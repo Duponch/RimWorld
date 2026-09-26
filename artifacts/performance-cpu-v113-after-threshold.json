@@ -1,0 +1,77 @@
+{
+  "label": "after-threshold",
+  "fixture": "public/test-saves/v98/mixed-100.json",
+  "protocol": "Node CPU only; 40 warmup ticks, 120 measured ticks; one worker-like publish per tick with current repeat phase/motion captures; structuredClone approximates postMessage clone. Exact continuation compared from the same post-warmup save. No browser, GPU, or real-time 6x throughput claim.",
+  "world": {
+    "width": 250,
+    "height": 250,
+    "pawns": 104,
+    "animals": 100,
+    "resources": 10994,
+    "piles": 331
+  },
+  "warmupTicks": 40,
+  "measuredTicks": 120,
+  "phaseChanges": 119,
+  "stages": {
+    "tick": {
+      "n": 120,
+      "total": 6061.566600000002,
+      "p50": 45.41159999999945,
+      "p95": 83.05199999999968,
+      "max": 126.32360000000062
+    },
+    "phase": {
+      "n": 120,
+      "total": 116.68769999999495,
+      "p50": 0.9110000000000582,
+      "p95": 1.4066000000002532,
+      "max": 3.4870999999984633
+    },
+    "motion": {
+      "n": 120,
+      "total": 20.34929999999622,
+      "p50": 0.1415999999990163,
+      "p95": 0.3414999999986321,
+      "max": 0.7223000000012689
+    },
+    "phaseRepeat": {
+      "n": 120,
+      "total": 105.2930000000024,
+      "p50": 0.8263000000006286,
+      "p95": 1.3739000000005035,
+      "max": 1.92029999999977
+    },
+    "motionRepeat": {
+      "n": 120,
+      "total": 16.375900000008187,
+      "p50": 0.1150999999990745,
+      "p95": 0.30169999999998254,
+      "max": 0.36490000000048894
+    },
+    "encode": {
+      "n": 120,
+      "total": 1294.749200000002,
+      "p50": 10.42410000000018,
+      "p95": 16.660799999999654,
+      "max": 22.834100000000035
+    },
+    "clone": {
+      "n": 120,
+      "total": 1320.6408999999903,
+      "p50": 10.815899999999601,
+      "p95": 14.08770000000004,
+      "max": 16.549399999999878
+    },
+    "decode": {
+      "n": 120,
+      "total": 173.21870000000308,
+      "p50": 0.5383999999994558,
+      "p95": 4.086900000000242,
+      "max": 9.675699999999779
+    }
+  },
+  "finalTick": 2160,
+  "finalRng": 63279223,
+  "finalSaveSha256": "b6da34e670bfa65f8f520fd4f8936e85c67460eb9f3c38a641a3787604bc623e"
+}

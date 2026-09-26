@@ -1,4 +1,6 @@
-# Plantes 3D instanciées et paysage — V97
+# Plantes 3D instanciées et paysage — V113
+
+V113 porte `WORLD_SCALE.chunkSize` de 16 à 64 **pour la présentation seulement**. Terrain, roches et ressources sont fusionnés en moins de lots sans modifier leurs cellules, sommets ni seuils LOD. En vue détaillée intermédiaire, la soumission CPU diminue nettement ; les gros lots peuvent toutefois réduire la précision du rejet hors champ et augmenter les triangles encodés. Les 14 états WebGPU V112/V113 comparent pixels, ombres, caméra et géométrie à l'identique. [Diagnostic](../research/performance-v113.md), [preuves et limites](../history/validation-performance-v113.md). Ne pas supprimer le rejet propre à la caméra des ombres ni l'adaptateur V96 pour tenter d'autres gains.
 
 V107 : [salissures transparentes](cleanliness.md#aspect-des-traces-v107), un atlas original et un lot instancié indépendant du paysage conservé. Une couche physique produit deux triangles, contre trois boîtes par trace auparavant ; cette réduction géométrique ne mesure pas à elle seule le coût des fragments alpha. Les mesures natives restent nécessaires. Attributs stables entre changements métier, même après mouvement de caméra ; aucune simulation dans le shader.
 

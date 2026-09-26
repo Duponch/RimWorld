@@ -4,6 +4,7 @@ import { createWorld,applyCommand,serializeWorld,deserializeWorld,validateWorld,
 import { enableWildlife,advanceWildlife,reconcileWildlife } from '../src/sim/wildlife';
 import { HARE } from '../src/sim/wildlife-state';
 import { plantGrowth } from '../src/sim/plants';
+import { animalFoods } from '../src/sim/wildlife-food';
 import { addGroundMaterial,reservedSource,refreshStock } from '../src/sim/materials';
 import { animalNavigation,moveAnimal } from '../src/sim/wildlife-navigation';
 import { constructionSiteFree } from '../src/sim/construction-rules';
@@ -16,6 +17,41 @@ import type { World } from '../src/sim/types';
 function fixture(){const w=createWorld(42,16,16);w.resources=[];w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.structures=[];w.jobs=[];w.piles=[];refreshStock(w);w.resources.push({id:w.nextId++,kind:'berries',x:3,z:3,amount:10,growth:1,growthTick:0});enableWildlife(w,1);const a=w.wildlife!.animals[0]!;a.x=1;a.z=1;a.food=.02;a.rest=1;return w;}
 function advance(w:World,n=1){for(let i=0;i<n;i++){w.tick++;advanceWildlife(w);refreshStock(w);}}
 function until(w:World,f:()=>boolean,n=1000){for(let i=0;i<n&&!f();i++){advance(w);expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);}expect(f()).toBe(true);}
+
+test('animal food search preserves plant order, own claims and reserved work cells',()=>{
+  const w=fixture(),a=w.wildlife!.animals[0]!,own=w.resources[0]!;
+  const competing={...own,id:w.nextId++,x:4};
+  const reserved={...own,id:w.nextId++,x:5};
+  const free={...own,id:w.nextId++,x:6};
+  const sowing={...own,id:w.nextId++,x:7};
+  w.resources.push(competing,reserved,free,sowing);
+  a.meal={kind:'plant',id:own.id,quantity:1,progress:0};
+  w.wildlife!.animals.push({...structuredClone(a),id:w.nextId++,meal:{kind:'plant',id:competing.id,quantity:1,progress:0}});
+  const job=(kind:'cut'|'sow',plant:typeof own,reservedBy:number|null)=>({id:w.nextId++,kind,x:plant.x,z:plant.z,orientation:0 as const,footprint:'standard' as const,status:'pending' as const,reservedBy,progress:0,escrow:{wood:0,food:0}});
+  w.jobs.push(job('cut',reserved,w.pawns[0]!.id),job('cut',free,null),job('sow',sowing,w.pawns[0]!.id));
+  expect(animalFoods(w,a).filter(food=>food.kind==='plant').map(food=>food.id)).toEqual([own.id,free.id]);
+});
+
+test('indexed meals remove sixteen plants during one wildlife tick with exact replay',()=>{
+  const w=fixture(),first=w.wildlife!.animals[0]!;
+  w.resources=[];
+  for(let i=0;i<16;i++){
+    const x=2+i%8,z=3+Math.floor(i/8);
+    const plant={id:w.nextId++,kind:'rice' as const,x,z,amount:6,growth:.1,growthTick:w.tick};
+    w.resources.push(plant);
+    const animal=i===0?first:{...structuredClone(first),id:w.nextId++};
+    animal.x=x;animal.z=z;animal.food=0;animal.state='eating';animal.path=[];
+    animal.meal={kind:'plant',id:plant.id,quantity:1,progress:HARE.ingestTicks-.01};
+    if(i>0)w.wildlife!.animals.push(animal);
+  }
+  expect(validateWorld(w)).toEqual([]);
+  const resumed=deserializeWorld(serializeWorld(w));
+  advance(w);advance(resumed);
+  expect(resumed).toEqual(w);
+  expect(w.resources).toEqual([]);
+  expect(w.wildlife!.eatenPlants).toBe(16);
+  expect(validateWorld(w)).toEqual([]);
+});
 
 test('physical grazing, fractional growth, discrete ingestion and exact continuation with motion tracks',()=>{
   const w=fixture(),s=w.wildlife!,a=s.animals[0]!,plant=w.resources[0]!,initialRng=w.rng,recorder=new MotionRecorder();

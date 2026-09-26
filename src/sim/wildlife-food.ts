@@ -26,9 +26,15 @@ function unclaimedPlant(world:World,r:Resource,except:number):boolean {
 export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   const result:AnimalFood[]=[];
   const definition=animalSpecies(a.species);
+  // A food search can inspect thousands of plants. Collect competing claims
+  // once for this decision instead of walking every animal and job per plant.
+  const claimedPlants=new Set<number>();
+  for(const other of world.wildlife?.animals??[])if(other.id!==a.id&&other.meal?.kind==='plant')claimedPlants.add(other.meal.id);
+  const reservedPlantCells=new Set<number>();
+  for(const job of world.jobs)if(job.reservedBy!==null&&(job.kind==='harvest'||job.kind==='cut'||job.kind==='sow'))reservedPlantCells.add(job.z*world.width+job.x);
   for(const r of world.resources)if(isPlant(r)&&!plantLeafless(world,r)) {
     const growth=plantGrowth(world,r);
-    if(growth>=.1&&plantNutrition(r,growth)>0&&unclaimedPlant(world,r,a.id))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
+    if(growth>=.1&&plantNutrition(r,growth)>0&&!claimedPlants.has(r.id)&&!reservedPlantCells.has(r.z*world.width+r.x))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
   }
   for(const p of world.piles)if(p.kind==='food'&&herbivoreFoods.has(p.item)&&p.owner.type==='ground') {
     const available=p.quantity-reservedSource(world,p.id,a.id),nutrition=ITEM_DEFINITIONS[p.item].nutrition/100;
@@ -36,10 +42,10 @@ export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   }
   return result;
 }
-export function animalMealTarget(world:World,a:WildAnimal):Cell|undefined {
+export function animalMealTarget(world:World,a:WildAnimal,resourcesById?:ReadonlyMap<number,Resource>):Cell|undefined {
   const meal=a.meal;if(!meal)return;
   if(meal.kind==='plant') {
-    const r=world.resources.find(r=>r.id===meal.id);
+    const r=resourcesById?resourcesById.get(meal.id):world.resources.find(r=>r.id===meal.id);
     if(!r||!isPlant(r)||plantLeafless(world,r))return;
     const growth=plantGrowth(world,r);
     return growth>=.1&&plantNutrition(r,growth)>0&&unclaimedPlant(world,r,a.id)?r:undefined;

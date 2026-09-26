@@ -13,7 +13,7 @@ import { animalNavigation,moveAnimal } from './wildlife-navigation.ts';
 import { HARE,MAX_WILDLIFE,wildlifeRandom,type WildAnimal,type WildlifeState } from './wildlife-state.ts';
 import { isPlant } from './plants.ts';
 import { calendarTick } from './calendar.ts';
-import type { Cell,World } from './types.ts';
+import type { Cell,Resource,World } from './types.ts';
 import { animalSpecies,faunaBiome,selectBiomeSpecies,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
 import { animalHandlingHolding } from './animal-handling.ts';
 import { animalCareInProgress,animalCareTargets } from './animal-care.ts';
@@ -107,12 +107,23 @@ export function enableWildlife(world:World,count=Math.min(12,Math.max(3,Math.flo
     s.animals.push({id:world.nextId++,species:'hare',sex:wildlifeRandom(s)<.5?'female':'male',x:place.x,z:place.z,food:HARE.nutrition*(.5+.4*wildlifeRandom(s)),rest:.9+.1*wildlifeRandom(s),state:'idle',path:[],nextDecision:world.tick+1+n%60});
   }
 }
-export function reconcileWildlife(world:World):void {
-  for(const a of world.wildlife?.animals??[])if(a.meal&&!animalMealTarget(world,a)){delete a.meal;a.path=[];a.state=a.motion&&a.motion.end>world.tick?'moving':'idle';a.nextDecision=world.tick;}
+export function reconcileWildlife(world:World,resourcesById?:ReadonlyMap<number,Resource>):void {
+  for(const a of world.wildlife?.animals??[])if(a.meal&&!animalMealTarget(world,a,resourcesById)){delete a.meal;a.path=[];a.state=a.motion&&a.motion.end>world.tick?'moving':'idle';a.nextDecision=world.tick;}
 }
 export function advanceWildlife(world:World):void {
   const s=world.wildlife;if(!s)return;advancePopulation(world,s);if(!s.animals.length)return;
-  reconcileWildlife(world);
+  // A meal can remain active for many ticks. Capture its plant identity once
+  // for this synchronous decision, then discard the index before other world
+  // systems can mutate resources. A handful of meals are cheaper to scan
+  // directly; the first measured large-map win was at 16 active meals.
+  // The public reconciliation API remains live.
+  let mealResources:Map<number,Resource>|undefined;
+  let activePlantMeals=0;
+  for(const animal of s.animals)if(animal.meal?.kind==='plant')activePlantMeals++;
+  if(activePlantMeals>=16){
+    mealResources=new Map();for(const resource of world.resources)mealResources.set(resource.id,resource);
+  }
+  reconcileWildlife(world,mealResources);
   let nav:ReturnType<typeof animalNavigation>|undefined,searches=0;
   const getNav=()=>nav??=animalNavigation(world);
   let physical:Uint8Array|undefined,shot:ReturnType<typeof captureWorldShotGrid>|undefined;
@@ -161,11 +172,16 @@ export function advanceWildlife(world:World):void {
       a.state='idle';a.nextDecision=world.tick+1;
     }
     if(a.meal) {
-      const target=animalMealTarget(world,a)!;
+      const target=animalMealTarget(world,a,mealResources)!;
       if(contact(a,target)&&getNav().free(a)) {
         a.path=[];
         if(a.state!=='eating'){a.state='eating';a.meal.progress=0;}
-        else if((a.meal.progress+=Math.max(.15,(.05+.95*body.capacities.eating)*(.7+.3*body.capacities.manipulation)))>=species.ingestTicks){finishAnimalMeal(world,a);nav=undefined;}
+        else if((a.meal.progress+=Math.max(.15,(.05+.95*body.capacities.eating)*(.7+.3*body.capacities.manipulation)))>=species.ingestTicks){
+          const meal=a.meal,resourcesBefore=world.resources;
+          finishAnimalMeal(world,a);
+          if(meal.kind==='plant'&&world.resources!==resourcesBefore)mealResources?.delete(meal.id);
+          nav=undefined;
+        }
         continue;
       }
       if(!a.path.length){delete a.meal;a.state='idle';a.nextDecision=world.tick;}

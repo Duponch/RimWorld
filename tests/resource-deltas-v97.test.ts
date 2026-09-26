@@ -5,6 +5,7 @@ import type { Resource,World } from '../src/sim/types';
 import { ResourceLayer } from '../src/render/ResourceLayer';
 import { NaturalResourcePresentation } from '../src/render/NaturalResourcePresentation';
 import { isClusterPlantSpecies } from '../src/render/flora-presentation';
+import { WORLD_SCALE } from '../src/world/scale';
 
 function appearance(group:THREE.Group) {
   return group.children.map(chunk=>({
@@ -24,14 +25,15 @@ function appearance(group:THREE.Group) {
 }
 
 test('resource deltas match full chunk updates across growth, masks, replacement and chunk moves',()=>{
-  const world:World=createWorld(42,64,64);
+  const chunkSize=WORLD_SCALE.chunkSize;
+  const world:World=createWorld(42,Math.min(250,Math.max(64,chunkSize*4)),Math.max(64,chunkSize));
   world.tiles=world.tiles.map(()=>({terrain:'grass'}));
   world.resources=[
     {id:1,kind:'tree',species:'oak',x:2,z:2,amount:20,growth:.01,growthTick:0},
     {id:2,kind:'berries',x:3,z:2,amount:10,growth:.64,growthTick:world.tick},
-    {id:3,kind:'rock',stone:'granite',x:17,z:2,amount:20},
-    {id:4,kind:'tree',species:'pine',x:34,z:2,amount:20},
-    {id:5,kind:'tree',species:'oak',x:50,z:2,amount:20},
+    {id:3,kind:'rock',stone:'granite',x:chunkSize+1,z:2,amount:20},
+    {id:4,kind:'tree',species:'pine',x:chunkSize*2+2,z:2,amount:20},
+    {id:5,kind:'tree',species:'oak',x:chunkSize*3+2,z:2,amount:20},
     {id:6,kind:'wild-plant',species:'grass',x:5,z:2,amount:2},
   ];
   const presentation=new NaturalResourcePresentation();
@@ -42,7 +44,8 @@ test('resource deltas match full chunk updates across growth, masks, replacement
   const initial=visible(presentation.read(world,true)!);
   incremental.update(initial,true,presentation.changes);full.update(initial,true);
   expect(appearance(incrementalGroup)).toEqual(appearance(fullGroup));
-  const stable=incrementalGroup.children.find(chunk=>chunk.name==='Resources 3:0')!;
+  const stableChunkName=`Resources ${Math.floor(world.resources[4]!.x/chunkSize)}:0`;
+  const stable=incrementalGroup.children.find(chunk=>chunk.name===stableChunkName)!;
   const stableMeshes=stable.children as THREE.Mesh[];
   const stableGeometries=stableMeshes.map(mesh=>mesh.geometry);
   const stableVersions=stableMeshes.map(mesh=>[mesh.geometry.index!.version,(mesh.geometry.getAttribute('position') as THREE.BufferAttribute).version]);
@@ -55,7 +58,7 @@ test('resource deltas match full chunk updates across growth, masks, replacement
     full.update(rendering,false);
     expect(world.rng).toBe(rng);
     expect(appearance(incrementalGroup)).toEqual(appearance(fullGroup));
-    expect(incrementalGroup.children.find(chunk=>chunk.name==='Resources 3:0')).toBe(stable);
+    expect(incrementalGroup.children.find(chunk=>chunk.name===stableChunkName)).toBe(stable);
     expect(stableMeshes.map(mesh=>mesh.geometry)).toEqual(stableGeometries);
     expect(stableMeshes.map(mesh=>[mesh.geometry.index!.version,(mesh.geometry.getAttribute('position') as THREE.BufferAttribute).version])).toEqual(stableVersions);
   };
@@ -67,11 +70,11 @@ test('resource deltas match full chunk updates across growth, masks, replacement
     delete world.resources[0]!.plantLife;check();
     const berry=world.resources[1]!;world.resources=world.resources.filter(r=>r.id!==berry.id);check();
     world.resources.splice(1,0,berry);check();
-    world.resources[2]!.x=32;check(); // old chunk becomes empty
+    world.resources[2]!.x=chunkSize*2;check(); // old chunk becomes empty
     world.resources[2]!.stone='marble';check();
     Object.assign(world.resources[2]!,{kind:'tree',species:'birch'} satisfies Partial<Resource>);check();
     incremental.setFoliageVisible(false);full.setFoliageVisible(false);
-    world.resources.push({id:7,kind:'tree',species:'saguaro',x:18,z:3,amount:10});check();
+    world.resources.push({id:7,kind:'tree',species:'saguaro',x:chunkSize+2,z:3,amount:10});check();
     incremental.setFoliageVisible(true);full.setFoliageVisible(true);
     world.resources=world.resources.filter(r=>r.id!==7);check();
   } finally {incremental.clear();full.clear();material.dispose();}

@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V113 — paysage plus léger en vue détaillée :** lots de terrain et de ressources plus grands, recherche alimentaire de la faune moins répétitive. [Diagnostic CPU/GPU et décision WASM](research/performance-v113.md), [comparaisons natives, images et replays](history/validation-performance-v113.md). Le départ de trois colons approche 240 FPS dans la vue mesurée, sans garantie générale ; la charge mixte à cent colons reste limitée. Schéma 109 et gameplay inchangés.
+
 **V112 — orientation, travail et armes visibles :** pivot rapide des humains et animaux, quatre gestes de travail distincts, fusil porté puis visé avec un bref recul et portrait HUD/Bio accordé à l'arme physique. [Contrat](development/action-presentation.md), [référence Core 1.6.4871](research/action-visual-reference-v112.md), [preuves et charge native](history/validation-action-visual-v112.md). Il s'agit d'une présentation : règles, schéma 109 et catalogue inchangés ; les outils de mine/coupe ne deviennent pas des équipements. La mesure appariée à cent colons ne garantit ni coût strictement nul ni débit ×6.
 
 **V111 — retouche des cheveux :** côtés courts arrêtés avant la nuque, côtés et arrière longs assortis, frange assemblée sans trou. Les portraits existants suivent le même maillage. [Contrat](development/pawn-appearance.md), [preuves](history/validation-appearance-v111.md). Schéma 109 et règles inchangés ; le site Netlify reste en V109 tant que les crédits sont épuisés.

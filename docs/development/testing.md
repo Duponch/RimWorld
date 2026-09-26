@@ -1,5 +1,7 @@
 # Stratégie de validation
 
+V113 compare les chunks 16/64 sur le même départ et la même sauvegarde mixte, dans des fenêtres natives successives et ABBA avec zoom réellement détaillé. Les timestamps GPU, la soumission CPU, l'intervalle image et le débit du worker sont distincts. Le rendu se compare pixel à pixel sur première image, déplacement, rotation, LOD, mutations et rechargement ; les recherches alimentaires comparent candidats et sauvegarde/PRNG finaux. Les tests courts couvrent aussi les deltas de ressources, la présentation et la continuité. [Preuves et limites](../history/validation-performance-v113.md).
+
 V112 vérifie les phases de travail et les rotations sur les poses du worker, une visée puis un tir réel et le portrait de l'arme équipée. Les frontières en pause, de demi-tour et de changement de tâche restent distinctes. Les attributs et appels de dessin résidents sont vérifiés ; la charge native compare V111/V112 sur builds gelés en ordre inversé. Sans règle métier ni calendrier modifié, une campagne annuelle n'apporterait pas de preuve pertinente. [Contrat](action-presentation.md), [preuves](../history/validation-action-visual-v112.md).
 
 V106 groupe tâches Animaux/Médecin, fournitures et interruptions, étapes sauvegardées, migration stricte, bibliothèque et contrôles UI courts. Les pertes périodiques de familiarité sont testées aux frontières ; pas de campagne annuelle ni de succès aléatoire exigé au pilote natif. CPU puis rendu mixtes restent successifs. [Preuves](../history/validation-domestic-v106.md).

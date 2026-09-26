@@ -1,4 +1,6 @@
-# Validation courante — V112
+# Validation courante — V113
+
+V113 : [regroupement du paysage et recherche alimentaire](../history/validation-performance-v113.md), 27 contrôles ciblés, build/typage, comparaison WebGPU de 14 états pixel-identiques, présentation native mine/coupe et mesures CPU/GPU séparées. Le départ détaillé intermédiaire accélère nettement ; à cent colons, le débit ×6 reste insuffisant. Schéma 109, règles et G0–G5 inchangés.
 
 V112 : [rotation, gestes et fusil visible](../history/validation-action-visual-v112.md), 23 contrôles ciblés, sept parcours Chromium/WebGPU V112 et historiques, mine/coupe 250² et comparaison ABBA à cent colons. Présentation seule ; schéma 109, règles, catalogue et G0–G5 inchangés. Débit ×6 non tenu à cent colons.
 

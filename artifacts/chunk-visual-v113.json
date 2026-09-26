@@ -1,0 +1,2297 @@
+{
+  "date": "2026-09-26T14:46:40.885Z",
+  "baselineCommit": "9f840a8",
+  "candidateDigest": "d2b10233b7b527a27f3635f920911828452a0d713fb3cc5939b23d217e668099",
+  "work": "E:\\Code\\RimWorld\\tmp\\chunk-visual-v113-YycNGL",
+  "aa": false,
+  "protocol": "Frozen production builds, native Chromium WebGPU, 1920x1080, same migrated mixed-100 save, paused at the same tick. Chunk 16 vs 64: first frame, direct pan/orbit, cross 7 px/cell into distant LOD and return above 9 px/cell into detailed LOD, growth, mined rock, foliage switch, real session reload and changed solar pose. Pixel comparison includes actual shadows. No simulation claim: growth/mining are controlled world presentation mutations, not jobs performed by the worker. Geometry counts and state are checked alongside images.",
+  "cases": [
+    {
+      "version": "V112",
+      "spec": "initial",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "5a2df123bb16d603b928943aca30de6110539fd93972b5a126e576d1714d7fa5"
+    },
+    {
+      "version": "V112",
+      "spec": "pan-first",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          272.32464008728107,
+          312.5285649112496,
+          256.1378542100623
+        ],
+        "quaternion": [
+          -0.4522370057660577,
+          0.32274675181028456,
+          0.1797997717490261,
+          0.8117809229654633
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          190.45246653650682,
+          22.78684184087028,
+          137.51376825455645
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "3c243f7cef2701a48bd5063b6b5c0fe0616eb2c783dd0f733606749014ec82c6"
+    },
+    {
+      "version": "V112",
+      "spec": "pan-next",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          272.32464008728107,
+          312.5285649112496,
+          256.1378542100623
+        ],
+        "quaternion": [
+          -0.4522370057660577,
+          0.32274675181028456,
+          0.1797997717490261,
+          0.8117809229654633
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          190.45246653650682,
+          22.78684184087028,
+          137.51376825455645
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "3c243f7cef2701a48bd5063b6b5c0fe0616eb2c783dd0f733606749014ec82c6"
+    },
+    {
+      "version": "V112",
+      "spec": "orbit-first",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          303.12726501468,
+          312.5285649112496,
+          198.75423384899864
+        ],
+        "quaternion": [
+          -0.4048207300103337,
+          0.484880070795615,
+          0.27012301615958534,
+          0.7266670830854995
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "16989ec5c99bef1114ccb2e18a4e83848d9a103d966760b5b9296b659488b5a1"
+    },
+    {
+      "version": "V112",
+      "spec": "lod-far-first",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          303.12726501468,
+          312.5285649112496,
+          198.75423384899864
+        ],
+        "quaternion": [
+          -0.4048207300103337,
+          0.484880070795615,
+          0.27012301615958534,
+          0.7266670830854995
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.2,
+        "pixelsPerCell": 6.367924528301887,
+        "overview": true
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "3859686068145bbc66871ab0e3aa5598ba4e80e455c968694b343e5c448096a0"
+    },
+    {
+      "version": "V112",
+      "spec": "lod-near-first",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          303.12726501468,
+          312.5285649112496,
+          198.75423384899864
+        ],
+        "quaternion": [
+          -0.4048207300103337,
+          0.484880070795615,
+          0.27012301615958534,
+          0.7266670830854995
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.3,
+        "pixelsPerCell": 9.55188679245283,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "81ecdde3709acf23a66b7e830a392cf78562525bde3cf736bc36d82d17c29572"
+    },
+    {
+      "version": "V112",
+      "spec": "growth",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock",
+        "treeGrowth": 0.2
+      },
+      "imageHash": "c2c42b594cef1d950aaefbc0c307297956e80f398fc5d211e86afd48a7a496da"
+    },
+    {
+      "version": "V112",
+      "spec": "growth-later",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock",
+        "treeGrowth": 0.8
+      },
+      "imageHash": "d987e32f7525dfaf5d96fd127b32f6da1af74b05657a1ddc1a9e67781b20ef33"
+    },
+    {
+      "version": "V112",
+      "spec": "mined",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162528,
+          "shadowIndices": 81228,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rough-stone",
+        "treeGrowth": 0.8
+      },
+      "imageHash": "9ee38bdd2c5c6e70616088674bb5877e755e0aec49785ab9bd8c77566a5a48ed"
+    },
+    {
+      "version": "V112",
+      "spec": "foliage-hidden",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162528,
+          "shadowIndices": 81228,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 817542,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rough-stone",
+        "treeGrowth": 0.8
+      },
+      "imageHash": "b11142067dd1273267c7de925c2cb56e583d801164bf9020a6727756ac3ba450"
+    },
+    {
+      "version": "V112",
+      "spec": "foliage-restored",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162528,
+          "shadowIndices": 81228,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rough-stone",
+        "treeGrowth": 0.8
+      },
+      "imageHash": "9ee38bdd2c5c6e70616088674bb5877e755e0aec49785ab9bd8c77566a5a48ed"
+    },
+    {
+      "version": "V112",
+      "spec": "reload-first",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "22e379cf1000e171442c82ee11720b16019a0218d917e744f171fdf043262f7b"
+    },
+    {
+      "version": "V112",
+      "spec": "reload-pan",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          272.32464008728107,
+          312.5285649112496,
+          256.1378542100623
+        ],
+        "quaternion": [
+          -0.4522370057660577,
+          0.32274675181028456,
+          0.1797997717490261,
+          0.8117809229654633
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          190.45246653650682,
+          22.78684184087028,
+          137.51376825455645
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "56a0d12d6ed53b420f011d3b74c5359dda2740c3955be3ec05e80d19fccfb18a"
+    },
+    {
+      "version": "V112",
+      "spec": "sun-shift",
+      "difference": null,
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 281
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 508
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 119
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          124.50000000000003,
+          50.02162558457104,
+          157.6336230116326
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 3000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "04f0fcaa97f0f73964bbfc11be427f7d821862eee013ab2dc1f649c29a0316a4"
+    },
+    {
+      "version": "V113",
+      "spec": "initial",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "5a2df123bb16d603b928943aca30de6110539fd93972b5a126e576d1714d7fa5"
+    },
+    {
+      "version": "V113",
+      "spec": "pan-first",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          272.32464008728107,
+          312.5285649112496,
+          256.1378542100623
+        ],
+        "quaternion": [
+          -0.4522370057660577,
+          0.32274675181028456,
+          0.1797997717490261,
+          0.8117809229654633
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          190.45246653650682,
+          22.78684184087028,
+          137.51376825455645
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "3c243f7cef2701a48bd5063b6b5c0fe0616eb2c783dd0f733606749014ec82c6"
+    },
+    {
+      "version": "V113",
+      "spec": "pan-next",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          272.32464008728107,
+          312.5285649112496,
+          256.1378542100623
+        ],
+        "quaternion": [
+          -0.4522370057660577,
+          0.32274675181028456,
+          0.1797997717490261,
+          0.8117809229654633
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          190.45246653650682,
+          22.78684184087028,
+          137.51376825455645
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "3c243f7cef2701a48bd5063b6b5c0fe0616eb2c783dd0f733606749014ec82c6"
+    },
+    {
+      "version": "V113",
+      "spec": "orbit-first",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          303.12726501468,
+          312.5285649112496,
+          198.75423384899864
+        ],
+        "quaternion": [
+          -0.4048207300103337,
+          0.484880070795615,
+          0.27012301615958534,
+          0.7266670830854995
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "16989ec5c99bef1114ccb2e18a4e83848d9a103d966760b5b9296b659488b5a1"
+    },
+    {
+      "version": "V113",
+      "spec": "lod-far-first",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          303.12726501468,
+          312.5285649112496,
+          198.75423384899864
+        ],
+        "quaternion": [
+          -0.4048207300103337,
+          0.484880070795615,
+          0.27012301615958534,
+          0.7266670830854995
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.2,
+        "pixelsPerCell": 6.367924528301887,
+        "overview": true
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "3859686068145bbc66871ab0e3aa5598ba4e80e455c968694b343e5c448096a0"
+    },
+    {
+      "version": "V113",
+      "spec": "lod-near-first",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          303.12726501468,
+          312.5285649112496,
+          198.75423384899864
+        ],
+        "quaternion": [
+          -0.4048207300103337,
+          0.484880070795615,
+          0.27012301615958534,
+          0.7266670830854995
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.3,
+        "pixelsPerCell": 9.55188679245283,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "81ecdde3709acf23a66b7e830a392cf78562525bde3cf736bc36d82d17c29572"
+    },
+    {
+      "version": "V113",
+      "spec": "growth",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock",
+        "treeGrowth": 0.2
+      },
+      "imageHash": "c2c42b594cef1d950aaefbc0c307297956e80f398fc5d211e86afd48a7a496da"
+    },
+    {
+      "version": "V113",
+      "spec": "growth-later",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock",
+        "treeGrowth": 0.8
+      },
+      "imageHash": "d987e32f7525dfaf5d96fd127b32f6da1af74b05657a1ddc1a9e67781b20ef33"
+    },
+    {
+      "version": "V113",
+      "spec": "mined",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162528,
+          "shadowIndices": 81228,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rough-stone",
+        "treeGrowth": 0.8
+      },
+      "imageHash": "9ee38bdd2c5c6e70616088674bb5877e755e0aec49785ab9bd8c77566a5a48ed"
+    },
+    {
+      "version": "V113",
+      "spec": "foliage-hidden",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162528,
+          "shadowIndices": 81228,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 817542,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rough-stone",
+        "treeGrowth": 0.8
+      },
+      "imageHash": "b11142067dd1273267c7de925c2cb56e583d801164bf9020a6727756ac3ba450"
+    },
+    {
+      "version": "V113",
+      "spec": "foliage-restored",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162528,
+          "shadowIndices": 81228,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rough-stone",
+        "treeGrowth": 0.8
+      },
+      "imageHash": "9ee38bdd2c5c6e70616088674bb5877e755e0aec49785ab9bd8c77566a5a48ed"
+    },
+    {
+      "version": "V113",
+      "spec": "reload-first",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          175.45246653650685,
+          22.78684184087028,
+          146.51376825455645
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "22e379cf1000e171442c82ee11720b16019a0218d917e744f171fdf043262f7b"
+    },
+    {
+      "version": "V113",
+      "spec": "reload-pan",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          272.32464008728107,
+          312.5285649112496,
+          256.1378542100623
+        ],
+        "quaternion": [
+          -0.4522370057660577,
+          0.32274675181028456,
+          0.1797997717490261,
+          0.8117809229654633
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          190.45246653650682,
+          22.78684184087028,
+          137.51376825455645
+        ],
+        "target": [
+          139.5,
+          0,
+          115.5
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 2000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "56a0d12d6ed53b420f011d3b74c5359dda2740c3955be3ec05e80d19fccfb18a"
+    },
+    {
+      "version": "V113",
+      "spec": "sun-shift",
+      "difference": {
+        "changedPixels": 0,
+        "maxChannelDifference": 0,
+        "channelDifferenceTotal": 0
+      },
+      "footprint": {
+        "terrain": {
+          "vertices": 256452,
+          "indices": 384678,
+          "shadowIndices": 0,
+          "meshes": 22
+        },
+        "resources": {
+          "vertices": 1973788,
+          "indices": 2361732,
+          "shadowIndices": 2361732,
+          "meshes": 32
+        },
+        "rocks": {
+          "vertices": 98328,
+          "indices": 162540,
+          "shadowIndices": 81234,
+          "meshes": 18
+        },
+        "plants": {
+          "vertices": 0,
+          "indices": 0,
+          "shadowIndices": 0,
+          "meshes": 1
+        },
+        "overview": {
+          "vertices": 682221,
+          "indices": 987822,
+          "shadowIndices": 0,
+          "meshes": 6
+        }
+      },
+      "camera": {
+        "position": [
+          257.32464008728107,
+          312.5285649112496,
+          265.1378542100623
+        ],
+        "quaternion": [
+          -0.45223700576605763,
+          0.3227467518102845,
+          0.17979977174902603,
+          0.8117809229654633
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "zoom": 0.23,
+        "pixelsPerCell": 7.32311320754717,
+        "overview": false
+      },
+      "light": {
+        "position": [
+          124.50000000000003,
+          50.02162558457104,
+          157.6336230116326
+        ],
+        "target": [
+          124.50000000000003,
+          0,
+          124.50000000000003
+        ],
+        "intensity": 3.2
+      },
+      "world": {
+        "tick": 3000,
+        "rng": 42,
+        "resources": 11009,
+        "rock": "rock"
+      },
+      "imageHash": "04f0fcaa97f0f73964bbfc11be427f7d821862eee013ab2dc1f649c29a0316a4"
+    }
+  ],
+  "errors": [],
+  "targets": {
+    "world": {
+      "tick": 2000,
+      "rng": 42,
+      "width": 250,
+      "height": 250,
+      "pawns": 104,
+      "resources": 11009,
+      "schema": 109
+    },
+    "treeId": 12855,
+    "rock": {
+      "i": 31376,
+      "x": 126,
+      "z": 125,
+      "d": 2.5
+    },
+    "adapter": {
+      "vendor": "amd",
+      "architecture": "rdna-1",
+      "description": ""
+    }
+  },
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "description": ""
+  },
+  "V112IntraBuild": {
+    "repeatedPanPixelEqual": true,
+    "reloadMatchesInitialPixels": false
+  },
+  "V113IntraBuild": {
+    "repeatedPanPixelEqual": true,
+    "reloadMatchesInitialPixels": false
+  }
+}
