@@ -1,0 +1,140 @@
+{
+  "url": "https://lisiere-duponch.netlify.app",
+  "checkedAt": "2026-09-26T09:54:21.521Z",
+  "status": 200,
+  "semanticCursors": {
+    "button": [
+      9,
+      1
+    ],
+    "forbidden": [
+      20,
+      20
+    ],
+    "text": [
+      9,
+      20
+    ],
+    "wait": [
+      14,
+      20
+    ],
+    "grabbing": [
+      18,
+      20
+    ],
+    "grab": [
+      17,
+      20
+    ],
+    "zoom": [
+      15,
+      14
+    ],
+    "pointer": [
+      2,
+      1
+    ]
+  },
+  "debugExport": "undefined",
+  "people": 3,
+  "resourceWidth": 216,
+  "selectedPortrait": {
+    "text": "Ada",
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1"
+  },
+  "save": {
+    "schema": 106,
+    "tick": 0,
+    "pawns": 3
+  },
+  "savedSlots": 2,
+  "coldRestore": true,
+  "pngTools": 62,
+  "cursors": 1,
+  "management": {
+    "work": {
+      "client": 1356,
+      "scroll": 1356
+    },
+    "schedule": {
+      "client": 1356,
+      "scroll": 1356
+    },
+    "assign": {
+      "client": 1356,
+      "scroll": 1356
+    }
+  },
+  "wildlifeColumns": [
+    {
+      "x": 54,
+      "width": 90
+    },
+    {
+      "x": 154,
+      "width": 293.6875
+    },
+    {
+      "x": 457.6875,
+      "width": 74
+    },
+    {
+      "x": 541.6875,
+      "width": 240.3125
+    },
+    {
+      "x": 792,
+      "width": 74
+    },
+    {
+      "x": 876,
+      "width": 250
+    }
+  ],
+  "fonts": {
+    "sans": true,
+    "serif": true
+  },
+  "assets": [
+    {
+      "name": "planet",
+      "status": 200,
+      "cache": "public,max-age=0,must-revalidate"
+    },
+    {
+      "name": "panel-frame",
+      "status": 200,
+      "cache": "public,max-age=0,must-revalidate"
+    },
+    {
+      "name": "icons",
+      "status": 200,
+      "cache": "public,max-age=0,must-revalidate"
+    },
+    {
+      "name": "portraits",
+      "status": 200,
+      "cache": "public,max-age=0,must-revalidate"
+    },
+    {
+      "name": "architect-1",
+      "status": 200,
+      "cache": "public,max-age=0,must-revalidate"
+    },
+    {
+      "name": "architect-2",
+      "status": 200,
+      "cache": "public,max-age=0,must-revalidate"
+    },
+    {
+      "name": "cursors-v95",
+      "status": 200,
+      "cache": "public,max-age=0,must-revalidate"
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

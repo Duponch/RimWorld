@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Réactivité des déplacements — V108
+
+Mobilisez un colon avec **R**, puis faites un clic droit au sol. La commande est traitée immédiatement, et le déplacement commence au prochain pas de simulation disponible. L'affichage garde deux pas de réserve au lieu de quatre ; les mouvements autonomes profitent de la même réduction. Une case déjà en cours de traversée, l'ouverture d'une porte ou une récupération de combat restent à terminer. En pause, l'ordre est enregistré et attend la reprise. Sous forte charge, un ralentissement reste possible.
+
 ## Lire les salissures — V107
 
 La terre est une poussière légère ; sang, vomi et bile forment des traces irrégulières, et les cendres s'étalent davantage. Chaque épaisseur ajoute un motif transparent : les endroits qui se recouvrent deviennent plus denses. Au nettoyage, ces couches disparaissent une à une, sans déplacer les traces restantes. L'éclairage et la couleur du sol changent leur visibilité : consultez toujours **Environnement → Propreté** pour le score de la pièce. Le nombre de traces nettoyées augmente quand la dernière couche d'une trace est retirée.

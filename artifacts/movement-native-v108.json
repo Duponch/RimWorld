@@ -1,0 +1,249 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\Code\\RimWorld\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/integration/drafting.spec.ts",
+      "tests/integration/movement.spec.ts",
+      "--headed",
+      "--reporter=json"
+    ],
+    "configFile": "E:\\Code\\RimWorld\\playwright.config.ts",
+    "rootDir": "E:/Code/RimWorld/tests/integration",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/Code/RimWorld/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/Code/RimWorld/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "drafting.spec.ts",
+      "file": "drafting.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "native tactical UI: R, group button, physical queued movement, saved travel, stop and civilian return",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 72502,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-26T09:44:39.638Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5d1d5b0aea2696dd4f20-ded4ba600fc47611fd8e",
+          "file": "drafting.spec.ts",
+          "line": 18,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "movement.spec.ts",
+      "file": "movement.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "civil crossing in the real worker: shared cell, save/reload, three exclusive beds",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13436,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-26T09:45:52.212Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "civil-crossing",
+                      "contentType": "application/json",
+                      "body": "eyJzaGFyZWRUaWNrIjoyMDEzLCJmaW5hbFRpY2siOjIwNDgsInBvc2l0aW9ucyI6W3siaWQiOjQ5LCJ4IjoxNCwieiI6OCwiYmVkSWQiOjY3fSx7ImlkIjo1MCwieCI6MSwieiI6OCwiYmVkSWQiOjY1fSx7ImlkIjo1MSwieCI6OCwieiI6OCwiYmVkSWQiOjY2fV0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4f4644ce1bc9a9704a33-c41b4c3514e6bc0b77b3",
+          "file": "movement.spec.ts",
+          "line": 9,
+          "column": 1
+        },
+        {
+          "title": "GPU travel preserves speed, corners and work-facing through real worker snapshots",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 24910,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-26T09:46:05.663Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "movement-contract",
+                      "contentType": "application/json",
+                      "body": "ewogICJ3b3JzdFNhbXBsZSI6IHsKICAgICJhIjogewogICAgICAibm93IjogMTk2MDcuNywKICAgICAgImNsb2NrIjogNzYuMjUzMzk5OTk5OTk5ODksCiAgICAgICJzdGFydCI6IDc2LjE2NjY2NDEyMzUzNTE2LAogICAgICAiZW5kIjogNzcuMDUwNTUyMzY4MTY0MDYsCiAgICAgICJ4IjogMTEuOTAxODcwMDg3MDkzMjU2LAogICAgICAieiI6IDE1LjA5ODEyOTkxMjkwNjc0NCwKICAgICAgInlhdyI6IC0wLjc4NTM5ODE4NTI1MzE0MzMsCiAgICAgICJkeCI6IC0xLAogICAgICAiZHoiOiAxLAogICAgICAid2Fsa2luZyI6IDEKICAgIH0sCiAgICAiYiI6IHsKICAgICAgIm5vdyI6IDE5NjExLjksCiAgICAgICJjbG9jayI6IDc2LjI3ODU5OTk5OTk5OTg4LAogICAgICAic3RhcnQiOiA3Ni4xNjY2NjQxMjM1MzUxNiwKICAgICAgImVuZCI6IDc3LjA1MDU1MjM2ODE2NDA2LAogICAgICAieCI6IDExLjg3MzM1OTY5NTQ3NjI5NiwKICAgICAgInoiOiAxNS4xMjY2NDAzMDQ1MjM3MDQsCiAgICAgICJ5YXciOiAtMC43ODUzOTgxODUyNTMxNDMzLAogICAgICAiZHgiOiAtMSwKICAgICAgImR6IjogMSwKICAgICAgIndhbGtpbmciOiAxCiAgICB9LAogICAgImR0IjogMC4wMDQyMDAwMDAwMDAwMDA3Mjc1CiAgfSwKICAic2FtcGxlcyI6IDU0OCwKICAidHVybnMiOiA2LAogICJtYXhTcGVlZEVycm9yIjogMC4wMDAwNTE3ODczMTc2MDU4MDAzNTQsCiAgIm1heEZhY2luZ0Vycm9yIjogNC4zNzExMzkwMDYzMDk0Nzc1ZS04LAogICJ3b3JrVGFyZ2V0cyI6IDQsCiAgIm1heFdvcmtGYWNpbmdFcnJvciI6IDQuMzcxMTM5MDA2MzA5NDc3ZS04LAogICJlcnJvcnMiOiBbXQp9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4f4644ce1bc9a9704a33-220526b048956d75fc97",
+          "file": "movement.spec.ts",
+          "line": 46,
+          "column": 1
+        },
+        {
+          "title": "loaded furniture crossing shares GPU heights, preserves speed within each edge and resumes through the real worker",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 25053,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-26T09:46:30.592Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "furniture-gpu-contract",
+                      "contentType": "application/json",
+                      "body": "eyJzYW1wbGVzIjo1OTY0LCJtYXhTcGVlZEVycm9yIjo4LjE0NDU5NjEwODY1MDE0OGUtMTMsIndvcnN0U2FtcGxlIjp7ImEiOnsicmVhZHkiOjE4ODY4LjIwMDAwMDAwMDE4NiwiY29uZmlybWVkIjoxMSwiZXBvY2giOjUsImlkIjo0OSwibm93IjoyMDk0Mi44LCJzdGFydCI6MTAuNTMzMzMzNzc4MzgxMzQ4LCJlbmQiOjExLjE1ODMzMzc3ODM4MTM0OCwiY2xvY2siOjEwLjc0MTI2NjY2NjY2NjU0NiwiYWxwaGEiOjAuMzMyNjkyNjIxMjU2MzE2NTUsIngiOjYuNjY3MzA3Mzc4NzQzNjg0LCJ6Ijo4LCJmcm9tWSI6MC43NTk5OTk5OTA0NjMyNTY4LCJ0b1kiOjAsImxvYWQiOjEsImR4IjotMSwiZHoiOjB9LCJiIjp7InJlYWR5IjoxODg2OC4yMDAwMDAwMDAxODYsImNvbmZpcm1lZCI6MTEsImVwb2NoIjo1LCJpZCI6NDksIm5vdyI6MjA5NDcuMSwic3RhcnQiOjEwLjUzMzMzMzc3ODM4MTM0OCwiZW5kIjoxMS4xNTgzMzM3NzgzODEzNDgsImNsb2NrIjoxMC43NDU1NjY2NjY2NjY1NDMsImFscGhhIjowLjMzOTU3MjYyMTI1NjMxMTksIngiOjYuNjYwNDI3Mzc4NzQzNjg4LCJ6Ijo4LCJmcm9tWSI6MC43NTk5OTk5OTA0NjMyNTY4LCJ0b1kiOjAsImxvYWQiOjEsImR4IjotMSwiZHoiOjB9LCJkdCI6MC4wMDQyOTk5OTk5OTk5OTkyNzIsImV4cGVjdGVkIjoxLjZ9LCJlcG9jaHMiOlszLDVdLCJyZXNldFNhbXBsZXMiOltdLCJib3VuZGFyeVNhbXBsZXMiOlt7ImEiOnsicmVhZHkiOjk1MzguMDk5OTk5OTk5NjI3LCJjb25maXJtZWQiOjguNjY2NjY2NjY2NjY2NjY2LCJlcG9jaCI6MywiaWQiOjQ5LCJub3ciOjE4MjAxLjIsInN0YXJ0Ijo4LjU4MzMzMzAxNTQ0MTg5NSwiZW5kIjo5LjkwODMzMzc3ODM4MTM0OCwiY2xvY2siOjguNjYzMTAwMDAwMDAwNTAzLCJhbHBoYSI6MC4wNjAyMDE0NjMxMTU4NzY4NywieCI6OC45Mzk3OTg1MzY4ODQxMjMsInoiOjgsImZyb21ZIjowLCJ0b1kiOjAuNzU5OTk5OTkwNDYzMjU2OCwibG9hZCI6MSwiZHgiOi0xLCJkeiI6MH0sImIiOnsicmVhZHkiOjk1MzguMDk5OTk5OTk5NjI3LCJjb25maXJtZWQiOjguNjY2NjY2NjY2NjY2NjY2LCJlcG9jaCI6MywiaWQiOjQ5LCJub3ciOjE4MjA5LjYsInN0YXJ0Ijo4LjU4MzMzMzAxNTQ0MTg5NSwiZW5kIjo5LjkwODMzMzc3ODM4MTM0OCwiY2xvY2siOjguNjY2NjY2NjY2NjY2NjY2LCJhbHBoYSI6MC4wNjI4OTMyODU0NjQ5MDc3MiwieCI6OC45MzcxMDY3MTQ1MzUwOTIsInoiOjgsImZyb21ZIjowLCJ0b1kiOjAuNzU5OTk5OTkwNDYzMjU2OCwibG9hZCI6MSwiZHgiOi0xLCJkeiI6MH0sImVycm9yIjowLjQzNDI2MTUwNTAxMjQ1MzM2fSx7ImEiOnsicmVhZHkiOjk1MzguMDk5OTk5OTk5NjI3LCJjb25maXJtZWQiOjguNjY2NjY2NjY2NjY2NjY2LCJlcG9jaCI6MywiaWQiOjUwLCJub3ciOjE4MjAxLjIsInN0YXJ0Ijo4LjU4MzMzMzAxNTQ0MTg5NSwiZW5kIjo5LjkwODMzMzc3ODM4MTM0OCwiY2xvY2siOjguNjYzMTAwMDAwMDAwNTAzLCJhbHBoYSI6MC4wNjAyMDE0NjMxMTU4NzY4NywieCI6Ni4wNjAyMDE0NjMxMTU4NzY1LCJ6Ijo4LCJmcm9tWSI6MCwidG9ZIjowLjc1OTk5OTk5MDQ2MzI1NjgsImxvYWQiOjIsImR4IjoxLCJkeiI6MH0sImIiOnsicmVhZHkiOjk1MzguMDk5OTk5OTk5NjI3LCJjb25maXJtZWQiOjguNjY2NjY2NjY2NjY2NjY2LCJlcG9jaCI6MywiaWQiOjUwLCJub3ciOjE4MjA5LjYsInN0YXJ0Ijo4LjU4MzMzMzAxNTQ0MTg5NSwiZW5kIjo5LjkwODMzMzc3ODM4MTM0OCwiY2xvY2siOjguNjY2NjY2NjY2NjY2NjY2LCJhbHBoYSI6MC4wNjI4OTMyODU0NjQ5MDc3MiwieCI6Ni4wNjI4OTMyODU0NjQ5MDgsInoiOjgsImZyb21ZIjowLCJ0b1kiOjAuNzU5OTk5OTkwNDYzMjU2OCwibG9hZCI6MiwiZHgiOjEsImR6IjowfSwiZXJyb3IiOjAuNDM0MjYxNTA1MDEyMzQ3Njd9LHsiYSI6eyJyZWFkeSI6MTg4NjguMjAwMDAwMDAwMTg2LCJjb25maXJtZWQiOjksImVwb2NoIjo1LCJpZCI6NDksIm5vdyI6MTg4NjcuOSwic3RhcnQiOjguNTgzMzMzMDE1NDQxODk1LCJlbmQiOjkuOTA4MzMzNzc4MzgxMzQ4LCJjbG9jayI6OC42NjY2NjY2NjY2NjY2NjYsImFscGhhIjowLjA2Mjg5MzI4NTQ2NDkwNzcyLCJ4Ijo4LjkzNzEwNjcxNDUzNTA5MiwieiI6OCwiZnJvbVkiOjAsInRvWSI6MC43NTk5OTk5OTA0NjMyNTY4LCJsb2FkIjoxLCJkeCI6LTEsImR6IjowfSwiYiI6eyJyZWFkeSI6MTg4NjguMjAwMDAwMDAwMTg2LCJjb25maXJtZWQiOjksImVwb2NoIjo1LCJpZCI6NDksIm5vdyI6MTg4NzIsInN0YXJ0Ijo4LjU4MzMzMzAxNTQ0MTg5NSwiZW5kIjo5LjkwODMzMzc3ODM4MTM0OCwiY2xvY2siOjguNjcwNDY2NjY2NjY2NDgsImFscGhhIjowLjA2NTc2MTIwODM0MTcwOTIyLCJ4Ijo4LjkzNDIzODc5MTY1ODI5MSwieiI6OCwiZnJvbVkiOjAsInRvWSI6MC43NTk5OTk5OTA0NjMyNTY4LCJsb2FkIjoxLCJkeCI6LTEsImR6IjowfSwiZXJyb3IiOjAuMDU1MjIzMTYxOTc3OTA5ODg1fSx7ImEiOnsicmVhZHkiOjE4ODY4LjIwMDAwMDAwMDE4NiwiY29uZmlybWVkIjo5LCJlcG9jaCI6NSwiaWQiOjUwLCJub3ciOjE4ODY3LjksInN0YXJ0Ijo4LjU4MzMzMzAxNTQ0MTg5NSwiZW5kIjo5LjkwODMzMzc3ODM4MTM0OCwiY2xvY2siOjguNjY2NjY2NjY2NjY2NjY2LCJhbHBoYSI6MC4wNjI4OTMyODU0NjQ5MDc3MiwieCI6Ni4wNjI4OTMyODU0NjQ5MDgsInoiOjgsImZyb21ZIjowLCJ0b1kiOjAuNzU5OTk5OTkwNDYzMjU2OCwibG9hZCI6MiwiZHgiOjEsImR6IjowfSwiYiI6eyJyZWFkeSI6MTg4NjguMjAwMDAwMDAwMTg2LCJjb25maXJtZWQiOjksImVwb2NoIjo1LCJpZCI6NTAsIm5vdyI6MTg4NzIsInN0YXJ0Ijo4LjU4MzMzMzAxNTQ0MTg5NSwiZW5kIjo5LjkwODMzMzc3ODM4MTM0OCwiY2xvY2siOjguNjcwNDY2NjY2NjY2NDgsImFscGhhIjowLjA2NTc2MTIwODM0MTcwOTIyLCJ4Ijo2LjA2NTc2MTIwODM0MTcwOSwieiI6OCwiZnJvbVkiOjAsInRvWSI6MC43NTk5OTk5OTA0NjMyNTY4LCJsb2FkIjoyLCJkeCI6MSwiZHoiOjB9LCJlcnJvciI6MC4wNTUyMjMxNjE5Nzc2OTMyOH1dLCJzaGFyZWQiOnRydWUsImxvYWRlZFBsYXRlYXVGcmFtZXMiOjMwMCwibG9hZGVkQ2xpbWJGcmFtZXMiOjg3NiwiY3Jvc3NpbmdUaWNrIjo1MiwiZmluYWxUaWNrIjo3OSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4f4644ce1bc9a9704a33-2095f3aa7b20aff9b2c5",
+          "file": "movement.spec.ts",
+          "line": 85,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-26T09:44:37.429Z",
+    "duration": 138532.978,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,1168 @@
+{
+  "date": "2026-09-26T09:37:26.078Z",
+  "backend": "native WebGPU",
+  "reports": [
+    {
+      "buffer": 2,
+      "speedReports": [
+        {
+          "speed": 1,
+          "orders": [
+            {
+              "click": 6681.199999999255,
+              "sent": 6682.5,
+              "tick": 3005,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3018.3834000000634,
+                "now": 9155.2
+              },
+              "acceptedTick": 3005,
+              "ack": 6686.5999999996275,
+              "authoritative": 6750.299999999814,
+              "start": 3006,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3006,
+                "end": 3009
+              },
+              "visible": 7099.0999999996275,
+              "playhead": 3006.0336000000225,
+              "latest": 3008,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 5.400000000372529,
+              "logicMs": 69.1000000005588,
+              "visibleMs": 417.90000000037253,
+              "displayMs": 348.79999999981374
+            },
+            {
+              "click": 9158.399999999441,
+              "sent": 9158.5,
+              "tick": 3020,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3033.4080000001168,
+                "now": 11659.3
+              },
+              "acceptedTick": 3020,
+              "ack": 9163.399999999441,
+              "authoritative": 9249.099999999627,
+              "start": 3021,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3021,
+                "end": 3024
+              },
+              "visible": 9598.5,
+              "playhead": 3021.0336000000725,
+              "latest": 3023,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 5,
+              "logicMs": 90.70000000018626,
+              "visibleMs": 440.1000000005588,
+              "displayMs": 349.40000000037253
+            },
+            {
+              "click": 11664.199999999255,
+              "sent": 11664.5,
+              "tick": 3035,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3048.508800000169,
+                "now": 14176.1
+              },
+              "acceptedTick": 3035,
+              "ack": 11666.5,
+              "authoritative": 11749.299999999814,
+              "start": 3036,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3036,
+                "end": 3039
+              },
+              "visible": 12098.299999999814,
+              "playhead": 3036.033600000126,
+              "latest": 3038,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.300000000745058,
+              "logicMs": 85.1000000005588,
+              "visibleMs": 434.1000000005588,
+              "displayMs": 349
+            },
+            {
+              "click": 14179.599999999627,
+              "sent": 14179.799999999814,
+              "tick": 3050,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3063.5082000002203,
+                "now": 16676
+              },
+              "acceptedTick": 3050,
+              "ack": 14182.299999999814,
+              "authoritative": 14249.699999999255,
+              "start": 3051,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3051,
+                "end": 3054
+              },
+              "visible": 14598.799999999814,
+              "playhead": 3051.033600000178,
+              "latest": 3053,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.7000000001862645,
+              "logicMs": 70.09999999962747,
+              "visibleMs": 419.20000000018626,
+              "displayMs": 349.1000000005588
+            },
+            {
+              "click": 16681.199999999255,
+              "sent": 16681.39999999944,
+              "tick": 3065,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3078.5832000002733,
+                "now": 19188.5
+              },
+              "acceptedTick": 3065,
+              "ack": 16683.39999999944,
+              "authoritative": 16749.199999999255,
+              "start": 3066,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3066,
+                "end": 3069
+              },
+              "visible": 17098.39999999944,
+              "playhead": 3066.033000000229,
+              "latest": 3068,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.2000000001862645,
+              "logicMs": 68,
+              "visibleMs": 417.20000000018626,
+              "displayMs": 349.20000000018626
+            },
+            {
+              "click": 19193.099999999627,
+              "sent": 19193.39999999944,
+              "tick": 3080,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3093.708600000328,
+                "now": 21709.4
+              },
+              "acceptedTick": 3080,
+              "ack": 19195.5,
+              "authoritative": 19248.799999999814,
+              "start": 3081,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3081,
+                "end": 3084
+              },
+              "visible": 19598.599999999627,
+              "playhead": 3081.0330000002823,
+              "latest": 3083,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.400000000372529,
+              "logicMs": 55.700000000186265,
+              "visibleMs": 405.5,
+              "displayMs": 349.79999999981374
+            }
+          ],
+          "clickToAck": {
+            "count": 6,
+            "p50": 2.7,
+            "p95": 5.4,
+            "max": 5.4
+          },
+          "clickToLogic": {
+            "count": 6,
+            "p50": 70.1,
+            "p95": 90.7,
+            "max": 90.7
+          },
+          "clickToVisible": {
+            "count": 6,
+            "p50": 419.2,
+            "p95": 440.1,
+            "max": 440.1
+          },
+          "frameCpu": {
+            "count": 3609,
+            "p50": 1.3,
+            "p95": 1.8,
+            "max": 3.3
+          },
+          "frameInterval": {
+            "count": 3608,
+            "p50": 4.2,
+            "p95": 4.3,
+            "max": 4.4
+          }
+        },
+        {
+          "speed": 6,
+          "orders": [
+            {
+              "click": 22737.599999999627,
+              "sent": 22737.699999999255,
+              "tick": 3129,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3143.850600000349,
+                "now": 23184.4
+              },
+              "acceptedTick": 3129,
+              "ack": 22741.199999999255,
+              "authoritative": 22749.799999999814,
+              "start": 3130,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3130,
+                "end": 3133
+              },
+              "visible": 22802.89999999944,
+              "playhead": 3130.0482000003444,
+              "latest": 3131,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 3.599999999627471,
+              "logicMs": 12.200000000186265,
+              "visibleMs": 65.29999999981374,
+              "displayMs": 53.09999999962747
+            },
+            {
+              "click": 23190.199999999255,
+              "sent": 23190.5,
+              "tick": 3146,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3161.4006000003556,
+                "now": 23671.9
+              },
+              "acceptedTick": 3146,
+              "ack": 23192.599999999627,
+              "authoritative": 23228.5,
+              "start": 3147,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3147,
+                "end": 3150
+              },
+              "visible": 23277.799999999814,
+              "playhead": 3147.1446000003507,
+              "latest": 3149,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.400000000372529,
+              "logicMs": 38.30000000074506,
+              "visibleMs": 87.6000000005588,
+              "displayMs": 49.299999999813735
+            },
+            {
+              "click": 23676.39999999944,
+              "sent": 23676.699999999255,
+              "tick": 3163,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3178.9506000003626,
+                "now": 24159.4
+              },
+              "acceptedTick": 3163,
+              "ack": 23678.799999999814,
+              "authoritative": 23690,
+              "start": 3164,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3164,
+                "end": 3167
+              },
+              "visible": 23748.39999999944,
+              "playhead": 3164.0970000003563,
+              "latest": 3165,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.400000000372529,
+              "logicMs": 13.600000000558794,
+              "visibleMs": 72,
+              "displayMs": 58.39999999944121
+            },
+            {
+              "click": 24163,
+              "sent": 24163.199999999255,
+              "tick": 3180,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3196.3494000003675,
+                "now": 24642.7
+              },
+              "acceptedTick": 3180,
+              "ack": 24166.099999999627,
+              "authoritative": 24170.89999999944,
+              "start": 3181,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3181,
+                "end": 3184
+              },
+              "visible": 24219.299999999814,
+              "playhead": 3181.049400000363,
+              "latest": 3182,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 3.099999999627471,
+              "logicMs": 7.8999999994412065,
+              "visibleMs": 56.299999999813735,
+              "displayMs": 48.40000000037253
+            },
+            {
+              "click": 24648.39999999944,
+              "sent": 24648.599999999627,
+              "tick": 3198,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3214.9470000003757,
+                "now": 25159.3
+              },
+              "acceptedTick": 3198,
+              "ack": 24650.699999999255,
+              "authoritative": 24669.699999999255,
+              "start": 3199,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3199,
+                "end": 3202
+              },
+              "visible": 24719.599999999627,
+              "playhead": 3199.0458000003687,
+              "latest": 3200,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.2999999998137355,
+              "logicMs": 21.299999999813735,
+              "visibleMs": 71.20000000018626,
+              "displayMs": 49.90000000037253
+            },
+            {
+              "click": 25163.39999999944,
+              "sent": 25163.699999999255,
+              "tick": 3216,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3233.249400000382,
+                "now": 25667.7
+              },
+              "acceptedTick": 3216,
+              "ack": 25166.5,
+              "authoritative": 25171.199999999255,
+              "start": 3217,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3217,
+                "end": 3220
+              },
+              "visible": 25221.39999999944,
+              "playhead": 3217.0458000003764,
+              "latest": 3218,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 3.1000000005587935,
+              "logicMs": 7.7999999998137355,
+              "visibleMs": 58,
+              "displayMs": 50.200000000186265
+            }
+          ],
+          "clickToAck": {
+            "count": 6,
+            "p50": 3.1,
+            "p95": 3.6,
+            "max": 3.6
+          },
+          "clickToLogic": {
+            "count": 6,
+            "p50": 13.6,
+            "p95": 38.3,
+            "max": 38.3
+          },
+          "clickToVisible": {
+            "count": 6,
+            "p50": 71.2,
+            "p95": 87.6,
+            "max": 87.6
+          },
+          "frameCpu": {
+            "count": 703,
+            "p50": 1.4,
+            "p95": 2.3,
+            "max": 4.1
+          },
+          "frameInterval": {
+            "count": 702,
+            "p50": 4.2,
+            "p95": 4.3,
+            "max": 8.3
+          }
+        }
+      ]
+    },
+    {
+      "buffer": 1,
+      "speedReports": [
+        {
+          "speed": 1,
+          "orders": [
+            {
+              "click": 7289,
+              "sent": 7290.799999999814,
+              "tick": 3005,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3018.300600000012,
+                "now": 9589.4
+              },
+              "acceptedTick": 3005,
+              "ack": 7299.0999999996275,
+              "authoritative": 7356.5,
+              "start": 3006,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3006,
+                "end": 3009
+              },
+              "visible": 7545.700000000186,
+              "playhead": 3006.0246,
+              "latest": 3007,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 10.099999999627471,
+              "logicMs": 67.5,
+              "visibleMs": 256.70000000018626,
+              "displayMs": 189.20000000018626
+            },
+            {
+              "click": 9594.599999999627,
+              "sent": 9594.900000000373,
+              "tick": 3019,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3032.3998000000356,
+                "now": 11951.8
+              },
+              "acceptedTick": 3019,
+              "ack": 9597.5,
+              "authoritative": 9701,
+              "start": 3020,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3020,
+                "end": 3023
+              },
+              "visible": 9878.099999999627,
+              "playhead": 3020.025000000018,
+              "latest": 3021,
+              "shared": true,
+              "starved": 3,
+              "arrived": true,
+              "ackMs": 2.900000000372529,
+              "logicMs": 106.40000000037253,
+              "visibleMs": 283.5,
+              "displayMs": 177.09999999962747
+            },
+            {
+              "click": 11956.099999999627,
+              "sent": 11956.599999999627,
+              "tick": 3033,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3046.4494000000846,
+                "now": 14293.4
+              },
+              "acceptedTick": 3033,
+              "ack": 11959.200000000186,
+              "authoritative": 12030.200000000186,
+              "start": 3034,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3034,
+                "end": 3037
+              },
+              "visible": 12224.099999999627,
+              "playhead": 3034.0246000000416,
+              "latest": 3035,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 3.1000000005587935,
+              "logicMs": 74.1000000005588,
+              "visibleMs": 268,
+              "displayMs": 193.8999999994412
+            },
+            {
+              "click": 14297.799999999814,
+              "sent": 14298.200000000186,
+              "tick": 3047,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3060.5494000001327,
+                "now": 16643.4
+              },
+              "acceptedTick": 3047,
+              "ack": 14300.599999999627,
+              "authoritative": 14358.099999999627,
+              "start": 3048,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3048,
+                "end": 3051
+              },
+              "visible": 14557.400000000373,
+              "playhead": 3048.0244000000894,
+              "latest": 3049,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.7999999998137355,
+              "logicMs": 60.299999999813735,
+              "visibleMs": 259.6000000005588,
+              "displayMs": 199.30000000074506
+            },
+            {
+              "click": 16648.400000000373,
+              "sent": 16648.599999999627,
+              "tick": 3061,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3074.5996000001805,
+                "now": 18985.1
+              },
+              "acceptedTick": 3061,
+              "ack": 16650.599999999627,
+              "authoritative": 16691.299999999814,
+              "start": 3062,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3062,
+                "end": 3065
+              },
+              "visible": 16891,
+              "playhead": 3062.0242000001376,
+              "latest": 3063,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.199999999254942,
+              "logicMs": 42.89999999944121,
+              "visibleMs": 242.59999999962747,
+              "displayMs": 199.70000000018626
+            },
+            {
+              "click": 18989.700000000186,
+              "sent": 18990.099999999627,
+              "tick": 3075,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3088.6990000002297,
+                "now": 21335
+              },
+              "acceptedTick": 3075,
+              "ack": 18992.299999999814,
+              "authoritative": 19033,
+              "start": 3076,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3076,
+                "end": 3079
+              },
+              "visible": 19224,
+              "playhead": 3076.0240000001854,
+              "latest": 3077,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.599999999627471,
+              "logicMs": 43.299999999813735,
+              "visibleMs": 234.29999999981374,
+              "displayMs": 191
+            }
+          ],
+          "clickToAck": {
+            "count": 6,
+            "p50": 2.9,
+            "p95": 10.1,
+            "max": 10.1
+          },
+          "clickToLogic": {
+            "count": 6,
+            "p50": 67.5,
+            "p95": 106.4,
+            "max": 106.4
+          },
+          "clickToVisible": {
+            "count": 6,
+            "p50": 259.6,
+            "p95": 283.5,
+            "max": 283.5
+          },
+          "frameCpu": {
+            "count": 3370,
+            "p50": 1.3,
+            "p95": 1.9,
+            "max": 4.2
+          },
+          "frameInterval": {
+            "count": 3369,
+            "p50": 4.2,
+            "p95": 4.3,
+            "max": 8.4
+          }
+        },
+        {
+          "speed": 6,
+          "orders": [
+            {
+              "click": 22362,
+              "sent": 22362.299999999814,
+              "tick": 3123,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3137.748800000011,
+                "now": 22810
+              },
+              "acceptedTick": 3123,
+              "ack": 22364.799999999814,
+              "authoritative": 22388,
+              "start": 3124,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3124,
+                "end": 3127
+              },
+              "visible": 22432.400000000373,
+              "playhead": 3124.1012000000046,
+              "latest": 3125,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.7999999998137355,
+              "logicMs": 26,
+              "visibleMs": 70.40000000037253,
+              "displayMs": 44.40000000037253
+            },
+            {
+              "click": 22815.599999999627,
+              "sent": 22815.799999999814,
+              "tick": 3139,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3154.1000000000167,
+                "now": 23264.2
+              },
+              "acceptedTick": 3139,
+              "ack": 22818.099999999627,
+              "authoritative": 22827.099999999627,
+              "start": 3140,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3140,
+                "end": 3143
+              },
+              "visible": 22879.200000000186,
+              "playhead": 3140.150000000012,
+              "latest": 3142,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.5,
+              "logicMs": 11.5,
+              "visibleMs": 63.60000000055879,
+              "displayMs": 52.10000000055879
+            },
+            {
+              "click": 23269.299999999814,
+              "sent": 23269.599999999627,
+              "tick": 3155,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3170.897600000023,
+                "now": 23730.8
+              },
+              "acceptedTick": 3155,
+              "ack": 23271.599999999627,
+              "authoritative": 23271.799999999814,
+              "start": 3156,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3156,
+                "end": 3159
+              },
+              "visible": 23319.599999999627,
+              "playhead": 3156.0512000000176,
+              "latest": 3157,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 2.2999999998137355,
+              "logicMs": 2.5,
+              "visibleMs": 50.299999999813735,
+              "displayMs": 47.799999999813735
+            },
+            {
+              "click": 23735.700000000186,
+              "sent": 23736,
+              "tick": 3172,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3188.2500000000036,
+                "now": 24214.3
+              },
+              "acceptedTick": 3172,
+              "ack": 23738.400000000373,
+              "authoritative": 23748.099999999627,
+              "start": 3173,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3173,
+                "end": 3176
+              },
+              "visible": 23796.099999999627,
+              "playhead": 3173.1512000000243,
+              "latest": 3175,
+              "shared": true,
+              "starved": 1,
+              "arrived": true,
+              "ackMs": 2.7000000001862645,
+              "logicMs": 12.399999999441206,
+              "visibleMs": 60.39999999944121,
+              "displayMs": 48
+            },
+            {
+              "click": 24218.299999999814,
+              "sent": 24218.5,
+              "tick": 3190,
+              "from": {
+                "x": 13,
+                "z": 16
+              },
+              "target": {
+                "x": 17,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3206.7000000000107,
+                "now": 24726.8
+              },
+              "acceptedTick": 3190,
+              "ack": 24221.299999999814,
+              "authoritative": 24262,
+              "start": 3191,
+              "edge": {
+                "from": {
+                  "x": 13,
+                  "z": 16
+                },
+                "to": {
+                  "x": 14,
+                  "z": 16
+                },
+                "start": 3191,
+                "end": 3194
+              },
+              "visible": 24295.5,
+              "playhead": 3191.0976000000046,
+              "latest": 3193,
+              "shared": true,
+              "arrived": true,
+              "ackMs": 3,
+              "logicMs": 43.700000000186265,
+              "visibleMs": 77.20000000018626,
+              "displayMs": 33.5
+            },
+            {
+              "click": 24729.299999999814,
+              "sent": 24729.599999999627,
+              "tick": 3208,
+              "from": {
+                "x": 17,
+                "z": 16
+              },
+              "target": {
+                "x": 13,
+                "z": 16
+              },
+              "previous": {
+                "tick": 3224.946400000002,
+                "now": 25235
+              },
+              "acceptedTick": 3208,
+              "ack": 24732.900000000373,
+              "authoritative": 24758,
+              "start": 3209,
+              "edge": {
+                "from": {
+                  "x": 17,
+                  "z": 16
+                },
+                "to": {
+                  "x": 16,
+                  "z": 16
+                },
+                "start": 3209,
+                "end": 3212
+              },
+              "visible": 24795,
+              "playhead": 3209.0976000000123,
+              "latest": 3210,
+              "shared": true,
+              "starved": 1,
+              "arrived": true,
+              "ackMs": 3.6000000005587935,
+              "logicMs": 28.700000000186265,
+              "visibleMs": 65.70000000018626,
+              "displayMs": 37
+            }
+          ],
+          "clickToAck": {
+            "count": 6,
+            "p50": 2.8,
+            "p95": 3.6,
+            "max": 3.6
+          },
+          "clickToLogic": {
+            "count": 6,
+            "p50": 26,
+            "p95": 43.7,
+            "max": 43.7
+          },
+          "clickToVisible": {
+            "count": 6,
+            "p50": 65.7,
+            "p95": 77.2,
+            "max": 77.2
+          },
+          "frameCpu": {
+            "count": 692,
+            "p50": 1.3,
+            "p95": 1.9,
+            "max": 3
+          },
+          "frameInterval": {
+            "count": 691,
+            "p50": 4.2,
+            "p95": 4.3,
+            "max": 4.3
+          }
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+**V108 :** tampon de présentation réduit ; mêmes déplacements, interactions et horloge physique. Aucun système supplémentaire ni jalon G0–G5 clos. [Contrat](../development/presentation-timing.md), [preuves](../history/validation-latency-v108.md).
+
 **V107 :** aspect des six salissures amélioré par couches transparentes ; nettoyage et sauvegardes conservent leurs contrats. Aucune nouvelle boucle ni fermeture de jalon global. [Contrat](../development/cleanliness.md#aspect-des-traces-v107), [preuves](../history/validation-filth-v107.md).
 
 **V105 :** richesse connue/attentes, adaptation et compositions ordinaires de raids, commerce des sculptures sont reliés. Valeur des personnes, toutes factions/stratégies et familles de loisirs restent partielles ; [contrat et frontières](../development/colony-economy.md).

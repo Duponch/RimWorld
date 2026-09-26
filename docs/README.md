@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V108 — déplacements plus réactifs :** réserve graphique réduite de quatre à deux ticks, avec horloge commune aux acteurs et à la scène. [Diagnostic](research/movement-latency-v108.md), [contrat](development/presentation-timing.md), [preuves](history/validation-latency-v108.md). Logique, schéma et catalogue inchangés.
+
 **V107 — salissures naturelles :** traces irrégulières aux bords fondus, terre translucide et couches superposées suivant l'épaisseur réelle. [Contrat](development/cleanliness.md#aspect-des-traces-v107), [référence Core](research/filth-visual-reference-v107.md), [preuves](history/validation-filth-v107.md). Présentation seulement, schéma 106 et catalogue conservés.
 
 **V106 — lièvre domestique libre et soins :** [contrat](development/domestic-animals.md), [référence Core](research/domestic-animals-reference-v106.md), [guide](gameplay/player-guide.md). Travail Animaux qualifié, nourriture et médicaments physiques, familiarité à entretenir ; aucun enclos, aire assignable, autre espèce apprivoisable, reproduction ni produit animal. Le nouveau départ ne donne pas d'animal, la migration n'en crée pas.

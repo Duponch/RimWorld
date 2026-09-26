@@ -1,5 +1,7 @@
 # Lisière
 
+**V108 :** [jouer sur Netlify](https://lisiere-duponch.netlify.app). Déplacements plus réactifs grâce à une réserve graphique réduite, avec cohérence corps/cargaisons/scène conservée. [Diagnostic](docs/research/movement-latency-v108.md), [preuves et limites](docs/history/validation-latency-v108.md).
+
 **V107 :** [jouer sur Netlify](https://lisiere-duponch.netlify.app). Sang et saletés aux contours irréguliers, transparence et empilement suivant les couches réelles ; nettoyage progressif et éclairage conservés. [Contrat](docs/development/cleanliness.md#aspect-des-traces-v107), [preuves et coûts](docs/history/validation-filth-v107.md). Les onze colonies de test se chargent directement depuis **Charger → Colonies de test**.
 
 Jeu de colonie en 3D low poly pour navigateur, avec RimWorld de base comme référence fonctionnelle, sans extensions ni mods. Les données locales Core 1.6.4871, sources publiques et observations de parties sont recoupées ; une sauvegarde particulière ne constitue pas le calendrier d’une colonie.

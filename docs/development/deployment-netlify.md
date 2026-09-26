@@ -1,5 +1,7 @@
 # Publication Netlify
 
+V108 : production 6ab796356ca4a20087eb0767, 26 septembre 2026, 36 fichiers. Déplacements plus réactifs, schéma 106 et logique conservés. [Preuves et contrôle public](../history/validation-latency-v108.md).
+
 V107 : production 6ab78cd1cbfca039739970d1, 26 septembre 2026, 36 fichiers. Salissures transparentes avec schéma 106 et catalogue conservés. [Preuves et contrôle public](../history/validation-filth-v107.md).
 
 V106 : production `6ab719c6cae56ea3797e9ca3`, 26 septembre 2026, 36 fichiers. [Lièvre domestique, soins et vérifications publiques](../history/validation-domestic-v106.md). Onze colonies accessibles depuis Charger ; migration stricte en schéma 106.

@@ -2,7 +2,10 @@ import type { PawnTrack } from '../bridge/motion-tracks';
 import { LOCAL_TICKS_PER_SECOND } from '../bridge/clock-rate';
 import type { PresentationSegment as TravelSegment } from '../sim/travel-timing';
 
-export const MOTION_BUFFER_TICKS = 4;
+// Two ticks cover the tested 20 ms worker cadence + 0/20 ms delivery jitter,
+// without retaining 2/3 second of input latency at 1x. Longer stalls can still
+// starve playback. A tick-based reserve preserves immediate speed changes.
+export const MOTION_BUFFER_TICKS = 2;
 
 /** Confirmed-time playout. Running speed changes affect the next frame without
  * moving the playhead or inserting a new wait. No prediction on starvation. */
@@ -31,7 +34,7 @@ export class MotionTimeline {
     }
     this.latest=Math.max(this.latest,tick);
     // Buffer once at start/fully drained resume, in simulation ticks rather
-    // than wall time. At 6x this needs ~111 ms; positive rate changes do not refill.
+    // than wall time. At 1x/6x this needs ~333/56 ms; positive rate changes do not refill.
     if(this.buffering&&(this.latest-this.tick>=MOTION_BUFFER_TICKS||speed===0&&this.latest>this.tick)) {
       this.buffering=false;this.ready=now;
     }

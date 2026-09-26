@@ -136,7 +136,7 @@ test('buffered motion is linear across jitter, duplicate messages, turns, pause 
     const t=Math.min(1,Math.max(0,(timeline.tick-segment.start)/(segment.end-segment.start)));
     const position={x:segment.from.x+(segment.to.x-segment.from.x)*t,z:segment.from.z+(segment.to.z-segment.from.z)*t};
     const delta=Math.hypot(position.x-previous.x,position.z-previous.z);
-    if(ms>400)expect(delta,`frame ${ms}`).toBeCloseTo(1/50,8);else expect(delta).toBe(0);
+    if(ms>180&&ms<=1180)expect(delta,`frame ${ms}`).toBeCloseTo(1/50,8);else expect(delta).toBeCloseTo(0,12);
     // A turn must pass through (1,0), never cut diagonally from (0,0) to (1,1).
     expect(position.z===0||position.x===1).toBe(true);distance+=delta;previous=position;
   }
@@ -145,11 +145,11 @@ test('buffered motion is linear across jitter, duplicate messages, turns, pause 
   timeline.adopt(100,1,[],2500,true);expect(timeline.advance(2600)).toBe(100);expect(timeline.segment(1)).toBeUndefined();
   // A worker message can run before RAF while performance.now() is already
   // later than that frame's timestamp. Only rendered timestamps pace playback.
-  // Active worker batches every 50 ms, plus 10–20 ms delivery jitter.
+  // Stress case: publications spaced by 50 ms, plus 10–20 ms delivery jitter.
   const jitter=new MotionTimeline();jitter.adopt(0,6,[],0,true);
   const delayed=new Map<number,number>();
   for(let ms=50;ms<=1200;ms+=50)delayed.set(ms+(ms/50%2?10:20),Math.floor(ms*.036));
-  for(let ms=10;ms<=1200;ms+=10){if(delayed.has(ms))jitter.adopt(delayed.get(ms)!,6,[],ms);expect(jitter.advance(ms)).toBeCloseTo(Math.max(0,ms-160)*.036,9);}
+  for(let ms=10;ms<=1200;ms+=10){if(delayed.has(ms))jitter.adopt(delayed.get(ms)!,6,[],ms);expect(jitter.advance(ms)).toBeCloseTo(Math.max(0,ms-120)*.036,9);}
   const interleaved=new MotionTimeline();interleaved.adopt(0,6,[],0,true);
   interleaved.adopt(100,6,[],420);interleaved.advance(430);
   const first=interleaved.tick;
@@ -160,12 +160,17 @@ test('buffered motion is linear across jitter, duplicate messages, turns, pause 
   // NEXT frame, without waiting for old-rate history or resetting position.
   for(const period of [100,1000]) {
     const changes=new MotionTimeline();changes.adopt(0,1,[],0,true);
-    let gameMs=0,speed=1,expected=0;
+    let gameMs=0,speed=1,expected=0,publishedTick=0,publishedSpeed=1;
     for(let ms=10;ms<=30000;ms+=10) {
       gameMs+=speed*10;
-      if(ms>700)expected+=speed*.06;
+      if(ms>340)expected+=speed*.06;
       if(ms>700&&ms%period===0)speed=[1,6,3][ms/period%3]!;
-      if(ms%50===0)changes.adopt(Math.floor(gameMs*6/1000),speed,[],ms);
+      // Production wakes every 20 ms. The separate sparse-publication case
+      // above and the bridge scene test retain their slower input streams.
+      const tick=Math.floor(gameMs*6/1000);
+      if(ms%20===0&&(tick!==publishedTick||speed!==publishedSpeed)){
+        changes.adopt(tick,speed,[],ms);publishedTick=tick;publishedSpeed=speed;
+      }
       expect(changes.advance(ms),`speed ${speed} at ${ms}, controls every ${period}`).toBeCloseTo(expected,7);
     }
     const confirmed=Math.floor(gameMs*6/1000);changes.adopt(confirmed,0,[],30000);

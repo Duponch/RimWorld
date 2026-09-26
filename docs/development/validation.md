@@ -1,4 +1,6 @@
-# Validation courante — V104
+# Validation courante — V108
+
+V108 : [réactivité des déplacements](../history/validation-latency-v108.md), 29 contrôles ciblés, quatre parcours natifs et comparaisons de délai/charge successives. Règles et schéma 106 conservés, G0–G5 inchangés. V105–V107 restent documentées dans leurs preuves spécifiques, accessibles depuis l'index.
 
 V104 : [sculpture, installation et bibliothèque intégrée](../history/validation-art-v104.md). Contrôles regroupés de production/conservation/migration, vraie UI et mesures séparées ; aucun jalon G0–G5 globalement clos.
 

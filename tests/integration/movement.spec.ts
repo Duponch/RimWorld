@@ -1,4 +1,4 @@
-import { withMigratedSkills, withoutPawnSkills } from '../scenarios/legacy-skills';
+import { withMigratedSkills, withoutPawnSkills, withoutV90 } from '../scenarios/legacy-skills';
 import { furnitureTrafficFixture } from '../scenarios/furniture-traffic';
 import { expect, test } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
@@ -10,7 +10,7 @@ test('civil crossing in the real worker: shared cell, save/reload, three exclusi
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   try {
-    const fixture=civilCrossingFixture(),old=JSON.parse(serializeWorld(fixture));(old.schemaVersion=13,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;for(const pawn of old.pawns){delete pawn.orders;delete pawn.recreation;}
+    const fixture=civilCrossingFixture(),old=withoutV90(JSON.parse(serializeWorld(fixture)));(old.schemaVersion=13,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;for(const pawn of old.pawns){delete pawn.orders;delete pawn.recreation;}
     const migrated=deserializeWorld(JSON.stringify(old));
     // Compare with the independent V13→V90 oracle. It lists each deliberately
     // reconstructed field (skills, medical work, old research/hunting defaults,

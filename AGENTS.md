@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Réactivité des déplacements V108
+- `MotionTimeline` garde deux ticks confirmés, pas quatre ni un seul. À ×1/×6 : environ 333/56 ms de réserve, plus prochain tick et livraison. Corps, cargaisons, animaux, travail, impacts et scène conservent la même horloge ; jamais d'extrapolation, de rattrapage accéléré ou de déplacement du seul colon sélectionné.
+- Lire `docs/development/presentation-timing.md` et `docs/history/validation-latency-v108.md`. Ordres immédiatement traités, départ au prochain tick admissible ; arête engagée, porte, récupération et budgets de planification restent physiques. Le retard graphique ne s'accumule pas dans les décisions métier. Schéma 106, règles et catalogue inchangés.
+- Conserver les tests de livraisons irrégulières, variations de vitesse, pause/chargement et transport commun. Le worker se réveille à 20 ms, pas 50 ; les cas clairsemés restent distincts. Les fixtures pré-V90 retirent aussi les souvenirs/observations V103 avant d'annoncer un ancien schéma, sans assouplir sa validation.
+
 ## Salissures transparentes V107
 - Lire la référence Core `docs/research/filth-visual-reference-v107.md` et le contrat propreté. Un plan alpha par épaisseur (1–5), motifs originaux, terre moins opaque, cendres base trois cases ; pas de textures RimWorld reprises ni de traînée BloodSmear inventée.
 - `FilthLayer` : un lot instancié, atlas calculé une fois, offsets stables par cellule/espèce/couche, aucun RNG métier. Préserver lumière locale, précompilation vide versionnée, libération GPU et absence d'upload lors d'un simple mouvement de caméra. Ne pas réintroduire les trois boîtes opaques.

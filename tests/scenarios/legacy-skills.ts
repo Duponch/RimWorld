@@ -130,7 +130,12 @@ export function withoutV90<T>(world:T):T {
   const w=world as any;
   withoutArt(world);
   delete w.apparelWear;delete w.apparelPolicies;delete w.nextApparelPolicyId;
-  for(const pawn of w.pawns??[]){delete pawn.beauty;delete pawn.apparelPolicyId;delete pawn.apparelAutomation;delete pawn.nextApparelCheckAt;}
+  for(const pawn of w.pawns??[]){
+    delete pawn.beauty;delete pawn.apparelPolicyId;delete pawn.apparelAutomation;delete pawn.nextApparelCheckAt;
+    // A current sleeper may have observed a V103 room during the crossing.
+    // Earlier schemas stored neither the observation nor its room memories.
+    delete pawn.roomMemories;if(pawn.need?.kind==='sleep')delete pawn.need.roomRest;
+  }
   for(const departure of w.visitors?.departed??[]){delete departure.pawn.beauty;delete departure.pawn.apparelPolicyId;delete departure.pawn.apparelAutomation;delete departure.pawn.nextApparelCheckAt;}
   for(const structure of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)]){delete structure.quality;delete structure.flower;}
   for(const pile of [...w.piles??[],...(w.raids?.departed??[]).flatMap((d:any)=>d.items??[]),...(w.visitors?.departed??[]).flatMap((d:any)=>d.items??[])]){if(pile.apparel){delete pile.apparel.material;delete pile.apparel.forced;}if(pile.unfinished){delete pile.unfinished.material;delete pile.unfinished.units;}}
