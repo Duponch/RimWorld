@@ -5,6 +5,7 @@ import { constructionRecipe } from './construction-materials.ts';
 import type { ConstructionMaterial } from './construction-materials.ts';
 import { releaseAssignments } from './work-release.ts';
 import { reconcileRoofSupport } from './roofing.ts';
+import { invalidateAnimalPens } from './animal-pens.ts';
 import type { Structure, World } from './types.ts';
 
 /** Installed barriers: walls, manual doors and the solid cooler. */
@@ -33,6 +34,7 @@ export function damageBarrier(world:World,s:Structure,amount:number,rng=world.rn
   }
   world.jobs=world.jobs.filter(j=>!removed.has(j.id));
   world.structures=world.structures.filter(b=>b!==s);
+  invalidateAnimalPens(world);
   world.destroyed={count:ledger.count+1,lost};
   if(salvage)for(const d of salvage.drops)addMaterial(world,ITEM_DEFINITIONS[d.item].kind,d.quantity,{type:'ground',...d.cell},d.item);
   world.rng=salvage?.rng??rng;reconcileRoofSupport(world,false,s);

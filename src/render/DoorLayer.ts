@@ -6,6 +6,9 @@ import { doorOrientations, doorOpenTicks, type DoorState } from '../sim/door-rul
 import type { World } from '../sim/types';
 import { DOOR_LEAF_BOTTOM, doorLeafColor, doorLeafTop } from './door-parts';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
+import { penBoundaryAxes } from './pen-parts';
+
+const EMPTY_AXES:ReadonlyMap<number,0|1>=new Map();
 
 /** One retained leaf batch. TSL shares the pawn timeline; state uploads happen
  * on transitions, never as per-frame CPU transforms. Two segments preserve a
@@ -51,21 +54,24 @@ export class DoorLayer {
   }
   update(world:World,cutaway:boolean,reset=false):void {
     if(reset){this.history.clear();this.key='';}
-    const axes=doorOrientations(world);
-    const doors=world.structures.filter(s=>s.kind==='door'),key=String(cutaway)+doors.map(s=>`${s.id}:${s.material}:${s.x}:${s.z}:${(axes.get(s.z*world.width+s.x)??0)}:${s.door!.changedAt}:${s.door!.open}`).join('|');
+    const doors=world.structures.filter(s=>s.kind==='door'||s.kind==='fence-gate');
+    const axes=doors.some(s=>s.kind==='door')?doorOrientations(world):EMPTY_AXES;
+    const gateAxes=doors.some(s=>s.kind==='fence-gate')?penBoundaryAxes(world):EMPTY_AXES;
+    const key=String(cutaway)+doors.map(s=>`${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${(s.kind==='fence-gate'?gateAxes:axes).get(s.z*world.width+s.x)??0}:${s.door!.changedAt}:${s.door!.open}`).join('|');
     if(key===this.key)return;this.key=key;
     const live=new Set(doors.map(s=>s.id));for(const id of this.history.keys())if(!live.has(id))this.history.delete(id);
     const count=doors.length*2;
     if(count>this.mesh.instanceMatrix.count){const capacity=2**Math.ceil(Math.log2(count));this.mesh.allocate(this.base,capacity);this.allocateAttributes(capacity);}
     const current=this.mesh.geometry.getAttribute('doorCurrent'),previous=this.mesh.geometry.getAttribute('doorPrevious'),shift=this.mesh.geometry.getAttribute('doorShift');
-    const object=new THREE.Object3D(),color=new THREE.Color(),leafTop=doorLeafTop(cutaway);
+    const object=new THREE.Object3D(),color=new THREE.Color();
     let index=0;
     for(const s of doors) {
       const d=s.door!,old=this.history.get(s.id),changed=!old||old.current.changedAt!==d.changedAt||old.current.open!==d.open;
       const pair=changed?{current:{...d},previous:old?.current??{...d}}:old!;this.history.set(s.id,pair);
-      const duration=doorOpenTicks(s),angle=(axes.get(s.z*world.width+s.x)??0)*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle);
+      const gate=s.kind==='fence-gate',leafTop=gate?.94:doorLeafTop(cutaway),leafBottom=gate?.08:DOOR_LEAF_BOTTOM;
+      const duration=doorOpenTicks(s),angle=((gate?gateAxes:axes).get(s.z*world.width+s.x)??0)*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle);
       for(const side of [-1,1]) {
-        object.position.set(s.x+side*.215*cos,(leafTop+DOOR_LEAF_BOTTOM)/2,s.z-side*.215*sin);object.rotation.set(0,angle,0);object.scale.set(.42,leafTop-DOOR_LEAF_BOTTOM,.14);object.updateMatrix();
+        object.position.set(s.x+side*.215*cos,(leafTop+leafBottom)/2,s.z-side*.215*sin);object.rotation.set(0,angle,0);object.scale.set(.42,leafTop-leafBottom,gate?.085:.14);object.updateMatrix();
         this.mesh.setMatrixAt(index,object.matrix);this.mesh.setColorAt(index,color.setHex(doorLeafColor(s.material)));
         for(const [attribute,state] of [[current,pair.current],[previous,pair.previous]] as const)attribute.setXYZW(index,state.changedAt,state.from,(state.open?1:-1)/duration,0);
         shift.setXYZ(index,side*.45*cos,0,-side*.45*sin);index++;

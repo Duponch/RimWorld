@@ -21,8 +21,8 @@ function pngHeader(asset: string) {
 describe('Architect generated icon atlases', () => {
   it('maps every tool without shifting the original sheets; powered benches share the machine icon', () => {
     const rendered = toolDefinitions.map(tool => tool.id);
-    expect(rendered).toHaveLength(61);
-    expect(new Set(rendered).size).toBe(61);
+    expect(rendered).toHaveLength(65);
+    expect(new Set(rendered).size).toBe(65);
     expect(ARCHITECT_ICON_ORDER).toEqual(rendered);
     expect(Object.keys(ARCHITECT_ICON_MAPPING)).toEqual(rendered);
     expect(new Set(Object.values(ARCHITECT_ICON_MAPPING).map(cell => `${cell.atlas}:${cell.column}:${cell.row}`)).size).toBe(60);

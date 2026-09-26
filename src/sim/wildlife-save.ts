@@ -26,7 +26,7 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
     if(p.fullTargetWeight!==full||p.targetWeight!==target||!int(p.nextCheck,w.tick+1,w.tick+122)||!int(p.checks)||!int(p.arrivals,0,p.checks))return ['Invalid wildlife population state.'];
   } else if(s.population!==undefined)return ['Invalid wildlife population state.'];
   if(s.animals.some(a=>!object(a)))return ['Invalid wild animal.'];
-  let navigation:ReturnType<typeof animalNavigation>|undefined;
+  let navigation:ReturnType<typeof animalNavigation>|undefined,hareNavigation:ReturnType<typeof animalNavigation>|undefined;
   const cell=(c:unknown):c is {x:number;z:number}=>object(c)&&keys(c,['x','z'])&&int(c.x,0,w.width-1)&&int(c.z,0,w.height-1);
   for(const a of s.animals) {
     if(!object(a)||!keys(a,['id','species','sex','x','z','food','rest','state','path','motion','nextDecision','meal',...(version>=77?['health','flee','stagger','sleepUntilCore']:[]),...(version>=78?['threat','retaliation','strike','stun']:[]),...(version>=79?['corpseRot']:[]),...(version>=87?['burning']:[]),...(version>=106?['domestic','taming']:[])])||!int(a.id,1,w.nextId-1)||!int(a.x,0,w.width-1)||!int(a.z,0,w.height-1)||!isAnimalSpecies(a.species)||(version<91||s.profile==='temperate-hares-v1')&&a.species!=='hare'||s.profile==='biome-herbivores-v1'&&!faunaBiome(s.population!.biome).entries.some(e=>e.species===a.species)||!['female','male'].includes(a.sex)||!finite(a.food,0,animalSpecies(a.species).nutrition)||!finite(a.rest,0,1)||!['idle','moving','eating','sleeping','hungry',...(version>=77?['downed','dead']:[])].includes(a.state)||!int(a.nextDecision,0,w.tick+100)||!Array.isArray(a.path)||a.path.length>w.width*w.height||!a.path.every(cell)){errors.push('Invalid wild animal.');continue;}
@@ -50,8 +50,9 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
       if(!object(m)||!keys(m,['from','to','start','end','speedFactor','terrainDelay',...(version>=77?['stagger']:[]),...(version>=78?['stuns']:[])])||!cell(m.from)||!cell(m.to)||!finite(m.start,0,w.tick)||!finite(m.end,0,w.tick+100)||m.end<=m.start||Math.max(Math.abs(m.from.x-m.to.x),Math.abs(m.from.z-m.to.z))!==1||m.to.x!==a.x||m.to.z!==a.z||!(version>=77?finite(m.speedFactor,version>=87?.096*.8:.096,3):[3,.6].includes(m.speedFactor!))||!finite(m.terrainDelay,0,50)||!validSlowIntervals(m.stagger,version,m.start,w.tick)||!validSlowIntervals(m.stuns,version,m.start,w.tick)||Math.abs(m.end-travelEnd(m))>1e-7)errors.push('Invalid wildlife motion.');
       else if(m.end>w.tick){
         if(!['moving','downed','dead'].includes(a.state))errors.push('Active wildlife edge without movement.');
-        navigation??=animalNavigation(w);
-        if(!navigation.step(m.from,m.to))errors.push('Wildlife edge crosses a solid obstacle.');
+        const pathNavigation=a.species==='hare'||a.species==='snow-hare'
+          ?(hareNavigation??=animalNavigation(w,false,true)):(navigation??=animalNavigation(w));
+        if(!pathNavigation.step(m.from,m.to))errors.push('Wildlife edge crosses a solid obstacle.');
       }
     }
     let previous={x:a.x,z:a.z};for(const c of a.path){if(Math.max(Math.abs(c.x-previous.x),Math.abs(c.z-previous.z))!==1)errors.push('Disconnected wildlife path.');previous=c;}

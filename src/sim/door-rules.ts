@@ -26,10 +26,10 @@ export function doorOpenness(s:Structure,tick:number):number {
   const d=s.door!;
   return Math.max(0,Math.min(1,d.from+(d.open?1:-1)*(tick-d.changedAt)/doorOpenTicks(s)));
 }
-export const doorAt=(world:World,c:Cell):Structure|undefined=>world.structures.find(s=>s.kind==='door'&&s.x===c.x&&s.z===c.z);
+export const doorAt=(world:World,c:Cell):Structure|undefined=>world.structures.find(s=>(s.kind==='door'||s.kind==='fence-gate')&&s.x===c.x&&s.z===c.z);
 export const doorWait=(s:Structure,tick:number):number=>s.door!.open?Math.max(0,(1-doorOpenness(s,tick))*doorOpenTicks(s)):doorOpenTicks(s);
 /** Doors retain a solid frame at diagonal side cells, including while open. */
-export const doorCorners=(world:World):ReadonlySet<number>=>new Set(world.structures.filter(s=>s.kind==='door').map(s=>s.z*world.width+s.x));
+export const doorCorners=(world:World):ReadonlySet<number>=>new Set(world.structures.filter(s=>s.kind==='door'||s.kind==='fence-gate').map(s=>s.z*world.width+s.x));
 
 /** Visual axis follows adjacent solids/plans; rotation never changes footprint. */
 export function doorOrientation(world:World,c:Cell):0|1 {

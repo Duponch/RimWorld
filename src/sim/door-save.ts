@@ -4,8 +4,9 @@ export function validateDoors(world:World,version:number):string[] {
   const errors:string[]=[];
   for(const s of [...world.structures,...world.jobs]) {
     const d=(s as import('./types.ts').Structure).door;
-    if(s.kind==='door'&&s.orientation!==0)errors.push('Door orientation must be automatic.');
-    if(s.kind!=='door'||!world.structures.includes(s as import('./types.ts').Structure)||version<34) {
+    const isDoor=s.kind==='door'||version>=119&&s.kind==='fence-gate';
+    if(isDoor&&s.orientation!==0)errors.push('Door orientation must be automatic.');
+    if(!isDoor||!world.structures.includes(s as import('./types.ts').Structure)||version<34) {
       if(d!==undefined)errors.push('Unexpected door state.');continue;
     }
     if(!d||typeof d!=='object'||Array.isArray(d)||Object.keys(d).length!==7||!['open','holdOpen','forbidden'].every(k=>typeof d[k as keyof typeof d]==='boolean')

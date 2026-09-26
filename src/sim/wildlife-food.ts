@@ -8,6 +8,14 @@ import { reservedSource } from './materials.ts';
 import { releaseAssignments } from './work-release.ts';
 import { animalSpecies } from './animal-species.ts';
 import { grazingResult,plantNutrition } from './biome-flora.ts';
+import { penRegion } from './animal-pens.ts';
+
+/** A closed pen bounds actual food candidates; it never supplies nutrition. */
+export function grazingPen(world:World,a:WildAnimal):ReadonlySet<number>|undefined {
+  const id=a.domestic?.penMarkerId;if(!id)return;
+  const region=penRegion(world,id);
+  return region?.closed&&region.cells.has(a.z*world.width+a.x)?region.cells:undefined;
+}
 
 export interface AnimalFood extends Cell { id:number;kind:'plant'|'pile';quantity:number }
 // Herbivory is an explicit content profile. New nutritious items do not silently
@@ -26,17 +34,18 @@ function unclaimedPlant(world:World,r:Resource,except:number):boolean {
 export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   const result:AnimalFood[]=[];
   const definition=animalSpecies(a.species);
+  const pen=grazingPen(world,a);
   // A food search can inspect thousands of plants. Collect competing claims
   // once for this decision instead of walking every animal and job per plant.
   const claimedPlants=new Set<number>();
   for(const other of world.wildlife?.animals??[])if(other.id!==a.id&&other.meal?.kind==='plant')claimedPlants.add(other.meal.id);
   const reservedPlantCells=new Set<number>();
   for(const job of world.jobs)if(job.reservedBy!==null&&(job.kind==='harvest'||job.kind==='cut'||job.kind==='sow'))reservedPlantCells.add(job.z*world.width+job.x);
-  for(const r of world.resources)if(isPlant(r)&&!plantLeafless(world,r)) {
+  for(const r of world.resources)if((!pen||pen.has(r.z*world.width+r.x))&&isPlant(r)&&!plantLeafless(world,r)) {
     const growth=plantGrowth(world,r);
     if(growth>=.1&&plantNutrition(r,growth)>0&&!claimedPlants.has(r.id)&&!reservedPlantCells.has(r.z*world.width+r.x))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
   }
-  for(const p of world.piles)if(p.kind==='food'&&herbivoreFoods.has(p.item)&&p.owner.type==='ground') {
+  for(const p of world.piles)if(p.kind==='food'&&herbivoreFoods.has(p.item)&&p.owner.type==='ground'&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))) {
     const available=p.quantity-reservedSource(world,p.id,a.id),nutrition=ITEM_DEFINITIONS[p.item].nutrition/100;
     if(available>0&&nutrition>0)result.push({id:p.id,kind:'pile',x:p.owner.x,z:p.owner.z,quantity:Math.min(available,Math.max(1,Math.ceil((definition.nutrition-a.food)/nutrition)))});
   }
@@ -44,14 +53,15 @@ export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
 }
 export function animalMealTarget(world:World,a:WildAnimal,resourcesById?:ReadonlyMap<number,Resource>):Cell|undefined {
   const meal=a.meal;if(!meal)return;
+  const pen=grazingPen(world,a);
   if(meal.kind==='plant') {
     const r=resourcesById?resourcesById.get(meal.id):world.resources.find(r=>r.id===meal.id);
     if(!r||!isPlant(r)||plantLeafless(world,r))return;
     const growth=plantGrowth(world,r);
-    return growth>=.1&&plantNutrition(r,growth)>0&&unclaimedPlant(world,r,a.id)?r:undefined;
+    return growth>=.1&&plantNutrition(r,growth)>0&&unclaimedPlant(world,r,a.id)&&(!pen||pen.has(r.z*world.width+r.x))?r:undefined;
   }
   const p=world.piles.find(p=>p.id===meal.id);
-  return p?.kind==='food'&&herbivoreFoods.has(p.item)&&p.owner.type==='ground'&&p.quantity-reservedSource(world,p.id,a.id)>=meal.quantity?p.owner:undefined;
+  return p?.kind==='food'&&herbivoreFoods.has(p.item)&&p.owner.type==='ground'&&p.quantity-reservedSource(world,p.id,a.id)>=meal.quantity&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))?p.owner:undefined;
 }
 /** Called only after physical contact and the complete ingestion interval. */
 export function finishAnimalMeal(world:World,a:WildAnimal):void {

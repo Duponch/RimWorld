@@ -17,7 +17,7 @@ const amount=(w:World,item:string)=>w.piles.filter(p=>p.item===item).reduce((sum
 const command=(w:World,c:Command)=>{const result=applyCommand(w,c);expect(result,JSON.stringify(c)).toMatchObject({ok:true});};
 function prepared():{world:World;station:Structure} {
   const {world,pawn}=createMachiningFixture();
-  world.schemaVersion=109;
+  // The fixture factory already migrates to the current schema.
   pawn.schedule.fill('work');pawn.hunger=100;pawn.rest=100;pawn.recreation.level=100;
   world.research={project:null,points:CLOTHING_RESEARCH_COST,completedAt:1000,
     smithing:{points:SMITHING_RESEARCH_COST,completedAt:1001},machining:{points:MACHINING_RESEARCH_COST,completedAt:1002},

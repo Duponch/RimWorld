@@ -16,7 +16,7 @@ describe('persistance de l’apparence V109', () => {
     expect(previous.schemaVersion).toBe(106);
     expect(previous.pawns.every((pawn: {appearance?:unknown}) => pawn.appearance === undefined)).toBe(true);
     const world = deserializeWorld(source);
-    expect(world).toEqual({ ...previous, schemaVersion: 109 });
+    expect(world).toEqual({ ...previous, schemaVersion: 119 });
     expect(world.pawns.every(pawn => pawn.appearance === undefined)).toBe(true);
     expect(world.rng).toBe(previous.rng);
     expect(validateWorld(world)).toEqual([]);

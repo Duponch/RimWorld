@@ -8,17 +8,20 @@ export interface DomesticAnimal {
   tameness:number;
   nextDecay:number;
   lastTraining?:number;
+  /** Marker identity, never a cached set of cells. Roamers alone use pens. */
+  penMarkerId?:number;
 }
 export interface TamingDesignation { designated:boolean; lastAttempt?:number }
 export interface AnimalHandlingTask {
   animalId:number;
-  kind:'tame'|'maintain';
+  kind:'tame'|'maintain'|'lead';
   sourcePileId:number;
   carryPileId:number|null;
   quantity:number;
-  phase:'pickup'|'approach'|'interact';
+  phase:'pickup'|'approach'|'interact'|'lead';
   step:number;
   progress:number;
+  markerId?:number;
 }
 export interface AnimalCareTask {
   animalId:number;

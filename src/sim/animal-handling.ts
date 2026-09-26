@@ -16,41 +16,44 @@ import { animalBody } from './wildlife-health.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { releaseWork } from './work-release.ts';
+import { processLeading, type LeadingTask } from './animal-leading.ts';
 
 /** Core's 60,000-tick day is represented by 6,000 local ticks. */
 export const TAME_COOLDOWN = TICKS_PER_DAY / 2;
 export const TRAIN_COOLDOWN = TICKS_PER_DAY / 4;
 export const TAMENESS_DECAY = TICKS_PER_DAY * 7.5;
 export const MIN_HANDLING = 8;
+export const handlingSkill = (species:WildAnimal['species']):number => species==='dromedary'?2:species==='muffalo'?6:8;
+export const canTameSpecies = (species:WildAnimal['species']):boolean => ['hare','deer','gazelle','muffalo','dromedary'].includes(species);
 const TALK_TICKS = 27;
 const FINAL_TAME_TICKS = 35;
 const FINAL_TRAIN_TICKS = 10;
-const FEED_NUTRITION_MILLI = Math.round(Math.min(.15 * animalSpecies('hare').nutrition, .3)*1000);
 const FOOD:ReadonlySet<ItemId> = new Set(['berries','rice','potato','corn','agave-fruit']);
-const FEEDS = 2;
+export const handlingFeedUnits=(species:WildAnimal['species']):number=>Math.max(1,Math.ceil(Math.min(.15*animalSpecies(species).nutrition,.3)/.05));
 const MAX_TAMENESS = 5;
 /** All five explicitly supported raw foods have 0.05 nutrition per unit. */
-export const HANDLING_FEED_TICKS=Math.ceil(TALK_TICKS*(ITEM_DEFINITIONS.berries.nutrition*10)/FEED_NUTRITION_MILLI);
-export function handlingStepDuration(task:Pick<AnimalHandlingTask,'kind'|'step'>):number {
-  return task.step===2||task.step===4?HANDLING_FEED_TICKS
+export const HANDLING_FEED_TICKS=Math.ceil(TALK_TICKS*(ITEM_DEFINITIONS.berries.nutrition*10)/30);
+export function handlingStepDuration(task:Pick<AnimalHandlingTask,'kind'|'step'>,species:WildAnimal['species']='hare'):number {
+  const feedNutrition=Math.round(Math.min(.15*animalSpecies(species).nutrition,.3)*1000);
+  return task.step===2||task.step===4?Math.ceil(TALK_TICKS*(ITEM_DEFINITIONS.berries.nutrition*10)/feedNutrition)
     :task.step===5?task.kind==='tame'?FINAL_TAME_TICKS:FINAL_TRAIN_TICKS:TALK_TICKS;
 }
 
 function animalAvailable(a:WildAnimal):boolean {
-  return a.species==='hare'&&!['dead','downed','sleeping','eating'].includes(a.state)
+  return canTameSpecies(a.species)&&!['dead','downed','sleeping','eating'].includes(a.state)
     &&!a.stun&&!a.burning&&!a.flee&&!a.health?.foodPoisoning?.vomit;
 }
 function handlerAvailable(p:Pawn):boolean {
   const body=pawnBody(p).capacities;
-  return isColonist(p)&&p.priorities.handle>0&&(p.skills.animals?.level??0)>=MIN_HANDLING&&!p.draft&&!p.mental?.crisis&&!p.flee&&!p.interruptedCargo
+  return isColonist(p)&&p.priorities.handle>0&&!p.draft&&!p.mental?.crisis&&!p.flee&&!p.interruptedCargo
     &&!medicalWorkRefusal(p)&&body.talking>0&&body.hearing>0&&body.manipulation>0;
 }
 function trainableAt(w:World,a:WildAnimal):boolean {
-  return !!a.domestic&&a.domestic.tameness<MAX_TAMENESS
+  return a.species==='hare'&&!!a.domestic&&a.domestic.tameness<MAX_TAMENESS
     &&w.tick-(a.domestic.lastTraining??a.domestic.since)>=TRAIN_COOLDOWN;
 }
 function tameableAt(w:World,a:WildAnimal,p:Pawn):boolean {
-  return !!a.taming?.designated&&!a.domestic&&(p.skills.animals?.level??0)>=MIN_HANDLING
+  return !!a.taming?.designated&&!a.domestic&&(p.skills.animals?.level??0)>=handlingSkill(a.species)
     &&w.tick-(a.taming.lastAttempt??-TAME_COOLDOWN)>=TAME_COOLDOWN;
 }
 export function animalHandlingClaimed(w:World,id:number):boolean {
@@ -60,7 +63,7 @@ export function animalHandlingClaimed(w:World,id:number):boolean {
 export function animalHandlingHolding(w:World,id:number):boolean {
   const a=w.wildlife?.animals.find(a=>a.id===id);
   if(!a||!animalAvailable(a)||(a.motion?.end??0)>w.tick)return false;
-  return w.pawns.some(p=>p.animalHandling?.animalId===id&&p.animalHandling.phase==='interact'
+  return w.pawns.some(p=>p.animalHandling?.animalId===id&&p.animalHandling.kind!=='lead'&&p.animalHandling.phase==='interact'
     &&p.moveCooldown===0&&adjacent(p,a)&&handlerAvailable(p));
 }
 export function handlingWanted(w:World,p:Pawn):boolean {
@@ -74,18 +77,19 @@ export function handlingProposal(w:World,p:Pawn,reach:Reachability):HandlingProp
   const animals=w.wildlife!.animals.filter(a=>animalAvailable(a)&&!animalHandlingClaimed(w,a.id)
     &&(trainableAt(w,a)||tameableAt(w,a,p)))
     .sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
-  const sources=w.piles.filter(i=>i.kind==='food'&&FOOD.has(i.item)&&i.owner.type==='ground'
-    &&i.quantity-reservedSource(w,i.id)>=FEEDS)
+  const sources=w.piles.filter(i=>i.kind==='food'&&FOOD.has(i.item)&&i.owner.type==='ground')
     .sort((a,b)=>(a.owner.type==='ground'?(a.owner.x-p.x)**2+(a.owner.z-p.z)**2:Infinity)
       -(b.owner.type==='ground'?(b.owner.x-p.x)**2+(b.owner.z-p.z)**2:Infinity)||a.id-b.id);
   for(const a of animals) {
+    const feeds=handlingFeedUnits(a.species)*2;
     // An inaccessible animal must not reserve food, a worker or its attempt.
     if(!routeToJob(w,a,reach,false))continue;
     for(const pile of sources) {
     if(pile.owner.type!=='ground')continue;
+    if(pile.quantity-reservedSource(w,pile.id)<feeds)continue;
     const path=routeToJob(w,pile.owner,reach,true);if(!path)continue;
     return {task:{animalId:a.id,kind:a.domestic?'maintain':'tame',sourcePileId:pile.id,carryPileId:null,
-      quantity:FEEDS,phase:'pickup',step:0,progress:0},path,target:pile.owner};
+      quantity:feeds,phase:'pickup',step:0,progress:0},path,target:pile.owner};
     }
   }
 }
@@ -93,16 +97,16 @@ export function startHandling(p:Pawn,proposal:HandlingProposal):void {
   p.animalHandling=proposal.task;p.path=proposal.path;p.state=proposal.path.length?'moving':'working';p.planCooldown=0;
 }
 export function tameRefusal(_w:World,a:WildAnimal|undefined):string|undefined {
-  return !a||a.state==='dead'?'Lièvre vivant introuvable.'
-    :a.species!=='hare'?'Cette espèce n’est pas encore apprivoisable ici.'
-    :a.domestic?'Ce lièvre appartient déjà à la colonie.':undefined;
+  return !a||a.state==='dead'?'Animal vivant introuvable.'
+    :!canTameSpecies(a.species)?'Cette espèce n’est pas apprivoisable ici.'
+    :a.domestic?'Cet animal appartient déjà à la colonie.':undefined;
 }
 export function applyTaming(w:World,cmd:Extract<DomesticCommand,{type:'tame'}>):CommandResult {
   const fail=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
   const a=w.wildlife?.animals.find(a=>a.id===cmd.animalId);
   if(!Number.isSafeInteger(cmd.animalId)||typeof cmd.enabled!=='boolean')return fail('Ordre d’apprivoisement invalide.');
   const refusal=tameRefusal(w,a);if(refusal)return fail(refusal);
-  if(!a)return fail('Lièvre vivant introuvable.');
+  if(!a)return fail('Animal vivant introuvable.');
   if(cmd.enabled) {
     if(!a.taming)a.taming={designated:true};else a.taming.designated=true;
   } else {
@@ -127,7 +131,7 @@ export function trainChance(p:Pawn):number {
     *capacityFactor(c.talking,.7,.2)*capacityFactor(c.hearing,.3,.05)*capacityFactor(c.manipulation,.5,.2));
 }
 function stillValid(w:World,p:Pawn,a:WildAnimal,task:AnimalHandlingTask):boolean {
-  return handlerAvailable(p)&&animalAvailable(a)&&
+  return handlerAvailable(p)&&(p.skills.animals?.level??0)>=handlingSkill(a.species)&&animalAvailable(a)&&
     (task.kind==='tame'?!!a.taming?.designated&&!a.domestic:(!!a.domestic&&a.domestic.tameness<MAX_TAMENESS))
     &&!w.pawns.some(o=>o!==p&&(o.animalHandling?.animalId===a.id||o.animalCare?.animalId===a.id));
 }
@@ -144,17 +148,18 @@ function finish(w:World,p:Pawn,a:WildAnimal,task:AnimalHandlingTask,ctx:NeedCont
       delete a.taming;delete a.flee;delete a.threat;delete a.retaliation;
       if(w.hunting)w.hunting.targets=w.hunting.targets.filter(id=>id!==a.id);
       for(const hunter of w.pawns)if(hunter.hunting?.animalId===a.id){cancelHunting(hunter);hunter.path=[];hunter.state='idle';hunter.planCooldown=0;}
-      ctx.event(`${p.name} a apprivoisé le lièvre ${a.id}.`);
-    } else ctx.event(`${p.name} n’a pas réussi à apprivoiser le lièvre ${a.id}.`);
+      ctx.event(`${p.name} a apprivoisé ${animalSpecies(a.species).label} ${a.id}.`);
+    } else ctx.event(`${p.name} n’a pas réussi à apprivoiser ${animalSpecies(a.species).label} ${a.id}.`);
   } else if(a.domestic) {
     if(success)a.domestic.tameness=Math.min(MAX_TAMENESS,a.domestic.tameness+1);
-    ctx.event(`${p.name} ${success?'a entretenu':'n’a pas amélioré'} la familiarité du lièvre ${a.id}.`);
+    ctx.event(`${p.name} ${success?'a entretenu':'n’a pas amélioré'} la familiarité de ${animalSpecies(a.species).label} ${a.id}.`);
   }
   if(!releaseWork(w,p))interruptWork(w,p);
 }
 interface HandlingContext extends NeedContext { candidates():Reachability|null; blocked():Uint8Array }
 export function processHandling(w:World,p:Pawn,ctx:HandlingContext):void {
   const task=p.animalHandling;if(!task)return;
+  if(task.kind==='lead'){if(task.markerId===undefined){interruptWork(w,p);return;}processLeading(w,p,task as LeadingTask,ctx);return;}
   const a=w.wildlife?.animals.find(a=>a.id===task.animalId);
   if(!a||!stillValid(w,p,a,task)){interruptWork(w,p);return;}
   if(task.phase==='pickup') {
@@ -184,15 +189,16 @@ export function processHandling(w:World,p:Pawn,ctx:HandlingContext):void {
   if(task.kind==='maintain'&&task.step===5&&task.progress===0&&a.domestic
     &&w.tick-(a.domestic.lastTraining??a.domestic.since)>=TRAIN_COOLDOWN)a.domestic.lastTraining=w.tick;
   const feeding=task.step===2||task.step===4,final=task.step===5;
-  const duration=handlingStepDuration(task);
+  const duration=handlingStepDuration(task,a.species);
   if(++task.progress<duration)return;
   task.progress=0;
   if(feeding) {
     const consumed=food!;
     const foodRisk={item:consumed.item,...consumed.foodPoison?{foodPoison:{...consumed.foodPoison}}:{}};
-    consumed.quantity--;task.quantity--;
+    const units=handlingFeedUnits(a.species);
+    consumed.quantity-=units;task.quantity-=units;
     if(!consumed.quantity){w.piles.splice(w.piles.indexOf(consumed),1);task.carryPileId=null;}
-    a.food=Math.min(animalSpecies(a.species).nutrition,a.food+ITEM_DEFINITIONS[consumed.item].nutrition/100);
+    a.food=Math.min(animalSpecies(a.species).nutrition,a.food+units*ITEM_DEFINITIONS[consumed.item].nutrition/100);
     ingestFoodRisk(w,a,foodRisk,false);
     if(a.state==='dead'||a.state==='downed'){interruptWork(w,p);return;}
   } else if(!final&&p.skills.animals)learnSkill(p.skills.animals,70_000,p);

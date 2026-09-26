@@ -7,10 +7,11 @@ import { INFECTION_UNIT, infectionStage } from '../sim/infection-rules';
 import { MALNUTRITION_LABELS, MALNUTRITION_UNIT, malnutritionStage } from '../sim/malnutrition';
 import type { World } from '../sim/types';
 import { animalBody } from '../sim/wildlife-health';
-import { MIN_HANDLING,tameRefusal } from '../sim/animal-handling';
+import { handlingSkill,tameRefusal } from '../sim/animal-handling';
 import { MEDICAL_CARE,type MedicalCare } from '../sim/medicine-rules';
 import { isColonist } from '../sim/affiliation';
 import type { WildAnimal } from '../sim/wildlife-state';
+import { animalPenStatus } from './pen-status';
 
 export type AnimalInspectorTab = 'info' | 'health';
 export interface AnimalInspectorOptions {
@@ -65,14 +66,16 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
   if (health?.foodPoisoning) condition.push(`Intoxication alimentaire · ${poisonStage[foodPoisoningStage(health.foodPoisoning)]} · ${(health.foodPoisoning.severity * 100 / FOOD_POISON_UNIT).toFixed(1)} %${health.foodPoisoning.vomit ? ' · Vomit' : ''}`);
   if (health?.infections?.cases.length) condition.push(`Immunité ${Math.min(100, health.infections.immunity * 100 / INFECTION_UNIT).toFixed(1)} %`);
   condition.push(...cases, ...injuries, ...missing);
-  const tameReason=tameRefusal(world,animal),qualified=world.pawns.some(p=>isColonist(p)&&p.priorities.handle>0&&(p.skills.animals?.level??0)>=MIN_HANDLING&&p.state!=='dead'&&p.state!=='downed');
+  const minimum=handlingSkill(animal.species);
+  const tameReason=tameRefusal(world,animal),qualified=world.pawns.some(p=>isColonist(p)&&p.priorities.handle>0&&(p.skills.animals?.level??0)>=minimum&&p.state!=='dead'&&p.state!=='downed');
   const handling=tameReason??(qualified
-    ? `Animaux ${MIN_HANDLING} minimum · deux nourrissages physiques par tentative.`
-    : `Aucun dresseur actif de niveau Animaux ${MIN_HANDLING} ; la désignation attendra un colon qualifié et de la nourriture.`);
+    ? `Animaux ${minimum} minimum · deux nourrissages physiques par tentative.`
+    : `Aucun dresseur actif de niveau Animaux ${minimum} ; la désignation attendra un colon qualifié et de la nourriture.`);
+  const penStatus=animalPenStatus(world,animal);
   return {
     id: animal.id,
     title: `${species.label[0]!.toLocaleUpperCase('fr-FR')}${species.label.slice(1)} ${animal.id}`,
-    identity: `${animal.sex === 'female' ? 'Femelle' : 'Mâle'} · ${animal.domestic?'domestique libre':'sauvage'}`,
+    identity: `${animal.sex === 'female' ? 'Femelle' : 'Mâle'} · ${animal.domestic?(penStatus?'domestique':'domestique libre'):'sauvage'}`,
     activity: `${currentActivity}${animal.meal && state === 'moving' ? ' vers sa nourriture' : ''}`,
     position: `${animal.x}, ${animal.z}`,
     hunted: world.hunting?.targets.includes(animal.id) ?? false,
@@ -88,12 +91,13 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
       `Taille corporelle : ${species.bodySize.toLocaleString('fr-FR')}`,
       `Besoins alimentaires quotidiens : ${species.foodPerDay.toLocaleString('fr-FR')} unité de nutrition`,
       animal.domestic?`Familiarité : ${animal.domestic.tameness} / 5`:`Apprivoisement : ${handling}`,
+      ...(penStatus?[`Enclos : ${penStatus}`]:[]),
     ],
     needs: [
       `Nourriture : ${percent(Math.max(0, Math.min(1, animal.food / species.nutrition)))}`,
       `Repos : ${percent(Math.max(0, Math.min(1, animal.rest)))}`,
     ],
-    health:animal.domestic?[`Statut : domestique libre`,...condition]:condition,
+    health:animal.domestic&&!penStatus?[`Statut : domestique libre`,...condition]:condition,
   };
 }
 

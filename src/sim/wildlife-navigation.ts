@@ -11,12 +11,14 @@ import type { WildAnimal } from './wildlife-state.ts';
 import { animalSpecies } from './animal-species.ts';
 import type { Cell,World } from './types.ts';
 /** Short-lived capture: no world mutation may interleave its searches/steps. */
-export function animalNavigation(world:World) {
+/** `allowClosedGate` is for planning a handler-led route only. Physical steps
+ * must use the default navigation after the handler opens each passage. */
+export function animalNavigation(world:World,allowClosedGate=false,fencePassable=false) {
   const solids=new Set<number>(),corners=doorCorners(world),stand=captureStandability(world),width=world.width;
   const add=(s:Parameters<typeof footprintCells>[0])=>{for(const c of footprintCells(s))solids.add(c.z*width+c.x);};
   for(const s of world.structures) {
-    if(s.kind==='wall'||s.kind==='cooler'||world.schemaVersion<22&&s.kind==='table')add(s);
-    if(s.kind==='door'&&(!s.door?.open||doorOpenness(s,world.tick)<1-1e-9))solids.add(s.z*width+s.x);
+    if(s.kind==='wall'||s.kind==='cooler'||s.kind==='fence'&&!fencePassable||world.schemaVersion<22&&s.kind==='table')add(s);
+    if((s.kind==='door'||s.kind==='fence-gate')&&(s.door?.forbidden||!allowClosedGate&&(!s.door?.open||doorOpenness(s,world.tick)<1-1e-9)))solids.add(s.z*width+s.x);
   }
   for(const j of world.jobs)if(jobBlocksTransit(world,j))add(j);
   const blockedAt=(index:number)=>solids.has(index)||world.tiles[index]?.terrain==='water'||world.tiles[index]?.terrain==='rock';

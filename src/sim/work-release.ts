@@ -96,6 +96,10 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn):void {
+  if(pawn.animalHandling?.kind==='lead'){
+    const animal=world.wildlife?.animals.find(a=>a.id===pawn.animalHandling!.animalId);
+    if(animal){animal.path=[];animal.nextDecision=world.tick+1;}
+  }
   finishRoomRest(world,pawn);
   if(pawn.recreation.task?.activity==='horseshoes'&&pawn.recreation.task.phase==='active'&&pawn.recreation.task.elapsed>0)rememberRoomUse(world,pawn,'recreation');
   cancelAutomaticCombat(pawn);cancelHunting(pawn);

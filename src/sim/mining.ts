@@ -5,6 +5,7 @@ import { addMaterial } from './materials.ts';
 import { groundCapacity } from './ground-placement.ts';
 import type { Job, Pawn, World } from './types.ts';
 import { advanceWork, setWorkUnits, WORK_FRACTIONS } from './work-progress.ts';
+import { invalidateAnimalPens } from './animal-pens.ts';
 
 /** Returns true after excavation. Rock damage belongs to the tile, pick cadence
  * to the reserved job. Preview the RNG/drop before committing the final hit. */
@@ -35,7 +36,7 @@ export function advanceMining(world:World,pawn:Pawn,job:Job,workRate:()=>number=
     const tiles=world.tiles.slice();tiles[i]=floor;
     if(groundCapacity({...world,tiles},job,item)<quantity)return nextStroke();
   }
-  world.tiles[i]=floor;world.rng=rng;
+  world.tiles[i]=floor;world.rng=rng;invalidateAnimalPens(world);
   if(quantity)addMaterial(world,kind,quantity,{type:'ground',x:job.x,z:job.z},item);
   return true;
 }

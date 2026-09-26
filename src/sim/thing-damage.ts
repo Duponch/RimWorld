@@ -1,4 +1,5 @@
 import {detachMissingFlakBills} from './flak-work.ts';
+import {invalidateAnimalPens} from './animal-pens.ts';
 import {detachMissingGunBills} from './gun-work.ts';
 import {detachMissingArtBills} from './art-work.ts';
 import { constructionRecipe } from './construction-materials.ts';
@@ -106,6 +107,7 @@ export function damageStructure(world:World,s:Structure,amount:number):boolean {
   if(!addSafe(state.ledger.fuelTicksLost,fuelLost)||!addSafe(state.ledger.fuelTicksBurned,fuelBurned)||!addSafe(destruction.count,1)||!Object.values(lost).every(Number.isSafeInteger)||!addSafe(state.ledger.structures,1)||!Number.isSafeInteger((state.ledger.batteryEnergyLost+energy)*2))return false;
   world.fires=state;
   world.structures=world.structures.filter(b=>b!==s);world.packed=world.packed.filter(p=>p!==packed);
+  invalidateAnimalPens(world);
   // Commit exactly the floor preview before health/roof/task interruption can
   // cause other deposits. Those later effects see the already occupied floor.
   for(const p of actors){

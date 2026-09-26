@@ -300,6 +300,32 @@
       "prepared": true,
       "provenance": "Scène préparée issue de l’atelier V101 : recherches, ressources et profils explicites. Aucun gilet fabriqué au chargement, aucune progression naturelle revendiquée.",
       "sha256": "a3c107df89aeb757d17f111b5e80108358055099582e6c21a71fba7389dfbc1e"
+    },
+    {
+      "id": "enclos-v119",
+      "release": "v119",
+      "label": "Enclos et conduite · 2 colons",
+      "description": "Un cerf possédé attend d’être conduit dans un enclos fermé. Un second cerf sauvage peut être désigné pour l’apprivoisement ; clôture, portillon, marqueur, nourritures et travail Animaux sont prêts.",
+      "filename": "enclos.json",
+      "pawns": 2,
+      "colonists": 2,
+      "width": 32,
+      "height": 32,
+      "tick": 2000,
+      "focus": [
+        "enclos",
+        "conduite",
+        "apprivoisement",
+        "pâturage"
+      ],
+      "steps": [
+        "Repérer le cerf domestique à (10, 17), le marqueur à (16, 16) et examiner les espèces acceptées.",
+        "Reprendre la partie pour observer le colon conduire le cerf à travers le portillon ; les baies dans l’enclos servent de nourriture physique.",
+        "Désigner le second cerf sauvage dans Faune pour éprouver l’apprivoisement avec les baies extérieures."
+      ],
+      "prepared": true,
+      "provenance": "Situation préparée : deux cerfs, périmètre et provisions sont fournis. La conduite et tout apprivoisement ultérieur sont des transitions réelles du moteur, non une progression autonome de colonie.",
+      "sha256": "1260199018d3017cd76dc0406171a4d7de50512a9ead690c7834749e5e7e8ba0"
     }
   ]
 }

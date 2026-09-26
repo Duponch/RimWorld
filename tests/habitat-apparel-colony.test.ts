@@ -7,7 +7,7 @@ import { groundCapacity } from '../src/sim/ground-placement.ts';
 import { addGroundMaterial } from '../src/sim/materials.ts';
 import { COMPLEX_FURNITURE_RESEARCH_COST,complexFurnitureUnlocked } from '../src/sim/research.ts';
 import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index.ts';
-import type { Cell,Command,DesignateCommand,StructureKind,World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type Cell,type Command,type DesignateCommand,type StructureKind,type World } from '../src/sim/types.ts';
 
 const fixtureBytes=gunzipSync(readFileSync(new URL('./fixtures/colony-v89.json.gz',import.meta.url)));
 const load=()=>deserializeWorld(fixtureBytes.toString('utf8'));
@@ -27,7 +27,7 @@ test('V90 common colony: researched habitat, physical tailoring, apparel policy 
   const raw=JSON.parse(fixtureBytes.toString('utf8')) as World;
   expect(raw.schemaVersion).toBe(89);
   let world=load();const start=world.tick,initialLiving=living(world).map(p=>p.id),initialCleaned=world.filth!.cleaned;
-  expect(world.schemaVersion).toBe(90);expect(world.scenario).toMatchObject({id:'crashlanded',revision:2});expect(complexFurnitureUnlocked(world)).toBe(false);
+  expect(world.schemaVersion).toBe(SCHEMA_VERSION);expect(world.scenario).toMatchObject({id:'crashlanded',revision:2});expect(complexFurnitureUnlocked(world)).toBe(false);
   expect(validateWorld(world)).toEqual([]);
   const horizon=start+2*6000,afterCampaign=Math.ceil((horizon+1)/100)*100;
   // This campaign amortizes habitat, tailoring, policy, hygiene and persistence.
@@ -75,5 +75,5 @@ test('V90 common colony: researched habitat, physical tailoring, apparel policy 
   expect(cleaningEnabled).toBe(true);expect(world.filth!.cleaned).toBeGreaterThan(initialCleaned);
   expect(living(world).every(p=>p.state!=='downed'&&p.hunger>0&&p.rest>0)).toBe(true);
   expect(validateWorld(world)).toEqual([]);expect(deserializeWorld(serializeWorld(world))).toEqual(world);
-  writeFileSync('artifacts/habitat-apparel-colony-v90.json',JSON.stringify({schemaVersion:90,controlled:true,source:'tests/fixtures/colony-v89.json.gz',interventions:['60 cloth supplied','complex-furniture research prefilled except last 2 points','raids deferred beyond observation','maintained apparel threshold 90%'],startTick:start,endTick:world.tick,days:2,minimumLiving,chair,benchId,tailored:world.tailoring?.completed,replacementId:replacement?.id,oldShirtId,cleaned:world.filth!.cleaned-initialCleaned,unfinishedContinuationExact:checkpoint,valid:true},null,2));
+  writeFileSync('artifacts/habitat-apparel-colony-v90.json',JSON.stringify({schemaVersion:SCHEMA_VERSION,controlled:true,source:'tests/fixtures/colony-v89.json.gz',interventions:['60 cloth supplied','complex-furniture research prefilled except last 2 points','raids deferred beyond observation','maintained apparel threshold 90%'],startTick:start,endTick:world.tick,days:2,minimumLiving,chair,benchId,tailored:world.tailoring?.completed,replacementId:replacement?.id,oldShirtId,cleaned:world.filth!.cleaned-initialCleaned,unfinishedContinuationExact:checkpoint,valid:true},null,2));
 },180_000);
