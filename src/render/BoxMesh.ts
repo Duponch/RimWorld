@@ -32,6 +32,7 @@ export class BoxMesh extends THREE.Mesh<THREE.InstancedBufferGeometry> {
     // must never release another live batch's attributes or index.
     geometry.setAttribute('position', base.getAttribute('position').clone());
     geometry.setAttribute('normal', base.getAttribute('normal').clone());
+    geometry.setAttribute('uv', base.getAttribute('uv').clone());
     geometry.setIndex(base.index!.clone());
     this.instanceMatrix = new THREE.InstancedInterleavedBuffer(new Float32Array(capacity * 16), 16).setUsage(THREE.StaticDrawUsage);
     for(let column=0;column<4;column++)geometry.setAttribute(`boxMatrix${column}`, new THREE.InterleavedBufferAttribute(this.instanceMatrix,4,column*4));

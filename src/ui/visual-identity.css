@@ -57,6 +57,13 @@ input[type=radio]{border-radius:50%}input:checked{background:var(--forest);borde
 .management-panel{left:16px;bottom:92px;width:920px;max-width:calc(100vw - 272px);max-height:calc(100dvh - 214px);padding:24px;font-size:15px;line-height:1.5;overflow:auto}
 .management-panel p,.management-panel label{font-size:15px}.management-panel table{font-size:14px;border-collapse:collapse}.management-panel th,.management-panel td{border-color:var(--line)}
 #history-panel{width:680px}#menu-panel{width:450px}#menu-panel>button{min-height:42px}#journal-items{font-size:15px;line-height:1.55}.event-time{color:var(--muted-ink);font-size:13px}.policy-status{font-size:14px;color:var(--muted-ink)}
+#menu-panel .presentation-settings{margin:18px 0 14px;padding:12px 14px 14px;border:1px solid var(--line);border-radius:8px}
+#menu-panel .presentation-settings legend{padding:0 6px;font-weight:700}
+#menu-panel .presentation-setting{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:46px;cursor:pointer}
+#menu-panel .presentation-setting span{display:flex;flex-direction:column;gap:2px}
+#menu-panel .presentation-setting strong{font-size:15px}
+#menu-panel .presentation-setting small{color:var(--muted-ink);font-size:13px;line-height:1.3}
+#menu-panel .presentation-setting input{flex:none;margin:0}
 .bill,.storage-settings{background:transparent;border-color:var(--line);border-radius:8px}.bill p{font-size:14px}.storage-settings{font-size:14px;padding:12px 0}.storage-settings select{background:#fff9ed;color:var(--ink)}.storage-filters{gap:8px}.storage-filters label{font-size:14px}
 .architect-panel{width:1020px;height:min(640px,calc(100dvh - 214px));max-height:none;overflow:hidden;display:flex;flex-direction:column;padding:22px}
 .architect-panel[hidden]{display:none}.architect-panel .panel-heading{flex:none;margin-bottom:18px}

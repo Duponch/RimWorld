@@ -125,6 +125,18 @@ let placementOrientation: Orientation = 0;
 let currentSpeed = 1, lastSpeed = 1, stepMs = 0;
 let wallCutaway = false, foliageVisible = true, replacingWorld = false;
 let renderer: ColonyRenderer | undefined;
+const TEXTURE_PREFERENCE_KEY = 'lisiere.presentation.textures.v1';
+let texturesEnabled = true;
+try { texturesEnabled = localStorage.getItem(TEXTURE_PREFERENCE_KEY) !== 'false'; } catch { /* The default remains active when browser storage is unavailable. */ }
+const textureToggle = el<HTMLInputElement>('textures-enabled');
+textureToggle.checked = texturesEnabled;
+function setTexturesEnabled(enabled: boolean): boolean {
+  texturesEnabled = enabled;
+  textureToggle.checked = enabled;
+  renderer?.setTexturesEnabled(enabled);
+  try { localStorage.setItem(TEXTURE_PREFERENCE_KEY, String(enabled)); return true; }
+  catch { return false; }
+}
 let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 let pawnSignature = '';
 const selection=new PawnSelection();
@@ -145,6 +157,8 @@ const frontHost = document.createElement('div'); document.querySelector('#app')!
 document.querySelector('#app')!.append(el('fps-counter'));
 const frontMenu = createFrontMenu(frontHost, {
   getSaves: () => session.saves(),
+  getTexturesEnabled: () => texturesEnabled,
+  onTexturesEnabledChange: setTexturesEnabled,
   onStart: async draft => replaceColony(() => session.create(draft.seed, draft.size, 'crashlanded',draft.site)),
   onLoad: async key => replaceColony(() => session.load(key)),
   getTestColonies: fetchTestColonies,
@@ -715,6 +729,7 @@ el('world-scenario').onchange=updateScenarioDescription;
 el('new-world-close').onclick = () => el<HTMLDialogElement>('new-world-dialog').close();
 el('new-world-form').onsubmit = event => { event.preventDefault(); void attempt(createWorld); };
 el('show-diagnostics').onclick = () => { const hidden = !el('metrics').hidden; el('metrics').hidden = hidden; el('show-diagnostics').textContent = hidden ? 'Afficher les diagnostics' : 'Masquer les diagnostics'; };
+textureToggle.onchange = () => { if (!setTexturesEnabled(textureToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 el('wall-cutaway').onclick = () => { wallCutaway = !wallCutaway; renderer?.setWallCutaway(wallCutaway); el('wall-cutaway').textContent = wallCutaway ? 'Murs : coupés' : 'Murs : hauts'; el('wall-cutaway').setAttribute('aria-pressed', String(wallCutaway)); };
 el('roof-toggle').onclick=()=>{const button=el('roof-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));button.textContent=visible?'Toits : visibles':'Toits : masqués';renderer?.setRoofsVisible(visible);};
 el('foliage-toggle').onclick = () => { foliageVisible = !foliageVisible; renderer?.setFoliageVisible(foliageVisible); el('foliage-toggle').textContent = foliageVisible ? 'Feuillage' : 'Troncs'; el('foliage-toggle').setAttribute('aria-pressed', String(!foliageVisible)); };
@@ -763,6 +778,7 @@ async function prepareWorld(): Promise<void> {
   await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
   if (!renderer) {
     renderer = await ColonyRenderer.create(el('viewport'), pickCell);
+    renderer.setTexturesEnabled(texturesEnabled);
     renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){const type=shootingControls.mode!;shootingControls.cancel();void attempt(async()=>{await client.command({type,pawnIds:selectedColonyIds(),targetId});renderState();});}return;}selectPawns(gesture);};
     renderer.onInteractionCancel=()=>orderMenu.close();
     renderer.onContext=(cell,x,y,queue,targetId)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner);if(selected.some(p=>p.draft))void orderMenu.openTactical(snapshot,new Set(selected.map(p=>p.id)),cell,x,y,queue,targetId);else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};

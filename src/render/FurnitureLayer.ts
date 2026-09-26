@@ -27,6 +27,8 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
       const { x, z } = structure;
       const color = buildingMaterialColor(structure.material);
       if (structure.kind === 'wall') {
+        // The timber batch supplies its own planks and overhanging trim.
+        if (structure.material === 'wood') continue;
         walls.push({ x, z, color, y: (wallHeight - 0.09) / 2 }); wallCaps.push({ x, z, color, y: wallHeight - 0.045 });
       } else if (structure.kind === 'bed') {
         const cells = footprintCells(structure), last = cells[cells.length - 1]!;

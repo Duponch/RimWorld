@@ -1,4 +1,6 @@
-# Validation courante — V113
+# Validation courante — V114
+
+V114 : [bâtiments et surfaces peints](../history/validation-timber-v114.md), dalle continue, portes enchâssées et option de textures 3D vérifiées sur les sources finales. Contrôles ciblés et natifs réussis ; la comparaison V113/V114 sous charge ne démontre aucun gain de cadence. Schéma 109 et simulation inchangés.
 
 V113 : [regroupement du paysage et recherche alimentaire](../history/validation-performance-v113.md), 27 contrôles ciblés, build/typage, comparaison WebGPU de 14 états pixel-identiques, présentation native mine/coupe et mesures CPU/GPU séparées. Le départ détaillé intermédiaire accélère nettement ; à cent colons, le débit ×6 reste insuffisant. Schéma 109, règles et G0–G5 inchangés.
 

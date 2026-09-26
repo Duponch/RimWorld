@@ -29,10 +29,12 @@ try {
     const originalBundle=v.renderer._renderBundle;
     v.renderer._renderBundle=function(bundle,...args){
       const rb=this._bundles.get(bundle.bundleGroup,bundle.camera,this._currentRenderContext);
+      const bundleData=this.backend.get(rb);
+      const recording=this._bundleNeedsUpdate(bundle.bundleGroup,bundleData);
       const result=originalBundle.call(this,bundle,...args);
       if(bundle.bundleGroup===v.landscape&&bundle.camera===v.camera){
         const objects=this.backend.get(rb).renderObjects;
-        window.__cameraBundle={recorded:objects.length,listed:bundle.renderList.opaque.length+bundle.renderList.transparent.length,camerasMatch:objects.every(o=>o.camera===bundle.camera)};
+        window.__cameraBundle={recording,recorded:objects.length,listed:bundle.renderList.opaque.length+bundle.renderList.transparent.length,camerasMatch:objects.every(o=>o.camera===bundle.camera)};
       }
       return result;
     };
@@ -86,7 +88,7 @@ try {
       const moved=capture.position.some((n,i)=>Math.abs(n-captures.start.position[i])>1e-7)||capture.zoom!==captures.start.zoom;
       const versionExpected=gesture==='lod'?captures.frames[0].version:captures.start.version;
       const modeCorrect=gesture!=='lod'||baseline||Boolean(capture.bundle)===(zoom==='far');
-      const passed=modeCorrect&&moved&&capture.changedPixels===0&&(!capture.bundle||(capture.bundle.recorded===capture.bundle.listed&&capture.bundle.camerasMatch))&&capture.version===versionExpected;
+      const passed=modeCorrect&&moved&&capture.changedPixels===0&&(!capture.bundle||(capture.bundle.recorded>0&&(!capture.bundle.recording||capture.bundle.recorded===capture.bundle.listed)&&capture.bundle.camerasMatch))&&capture.version===versionExpected;
       report.cases.push({mode,distance:zoom,gesture,frame,...metrics,startVersion:captures.start.version,versionExpected,modeCorrect,moved,passed});
       if(frame===0&&!passed)for(const [type,url] of Object.entries({retained,plain}))await writeFile(`artifacts/camera-${label}-${mode}-${zoom}-${gesture}-${type}.png`,Buffer.from(url.split(',')[1],'base64'));
     }

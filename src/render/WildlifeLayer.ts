@@ -12,6 +12,8 @@ import type { MotionTimeline } from './MotionTimeline';
 import { furnitureSurfaces } from './furniture-motion';
 import { travelHeight } from './furniture-motion';
 import { pawnSelectionMesh } from './PawnSelectionLayer';
+import { createStylizedSurfaceTexture } from './stylized-surfaces';
+import { actorSurfaceShade } from './actor-surface';
 
 /** Resident capacity and node graph. CPU supplies edges/phases at snapshots
  * and segment boundaries; continuous translation and the rig run on the GPU. */
@@ -19,13 +21,15 @@ class SpeciesRig {
   readonly mesh:THREE.Mesh;
   readonly flames:THREE.Mesh;
   readonly selection:THREE.Mesh;
+  readonly plainMaterial:THREE.MeshStandardNodeMaterial;
+  readonly texturedMaterial:THREE.MeshStandardNodeMaterial;
   private selected:ReadonlySet<number>=new Set();
   readonly blend=uniform(1);private time=uniform(0);
   private keys=new Map<number,string>();private source:World|undefined;
   private headings=new Map<number,TurnHeading>();
   private animals:NonNullable<World['wildlife']>['animals']=[];
   private surfaces:ReadonlyMap<number,number>=new Map();
-  constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
+  constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,surfaceTexture:THREE.Texture,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
     const mat=material(0xffffff);configure?.(mat);mat.colorNode=mix(attribute('color','vec3'),vec3(.42,.4,.37),attribute('aAnimal','vec4').z.sub(1).max(0));
     mat.positionNode=Fn(()=>{
       const pose=pawnPresentationPose(this),state=attribute('aAnimal','vec4'),bone=attribute('boneId','float'),pivot=attribute('bindPivot','vec3');
@@ -42,10 +46,15 @@ class SpeciesRig {
       const cy=cos(pose.w),sy=sin(pose.w);
       return vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy))).add(pose.xyz);
     })();
-    this.mesh=new THREE.Mesh(hareGeometry(MAX_WILDLIFE,this.species),mat);this.mesh.name=`Wild ${this.species} — GPU rig`;this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6);
+    const textured=material(0xffffff);configure?.(textured);
+    textured.positionNode=mat.positionNode;
+    textured.colorNode=mat.colorNode.mul(actorSurfaceShade(surfaceTexture));
+    this.plainMaterial=mat;this.texturedMaterial=textured;
+    this.mesh=new THREE.Mesh(hareGeometry(MAX_WILDLIFE,this.species),textured);this.mesh.name=`Wild ${this.species} — GPU rig`;this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6);
     this.mesh.geometry.computeBoundingBox();
     this.selection=pawnSelectionMesh(this.mesh.geometry as THREE.InstancedBufferGeometry,this);this.selection.visible=false;
   }
+  setTexturesEnabled(enabled:boolean):void {this.mesh.material=enabled?this.texturedMaterial:this.plainMaterial;}
   setSelected(ids:ReadonlySet<number>):void {
     this.selected=ids;const geometry=this.selection.geometry as THREE.InstancedBufferGeometry,flags=geometry.getAttribute('aSelected') as THREE.InstancedBufferAttribute;
     geometry.instanceCount=this.animals.length;
@@ -109,14 +118,25 @@ class SpeciesRig {
 /** Six small resident actor batches; geometry never depends on population or frame. */
 export class WildlifeLayer {
   readonly mesh=new THREE.Group();readonly flames=new THREE.Group();readonly travelTime=uniform(0);
+  private readonly surfaceTexture=createStylizedSurfaceTexture();
+  private texturesEnabled=true;
   private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();
   constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void){
-    this.rigs=['hare','snow-hare','deer','muffalo','gazelle','dromedary'].map(species=>new SpeciesRig(this.travelTime,species,configure));
+    this.rigs=['hare','snow-hare','deer','muffalo','gazelle','dromedary'].map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTexture,configure));
     for(const rig of this.rigs){this.mesh.add(rig.mesh,rig.selection);this.flames.add(rig.flames);}
   }
+  setTexturesEnabled(enabled:boolean):void {if(this.texturesEnabled===enabled)return;this.texturesEnabled=enabled;for(const rig of this.rigs)rig.setTexturesEnabled(enabled);}
   setSelected(ids:ReadonlySet<number>):void {for(const rig of this.rigs)rig.setSelected(ids);}
   forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {for(const rig of this.rigs)rig.forEachPose(visit);}
   update(world:World,timeline:MotionTimeline|undefined,reset=false):void{if(this.source!==world){this.source=world;this.surfaces=furnitureSurfaces(world);}for(const rig of this.rigs)rig.update(world,timeline,this.surfaces,reset);}
   prepare():()=>void{const restores=this.rigs.map(r=>r.prepare());return()=>{for(const restore of restores)restore();};}
-  dispose():void{for(const r of this.rigs)for(const m of [r.mesh,r.flames,r.selection]){m.geometry.dispose();(m.material as THREE.Material).dispose();}}
+  dispose():void{
+    for(const r of this.rigs){
+      for(const m of [r.mesh,r.flames,r.selection])m.geometry.dispose();
+      r.plainMaterial.dispose();r.texturedMaterial.dispose();
+      (r.flames.material as THREE.Material).dispose();
+      (r.selection.material as THREE.Material).dispose();
+    }
+    this.surfaceTexture.dispose();
+  }
 }

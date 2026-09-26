@@ -357,6 +357,10 @@
 .front-home-actions > button, .front-later button { background: #f1dfbf; color: var(--ink); border-color: #b99559; box-shadow: inset 0 1px #fff9eb, 0 2px 0 #b99a65; font-size: 15px; }
 .front-later { border-color: var(--line); gap: 9px; }
 .front-later .front-choice-note { color: var(--muted-ink); font-size: 11px; }
+.front-menu[data-page=options] .front-frame { width: min(720px, 100%); }
+.front-texture-setting { min-height: 80px; background: #fff8e9; }
+.front-texture-setting input { flex: none; margin: 0; }
+.front-texture-setting > span { min-width: 0; }
 .front-menu .front-test-save { background: #fff9ec; border-color: var(--line); border-radius: 10px; }
 .front-menu .front-test-detail .front-test-metadata { color: var(--ink); font-weight: 700; }
 .front-menu .front-test-detail .front-test-focus, .front-menu .front-test-preservation { color: var(--muted-ink); border-color: var(--line); }

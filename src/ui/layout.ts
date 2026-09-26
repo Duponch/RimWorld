@@ -143,6 +143,9 @@ export function gameLayout(): string {
     </section>
     <section id="menu-panel" class="management-panel menu-panel panel" aria-label="Menu du jeu" hidden>
       <div class="panel-heading"><h2>Lisière</h2><button data-close-panel aria-label="Fermer Menu">×</button></div><p id="scenario-current" class="muted"></p><div id="climate-options"></div>
+      <fieldset class="presentation-settings"><legend>Affichage</legend>
+        <label class="presentation-setting"><span><strong id="textures-enabled-label">Textures 3D stylisées</strong><small id="textures-enabled-description">Détails peints des volumes 3D. Choix conservé dans ce navigateur.</small></span><input id="textures-enabled" type="checkbox" aria-labelledby="textures-enabled-label" aria-describedby="textures-enabled-description" checked></label>
+      </fieldset>
       <button id="save">Sauvegarder</button><button id="load">Recharger</button><button id="browse-saves">Charger une partie</button><button id="new-colony">Nouvelle colonie</button>
       <button id="return-home">Sauvegarder et accueil</button><button id="restore-previous" disabled>Colonie précédente</button><button id="show-diagnostics">Afficher les diagnostics</button>
       <p class="muted">Sauvegarde locale à ce navigateur.</p>

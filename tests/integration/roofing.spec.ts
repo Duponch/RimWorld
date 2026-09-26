@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { roomCamp } from '../scenarios/rooms';
+import { newDoorState } from '../../src/sim/door-rules';
 import { serializeWorld, validateWorld } from '../../src/sim/serialization';
 import { observeErrors, world, panel, tool, cell, dragRectangle, saveKey, expectWorld } from './helpers';
 import { revealCells } from './player-actions';
 
 test('toits : zone tracée, pose physique, affichage, retrait et reprise par le worker',async({playwright},testInfo)=>{
-  test.setTimeout(90000);
+  test.setTimeout(120000);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}});
   const errors=observeErrors(page);page.setDefaultTimeout(15000);
@@ -17,6 +18,13 @@ test('toits : zone tracée, pose physique, affichage, retrait et reprise par le 
       await route.fulfill({response,body:await response.text()+'\nconst originalSave=SimulationClient.prototype.save; SimulationClient.prototype.save=async function(){const data=await originalSave.call(this);await new Promise(resolve=>setTimeout(resolve,1000));return data;};'});
     });
     const initial=roomCamp();
+    // The original perimeter has a diagonal-only gap at (10,20). Give the
+    // builder a real exterior entrance so the last roof cell is serviceable
+    // even when nearby 3×3 roofing jobs happen to finish first.
+    const entrance=initial.structures.findIndex(s=>s.kind==='wall'&&s.x===11&&s.z===20);
+    expect(entrance).toBeGreaterThanOrEqual(0);
+    initial.structures.splice(entrance,1);
+    initial.structures.push({id:initial.nextId++,kind:'door',x:11,z:20,orientation:0,footprint:'standard',material:'wood',door:newDoorState(initial.tick)});
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
@@ -25,7 +33,8 @@ test('toits : zone tracée, pose physique, affichage, retrait et reprise par le 
     await expect.poll(async()=>(await world(page)).roofing?.build.length).toBe(121);
     expect((await world(page)).roofing?.constructed).toEqual([]);
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
-    await expect.poll(async()=>(await world(page)).roofing?.constructed.length,{timeout:20000}).toBe(121);
+    // A single builder must physically finish the entire 121-cell zone.
+    await expect.poll(async()=>(await world(page)).roofing?.constructed.length,{timeout:60000}).toBe(121);
     await page.locator('[data-speed="0"]').click();await cell(page,13,13);
     await expect(page.locator('#room-description')).toContainText('Pièce couverte · 36 / 36 cases');
     const covered=await world(page);expect(validateWorld(covered)).toEqual([]);

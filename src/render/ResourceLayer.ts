@@ -69,11 +69,18 @@ export class ResourceLayer {
   private readonly chunks=new Map<string,{signature:string;group:THREE.Group;identities:Map<number,string>;originalSizes:Map<number,number>;currentSizes:Map<number,number>}>();
   private readonly resourceChunks=new Map<number,string>();
   private foliageVisible = true;
+  private texturesEnabled = true;
   private readonly growing = new Map<number,World['resources'][number]>();
   updateGrowth(world: World): void {
     for(const plant of this.growing.values())if(harvestable(world,plant)){this.update(world,false);break;}
   }
-  constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.Material) {}
+  constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.Material, private readonly texturedMaterial: THREE.Material=staticMaterial) {}
+  setTexturesEnabled(enabled:boolean):void {
+    if(this.texturesEnabled===enabled)return;
+    this.texturesEnabled=enabled;
+    const chosen=enabled?this.texturedMaterial:this.staticMaterial;
+    this.group.traverse(object=>{if(object instanceof THREE.Mesh)object.material=chosen;});
+  }
   setFoliageVisible(visible: boolean): void {
     this.foliageVisible = visible;
     this.group.traverse(object => { if (object.name === 'tree-canopy') object.visible = visible; });
@@ -170,8 +177,8 @@ export class ResourceLayer {
         { geometry: new THREE.CylinderGeometry(.5,.5,1,5), items: cacti },
         { geometry: new THREE.IcosahedronGeometry(1, 0), items: bushes },
         { geometry: new THREE.IcosahedronGeometry(0.055, 0), items: berries },
-      ], this.staticMaterial);
-      const canopy = mergedInstances(group, [{ geometry: world.site?new THREE.IcosahedronGeometry(1,0):new THREE.ConeGeometry(1, 1, 6), items: [...crowns, ...upperCrowns] },{geometry:new THREE.ConeGeometry(1,1,6),items:cones}], this.staticMaterial);
+      ], this.texturesEnabled?this.texturedMaterial:this.staticMaterial,true,true);
+      const canopy = mergedInstances(group, [{ geometry: world.site?new THREE.IcosahedronGeometry(1,0):new THREE.ConeGeometry(1, 1, 6), items: [...crowns, ...upperCrowns] },{geometry:new THREE.ConeGeometry(1,1,6),items:cones}], this.texturesEnabled?this.texturedMaterial:this.staticMaterial,true,true);
       if (canopy) { canopy.name = 'tree-canopy'; canopy.visible = this.foliageVisible; }
       retainResources(group, new Set(chunk.flatMap(r => visibleResourceKeys(world,r))));
       this.chunks.set(key,{signature,group,identities:new Map(chunk.map(r=>[r.id,resourceIdentity(r)])),originalSizes:new Map(sizes),currentSizes:new Map(sizes)});

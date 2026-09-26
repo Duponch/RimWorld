@@ -1,7 +1,9 @@
 import * as THREE from 'three/webgpu';
+import { attribute, texture, uv } from 'three/tsl';
 import { material } from './primitives';
 import type { Placement } from './primitives';
 import { BoxMesh, configureBoxMaterial } from './BoxMesh';
+import { createStylizedSurfaceTexture } from './stylized-surfaces';
 
 const object = new THREE.Object3D(), color = new THREE.Color();
 type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'border';
@@ -12,6 +14,8 @@ type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'border';
  */
 export class BoxBatches {
   private readonly geometry = new THREE.BoxGeometry(1, 1, 1);
+  private readonly surfaceTexture = createStylizedSurfaceTexture();
+  private readonly texturedSolid = material(0xffffff);
   private readonly materials: Record<Style, THREE.NodeMaterial> = {
     solid: material(0xffffff),
     storage: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, depthWrite: false }),
@@ -20,17 +24,34 @@ export class BoxBatches {
     wire: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.65, depthWrite: false }),
   };
   private readonly batches = new Map<string, BoxMesh>();
+  private texturesEnabled = true;
 
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void) {
     configure?.(this.materials.solid as THREE.MeshStandardNodeMaterial);
+    configure?.(this.texturedSolid);
     this.geometry.userData.rendererOwned = true;
     for (const mat of Object.values(this.materials)) { mat.userData.rendererOwned = true; configureBoxMaterial(mat); }
+    this.texturedSolid.userData.rendererOwned = true;
+    configureBoxMaterial(this.texturedSolid);
+    this.texturedSolid.colorNode = attribute('boxColor', 'vec3').mul(texture(this.surfaceTexture, uv()).rgb);
+  }
+
+  /** Select a resident pipeline. The plain one has no texture node or map, so
+   * disabled surfaces do no texture sampling and need no per-frame work. */
+  setTexturesEnabled(enabled: boolean): void {
+    if (enabled === this.texturesEnabled) return;
+    this.texturesEnabled = enabled;
+    const chosen = enabled ? this.texturedSolid : this.materials.solid;
+    for (const mesh of this.batches.values()) {
+      if (mesh.material === this.texturedSolid || mesh.material === this.materials.solid) mesh.material = chosen;
+    }
   }
 
   set(group: THREE.Group, key: string, items: Placement[], style: Style = 'solid', shadows = true): void {
     let mesh = this.batches.get(key);
+    const chosen = style === 'solid' && this.texturesEnabled ? this.texturedSolid : this.materials[style];
     if (!mesh) {
-      mesh = new BoxMesh(this.geometry, this.materials[style], Math.max(256, 2 ** Math.ceil(Math.log2(items.length || 1))));
+      mesh = new BoxMesh(this.geometry, chosen, Math.max(256, 2 ** Math.ceil(Math.log2(items.length || 1))));
       mesh.name = key;
       mesh.castShadow = style === 'solid' && shadows; mesh.receiveShadow = true;
       group.add(mesh); this.batches.set(key, mesh);
@@ -39,6 +60,7 @@ export class BoxBatches {
       const capacity = 2 ** Math.ceil(Math.log2(items.length));
       mesh.allocate(this.geometry, capacity);
     }
+    if (mesh.material !== chosen) mesh.material = chosen;
     mesh.activeCount = items.length;
     for (let i = 0; i < items.length; i++) {
       const item = items[i]!;
@@ -73,5 +95,9 @@ export class BoxBatches {
     });};
   }
 
-  dispose(): void { this.clear(); this.geometry.dispose(); for (const mat of Object.values(this.materials)) mat.dispose(); }
+  dispose(): void {
+    this.clear(); this.geometry.dispose();
+    for (const mat of Object.values(this.materials)) mat.dispose();
+    this.texturedSolid.dispose(); this.surfaceTexture.dispose();
+  }
 }

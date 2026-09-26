@@ -30,6 +30,8 @@ import { adjacentTable } from '../sim/dining';
 import { CARRY_CAPACITY, footprintCells } from '../sim/definitions';
 import { PAWN_MODEL_SCALE, WORLD_SCALE } from '../world/scale';
 import { clearGroup, material } from './primitives';
+import { createStylizedSurfaceTexture } from './stylized-surfaces';
+import { pawnSurfaceShade } from './actor-surface';
 type VisualPawn = { from: THREE.Vector4; to: THREE.Vector4 };
 const scratchColor = new THREE.Color();
 
@@ -49,6 +51,10 @@ export class PawnLayer {
   readonly blend = uniform(1);
   readonly visuals = new Map<number, VisualPawn>();
   private pawnMesh: THREE.Mesh | null = null;
+  private readonly surfaceTexture = createStylizedSurfaceTexture();
+  private plainMaterial: THREE.MeshStandardNodeMaterial | null = null;
+  private texturedMaterial: THREE.MeshStandardNodeMaterial | null = null;
+  private texturesEnabled = true;
   get feedbackSource():THREE.InstancedBufferGeometry|undefined {return this.pawnMesh?.geometry as THREE.InstancedBufferGeometry|undefined;}
   private cargoMesh: THREE.Mesh | null = null;
   private fireMesh: THREE.Mesh | null = null;
@@ -58,6 +64,11 @@ export class PawnLayer {
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
   private rescuePairs:readonly (readonly [number,number])[]=[];
   constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void) {}
+  setTexturesEnabled(enabled: boolean): void {
+    if (this.texturesEnabled === enabled) return;
+    this.texturesEnabled = enabled;
+    if (this.pawnMesh) this.pawnMesh.material = enabled ? this.texturedMaterial! : this.plainMaterial!;
+  }
   private readonly travelKeys = new Map<number,string>();
   private createPawnMesh(count: number): void {
     clearGroup(this.group);
@@ -171,7 +182,7 @@ export class PawnLayer {
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
     })();
-    mat.colorNode = Fn(()=>{const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),attribute('dye','float').equal(1).select(float(1),float(0))).toVar();
+    const baseColor = Fn(()=>{const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),attribute('dye','float').equal(1).select(float(1),float(0))).toVar();
       If(attribute('dye','float').equal(-3).or(attribute('dye','float').equal(PARKA_HOOD_DYE)),()=>tint.assign(attribute('aTint','vec3')));
       If(attribute('aEquipment','vec4').y.equal(2).and(attribute('boneId','float').greaterThanEqual(2)).and(attribute('boneId','float').lessThanEqual(3)),()=>tint.assign(attribute('aSkin','vec3')));
       If(attribute('dye','float').equal(2),()=>tint.assign(attribute('aSkin','vec3')));
@@ -183,7 +194,17 @@ export class PawnLayer {
       {const color=new THREE.Color(0xa88b63);If(legs.and(attribute('aEquipment','vec4').w.equal(3)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
       {const color=new THREE.Color(0x839ac5);If(legs.and(attribute('aEquipment','vec4').w.equal(4)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
       {const color=new THREE.Color(0xc3a375);If(legs.and(attribute('aEquipment','vec4').w.equal(5)),()=>tint.assign(vec3(color.r,color.g,color.b)));}return tint;})();
-    const mesh = new THREE.Mesh(geometry, mat);
+    mat.colorNode = baseColor;
+    const textured = material(0xffffff);
+    this.configure?.(textured);
+    textured.positionNode = mat.positionNode;
+    textured.colorNode = baseColor.mul(pawnSurfaceShade(this.surfaceTexture));
+    // Both pipelines survive map changes; the plain node graph contains no
+    // pigment sampling and the shared rig/instance geometry never changes.
+    mat.userData.rendererOwned = textured.userData.rendererOwned = true;
+    this.plainMaterial = mat;
+    this.texturedMaterial = textured;
+    const mesh = new THREE.Mesh(geometry, this.texturesEnabled ? textured : mat);
     // CPU bounds cannot follow the shader positions. Individual culling/LOD is a later measured optimization.
     mesh.frustumCulled = false;
     mesh.castShadow = true;
@@ -384,6 +405,14 @@ export class PawnLayer {
       }
       for(const attribute of [from,to,times,motion])attribute.needsUpdate=true;
     }
+  }
+
+  dispose(): void {
+    clearGroup(this.group);
+    this.plainMaterial?.dispose();
+    this.texturedMaterial?.dispose();
+    this.surfaceTexture.dispose();
+    this.pawnMesh = this.cargoMesh = this.fireMesh = this.selectionMesh = null;
   }
 
 }

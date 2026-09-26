@@ -1,5 +1,7 @@
 # Publication Netlify
 
+**V114 en attente (26 septembre 2026) :** le lot visuel et son build sont validés localement ; la publication reste suspendue par le refus de crédits HTTP 403 constaté depuis V110. [Preuves V114](../history/validation-timber-v114.md). Le site public demeure en V109 tant qu'un nouveau déploiement `ready` et son contrôle public ne sont pas obtenus.
+
 **V111 également en attente (26 septembre 2026) :** la correction des cheveux et son build local sont validés ; aucun nouveau déploiement n'est tenté tant que le blocage de crédits HTTP 403 constaté pour V110 demeure. [Preuves V111](../history/validation-appearance-v111.md). Le site public reste en V109 ; reprendre la publication seulement après rétablissement du compte, puis vérifier le bundle et le parcours public.
 
 **V110 en attente (26 septembre 2026) :** build et contrôle local prêts, mais la création du déploiement est refusée par Netlify avec HTTP 403 : « Account credit usage exceeded - new deploys are blocked until credits are added ». [Preuve et limites](../history/validation-appearance-v110.md), [état](../../artifacts/netlify-v110-blocked.json). Le site public reste en V109. Ne pas annoncer une livraison publique V110 avant nouveau déploiement `ready` et parcours public réussi ; il faut que le compte Netlify dispose à nouveau de crédits.

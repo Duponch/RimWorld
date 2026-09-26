@@ -1,0 +1,761 @@
+{
+  "date": "2026-09-26T17:31:15.772Z",
+  "fixture": "Prepared 9×9 timber room with wood, steel and granite doors along one wall; 49 constructed interior roof cells",
+  "errors": [],
+  "views": [
+    {
+      "name": "three-doors",
+      "file": "artifacts/timber-v114-three-doors.png",
+      "textures": true,
+      "preference": "true",
+      "walls": 29,
+      "doors": [
+        {
+          "x": 14,
+          "z": 20,
+          "material": "wood"
+        },
+        {
+          "x": 16,
+          "z": 20,
+          "material": "steel"
+        },
+        {
+          "x": 18,
+          "z": 20,
+          "material": "granite-blocks"
+        }
+      ],
+      "constructedRoofCells": 49,
+      "roofTriangles": 396,
+      "roofBounds": {
+        "min": [
+          11.4350004196167,
+          2.569999933242798,
+          11.4350004196167
+        ],
+        "max": [
+          20.565000534057617,
+          2.880000114440918,
+          20.565000534057617
+        ]
+      },
+      "roofVisible": false,
+      "cutaway": false,
+      "timberInstances": 32,
+      "textureVariants": {
+        "walls": true,
+        "roof": true,
+        "doors": true
+      },
+      "drawCalls": 26
+    },
+    {
+      "name": "three-doors-close",
+      "file": "artifacts/timber-v114-three-doors-close.png",
+      "textures": true,
+      "preference": "true",
+      "walls": 29,
+      "doors": [
+        {
+          "x": 14,
+          "z": 20,
+          "material": "wood"
+        },
+        {
+          "x": 16,
+          "z": 20,
+          "material": "steel"
+        },
+        {
+          "x": 18,
+          "z": 20,
+          "material": "granite-blocks"
+        }
+      ],
+      "constructedRoofCells": 49,
+      "roofTriangles": 396,
+      "roofBounds": {
+        "min": [
+          11.4350004196167,
+          2.569999933242798,
+          11.4350004196167
+        ],
+        "max": [
+          20.565000534057617,
+          2.880000114440918,
+          20.565000534057617
+        ]
+      },
+      "roofVisible": false,
+      "cutaway": false,
+      "timberInstances": 32,
+      "textureVariants": {
+        "walls": true,
+        "roof": true,
+        "doors": true
+      },
+      "drawCalls": 26
+    },
+    {
+      "name": "roof-front",
+      "file": "artifacts/timber-v114-roof-front.png",
+      "textures": true,
+      "preference": "true",
+      "walls": 29,
+      "doors": [
+        {
+          "x": 14,
+          "z": 20,
+          "material": "wood"
+        },
+        {
+          "x": 16,
+          "z": 20,
+          "material": "steel"
+        },
+        {
+          "x": 18,
+          "z": 20,
+          "material": "granite-blocks"
+        }
+      ],
+      "constructedRoofCells": 49,
+      "roofTriangles": 396,
+      "roofBounds": {
+        "min": [
+          11.4350004196167,
+          2.569999933242798,
+          11.4350004196167
+        ],
+        "max": [
+          20.565000534057617,
+          2.880000114440918,
+          20.565000534057617
+        ]
+      },
+      "roofVisible": true,
+      "cutaway": false,
+      "timberInstances": 32,
+      "textureVariants": {
+        "walls": true,
+        "roof": true,
+        "doors": true
+      },
+      "drawCalls": 26
+    },
+    {
+      "name": "roof-top",
+      "file": "artifacts/timber-v114-roof-top.png",
+      "textures": true,
+      "preference": "true",
+      "walls": 29,
+      "doors": [
+        {
+          "x": 14,
+          "z": 20,
+          "material": "wood"
+        },
+        {
+          "x": 16,
+          "z": 20,
+          "material": "steel"
+        },
+        {
+          "x": 18,
+          "z": 20,
+          "material": "granite-blocks"
+        }
+      ],
+      "constructedRoofCells": 49,
+      "roofTriangles": 396,
+      "roofBounds": {
+        "min": [
+          11.4350004196167,
+          2.569999933242798,
+          11.4350004196167
+        ],
+        "max": [
+          20.565000534057617,
+          2.880000114440918,
+          20.565000534057617
+        ]
+      },
+      "roofVisible": true,
+      "cutaway": false,
+      "timberInstances": 32,
+      "textureVariants": {
+        "walls": true,
+        "roof": true,
+        "doors": true
+      },
+      "drawCalls": 28
+    },
+    {
+      "name": "roof-side",
+      "file": "artifacts/timber-v114-roof-side.png",
+      "textures": true,
+      "preference": "true",
+      "walls": 29,
+      "doors": [
+        {
+          "x": 14,
+          "z": 20,
+          "material": "wood"
+        },
+        {
+          "x": 16,
+          "z": 20,
+          "material": "steel"
+        },
+        {
+          "x": 18,
+          "z": 20,
+          "material": "granite-blocks"
+        }
+      ],
+      "constructedRoofCells": 49,
+      "roofTriangles": 396,
+      "roofBounds": {
+        "min": [
+          11.4350004196167,
+          2.569999933242798,
+          11.4350004196167
+        ],
+        "max": [
+          20.565000534057617,
+          2.880000114440918,
+          20.565000534057617
+        ]
+      },
+      "roofVisible": true,
+      "cutaway": false,
+      "timberInstances": 32,
+      "textureVariants": {
+        "walls": true,
+        "roof": true,
+        "doors": true
+      },
+      "drawCalls": 28
+    },
+    {
+      "name": "cutaway",
+      "file": "artifacts/timber-v114-cutaway.png",
+      "textures": true,
+      "preference": "true",
+      "walls": 29,
+      "doors": [
+        {
+          "x": 14,
+          "z": 20,
+          "material": "wood"
+        },
+        {
+          "x": 16,
+          "z": 20,
+          "material": "steel"
+        },
+        {
+          "x": 18,
+          "z": 20,
+          "material": "granite-blocks"
+        }
+      ],
+      "constructedRoofCells": 49,
+      "roofTriangles": 396,
+      "roofBounds": {
+        "min": [
+          11.4350004196167,
+          0.49000000953674316,
+          11.4350004196167
+        ],
+        "max": [
+          20.565000534057617,
+          0.800000011920929,
+          20.565000534057617
+        ]
+      },
+      "roofVisible": false,
+      "cutaway": true,
+      "timberInstances": 32,
+      "textureVariants": {
+        "walls": true,
+        "roof": true,
+        "doors": true
+      },
+      "drawCalls": 28
+    },
+    {
+      "name": "three-doors-plain",
+      "file": "artifacts/timber-v114-three-doors-plain.png",
+      "textures": false,
+      "preference": "false",
+      "walls": 29,
+      "doors": [
+        {
+          "x": 14,
+          "z": 20,
+          "material": "wood"
+        },
+        {
+          "x": 16,
+          "z": 20,
+          "material": "steel"
+        },
+        {
+          "x": 18,
+          "z": 20,
+          "material": "granite-blocks"
+        }
+      ],
+      "constructedRoofCells": 49,
+      "roofTriangles": 396,
+      "roofBounds": {
+        "min": [
+          11.4350004196167,
+          2.569999933242798,
+          11.4350004196167
+        ],
+        "max": [
+          20.565000534057617,
+          2.880000114440918,
+          20.565000534057617
+        ]
+      },
+      "roofVisible": false,
+      "cutaway": false,
+      "timberInstances": 32,
+      "textureVariants": {
+        "walls": false,
+        "roof": false,
+        "doors": false
+      },
+      "drawCalls": 26
+    },
+    {
+      "name": "roof-top-plain",
+      "file": "artifacts/timber-v114-roof-top-plain.png",
+      "textures": false,
+      "preference": "false",
+      "walls": 29,
+      "doors": [
+        {
+          "x": 14,
+          "z": 20,
+          "material": "wood"
+        },
+        {
+          "x": 16,
+          "z": 20,
+          "material": "steel"
+        },
+        {
+          "x": 18,
+          "z": 20,
+          "material": "granite-blocks"
+        }
+      ],
+      "constructedRoofCells": 49,
+      "roofTriangles": 396,
+      "roofBounds": {
+        "min": [
+          11.4350004196167,
+          2.569999933242798,
+          11.4350004196167
+        ],
+        "max": [
+          20.565000534057617,
+          2.880000114440918,
+          20.565000534057617
+        ]
+      },
+      "roofVisible": true,
+      "cutaway": false,
+      "timberInstances": 32,
+      "textureVariants": {
+        "walls": false,
+        "roof": false,
+        "doors": false
+      },
+      "drawCalls": 26
+    }
+  ],
+  "detailFixture": "Prepared tree, wood table, steel solar panel and one pawn",
+  "detailViews": [
+    {
+      "name": "tree",
+      "file": "artifacts/stylized-v114-tree-on.png",
+      "textures": true,
+      "preference": "true",
+      "resources": [
+        {
+          "kind": "tree",
+          "x": 7,
+          "z": 16
+        }
+      ],
+      "structures": [
+        {
+          "kind": "table",
+          "x": 12,
+          "z": 15,
+          "material": "wood"
+        },
+        {
+          "kind": "solar-generator",
+          "x": 19,
+          "z": 14,
+          "material": "steel"
+        }
+      ],
+      "pawn": {
+        "x": 15,
+        "z": 17
+      },
+      "textureVariants": {
+        "tree": true,
+        "furniture": true,
+        "pawn": true
+      },
+      "drawCalls": 24
+    },
+    {
+      "name": "table",
+      "file": "artifacts/stylized-v114-table-on.png",
+      "textures": true,
+      "preference": "true",
+      "resources": [
+        {
+          "kind": "tree",
+          "x": 7,
+          "z": 16
+        }
+      ],
+      "structures": [
+        {
+          "kind": "table",
+          "x": 12,
+          "z": 15,
+          "material": "wood"
+        },
+        {
+          "kind": "solar-generator",
+          "x": 19,
+          "z": 14,
+          "material": "steel"
+        }
+      ],
+      "pawn": {
+        "x": 15,
+        "z": 17
+      },
+      "textureVariants": {
+        "tree": true,
+        "furniture": true,
+        "pawn": true
+      },
+      "drawCalls": 24
+    },
+    {
+      "name": "solar",
+      "file": "artifacts/stylized-v114-solar-on.png",
+      "textures": true,
+      "preference": "true",
+      "resources": [
+        {
+          "kind": "tree",
+          "x": 7,
+          "z": 16
+        }
+      ],
+      "structures": [
+        {
+          "kind": "table",
+          "x": 12,
+          "z": 15,
+          "material": "wood"
+        },
+        {
+          "kind": "solar-generator",
+          "x": 19,
+          "z": 14,
+          "material": "steel"
+        }
+      ],
+      "pawn": {
+        "x": 15,
+        "z": 17
+      },
+      "textureVariants": {
+        "tree": true,
+        "furniture": true,
+        "pawn": true
+      },
+      "drawCalls": 24
+    },
+    {
+      "name": "pawn",
+      "file": "artifacts/stylized-v114-pawn-on.png",
+      "textures": true,
+      "preference": "true",
+      "resources": [
+        {
+          "kind": "tree",
+          "x": 7,
+          "z": 16
+        }
+      ],
+      "structures": [
+        {
+          "kind": "table",
+          "x": 12,
+          "z": 15,
+          "material": "wood"
+        },
+        {
+          "kind": "solar-generator",
+          "x": 19,
+          "z": 14,
+          "material": "steel"
+        }
+      ],
+      "pawn": {
+        "x": 15,
+        "z": 17
+      },
+      "textureVariants": {
+        "tree": true,
+        "furniture": true,
+        "pawn": true
+      },
+      "drawCalls": 22
+    },
+    {
+      "name": "group",
+      "file": "artifacts/stylized-v114-group-on.png",
+      "textures": true,
+      "preference": "true",
+      "resources": [
+        {
+          "kind": "tree",
+          "x": 7,
+          "z": 16
+        }
+      ],
+      "structures": [
+        {
+          "kind": "table",
+          "x": 12,
+          "z": 15,
+          "material": "wood"
+        },
+        {
+          "kind": "solar-generator",
+          "x": 19,
+          "z": 14,
+          "material": "steel"
+        }
+      ],
+      "pawn": {
+        "x": 15,
+        "z": 17
+      },
+      "textureVariants": {
+        "tree": true,
+        "furniture": true,
+        "pawn": true
+      },
+      "drawCalls": 24
+    },
+    {
+      "name": "tree",
+      "file": "artifacts/stylized-v114-tree-off.png",
+      "textures": false,
+      "preference": "false",
+      "resources": [
+        {
+          "kind": "tree",
+          "x": 7,
+          "z": 16
+        }
+      ],
+      "structures": [
+        {
+          "kind": "table",
+          "x": 12,
+          "z": 15,
+          "material": "wood"
+        },
+        {
+          "kind": "solar-generator",
+          "x": 19,
+          "z": 14,
+          "material": "steel"
+        }
+      ],
+      "pawn": {
+        "x": 15,
+        "z": 17
+      },
+      "textureVariants": {
+        "tree": false,
+        "furniture": false,
+        "pawn": false
+      },
+      "drawCalls": 24
+    },
+    {
+      "name": "table",
+      "file": "artifacts/stylized-v114-table-off.png",
+      "textures": false,
+      "preference": "false",
+      "resources": [
+        {
+          "kind": "tree",
+          "x": 7,
+          "z": 16
+        }
+      ],
+      "structures": [
+        {
+          "kind": "table",
+          "x": 12,
+          "z": 15,
+          "material": "wood"
+        },
+        {
+          "kind": "solar-generator",
+          "x": 19,
+          "z": 14,
+          "material": "steel"
+        }
+      ],
+      "pawn": {
+        "x": 15,
+        "z": 17
+      },
+      "textureVariants": {
+        "tree": false,
+        "furniture": false,
+        "pawn": false
+      },
+      "drawCalls": 24
+    },
+    {
+      "name": "solar",
+      "file": "artifacts/stylized-v114-solar-off.png",
+      "textures": false,
+      "preference": "false",
+      "resources": [
+        {
+          "kind": "tree",
+          "x": 7,
+          "z": 16
+        }
+      ],
+      "structures": [
+        {
+          "kind": "table",
+          "x": 12,
+          "z": 15,
+          "material": "wood"
+        },
+        {
+          "kind": "solar-generator",
+          "x": 19,
+          "z": 14,
+          "material": "steel"
+        }
+      ],
+      "pawn": {
+        "x": 15,
+        "z": 17
+      },
+      "textureVariants": {
+        "tree": false,
+        "furniture": false,
+        "pawn": false
+      },
+      "drawCalls": 24
+    },
+    {
+      "name": "pawn",
+      "file": "artifacts/stylized-v114-pawn-off.png",
+      "textures": false,
+      "preference": "false",
+      "resources": [
+        {
+          "kind": "tree",
+          "x": 7,
+          "z": 16
+        }
+      ],
+      "structures": [
+        {
+          "kind": "table",
+          "x": 12,
+          "z": 15,
+          "material": "wood"
+        },
+        {
+          "kind": "solar-generator",
+          "x": 19,
+          "z": 14,
+          "material": "steel"
+        }
+      ],
+      "pawn": {
+        "x": 15,
+        "z": 17
+      },
+      "textureVariants": {
+        "tree": false,
+        "furniture": false,
+        "pawn": false
+      },
+      "drawCalls": 22
+    },
+    {
+      "name": "group",
+      "file": "artifacts/stylized-v114-group-off.png",
+      "textures": false,
+      "preference": "false",
+      "resources": [
+        {
+          "kind": "tree",
+          "x": 7,
+          "z": 16
+        }
+      ],
+      "structures": [
+        {
+          "kind": "table",
+          "x": 12,
+          "z": 15,
+          "material": "wood"
+        },
+        {
+          "kind": "solar-generator",
+          "x": 19,
+          "z": 14,
+          "material": "steel"
+        }
+      ],
+      "pawn": {
+        "x": 15,
+        "z": 17
+      },
+      "textureVariants": {
+        "tree": false,
+        "furniture": false,
+        "pawn": false
+      },
+      "drawCalls": 24
+    }
+  ],
+  "adapter": {
+    "backend": "WebGPU",
+    "info": {}
+  },
+  "settingsScreenshot": "artifacts/timber-v114-settings-off.png"
+}

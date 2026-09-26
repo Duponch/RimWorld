@@ -16,6 +16,7 @@ import { RoofLayer } from './RoofLayer';
 import { sameTerrainSurface } from './terrain-state';
 import { doorOrientations } from '../sim/door-rules';
 import { DoorLayer } from './DoorLayer';
+import { TimberCladdingLayer } from './TimberCladdingLayer';
 import { prepareShadowPipelines } from './shadow-preparation';
 import { installCommand } from '../sim/furniture-commands';
 import type { Structure } from '../sim/types';
@@ -57,6 +58,7 @@ import { isClusterPlantSpecies } from './flora-presentation';
 import { DesignationIconLayer } from './DesignationIconLayer';
 import { LandscapeBatch } from './LandscapeBatch';
 import { ActionFeedbackLayer } from './ActionFeedbackLayer';
+import { createStylizedSurfaceTexture } from './stylized-surfaces';
 
 type VisualChunk = { signature: string; group: THREE.Group };
 
@@ -90,8 +92,9 @@ export class ColonyRenderer {
   private get controls(): OrbitControls { return this.rig.controls; }
   private readonly terrainGroup = new THREE.Group();
   private readonly resourceGroup = new THREE.Group();
-  private readonly roofs=new RoofLayer();
+  private readonly roofs=new RoofLayer(this.environmentLighting.configure);
   private readonly doors=new DoorLayer(this.environmentLighting.configure);
+  private readonly timber=new TimberCladdingLayer(this.environmentLighting.configure);
   private readonly structureGroup = new THREE.Group();
   private readonly jobGroup = new THREE.Group();
   private readonly pileGroup = new THREE.Group();
@@ -116,15 +119,17 @@ export class ColonyRenderer {
   private readonly keys = new Set<string>();
   private readonly pileChunks = new Map<string, VisualChunk>();
   private readonly staticMaterial = material(0xffffff, { vertexColors: true });
+  private readonly staticPaint=createStylizedSurfaceTexture('vegetation');
+  private readonly texturedStaticMaterial=material(0xffffff,{vertexColors:true,map:this.staticPaint});
   private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
   private readonly boxes = new BoxBatches(this.environmentLighting.configure);
   private readonly recreationHints = new RecreationHints(this.boxes);
-  private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial);
+  private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial,this.texturedStaticMaterial);
   private readonly naturalPresentation = new NaturalResourcePresentation();
-  private readonly crops = new CropLayer(this.staticMaterial);
+  private readonly crops = new CropLayer(this.staticMaterial,this.texturedStaticMaterial);
   private readonly growing = new GrowingZoneLayer(this.boxes);
   private readonly rocks = new RockLayer(this.staticMaterial);
-  private readonly plants = new PlantClusterLayer(this.staticMaterial);
+  private readonly plants = new PlantClusterLayer(this.staticMaterial,this.texturedStaticMaterial);
   private readonly designations = new DesignationIconLayer();
   private readonly daylight: DayNightLayer;
   private world: World | null = null;
@@ -137,6 +142,7 @@ export class ColonyRenderer {
   private placementRotation: Orientation = 0;
   private hoverCell: { x: number; z: number } | null = null;
   private wallCutaway = false;
+  private texturesEnabled=true;
   private lastFrame = 0;
   private snapshotAt = 0;
   private timeFrom = 0;
@@ -158,10 +164,12 @@ export class ColonyRenderer {
     this.renderer = renderer;
     this.scene.matrixAutoUpdate = false;
     this.environmentLighting.configure(this.staticMaterial);
+    this.environmentLighting.configure(this.texturedStaticMaterial);
     this.environmentLighting.configure(this.waterMaterial);
     // Renderer-owned shared material survives deletion of an individual chunk.
     // Reusing its node graph also avoids compiling a pipeline per tree batch.
     this.staticMaterial.userData.rendererOwned = true;
+    this.texturedStaticMaterial.userData.rendererOwned = true;
     this.waterMaterial.userData.rendererOwned = true;
     this.backend = renderer.getContext() instanceof WebGL2RenderingContext ? 'WebGL 2' : 'WebGPU';
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
@@ -191,7 +199,7 @@ export class ColonyRenderer {
     host.appendChild(renderer.domElement);
     this.daylight = new DayNightLayer(this.scene);
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
-    this.scene.add(this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group);
+    this.scene.add(this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group);
     this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide, forceSinglePass:true });
     // A zero-thickness cursor has no front/back transparency ordering.
@@ -281,7 +289,7 @@ export class ColonyRenderer {
     this.hygiene.update(world,this.boxes,newMap);
     if (previousWorld?.resources !== world.resources || newMap || Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.updateResources(world, newMap);
     const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.building.material}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
-    this.roofs.update(world,this.boxes,newMap);
+    this.roofs.update(world,this.boxes,this.wallCutaway,newMap);
     this.doors.update(world,this.wallCutaway,resetPoses);
     const doorAxes=doorOrientations(world);
     const structureKey = [...doorAxes].join(':') + packageKey + world.structures.map((s) => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.medical}:${s.grave?.corpseId}:${s.flower?.plant?`${s.flower.plant.hitPoints>0}:${Math.floor(s.flower.plant.growth*4)}`:''}:${s.power?.on}:${s.power?.parentId}:${s.power?.switchOn}:${s.fuel?s.fuel.ticks>0:''}`).join('|');
@@ -348,11 +356,28 @@ export class ColonyRenderer {
 
   /** Presentation only: hidden wall volume remains blocked in the simulation. */
   setRoofsVisible(visible:boolean):void {this.roofs.surface.visible=visible;}
+  /** Switch resident material graphs. The plain variants contain no texture
+   * sampling node; no image or per-frame CPU work is involved while disabled. */
+  setTexturesEnabled(enabled:boolean):void {
+    if(this.texturesEnabled===enabled)return;
+    this.texturesEnabled=enabled;
+    this.boxes.setTexturesEnabled(enabled);
+    this.timber.setTexturesEnabled(enabled);
+    this.doors.setTexturesEnabled(enabled);
+    this.roofs.setTexturesEnabled(enabled);
+    this.resources.setTexturesEnabled(enabled);
+    this.crops.setTexturesEnabled(enabled);
+    this.plants.setTexturesEnabled(enabled);
+    this.overview.setTexturesEnabled(enabled);
+    this.pawns.setTexturesEnabled(enabled);
+    this.wildlife.setTexturesEnabled(enabled);
+    this.landscape.needsUpdate=true;
+  }
   setRoofAreasVisible(visible:boolean):void {this.roofs.areas.visible=visible;}
   setWallCutaway(enabled: boolean): void {
     if (this.wallCutaway === enabled) return;
     this.wallCutaway = enabled;
-    if (this.world) { this.buildStructures(this.world); this.buildJobs(this.world); }
+    if (this.world) { this.roofs.update(this.world,this.boxes,this.wallCutaway);this.buildStructures(this.world); this.buildJobs(this.world); }
   }
 
   /** Hide canopies for inspection while retaining trunks and all game rules. */
@@ -375,6 +400,7 @@ export class ColonyRenderer {
     const restoreWind=this.wind.prepareForCompile();
     const restoreRoofs=this.roofs.prepare();
     const restoreDoors=this.doors.prepareForCompile();
+    const restoreTimber=this.timber.prepareForCompile();
     const restoreCrops = this.crops.prepareForCompile();
     const restorePlants = this.plants.prepareForCompile();
     const restoreDesignations=this.designations.prepareForCompile();
@@ -392,7 +418,7 @@ export class ColonyRenderer {
       this.landscape.needsUpdate=true;
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
-      restoreWind();restoreWildlife();restoreFeedback();restoreRoofs();restoreDoors();restoreCrops();restorePlants();restoreDesignations();restoreFilth();
+      restoreWind();restoreWildlife();restoreFeedback();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreDesignations();restoreFilth();
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
@@ -473,7 +499,7 @@ export class ColonyRenderer {
     this.resources.update(visible, newMap,this.naturalPresentation.changes); this.overview.update(visible,newMap,this.naturalPresentation.changes);
   }
 
-  private buildStructures(world: World): void { this.doors.update(world,this.wallCutaway);buildFurniture(world, this.structureGroup, this.wallCutaway, this.boxes); }
+  private buildStructures(world: World): void { this.doors.update(world,this.wallCutaway);this.timber.update(world,this.wallCutaway);buildFurniture(world, this.structureGroup, this.wallCutaway, this.boxes); }
 
   private buildJobs(world: World): void { buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes);this.designations.update(world); }
 
@@ -775,6 +801,8 @@ export class ColonyRenderer {
     window.removeEventListener('blur', this.onBlur);
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.boxes.dispose();
+    this.roofs.dispose();
+    this.timber.dispose();
     this.hygiene.dispose();
     this.actionFeedback.dispose();
     this.overview.dispose();
@@ -782,11 +810,13 @@ export class ColonyRenderer {
     this.crops.dispose();
     this.plants.dispose();
     this.resources.clear();
+    this.pawns.dispose();
     this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.designations.dispose();
 
-    for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup, this.pawns.group]) clearGroup(group);
+    for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup]) clearGroup(group);
     this.pileChunks.clear();
     this.staticMaterial.dispose();
+    this.texturedStaticMaterial.dispose();this.staticPaint.dispose();
     this.waterMaterial.dispose();
     this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();
     this.daylight.dispose();

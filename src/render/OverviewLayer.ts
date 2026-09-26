@@ -7,6 +7,7 @@ import type { World, ResourceKind } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { noise } from './StaticGeometry';
 import { clearGroup } from './primitives';
+import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import type { NaturalPresentationChange } from './NaturalResourcePresentation';
 
 /** Resident distant representation. Switching zoom never rebuilds geometry.
@@ -19,9 +20,17 @@ export class OverviewLayer {
   private readonly slots=new Map<number,{kind:ResourceKind;slot:number;signature:string}>();
   private readonly transform=new THREE.Object3D();
   private readonly tint=new THREE.Color();
-  private readonly surface=new THREE.MeshStandardNodeMaterial({roughness:0.95,vertexColors:true});
+  private readonly paint=createStylizedSurfaceTexture();
+  private readonly surface=new THREE.MeshStandardNodeMaterial({roughness:0.95,vertexColors:true,map:this.paint});
+  private readonly plainSurface=new THREE.MeshStandardNodeMaterial({roughness:0.95,vertexColors:true});
+  private texturesEnabled=true;
   private foliage=true;
-  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void){configure?.(this.surface);this.group.add(this.terrain,this.vegetation);this.group.visible=false;this.surface.userData.rendererOwned=true;}
+  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void){for(const mat of [this.surface,this.plainSurface]){configure?.(mat);mat.userData.rendererOwned=true;}this.group.add(this.terrain,this.vegetation);this.group.visible=false;}
+  setTexturesEnabled(enabled:boolean):void {
+    if(this.texturesEnabled===enabled)return;
+    this.texturesEnabled=enabled;
+    for(const mesh of this.batches.values())mesh.material=enabled?this.surface:this.plainSurface;
+  }
   rebuildTerrain(source:THREE.Group):void {
     clearGroup(this.terrain);source.updateMatrixWorld(true);
     const grouped=new Map<THREE.Material,THREE.BufferGeometry[]>();
@@ -52,7 +61,7 @@ export class OverviewLayer {
         // Three r186 uploads DynamicDrawUsage attributes on every render even
         // when their version is unchanged. These matrices change on snapshots
         // only; StaticDrawUsage still uploads each explicit needsUpdate below.
-        const mesh=new THREE.InstancedMesh(geometry,this.surface,Math.max(1,count));mesh.count=count;
+        const mesh=new THREE.InstancedMesh(geometry,this.texturesEnabled?this.surface:this.plainSurface,Math.max(1,count));mesh.count=count;
         this.batches.set(kind,mesh);this.vegetation.add(mesh);
       }
     }
@@ -87,5 +96,5 @@ export class OverviewLayer {
     for(const kind of dirty) {const mesh=this.batches.get(kind)!;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;if(boundsChanged)mesh.computeBoundingSphere();}
     this.setFoliageVisible(this.foliage);
   }
-  dispose():void {clearGroup(this.terrain);clearGroup(this.vegetation);this.surface.dispose();}
+  dispose():void {clearGroup(this.terrain);clearGroup(this.vegetation);this.surface.dispose();this.plainSurface.dispose();this.paint.dispose();}
 }

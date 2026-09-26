@@ -37,13 +37,14 @@ class CropBatch {
   private readonly color = new THREE.Color();
   private readonly green = new THREE.Color(0x80a24a);
   private readonly ripe = new THREE.Color(0xcfb665);
-  constructor(private readonly group:THREE.Group,private readonly kind:CropKind,private readonly material: THREE.Material) {
+  constructor(private readonly group:THREE.Group,private readonly kind:CropKind,private material: THREE.Material) {
     if(kind==='cotton')this.ripe.setHex(0xf0ead7);
     if(kind==='potato')this.ripe.setHex(0x83964a);
     this.geometry = cropGeometry(kind);
     this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(this.geometry.getAttribute('position').count * 3).fill(1), 3));
     this.mesh = this.createMesh(128); this.group.add(this.mesh);
   }
+  setMaterial(material:THREE.Material):void {this.material=material;this.mesh.material=material;}
   private createMesh(capacity: number): THREE.InstancedMesh {
     const mesh = new THREE.InstancedMesh(this.geometry, this.material, capacity);
     // A runtime-sized storage array keeps the same shader when capacity grows.
@@ -101,7 +102,8 @@ class CropBatch {
 export class CropLayer {
   readonly group=new THREE.Group();
   private readonly batches:CropBatch[];
-  constructor(material:THREE.Material){this.batches=CROP_KINDS.map(kind=>new CropBatch(this.group,kind,material));}
+  constructor(private readonly plainMaterial:THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial){this.batches=CROP_KINDS.map(kind=>new CropBatch(this.group,kind,texturedMaterial));}
+  setTexturesEnabled(enabled:boolean):void {for(const batch of this.batches)batch.setMaterial(enabled?this.texturedMaterial:this.plainMaterial);}
   prepareForCompile():()=>void {const restore=this.batches.map(b=>b.prepareForCompile());return()=>restore.forEach(f=>f());}
   update(world:World,reset:boolean):void {for(const batch of this.batches)batch.update(world,reset);}
   dispose():void {for(const batch of this.batches)batch.dispose();}

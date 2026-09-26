@@ -19,16 +19,17 @@ export function noise(x: number, z: number, salt = 0): number {
  * per-cell silhouettes and colors stay intact; only submissions are combined.
  * Dynamic pawns and cargo remain GPU-instanced and are never baked here.
  */
-export function mergedInstances(group: THREE.Group, parts: { geometry: THREE.BufferGeometry; items: Placement[] }[], mat: THREE.Material, shadows = true): THREE.Mesh | undefined {
+export function mergedInstances(group: THREE.Group, parts: { geometry: THREE.BufferGeometry; items: Placement[] }[], mat: THREE.Material, shadows = true, includeUv = false): THREE.Mesh | undefined {
   const vertexCount = parts.reduce((sum, part) => sum + part.geometry.getAttribute('position').count * part.items.length, 0);
   const indexCount = parts.reduce((sum, part) => sum + (part.geometry.index?.count ?? part.geometry.getAttribute('position').count) * part.items.length, 0);
   if (!vertexCount) { for (const part of parts) part.geometry.dispose(); if (!mat.userData.rendererOwned) mat.dispose(); return; }
   const positions = new Float32Array(vertexCount * 3), normals = new Float32Array(vertexCount * 3), colors = new Float32Array(vertexCount * 3);
+  const uvs = includeUv ? new Float32Array(vertexCount * 2) : undefined;
   const indices = vertexCount > 65535 ? new Uint32Array(indexCount) : new Uint16Array(indexCount);
   let vertex = 0, index = 0;
   const ranges:ResourceRange[] = [];
   for (const { geometry, items } of parts) {
-    const pos = geometry.getAttribute('position'), normal = geometry.getAttribute('normal');
+    const pos = geometry.getAttribute('position'), normal = geometry.getAttribute('normal'), uv=geometry.getAttribute('uv');
     for (const item of items) {
       const firstIndex = index,firstVertex=vertex;
       const sx = item.sx ?? 1, sy = item.sy ?? 1, sz = item.sz ?? 1;
@@ -45,6 +46,7 @@ export function mergedInstances(group: THREE.Group, parts: { geometry: THREE.Buf
         normals[offset + 1] = ny / length;
         normals[offset + 2] = (nz * cosine - nx * sine) / length;
         colors[offset] = scratchColor.r; colors[offset + 1] = scratchColor.g; colors[offset + 2] = scratchColor.b;
+        if(uvs){const uvOffset=(vertex+i)*2;uvs[uvOffset]=uv?.getX(i)??0;uvs[uvOffset+1]=uv?.getY(i)??0;}
       }
       for (let i = 0; i < (geometry.index?.count ?? pos.count); i++) indices[index++] = vertex + (geometry.index?.getX(i) ?? i);
       if (item.key !== undefined) ranges.push({id:item.key,start:firstIndex,count:index-firstIndex,vertexStart:firstVertex,vertexCount:pos.count});
@@ -56,6 +58,7 @@ export function mergedInstances(group: THREE.Group, parts: { geometry: THREE.Buf
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  if(uvs)geometry.setAttribute('uv',new THREE.BufferAttribute(uvs,2));
   geometry.setIndex(new THREE.BufferAttribute(indices, 1));
   geometry.computeBoundingSphere();
   const mesh = new THREE.Mesh(geometry, mat);

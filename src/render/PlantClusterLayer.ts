@@ -79,14 +79,16 @@ export class PlantClusterLayer {
   private readonly transformedBounds = new THREE.Box3();
   private used = 0;
 
-  constructor(private readonly material: THREE.Material) {
+  constructor(private readonly plainMaterial: THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial) {
     this.mesh = this.createMesh(128);
     this.group.name = 'plant-cluster-layer';
     this.group.add(this.mesh);
   }
+  private texturesEnabled=true;
+  setTexturesEnabled(enabled:boolean):void {this.texturesEnabled=enabled;this.mesh.material=enabled?this.texturedMaterial:this.plainMaterial;}
 
   private createMesh(capacity: number): THREE.InstancedMesh {
-    const mesh = new THREE.InstancedMesh(this.geometry, this.material, capacity);
+    const mesh = new THREE.InstancedMesh(this.geometry, this.texturesEnabled?this.texturedMaterial:this.plainMaterial, capacity);
     mesh.name = 'upright-plant-clusters';
     mesh.instanceMatrix = new THREE.StorageInstancedBufferAttribute(capacity, 16);
     mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);

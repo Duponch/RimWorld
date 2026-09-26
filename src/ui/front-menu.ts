@@ -21,6 +21,8 @@ export interface FrontMenuOptions {
   onStart: (draft: FrontMenuDraft) => Promise<void>;
   onLoad: (key: string) => Promise<void>;
   onResume: () => Promise<void>;
+  getTexturesEnabled: () => boolean;
+  onTexturesEnabledChange: (enabled: boolean) => boolean;
   getSaves: () => FrontMenuSave[];
   getTestColonies: () => Promise<TestColony[]>;
   onLoadTest: (save: TestColony) => Promise<void>;
@@ -38,7 +40,7 @@ export interface FrontMenu {
   showError(message: string): void;
 }
 
-type Page = 'home' | 'scenario' | 'story' | 'configuration' | 'load' | 'tests';
+type Page = 'home' | 'scenario' | 'story' | 'configuration' | 'load' | 'tests' | 'options';
 type Control = HTMLButtonElement | HTMLInputElement | HTMLSelectElement;
 
 const scenery = `<svg class="front-landscape" viewBox="0 0 1440 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -189,8 +191,8 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     footer.replaceChildren();
     steps.replaceChildren();
     root.dataset.page = page;
-    eyebrow.textContent = page === 'home' ? 'UNE HISTOIRE À CONSTRUIRE' : page === 'tests' ? 'EXPLORER ET ESSAYER' : page === 'load' ? 'VOS COLONIES' : 'NOUVELLE PARTIE';
-    title.textContent = { home: 'Lisière', scenario: 'Choisir un scénario', story: 'Choisir votre histoire', configuration: 'Préparer le départ', load: 'Charger une partie', tests: 'Colonies de test' }[page];
+    eyebrow.textContent = page === 'home' ? 'UNE HISTOIRE À CONSTRUIRE' : page === 'tests' ? 'EXPLORER ET ESSAYER' : page === 'load' ? 'VOS COLONIES' : page === 'options' ? 'PRÉFÉRENCES LOCALES' : 'NOUVELLE PARTIE';
+    title.textContent = { home: 'Lisière', scenario: 'Choisir un scénario', story: 'Choisir votre histoire', configuration: 'Préparer le départ', load: 'Charger une partie', tests: 'Colonies de test', options: 'Options' }[page];
     if (['scenario','story','configuration'].includes(page)) {
       const active = ['scenario', 'story', 'configuration'].indexOf(page);
       ['Scénario', 'Histoire', 'Départ'].forEach((label, index) => {
@@ -204,6 +206,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     else if (page === 'story') renderStory();
     else if (page === 'configuration') renderConfiguration();
     else if (page === 'tests') renderTests();
+    else if (page === 'options') renderOptions();
     else renderLoad();
     reveal();
     title.focus({ preventScroll: true });
@@ -218,9 +221,34 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     if (hasGame) nav.append(action('Reprendre la colonie', () => { void run(options.onResume, 'Reprise de la colonie…'); }, 'front-primary'));
     nav.append(action('Nouvelle partie', showCreation, hasGame ? '' : 'front-primary'), action('Charger une partie', showLoad));
     const later = element('div', 'front-later');
-    later.append(unavailable('Tutoriel'), unavailable('Options'), unavailable('Mods'), unavailable('Crédits'));
+    later.append(unavailable('Tutoriel'), action('Options', () => navigate('options')), unavailable('Mods'), unavailable('Crédits'));
     nav.append(later);
     content.append(intro, nav);
+  }
+
+  function renderOptions(): void {
+    const card = element('section', 'front-card front-options');
+    card.append(element('h2', '', 'Affichage'));
+    const setting = element('label', 'front-relief front-texture-setting');
+    const checkbox = element('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = options.getTexturesEnabled();
+    checkbox.setAttribute('aria-labelledby', 'front-textures-label');
+    checkbox.setAttribute('aria-describedby', 'front-textures-description');
+    checkbox.addEventListener('change', () => {
+      clearError();
+      if (!options.onTexturesEnabledChange(checkbox.checked)) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+    });
+    const text = element('span');
+    const label = element('strong', '', 'Textures 3D stylisées');
+    label.id = 'front-textures-label';
+    const description = element('span', '', 'Détails peints des volumes 3D. Choix conservé dans ce navigateur.');
+    description.id = 'front-textures-description';
+    text.append(label, description);
+    setting.append(checkbox, text);
+    card.append(setting);
+    content.append(card);
+    footer.append(action('Retour', () => navigate('home'), 'front-back'));
   }
 
   function addNavigation(back: () => void, nextLabel?: string, next?: () => void): void {
