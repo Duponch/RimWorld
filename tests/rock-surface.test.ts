@@ -35,6 +35,17 @@ test('continuous faceted cells: shared seams, winding, local excavation/restorat
   const material=new THREE.MeshStandardNodeMaterial(),layer=new RockLayer(material),before=JSON.stringify(world);
   layer.update(world,true);expect(JSON.stringify(world)).toBe(before);
   const geometry=layer.mesh.geometry,position=geometry.getAttribute('position') as THREE.BufferAttribute,index=geometry.index,original=Array.from(index!.array).slice(0,geometry.drawRange.count);
+  const textured=layer.mesh.material;
+  const localMaterials=()=>((layer.group.children[1] as THREE.Group).children as THREE.Mesh[]).map(mesh=>mesh.material);
+  expect(textured).not.toBe(material);
+  expect(geometry.getAttribute('uv')).toBeUndefined(); // position supplies painted coordinates without another buffer
+  expect(localMaterials()).toEqual([textured,textured]);
+  layer.setTexturesEnabled(false);
+  expect(layer.mesh.material).toBe(material);
+  expect(localMaterials()).toEqual([material,material]);
+  layer.setTexturesEnabled(true);
+  expect(layer.mesh.material).toBe(textured);
+  expect(localMaterials()).toEqual([textured,textured]);
   const vertices=Array.from(position.array);
   expect(position.usage).toBe(THREE.StaticDrawUsage);expect(index!.usage).toBe(THREE.StaticDrawUsage);
   const positionVersion=position.version;layer.update(world);expect(position.version).toBe(positionVersion);

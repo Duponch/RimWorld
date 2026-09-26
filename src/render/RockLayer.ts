@@ -6,6 +6,9 @@ import { ROCK_INDICES, ROCK_VERTICES, writeRockCell } from './RockSurface';
 import { WORLD_SCALE } from '../world/scale';
 import { STONE_KINDS } from '../sim/geology';
 import { stoneColor } from './stone-palette';
+import { material } from './primitives';
+import { createStylizedSurfaceTexture } from './stylized-surfaces';
+import { positionLocal, texture, varying, vec2 } from 'three/tsl';
 
 /** One resident surface shared by close/distant views, including the map slab.
  * Cell slots survive excavation/restoration. Only affected vertices are uploaded;
@@ -26,11 +29,29 @@ export class RockLayer {
   private readonly local=new THREE.Group();
   private readonly chunks=new Map<string,{cells:Set<number>;mesh:THREE.Mesh;capacity:number}>();
   private distant=false;
-  constructor(surface:THREE.Material) {
-    this.mesh=new THREE.Mesh(new THREE.BufferGeometry(),surface);
+  private texturesEnabled=true;
+  private readonly stonePaint=createStylizedSurfaceTexture('stone');
+  private readonly texturedMaterial=material(0xffffff,{vertexColors:true});
+  constructor(private readonly plainMaterial:THREE.Material,configure?: (material:THREE.MeshStandardNodeMaterial)=>void) {
+    // Coordinates come from the existing world-space position attribute, so
+    // even a vast continuous cliff adds no UV buffer, vertices or draw calls.
+    // The varying moves coordinate arithmetic out of the fragment stage.
+    const paintedUv=varying(positionLocal.xz.mul(.28).add(positionLocal.y.mul(vec2(.075,.065))));
+    // NodeMaterial applies vertexColors after colorNode; multiplying the
+    // color attribute here too would darken the stone twice.
+    this.texturedMaterial.colorNode=texture(this.stonePaint,paintedUv).rgb;
+    configure?.(this.texturedMaterial);
+    this.mesh=new THREE.Mesh(new THREE.BufferGeometry(),this.texturedMaterial);
     this.mesh.name='Continuous rock surface';this.mesh.castShadow=true;this.mesh.receiveShadow=true;
     this.mesh.matrixAutoUpdate=false;
     this.group.add(this.mesh,this.local);this.setDistant(false);
+  }
+  setTexturesEnabled(enabled:boolean):void {
+    if(this.texturesEnabled===enabled)return;
+    this.texturesEnabled=enabled;
+    const chosen=enabled?this.texturedMaterial:this.plainMaterial;
+    this.mesh.material=chosen;
+    this.local.traverse(object=>{if(object instanceof THREE.Mesh)object.material=chosen;});
   }
   setDistant(distant:boolean):void {this.distant=distant;this.mesh.visible=distant;this.mesh.castShadow=false;this.local.visible=!distant;}
   private clearLocal():void {for(const mesh of this.local.children)(mesh as THREE.Mesh).geometry.dispose();this.local.clear();this.chunks.clear();}
@@ -124,5 +145,5 @@ export class RockLayer {
     }
     this.tiles=world.tiles;
   }
-  dispose():void {this.clearLocal();this.mesh.geometry.dispose();}
+  dispose():void {this.clearLocal();this.mesh.geometry.dispose();this.texturedMaterial.dispose();this.stonePaint.dispose();}
 }

@@ -35,6 +35,22 @@ function paintedVegetation(u: number, v: number): number {
   return Math.max(132, Math.min(255, Math.round((250 - first * 75 - second * 59 + light * 9 - wash * 14) / 11) * 11));
 }
 
+function paintedStone(u: number, v: number): [number, number, number] {
+  // The borders join when the map repeats over the continuous cliff surface.
+  // Wide warm and cool washes survive mipmapping where fine speckles do not.
+  const wrapped = (a: number, b: number): number => {
+    const distance = Math.abs(a - b);
+    return Math.min(distance, 1 - distance);
+  };
+  const warp = Math.sin(u * Math.PI * 2) * Math.sin(v * Math.PI * 2) * 0.045;
+  const warm = 1 - smoothstep((Math.hypot(wrapped(u + warp, 0.28) / 0.33, wrapped(v - warp, 0.36) / 0.38) - 0.58) / 0.38);
+  const cool = 1 - smoothstep((Math.hypot(wrapped(u - warp, 0.76) / 0.32, wrapped(v + warp, 0.75) / 0.36) - 0.54) / 0.39);
+  const grain = (Math.sin((u * 3 + v) * Math.PI * 2) + Math.cos((u + v * 2) * Math.PI * 2)) * 3;
+  const base = 245 - warm * 87 - cool * 72 + grain;
+  const level = (value: number): number => Math.max(128, Math.min(255, Math.round(value / 7) * 7));
+  return [level(base + warm * 18), level(base + warm * 5 + cool * 5), level(base - warm * 10 + cool * 17)];
+}
+
 /** Original, low-frequency pigment patches for resident static surfaces.
  * White remains the base colour; charcoal fields and soft, stepped edges
  * give tables, machinery and panel faces broad painted variation. No game
@@ -42,12 +58,17 @@ function paintedVegetation(u: number, v: number): number {
  * The vegetation variant has larger, stronger tonal planes so its patches
  * remain legible across the narrow UV wedges of low-poly trees. The caller
  * owns and disposes the returned texture. */
-export function createStylizedSurfaceTexture(style: 'surface' | 'vegetation' = 'surface'): THREE.DataTexture {
+export function createStylizedSurfaceTexture(style: 'surface' | 'vegetation' | 'stone' = 'surface'): THREE.DataTexture {
   const data = new Uint8Array(SIZE * SIZE * 4);
   for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
     const u = (x + 0.5) / SIZE, v = (y + 0.5) / SIZE;
     let value: number;
-    if (style === 'vegetation') value = paintedVegetation(u, v);
+    if (style === 'stone') {
+      const [red, green, blue] = paintedStone(u, v);
+      const at = (y * SIZE + x) * 4;
+      data[at] = red; data[at + 1] = green; data[at + 2] = blue; data[at + 3] = 255;
+      continue;
+    } else if (style === 'vegetation') value = paintedVegetation(u, v);
     else {
       const cloud = broadNoise(u * 2.6 + 0.2, v * 2.8 + 0.4);
       const wash = broadNoise(u * 4.2 + 7.3, v * 3.6 + 11.8);
@@ -64,8 +85,20 @@ export function createStylizedSurfaceTexture(style: 'surface' | 'vegetation' = '
     data[at] = data[at + 1] = data[at + 2] = value;
     data[at + 3] = 255;
   }
+  if (style === 'stone') {
+    // Match the sampled texel centres on opposing borders as well as the
+    // continuous underlying pattern. Bilinear repetition then has no seam.
+    for (let y = 0; y < SIZE; y++) for (let channel = 0; channel < 3; channel++) {
+      const first = (y * SIZE) * 4 + channel, last = (y * SIZE + SIZE - 1) * 4 + channel;
+      data[first] = data[last] = Math.round((data[first]! + data[last]!) / 2);
+    }
+    for (let x = 0; x < SIZE; x++) for (let channel = 0; channel < 3; channel++) {
+      const first = x * 4 + channel, last = ((SIZE - 1) * SIZE + x) * 4 + channel;
+      data[first] = data[last] = Math.round((data[first]! + data[last]!) / 2);
+    }
+  }
   const map = new THREE.DataTexture(data, SIZE, SIZE, THREE.RGBAFormat);
-  map.wrapS = map.wrapT = THREE.ClampToEdgeWrapping;
+  map.wrapS = map.wrapT = style === 'stone' ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
   map.magFilter = THREE.LinearFilter;
   map.minFilter = THREE.LinearMipmapLinearFilter;
   map.generateMipmaps = true;

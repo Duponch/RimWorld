@@ -59,6 +59,7 @@ import { DesignationIconLayer } from './DesignationIconLayer';
 import { LandscapeBatch } from './LandscapeBatch';
 import { ActionFeedbackLayer } from './ActionFeedbackLayer';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
+import { GpuGroundGrassLayer } from './GpuGroundGrassLayer';
 
 type VisualChunk = { signature: string; group: THREE.Group };
 
@@ -87,6 +88,7 @@ export class ColonyRenderer {
   private readonly renderer: THREE.WebGPURenderer;
   private readonly scene = new THREE.Scene();
   private readonly landscape = new LandscapeBatch();
+  private grass: GpuGroundGrassLayer | null = null;
   private readonly rig: CameraRig;
   private get camera(): THREE.OrthographicCamera | THREE.PerspectiveCamera { return this.rig.camera; }
   private get controls(): OrbitControls { return this.rig.controls; }
@@ -128,7 +130,7 @@ export class ColonyRenderer {
   private readonly naturalPresentation = new NaturalResourcePresentation();
   private readonly crops = new CropLayer(this.staticMaterial,this.texturedStaticMaterial);
   private readonly growing = new GrowingZoneLayer(this.boxes);
-  private readonly rocks = new RockLayer(this.staticMaterial);
+  private readonly rocks = new RockLayer(this.staticMaterial,this.environmentLighting.configure);
   private readonly plants = new PlantClusterLayer(this.staticMaterial,this.texturedStaticMaterial);
   private readonly designations = new DesignationIconLayer();
   private readonly daylight: DayNightLayer;
@@ -142,6 +144,7 @@ export class ColonyRenderer {
   private placementRotation: Orientation = 0;
   private hoverCell: { x: number; z: number } | null = null;
   private wallCutaway = false;
+  private grassVisible = true;
   private texturesEnabled=true;
   private lastFrame = 0;
   private snapshotAt = 0;
@@ -152,15 +155,15 @@ export class ColonyRenderer {
   private preparing = false;
   private pointerDown: { x: number; y: number; button: number; pointerId: number } | null = null;
 
-  static async create(host: HTMLElement, onPick: (x: number, z: number) => void): Promise<ColonyRenderer> {
+  static async create(host: HTMLElement, onPick: (x: number, z: number) => void, groundGrassEnabled = true): Promise<ColonyRenderer> {
     const renderer = new ReentrantRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
     await renderer.init();
-    const view = new ColonyRenderer(host, onPick, renderer);
+    const view = new ColonyRenderer(host, onPick, renderer, groundGrassEnabled);
     renderer.setAnimationLoop((time) => view.frame(time));
     return view;
   }
 
-  private constructor(private readonly host: HTMLElement, private readonly onPick: (x: number, z: number) => void, renderer: THREE.WebGPURenderer) {
+  private constructor(private readonly host: HTMLElement, private readonly onPick: (x: number, z: number) => void, renderer: THREE.WebGPURenderer, groundGrassEnabled: boolean) {
     this.renderer = renderer;
     this.scene.matrixAutoUpdate = false;
     this.environmentLighting.configure(this.staticMaterial);
@@ -200,6 +203,10 @@ export class ColonyRenderer {
     this.daylight = new DayNightLayer(this.scene);
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
     this.scene.add(this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group);
+    if (groundGrassEnabled) {
+      this.grass = new GpuGroundGrassLayer(this.environmentLighting.configure);
+      this.scene.add(this.grass.mesh);
+    }
     this.rig = new CameraRig(renderer.domElement);
     const hoverMat = new THREE.MeshBasicNodeMaterial({ color: 0xf9ebae, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide, forceSinglePass:true });
     // A zero-thickness cursor has no front/back transparency ordering.
@@ -271,6 +278,7 @@ export class ColonyRenderer {
     // if terrain content and simulation tick match a previous session.
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
     this.world = world;
+    this.grass?.update(world,newMap);
     this.fires.adopt(world,newMap);this.wind.adopt(world,newMap);
     this.environmentLighting.update(world);
     if(groundChanged) {
@@ -368,10 +376,25 @@ export class ColonyRenderer {
     this.resources.setTexturesEnabled(enabled);
     this.crops.setTexturesEnabled(enabled);
     this.plants.setTexturesEnabled(enabled);
+    this.rocks.setTexturesEnabled(enabled);
     this.overview.setTexturesEnabled(enabled);
     this.pawns.setTexturesEnabled(enabled);
     this.wildlife.setTexturesEnabled(enabled);
     this.landscape.needsUpdate=true;
+  }
+  /** A disabled decorative grass layer owns no mesh, texture, shader or map
+   * update path. Re-enable lazily from the current immutable world snapshot. */
+  setGroundGrassEnabled(enabled: boolean): void {
+    if (this.disposed || enabled === Boolean(this.grass)) return;
+    if (!enabled) {
+      this.grass!.mesh.removeFromParent();
+      this.grass!.dispose();
+      this.grass = null;
+      return;
+    }
+    this.grass = new GpuGroundGrassLayer(this.environmentLighting.configure);
+    this.scene.add(this.grass.mesh);
+    if (this.world) this.grass.update(this.world, true);
   }
   setRoofAreasVisible(visible:boolean):void {this.roofs.areas.visible=visible;}
   setWallCutaway(enabled: boolean): void {
@@ -382,6 +405,8 @@ export class ColonyRenderer {
 
   /** Hide canopies for inspection while retaining trunks and all game rules. */
   setFoliageVisible(visible: boolean): void {
+    this.grassVisible=visible;
+    if(!visible&&this.grass){this.grass.mesh.visible=false;this.grass.mesh.geometry.instanceCount=0;}
     this.resources.setFoliageVisible(visible);
     this.overview.setFoliageVisible(visible);
     this.landscape.needsUpdate = true;
@@ -403,6 +428,7 @@ export class ColonyRenderer {
     const restoreTimber=this.timber.prepareForCompile();
     const restoreCrops = this.crops.prepareForCompile();
     const restorePlants = this.plants.prepareForCompile();
+    const restoreGrass = this.grass?.prepareForCompile() ?? (() => {});
     const restoreDesignations=this.designations.prepareForCompile();
     const restoreFilth=this.hygiene.filth.prepareForCompile();
     try {
@@ -418,7 +444,7 @@ export class ColonyRenderer {
       this.landscape.needsUpdate=true;
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
-      restoreWind();restoreWildlife();restoreFeedback();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreDesignations();restoreFilth();
+      restoreWind();restoreWildlife();restoreFeedback();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();
       for (const [object, value] of culling) object.frustumCulled = value;
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
@@ -599,6 +625,10 @@ export class ColonyRenderer {
     if(distant!==this.overview.group.visible)this.landscape.needsUpdate=true;
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;this.plants.group.visible=!distant;
     this.rocks.setDistant(distant);
+    if(this.grass){
+      if(this.grassVisible&&!distant)this.grass.present(this.camera,this.controls.target,this.rig.span,cellPixels);
+      else{this.grass.mesh.visible=false;this.grass.mesh.geometry.instanceCount=0;}
+    }
     this.landscape.setRetained(this.backend==='WebGPU'&&distant);
     this.renderer.info.reset();
     this.renderer.render(this.scene, this.camera);
@@ -809,6 +839,7 @@ export class ColonyRenderer {
     this.rocks.dispose();
     this.crops.dispose();
     this.plants.dispose();
+    if(this.grass){this.grass.mesh.removeFromParent();this.grass.dispose();this.grass=null;}
     this.resources.clear();
     this.pawns.dispose();
     this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.designations.dispose();

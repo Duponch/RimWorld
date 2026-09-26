@@ -1,0 +1,115 @@
+{
+  "fixture": "Prepared 32² grass map, 13×14 three-stone cliff and one loose sandstone rock",
+  "errors": [],
+  "views": [
+    {
+      "name": "rock-paint-on",
+      "file": "artifacts/rock-paint-v116-on.png",
+      "backend": "WebGPU",
+      "rocks": 182,
+      "activeTriangles": 592,
+      "vertexCount": 3096,
+      "hasUv": false,
+      "materialPainted": true,
+      "localPainted": true,
+      "looseRockPainted": true,
+      "localChunks": 2,
+      "drawCalls": 23,
+      "cameraPosition": [
+        29,
+        20,
+        31
+      ],
+      "target": [
+        16,
+        1.2,
+        16
+      ],
+      "rockCentreNdc": [
+        1.909286844628561E-16,
+        0.059932463663633105,
+        0.08899375158952354
+      ],
+      "pawnNdc": [
+        -0.07941897516871904,
+        1.0860097064124505,
+        0.12885192700733958
+      ],
+      "preference": "true"
+    },
+    {
+      "name": "rock-paint-off",
+      "file": "artifacts/rock-paint-v116-off.png",
+      "backend": "WebGPU",
+      "rocks": 182,
+      "activeTriangles": 592,
+      "vertexCount": 3096,
+      "hasUv": false,
+      "materialPainted": false,
+      "localPainted": false,
+      "looseRockPainted": false,
+      "localChunks": 2,
+      "drawCalls": 23,
+      "cameraPosition": [
+        29,
+        20,
+        31
+      ],
+      "target": [
+        16,
+        1.2,
+        16
+      ],
+      "rockCentreNdc": [
+        1.909286844628561E-16,
+        0.059932463663633105,
+        0.08899375158952354
+      ],
+      "pawnNdc": [
+        -0.07941897516871904,
+        1.0860097064124505,
+        0.12885192700733958
+      ],
+      "preference": "false"
+    },
+    {
+      "name": "rock-paint-restored",
+      "file": "artifacts/rock-paint-v116-restored.png",
+      "backend": "WebGPU",
+      "rocks": 182,
+      "activeTriangles": 592,
+      "vertexCount": 3096,
+      "hasUv": false,
+      "materialPainted": true,
+      "localPainted": true,
+      "looseRockPainted": true,
+      "localChunks": 2,
+      "drawCalls": 23,
+      "cameraPosition": [
+        29,
+        20,
+        31
+      ],
+      "target": [
+        16,
+        1.2,
+        16
+      ],
+      "rockCentreNdc": [
+        1.909286844628561E-16,
+        0.059932463663633105,
+        0.08899375158952354
+      ],
+      "pawnNdc": [
+        -0.07941897516871904,
+        1.0860097064124505,
+        0.12885192700733958
+      ],
+      "preference": "true"
+    }
+  ],
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1"
+  }
+}

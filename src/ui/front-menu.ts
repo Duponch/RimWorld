@@ -23,6 +23,8 @@ export interface FrontMenuOptions {
   onResume: () => Promise<void>;
   getTexturesEnabled: () => boolean;
   onTexturesEnabledChange: (enabled: boolean) => boolean;
+  getGroundGrassEnabled: () => boolean;
+  onGroundGrassEnabledChange: (enabled: boolean) => boolean;
   getSaves: () => FrontMenuSave[];
   getTestColonies: () => Promise<TestColony[]>;
   onLoadTest: (save: TestColony) => Promise<void>;
@@ -247,6 +249,24 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     text.append(label, description);
     setting.append(checkbox, text);
     card.append(setting);
+    const grassSetting = element('label', 'front-relief front-texture-setting');
+    const grassCheckbox = element('input');
+    grassCheckbox.type = 'checkbox';
+    grassCheckbox.checked = options.getGroundGrassEnabled();
+    grassCheckbox.setAttribute('aria-labelledby', 'front-ground-grass-label');
+    grassCheckbox.setAttribute('aria-describedby', 'front-ground-grass-description');
+    grassCheckbox.addEventListener('change', () => {
+      clearError();
+      if (!options.onGroundGrassEnabledChange(grassCheckbox.checked)) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+    });
+    const grassText = element('span');
+    const grassLabel = element('strong', '', 'Tapis d’herbe');
+    grassLabel.id = 'front-ground-grass-label';
+    const grassDescription = element('span', '', 'Brins décoratifs sur la terre visible. Désactivé : aucun brin ni traitement associé.');
+    grassDescription.id = 'front-ground-grass-description';
+    grassText.append(grassLabel, grassDescription);
+    grassSetting.append(grassCheckbox, grassText);
+    card.append(grassSetting);
     content.append(card);
     footer.append(action('Retour', () => navigate('home'), 'front-back'));
   }

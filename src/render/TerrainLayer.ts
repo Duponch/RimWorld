@@ -5,7 +5,8 @@ import { WORLD_SCALE } from '../world/scale';
 import { clearGroup, type Placement } from './primitives';
 import { mergedInstances, noise } from './StaticGeometry';
 const scratchColor=new THREE.Color();
-const TERRAIN_COLORS: Record<Terrain, number> = { 'rich-soil':0x665642,gravel:0x999783,'rough-stone':0x899182, grass: 0x81946c, soil: 0xa39b75, rock: 0x899182, water: 0x78a7a4 };
+export const TERRAIN_COLORS: Record<Terrain, number> = { 'rich-soil':0x665642,gravel:0x999783,'rough-stone':0x899182, grass: 0x81946c, soil: 0xa39b75, rock: 0x899182, water: 0x78a7a4 };
+export const ARID_GRASS_COLOR = 0xa69772;
 
 export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Material, water: THREE.Material): void {
     clearGroup(group);
@@ -19,7 +20,7 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
         // The typed rough floor is already rendered beneath a massif; excavation changes no ground buffers.
         const terrain = type==='rock'?'rough-stone':type;
         const n = noise(x, z, world.seed);
-        scratchColor.setHex(terrain==='rough-stone'?stoneColor(world.tiles[z*world.width+x].stone):terrain==='grass'&&world.site?.biome==='arid-shrubland'?0xa69772:TERRAIN_COLORS[terrain]).multiplyScalar(0.94 + n * 0.12);
+        scratchColor.setHex(terrain==='rough-stone'?stoneColor(world.tiles[z*world.width+x].stone):terrain==='grass'&&world.site?.biome==='arid-shrubland'?ARID_GRASS_COLOR:TERRAIN_COLORS[terrain]).multiplyScalar(0.94 + n * 0.12);
         const color = scratchColor.getHex(), level = terrain === 'water' ? WORLD_SCALE.waterSurface : 0;
         tileGroups[terrain].push({ x, z, y: level, color });
         // Top quads replace six-sided ground cubes; exposed bank and perimeter

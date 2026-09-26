@@ -3,6 +3,9 @@ import * as THREE from 'three/webgpu';
 import { BoxBatches } from '../src/render/BoxBatches';
 import type { BoxMesh } from '../src/render/BoxMesh';
 import { createStylizedSurfaceTexture } from '../src/render/stylized-surfaces';
+import { mergedInstances } from '../src/render/StaticGeometry';
+import { chunkParts } from '../src/render/chunk-presentation';
+import { blockParts } from '../src/render/block-presentation';
 import { ResourceLayer } from '../src/render/ResourceLayer';
 import { CropLayer } from '../src/render/CropLayer';
 import { PlantClusterLayer } from '../src/render/PlantClusterLayer';
@@ -52,6 +55,60 @@ test('vegetation pigment has large readable tonal planes across narrow tree face
   } finally {
     vegetation.dispose(); repeated.dispose(); neutral.dispose();
   }
+});
+
+test('stone paint has broad pastel washes and repeatable edges', () => {
+  const stone=createStylizedSurfaceTexture('stone'),repeated=createStylizedSurfaceTexture('stone');
+  try {
+    const pixels=stone.image.data as Uint8Array;
+    expect(stone.wrapS).toBe(THREE.RepeatWrapping);
+    expect(stone.wrapT).toBe(THREE.RepeatWrapping);
+    expect(pixels).toEqual(repeated.image.data);
+    const levels=Array.from({length:64*64},(_,i)=>pixels[i*4]!);
+    expect(Math.max(...levels)-Math.min(...levels)).toBeGreaterThan(75);
+    expect(pixels.some((channel,i)=>i%4===0&&channel!==pixels[i+2])).toBe(true);
+    for(let y=0;y<64;y++)for(let channel=0;channel<3;channel++)
+      expect(Math.abs(pixels[(y*64)*4+channel]!-pixels[(y*64+63)*4+channel]!)).toBeLessThan(8);
+  } finally {stone.dispose();repeated.dispose();}
+});
+
+test('small rocks vary their existing vertex colours by facet without changing the shared mesh format', () => {
+  const group=new THREE.Group(),material=new THREE.MeshStandardNodeMaterial({vertexColors:true});
+  const rock=new THREE.DodecahedronGeometry(1,0);
+  const plain=new THREE.DodecahedronGeometry(1,0);
+  try {
+    const painted=mergedInstances(group,[{geometry:rock,items:[{x:1,y:0,z:1,key:31,color:0xaaa59b,pigment:'stone'}]}],material,true,true)!;
+    const unpainted=mergedInstances(group,[{geometry:plain,items:[{x:3,y:0,z:1,key:32,color:0xaaa59b}]}],material,true,true)!;
+    const colors=painted.geometry.getAttribute('color') as THREE.BufferAttribute;
+    const other=unpainted.geometry.getAttribute('color') as THREE.BufferAttribute;
+    const tones=new Set(Array.from({length:colors.count},(_,i)=>colors.getX(i).toFixed(3)+':'+colors.getY(i).toFixed(3)+':'+colors.getZ(i).toFixed(3)));
+    expect(tones.size).toBeGreaterThan(3);
+    expect(new Set(Array.from({length:other.count},(_,i)=>other.getX(i).toFixed(3)+':'+other.getY(i).toFixed(3)+':'+other.getZ(i).toFixed(3))).size).toBe(1);
+    expect(painted.geometry.getAttribute('uv').count).toBe(colors.count);
+    expect(painted.geometry.attributes).toHaveProperty('color');
+    expect(Object.keys(painted.geometry.attributes).sort()).toEqual(Object.keys(unpainted.geometry.attributes).sort());
+    expect(painted.material).toBe(unpainted.material);
+  } finally {
+    for(const mesh of group.children as THREE.Mesh[])mesh.geometry.dispose();
+    material.dispose();
+  }
+});
+
+test('stone fragments and cut blocks have several pastel tones in one existing pile batch', () => {
+  const fragments=chunkParts(8,9,'granite-chunk');
+  const blocks=blockParts(8,9,'granite-blocks',75);
+  expect(fragments).toHaveLength(2);
+  expect(blocks).toHaveLength(5);
+  expect(new Set(fragments.map(part=>part.color)).size).toBe(2);
+  expect(new Set(blocks.map(part=>part.color)).size).toBeGreaterThan(3);
+  expect(blockParts(8,9,'granite-blocks',75)).toEqual(blocks);
+  const group=new THREE.Group(),boxes=new BoxBatches();
+  try {
+    boxes.set(group,'stone-pile',[...fragments,...blocks]);
+    expect(group.children).toHaveLength(1);
+    expect((group.children[0] as BoxMesh).activeCount).toBe(7);
+    expect((group.children[0] as BoxMesh).colorBuffer.count).toBeGreaterThanOrEqual(7);
+  } finally {boxes.dispose();}
 });
 
 test('vegetation uses textured geometry at both distances and switches existing batches to plain materials',()=>{

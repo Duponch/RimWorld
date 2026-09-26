@@ -2,6 +2,13 @@ import * as THREE from 'three/webgpu';
 import type { Placement } from './primitives';
 import { PATTERN_SPAN } from './texture-variation';
 const scratchColor = new THREE.Color();
+// Painted stone facets use the existing RGB vertex stream; the shared
+// resource material and its UV map remain unchanged. Values are linear-space
+// multipliers, with broad warm/cool pastel planes rather than tiny speckles.
+const STONE_FACET_TINTS = [
+  [0.73,0.79,0.84], [0.80,0.83,0.76], [0.89,0.78,0.72],
+  [1.00,0.94,0.86], [1.12,1.05,0.94], [1.03,1.10,1.16],
+] as const;
 
 export interface ResourceRange { id:number;start:number;count:number;vertexStart:number;vertexCount:number }
 export interface ResourceRangeData {
@@ -41,6 +48,8 @@ export function mergedInstances(group: THREE.Group, parts: { geometry: THREE.Buf
       const sx = item.sx ?? 1, sy = item.sy ?? 1, sz = item.sz ?? 1;
       const cosine = Math.cos(item.ry ?? 0), sine = Math.sin(item.ry ?? 0);
       scratchColor.setHex(item.color ?? 0xffffff);
+      const stonePigment=item.pigment==='stone';
+      let facetX=NaN,facetZ=NaN,facetTint:readonly [number,number,number]=STONE_FACET_TINTS[0];
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i) * sx, z = pos.getZ(i) * sz;
         const nx = normal.getX(i) / sx, ny = normal.getY(i) / sy, nz = normal.getZ(i) / sz;
@@ -51,7 +60,16 @@ export function mergedInstances(group: THREE.Group, parts: { geometry: THREE.Buf
         normals[offset] = (nx * cosine + nz * sine) / length;
         normals[offset + 1] = ny / length;
         normals[offset + 2] = (nz * cosine - nx * sine) / length;
-        colors[offset] = scratchColor.r; colors[offset + 1] = scratchColor.g; colors[offset + 2] = scratchColor.b;
+        if(stonePigment) {
+          // Dodecahedron normals are constant over each broad facet. Hashing
+          // their quantized direction makes all vertices of a face share one
+          // tone, stable across chunk rebuilds and independent of game PRNG.
+          const nx=Math.round(normal.getX(i)*127),nz=Math.round(normal.getZ(i)*127);
+          if(nx!==facetX||nz!==facetZ){facetTint=STONE_FACET_TINTS[Math.min(5,Math.floor(noise(nx,nz,pigmentKey+701)*6))]!;facetX=nx;facetZ=nz;}
+          colors[offset]=scratchColor.r*facetTint[0];colors[offset+1]=scratchColor.g*facetTint[1];colors[offset+2]=scratchColor.b*facetTint[2];
+        } else {
+          colors[offset] = scratchColor.r; colors[offset + 1] = scratchColor.g; colors[offset + 2] = scratchColor.b;
+        }
         if(uvs){const uvOffset=(vertex+i)*2;uvs[uvOffset]=(uv?.getX(i)??0)*PATTERN_SPAN+phaseU;uvs[uvOffset+1]=(uv?.getY(i)??0)*PATTERN_SPAN+phaseV;}
       }
       for (let i = 0; i < (geometry.index?.count ?? pos.count); i++) indices[index++] = vertex + (geometry.index?.getX(i) ?? i);

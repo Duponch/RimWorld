@@ -29,7 +29,7 @@ export function appendFlora(parts:FloraParts,world:World,r:Resource,turn:number)
       add(parts.trunks,{y:height*.25,sx:r.species==='birch'?.85:1,sy:height*.5,sz:1,color:r.species==='birch'?0xcac9b4:0x70573e,key:r.id});
       if(r.species==='pine') {
         add(parts.cones,{y:height*.57,sx:1,sy:height*.6,sz:1,ry:turn});
-        add(parts.cones,{y:height*.82,sx:.7,sy:height*.4,sz:.7,ry:turn+.3});
+        add(parts.cones,{y:height*.76,sx:.7,sy:height*.4,sz:.7,ry:turn+.3});
       } else {
         add(parts.crowns,{y:height*.65,sx:r.species==='poplar'?.7:1,sy:height*(r.species==='drago'?.12:.24),sz:r.species==='poplar'?.7:1,ry:turn});
         if(r.species!=='drago')add(parts.crowns,{y:height*.87,sx:.66,sy:height*.16,sz:.66,ry:turn+.5});
