@@ -8,7 +8,7 @@ export function deconstructionCamp(count=1,size=32):World {
   w.resources=[];w.piles=[];w.jobs=[];w.structures=[];w.tiles=w.tiles.map(()=>({terrain:'grass'}));
   w.pawns=Array.from({length:count},(_,i)=>({...structuredClone(original),id:w.nextId++,name:`Bâtisseur ${i+1}`,
     x:Math.floor(size/2)-3+i%10,z:Math.floor(size/2)+Math.floor(i/10)*2,hunger:100,rest:100,
-    priorities: {clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,art:0,craft:2,mine:2,build:1,haul:0,gather:0,grow:0,cook:0}}));
+    priorities: {handle:0,clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,art:0,craft:2,mine:2,build:1,haul:0,gather:0,grow:0,cook:0}}));
   for(const p of w.pawns){delete p.medicalCare;p.schedule.fill('anything');}refreshStock(w);return w;
 }
 export function fixtureBuilding(w:World,kind:StructureKind,x:number,z:number,orientation:0|1|2|3=0) {

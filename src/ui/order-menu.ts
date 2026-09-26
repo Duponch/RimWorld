@@ -35,6 +35,7 @@ export function tacticalPawns(world: World, ids: ReadonlySet<number>): Pawn[] {
 export function tacticalAttackPolicy(world: World, ids: ReadonlySet<number>, targetId: number, queue: boolean): TacticalAttackPolicy {
   const pawns = tacticalPawns(world, ids), target = combatTarget(world, targetId);
   const base = { selected: ids.size, drafted: pawns.length, target: target ? isAnimalTarget(target) ? `${animalSpecies(target.species).label} ${target.id}` : target.name : `cible ${targetId}` };
+  if(target&&isAnimalTarget(target)&&target.domestic)return {...base,reason:'Cet animal appartient à la colonie.',options:[]};
   if (!pawns.length) return { ...base, reason: 'Mobilisez un colon libre et capable de combattre.', options: [] };
   if (!target || target.state === 'dead') return { ...base, reason: 'Cible vivante indisponible.', options: [] };
   // The ordinary context action must not turn a selected friend or neutral human

@@ -1,3 +1,6 @@
+import { reconcileDomesticWork } from './domestic-reconcile.ts';
+import { applyTaming,processHandling,advanceTameness } from './animal-handling.ts';
+import { applyAnimalCarePolicy,processAnimalCare } from './animal-care.ts';
 import {cancelArtWork,detachMissingArtBills} from './art-work.ts';
 import { machiningUnlocked } from './research.ts';
 import { advanceHumanCorpses } from './human-corpses.ts';
@@ -298,6 +301,8 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='clear-orders'&&world.pawns.find(p=>p.id===command.pawnId)?.draft)return applyDraftCommand(world,{type:'draft-stop',pawnIds:[command.pawnId]});
   if(command.type==='order-equipment'||command.type==='weapon-permission'||command.type==='apparel-permission'||command.type==='forget-weapon')return applyEquipment(world,command);
   if(command.type==='order-feed')return applyFeeding(world,command);
+  if(command.type==='tame')return applyTaming(world,command);
+  if(command.type==='animal-care-policy')return applyAnimalCarePolicy(world,command);
   if(command.type==='order-tend')return applyTending(world,command);
   if(command.type==='self-tend-policy'){
     const p=world.pawns.find(p=>p.id===command.pawnId);
@@ -359,10 +364,12 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     return { ok: true };
   }
   if (command.type === 'priority') {
-    if (!['art','clean','firefight','warden','basic','hunt','research','patient','bedrest','doctor','mine', 'gather', 'build', 'haul', 'grow', 'cook', 'craft'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
+    if (!['handle','art','clean','firefight','warden','basic','hunt','research','patient','bedrest','doctor','mine', 'gather', 'build', 'haul', 'grow', 'cook', 'craft'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
     const pawn = world.pawns.find(candidate => candidate.id === command.pawnId);
     if (!pawn) return refusal('missing-target', 'Colon introuvable.');
-    pawn.priorities[command.work] = command.value;if(command.work==='hunt'&&command.value===0&&pawn.hunting){cancelHunting(pawn);pawn.path=[];pawn.state='idle';}if(command.work==='research'&&command.value===0&&pawn.research)releaseAssignments(world,pawn);
+    pawn.priorities[command.work] = command.value;
+    if(command.value===0&&(command.work==='handle'&&pawn.animalHandling||command.work==='doctor'&&pawn.animalCare))releaseWork(world,pawn,drops);
+    if(command.work==='hunt'&&command.value===0&&pawn.hunting){cancelHunting(pawn);pawn.path=[];pawn.state='idle';}if(command.work==='research'&&command.value===0&&pawn.research)releaseAssignments(world,pawn);
     if(command.value===0&&pawn.feed&&command.work===feedingWork(world.pawns.find(p=>p.id===pawn.feed!.patientId))&&pawn.orders.active!=='feed')releaseWork(world,pawn,drops);
     if(command.work==='doctor'&&command.value===0&&pawn.tend&&pawn.orders.active!=='tend')releaseWork(world,pawn);
     if(command.work==='clean'&&command.value===0&&pawn.cleaning&&!pawn.cleaning.forced)releaseWork(world,pawn,drops);
@@ -481,10 +488,10 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     expireFood(world);
     thermal=advanceSurfaceTemperature(world,thermal);
     burnFuel(world);
-    advanceWildlife(world);
+    advanceTameness(world);reconcileDomesticWork(world);advanceWildlife(world);
     updateDoors(world);
     const structuresBeforeCombat=world.structures;
-    advanceWorldCombat(world);advanceCorpses(world,thermal);advanceHumanCorpses(world);reconcileBurials(world);
+    advanceWorldCombat(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);
     detachMissingBills(world);detachMissingGunBills(world);detachMissingArtBills(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     expireStaggers(world);advanceFilth(world,weatherRainRate(world));
     scheduleGrowing(world);
@@ -531,7 +538,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
       if(hasAdversary&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.burial || pawn.cleaning || pawn.visitor || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = pawn.animalHandling || pawn.animalCare || pawn.burial || pawn.cleaning || pawn.visitor || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
@@ -561,15 +568,17 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.orders.active==='bury'&&pawn.burial){processBurial(world,pawn,needsContext);continue;}
       if(pawn.cleaning?.forced&&processCleaning(world,pawn,needsContext))continue;
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
-      if (!pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.rescue&&advancePriorityWork(world,pawn,getBlocked,budget)) continue;
+      if (!pawn.animalHandling&&!pawn.animalCare&&!pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.rescue&&advancePriorityWork(world,pawn,getBlocked,budget)) continue;
       if(processHeatRefuge(world,pawn,needsContext,thermal))continue;
       if(processFirefighting(world,pawn,needsContext))continue;
       if (planUrgentCare(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget))) continue;
-      if (processNeeds(world, pawn, needsContext) || !pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
+      if (processNeeds(world, pawn, needsContext) || !pawn.animalHandling&&!pawn.animalCare&&!pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if(pawn.planCooldown===0&&recoverDroppedWeapon(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget)))continue;
       if(pawn.planCooldown===0&&considerApparelPolicy(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget)))continue;
-      if (pawn.jobId === null && pawn.haul === null && !pawn.rescue && !pawn.ward&&!pawn.feed&&!pawn.tend && !pawn.cooking && !pawn.hunting && !pawn.research && !pawn.burial && !pawn.cleaning && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
+      if (pawn.jobId === null && pawn.haul === null && !pawn.rescue && !pawn.animalHandling && !pawn.animalCare && !pawn.ward&&!pawn.feed&&!pawn.tend && !pawn.cooking && !pawn.hunting && !pawn.research && !pawn.burial && !pawn.cleaning && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
       if(pawn.firefighting&&processFirefighting(world,pawn,needsContext))continue;
+      if(pawn.animalHandling){processHandling(world,pawn,{...needsContext,candidates:()=>searchCandidates(world,pawn,getBlocked(),occupied,budget),blocked:getBlocked});continue;}
+      if(pawn.animalCare){processAnimalCare(world,pawn,{...needsContext,candidates:()=>searchCandidates(world,pawn,getBlocked(),occupied,budget),blocked:getBlocked},()=>getLight().speedAt(pawn));continue;}
       if(pawn.hunting){processHunting(world,pawn,{...needsContext,candidates:()=>searchCandidates(world,pawn,getBlocked(),occupied,budget),blocked:getBlocked});continue;}
       if(pawn.burial){processBurial(world,pawn,needsContext);continue;}
       if(processCleaning(world,pawn,needsContext))continue;
@@ -644,7 +653,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     advanceRaids(world);
     advanceSocial(world);
     if(world.roofing)reconcileRoofJobs(world,roofs);
-    reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);reconcileWildlife(world);advanceCorpses(world,thermal);advanceHumanCorpses(world);reconcileBurials(world);
+    reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);reconcileWildlife(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);
     if(world.hunting)world.hunting.targets=world.hunting.targets.filter(id=>world.wildlife?.animals.some(a=>a.id===id&&a.state!=='dead')||world.pawns.some(p=>p.hunting?.animalId===id));
     refreshStock(world);
     if(thermalDirty)thermal=reconcileTemperature(world);

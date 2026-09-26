@@ -15,6 +15,8 @@ import { isPlant } from './plants.ts';
 import { calendarTick } from './calendar.ts';
 import type { Cell,World } from './types.ts';
 import { animalSpecies,faunaBiome,selectBiomeSpecies,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
+import { animalHandlingHolding } from './animal-handling.ts';
+import { animalCareInProgress,animalCareTargets } from './animal-care.ts';
 const contact=(a:Cell,b:Cell)=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z)<=1;
 const neighbours=(c:Cell):Cell[]=>[{x:c.x,z:c.z},{x:c.x-1,z:c.z},{x:c.x+1,z:c.z},{x:c.x,z:c.z-1},{x:c.x,z:c.z+1}];
 export const ANIMAL_POPULATION_CHECK_TICKS=122; // 1,220 Core ticks; Core checks every 1,213.
@@ -45,7 +47,9 @@ function placeSpeciesGroup(world:World,s:WildlifeState,speciesId:AnimalSpeciesId
   }
   return added;
 }
-const currentPopulationWeight=(s:WildlifeState)=>s.animals.reduce((sum,a)=>sum+animalSpecies(a.species).ecoSystemWeight,0);
+// A tamed hare keeps its physical body in this collection, but no longer
+// satisfies the wild ecological target used to plan new arrivals.
+export const wildPopulationWeight=(s:WildlifeState)=>s.animals.reduce((sum,a)=>sum+(a.domestic?0:animalSpecies(a.species).ecoSystemWeight),0);
 
 /** V91 biome initialization spends ecological weight, never density as a head
  * count. The target is reduced by the exact commonality share implemented in
@@ -56,7 +60,7 @@ export function enableBiomeWildlife(world:World,biomeId:FaunaBiomeId):void {
   const fullTargetWeight=world.width*world.height*biome.animalDensity/10000,targetWeight=fullTargetWeight*implemented/biome.totalCommonality;
   const s=world.wildlife={profile:'biome-herbivores-v1',rng:(world.seed^0x784caf31)>>>0||1,animals:[],eatenPlants:0,eatenNutrition:0,eatenItems:0,
     population:{biome:biomeId,fullTargetWeight,targetWeight,nextCheck:world.tick+ANIMAL_POPULATION_CHECK_TICKS,checks:0,arrivals:0}};
-  for(let attempts=0;attempts<256&&currentPopulationWeight(s)<targetWeight&&s.animals.length<MAX_WILDLIFE;attempts++){
+  for(let attempts=0;attempts<256&&wildPopulationWeight(s)<targetWeight&&s.animals.length<MAX_WILDLIFE;attempts++){
     let roll=wildlifeRandom(s)*implemented,speciesId:AnimalSpeciesId|undefined;
     for(const entry of biome.entries){roll-=entry.commonality;if(roll<0){speciesId=entry.species;break;}}
     if(!speciesId)break;const species=animalSpecies(speciesId),[min,max]=species.wildGroupSize;
@@ -68,7 +72,7 @@ function advancePopulation(world:World,s:WildlifeState):void {
   const population=s.population;if(s.profile!=='biome-herbivores-v1'||!population||world.tick<population.nextCheck)return;
   if(!Number.isSafeInteger(population.checks+1))return;
   population.nextCheck=world.tick+ANIMAL_POPULATION_CHECK_TICKS;population.checks++;
-  if(currentPopulationWeight(s)>=population.targetWeight||s.animals.length>=MAX_WILDLIFE)return;
+  if(wildPopulationWeight(s)>=population.targetWeight||s.animals.length>=MAX_WILDLIFE)return;
   const biome=faunaBiome(population.biome);
   const maximumGroup=biome.entries.reduce((maximum,entry)=>Math.max(maximum,animalSpecies(entry.species).wildGroupSize[1]),0);
   if(!Number.isSafeInteger(population.arrivals+1)||!Number.isSafeInteger(world.nextId+Math.min(maximumGroup,MAX_WILDLIFE-s.animals.length)))return;
@@ -122,6 +126,11 @@ export function advanceWildlife(world:World):void {
     if(a.state==='dead')continue;
     if(a.health)bleedFilth(world,a,medicalBleed(a.health),a.state==='downed'||a.state==='sleeping',.4);
     const body=animalBody(a);
+    // Local posture adaptation for mobile injured pets: allow a veterinary
+    // visit, but wake at the pre-existing 45% food-search threshold. Core's
+    // tend work requires a non-standing patient; it gives no 25% food rule.
+    const medicalRest=!!a.domestic&&a.domestic.care!=='none'&&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike
+      &&animalCareTargets(a).length>0;
     a.food=Math.max(0,a.food-species.foodPerDay/6000*malnutritionModifiers(a.health?.malnutrition).hungerFactor*(a.food<species.nutrition*.18?.25:a.food<species.nutrition*.36?.5:1));
     a.rest=Math.max(0,Math.min(1,a.rest+(a.state==='sleeping'?.0003809524*.8:-.00015833333*(a.rest<.01?.6:a.rest<.14?.3:a.rest<.28?.7:1))));
     if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
@@ -140,8 +149,15 @@ export function advanceWildlife(world:World):void {
         a.nextDecision=world.tick+20;continue;
       }
     }
+    // A handler or veterinarian holds the animal only at real adjacent
+    // interaction. Their approach reserves work but never freezes wildlife.
+    const danger=!!(a.burning||a.flee||a.threat||a.retaliation||a.strike);
+    const held=!danger&&((!!a.taming?.designated||!!a.domestic)&&animalHandlingHolding(world,a.id)
+      ||!!a.domestic&&animalCareInProgress(world,a));
+    if(held&&!(a.state==='eating'&&a.meal))continue;
     if(a.state==='sleeping') {
-      if(a.rest<1&&!a.sleepUntilCore&&getNav().free(a))continue;
+      if(medicalRest&&a.food>=species.nutrition*.45&&!a.sleepUntilCore&&getNav().free(a))continue;
+      if(!medicalRest&&a.rest<1&&!a.sleepUntilCore&&getNav().free(a))continue;
       a.state='idle';a.nextDecision=world.tick+1;
     }
     if(a.meal) {
@@ -166,7 +182,7 @@ export function advanceWildlife(world:World):void {
       }
       a.nextDecision=world.tick+100;a.state='hungry';
     } else if(a.food<species.nutrition*.45)continue;
-    if((a.rest<.3||night&&a.rest<.75)&&!a.sleepUntilCore&&n.free(a)) {a.state='sleeping';continue;}
+    if((medicalRest?a.food>=species.nutrition*.45:a.rest<.3||night&&a.rest<.75)&&!a.sleepUntilCore&&n.free(a)) {a.state='sleeping';continue;}
     // Bounded neighbouring moves avoid full-map wandering floods. No random
     // walk through walls/closed doors; diagonal length stays Euclidean.
     const choices=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]].map(([x,z])=>({x:a.x+x!,z:a.z+z!})).filter(c=>n.free(c)&&n.step(a,c));

@@ -7,7 +7,7 @@ import { interruptWork } from './interrupted-cargo.ts';
 import type { NeedContext } from './needs.ts';
 import type { Cell,Pawn,World } from './types.ts';
 
-export const medicineClaims=(world:World,id:number):number=>world.pawns.reduce((n,p)=>n+Number(p.tend?.phase==='pickup'&&p.tend.medicine?.sourcePileId===id),0);
+export const medicineClaims=(world:World,id:number):number=>world.pawns.reduce((n,p)=>n+Number(p.tend?.phase==='pickup'&&p.tend.medicine?.sourcePileId===id)+Number(p.animalCare?.phase==='pickup'&&p.animalCare.medicine?.sourcePileId===id),0);
 
 /** Best allowed potency, then distance to patient, with a real route from the
  * doctor. Exhausting one inaccessible candidate must not hide the next one. */

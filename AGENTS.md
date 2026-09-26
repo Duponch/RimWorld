@@ -1,5 +1,12 @@
 # Travail sur Lisière
 
+## Lièvre domestique et soins V106
+- Lire `docs/development/domestic-animals.md` et la référence Core V106. Lièvre seul, Animaux 8, travail handle, deux aliments physiques, trois conversations puis tentative finale. Séquence parole/parole/repas/parole/repas/tentative ; délai à l’entrée finale. Familiarité cinq niveaux, dégradation périodique non repoussée par entretien réussi.
+- Animaux possédés restent les mêmes acteurs ; faune sauvage et patrimoine inconnu les distinguent. Aucun enclos, aire assignable, reproduction, lait/laine, maître ou animal offert au départ. Les quatre errants restent sauvages. Repos médical au seuil alimentaire local 45 % = adaptation annoncée.
+- Médecin transporte les doses, soigne l’anatomie animale au contact. Disparition de cible, perte de familiarité, péremption/destruction des fournitures réconcilient tâches et cargaisons avant sauvegarde. Durée de soin uniquement en phase traitement, bornée ; stade et quantité de nourriture cohérents.
+- Schéma 106 : valider V105 avant handle 0 ; compétences absentes restent absentes, aucun don rétroactif. Nouveau Crashlanded révision 8. Onze colonies dans Charger, anciennes fixtures immuables ; démo V106 préparée avec lit/provisions, sans succès forcé. Preuves `docs/history/validation-domestic-v106.md`.
+
+
 ## Économie et menaces V105
 - Lire `docs/development/colony-economy.md` et les trois recherches V105. Patrimoine connu est une borne inférieure explicite : pas de prix humain inventé. Relevé 501 ticks partagé, attente/humeur/lassitude liées ; jauge de loisirs inchangée.
 - Cassandra ordinaire adoptée utilise budget/soins/temps/adaptation et rôles limités avec plafond individuel ; introduction et calendrier conservés. Chute violente et décès distingués, notification persistée, même tick dédoublonné. Pas de parité générale du narrateur.

@@ -6,15 +6,15 @@ import { animalBodyModel } from '../sim/body-model';
 import { animalSpecies } from '../sim/animal-species';
 const labels={idle:'Se repose',moving:'Se déplace',eating:'Mange',sleeping:'Dort',hungry:'Cherche à manger',downed:'À terre',dead:'Mort'};
 export function wildlifePanelScaffold():string {
-  return '<div class="fauna-intro"><p>Faune sauvage · herbivores. Les portes fermées les arrêtent. Les blessures affectent leurs capacités ; les impacts peuvent les faire fuir.</p><p class="muted">Mobilisez un colon, puis choisissez Tirer (avec une arme à feu) ou Attaquer au contact. Un animal agressé au contact peut riposter brièvement. Cochez Chasser pour un colon civil affecté à Chasse et muni d’une arme à feu. Une réserve acceptant les dépouilles permet leur rangement ; un emplacement de boucherie et sa facture produisent viande et cuir.</p></div><button class="fauna-enable" data-fauna-enable>Introduire la faune dans cette ancienne partie</button><div class="fauna-list" data-fauna-list></div>';
+  return '<div class="fauna-intro"><p>Faune sauvage · herbivores. Les portes fermées les arrêtent. Les blessures affectent leurs capacités ; les impacts peuvent les faire fuir.</p><p class="muted">Mobilisez un colon, puis choisissez Tirer (avec une arme à feu) ou Attaquer au contact. Cochez Chasser pour un colon civil affecté à Chasse et muni d’une arme à feu. Le lièvre peut être désigné pour Apprivoiser avec un dresseur Animaux 8, de la nourriture physique et du temps. Cerf, gazelle, mufalo et dromadaire attendent de vrais enclos.</p></div><button class="fauna-enable" data-fauna-enable>Introduire la faune dans cette ancienne partie</button><div class="fauna-list" data-fauna-list></div>';
 }
-export function updateWildlifePanel(root:HTMLElement,world:World,focus:(id:number)=>void,enable:()=>void,selected:readonly number[]=[],shoot?:(id:number)=>void,melee?:(id:number)=>void,hunt?:(id:number,enabled:boolean)=>void):void {
+export function updateWildlifePanel(root:HTMLElement,world:World,focus:(id:number)=>void,enable:()=>void,selected:readonly number[]=[],shoot?:(id:number)=>void,melee?:(id:number)=>void,hunt?:(id:number,enabled:boolean)=>void,tame?:(id:number,enabled:boolean)=>void):void {
   if(!root.querySelector('[data-fauna-list]')) {
     root.innerHTML=wildlifePanelScaffold();
     root.querySelector<HTMLButtonElement>('[data-fauna-enable]')!.onclick=enable;
   }
   root.querySelector<HTMLButtonElement>('[data-fauna-enable]')!.hidden=world.wildlife!==undefined;
-  const list=root.querySelector<HTMLElement>('[data-fauna-list]')!,animals=world.wildlife?.animals??[];
+  const list=root.querySelector<HTMLElement>('[data-fauna-list]')!,animals=world.wildlife?.animals.filter(a=>!a.domestic)??[];
   const signature=animals.map(a=>`${a.id}:${a.species}`).join(',');
   if(list.dataset.ids!==signature){
     const head=document.createElement('div');head.className='fauna-list-head';head.setAttribute('aria-hidden','true');
@@ -32,11 +32,18 @@ export function updateWildlifePanel(root:HTMLElement,world:World,focus:(id:numbe
       const activity=document.createElement('span');activity.className='fauna-activity';activity.dataset.animalActivity=String(a.id);
       const position=document.createElement('span');position.className='fauna-position';position.dataset.animalPosition=String(a.id);
       const actions=document.createElement('div');actions.className='fauna-actions';actions.append(attack,contact);
+      if(a.species==='hare'){
+        const tameLabel=document.createElement('label'),tameCheck=document.createElement('input');
+        tameLabel.className='fauna-tame';tameCheck.type='checkbox';tameCheck.dataset.animalTame=String(a.id);
+        tameLabel.append(tameCheck,document.createTextNode(' Apprivoiser · Animaux 8'));actions.append(tameLabel);
+      }
       row.append(designation,button,sex,activity,position,actions,health);return row;
     }));
   }
   for(const a of animals){
     const checkbox=list.querySelector<HTMLInputElement>(`[data-animal-hunt="${a.id}"]`)!;checkbox.checked=world.hunting?.targets.includes(a.id)??false;checkbox.disabled=a.state==='dead'||!hunt;checkbox.onchange=()=>hunt?.(a.id,checkbox.checked);
+    const tameCheck=list.querySelector<HTMLInputElement>(`[data-animal-tame="${a.id}"]`);
+    if(tameCheck){tameCheck.checked=!!a.taming?.designated;tameCheck.disabled=a.state==='dead'||!tame;tameCheck.onchange=()=>tame?.(a.id,tameCheck.checked);}
     const state=a.state==='moving'&&!a.path.length&&!a.meal&&(!a.motion||a.motion.end<=world.tick)?'idle':a.state;
     list.querySelector(`[data-animal-activity="${a.id}"]`)!.textContent=`${a.strike?'Riposte':a.threat?'Se défend':a.flee?'Fuit':labels[state]}${a.meal&&state==='moving'?' vers sa nourriture':''}`;
     list.querySelector(`[data-animal-position="${a.id}"]`)!.textContent=`${a.x}, ${a.z}`;

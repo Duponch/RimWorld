@@ -1,3 +1,4 @@
+import { handlingStepDuration } from '../sim/animal-handling';
 import { isColonist } from '../sim/affiliation';
 import { INGEST_TICKS } from '../sim/eating';
 import { FEED_TICKS } from '../sim/feeding-rules';
@@ -10,7 +11,7 @@ import { PRISON_RAPPORT_TICKS } from '../sim/prisoner-state';
 import type { Cell, Job, Pawn, Resource, World } from '../sim/types';
 
 export interface ActionProgress {
-  kind: 'job'|'clearing'|'production'|'ingestion'|'feeding'|'tending'|'warden'|'cleaning'|'hunting';
+  kind: 'job'|'clearing'|'production'|'ingestion'|'feeding'|'tending'|'warden'|'cleaning'|'hunting'|'handling';
   completed: number;
   total: number;
   fraction: number;
@@ -42,6 +43,8 @@ export function actionProgress(world:World,pawn:Pawn,lookup?:ActionLookup):Actio
     const filth=world.filth?.items.find(item=>item.id===pawn.cleaning!.targets[0]);
     if(filth)return measured('cleaning',pawn.cleaning.progress,FILTH_DEFINITIONS[filth.kind].work);
   }
+  if(pawn.animalHandling?.phase==='interact')return measured('handling',pawn.animalHandling.progress,handlingStepDuration(pawn.animalHandling));
+  if(pawn.animalCare?.phase==='treat'&&pawn.animalCare.duration!==undefined)return measured('tending',pawn.animalCare.progress,pawn.animalCare.duration);
   if(pawn.hunting?.phase==='finish')return measured('hunting',pawn.hunting.progress,18);
   if(pawn.tend?.phase==='tend'&&pawn.tend.duration!==undefined)
     return measured('tending',pawn.tend.progress,pawn.tend.duration);

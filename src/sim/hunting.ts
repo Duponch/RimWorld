@@ -24,6 +24,7 @@ import type { Cell,Pawn,World,CommandResult } from './types.ts';
 export function designateHunt(w:World,c:HuntingCommand):CommandResult {
   const a=w.wildlife?.animals.find(a=>a.id===c.animalId);
   if(!Number.isSafeInteger(c.animalId)||typeof c.enabled!=='boolean'||!a||a.state==='dead')return {ok:false,code:'invalid-command',reason:'Animal vivant introuvable.'};
+  if(c.enabled&&a.domestic)return {ok:false,code:'invalid-command',reason:'Un animal domestique allié ne peut pas être chassé.'};
   if(c.enabled&&!w.hunting?.targets.includes(a.id)&&(w.hunting?.targets.length??0)>=256)return {ok:false,code:'invalid-command',reason:'Trop de cibles de chasse.'};
   const s=w.hunting??={targets:[],completed:0};
   if(c.enabled&&!s.targets.includes(a.id))s.targets.push(a.id);
@@ -33,7 +34,7 @@ export function designateHunt(w:World,c:HuntingCommand):CommandResult {
 }
 export function huntingWanted(w:World,p:Pawn):boolean {
   return isColonist(p)&&p.priorities.hunt>0&&!p.draft&&!medicallyStopped(p)&&pawnBody(p).capacities.manipulation>0
-    &&isRangedWeaponItem(equippedWeapon(w,p)?.item)&&!!w.hunting?.targets.some(id=>!w.pawns.some(o=>o!==p&&o.hunting?.animalId===id));
+    &&isRangedWeaponItem(equippedWeapon(w,p)?.item)&&!!w.hunting?.targets.some(id=>w.wildlife?.animals.some(a=>a.id===id&&!a.domestic&&a.state!=='dead')&&!w.pawns.some(o=>o!==p&&o.hunting?.animalId===id));
 }
 /** Hunting seeks an unobstructed shot within 95% of weapon range, without
  * tactical cover scoring. All candidates share one bounded decision capture. */
@@ -56,7 +57,7 @@ function huntingPosition(w:World,p:Pawn,a:WildAnimal,reach:Reachability):{cell:C
 }
 export function huntingProposal(w:World,p:Pawn,reach:Reachability):{task:HuntingTask;path:Cell[];target:Cell}|undefined {
   if(!huntingWanted(w,p))return;
-  const targets=w.wildlife?.animals.filter(a=>a.state!=='dead'&&w.hunting!.targets.includes(a.id)&&!w.pawns.some(o=>o!==p&&o.hunting?.animalId===a.id))??[];
+  const targets=w.wildlife?.animals.filter(a=>!a.domestic&&a.state!=='dead'&&w.hunting!.targets.includes(a.id)&&!w.pawns.some(o=>o!==p&&o.hunting?.animalId===a.id))??[];
   targets.sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
   for(const a of targets){const plan=huntingPosition(w,p,a,reach);if(plan)return {task:{animalId:a.id,startedAt:w.tick,phase:'stalk',progress:0},path:plan.path,target:plan.cell};}
 }
@@ -97,6 +98,7 @@ export function processHunting(w:World,p:Pawn,ctx:HuntContext):void {
   const task=p.hunting!;
   if(p.draft||p.priorities.hunt===0||!equippedWeapon(w,p)||medicallyStopped(p)||pawnBody(p).capacities.manipulation===0){stop(p);return;}
   const a=w.wildlife?.animals.find(a=>a.id===task.animalId),corpse=w.piles.some(i=>i.id===task.animalId&&i.kind==='corpse');
+  if(a?.domestic){stop(p);return;}
   if(task.phase!=='collect'&&(a?.state==='dead'||corpse)){
     cancelShooting(p);task.phase='collect';task.progress=0;p.path=[];p.state='idle';
     if(w.hunting){w.hunting.targets=w.hunting.targets.filter(id=>id!==task.animalId);w.hunting.completed=Math.min(Number.MAX_SAFE_INTEGER,w.hunting.completed+1);}

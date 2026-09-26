@@ -7,11 +7,16 @@ import { INFECTION_UNIT, infectionStage } from '../sim/infection-rules';
 import { MALNUTRITION_LABELS, MALNUTRITION_UNIT, malnutritionStage } from '../sim/malnutrition';
 import type { World } from '../sim/types';
 import { animalBody } from '../sim/wildlife-health';
+import { MIN_HANDLING,tameRefusal } from '../sim/animal-handling';
+import { MEDICAL_CARE,type MedicalCare } from '../sim/medicine-rules';
+import { isColonist } from '../sim/affiliation';
 import type { WildAnimal } from '../sim/wildlife-state';
 
 export type AnimalInspectorTab = 'info' | 'health';
 export interface AnimalInspectorOptions {
   onHunt: (animalId: number, enabled: boolean) => void;
+  onTame?: (animalId: number, enabled: boolean) => void;
+  onCarePolicy?: (animalId: number, care: MedicalCare) => void;
   onClose: () => void;
 }
 export interface AnimalInspectorView {
@@ -22,6 +27,12 @@ export interface AnimalInspectorView {
   position: string;
   hunted: boolean;
   canHunt: boolean;
+  canTame:boolean;
+  tameDesignated:boolean;
+  tameReason:string;
+  domestic:boolean;
+  care?:MedicalCare;
+  dead:boolean;
   species: readonly string[];
   needs: readonly string[];
   health: readonly string[];
@@ -54,24 +65,35 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
   if (health?.foodPoisoning) condition.push(`Intoxication alimentaire · ${poisonStage[foodPoisoningStage(health.foodPoisoning)]} · ${(health.foodPoisoning.severity * 100 / FOOD_POISON_UNIT).toFixed(1)} %${health.foodPoisoning.vomit ? ' · Vomit' : ''}`);
   if (health?.infections?.cases.length) condition.push(`Immunité ${Math.min(100, health.infections.immunity * 100 / INFECTION_UNIT).toFixed(1)} %`);
   condition.push(...cases, ...injuries, ...missing);
+  const tameReason=tameRefusal(world,animal),qualified=world.pawns.some(p=>isColonist(p)&&p.priorities.handle>0&&(p.skills.animals?.level??0)>=MIN_HANDLING&&p.state!=='dead'&&p.state!=='downed');
+  const handling=tameReason??(qualified
+    ? `Animaux ${MIN_HANDLING} minimum · deux nourrissages physiques par tentative.`
+    : `Aucun dresseur actif de niveau Animaux ${MIN_HANDLING} ; la désignation attendra un colon qualifié et de la nourriture.`);
   return {
     id: animal.id,
     title: `${species.label[0]!.toLocaleUpperCase('fr-FR')}${species.label.slice(1)} ${animal.id}`,
-    identity: `${animal.sex === 'female' ? 'Femelle' : 'Mâle'} · sauvage`,
+    identity: `${animal.sex === 'female' ? 'Femelle' : 'Mâle'} · ${animal.domestic?'domestique libre':'sauvage'}`,
     activity: `${currentActivity}${animal.meal && state === 'moving' ? ' vers sa nourriture' : ''}`,
     position: `${animal.x}, ${animal.z}`,
     hunted: world.hunting?.targets.includes(animal.id) ?? false,
-    canHunt: animal.state !== 'dead',
+    canHunt: animal.state !== 'dead'&&!animal.domestic,
+    canTame:!tameReason,
+    tameDesignated:!!animal.taming?.designated,
+    tameReason:handling,
+    domestic:!!animal.domestic,
+    care:animal.domestic?.care,
+    dead:animal.state==='dead',
     species: [
       `Espèce : ${species.label}`,
       `Taille corporelle : ${species.bodySize.toLocaleString('fr-FR')}`,
       `Besoins alimentaires quotidiens : ${species.foodPerDay.toLocaleString('fr-FR')} unité de nutrition`,
+      animal.domestic?`Familiarité : ${animal.domestic.tameness} / 5`:`Apprivoisement : ${handling}`,
     ],
     needs: [
       `Nourriture : ${percent(Math.max(0, Math.min(1, animal.food / species.nutrition)))}`,
       `Repos : ${percent(Math.max(0, Math.min(1, animal.rest)))}`,
     ],
-    health: condition,
+    health:animal.domestic?[`Statut : domestique libre`,...condition]:condition,
   };
 }
 
@@ -79,7 +101,7 @@ export function animalInspectorScaffold(): string {
   const tabs: readonly { id: AnimalInspectorTab; label: string }[] = [
     { id: 'info', label: 'Info' }, { id: 'health', label: 'Santé' },
   ];
-  return `<div class="animal-inspector-scroll"><header class="animal-inspector-summary"><div class="panel-heading"><h2 data-animal-title></h2><button type="button" data-animal-close aria-label="Fermer l’inspection">×</button></div><p data-animal-identity></p><p data-animal-activity></p><p data-animal-position></p></header><div class="animal-inspector-tabs" role="tablist" aria-label="Dossiers de l’animal">${tabs.map(tab => `<button type="button" role="tab" id="animal-tab-${tab.id}" aria-controls="animal-panel-${tab.id}" aria-selected="false" tabindex="-1" data-animal-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="animal-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="animal-panel-${tab.id}" aria-labelledby="animal-tab-${tab.id}" tabindex="0" data-animal-panel="${tab.id}" hidden><div data-animal-content="${tab.id}"></div></section>`).join('')}</div><div class="animal-inspector-actions"><label><input type="checkbox" data-animal-hunt><span>Chasser</span></label></div></div>`;
+  return `<div class="animal-inspector-scroll"><header class="animal-inspector-summary"><div class="panel-heading"><h2 data-animal-title></h2><button type="button" data-animal-close aria-label="Fermer l’inspection">×</button></div><p data-animal-identity></p><p data-animal-activity></p><p data-animal-position></p></header><div class="animal-inspector-tabs" role="tablist" aria-label="Dossiers de l’animal">${tabs.map(tab => `<button type="button" role="tab" id="animal-tab-${tab.id}" aria-controls="animal-panel-${tab.id}" aria-selected="false" tabindex="-1" data-animal-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="animal-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="animal-panel-${tab.id}" aria-labelledby="animal-tab-${tab.id}" tabindex="0" data-animal-panel="${tab.id}" hidden><div data-animal-content="${tab.id}"></div>${tab.id==='health'?`<label class="animal-care-policy" data-animal-care-wrap>Politique de soins <select data-animal-care>${Object.entries(MEDICAL_CARE).map(([id,label])=>`<option value="${id}">${label}</option>`).join('')}</select></label>`:''}</section>`).join('')}</div><div class="animal-inspector-actions"><label data-animal-hunt-wrap><input type="checkbox" data-animal-hunt><span>Chasser</span></label><label data-animal-tame-wrap><input type="checkbox" data-animal-tame><span>Apprivoiser</span></label></div></div>`;
 }
 
 function selectTab(root: HTMLElement, tab: AnimalInspectorTab): void {
@@ -98,6 +120,8 @@ export function createAnimalInspector(root: HTMLElement, options: AnimalInspecto
   root.classList.remove('colonist-inspector-host');
   root.classList.add('animal-inspector-host');
   root.innerHTML = animalInspectorScaffold();
+  root.dataset.animalTameAvailable=String(!!options.onTame);
+  root.dataset.animalCareAvailable=String(!!options.onCarePolicy);
   const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-animal-tab]')];
   for (const button of buttons) {
     button.addEventListener('click', () => selectTab(root, button.dataset.animalTab as AnimalInspectorTab));
@@ -113,6 +137,14 @@ export function createAnimalInspector(root: HTMLElement, options: AnimalInspecto
   root.querySelector<HTMLInputElement>('[data-animal-hunt]')!.onchange = event => {
     const id = Number(root.dataset.animalInspectorId);
     if (Number.isSafeInteger(id)) options.onHunt(id, (event.currentTarget as HTMLInputElement).checked);
+  };
+  root.querySelector<HTMLInputElement>('[data-animal-tame]')!.onchange = event => {
+    const id=Number(root.dataset.animalInspectorId);
+    if(Number.isSafeInteger(id))options.onTame?.(id,(event.currentTarget as HTMLInputElement).checked);
+  };
+  root.querySelector<HTMLSelectElement>('[data-animal-care]')!.onchange = event => {
+    const id=Number(root.dataset.animalInspectorId);
+    if(Number.isSafeInteger(id))options.onCarePolicy?.(id,(event.currentTarget as HTMLSelectElement).value as MedicalCare);
   };
   selectTab(root, 'info');
 }
@@ -158,6 +190,14 @@ export function updateAnimalInspector(root: HTMLElement, world: World, animalId:
   const hunt = root.querySelector<HTMLInputElement>('[data-animal-hunt]')!;
   hunt.checked = view.hunted;
   hunt.disabled = !view.canHunt;
+  root.querySelector<HTMLElement>('[data-animal-hunt-wrap]')!.hidden=view.domestic;
+  const tame=root.querySelector<HTMLInputElement>('[data-animal-tame]')!;
+  root.querySelector<HTMLElement>('[data-animal-tame-wrap]')!.hidden=!view.canTame;
+  tame.checked=view.tameDesignated;tame.disabled=root.dataset.animalTameAvailable!=='true';
+  const care=root.querySelector<HTMLSelectElement>('[data-animal-care]')!;
+  root.querySelector<HTMLElement>('[data-animal-care-wrap]')!.hidden=!view.domestic;
+  if(view.care)care.value=view.care;
+  care.disabled=root.dataset.animalCareAvailable!=='true'||view.dead;
   renderSections(root, 'info', [
     { title: 'Espèce', lines: view.species },
     { title: 'Besoins', lines: view.needs },

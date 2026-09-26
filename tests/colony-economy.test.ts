@@ -15,7 +15,7 @@ describe('économie V105 : adoption et relevé', () => {
     const saved=readFileSync('public/test-saves/v104/sculpture.json','utf8');
     const original=JSON.parse(saved),migrated=deserializeWorld(saved);
     expect(original.schemaVersion).toBe(104);
-    expect(migrated).toEqual({...original,schemaVersion:105});
+    expect(migrated).toEqual({...original,schemaVersion:106,pawns:original.pawns.map((p:any)=>({...p,priorities:{...p.priorities,handle:0}}))});
     expect(migrated.economy).toBeUndefined();
     expect(validateWorld(migrated)).toEqual([]);
   });

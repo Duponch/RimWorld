@@ -19,6 +19,7 @@ import type { PawnTrack } from './bridge/motion-tracks';
 import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
 import { INFECTION_UNIT,infectionStage } from './sim/infection-rules';
 import { corpseStage } from './sim/corpses';
+import { updateAnimalsPanel } from './ui/animals-panel';
 import { updateWildlifePanel } from './ui/wildlife-panel';
 import { createHeatwaveUI } from './ui/heatwave';
 import { updateResearchPanel } from './ui/research-panel';
@@ -210,7 +211,7 @@ function setCategory(category: ArchitectCategory) {
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool-category]')) button.hidden = button.dataset.toolCategory !== category;
 }
 function selectedColonyIds():number[]{return snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner).map(p=>p.id)??[];}
-function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>selectPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:selectedColonyIds(),targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}));}
+function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>selectPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:selectedColonyIds(),targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId:id,enabled});renderState();}));}
 function setPanel(panel: Panel, preserveTool = false) {
   // Every exit path (tabs, map, portraits and shortcuts) releases this pause.
   if (currentPanel === 'menu' && panel !== 'menu' && menuResumeSpeed !== undefined && !replacingWorld && !frontMenu.isOpen()) {
@@ -222,7 +223,8 @@ function setPanel(panel: Panel, preserveTool = false) {
   currentPanel = panel;
   syncStorageButtons();
   scheduleUI.cancel();
-  for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife'] as const) el(`${name}-panel`).hidden = panel !== name;
+  for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals'] as const) el(`${name}-panel`).hidden = panel !== name;
+  if(panel==='animals'&&snapshot)updateAnimalsPanel(el('animals-content'),snapshot,id=>selectPawn(id));
   if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
   if (panel === 'schedule' && snapshot) scheduleUI.update(snapshot);
   if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot);apparelPolicyUI.update(snapshot);}
@@ -340,7 +342,7 @@ function rebuildInspector() {
       const button=document.createElement('button');button.dataset.groupPawn=String(id);button.onclick=()=>selectPawn(id);el('group-members').append(button);
     }
   } else if(selectedPawn!==undefined&&snapshot?.wildlife?.animals.some(a=>a.id===selectedPawn)) {
-    createAnimalInspector(panel,{onHunt:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId,enabled});renderState();}),onClose:clearSelection});
+    createAnimalInspector(panel,{onTame:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId,enabled});renderState();}),onCarePolicy:(animalId,care)=>void attempt(async()=>{await client.command({type:'animal-care-policy',animalId,care});renderState();}),onHunt:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId,enabled});renderState();}),onClose:clearSelection});
   } else if(selectedPawn!==undefined&&snapshot?.pawns.some(p=>p.id===selectedPawn&&p.prisoner)) {
     panel.innerHTML='<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p>';
     createPrisonerInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},c=>void attempt(()=>client.command(c)),renderState);
@@ -427,6 +429,8 @@ function actionLabel(pawn: Pawn) {
   if(pawn.ward||pawn.prisoner||pawn.feed||pawn.tend||pawn.state==='resting'||pawn.rescue||carrierOf(snapshot!,pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
   if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
+  if(pawn.animalHandling)return pawn.animalHandling.kind==='tame'?'Apprivoisement · lièvre':'Entretien de la familiarité';
+  if(pawn.animalCare)return 'Soins vétérinaires';
   if(pawn.cooking)return queryPawnStatus(snapshot!,pawn).reason;
   if (pawn.need) return queryPawnStatus(snapshot!, pawn).reason;
   if(pawn.visitor)return pawn.visitor.phase==='leaving'?'Visiteur · quitte la carte':pawn.visitor.phase==='arriving'?'Visiteur · rejoint la colonie':pawn.visitor.role==='trader'?'Marchand · séjourne dans la colonie':'Visiteur · séjourne dans la colonie';
@@ -451,10 +455,10 @@ function rebuildPawns(world: World) {
   el('work-rows').replaceChildren(...world.pawns.filter(isColonist).map(pawn => {
     const row = document.createElement('tr'); row.dataset.worker = String(pawn.id);
     const name = document.createElement('th'); name.scope = 'row'; name.textContent = pawn.name; row.append(name);
-    for (const work of ['firefight','patient','doctor','bedrest','basic','warden','hunt', 'gather', 'build', 'haul', 'grow', 'cook', 'craft', 'art', 'mine', 'research', 'clean'] as WorkType[]) {
+    for (const work of ['firefight','patient','doctor','bedrest','basic','warden','handle','hunt', 'gather', 'build', 'haul', 'grow', 'cook', 'craft', 'art', 'mine', 'research', 'clean'] as WorkType[]) {
       const cell = document.createElement('td'), select = document.createElement('select');
       select.dataset.work = work; select.dataset.owner = String(pawn.id);
-      select.setAttribute('aria-label', `Priorité ${{ art:'Art',clean:'Nettoyage',firefight:'Incendie',warden:'Geôlier',basic:'Tâches élémentaires',hunt:'Chasse',research:'recherche',patient:'patient',bedrest:'repos au lit',doctor:'médecin', mine:'minage', gather: 'collecte', build: 'construction', haul: 'transport', grow: 'culture', cook: 'cuisine', craft:'artisanat' }[work]} ${pawn.name}`);
+      select.setAttribute('aria-label', `Priorité ${{ handle:'Animaux',art:'Art',clean:'Nettoyage',firefight:'Incendie',warden:'Geôlier',basic:'Tâches élémentaires',hunt:'Chasse',research:'recherche',patient:'patient',bedrest:'repos au lit',doctor:'médecin', mine:'minage', gather: 'collecte', build: 'construction', haul: 'transport', grow: 'culture', cook: 'cuisine', craft:'artisanat' }[work]} ${pawn.name}`);
       for (let value = 0; value <= 4; value++) { const option = document.createElement('option'); option.value = String(value); option.textContent = String(value); select.append(option); }
       select.onchange = () => { void attempt(async () => { try { await client.command({ type: 'priority', pawnId: pawn.id, work, value: Number(select.value) }); } finally { renderState(); } }); };
       cell.append(select); row.append(cell);
@@ -474,6 +478,7 @@ function updateWorkPanel(world: World): void {
 function renderState() {
   if (!snapshot) return;
   const world = snapshot;
+  if(currentPanel==='animals')updateAnimalsPanel(el('animals-content'),world,id=>selectPawn(id));
   if(currentPanel==='wildlife')renderWildlife(world);
   updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)));
   scheduleUI.update(world);

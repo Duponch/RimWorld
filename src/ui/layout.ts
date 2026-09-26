@@ -10,7 +10,7 @@ import { FLOOR_KINDS,FLOOR_DEFINITIONS,type BuildableFloorKind } from '../sim/fl
 const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
 
 export type Tool = BuildableFloorKind | 'home' | 'remove-home' | 'ignore-roof' | 'haul-chunks' | 'select' | Exclude<JobKind, 'sow'|'repair'|'flick'|'lay-floor'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
-export type Panel = 'wildlife' | 'research' | 'architect' | 'work' | 'schedule' | 'assign' | 'history' | 'menu' | null;
+export type Panel = 'animals' | 'wildlife' | 'research' | 'architect' | 'work' | 'schedule' | 'assign' | 'history' | 'menu' | null;
 export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'floors' | 'furniture' | 'temperature' | 'recreation' | 'production' | 'power';
 export const toolDefinitions: { id: Tool; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
   ...FLOOR_KINDS.map(id=>({id,title:FLOOR_DEFINITIONS[id].label,hint:`${FLOOR_DEFINITIONS[id].quantity} ${ITEM_DEFINITIONS[FLOOR_DEFINITIONS[id].item!].label} par case · Construction ${FLOOR_DEFINITIONS[id].skill}${FLOOR_DEFINITIONS[id].research==='stonecutting'?' · recherche Taille de pierre':FLOOR_DEFINITIONS[id].research==='smithing'?' · recherche Forge':''} · cliquer ou tracer un rectangle`,key:'',category:'floors' as const})),
@@ -129,10 +129,11 @@ export function gameLayout(): string {
     <section id="work-panel" class="management-panel work-panel panel" aria-label="Travail" hidden>
       <div class="panel-heading"><h2>Travail</h2><button data-close-panel aria-label="Fermer Travail">×</button></div>
       <p>Priorités manuelles : <b>1</b> haute · <b>4</b> basse · <b>0</b> désactivée. Le transport livre aussi les chantiers.</p>
-      <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Incendie</th><th>Patient</th><th>Médecin</th><th>Repos au lit</th><th>Tâches élémentaires</th><th>Geôlier</th><th>Chasse</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Artisanat</th><th>Art</th><th>Minage</th><th>Recherche</th><th>Nettoyage</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
+      <div class="work-table-wrap"><table><thead><tr><th>Colon</th><th>Incendie</th><th>Patient</th><th>Médecin</th><th>Repos au lit</th><th>Tâches élémentaires</th><th>Geôlier</th><th>Animaux</th><th>Chasse</th><th>Collecte</th><th>Construction</th><th>Transport</th><th>Culture</th><th>Cuisine</th><th>Artisanat</th><th>Art</th><th>Minage</th><th>Recherche</th><th>Nettoyage</th><th>Activité</th></tr></thead><tbody id="work-rows"></tbody></table></div>
     </section>
     ${scheduleLayout()}
     ${apparelAssignmentLayout(foodPolicyLayout())}
+    <section id="animals-panel" class="management-panel panel" aria-label="Animaux domestiques" hidden><div class="panel-heading"><h2>Animaux domestiques</h2><button data-close-panel aria-label="Fermer">×</button></div><div id="animals-content"></div></section>
     <section id="wildlife-panel" class="management-panel panel" aria-label="Faune" hidden><div class="panel-heading"><h2>Faune</h2><button data-close-panel aria-label="Fermer Faune">×</button></div><div id="wildlife-content"></div></section>
     <section id="research-panel" class="management-panel panel" aria-label="Recherche" hidden><div class="panel-heading"><h2>Recherche</h2><button data-close-panel aria-label="Fermer Recherche">×</button></div><div id="research-content"></div></section>
     <section id="history-panel" class="management-panel history-panel panel" aria-label="Historique" hidden>
@@ -157,7 +158,7 @@ export function gameLayout(): string {
       </div>
     </aside>
     <div id="metrics" class="diagnostics" hidden></div>
-    <nav class="main-tabs panel" aria-label="Gestion de la colonie">${tabs.map(([id, label]) => `<button data-panel="${id}" ${['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife'].includes(id) ? 'aria-pressed="false"' : 'disabled title="Fonctionnalité à venir"'}>${label}</button>`).join('')}</nav>
+    <nav class="main-tabs panel" aria-label="Gestion de la colonie">${tabs.map(([id, label]) => `<button data-panel="${id}" ${['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals'].includes(id) ? 'aria-pressed="false"' : 'disabled title="Fonctionnalité à venir"'}>${label}</button>`).join('')}</nav>
     <div id="loading" class="loading"><h1>LISIÈRE</h1><p>Préparation de votre colonie…</p></div>
     <dialog id="help" class="help-dialog"><form method="dialog"><button class="close" aria-label="Fermer l’aide">×</button></form><span class="section-label">CARNET DE SURVIE</span><h2>Votre première journée</h2>
       <p>Vous donnez les ordres. Les colons choisissent leurs tâches et se déplacent de façon autonome.</p>

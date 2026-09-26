@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 105 as const;
+export const SCHEMA_VERSION = 106 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -8,7 +8,7 @@ export type ResourceKind = 'wild-plant' | 'potato' | 'corn' | 'tree' | 'berries'
 export type MaterialKind = 'silver' | 'corpse' | 'wood' | 'food' | 'chunk' | 'steel' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
 export type StructureKind = 'art-bench' | 'small-sculpture' | 'large-sculpture' | 'machining-table' | 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'standing-lamp' | 'passive-cooler' | 'door' | 'wall' | 'bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'stonecutter';
 export type JobKind = 'lay-floor' | 'remove-floor' | 'flick' | 'repair' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
-export type WorkType = 'art' | 'clean' | 'firefight' | 'warden' | 'basic' | 'hunt' | 'research' | 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
+export type WorkType = 'handle' | 'art' | 'clean' | 'firefight' | 'warden' | 'basic' | 'hunt' | 'research' | 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
 export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
 export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 'eating' | 'recreating' | 'resting' | 'downed' | 'dead';
@@ -67,6 +67,8 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  animalHandling?:import('./domestic-state.ts').AnimalHandlingTask;
+  animalCare?:import('./domestic-state.ts').AnimalCareTask;
   roomMemories?:import('./room-experience.ts').RoomMemory[];
   body?:import('./human-corpses.ts').HumanBodyState;
   burial?:import('./burial.ts').BurialTask;
@@ -215,7 +217,7 @@ export type DesignateCommand = { type: 'designate'; kind: JobKind; targetId?:num
 export type AreaAction = 'lay-floor' | 'remove-floor' | 'home' | 'remove-home' | 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' | 'haul-chunks' | 'deconstruct' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export interface StorageSettings { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; floor?: import('./flooring.ts').FloorKind }
-export type Command = import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
+export type Command = import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
   | {type:'adopt-economy'}
   | {type:'climate-adopt'}
   | {type:'heater-adjust';structureId:number;offset:-10|-1|1|10|null}

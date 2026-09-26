@@ -113,14 +113,14 @@ export function withMigratedV90<T>(world:T):T {
   for(const departure of w.raids?.departed??[])for(const pile of departure.items??[])if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material='cloth';
   if(w.tailoring)w.tailoring.lostLeather=0;
   w.apparelWear=createApparelWearCalendar(w.tick,(w.seed^w.tick^0x0a77e1)>>>0);w.apparelPolicies=registry.apparelPolicies;w.nextApparelPolicyId=registry.nextApparelPolicyId;
-  for(const pawn of w.pawns??[]){pawn.beauty=40;pawn.priorities.art=0;if((pawn.faction??'colony')==='colony'&&!pawn.visitor&&!pawn.prisoner&&pawn.state!=='dead'){pawn.apparelPolicyId=1;pawn.apparelAutomation=false;pawn.nextApparelCheckAt=w.tick+600+pawn.id%301;}}
+  for(const pawn of w.pawns??[]){pawn.beauty=40;pawn.priorities.art=0;pawn.priorities.handle=0;if((pawn.faction??'colony')==='colony'&&!pawn.visitor&&!pawn.prisoner&&pawn.state!=='dead'){pawn.apparelPolicyId=1;pawn.apparelAutomation=false;pawn.nextApparelCheckAt=w.tick+600+pawn.id%301;}}
   return world;
 }
 
 /** Authentic pre-V104 test payloads have no Art work priority or practice. */
 export function withoutArt<T>(world:T):T {
   const w=world as any;
-  for(const pawn of w.pawns??[]){delete pawn.priorities.art;if(pawn.skills)delete pawn.skills.artistic;}
+  for(const pawn of w.pawns??[]){delete pawn.priorities.art;delete pawn.priorities.handle;if(pawn.skills){delete pawn.skills.artistic;delete pawn.skills.animals;}}
   return world;
 }
 

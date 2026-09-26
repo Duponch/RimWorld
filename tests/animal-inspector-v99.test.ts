@@ -40,13 +40,15 @@ test('animal anatomy and medical conditions use the real species record', () => 
   expect(animalInspectorView(world, animal.id)?.canHunt).toBe(false);
 });
 
-test('applicable tabs have labelled panels and no unsupported training controls', () => {
+test('applicable tabs have labelled panels; advanced training remains absent', () => {
   const markup = animalInspectorScaffold();
   for (const tab of ['info', 'health']) {
     expect(markup).toContain(`role="tab" id="animal-tab-${tab}" aria-controls="animal-panel-${tab}"`);
     expect(markup).toContain(`role="tabpanel" id="animal-panel-${tab}" aria-labelledby="animal-tab-${tab}"`);
   }
   expect(markup).toContain('data-animal-hunt');
+  expect(markup).toContain('data-animal-tame');
+  expect(markup).toContain('data-animal-care');
   expect(markup).not.toContain('animal-tab-needs');
-  expect(markup).not.toMatch(/dressage|apprivoiser|training|taming/i);
+  expect(markup).not.toMatch(/dressage|training/i);
 });

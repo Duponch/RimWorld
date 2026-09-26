@@ -24,4 +24,7 @@
 .animal-inspector-actions label:hover{background:var(--paper)}
 .animal-inspector-actions label:has(input:disabled){opacity:.55;cursor:default}
 .animal-inspector-actions input{accent-color:var(--forest);margin:0}
+.animal-inspector-actions label[hidden],.animal-care-policy[hidden]{display:none}
+.animal-care-policy{display:grid;gap:8px;margin-top:15px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper-deep);font-weight:600}
+.animal-care-policy select{width:100%;min-height:39px}
 @media(max-width:1050px){.animal-inspector-summary,.animal-inspector-tabs,.animal-inspector-pages,.animal-inspector-actions{padding-inline:15px}}

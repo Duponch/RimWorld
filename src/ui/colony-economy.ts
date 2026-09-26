@@ -59,7 +59,7 @@ export function createColonyEconomyUI(root:HTMLElement,send:(command:Command)=>v
     const missing=(wealth.unpricedPileIds?.length??0)+(wealth.unpricedPackedIds?.length??0)+(wealth.unpricedStructureIds?.length??0);
     coverage.textContent=missing
       ? `${missing} autre${missing>1?'s':''} bien${missing>1?'s':''} sans valeur vérifiée. Le total et le palier peuvent augmenter après une meilleure couverture du catalogue.`
-      : wealth.complete?'Toutes les valeurs de ce relevé sont couvertes.':'Les personnes ne sont pas comprises dans le montant évalué.';
+      : wealth.complete?'Toutes les valeurs de ce relevé sont couvertes.':'Les personnes et animaux domestiques ne sont pas compris dans le montant évalué.';
     sample.textContent=`Relevé au jour ${1+Math.floor(state.sampledAt/TICKS_PER_DAY)}. Le budget des incidents dépend aussi du nombre de colons et du récit.`;
   }};
 }

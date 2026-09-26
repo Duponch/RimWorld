@@ -12,7 +12,7 @@ function obstructedBed(extraWood: number): World {
   const pawn=world.pawns[0]!;
   Object.assign(pawn,{x:8,z:10,hunger:100,rest:100});
   pawn.schedule.fill('anything');
-  pawn.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0,patient:0,bedrest:0,doctor:0,art:0,craft:0,mine:0,build:1,haul:0,grow:0,gather:0,cook:0};
+  pawn.priorities={handle:0,clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0,patient:0,bedrest:0,doctor:0,art:0,craft:0,mine:0,build:1,haul:0,grow:0,gather:0,cook:0};
   world.resources.push({id:world.nextId++,kind:'tree',x:15,z:8,amount:12});
   if(extraWood)addGroundMaterial(world,'wood',extraWood,{x:8,z:8},'wood');
   refreshStock(world);

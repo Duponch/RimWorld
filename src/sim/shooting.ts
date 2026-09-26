@@ -38,6 +38,7 @@ export function shotPlan(world:World,pawn:Pawn,targetId:number,queries:Queries,a
   if(!weapon?.weapon||!isRangedWeaponItem(weapon.item)||pawn.equipmentDropPending||queries.body(pawn).capacities.manipulation<=0)return {reason:'Aucune arme à distance utilisable en main.'} as const;
   const target=combatTarget(world,targetId);
   if(!target||target.id===pawn.id||target.state==='dead'||queries.carried(targetId))return {reason:'Cible absente ou invalide.'} as const;
+  if(isAnimalTarget(target)&&target.domestic)return {reason:'Cet animal appartient à la colonie.'} as const;
   if(hostileTarget(pawn,target)&&target.state!=='downed'&&distanceSquared(pawn,target)<1.421**2)return {reason:'Un adversaire adjacent empêche le tir : utilisez la mêlée.'} as const;
   const profile=rangedWeaponProfile(weapon.item,weapon.weapon.quality)!,line=findShotLine(queries.grid(),pawn,{cell:target,leans:!isAnimalTarget(target)&&!['downed','resting','sleeping'].includes(target.state)},profile.range);
   if(!line.ok)return {reason:line.reason==='range'?'La cible est hors de portée.':'La ligne de tir est bloquée.'} as const;

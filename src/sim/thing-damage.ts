@@ -50,6 +50,8 @@ function referencesPile(p:Pawn,id:number):boolean {
   const c=p.cooking,h=p.haul,n=p.need;
   return !!(p.equipmentTask?.itemId===id||c&&(c.productId===id||c.ingredients.some(i=>i.pileId===id))
     ||h&&(h.sourcePileId===id||h.carryPileId===id)||n?.kind==='eat'&&(n.sourcePileId===id||n.carryPileId===id)
+    ||p.animalHandling&&(p.animalHandling.sourcePileId===id||p.animalHandling.carryPileId===id)
+    ||p.animalCare?.medicine&&(p.animalCare.medicine.sourcePileId===id||p.animalCare.medicine.carryPileId===id)
     ||p.tend?.medicine&&(p.tend.medicine.sourcePileId===id||p.tend.medicine.carryPileId===id)
     ||p.feed&&(p.feed.sourcePileId===id||p.feed.carryPileId===id)||p.ward?.kind==='food'&&(p.ward.sourcePileId===id||p.ward.carryPileId===id));
 }

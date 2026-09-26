@@ -9,11 +9,12 @@ import type { Pawn } from '../sim/types.ts';
 import { SKILL_PASSION_LABELS,setCompactSkillPassion,setSkillPassion } from './skill-passion';
 
 type SkillEntry = {
-  skill: 'construction'|'medicine'|'intellectual'|'crafting'|'artistic'|'cooking'|'shooting'|'melee';
+  skill: 'animals'|'construction'|'medicine'|'intellectual'|'crafting'|'artistic'|'cooking'|'shooting'|'melee';
   progress?: string;
   description?: string;
 };
 const SKILL_ENTRIES: readonly SkillEntry[] = [
+  {skill:'animals',progress:'data-animals-xp'},
   {skill:'construction',progress:'data-skill-xp',description:'data-skill-description'},
   {skill:'medicine',progress:'data-medicine-xp',description:'data-medicine-description'},
   {skill:'intellectual'},
@@ -49,6 +50,10 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
   const intellect=intellectualSkill(pawn);setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="intellectual"]')!,`Intellect ${intellect.level}/20`,intellect.passion);panel.querySelector<HTMLElement>('[data-skill-detail="intellectual"]')!.textContent=`${(intellect.xp/XP_SCALE).toFixed(1)} XP · vitesse de recherche.`;
   const craft=craftingSkill(pawn);setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="crafting"]')!,`Artisanat ${craft.level}/20`,craft.passion);panel.querySelector<HTMLElement>('[data-skill-detail="crafting"]')!.textContent=`${(craft.xp/XP_SCALE).toFixed(1)} XP · influe sur la qualité de confection, sans accélérer la taille de pierre.`;
   const craftProgress=panel.querySelector<HTMLProgressElement>('[data-crafting-xp]')!;craftProgress.value=Math.max(0,craft.xp/xpRequired(craft.level));craftProgress.setAttribute('aria-label','Expérience d’artisanat');
+  const animals=pawn.skills.animals??{level:0,xp:0,dailyXp:0,passion:0 as const};
+  setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="animals"]')!,`Animaux ${animals.level}/20`,animals.passion);
+  panel.querySelector<HTMLElement>('[data-skill-detail="animals"]')!.textContent=`${(animals.xp/XP_SCALE).toFixed(1)} XP · Apprivoisement et entretien. Niveau 8 requis pour le lièvre.`;
+  const ap=panel.querySelector<HTMLProgressElement>('[data-animals-xp]')!;ap.value=Math.max(0,animals.xp/xpRequired(animals.level));ap.setAttribute('aria-label','Expérience Animaux');
   const art=artisticSkill(pawn);
   setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="artistic"]')!,`Artistique ${art.level}/20`,art.passion);
   panel.querySelector<HTMLElement>('[data-skill-detail="artistic"]')!.textContent=`${(art.xp/XP_SCALE).toFixed(1)} / ${xpRequired(art.level)/XP_SCALE} XP · détermine la qualité des sculptures, sans accélérer le travail. Apprentissage ${Math.round(learningFactor(art,pawn)*100)} %.`;
@@ -67,6 +72,8 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
 }
 export function updateWorkSkills(row:HTMLElement,pawn:Pawn):void {
   row.title=traitSummary(pawn);
+  const handle=row.querySelector<HTMLSelectElement>('[data-work="handle"]');
+  if(handle){let label=handle.parentElement!.querySelector<HTMLElement>('.work-animals');if(!label){label=document.createElement('small');label.className='work-animals';handle.parentElement!.append(label);}const a=pawn.skills.animals;setCompactSkillPassion(label,a?.level??0,a?.passion??0,'Animaux');handle.title='Apprivoisement et entretien des lièvres · niveau Animaux 8 requis';}
   const warden=row.querySelector<HTMLSelectElement>('[data-work="warden"]');
   if(warden){let label=warden.parentElement!.querySelector<HTMLElement>('.work-social');if(!label){label=document.createElement('small');label.className='work-social';warden.parentElement!.append(label);}const s=pawn.skills.social??{level:0,xp:0,dailyXp:0,passion:0};setCompactSkillPassion(label,s.level,s.passion,'Social');warden.title=`Social ${s.level}/20 · ${SKILL_PASSION_LABELS[s.passion]} · nourrit les prisonniers et mène les conversations selon le mode choisi`;}
   const doctor=row.querySelector<HTMLSelectElement>('[data-work="doctor"]');

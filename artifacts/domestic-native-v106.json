@@ -1,0 +1,24 @@
+{
+  "backend": "WebGPU",
+  "prepared": true,
+  "fixture": "lievres-v106",
+  "start": 2000,
+  "checkpoint": 2114,
+  "final": 2329,
+  "tamed": false,
+  "events": [
+    {
+      "tick": 2219,
+      "type": "need",
+      "message": "Ada n’a pas réussi à apprivoiser le lièvre 186."
+    },
+    {
+      "tick": 2322,
+      "type": "need",
+      "message": "Ada a soigné le lièvre 187 avec Plantes médicinales."
+    }
+  ],
+  "medicineUsed": 1,
+  "coldReload": true,
+  "errors": []
+}

@@ -99,6 +99,7 @@ export function colonyWealth(world: World): ColonyWealth {
   // Pawn MarketValue needs age/life stage, all Core capacities, full skill set,
   // beauty and hediff price offsets. Those facts are absent from this save.
   for (const pawn of world.pawns) if (colonyPawn(pawn)) unpricedPawnIds.push(pawn.id);
+  for(const animal of world.wildlife?.animals??[])if(animal.domestic&&animal.state!=='dead')unpricedPawnIds.push(animal.id);
   const pawnsKnown = 0, knownTotal = items + structures + floors + pawnsKnown;
   return {
     items,structures,floors,pawnsKnown,knownTotal,

@@ -107,6 +107,8 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
       if(pawn.hunting?.animalId===pileId)quantity++;
       if((pawn.equipmentTask?.action==='equip'||pawn.equipmentTask?.action==='wear')&&pawn.equipmentTask.itemId===pileId)quantity++;
       for(const i of pawn.cooking?.ingredients??[])if(i.pileId===pileId&&i.stage!=='held')quantity+=i.quantity;
+      if(pawn.animalHandling?.phase==='pickup'&&pawn.animalHandling.sourcePileId===pileId)quantity+=pawn.animalHandling.quantity;
+      if(pawn.animalCare?.phase==='pickup'&&pawn.animalCare.medicine?.sourcePileId===pileId)quantity+=pawn.animalCare.medicine.quantity;
       if(pawn.tend?.phase==='pickup'&&pawn.tend.medicine?.sourcePileId===pileId)quantity+=pawn.tend.medicine.quantity;
       if(pawn.feed?.phase==='pickup'&&pawn.feed.sourcePileId===pileId)quantity+=pawn.feed.quantity;
       if(pawn.ward?.kind==='food'&&pawn.ward.phase==='pickup'&&pawn.ward.sourcePileId===pileId)quantity+=pawn.ward.quantity;

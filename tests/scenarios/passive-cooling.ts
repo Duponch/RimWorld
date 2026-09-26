@@ -12,7 +12,7 @@ export function passiveCoolingFixture():World {
   w.thermal=undefined;
   w.roofing!.constructed=[];
   for(let z=15;z<=18;z++)for(let x=15;x<=18;x++)w.roofing!.constructed.push(z*w.width+x);
-  w.pawns[0]!.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,mine:0,gather:0,build:1,haul:1,grow:0,cook:0,art:0,craft:0};
+  w.pawns[0]!.priorities={handle:0,clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,mine:0,gather:0,build:1,haul:1,grow:0,cook:0,art:0,craft:0};
   addGroundMaterial(w,'wood',75,{x:18,z:18},'wood');addGroundMaterial(w,'food',10,{x:18,z:17},'rice');refreshStock(w);
   reconcileTemperature(w);w.thermal!.regions[0]!.temperature=35;return w;
 }

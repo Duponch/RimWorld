@@ -9,7 +9,7 @@ import { TICKS_PER_DAY, type World } from '../src/sim/types';
 
 function camp():World {
   const w=createWorld(42,32,32);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];w.structures=[];w.stockpiles=[];w.pawns=w.pawns.slice(0,2);
-  w.pawns.forEach((p,i)=>{p.x=8;p.z=10+i;p.hunger=100;p.rest=100;p.schedule.fill('anything');p.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,art:0,craft:2,mine:2,haul:1,build:0,grow:0,gather:0,cook:0};});refreshStock(w);return w;
+  w.pawns.forEach((p,i)=>{p.x=8;p.z=10+i;p.hunger=100;p.rest=100;p.schedule.fill('anything');p.priorities={handle:0,clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,art:0,craft:2,mine:2,haul:1,build:0,grow:0,gather:0,cook:0};});refreshStock(w);return w;
 }
 function storage(w:World,x:number,capacity=15,food=false,priority=3) {
   expect(applyCommand(w,{type:'stockpile',x,z:8,enabled:true,capacity,priority,filters:{wood:!food,food}}).ok).toBe(true);return w.stockpiles.at(-1)!;
@@ -45,7 +45,7 @@ test('forced stock hauling reserves active and queued quantities/capacity agains
 });
 
 test('forced construction deliveries are physical subjobs, builders need no hauling assignment, cancellation keeps delivered and carried materials',()=>{
-  const w=camp(),p=w.pawns[0]!;w.pawns=w.pawns.slice(0,1);p.priorities={clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,art:0,craft:2,mine:2,haul:0,build:1,grow:0,gather:0,cook:0};
+  const w=camp(),p=w.pawns[0]!;w.pawns=w.pawns.slice(0,1);p.priorities={handle:0,clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,art:0,craft:2,mine:2,haul:0,build:1,grow:0,gather:0,cook:0};
   for(const x of [16,18])expect(applyCommand(w,{type:'designate',kind:'wall',x,z:8}).ok).toBe(true);
   addGroundMaterial(w,'wood',12,{x:8,z:8},'wood');const [a,b]=w.jobs;
   expect(queryOrderOptions(w,p.id,a!).find(o=>o.haulTarget)?.enabled).toBe(true);
@@ -76,7 +76,7 @@ test('waiting hauling survives migration/replay, releases vanished sources, reje
     const invalid=structuredClone(raw);mutate(invalid);expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow();expect(w).toEqual(raw);
   }
   rice.rot={progress:ROT_DAYS.rice*TICKS_PER_DAY-1,atTick:w.tick};tick(w);expect(w.spoiled.rice).toBe(20);expect(p.orders).toEqual({active:null,queue:[]});expect(w.stock.food).toBe(0);
-  const old=JSON.parse(serializeWorld(camp()));(old.schemaVersion=17,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(withMigratedSkills({...old,pawns:old.pawns.map((p:any)=>({...p,priorities: {clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,...p.priorities,mine:2}})),schemaVersion:SCHEMA_VERSION,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}}));
+  const old=JSON.parse(serializeWorld(camp()));(old.schemaVersion=17,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(withMigratedSkills({...old,pawns:old.pawns.map((p:any)=>({...p,priorities: {handle:0,clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,...p.priorities,mine:2}})),schemaVersion:SCHEMA_VERSION,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}}));
 
   const blocked=camp(),actor=blocked.pawns[0]!;blocked.pawns=blocked.pawns.slice(0,1);storage(blocked,20,30);addGroundMaterial(blocked,'wood',20,{x:8,z:8},'wood');const wood=blocked.piles[0]!;
   applyCommand(blocked,{type:'order-haul',pawnId:actor.id,target:{type:'pile',pileId:wood.id},queue:false});applyCommand(blocked,{type:'order-haul',pawnId:actor.id,target:{type:'pile',pileId:wood.id},queue:true});

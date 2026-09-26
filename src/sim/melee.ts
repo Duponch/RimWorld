@@ -23,7 +23,7 @@ import type { CommandResult,Pawn,World } from './types.ts';
 function targetFor(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id)):LivingTarget|undefined {
   const order=pawn.melee?.order;
   const p=order?combatTarget(world,order.targetId):undefined;
-  return p&&p.state!=='dead'&&(order!.startedDowned||p.state!=='downed')&&(!isAnimalTarget(p)?!carried(p.id):world.schemaVersion>=78)?p:undefined;
+  return p&&!(isAnimalTarget(p)&&p.domestic)&&p.state!=='dead'&&(order!.startedDowned||p.state!=='downed')&&(!isAnimalTarget(p)?!carried(p.id):world.schemaVersion>=78)?p:undefined;
 }
 function canFight(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id)):boolean {
   return !medicallyStopped(pawn)&&pawn.state!=='sleeping'&&!pawn.need&&!pawn.collapsePending&&!carried(pawn.id);
@@ -34,6 +34,7 @@ export function applyMeleeCommand(world:World,command:MeleeCommand):CommandResul
   if(command.structure!==undefined&&command.structure!==true)return refuse('Type de cible invalide.');
   const target=command.structure?world.structures.find(s=>s.id===command.targetId&&isBarrier(s)):combatTarget(world,command.targetId);
   if(!target||'state' in target&&(target.state==='dead'||!isAnimalTarget(target)&&!!carrierOf(world,target.id)))return refuse(command.structure?'Mur ou porte indisponible.':'Cible vivante indisponible.');
+  if('state' in target&&isAnimalTarget(target)&&target.domestic)return refuse('Cet animal appartient à la colonie.');
   const plans:{pawn:Pawn;path:Pawn['path']}[]=[],claimed=new Set<number>(),blocked=blockedCells(world);
   for(const id of [...command.pawnIds].sort((a,b)=>a-b)) {
     const pawn=world.pawns.find(p=>p.id===id);

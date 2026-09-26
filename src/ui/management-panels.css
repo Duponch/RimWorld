@@ -324,6 +324,20 @@
   padding-inline: 7px;
 }
 
+#wildlife-panel .fauna-tame {
+  display:flex;
+  grid-column:1 / -1;
+  align-items:center;
+  gap:7px;
+  min-height:28px;
+  white-space:nowrap;
+}
+
+#animals-panel .domestic-list{display:grid;gap:9px}
+#animals-panel .domestic-row{display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr);gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--paper-deep)}
+#animals-panel .domestic-row button{text-align:left;min-height:38px}
+#animals-panel .domestic-row span{min-width:0;line-height:1.45}
+
 #wildlife-panel .fauna-health {
   grid-column: 2 / -1;
   display: block;

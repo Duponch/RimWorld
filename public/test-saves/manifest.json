@@ -252,6 +252,30 @@
       "prepared": true,
       "provenance": "Situation préparée ; visiteur créé par le moteur à son introduction. Sculpture et ressources fournies pour un essai immédiat, aucune progression naturelle revendiquée.",
       "sha256": "79bb80341733624a859cc53c222b91bccfa0b6057f82699cb92f98a0dc669789"
+    },
+    {
+      "id": "lievres-v106",
+      "release": "v106",
+      "label": "Lièvres et soins · 1 colon",
+      "description": "Un lièvre sauvage à apprivoiser et un lièvre possédé blessé : nourriture, travail Animaux et soins médicaux.",
+      "filename": "lievres.json",
+      "pawns": 1,
+      "colonists": 1,
+      "width": 32,
+      "height": 32,
+      "tick": 2000,
+      "focus": [
+        "apprivoisement",
+        "animaux",
+        "soins"
+      ],
+      "steps": [
+        "Ouvrir Faune et désigner le lièvre sauvage à apprivoiser.",
+        "Ouvrir Animaux pour régler les soins du lièvre blessé ; reprendre puis observer les travaux et sauvegarder."
+      ],
+      "prepared": true,
+      "provenance": "Situation préparée : compétences et provisions fournies, un lièvre domestique blessé placé pour les soins. Le lièvre sauvage reste à apprivoiser par le moteur ; aucun succès ni parcours autonome revendiqué.",
+      "sha256": "2159a4196438be65301524c2771d006d5578406c8862e1c7480e4a5687cd6390"
     }
   ]
 }

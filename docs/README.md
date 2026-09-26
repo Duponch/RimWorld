@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V106 — lièvre domestique libre et soins :** [contrat](development/domestic-animals.md), [référence Core](research/domestic-animals-reference-v106.md), [guide](gameplay/player-guide.md). Travail Animaux qualifié, nourriture et médicaments physiques, familiarité à entretenir ; aucun enclos, aire assignable, autre espèce apprivoisable, reproduction ni produit animal. Le nouveau départ ne donne pas d'animal, la migration n'en crée pas.
+
 **V105 — patrimoine, attentes, menaces et commerce artistique** : [contrat](development/colony-economy.md), [preuves](history/validation-economy-v105.md). Richesse explicitement partielle, adoption prospective, œuvres vendables et démonstration directement dans Charger.
 
 **V104 — sculpture et décoration** : [contrat](development/art.md), [référence Core](research/art-reference-v104.md), [preuves](history/validation-art-v104.md). Les démonstrations V101/V103/V104 se chargent directement depuis la bibliothèque du jeu.
