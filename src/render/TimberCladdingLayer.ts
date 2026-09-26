@@ -1,8 +1,10 @@
 import * as THREE from 'three/webgpu';
+import { texture } from 'three/tsl';
 import type { World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { doorOrientations } from '../sim/door-rules';
 import { doorLeafTop } from './door-parts';
+import { instancedPatternUv } from './texture-variation';
 
 type Point = readonly [number, number, number];
 
@@ -128,6 +130,10 @@ export class TimberCladdingLayer {
   private key='';
   private texturesEnabled=true;
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial)=>void) {
+    // NodeMaterial still applies authored vertex colours and instance tints
+    // after colorNode, just as it does for the original map material.
+    this.material.colorNode=texture(this.grain,instancedPatternUv()).rgb;
+    this.material.map=null;
     for(const mat of [this.material,this.plainMaterial]){configure?.(mat);mat.userData.rendererOwned=true;}
     this.wallMesh=this.makeMesh(this.wallGeometry,'timber-vertical-planks',this.wallCapacity);
     this.eaveMesh=this.makeMesh(this.eaveGeometry,'timber-eave-planks',this.eaveCapacity);

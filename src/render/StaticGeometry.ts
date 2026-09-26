@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
 import type { Placement } from './primitives';
+import { PATTERN_SPAN } from './texture-variation';
 const scratchColor = new THREE.Color();
 
 export interface ResourceRange { id:number;start:number;count:number;vertexStart:number;vertexCount:number }
@@ -32,6 +33,11 @@ export function mergedInstances(group: THREE.Group, parts: { geometry: THREE.Buf
     const pos = geometry.getAttribute('position'), normal = geometry.getAttribute('normal'), uv=geometry.getAttribute('uv');
     for (const item of items) {
       const firstIndex = index,firstVertex=vertex;
+      // These vertices are baked only when a spatial chunk changes. Encode a
+      // stable, resource-specific pigment crop in the existing UV stream.
+      const pigmentKey=item.key??(Math.floor(item.x*257)^Math.floor(item.z*131));
+      const phaseU=includeUv?noise(pigmentKey,Math.floor(item.x),191)*(1-PATTERN_SPAN):0;
+      const phaseV=includeUv?noise(pigmentKey,Math.floor(item.z),311)*(1-PATTERN_SPAN):0;
       const sx = item.sx ?? 1, sy = item.sy ?? 1, sz = item.sz ?? 1;
       const cosine = Math.cos(item.ry ?? 0), sine = Math.sin(item.ry ?? 0);
       scratchColor.setHex(item.color ?? 0xffffff);
@@ -46,7 +52,7 @@ export function mergedInstances(group: THREE.Group, parts: { geometry: THREE.Buf
         normals[offset + 1] = ny / length;
         normals[offset + 2] = (nz * cosine - nx * sine) / length;
         colors[offset] = scratchColor.r; colors[offset + 1] = scratchColor.g; colors[offset + 2] = scratchColor.b;
-        if(uvs){const uvOffset=(vertex+i)*2;uvs[uvOffset]=uv?.getX(i)??0;uvs[uvOffset+1]=uv?.getY(i)??0;}
+        if(uvs){const uvOffset=(vertex+i)*2;uvs[uvOffset]=(uv?.getX(i)??0)*PATTERN_SPAN+phaseU;uvs[uvOffset+1]=(uv?.getY(i)??0)*PATTERN_SPAN+phaseV;}
       }
       for (let i = 0; i < (geometry.index?.count ?? pos.count); i++) indices[index++] = vertex + (geometry.index?.getX(i) ?? i);
       if (item.key !== undefined) ranges.push({id:item.key,start:firstIndex,count:index-firstIndex,vertexStart:firstVertex,vertexCount:pos.count});

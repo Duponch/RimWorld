@@ -30,7 +30,8 @@ test('one broad irregular bevelled board covers each wall face with a closed rec
   expect(outward).toEqual(new Set(['0:1','0:-1','1:0','-1:0']));
   expect(tones.size).toBeGreaterThan(8);
   expect(layer.material.vertexColors).toBe(true);
-  expect(layer.material.map).toBe(layer.grain);
+  expect(layer.material.map).toBeNull();
+  expect(layer.material.colorNode).toBeTruthy();
   const bytes=layer.grain.image.data as Uint8Array;
   expect(Math.min(...bytes)).toBeGreaterThanOrEqual(158);
   expect(new Set(bytes).size).toBeGreaterThan(10);

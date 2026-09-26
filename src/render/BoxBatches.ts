@@ -1,9 +1,10 @@
 import * as THREE from 'three/webgpu';
-import { attribute, texture, uv } from 'three/tsl';
+import { attribute, texture } from 'three/tsl';
 import { material } from './primitives';
 import type { Placement } from './primitives';
 import { BoxMesh, configureBoxMaterial } from './BoxMesh';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
+import { instancedPatternUv } from './texture-variation';
 
 const object = new THREE.Object3D(), color = new THREE.Color();
 type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'border';
@@ -33,7 +34,7 @@ export class BoxBatches {
     for (const mat of Object.values(this.materials)) { mat.userData.rendererOwned = true; configureBoxMaterial(mat); }
     this.texturedSolid.userData.rendererOwned = true;
     configureBoxMaterial(this.texturedSolid);
-    this.texturedSolid.colorNode = attribute('boxColor', 'vec3').mul(texture(this.surfaceTexture, uv()).rgb);
+    this.texturedSolid.colorNode = attribute('boxColor', 'vec3').mul(texture(this.surfaceTexture, instancedPatternUv()).rgb);
   }
 
   /** Select a resident pipeline. The plain one has no texture node or map, so
