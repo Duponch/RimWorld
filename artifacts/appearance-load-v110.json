@@ -1,0 +1,211 @@
+{
+  "date": "2026-09-26T11:41:31.736Z",
+  "protocol": "Native WebGPU, 1440x1000, mixed-100 immutable save, all-map view, V109/V110/V110/V109 appearance renderers sequentially; same current simulation and immutable scene, pause and 6x windows of six seconds after one second settling. RAF wall time and render CPU are separate; not a GPU timer or simulation microbenchmark.",
+  "reports": [
+    {
+      "version": "V109",
+      "windows": [
+        {
+          "speed": 0,
+          "span": 375.5533905932738,
+          "frameCpu": {
+            "count": 1440,
+            "p50": 2.5,
+            "p95": 3.6,
+            "max": 7.5
+          },
+          "image": {
+            "count": 1439,
+            "p50": 4.2,
+            "p95": 4.3,
+            "max": 8.4
+          },
+          "presentationLagTicks": {
+            "count": 1440,
+            "p50": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "actualSpeed": 0
+        },
+        {
+          "speed": 6,
+          "span": 375.5533905932738,
+          "frameCpu": {
+            "count": 754,
+            "p50": 3.6,
+            "p95": 20.3,
+            "max": 76.6
+          },
+          "image": {
+            "count": 753,
+            "p50": 4.2,
+            "p95": 20.9,
+            "max": 74.9
+          },
+          "presentationLagTicks": {
+            "count": 754,
+            "p50": 0,
+            "p95": 0.849,
+            "max": 0.856
+          },
+          "actualSpeed": 2.6821067533782386
+        }
+      ]
+    },
+    {
+      "version": "V110",
+      "windows": [
+        {
+          "speed": 0,
+          "span": 375.5533905932738,
+          "frameCpu": {
+            "count": 1442,
+            "p50": 2.8,
+            "p95": 3.6,
+            "max": 6.7
+          },
+          "image": {
+            "count": 1441,
+            "p50": 4.2,
+            "p95": 4.3,
+            "max": 8.3
+          },
+          "presentationLagTicks": {
+            "count": 1442,
+            "p50": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "actualSpeed": 0
+        },
+        {
+          "speed": 6,
+          "span": 375.5533905932738,
+          "frameCpu": {
+            "count": 795,
+            "p50": 3.3,
+            "p95": 20.5,
+            "max": 93.2
+          },
+          "image": {
+            "count": 794,
+            "p50": 4.2,
+            "p95": 20.9,
+            "max": 91.7
+          },
+          "presentationLagTicks": {
+            "count": 795,
+            "p50": 0,
+            "p95": 0.849,
+            "max": 0.852
+          },
+          "actualSpeed": 2.2723997650008916
+        }
+      ]
+    },
+    {
+      "version": "V110",
+      "windows": [
+        {
+          "speed": 0,
+          "span": 375.5533905932738,
+          "frameCpu": {
+            "count": 1440,
+            "p50": 2.9,
+            "p95": 3.7,
+            "max": 8.4
+          },
+          "image": {
+            "count": 1439,
+            "p50": 4.2,
+            "p95": 4.3,
+            "max": 8.4
+          },
+          "presentationLagTicks": {
+            "count": 1440,
+            "p50": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "actualSpeed": 0
+        },
+        {
+          "speed": 6,
+          "span": 375.5533905932738,
+          "frameCpu": {
+            "count": 762,
+            "p50": 3.4,
+            "p95": 22,
+            "max": 95.4
+          },
+          "image": {
+            "count": 761,
+            "p50": 4.2,
+            "p95": 25,
+            "max": 95.8
+          },
+          "presentationLagTicks": {
+            "count": 762,
+            "p50": 0,
+            "p95": 0.849,
+            "max": 0.856
+          },
+          "actualSpeed": 2.2713800572836593
+        }
+      ]
+    },
+    {
+      "version": "V109",
+      "windows": [
+        {
+          "speed": 0,
+          "span": 375.5533905932738,
+          "frameCpu": {
+            "count": 1441,
+            "p50": 2.8,
+            "p95": 3.6,
+            "max": 6.7
+          },
+          "image": {
+            "count": 1440,
+            "p50": 4.2,
+            "p95": 4.3,
+            "max": 8.2
+          },
+          "presentationLagTicks": {
+            "count": 1441,
+            "p50": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "actualSpeed": 0
+        },
+        {
+          "speed": 6,
+          "span": 375.5533905932738,
+          "frameCpu": {
+            "count": 771,
+            "p50": 3.4,
+            "p95": 21.3,
+            "max": 93.2
+          },
+          "image": {
+            "count": 770,
+            "p50": 4.2,
+            "p95": 20.9,
+            "max": 91.8
+          },
+          "presentationLagTicks": {
+            "count": 771,
+            "p50": 0,
+            "p95": 0.849,
+            "max": 0.856
+          },
+          "actualSpeed": 2.3236900197512216
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

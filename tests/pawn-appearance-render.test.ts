@@ -5,6 +5,9 @@ import {createWorld} from '../src/sim/index';
 import {startingPawn} from '../src/sim/starting-pawns';
 import {appearanceOf} from '../src/sim/pawn-appearance';
 import {appearanceShape} from '../src/render/pawn-appearance-shape';
+import {HAIR_PARTS,BEARD_PARTS,HAIR_MASKS} from '../src/render/pawn-appearance-shape';
+import {portraitDataUrl} from '../src/ui/pawn-portrait';
+import {apparelAppearance} from '../src/render/character-apparel';
 
 test('resident appearance survives actor growth, reordering and restored legacy identity without mutating gameplay',()=>{
   const world=createWorld(42,32,32),layer=new PawnLayer();
@@ -33,4 +36,25 @@ test('resident appearance survives actor growth, reordering and restored legacy 
   const names=['position','normal','color','boneId','bindPivot','dye','aFrom','aTo','aMotion','aTravel','aCargo','aTint','aEquipment','aSkin','aHair','aShape'];
   const buffers=new Set(names.map(n=>{const a=grown.getAttribute(n);return a instanceof THREE.InterleavedBufferAttribute?a.data:a;}));
   expect(buffers.size).toBeLessThanOrEqual(8);expect(names.length).toBeLessThanOrEqual(16);
+});
+
+test('hairlines and beard cheeks wrap the actual head without coplanar front faces; portraits project the same mesh',()=>{
+  // The face occupies z = .15 and y = 1.04..1.34 before the V109 morph.
+  for(const index of [2,3])expect(HAIR_PARTS[index]!.center[2]-HAIR_PARTS[index]!.size[2]/2).toBeGreaterThan(.15);
+  for(const index of [4,5]){
+    const side=HAIR_PARTS[index]!;
+    expect(side.center[1]-side.size[1]/2).toBeLessThanOrEqual(1.08);
+    expect(side.center[2]+side.size[2]/2).toBeGreaterThan(.15);
+  }
+  for(const index of [3,4]){
+    const cheek=BEARD_PARTS[index]!;
+    expect(cheek.center[1]-cheek.size[1]/2).toBeLessThanOrEqual(1.04);
+    expect(cheek.center[2]+cheek.size[2]/2).toBeGreaterThan(.18);
+  }
+  for(const style of ['afro','curly'] as const)for(const index of [0,4,5,11,12,13])expect(HAIR_MASKS[style] & 2**index).not.toBe(0);
+  const pawn=createWorld(42,32,32).pawns[0]!,appearance=appearanceOf(pawn,42);
+  const svg=decodeURIComponent(portraitDataUrl(appearance,apparelAppearance()).split(',')[1]!);
+  expect(svg).toContain('data-source="pawn-geometry"');
+  expect((svg.match(/<polygon /g)??[]).length).toBeGreaterThan(30);
+  expect(svg).not.toContain('<path'); // no independent cartoon head/hair shapes
 });

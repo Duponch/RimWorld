@@ -1,4 +1,10 @@
-# Apparence humaine modulaire — V109
+# Apparence humaine modulaire — V109–V110
+
+## Retouche V110 des volumes et portraits
+
+Les deux coiffures sombres de la capture annotée sont des **cheveux**, pas des couvre-chefs. Leurs couronnes trop rectangulaires ont été abaissées et divisées visuellement par les mèches déjà communes ; les cheveux couvrent maintenant les tempes et l'arrière de la tête. Deux mèches décalées couvrent ensemble toute la largeur du front, avec une face avant devant la peau pour éviter la coplanarité. Les joues de la barbe longent la mâchoire jusqu'à son arrière et descendent sous le menton. Les masques restent bornés aux quinze pièces de cheveux résidentes du lot V109 ; les variantes de coiffure ne créent aucun objet Three ni appel de dessin par personne.
+
+Le HUD et Bio utilisent une projection orthographique fixe des **faces du même maillage** que le personnage en jeu. Proportions, pièces visibles, peau, cheveux et tenue viennent des mêmes paramètres ; ce n'est plus un second dessin manuel qui ressemble seulement au profil. Le portrait n'est pas une capture animée : il représente le personnage debout, au repos et vu sous un angle constant. Les faces sont extraites une fois et l'image SVG est mise en cache par identité et tenue, sans scène WebGPU, rendu supplémentaire ou travail à chaque image. La première création d'un grand nombre de portraits reste un coût ponctuel. [Contrôles et mesures V110](../history/validation-appearance-v110.md).
 
 ## Référence et interprétation
 
@@ -14,7 +20,7 @@ Un seul lot humain instancié conserve géométrie et articulations partagées. 
 
 Les attributs de tenue, peau, cheveux et morphologie partagent un flux interleavé : sept flux utilisés et seize attributs au plus dans le shader humain, sous les minima WebGPU. Les lots de transport, sélection, feu et progression gardent la même trajectoire confirmée V108. L’agrandissement des buffers conserve données et matériaux. Aucun squelette JavaScript individuel ni nouvelle animation CPU par colon.
 
-Portrait SVG original composé depuis le même profil et la tenue, cache borné, utilisé dans le HUD et Bio. Les anciennes illustrations restent dans les assets historiques. L’inspection tardive est déplacée sous Bio sans duplication à chaque actualisation. Les traits sont lisibles pour les anciennes parties aussi, sans réécrire leur sauvegarde.
+Le portrait V109 composait un dessin SVG depuis le même profil et la tenue ; V110 remplace cette composition indépendante par la projection du maillage décrite plus haut. Les anciennes illustrations restent dans les assets historiques. L’inspection tardive est déplacée sous Bio sans duplication à chaque actualisation. Les traits sont lisibles pour les anciennes parties aussi, sans réécrire leur sauvegarde.
 
 ## Persistance et frontières
 

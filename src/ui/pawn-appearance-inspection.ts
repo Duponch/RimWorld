@@ -3,7 +3,7 @@ import { appearanceOf, BEARD_STYLES, HAIR_STYLES, type BodyTypeId, type HairId }
 import type { Pawn, World } from '../sim/types';
 import { portraitDataUrl } from './pawn-portrait';
 
-type ApparelLook = Pick<ReturnType<typeof apparelAppearance>, 'signature' | 'color' | 'vest' | 'silhouette'>;
+type ApparelLook = ReturnType<typeof apparelAppearance>;
 
 const BODY_LABEL: Record<BodyTypeId, string> = {
   Male: 'silhouette moyenne', Female: 'silhouette moyenne', Thin: 'silhouette fine',
@@ -41,7 +41,7 @@ export function updatePawnAppearanceInspection(container: HTMLElement, world: Wo
   const key = [pawn.id, pawn.name, pawn.appearance ? 'saved' : 'projection',
     appearance.version, appearance.sex, appearance.bodyType, appearance.headType,
     appearance.hair, appearance.beard, appearance.skinColor, appearance.hairColor,
-    look.signature, look.color ?? '', look.vest, look.silhouette].join('|');
+    look.signature, look.color ?? '', look.vest, look.silhouette, look.pants].join('|');
   if (section.dataset.appearanceKey === key) return;
   section.dataset.appearanceKey = key;
   const image = section.querySelector<HTMLImageElement>('.appearance-inspection-portrait')!;

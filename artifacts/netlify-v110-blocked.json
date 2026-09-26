@@ -1,0 +1,11 @@
+{
+  "date": "2026-09-26T11:46:39Z",
+  "siteId": "9c1b98b5-68a5-4242-b1ec-3bc193b93445",
+  "requestedVersion": "V110",
+  "operation": "POST /sites/{site_id}/deploys",
+  "httpStatus": 403,
+  "reason": "Account credit usage exceeded - new deploys are blocked until credits are added",
+  "attempts": 2,
+  "newDeployCreated": false,
+  "publicVersion": "V109"
+}

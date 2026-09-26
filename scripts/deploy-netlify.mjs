@@ -23,7 +23,12 @@ async function api(path,method='GET',body,type='application/json'){
       for(let remaining=delay;remaining>0;remaining-=60000)await new Promise(resolve=>setTimeout(resolve,Math.min(remaining,60000)));
       continue;
     }
-    if(!response.ok){await response.body?.cancel();throw Error(`Netlify ${method} ${path}: HTTP ${response.status}`);}
+    if(!response.ok){
+      const raw=await response.text();
+      let reason='';
+      try{const body=JSON.parse(raw);reason=typeof body?.message==='string'?body.message:typeof body?.error==='string'?body.error:'';}catch{}
+      throw Error(`Netlify ${method} ${path}: HTTP ${response.status}${reason?` (${reason.replaceAll(token,'[redacted]').slice(0,160)})`:''}`);
+    }
     const data=await response.text();return data?JSON.parse(data):undefined;
   }
 }

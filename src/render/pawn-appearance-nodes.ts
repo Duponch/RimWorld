@@ -26,6 +26,6 @@ export function hiddenAppearancePart() {
   const beard=dye.greaterThanEqual(200);
   const mask=hair.select(shape.z,shape.w),index=hair.select(dye.sub(100),dye.sub(200));
   // The indices are small exact integers; outside those parts use exponent zero.
-  const visible=mask.div(float(2).pow(index.clamp(0,15))).floor().mod(2).greaterThan(.5);
+  const visible=mask.div(float(2).pow(index.clamp(0,14))).floor().mod(2).greaterThan(.5);
   return hair.or(beard).and(visible.not());
 }

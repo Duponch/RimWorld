@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V110 — retouche des coiffures et vrais portraits du modèle :** mèches latérales et franges complètes, barbe prolongée sur la mâchoire ; HUD et Bio projettent le maillage partagé, en cache. [Contrat](development/pawn-appearance.md), [preuves](history/validation-appearance-v110.md). Schéma 109, contenu et règles inchangés.
+
 **V109 — identités et armurerie :** profils humains persistants, silhouettes et coiffures 3D partagées, portraits cohérents et gilet pare-balles fabricable. [Apparence](development/pawn-appearance.md), [recherche Core](research/pawn-appearance-reference-v109.md), [filière du gilet](development/flak-armor.md), [preuves](history/validation-appearance-v109.md). Douze colonies directement dans Charger ; migration neutre 106→109.
 
 **V108 — déplacements plus réactifs :** réserve graphique réduite de quatre à deux ticks, avec horloge commune aux acteurs et à la scène. [Diagnostic](research/movement-latency-v108.md), [contrat](development/presentation-timing.md), [preuves](history/validation-latency-v108.md). Logique, schéma et catalogue inchangés.

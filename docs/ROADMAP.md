@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V110 — retouche graphique demandée :** coiffures et barbes mieux ajustées au volume de la tête, portraits HUD/Bio directement dérivés du maillage humain. [Contrat](development/pawn-appearance.md), [preuves](history/validation-appearance-v110.md). Schéma 109, catalogue, règles et estimations fonctionnelles inchangés ; G0–G4 restent partiels, G5 absent. La charge mixte à cent colons ne garantit toujours ni 240 FPS ni un débit 6× effectif.
+
 **V109 — identités visibles et gilet obtenable :** [apparences](development/pawn-appearance.md), [armurerie](development/flak-armor.md), [preuves](history/validation-appearance-v109.md). Profils persistants, cinq silhouettes, portraits cohérents, recette physique du gilet et douzième démonstration. Schéma 109, migration neutre ; G0–G4 restent partiels et G5 absent. Le volet graphique progresse, sans transformer le nombre de variantes en progression du catalogue métier.
 
 **V108 — priorité utilisateur, réactivité des déplacements :** retard de présentation réduit après clic droit et pour les déplacements autonomes ; contrôles de continuité, reprise et charge. [Diagnostic](research/movement-latency-v108.md), [preuves](history/validation-latency-v108.md). Schéma 106, catalogue, estimations fonctionnelles et jalons G0–G5 inchangés. La préparation industrielle était différée lors de ce correctif ; sa note V108 désigne son étude initiale ; la fabrication du gilet a depuis été livrée en V109.

@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Coiffures et portraits du modèle V110
+- Lire `docs/development/pawn-appearance.md` et `docs/history/validation-appearance-v110.md`. Les deux volumes sombres annotés étaient des cheveux, non des bonnets. Les mèches latérales descendent autour de la tête, les deux franges couvrent le front sans face coplanaire et les joues de barbe suivent la mâchoire. Garder quinze pièces de cheveux résidentes et les masques bornés à 14 ; les styles ne créent pas de maillage individuel.
+- HUD et Bio projettent les faces de `pawnGeometry()` dans un SVG orthographique au repos. Maintenir la géométrie, morphologie, teintes et tenue communes, le cache par identité/tenue, et aucune scène ou image GPU additionnelle à chaque frame. La création froide d'un grand groupe a un coût ponctuel ; ne pas prétendre que les performances sont garanties identiques dans toutes les charges.
+- Schéma 109, catalogue, simulation et anciennes fixtures inchangés. Contrôles ciblés, vues WebGPU face/profil/dos/Bio, charge mixte V109/V110 successive ; sources gelées pendant le natif. G0–G4 partiels, G5 absent. Netlify et commit final documentés dans les preuves.
+
 ## Apparences et gilet fabriqué V109
 - Lire `docs/development/pawn-appearance.md`, `flak-armor.md` et la recherche Core V109. Cinq corps, douze têtes, 26 IDs Urban interprétés en treize familles voxel originales ; profil visuel persistant indépendant du PRNG métier. Aucun âge/biographie/parenté simulé par ce champ ; sans biographie, repli Thin à 50 %, sinon corps selon sexe visuel. Les anciennes parties restent sans profil persisté, projection déterministe seulement.
 - Portraits SVG et corps GPU partagent profil/tenue. Conserver les flux interleavés (sept buffers, seize attributs), leurs extensions de capacité, les articulations et l'horloge commune V108. Les nouveaux arrivants/visiteurs/raids reçoivent un profil ; l'archive de visite le valide aussi.
