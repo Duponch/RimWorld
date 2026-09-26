@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Longueurs de coiffure et assemblage V111
+- Lire `docs/development/pawn-appearance.md` et `docs/history/validation-appearance-v111.md`. V110 descendait trop les tempes courtes : leurs pièces 4/5 finissent au-dessus de la base de nuque. Les styles longs et à queues utilisent les pièces 8/9 prolongées et l'arrière 6 ; garder la nuque 1 pour joindre le haut. Les franges 2/3 chevauchent la couronne 0 en profondeur/hauteur sans être coplanaires au front. Le volume haut 11 doit toucher la couronne.
+- Quinze pièces résidentes et un lot humain instancié, masques bornés à 14. Les portraits HUD/Bio projettent les mêmes faces et sont cachés par identité/tenue ; aucun rendu par frame supplémentaire. Schéma 109, anciennes fixtures, simulation et catalogue inchangés. La comparaison cent colons V110/V111 ne prouve pas une performance égale sous ×6 ; ne pas présenter cette retouche comme une optimisation.
+- Contrôles de bornes géométriques, 17 tests ciblés, vues WebGPU proche/lointaine face/profil/dos et charge successive documentés. Netlify refuse toujours les déploiements faute de crédits ; V111 n'est pas publique tant qu'un déploiement prêt et un contrôle public n'existent pas. G0–G4 partiels, G5 absent.
+
 ## Coiffures et portraits du modèle V110
 - Lire `docs/development/pawn-appearance.md` et `docs/history/validation-appearance-v110.md`. Les deux volumes sombres annotés étaient des cheveux, non des bonnets. Les mèches latérales descendent autour de la tête, les deux franges couvrent le front sans face coplanaire et les joues de barbe suivent la mâchoire. Garder quinze pièces de cheveux résidentes et les masques bornés à 14 ; les styles ne créent pas de maillage individuel.
 - HUD et Bio projettent les faces de `pawnGeometry()` dans un SVG orthographique au repos. Maintenir la géométrie, morphologie, teintes et tenue communes, le cache par identité/tenue, et aucune scène ou image GPU additionnelle à chaque frame. La création froide d'un grand groupe a un coût ponctuel ; ne pas prétendre que les performances sont garanties identiques dans toutes les charges.

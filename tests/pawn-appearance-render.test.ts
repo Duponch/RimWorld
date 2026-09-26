@@ -40,12 +40,27 @@ test('resident appearance survives actor growth, reordering and restored legacy 
 
 test('hairlines and beard cheeks wrap the actual head without coplanar front faces; portraits project the same mesh',()=>{
   // The face occupies z = .15 and y = 1.04..1.34 before the V109 morph.
-  for(const index of [2,3])expect(HAIR_PARTS[index]!.center[2]-HAIR_PARTS[index]!.size[2]/2).toBeGreaterThan(.15);
+  const crown=HAIR_PARTS[0]!,nape=HAIR_PARTS[1]!;
+  expect(crown.center[2]+crown.size[2]/2).toBeGreaterThan(.15);
+  for(const index of [2,3]){
+    const fringe=HAIR_PARTS[index]!;
+    expect(fringe.center[2]-fringe.size[2]/2).toBeGreaterThan(.15);
+    expect(fringe.center[1]+fringe.size[1]/2).toBeGreaterThan(crown.center[1]-crown.size[1]/2);
+  }
+  const napeBase=nape.center[1]-nape.size[1]/2;
   for(const index of [4,5]){
     const side=HAIR_PARTS[index]!;
-    expect(side.center[1]-side.size[1]/2).toBeLessThanOrEqual(1.08);
+    expect(side.center[1]-side.size[1]/2).toBeGreaterThan(napeBase);
+    expect(side.center[1]-side.size[1]/2).toBeLessThan(1.24);
     expect(side.center[2]+side.size[2]/2).toBeGreaterThan(.15);
   }
+  for(const style of ['long','wavy','tails'] as const){
+    for(const index of [1,6,8,9])expect(HAIR_MASKS[style] & 2**index).not.toBe(0);
+    for(const index of [4,5])expect(HAIR_MASKS[style] & 2**index).toBe(0);
+  }
+  for(const index of [8,9])expect(HAIR_PARTS[index]!.center[1]-HAIR_PARTS[index]!.size[1]/2).toBeLessThan(napeBase);
+  expect(HAIR_PARTS[6]!.center[1]-HAIR_PARTS[6]!.size[1]/2).toBeLessThan(HAIR_PARTS[8]!.center[1]-HAIR_PARTS[8]!.size[1]/2);
+  expect(HAIR_PARTS).toHaveLength(15);
   for(const index of [3,4]){
     const cheek=BEARD_PARTS[index]!;
     expect(cheek.center[1]-cheek.size[1]/2).toBeLessThanOrEqual(1.04);

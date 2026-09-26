@@ -1,4 +1,8 @@
-# Apparence humaine modulaire — V109–V110
+# Apparence humaine modulaire — V109–V111
+
+## Ajustement V111 des coiffures courtes et longues
+
+La capture rapprochée de l'utilisateur corrige le réglage V110 : les tempes courtes finissent **au-dessus de la base de la nuque**. Les coiffures longues et les deux queues utilisent à la place des mèches latérales prolongées, et leur arrière descend lui aussi plus bas. Les mèches de la frange chevauchent légèrement la couronne en hauteur et en profondeur ; il n'y a plus de bande de peau entre les deux pièces. Les faces restent distinctes du front pour éviter les surfaces coplanaires. Ces changements réattribuent les quinze pièces résidentes existantes selon les familles, sans changer les identifiants sauvegardés, les portraits issus du maillage, l'animation ou le gameplay. [Preuves V111](../history/validation-appearance-v111.md).
 
 ## Retouche V110 des volumes et portraits
 

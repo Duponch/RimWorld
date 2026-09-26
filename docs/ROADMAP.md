@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V111 — ajustement visuel ciblé :** longueur des cheveux latéraux selon les familles courtes/longues, arrière long assorti, jonction de frange fermée. [Contrat](development/pawn-appearance.md), [preuves](history/validation-appearance-v111.md). Schéma 109, catalogue, estimations fonctionnelles et jalons G0–G5 inchangés. La charge à cent colons reste une limite ; Netlify bloque les nouveaux déploiements faute de crédits, donc V111 n'est pas encore publique.
+
 **V110 — retouche graphique demandée :** coiffures et barbes mieux ajustées au volume de la tête, portraits HUD/Bio directement dérivés du maillage humain. [Contrat](development/pawn-appearance.md), [preuves](history/validation-appearance-v110.md). Schéma 109, catalogue, règles et estimations fonctionnelles inchangés ; G0–G4 restent partiels, G5 absent. La charge mixte à cent colons ne garantit toujours ni 240 FPS ni un débit 6× effectif.
 
 **V109 — identités visibles et gilet obtenable :** [apparences](development/pawn-appearance.md), [armurerie](development/flak-armor.md), [preuves](history/validation-appearance-v109.md). Profils persistants, cinq silhouettes, portraits cohérents, recette physique du gilet et douzième démonstration. Schéma 109, migration neutre ; G0–G4 restent partiels et G5 absent. Le volet graphique progresse, sans transformer le nombre de variantes en progression du catalogue métier.

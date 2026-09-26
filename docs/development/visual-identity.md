@@ -1,5 +1,7 @@
 # Identité visuelle et inspection — V100
 
+**V111 — volumes de cheveux ajustés :** les côtés des styles courts s'arrêtent avant le bas de la nuque ; les côtés et l'arrière des styles longs descendent ensemble. Les mèches frontales recouvrent le bord du dessus sans laisser de peau apparente entre deux pièces. Les portraits HUD/Bio continuent de projeter ce même maillage. [Contrat](pawn-appearance.md), [contrôle natif et limites](../history/validation-appearance-v111.md).
+
 **V110 — portraits du modèle :** le HUD et Bio projettent les faces du maillage humain commun dans une vue fixe SVG et mettent ce résultat en cache par identité et tenue. Cheveux, barbe, corps et vêtements suivent ainsi la même géométrie que sur la carte, sans deuxième rendu GPU par image. Les illustrations historiques restent conservées et ne doivent pas remplacer ces portraits par une règle CSS prioritaire. [Contrat commun carte/portrait](pawn-appearance.md), [preuves](../history/validation-appearance-v110.md). Le SVG indépendant assemblé en V109 est historique.
 
 V107 : les salissures utilisent des motifs originaux irréguliers, des bords fondus et une superposition translucide liée à leur épaisseur. Terre discrète, sang en projections, cendres étalées ; aucune texture propriétaire importée. Ce rendu au sol conserve les éclairages du paysage. [Contrat](cleanliness.md#aspect-des-traces-v107).

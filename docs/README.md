@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V111 — retouche des cheveux :** côtés courts arrêtés avant la nuque, côtés et arrière longs assortis, frange assemblée sans trou. Les portraits existants suivent le même maillage. [Contrat](development/pawn-appearance.md), [preuves](history/validation-appearance-v111.md). Schéma 109 et règles inchangés ; le site Netlify reste en V109 tant que les crédits sont épuisés.
+
 **V110 — retouche des coiffures et vrais portraits du modèle :** mèches latérales et franges complètes, barbe prolongée sur la mâchoire ; HUD et Bio projettent le maillage partagé, en cache. [Contrat](development/pawn-appearance.md), [preuves](history/validation-appearance-v110.md). Schéma 109, contenu et règles inchangés.
 
 **V109 — identités et armurerie :** profils humains persistants, silhouettes et coiffures 3D partagées, portraits cohérents et gilet pare-balles fabricable. [Apparence](development/pawn-appearance.md), [recherche Core](research/pawn-appearance-reference-v109.md), [filière du gilet](development/flak-armor.md), [preuves](history/validation-appearance-v109.md). Douze colonies directement dans Charger ; migration neutre 106→109.

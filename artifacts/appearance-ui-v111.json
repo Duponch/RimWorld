@@ -1,0 +1,45 @@
+{
+  "errors": [],
+  "portraits": [
+    {
+      "name": "Ada",
+      "bytes": 9694,
+      "matching": true
+    },
+    {
+      "name": "Noé",
+      "bytes": 12258,
+      "matching": true
+    },
+    {
+      "name": "Mina",
+      "bytes": 8628,
+      "matching": true
+    },
+    {
+      "name": "Ilyas",
+      "bytes": 11742,
+      "matching": true
+    },
+    {
+      "name": "Lou",
+      "bytes": 9708,
+      "matching": true
+    }
+  ],
+  "images": [
+    "front",
+    "side",
+    "back",
+    "close-front",
+    "close-side",
+    "close-back"
+  ],
+  "batch": {
+    "baselineColdMs": 2.099999999627471,
+    "coldMs": 28.59999999962747,
+    "warmMs": 0.30000000074505806,
+    "cacheSize": 100
+  },
+  "backend": "WebGPU"
+}
