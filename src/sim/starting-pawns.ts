@@ -1,3 +1,4 @@
+import {createPawnAppearance} from './pawn-appearance.ts';
 import { startingSkills } from './skills.ts';
 import { initialRecreation } from './recreation-rules.ts';
 import { defaultSchedule } from './schedule.ts';
@@ -7,8 +8,9 @@ import type { Pawn } from './types.ts';
  * In Node 24.11.1/V8 13.6, optimized literal allocation there reproduced shared
  * mutable numeric defaults across successive worlds. This small factory also
  * keeps scenario profiles separate from terrain/geology generation. */
-export function startingPawn(id:number,name:string,x:number,z:number,index:number,recreation:number):Pawn {
+export function startingPawn(id:number,name:string,x:number,z:number,index:number,recreation:number,seed?:number):Pawn {
   return {
+    ...(seed===undefined?{}:{appearance:createPawnAppearance(seed,id,name)}),
     medicalCare:'industrial',skills:startingSkills(index),recreation:initialRecreation(recreation),foodPolicyId:1,apparelPolicyId:1,apparelAutomation:true,nextApparelCheckAt:0,
     schedule:defaultSchedule(),restZeroTicks:0,collapsePending:false,id,name,x,z,
     hunger:90-index*5,rest:90-index*3,mood:80,comfort:50,beauty:40,memories:[],

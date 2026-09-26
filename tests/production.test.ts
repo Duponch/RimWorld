@@ -45,7 +45,7 @@ test('feu construit, deux jours de combustion, ravitaillement concurrent et inte
   const migrated=deserializeWorld(JSON.stringify(v9));
   expect(migrated.pawns.every(p=>p.cooking===null&&p.priorities.cook===2)).toBe(true);
   migrated.pawns.forEach(p=>p.priorities.cook=0);
-  const historicalExpected=structuredClone(w);historicalExpected.restRules='legacy';historicalExpected.pawns.forEach(p=>{p.schedule.fill('anything');p.recreation=initialRecreation();});expect(migrated).toEqual(withMigratedSkills(historicalExpected));
+  const historicalExpected=structuredClone(w);historicalExpected.restRules='legacy';historicalExpected.pawns.forEach(p=>{delete p.appearance;p.schedule.fill('anything');p.recreation=initialRecreation();});expect(migrated).toEqual(withMigratedSkills(historicalExpected));
   expect(applyCommand(w,{type:'designate',kind:'campfire',x:8,z:8}).ok).toBe(true);
   until(w,()=>w.structures.some(s=>s.kind==='campfire'));
   const fire=w.structures.find(s=>s.kind==='campfire')!;

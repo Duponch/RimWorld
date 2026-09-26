@@ -23,7 +23,7 @@ export interface CookingIngredient {
 }
 /** Historical serialized envelope shared by meal and material production. */
 export interface CookingTask {
-  recipe?:'small-sculpture'|'large-sculpture'|'make-revolver'|'make-bolt-action-rifle'|'stone-blocks'|'tribalwear'|'shirt'|'pants'|'duster'|'parka'|'butcher-creature';
+  recipe?:'small-sculpture'|'large-sculpture'|'make-revolver'|'make-bolt-action-rifle'|'make-flak-vest'|'stone-blocks'|'tribalwear'|'shirt'|'pants'|'duster'|'parka'|'butcher-creature';
   stationId:number;
   billId:number;
   spot:Cell;

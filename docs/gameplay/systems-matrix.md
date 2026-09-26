@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+**V109 :** apparence humaine persistante et projection des anciens acteurs, portraits/Bio et silhouettes 3D diversifiés ; recherche et fabrication physique du gilet. Biographies, âge/vieillissement et choix complet des personnages restent absents ; casques, composants fabriqués, chaîne industrielle complète et productions animales restent ouverts. G0–G4 partiels, G5 absent, aucun jalon global clos. [Contrats](../development/pawn-appearance.md), [gilet](../development/flak-armor.md), [preuves](../history/validation-appearance-v109.md).
+
 **V108 :** tampon de présentation réduit ; mêmes déplacements, interactions et horloge physique. Aucun système supplémentaire ni jalon G0–G5 clos. [Contrat](../development/presentation-timing.md), [preuves](../history/validation-latency-v108.md).
 
 **V107 :** aspect des six salissures amélioré par couches transparentes ; nettoyage et sauvegardes conservent leurs contrats. Aucune nouvelle boucle ni fermeture de jalon global. [Contrat](../development/cleanliness.md#aspect-des-traces-v107), [preuves](../history/validation-filth-v107.md).

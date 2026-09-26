@@ -75,7 +75,7 @@ export function advanceRaids(w:World):void {
   if(!sites||s.serial>=Number.MAX_SAFE_INTEGER||w.nextId>Number.MAX_SAFE_INTEGER-count*3||w.pawns.length+count>w.width*w.height||w.piles.length+count*2>32768||s.departed.length+count>w.width*w.height){if(!cassandra)s.nextCheck=w.tick+TICKS_PER_DAY/4;return;}
   const id=s.serial+1,generated:Pawn[]=[],piles:World['piles']=[];let next=w.nextId;
   for(let i=0;i<count;i++){
-    const p=startingPawn(next++,`Assaillant ${id}.${i+1}`,sites[i]!.x,sites[i]!.z,0,55);p.faction='outlaws';p.raid={group:id,exiting:false,goal:null};p.skills.shooting.level=4;p.skills.melee.level=4;p.foodPolicyId=w.foodPolicies[0]!.id;
+    const p=startingPawn(next++,`Assaillant ${id}.${i+1}`,sites[i]!.x,sites[i]!.z,0,55,w.seed);p.faction='outlaws';p.raid={group:id,exiting:false,goal:null};p.skills.shooting.level=4;p.skills.melee.level=4;p.foodPolicyId=w.foodPolicies[0]!.id;
     generated.push(p);piles.push({id:next++,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt')});
     const weapon=composition?ROLES.find(role=>role.role===composition.roster[i])!.weapon:id>1&&i===0?'revolver':undefined;
     if(weapon)piles.push({id:next++,kind:'weapon',item:weapon,quantity:1,owner:{type:'equipment',pawnId:p.id},weapon:newWeaponState(weapon)});

@@ -217,7 +217,7 @@ export function generateWorld(seed: number, width: number, height: number, profi
   // possessions and admissible arrival placement without rewriting this terrain.
   if(profile)return world;
   for (const [offset, name] of ['Ada', 'Noé', 'Mina'].entries()) {
-    world.pawns.push(startingPawn(world.nextId++,name,cx+offset-1,cz,offset,50+sample(world.seed,offset,0,101)*10));
+    world.pawns.push(startingPawn(world.nextId++,name,cx+offset-1,cz,offset,50+sample(world.seed,offset,0,101)*10,world.seed));
   }
   // Preserved tutorial targets, with a guaranteed adjacent walkable work cell.
   for (const [x, z, kind] of [[cx - 2, cz - 2, 'tree'], [cx + 2, cz - 2, 'berries'], [cx - 3, cz + 2, 'tree']] as const) {

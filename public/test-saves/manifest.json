@@ -276,6 +276,30 @@
       "prepared": true,
       "provenance": "Situation préparée : compétences et provisions fournies, un lièvre domestique blessé placé pour les soins. Le lièvre sauvage reste à apprivoiser par le moteur ; aucun succès ni parcours autonome revendiqué.",
       "sha256": "2159a4196438be65301524c2771d006d5578406c8862e1c7480e4a5687cd6390"
+    },
+    {
+      "id": "visages-armurerie-v109",
+      "release": "v109",
+      "label": "Visages et armurerie · 5 colons",
+      "description": "Cinq silhouettes, portraits et une facture de gilet pare-balles à fabriquer avec ses matières réelles.",
+      "filename": "visages-armurerie.json",
+      "pawns": 5,
+      "colonists": 5,
+      "width": 32,
+      "height": 32,
+      "tick": 3244,
+      "focus": [
+        "apparence",
+        "armurerie",
+        "équipement"
+      ],
+      "steps": [
+        "Sélectionner les cinq colons et consulter Bio ; rapprocher et tourner la caméra pour comparer les silhouettes.",
+        "Reprendre la partie pour laisser Ada fabriquer le gilet, puis examiner sa qualité et l’équiper."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée issue de l’atelier V101 : recherches, ressources et profils explicites. Aucun gilet fabriqué au chargement, aucune progression naturelle revendiquée.",
+      "sha256": "a3c107df89aeb757d17f111b5e80108358055099582e6c21a71fba7389dfbc1e"
     }
   ]
 }

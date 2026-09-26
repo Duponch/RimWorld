@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V109 — contenu obtenu :** une nouvelle recette pour le gilet pare-balles existant, deux recherches (Armure de plaques 600 ; Armure pare-balles 1 200) et un ouvrage physique `unfinished-flak-vest`. Acquisition par tissu, acier et composant, fabrication qualifiée sur atelier électrique, qualité, stockage et port conservés. Aucun casque ni armure de plaques fabricable, aucun composant fabriqué. Les variantes de corps/têtes/cheveux sont des visuels, pas des objets supplémentaires. [Filière](../development/flak-armor.md), [apparences](../development/pawn-appearance.md).
+
 **V107 — aspect seulement :** les six espèces de salissures déjà jouables gagnent 24 motifs transparents originaux et un empilement visuel. Ces variantes ne sont pas de nouveaux objets, matières ou recettes. Le catalogue métier V106 reste inchangé ; gilet fabriqué et chaîne de composants restent à développer.
 
 **Usage ajouté V106 :** le lièvre (`hare`) déjà présent peut être apprivoisé, entretenu et soigné sans changer d'espèce ou créer un nouvel objet. Deux unités physiques de baies, riz, pommes de terre, maïs ou fruit d'agave alimentent chaque interaction ; les soins utilisent les médicaments existants selon la politique de l'animal. Aucun nouveau produit, recette, matériau, espèce, enclos ou animal de départ n'est compté. Cerf, gazelle, mufalo et dromadaire restent sauvages dans le catalogue jouable. [Contrat](../development/domestic-animals.md).

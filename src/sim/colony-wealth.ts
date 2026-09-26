@@ -46,9 +46,9 @@ function unfinishedIngredientValue(pile: MaterialPile): number | undefined {
     const unit = MATERIAL_VALUE[pile.artWork.material];
     return unit === undefined ? undefined : unit * pile.artWork.parts.reduce((a,b) => a+b,0);
   }
-  if (pile.gunWork) {
+  if (pile.gunWork || pile.flakWork) {
     let sum = 0;
-    for (const part of pile.gunWork.parts) {
+    for (const part of (pile.gunWork ?? pile.flakWork!).parts) {
       const unit = MATERIAL_VALUE[part.item];
       if (unit === undefined) return undefined;
       sum += unit * part.quantity;

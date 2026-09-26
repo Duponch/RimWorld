@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 106 as const;
+export const SCHEMA_VERSION = 109 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -18,7 +18,7 @@ export interface Resource extends Cell { species?:import('./biome-flora.ts').Pla
 export interface Structure extends Cell { art?:{authorId:number;createdAt:number}; flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = {type:'grave';graveId:number} | ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'inventory';pawnId:number} | {type:'equipment';pawnId:number} | {type:'apparel';pawnId:number} | { type: 'job'; jobId: number };
-export interface MaterialPile { artWork?:import('./art-work.ts').ArtWork; gunWork?:import('./gun-work.ts').GunWork; humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
+export interface MaterialPile { flakWork?:import('./flak-work.ts').FlakWork; artWork?:import('./art-work.ts').ArtWork; gunWork?:import('./gun-work.ts').GunWork; humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
 export type StorageFilters = { silver?:boolean; corpse?:boolean; wood:boolean; food:boolean; unfinished?:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; component?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
 export interface StockpileCell extends Cell { items?:Partial<Record<ItemId,boolean>>; id: number; filters: StorageFilters; priority: number; capacity: number }
 export interface GrowingZone { id: number; cells: number[]; plant: 'rice' | 'cotton' | 'potato' | 'corn'; allowSow: boolean; allowCut: boolean }
@@ -67,6 +67,7 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  appearance?:import('./pawn-appearance.ts').PawnAppearance;
   animalHandling?:import('./domestic-state.ts').AnimalHandlingTask;
   animalCare?:import('./domestic-state.ts').AnimalCareTask;
   roomMemories?:import('./room-experience.ts').RoomMemory[];

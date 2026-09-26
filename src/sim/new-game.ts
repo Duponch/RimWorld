@@ -67,7 +67,7 @@ function survivalStart(world:World,commerce=false):Cell {
   const stacks=supplies.reduce((n,[item,q])=>n+Math.ceil(q/ITEM_DEFINITIONS[item].stackLimit),0);
   const {landing,cells}=landingSite(world,stacks);
   for(const [index,name] of ['Ada','Noé','Mina'].entries()) {
-    const cell=cells[index]!,pawn=startingPawn(world.nextId++,name,cell.x,cell.z,index,55);
+    const cell=cells[index]!,pawn=startingPawn(world.nextId++,name,cell.x,cell.z,index,55,world.seed);
     world.pawns.push(pawn);
     addMaterial(world,'apparel',1,{type:'apparel',pawnId:pawn.id},'cloth-shirt');
   }

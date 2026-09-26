@@ -1,5 +1,7 @@
 # Bibliothèque de colonies de test — V98 à V106
 
+**V109 : douzième entrée — Visages et armurerie.** Cinq profils visuels préparés et une facture de gilet non réalisée au chargement. Base atelier V101 immuable, nouvelle scène dans `public/test-saves/v109/visages-armurerie.json`, générateur explicite `scripts/generate-appearance-flak-v109.mjs`. Aucun écrasement des onze références précédentes ; contrôle d’empreinte et de migration maintenu.
+
 **V106 :** « Lièvres et soins · 1 colon » ajoute un lièvre sauvage à désigner et un lièvre possédé blessé. Un lit, 75 baies, 20 repas et quatre plantes médicinales sont préparés ; les tentatives et soins sont réels, sans succès garanti. [Générateur](../../scripts/generate-domestic-demo.ts), [contrat](domestic-animals.md). Les dix fichiers précédents restent immuables.
 
 **V105 :** dix colonies dans le manifeste commun. « Art et commerce · 1 colon » propose un visiteur et une œuvre préparée pour adopter le suivi, contacter, vendre puis sauvegarder. Les neuf fichiers historiques restent inchangés ; [générateur](../../scripts/generate-economy-demo.ts).

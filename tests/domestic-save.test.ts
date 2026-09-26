@@ -1,12 +1,13 @@
 import {expect,test} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld} from '../src/sim/index';
+import {SCHEMA_VERSION} from '../src/sim/types';
 import {domesticColony} from './scenarios/domestic-colony';
 import {actionProgress} from '../src/render/action-feedback';
 
 test('V105 is strictly validated before neutral V106 migration',()=>{
  const raw=JSON.parse(readFileSync('public/test-saves/v105/economie.json','utf8'));
- const expected={...raw,schemaVersion:106,pawns:raw.pawns.map((p:any)=>({...p,priorities:{...p.priorities,handle:0}}))};
+ const expected={...raw,schemaVersion:SCHEMA_VERSION,pawns:raw.pawns.map((p:any)=>({...p,priorities:{...p.priorities,handle:0}}))};
  expect(deserializeWorld(JSON.stringify(raw))).toEqual(expected);
  for(const corrupt of [()=>raw.pawns[0].priorities.handle=1,()=>{raw.pawns[0].skills.animals={level:8,xp:0,dailyXp:0,passion:0};}]){
   const before=JSON.stringify(raw);corrupt();expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow();Object.assign(raw,JSON.parse(before));

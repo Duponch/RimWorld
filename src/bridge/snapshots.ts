@@ -1,3 +1,5 @@
+import { validArtWorkShape } from '../sim/art-work.ts';
+import { validFlakWorkShape } from '../sim/flak-work.ts';
 import { isFloorKind } from '../sim/flooring.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { resourceMaxHp } from '../sim/thing-damage-rules.ts';
@@ -63,7 +65,7 @@ function validPile(pile:MaterialPile,world:DynamicWorld):boolean {
     if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&s.kind==='grave')
       ||Object.keys(owner).some(key=>!['type','graveId'].includes(key)))return false;
   }else return false;
-  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','damage','unfinished','gunWork','apparel','weapon','haulRequested'].includes(key)))return false;
+  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','damage','unfinished','gunWork','flakWork','artWork','apparel','weapon','haulRequested'].includes(key)))return false;
   if(pile.haulRequested!==undefined&&(world.schemaVersion<28||pile.kind!=='chunk'||pile.haulRequested!==true))return false;
   if(pile.damage!==undefined&&(world.schemaVersion<87||!Number.isSafeInteger(pile.damage)||pile.damage<1||pile.damage>=pileMaxHp(pile)))return false;
   const rot=pile.rot;
@@ -75,6 +77,7 @@ function validPile(pile:MaterialPile,world:DynamicWorld):boolean {
     &&(pile.item==='human-corpse'?validHumanCorpseShape(pile.humanCorpse,world.schemaVersion,world.tick):pile.humanCorpse===undefined)
     &&(pile.item==='human-corpse'||validCorpseShape(record,world.schemaVersion))
     &&validUnfinishedShape(record,world.schemaVersion)&&validGunWorkShape(record,world.schemaVersion)
+    &&validArtWorkShape(record,world.schemaVersion)&&validFlakWorkShape(record,world.schemaVersion)
     &&validApparelShape(record,world.schemaVersion)
     &&validWeaponShape(record,world.schemaVersion);
 }

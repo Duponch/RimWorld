@@ -1,5 +1,7 @@
 # Vêtements physiques et protection corporelle — V63
 
+**V109 : le gilet pare-balles est désormais fabricable.** [Recherches, recette, ouvrage et conservation](flak-armor.md). Ses anciennes statistiques et les gilets déjà présents restent inchangés ; aucune dotation ou recherche offerte aux anciennes parties.
+
 V74 branche l’**isolation vestimentaire** sur le confort et le coup de chaleur. Qualité appliquée, PV sans effet ; statistique distincte de l’armure chaleur. [Valeurs et santé](heatwave.md).
 
 V73 rend la **chemise en tissu fabricable** après Vêtements complexes, au tailleur manuel (45 tissus). Elle réutilise les propriétés et couches ci-dessous, avec qualité de confection. Le gilet reste non fabricable. [Filière et limites](research.md).

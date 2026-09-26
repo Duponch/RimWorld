@@ -1,0 +1,12 @@
+{
+  "fixture": "v98/mixed-100.json",
+  "warmupTicks": 50,
+  "measuredTicks": 200,
+  "pawns": 104,
+  "p50": 27.486700000000383,
+  "p95": 64.0612000000001,
+  "max": 140.92669999999998,
+  "continuationTicks": 30,
+  "validationErrors": [],
+  "note": "Short isolated CPU window; validation and serialization outside timing. Not a causal before/after or a long colony balancing test."
+}

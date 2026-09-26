@@ -1,5 +1,11 @@
 # Travail sur Lisière
 
+## Apparences et gilet fabriqué V109
+- Lire `docs/development/pawn-appearance.md`, `flak-armor.md` et la recherche Core V109. Cinq corps, douze têtes, 26 IDs Urban interprétés en treize familles voxel originales ; profil visuel persistant indépendant du PRNG métier. Aucun âge/biographie/parenté simulé par ce champ ; sans biographie, repli Thin à 50 %, sinon corps selon sexe visuel. Les anciennes parties restent sans profil persisté, projection déterministe seulement.
+- Portraits SVG et corps GPU partagent profil/tenue. Conserver les flux interleavés (sept buffers, seize attributs), leurs extensions de capacité, les articulations et l'horloge commune V108. Les nouveaux arrivants/visiteurs/raids reçoivent un profil ; l'archive de visite le valide aussi.
+- Forge et Vêtements complexes → Armure de plaques (préalable seulement) ; Usinage et plaques → Armure pare-balles. Gilet : 30 tissu, 60 acier, 1 composant, Artisanat 4, atelier alimenté. Ouvrage/auteur/qualité, annulation atomique et compte du gilet porté conservés. Aucun casque, armure de plaques physique ni composant fabriqué ajouté.
+- Schéma 106 strictement validé avant migration neutre 109, sans don ni profil rétroactif. Douze colonies directement dans Charger ; anciennes fixtures immuables. Les deltas de piles doivent accepter et valider `artWork` et `flakWork` pour éviter une resynchronisation complète à chaque progrès. Preuves `docs/history/validation-appearance-v109.md` ; charge cent colons encore loin de 6×/240 FPS actifs.
+
 ## Réactivité des déplacements V108
 - `MotionTimeline` garde deux ticks confirmés, pas quatre ni un seul. À ×1/×6 : environ 333/56 ms de réserve, plus prochain tick et livraison. Corps, cargaisons, animaux, travail, impacts et scène conservent la même horloge ; jamais d'extrapolation, de rattrapage accéléré ou de déplacement du seul colon sélectionné.
 - Lire `docs/development/presentation-timing.md` et `docs/history/validation-latency-v108.md`. Ordres immédiatement traités, départ au prochain tick admissible ; arête engagée, porte, récupération et budgets de planification restent physiques. Le retard graphique ne s'accumule pas dans les décisions métier. Schéma 106, règles et catalogue inchangés.

@@ -1,3 +1,6 @@
+import { appearanceOf } from '../sim/pawn-appearance';
+import { appearanceShape,pawnBaseColor } from './pawn-appearance-shape';
+import { pawnMorph,hiddenAppearancePart } from './pawn-appearance-nodes';
 import { BIOME_CARGO } from './biome-cargo';
 import { isAnimalMeat } from '../sim/biome-items';
 import type { ApparelItem } from '../sim/apparel-rules';
@@ -26,7 +29,6 @@ import { CARRY_CAPACITY, footprintCells } from '../sim/definitions';
 import { PAWN_MODEL_SCALE, WORLD_SCALE } from '../world/scale';
 import { clearGroup, material } from './primitives';
 type VisualPawn = { from: THREE.Vector4; to: THREE.Vector4 };
-const PAWN_COLORS = [0xeab969, 0x639eac, 0xc57c65, 0x809864, 0xaa8db2];
 const scratchColor = new THREE.Color();
 
 export class PawnLayer {
@@ -62,15 +64,17 @@ export class PawnLayer {
     geometry.setAttribute('aFrom', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aTo', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aMotion', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
-    geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3));
-    geometry.setAttribute('aEquipment',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4));
+    // One resident appearance stream leaves WebGPU within its eight-buffer limit.
+    const appearance=new THREE.InstancedInterleavedBuffer(new Float32Array(count*17),17).setUsage(THREE.StaticDrawUsage);
+    for(const [name,size,offset] of [['aTint',3,0],['aEquipment',4,3],['aSkin',3,7],['aHair',3,10],['aShape',4,13]] as const)
+      geometry.setAttribute(name,new THREE.InterleavedBufferAttribute(appearance,size,offset));
     geometry.setAttribute('aCargo', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
-    for (const name of ['aFrom', 'aTo', 'aMotion', 'aTint', 'aCargo', 'aTravel', 'aEquipment']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.StaticDrawUsage);
+    for (const name of ['aFrom', 'aTo', 'aMotion', 'aCargo', 'aTravel']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.StaticDrawUsage);
     const mat = material(0xffffff);
     this.configure?.(mat);
     mat.positionNode = Fn(() => {
       const bone = attribute('boneId', 'float');
-      const pivot = attribute('bindPivot', 'vec3');
+      const pivot = pawnMorph(attribute('bindPivot', 'vec3'));
       const motion = attribute('aMotion', 'vec4');
       const pose = pawnPresentationPose(this);
       const angle = float(0).toVar();
@@ -92,7 +96,7 @@ export class PawnLayer {
       If(motion.z.equal(8).and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{angle.assign(sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI)).mul(-1.7));});
       If(motion.z.equal(7).and(bone.equal(3)),()=>{angle.assign(float(-Math.PI/2));});
       If(motion.z.equal(4).and(bone.equal(3)), () => { angle.assign(sin(this.time.mul(2).add(motion.w)).mul(1.1).sub(.35)); });
-      const local = positionLocal.sub(pivot);
+      const local = pawnMorph(positionLocal).sub(pivot);
       const c = cos(angle), s = sin(angle);
       const animated = vec3(local.x, local.y.mul(c).sub(local.z.mul(s)), local.y.mul(s).add(local.z.mul(c))).add(pivot).toVar();
       If(motion.z.greaterThan(2.5).and(motion.z.lessThan(3.5)), () => {
@@ -122,12 +126,15 @@ export class PawnLayer {
       If(attribute('dye','float').equal(-3).and(attribute('aEquipment','vec4').y.notEqual(2).and(attribute('aEquipment','vec4').y.notEqual(3))),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(-2).and(attribute('aEquipment','vec4').z.lessThan(.5)),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(PARKA_HOOD_DYE).and(attribute('aEquipment','vec4').y.notEqual(4)),()=>{animated.assign(vec3(0));});
+      If(hiddenAppearancePart(),()=>animated.assign(vec3(0)));
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
     })();
-    mat.colorNode = Fn(()=>{const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),attribute('dye','float').max(0)).toVar();
+    mat.colorNode = Fn(()=>{const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),attribute('dye','float').equal(1).select(float(1),float(0))).toVar();
       If(attribute('dye','float').equal(-3).or(attribute('dye','float').equal(PARKA_HOOD_DYE)),()=>tint.assign(attribute('aTint','vec3')));
-      If(attribute('aEquipment','vec4').y.equal(2).and(attribute('boneId','float').greaterThanEqual(2)).and(attribute('boneId','float').lessThanEqual(3)),()=>tint.assign(vec3(.761,.479,.319)));
+      If(attribute('aEquipment','vec4').y.equal(2).and(attribute('boneId','float').greaterThanEqual(2)).and(attribute('boneId','float').lessThanEqual(3)),()=>tint.assign(attribute('aSkin','vec3')));
+      If(attribute('dye','float').equal(2),()=>tint.assign(attribute('aSkin','vec3')));
+      If(attribute('dye','float').greaterThanEqual(100),()=>tint.assign(attribute('aHair','vec3')));
       const legs=attribute('boneId','float').greaterThanEqual(4).and(attribute('dye','float').equal(0));
       const cloth=new THREE.Color(0xd8c8a2),leather=new THREE.Color(0xad8a61);
       If(legs.and(attribute('aEquipment','vec4').w.equal(1)),()=>tint.assign(vec3(cloth.r,cloth.g,cloth.b)));
@@ -189,9 +196,10 @@ export class PawnLayer {
     const fromAttribute = geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
     const toAttribute = geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
     const motion = geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
-    const tint = geometry.getAttribute('aTint') as THREE.InstancedBufferAttribute;
+    const tint = geometry.getAttribute('aTint') as THREE.InterleavedBufferAttribute;
+    const skin=geometry.getAttribute('aSkin'),hair=geometry.getAttribute('aHair'),shape=geometry.getAttribute('aShape');
     const cargo = geometry.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
-    const equipment=geometry.getAttribute('aEquipment') as THREE.InstancedBufferAttribute,gears=equipmentProjection(world),apparel=apparelProjection(world);
+    const equipment=geometry.getAttribute('aEquipment') as THREE.InterleavedBufferAttribute,gears=equipmentProjection(world),apparel=apparelProjection(world);
     const carried = new Map<number, World['piles'][number]>();
     for (const pile of world.piles) if (pile.owner.type === 'pawn') carried.set(pile.owner.pawnId, pile);
     const present = new Set<number>();
@@ -249,8 +257,12 @@ export class PawnLayer {
       fromAttribute.setXYZW(index, from.x, from.y, from.z, from.w);
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
       motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun ? 1 : 0, pawn.state === 'working'&&!pawn.stun ? 1 : 0, pawn.health?.foodPoisoning?.vomit&&pawn.state!=='dead' ? 10 : pawn.stun&&!medicallyStopped(pawn) ? 9 : pawn.melee?.strike ? 8 : pawn.shooting?.stance ? 7 : pawn.state === 'recreating' ? pawn.recreation.task?.activity==='horseshoes'?4:5 : pawn.state === 'sleeping'||pawn.state==='resting'||medicallyStopped(pawn) ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : 0, pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.id * 1.7);
+      const identity=appearanceOf(pawn,world.seed),variant=appearanceShape(identity);
+      scratchColor.setHex(identity.skinColor);skin.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
+      scratchColor.setHex(identity.hairColor);hair.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
+      shape.setXYZW(index,...variant);
       const look=apparelAppearance(apparel.get(pawn.id));
-      scratchColor.setHex(look.color??(isColonist(pawn)?PAWN_COLORS[index % PAWN_COLORS.length]:pawn.visitor&&!world.visitors?.groups.find(g=>g.id===pawn.visitor!.group)?.hostile?0x77958f:0xb74736));
+      scratchColor.setHex(look.color??(isColonist(pawn)?pawnBaseColor(pawn.id):pawn.visitor&&!world.visitors?.groups.find(g=>g.id===pawn.visitor!.group)?.hostile?0x77958f:0xb74736));
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
       equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,look.vest?1:0,look.pants);
@@ -259,7 +271,7 @@ export class PawnLayer {
       cargo.setXY(index, pawn.rescue?.phase==='carry'||load?.humanCorpse?-1:packed?4:load ? BIOME_CARGO[load.item]??(load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:isAnimalMeat(load.item)?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2) : 0, packed||load?.kind==='corpse'||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
     for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);}
-    for (const attr of [fromAttribute, toAttribute, motion, tint, cargo, equipment]) attr.needsUpdate = true;
+    for (const attr of [fromAttribute, toAttribute, motion, tint, cargo]) attr.needsUpdate = true;
     geometry.instanceCount = world.pawns.length;
     (this.cargoMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount = world.pawns.length;
     (this.selectionMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount=world.pawns.length;

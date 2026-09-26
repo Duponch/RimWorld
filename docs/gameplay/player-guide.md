@@ -1,5 +1,7 @@
 # Guide joueur
 
+**V109 — à essayer :** Charger → Colonies de test → **Visages et armurerie · 5 colons**. Comparez silhouettes et coiffures sous plusieurs angles, puis les portraits du HUD et de Bio. Reprenez pour laisser Ada fabriquer le gilet préparé. Dans une colonie ordinaire : Forge + Vêtements complexes → Armure de plaques, puis Usinage + Armure de plaques → Armure pare-balles ; à l’atelier d’usinage alimenté, la facture consomme **30 tissu, 60 acier et 1 composant**, avec Artisanat 4. L’ouvrage conserve son auteur et sa progression ; le gilet achevé se stocke et s’équipe comme celui déjà existant. Les anciennes parties gagnent une présentation variée sans modification rétroactive de leur identité sauvegardée.
+
 ## Réactivité des déplacements — V108
 
 Mobilisez un colon avec **R**, puis faites un clic droit au sol. La commande est traitée immédiatement, et le déplacement commence au prochain pas de simulation disponible. L'affichage garde deux pas de réserve au lieu de quatre ; les mouvements autonomes profitent de la même réduction. Une case déjà en cours de traversée, l'ouverture d'une porte ou une récupération de combat restent à terminer. En pause, l'ordre est enregistré et attend la reprise. Sous forte charge, un ralentissement reste possible.

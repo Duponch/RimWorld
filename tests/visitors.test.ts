@@ -48,6 +48,9 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   until(w,()=>!w.pawns.includes(p));const d=w.visitors!.departed.find(d=>d.pawn.id===traderId)!;
   expect(visitorAtEdge(w,d.pawn)).toBe(true);expect(d.pawn.health).toEqual(p.health);expect(d.items.map(i=>i.id)).toEqual(owned);expect(w.visitors!.groups).toHaveLength(0);
   const frozen=JSON.stringify(d);replay(w,30);expect(JSON.stringify(w.visitors!.departed[0])).toBe(frozen);
+  expect(d.pawn.appearance).toEqual(p.appearance);expect(d.pawn.appearance).toBeDefined();
+  const badAppearance=structuredClone(w);badAppearance.visitors!.departed[0]!.pawn.appearance!.hairColor=-1;
+  expect(()=>deserializeWorld(JSON.stringify(badAppearance))).toThrow('Invalid frozen visitor departure');
   for(const mutate of [(v:World)=>v.visitors!.departed[0]!.pawn.id=v.pawns[0]!.id,(v:World)=>v.visitors!.departed[0]!.items[0]!.id=v.pawns[0]!.id,(v:World)=>v.visitors!.departed[0]!.pawn.hunger=Infinity,(v:World)=>v.visitors!.departed[0]!.pawn.need={kind:'sleep',phase:'sleep',bedId:null,target:{x:1,z:1}},(v:World)=>v.visitors!.departed[0]!.items[0]!.owner={type:'inventory',pawnId:v.pawns[0]!.id}]){const bad=structuredClone(w);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
 });
 

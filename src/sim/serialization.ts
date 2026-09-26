@@ -1,4 +1,6 @@
 import { validateDomesticAnimals } from './domestic-save.ts';
+import {validatePawnAppearance} from './pawn-appearance.ts';
+import {validFlakWorkShape,validateFlakWorks} from './flak-work.ts';
 import {validArtWorkShape,validateArtWorks} from './art-work.ts';
 import {validateArtObjects} from './art-save.ts';
 import { validateWildFlora } from './wild-flora.ts';
@@ -120,7 +122,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -167,6 +169,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         if(version>=85?!integer(basic,0,4):basic!==undefined)errors.push('Invalid basic work priority for schema.');
         if(!validDisturbance(item.disturbance,version,input.tick as number))errors.push('Invalid disturbance for schema.');
         if(!validTradeShape(item,version,input as unknown as World))errors.push('Invalid trade task for schema.');
+        if(item.appearance!==undefined){if(version<109)errors.push('Future pawn appearance in older save.');else errors.push(...validatePawnAppearance(item.appearance));}
         if(!validVisitorShape(item,version,input as unknown as World))errors.push('Invalid visitor for schema.');
         if(!validHuntingTask(item.hunting,version,input.tick as number))errors.push('Invalid hunting task for schema.');
         if(!validTacticsShape(item.tactics,version,input as unknown as World))errors.push('Invalid tactics shape for schema.');
@@ -278,10 +281,11 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         if(item.item==='human-corpse'?!validHumanCorpseShape(item.humanCorpse,version,input.tick as number):item.humanCorpse!==undefined)errors.push('Invalid human corpse metadata.');
         if(item.item!=='human-corpse'&&!validCorpseShape(item,version))errors.push('Invalid corpse metadata for schema.');
         if(!validArtWorkShape(item,version))errors.push('Invalid or future art work.');
+        if(version<109&&(item.item==='unfinished-flak-vest'||item.flakWork!==undefined))errors.push('Future flak work in older save.');
         if(version<101&&(item.item==='unfinished-gun'||item.gunWork!==undefined))errors.push('Future machining work in older save.');
         if(version<91&&V91_ITEM_IDS.includes(String(item.item)))errors.push('Future biome product in older save.');
         if(version<79&&['hare-corpse','hare-meat','light-leather'].includes(String(item.item)))errors.push('Future animal product in older save.');
-        if(!validUnfinishedShape(item,version)||!validGunWorkShape(item,version))errors.push('Invalid unfinished item.');
+        if(!validUnfinishedShape(item,version)||!validGunWorkShape(item,version)||!validFlakWorkShape(item,version))errors.push('Invalid unfinished item.');
         if(!validApparelShape(item,version))errors.push('Invalid apparel state for schema.');
         if(!validWeaponShape(item,version))errors.push('Invalid weapon state for schema.');
         if (!oneOf(item.kind, ['wood', 'food', ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=88&&item.item==='silver'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
@@ -351,7 +355,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(errors.length)return errors;
   errors.push(...validateCorpses(world,version),...validateHunting(world,version));
   errors.push(...validateResearch(world,version));
-  errors.push(...validateUnfinished(world,version),...validateGunWorks(world,version),...validateArtWorks(world,version),...validateArtObjects(world,version));
+  errors.push(...validateUnfinished(world,version),...validateGunWorks(world,version),...validateFlakWorks(world,version),...validateArtWorks(world,version),...validateArtObjects(world,version));
   errors.push(...validateTrade(world,version),...validateVisitors(world,version,ids));
   if(version>=63)errors.push(...validateApparel(world));
   if(version>=52)errors.push(...validateEquipment(world));
@@ -760,6 +764,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===103){const errors=validateSchema(input,103);if(errors.length)throw new Error('Invalid version 103 save: '+errors.join(' '));input.schemaVersion=104;for(const pawn of (input as unknown as World).pawns)pawn.priorities.art=0;}
   if(record(input)&&input.schemaVersion===104){const errors=validateSchema(input,104);if(errors.length)throw new Error('Invalid version 104 save: '+errors.join(' '));input.schemaVersion=105;}
   if(record(input)&&input.schemaVersion===105){const errors=validateSchema(input,105);if(errors.length)throw new Error('Invalid version 105 save: '+errors.join(' '));input.schemaVersion=106;for(const pawn of (input as unknown as World).pawns)pawn.priorities.handle=0;}
+  if(record(input)&&input.schemaVersion===106){const errors=validateSchema(input,106);if(errors.length)throw new Error('Invalid version 106 save: '+errors.join(' '));input.schemaVersion=109;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

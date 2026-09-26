@@ -9,6 +9,23 @@ import { PresentationQueue } from '../src/render/PresentationQueue';
 import { PawnLayer } from '../src/render/PawnLayer';
 import { miningCamp } from './scenarios/mining';
 
+test('flak and sculpture works transmit incremental progress without resync or mutation of old snapshots',()=>{
+  const w=createWorld(109,32,32),encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();
+  const send=()=>structuredClone(encoder.encode(w,0,6));
+  expect(decoder.adopt(send()).status).toBe('applied');
+  w.piles.push({id:w.nextId++,kind:'unfinished',item:'unfinished-flak-vest',quantity:1,owner:{type:'ground',x:1,z:1},flakWork:{recipe:'make-flak-vest',authorId:w.pawns[0]!.id,progress:0,parts:[{item:'cloth',quantity:30},{item:'steel',quantity:60},{item:'component',quantity:1}]}},
+    {id:w.nextId++,kind:'unfinished',item:'unfinished-sculpture',quantity:1,owner:{type:'ground',x:2,z:1},artWork:{recipe:'small-sculpture',material:'wood',authorId:w.pawns[0]!.id,progress:0,parts:[50]}});
+  const first=decoder.adopt(send());expect(first.status).toBe('applied');if(first.status!=='applied')throw Error('works rejected');
+  const before=structuredClone(first.world);
+  w.piles.at(-2)!.flakWork!.progress=25;w.piles.at(-1)!.artWork!.progress=50;w.tick++;
+  const delta=send();expect(delta.kind).toBe('delta');
+  const corrupt=structuredClone(delta);if(corrupt.kind!=='delta')throw Error('missing delta');
+  corrupt.piles!.upserted[0]!.flakWork!.parts[0]!.quantity=29;
+  expect(decoder.adopt(corrupt).status).toBe('resync');
+  const next=decoder.adopt(delta);expect(next.status).toBe('applied');if(next.status!=='applied')throw Error('progress rejected');
+  expect(next.world).toEqual(w);expect(first.world).toEqual(before);
+});
+
 test('packed growth deltas preserve exact doubles, absent fields, order and atomic rejection',()=>{
   const w=createWorld(911,16,16);w.tick=2000;w.resources=[
     {id:w.nextId++,kind:'berries',x:2,z:2,amount:10,growth:.3,growthTick:1900,growthThermalFactor:.9},

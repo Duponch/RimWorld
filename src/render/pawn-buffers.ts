@@ -6,9 +6,19 @@ import * as THREE from 'three/webgpu';
 export function growPawnBuffers(meshes:readonly THREE.Mesh[],required:number):void {
   const capacity=2**Math.ceil(Math.log2(Math.max(1,required)));
   const shared=new Map<string,THREE.InstancedBufferAttribute>();
+  const interleaved=new Map<THREE.InterleavedBuffer,THREE.InstancedInterleavedBuffer>();
   const replacements=meshes.map(mesh=>{
     const geometry=mesh.geometry.clone() as THREE.InstancedBufferGeometry;
     for(const [name,previous] of Object.entries(mesh.geometry.attributes)) {
+      if(previous instanceof THREE.InterleavedBufferAttribute && previous.data instanceof THREE.InstancedInterleavedBuffer) {
+        let next=interleaved.get(previous.data);
+        if(!next){
+          next=new THREE.InstancedInterleavedBuffer(new Float32Array(capacity*previous.data.stride),previous.data.stride,previous.data.meshPerAttribute).setUsage(previous.data.usage);
+          next.array.set(previous.data.array);interleaved.set(previous.data,next);
+        }
+        geometry.setAttribute(name,new THREE.InterleavedBufferAttribute(next,previous.itemSize,previous.offset,previous.normalized));
+        continue;
+      }
       if(!(previous instanceof THREE.InstancedBufferAttribute))continue;
       let next=shared.get(name);
       if(!next) {

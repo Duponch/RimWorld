@@ -2,7 +2,8 @@ import {planArtWork} from './art-work-plan.ts';
 import {isArtRecipe} from './art-rules.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
 import { planGunWork } from './gun-work-plan.ts';
-import { isGunRecipe,GUN_REQUIREMENTS } from './production-recipes.ts';
+import { planFlakWork } from './flak-work-plan.ts';
+import { isGunRecipe,GUN_REQUIREMENTS,isFlakRecipe,FLAK_REQUIREMENTS } from './production-recipes.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
@@ -56,6 +57,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       }
       const artResumed=planArtWork(world,pawn,station,bill,reachable,budget);if(artResumed.plan)return artResumed.plan;if(artResumed.handled)continue;
       const gunResumed=planGunWork(world,pawn,station,bill,reachable,budget);if(gunResumed.plan)return gunResumed.plan;if(gunResumed.handled)continue;
+      const flakResumed=planFlakWork(world,pawn,station,bill,reachable,budget);if(flakResumed.plan)return flakResumed.plan;if(flakResumed.handled)continue;
       const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
       const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
         .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
@@ -74,7 +76,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       for(const pile of group) {
         if(isTailoring(bill.recipe)&&tailoringMaterial!==undefined&&pile.item!==tailoringMaterial)continue;
         if(budget.pairs--<=0){budget.pairs=0;return null;}
-        const typeMissing=isGunRecipe(bill.recipe)?(pile.item==='steel'||pile.item==='component'?GUN_REQUIREMENTS[bill.recipe][pile.item]-ingredients.reduce((n,i)=>n+(i.item===pile.item?i.quantity:0),0):0):missing;
+        const typeMissing=isGunRecipe(bill.recipe)?(pile.item==='steel'||pile.item==='component'?GUN_REQUIREMENTS[bill.recipe][pile.item]-ingredients.reduce((n,i)=>n+(i.item===pile.item?i.quantity:0),0):0):isFlakRecipe(bill.recipe)?(pile.item==='cloth'||pile.item==='steel'||pile.item==='component'?FLAK_REQUIREMENTS[pile.item]-ingredients.reduce((n,i)=>n+(i.item===pile.item?i.quantity:0),0):0):missing;
         const quantity=Math.min(typeMissing,pile.quantity-reservedSource(world,pile.id));
         if(quantity<=0)continue;if(isTailoring(bill.recipe))tailoringMaterial??=pile.item as ProductionIngredient;
         if(!routeToJob(world,pile.owner as Cell,reachable,true))continue;

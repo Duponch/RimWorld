@@ -12,8 +12,11 @@ export const TAILORING_RECIPES = ['tribalwear','shirt','pants','duster','parka']
 export type TailoringRecipe = typeof TAILORING_RECIPES[number];
 export type TailoringMaterial = ApparelMaterial;
 export type UnfinishedApparelItem = 'unfinished-tribalwear'|'unfinished-shirt'|'unfinished-pants'|'unfinished-duster'|'unfinished-parka';
-export type ProductionIngredient = ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'unfinished-gun'|'rice'|'berries'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
-export type ProductionRecipe = ArtRecipe|GunRecipe|'simple-meal'|'stone-blocks'|TailoringRecipe|'butcher-creature';
+export type ProductionIngredient = ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'unfinished-gun'|'unfinished-flak-vest'|'rice'|'berries'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
+export type FlakRecipe='make-flak-vest';
+export const isFlakRecipe=(v:unknown):v is FlakRecipe=>v==='make-flak-vest';
+export const FLAK_REQUIREMENTS={cloth:30,steel:60,component:1,skill:4} as const;
+export type ProductionRecipe = ArtRecipe|GunRecipe|FlakRecipe|'simple-meal'|'stone-blocks'|TailoringRecipe|'butcher-creature';
 
 export type GunRecipe='make-revolver'|'make-bolt-action-rifle';
 export const isGunRecipe=(v:unknown):v is GunRecipe=>v==='make-revolver'||v==='make-bolt-action-rifle';
@@ -23,6 +26,7 @@ export const PRODUCTION_RECIPES = Object.freeze({
   'large-sculpture':Object.freeze({label:'Grande sculpture',station:'art-bench',work:'art',inputs:ART_MATERIALS as readonly ProductionIngredient[],units:100,workTicks:3000,outputUnits:1}),
   'make-revolver':Object.freeze({label:'Revolver',station:'machining-table',work:'craft',inputs:['steel','component'] as readonly ProductionIngredient[],units:32,workTicks:400,outputUnits:1}),
   'make-bolt-action-rifle':Object.freeze({label:'Fusil à verrou',station:'machining-table',work:'craft',inputs:['steel','component'] as readonly ProductionIngredient[],units:63,workTicks:1200,outputUnits:1}),
+  'make-flak-vest':Object.freeze({label:'Gilet pare-balles',station:'machining-table',work:'craft',inputs:['cloth','steel','component'] as readonly ProductionIngredient[],units:91,workTicks:900,outputUnits:1}),
   'butcher-creature':Object.freeze({label:'Dépecer une créature',station:'butcher-spot',work:'cook',inputs:ANIMAL_CORPSE_ITEMS as readonly ProductionIngredient[],units:1,workTicks:45,outputUnits:50}),
   shirt:Object.freeze({label:'Chemise',station:'tailor-bench',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:45,workTicks:270,outputUnits:1}),
   tribalwear:Object.freeze({label:'Tenue tribale',station:'crafting-spot',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:60,workTicks:180,outputUnits:1}),
@@ -59,18 +63,20 @@ export function tailoringMaterialFromIngredients(ingredients:readonly {item:Prod
 export function recipeProduct(recipe:ProductionRecipe,ingredients:readonly {item:ProductionIngredient}[],material?:TailoringMaterial):ItemId {
   if(isArtRecipe(recipe))throw new RangeError('Sculptures are whole furniture products');
   if(isGunRecipe(recipe))return recipe==='make-revolver'?'revolver':'bolt-action-rifle';
+  if(isFlakRecipe(recipe))return 'flak-vest';
   if(isTailoring(recipe)){const resolved=material??tailoringMaterialFromIngredients(ingredients);if(!resolved)throw new RangeError('Tailoring product requires one material');return apparelItemFor(recipe,resolved);}
   return recipe==='butcher-creature'?((ingredients[0]?.item??'hare-corpse').replace('-corpse','-meat') as ItemId):recipe==='simple-meal'?'simple-meal':blockFor(ingredients[0]!.item as StoneIngredient);
 }
 export function isRecipeProduct(recipe:ProductionRecipe,item:ItemId):boolean {
   if(isArtRecipe(recipe))return false;
   if(isGunRecipe(recipe))return item===(recipe==='make-revolver'?'revolver':'bolt-action-rifle');
+  if(isFlakRecipe(recipe))return item==='flak-vest';
   if(isTailoring(recipe))return APPAREL_MATERIALS.some(material=>item===apparelItemFor(recipe,material));
   return recipe==='butcher-creature'?(isAnimalMeat(item)||(ANIMAL_LEATHER_ITEMS as readonly string[]).includes(item)):recipe==='simple-meal'?item==='simple-meal':ITEM_DEFINITIONS[item].kind==='blocks';
 }
 export function tailoringProduct(recipe:TailoringRecipe,material:TailoringMaterial):ApparelItem { return apparelItemFor(recipe,material); }
 
-export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear']:station.kind==='crafting-spot'?['tribalwear']:stationRecipe(station)?[stationRecipe(station)!]:[];
+export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle','make-flak-vest']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear']:station.kind==='crafting-spot'?['tribalwear']:stationRecipe(station)?[stationRecipe(station)!]:[];
 export const stationAccepts=(station:Pick<Structure,'kind'>,recipe:ProductionRecipe):boolean=>stationRecipes(station).includes(recipe);
 
 /** Snapshot-only display total; the authoritative workpiece owns its material. */

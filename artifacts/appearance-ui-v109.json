@@ -1,0 +1,102 @@
+{
+  "portraits": [
+    {
+      "id": 166,
+      "text": "silhouette moyenne · cheveux attachés",
+      "portraitBytes": 1868
+    },
+    {
+      "id": 209,
+      "text": "silhouette moyenne · cheveux ébouriffés, barbe visible",
+      "portraitBytes": 1866
+    },
+    {
+      "id": 210,
+      "text": "silhouette fine · cheveux en chignon",
+      "portraitBytes": 1798
+    },
+    {
+      "id": 211,
+      "text": "silhouette robuste · cheveux crépus, barbe visible",
+      "portraitBytes": 1893
+    },
+    {
+      "id": 212,
+      "text": "silhouette large · cheveux bouclés",
+      "portraitBytes": 1795
+    }
+  ],
+  "errors": [],
+  "research": "Terminée · 1200.0 / 1200 points",
+  "finished": {
+    "tick": 5070,
+    "vest": {
+      "id": 225,
+      "item": "flak-vest",
+      "kind": "apparel",
+      "quantity": 1,
+      "owner": {
+        "type": "pawn",
+        "pawnId": 166
+      },
+      "apparel": {
+        "quality": "good",
+        "hitPoints": 200
+      }
+    },
+    "errors": [],
+    "profiles": [
+      {
+        "version": 1,
+        "sex": "female",
+        "bodyType": "Female",
+        "headType": "Female_AverageNormal",
+        "hair": "Ponytails",
+        "beard": "NoBeard",
+        "skinColor": 15910796,
+        "hairColor": 5913120
+      },
+      {
+        "version": 1,
+        "sex": "male",
+        "bodyType": "Male",
+        "headType": "Male_AverageWide",
+        "hair": "Mop",
+        "beard": "Full",
+        "skinColor": 14982746,
+        "hairColor": 3355443
+      },
+      {
+        "version": 1,
+        "sex": "female",
+        "bodyType": "Thin",
+        "headType": "Female_NarrowNormal",
+        "hair": "FancyBun",
+        "beard": "NoBeard",
+        "skinColor": 16773065,
+        "hairColor": 8672047
+      },
+      {
+        "version": 1,
+        "sex": "male",
+        "bodyType": "Hulk",
+        "headType": "Male_NarrowWide",
+        "hair": "Afro",
+        "beard": "Boxed",
+        "skinColor": 6506020,
+        "hairColor": 1644825
+      },
+      {
+        "version": 1,
+        "sex": "female",
+        "bodyType": "Fat",
+        "headType": "Female_AverageWide",
+        "hair": "Curly",
+        "beard": "NoBeard",
+        "skinColor": 16374693,
+        "hairColor": 5195586
+      }
+    ]
+  },
+  "resync": 0
+}

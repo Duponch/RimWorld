@@ -1,3 +1,4 @@
+import { HAIR_PARTS,BEARD_PARTS } from './pawn-appearance-shape';
 import { BIOME_CARGO } from './biome-cargo';
 import { corpseParts } from './corpse-presentation';
 import * as THREE from 'three/webgpu';
@@ -33,13 +34,13 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
     box.dispose();
   };
   addPart([0.35, 0.43, 0.22], [0, 0.82, 0], 0, [0, 0.61, 0], 0xffffff, 1);
-  addPart([0.3, 0.3, 0.28], [0, 1.19, 0.01], 1, [0, 1.04, 0], 0xe2b899);
-  addPart([0.32, 0.11, 0.3], [0, 1.35, -0.02], 1, [0, 1.04, 0], 0x554741);
-  addPart([0.27, 0.15, 0.08], [0, 1.23, -0.13], 1, [0, 1.04, 0], 0x554741);
+  addPart([0.3, 0.3, 0.28], [0, 1.19, 0.01], 1, [0, 1.04, 0], 0xe2b899,2);
+  HAIR_PARTS.forEach((p,i)=>addPart([...p.size],[...p.center],1,[0,1.04,0],0xffffff,100+i));
+  BEARD_PARTS.forEach((p,i)=>addPart([...p.size],[...p.center],1,[0,1.04,0],0xffffff,200+i));
   for (const side of [-1, 1]) {
     const arm = side < 0 ? 2 : 3, leg = side < 0 ? 4 : 5, calf = side < 0 ? 6 : 7;
     addPart([0.12, 0.28, 0.15], [side * 0.23, 0.85, 0], arm, [side * 0.23, 1.01, 0], 0xffffff, 1);
-    addPart([0.115, 0.12, 0.14], [side * 0.23, 0.65, 0], arm, [side * 0.23, 1.01, 0], 0xe2b899);
+    addPart([0.115, 0.12, 0.14], [side * 0.23, 0.65, 0], arm, [side * 0.23, 1.01, 0], 0xe2b899,2);
     addPart([.20,.28,.255],[side*.105,.49,0],leg,[side*.105,.61,0],APPAREL['cloth-tribalwear'].color,-3);
     addPart([0.135, 0.21, 0.17], [side * 0.105, 0.505, 0], leg, [side * 0.105, 0.61, 0], 0x495052);
     addPart([0.13, 0.235, 0.16], [side * 0.105, 0.2825, 0], calf, [side * 0.105, 0.61, 0], 0x495052);

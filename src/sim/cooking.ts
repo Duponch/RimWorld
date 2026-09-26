@@ -2,8 +2,9 @@ import { beginArtWork } from './art-work.ts';
 import { isArtRecipe,artWorkTotal,artisticSkill } from './art-rules.ts';
 import { completeArtProduction } from './art-production.ts';
 import { beginGunWork } from './gun-work.ts';
+import { beginFlakWork } from './flak-work.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
-import { isGunRecipe } from './production-recipes.ts';
+import { isFlakRecipe,isGunRecipe } from './production-recipes.ts';
 import { newWeaponState,type RangedWeaponItem } from './equipment-rules.ts';
 import { isAnimalCorpseItem, isAnimalMeat } from './biome-items.ts';
 import { foodStationUsable } from './food-workstations.ts';
@@ -73,7 +74,10 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(isTailoring(task.recipe)&&!unfinished){context.release();return;}
   const gun=isGunRecipe(task.recipe)?beginGunWork(world,pawn):null;
   if(isGunRecipe(task.recipe)&&!gun){context.release();return;}
+  const flak=isFlakRecipe(task.recipe)?beginFlakWork(world,pawn):null;
+  if(isFlakRecipe(task.recipe)&&!flak){context.release();return;}
   if(gun){pawn.skills.crafting??={...craftingSkill(pawn)};if(gun.gunWork!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=gun.gunWork!.progress;}
+  if(flak){pawn.skills.crafting??={...craftingSkill(pawn)};if(flak.flakWork!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=flak.flakWork!.progress;}
   if(unfinished){pawn.skills.crafting??={...craftingSkill(pawn)};if(unfinished.unfinished!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=unfinished.unfinished!.progress;}
   const art=isArtRecipe(task.recipe)?beginArtWork(world,pawn):null;
   if(isArtRecipe(task.recipe)&&!art){context.release();return;}
@@ -87,6 +91,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   }
   if(unfinished)unfinished.unfinished!.progress=task.progress;
   if(gun)gun.gunWork!.progress=task.progress;
+  if(flak)flak.flakWork!.progress=task.progress;
   if(art)art.artWork!.progress=task.progress;
   if(task.progress<total)return;
   if(art){completeArtProduction(world,pawn,task,context);return;}
@@ -100,7 +105,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const rice=task.ingredients.filter(i=>i.item==='rice').reduce((n,i)=>n+i.quantity,0),item=recipeProduct(taskRecipe(task),task.ingredients,material);
   const potato=task.ingredients.filter(i=>i.item==='potato').reduce((n,i)=>n+i.quantity,0),corn=task.ingredients.filter(i=>i.item==='corn').reduce((n,i)=>n+i.quantity,0);
   if(isTailoring(task.recipe)&&!Number.isSafeInteger((world.tailoring?.completed??0)+1))return;
-  const random={rng:world.rng},apparel=isTailoring(task.recipe)?{...newApparelState(item as ApparelItem,material),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
+  const random={rng:world.rng},apparel=isTailoring(task.recipe)||isFlakRecipe(task.recipe)?{...newApparelState(item as ApparelItem,material),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
   const weapon=isGunRecipe(task.recipe)?{...newWeaponState(item as RangedWeaponItem),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
   const foodPoison=world.schemaVersion>=89&&culinary?foodPoisonFromRecipe(roomCleanliness(world,pawn),(pawn.skills.cooking?.level??0),()=>healthRandom(random)):undefined;
   // All preconditions succeeded. Consume once, create once, then store physically.
@@ -108,8 +113,8 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   world.piles=world.piles.filter(p=>p.quantity>0);
   const id=world.nextId++;world.piles.push({id,item,kind:ITEM_DEFINITIONS[item].kind,quantity:recipe.outputUnits,owner:{type:'pawn',pawnId:pawn.id},...freshRot(item,world.tick),...(foodPoison?{foodPoison}:{}),...apparel?{apparel}:{},...(weapon?{weapon}:{})});
   world.rng=random.rng;
-  if(apparel){(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
+  if(isTailoring(task.recipe)){(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
   task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;if(culinary)pawn.skills.cooking=completedCookingSkill(pawn,task.workTicks??0);delete task.workTicks;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
-  context.event(isGunRecipe(task.recipe)||isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
+  context.event(isGunRecipe(task.recipe)||isFlakRecipe(task.recipe)||isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
 }

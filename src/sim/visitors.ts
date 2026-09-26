@@ -65,7 +65,7 @@ function arrive(w:World,kind:VisitorKind,intro=false):boolean {
   const id=s.serial+1,merchant=kind==='visitor'&&visitorRandom(random)<.75?Math.floor(visitorRandom(random)*profiles.length):-1;
   const pawns:Pawn[]=[],piles:MaterialPile[]=[];let nextId=w.nextId;
   for(let i=0;i<profiles.length;i++){
-    const p=startingPawn(nextId++,`${profiles[i]} ${id}.${i+1}`,arrival.sites[i]!.x,arrival.sites[i]!.z,0,55);
+    const p=startingPawn(nextId++,`${profiles[i]} ${id}.${i+1}`,arrival.sites[i]!.x,arrival.sites[i]!.z,0,55,w.seed);
     p.faction='outlanders';p.foodPolicyId=w.foodPolicies[0]!.id;
     delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
     for(const value of Object.values(p.skills))if(typeof value==='object'){value.level=0;value.passion=0;}

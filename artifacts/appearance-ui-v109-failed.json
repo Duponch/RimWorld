@@ -1,0 +1,5 @@
+{
+  "portraits": [],
+  "errors": [],
+  "failure": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /data:image\\/svg\\+xml/. Input:\n\n'url(\"http://127.0.0.1:5173/assets/ui/lisiere/portraits.png\")'\n"
+}

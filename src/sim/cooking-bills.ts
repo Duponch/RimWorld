@@ -3,7 +3,7 @@ import { V91_ITEM_IDS, isAnimalMeat } from './biome-items.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { isFoodWorkstation } from './food-workstations.ts';
 import { groundOccupancyAllows } from './occupancy.ts';
-import { PRODUCTION_RECIPES, isRecipeProduct, type ProductionRecipe } from './production-recipes.ts';
+import { PRODUCTION_RECIPES, isFlakRecipe,isRecipeProduct, type ProductionRecipe } from './production-recipes.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
 import { isCookingOrder } from './order-types.ts';
@@ -33,7 +33,7 @@ export function countedProducts(world:World,bill?:CookingBill):number {
   let products=COUNTED_PRODUCTS.get(recipe);
   if(!products){products=new Set(Object.keys(ITEM_DEFINITIONS).filter(item=>recipe==='butcher-creature'?isAnimalMeat(item):isRecipeProduct(recipe,item as keyof typeof ITEM_DEFINITIONS)));COUNTED_PRODUCTS.set(recipe,products);}
   const stored=new Set(world.stockpiles.map(z=>z.z*world.width+z.x));
-  return world.piles.reduce((n,p)=>n+(products.has(p.item)&&(p.owner.type==='pawn'&&bill?.recipe!=='butcher-creature'||p.owner.type==='ground'&&stored.has(p.owner.z*world.width+p.owner.x))?p.quantity:0),0);
+  return world.piles.reduce((n,p)=>n+(products.has(p.item)&&(p.owner.type==='pawn'&&bill?.recipe!=='butcher-creature'||isFlakRecipe(recipe)&&p.owner.type==='apparel'||p.owner.type==='ground'&&stored.has(p.owner.z*world.width+p.owner.x))?p.quantity:0),0);
 }
 export function billWanted(world:World,bill:CookingBill):boolean {
   return !bill.suspended&&(bill.mode==='forever'||bill.mode==='times'&&bill.target>0||bill.mode==='until'&&countedProducts(world,bill)<bill.target);

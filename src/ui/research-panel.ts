@@ -5,6 +5,8 @@ type ProjectCard = { id: ResearchProject; prefix: string; title: string; cost: n
 const projects: readonly ProjectCard[] = [
   {id:'machining',prefix:'machining',title:'Usinage',cost:1000,detail:'Après Forge : atelier d’usinage électrique, 150 acier + 5 composants. Construction 4.',progress:w=>w.research?.machining},
   {id:'gunsmithing',prefix:'gunsmithing',title:'Armurerie',cost:500,detail:'Après Usinage : revolver (Artisanat 3) et fusil à verrou (Artisanat 5).',progress:w=>w.research?.gunsmithing},
+  {id:'plate-armor',prefix:'plate-armor',title:'Armure de plaques',cost:600,detail:'Après Forge et Vêtements complexes : préalable du gilet pare-balles. La fabrication de plaques reste hors périmètre.',progress:w=>w.research?.plateArmor},
+  {id:'flak-armor',prefix:'flak-armor',title:'Armure pare-balles',cost:1200,detail:'Après Usinage et Armure de plaques : gilet à l’atelier d’usinage, Artisanat 4.',progress:w=>w.research?.flakArmor},
   {id:'complex-furniture',prefix:'furniture',title:'Mobilier complexe',cost:300,detail:'Débloque chaise, fauteuil, table de chevet et commode.',progress:w=>w.research?.complexFurniture},
   {id:'stonecutting',prefix:'stonecutting',title:'Taille de pierre',cost:300,detail:'Débloque les dallages en pierre. Quatre blocs par case ; Construction 3.',progress:w=>w.research?.stonecutting},
   {id:'smithing',prefix:'smithing',title:'Forge',cost:700,detail:'Débloque le dallage en acier. Sept aciers par case ; Construction 3.',progress:w=>w.research?.smithing},
@@ -38,7 +40,7 @@ export function updateResearchPanel(root: HTMLElement, world: World, send: (comm
   }
   root.querySelector<HTMLButtonElement>('[data-research-pause]')!.disabled=!world.research?.project;
   root.querySelector('[data-research-help]')!.textContent=projects.every(p=>researchUnlocked(world,p.id))
-    ? 'Les neuf projets disponibles sont acquis. Les autres technologies restent à développer.'
+    ? 'Les onze projets disponibles sont acquis. Les autres technologies restent à développer.'
     : 'Construisez un bureau de recherche simple dans Architecte → Production, puis affectez un colon dans Travail. Plusieurs bureaux contribuent au même projet. Batteries et panneaux solaires sont deux recherches indépendantes ; les bases de l’électricité sont disponibles dans ce scénario.';
   const workers=world.pawns.filter(p=>p.research).map(p=>`${p.name} · Intellect ${intellectualSkill(p).level} · ${p.state==='working'?'au bureau':'en chemin'}`);
   root.querySelector('[data-research-workers]')!.textContent=workers.join(' ; ')||`${world.structures.filter(s=>s.kind==='research-bench').length} bureau(x) construit(s) · aucun chercheur au travail.`;

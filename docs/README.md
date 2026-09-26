@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V109 — identités et armurerie :** profils humains persistants, silhouettes et coiffures 3D partagées, portraits cohérents et gilet pare-balles fabricable. [Apparence](development/pawn-appearance.md), [recherche Core](research/pawn-appearance-reference-v109.md), [filière du gilet](development/flak-armor.md), [preuves](history/validation-appearance-v109.md). Douze colonies directement dans Charger ; migration neutre 106→109.
+
 **V108 — déplacements plus réactifs :** réserve graphique réduite de quatre à deux ticks, avec horloge commune aux acteurs et à la scène. [Diagnostic](research/movement-latency-v108.md), [contrat](development/presentation-timing.md), [preuves](history/validation-latency-v108.md). Logique, schéma et catalogue inchangés.
 
 **V107 — salissures naturelles :** traces irrégulières aux bords fondus, terre translucide et couches superposées suivant l'épaisseur réelle. [Contrat](development/cleanliness.md#aspect-des-traces-v107), [référence Core](research/filth-visual-reference-v107.md), [preuves](history/validation-filth-v107.md). Présentation seulement, schéma 106 et catalogue conservés.

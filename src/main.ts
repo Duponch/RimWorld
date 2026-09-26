@@ -1,3 +1,7 @@
+import {appearanceOf} from './sim/pawn-appearance';
+import {portraitDataUrl} from './ui/pawn-portrait';
+import {updatePawnAppearanceInspection} from './ui/pawn-appearance-inspection';
+import {pawnBaseColor} from './render/pawn-appearance-shape';
 import { createColonyEconomyUI } from './ui/colony-economy';
 import {QUALITY_LABELS} from './sim/equipment-rules';
 import {structureBeauty} from './sim/room-beauty';
@@ -82,7 +86,7 @@ import './ui/visual-identity.css';
 import './ui/cell-inspector.css';
 import { presentCellDescription } from './ui/cell-inspector';
 import './ui/cursors.css';
-import { installVisualIdentity, portraitIndex } from './ui/visual-identity';
+import { installVisualIdentity } from './ui/visual-identity';
 import { installArchitectIcons } from './ui/architect-icons';
 import { syncToolCursor } from './ui/tool-cursors';
 import { mountColonistInspector, updateColonistInspector, colonistInspectorState, type ColonistInspectorState } from './ui/colonist-inspector';
@@ -448,7 +452,7 @@ function rebuildPawns(world: World) {
   el('colonists').replaceChildren(...world.pawns.filter(isColonist).map((pawn, index) => {
     const button = document.createElement('button');
     button.className = 'colonist'; button.dataset.pawn = String(pawn.id);
-    button.innerHTML = `<span class="portrait portrait-${portraitIndex(pawn.id, pawn.name)}"><span class="portrait-head"></span><span class="portrait-body"></span><span class="portrait-vest"></span><span class="pawn-symbol"></span></span><strong></strong><span class="pawn-mood"><i></i></span>`;
+    button.innerHTML = `<span class="portrait portrait-generated"><span class="portrait-head"></span><span class="portrait-body"></span><span class="portrait-vest"></span><span class="pawn-symbol"></span></span><strong></strong><span class="pawn-mood"><i></i></span>`;
     button.onclick = event => selectPawns({ids:[pawn.id],additive:event.shiftKey,toggle:event.shiftKey},!event.shiftKey);
     return button;
   }));
@@ -517,7 +521,9 @@ function renderState() {
     button.classList.toggle('selected', selection.ids.has(pawn.id));button.dataset.drafted=String(!!pawn.draft);
     button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
     button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn)} · ${equipmentDescription(equipment.get(pawn.id),pawn)}`;button.dataset.equipment=equipment.get(pawn.id)?.item??'';
-    const look=apparelAppearance(apparel.get(pawn.id));button.dataset.apparel=look.signature;button.title+=` · ${look.description}`;
+    const rawLook=apparelAppearance(apparel.get(pawn.id)),look={...rawLook,color:rawLook.color??pawnBaseColor(pawn.id)};button.dataset.apparel=look.signature;
+    const portrait=button.querySelector<HTMLElement>('.portrait-head')!,url=portraitDataUrl(appearanceOf(pawn,world.seed),look);
+    if(portrait.dataset.source!==url){portrait.dataset.source=url;portrait.style.setProperty('--pawn-portrait',`url("${url}")`);}button.title+=` · ${look.description}`;
     (button.querySelector('.portrait-body') as HTMLElement).style.background=look.color!==undefined?`#${look.color.toString(16)}`:'';
     (button.querySelector('.portrait-vest') as HTMLElement).hidden=!look.vest;
     button.querySelector('.pawn-symbol')!.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':pawn.mental?.crisis?'↝':pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
@@ -535,6 +541,7 @@ function renderState() {
     }
   } else if (selectedPawn !== undefined) {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
+    if(pawn){const look=apparelAppearance(apparel.get(pawn.id));updatePawnAppearanceInspection(el('inspector'),world,pawn,{...look,color:look.color??pawnBaseColor(pawn.id)});}
     if (!pawn) {if(!updateAnimalInspector(el('inspector'),world,selectedPawn))clearSelection();}
     else if(pawn.prisoner){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updatePrisonerInspection(el('inspector'),world,pawn);}
     else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);}
@@ -575,7 +582,7 @@ function renderState() {
       const weapon=piles.find(p=>p.kind==='weapon'||p.kind==='apparel'),permission=el<HTMLButtonElement>('weapon-permission');permission.hidden=!weapon;
       if(weapon){const forbidden=!!(weapon.weapon??weapon.apparel)?.forbidden;permission.textContent=forbidden?'Autoriser cet objet':'Interdire cet objet';permission.onclick=()=>void attempt(()=>client.command({type:weapon.kind==='apparel'?'apparel-permission':'weapon-permission',itemId:weapon.id,allowed:forbidden}));}
       el('cell-materials').textContent = piles.length ? `Au sol : ${piles.map(pile => `${pile.quantity} ${ITEM_DEFINITIONS[pile.item].label}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}`).join(' · ')}` : '';
-      updateUnfinishedInspection(el('inspector'),world,piles.find(p=>p.unfinished||p.gunWork||p.artWork),c=>void attempt(()=>client.command(c)));
+      updateUnfinishedInspection(el('inspector'),world,piles.find(p=>p.unfinished||p.gunWork||p.artWork||p.flakWork),c=>void attempt(()=>client.command(c)));
       el('cell-job').textContent = job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]} · ${queryJobStatus(world, job).reason ?? 'En cours'}${constructionDeliveryLabel(world,job) ? ` · Livré : ${constructionDeliveryLabel(world,job)}` : ''}` : 'Aucun ordre sur cette case.';
       if(structure?.kind==='bed')cellDescription += ` · Efficacité du repos : ${structure.material?.endsWith('-blocks')?90:100} %`;
       updateCoolerControls(el('inspector'),world,structure,c=>void attempt(()=>client.command(c)));

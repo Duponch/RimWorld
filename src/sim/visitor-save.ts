@@ -1,3 +1,4 @@
+import {validatePawnAppearance} from './pawn-appearance.ts';
 import {validateFurniture} from './furniture-transfer-save.ts';
 import {validateArtObjects} from './art-save.ts';
 import {isSculptureKind} from './furniture-stats.ts';
@@ -40,7 +41,8 @@ function validAgenda(value:unknown,kind:VisitorKind,w:World):boolean {
 }
 function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
   if(object(value)&&value.filthFeet!==undefined){if(w.schemaVersion<89||!validFilthFeet(value.filthFeet))return false;const copy={...value};delete copy.filthFeet;value=copy;}
-  if(!object(value)||!keys(value,['id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance']))return false;
+  if(object(value)&&value.appearance!==undefined&&(w.schemaVersion<109||validatePawnAppearance(value.appearance).length))return false;
+  if(!object(value)||!keys(value,[...(w.schemaVersion>=109?['appearance']:[]),'id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance']))return false;
   if(!integer(value.id,1,w.nextId-1)||typeof value.name!=='string'||!value.name.trim()||value.name.length>48||!integer(value.x,0,w.width-1)||!integer(value.z,0,w.height-1)||!edge(value as unknown as Cell,w)
     ||value.faction!=='outlanders'||value.medicalCare!=='industrial'||value.state!=='idle'||!validVisitorShape(value,88,w)||!object(value.visitor)||value.visitor.phase!=='leaving'||value.visitor.goal!==null
     ||!['hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty']:[])].every(k=>range(value[k],0,100))||value.collapsePending!==false||!integer(value.restZeroTicks,0)||!validSkills(value.skills,tick,w.schemaVersion)||!integer(value.foodPolicyId,1)

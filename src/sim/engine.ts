@@ -1,6 +1,7 @@
 import { reconcileDomesticWork } from './domestic-reconcile.ts';
 import { applyTaming,processHandling,advanceTameness } from './animal-handling.ts';
 import { applyAnimalCarePolicy,processAnimalCare } from './animal-care.ts';
+import {cancelFlakWork,detachMissingFlakBills} from './flak-work.ts';
 import {cancelArtWork,detachMissingArtBills} from './art-work.ts';
 import { machiningUnlocked } from './research.ts';
 import { advanceHumanCorpses } from './human-corpses.ts';
@@ -259,7 +260,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
   const result=applyCommandInternal(world,command);
   if(result.ok){
     reconcileWildlife(world);
-    detachMissingBills(world);detachMissingGunBills(world);detachMissingArtBills(world);reconcileRepairs(world);reconcilePowerFlicks(world);
+    detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     if(command.type.startsWith('order-')&&'pawnId' in command){const actor=world.pawns.find(p=>p.id===command.pawnId);if(actor)delete actor.flee;}
     reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);reconcileOrders(world);const thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
   return result;
@@ -282,7 +283,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='climate-adopt'){const adopted=adoptEnvironment(world);if(adopted)event(world,'command','Climat saisonnier et météo activés à partir de maintenant.');return {ok:true};}
   if(command.type==='order-extinguish'){const reason=applyExtinguish(world,command);return reason?refusal('invalid-command',reason):{ok:true};}
   if(command.type==='power-flick')return requestPowerFlick(world,command.structureId,command.on);
-  if(command.type==='cancel-unfinished')return world.piles.some(p=>p.id===command.itemId&&p.artWork)?cancelArtWork(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.gunWork)?cancelGunWork(world,command.itemId):cancelUnfinished(world,command.itemId);
+  if(command.type==='cancel-unfinished')return world.piles.some(p=>p.id===command.itemId&&p.flakWork)?cancelFlakWork(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.artWork)?cancelArtWork(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.gunWork)?cancelGunWork(world,command.itemId):cancelUnfinished(world,command.itemId);
   if(command.type==='enable-wildlife'){enableWildlife(world);return {ok:true};}
   if(command.type==='enable-heatwaves'){if(world.gameProfile)return {ok:false,code:'invalid-command',reason:'Le calendrier de canicule historique n’est pas disponible avec ce narrateur.'};enableHeatwaves(world);return {ok:true};}
   if(command.type==='enable-visitors'||command.type==='order-trade'||command.type==='cancel-trade'||command.type==='trade-execute')return applyTrade(world,command);
@@ -336,7 +337,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='cooler-target')return setCoolerTarget(world,command.structureId,command.target);
   if(command.type==='research-project')return selectResearch(world,command.project);
   if(command.type==='bill-add'||command.type==='bill-update'||command.type==='bill-remove'||command.type==='bill-move') {
-    const result=applyBillCommand(world,command,drops);if(result.ok){detachMissingBills(world);detachMissingGunBills(world);detachMissingArtBills(world);wakePlanners(world);refreshStock(world);}return result;
+    const result=applyBillCommand(world,command,drops);if(result.ok){detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);wakePlanners(world);refreshStock(world);}return result;
   }
   if (command.type === 'area') return applyArea(world, command,drops);
   if (command.type === 'refuel-policy') {
@@ -492,7 +493,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     updateDoors(world);
     const structuresBeforeCombat=world.structures;
     advanceWorldCombat(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);
-    detachMissingBills(world);detachMissingGunBills(world);detachMissingArtBills(world);reconcileRepairs(world);reconcilePowerFlicks(world);
+    detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     expireStaggers(world);advanceFilth(world,weatherRainRate(world));
     scheduleGrowing(world);
     scheduleRoofs(world);advanceWorldApparelWear(world);reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);
