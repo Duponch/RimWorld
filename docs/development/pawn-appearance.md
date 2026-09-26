@@ -1,4 +1,8 @@
-# Apparence humaine modulaire — V109–V111
+# Apparence humaine modulaire — V109–V112
+
+## Arme dans le portrait V112
+
+Le HUD et Bio projettent maintenant aussi les faces de l'**arme primaire physique équipée**, dans la pose de repos du même maillage humain. La clé du cache inclut le type d'arme : un changement de modèle invalide l'image, tandis qu'une image ordinaire ne relance pas la projection. Cette visibilité du fusil sur le portrait est une [adaptation demandée](action-presentation.md) : le portrait Core 1.6.4871 exclut l'arme. Une arme simplement portée comme marchandise n'est pas montrée comme équipement.
 
 ## Ajustement V111 des coiffures courtes et longues
 

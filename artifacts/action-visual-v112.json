@@ -1,0 +1,81 @@
+{
+  "date": "2026-09-26T12:50:25.168Z",
+  "protocol": "Native Chromium WebGPU, four separate 32² prepared jobs. Each work state and progress comes from the real worker at 6×; aMotion and resident buffer counts are observed after frame rendering. Screenshots show the paused work state. This is not a long colony run or a GPU timer.",
+  "phases": {
+    "mine": 11,
+    "chop": 12,
+    "build": 13,
+    "craft": 14
+  },
+  "reports": [
+    {
+      "kind": "mine",
+      "tick": 2004,
+      "phase": 11,
+      "workFrames": 27,
+      "jobKinds": [
+        "mine"
+      ],
+      "cookingPhases": [],
+      "geometry": {
+        "instances": 1,
+        "attributes": 17,
+        "shaderAttributes": 16,
+        "shaderBuffers": 7
+      },
+      "errors": []
+    },
+    {
+      "kind": "chop",
+      "tick": 2004,
+      "phase": 12,
+      "workFrames": 24,
+      "jobKinds": [
+        "chop"
+      ],
+      "cookingPhases": [],
+      "geometry": {
+        "instances": 1,
+        "attributes": 17,
+        "shaderAttributes": 16,
+        "shaderBuffers": 7
+      },
+      "errors": []
+    },
+    {
+      "kind": "build",
+      "tick": 13,
+      "phase": 13,
+      "workFrames": 69,
+      "jobKinds": [
+        "wall"
+      ],
+      "cookingPhases": [],
+      "geometry": {
+        "instances": 1,
+        "attributes": 17,
+        "shaderAttributes": 16,
+        "shaderBuffers": 7
+      },
+      "errors": []
+    },
+    {
+      "kind": "craft",
+      "tick": 16,
+      "phase": 14,
+      "workFrames": 43,
+      "jobKinds": [],
+      "cookingPhases": [
+        "gather",
+        "work"
+      ],
+      "geometry": {
+        "instances": 1,
+        "attributes": 17,
+        "shaderAttributes": 16,
+        "shaderBuffers": 7
+      },
+      "errors": []
+    }
+  ]
+}

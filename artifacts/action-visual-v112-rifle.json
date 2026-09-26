@@ -1,0 +1,69 @@
+{
+  "date": "2026-09-26T12:48:23.422Z",
+  "backend": "WebGPU",
+  "aimTick": 3000,
+  "shotTick": 3014,
+  "shooter": 182,
+  "target": 183,
+  "rest": {
+    "equipment": 2,
+    "phase": 0,
+    "draws": 20
+  },
+  "aimFrames": 48,
+  "cooldownFrames": 74,
+  "recoilWindowFrames": 38,
+  "recoilWindowSeconds": 0.3,
+  "firstRecoilFactor": 0.5506734483312054,
+  "priorDiagnostic": "The original 0.13 s cosmetic window had no visible sample: first cooldown frame was +0.1345 s. V112 widened only the render recoil to 0.30 s.",
+  "firstCooldownElapsedSeconds": 0.13479796550063838,
+  "cooldownElapsedRangeSeconds": [
+    0.13479796550063838,
+    0.4722979655014967
+  ],
+  "firstCooldownSamples": [
+    {
+      "worldTick": 3011,
+      "timelineTick": 3011.008800000035,
+      "travelTime": 160.5014666666725,
+      "phaseOrigin": 160.36666870117188,
+      "elapsedSeconds": 0.13479796550063838
+    },
+    {
+      "worldTick": 3011,
+      "timelineTick": 3011.034000000035,
+      "travelTime": 160.5056666666725,
+      "phaseOrigin": 160.36666870117188,
+      "elapsedSeconds": 0.1389979655006357
+    },
+    {
+      "worldTick": 3011,
+      "timelineTick": 3011.0586000000353,
+      "travelTime": 160.50976666667256,
+      "phaseOrigin": 160.36666870117188,
+      "elapsedSeconds": 0.14309796550068654
+    },
+    {
+      "worldTick": 3011,
+      "timelineTick": 3011.0838000000354,
+      "travelTime": 160.51396666667256,
+      "phaseOrigin": 160.36666870117188,
+      "elapsedSeconds": 0.14729796550068386
+    },
+    {
+      "worldTick": 3011,
+      "timelineTick": 3011.1084000000355,
+      "travelTime": 160.51806666667258,
+      "phaseOrigin": 160.36666870117188,
+      "elapsedSeconds": 0.15139796550070628
+    }
+  ],
+  "projectileFrames": 55,
+  "lastAttack": {
+    "targetId": 183,
+    "atCore": 30102
+  },
+  "armedAvatarBytes": 11783,
+  "avatarDiffersFromBare": true,
+  "errors": []
+}

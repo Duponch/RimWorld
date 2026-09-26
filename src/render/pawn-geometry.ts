@@ -51,7 +51,11 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
   addPart([.12,.18,.025],[0,.86,.145],0,[0,.61,0],0x404c44,-2);
   // Resident parka hood; its visibility follows the outfit attribute.
   addPart([.34,.34,.14],[0,1.17,-.12],1,[0,1.04,0],0xffffff,PARKA_HOOD_DYE);
-  for(const variant of WEAPON_VISUALS)for(const part of variant.parts)addPart(part.size.map(n=>n/PAWN_MODEL_SCALE),
+  // Ground weapon shapes run along X. The pawn holster runs along Y: rotate
+  // both each part's centre and its dimensions so the same authored pieces
+  // retain their proportions when attached to a character.
+  for(const variant of WEAPON_VISUALS)for(const part of variant.parts)addPart(
+    [part.size[2],part.size[0],part.size[1]].map(n=>n/PAWN_MODEL_SCALE),
     [.205+part.center[2]/PAWN_MODEL_SCALE,.68+part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,variant.dye);
   const geometry = new THREE.InstancedBufferGeometry();
   // WebGPU guarantees only eight vertex-buffer slots. Keeping authored attributes

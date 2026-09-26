@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-26",
+  "command": "npm run test:presentation",
+  "protocol": "Native Chromium/WebGPU, 250x250 seed 42, 45-second mine then chop, worker and rendering active, 22 speed switches per action. Sustained starvation means more than one second since the last presented tick progress; the original pilot compared to the first frame and falsely flagged ordinary repeated high-FPS frames.",
+  "mine": {
+    "frames": 9228,
+    "imageP95Ms": 8.4,
+    "speedSwitches": 22,
+    "maxSpeedResponseMs": 40.8,
+    "sustainedStalls": 0,
+    "poseJumps": 0,
+    "rockOccupancies": 0,
+    "errors": 0,
+    "initialJobs": 186,
+    "remainingJobs": 162,
+    "observedRemovals": 18
+  },
+  "chop": {
+    "frames": 8251,
+    "imageP95Ms": 8.4,
+    "speedSwitches": 22,
+    "maxSpeedResponseMs": 40.9,
+    "sustainedStalls": 0,
+    "poseJumps": 0,
+    "rockOccupancies": 0,
+    "errors": 0,
+    "initialJobs": 262,
+    "remainingJobs": 238,
+    "observedRemovals": 22
+  }
+}

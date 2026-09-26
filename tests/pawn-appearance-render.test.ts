@@ -1,6 +1,7 @@
 import {test,expect} from 'vitest';
 import * as THREE from 'three/webgpu';
 import {PawnLayer} from '../src/render/PawnLayer';
+import {pawnGeometry} from '../src/render/pawn-geometry';
 import {createWorld} from '../src/sim/index';
 import {startingPawn} from '../src/sim/starting-pawns';
 import {appearanceOf} from '../src/sim/pawn-appearance';
@@ -72,4 +73,26 @@ test('hairlines and beard cheeks wrap the actual head without coplanar front fac
   expect(svg).toContain('data-source="pawn-geometry"');
   expect((svg.match(/<polygon /g)??[]).length).toBeGreaterThan(30);
   expect(svg).not.toContain('<path'); // no independent cartoon head/hair shapes
+});
+
+test('the cached mesh portrait follows the physical primary weapon and removes it on drop',()=>{
+  const geometry=pawnGeometry(),position=geometry.getAttribute('position'),dye=geometry.getAttribute('dye');
+  const rifleBounds={minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity};
+  for(let i=0;i<position.count;i++)if(dye.getX(i)===-4){
+    rifleBounds.minX=Math.min(rifleBounds.minX,position.getX(i));rifleBounds.maxX=Math.max(rifleBounds.maxX,position.getX(i));
+    rifleBounds.minY=Math.min(rifleBounds.minY,position.getY(i));rifleBounds.maxY=Math.max(rifleBounds.maxY,position.getY(i));
+  }
+  expect(rifleBounds.maxY-rifleBounds.minY).toBeGreaterThan((rifleBounds.maxX-rifleBounds.minX)*4);
+  geometry.dispose();
+  const world=createWorld(42,32,32),appearance=appearanceOf(world.pawns[0]!,world.seed),look=apparelAppearance();
+  const decode=(weapon?:string)=>decodeURIComponent(portraitDataUrl(appearance,look,weapon).split(',')[1]!);
+  const empty=decode(),rifleSvg=decode('bolt-action-rifle'),revolver=decode('revolver'),knife=decode('plasteel-knife');
+  expect(empty).toContain('data-weapon=""');
+  for(const [weapon,svg] of [['bolt-action-rifle',rifleSvg],['revolver',revolver],['plasteel-knife',knife]] as const){
+    expect(svg).toContain(`data-weapon="${weapon}"`);
+    expect((svg.match(/<polygon /g)??[]).length).toBeGreaterThan((empty.match(/<polygon /g)??[]).length);
+    expect(svg).not.toBe(empty);
+  }
+  expect(portraitDataUrl(appearance,look,'bolt-action-rifle')).toBe(portraitDataUrl(appearance,look,'bolt-action-rifle'));
+  expect(decode()).toBe(empty);
 });

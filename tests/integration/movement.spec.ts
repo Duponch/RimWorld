@@ -52,7 +52,7 @@ test('GPU travel preserves speed, corners and work-facing through real worker sn
   for(const [x,z] of [[16,10],[16,16],[10,16],[7,10]]) {fixture.resources.push({id:fixture.nextId++,kind:'tree',x:x!,z:z!,amount:12});applyCommand(fixture,{type:'designate',kind:'chop',x:x!,z:z!});}
   for(let z=9;z<15;z++)fixture.tiles[z*32+13]={terrain:'rock'};
   refreshStock(fixture);
-  const probe=`window.__travel={frames:[],working:[],active:false,view:null};const originalTravelFrame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(now){const result=originalTravelFrame.call(this,now),b=window.__travel;b.view=this;if(!b.active||!this.world)return result;const g=this.pawns.pawnMesh.geometry,a=g.getAttribute('aFrom'),z=g.getAttribute('aTo'),m=g.getAttribute('aMotion'),t=g.getAttribute('aTravel');const start=t.getX(0),end=t.getY(0),clock=this.pawns.travelTime.value,blend=end-start>0?Math.max(0,Math.min(1,(clock-start)/(end-start))):this.pawns.blend.value;const x=a.getX(0)+(z.getX(0)-a.getX(0))*blend,y=a.getZ(0)+(z.getZ(0)-a.getZ(0))*blend,yaw=a.getW(0)+(z.getW(0)-a.getW(0))*blend;b.frames.push({now,clock,start,end,x,z:y,yaw,dx:z.getX(0)-a.getX(0),dz:z.getZ(0)-a.getZ(0),walking:m.getX(0)});const p=this.world.pawns[0],job=this.world.jobs.find(j=>j.id===p.jobId);if(m.getY(0)>0&&job)b.working.push({id:job.id,error:Math.abs(Math.atan2(Math.sin(yaw-Math.atan2(job.x-x,job.z-y)),Math.cos(yaw-Math.atan2(job.x-x,job.z-y))))});return result;};\n`;
+  const probe=`window.__travel={frames:[],working:[],active:false,view:null};const originalTravelFrame=ColonyRenderer.prototype.frame;ColonyRenderer.prototype.frame=function(now){const result=originalTravelFrame.call(this,now),b=window.__travel;b.view=this;if(!b.active||!this.world)return result;const g=this.pawns.pawnMesh.geometry,a=g.getAttribute('aFrom'),z=g.getAttribute('aTo'),m=g.getAttribute('aMotion'),t=g.getAttribute('aTravel');const start=t.getX(0),end=t.getY(0),clock=this.pawns.travelTime.value,blend=end-start>0?Math.max(0,Math.min(1,(clock-start)/(end-start))):this.pawns.blend.value,turn=end-start>0?Math.max(0,Math.min(1,(clock-start)/.24)):this.pawns.blend.value;const x=a.getX(0)+(z.getX(0)-a.getX(0))*blend,y=a.getZ(0)+(z.getZ(0)-a.getZ(0))*blend,yaw=a.getW(0)+(z.getW(0)-a.getW(0))*turn,turning=end>start&&clock-start<.24;b.frames.push({now,clock,start,end,x,z:y,yaw,turning,arc:Math.abs(z.getW(0)-a.getW(0)),dx:z.getX(0)-a.getX(0),dz:z.getZ(0)-a.getZ(0),walking:m.getX(0)});const p=this.world.pawns[0],job=this.world.jobs.find(j=>j.id===p.jobId);if(m.getY(0)>0&&job)b.working.push({id:job.id,turning,error:Math.abs(Math.atan2(Math.sin(yaw-Math.atan2(job.x-x,job.z-y)),Math.cos(yaw-Math.atan2(job.x-x,job.z-y))))});return result;};\n`;
   try {
     await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()});});
     await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
@@ -62,7 +62,7 @@ test('GPU travel preserves speed, corners and work-facing through real worker sn
     await page.waitForFunction(()=>window.__lisiere.world.jobs.length===0,undefined,{timeout:45000,polling:100});
     await page.locator('[data-speed="0"]').click();
     const result=await page.evaluate(()=>{const b=(window as any).__travel;b.active=false;return {frames:b.frames,working:b.working};});
-    let samples=0,maxSpeedError=0,maxFacingError=0;const turns=new Set<number>();let worstSample:unknown;
+    let samples=0,maxSpeedError=0,maxFacingError=0,maxTurnArc=0;const turns=new Set<number>();let worstSample:unknown;
     for(let i=1;i<result.frames.length;i++) {
       const a=result.frames[i-1],b=result.frames[i],dt=(b.now-a.now)/1000;
       if(a.start!==b.start||!a.walking||!b.walking||dt<=0||dt>0.05||b.clock>=b.end||a.clock<=a.start)continue;
@@ -70,12 +70,14 @@ test('GPU travel preserves speed, corners and work-facing through real worker sn
       // This entire route is before dawn: 0.8 × 6/3 cells/s at 6× speed.
       const speedError=Math.abs(Math.hypot(b.x-a.x,b.z-a.z)/dt-9.6);
       if(speedError>maxSpeedError){maxSpeedError=speedError;worstSample={a,b,dt};}
-      maxFacingError=Math.max(maxFacingError,Math.abs(Math.atan2(Math.sin(b.yaw-Math.atan2(b.dx,b.dz)),Math.cos(b.yaw-Math.atan2(b.dx,b.dz)))));
+      maxTurnArc=Math.max(maxTurnArc,b.arc);
+      if(!b.turning)maxFacingError=Math.max(maxFacingError,Math.abs(Math.atan2(Math.sin(b.yaw-Math.atan2(b.dx,b.dz)),Math.cos(b.yaw-Math.atan2(b.dx,b.dz)))));
     }
-    const summary={worstSample,samples,turns:turns.size,maxSpeedError,maxFacingError,workTargets:new Set(result.working.map((w:any)=>w.id)).size,maxWorkFacingError:Math.max(...result.working.map((w:any)=>w.error)),errors};
+    const settledWork=result.working.filter((w:any)=>!w.turning);
+    const summary={worstSample,samples,turns:turns.size,maxSpeedError,maxFacingError,maxTurnArc,workTargets:new Set(settledWork.map((w:any)=>w.id)).size,maxWorkFacingError:Math.max(...settledWork.map((w:any)=>w.error)),errors};
     await testInfo.attach('movement-contract',{body:JSON.stringify(summary,null,2),contentType:'application/json'});
     expect(summary.samples).toBeGreaterThan(100);expect(summary.turns).toBeGreaterThan(2);
-    expect(summary.maxSpeedError).toBeLessThan(.01);expect(summary.maxFacingError).toBeLessThan(.00001);
+    expect(summary.maxSpeedError).toBeLessThan(.01);expect(summary.maxFacingError).toBeLessThan(.00001);expect(summary.maxTurnArc).toBeLessThan(Math.PI+.00001);
     expect(summary.workTargets).toBe(4);expect(summary.maxWorkFacingError).toBeLessThan(.00001);expect(errors).toEqual([]);
     await page.screenshot({path:'artifacts/movement-work-facing.png'});
   } finally {await browser.close();}

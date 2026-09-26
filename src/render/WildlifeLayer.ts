@@ -5,7 +5,8 @@ import { Fn,If,attribute,cos,sin,float,positionLocal,vec3,uniform,mix,min } from
 import { hareGeometry } from './hare-geometry';
 import { material } from './primitives';
 import { pawnPresentationPose } from './pawn-presentation';
-import type { World } from '../sim/types';
+import { headingAt,turnToward,TURN_TICKS,type TurnHeading } from './turn-presentation';
+import { TICKS_PER_SECOND,type World } from '../sim/types';
 import { MAX_WILDLIFE } from '../sim/wildlife-state';
 import type { MotionTimeline } from './MotionTimeline';
 import { furnitureSurfaces } from './furniture-motion';
@@ -21,6 +22,7 @@ class SpeciesRig {
   private selected:ReadonlySet<number>=new Set();
   readonly blend=uniform(1);private time=uniform(0);
   private keys=new Map<number,string>();private source:World|undefined;
+  private headings=new Map<number,TurnHeading>();
   private animals:NonNullable<World['wildlife']>['animals']=[];
   private surfaces:ReadonlyMap<number,number>=new Map();
   constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
@@ -62,9 +64,12 @@ class SpeciesRig {
     });
   }
   prepare():()=>void {const g=this.mesh.geometry as THREE.InstancedBufferGeometry,n=g.instanceCount;g.instanceCount=Math.max(1,n);return ()=>{g.instanceCount=n;};}
-  update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>):void {
+  update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,reset=false):void {
     const changed=this.source!==world;
-    if(changed){this.source=world;this.keys.clear();this.animals=(world.wildlife?.animals??[]).filter(a=>a.species===this.species);this.surfaces=surfaces;this.setSelected(this.selected);}
+    if(reset){this.headings.clear();this.keys.clear();}
+    if(changed){this.source=world;this.keys.clear();this.animals=(world.wildlife?.animals??[]).filter(a=>a.species===this.species);this.surfaces=surfaces;this.setSelected(this.selected);
+      const present=new Set(this.animals.map(a=>a.id));for(const id of this.headings.keys())if(!present.has(id))this.headings.delete(id);
+    }
     const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
     this.travelTime.value=localTimeSeconds(tick,origin);this.time.value=localTimeSeconds(tick)%(2*Math.PI);
     const g=this.mesh.geometry as THREE.InstancedBufferGeometry,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=g.getAttribute('aTravel') as THREE.InstancedBufferAttribute,state=g.getAttribute('aAnimal') as THREE.InstancedBufferAttribute;
@@ -85,9 +90,16 @@ class SpeciesRig {
       let yaw=edge?Math.atan2(edge.to.x-edge.from.x,edge.to.z-edge.from.z):0;
       if(!traveling&&a.meal){const m=a.meal,target=m.kind==='plant'?world.resources.find(r=>r.id===m.id):world.piles.find(p=>p.id===m.id)?.owner;if(target&&'x' in target&&(target.x!==a.x||target.z!==a.z))yaw=Math.atan2(target.x-a.x,target.z-a.z);}
       if(!traveling&&(a.strike||a.threat)){const target=world.pawns.find(p=>p.id===(a.strike?.targetId??a.threat?.targetId));if(target&&(target.x!==a.x||target.z!==a.z))yaw=Math.atan2(target.x-a.x,target.z-a.z);}
+      const previous=this.headings.get(a.id);
+      let heading=turnToward(previous,yaw,traveling?edge.start:tick);
+      if(traveling&&previous&&heading===previous&&previous.startTick!==edge.start)heading={from:headingAt(previous,edge.start),to:previous.to,startTick:edge.start};
+      this.headings.set(a.id,heading);
       const fa=traveling&&'fromFraction' in edge?Number(edge.fromFraction??0):0,fb=traveling&&'toFraction' in edge?Number(edge.toFraction??1):1,lerp=THREE.MathUtils.lerp;
-      from.setXYZW(i,lerp(f.x,t.x,fa),this.surfaces.get(f.z*world.width+f.x)??0,lerp(f.z,t.z,fa),yaw);to.setXYZW(i,lerp(f.x,t.x,fb),this.surfaces.get(t.z*world.width+t.x)??0,lerp(f.z,t.z,fb),yaw);
-      times.setXYZW(i,traveling?localTimeSeconds(edge.start,origin):0,traveling?localTimeSeconds(edge.end,origin):0,fa,fb);
+      const turning=!traveling&&tick-heading.startTick<TURN_TICKS;
+      from.setXYZW(i,lerp(f.x,t.x,fa),this.surfaces.get(f.z*world.width+f.x)??0,lerp(f.z,t.z,fa),traveling||turning?heading.from:heading.to);
+      to.setXYZW(i,lerp(f.x,t.x,fb),this.surfaces.get(t.z*world.width+t.x)??0,lerp(f.z,t.z,fb),heading.to);
+      const turnStart=localTimeSeconds(heading.startTick,origin);
+      times.setXYZW(i,traveling?localTimeSeconds(edge.start,origin):turning?turnStart:0,traveling?localTimeSeconds(edge.end,origin):turning?turnStart+TURN_TICKS/TICKS_PER_SECOND:0,fa,fb);
       state.setXYZW(i,active&&!fallen&&!a.stun&&(!edge||!('fromFraction' in edge)||!('toFraction' in edge)||edge.fromFraction!==edge.toFraction)?1:0,!traveling&&a.strike&&!a.stun?2:!traveling&&a.state==='eating'?1:0,a.state==='dead'?2:fallen||!traveling&&a.state==='sleeping'?1:0,a.strike?coreTimeSeconds(a.strike.atCore,origin):a.id%30);
     });
     if(dirty)for(const a of [from,to,times,state])a.needsUpdate=true;
@@ -104,7 +116,7 @@ export class WildlifeLayer {
   }
   setSelected(ids:ReadonlySet<number>):void {for(const rig of this.rigs)rig.setSelected(ids);}
   forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {for(const rig of this.rigs)rig.forEachPose(visit);}
-  update(world:World,timeline:MotionTimeline|undefined):void{if(this.source!==world){this.source=world;this.surfaces=furnitureSurfaces(world);}for(const rig of this.rigs)rig.update(world,timeline,this.surfaces);}
+  update(world:World,timeline:MotionTimeline|undefined,reset=false):void{if(this.source!==world){this.source=world;this.surfaces=furnitureSurfaces(world);}for(const rig of this.rigs)rig.update(world,timeline,this.surfaces,reset);}
   prepare():()=>void{const restores=this.rigs.map(r=>r.prepare());return()=>{for(const restore of restores)restore();};}
   dispose():void{for(const r of this.rigs)for(const m of [r.mesh,r.flames,r.selection]){m.geometry.dispose();(m.material as THREE.Material).dispose();}}
 }

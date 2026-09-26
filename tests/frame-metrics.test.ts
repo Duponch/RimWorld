@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { assertHarvestPhase,visibleSpeedResponse } from '../scripts/harvest-assertions';
+import { assertHarvestPhase,presentationStarvations,visibleSpeedResponse } from '../scripts/harvest-assertions';
 import { expect, test } from 'vitest';
 import { FrameMetrics } from '../src/render/FrameMetrics';
 
@@ -32,4 +32,13 @@ test('presentation acceptance rejects the recorded speed defect and incomplete o
   for(const change of [(p:any)=>p.controls=[],(p:any)=>p.controls[0].delay=null,(p:any)=>p.controls[0].delay=101,(p:any)=>p.starvedFrames=1,(p:any)=>p.jumpCount=1,(p:any)=>p.solidOccupancyCount=1,(p:any)=>p.removals=[],(p:any)=>p.removals[0].play=p.removals[0].tick-1]) {
     const bad=structuredClone(corrected[0]);change(bad);expect(()=>assertHarvestPhase(bad)).toThrow();
   }
+});
+
+test('stalled presentation means a full second without tick progress, not ordinary repeated high-FPS images',()=>{
+  const frames=[] as {at:number;play:number;speed:number}[];
+  for(let at=0;at<=1400;at+=5)frames.push({at,play:Math.floor(at/30),speed:6});
+  expect(presentationStarvations(frames)).toEqual([]);
+  const stall=[{at:0,play:10,speed:6},{at:500,play:10,speed:6},{at:1001,play:10,speed:6},{at:1200,play:10,speed:6}];
+  expect(presentationStarvations(stall)).toEqual([{previous:stall[0],current:stall[2]}]);
+  expect(presentationStarvations([{at:0,play:10,speed:0},{at:1200,play:10,speed:0}])).toEqual([]);
 });

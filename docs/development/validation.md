@@ -1,4 +1,8 @@
-# Validation courante — V108
+# Validation courante — V112
+
+V112 : [rotation, gestes et fusil visible](../history/validation-action-visual-v112.md), 23 contrôles ciblés, sept parcours Chromium/WebGPU V112 et historiques, mine/coupe 250² et comparaison ABBA à cent colons. Présentation seule ; schéma 109, règles, catalogue et G0–G5 inchangés. Débit ×6 non tenu à cent colons.
+
+V109–V111 : [apparences et armurerie](../history/validation-appearance-v109.md), [portraits](../history/validation-appearance-v110.md), [coiffures](../history/validation-appearance-v111.md). Leurs mesures et limites restent séparées.
 
 V108 : [réactivité des déplacements](../history/validation-latency-v108.md), 29 contrôles ciblés, quatre parcours natifs et comparaisons de délai/charge successives. Règles et schéma 106 conservés, G0–G5 inchangés. V105–V107 restent documentées dans leurs preuves spécifiques, accessibles depuis l'index.
 

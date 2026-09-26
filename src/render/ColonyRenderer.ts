@@ -303,7 +303,7 @@ export class ColonyRenderer {
     this.pawns.blend.value = resetPoses ? 1 : 0;
     this.pawns.update(world, resetPoses ? 1 : oldBlend, resetPoses);
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
-    this.wildlife.update(world,this.hasTracks?this.timeline:undefined);
+    this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses);
     this.landscape.refresh(this.backend==='WebGPU'&&this.overview.group.visible);
     this.updateHover();
   }

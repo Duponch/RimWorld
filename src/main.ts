@@ -522,7 +522,7 @@ function renderState() {
     button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
     button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn)} · ${equipmentDescription(equipment.get(pawn.id),pawn)}`;button.dataset.equipment=equipment.get(pawn.id)?.item??'';
     const rawLook=apparelAppearance(apparel.get(pawn.id)),look={...rawLook,color:rawLook.color??pawnBaseColor(pawn.id)};button.dataset.apparel=look.signature;
-    const portrait=button.querySelector<HTMLElement>('.portrait-head')!,url=portraitDataUrl(appearanceOf(pawn,world.seed),look);
+    const portrait=button.querySelector<HTMLElement>('.portrait-head')!,url=portraitDataUrl(appearanceOf(pawn,world.seed),look,equipment.get(pawn.id)?.item);
     if(portrait.dataset.source!==url){portrait.dataset.source=url;portrait.style.setProperty('--pawn-portrait',`url("${url}")`);}button.title+=` · ${look.description}`;
     (button.querySelector('.portrait-body') as HTMLElement).style.background=look.color!==undefined?`#${look.color.toString(16)}`:'';
     (button.querySelector('.portrait-vest') as HTMLElement).hidden=!look.vest;
@@ -541,7 +541,7 @@ function renderState() {
     }
   } else if (selectedPawn !== undefined) {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
-    if(pawn){const look=apparelAppearance(apparel.get(pawn.id));updatePawnAppearanceInspection(el('inspector'),world,pawn,{...look,color:look.color??pawnBaseColor(pawn.id)});}
+    if(pawn){const look=apparelAppearance(apparel.get(pawn.id));updatePawnAppearanceInspection(el('inspector'),world,pawn,{...look,color:look.color??pawnBaseColor(pawn.id)},equipment.get(pawn.id)?.item);}
     if (!pawn) {if(!updateAnimalInspector(el('inspector'),world,selectedPawn))clearSelection();}
     else if(pawn.prisoner){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updatePrisonerInspection(el('inspector'),world,pawn);}
     else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);}
