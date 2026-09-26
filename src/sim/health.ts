@@ -1,3 +1,4 @@
+import { notifyColonyLoss } from './colony-economy.ts';
 import { finishMentalBreak } from './mental-state.ts';
 import { playerInfectionFactor } from './game-profile.ts';
 import { resetTactics } from './tactics-state.ts';
@@ -18,13 +19,14 @@ function announce(world:World,message:string):void {world.events.push({tick:worl
 
 /** Actions stop at this tick. A captured edge finishes as the fall's translation:
  * no new edge, work or ingestion is performed during it (documented 3D choice). */
-export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn)):void {
+export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),externalViolence=false):void {
   if(!pawn.health)return;
   const status=medicalStatus(pawn.health,body);
   if(status!=='mobile') {
     finishMentalBreak(world,pawn,status!=='dead');
     delete pawn.draft;delete pawn.shooting;delete pawn.flee;delete pawn.melee;resetTactics(pawn);if(pawn.raid)pawn.raid.goal=null;delete pawn.stun;
     if(pawn.state!==status) {
+      if(status==='dead'||externalViolence)notifyColonyLoss(world,pawn,status==='dead'?'died':'downed');
       const wasSleeping=pawn.state==='sleeping';
       const bed=pawn.need?.kind==='sleep'&&pawn.need.phase==='sleep'&&pawn.need.bedId!==null?pawn.need:null;
       interruptWork(world,pawn);
@@ -69,5 +71,5 @@ export function injurePawn(world:World,pawn:Pawn,part:BodyPartId,kind:InjuryKind
   if(pawn.health?.death)return;
   pawn.health??=createMedicalRecord(world.tick);
   addResolvedInjury(pawn.health,part,kind,severity,()=>healthRandom(world));
-  reconcilePawnHealth(world,pawn);
+  reconcilePawnHealth(world,pawn,undefined,true);
 }

@@ -1,3 +1,4 @@
+import { createColonyEconomyUI } from './ui/colony-economy';
 import {QUALITY_LABELS} from './sim/equipment-rules';
 import {structureBeauty} from './sim/room-beauty';
 import { floraDefinition } from './sim/biome-flora';
@@ -535,7 +536,7 @@ function renderState() {
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.burning||pawn.firefighting||pawn.draft||pawn.equipmentTask||pawn.need||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
       updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn,world);
-      updateRecreationInspection(el('inspector'),pawn);
+      updateRecreationInspection(el('inspector'),pawn,world);
       roomInspection.update(el('inspector'), world, pawn);
       el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file${pawn.priorityWork?` · Priorité case ${pawn.priorityWork.cell.x}, ${pawn.priorityWork.cell.z}`:''}`;
       el<HTMLButtonElement>('clear-orders').disabled=pawn.orders.active===null&&!pawn.orders.queue.length&&!pawn.priorityWork;
@@ -639,9 +640,10 @@ function renderState() {
   if (beds < living.length) { const item = document.createElement('p'); item.dataset.alert = 'beds'; item.textContent = `${living.length - beds} couchage(s) manquant(s)`; el('status-alerts').append(item); }
   const prisoners=world.pawns.filter(p=>p.prisoner&&p.state!=='dead');
   if(prisoners.length){const item=document.createElement('p');item.dataset.alert='prisoners';item.textContent=`${prisoners.length} prisonnier(s) · ${living.some(p=>p.priorities.warden>0)?'Geôlier activé':'Geôlier désactivé'}`;el('status-alerts').append(item);}
-  arrivalUI.update(world);raidUI.update(world);heatwaveUI.update(world);tradeUI.update(world);
+  economyUI.update(world);arrivalUI.update(world);raidUI.update(world);heatwaveUI.update(world);tradeUI.update(world);
 }
 const heatwaveUI=createHeatwaveUI(command=>client.command(command));
+const economyUI=createColonyEconomyUI(el('colony-economy'),command=>client.command(command));
 const raidUI=createRaidUI(command=>client.command(command),id=>renderer?.focusPawn(id));
 const tradeUI=createTradeUI(command=>client.command(command),()=>client.setSpeed(0),id=>renderer?.focusPawn(id),async()=>{if(currentSpeed===0)await client.setSpeed(1);});
 const arrivalUI=createArrivalUI(command=>client.command(command));

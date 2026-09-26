@@ -137,6 +137,7 @@ export function gameLayout(): string {
     <section id="research-panel" class="management-panel panel" aria-label="Recherche" hidden><div class="panel-heading"><h2>Recherche</h2><button data-close-panel aria-label="Fermer Recherche">×</button></div><div id="research-content"></div></section>
     <section id="history-panel" class="management-panel history-panel panel" aria-label="Historique" hidden>
       <div class="panel-heading"><h2>Historique</h2><button data-close-panel aria-label="Fermer Historique">×</button></div>
+      <div id="colony-economy"></div>
       <div id="journal-items"></div>
     </section>
     <section id="menu-panel" class="management-panel menu-panel panel" aria-label="Menu du jeu" hidden>

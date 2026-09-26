@@ -1,3 +1,6 @@
+import {validateFurniture} from './furniture-transfer-save.ts';
+import {validateArtObjects} from './art-save.ts';
+import {isSculptureKind} from './furniture-stats.ts';
 import { validApparelShape } from './apparel-save.ts';
 import { conflictsWith } from './apparel-rules.ts';
 import { validDisturbance } from './disturbance-state.ts';
@@ -40,12 +43,12 @@ function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
   if(!object(value)||!keys(value,['id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance']))return false;
   if(!integer(value.id,1,w.nextId-1)||typeof value.name!=='string'||!value.name.trim()||value.name.length>48||!integer(value.x,0,w.width-1)||!integer(value.z,0,w.height-1)||!edge(value as unknown as Cell,w)
     ||value.faction!=='outlanders'||value.medicalCare!=='industrial'||value.state!=='idle'||!validVisitorShape(value,88,w)||!object(value.visitor)||value.visitor.phase!=='leaving'||value.visitor.goal!==null
-    ||!['hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty']:[])].every(k=>range(value[k],0,100))||value.collapsePending!==false||!integer(value.restZeroTicks,0)||!validSkills(value.skills,tick,88)||!integer(value.foodPolicyId,1)
+    ||!['hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty']:[])].every(k=>range(value[k],0,100))||value.collapsePending!==false||!integer(value.restZeroTicks,0)||!validSkills(value.skills,tick,w.schemaVersion)||!integer(value.foodPolicyId,1)
     ||w.schemaVersion>=90&&value.apparelPolicyId!==undefined&&(!integer(value.apparelPolicyId,1)||!w.apparelPolicies?.some(policy=>policy.id===value.apparelPolicyId)||typeof value.apparelAutomation!=='boolean'||!integer(value.nextApparelCheckAt,0,w.tick+APPAREL_POLICY_INTERVAL.max))
     ||!Array.isArray(value.schedule)||value.schedule.length!==24||!value.schedule.every(v=>['anything','work','sleep','recreation'].includes(String(v)))
     ||!object(value.orders)||Object.keys(value.orders).length!==2||value.orders.active!==null||!Array.isArray(value.orders.queue)||value.orders.queue.length!==0
     ||!['jobId','haul','cooking','need','bedId'].every(k=>value[k]===null)||!Array.isArray(value.path)||value.path.length!==0||value.moveCooldown!==0||!integer(value.needCooldown,0)||!integer(value.planCooldown,0)
-    ||!object(value.priorities)||Object.keys(value.priorities).length!==(w.schemaVersion>=89&&value.priorities.clean!==undefined?16:15)||!Object.keys(value.priorities).every(k=>[...(w.schemaVersion>=89?['clean']:[]),'firefight','warden','basic','hunt','research','patient','bedrest','doctor','mine','gather','build','haul','grow','cook','craft'].includes(k))||!Object.values(value.priorities).every(v=>v===0))return false;
+    ||!object(value.priorities)||Object.keys(value.priorities).length!==15+(w.schemaVersion>=89&&value.priorities.clean!==undefined?1:0)+(w.schemaVersion>=104&&value.priorities.art!==undefined?1:0)||!Object.keys(value.priorities).every(k=>[...(w.schemaVersion>=89?['clean']:[]),...(w.schemaVersion>=104?['art']:[]),'firefight','warden','basic','hunt','research','patient','bedrest','doctor','mine','gather','build','haul','grow','cook','craft'].includes(k))||!Object.values(value.priorities).every(v=>v===0))return false;
   const r=value.recreation;
   if(!object(r)||!keys(r,['level','tolerance','bored','task'])||!range(r.level,0,100)||r.task!==null||!object(r.tolerance)||!object(r.bored))return false;
   const tolerance=r.tolerance,bored=r.bored;
@@ -78,13 +81,18 @@ export function validateVisitors(w:World,version:number,ids:Set<number>):string[
     ||state.introAt!==null&&(state.adoptedAt!==0||state.introAt!==INTRO_VISITOR_TICK||w.tick>=INTRO_VISITOR_TICK)||!validAgenda(state.traveler,'traveler',w)||!validAgenda(state.visitor,'visitor',w)||!Array.isArray(state.groups)||state.groups.length>w.width*w.height||!Array.isArray(state.departed)||state.departed.length>w.width*w.height)return ['Invalid visitor calendar.'];
   const errors:string[]=[],s=w.visitors!,groups=new Set<number>(),members=new Set<number>(),departed=new Set<number>();
   for(const d of s.departed){
-    if(!object(d)||Object.keys(d).length!==4||!integer(d.group,1,s.serial)||!integer(d.tick,s.adoptedAt,w.tick)||!validArchivedPawn(d.pawn,w,d.tick)||!Array.isArray(d.items)||d.items.length>32768){errors.push('Invalid frozen visitor departure.');continue;}
+    if(!object(d)||!keys(d,['group','tick','pawn','items',...(version>=105?['packed']:[])])||d.packed!==undefined&&(version<105||!Array.isArray(d.packed)||d.packed.length===0||d.packed.length>32768)||!integer(d.group,1,s.serial)||!integer(d.tick,s.adoptedAt,w.tick)||!validArchivedPawn(d.pawn,w,d.tick)||!Array.isArray(d.items)||d.items.length>32768){errors.push('Invalid frozen visitor departure.');continue;}
     const p=d.pawn;if(ids.has(p.id)||p.visitor!.group!==d.group||departed.has(p.id)){errors.push('Duplicate visitor departure identity.');continue;}ids.add(p.id);departed.add(p.id);
     const worn:MaterialPile[]=[];let equipped=0;
     for(const pile of d.items){
       if(!validExportedPile(pile,p.id,d.tick,w)||ids.has(pile.id)){errors.push('Invalid exported visitor possession.');continue;}ids.add(pile.id);
       if(pile.owner.type==='equipment'&&++equipped>1)errors.push('Duplicate exported primary equipment.');
       if(pile.owner.type==='apparel'){if(worn.some(other=>conflictsWith(other,pile)))errors.push('Conflicting exported apparel.');worn.push(pile);}
+    }
+    for(const pack of d.packed??[]){
+      if(!object(pack)||!object(pack.building)||!object(pack.owner)||!isSculptureKind(pack.building.kind)||pack.owner.type!=='inventory'||pack.owner.pawnId!==p.id){errors.push('Invalid exported sculpture.');continue;}
+      const view={...w,tick:d.tick,packed:[pack],structures:[],jobs:[],piles:[],pawns:[...w.pawns,p]};
+      errors.push(...validateFurniture(view,version,ids,true),...validateFurniture(view,version,new Set(),false),...validateArtObjects(view,version));
     }
     if(!p.visitor!.personalFoodIds.every(id=>d.items.some(i=>i.id===id&&i.kind==='food'&&i.owner.type==='inventory')))errors.push('Invalid exported visitor food.');
   }

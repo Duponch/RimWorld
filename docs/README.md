@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V105 — patrimoine, attentes, menaces et commerce artistique** : [contrat](development/colony-economy.md), [preuves](history/validation-economy-v105.md). Richesse explicitement partielle, adoption prospective, œuvres vendables et démonstration directement dans Charger.
+
 **V104 — sculpture et décoration** : [contrat](development/art.md), [référence Core](research/art-reference-v104.md), [preuves](history/validation-art-v104.md). Les démonstrations V101/V103/V104 se chargent directement depuis la bibliothèque du jeu.
 
 **V103 : pièces vécues et humeur.** Richesse, espace et impression complètent l'inspection ; repas, fers et sommeil produisent des souvenirs depuis leurs usages réels. Migration neutre, calcul local de pièce et [démonstration préparée](../public/test-saves/v103/salles.json). [Contrat](development/room-quality.md), [références](research/room-impressiveness-reference-v103.md), [preuves et limites](history/validation-rooms-v103.md). Art/sculpture reste préparatoire, sans nouvel objet de catalogue.

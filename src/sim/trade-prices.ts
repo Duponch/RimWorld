@@ -41,6 +41,16 @@ export function tradeUnitPrice(pile:MaterialPile,direction:TradeDirection,improv
   if(direction==='buy')return buy;
   return Math.min(buy,roundUnit(Math.max(.01,marketValue*.6*entry.sellPriceFactor*(1-priceLoss)*(1+improvement))));
 }
+/** Only authored sculptures have the Art tag in the delivered visitor profile.
+ * The room value routine already applies stuff, work, quality, HP and Core's
+ * market-value rounding. Selling then uses the sculpture's 1.10 factor. */
+export function sculptureTradeUnitPrice(value:number,direction:TradeDirection,improvement:number):number|undefined {
+  if(!Number.isFinite(improvement)||improvement<0||improvement>.395)return undefined;
+  if(!Number.isFinite(value)||value<=0)return undefined;
+  const roundUnit=(n:number)=>n>99.5?roundTradeSilver(n):n;
+  const buy=roundUnit(Math.max(.5,value*1.4*(1-improvement)));
+  return direction==='buy'?buy:Math.min(buy,roundUnit(Math.max(.01,value*.6*1.1*(1+improvement))));
+}
 /** Only the small outlander visitor profile is delivered, not every merchant type. */
 export function tradeRefusal(pile:MaterialPile,direction:TradeDirection,tick:number):string|undefined {
   const entry=tradeCatalogueEntry(pile.item);

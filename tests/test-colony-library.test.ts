@@ -21,22 +21,22 @@ test('test catalogue rejects invalid paths, duplicate identities and inconsisten
   expect(parseTestColonies(legacy)).toEqual([save]);
   expect(()=>parseTestColonies({...legacy,release:'v103'})).toThrow('invalide');
 });
-test('published catalogue keeps six V98 entries and lists the V101/V103/V104 demonstrations with exact bytes and valid migration',async()=>{
+test('published catalogue keeps six V98 entries and lists the V101/V103/V104/V105 demonstrations with exact bytes and valid migration',async()=>{
   const manifest=JSON.parse(readFileSync('public/test-saves/manifest.json','utf8'));
   const legacy=JSON.parse(readFileSync('public/test-saves/v98/manifest.json','utf8'));
   const entries=parseTestColonies(manifest);
-  expect(entries).toHaveLength(9);
+  expect(entries).toHaveLength(10);
   expect(entries.slice(0,6).map(({release,...entry})=>{expect(release).toBe('v98');return entry;})).toEqual(legacy.saves);
-  for(const [id,release,filename,schemaVersion] of [['atelier-v101','v101','atelier.json',101],['salles-v103','v103','salles.json',103],['art-v104','v104','sculpture.json',104]] as const){
+  for(const [id,release,filename,schemaVersion] of [['atelier-v101','v101','atelier.json',101],['salles-v103','v103','salles.json',103],['art-v104','v104','sculpture.json',104],['economie-v105','v105','economie.json',105]] as const){
     const entry=entries.find(e=>e.id===id)!;
-    expect(entry).toMatchObject({release,filename,pawns:1,colonists:1,width:32,height:32,prepared:true});
+    expect(entry).toMatchObject({release,filename,pawns:id==='economie-v105'?2:1,colonists:1,width:32,height:32,prepared:true});
     const raw=readFileSync(`public/test-saves/${release}/${filename}`,'utf8');
     expect(createHash('sha256').update(raw).digest('hex')).toBe(entry.sha256);
     const original=JSON.parse(raw);
     expect(original).toMatchObject({schemaVersion,tick:entry.tick,width:entry.width,height:entry.height});
     expect(original.pawns).toHaveLength(entry.pawns);
     const world=deserializeWorld(raw);
-    expect(world).toEqual(schemaVersion===104?original:{...original,schemaVersion:104,pawns:original.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0}}))});
+    expect(world).toEqual(schemaVersion>=104?{...original,schemaVersion:105}:{...original,schemaVersion:105,pawns:original.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0}}))});
     expect(validateWorld(world)).toEqual([]);
   }
   vi.stubGlobal('fetch',vi.fn(async(url:string)=>new Response(readFileSync(`public${url}`,'utf8'))));

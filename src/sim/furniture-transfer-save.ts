@@ -31,7 +31,7 @@ export function validateFurniture(world:World,version:number,ids:Set<number>,sha
     if(!integer(b.id,1)||b.id>=world.nextId||!minifiable(b.kind)||version<31&&b.kind==='stonecutter'||version<73&&(b.kind==='research-bench'||b.kind==='tailor-bench')||version<42&&b.kind==='standing-lamp'||version<85&&b.kind==='battery'||version<84&&isFoodWorkstation(b.kind)||version<90&&b.kind==='electric-tailor-bench'||version<101&&b.kind==='machining-table'||version<104&&['art-bench','small-sculpture','large-sculpture'].includes(b.kind)||!cell(b)||!integer(b.orientation)||b.orientation>3||footprintCells(b).some(c=>!cell({x:c.x,z:c.z}))||!['standard','legacy-single'].includes(b.footprint)||b.footprint==='legacy-single'&&b.kind!=='bed'||b.fuel!==undefined&&b.kind!=='fueled-stove'||b.bills!==undefined&&(version<32||b.kind!=='stonecutter'&&!(version>=73&&b.kind==='tailor-bench')&&!(version>=90&&b.kind==='electric-tailor-bench')&&!(version>=101&&b.kind==='machining-table')&&!(version>=104&&b.kind==='art-bench')&&!(version>=84&&isFoodWorkstation(b.kind))))errors.push('Invalid packed building.');
     if(b.kind==='fueled-stove'){const f=b.fuel;if(version<84||!record(f)||!integer(f.ticks)||f.ticks>fuelLimit(b.kind)||!integer(f.burned)||f.burned>world.tick*16||typeof f.autoRefuel!=='boolean'||Object.keys(f).some(k=>!['ticks','burned','autoRefuel'].includes(k)))errors.push('Invalid packed stove fuel.');}
     if(shapesOnly){if(ids.has(b.id))errors.push('Duplicate furniture identity.');ids.add(b.id);}
-    if(Object.keys(pack).some(k=>!['building','owner'].includes(k))||Object.keys(o).some(k=>!(o.type==='ground'?['type','x','z']:['type','pawnId']).includes(k))||(o.type==='ground'?!cell(o):o.type==='pawn'?!integer(o.pawnId,1):true))errors.push('Invalid furniture owner.');
+    if(Object.keys(pack).some(k=>!['building','owner'].includes(k))||Object.keys(o).some(k=>!(o.type==='ground'?['type','x','z']:['type','pawnId']).includes(k))||(o.type==='ground'?!cell(o):o.type==='pawn'||version>=105&&o.type==='inventory'?!integer(o.pawnId,1):true))errors.push('Invalid furniture owner.');
   }
   if(errors.length)return errors;
   const seen=new Set<number>();
@@ -41,6 +41,7 @@ export function validateFurniture(world:World,version:number,ids:Set<number>,sha
     if(!['install','uninstall'].includes(job.kind)){if(f!==undefined)errors.push('Unexpected furniture target.');continue;}
     if(!record(f)||!integer(f.structureId,1)||!minifiable(f.kind)||version<31&&f.kind==='stonecutter'||version<73&&(f.kind==='research-bench'||f.kind==='tailor-bench')||version<42&&f.kind==='standing-lamp'||version<85&&f.kind==='battery'||version<84&&isFoodWorkstation(f.kind)||version<90&&f.kind==='electric-tailor-bench'||version<101&&f.kind==='machining-table'||version<104&&['art-bench','small-sculpture','large-sculpture'].includes(f.kind)||Object.keys(f).some(k=>!['structureId','kind'].includes(k))){errors.push('Invalid furniture target.');continue;}
     const source=furnitureObject(world,f.structureId);
+    if(world.packed.some(p=>p.building.id===f.structureId&&p.owner.type==='inventory'))errors.push('Merchant possession has a colonial furniture order.');
     if(!source||source.kind!==f.kind||source.footprint!==job.footprint||seen.has(f.structureId)||job.deconstruction!==undefined||job.growingZoneId!==undefined||job.escrow.wood||job.escrow.food)errors.push('Invalid or duplicated furniture intent.');
     seen.add(f.structureId);
     if(['standing-lamp','small-sculpture','large-sculpture'].includes(f.kind)&&job.orientation!==0)errors.push('Lamp installation cannot rotate.');
@@ -58,6 +59,9 @@ export function validateFurniture(world:World,version:number,ids:Set<number>,sha
       const key=o.z*world.width+o.x;
       if(ground.has(key)||!groundOccupancyAllows(world,o)||world.piles.some(p=>p.owner.type==='ground'&&p.owner.x===o.x&&p.owner.z===o.z))errors.push('Furniture ground slot is occupied.');
       ground.add(key);
+    } else if(o.type==='inventory') {
+      const trader=world.pawns.find(p=>p.id===o.pawnId);
+      if(version<105||!isSculptureKind(pack.building.kind)||trader?.visitor?.role!=='trader'||trader.body?.lostAt!==undefined)errors.push('Invalid merchant furniture inventory.');
     } else {
       const pawn=world.pawns.find(p=>p.id===o.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
       const artOutput=version>=104&&isSculptureKind(pack.building.kind)&&isArtRecipe(pawn?.cooking?.recipe)

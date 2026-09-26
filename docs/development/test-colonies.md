@@ -1,5 +1,7 @@
 # Bibliothèque de colonies de test — V98, V101, V103 et V104
 
+**V105 :** dix colonies dans le manifeste commun. « Art et commerce · 1 colon » propose un visiteur et une œuvre préparée pour adopter le suivi, contacter, vendre puis sauvegarder. Les neuf fichiers historiques restent inchangés ; [générateur](../../scripts/generate-economy-demo.ts).
+
 **Charger une partie → Colonies de test** propose directement neuf situations, depuis l'accueil ou Menu : les six références V98 inchangées et trois démonstrations préparées. Il suffit de choisir **Charger cette colonie** ; téléchargement et import manuel ne sont plus nécessaires. Chaque copie s'ouvre en pause et le jeu continue normalement après reprise.
 
 V101 ajoute [l'atelier](../../public/test-saves/v101/atelier.json) : recherches et matières initiales préparées, atelier construit par le vrai moteur, aucune arme fabriquée d'avance. `node --experimental-strip-types scripts/machining-demo-v101.ts` régénère et recharge exactement ce fichier. V103 ajoute [les salles](../../public/test-saves/v103/salles.json) : pièces meublées, fleurs et repas préparés, sans souvenir prérempli ; l'ingestion et les pensées suivent la simulation. Ces deux démonstrations ne sont pas des colonies autonomes. [Preuves V98](../history/validation-test-colonies-v98.md), [V101](../history/validation-machining-v101.md) et [V103](../history/validation-rooms-v103.md).

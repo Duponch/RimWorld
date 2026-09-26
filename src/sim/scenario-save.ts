@@ -6,7 +6,7 @@ const coordinate=(value:unknown,limit:number)=>typeof value==='number'&&Number.i
  * never a promise about the population, terrain or stocks of an advanced game. */
 export function validScenario(value:unknown,version:number,width:number,height:number):boolean {
   if(value===undefined)return true;
-  if(version<80||!record(value)||Object.keys(value).length!==3||!Object.keys(value).every(k=>['id','revision','landing'].includes(k))||!isScenarioId(value.id)||!(value.revision===SCENARIO_REVISION||version>=83&&value.id==='crashlanded'&&value.revision===2||version>=88&&value.id==='crashlanded'&&value.revision===3||version>=89&&value.id==='crashlanded'&&value.revision===4||version>=90&&value.id==='crashlanded'&&value.revision===5||version>=91&&value.id==='crashlanded'&&value.revision===6)||!record(value.landing))return false;
+  if(version<80||!record(value)||Object.keys(value).length!==3||!Object.keys(value).every(k=>['id','revision','landing'].includes(k))||!isScenarioId(value.id)||!(value.revision===SCENARIO_REVISION||version>=83&&value.id==='crashlanded'&&value.revision===2||version>=88&&value.id==='crashlanded'&&value.revision===3||version>=89&&value.id==='crashlanded'&&value.revision===4||version>=90&&value.id==='crashlanded'&&value.revision===5||version>=91&&value.id==='crashlanded'&&value.revision===6||version>=105&&value.id==='crashlanded'&&value.revision===7)||!record(value.landing))return false;
   if(width<SCENARIOS[value.id].minSize||height<SCENARIOS[value.id].minSize)return false;
   if(value.id==='crashlanded'&&version<82)return false;
   const landing=value.landing;

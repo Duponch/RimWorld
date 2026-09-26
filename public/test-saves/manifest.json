@@ -227,6 +227,31 @@
       "prepared": true,
       "provenance": "Démonstration V104 préparée à partir des salles V103 : atelier, niveau Artistique et matières fournis ; la grande sculpture a été fabriquée et installée par les vrais travaux du moteur.",
       "sha256": "0c55c4d8172f33de1885d31a096ac680ab6ce45efd1ac81a67b29c597bb0b7f3"
+    },
+    {
+      "id": "economie-v105",
+      "release": "v105",
+      "label": "Art et commerce · 1 colon",
+      "description": "Un petit marchand présent, une sculpture minifiée et de l’argent : suivre le patrimoine puis vendre l’œuvre.",
+      "filename": "economie.json",
+      "pawns": 2,
+      "colonists": 1,
+      "width": 32,
+      "height": 32,
+      "tick": 15000,
+      "focus": [
+        "commerce",
+        "sculpture",
+        "patrimoine",
+        "attentes"
+      ],
+      "steps": [
+        "Ouvrir Historique et activer le suivi économique.",
+        "Contacter le marchand, vendre la petite sculpture puis examiner le paiement et sauvegarder."
+      ],
+      "prepared": true,
+      "provenance": "Situation préparée ; visiteur créé par le moteur à son introduction. Sculpture et ressources fournies pour un essai immédiat, aucune progression naturelle revendiquée.",
+      "sha256": "79bb80341733624a859cc53c222b91bccfa0b6057f82699cb92f98a0dc669789"
     }
   ]
 }

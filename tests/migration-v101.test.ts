@@ -11,7 +11,7 @@ import { withoutArt } from './scenarios/legacy-skills';
 test('immutable V90 colony migrates neutrally through V91, V101 and V103 to V104',()=>{
   const text=gunzipSync(readFileSync('tests/fixtures/colony-v90.json.gz')).toString('utf8');
   const old=JSON.parse(text),world=deserializeWorld(text);
-  expect(world).toEqual({...old,schemaVersion:104,pawns:old.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0}}))});
+  expect(world).toEqual({...old,schemaVersion:105,pawns:old.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0}}))});
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
 });

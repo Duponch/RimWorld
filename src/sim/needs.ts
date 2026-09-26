@@ -1,3 +1,4 @@
+import { colonyExpectation } from './colony-economy.ts';
 import { malnutritionModifiers } from './malnutrition.ts';
 import { advanceRoomRest } from './room-experience.ts';
 import { resetTactics } from './tactics-state.ts';
@@ -108,7 +109,7 @@ export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capaci
   pawn.hunger = Math.max(0, pawn.hunger - (world.foodRules === 'legacy' ? 0.015 : HUNGER_PER_TICK * adultHungerFactor(pawn.hunger)) * malnutritionModifiers(pawn.health?.malnutrition).hungerFactor);
   updateRest(world, pawn);
   advanceRoomRest(world,pawn);
-  if(!pawn.prisoner)updateRecreation(pawn,body);
+  if(!pawn.prisoner)updateRecreation(pawn,body,(colonyExpectation(world,pawn)?.joyToleranceDropPerDay??.18)*100/TICKS_PER_DAY);
   if (pawn.needCooldown > 0) pawn.needCooldown--;
   updateWellbeing(world, pawn,body,readFurnitureSight);
 }

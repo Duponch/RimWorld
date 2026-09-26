@@ -1,0 +1,35 @@
+{
+  "backend": "WebGPU",
+  "fixture": "economie-v105",
+  "prepared": true,
+  "adoptedAt": 15000,
+  "initialWealth": 358.20000000000005,
+  "artId": 191,
+  "merchantId": 183,
+  "saleSilver": 99,
+  "soldTick": 15120,
+  "receipt": {
+    "tick": 15120,
+    "negotiatorId": 182,
+    "traderId": 183,
+    "silver": -99,
+    "forgone": 0,
+    "lines": [
+      {
+        "packedId": 191,
+        "kind": "small-sculpture",
+        "material": "marble-blocks",
+        "quality": "good",
+        "damage": 0,
+        "art": {
+          "authorId": 182,
+          "createdAt": 15000
+        },
+        "quantity": -1,
+        "unitPrice": 98.60400000000001
+      }
+    ]
+  },
+  "restored": true,
+  "errors": []
+}

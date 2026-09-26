@@ -1,3 +1,4 @@
+import { adoptColonyEconomy } from './colony-economy.ts';
 import { enableVisitors } from './visitors.ts';
 import { enableArrivals } from './arrivals.ts';
 import { enableCassandraRaids } from './cassandra-raids.ts';
@@ -104,6 +105,6 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
   }
   world.scenario={id,revision:id==='crashlanded'?SCENARIOS.crashlanded.revision:SCENARIO_REVISION,landing};
   if(natural)adoptEnvironment(world);
-  if(id==='crashlanded')enableVisitors(world,true);
+  if(id==='crashlanded'){enableVisitors(world,true);adoptColonyEconomy(world);}
   return world;
 }

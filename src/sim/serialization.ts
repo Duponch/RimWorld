@@ -10,6 +10,7 @@ import { validFoodContamination } from './food-poisoning-save.ts';
 import { validVisitorShape,validateVisitors } from './visitor-save.ts';
 import { validTradeShape,validateTrade } from './trade-save.ts';
 import { validateFires,validateThingDamage } from './fire-save.ts';
+import { validateColonyEconomy } from './colony-economy-save.ts';
 import { validSiteClimate } from './site-climate-save.ts';
 import { validPlantLife } from './plant-life-save.ts';
 import { validateWeather } from './weather-save.ts';
@@ -118,7 +119,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -330,6 +331,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   const world = input as unknown as World;
   errors.push(...validateFlooring(world,version),...validateFilth(world,version,ids),...validateBurials(world,version,ids));
   if(errors.length)return errors;
+  errors.push(...validateColonyEconomy(world,version));
   errors.push(...validateGameProfile(world));
   errors.push(...validateRaids(world,version,ids));
   if(!errors.length)errors.push(...validatePrisoners(world,version,ids));
@@ -754,6 +756,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===91){const errors=validateSchema(input,91);if(errors.length)throw new Error('Invalid version 91 save: '+errors.join(' '));input.schemaVersion=101;}
   if(record(input)&&input.schemaVersion===101){const errors=validateSchema(input,101);if(errors.length)throw new Error('Invalid version 101 save: '+errors.join(' '));input.schemaVersion=103;}
   if(record(input)&&input.schemaVersion===103){const errors=validateSchema(input,103);if(errors.length)throw new Error('Invalid version 103 save: '+errors.join(' '));input.schemaVersion=104;for(const pawn of (input as unknown as World).pawns)pawn.priorities.art=0;}
+  if(record(input)&&input.schemaVersion===104){const errors=validateSchema(input,104);if(errors.length)throw new Error('Invalid version 104 save: '+errors.join(' '));input.schemaVersion=105;}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

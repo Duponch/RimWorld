@@ -1,0 +1,70 @@
+{
+  "url": "https://lisiere-duponch.netlify.app",
+  "checkedAt": "2026-09-26T00:27:55.439Z",
+  "errors": [],
+  "bundle": [
+    {
+      "file": "index.html",
+      "sha256": "14ba6716f0e0deea2d41671a7500054729c3aefe563e05be66544fda556a0b1a",
+      "bytes": 1025
+    },
+    {
+      "file": "assets/game-BeUXPSbv.css",
+      "sha256": "d91626645e4fd1362995f6c24b9319f0a032b11dbef0b7b9a2dced74a6fa438a",
+      "bytes": 96910
+    },
+    {
+      "file": "assets/game-qD2M3hSt.js",
+      "sha256": "9ad8b81e9e5d98c9767f252ec007a0800762478a2eb3e49284602ddb667621df",
+      "bytes": 1320857
+    },
+    {
+      "file": "assets/navigation-Be_IfcT4.css",
+      "sha256": "6685dcc48820269c7a80179963a71e6dbcde46f61705628847b90b27f57667b6",
+      "bytes": 1618
+    },
+    {
+      "file": "assets/navigation-DuF7OdKR.js",
+      "sha256": "8a464fcc5399d64df6fed086708bcef1b62c1649dc0ae74938a25be819126b16",
+      "bytes": 18297
+    },
+    {
+      "file": "assets/sim-BF8dxh1S.js",
+      "sha256": "4fba44a524c78972a3e454f1523e5d793805288cf3d2f379a5908c12da94124d",
+      "bytes": 234855
+    },
+    {
+      "file": "assets/simulation.worker-DYYOkMXn.js",
+      "sha256": "65d2ddf5823829fd54b03d4e8960ba37953e2e502055356321e084d26b499bb7",
+      "bytes": 857534
+    }
+  ],
+  "colonies": [
+    {
+      "id": "salles-v103",
+      "sha256": "e698c0fd4e1fa7e01da81dab6f3eb2c7fdd0bb6f873fde804879e783ec7cb9cf",
+      "tick": 2000,
+      "schema": 105,
+      "exactLoadAndSave": true
+    },
+    {
+      "id": "art-v104",
+      "sha256": "0c55c4d8172f33de1885d31a096ac680ab6ce45efd1ac81a67b29c597bb0b7f3",
+      "tick": 8516,
+      "schema": 105,
+      "exactLoadAndSave": true
+    },
+    {
+      "id": "economie-v105",
+      "sha256": "79bb80341733624a859cc53c222b91bccfa0b6057f82699cb92f98a0dc669789",
+      "tick": 15000,
+      "schema": 105,
+      "exactLoadAndSave": true
+    }
+  ],
+  "work": {
+    "client": 1356,
+    "scroll": 1356
+  },
+  "passed": true
+}

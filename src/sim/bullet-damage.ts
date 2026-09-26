@@ -20,6 +20,6 @@ export function damageUnarmoredPawnWithBullet(world:World,pawn:Pawn,hit:Unarmore
   const protection=apparelProtection(world,pawn,'sharp',penetration,()=>healthRandom(randomState));
   const impact=resolveUnarmoredBullet(pawn.health??createMedicalRecord(world.tick),hit,()=>healthRandom(randomState),protection.protect);
   if(!impact.selected)return impact;
-  protection.commit();world.rng=randomState.rng;pawn.health=impact.record;reconcilePawnHealth(world,pawn);
+  protection.commit();world.rng=randomState.rng;pawn.health=impact.record;reconcilePawnHealth(world,pawn,undefined,true);
   return impact;
 }

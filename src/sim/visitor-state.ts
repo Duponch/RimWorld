@@ -5,7 +5,7 @@ export type VisitorKind='traveler'|'visitor';
 export interface VisitorState {group:number;role:'traveler'|'visitor'|'trader';phase:VisitorPhase;goal:Cell|null;personalFoodIds:number[]}
 export interface VisitorGroup {id:number;kind:VisitorKind;members:number[];entry:Cell;spot:Cell;phase:VisitorPhase;startedAt:number;arrivedAt:number|null;durationCore:number;hostile:boolean;reason?:'timeout'|'danger'|'hostile'|'blocked'}
 /** Frozen departure evidence, not a simulated world population. */
-export interface VisitorDeparture {group:number;tick:number;pawn:Pawn;items:MaterialPile[]}
+export interface VisitorDeparture {group:number;tick:number;pawn:Pawn;items:MaterialPile[];packed?:import('./furniture-rules.ts').PackedFurniture[]}
 export interface VisitorAgenda {rng:number;cycle:number;last:number;pending:number[]}
 export interface VisitorCalendar {profile:'cassandra-visitors-v1';adoptedAt:number;rng:number;serial:number;introAt:number|null;traveler:VisitorAgenda;visitor:VisitorAgenda;groups:VisitorGroup[];departed:VisitorDeparture[]}
 export const VISITOR_YEAR=60*TICKS_PER_DAY;

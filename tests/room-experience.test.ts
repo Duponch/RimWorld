@@ -109,7 +109,7 @@ test('immutable V101 workshop migrates without adding a thought, clock, material
   const raw=JSON.parse(readFileSync('public/test-saves/v101/atelier.json','utf8'));
   expect(raw.schemaVersion).toBe(101);
   const migrated=deserializeWorld(JSON.stringify(raw));
-  expect(migrated).toEqual({...raw,schemaVersion:104,pawns:raw.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0}}))});
+  expect(migrated).toEqual({...raw,schemaVersion:105,pawns:raw.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0}}))});
   expect(validateWorld(migrated)).toEqual([]);
 });
 

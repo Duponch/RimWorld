@@ -83,7 +83,7 @@ export function damageStructure(world:World,s:Structure,amount:number):boolean {
   const packed=world.packed.find(p=>p.building===s),installed=world.structures.includes(s),max=structureMaxHp(s);
   if(!max||!positive(amount)||!installed&&!packed)return false;
   const damage=(s.damage??0)+amount;if(damage<max){s.damage=damage;return true;}
-  const owner=packed?.owner,origin=owner?.type==='ground'?owner:owner?.type==='pawn'?world.pawns.find(p=>p.id===owner.pawnId)??s:s;
+  const owner=packed?.owner,origin=owner?.type==='ground'?owner:owner?.type==='pawn'||owner?.type==='inventory'?world.pawns.find(p=>p.id===owner.pawnId)??s:s;
   // Refusing a fatal hit must not create a fire ledger or advance its stream.
   const state=world.fires??ensureFireState({...world});
   const ids=new Set(world.jobs.filter(j=>j.repair?.structureId===s.id||j.deconstruction?.structureId===s.id||j.furniture?.structureId===s.id||j.flick?.structureId===s.id).map(j=>j.id));

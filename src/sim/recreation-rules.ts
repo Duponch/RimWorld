@@ -14,11 +14,11 @@ export const TOLERANCE_FALL = 18 / TICKS_PER_DAY;
 export const recreationKind = (activity: RecreationActivity): RecreationKind => activity === 'horseshoes' ? 'dexterity' : 'solitary';
 export const initialRecreation = (level = 55): RecreationNeed => ({level, tolerance: {solitary: 0, dexterity: 0}, bored: {solitary: false, dexterity: false}, task: null});
 
-export function updateRecreation(pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment): void {
+export function updateRecreation(pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment,toleranceFall=TOLERANCE_FALL): void {
   if (pawn.mental?.crisis||pawn.state === 'sleeping'||pawn.state==='dead'||pawn.medicalSleep||pawn.health&&(body??pawnBody(pawn)).capacities.consciousness<.3) return;
   const joy = pawn.recreation;
   for (const kind of RECREATION_KINDS) {
-    joy.tolerance[kind] = Math.max(0, joy.tolerance[kind] - TOLERANCE_FALL);
+    joy.tolerance[kind] = Math.max(0, joy.tolerance[kind] - toleranceFall);
     if (joy.tolerance[kind] < 30) joy.bored[kind] = false;
   }
   if (pawn.state !== 'recreating' || joy.task?.phase !== 'active') {

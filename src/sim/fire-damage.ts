@@ -36,7 +36,7 @@ export function burnPawn(world:World,pawn:Pawn,amount:number):boolean {
   const worn=world.piles.filter(p=>p.owner.type==='apparel'&&p.owner.pawnId===pawn.id).map(p=>({id:p.id,item:p.item,quantity:p.quantity}));
   const guard=apparelProtection(world,pawn,'heat',0,random),penetrated=localizedBurn(record,amount,random,guard.protect);guard.commit();
   for(const p of worn)if(!world.piles.some(i=>i.id===p.id))state.ledger.items[p.item]=(state.ledger.items[p.item]??0)+p.quantity;
-  pawn.health=record;reconcilePawnHealth(world,pawn);
+  pawn.health=record;reconcilePawnHealth(world,pawn,undefined,true);
   const apparel=world.piles.filter(p=>p.owner.type==='apparel'&&p.owner.pawnId===pawn.id);
   if(apparel.length)damagePile(world,apparel[Math.floor(random()*apparel.length)]!,amount);return penetrated;
 }

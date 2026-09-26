@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 104 as const;
+export const SCHEMA_VERSION = 105 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -151,6 +151,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  economy?:import('./colony-economy.ts').ColonyEconomy;
   apparelWear?:import('./apparel-renewal.ts').ApparelWearState;
   apparelPolicies?:import('./apparel-policy.ts').ApparelPolicy[];
   nextApparelPolicyId?:number;
@@ -215,6 +216,7 @@ export type AreaAction = 'lay-floor' | 'remove-floor' | 'home' | 'remove-home' |
 export interface StorageSettings { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; floor?: import('./flooring.ts').FloorKind }
 export type Command = import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
+  | {type:'adopt-economy'}
   | {type:'climate-adopt'}
   | {type:'heater-adjust';structureId:number;offset:-10|-1|1|10|null}
   | {type:'wind-auto-cut';structureId:number;enabled:boolean}

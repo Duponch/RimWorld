@@ -17,6 +17,7 @@ export function installCommand(world:World,command:Extract<Command,{type:'instal
   if(!source||!minifiable(source.kind))return fail('Ce meuble ne peut pas être installé.');
   if(world.jobs.some(j=>j.flick?.structureId===source.id||j.furniture?.structureId===source.id||j.deconstruction?.structureId===source.id))return fail('Un ordre existe déjà pour ce meuble.');
   const pack=world.packed.find(p=>p.building.id===source.id);
+  if(pack?.owner.type==='inventory')return fail('Cette œuvre appartient à un marchand.');
   if(pack?.owner.type==='pawn')return fail('Ce meuble est porté par un colon.');
   if(!Number.isInteger(command.orientation)||command.orientation<0||command.orientation>3)return fail('Orientation invalide.');
   if(['standing-lamp','small-sculpture','large-sculpture'].includes(source.kind)&&command.orientation!==0)return fail('Cette lampe ne pivote pas.');

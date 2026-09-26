@@ -1,11 +1,22 @@
 import { validApparelShape,validateApparel } from './apparel-save.ts';
-import { validCassandraAgenda } from './cassandra-raids.ts';
+import { CASSANDRA_CYCLE_START,validCassandraAgenda } from './cassandra-raids.ts';
 import { validWeaponShape,validateEquipment } from './equipment-save.ts';
+import { RAID_ROLE_COST,pirateMaxPawnCost } from './raid-state.ts';
 import { TICKS_PER_DAY,type World } from './types.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const keys=(v:Record<string,unknown>,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
+function validComposition(value:unknown,count:number,version:number,cassandra:boolean,economy:boolean):boolean {
+  if(version<105||!cassandra||!economy||!object(value)||!keys(value,['budget','roster'])||
+    typeof value.budget!=='number'||!Number.isFinite(value.budget)||value.budget<35||value.budget>10000||
+    !Array.isArray(value.roster)||value.roster.length!==count||count<1||count>Math.floor(value.budget/35))return false;
+  let spent=0;
+  const maxCost=pirateMaxPawnCost(value.budget);
+  for(const role of value.roster){if(typeof role!=='string'||!Object.hasOwn(RAID_ROLE_COST,role))return false;
+    const cost=RAID_ROLE_COST[role as keyof typeof RAID_ROLE_COST];if(cost>maxCost)return false;spent+=cost;}
+  return spent<=value.budget&&value.budget-spent<35;
+}
 export function validateRaids(w:World,version:number,ids:Set<number>):string[] {
   const errors:string[]=[],state:unknown=w.raids;
   const cell=(v:unknown):boolean=>object(v)&&Object.keys(v).length===2&&integer(v.x,0,w.width-1)&&integer(v.z,0,w.height-1);
@@ -20,7 +31,8 @@ export function validateRaids(w:World,version:number,ids:Set<number>):string[] {
   // exceed one cycle; a rolling cycle-length bound would reject that save.
   const validNext=a===undefined?(cassandra?s.nextCheck===s.cassandra!.pending[0]:integer(s.nextCheck,w.tick+1,w.tick+8*TICKS_PER_DAY)):s.nextCheck===null;
   if(s.completed!==s.serial-(a===undefined?0:1)||!validNext)errors.push('Invalid raid schedule or count.');
-  if(s.completed===0?last!==undefined:!object(last)||!keys(last,['id','tick','reason','killed','downed','escaped',...(version>=86?['captured']:[])])||last.id!==s.completed||!integer(last.tick,0,w.tick)||!['defended','withdrawn','colony-down'].includes(String(last.reason))||!['killed','downed','escaped'].every(k=>integer(last[k],0,2))||last.captured!==undefined&&(version<86||!integer(last.captured,1,2))||Number(last.killed)+Number(last.downed)+Number(last.escaped)+Number(last.captured??0)!==(s.completed===1?1:2))errors.push('Invalid raid outcome.');
+  const lastCount=object(last)&&object(last.composition)&&Array.isArray(last.composition.roster)?last.composition.roster.length:s.completed===1?1:2;
+  if(s.completed===0?last!==undefined:!object(last)||!keys(last,['id','tick','reason','killed','downed','escaped',...(version>=86?['captured']:[]),...(version>=105?['composition']:[])])||last.id!==s.completed||!integer(last.tick,0,w.tick)||!['defended','withdrawn','colony-down'].includes(String(last.reason))||!['killed','downed','escaped'].every(k=>integer(last[k],0,lastCount))||last.captured!==undefined&&(version<86||!integer(last.captured,1,lastCount))||last.composition!==undefined&&(last.tick<CASSANDRA_CYCLE_START||!w.economy||last.tick<w.economy.adoptedAt||!validComposition(last.composition,lastCount,version,cassandra,true))||Number(last.killed)+Number(last.downed)+Number(last.escaped)+Number(last.captured??0)!==lastCount)errors.push('Invalid raid outcome.');
   for(const d of s.departed){
     if(!object(d)||!keys(d,['group','pawnId','name','cell','tick','items'])||!integer(d.group,1,s.serial)||!integer(d.pawnId,1,w.nextId-1)||ids.has(d.pawnId)||typeof d.name!=='string'||!d.name.trim()||d.name.length>48||!integer(d.tick,0,w.tick)||!cell(d.cell)||!(d.cell.x===0||d.cell.z===0||d.cell.x===w.width-1||d.cell.z===w.height-1)||!Array.isArray(d.items)||d.items.length>3){errors.push('Invalid raid departure.');continue;}
     ids.add(d.pawnId);
@@ -37,7 +49,8 @@ export function validateRaids(w:World,version:number,ids:Set<number>):string[] {
     errors.push(...validateApparel(exported),...validateEquipment(exported));
   }
   if(a!==undefined){
-    if(!object(a)||!keys(a,['id','startedAt','deadline','lossPermille','members','lost','phase','reason'])||a.id!==s.serial||!integer(a.startedAt,0,w.tick)||!integer(a.deadline,a.startedAt+2600,a.startedAt+3800)||!integer(a.lossPermille,400,700)||!['assault','withdraw'].includes(String(a.phase))||!Array.isArray(a.members)||a.members.length!==(s.serial===1?1:2)||new Set(a.members).size!==a.members.length||!a.members.every(id=>integer(id,1,w.nextId-1))||!Array.isArray(a.lost)||!a.lost.every((id,i)=>a.members instanceof Array&&a.members.includes(id)&&(i===0||Number(id)>Number((a.lost as unknown[])[i-1])))||!(a.phase==='assault'?a.reason===undefined:['losses','timeout','colony-down'].includes(String(a.reason))))return [...errors,'Invalid active raid group.'];
+    const expectedCount=object(a)&&object(a.composition)&&Array.isArray(a.composition.roster)?a.composition.roster.length:s.serial===1?1:2;
+    if(!object(a)||!keys(a,['id','startedAt','deadline','lossPermille','members','lost','phase','reason',...(version>=105?['composition']:[])])||a.id!==s.serial||!integer(a.startedAt,0,w.tick)||!integer(a.deadline,a.startedAt+2600,a.startedAt+3800)||!integer(a.lossPermille,400,700)||!['assault','withdraw'].includes(String(a.phase))||!Array.isArray(a.members)||a.members.length!==expectedCount||a.composition===undefined&&version>=105&&cassandra&&a.startedAt>=CASSANDRA_CYCLE_START&&!!w.economy&&a.startedAt>w.economy.adoptedAt||a.composition!==undefined&&(a.startedAt<CASSANDRA_CYCLE_START||!w.economy||a.startedAt<w.economy.adoptedAt||!validComposition(a.composition,expectedCount,version,cassandra,true))||new Set(a.members).size!==a.members.length||!a.members.every(id=>integer(id,1,w.nextId-1))||!Array.isArray(a.lost)||!a.lost.every((id,i)=>a.members instanceof Array&&a.members.includes(id)&&(i===0||Number(id)>Number((a.lost as unknown[])[i-1])))||!(a.phase==='assault'?a.reason===undefined:['losses','timeout','colony-down'].includes(String(a.reason))))return [...errors,'Invalid active raid group.'];
     const group=s.active!;
     if(group.phase==='withdraw'&&(group.reason==='timeout'&&w.tick<group.deadline||group.reason==='losses'&&group.lost.length*1000<group.members.length*group.lossPermille))errors.push('Premature raid withdrawal.');
     for(const id of a.members)if(!w.pawns.some(p=>p.id===id&&(p.raid?.group===a.id||version>=86&&p.recruitment?.raidGroup===a.id))&&!s.departed.some(d=>d.pawnId===id&&d.group===a.id))errors.push('Missing raid participant.');

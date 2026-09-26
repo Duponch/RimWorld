@@ -1,3 +1,5 @@
+import { COLONY_EXPECTATIONS } from './expectations.ts';
+import { colonyExpectation } from './colony-economy.ts';
 import { malnutritionStage } from './malnutrition.ts';
 import { expireRoomMemories,roomMoodThoughts } from './room-experience.ts';
 import { TRAITS } from './traits.ts';
@@ -23,6 +25,7 @@ const beauty=[situation('hideous-environment','Environnement affreux',-15,'Beaut
 const leisure=[situation('recreation-starved','Privé de loisirs',-20,'Loisirs sous 1 %.'),situation('recreation-deprived','Manque important de loisirs',-10,'Loisirs sous 15 %.'),situation('recreation-low','Manque de loisirs',-5,'Loisirs sous 30 %.'),situation('recreation-high','Loisirs satisfaisants',5,'Loisirs d’au moins 70 %.'),situation('recreation-full','Loisirs pleinement satisfaits',10,'Loisirs d’au moins 85 %.')];
 const pains=[situation('minor-pain','Douleur légère',-5,'Douleur présente, sous 15 %.'),situation('serious-pain','Douleur importante',-10,'Douleur d’au moins 15 %.'),situation('intense-pain','Douleur intense',-15,'Douleur d’au moins 40 %.'),situation('extreme-pain','Douleur extrême',-20,'Douleur d’au moins 80 %.')];
 const apparel=[situation('ratty-apparel','Vêtements abîmés',-3,'Au moins une pièce portée a moins de 50 % de ses PV.'),situation('tattered-apparel','Vêtements en lambeaux',-5,'Au moins une pièce portée a moins de 20 % de ses PV.')];
+const expectationThoughts=new Map(COLONY_EXPECTATIONS.map(e=>[e.id,situation(`expectations-${e.id}`,e.label,e.moodOffset,'Attentes liées au patrimoine évalué de la colonie ; les valeurs inconnues restent exclues.')]));
 const camp=situation('camp-expectations','Attentes extrêmement basses',30,'Profil fixe de ce camp, partagé avec les loisirs ; ne varie pas encore avec la richesse.');
 const memoryLabels={'ate-without-table':'Mangé sans table','ate-raw-food':'Mangé cru'} as const;
 const memoryOffsets={'ate-without-table':-3,'ate-raw-food':-7} as const;
@@ -40,7 +43,8 @@ export const comfortMood=(value:number):number=>comforts[comfortStage(value)]?.o
  * content permits one stage per family and one memory per meal kind. */
 export function moodThoughts(world:World,pawn:Pawn):readonly MoodThought[] {
   if(pawn.state==='dead')return [];
-  const thoughts:MoodThought[]=[camp,...roomMoodThoughts(world,pawn)];
+  const expectation=colonyExpectation(world,pawn);
+  const thoughts:MoodThought[]=[expectation?expectationThoughts.get(expectation.id)!:camp,...roomMoodThoughts(world,pawn)];
   const difficultyMood=colonistMoodOffset(world,pawn);
   if(difficultyMood)thoughts.push(situation('difficulty-mood','Récit d’aventure',difficultyMood,'Bonus d’humeur du niveau d’aventure choisi.'));
   for(const id of pawn.traits??[]){const trait=TRAITS[id];if(trait.mood)thoughts.push({id:`trait-${id}`,label:trait.label,offset:trait.mood,kind:'situation',description:trait.description});}

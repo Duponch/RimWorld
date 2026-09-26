@@ -1,5 +1,12 @@
 # Travail sur Lisière
 
+## Économie et menaces V105
+- Lire `docs/development/colony-economy.md` et les trois recherches V105. Patrimoine connu est une borne inférieure explicite : pas de prix humain inventé. Relevé 501 ticks partagé, attente/humeur/lassitude liées ; jauge de loisirs inchangée.
+- Cassandra ordinaire adoptée utilise budget/soins/temps/adaptation et rôles limités avec plafond individuel ; introduction et calendrier conservés. Chute violente et décès distingués, notification persistée, même tick dédoublonné. Pas de parité générale du narrateur.
+- Commerce uniquement sculptures minifiées libres : identité/auteur/qualité conservés, monnaie et dépôts atomiques, rachat, archives de sortie et destruction des possessions. Anciens visiteurs sans Art/Artistique restent admissibles.
+- Schéma 105 : V104 validée avant migration neutre, adoption économique explicite ; nouveaux Crashlanded révision 7. Dix colonies directes, anciennes fixtures immuables.
+- L’utilisateur demande le 26 septembre de finir/commiter puis poursuivre la prochaine étape et un autre commit ; cette instruction remplace le retour systématique en fin de ce lot. Contrôles regroupés, sources gelées en natif, preuves dans `docs/history/validation-economy-v105.md`.
+
 ## Sculpture et décoration V104
 - Lire `docs/development/art.md` et `docs/research/art-reference-v104.md` : atelier manuel 3×1, travail Art/compétence Artistique, deux tailles et sept matières homogènes. Ouvrage, auteur, progression et parts incorporées persistés ; annulation à 75 % par part, tirages et dépôts prévalidés ensemble. Le talent règle la qualité, pas directement la vitesse.
 - Les œuvres achevées sont des meubles minifiés physiques. Transport, stockage, installation/désinstallation conservent identité, qualité et provenance ; aucune construction directe de sculpture. « Jusqu’à X » compte œuvres installées et minifiées, portées ou au sol. Beauté et valeur décorative s’appliquent à l’œuvre installée ; titres narratifs et vente des meubles minifiés restent absents.

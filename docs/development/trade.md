@@ -1,5 +1,7 @@
 # Visites et commerce physique — V88
 
+**V105 :** sculptures minifiées physiques acceptées par le petit marchand, rachat puis archive au départ ; [contrat complet](colony-economy.md). Autres meubles minifiés non négociables.
+
 Contrat de l'ensemble V88 livré, dans les limites des [preuves](../history/validation-trade-v88.md). [Recherche Core](../research/trade-reference-v88.md), [visiteurs](visitors.md), [armes](../research/weapons-v88.md). Corpus : chapitre 27, SYS/TEST-145 et UI-032 ; monnaie et possession distinctes de la cargaison de travail. Monde, caravanes de porteurs, commerce orbital et diplomatie complète restent absents.
 
 L'argent se range par piles de 500. La capacité réglable des nouvelles réserves peut atteindre 500 sans dépasser la limite propre aux autres objets ; les anciennes réserves conservent leur capacité. Voir le [contrat de stockage](spatial-motion-storage.md).

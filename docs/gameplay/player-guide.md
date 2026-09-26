@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Patrimoine et commerce artistique — V105
+
+Ouvrez **Historique** pour consulter le patrimoine évalué et les attentes. Les nouvelles parties Atterrissage forcé l'activent ; une ancienne colonie propose un bouton d'activation prospective. La valeur des personnes reste inconnue et indiquée séparément. L'enrichissement diminue le bonus d'attentes et augmente la durée de lassitude ; les raids ordinaires Cassandra suivent désormais un budget variable. Les dates du narrateur ne changent pas.
+
+Une sculpture doit être **désinstallée**, posée au sol dans le foyer ou une réserve, et libre de réservation pour être vendue. Contactez un petit marchand, réglez sa quantité puis confirmez le panier. Son argent reste limité ; un abandon de paiement exige votre accord. Pendant la visite, l'œuvre vendue peut être rachetée avec sa même identité. Essayez directement **Charger → Colonies de test → Art et commerce · 1 colon**. Cette scène est préparée. [Contrat et limites](../development/colony-economy.md).
+
 ## Fabriquer une sculpture
 
 Dans **Architecte → Production**, construisez un **Atelier de sculpture** (75 bois + 50 acier, ou 125 acier). Activez **Art** dans Travail, sélectionnez le poste et ajoutez une facture de petite (50) ou grande sculpture (100). Gardez une seule matière disponible dans les filtres. Le colon apporte les matériaux et poursuit son ouvrage ; sa compétence Artistique détermine la qualité.

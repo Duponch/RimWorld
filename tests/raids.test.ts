@@ -39,7 +39,8 @@ test('closed camp uses real barrier blows, preserves impact recovery and opens m
   const w=deconstructionCamp(),p=w.pawns[0]!;p.rest=1;p.need={kind:'sleep',phase:'sleep',bedId:null,target:{x:p.x,z:p.z}};p.state='sleeping';
   for(let dz=-2;dz<=2;dz++)for(let dx=-2;dx<=2;dx++)if(dx||dz){const s=fixtureBuilding(w,'wall',p.x+dx,p.z+dz);Object.assign(s,{damage:barrierMaxHp(s)-8});}
   enableRaids(w);w.raids!.nextCheck=1;stepWorld(w);const enemy=w.pawns.find(q=>q.raid)!;
-  until(w,()=>!!enemy.melee?.strike?.structure);expect(w.destroyed?.count).toBeGreaterThan(0);replay(w,25);
+  until(w,()=>!!enemy.melee?.strike?.structure);replay(w,25);
+  until(w,()=>!!w.destroyed?.count);expect(w.destroyed?.count).toBeGreaterThan(0);replay(w,25);
   until(w,()=>!!p.health);expect(w.destroyed!.count).toBeGreaterThanOrEqual(2);expect(p.state).not.toBe('sleeping');replay(w,10);
 });
 

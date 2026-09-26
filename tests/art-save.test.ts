@@ -11,7 +11,7 @@ test('the immutable V103 room demo migrates only its schema and disabled Art pri
   const raw=JSON.parse(readFileSync('public/test-saves/v103/salles.json','utf8'));
   expect(raw.schemaVersion).toBe(103);
   const migrated=deserializeWorld(JSON.stringify(raw));
-  expect(migrated).toEqual({...raw,schemaVersion:104,
+  expect(migrated).toEqual({...raw,schemaVersion:105,
     pawns:raw.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0}}))});
   expect(validateWorld(migrated)).toEqual([]);
   for(const edit of [

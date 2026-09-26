@@ -42,6 +42,7 @@ import { placeCraftingSpot,removeCraftingSpot } from './crafting-spot.ts';
 import { harvestProductLabel } from './plants.ts';
 import { advanceSocial } from './social.ts';
 import { reconcileRepairs,advanceRepair } from './repairs.ts';
+import { adoptColonyEconomy,sampleColonyEconomy,flushColonyLosses,advanceColonyAdaptation } from './colony-economy.ts';
 import { advanceRaids,enableRaids,exitRaider } from './raids.ts';
 import { processRaider } from './raid-behavior.ts';
 import { advanceArrivals,applyArrival } from './arrivals.ts';
@@ -274,6 +275,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command?.type==='designate'&&command.kind==='repair')return refusal('invalid-command','Utilisez la zone de foyer pour activer les réparations.');
   if(command.type==='heater-adjust')return adjustHeaterTarget(world,command.structureId,command.offset);
   if(command.type==='wind-auto-cut')return setWindAutoCut(world,command.structureId,command.enabled);
+  if(command.type==='adopt-economy'){if(adoptColonyEconomy(world))event(world,'command','Patrimoine, attentes et progression des menaces activés à partir de maintenant.');return {ok:true};}
   if(command.type==='climate-adopt'){const adopted=adoptEnvironment(world);if(adopted)event(world,'command','Climat saisonnier et météo activés à partir de maintenant.');return {ok:true};}
   if(command.type==='order-extinguish'){const reason=applyExtinguish(world,command);return reason?refusal('invalid-command',reason):{ok:true};}
   if(command.type==='power-flick')return requestPowerFlick(world,command.structureId,command.on);
@@ -468,7 +470,9 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   if(!ticks)return;
   let thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
+    flushColonyLosses(world);
     world.tick++;
+    sampleColonyEconomy(world);
     advanceArrivals(world);advanceHeatwaves(world);advanceVisitors(world);
     const beforeWeather=world.structures;
     advanceSurfaceWeather(world,cell=>{const c={type:'designate' as const,kind:'chop' as const,...cell};if(canDesignate(world,c).ok)applyCommand(world,c);});
@@ -636,6 +640,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     for(const pawn of world.pawns)if(pawn.trade&&!world.pawns.some(t=>t.id===pawn.trade!.traderId&&t.visitor)){delete pawn.trade;pawn.path=[];pawn.state='idle';}
     for(const pawn of [...world.pawns])if(pawn.prisoner?.escape)exitPrisoner(world,pawn);
     if(world.raids)for(const pawn of [...world.pawns])if(pawn.raid?.exiting&&!pawn.prisoner)exitRaider(world,pawn);
+    advanceColonyAdaptation(world);
     advanceRaids(world);
     advanceSocial(world);
     if(world.roofing)reconcileRoofJobs(world,roofs);

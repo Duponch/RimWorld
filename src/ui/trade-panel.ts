@@ -3,6 +3,7 @@ import { ITEM_DEFINITIONS } from '../sim/items';
 import { weaponLabel } from '../sim/equipment-rules';
 import { negotiatorRefusal,tradingAtContact } from '../sim/trade-contact';
 import { tradeGoods,quoteTrade,tradeImprovement } from '../sim/trade-goods';
+import { isSculptureMaterial,sculptureMaxHitPoints } from '../sim/furniture-stats';
 import { visitorMayTrade } from '../sim/visitors';
 import type { Command,World } from '../sim/types';
 import type { TradeLine } from '../sim/trade-state';
@@ -21,8 +22,8 @@ export function createTradeUI(send:(c:Command)=>Promise<unknown>,pause:()=>Promi
   const confirm=document.createElement('button'),close=document.createElement('button');confirm.id='trade-confirm';close.id='trade-close';confirm.textContent='Conclure l’échange';close.textContent='Fermer';
   dialog.append(heading,trader,colonist,contact,status,hint,table,total,shortfall,error,confirm,close);document.body.append(dialog);
   let current:World|undefined,last=-Infinity,stockKey='',readyKey='',shownQuote='',busy=false;
-  const quantities=new Map<number,number>();
-  const lines=():TradeLine[]=>[...quantities].filter(([,n])=>n!==0).map(([pileId,quantity])=>({pileId,quantity}));
+  const quantities=new Map<string,number>();
+  const lines=():TradeLine[]=>[...quantities].filter(([,n])=>n!==0).map(([key,quantity])=>key.startsWith('packed:')?{packedId:Number(key.slice(7)),quantity}:{pileId:Number(key.slice(5)),quantity});
   function balance(){
     confirm.disabled=true;shortfall.hidden=true;if(!current)return;
     const q=quoteTrade(current,Number(colonist.value),Number(trader.value),lines());
@@ -52,14 +53,25 @@ export function createTradeUI(send:(c:Command)=>Promise<unknown>,pause:()=>Promi
     if(!ready){total.textContent='';confirm.disabled=true;return;}
     const key=`${p.id}:${t.id}:${p.trade!.startedAt}`;
     if(readyKey!==key&&!busy){readyKey=key;void run(pause);}
-    const stock=tradeGoods(w,p,t),next=stock.goods.map(g=>`${g.pile.id}:${g.available}:${g.unitPrice}:${g.refusal??''}`).join('|');
+    const stock=tradeGoods(w,p,t),next=[...stock.goods.map(g=>`${g.pile.id}:${g.available}:${g.unitPrice}:${g.refusal??''}`),...stock.artGoods.map(g=>`art:${g.packed.building.id}:${g.packed.building.kind}:${g.packed.building.material}:${g.packed.building.quality}:${g.packed.building.damage??0}:${g.unitPrice}`)].join('|');
     if(stockKey!==next){
       stockKey=next;table.replaceChildren();const head=document.createElement('tr');for(const x of ['Objet','Échange','Stock','Prix unitaire','Quantité']){const th=document.createElement('th');th.textContent=x;head.append(th);}table.append(head);
       for(const g of stock.goods){
         const tr=document.createElement('tr'),name=document.createElement('td'),side=document.createElement('td'),available=document.createElement('td'),price=document.createElement('td'),quantity=document.createElement('td');
         name.textContent=g.pile.weapon?weaponLabel(g.pile):ITEM_DEFINITIONS[g.pile.item].label;side.textContent=g.side==='buy'?'Acheter':'Vendre';available.textContent=String(g.available);price.textContent=g.refusal?'Refusé':g.unitPrice.toFixed(2);if(g.refusal)tr.title=g.refusal;
-        const input=document.createElement('input');input.type='number';input.min='0';input.max=String(g.available);input.step='1';input.value=String(Math.abs(quantities.get(g.pile.id)??0));input.disabled=!!g.refusal;input.dataset.pile=String(g.pile.id);input.dataset.item=g.pile.item;input.dataset.side=g.side;input.setAttribute('aria-label',`${side.textContent} ${name.textContent}`);
-        input.oninput=()=>{const n=Number(input.value);quantities.set(g.pile.id,(g.side==='buy'?1:-1)*n);accept.checked=false;balance();};quantity.append(input);tr.append(name,side,available,price,quantity);table.append(tr);
+        const input=document.createElement('input');input.type='number';input.min='0';input.max=String(g.available);input.step='1';input.value=String(Math.abs(quantities.get(`pile:${g.pile.id}`)??0));input.disabled=!!g.refusal;input.dataset.pile=String(g.pile.id);input.dataset.item=g.pile.item;input.dataset.side=g.side;input.setAttribute('aria-label',`${side.textContent} ${name.textContent}`);
+        input.oninput=()=>{const n=Number(input.value);quantities.set(`pile:${g.pile.id}`,(g.side==='buy'?1:-1)*n);accept.checked=false;balance();};quantity.append(input);tr.append(name,side,available,price,quantity);table.append(tr);
+      }
+      for(const g of stock.artGoods){
+        const b=g.packed.building,kind=b.kind;
+        if(kind!=='small-sculpture'&&kind!=='large-sculpture')continue;
+        const tr=document.createElement('tr'),name=document.createElement('td'),side=document.createElement('td'),available=document.createElement('td'),price=document.createElement('td'),quantity=document.createElement('td');
+        const max=isSculptureMaterial(b.material)?sculptureMaxHitPoints(kind,b.material):0;
+        const author=w.pawns.find(a=>a.id===b.art?.authorId)?.name??`#${b.art?.authorId??'?'}`;
+        name.textContent=`${kind==='small-sculpture'?'Petite sculpture':'Grande sculpture'} · ${b.material?ITEM_DEFINITIONS[b.material].label:'matière inconnue'} · ${b.quality??'normal'} · ${max-(b.damage??0)}/${max} PV · ${author}`;
+        side.textContent=g.side==='buy'?'Acheter':'Vendre';available.textContent='1';price.textContent=g.unitPrice.toFixed(2);
+        const key=`packed:${b.id}`,input=document.createElement('input');input.type='number';input.min='0';input.max='1';input.step='1';input.value=String(Math.abs(quantities.get(key)??0));input.dataset.packed=String(b.id);input.dataset.side=g.side;input.setAttribute('aria-label',`${side.textContent} ${name.textContent}`);
+        input.oninput=()=>{const n=Number(input.value);quantities.set(key,(g.side==='buy'?1:-1)*n);accept.checked=false;balance();};quantity.append(input);tr.append(name,side,available,price,quantity);table.append(tr);
       }
     }
     const money=stock.silver.reduce((n,x)=>n+x.quantity,0),merchant=stock.merchantSilver.reduce((n,x)=>n+x.quantity,0);hint.textContent=`Argent disponible : colonie ${money}, marchand ${merchant}. Biens au foyer ou en réserve, accessibles et non réservés. Les achats seront déposés au contact, puis rangés par les colons.`;balance();

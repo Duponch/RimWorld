@@ -46,7 +46,7 @@ export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTa
   w.rng=randomState.rng;
   if(animal)delayAnimalImpact(target,core,stun);
   else {
-    if(outcome==='hit'){reconcilePawnHealth(w,target);if(injured)disturbance.damage(target,core,immobile);}
+    if(outcome==='hit'){reconcilePawnHealth(w,target,undefined,true);if(injured)disturbance.damage(target,core,immobile);}
     applyBulletStagger(w,target,core,1);if(stun)applyMeleeStun(w,target,core);
     if(target.shooting?.stance?.phase==='aim')cancelShooting(target);
   }

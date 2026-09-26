@@ -5,7 +5,7 @@ import { deconstructionAvailable } from './deconstruction-rules.ts';
 import type { Cell, Job, Pawn, Structure, World } from './types.ts';
 
 export interface FurnitureTarget { structureId: number; kind: Structure['kind'] }
-export interface PackedFurniture { building: Structure; owner: ({type:'ground'} & Cell) | {type:'pawn';pawnId:number} }
+export interface PackedFurniture { building: Structure; owner: ({type:'ground'} & Cell) | {type:'pawn';pawnId:number} | {type:'inventory';pawnId:number} }
 export const minifiable = (kind: string): boolean => ['art-bench','small-sculpture','large-sculpture','machining-table','heater','battery','fueled-stove','electric-stove','butcher-table','research-bench','tailor-bench','electric-tailor-bench','bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','stonecutter','standing-lamp'].includes(kind);
 export const packedAt = (world:World, cell:Cell) => world.packed?.find(p=>p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z);
 export const furnitureObject = (world:World,id:number) => world.structures.find(s=>s.id===id)??world.packed?.find(p=>p.building.id===id)?.building;
@@ -22,7 +22,7 @@ export function furnitureDuration(world:World,job:Job):number {
 export function furnitureReady(world:World,job:Job,pawn:Pawn):boolean {
   const id=job.furniture?.structureId;if(!id)return false;
   const source=world.structures.find(s=>s.id===id),pack=world.packed?.find(p=>p.building.id===id);
-  if(!source&&!pack||pack?.owner.type==='pawn'&&pack.owner.pawnId!==pawn.id||reservedSource(world,id,pawn.id)>0)return false;
+  if(!source&&!pack||pack?.owner.type==='inventory'||pack?.owner.type==='pawn'&&pack.owner.pawnId!==pawn.id||reservedSource(world,id,pawn.id)>0)return false;
   if(source&&!deconstructionAvailable(world,{...job,deconstruction:{structureId:id,kind:source.kind}},pawn.id))return false;
   if(job.kind==='install') {
     const obstruction=constructionObstruction(world,job);

@@ -1,5 +1,7 @@
 # Sculpture et décoration — V104
 
+**Complément V105 :** le commerce des sculptures minifiées est maintenant livré dans le [contrat économie](colony-economy.md). Les mentions d’absence V104 ci-dessous décrivent sa frontière historique ; les autres meubles, récits et formats monumentaux restent hors périmètre.
+
 Le poste **Atelier de sculpture** ouvre deux factures : **Petite sculpture** (50 unités) et **Grande sculpture** (100 unités). Le poste manuel mesure 3×1, coûte 75 bois + 50 acier ou 125 acier ; il n’exige aucune recherche. Les sculptures mesurent 1×1 et sont fabriquées, puis installées. Elles ne se construisent pas directement dans Architecte.
 
 ## Matières, travail et propriété

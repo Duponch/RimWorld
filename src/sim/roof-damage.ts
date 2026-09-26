@@ -30,7 +30,7 @@ export function damageFromRoofCollapse(world:World,cells:ReadonlySet<number>):vo
     const traits=PART_INJURY_RULES[part.id];
     const wasLying=isLying(pawn);
     if(amount>0)addResolvedInjuryBatch(health,[{part:part.id,kind:traits.solid?'crack':traits.skin?'cut':'crush',severity:amount}],()=>healthRandom(randomState));
-    protection.commit();world.rng=randomState.rng;pawn.health=health;reconcilePawnHealth(world,pawn);
+    protection.commit();world.rng=randomState.rng;pawn.health=health;reconcilePawnHealth(world,pawn,undefined,true);
     if(amount>0)disturbance.damage(pawn,world.tick*10,wasLying);
   }
 }

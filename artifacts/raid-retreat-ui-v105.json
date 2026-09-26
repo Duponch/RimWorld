@@ -1,0 +1,38 @@
+{
+  "from": 40,
+  "to": 73,
+  "departure": {
+    "group": 1,
+    "pawnId": 185,
+    "name": "Assaillant 1.1",
+    "cell": {
+      "x": 0,
+      "z": 20
+    },
+    "tick": 71,
+    "items": [
+      {
+        "id": 186,
+        "kind": "apparel",
+        "item": "cloth-shirt",
+        "quantity": 1,
+        "owner": {
+          "type": "apparel",
+          "pawnId": 185
+        },
+        "apparel": {
+          "quality": "normal",
+          "hitPoints": 100,
+          "material": "cloth"
+        }
+      }
+    ]
+  },
+  "counts": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "errors": []
+}
