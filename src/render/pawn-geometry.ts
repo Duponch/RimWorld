@@ -12,6 +12,11 @@ import { WEAPON_VISUALS } from './weapon-shape';
 
 // Disjoint from weapon tags; -4 is the bolt-action rifle, not the parka hood.
 export const PARKA_HOOD_DYE = -6;
+// Face variants are resident in the same pawn batch. The vertex shader shows
+// exactly one of them; portraits project the open-eye variant at rest.
+export const PAWN_EYE_OPEN = 60;
+export const PAWN_EYE_CLOSED = 61;
+export const PAWN_EYE_CROSS = 62;
 
 /** Eight rigid bones, authored entirely in code. Each vertex has one bone influence.
  * The bind position/pivot and animation state are evaluated in the vertex shader.
@@ -21,8 +26,9 @@ export const PARKA_HOOD_DYE = -6;
 export function pawnGeometry(): THREE.InstancedBufferGeometry {
   const positions: number[] = [], normals: number[] = [], colors: number[] = [];
   const bones: number[] = [], pivots: number[] = [], dyes: number[] = [];
-  const addPart = (size: number[], center: number[], bone: number, pivot: number[], color: number, dye = 0) => {
+  const addPart = (size: number[], center: number[], bone: number, pivot: number[], color: number, dye = 0, roll = 0) => {
     const box = new THREE.BoxGeometry(size[0], size[1], size[2]).toNonIndexed();
+    if (roll) box.rotateZ(roll);
     const pos = box.getAttribute('position'), normal = box.getAttribute('normal');
     const col = new THREE.Color(color);
     for (let i = 0; i < pos.count; i++) {
@@ -45,7 +51,10 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
     addPart([0.135, 0.21, 0.17], [side * 0.105, 0.505, 0], leg, [side * 0.105, 0.61, 0], 0x495052);
     addPart([0.13, 0.235, 0.16], [side * 0.105, 0.2825, 0], calf, [side * 0.105, 0.61, 0], 0x495052);
     addPart([0.145, 0.12, 0.23], [side * 0.105, 0.11, 0.03], calf, [side * 0.105, 0.61, 0], 0x443e37);
-    addPart([0.035, 0.035, 0.014], [side * 0.07, 1.2, 0.157], 1, [0, 1.04, 0], 0x433e39);
+    addPart([.035,.035,.014],[side*.07,1.2,.157],1,[0,1.04,0],0x433e39,PAWN_EYE_OPEN);
+    addPart([.068,.016,.016],[side*.07,1.2,.159],1,[0,1.04,0],0x433e39,PAWN_EYE_CLOSED);
+    for(const [index,angle] of [-Math.PI/4,Math.PI/4].entries())
+      addPart([.068,.015,.016],[side*.07,1.2,.160+index*.002],1,[0,1.04,0],0x433e39,PAWN_EYE_CROSS,angle);
   }
   addPart([.37,.34,.26],[0,.85,0],0,[0,.61,0],APPAREL['flak-vest'].color,-2);
   addPart([.12,.18,.025],[0,.86,.145],0,[0,.61,0],0x404c44,-2);

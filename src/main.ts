@@ -1,5 +1,5 @@
 import {appearanceOf} from './sim/pawn-appearance';
-import {portraitDataUrl} from './ui/pawn-portrait';
+import {portraitDataUrl,portraitExpressionOf} from './ui/pawn-portrait';
 import {updatePawnAppearanceInspection} from './ui/pawn-appearance-inspection';
 import {pawnBaseColor} from './render/pawn-appearance-shape';
 import { createColonyEconomyUI } from './ui/colony-economy';
@@ -563,7 +563,7 @@ function renderState() {
     button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
     button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn)} · ${equipmentDescription(equipment.get(pawn.id),pawn)}`;button.dataset.equipment=equipment.get(pawn.id)?.item??'';
     const rawLook=apparelAppearance(apparel.get(pawn.id)),look={...rawLook,color:rawLook.color??pawnBaseColor(pawn.id)};button.dataset.apparel=look.signature;
-    const portrait=button.querySelector<HTMLElement>('.portrait-head')!,url=portraitDataUrl(appearanceOf(pawn,world.seed),look,equipment.get(pawn.id)?.item);
+    const portrait=button.querySelector<HTMLElement>('.portrait-head')!,url=portraitDataUrl(appearanceOf(pawn,world.seed),look,equipment.get(pawn.id)?.item,portraitExpressionOf(pawn));
     if(portrait.dataset.source!==url){portrait.dataset.source=url;portrait.style.setProperty('--pawn-portrait',`url("${url}")`);}button.title+=` · ${look.description}`;
     (button.querySelector('.portrait-body') as HTMLElement).style.background=look.color!==undefined?`#${look.color.toString(16)}`:'';
     (button.querySelector('.portrait-vest') as HTMLElement).hidden=!look.vest;

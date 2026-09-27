@@ -65,10 +65,8 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
       parcels.push({x,z,y:y+.24*scale,sx:.64*scale,sy:.48*scale,sz:.64*scale,color:0xb6996c},
         {x,z,y:y+.49*scale,sx:.13*scale,sy:.03*scale,sz:.67*scale,color:buildingMaterialColor(p.building.material,0x6f634e)});
     }
-    const fires=campfireParts(world);
-    batches.set(group,'campfire-flames',fires.flames,'border',false);
     batches.set(group, 'furniture', [
-      ...graveParts(world), ...foodWorkstationParts(world), ...electricalParts(world,cutaway), ...passiveCoolerParts(world), ...doorParts(world,cutaway), ...penParts(world), ...fires.base, ...recreationParts(world), ...stonecutterParts(world), ...craftingSpotParts(world), ...researchTailorParts(world), ...industryParts(world), ...habitatParts(world), ...artParts(world),
+      ...graveParts(world), ...foodWorkstationParts(world), ...electricalParts(world,cutaway), ...passiveCoolerParts(world), ...doorParts(world,cutaway), ...penParts(world), ...campfireParts(world), ...recreationParts(world), ...stonecutterParts(world), ...craftingSpotParts(world), ...researchTailorParts(world), ...industryParts(world), ...habitatParts(world), ...artParts(world),
       ...parcels,
       ...woodParts.map(p => ({ ...p, color: p.color ?? 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 0.96, sy: wallHeight - 0.09, sz: 0.96, color: p.color ?? 0xa6916e })),

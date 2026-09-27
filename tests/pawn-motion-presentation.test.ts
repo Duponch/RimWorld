@@ -6,7 +6,7 @@ import { PawnLayer } from '../src/render/PawnLayer';
 import { MotionTimeline } from '../src/render/MotionTimeline';
 import { WildlifeLayer } from '../src/render/WildlifeLayer';
 import { headingAt,turnToward,TURN_TICKS } from '../src/render/turn-presentation';
-import { pawnWorkPose,workApproach,WORK_POSE } from '../src/render/work-presentation';
+import { pawnWorkPose,workApproach,meleeApproach,WORK_POSE } from '../src/render/work-presentation';
 import { clearGroup } from '../src/render/primitives';
 import { animalCombatCamp } from './scenarios/animal-combat';
 
@@ -47,6 +47,54 @@ test('work reach stays inside the neighbouring target clearance and rejects dist
   expect(workApproach(actor,{x:10,z:10})).toEqual({x:0,z:0});
   expect(workApproach(actor,{x:10,z:12})).toEqual({x:0,z:0});
   expect(workApproach(actor,undefined)).toEqual({x:0,z:0});
+});
+
+test('adjacent human fighters close smoothly in the shared body/cargo/selection pose and retreat on cancellation',()=>{
+  const aCell={x:10,z:10},bCell={x:10,z:11};
+  expect(meleeApproach(aCell,bCell).z).toBeCloseTo(.24);
+  expect(meleeApproach(bCell,aCell).z).toBeCloseTo(-.24);
+  expect(meleeApproach(aCell,{x:11,z:11}).x).toBeLessThan(.36);
+  expect(meleeApproach(aCell,{x:10,z:12})).toEqual({x:0,z:0});
+  const world=createWorld(),a=world.pawns[0]!,b=world.pawns[1]!;
+  a.x=aCell.x;a.z=aCell.z;b.x=bCell.x;b.z=bCell.z;a.state=b.state='idle';delete a.motion;delete b.motion;
+  world.tick=50;
+  const layer=new PawnLayer(),timeline=new MotionTimeline();
+  layer.update(world,1,true);timeline.tick=50;layer.updateTravel(world,timeline);
+  const g=layer.feedbackSource!,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute;
+  a.social={rng:1,memories:[],fight:{opponentId:b.id,startedAt:51}};
+  b.social={rng:2,memories:[],fight:{opponentId:a.id,startedAt:51}};
+  a.melee={order:{targetId:b.id,startedDowned:false,auto:'social'},strike:null};
+  b.melee={order:{targetId:a.id,startedDowned:false,auto:'social'},strike:null};
+  world.tick=51;layer.update(world,1,false);timeline.tick=51;layer.updateTravel(world,timeline);
+  expect(from.getZ(0)).toBeCloseTo(10);expect(to.getZ(0)).toBeCloseTo(10.24);
+  expect(from.getZ(1)).toBeCloseTo(11);expect(to.getZ(1)).toBeCloseTo(10.76);
+  expect((g.getAttribute('aMotion') as THREE.InstancedBufferAttribute).getZ(0)).toBe(22);
+  expect((layer.group.children[1] as THREE.Mesh).geometry.getAttribute('aFrom')).toBe(g.getAttribute('aFrom'));
+  expect((layer.group.children[3] as THREE.Mesh).geometry.getAttribute('aFrom')).toBe(g.getAttribute('aFrom'));
+  const poseVersion=from.version;
+  timeline.tick=52.44;layer.updateTravel(world,timeline);
+  expect(from.version).toBe(poseVersion); // the resident GPU interpolation reaches the endpoint
+  expect(to.getZ(0)).toBeCloseTo(10.24);
+  delete a.social.fight;delete b.social.fight;delete a.melee;delete b.melee;
+  world.tick=53;layer.update(world,1,false);timeline.tick=53;layer.updateTravel(world,timeline);
+  expect(from.getZ(0)).toBeCloseTo(10.24);expect(to.getZ(0)).toBeCloseTo(10);
+  expect(a.z).toBe(10);expect(b.z).toBe(11);
+  clearGroup(layer.group);
+});
+
+test('working subtype and sleeping or dead face pose reuse the resident motion attribute',()=>{
+  const world=createWorld(),pawn=world.pawns[0]!,layer=new PawnLayer();
+  pawn.state='working';pawn.cooking={stationId:1,billId:1,phase:'work',progress:0} as typeof pawn.cooking;
+  layer.update(world,1,true);
+  const motion=layer.feedbackSource!.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
+  expect(motion.getY(0)).toBe(2);expect(motion.getZ(0)).toBe(WORK_POSE.craft);
+  pawn.cooking=null;pawn.research={stationId:1,spot:{x:8,z:8},worked:0};layer.update(world,1,false);
+  expect(motion.getY(0)).toBe(3);expect(motion.getZ(0)).toBe(WORK_POSE.craft);
+  pawn.research=undefined;pawn.state='sleeping';layer.update(world,1,false);
+  expect(motion.getY(0)).toBe(0);expect(motion.getZ(0)).toBe(18);
+  pawn.state='dead';layer.update(world,1,false);
+  expect(motion.getZ(0)).toBe(19);
+  clearGroup(layer.group);
 });
 
 test('confirmed tree work approaches and releases smoothly without moving the logical cell or accumulating offset',()=>{

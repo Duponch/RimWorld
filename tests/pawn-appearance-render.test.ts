@@ -1,13 +1,13 @@
 import {test,expect} from 'vitest';
 import * as THREE from 'three/webgpu';
 import {PawnLayer} from '../src/render/PawnLayer';
-import {pawnGeometry} from '../src/render/pawn-geometry';
+import {pawnGeometry,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS} from '../src/render/pawn-geometry';
 import {createWorld} from '../src/sim/index';
 import {startingPawn} from '../src/sim/starting-pawns';
 import {appearanceOf} from '../src/sim/pawn-appearance';
 import {appearanceShape} from '../src/render/pawn-appearance-shape';
 import {HAIR_PARTS,BEARD_PARTS,HAIR_MASKS} from '../src/render/pawn-appearance-shape';
-import {portraitDataUrl} from '../src/ui/pawn-portrait';
+import {portraitDataUrl,portraitExpressionOf,portraitCacheSize} from '../src/ui/pawn-portrait';
 import {apparelAppearance} from '../src/render/character-apparel';
 
 test('resident appearance survives actor growth, reordering and restored legacy identity without mutating gameplay',()=>{
@@ -73,6 +73,45 @@ test('hairlines and beard cheeks wrap the actual head without coplanar front fac
   expect(svg).toContain('data-source="pawn-geometry"');
   expect((svg.match(/<polygon /g)??[]).length).toBeGreaterThan(30);
   expect(svg).not.toContain('<path'); // no independent cartoon head/hair shapes
+});
+
+test('one resident head contains open, shut and crossed eye geometry without a new vertex stream',()=>{
+  const geometry=pawnGeometry(),dye=geometry.getAttribute('dye'),position=geometry.getAttribute('position');
+  const counts=new Map<number,number>(),front=new Map<number,number>();
+  for(let i=0;i<dye.count;i++){
+    const tag=dye.getX(i);
+    if(tag!==PAWN_EYE_OPEN&&tag!==PAWN_EYE_CLOSED&&tag!==PAWN_EYE_CROSS)continue;
+    counts.set(tag,(counts.get(tag)??0)+1);
+    front.set(tag,Math.max(front.get(tag)??0,position.getZ(i)));
+  }
+  expect(counts.get(PAWN_EYE_OPEN)).toBe(72);
+  expect(counts.get(PAWN_EYE_CLOSED)).toBe(72);
+  expect(counts.get(PAWN_EYE_CROSS)).toBe(144);
+  for(const tag of [PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS])expect(front.get(tag)).toBeGreaterThan(.15);
+  expect(geometry.getAttribute('dye')).toBeInstanceOf(THREE.InterleavedBufferAttribute);
+  geometry.dispose();
+});
+
+test('HUD and Bio portraits cache distinct awake, sleeping and dead eyes only on state changes',()=>{
+  const world=createWorld(82,32,32),pawn=world.pawns[0]!,appearance=appearanceOf(pawn,world.seed);
+  const look={...apparelAppearance(),signature:'expression-test'};
+  const before=portraitCacheSize();
+  const awake=portraitDataUrl(appearance,look,undefined,portraitExpressionOf(pawn));
+  pawn.state='sleeping';
+  const asleep=portraitDataUrl(appearance,look,undefined,portraitExpressionOf(pawn));
+  pawn.state='dead';
+  const dead=portraitDataUrl(appearance,look,undefined,portraitExpressionOf(pawn));
+  expect(new Set([awake,asleep,dead]).size).toBe(3);
+  expect(portraitCacheSize()).toBe(before+3);
+  for(const [expression,url] of [['awake',awake],['sleep',asleep],['dead',dead]] as const){
+    const svg=decodeURIComponent(url.split(',')[1]!);
+    expect(svg).toContain(`data-expression="${expression}"`);
+    expect(portraitDataUrl(appearance,look,undefined,expression)).toBe(url);
+  }
+  const art=(url:string)=>decodeURIComponent(url.split(',')[1]!).replace(/ data-expression="(?:awake|sleep|dead)"/,'');
+  expect(art(awake)).not.toBe(art(asleep));
+  expect(art(asleep)).not.toBe(art(dead));
+  expect(portraitExpressionOf({...pawn,state:'downed',medicalSleep:true})).toBe('sleep');
 });
 
 test('the cached mesh portrait follows the physical primary weapon and removes it on drop',()=>{

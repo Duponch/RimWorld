@@ -24,8 +24,12 @@ export class FireLayer {
   constructor(){
     const material=fireMaterial();
     material.positionNode=Fn(()=>{
-      const data=attribute('firePosition','vec4'),pulse=sin(this.tick.mul(.9).add(data.x.mul(7)).add(data.z)).mul(.15).add(1);
-      const p=vec3(positionLocal.x,positionLocal.y.add(.75).mul(pulse),positionLocal.z).mul(data.w);
+      const data=attribute('firePosition','vec4'),height=positionLocal.y.add(.75);
+      const phase=this.tick.mul(2*Math.PI/18).add(data.x.mul(7)).add(data.z.mul(11));
+      const pulse=sin(phase).mul(.14).add(.96);
+      const sway=sin(phase.add(height.mul(2.4))).mul(height).mul(.10);
+      const curl=cos(phase.mul(1.27).add(height.mul(2.1))).mul(height).mul(.07);
+      const p=vec3(positionLocal.x.add(sway),height.mul(pulse),positionLocal.z.add(curl)).mul(data.w);
       return data.w.greaterThan(0).select(p.add(data.xyz),vec3(0,-100,0));
     })();
     this.mesh=new THREE.Mesh(fireGeometry(),material);this.mesh.name='Ground fire — shared GPU flames';this.mesh.frustumCulled=false;this.allocate();
@@ -36,13 +40,20 @@ export class FireLayer {
   }
   adopt(world:World,reset=false):void {
     const fires=(world.fires?.items??[]).filter(f=>f.attachedPawnId===undefined&&f.attachedAnimalId===undefined);
-    const key=fires.map(f=>`${f.id}:${f.x}:${f.z}:${f.size}`).join('|');if(!reset&&key===this.signature)return;this.signature=key;
-    if(fires.length>this.capacity){while(this.capacity<fires.length)this.capacity*=2;this.allocate();}
+    const campfires=world.structures.filter(s=>s.kind==='campfire'&&!!s.fuel?.ticks);
+    const key=fires.map(f=>`${f.id}:${f.x}:${f.z}:${f.size}`).join('|')+';'+campfires.map(s=>`${s.id}:${s.x}:${s.z}`).join('|');if(!reset&&key===this.signature)return;this.signature=key;
+    const count=fires.length+campfires.length*3;
+    if(count>this.capacity){while(this.capacity<count)this.capacity*=2;this.allocate();}
     const a=this.mesh.geometry.getAttribute('firePosition') as THREE.InstancedBufferAttribute;
-    fires.forEach((f,i)=>a.setXYZW(i,f.x,0,f.z,f.size));if(!fires.length)a.setXYZW(0,0,-100,0,0);
-    a.needsUpdate=true;(this.mesh.geometry as THREE.InstancedBufferGeometry).instanceCount=Math.max(1,fires.length);
+    // A new small fire used to disappear behind the ground/logs in the
+    // isometric view. Keep one GPU instance per ground fire, but give its
+    // visible flame a minimum silhouette while preserving size ordering.
+    let i=0;for(const f of fires)a.setXYZW(i++,f.x,0,f.z,Math.max(.46,f.size*1.25));
+    for(const s of campfires)for(let j=0;j<3;j++)a.setXYZW(i++,s.x+(j-1)*.13,.2+(j%2)*.045,s.z+(j%2)*.09,j===1?.54:.40);
+    if(!count)a.setXYZW(0,0,-100,0,0);
+    a.needsUpdate=true;(this.mesh.geometry as THREE.InstancedBufferGeometry).instanceCount=Math.max(1,count);
   }
-  present(tick:number):void {this.tick.value=tick%4096;}
+  present(tick:number):void {this.tick.value=((tick%3600)+3600)%3600;}
   dispose():void {this.mesh.geometry.dispose();(this.mesh.material as THREE.Material).dispose();}
 }
 

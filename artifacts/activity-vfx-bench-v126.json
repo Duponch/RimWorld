@@ -1,0 +1,97 @@
+{
+  "date": "2026-09-27T11:08:42.540Z",
+  "base": "http://127.0.0.1:5173",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "protocol": "One paused synthetic 64² scene, 100 visible actors (60 at powered machining benches, 40 sleeping), 30 ground fires and 10 lit campfires. Native Chromium WebGPU, fixed orthographic camera, A/B/A with V126 actor/structure effect groups visible/hidden/visible. 45 RAF warmup frames per arm and 1.8 s sampling. RAF interval includes scheduling and display pacing; frame CPU is JS/render submission, not GPU execution. No performance threshold or simulation-speed claim.",
+  "scene": {
+    "pawns": 100,
+    "working": 60,
+    "sleeping": 40,
+    "groundFires": 30,
+    "campfires": 10
+  },
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "description": ""
+  },
+  "phases": [
+    {
+      "name": "A-visible",
+      "enabled": true,
+      "frames": {
+        "count": 433,
+        "p50": 4.2,
+        "p95": 4.3,
+        "max": 4.3
+      },
+      "frameCpu": {
+        "count": 434,
+        "p50": 1.2,
+        "p95": 1.7,
+        "max": 2.2
+      },
+      "fps": 240,
+      "drawCalls": 31,
+      "triangles": 973549,
+      "tick": 0
+    },
+    {
+      "name": "B-hidden",
+      "enabled": false,
+      "frames": {
+        "count": 434,
+        "p50": 4.2,
+        "p95": 4.2,
+        "max": 4.3
+      },
+      "frameCpu": {
+        "count": 435,
+        "p50": 1.1,
+        "p95": 1.4,
+        "max": 2
+      },
+      "fps": 240,
+      "drawCalls": 28,
+      "triangles": 968589,
+      "tick": 0
+    },
+    {
+      "name": "A-visible-repeat",
+      "enabled": true,
+      "frames": {
+        "count": 435,
+        "p50": 4.2,
+        "p95": 4.3,
+        "max": 4.3
+      },
+      "frameCpu": {
+        "count": 436,
+        "p50": 1.1,
+        "p95": 1.5,
+        "max": 2.2
+      },
+      "fps": 240,
+      "drawCalls": 31,
+      "triangles": 973549,
+      "tick": 0
+    }
+  ],
+  "errors": [],
+  "runtime": {
+    "backend": "WebGPU",
+    "adapter": {
+      "vendor": "amd",
+      "architecture": "rdna-1",
+      "description": ""
+    },
+    "actorInstances": 100,
+    "smokeInstances": 200,
+    "glowInstances": 180,
+    "detail": 26.53301886792453,
+    "distant": false
+  }
+}

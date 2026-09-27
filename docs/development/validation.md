@@ -1,4 +1,8 @@
-# Validation courante — V124
+# Validation courante — V126
+
+V126 : [activités, expressions et effets visibles](../history/validation-activity-v126.md), gestes liés aux états confirmés, lots GPU partagés, borne des fumées de feu et parcours WebGPU de bagarre, sommeil, fabrication et feu. Simulation et schéma V125 inchangés ; mesures et limites de cadence distinctes.
+
+V125 : [paroles blessantes et bagarres physiques](../history/validation-social-conflict-v125.md), migration stricte V124→V125, duel réciproque, souvenirs, scène préparée et parcours natifs. Les règles sociales générales restent partielles.
 
 V124 : [loisirs sociaux](../history/validation-social-v124.md), table/feu et visite physique, migration stricte, scène préparée, reprise et parcours WebGPU. Le compte rendu distingue les tests ciblés, les anciens oracles corrigés, les limites de couverture et les mesures ; aucune parité sociale complète ni cadence générale n'est induite.
 

@@ -128,7 +128,8 @@ test('V117: real jobs show contact, low work and confirmed tree recoil', async (
         }
         await page.waitForFunction(({ phase, kind }) => {
           const frames = (window as any).__v117.frames as any[];
-          const active = frames.filter(f => f.state === 'working' && f.work === 1 && f.phase === phase &&
+          // Positive work codes distinguish cooking/research while retaining active work.
+          const active = frames.filter(f => f.state === 'working' && f.work > 0 && f.phase === phase &&
             ((f.jobProgress ?? 0) > 0 || (f.cookingProgress ?? 0) > 0));
           const tree = kind !== 'chop' || (window as any).__v117.treeCaptured;
           if (active.length < 3 || !tree) return false;
@@ -137,7 +138,7 @@ test('V117: real jobs show contact, low work and confirmed tree recoil', async (
         }, { phase, kind }, { timeout: 40_000, polling: 'raf' });
         await pause(page);
         const frames = await page.evaluate(() => (window as any).__v117.frames as any[]);
-        const active = frames.filter(f => f.state === 'working' && f.work === 1 && f.phase === phase);
+        const active = frames.filter(f => f.state === 'working' && f.work > 0 && f.phase === phase);
         expect(active.length).toBeGreaterThanOrEqual(3);
         expect(new Set(active.map(f => f.time)).size).toBeGreaterThan(1);
         const geometry = await page.evaluate(() => {

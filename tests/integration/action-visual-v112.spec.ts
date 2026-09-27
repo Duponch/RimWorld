@@ -110,7 +110,8 @@ test('V112: four real jobs select four resident GPU gestures without changing th
         await page.locator('[data-speed="6"]').click();
         await page.waitForFunction(({expectedPhase}) => {
           const frames = (window as any).__actionVisual.frames as any[];
-          const active = frames.filter(f => f.state === 'working' && f.work === 1 && f.phase === expectedPhase &&
+          // Positive work codes distinguish cooking/research while retaining active work.
+          const active = frames.filter(f => f.state === 'working' && f.work > 0 && f.phase === expectedPhase &&
             ((f.jobProgress ?? 0) > 0 || (f.cookingProgress ?? 0) > 0));
           if (active.length < 3) return false;
           (document.querySelector('[data-speed="0"]') as HTMLButtonElement).click();
@@ -118,7 +119,7 @@ test('V112: four real jobs select four resident GPU gestures without changing th
         }, {expectedPhase}, { timeout: 40_000, polling: 'raf' });
         await pause(page);
         const frames = await page.evaluate(() => (window as any).__actionVisual.frames as any[]);
-        const active = frames.filter(f => f.state === 'working' && f.work === 1 && f.phase > 10);
+        const active = frames.filter(f => f.state === 'working' && f.work > 0 && f.phase > 10);
         expect(active.length).toBeGreaterThanOrEqual(3);
         const modes = [...new Set(active.map(f => f.phase))];
         expect(modes).toContain(expectedPhase);

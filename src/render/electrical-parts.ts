@@ -43,7 +43,10 @@ export function electricalParts(world:World,cutaway=false):Placement[] {
       const cells=footprintCells(s),last=cells[cells.length-1]!,x=(s.x+last.x)/2,z=(s.z+last.z)/2,ry=s.orientation*Math.PI/2;
       out.push({x,z,y:.13,sx:.86,sy:.26,sz:1.83,ry,color:0x4b5957},
         {x,z,y:.57,sx:.79,sy:.7,sz:1.69,ry,color:0x7a8d75},
-        {x,z,y:.94,sx:.86,sy:.08,sz:1.82,ry,color:0x54655c});
+        {x,z,y:.94,sx:.86,sy:.08,sz:1.82,ry,color:0x54655c},
+        // Dark recessed display makes the stored-charge bars legible when the
+        // resident emissive batch has no active segments.
+        {x,z,y:.989,sx:.70,sy:.018,sz:.31,ry,color:0x304644});
       for(const sign of [-1,1])out.push({x:x+Math.sin(ry)*sign*.58,z:z+Math.cos(ry)*sign*.58,y:1.04,sx:.23,sy:.14,sz:.2,ry,color:sign>0?0xb07152:0xa8b5ae});
     } else if(s.kind==='solar-generator') {
       const x=s.x+1.5,z=s.z+1.5;

@@ -1,7 +1,7 @@
 import type { apparelAppearance } from '../render/character-apparel';
 import { appearanceOf, BEARD_STYLES, HAIR_STYLES, type BodyTypeId, type HairId } from '../sim/pawn-appearance';
 import type { Pawn, World } from '../sim/types';
-import { portraitDataUrl } from './pawn-portrait';
+import { portraitDataUrl,portraitExpressionOf } from './pawn-portrait';
 
 type ApparelLook = ReturnType<typeof apparelAppearance>;
 
@@ -22,6 +22,7 @@ const HAIR_LABEL: Record<HairId, string> = {
 /** Refreshes only when the visual identity or equipped apparel actually changes. */
 export function updatePawnAppearanceInspection(container: HTMLElement, world: World, pawn: Pawn, look: ApparelLook, weaponItem?: string): void {
   const appearance = appearanceOf(pawn, world.seed);
+  const expression=portraitExpressionOf(pawn);
   // ColonistInspector moves this node into the Bio panel after its first update.
   let section = container.querySelector<HTMLElement>('.appearance-inspection');
   if (!section) {
@@ -41,11 +42,11 @@ export function updatePawnAppearanceInspection(container: HTMLElement, world: Wo
   const key = [pawn.id, pawn.name, pawn.appearance ? 'saved' : 'projection',
     appearance.version, appearance.sex, appearance.bodyType, appearance.headType,
     appearance.hair, appearance.beard, appearance.skinColor, appearance.hairColor,
-    look.signature, look.color ?? '', look.vest, look.silhouette, look.pants, weaponItem ?? ''].join('|');
+    look.signature, look.color ?? '', look.vest, look.silhouette, look.pants, weaponItem ?? '',expression].join('|');
   if (section.dataset.appearanceKey === key) return;
   section.dataset.appearanceKey = key;
   const image = section.querySelector<HTMLImageElement>('.appearance-inspection-portrait')!;
-  image.src = portraitDataUrl(appearance, look, weaponItem);
+  image.src = portraitDataUrl(appearance, look, weaponItem, expression);
   image.alt = `Portrait de ${pawn.name}`;
   const hair = HAIR_STYLES.find(style => style.id === appearance.hair);
   const beard = BEARD_STYLES.find(style => style.id === appearance.beard);

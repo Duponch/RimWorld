@@ -1,0 +1,258 @@
+import * as THREE from 'three/webgpu';
+import { Fn, attribute, cameraPosition, float, mix, positionLocal, sin, smoothstep, uniform, uv, vec2, vec3 } from 'three/tsl';
+import { BATTERY_CAPACITY } from '../sim/power-battery.ts';
+import { isPowerActive } from '../sim/power-rules.ts';
+import { footprintCells } from '../sim/definitions.ts';
+import type { Structure, World } from '../sim/types.ts';
+import { WORLD_SCALE } from '../world/scale.ts';
+import { BoxMesh, configureBoxMaterial } from './BoxMesh.ts';
+
+type Glow = { x:number; y:number; z:number; sx:number; sy:number; sz:number; ry:number; color:number };
+type Smoke = { x:number; y:number; z:number; seed:number; size:number; soot:number; rise:number };
+type GroundFire = { id:number; x:number; z:number; size:number };
+type FireChunk = { x:number; z:number; fires:GroundFire[] };
+type FireCandidate = { fire:GroundFire; distance:number };
+const FIRE_CHUNK_SIZE=16;
+const MAX_GROUND_SMOKE_SOURCES=128;
+const object=new THREE.Object3D(), color=new THREE.Color();
+
+// Keep only the nearest visible flames without sorting every fire. The heap
+// holds at most MAX_GROUND_SMOKE_SOURCES entries even during a map-wide fire.
+function worse(a:FireCandidate,b:FireCandidate):boolean {
+  return a.distance>b.distance || (a.distance===b.distance&&a.fire.id>b.fire.id);
+}
+function offerFire(heap:FireCandidate[],candidate:FireCandidate):void {
+  if(heap.length<MAX_GROUND_SMOKE_SOURCES){
+    let i=heap.length;heap.push(candidate);
+    while(i>0){const parent=(i-1)>>1;if(!worse(heap[i]!,heap[parent]!))break;[heap[i],heap[parent]]=[heap[parent]!,heap[i]!];i=parent;}
+  }else if(worse(heap[0]!,candidate)){
+    heap[0]=candidate;let i=0;
+    for(;;){const left=i*2+1,right=left+1;if(left>=heap.length)break;
+      let child=right<heap.length&&worse(heap[right]!,heap[left]!)?right:left;
+      if(!worse(heap[child]!,heap[i]!))break;
+      [heap[i],heap[child]]=[heap[child]!,heap[i]!];i=child;
+    }
+  }
+}
+
+function local(s:Structure,x:number,y:number,z:number,sx:number,sy:number,sz:number,tint:number):Glow {
+  const ry=s.orientation*Math.PI/2,cs=Math.cos(ry),sn=Math.sin(ry);
+  return {x:s.x+x*cs+z*sn,y,z:s.z+z*cs-x*sn,sx,sy,sz,ry,color:tint};
+}
+function phase(id:number,index:number):number {
+  let n=Math.imul(id^0x45d9f3b,index*0x9e3779b1);n=Math.imul(n^(n>>>16),0x7feb352);
+  return ((n^(n>>>15))>>>0)/4294967296;
+}
+
+/** Two resident draws: unlit metal/status pieces and shader-animated smoke.
+ * Work/power/charge state is sampled only when a confirmed snapshot arrives;
+ * there are no per-appliance meshes, lights or CPU-stepped particles. */
+export class StructureVfxLayer {
+  readonly group=new THREE.Group();
+  readonly glow:BoxMesh;
+  readonly smoke:THREE.Mesh<THREE.InstancedBufferGeometry>;
+  private readonly tick=uniform(0);
+  private readonly boxBase=new THREE.BoxGeometry(1,1,1);
+  private readonly smokeBase=new THREE.PlaneGeometry(1,1);
+  private readonly glowMaterial=new THREE.MeshBasicNodeMaterial({color:0xffffff,toneMapped:false});
+  private readonly smokeMaterial=new THREE.MeshBasicNodeMaterial({color:0xffffff,transparent:true,depthWrite:false,side:THREE.DoubleSide,forceSinglePass:true,toneMapped:false});
+  private smokeCapacity=64;
+  private key:string|null=null;
+  private structuralSmoke:Smoke[]=[];
+  private fireChunks:FireChunk[]=[];
+  private viewVersion=0;
+  private selectedVersion=-1;
+  private lastView:{targetX:number;targetZ:number;cameraX:number;cameraY:number;cameraZ:number;quaternion:THREE.Quaternion;projectionX:number;projectionY:number}|null=null;
+  private readonly frustum=new THREE.Frustum();
+  private readonly projection=new THREE.Matrix4();
+  private readonly viewProjection=new THREE.Matrix4();
+  private readonly chunkSphere=new THREE.Sphere(new THREE.Vector3(),1);
+  private readonly firePoint=new THREE.Vector3();
+
+  constructor(){
+    configureBoxMaterial(this.glowMaterial);
+    const point=attribute('boxMatrix3','vec4');
+    const flutter=sin(this.tick.mul(2*Math.PI/18).add(point.x.mul(2.1)).add(point.z.mul(1.7))).mul(.12).add(.91);
+    this.glowMaterial.colorNode=attribute('boxColor','vec3').mul(flutter);
+    this.glow=new BoxMesh(this.boxBase,this.glowMaterial,128);
+    this.glow.name='Hot workpieces and powered indicators — resident GPU batch';
+    this.glow.castShadow=false;this.glow.receiveShadow=false;
+
+    const smokePosition=attribute('smokePosition','vec4'),smokeShape=attribute('smokeShape','vec4');
+    const phase=this.tick.div(30).add(smokePosition.w).fract();
+    this.smokeMaterial.positionNode=Fn(()=>{
+      const direction=cameraPosition.xz.sub(smokePosition.xz),distance=direction.length().max(.001);
+      const right=vec2(direction.y,direction.x.negate()).div(distance);
+      const breadth=smokeShape.x.mul(float(.46).add(phase.mul(.78)));
+      const drift=sin(this.tick.mul(2*Math.PI/80).add(smokePosition.w.mul(19))).mul(.08).mul(phase);
+      const horizontal=positionLocal.x.mul(breadth).add(drift);
+      return vec3(smokePosition.x.add(right.x.mul(horizontal)),smokePosition.y.add(phase.mul(smokeShape.z)).add(positionLocal.y.mul(breadth)),smokePosition.z.add(right.y.mul(horizontal)));
+    })();
+    this.smokeMaterial.colorNode=mix(vec3(.87,.91,.86),vec3(.37,.39,.36),smokeShape.y);
+    const radius=uv().sub(vec2(.5,.5)).length();
+    const edge=float(1).sub(smoothstep(.19,.52,radius));
+    const birth=smoothstep(0,.17,phase),death=float(1).sub(smoothstep(.68,1,phase));
+    this.smokeMaterial.opacityNode=edge.mul(birth).mul(death).mul(smokeShape.y.mul(.16).add(.34));
+    this.smoke=new THREE.Mesh(this.smokeGeometry(),this.smokeMaterial);
+    this.smoke.name='Steam and smoke — resident GPU billboards';
+    this.smoke.castShadow=false;this.smoke.receiveShadow=false;this.smoke.frustumCulled=false;this.smoke.renderOrder=3;
+    this.group.add(this.glow,this.smoke);
+  }
+
+  private smokeGeometry():THREE.InstancedBufferGeometry {
+    const geometry=new THREE.InstancedBufferGeometry();
+    geometry.index=this.smokeBase.index!.clone();
+    for(const [name,part] of Object.entries(this.smokeBase.attributes))geometry.setAttribute(name,part.clone());
+    geometry.setAttribute('smokePosition',new THREE.InstancedBufferAttribute(new Float32Array(this.smokeCapacity*4),4).setUsage(THREE.StaticDrawUsage));
+    geometry.setAttribute('smokeShape',new THREE.InstancedBufferAttribute(new Float32Array(this.smokeCapacity*4),4).setUsage(THREE.StaticDrawUsage));
+    geometry.instanceCount=0;return geometry;
+  }
+
+  adopt(world:World,reset=false):void {
+    if(reset)this.key=null;
+    const working=new Set<number>();
+    for(const pawn of world.pawns)if(pawn.state==='working'&&pawn.cooking?.phase==='work')working.add(pawn.cooking.stationId);
+    const glow:Glow[]=[],smoke:Smoke[]=[],groundFires:GroundFire[]=[],tokens:string[]=[];
+    const puff=(x:number,y:number,z:number,id:number,size:number,soot:number,rise:number,count=2)=>{
+      for(let i=0;i<count;i++)smoke.push({x:x+(i-.5)*.09,y,z:z+(i%2)*.06,seed:phase(id,i),size:size*(i%2?.85:1),soot,rise});
+    };
+    const h=WORLD_SCALE.stonecutterHeight;
+    for(const s of world.structures){
+      const on=isPowerActive(s),work=working.has(s.id);
+      if(s.kind==='machining-table'||s.kind==='fabrication-bench'){
+        tokens.push(`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${on}:${work}`);
+        if(on){
+          const lx=s.kind==='machining-table'?.56:1.9,lz=s.kind==='machining-table'?.05:.55;
+          glow.push(local(s,lx,h+.26,lz,.17,.04,.13,s.kind==='machining-table'?0x68cbd4:0x72c8b4));
+          if(work){
+            const x=s.kind==='machining-table'?.55:0,z=s.kind==='machining-table'?.05:.38,y=s.kind==='machining-table'?h+.285:h+.48;
+            glow.push(local(s,x,y,z,.56,.10,.20,0xff7132),local(s,x,y+.06,z,.29,.025,.11,0xffda78));
+            const emitter=local(s,x,y+.17,z,.1,.1,.1,0xffffff);
+            puff(emitter.x,emitter.y,emitter.z,s.id,.39,.42,.76);
+          }
+        }
+      }else if(s.kind==='electric-stove'||s.kind==='fueled-stove'){
+        const active=work&&(s.kind==='electric-stove'?on:!!s.fuel?.ticks);
+        tokens.push(`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${on}:${active}`);
+        if(s.kind==='electric-stove'&&on)glow.push(local(s,.8,h+.22,.37,.13,.04,.11,0x8ed7be));
+        if(active){
+          const emitter=local(s,-.58,h+.26,-.04,.1,.1,.1,0xffffff);
+          puff(emitter.x,emitter.y,emitter.z,s.id,.42,s.kind==='fueled-stove'?.25:0,.82,3);
+          glow.push(local(s,-.58,h+.105,-.04,.35,.015,.36,0xffa260));
+        }
+      }else if(s.kind==='hi-tech-research-bench'||s.kind==='multi-analyzer'){
+        tokens.push(`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${on}`);
+        if(on){
+          if(s.kind==='multi-analyzer')glow.push(local(s,.5,1.68,.5,.38,.04,.38,0x79cfce));
+          else glow.push(local(s,-1.55,h+.31,.84,.52,.045,.055,0x8acfd4),local(s,1.55,h+.31,.84,.52,.045,.055,0x8acfd4));
+        }
+      }else if(s.kind==='battery'){
+        const cells=footprintCells(s),last=cells[cells.length-1]!,x=(s.x+last.x)/2,z=(s.z+last.z)/2;
+        const level=Math.min(4,Math.max(0,Math.ceil((s.battery?.stored??0)/BATTERY_CAPACITY*4)));
+        tokens.push(`${s.id}:battery:${x}:${z}:${s.orientation}:${level}`);
+        for(let i=0;i<level;i++){
+          const ry=s.orientation*Math.PI/2,dx=(i-1.5)*.15,cs=Math.cos(ry),sn=Math.sin(ry);
+          glow.push({x:x+dx*cs,y:1.012,z:z-dx*sn,sx:.105,sy:.026,sz:.24,ry,color:i===3?0x87dcc7:i===2?0xa7d792:0xe4af67});
+        }
+      }else if(s.kind==='wood-generator'){
+        tokens.push(`${s.id}:wood-generator:${s.x}:${s.z}:${on}`);
+        if(on){glow.push({x:s.x+.13,y:.58,z:s.z+1.23,sx:.42,sy:.07,sz:.025,ry:0,color:0xffa456});puff(s.x+.13,WORLD_SCALE.generatorHeight+.73,s.z-.04,s.id,.57,.9,1.32,3);}
+      }else if(s.kind==='campfire'){
+        const lit=!!s.fuel?.ticks;tokens.push(`${s.id}:campfire:${s.x}:${s.z}:${lit}`);
+        if(lit)puff(s.x,.47,s.z,s.id,.48,.76,1.06,2);
+      }
+    }
+    for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined){
+      tokens.push(`${fire.id}:ground-fire:${fire.x}:${fire.z}:${fire.size}`);
+      groundFires.push({id:fire.id,x:fire.x,z:fire.z,size:fire.size});
+    }
+    const key=tokens.join('|');if(key===this.key)return;this.key=key;
+    this.structuralSmoke=smoke;
+    const chunks=new Map<string,FireChunk>();
+    for(const fire of groundFires){
+      const x=Math.floor(fire.x/FIRE_CHUNK_SIZE)*FIRE_CHUNK_SIZE,z=Math.floor(fire.z/FIRE_CHUNK_SIZE)*FIRE_CHUNK_SIZE,key=`${x}:${z}`;
+      let chunk=chunks.get(key);if(!chunk){chunk={x,z,fires:[]};chunks.set(key,chunk);}
+      chunk.fires.push(fire);
+    }
+    this.fireChunks=[...chunks.values()];
+    this.viewVersion++;
+    if(glow.length>this.glow.instanceMatrix.count)this.glow.allocate(this.boxBase,2**Math.ceil(Math.log2(glow.length)));
+    this.glow.activeCount=glow.length;
+    for(const [i,item] of glow.entries()){
+      object.position.set(item.x,item.y,item.z);object.rotation.set(0,item.ry,0);object.scale.set(item.sx,item.sy,item.sz);object.updateMatrix();
+      this.glow.setMatrixAt(i,object.matrix);this.glow.setColorAt(i,color.setHex(item.color));
+    }
+    if(glow.length){this.glow.instanceMatrix.needsUpdate=true;this.glow.colorBuffer.needsUpdate=true;this.glow.computeBoundingSphere();}
+    // Structure smoke is independent of the capped ground-fire selection. The
+    // camera refreshes that selection before the next render after adoption.
+    this.uploadSmoke([]);
+  }
+
+  private uploadSmoke(fires:readonly GroundFire[]):void {
+    const count=this.structuralSmoke.length+fires.length*2;
+    if(count>this.smokeCapacity){while(this.smokeCapacity<count)this.smokeCapacity*=2;this.smoke.geometry.dispose();this.smoke.geometry=this.smokeGeometry();}
+    const positions=this.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute;
+    const shapes=this.smoke.geometry.getAttribute('smokeShape') as THREE.InstancedBufferAttribute;
+    for(const [i,item] of this.structuralSmoke.entries()){
+      positions.setXYZW(i,item.x,item.y,item.z,item.seed);
+      shapes.setXYZW(i,item.size,item.soot,item.rise,0);
+    }
+    let i=this.structuralSmoke.length;
+    for(const fire of fires)for(let puff=0;puff<2;puff++){
+      positions.setXYZW(i,fire.x+(puff-.5)*.09,.35,fire.z+(puff%2)*.06,phase(fire.id,puff));
+      shapes.setXYZW(i++,.43*Math.max(.6,fire.size)*(puff%2?.85:1),.84,1.12,0);
+    }
+    this.smoke.geometry.instanceCount=count;this.smoke.visible=count>0;
+    if(count){positions.needsUpdate=true;shapes.needsUpdate=true;}
+  }
+
+  /** Refresh only when the camera moves beyond a small guard band, not every
+   * RAF. The expanded frustum keeps edge fires resident while panning within
+   * that band; the chunk index avoids scanning the whole burning map. */
+  setView(camera:THREE.Camera,target:THREE.Vector3):void {
+    if(!this.group.visible)return;
+    const x=camera.projectionMatrix.elements[0]!,y=camera.projectionMatrix.elements[5]!,prior=this.lastView;
+    if(this.selectedVersion===this.viewVersion&&prior&&
+      Math.hypot(target.x-prior.targetX,target.z-prior.targetZ)<3&&
+      Math.hypot(camera.position.x-prior.cameraX,camera.position.y-prior.cameraY,camera.position.z-prior.cameraZ)<5&&
+      Math.abs(camera.quaternion.dot(prior.quaternion))>.9975&&
+      Math.abs(x-prior.projectionX)<Math.abs(prior.projectionX)*.06&&
+      Math.abs(y-prior.projectionY)<Math.abs(prior.projectionY)*.06)return;
+    this.lastView={targetX:target.x,targetZ:target.z,cameraX:camera.position.x,cameraY:camera.position.y,cameraZ:camera.position.z,
+      quaternion:camera.quaternion.clone(),projectionX:x,projectionY:y};
+    this.selectedVersion=this.viewVersion;
+    if(!this.fireChunks.length)return;
+    camera.updateMatrixWorld();
+    this.projection.copy(camera.projectionMatrix);
+    this.projection.elements[0]!*=.78;this.projection.elements[5]!*=.78;
+    this.viewProjection.multiplyMatrices(this.projection,camera.matrixWorldInverse);
+    this.frustum.setFromProjectionMatrix(this.viewProjection);
+    const nearest:FireCandidate[]=[];
+    for(const chunk of this.fireChunks){
+      this.chunkSphere.center.set(chunk.x+7.5,.6,chunk.z+7.5);
+      this.chunkSphere.radius=13;
+      if(!this.frustum.intersectsSphere(this.chunkSphere))continue;
+      for(const fire of chunk.fires){
+        this.firePoint.set(fire.x,.6,fire.z);
+        if(!this.frustum.containsPoint(this.firePoint))continue;
+        const dx=fire.x-target.x,dz=fire.z-target.z;
+        offerFire(nearest,{fire,distance:dx*dx+dz*dz});
+      }
+    }
+    nearest.sort((a,b)=>a.distance-b.distance||a.fire.id-b.fire.id);
+    this.uploadSmoke(nearest.map(item=>item.fire));
+  }
+
+  /** All three shader periods divide 7200, so wrap is invisible on long saves
+   * and GPU float precision stays stable after millions of simulation ticks. */
+  present(tick:number):void {this.tick.value=((tick%7200)+7200)%7200;}
+  setDistant(distant:boolean):void {this.group.visible=!distant;}
+  prepareForCompile():()=>void {
+    const before={group:this.group.visible,glow:this.glow.activeCount,glowCull:this.glow.frustumCulled,smoke:this.smoke.geometry.instanceCount,smokeVisible:this.smoke.visible};
+    this.group.visible=true;
+    if(!before.glow){object.position.set(0,-100,0);object.rotation.set(0,0,0);object.scale.set(.001,.001,.001);object.updateMatrix();this.glow.setMatrixAt(0,object.matrix);this.glow.setColorAt(0,color.setHex(0xffffff));this.glow.instanceMatrix.needsUpdate=true;this.glow.colorBuffer.needsUpdate=true;this.glow.activeCount=1;this.glow.frustumCulled=false;}
+    if(!before.smoke){const position=this.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute,shape=this.smoke.geometry.getAttribute('smokeShape') as THREE.InstancedBufferAttribute;position.setXYZW(0,0,-100,0,0);shape.setXYZW(0,.001,0,0,0);position.needsUpdate=shape.needsUpdate=true;this.smoke.geometry.instanceCount=1;this.smoke.visible=true;}
+    return ()=>{this.group.visible=before.group;this.glow.activeCount=before.glow;this.glow.frustumCulled=before.glowCull;this.smoke.geometry.instanceCount=before.smoke;this.smoke.visible=before.smokeVisible;};
+  }
+  dispose():void {this.group.clear();this.glow.dispose();this.smoke.geometry.dispose();this.boxBase.dispose();this.smokeBase.dispose();this.glowMaterial.dispose();this.smokeMaterial.dispose();}
+}

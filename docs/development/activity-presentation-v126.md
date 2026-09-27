@@ -1,0 +1,17 @@
+# Activités vivantes — V126
+
+Cette tranche rend les décisions déjà confirmées plus lisibles sur la carte. Elle ne crée ni tâche, durée, équipement, dégât, rendement, tirage métier ou champ de sauvegarde. Le schéma reste **125**. Les positions logiques, collisions, portées et réservations sont toujours celles du worker ; la présentation peut seulement rapprocher deux combattants et animer les pièces communes de leurs modèles.
+
+## Corps et expressions
+
+Les gestes de mine, coupe, construction, fabrication, cuisine et recherche mobilisent les bras, le buste et légèrement la tête sur la même horloge que les pas. Les clignements vivants, yeux fermés du dormeur et croix du mort sont des variantes du maillage humain résident ; les portraits HUD/Bio choisissent l'expression correspondante dans leur cache SVG lorsque l'état change. Une bagarre mutuelle au contact emploie un rapprochement borné et interpolé sur les poses partagées par le corps, la charge et la sélection ; le départ et l'arrêt du duel ne déplacent pas sa case physique. Aucun `AnimationMixer`, squelette ni objet de scène par colon n'est créé.
+
+## Effets de carte
+
+`ActionVfxLayer` emprunte les positions instanciées des humains. Un seul lot dessine sur le GPU le nuage et les étoiles de la bagarre, les copeaux de coupe, éclats de mine et de construction, signes discrets d'atelier/recherche/extinction et les Z du sommeil. Il classe les tâches seulement à la réception d'un état confirmé. Sans activité, le lot a zéro instance visible ; au recul, il se masque quand les signes ne seraient plus lisibles. Les dessins et trajectoires sont originaux et procéduraux, sans texture RimWorld ni simulation de particules sur le CPU.
+
+`StructureVfxLayer` réunit les pièces de métal chaud, témoins d'appareils et émissions de vapeur/fumée en deux lots instanciés. L'activité dépend du vrai poste, de sa tâche, de son alimentation et de sa charge ; les appareils éteints n'affichent pas de métal incandescent. Les foyers construits utilisent le lot de feu existant au lieu de cubes de flamme statiques. La fumée des feux au sol se limite à 128 sources proches et visibles, choisies par chunks seulement au changement significatif de vue ou d'état. La fumée reste symbolique : elle ne simule ni vent volumétrique ni propagation supplémentaire d'incendie. Les effets sont masqués dans la vue globale.
+
+Les positions, couleurs, tailles et états s'envoient seulement quand l'état confirmé change. Le shader anime ensuite les sommets et les formes à partir du tick de présentation partagé. Pause, chargement, déplacement et rotation de caméra ne lancent aucune horloge parallèle. Les matériaux ne créent pas de lampe dynamique par étincelle. Le commutateur historique « Textures 3D stylisées » reste indépendant de ces formes simples et ne réintroduit aucun échantillonnage de texture lorsqu'il est désactivé.
+
+Le dessin instancié dans les étapes vertex/fragment TSL convient ici à des formes courtes, déterministes et liées à peu d'acteurs. Un dispatch compute et des buffers de stockage auraient ajouté une passe et un état à synchroniser sans besoin de particules libres persistantes. Cette décision repose sur les capacités du Three épinglé et sur la [documentation officielle de l'instanciation](https://threejs.org/docs/pages/InstancedBufferGeometry.html) et des [nœuds TSL/compute](https://threejs.org/docs/pages/TSL.html), pas sur une promesse de coût GPU nul. Les mesures et contrôles de la tranche sont consignés dans [la validation V126](../history/validation-activity-v126.md).
