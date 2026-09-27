@@ -47,14 +47,20 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
       const supply=t.medicine?`avec ${ITEM_DEFINITIONS[t.medicine.item].label.toLowerCase()}`:'sans médicament';
       return {code:'tend',reason:t.phase==='pickup'?`Prélève ${ITEM_DEFINITIONS[t.medicine!.item].label.toLowerCase()} pour ${target}.`:t.phase==='find-medicine'?`Recherche une nouvelle dose pour ${target}.`:`${t.phase==='tend'?'Soigne':'Rejoint'} ${target} ${supply}.`};
     }
-  if(pawn.state==='resting')return {code:'patient',reason:pawn.medicalSleep?'Dort pendant sa récupération médicale.':'Attend des soins ou récupère au lit, éveillé.'};
+  if(pawn.state==='resting'){
+    const visitor=world.pawns.find(other=>other.recreation.task?.activity==='visit-sick'&&other.recreation.task.phase==='active'&&other.recreation.task.patientId===pawn.id);
+    return {code:'patient',reason:visitor?`Reçoit la visite de ${visitor.name} au lit.`:pawn.medicalSleep?'Dort pendant sa récupération médicale.':'Attend des soins ou récupère au lit, éveillé.'};
+  }
   if(pawn.rescue)return {code:pawn.rescue.capture?'capture':'rescue',reason:`${pawn.rescue.phase==='carry'?'Porte':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.name??'un patient'} pour ${pawn.rescue.capture?'le capturer':'le secourir'}.`};
   if(pawn.state==='dead')return {code:'dead',reason:'Décédé ; dépouille conservée sur place. Le transport et les sépultures ne sont pas encore disponibles.'};
   if(pawn.state==='downed')return {code:'downed',reason:'Incapacité médicale : ne peut pas agir. Consultez ses blessures et ses capacités dans Santé.'};
   if(pawn.prisoner&&!pawn.need)return {code:'prisoner',reason:pawn.prisoner.escape?'Cherche à quitter la carte par une ouverture.':'Prisonnier : attend nourriture, repos ou visite du geôlier.'};
   if(pawn.interruptedCargo)return {code:'interrupted-cargo',reason:'Travail interrompu ; cargaison conservée. Libérez une case de sol proche pour permettre son dépôt.'};
   if(pawn.recreation.task) {
-    const task=pawn.recreation.task, activity=task.activity==='horseshoes'?'jouer aux fers à cheval':task.activity==='chess'?'jouer aux échecs':'observer le ciel';
+    const task=pawn.recreation.task, patient=task.activity==='visit-sick'?world.pawns.find(other=>other.id===task.patientId):undefined;
+    if(task.activity==='visit-sick')return {code:'recreation',reason:task.phase==='travel'?`Se rend au chevet de ${patient?.name??'un patient'}.`:`Rend visite à ${patient?.name??'un patient'} (${Math.round(pawn.recreation.level)} % de loisirs).`};
+    if(task.activity==='social-relax')return {code:'recreation',reason:task.phase==='travel'?'Rejoint un point de rencontre.':`Se détend au point de rencontre (${Math.round(pawn.recreation.level)} % de loisirs).`};
+    const activity=task.activity==='horseshoes'?'jouer aux fers à cheval':task.activity==='chess'?'jouer aux échecs':'observer le ciel';
     return {code:'recreation',reason:task.phase==='travel'?`Rejoint une place pour ${activity}.`:`Prend le temps de ${activity} (${Math.round(pawn.recreation.level)} %).`};
   }
   if(pawn.heatRefuge)return {code:'thermal-refuge',reason:pawn.state==='moving'?'Rejoint un refuge à température confortable.':'Attend dans un refuge thermique pour récupérer.'};

@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 123 as const;
+export const SCHEMA_VERSION = 124 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -15,7 +15,7 @@ export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 
 export interface Cell { x: number; z: number }
 export interface Tile { floor?:import('./flooring.ts').FloorKind; ore?: 'steel' | 'machinery' | 'gold' | 'plasteel'; miningDamage?: number; terrain: Terrain; stone?: import('./geology.ts').StoneKind }
 export interface Resource extends Cell { species?:import('./biome-flora.ts').PlantSpecies; plantLife?:import('./plant-life.ts').PlantLife; damage?:number; id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; growthThermalFactor?:number; stone?: import('./geology.ts').StoneKind }
-export interface Structure extends Cell { pen?:{accepted:import('./animal-species.ts').AnimalSpeciesId[]}; art?:{authorId:number;createdAt:number}; flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
+export interface Structure extends Cell { gatherSpot?:boolean; pen?:{accepted:import('./animal-species.ts').AnimalSpeciesId[]}; art?:{authorId:number;createdAt:number}; flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = {type:'grave';graveId:number} | ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'inventory';pawnId:number} | {type:'equipment';pawnId:number} | {type:'apparel';pawnId:number} | { type: 'job'; jobId: number };
 export interface MaterialPile { componentWork?:import('./component-work.ts').ComponentWork; flakWork?:import('./flak-work.ts').FlakWork; artWork?:import('./art-work.ts').ArtWork; gunWork?:import('./gun-work.ts').GunWork; humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
@@ -222,6 +222,7 @@ export type Command = import('./domestic-state.ts').DomesticCommand | import('./
   | {type:'pen-species';markerId:number;species:import('./animal-species.ts').AnimalSpeciesId;accepted:boolean}
   | {type:'adopt-economy'}
   | {type:'climate-adopt'}
+  | {type:'gather-spot';structureId:number;enabled:boolean}
   | {type:'heater-adjust';structureId:number;offset:-10|-1|1|10|null}
   | {type:'wind-auto-cut';structureId:number;enabled:boolean}
   | {type:'order-extinguish';pawnId:number;fireId:number}

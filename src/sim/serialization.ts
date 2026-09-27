@@ -127,7 +127,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -261,6 +261,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         }
         if(version<91&&item.species!==undefined)errors.push('Future flora species in older save.');
       } else if (key === 'structures' || key === 'jobs') {
+        if(item.gatherSpot!==undefined&&(version<124||key!=='structures'||!['campfire','table','table-square','table-long'].includes(String(item.kind))||typeof item.gatherSpot!=='boolean'))errors.push('Invalid or future gathering spot.');
         const flowerPotId=item.flowerPotId;
         if(flowerPotId!==undefined){
           const pot=(input.structures as Record<string,unknown>[]).find(s=>s.id===flowerPotId&&s.kind==='flower-pot');
@@ -323,6 +324,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   if(!errors.length)errors.push(...validateWorkProgress(input as unknown as World,version));
   if(!errors.length)errors.push(...validateMining(input as unknown as World,version));
   if(!errors.length)errors.push(...validateFurniture(input as unknown as World,version,ids,true));
+  if(!errors.length)for(const pack of (input as unknown as World).packed??[])if(pack.building.gatherSpot!==undefined&&(version<124||!['table','table-square','table-long'].includes(pack.building.kind)||typeof pack.building.gatherSpot!=='boolean'))errors.push('Invalid or future packed gathering spot.');
   if(!errors.length)errors.push(...validateBarriers(input as unknown as World,version));
   if(!errors.length)errors.push(...validateDeconstruction(input as unknown as World,version,true));
   if(!errors.length)errors.push(...validatePriorityWork(input as unknown as World,version));
@@ -800,6 +802,11 @@ export function deserializeWorld(serialized: string): World {
     const errors=validateSchema(input,122);if(errors.length)throw new Error('Invalid version 122 save: '+errors.join(' '));
     input.schemaVersion=123;
     adoptExoticMerchantSchedule(input as unknown as World);
+  }
+  if(record(input)&&input.schemaVersion===123){
+    const errors=validateSchema(input,123);if(errors.length)throw new Error('Invalid version 123 save: '+errors.join(' '));
+    for(const pawn of (input as unknown as World).pawns){pawn.recreation.tolerance.social=0;pawn.recreation.bored.social=false;}
+    input.schemaVersion=124;
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

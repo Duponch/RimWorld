@@ -9,7 +9,6 @@ import {recreationSiteValid} from '../src/sim/recreation-space.ts';
 import {addGroundMaterial} from '../src/sim/materials.ts';
 import type {World} from '../src/sim/types.ts';
 import {roomExperienceCamp} from './scenarios/room-experience.ts';
-import {withoutArt} from './scenarios/legacy-skills.ts';
 import {expireRoomMemories,rememberRoomUse} from '../src/sim/room-experience.ts';
 
 function room():World {
@@ -88,8 +87,9 @@ test('owned bed observes only after its persisted delay, then refreshes at physi
 });
 
 test('V101 migration preserves fields and refuses future room memories; current saves enforce family and duration bounds',()=>{
-  const w=room(),raw=withoutArt(JSON.parse(serializeWorld(w)));raw.schemaVersion=101;
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual({...raw,schemaVersion:106,pawns:raw.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0,handle:0}}))});
+  const w=room(),raw=JSON.parse(readFileSync('public/test-saves/v101/atelier.json','utf8'));
+  expect(raw.schemaVersion).toBe(101);
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(124);
   expect(migrated.pawns[0]!.roomMemories).toBeUndefined();
   const future=structuredClone(raw);future.pawns[0].roomMemories=[{kind:'dining',stage:3,expiresAt:future.tick+100}];
   expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/version 101|room/i);
@@ -109,7 +109,11 @@ test('immutable V101 workshop migrates without adding a thought, clock, material
   const raw=JSON.parse(readFileSync('public/test-saves/v101/atelier.json','utf8'));
   expect(raw.schemaVersion).toBe(101);
   const migrated=deserializeWorld(JSON.stringify(raw));
-  expect(migrated).toEqual({...raw,schemaVersion:106,pawns:raw.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0,handle:0}}))});
+  expect(migrated).toEqual({...raw,schemaVersion:124,pawns:raw.pawns.map((p:Record<string,unknown>)=>({
+    ...p,
+    priorities:{...(p.priorities as object),art:0,handle:0},
+    recreation:{...(p.recreation as object),tolerance:{...((p.recreation as {tolerance:object}).tolerance),cerebral:0,social:0},bored:{...((p.recreation as {bored:object}).bored),cerebral:false,social:false}},
+  }))});
   expect(validateWorld(migrated)).toEqual([]);
 });
 

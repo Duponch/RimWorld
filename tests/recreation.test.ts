@@ -1,4 +1,3 @@
-import { withoutPawnSkills, withMigratedSkills } from './scenarios/legacy-skills';
 import { expect, test } from 'vitest';
 import { applyCommand, createWorld, stepWorld } from '../src/sim/engine';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization';
@@ -96,15 +95,18 @@ test('physical horseshoes: delivered construction, three reserved players, trans
   const resume=deserializeWorld(serializeWorld(w));stepWorld(w,500);stepWorld(resume,500);expect(resume).toEqual(w);expect(validateWorld(w)).toEqual([]);
 });
 
-test('skygazing requires arrival; unavailable or boring activities give no joy; V14 migration preserves existing state',()=>{
+test('skygazing requires arrival; unavailable or boring activities give no joy; V123 migration adds no past joy',()=>{
   const w=fixture();w.tick=2000;w.pawns=w.pawns.slice(0,1);const p=w.pawns[0]!;let travel='';
   for(let i=0;i<50&&p.state!=='recreating';i++){const before=p.recreation.level;stepWorld(w);if(p.recreation.task?.phase==='travel'){expect(p.recreation.level).toBeLessThanOrEqual(before);travel ||= serializeWorld(w);}}
   expect(p.recreation.task).toMatchObject({activity:'skygaze',phase:'active',buildingId:null});expect(travel).not.toBe('');
   expect(recreationSiteValid(w,p.recreation.task!)).toBe(true);const saved=deserializeWorld(travel);stepWorld(saved,w.tick-saved.tick);expect(saved).toEqual(w);
   const invalid=JSON.parse(serializeWorld(w));invalid.pawns[0].recreation.tolerance.solitary=Infinity;expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/recreation/i);
-  p.recreation.task=null;p.path=[];p.state='idle';p.schedule.fill('anything');p.recreation.level=10;p.recreation.bored={solitary:true,dexterity:true,cerebral:true};p.recreation.tolerance={solitary:80,dexterity:80,cerebral:80};
+  p.recreation.task=null;p.path=[];p.state='idle';p.schedule.fill('anything');p.recreation.level=10;p.recreation.bored={solitary:true,dexterity:true,cerebral:true,social:true};p.recreation.tolerance={solitary:80,dexterity:80,cerebral:80,social:80};
   const level=p.recreation.level;stepWorld(w,100);expect(p.recreation.task).toBeNull();expect(p.recreation.level).toBeLessThan(level);
-  const old=fixture();old.pawns.forEach(p=>p.schedule.fill('anything'));const raw=JSON.parse(serializeWorld(old));(raw.schemaVersion=14,withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;for(const pawn of raw.pawns)delete pawn.orders;raw.pawns.forEach((p:any)=>delete p.recreation);
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual(withMigratedSkills({...old,pawns:old.pawns.map(p=>({...p,recreation:initialRecreation()}))}));
-  const corruptOld=structuredClone(raw);corruptOld.pawns[0].path=[{x:31,z:31}];expect(()=>deserializeWorld(JSON.stringify(corruptOld))).toThrow(/version 14|path/i);
+  const old=fixture();old.pawns.forEach(p=>p.schedule.fill('anything'));
+  const raw=JSON.parse(serializeWorld(old));raw.schemaVersion=123;
+  for(const pawn of raw.pawns){delete pawn.recreation.tolerance.social;delete pawn.recreation.bored.social;}
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual(old);
+  const corruptOld=structuredClone(raw);corruptOld.pawns[0].recreation.tolerance.social=12;
+  expect(()=>deserializeWorld(JSON.stringify(corruptOld))).toThrow(/version 123|recreation/i);
 });

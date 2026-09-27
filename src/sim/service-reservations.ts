@@ -1,4 +1,5 @@
 import { isCookingOrder } from './order-types.ts';
+import { urgentTreatment } from './care-rules.ts';
 import type { Cell, Pawn, World } from './types.ts';
 
 /** Exclusive use of a workstation, dining place or bed. This is not physical
@@ -10,7 +11,7 @@ export function serviceCell(pawn: Pawn): Cell | null {
   if(pawn.research)return pawn.research.spot;
   if(pawn.feed)return pawn.feed.spot;
   if(pawn.tend)return pawn.tend.spot;
-  if (pawn.recreation?.task?.activity === 'horseshoes' || pawn.recreation?.task?.activity === 'chess') return pawn.recreation.task.target;
+  if (pawn.recreation?.task && pawn.recreation.task.activity !== 'skygaze') return pawn.recreation.task.target;
   if (pawn.cooking) return pawn.cooking.spot;
   if (pawn.need?.kind === 'eat') return pawn.need.dining?.target ?? null;
   if (pawn.need?.kind === 'sleep' && pawn.need.bedId !== null) return pawn.need.target;
@@ -19,6 +20,10 @@ export function serviceCell(pawn: Pawn): Cell | null {
 export function reservedServiceCells(world: World, exceptPawn?: number): Set<number> {
   const reserved = new Set<number>();
   for (const pawn of world.pawns) if (pawn.id !== exceptPawn) {
+    // A leisure visitor must never monopolize the sole bedside place when
+    // emergency treatment becomes due later in the same confirmed tick.
+    const visit=pawn.recreation?.task;
+    if(visit?.activity==='visit-sick'&&world.pawns.some(p=>p.id===visit.patientId&&urgentTreatment(p)))continue;
     const cell = serviceCell(pawn); if (cell) reserved.add(cell.z*world.width+cell.x);
   }
   for(const pawn of world.pawns)if(pawn.id!==exceptPawn&&pawn.rescue){const bed=world.structures.find(s=>s.id===pawn.rescue!.bedId);if(bed)reserved.add(bed.z*world.width+bed.x);}

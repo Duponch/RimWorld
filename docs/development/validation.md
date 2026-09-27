@@ -1,4 +1,6 @@
-# Validation courante — V123
+# Validation courante — V124
+
+V124 : [loisirs sociaux](../history/validation-social-v124.md), table/feu et visite physique, migration stricte, scène préparée, reprise et parcours WebGPU. Le compte rendu distingue les tests ciblés, les anciens oracles corrigés, les limites de couverture et les mesures ; aucune parité sociale complète ni cadence générale n'est induite.
 
 V123 : [première chaîne industrielle avancée](../history/validation-industry-v123.md), 35 contrôles regroupés sur neuf fichiers, quatre parcours Chromium/WebGPU au total et build/typage. La scène préparée crée son premier composant après reprise par les règles ordinaires ; migration stricte et continuation exacte vérifiées. Aucun gain général de FPS ou débit ×6 n'est inféré.
 

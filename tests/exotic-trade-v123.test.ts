@@ -22,7 +22,6 @@ test('V123 exotic schedule adopts only future opportunities and carries finite p
   expect(old.visitors!.exotic!.pending[0]).toBeGreaterThan(old.tick);
   expect({rng:old.rng,nextId:old.nextId,visitor:old.visitors!.visitor,traveler:old.visitors!.traveler}).toEqual(before);
   expect(old.pawns.some(p=>p.visitor)).toBe(false);
-  old.schemaVersion=123;
   expect(validateVisitors(old,123,new Set())).toEqual([]);
   expect(validateVisitors(old,122,new Set())).toContain('Invalid visitor calendar.');
   const zone={filters:{wood:true,food:true,steel:true,component:true,gold:false,plasteel:true,'advanced-component':false}};
@@ -43,7 +42,7 @@ test('V123 exotic schedule adopts only future opportunities and carries finite p
     for(const pile of stock.piles){expect(pile.quantity).toBeLessThanOrEqual(ITEM_DEFINITIONS[pile.item].stackLimit);expect(pile.owner).toEqual({type:'inventory',pawnId:100});if(pile.item!=='silver')expect(tradeRefusal(pile,'buy',old.tick)).toBeTruthy();expect(tradeRefusal(pile,'buy',old.tick,'exotic')).toBeUndefined();}
   }
 
-  const fresh=deconstructionCamp(1,32);fresh.schemaVersion=123;enableVisitors(fresh);
+  const fresh=deconstructionCamp(1,32);enableVisitors(fresh);
   fresh.tick=fresh.visitors!.exotic!.pending[0]!;
   advanceVisitors(fresh);
   const trader=fresh.pawns.find(p=>p.visitor?.merchantKind==='exotic');
@@ -54,7 +53,7 @@ test('V123 exotic schedule adopts only future opportunities and carries finite p
 });
 
 test('V123 exotic basket uses contact, finite stock, physical currency and atomic stale-quote refusal',()=>{
-  const {world:w,pawnId,traderId}=visitorTradeFixture();w.schemaVersion=123;adoptExoticMerchantSchedule(w);
+  const {world:w,pawnId,traderId}=visitorTradeFixture();adoptExoticMerchantSchedule(w);
   const trader=w.pawns.find(p=>p.id===traderId)!,negotiator=w.pawns.find(p=>p.id===pawnId)!;
   trader.visitor!.merchantKind='exotic';
   const stock=generateExoticStock(123,traderId,w.nextId,w.tick);w.nextId=stock.nextId;w.piles.push(...stock.piles);

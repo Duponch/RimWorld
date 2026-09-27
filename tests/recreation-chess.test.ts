@@ -89,12 +89,12 @@ test('seat destruction releases chess before a save and V121 migration adds no r
   expect(deserializeWorld(serializeWorld(w))).toEqual(w);
 
   const old=JSON.parse(serializeWorld(w));old.schemaVersion=121;
-  for(const p of old.pawns){delete p.recreation.tolerance.cerebral;delete p.recreation.bored.cerebral;p.recreation.task=null;p.state='idle';p.path=[];p.moveCooldown=0;delete p.motion;delete p.transitExit;}
+  for(const p of old.pawns){delete p.recreation.tolerance.cerebral;delete p.recreation.bored.cerebral;delete p.recreation.tolerance.social;delete p.recreation.bored.social;p.recreation.task=null;p.state='idle';p.path=[];p.moveCooldown=0;delete p.motion;delete p.transitExit;}
   old.structures=old.structures.filter((s:{kind:string})=>s.kind!=='chess-table');
   expect(()=>deserializeWorld(JSON.stringify({...old,structures:w.structures}))).toThrow(/version 121/i);
   const migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated.schemaVersion).toBe(122);
-  expect(migrated.pawns.every(p=>p.recreation.tolerance.cerebral===0&&p.recreation.bored.cerebral===false&&p.recreation.task===null)).toBe(true);
+  expect(migrated.schemaVersion).toBe(124);
+  expect(migrated.pawns.every(p=>p.recreation.tolerance.cerebral===0&&p.recreation.bored.cerebral===false&&p.recreation.tolerance.social===0&&p.recreation.bored.social===false&&p.recreation.task===null)).toBe(true);
 });
 
 test('chess needs manipulation, stops on loss of both hands, and reports the real activity',()=>{

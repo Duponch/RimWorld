@@ -285,6 +285,14 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command?.type==='designate'&&command.kind==='repair')return refusal('invalid-command','Utilisez la zone de foyer pour activer les réparations.');
   if(command.type==='heater-adjust')return adjustHeaterTarget(world,command.structureId,command.offset);
   if(command.type==='wind-auto-cut')return setWindAutoCut(world,command.structureId,command.enabled);
+  if(command.type==='gather-spot'){
+    const spot=world.structures.find(structure=>structure.id===command.structureId);
+    if(!spot||!['campfire','table','table-square','table-long'].includes(spot.kind)||typeof command.enabled!=='boolean')
+      return refusal('invalid-command','Point de rencontre invalide.');
+    if(command.enabled)delete spot.gatherSpot;else spot.gatherSpot=false;
+    if(!command.enabled)for(const pawn of world.pawns)if(pawn.recreation.task?.activity==='social-relax'&&pawn.recreation.task.buildingId===spot.id)releaseWork(world,pawn);
+    return {ok:true};
+  }
   if(command.type==='adopt-economy'){if(adoptColonyEconomy(world))event(world,'command','Patrimoine, attentes et progression des menaces activés à partir de maintenant.');return {ok:true};}
   if(command.type==='climate-adopt'){const adopted=adoptEnvironment(world);if(adopted)event(world,'command','Climat saisonnier et météo activés à partir de maintenant.');return {ok:true};}
   if(command.type==='order-extinguish'){const reason=applyExtinguish(world,command);return reason?refusal('invalid-command',reason):{ok:true};}

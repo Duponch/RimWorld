@@ -434,6 +434,33 @@
       "prepared": true,
       "provenance": "Scène V123 préparée depuis la sauvegarde historique V101 sans la modifier : recherches achevées, établi et facture placés explicitement, composants initiaux retirés. Le premier composant et son travail sont produits après reprise par le moteur.",
       "sha256": "424f6a7caae1ad58c22ac5cfed59f8cc6e241f18f5276e2e41f773bb91c482c7"
+    },
+    {
+      "id": "rencontre-v124",
+      "release": "v124",
+      "label": "Rencontre autour d’une table · 2 colons",
+      "description": "Ada et Basile disposent d’une table de rassemblement active et de deux tabourets physiques ; leurs loisirs sociaux commencent après reprise.",
+      "filename": "rencontre.json",
+      "pawns": 2,
+      "colonists": 2,
+      "width": 32,
+      "height": 32,
+      "tick": 2000,
+      "focus": [
+        "loisir social",
+        "table de rassemblement",
+        "places réservées",
+        "conversation",
+        "salle de loisirs"
+      ],
+      "steps": [
+        "Repérer la table active à (18, 15) et ses deux tabourets à (17, 15) et (17, 16) ; inspecter le loisir d’Ada et de Basile.",
+        "Reprendre la partie : les deux colons rejoignent chacun une place, gagnent du loisir social et peuvent converser.",
+        "Désactiver le point de rassemblement ou retirer un tabouret pour constater l’interruption et la libération de la place."
+      ],
+      "prepared": true,
+      "provenance": "Scène V124 préparée depuis les salles historiques V103 sans les modifier : un second colon, un tabouret, la table active et les besoins initiaux sont fixés explicitement. La détente et les conversations éventuelles se produisent seulement après reprise par le moteur.",
+      "sha256": "a6f63b3ef13ce5a373faf832bf5879db9122412e7a16e1a4458a7bfd0b79bd6e"
     }
   ]
 }

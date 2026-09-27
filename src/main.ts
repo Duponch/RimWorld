@@ -104,6 +104,7 @@ import { gameLayout, storageSettings, toolDefinitions, workColumns } from './ui/
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
 import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
+import { gatherSpotControls, updateGatherSpotControls } from './ui/gather-spot-controls';
 const jobLabels: Record<JobKind, string> = { fence:'Clôture','fence-gate':'Portillon','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'wood-generator':'Construction du générateur à bois', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const rotatableTools=new Set<Tool>(['art-bench','machining-table','hi-tech-research-bench','fabrication-bench','grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
@@ -429,6 +430,7 @@ function rebuildInspector() {
     doorControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
     penControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
     furnitureControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)),id=>{const object=furnitureObject(snapshot!,id);if(!object)return;setPanel('architect');applyTool('install');installationId=id;placementOrientation=object.orientation;renderer?.setPlacementRotation(placementOrientation);renderer?.setFurniturePlacement(object);});
+    gatherSpotControls(panel,(structureId,enabled)=>attempt(async()=>{await client.command({type:'gather-spot',structureId,enabled});renderState();}));
     bedControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
     const fire=snapshot?.structures.find(s=>(stationRecipe(s)!==null||s.kind==='passive-cooler'||s.kind==='wood-generator')&&footprintCells(s).some(c=>c.x===selectedCell!.x&&c.z===selectedCell!.z));
     if(fire) {
@@ -472,6 +474,7 @@ function actionLabel(pawn: Pawn) {
   if(pawn.animalCare)return 'Soins vétérinaires';
   if(pawn.cooking)return queryPawnStatus(snapshot!,pawn).reason;
   if (pawn.need) return queryPawnStatus(snapshot!, pawn).reason;
+  if(pawn.recreation.task)return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.visitor)return pawn.visitor.phase==='leaving'?'Visiteur · quitte la carte':pawn.visitor.phase==='arriving'?'Visiteur · rejoint la colonie':pawn.visitor.role==='trader'?'Marchand · séjourne dans la colonie':'Visiteur · séjourne dans la colonie';
   if(pawn.haul?.destination.type==='fuel')return queryPawnStatus(snapshot!,pawn).reason;
   if (pawn.haul) {
@@ -584,7 +587,7 @@ function renderState() {
     else if(pawn.prisoner){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updatePrisonerInspection(el('inspector'),world,pawn);}
     else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);}
     else {
-      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.burning||pawn.firefighting||pawn.draft||pawn.equipmentTask||pawn.need||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
+      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.burning||pawn.firefighting||pawn.draft||pawn.equipmentTask||pawn.need||pawn.recreation.task||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='resting'||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
       updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn,world);
       updateRecreationInspection(el('inspector'),pawn,world);
       roomInspection.update(el('inspector'), world, pawn);
@@ -605,6 +608,7 @@ function renderState() {
       const storage = world.stockpiles.find(item => item.x === x && item.z === z);
       const piles = world.piles.filter(item => item.owner.type === 'ground' && item.owner.x === x && item.owner.z === z);
       updateFurnitureControls(el('inspector'),world,selectedCell);
+      updateGatherSpotControls(el('inspector'),structure);
       updateDoorControls(el('inspector'),world,selectedCell);
       updatePenControls(el('inspector'),world,selectedCell);
       roomInspection.update(el('inspector'), world, selectedCell);

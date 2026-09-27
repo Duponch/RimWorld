@@ -33,6 +33,14 @@ export function exchangeSocial(world:World,a:Pawn,b:Pawn,kind:SocialKind,grid?:S
   world.events.push({tick:world.tick,type:'need',message:`${SOCIAL_LABELS[kind]} entre ${a.name} et ${b.name}.`});if(world.events.length>80)world.events.splice(0,world.events.length-80);
   return true;
 }
+/** The patient visit owns its conversation cadence; no passive roll is due for
+ * the visitor while the physical visit is active. */
+export function visitSocialExchange(world:World,visitor:Pawn,patient:Pawn):boolean {
+  if(visitor.recreation.task?.activity!=='visit-sick'||visitor.recreation.task.phase!=='active'||visitor.recreation.task.patientId!==patient.id
+    ||!canSocialize(world,visitor,true)||!canSocialize(world,patient,false)||!goodSocialPosition(world,visitor,patient))return false;
+  const kind=socialRandom(stateFor(world,visitor))<.8?'chitchat':'deep-talk';
+  return exchangeSocial(world,visitor,patient,kind);
+}
 /** Hash checks: 60 Core ticks; pending attempts retry every 91 Core ticks.
  * Recipients are sampled uniformly among eligible nearby colonists. */
 export function advanceSocial(world:World):void {
@@ -40,12 +48,14 @@ export function advanceSocial(world:World):void {
   const carried=new Set(world.pawns.flatMap(p=>p.rescue?.phase==='carry'?[p.rescue.patientId]:[]));
   for(const p of world.pawns){
     expireSocialMemories(p,world.tick);
+    if(p.recreation.task?.activity==='visit-sick'&&p.recreation.task.phase==='active')continue;
     if(!canSocialize(world,p,true,carried)){if(p.social)delete p.social.wants;continue;}
     if(p.draft&&p.social)delete p.social.wants;
     const prior=p.social,last=prior?.last?.tick??-1000,pending=!!prior?.wants;
     if(pending?(world.tick*10+p.id)%91>=10:(world.tick+p.id)%6!==0||world.tick<=last+32)continue;
     const s=stateFor(world,p);
-    if(!pending&&socialRandom(s)>=60/(p.draft?22000:6600))continue;
+    const intensive=p.recreation.task?.activity==='social-relax'&&p.recreation.task.phase==='active'&&p.state==='recreating';
+    if(!pending&&socialRandom(s)>=60/(p.draft?22000:intensive?550:6600))continue;
     if(world.tick-last<12)continue;
     const candidates=world.pawns.filter(q=>q!==p&&distanceSquared(p,q)<=36&&canSocialize(world,q,false,carried));
     if(candidates.length){grid??=socialSight(world);const eligible=candidates.filter(q=>goodSocialPosition(world,p,q,grid));
