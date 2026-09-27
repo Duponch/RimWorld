@@ -47,8 +47,8 @@ test('les libellés Core adoptés et les dossiers humains restent lisibles sur u
   await expect(page.locator('#wildlife-panel .fauna-combat')).toBeVisible();
   await page.locator('#wildlife-panel').screenshot({ path: 'artifacts/ui-faune-v118.png', animations: 'disabled' });
   await page.locator('[data-panel="research"]').click();
-  await expect(page.locator('#research-panel .research-graph .research-node')).toHaveCount(11);
-  await expect(page.locator('#research-panel .research-links path')).toHaveCount(6);
+  await expect(page.locator('#research-panel .research-graph .research-node')).toHaveCount(14);
+  await expect(page.locator('#research-panel .research-links path')).toHaveCount(9);
   await expect(page.locator('#research-panel .research-detail')).toBeVisible();
   await page.locator('#research-panel').screenshot({ path: 'artifacts/ui-recherche-v118.png', animations: 'disabled' });
 });

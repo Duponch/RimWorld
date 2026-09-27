@@ -1,10 +1,10 @@
-import { flakArmorUnlocked,gunsmithingUnlocked } from './research.ts';
+import { fabricationUnlocked,flakArmorUnlocked,gunsmithingUnlocked } from './research.ts';
 import { craftingSkill } from './crafting-quality.ts';
 import { FLAK_REQUIREMENTS,GUN_REQUIREMENTS,isFlakRecipe,isGunRecipe,type ProductionRecipe } from './production-recipes.ts';
 import type { Pawn,World } from './types.ts';
 
-export const productionResearchUnlocked=(world:World,recipe:ProductionRecipe):boolean=>isGunRecipe(recipe)?gunsmithingUnlocked(world):isFlakRecipe(recipe)?flakArmorUnlocked(world):true;
-export const productionWorkerQualified=(pawn:Pawn,recipe:ProductionRecipe):boolean=>isGunRecipe(recipe)?craftingSkill(pawn).level>=GUN_REQUIREMENTS[recipe].skill:isFlakRecipe(recipe)?craftingSkill(pawn).level>=FLAK_REQUIREMENTS.skill:true;
+export const productionResearchUnlocked=(world:World,recipe:ProductionRecipe):boolean=>recipe==='make-component'?fabricationUnlocked(world):isGunRecipe(recipe)?gunsmithingUnlocked(world):isFlakRecipe(recipe)?flakArmorUnlocked(world):true;
+export const productionWorkerQualified=(pawn:Pawn,recipe:ProductionRecipe):boolean=>recipe==='make-component'?craftingSkill(pawn).level>=8:isGunRecipe(recipe)?craftingSkill(pawn).level>=GUN_REQUIREMENTS[recipe].skill:isFlakRecipe(recipe)?craftingSkill(pawn).level>=FLAK_REQUIREMENTS.skill:true;
 /** Exact inputs for machining; the historic recipes retain their pooled units. */
 export function validGunIngredients(recipe:ProductionRecipe,parts:readonly {item:string;quantity:number}[]):boolean {
   if(!isGunRecipe(recipe))return true;

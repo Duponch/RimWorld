@@ -115,7 +115,7 @@ export class RockLayer {
     if(reset) {this.slots.clear();this.rockMask=new Uint8Array(world.tiles.length);this.width=world.width;this.height=world.height;this.seed=world.seed;}
     for(let i=0;i<world.tiles.length;i++) {
       const tile=world.tiles[i]!;
-      const rock=tile.terrain==='rock'?(tile.ore?tile.ore==='machinery'?9:8:tile.stone?2+STONE_KINDS.indexOf(tile.stone):1):0;
+      const rock=tile.terrain==='rock'?(tile.ore?tile.ore==='machinery'?9:tile.ore==='gold'?10:tile.ore==='plasteel'?11:8:tile.stone?2+STONE_KINDS.indexOf(tile.stone):1):0;
       if(rock!==this.rockMask[i]) {changed.push(i);this.rockMask[i]=rock;}
       if(rock&&!this.slots.has(i))this.slots.set(i,{slot:this.slots.size,indices:[]});
     }

@@ -3,6 +3,7 @@ import {isArtRecipe} from './art-rules.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
 import { planGunWork } from './gun-work-plan.ts';
 import { planFlakWork } from './flak-work-plan.ts';
+import { planComponentWork } from './component-work-plan.ts';
 import { isGunRecipe,GUN_REQUIREMENTS,isFlakRecipe,FLAK_REQUIREMENTS } from './production-recipes.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
@@ -58,6 +59,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       const artResumed=planArtWork(world,pawn,station,bill,reachable,budget);if(artResumed.plan)return artResumed.plan;if(artResumed.handled)continue;
       const gunResumed=planGunWork(world,pawn,station,bill,reachable,budget);if(gunResumed.plan)return gunResumed.plan;if(gunResumed.handled)continue;
       const flakResumed=planFlakWork(world,pawn,station,bill,reachable,budget);if(flakResumed.plan)return flakResumed.plan;if(flakResumed.handled)continue;
+      const componentResumed=planComponentWork(world,pawn,station,bill,reachable,budget);if(componentResumed.plan)return componentResumed.plan;if(componentResumed.handled)continue;
       const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
       const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
         .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);

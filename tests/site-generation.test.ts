@@ -38,7 +38,7 @@ test('ore occasions share one budget, include hidden centres, consume absent min
   const seen=new Set<number>();
   for(const [index,occasion] of report.occasions.entries()) {
     for(const prior of report.occasions.slice(0,index))expect((prior.center%64-occasion.center%64)**2+(Math.floor(prior.center/64)-Math.floor(occasion.center/64))**2).toBeGreaterThanOrEqual(25);
-    if(occasion.mineral!=='steel'&&occasion.mineral!=='machinery'){expect(occasion.cells).toEqual([]);continue;}
+    if(!['steel','machinery','gold','plasteel'].includes(occasion.mineral)){expect(occasion.cells).toEqual([]);continue;}
     expect(occasion.cells.length).toBe(occasion.requested);
     for(const cell of occasion.cells){expect(seen.has(cell)).toBe(false);seen.add(cell);expect(world.tiles[cell]!.ore).toBe(occasion.mineral);}
   }
@@ -49,6 +49,30 @@ test('ore occasions share one budget, include hidden centres, consume absent min
   const edge=generateSiteOres(world,site,geologicalField(world.seed,site.stones));
   expect(edge.occasions).toHaveLength(1);expect(edge.occasions[0]!.cells.length).toBeGreaterThan(1);
   expect(world.tiles.filter(t=>t.ore).length).toBe(edge.occasions[0]!.cells.length);
+});
+
+test('new site maps place rare gold and plasteel veins in their original mineral occasions',()=>{
+  const seed=2,site=resolveSite(seed,{hilliness:'small-hills'});
+  const world:Pick<World,'seed'|'width'|'height'|'tiles'>={seed,width:250,height:250,tiles:Array.from({length:250*250},()=>({terrain:'rock',stone:site.stones[0]!}))};
+  const stoneAt=geologicalField(seed,site.stones);
+  const report=generateSiteOres(world,site,stoneAt);
+  expect(report.requested).toBe(50);
+  for(const mineral of ['gold','plasteel'] as const){
+    const veins=report.occasions.filter(occasion=>occasion.mineral===mineral);
+    expect(veins.length).toBeGreaterThan(0);
+    for(const vein of veins){
+      expect(vein.cells.length).toBe(vein.requested);
+      expect(vein.requested).toBeGreaterThanOrEqual(2);
+      expect(vein.requested).toBeLessThanOrEqual(8);
+      for(const cell of vein.cells)expect(world.tiles[cell]).toMatchObject({terrain:'rock',ore:mineral,stone:stoneAt(cell%world.width,Math.floor(cell/world.width))});
+    }
+  }
+  expect(world.tiles.filter(tile=>tile.ore==='gold').length).toBeGreaterThan(0);
+  expect(world.tiles.filter(tile=>tile.ore==='plasteel').length).toBeGreaterThan(0);
+  const playable=generateSiteWorld(seed,250,250,site);
+  expect(playable.tiles.filter(tile=>tile.ore==='gold').length).toBeGreaterThan(0);
+  expect(playable.tiles.filter(tile=>tile.ore==='plasteel').length).toBeGreaterThan(0);
+  expect(playable.rng).toBe(seed);
 });
 
 test('loose fragments are unique physical piles; incomplete vegetation neither occupies them nor grows on stone',()=>{

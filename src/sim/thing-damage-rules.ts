@@ -10,6 +10,7 @@ const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
   campfire:[80,0,false],'passive-cooler':[80,1,false],stonecutter:[180,1,true],'butcher-table':[180,1,true],
   'fueled-stove':[180,1,true],'electric-stove':[180,1,true],'tailor-bench':[180,1,true],'research-bench':[250,1,true],
   'machining-table':[180,1,true],
+  'fabrication-bench':[300,1,true],'hi-tech-research-bench':[250,1,true],'multi-analyzer':[200,1,true],
   'art-bench':[180,1,true],'small-sculpture':[90,1,true],'large-sculpture':[150,1,true],
   'electric-tailor-bench':[180,1,true],'table-square':[100,1,true],'table-long':[125,1,true],'dining-chair':[75,1,true],armchair:[120,1,true],'end-table':[60,1,true],dresser:[100,1,true],'flower-pot':[40,1,true],
   'wood-generator':[300,1,true],'standing-lamp':[50,1,false],cooler:[100,.7,true],battery:[100,1,true],

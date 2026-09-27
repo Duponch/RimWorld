@@ -20,6 +20,7 @@ export function billControls(station:Structure,send:(command:Command)=>void):HTM
     const reason=document.createElement('p');reason.dataset.billReason=String(bill.id);reason.className='muted';form.append(reason);
     if(isGunRecipe(bill.recipe)){const cost=document.createElement('p'),r=GUN_REQUIREMENTS[bill.recipe];cost.className='bill-cost';cost.textContent=`${r.steel} acier · ${r.component} composants · Artisanat ${r.skill}`;form.append(cost);}
     if(isFlakRecipe(bill.recipe)){const cost=document.createElement('p'),r=FLAK_REQUIREMENTS;cost.className='bill-cost';cost.textContent=`${r.cloth} tissu · ${r.steel} acier · ${r.component} composant · Artisanat ${r.skill}`;form.append(cost);}
+    if(bill.recipe==='make-component'){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent='12 acier · Artisanat 8';form.append(cost);}
     if(isArtRecipe(bill.recipe)){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent=`${artMaterialCount(bill.recipe)} unités d’un seul matériau · travail Art · qualité selon Artistique`;form.append(cost);}
     const fields=new Map<string,HTMLInputElement|HTMLSelectElement>();
     const input=(key:string,label:string,type:string,value:string|boolean)=>{

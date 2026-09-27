@@ -56,6 +56,13 @@ export function pileParts(bundles:readonly PileBundle[]):Placement[] {
     } else if(bundle.kind==='component') {
       food.push({x:bundle.x,z,y:.14,sx:.48,sy:.26,sz:.4,color:ITEM_DEFINITIONS.component.color});
       food.push({x:bundle.x,z,y:.29,sx:.2,sy:.07,sz:.26,color:0x637d77});
+    } else if(bundle.kind==='advanced-component') {
+      food.push({x:bundle.x,z,y:.13,sx:.45,sy:.23,sz:.38,color:ITEM_DEFINITIONS['advanced-component'].color});
+      food.push({x:bundle.x,z,y:.28,sx:.31,sy:.07,sz:.28,color:0xb2d4d2},
+        {x:bundle.x,z,y:.33,sx:.10,sy:.05,sz:.10,color:0xd8ab67});
+    } else if(bundle.kind==='gold'||bundle.kind==='plasteel') {
+      const color=ITEM_DEFINITIONS[bundle.item].color;
+      for(let row=0;row<Math.min(3,Math.ceil(bundle.quantity/25));row++)food.push({x:bundle.x,z,y:.055+row*.115,sx:.59,sy:.105,sz:.35,color:row%2?color:bundle.kind==='gold'?0xd9bd65:0x91adb4});
     } else if(bundle.kind==='steel') {
       for(let row=0;row<Math.ceil(bundle.quantity/25);row++)food.push({x:bundle.x,z,y:.07+row*.13,sx:.62,sy:.12,sz:.36,color:row%2?0x6b7a80:ITEM_DEFINITIONS.steel.color});
     } else if(bundle.kind==='blocks') {

@@ -1,7 +1,7 @@
 import { ITEM_DEFINITIONS, type ItemId } from '../sim/items';
 
 export type StorageItemSelection = Partial<Record<ItemId, boolean>>;
-const GROUP_LABELS:Readonly<Record<string,string>>={silver:'Argent',corpse:'Dépouilles',wood:'Bois',food:'Nourriture',unfinished:'Ouvrages inachevés',textile:'Textiles',chunk:'Fragments',steel:'Acier',component:'Composants',medicine:'Médicaments',weapon:'Armes',apparel:'Vêtements',blocks:'Blocs de pierre'};
+const GROUP_LABELS:Readonly<Record<string,string>>={silver:'Argent',corpse:'Dépouilles',wood:'Bois',food:'Nourriture',unfinished:'Ouvrages inachevés',textile:'Textiles',chunk:'Fragments',steel:'Acier',gold:'Or',plasteel:'Plastacier',component:'Composants','advanced-component':'Composants avancés',medicine:'Médicaments',weapon:'Armes',apparel:'Vêtements',blocks:'Blocs de pierre'};
 
 /** Mount beside the existing category controls. A historical zone without an
  * item list displays every item as selected, matching its category-only rule. */

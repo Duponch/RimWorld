@@ -14,8 +14,8 @@ export interface ConstructionRecipe { ingredients:readonly ConstructionCost[]; w
 type ConstructionObject={kind:JobKind;material?:ConstructionMaterial;floor?:FloorKind};
 // Core base work before the stuff factor, in Core ticks. Absence of material
 // deliberately keeps the V1–V29 historical recipe on existing objects.
-const costs:Record<StructureKind,number>={fence:1,'fence-gate':25,'pen-marker':30,'art-bench':75,'small-sculpture':50,'large-sculpture':100,'machining-table':150,grave:0,heater:50,'wind-turbine':100,'power-conduit':1,'power-switch':15,battery:70,'solar-generator':100,'fueled-stove':80,'electric-stove':80,'butcher-table':95,'butcher-spot':0,cooler:90,'research-bench':75,'tailor-bench':75,'electric-tailor-bench':75,'crafting-spot':0,'wood-generator':100,'standing-lamp':20,'passive-cooler':50,door:25,stonecutter:75,wall:5,bed:45,table:28,'table-square':50,'table-long':95,stool:25,'dining-chair':45,armchair:110,'end-table':30,dresser:50,'flower-pot':20,campfire:20,horseshoes:10,'chess-table':70};
-const work:Record<StructureKind,number>={fence:70,'fence-gate':500,'pen-marker':600,'art-bench':2500,'small-sculpture':0,'large-sculpture':0,'machining-table':3000,grave:800,heater:1000,'wind-turbine':3300,'power-conduit':35,'power-switch':200,battery:800,'solar-generator':2500,'fueled-stove':2000,'electric-stove':2000,'butcher-table':2000,'butcher-spot':0,cooler:1600,'research-bench':2800,'tailor-bench':2000,'electric-tailor-bench':2500,'crafting-spot':0,'wood-generator':2500,'standing-lamp':300,'passive-cooler':200,door:850,stonecutter:2000,wall:135,bed:800,table:750,'table-square':1500,'table-long':3000,stool:450,'dining-chair':8000,armchair:14000,'end-table':1000,dresser:2000,'flower-pot':250,campfire:200,horseshoes:100,'chess-table':8000};
+const costs:Record<StructureKind,number>={fence:1,'fence-gate':25,'pen-marker':30,'art-bench':75,'small-sculpture':50,'large-sculpture':100,'machining-table':150,'fabrication-bench':200,'hi-tech-research-bench':250,'multi-analyzer':40,grave:0,heater:50,'wind-turbine':100,'power-conduit':1,'power-switch':15,battery:70,'solar-generator':100,'fueled-stove':80,'electric-stove':80,'butcher-table':95,'butcher-spot':0,cooler:90,'research-bench':75,'tailor-bench':75,'electric-tailor-bench':75,'crafting-spot':0,'wood-generator':100,'standing-lamp':20,'passive-cooler':50,door:25,stonecutter:75,wall:5,bed:45,table:28,'table-square':50,'table-long':95,stool:25,'dining-chair':45,armchair:110,'end-table':30,dresser:50,'flower-pot':20,campfire:20,horseshoes:10,'chess-table':70};
+const work:Record<StructureKind,number>={fence:70,'fence-gate':500,'pen-marker':600,'art-bench':2500,'small-sculpture':0,'large-sculpture':0,'machining-table':3000,'fabrication-bench':5000,'hi-tech-research-bench':5000,'multi-analyzer':10000,grave:800,heater:1000,'wind-turbine':3300,'power-conduit':35,'power-switch':200,battery:800,'solar-generator':2500,'fueled-stove':2000,'electric-stove':2000,'butcher-table':2000,'butcher-spot':0,cooler:1600,'research-bench':2800,'tailor-bench':2000,'electric-tailor-bench':2500,'crafting-spot':0,'wood-generator':2500,'standing-lamp':300,'passive-cooler':200,door:850,stonecutter:2000,wall:135,bed:800,table:750,'table-square':1500,'table-long':3000,stool:450,'dining-chair':8000,armchair:14000,'end-table':1000,dresser:2000,'flower-pot':250,campfire:200,horseshoes:100,'chess-table':8000};
 const recipes=new Map<string,ConstructionRecipe>();
 // Physical ingredient provenance for salvage and damage. A sculpture has no
 // construction job: designation and save validation reject those jobs.
@@ -42,6 +42,14 @@ for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
     continue;
   }
   if(kind==='grave'){recipes.set('grave:legacy',Object.freeze({ingredients:[],work:80,coreWork:800}));continue;}
+  if(kind==='hi-tech-research-bench'||kind==='multi-analyzer'||kind==='fabrication-bench'){
+    const ingredients:ConstructionCost[]=kind==='hi-tech-research-bench'
+      ?[{item:'steel',quantity:250},{item:'component',quantity:10}]
+      :kind==='multi-analyzer'
+        ?[{item:'steel',quantity:40},{item:'plasteel',quantity:50},{item:'gold',quantity:20},{item:'component',quantity:8}]
+        :[{item:'steel',quantity:200},{item:'component',quantity:12},{item:'advanced-component',quantity:2}];
+    recipes.set(`${kind}:steel`,Object.freeze({ingredients:Object.freeze(ingredients.map(c=>Object.freeze(c))),work:work[kind]/10,coreWork:work[kind]}));continue;
+  }
   if(kind==='machining-table'||kind==='heater'||kind==='wind-turbine'||kind==='power-conduit'||kind==='power-switch'||kind==='battery'||kind==='solar-generator'){
     const components=kind==='machining-table'?5:kind==='heater'?1:kind==='wind-turbine'?2:kind==='power-switch'?1:kind==='battery'?2:kind==='solar-generator'?3:0;
     const ingredients:ConstructionCost[]=[{item:'steel',quantity:costs[kind]},...(components?[{item:'component' as const,quantity:components}]:[])];
@@ -77,6 +85,7 @@ export function validConstructionMaterial(kind:unknown,material:unknown,version=
   if(kind==='fence'||kind==='fence-gate'||kind==='pen-marker')return version>=119&&typeof material==='string'&&recipes.has(`${kind}:${material}`);
   if(kind==='art-bench')return version>=104&&(material==='wood'||material==='steel');
   if(kind==='small-sculpture'||kind==='large-sculpture')return version>=104&&isSculptureMaterial(material);
+  if(kind==='fabrication-bench'||kind==='hi-tech-research-bench'||kind==='multi-analyzer')return version>=123&&material==='steel';
   if(kind==='machining-table')return version>=101&&material==='steel';
   if(kind==='grave'||kind==='lay-floor'||kind==='remove-floor')return version>=89&&material===undefined;
   if(kind==='heater'||kind==='wind-turbine')return version>=87&&material==='steel';
@@ -91,7 +100,7 @@ export function validConstructionMaterial(kind:unknown,material:unknown,version=
   return material===undefined||typeof kind==='string'&&typeof material==='string'&&(CONSTRUCTION_MATERIALS as readonly string[]).includes(material)&&(version>=33||!isBlockMaterial(material))&&recipes.has(`${kind}:${material}`);
 }
 export const constructionMaterials=(kind:string):readonly ConstructionMaterial[]=>CONSTRUCTION_MATERIALS.filter(material=>validConstructionMaterial(kind,material));
-export const constructionSkillRequired=(kind:unknown):number=>kind==='cooler'?5:kind==='electric-stove'||kind==='electric-tailor-bench'||kind==='machining-table'?4:isHabitatFurnitureKind(kind)?FURNITURE_DEFINITIONS[kind].constructionSkill:powerConstructionSkill(kind as JobKind);
+export const constructionSkillRequired=(kind:unknown):number=>kind==='cooler'?5:kind==='electric-stove'||kind==='electric-tailor-bench'||kind==='machining-table'?4:kind==='fabrication-bench'||kind==='hi-tech-research-bench'?6:kind==='multi-analyzer'?8:isHabitatFurnitureKind(kind)?FURNITURE_DEFINITIONS[kind].constructionSkill:powerConstructionSkill(kind as JobKind);
 export function constructionRecipe(entity:ConstructionObject):ConstructionRecipe {
   if(entity.kind==='lay-floor'||entity.kind==='remove-floor')return flooringRecipe(entity.floor,entity.kind==='remove-floor');
   return recipes.get(`${entity.kind}:${entity.material??'legacy'}`)!;

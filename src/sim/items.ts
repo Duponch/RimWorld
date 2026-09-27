@@ -15,6 +15,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'unfinished-sculpture':Object.freeze({label:'Sculpture inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xb59b76}),
   'unfinished-flak-vest':Object.freeze({label:'Gilet pare-balles inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x626d65}),
   'unfinished-gun':Object.freeze({label:'Arme à feu inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x798c90}),
+  'unfinished-component':Object.freeze({label:'Composant inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x9aa69e}),
   'unfinished-shirt':Object.freeze({label:'Chemise inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xd8c8a2}),
   'unfinished-tribalwear':Object.freeze({label:'Tenue tribale inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xd8c8a2}),
   'unfinished-pants':Object.freeze({label:'Pantalon inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xd8c8a2}),
@@ -45,7 +46,10 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'sandstone-blocks': Object.freeze({label:'Blocs de grès',kind:'blocks',stackLimit:75,nutrition:0,maxIngest:0,color:0xb99d76}),
   'slate-blocks': Object.freeze({label:'Blocs de ardoise',kind:'blocks',stackLimit:75,nutrition:0,maxIngest:0,color:0x737f83}),
   component: Object.freeze({label:'Composants',kind:'component',stackLimit:50,nutrition:0,maxIngest:0,color:0xbe914c}),
+  'advanced-component':Object.freeze({label:'Composants avancés',kind:'advanced-component',stackLimit:50,nutrition:0,maxIngest:0,color:0xb7c9c1}),
   steel: Object.freeze({label:'Acier',kind:'steel',stackLimit:75,nutrition:0,maxIngest:0,color:0x839399}),
+  gold: Object.freeze({label:'Or',kind:'gold',stackLimit:500,nutrition:0,maxIngest:0,color:0xd8b85d}),
+  plasteel: Object.freeze({label:'Plastacier',kind:'plasteel',stackLimit:75,nutrition:0,maxIngest:0,color:0x93b8bd}),
   'granite-chunk': Object.freeze({label:'Fragment de granite',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0x99958d}),
   'limestone-chunk': Object.freeze({label:'Fragment de calcaire',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0xafad8b}),
   'marble-chunk': Object.freeze({label:'Fragment de marbre',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0xc5c4b5}),
@@ -65,7 +69,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
 export type ItemId = keyof typeof ITEM_DEFINITIONS;
 /** These raw foods cause the shared raw-meal thought, independently of policy. */
 export const rawFoodThought = (item: ItemId): boolean => item === 'rice' || item === 'potato' || item === 'corn' || item === 'agave-fruit' || isAnimalMeat(item);
-export const legacyItem = (kind: MaterialKind): ItemId => kind==='silver'?'silver':kind==='corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
+export const legacyItem = (kind: MaterialKind): ItemId => kind==='silver'?'silver':kind==='corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='advanced-component'?'advanced-component':kind==='gold'?'gold':kind==='plasteel'?'plasteel':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
 export const nutritionOf = (pile: MaterialPile): number => ITEM_DEFINITIONS[pile.item].nutrition * pile.quantity;
 export function availableNutrition(world: World): number {
   return world.piles.reduce((sum, pile) => sum + (pile.owner.type === 'job'||pile.owner.type==='inventory'||pile.owner.type==='pawn'&&!world.pawns.some(p=>p.id===('pawnId' in pile.owner?pile.owner.pawnId:-1)&&(p.faction??'colony')==='colony') ? 0 : nutritionOf(pile)), 0) / 100;

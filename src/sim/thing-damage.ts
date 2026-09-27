@@ -1,6 +1,7 @@
 import {detachMissingFlakBills} from './flak-work.ts';
 import {invalidateAnimalPens} from './animal-pens.ts';
 import {detachMissingGunBills} from './gun-work.ts';
+import {detachMissingComponentBills} from './component-work.ts';
 import {detachMissingArtBills} from './art-work.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
@@ -126,5 +127,5 @@ export function damageStructure(world:World,s:Structure,amount:number):boolean {
   }
   world.destroyed={count:destruction.count+1,lost};state.ledger.structures++;state.ledger.batteryEnergyLost+=energy;state.ledger.fuelTicksLost+=fuelLost;state.ledger.fuelTicksBurned+=fuelBurned;
   state.batteryWicks=state.batteryWicks.filter(w=>w.structureId!==s.id);
-  detachMissingBills(world);detachMissingFlakBills(world);detachMissingGunBills(world);detachMissingArtBills(world);reconcilePower(world);if(installed)reconcileRoofSupport(world,false,s);refreshStock(world);return true;
+  detachMissingBills(world);detachMissingFlakBills(world);detachMissingGunBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);reconcilePower(world);if(installed)reconcileRoofSupport(world,false,s);refreshStock(world);return true;
 }

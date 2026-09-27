@@ -407,6 +407,33 @@
       "prepared": true,
       "provenance": "Scène V122 préparée depuis les salles historiques V103 : table, recherche, siège, faim et lassitudes initiales sont fixés explicitement. La partie d’échecs et ses gains sont effectués après reprise par le moteur ordinaire.",
       "sha256": "7e9fd2294417ba65d9385e87dc253cc9a6c1782350cb5b7ae8ba8950ff9784cd"
+    },
+    {
+      "id": "industrie-v123",
+      "release": "v123",
+      "label": "Fabrication de composants · 1 colon",
+      "description": "Établi de fabrication alimenté, Ada Artisanat 10, acier physique et facture pour un composant ; la fabrication commence après reprise.",
+      "filename": "industrie.json",
+      "pawns": 1,
+      "colonists": 1,
+      "width": 32,
+      "height": 32,
+      "tick": 3244,
+      "focus": [
+        "fabrication",
+        "composant",
+        "acier",
+        "ouvrage physique",
+        "énergie"
+      ],
+      "steps": [
+        "Repérer l’établi de fabrication à (16, 8), son alimentation et sa facture de composant ; inspecter l’acier au sol.",
+        "Reprendre la partie : Ada transporte 12 aciers, travaille à l’établi et produit un composant physique.",
+        "Sauvegarder et recharger pendant l’ouvrage pour vérifier la reprise de sa progression."
+      ],
+      "prepared": true,
+      "provenance": "Scène V123 préparée depuis la sauvegarde historique V101 sans la modifier : recherches achevées, établi et facture placés explicitement, composants initiaux retirés. Le premier composant et son travail sont produits après reprise par le moteur.",
+      "sha256": "424f6a7caae1ad58c22ac5cfed59f8cc6e241f18f5276e2e41f773bb91c482c7"
     }
   ]
 }

@@ -11,7 +11,7 @@ import { copyPileCondition } from './pile-condition.ts';
 import { freshRot } from './food-preservation.ts';
 import { carrierOf } from './rescue-state.ts';
 import { startingPawn } from './starting-pawns.ts';
-import { generateVisitorStock } from './trade-stock.ts';
+import { generateExoticStock,generateVisitorStock } from './trade-stock.ts';
 import { visitorArrival,visitorAtEdge,visitorExit } from './visitor-navigation.ts';
 import { PLAN_INTERVAL } from './work-planner.ts';
 import { consumeVisitorOpportunity,INTRO_VISITOR_TICK,newVisitorAgenda,visitorPoints,visitorRandom,type VisitorGroup,type VisitorKind } from './visitor-state.ts';
@@ -21,7 +21,13 @@ const log=(w:World,message:string)=>{w.events.push({tick:w.tick,type:'command',m
 export function enableVisitors(w:World,withIntro=false):void {
   if(w.visitors)return;
   w.visitors={profile:'cassandra-visitors-v1',adoptedAt:w.tick,rng:((w.seed^0x88c0173)>>>0)||1,serial:0,
-    introAt:withIntro&&w.tick===0?INTRO_VISITOR_TICK:null,traveler:newVisitorAgenda(w.seed,'traveler',w.tick),visitor:newVisitorAgenda(w.seed,'visitor',w.tick),groups:[],departed:[]};
+    introAt:withIntro&&w.tick===0?INTRO_VISITOR_TICK:null,traveler:newVisitorAgenda(w.seed,'traveler',w.tick),visitor:newVisitorAgenda(w.seed,'visitor',w.tick),
+    ...w.schemaVersion>=123?{exotic:newVisitorAgenda(w.seed,'exotic',w.tick)}:{},groups:[],departed:[]};
+}
+/** V122→V123 migration: discard past exotic opportunities without touching the
+ * old visitor agendas, stock, actor identities, or the business RNG. */
+export function adoptExoticMerchantSchedule(w:World):void {
+  if(w.visitors&&!w.visitors.exotic)w.visitors.exotic=newVisitorAgenda(w.seed,'exotic',w.tick);
 }
 const groupOf=(w:World,p:Pawn)=>w.visitors?.groups.find(g=>g.id===p.visitor?.group);
 export function visitorMayTrade(w:World,p:Pawn):boolean {
@@ -56,13 +62,13 @@ function groupProfiles(random:{rng:number},points:number):string[] {
 }
 /** All actor IDs, stock and random draws are speculative until entry and space
  * are accepted. A refused opportunity creates neither a person nor a pile. */
-function arrive(w:World,kind:VisitorKind,intro=false):boolean {
+function arrive(w:World,kind:VisitorKind,intro=false,exotic=false):boolean {
   const s=w.visitors!;
   if(!w.pawns.some(p=>isColonist(p)&&p.state!=='dead')||w.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p))||s.serial>=Number.MAX_SAFE_INTEGER||s.departed.length+w.pawns.length>=w.width*w.height)return false;
-  const random={rng:s.rng},profiles=groupProfiles(random,intro?40+Math.floor(visitorRandom(random)*60):visitorPoints(random,kind));
+  const random={rng:exotic?((w.seed^w.tick^s.serial^0xe70c)>>>0)||1:s.rng},profiles=exotic?['Négociant exotique']:groupProfiles(random,intro?40+Math.floor(visitorRandom(random)*60):visitorPoints(random,kind));
   const arrival=visitorArrival(w,Math.floor(visitorRandom(random)*4294967296),profiles.length,kind);
   if(!profiles.length||!arrival||w.pawns.length+profiles.length>w.width*w.height)return false;
-  const id=s.serial+1,merchant=kind==='visitor'&&visitorRandom(random)<.75?Math.floor(visitorRandom(random)*profiles.length):-1;
+  const id=s.serial+1,merchant=exotic?0:kind==='visitor'&&visitorRandom(random)<.75?Math.floor(visitorRandom(random)*profiles.length):-1;
   const pawns:Pawn[]=[],piles:MaterialPile[]=[];let nextId=w.nextId;
   for(let i=0;i<profiles.length;i++){
     const p=startingPawn(nextId++,`${profiles[i]} ${id}.${i+1}`,arrival.sites[i]!.x,arrival.sites[i]!.z,0,55,w.seed);
@@ -70,9 +76,9 @@ function arrive(w:World,kind:VisitorKind,intro=false):boolean {
     delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
     for(const value of Object.values(p.skills))if(typeof value==='object'){value.level=0;value.passion=0;}
     for(const key of Object.keys(p.priorities) as (keyof Pawn['priorities'])[])p.priorities[key]=0;
-    p.visitor={group:id,role:kind==='traveler'?'traveler':i===merchant?'trader':'visitor',phase:'arriving',goal:{...arrival.parking[i]!},personalFoodIds:[]};
+    p.visitor={group:id,role:kind==='traveler'?'traveler':i===merchant?'trader':'visitor',...exotic&&i===merchant?{merchantKind:'exotic' as const}:{},phase:'arriving',goal:{...arrival.parking[i]!},personalFoodIds:[]};
     piles.push({id:nextId++,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt')});
-    if(i===merchant){const stock=generateVisitorStock(random.rng,p.id,nextId,w.tick);piles.push(...stock.piles);nextId=stock.nextId;random.rng=stock.rng;}
+    if(i===merchant){const stock=exotic?generateExoticStock(random.rng,p.id,nextId,w.tick):generateVisitorStock(random.rng,p.id,nextId,w.tick);piles.push(...stock.piles);nextId=stock.nextId;random.rng=stock.rng;}
     // Preserve Core's food draw before the explicit fine→simple substitution.
     const foodDraw=visitorRandom(random),item=foodDraw<.75?'simple-meal':'survival-meal',quantity=visitorRandom(random)<5/6?3:2,foodId=nextId++;
     piles.push({id:foodId,kind:'food',item,quantity,owner:{type:'inventory',pawnId:p.id},...freshRot(item,w.tick)});p.visitor.personalFoodIds=[foodId];
@@ -80,9 +86,9 @@ function arrive(w:World,kind:VisitorKind,intro=false):boolean {
   }
   const durationCore=kind==='visitor'?8000+Math.floor(visitorRandom(random)*14000):0;
   if(!Number.isSafeInteger(nextId)||w.piles.length+piles.length>32768)return false;
-  w.nextId=nextId;w.pawns.push(...pawns);w.piles.push(...piles);s.rng=random.rng;s.serial=id;
+  w.nextId=nextId;w.pawns.push(...pawns);w.piles.push(...piles);if(!exotic)s.rng=random.rng;s.serial=id;
   s.groups.push({id,kind,members:pawns.map(p=>p.id),entry:arrival.entry,spot:arrival.spot,phase:'arriving',startedAt:w.tick,arrivedAt:null,durationCore,hostile:false});
-  log(w,kind==='traveler'?`${pawns.length} passant(s) traverse(nt) la région.`:`${pawns.length} visiteur(s) approche(nt) de la colonie${merchant>=0?' ; un marchand porte quelques marchandises':''}.`);
+  log(w,kind==='traveler'?`${pawns.length} passant(s) traverse(nt) la région.`:exotic?'Un négociant exotique approche de la colonie avec ses marchandises.':`${pawns.length} visiteur(s) approche(nt) de la colonie${merchant>=0?' ; un marchand porte quelques marchandises':''}.`);
   return true;
 }
 /** Tick controller: calendar opportunities are consumed even if blocked;
@@ -107,6 +113,7 @@ export function advanceVisitors(w:World):void {
   if(s.introAt!==null&&w.tick>=s.introAt){const due=w.tick===s.introAt;s.introAt=null;if(due)arrive(w,'visitor',true);}
   if(consumeVisitorOpportunity(s.traveler,'traveler',w.tick))arrive(w,'traveler');
   if(consumeVisitorOpportunity(s.visitor,'visitor',w.tick))arrive(w,'visitor');
+  if(s.exotic&&consumeVisitorOpportunity(s.exotic,'exotic',w.tick))arrive(w,'visitor',false,true);
 }
 function personalMeal(w:World,p:Pawn):void {
   if(p.need||p.hunger>30||!captureStandability(w)(p))return;

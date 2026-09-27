@@ -49,7 +49,7 @@ export function generateSiteOres(world:Pick<World,'seed'|'width'|'height'|'tiles
     const mineral=chooseMineral(siteSample(seed,attempt,0,1101));
     const count=mineral.min+Math.floor(siteSample(seed,attempt,0,1102)*(mineral.max-mineral.min+1));
     const occasion:OreOccasion={mineral:mineral.id,center:origin,requested:count,cells:[]};occasions.push(occasion);
-    if(mineral.id!=='steel'&&mineral.id!=='machinery')continue;
+    if(mineral.id!=='steel'&&mineral.id!=='machinery'&&mineral.id!=='gold'&&mineral.id!=='plasteel')continue;
     const ore:NonNullable<Tile['ore']>=mineral.id,frontier=[origin],seen=new Set(frontier),ox=origin%width,oz=Math.floor(origin/width);
     const score=(i:number):number=>(i%width-ox)**2+(Math.floor(i/width)-oz)**2+siteSample(seed,i,attempt,1103)*6;
     while(frontier.length&&occasion.cells.length<count) {

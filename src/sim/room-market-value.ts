@@ -22,17 +22,21 @@ interface BuildingValueDef {
   readonly stuff: number;
   readonly wood: number;
   readonly steel: number;
+  readonly plasteel: number;
+  readonly gold: number;
   readonly component: number;
+  readonly advancedComponent: number;
   /** Neutral Core WorkToBuild, or WorkToMake for a sculpture, before stuff. */
   readonly work: number;
   readonly quality: boolean;
   readonly passability: Passability;
 }
 const def = (stuff: number, work: number, passability: Passability,
-  fixed: Readonly<{wood?: number; steel?: number; component?: number}> = {},
+  fixed: Readonly<{wood?: number; steel?: number; plasteel?: number; gold?: number; component?: number; 'advanced-component'?: number}> = {},
   quality = false): BuildingValueDef => Object.freeze({
     stuff, work, passability, quality,
-    wood: fixed.wood ?? 0, steel: fixed.steel ?? 0, component: fixed.component ?? 0,
+    wood: fixed.wood ?? 0, steel: fixed.steel ?? 0, plasteel: fixed.plasteel ?? 0, gold: fixed.gold ?? 0,
+    component: fixed.component ?? 0, advancedComponent: fixed['advanced-component'] ?? 0,
   });
 
 /** Resolved Core building Defs. An explicit zero prevents a new kind from
@@ -43,6 +47,9 @@ const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.free
   'small-sculpture': def(50, 18000, 'pass-through', {}, true),
   'large-sculpture': def(100, 30000, 'pass-through', {}, true),
   'machining-table': def(0, 3000, 'pass-through', {steel:150,component:5}),
+  'fabrication-bench': def(0, 5000, 'pass-through', {steel:200,component:12,'advanced-component':2}),
+  'hi-tech-research-bench': def(0, 5000, 'pass-through', {steel:250,component:10}),
+  'multi-analyzer': def(0, 10000, 'pass-through', {steel:40,plasteel:50,gold:20,component:8}),
   grave: def(0, 800, 'standable'),
   heater: def(0, 1000, 'pass-through', {steel:50,component:1}),
   'wind-turbine': def(0, 3300, 'pass-through', {steel:100,component:2}),
@@ -108,7 +115,7 @@ export function structureRoomMarketValue(structure: Structure): number {
   const factors = material ? FURNITURE_MATERIALS[material] : undefined;
   if (material && !factors) throw new RangeError(`Unmapped building material: ${material}`);
   const stuffValue = d.stuff * (material ? MATERIAL_VALUE[material] : UNKNOWN_STUFF_VALUE);
-  const fixedValue = d.wood * MATERIAL_VALUE.wood + d.steel * MATERIAL_VALUE.steel + d.component * 32;
+  const fixedValue = d.wood * MATERIAL_VALUE.wood + d.steel * MATERIAL_VALUE.steel + d.plasteel * 9 + d.gold * 10 + d.component * 32 + d.advancedComponent * 200;
   const work = isSculptureKind(structure.kind)&&isSculptureMaterial(material)
     ? sculptureWorkToMakeCore(structure.kind,material)
     : d.work * (factors?.workFactor ?? 1) + (factors?.workOffset ?? 0);

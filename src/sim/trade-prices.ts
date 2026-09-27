@@ -51,14 +51,15 @@ export function sculptureTradeUnitPrice(value:number,direction:TradeDirection,im
   const buy=roundUnit(Math.max(.5,value*1.4*(1-improvement)));
   return direction==='buy'?buy:Math.min(buy,roundUnit(Math.max(.01,value*.6*1.1*(1+improvement))));
 }
-/** Only the small outlander visitor profile is delivered, not every merchant type. */
-export function tradeRefusal(pile:MaterialPile,direction:TradeDirection,tick:number):string|undefined {
+/** The ordinary visitor and the V123 exotic visitor use their own finite stock;
+ * category permission is checked against the merchant present at contact. */
+export function tradeRefusal(pile:MaterialPile,direction:TradeDirection,tick:number,merchantKind?:'exotic'):string|undefined {
   const entry=tradeCatalogueEntry(pile.item);
   if(!entry)return 'Cet objet n’a pas de profil commercial disponible.';
   if(pile.quantity<=0||ticksUntilRot(pile,tick)<=0)return 'Cet objet n’est plus disponible.';
   if(direction==='sell'&&!entry.playerCanSell)return 'Cet objet ne peut pas être revendu.';
   if(direction==='buy'&&!entry.playerCanBuy)return 'Cet objet n’est pas vendu par les marchands.';
-  if(!entry.visitorHandles)return 'Ce visiteur ne commerce pas cette catégorie d’objets.';
+  if(!entry.visitorHandles&&!(merchantKind==='exotic'&&['gold','plasteel','advanced-component'].includes(pile.item)))return 'Ce visiteur ne commerce pas cette catégorie d’objets.';
   if(pileMarketValue(pile)===undefined)return 'L’état de cet objet ne permet pas de calculer son prix.';
   return undefined;
 }

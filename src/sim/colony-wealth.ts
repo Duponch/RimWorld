@@ -55,6 +55,7 @@ function unfinishedIngredientValue(pile: MaterialPile): number | undefined {
     }
     return sum;
   }
+  if (pile.componentWork) return MATERIAL_VALUE.steel! * pile.componentWork.parts.reduce((a,b)=>a+b,0);
   if (pile.unfinished) {
     const material = pile.unfinished.material ?? 'cloth';
     const unit = MATERIAL_VALUE[material];

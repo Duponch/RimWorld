@@ -358,7 +358,7 @@ export class PawnLayer {
       const work = pawn.state==='working'||arriving ? fireTarget ?? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.hunting?.phase==='finish' ? world.wildlife?.animals.find(a=>a.id===pawn.hunting!.animalId) : stationCell ?? pawn.cooking?.actionCell ?? pawn.haul?.pickupCell) : undefined;
       if(work&&pawn.state==='working') yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);
       const contactPose=arriving?pawnWorkPose({...pawn,state:'working'},job):workPose;
-      const atBench=station?.kind==='research-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
+      const atBench=station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
       const clearance=job?.kind==='mine' ? .9 : atBench ? .88 : .82;
       const reach=contactPose!==WORK_POSE.ground&&contactPose!==0&&!station?.kind.includes('spot') ? workApproach(pawn,work,clearance) : {x:0,z:0};
       this.workOffsets.set(pawn.id,reach);

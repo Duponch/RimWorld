@@ -74,3 +74,24 @@ export function generateVisitorStock(seed:number,pawnId:number,nextId:number,tic
   }
   return {piles,nextId,rng:state.rng};
 }
+
+/** A separate physical exotic inventory. The ranges are per visit, and large
+ * amounts are split into real stacks before the arrival is committed. */
+export function generateExoticStock(seed:number,pawnId:number,nextId:number,tick:number):VisitorStockPlan {
+  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Number.isSafeInteger(pawnId)||pawnId<=0||!Number.isSafeInteger(nextId)||nextId<=0||!Number.isSafeInteger(tick)||tick<0)throw new RangeError('Invalid exotic stock planning input.');
+  const state={rng:seed||1},piles:MaterialPile[]=[];
+  const add=(item:ItemId,quantity:number)=>{
+    const definition=ITEM_DEFINITIONS[item];
+    while(quantity>0){
+      if(!Number.isSafeInteger(nextId+1))throw new RangeError('Exotic stock identity overflow.');
+      const part=Math.min(quantity,definition.stackLimit);
+      piles.push({id:nextId++,kind:definition.kind,item,quantity:part,owner:{type:'inventory',pawnId},...freshRot(item,tick)});
+      quantity-=part;
+    }
+  };
+  add('silver',integer(state,500,2000));
+  add('advanced-component',integer(state,1,4));
+  add('plasteel',integer(state,50,150));
+  add('gold',integer(state,40,80));
+  return {piles,nextId,rng:state.rng};
+}

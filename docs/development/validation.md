@@ -1,4 +1,6 @@
-# Validation courante — V122
+# Validation courante — V123
+
+V123 : [première chaîne industrielle avancée](../history/validation-industry-v123.md), 35 contrôles regroupés sur neuf fichiers, quatre parcours Chromium/WebGPU au total et build/typage. La scène préparée crée son premier composant après reprise par les règles ordinaires ; migration stricte et continuation exacte vérifiées. Aucun gain général de FPS ou débit ×6 n'est inféré.
 
 V122 : [échecs physiques et loisirs cérébraux](../history/validation-recreation-v122.md), six contrôles ciblés, neuf contrôles des démonstrations historiques, deux parcours Chromium/WebGPU, build/typage, reprise exacte et mesure CPU séparée. Un regroupement de tests historiques plus large reste non vert avec ses oracles périmés ; le compte rendu distingue ces échecs des contrats V122 validés.
 

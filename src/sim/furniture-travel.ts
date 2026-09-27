@@ -17,6 +17,9 @@ export function terrainTravelDelay(world:World,index:number):number {
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
 export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:number;stand:boolean;repeat:boolean}>>>=Object.freeze({
   'art-bench':{delay:5,stand:false,repeat:true},
+  'fabrication-bench':{delay:5,stand:false,repeat:true},
+  'hi-tech-research-bench':{delay:5,stand:false,repeat:true},
+  'multi-analyzer':{delay:5,stand:false,repeat:true},
   'small-sculpture':{delay:5,stand:false,repeat:true},
   'large-sculpture':{delay:5,stand:false,repeat:true},
   grave:{delay:0,stand:true,repeat:false},
@@ -77,7 +80,7 @@ export function furnitureDelay(world:World,from:Cell,to:Cell):number {
     if(p.owner.x===to.x&&p.owner.z===to.z){objectDelay=Math.max(objectDelay,4.2);repeats=true;}
     if(p.owner.x===from.x&&p.owner.z===from.z)previousRepeats=true;
   }
-  const materialDelay=world.piles.some(p=>(world.schemaVersion>=29&&p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component')&&p.owner.type==='ground'&&p.owner.x===to.x&&p.owner.z===to.z)?1.4:0;
+  const materialDelay=world.piles.some(p=>(world.schemaVersion>=29&&p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component'||world.schemaVersion>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'&&p.owner.x===to.x&&p.owner.z===to.z)?1.4:0;
   return Math.max(repeats&&previousRepeats?0:objectDelay,materialDelay,terrainTravelDelay(world,to.z*world.width+to.x));
 }
 /** Captured once per synchronous search. No shared mutation or cross-tick cache. */
@@ -107,7 +110,7 @@ export function navigationCosts(world:World):{costs:NavigationCostLookup|undefin
       if(cost){terrain[i]=cost;if(cost>terrainMaximum)terrainMaximum=cost;}
     }
   }
-  if(world.schemaVersion>=29)for(const p of world.piles)if((p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component')&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
+  if(world.schemaVersion>=29)for(const p of world.piles)if((p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component'||world.schemaVersion>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
   // Door wait is added after the terrain/object/material maximum, not compared
   // with it. Preserve present zero entries for fully open doors on bare floors.
   for(const s of world.structures)if(s.kind==='door') {const i=s.z*world.width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,world.tick)/3*1000));}

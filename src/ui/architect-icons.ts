@@ -22,7 +22,7 @@ const SECOND_ATLAS = [
   'ignore-roof', 'remove-growing', 'stockpile', 'home', 'remove-home', 'remove-stockpile',
 ] as const;
 
-export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='wall'?[id,'fence','fence-gate','pen-marker']:id==='horseshoes'?[id,'chess-table']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='tailor-bench'?[id,'art-bench','machining-table']:[id])]);
+export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='wall'?[id,'fence','fence-gate','pen-marker']:id==='horseshoes'?[id,'chess-table']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='tailor-bench'?[id,'art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
 
 // Small original vector additions share the existing Architecte icon installer.
 // They do not change the historical two-atlas coordinates.
@@ -32,6 +32,9 @@ const CUSTOM_ICONS:Readonly<Record<string,string>>=Object.freeze({
   'fence-gate':vectorIcon('<path d="M5 9v27M35 9v27M5 15h30M5 29h30M12 15v14M28 15v14M20 16v13"/><circle cx="24" cy="23" r="1" fill="#365647"/>'),
   'pen-marker':vectorIcon('<path d="M20 8v28M11 12h18v16H11zM15 16c2-2 4-2 5 0 1-2 3-2 5 0M16 23h8"/>'),
   'chess-table':vectorIcon('<rect x="5" y="5" width="30" height="30" rx="2"/><path d="M12.5 5v30M20 5v30M27.5 5v30M5 12.5h30M5 20h30M5 27.5h30" stroke-width="1"/><path d="M13 7h6v5h-6zM28 7h5v5h-5zM6 13h6v6H6zM21 13h6v6h-6zM13 21h6v6h-6zM28 21h5v6h-5zM6 28h6v5H6zM21 28h6v5h-6z" fill="#365647" stroke="none"/><circle cx="9" cy="9" r="2" fill="#e6c989" stroke="none"/><circle cx="31" cy="31" r="2" fill="#e6c989" stroke="none"/>'),
+  'hi-tech-research-bench':vectorIcon('<path d="M4 27h32M8 27V12h24v15M13 16h14v8H13zM17 32h6M20 27v5"/><path d="M15 19h10M15 22h7"/>'),
+  'multi-analyzer':vectorIcon('<path d="M8 30h24M12 30V11h16v19M16 15h8v10h-8zM19 8h2M6 18h4M30 18h4"/><circle cx="20" cy="20" r="2"/>'),
+  'fabrication-bench':vectorIcon('<path d="M4 27h32M8 27V13h24v14M12 18h16M14 21l4-3 4 3 4-3M13 31h3M24 31h3"/><circle cx="20" cy="10" r="2"/>'),
 });
 
 export interface ArchitectIconCell {
