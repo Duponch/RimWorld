@@ -1,9 +1,19 @@
-import { float, instanceIndex, uv, varying, vec2 } from 'three/tsl';
+import { attribute, float, instanceIndex, uv, varying, vec2 } from 'three/tsl';
 
 // Crop different regions of the same painted map. Staying inside [0, 1]
 // avoids a visible wrapping seam on the broad faces of planks and furniture.
 export const PATTERN_SPAN = 0.68;
 const PHASE_SPAN = 1 - PATTERN_SPAN;
+
+/** UV axes on the six box faces follow X/Z, X/Y or Z/Y. Fit the same painted
+ * crop to the longer physical edge and take proportionally less of it along
+ * the shorter one. Both coordinates stay inside the original clamp-safe crop. */
+export function physicalPatternSpan(sx:number,sy:number,sz:number,nx:number,ny:number):readonly [number,number] {
+  const u=Math.abs(nx)*sz+(1-Math.abs(nx))*sx;
+  const v=Math.abs(ny)*sz+(1-Math.abs(ny))*sy;
+  const longest=Math.max(u,v,1e-6);
+  return [PATTERN_SPAN*u/longest,PATTERN_SPAN*v/longest];
+}
 
 /** Calculate the shifted UV in the vertex stage and interpolate it, so the
  * fragment shader still performs just one texture lookup and no extra math.
@@ -14,4 +24,21 @@ export function instancedPatternUv() {
     seed.mul(0.61803398875).fract(),
     seed.mul(0.41421356237).fract(),
   ).mul(PHASE_SPAN)));
+}
+
+/** The existing box transform already contains its physical scale. Derive
+ * face spans in the vertex stage; no instance attribute or fragment sample is
+ * added, and the same untextured pipeline is still selected when disabled. */
+export function instancedBoxPatternUv() {
+  const seed=float(instanceIndex);
+  const sx=attribute('boxMatrix0','vec4').xyz.length();
+  const sy=attribute('boxMatrix1','vec4').xyz.length();
+  const sz=attribute('boxMatrix2','vec4').xyz.length();
+  const facing=attribute('normal','vec3').abs();
+  const u=sx.mul(facing.x.oneMinus()).add(sz.mul(facing.x));
+  const v=sy.mul(facing.y.oneMinus()).add(sz.mul(facing.y));
+  const longest=u.max(v).max(1e-6);
+  const span=vec2(u,v).div(longest).mul(PATTERN_SPAN);
+  const phase=vec2(seed.mul(0.61803398875).fract(),seed.mul(0.41421356237).fract()).mul(PHASE_SPAN);
+  return varying(uv().sub(.5).mul(span).add(PATTERN_SPAN*.5).add(phase));
 }

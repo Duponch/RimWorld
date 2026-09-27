@@ -88,6 +88,7 @@ test('corpse persistence refuses forged identities, live anatomy, duplicate repr
   }
   const meat=field();addMaterial(meat,'food',3,{type:'ground',x:14,z:14},'hare-meat');meat.tick+=12000;expireFood(meat);expect(meat.spoiled['hare-meat']).toBe(3);expect(meat.piles).toEqual([]);
   const prior=field();kill(prior);const old=stripV120(JSON.parse(JSON.stringify(prior)));old.schemaVersion=78;withoutHunting(old);
+  for(const pawn of old.pawns){delete pawn.recreation.tolerance.cerebral;delete pawn.recreation.bored.cerebral;delete pawn.recreation.tolerance.social;delete pawn.recreation.bored.social;}
   for(const animal of old.wildlife.animals){delete animal.ageTicks;delete animal.parents;delete animal.pregnancy;delete animal.mating;}
   const resumed=deserializeWorld(JSON.stringify(old));expect(resumed.piles).toEqual([]);expect(resumed.wildlife!.animals[0]!.corpseRot).toBeUndefined();
   stepWorld(resumed);expect(resumed.wildlife!.animals).toEqual([]);expect(resumed.piles[0]).toMatchObject({kind:'corpse',rot:{progress:0,atTick:prior.tick+1}});

@@ -1,4 +1,6 @@
 import { appearanceOf } from '../sim/pawn-appearance';
+import { corpseStage,CORPSE_ROT_TICKS,CORPSE_DESSICATION_TICKS } from '../sim/corpses';
+import { humanCorpseAge } from '../sim/human-corpses';
 import { appearanceShape,pawnBaseColor } from './pawn-appearance-shape';
 import { pawnMorph,hiddenAppearancePart } from './pawn-appearance-nodes';
 import { BIOME_CARGO } from './biome-cargo';
@@ -24,7 +26,7 @@ import { pawnSelectionMesh } from './PawnSelectionLayer';
 import type { MotionTimeline } from './MotionTimeline';
 import * as THREE from 'three/webgpu';
 import { Fn, If, attribute, cos, float, mix, positionLocal, sin, uniform, vec3 } from 'three/tsl';
-import { TICKS_PER_SECOND,type Pawn,type World } from '../sim/types';
+import { TICKS_PER_SECOND,type MaterialPile,type Pawn,type World } from '../sim/types';
 import { chunkCargoKind } from './chunk-presentation';
 import { adjacentTable } from '../sim/dining';
 import { CARRY_CAPACITY, footprintCells } from '../sim/definitions';
@@ -87,6 +89,34 @@ function approachAt(transition:ApproachTransition,tick:number):{x:number;z:numbe
   return {x:THREE.MathUtils.lerp(transition.fromX,transition.toX,alpha),z:THREE.MathUtils.lerp(transition.fromZ,transition.toZ,alpha)};
 }
 const scratchColor = new THREE.Color();
+/** Packed into the existing appearance stream; no extra vertex buffer. */
+export function humanCorpseVisualStage(world:World,pawn:Pawn,body?:MaterialPile):0|1|2 {
+  if(pawn.state!=='dead')return 0;
+  const pile=body??(pawn.body?.pileId!==undefined?world.piles.find(p=>p.id===pawn.body?.pileId):undefined);
+  if(pile){const stage=corpseStage(pile,world.tick);return stage==='desiccated'?2:stage==='rotting'?1:0;}
+  const age=humanCorpseAge(world,pawn);
+  return age>=CORPSE_DESSICATION_TICKS?2:age>=CORPSE_ROT_TICKS?1:0;
+}
+/** Bodies awaiting a free pile cell remain logically where they fell. Fan only
+ * coincident presentations within that cell so their surfaces do not fight. */
+export function retainedHumanCorpseOffsets(world:World):ReadonlyMap<number,{x:number;z:number;y:number}> {
+  const occupied=new Set<string>();
+  for(const pile of world.piles)if(pile.humanCorpse&&pile.owner.type==='ground')occupied.add(`${pile.owner.x}:${pile.owner.z}`);
+  const groups=new Map<string,number[]>();
+  for(const pawn of world.pawns)if(pawn.state==='dead'&&pawn.body?.pileId===undefined&&pawn.body?.lostAt===undefined){
+    const key=`${pawn.x}:${pawn.z}`,ids=groups.get(key)??[];ids.push(pawn.id);groups.set(key,ids);
+  }
+  const offsets=new Map<number,{x:number;z:number;y:number}>();
+  for(const [key,ids] of groups){
+    if(ids.length+(occupied.has(key)?1:0)<2)continue;
+    ids.sort((a,b)=>a-b);
+    ids.forEach((id,index)=>{
+      const slot=index+(occupied.has(key)?1:0),angle=slot*Math.PI*2/Math.max(2,ids.length+(occupied.has(key)?1:0));
+      offsets.set(id,{x:.20*Math.cos(angle),z:.16*Math.sin(angle),y:Math.min(.06,.012*(index+1))});
+    });
+  }
+  return offsets;
+}
 
 export class PawnLayer {
   private selected:ReadonlySet<number>=new Set();
@@ -235,7 +265,7 @@ export class PawnLayer {
       // switch in aMotion.w. Confirmed strikes add a short accent to the same
       // continuous arm/torso/leg rhythm instead of replacing the whole pose.
       const brawl=motion.z.equal(POSE_FIGHT_READY).or(motion.z.equal(8));
-      const fightPhase=this.time.mul(8).add(attribute('aShape','vec4').x.mul(3.7)).add(attribute('aHair','vec3').x.mul(7));
+      const fightPhase=this.time.mul(8).add(attribute('aShape','vec4').x.mod(10).mul(3.7)).add(attribute('aHair','vec3').x.mul(7));
       const strike=motion.z.equal(8).select(
         sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI)),float(0));
       If(brawl.and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
@@ -301,6 +331,9 @@ export class PawnLayer {
         animated.y.assign(animated.z.add(0.19));
         animated.z.assign(float(0.65).sub(y));
       });
+      // A corpse fits more closely to its owning cell while retaining the
+      // same pose and ground anchor. Adjacent bodies may still touch.
+      If(motion.z.equal(POSE_DEAD),()=>animated.z.assign(animated.z.mul(.78)));
       If(motion.z.equal(10).and(bone.lessThan(3.5)),()=>{
         const y=animated.y.sub(.48).toVar(),z=animated.z.toVar();
         animated.y.assign(y.mul(.82).sub(z.mul(.57)).add(.48));animated.z.assign(y.mul(.57).add(z.mul(.82)));
@@ -343,6 +376,13 @@ export class PawnLayer {
       const face=dead.select(float(PAWN_EYE_CROSS),asleep.or(blink).select(float(PAWN_EYE_CLOSED),float(PAWN_EYE_OPEN)));
       If(dye.greaterThanEqual(PAWN_EYE_OPEN).and(dye.lessThanEqual(PAWN_EYE_CROSS)).and(dye.notEqual(face)),()=>animated.assign(vec3(0)));
       If(hiddenAppearancePart(),()=>animated.assign(vec3(0)));
+      const rotStage=attribute('aShape','vec4').x.div(10).floor();
+      // A dried body loses the garment/hair silhouette and narrows in the
+      // same resident rig. The palette below reveals a pale skeletal form.
+      If(rotStage.greaterThan(1.5),()=>{
+        If(dye.lessThan(0).or(dye.greaterThanEqual(100)),()=>animated.assign(vec3(0)));
+        animated.x.assign(animated.x.mul(.78));
+      });
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
     })();
@@ -358,7 +398,18 @@ export class PawnLayer {
       {const color=new THREE.Color(0xa88b63);If(legs.and(attribute('aEquipment','vec4').w.equal(3)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
       {const color=new THREE.Color(0x839ac5);If(legs.and(attribute('aEquipment','vec4').w.equal(4)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
       {const color=new THREE.Color(0xc3a375);If(legs.and(attribute('aEquipment','vec4').w.equal(5)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
-      {const color=new THREE.Color(0xb3c0ba);If(legs.and(attribute('aEquipment','vec4').w.equal(6)),()=>tint.assign(vec3(color.r,color.g,color.b)));}return tint;})();
+      {const color=new THREE.Color(0xb3c0ba);If(legs.and(attribute('aEquipment','vec4').w.equal(6)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
+      const stage=attribute('aShape','vec4').x.div(10).floor();
+      {const red=new THREE.Color(0x965f58);If(stage.equal(1),()=>tint.assign(mix(tint,vec3(red.r,red.g,red.b),.7)));}
+      {const bone=new THREE.Color(0xc9bd9b),dark=new THREE.Color(0x554e43);
+        const eyes=attribute('dye','float').greaterThanEqual(PAWN_EYE_OPEN).and(attribute('dye','float').lessThanEqual(PAWN_EYE_CROSS));
+        If(stage.greaterThan(1.5),()=>{
+          tint.assign(eyes.select(vec3(dark.r,dark.g,dark.b),vec3(bone.r,bone.g,bone.b)));
+          // Sparse dark gaps read as ribs in the existing torso geometry.
+          const ribs=sin(positionLocal.y.mul(43)).greaterThan(.25);
+          If(attribute('boneId','float').equal(0).and(attribute('dye','float').equal(1)),()=>tint.assign(ribs.select(vec3(bone.r,bone.g,bone.b),vec3(dark.r,dark.g,dark.b))));
+        });}
+      return tint;})();
     mat.colorNode = baseColor;
     const textured = material(0xffffff);
     this.configure?.(textured);
@@ -414,6 +465,7 @@ export class PawnLayer {
     this.rescuePairs=world.pawns.flatMap((p,i)=>p.rescue?.phase==='carry'&&indices.has(p.rescue.patientId)?[[i,indices.get(p.rescue.patientId)!] as const]:[]);
     this.rescuePairs=[...this.rescuePairs,...world.piles.flatMap(p=>p.humanCorpse&&p.owner.type==='pawn'&&indices.has(p.owner.pawnId)&&indices.has(p.humanCorpse.pawnId)?[[indices.get(p.owner.pawnId)!,indices.get(p.humanCorpse.pawnId)!] as const]:[])];
     const bodies=new Map(world.piles.filter(p=>p.humanCorpse).map(p=>[p.humanCorpse!.pawnId,p]));
+    const retainedOffsets=retainedHumanCorpseOffsets(world);
     if (!this.pawnMesh) this.createPawnMesh(Math.max(1,world.pawns.length));
     else if(this.pawnMesh.geometry.getAttribute('aFrom').count<world.pawns.length)growPawnBuffers([this.pawnMesh,this.cargoMesh!,this.selectionMesh!,this.fireMesh!],world.pawns.length);
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
@@ -445,7 +497,7 @@ export class PawnLayer {
       const previous = newMap ? undefined : this.visuals.get(pawn.id);
       // A stationary actor retains its last travel heading after a save reload.
       // Work with an external target and bed posture override it below.
-      const initialYaw=pawn.motion?Math.atan2(pawn.motion.to.x-pawn.motion.from.x,pawn.motion.to.z-pawn.motion.from.z):Math.PI*.2;
+      const initialYaw=pawn.motion?Math.atan2(pawn.motion.to.x-pawn.motion.from.x,pawn.motion.to.z-pawn.motion.from.z):Math.PI*.2+(pawn.state==='dead'?(pawn.id%5-2)*.14:0);
       const from = previous ? previous.from.clone().lerp(previous.to, oldBlend) : new THREE.Vector4(pawn.x, 0, pawn.z, initialYaw);
       const lastShown=presented.get(pawn.id);
       if(lastShown){from.x=lastShown.x;from.z=lastShown.z;}
@@ -457,6 +509,7 @@ export class PawnLayer {
         const target = Math.atan2(dx, dz);
         yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
       }
+      if(pawn.state==='dead'&&!pawn.motion)yaw=initialYaw;
       const bedId = pawn.need?.kind === 'sleep' ? pawn.need.bedId : null;
       if(pawn.feed?.phase==='feed'){const p=pawnsById.get(pawn.feed.patientId);if(p)yaw=Math.atan2(p.x-pawn.x,p.z-pawn.z);}
       if(pawn.tend?.phase==='tend'&&pawn.tend.patientId!==pawn.id){const p=pawnsById.get(pawn.tend.patientId);if(p)yaw=Math.atan2(p.x-pawn.x,p.z-pawn.z);}
@@ -466,6 +519,8 @@ export class PawnLayer {
       const body=bodies.get(pawn.id);
       const hiddenBody=pawn.body?.lostAt!==undefined||pawn.body?.pileId!==undefined&&(!body||body.owner.type==='grave');
       if(body?.owner.type==='ground'){px=body.owner.x;pz=body.owner.z;py=0;}
+      const retainedOffset=retainedOffsets.get(pawn.id);
+      if(retainedOffset){px+=retainedOffset.x;pz+=retainedOffset.z;py+=retainedOffset.y;}
       if(hiddenBody)py=-1000;
       if (bed&&!body&&!hiddenBody) {
         const cells = footprintCells(bed), last = cells[cells.length - 1]!;
@@ -532,7 +587,7 @@ export class PawnLayer {
       const identity=appearanceOf(pawn,world.seed),variant=appearanceShape(identity);
       scratchColor.setHex(identity.skinColor);skin.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
       scratchColor.setHex(identity.hairColor);hair.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
-      shape.setXYZW(index,...variant);
+      shape.setXYZW(index,variant[0]+10*humanCorpseVisualStage(world,pawn,body),variant[1],variant[2],variant[3]);
       const look=apparelAppearance(apparel.get(pawn.id));
       scratchColor.setHex(look.color??(isColonist(pawn)?pawnBaseColor(pawn.id):pawn.visitor&&!world.visitors?.groups.find(g=>g.id===pawn.visitor!.group)?.hostile?0x77958f:0xb74736));
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);

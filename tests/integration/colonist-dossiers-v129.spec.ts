@@ -21,10 +21,14 @@ test('V129: colonist dossiers stay above the compact summary and expose recorded
     const geometry = await page.evaluate(() => {
       const rect = (selector: string) => document.querySelector(selector)!.getBoundingClientRect();
       const pages = rect('.colonist-inspector-pages'), tabs = rect('.colonist-inspector-tabs'), summary = rect('.colonist-inspector-summary');
-      return { pageBottom: pages.bottom, tabsTop: tabs.top, tabsBottom: tabs.bottom, summaryTop: summary.top, pageWidth: pages.width };
+      return { pageBottom: pages.bottom, tabsTop: tabs.top, tabsBottom: tabs.bottom, summaryTop: summary.top, pageWidth: pages.width,
+        pageRadius: getComputedStyle(document.querySelector('.colonist-inspector-pages')!).borderBottomLeftRadius,
+        tabRadius: getComputedStyle(document.querySelector('[data-colonist-tab]')!).borderBottomLeftRadius,
+        summaryRadius: getComputedStyle(document.querySelector('.colonist-inspector-summary')!).borderTopLeftRadius };
     });
-    expect(geometry.pageBottom).toBeLessThanOrEqual(geometry.tabsTop + 2);
-    expect(geometry.tabsBottom).toBeLessThanOrEqual(geometry.summaryTop + 2);
+    expect(geometry.tabsTop - geometry.pageBottom).toBeGreaterThanOrEqual(7);
+    expect(geometry.summaryTop - geometry.tabsBottom).toBeGreaterThanOrEqual(7);
+    expect([geometry.pageRadius, geometry.tabRadius, geometry.summaryRadius]).toEqual(['10px', '8px', '10px']);
     expect(geometry.pageWidth).toBeGreaterThan(650);
     await pawnTab(page, 'journal');
     await expect(page.locator('#pawn-journal-rows')).toContainText('Bavardage entre');

@@ -5,7 +5,9 @@ import { BODY_PROPORTIONS } from './pawn-appearance-shape';
 /** Applied equally to vertices and rigid-bone pivots, before pose animation. */
 export function pawnMorph(point:Node<'vec3'>) {
   const bone=attribute('boneId','float'),dye=attribute('dye','float'),shape=attribute('aShape','vec4');
-  const factor=(column:number)=>BODY_PROPORTIONS.reduce<Node<'float'>>((v,row,i)=>shape.x.equal(i).select(float(row[column]!),v),float(1));
+  // Tens encode corpse presentation stage in the existing appearance slot.
+  const bodyType=shape.x.mod(10);
+  const factor=(column:number)=>BODY_PROPORTIONS.reduce<Node<'float'>>((v,row,i)=>bodyType.equal(i).select(float(row[column]!),v),float(1));
   const shoulder=factor(0),waist=factor(1),hip=factor(2),depth=factor(3);
   const torso=mix(waist,shoulder,point.y.sub(.76).div(.20).clamp(0,1));
   const legs=bone.greaterThanEqual(4),arms=bone.greaterThanEqual(2).and(bone.lessThanEqual(3));

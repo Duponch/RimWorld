@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu';
 import type { Placement } from './primitives';
-import { PATTERN_SPAN } from './texture-variation';
+import { PATTERN_SPAN,physicalPatternSpan } from './texture-variation';
 const scratchColor = new THREE.Color();
 // Painted stone facets use the existing RGB vertex stream; the shared
 // resource material and its UV map remain unchanged. Values are linear-space
@@ -70,7 +70,12 @@ export function mergedInstances(group: THREE.Group, parts: { geometry: THREE.Buf
         } else {
           colors[offset] = scratchColor.r; colors[offset + 1] = scratchColor.g; colors[offset + 2] = scratchColor.b;
         }
-        if(uvs){const uvOffset=(vertex+i)*2;uvs[uvOffset]=(uv?.getX(i)??0)*PATTERN_SPAN+phaseU;uvs[uvOffset+1]=(uv?.getY(i)??0)*PATTERN_SPAN+phaseV;}
+        if(uvs){
+          const uvOffset=(vertex+i)*2;
+          const [spanU,spanV]=physicalPatternSpan(sx,sy,sz,normal.getX(i),normal.getY(i));
+          uvs[uvOffset]=((uv?.getX(i)??0)-.5)*spanU+PATTERN_SPAN*.5+phaseU;
+          uvs[uvOffset+1]=((uv?.getY(i)??0)-.5)*spanV+PATTERN_SPAN*.5+phaseV;
+        }
       }
       for (let i = 0; i < (geometry.index?.count ?? pos.count); i++) indices[index++] = vertex + (geometry.index?.getX(i) ?? i);
       if (item.key !== undefined) ranges.push({id:item.key,start:firstIndex,count:index-firstIndex,vertexStart:firstVertex,vertexCount:pos.count});

@@ -9,6 +9,7 @@ import { noise } from './StaticGeometry';
 import { clearGroup } from './primitives';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import type { NaturalPresentationChange } from './NaturalResourcePresentation';
+import { syncTerrainPaintUvs } from './TerrainLayer';
 
 /** Resident distant representation. Switching zoom never rebuilds geometry.
  * Terrain keeps its exact heights/colors. Tiny fruit/branches yield to silhouettes. */
@@ -43,6 +44,10 @@ export class OverviewLayer {
       const geometry=mergeGeometries(parts,false);for(const part of parts)part.dispose();
       if(geometry) {const mesh=new THREE.Mesh(geometry,material.userData.rendererOwned?material:material.clone());mesh.receiveShadow=false;this.terrain.add(mesh);}
     }
+  }
+  setTerrainMaterial(previous:THREE.Material,next:THREE.Material,world:Pick<World,'width'|'height'>,painted:boolean):void {
+    for(const child of this.terrain.children)if(child instanceof THREE.Mesh&&child.material===previous)child.material=next;
+    syncTerrainPaintUvs(world,this.terrain,next,painted);
   }
   setFoliageVisible(visible:boolean):void {this.foliage=visible;const trees=this.batches.get('tree');if(trees)trees.geometry.setDrawRange(0,visible?Infinity:trees.geometry.userData.trunkIndices);}
   update(world:World,reset:boolean,changes?:ReadonlyMap<number,NaturalPresentationChange>):void {

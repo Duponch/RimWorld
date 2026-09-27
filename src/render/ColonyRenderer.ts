@@ -13,7 +13,7 @@ import { EnvironmentLighting } from './EnvironmentLighting';
 import { PresentationQueue } from './PresentationQueue';
 import { MOTION_HISTORY_TICKS } from '../bridge/motion-tracks';
 import { RoofLayer } from './RoofLayer';
-import { sameTerrainSurface } from './terrain-state';
+import { terrainSurfaceChanges } from './terrain-state';
 import { doorOrientations } from '../sim/door-rules';
 import { DoorLayer } from './DoorLayer';
 import { TimberCladdingLayer } from './TimberCladdingLayer';
@@ -28,7 +28,7 @@ import { CropLayer } from './CropLayer';
 import { PawnSelectionInput, hitActors, type ScreenPawn, type SelectionGesture } from './PawnSelectionInput';
 import { FireLayer } from './FireLayer';
 import { GrowingZoneLayer } from './GrowingZoneLayer';
-import { buildTerrain } from './TerrainLayer';
+import { buildTerrain, createTerrainPaintTexture, patchTerrainPaintTexture, syncTerrainPaintUvs } from './TerrainLayer';
 import { RockLayer } from './RockLayer';
 import { MotionTimeline } from './MotionTimeline';
 import type { PawnTrack } from '../bridge/motion-tracks';
@@ -109,7 +109,7 @@ export class ColonyRenderer {
   private readonly pileGroup = new THREE.Group();
   private readonly storageGroup = new THREE.Group();
   private readonly hover: THREE.Mesh;
-  private readonly objectSelection: THREE.LineSegments;
+  private readonly objectSelection: THREE.Mesh;
   private selectedObject:MapObjectSelection|undefined;
   private objectSelectionSignature='';
   private readonly selectionInput: PawnSelectionInput;
@@ -132,6 +132,8 @@ export class ColonyRenderer {
   private readonly keys = new Set<string>();
   private readonly pileChunks = new Map<string, VisualChunk>();
   private readonly staticMaterial = material(0xffffff, { vertexColors: true });
+  private readonly terrainPlainMaterial = material(0xffffff,{vertexColors:true});
+  private readonly terrainPaintMaterial = material(0xffffff,{vertexColors:false,map:new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1)});
   private readonly staticPaint=createStylizedSurfaceTexture('vegetation');
   private readonly texturedStaticMaterial=material(0xffffff,{vertexColors:true,map:this.staticPaint});
   private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
@@ -157,6 +159,8 @@ export class ColonyRenderer {
   private wallCutaway = false;
   private grassVisible = true;
   private texturesEnabled=true;
+  private terrainPaintDirty=true;
+  private terrainGeometryDirty=false;
   private lastFrame = 0;
   private snapshotAt = 0;
   private timeFrom = 0;
@@ -178,11 +182,15 @@ export class ColonyRenderer {
     this.renderer = renderer;
     this.scene.matrixAutoUpdate = false;
     this.environmentLighting.configure(this.staticMaterial);
+    this.environmentLighting.configure(this.terrainPlainMaterial);
+    this.environmentLighting.configure(this.terrainPaintMaterial);
     this.environmentLighting.configure(this.texturedStaticMaterial);
     this.environmentLighting.configure(this.waterMaterial);
     // Renderer-owned shared material survives deletion of an individual chunk.
     // Reusing its node graph also avoids compiling a pipeline per tree batch.
     this.staticMaterial.userData.rendererOwned = true;
+    this.terrainPlainMaterial.userData.rendererOwned = true;
+    this.terrainPaintMaterial.userData.rendererOwned = true;
     this.texturedStaticMaterial.userData.rendererOwned = true;
     this.waterMaterial.userData.rendererOwned = true;
     this.backend = renderer.getContext() instanceof WebGL2RenderingContext ? 'WebGL 2' : 'WebGPU';
@@ -226,7 +234,7 @@ export class ColonyRenderer {
     this.hover.position.y = 0.08;
     this.hover.visible = false;
     this.hover.renderOrder = 5;
-    this.objectSelection = new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xfff5d6,depthTest:false,depthWrite:false}));
+    this.objectSelection = new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:0xfff5d6,side:THREE.DoubleSide,depthTest:false,depthWrite:false}));
     this.objectSelection.visible=false;this.objectSelection.frustumCulled=false;this.objectSelection.renderOrder=20;
     this.scene.add(this.hover,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group);
     this.selectionInput=new PawnSelectionInput(renderer.domElement,{
@@ -289,7 +297,8 @@ export class ColonyRenderer {
     // collection is inspected once; ordinary pawn snapshots do not scan the map.
     const newMap = !previousWorld||previousWorld.seed!==world.seed||previousWorld.width!==world.width||previousWorld.height!==world.height||previousWorld.scenario?.id!==world.scenario?.id||previousWorld.scenario?.revision!==world.scenario?.revision||
       previousWorld.site?.hilliness!==world.site?.hilliness||previousWorld.site?.revision!==world.site?.revision||previousWorld.site?.biome!==world.site?.biome;
-    const groundChanged = !sameTerrainSurface(previousWorld,world);
+    const terrainChanges=terrainSurfaceChanges(previousWorld,world);
+    const groundChanged=terrainChanges===null||terrainChanges.length>0;
     if (newMap) this.cancelDesignation();
     // The worker epoch distinguishes a checkpoint from an ordinary delta even
     // if terrain content and simulation tick match a previous session.
@@ -299,8 +308,21 @@ export class ColonyRenderer {
     this.fires.adopt(world,newMap);this.wind.adopt(world,newMap);
     this.environmentLighting.update(world);
     if(groundChanged) {
-      buildTerrain(world,this.terrainGroup,this.staticMaterial,this.waterMaterial);
-      this.overview.rebuildTerrain(this.terrainGroup);
+      if(terrainChanges===null||this.terrainPaintDirty)this.terrainPaintDirty=true;
+      else if(this.texturesEnabled)patchTerrainPaintTexture(this.terrainPaintMaterial.map as THREE.DataTexture,world,terrainChanges);
+      else this.terrainPaintDirty=true;
+      if(this.texturesEnabled)this.refreshTerrainPaint(world);
+      const waterTopologyChanged=terrainChanges===null||terrainChanges.some(i=>(previousWorld!.tiles[i]!.terrain==='water')!==(world.tiles[i]!.terrain==='water'));
+      if(this.texturesEnabled&&!waterTopologyChanged){
+        // Painted terrain reads its colour from the map. A soil/grass/stone
+        // change does not alter its quad or bank geometry. Keep the plain
+        // vertex colours marked dirty for a later texture-off switch.
+        this.terrainGeometryDirty=true;
+      }else{
+        buildTerrain(world,this.terrainGroup,this.texturesEnabled?this.terrainPaintMaterial:this.terrainPlainMaterial,this.waterMaterial,this.texturesEnabled);
+        this.overview.rebuildTerrain(this.terrainGroup);
+        this.terrainGeometryDirty=false;
+      }
     }
     this.rocks.update(world,newMap);
     if(!this.rocks.group.parent)this.scene.add(this.rocks.group);
@@ -393,6 +415,20 @@ export class ColonyRenderer {
   setTexturesEnabled(enabled:boolean):void {
     if(this.texturesEnabled===enabled)return;
     this.texturesEnabled=enabled;
+    if(enabled&&this.world)this.refreshTerrainPaint(this.world);
+    if(!enabled)this.releaseTerrainPaint();
+    if(!enabled&&this.world&&this.terrainGeometryDirty){
+      buildTerrain(this.world,this.terrainGroup,this.terrainPlainMaterial,this.waterMaterial);
+      this.overview.rebuildTerrain(this.terrainGroup);
+      this.terrainGeometryDirty=false;
+    }
+    const oldTerrain=enabled?this.terrainPlainMaterial:this.terrainPaintMaterial;
+    const nextTerrain=enabled?this.terrainPaintMaterial:this.terrainPlainMaterial;
+    for(const child of this.terrainGroup.children)if(child instanceof THREE.Mesh&&child.material===oldTerrain)child.material=nextTerrain;
+    if(this.world){
+      syncTerrainPaintUvs(this.world,this.terrainGroup,nextTerrain,enabled);
+      this.overview.setTerrainMaterial(oldTerrain,nextTerrain,this.world,enabled);
+    }
     this.boxes.setTexturesEnabled(enabled);
     this.timber.setTexturesEnabled(enabled);
     this.doors.setTexturesEnabled(enabled);
@@ -405,6 +441,21 @@ export class ColonyRenderer {
     this.pawns.setTexturesEnabled(enabled);
     this.wildlife.setTexturesEnabled(enabled);
     this.landscape.needsUpdate=true;
+  }
+  private refreshTerrainPaint(world:World):void {
+    if(!this.terrainPaintDirty)return;
+    const oldPaint=this.terrainPaintMaterial.map;
+    this.terrainPaintMaterial.map=createTerrainPaintTexture(world);
+    this.terrainPaintMaterial.needsUpdate=true;
+    oldPaint?.dispose();
+    this.terrainPaintDirty=false;
+  }
+  private releaseTerrainPaint():void {
+    const oldPaint=this.terrainPaintMaterial.map;
+    this.terrainPaintMaterial.map=new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1);
+    this.terrainPaintMaterial.needsUpdate=true;
+    oldPaint?.dispose();
+    this.terrainPaintDirty=true;
   }
   /** A disabled decorative grass layer owns no mesh, texture, shader or map
    * update path. Re-enable lazily from the current immutable world snapshot. */
@@ -518,21 +569,29 @@ export class ColonyRenderer {
     if(signature===this.objectSelectionSignature)return;
     this.objectSelectionSignature=signature;
     const length=Math.min(.23,(maxX-minX)/3,(maxZ-minZ)/3),y=.14;
-    const points:THREE.Vector3[]=[];
+    const vertices:number[]=[];
+    // GPU line width is fixed to one pixel on common WebGPU backends. Flat
+    // strokes give object corners a stable thickness comparable to pawn rings.
+    const stroke=(ax:number,az:number,bx:number,bz:number)=>{
+      const dx=bx-ax,dz=bz-az,scale=.024/Math.hypot(dx,dz),nx=-dz*scale,nz=dx*scale;
+      vertices.push(ax+nx,y,az+nz,bx+nx,y,bz+nz,bx-nx,y,bz-nz,
+        ax+nx,y,az+nz,bx-nx,y,bz-nz,ax-nx,y,az-nz);
+    };
     if(this.selectedObject?.kind==='growing'){
       const inside=new Set(cells.map(c=>`${c.x}:${c.z}`));
       for(const cell of cells){const x=cell.x,z=cell.z;
-        if(!inside.has(`${x}:${z-1}`))points.push(new THREE.Vector3(x-.48,y,z-.48),new THREE.Vector3(x+.48,y,z-.48));
-        if(!inside.has(`${x+1}:${z}`))points.push(new THREE.Vector3(x+.48,y,z-.48),new THREE.Vector3(x+.48,y,z+.48));
-        if(!inside.has(`${x}:${z+1}`))points.push(new THREE.Vector3(x+.48,y,z+.48),new THREE.Vector3(x-.48,y,z+.48));
-        if(!inside.has(`${x-1}:${z}`))points.push(new THREE.Vector3(x-.48,y,z+.48),new THREE.Vector3(x-.48,y,z-.48));
+        if(!inside.has(`${x}:${z-1}`))stroke(x-.48,z-.48,x+.48,z-.48);
+        if(!inside.has(`${x+1}:${z}`))stroke(x+.48,z-.48,x+.48,z+.48);
+        if(!inside.has(`${x}:${z+1}`))stroke(x+.48,z+.48,x-.48,z+.48);
+        if(!inside.has(`${x-1}:${z}`))stroke(x-.48,z+.48,x-.48,z-.48);
       }
     }else for(const x of [minX,maxX])for(const z of [minZ,maxZ]){
       const dx=x===minX?1:-1,dz=z===minZ?1:-1;
-      points.push(new THREE.Vector3(x,y,z),new THREE.Vector3(x+dx*length,y,z),new THREE.Vector3(x,y,z),new THREE.Vector3(x,y,z+dz*length));
+      stroke(x,z,x+dx*length,z);stroke(x,z,x,z+dz*length);
     }
     const old=this.objectSelection.geometry;
-    this.objectSelection.geometry=new THREE.BufferGeometry().setFromPoints(points);old.dispose();
+    this.objectSelection.geometry=new THREE.BufferGeometry();
+    this.objectSelection.geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));old.dispose();
   }
 
   /** Project lightweight actor proxies only for pointer gestures, using the
@@ -921,6 +980,8 @@ export class ColonyRenderer {
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup]) clearGroup(group);
     this.pileChunks.clear();
     this.staticMaterial.dispose();
+    this.terrainPlainMaterial.dispose();
+    this.terrainPaintMaterial.dispose();this.terrainPaintMaterial.map?.dispose();
     this.texturedStaticMaterial.dispose();this.staticPaint.dispose();
     this.waterMaterial.dispose();
     this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();

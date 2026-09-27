@@ -19,7 +19,9 @@ export function pileParts(bundles:readonly PileBundle[]):Placement[] {
   const logs: Placement[] = [], ends: Placement[] = [], crates: Placement[] = [], food: Placement[] = [];
   for (const bundle of bundles) {
     const starts=[logs.length,ends.length,crates.length,food.length];
-    const x = bundle.x + (bundle.kind === 'wood' ? -0.12 : 0.2), z = bundle.z + (bundle.supplied ? 0.16 : bundle.item === 'berries' ? -0.24 : bundle.item === 'survival-meal' ? 0.24 : 0);
+    // Only the loose crate-like piles use the old stagger. Authored apparel
+    // and weapons have their own local centres and must sit on the cell centre.
+    const x = bundle.x + (bundle.kind === 'wood' ? -0.12 : bundle.kind==='apparel'||bundle.kind==='weapon' ? 0 : 0.2), z = bundle.z + (bundle.supplied ? 0.16 : bundle.item === 'berries' ? -0.24 : bundle.item === 'survival-meal' ? 0.24 : 0);
     const height = 0.12 + Math.min(1, bundle.quantity / ITEM_DEFINITIONS[bundle.item].stackLimit) * (WORLD_SCALE.pileMaxHeight - 0.12);
     if (bundle.kind === 'wood') {
       const rows = Math.max(1, Math.min(3, Math.ceil(bundle.quantity / 25)));
