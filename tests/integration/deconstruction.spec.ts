@@ -20,9 +20,9 @@ test('le joueur désigne un rectangle, annule un meuble, priorise la déconstruc
     const rotation={value:0};
     await perform(page,{reason:'Retirer plusieurs ouvrages du camp.',command:{type:'area',action:'deconstruct',from:{x:18,z:14},to:{x:22,z:18}}},rotation);
     await expect.poll(async()=>(await world(page)).jobs.length).toBe(4);
-    await page.keyboard.press('Escape');await revealCells(page,[{x:18,z:18}]);await cell(page,18,18);
-    await expect(page.locator('#cell-job')).toContainText('Déconstruction');await page.locator('#cell-cancel').click();
-    await expect.poll(async()=>(await world(page)).jobs.length).toBe(3);await expect(page.locator('#cell-deconstruct')).toBeVisible();
+    await page.keyboard.press('Escape');await revealCells(page,[{x:18,z:18}]);await cell(page,18,18);await cell(page,18,18);
+    await expect(page.locator('#cell-title')).toContainText('Déconstruction');await page.locator('#cell-cancel').click();
+    await expect.poll(async()=>(await world(page)).jobs.length).toBe(3);await cell(page,18,18);await expect(page.locator('#cell-deconstruct')).toBeVisible();
     await perform(page,{reason:'Conserver un abattage de priorité inférieure en attente.',command:{type:'designate',kind:'chop',x:12,z:16}},rotation);
     const pending=await world(page),wall=pending.jobs.find(j=>j.deconstruction?.kind==='wall')!;
     await perform(page,{reason:'Ouvrir ce passage en premier.',command:{type:'order-job',pawnId:fixture.pawns[0]!.id,jobId:wall.id,queue:false}},rotation);
@@ -34,7 +34,8 @@ test('le joueur désigne un rectangle, annule un meuble, priorise la déconstruc
     expect(woodAccount(result)).toBe(initialWood);expect(validateWorld(result)).toEqual([]);
     const replay=deserializeWorld(serializeWorld(accepted));stepWorld(replay,result.tick-replay.tick);expect(replay).toEqual(result);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,result);
-    await page.keyboard.press('Escape');await revealCells(page,[{x:18,z:14}]);await cell(page,18,14);await expect(page.locator('#cell-title')).toContainText('Terre ordinaire');
+    const bare=[{x:18,z:14},{x:17,z:14},{x:19,z:14},{x:18,z:13}].find(c=>!result.piles.some(p=>p.owner.type==='ground'&&p.owner.x===c.x&&p.owner.z===c.z)&&!result.resources.some(r=>r.x===c.x&&r.z===c.z)&&!result.structures.some(s=>s.x===c.x&&s.z===c.z));
+    expect(bare).toBeDefined();await page.keyboard.press('Escape');await revealCells(page,[bare!]);await cell(page,bare!.x,bare!.z);await expect(page.locator('#inspector')).toBeHidden();await expect(page.locator('#map-hover-readout')).toContainText('Terre ordinaire');
     await page.screenshot({path:'artifacts/deconstruction-result.png'});
     await testInfo.attach('deconstruction-result',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),tick:result.tick,stock:result.stock,ledger:result.deconstructed,errors})});
     expect(errors).toEqual([]);

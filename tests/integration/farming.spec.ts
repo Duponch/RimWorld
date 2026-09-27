@@ -31,6 +31,7 @@ test('culture par interface : champ, semis GPU, inspection, politiques, maturitÃ
     expect(cleared.piles.some(p=>p.owner.type==='ground'&&p.owner.x===18&&p.owner.z===16)).toBe(false);
     await expect(page.locator('#cell-title')).toHaveText('Plant de riz');
     await expect(page.locator('#cell-description')).toContainText('Croissance');
+    await cell(page,18,16);await expect(page.locator('#cell-title')).toHaveText('Zone de culture');
     await page.locator('#growing-allowSow').uncheck();await page.locator('#growing-allowCut').uncheck();
     await page.getByRole('button',{name:'Appliquer les rÃ©glages de culture'}).click();
     await expect.poll(async()=>(await world(page)).growingZones[0]?.allowSow).toBe(false);
@@ -84,7 +85,7 @@ test('cold room: UI explains stopped plants, no sowing, built fire restores grow
     expect(warmed.thermal!.regions[0]!.temperature).toBeGreaterThan(withoutFire.thermal!.regions[0]!.temperature+3);
     expect(plantGrowth(warmed,warmed.resources.find(p=>p.id===id)!)).toBeGreaterThan(.2);
     expect(warmed.resources.some(p=>p.x===17&&p.z===16&&p.kind==='rice')).toBe(true);expect(validateWorld(warmed)).toEqual([]);
-    await tool(page,'select');await cell(page,16,16);await expect(page.locator('#cell-description')).toContainText('Croissance diurne');
+    await tool(page,'select');await page.keyboard.press('Escape');await cell(page,16,16);await expect(page.locator('#cell-description')).toContainText('Croissance diurne');
     await expect(page.locator('#cell-description')).not.toContainText('Croissance thermique 0 %');await expect(page.locator('#fps-counter')).toBeVisible();
     await page.locator('[data-speed="6"]').click();await expect(page.locator('#cell-description')).toContainText('Croissance 21 %',{timeout:10000});
     await page.locator('[data-speed="0"]').click();const final=await world(page);

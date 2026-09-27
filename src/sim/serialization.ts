@@ -1,4 +1,5 @@
 import { validateDomesticAnimals } from './domestic-save.ts';
+import { consolidateLooseRocks } from './loose-rocks.ts';
 import { validateAnimalPens } from './animal-pens-save.ts';
 import {validatePawnAppearance} from './pawn-appearance.ts';
 import {validFlakWorkShape,validateFlakWorks} from './flak-work.ts';
@@ -823,7 +824,12 @@ export function deserializeWorld(serialized: string): World {
     input.schemaVersion=127;
     adoptFluIncidents(input as unknown as World);
   }
-  const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
+  const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
+  const world = input as World;
+  consolidateLooseRocks(world);
+  const normalizedErrors = validateWorld(world);
+  if (normalizedErrors.length) throw new Error(`Invalid consolidated save: ${normalizedErrors.join(' ')}`);
+  return world;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */
 export function hashWorld(world: World): string {

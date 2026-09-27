@@ -17,7 +17,8 @@ export const world = async (page: Page): Promise<World> => JSON.parse(await seri
  * final snapshot is adopted; never capture a save oracle before this returns. */
 export async function pause(page: Page): Promise<void> {
   const button=page.locator('[data-speed="0"]');
-  await button.click();await expect(button).toHaveAttribute('aria-pressed','true');
+  if(await button.getAttribute('aria-pressed')!=='true')await button.click();
+  await expect(button).toHaveAttribute('aria-pressed','true');
 }
 export async function expectWorld(page: Page, expected: World) {
   // The pre-load snapshot can already equal expected: wait for replacement and
@@ -59,7 +60,7 @@ export async function panel(page: Page, name: 'wildlife' | 'research' | 'archite
   await expect(page.locator(`#${name}-panel`)).toBeVisible();
 }
 
-export type PawnInspectorTab = 'bio' | 'needs' | 'health' | 'gear' | 'social' | 'prisoner';
+export type PawnInspectorTab = 'journal' | 'bio' | 'needs' | 'health' | 'gear' | 'social' | 'prisoner';
 
 /** Open one real pawn-inspector tab and wait for its associated panel. */
 export async function pawnTab(page: Page, tab: PawnInspectorTab): Promise<void> {

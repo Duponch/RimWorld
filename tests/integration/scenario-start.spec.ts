@@ -240,11 +240,11 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     expect(richLand, 'This chosen site should expose a real rich-soil patch for the player.').toBeDefined();
     await revealCells(page, [richLand!]);
     await cell(page, richLand!.x, richLand!.z);
-    await expect(page.locator('#cell-title')).toHaveText('Terre riche');
-    await expect(page.locator('#cell-description')).toContainText('Fertilité : 140 %');
-    await expect(page.locator('#cell-description')).toContainText('Terrain cultivable');
+    await expect(page.locator('#inspector')).toBeHidden();
+    await expect(page.locator('#map-hover-readout')).toContainText('Terre riche');
+    await expect(page.locator('#map-hover-readout')).toContainText('fertilité 140 %');
     expect(await world(page)).toEqual(initial);
-    checkpoints.richSoil = { ...richLand, description: await page.locator('#cell-description').textContent() };
+    checkpoints.richSoil = { ...richLand, description: await page.locator('#map-hover-readout').textContent() };
     await page.screenshot({ path: 'artifacts/scenario-rich-soil-v83.png' });
     await page.keyboard.press('Escape');
 

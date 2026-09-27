@@ -2,7 +2,6 @@ import * as THREE from 'three/webgpu';
 import { Fn, attribute, mat4, normalLocal, positionLocal, transformNormal } from 'three/tsl';
 
 const matrix = new THREE.Matrix4(), sphere = new THREE.Sphere();
-const unitSphere = new THREE.Sphere(new THREE.Vector3(), Math.sqrt(3) / 2);
 
 /** Attribute layouts are independent of allocation size and node IDs. Keep
  * transforms explicit so buffer growth reuses both solid and shadow shaders. */
@@ -19,21 +18,24 @@ export function configureBoxMaterial(material: THREE.NodeMaterial): void {
 export class BoxMesh extends THREE.Mesh<THREE.InstancedBufferGeometry> {
   instanceMatrix!: THREE.InstancedInterleavedBuffer;
   colorBuffer!: THREE.InstancedBufferAttribute;
+  private baseRadius = Math.sqrt(3) / 2;
 
-  constructor(base: THREE.BoxGeometry, material: THREE.Material, capacity: number) {
+  constructor(base: THREE.BufferGeometry, material: THREE.Material, capacity: number) {
     super(new THREE.InstancedBufferGeometry(), material);
     this.allocate(base, capacity);
   }
 
-  allocate(base: THREE.BoxGeometry, capacity: number): void {
+  allocate(base: THREE.BufferGeometry, capacity: number): void {
     this.geometry.dispose();
+    if (!base.boundingSphere) base.computeBoundingSphere();
+    this.baseRadius = base.boundingSphere?.radius ?? 1;
     const geometry = new THREE.InstancedBufferGeometry();
     // Tiny authored box data is owned by each geometry. Disposing a grown batch
     // must never release another live batch's attributes or index.
     geometry.setAttribute('position', base.getAttribute('position').clone());
     geometry.setAttribute('normal', base.getAttribute('normal').clone());
     geometry.setAttribute('uv', base.getAttribute('uv').clone());
-    geometry.setIndex(base.index!.clone());
+    if (base.index) geometry.setIndex(base.index.clone());
     this.instanceMatrix = new THREE.InstancedInterleavedBuffer(new Float32Array(capacity * 16), 16).setUsage(THREE.StaticDrawUsage);
     for(let column=0;column<4;column++)geometry.setAttribute(`boxMatrix${column}`, new THREE.InterleavedBufferAttribute(this.instanceMatrix,4,column*4));
     this.colorBuffer = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3).setUsage(THREE.StaticDrawUsage);
@@ -51,7 +53,7 @@ export class BoxMesh extends THREE.Mesh<THREE.InstancedBufferGeometry> {
   computeBoundingSphere():void {
     this.boundingSphere.makeEmpty();
     for(let i=0;i<this.activeCount;i++) {
-      this.getMatrixAt(i,matrix);sphere.copy(unitSphere).applyMatrix4(matrix);this.boundingSphere.union(sphere);
+      this.getMatrixAt(i,matrix);sphere.set(new THREE.Vector3(),this.baseRadius).applyMatrix4(matrix);this.boundingSphere.union(sphere);
     }
   }
   dispose():void { this.geometry.dispose(); }

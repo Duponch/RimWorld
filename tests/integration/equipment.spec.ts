@@ -28,7 +28,7 @@ test('real equipment UI: contact before ownership, GPU hip attachment, saved app
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).piles[0]!.owner.type).toBe('equipment');await page.locator('[data-speed="0"]').click();
     const equipped=await world(page);expect(validateWorld(equipped)).toEqual([]);expect(equipped.piles[0]!.id).toBe(gun.id);
     await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'gear');await expect(page.locator('#equipment-primary')).toContainText('Revolver');
-    await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-equipment','revolver');await expect(page.locator('#equipment-cargo')).toHaveText('Aucune cargaison');
+    await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-equipment','revolver');await expect(page.locator('#equipment-cargo')).toHaveText('Aucun objet porté');
     await page.screenshot({path:'artifacts/equipment-v52.png'});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,equipped);await page.keyboard.press('Escape');
     await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'gear');await page.locator('#drop-equipment').click();

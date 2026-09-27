@@ -44,7 +44,9 @@ describe('seeded temperate valley generation', () => {
         for (const j of neighbors(w, i)) if (j > i && w.tiles[j]!.terrain === 'rock') { pairs++; if (tile.stone === w.tiles[j]!.stone) equal++; }
       }
       if (localTypes.size > 1) mixedSites++;
-      for (const resource of w.resources) expect(resource.stone).toBe(resource.kind === 'rock' ? field(resource.x, resource.z) : undefined);
+      for (const resource of w.resources) { expect(resource.kind).not.toBe('rock'); expect(resource.stone).toBeUndefined(); }
+      for (const pile of w.piles) if (pile.kind === 'chunk' && pile.owner.type === 'ground')
+        expect(pile.item).toBe(`${field(pile.owner.x, pile.owner.z)}-chunk`);
       expect(w.rng).toBe(rng); expect(serializeWorld(w)).toBe(before);
       expect(deserializeWorld(before)).toEqual(w);
     }
@@ -55,6 +57,9 @@ describe('seeded temperate valley generation', () => {
     ((raw.schemaVersion = 26,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}
     // V26 cannot smuggle a modern geological identity through migration.
     expect(() => deserializeWorld(JSON.stringify(raw))).toThrow(/version 26/);
+    // The current world also contains natural physical chunks, which V26 did
+    // not yet support; remove them from this intentionally old-schema fixture.
+    raw.piles = raw.piles.filter((pile:any) => pile.kind !== 'chunk');
     for (const tile of raw.tiles) { delete tile.stone; delete tile.ore; }
     for (const resource of raw.resources) delete resource.stone;
     const migrated = deserializeWorld(JSON.stringify(raw));
@@ -64,7 +69,7 @@ describe('seeded temperate valley generation', () => {
     for (const change of [(w: any) => w.tiles.find((t: any) => t.terrain === 'rock').stone = 'vacstone',
       (w: any) => w.tiles.find((t: any) => t.terrain === 'grass').stone = 'granite',
       (w: any) => w.resources.find((r: any) => r.kind === 'tree').stone = 'slate',
-      (w: any) => w.resources.find((r: any) => r.kind === 'rock').stone = null]) {
+      (w: any) => w.piles.find((p: any) => p.kind === 'chunk').item = 'vacstone-chunk']) {
       const invalid = structuredClone(modern); change(invalid);
       expect(validateWorld(invalid).length).toBeGreaterThan(0);
       expect(() => deserializeWorld(JSON.stringify(invalid))).toThrow();
@@ -103,7 +108,7 @@ describe('seeded temperate valley generation', () => {
   });
 
   test('many seeds produce continuous rivers, coherent patches, walkable starts and readable rock clusters', () => {
-    let edgeRocks = 0; let decorativeRocks = 0; let grassTrees = 0; let soilTrees = 0; let grassArea = 0; let soilArea = 0;
+    let edgeRocks = 0; let looseChunks = 0; let grassTrees = 0; let soilTrees = 0; let grassArea = 0; let soilArea = 0;
     for (const size of [32, 64, 128, 200, 250]) {
       for (const seed of [0, 1, 7, 19, 42, 65, 75, 85, 114, 271, 65535, 0xffffffff]) {
         const world = createWorld(seed, size, size); const context = `seed=${seed} map=${size}`;
@@ -139,17 +144,19 @@ describe('seeded temperate valley generation', () => {
         for (const item of world.resources) {
           const index = item.z * size + item.x; const terrain = world.tiles[index]!.terrain;
           expect(['grass', 'soil'], context).toContain(terrain);
-          if (item.kind === 'rock') {
-            decorativeRocks++;
-            if (neighbors(world, index).some(next => world.tiles[next]!.terrain === 'rock')) edgeRocks++;
-          } else if (item.kind === 'tree') {
+          if (item.kind === 'tree') {
             if (terrain === 'grass') grassTrees++; else soilTrees++;
           }
+        }
+        for (const pile of world.piles) if (pile.kind === 'chunk' && pile.owner.type === 'ground') {
+          const index = pile.owner.z * size + pile.owner.x;
+          looseChunks++;
+          if (neighbors(world, index).some(next => world.tiles[next]!.terrain === 'rock')) edgeRocks++;
         }
       }
     }
     // Population-level ecological relationships; a particular seed need not look average.
-    expect(edgeRocks / decorativeRocks).toBeGreaterThan(0.45);
+    expect(edgeRocks / looseChunks).toBeGreaterThan(0.45);
     expect(grassTrees / grassArea).toBeGreaterThan(soilTrees / soilArea * 1.25);
   });
 

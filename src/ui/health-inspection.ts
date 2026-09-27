@@ -1,7 +1,6 @@
 import { MALNUTRITION_UNIT,MALNUTRITION_LABELS,malnutritionStage } from '../sim/malnutrition';
-import { comfortableTemperature,HEAT_UNIT,HEAT_LABELS,heatStage } from '../sim/heat-rules';
-import { TemperatureView } from '../sim/temperature';
-import { BODY_PARTS } from '../sim/body-definition';
+import { HEAT_UNIT,HEAT_LABELS,heatStage } from '../sim/heat-rules';
+import { BODY_PARTS,HUMAN_BODY } from '../sim/body-definition';
 import { BLOOD_UNIT,HP_UNIT,INJURY_RULES } from '../sim/injury-rules';
 import { medicalBleed,medicalPain } from '../sim/injury-state';
 import { pawnBody } from '../sim/health-rules';
@@ -12,47 +11,93 @@ import { createFluInspection,updateFluInspection } from './flu-inspection';
 import { foodPoisoningStage,FOOD_POISON_UNIT } from '../sim/food-poisoning';
 import { bodyDescription } from './burial-controls';
 
+const CAPACITY_LABELS = [
+  ['consciousness','Conscience'],['moving','Mouvement'],['manipulation','Manipulation'],
+  ['talking','Parole'],['eating','Alimentation'],['sight','Vue'],['hearing','Ouïe'],
+  ['breathing','Respiration'],['bloodFiltration','Filtrage du sang'],
+  ['bloodPumping','Pompage du sang'],['digestion','Digestion'],
+] as const;
+
+export function healthCapacityRows(pawn:Pawn):ReadonlyArray<{label:string;value:string}> {
+  if(pawn.state==='dead')return [];
+  const c=pawnBody(pawn).capacities;
+  return [
+    {label:'Douleur',value:pawn.health&&medicalPain(pawn.health)>0?`${Math.round(medicalPain(pawn.health)*100)} %`:'Aucune'},
+    ...CAPACITY_LABELS.map(([key,label])=>({label,value:`${Math.round(c[key]*100)} %`})),
+  ];
+}
+
+/** Anatomical order follows the visible health tree, rather than injury time. */
+export function healthInjuryRows(pawn:Pawn):ReadonlyArray<{part:string;description:string}> {
+  const health=pawn.health;if(!health)return [];
+  const order=new Map(HUMAN_BODY.map((part,index)=>[part.id,index]));
+  return [
+    ...health.injuries.map(i=>({partId:i.part,part:BODY_PARTS[i.part].label,description:`${i.scar?.pain!==undefined?'Cicatrice':INJURY_RULES[i.kind].label} · −${(i.severity/HP_UNIT).toFixed(2)} PV${i.tended!==undefined?` · soignée (${Math.round(i.tended/10)} %)` :''}`})),
+    ...health.missing.map(m=>({partId:m.part,part:BODY_PARTS[m.part].label,description:`Partie perdue${m.tended?' · plaie soignée':''}`})),
+  ].sort((a,b)=>(order.get(a.partId)??Infinity)-(order.get(b.partId)??Infinity)).map(({part,description})=>({part,description}));
+}
+
 export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|undefined,send?:(c:Command)=>void,allowSelfTend=true):void {
   const details=document.createElement('details');details.id='health-inspection';details.open=true;
   const summary=document.createElement('summary');summary.textContent='Santé';details.append(summary);
-  for(const name of ['status','capacities','food-poisoning','malnutrition','thermal','stagger','injuries']) {
-    const p=document.createElement('p');p.dataset.health=name;details.append(p);
-    if(name==='capacities'){createInfectionInspection(details);createFluInspection(details);}
-  }
+  const layout=document.createElement('div');layout.className='health-dossier';
+  const overview=document.createElement('section');overview.className='health-overview';
+  const overviewTitle=document.createElement('h4');overviewTitle.textContent='Vue d’ensemble';overview.append(overviewTitle);
   if(selected&&send){
     const label=document.createElement('label'),input=document.createElement('select');input.id='medical-policy';
     for(const [value,name] of Object.entries(MEDICAL_CARE)){const o=document.createElement('option');o.value=value;o.textContent=name;input.append(o);}
     input.onchange=()=>{const p=selected();if(p)send({type:'medical-care',pawnId:p.id,care:input.value as MedicalCare});};
-    label.append('Soins autorisés ',input);details.append(label);
+    label.append('Médecine ',input);overview.append(label);
     if(allowSelfTend){const selfLabel=document.createElement('label'),selfInput=document.createElement('input');selfInput.type='checkbox';selfInput.id='self-tend-policy';
-    selfInput.onchange=()=>{const p=selected();if(p)send({type:'self-tend-policy',pawnId:p.id,enabled:selfInput.checked});};
-    selfLabel.append(selfInput,' Auto-soin');selfLabel.title='Médecin doit être activé. Qualité de base ×70 %, avant variation ; pas de pénalité de vitesse propre aux auto-soins.';details.append(selfLabel);
-    const hint=document.createElement('small');hint.dataset.health='self-tend-hint';details.append(hint);}
+      selfInput.onchange=()=>{const p=selected();if(p)send({type:'self-tend-policy',pawnId:p.id,enabled:selfInput.checked});};
+      selfLabel.append('Auto-soin ',selfInput);selfLabel.title='Requiert le travail Médecin. La qualité de soin suit les règles de la simulation.';overview.append(selfLabel);
+      const hint=document.createElement('small');hint.dataset.health='self-tend-hint';overview.append(hint);
+    }
   }
-  panel.append(details);
+  const status=document.createElement('p');status.dataset.health='status';status.className='health-status';overview.append(status);
+  const capacities=document.createElement('dl');capacities.dataset.health='capacities';capacities.className='health-capacities';overview.append(capacities);
+  const conditions=document.createElement('section');conditions.className='health-conditions';
+  const conditionsTitle=document.createElement('h4');conditionsTitle.textContent='Affections';conditions.append(conditionsTitle);
+  const injuries=document.createElement('div');injuries.dataset.health='injuries';injuries.className='health-injury-list';conditions.append(injuries);
+  createInfectionInspection(conditions);createFluInspection(conditions);
+  for(const name of ['food-poisoning','malnutrition','thermal','stagger']){
+    const p=document.createElement('p');p.dataset.health=name;conditions.append(p);
+  }
+  layout.append(overview,conditions);details.append(layout);panel.append(details);
 }
+
 export function healthStatusText(pawn:Pawn,world?:World):string {
   if(pawn.state==='dead')return world?bodyDescription(world,pawn):'Décédé';
   const health=pawn.health;
   if(!health)return 'Aucune lésion';
   return `${pawn.state==='downed'?'À terre · ':''}${health.flu?.severity?'Malade · ':''}Douleur ${Math.round(medicalPain(health)*100)} % · Sang perdu ${(health.bloodLoss/BLOOD_UNIT*100).toFixed(1)} % · Saignement ${(medicalBleed(health)*100).toFixed(0)} %/jour`;
 }
+
 /** Selected pawn only, at HUD cadence. Save strings never enter innerHTML. */
 export function updateHealthInspection(panel:HTMLElement,pawn:Pawn,world?:World):void {
   const details=panel.querySelector('#health-inspection');if(!details)return;
-  const health=pawn.health,c=pawnBody(pawn).capacities;
+  const health=pawn.health;
   updateInfectionInspection(details,health);
   updateFluInspection(details,health);
   const poison=health?.foodPoisoning;
-  details.querySelector('[data-health="food-poisoning"]')!.textContent=poison?`Intoxication alimentaire · ${{none:'récupération',initial:'phase initiale',major:'phase majeure',recovering:'récupération'}[foodPoisoningStage(poison)]} · ${(100*poison.severity/FOOD_POISON_UNIT).toFixed(1)} %${poison.vomit?' · Vomit':''}. Guérit avec le temps ; aucun médicament ne traite cette intoxication. Ingestion ${Math.round(c.eating*100)} % · Filtration du sang ${Math.round(c.bloodFiltration*100)} %.`:'';
-  details.querySelector('[data-health="malnutrition"]')!.textContent=health?.malnutrition?`Malnutrition ${MALNUTRITION_LABELS[malnutritionStage(health.malnutrition)]} : ${(health.malnutrition/MALNUTRITION_UNIT*100).toFixed(1)} %. ${pawn.state==='dead'?'':pawn.hunger<=0?'S’aggrave sans nourriture.':'Récupère progressivement après le repas.'}`:'';
-  const range=world&&comfortableTemperature(world,pawn),stage=heatStage(health?.heatstroke);
-  details.querySelector('[data-health="thermal"]')!.textContent=(range?`Air ${new TemperatureView(world!).at(world!,pawn).toFixed(1)} °C · Confort ${range.min.toFixed(1)} à ${range.max.toFixed(1)} °C. `:'')+(stage?`Coup de chaleur ${HEAT_LABELS[stage]} : ${(100*health!.heatstroke!/HEAT_UNIT).toFixed(1)} %. `:'')+(heatStage(health?.hypothermia)?`Hypothermie ${HEAT_LABELS[heatStage(health?.hypothermia)]} : ${(100*health!.hypothermia!/HEAT_UNIT).toFixed(1)} %. `:'')+(pawn.heatRefuge?'Cherche ou attend dans un refuge thermique.':'');
+  details.querySelector('[data-health="food-poisoning"]')!.textContent=poison?`Intoxication alimentaire · ${{none:'récupération',initial:'phase initiale',major:'phase majeure',recovering:'récupération'}[foodPoisoningStage(poison)]} · ${(100*poison.severity/FOOD_POISON_UNIT).toFixed(1)} %${poison.vomit?' · vomissements':''}`:'';
+  details.querySelector('[data-health="malnutrition"]')!.textContent=health?.malnutrition?`Malnutrition ${MALNUTRITION_LABELS[malnutritionStage(health.malnutrition)]} · ${(health.malnutrition/MALNUTRITION_UNIT*100).toFixed(1)} %`:'';
+  const stage=heatStage(health?.heatstroke),coldStage=heatStage(health?.hypothermia);
+  details.querySelector('[data-health="thermal"]')!.textContent=(stage?`Coup de chaleur ${HEAT_LABELS[stage]} · ${(100*health!.heatstroke!/HEAT_UNIT).toFixed(1)} %. `:'')+(coldStage?`Hypothermie ${HEAT_LABELS[coldStage]} · ${(100*health!.hypothermia!/HEAT_UNIT).toFixed(1)} %.`:'');
   details.querySelector('[data-health="stagger"]')!.textContent=pawn.stagger?'Ralenti temporairement par un impact de balle.':'';
   const policy=details.querySelector<HTMLSelectElement>('#medical-policy');if(policy){policy.value=medicalCare(pawn);policy.disabled=pawn.state==='dead';}
   const self=details.querySelector<HTMLInputElement>('#self-tend-policy');if(self){self.checked=!!pawn.selfTend;self.disabled=pawn.state==='dead';}
   const hint=details.querySelector('[data-health="self-tend-hint"]');if(hint)hint.textContent=pawn.selfTend&&pawn.priorities.doctor===0?'Auto-soins autorisés, mais Médecin est désactivé dans Travail.':'';
   details.querySelector('[data-health="status"]')!.textContent=healthStatusText(pawn,world);
-  details.querySelector('[data-health="capacities"]')!.textContent=pawn.state==='dead'?'':`Conscience ${Math.round(c.consciousness*100)} % · Mobilité ${Math.round(c.moving*100)} % · Manipulation ${Math.round(c.manipulation*100)} % · Vue ${Math.round(c.sight*100)} %`;
-  details.querySelector('[data-health="injuries"]')!.textContent=health?[...health.injuries.map(i=>`${BODY_PARTS[i.part].label} : ${i.scar?.pain!==undefined?'Cicatrice':INJURY_RULES[i.kind].label}, −${(i.severity/HP_UNIT).toFixed(2)} PV${i.tended!==undefined?` (traitée, qualité ${Math.round(i.tended/10)} %)`:''}`),...health.missing.map(m=>`${BODY_PARTS[m.part].label} : partie perdue${m.tended?' (plaie traitée)':''}`)].join(' ; '):'';
+  const capacities=details.querySelector<HTMLElement>('[data-health="capacities"]')!;
+  const rows=healthCapacityRows(pawn),signature=JSON.stringify(rows);
+  if(capacities.dataset.signature!==signature){capacities.dataset.signature=signature;capacities.replaceChildren(...rows.flatMap(({label,value})=>{
+    const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;dd.dataset.reduced=String(value!=='100 %'&&value!=='Aucune');return [dt,dd];
+  }));}
+  const injuries=details.querySelector<HTMLElement>('[data-health="injuries"]')!,injuryRows=healthInjuryRows(pawn),injurySignature=JSON.stringify(injuryRows);
+  if(injuries.dataset.signature!==injurySignature){injuries.dataset.signature=injurySignature;injuries.replaceChildren(...injuryRows.map(({part,description})=>{
+    const row=document.createElement('p');row.className='health-injury-row';
+    const name=document.createElement('strong');name.textContent=part;const detail=document.createElement('span');detail.textContent=description;
+    row.append(name,detail);return row;
+  }));}
 }

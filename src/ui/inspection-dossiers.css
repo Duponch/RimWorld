@@ -1,0 +1,62 @@
+/* The medical and gear dossiers share the inspector's palette, while following
+   the two-column information hierarchy of the in-game inspection windows. */
+#health-inspection .health-dossier{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px;align-items:start}
+#health-inspection .health-dossier>section{min-width:0}
+#health-inspection .health-dossier h4,#equipment-details .equipment-dossier h4{margin:0 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line);font:600 17px/1.3 'Lisiere Serif',Georgia,serif;color:var(--ink)}
+#health-inspection .health-overview>label{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px;margin:6px 0;color:var(--ink)}
+#health-inspection .health-overview>label:has(#medical-policy){align-items:flex-start;flex-direction:column}
+#health-inspection #medical-policy{width:100%}
+#health-inspection .health-overview>label:has(#self-tend-policy){justify-content:flex-start}
+#health-inspection .health-overview>label input{order:-1}
+#health-inspection .health-overview>small:empty,#health-inspection .health-conditions>p:empty,#health-inspection .health-conditions>[hidden]{display:none}
+#health-inspection .health-status{margin:12px 0;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--paper-deep);font-size:13px;line-height:1.4}
+#health-inspection .health-capacities{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 15px;margin:0;padding:0;font-size:14px;line-height:1.35}
+#health-inspection .health-capacities dt,#health-inspection .health-capacities dd{margin:0;padding:3px 0;color:var(--ink)}
+#health-inspection .health-capacities dd{font-variant-numeric:tabular-nums;text-align:right;color:#507457}
+#health-inspection .health-capacities dd[data-reduced=true]{color:#9b6840}
+#health-inspection .health-injury-list:empty{min-height:24px}
+#health-inspection .health-injury-row{display:grid;grid-template-columns:minmax(100px,.45fr) minmax(0,1fr);gap:8px;margin:0;padding:7px 8px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.35}
+#health-inspection .health-injury-row:nth-child(odd){background:color-mix(in srgb,var(--paper-deep) 60%,transparent)}
+#health-inspection .health-injury-row strong{font-weight:600;color:var(--accent)}
+#health-inspection .health-conditions>[data-health=infections],#health-inspection .health-conditions>[data-health=flu]{padding:8px 0;border-bottom:1px solid var(--line)}
+#health-inspection .health-conditions>[data-health=infections] p,#health-inspection .health-conditions>[data-health=flu] p{margin:5px 0;font-size:14px}
+#health-inspection .health-conditions>p:not(:empty){margin:8px 0;padding:7px 8px;border-bottom:1px solid var(--line)}
+#equipment-details .equipment-dossier{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px 18px;align-items:start}
+#equipment-details #equipment-comfort{grid-column:1/-1;margin:0;padding:0 0 10px;border-bottom:1px solid var(--line);font-size:14px}
+#equipment-details .equipment-group{min-width:0}
+#equipment-details .equipment-group h4{margin-bottom:8px}
+#equipment-details #equipment-primary{margin:0 0 9px}
+#equipment-details #equipment-memory:empty,#equipment-details .equipment-group button[hidden]{display:none}
+#equipment-details #equipment-memory{margin:8px 0;color:var(--muted-ink);font-size:13px}
+#equipment-details .equipment-apparel-row{padding:9px 0;border-bottom:1px solid var(--line)}
+#equipment-details .equipment-apparel-line{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px}
+#equipment-details .equipment-apparel-line strong{font-weight:600}
+#equipment-details .equipment-apparel-line span{flex:none;color:var(--muted-ink);font-variant-numeric:tabular-nums}
+#equipment-details .equipment-apparel-stats{margin:5px 0;color:var(--muted-ink);font-size:13px;line-height:1.35}
+#equipment-details .equipment-apparel-row button{min-height:30px;padding:3px 10px;font-size:13px}
+#equipment-details #equipment-cargo p{margin:0;padding:7px 0;border-bottom:1px solid var(--line)}
+
+#social-inspection #social-opinions{width:100%;margin:0 0 18px;border-collapse:collapse;table-layout:fixed;font-size:14px}
+#social-inspection #social-opinions th,#social-inspection #social-opinions td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;line-height:1.35}
+#social-inspection #social-opinions thead th{color:var(--muted-ink);font-size:12px;font-weight:600}
+#social-inspection #social-opinions tbody th{font-weight:500;overflow-wrap:anywhere}
+#social-inspection #social-opinions tbody tr:nth-child(odd){background:color-mix(in srgb,var(--paper-deep) 55%,transparent)}
+#social-inspection #social-opinions th:first-child{width:55%}
+#social-inspection #social-opinions td{font-variant-numeric:tabular-nums;white-space:nowrap}
+#social-inspection #social-opinions td[data-sign=positive]{color:#477c4e}
+#social-inspection #social-opinions td[data-sign=negative]{color:#a65348}
+#social-inspection #social-opinions td[data-sign=neutral]{color:var(--muted-ink)}
+#social-inspection h4{margin:0 0 6px;padding-top:9px;border-top:1px solid var(--line);font:600 16px/1.3 'Lisiere Serif',Georgia,serif;color:var(--ink)}
+#social-inspection #social-last{margin:0;color:var(--muted-ink);font-size:14px}
+#mood-inspection #mood-gauge{position:relative;width:100%;height:23px;margin:8px 0 6px;border:2px solid var(--ink);background:var(--paper-deep);overflow:hidden}
+#mood-inspection #mood-gauge[hidden]{display:none}
+#mood-inspection #mood-gauge-fill{position:absolute;inset:0 auto 0 0;background:#59b6bd}
+#mood-inspection .mood-gauge-marker{position:absolute;top:2px;bottom:2px;width:2px;background:var(--ink);opacity:.75}
+#mood-inspection #mood-target{margin:5px 0 12px;font-size:14px;font-variant-numeric:tabular-nums}
+#mood-inspection #mood-break-thresholds{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+#mood-inspection #mood-thoughts{margin:0;padding:0;list-style:none}
+#mood-inspection #mood-thoughts li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;margin:0;padding:6px 9px;border-bottom:1px solid var(--line);line-height:1.35}
+#mood-inspection #mood-thoughts li:nth-child(odd){background:color-mix(in srgb,var(--paper-deep) 50%,transparent)}
+#mood-inspection #mood-thoughts strong{min-width:3ch;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+#mood-inspection #mood-thoughts strong[data-sign=positive]{color:#477c4e}
+#mood-inspection #mood-thoughts strong[data-sign=negative]{color:#a65348}

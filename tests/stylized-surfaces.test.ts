@@ -119,9 +119,10 @@ test('stone fragments and cut blocks have several pastel tones in one existing p
   const group=new THREE.Group(),boxes=new BoxBatches();
   try {
     boxes.set(group,'stone-pile',[...fragments,...blocks]);
-    expect(group.children).toHaveLength(1);
-    expect((group.children[0] as BoxMesh).activeCount).toBe(7);
-    expect((group.children[0] as BoxMesh).colorBuffer.count).toBeGreaterThanOrEqual(7);
+    expect(group.children).toHaveLength(2);
+    expect((group.children[0] as BoxMesh).activeCount).toBe(5);
+    expect((group.children[1] as BoxMesh).activeCount).toBe(2);
+    expect((group.children[1] as BoxMesh).colorBuffer.count).toBeGreaterThanOrEqual(2);
   } finally {boxes.dispose();}
 });
 

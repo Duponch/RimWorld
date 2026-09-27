@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Sélection, roches et dossiers V129
+- Lire `docs/development/selection-inspection-v129.md`, `docs/research/interaction-core-v129.md` et `docs/history/validation-interaction-v129.md`. Le Core possède un seul fragment naturel transportable par pierre, distinct du massif minable et des blocs taillés. Ne pas réintroduire `Resource.kind='rock'` dans les nouveaux mondes : les anciens décors sont retirés après validation stricte, sans ajouter de fragment ou changer piles/IDs/RNG.
+- Le terrain et le revêtement ne sont pas sélectionnables : le survol en bas à gauche les décrit sans teinter la case. Clic sur Thing/zone/plan, clics répétés sur les superpositions, terre nue désélectionne. Coins pour objet, contour pour zone ; pas de bordure agricole fluorescente permanente. Deux colons civils peuvent partager une case à l'arrêt ; les destinations tactiques distinctes sont déjà réservées, ne pas imposer une occupation exclusive globale.
+- Les six dossiers de colon suivent Journal/Matériel/Social/Bio/Besoins/Santé au-dessus du résumé. Journal borné aux événements conservés ; aucune relation familiale, masse, armure globale ou chirurgie fictive. Garder les commandes branchées et les valeurs issues du moteur. Survol au changement de case/au plus 4 Hz sur snapshot, calcul de lumière réutilisé pendant 250 ms ; contours et lots GPU reconstruits aux changements, jamais par image. Les contrôles de lot ne garantissent pas 240 FPS/×6 ni parité de toutes les fiches.
+
 ## Signes BD de bagarre et sommeil V128
 
 - Lire `docs/development/comic-vfx-v128.md`, `docs/research/comic-vfx-reference-v128.md` et `docs/history/validation-comic-vfx-v128.md`. La nouvelle référence fournie est un visualiseur 3D : nuage crème volumique cerné, étoiles dorées en relief, traits noirs et membres cubiques. Ses 17 dessins animés pour **une** bagarre et sa boucle CPU ne sont pas un budget à copier par paire.

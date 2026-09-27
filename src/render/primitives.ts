@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-export type Placement = { x: number; y: number; z: number; sx?: number; sy?: number; sz?: number; ry?: number; color?: number; key?: number; pigment?: 'stone' };
+export type Placement = { x: number; y: number; z: number; sx?: number; sy?: number; sz?: number; ry?: number; color?: number; key?: number; pigment?: 'stone'; shape?: 'rounded-rock' };
 const scratchObject = new THREE.Object3D();
 const scratchColor = new THREE.Color();
 

@@ -1,4 +1,4 @@
-export type ColonistInspectorTab = 'bio' | 'needs' | 'health' | 'gear' | 'social' | 'prisoner';
+export type ColonistInspectorTab = 'journal' | 'gear' | 'social' | 'bio' | 'needs' | 'health' | 'prisoner';
 
 export interface ColonistInspectorState {
   pawnId: number;
@@ -17,11 +17,12 @@ interface InspectorTabDefinition {
 }
 
 const TAB_DEFINITIONS: readonly InspectorTabDefinition[] = Object.freeze([
+  { id: 'journal', label: 'Journal', selectors: ['#pawn-journal'] },
+  { id: 'gear', label: 'Matériel', selectors: ['#equipment-details'] },
+  { id: 'social', label: 'Social', selectors: ['#social-inspection'] },
   { id: 'bio', label: 'Bio', selectors: ['.appearance-inspection','.skills-inspection'] },
   { id: 'needs', label: 'Besoins', selectors: ['.needs', '#recreation-tolerance', '#mood-inspection', '#room-description'] },
   { id: 'health', label: 'Santé', selectors: ['#health-inspection', '#hygiene-controls', '#burial-controls'] },
-  { id: 'gear', label: 'Matériel', selectors: ['#equipment-details'] },
-  { id: 'social', label: 'Social', selectors: ['#social-inspection'] },
   { id: 'prisoner', label: 'Prisonnier', selectors: ['#prisoner-inspection'] },
 ]);
 
@@ -65,7 +66,7 @@ export function colonistInspectorState(
  * without requiring a second browser DOM in the unit-test process. */
 export function colonistInspectorScaffold(prisoner: boolean): string {
   const tabs = colonistInspectorTabs(prisoner);
-  return `<div class="colonist-inspector-scroll"><section class="colonist-inspector-summary" aria-label="Résumé du personnage sélectionné"></section><div class="colonist-inspector-tabs" role="tablist" aria-label="Dossiers du personnage">${tabs.map(tab => `<button type="button" role="tab" id="colonist-tab-${tab.id}" aria-controls="colonist-panel-${tab.id}" aria-selected="false" tabindex="-1" data-colonist-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="colonist-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="colonist-panel-${tab.id}" aria-labelledby="colonist-tab-${tab.id}" tabindex="0" data-colonist-panel="${tab.id}" hidden><h3 class="inspector-page-title">${tab.label}</h3></section>`).join('')}</div><section class="colonist-inspector-actions" aria-label="Actions du personnage"></section></div>`;
+  return `<div class="colonist-inspector-scroll"><div class="colonist-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="colonist-panel-${tab.id}" aria-labelledby="colonist-tab-${tab.id}" tabindex="0" data-colonist-panel="${tab.id}" hidden><h3 class="inspector-page-title">${tab.label}</h3></section>`).join('')}</div><div class="colonist-inspector-tabs" role="tablist" aria-label="Dossiers du personnage">${tabs.map(tab => `<button type="button" role="tab" id="colonist-tab-${tab.id}" aria-controls="colonist-panel-${tab.id}" aria-selected="false" tabindex="-1" data-colonist-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="colonist-inspector-footer"><section class="colonist-inspector-summary" aria-label="Résumé du personnage sélectionné"></section><section class="colonist-inspector-actions" aria-label="Actions du personnage"></section></div></div>`;
 }
 
 function directMatches(root: HTMLElement, selector: string): HTMLElement[] {

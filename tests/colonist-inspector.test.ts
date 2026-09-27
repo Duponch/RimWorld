@@ -8,9 +8,9 @@ import {
 } from '../src/ui/colonist-inspector';
 
 describe('colonist inspector structure', () => {
-  test('offers the five human records and only exposes Prisonnier for a captive', () => {
-    expect(colonistInspectorTabs(false).map(tab => tab.label)).toEqual(['Bio', 'Besoins', 'Santé', 'Matériel', 'Social']);
-    expect(colonistInspectorTabs(true).map(tab => tab.label)).toEqual(['Bio', 'Besoins', 'Santé', 'Matériel', 'Social', 'Prisonnier']);
+  test('offers the six human records in Core order and only exposes Prisonnier for a captive', () => {
+    expect(colonistInspectorTabs(false).map(tab => tab.label)).toEqual(['Journal', 'Matériel', 'Social', 'Bio', 'Besoins', 'Santé']);
+    expect(colonistInspectorTabs(true).map(tab => tab.label)).toEqual(['Journal', 'Matériel', 'Social', 'Bio', 'Besoins', 'Santé', 'Prisonnier']);
   });
 
   test('keeps the chosen record across identity selection and rejects an inapplicable prisoner record', () => {
@@ -26,8 +26,10 @@ describe('colonist inspector structure', () => {
       expect(markup).toContain(`role="tab" id="colonist-tab-${id}" aria-controls="colonist-panel-${id}"`);
       expect(markup).toContain(`role="tabpanel" id="colonist-panel-${id}" aria-labelledby="colonist-tab-${id}"`);
     }
-    expect(markup.match(/role="tab"/g)).toHaveLength(6);
-    expect(markup.match(/role="tabpanel"/g)).toHaveLength(6);
+    expect(markup.match(/role="tab"/g)).toHaveLength(7);
+    expect(markup.match(/role="tabpanel"/g)).toHaveLength(7);
+    expect(markup.indexOf('colonist-inspector-pages')).toBeLessThan(markup.indexOf('colonist-inspector-tabs'));
+    expect(markup.indexOf('colonist-inspector-tabs')).toBeLessThan(markup.indexOf('colonist-inspector-summary'));
     expect(markup).toContain('aria-label="Résumé du personnage sélectionné"');
     expect(markup).toContain('aria-label="Actions du personnage"');
   });
@@ -43,6 +45,7 @@ describe('colonist inspector structure', () => {
     expect(layout.panels.health).toEqual(expect.arrayContaining(['#hygiene-controls', '#burial-controls']));
     expect(layout.panels.gear).toContain('#equipment-details');
     expect(layout.panels.social).toContain('#social-inspection');
+    expect(layout.panels.journal).toContain('#pawn-journal');
     expect(layout.panels.prisoner).toContain('#prisoner-inspection');
   });
 });

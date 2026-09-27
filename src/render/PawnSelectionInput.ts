@@ -16,6 +16,7 @@ interface Callbacks {
   pawns():ScreenPawn[];
   selected():ReadonlySet<number>;
   canInspect(event:PointerEvent):boolean;
+  preferObjectCycle(event:PointerEvent):boolean;
   select(gesture:SelectionGesture):void;
   inspect(event:PointerEvent):void;
   lock(locked:boolean):void;
@@ -53,7 +54,8 @@ export class PawnSelectionInput {
       this.callbacks.select({ids,additive:drag.shift,toggle:false});
     } else {
       const hits=this.hits(event.clientX,event.clientY),selected=this.callbacks.selected();
-      // Cycle overlapping pawns and the floor object on ordinary clicks. Shift
+      if(!drag.shift&&this.callbacks.preferObjectCycle(event)){this.callbacks.inspect(event);return true;}
+      // Cycle overlapping pawns and map objects on ordinary clicks. Shift
       // still toggles a pawn; double-click still selects the visible group.
       const current=drag.shift?-1:hits.findIndex(p=>selected.has(p.id));
       const next=current+1,inspect=next===hits.length&&this.callbacks.canInspect(event);

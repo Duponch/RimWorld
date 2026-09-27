@@ -1,4 +1,7 @@
 /* Compact selection card, with the same hierarchy as the reference artwork. */
+#map-hover-readout{position:absolute;left:18px;bottom:calc(94px + var(--hover-inspector-height, 0px));z-index:2;max-width:min(560px,calc(100vw - 40px));pointer-events:none;color:#fff8e8;text-shadow:0 1px 3px #142018,0 2px 7px #142018;font-size:14px;line-height:1.35}
+#map-hover-readout span{display:block}
+.game-shell:has(.management-panel:not([hidden])) #map-hover-readout{display:none}
 #inspector.cell-inspector-host{width:510px;padding:20px 22px;max-height:calc(100dvh - 210px)}
 .cell-inspector-host .cell-heading{display:grid;grid-template-columns:66px minmax(0,1fr) 30px;gap:14px;align-items:center;margin-bottom:12px}
 .cell-illustration{width:66px;height:66px;border-radius:9px;background-color:#e9d7b8;box-shadow:inset 0 0 0 1px #cbb58e}

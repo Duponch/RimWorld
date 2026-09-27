@@ -15,6 +15,7 @@ type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'border';
  */
 export class BoxBatches {
   private readonly geometry = new THREE.BoxGeometry(1, 1, 1);
+  private readonly roundedRockGeometry = new THREE.DodecahedronGeometry(1, 0);
   private readonly surfaceTexture = createStylizedSurfaceTexture();
   private readonly texturedSolid = material(0xffffff);
   private readonly materials: Record<Style, THREE.NodeMaterial> = {
@@ -31,6 +32,7 @@ export class BoxBatches {
     configure?.(this.materials.solid as THREE.MeshStandardNodeMaterial);
     configure?.(this.texturedSolid);
     this.geometry.userData.rendererOwned = true;
+    this.roundedRockGeometry.userData.rendererOwned = true;
     for (const mat of Object.values(this.materials)) { mat.userData.rendererOwned = true; configureBoxMaterial(mat); }
     this.texturedSolid.userData.rendererOwned = true;
     configureBoxMaterial(this.texturedSolid);
@@ -49,17 +51,26 @@ export class BoxBatches {
   }
 
   set(group: THREE.Group, key: string, items: Placement[], style: Style = 'solid', shadows = true): void {
+    if (style === 'solid' && (items.some(item=>item.shape==='rounded-rock') || this.batches.has(`${key}:rounded-rock`))) {
+      this.setGeometry(group,key,items.filter(item=>item.shape!=='rounded-rock'),this.geometry,style,shadows);
+      this.setGeometry(group,`${key}:rounded-rock`,items.filter(item=>item.shape==='rounded-rock'),this.roundedRockGeometry,style,shadows);
+      return;
+    }
+    this.setGeometry(group,key,items,this.geometry,style,shadows);
+  }
+
+  private setGeometry(group: THREE.Group, key: string, items: Placement[], geometry: THREE.BufferGeometry, style: Style, shadows: boolean): void {
     let mesh = this.batches.get(key);
     const chosen = style === 'solid' && this.texturesEnabled ? this.texturedSolid : this.materials[style];
     if (!mesh) {
-      mesh = new BoxMesh(this.geometry, chosen, Math.max(256, 2 ** Math.ceil(Math.log2(items.length || 1))));
+      mesh = new BoxMesh(geometry, chosen, Math.max(256, 2 ** Math.ceil(Math.log2(items.length || 1))));
       mesh.name = key;
       mesh.castShadow = style === 'solid' && shadows; mesh.receiveShadow = true;
       group.add(mesh); this.batches.set(key, mesh);
     } else if (items.length > mesh.instanceMatrix.count) {
       // Release the old per-instance buffers before replacing their capacity.
       const capacity = 2 ** Math.ceil(Math.log2(items.length));
-      mesh.allocate(this.geometry, capacity);
+      mesh.allocate(geometry, capacity);
     }
     if (mesh.material !== chosen) mesh.material = chosen;
     mesh.activeCount = items.length;
@@ -97,7 +108,7 @@ export class BoxBatches {
   }
 
   dispose(): void {
-    this.clear(); this.geometry.dispose();
+    this.clear(); this.geometry.dispose(); this.roundedRockGeometry.dispose();
     for (const mat of Object.values(this.materials)) mat.dispose();
     this.texturedSolid.dispose(); this.surfaceTexture.dispose();
   }

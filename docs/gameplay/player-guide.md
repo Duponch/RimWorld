@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Sélection et dossiers — V129
+
+Survolez une case pour lire en bas à gauche terrain, fertilité, lumière et objets présents. Cliquez un repas, un fragment, une plante, un bâtiment ou une zone pour ouvrir sa fiche ; des clics répétés sur la même case parcourent les cibles superposées. Cliquer la terre nue ferme la fiche. Une zone agricole n'affiche son contour que lorsqu'elle est sélectionnée ou que l'outil de zone est actif. Sur un colon, Journal, Matériel, Social, Bio, Besoins et Santé s'ouvrent au-dessus du résumé et des commandes. Le Journal montre seulement les événements encore conservés. [Contrat et limites](../development/selection-inspection-v129.md).
+
 ## Jouer aux échecs — V122
 
 Dans **Recherche**, terminez **Mobilier complexe**. Dans **Architecte → Loisirs**, choisissez la **Table d’échecs**, fournissez 70 unités de matière admissible et laissez le bâtisseur la terminer. Placez un tabouret, une chaise ou un fauteuil sur une case **cardinale** voisine ; deux sièges permettent deux joueurs. Un colon avec du temps libre et un besoin de loisir rejoint une place disponible avant que la joie ou l’expérience Intellectuel augmente. Le même siège ne peut pas servir simultanément à un repas et aux échecs. La fiche **Besoins** montre la lassitude « Jeux cérébraux » ; le souvenir de salle ne suit qu’un usage réel. Essayez directement **Charger → Colonies de test → Échecs en salle · 1 colon** : meuble et siège y sont préparés, mais la partie commence après la reprise. [Règles et limites](../development/recreation-v122.md).
@@ -667,7 +671,7 @@ Les fragments au sol peuvent être traversés, mais ne servent pas de place pour
 
 ## Inspecter une pièce
 
-Cliquez sur le sol ou un meuble pour lire **Pièce non couverte** et son nombre de cases dans l’inspection, en bas à gauche. Un colon sélectionné indique l’espace de sa cellule. Les murs achevés, roches et portes séparent les pièces ; une porte ouverte reste un seuil. Plans et cadres ne les ferment pas encore. Une brèche latérale peut ouvrir l’espace jusqu’au bord de la carte ; un coin diagonal manquant ne suffit pas.
+Sélectionnez un meuble pour lire **Pièce non couverte** et son nombre de cases dans l’inspection, en bas à gauche. Un colon sélectionné indique l’espace de sa cellule. Les murs achevés, roches et portes séparent les pièces ; une porte ouverte reste un seuil. Plans et cadres ne les ferment pas encore. Une brèche latérale peut ouvrir l’espace jusqu’au bord de la carte ; un coin diagonal manquant ne suffit pas.
 
 Le nombre compte le sol intérieur, y compris sous les meubles, sans les murs ni les portes. Ce n’est pas une statistique de confort. La toiture construite est disponible et son compte figure ici. La couverture permet de retenir un air distinct, que le feu peut chauffer. Lumière, extérieur et rôle de pièce influencent les ateliers. Les besoins psychologiques de logement restent à développer.
 

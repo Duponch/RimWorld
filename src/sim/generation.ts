@@ -196,6 +196,7 @@ export function generateWorld(seed: number, width: number, height: number, profi
     ? { terrain: value, stone: stoneAt(index % width, Math.floor(index / width)) } : { terrain: value });
   generateSteel(world);
   generateMachinery(world);
+  const occupiedPiles = new Set(world.piles.flatMap(pile=>pile.owner.type==='ground'?[pile.owner.z*width+pile.owner.x]:[]));
   for (let z = 0; z < height; z++) {
     for (let x = 0; x < width; x++) {
       const index = z * width + x; const ground = terrain[index]!;
@@ -208,9 +209,16 @@ export function generateWorld(seed: number, width: number, height: number, profi
       const berryChance = natural?.berryChance??0.025 + wetness * 0.04 + (1 - Math.abs(density - 0.48) * 2) * 0.025;
       const rockChance = rockyEdge ? 0.32 : ground === 'soil' ? 0.018 : 0.005;
       const roll = sample(world.seed, x, z, 60);
-      const kind: ResourceKind | null = roll < rockChance ? 'rock' : roll < rockChance + treeChance ? 'tree'
+      if (roll < rockChance) {
+        if (!occupiedPiles.has(index)) {
+          world.piles.push({id:world.nextId++,kind:'chunk',item:`${stoneAt(x,z)}-chunk`,quantity:1,owner:{type:'ground',x,z}});
+          occupiedPiles.add(index);
+        }
+        continue;
+      }
+      const kind: ResourceKind | null = roll < rockChance + treeChance ? 'tree'
         : roll < rockChance + treeChance + berryChance ? 'berries' : null;
-      if (kind) world.resources.push({ id: world.nextId++, x, z, kind, ...(kind === 'rock' ? { stone: stoneAt(x, z) } : {}), ...(profile&&kind==='berries'?{growth:Math.min(1,.15+sample(world.seed,x,z,62)*(profile==='temperate-crashlanded-v1'?1.35:.85)),growthTick:0}:{}), amount: kind === 'berries' ? 10 : 7 + Math.floor(sample(world.seed, x, z, 61) * 7) });
+      if (kind && !occupiedPiles.has(index)) world.resources.push({ id: world.nextId++, x, z, kind, ...(profile&&kind==='berries'?{growth:Math.min(1,.15+sample(world.seed,x,z,62)*(profile==='temperate-crashlanded-v1'?1.35:.85)),growthTick:0}:{}), amount: kind === 'berries' ? 10 : 7 + Math.floor(sample(world.seed, x, z, 61) * 7) });
     }
   }
   // The natural profile is landscape only. Its scenario factory owns people,

@@ -21,6 +21,7 @@ test('cotton UI 1×/6×: crop choice, sowing, cloth filter, physical harvest/car
     await page.locator(`[data-speed="${speed}"]`).click();
     await page.waitForFunction(()=>{if(window.__lisiere.world.resources.filter(r=>r.kind==='cotton').length!==6)return false;document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click();return true;},undefined,{timeout:30000});
     await cell(page,18,16);await expect(page.locator('#cell-title')).toHaveText('Cotonnier');await expect(page.locator('#cell-description')).toContainText('Croissance');
+    await cell(page,18,16);await expect(page.locator('#cell-title')).toHaveText('Zone de culture');
     await page.locator('#growing-allowSow').uncheck();await page.locator('#growing-allowCut').uncheck();await page.getByRole('button',{name:'Appliquer les réglages de culture'}).click();
     await expect.poll(async()=>(await world(page)).growingZones[0]?.allowSow).toBe(false);
     const saved=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,saved);
@@ -34,7 +35,7 @@ test('cotton UI 1×/6×: crop choice, sowing, cloth filter, physical harvest/car
     await page.locator(`[data-speed="${speed}"]`).click();
     await page.waitForFunction(()=>{const w=window.__lisiere.world;if(w.resources.length||!w.piles.some(p=>p.item==='cloth'&&p.quantity===60&&p.owner.type==='ground'&&p.owner.x===23&&p.owner.z===16))return false;document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click();return true;},undefined,{timeout:20000});
     const end=await world(page);expect(validateWorld(end)).toEqual([]);expect(end.stock.food).toBe(0);await expect(page.locator('#cloth')).toHaveText('60');await expect(page.locator('#fps-counter')).toBeVisible();
-    await cell(page,23,16);await expect(page.locator('#cell-materials')).toContainText('Tissu');await expect(page.locator('#selected-stockpile-textile')).toBeChecked();
+    await cell(page,23,16);await expect(page.locator('#cell-title')).toContainText('Tissu');await cell(page,23,16);await expect(page.locator('#selected-stockpile-textile')).toBeChecked();
     await page.screenshot({path:`artifacts/cloth-v71-${speed}x.png`});expect(errors).toEqual([]);proof.push({speed,sownAt:saved.tick,cargoAt:carried.tick,storedAt:end.tick,cloth:60,errors});await page.close();
   }}finally{await browser.close();}writeFileSync(`artifacts/textile-ui-${process.env.VALIDATION_VERSION??'v71'}.json`,JSON.stringify({date:new Date().toISOString(),driver:'Shared colony player, including growing-policy',maturity:'UI boundary fixture; natural growth separately tested',proof},null,2));
 });

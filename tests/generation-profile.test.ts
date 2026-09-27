@@ -17,7 +17,8 @@ test('natural landscapes preserve terrain contracts, varied growth and reproduci
     const w=generateWorld(seed,250,250,'temperate-survivors-v1');
     expect(validateWorld(w),`seed ${seed}`).toEqual([]);
     expect(serializeWorld(generateWorld(seed+2**32,250,250,'temperate-survivors-v1'))).toBe(serializeWorld(w));
-    expect(w.pawns).toEqual([]);expect(w.piles).toEqual([]);expect(w.structures).toEqual([]);
+    expect(w.pawns).toEqual([]);expect(w.piles.length).toBeGreaterThan(0);expect(w.structures).toEqual([]);
+    expect(w.piles.every(pile=>pile.kind==='chunk'&&pile.quantity===1&&pile.owner.type==='ground')).toBe(true);
     expect(w.jobs).toEqual([]);expect(w.wildlife).toBeUndefined();expect(w.scenario).toBeUndefined();
     expect(w.rng).toBe((seed>>>0)||0x9e3779b9);
     const occupied=new Set<number>();

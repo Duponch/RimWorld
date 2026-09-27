@@ -63,6 +63,7 @@ import { BrawlCloudLayer } from './BrawlCloudLayer';
 import { StructureVfxLayer } from './StructureVfxLayer';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { GpuGroundGrassLayer } from './GpuGroundGrassLayer';
+import { mapObjectCells,mapObjectsAt,sameMapObject,type MapObjectSelection } from '../ui/map-object-selection';
 
 type VisualChunk = { signature: string; group: THREE.Group };
 
@@ -108,9 +109,13 @@ export class ColonyRenderer {
   private readonly pileGroup = new THREE.Group();
   private readonly storageGroup = new THREE.Group();
   private readonly hover: THREE.Mesh;
+  private readonly objectSelection: THREE.LineSegments;
+  private selectedObject:MapObjectSelection|undefined;
+  private objectSelectionSignature='';
   private readonly selectionInput: PawnSelectionInput;
   private selectedPawns:ReadonlySet<number>=new Set();
   onSelection: (gesture:SelectionGesture)=>void=()=>{};
+  onHover: (cell:Cell|null)=>void=()=>{};
   onContext: (cell:Cell,x:number,y:number,queue:boolean,targetId?:number)=>void=()=>{};
   onInteractionCancel: ()=>void=()=>{};
   private areaMesh: THREE.InstancedMesh | null = null;
@@ -221,16 +226,22 @@ export class ColonyRenderer {
     this.hover.position.y = 0.08;
     this.hover.visible = false;
     this.hover.renderOrder = 5;
-    this.scene.add(this.hover, this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group);
+    this.objectSelection = new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xfff5d6,depthTest:false,depthWrite:false}));
+    this.objectSelection.visible=false;this.objectSelection.frustumCulled=false;this.objectSelection.renderOrder=20;
+    this.scene.add(this.hover,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group);
     this.selectionInput=new PawnSelectionInput(renderer.domElement,{
       enabled:()=>this.tool==='select'&&!document.querySelector('dialog[open]'),
       pawns:()=>this.screenPawns(),select:gesture=>this.onSelection(gesture),
       selected:()=>this.selectedPawns,
       canInspect:event=>{
         const c=this.pick(event),w=this.world;if(!c||!w)return false;
-        const same=(p:Cell)=>p.x===c.x&&p.z===c.z;
-        return w.packed.some(p=>p.owner.type==='ground'&&same(p.owner))||w.piles.some(p=>p.owner.type==='ground'&&same(p.owner))
-          ||w.stockpiles.some(same)||w.resources.some(same)||w.structures.some(s=>footprintCells(s).some(same))||w.jobs.some(j=>footprintCells(j).some(same));
+        return mapObjectsAt(w,c).length>0;
+      },
+      preferObjectCycle:event=>{
+        const cell=this.pick(event),world=this.world,selected=this.selectedObject;
+        if(!cell||!world||!selected)return false;
+        const objects=mapObjectsAt(world,cell),index=objects.findIndex(object=>sameMapObject(object,selected));
+        return index>=0&&(index<objects.length-1||hitActors(this.screenPawns(),event.clientX,event.clientY).length===0);
       },
       inspect:event=>{const cell=this.pick(event);if(cell)this.onPick(cell.x,cell.z);else this.onSelection({ids:[],additive:false,toggle:false});},
       lock:locked=>{this.controls.enabled=!locked;this.keys.clear();},
@@ -315,7 +326,7 @@ export class ColonyRenderer {
     const storageKey = `${world.home?.join(',')??''};`+world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
     if (newMap || previousWorld?.resources !== world.resources || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap);
-    this.growing.update(world, newMap);
+    const zoneChanged=this.updateGrowingZones(newMap);
     this.updatePiles(world, newMap);
     const oldBlend = this.pawns.blend.value;
     this.snapshotDuration = previousWorld && world.tick >= previousWorld.tick ? Math.min(200, Math.max(70, now - this.snapshotAt)) : 0;
@@ -331,6 +342,7 @@ export class ColonyRenderer {
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses);
     this.landscape.refresh(this.backend==='WebGPU'&&this.overview.group.visible);
+    if(this.selectedObject?.kind!=='growing'||zoneChanged)this.updateSelectedObject();
     this.updateHover();
   }
 
@@ -343,6 +355,7 @@ export class ColonyRenderer {
     if (tool !== this.tool) this.cancelDesignation();
     const homeBefore=this.tool==='home'||this.tool==='remove-home';
     this.tool = tool;
+    this.updateGrowingZones(false);
     if(this.world&&(homeBefore||tool==='home'||tool==='remove-home'))this.buildStorage(this.world);
     if (tool in STRUCTURE_DEFINITIONS) this.keys.delete('q');
     const color = tool === 'cancel' ? 0xe6876a : tool === 'select' ? 0xf9ebae : 0x9dd9ca;
@@ -363,6 +376,7 @@ export class ColonyRenderer {
     const selecting=this.selectionInput.cancel();this.onInteractionCancel();
     const drag = this.areaDrag;
     this.areaDrag = null; this.pointerDown = null; this.areaSignature = ''; this.hoverCell = null;
+    this.onHover(null);
     this.controls.enabled = true;
     if (drag && this.renderer.domElement.hasPointerCapture(drag.pointerId)) this.renderer.domElement.releasePointerCapture(drag.pointerId);
     if (this.areaMesh) this.areaMesh.visible = false;
@@ -489,6 +503,37 @@ export class ColonyRenderer {
   }
 
   setSelectedPawns(ids:ReadonlySet<number>):void {this.selectedPawns=new Set(ids);this.pawns.setSelected(ids);this.wildlife.setSelected(ids);if(this.world&&this.pawns.feedbackSource)this.actionFeedback.update(this.world,this.selectedPawns,this.pawns.feedbackSource);}
+  setSelectedObject(selected:MapObjectSelection|undefined):void {this.selectedObject=selected;this.updateSelectedObject();this.updateGrowingZones(false);}
+  private updateGrowingZones(reset:boolean):boolean {
+    return this.world?this.growing.update(this.world,reset,this.tool==='growing'||this.tool==='remove-growing',this.selectedObject?.kind==='growing'?this.selectedObject.id:undefined):false;
+  }
+  private updateSelectedObject():void {
+    const cells=this.world&&this.selectedObject?mapObjectCells(this.world,this.selectedObject):[];
+    if(!cells.length){this.objectSelection.visible=false;this.objectSelectionSignature='';return;}
+    let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity,shape=2166136261;
+    for(const cell of cells){minX=Math.min(minX,cell.x);maxX=Math.max(maxX,cell.x);minZ=Math.min(minZ,cell.z);maxZ=Math.max(maxZ,cell.z);shape=Math.imul(shape^((cell.z*this.world!.width+cell.x)>>>0),16777619);}
+    minX-=.44;maxX+=.44;minZ-=.44;maxZ+=.44;
+    const signature=`${this.selectedObject!.kind}:${this.selectedObject!.id}:${cells.length}:${shape}:${minX}:${maxX}:${minZ}:${maxZ}`;
+    this.objectSelection.visible=true;
+    if(signature===this.objectSelectionSignature)return;
+    this.objectSelectionSignature=signature;
+    const length=Math.min(.23,(maxX-minX)/3,(maxZ-minZ)/3),y=.14;
+    const points:THREE.Vector3[]=[];
+    if(this.selectedObject?.kind==='growing'){
+      const inside=new Set(cells.map(c=>`${c.x}:${c.z}`));
+      for(const cell of cells){const x=cell.x,z=cell.z;
+        if(!inside.has(`${x}:${z-1}`))points.push(new THREE.Vector3(x-.48,y,z-.48),new THREE.Vector3(x+.48,y,z-.48));
+        if(!inside.has(`${x+1}:${z}`))points.push(new THREE.Vector3(x+.48,y,z-.48),new THREE.Vector3(x+.48,y,z+.48));
+        if(!inside.has(`${x}:${z+1}`))points.push(new THREE.Vector3(x+.48,y,z+.48),new THREE.Vector3(x-.48,y,z+.48));
+        if(!inside.has(`${x-1}:${z}`))points.push(new THREE.Vector3(x-.48,y,z+.48),new THREE.Vector3(x-.48,y,z-.48));
+      }
+    }else for(const x of [minX,maxX])for(const z of [minZ,maxZ]){
+      const dx=x===minX?1:-1,dz=z===minZ?1:-1;
+      points.push(new THREE.Vector3(x,y,z),new THREE.Vector3(x+dx*length,y,z),new THREE.Vector3(x,y,z),new THREE.Vector3(x,y,z+dz*length));
+    }
+    const old=this.objectSelection.geometry;
+    this.objectSelection.geometry=new THREE.BufferGeometry().setFromPoints(points);old.dispose();
+  }
 
   /** Project lightweight actor proxies only for pointer gestures, using the
    * same confirmed edge as the GPU. Canopies don't prevent selecting a colon. */
@@ -733,7 +778,9 @@ export class ColonyRenderer {
     if (this.areaDrag && event.pointerId !== this.areaDrag.pointerId) return;
     // A second mouse button changes `buttons` through pointermove, without a new pointerdown.
     if (this.areaDrag && (event.buttons & 2)) { event.preventDefault(); this.cancelDesignation(); return; }
+    const previous=this.hoverCell;
     this.hoverCell = this.pointerOnCanvas(event) ? this.pick(event, !!this.areaDrag) : null;
+    if(previous?.x!==this.hoverCell?.x||previous?.z!==this.hoverCell?.z)this.onHover(this.hoverCell);
     this.updateHover();
   };
   private pointerOnCanvas(event: PointerEvent): boolean {
@@ -793,7 +840,8 @@ export class ColonyRenderer {
     if(this.world&&turbine)this.recreationHints.wind(this.world,turbine);
     const cooler=this.tool==='select'?this.world?.structures.find(s=>s.kind==='cooler'&&s.x===cell?.x&&s.z===cell?.z):undefined;
     if(cell&&(this.tool==='cooler'||cooler))this.recreationHints.cooler(cell,cooler?.orientation??this.placementRotation);
-    this.hover.visible = !!cell;
+    this.hover.visible = !!cell&&this.tool!=='select';
+    if(this.tool==='select'){this.renderer.domElement.title='';return;}
     if (!cell || !this.world) return;
     const kind=this.tool==='install'&&this.furniturePlacement?this.furniturePlacement.kind:this.tool in STRUCTURE_DEFINITIONS?this.tool as JobKind:'wall';
     const cells = footprintCells({ ...cell, kind, orientation: this.placementRotation });
@@ -810,6 +858,7 @@ export class ColonyRenderer {
   private onPointerLeave = (): void => {
     this.recreationHints.group.visible=false;
     this.hoverCell = null; this.hover.visible = false;
+    this.onHover(null);
     if (this.areaDrag) this.updateAreaPreview(); else this.pointerDown = null;
   };
   private onPointerCancel = (event: PointerEvent): void => {
@@ -875,6 +924,7 @@ export class ColonyRenderer {
     this.texturedStaticMaterial.dispose();this.staticPaint.dispose();
     this.waterMaterial.dispose();
     this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();
+    this.objectSelection.geometry.dispose();(this.objectSelection.material as THREE.Material).dispose();
     this.daylight.dispose();
     this.environmentLighting.dispose();
     void this.renderer.dispose();

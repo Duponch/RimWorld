@@ -76,7 +76,9 @@ test('snapshots preserve exact state and previous frames through harvest, patche
   // while the previous frame keeps its original tile/resource identity.
   const rockIndex = source.tiles.findIndex(t => t.terrain === 'rock');
   source.tiles[rockIndex]!.stone = source.tiles[rockIndex]!.stone === 'marble' ? 'slate' : 'marble';
-  const looseRock = source.resources.find(r => r.kind === 'rock')!;
+  // Decoder compatibility: old snapshots may still carry decorative rock metadata.
+  const looseRock:World['resources'][number] = {id:source.nextId++,kind:'rock',x:5,z:5,amount:1,stone:'limestone'};
+  source.resources.push(looseRock);
   looseRock.stone = looseRock.stone === 'marble' ? 'slate' : 'marble';
   const stonePacket = transfer(); apply(stonePacket);
   expect(initial).toEqual(initialValue);
