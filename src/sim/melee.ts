@@ -13,6 +13,7 @@ import { medicallyStopped } from './health-rules.ts';
 import { healthRandom } from './health.ts';
 import { chooseMeleeTool,meleeTools } from './melee-statistics.ts';
 import { meleeContact,meleePlaces,meleeRoute } from './melee-space.ts';
+import { activeSocialFight,finishSocialFight,socialFightRecoveryDue } from './social-fight.ts';
 import { isStunned } from './stun.ts';
 import { blockedCells,canStep } from './pathfinding.ts';
 import { startTravel } from './movement.ts';
@@ -65,9 +66,18 @@ export function startSentryMelee(world:World,pawn:Pawn):boolean {
 /** One Core substep. Return true when medical/ground captures have expired. */
 export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>Uint8Array,queries:ReturnType<typeof shootingQueries>,disturbance=disturbanceEvents(world)):boolean {
   const m=pawn.melee;if(!m)return false;
-  if(medicallyStopped(pawn)){delete pawn.melee;return false;}
+  if(medicallyStopped(pawn)){if(m.order?.auto==='social')finishSocialFight(world,pawn);delete pawn.melee;return false;}
   if(m.strike&&core>=m.strike.untilCore)m.strike=null;
-  if(!canFight(world,pawn,queries.carried)||(m.order?.auto?(!automaticPermission(pawn,m.order.auto)||!automaticTarget(world,pawn,m.order.targetId)):isColonist(pawn)&&!pawn.draft))cancelMelee(pawn);
+  if(m.order?.auto==='social'&&!activeSocialFight(world,pawn,m.order.targetId)){finishSocialFight(world,pawn);return false;}
+  if(!canFight(world,pawn,queries.carried)){
+    if(m.order?.auto==='social')finishSocialFight(world,pawn);else cancelMelee(pawn);
+    return false;
+  }
+  if(m.order?.auto==='social'&&socialFightRecoveryDue(pawn,core)){finishSocialFight(world,pawn);return false;}
+  const auto=m.order?.auto;
+  if(auto==='draft'||auto==='response'){
+    if(!automaticPermission(pawn,auto)||!automaticTarget(world,pawn,m.order!.targetId))cancelMelee(pawn);
+  }else if(!auto&&isColonist(pawn)&&!pawn.draft)cancelMelee(pawn);
   if(m.order?.structure){
     const target=world.structures.find(s=>s.id===m.order!.targetId&&isBarrier(s));
     if(!target){cancelMelee(pawn);pawn.path=[];return false;}
@@ -82,7 +92,7 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
     return true;
   }
   const target=targetFor(world,pawn,queries.carried);
-  if(m.order&&!target){cancelMelee(pawn);pawn.path=[];}
+  if(m.order&&!target){if(m.order.auto==='social')finishSocialFight(world,pawn);else {cancelMelee(pawn);pawn.path=[];}}
   if(!pawn.melee)return false;
   if(!m.order&&!m.strike){delete pawn.melee;return false;}
   if(m.strike||!target||isStunned(pawn,core)||pawn.shooting?.stance?.phase==='cooldown'||(pawn.motion?.end??0)>core/10)return false;
@@ -90,13 +100,16 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   // Contact is logical, as in the reference; captured travel cannot permit the
   // attacker to swing before reaching its own interaction cell.
   const randomState={rng:world.rng},random=()=>healthRandom(randomState);
-  const tool=chooseMeleeTool(meleeTools(world,pawn,()=>queries.body(pawn)),random);if(!tool){cancelMelee(pawn);return false;}
+  const tool=chooseMeleeTool(meleeTools(world,pawn,()=>queries.body(pawn)),random);if(!tool){if(m.order?.auto==='social')finishSocialFight(world,pawn);else cancelMelee(pawn);return false;}
   strikeLivingTarget(world,pawn,target,tool,core,randomState,disturbance);
-  if(m.order?.auto==='draft'||!targetFor(world,pawn))cancelMelee(pawn);
+  if(m.order?.auto==='social'){
+    if(!activeSocialFight(world,pawn,target.id))finishSocialFight(world,pawn);
+  }else if(m.order?.auto==='draft'||!targetFor(world,pawn))cancelMelee(pawn);
   return true;
 }
 export function processMelee(world:World,pawn:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader):void {
   const m=pawn.melee!,target=m.order?.structure?world.structures.find(s=>s.id===m.order!.targetId&&isBarrier(s)):targetFor(world,pawn);if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
+  if(m.order?.auto==='social'&&(!activeSocialFight(world,pawn,m.order.targetId)||!target||!canFight(world,pawn))){finishSocialFight(world,pawn);return;}
   if(!target||!canFight(world,pawn)){cancelMelee(pawn);pawn.path=[];return;}
   if(m.strike||pawn.shooting?.stance?.phase==='cooldown'||isStunned(pawn,world.tick*10)){pawn.path=[];pawn.state='idle';return;}
   if(meleeContact(world,pawn,target,getBlocked())){pawn.path=[];pawn.state='idle';return;}
@@ -106,7 +119,7 @@ export function processMelee(world:World,pawn:Pawn,getBlocked:NavigationGrid,bud
     if(!budget.remaining||pawn.planCooldown)return;
     budget.remaining--;pawn.planCooldown=20;
     const path=meleeRoute(world,pawn,meleePlaces(world,pawn,target),blocked);
-    if(!path){cancelMelee(pawn);pawn.path=[];pawn.state='idle';return;}pawn.path=path;
+    if(!path){if(m.order?.auto==='social')finishSocialFight(world,pawn);else {cancelMelee(pawn);pawn.path=[];pawn.state='idle';}return;}pawn.path=path;
   }
   const step=pawn.path[0];if(step){pawn.state='moving';if(startTravel(world,pawn,step,getLight))pawn.path.shift();}
 }

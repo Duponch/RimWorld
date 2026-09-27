@@ -3,7 +3,6 @@ import {readFileSync} from 'node:fs';
 import {afterEach, expect, test, vi} from 'vitest';
 import {deserializeWorld, serializeWorld, stepWorld, validateWorld} from '../src/sim/index.ts';
 import {parseTestColonies, readTestColony} from '../src/ui/test-colonies.ts';
-import {prepareSocialDemo} from '../scripts/generate-social-demo-v124.ts';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -13,10 +12,10 @@ test('V124 prepared table gathers two people in distinct seats and resumes exact
   const entry = entries.find(save => save.id === 'rencontre-v124');
   expect(entry).toMatchObject({release: 'v124', filename: 'rencontre.json', prepared: true, pawns: 2, colonists: 2});
   expect(entry!.sha256).toBe(createHash('sha256').update(raw).digest('hex'));
-  expect(raw).toBe(serializeWorld(prepareSocialDemo()));
+  expect(JSON.parse(raw).schemaVersion).toBe(124);
   vi.stubGlobal('fetch', vi.fn(async () => new Response(raw)));
   const world = deserializeWorld(await readTestColony(entry!));
-  expect(world.schemaVersion).toBe(124);
+  expect(world.schemaVersion).toBe(125);
   expect(validateWorld(world)).toEqual([]);
   const table = world.structures.find(s => s.kind === 'table' && s.x === 18 && s.z === 15)!;
   expect(table.gatherSpot).toBe(true);

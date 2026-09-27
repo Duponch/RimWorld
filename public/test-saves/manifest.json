@@ -461,6 +461,33 @@
       "prepared": true,
       "provenance": "Scène V124 préparée depuis les salles historiques V103 sans les modifier : un second colon, un tabouret, la table active et les besoins initiaux sont fixés explicitement. La détente et les conversations éventuelles se produisent seulement après reprise par le moteur.",
       "sha256": "a6f63b3ef13ce5a373faf832bf5879db9122412e7a16e1a4458a7bfd0b79bd6e"
+    },
+    {
+      "id": "insulte-bagarre-v125",
+      "release": "v125",
+      "label": "Insulte et bagarre · 2 colons",
+      "description": "Basile vient de subir une insulte d’Ada et les deux colons sont engagés dans une bagarre physique ; inspecter opinion, humeur et blessures après reprise.",
+      "filename": "insulte-bagarre.json",
+      "pawns": 2,
+      "colonists": 2,
+      "width": 32,
+      "height": 32,
+      "tick": 2000,
+      "focus": [
+        "insulte",
+        "opinion",
+        "humeur",
+        "bagarre",
+        "blessures"
+      ],
+      "steps": [
+        "Sélectionner Basile près de (16, 16) : vérifier l’insulte dans Social et la pensée temporaire dans Besoins.",
+        "Reprendre la partie : Ada et Basile se déplacent, échangent des coups de mêlée et peuvent être blessés.",
+        "Après la fin de la bagarre, inspecter leurs opinions réciproques, leurs blessures et les soins ordinaires."
+      ],
+      "prepared": true,
+      "provenance": "Scène V125 préparée depuis la sauvegarde historique V124 sans la modifier. Une insulte est effectuée par la simulation ; la bagarre est déclenchée explicitement avec les règles physiques du moteur si le tirage spontané ne l’a pas déjà déclenchée. Les coups, blessures et effets de fin de bagarre se produisent seulement après reprise.",
+      "sha256": "194442f6cc19316ffdef80a1313083bede2335b9a99b04b74f624cec5cf15607"
     }
   ]
 }

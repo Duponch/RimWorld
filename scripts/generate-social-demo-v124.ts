@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION, type World } from '../src/sim/types.ts';
 
 const sourceUrl = new URL('../public/test-saves/v103/salles.json', import.meta.url);
 const fixtureUrl = new URL('../public/test-saves/v124/rencontre.json', import.meta.url);
@@ -65,6 +65,7 @@ export function socialManifestEntry(world: World, sha256: string) {
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  assert.equal(Number(SCHEMA_VERSION), 124, 'The V124 fixture is immutable after schema V124; prepare a new-version scene instead.');
   const world = prepareSocialDemo();
   const raw = serializeWorld(world);
   const sha256 = createHash('sha256').update(raw).digest('hex');

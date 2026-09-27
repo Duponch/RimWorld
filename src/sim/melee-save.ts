@@ -9,7 +9,7 @@ export function validMeleeShape(value:unknown,version:number,tick:number):boolea
   if(value===undefined)return true;
   if(version<59||!object(value)||!keys(value,['order','strike'])||value.order===null&&value.strike===null)return false;
   const o=value.order,s=value.strike;
-  if(o!==null&&(!object(o)||!keys(o,['targetId','startedDowned',...(version>=60?['auto']:[]),...(version>=67?['structure']:[])])||!integer(o.targetId,1)||o.structure!==undefined&&(o.structure!==true||o.startedDowned||o.auto!==undefined)||typeof o.startedDowned!=='boolean'||o.auto!==undefined&&(typeof o.auto!=='string'||!['draft','response'].includes(o.auto))))return false;
+  if(o!==null&&(!object(o)||!keys(o,['targetId','startedDowned',...(version>=60?['auto']:[]),...(version>=67?['structure']:[])])||!integer(o.targetId,1)||o.structure!==undefined&&(o.structure!==true||o.startedDowned||o.auto!==undefined)||typeof o.startedDowned!=='boolean'||o.auto!==undefined&&(typeof o.auto!=='string'||!['draft','response',...(version>=125?['social']:[])].includes(o.auto))))return false;
   if(s===null)return o!==null;
   return object(s)&&keys(s,['targetId','atCore','untilCore','tool','outcome',...(version>=67?['structure']:[])])&&(s.structure===undefined||object(s.structure)&&keys(s.structure,['x','z'])&&integer(s.structure.x,0)&&integer(s.structure.z,0)&&s.outcome==='hit')&&integer(s.targetId,1)&&integer(s.atCore,0,tick*10)&&integer(s.untilCore,tick*10+1)&&s.untilCore-s.atCore===meleeRecoveryCore(s.tool as MeleeToolId)&&['left-fist','right-fist','head','teeth','grip','barrel','barrel-poke',...(version>=88?['knife-handle','knife-blade','knife-point']:[])].includes(String(s.tool))&&['hit','miss','dodge'].includes(String(s.outcome));
 }
@@ -24,7 +24,17 @@ export function validateMelee(world:World):string[] {
     const m=p.melee;if(!m)continue;
     if(m.order?.auto&&m.order.startedDowned)errors.push('Automatic melee cannot start on a downed target.');
     if(['dead','downed','sleeping','eating','working','resting','recreating'].includes(p.state)||p.need||p.jobId!==null||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.flee||p.recreation.task||p.orders.active!==null||p.orders.queue.length||p.priorityWork)errors.push('Melee conflicts with another activity.');
-    if(m.order&&!m.order.structure&&(!world.pawns.some(t=>t.id===m.order!.targetId&&t.id!==p.id&&(isColonist(p)||hostileTo(p,t)))&&!(world.schemaVersion>=78&&isColonist(p)&&!m.order.auto&&world.wildlife?.animals.some(a=>a.id===m.order!.targetId))||(m.order.auto?!automaticOwnership(world,p,m.order.targetId,m.order.auto):isColonist(p)&&!p.draft)||p.shooting?.order||(!m.order.auto&&p.draft?.target)||m.order.auto==='draft'&&!automaticPost(p)||p.draft?.queue.length))errors.push('Invalid melee order ownership.');
+    if(m.order&&!m.order.structure){
+      const order=m.order,target=world.pawns.find(t=>t.id===order.targetId);
+      const social=order.auto==='social';
+      const owned=social?world.schemaVersion>=125&&isColonist(p)&&!p.prisoner&&!p.draft&&!!target&&isColonist(target)&&!target.prisoner
+        &&p.social?.fight?.opponentId===target.id&&target.social?.fight?.opponentId===p.id
+        :order.auto==='draft'||order.auto==='response'?automaticOwnership(world,p,order.targetId,order.auto):!isColonist(p)||!!p.draft;
+      if((!target||target.id===p.id||!social&&!isColonist(p)&&!hostileTo(p,target))
+        &&!(world.schemaVersion>=78&&isColonist(p)&&!order.auto&&world.wildlife?.animals.some(a=>a.id===order.targetId))
+        ||!owned||p.shooting?.order||(!order.auto&&p.draft?.target)||order.auto==='draft'&&!automaticPost(p)||p.draft?.queue.length)
+        errors.push('Invalid melee order ownership.');
+    }
     if(m.order?.structure&&(!(isColonist(p)?!!p.draft:!!p.raid)||p.shooting?.order||p.draft?.target||p.draft?.queue.length||!world.structures.some(s=>s.id===m.order!.targetId&&(s.kind==='wall'||s.kind==='door'||s.kind==='cooler'))))errors.push('Invalid barrier melee order.');
     if(m.strike?.structure&&(m.strike.structure.x>=world.width||m.strike.structure.z>=world.height||m.strike.targetId>=world.nextId))errors.push('Invalid barrier recovery position.');
     if(m.strike?.structure){

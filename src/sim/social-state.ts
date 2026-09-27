@@ -1,15 +1,18 @@
-import { TICKS_PER_DAY,type Pawn } from './types.ts';
+import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 import { pawnBody } from './health-rules.ts';
 
-export type SocialKind='chitchat'|'deep-talk'|'rapport';
+export type SocialKind='chitchat'|'deep-talk'|'rapport'|'slight'|'insult'|'fight-cathartic'|'fight-angering';
 export interface SocialMemory { otherId:number;kind:SocialKind;at:number;offset:number }
 export interface SocialState {
   rng:number; wants?:true;
   last?:{otherId:number;kind:SocialKind;tick:number;initiated:boolean};
+  /** Reciprocal marker for an actual physical social fight, not an interaction roll. */
+  fight?:{opponentId:number;startedAt:number};
   memories:SocialMemory[];
 }
-export const SOCIAL_LABELS:Readonly<Record<SocialKind,string>>=Object.freeze({'chitchat':'Bavardage','deep-talk':'Discussion approfondie',rapport:'Rapprochement'});
+export const SOCIAL_LABELS:Readonly<Record<SocialKind,string>>=Object.freeze({'chitchat':'Bavardage','deep-talk':'Discussion approfondie',rapport:'Rapprochement',slight:'Vexation',insult:'Insulte','fight-cathartic':'Bagarre cathartique','fight-angering':'Bagarre rageante'});
 export const DEEP_TALK_DURATION=20*TICKS_PER_DAY;
+export const INSULT_MOOD_DURATION=2*TICKS_PER_DAY;
 
 /** Independent stream: social rolls never perturb mining, medicine or raids. */
 export function socialRandom(state:{rng:number}):number {
@@ -38,17 +41,31 @@ export function memoryOffset(memory:SocialMemory,tick:number):number {
   if(memory.kind==='chitchat')return Math.min(10,Math.max(0,memory.offset-Math.floor(age/TICKS_PER_DAY)));
   return memory.offset*Math.max(0,Math.min(1,(DEEP_TALK_DURATION-age)/(DEEP_TALK_DURATION*.3)));
 }
-function roundOpinion(n:number):number {const lo=Math.floor(n);return n<=0?0:Math.max(1,n-lo===.5?lo+lo%2:Math.round(n));}
+function roundPositiveOpinion(n:number):number {const lo=Math.floor(n);return n<=0?0:Math.max(1,n-lo===.5?lo+lo%2:Math.round(n));}
+function roundOpinion(n:number):number {return n<0?-roundPositiveOpinion(-n):roundPositiveOpinion(n);}
 export function opinionCauses(pawn:Pawn,otherId:number,tick:number):{kind:SocialKind;count:number;value:number;nextChange:number}[] {
-  const memories=pawn.social?.memories.filter(m=>m.otherId===otherId&&memoryOffset(m,tick)>0)??[];
-  return (['chitchat','deep-talk','rapport'] as const).flatMap(kind=>{
+  const memories=pawn.social?.memories.filter(m=>m.otherId===otherId&&memoryOffset(m,tick)!==0)??[];
+  return (['chitchat','deep-talk','rapport','slight','insult','fight-cathartic','fight-angering'] as const).flatMap(kind=>{
     const group=memories.filter(m=>m.kind===kind).sort((a,b)=>b.at-a.at);if(!group.length)return [];
-    const value=roundOpinion(group.reduce((s,m,i)=>s+memoryOffset(m,tick)*(kind==='deep-talk'?.9**i:1),0));
+    const value=roundOpinion(group.reduce((s,m,i)=>s+memoryOffset(m,tick)*((kind==='deep-talk'||kind==='slight'||kind==='insult'||kind==='fight-cathartic'||kind==='fight-angering') ? .9**i : 1),0));
     const nextChange=kind==='chitchat'?group[0]!.at+(Math.floor((tick-group[0]!.at)/TICKS_PER_DAY)+1)*TICKS_PER_DAY:Math.min(...group.map(m=>m.at+DEEP_TALK_DURATION));
     return [{kind,count:group.length,value,nextChange}];
   });
 }
-export const opinionOf=(pawn:Pawn,otherId:number,tick:number):number=>Math.min(100,opinionCauses(pawn,otherId,tick).reduce((s,c)=>s+c.value,0));
+export const opinionOf=(pawn:Pawn,otherId:number,tick:number):number=>Math.max(-100,Math.min(100,opinionCauses(pawn,otherId,tick).reduce((s,c)=>s+c.value,0)));
+
+/** InsultedMood is a separate two-day thought in Core, with fixed -5 per
+ * occurrence before stacking, independent of the speaker's SocialImpact. */
+export function insultMoodMemories(pawn:Pawn,tick:number):{otherId:number;count:number;offset:number;expiresAt:number}[] {
+  const active=(pawn.social?.memories??[]).filter(m=>m.kind==='insult'&&m.at+INSULT_MOOD_DURATION>tick)
+    .sort((a,b)=>b.at-a.at||a.otherId-b.otherId).slice(0,10);
+  const groups=new Map<number,{otherId:number;count:number;offset:number;expiresAt:number}>();
+  for(const [index,m] of active.entries()){
+    let group=groups.get(m.otherId);if(!group){group={otherId:m.otherId,count:0,offset:0,expiresAt:m.at+INSULT_MOOD_DURATION};groups.set(m.otherId,group);}
+    group.count++;group.offset+=-5*.9**index;group.expiresAt=Math.max(group.expiresAt,m.at+INSULT_MOOD_DURATION);
+  }
+  return [...groups.values()];
+}
 
 /** Cleanup runs on retained dead actors too. Merging chitchat never refreshes its clock. */
 export function expireSocialMemories(pawn:Pawn,tick:number):void {
@@ -56,13 +73,24 @@ export function expireSocialMemories(pawn:Pawn,tick:number):void {
   for(const m of s.memories)if(m.kind==='chitchat'){
     const days=Math.floor((tick-m.at)/TICKS_PER_DAY);if(days>0){m.offset=Math.max(0,m.offset-days);m.at+=days*TICKS_PER_DAY;}
   }
-  if(s.memories.some(m=>memoryOffset(m,tick)<=0))s.memories=s.memories.filter(m=>memoryOffset(m,tick)>0);
+  if(s.memories.some(m=>memoryOffset(m,tick)===0))s.memories=s.memories.filter(m=>memoryOffset(m,tick)!==0);
 }
 export function addSocialMemory(state:SocialState,otherId:number,kind:SocialKind,tick:number,impact:number):void {
   const same=state.memories.filter(m=>m.kind===kind&&m.otherId===otherId);
   if(kind==='chitchat'&&same.length){same[0]!.offset+=.66*impact;return;}
-  if(kind!=='chitchat'&&same.length>=(kind==='rapport'?50:10))state.memories.splice(state.memories.indexOf(same.reduce((a,b)=>a.at<=b.at?a:b)),1);
+  if(kind!=='chitchat'&&same.length>=(kind==='rapport'?50:kind==='fight-cathartic'||kind==='fight-angering'?5:10))state.memories.splice(state.memories.indexOf(same.reduce((a,b)=>a.at<=b.at?a:b)),1);
   const all=state.memories.filter(m=>m.kind===kind);
   if(all.length>=300)state.memories.splice(state.memories.indexOf(all.reduce((a,b)=>a.at<=b.at?a:b)),1);
-  state.memories.push({otherId,kind,at:tick,offset:(kind==='chitchat'?.66:kind==='rapport'?2:15)*impact});
+  state.memories.push({otherId,kind,at:tick,offset:(kind==='chitchat'?.66:kind==='rapport'?2:kind==='slight'?-5:kind==='insult'?-15:kind==='fight-cathartic'?38:kind==='fight-angering'?-22:15)*impact});
+}
+
+/** Called once when an actual social fight ends, including before its first
+ * strike. Each eligible participant draws from their own persisted stream. */
+export function addFightAftermath(world:World,a:Pawn,b:Pawn):void {
+  for(const [pawn,other] of [[a,b],[b,a]] as const){
+    if(pawn.state==='dead'||other.state==='dead')continue;
+    const state=pawn.social??={rng:socialSeed(world.seed,pawn.id),memories:[]};
+    expireSocialMemories(pawn,world.tick);
+    addSocialMemory(state,other.id,socialRandom(state)<.5?'fight-cathartic':'fight-angering',world.tick,1);
+  }
 }
