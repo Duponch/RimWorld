@@ -1,5 +1,11 @@
 # Travail sur Lisière
 
+## Fabrication avancée V139
+
+- Lire `docs/development/advanced-fabrication-v139.md`, `docs/research/advanced-fabrication-core-v139.md` et `docs/history/validation-advanced-fabrication-v139.md`. Core 1.6.4871 : Fabrication avancée coûte 4 000 points après Fabrication, requiert bureau haute technologie et multi-analyseur, puis l'établi alimenté fabrique un composant avancé avec 1 composant, 20 aciers, 10 plastaciers et 3 or, Artisanat 8. Le nombre 0,3 du XML pour l'or signifie trois unités physiques à cause de `smallVolume` 0,1. Lisière convertit 10 000 travaux Core en 1 000 ticks neutres locaux.
+- Schéma 139 : valider strictement V138 avant migration neutre. Aucune recherche, facture, ressource, progression ou personne acquise rétroactivement. Les ouvrages ordinaires V123 gardent leurs `parts:number[]` ; l'ouvrage avancé conserve les quatre matières et quantités typées, auteur et facture. Reprise, ordre joueur, annulation atomique et richesse doivent respecter cette distinction. Le premier établi conserve ses deux composants avancés achetés ; les pièces produites permettent ensuite un deuxième établi. Ne pas détendre la validation des anciens filtres or/plastacier, déjà admissibles sur une facture V138.
+- Conserver les lots GPU et les choix de production au rythme des décisions, sans objet graphique par composant ni recherche par image. Aucun FPS/240 FPS, débit ×6 ou coût GPU nul ne se déduit de cette tranche ; lire les preuves V139 pour le périmètre réellement validé. Les autres débouchés Core des composants avancés restent ouverts.
+
 ## Végétation, repères et âges humains V138
 
 - Lire `docs/development/map-details-v135.md`, `docs/history/validation-vegetation-v138.md`, `docs/development/human-age-v138.md`, `docs/research/human-age-core-v138.md` et `docs/history/validation-human-age-v138.md`. Le drago aride a un tronc joint à sa couronne, une cime élargie et dépasse le saguaro. Le vent V137 fléchit plus nettement arbres, touffes et herbe dans les lots GPU existants, sans écriture de buffers par image ; la marge de rejet des arbres est accrue. Aucun FPS ni coût GPU nul n'est déduit de cette retouche.

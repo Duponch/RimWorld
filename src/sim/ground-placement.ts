@@ -69,9 +69,10 @@ export function groundCapacity(world: World, cell: Cell, item: ItemId, exceptPaw
 export function storageCapacity(world: World, zone: StockpileCell, item: ItemId, exceptPawn?: number): number {
   return storageAccepts(zone,item) ? cellCapacity(world,zone,item,zone.capacity,exceptPawn,zone) : 0;
 }
-export function planGroundPlacement(world: World, quantity: number, origin: Cell, item: ItemId): {cell:Cell; quantity:number}[] | null {
+export function planGroundPlacement(world: World, quantity: number, origin: Cell, item: ItemId, reachable?: (cell:Cell)=>boolean): {cell:Cell; quantity:number}[] | null {
   const result: {cell:Cell;quantity:number}[]=[];
   for (const cell of nearbyGround(world,origin)) {
+    if(reachable&&!reachable(cell))continue;
     const moved=Math.min(quantity,groundCapacity(world,cell,item));
     if(moved>0) {result.push({cell,quantity:moved});quantity-=moved;}
     if(!quantity) return result;

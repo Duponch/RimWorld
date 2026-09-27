@@ -18,21 +18,23 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'microelectronics',prefix:'microelectronics',title:'Microélectronique',cost:3000,detail:'Débloque le bureau de recherche avancé. Électricité connue au départ.',progress:w=>w.research?.microelectronics,x:224,y:432},
   {id:'multi-analyzer',prefix:'multi-analyzer',title:'Multi-analyseur',cost:4000,detail:'Débloque le multi-analyseur. Recherche au bureau avancé alimenté ; Usinage est aussi requis.',progress:w=>w.research?.multiAnalyzer,x:624,y:432},
   {id:'fabrication',prefix:'fabrication',title:'Fabrication',cost:4000,detail:'Débloque l’établi de fabrication. Exige un bureau avancé alimenté et un multi-analyseur alimenté à proximité.',progress:w=>w.research?.fabrication,x:824,y:432},
+  {id:'advanced-fabrication',prefix:'advanced-fabrication',title:'Fabrication avancée',cost:4000,detail:'Débloque la fabrication du composant avancé à l’établi alimenté : 1 composant, 20 acier, 10 plastacier et 3 or ; Artisanat 8.',progress:w=>w.research?.advancedFabrication,x:824,y:566},
 ];
 export const researchLinks: readonly (readonly [ResearchProject, ResearchProject])[] = [
   ['smithing','machining'],['machining','gunsmithing'],
   ['smithing','plate-armor'],['complex-clothing','plate-armor'],
   ['machining','flak-armor'],['plate-armor','flak-armor'],
   ['microelectronics','multi-analyzer'],['machining','multi-analyzer'],['multi-analyzer','fabrication'],
+  ['fabrication','advanced-fabrication'],
 ];
 const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const prerequisites=new Map<ResearchProject,string[]>([
   ['machining',['Forge']],['gunsmithing',['Usinage']],['plate-armor',['Forge','Vêtements complexes']],['flak-armor',['Usinage','Armure de plaques']],
-  ['microelectronics',['Électricité (acquise au départ)']],['multi-analyzer',['Microélectronique','Usinage']],['fabrication',['Multi-analyseur']],
+  ['microelectronics',['Électricité (acquise au départ)']],['multi-analyzer',['Microélectronique','Usinage']],['fabrication',['Multi-analyseur']],['advanced-fabrication',['Fabrication']],
 ]);
 function stationIssue(world:World,project:ResearchProject):string|undefined {
   if(world.structures.some(s=>researchStationUsable(world,s,project)))return undefined;
-  if(project==='multi-analyzer'||project==='fabrication')return project==='fabrication'?'Bureau avancé et multi-analyseur alimentés à proximité requis':'Bureau de recherche avancé alimenté requis';
+  if(project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication')return project==='multi-analyzer'?'Bureau de recherche avancé alimenté requis':'Bureau avancé et multi-analyseur alimentés à proximité requis';
   return 'Bureau de recherche disponible requis';
 }
 
@@ -60,12 +62,17 @@ export function updateResearchPanel(root: HTMLElement, world: World, send: (comm
     const viewport=document.createElement('div');viewport.className='research-viewport';viewport.dataset.researchMap='';
     viewport.setAttribute('role','group');viewport.setAttribute('aria-label','Projets de recherche et prérequis');
     const graph=document.createElement('div');graph.className='research-graph';
-    const lines=document.createElementNS('http://www.w3.org/2000/svg','svg');lines.setAttribute('class','research-links');lines.setAttribute('viewBox','0 0 1010 566');lines.style.height='566px';lines.setAttribute('aria-hidden','true');graph.style.height='566px';
+    const lines=document.createElementNS('http://www.w3.org/2000/svg','svg');lines.setAttribute('class','research-links');lines.setAttribute('viewBox','0 0 1010 700');lines.style.height='700px';lines.setAttribute('aria-hidden','true');graph.style.height='700px';
     for(const [fromId,toId] of researchLinks){
       const from=projectById.get(fromId)!,to=projectById.get(toId)!;
       const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-      const x1=from.x+174,y1=from.y+57,x2=to.x,y2=to.y+57;
-      path.setAttribute('d',`M${x1} ${y1} C${x1+Math.max(18,(x2-x1)/2)} ${y1},${x2-Math.max(18,(x2-x1)/2)} ${y2},${x2} ${y2}`);
+      if(from.x===to.x){
+        const x=from.x+87,y1=from.y+114,y2=to.y;
+        path.setAttribute('d',`M${x} ${y1} L${x} ${y2}`);
+      } else {
+        const x1=from.x+174,y1=from.y+57,x2=to.x,y2=to.y+57;
+        path.setAttribute('d',`M${x1} ${y1} C${x1+Math.max(18,(x2-x1)/2)} ${y1},${x2-Math.max(18,(x2-x1)/2)} ${y2},${x2} ${y2}`);
+      }
       lines.append(path);
     }
     graph.append(lines);
@@ -102,7 +109,7 @@ export function updateResearchPanel(root: HTMLElement, world: World, send: (comm
   paintSelected(root,world,send);
   root.querySelector<HTMLButtonElement>('[data-research-pause]')!.disabled=!world.research?.project;
   root.querySelector('[data-research-help]')!.textContent=researchProjects.every(p=>researchUnlocked(world,p.id))
-    ? 'Les quatorze projets disponibles sont acquis.'
+    ? `Les ${researchProjects.length} projets disponibles sont acquis.`
     : 'Construisez un bureau de recherche dans Architecte → Production, puis affectez un colon dans Travail. Les recherches avancées exigent un bureau alimenté ; Fabrication exige aussi un multi-analyseur alimenté à proximité. L’électricité est disponible au départ.';
   const workers=world.pawns.filter(p=>p.research).map(p=>`${p.name} · Intellectuel ${intellectualSkill(p).level} · ${p.state==='working'?'au bureau':'en chemin'}`);
   root.querySelector('[data-research-workers]')!.textContent=workers.join(' ; ')||`${world.structures.filter(s=>s.kind==='research-bench'||s.kind==='hi-tech-research-bench').length} bureau(x) construit(s) · aucun chercheur au travail.`;

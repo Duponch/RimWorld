@@ -36,7 +36,7 @@ function advance(w:World,done:()=>boolean,limit:number):void {
 test('Core component bill needs 12 steel, Crafting 8, Fabrication research and a powered bench',()=>{
   const {world,station}=prepared(),pawn=world.pawns[0]!;
   expect(PRODUCTION_RECIPES['make-component']).toMatchObject({station:'fabrication-bench',units:12,workTicks:500,outputUnits:1});
-  expect(stationRecipes(station)).toEqual(['make-component']);
+  expect(stationRecipes(station)).toEqual(['make-component','make-advanced-component']);
   station.power!.on=false;
   expect(productionStationUsable(station)).toBe(false);
   station.power!.on=true;
@@ -49,12 +49,13 @@ test('Core component bill needs 12 steel, Crafting 8, Fabrication research and a
   advance(world,()=>!!world.piles.find(p=>p.componentWork?.progress),1200);
   const piece=world.piles.find(p=>p.componentWork)!;
   expect(piece.componentWork).toMatchObject({recipe:'make-component',authorId:pawn.id,billId:station.bills![0]!.id});
-  expect(piece.componentWork!.parts.reduce((a,b)=>a+b,0)).toBe(12);
+  if(piece.componentWork?.recipe!=='make-component')throw new Error('Expected legacy component workpiece');
+  expect(piece.componentWork.parts.reduce((a,b)=>a+b,0)).toBe(12);
   expect(validComponentWorkShape(piece as unknown as Record<string,unknown>,123)).toBe(true);
   expect(validComponentWorkShape(piece as unknown as Record<string,unknown>,122)).toBe(false);
-  piece.componentWork!.parts[0]!++;
+  piece.componentWork.parts[0]!++;
   expect(validateWorld(world)).not.toEqual([]);
-  piece.componentWork!.parts[0]!--;
+  piece.componentWork.parts[0]!--;
   expect(validateWorld(world)).toEqual([]);
 });
 

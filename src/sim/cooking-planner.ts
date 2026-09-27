@@ -1,10 +1,10 @@
 import {planArtWork} from './art-work-plan.ts';
 import {isArtRecipe} from './art-rules.ts';
-import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
+import { productionResearchUnlocked,productionWorkerQualified,validAdvancedComponentIngredients } from './machining.ts';
 import { planGunWork } from './gun-work-plan.ts';
 import { planFlakWork } from './flak-work-plan.ts';
 import { planComponentWork } from './component-work-plan.ts';
-import { isGunRecipe,GUN_REQUIREMENTS,isFlakRecipe,FLAK_REQUIREMENTS } from './production-recipes.ts';
+import { isGunRecipe,GUN_REQUIREMENTS,isFlakRecipe,FLAK_REQUIREMENTS,ADVANCED_COMPONENT_REQUIREMENTS,type AdvancedComponentMaterial } from './production-recipes.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
@@ -78,7 +78,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       for(const pile of group) {
         if(isTailoring(bill.recipe)&&tailoringMaterial!==undefined&&pile.item!==tailoringMaterial)continue;
         if(budget.pairs--<=0){budget.pairs=0;return null;}
-        const typeMissing=isGunRecipe(bill.recipe)?(pile.item==='steel'||pile.item==='component'?GUN_REQUIREMENTS[bill.recipe][pile.item]-ingredients.reduce((n,i)=>n+(i.item===pile.item?i.quantity:0),0):0):isFlakRecipe(bill.recipe)?(pile.item==='cloth'||pile.item==='steel'||pile.item==='component'?FLAK_REQUIREMENTS[pile.item]-ingredients.reduce((n,i)=>n+(i.item===pile.item?i.quantity:0),0):0):missing;
+        const typeMissing=isGunRecipe(bill.recipe)?(pile.item==='steel'||pile.item==='component'?GUN_REQUIREMENTS[bill.recipe][pile.item]-ingredients.reduce((n,i)=>n+(i.item===pile.item?i.quantity:0),0):0):isFlakRecipe(bill.recipe)?(pile.item==='cloth'||pile.item==='steel'||pile.item==='component'?FLAK_REQUIREMENTS[pile.item]-ingredients.reduce((n,i)=>n+(i.item===pile.item?i.quantity:0),0):0):bill.recipe==='make-advanced-component'?ADVANCED_COMPONENT_REQUIREMENTS[pile.item as AdvancedComponentMaterial]-ingredients.reduce((n,i)=>n+(i.item===pile.item?i.quantity:0),0):missing;
         const quantity=Math.min(typeMissing,pile.quantity-reservedSource(world,pile.id));
         if(quantity<=0)continue;if(isTailoring(bill.recipe))tailoringMaterial??=pile.item as ProductionIngredient;
         if(!routeToJob(world,pile.owner as Cell,reachable,true))continue;
@@ -92,7 +92,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
         if(!already){const key=`${cell.x}:${cell.z}`;planned.set(key,{item:pile.item as ProductionIngredient,quantity:(planned.get(key)?.quantity??0)+quantity});}
         missing-=quantity;if(!missing)break;
       }
-      if(missing)continue; // Try the next bill if its filters admit other ingredients.
+      if(missing||!validAdvancedComponentIngredients(bill.recipe,ingredients))continue; // Try the next bill if its filters admit other ingredients.
       const source=ingredients.find(i=>i.stage==='source'),target=source?world.piles.find(p=>p.id===source.pileId)!.owner as Cell:spot;
       return {station,priority:pawn.priorities[stationWork(station)],target,path:source?routeToJob(world,target,reachable,true)!:toSpot,task:{...(bill.recipe!=='simple-meal'?{recipe:bill.recipe}:{}),stationId:station.id,billId:bill.id,spot,actionCell:{x:target.x,z:target.z},phase:'gather',ingredients,progress:0,productId:null,storageId:null}};
       }

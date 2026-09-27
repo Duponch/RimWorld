@@ -22,7 +22,7 @@ import { learnSkill } from './skills.ts';
 import { healthRandom } from './health.ts';
 import { newApparelState, type ApparelItem } from './apparel-rules.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
-import { isTailoring, PRODUCTION_RECIPES, PRODUCTION_WORK_SCALE, productionStationUsable, productionWorkTotal, recipeProduct, taskRecipe, taskWork } from './production-recipes.ts';
+import { isComponentRecipe,isTailoring, PRODUCTION_RECIPES, PRODUCTION_WORK_SCALE, productionStationUsable, productionWorkTotal, recipeProduct, taskRecipe, taskWork } from './production-recipes.ts';
 import { processProductionOutput, type ProductionContext } from './production-output.ts';
 import { copyPileCondition } from './pile-condition.ts';
 import { freshRot } from './food-preservation.ts';
@@ -77,8 +77,8 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(isGunRecipe(task.recipe)&&!gun){context.release();return;}
   const flak=isFlakRecipe(task.recipe)?beginFlakWork(world,pawn):null;
   if(isFlakRecipe(task.recipe)&&!flak){context.release();return;}
-  const component=task.recipe==='make-component'?beginComponentWork(world,pawn):null;
-  if(task.recipe==='make-component'&&!component){context.release();return;}
+  const component=isComponentRecipe(task.recipe)?beginComponentWork(world,pawn):null;
+  if(isComponentRecipe(task.recipe)&&!component){context.release();return;}
   if(gun){pawn.skills.crafting??={...craftingSkill(pawn)};if(gun.gunWork!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=gun.gunWork!.progress;}
   if(flak){pawn.skills.crafting??={...craftingSkill(pawn)};if(flak.flakWork!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=flak.flakWork!.progress;}
   if(component){pawn.skills.crafting??={...craftingSkill(pawn)};if(component.componentWork!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=component.componentWork!.progress;}
@@ -121,5 +121,5 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(isTailoring(task.recipe)){(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
   task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;if(culinary)pawn.skills.cooking=completedCookingSkill(pawn,task.workTicks??0);delete task.workTicks;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
-  context.event(isGunRecipe(task.recipe)||isFlakRecipe(task.recipe)||task.recipe==='make-component'||isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
+  context.event(isGunRecipe(task.recipe)||isFlakRecipe(task.recipe)||isComponentRecipe(task.recipe)||isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
 }

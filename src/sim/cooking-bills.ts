@@ -69,3 +69,14 @@ export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:Produ
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
     &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)&&groundOccupancyAllows(world,cell);
 }
+/** An advanced component's unfinished body can rest on the nearby fabrication
+ * surface. Ordinary ingredients and historical workpieces keep their reach. */
+export function componentWorkpiecePlaceFree(world:World,cell:Cell,spot:Cell,recipe:ProductionRecipe,station?:Structure):boolean {
+  if(ingredientPlaceFree(world,cell,spot,recipe,station))return true;
+  return recipe==='make-advanced-component'&&station?.kind==='fabrication-bench'
+    &&Math.abs(cell.x-spot.x)+Math.abs(cell.z-spot.z)<=2
+    &&footprintCells(station).some(c=>c.x===cell.x&&c.z===cell.z)
+    &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
+    &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
+    &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)&&groundOccupancyAllows(world,cell);
+}

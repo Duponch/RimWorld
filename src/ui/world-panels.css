@@ -47,8 +47,8 @@
   max-width:100%;margin:10px 0 12px;overflow-x:auto;overflow-y:hidden;
   border:1px solid var(--line);border-radius:10px;background:#f9f2e4;
 }
-#research-panel .research-graph{position:relative;width:1010px;height:430px;max-width:none}
-#research-panel .research-links{position:absolute;inset:0;width:1010px;height:430px;pointer-events:none}
+#research-panel .research-graph{position:relative;width:1010px;height:700px;max-width:none}
+#research-panel .research-links{position:absolute;inset:0;width:1010px;height:700px;pointer-events:none}
 #research-panel .research-links path{fill:none;stroke:#ad9064;stroke-width:2.5;stroke-linecap:round}
 #research-panel .research-node{
   position:absolute;box-sizing:border-box;width:174px;height:114px;padding:7px;

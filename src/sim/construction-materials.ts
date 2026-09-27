@@ -6,6 +6,7 @@ import { flooringRecipe,type FloorKind } from './flooring.ts';
 import { FURNITURE_DEFINITIONS,isHabitatFurnitureKind,isSculptureMaterial } from './furniture-stats.ts';
 import { ART_MATERIALS } from './art-rules.ts';
 import { powerConstructionSkill } from './power-construction.ts';
+import { SCHEMA_VERSION } from './types.ts';
 
 import { BUILDING_MATERIALS, CONSTRUCTION_MATERIALS, isBlockMaterial,isUpholsteryMaterial, type ConstructionMaterial } from './building-materials.ts';
 export type { ConstructionMaterial } from './building-materials.ts';
@@ -80,7 +81,7 @@ for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
     recipes.set(`${kind}:${material}`,Object.freeze({ingredients,work:Math.ceil(coreWork/10),coreWork}));
   }
 }
-export function validConstructionMaterial(kind:unknown,material:unknown,version=122):boolean {
+export function validConstructionMaterial(kind:unknown,material:unknown,version:number=SCHEMA_VERSION):boolean {
   if(kind==='chess-table')return version>=122&&typeof material==='string'&&(CONSTRUCTION_MATERIALS as readonly string[]).includes(material)&&recipes.has(`${kind}:${material}`);
   if(kind==='fence'||kind==='fence-gate'||kind==='pen-marker')return version>=119&&typeof material==='string'&&recipes.has(`${kind}:${material}`);
   if(kind==='art-bench')return version>=104&&(material==='wood'||material==='steel');

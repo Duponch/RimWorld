@@ -563,7 +563,7 @@
 #wildlife-panel .fauna-focus { font-weight: 600; text-align: left; }
 #wildlife-panel .fauna-hunt { font-weight: 600; color: var(--ink); }
 
-#research-panel { width: min(1040px, calc(100vw - 282px)); }
+#research-panel { width: min(1068px, calc(100vw - 282px)); }
 #research-panel .research-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

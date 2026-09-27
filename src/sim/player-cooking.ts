@@ -5,7 +5,7 @@ import { foodStationUsable, usesCookingFuel, isButcherStation } from './food-wor
 import { corpseFresh } from './corpses.ts';
 import { isFlakRecipe,stationRecipe, stationWork, taskRecipe, type ProductionIngredient } from './production-recipes.ts';
 import { candidateAccess } from './candidate-access.ts';
-import { billWanted, cookingPlaceFree, cookingSpot, ingredientPlaceFree, ingredientWithinReach } from './cooking-bills.ts';
+import { billWanted, componentWorkpiecePlaceFree,cookingPlaceFree, cookingSpot, ingredientPlaceFree, ingredientWithinReach } from './cooking-bills.ts';
 import { planCooking } from './cooking-planner.ts';
 import { fuelStationReserved } from './fuel.ts';
 import { groundCapacity } from './ground-placement.ts';
@@ -52,10 +52,12 @@ export function queuedCookingReason(world:World,order:CookingOrder):string|undef
     const work=pile?.artWork??pile?.gunWork??pile?.flakWork??pile?.componentWork??pile?.unfinished,bound=work?.billId===bill.id;
     const required=(sources.get(i.pileId)??0)+i.quantity;sources.set(i.pileId,required);
     if(pile&&isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick))return 'Dépouille pourrie, impropre à la boucherie.';
+    if(pile?.componentWork&&pile.componentWork.recipe!==bill.recipe)return 'Ouvrage réservé à une autre recette.';
     if(work&&(work.authorId!==author?.id||work.billId!==undefined&&!bound))return 'Ouvrage réservé à un autre auteur ou une autre facture.';
-    if(!(bound||(pile?.artWork?bill.filters[pile.artWork.material]:pile?.gunWork?pile.gunWork.parts.every(part=>bill.filters[part.item]):pile?.flakWork?pile.flakWork.parts.every(part=>bill.filters[part.item]):pile?.componentWork?bill.filters.steel:bill.filters[pile?.unfinished?'cloth':i.item]))||!pile||pile.item!==i.item||pile.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<required)return 'Ingrédient réservé disparu ou devenu insuffisant.';
+    if(!(bound||(pile?.artWork?bill.filters[pile.artWork.material]:pile?.gunWork?pile.gunWork.parts.every(part=>bill.filters[part.item]):pile?.flakWork?pile.flakWork.parts.every(part=>bill.filters[part.item]):pile?.componentWork?pile.componentWork.recipe==='make-component'?bill.filters.steel:pile.componentWork.parts.every(part=>bill.filters[part.item]):bill.filters[pile?.unfinished?'cloth':i.item]))||!pile||pile.item!==i.item||pile.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<required)return 'Ingrédient réservé disparu ou devenu insuffisant.';
     if(!bound&&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)return 'Ingrédient sorti du rayon de la facture.';
-    if(!ingredientWithinReach(i.cell,spot,station)||!ingredientPlaceFree(view,i.cell,spot,taskRecipe(c),station))return 'Dépôt des ingrédients inaccessible.';
+    const workpiece=i.item==='unfinished-component'&&c.recipe==='make-advanced-component';
+    if(!(workpiece&&componentWorkpiecePlaceFree(view,i.cell,spot,taskRecipe(c),station)||ingredientWithinReach(i.cell,spot,station))||!(workpiece?componentWorkpiecePlaceFree(view,i.cell,spot,taskRecipe(c),station):ingredientPlaceFree(view,i.cell,spot,taskRecipe(c),station)))return 'Dépôt des ingrédients inaccessible.';
     if(i.stage==='placed') {if(pile.owner.x!==i.cell.x||pile.owner.z!==i.cell.z)return 'Ingrédient déjà posé déplacé.';}
     else {
       const key=cellIndex(view,i.cell.x,i.cell.z),prior=incoming.get(key),quantity=(prior?.quantity??0)+i.quantity;

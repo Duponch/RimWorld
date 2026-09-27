@@ -13,13 +13,14 @@ test('V123 industry scene loads through Charger and fabricates its first compone
   const entry = entries.find(save => save.id === 'industrie-v123');
   expect(entry).toMatchObject({ release: 'v123', filename: 'industrie.json', prepared: true });
   expect(entry!.sha256).toBe(createHash('sha256').update(raw).digest('hex'));
-  expect(raw).toBe(serializeWorld(prepareIndustryDemo()));
+  expect(deserializeWorld(raw)).toEqual(prepareIndustryDemo());
   vi.stubGlobal('fetch', vi.fn(async () => new Response(raw)));
   const loadedRaw = await readTestColony(entry!);
   expect(loadedRaw).toBe(raw);
   const world = deserializeWorld(loadedRaw);
   expect(validateWorld(world)).toEqual([]);
-  expect(world.schemaVersion).toBe(123);
+  expect(JSON.parse(raw).schemaVersion).toBe(123);
+  expect(world.schemaVersion).toBe(139);
   expect(world.pawns[0]!.skills.crafting!.level).toBeGreaterThanOrEqual(8);
   const bench = world.structures.find(s => s.kind === 'fabrication-bench');
   expect(bench?.power?.on).toBe(true);

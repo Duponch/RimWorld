@@ -545,6 +545,35 @@
       "prepared": true,
       "provenance": "Copie préparée de la scène V124, sans modifier son fichier : seuls trois traits et un échange physique déjà effectué sont ajoutés. La fréquence future et une bagarre ne sont pas préécrites.",
       "sha256": "2c71191a9292e111d798cbc1e5d469c31cd127fd0ff089ed0c3a7b88bd915590"
+    },
+    {
+      "id": "industrie-avancee-v139",
+      "release": "v139",
+      "label": "Composant avancé · 1 colon",
+      "description": "Fabrication avancée recherchée, établi alimenté, Ada Artisanat 10, quatre matières physiques et facture prête ; la production commence après reprise.",
+      "filename": "industrie-avancee.json",
+      "pawns": 1,
+      "colonists": 1,
+      "width": 32,
+      "height": 32,
+      "tick": 3244,
+      "focus": [
+        "fabrication avancée",
+        "composant avancé",
+        "acier",
+        "plastacier",
+        "or",
+        "ouvrage physique"
+      ],
+      "steps": [
+        "Repérer l’établi alimenté à (16, 8) et sa facture de composant avancé ; inspecter les quatre matières au sol.",
+        "Reprendre la partie : Ada transporte 1 composant, 20 aciers, 10 plastaciers et 3 ors avant de travailler l’ouvrage.",
+        "Sauvegarder et recharger pendant le travail pour vérifier l’auteur, les parts et la progression conservés.",
+        "Après la production de deux composants avancés par les mêmes règles, les livrer à un deuxième établi avec ses autres matériaux."
+      ],
+      "prepared": true,
+      "provenance": "Scène V139 préparée depuis la sauvegarde V123 sans la modifier : recherche avancée acquise, trois nouvelles piles et facture avancée explicites. Aucun composant avancé, ouvrage ou second établi n’est préfabriqué ; le premier produit vient du moteur après reprise.",
+      "sha256": "cafbc83783fab1e858229fc7021cc6c6761d3d9b19547a2ada9a67271e18dfc0"
     }
   ]
 }

@@ -33,7 +33,7 @@ function pileOnPlayerMap(pile: MaterialPile, pawns: ReadonlyMap<number, Pawn>): 
 }
 
 const MATERIAL_VALUE: Readonly<Partial<Record<ItemId, number>>> = Object.freeze({
-  wood: 1.2, steel: 1.9, component: 32, cloth: 1.5, 'light-leather': 1.9, 'muffalo-wool': 2.7,
+  wood: 1.2, steel: 1.9, component: 32, plasteel: 9, gold: 10, cloth: 1.5, 'light-leather': 1.9, 'muffalo-wool': 2.7,
   'granite-blocks': .9, 'limestone-blocks': .9, 'marble-blocks': .9,
   'sandstone-blocks': .9, 'slate-blocks': .9,
 });
@@ -55,7 +55,16 @@ function unfinishedIngredientValue(pile: MaterialPile): number | undefined {
     }
     return sum;
   }
-  if (pile.componentWork) return MATERIAL_VALUE.steel! * pile.componentWork.parts.reduce((a,b)=>a+b,0);
+  if (pile.componentWork) {
+    if (pile.componentWork.recipe === 'make-component') return MATERIAL_VALUE.steel! * pile.componentWork.parts.reduce((a,b)=>a+b,0);
+    let sum = 0;
+    for (const part of pile.componentWork.parts) {
+      const unit = MATERIAL_VALUE[part.item];
+      if (unit === undefined) return undefined;
+      sum += unit * part.quantity;
+    }
+    return sum;
+  }
   if (pile.unfinished) {
     const material = pile.unfinished.material ?? 'cloth';
     const unit = MATERIAL_VALUE[material];
