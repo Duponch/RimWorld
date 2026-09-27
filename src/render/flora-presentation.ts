@@ -7,7 +7,7 @@ export const floraSize=(world:World,r:Resource):number=>!r.species?1:(r.growth??
 const FLORA_COLORS={pine:0x47684c,birch:0x8fa467,oak:0x57754d,poplar:0x849752,drago:0x728966,saguaro:0x698661,agave:0x839c89,moss:0x718356,grass:0x929357,'tall-grass':0x7d8a4f,brambles:0x556648,'berry-bush':0x677b55};
 export const floraColor=(r:Resource):number=>FLORA_COLORS[r.species??'berry-bush'];
 export const isClusterPlantSpecies=(species:Resource['species']):boolean=>species==='grass'||species==='tall-grass';
-export const floraTreeHeight=(r:Resource):number=>r.species==='saguaro'?2.2:r.species==='drago'?2.7:r.species==='pine'?4.6:r.species==='poplar'?4.3:3.8;
+export const floraTreeHeight=(r:Resource):number=>r.species==='saguaro'?2.2:r.species==='drago'?3.25:r.species==='pine'?4.6:r.species==='poplar'?4.3:3.8;
 export const floraIdentity=(world:World,r:Resource):string=>`${r.kind}:${r.x}:${r.z}:${r.stone??''}:${r.species??''}:${floraSize(world,r)}`;
 
 export interface FloraParts {trunks:Placement[];crowns:Placement[];cones:Placement[];bushes:Placement[];blades:Placement[];cacti:Placement[];fruit:Placement[]}
@@ -26,13 +26,14 @@ export function appendFlora(parts:FloraParts,world:World,r:Resource,turn:number)
       add(parts.cacti,{y:height/2,sx:.32,sy:height,sz:.32,key:r.id});
       for(const side of [-1,1]){add(parts.cacti,{dx:side*.35,y:1,sy:.22,sx:.65,sz:.22,key:r.id});add(parts.cacti,{dx:side*.6,y:1.4,sy:1,sx:.22,sz:.22,key:r.id});}
     } else {
-      add(parts.trunks,{y:height*.25,sx:r.species==='birch'?.85:1,sy:height*.5,sz:1,color:r.species==='birch'?0xcac9b4:0x70573e,key:r.id});
+      const drago=r.species==='drago';
+      add(parts.trunks,{y:height*(drago?.36:.25),sx:r.species==='birch'?.85:1,sy:height*(drago?.72:.5),sz:1,color:r.species==='birch'?0xcac9b4:0x70573e,key:r.id});
       if(r.species==='pine') {
         add(parts.cones,{y:height*.53,sx:1,sy:height*.6,sz:1,ry:turn});
         add(parts.cones,{y:height*.70,sx:.7,sy:height*.4,sz:.7,ry:turn+.3});
       } else {
-        add(parts.crowns,{y:height*.65,sx:r.species==='poplar'?.7:1,sy:height*(r.species==='drago'?.12:.24),sz:r.species==='poplar'?.7:1,ry:turn});
-        if(r.species!=='drago')add(parts.crowns,{y:height*.87,sx:.66,sy:height*.16,sz:.66,ry:turn+.5});
+        add(parts.crowns,{y:height*(drago?.79:.65),sx:drago?1.43:r.species==='poplar'?.7:1,sy:height*(drago?.16:.24),sz:drago?1.43:r.species==='poplar'?.7:1,ry:turn});
+        if(!drago)add(parts.crowns,{y:height*.87,sx:.66,sy:height*.16,sz:.66,ry:turn+.5});
       }
     }
   } else if(r.species==='agave') {

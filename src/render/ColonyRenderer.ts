@@ -794,6 +794,7 @@ export class ColonyRenderer {
     this.actionVfx.setDetailVisible(cellPixels>=18);
     this.brawlCloud.setDetailVisible(cellPixels>=18);
     this.ropes.setDetailVisible(cellPixels>=18);
+    this.designations.present(this.camera,this.host.clientHeight,cellPixels);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
     if(distant!==this.overview.group.visible)this.landscape.needsUpdate=true;
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;this.plants.group.visible=!distant;

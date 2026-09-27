@@ -25,6 +25,24 @@ test('pine upper cone enters the lower canopy by more than half its height at ev
   }
 });
 
+test('arid drago keeps its wider parasol seated on a trunk taller than the cactus',()=>{
+  const world=createWorld(),drago:Resource={id:903,x:8,z:8,kind:'tree',species:'drago',amount:30,growth:1};
+  const cactus:Resource={id:904,x:9,z:8,kind:'tree',species:'saguaro',amount:30,growth:1};
+  for(const growth of [1,.825,.65,.475]){
+    drago.growth=cactus.growth=growth;
+    const shape=parts(),cactusShape=parts();
+    appendFlora(shape,world,drago,.37);appendFlora(cactusShape,world,cactus,.37);
+    expect(shape.trunks).toHaveLength(1);
+    expect(shape.crowns).toHaveLength(1);
+    const trunk=shape.trunks[0]!,crown=shape.crowns[0]!,saguaro=cactusShape.cacti[0]!;
+    const stem=bounds(trunk.y,trunk.sy!),parasol=bounds(crown.y,crown.sy!);
+    expect(stem.bottom).toBeCloseTo(0,5);
+    expect(stem.top).toBeGreaterThanOrEqual(parasol.bottom);
+    expect(crown.sx).toBeGreaterThan(1.4*floraSize(world,drago));
+    expect(parasol.top).toBeGreaterThan(bounds(saguaro.y,saguaro.sy!).top);
+  }
+});
+
 test('legacy conifers overlap while broadleaf and cactus centres retain their previous placement',()=>{
   const world=createWorld(42,32,32);world.tiles=world.tiles.map(()=>({terrain:'grass'}));world.resources=[{id:901,x:8,z:8,kind:'tree',amount:30}];
   delete world.site;

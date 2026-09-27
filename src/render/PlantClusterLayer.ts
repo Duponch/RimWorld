@@ -91,9 +91,9 @@ export class PlantClusterLayer {
       const yaw=attribute('windYaw','float'),c=yaw.cos(),s=yaw.sin();
       const localX=this.windDirection.x.mul(c).sub(this.windDirection.y.mul(s));
       const localZ=this.windDirection.x.mul(s).add(this.windDirection.y.mul(c));
-      const phase=this.windTick.mul(2*Math.PI/24).add(yaw.mul(3.1));
+      const phase=this.windTick.mul(2*Math.PI/18).add(yaw.mul(3.1));
       const bend=positionLocal.y.mul(positionLocal.y).mul(this.windStrength)
-        .mul(sin(phase).mul(.035).add(.10));
+        .mul(sin(phase).mul(.075).add(.12));
       return positionLocal.add(vec3(localX.mul(bend),0,localZ.mul(bend)));
     })();
     this.windPlain=(plainMaterial as THREE.MeshStandardNodeMaterial).clone();

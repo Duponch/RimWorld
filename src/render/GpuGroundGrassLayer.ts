@@ -198,8 +198,8 @@ export class GpuGroundGrassLayer {
       const height = hash(key.add(uint(43))).mul(.17).add(.21).mul(coverage);
       const width = hash(key.add(uint(59))).mul(.45).add(.76).mul(coverage);
       const bladeT = uv().y;
-      const sway = sin(this.windTick.mul(2*Math.PI/24).add(bx.mul(.31)).add(bz.mul(.23)).add(yaw))
-        .mul(this.windStrength).mul(.045).mul(bladeT.mul(bladeT));
+      const sway = sin(this.windTick.mul(2*Math.PI/18).add(bx.mul(.31)).add(bz.mul(.23)).add(yaw))
+        .mul(.07).add(.04).mul(this.windStrength).mul(bladeT.mul(bladeT));
       const side = positionLocal.x.mul(width), lean = positionLocal.z.mul(width);
       return vec3(
         bx.add(side.mul(c)).add(lean.mul(s)).add(this.windDirection.x.mul(sway)),

@@ -1,9 +1,12 @@
 import * as THREE from 'three/webgpu';
-import { attribute, texture, uv, vec2 } from 'three/tsl';
+import { attribute, cameraPosition, cameraViewMatrix, texture, uniform, uv, vec2, vec4 } from 'three/tsl';
 import type { Job, World } from '../sim/types';
 import { floraSize, floraTreeHeight } from './flora-presentation';
+import { perspectiveDetailRange, screenSpriteScale } from './map-overlay-detail';
 import { WORLD_SCALE } from '../world/scale';
 
+export const DESIGNATION_MIN_CELL_PIXELS = 32;
+export const DESIGNATION_ICON_PIXELS = 30;
 export const DESIGNATION_ICON_KINDS = ['mine', 'chop', 'harvest', 'cut'] as const;
 export type DesignationIconKind = typeof DESIGNATION_ICON_KINDS[number];
 const ICON_INDEX: Readonly<Record<DesignationIconKind, number>> = { mine: 0, chop: 1, harvest: 2, cut: 3 };
@@ -47,12 +50,16 @@ function fallbackAtlas(): THREE.DataTexture {
   return map;
 }
 
-/** One resident instanced sprite draw. SpriteNodeMaterial performs camera-facing
- * orientation in the vertex shader; snapshots upload only positions/icon cells. */
+/** One resident instanced sprite draw. Camera-facing orientation, fixed screen
+ * size and per-target distance rejection stay in the vertex shader; camera
+ * movement never uploads designation buffers. */
 export class DesignationIconLayer {
   readonly mesh: THREE.Mesh<THREE.InstancedBufferGeometry, THREE.SpriteNodeMaterial>;
   private readonly fallback = fallbackAtlas();
   private readonly atlasNode = texture(this.fallback);
+  private readonly screenScale = uniform(1);
+  private readonly detailDistance = uniform(0);
+  private readonly perspectiveScale = uniform(0);
   private loaded: THREE.Texture | undefined;
   private capacity = 16;
   private key = '';
@@ -67,8 +74,15 @@ export class DesignationIconLayer {
     geometry.setAttribute('designationPosition', new THREE.InstancedBufferAttribute(new Float32Array(this.capacity * 3), 3).setUsage(THREE.StaticDrawUsage));
     geometry.setAttribute('designationIcon', new THREE.InstancedBufferAttribute(new Float32Array(this.capacity), 1).setUsage(THREE.StaticDrawUsage));
     const material = new THREE.SpriteNodeMaterial({ transparent: true, depthTest: false, depthWrite: false, alphaTest: .12 });
-    material.positionNode = attribute('designationPosition', 'vec3');
-    material.scaleNode = vec2(.78);
+    const anchor = attribute('designationPosition', 'vec3');
+    material.positionNode = anchor;
+    const depth = cameraViewMatrix.mul(vec4(anchor, 1)).z.negate();
+    const inRange = cameraPosition.sub(anchor).length().lessThan(this.detailDistance).and(depth.greaterThan(0));
+    // Use the target's projected depth explicitly. Three's sizeAttenuation
+    // camera branch can reuse the ortho prewarm variant after a mode switch.
+    material.scaleNode = vec2(this.screenScale)
+      .mul(this.perspectiveScale.greaterThan(.5).select(depth, 1))
+      .mul(inRange.select(1, 0));
     const atlasUv = vec2(uv().x.add(attribute('designationIcon', 'float')).div(4), uv().y.div(5).add(.8));
     material.colorNode = this.atlasNode.sample(atlasUv);
     this.mesh = new THREE.Mesh(geometry, material);
@@ -103,6 +117,16 @@ export class DesignationIconLayer {
     positions.needsUpdate = icons.needsUpdate = true;
   }
 
+  present(camera: THREE.OrthographicCamera | THREE.PerspectiveCamera, viewportHeight: number, cellPixels: number): void {
+    this.mesh.visible = this.mesh.geometry.instanceCount > 0 && viewportHeight > 0 && cellPixels >= DESIGNATION_MIN_CELL_PIXELS;
+    if (!this.mesh.visible) return;
+    this.screenScale.value = screenSpriteScale(camera, viewportHeight, DESIGNATION_ICON_PIXELS);
+    const perspective = camera instanceof THREE.PerspectiveCamera;
+    this.perspectiveScale.value = perspective ? 1 : 0;
+    this.detailDistance.value = perspective
+      ? perspectiveDetailRange(camera, viewportHeight, DESIGNATION_MIN_CELL_PIXELS) : 1e8;
+  }
+
   private allocate(capacity: number): void {
     this.capacity = capacity;
     this.mesh.geometry.setAttribute('designationPosition', new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3).setUsage(THREE.StaticDrawUsage));
@@ -110,9 +134,11 @@ export class DesignationIconLayer {
   }
 
   prepareForCompile(): () => void {
-    if (this.mesh.geometry.instanceCount) return () => {};
-    this.mesh.geometry.instanceCount = 1;
-    return () => { if (!this.key) this.mesh.geometry.instanceCount = 0; };
+    const wasVisible = this.mesh.visible;
+    const wasEmpty = this.mesh.geometry.instanceCount === 0;
+    this.mesh.visible = true;
+    if (wasEmpty) this.mesh.geometry.instanceCount = 1;
+    return () => { if (wasEmpty && !this.key) this.mesh.geometry.instanceCount = 0; this.mesh.visible = wasVisible; };
   }
 
   dispose(): void {

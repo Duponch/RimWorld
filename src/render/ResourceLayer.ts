@@ -71,7 +71,7 @@ function resizeResources(group:THREE.Group,resources:Map<number,World['resources
     if(touched){
       position.needsUpdate=true;mesh.geometry.computeBoundingSphere();
       if(data.ranges.some(range=>resources.get(rangeResourceId(range.id))?.kind==='tree')&&mesh.geometry.boundingSphere)
-        mesh.geometry.boundingSphere.radius+=3;
+        mesh.geometry.boundingSphere.radius+=4;
     }
   }
   for(const id of changed)currentSizes.set(id,nextSizes.get(id)!);
@@ -102,12 +102,12 @@ export class ResourceLayer {
   constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.Material, private readonly texturedMaterial: THREE.Material=staticMaterial) {
     const windPosition=Fn(()=>{
       const root=attribute('windRoot','vec3');
-      const height=positionLocal.y.div(5).clamp(0,1);
-      const wave=sin(this.windTick.mul(2*Math.PI/90).add(root.x.mul(.47)).add(root.y.mul(.31)));
-      const bend=height.mul(height).mul(root.z).mul(this.windStrength).mul(wave.mul(.29).add(.40));
+      const height=positionLocal.y.div(4).clamp(0,1);
+      const wave=sin(this.windTick.mul(2*Math.PI/48).add(root.x.mul(.47)).add(root.y.mul(.31)));
+      const bend=height.mul(height).mul(root.z).mul(this.windStrength).mul(wave.mul(.43).add(.63));
       const leaves=root.z.greaterThan(.8).select(1,0);
-      const flutter=sin(this.windTick.mul(2*Math.PI/30).add(positionLocal.x.mul(1.3)).add(positionLocal.z.mul(1.7)))
-        .mul(leaves).mul(height).mul(this.windStrength).mul(.08);
+      const flutter=sin(this.windTick.mul(2*Math.PI/15).add(positionLocal.x.mul(1.3)).add(positionLocal.z.mul(1.7)))
+        .mul(leaves).mul(height).mul(this.windStrength).mul(.11);
       return positionLocal.add(vec3(
         this.windDirection.x.mul(bend).sub(this.windDirection.y.mul(flutter)),
         0,
@@ -346,7 +346,7 @@ export class ResourceLayer {
         }
         if(!ranges.some(range=>trees.has(rangeResourceId(range.id))))continue;
         // Tilted crowns remain inside the conservative camera/shadow bounds.
-        if(mesh.geometry.boundingSphere)mesh.geometry.boundingSphere.radius+=3;
+        if(mesh.geometry.boundingSphere)mesh.geometry.boundingSphere.radius+=4;
         const windRoot=new Float32Array((mesh.geometry.getAttribute('position') as THREE.BufferAttribute).count*3);
         for(const range of ranges){
           const resource=trees.get(rangeResourceId(range.id));

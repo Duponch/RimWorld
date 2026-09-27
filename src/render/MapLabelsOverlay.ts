@@ -1,7 +1,10 @@
-import { Box3, Frustum, Matrix4, Vector3, type OrthographicCamera, type PerspectiveCamera } from 'three/webgpu';
+import { Box3, Frustum, Matrix4, PerspectiveCamera, Vector3, type OrthographicCamera } from 'three/webgpu';
 import { QUALITY_LABELS, type WeaponQuality } from '../sim/equipment-rules';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import type { MaterialPile, World } from '../sim/types';
+import { perspectiveDetailRange } from './map-overlay-detail';
+
+export const PILE_LABEL_MIN_CELL_PIXELS = 96;
 
 const QUALITY_SHORT: Readonly<Record<WeaponQuality, string>> = {
   awful: 'dépl.', poor: 'médi.', normal: 'norm.', good: 'bon',
@@ -69,7 +72,7 @@ export class MapLabelsOverlay {
   draw(world: World | null | undefined, camera: OrthographicCamera | PerspectiveCamera, cellPixels: number, width: number, height: number): void {
     // RimWorld shows item overlays at its closest detail levels. At other
     // scales the early exit avoids the pile scan and all canvas operations.
-    if (!world || cellPixels < 96 || !width || !height) {
+    if (!world || cellPixels < PILE_LABEL_MIN_CELL_PIXELS || !width || !height) {
       if (this.visible) { this.canvas.hidden = true; this.visible = false; }
       return;
     }
@@ -91,11 +94,16 @@ export class MapLabelsOverlay {
     camera.updateMatrixWorld();
     this.index(world);
     this.frustum.setFromProjectionMatrix(this.projectionView.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+    const maxDistance = camera instanceof PerspectiveCamera
+      ? perspectiveDetailRange(camera, height, PILE_LABEL_MIN_CELL_PIXELS) : Infinity;
+    const maxDistanceSquared = maxDistance * maxDistance;
     const occupied = new Map<number, number>();
     for (const chunk of this.chunks) {
-      if (!this.frustum.intersectsBox(chunk.bounds)) continue;
+      if (!this.frustum.intersectsBox(chunk.bounds) || chunk.bounds.distanceToPoint(camera.position) > maxDistance) continue;
       for (const { x, z, label } of chunk.entries) {
-        this.point.set(x, .32, z).project(camera);
+        this.point.set(x, .32, z);
+        if (this.point.distanceToSquared(camera.position) > maxDistanceSquared) continue;
+        this.point.project(camera);
         if (this.point.z < -1 || this.point.z > 1 || Math.abs(this.point.x) > 1.08 || Math.abs(this.point.y) > 1.08) continue;
         const screenX = (this.point.x + 1) * width * .5;
         const screenY = (1 - this.point.y) * height * .5;
