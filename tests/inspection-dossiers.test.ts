@@ -2,12 +2,15 @@ import { expect,test } from 'vitest';
 import { medicalCamp,controlledInjury } from './scenarios/health';
 import { equipmentCamp } from './scenarios/equipment';
 import { healthCapacityRows,healthInjuryRows } from '../src/ui/health-inspection';
+import { humanAgeText } from '../src/ui/skills-inspection';
+import { TICKS_PER_DAY } from '../src/sim/types';
 import { equipmentInspectionView } from '../src/ui/equipment-inspection';
 import { socialLastText,socialOpinionRows } from '../src/ui/social-inspection';
 import { moodInspectionView } from '../src/ui/mood-inspection';
 import { moodTarget,moodThoughts } from '../src/sim/mood';
 import { newApparelState } from '../src/sim/apparel-rules';
 import { newWeaponState } from '../src/sim/equipment-rules';
+import { createMedicalRecord } from '../src/sim/injury-state';
 
 test('health dossier shows only measured capacities and orders wounds by anatomy',()=>{
   const world=medicalCamp(),pawn=world.pawns[0]!;
@@ -25,6 +28,22 @@ test('health dossier shows only measured capacities and orders wounds by anatomy
   expect(Number(healthCapacityRows(pawn).find(row=>row.label==='Vue')!.value.replace(' %',''))).toBeLessThan(100);
   pawn.health!.injuries.find(injury=>injury.part==='left-eye')!.tended=800;
   expect(healthInjuryRows(pawn)[0]!.description).toContain('soignée (80 %)');
+});
+
+test('Bio distinguishes biological and chronological years and Santé locates real age conditions',()=>{
+  const pawn=medicalCamp().pawns[0]!;
+  delete pawn.age;
+  expect(humanAgeText(pawn)).toBe('');
+  pawn.age={biologicalTicks:36*60*TICKS_PER_DAY,chronologicalTicks:44*60*TICKS_PER_DAY};
+  expect(humanAgeText(pawn)).toBe('Âge : 36 ans (44 chronologiques)');
+  pawn.age.chronologicalTicks=pawn.age.biologicalTicks;
+  expect(humanAgeText(pawn)).toBe('Âge : 36 ans');
+  pawn.health=createMedicalRecord(0);
+  pawn.health.ageAilments=['bad-back','frail'];
+  expect(healthInjuryRows(pawn).slice(0,2)).toEqual([
+    {part:'Torse',description:'Frêle'},
+    {part:'Colonne vertébrale',description:'Lumbago'},
+  ]);
 });
 
 test('equipment dossier lists owned objects and actual protection without invented mass',()=>{

@@ -1,4 +1,5 @@
 import {validatePawnAppearance} from './pawn-appearance.ts';
+import { validHumanAge } from './human-age.ts';
 import {validateFurniture} from './furniture-transfer-save.ts';
 import {validateArtObjects} from './art-save.ts';
 import {isSculptureKind} from './furniture-stats.ts';
@@ -43,7 +44,7 @@ function validAgenda(value:unknown,kind:VisitorAgendaKind,w:World):boolean {
 function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
   if(object(value)&&value.filthFeet!==undefined){if(w.schemaVersion<89||!validFilthFeet(value.filthFeet))return false;const copy={...value};delete copy.filthFeet;value=copy;}
   if(object(value)&&value.appearance!==undefined&&(w.schemaVersion<109||validatePawnAppearance(value.appearance).length))return false;
-  if(!object(value)||!keys(value,[...(w.schemaVersion>=109?['appearance']:[]),'id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance']))return false;
+  if(!object(value)||!keys(value,[...(w.schemaVersion>=109?['appearance']:[]),...(w.schemaVersion>=138?['age']:[]),'id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance'])||!validHumanAge(value.age,w.schemaVersion))return false;
   if(!integer(value.id,1,w.nextId-1)||typeof value.name!=='string'||!value.name.trim()||value.name.length>48||!integer(value.x,0,w.width-1)||!integer(value.z,0,w.height-1)||!edge(value as unknown as Cell,w)
     ||value.faction!=='outlanders'||value.medicalCare!=='industrial'||value.state!=='idle'||!validVisitorShape(value,w.schemaVersion,w)||!object(value.visitor)||value.visitor.phase!=='leaving'||value.visitor.goal!==null
     ||!['hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty']:[])].every(k=>range(value[k],0,100))||value.collapsePending!==false||!integer(value.restZeroTicks,0)||!validSkills(value.skills,tick,w.schemaVersion)||!integer(value.foodPolicyId,1)
@@ -56,9 +57,10 @@ function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
   if(!object(r)||!keys(r,['level','tolerance','bored','task'])||!range(r.level,0,100)||r.task!==null||!object(r.tolerance)||!object(r.bored))return false;
   const tolerance=r.tolerance,bored=r.bored;
   const cerebral=Object.hasOwn(tolerance,'cerebral')||Object.hasOwn(bored,'cerebral');
-  if(Object.keys(tolerance).length!==2+(cerebral?1:0)||Object.keys(bored).length!==2+(cerebral?1:0)||cerebral&&(w.schemaVersion<122||!range(tolerance.cerebral,0,100)||typeof bored.cerebral!=='boolean')||!['solitary','dexterity'].every(k=>range(tolerance[k],0,100)&&typeof bored[k]==='boolean'))return false;
+  const social=Object.hasOwn(tolerance,'social')||Object.hasOwn(bored,'social');
+  if(Object.keys(tolerance).length!==2+(cerebral?1:0)+(social?1:0)||Object.keys(bored).length!==2+(cerebral?1:0)+(social?1:0)||cerebral&&(w.schemaVersion<122||!range(tolerance.cerebral,0,100)||typeof bored.cerebral!=='boolean')||social&&(w.schemaVersion<124||!range(tolerance.social,0,100)||typeof bored.social!=='boolean')||!['solitary','dexterity'].every(k=>range(tolerance[k],0,100)&&typeof bored[k]==='boolean'))return false;
   if(!Array.isArray(value.memories)||value.memories.length>2||new Set(value.memories.map(m=>object(m)?m.kind:null)).size!==value.memories.length||!value.memories.every(m=>object(m)&&Object.keys(m).length===2&&['ate-without-table','ate-raw-food'].includes(String(m.kind))&&integer(m.expiresAt,tick+1,tick+TICKS_PER_DAY)))return false;
-  if(value.health!==undefined&&(validateMedicalRecord(value.health,true,true,true,true,false,false,true,true,true,true,w.schemaVersion>=89,91,w.schemaVersion>=127)!==null||!object(value.health)||!integer(value.health.tick,0,tick)||medicalStatus(value.health as unknown as NonNullable<World['pawns'][number]['health']>)!=='mobile'))return false;
+  if(value.health!==undefined&&(validateMedicalRecord(value.health,true,true,true,true,false,false,true,true,true,true,w.schemaVersion>=89,w.schemaVersion,w.schemaVersion>=127)!==null||!object(value.health)||!integer(value.health.tick,0,tick)||medicalStatus(value.health as unknown as NonNullable<World['pawns'][number]['health']>)!=='mobile'))return false;
   if(!validDisturbance(value.disturbance,88,tick))return false;
   const a=value.lastAttack;if(a!==undefined&&(!object(a)||Object.keys(a).length!==2||!integer(a.targetId,1,w.nextId-1)||a.targetId===value.id||!integer(a.atCore,0,tick*10)))return false;
   return true;

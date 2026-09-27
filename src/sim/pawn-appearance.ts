@@ -155,7 +155,7 @@ function generate(seed: number, id: number, name: string, varyBrightness: boolea
   const hairColor = varyBrightness
     ? varyHairColor(hairGene.color, fixedBrightness ? 1 : 1 + (draw(7) * 2 - 1) * .12)
     : hairGene.color;
-  // Lisière has no biological age, so assigning adult beard probability would invent one.
+  // Beard variation remains outside this visual profile; aging does not alter a saved appearance.
   const beard = 'NoBeard';
   return { version: 1, sex, bodyType, headType, hair, beard, skinColor, hairColor };
 }

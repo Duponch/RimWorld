@@ -33,6 +33,7 @@
 .colonist-inspector-pages details details{max-height:none;overflow:visible}
 .colonist-inspector-pages details details>summary{color:var(--ink);font-size:14px;font-weight:600;line-height:1.4}
 .colonist-inspector-pages .skill-entry{padding:9px 0;border-bottom:1px solid var(--line)}
+.colonist-inspector-pages .pawn-age{margin:0 0 10px;padding:0 0 11px;border-bottom:1px solid var(--line);font-weight:600}
 .colonist-inspector-pages .skill-entry:last-of-type{border-bottom:0}
 .colonist-inspector-pages .skill-entry>summary,.colonist-inspector-pages .trait-entry>summary,.colonist-inspector-pages .trait-stat-entry>summary{position:static;padding:0;background:transparent;list-style:none}
 .colonist-inspector-pages .skill-entry>summary::before,.colonist-inspector-pages .trait-entry>summary::before,.colonist-inspector-pages .trait-stat-entry>summary::before{content:'›';display:inline-block;width:16px;color:var(--accent)}

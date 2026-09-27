@@ -48,6 +48,7 @@ import { detachMissingBills,cancelUnfinished } from './unfinished.ts';
 import { placeCraftingSpot,removeCraftingSpot } from './crafting-spot.ts';
 import { harvestProductLabel } from './plants.ts';
 import { advanceSocial } from './social.ts';
+import { advanceHumanAges } from './human-age.ts';
 import { reconcileRepairs,advanceRepair } from './repairs.ts';
 import { adoptColonyEconomy,sampleColonyEconomy,flushColonyLosses,advanceColonyAdaptation } from './colony-economy.ts';
 import { advanceRaids,enableRaids,exitRaider } from './raids.ts';
@@ -510,6 +511,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   for (let step = 0; step < ticks; step++) {
     flushColonyLosses(world);
     world.tick++;
+    advanceHumanAges(world);
     sampleColonyEconomy(world);
     advanceArrivals(world);advanceHeatwaves(world);advanceVisitors(world);advanceFluIncidents(world);
     const beforeWeather=world.structures;

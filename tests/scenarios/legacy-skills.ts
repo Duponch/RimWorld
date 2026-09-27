@@ -107,13 +107,15 @@ export function withMigratedBasic<T>(world:T):T {
 
 /** Independent expectation of V89->V90's neutral adoption. */
 export function withMigratedV90<T>(world:T):T {
-  const w=world as any,registry=createDefaultApparelPolicyRegistry();
+  // V120 does not grant wool permissions to an already chosen policy.
+  const w=world as any,registry=createDefaultApparelPolicyRegistry(false);
   for(const structure of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)])if(['bed','table','stool'].includes(structure.kind))structure.quality='normal';
   for(const pile of w.piles??[]){if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material='cloth';if(pile.unfinished){pile.unfinished.material='cloth';pile.unfinished.units=pile.unfinished.cloth;}}
   for(const departure of w.raids?.departed??[])for(const pile of departure.items??[])if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material='cloth';
   if(w.tailoring)w.tailoring.lostLeather=0;
   w.apparelWear=createApparelWearCalendar(w.tick,(w.seed^w.tick^0x0a77e1)>>>0);w.apparelPolicies=registry.apparelPolicies;w.nextApparelPolicyId=registry.nextApparelPolicyId;
-  for(const pawn of w.pawns??[]){pawn.beauty=40;pawn.priorities.art=0;pawn.priorities.handle=0;if((pawn.faction??'colony')==='colony'&&!pawn.visitor&&!pawn.prisoner&&pawn.state!=='dead'){pawn.apparelPolicyId=1;pawn.apparelAutomation=false;pawn.nextApparelCheckAt=w.tick+600+pawn.id%301;}}
+  for(const pawn of w.pawns??[]){pawn.age={biologicalTicks:10800000,chronologicalTicks:10800000};pawn.beauty=40;pawn.priorities.art=0;pawn.priorities.handle=0;if(pawn.recreation){pawn.recreation.tolerance.cerebral=0;pawn.recreation.bored.cerebral=false;pawn.recreation.tolerance.social=0;pawn.recreation.bored.social=false;}if((pawn.faction??'colony')==='colony'&&!pawn.visitor&&!pawn.prisoner&&pawn.state!=='dead'){pawn.apparelPolicyId=1;pawn.apparelAutomation=false;pawn.nextApparelCheckAt=w.tick+600+pawn.id%301;}}
+  for(const departure of w.visitors?.departed??[])departure.pawn.age={biologicalTicks:10800000,chronologicalTicks:10800000};
   return world;
 }
 
@@ -131,13 +133,15 @@ export function withoutV90<T>(world:T):T {
   withoutArt(world);
   delete w.apparelWear;delete w.apparelPolicies;delete w.nextApparelPolicyId;
   for(const pawn of w.pawns??[]){
+    delete pawn.age;
+    if(pawn.recreation){delete pawn.recreation.tolerance.cerebral;delete pawn.recreation.bored.cerebral;delete pawn.recreation.tolerance.social;delete pawn.recreation.bored.social;}
     delete pawn.beauty;delete pawn.apparelPolicyId;delete pawn.apparelAutomation;delete pawn.nextApparelCheckAt;
     delete pawn.appearance;
     // A current sleeper may have observed a V103 room during the crossing.
     // Earlier schemas stored neither the observation nor its room memories.
     delete pawn.roomMemories;if(pawn.need?.kind==='sleep')delete pawn.need.roomRest;
   }
-  for(const departure of w.visitors?.departed??[]){delete departure.pawn.beauty;delete departure.pawn.apparelPolicyId;delete departure.pawn.apparelAutomation;delete departure.pawn.nextApparelCheckAt;delete departure.pawn.appearance;}
+  for(const departure of w.visitors?.departed??[]){delete departure.pawn.age;delete departure.pawn.beauty;delete departure.pawn.apparelPolicyId;delete departure.pawn.apparelAutomation;delete departure.pawn.nextApparelCheckAt;delete departure.pawn.appearance;}
   for(const structure of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)]){delete structure.quality;delete structure.flower;}
   for(const pile of [...w.piles??[],...(w.raids?.departed??[]).flatMap((d:any)=>d.items??[]),...(w.visitors?.departed??[]).flatMap((d:any)=>d.items??[])]){if(pile.apparel){delete pile.apparel.material;delete pile.apparel.forced;}if(pile.unfinished){delete pile.unfinished.material;delete pile.unfinished.units;}}
   for(const job of w.jobs??[])delete job.flowerPotId;
@@ -145,7 +149,9 @@ export function withoutV90<T>(world:T):T {
   // Current fixtures include V91 catalogue defaults. A deliberate pre-V91
   // payload must remove those references; production validation still rejects
   // any new item smuggled under an old schema.
-  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>!V91_ITEM_IDS.includes(id));
+  // The helper also builds pre-V120 payloads. Milk was added later and cannot
+  // appear in an old policy, even when the current default policy lists it.
+  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>id!=='milk'&&!V91_ITEM_IDS.includes(id));
   for(const structure of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)])for(const bill of structure.bills??[])for(const id of V91_ITEM_IDS)delete bill.filters[id];
   if(w.spoiled)for(const id of V91_ITEM_IDS)delete w.spoiled[id];
   return world;

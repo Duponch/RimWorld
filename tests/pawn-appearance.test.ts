@@ -30,7 +30,7 @@ describe('identité visuelle V109', () => {
     } finally { random.mockRestore(); }
   });
 
-  it('génère des profils valides, la branche sans biographie Thin/sexuée et aucune barbe d’âge fictif', () => {
+  it('génère des profils valides, la branche sans biographie Thin/sexuée et aucune barbe rétroactive', () => {
     const bodies = new Set<string>(), heads = new Set<string>(), hairs = new Set<string>(), skins = new Set<number>();
     let thin = 0;
     for (let id = 1; id <= 2000; id++) {

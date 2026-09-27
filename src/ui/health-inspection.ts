@@ -34,6 +34,9 @@ export function healthInjuryRows(pawn:Pawn):ReadonlyArray<{part:string;descripti
   return [
     ...health.injuries.map(i=>({partId:i.part,part:BODY_PARTS[i.part].label,description:`${i.scar?.pain!==undefined?'Cicatrice':INJURY_RULES[i.kind].label} · −${(i.severity/HP_UNIT).toFixed(2)} PV${i.tended!==undefined?` · soignée (${Math.round(i.tended/10)} %)` :''}`})),
     ...health.missing.map(m=>({partId:m.part,part:BODY_PARTS[m.part].label,description:`Partie perdue${m.tended?' · plaie soignée':''}`})),
+    ...(health.ageAilments??[]).map(kind=>kind==='bad-back'
+      ?{partId:'spine' as const,part:'Colonne vertébrale',description:'Lumbago'}
+      :{partId:'torso' as const,part:'Torse',description:'Frêle'}),
   ].sort((a,b)=>(order.get(a.partId)??Infinity)-(order.get(b.partId)??Infinity)).map(({part,description})=>({part,description}));
 }
 

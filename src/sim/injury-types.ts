@@ -16,6 +16,7 @@ export interface Injury {
 }
 export interface MissingPart {part:BodyPartId;bornAt:number;tended?:true}
 export interface MedicalRecord {
+  ageAilments?:import('./human-age.ts').HumanAgeAilment[];
   foodPoisoning?:import('./food-poisoning.ts').FoodPoisoningState;
   /** A human systemic illness; absent for historical records and animals. */
   flu?:import('./flu-types.ts').FluState;
@@ -46,6 +47,8 @@ export interface MedicalContext {
   infectionSeed?:number;
   /** Difficulty applies to the owning player faction at acquisition time. */
   infectionChanceFactor?:number;
+  /** Core StatPart_Age for immunity, supplied by the human owner. */
+  ageImmunityFactor?:number;
 }
 /** Caller owns and persists its deterministic PRNG; never Math.random. */
 export type MedicalRandom=()=>number;

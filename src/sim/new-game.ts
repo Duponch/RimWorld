@@ -18,6 +18,7 @@ import { enableRaids } from './raids.ts';
 import { AIR_CONDITIONING_COST,CLOTHING_RESEARCH_COST,COMPLEX_FURNITURE_RESEARCH_COST,STONECUTTING_RESEARCH_COST } from './research.ts';
 import { DEFAULT_SCENARIO,isScenarioId,SCENARIOS,SCENARIO_REVISION,type ScenarioId } from './scenario-definitions.ts';
 import { startingPawn } from './starting-pawns.ts';
+import { crashlandedHumanAge } from './human-age.ts';
 import { initializeCampTraits } from './traits.ts';
 import { adoptEnvironment } from './environment-step.ts';
 import type { Cell,World } from './types.ts';
@@ -69,6 +70,7 @@ function survivalStart(world:World,commerce=false):Cell {
   const {landing,cells}=landingSite(world,stacks);
   for(const [index,name] of ['Ada','Noé','Mina'].entries()) {
     const cell=cells[index]!,pawn=startingPawn(world.nextId++,name,cell.x,cell.z,index,55,world.seed);
+    if(commerce)pawn.age=crashlandedHumanAge(world.seed,pawn.id,pawn.age!);
     world.pawns.push(pawn);
     addMaterial(world,'apparel',1,{type:'apparel',pawnId:pawn.id},'cloth-shirt');
   }

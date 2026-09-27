@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 135 as const;
+export const SCHEMA_VERSION = 138 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -67,6 +67,7 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  age?:import('./human-age.ts').HumanAge;
   appearance?:import('./pawn-appearance.ts').PawnAppearance;
   animalHandling?:import('./domestic-state.ts').AnimalHandlingTask;
   animalCare?:import('./domestic-state.ts').AnimalCareTask;

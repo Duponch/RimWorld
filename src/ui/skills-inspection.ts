@@ -6,6 +6,7 @@ import { cookingSkill,cookingSpeed,butcherySpeed,butcheryEfficiency } from '../s
 import { constructionSpeed, learningFactor, XP_SCALE, xpRequired } from '../sim/skills.ts';
 import { medicalTendSpeed,medicalTendQuality } from '../sim/care-rules.ts';
 import { socialImpact } from '../sim/social-state';
+import { biologicalYears,chronologicalYears } from '../sim/human-age.ts';
 import type { Pawn } from '../sim/types.ts';
 import { SKILL_PASSION_LABELS,setCompactSkillPassion,setSkillPassion } from './skill-passion';
 
@@ -26,6 +27,13 @@ const SKILL_ENTRIES: readonly SkillEntry[] = [
   {skill:'melee',progress:'data-melee-xp'},
   {skill:'social',progress:'data-social-xp'},
 ];
+/** Core displays biological age first and chronological age in parentheses. */
+export function humanAgeText(pawn:Pawn):string {
+  if(!pawn.age)return '';
+  const biological=biologicalYears(pawn.age);
+  const chronological=chronologicalYears(pawn.age);
+  return `Âge : ${biological} ans${biological===chronological?'':` (${chronological} chronologiques)`}`;
+}
 
 function createSkillEntry(entry:SkillEntry):HTMLDetailsElement {
   const details=document.createElement('details');details.className='skill-entry';details.dataset.skillEntry=entry.skill;
@@ -38,11 +46,14 @@ function createSkillEntry(entry:SkillEntry):HTMLDetailsElement {
 
 export function createSkillsInspection(panel:HTMLElement):void {
   const details=document.createElement('details');details.className='skills-inspection';
-  const summary=document.createElement('summary');summary.textContent='Biographie · compétences';details.append(summary,...SKILL_ENTRIES.map(createSkillEntry));
+  const summary=document.createElement('summary');summary.textContent='Biographie · compétences';
+  const age=document.createElement('p');age.className='pawn-age';age.dataset.pawnAge='';
+  details.append(summary,age,...SKILL_ENTRIES.map(createSkillEntry));
   createTraitsInspection(details);panel.append(details);
 }
 export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
   updateTraitsInspection(panel,pawn);
+  const age=panel.querySelector<HTMLElement>('[data-pawn-age]');if(age){age.textContent=humanAgeText(pawn);age.hidden=!age.textContent;}
   const s=pawn.skills.construction,label=panel.querySelector('[data-skill="construction"]');if(!label)return;
   setSkillPassion(label as HTMLElement,`Construction ${s.level}/20`,s.passion);
   const progress=panel.querySelector<HTMLProgressElement>('[data-skill-xp]')!;

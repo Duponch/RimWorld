@@ -42,7 +42,7 @@ export function applyArrival(world:World,command:ArrivalCommand):CommandResult {
   }
   if(world.pawns.length>=world.width*world.height||world.piles.length>=32768||world.nextId>Number.MAX_SAFE_INTEGER-2)return refuse('La carte ne peut plus accueillir cette personne.');
   const entry=arrivalEntry(world,s!.rng);if(!entry)return refuse('Aucune entrée libre et accessible depuis la colonie. La demande reste ouverte.');
-  const pawn=startingPawn(world.nextId,o.name,entry.x,entry.z,o.profile,55,world.seed);
+  const pawn=startingPawn(world.nextId,o.name,entry.x,entry.z,o.profile,55,world.seed,world.tick);
   if(o.traits)pawn.traits=[...o.traits];
   pawn.hunger=75;pawn.rest=80;pawn.foodPolicyId=world.foodPolicies[0]!.id;
   // Clothing crosses the map boundary with its owner; it is an external input,

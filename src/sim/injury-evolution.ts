@@ -26,7 +26,8 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
     [context.hunger,context.rest].some(value=>value!==undefined&&(!Number.isFinite(value)||value<0||value>100))||
     context.restingBonus!==undefined&&typeof context.restingBonus!=='boolean'||
     context.infectionChanceFactor!==undefined&&(!Number.isFinite(context.infectionChanceFactor)||context.infectionChanceFactor<0||context.infectionChanceFactor>1)||
-    context.infectionSeed!==undefined&&(!Number.isInteger(context.infectionSeed)||context.infectionSeed<0||context.infectionSeed>0xffffffff))throw new Error('Invalid medical interval');
+    context.infectionSeed!==undefined&&(!Number.isInteger(context.infectionSeed)||context.infectionSeed<0||context.infectionSeed>0xffffffff)||
+    context.ageImmunityFactor!==undefined&&(!Number.isFinite(context.ageImmunityFactor)||context.ageImmunityFactor<.5||context.ageImmunityFactor>1))throw new Error('Invalid medical interval');
   if(record.death)return;
   const pending=record.injuries.filter(i=>i.infection&&i.infection.dueCore<=(record.tick+ticks)*10).length;
   if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');
