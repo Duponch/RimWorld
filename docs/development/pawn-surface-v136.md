@@ -1,0 +1,9 @@
+# Surface continue des colons — V136
+
+Le lot V135 ne satisfaisait pas la demande : il inclinait les faces de boîtes indépendantes et ajoutait un bassin superposé. Le massif rocheux, lui, calcule un contour partagé et ne produit aucune face interne entre ses cellules. V136 reprend ce principe pour la silhouette animée du colon, sans prétendre que les articulations mobiles puissent former un seul solide rigide.
+
+Le torse et le bassin, qui portent déjà le même os, sont remplacés par **une seule enveloppe extérieure fermée** à cinq anneaux octogonaux. Aucun bouchon ni mur ne subsiste à la taille ; les positions et normales de chaque anneau sont partagées par les bandes voisines. La tête, les bras, les mains, les cuisses, les mollets et le gilet ont des profils facettés au lieu d'une succession de parallélépipèdes. Les épaules et hanches pénètrent sous le tronc ; leurs os distincts continuent de bouger avec les gestes et la marche. La morphologie utilise les mêmes attributs et pivots que les modèles précédents.
+
+La géométrie est **indexée** : les anneaux partagent leurs sommets, et les petits accessoires historiques gardent leurs triangles. Le portrait SVG lit désormais les indices de cette même géométrie. Les sept flux GPU, seize attributs, huit os et l'unique lot humain instancié restent inchangés. Le maillage passe de **2 088 à 2 154 sommets transformés** (+3,16 %) ; l'index contient davantage de triangles pour les contours facettés. Aucun maillage par colon ni calcul CPU par image n'est ajouté. Le coût réel en GPU/ombres exige une mesure comparative sous charge. Les règles de simulation, collisions, sauvegardes et PRNG métier sont inchangés.
+
+Le contrôle de topologie soude les coordonnées de l'enveloppe du tronc, exige une seule composante fermée et refuse une face interne à la taille. Des captures WebGPU debout et accroupi complètent ce test, car une jonction entre os différents peut se rouvrir seulement en pose animée.

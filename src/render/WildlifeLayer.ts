@@ -43,18 +43,21 @@ class SpeciesRig {
       const phase=state.w.add(pose.xz.sub(attribute('aFrom','vec4').xz).length().mul(this.gaitRate));
       If(bone.equal(1),()=>angle.assign(sin(phase).mul(.5).mul(state.x)));
       If(bone.equal(2),()=>angle.assign(sin(phase.add(Math.PI)).mul(.6).mul(state.x)));
-      If(bone.equal(3),()=>{
+      If(bone.greaterThanEqual(3),()=>{
         const attack=sin(this.travelTime.sub(state.w).mul(10).clamp(0,Math.PI)).mul(.9);
         angle.assign(state.x.greaterThan(.5).select(sin(phase).mul(.06),
           state.y.greaterThan(1).select(attack,state.y.mul(sin(this.time.mul(5)).mul(.12).add(.48)))));
         If(state.x.lessThan(.5).and(state.y.lessThan(.5)).and(state.z.lessThan(.5)),()=>{
           angle.assign(sin(this.time.add(state.w)).mul(.03));
         });
+        // The outer shell bends continuously into the head. Existing detail
+        // pieces use bone 3 (full angle); shell vertices encode 4 + weight.
+        If(bone.greaterThanEqual(4),()=>angle.mulAssign(bone.sub(4)));
       });
       const p=positionLocal.sub(pivot),c=cos(angle),s=sin(angle);
       const q=vec3(p.x,p.y.mul(c).sub(p.z.mul(s)),p.z.mul(c).add(p.y.mul(s))).add(pivot).toVar();
       q.y.mulAssign(float(1).sub(min(state.z,1).mul(.5)));q.y.addAssign(sin(phase).abs().mul(.08).mul(state.x));
-      If(state.x.lessThan(.5).and(state.y.lessThan(.5)).and(state.z.lessThan(.5)).and(bone.equal(0)),()=>{
+      If(state.x.lessThan(.5).and(state.y.lessThan(.5)).and(state.z.lessThan(.5)).and(bone.equal(0).or(bone.greaterThanEqual(3))),()=>{
         q.y.addAssign(sin(this.time.add(state.w)).mul(.006));
       });
       const cy=cos(pose.w),sy=sin(pose.w);

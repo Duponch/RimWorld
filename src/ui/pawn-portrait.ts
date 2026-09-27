@@ -25,14 +25,20 @@ function faces(): readonly Face[] {
   const pos = geometry.getAttribute('position'), normal = geometry.getAttribute('normal');
   const color = geometry.getAttribute('color'), bone = geometry.getAttribute('boneId'), dye = geometry.getAttribute('dye');
   const result: Face[] = [];
-  // Each box face is two triangles with vertices (a,b,d) and (b,c,d).
-  // Emit its one actual quad: fewer SVG elements and half the projection work.
-  for (let i = 0; i < pos.count; i += 6) {
-    const points = [0, 1, 4, 2].map(j => [pos.getX(i + j), pos.getY(i + j), pos.getZ(i + j)] as Vertex);
-    const linear = new THREE.Color().setRGB(color.getX(i), color.getY(i), color.getZ(i));
+  // Both the original small box faces and the fused anatomical shell emit
+  // consecutive pairs of triangles for each exterior quad. Resolve their
+  // indices so a shared contour vertex is transformed only once on the GPU.
+  const draw=geometry.index;
+  const at=(i:number)=>draw?draw.getX(i):i;
+  for (let i = 0; i < (draw?.count ?? pos.count); i += 6) {
+    const points = [0, 1, 4, 2].map(j => {
+      const v=at(i+j);return [pos.getX(v), pos.getY(v), pos.getZ(v)] as Vertex;
+    });
+    const first=at(i);
+    const linear = new THREE.Color().setRGB(color.getX(first), color.getY(first), color.getZ(first));
     result.push({ points: points as [Vertex, Vertex, Vertex, Vertex],
-      normal: [normal.getX(i), normal.getY(i), normal.getZ(i)],
-      color: linear.getHex(), bone: bone.getX(i), dye: dye.getX(i) });
+      normal: [normal.getX(first), normal.getY(first), normal.getZ(first)],
+      color: linear.getHex(), bone: bone.getX(first), dye: dye.getX(first) });
   }
   geometry.dispose();
   sourceFaces = result;

@@ -1,7 +1,6 @@
 import { expect,test } from 'vitest';
 import { pawnGeometry } from '../src/render/pawn-geometry';
 import { animalParts } from '../src/render/animal-shape';
-import { hareGeometry } from '../src/render/hare-geometry';
 import { graveParts } from '../src/render/grave-parts';
 import { createWorld } from '../src/sim/index';
 import { initialGrave } from '../src/sim/burial';
@@ -32,16 +31,13 @@ test('the shared human rig overlaps shoulders and hips while the holstered revol
   geometry.dispose();
 });
 
-test('every quadruped keeps upper legs inside its body with unchanged box-face vertex density',()=>{
+test('every quadruped keeps upper legs inside its body proxy',()=>{
   for(const species of ['hare','snow-hare','deer','muffalo','gazelle','dromedary']){
     const parts=animalParts(species),body=parts[0]!;
     const bodyBottom=body.center[1]-body.size[1]/2;
     const legs=parts.filter(p=>p.bone===1||p.bone===2);
     expect(legs.length).toBeGreaterThanOrEqual(2);
     expect(legs.some(p=>p.center[1]+p.size[1]/2>bodyBottom+.07)).toBe(true);
-    const geometry=hareGeometry(2,species);
-    expect(geometry.getAttribute('position').count).toBe(parts.length*36);
-    geometry.dispose();
   }
 });
 

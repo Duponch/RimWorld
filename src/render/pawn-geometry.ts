@@ -26,9 +26,10 @@ export const PAWN_EYE_CROSS = 62;
 export function pawnGeometry(): THREE.InstancedBufferGeometry {
   const positions: number[] = [], normals: number[] = [], colors: number[] = [];
   const bones: number[] = [], pivots: number[] = [], dyes: number[] = [];
-  // Taper the six existing box faces instead of subdividing them. The shoulder,
-  // waist and joint silhouettes read as one body while the vertex/buffer count
-  // stays identical to the previous rigid cuboids.
+  const indices:number[]=[];
+  // Small accessories retain their hard-edged shapes. The anatomical body is
+  // authored as continuous exterior shells below, rather than overlapping
+  // boxes whose internal caps remain visible around joints.
   const addPart = (size: number[], center: number[], bone: number, pivot: number[], color: number, dye = 0, roll = 0,
     taper?: readonly [topX:number,bottomX:number,topZ:number,bottomZ:number]) => {
     const box = new THREE.BoxGeometry(size[0], size[1], size[2]).toNonIndexed();
@@ -44,35 +45,101 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
     if (roll) box.rotateZ(roll);
     const pos = box.getAttribute('position'), normal = box.getAttribute('normal');
     const col = new THREE.Color(color);
+    const base=bones.length;
     for (let i = 0; i < pos.count; i++) {
       positions.push(pos.getX(i) + center[0], pos.getY(i) + center[1], pos.getZ(i) + center[2]);
       normals.push(normal.getX(i), normal.getY(i), normal.getZ(i));
       colors.push(col.r, col.g, col.b);
       bones.push(bone); pivots.push(...pivot); dyes.push(dye);
+      indices.push(base+i);
     }
     box.dispose();
   };
-  addPart([0.35, 0.43, 0.22], [0, 0.82, 0], 0, [0, 0.61, 0], 0xffffff, 1,0,[1.08,.94,1.04,.98]);
-  // This low pelvis overlaps both the jacket hem and the moving upper legs.
-  // In a crouch it bridges the forward torso to the planted thighs.
-  addPart([.29,.16,.25],[0,.61,.035],0,[0,.61,0],0xffffff,1,0,[.99,.89,1.07,.96]);
-  addPart([0.3, 0.3, 0.28], [0, 1.19, 0.01], 1, [0, 1.04, 0], 0xe2b899,2,0,[1,.91,1,.94]);
+  type Ring = { y:number; x:number; z:number; halfX:number; halfZ:number; corner:number };
+  const addShell = (rings:readonly Ring[],bone:number,pivot:readonly [number,number,number],color:number,dye=0) => {
+    const tint=new THREE.Color(color),sides=8;
+    const contour=(ring:Ring,i:number):readonly [number,number,number] => {
+      const {x,z,halfX:a,halfZ:b,corner:c,y}=ring;
+      switch(i%sides) {
+        case 0:return [x-a+c,y,z-b];case 1:return [x+a-c,y,z-b];
+        case 2:return [x+a,y,z-b+c];case 3:return [x+a,y,z+b-c];
+        case 4:return [x+a-c,y,z+b];case 5:return [x-a+c,y,z+b];
+        case 6:return [x-a,y,z+b-c];default:return [x-a,y,z-b+c];
+      }
+    };
+    const vertex=(v:readonly number[],n:THREE.Vector3):number=>{
+      const index=bones.length;
+      positions.push(v[0]!,v[1]!,v[2]!);normals.push(n.x,n.y,n.z);
+      colors.push(tint.r,tint.g,tint.b);bones.push(bone);pivots.push(...pivot);dyes.push(dye);
+      return index;
+    };
+    const points=rings.map(r=>Array.from({length:sides},(_,i)=>contour(r,i)));
+    // The same contour points and averaged normals serve both adjoining bands.
+    // This removes the waist's lighting seam without flattening all normals to
+    // (0,1,0) as the rock surface does.
+    const sideNormals=points.map((row,j)=>row.map((p,i)=>{
+      const below=points[Math.max(0,j-1)]![i]!,above=points[Math.min(points.length-1,j+1)]![i]!;
+      const left=row[(i+sides-1)%sides]!,right=row[(i+1)%sides]!;
+      const vertical=new THREE.Vector3(above[0]-below[0],above[1]-below[1],above[2]-below[2]);
+      const around=new THREE.Vector3(right[0]-left[0],right[1]-left[1],right[2]-left[2]);
+      return vertical.cross(around).normalize();
+    }));
+    const sideIndex=points.map((row,j)=>row.map((p,i)=>vertex(p,sideNormals[j]![i]!)));
+    for(let j=0;j<rings.length-1;j++)for(let i=0;i<sides;i++){
+      const next=(i+1)%sides;
+      const a=sideIndex[j]![i]!,b=sideIndex[j]![next]!,c=sideIndex[j+1]![next]!,d=sideIndex[j+1]![i]!;
+      // Exterior only: no face is emitted at any intermediate ring.
+      indices.push(a,d,b,d,c,b);
+    }
+    const bottom=rings[0]!,top=rings[rings.length-1]!;
+    const down=new THREE.Vector3(0,-1,0),up=new THREE.Vector3(0,1,0);
+    const bc=vertex([bottom.x,bottom.y,bottom.z],down),tc=vertex([top.x,top.y,top.z],up);
+    const bCap=points[0]!.map(p=>vertex(p,down));
+    const tCap=points[points.length-1]!.map(p=>vertex(p,up));
+    for(let i=0;i<sides;i+=2){
+      const a=bCap[i]!,b=bCap[i+1]!,c=bCap[(i+2)%sides]!;
+      indices.push(bc,a,c,a,b,c);
+      const ta=tCap[i]!,tb=tCap[i+1]!,tNext=tCap[(i+2)%sides]!;
+      indices.push(tc,tNext,ta,tNext,tb,ta);
+    }
+  };
+  const ring=(y:number,x:number,z:number,halfX:number,halfZ:number,corner:number):Ring=>({y,x,z,halfX,halfZ,corner});
+  // A single closed jacket/pelvis envelope: the waist is just another contour
+  // ring. It has no internal wall or second cap to expose when crouching.
+  addShell([
+    ring(.51,0,.035,.135,.112,.022),ring(.64,0,.025,.151,.125,.027),
+    ring(.78,0,0,.158,.117,.026),ring(.965,0,0,.198,.133,.035),
+    ring(1.035,0,0,.147,.105,.032),
+  ],0,[0,.61,0],0xffffff,1);
+  addShell([
+    ring(1.04,0,.01,.112,.105,.021),ring(1.105,0,.01,.142,.13,.029),
+    ring(1.295,0,.01,.151,.139,.031),ring(1.34,0,.01,.128,.118,.026),
+  ],1,[0,1.04,0],0xe2b899,2);
   HAIR_PARTS.forEach((p,i)=>addPart([...p.size],[...p.center],1,[0,1.04,0],0xffffff,100+i));
   BEARD_PARTS.forEach((p,i)=>addPart([...p.size],[...p.center],1,[0,1.04,0],0xffffff,200+i));
   for (const side of [-1, 1]) {
     const arm = side < 0 ? 2 : 3, leg = side < 0 ? 4 : 5, calf = side < 0 ? 6 : 7;
-    addPart([0.12, 0.31, 0.15], [side * 0.225, 0.865, 0], arm, [side * 0.23, 1.01, 0], 0xffffff, 1,0,[1.10,.87,1.04,.94]);
-    addPart([0.115, 0.12, 0.14], [side * 0.23, 0.65, 0], arm, [side * 0.23, 1.01, 0], 0xe2b899,2);
-    addPart([.20,.30,.255],[side*.105,.50,0],leg,[side*.105,.61,0],APPAREL['cloth-tribalwear'].color,-3,0,[1.08,.91,1.03,.98]);
-    addPart([0.135, 0.24, 0.17], [side * 0.105, 0.515, 0], leg, [side * 0.105, 0.61, 0], 0x495052,0,0,[1.10,.87,1.03,.95]);
-    addPart([0.13, 0.235, 0.16], [side * 0.105, 0.2825, 0], calf, [side * 0.105, 0.61, 0], 0x495052);
+    const shoulder=side*.226,hip=side*.105;
+    addShell([
+      ring(.70,side*.23,0,.052,.064,.014),ring(.79,shoulder,0,.059,.071,.017),
+      ring(.94,shoulder,0,.067,.08,.019),ring(1.025,side*.219,0,.075,.086,.021),
+    ],arm,[side*.23,1.01,0],0xffffff,1);
+    addShell([ring(.59,side*.23,0,.051,.061,.012),ring(.71,side*.23,0,.057,.068,.014)],
+      arm,[side*.23,1.01,0],0xe2b899,2);
+    addShell([ring(.35,hip,0,.086,.113,.019),ring(.50,hip,0,.103,.128,.025),
+      ring(.67,hip,0,.103,.132,.026)],leg,[hip,.61,0],APPAREL['cloth-tribalwear'].color,-3);
+    addShell([ring(.39,hip,0,.060,.075,.014),ring(.50,hip,0,.067,.082,.017),
+      ring(.655,hip,0,.076,.089,.018)],leg,[hip,.61,0],0x495052);
+    addShell([ring(.16,hip,0,.061,.074,.013),ring(.28,hip,0,.067,.081,.016),
+      ring(.405,hip,0,.071,.084,.017)],calf,[hip,.61,0],0x495052);
     addPart([0.145, 0.12, 0.23], [side * 0.105, 0.11, 0.03], calf, [side * 0.105, 0.61, 0], 0x443e37);
     addPart([.035,.035,.014],[side*.07,1.2,.157],1,[0,1.04,0],0x433e39,PAWN_EYE_OPEN);
     addPart([.068,.016,.016],[side*.07,1.2,.159],1,[0,1.04,0],0x433e39,PAWN_EYE_CLOSED);
     for(const [index,angle] of [-Math.PI/4,Math.PI/4].entries())
       addPart([.068,.015,.016],[side*.07,1.2,.160+index*.002],1,[0,1.04,0],0x433e39,PAWN_EYE_CROSS,angle);
   }
-  addPart([.37,.34,.26],[0,.85,0],0,[0,.61,0],APPAREL['flak-vest'].color,-2);
+  addShell([ring(.68,0,0,.165,.13,.029),ring(.83,0,0,.191,.148,.034),
+    ring(1.015,0,0,.205,.148,.039)],0,[0,.61,0],APPAREL['flak-vest'].color,-2);
   addPart([.12,.18,.025],[0,.86,.145],0,[0,.61,0],0x404c44,-2);
   // Resident parka hood; its visibility follows the outfit attribute.
   addPart([.34,.34,.14],[0,1.17,-.12],1,[0,1.04,0],0xffffff,PARKA_HOOD_DYE);
@@ -100,6 +167,7 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
   geometry.setAttribute('boneId', new THREE.InterleavedBufferAttribute(vertices, 1, 9));
   geometry.setAttribute('bindPivot', new THREE.InterleavedBufferAttribute(vertices, 3, 10));
   geometry.setAttribute('dye', new THREE.InterleavedBufferAttribute(vertices, 1, 13));
+  geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indices),1));
   geometry.instanceCount = 0;
   return geometry;
 }
