@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import {
   Fn, float, hash, instanceIndex, positionLocal, sin, smoothstep,
-  texture, time, transformNormalToView, uint, uniform, uv, varyingProperty,
+  texture, transformNormalToView, uint, uniform, uv, varyingProperty,
   vec2, vec3,
 } from 'three/tsl';
 import type { Terrain, World } from '../sim/types';
@@ -125,6 +125,9 @@ export class GpuGroundGrassLayer {
   private readonly bandLimits = uniform(new THREE.Vector4());
   private readonly zoomVisibility = uniform(1);
   private readonly dimensions = uniform(new THREE.Vector2(1, 1));
+  private readonly windTick = uniform(0);
+  private readonly windStrength = uniform(0);
+  private readonly windDirection = uniform(new THREE.Vector2(1,0));
   private previousTiles: World['tiles'] | undefined;
   private previousStructures: World['structures'] | undefined;
   private previousResources: World['resources'] | undefined;
@@ -195,13 +198,13 @@ export class GpuGroundGrassLayer {
       const height = hash(key.add(uint(43))).mul(.17).add(.21).mul(coverage);
       const width = hash(key.add(uint(59))).mul(.45).add(.76).mul(coverage);
       const bladeT = uv().y;
-      const sway = sin(time.mul(1.7).add(bx.mul(.31)).add(bz.mul(.23)).add(yaw))
-        .mul(.026).mul(bladeT.mul(bladeT));
+      const sway = sin(this.windTick.mul(2*Math.PI/24).add(bx.mul(.31)).add(bz.mul(.23)).add(yaw))
+        .mul(this.windStrength).mul(.045).mul(bladeT.mul(bladeT));
       const side = positionLocal.x.mul(width), lean = positionLocal.z.mul(width);
       return vec3(
-        bx.add(side.mul(c)).add(lean.mul(s)).add(sway),
+        bx.add(side.mul(c)).add(lean.mul(s)).add(this.windDirection.x.mul(sway)),
         positionLocal.y.mul(height).add(.021),
-        bz.add(lean.mul(c)).sub(side.mul(s)).add(sway.mul(.35)),
+        bz.add(lean.mul(c)).sub(side.mul(s)).add(this.windDirection.y.mul(sway)),
       );
     })();
     // Match TerrainLayer's albedo and vertical normal exactly. As in
@@ -216,6 +219,13 @@ export class GpuGroundGrassLayer {
     this.mesh.receiveShadow = true;
     this.mesh.visible = false;
   }
+
+  setWind(strength:number,directionX:number,directionZ:number):void {
+    this.windStrength.value=Number.isFinite(strength)?Math.max(0,Math.min(2,strength)):0;
+    const length=Math.hypot(directionX,directionZ);
+    if(length>0&&Number.isFinite(length))this.windDirection.value.set(directionX/length,directionZ/length);
+  }
+  presentWind(tick:number):void {this.windTick.value=((tick%7200)+7200)%7200;}
 
   /** Cheap on ordinary snapshots. A changed tiles/structures collection is
    * checked against the previous pixels; health/damage-only edits do not upload. */

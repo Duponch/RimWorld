@@ -5,6 +5,7 @@ import { stoneColor } from './stone-palette';
 import { harvestable } from '../sim/plants';
 import { workProgress } from '../sim/work-progress';
 import * as THREE from 'three/webgpu';
+import { Fn, attribute, positionLocal, sin, uniform, vec3 } from 'three/tsl';
 import { TICKS_PER_SECOND, type World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { clearGroup } from './primitives';
@@ -70,7 +71,7 @@ function resizeResources(group:THREE.Group,resources:Map<number,World['resources
     if(touched){
       position.needsUpdate=true;mesh.geometry.computeBoundingSphere();
       if(data.ranges.some(range=>resources.get(rangeResourceId(range.id))?.kind==='tree')&&mesh.geometry.boundingSphere)
-        mesh.geometry.boundingSphere.radius+=1.5;
+        mesh.geometry.boundingSphere.radius+=3;
     }
   }
   for(const id of changed)currentSizes.set(id,nextSizes.get(id)!);
@@ -89,22 +90,54 @@ export class ResourceLayer {
   private readonly treeCells=new Map<number,number>();
   private foliageVisible = true;
   private texturesEnabled = true;
+  private readonly windTick=uniform(0);
+  private readonly windStrength=uniform(0);
+  private readonly windDirection=uniform(new THREE.Vector2(1,0));
+  private readonly windPlain:THREE.MeshStandardNodeMaterial;
+  private readonly windTextured:THREE.MeshStandardNodeMaterial;
   private readonly growing = new Map<number,World['resources'][number]>();
   updateGrowth(world: World): void {
     for(const plant of this.growing.values())if(harvestable(world,plant)){this.update(world,false);break;}
   }
-  constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.Material, private readonly texturedMaterial: THREE.Material=staticMaterial) {}
+  constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.Material, private readonly texturedMaterial: THREE.Material=staticMaterial) {
+    const windPosition=Fn(()=>{
+      const root=attribute('windRoot','vec3');
+      const height=positionLocal.y.div(5).clamp(0,1);
+      const wave=sin(this.windTick.mul(2*Math.PI/90).add(root.x.mul(.47)).add(root.y.mul(.31)));
+      const bend=height.mul(height).mul(root.z).mul(this.windStrength).mul(wave.mul(.29).add(.40));
+      const leaves=root.z.greaterThan(.8).select(1,0);
+      const flutter=sin(this.windTick.mul(2*Math.PI/30).add(positionLocal.x.mul(1.3)).add(positionLocal.z.mul(1.7)))
+        .mul(leaves).mul(height).mul(this.windStrength).mul(.08);
+      return positionLocal.add(vec3(
+        this.windDirection.x.mul(bend).sub(this.windDirection.y.mul(flutter)),
+        0,
+        this.windDirection.y.mul(bend).add(this.windDirection.x.mul(flutter)),
+      ));
+    })();
+    this.windPlain=(staticMaterial as THREE.MeshStandardNodeMaterial).clone();
+    this.windTextured=(texturedMaterial as THREE.MeshStandardNodeMaterial).clone();
+    this.windPlain.positionNode=this.windTextured.positionNode=windPosition;
+    this.windPlain.userData.rendererOwned=this.windTextured.userData.rendererOwned=true;
+  }
+  /** One uniform update for the whole forest; no vertex buffer is rewritten. */
+  setWind(strength:number,directionX:number,directionZ:number):void {
+    this.windStrength.value=Number.isFinite(strength)?Math.max(0,Math.min(2,strength)):0;
+    const length=Math.hypot(directionX,directionZ);
+    if(length>0&&Number.isFinite(length))this.windDirection.value.set(directionX/length,directionZ/length);
+  }
+  presentWind(tick:number):void {this.windTick.value=((tick%7200)+7200)%7200;}
   setTexturesEnabled(enabled:boolean):void {
     if(this.texturesEnabled===enabled)return;
     this.texturesEnabled=enabled;
-    const chosen=enabled?this.texturedMaterial:this.staticMaterial;
-    this.group.traverse(object=>{if(object instanceof THREE.Mesh)object.material=chosen;});
+    this.group.traverse(object=>{if(object instanceof THREE.Mesh)object.material=object.geometry.hasAttribute('windRoot')
+      ?enabled?this.windTextured:this.windPlain:enabled?this.texturedMaterial:this.staticMaterial;});
   }
   setFoliageVisible(visible: boolean): void {
     this.foliageVisible = visible;
     this.group.traverse(object => { if (object.name === 'tree-canopy') object.visible = visible; });
   }
   clear(): void { clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); this.treeCells.clear(); }
+  dispose():void {this.clear();this.windPlain.dispose();this.windTextured.dispose();}
 
   /** Only a confirmed increase in a reserved chopping job can produce a hit.
    * The contact phase is the forward reach of the existing 11 rad/s arm pose. */
@@ -191,6 +224,12 @@ export class ResourceLayer {
     }
   }
   update(world: World, newMap: boolean, changes?: ReadonlyMap<number,NaturalPresentationChange>): void {
+    // ColonyRenderer configures the shared materials after constructing this
+    // layer. Copy its lighting node before the first tree shader is compiled.
+    const plainOutput=(this.staticMaterial as THREE.MeshStandardNodeMaterial).outputNode;
+    const texturedOutput=(this.texturedMaterial as THREE.MeshStandardNodeMaterial).outputNode;
+    if(this.windPlain.outputNode!==plainOutput)this.windPlain.outputNode=plainOutput;
+    if(this.windTextured.outputNode!==texturedOutput)this.windTextured.outputNode=texturedOutput;
     if (newMap) { clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); }
     this.treeCells.clear();
     for(const resource of world.resources)if(resource.kind==='tree')this.treeCells.set(resource.z*world.width+resource.x,resource.id);
@@ -293,7 +332,8 @@ export class ResourceLayer {
       const canopy = mergedInstances(group, [{ geometry: world.site?new THREE.IcosahedronGeometry(1,0):new THREE.ConeGeometry(1, 1, 6), items: [...crowns, ...upperCrowns] },{geometry:new THREE.ConeGeometry(1,1,6),items:cones}], this.texturesEnabled?this.texturedMaterial:this.staticMaterial,true,true);
       if (canopy) { canopy.name = 'tree-canopy'; canopy.visible = this.foliageVisible; }
       retainResources(group, new Set(chunk.flatMap(r => visibleResourceKeys(world,r))));
-      const treeIds=chunk.filter(r=>r.kind==='tree').map(r=>r.id),treeSet=new Set(treeIds);
+      const trees=new Map(chunk.filter(r=>r.kind==='tree').map(r=>[r.id,r] as const));
+      const treeIds=[...trees.keys()],treeSet=new Set(treeIds);
       for(const object of group.children){
         const mesh=object as THREE.Mesh,source=mesh.userData.resourceRanges as ResourceRangeData|undefined;
         if(!source)continue;
@@ -304,8 +344,20 @@ export class ResourceLayer {
           const id=rangeResourceId(range.id),parts=this.treeParts.get(id)??[];
           parts.push({mesh,range,positions:source.originalPositions,normals,upload:{start:range.vertexStart*3,count:range.vertexCount*3}});this.treeParts.set(id,parts);
         }
+        if(!ranges.some(range=>trees.has(rangeResourceId(range.id))))continue;
         // Tilted crowns remain inside the conservative camera/shadow bounds.
-        if(mesh.geometry.boundingSphere)mesh.geometry.boundingSphere.radius+=1.5;
+        if(mesh.geometry.boundingSphere)mesh.geometry.boundingSphere.radius+=3;
+        const windRoot=new Float32Array((mesh.geometry.getAttribute('position') as THREE.BufferAttribute).count*3);
+        for(const range of ranges){
+          const resource=trees.get(rangeResourceId(range.id));
+          if(!resource)continue;
+          const weight=resource.species==='saguaro'?.14:mesh===canopy?1:.62;
+          for(let vertex=range.vertexStart;vertex<range.vertexStart+range.vertexCount;vertex++){
+            const offset=vertex*3;windRoot[offset]=resource.x;windRoot[offset+1]=resource.z;windRoot[offset+2]=weight;
+          }
+        }
+        mesh.geometry.setAttribute('windRoot',new THREE.BufferAttribute(windRoot,3));
+        mesh.material=this.texturesEnabled?this.windTextured:this.windPlain;
       }
       for(const id of treeIds){const hit=this.treeHits.get(id);if(hit)hit.angle=NaN;}
       this.chunks.set(key,{signature,group,identities:new Map(chunk.map(r=>[r.id,resourceIdentity(r)])),originalSizes:new Map(sizes),currentSizes:new Map(sizes),treeIds});

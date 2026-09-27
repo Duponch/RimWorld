@@ -7,7 +7,7 @@ import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { instancedBoxPatternUv } from './texture-variation';
 
 const object = new THREE.Object3D(), color = new THREE.Color();
-type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'border';
+type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'storage-home' | 'border';
 
 /** Shared pipelines and authored shape; changing quantity never creates a material.
  * Each logical batch retains its GPU allocation, including when emptied.
@@ -20,8 +20,11 @@ export class BoxBatches {
   private readonly texturedSolid = material(0xffffff);
   private readonly materials: Record<Style, THREE.NodeMaterial> = {
     solid: material(0xffffff),
-    storage: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, depthWrite: false }),
-    border: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.76, depthWrite: false }),
+    // Core's ZoneColorUtility uses 0.09 alpha for ground zones. The edit-only
+    // home area keeps its former stronger tint on a separate resident batch.
+    storage: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.09, depthWrite: false }),
+    'storage-home': new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, depthWrite: false }),
+    border: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, depthWrite: false }),
     overlay: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.48, depthWrite: false }),
     wire: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.65, depthWrite: false }),
   };

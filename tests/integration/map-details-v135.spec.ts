@@ -45,6 +45,19 @@ test('V135: avatar stays in the lower summary; Alt and close zoom reveal physica
       for(let i=3;i<data.length;i+=4)if(data[i]!==0)return true;
       return false;
     })).toBe(true);
+    await page.locator(`[data-pawn="${world.pawns[0]!.id}"]`).click();await pawnTab(page,'needs');
+    await expect(page.locator('[data-colonist-panel="needs"] #mood-gauge')).toBeVisible();
+    await expect(page.locator('#mood-meter')).toHaveCount(0);
+    const panelIsAboveLabels=await page.evaluate(()=>{
+      const canvas=document.querySelector<HTMLCanvasElement>('.map-labels-overlay')!;
+      const inspector=document.querySelector<HTMLElement>('#inspector')!;
+      const bounds=inspector.getBoundingClientRect(),oldPointerEvents=canvas.style.pointerEvents;
+      canvas.style.pointerEvents='auto';
+      const top=document.elementFromPoint(bounds.left+bounds.width/2,bounds.top+bounds.height/2);
+      canvas.style.pointerEvents=oldPointerEvents;
+      return top===inspector||inspector.contains(top);
+    });
+    expect(panelIsAboveLabels).toBe(true);
     await page.screenshot({path:test.info().outputPath('map-details-v135.png')});
     expect(errors).toEqual([]);
   } finally {await browser.close();}

@@ -38,7 +38,9 @@ export class MapLabelsOverlay {
     this.context = this.canvas.getContext('2d', { alpha: true })!;
     // Keep the WebGPU canvas as the sole #viewport canvas; the existing input
     // and accessibility helpers intentionally target that single surface.
-    (host.parentElement ?? host).append(this.canvas);
+    // Keep the overlay next to the viewport but before the interface panels
+    // in paint order. It must stay outside #viewport: WebGPU is its sole canvas.
+    host.after(this.canvas);
   }
 
   private index(world: World): void {
@@ -67,7 +69,7 @@ export class MapLabelsOverlay {
   draw(world: World | null | undefined, camera: OrthographicCamera | PerspectiveCamera, cellPixels: number, width: number, height: number): void {
     // RimWorld shows item overlays at its closest detail levels. At other
     // scales the early exit avoids the pile scan and all canvas operations.
-    if (!world || cellPixels < 34 || !width || !height) {
+    if (!world || cellPixels < 96 || !width || !height) {
       if (this.visible) { this.canvas.hidden = true; this.visible = false; }
       return;
     }

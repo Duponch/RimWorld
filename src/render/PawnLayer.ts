@@ -35,6 +35,7 @@ import { PAWN_MODEL_SCALE, WORLD_SCALE } from '../world/scale';
 import { clearGroup, material } from './primitives';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { pawnSurfaceShade } from './actor-surface';
+import { CargoHandoffs,type CargoAnchor } from './cargo-handoff';
 type VisualPawn = { from: THREE.Vector4; to: THREE.Vector4 };
 type ApproachTransition = { fromX:number; fromZ:number; toX:number; toZ:number; start:number; baseX:number; baseZ:number };
 type CrouchTransition = { start:number; from:number; to:number };
@@ -90,6 +91,12 @@ function approachAt(transition:ApproachTransition,tick:number):{x:number;z:numbe
   return {x:THREE.MathUtils.lerp(transition.fromX,transition.toX,alpha),z:THREE.MathUtils.lerp(transition.fromZ,transition.toZ,alpha)};
 }
 const scratchColor = new THREE.Color();
+function cargoAppearance(load:MaterialPile|undefined):readonly [number,number] {
+  if(!load)return [0,0];
+  const kind=BIOME_CARGO[load.item]??(load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:isAnimalMeat(load.item)?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2);
+  const size=load.kind==='corpse'||load.kind==='unfinished'||load.kind==='weapon'||load.kind==='apparel'?1:Math.min(1,load.quantity/CARRY_CAPACITY);
+  return [kind,size];
+}
 /** Packed into the existing appearance stream; no extra vertex buffer. */
 export function humanCorpseVisualStage(world:World,pawn:Pawn,body?:MaterialPile):0|1|2 {
   if(pawn.state!=='dead')return 0;
@@ -141,6 +148,7 @@ export class PawnLayer {
   private texturesEnabled = true;
   get feedbackSource():THREE.InstancedBufferGeometry|undefined {return this.pawnMesh?.geometry as THREE.InstancedBufferGeometry|undefined;}
   private cargoMesh: THREE.Mesh | null = null;
+  private partialCargoMesh: THREE.Mesh | null = null;
   private fireMesh: THREE.Mesh | null = null;
   private readonly targetPoses = new Map<number,THREE.Vector4>();
   private readonly pawnIndices = new Map<number,number>();
@@ -152,6 +160,12 @@ export class PawnLayer {
   private readonly crouchTransitions = new Map<number,CrouchTransition>();
   private readonly shownPoses = new Map<number,number>();
   private readonly gait = new GaitPhaseTracker();
+  private readonly handoffs = new CargoHandoffs();
+  private carryOrigin=0;
+  private travelOrigin=0;
+  readonly cargoTime=uniform(0);
+  hiddenPileQuantity(pileId:number):number {return this.handoffs.hiddenQuantity(pileId);}
+  hiddenPileQuantities():ReadonlyMap<number,number> {return this.handoffs.hiddenQuantities();}
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
   private rescuePairs:readonly (readonly [number,number])[]=[];
   constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void) {}
@@ -189,7 +203,9 @@ export class PawnLayer {
     const appearance=new THREE.InstancedInterleavedBuffer(new Float32Array(count*17),17).setUsage(THREE.StaticDrawUsage);
     for(const [name,size,offset] of [['aTint',3,0],['aEquipment',4,3],['aSkin',3,7],['aHair',3,10],['aShape',4,13]] as const)
       geometry.setAttribute(name,new THREE.InterleavedBufferAttribute(appearance,size,offset));
-    geometry.setAttribute('aCargo', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
+    // Z/W carry a short, presentation-only handoff interval. X/Y retain the
+    // existing kind and load for HUD probes and the pawn's own geometry.
+    geometry.setAttribute('aCargo', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     for (const name of ['aFrom', 'aTo', 'aMotion', 'aCargo', 'aTravel']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.StaticDrawUsage);
     const mat = material(0xffffff);
     this.configure?.(mat);
@@ -228,7 +244,7 @@ export class PawnLayer {
           If(motion.y.greaterThan(0).and(motion.z.lessThan(10.5)),()=>{
             angle.addAssign(sin(this.time.mul(12).add(motion.w)).mul(0.35).sub(0.8));
           });
-          If(attribute('aCargo', 'vec2').x.abs().greaterThan(0.5), () => {
+          If(attribute('aCargo', 'vec4').x.abs().greaterThan(0.5), () => {
             angle.assign(float(-0.9).add(sin(gaitPhase).mul(walking).mul(0.06)));
             If(motion.z.greaterThan(1.5), () => { angle.assign(float(-1.3).add(sin(this.time.mul(4).add(motion.w)).mul(0.22))); });
           });
@@ -450,12 +466,14 @@ export class PawnLayer {
     this.group.add(mesh);
     const cargo = cargoGeometry();
     for (const name of ['aFrom', 'aTo', 'aCargo', 'aMotion', 'aTravel']) cargo.setAttribute(name, geometry.getAttribute(name));
+    cargo.setAttribute('aHandoffFrom',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.DynamicDrawUsage));
+    cargo.setAttribute('aHandoffTo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.DynamicDrawUsage));
     const cargoMat = material(0xffffff);
     this.configure?.(cargoMat);
     cargoMat.colorNode = attribute('color', 'vec3');
     cargoMat.positionNode = Fn(() => {
       const pose = pawnPresentationPose(this);
-      const load = attribute('aCargo', 'vec2');
+      const load = attribute('aCargo', 'vec4');
       const scale = float(0).toVar();
       If(attribute('cargoKind', 'float').equal(load.x), () => { scale.assign(load.y.mul(0.25).add(0.75)); });
       const height = float(WORLD_SCALE.carriedHeight).toVar();
@@ -465,7 +483,22 @@ export class PawnLayer {
       If(attribute('aMotion','vec4').z.equal(6),()=>{height.assign(1.3);});
       const local = positionLocal.mul(scale).add(vec3(0, height, WORLD_SCALE.carriedForward));
       const cy = cos(pose.w), sy = sin(pose.w);
-      return vec3(local.x.mul(cy).add(local.z.mul(sy)), local.y, local.z.mul(cy).sub(local.x.mul(sy))).add(pose.xyz);
+      const carried=vec3(local.x.mul(cy).add(local.z.mul(sy)), local.y, local.z.mul(cy).sub(local.x.mul(sy))).add(pose.xyz);
+      const result=carried.toVar();
+      const start=attribute('aHandoffFrom','vec4'),end=attribute('aHandoffTo','vec4');
+      If(load.w.abs().greaterThan(.0001),()=>{
+        const progress=this.cargoTime.sub(load.z).div(load.w.abs().sub(load.z).max(.001)).clamp(0,1);
+        const smooth=progress.mul(progress).mul(float(3).sub(progress.mul(2)));
+        const grounded=positionLocal.mul(scale.greaterThan(0).select(end.w,float(0)));
+        If(load.w.greaterThan(0),()=>{
+          result.assign(mix(start.xyz.add(grounded),carried,smooth));
+        }).Else(()=>{
+          const cx=cos(start.w),sx=sin(start.w),part=positionLocal.mul(scale);
+          const released=vec3(part.x.mul(cx).add(part.z.mul(sx)),part.y,part.z.mul(cx).sub(part.x.mul(sx))).add(start.xyz);
+          result.assign(mix(released,end.xyz.add(grounded),smooth));
+        });
+      });
+      return result;
     })();
     this.cargoMesh = new THREE.Mesh(cargo, cargoMat);
     this.cargoMesh.name = 'Carried materials — shared GPU pawn poses';
@@ -475,11 +508,113 @@ export class PawnLayer {
     this.group.add(this.cargoMesh);
     this.fireMesh=attachedFireMesh(geometry,this);this.group.add(this.fireMesh);
     this.selectionMesh=pawnSelectionMesh(geometry,this);this.group.add(this.selectionMesh);
+    const partial=cargoGeometry();
+    partial.setAttribute('aTransferFrom',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.DynamicDrawUsage));
+    partial.setAttribute('aTransferTo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.DynamicDrawUsage));
+    partial.setAttribute('aTransferCargo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.DynamicDrawUsage));
+    const partialMat=material(0xffffff);this.configure?.(partialMat);
+    partialMat.colorNode=attribute('color','vec3');
+    partialMat.positionNode=Fn(()=>{
+      const from=attribute('aTransferFrom','vec4'),to=attribute('aTransferTo','vec4'),load=attribute('aTransferCargo','vec4');
+      const visible=attribute('cargoKind','float').equal(load.x);
+      const scale=visible.select(load.y.mul(.25).add(.75),float(0));
+      const part=positionLocal.mul(scale),c=cos(from.w),s=sin(from.w);
+      const carried=vec3(part.x.mul(c).add(part.z.mul(s)),part.y,part.z.mul(c).sub(part.x.mul(s))).add(from.xyz);
+      const landed=positionLocal.mul(visible.select(to.w,float(0))).add(to.xyz);
+      const t=this.cargoTime.sub(load.z).div(load.w.sub(load.z).max(.001)).clamp(0,1);
+      const smooth=t.mul(t).mul(float(3).sub(t.mul(2)));
+      return mix(carried,landed,smooth);
+    })();
+    this.partialCargoMesh=new THREE.Mesh(partial,partialMat);
+    this.partialCargoMesh.name='Partial material releases — resident transfer batch';
+    this.partialCargoMesh.frustumCulled=false;this.partialCargoMesh.castShadow=true;this.partialCargoMesh.receiveShadow=true;
+    this.group.add(this.partialCargoMesh);
+  }
+
+  private syncPartialCargo():void {
+    if(!this.partialCargoMesh)return;
+    const geometry=this.partialCargoMesh.geometry as THREE.InstancedBufferGeometry;
+    const from=geometry.getAttribute('aTransferFrom') as THREE.InstancedBufferAttribute;
+    const to=geometry.getAttribute('aTransferTo') as THREE.InstancedBufferAttribute;
+    const cargo=geometry.getAttribute('aTransferCargo') as THREE.InstancedBufferAttribute;
+    let index=0;
+    for(const item of this.handoffs.active.values())if(item.partial){
+      const [kind,size]=cargoAppearance(item.pile);
+      from.setXYZW(index,item.from.x,item.from.y,item.from.z,item.from.yaw);
+      to.setXYZW(index,item.to.x,item.to.y,item.to.z,item.groundScale);
+      cargo.setXYZW(index,kind,size,localTimeSeconds(item.start,this.carryOrigin),localTimeSeconds(item.end,this.carryOrigin));
+      index++;
+    }
+    geometry.instanceCount=index;
+    if(index){from.needsUpdate=true;to.needsUpdate=true;cargo.needsUpdate=true;}
+  }
+
+  /** Read the already presented pose once at an ownership change. The release
+   * then has a fixed hand origin even if the pawn starts its next route. */
+  private presentedCargoAnchor(id:number,tick:number):CargoAnchor|undefined {
+    const index=this.pawnIndices.get(id),geometry=this.pawnMesh?.geometry;
+    if(index===undefined||!geometry)return;
+    const from=geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
+    const to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
+    const travel=geometry.getAttribute('aTravel') as THREE.InstancedBufferAttribute;
+    const motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
+    const clock=localTimeSeconds(tick,this.travelOrigin),start=travel.getX(index),end=travel.getY(index);
+    const alpha=end>start?THREE.MathUtils.clamp((clock-start)/(end-start),0,1):this.blend.value;
+    const turnStart=travel.getW(index)>1?travel.getZ(index):start;
+    const turnAlpha=end>start||travel.getW(index)>1?THREE.MathUtils.clamp((clock-turnStart)/(TURN_TICKS/TICKS_PER_SECOND),0,1):this.blend.value;
+    const yaw=THREE.MathUtils.lerp(from.getW(index),to.getW(index),turnAlpha);
+    const fraction=THREE.MathUtils.lerp(travel.getZ(index),travel.getW(index),alpha);
+    const vertical=from.getY(index)<to.getY(index)?THREE.MathUtils.clamp(fraction*3,0,1)
+      :from.getY(index)>to.getY(index)?THREE.MathUtils.clamp(fraction*3-2,0,1):fraction;
+    const pose=motion.getZ(index);
+    const height=pose===1||pose===POSE_SLEEP||pose===POSE_DEAD ? .28 : pose===6 ? 1.3 : WORLD_SCALE.carriedHeight;
+    return {x:THREE.MathUtils.lerp(from.getX(index),to.getX(index),alpha)+Math.sin(yaw)*WORLD_SCALE.carriedForward,
+      y:THREE.MathUtils.lerp(from.getY(index),to.getY(index),vertical)+height,
+      z:THREE.MathUtils.lerp(from.getZ(index),to.getZ(index),alpha)+Math.cos(yaw)*WORLD_SCALE.carriedForward,yaw};
+  }
+
+  adoptCargo(previous:World|undefined,world:World,tick:number,animate:boolean):void {
+    this.carryOrigin=Math.floor(tick/1024)*1024;
+    this.handoffs.adopt(previous,world,tick,animate,id=>this.presentedCargoAnchor(id,tick));
+  }
+
+  /** Only the clock uniform changes on ordinary frames. Instance attributes and
+   * static pile chunks change when the short transfer starts or completes. */
+  presentCargo(tick:number,world:World):boolean {
+    if(!this.cargoMesh||!this.pawnMesh)return false;
+    const cargo=this.pawnMesh.geometry.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
+    const nextOrigin=Math.floor(tick/1024)*1024;
+    if(nextOrigin!==this.carryOrigin){
+      this.carryOrigin=nextOrigin;
+      for(const [id,transition] of this.handoffs.active){
+        const index=this.pawnIndices.get(id);if(index===undefined)continue;
+        cargo.setZ(index,localTimeSeconds(transition.start,nextOrigin));
+        cargo.setW(index,(transition.direction==='pickup'?1:-1)*localTimeSeconds(transition.end,nextOrigin));
+      }
+      cargo.needsUpdate=true;
+      this.syncPartialCargo();
+    }
+    this.cargoTime.value=localTimeSeconds(tick,this.carryOrigin);
+    if(this.handoffs.active.size===0)return false;
+    const expired=[...this.handoffs.active.values()].filter(item=>tick>=item.end);
+    const refresh=this.handoffs.complete(tick);
+    if(expired.length){
+      const carried=new Map<number,MaterialPile>();
+      for(const pile of world.piles)if(pile.owner.type==='pawn'&&!pile.humanCorpse)carried.set(pile.owner.pawnId,pile);
+      for(const item of expired){
+        const index=this.pawnIndices.get(item.pawnId);if(index===undefined)continue;
+        const [kind,size]=cargoAppearance(carried.get(item.pawnId));
+        cargo.setXYZW(index,kind,size,0,0);
+      }
+      cargo.needsUpdate=true;
+      this.syncPartialCargo();
+    }
+    return refresh;
   }
 
   update(world: World, oldBlend: number, newMap: boolean): void {
     this.travelKeys.clear();this.travelSurfaces=furnitureSurfaces(world);
-    if(newMap){this.headings.clear();this.approachTransitions.clear();this.departureOffsets.clear();this.workOffsets.clear();this.crouchTransitions.clear();this.shownPoses.clear();this.gait.clear();}
+    if(newMap){this.headings.clear();this.approachTransitions.clear();this.departureOffsets.clear();this.workOffsets.clear();this.crouchTransitions.clear();this.shownPoses.clear();this.gait.clear();this.handoffs.clear();}
     const indices=new Map<number,number>(),pawnsById=new Map<number,Pawn>();
     world.pawns.forEach((p,i)=>{indices.set(p.id,i);pawnsById.set(p.id,p);});
     this.rescuePairs=world.pawns.flatMap((p,i)=>p.rescue?.phase==='carry'&&indices.has(p.rescue.patientId)?[[i,indices.get(p.rescue.patientId)!] as const]:[]);
@@ -487,7 +622,7 @@ export class PawnLayer {
     const bodies=new Map(world.piles.filter(p=>p.humanCorpse).map(p=>[p.humanCorpse!.pawnId,p]));
     const retainedOffsets=retainedHumanCorpseOffsets(world);
     if (!this.pawnMesh) this.createPawnMesh(Math.max(1,world.pawns.length));
-    else if(this.pawnMesh.geometry.getAttribute('aFrom').count<world.pawns.length)growPawnBuffers([this.pawnMesh,this.cargoMesh!,this.selectionMesh!,this.fireMesh!],world.pawns.length);
+    else if(this.pawnMesh.geometry.getAttribute('aFrom').count<world.pawns.length)growPawnBuffers([this.pawnMesh,this.cargoMesh!,this.selectionMesh!,this.fireMesh!,this.partialCargoMesh!],world.pawns.length);
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
     const flames=geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
     const burning=new Map((world.fires?.items??[]).filter(f=>f.attachedPawnId!==undefined).map(f=>[f.attachedPawnId!,f.size]));
@@ -507,6 +642,8 @@ export class PawnLayer {
     const tint = geometry.getAttribute('aTint') as THREE.InterleavedBufferAttribute;
     const skin=geometry.getAttribute('aSkin'),hair=geometry.getAttribute('aHair'),shape=geometry.getAttribute('aShape');
     const cargo = geometry.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
+    const handoffFrom=this.cargoMesh!.geometry.getAttribute('aHandoffFrom') as THREE.InstancedBufferAttribute;
+    const handoffTo=this.cargoMesh!.geometry.getAttribute('aHandoffTo') as THREE.InstancedBufferAttribute;
     const equipment=geometry.getAttribute('aEquipment') as THREE.InterleavedBufferAttribute,gears=equipmentProjection(world),apparel=apparelProjection(world);
     const carried = new Map<number, World['piles'][number]>();
     for (const pile of world.piles) if (pile.owner.type === 'pawn') carried.set(pile.owner.pawnId, pile);
@@ -615,13 +752,25 @@ export class PawnLayer {
       equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,look.vest?1:0,look.pants);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
-      cargo.setXY(index, pawn.rescue?.phase==='carry'||load?.humanCorpse?-1:packed?4:load ? BIOME_CARGO[load.item]??(load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:isAnimalMeat(load.item)?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2) : 0, packed||load?.kind==='corpse'||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
+      const handoff=this.handoffs.active.get(pawn.id);
+      const mainHandoff=handoff?.partial?undefined:handoff;
+      const [kind,size]=cargoAppearance(mainHandoff?.direction==='drop'?mainHandoff.pile:load);
+      cargo.setXYZW(index,pawn.rescue?.phase==='carry'||load?.humanCorpse?-1:packed?4:kind,packed?1:size,
+        mainHandoff?localTimeSeconds(mainHandoff.start,this.carryOrigin):0,
+        mainHandoff?(mainHandoff.direction==='pickup'?1:-1)*localTimeSeconds(mainHandoff.end,this.carryOrigin):0);
+      if(mainHandoff){
+        handoffFrom.setXYZW(index,mainHandoff.from.x,mainHandoff.from.y,mainHandoff.from.z,mainHandoff.from.yaw);
+        handoffTo.setXYZW(index,mainHandoff.to.x,mainHandoff.to.y,mainHandoff.to.z,mainHandoff.groundScale);
+      }else{
+        handoffFrom.setXYZW(index,0,0,0,0);handoffTo.setXYZW(index,0,0,0,0);
+      }
     });
     for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);this.headings.delete(id);this.workPoses.delete(id);this.workOffsets.delete(id);this.approachTransitions.delete(id);this.departureOffsets.delete(id);this.crouchTransitions.delete(id);this.shownPoses.delete(id);this.gait.delete(id);}
     this.pawnIndices.clear();for(const [id,index] of indices)this.pawnIndices.set(id,index);
-    for (const attr of [fromAttribute, toAttribute, motion, tint, cargo]) attr.needsUpdate = true;
+    for (const attr of [fromAttribute, toAttribute, motion, tint, cargo,handoffFrom,handoffTo]) attr.needsUpdate = true;
     geometry.instanceCount = world.pawns.length;
     (this.cargoMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount = world.pawns.length;
+    this.syncPartialCargo();
     (this.selectionMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount=world.pawns.length;
     this.pawnIds=world.pawns.map(p=>p.id);this.setSelected(this.selected);
   }
@@ -632,6 +781,7 @@ export class PawnLayer {
     const geometry=this.pawnMesh.geometry;
     const from=geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=geometry.getAttribute('aTravel') as THREE.InstancedBufferAttribute,motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
     const origin=Math.floor(timeline.tick/1024)*1024;
+    this.travelOrigin=origin;
     this.travelTime.value=localTimeSeconds(timeline.tick,origin);
     let dirty=false;
     world.pawns.forEach((pawn,i)=>{
@@ -764,7 +914,7 @@ export class PawnLayer {
     this.plainMaterial?.dispose();
     this.texturedMaterial?.dispose();
     this.surfaceTexture.dispose();
-    this.pawnMesh = this.cargoMesh = this.fireMesh = this.selectionMesh = null;
+    this.pawnMesh = this.cargoMesh = this.partialCargoMesh = this.fireMesh = this.selectionMesh = null;
   }
 
 }

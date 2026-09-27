@@ -5,7 +5,7 @@ const {chromium} = await import('@playwright/test');
 const label = process.argv[2] ?? 'current';
 if (!/^[a-z0-9-]+$/.test(label)) throw Error('Invalid label');
 const baseline=process.env.CAMERA_BASELINE==='1';
-const report = {label, baseline, protocol: 'Native WebGPU, frozen simulation, real mouse pan/orbit/wheel plus controlled close/distant transitions without rebuilding the world. Compare the very first frame after input, and three consecutive damping frames, against a fresh draw at the SAME camera/light pose. Near views use ordinary per-camera culling; far views retain bundles. No landscape refresh between input and tested frames. Exact pixels required. A fresh bundle preserves draw order, unlike an ordinary globally sorted render list. Also verify every listed draw belongs to this camera and remains registered for uniform replay.', cases: [], errors: []};
+const report = {label, baseline, protocol: 'Native WebGPU, frozen simulation, real mouse pan/orbit/wheel plus controlled close/distant transitions without rebuilding the world. Compare the very first frame after input, and three consecutive damping frames, against a fresh draw at the SAME camera/light pose, including shadow fit and camera-relative ground grass. Near views use ordinary per-camera culling; far views retain bundles. No landscape refresh between input and tested frames. Exact pixels required. A fresh bundle preserves draw order, unlike an ordinary globally sorted render list. Also verify every listed draw belongs to this camera and remains registered for uniform replay.', cases: [], errors: []};
 const browser = await chromium.launch({channel:'chromium', headless:false});
 try {
   const page = await browser.newPage({viewport:{width:1440,height:1000}});
@@ -62,14 +62,15 @@ try {
       for(let frame=0;frame<4;frame++){
         v.frame(performance.now());
         await v.renderer.getContext().getConfiguration().device.queue.onSubmittedWorkDone();
-        frames.push({retained:v.renderer.domElement.toDataURL('image/png'),position:v.camera.position.toArray(),quaternion:v.camera.quaternion.toArray(),zoom:v.camera.zoom,lightPosition:v.daylight.light.position.toArray(),lightTarget:v.daylight.light.target.position.toArray(),version:v.landscape.version,bundle:v.landscape.isBundleGroup?window.__cameraBundle:null});
+        frames.push({retained:v.renderer.domElement.toDataURL('image/png'),position:v.camera.position.toArray(),quaternion:v.camera.quaternion.toArray(),zoom:v.camera.zoom,target:v.controls.target.toArray(),lightPosition:v.daylight.light.position.toArray(),lightTarget:v.daylight.light.target.position.toArray(),version:v.landscape.version,bundle:v.landscape.isBundleGroup?window.__cameraBundle:null});
       }
       // Keep the same draw ordering, but force current-camera uniforms to be
       // recorded afresh. Ordinary scene sorting is a separate visual contract.
       for(const frame of frames){
-        v.camera.position.fromArray(frame.position);v.camera.quaternion.fromArray(frame.quaternion);v.camera.zoom=frame.zoom;
+        v.camera.position.fromArray(frame.position);v.camera.quaternion.fromArray(frame.quaternion);v.camera.zoom=frame.zoom;v.controls.target.fromArray(frame.target);
         v.daylight.light.position.fromArray(frame.lightPosition);v.daylight.light.target.position.fromArray(frame.lightTarget);
-        v.camera.updateProjectionMatrix();v.camera.updateMatrixWorld();v.landscape.refresh();
+        v.camera.updateProjectionMatrix();v.camera.updateMatrixWorld();v.daylight.fitShadow(v.camera);v.landscape.refresh();
+        if(v.grass&&v.grassVisible&&!v.overview.group.visible)v.grass.present(v.camera,v.controls.target,v.rig.span,v.rig.pixelsPerCell(v.host.clientHeight));
         v.renderer.render(v.scene,v.camera);
         await v.renderer.getContext().getConfiguration().device.queue.onSubmittedWorkDone();
         frame.plain=v.renderer.domElement.toDataURL('image/png');

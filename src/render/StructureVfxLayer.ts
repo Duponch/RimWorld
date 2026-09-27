@@ -53,6 +53,8 @@ export class StructureVfxLayer {
   readonly glow:BoxMesh;
   readonly smoke:THREE.Mesh<THREE.InstancedBufferGeometry>;
   private readonly tick=uniform(0);
+  private readonly windStrength=uniform(0);
+  private readonly windDirection=uniform(new THREE.Vector2(1,0));
   private readonly boxBase=new THREE.BoxGeometry(1,1,1);
   private readonly smokeBase=new THREE.PlaneGeometry(1,1);
   private readonly glowMaterial=new THREE.MeshBasicNodeMaterial({color:0xffffff,toneMapped:false});
@@ -83,7 +85,12 @@ export class StructureVfxLayer {
     const phase=this.tick.div(30).add(smokePosition.w).fract();
     this.smokeMaterial.positionNode=Fn(()=>{
       const drift=sin(this.tick.mul(2*Math.PI/80).add(smokePosition.w.mul(19))).mul(.08).mul(phase);
-      const center=vec3(smokePosition.x.add(drift),smokePosition.y.add(phase.mul(smokeShape.z)),smokePosition.z);
+      const downwind=phase.mul(phase).mul(this.windStrength).mul(smokeShape.z).mul(.42);
+      const center=vec3(
+        smokePosition.x.add(this.windDirection.x.mul(downwind)).sub(this.windDirection.y.mul(drift)),
+        smokePosition.y.add(phase.mul(smokeShape.z)),
+        smokePosition.z.add(this.windDirection.y.mul(downwind)).add(this.windDirection.x.mul(drift)),
+      );
       const look=cameraPosition.sub(center),lookDistance=look.length();
       const facing=lookDistance.greaterThan(.001).select(look.div(lookDistance.max(.001)),vec3(0,1,0));
       const horizontal=vec2(facing.z,facing.x.negate()),distance=horizontal.length();
@@ -260,6 +267,11 @@ export class StructureVfxLayer {
   /** All three shader periods divide 7200, so wrap is invisible on long saves
    * and GPU float precision stays stable after millions of simulation ticks. */
   present(tick:number):void {this.tick.value=((tick%7200)+7200)%7200;}
+  setWind(strength:number,directionX:number,directionZ:number):void {
+    this.windStrength.value=Number.isFinite(strength)?Math.max(0,Math.min(2,strength)):0;
+    const length=Math.hypot(directionX,directionZ);
+    if(length>0&&Number.isFinite(length))this.windDirection.value.set(directionX/length,directionZ/length);
+  }
   setDistant(distant:boolean):void {this.group.visible=!distant;}
   prepareForCompile():()=>void {
     const before={group:this.group.visible,glow:this.glow.activeCount,glowCull:this.glow.frustumCulled,smoke:this.smoke.geometry.instanceCount,smokeVisible:this.smoke.visible};

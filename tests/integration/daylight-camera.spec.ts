@@ -31,7 +31,7 @@ test('vue iso/perspective : sélection, rectangle, pause, reprise et ciel restau
     await expectWorld(page, fixture);
     const toggled = await probe(); expect(toggled.span).toBeCloseTo(initial.span, 8); expect(toggled.target).toEqual(initial.target);
     await page.locator('#camera-mode').click(); await tool(page, 'select'); await revealCells(page, [{ x: 18, z: 14 }]); await cell(page, 18, 14);
-    await expect(page.locator('#cell-description')).toContainText('18, 14');
+    await expect(page.locator('#cell-title')).toHaveText('Arbre');
     await tool(page, 'stockpile'); await revealCells(page, [{ x: 17, z: 12 }, { x: 19, z: 13 }]); await dragRectangle(page, { x: 17, z: 12 }, { x: 19, z: 13 });
     await expect.poll(async () => (await world(page)).stockpiles.length).toBe(6);
     await tool(page, 'chop'); await revealCells(page, [{ x: 18, z: 14 }]); await cell(page, 18, 14);
@@ -42,7 +42,7 @@ test('vue iso/perspective : sélection, rectangle, pause, reprise et ciel restau
     await expectWorld(page, beforeGesture);
     await page.locator('#camera-mode').click();
     await page.setViewportSize({ width: 1100, height: 780 }); await tool(page, 'select'); await revealCells(page, [{ x: 18, z: 14 }]); await cell(page, 18, 14);
-    await expect(page.locator('#cell-description')).toContainText('18, 14');
+    await expect(page.locator('#cell-title')).toHaveText('Abattage');
     const paused = (await probe()).sample;
     await page.waitForTimeout(350); expect((await probe()).sample).toEqual(paused);
     await page.locator('[data-speed="6"]').click();

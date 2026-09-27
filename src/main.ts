@@ -420,7 +420,7 @@ function readStorageSettings(prefix: string) {
   };
 }
 function pawnNeedsMarkup():string {
-  return `<div class="needs">${(['hunger', 'rest', 'comfort', 'mood'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort', 'Humeur'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div>${recreationInspection()}`;
+  return `<div class="needs">${(['hunger', 'rest', 'comfort'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div>${recreationInspection()}`;
 }
 function rotatePlacement(direction = 1) {
   placementOrientation = ((placementOrientation + direction + 4) % 4) as Orientation;
@@ -673,7 +673,7 @@ function renderState() {
       updateMoodInspection(el('inspector'),world,pawn);
       updateSocialInspection(el('inspector'),world,pawn);
       updateJournalInspection(el('inspector'),world,pawn);
-      for (const need of ['hunger', 'rest', 'comfort', 'mood'] as const) { el(`selected-${need}`).textContent = pawn.state==='dead'?'—':`${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn.state==='dead'?0:pawn[need]; }
+      for (const need of ['hunger', 'rest', 'comfort'] as const) { el(`selected-${need}`).textContent = pawn.state==='dead'?'—':`${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn.state==='dead'?0:pawn[need]; }
     }
   } else if (selectedCell) {
     const { x, z } = selectedCell;

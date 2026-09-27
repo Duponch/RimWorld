@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { Plane, Raycaster, Scene, Vector2, Vector3 } from 'three/webgpu';
+import { Frustum, Matrix4, Plane, Raycaster, Scene, Vector2, Vector3 } from 'three/webgpu';
 import { CameraRig } from '../src/render/CameraRig';
 import { DayNightLayer } from '../src/render/DayNightLayer';
 import { sampleDaylight, type DaylightSample } from '../src/render/daylight';
@@ -66,4 +66,53 @@ test('ciel : horloge périodique, continuité minuit/crépuscule et ressources g
     sky.update(1234, target); expect(light.position).toEqual(before);
   } finally { sky.dispose(); }
   expect(scene.backgroundNode).toBeNull(); expect(scene.children).toEqual([]);
+});
+
+test('ombre : la première image couvre le sol visible après zoom, panoramique et bascule de projection', () => {
+  const scene=new Scene(),sky=new DayNightLayer(scene),rig=new CameraRig(null),shadow=sky.light.shadow;
+  try {
+    for(const [width,height] of [[32,32],[250,250],[325,175]])for(const aspect of [0.7,1.6,2.5]) {
+      rig.configureMap(width!,height!);rig.resize(800*aspect,800);sky.configureShadow(width!,height!);
+      for(const mode of ['orthographic','perspective'] as const)for(const zoom of ['near','far'] as const)for(const [x,z] of [[width!/2,height!/2],[2,2],[width!-3,height!-3]]) {
+        rig.setMode(mode);rig.configureMap(width!,height!);
+        const shift=new Vector3(x!-rig.controls.target.x,0,z!-rig.controls.target.z);
+        rig.controls.target.add(shift);rig.camera.position.add(shift);
+        if(mode==='orthographic')rig.camera.zoom=zoom==='far'?rig.controls.minZoom:1.5;
+        else rig.camera.position.sub(rig.controls.target).setLength(zoom==='far'?rig.controls.maxDistance:rig.controls.minDistance*2).add(rig.controls.target);
+        rig.camera.updateProjectionMatrix();rig.controls.update();rig.camera.updateMatrixWorld();
+        sky.update(3000,rig.controls.target);sky.fitShadow(rig.camera);
+        const main=new Frustum().setFromProjectionMatrix(new Matrix4().multiplyMatrices(rig.camera.projectionMatrix,rig.camera.matrixWorldInverse),rig.camera.coordinateSystem,rig.camera.reversedDepth);
+        const shadowFrustum=new Frustum().setFromProjectionMatrix(new Matrix4().multiplyMatrices(shadow.camera.projectionMatrix,shadow.camera.matrixWorldInverse));
+        let visible=0;
+        for(const y of [0,2.8,7])for(let iz=0;iz<=16;iz++)for(let ix=0;ix<=16;ix++) {
+          const point=new Vector3((width!-1)*ix/16,y,(height!-1)*iz/16);
+          if(!main.containsPoint(point))continue;
+          visible++;
+          expect(shadowFrustum.containsPoint(point),`${width}×${height} ${mode} ${zoom} ${x},${z} at ${point.toArray()}`).toBe(true);
+        }
+        expect(visible).toBeGreaterThan(0);
+        expect(shadow.camera.near).toBeGreaterThan(0);
+        expect(shadow.camera.far).toBeGreaterThan(shadow.camera.near);
+        expect(shadow.mapSize.toArray()).toEqual([2048,2048]);
+      }
+    }
+    rig.setMode('orthographic');rig.configureMap(250,250);rig.resize(1440,1000);sky.configureShadow(250,250);
+    sky.update(3000,rig.controls.target);rig.camera.zoom=1.5;rig.camera.updateProjectionMatrix();sky.fitShadow(rig.camera);
+    const nearWidth=shadow.camera.right-shadow.camera.left;
+    rig.camera.zoom=rig.controls.minZoom;rig.camera.updateProjectionMatrix();sky.fitShadow(rig.camera);
+    expect(shadow.camera.right-shadow.camera.left).toBeGreaterThan(nearWidth*2);
+
+    // A low sun can put the caster far outside the player's close view while
+    // its shadow still reaches a visible ground point.
+    rig.camera.zoom=2;rig.camera.updateProjectionMatrix();rig.controls.update();rig.camera.updateMatrixWorld();
+    sky.update(1650,rig.controls.target);sky.fitShadow(rig.camera);
+    const receiver=new Vector3(125,0,125);
+    const towardLight=sky.light.position.clone().sub(sky.light.target.position).normalize();
+    const caster=receiver.clone().addScaledVector(towardLight,7/towardLight.y);
+    const main=new Frustum().setFromProjectionMatrix(new Matrix4().multiplyMatrices(rig.camera.projectionMatrix,rig.camera.matrixWorldInverse));
+    const lit=new Frustum().setFromProjectionMatrix(new Matrix4().multiplyMatrices(shadow.camera.projectionMatrix,shadow.camera.matrixWorldInverse));
+    expect(main.containsPoint(receiver)).toBe(true);
+    expect(main.containsPoint(caster)).toBe(false);
+    expect(lit.containsPoint(caster)).toBe(true);
+  }finally{rig.dispose();sky.dispose();}
 });

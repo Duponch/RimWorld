@@ -122,6 +122,8 @@ test('a real item-specific stockpile accepts the revolver and leaves the rifle o
     expect(outside.owner).toEqual({type:'ground',x:18,z:12});
     expect(stored.weapon).toEqual(revolver.weapon);expect(outside.weapon).toEqual(rifle.weapon);
     await page.keyboard.press('Escape');await revealCells(page,[{x:20,z:12}]);await cell(page,20,12);
+    await expect(page.locator('#cell-title')).toHaveText('Revolver');
+    await cell(page,20,12);await expect(page.locator('#cell-title')).toHaveText('Réserve');
     await expect(page.locator('#selected-stockpile-items [data-storage-item-toggle]')).toBeChecked();
     await expect(page.locator('#selected-stockpile-items [data-storage-item="revolver"]')).toBeChecked();
     await expect(page.locator('#selected-stockpile-items [data-storage-item="bolt-action-rifle"]')).not.toBeChecked();

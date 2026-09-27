@@ -1,0 +1,5 @@
+# Repères de carte et dossier Besoins V137
+
+Le 27 septembre 2026, les nombres et qualités des piles ont été replacés dans l'ordre de peinture immédiatement après le viewport et avant les panneaux d'interface. Leur canvas reste hors de `#viewport`, qui conserve le seul canvas WebGPU, et ne capte pas les clics. Après revue à zoom intermédiaire, le seuil d'apparition passe finalement de 34 à 96 pixels par case ; sous ce seuil, le dessin et l'indexation sortent immédiatement. Dans Besoins, la jauge d'humeur simplifiée en double est retirée. La jauge détaillée, la valeur courante, la cible, les seuils de crise et les pensées restent accessibles dans le volet Humeur.
+
+`npm run typecheck` et le parcours Chromium/WebGPU `npx playwright test tests/integration/map-details-v135.spec.ts` passent. Ce dernier vérifie qu'un panneau Besoins est au-dessus du canvas des libellés au zoom proche et qu'il ne porte qu'une jauge d'humeur. Les tests ciblés de dossier et de grippe/humeur passent ; l'ancien oracle `tests/mood.test.ts` reste en échec sur une sauvegarde V63 à politique alimentaire invalide, sans lien avec cette retouche d'interface.

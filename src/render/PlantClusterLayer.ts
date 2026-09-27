@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { Fn, attribute, positionLocal, sin, uniform, vec3 } from 'three/tsl';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Resource, World } from '../sim/types';
 import { floraColor, floraSize, isClusterPlantSpecies } from './flora-presentation';
@@ -72,6 +73,12 @@ export class PlantClusterLayer {
   private readonly free: number[] = [];
   private readonly transform = new THREE.Object3D();
   private readonly color = new THREE.Color();
+  private readonly windTick=uniform(0);
+  private readonly windStrength=uniform(0);
+  private readonly windDirection=uniform(new THREE.Vector2(1,0));
+  private readonly windPlain:THREE.MeshStandardNodeMaterial;
+  private readonly windTextured:THREE.MeshStandardNodeMaterial;
+  private windYaw!:THREE.InstancedBufferAttribute;
   // A growing envelope is conservative after removals and moves. Updating it
   // for a changed tuft costs O(1), unlike InstancedMesh.computeBoundingSphere()
   // which scans every resident slot, including the thousands left unchanged.
@@ -80,15 +87,36 @@ export class PlantClusterLayer {
   private used = 0;
 
   constructor(private readonly plainMaterial: THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial) {
+    const windPosition=Fn(()=>{
+      const yaw=attribute('windYaw','float'),c=yaw.cos(),s=yaw.sin();
+      const localX=this.windDirection.x.mul(c).sub(this.windDirection.y.mul(s));
+      const localZ=this.windDirection.x.mul(s).add(this.windDirection.y.mul(c));
+      const phase=this.windTick.mul(2*Math.PI/24).add(yaw.mul(3.1));
+      const bend=positionLocal.y.mul(positionLocal.y).mul(this.windStrength)
+        .mul(sin(phase).mul(.035).add(.10));
+      return positionLocal.add(vec3(localX.mul(bend),0,localZ.mul(bend)));
+    })();
+    this.windPlain=(plainMaterial as THREE.MeshStandardNodeMaterial).clone();
+    this.windTextured=(texturedMaterial as THREE.MeshStandardNodeMaterial).clone();
+    this.windPlain.positionNode=this.windTextured.positionNode=windPosition;
     this.mesh = this.createMesh(128);
     this.group.name = 'plant-cluster-layer';
     this.group.add(this.mesh);
   }
   private texturesEnabled=true;
-  setTexturesEnabled(enabled:boolean):void {this.texturesEnabled=enabled;this.mesh.material=enabled?this.texturedMaterial:this.plainMaterial;}
+  setTexturesEnabled(enabled:boolean):void {this.texturesEnabled=enabled;this.mesh.material=enabled?this.windTextured:this.windPlain;}
+
+  setWind(strength:number,directionX:number,directionZ:number):void {
+    this.windStrength.value=Number.isFinite(strength)?Math.max(0,Math.min(2,strength)):0;
+    const length=Math.hypot(directionX,directionZ);
+    if(length>0&&Number.isFinite(length))this.windDirection.value.set(directionX/length,directionZ/length);
+  }
+  presentWind(tick:number):void {this.windTick.value=((tick%7200)+7200)%7200;}
 
   private createMesh(capacity: number): THREE.InstancedMesh {
-    const mesh = new THREE.InstancedMesh(this.geometry, this.texturesEnabled?this.texturedMaterial:this.plainMaterial, capacity);
+    this.windYaw=new THREE.InstancedBufferAttribute(new Float32Array(capacity),1).setUsage(THREE.StaticDrawUsage);
+    this.geometry.setAttribute('windYaw',this.windYaw);
+    const mesh = new THREE.InstancedMesh(this.geometry, this.texturesEnabled?this.windTextured:this.windPlain, capacity);
     mesh.name = 'upright-plant-clusters';
     mesh.instanceMatrix = new THREE.StorageInstancedBufferAttribute(capacity, 16);
     mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
@@ -103,9 +131,11 @@ export class PlantClusterLayer {
   private ensureCapacity(required: number): void {
     if (required <= this.mesh.instanceMatrix.count) return;
     const previous = this.mesh;
+    const previousYaw=this.windYaw;
     const next = this.createMesh(2 ** Math.ceil(Math.log2(required)));
     next.instanceMatrix.array.set(previous.instanceMatrix.array);
     next.instanceColor!.array.set(previous.instanceColor!.array);
+    this.windYaw.array.set(previousYaw.array);
     next.count = previous.count;
     next.boundingSphere = previous.boundingSphere?.clone() ?? null;
     this.group.remove(previous);
@@ -121,6 +151,10 @@ export class PlantClusterLayer {
   }
 
   update(world: World, reset: boolean, changes?: ReadonlyMap<number, NaturalPresentationChange>): void {
+    const plainOutput=(this.plainMaterial as THREE.MeshStandardNodeMaterial).outputNode;
+    const texturedOutput=(this.texturedMaterial as THREE.MeshStandardNodeMaterial).outputNode;
+    if(this.windPlain.outputNode!==plainOutput)this.windPlain.outputNode=plainOutput;
+    if(this.windTextured.outputNode!==texturedOutput)this.windTextured.outputNode=texturedOutput;
     if (reset) {
       this.bounds.makeEmpty();
       this.slots.clear();
@@ -171,6 +205,7 @@ export class PlantClusterLayer {
       this.transform.scale.set(presentation.scaleX, presentation.scaleY, presentation.scaleZ);
       this.transform.updateMatrix();
       this.mesh.setMatrixAt(slot.index, this.transform.matrix);
+      this.windYaw.setX(slot.index,presentation.rotation);
       this.includeTransformBounds();
       this.mesh.setColorAt(slot.index, this.color.setHex(presentation.color));
       firstMatrix = Math.min(firstMatrix, slot.index);
@@ -184,8 +219,14 @@ export class PlantClusterLayer {
       this.mesh.instanceMatrix.clearUpdateRanges();
       this.mesh.instanceMatrix.addUpdateRange(firstMatrix * 16, (lastMatrix - firstMatrix + 1) * 16);
       this.mesh.instanceMatrix.needsUpdate = true;
+      this.windYaw.clearUpdateRanges();
+      this.windYaw.addUpdateRange(firstMatrix,lastMatrix-firstMatrix+1);
+      this.windYaw.needsUpdate=true;
     }
-    if (lastMatrix >= 0 || reset) this.bounds.getBoundingSphere(this.mesh.boundingSphere ??= new THREE.Sphere());
+    if (lastMatrix >= 0 || reset) {
+      this.bounds.getBoundingSphere(this.mesh.boundingSphere ??= new THREE.Sphere());
+      this.mesh.boundingSphere.radius+=.3;
+    }
     if (lastColor >= 0 && visibleCount) {
       this.mesh.instanceColor!.clearUpdateRanges();
       this.mesh.instanceColor!.addUpdateRange(firstColor * 3, (lastColor - firstColor + 1) * 3);
@@ -203,5 +244,6 @@ export class PlantClusterLayer {
   dispose(): void {
     this.mesh.dispose();
     this.geometry.dispose();
+    this.windPlain.dispose();this.windTextured.dispose();
   }
 }

@@ -40,6 +40,16 @@ ColonyRenderer.prototype.frame=function(now){window.__waterView=this;return orig
   await page.waitForTimeout(300);
   const paused=await page.evaluate(()=>{const v=(window as any).__waterView;return {version:v.terrainPaintTexture.version,time:v.paintedWater.time.value};});
   expect(paused).toEqual({version:close.version,time:close.time});
+  // V137: the same resident paint must animate when confirmed time advances.
+  // Freeze the test's shader clock independently of the paused simulation.
+  await page.evaluate(()=>{const water=(window as any).__waterView.paintedWater;water.present=()=>{};water.time.value=0;});
+  await page.waitForTimeout(100);
+  const still=await page.locator('#viewport canvas').screenshot();
+  await page.evaluate(()=>{(window as any).__waterView.paintedWater.time.value=1;});
+  await page.waitForTimeout(100);
+  const moved=await page.locator('#viewport canvas').screenshot();
+  expect(still.equals(moved)).toBe(false);
+  expect(await page.evaluate(()=>(window as any).__waterView.terrainPaintTexture.version)).toBe(close.version);
   await page.setViewportSize({width:1440,height:768});
   await page.evaluate(()=>{const v=(window as any).__waterView;v.camera.zoom=.25;v.camera.updateProjectionMatrix();v.controls.update();});
   await page.waitForTimeout(350);

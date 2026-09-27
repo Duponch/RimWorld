@@ -31,6 +31,8 @@ import { FireLayer } from './FireLayer';
 import { GrowingZoneLayer } from './GrowingZoneLayer';
 import { buildTerrain, createTerrainPaintTexture, patchTerrainPaintTexture, syncTerrainPaintUvs } from './TerrainLayer';
 import { PaintedWater } from './PaintedWater';
+import { WeatherCloudLayer } from './WeatherCloudLayer';
+import { visualWindDirection } from './visual-weather';
 import { RockLayer } from './RockLayer';
 import { MotionTimeline } from './MotionTimeline';
 import type { PawnTrack } from '../bridge/motion-tracks';
@@ -46,6 +48,7 @@ import type { Placement } from './primitives';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { World, Orientation, AreaAction, Cell, JobKind } from '../sim/types';
 import { TICKS_PER_SECOND } from '../sim/types';
+import { windIntensity } from '../sim/wind-rules';
 import { calendarTick } from '../sim/calendar';
 import { footprintCells,STRUCTURE_DEFINITIONS } from '../sim/definitions';
 import { canDesignate } from '../sim/engine';
@@ -66,12 +69,12 @@ import { StructureVfxLayer } from './StructureVfxLayer';
 import { MapLabelsOverlay } from './MapLabelsOverlay';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { GpuGroundGrassLayer } from './GpuGroundGrassLayer';
+import { storageZonePlacements, storageZoneSignature } from './storage-zone-presentation';
 import { mapObjectCells,mapObjectsAt,sameMapObject,type MapObjectSelection } from '../ui/map-object-selection';
 
 type VisualChunk = { signature: string; group: THREE.Group };
 
 const scratchObject = new THREE.Object3D();
-const scratchColor = new THREE.Color();
 
 export class ColonyRenderer {
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
@@ -146,6 +149,7 @@ export class ColonyRenderer {
   private readonly texturedStaticMaterial=material(0xffffff,{vertexColors:true,map:this.staticPaint});
   private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
   private readonly paintedWater=new PaintedWater(this.terrainPaintTexture,this.environmentLighting.configure);
+  private readonly clouds=new WeatherCloudLayer();
   private readonly boxes = new BoxBatches(this.environmentLighting.configure);
   private readonly recreationHints = new RecreationHints(this.boxes);
   private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial,this.texturedStaticMaterial);
@@ -237,7 +241,7 @@ export class ColonyRenderer {
     this.mapLabels = new MapLabelsOverlay(host);
     this.daylight = new DayNightLayer(this.scene);
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
-    this.scene.add(this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group);
+    this.scene.add(this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh);
     if (groundGrassEnabled) {
       this.grass = new GpuGroundGrassLayer(this.environmentLighting.configure);
       this.scene.add(this.grass.mesh);
@@ -344,9 +348,10 @@ export class ColonyRenderer {
     if(!this.rocks.group.parent)this.scene.add(this.rocks.group);
     if (newMap) {
       this.boxes.clear();
-      const extent = Math.min(WORLD_SCALE.cameraSpan, Math.max(world.width, world.height));
+      this.clouds.configureMap(world.width, world.height);
+      this.paintedWater.reset();
       this.rig.configureMap(world.width, world.height, world.scenario?.landing);
-      this.daylight.configureShadow(extent);
+      this.daylight.configureShadow(world.width, world.height);
       this.resize();
     }
     this.hygiene.update(world,this.boxes,newMap);
@@ -361,10 +366,12 @@ export class ColonyRenderer {
     // every work tick. Saved simulation progress remains exact and authoritative.
     const jobKey = world.jobs.map((j) => `${j.id}:${j.kind}:${j.floor}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' || j.kind==='repair' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
-    const storageKey = `${world.home?.join(',')??''};`+world.stockpiles.map((s) => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.filters.wood}:${s.filters.food}`).join('|');
+    const storageKey = `${world.home?.join(',')??''};`+storageZoneSignature(world.stockpiles);
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
     if (newMap || previousWorld?.resources !== world.resources || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap);
     const zoneChanged=this.updateGrowingZones(newMap);
+    this.pawns.adoptCargo(previousWorld??undefined,world,this.hasTracks?this.timeline.tick:world.tick,
+      !resetPoses&&this.hasTracks&&(this.received?.speed??0)>0);
     this.updatePiles(world, newMap);
     const oldBlend = this.pawns.blend.value;
     this.snapshotDuration = previousWorld && world.tick >= previousWorld.tick ? Math.min(200, Math.max(70, now - this.snapshotAt)) : 0;
@@ -532,6 +539,7 @@ export class ColonyRenderer {
     const restoreGrass = this.grass?.prepareForCompile() ?? (() => {});
     const restoreDesignations=this.designations.prepareForCompile();
     const restoreFilth=this.hygiene.filth.prepareForCompile();
+    const restoreClouds=this.clouds.prepareForCompile();
     try {
       // The double-sided cursor otherwise compiles both face variants on the
       // first map interaction. Include it behind the loading overlay.
@@ -540,6 +548,7 @@ export class ColonyRenderer {
       this.rocks.setDistant(false); this.rocks.mesh.visible = true;
       this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
       this.daylight.update(this.world ? calendarTick(this.world) : 0, this.controls.target,this.world??undefined);
+      this.daylight.fitShadow(this.camera);
       await this.renderer.compileAsync(this.scene, this.rig.orthographic);
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
       this.landscape.needsUpdate=true;
@@ -549,7 +558,7 @@ export class ColonyRenderer {
       // already disabled culling when that override was captured; their own
       // restorers must therefore run last to recover their real runtime flag.
       for (const [object, value] of culling) object.frustumCulled = value;
-      restoreWind();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();
+      restoreWind();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
       this.updateHover();
@@ -600,7 +609,7 @@ export class ColonyRenderer {
       vertices.push(ax+nx,y,az+nz,bx+nx,y,bz+nz,bx-nx,y,bz-nz,
         ax+nx,y,az+nz,bx-nx,y,bz-nz,ax-nx,y,az-nz);
     };
-    if(this.selectedObject?.kind==='growing'){
+    if(this.selectedObject?.kind==='growing'||this.selectedObject?.kind==='stockpile'){
       const inside=new Set(cells.map(c=>`${c.x}:${c.z}`));
       for(const cell of cells){const x=cell.x,z=cell.z;
         if(!inside.has(`${x}:${z-1}`))stroke(x-.48,z-.48,x+.48,z-.48);
@@ -673,18 +682,12 @@ export class ColonyRenderer {
   private buildJobs(world: World): void { buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes);this.designations.update(world); }
 
   private buildStorage(world: World): void {
-    const cells: Placement[] = [], borders: Placement[] = [];
-    if(this.tool==='home'||this.tool==='remove-home')for(const i of world.home??[])cells.push({x:i%world.width,z:Math.floor(i/world.width),y:.04,color:0x779ee6});
-    for (const storage of world.stockpiles) {
-      const color = !storage.filters.wood && !storage.filters.food ? 0x9b8980
-        : storage.filters.wood && storage.filters.food ? 0x9ac6aa : storage.filters.wood ? 0xc1a373 : 0xc89080;
-      cells.push({ x: storage.x, z: storage.z, y: 0.021, color });
-      const shade = scratchColor.setHex(color).multiplyScalar(0.82 + storage.priority * 0.06).getHex();
-      for (const dx of [-1, 1]) borders.push({ x: storage.x + dx * 0.465, z: storage.z, y: 0.028, sx: 0.025, sz: 0.95, color: shade });
-      for (const dz of [-1, 1]) borders.push({ x: storage.x, z: storage.z + dz * 0.465, y: 0.028, sx: 0.95, sz: 0.025, color: shade });
-    }
-    this.boxes.set(this.storageGroup, 'storage-cells', cells.map(p => ({ ...p, sx: 0.94, sy: 0.014, sz: 0.94 })), 'storage', false);
-    this.boxes.set(this.storageGroup, 'storage-borders', borders.map(p => ({ ...p, sy: 0.015 })), 'border', false);
+    const { cells, borders } = storageZonePlacements(world.width, world.stockpiles);
+    const home: Placement[] = [];
+    if(this.tool==='home'||this.tool==='remove-home')for(const i of world.home??[])home.push({x:i%world.width,z:Math.floor(i/world.width),y:.04,sx:.94,sy:.014,sz:.94,color:0x779ee6});
+    this.boxes.set(this.storageGroup, 'storage-cells', cells, 'storage', false);
+    this.boxes.set(this.storageGroup, 'storage-borders', borders, 'border', false);
+    this.boxes.set(this.storageGroup, 'storage-home', home, 'storage-home', false);
   }
 
   private updatePiles(world: World, newMap: boolean): void {
@@ -700,18 +703,21 @@ export class ColonyRenderer {
       }
     }
     const surfaces=pileSurfaces(world);
+    const hidden=this.pawns.hiddenPileQuantities();
     const jobById = new Map(world.jobs.map(job => [job.id, job]));
     const cells = new Map<string, PileBundle>();
     for (const pile of world.piles) {
       if(pile.humanCorpse||pile.owner.type==='grave')continue;
       if (pile.owner.type === 'pawn'||pile.owner.type==='equipment'||pile.owner.type==='apparel'||pile.owner.type==='inventory') continue;
+      const quantity=pile.quantity-(hidden.get(pile.id)??0);
+      if(quantity<=0)continue;
       const job = pile.owner.type === 'job' ? jobById.get(pile.owner.jobId) : undefined;
       if (pile.owner.type === 'job' && !job) continue;
       const position = pile.owner.type === 'ground' ? pile.owner : job!;
       const key = `${position.x}:${position.z}:${pile.item}:${job ? 'job' : 'ground'}`;
       const bundle = cells.get(key);
-      if (bundle) bundle.quantity += pile.quantity;
-      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity: pile.quantity, supplied: !!job, surface:job?undefined:surfaces.get(position.z*world.width+position.x),...(pile.kind==='corpse'?{corpseStage:corpseStage(pile,world.tick),facing:pile.corpse?.facing??0}:{}) });
+      if (bundle) bundle.quantity += quantity;
+      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity, supplied: !!job, surface:job?undefined:surfaces.get(position.z*world.width+position.x),...(pile.kind==='corpse'?{corpseStage:corpseStage(pile,world.tick),facing:pile.corpse?.facing??0}:{}) });
     }
     const chunks = new Map<string, PileBundle[]>();
     for (const bundle of cells.values()) {
@@ -747,6 +753,7 @@ export class ColonyRenderer {
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
     if(this.hasTracks && this.world) {this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
+    if(this.world&&this.pawns.presentCargo(this.hasTracks?this.timeline.tick:THREE.MathUtils.lerp(this.timeFrom,this.timeTo,this.pawns.blend.value)*TICKS_PER_SECOND,this.world))this.updatePiles(this.world,false);
     if(this.pawns.feedbackSource)this.actionFeedback.syncTravel(this.pawns.feedbackSource);
     if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined);
     this.ropes.present(this.hasTracks?this.timeline:undefined);
@@ -761,11 +768,27 @@ export class ColonyRenderer {
     // Share the confirmed presentation clock with pawn motion. Loading a save
     // restores the sky; pausing cannot continue an independent wall-clock sun.
     const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
+    const visualWind=this.world?visualWindDirection(this.world.wind?.seed??this.world.seed,skyTick):{x:1,z:0};
+    const visualWindStrength=this.world?windIntensity(this.world):0;
+    if(this.world){
+      this.resources.setWind(visualWindStrength,visualWind.x,visualWind.z);
+      this.plants.setWind(visualWindStrength,visualWind.x,visualWind.z);
+      this.grass?.setWind(visualWindStrength,visualWind.x,visualWind.z);
+      this.structureVfx.setWind(visualWindStrength,visualWind.x,visualWind.z);
+      this.paintedWater.setWind(visualWindStrength,visualWind.x,visualWind.z);
+      this.resources.presentWind(skyTick);
+      this.plants.presentWind(skyTick);
+      this.grass?.presentWind(skyTick);
+    }
     this.resources.presentChop(skyTick/TICKS_PER_SECOND);
     this.doors.tick.value=skyTick;this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
     this.actionVfx.present(skyTick);this.brawlCloud.present(skyTick);this.structureVfx.present(skyTick);
     if(this.texturesEnabled)this.paintedWater.present(skyTick/TICKS_PER_SECOND);
     this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
+    if(this.world)this.clouds.present({seed:this.world.seed,tick:skyTick,weather:this.world.weather,camera:this.camera,
+      target:this.controls.target,strength:visualWindStrength,directionX:visualWind.x,directionZ:visualWind.z,
+      daylight:this.daylight.sample.daylight});
+    this.daylight.fitShadow(this.camera);
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
     this.actionFeedback.setBarsDetailVisible(cellPixels>=18);
     this.actionVfx.setDetailVisible(cellPixels>=18);
@@ -1001,7 +1024,7 @@ export class ColonyRenderer {
     this.crops.dispose();
     this.plants.dispose();
     if(this.grass){this.grass.mesh.removeFromParent();this.grass.dispose();this.grass=null;}
-    this.resources.clear();
+    this.resources.dispose();
     this.pawns.dispose();
     this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.ropes.dispose();this.designations.dispose();
 
@@ -1013,6 +1036,7 @@ export class ColonyRenderer {
     this.texturedStaticMaterial.dispose();this.staticPaint.dispose();
     this.waterMaterial.dispose();
     this.paintedWater.dispose();
+    this.clouds.dispose();
     this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();
     this.objectSelection.geometry.dispose();(this.objectSelection.material as THREE.Material).dispose();
     this.daylight.dispose();

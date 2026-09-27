@@ -153,18 +153,29 @@ test('vegetation uses textured geometry at both distances and switches existing 
   try {
     resources.update(world,true);crops.update(world,true);plants.update(world,true);overview.update(world,true);
     const tree=resources.group.getObjectByName('tree-canopy') as THREE.Mesh;
-    expect(tree).toBeTruthy();expect(tree.material).toBe(textured);
+    expect(tree).toBeTruthy();
+    const windyTreeTextured=tree.material as THREE.MeshStandardNodeMaterial;
+    expect(windyTreeTextured).not.toBe(textured);
+    expect(windyTreeTextured.map).toBe(paint);
+    expect(windyTreeTextured.positionNode).toBeTruthy();
     expect(tree.geometry.getAttribute('uv').count).toBe(tree.geometry.getAttribute('position').count);
     const crop=(crops.group.children[0] as THREE.Mesh),plant=(plants.group.children[0] as THREE.Mesh);
+    const windyPlantTextured=plant.material as THREE.MeshStandardNodeMaterial;
+    expect(windyPlantTextured.map).toBe(paint);
+    expect(windyPlantTextured.positionNode).toBeTruthy();
     const treeGeometry=tree.geometry,cropGeometry=crop.geometry,plantGeometry=plant.geometry;
     resources.setTexturesEnabled(false);crops.setTexturesEnabled(false);plants.setTexturesEnabled(false);overview.setTexturesEnabled(false);
-    expect(tree.material).toBe(plain);expect(crop.material).toBe(plain);expect(plant.material).toBe(plain);
+    const windyTreePlain=tree.material as THREE.MeshStandardNodeMaterial;
+    const windyPlantPlain=plant.material as THREE.MeshStandardNodeMaterial;
+    expect(windyTreePlain.map).toBeNull();expect(windyTreePlain.positionNode).toBeTruthy();
+    expect(crop.material).toBe(plain);
+    expect(windyPlantPlain.map).toBeNull();expect(windyPlantPlain.positionNode).toBeTruthy();
     expect(tree.geometry).toBe(treeGeometry);expect(crop.geometry).toBe(cropGeometry);expect(plant.geometry).toBe(plantGeometry);
     expect(plain.map).toBeNull();
     resources.setTexturesEnabled(true);crops.setTexturesEnabled(true);plants.setTexturesEnabled(true);overview.setTexturesEnabled(true);
-    expect(tree.material).toBe(textured);expect(crop.material).toBe(textured);expect(plant.material).toBe(textured);
+    expect(tree.material).toBe(windyTreeTextured);expect(crop.material).toBe(textured);expect(plant.material).toBe(windyPlantTextured);
   } finally {
-    resources.clear();crops.dispose();plants.dispose();overview.dispose();plain.dispose();textured.dispose();paint.dispose();
+    resources.dispose();crops.dispose();plants.dispose();overview.dispose();plain.dispose();textured.dispose();paint.dispose();
   }
 });
 
