@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { deserializeWorld, serializeWorld, validateWorld } from '../../src/sim/serialization';
 import { stepWorld } from '../../src/sim/engine';
+import { ACTION_FX } from '../../src/render/ActionVfxLayer';
 import type { World } from '../../src/sim/types';
 import { nightEncounter } from '../scenarios/disturbance';
 import { environmentUiFixture } from '../scenarios/environment-camp';
@@ -66,6 +67,11 @@ test('V126: brawl, sleep and active equipment effects use shared WebGPU batches 
         const inspect = () => page.evaluate(() => {
           const view = (window as any).__activityView;
           const action = view.actionVfx.mesh;
+          const brawl = view.brawlCloud.group;
+          let brawlDraws = 0;
+          brawl.traverse((object: any) => {
+            if (object.isMesh && object.visible && object.geometry?.instanceCount > 0) brawlDraws++;
+          });
           const source = view.pawns.feedbackSource;
           const structure = view.structureVfx;
           const fx = action.geometry.getAttribute('actionFx');
@@ -73,6 +79,8 @@ test('V126: brawl, sleep and active equipment effects use shared WebGPU batches 
             backend: view.backend,
             actionVisible: action.visible,
             actionCount: action.geometry.instanceCount,
+            brawlVisible: brawl.visible,
+            brawlDraws,
             effects: view.world.pawns.map((_pawn: unknown, index: number) => fx.getX(index)),
             sharedPose: ['aFrom', 'aTo', 'aTravel'].every(name => action.geometry.getAttribute(name) === source.getAttribute(name)),
             actionClock: view.actionVfx.time.value,
@@ -85,17 +93,18 @@ test('V126: brawl, sleep and active equipment effects use shared WebGPU batches 
         expect(first.backend).toBe('WebGPU');
         expect(first.sharedPose).toBe(true);
         if (scene.name === 'brawl') {
-          expect(first.actionVisible).toBe(true);
-          expect(first.effects).toContain(1);
+          expect(first.brawlVisible).toBe(true);
+          expect(first.brawlDraws).toBeGreaterThan(0);
+          expect(first.actionVisible).toBe(false);
         } else if (scene.name === 'sleep') {
           expect(first.actionVisible).toBe(true);
-          expect(first.effects).toContain(2);
+          expect(first.effects).toContain(ACTION_FX.sleep);
           const portraitExpressions = await page.locator('#colonists .portrait-head').evaluateAll(nodes =>
             nodes.map(node => decodeURIComponent((node as HTMLElement).dataset.source ?? '').match(/data-expression="([^"]+)"/)?.[1] ?? ''));
           // The HUD portrait is generated from the same closed-eye face state.
           expect(portraitExpressions).toContain('sleep');
         } else if (scene.name === 'forge') {
-          expect(first.effects).toContain(7);
+          expect(first.effects).toContain(ACTION_FX.smith);
           expect(first.glowCount).toBeGreaterThan(0);
           expect(first.smokeCount).toBeGreaterThan(0);
         } else {

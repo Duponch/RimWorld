@@ -75,10 +75,46 @@ test('adjacent human fighters close smoothly in the shared body/cargo/selection 
   timeline.tick=52.44;layer.updateTravel(world,timeline);
   expect(from.version).toBe(poseVersion); // the resident GPU interpolation reaches the endpoint
   expect(to.getZ(0)).toBeCloseTo(10.24);
+  // A reciprocal social pair keeps its visual contact and fighting stance if
+  // a transient confirmed snapshot has already cleared the melee order.
+  a.melee={order:null,strike:null};b.melee={order:null,strike:null};
+  world.tick=52;layer.update(world,1,false);timeline.tick=52.44;layer.updateTravel(world,timeline);
+  expect(to.getZ(0)).toBeCloseTo(10.24);expect(to.getZ(1)).toBeCloseTo(10.76);
+  expect((g.getAttribute('aMotion') as THREE.InstancedBufferAttribute).getZ(0)).toBe(22);
   delete a.social.fight;delete b.social.fight;delete a.melee;delete b.melee;
   world.tick=53;layer.update(world,1,false);timeline.tick=53;layer.updateTravel(world,timeline);
   expect(from.getZ(0)).toBeCloseTo(10.24);expect(to.getZ(0)).toBeCloseTo(10);
   expect(a.z).toBe(10);expect(b.z).toBe(11);
+  clearGroup(layer.group);
+});
+
+test('low work bends and straightens through the existing motion stream without changing the work flag',()=>{
+  const world=createWorld(),pawn=world.pawns[0]!;
+  pawn.x=10;pawn.z=10;pawn.state='idle';delete pawn.motion;world.tick=60;
+  const layer=new PawnLayer(),timeline=new MotionTimeline();
+  layer.update(world,1,true);timeline.tick=60;layer.updateTravel(world,timeline);
+  const geometry=layer.feedbackSource!,motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
+  const attributes=Object.entries(geometry.attributes).filter(([name])=>name!=='aFire');
+  expect(attributes.length).toBeLessThanOrEqual(16);
+  expect(new Set(attributes.map(([,attribute])=>(attribute as THREE.InterleavedBufferAttribute).data??attribute)).size).toBeLessThanOrEqual(7);
+  const job:Job={id:990,kind:'sow',x:10,z:11,orientation:0,footprint:'standard',status:'active',reservedBy:pawn.id,progress:0,escrow:{wood:0,food:0}};
+  world.jobs.push(job);pawn.jobId=job.id;pawn.state='working';world.tick=61;
+  layer.update(world,1,false);timeline.tick=61;layer.updateTravel(world,timeline);
+  expect(motion.getZ(0)).toBe(WORK_POSE.ground);expect(motion.getY(0)).toBe(1);
+  const incoming=motion.getX(0);expect(incoming).toBeLessThan(-1);
+  const fraction=(value:number)=>{const payload=-value-1;return payload-Math.floor(payload);};
+  expect(fraction(incoming)).toBeCloseTo(0,3);
+  const version=motion.version;
+  timeline.tick=61.5;layer.updateTravel(world,timeline);
+  expect(motion.version).toBe(version); // bend advances in the shader, not a per-frame upload
+  const elapsed=.5/(.28*6),ease=elapsed*elapsed*(3-2*elapsed);
+  pawn.state='idle';pawn.jobId=null;world.jobs=[];world.tick=62;
+  layer.update(world,1,false);layer.updateTravel(world,timeline);
+  const outgoing=motion.getX(0);
+  expect(outgoing).toBeLessThan(-1);expect(fraction(outgoing)).toBeCloseTo(ease,2);
+  expect(motion.getY(0)).toBe(0);expect(motion.getZ(0)).toBe(0);
+  timeline.tick=64;layer.updateTravel(world,timeline);
+  expect(motion.getX(0)).toBe(0);expect(pawn.x).toBe(10);expect(pawn.z).toBe(10);
   clearGroup(layer.group);
 });
 
@@ -92,6 +128,9 @@ test('working subtype and sleeping or dead face pose reuse the resident motion a
   expect(motion.getY(0)).toBe(3);expect(motion.getZ(0)).toBe(WORK_POSE.craft);
   pawn.research=undefined;pawn.state='sleeping';layer.update(world,1,false);
   expect(motion.getY(0)).toBe(0);expect(motion.getZ(0)).toBe(18);
+  pawn.social={rng:1,memories:[],fight:{opponentId:world.pawns[1]!.id,startedAt:world.tick}};
+  pawn.state='downed';layer.update(world,1,false);
+  expect(motion.getZ(0)).toBe(1); // a stale fight marker cannot stand up a downed actor
   pawn.state='dead';layer.update(world,1,false);
   expect(motion.getZ(0)).toBe(19);
   clearGroup(layer.group);

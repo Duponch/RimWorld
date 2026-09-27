@@ -5,6 +5,9 @@ dist/
 test-results/
 playwright-report/
 artifacts/*.png
+artifacts/v128-brawl/
+artifacts/v128-work/
+artifacts/comic-vfx-bench-v128.json
 # Regenerable large fixture and full browser checkpoints; compact proofs are tracked.
 artifacts/deconstruction-load.json
 artifacts/deconstruction-ui.json

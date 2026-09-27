@@ -34,8 +34,25 @@ import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { pawnSurfaceShade } from './actor-surface';
 type VisualPawn = { from: THREE.Vector4; to: THREE.Vector4 };
 type ApproachTransition = { fromX:number; fromZ:number; toX:number; toZ:number; start:number; baseX:number; baseZ:number };
+type CrouchTransition = { start:number; from:number; to:number };
 const APPROACH_TICKS=.24*TICKS_PER_SECOND;
+const CROUCH_TICKS=.28*TICKS_PER_SECOND;
+// aMotion.x normally stores 0/1 locomotion. A negative value also carries a
+// short pose transition: quarter-tick start, initial crouch fraction, and the
+// locomotion bit. Work subtype (y), pose (z), and strike clock (w) stay intact.
+const CROUCH_QUANTA=4,CROUCH_PADDING=16,CROUCH_WALK_MARK=8192;
 const POSE_SLEEP=18,POSE_DEAD=19,POSE_FIGHT_READY=22;
+const crouched=(pose:number|undefined):boolean=>pose===WORK_POSE.ground||pose===WORK_POSE.groundMelee;
+function crouchAt(transition:CrouchTransition,tick:number):number {
+  const fraction=THREE.MathUtils.clamp((tick-transition.start)/CROUCH_TICKS,0,1);
+  const smooth=fraction*fraction*(3-2*fraction);
+  return THREE.MathUtils.lerp(transition.from,transition.to,smooth);
+}
+function motionX(walking:boolean,transition:CrouchTransition|undefined,origin:number):number {
+  if(!transition)return walking?1:0;
+  const quarterTick=Math.round(transition.start*CROUCH_QUANTA)-origin*CROUCH_QUANTA+CROUCH_PADDING;
+  return -1-quarterTick-Math.min(.999,Math.max(0,transition.from))-(walking?CROUCH_WALK_MARK:0);
+}
 function workActivity(pawn:Pawn):number {
   if(pawn.state!=='working'||pawn.stun)return 0;
   return pawn.cooking?2:pawn.research?3:1;
@@ -48,7 +65,7 @@ function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boole
   if(pawn.melee?.strike)return smallMelee?WORK_POSE.groundMelee:8;
   if(pawn.shooting?.stance?.phase==='cooldown')return 15;
   if(pawn.shooting?.stance)return 7;
-  if(pawn.social?.fight&&pawn.melee?.order?.auto==='social')return POSE_FIGHT_READY;
+  if(pawn.social?.fight&&!medicallyStopped(pawn))return POSE_FIGHT_READY;
   if(pawn.state==='recreating')return pawn.recreation.task?.activity==='horseshoes'?4:pawn.recreation.task?.activity==='chess'?3:5;
   if(pawn.state==='resting'||medicallyStopped(pawn))return 1;
   if(pawn.state==='eating')return seated?3:2;
@@ -90,9 +107,26 @@ export class PawnLayer {
   private readonly workOffsets = new Map<number,{x:number;z:number}>();
   private readonly approachTransitions = new Map<number,ApproachTransition>();
   private readonly departureOffsets = new Map<number,{start:number;x:number;z:number;arrivalX:number;arrivalZ:number}>();
+  private readonly crouchTransitions = new Map<number,CrouchTransition>();
+  private readonly shownPoses = new Map<number,number>();
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
   private rescuePairs:readonly (readonly [number,number])[]=[];
   constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void) {}
+  private showPose(id:number,pose:number,tick:number):void {
+    const previous=this.shownPoses.get(id);
+    if(previous===pose)return;
+    if(previous!==undefined&&crouched(previous)!==crouched(pose)){
+      // The presentation playhead, not the latest worker snapshot, starts the
+      // bend. A rapid interruption resumes from the fraction already shown.
+      const earlier=this.crouchTransitions.get(id);
+      const from=earlier?crouchAt(earlier,tick):crouched(previous)?1:0;
+      const to=crouched(pose)?1:0;
+      if(pose===POSE_SLEEP||pose===POSE_DEAD||pose===1||pose===5||pose===6||Math.abs(from-to)<.001)
+        this.crouchTransitions.delete(id);
+      else this.crouchTransitions.set(id,{start:Math.ceil(tick*CROUCH_QUANTA)/CROUCH_QUANTA,from,to});
+    }
+    this.shownPoses.set(id,pose);
+  }
   setTexturesEnabled(enabled: boolean): void {
     if (this.texturesEnabled === enabled) return;
     this.texturesEnabled = enabled;
@@ -121,17 +155,30 @@ export class PawnLayer {
       const pivot = pawnMorph(attribute('bindPivot', 'vec3'));
       const motion = attribute('aMotion', 'vec4');
       const pose = pawnPresentationPose(this);
+      const transitioning=motion.x.lessThan(-.5);
+      const packed=motion.x.negate().sub(1);
+      const transitionWalk=packed.greaterThan(CROUCH_WALK_MARK);
+      const walking=transitioning.select(transitionWalk.select(float(1),float(0)),motion.x);
+      const ground=motion.z.equal(WORK_POSE.ground),low=ground.or(motion.z.equal(WORK_POSE.groundMelee));
+      const crouch=low.select(float(1),float(0)).toVar();
+      If(transitioning,()=>{
+        const payload=transitionWalk.select(packed.sub(CROUCH_WALK_MARK),packed);
+        const start=payload.floor().sub(CROUCH_PADDING).div(CROUCH_QUANTA*TICKS_PER_SECOND);
+        const elapsed=this.travelTime.sub(start).div(CROUCH_TICKS/TICKS_PER_SECOND).clamp(0,1);
+        const smooth=elapsed.mul(elapsed).mul(float(3).sub(elapsed.mul(2)));
+        crouch.assign(mix(payload.fract(),crouch,smooth));
+      });
       const angle = float(0).toVar();
       const sign = float(1).toVar();
       If(bone.equal(3).or(bone.equal(4)).or(bone.equal(6)), () => { sign.assign(-1); });
       If(bone.greaterThan(1.5), () => {
-        angle.assign(sin(this.time.mul(9).add(motion.w)).mul(motion.x).mul(sign).mul(0.65));
+        angle.assign(sin(this.time.mul(9).add(motion.w)).mul(walking).mul(sign).mul(0.65));
         If(bone.lessThan(3.5), () => {
           If(motion.y.greaterThan(0).and(motion.z.lessThan(10.5)),()=>{
             angle.addAssign(sin(this.time.mul(12).add(motion.w)).mul(0.35).sub(0.8));
           });
           If(attribute('aCargo', 'vec2').x.abs().greaterThan(0.5), () => {
-            angle.assign(float(-0.9).add(sin(this.time.mul(9).add(motion.w)).mul(motion.x).mul(0.06)));
+            angle.assign(float(-0.9).add(sin(this.time.mul(9).add(motion.w)).mul(walking).mul(0.06)));
             If(motion.z.greaterThan(1.5), () => { angle.assign(float(-1.3).add(sin(this.time.mul(4).add(motion.w)).mul(0.22))); });
           });
         });
@@ -164,45 +211,73 @@ export class PawnLayer {
         angle.assign(sin(this.time.mul(cadence).add(motion.w).add(bone.equal(3).select(float(1.25),float(0))))
           .mul(breadth).sub(motion.y.equal(3).select(float(.99),float(.87))));
       });
-      If(motion.z.equal(WORK_POSE.ground).or(motion.z.equal(WORK_POSE.groundMelee)).and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
-        angle.assign(stroke.mul(bone.equal(3).select(float(-.29),float(.29))).sub(.22));
-      });
-      If(bone.equal(1).and(motion.x.greaterThan(.5)),()=>{
+      If(bone.equal(1).and(walking.greaterThan(.5)),()=>{
         angle.assign(sin(this.time.mul(9).add(motion.w)).mul(.045));
       });
       If(motion.z.greaterThan(2.5).and(motion.z.lessThan(3.5)).and(bone.greaterThan(3.5)), () => {
         angle.assign(bone.lessThan(5.5).select(float(-Math.PI / 2), float(0)));
       });
-      If(motion.z.equal(8).and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{angle.assign(sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI)).mul(-1.7));});
       If(motion.z.equal(WORK_POSE.groundMelee).and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
         angle.assign(sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI)).mul(-.9).sub(.2));
       });
-      If(motion.z.equal(POSE_FIGHT_READY).and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
-        angle.assign(sin(this.time.mul(6).add(motion.w).add(bone.equal(3).select(float(1),float(0)))).mul(.13).sub(.95));
+      // A stable appearance-based phase survives the ready -> strike clock
+      // switch in aMotion.w. Confirmed strikes add a short accent to the same
+      // continuous arm/torso/leg rhythm instead of replacing the whole pose.
+      const brawl=motion.z.equal(POSE_FIGHT_READY).or(motion.z.equal(8));
+      const fightPhase=this.time.mul(8).add(attribute('aShape','vec4').x.mul(3.7)).add(attribute('aHair','vec3').x.mul(7));
+      const strike=motion.z.equal(8).select(
+        sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI)),float(0));
+      If(brawl.and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
+        angle.assign(sin(fightPhase.add(bone.equal(3).select(float(Math.PI),float(0))))
+          .mul(.29).sub(.95).sub(strike.mul(bone.equal(3).select(float(.85),float(.3)))));
       });
-      If(motion.z.equal(POSE_FIGHT_READY).and(bone.equal(0).or(bone.equal(1))),()=>{
-        angle.assign(sin(this.time.mul(6).add(motion.w)).mul(bone.equal(0).select(float(.07),float(.035))));
+      If(brawl.and(bone.equal(0).or(bone.equal(1))),()=>{
+        angle.assign(sin(fightPhase).mul(bone.equal(0).select(float(.105),float(.06))).sub(strike.mul(.11)));
+      });
+      If(brawl.and(bone.greaterThan(3.5)),()=>{
+        angle.assign(sin(fightPhase.add(bone.equal(4).or(bone.equal(6)).select(float(0),float(Math.PI))))
+          .mul(bone.lessThan(5.5).select(float(.12),float(.055))));
       });
       const shooting=motion.z.equal(7).or(motion.z.equal(15));
       If(shooting.and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
         angle.assign(bone.equal(3).select(float(-1.54),float(-1.12)));
       });
       If(motion.z.equal(4).and(bone.equal(3)), () => { angle.assign(sin(this.time.mul(2).add(motion.w)).mul(1.1).sub(.35)); });
+      If(crouch.greaterThan(0).and(brawl.not()).and(bone.lessThan(3.5)),()=>{
+        const lowAngle=bone.equal(0)
+          .select(sin(this.time.mul(8).add(motion.w)).mul(.085).sub(.09),
+            bone.equal(1).select(sin(this.time.mul(8).add(motion.w).add(.7)).mul(.055).add(.055),
+              sin(this.time.mul(8).add(motion.w).add(bone.equal(3).select(float(2.1),float(0)))).mul(.39).sub(.65)));
+        // Keep the active strike of a low melee target, but transition ordinary
+        // ground-work hands with the same bend as the body.
+        If(motion.z.notEqual(WORK_POSE.groundMelee),()=>{angle.assign(mix(angle,lowAngle,crouch));});
+      });
+      If(crouch.greaterThan(0).and(bone.greaterThan(3.5)),()=>{
+        const lowLeg=sin(this.time.mul(8).add(motion.w).add(bone.equal(4).or(bone.equal(6)).select(float(0),float(Math.PI))))
+          .mul(bone.lessThan(5.5).select(float(.045),float(.025)));
+        angle.assign(mix(angle,lowLeg,crouch));
+      });
       const local = pawnMorph(positionLocal).sub(pivot);
       const c = cos(angle), s = sin(angle);
       const animated = vec3(local.x, local.y.mul(c).sub(local.z.mul(s)), local.y.mul(s).add(local.z.mul(c))).add(pivot).toVar();
       If(busy.and(bone.lessThan(3.5)),()=>{
         animated.y.addAssign(sin(this.time.mul(11).add(motion.w)).mul(.012));
       });
-      If(motion.z.equal(WORK_POSE.ground).or(motion.z.equal(WORK_POSE.groundMelee)),()=>{
-        // Compress the legs around grounded feet and tip the upper body over
-        // the contact point. Every part still belongs to the resident rig.
+      If(crouch.greaterThan(0),()=>{
+        // Blend the entire low silhouette, not just its vertical offset. Feet
+        // stay anchored while the hands, head and torso continue to move.
+        const upright=animated.toVar();
         If(bone.greaterThan(3.5),()=>{animated.y.assign(animated.y.sub(.11).mul(.72).add(.11));});
         If(bone.lessThan(3.5),()=>{
           const y=animated.y.sub(.61).toVar(),z=animated.z.toVar();
           animated.y.assign(y.mul(.91).sub(z.mul(.42)).add(.46));
           animated.z.assign(y.mul(.42).add(z.mul(.91)).add(.10));
         });
+        animated.assign(mix(upright,animated,crouch));
+      });
+      If(brawl.and(bone.lessThan(3.5)),()=>{
+        animated.y.addAssign(sin(fightPhase.mul(2)).mul(.014));
+        animated.z.addAssign(sin(fightPhase).mul(.025));
       });
       If(motion.z.greaterThan(2.5).and(motion.z.lessThan(3.5)), () => {
         // Thigh rotates around the hip; the lower leg keeps its vertical pose
@@ -322,7 +397,7 @@ export class PawnLayer {
 
   update(world: World, oldBlend: number, newMap: boolean): void {
     this.travelKeys.clear();this.travelSurfaces=furnitureSurfaces(world);
-    if(newMap){this.headings.clear();this.approachTransitions.clear();this.departureOffsets.clear();this.workOffsets.clear();}
+    if(newMap){this.headings.clear();this.approachTransitions.clear();this.departureOffsets.clear();this.workOffsets.clear();this.crouchTransitions.clear();this.shownPoses.clear();}
     const indices=new Map<number,number>(),pawnsById=new Map<number,Pawn>();
     world.pawns.forEach((p,i)=>{indices.set(p.id,i);pawnsById.set(p.id,p);});
     this.rescuePairs=world.pawns.flatMap((p,i)=>p.rescue?.phase==='carry'&&indices.has(p.rescue.patientId)?[[i,indices.get(p.rescue.patientId)!] as const]:[]);
@@ -413,7 +488,9 @@ export class PawnLayer {
       const contactPose=arriving?pawnWorkPose({...pawn,state:'working'},job):workPose;
       const atBench=station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
       const clearance=job?.kind==='mine' ? .9 : atBench ? .88 : .82;
-      const humanOpponent=pawn.melee?.order&&!pawn.melee.order.structure?pawnsById.get(pawn.melee.order.targetId):undefined;
+      const pair=pawn.social?.fight?pawnsById.get(pawn.social.fight.opponentId):undefined;
+      const socialOpponent=pair?.social?.fight?.opponentId===pawn.id&&!medicallyStopped(pair)?pair:undefined;
+      const humanOpponent=pawn.melee?.order&&!pawn.melee.order.structure?pawnsById.get(pawn.melee.order.targetId):socialOpponent;
       const fightContact=humanOpponent&&humanOpponent.state!=='dead'&&!medicallyStopped(pawn)&&(pawn.state!=='moving'||arriving)
         ? meleeApproach(pawn,humanOpponent):undefined;
       const reach=fightContact&&(fightContact.x!==0||fightContact.z!==0)?fightContact
@@ -449,7 +526,7 @@ export class PawnLayer {
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
       cargo.setXY(index, pawn.rescue?.phase==='carry'||load?.humanCorpse?-1:packed?4:load ? BIOME_CARGO[load.item]??(load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:isAnimalMeat(load.item)?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2) : 0, packed||load?.kind==='corpse'||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
-    for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);this.headings.delete(id);this.workPoses.delete(id);this.workOffsets.delete(id);this.approachTransitions.delete(id);this.departureOffsets.delete(id);}
+    for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);this.headings.delete(id);this.workPoses.delete(id);this.workOffsets.delete(id);this.approachTransitions.delete(id);this.departureOffsets.delete(id);this.crouchTransitions.delete(id);this.shownPoses.delete(id);}
     this.pawnIndices.clear();for(const [id,index] of indices)this.pawnIndices.set(id,index);
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo]) attr.needsUpdate = true;
     geometry.instanceCount = world.pawns.length;
@@ -469,11 +546,17 @@ export class PawnLayer {
     world.pawns.forEach((pawn,i)=>{
       const segment=pawn.body?.pileId!==undefined||pawn.body?.lostAt!==undefined?undefined:timeline.segment(pawn.id);
       const active=!!segment && timeline.tick<segment.end;
-      const key=`${origin}:${segment?.start}:${segment?.end}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}:${pawn.path[0]?.x}:${pawn.path[0]?.z}`;
+      const onEdge=!!segment&&(active||pawn.state==='moving'||world.tick<segment.end);
+      const smallMelee=!!pawn.melee?.strike&&(world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
+      const dining=pawn.need?.kind==='eat'?pawn.need.dining:null;
+      const shownPose=onEdge?(medicallyStopped(pawn)?1:0)
+        :animationPose(pawn,this.workPoses.get(pawn.id)??0,smallMelee,!!dining&&dining.seatId!==null);
+      this.showPose(pawn.id,shownPose,timeline.tick);
+      const key=`${origin}:${segment?.start}:${segment?.end}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}:${shownPose}:${pawn.path[0]?.x}:${pawn.path[0]?.z}`;
       if(this.travelKeys.get(pawn.id)===key)return;
       this.travelKeys.set(pawn.id,key);dirty=true;
       const visual=this.visuals.get(pawn.id)!;
-      if(segment && (active || pawn.state==='moving'||world.tick<segment.end)) {
+      if(onEdge&&segment) {
         const yaw=Math.atan2(segment.to.x-segment.from.x,segment.to.z-segment.from.z);
         const previous=this.headings.get(pawn.id);
         let heading=turnToward(previous,yaw,segment.start);
@@ -503,7 +586,8 @@ export class PawnLayer {
         visual.to.x+=departure.arrivalX*b;visual.to.z+=departure.arrivalZ*b;
         this.approachTransitions.delete(pawn.id);
         times.setXYZW(i,localTimeSeconds(segment.start,origin),localTimeSeconds(segment.end,origin),a,b);
-        motion.setX(i,!medicallyStopped(pawn)&&active && a!==b && timeline.tick>=segment.start?1:0);motion.setY(i,0);motion.setZ(i,medicallyStopped(pawn)?1:0);
+        motion.setX(i,motionX(!medicallyStopped(pawn)&&active&&a!==b&&timeline.tick>=segment.start,this.crouchTransitions.get(pawn.id),origin));
+        motion.setY(i,0);motion.setZ(i,shownPose);
       } else {
         const desired=this.workOffsets.get(pawn.id)??{x:0,z:0};
         const target=this.targetPoses.get(pawn.id)!;
@@ -540,15 +624,24 @@ export class PawnLayer {
         times.setXYZW(i,shifting?approachStart:0,shifting?approachStart+APPROACH_TICKS/TICKS_PER_SECOND:0,localTimeSeconds(heading.startTick,origin),2);
         // Unexpected target changes still get a short, visibly stepping
         // adjustment. Normal task arrivals already reach contact on the edge.
-        motion.setX(i,shifting?1:0);motion.setY(i,workActivity(pawn));
-        const dining=pawn.need?.kind==='eat'?pawn.need.dining:null;
-        const smallMelee=!!pawn.melee?.strike&&(world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
-        motion.setZ(i,animationPose(pawn,this.workPoses.get(pawn.id)??0,smallMelee,!!dining&&dining.seatId!==null));
+        motion.setX(i,motionX(shifting,this.crouchTransitions.get(pawn.id),origin));motion.setY(i,workActivity(pawn));
+        motion.setZ(i,shownPose);
       }
       if(pawn.melee?.strike)motion.setW(i,coreTimeSeconds(pawn.melee.strike.atCore,origin));
       else if(pawn.shooting?.stance?.phase==='cooldown')motion.setW(i,coreTimeSeconds(pawn.shooting.stance.startedAtCore,origin));
       from.setXYZW(i,visual.from.x,visual.from.y,visual.from.z,visual.from.w);to.setXYZW(i,visual.to.x,visual.to.y,visual.to.z,visual.to.w);
     });
+    let crouchFinished=false;
+    for(const [id,transition] of this.crouchTransitions){
+      if(timeline.tick<transition.start+CROUCH_TICKS)continue;
+      this.crouchTransitions.delete(id);
+      const index=this.pawnIndices.get(id);
+      if(index===undefined)continue;
+      const value=motion.getX(index);
+      if(value>=-.5)continue;
+      motion.setX(index,-value-1>=CROUCH_WALK_MARK?1:0);
+      crouchFinished=true;
+    }
     if(dirty){
       // Both actors, their loads and selection rings use exactly the same edge
       // and yaw. The carried rig is an extra pose in the existing GPU batch.
@@ -556,12 +649,13 @@ export class PawnLayer {
         from.setXYZW(patient,from.getX(carrier),from.getY(carrier),from.getZ(carrier),from.getW(carrier));
         to.setXYZW(patient,to.getX(carrier),to.getY(carrier),to.getZ(carrier),to.getW(carrier));
         times.setXYZW(patient,times.getX(carrier),times.getY(carrier),times.getZ(carrier),times.getW(carrier));motion.setXYZ(patient,0,0,6);
+        this.crouchTransitions.delete(world.pawns[patient]!.id);this.shownPoses.set(world.pawns[patient]!.id,6);
         const source=this.visuals.get(world.pawns[carrier]!.id)!,target=this.visuals.get(world.pawns[patient]!.id)!;
         target.from.copy(source.from);target.to.copy(source.to);
         const heading=this.headings.get(world.pawns[carrier]!.id);if(heading)this.headings.set(world.pawns[patient]!.id,{...heading});
       }
       for(const attribute of [from,to,times,motion])attribute.needsUpdate=true;
-    }
+    }else if(crouchFinished)motion.needsUpdate=true;
   }
 
   dispose(): void {

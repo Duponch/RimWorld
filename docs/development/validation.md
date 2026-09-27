@@ -1,4 +1,6 @@
-# Validation courante — V127
+# Validation courante — V128
+
+V128 : [bagarre 3D et Z de sommeil](../history/validation-comic-vfx-v128.md). Build, cinq fichiers Vitest / 25 tests et deux parcours natifs finaux réussissent séquentiellement ; un essai concurrent a épuisé la mémoire système et GPU, puis n'a pas reproduit sa panne isolément. Banc A/B/A sur cent acteurs en pause : CPU frame p95 2,6/2,2/2,5 ms, RAF à 240 Hz plafonnés, pixels d'effet absents en B. Les poses de `PawnLayer` restent dans les deux bras et aucun temps GPU n'est déduit de RAF.
 
 V127 : [grippe, traitement et reprise](../history/validation-flu-v127.md). Calendrier Cassandra futur et biome, PRNG d'incident distinct, maladie/admissibilité bornées, soin médical avec dose physique, ancienne sauvegarde stricte, colonie préparée et parcours natif. Les autres maladies ne sont pas simulées par substitution ; aucune campagne longue ni promesse 240 FPS/×6.
 

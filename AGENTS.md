@@ -1,5 +1,11 @@
 # Travail sur Lisière
 
+## Signes BD de bagarre et sommeil V128
+
+- Lire `docs/development/comic-vfx-v128.md`, `docs/research/comic-vfx-reference-v128.md` et `docs/history/validation-comic-vfx-v128.md`. La nouvelle référence fournie est un visualiseur 3D : nuage crème volumique cerné, étoiles dorées en relief, traits noirs et membres cubiques. Ses 17 dessins animés pour **une** bagarre et sa boucle CPU ne sont pas un budget à copier par paire.
+- `BrawlCloudLayer` regroupe les paires réciproques dans des maillages résidents partagés ; `ActionVfxLayer` conserve Z de sommeil et signes de travail. Les éclats de coup suivent une frappe confirmée, tandis que le nuage suit le duel en cours. L'horloge reste celle du tick présenté : pause fixe, disparition au réveil/à la fin du duel et au LOD éloigné. Préserver l'entrelacement des attributs de bagarre pour la limite WebGPU de huit vertex buffers ; aucune scène individuelle par acteur.
+- V128 est une tranche de **présentation** : pas de nouvel ordre, blessure, besoin, schéma, ressource ou progression G0–G5. Le banc A/B/A sur cent acteurs en pause masque les deux couches d'effets, mais laisse les poses `PawnLayer` actives ; CPU frame p95 2,6/2,2/2,5 ms, RAF plafonnés à 240 Hz. Son delta ne mesure ni le coût de ces poses ni le GPU sans timestamp. Build, 25 tests ciblés et deux parcours natifs finaux passent séquentiellement ; un essai concurrent avait épuisé la mémoire de l'environnement et n'est pas une panne de rendu reproduite. Ne pas garantir 240 FPS/×6 ou égalité de pixels avec le prototype.
+
 ## Grippe humaine V127
 
 - Lire `docs/development/flu-v127.md`, `docs/research/flu-core-v127.md` et `docs/history/validation-flu-v127.md`. La catégorie Cassandra `DiseaseHuman` s'ouvre après neuf jours locaux ; forêt tempérée 50 jours moyens de catégorie, poids grippe 100/470, Récit d'aventure ×1,5. Les autres maladies non implémentées consomment leurs occasions sans les convertir en grippe. Fraction de victimes 20–50 %, pas de contamination de voisinage inventée.
@@ -8,7 +14,7 @@
 
 ## Activités vivantes V126
 - Lire `docs/development/activity-presentation-v126.md` et `docs/history/validation-activity-v126.md`. Gestes continus des bras, du buste et de la tête aux postes et travaux, approche de bagarre bornée et interpolée, clignement vivant, yeux fermés pour le sommeil et croix pour les morts au sol. HUD/Bio choisissent une expression SVG cachée par identité et état, jamais rendue chaque image. Ces états sont une présentation des décisions confirmées ; portée, position logique, dégâts et sauvegarde V125 restent inchangés.
-- `ActionVfxLayer` emprunte les attributs de pose humains et dessine les signes de contact, nuage/étoiles de bagarre et sommeil dans un lot GPU. `StructureVfxLayer` regroupe métal chaud, voyants de charge et fumée/vapeur ; le feu conserve son lot existant. Pas de particules CPU par image, lampe dynamique par étincelle, scène individuelle par acteur ou nouvel aléa métier. Les sources de fumée de feu au sol sont bornées autour de la vue pour éviter un lot transparent illimité ; préserver ce plafond et le suivi caméra.
+- Historiquement en V126, `ActionVfxLayer` dessinait contact, nuage/étoiles et sommeil dans un lot GPU. En V128, le nuage/étoiles passent dans `BrawlCloudLayer` ; `ActionVfxLayer` garde contact et sommeil. `StructureVfxLayer` regroupe métal chaud, voyants de charge et fumée/vapeur ; le feu conserve son lot existant. Pas de particules CPU par image, lampe dynamique par étincelle, scène individuelle par acteur ou nouvel aléa métier. Les sources de fumée de feu au sol sont bornées autour de la vue pour éviter un lot transparent illimité ; préserver ce plafond et le suivi caméra.
 - Valider pause, chargement, rotation/panoramique et vue reculée avant toute optimisation de ces lots. Les textures stylisées désactivées ne doivent pas réintroduire leur échantillonnage. V126 ne prouve ni 240 FPS ni débit ×6 sous forte charge, et n'augmente aucun pourcentage fonctionnel ni jalon G0–G5.
 
 ## Paroles blessantes et bagarres V125

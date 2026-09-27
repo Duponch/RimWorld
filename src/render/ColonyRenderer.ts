@@ -59,6 +59,7 @@ import { DesignationIconLayer } from './DesignationIconLayer';
 import { LandscapeBatch } from './LandscapeBatch';
 import { ActionFeedbackLayer } from './ActionFeedbackLayer';
 import { ActionVfxLayer } from './ActionVfxLayer';
+import { BrawlCloudLayer } from './BrawlCloudLayer';
 import { StructureVfxLayer } from './StructureVfxLayer';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { GpuGroundGrassLayer } from './GpuGroundGrassLayer';
@@ -87,6 +88,7 @@ export class ColonyRenderer {
   private readonly pawns = new PawnLayer(this.environmentLighting.configure);
   private readonly actionFeedback = new ActionFeedbackLayer(this.pawns);
   private readonly actionVfx = new ActionVfxLayer(this.pawns);
+  private readonly brawlCloud = new BrawlCloudLayer(this.pawns);
   private readonly structureVfx = new StructureVfxLayer();
   readonly backend: string;
   private readonly renderer: THREE.WebGPURenderer;
@@ -219,7 +221,7 @@ export class ColonyRenderer {
     this.hover.position.y = 0.08;
     this.hover.visible = false;
     this.hover.renderOrder = 5;
-    this.scene.add(this.hover, this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.structureVfx.group);
+    this.scene.add(this.hover, this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group);
     this.selectionInput=new PawnSelectionInput(renderer.domElement,{
       enabled:()=>this.tool==='select'&&!document.querySelector('dialog[open]'),
       pawns:()=>this.screenPawns(),select:gesture=>this.onSelection(gesture),
@@ -323,6 +325,7 @@ export class ColonyRenderer {
     this.pawns.blend.value = resetPoses ? 1 : 0;
     this.pawns.update(world, resetPoses ? 1 : oldBlend, resetPoses);
     this.actionVfx.update(world,this.pawns.feedbackSource!);
+    this.brawlCloud.update(world,this.pawns.feedbackSource!);
     this.structureVfx.adopt(world,newMap);
     this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses);
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
@@ -430,6 +433,7 @@ export class ColonyRenderer {
     const restoreWildlife=this.wildlife.prepare();
     const restoreFeedback=this.actionFeedback.prepareForCompile();
     const restoreActionVfx=this.actionVfx.prepareForCompile();
+    const restoreBrawlCloud=this.brawlCloud.prepareForCompile();
     const restoreStructureVfx=this.structureVfx.prepareForCompile();
     const restoreWind=this.wind.prepareForCompile();
     const restoreRoofs=this.roofs.prepare();
@@ -453,8 +457,11 @@ export class ColonyRenderer {
       this.landscape.needsUpdate=true;
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
     } finally {
-      restoreWind();restoreWildlife();restoreFeedback();restoreActionVfx();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();
+      // Restore the broad compile override first. Layers prepared above had
+      // already disabled culling when that override was captured; their own
+      // restorers must therefore run last to recover their real runtime flag.
       for (const [object, value] of culling) object.frustumCulled = value;
+      restoreWind();restoreWildlife();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
       this.updateHover();
@@ -628,11 +635,12 @@ export class ColonyRenderer {
     const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
     this.resources.presentChop(skyTick/TICKS_PER_SECOND);
     this.doors.tick.value=skyTick;this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
-    this.actionVfx.present(skyTick);this.structureVfx.present(skyTick);
+    this.actionVfx.present(skyTick);this.brawlCloud.present(skyTick);this.structureVfx.present(skyTick);
     this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
     this.actionFeedback.setBarsDetailVisible(cellPixels>=18);
     this.actionVfx.setDetailVisible(cellPixels>=18);
+    this.brawlCloud.setDetailVisible(cellPixels>=18);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
     if(distant!==this.overview.group.visible)this.landscape.needsUpdate=true;
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;this.plants.group.visible=!distant;
@@ -850,6 +858,7 @@ export class ColonyRenderer {
     this.hygiene.dispose();
     this.actionFeedback.dispose();
     this.actionVfx.dispose();
+    this.brawlCloud.dispose();
     this.structureVfx.dispose();
     this.overview.dispose();
     this.rocks.dispose();
