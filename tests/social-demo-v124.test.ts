@@ -2,6 +2,7 @@ import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {afterEach, expect, test, vi} from 'vitest';
 import {deserializeWorld, serializeWorld, stepWorld, validateWorld} from '../src/sim/index.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import {parseTestColonies, readTestColony} from '../src/ui/test-colonies.ts';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -15,7 +16,7 @@ test('V124 prepared table gathers two people in distinct seats and resumes exact
   expect(JSON.parse(raw).schemaVersion).toBe(124);
   vi.stubGlobal('fetch', vi.fn(async () => new Response(raw)));
   const world = deserializeWorld(await readTestColony(entry!));
-  expect(world.schemaVersion).toBe(127);
+  expect(world.schemaVersion).toBe(SCHEMA_VERSION);
   expect(validateWorld(world)).toEqual([]);
   const table = world.structures.find(s => s.kind === 'table' && s.x === 18 && s.z === 15)!;
   expect(table.gatherSpot).toBe(true);

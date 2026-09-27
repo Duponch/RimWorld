@@ -7,7 +7,7 @@ import { colonistMoodOffset } from './game-profile.ts';
 import { APPAREL } from './apparel-rules.ts';
 import { pawnBody } from './health-rules.ts';
 import { medicalPain } from './injury-state.ts';
-import { insultMoodMemories } from './social-state.ts';
+import { insultMoodMemories,kindWordsMoodMemories } from './social-state.ts';
 import type { BodyAssessment } from './body-capacities.ts';
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 
@@ -61,6 +61,10 @@ export function moodThoughts(world:World,pawn:Pawn):readonly MoodThought[] {
   for(const insult of insultMoodMemories(pawn,world.tick)){
     const speaker=world.pawns.find(p=>p.id===insult.otherId);
     thoughts.push({id:`insult-${insult.otherId}`,label:`Insulté par ${speaker?.name??'un colon'}${insult.count>1?` ×${insult.count}`:''}`,offset:insult.offset,kind:'memory',description:'Paroles blessantes reçues ; effet cumulatif dégressif pendant deux jours.',expiresAt:insult.expiresAt});
+  }
+  for(const words of kindWordsMoodMemories(pawn,world.tick)){
+    const speaker=world.pawns.find(p=>p.id===words.otherId);
+    thoughts.push({id:`kind-words-${words.otherId}`,label:`Mots gentils de ${speaker?.name??'un colon'}${words.count>1?` ×${words.count}`:''}`,offset:words.offset,kind:'memory',description:'Paroles bienveillantes reçues ; effet cumulatif dégressif pendant deux jours.',expiresAt:words.expiresAt});
   }
   const catharsis=pawn.mental?.catharsis.filter(t=>t>world.tick)??[];
   if(catharsis.length)thoughts.push({id:'catharsis',label:`Catharsis ×${catharsis.length}`,offset:40*(1-.75**catharsis.length)/.25,kind:'memory',description:'Soulagement après crise ; chaque occurrence dure trois jours, au plus cinq, effet décroissant.',expiresAt:catharsis[0]});

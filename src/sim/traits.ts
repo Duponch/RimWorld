@@ -9,6 +9,9 @@ export const TRAITS = Object.freeze({
   nervous:Object.freeze({label:'Nerveux',group:'nerves',mood:0,learning:0,breakOffset:8,description:'Seuil de crise mineure augmenté de 8 points ; ne diminue pas directement l’humeur.'}),
   'fast-learner':Object.freeze({label:'Apprentissage rapide',group:'learning',mood:0,learning:.75,breakOffset:0,description:'Apprentissage général : 175 %. Passion et saturation quotidienne se multiplient ensuite ; oubli inchangé.'}),
   'slow-learner':Object.freeze({label:'Apprentissage lent',group:'learning',mood:0,learning:-.75,breakOffset:0,description:'Apprentissage général : 25 %. Aucun ralentissement direct du travail ; oubli inchangé.'}),
+  kind:Object.freeze({label:'Aimable',group:'social-tone',mood:0,learning:0,breakOffset:0,description:'N’initie pas de vexation ni d’insulte et peut offrir des mots gentils : opinion +15 et humeur +5 pour la cible.'}),
+  abrasive:Object.freeze({label:'Incisif',group:'social-tone',mood:0,learning:0,breakOffset:0,description:'Vexations et insultes 2,3 fois plus probables parmi les échanges admissibles.'}),
+  bloodlust:Object.freeze({label:'Sanguinaire',group:'social-violence',mood:0,learning:0,breakOffset:0,description:'Quatre fois plus susceptible de déclencher une bagarre après une vexation ou une insulte.'}),
 });
 export type TraitId=keyof typeof TRAITS;
 export type TraitBearer=Pick<Pawn,'traits'>;
@@ -23,13 +26,18 @@ export function validTraits(value:unknown,version:number):boolean {
   if(value===undefined)return true; // Neutral legacy/person with no authored traits.
   if(version<69||!Array.isArray(value)||value.length<1||value.length>3)return false;
   const groups=new Set<string>();
-  for(const id of value){if(typeof id!=='string'||!Object.hasOwn(TRAITS,id))return false;const group=TRAITS[id as TraitId].group;if(groups.has(group))return false;groups.add(group);}
+  for(const id of value){if(typeof id!=='string'||!Object.hasOwn(TRAITS,id)||version<134&&(id==='kind'||id==='abrasive'||id==='bloodlust'))return false;const group=TRAITS[id as TraitId].group;if(groups.has(group))return false;groups.add(group);}
   return true;
 }
 /** Authored scenario profiles, deliberately not Core's trait frequencies or
  * biographies. Each call owns a new array; no RNG, no changes to existing saves. */
 export function startingTraits(index:number):TraitId[] {
   return index%3===0?['optimist','fast-learner']:index%3===1?['steadfast','slow-learner']:['pessimist','nervous'];
+}
+/** The provisional arrival calendar adds one social disposition without
+ * consuming the simulation or arrival RNG. Existing offers keep their traits. */
+export function arrivalTraits(profile:number,serial:number):TraitId[] {
+  return [...startingTraits(profile),(['kind','abrasive','bloodlust'] as const)[(serial-1)%3]!];
 }
 /** Only new ordinary camps. The terrain/fixture factory remains neutral. */
 export function initializeCampTraits(world:World):void {

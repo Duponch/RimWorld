@@ -2,7 +2,7 @@ import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills'
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { expect,test } from 'vitest';
 import { createWorld,applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
-import { TRAITS,validTraits,startingTraits,initializeCampTraits,breakThresholds,globalLearningFactor } from '../src/sim/traits';
+import { TRAITS,validTraits,startingTraits,arrivalTraits,initializeCampTraits,breakThresholds,globalLearningFactor } from '../src/sim/traits';
 import { initialSkills,learnSkill,learningFactor,tickSkills } from '../src/sim/skills';
 import { moodTarget,moodThoughts,updateMood } from '../src/sim/mood';
 import { updateMentalBreak } from '../src/sim/mental-break';
@@ -87,7 +87,7 @@ test('strict neutral migration, conflicts/duplicates/unknowns, mutable copies an
 
 test('arrival traits are announced, persist in the letter, transfer once and leave old pending offers neutral',()=>{
   const w=createWorld(42);enableArrivals(w);w.tick=w.arrivals!.nextCheck;advanceArrivals(w);const offer=w.arrivals!.pending!;
-  expect(offer.traits).toEqual(startingTraits(offer.profile));const saved=serializeWorld(w),copy=deserializeWorld(saved);
+  expect(offer.traits).toEqual(arrivalTraits(offer.profile,offer.id));const saved=serializeWorld(w),copy=deserializeWorld(saved);
   for(const world of [w,copy])expect(applyCommand(world,{type:'answer-arrival',offerId:offer.id,accept:true}).ok).toBe(true);
   expect(copy).toEqual(w);expect(w.pawns.at(-1)!.traits).toEqual(offer.traits);expect(w.pawns.at(-1)!.traits).not.toBe(offer.traits);replay(w);
   const old=JSON.parse(saved);(old.schemaVersion=68,withoutResearch(old));expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 68/);delete old.arrivals.pending.traits;

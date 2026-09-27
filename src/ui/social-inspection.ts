@@ -28,6 +28,7 @@ export function socialLastText(world:World,pawn:Pawn):string {
   const other=world.pawns.find(p=>p.id===last.otherId),name=other?.name??'une personne absente';
   const exchange=last.kind==='slight'?`${last.initiated?'A vexé':'A été vexé par'} ${name}`:
     last.kind==='insult'?`${last.initiated?'A insulté':'A été insulté par'} ${name}`:
+    last.kind==='kind-words'?`${last.initiated?'A adressé des mots gentils à':'A reçu des mots gentils de'} ${name}`:
     `${SOCIAL_LABELS[last.kind]} ${last.initiated?'engagé':'reçu'} avec ${name}`;
   return `${exchange} · il y a ${((world.tick-last.tick)/(TICKS_PER_DAY/24)).toFixed(1)} h`;
 }

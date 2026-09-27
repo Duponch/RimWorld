@@ -1,4 +1,4 @@
-import { startingTraits } from './traits.ts';
+import { arrivalTraits } from './traits.ts';
 import { ARRIVAL_NAMES,arrivalRandom,type ArrivalCommand } from './arrival-state.ts';
 import { arrivalEntry } from './arrival-entry.ts';
 import { isColonist } from './affiliation.ts';
@@ -23,7 +23,8 @@ export function advanceArrivals(world:World):void {
   if(s.pending||world.pawns.filter(p=>isColonist(p)&&p.state!=='dead').length>=12||!arrivalEntry(world,s.rng))return;
   const profile=Math.floor(arrivalRandom(s)*3) as 0|1|2;
   const name=ARRIVAL_NAMES[Math.floor(arrivalRandom(s)*ARRIVAL_NAMES.length)]!;
-  s.pending={id:++s.serial,openedAt:world.tick,expiresAt:world.tick+TICKS_PER_DAY,name,profile,traits:startingTraits(profile)};
+  const id=++s.serial;
+  s.pending={id,openedAt:world.tick,expiresAt:world.tick+TICKS_PER_DAY,name,profile,traits:arrivalTraits(profile,id)};
   log(world,`${name} demande à rejoindre la colonie. Répondez dans la journée.`);
 }
 export function applyArrival(world:World,command:ArrivalCommand):CommandResult {

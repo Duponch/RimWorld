@@ -9,8 +9,7 @@ test('V124 social gathering migrates to V125 without invented disputes or fights
   const raw=historical();
   expect(raw.schemaVersion).toBe(124);
   const world=deserializeWorld(JSON.stringify(raw));
-  expect(SCHEMA_VERSION).toBe(127);
-  expect(world).toEqual({...raw,schemaVersion:127});
+  expect(world).toEqual({...raw,schemaVersion:SCHEMA_VERSION});
   expect(validateWorld(world)).toEqual([]);
   expect(world.pawns.every(p=>!p.social?.fight&&!(p.social?.memories.some(m=>m.kind==='slight'||m.kind==='insult')))).toBe(true);
 });

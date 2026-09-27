@@ -1,7 +1,7 @@
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 import { pawnBody } from './health-rules.ts';
 
-export type SocialKind='chitchat'|'deep-talk'|'rapport'|'slight'|'insult'|'fight-cathartic'|'fight-angering';
+export type SocialKind='chitchat'|'deep-talk'|'rapport'|'kind-words'|'slight'|'insult'|'fight-cathartic'|'fight-angering';
 export interface SocialMemory { otherId:number;kind:SocialKind;at:number;offset:number }
 export interface SocialState {
   rng:number; wants?:true;
@@ -10,7 +10,7 @@ export interface SocialState {
   fight?:{opponentId:number;startedAt:number};
   memories:SocialMemory[];
 }
-export const SOCIAL_LABELS:Readonly<Record<SocialKind,string>>=Object.freeze({'chitchat':'Bavardage','deep-talk':'Discussion approfondie',rapport:'Rapprochement',slight:'Vexation',insult:'Insulte','fight-cathartic':'Bagarre cathartique','fight-angering':'Bagarre rageante'});
+export const SOCIAL_LABELS:Readonly<Record<SocialKind,string>>=Object.freeze({'chitchat':'Bavardage','deep-talk':'Discussion approfondie',rapport:'Rapprochement','kind-words':'Mots gentils',slight:'Vexation',insult:'Insulte','fight-cathartic':'Bagarre cathartique','fight-angering':'Bagarre rageante'});
 export const DEEP_TALK_DURATION=20*TICKS_PER_DAY;
 export const INSULT_MOOD_DURATION=2*TICKS_PER_DAY;
 
@@ -45,9 +45,9 @@ function roundPositiveOpinion(n:number):number {const lo=Math.floor(n);return n<
 function roundOpinion(n:number):number {return n<0?-roundPositiveOpinion(-n):roundPositiveOpinion(n);}
 export function opinionCauses(pawn:Pawn,otherId:number,tick:number):{kind:SocialKind;count:number;value:number;nextChange:number}[] {
   const memories=pawn.social?.memories.filter(m=>m.otherId===otherId&&memoryOffset(m,tick)!==0)??[];
-  return (['chitchat','deep-talk','rapport','slight','insult','fight-cathartic','fight-angering'] as const).flatMap(kind=>{
+  return (['chitchat','deep-talk','rapport','kind-words','slight','insult','fight-cathartic','fight-angering'] as const).flatMap(kind=>{
     const group=memories.filter(m=>m.kind===kind).sort((a,b)=>b.at-a.at);if(!group.length)return [];
-    const value=roundOpinion(group.reduce((s,m,i)=>s+memoryOffset(m,tick)*((kind==='deep-talk'||kind==='slight'||kind==='insult'||kind==='fight-cathartic'||kind==='fight-angering') ? .9**i : 1),0));
+    const value=roundOpinion(group.reduce((s,m,i)=>s+memoryOffset(m,tick)*((kind==='deep-talk'||kind==='kind-words'||kind==='slight'||kind==='insult'||kind==='fight-cathartic'||kind==='fight-angering') ? .9**i : 1),0));
     const nextChange=kind==='chitchat'?group[0]!.at+(Math.floor((tick-group[0]!.at)/TICKS_PER_DAY)+1)*TICKS_PER_DAY:Math.min(...group.map(m=>m.at+DEEP_TALK_DURATION));
     return [{kind,count:group.length,value,nextChange}];
   });
@@ -56,16 +56,18 @@ export const opinionOf=(pawn:Pawn,otherId:number,tick:number):number=>Math.max(-
 
 /** InsultedMood is a separate two-day thought in Core, with fixed -5 per
  * occurrence before stacking, independent of the speaker's SocialImpact. */
-export function insultMoodMemories(pawn:Pawn,tick:number):{otherId:number;count:number;offset:number;expiresAt:number}[] {
-  const active=(pawn.social?.memories??[]).filter(m=>m.kind==='insult'&&m.at+INSULT_MOOD_DURATION>tick)
+function socialMoodMemories(pawn:Pawn,tick:number,kind:'insult'|'kind-words'):{otherId:number;count:number;offset:number;expiresAt:number}[] {
+  const active=(pawn.social?.memories??[]).filter(m=>m.kind===kind&&m.at+INSULT_MOOD_DURATION>tick)
     .sort((a,b)=>b.at-a.at||a.otherId-b.otherId).slice(0,10);
   const groups=new Map<number,{otherId:number;count:number;offset:number;expiresAt:number}>();
   for(const [index,m] of active.entries()){
     let group=groups.get(m.otherId);if(!group){group={otherId:m.otherId,count:0,offset:0,expiresAt:m.at+INSULT_MOOD_DURATION};groups.set(m.otherId,group);}
-    group.count++;group.offset+=-5*.9**index;group.expiresAt=Math.max(group.expiresAt,m.at+INSULT_MOOD_DURATION);
+    group.count++;group.offset+=(kind==='insult'?-5:5)*.9**index;group.expiresAt=Math.max(group.expiresAt,m.at+INSULT_MOOD_DURATION);
   }
   return [...groups.values()];
 }
+export const insultMoodMemories=(pawn:Pawn,tick:number)=>socialMoodMemories(pawn,tick,'insult');
+export const kindWordsMoodMemories=(pawn:Pawn,tick:number)=>socialMoodMemories(pawn,tick,'kind-words');
 
 /** Cleanup runs on retained dead actors too. Merging chitchat never refreshes its clock. */
 export function expireSocialMemories(pawn:Pawn,tick:number):void {
@@ -81,7 +83,7 @@ export function addSocialMemory(state:SocialState,otherId:number,kind:SocialKind
   if(kind!=='chitchat'&&same.length>=(kind==='rapport'?50:kind==='fight-cathartic'||kind==='fight-angering'?5:10))state.memories.splice(state.memories.indexOf(same.reduce((a,b)=>a.at<=b.at?a:b)),1);
   const all=state.memories.filter(m=>m.kind===kind);
   if(all.length>=300)state.memories.splice(state.memories.indexOf(all.reduce((a,b)=>a.at<=b.at?a:b)),1);
-  state.memories.push({otherId,kind,at:tick,offset:(kind==='chitchat'?.66:kind==='rapport'?2:kind==='slight'?-5:kind==='insult'?-15:kind==='fight-cathartic'?38:kind==='fight-angering'?-22:15)*impact});
+  state.memories.push({otherId,kind,at:tick,offset:(kind==='chitchat'?.66:kind==='rapport'?2:kind==='kind-words'?15:kind==='slight'?-5:kind==='insult'?-15:kind==='fight-cathartic'?38:kind==='fight-angering'?-22:15)*impact});
 }
 
 /** Called once when an actual social fight ends, including before its first

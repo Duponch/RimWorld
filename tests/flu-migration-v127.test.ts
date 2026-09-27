@@ -12,8 +12,7 @@ test('V125 est validé avant migration et ne reçoit aucune grippe rétroactive'
   const raw=historical();
   expect(raw.schemaVersion).toBe(125);
   const world=deserializeWorld(JSON.stringify(raw));
-  expect(SCHEMA_VERSION).toBe(127);
-  expect(world.schemaVersion).toBe(127);
+  expect(world.schemaVersion).toBe(SCHEMA_VERSION);
   expect(world.rng).toBe(raw.rng);
   expect(world.pawns.every(p=>!p.health?.flu)).toBe(true);
   expect(world.fluIncidents).toBeUndefined(); // Scène pédagogique hors profil Cassandra.

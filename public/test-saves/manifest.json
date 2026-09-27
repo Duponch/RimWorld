@@ -517,6 +517,34 @@
       "prepared": true,
       "provenance": "Départ Atterrissage forcé 64×64 créé par le moteur, puis deux grippes et deux lits médicaux préparés explicitement au tick zéro pour permettre un essai immédiat. Le narrateur ne les a pas tirées ; les lits coûtent 90 bois des piles initiales, et les médicaments et personnages sont ceux du départ physique normal.",
       "sha256": "c5a8f25b97ba4f3eb1049898ee081e06007ce874e307a3623d989ad66db1b4e9"
+    },
+    {
+      "release": "v134",
+      "id": "mots-gentils-v134",
+      "label": "Mots gentils et disputes · 2 colons",
+      "description": "Ada aimable a adressé des mots gentils à Basile incisif et sanguinaire ; opinion, humeur et traits sont inspectables immédiatement.",
+      "filename": "mots-gentils.json",
+      "pawns": 2,
+      "colonists": 2,
+      "width": 32,
+      "height": 32,
+      "tick": 2000,
+      "focus": [
+        "trait Aimable",
+        "trait Incisif",
+        "trait Sanguinaire",
+        "mots gentils",
+        "opinion et humeur",
+        "bagarre sociale"
+      ],
+      "steps": [
+        "Sélectionner Ada et ouvrir Bio pour voir le trait Aimable ; sélectionner Basile pour voir Incisif et Sanguinaire.",
+        "Ouvrir Social puis Besoins de Basile : les mots gentils d’Ada ont laissé une opinion et une humeur distinctes.",
+        "Reprendre la partie : les échanges futurs et les éventuelles bagarres sont décidés normalement selon ces dispositions."
+      ],
+      "prepared": true,
+      "provenance": "Copie préparée de la scène V124, sans modifier son fichier : seuls trois traits et un échange physique déjà effectué sont ajoutés. La fréquence future et une bagarre ne sont pas préécrites.",
+      "sha256": "2c71191a9292e111d798cbc1e5d469c31cd127fd0ff089ed0c3a7b88bd915590"
     }
   ]
 }
