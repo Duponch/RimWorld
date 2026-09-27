@@ -85,7 +85,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   const c=decision.command;
   let heaterTarget:number|undefined;
   if(c.type==='answer-arrival'){await page.locator('#arrival-letter').click();await page.locator(c.accept?'#accept-arrival':'#reject-arrival').click();await expect(page.locator('#arrival-dialog')).not.toBeVisible();await expect(page.locator('#arrival-letter')).toHaveCount(0);return;}
-  if(c.type==='enable-arrivals'){await page.locator('#enable-arrivals').click();await expect(page.locator('#enable-arrivals')).toBeHidden();return;}
+  if(c.type==='enable-arrivals'){await panel(page,'menu');if(!await page.locator('.legacy-scenario-settings').evaluate(node=>node.hasAttribute('open')))await page.locator('.legacy-scenario-settings>summary').click();await page.locator('#enable-arrivals').click();await expect(page.locator('#enable-arrivals')).toBeHidden();await page.keyboard.press('Escape');return;}
   if(c.type==='draft'||c.type==='draft-move'||c.type==='draft-stop') {
     await page.keyboard.press('Escape');
     for(const [i,id] of c.pawnIds.entries())await page.locator(`[data-pawn="${id}"]`).click({modifiers:i?['Shift']:[]});

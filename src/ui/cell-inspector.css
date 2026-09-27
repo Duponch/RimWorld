@@ -1,34 +1,48 @@
-/* Compact selection card, with the same hierarchy as the reference artwork. */
+/* The selected Thing has a short identity card; its commands occupy a separate rail. */
 #map-hover-readout{position:absolute;left:18px;bottom:calc(94px + var(--hover-inspector-height, 0px));z-index:2;max-width:min(560px,calc(100vw - 40px));pointer-events:none;color:#fff8e8;text-shadow:0 1px 3px #142018,0 2px 7px #142018;font-size:14px;line-height:1.35}
 #map-hover-readout span{display:block}
 .game-shell:has(.management-panel:not([hidden])) #map-hover-readout{display:none}
-#inspector.cell-inspector-host{width:510px;padding:20px 22px;max-height:calc(100dvh - 210px)}
-.cell-inspector-host .cell-heading{display:grid;grid-template-columns:66px minmax(0,1fr) 30px;gap:14px;align-items:center;margin-bottom:12px}
-.cell-illustration{width:66px;height:66px;border-radius:9px;background-color:#e9d7b8;box-shadow:inset 0 0 0 1px #cbb58e}
-.cell-inspector-host #cell-title{font-size:24px;line-height:1.3;overflow-wrap:anywhere}
-.cell-inspector-host #cell-description{margin:0}
-.cell-inspector-host .cell-location{font-size:14px;font-weight:700;color:var(--ink);margin:0 0 12px}
-.cell-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 20px;margin:0 0 14px}
-.cell-inspector-host .cell-facts p{margin:0;font-size:14px;line-height:1.45}
-.cell-facts p:not(.cell-note){display:flex;flex-direction:column}
-.cell-facts p>span{color:var(--muted-ink)}.cell-facts strong{font-size:15px;font-weight:600;color:var(--ink)}
-.cell-facts .cell-note{grid-column:1/-1;color:var(--muted-ink)}
-.cell-inspector-host #room-description{margin:10px 0 16px;padding:12px 14px;border-radius:8px;background:#efe1c980;font-size:14px;line-height:1.55;color:var(--muted-ink)}
-.cell-inspector-host #cell-materials:empty{display:none}
-.cell-inspector-host #cell-materials{font-size:14px;line-height:1.5;margin:12px 0;color:var(--ink);font-weight:600}
-.cell-inspector-host #cell-job{margin:14px 0;color:var(--muted-ink);font-size:14px}
-.cell-actions{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.cell-actions:has(>button:not([hidden])){padding-top:12px;border-top:1px solid var(--line)}
-.cell-actions button{flex:1 1 160px;min-height:42px}
-.cell-inspector-host .hygiene-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:10px 14px;margin:16px 0 0;padding:14px 0 0;border-top:1px solid var(--line)}
-.cell-inspector-host #filth-description{grid-column:1/-1;margin:0;font-size:14px;color:var(--muted-ink)}
-.cell-inspector-host .hygiene-controls label{display:flex;flex-direction:column;gap:6px;margin:0;font-size:14px;font-weight:600}
-.cell-inspector-host #clean-room{min-height:38px;font-size:14px;padding:8px}
-.cell-inspector-host #cell-storage{padding-top:14px;border-top:1px solid var(--line)}
-.cell-inspector-host #cell-storage>button{margin:8px 6px 0 0}
-.cell-inspector-host :is(.power-controls,.cooler-controls,.bed-controls,.bill-controls){margin-top:16px;padding-top:14px;border-color:var(--line)}
-@media(max-width:760px){#inspector.cell-inspector-host{width:min(510px,calc(100vw - 20px));padding:18px}.cell-inspector-host .cell-heading{grid-template-columns:50px minmax(0,1fr) 30px;gap:10px}.cell-illustration{width:50px;height:50px}.cell-inspector-host #cell-title{font-size:21px}}
 
-.cell-environment{margin:12px 0;border-block:1px solid var(--line)}
-.cell-environment summary{font-size:14px;color:var(--muted-ink)}
-.cell-inspector-host .cell-environment #room-description{padding:0;margin:0 0 12px;background:none}
-.room-fact{display:block;margin:5px 0;line-height:1.5}.room-fact strong{font-weight:600;color:var(--ink)}
+#inspector.cell-inspector-host{width:min(500px,calc(100vw - 20px));padding:12px;max-height:calc(100dvh - 190px)}
+.cell-inspector-host .cell-summary{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:10px}
+.cell-inspector-host .cell-summary:has(.cell-actions>button:not([hidden])){grid-template-columns:minmax(0,1fr) 144px}
+.cell-inspector-host .cell-card{min-width:0;padding:5px 3px}
+.cell-inspector-host .cell-heading{display:grid;grid-template-columns:44px minmax(0,1fr) 28px;gap:9px;align-items:start;margin:0 0 9px}
+.cell-illustration{width:44px;height:44px;border-radius:7px;background-color:#e9d7b8;box-shadow:inset 0 0 0 1px #cbb58e}
+.cell-inspector-host #cell-title{font-size:20px;line-height:1.2;overflow-wrap:anywhere}
+.cell-inspector-host .cell-heading #inspect-close{width:28px;height:28px;min-height:28px}
+.cell-inspector-host #cell-description{margin:0}
+.cell-health{margin:2px 0 10px}
+.cell-health-caption{display:flex;justify-content:space-between;gap:8px;align-items:baseline;color:var(--muted-ink);font-size:12px;line-height:1.3}
+.cell-health-caption strong{color:var(--ink);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cell-inspector-host .cell-health progress{display:block;width:100%;height:7px;margin-top:4px}
+.cell-facts{display:grid;gap:4px}
+.cell-inspector-host .cell-facts p{display:flex;justify-content:space-between;gap:8px;margin:0;font-size:13px;line-height:1.35}
+.cell-facts p>span{color:var(--muted-ink)}
+.cell-facts strong{font-weight:600;color:var(--ink);text-align:right}
+.cell-inspector-host .cell-facts .cell-note{display:block;color:var(--muted-ink)}
+.cell-inspector-host #cell-materials:empty,.cell-inspector-host #cell-job:empty{display:none}
+.cell-inspector-host #cell-materials,.cell-inspector-host #cell-job{margin:7px 0 0;font-size:13px;line-height:1.4;color:var(--muted-ink)}
+
+.cell-inspector-host .cell-actions{display:grid;align-content:start;gap:7px;padding:8px;border:1px solid var(--line);border-radius:9px;background:#efe1c980}
+.cell-inspector-host .cell-actions:not(:has(>button:not([hidden]))){display:none}
+.cell-inspector-host .cell-actions button{display:block;width:100%;min-height:44px;margin:0;padding:7px 6px;font-size:12px;line-height:1.2;text-align:center;white-space:normal}
+.cell-inspector-host .cell-actions :is(#cell-chop,#cell-harvest,#cell-cut,#cell-deconstruct,#cell-cancel)::before{content:'';display:block;width:28px;height:28px;margin:0 auto 3px;background-image:url('/assets/ui/lisiere/architect-1.png');background-size:600% 500%;background-repeat:no-repeat}
+.cell-inspector-host #cell-chop::before{background-position:0 50%}
+.cell-inspector-host #cell-harvest::before{background-position:20% 50%}
+.cell-inspector-host #cell-cut::before{background-position:40% 50%}
+.cell-inspector-host #cell-deconstruct::before{background-position:80% 50%}
+.cell-inspector-host #cell-cancel::before{background-position:100% 50%}
+
+.cell-inspector-host #cell-storage{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.cell-inspector-host #cell-storage>button{margin:8px 6px 0 0}
+.cell-inspector-host :is(.power-controls,.cooler-controls,.bed-controls,.bill-controls,[data-unfinished]){margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
+.cell-inspector-host .hygiene-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:10px 14px;margin:13px 0 0;padding:12px 0 0;border-top:1px solid var(--line)}
+.cell-inspector-host #filth-description{grid-column:1/-1;margin:0;font-size:13px;color:var(--muted-ink)}
+.cell-inspector-host .hygiene-controls label{display:flex;flex-direction:column;gap:6px;margin:0;font-size:13px;font-weight:600}
+.cell-inspector-host #clean-room{min-height:38px;font-size:13px;padding:8px}
+.cell-environment{margin:10px 0;border-top:1px solid var(--line)}
+.cell-environment summary{font-size:13px;color:var(--muted-ink)}
+.cell-inspector-host .cell-environment #room-description{padding:0;margin:0 0 10px;background:none;font-size:13px;line-height:1.4;color:var(--muted-ink)}
+.room-fact{display:block;margin:5px 0;line-height:1.4}.room-fact strong{font-weight:600;color:var(--ink)}
+@media(max-width:580px){.cell-inspector-host .cell-summary:has(.cell-actions>button:not([hidden])){grid-template-columns:1fr}.cell-inspector-host .cell-actions{display:flex;flex-wrap:wrap}.cell-inspector-host .cell-actions button{flex:1 1 120px;width:auto}.cell-inspector-host #cell-title{font-size:19px}}

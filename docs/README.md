@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V130 — carte des objets :** identité et PV réels d'une cible, commandes contextuelles illustrées dans un rail séparé, affichage DOM des alertes et du journal réutilisé si inchangé, HUD droit séparé et trois conseils reliés aux panneaux jouables. [Contrat](development/object-inspection-v130.md), [relevé des fiches et du HUD Core](research/object-hud-core-v130.md), [validation](history/validation-object-inspection-v130.md). Pas de nouvelle règle ni de parité complète des fiches.
+
 **V128 — signes de bagarre et de sommeil :** nuage 3D partagé avec contour, étoiles et membres voxel pendant un duel réel ; Z liés au dormeur. [Contrat](development/comic-vfx-v128.md), [référence visuelle et coût](research/comic-vfx-reference-v128.md), [validation](history/validation-comic-vfx-v128.md). Aucun nouveau gameplay ni schéma ; banc A/B/A en pause, build, tests ciblés et natifs finaux documentés avec leurs limites.
 
 **V127 — première maladie humaine :** une grippe peut suivre une occasion de Cassandra, évoluer en gravité et immunité, puis être soignée au lit avec un médicament réellement prélevé. [Contrat](development/flu-v127.md), [relevé Core](research/flu-core-v127.md), [preuves](history/validation-flu-v127.md). La [colonie préparée](../public/test-saves/v127/grippe.json) rend les soins testables immédiatement ; autres maladies et équilibre de campagne longue restent ouverts.

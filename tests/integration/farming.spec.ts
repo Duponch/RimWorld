@@ -87,7 +87,7 @@ test('cold room: UI explains stopped plants, no sowing, built fire restores grow
     expect(warmed.resources.some(p=>p.x===17&&p.z===16&&p.kind==='rice')).toBe(true);expect(validateWorld(warmed)).toEqual([]);
     await tool(page,'select');await page.keyboard.press('Escape');await cell(page,16,16);await expect(page.locator('#cell-description')).toContainText('Croissance diurne');
     await expect(page.locator('#cell-description')).not.toContainText('Croissance thermique 0 %');await expect(page.locator('#fps-counter')).toBeVisible();
-    await page.locator('[data-speed="6"]').click();await expect(page.locator('#cell-description')).toContainText('Croissance 21 %',{timeout:10000});
+    await page.locator('[data-speed="6"]').click();await expect(page.locator('#cell-description .cell-facts p').filter({hasText:'Croissance :'})).toContainText('21 %',{timeout:10000});
     await page.locator('[data-speed="0"]').click();const final=await world(page);
     await page.screenshot({path:'artifacts/plant-climate-warmed.png'});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);

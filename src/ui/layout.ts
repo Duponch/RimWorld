@@ -129,8 +129,15 @@ export function gameLayout(): string {
       <div class="resource-foot"><span id="population">3</span> colons · <span id="map-size">${DEFAULT_MAP_SIZE} × ${DEFAULT_MAP_SIZE}</span></div>
     </aside>
     <span id="fps-counter" aria-live="off" title="Cadence du rendu, indépendante de la vitesse de simulation">— FPS</span>
-    <div class="corner-tools"><span class="game-title">LISIÈRE</span><button id="help-open" aria-label="Ouvrir l’aide" title="Aide">?</button></div>
-    <aside id="alerts" class="alerts" aria-label="Alertes de la colonie"><div id="status-alerts"></div><div class="legacy-event-controls"><button id="enable-arrivals">Activer les demandes d’accueil</button><button id="enable-raids">Activer les raids du camp</button><button id="enable-heatwaves">Activer les canicules du camp</button></div></aside>
+    <div class="corner-tools"><span class="game-title">LISIÈRE</span><button id="help-open" aria-label="Ouvrir l’aide" title="Guide complet">?</button></div>
+    <details class="learning-readout" aria-label="Conseils de jeu"><summary>Conseils</summary>
+      <div class="learning-concepts"><p>Notions disponibles</p>
+        <details><summary>Emploi du temps</summary><p>Planning règle les heures de travail, de loisir et de repos de chaque colon.</p><button data-guide-panel="schedule" type="button">Ouvrir Planning</button></details>
+        <details><summary>Ordres sur la carte</summary><p>Dans Architecte, désignez les arbres à abattre et les plantes à récolter. Les colons exécutent ces ordres selon leurs priorités et leur accès.</p><button data-guide-panel="architect" type="button">Ouvrir Architecte</button></details>
+        <details><summary>Recherche</summary><p>Choisissez un projet ; un colon affecté à la recherche pourra progresser à un bureau construit et utilisable.</p><button data-guide-panel="research" type="button">Ouvrir Recherche</button></details>
+      </div>
+    </details>
+    <aside id="alerts" class="alerts" aria-label="Alertes de la colonie"><div id="status-alerts"></div><div class="alert-jumps"><button id="inspect-threat" hidden>Menace armée · voir</button><button id="inspect-fire" hidden>Incendie · voir</button></div></aside>
     <div id="pause-banner" hidden>EN PAUSE</div>
     <div id="notice" role="status" aria-live="polite" hidden></div>
     <div id="area-feedback" role="status" aria-live="polite" hidden></div>
@@ -173,19 +180,20 @@ export function gameLayout(): string {
         <label class="presentation-setting"><span><strong id="textures-enabled-label">Textures 3D stylisées</strong><small id="textures-enabled-description">Détails peints des volumes 3D. Choix conservé dans ce navigateur.</small></span><input id="textures-enabled" type="checkbox" aria-labelledby="textures-enabled-label" aria-describedby="textures-enabled-description" checked></label>
         <label class="presentation-setting"><span><strong id="ground-grass-label">Tapis d’herbe</strong><small id="ground-grass-description">Brins décoratifs sur la terre visible. Désactivé : aucun brin ni traitement associé.</small></span><input id="ground-grass-enabled" type="checkbox" aria-labelledby="ground-grass-label" aria-describedby="ground-grass-description" checked></label>
       </fieldset>
+      <details class="legacy-scenario-settings"><summary>Événements d’une ancienne colonie</summary><p class="muted">Ces activations concernent seulement les sauvegardes historiques sans narrateur.</p><div class="legacy-event-controls"><button id="enable-arrivals">Activer les demandes d’accueil</button><button id="enable-raids">Activer les raids du camp</button><button id="enable-heatwaves">Activer les canicules du camp</button></div></details>
       <button id="save">Sauvegarder</button><button id="load">Recharger</button><button id="browse-saves">Charger une partie</button><button id="new-colony">Nouvelle colonie</button>
       <button id="return-home">Sauvegarder et accueil</button><button id="restore-previous" disabled>Colonie précédente</button><button id="show-diagnostics">Afficher les diagnostics</button>
       <p class="muted">Sauvegarde locale à ce navigateur.</p>
     </section>
 
-    <aside class="time-panel panel" aria-label="Temps de jeu">
-      <div class="view-controls"><button id="wall-cutaway" aria-pressed="false" title="Coupe visuelle : les murs gardent leurs collisions">Murs : hauts</button><button id="roof-toggle" aria-pressed="false" title="Afficher la couverture ; masquer ne retire pas le toit">Toits : masqués</button><button id="foliage-toggle" aria-pressed="false" title="Masquer le feuillage pour voir les colons">Feuillage</button><button id="view-home" title="Recentrer sur la colonie">⌂</button></div>
-      <div class="camera-controls"><button id="camera-mode" aria-pressed="false" title="Basculer en perspective ; glisser avec le bouton droit pour tourner">Vue : iso</button></div>
-      <div id="clock">00:00</div><div id="day">Jour 1</div><div id="outdoor-temperature" class="biome-label"></div><div id="weather" class="biome-label"></div><div id="biome-current" class="biome-label" title="Milieu local. Climat et saisons indiqués dans le menu."></div>
+    <aside class="time-panel panel" aria-label="Temps et commandes de vue">
+      <div class="site-readout" aria-label="Conditions et date du site"><div id="outdoor-temperature" class="biome-label"></div><div id="weather" class="biome-label"></div><div id="clock">00:00</div><div id="day">Jour 1</div><div id="biome-current" class="biome-label" title="Milieu local. Climat et saisons indiqués dans le menu."></div></div>
       <div class="time-controls" aria-label="Vitesse de simulation">
         <button data-speed="0" aria-label="Pause" title="Pause · Espace">Ⅱ</button><button data-speed="1" aria-label="Vitesse normale" title="1× · touche 1">▷</button>
         <button data-speed="3" aria-label="Vitesse 3 fois" title="3× · touche 2">▷▷</button><button data-speed="6" aria-label="Vitesse 6 fois" title="6× · touche 3">▷▷▷</button>
       </div>
+      <div class="view-controls" aria-label="Commandes de vue"><button id="wall-cutaway" aria-pressed="false" title="Coupe visuelle : les murs gardent leurs collisions">Murs : hauts</button><button id="roof-toggle" aria-pressed="false" title="Afficher la couverture ; masquer ne retire pas le toit">Toits : masqués</button><button id="foliage-toggle" aria-pressed="false" title="Masquer le feuillage pour voir les colons">Feuillage</button><button id="view-home" title="Recentrer sur la colonie">⌂</button></div>
+      <div class="camera-controls"><button id="camera-mode" aria-pressed="false" title="Basculer en perspective ; glisser avec le bouton droit pour tourner">Vue : iso</button></div>
     </aside>
     <div id="metrics" class="diagnostics" hidden></div>
     <nav class="main-tabs panel" aria-label="Gestion de la colonie">${tabs.map(([id, label]) => `<button data-panel="${id}" ${['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals'].includes(id) ? 'aria-pressed="false"' : 'disabled title="Fonctionnalité à venir"'}>${label}</button>`).join('')}</nav>
@@ -198,8 +206,6 @@ export function gameLayout(): string {
       <p>Molette : zoom · glisser le bouton droit : tourner · bouton central ou flèches : déplacer la caméra. La coupe des murs sert à voir les intérieurs ; leurs obstacles restent en place.</p>
       <p class="muted">Inspectez un chantier pour comprendre son attente, ou une réserve pour modifier ses filtres. Planning permet de régler les plages de travail et de repos. Un piquet de fers à cheval offre une autre famille de loisirs que l’observation du ciel. Les onglets grisés indiquent les domaines actuellement indisponibles.</p>
     </dialog>
-    <button id="inspect-fire" class="panel" style="position:fixed;right:16px;top:132px;z-index:3" hidden>Incendie · voir</button>
-    <button id="inspect-threat" class="panel" style="position:fixed;right:16px;top:90px;z-index:3" hidden>Menace armée · voir</button>
     <dialog id="new-world-dialog" class="help-dialog"><form id="new-world-form"><button type="button" class="close" id="new-world-close" aria-label="Fermer la création">×</button><h2>Nouvelle colonie</h2>
       <label class="field">Graine<input id="world-seed" inputmode="numeric" type="number" min="0" max="4294967295" value="42" required></label>
       <label class="field">Taille de la carte<select id="world-size">${[32, ...MAP_SIZE_PRESETS].map(size => `<option value="${size}"${size === DEFAULT_MAP_SIZE ? ' selected' : ''}>${size} × ${size} · ${mapSizeLabels[size]} · ${(size * size).toLocaleString('fr-FR')} cases</option>`).join('')}</select></label>

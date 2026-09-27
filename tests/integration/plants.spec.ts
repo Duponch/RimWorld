@@ -14,11 +14,11 @@ test('buisson persistant : inspection, récolte, sauvegarde et coupe par la vrai
     await page.evaluate(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
     await startPaused(page);await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     await tool(page,'select');await cell(page,18,14);
-    await expect(page.locator('#cell-description')).toContainText('Croissance 100 %');
+    await expect(page.locator('#cell-description .cell-facts p').filter({hasText:'Croissance :'})).toContainText('100 %');
     await tool(page,'harvest');await cell(page,18,14);await page.locator('[data-speed="6"]').click();
     await page.waitForFunction(()=>{if(window.__lisiere.world.resources[0]?.growth!==.3)return false;document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click();return true;});
     const picked=await world(page);expect(picked.resources[0]).toMatchObject({id,growth:.3});expect(picked.stock.food).toBe(10);
-    await tool(page,'select');await cell(page,18,14);
+    await tool(page,'select');await cell(page,18,14);await cell(page,18,14);
     await expect(page.locator('#cell-description')).toContainText('Pas encore récoltable');
     await expect(page.locator('#fps-counter')).toBeVisible();
     await page.screenshot({path:'artifacts/bush-harvested.png'});

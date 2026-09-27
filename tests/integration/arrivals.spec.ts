@@ -24,8 +24,10 @@ test('arrival UI at 1x/6x: real worker, letter, postpone/save, edge entry and fo
     await expect(page.locator(`[data-pawn="${newcomer.id}"]`)).toBeVisible();await page.locator(`[data-pawn="${newcomer.id}"]`).click();await expect(page.locator('#inspector')).toContainText(newcomer.name);
     await page.screenshot({path:`artifacts/arrival-v66-${speed}x.png`});
     await panel(page,'work');await expect(page.locator('#work-panel')).toContainText(newcomer.name);await page.keyboard.press('Escape');
+    const destination=[{x:16,z:16},{x:17,z:16},{x:16,z:17},{x:17,z:17},{x:15,z:16}].find(c=>!joined.pawns.some(p=>p.x===c.x&&p.z===c.z)&&!['rock','water'].includes(joined.tiles[c.z*joined.width+c.x]!.terrain));
+    expect(destination).toBeDefined();
     await perform(page,{reason:'Diriger le nouveau colon vers le camp.',command:{type:'draft',pawnIds:[newcomer.id],enabled:true}},{value:0});
-    await perform(page,{reason:'Vérifier son déplacement physique depuis la bordure.',command:{type:'draft-move',pawnIds:[newcomer.id],target:{x:16,z:16},queue:false}},{value:0});
+    await perform(page,{reason:'Vérifier son déplacement physique depuis la bordure.',command:{type:'draft-move',pawnIds:[newcomer.id],target:destination!,queue:false}},{value:0});
     await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>{const p=(await world(page)).pawns.at(-1)!;return p.x!==newcomer.x||p.z!==newcomer.z;},{timeout:30000}).toBe(true);await page.locator('[data-speed="0"]').click();
     const walking=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,walking);await page.keyboard.press('Escape');
     await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(pending)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,pending);await page.keyboard.press('Escape');
@@ -38,6 +40,7 @@ test('arrival UI at 1x/6x: real worker, letter, postpone/save, edge entry and fo
     const former=createWorld(42);
     for(let reload=0;reload<2;reload++) {
       await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(former)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,former);await page.keyboard.press('Escape');
+      await panel(page,'menu');if(!await page.locator('.legacy-scenario-settings').evaluate(node=>node.hasAttribute('open')))await page.locator('.legacy-scenario-settings>summary').click();
       await expect(page.locator('#enable-arrivals')).toBeEnabled();await page.locator('#enable-arrivals').click();await expect.poll(async()=>!!(await world(page)).arrivals).toBe(true);await expect(page.locator('#enable-arrivals')).toBeHidden();expect((await world(page)).pawns).toHaveLength(3);
     }
     expect(errors).toEqual([]);proof.push({speed,pendingTick:pending.tick,joinedTick:joined.tick,newcomer:{id:newcomer.id,x:newcomer.x,z:newcomer.z},walkingTick:walking.tick,refusal:true,expiration:true,formerCampActivation:true,errors});await page.close();

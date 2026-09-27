@@ -1,5 +1,9 @@
 # Travail sur Lisière
 
+## Fiches d'objets V130
+- Lire `docs/development/object-inspection-v130.md`, `docs/research/object-hud-core-v130.md` et `docs/history/validation-object-inspection-v130.md`. Objet sélectionné, lecture du sol au survol et commandes sont trois fonctions distinctes. La fiche courte donne des PV seulement quand le moteur les conserve ; n'inventer ni jauge ni commande Core manquante. Les boutons utilisent les cellules de l'atlas Architecte correspondant à leurs vraies actions.
+- Garder tous les contrôles existants (stockage, ateliers, portes, lits, mobilier, énergie) branchés après le changement de structure. Les alertes et le journal colonial ne reconstruisent leurs nœuds DOM que si leur contenu change ; aucune donnée métier ni sauvegarde ne passe dans ce cache. Le HUD droit sépare alertes, site/date, vitesse et vue ; « Conseils » mène seulement à Planning, Architecte et Recherche réels, sans mémoire de notions. Ce lot ne prouve ni parité de tous les objets, ni hausse FPS, ni Assistant Core complet.
+
 ## Sélection, roches et dossiers V129
 - Lire `docs/development/selection-inspection-v129.md`, `docs/research/interaction-core-v129.md` et `docs/history/validation-interaction-v129.md`. Le Core possède un seul fragment naturel transportable par pierre, distinct du massif minable et des blocs taillés. Ne pas réintroduire `Resource.kind='rock'` dans les nouveaux mondes : les anciens décors sont retirés après validation stricte, sans ajouter de fragment ou changer piles/IDs/RNG.
 - Le terrain et le revêtement ne sont pas sélectionnables : le survol en bas à gauche les décrit sans teinter la case. Clic sur Thing/zone/plan, clics répétés sur les superpositions, terre nue désélectionne. Coins pour objet, contour pour zone ; pas de bordure agricole fluorescente permanente. Deux colons civils peuvent partager une case à l'arrêt ; les destinations tactiques distinctes sont déjà réservées, ne pas imposer une occupation exclusive globale.

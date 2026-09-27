@@ -37,7 +37,10 @@ test('map click cycles meal and growing zone; bare soil only reports hover',asyn
     await expect(page.locator('#map-hover-readout')).toContainText('Terre riche');
     await expect(page.locator('#map-hover-readout')).toContainText('fertilité 140 %');
     await cell(page,tree.x,tree.z);
+    await expect(page.locator('.cell-health')).toBeVisible();
+    await expect(page.locator('.cell-actions')).toBeVisible();
     await expect(page.locator('#cell-chop')).toBeVisible();
+    await page.screenshot({path:'artifacts/object-inspection-v130.png'});
     await page.locator('#cell-chop').click();
     await expect.poll(()=>page.evaluate(({x,z})=>window.__lisiere.world.jobs.some(job=>job.kind==='chop'&&job.x===x&&job.z===z),tree)).toBe(true);
     expect({errors,failedResponses}).toEqual({errors:[],failedResponses:[]});

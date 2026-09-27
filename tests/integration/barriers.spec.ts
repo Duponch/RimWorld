@@ -37,7 +37,7 @@ test('native barrier UI: direct strike, stop/load, home area and physical repair
       await page.locator(`[data-pawn="${p.id}"]`).click();await page.locator('#toggle-draft').click();await page.locator(`[data-speed="${speed}"]`).click();
       await expect.poll(async()=>(await world(page)).structures[0]!.damage??0,{timeout:15000}).toBe(0);
       await page.locator('[data-speed="0"]').click();const repaired=await world(page);expect(validateWorld(repaired)).toEqual([]);expect(repaired.piles).toEqual(initial.piles);expect(repaired.jobs).toEqual([]);
-      await cell(page,s.x,s.z);await expect(page.locator('#cell-description')).toContainText('195/195');await page.screenshot({path:`artifacts/barrier-v67-${speed}x.png`});
+      await page.keyboard.press('Escape');await cell(page,s.x,s.z);await expect(page.locator('#cell-description')).toContainText('195/195');await page.screenshot({path:`artifacts/barrier-v67-${speed}x.png`});
       reports.push({speed,damage:damaged.structures[0]!.damage,ticks:repaired.tick,constructionXp:repaired.pawns[0]!.skills.construction.dailyXp});
     }
     const poses=await page.evaluate(()=>(window as any).__barriers);expect(poses.strikes).toBeGreaterThan(0);expect(poses.repairs).toBeGreaterThan(0);expect(poses.misfacing).toBe(0);expect(errors).toEqual([]);

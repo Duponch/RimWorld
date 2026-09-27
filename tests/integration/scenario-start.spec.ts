@@ -420,6 +420,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     expect(oldWorld.arrivals).toBeUndefined();
     expect(oldWorld.raids).toBeUndefined();
     expect(oldWorld.heatwaves?.profile).toBe('camp-heat-v1');
+    await panel(page,'menu');await page.locator('.legacy-scenario-settings>summary').click();
     await expect(page.locator('#enable-arrivals')).toBeVisible();
     await expect(page.locator('#enable-raids')).toBeVisible();
     await expect(page.locator('#enable-heatwaves')).toBeHidden();

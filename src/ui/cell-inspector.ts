@@ -1,7 +1,9 @@
 import { iconPosition, type UiIcon } from './visual-identity';
 
-/** Presentation only. Keep every supplied fact and rebuild only changed copy. */
-export function presentCellDescription(panel: HTMLElement, text: string, icon: UiIcon): void {
+export type CellHealth = { current: number; maximum: number; label: string; valueText?: string };
+
+/** Presentation only. Keep engine facts in the selected object's card. */
+export function presentCellDescription(panel: HTMLElement, text: string, icon: UiIcon, health?: CellHealth): void {
   const art = panel.querySelector<HTMLElement>('.cell-illustration');
   if (art && art.dataset.icon !== icon) {
     art.dataset.icon = icon;
@@ -9,21 +11,36 @@ export function presentCellDescription(panel: HTMLElement, text: string, icon: U
     art.style.backgroundPosition = `${x}% ${y}%`;
   }
   const description = panel.querySelector<HTMLElement>('#cell-description');
-  if (!description || description.dataset.copy === text) return;
-  description.dataset.copy = text;
-  const parts = text.split(' · ').filter(Boolean);
-  const location = document.createElement('p');
-  location.className = 'cell-location'; location.textContent = parts.shift() ?? '';
+  if (!description) return;
+  const copy = `${text}\u0000${health ? `${health.label}:${health.current}/${health.maximum}:${health.valueText ?? ''}` : ''}`;
+  if (description.dataset.copy === copy) return;
+  description.dataset.copy = copy;
+
+  const content: HTMLElement[] = [];
+  if (health && health.maximum > 0) {
+    const row = document.createElement('div'); row.className = 'cell-health';
+    const caption = document.createElement('div'); caption.className = 'cell-health-caption';
+    const label = document.createElement('span'); label.textContent = health.label;
+    const value = document.createElement('strong'); value.textContent = health.valueText ?? `${health.current} / ${health.maximum} PV`;
+    caption.append(label, value);
+    const bar = document.createElement('progress');
+    bar.max = health.maximum; bar.value = Math.max(0, Math.min(health.maximum, health.current));
+    bar.setAttribute('aria-label', `${health.label} : ${value.textContent}`);
+    row.append(caption, bar); content.push(row);
+  }
+
   const facts = document.createElement('div'); facts.className = 'cell-facts';
-  for (const part of parts) {
+  for (const part of text.split(' · ').map(value => value.trim()).filter(Boolean)) {
     const line = document.createElement('p');
     const separator = part.indexOf(' : ');
-    if (separator > 0) {
-      const label = document.createElement('span'); label.textContent = part.slice(0, separator + 3);
-      const value = document.createElement('strong'); value.textContent = part.slice(separator + 3);
+    const percentage = separator < 0 ? /^(Croissance)\s+(\d+(?:[,.]\d+)?\s*%)$/.exec(part) : null;
+    if (separator > 0 || percentage) {
+      const label = document.createElement('span'); label.textContent = percentage ? `${percentage[1]} :` : `${part.slice(0, separator)} :`;
+      const value = document.createElement('strong'); value.textContent = percentage ? percentage[2]! : part.slice(separator + 3);
       line.append(label, value);
     } else { line.textContent = part; line.className = 'cell-note'; }
     facts.append(line);
   }
-  description.replaceChildren(location, facts);
+  if (facts.childElementCount) content.push(facts);
+  description.replaceChildren(...content);
 }

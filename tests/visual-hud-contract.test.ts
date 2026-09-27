@@ -5,7 +5,7 @@ const css=readFileSync(new URL('../src/ui/visual-identity.css',import.meta.url),
 const cursorSource=readFileSync(new URL('../src/ui/tool-cursors.ts',import.meta.url),'utf8');
 
 test('the resource ledger keeps its complete layout while other panels overlap it',()=>{
-  expect(css).toContain('.resource-list{left:16px;top:16px;width:216px');
+  expect(css).toContain('.resource-list.panel{left:18px;top:18px;width:216px');
   expect(css).not.toMatch(/:has\([^}]+\) \.resource-list/);
   expect(css).not.toMatch(/@media\([^}]+\.resource-list\{(?:display:none|width:(?!216px))/);
 });

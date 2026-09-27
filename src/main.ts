@@ -35,6 +35,8 @@ import { createSocialInspection,updateSocialInspection } from './ui/social-inspe
 import { createJournalInspection,updateJournalInspection } from './ui/journal-inspection';
 import { createRaidUI } from './ui/raids';
 import { barrierHp,barrierMaxHp,isBarrier } from './sim/barriers';
+import { resourceMaxHp } from './sim/thing-damage-rules';
+import { rockMaxHP } from './sim/mining-rules';
 import { createArrivalUI } from './ui/arrivals';
 import { createMoodInspection,updateMoodInspection } from './ui/mood-inspection';
 import { isColonist,activeThreat } from './sim/affiliation';
@@ -87,7 +89,7 @@ import './ui/visual-identity.css';
 import './ui/cell-inspector.css';
 import './ui/inspection-dossiers.css';
 import './ui/journal-inspection.css';
-import { presentCellDescription } from './ui/cell-inspector';
+import { presentCellDescription, type CellHealth } from './ui/cell-inspector';
 import { mapObjectExists,nextMapObject,type MapObjectSelection } from './ui/map-object-selection';
 import { MapHoverLightCache,mapHoverLines } from './ui/map-hover-readout';
 import './ui/cursors.css';
@@ -127,6 +129,8 @@ let selectedObject:MapObjectSelection|undefined;
 let hoveredCell:Cell|null=null;
 let lastHoverReadAt=0,lastHoverCopy='';
 const mapHoverLight=new MapHoverLightCache();
+let lastStatusAlertsSignature='';
+let lastColonyHistorySignature='';
 let installationId:number|undefined;
 let currentTool: Tool = 'select';
 let currentPanel: Panel = null;
@@ -428,7 +432,7 @@ function rebuildInspector() {
     cancel.onclick=()=>{if(selectedPawn!==undefined)void attempt(()=>client.command({type:'clear-orders',pawnId:selectedPawn!}));};panel.append(cancel);
   } else if (selectedCell) {
     panel.classList.add('cell-inspector-host');
-    panel.innerHTML = `<div class="panel-heading cell-heading"><span class="cell-illustration ui-icon" aria-hidden="true"></span><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="cell-description"></div><p id="cell-materials"></p><p id="cell-job"></p><div class="cell-actions"><button id="weapon-permission" class="secondary-action" hidden></button><button id="cell-chop" class="secondary-action" hidden>Couper du bois</button><button id="cell-harvest" class="secondary-action" hidden>Récolter</button><button id="cell-cut" class="secondary-action" hidden>Déraciner</button><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button></div><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
+    panel.innerHTML = `<div class="cell-summary"><div class="cell-card"><div class="panel-heading cell-heading"><span class="cell-illustration ui-icon" aria-hidden="true"></span><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="cell-description"></div><p id="cell-materials"></p><p id="cell-job"></p></div><div class="cell-actions" role="group" aria-label="Commandes de l’objet"><button id="weapon-permission" class="secondary-action" hidden></button><button id="cell-chop" class="secondary-action" hidden>Couper du bois</button><button id="cell-harvest" class="secondary-action" hidden>Récolter</button><button id="cell-cut" class="secondary-action" hidden>Déraciner</button><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button></div></div><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
     const storage = selectedObject?.kind==='stockpile'?snapshot?.stockpiles.find(item => item.id===selectedObject!.id):undefined;
     mountStorageItemControls(el('selected-stockpile-items'),storage?.items);
     if (storage) {
@@ -460,6 +464,7 @@ function rebuildInspector() {
       doorControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
       penControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
       furnitureControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)),id=>{const object=furnitureObject(snapshot!,id);if(!object)return;setPanel('architect');applyTool('install');installationId=id;placementOrientation=object.orientation;renderer?.setPlacementRotation(placementOrientation);renderer?.setFurniturePlacement(object);});
+      panel.querySelector('.cell-actions')?.append(...panel.querySelectorAll('#cell-uninstall, #cell-install'));
       gatherSpotControls(panel,(structureId,enabled)=>attempt(async()=>{await client.command({type:'gather-spot',structureId,enabled});renderState();}));
       bedControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
     }
@@ -654,12 +659,29 @@ function renderState() {
       const packed=selectedObject.kind==='packed'?world.packed.find(p=>p.building.id===selectedObject!.id&&p.owner.type==='ground'):undefined;
       const zone=selectedObject.kind==='growing'?world.growingZones.find(z=>z.id===selectedObject!.id):undefined;
       el('cell-title').textContent = packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : pile ? ITEM_DEFINITIONS[pile.item].label : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]}` : zone ? 'Zone de culture' : storage ? 'Réserve' : 'Massif rocheux';
-      let cellDescription = resource ? isPlant(resource) ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Capacité : ${storage.capacity}` : '';
-      if(structure&&isBarrier(structure))cellDescription+=` · Résistance : ${barrierHp(structure)}/${barrierMaxHp(structure)} PV · ${world.home?.includes(z*world.width+x)?'Zone de foyer':'Hors zone de foyer (réparation désactivée)'}`;
+      let cellDescription = resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Capacité : ${storage.capacity}` : '';
+      let cellHealth:CellHealth|undefined;
+      if(resource&&(isPlant(resource)||resource.kind==='tree')){
+        const maximum=resourceMaxHp(resource);
+        cellHealth={current:maximum-(resource.damage??0),maximum,label:'État'};
+        cellDescription=cellDescription.replace(/ · État \d+\/\d+/, '');
+      }
+      if(structure&&isBarrier(structure)){
+        const current=barrierHp(structure),maximum=barrierMaxHp(structure);
+        cellHealth={current,maximum,label:'Résistance',valueText:`${current}/${maximum} PV`};
+        cellDescription+=` · ${world.home?.includes(z*world.width+x)?'Zone de foyer':'Hors zone de foyer (réparation désactivée)'}`;
+      }
       const building = packed?.building ?? structure;
       if (building && building.kind !== 'grave' && building.kind !== 'butcher-spot' && building.kind !== 'crafting-spot' && building.kind !== 'campfire' && building.kind !== 'passive-cooler') el('cell-title').textContent += ` · ${ITEM_DEFINITIONS[building.material ?? 'wood'].label}${building.material === undefined ? ' (ancien)' : ''}`;
       const rock = selectedObject.kind==='rock'||resource?.kind==='rock'?rockInspection(world.tiles[z * world.width + x]!, resource):null;
-      if (rock) { el('cell-title').textContent = rock.title; cellDescription = rock.description; }
+      if (rock) {
+        el('cell-title').textContent = rock.title; cellDescription = rock.description;
+        if(selectedObject.kind==='rock'){
+          const tile=world.tiles[z*world.width+x]!,maximum=rockMaxHP(tile);
+          cellHealth={current:maximum-(tile.miningDamage??0),maximum,label:'Résistance'};
+          cellDescription=cellDescription.replace(/^(?:Roche : )?\d+ \/ \d+ PV\. ?/, '');
+        }
+      }
       const weapon=piles.find(p=>p.kind==='weapon'||p.kind==='apparel'),permission=el<HTMLButtonElement>('weapon-permission');permission.hidden=!weapon;
       if(weapon){const forbidden=!!(weapon.weapon??weapon.apparel)?.forbidden;permission.textContent=forbidden?'Autoriser cet objet':'Interdire cet objet';permission.onclick=()=>void attempt(()=>client.command({type:weapon.kind==='apparel'?'apparel-permission':'weapon-permission',itemId:weapon.id,allowed:forbidden}));}
       const plantOrder=(kind:'chop'|'harvest'|'cut')=>{if(resource)void attempt(()=>client.command({type:'designate',kind,x:resource.x,z:resource.z}));};
@@ -688,7 +710,7 @@ function renderState() {
           :pile.kind==='component'||pile.kind==='advanced-component'?'component'
           :pile.kind==='silver'?'silver':pile.kind==='chunk'||pile.kind==='blocks'?'blocks':'layers';
       }
-      presentCellDescription(el('inspector'), cellDescription, inspectionIcon);
+      presentCellDescription(el('inspector'), cellDescription, inspectionIcon, cellHealth);
       if(structure?.fuel)updateFireControls(el('inspector'),structure);
       if(structure&&stationRecipe(structure))updateBillControls(el('inspector'),structure,world);
       el('cell-deconstruct').hidden=!structure||!!job&&job.kind!=='repair'&&job.kind!=='flick';
@@ -713,12 +735,16 @@ function renderState() {
   const pending = world.jobs.filter(job => job.status === 'pending').length;
   el('job-count').textContent = world.jobs.length ? `${world.jobs.length} ordre(s) · ${pending} en attente` : 'Aucun ordre en cours';
   const entries = world.events.slice(-30).reverse();
-  el('journal-items').replaceChildren(...entries.map(entry => {
-    const item = document.createElement('p'), time = document.createElement('span'); time.className = 'event-time';
-    time.textContent = `J${1 + Math.floor(entry.tick / TICKS_PER_DAY)} · `;
-    item.append(time, document.createTextNode(entry.message)); return item;
-  }));
-  if (!entries.length) el('journal-items').textContent = 'Trois survivants. Une nouvelle histoire.';
+  const historySignature=JSON.stringify(entries.map(entry=>[entry.tick,entry.message]));
+  if(historySignature!==lastColonyHistorySignature){
+    lastColonyHistorySignature=historySignature;
+    el('journal-items').replaceChildren(...entries.map(entry => {
+      const item = document.createElement('p'), time = document.createElement('span'); time.className = 'event-time';
+      time.textContent = `J${1 + Math.floor(entry.tick / TICKS_PER_DAY)} · `;
+      item.append(time, document.createTextNode(entry.message)); return item;
+    }));
+    if (!entries.length) el('journal-items').textContent = 'Trois survivants. Une nouvelle histoire.';
+  }
   const living=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead');
   const alerts: string[] = [];
   const crises=living.filter(p=>p.mental?.crisis).length;if(crises)alerts.push(`${crises} colon(s) en errance triste`);
@@ -755,11 +781,16 @@ function renderState() {
   if(interrupted)alerts.push(`${interrupted} cargaison(s) conservée(s) : fin de déplacement ou sol proche à libérer`);
   const idle = world.pawns.filter(pawn => isColonist(pawn)&&pawn.state === 'idle'&&!pawn.draft&&!pawn.flee&&!pawn.mental?.crisis&&!pawn.interruptedCargo).length;
   if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
-  el('status-alerts').replaceChildren(...alerts.map(text => { const item = document.createElement('p'); item.textContent = text; return item; }));
   const beds = world.structures.filter(structure => structure.kind === 'bed'&&!structure.medical&&!structure.prisoner).length;
-  if (beds < living.length) { const item = document.createElement('p'); item.dataset.alert = 'beds'; item.textContent = `${living.length - beds} couchage(s) manquant(s)`; el('status-alerts').append(item); }
+  const alertRows=alerts.map(text=>({text,kind:''}));
+  if (beds < living.length) alertRows.push({text:`${living.length - beds} couchage(s) manquant(s)`,kind:'beds'});
   const prisoners=world.pawns.filter(p=>p.prisoner&&p.state!=='dead');
-  if(prisoners.length){const item=document.createElement('p');item.dataset.alert='prisoners';item.textContent=`${prisoners.length} prisonnier(s) · ${living.some(p=>p.priorities.warden>0)?'Geôlier activé':'Geôlier désactivé'}`;el('status-alerts').append(item);}
+  if(prisoners.length)alertRows.push({text:`${prisoners.length} prisonnier(s) · ${living.some(p=>p.priorities.warden>0)?'Geôlier activé':'Geôlier désactivé'}`,kind:'prisoners'});
+  const alertSignature=JSON.stringify(alertRows);
+  if(alertSignature!==lastStatusAlertsSignature){
+    lastStatusAlertsSignature=alertSignature;
+    el('status-alerts').replaceChildren(...alertRows.map(row=>{const item=document.createElement('p');item.textContent=row.text;if(row.kind)item.dataset.alert=row.kind;return item;}));
+  }
   economyUI.update(world);arrivalUI.update(world);raidUI.update(world);heatwaveUI.update(world);tradeUI.update(world);
 }
 const heatwaveUI=createHeatwaveUI(command=>client.command(command));
@@ -804,6 +835,7 @@ async function changeSpeed(speed: number) { if (currentPanel==='menu') return; i
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) button.onclick = () => setTool(button.dataset.tool as Tool);
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.onclick = () => { setCategory(button.dataset.category as ArchitectCategory); applyTool('select'); };
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) button.onclick = () => { const panel = button.dataset.panel as Panel; void attempt(() => switchPanel(currentPanel === panel ? null : panel)); };
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-guide-panel]')) button.onclick = () => { const panel = button.dataset.guidePanel as Panel; document.querySelector('.learning-readout')?.removeAttribute('open'); void attempt(() => switchPanel(panel)); };
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-close-panel]')) button.onclick = () => {
   const preserveTool = currentPanel === 'architect' && currentTool !== 'select';
   void attempt(() => switchPanel(null, preserveTool));
