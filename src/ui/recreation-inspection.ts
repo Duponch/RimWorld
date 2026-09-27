@@ -7,7 +7,7 @@ export function updateRecreationInspection(root: HTMLElement, pawn: Pawn, world:
   const joy=pawn.recreation, mood=recreationMood(joy.level);
   root.querySelector('#selected-recreation')!.textContent=`${Math.round(joy.level)} % · humeur ${mood>=0?'+':''}${mood}`;
   root.querySelector<HTMLMeterElement>('#recreation-meter')!.value=joy.level;
-  const text=RECREATION_KINDS.map(k=>`${k==='solitary'?'Détente solitaire':'Dextérité'} : ${joy.tolerance[k].toFixed(0)} %${joy.bored[k]?' (lassé)':''}`).join(' · ');
+  const text=RECREATION_KINDS.map(k=>`${k==='solitary'?'Détente solitaire':k==='dexterity'?'Dextérité':'Jeux cérébraux'} : ${joy.tolerance[k].toFixed(0)} %${joy.bored[k]?' (lassé)':''}`).join(' · ');
   root.querySelector('#recreation-tolerance')!.textContent=`Lassitude — ${text}`;
   root.querySelector('#recreation-meter')!.setAttribute('title',`${text}. Une famille lassante redevient intéressante sous 30 %. La lassitude diminue de ${Math.round((colonyExpectation(world,pawn)?.joyToleranceDropPerDay??.18)*100)} points par jour éveillé selon les attentes actuelles.`);
 }

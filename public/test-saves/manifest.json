@@ -380,6 +380,33 @@
       "prepared": true,
       "provenance": "Scène V121 préparée depuis l’enclos historique V119 : couple possédé, gestation presque achevée et jeune proche de l’âge adulte sont fournis. La naissance et la croissance observées après reprise sont de vraies transitions du moteur ; aucune naissance n’est précréditée.",
       "sha256": "84b1bb146b230d013505c365993c9f917cc4cbb4cea78c4c59528c9b137028f8"
+    },
+    {
+      "id": "echecs-v122",
+      "release": "v122",
+      "label": "Échecs en salle · 1 colon",
+      "description": "Table d’échecs et siège physiques dans une salle préparée ; le colon joue réellement après la reprise, gagne du loisir et entraîne son intellect.",
+      "filename": "echecs.json",
+      "pawns": 1,
+      "colonists": 1,
+      "width": 32,
+      "height": 32,
+      "tick": 2000,
+      "focus": [
+        "échecs",
+        "siège partagé",
+        "lassitude cérébrale",
+        "salle de loisirs",
+        "mobilier complexe"
+      ],
+      "steps": [
+        "Repérer la table d’échecs à (16, 15) et le tabouret adjacent à (17, 15) ; ouvrir la fiche Besoins d’Ada.",
+        "Reprendre : Ada rejoint le siège et joue. Son loisir augmente, et la lassitude des jeux cérébraux progresse.",
+        "Retirer ou désinstaller le siège pour voir l’activité s’interrompre ; un nouveau siège rétablit une place utilisable."
+      ],
+      "prepared": true,
+      "provenance": "Scène V122 préparée depuis les salles historiques V103 : table, recherche, siège, faim et lassitudes initiales sont fixés explicitement. La partie d’échecs et ses gains sont effectués après reprise par le moteur ordinaire.",
+      "sha256": "7e9fd2294417ba65d9385e87dc253cc9a6c1782350cb5b7ae8ba8950ff9784cd"
     }
   ]
 }

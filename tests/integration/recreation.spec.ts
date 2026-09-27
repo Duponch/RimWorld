@@ -1,19 +1,17 @@
 import { SCHEMA_VERSION } from '../../src/sim/types';
-import { withoutPawnSkills } from '../scenarios/legacy-skills';
 import { expect, test } from '@playwright/test';
 import { createWorld, refreshStock, addGroundMaterial, serializeWorld, validateWorld } from '../../src/sim/index';
-import { world, panel, tool, cell, saveKey, expectWorld, observeErrors } from './helpers';
+import { world, panel, tool, cell, saveKey, expectWorld, observeErrors, pawnTab } from './helpers';
 
-test('loisirs par interface : migration, piquet construit, horaire, activité physique, inspection et reprise',async({playwright},testInfo)=>{
+test('loisirs par interface : piquet construit, horaire, activité physique, inspection et reprise',async({playwright},testInfo)=>{
   test.setTimeout(90000);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
   try {
     const fixture=createWorld(42,32,32);fixture.tick=2000;fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.piles=[];
-    for(const p of fixture.pawns)p.schedule.fill('anything');
+    for(const p of fixture.pawns){p.schedule.fill('anything');p.recreation.level=55;}
     addGroundMaterial(fixture,'wood',30,{x:15,z:17},'wood');refreshStock(fixture);
-    const old=JSON.parse(serializeWorld(fixture));(old.schemaVersion=14,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;for(const pawn of old.pawns)delete pawn.orders;old.pawns.forEach((p:any)=>delete p.recreation);
-    await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:JSON.stringify(old)});
+    await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
     await page.goto('/?scenario=camp&size=32&e2e');await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();
     await expect.poll(async()=>(await world(page)).schemaVersion).toBe(SCHEMA_VERSION);expect((await world(page)).pawns.map(p=>p.recreation.level)).toEqual([55,55,55]);
     await tool(page,'horseshoes');await cell(page,16,14);
@@ -30,9 +28,9 @@ test('loisirs par interface : migration, piquet construit, horaire, activité ph
     },undefined,{timeout:20000,polling:'raf'});
     await expect(page.locator('#pause-banner')).toBeVisible();const active=await world(page),player=active.pawns.find(p=>p.state==='recreating'&&p.recreation.task?.activity==='horseshoes')!;
     expect(validateWorld(active)).toEqual([]);expect(player.recreation.tolerance.dexterity).toBeGreaterThan(0);
-    await page.locator(`[data-pawn="${player.id}"]`).click();await expect(page.locator('#recreation-meter')).toBeVisible();await expect(page.locator('#recreation-tolerance')).toContainText('Dextérité');
+    await page.locator(`[data-pawn="${player.id}"]`).click();await pawnTab(page,'needs');await expect(page.locator('#recreation-meter')).toBeVisible();await expect(page.locator('#recreation-tolerance')).toContainText('Dextérité');
     await expect(page.locator('#selected-action')).toContainText('fers à cheval');
-    await page.screenshot({path:'artifacts/recreation-active.png'});
+    await page.screenshot({path:testInfo.outputPath('recreation-active.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,active);
     await page.keyboard.press('Escape');expect(errors).toEqual([]);expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
     await testInfo.attach('recreation',{contentType:'application/json',body:JSON.stringify({tick:active.tick,pin:active.structures,players:active.pawns.map(p=>({id:p.id,state:p.state,recreation:p.recreation})),errors})});

@@ -1,25 +1,32 @@
 import { assignmentAt } from './schedule.ts';
 import { gainRecreation, RECREATION_DURATION, recreationKind, recreationRandom, type RecreationActivity, type RecreationTask } from './recreation-rules.ts';
-import { availablePins, horseshoeCells, recreationSiteValid, recreationSpace } from './recreation-space.ts';
+import { availableChessTables, availablePins, chessCells, horseshoeCells, recreationSiteValid, recreationSpace } from './recreation-space.ts';
 import { reservedServiceCells } from './service-reservations.ts';
+import { learnSkill } from './skills.ts';
+import { pawnBody } from './health-rules.ts';
 import { cellIndex, routeToCell } from './pathfinding.ts';
 import type { NeedContext } from './needs.ts';
 import type { Pawn, World } from './types.ts';
 
-const labels: Record<RecreationActivity,string> = {horseshoes: 'jouer aux fers à cheval', skygaze: 'observer le ciel'};
+const labels: Record<RecreationActivity,string> = {horseshoes: 'jouer aux fers à cheval', skygaze: 'observer le ciel', chess:'jouer aux échecs'};
 /** Search shares the existing bounded navigation budget. No gain in transit,
  * no worker/cargo preemption just because the timetable recommends recreation. */
 export function processRecreation(world: World, pawn: Pawn, context: NeedContext, afterWork = false): boolean {
   const joy=pawn.recreation, assignment=assignmentAt(world,pawn);
   if (joy.task) {
-    if (assignment==='work' || !recreationSiteValid(world,joy.task)) { context.release(); return false; }
+    if (assignment==='work' || joy.task.activity==='chess'&&pawnBody(pawn).capacities.manipulation<=0 || !recreationSiteValid(world,joy.task)) { context.release(); return false; }
     const task=joy.task;
     if (task.phase==='travel') {
       if(pawn.x!==task.target.x||pawn.z!==task.target.z) {context.move(task.target,true);return true;}
       task.phase='active';pawn.path=[];pawn.state='recreating';
       context.event(`${pawn.name} commence à ${labels[task.activity]}.`);
     }
-    pawn.state='recreating';gainRecreation(joy,recreationKind(task.activity));task.elapsed++;
+    pawn.state='recreating';gainRecreation(joy,recreationKind(task.activity));
+    if(task.activity==='chess') {
+      pawn.skills.intellectual??={level:0,xp:0,dailyXp:0,passion:0};
+      learnSkill(pawn.skills.intellectual,20,pawn); // Core 0.002 XP per tick, ten Core ticks per local tick.
+    }
+    task.elapsed++;
     if(joy.level>99.99||task.elapsed>=RECREATION_DURATION) {
       context.event(`${pawn.name} termine son loisir : ${labels[task.activity]}.`);
       context.release();
@@ -29,10 +36,11 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
   if (world.tick<500 || pawn.hunting || pawn.research || pawn.need || pawn.jobId!==null || pawn.haul || pawn.cooking || pawn.burial || pawn.cleaning || pawn.needCooldown>0 || pawn.hunger<=20
     || assignment==='work' || assignment==='sleep'&&!afterWork || joy.level >= (assignment==='anything'?35:95)) return false;
   const choices: {activity: RecreationActivity; weight: number}[] = [];
-  for(const activity of ['skygaze','horseshoes'] as const) {
+  let pins:ReturnType<typeof availablePins>|undefined,chessTables:ReturnType<typeof availableChessTables>|undefined;
+  for(const activity of ['skygaze','horseshoes','chess'] as const) {
     const kind=recreationKind(activity);
-    if(!joy.bored[kind]&&(activity!=='horseshoes'||availablePins(world,pawn.id).length))
-      choices.push({activity,weight:(activity==='horseshoes'?2.5:1)*Math.max(.001,(1-joy.tolerance[kind]/100)**5)});
+    if(!joy.bored[kind]&&(activity!=='horseshoes'||(pins??=availablePins(world,pawn.id)).length)&&(activity!=='chess'||(chessTables??=availableChessTables(world,pawn.id)).length&&pawnBody(pawn).capacities.manipulation>0))
+      choices.push({activity,weight:(activity==='horseshoes'?2.5:activity==='chess'?2:1)*Math.max(.001,(1-joy.tolerance[kind]/100)**5)});
   }
   if(!choices.length){pawn.needCooldown=20;return false;}
   const reserved=reservedServiceCells(world,pawn.id);
@@ -42,8 +50,14 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
     const {activity}=choices.splice(index,1)[0]!;
     const candidates: RecreationTask[]=[];
     if(activity==='horseshoes') {
-      for(const pin of availablePins(world,pawn.id))for(const target of horseshoeCells(pin))
+      for(const pin of pins??=availablePins(world,pawn.id))for(const target of horseshoeCells(pin))
         if(!reserved.has(cellIndex(world,target.x,target.z)))candidates.push({activity,buildingId:pin.id,target,phase:'travel',elapsed:0});
+    } else if(activity==='chess') {
+      const seats=new Map(world.structures.filter(s=>s.kind==='stool'||s.kind==='dining-chair'||s.kind==='armchair').map(s=>[cellIndex(world,s.x,s.z),s]));
+      for(const table of chessTables??=availableChessTables(world,pawn.id))for(const target of chessCells(table)) {
+        const seat=seats.get(cellIndex(world,target.x,target.z));
+        if(seat&&!reserved.has(cellIndex(world,target.x,target.z)))candidates.push({activity,buildingId:table.id,seatId:seat.id,target,phase:'travel',elapsed:0});
+      }
     } else {
       // Local open-air sites replace the reference's region-based random search.
       // Eight rays, three distances: bounded candidates, varied physical trips.

@@ -6,6 +6,16 @@ import { decodeStoredSave, storedSaveMetadata } from '../src/ui/save-storage-cod
 import { deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
 import { publicSaveDirectory, testColonySources, writeTestColonies, type TestSaveManifest } from '../scripts/test-colonies-v98.ts';
 
+/** Compare every field actually stored in the historical file while allowing
+ * strictly validated migrations to add their own fields and schema number. */
+function historicalProjection(actual:unknown, original:unknown):unknown {
+  if(Array.isArray(original))return Array.isArray(actual)?actual.map((value,index)=>historicalProjection(value,original[index])):actual;
+  if(original!==null&&typeof original==='object')return Object.fromEntries(Object.keys(original).map(key=>[
+    key,historicalProjection((actual as Record<string,unknown>|undefined)?.[key],(original as Record<string,unknown>)[key]),
+  ]));
+  return actual;
+}
+
 if(process.env.WRITE_TEST_SAVES==='1'){
   describe('V98 maintainer asset generation',()=>{
     it('writes six checked, compressed test saves and their manifest',async()=>{
@@ -33,7 +43,8 @@ if(process.env.WRITE_TEST_SAVES==='1'){
         expect(createHash('sha256').update(raw).digest('hex')).toBe(entry.sha256);
         const w=deserializeWorld(raw),copy=deserializeWorld(raw);
         const original=JSON.parse(raw);
-        expect(w).toEqual({...original,schemaVersion:104,pawns:original.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0}}))});
+        const historical={...original,schemaVersion:w.schemaVersion};
+        expect(historicalProjection(w,historical)).toEqual(historical);
         expect(deserializeWorld(serializeWorld(w))).toEqual(w);
         expect(w.pawns.length).toBe(entry.pawns);
         expect(w.pawns.filter(p=>(p.faction??'colony')==='colony'&&p.state!=='dead').length).toBe(entry.colonists);

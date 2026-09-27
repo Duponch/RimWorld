@@ -18,7 +18,7 @@ export function deconstructionAvailable(world: World, job: Job, exceptPawn?: num
   for (const p of world.pawns) if (p.id !== exceptPawn) {
     if (p.research?.stationId===id || p.rescue?.bedId===id || p.cooking?.stationId === id || p.haul?.destination.type === 'fuel' && p.haul.destination.structureId === id
       || p.need?.kind === 'sleep' && p.need.bedId === id || p.need?.kind === 'eat' && p.need.dining?.seatId === id
-      || p.recreation.task?.buildingId === id) return false;
+      || p.recreation.task?.buildingId === id || p.recreation.task?.seatId === id) return false;
     for (const order of p.orders.queue) if (typeof order !== 'number') {
       if ('cooking' in order ? order.cooking.stationId === id : order.destination.type === 'fuel' && order.destination.structureId === id) return false;
     }

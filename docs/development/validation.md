@@ -1,4 +1,6 @@
-# Validation courante — V121
+# Validation courante — V122
+
+V122 : [échecs physiques et loisirs cérébraux](../history/validation-recreation-v122.md), six contrôles ciblés, neuf contrôles des démonstrations historiques, deux parcours Chromium/WebGPU, build/typage, reprise exacte et mesure CPU séparée. Un regroupement de tests historiques plus large reste non vert avec ses oracles périmés ; le compte rendu distingue ces échecs des contrats V122 validés.
 
 V121 : [âge, accouplement et naissances physiques](../history/validation-animal-life-v121.md), 131 tests ciblés sur 26 fichiers, trois parcours Chromium/WebGPU, build/typage, continuation exacte et mesure CPU séparée. La scène V121 est préparée ; aucune cadence 240 FPS ou débit ×6 constant n'est inféré.
 

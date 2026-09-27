@@ -49,6 +49,7 @@ export const OCCUPANCY = Object.freeze({
   'flower-pot':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   campfire: Object.freeze({clearItems:true,items:false,zones:true,store:false}),
   horseshoes: Object.freeze({clearItems:false,items:true,zones:true,store:true}),
+  'chess-table': Object.freeze({clearItems:false,items:true,zones:false,store:false}),
 });
 export const occupancyOf=(kind:JobKind)=>kind in OCCUPANCY?OCCUPANCY[kind as StructureKind]:undefined;
 export const clearsGroundItems=(world:World,kind:JobKind)=>world.schemaVersion<21||occupancyOf(kind)?.clearItems!==false;

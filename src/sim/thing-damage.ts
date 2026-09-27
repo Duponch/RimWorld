@@ -96,7 +96,7 @@ export function damageStructure(world:World,s:Structure,amount:number):boolean {
     const h=p.haul;
     return p.jobId!==null&&ids.has(p.jobId)||p.research?.stationId===s.id||p.cooking?.stationId===s.id
       ||h&&(h.whole&&h.sourcePileId===s.id||h.destination.type==='fuel'&&h.destination.structureId===s.id)
-      ||p.need?.kind==='sleep'&&p.need.bedId===s.id||p.recreation.task?.buildingId===s.id||p.rescue?.bedId===s.id;
+      ||p.need?.kind==='sleep'&&p.need.bedId===s.id||p.recreation.task?.buildingId===s.id||p.recreation.task?.seatId===s.id||p.rescue?.bedId===s.id;
   });
   const plan=planStructureDestruction(world,s,actors,origin,state.rng);if(!plan)return false;
   const {salvage,drops}=plan;

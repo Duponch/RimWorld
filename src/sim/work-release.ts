@@ -101,7 +101,7 @@ export function releaseAssignments(world:World,pawn:Pawn):void {
     if(animal){animal.path=[];animal.nextDecision=world.tick+1;}
   }
   finishRoomRest(world,pawn);
-  if(pawn.recreation.task?.activity==='horseshoes'&&pawn.recreation.task.phase==='active'&&pawn.recreation.task.elapsed>0)rememberRoomUse(world,pawn,'recreation');
+  if((pawn.recreation.task?.activity==='horseshoes'||pawn.recreation.task?.activity==='chess')&&pawn.recreation.task.phase==='active'&&pawn.recreation.task.elapsed>0)rememberRoomUse(world,pawn,'recreation');
   cancelAutomaticCombat(pawn);cancelHunting(pawn);
   if(pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
   delete pawn.animalHandling;delete pawn.animalCare;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;

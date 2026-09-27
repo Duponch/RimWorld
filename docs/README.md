@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V122 — table d’échecs et loisir cérébral :** Mobilier complexe ouvre une table physique à construire et à placer près de sièges ; jusqu’à deux colons peuvent s’y divertir et entraîner leur intellect. La [scène préparée](../public/test-saves/v122/echecs.json) démarre l’usage réel après reprise. [Contrat](development/recreation-v122.md), [relevé Core](research/recreation-core-v122.md), [preuves](history/validation-recreation-v122.md). Le jeu d’Ur néolithique et le loisir social restent distincts.
+
 **V121 — premiers âges et naissances animales :** les bêtes domestiques adultes peuvent s'accoupler, porter une grossesse et donner naissance à un jeune physique ; trois stades gouvernent taille, alimentation, produits et dépouille. La [scène préparée](../public/test-saves/v121/cycle-animal.json) rend la transition observable rapidement. [Contrat](development/animal-life.md), [relevé Core](research/animal-life-core-v121.md), [preuves et coût](history/validation-animal-life-v121.md). Schéma 121 ; reproduction sauvage, fausse couche et soins maternels restent hors périmètre.
 
 **V120 — lait et laine physiques :** le mufalo donne la laine et la dromadaire adulte femelle le lait par collecte réelle, puis piles, repas et vêtements. [Contrat](development/animal-products.md), [référence Core](research/animal-products-core-v120.md), [preuves](history/validation-animal-products-v120.md).

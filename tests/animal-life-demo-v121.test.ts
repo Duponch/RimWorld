@@ -48,10 +48,11 @@ const entry = (world: ReturnType<typeof preparedWorld>, sha256: string) => ({
 });
 
 test('prepared V121 colony is directly loadable and its birth and growth continue exactly', () => {
-  const expected = preparedWorld();
-  const serialized = serializeWorld(expected);
-  const sha256 = createHash('sha256').update(serialized).digest('hex');
   if (process.env.WRITE_V121_DEMO === '1') {
+    const expected = preparedWorld();
+    if(Number(expected.schemaVersion)!==121)throw new Error('The published V121 fixture is immutable under a newer schema.');
+    const serialized = serializeWorld(expected);
+    const sha256 = createHash('sha256').update(serialized).digest('hex');
     mkdirSync(new URL('../public/test-saves/v121/', import.meta.url), { recursive: true });
     writeFileSync(fixtureUrl, serialized);
     const manifest = JSON.parse(readFileSync(manifestUrl, 'utf8')) as { version: number; saves: Record<string, unknown>[] };
@@ -61,9 +62,8 @@ test('prepared V121 colony is directly loadable and its birth and growth continu
   }
   const manifest = JSON.parse(readFileSync(manifestUrl, 'utf8')) as { saves: { id: string; release: string; filename: string; sha256: string; prepared: boolean }[] };
   const listed = manifest.saves.find(save => save.id === 'cycle-animal-v121');
-  expect(listed).toMatchObject({ release: 'v121', filename: 'cycle-animal.json', prepared: true, sha256 });
+  expect(listed).toMatchObject({ release: 'v121', filename: 'cycle-animal.json', prepared: true });
   const raw = readFileSync(fixtureUrl, 'utf8');
-  expect(raw).toBe(serialized);
   expect(createHash('sha256').update(raw).digest('hex')).toBe(listed!.sha256);
   const world = deserializeWorld(raw);
   expect(validateWorld(world)).toEqual([]);

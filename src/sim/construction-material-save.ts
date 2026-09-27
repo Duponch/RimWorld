@@ -13,6 +13,7 @@ export function validateConstructionMaterials(world:World,version:number):string
     if((entity.kind==='research-bench'||entity.kind==='tailor-bench')&&(version<73||entity.material===undefined))errors.push('Research and tailoring benches require V73 and explicit materials.');
     if(entity.kind==='machining-table'&&(version<101||entity.material!=='steel'))errors.push('Machining table requires V101 and steel.');
     if(entity.kind==='art-bench'&&(version<104||entity.material!=='wood'&&entity.material!=='steel'))errors.push('Art bench requires V104 and wood or steel.');
+    if(entity.kind==='chess-table'&&(version<122||!validConstructionMaterial(entity.kind,entity.material,version)))errors.push('Chess table requires V122, complex furniture and a hard material.');
     if((entity.kind==='small-sculpture'||entity.kind==='large-sculpture')&&(version<104||!validConstructionMaterial(entity.kind,entity.material,version)||entity.orientation!==0||entity.footprint!=='standard'))errors.push('Sculpture requires V104, its material and fixed orientation.');
     if(entity.kind==='electric-tailor-bench'&&(version<90||entity.material===undefined))errors.push('Electric tailoring bench requires V90 and explicit materials.');
     if(entity.kind==='stonecutter'&&(version<31||entity.material===undefined))errors.push('Stonecutter requires V31 and an explicit material.');

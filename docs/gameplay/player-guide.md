@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Jouer aux échecs — V122
+
+Dans **Recherche**, terminez **Mobilier complexe**. Dans **Architecte → Loisirs**, choisissez la **Table d’échecs**, fournissez 70 unités de matière admissible et laissez le bâtisseur la terminer. Placez un tabouret, une chaise ou un fauteuil sur une case **cardinale** voisine ; deux sièges permettent deux joueurs. Un colon avec du temps libre et un besoin de loisir rejoint une place disponible avant que la joie ou l’expérience Intellectuel augmente. Le même siège ne peut pas servir simultanément à un repas et aux échecs. La fiche **Besoins** montre la lassitude « Jeux cérébraux » ; le souvenir de salle ne suit qu’un usage réel. Essayez directement **Charger → Colonies de test → Échecs en salle · 1 colon** : meuble et siège y sont préparés, mais la partie commence après la reprise. [Règles et limites](../development/recreation-v122.md).
+
 ## Enclos, lait, laine et naissances — V119–V121
 
 Dans **Faune**, désignez un cerf, une gazelle, un mufalo ou un dromadaire à apprivoiser. Le colon affecté à **Animaux** doit avoir le niveau requis pour l'espèce et apporter deux nourrissages physiques. Construisez ensuite une clôture avec portillon et marqueur, vérifiez dans la fiche du marqueur que le périmètre est **fermé et accessible**, et autorisez l'espèce. Un colon peut alors conduire l'animal apprivoisé dans l'enclos ; ce geste n'exige pas son niveau d'apprivoisement. L'animal y pâture les plantes et les piles réellement présentes. Une brèche ou une porte maintenue ouverte ne retient plus les bêtes. [Enclos et limites](../development/husbandry.md).

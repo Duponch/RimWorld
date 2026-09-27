@@ -79,6 +79,7 @@ const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.free
   'flower-pot': def(20, 250, 'pass-through', {}, true),
   campfire: def(0, 200, 'pass-through', {wood:20}),
   horseshoes: def(10, 100, 'standable'),
+  'chess-table': def(70, 8000, 'pass-through', {}, true),
   stonecutter: def(75, 2000, 'pass-through', {steel:30}),
 });
 

@@ -10,7 +10,7 @@ export function serviceCell(pawn: Pawn): Cell | null {
   if(pawn.research)return pawn.research.spot;
   if(pawn.feed)return pawn.feed.spot;
   if(pawn.tend)return pawn.tend.spot;
-  if (pawn.recreation?.task?.activity === 'horseshoes') return pawn.recreation.task.target;
+  if (pawn.recreation?.task?.activity === 'horseshoes' || pawn.recreation?.task?.activity === 'chess') return pawn.recreation.task.target;
   if (pawn.cooking) return pawn.cooking.spot;
   if (pawn.need?.kind === 'eat') return pawn.need.dining?.target ?? null;
   if (pawn.need?.kind === 'sleep' && pawn.need.bedId !== null) return pawn.need.target;

@@ -1,7 +1,7 @@
 import { WEAPON_QUALITIES,type WeaponQuality } from './equipment-rules.ts';
 
 /** Core 1.6.4871 names adapted to the stable ids proposed for V90. */
-export const HABITAT_FURNITURE_KINDS=['bed','table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot'] as const;
+export const HABITAT_FURNITURE_KINDS=['bed','table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot','chess-table'] as const;
 export type HabitatFurnitureKind=typeof HABITAT_FURNITURE_KINDS[number];
 export type FurnitureQuality=WeaponQuality;
 export const FURNITURE_QUALITIES=WEAPON_QUALITIES;
@@ -43,6 +43,7 @@ export const FURNITURE_DEFINITIONS:Readonly<Record<HabitatFurnitureKind,Furnitur
   'table-square':definition({label:'Table 2×2',width:2,depth:2,stuff:50,categories:hard,coreWork:1500,constructionSkill:0,research:null,maxHitPoints:100,beauty:1,seats:8,quality:true}),
   'table-long':definition({label:'Table 2×4',width:2,depth:4,stuff:95,categories:hard,coreWork:3000,constructionSkill:0,research:null,maxHitPoints:150,beauty:2,seats:12,quality:true}),
   'flower-pot':definition({label:'Pot de fleurs',width:1,depth:1,stuff:20,categories:hard,coreWork:250,constructionSkill:0,research:null,maxHitPoints:75,beauty:0,quality:true}),
+  'chess-table':definition({label:'Table d’échecs',width:1,depth:1,stuff:70,categories:hard,coreWork:8000,constructionSkill:0,research:'complex-furniture',maxHitPoints:100,beauty:4,quality:true}),
 });
 
 export interface FurnitureMaterialFactors {

@@ -34,7 +34,7 @@ export function validateResearch(world:World,version:number):string[]{
   const electricalContent=[...world.structures,...world.jobs,...(world.packed??[]).map(p=>p.building)];
   if(!batteriesUnlocked(world)&&electricalContent.some(s=>s.kind==='battery'))errors.push('Locked battery.');
   if(!solarPowerUnlocked(world)&&electricalContent.some(s=>s.kind==='solar-generator'))errors.push('Locked solar generator.');
-  if(version>=90&&!complexFurnitureUnlocked(world)&&electricalContent.some(s=>['dining-chair','armchair','end-table','dresser'].includes(s.kind)))errors.push('Locked complex furniture.');
+  if(version>=90&&!complexFurnitureUnlocked(world)&&electricalContent.some(s=>['dining-chair','armchair','end-table','dresser',...(version>=122?['chess-table']:[])].includes(s.kind)))errors.push('Locked complex furniture.');
   if(!machiningUnlocked(world)&&electricalContent.some(s=>s.kind==='machining-table'))errors.push('Locked machining table.');
   // Obtained weapons need no research; only the local fabrication chain does.
   if(version>=101&&!gunsmithingUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>isGunRecipe(b.recipe)))

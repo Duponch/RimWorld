@@ -3,10 +3,27 @@ import { buildingMaterialColor } from './building-material-color';
 import type { Placement } from './primitives';
 import { WORLD_SCALE } from '../world/scale';
 
-/** A few instances inside the existing furniture batch, no per-pin mesh. */
+const BOARD_STEP=.078;
+const BOARD_TOP=WORLD_SCALE.tableHeight+.025;
+const DARK_SQUARES=Array.from({length:8},(_,row)=>Array.from({length:8},(_,column)=>({row,column})))
+  .flat().filter(({row,column})=>(row+column)%2===1);
+const CHESS_PIECES=Array.from({length:8},(_,column)=>({column,row:column%3===0?1:0,light:true}))
+  .concat(Array.from({length:8},(_,column)=>({column,row:column%3===0?6:7,light:false})));
+
+/** All details join the resident furniture batch when structure content changes. */
 export function recreationParts(world: World): Placement[] {
   const parts: Placement[]=[];
-  for(const pin of world.structures)if(pin.kind==='horseshoes') {
+  for(const pin of world.structures)if(pin.kind==='chess-table') {
+    const {x,z}=pin,color=buildingMaterialColor(pin.material,0xa98559);
+    parts.push({x,z,y:WORLD_SCALE.tableHeight-.035,sx:.84,sy:.07,sz:.84,color},
+      {x,z,y:BOARD_TOP-.012,sx:.69,sy:.024,sz:.69,color:0xdacda8});
+    for(const dx of [-.33,.33])for(const dz of [-.33,.33])
+      parts.push({x:x+dx,z:z+dz,y:(WORLD_SCALE.tableHeight-.07)/2,sx:.09,sy:WORLD_SCALE.tableHeight-.07,sz:.09,color});
+    for(const {row,column} of DARK_SQUARES)
+      parts.push({x:x+(column-3.5)*BOARD_STEP,z:z+(row-3.5)*BOARD_STEP,y:BOARD_TOP+.002,sx:BOARD_STEP,sy:.006,sz:BOARD_STEP,color:0x496659});
+    for(const {row,column,light} of CHESS_PIECES)
+      parts.push({x:x+(column-3.5)*BOARD_STEP,z:z+(row-3.5)*BOARD_STEP,y:BOARD_TOP+.035,sx:.038,sy:.06,sz:.038,color:light?0xf0e4c6:0x35443f});
+  }else if(pin.kind==='horseshoes') {
     const {x,z}=pin;
     parts.push({x,z,y:.025,sx:.72,sy:.05,sz:.72,color:0x887252},
       {x,z,y:WORLD_SCALE.horseshoeHeight/2,sx:.09,sy:WORLD_SCALE.horseshoeHeight,sz:.09,color:buildingMaterialColor(pin.material,0xc9a875)});

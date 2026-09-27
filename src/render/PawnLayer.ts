@@ -364,7 +364,7 @@ export class PawnLayer {
       this.workOffsets.set(pawn.id,reach);
       if(newMap)this.approachTransitions.set(pawn.id,{fromX:reach.x,fromZ:reach.z,toX:reach.x,toZ:reach.z,start:world.tick,baseX:pawn.x,baseZ:pawn.z});
       px+=reach.x;pz+=reach.z;
-      const game=pawn.state==='recreating'&&pawn.recreation.task?.activity==='horseshoes'?world.structures.find(s=>s.id===pawn.recreation.task!.buildingId):undefined;
+      const game=pawn.state==='recreating'&&(pawn.recreation.task?.activity==='horseshoes'||pawn.recreation.task?.activity==='chess')?world.structures.find(s=>s.id===pawn.recreation.task!.buildingId):undefined;
       if(game)yaw=Math.atan2(game.x-pawn.x,game.z-pawn.z);
       const melee=pawn.melee?.strike;
       const shotTarget=pawn.shooting?.stance?pawn.shooting.order?.targetId??(pawn.shooting.stance.phase==='cooldown'?pawn.lastAttack?.targetId:undefined):undefined;
@@ -378,7 +378,7 @@ export class PawnLayer {
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
       this.workPoses.set(pawn.id,workPose);
       const smallMelee=!!pawn.melee?.strike&&world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare');
-      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun ? 1 : 0, pawn.state === 'working'&&!pawn.stun ? 1 : 0, pawn.health?.foodPoisoning?.vomit&&pawn.state!=='dead' ? 10 : pawn.stun&&!medicallyStopped(pawn) ? 9 : pawn.melee?.strike ? smallMelee?WORK_POSE.groundMelee:8 : pawn.shooting?.stance?.phase==='cooldown'?15:pawn.shooting?.stance ? 7 : pawn.state === 'recreating' ? pawn.recreation.task?.activity==='horseshoes'?4:5 : pawn.state === 'sleeping'||pawn.state==='resting'||medicallyStopped(pawn) ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : workPose, pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.shooting?.stance?.phase==='cooldown'?coreTimeSeconds(pawn.shooting.stance.startedAtCore,Math.floor(world.tick/1024)*1024):pawn.id * 1.7);
+      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun ? 1 : 0, pawn.state === 'working'&&!pawn.stun ? 1 : 0, pawn.health?.foodPoisoning?.vomit&&pawn.state!=='dead' ? 10 : pawn.stun&&!medicallyStopped(pawn) ? 9 : pawn.melee?.strike ? smallMelee?WORK_POSE.groundMelee:8 : pawn.shooting?.stance?.phase==='cooldown'?15:pawn.shooting?.stance ? 7 : pawn.state === 'recreating' ? pawn.recreation.task?.activity==='horseshoes'?4:pawn.recreation.task?.activity==='chess'?3:5 : pawn.state === 'sleeping'||pawn.state==='resting'||medicallyStopped(pawn) ? 1 : pawn.state === 'eating' ? dining?.seatId !== null && dining ? 3 : 2 : workPose, pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.shooting?.stance?.phase==='cooldown'?coreTimeSeconds(pawn.shooting.stance.startedAtCore,Math.floor(world.tick/1024)*1024):pawn.id * 1.7);
       const identity=appearanceOf(pawn,world.seed),variant=appearanceShape(identity);
       scratchColor.setHex(identity.skinColor);skin.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
       scratchColor.setHex(identity.hairColor);hair.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
@@ -486,7 +486,7 @@ export class PawnLayer {
         motion.setX(i,shifting?1:0);motion.setY(i,pawn.state==='working'&&!pawn.stun?1:0);
         const dining=pawn.need?.kind==='eat'?pawn.need.dining:null;
         const smallMelee=!!pawn.melee?.strike&&world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare');
-        motion.setZ(i,pawn.health?.foodPoisoning?.vomit&&pawn.state!=='dead'?10:pawn.stun&&!medicallyStopped(pawn)?9:pawn.melee?.strike?smallMelee?WORK_POSE.groundMelee:8:pawn.shooting?.stance?.phase==='cooldown'?15:pawn.shooting?.stance?7:pawn.state==='recreating'?pawn.recreation.task?.activity==='horseshoes'?4:5:pawn.state==='sleeping'||pawn.state==='resting'||medicallyStopped(pawn)?1:pawn.state==='eating'?dining&&dining.seatId!==null?3:2:this.workPoses.get(pawn.id)??0);
+        motion.setZ(i,pawn.health?.foodPoisoning?.vomit&&pawn.state!=='dead'?10:pawn.stun&&!medicallyStopped(pawn)?9:pawn.melee?.strike?smallMelee?WORK_POSE.groundMelee:8:pawn.shooting?.stance?.phase==='cooldown'?15:pawn.shooting?.stance?7:pawn.state==='recreating'?pawn.recreation.task?.activity==='horseshoes'?4:pawn.recreation.task?.activity==='chess'?3:5:pawn.state==='sleeping'||pawn.state==='resting'||medicallyStopped(pawn)?1:pawn.state==='eating'?dining&&dining.seatId!==null?3:2:this.workPoses.get(pawn.id)??0);
       }
       if(pawn.melee?.strike)motion.setW(i,coreTimeSeconds(pawn.melee.strike.atCore,origin));
       else if(pawn.shooting?.stance?.phase==='cooldown')motion.setW(i,coreTimeSeconds(pawn.shooting.stance.startedAtCore,origin));

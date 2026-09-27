@@ -9,18 +9,20 @@ import type { RecreationTask } from './recreation-rules.ts';
 /** Decision-local index: never reused after another actor can change the world. */
 interface RecreationSpace {
   solids: Set<number>; walls: Set<number>; objects: Set<number>; resources?: Set<number>;
-  pins: Map<number, Structure>;
+  pins: Map<number, Structure>; games: Map<number, Structure>; seats: Map<number, Structure>;
 }
 export function recreationSpace(world: World, resourceTargets?: readonly Cell[]): RecreationSpace {
-  const index: RecreationSpace = {solids:new Set(),walls:new Set(),objects:new Set(),pins:new Map()};
+  const index: RecreationSpace = {solids:new Set(),walls:new Set(),objects:new Set(),pins:new Map(),games:new Map(),seats:new Map()};
   for(const s of world.structures) {
     if(s.kind==='horseshoes')index.pins.set(s.id,s);
+    if(s.kind==='chess-table')index.games.set(s.id,s);
+    if(s.kind==='stool'||s.kind==='dining-chair'||s.kind==='armchair')index.seats.set(s.z*world.width+s.x,s);
     for(const c of footprintCells(s))index.objects.add(c.z*world.width+c.x);
   }
   for(const job of world.jobs)index.objects.add(job.z*world.width+job.x);
   for(const s of [...world.structures,...world.jobs]) {
     if(!('status' in s)&&((s.kind==='wall'||s.kind==='cooler')||s.kind==='door'&&!s.door!.open))index.walls.add(s.z*world.width+s.x);
-    if((s.kind==='wall'||s.kind==='cooler')||s.kind==='table'||world.schemaVersion>=22&&(!('status' in s)&&(s.kind==='passive-cooler'||s.kind==='bed'||s.kind==='campfire'||s.kind==='stonecutter'||s.kind==='research-bench'||s.kind==='tailor-bench')||'construction' in s&&s.construction==='frame'))for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
+    if((s.kind==='wall'||s.kind==='cooler')||s.kind==='table'||s.kind==='chess-table'||world.schemaVersion>=22&&(!('status' in s)&&(s.kind==='passive-cooler'||s.kind==='bed'||s.kind==='campfire'||s.kind==='stonecutter'||s.kind==='research-bench'||s.kind==='tailor-bench')||'construction' in s&&s.construction==='frame'))for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
   }
   // Match the direct standability check: chunks permit transit, not stopping.
   if(world.schemaVersion>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground')index.solids.add(p.owner.z*world.width+p.owner.x);
@@ -42,6 +44,11 @@ export const isHorseshoeCell = (pin: Cell, cell: Cell): boolean => {
   const dx = Math.abs(pin.x-cell.x), dz = Math.abs(pin.z-cell.z);
   return dx === 5 && dz <= 1 || dz === 5 && dx <= 1;
 };
+export const chessCells = (table: Cell): Cell[] => [
+  {x:table.x-1,z:table.z},{x:table.x+1,z:table.z},
+  {x:table.x,z:table.z-1},{x:table.x,z:table.z+1},
+];
+export const isChessCell = (table: Cell, cell: Cell): boolean => Math.abs(table.x-cell.x)+Math.abs(table.z-cell.z)===1;
 
 /** Tiny straight throwing segment; furniture passability and sight differ.
  * Walls and natural rock hide the pin; a table across the ray does not. */
@@ -61,6 +68,12 @@ export function standableRecreationCell(world: World, cell: Cell, space?: Recrea
 export function recreationSiteValid(world: World, task: RecreationTask, space?: RecreationSpace): boolean {
   if(task.activity==='skygaze'&&isRoofed(world,roofIndex(world,task.target)))return false;
   if (!standableRecreationCell(world,task.target,space)) return false;
+  if(task.activity==='chess') {
+    const table=space?space.games.get(task.buildingId!):world.structures.find(s=>s.id===task.buildingId&&s.kind==='chess-table');
+    const seat=space?space.seats.get(task.target.z*world.width+task.target.x):world.structures.find(s=>s.id===task.seatId&&(s.kind==='stool'||s.kind==='dining-chair'||s.kind==='armchair'));
+    return !!table&&!!seat&&seat.id===task.seatId&&seat.x===task.target.x&&seat.z===task.target.z&&isChessCell(table,seat)
+      &&!deconstructionReserved(world,table.id)&&!deconstructionReserved(world,seat.id);
+  }
   if(task.activity==='skygaze'&&space?.resources)return !space.objects.has(task.target.z*world.width+task.target.x)&&!space.resources.has(task.target.z*world.width+task.target.x);
   if (task.activity === 'skygaze') return !world.structures.some(s=>footprintContains(s,task.target))
     && !world.jobs.some(s=>s.x===task.target.x&&s.z===task.target.z)
@@ -74,4 +87,11 @@ export function availablePins(world: World, pawnId: number): Structure[] {
     const id=p.recreation.task.buildingId;users.set(id,(users.get(id)??0)+1);
   }
   return world.structures.filter(s=>s.kind==='horseshoes'&&!deconstructionReserved(world,s.id,pawnId)&&(users.get(s.id)??0)<3);
+}
+export function availableChessTables(world:World,pawnId:number):Structure[] {
+  const users=new Map<number,number>();
+  for(const p of world.pawns)if(p.id!==pawnId&&p.recreation?.task?.activity==='chess') {
+    const id=p.recreation.task.buildingId!;users.set(id,(users.get(id)??0)+1);
+  }
+  return world.structures.filter(s=>s.kind==='chess-table'&&!deconstructionReserved(world,s.id,pawnId)&&(users.get(s.id)??0)<2);
 }
