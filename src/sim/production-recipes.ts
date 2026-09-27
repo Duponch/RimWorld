@@ -12,7 +12,7 @@ export const TAILORING_RECIPES = ['tribalwear','shirt','pants','duster','parka']
 export type TailoringRecipe = typeof TAILORING_RECIPES[number];
 export type TailoringMaterial = ApparelMaterial;
 export type UnfinishedApparelItem = 'unfinished-tribalwear'|'unfinished-shirt'|'unfinished-pants'|'unfinished-duster'|'unfinished-parka';
-export type ProductionIngredient = ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'unfinished-gun'|'unfinished-flak-vest'|'rice'|'berries'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
+export type ProductionIngredient = ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'unfinished-gun'|'unfinished-flak-vest'|'rice'|'berries'|'milk'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
 export type FlakRecipe='make-flak-vest';
 export const isFlakRecipe=(v:unknown):v is FlakRecipe=>v==='make-flak-vest';
 export const FLAK_REQUIREMENTS={cloth:30,steel:60,component:1,skill:4} as const;
@@ -34,7 +34,7 @@ export const PRODUCTION_RECIPES = Object.freeze({
   duster:Object.freeze({label:'Cache-poussière',station:'tailor-bench',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:80,workTicks:1000,outputUnits:1}),
   parka:Object.freeze({label:'Parka',station:'tailor-bench',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:80,workTicks:800,outputUnits:1}),
   // Neutral recipe work, before station/room/light factors; Core ticks / 10.
-  'simple-meal': Object.freeze({label:'Repas simple',station:'campfire',work:'cook',inputs:['rice','berries',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:10,workTicks:30,outputUnits:1}),
+  'simple-meal': Object.freeze({label:'Repas simple',station:'campfire',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:10,workTicks:30,outputUnits:1}),
   'stone-blocks': Object.freeze({label:'Blocs de pierre',station:'stonecutter',work:'craft',inputs:STONE_INPUTS as readonly ProductionIngredient[],units:1,workTicks:160,outputUnits:20}),
 } as const);
 /** Persist integer work units; rounding error is at most 0.00005 neutral ticks

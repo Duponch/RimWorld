@@ -465,7 +465,7 @@ function actionLabel(pawn: Pawn) {
   if(pawn.ward||pawn.prisoner||pawn.feed||pawn.tend||pawn.state==='resting'||pawn.rescue||carrierOf(snapshot!,pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
   if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
-  if(pawn.animalHandling)return pawn.animalHandling.kind==='tame'?'Apprivoisement · lièvre':'Entretien de la familiarité';
+  if(pawn.animalHandling)return ({tame:'Apprivoisement',maintain:'Entretien de la familiarité',lead:'Conduit un animal vers son enclos',milk:'Trait un dromadaire',shear:'Tond un mufalo'})[pawn.animalHandling.kind];
   if(pawn.animalCare)return 'Soins vétérinaires';
   if(pawn.cooking)return queryPawnStatus(snapshot!,pawn).reason;
   if (pawn.need) return queryPawnStatus(snapshot!, pawn).reason;

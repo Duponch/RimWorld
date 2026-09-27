@@ -4,7 +4,7 @@ import { partMissing } from './injury-state.ts';
 import type { ItemId } from './items.ts';
 import type { MaterialPile, Pawn, World } from './types.ts';
 
-export const APPAREL_MATERIALS = ['cloth', 'light-leather', 'plainleather', 'bluefur', 'camelhide'] as const;
+export const APPAREL_MATERIALS = ['cloth', 'light-leather', 'plainleather', 'bluefur', 'camelhide', 'muffalo-wool'] as const;
 export type ApparelMaterial = typeof APPAREL_MATERIALS[number];
 export const APPAREL_FAMILIES = ['tribalwear', 'shirt', 'pants', 'duster', 'parka'] as const;
 export type ApparelFamily = typeof APPAREL_FAMILIES[number];
@@ -22,6 +22,7 @@ export const APPAREL_MATERIAL_DEFINITIONS: Readonly<Record<ApparelMaterial, Appa
   plainleather:Object.freeze({label:'cuir ordinaire',color:0xa88b63,armor:Object.freeze({sharp:.81,blunt:.24,heat:1.5}),coldInsulation:16,heatInsulation:16}),
   bluefur:Object.freeze({label:'fourrure bleue',color:0x839ac5,armor:Object.freeze({sharp:.81,blunt:.24,heat:1.5}),coldInsulation:20,heatInsulation:16}),
   camelhide:Object.freeze({label:'cuir de chameau',color:0xc3a375,armor:Object.freeze({sharp:.81,blunt:.24,heat:1.5}),coldInsulation:16,heatInsulation:24}),
+  'muffalo-wool':Object.freeze({label:'laine de mufalo',color:0xb3c0ba,armor:Object.freeze({sharp:.36,blunt:0,heat:1.1}),coldInsulation:28,heatInsulation:12}),
 });
 
 interface ApparelFamilyDefinition {
@@ -83,6 +84,11 @@ export const APPAREL:Readonly<Record<ApparelItem,ApparelDefinition>> = Object.fr
   'camelhide-pants': textileDefinition('pants','camelhide'),
   'camelhide-duster': textileDefinition('duster','camelhide'),
   'camelhide-parka': textileDefinition('parka','camelhide'),
+  'muffalo-wool-tribalwear': textileDefinition('tribalwear','muffalo-wool'),
+  'muffalo-wool-shirt': textileDefinition('shirt','muffalo-wool'),
+  'muffalo-wool-pants': textileDefinition('pants','muffalo-wool'),
+  'muffalo-wool-duster': textileDefinition('duster','muffalo-wool'),
+  'muffalo-wool-parka': textileDefinition('parka','muffalo-wool'),
   'cloth-shirt': textileDefinition('shirt','cloth'),
   'light-leather-tribalwear': textileDefinition('tribalwear','light-leather'),
   'light-leather-shirt': textileDefinition('shirt','light-leather'),
@@ -106,11 +112,11 @@ export interface ApparelState {
 }
 
 const ITEM_BY_FAMILY: Readonly<Record<ApparelFamily, Readonly<Record<ApparelMaterial, ApparelItem>>>> = Object.freeze({
-  tribalwear:Object.freeze({cloth:'cloth-tribalwear','light-leather':'light-leather-tribalwear','plainleather':'plainleather-tribalwear','bluefur':'bluefur-tribalwear','camelhide':'camelhide-tribalwear'}),
-  shirt:Object.freeze({cloth:'cloth-shirt','light-leather':'light-leather-shirt','plainleather':'plainleather-shirt','bluefur':'bluefur-shirt','camelhide':'camelhide-shirt'}),
-  pants:Object.freeze({cloth:'cloth-pants','light-leather':'light-leather-pants','plainleather':'plainleather-pants','bluefur':'bluefur-pants','camelhide':'camelhide-pants'}),
-  duster:Object.freeze({cloth:'cloth-duster','light-leather':'light-leather-duster','plainleather':'plainleather-duster','bluefur':'bluefur-duster','camelhide':'camelhide-duster'}),
-  parka:Object.freeze({cloth:'cloth-parka','light-leather':'light-leather-parka','plainleather':'plainleather-parka','bluefur':'bluefur-parka','camelhide':'camelhide-parka'}),
+  tribalwear:Object.freeze({cloth:'cloth-tribalwear','light-leather':'light-leather-tribalwear','plainleather':'plainleather-tribalwear','bluefur':'bluefur-tribalwear','camelhide':'camelhide-tribalwear','muffalo-wool':'muffalo-wool-tribalwear'}),
+  shirt:Object.freeze({cloth:'cloth-shirt','light-leather':'light-leather-shirt','plainleather':'plainleather-shirt','bluefur':'bluefur-shirt','camelhide':'camelhide-shirt','muffalo-wool':'muffalo-wool-shirt'}),
+  pants:Object.freeze({cloth:'cloth-pants','light-leather':'light-leather-pants','plainleather':'plainleather-pants','bluefur':'bluefur-pants','camelhide':'camelhide-pants','muffalo-wool':'muffalo-wool-pants'}),
+  duster:Object.freeze({cloth:'cloth-duster','light-leather':'light-leather-duster','plainleather':'plainleather-duster','bluefur':'bluefur-duster','camelhide':'camelhide-duster','muffalo-wool':'muffalo-wool-duster'}),
+  parka:Object.freeze({cloth:'cloth-parka','light-leather':'light-leather-parka','plainleather':'plainleather-parka','bluefur':'bluefur-parka','camelhide':'camelhide-parka','muffalo-wool':'muffalo-wool-parka'}),
 });
 export const apparelItemFor=(family:ApparelFamily,material:ApparelMaterial):ApparelItem=>ITEM_BY_FAMILY[family][material];
 export const isApparelMaterial=(value:unknown):value is ApparelMaterial=>typeof value==='string'&&APPAREL_MATERIALS.includes(value as ApparelMaterial);

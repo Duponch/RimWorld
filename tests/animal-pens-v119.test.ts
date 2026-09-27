@@ -59,8 +59,12 @@ test('marker species choice is atomic, persisted, and old saves migrate without 
   expect(serializeWorld(world)).toBe(after);
   const historical=JSON.parse(before) as World;
   historical.structures=[];historical.schemaVersion=109 as never;
+  for(const policy of historical.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='milk');
+  historical.apparelPolicies=(historical.apparelPolicies??[]).map(policy=>({...policy,
+    allowedItems:policy.allowedItems.filter(item=>!item.startsWith('muffalo-wool-')),
+    allowedMaterials:policy.allowedMaterials.filter(material=>material!=='muffalo-wool')}));
   const migrated=deserializeWorld(JSON.stringify(historical));
-  expect(migrated).toEqual({...historical,schemaVersion:119});
+  expect(migrated).toEqual({...historical,schemaVersion:120});
   expect(migrated.structures).toEqual([]);
 });
 

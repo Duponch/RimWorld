@@ -12,6 +12,7 @@ import { MEDICAL_CARE,type MedicalCare } from '../sim/medicine-rules';
 import { isColonist } from '../sim/affiliation';
 import type { WildAnimal } from '../sim/wildlife-state';
 import { animalPenStatus } from './pen-status';
+import { ANIMAL_PRODUCTS, productFullness, productKind } from '../sim/animal-products';
 
 export type AnimalInspectorTab = 'info' | 'health';
 export interface AnimalInspectorOptions {
@@ -72,6 +73,14 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
     ? `Animaux ${minimum} minimum · deux nourrissages physiques par tentative.`
     : `Aucun dresseur actif de niveau Animaux ${minimum} ; la désignation attendra un colon qualifié et de la nourriture.`);
   const penStatus=animalPenStatus(world,animal);
+  const product=animal.domestic?productKind(animal):undefined;
+  const productLabel=product==='milk'?'Lait':'Laine de mufalo';
+  const productWork=product==='milk'?'Traite':'Tonte';
+  const productTask=product&&world.pawns.find(pawn=>pawn.animalHandling?.animalId===animal.id&&pawn.animalHandling.kind===product)?.animalHandling;
+  const productLines=product?[
+    `${productLabel} : ${percent(Math.max(0,Math.min(1,productFullness(animal))))} de maturité${productFullness(animal)>=1?' · prêt à récolter':''}`,
+    ...(productTask?[`${productWork} : ${productTask.phase==='interact'?`${percent(Math.max(0,Math.min(1,productTask.progress/ANIMAL_PRODUCTS[product].work)))} du travail`:'en approche'}`]:[]),
+  ]:[];
   return {
     id: animal.id,
     title: `${species.label[0]!.toLocaleUpperCase('fr-FR')}${species.label.slice(1)} ${animal.id}`,
@@ -92,6 +101,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
       `Besoins alimentaires quotidiens : ${species.foodPerDay.toLocaleString('fr-FR')} unité de nutrition`,
       animal.domestic?`Familiarité : ${animal.domestic.tameness} / 5`:`Apprivoisement : ${handling}`,
       ...(penStatus?[`Enclos : ${penStatus}`]:[]),
+      ...productLines,
     ],
     needs: [
       `Nourriture : ${percent(Math.max(0, Math.min(1, animal.food / species.nutrition)))}`,

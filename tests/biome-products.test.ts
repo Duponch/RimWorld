@@ -48,10 +48,11 @@ test('all five families accept the new leathers, with distinct useful insulation
   const ids=new Set<string>();for(const material of APPAREL_MATERIALS)for(const family of APPAREL_FAMILIES){
     const item=apparelItemFor(family,material);ids.add(item);
     const pile={kind:'apparel',item,quantity:1,owner:{type:'ground',x:1,z:1},apparel:newApparelState(item)};
-    expect(validApparelShape(pile,91)).toBe(true);
-    if(!['cloth','light-leather'].includes(material))expect(validApparelShape(pile,90)).toBe(false);
+    expect(validApparelShape(pile,material==='muffalo-wool'?120:91)).toBe(true);
+    if(material==='muffalo-wool')expect(validApparelShape(pile,119)).toBe(false);
+    else if(!['cloth','light-leather'].includes(material))expect(validApparelShape(pile,90)).toBe(false);
   }
-  expect(ids.size).toBe(25);
+  expect(ids.size).toBe(30);
   expect(APPAREL['bluefur-parka'].coldInsulation).toBe(40);
   expect(APPAREL['plainleather-parka'].coldInsulation).toBe(32);
   expect(APPAREL['camelhide-duster'].heatInsulation).toBeCloseTo(20.4);
@@ -69,7 +70,7 @@ test('until-target bills count every new material in storage and task cargo, exc
       {id:w.nextId++,kind:'apparel' as const,item:apparelItemFor(family,material),quantity:1,owner:{type:'ground' as const,x:i?2:1,z:1},apparel:newApparelState(apparelItemFor(family,material))},
       {id:w.nextId++,kind:'apparel' as const,item:apparelItemFor(family,material),quantity:1,owner:{type:'pawn' as const,pawnId:w.pawns[0]!.id},apparel:newApparelState(apparelItemFor(family,material))},
     ]);
-    expect(countedProducts(w,newCookingBill(1,family))).toBe(6);
+    expect(countedProducts(w,newCookingBill(1,family))).toBe(7);
   }
   w.piles=[{id:w.nextId++,kind:'food',item:'dromedary-meat',quantity:40,owner:{type:'ground',x:1,z:1}},
     {id:w.nextId++,kind:'textile',item:'camelhide',quantity:30,owner:{type:'ground',x:1,z:1}}];
@@ -79,7 +80,10 @@ test('until-target bills count every new material in storage and task cargo, exc
 test('published V90 colony migrates neutrally and cannot smuggle future ecology, material or filter fields into V90',()=>{
   const raw=gunzipSync(readFileSync(new URL('./fixtures/colony-v90.json.gz',import.meta.url))).toString('utf8'),old=JSON.parse(raw);
   expect(old.schemaVersion).toBe(90);const current=deserializeWorld(raw);
-  expect(current).toEqual({...old,schemaVersion:91});expect(current.flora).toBeUndefined();
+  expect(current.schemaVersion).toBe(120);
+  expect(current.piles.map(p=>[p.id,p.item,p.quantity])).toEqual(old.piles.map((p:World['piles'][number])=>[p.id,p.item,p.quantity]));
+  expect(current.piles.some(p=>p.item==='muffalo-wool')).toBe(false);
+  expect(current.flora).toBeUndefined();
   for(const mutate of [
     (w:any)=>w.flora={revision:1,biome:'temperate-forest',rng:1,nextCheck:w.tick+60,adoptedAt:w.tick,capacity:1},
     (w:any)=>w.resources[0].species='oak',

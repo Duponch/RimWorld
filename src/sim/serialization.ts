@@ -7,6 +7,7 @@ import {validateArtObjects} from './art-save.ts';
 import { validateWildFlora } from './wild-flora.ts';
 import { validRoomExperience } from './room-experience.ts';
 import { V91_ITEM_IDS } from './biome-items.ts';
+import { V120_ANIMAL_PRODUCT_ITEMS } from './animal-product-items.ts';
 import { validHumanBodyShape,validHumanCorpseShape,validGraveShape,validBurialTaskShape,validateBurials } from './burial-save.ts';
 import { validateFlooring } from './flooring-save.ts';
 import { validateFilth } from './filth-save.ts';
@@ -62,7 +63,7 @@ import { validPlantThermalFactor } from './thermal-plants.ts';
 import { validateTemperature } from './temperature-save.ts';
 import { initializeLightWork, validateWorkProgress } from './work-progress-save.ts';
 import { workProgress } from './work-progress.ts';
-import { legacyProductionTicks, productionWorkTotal, taskRecipe } from './production-recipes.ts';
+import { legacyProductionTicks, productionWorkTotal, taskRecipe, PRODUCTION_RECIPES } from './production-recipes.ts';
 import { validateRoofing } from './roof-save.ts';
 import { isRoofJob } from './roof-rules.ts';
 import { validateDoors } from './door-save.ts';
@@ -123,7 +124,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -285,11 +286,12 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
         if(version<109&&(item.item==='unfinished-flak-vest'||item.flakWork!==undefined))errors.push('Future flak work in older save.');
         if(version<101&&(item.item==='unfinished-gun'||item.gunWork!==undefined))errors.push('Future machining work in older save.');
         if(version<91&&V91_ITEM_IDS.includes(String(item.item)))errors.push('Future biome product in older save.');
+        if(version<120&&V120_ANIMAL_PRODUCT_ITEMS.includes(String(item.item)))errors.push('Future livestock product in older save.');
         if(version<79&&['hare-corpse','hare-meat','light-leather'].includes(String(item.item)))errors.push('Future animal product in older save.');
         if(!validUnfinishedShape(item,version)||!validGunWorkShape(item,version)||!validFlakWorkShape(item,version))errors.push('Invalid unfinished item.');
         if(!validApparelShape(item,version))errors.push('Invalid apparel state for schema.');
         if(!validWeaponShape(item,version))errors.push('Invalid weapon state for schema.');
-        if (!oneOf(item.kind, ['wood', 'food', ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=88&&item.item==='silver'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
+        if (!oneOf(item.kind, ['wood', 'food', ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=120&&item.item==='muffalo-wool'?100:version>=88&&item.item==='silver'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
         else {
           if (version >= 5) {
             if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');
@@ -306,7 +308,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
             : (owner.type === 'pawn'||version>=52&&owner.type==='equipment'||version>=63&&owner.type==='apparel'||version>=88&&owner.type==='inventory') ? !integer(owner.pawnId, 1) || Object.keys(owner).some(key => !['type', 'pawnId'].includes(key))
               : version>=89&&owner.type==='grave' ? !integer(owner.graveId,1)||Object.keys(owner).some(key=>!['type','graveId'].includes(key)) : owner.type === 'job' ? !integer(owner.jobId, 1) || Object.keys(owner).some(key => !['type', 'jobId'].includes(key)) : true) errors.push('Invalid material owner.');
         }
-      } else if (item.items!==undefined&&(version<101||!validStorageItems(item.items)||version<104&&Object.hasOwn(item.items as object,'unfinished-sculpture'))||!record(item.filters) || typeof item.filters.wood !== 'boolean' || typeof item.filters.food !== 'boolean' || item.filters.silver!==undefined&&(version<88||typeof item.filters.silver!=='boolean') || item.filters.corpse!==undefined&&(version<79||typeof item.filters.corpse!=='boolean') || item.filters.unfinished!==undefined&&(version<72||typeof item.filters.unfinished!=='boolean') || item.filters.textile!==undefined&&(version<71||typeof item.filters.textile!=='boolean') || item.filters.apparel!==undefined&&(version<63||typeof item.filters.apparel!=='boolean') || item.filters.weapon!==undefined&&(version<52||typeof item.filters.weapon!=='boolean') || item.filters.medicine!==undefined&&(version<51||typeof item.filters.medicine!=='boolean') || item.filters.component!==undefined&&(version<41||typeof item.filters.component!=='boolean') || item.filters.blocks!==undefined&&(version<32||typeof item.filters.blocks!=='boolean') || item.filters.steel!==undefined&&(version<29||typeof item.filters.steel!=='boolean') || item.filters.chunk!==undefined&&(version<28||typeof item.filters.chunk!=='boolean') || item.filters.furniture!==undefined&&(version<26||typeof item.filters.furniture!=='boolean')
+      } else if (item.items!==undefined&&(version<101||!validStorageItems(item.items)||version<104&&Object.hasOwn(item.items as object,'unfinished-sculpture')||version<120&&Object.keys(item.items as object).some(i=>V120_ANIMAL_PRODUCT_ITEMS.includes(i)))||!record(item.filters) || typeof item.filters.wood !== 'boolean' || typeof item.filters.food !== 'boolean' || item.filters.silver!==undefined&&(version<88||typeof item.filters.silver!=='boolean') || item.filters.corpse!==undefined&&(version<79||typeof item.filters.corpse!=='boolean') || item.filters.unfinished!==undefined&&(version<72||typeof item.filters.unfinished!=='boolean') || item.filters.textile!==undefined&&(version<71||typeof item.filters.textile!=='boolean') || item.filters.apparel!==undefined&&(version<63||typeof item.filters.apparel!=='boolean') || item.filters.weapon!==undefined&&(version<52||typeof item.filters.weapon!=='boolean') || item.filters.medicine!==undefined&&(version<51||typeof item.filters.medicine!=='boolean') || item.filters.component!==undefined&&(version<41||typeof item.filters.component!=='boolean') || item.filters.blocks!==undefined&&(version<32||typeof item.filters.blocks!=='boolean') || item.filters.steel!==undefined&&(version<29||typeof item.filters.steel!=='boolean') || item.filters.chunk!==undefined&&(version<28||typeof item.filters.chunk!=='boolean') || item.filters.furniture!==undefined&&(version<26||typeof item.filters.furniture!=='boolean')
         || !integer(item.priority, 1, 4) || !integer(item.capacity, 1, version>=88?ITEM_DEFINITIONS.silver.stackLimit:MAX_STACK)) errors.push('Invalid storage policy.');
     }
   }
@@ -542,7 +544,7 @@ function validateV90Persistence(world:World,version:number):string[] {
     else {
       const ids=new Set<number>(),allowed=['id','label','allowedItems','allowedMaterials','minQuality','maxQuality','minHitPointsPercent','maxHitPointsPercent'];
       for(const policy of policies){
-        if(!record(policy)||Object.keys(policy).length!==allowed.length||Object.keys(policy).some(key=>!allowed.includes(key))||!validApparelPolicy(policy as never)||String(policy.label).length>60||ids.has(Number(policy.id)))errors.push('Invalid apparel policy.');
+        if(!record(policy)||Object.keys(policy).length!==allowed.length||Object.keys(policy).some(key=>!allowed.includes(key))||!validApparelPolicy(policy as never)||version<120&&(Array.isArray(policy.allowedItems)&&policy.allowedItems.some(i=>V120_ANIMAL_PRODUCT_ITEMS.includes(String(i)))||Array.isArray(policy.allowedMaterials)&&policy.allowedMaterials.includes('muffalo-wool'))||String(policy.label).length>60||ids.has(Number(policy.id)))errors.push('Invalid apparel policy.');
         else ids.add(Number(policy.id));
       }
       if(ids.size&&Number(world.nextApparelPolicyId)<=Math.max(...ids))errors.push('Apparel policy identity was reused.');
@@ -737,7 +739,7 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===88){const errors=validateSchema(input,88);if(errors.length)throw new Error('Invalid version 88 save: '+errors.join(' '));input.schemaVersion=89;for(const p of (input as unknown as World).pawns)p.priorities.clean=p.visitor?0:3;}
   if(record(input)&&input.schemaVersion===89){
     const errors=validateSchema(input,89);if(errors.length)throw new Error('Invalid version 89 save: '+errors.join(' '));
-    const world=input as unknown as World,registry=createDefaultApparelPolicyRegistry();
+    const world=input as unknown as World,registry=createDefaultApparelPolicyRegistry(false);
     for(const structure of [...world.structures,...world.packed.map(pack=>pack.building)])if(['bed','table','stool'].includes(structure.kind))structure.quality='normal';
     for(const pile of world.piles){
       if(pile.apparel&&(pile.item==='cloth-shirt'||pile.item==='cloth-tribalwear'))pile.apparel.material='cloth';
@@ -768,6 +770,16 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===105){const errors=validateSchema(input,105);if(errors.length)throw new Error('Invalid version 105 save: '+errors.join(' '));input.schemaVersion=106;for(const pawn of (input as unknown as World).pawns)pawn.priorities.handle=0;}
   if(record(input)&&input.schemaVersion===106){const errors=validateSchema(input,106);if(errors.length)throw new Error('Invalid version 106 save: '+errors.join(' '));input.schemaVersion=109;}
   if(record(input)&&input.schemaVersion===109){const errors=validateSchema(input,109);if(errors.length)throw new Error('Invalid version 109 save: '+errors.join(' '));input.schemaVersion=119;}
+  if(record(input)&&input.schemaVersion===119){
+    const errors=validateSchema(input,119);if(errors.length)throw new Error('Invalid version 119 save: '+errors.join(' '));
+    const world=input as unknown as World;
+    for(const animal of world.wildlife?.animals??[])if(animal.domestic&&(animal.species==='muffalo'||animal.species==='dromedary'&&animal.sex==='female'))animal.domestic.productFullness=0;
+    for(const structure of [...world.structures,...world.packed.map(pack=>pack.building)])for(const bill of structure.bills??[]){
+      if(PRODUCTION_RECIPES[bill.recipe].inputs.includes('milk'))bill.filters.milk=false;
+      if(PRODUCTION_RECIPES[bill.recipe].inputs.includes('muffalo-wool'))bill.filters['muffalo-wool']=false;
+    }
+    input.schemaVersion=120;
+  }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */

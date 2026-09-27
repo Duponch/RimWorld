@@ -1,4 +1,8 @@
-# Bibliothèque de colonies de test — V98 à V106
+# Bibliothèque de colonies de test — V98 à V120
+
+**V120 : quatorzième entrée — Produits animaux.** Une dromadaire apprivoisée et un mufalo apprivoisé approchent de leur première récolte, avec deux soigneurs et des postes de cuisine et de confection préparés. La traite, la tonte, le repas et le vêtement doivent encore être accomplis par la simulation. [Générateur](../../scripts/generate-animal-products-demo-v120.ts), [contrat](animal-products.md), [preuve](../history/validation-animal-products-v120.md). Le fichier est préparé ; il n'est pas une progression autonome.
+
+**V119 : treizième entrée — Enclos.** Un cerf domestique doit être conduit dans un périmètre préparé ; portes, marqueur et filtre restent interactifs. [Générateur](../../scripts/generate-husbandry-demo-v119.ts), [preuve](../history/validation-husbandry-v119.md).
 
 **V109 : douzième entrée — Visages et armurerie.** Cinq profils visuels préparés et une facture de gilet non réalisée au chargement. Base atelier V101 immuable, nouvelle scène dans `public/test-saves/v109/visages-armurerie.json`, générateur explicite `scripts/generate-appearance-flak-v109.mjs`. Aucun écrasement des onze références précédentes ; contrôle d’empreinte et de migration maintenu.
 
@@ -6,7 +10,7 @@
 
 **V105 :** dix colonies dans le manifeste commun. « Art et commerce · 1 colon » propose un visiteur et une œuvre préparée pour adopter le suivi, contacter, vendre puis sauvegarder. Les neuf fichiers historiques restent inchangés ; [générateur](../../scripts/generate-economy-demo.ts).
 
-**Charger une partie → Colonies de test** propose directement onze situations, depuis l'accueil ou Menu : les six références V98 inchangées et cinq démonstrations préparées. Il suffit de choisir **Charger cette colonie** ; téléchargement et import manuel ne sont plus nécessaires. Chaque copie s'ouvre en pause et le jeu continue normalement après reprise.
+**Charger une partie → Colonies de test** propose directement quatorze situations, depuis l'accueil ou Menu : les six références V98 inchangées et huit démonstrations préparées. Il suffit de choisir **Charger cette colonie** ; téléchargement et import manuel ne sont plus nécessaires. Chaque copie s'ouvre en pause et le jeu continue normalement après reprise.
 
 V101 ajoute [l'atelier](../../public/test-saves/v101/atelier.json) : recherches et matières initiales préparées, atelier construit par le vrai moteur, aucune arme fabriquée d'avance. `node --experimental-strip-types scripts/machining-demo-v101.ts` régénère et recharge exactement ce fichier. V103 ajoute [les salles](../../public/test-saves/v103/salles.json) : pièces meublées, fleurs et repas préparés, sans souvenir prérempli ; l'ingestion et les pensées suivent la simulation. Ces deux démonstrations ne sont pas des colonies autonomes. [Preuves V98](../history/validation-test-colonies-v98.md), [V101](../history/validation-machining-v101.md) et [V103](../history/validation-rooms-v103.md).
 
@@ -23,12 +27,15 @@ V101 ajoute [l'atelier](../../public/test-saves/v101/atelier.json) : recherches 
 | Atelier de sculpture | 1 | Grande œuvre en marbre réellement produite et posée ; fabriquer puis installer une petite sculpture en bois. |
 | Art et commerce | 1 + 1 marchand | Œuvre vendable, contact et argent physiques, suivi du patrimoine. |
 | Lièvres et soins | 1 | Apprivoisement à tenter et lièvre possédé blessé à soigner ; provisions préparées. |
+| Visages et armurerie | 5 | Variantes de corps/visages, poste et facture de gilet préparés. |
+| Enclos | 1 | Cerf apprivoisé à conduire derrière une clôture et filtre d'enclos modifiable. |
+| Produits animaux | 2 | Dromadaire et mufalo possédés presque mûrs ; traite, tonte, repas au lait et vêtement en laine à produire. |
 
-Les six cartes V98 font 250 × 250 ; les cinq démonstrations font 32 × 32. Les cinq situations V98 préparées proviennent de scénarios de charge : elles ne représentent pas des colonies autonomes équilibrées. Certains besoins sont déjà urgents ; elles servent à exercer des systèmes existants, sans démontrer une progression naturelle ou la parité Core. La première est une partie de **Lisière**, jamais une sauvegarde personnelle RimWorld. Ses 48 dossiers comprennent quatre habitants vivants et 44 morts historiques. Visiteurs, captifs et morts ne comptent pas comme cent colons libres.
+Les six cartes V98 font 250 × 250 ; les huit démonstrations font 32 × 32. Les cinq situations V98 préparées proviennent de scénarios de charge : elles ne représentent pas des colonies autonomes équilibrées. Certains besoins sont déjà urgents ; elles servent à exercer des systèmes existants, sans démontrer une progression naturelle ou la parité Core. La première est une partie de **Lisière**, jamais une sauvegarde personnelle RimWorld. Ses 48 dossiers comprennent quatre habitants vivants et 44 morts historiques. Visiteurs, captifs et morts ne comptent pas comme cent colons libres.
 
 ## Chargement et conservation
 
-Le catalogue commun `/test-saves/manifest.json` et le fichier choisi sont téléchargés à la demande depuis leur dossier de version (`v98`, `v101`, `v103`, `v104`, `v105` ou `v106`). Le manifeste V98 historique et ses six fichiers restent inchangés. Le lecteur accepte aussi ce manifeste historique de version 1 ; le catalogue commun de version 2 indique le dossier de chaque entrée. Aucun constructeur de scénario n'entre dans le bundle applicatif. Les fiches indiquent provenance, systèmes et coordonnées utiles. Chaque chargement repart du même état en pause ; règles et délais ordinaires reprennent ensuite.
+Le catalogue commun `/test-saves/manifest.json` et le fichier choisi sont téléchargés à la demande depuis leur dossier de version (`v98`, `v101`, `v103`, `v104`, `v105`, `v106`, `v109`, `v119` ou `v120`). Le manifeste V98 historique et ses six fichiers restent inchangés. Le lecteur accepte aussi ce manifeste historique de version 1 ; le catalogue commun de version 2 indique le dossier de chaque entrée. Aucun constructeur de scénario n'entre dans le bundle applicatif. Les fiches indiquent provenance, systèmes et coordonnées utiles. Chaque chargement repart du même état en pause ; règles et délais ordinaires reprennent ensuite.
 
 Le manifeste contient les comptes et le SHA-256 du JSON métier décompressé. Lecture réseau bornée, dossier de version et nom de fichier contrôlés, décompression bornée et empreinte précèdent la validation stricte du worker. **Télécharger le fichier** conserve les octets publiés, y compris l'enveloppe compressée des fichiers V98 ; **Importer un fichier** accepte aussi les sauvegardes JSON brutes, dans la limite de 32 Mio. Ce n'est pas un importeur RimWorld.
 

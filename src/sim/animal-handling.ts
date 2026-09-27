@@ -17,6 +17,7 @@ import type { WildAnimal } from './wildlife-state.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { releaseWork } from './work-release.ts';
 import { processLeading, type LeadingTask } from './animal-leading.ts';
+import { processProduct, productHandlerAvailable, productKind, type ProductTask } from './animal-products.ts';
 
 /** Core's 60,000-tick day is represented by 6,000 local ticks. */
 export const TAME_COOLDOWN = TICKS_PER_DAY / 2;
@@ -64,7 +65,8 @@ export function animalHandlingHolding(w:World,id:number):boolean {
   const a=w.wildlife?.animals.find(a=>a.id===id);
   if(!a||!animalAvailable(a)||(a.motion?.end??0)>w.tick)return false;
   return w.pawns.some(p=>p.animalHandling?.animalId===id&&p.animalHandling.kind!=='lead'&&p.animalHandling.phase==='interact'
-    &&p.moveCooldown===0&&adjacent(p,a)&&handlerAvailable(p));
+    &&p.moveCooldown===0&&adjacent(p,a)
+    &&((p.animalHandling.kind==='milk'||p.animalHandling.kind==='shear')?productHandlerAvailable(p):handlerAvailable(p)));
 }
 export function handlingWanted(w:World,p:Pawn):boolean {
   if(!handlerAvailable(p))return false;
@@ -144,7 +146,7 @@ function finish(w:World,p:Pawn,a:WildAnimal,task:AnimalHandlingTask,ctx:NeedCont
   if(skill)learnSkill(skill,task.kind==='tame'?90_000:70_000,p);
   const success=healthRandom(w)<(task.kind==='tame'?tameChance(p):trainChance(p));
   if(task.kind==='tame') {
-    if(success){a.domestic={since:w.tick,care:'herbal',tameness:MAX_TAMENESS,nextDecay:w.tick+TAMENESS_DECAY,lastTraining:w.tick};
+    if(success){a.domestic={since:w.tick,care:'herbal',tameness:MAX_TAMENESS,nextDecay:w.tick+TAMENESS_DECAY,lastTraining:w.tick,...(productKind(a)?{productFullness:0}:{})};
       delete a.taming;delete a.flee;delete a.threat;delete a.retaliation;
       if(w.hunting)w.hunting.targets=w.hunting.targets.filter(id=>id!==a.id);
       for(const hunter of w.pawns)if(hunter.hunting?.animalId===a.id){cancelHunting(hunter);hunter.path=[];hunter.state='idle';hunter.planCooldown=0;}
@@ -160,6 +162,7 @@ interface HandlingContext extends NeedContext { candidates():Reachability|null; 
 export function processHandling(w:World,p:Pawn,ctx:HandlingContext):void {
   const task=p.animalHandling;if(!task)return;
   if(task.kind==='lead'){if(task.markerId===undefined){interruptWork(w,p);return;}processLeading(w,p,task as LeadingTask,ctx);return;}
+  if(task.kind==='milk'||task.kind==='shear'){processProduct(w,p,task as ProductTask,ctx);return;}
   const a=w.wildlife?.animals.find(a=>a.id===task.animalId);
   if(!a||!stillValid(w,p,a,task)){interruptWork(w,p);return;}
   if(task.phase==='pickup') {

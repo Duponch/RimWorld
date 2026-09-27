@@ -1,4 +1,5 @@
 import { reconcileDomesticWork } from './domestic-reconcile.ts';
+import { advanceAnimalProducts } from './animal-products.ts';
 import { PEN_ANIMALS, invalidateAnimalPens } from './animal-pens.ts';
 import { applyTaming,processHandling,advanceTameness } from './animal-handling.ts';
 import { applyAnimalCarePolicy,processAnimalCare } from './animal-care.ts';
@@ -508,7 +509,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     advanceTameness(world);reconcileDomesticWork(world);advanceWildlife(world);
     updateDoors(world);
     const structuresBeforeCombat=world.structures;
-    advanceWorldCombat(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);
+    advanceWorldCombat(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);reconcileBurials(world);
     detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     expireStaggers(world);advanceFilth(world,weatherRainRate(world));
     scheduleGrowing(world);

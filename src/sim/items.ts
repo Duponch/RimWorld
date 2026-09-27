@@ -1,11 +1,13 @@
 import type { MaterialKind, MaterialPile, Pawn, World } from './types.ts';
 import { BIOME_ITEM_DEFINITIONS,isAnimalMeat } from './biome-items.ts';
+import { ANIMAL_PRODUCT_ITEM_DEFINITIONS } from './animal-product-items.ts';
 
 /** Runtime content, not an exhaustive reference catalogue. Values and unresolved
  * rules are tracked in docs/development/food-items.md. Nutrition uses integer
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
 export const ITEM_DEFINITIONS = Object.freeze({
   ...BIOME_ITEM_DEFINITIONS,
+  ...ANIMAL_PRODUCT_ITEM_DEFINITIONS,
   'human-corpse':Object.freeze({label:'Dépouille humaine',kind:'corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x8f8775}),
   'hare-corpse':Object.freeze({label:'Dépouille de lièvre',kind:'corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x9b9981}),
   'hare-meat':Object.freeze({label:'Viande de lièvre',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xba6259}),
@@ -52,6 +54,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'legacy-chunk': Object.freeze({label:'Fragment historique non typé',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0x899182}),
   wood: Object.freeze({ label: 'Bois', kind: 'wood', stackLimit: 75, nutrition: 0, maxIngest: 0, color: 0x896841 }),
   berries: Object.freeze({ label: 'Baies', kind: 'food', stackLimit: 75, nutrition: 5, maxIngest: 75, color: 0xb96f63 }),
+  milk: Object.freeze({ label: 'Lait', kind: 'food', stackLimit: 75, nutrition: 5, maxIngest: 75, color: 0xf1ead7 }),
   rice: Object.freeze({ label: 'Riz', kind: 'food', stackLimit: 75, nutrition: 5, maxIngest: 75, color: 0xd9c695 }),
   potato: Object.freeze({ label: 'Pommes de terre', kind: 'food', stackLimit: 75, nutrition: 5, maxIngest: 75, color: 0xb89b70 }),
   corn: Object.freeze({ label: 'Maïs', kind: 'food', stackLimit: 75, nutrition: 5, maxIngest: 75, color: 0xe0be56 }),

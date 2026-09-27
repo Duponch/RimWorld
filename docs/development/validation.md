@@ -1,4 +1,8 @@
-# Validation courante — V114
+# Validation courante — V120
+
+V120 : [lait et laine physiques](../history/validation-animal-products-v120.md), 140 contrôles ciblés, deux parcours Chromium/WebGPU, build/typage, continuation exacte et mesure CPU de charge mixte. La suite globale garde sa dette V84 ; aucun débit 6× ou 240 FPS constant n'est inféré.
+
+V119 : [apprivoisement, enclos et conduite](../history/validation-husbandry-v119.md), migration stricte, démonstration préparée, parcours natifs et mesure CPU séparée.
 
 V114 : [bâtiments et surfaces peints](../history/validation-timber-v114.md), dalle continue, portes enchâssées et option de textures 3D vérifiées sur les sources finales. Contrôles ciblés et natifs réussis ; la comparaison V113/V114 sous charge ne démontre aucun gain de cadence. Schéma 109 et simulation inchangés.
 

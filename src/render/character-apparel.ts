@@ -15,7 +15,7 @@ export function apparelAppearance(pieces:readonly MaterialPile[]=[]) {
   const top=outer??tribal??shirt,definition=top?APPAREL[top.item as ApparelItem]:undefined;
   return {shirt:!!shirt,tribal:!!tribal,vest:pieces.some(p=>p.item==='flak-vest')&&!outer,
     silhouette:outer?(definition!.family==='parka'?4:3):tribal?2:shirt?1:0,
-    pants:pants?((['cloth','light-leather','plainleather','bluefur','camelhide'].indexOf(APPAREL[pants.item as ApparelItem].material??'cloth')+1)):0,
+    pants:pants?((['cloth','light-leather','plainleather','bluefur','camelhide','muffalo-wool'].indexOf(APPAREL[pants.item as ApparelItem].material??'cloth')+1)):0,
     color:definition?.color,signature:pieces.map(p=>p.item).sort().join(' '),description:pieces.map(apparelLabel).join(', ')||'Aucun vêtement équipé'};
 }
 export const APPAREL_CARGO:Readonly<Record<ApparelItem,number>>=Object.freeze({
@@ -34,6 +34,11 @@ export const APPAREL_CARGO:Readonly<Record<ApparelItem,number>>=Object.freeze({
   'camelhide-pants':51,
   'camelhide-duster':52,
   'camelhide-parka':53,
+  'muffalo-wool-tribalwear':54,
+  'muffalo-wool-shirt':55,
+  'muffalo-wool-pants':56,
+  'muffalo-wool-duster':57,
+  'muffalo-wool-parka':58,
   'cloth-shirt':22,'flak-vest':23,'cloth-tribalwear':26,'light-leather-shirt':31,'light-leather-tribalwear':32,
   'cloth-pants':33,'light-leather-pants':34,'cloth-duster':35,'light-leather-duster':36,'cloth-parka':37,'light-leather-parka':38,
 });

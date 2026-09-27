@@ -1,6 +1,7 @@
 import { handlingFeedUnits, handlingStepDuration, canTameSpecies } from './animal-handling.ts';
 import { livestock } from './animal-leading.ts';
 import { penRegion } from './animal-pens.ts';
+import { ANIMAL_PRODUCTS, productKind, productReady } from './animal-products.ts';
 import { isColonist } from './affiliation.ts';
 import { isMedicine, MEDICAL_CARE } from './medicine-rules.ts';
 import { reservedSource } from './materials.ts';
@@ -17,9 +18,10 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
   const errors:string[]=[],claimed=new Set<number>();
   for(const a of w.wildlife?.animals??[]){
     const d:unknown=a.domestic,t:unknown=a.taming;
-    if(d!==undefined&&!(version>=106&&(a.species==='hare'||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=119?['lastTraining','penMarkerId']:['lastTraining'])
+    if(d!==undefined&&!(version>=106&&(a.species==='hare'||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=120?['lastTraining','penMarkerId','productFullness']:version>=119?['lastTraining','penMarkerId']:['lastTraining'])
       &&int(d.since,0,w.tick)&&typeof d.care==='string'&&Object.hasOwn(MEDICAL_CARE,d.care)&&int(d.tameness,1,5)
       &&int(d.nextDecay,0,w.tick+45000)&&(d.lastTraining===undefined||int(d.lastTraining,d.since,w.tick))
+      &&(version>=120?(productKind(a)?finite(d.productFullness,0,1):d.productFullness===undefined):d.productFullness===undefined)
       &&(d.penMarkerId===undefined||version>=119&&livestock(a)&&int(d.penMarkerId,1,w.nextId-1)&&!!w.structures.find(s=>s.id===d.penMarkerId&&s.kind==='pen-marker'&&s.pen?.accepted.includes(a.species)))))errors.push('Invalid domestic animal.');
     if(t!==undefined&&!(version>=106&&(a.species==='hare'||version>=119&&canTameSpecies(a.species))&&obj(t)&&keys(t,['designated'],['lastAttempt'])&&typeof t.designated==='boolean'
       &&(t.lastAttempt===undefined||int(t.lastAttempt,0,w.tick))&&(!a.domestic||!t.designated)))errors.push('Invalid taming designation.');
@@ -32,9 +34,14 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
     if(version<106){errors.push('Legacy pawn contains animal work.');continue;}
     const base=(t:Record<string,unknown>)=>int(t.animalId,1,w.nextId-1)&&w.wildlife?.animals.some(a=>a.id===t.animalId&&(a.species==='hare'||version>=119&&canTameSpecies(a.species)));
     const lead=obj(h)&&h.kind==='lead';
+    const product=obj(h)&&(h.kind==='milk'||h.kind==='shear');
     if(h!==undefined&&!(lead
       ?version>=119&&keys(h,['animalId','kind','markerId','phase','sourcePileId','carryPileId','quantity','step','progress'])&&base(h)&&int(h.markerId,1,w.nextId-1)&&['approach','lead'].includes(String(h.phase))
         &&h.sourcePileId===0&&h.carryPileId===null&&h.quantity===0&&h.step===0&&h.progress===0
+      :product
+      ?version>=120&&keys(h,['animalId','kind','sourcePileId','carryPileId','quantity','phase','step','progress'])&&base(h)
+        &&['approach','interact'].includes(String(h.phase))&&h.sourcePileId===0&&h.carryPileId===null&&h.quantity===0&&h.step===0
+        &&finite(h.progress,0,ANIMAL_PRODUCTS[h.kind as 'milk'|'shear'].work)&&Number(h.progress)<ANIMAL_PRODUCTS[h.kind as 'milk'|'shear'].work
       :obj(h)&&keys(h,['animalId','kind','sourcePileId','carryPileId','quantity','phase','step','progress'])&&base(h)
       &&['tame','maintain'].includes(String(h.kind))&&['pickup','approach','interact'].includes(String(h.phase))
       &&int(h.sourcePileId,1,w.nextId-1)&&(h.carryPileId===null||int(h.carryPileId,1,w.nextId-1))&&int(h.quantity,0,12)
@@ -56,6 +63,10 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
         const region=t.markerId===undefined?undefined:penRegion(w,t.markerId);
         if(!a.domestic||!livestock(a)||!region||!region.closed||!region.accessible||a.domestic.penMarkerId!==t.markerId
           ||!w.structures.some(s=>s.id===t.markerId&&s.kind==='pen-marker'&&s.pen?.accepted.includes(a.species)))errors.push('Invalid animal leading task.');
+        continue;
+      }
+      if(t.kind==='milk'||t.kind==='shear'){
+        if(!a.domestic||productKind(a)!==t.kind||!productReady(a)||a.state==='dead'||a.state==='downed')errors.push('Invalid animal product task.');
         continue;
       }
       if(t.kind==='tame'?!a.taming?.designated||!!a.domestic:!a.domestic)errors.push('Animal handling has no matching designation.');

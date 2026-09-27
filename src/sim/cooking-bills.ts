@@ -15,11 +15,11 @@ export const INGREDIENT_UNITS=10; // 0.5 nutrition for the supported raw ingredi
 export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal'):CookingBill {
   return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(PRODUCTION_RECIPES[recipe].inputs.map(i=>[i,true])),radius:999,destination:'stockpile'};
 }
-export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal'):value is BillSettings {
+export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version=120):value is BillSettings {
   if(!value||typeof value!=='object')return false;
   const v=value as BillSettings;
   return ['times','until','forever'].includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
-    &&typeof v.suspended==='boolean'&&!!v.filters&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||['hare-meat','potato','corn',...V91_ITEM_IDS].includes(i)&&v.filters[i]===undefined)
+    &&typeof v.suspended==='boolean'&&!!v.filters&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS].includes(i))&&v.filters[i]===undefined)
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&['stockpile','drop'].includes(v.destination);
 }
 /** Reference resource counter includes stored items and current task cargo.

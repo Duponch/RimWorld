@@ -222,7 +222,8 @@ export class PawnLayer {
       If(legs.and(attribute('aEquipment','vec4').w.equal(2)),()=>tint.assign(vec3(leather.r,leather.g,leather.b)));
       {const color=new THREE.Color(0xa88b63);If(legs.and(attribute('aEquipment','vec4').w.equal(3)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
       {const color=new THREE.Color(0x839ac5);If(legs.and(attribute('aEquipment','vec4').w.equal(4)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
-      {const color=new THREE.Color(0xc3a375);If(legs.and(attribute('aEquipment','vec4').w.equal(5)),()=>tint.assign(vec3(color.r,color.g,color.b)));}return tint;})();
+      {const color=new THREE.Color(0xc3a375);If(legs.and(attribute('aEquipment','vec4').w.equal(5)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
+      {const color=new THREE.Color(0xb3c0ba);If(legs.and(attribute('aEquipment','vec4').w.equal(6)),()=>tint.assign(vec3(color.r,color.g,color.b)));}return tint;})();
     mat.colorNode = baseColor;
     const textured = material(0xffffff);
     this.configure?.(textured);

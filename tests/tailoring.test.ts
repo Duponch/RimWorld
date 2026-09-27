@@ -1,4 +1,5 @@
 import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
+import { stripV120 } from './scenarios/strip-v120';
 import { expect,test } from 'vitest';
 import { applyCommand,createWorld,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
 import { addGroundMaterial,refreshStock } from '../src/sim/materials';
@@ -41,7 +42,7 @@ test('physical sixty-cloth gather, interruptions, author-bound work, exact save 
   command(w,{type:'priority',pawnId:author.id,work:'craft',value:0});command(w,{type:'priority',pawnId:other.id,work:'craft',value:1});
   stepWorld(w,100);expect(unfinished(w)!.id).toBe(id);expect(unfinished(w)!.unfinished!.progress).toBe(progress);expect(other.cooking).toBeNull();
   // Bound resume ignores changed ingredient filters and radius, as in the reference.
-  command(w,{type:'bill-update',structureId:s.id,billId:b.id,settings:{...b,filters:{cloth:false,'light-leather':false},radius:0}});
+  command(w,{type:'bill-update',structureId:s.id,billId:b.id,settings:{...b,filters:Object.fromEntries(Object.keys(b.filters).map(item=>[item,false])),radius:0}});
   command(w,{type:'priority',pawnId:author.id,work:'craft',value:1});
   until(w,()=>{if(author.cooking)snapshots.set(author.cooking.phase,snapshots.get(author.cooking.phase)??serializeWorld(w));return w.piles.some(p=>p.item==='cloth-tribalwear'&&p.owner.type==='ground');});
   expect([...snapshots.keys()].sort()).toEqual(['gather','output','work']);expect(balance(w)).toBe(120);expect(unfinished(w)).toBeUndefined();expect(b.target).toBe(0);
@@ -63,7 +64,7 @@ test('unfinished identity survives removal of the spot, hauling, new bill adopti
 });
 
 test('strict V71 migration and V72 continuation reject future fields, corrupt work and mismatched authors',()=>{
-  const w=camp();delete w.pawns[0]!.skills.crafting;const old=JSON.parse(serializeWorld(w));(old.schemaVersion=71,withoutResearch(old));expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedResearch(w));
+  const w=camp();delete w.pawns[0]!.skills.crafting;const old=stripV120(JSON.parse(serializeWorld(w)));(old.schemaVersion=71,withoutResearch(old));expect(deserializeWorld(JSON.stringify(old))).toEqual(stripV120(withMigratedResearch(w)));
   for(const mutate of [(s:World)=>{s.tailoring={completed:0,cancelled:0,lostCloth:0};},(s:World)=>{s.pawns[0]!.skills.crafting={level:1,xp:0,dailyXp:0,passion:0};},(s:World)=>{s.structures.push({id:s.nextId++,kind:'crafting-spot',x:8,z:8,orientation:0,footprint:'standard',bills:[]});}]){
     const bad=structuredClone(old);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }

@@ -39,7 +39,11 @@ export const TEXTILE_APPAREL_POLICY:ApparelPolicy=Object.freeze({
 });
 export interface ApparelPolicyRegistry {apparelPolicies:ApparelPolicy[];nextApparelPolicyId:number}
 const clonePolicy=(policy:ApparelPolicy):ApparelPolicy=>({...policy,allowedItems:[...policy.allowedItems],allowedMaterials:[...policy.allowedMaterials]});
-export const createDefaultApparelPolicyRegistry=():ApparelPolicyRegistry=>({apparelPolicies:[clonePolicy(DEFAULT_APPAREL_POLICY),clonePolicy(TEXTILE_APPAREL_POLICY)],nextApparelPolicyId:3});
+export const createDefaultApparelPolicyRegistry=(includeWool=true):ApparelPolicyRegistry=>({apparelPolicies:[DEFAULT_APPAREL_POLICY,TEXTILE_APPAREL_POLICY].map(policy=>{
+  const copy=clonePolicy(policy);
+  return includeWool?copy:{...copy,allowedItems:copy.allowedItems.filter(item=>APPAREL[item].material!=='muffalo-wool'),
+    allowedMaterials:copy.allowedMaterials.filter(material=>material!=='muffalo-wool')};
+}),nextApparelPolicyId:3});
 
 export function validApparelPolicy(policy:ApparelPolicy):boolean {
   return !!policy&&Number.isSafeInteger(policy.id)&&policy.id>0&&typeof policy.label==='string'&&policy.label.length>0

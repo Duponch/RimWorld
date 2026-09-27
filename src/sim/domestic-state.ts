@@ -10,11 +10,13 @@ export interface DomesticAnimal {
   lastTraining?:number;
   /** Marker identity, never a cached set of cells. Roamers alone use pens. */
   penMarkerId?:number;
+  /** V120 body product fullness, 0..1. Only milkable/shearable adults carry it. */
+  productFullness?:number;
 }
 export interface TamingDesignation { designated:boolean; lastAttempt?:number }
 export interface AnimalHandlingTask {
   animalId:number;
-  kind:'tame'|'maintain'|'lead';
+  kind:'tame'|'maintain'|'lead'|'milk'|'shear';
   sourcePileId:number;
   carryPileId:number|null;
   quantity:number;

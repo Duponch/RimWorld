@@ -326,6 +326,33 @@
       "prepared": true,
       "provenance": "Situation préparée : deux cerfs, périmètre et provisions sont fournis. La conduite et tout apprivoisement ultérieur sont des transitions réelles du moteur, non une progression autonome de colonie.",
       "sha256": "1260199018d3017cd76dc0406171a4d7de50512a9ead690c7834749e5e7e8ba0"
+    },
+    {
+      "id": "produits-animaux-v120",
+      "release": "v120",
+      "label": "Lait et laine · 2 colons",
+      "description": "Une dromadaire domestique et un mufalo domestique ont leur production presque mûre. Deux colons récoltent lait et laine, puis disposent d’un feu et d’un atelier configurés pour fabriquer un repas et un vêtement.",
+      "filename": "produits-animaux.json",
+      "pawns": 2,
+      "colonists": 2,
+      "width": 32,
+      "height": 32,
+      "tick": 2000,
+      "focus": [
+        "lait",
+        "tonte",
+        "repas au lait",
+        "vêtement en laine",
+        "piles physiques"
+      ],
+      "steps": [
+        "Repérer la dromadaire à (10, 15) et le mufalo à (16, 15) ; examiner leur jauge de production dans Animaux.",
+        "Reprendre la partie pour observer la traite et la tonte par les deux colons, puis inspecter les piles de lait et de laine au sol.",
+        "Laisser tourner le feu à (12, 20) et l’atelier manuel à (18, 20) : leurs factures acceptent seulement le lait et la laine du mufalo. Inspecter le repas et le vêtement achevés."
+      ],
+      "prepared": true,
+      "provenance": "Situation préparée : animaux possédés, jauges presque mûres, compétences, provisions, postes et factures fournis. La traite, la tonte, la cuisine et la confection reprennent par les travaux réels du moteur ; aucune progression autonome antérieure n’est revendiquée.",
+      "sha256": "5db1f5b075c1862b147655e179c7ecdc6b4a7b4cae0a104295961e08e7ed6474"
     }
   ]
 }

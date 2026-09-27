@@ -33,7 +33,7 @@ function pileOnPlayerMap(pile: MaterialPile, pawns: ReadonlyMap<number, Pawn>): 
 }
 
 const MATERIAL_VALUE: Readonly<Partial<Record<ItemId, number>>> = Object.freeze({
-  wood: 1.2, steel: 1.9, component: 32, cloth: 1.5, 'light-leather': 1.9,
+  wood: 1.2, steel: 1.9, component: 32, cloth: 1.5, 'light-leather': 1.9, 'muffalo-wool': 2.7,
   'granite-blocks': .9, 'limestone-blocks': .9, 'marble-blocks': .9,
   'sandstone-blocks': .9, 'slate-blocks': .9,
 });

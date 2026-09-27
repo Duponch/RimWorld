@@ -1,5 +1,6 @@
 import { interruptWork } from './interrupted-cargo.ts';
 import { penRegion } from './animal-pens.ts';
+import { productKind, productReady } from './animal-products.ts';
 import type { World } from './types.ts';
 
 /** Death, corpse conversion and loss of tameness can precede a travelling
@@ -13,6 +14,6 @@ export function reconcileDomesticWork(world:World):void {
     const task=pawn.animalHandling??pawn.animalCare;if(!task)continue;
     const animal=world.wildlife?.animals.find(a=>a.id===task.animalId);
     const h=pawn.animalHandling;
-    if(!animal||animal.state==='dead'||(h?h.kind==='tame'?!animal.taming?.designated||!!animal.domestic:h.kind==='lead'?!animal.domestic||h.markerId===undefined||animal.domestic.penMarkerId!==h.markerId||!penRegion(world,h.markerId)?.closed:!animal.domestic:!animal.domestic||animal.domestic.care==='none'))interruptWork(world,pawn);
+    if(!animal||animal.state==='dead'||(h?h.kind==='tame'?!animal.taming?.designated||!!animal.domestic:h.kind==='lead'?!animal.domestic||h.markerId===undefined||animal.domestic.penMarkerId!==h.markerId||!penRegion(world,h.markerId)?.closed:h.kind==='milk'||h.kind==='shear'?!productReady(animal)||productKind(animal)!==h.kind||animal.state==='downed':!animal.domestic:!animal.domestic||animal.domestic.care==='none'))interruptWork(world,pawn);
   }
 }
