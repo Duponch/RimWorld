@@ -1,4 +1,4 @@
-import type { Cell,Job,Pawn } from '../sim/types';
+import type { Cell,Job,Pawn,StructureKind } from '../sim/types';
 
 /** Values 0–10 are the existing locomotion, rest and combat poses. */
 export const WORK_POSE = { mine:11, chop:12, build:13, craft:14, ground:16, groundMelee:17 } as const;
@@ -24,11 +24,14 @@ export function meleeApproach(pawn:Cell,target:Cell|undefined):Cell {
   return {x:dx/distance*reach,z:dz/distance*reach};
 }
 
-export function pawnWorkPose(pawn:Pawn,job:Job|undefined):number {
+export function pawnWorkPose(pawn:Pawn,job:Job|undefined,stationKind?:StructureKind):number {
   if(pawn.state!=='working'||pawn.stun)return 0;
   if(job?.kind==='mine')return WORK_POSE.mine;
   if(job?.kind==='chop'||job?.kind==='cut'||job?.clearance)return WORK_POSE.chop;
   if(job?.kind==='harvest'||job?.kind==='sow'||job?.kind==='lay-floor'||job?.kind==='remove-floor'||pawn.hunting?.phase==='finish'||pawn.cleaning||pawn.burial||pawn.equipmentTask||pawn.haul&&!pawn.haul.serviceProgress||pawn.cooking&&pawn.cooking.phase!=='work')return WORK_POSE.ground;
+  // Work spots are painted directly on the floor; there is no bench at hand
+  // height to justify the upright crafting or butchering silhouette.
+  if(pawn.cooking?.phase==='work'&&(stationKind==='crafting-spot'||stationKind==='butcher-spot'))return WORK_POSE.ground;
   if(pawn.firefighting?.phase==='beat')return WORK_POSE.build;
   if(pawn.feed?.phase==='feed'||pawn.tend?.phase==='tend'||pawn.animalCare?.phase==='treat'||pawn.animalHandling?.phase==='interact'||pawn.haul?.serviceProgress!==undefined)return WORK_POSE.craft;
   if(pawn.cooking||pawn.research)return WORK_POSE.craft;

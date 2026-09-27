@@ -151,6 +151,19 @@ test('V128: distinct real work particles stay in one resident WebGPU batch and f
         expect(first.frustumCulled).toBe(true);
         expect(first.sharedPose).toBe(true);
         await page.screenshot({ path: `artifacts/v128-work/${scene.name}.png` });
+        if(scene.name==='mine'||scene.name==='chop'){
+          await page.evaluate(()=>{
+            const layer=(window as any).__workVfxView.actionVfx;
+            const original=layer.present.bind(layer);
+            layer.present=(tick:number)=>original(tick+layer.debugPhaseOffset);
+          });
+          for(const offset of [1,2,3]){
+            await page.evaluate(value=>{(window as any).__workVfxView.actionVfx.debugPhaseOffset=value;},offset);
+            await page.waitForTimeout(80);
+            await page.screenshot({path:`artifacts/v128-work/${scene.name}-phase-${offset}.png`});
+          }
+          await page.evaluate(()=>{(window as any).__workVfxView.actionVfx.debugPhaseOffset=0;});
+        }
         // The WebGPU renderer retains render bundles; changing Mesh.visible
         // after prewarm does not necessarily invalidate one. Disable the
         // effect in its existing GPU attribute instead for an honest A/B.

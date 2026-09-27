@@ -23,17 +23,25 @@ export function terrainPaintPixelsPerCell(world:Pick<World,'width'|'height'>):nu
  * same function, including across render chunks and after a camera move. */
 export function terrainPaintEdge(axis:0|1,boundary:number,along:number,seed:number):number {
   const segment=Math.floor(along*2),blend=smooth(along*2-segment);
+  const fineSegment=Math.floor(along*4),fineBlend=smooth(along*4-fineSegment);
   const salt=seed+axis*173+409;
   const first=noise(boundary*19+axis,segment,salt);
   const second=noise(boundary*19+axis,segment+1,salt);
-  return ((first*(1-blend)+second*blend)-.5)*.18;
+  const fineFirst=noise(boundary*37+axis,fineSegment,salt+41);
+  const fineSecond=noise(boundary*37+axis,fineSegment+1,salt+41);
+  // The broad push makes cells visibly paint across their neighbours; the
+  // smaller irregularity prevents a row of long, straight tile edges.
+  return ((first*(1-blend)+second*blend)-.5)*.52
+    +((fineFirst*(1-fineBlend)+fineSecond*fineBlend)-.5)*.13;
 }
 
 function paintTileColor(world:World,palette:Uint8Array,index:number):void {
   const x=index%world.width,z=Math.floor(index/world.width);
   const tile=world.tiles[index]!,terrain=tile.terrain==='rock'?'rough-stone':tile.terrain;
   const color=terrain==='rough-stone'?stoneColor(tile.stone):terrain==='grass'&&world.site?.biome==='arid-shrubland'?ARID_GRASS_COLOR:TERRAIN_COLORS[terrain];
-  scratchColor.setHex(color).multiplyScalar(.94+noise(x,z,world.seed)*.12);
+  // Keep per-cell tint subtle. A hard tint step on every identical tile would
+  // reveal the square grid even after its painted edge was displaced.
+  scratchColor.setHex(color).multiplyScalar(.98+noise(x,z,world.seed)*.04);
   const hex=scratchColor.getHex(),offset=index*3;
   palette[offset]=(hex>>>16)&255;palette[offset+1]=(hex>>>8)&255;palette[offset+2]=hex&255;
 }
@@ -41,27 +49,62 @@ function paintTileColor(world:World,palette:Uint8Array,index:number):void {
 function paintPixels(world:World,scale:number,pixels:Uint8Array,palette:Uint8Array,x0:number,z0:number,x1:number,z1:number):void {
   const width=world.width*scale;
   const channel=(x:number,z:number,c:number)=>palette[((Math.max(0,Math.min(world.height-1,z))*world.width+Math.max(0,Math.min(world.width-1,x)))*3)+c]!;
-  for(let py=z0;py<z1;py++)for(let px=x0;px<x1;px++){
-    const gx=(px+.5)/scale,gz=(py+.5)/scale;
-    const bx=Math.round(gx),bz=Math.round(gz);
-    const dx=gx-bx-terrainPaintEdge(0,bx,gz,world.seed);
-    const dz=gz-bz-terrainPaintEdge(1,bz,gx,world.seed);
-    // Only the narrow border is mixed. The displaced midpoint makes one
-    // painted cell protrude into the next by at most a fraction of a tile.
-    const crossingX=Math.abs(dx)<.14,crossingZ=Math.abs(dz)<.14;
+  const waterAt=(x:number,z:number)=>x>=0&&z>=0&&x<world.width&&z<world.height&&world.tiles[z*world.width+x]!.terrain==='water';
+  // The horizontal boundary varies with each row but is shared by the ~8
+  // texels across a cell. The vertical boundary varies with each column but
+  // is shared by the ~8 rows. Cache those exact samples within this bake (or
+  // local patch) instead of repeating four hash evaluations per texel.
+  const zEdges=new Float32Array(x1-x0);
+  let cachedZBoundary=Number.NaN;
+  for(let py=z0;py<z1;py++){
+    const gz=(py+.5)/scale,bz=Math.round(gz);
+    if(bz!==cachedZBoundary){
+      cachedZBoundary=bz;
+      for(let px=x0;px<x1;px++)zEdges[px-x0]=terrainPaintEdge(1,bz,(px+.5)/scale,world.seed);
+    }
+    let cachedXBoundary=Number.NaN,xEdge=0;
+    for(let px=x0;px<x1;px++){
+    const gx=(px+.5)/scale;
+    const bx=Math.round(gx);
+    if(bx!==cachedXBoundary){cachedXBoundary=bx;xEdge=terrainPaintEdge(0,bx,gz,world.seed);}
+    const dx=gx-bx-xEdge;
+    const dz=gz-bz-zEdges[px-x0]!;
+    // The pigment follows a shared displaced boundary. A narrow soft brush
+    // covers that boundary; its centre can now protrude over a quarter tile.
+    const brush=.115;
+    const crossingX=Math.abs(dx)<brush,crossingZ=Math.abs(dz)<brush;
     const left=crossingX?bx-1:Math.floor(gx),right=crossingX?bx:left;
     const top=crossingZ?bz-1:Math.floor(gz),bottom=crossingZ?bz:top;
-    const blendX=crossingX?smooth((dx+.14)/.28):0,blendZ=crossingZ?smooth((dz+.14)/.28):0;
-    const dust=(noise(px,py,world.seed+701)-.5)*18;
-    const stroke=noise(Math.floor(px/3),Math.floor(py/2),world.seed+907)>.83?9:0;
-    const broad=(noise(Math.floor(px/17),Math.floor(py/19),world.seed+113)-.5)*12;
+    const blendX=crossingX?smooth((dx+brush)/(2*brush)):0,blendZ=crossingZ?smooth((dz+brush)/(2*brush)):0;
+    const dust=(noise(px,py,world.seed+701)-.5)*24;
+    const stroke=noise(Math.floor((px+py*.24)/3),Math.floor(py/2),world.seed+907)>.77?13:0;
+    const broad=(noise(Math.floor(px/17),Math.floor(py/19),world.seed+113)-.5)*20;
     const i=(py*width+px)*4;
     for(let c=0;c<3;c++){
       const a=channel(left,top,c)*(1-blendX)+channel(right,top,c)*blendX;
       const b=channel(left,bottom,c)*(1-blendX)+channel(right,bottom,c)*blendX;
       pixels[i+c]=Math.max(0,Math.min(255,Math.round((a*(1-blendZ)+b*blendZ)*(.97+(dust+stroke+broad)/255))));
     }
-    pixels[i+3]=255;
+    // Alpha is a *pigment channel*, not transparency: water's material reads
+    // it as a shore-foam mask. Land stays opaque under its standard material.
+    const cellX=Math.floor(gx),cellZ=Math.floor(gz);
+    let foam=0;
+    if(waterAt(cellX,cellZ)){
+      const xLocal=gx-cellX,zLocal=gz-cellZ;
+      const leftBank=!waterAt(cellX-1,cellZ)
+        ?xLocal-terrainPaintEdge(0,cellX,gz,world.seed):1;
+      const rightBank=!waterAt(cellX+1,cellZ)
+        ?1+terrainPaintEdge(0,cellX+1,gz,world.seed)-xLocal:1;
+      const topBank=!waterAt(cellX,cellZ-1)
+        ?zLocal-terrainPaintEdge(1,cellZ,gx,world.seed):1;
+      const bottomBank=!waterAt(cellX,cellZ+1)
+        ?1+terrainPaintEdge(1,cellZ+1,gx,world.seed)-zLocal:1;
+      const distance=Math.min(leftBank,rightBank,topBank,bottomBank);
+      const ragged=(noise(Math.floor(px/2),Math.floor(py/3),world.seed+1217)-.5)*.09;
+      foam=1-smooth((distance+ragged)/.39);
+    }
+    pixels[i+3]=Math.round(255*Math.max(0,foam));
+    }
   }
 }
 
@@ -107,9 +150,9 @@ export function patchTerrainPaintTexture(texture:THREE.DataTexture,world:World,c
   return painted;
 }
 
-export function syncTerrainPaintUvs(world:Pick<World,'width'|'height'>,group:THREE.Group,surface:THREE.Material,enabled:boolean):void {
+export function syncTerrainPaintUvs(world:Pick<World,'width'|'height'>,group:THREE.Group,surface:THREE.Material,enabled:boolean,water?:THREE.Material):void {
   for(const child of group.children){
-    if(!(child instanceof THREE.Mesh)||child.material!==surface)continue;
+    if(!(child instanceof THREE.Mesh)||(child.material!==surface&&child.material!==water))continue;
     const geometry=child.geometry;
     if(!enabled){if(geometry.getAttribute('uv'))geometry.deleteAttribute('uv');continue;}
     if(geometry.getAttribute('uv'))continue;
@@ -151,5 +194,5 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
     }
     // Identical world-space UVs meet at cell and chunk edges. Plain terrain
     // retains its original vertex layout and does not upload a UV buffer.
-    if(painted)syncTerrainPaintUvs(world,group,surface,true);
+    if(painted)syncTerrainPaintUvs(world,group,surface,true,water);
   }

@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, atan, cos, dot, float, mix, sin, smoothstep, uniform, uv, varying, vec2, vec3, vec4 } from 'three/tsl';
+import { Fn, attribute, atan, cameraPosition, cos, dot, float, mix, sin, smoothstep, uniform, uv, varying, vec2, vec3, vec4 } from 'three/tsl';
 import type { Pawn, World } from '../sim/types';
 import { TICKS_PER_SECOND } from '../sim/types';
 import { footprintCells } from '../sim/definitions';
@@ -11,6 +11,7 @@ export const ACTION_FX = {
   none: 0, brawl: 1, sleep: 2, chop: 3, mine: 4, build: 5,
   cook: 6, craft: 7, research: 8, extinguish: 9,
   smith: 10, tailor: 11, stonecraft: 12, art: 13,
+  butcher: 14, tailorGround: 15, butcherGround: 16,
 } as const;
 
 export type ActionFx = { kind: number; x: number; z: number; impactCore?:number };
@@ -84,9 +85,13 @@ export function actionFxForPawn(
     const contact = nearestStationCell(pawn, station) ?? pawn.cooking.actionCell;
     const kind=station?.kind==='machining-table'||station?.kind==='fabrication-bench'?ACTION_FX.smith
       :station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'?ACTION_FX.tailor
+      :station?.kind==='crafting-spot'?ACTION_FX.tailorGround
+      :station?.kind==='butcher-table'?ACTION_FX.butcher
+      :station?.kind==='butcher-spot'?ACTION_FX.butcherGround
       :station?.kind==='stonecutter'?ACTION_FX.stonecraft
       :station?.kind==='art-bench'?ACTION_FX.art
-      :pawn.cooking.recipe==='butcher-creature'||!pawn.cooking.recipe?ACTION_FX.cook:ACTION_FX.craft;
+      :pawn.cooking.recipe==='butcher-creature'?ACTION_FX.butcher
+      :!pawn.cooking.recipe?ACTION_FX.cook:ACTION_FX.craft;
     return { kind, ...nearFace(pawn, contact, .48) };
   }
   if (pawn.research) {
@@ -99,13 +104,9 @@ export function actionFxForPawn(
     if (job?.status === 'active' && job.reservedBy === pawn.id) {
       const kind = job.kind === 'chop' || job.kind === 'cut' || job.clearance ? ACTION_FX.chop
         : job.kind === 'mine' ? ACTION_FX.mine : ACTION_FX.build;
-      if (kind === ACTION_FX.mine) {
-        const dx = pawn.x - job.x, dz = pawn.z - job.z, distance = Math.hypot(dx, dz);
-        // The rock fills most of its cell. Put the sparks at the near face so
-        // they remain visible instead of being depth-tested inside the rock.
-        if (distance > .001) return { kind, x: job.x + dx / distance * .70, z: job.z + dz / distance * .70 };
-      }
-      return kind===ACTION_FX.chop ? { kind, ...nearFace(pawn, job, .82) } : { kind, x: job.x, z: job.z };
+      // Rock and tree marks are distributed around this physical target by
+      // the vertex shader: some at the hands, some on its camera-facing side.
+      return { kind, x: job.x, z: job.z };
     }
   }
   return NONE;
@@ -163,31 +164,48 @@ export class ActionVfxLayer {
       const workCycle = this.time.mul(1.65).add(part.mul(.173)).add(fx.w.mul(.017)).fract();
       const sleepCycle = this.time.mul(.15).add(part.mul(.21)).add(fx.w.mul(.003)).fract();
       const target = vec3(fx.y, 0, fx.z);
+      const rockOrTree=fx.x.equal(ACTION_FX.mine).or(fx.x.equal(ACTION_FX.chop));
+      const workerVector=pose.xyz.xz.sub(target.xz);
+      const workerSide=workerVector.div(workerVector.length().max(.001));
+      const cameraVector=cameraPosition.xz.sub(target.xz);
+      const cameraSide=cameraVector.div(cameraVector.length().max(.001));
+      // First four pieces stay at the actual strike; the remaining pieces
+      // emerge on the visible side of the same target. This is all vertex
+      // work in the existing batch and still obeys the scene depth buffer.
+      const contactSide=part.lessThan(4).select(workerSide.mul(fx.x.equal(ACTION_FX.mine).select(.61,.58)),
+        cameraSide.mul(fx.x.equal(ACTION_FX.mine).select(.73,.84)));
+      const workTarget=rockOrTree.select(target.add(vec3(contactSide.x,0,contactSide.y)),target);
       const sleepOffset = vec3(sin(pose.w).mul(-1.05).add(sin(sleepCycle.mul(2*Math.PI)).mul(.11)).add(part.mul(.035)),
         float(1.20).add(sleepCycle.mul(.73)),
         cos(pose.w).mul(-1.05).add(part.mul(.05)));
-      const bench = fx.x.greaterThanEqual(ACTION_FX.cook).and(fx.x.notEqual(ACTION_FX.extinguish));
+      const groundWork=fx.x.equal(ACTION_FX.tailorGround).or(fx.x.equal(ACTION_FX.butcherGround));
+      const bench = fx.x.greaterThanEqual(ACTION_FX.cook).and(fx.x.notEqual(ACTION_FX.extinguish)).and(groundWork.not());
       // Draw above the work surface and on its near side. At the old height
       // almost every fragment failed the scene depth test inside the desk,
       // rock or conifer cone, despite being present in the GPU batch.
-      const contactY = bench.select(float(1.25), fx.x.equal(ACTION_FX.mine).select(1.25,1.18));
-      const workSpread = float(.13).add(workCycle.mul(.24));
+      const contactY = groundWork.select(.55,bench.select(float(1.25),
+        fx.x.equal(ACTION_FX.mine).select(1.65,fx.x.equal(ACTION_FX.chop).select(1.50,1.18))));
+      const workSpread = fx.x.equal(ACTION_FX.research).select(float(.22).add(workCycle.mul(.34)),
+        float(.13).add(workCycle.mul(.24)));
       const workOffset = vec3(cos(angle).mul(workSpread),
-        contactY.add(workCycle.mul(fx.x.equal(ACTION_FX.cook).select(.48,.38))),
+        contactY.add(workCycle.mul(fx.x.equal(ACTION_FX.cook).select(.48,
+          fx.x.equal(ACTION_FX.chop).select(.22,.38)))),
         sin(angle).mul(workSpread));
-      return sleeping.select(pose.xyz.add(sleepOffset), target.add(workOffset));
+      return sleeping.select(pose.xyz.add(sleepOffset), workTarget.add(workOffset));
     })();
     material.scaleNode = Fn(() => {
       const kind = attribute('actionFx', 'vec4').x, part = attribute('actionPart', 'float');
       const sleeping = kind.equal(ACTION_FX.sleep);
-      const visible = sleeping.and(part.lessThan(5)).or(kind.greaterThanEqual(ACTION_FX.chop));
+      const visible = sleeping.and(part.lessThan(5))
+        .or(kind.equal(ACTION_FX.research).and(part.lessThan(6)))
+        .or(kind.greaterThanEqual(ACTION_FX.chop).and(kind.notEqual(ACTION_FX.research)));
       const sleepCycle = this.time.mul(.15).add(part.mul(.21)).add(attribute('actionFx','vec4').w.mul(.003)).fract();
       const sleepSize = float(.19).add(sleepCycle.mul(.17))
         .mul(smoothstep(0,.10,sleepCycle)).mul(float(1).sub(smoothstep(.82,1,sleepCycle)));
       // Keep each burst smaller than a head, beside the hand contact point.
       // Several quads overlap into one readable mark without hiding actors.
-      const workSize = kind.equal(ACTION_FX.cook).select(vec2(.40),
-        kind.equal(ACTION_FX.research).select(vec2(.42),vec2(.36,.33)));
+      const workSize = kind.equal(ACTION_FX.cook).or(kind.equal(ACTION_FX.butcher)).or(kind.equal(ACTION_FX.butcherGround)).select(vec2(.42),
+        kind.equal(ACTION_FX.research).select(vec2(.43),vec2(.39,.36)));
       return sleeping.select(vec2(sleepSize),workSize).mul(visible.select(1,0));
     })();
     material.rotationNode = Fn(() => {
@@ -204,66 +222,114 @@ export class ActionVfxLayer {
       const part=varying(rawPart), pixel=varying(uv()).sub(vec2(.5));
       const radius=pixel.length(), ink=vec3(.20,.13,.075);
       const cycle=varying(this.time.mul(1.65).add(rawPart.mul(.173)).add(fx.w.mul(.017)).fract());
-      const workLife=smoothstep(0,.055,cycle).mul(float(1).sub(smoothstep(.72,.98,cycle)));
+      const workLife=smoothstep(0,.09,cycle).mul(float(1).sub(smoothstep(.66,.98,cycle)));
       const sleepCycle=varying(this.time.mul(.15).add(rawPart.mul(.21)).add(fx.w.mul(.003)).fract());
+      const stroke=(ax:number,ay:number,bx:number,by:number,width:number)=>{
+        const a=vec2(ax,ay),direction=vec2(bx-ax,by-ay);
+        const t=dot(pixel.sub(a),direction).div(dot(direction,direction)).clamp(0,1);
+        return float(1).sub(smoothstep(width,width+.024,pixel.sub(a.add(direction.mul(t))).length()));
+      };
+      const circle=(x:number,y:number,r:number)=>float(1).sub(smoothstep(r-.012,r+.022,pixel.sub(vec2(x,y)).length()));
       const top=vec2(pixel.x.abs().sub(.27).max(0),pixel.y.sub(.28)).length();
       const bottom=vec2(pixel.x.abs().sub(.27).max(0),pixel.y.add(.28)).length();
       const diagonalDirection=vec2(-.50,-.56),fromTop=pixel.sub(vec2(.25,.28));
       const projection=dot(fromTop,diagonalDirection).div(dot(diagonalDirection,diagonalDirection)).clamp(0,1);
       const distance=top.min(bottom).min(fromTop.sub(diagonalDirection.mul(projection)).length());
       const sleepAlpha=float(1).sub(smoothstep(.095,.11,distance))
-        .mul(smoothstep(0,.10,sleepCycle)).mul(float(1).sub(smoothstep(.82,1,sleepCycle)));
-      const gold=mix(vec3(.96,.57,.13),vec3(1,.87,.38),smoothstep(-.32,.32,pixel.y));
-      const sleepColor=mix(ink,gold,float(1).sub(smoothstep(.055,.071,distance)));
-      const chipDistance=pixel.x.abs().mul(.68).add(pixel.y.abs().mul(1.22));
+        .mul(smoothstep(0,.10,sleepCycle)).mul(float(1).sub(smoothstep(.53,1,sleepCycle))).mul(.74);
+      // A flat parchment fill matches the UI; both silhouette and opacity
+      // disappear gradually instead of an opaque gradient-coloured Z popping.
+      const sleepColor=mix(ink,vec3(.95,.86,.67),float(1).sub(smoothstep(.055,.071,distance)));
+      const chipDistance=pixel.x.abs().mul(.68).add(pixel.y.abs().mul(1.22))
+        .add(sin(pixel.y.mul(21).add(part.mul(2.9))).mul(.028));
       const chip=float(1).sub(smoothstep(.32,.37,chipDistance));
       const chipInner=float(1).sub(smoothstep(.23,.28,chipDistance));
-      const pebbleDistance=pixel.x.abs().mul(.9).add(pixel.y.abs().mul(.8)).add(sin(pixel.x.mul(17).add(part)).mul(.016));
+      const pebbleDistance=pixel.x.abs().mul(.9).add(pixel.y.abs().mul(.8))
+        .add(sin(pixel.x.mul(17).add(part)).mul(.035)).add(sin(pixel.y.mul(19)).mul(.017));
       const pebble=float(1).sub(smoothstep(.33,.38,pebbleDistance));
       const pebbleInner=float(1).sub(smoothstep(.23,.28,pebbleDistance));
       const puffEdge=float(.37).add(sin(atan(pixel.y,pixel.x).mul(5).add(part)).mul(.033));
       const puff=float(1).sub(smoothstep(puffEdge.sub(.025),puffEdge.add(.02),radius));
       const puffInner=float(1).sub(smoothstep(puffEdge.sub(.095),puffEdge.sub(.045),radius));
-      const starEdge=cos(atan(pixel.y,pixel.x).mul(5)).mul(.085).add(.26);
-      const star=float(1).sub(smoothstep(starEdge.sub(.012),starEdge.add(.025),radius));
-      const starInner=float(1).sub(smoothstep(starEdge.sub(.085),starEdge.sub(.040),radius));
+      const smallSpark=stroke(-.27,-.23,.25,.26,.028).max(stroke(-.25,.15,.15,-.18,.018));
       const dusty=part.greaterThanEqual(6),firstThree=part.lessThan(3);
-      const chipColor=mix(ink,vec3(.98,.68,.29),chipInner);
-      const stoneColor=mix(vec3(.17,.19,.18),vec3(.86,.84,.70),pebbleInner);
-      const starColor=mix(ink,vec3(1,.82,.32),starInner);
-      const chopAlpha=dusty.select(puff.mul(.56),chip), chopColor=dusty.select(mix(ink,vec3(.90,.77,.53),puffInner),chipColor);
-      const mineAlpha=dusty.select(puff.mul(.58),pebble), mineColor=dusty.select(mix(ink,vec3(.74,.72,.60),puffInner),stoneColor);
-      const buildAlpha=firstThree.select(star,chip), buildColor=firstThree.select(starColor,mix(ink,vec3(.94,.69,.37),chipInner));
-      const cookColor=mix(vec3(.24,.32,.30),vec3(.99,.94,.78),puffInner);
+      const chipColor=mix(ink,part.lessThan(4).select(vec3(.48,.22,.075),vec3(.65,.35,.12)),chipInner);
+      const stoneColor=mix(vec3(.20,.15,.10),vec3(.43,.31,.20),pebbleInner);
+      const chopAlpha=dusty.select(puff.mul(.68),chip),chopColor=dusty.select(mix(ink,vec3(.45,.28,.14),puffInner),chipColor);
+      const mineAlpha=part.greaterThanEqual(6).select(smallSpark,part.lessThan(4).select(pebble,puff.mul(.62)));
+      const mineColor=part.greaterThanEqual(6).select(part.equal(6).select(vec3(1,.67,.15),vec3(1,.40,.12)),
+        part.lessThan(4).select(stoneColor,mix(ink,vec3(.45,.31,.18),puffInner)));
+      const buildAlpha=firstThree.select(pebble,chip),buildColor=firstThree.select(stoneColor,chipColor);
+      // Food is drawn as small produce: tomato, carrot, and leafy herbs.
+      const tomato=circle(0,0,.27),tomatoHeart=circle(-.045,.02,.18);
+      const tomatoLeaf=stroke(-.18,.22,.16,.31,.045).max(stroke(0,.18,0,.37,.038));
+      const tomatoAlpha=tomato.max(tomatoLeaf);
+      const tomatoColor=tomatoLeaf.greaterThan(.1).select(vec3(.34,.56,.30),
+        mix(ink,mix(vec3(.81,.25,.18),vec3(1,.52,.30),tomatoHeart),tomato));
+      const carrotWidth=float(.24).sub(pixel.y.add(.26).mul(.30)).max(.03);
+      const carrotBody=float(1).sub(smoothstep(.86,1.05,pixel.x.abs().div(carrotWidth)))
+        .mul(smoothstep(-.34,-.29,pixel.y)).mul(float(1).sub(smoothstep(.25,.30,pixel.y)));
+      const carrotLeaf=stroke(-.02,.25,-.17,.40,.035).max(stroke(.01,.25,.15,.41,.036));
+      const carrotAlpha=carrotBody.max(carrotLeaf);
+      const carrotColor=carrotLeaf.greaterThan(.1).select(vec3(.34,.55,.30),mix(ink,vec3(.96,.55,.20),carrotBody));
+      const herb=circle(-.13,-.06,.13).max(circle(.12,.06,.14)).max(circle(-.01,.19,.13))
+        .max(stroke(-.03,-.31,.02,.12,.028));
+      const herbColor=mix(ink,vec3(.44,.66,.34),herb);
+      const cookAlpha=part.lessThan(3).select(tomatoAlpha,part.lessThan(6).select(carrotAlpha,herb));
+      const cookColor=part.lessThan(3).select(tomatoColor,part.lessThan(6).select(carrotColor,herbColor));
       const square=pixel.x.abs().max(pixel.y.abs().mul(.82));
       const pageAlpha=float(1).sub(smoothstep(.34,.37,square)),pageInner=float(1).sub(smoothstep(.26,.30,square));
       const ruled=smoothstep(.79,.95,sin(pixel.y.mul(34)).abs())
         .mul(float(1).sub(smoothstep(.13,.24,pixel.x.abs()))).mul(pageInner);
-      const page=part.lessThan(4);
-      const researchAlpha=page.select(pageAlpha,star);
-      const researchColor=page.select(mix(mix(ink,vec3(.99,.94,.74),pageInner),vec3(.20,.39,.37),ruled),
-        mix(ink,vec3(.42,.85,.87),starInner));
-      const smithAlpha=part.lessThan(6).select(star,chip);
-      const smithColor=part.lessThan(6).select(mix(ink,vec3(1,.64,.16),starInner),mix(ink,vec3(1,.39,.13),chipInner));
+      const page=part.lessThan(2);
+      const magnifierRing=float(1).sub(smoothstep(.038,.061,pixel.sub(vec2(-.09,.08)).length().sub(.22).abs()));
+      const magnifierHandle=stroke(.07,-.08,.34,-.35,.055);
+      const magnifier=magnifierRing.max(magnifierHandle);
+      const magnifierLens=circle(-.09,.08,.17).mul(.35);
+      const flaskBody=float(1).sub(smoothstep(.21,.25,pixel.x.abs().add(pixel.y.mul(.34))))
+        .mul(smoothstep(-.34,-.29,pixel.y)).mul(float(1).sub(smoothstep(.12,.17,pixel.y)));
+      const flaskNeck=float(1).sub(smoothstep(.07,.095,pixel.x.abs()))
+        .mul(smoothstep(.08,.12,pixel.y)).mul(float(1).sub(smoothstep(.34,.38,pixel.y)));
+      const flaskLiquid=flaskBody.mul(float(1).sub(smoothstep(-.05,.02,pixel.y)));
+      const flask=flaskBody.max(flaskNeck);
+      const researchAlpha=page.select(pageAlpha,part.lessThan(4).select(magnifier.max(magnifierLens),flask));
+      const researchColor=page.select(mix(mix(ink,vec3(.96,.90,.72),pageInner),vec3(.24,.43,.38),ruled),
+        part.lessThan(4).select(mix(ink,vec3(.74,.89,.85),magnifierLens),mix(ink,vec3(.51,.81,.75),flaskLiquid)));
+      const smithAlpha=part.lessThan(6).select(smallSpark,chip);
+      const smithColor=part.lessThan(6).select(vec3(1,.56,.12),mix(ink,vec3(.95,.35,.10),chipInner));
       const thread=pixel.y.sub(sin(pixel.x.mul(10).add(part)).mul(.11)).abs();
       const strand=float(1).sub(smoothstep(.025,.055,thread)).mul(float(1).sub(smoothstep(.30,.40,pixel.x.abs())));
-      const tailorAlpha=part.lessThan(4).select(strand,chip.mul(.65));
-      const tailorColor=part.lessThan(4).select(vec3(.33,.47,.51),vec3(.96,.83,.66));
-      const artAlpha=firstThree.select(star,chip);
-      const artColor=firstThree.select(vec3(.97,.74,.25),part.lessThan(6).select(vec3(.65,.77,.55),vec3(.64,.49,.61)));
+      const scissorRings=float(1).sub(smoothstep(.035,.058,pixel.sub(vec2(-.18,-.23)).length().sub(.105).abs()))
+        .max(float(1).sub(smoothstep(.035,.058,pixel.sub(vec2(.18,-.23)).length().sub(.105).abs())));
+      const scissors=scissorRings.max(stroke(-.11,-.17,.28,.33,.035)).max(stroke(.11,-.17,-.28,.33,.035));
+      const wool=circle(-.20,-.04,.17).max(circle(.06,-.18,.17)).max(circle(.18,.06,.16)).max(circle(-.03,.17,.18));
+      const woolInner=circle(-.17,-.03,.115).max(circle(.06,-.14,.12)).max(circle(.16,.06,.11)).max(circle(-.03,.15,.13));
+      const tailorAlpha=part.lessThan(3).select(scissors,part.lessThan(6).select(wool,strand));
+      const tailorColor=part.lessThan(3).select(vec3(.33,.41,.43),part.lessThan(6).select(mix(ink,vec3(.94,.85,.67),woolInner),vec3(.47,.59,.57)));
+      const bloodDrop=circle(0,-.09,.23).max(stroke(0,.12,0,.34,.11));
+      const skinFold=puff.mul(float(1).sub(stroke(-.18,-.18,.17,.16,.018).mul(.85)));
+      const butcherAlpha=part.lessThan(4).select(bloodDrop,skinFold);
+      const butcherColor=part.lessThan(4).select(mix(vec3(.43,.13,.10),vec3(.78,.25,.19),circle(-.05,-.10,.13)),
+        mix(ink,vec3(.88,.71,.52),puffInner));
+      const artAlpha=firstThree.select(strand,part.lessThan(6).select(puff,chip));
+      const artColor=firstThree.select(vec3(.52,.65,.53),part.lessThan(6).select(vec3(.75,.57,.63),chipColor));
       const kind=fx.x;
       const isMine=kind.equal(ACTION_FX.mine).or(kind.equal(ACTION_FX.stonecraft));
       const isBuild=kind.equal(ACTION_FX.build).or(kind.equal(ACTION_FX.craft));
+      const isTailor=kind.equal(ACTION_FX.tailor).or(kind.equal(ACTION_FX.tailorGround));
+      const isButcher=kind.equal(ACTION_FX.butcher).or(kind.equal(ACTION_FX.butcherGround));
       let workAlpha=kind.equal(ACTION_FX.art).select(artAlpha,puff.mul(.65));
-      workAlpha=kind.equal(ACTION_FX.tailor).select(tailorAlpha,workAlpha);
+      workAlpha=isTailor.select(tailorAlpha,workAlpha);
+      workAlpha=isButcher.select(butcherAlpha,workAlpha);
       workAlpha=kind.equal(ACTION_FX.smith).select(smithAlpha,workAlpha);
       workAlpha=kind.equal(ACTION_FX.research).select(researchAlpha,workAlpha);
-      workAlpha=kind.equal(ACTION_FX.cook).select(puff.mul(.89),workAlpha);
+      workAlpha=kind.equal(ACTION_FX.cook).select(cookAlpha,workAlpha);
       workAlpha=isBuild.select(buildAlpha,workAlpha);
       workAlpha=isMine.select(mineAlpha,workAlpha);
       workAlpha=kind.equal(ACTION_FX.chop).select(chopAlpha,workAlpha);
-      let workColor=kind.equal(ACTION_FX.art).select(artColor,vec3(.72,.89,.99));
-      workColor=kind.equal(ACTION_FX.tailor).select(tailorColor,workColor);
+      let workColor=kind.equal(ACTION_FX.art).select(artColor,vec3(.64,.84,.94));
+      workColor=isTailor.select(tailorColor,workColor);
+      workColor=isButcher.select(butcherColor,workColor);
       workColor=kind.equal(ACTION_FX.smith).select(smithColor,workColor);
       workColor=kind.equal(ACTION_FX.research).select(researchColor,workColor);
       workColor=kind.equal(ACTION_FX.cook).select(cookColor,workColor);

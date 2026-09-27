@@ -5,7 +5,7 @@ import { createWorld } from '../src/sim/engine.ts';
 import type { CookingTask } from '../src/sim/cooking-types.ts';
 import type { Structure } from '../src/sim/types.ts';
 import { FireLayer } from '../src/render/FireLayer.ts';
-import { StructureVfxLayer } from '../src/render/StructureVfxLayer.ts';
+import { GROUND_SMOKE_PUFFS, StructureVfxLayer } from '../src/render/StructureVfxLayer.ts';
 import { ensureFireState } from '../src/sim/fire-rules.ts';
 
 const structure=(kind:Structure['kind'],id:number,x=8,z=8):Structure=>({id,kind,x,z,orientation:0,footprint:'standard'});
@@ -21,7 +21,10 @@ describe('resident structure effects',()=>{
     pawn.state='working';pawn.cooking={recipe:'make-revolver',stationId:table.id,phase:'work'} as CookingTask;
     layer.adopt(world);
     expect(layer.glow.activeCount).toBe(3);
-    expect(layer.smoke.geometry.instanceCount).toBe(2);
+    expect(layer.smoke.geometry.instanceCount).toBe(4);
+    const sizes=layer.smoke.geometry.getAttribute('smokeShape') as THREE.InstancedBufferAttribute;
+    expect(new Set(Array.from({length:4},(_,i)=>sizes.getX(i).toFixed(3))).size).toBeGreaterThan(2);
+    expect(Array.from({length:4},(_,i)=>sizes.getW(i)).every(aspect=>aspect>.7&&aspect<1.3)).toBe(true);
     const version=(layer.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute).version;
     layer.present(17.5);layer.adopt(world);
     expect((layer.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute).version).toBe(version);
@@ -42,12 +45,12 @@ describe('resident structure effects',()=>{
     pawn.state='working';pawn.cooking={recipe:'make-component',stationId:bench.id,phase:'work'} as CookingTask;
     layer.adopt(world,true);
     expect(layer.glow.activeCount).toBe(4); // bench lamp, two hot pieces, one charge bar
-    expect(layer.smoke.geometry.instanceCount).toBe(2);
+    expect(layer.smoke.geometry.instanceCount).toBe(4);
     pawn.cooking={stationId:stove.id,phase:'work'} as CookingTask;
     layer.adopt(world);
     expect(layer.smoke.geometry.instanceCount).toBe(0); // electric stove is unpowered
     stove.power.on=true;layer.adopt(world);
-    expect(layer.smoke.geometry.instanceCount).toBe(3);
+    expect(layer.smoke.geometry.instanceCount).toBe(5);
     battery.battery!.stored=0;layer.adopt(world);
     expect(layer.glow.activeCount).toBe(3); // stove status, stove heat, bench idle status
     layer.setDistant(true);expect(layer.group.visible).toBe(false);
@@ -80,13 +83,13 @@ describe('resident structure effects',()=>{
     camera.position.set(52,50,52);camera.lookAt(target);camera.updateProjectionMatrix();camera.updateMatrixWorld();
     const layer=new StructureVfxLayer();layer.adopt(world,true);layer.setView(camera,target);
     let position=layer.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute;
-    expect(layer.smoke.geometry.instanceCount).toBe(2+128*2); // campfire + bounded ground fire
-    for(let i=2;i<layer.smoke.geometry.instanceCount;i++)expect(position.getX(i)).toBeLessThan(32);
+    expect(layer.smoke.geometry.instanceCount).toBe(4+128*GROUND_SMOKE_PUFFS); // campfire + bounded ground fire
+    for(let i=4;i<layer.smoke.geometry.instanceCount;i++)expect(position.getX(i)).toBeLessThan(32);
     const version=position.version;layer.setView(camera,target);expect(position.version).toBe(version);
     target.set(82,0,82);camera.position.set(112,50,112);camera.lookAt(target);camera.updateMatrixWorld();
     layer.setView(camera,target);position=layer.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute;
-    expect(layer.smoke.geometry.instanceCount).toBe(2+128*2);
-    for(let i=2;i<layer.smoke.geometry.instanceCount;i++)expect(position.getX(i)).toBeGreaterThan(73);
+    expect(layer.smoke.geometry.instanceCount).toBe(4+128*GROUND_SMOKE_PUFFS);
+    for(let i=4;i<layer.smoke.geometry.instanceCount;i++)expect(position.getX(i)).toBeGreaterThan(73);
     layer.dispose();
   });
 });

@@ -26,9 +26,11 @@ test('one resident geometry routes active stations to distinct comic marks',()=>
     ['machining-table',ACTION_FX.smith],['fabrication-bench',ACTION_FX.smith],
     ['tailor-bench',ACTION_FX.tailor],['electric-tailor-bench',ACTION_FX.tailor],
     ['stonecutter',ACTION_FX.stonecraft],['art-bench',ACTION_FX.art],
-    ['electric-stove',ACTION_FX.cook],['crafting-spot',ACTION_FX.cook],
+    ['electric-stove',ACTION_FX.cook],['crafting-spot',ACTION_FX.tailorGround],
   ] as const){station.kind=kind;expect(classify(world).kind).toBe(effect);}
-  station.kind='crafting-spot';pawn.cooking.recipe='tribalwear';expect(classify(world).kind).toBe(ACTION_FX.craft);
+  station.kind='crafting-spot';pawn.cooking.recipe='tribalwear';expect(classify(world).kind).toBe(ACTION_FX.tailorGround);
+  station.kind='butcher-spot';pawn.cooking.recipe='butcher-creature';expect(classify(world).kind).toBe(ACTION_FX.butcherGround);
+  station.kind='butcher-table';expect(classify(world).kind).toBe(ACTION_FX.butcher);
 });
 
 test('fight state stays available to the volumetric layer without duplicate sprite effects',()=>{

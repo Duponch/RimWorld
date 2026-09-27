@@ -29,6 +29,7 @@ import { PawnSelectionInput, hitActors, type ScreenPawn, type SelectionGesture }
 import { FireLayer } from './FireLayer';
 import { GrowingZoneLayer } from './GrowingZoneLayer';
 import { buildTerrain, createTerrainPaintTexture, patchTerrainPaintTexture, syncTerrainPaintUvs } from './TerrainLayer';
+import { PaintedWater } from './PaintedWater';
 import { RockLayer } from './RockLayer';
 import { MotionTimeline } from './MotionTimeline';
 import type { PawnTrack } from '../bridge/motion-tracks';
@@ -133,10 +134,14 @@ export class ColonyRenderer {
   private readonly pileChunks = new Map<string, VisualChunk>();
   private readonly staticMaterial = material(0xffffff, { vertexColors: true });
   private readonly terrainPlainMaterial = material(0xffffff,{vertexColors:true});
-  private readonly terrainPaintMaterial = material(0xffffff,{vertexColors:false,map:new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1)});
+  // Keep texture identity stable: terrain and water can share one GPU image and
+  // one shader graph even when a new map or the texture option replaces pixels.
+  private readonly terrainPaintTexture=new THREE.DataTexture(new Uint8Array([255,255,255,0]),1,1);
+  private readonly terrainPaintMaterial = material(0xffffff,{vertexColors:false,map:this.terrainPaintTexture});
   private readonly staticPaint=createStylizedSurfaceTexture('vegetation');
   private readonly texturedStaticMaterial=material(0xffffff,{vertexColors:true,map:this.staticPaint});
   private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
+  private readonly paintedWater=new PaintedWater(this.terrainPaintTexture,this.environmentLighting.configure);
   private readonly boxes = new BoxBatches(this.environmentLighting.configure);
   private readonly recreationHints = new RecreationHints(this.boxes);
   private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial,this.texturedStaticMaterial);
@@ -186,6 +191,12 @@ export class ColonyRenderer {
     this.environmentLighting.configure(this.terrainPaintMaterial);
     this.environmentLighting.configure(this.texturedStaticMaterial);
     this.environmentLighting.configure(this.waterMaterial);
+    this.terrainPaintTexture.colorSpace=THREE.SRGBColorSpace;
+    this.terrainPaintTexture.magFilter=THREE.LinearFilter;
+    this.terrainPaintTexture.minFilter=THREE.LinearMipmapLinearFilter;
+    this.terrainPaintTexture.generateMipmaps=true;
+    this.terrainPaintTexture.wrapS=this.terrainPaintTexture.wrapT=THREE.ClampToEdgeWrapping;
+    this.terrainPaintTexture.needsUpdate=true;
     // Renderer-owned shared material survives deletion of an individual chunk.
     // Reusing its node graph also avoids compiling a pipeline per tree batch.
     this.staticMaterial.userData.rendererOwned = true;
@@ -319,7 +330,7 @@ export class ColonyRenderer {
         // vertex colours marked dirty for a later texture-off switch.
         this.terrainGeometryDirty=true;
       }else{
-        buildTerrain(world,this.terrainGroup,this.texturesEnabled?this.terrainPaintMaterial:this.terrainPlainMaterial,this.waterMaterial,this.texturesEnabled);
+        buildTerrain(world,this.terrainGroup,this.texturesEnabled?this.terrainPaintMaterial:this.terrainPlainMaterial,this.texturesEnabled?this.paintedWater.material:this.waterMaterial,this.texturesEnabled);
         this.overview.rebuildTerrain(this.terrainGroup);
         this.terrainGeometryDirty=false;
       }
@@ -424,10 +435,14 @@ export class ColonyRenderer {
     }
     const oldTerrain=enabled?this.terrainPlainMaterial:this.terrainPaintMaterial;
     const nextTerrain=enabled?this.terrainPaintMaterial:this.terrainPlainMaterial;
+    const oldWater=enabled?this.waterMaterial:this.paintedWater.material;
+    const nextWater=enabled?this.paintedWater.material:this.waterMaterial;
     for(const child of this.terrainGroup.children)if(child instanceof THREE.Mesh&&child.material===oldTerrain)child.material=nextTerrain;
+    for(const child of this.terrainGroup.children)if(child instanceof THREE.Mesh&&child.material===oldWater)child.material=nextWater;
     if(this.world){
-      syncTerrainPaintUvs(this.world,this.terrainGroup,nextTerrain,enabled);
+      syncTerrainPaintUvs(this.world,this.terrainGroup,nextTerrain,enabled,nextWater);
       this.overview.setTerrainMaterial(oldTerrain,nextTerrain,this.world,enabled);
+      this.overview.setTerrainMaterial(oldWater,nextWater,this.world,enabled);
     }
     this.boxes.setTexturesEnabled(enabled);
     this.timber.setTexturesEnabled(enabled);
@@ -444,17 +459,18 @@ export class ColonyRenderer {
   }
   private refreshTerrainPaint(world:World):void {
     if(!this.terrainPaintDirty)return;
-    const oldPaint=this.terrainPaintMaterial.map;
-    this.terrainPaintMaterial.map=createTerrainPaintTexture(world);
-    this.terrainPaintMaterial.needsUpdate=true;
-    oldPaint?.dispose();
+    const baked=createTerrainPaintTexture(world);
+    if(this.terrainPaintTexture.image.width!==baked.image.width||this.terrainPaintTexture.image.height!==baked.image.height)this.terrainPaintTexture.dispose();
+    this.terrainPaintTexture.image=baked.image;
+    this.terrainPaintTexture.userData.terrainPalette=baked.userData.terrainPalette;
+    this.terrainPaintTexture.needsUpdate=true;
     this.terrainPaintDirty=false;
   }
   private releaseTerrainPaint():void {
-    const oldPaint=this.terrainPaintMaterial.map;
-    this.terrainPaintMaterial.map=new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1);
-    this.terrainPaintMaterial.needsUpdate=true;
-    oldPaint?.dispose();
+    this.terrainPaintTexture.dispose();
+    this.terrainPaintTexture.image={data:new Uint8Array([255,255,255,0]),width:1,height:1};
+    delete this.terrainPaintTexture.userData.terrainPalette;
+    this.terrainPaintTexture.needsUpdate=true;
     this.terrainPaintDirty=true;
   }
   /** A disabled decorative grass layer owns no mesh, texture, shader or map
@@ -740,6 +756,7 @@ export class ColonyRenderer {
     this.resources.presentChop(skyTick/TICKS_PER_SECOND);
     this.doors.tick.value=skyTick;this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
     this.actionVfx.present(skyTick);this.brawlCloud.present(skyTick);this.structureVfx.present(skyTick);
+    if(this.texturesEnabled)this.paintedWater.present(skyTick/TICKS_PER_SECOND);
     this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
     const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
     this.actionFeedback.setBarsDetailVisible(cellPixels>=18);
@@ -981,9 +998,10 @@ export class ColonyRenderer {
     this.pileChunks.clear();
     this.staticMaterial.dispose();
     this.terrainPlainMaterial.dispose();
-    this.terrainPaintMaterial.dispose();this.terrainPaintMaterial.map?.dispose();
+    this.terrainPaintMaterial.dispose();this.terrainPaintTexture.dispose();
     this.texturedStaticMaterial.dispose();this.staticPaint.dispose();
     this.waterMaterial.dispose();
+    this.paintedWater.dispose();
     this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();
     this.objectSelection.geometry.dispose();(this.objectSelection.material as THREE.Material).dispose();
     this.daylight.dispose();

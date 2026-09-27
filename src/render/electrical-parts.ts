@@ -72,7 +72,8 @@ export function electricalParts(world:World,cutaway=false):Placement[] {
         {x:x+.45,z:z+.15,y:.63,sx:.54,sy:.76,sz:.96,color:0x596c68},
         {x:x-.37,z:z+.73,y:.57,sx:.56,sy:.39,sz:.045,color:on?0xeb9542:0x514e42},
         {x:x-.37,z:z-.54,y:WORLD_SCALE.generatorHeight+.35,sx:.23,sy:.7,sz:.23,color:0x535e58});
-      for(const dx of [-.4,-.1,.2])out.push({x:x+.45,z:z+dx,y:1.06,sx:.62,sy:.055,sz:.095,color:0x9eab97});
+      // Align all three light slats with the top of the smaller front housing.
+      for(const dz of [-.25,.05,.35])out.push({x:x+.45,z:z+dz,y:1.06,sx:.48,sy:.055,sz:.095,color:0x9eab97});
     }
   }
   // Consumer leads are visual links to the saved connection, not guessed by

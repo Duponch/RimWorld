@@ -3,8 +3,10 @@ dist/
 .npm-cache/
 .playwright/
 test-results/
+test-results-*/
 playwright-report/
 artifacts/*.png
+artifacts/v133-vfx/
 artifacts/v128-brawl/
 artifacts/v128-work/
 artifacts/comic-vfx-bench-v128.json

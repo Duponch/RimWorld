@@ -19,9 +19,10 @@ export function pileParts(bundles:readonly PileBundle[]):Placement[] {
   const logs: Placement[] = [], ends: Placement[] = [], crates: Placement[] = [], food: Placement[] = [];
   for (const bundle of bundles) {
     const starts=[logs.length,ends.length,crates.length,food.length];
-    // Only the loose crate-like piles use the old stagger. Authored apparel
-    // and weapons have their own local centres and must sit on the cell centre.
-    const x = bundle.x + (bundle.kind === 'wood' ? -0.12 : bundle.kind==='apparel'||bundle.kind==='weapon' ? 0 : 0.2), z = bundle.z + (bundle.supplied ? 0.16 : bundle.item === 'berries' ? -0.24 : bundle.item === 'survival-meal' ? 0.24 : 0);
+    // Materials already delivered to a blueprint are tucked beside its work
+    // marker. A loose ground object instead belongs at the centre of its cell.
+    const x = bundle.supplied ? bundle.x + (bundle.kind === 'wood' ? -.12 : .2) : bundle.x;
+    const z = bundle.z + (bundle.supplied ? .16 : 0);
     const height = 0.12 + Math.min(1, bundle.quantity / ITEM_DEFINITIONS[bundle.item].stackLimit) * (WORLD_SCALE.pileMaxHeight - 0.12);
     if (bundle.kind === 'wood') {
       const rows = Math.max(1, Math.min(3, Math.ceil(bundle.quantity / 25)));
@@ -74,6 +75,24 @@ export function pileParts(bundles:readonly PileBundle[]):Placement[] {
     } else {
       crates.push({ x, z, y: height / 2, sx: 0.5, sy: height, sz: 0.45 });
       for (const dx of [-0.12, 0.12]) for (const dz of [-0.11, 0.11]) food.push({ x: x + dx, z: z + dz, y: height + 0.025, sx: 0.18, sy: 0.1, sz: 0.16, color: ITEM_DEFINITIONS[bundle.item].color });
+    }
+    // Composite silhouettes have authored local offsets (and can rotate), so
+    // centring only their anchor still leaves logs, crates and tools off-centre.
+    // Rebalance their bounds once, when the pile chunk changes, never per frame.
+    if(!bundle.supplied){
+      let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
+      for(const [index,parts] of [logs,ends,crates,food].entries())for(let i=starts[index]!;i<parts.length;i++){
+        const p=parts[i]!,angle=p.ry??0,c=Math.abs(Math.cos(angle)),s=Math.abs(Math.sin(angle));
+        const halfX=(c*(p.sx??1)+s*(p.sz??1))/2,halfZ=(s*(p.sx??1)+c*(p.sz??1))/2;
+        minX=Math.min(minX,p.x-halfX);maxX=Math.max(maxX,p.x+halfX);
+        minZ=Math.min(minZ,p.z-halfZ);maxZ=Math.max(maxZ,p.z+halfZ);
+      }
+      if(Number.isFinite(minX)){
+        const shiftX=bundle.x-(minX+maxX)/2,shiftZ=bundle.z-(minZ+maxZ)/2;
+        for(const [index,parts] of [logs,ends,crates,food].entries())for(let i=starts[index]!;i<parts.length;i++){
+          parts[i]!.x+=shiftX;parts[i]!.z+=shiftZ;
+        }
+      }
     }
     if(bundle.surface)for(const [index,parts] of [logs,ends,crates,food].entries())for(let i=starts[index]!;i<parts.length;i++) {
       const p=parts[i]!,surface=bundle.surface;

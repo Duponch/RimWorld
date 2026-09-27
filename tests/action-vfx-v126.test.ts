@@ -31,9 +31,9 @@ describe('V126 resident action VFX', () => {
       orientation: 0 as const, footprint: 'standard' as const, status: 'active' as const,
       reservedBy: pawn.id, progress: 2, escrow: { wood: 0, food: 0 } };
     world.jobs.push(job); pawn.jobId = job.id;
-    expect(classify(world)).toEqual({ kind: ACTION_FX.chop, x: job.x - .82, z: job.z });
+    expect(classify(world)).toEqual({ kind: ACTION_FX.chop, x: job.x, z: job.z });
     world.jobs[0]!.kind = 'mine';
-    expect(classify(world)).toMatchObject({ kind: ACTION_FX.mine, x: job.x - .70, z: job.z });
+    expect(classify(world)).toMatchObject({ kind: ACTION_FX.mine, x: job.x, z: job.z });
     job.reservedBy = -1;
     expect(classify(world).kind).toBe(ACTION_FX.none);
   });

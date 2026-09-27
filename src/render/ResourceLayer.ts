@@ -265,8 +265,8 @@ export class ResourceLayer {
           const radius = 0.8 + n * 0.32;
           const broadleaf=world.site!==undefined;
           trunks.push({ x, y: height * 0.25, z, sx: 1.1, sy: height * 0.5, sz: 1.1, ry: turn });
-          crowns.push({ x, y: height * (broadleaf?.62:.57), z, sx: radius, sy: height * (broadleaf?.21:.35), sz: radius, ry: turn, color: n > 0.65 ? 0x657d56 : 0x526e50 });
-          upperCrowns.push({ x, y: height * (broadleaf?.83:.77), z, sx: radius * .72, sy: height * (broadleaf?.14:.34), sz: radius * .72, ry: turn + .3, color: n > .65 ? 0x81925b : 0x688557 });
+          crowns.push({ x, y: height * (broadleaf?.62:.53), z, sx: radius, sy: height * (broadleaf?.21:.35), sz: radius, ry: turn, color: n > 0.65 ? 0x657d56 : 0x526e50 });
+          upperCrowns.push({ x, y: height * (broadleaf?.83:.70), z, sx: radius * .72, sy: height * (broadleaf?.14:.34), sz: radius * .72, ry: turn + .3, color: n > .65 ? 0x81925b : 0x688557 });
         } else if (resource.kind === 'rock') {
           rocks.push({ x: x - 0.1, y: 0.3, z, sx: 0.46 + n * 0.14, sy: 0.35 + n * 0.15, sz: 0.43, ry: turn, color: resource.stone ? stoneColor(resource.stone) : 0x92998d, pigment:'stone' });
           rocks.push({ x: x + 0.3, y: 0.15, z: z + 0.2, sx: 0.25, sy: 0.24, sz: 0.25, ry: -turn, color: resource.stone ? stoneColor(resource.stone) : 0xa8ad9c, pigment:'stone' });

@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, cameraPosition, float, mix, positionLocal, sin, smoothstep, uniform, uv, vec2, vec3 } from 'three/tsl';
+import { Fn, atan, attribute, cameraPosition, float, mix, positionLocal, sin, smoothstep, uniform, uv, vec2, vec3 } from 'three/tsl';
 import { BATTERY_CAPACITY } from '../sim/power-battery.ts';
 import { isPowerActive } from '../sim/power-rules.ts';
 import { footprintCells } from '../sim/definitions.ts';
@@ -14,6 +14,7 @@ type FireChunk = { x:number; z:number; fires:GroundFire[] };
 type FireCandidate = { fire:GroundFire; distance:number };
 const FIRE_CHUNK_SIZE=16;
 const MAX_GROUND_SMOKE_SOURCES=128;
+export const GROUND_SMOKE_PUFFS=3;
 const object=new THREE.Object3D(), color=new THREE.Color();
 
 // Keep only the nearest visible flames without sorting every fire. The heap
@@ -83,14 +84,15 @@ export class StructureVfxLayer {
     this.smokeMaterial.positionNode=Fn(()=>{
       const direction=cameraPosition.xz.sub(smokePosition.xz),distance=direction.length().max(.001);
       const right=vec2(direction.y,direction.x.negate()).div(distance);
-      const breadth=smokeShape.x.mul(float(.46).add(phase.mul(.78)));
+      const breadth=smokeShape.x.mul(float(.43).add(phase.mul(.85)));
       const drift=sin(this.tick.mul(2*Math.PI/80).add(smokePosition.w.mul(19))).mul(.08).mul(phase);
       const horizontal=positionLocal.x.mul(breadth).add(drift);
-      return vec3(smokePosition.x.add(right.x.mul(horizontal)),smokePosition.y.add(phase.mul(smokeShape.z)).add(positionLocal.y.mul(breadth)),smokePosition.z.add(right.y.mul(horizontal)));
+      return vec3(smokePosition.x.add(right.x.mul(horizontal)),smokePosition.y.add(phase.mul(smokeShape.z)).add(positionLocal.y.mul(breadth).mul(smokeShape.w)),smokePosition.z.add(right.y.mul(horizontal)));
     })();
     this.smokeMaterial.colorNode=mix(vec3(.87,.91,.86),vec3(.37,.39,.36),smokeShape.y);
-    const radius=uv().sub(vec2(.5,.5)).length();
-    const edge=float(1).sub(smoothstep(.19,.52,radius));
+    const pixel=uv().sub(vec2(.5,.5)),radius=pixel.length();
+    const edgeRadius=float(.42).add(sin(atan(pixel.y,pixel.x).mul(5).add(smokePosition.w.mul(31))).mul(.045));
+    const edge=float(1).sub(smoothstep(edgeRadius.sub(.20),edgeRadius.add(.06),radius));
     const birth=smoothstep(0,.17,phase),death=float(1).sub(smoothstep(.68,1,phase));
     this.smokeMaterial.opacityNode=edge.mul(birth).mul(death).mul(smokeShape.y.mul(.16).add(.34));
     this.smoke=new THREE.Mesh(this.smokeGeometry(),this.smokeMaterial);
@@ -113,8 +115,12 @@ export class StructureVfxLayer {
     const working=new Set<number>();
     for(const pawn of world.pawns)if(pawn.state==='working'&&pawn.cooking?.phase==='work')working.add(pawn.cooking.stationId);
     const glow:Glow[]=[],smoke:Smoke[]=[],groundFires:GroundFire[]=[],tokens:string[]=[];
-    const puff=(x:number,y:number,z:number,id:number,size:number,soot:number,rise:number,count=2)=>{
-      for(let i=0;i<count;i++)smoke.push({x:x+(i-.5)*.09,y,z:z+(i%2)*.06,seed:phase(id,i),size:size*(i%2?.85:1),soot,rise});
+    const puff=(x:number,y:number,z:number,id:number,size:number,soot:number,rise:number,count=4)=>{
+      for(let i=0;i<count;i++){
+        const spread=phase(id,i+23),shape=phase(id,i+61);
+        smoke.push({x:x+(spread-.5)*.19,y,z:z+(shape-.5)*.16,seed:phase(id,i),
+          size:size*(.53+phase(id,i+41)*.94),soot,rise:rise*(.78+shape*.42)});
+      }
     };
     const h=WORLD_SCALE.stonecutterHeight;
     for(const s of world.structures){
@@ -137,7 +143,7 @@ export class StructureVfxLayer {
         if(s.kind==='electric-stove'&&on)glow.push(local(s,.8,h+.22,.37,.13,.04,.11,0x8ed7be));
         if(active){
           const emitter=local(s,-.58,h+.26,-.04,.1,.1,.1,0xffffff);
-          puff(emitter.x,emitter.y,emitter.z,s.id,.42,s.kind==='fueled-stove'?.25:0,.82,3);
+          puff(emitter.x,emitter.y,emitter.z,s.id,.42,s.kind==='fueled-stove'?.25:0,.82,5);
           glow.push(local(s,-.58,h+.105,-.04,.35,.015,.36,0xffa260));
         }
       }else if(s.kind==='hi-tech-research-bench'||s.kind==='multi-analyzer'){
@@ -156,10 +162,10 @@ export class StructureVfxLayer {
         }
       }else if(s.kind==='wood-generator'){
         tokens.push(`${s.id}:wood-generator:${s.x}:${s.z}:${on}`);
-        if(on){glow.push({x:s.x+.13,y:.58,z:s.z+1.23,sx:.42,sy:.07,sz:.025,ry:0,color:0xffa456});puff(s.x+.13,WORLD_SCALE.generatorHeight+.73,s.z-.04,s.id,.57,.9,1.32,3);}
+        if(on){glow.push({x:s.x+.13,y:.58,z:s.z+1.23,sx:.42,sy:.07,sz:.025,ry:0,color:0xffa456});puff(s.x+.13,WORLD_SCALE.generatorHeight+.73,s.z-.04,s.id,.57,.9,1.32,5);}
       }else if(s.kind==='campfire'){
         const lit=!!s.fuel?.ticks;tokens.push(`${s.id}:campfire:${s.x}:${s.z}:${lit}`);
-        if(lit)puff(s.x,.47,s.z,s.id,.48,.76,1.06,2);
+        if(lit)puff(s.x,.47,s.z,s.id,.48,.76,1.06,4);
       }
     }
     for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined){
@@ -189,18 +195,19 @@ export class StructureVfxLayer {
   }
 
   private uploadSmoke(fires:readonly GroundFire[]):void {
-    const count=this.structuralSmoke.length+fires.length*2;
+    const count=this.structuralSmoke.length+fires.length*GROUND_SMOKE_PUFFS;
     if(count>this.smokeCapacity){while(this.smokeCapacity<count)this.smokeCapacity*=2;this.smoke.geometry.dispose();this.smoke.geometry=this.smokeGeometry();}
     const positions=this.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute;
     const shapes=this.smoke.geometry.getAttribute('smokeShape') as THREE.InstancedBufferAttribute;
     for(const [i,item] of this.structuralSmoke.entries()){
       positions.setXYZW(i,item.x,item.y,item.z,item.seed);
-      shapes.setXYZW(i,item.size,item.soot,item.rise,0);
+      shapes.setXYZW(i,item.size,item.soot,item.rise,.72+phase(i,7)*.56);
     }
     let i=this.structuralSmoke.length;
-    for(const fire of fires)for(let puff=0;puff<2;puff++){
-      positions.setXYZW(i,fire.x+(puff-.5)*.09,.35,fire.z+(puff%2)*.06,phase(fire.id,puff));
-      shapes.setXYZW(i++,.43*Math.max(.6,fire.size)*(puff%2?.85:1),.84,1.12,0);
+    for(const fire of fires)for(let puff=0;puff<GROUND_SMOKE_PUFFS;puff++){
+      const spread=phase(fire.id,puff+21),shape=phase(fire.id,puff+47);
+      positions.setXYZW(i,fire.x+(spread-.5)*.23,.35,fire.z+(shape-.5)*.19,phase(fire.id,puff));
+      shapes.setXYZW(i++,.43*Math.max(.6,fire.size)*(.55+phase(fire.id,puff+83)*.95),.84,1.12*(.8+shape*.35),.72+spread*.56);
     }
     this.smoke.geometry.instanceCount=count;this.smoke.visible=count>0;
     if(count){positions.needsUpdate=true;shapes.needsUpdate=true;}
@@ -251,7 +258,7 @@ export class StructureVfxLayer {
     const before={group:this.group.visible,glow:this.glow.activeCount,glowCull:this.glow.frustumCulled,smoke:this.smoke.geometry.instanceCount,smokeVisible:this.smoke.visible};
     this.group.visible=true;
     if(!before.glow){object.position.set(0,-100,0);object.rotation.set(0,0,0);object.scale.set(.001,.001,.001);object.updateMatrix();this.glow.setMatrixAt(0,object.matrix);this.glow.setColorAt(0,color.setHex(0xffffff));this.glow.instanceMatrix.needsUpdate=true;this.glow.colorBuffer.needsUpdate=true;this.glow.activeCount=1;this.glow.frustumCulled=false;}
-    if(!before.smoke){const position=this.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute,shape=this.smoke.geometry.getAttribute('smokeShape') as THREE.InstancedBufferAttribute;position.setXYZW(0,0,-100,0,0);shape.setXYZW(0,.001,0,0,0);position.needsUpdate=shape.needsUpdate=true;this.smoke.geometry.instanceCount=1;this.smoke.visible=true;}
+    if(!before.smoke){const position=this.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute,shape=this.smoke.geometry.getAttribute('smokeShape') as THREE.InstancedBufferAttribute;position.setXYZW(0,0,-100,0,0);shape.setXYZW(0,.001,0,0,1);position.needsUpdate=shape.needsUpdate=true;this.smoke.geometry.instanceCount=1;this.smoke.visible=true;}
     return ()=>{this.group.visible=before.group;this.glow.activeCount=before.glow;this.glow.frustumCulled=before.glowCull;this.smoke.geometry.instanceCount=before.smoke;this.smoke.visible=before.smokeVisible;};
   }
   dispose():void {this.group.clear();this.glow.dispose();this.smoke.geometry.dispose();this.boxBase.dispose();this.smokeBase.dispose();this.glowMaterial.dispose();this.smokeMaterial.dispose();}

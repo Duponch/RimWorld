@@ -2,7 +2,7 @@ import { expect,test } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { createWorld } from '../src/sim/index';
 import type { Resource,World } from '../src/sim/types';
-import { appendFlora,floraTreeHeight,type FloraParts } from '../src/render/flora-presentation';
+import { appendFlora,floraSize,floraTreeHeight,type FloraParts } from '../src/render/flora-presentation';
 import { ResourceLayer } from '../src/render/ResourceLayer';
 import { noise,type ResourceRangeData } from '../src/render/StaticGeometry';
 import { clearGroup } from '../src/render/primitives';
@@ -19,6 +19,8 @@ test('pine upper cone enters the lower canopy by more than half its height at ev
     expect(lo.top-hi.bottom).toBeGreaterThan(lower!.sy!*.5);
     expect(hi.bottom).toBeGreaterThan(lo.bottom);
     expect(hi.top).toBeGreaterThan(lo.top);
+    expect(lower!.y).toBeCloseTo(floraTreeHeight(pine)*.53*floraSize(world,pine),5);
+    expect(upper!.y).toBeCloseTo(floraTreeHeight(pine)*.70*floraSize(world,pine),5);
     expect(shape.trunks).toHaveLength(1);
   }
 });
@@ -41,6 +43,10 @@ test('legacy conifers overlap while broadleaf and cactus centres retain their pr
   layer.update(world,true);
   const conifer=centers();expect(conifer).toHaveLength(2);
   expect(conifer[0]!.top-conifer[1]!.bottom).toBeGreaterThan((conifer[0]!.top-conifer[0]!.bottom)*.35);
+  // ConeGeometry has more vertices at its base, so its arithmetic vertex mean
+  // is below the geometric centre; compare the rendered top/bottom bounds.
+  expect((conifer[0]!.bottom+conifer[0]!.top)/2).toBeCloseTo((5+noise(8,8,77)*2)*.53,5);
+  expect((conifer[1]!.bottom+conifer[1]!.top)/2).toBeCloseTo((5+noise(8,8,77)*2)*.70,5);
   world.site={} as World['site'];layer.update(world,true);
   const broadleaf=centers(),height=5+noise(8,8,77)*2;
   expect(broadleaf).toHaveLength(2);

@@ -21,6 +21,7 @@ import { furnitureSurfaces } from './furniture-motion';
 import { pawnPresentationPose } from './pawn-presentation';
 import { headingAt,turnToward,TURN_TICKS,type TurnHeading } from './turn-presentation';
 import { pawnWorkPose,workApproach,meleeApproach,WORK_POSE } from './work-presentation';
+import { GaitPhaseTracker,HUMAN_GAIT_RADIANS_PER_UNIT } from './gait-presentation';
 import { constructionWorkTarget } from '../sim/construction-rules';
 import { pawnSelectionMesh } from './PawnSelectionLayer';
 import type { MotionTimeline } from './MotionTimeline';
@@ -150,6 +151,7 @@ export class PawnLayer {
   private readonly departureOffsets = new Map<number,{start:number;x:number;z:number;arrivalX:number;arrivalZ:number}>();
   private readonly crouchTransitions = new Map<number,CrouchTransition>();
   private readonly shownPoses = new Map<number,number>();
+  private readonly gait = new GaitPhaseTracker();
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
   private rescuePairs:readonly (readonly [number,number])[]=[];
   constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void) {}
@@ -200,6 +202,10 @@ export class PawnLayer {
       const packed=motion.x.negate().sub(1);
       const transitionWalk=packed.greaterThan(CROUCH_WALK_MARK);
       const walking=transitioning.select(transitionWalk.select(float(1),float(0)),motion.x);
+      // Motion.w carries the phase at the beginning of an active edge. The
+      // distance is computed from the same interpolated XZ pose as the body,
+      // so a slowed/stunned edge cannot keep cycling the limbs in place.
+      const gaitPhase=motion.w.add(pose.xz.sub(attribute('aFrom','vec4').xz).length().mul(HUMAN_GAIT_RADIANS_PER_UNIT));
       const ground=motion.z.equal(WORK_POSE.ground),low=ground.or(motion.z.equal(WORK_POSE.groundMelee));
       const crouch=low.select(float(1),float(0)).toVar();
       If(transitioning,()=>{
@@ -213,13 +219,13 @@ export class PawnLayer {
       const sign = float(1).toVar();
       If(bone.equal(3).or(bone.equal(4)).or(bone.equal(6)), () => { sign.assign(-1); });
       If(bone.greaterThan(1.5), () => {
-        angle.assign(sin(this.time.mul(9).add(motion.w)).mul(walking).mul(sign).mul(0.65));
+        angle.assign(sin(gaitPhase).mul(walking).mul(sign).mul(0.65));
         If(bone.lessThan(3.5), () => {
           If(motion.y.greaterThan(0).and(motion.z.lessThan(10.5)),()=>{
             angle.addAssign(sin(this.time.mul(12).add(motion.w)).mul(0.35).sub(0.8));
           });
           If(attribute('aCargo', 'vec2').x.abs().greaterThan(0.5), () => {
-            angle.assign(float(-0.9).add(sin(this.time.mul(9).add(motion.w)).mul(walking).mul(0.06)));
+            angle.assign(float(-0.9).add(sin(gaitPhase).mul(walking).mul(0.06)));
             If(motion.z.greaterThan(1.5), () => { angle.assign(float(-1.3).add(sin(this.time.mul(4).add(motion.w)).mul(0.22))); });
           });
         });
@@ -253,7 +259,7 @@ export class PawnLayer {
           .mul(breadth).sub(motion.y.equal(3).select(float(.99),float(.87))));
       });
       If(bone.equal(1).and(walking.greaterThan(.5)),()=>{
-        angle.assign(sin(this.time.mul(9).add(motion.w)).mul(.045));
+        angle.assign(sin(gaitPhase).mul(.045));
       });
       If(motion.z.greaterThan(2.5).and(motion.z.lessThan(3.5)).and(bone.greaterThan(3.5)), () => {
         angle.assign(bone.lessThan(5.5).select(float(-Math.PI / 2), float(0)));
@@ -459,7 +465,7 @@ export class PawnLayer {
 
   update(world: World, oldBlend: number, newMap: boolean): void {
     this.travelKeys.clear();this.travelSurfaces=furnitureSurfaces(world);
-    if(newMap){this.headings.clear();this.approachTransitions.clear();this.departureOffsets.clear();this.workOffsets.clear();this.crouchTransitions.clear();this.shownPoses.clear();}
+    if(newMap){this.headings.clear();this.approachTransitions.clear();this.departureOffsets.clear();this.workOffsets.clear();this.crouchTransitions.clear();this.shownPoses.clear();this.gait.clear();}
     const indices=new Map<number,number>(),pawnsById=new Map<number,Pawn>();
     world.pawns.forEach((p,i)=>{indices.set(p.id,i);pawnsById.set(p.id,p);});
     this.rescuePairs=world.pawns.flatMap((p,i)=>p.rescue?.phase==='carry'&&indices.has(p.rescue.patientId)?[[i,indices.get(p.rescue.patientId)!] as const]:[]);
@@ -543,16 +549,16 @@ export class PawnLayer {
       const dressing=garment?.owner.type==='ground'?garment.owner:undefined;
       const fighting=pawn.firefighting?world.fires?.items.find(f=>f.id===pawn.firefighting!.fireId):undefined;
       const fireTarget=fighting?firePosition(world,fighting):undefined;
-      const workPose=pawnWorkPose(pawn,job);
       const fuelDestination=pawn.haul?.destination.type==='fuel'?pawn.haul.destination:undefined;
       const station=pawn.state==='working'||arriving ? pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking?.phase==='work' ? world.structures.find(s=>s.id===pawn.cooking!.stationId) : pawn.haul?.serviceProgress!==undefined&&fuelDestination ? world.structures.find(s=>s.id===fuelDestination.structureId) : undefined : undefined;
+      const workPose=pawnWorkPose(pawn,job,station?.kind);
       const stationCell=station ? footprintCells(station).reduce((best,cell)=>Math.hypot(cell.x-pawn.x,cell.z-pawn.z)<Math.hypot(best.x-pawn.x,best.z-pawn.z)?cell:best) : undefined;
       const patient=pawn.feed?.phase==='feed'?pawnsById.get(pawn.feed.patientId):pawn.tend?.phase==='tend'?pawnsById.get(pawn.tend.patientId):undefined;
       const handledAnimal=pawn.animalCare?.phase==='treat'?world.wildlife?.animals.find(a=>a.id===pawn.animalCare!.animalId)
         :pawn.animalHandling?.phase==='interact'?world.wildlife?.animals.find(a=>a.id===pawn.animalHandling!.animalId):undefined;
       const work = pawn.state==='working'||arriving ? fireTarget ?? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.hunting?.phase==='finish' ? world.wildlife?.animals.find(a=>a.id===pawn.hunting!.animalId) : patient ?? handledAnimal ?? stationCell ?? pawn.cooking?.actionCell ?? pawn.haul?.pickupCell) : undefined;
       if(work&&pawn.state==='working') yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);
-      const contactPose=arriving?pawnWorkPose({...pawn,state:'working'},job):workPose;
+      const contactPose=arriving?pawnWorkPose({...pawn,state:'working'},job,station?.kind):workPose;
       const atBench=station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
       const clearance=job?.kind==='mine' ? .9 : atBench ? .88 : .82;
       const pair=pawn.social?.fight?pawnsById.get(pawn.social.fight.opponentId):undefined;
@@ -597,7 +603,7 @@ export class PawnLayer {
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
       cargo.setXY(index, pawn.rescue?.phase==='carry'||load?.humanCorpse?-1:packed?4:load ? BIOME_CARGO[load.item]??(load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:isAnimalMeat(load.item)?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2) : 0, packed||load?.kind==='corpse'||load?.kind==='unfinished'||load?.kind==='weapon'||load?.kind==='apparel'?1:load ? Math.min(1, load.quantity / CARRY_CAPACITY) : 0);
     });
-    for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);this.headings.delete(id);this.workPoses.delete(id);this.workOffsets.delete(id);this.approachTransitions.delete(id);this.departureOffsets.delete(id);this.crouchTransitions.delete(id);this.shownPoses.delete(id);}
+    for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);this.headings.delete(id);this.workPoses.delete(id);this.workOffsets.delete(id);this.approachTransitions.delete(id);this.departureOffsets.delete(id);this.crouchTransitions.delete(id);this.shownPoses.delete(id);this.gait.delete(id);}
     this.pawnIndices.clear();for(const [id,index] of indices)this.pawnIndices.set(id,index);
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo]) attr.needsUpdate = true;
     geometry.instanceCount = world.pawns.length;
@@ -618,11 +624,12 @@ export class PawnLayer {
       const segment=pawn.body?.pileId!==undefined||pawn.body?.lostAt!==undefined?undefined:timeline.segment(pawn.id);
       const active=!!segment && timeline.tick<segment.end;
       const onEdge=!!segment&&(active||pawn.state==='moving'||world.tick<segment.end);
+      const stepping=onEdge&&!!segment&&active&&!medicallyStopped(pawn)&&(segment.fromFraction??0)!==(segment.toFraction??1)&&timeline.tick>=segment.start;
       const smallMelee=!!pawn.melee?.strike&&(world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
       const shownPose=onEdge?(medicallyStopped(pawn)?1:0)
         :animationPose(pawn,this.workPoses.get(pawn.id)??0,smallMelee,seatedOnFurniture(pawn));
       this.showPose(pawn.id,shownPose,timeline.tick);
-      const key=`${origin}:${segment?.start}:${segment?.end}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}:${shownPose}:${pawn.path[0]?.x}:${pawn.path[0]?.z}`;
+      const key=`${origin}:${segment?.start}:${segment?.end}:${segment?.edgeStart}:${segment?.fromFraction}:${segment?.toFraction}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}:${shownPose}:${pawn.path[0]?.x}:${pawn.path[0]?.z}`;
       if(this.travelKeys.get(pawn.id)===key)return;
       this.travelKeys.set(pawn.id,key);dirty=true;
       const visual=this.visuals.get(pawn.id)!;
@@ -657,8 +664,15 @@ export class PawnLayer {
         this.approachTransitions.delete(pawn.id);
         times.setXYZW(i,localTimeSeconds(segment.start,origin),localTimeSeconds(segment.end,origin),a,b);
         motion.setX(i,motionX(!medicallyStopped(pawn)&&active&&a!==b&&timeline.tick>=segment.start,this.crouchTransitions.get(pawn.id),origin));
-        motion.setY(i,0);motion.setZ(i,shownPose);
+        if(stepping)motion.setW(i,this.gait.begin(pawn.id,{
+          start:segment.start,end:segment.end,
+          fromX:visual.from.x,fromZ:visual.from.z,toX:visual.to.x,toZ:visual.to.z,
+        },timeline.tick,HUMAN_GAIT_RADIANS_PER_UNIT));
+        else this.gait.halt(pawn.id,timeline.tick,HUMAN_GAIT_RADIANS_PER_UNIT);
+        motion.setY(i,0);
+        motion.setZ(i,shownPose);
       } else {
+        this.gait.halt(pawn.id,timeline.tick,HUMAN_GAIT_RADIANS_PER_UNIT);
         const desired=this.workOffsets.get(pawn.id)??{x:0,z:0};
         const target=this.targetPoses.get(pawn.id)!;
         const baseX=target.x-desired.x,baseZ=target.z-desired.z;
@@ -697,8 +711,11 @@ export class PawnLayer {
         motion.setX(i,motionX(shifting,this.crouchTransitions.get(pawn.id),origin));motion.setY(i,workActivity(pawn));
         motion.setZ(i,shownPose);
       }
-      if(pawn.melee?.strike)motion.setW(i,coreTimeSeconds(pawn.melee.strike.atCore,origin));
-      else if(pawn.shooting?.stance?.phase==='cooldown')motion.setW(i,coreTimeSeconds(pawn.shooting.stance.startedAtCore,origin));
+      if(!stepping){
+        if(pawn.melee?.strike)motion.setW(i,coreTimeSeconds(pawn.melee.strike.atCore,origin));
+        else if(pawn.shooting?.stance?.phase==='cooldown')motion.setW(i,coreTimeSeconds(pawn.shooting.stance.startedAtCore,origin));
+        else motion.setW(i,pawn.id*1.7);
+      }
       from.setXYZW(i,visual.from.x,visual.from.y,visual.from.z,visual.from.w);to.setXYZW(i,visual.to.x,visual.to.y,visual.to.z,visual.to.w);
     });
     let crouchFinished=false;
