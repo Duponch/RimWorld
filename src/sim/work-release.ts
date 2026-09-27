@@ -1,4 +1,5 @@
 import { cancelHunting } from './hunting-state.ts';
+import { leadRopees } from './animal-leading.ts';
 import { finishRoomRest,rememberRoomUse } from './room-experience.ts';
 import { feedingWork } from './feeding-rules.ts';
 import { cancelAutomaticCombat } from './automatic-combat-state.ts';
@@ -97,8 +98,8 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn):void {
   if(pawn.animalHandling?.kind==='lead'){
-    const animal=world.wildlife?.animals.find(a=>a.id===pawn.animalHandling!.animalId);
-    if(animal){animal.path=[];animal.nextDecision=world.tick+1;}
+    const ids=new Set(leadRopees(pawn.animalHandling));
+    for(const animal of world.wildlife?.animals??[])if(ids.has(animal.id)){animal.path=[];animal.nextDecision=world.tick+1;}
   }
   finishRoomRest(world,pawn);
   if((pawn.recreation.task?.activity==='horseshoes'||pawn.recreation.task?.activity==='chess')&&pawn.recreation.task.phase==='active'&&pawn.recreation.task.elapsed>0)rememberRoomUse(world,pawn,'recreation');

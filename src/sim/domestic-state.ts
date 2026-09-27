@@ -20,10 +20,15 @@ export interface AnimalHandlingTask {
   sourcePileId:number;
   carryPileId:number|null;
   quantity:number;
-  phase:'pickup'|'approach'|'interact'|'lead';
+  phase:'pickup'|'approach'|'interact'|'lead'|'gather';
   step:number;
   progress:number;
   markerId?:number;
+  /** V135: IDs already on the handler's ropes, in attachment order. The
+   * original animalId remains the stable job identity. */
+  ropees?:number[];
+  /** A second animal reserved while the handler physically walks to it. */
+  gatherId?:number;
 }
 export interface AnimalCareTask {
   animalId:number;

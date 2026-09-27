@@ -26,8 +26,21 @@ export const PAWN_EYE_CROSS = 62;
 export function pawnGeometry(): THREE.InstancedBufferGeometry {
   const positions: number[] = [], normals: number[] = [], colors: number[] = [];
   const bones: number[] = [], pivots: number[] = [], dyes: number[] = [];
-  const addPart = (size: number[], center: number[], bone: number, pivot: number[], color: number, dye = 0, roll = 0) => {
+  // Taper the six existing box faces instead of subdividing them. The shoulder,
+  // waist and joint silhouettes read as one body while the vertex/buffer count
+  // stays identical to the previous rigid cuboids.
+  const addPart = (size: number[], center: number[], bone: number, pivot: number[], color: number, dye = 0, roll = 0,
+    taper?: readonly [topX:number,bottomX:number,topZ:number,bottomZ:number]) => {
     const box = new THREE.BoxGeometry(size[0], size[1], size[2]).toNonIndexed();
+    if (taper) {
+      const points=box.getAttribute('position');
+      for(let i=0;i<points.count;i++) {
+        const top=points.getY(i)>0;
+        points.setX(i,points.getX(i)*(top?taper[0]:taper[1]));
+        points.setZ(i,points.getZ(i)*(top?taper[2]:taper[3]));
+      }
+      box.computeVertexNormals();
+    }
     if (roll) box.rotateZ(roll);
     const pos = box.getAttribute('position'), normal = box.getAttribute('normal');
     const col = new THREE.Color(color);
@@ -39,16 +52,19 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
     }
     box.dispose();
   };
-  addPart([0.35, 0.43, 0.22], [0, 0.82, 0], 0, [0, 0.61, 0], 0xffffff, 1);
-  addPart([0.3, 0.3, 0.28], [0, 1.19, 0.01], 1, [0, 1.04, 0], 0xe2b899,2);
+  addPart([0.35, 0.43, 0.22], [0, 0.82, 0], 0, [0, 0.61, 0], 0xffffff, 1,0,[1.08,.94,1.04,.98]);
+  // This low pelvis overlaps both the jacket hem and the moving upper legs.
+  // In a crouch it bridges the forward torso to the planted thighs.
+  addPart([.29,.16,.25],[0,.61,.035],0,[0,.61,0],0xffffff,1,0,[.99,.89,1.07,.96]);
+  addPart([0.3, 0.3, 0.28], [0, 1.19, 0.01], 1, [0, 1.04, 0], 0xe2b899,2,0,[1,.91,1,.94]);
   HAIR_PARTS.forEach((p,i)=>addPart([...p.size],[...p.center],1,[0,1.04,0],0xffffff,100+i));
   BEARD_PARTS.forEach((p,i)=>addPart([...p.size],[...p.center],1,[0,1.04,0],0xffffff,200+i));
   for (const side of [-1, 1]) {
     const arm = side < 0 ? 2 : 3, leg = side < 0 ? 4 : 5, calf = side < 0 ? 6 : 7;
-    addPart([0.12, 0.28, 0.15], [side * 0.23, 0.85, 0], arm, [side * 0.23, 1.01, 0], 0xffffff, 1);
+    addPart([0.12, 0.31, 0.15], [side * 0.225, 0.865, 0], arm, [side * 0.23, 1.01, 0], 0xffffff, 1,0,[1.10,.87,1.04,.94]);
     addPart([0.115, 0.12, 0.14], [side * 0.23, 0.65, 0], arm, [side * 0.23, 1.01, 0], 0xe2b899,2);
-    addPart([.20,.28,.255],[side*.105,.49,0],leg,[side*.105,.61,0],APPAREL['cloth-tribalwear'].color,-3);
-    addPart([0.135, 0.21, 0.17], [side * 0.105, 0.505, 0], leg, [side * 0.105, 0.61, 0], 0x495052);
+    addPart([.20,.30,.255],[side*.105,.50,0],leg,[side*.105,.61,0],APPAREL['cloth-tribalwear'].color,-3,0,[1.08,.91,1.03,.98]);
+    addPart([0.135, 0.24, 0.17], [side * 0.105, 0.515, 0], leg, [side * 0.105, 0.61, 0], 0x495052,0,0,[1.10,.87,1.03,.95]);
     addPart([0.13, 0.235, 0.16], [side * 0.105, 0.2825, 0], calf, [side * 0.105, 0.61, 0], 0x495052);
     addPart([0.145, 0.12, 0.23], [side * 0.105, 0.11, 0.03], calf, [side * 0.105, 0.61, 0], 0x443e37);
     addPart([.035,.035,.014],[side*.07,1.2,.157],1,[0,1.04,0],0x433e39,PAWN_EYE_OPEN);
@@ -60,12 +76,11 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
   addPart([.12,.18,.025],[0,.86,.145],0,[0,.61,0],0x404c44,-2);
   // Resident parka hood; its visibility follows the outfit attribute.
   addPart([.34,.34,.14],[0,1.17,-.12],1,[0,1.04,0],0xffffff,PARKA_HOOD_DYE);
-  // Ground weapon shapes run along X. The pawn holster runs along Y: rotate
-  // both each part's centre and its dimensions so the same authored pieces
-  // retain their proportions when attached to a character.
+  // Ground weapon shapes run along X. Rifle barrel rises on its sling; the
+  // revolver/knife point down at the hip, grip up against the belt.
   for(const variant of WEAPON_VISUALS)for(const part of variant.parts)addPart(
     [part.size[2],part.size[0],part.size[1]].map(n=>n/PAWN_MODEL_SCALE),
-    [.205+part.center[2]/PAWN_MODEL_SCALE,.68+part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,variant.dye);
+    [.205+part.center[2]/PAWN_MODEL_SCALE,.68+(variant.item==='bolt-action-rifle'?1:-1)*part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,variant.dye);
   const geometry = new THREE.InstancedBufferGeometry();
   // WebGPU guarantees only eight vertex-buffer slots. Keeping authored attributes
   // interleaved leaves room for the seven independent per-instance attributes.

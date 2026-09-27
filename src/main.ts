@@ -92,6 +92,8 @@ import './ui/journal-inspection.css';
 import { presentCellDescription, type CellHealth } from './ui/cell-inspector';
 import { mapObjectExists,nextMapObject,type MapObjectSelection } from './ui/map-object-selection';
 import { MapHoverLightCache,mapHoverLines } from './ui/map-hover-readout';
+import { mapCellDetails } from './ui/map-cell-details';
+import './ui/map-details.css';
 import './ui/cursors.css';
 import { installVisualIdentity, type UiIcon } from './ui/visual-identity';
 import { installArchitectIcons } from './ui/architect-icons';
@@ -128,6 +130,7 @@ let selectedCell: { x: number; z: number } | undefined;
 let selectedObject:MapObjectSelection|undefined;
 let hoveredCell:Cell|null=null;
 let lastHoverReadAt=0,lastHoverCopy='';
+let altInspectorHeld=false,lastAltReadAt=0,lastAltCopy='',mapPointerX=0,mapPointerY=0;
 const mapHoverLight=new MapHoverLightCache();
 let lastStatusAlertsSignature='';
 let lastColonyHistorySignature='';
@@ -319,7 +322,7 @@ function selectPawn(id: number) {
 }
 function updateMapHover(force=false):void {
   const readout=el('map-hover-readout');
-  if(!snapshot||!hoveredCell){readout.hidden=true;readout.replaceChildren();lastHoverCopy='';return;}
+  if(!snapshot||!hoveredCell){readout.hidden=true;readout.replaceChildren();lastHoverCopy='';updateMapCellDetails(true);return;}
   const now=performance.now();
   if(!force&&now-lastHoverReadAt<250)return;
   lastHoverReadAt=now;
@@ -327,6 +330,33 @@ function updateMapHover(force=false):void {
   const copy=lines.join('\n');
   if(copy!==lastHoverCopy){readout.replaceChildren(...lines.map(line=>{const span=document.createElement('span');span.textContent=line;return span;}));lastHoverCopy=copy;}
   readout.hidden=!lines.length;
+  updateMapCellDetails(force);
+}
+function positionMapCellDetails():void {
+  const panel=el('map-cell-details');if(panel.hidden)return;
+  const bounds=shell.getBoundingClientRect();
+  const x=mapPointerX-bounds.left,y=mapPointerY-bounds.top;
+  panel.style.left=`${Math.max(8,Math.min(bounds.width-panel.offsetWidth-8,x+26))}px`;
+  panel.style.top=`${Math.max(8,Math.min(bounds.height-panel.offsetHeight-8,y+26))}px`;
+}
+function updateMapCellDetails(force=false):void {
+  const panel=el('map-cell-details');
+  if(!altInspectorHeld||!snapshot||!hoveredCell||frontMenu.isOpen()||replacingWorld
+    ||document.elementFromPoint(mapPointerX,mapPointerY)!==document.querySelector('#viewport canvas')){
+    panel.hidden=true;lastAltCopy='';return;
+  }
+  const now=performance.now();if(!force&&now-lastAltReadAt<160)return;
+  lastAltReadAt=now;
+  const details=mapCellDetails(snapshot,hoveredCell,mapHoverLight.lightAt(snapshot,hoveredCell,now));
+  if(!details){panel.hidden=true;lastAltCopy='';return;}
+  const copy=JSON.stringify(details);
+  if(copy!==lastAltCopy){
+    const heading=document.createElement('div');heading.className='map-cell-detail-heading';heading.textContent=details.heading;
+    const things=details.things.map(value=>{const node=document.createElement('div');node.className='map-cell-detail-thing';node.textContent=value;return node;});
+    const rows=details.rows.map(({label,value})=>{const node=document.createElement('div');node.className='map-cell-detail-row';const name=document.createElement('span');name.textContent=label;const datum=document.createElement('strong');datum.textContent=value;node.append(name,datum);return node;});
+    panel.replaceChildren(heading,...things,...rows);lastAltCopy=copy;
+  }
+  panel.hidden=false;positionMapCellDetails();
 }
 function selectPawns(gesture:SelectionGesture,focus=false) {
   if(!snapshot||replacingWorld||frontMenu.isOpen())return;
@@ -603,7 +633,9 @@ function renderState() {
     if(portrait.dataset.source!==url){portrait.dataset.source=url;portrait.style.setProperty('--pawn-portrait',`url("${url}")`);}button.title+=` · ${look.description}`;
     (button.querySelector('.portrait-body') as HTMLElement).style.background=look.color!==undefined?`#${look.color.toString(16)}`:'';
     (button.querySelector('.portrait-vest') as HTMLElement).hidden=!look.vest;
-    button.querySelector('.pawn-symbol')!.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':pawn.mental?.crisis?'↝':pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
+    const symbol=button.querySelector<HTMLElement>('.pawn-symbol')!;
+    symbol.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':pawn.mental?.crisis?'↝':pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
+    symbol.dataset.state = pawn.state==='dead'?'dead':pawn.state==='sleeping'?'sleep':'';
     (button.querySelector('i') as HTMLElement).style.width = `${pawn.state==='dead'?0:pawn.mood}%`;
   }
   if (currentPanel === 'work') updateWorkPanel(world);
@@ -869,6 +901,18 @@ el('camera-mode').onclick = () => {
 };
 el('rotate-building').onclick = () => rotatePlacement();
 syncStorageButtons(); setCategory(currentCategory); applyTool('select');
+window.addEventListener('pointermove',event=>{
+  mapPointerX=event.clientX;mapPointerY=event.clientY;
+  if(altInspectorHeld)positionMapCellDetails();
+},{passive:true});
+window.addEventListener('keydown',event=>{
+  if(event.key!=='Alt'||frontMenu.isOpen()||!snapshot||replacingWorld)return;
+  altInspectorHeld=true;event.preventDefault();updateMapCellDetails(true);
+},true);
+window.addEventListener('keyup',event=>{
+  if(event.key==='Alt'){altInspectorHeld=false;updateMapCellDetails(true);}
+},true);
+window.addEventListener('blur',()=>{altInspectorHeld=false;updateMapCellDetails(true);});
 document.addEventListener('keydown', event => {
   if(event.defaultPrevented || frontMenu.isOpen() || !snapshot || replacingWorld)return;
   if (document.querySelector('dialog[open]')) return;

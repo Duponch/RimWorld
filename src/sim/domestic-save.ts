@@ -1,5 +1,5 @@
 import { handlingFeedUnits, handlingStepDuration, canTameSpecies } from './animal-handling.ts';
-import { livestock } from './animal-leading.ts';
+import { leadRopees,leadingClaimIds,livestock,MAX_ROPEES } from './animal-leading.ts';
 import { penRegion } from './animal-pens.ts';
 import { ANIMAL_PRODUCTS, productKind } from './animal-products.ts';
 import { isColonist } from './affiliation.ts';
@@ -39,8 +39,13 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
     const lead=obj(h)&&h.kind==='lead';
     const product=obj(h)&&(h.kind==='milk'||h.kind==='shear');
     if(h!==undefined&&!(lead
-      ?version>=119&&keys(h,['animalId','kind','markerId','phase','sourcePileId','carryPileId','quantity','step','progress'])&&base(h)&&int(h.markerId,1,w.nextId-1)&&['approach','lead'].includes(String(h.phase))
+      ?version>=119&&keys(h,['animalId','kind','markerId','phase','sourcePileId','carryPileId','quantity','step','progress'],version>=135?['ropees','gatherId']:[])&&base(h)&&int(h.markerId,1,w.nextId-1)&&['approach','lead',...(version>=135?['gather']:[])].includes(String(h.phase))
         &&h.sourcePileId===0&&h.carryPileId===null&&h.quantity===0&&h.step===0&&h.progress===0
+        &&(h.ropees===undefined||version>=135&&Array.isArray(h.ropees)&&h.ropees.length>=1&&h.ropees.length<=MAX_ROPEES
+          &&h.ropees.every(id=>int(id,1,w.nextId-1))&&new Set(h.ropees).size===h.ropees.length&&h.ropees.includes(Number(h.animalId))
+          &&h.phase!=='approach')
+        &&(h.gatherId===undefined?h.phase!=='gather':version>=135&&h.phase==='gather'&&Array.isArray(h.ropees)
+          &&h.ropees.length<MAX_ROPEES&&int(h.gatherId,1,w.nextId-1)&&!h.ropees.includes(Number(h.gatherId)))
       :product
       ?version>=120&&keys(h,['animalId','kind','sourcePileId','carryPileId','quantity','phase','step','progress'])&&base(h)
         &&['approach','interact'].includes(String(h.phase))&&h.sourcePileId===0&&h.carryPileId===null&&h.quantity===0&&h.step===0
@@ -56,7 +61,9 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
       &&(c.phase==='treat'?finite(c.duration,1,6000):c.duration===undefined)
       &&(c.phase==='treat'?Number(c.progress)<Number(c.duration):c.progress===0))) {errors.push('Invalid animal care task.');continue;}
     const task=p.animalHandling??p.animalCare!;
-    if(claimed.has(task.animalId))errors.push('Animal is reserved twice.');claimed.add(task.animalId);
+    for(const id of p.animalHandling?new Set(leadingClaimIds(p.animalHandling)):[task.animalId]){
+      if(claimed.has(id))errors.push('Animal is reserved twice.');claimed.add(id);
+    }
     if(!isColonist(p)||p.prisoner||p.visitor||p.draft||p.mental?.crisis||p.interruptedCargo||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.rescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.flee||p.recreation.task||p.orders.active!==null||!['moving','working','idle'].includes(p.state)
       ||h&&c||h&&p.priorities.handle===0||c&&p.priorities.doctor===0)errors.push('Animal work conflicts with another activity.');
     const a=w.wildlife!.animals.find(a=>a.id===task.animalId)!;
@@ -66,6 +73,12 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
         const region=t.markerId===undefined?undefined:penRegion(w,t.markerId);
         if(!a.domestic||!livestock(a)||!region||!region.closed||!region.accessible||a.domestic.penMarkerId!==t.markerId
           ||!w.structures.some(s=>s.id===t.markerId&&s.kind==='pen-marker'&&s.pen?.accepted.includes(a.species)))errors.push('Invalid animal leading task.');
+        for(const id of [...leadRopees(t),...(t.gatherId===undefined?[]:[t.gatherId])]){
+          const member=w.wildlife?.animals.find(item=>item.id===id);
+          if(!member?.domestic||!livestock(member)||member.state==='dead'||member.state==='downed'
+            ||!w.structures.some(s=>s.id===t.markerId&&s.kind==='pen-marker'&&s.pen?.accepted.includes(member.species))
+            ||id!==t.gatherId&&member.domestic.penMarkerId!==t.markerId)errors.push('Invalid animal leading member.');
+        }
         continue;
       }
       if(t.kind==='milk'||t.kind==='shear'){

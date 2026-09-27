@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { leadingClaimIds } from './animal-leading.ts';
 import { animalGrowthFactor, animalLifeStage } from './animal-life.ts';
 import type { AnimalHandlingTask } from './domestic-state.ts';
 import { pawnBody, medicalWorkRefusal } from './health-rules.ts';
@@ -44,7 +45,8 @@ export const productHandlerAvailable=(p:Pawn):boolean=>{
   if(!isColonist(p)||p.priorities.handle===0||p.draft||p.mental?.crisis||p.flee||p.interruptedCargo||medicalWorkRefusal(p))return false;
   const body=pawnBody(p).capacities;return body.moving>0&&body.manipulation>0;
 };
-const claimed=(world:World)=>new Set(world.pawns.flatMap(p=>[p.animalHandling?.animalId,p.animalCare?.animalId].filter((id):id is number=>id!==undefined)));
+const claimed=(world:World)=>new Set(world.pawns.flatMap(p=>[
+  ...(p.animalHandling?leadingClaimIds(p.animalHandling):[]),...(p.animalCare?[p.animalCare.animalId]:[])]));
 export function productWanted(world:World,pawn:Pawn):boolean {
   if(!productHandlerAvailable(pawn)||!world.wildlife?.animals.some(available))return false;
   const reserved=claimed(world);

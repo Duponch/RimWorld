@@ -85,7 +85,7 @@ function posedPoint(point: Vertex, bone: number, variant: readonly [number, numb
   }
   if (dye === -1 || dye === -5) {
     const along = point[1] - .68, across = point[0] - .205, depth = point[2];
-    return [.32 + across, .67 + .82 * along, .17 + depth];
+    return [.27 + across, .65 + .82 * along, .13 + depth];
   }
   return morph(point, bone, variant);
 }

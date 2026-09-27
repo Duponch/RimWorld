@@ -1,0 +1,11 @@
+# Silhouettes et poses des acteurs — V135
+
+Le modèle humain conserve un lot instancié et ses huit articulations. Torse, tête, bras et haut des jambes ont des faces légèrement inclinées, obtenues en déplaçant les sommets des boîtes partagées **sans subdiviser leurs six faces**. Une petite pièce de bassin, dans le même lot, chevauche le bas du torse et les cuisses. L'accroupissement relève légèrement cette jonction et limite son décalage vers l'avant : les pieds restent ancrés à la pose confirmée. Ces volumes sont cosmétiques ; emprise, portée, anatomie et cellule logique ne changent pas.
+
+Le repos debout ajoute respiration lente, très faible oscillation des bras et mouvement de tête. Les animaux partagent le principe : leurs pattes pénètrent davantage dans le ventre, leur cou est évasé à la base et leur tête bouge légèrement au repos. La forme du lièvre et les autres espèces restent dans leurs lots existants. La pose est calculée dans le shader à partir de l'horloge de présentation ; pause et reprise ne créent pas d'animation CPU ou de décision métier. Les pièces principales gardent 36 sommets par boîte ; le bassin ajoute 36 sommets partagés à l'humain, sans nouvel attribut, buffer ni appel de dessin.
+
+Le revolver et le couteau ont le canon ou la lame vers le bas à la taille, contre le flanc ; le fusil garde sa sangle diagonale. Les armes sont ensuite soumises à la même rotation de corps que le porteur allongé, mort ou transporté : elles ne restent plus suspendues à la pose debout. Le portrait SVG en cache projette le même revolver à la taille. Le contraste du badge de sommeil et de mort au-dessus des portraits est renforcé sans générer de nouvelle image à chaque frame.
+
+La croix d'une tombe est un montant vertical et une traverse placés à sa tête pour les quatre orientations. Elle rejoint le lot de meubles reconstruit aux changements de structures, jamais à chaque image.
+
+Ces retouches ajoutent quelques opérations au shader de sommet et une pièce humaine supplémentaire. Le nombre d'acteurs, de lots, de flux d'attributs et de tirages métier est inchangé ; cela ne constitue pas une preuve d'égalité de FPS. Une comparaison GPU chronométrée sur une grande colonie reste nécessaire avant de conclure sur le coût total.

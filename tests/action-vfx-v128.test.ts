@@ -61,6 +61,25 @@ test('fight state stays available to the volumetric layer without duplicate spri
   layer.dispose();body.dispose();
 });
 
+test('a real ingestion uses the existing sprite batch and stops outside ingestion',()=>{
+  const world=createWorld(1291,32,32),pawn=world.pawns[0]!;
+  pawn.state='eating';
+  pawn.need={kind:'eat',phase:'ingest',sourcePileId:101,carryPileId:101,quantity:1,progress:10,
+    dining:{target:{x:pawn.x,z:pawn.z},seatId:null,tableId:null}};
+  const body=poseSource(world.pawns.length),layer=new ActionVfxLayer({blend:uniform(1),travelTime:uniform(0)});
+  expect(classify(world).kind).toBe(ACTION_FX.eat);
+  layer.update(world,body);
+  expect(layer.mesh.visible).toBe(true);
+  expect(layer.mesh.geometry.instanceCount).toBe(1);
+  const effects=layer.mesh.geometry.getAttribute('actionFx') as THREE.InstancedBufferAttribute;
+  expect(effects.getX(0)).toBe(ACTION_FX.eat);
+  pawn.need.phase='travel';pawn.state='moving';
+  layer.update(world,body);
+  expect(layer.mesh.geometry.instanceCount).toBe(0);
+  expect(layer.mesh.visible).toBe(false);
+  layer.dispose();body.dispose();
+});
+
 test('pause and 200-second wrap keep one shader clock with no CPU particle loop',()=>{
   const layer=new ActionVfxLayer({blend:uniform(1),travelTime:uniform(0)});
   const clock=(layer as unknown as {time:{value:number}}).time;

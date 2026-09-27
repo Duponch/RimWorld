@@ -8,17 +8,19 @@ export function animalParts(species:string):readonly HarePart[] {
   const width=muffalo?.78:camel?.62:gazelle?.30:.46,length=muffalo?1.34:camel?1.32:gazelle?.78:1.02;
   const leg=muffalo?.48:camel?.84:gazelle?.59:.68,height=muffalo?.75:camel?.52:gazelle?.30:.43;
   const color=muffalo?0x95a3bd:camel?0xc4a478:gazelle?0xc29358:0x97714e;
-  const add=(size:HarePart['size'],center:HarePart['center'],bone=0,pivot:HarePart['pivot']=[0,0,0],tint=color)=>parts.push({size,center,bone,pivot,color:tint});
-  add([width,height,length],[0,leg+height/2,0]);
+  const add=(size:HarePart['size'],center:HarePart['center'],bone=0,pivot:HarePart['pivot']=[0,0,0],tint=color,taper?:HarePart['taper'])=>parts.push({size,center,bone,pivot,color:tint,taper});
+  add([width,height,length],[0,leg+height/2,0],0,[0,0,0],color,[.90,.99,.94,.99]);
   for(const side of [-1,1])for(const front of [-1,1]){
     const x=side*width*.36,z=front*length*.34,pivot:[number,number,number]=[x,leg,z];
-    add([width*.18,leg,.13],[x,leg*.5,z],side===front?1:2,pivot,muffalo?0x6e7b96:color);
+    // Upper legs extend into the belly, so a gait rotation does not open a
+    // visible slit between the independently articulated surfaces.
+    add([width*.22,leg+.12,.15],[x,(leg+.12)*.5,z],side===front?1:2,pivot,muffalo?0x6e7b96:color,[1.08,.78,1.03,.9]);
     add([width*.22,.10,.17],[x,.055,z+.015],side===front?1:2,pivot,0x49433d);
   }
   const neck=camel?.65:muffalo?.25:.32,headY=leg+height+neck*.55,headZ=length*.50;
   const headPivot:[number,number,number]=[0,leg+height*.6,length*.35];
-  add([width*.48,neck+.2,.27],[0,leg+height*.8+neck*.3,length*.40],3,headPivot);
-  add([width*.55,.25,.37],[0,headY,headZ+.1],3,headPivot);
+  add([width*.55,neck+.2,.31],[0,leg+height*.8+neck*.3,length*.40],3,headPivot,color,[.78,1.06,.90,1.06]);
+  add([width*.55,.25,.37],[0,headY,headZ+.1],3,headPivot,color,[.95,1.02,.97,1]);
   add([width*.38,.16,.19],[0,headY-.05,headZ+.33],3,headPivot,muffalo?0x747f96:0xbba185);
   for(const side of [-1,1]){
     add([.13,.08,.17],[side*width*.36,headY+.12,headZ+.02],3,headPivot);

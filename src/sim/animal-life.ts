@@ -1,4 +1,5 @@
 import { animalSpecies, type AnimalSpeciesId } from './animal-species.ts';
+import { leadingClaimIds } from './animal-leading.ts';
 import { animalNavigation } from './wildlife-navigation.ts';
 import { grazingPen } from './wildlife-food.ts';
 import { MAX_WILDLIFE, wildlifeRandom } from './wildlife-state.ts';
@@ -43,7 +44,7 @@ export function advanceAnimalLife(world:World):void {
   const claimed=new Set<number>();
   const handled=new Set<number>();
   for(const pawn of world.pawns){
-    if(pawn.animalHandling)handled.add(pawn.animalHandling.animalId);
+    if(pawn.animalHandling)for(const id of leadingClaimIds(pawn.animalHandling))handled.add(id);
     if(pawn.animalCare)handled.add(pawn.animalCare.animalId);
   }
   for(const male of residents)if(male.mating)claimed.add(male.mating.femaleId);

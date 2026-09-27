@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { Fn, atan, attribute, cameraPosition, float, mix, positionLocal, sin, smoothstep, uniform, uv, vec2, vec3 } from 'three/tsl';
+import { Fn, attribute, cameraPosition, cross, float, positionLocal, sin, smoothstep, uniform, uv, vec2, vec3 } from 'three/tsl';
 import { BATTERY_CAPACITY } from '../sim/power-battery.ts';
 import { isPowerActive } from '../sim/power-rules.ts';
 import { footprintCells } from '../sim/definitions.ts';
@@ -8,13 +8,13 @@ import { WORLD_SCALE } from '../world/scale.ts';
 import { BoxMesh, configureBoxMaterial } from './BoxMesh.ts';
 
 type Glow = { x:number; y:number; z:number; sx:number; sy:number; sz:number; ry:number; color:number };
-type Smoke = { x:number; y:number; z:number; seed:number; size:number; soot:number; rise:number };
+type Smoke = { x:number; y:number; z:number; seed:number; size:number; opacityBias:number; rise:number };
 type GroundFire = { id:number; x:number; z:number; size:number };
 type FireChunk = { x:number; z:number; fires:GroundFire[] };
 type FireCandidate = { fire:GroundFire; distance:number };
 const FIRE_CHUNK_SIZE=16;
 const MAX_GROUND_SMOKE_SOURCES=128;
-export const GROUND_SMOKE_PUFFS=3;
+export const GROUND_SMOKE_PUFFS=5;
 const object=new THREE.Object3D(), color=new THREE.Color();
 
 // Keep only the nearest visible flames without sorting every fire. The heap
@@ -82,19 +82,26 @@ export class StructureVfxLayer {
     const smokePosition=attribute('smokePosition','vec4'),smokeShape=attribute('smokeShape','vec4');
     const phase=this.tick.div(30).add(smokePosition.w).fract();
     this.smokeMaterial.positionNode=Fn(()=>{
-      const direction=cameraPosition.xz.sub(smokePosition.xz),distance=direction.length().max(.001);
-      const right=vec2(direction.y,direction.x.negate()).div(distance);
-      const breadth=smokeShape.x.mul(float(.43).add(phase.mul(.85)));
       const drift=sin(this.tick.mul(2*Math.PI/80).add(smokePosition.w.mul(19))).mul(.08).mul(phase);
-      const horizontal=positionLocal.x.mul(breadth).add(drift);
-      return vec3(smokePosition.x.add(right.x.mul(horizontal)),smokePosition.y.add(phase.mul(smokeShape.z)).add(positionLocal.y.mul(breadth).mul(smokeShape.w)),smokePosition.z.add(right.y.mul(horizontal)));
+      const center=vec3(smokePosition.x.add(drift),smokePosition.y.add(phase.mul(smokeShape.z)),smokePosition.z);
+      const look=cameraPosition.sub(center),lookDistance=look.length();
+      const facing=lookDistance.greaterThan(.001).select(look.div(lookDistance.max(.001)),vec3(0,1,0));
+      const horizontal=vec2(facing.z,facing.x.negate()),distance=horizontal.length();
+      const right=distance.greaterThan(.001).select(
+        vec3(horizontal.x.div(distance.max(.001)),0,horizontal.y.div(distance.max(.001))),vec3(1,0,0));
+      const up=cross(facing,right).normalize();
+      const breadth=smokeShape.x.mul(float(.59).add(phase.mul(1.04)));
+      return center.add(right.mul(positionLocal.x.mul(breadth)))
+        .add(up.mul(positionLocal.y.mul(breadth).mul(smokeShape.w)));
     })();
-    this.smokeMaterial.colorNode=mix(vec3(.87,.91,.86),vec3(.37,.39,.36),smokeShape.y);
     const pixel=uv().sub(vec2(.5,.5)),radius=pixel.length();
-    const edgeRadius=float(.42).add(sin(atan(pixel.y,pixel.x).mul(5).add(smokePosition.w.mul(31))).mul(.045));
-    const edge=float(1).sub(smoothstep(edgeRadius.sub(.20),edgeRadius.add(.06),radius));
+    // A single round white disc per quad. Size, phase and opacity vary by
+    // stable emitter seed; no texture sampling or per-frame CPU particles.
+    this.smokeMaterial.colorNode=vec3(1,1,1);
+    const edge=float(1).sub(smoothstep(.27,.49,radius));
     const birth=smoothstep(0,.17,phase),death=float(1).sub(smoothstep(.68,1,phase));
-    this.smokeMaterial.opacityNode=edge.mul(birth).mul(death).mul(smokeShape.y.mul(.16).add(.34));
+    const density=sin(smokePosition.w.mul(39.7)).mul(.07).add(smokeShape.y.mul(.08)).add(.37);
+    this.smokeMaterial.opacityNode=edge.mul(birth).mul(death).mul(density);
     this.smoke=new THREE.Mesh(this.smokeGeometry(),this.smokeMaterial);
     this.smoke.name='Steam and smoke — resident GPU billboards';
     this.smoke.castShadow=false;this.smoke.receiveShadow=false;this.smoke.frustumCulled=false;this.smoke.renderOrder=3;
@@ -115,11 +122,11 @@ export class StructureVfxLayer {
     const working=new Set<number>();
     for(const pawn of world.pawns)if(pawn.state==='working'&&pawn.cooking?.phase==='work')working.add(pawn.cooking.stationId);
     const glow:Glow[]=[],smoke:Smoke[]=[],groundFires:GroundFire[]=[],tokens:string[]=[];
-    const puff=(x:number,y:number,z:number,id:number,size:number,soot:number,rise:number,count=4)=>{
+    const puff=(x:number,y:number,z:number,id:number,size:number,opacityBias:number,rise:number,count=7)=>{
       for(let i=0;i<count;i++){
         const spread=phase(id,i+23),shape=phase(id,i+61);
         smoke.push({x:x+(spread-.5)*.19,y,z:z+(shape-.5)*.16,seed:phase(id,i),
-          size:size*(.53+phase(id,i+41)*.94),soot,rise:rise*(.78+shape*.42)});
+          size:size*(.53+phase(id,i+41)*.94),opacityBias,rise:rise*(.78+shape*.42)});
       }
     };
     const h=WORLD_SCALE.stonecutterHeight;
@@ -134,7 +141,7 @@ export class StructureVfxLayer {
             const x=s.kind==='machining-table'?.55:0,z=s.kind==='machining-table'?.05:.38,y=s.kind==='machining-table'?h+.285:h+.48;
             glow.push(local(s,x,y,z,.56,.10,.20,0xff7132),local(s,x,y+.06,z,.29,.025,.11,0xffda78));
             const emitter=local(s,x,y+.17,z,.1,.1,.1,0xffffff);
-            puff(emitter.x,emitter.y,emitter.z,s.id,.39,.42,.76);
+            puff(emitter.x,emitter.y,emitter.z,s.id,.48,.42,.76);
           }
         }
       }else if(s.kind==='electric-stove'||s.kind==='fueled-stove'){
@@ -143,7 +150,7 @@ export class StructureVfxLayer {
         if(s.kind==='electric-stove'&&on)glow.push(local(s,.8,h+.22,.37,.13,.04,.11,0x8ed7be));
         if(active){
           const emitter=local(s,-.58,h+.26,-.04,.1,.1,.1,0xffffff);
-          puff(emitter.x,emitter.y,emitter.z,s.id,.42,s.kind==='fueled-stove'?.25:0,.82,5);
+          puff(emitter.x,emitter.y,emitter.z,s.id,.52,s.kind==='fueled-stove'?.25:0,.82,8);
           glow.push(local(s,-.58,h+.105,-.04,.35,.015,.36,0xffa260));
         }
       }else if(s.kind==='hi-tech-research-bench'||s.kind==='multi-analyzer'){
@@ -162,10 +169,10 @@ export class StructureVfxLayer {
         }
       }else if(s.kind==='wood-generator'){
         tokens.push(`${s.id}:wood-generator:${s.x}:${s.z}:${on}`);
-        if(on){glow.push({x:s.x+.13,y:.58,z:s.z+1.23,sx:.42,sy:.07,sz:.025,ry:0,color:0xffa456});puff(s.x+.13,WORLD_SCALE.generatorHeight+.73,s.z-.04,s.id,.57,.9,1.32,5);}
+        if(on){glow.push({x:s.x+.13,y:.58,z:s.z+1.23,sx:.42,sy:.07,sz:.025,ry:0,color:0xffa456});puff(s.x+.13,WORLD_SCALE.generatorHeight+.73,s.z-.04,s.id,.68,.9,1.32,8);}
       }else if(s.kind==='campfire'){
         const lit=!!s.fuel?.ticks;tokens.push(`${s.id}:campfire:${s.x}:${s.z}:${lit}`);
-        if(lit)puff(s.x,.47,s.z,s.id,.48,.76,1.06,4);
+        if(lit)puff(s.x,.47,s.z,s.id,.58,.76,1.06,7);
       }
     }
     for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined){
@@ -201,13 +208,13 @@ export class StructureVfxLayer {
     const shapes=this.smoke.geometry.getAttribute('smokeShape') as THREE.InstancedBufferAttribute;
     for(const [i,item] of this.structuralSmoke.entries()){
       positions.setXYZW(i,item.x,item.y,item.z,item.seed);
-      shapes.setXYZW(i,item.size,item.soot,item.rise,.72+phase(i,7)*.56);
+      shapes.setXYZW(i,item.size,item.opacityBias,item.rise,1);
     }
     let i=this.structuralSmoke.length;
     for(const fire of fires)for(let puff=0;puff<GROUND_SMOKE_PUFFS;puff++){
       const spread=phase(fire.id,puff+21),shape=phase(fire.id,puff+47);
       positions.setXYZW(i,fire.x+(spread-.5)*.23,.35,fire.z+(shape-.5)*.19,phase(fire.id,puff));
-      shapes.setXYZW(i++,.43*Math.max(.6,fire.size)*(.55+phase(fire.id,puff+83)*.95),.84,1.12*(.8+shape*.35),.72+spread*.56);
+      shapes.setXYZW(i++,.53*Math.max(.6,fire.size)*(.55+phase(fire.id,puff+83)*.95),.84,1.12*(.8+shape*.35),1);
     }
     this.smoke.geometry.instanceCount=count;this.smoke.visible=count>0;
     if(count){positions.needsUpdate=true;shapes.needsUpdate=true;}

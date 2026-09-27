@@ -12,6 +12,12 @@
 .material-status{font-size:9px;line-height:1.5;color:#aebbaa;margin-top:5px}.storage-settings{display:flex;flex-direction:column;gap:8px;margin:10px 0;font-size:11px}.storage-settings>label{display:flex;align-items:center;justify-content:space-between;gap:8px}.storage-settings input[type=number]{width:95px}.storage-settings select,.storage-settings input[type=number]{background:#233332;border:1px solid var(--line);padding:5px;color:inherit;min-width:0}.storage-filters{display:flex;gap:12px;flex-wrap:wrap}.storage-filters label{display:flex;align-items:center;gap:4px}#placement-controls{display:flex;align-items:center;gap:10px;font-size:11px}#placement-controls button{font-size:11px}#storage-options{max-width:310px}.work-table-wrap th,.work-table-wrap td{padding:9px 6px}.work-table-wrap select{min-width:48px;padding:5px 7px}
 #area-feedback{position:absolute;left:50%;top:192px;transform:translateX(-50%);max-width:min(600px,85vw);padding:8px 12px;background:#172c26ed;border:1px solid #9dd9ca88;color:#e5edcf;font-size:11px;text-align:center;pointer-events:none;z-index:5}@media(max-width:700px){#area-feedback{top:178px;font-size:10px}}
 
+/* The sleeping Z and death cross must remain legible over every skin, garment
+   and background tint in the cached mesh portrait. Empty badges draw nothing. */
+.colonist .portrait .pawn-symbol:not(:empty){bottom:2px;left:2px;min-width:21px;min-height:24px;padding:0 3px;border:1px solid #fff0cf;background:#263a36e6;border-radius:4px;color:#fff3d5;font-size:23px;line-height:22px;text-align:center;text-shadow:0 1px 1px #142a27,0 0 3px #142a27;-webkit-text-stroke:.45px #142a27;box-shadow:0 1px 3px #1728249c}
+.colonist .portrait .pawn-symbol[data-state="dead"]{border-color:#f7d6c3;background:#562f31ec;color:#fff3e7}
+.colonist .portrait .pawn-symbol[data-state="sleep"]{border-color:#f4e3bd;background:#38483eea;color:#fff1cf}
+
 #fps-counter{position:absolute;top:52px;right:14px;pointer-events:none;padding:4px 7px;border-radius:3px;background:#16201ee8;color:#e4ebd8;font:11px ui-monospace,monospace;font-variant-numeric:tabular-nums;z-index:12}
 @media(max-width:700px){#fps-counter{top:47px;right:7px;font-size:10px}}
 

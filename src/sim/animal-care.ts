@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { leadingClaimIds } from './animal-leading.ts';
 import { medicalTendQuality,medicalTendSpeed,treatmentBatch,medicineCount,type RankedTreatment } from './care-rules.ts';
 import { animalBodyModel,modelHasPart } from './body-model.ts';
 import { infectionTargets,tendInfection,captureInfectionTendRoom } from './infection-state.ts';
@@ -32,7 +33,7 @@ function patientReady(w:World,a:WildAnimal,doctor?:Pawn):boolean {
   return a.species==='hare'&&!!a.domestic&&a.domestic.care!=='none'&&
     (a.state==='downed'||a.state==='sleeping')&&(!a.motion||a.motion.end<=w.tick)&&
     !!a.health&&!a.health.death&&animalCareTargets(a).length>0&&
-    !w.pawns.some(p=>p!==doctor&&(p.animalCare?.animalId===a.id||p.animalHandling?.animalId===a.id));
+    !w.pawns.some(p=>p!==doctor&&(p.animalCare?.animalId===a.id||p.animalHandling&&leadingClaimIds(p.animalHandling).includes(a.id)));
 }
 function doctorReady(p:Pawn):boolean {
   return isColonist(p)&&!p.prisoner&&!p.visitor&&!p.draft&&!p.burning&&!p.mental?.crisis&&

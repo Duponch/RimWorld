@@ -14,6 +14,12 @@ import { animalBody } from './wildlife-health.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 
 export type LeadingTask=AnimalHandlingTask & {kind:'lead';markerId:number};
+/** Core 1.6.4871 JobDriver_RopeToDestination constants. */
+export const MAX_ROPEES=10, ROPE_SCAN_RADIUS=10, ROPE_LENGTH=8;
+export const leadRopees=(task:Pick<LeadingTask,'animalId'|'ropees'>):readonly number[]=>task.ropees??[task.animalId];
+export const leadingClaimIds=(task:AnimalHandlingTask):readonly number[]=>task.kind==='lead'
+  ?[task.animalId,...(task.ropees??[]),...(task.gatherId===undefined?[]:[task.gatherId])]
+  :[task.animalId];
 const key=(world:World,cell:Cell)=>cell.z*world.width+cell.x;
 export const livestock=(a:WildAnimal):boolean=>PEN_ANIMALS.includes(a.species);
 const usable=(world:World,a:WildAnimal,markerId:number)=>{
@@ -25,7 +31,10 @@ const handler=(p:Pawn)=>{
   if(!isColonist(p)||p.priorities.handle===0||p.state==='dead'||p.state==='downed'||p.draft||p.mental?.crisis||p.flee||p.interruptedCargo)return false;
   const body=pawnBody(p).capacities;return body.moving>0&&body.manipulation>0;
 };
-const claimedIds=(world:World)=>new Set(world.pawns.flatMap(p=>[p.animalHandling?.animalId,p.animalCare?.animalId].filter((id):id is number=>id!==undefined)));
+const claimedIds=(world:World)=>new Set(world.pawns.flatMap(p=>[
+  ...(p.animalHandling?leadingClaimIds(p.animalHandling):[]),...(p.animalCare?[p.animalCare.animalId]:[])]));
+const ropeable=(a:WildAnimal)=>!!a.domestic&&livestock(a)&&a.state!=='dead'&&a.state!=='downed'
+  &&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike;
 function destination(world:World,a:WildAnimal):number|undefined {
   const assigned=a.domestic?.penMarkerId;
   if(assigned&&usable(world,a,assigned))return assigned;
@@ -37,7 +46,7 @@ export function leadingWanted(world:World,pawn:Pawn):boolean {
   if(!world.wildlife?.animals.some(a=>a.domestic&&livestock(a)&&a.state!=='dead'&&a.state!=='downed'))return false;
   if(!world.structures.some(s=>s.kind==='pen-marker'))return false;
   const claimed=claimedIds(world);
-  return !!world.wildlife?.animals.some(a=>a.domestic&&livestock(a)&&a.state!=='dead'&&a.state!=='downed'&&!claimed.has(a.id)
+  return !!world.wildlife?.animals.some(a=>ropeable(a)&&!claimed.has(a.id)
     &&(()=>{const id=destination(world,a),r=id&&usable(world,a,id);return !!r&&!r.cells.has(key(world,a));})());
 }
 export interface LeadingProposal {task:LeadingTask;path:Cell[];target:Cell}
@@ -45,7 +54,7 @@ export function leadingProposal(world:World,pawn:Pawn,reach:Reachability):Leadin
   if(!handler(pawn))return;
   const claimed=claimedIds(world);
   let navigation:ReturnType<typeof animalNavigation>|undefined;
-  const animals=(world.wildlife?.animals??[]).filter(a=>a.domestic&&livestock(a)&&a.state!=='dead'&&a.state!=='downed'&&!claimed.has(a.id))
+  const animals=(world.wildlife?.animals??[]).filter(a=>ropeable(a)&&!claimed.has(a.id))
     .sort((a,b)=>(a.x-pawn.x)**2+(a.z-pawn.z)**2-((b.x-pawn.x)**2+(b.z-pawn.z)**2)||a.id-b.id);
   for(const a of animals){
     const markerId=destination(world,a);if(!markerId)continue;
@@ -61,13 +70,53 @@ export function startLeading(world:World,pawn:Pawn,proposal:LeadingProposal):voi
   if(animal?.domestic)animal.domestic.penMarkerId=proposal.task.markerId;
   pawn.animalHandling=proposal.task;pawn.path=proposal.path;pawn.state=proposal.path.length?'moving':'working';pawn.planCooldown=0;
 }
+function nextGather(world:World,pawn:Pawn,task:LeadingTask,ctx:NeedContext):number|undefined {
+  if(leadRopees(task).length>=MAX_ROPEES)return;
+  const region=usable(world,world.wildlife!.animals.find(a=>a.id===task.animalId)!,task.markerId);
+  if(!region)return;
+  const claims=claimedIds(world),reach=ctx.search();if(!reach)return;
+  return world.wildlife!.animals.filter(a=>ropeable(a)&&!claims.has(a.id)&&!region.cells.has(key(world,a))
+    &&!!usable(world,a,task.markerId)&&(a.x-pawn.x)**2+(a.z-pawn.z)**2<=ROPE_SCAN_RADIUS**2)
+    .sort((a,b)=>(a.x-pawn.x)**2+(a.z-pawn.z)**2-((b.x-pawn.x)**2+(b.z-pawn.z)**2)||a.id-b.id)
+    .find(a=>!!routeToJob(world,a,reach,false))?.id;
+}
+/** Attached animals advance on confirmed simulation edges only. The handler
+ * waits while a ropee is still traversing its edge. Routes are computed only
+ * when a follower needs one, never from a render frame. */
+function followRopees(world:World,pawn:Pawn,task:LeadingTask,activeId:number|null):boolean {
+  let allNear=true;
+  let plan:ReturnType<typeof animalNavigation>|undefined,physical:ReturnType<typeof animalNavigation>|undefined;
+  const region=penRegion(world,task.markerId);
+  for(const id of leadRopees(task)){
+    if(id===activeId)continue;
+    const a=world.wildlife?.animals.find(item=>item.id===id);
+    if(!a||region?.cells.has(key(world,a)))continue;
+    if(a.motion&&a.motion.end>world.tick){allNear=false;continue;}
+    if(Math.max(Math.abs(a.x-pawn.x),Math.abs(a.z-pawn.z))<=1){a.path=[];continue;}
+    allNear=false;
+    if(!a.path.length){
+      const goals=[pawn,{x:pawn.x-1,z:pawn.z},{x:pawn.x+1,z:pawn.z},{x:pawn.x,z:pawn.z-1},{x:pawn.x,z:pawn.z+1}]
+        .filter(c=>c.x>=0&&c.z>=0&&c.x<world.width&&c.z<world.height);
+      a.path=(plan??=animalNavigation(world,true)).route(a,goals)??[];
+      if(!a.path.length){interruptWork(world,pawn);return false;}
+    }
+    const next=a.path[0]!;
+    if(doorAt(world,next)?.door?.forbidden){interruptWork(world,pawn);return false;}
+    if(!readyDoorEntry(world,pawn,next))continue;
+    if(!(physical??=animalNavigation(world)).step(a,next)){a.path=[];continue;}
+    moveAnimal(world,a,physical.step,animalBody(a).capacities.moving);
+    a.nextDecision=world.tick;
+  }
+  return allNear;
+}
 export function processLeading(world:World,pawn:Pawn,task:LeadingTask,ctx:NeedContext):void {
   const animal=world.wildlife?.animals.find(a=>a.id===task.animalId);
-  if(!animal?.domestic||!livestock(animal)||animal.state==='dead'||animal.state==='downed'||animal.burning||animal.flee||animal.threat||animal.retaliation||animal.strike||!handler(pawn)) {interruptWork(world,pawn);return;}
+  if(!animal||!ropeable(animal)||!handler(pawn)||leadRopees(task).some(id=>!world.wildlife?.animals.some(a=>a.id===id&&ropeable(a)))) {interruptWork(world,pawn);return;}
   const region=usable(world,animal,task.markerId);
   if(!region){interruptWork(world,pawn);return;}
-  if(region.cells.has(key(world,animal))){
-    animal.domestic.penMarkerId=task.markerId;animal.path=[];
+  const attached=leadRopees(task).map(id=>world.wildlife!.animals.find(a=>a.id===id)!);
+  if(attached.every(a=>region.cells.has(key(world,a)))){
+    for(const a of attached){a.domestic!.penMarkerId=task.markerId;a.path=[];}
     // The handler must clear the leaf before it can close. This is still a
     // physical move, so an occupied or blocked landing cell postpones release.
     if(doorAt(world,pawn)){
@@ -77,27 +126,52 @@ export function processLeading(world:World,pawn:Pawn,task:LeadingTask,ctx:NeedCo
     }
     if(!releaseWork(world,pawn))interruptWork(world,pawn);return;
   }
-  if(animal.motion&&animal.motion.end>world.tick)return;
-  if(!adjacent(pawn,animal)&&(pawn.x!==animal.x||pawn.z!==animal.z)){task.phase='approach';ctx.move(animal,false);return;}
-  if(task.phase!=='lead'){
+  if(task.phase==='approach'){
+    if(animal.motion&&animal.motion.end>world.tick)return;
+    if(!adjacent(pawn,animal)&&(pawn.x!==animal.x||pawn.z!==animal.z)){ctx.move(animal,false);return;}
     animal.path=[];delete animal.meal;animal.nextDecision=world.tick;
     if(!animal.motion||animal.motion.end<=world.tick)animal.state='idle';
+    task.ropees=[animal.id];
+    task.gatherId=nextGather(world,pawn,task,ctx);
+    task.phase=task.gatherId===undefined?'lead':'gather';
+    pawn.path=[];pawn.state='working';return;
   }
+  if(task.phase==='gather'){
+    const target=world.wildlife?.animals.find(a=>a.id===task.gatherId);
+    if(!target||!ropeable(target)||!usable(world,target,task.markerId)||region.cells.has(key(world,target))){
+      delete task.gatherId;task.phase='lead';for(const a of attached)a.path=[];return;
+    }
+    if(!followRopees(world,pawn,task,null))return;
+    if(target.motion&&target.motion.end>world.tick)return;
+    if(!adjacent(pawn,target)&&(pawn.x!==target.x||pawn.z!==target.z)){ctx.move(target,false);return;}
+    target.path=[];delete target.meal;target.nextDecision=world.tick;
+    if(!target.motion||target.motion.end<=world.tick)target.state='idle';
+    target.domestic!.penMarkerId=task.markerId;
+    task.ropees=[...leadRopees(task),target.id];delete task.gatherId;
+    task.gatherId=nextGather(world,pawn,task,ctx);
+    task.phase=task.gatherId===undefined?'lead':'gather';
+    for(const a of world.wildlife!.animals)if(task.ropees.includes(a.id))a.path=[];
+    pawn.path=[];pawn.state='working';return;
+  }
+  const active=attached.find(a=>!region.cells.has(key(world,a)));
+  if(!active)return;
+  if(!followRopees(world,pawn,task,active.id))return;
+  if(active.motion&&active.motion.end>world.tick)return;
   task.phase='lead';pawn.state='working';pawn.path=[];
-  if(!animal.path.length){
-    if(animal.nextDecision>world.tick)return;
+  if(!active.path.length){
+    if(active.nextDecision>world.tick)return;
     const goals=penAccessCells(world,task.markerId);
     // One global animal route only when beginning or after a failed edge.
-    const path=goals.length?animalNavigation(world,true).route(animal,[...goals]):undefined;
+    const path=goals.length?animalNavigation(world,true).route(active,[...goals]):undefined;
     if(!path?.length){interruptWork(world,pawn);return;}
-    animal.path=path;
+    active.path=path;
   }
-  const next=animal.path[0]!;
+  const next=active.path[0]!;
   if(!adjacent(pawn,next)&&!(pawn.x===next.x&&pawn.z===next.z)){ctx.move(next,false);return;}
-  if(doorAt(world,next)?.door?.forbidden){animal.path=[];animal.nextDecision=world.tick+100;return;}
+  if(doorAt(world,next)?.door?.forbidden){active.path=[];active.nextDecision=world.tick+100;return;}
   if(!readyDoorEntry(world,pawn,next))return;
   const nav=animalNavigation(world);
-  if(!nav.step(animal,next)){animal.path=[];animal.nextDecision=world.tick+100;return;}
-  moveAnimal(world,animal,nav.step,animalBody(animal).capacities.moving);
-  animal.nextDecision=world.tick;
+  if(!nav.step(active,next)){active.path=[];active.nextDecision=world.tick+100;return;}
+  moveAnimal(world,active,nav.step,animalBody(active).capacities.moving);
+  active.nextDecision=world.tick;
 }

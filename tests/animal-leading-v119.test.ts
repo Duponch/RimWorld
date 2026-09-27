@@ -3,6 +3,8 @@ import {penRegion} from '../src/sim/animal-pens.ts';
 import {newDoorState} from '../src/sim/door-rules.ts';
 import {applyCommand,stepWorld} from '../src/sim/engine.ts';
 import {startLeading} from '../src/sim/animal-leading.ts';
+import {penParts} from '../src/render/pen-parts.ts';
+import {RopeLayer} from '../src/render/RopeLayer.ts';
 import {advanceWildlife} from '../src/sim/wildlife.ts';
 import {animalFoods} from '../src/sim/wildlife-food.ts';
 import {addMaterial,refreshStock} from '../src/sim/materials.ts';
@@ -112,4 +114,70 @@ test('opening a pen gate while leading immediately releases the task before savi
   expect(pawn.animalHandling).toBeUndefined();
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
+});
+
+test('one handler physically gathers two animals and resumes both ropes exactly',()=>{
+  const {world,pawn,animal,marker}=penCamp();
+  const second=structuredClone(animal);second.id=world.nextId++;second.x=3;second.z=8;
+  world.wildlife!.animals.push(second);
+  let checkpoint:World|undefined;
+  for(let i=0;i<2500;i++){
+    if(checkpoint)stepWorld(checkpoint);
+    stepWorld(world);
+    const task=pawn.animalHandling;
+    if(!checkpoint&&task?.kind==='lead'&&task.ropees?.length===2&&task.phase==='lead'){
+      expect(validateWorld(world)).toEqual([]);
+      checkpoint=deserializeWorld(serializeWorld(world));
+    }
+    const inside=penRegion(world,marker.id)?.cells;
+    if(inside?.has(animal.z*world.width+animal.x)&&inside?.has(second.z*world.width+second.x)&&!task)break;
+  }
+  expect(checkpoint).toBeDefined();
+  const inside=penRegion(world,marker.id)!.cells;
+  expect(inside.has(animal.z*world.width+animal.x)).toBe(true);
+  expect(inside.has(second.z*world.width+second.x)).toBe(true);
+  expect(pawn.animalHandling).toBeUndefined();
+  expect(checkpoint).toEqual(world);
+  expect(validateWorld(world)).toEqual([]);
+});
+
+test('at a pen corner each rail ends at the post instead of passing through it',()=>{
+  const {world}=penCamp();
+  const rails=penParts(world).filter(part=>part.y===.34&&Math.abs(part.x-5)<.5&&Math.abs(part.z-5)<.5);
+  expect(rails).toHaveLength(2);
+  expect(rails.some(part=>part.x===5.24&&part.sx===.48)).toBe(true);
+  expect(rails.some(part=>part.z===5.24&&part.sz===.48)).toBe(true);
+  expect(rails.every(part=>part.x>=5&&part.z>=5)).toBe(true);
+});
+
+test('version 134 rejects future rope members, then migrates a single rope without recruiting retroactively',()=>{
+  const {world,pawn}=penCamp();
+  for(let i=0;i<60&&pawn.animalHandling?.phase!=='lead';i++)stepWorld(world);
+  expect(pawn.animalHandling?.kind).toBe('lead');
+  const legacy=structuredClone(world);(legacy as unknown as {schemaVersion:number}).schemaVersion=134;
+  expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow('Invalid version 134 save');
+  if(legacy.pawns[0]?.animalHandling?.kind==='lead')delete legacy.pawns[0].animalHandling.ropees;
+  const migrated=deserializeWorld(JSON.stringify(legacy));
+  expect(migrated.schemaVersion).toBe(135);
+  expect(migrated.pawns[0]?.animalHandling?.ropees).toBeUndefined();
+  expect(migrated.wildlife?.animals).toEqual(world.wildlife?.animals);
+  expect(validateWorld(migrated)).toEqual([]);
+});
+
+test('visible cords share one resident instanced draw and hold their upload between motion edges',()=>{
+  const {world,pawn,animal,marker}=penCamp();
+  const second=structuredClone(animal);second.id=world.nextId++;second.z=8;
+  world.wildlife!.animals.push(second);
+  pawn.animalHandling={animalId:animal.id,kind:'lead',markerId:marker.id,phase:'lead',ropees:[animal.id,second.id],sourcePileId:0,carryPileId:null,quantity:0,step:0,progress:0};
+  pawn.state='working';animal.domestic!.penMarkerId=marker.id;second.domestic!.penMarkerId=marker.id;
+  const layer=new RopeLayer();
+  try{
+    layer.adopt(world);layer.present();
+    expect(layer.stats.activeRopes).toBe(2);
+    expect(layer.mesh.geometry.instanceCount).toBe(2);
+    expect(layer.mesh.visible).toBe(true);
+    const uploads=layer.stats.uploads;
+    layer.present();expect(layer.stats.uploads).toBe(uploads);
+    layer.setDetailVisible(false);expect(layer.mesh.visible).toBe(false);
+  }finally{layer.dispose();}
 });

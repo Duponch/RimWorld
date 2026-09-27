@@ -217,6 +217,10 @@ export class PawnLayer {
       });
       const angle = float(0).toVar();
       const sign = float(1).toVar();
+      const idle=motion.z.equal(0).and(walking.lessThan(.5)).and(motion.y.equal(0));
+      // Quiet breathing and weight shifts share the presentation clock. They
+      // stop on pause and cannot change a logical position or decision.
+      const breath=sin(this.time.add(motion.w));
       If(bone.equal(3).or(bone.equal(4)).or(bone.equal(6)), () => { sign.assign(-1); });
       If(bone.greaterThan(1.5), () => {
         angle.assign(sin(gaitPhase).mul(walking).mul(sign).mul(0.65));
@@ -260,6 +264,11 @@ export class PawnLayer {
       });
       If(bone.equal(1).and(walking.greaterThan(.5)),()=>{
         angle.assign(sin(gaitPhase).mul(.045));
+      });
+      If(idle.and(bone.equal(0)),()=>angle.assign(breath.mul(.018)));
+      If(idle.and(bone.equal(1)),()=>angle.assign(breath.mul(.026)));
+      If(idle.and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
+        angle.assign(breath.mul(bone.equal(3).select(float(-.025),float(.025))).add(.035));
       });
       If(motion.z.greaterThan(2.5).and(motion.z.lessThan(3.5)).and(bone.greaterThan(3.5)), () => {
         angle.assign(bone.lessThan(5.5).select(float(-Math.PI / 2), float(0)));
@@ -310,6 +319,10 @@ export class PawnLayer {
       If(busy.and(bone.lessThan(3.5)),()=>{
         animated.y.addAssign(sin(this.time.mul(11).add(motion.w)).mul(.012));
       });
+      If(idle.and(bone.lessThan(3.5)),()=>{
+        animated.y.addAssign(breath.mul(.007));
+        animated.z.addAssign(breath.mul(.004));
+      });
       If(crouch.greaterThan(0),()=>{
         // Blend the entire low silhouette, not just its vertical offset. Feet
         // stay anchored while the hands, head and torso continue to move.
@@ -317,8 +330,8 @@ export class PawnLayer {
         If(bone.greaterThan(3.5),()=>{animated.y.assign(animated.y.sub(.11).mul(.72).add(.11));});
         If(bone.lessThan(3.5),()=>{
           const y=animated.y.sub(.61).toVar(),z=animated.z.toVar();
-          animated.y.assign(y.mul(.91).sub(z.mul(.42)).add(.46));
-          animated.z.assign(y.mul(.42).add(z.mul(.91)).add(.10));
+          animated.y.assign(y.mul(.91).sub(z.mul(.42)).add(.49));
+          animated.z.assign(y.mul(.42).add(z.mul(.91)).add(.075));
         });
         animated.assign(mix(upright,animated,crouch));
       });
@@ -332,21 +345,9 @@ export class PawnLayer {
         If(bone.greaterThan(5.5), () => { animated.y.addAssign(0.21); animated.z.addAssign(0.21); });
         animated.y.addAssign(WORLD_SCALE.stoolHeight / PAWN_MODEL_SCALE - 0.605);
       });
-      If(motion.z.equal(1).or(motion.z.equal(5)).or(motion.z.equal(POSE_SLEEP)).or(motion.z.equal(POSE_DEAD)), () => {
-        const y = animated.y.toVar();
-        animated.y.assign(animated.z.add(0.19));
-        animated.z.assign(float(0.65).sub(y));
-      });
-      // A corpse fits more closely to its owning cell while retaining the
-      // same pose and ground anchor. Adjacent bodies may still touch.
-      If(motion.z.equal(POSE_DEAD),()=>animated.z.assign(animated.z.mul(.78)));
       If(motion.z.equal(10).and(bone.lessThan(3.5)),()=>{
         const y=animated.y.sub(.48).toVar(),z=animated.z.toVar();
         animated.y.assign(y.mul(.82).sub(z.mul(.57)).add(.48));animated.z.assign(y.mul(.57).add(z.mul(.82)));
-      });
-      If(motion.z.equal(6),()=>{
-        const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();
-        animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));
       });
       // The first confirmed cooldown image can arrive one local tick after
       // the shot (0.134 s in the native pilot). Keep the cosmetic kick short
@@ -361,7 +362,7 @@ export class PawnLayer {
           If(isWeapon,()=>animated.assign(vec3(along.mul(.30).add(across).add(.13),along.mul(.78).add(depth.mul(.12)).add(.84),depth.mul(.8).add(.25))));
           If(shooting.and(isWeapon),()=>animated.assign(vec3(across.add(.10),depth.add(1.02).add(recoil.mul(.035)),along.add(.45).sub(recoil.mul(.12)))));
         } else {
-          If(isWeapon,()=>animated.assign(vec3(across.add(.32),along.mul(.82).add(.67),depth.add(.17))));
+          If(isWeapon,()=>animated.assign(vec3(across.add(.27),along.mul(.82).add(.65),depth.add(.13))));
           If(shooting.and(isWeapon),()=>animated.assign(vec3(across.add(.19),depth.add(.99).add(recoil.mul(.035)),along.add(.44).sub(recoil.mul(.09)))));
           if(weapon.item==='plasteel-knife')If(motion.z.equal(8).or(motion.z.equal(WORK_POSE.groundMelee)).and(isWeapon),()=>{
             const reach=sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI));
@@ -370,6 +371,19 @@ export class PawnLayer {
         }
         If(isWeapon.and(attribute('aEquipment','vec4').x.notEqual(weapon.equipment)),()=>{animated.assign(vec3(0));});
       }
+      // Holstered equipment follows the same full-body transformation as the
+      // torso when reclining, dying or being carried. Previously it was reset
+      // to the standing hip after these poses and floated above the sleeper.
+      If(motion.z.equal(1).or(motion.z.equal(5)).or(motion.z.equal(POSE_SLEEP)).or(motion.z.equal(POSE_DEAD)), () => {
+        const y = animated.y.toVar();
+        animated.y.assign(animated.z.add(.19));
+        animated.z.assign(float(.65).sub(y));
+      });
+      If(motion.z.equal(POSE_DEAD),()=>animated.z.assign(animated.z.mul(.78)));
+      If(motion.z.equal(6),()=>{
+        const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();
+        animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));
+      });
       If(attribute('dye','float').equal(-3).and(attribute('aEquipment','vec4').y.notEqual(2).and(attribute('aEquipment','vec4').y.notEqual(3))),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(-2).and(attribute('aEquipment','vec4').z.lessThan(.5)),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(PARKA_HOOD_DYE).and(attribute('aEquipment','vec4').y.notEqual(4)),()=>{animated.assign(vec3(0));});

@@ -38,13 +38,23 @@ export function penParts(world:World):Placement[] {
       parts.push({x:s.x,z:s.z+.047,y:1.05,sx:.28,sy:.035,sz:.02,color:0x3b614e});
       continue;
     }
-    const horizontal=!!at(s.x-1,s.z)||!!at(s.x+1,s.z);
-    const vertical=!!at(s.x,s.z-1)||!!at(s.x,s.z+1);
+    const left=!!at(s.x-1,s.z),right=!!at(s.x+1,s.z);
+    const near=!!at(s.x,s.z-1),far=!!at(s.x,s.z+1);
+    const horizontal=left||right;
+    const vertical=near||far;
     const axes=horizontal&&vertical?[0,1]:[horizontal?0:vertical?1:orientations.get(s.z*world.width+s.x)??0];
     if(s.kind==='fence') {
       parts.push({x:s.x,z:s.z,y:.48,sx:.12,sy:.96,sz:.12,color});
       parts.push({x:s.x,z:s.z,y:1.02,sx:.17,sy:.12,sz:.17,color});
-      for(const axis of axes)for(const height of [.34,.73])parts.push({x:s.x,z:s.z,y:height,sx:axis===0?.96:.09,sy:.075,sz:axis===1?.96:.09,color});
+      for(const axis of axes)for(const height of [.34,.73]){
+        const negative=axis===0?left:near,positive=axis===0?right:far;
+        // On a corner the rail ends at its own post, instead of crossing the
+        // perpendicular rail and visibly protruding through the enclosure.
+        const length=negative&&positive ? .96 : negative||positive ? .48 : .78;
+        const shift=negative&&!positive ? -.24 : positive&&!negative ? .24 : 0;
+        parts.push({x:s.x+(axis===0?shift:0),z:s.z+(axis===1?shift:0),y:height,
+          sx:axis===0?length:.09,sy:.075,sz:axis===1?length:.09,color});
+      }
     } else {
       const axis=axes[0]??0;
       for(const side of [-1,1])parts.push({x:s.x+(axis===0?side*.45:0),z:s.z+(axis===1?side*.45:0),y:.53,sx:.13,sy:1.06,sz:.13,color});

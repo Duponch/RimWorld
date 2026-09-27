@@ -143,8 +143,8 @@ export function advanceWildlife(world:World):void {
   const getPhysical=()=>physical??=blockedCells(world,true),getShot=()=>shot??=captureWorldShotGrid(world);
   const hour=Math.floor(calendarTick(world)%6000/250),night=hour<7||hour>=22;
   let ledAnimals:Set<number>|undefined;
-  for(const pawn of world.pawns)if(pawn.animalHandling?.kind==='lead'&&pawn.animalHandling.phase==='lead')
-    (ledAnimals??=new Set()).add(pawn.animalHandling.animalId);
+  for(const pawn of world.pawns)if(pawn.animalHandling?.kind==='lead'&&pawn.animalHandling.phase!=='approach')
+    for(const id of pawn.animalHandling.ropees??[pawn.animalHandling.animalId])(ledAnimals??=new Set()).add(id);
   const matingFemales=new Set(s.animals.flatMap(a=>a.mating?[a.mating.femaleId]:[]));
   // Rotate priority; at most one potentially map-wide search per tick.
   for(let i=0;i<s.animals.length;i++) {

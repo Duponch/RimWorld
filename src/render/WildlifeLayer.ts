@@ -47,10 +47,16 @@ class SpeciesRig {
         const attack=sin(this.travelTime.sub(state.w).mul(10).clamp(0,Math.PI)).mul(.9);
         angle.assign(state.x.greaterThan(.5).select(sin(phase).mul(.06),
           state.y.greaterThan(1).select(attack,state.y.mul(sin(this.time.mul(5)).mul(.12).add(.48)))));
+        If(state.x.lessThan(.5).and(state.y.lessThan(.5)).and(state.z.lessThan(.5)),()=>{
+          angle.assign(sin(this.time.add(state.w)).mul(.03));
+        });
       });
       const p=positionLocal.sub(pivot),c=cos(angle),s=sin(angle);
       const q=vec3(p.x,p.y.mul(c).sub(p.z.mul(s)),p.z.mul(c).add(p.y.mul(s))).add(pivot).toVar();
       q.y.mulAssign(float(1).sub(min(state.z,1).mul(.5)));q.y.addAssign(sin(phase).abs().mul(.08).mul(state.x));
+      If(state.x.lessThan(.5).and(state.y.lessThan(.5)).and(state.z.lessThan(.5)).and(bone.equal(0)),()=>{
+        q.y.addAssign(sin(this.time.add(state.w)).mul(.006));
+      });
       const cy=cos(pose.w),sy=sin(pose.w);
       return vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy)))
         .mul(attribute('aScale','float')).add(pose.xyz);

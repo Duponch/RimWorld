@@ -142,6 +142,7 @@ export function gameLayout(): string {
     <div id="notice" role="status" aria-live="polite" hidden></div>
     <div id="area-feedback" role="status" aria-live="polite" hidden></div>
     <aside id="map-hover-readout" aria-label="Informations sous le pointeur" aria-live="off" hidden></aside>
+    <aside id="map-cell-details" aria-label="Détails de la case sous le pointeur" aria-live="off" hidden></aside>
 
     <section id="inspector" class="inspector panel" aria-label="Inspection" hidden></section>
     <section id="architect-panel" class="management-panel architect-panel panel" aria-label="Architecte" hidden>

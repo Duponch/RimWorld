@@ -12,6 +12,7 @@ export const ACTION_FX = {
   cook: 6, craft: 7, research: 8, extinguish: 9,
   smith: 10, tailor: 11, stonecraft: 12, art: 13,
   butcher: 14, tailorGround: 15, butcherGround: 16,
+  eat: 17,
 } as const;
 
 export type ActionFx = { kind: number; x: number; z: number; impactCore?:number };
@@ -73,6 +74,8 @@ export function actionFxForPawn(
     }
   }
   if (pawn.state === 'sleeping') return { kind: ACTION_FX.sleep, x: pawn.x, z: pawn.z };
+  if (pawn.state === 'eating' && pawn.need?.kind === 'eat' && pawn.need.phase === 'ingest')
+    return { kind: ACTION_FX.eat, x: pawn.x, z: pawn.z };
   if (pawn.state !== 'working' || pawn.stun) return NONE;
 
   if (pawn.firefighting?.phase === 'beat') {
@@ -112,7 +115,7 @@ export function actionFxForPawn(
   return NONE;
 }
 
-/** One draw for every active sleeping/working actor. At 100 actors eight
+/** One draw for every active sleeping/working/eating actor. At 100 actors eight
  * resident quads amount to 3,200 vertices and 4,800 indices. Brawls use the
  * dedicated instanced volumetric layer, never a duplicate sprite cloud. */
 export const SPRITES_PER_PAWN = 8;
@@ -178,6 +181,9 @@ export class ActionVfxLayer {
       const sleepOffset = vec3(sin(pose.w).mul(-1.05).add(sin(sleepCycle.mul(2*Math.PI)).mul(.11)).add(part.mul(.035)),
         float(1.20).add(sleepCycle.mul(.73)),
         cos(pose.w).mul(-1.05).add(part.mul(.05)));
+      const mealOffset=vec3(sin(pose.w).mul(.33).add(cos(angle).mul(.24)),
+        float(1.48).add(workCycle.mul(.30)),
+        cos(pose.w).mul(.33).add(sin(angle).mul(.24)));
       const groundWork=fx.x.equal(ACTION_FX.tailorGround).or(fx.x.equal(ACTION_FX.butcherGround));
       const bench = fx.x.greaterThanEqual(ACTION_FX.cook).and(fx.x.notEqual(ACTION_FX.extinguish)).and(groundWork.not());
       // Draw above the work surface and on its near side. At the old height
@@ -191,7 +197,8 @@ export class ActionVfxLayer {
         contactY.add(workCycle.mul(fx.x.equal(ACTION_FX.cook).select(.48,
           fx.x.equal(ACTION_FX.chop).select(.22,.38)))),
         sin(angle).mul(workSpread));
-      return sleeping.select(pose.xyz.add(sleepOffset), workTarget.add(workOffset));
+      return sleeping.select(pose.xyz.add(sleepOffset),
+        fx.x.equal(ACTION_FX.eat).select(pose.xyz.add(mealOffset),workTarget.add(workOffset)));
     })();
     material.scaleNode = Fn(() => {
       const kind = attribute('actionFx', 'vec4').x, part = attribute('actionPart', 'float');
@@ -204,8 +211,9 @@ export class ActionVfxLayer {
         .mul(smoothstep(0,.10,sleepCycle)).mul(float(1).sub(smoothstep(.82,1,sleepCycle)));
       // Keep each burst smaller than a head, beside the hand contact point.
       // Several quads overlap into one readable mark without hiding actors.
-      const workSize = kind.equal(ACTION_FX.cook).or(kind.equal(ACTION_FX.butcher)).or(kind.equal(ACTION_FX.butcherGround)).select(vec2(.42),
-        kind.equal(ACTION_FX.research).select(vec2(.43),vec2(.39,.36)));
+      const workSize = kind.equal(ACTION_FX.eat).select(vec2(.26),
+        kind.equal(ACTION_FX.cook).or(kind.equal(ACTION_FX.butcher)).or(kind.equal(ACTION_FX.butcherGround)).select(vec2(.42),
+        kind.equal(ACTION_FX.research).select(vec2(.43),vec2(.39,.36))));
       return sleeping.select(vec2(sleepSize),workSize).mul(visible.select(1,0));
     })();
     material.rotationNode = Fn(() => {
@@ -324,6 +332,7 @@ export class ActionVfxLayer {
       workAlpha=kind.equal(ACTION_FX.smith).select(smithAlpha,workAlpha);
       workAlpha=kind.equal(ACTION_FX.research).select(researchAlpha,workAlpha);
       workAlpha=kind.equal(ACTION_FX.cook).select(cookAlpha,workAlpha);
+      workAlpha=kind.equal(ACTION_FX.eat).select(cookAlpha,workAlpha);
       workAlpha=isBuild.select(buildAlpha,workAlpha);
       workAlpha=isMine.select(mineAlpha,workAlpha);
       workAlpha=kind.equal(ACTION_FX.chop).select(chopAlpha,workAlpha);
@@ -333,6 +342,7 @@ export class ActionVfxLayer {
       workColor=kind.equal(ACTION_FX.smith).select(smithColor,workColor);
       workColor=kind.equal(ACTION_FX.research).select(researchColor,workColor);
       workColor=kind.equal(ACTION_FX.cook).select(cookColor,workColor);
+      workColor=kind.equal(ACTION_FX.eat).select(cookColor,workColor);
       workColor=isBuild.select(buildColor,workColor);
       workColor=isMine.select(mineColor,workColor);
       workColor=kind.equal(ACTION_FX.chop).select(chopColor,workColor);
@@ -359,9 +369,10 @@ export class ActionVfxLayer {
       this.capacity = 2 ** Math.ceil(Math.log2(world.pawns.length));
       geometry.setAttribute('actionFx', new THREE.InstancedBufferAttribute(new Float32Array(this.capacity * 4), 4).setUsage(THREE.StaticDrawUsage));
     }
-    let working = false, hasJob = false, hasStation = false, hasFirefight = false, sleeping = false;
+    let working = false, hasJob = false, hasStation = false, hasFirefight = false, sleeping = false, eating = false;
     for (const pawn of world.pawns) {
       sleeping ||= pawn.state === 'sleeping';
+      eating ||= pawn.state === 'eating' && pawn.need?.kind === 'eat' && pawn.need.phase === 'ingest';
       if (pawn.state === 'working') {
         working = true;
         hasJob ||= pawn.jobId !== null;
@@ -369,7 +380,7 @@ export class ActionVfxLayer {
         hasFirefight ||= pawn.firefighting?.phase === 'beat';
       }
     }
-    if (!working && !sleeping) {
+    if (!working && !sleeping && !eating) {
       this.active = false;
       geometry.instanceCount = 0;
       this.mesh.visible = false;
