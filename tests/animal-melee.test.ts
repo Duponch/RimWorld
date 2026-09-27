@@ -72,6 +72,7 @@ test('stun and stagger keep a captured diagonal continuous and block attacks whi
 
 test('V77 validation precedes neutral migration; corrupt ownership, timers and tools are refused',()=>{
   const w=camp(),a=w.wildlife!.animals[0]!,p=w.pawns[0]!,old=stripV120(structuredClone(w)) as any;old.schemaVersion=77;withoutHunting(old);
+  for(const animal of old.wildlife.animals){delete animal.ageTicks;delete animal.parents;delete animal.pregnancy;delete animal.mating;}
   expect(deserializeWorld(JSON.stringify(old))).toEqual(stripV120(withMigratedHunting(w)));
   old.wildlife.animals[0].threat={targetId:p.id,harmedAtCore:w.tick*10};expect(()=>deserializeWorld(JSON.stringify(old))).toThrow();
   applyCommand(w,{type:'melee',pawnIds:[p.id],targetId:a.id});

@@ -109,6 +109,7 @@ import { INGEST_TICKS } from './eating.ts';
 import { validDiningPlace } from './dining.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { SCHEMA_VERSION, TICKS_PER_DAY } from './types.ts';
+import { adultAgeTicks } from './animal-life.ts';
 import { isFurnitureQuality } from './furniture-stats.ts';
 import { validateFlowerPotState } from './flower-pot.ts';
 import { createDefaultApparelPolicyRegistry,validApparelPolicy } from './apparel-policy.ts';
@@ -124,7 +125,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120): string[] {
+function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(input)) return ['World must be an object.'];
@@ -779,6 +780,13 @@ export function deserializeWorld(serialized: string): World {
       if(PRODUCTION_RECIPES[bill.recipe].inputs.includes('muffalo-wool'))bill.filters['muffalo-wool']=false;
     }
     input.schemaVersion=120;
+  }
+  if(record(input)&&input.schemaVersion===120){
+    const errors=validateSchema(input,120);if(errors.length)throw new Error('Invalid version 120 save: '+errors.join(' '));
+    const world=input as unknown as World;
+    for(const animal of world.wildlife?.animals??[])animal.ageTicks=adultAgeTicks(animal.species);
+    for(const pile of world.piles)if(pile.corpse)pile.corpse.ageTicks=adultAgeTicks(pile.corpse.species);
+    input.schemaVersion=121;
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`); return input as World;
 }

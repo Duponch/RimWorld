@@ -1,4 +1,5 @@
 import { withoutHunting } from './scenarios/legacy-skills';
+import { stripV120 } from './scenarios/strip-v120';
 import { expect,test } from 'vitest';
 import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index';
 import { animalCombatCamp } from './scenarios/animal-combat';
@@ -57,7 +58,9 @@ test('cold preserves anchored corpse age through ownership changes; rotting and 
   p.owner={type:'pawn',pawnId:carrier.id};updateFoodTemperatures(w);expect(p.rot).toEqual({progress:0,atTick:start+6000,rate:.5});
   w.tick=start+12000;expect(rotAge(p,w.tick)).toBe(3000);p.owner={type:'ground',x:12,z:12};updateFoodTemperatures(w);expect(p.rot).toEqual({progress:3000,atTick:start+12000});
   w.tick=start+12000+CORPSE_ROT_TICKS-3001;expect(corpseFresh(p,w.tick)).toBe(true);w.tick++;expect(corpseStage(p,w.tick)).toBe('rotting');expireFood(w);expect(w.piles).toContain(p);
-  w.tick+=CORPSE_DESSICATION_TICKS-CORPSE_ROT_TICKS;expect(corpseStage(p,w.tick)).toBe('desiccated');expireFood(w);expect(w.piles).toContain(p);expect(validateCorpses(w,79)).toEqual([]);
+  w.tick+=CORPSE_DESSICATION_TICKS-CORPSE_ROT_TICKS;expect(corpseStage(p,w.tick)).toBe('desiccated');expireFood(w);expect(w.piles).toContain(p);
+  const historical=structuredClone(w);delete (historical.piles.find(q=>q.corpse)!.corpse as {ageTicks?:number}).ageTicks;
+  expect(validateCorpses(historical,79)).toEqual([]);
   const held=field(),heldStart=held.tick,a=kill(held);addMaterial(held,'wood',1,{type:'ground',x:a.x,z:a.z});advanceCorpses(held);
   held.thermal={regions:[{cells:[a.z*held.width+a.x],temperature:-10}]};updateFoodTemperatures(held);expect(a.corpseRot?.rate).toBe(0);
   held.tick+=500;advanceCorpses(held);expect(a.corpseRot).toEqual({progress:0,atTick:heldStart,rate:0});expect(held.wildlife!.animals).toContain(a);
@@ -70,7 +73,9 @@ test('butchery yield uses exact natural coverage and one nonpermanent-injury pen
   expect(corpseYield(p).meat).toBeCloseTo(24.0137142857,9);expect(corpseYield(p).leather).toBeCloseTo(14.208,9);
   h.injuries[0]!.scar={threshold:1000};expect(corpseYield(p).meat).toBeCloseTo(31.0857142857,9);
   h.injuries=[];h.missing=[{part:'left-front-leg',bornAt:0}];const lost=corpseYield(p);expect(lost.meat).toBeCloseTo(14+(140*.2*.93-5)*26/35,9);
-  expect(lost.leather).toBeCloseTo(14+(40*.2*.93-5)*26/35,9);expect(validateCorpses(w,79)).toEqual([]);
+  expect(lost.leather).toBeCloseTo(14+(40*.2*.93-5)*26/35,9);
+  const historical=structuredClone(w);delete (historical.piles.find(q=>q.corpse)!.corpse as {ageTicks?:number}).ageTicks;
+  expect(validateCorpses(historical,79)).toEqual([]);
 });
 
 test('corpse persistence refuses forged identities, live anatomy, duplicate representation, impossible age and pre-V79 fields',()=>{
@@ -82,7 +87,8 @@ test('corpse persistence refuses forged identities, live anatomy, duplicate repr
     const broken=JSON.parse(saved);change(broken);expect(validateWorld(broken).length).toBeGreaterThan(0);expect(()=>deserializeWorld(JSON.stringify(broken))).toThrow();
   }
   const meat=field();addMaterial(meat,'food',3,{type:'ground',x:14,z:14},'hare-meat');meat.tick+=12000;expireFood(meat);expect(meat.spoiled['hare-meat']).toBe(3);expect(meat.piles).toEqual([]);
-  const prior=field();kill(prior);const old=JSON.parse(JSON.stringify(prior));old.schemaVersion=78;withoutHunting(old);
+  const prior=field();kill(prior);const old=stripV120(JSON.parse(JSON.stringify(prior)));old.schemaVersion=78;withoutHunting(old);
+  for(const animal of old.wildlife.animals){delete animal.ageTicks;delete animal.parents;delete animal.pregnancy;delete animal.mating;}
   const resumed=deserializeWorld(JSON.stringify(old));expect(resumed.piles).toEqual([]);expect(resumed.wildlife!.animals[0]!.corpseRot).toBeUndefined();
   stepWorld(resumed);expect(resumed.wildlife!.animals).toEqual([]);expect(resumed.piles[0]).toMatchObject({kind:'corpse',rot:{progress:0,atTick:prior.tick+1}});
   old.wildlife.animals[0].corpseRot={progress:0,atTick:0};expect(()=>deserializeWorld(JSON.stringify(old))).toThrow();

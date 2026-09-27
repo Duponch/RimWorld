@@ -7,6 +7,7 @@ import { healthRandom } from './health.ts';
 import { mergeSlowIntervals,travelEnd } from './travel-timing.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { animalSpecies } from './animal-species.ts';
+import { animalNutritionMax } from './animal-life.ts';
 import type { Cell,World } from './types.ts';
 import { malnutritionRate } from './malnutrition.ts';
 
@@ -32,7 +33,7 @@ export function advanceAnimalHealth(w:World,a:WildAnimal):void {
   if(!a.health||a.health.death)return;
   const lying=(!a.motion||a.motion.end<=w.tick)&&['sleeping','downed'].includes(a.state);
   advanceMedical(a.health,w.tick-a.health.tick,{phase:a.id%60,posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:w.schemaVersion>=84?malnutritionRate(a.id):undefined,
-    hunger:a.food/animalSpecies(a.species).nutrition*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(w));
+    hunger:a.food/animalNutritionMax(a)*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(w));
   reconcileAnimalHealth(w,a);
 }
 export function scareAnimal(w:World,a:WildAnimal,danger:Cell,core:number):void {

@@ -8,6 +8,14 @@ export interface WildAnimal extends Cell {
   domestic?:import('./domestic-state.ts').DomesticAnimal;
   taming?:import('./domestic-state.ts').TamingDesignation;
   id:number; species:AnimalSpeciesId; sex:'female'|'male';
+  /** Biological age in local ticks. Historical animals enter V121 as adults. */
+  ageTicks:number;
+  /** Identity survives even after either parent leaves the map. */
+  parents?:{motherId:number;fatherId:number};
+  /** A full gestation waits for a physical, available birth cell. */
+  pregnancy?:{fatherId:number;progress:number};
+  /** Physical mating action on the male; 50 local ticks complete one attempt. */
+  mating?:{femaleId:number;progress:number};
   /** Nutrition units, distinct from a human's percentage gauge. */
   food:number; rest:number;
   state:'idle'|'moving'|'eating'|'sleeping'|'hungry'|'downed'|'dead';

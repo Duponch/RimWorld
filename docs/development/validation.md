@@ -1,4 +1,6 @@
-# Validation courante — V120
+# Validation courante — V121
+
+V121 : [âge, accouplement et naissances physiques](../history/validation-animal-life-v121.md), 131 tests ciblés sur 26 fichiers, trois parcours Chromium/WebGPU, build/typage, continuation exacte et mesure CPU séparée. La scène V121 est préparée ; aucune cadence 240 FPS ou débit ×6 constant n'est inféré.
 
 V120 : [lait et laine physiques](../history/validation-animal-products-v120.md), 140 contrôles ciblés, deux parcours Chromium/WebGPU, build/typage, continuation exacte et mesure CPU de charge mixte. La suite globale garde sa dette V84 ; aucun débit 6× ou 240 FPS constant n'est inféré.
 

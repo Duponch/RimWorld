@@ -1,5 +1,5 @@
 import { isColonist } from './affiliation.ts';
-import { animalSpecies } from './animal-species.ts';
+import { animalGrowthFactor, animalLifeStage } from './animal-life.ts';
 import type { AnimalHandlingTask } from './domestic-state.ts';
 import { pawnBody, medicalWorkRefusal } from './health-rules.ts';
 import { healthRandom } from './health.ts';
@@ -13,8 +13,7 @@ import { learnSkill } from './skills.ts';
 import { TICKS_PER_DAY, type Cell, type Pawn, type World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 
-/** Core 1.6.4871 nominal quantities/intervals, converted to Lisière's
- * 6,000-tick day. All currently simulated animals are adult. */
+/** Core 1.6.4871 nominal quantities/intervals, converted to Lisière's 6,000-tick day. */
 export const ANIMAL_PRODUCTS = Object.freeze({
   milk: Object.freeze({species:'dromedary',item:'milk',quantity:18,days:2,work:400/10,rank:-.9}),
   shear: Object.freeze({species:'muffalo',item:'muffalo-wool',quantity:120,days:15,work:1700/10,rank:-.85}),
@@ -22,14 +21,13 @@ export const ANIMAL_PRODUCTS = Object.freeze({
 const YIELD_BY_ANIMALS_LEVEL=[.60,.70,.75,.80,.85,.90,.95,.975,1,1.01,1.02,1.03,1.04,1.05,1.06,1.07,1.08,1.09,1.10,1.12,1.13] as const;
 export type AnimalProductKind=keyof typeof ANIMAL_PRODUCTS;
 export type ProductTask=AnimalHandlingTask & {kind:AnimalProductKind;phase:'approach'|'interact'};
-export const productKind=(a:WildAnimal):AnimalProductKind|undefined=>a.species==='muffalo'?'shear':a.species==='dromedary'&&a.sex==='female'?'milk':undefined;
+export const productKind=(a:WildAnimal):AnimalProductKind|undefined=>animalLifeStage(a)!=='adult'?undefined:a.species==='muffalo'?'shear':a.species==='dromedary'&&a.sex==='female'?'milk':undefined;
 export const productFullness=(a:WildAnimal):number=>a.domestic?.productFullness??0;
 export const productReady=(a:WildAnimal):boolean=>!!a.domestic&&!!productKind(a)&&productFullness(a)>=1;
 
 /** Hunger bands inferred from Core's herbivore 45% want-to-eat threshold. */
 export function productGrowthFactor(a:WildAnimal):number {
-  const reserve=a.food/animalSpecies(a.species).nutrition;
-  return reserve<=0?0:reserve<.18?.25:reserve<.36?.5:1;
+  return animalGrowthFactor(a);
 }
 /** One bounded animal pass per simulation tick, with no map or pile search. */
 export function advanceAnimalProducts(world:World):void {

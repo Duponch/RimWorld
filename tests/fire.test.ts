@@ -3,6 +3,7 @@ import { furnitureDelay,navigationCosts } from '../src/sim/furniture-travel';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
 import { flameBurst,startFire,attachPawnFire,attachAnimalFire,advanceFires,extinguishFire } from '../src/sim/fire';
+import { adultAgeTicks } from '../src/sim/animal-life';
 import { fireDanger,fireNavigationPenalty,attachFireChance,ensureFireState } from '../src/sim/fire-rules';
 import { fireTouch,applyExtinguish } from '../src/sim/firefighting';
 import { damageResource,damagePile,damageStructure } from '../src/sim/thing-damage';
@@ -17,6 +18,7 @@ import { injuryBleed,medicalPain } from '../src/sim/injury-state';
 import { newPowerState } from '../src/sim/power-rules';
 import { newBuildingFuel } from '../src/sim/fuel';
 import { withoutV90 } from './scenarios/legacy-skills';
+import { stripV120 } from './scenarios/strip-v120';
 import { footprintCells } from '../src/sim/definitions';
 import { BATTERIES_RESEARCH_COST } from '../src/sim/research';
 import { validateMedicalRecord } from '../src/sim/injury-validation';
@@ -147,7 +149,7 @@ test('burn attachment, outside injuries, bleeding, self-extinction and animal re
   const w=fireCamp(),p=w.pawns[0]!;expect(attachFireChance(.7)).toBe(1);expect(attachFireChance(.1,60)).toBeCloseTo(.07);
   burnPawn(w,p,2);expect(p.health!.injuries.every(i=>i.kind==='burn')).toBe(true);expect(p.health!.injuries.every(i=>injuryBleed(p.health!,i)===0)).toBe(true);expect(medicalPain(p.health!)).toBeGreaterThan(0);
   expect(attachPawnFire(w,p.id,.2)).toBe(true);p.burning={phase:'extinguish',remainingCore:150};replay(w,6);until(w,()=>!p.burning,20);expect(w.fires!.items).toHaveLength(0);
-  w.wildlife={profile:'temperate-hares-v1',rng:43,eatenPlants:0,eatenNutrition:0,eatenItems:0,animals:[{id:w.nextId++,species:'hare',sex:'female',x:p.x+3,z:p.z,food:.2,rest:1,state:'idle',path:[],nextDecision:w.tick}]};
+  w.wildlife={profile:'temperate-hares-v1',rng:43,eatenPlants:0,eatenNutrition:0,eatenItems:0,animals:[{id:w.nextId++,species:'hare',sex:'female',ageTicks:adultAgeTicks('hare'),x:p.x+3,z:p.z,food:.2,rest:1,state:'idle',path:[],nextDecision:w.tick}]};
   const a=w.wildlife.animals[0]!;expect(attachAnimalFire(w,a.id,.2)).toBe(true);a.burning={phase:'extinguish',remainingCore:150};replay(w,6);until(w,()=>!a.burning,20);expect(w.fires!.items).toHaveLength(0);
   expect(attachPawnFire(w,p.id,.2)).toBe(true);p.path=[{x:p.x+1,z:p.z}];p.burning={phase:'panic',remainingCore:0,target:{x:p.x+1,z:p.z}};
   const motion=p.motion,cooldown=p.moveCooldown;extinguishFire(w,w.fires!.items[0]!.id,1000);expect(p.path).toEqual([]);expect(p.motion).toEqual(motion);expect(p.moveCooldown).toBe(cooldown);expect(validateWorld(w)).toEqual([]);
@@ -186,7 +188,9 @@ test('strict fire/HP migration rejects old burns and malformed phases or duplica
   expect(validateFires(w,86)).not.toEqual([]);
   const record={tick:0,nextInjuryId:2,injuries:[{id:1,part:'torso',kind:'burn',severity:1000,bornAt:0}],missing:[],bloodLoss:0};
   expect(validateMedicalRecord(record,true,true,true,true,false,false,true,true,false)).not.toBeNull();expect(validateMedicalRecord(record,true,true,true,true,false,false,true,true,true)).toBeNull();
-  const old=withoutV90(fireCamp()) as unknown as Record<string,unknown>;old.schemaVersion=86;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).clean;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).firefight;
+  const old=stripV120(withoutV90(fireCamp())) as unknown as Record<string,unknown>;old.schemaVersion=86;
+  for(const animal of (old as unknown as World).wildlife?.animals??[]){delete (animal as {ageTicks?:number}).ageTicks;delete animal.parents;delete animal.pregnancy;delete animal.mating;}
+  for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).clean;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).firefight;
   const loaded=deserializeWorld(JSON.stringify(old));expect(loaded.fires).toBeUndefined();expect(loaded.pawns[0]!.priorities.firefight).toBe(1);
   const capped=fireCamp(),id=woodFire(capped,{x:10,z:10});addGroundMaterial(capped,'wood',10,{x:12,z:10},'wood');
   capped.fires!.ledger.ignitions=Number.MAX_SAFE_INTEGER;capped.fires!.ledger.extinguished=Number.MAX_SAFE_INTEGER-1;

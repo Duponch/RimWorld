@@ -1,6 +1,6 @@
 import { PAWN_MODEL_SCALE } from '../world/scale';
 import * as THREE from 'three/webgpu';
-import { Fn,attribute,positionLocal,positionGeometry,sin,cos,uniform,vec3,mix } from 'three/tsl';
+import { Fn,attribute,float,positionLocal,positionGeometry,sin,cos,uniform,vec3,mix } from 'three/tsl';
 import { pawnPresentationPose } from './pawn-presentation';
 import type { PawnLayer } from './PawnLayer';
 import type { World } from '../sim/types';
@@ -52,11 +52,13 @@ export function attachedFireMesh(source:THREE.BufferGeometry,clock:Pick<PawnLaye
   const geometry=fireGeometry(),count=source.getAttribute('aFrom').count;
   const size=new THREE.InstancedBufferAttribute(new Float32Array(count),1);source.setAttribute('aFire',size);
   const carried=source.hasAttribute('aMotion');
-  for(const name of ['aFrom','aTo','aTravel','aFire',...(carried?['aMotion']:[])])geometry.setAttribute(name,source.getAttribute(name));
+  const scaled=source.hasAttribute('aScale');
+  for(const name of ['aFrom','aTo','aTravel','aFire',...(carried?['aMotion']:[]),...(scaled?['aScale']:[])])geometry.setAttribute(name,source.getAttribute(name));
   const material=fireMaterial();material.positionNode=Fn(()=>{
     const size=attribute('aFire','float'),pose=pawnPresentationPose(clock);
     const pulse=sin(clock.travelTime.mul(8).add(pose.x)).mul(.15).add(1);
-    const local=vec3(positionLocal.x,positionLocal.y.add(.75).mul(pulse),positionLocal.z).mul(size.mul(scale));
+    const local=vec3(positionLocal.x,positionLocal.y.add(.75).mul(pulse),positionLocal.z)
+      .mul(size.mul(scale).mul(scaled?attribute('aScale','float'):float(1)));
     const offset=carried?attribute('aMotion','vec4').z.equal(6).select(vec3(sin(pose.w).mul(.3*PAWN_MODEL_SCALE),.95+.19*PAWN_MODEL_SCALE,cos(pose.w).mul(.3*PAWN_MODEL_SCALE)),vec3(0)):vec3(0);
     return size.greaterThan(0).select(local.add(pose.xyz).add(offset),vec3(0,-100,0));
   })();

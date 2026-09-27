@@ -10,6 +10,7 @@ import { animalMealTarget } from './wildlife-food.ts';
 import { animalNavigation } from './wildlife-navigation.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { animalSpecies,faunaBiome,isAnimalSpecies } from './animal-species.ts';
+import { adultAgeTicks, gestationTicks } from './animal-life.ts';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const finite=(v:unknown,min:number,max:number)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
@@ -26,10 +27,39 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
     if(p.fullTargetWeight!==full||p.targetWeight!==target||!int(p.nextCheck,w.tick+1,w.tick+122)||!int(p.checks)||!int(p.arrivals,0,p.checks))return ['Invalid wildlife population state.'];
   } else if(s.population!==undefined)return ['Invalid wildlife population state.'];
   if(s.animals.some(a=>!object(a)))return ['Invalid wild animal.'];
+  const matingFemales=new Set<number>();
   let navigation:ReturnType<typeof animalNavigation>|undefined,hareNavigation:ReturnType<typeof animalNavigation>|undefined;
   const cell=(c:unknown):c is {x:number;z:number}=>object(c)&&keys(c,['x','z'])&&int(c.x,0,w.width-1)&&int(c.z,0,w.height-1);
   for(const a of s.animals) {
-    if(!object(a)||!keys(a,['id','species','sex','x','z','food','rest','state','path','motion','nextDecision','meal',...(version>=77?['health','flee','stagger','sleepUntilCore']:[]),...(version>=78?['threat','retaliation','strike','stun']:[]),...(version>=79?['corpseRot']:[]),...(version>=87?['burning']:[]),...(version>=106?['domestic','taming']:[])])||!int(a.id,1,w.nextId-1)||!int(a.x,0,w.width-1)||!int(a.z,0,w.height-1)||!isAnimalSpecies(a.species)||(version<91||s.profile==='temperate-hares-v1')&&a.species!=='hare'||s.profile==='biome-herbivores-v1'&&!faunaBiome(s.population!.biome).entries.some(e=>e.species===a.species)&&!(version>=119&&!!a.domestic)||!['female','male'].includes(a.sex)||!finite(a.food,0,animalSpecies(a.species).nutrition)||!finite(a.rest,0,1)||!['idle','moving','eating','sleeping','hungry',...(version>=77?['downed','dead']:[])].includes(a.state)||!int(a.nextDecision,0,w.tick+100)||!Array.isArray(a.path)||a.path.length>w.width*w.height||!a.path.every(cell)){errors.push('Invalid wild animal.');continue;}
+    if(!object(a)||!keys(a,['id','species','sex','x','z','food','rest','state','path','motion','nextDecision','meal',...(version>=77?['health','flee','stagger','sleepUntilCore']:[]),...(version>=78?['threat','retaliation','strike','stun']:[]),...(version>=79?['corpseRot']:[]),...(version>=87?['burning']:[]),...(version>=106?['domestic','taming']:[]),...(version>=121?['ageTicks','parents','pregnancy','mating']:[])])||!int(a.id,1,w.nextId-1)||!int(a.x,0,w.width-1)||!int(a.z,0,w.height-1)||!isAnimalSpecies(a.species)||(version<91||s.profile==='temperate-hares-v1')&&a.species!=='hare'||s.profile==='biome-herbivores-v1'&&!faunaBiome(s.population!.biome).entries.some(e=>e.species===a.species)&&!(version>=119&&!!a.domestic)||!['female','male'].includes(a.sex)||!finite(a.food,0,animalSpecies(a.species).nutrition)||!finite(a.rest,0,1)||!['idle','moving','eating','sleeping','hungry',...(version>=77?['downed','dead']:[])].includes(a.state)||!int(a.nextDecision,0,w.tick+100)||!Array.isArray(a.path)||a.path.length>w.width*w.height||!a.path.every(cell)){errors.push('Invalid wild animal.');continue;}
+    if(version>=121){
+      if(!int(a.ageTicks))errors.push('Invalid animal age.');
+      const parents:unknown=a.parents;
+      if(parents!==undefined&&(!object(parents)||!keys(parents,['motherId','fatherId'])
+        ||!int(parents.motherId,1,a.id-1)||!int(parents.fatherId,1,a.id-1)||parents.motherId===parents.fatherId))errors.push('Invalid animal parentage.');
+      const pregnancy:unknown=a.pregnancy;
+      if(pregnancy!==undefined){
+        const father=object(pregnancy)&&int(pregnancy.fatherId,1,w.nextId-1)
+          ?s.animals.find(other=>other.id===pregnancy.fatherId):undefined;
+        if(!object(pregnancy)||!keys(pregnancy,['fatherId','progress'])
+          ||!int(pregnancy.fatherId,1,w.nextId-1)||pregnancy.fatherId===a.id
+          ||!int(pregnancy.progress,0,gestationTicks(a.species))
+          ||a.sex!=='female'||!int(a.ageTicks,adultAgeTicks(a.species))||a.state==='dead'
+          ||father&&(father.species!==a.species||father.sex!=='male'||!isAnimalSpecies(father.species)||!int(father.ageTicks,adultAgeTicks(father.species))))errors.push('Invalid animal pregnancy.');
+      }
+      const mating:unknown=a.mating;
+      if(mating!==undefined){
+        const female=object(mating)&&int(mating.femaleId,1,w.nextId-1)
+          ?s.animals.find(other=>other.id===mating.femaleId):undefined;
+        if(!object(mating)||!keys(mating,['femaleId','progress'])
+          ||!int(mating.femaleId,1,w.nextId-1)||!int(mating.progress,0,49)
+          ||a.sex!=='male'||!a.domestic||a.state==='dead'||!int(a.ageTicks,adultAgeTicks(a.species))
+          ||!female||female.species!==a.species||female.sex!=='female'||!female.domestic
+          ||female.state==='dead'||female.pregnancy!==undefined||!int(female.ageTicks,adultAgeTicks(a.species))
+          ||matingFemales.has(Number(mating.femaleId)))errors.push('Invalid animal mating.');
+        else matingFemales.add(Number(mating.femaleId));
+      }
+    }
     if(a.corpseRot!==undefined&&(version<79||a.state!=='dead'||!a.health?.death||!validCorpseRot(a.corpseRot,w.tick,a.health.death.tick)))errors.push('Invalid retained animal corpse age.');
     if(ids.has(a.id))errors.push('Duplicate wildlife identity.');ids.add(a.id);
     if(['water','rock'].includes(w.tiles[a.z*w.width+a.x]!.terrain)||w.structures.some(s=>(s.kind==='wall'||s.kind==='cooler')&&s.x===a.x&&s.z===a.z))errors.push('Wildlife inside solid terrain.');

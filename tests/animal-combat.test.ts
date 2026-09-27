@@ -97,6 +97,7 @@ test('flight negotiates an enclosure, captured diagonal remains continuous after
 
 test('V76 migration is neutral and corruption cannot cross species, clocks, phases or projectile schemas',()=>{
   const w=animalCombatCamp(),a=w.wildlife!.animals[0]!,legacy=stripV120(structuredClone(w)) as any;legacy.schemaVersion=76;withoutHunting(legacy);
+  for(const animal of legacy.wildlife.animals){delete animal.ageTicks;delete animal.parents;delete animal.pregnancy;delete animal.mating;}
   const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated).toEqual(stripV120(withMigratedHunting(w)));expect(migrated.wildlife!.animals[0]!.health).toBeUndefined();
   legacy.wildlife.animals[0].health=record();expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow();
   damageAnimalWithBullet(w,a,{part:'tail',damage:1});expect(validateWorld(w)).toEqual([]);

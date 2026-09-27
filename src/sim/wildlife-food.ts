@@ -6,7 +6,7 @@ import { plantLeafless } from './plant-life.ts';
 import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
 import { reservedSource } from './materials.ts';
 import { releaseAssignments } from './work-release.ts';
-import { animalSpecies } from './animal-species.ts';
+import { animalNutritionMax } from './animal-life.ts';
 import { grazingResult,plantNutrition } from './biome-flora.ts';
 import { penRegion } from './animal-pens.ts';
 
@@ -33,7 +33,7 @@ function unclaimedPlant(world:World,r:Resource,except:number):boolean {
 }
 export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   const result:AnimalFood[]=[];
-  const definition=animalSpecies(a.species);
+  const capacity=animalNutritionMax(a);
   const pen=grazingPen(world,a);
   // A food search can inspect thousands of plants. Collect competing claims
   // once for this decision instead of walking every animal and job per plant.
@@ -47,7 +47,7 @@ export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   }
   for(const p of world.piles)if(p.kind==='food'&&herbivoreFoods.has(p.item)&&p.owner.type==='ground'&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))) {
     const available=p.quantity-reservedSource(world,p.id,a.id),nutrition=ITEM_DEFINITIONS[p.item].nutrition/100;
-    if(available>0&&nutrition>0)result.push({id:p.id,kind:'pile',x:p.owner.x,z:p.owner.z,quantity:Math.min(available,Math.max(1,Math.ceil((definition.nutrition-a.food)/nutrition)))});
+    if(available>0&&nutrition>0)result.push({id:p.id,kind:'pile',x:p.owner.x,z:p.owner.z,quantity:Math.min(available,Math.max(1,Math.ceil((capacity-a.food)/nutrition)))});
   }
   return result;
 }
@@ -66,10 +66,10 @@ export function animalMealTarget(world:World,a:WildAnimal,resourcesById?:Readonl
 /** Called only after physical contact and the complete ingestion interval. */
 export function finishAnimalMeal(world:World,a:WildAnimal):void {
   const s=world.wildlife!,m=a.meal!,ingested=m.kind==='pile'?world.piles.find(p=>p.id===m.id):undefined;let nutrition=0;
-  const definition=animalSpecies(a.species);
+  const capacity=animalNutritionMax(a);
   if(m.kind==='plant') {
     const r=world.resources.find(r=>r.id===m.id)!;if(!isPlant(r))return;
-    const growth=plantGrowth(world,r),result=grazingResult(r,growth,definition.nutrition-a.food);nutrition=result.nutrition;
+    const growth=plantGrowth(world,r),result=grazingResult(r,growth,capacity-a.food);nutrition=result.nutrition;
     if(result.removes){
       world.resources=world.resources.filter(p=>p!==r);s.eatenPlants++;
       invalidatePlantWork(world,r,true);
@@ -78,7 +78,7 @@ export function finishAnimalMeal(world:World,a:WildAnimal):void {
     const p=world.piles.find(p=>p.id===m.id)!;nutrition=ITEM_DEFINITIONS[p.item].nutrition*m.quantity/100;
     p.quantity-=m.quantity;s.eatenItems+=m.quantity;if(!p.quantity)world.piles.splice(world.piles.indexOf(p),1);
   }
-  a.food=Math.min(definition.nutrition,a.food+nutrition);s.eatenNutrition+=nutrition;
+  a.food=Math.min(capacity,a.food+nutrition);s.eatenNutrition+=nutrition;
   delete a.meal;a.state='idle';a.nextDecision=world.tick;
   if(ingested)ingestFoodRisk(world,a,ingested,false);
 }

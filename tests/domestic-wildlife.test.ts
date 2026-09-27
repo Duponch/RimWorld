@@ -2,6 +2,7 @@ import {expect,test} from 'vitest';
 import {applyCommand,createWorld} from '../src/sim/index.ts';
 import {addGroundMaterial,addMaterial} from '../src/sim/materials.ts';
 import {animalSpecies} from '../src/sim/animal-species.ts';
+import {adultAgeTicks} from '../src/sim/animal-life.ts';
 import {colonyWealth} from '../src/sim/colony-wealth.ts';
 import {animalHandlingHolding} from '../src/sim/animal-handling.ts';
 import {addResolvedInjury,createMedicalRecord} from '../src/sim/injury-state.ts';
@@ -16,7 +17,7 @@ import {animalCombatCamp} from './scenarios/animal-combat.ts';
 function fixture(){
   const w=createWorld(106,16,16);
   w.resources=[];w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.structures=[];w.jobs=[];w.piles=[];
-  const a:WildAnimal={id:w.nextId++,species:'hare',sex:'female',x:5,z:7,
+  const a:WildAnimal={id:w.nextId++,species:'hare',sex:'female',ageTicks:adultAgeTicks('hare'),x:5,z:7,
     food:.02,rest:1,state:'idle',path:[],nextDecision:w.tick};
   w.wildlife={profile:'temperate-hares-v1',rng:1,animals:[a],eatenPlants:0,eatenNutrition:0,eatenItems:0};
   return {w,a};
@@ -106,10 +107,10 @@ test('le lièvre blessé se couche pour un vrai soin mais se relève pour cherch
 
 test('les dossiers séparent sauvage et domestique libre, sans promettre de dressage avancé',()=>{
   const {w,a}=fixture();
-  expect(animalInspectorView(w,a.id)).toMatchObject({identity:'Femelle · sauvage',canTame:true,domestic:false});
+  expect(animalInspectorView(w,a.id)).toMatchObject({identity:'Femelle · Adulte · sauvage',canTame:true,domestic:false});
   expect(animalInspectorView(w,a.id)!.species.join(' ')).toContain('Animaux 8');
   own(w,a);
-  expect(animalInspectorView(w,a.id)).toMatchObject({identity:'Femelle · domestique libre',canHunt:false,canTame:false,domestic:true,care:'herbal'});
+  expect(animalInspectorView(w,a.id)).toMatchObject({identity:'Femelle · Adulte · domestique libre',canHunt:false,canTame:false,domestic:true,care:'herbal'});
   expect(animalInspectorView(w,a.id)!.health.join(' ')).toContain('Statut : domestique libre');
   expect(animalInspectorScaffold()).toContain('data-animal-care');
   expect(animalsPanelScaffold()).toContain('Aucun animal domestique');

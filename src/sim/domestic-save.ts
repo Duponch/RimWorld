@@ -1,16 +1,19 @@
 import { handlingFeedUnits, handlingStepDuration, canTameSpecies } from './animal-handling.ts';
 import { livestock } from './animal-leading.ts';
 import { penRegion } from './animal-pens.ts';
-import { ANIMAL_PRODUCTS, productKind, productReady } from './animal-products.ts';
+import { ANIMAL_PRODUCTS, productKind } from './animal-products.ts';
 import { isColonist } from './affiliation.ts';
 import { isMedicine, MEDICAL_CARE } from './medicine-rules.ts';
 import { reservedSource } from './materials.ts';
 import type { World } from './types.ts';
+import type { WildAnimal } from './wildlife-state.ts';
 
 const obj=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const finite=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
 const keys=(v:Record<string,unknown>,required:string[],optional:string[]=[])=>required.every(k=>Object.hasOwn(v,k))&&Object.keys(v).every(k=>required.includes(k)||optional.includes(k));
+const productForVersion=(a:WildAnimal,version:number)=>version>=121?productKind(a):a.species==='muffalo'?'shear':a.species==='dromedary'&&a.sex==='female'?'milk':undefined;
+const productReadyForVersion=(a:WildAnimal,version:number)=>!!a.domestic&&!!productForVersion(a,version)&&(a.domestic.productFullness??0)>=1;
 
 /** Shape and ownership remain separate from transient availability: an animal
  * can be harmed between accepting an order and its next simulation step. */
@@ -21,7 +24,7 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
     if(d!==undefined&&!(version>=106&&(a.species==='hare'||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=120?['lastTraining','penMarkerId','productFullness']:version>=119?['lastTraining','penMarkerId']:['lastTraining'])
       &&int(d.since,0,w.tick)&&typeof d.care==='string'&&Object.hasOwn(MEDICAL_CARE,d.care)&&int(d.tameness,1,5)
       &&int(d.nextDecay,0,w.tick+45000)&&(d.lastTraining===undefined||int(d.lastTraining,d.since,w.tick))
-      &&(version>=120?(productKind(a)?finite(d.productFullness,0,1):d.productFullness===undefined):d.productFullness===undefined)
+      &&(version>=120?(productForVersion(a,version)?finite(d.productFullness,0,1):d.productFullness===undefined):d.productFullness===undefined)
       &&(d.penMarkerId===undefined||version>=119&&livestock(a)&&int(d.penMarkerId,1,w.nextId-1)&&!!w.structures.find(s=>s.id===d.penMarkerId&&s.kind==='pen-marker'&&s.pen?.accepted.includes(a.species)))))errors.push('Invalid domestic animal.');
     if(t!==undefined&&!(version>=106&&(a.species==='hare'||version>=119&&canTameSpecies(a.species))&&obj(t)&&keys(t,['designated'],['lastAttempt'])&&typeof t.designated==='boolean'
       &&(t.lastAttempt===undefined||int(t.lastAttempt,0,w.tick))&&(!a.domestic||!t.designated)))errors.push('Invalid taming designation.');
@@ -66,7 +69,7 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
         continue;
       }
       if(t.kind==='milk'||t.kind==='shear'){
-        if(!a.domestic||productKind(a)!==t.kind||!productReady(a)||a.state==='dead'||a.state==='downed')errors.push('Invalid animal product task.');
+        if(!a.domestic||productForVersion(a,version)!==t.kind||!productReadyForVersion(a,version)||a.state==='dead'||a.state==='downed')errors.push('Invalid animal product task.');
         continue;
       }
       if(t.kind==='tame'?!a.taming?.designated||!!a.domestic:!a.domestic)errors.push('Animal handling has no matching designation.');

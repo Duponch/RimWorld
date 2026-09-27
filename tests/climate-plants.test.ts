@@ -11,6 +11,7 @@ import { reconcileTemperature } from '../src/sim/temperature';
 import { updatePlantTemperatures } from '../src/sim/thermal-plants';
 import { solarPowerOutput } from '../src/sim/solar-rules';
 import { animalFoods,animalMealTarget } from '../src/sim/wildlife-food';
+import { adultAgeTicks } from '../src/sim/animal-life';
 import type { WildAnimal } from '../src/sim/wildlife-state';
 import { sampleSeasonalDaylight,type DaylightSample } from '../src/render/daylight';
 import type { Resource,World } from '../src/sim/types';
@@ -83,7 +84,7 @@ test('vie végétale : frontière de gel contrôlée, cultures fragiles, buisson
   expect(w.resources.includes(outside)).toBe(false);expect(w.resources.includes(roomPlant)).toBe(true);
   expect(w.resources.includes(berry)).toBe(true);expect(berry.plantLife!.leaflessAt).toBeDefined();
   const leaflessAt=berry.plantLife!.leaflessAt!;
-  const hare:WildAnimal={id:w.nextId++,species:'hare',sex:'female',x:10,z:4,food:.01,rest:80,state:'idle',path:[],nextDecision:w.tick,meal:{id:berry.id,kind:'plant',quantity:1,progress:0}};
+  const hare:WildAnimal={id:w.nextId++,species:'hare',sex:'female',ageTicks:adultAgeTicks('hare'),x:10,z:4,food:.01,rest:80,state:'idle',path:[],nextDecision:w.tick,meal:{id:berry.id,kind:'plant',quantity:1,progress:0}};
   expect(animalFoods(w,hare).some(f=>f.id===berry.id)).toBe(false);expect(animalMealTarget(w,hare)).toBeUndefined();
   expect(plantLeafless({tick:leaflessAt+5999},berry)).toBe(true);expect(plantLeafless({tick:leaflessAt+6000},berry)).toBe(false);
   expect(w.fires).toBeUndefined(); // frost never becomes a fire loss

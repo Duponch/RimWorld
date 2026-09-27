@@ -14,6 +14,8 @@ import { travelHeight } from './furniture-motion';
 import { pawnSelectionMesh } from './PawnSelectionLayer';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { actorSurfaceShade } from './actor-surface';
+import { animalBodySize } from '../sim/animal-life';
+import { animalSpecies } from '../sim/animal-species';
 
 /** Resident capacity and node graph. CPU supplies edges/phases at snapshots
  * and segment boundaries; continuous translation and the rig run on the GPU. */
@@ -44,7 +46,8 @@ class SpeciesRig {
       const q=vec3(p.x,p.y.mul(c).sub(p.z.mul(s)),p.z.mul(c).add(p.y.mul(s))).add(pivot).toVar();
       q.y.mulAssign(float(1).sub(min(state.z,1).mul(.5)));q.y.addAssign(sin(phase).abs().mul(.08).mul(state.x));
       const cy=cos(pose.w),sy=sin(pose.w);
-      return vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy))).add(pose.xyz);
+      return vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy)))
+        .mul(attribute('aScale','float')).add(pose.xyz);
     })();
     const textured=material(0xffffff);configure?.(textured);
     textured.positionNode=mat.positionNode;
@@ -64,12 +67,12 @@ class SpeciesRig {
   }
   /** Read the same resident edges as the GPU, only on pointer gestures. */
   forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {
-    const g=this.mesh.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),times=g.getAttribute('aTravel'),state=g.getAttribute('aAnimal'),box=g.boundingBox!;
+    const g=this.mesh.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),times=g.getAttribute('aTravel'),state=g.getAttribute('aAnimal'),scale=g.getAttribute('aScale'),box=g.boundingBox!;
     const radius=Math.max(box.max.x-box.min.x,box.max.z-box.min.z)/2+.1;
     this.animals.forEach((a,i)=>{
       const start=times.getX(i),end=times.getY(i),alpha=end>start?THREE.MathUtils.clamp((this.travelTime.value-start)/(end-start),0,1):1;
-      const height=box.max.y*(1-Math.min(1,state.getZ(i))*.5);
-      visit(a.id,this.species,THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),times.getW(i),alpha)),THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),height,radius);
+      const growth=scale.getX(i),height=box.max.y*growth*(1-Math.min(1,state.getZ(i))*.5);
+      visit(a.id,this.species,THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),times.getW(i),alpha)),THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),height,radius*growth);
     });
   }
   prepare():()=>void {const g=this.mesh.geometry as THREE.InstancedBufferGeometry,n=g.instanceCount;g.instanceCount=Math.max(1,n);return ()=>{g.instanceCount=n;};}
@@ -81,7 +84,7 @@ class SpeciesRig {
     }
     const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
     this.travelTime.value=localTimeSeconds(tick,origin);this.time.value=localTimeSeconds(tick)%(2*Math.PI);
-    const g=this.mesh.geometry as THREE.InstancedBufferGeometry,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=g.getAttribute('aTravel') as THREE.InstancedBufferAttribute,state=g.getAttribute('aAnimal') as THREE.InstancedBufferAttribute;
+    const g=this.mesh.geometry as THREE.InstancedBufferGeometry,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=g.getAttribute('aTravel') as THREE.InstancedBufferAttribute,state=g.getAttribute('aAnimal') as THREE.InstancedBufferAttribute,scale=g.getAttribute('aScale') as THREE.InstancedBufferAttribute;
     if(changed){
     const fireSize=this.mesh.geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
     const burning=new Map((world.fires?.items??[]).filter(f=>f.attachedAnimalId!==undefined).map(f=>[f.attachedAnimalId!,f.size]));
@@ -92,7 +95,8 @@ class SpeciesRig {
     const animals=this.animals;g.instanceCount=animals.length;let dirty=false;
     animals.forEach((a,i)=>{
       const edge=timeline?.segment(a.id)??a.motion,active=!!edge&&tick>=edge.start&&tick<edge.end;
-      const key=`${i}:${origin}:${edge?.start}:${edge?.end}:${active}:${a.state}:${a.meal?.id}:${a.strike?.atCore}:${a.stun?.untilCore}:${a.threat?.targetId}`;if(this.keys.get(a.id)===key)return;this.keys.set(a.id,key);dirty=true;
+      const growth=animalBodySize(a)/animalSpecies(a.species).bodySize;
+      const key=`${i}:${origin}:${edge?.start}:${edge?.end}:${active}:${a.state}:${a.meal?.id}:${a.strike?.atCore}:${a.stun?.untilCore}:${a.threat?.targetId}:${growth}`;if(this.keys.get(a.id)===key)return;this.keys.set(a.id,key);dirty=true;
       const fallen=a.state==='dead'||a.state==='downed';
       const traveling=!!edge&&(active||a.state==='moving'&&world.tick<edge.end);
       const f=traveling?edge.from:a,t=traveling?edge.to:a;
@@ -110,8 +114,9 @@ class SpeciesRig {
       const turnStart=localTimeSeconds(heading.startTick,origin);
       times.setXYZW(i,traveling?localTimeSeconds(edge.start,origin):turning?turnStart:0,traveling?localTimeSeconds(edge.end,origin):turning?turnStart+TURN_TICKS/TICKS_PER_SECOND:0,fa,fb);
       state.setXYZW(i,active&&!fallen&&!a.stun&&(!edge||!('fromFraction' in edge)||!('toFraction' in edge)||edge.fromFraction!==edge.toFraction)?1:0,!traveling&&a.strike&&!a.stun?2:!traveling&&a.state==='eating'?1:0,a.state==='dead'?2:fallen||!traveling&&a.state==='sleeping'?1:0,a.strike?coreTimeSeconds(a.strike.atCore,origin):a.id%30);
+      scale.setX(i,growth);
     });
-    if(dirty)for(const a of [from,to,times,state])a.needsUpdate=true;
+    if(dirty)for(const a of [from,to,times,state,scale])a.needsUpdate=true;
   }
 }
 

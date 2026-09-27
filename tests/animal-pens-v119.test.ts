@@ -64,7 +64,7 @@ test('marker species choice is atomic, persisted, and old saves migrate without 
     allowedItems:policy.allowedItems.filter(item=>!item.startsWith('muffalo-wool-')),
     allowedMaterials:policy.allowedMaterials.filter(material=>material!=='muffalo-wool')}));
   const migrated=deserializeWorld(JSON.stringify(historical));
-  expect(migrated).toEqual({...historical,schemaVersion:120});
+  expect(migrated).toEqual({...historical,schemaVersion:121});
   expect(migrated.structures).toEqual([]);
 });
 

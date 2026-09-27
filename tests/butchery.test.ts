@@ -2,6 +2,7 @@ import { expect,test } from 'vitest';
 import { applyCommand,createWorld,stepWorld,validateWorld,serializeWorld,deserializeWorld } from '../src/sim/index';
 import { addGroundMaterial,refreshStock } from '../src/sim/materials';
 import { corpseYield,CORPSE_ROT_TICKS } from '../src/sim/corpses';
+import { adultAgeTicks } from '../src/sim/animal-life';
 import { createMedicalRecord } from '../src/sim/injury-state';
 import { BLOOD_UNIT } from '../src/sim/injury-rules';
 import { cookingSpeed,butcherySpeed,butcheryEfficiency,cookingSkill,roundYield } from '../src/sim/cooking-statistics';
@@ -16,7 +17,7 @@ function camp(){
   w.pawns=w.pawns.slice(0,1);const p=w.pawns[0]!;
   Object.assign(p,{x:3,z:4,hunger:100,rest:100});p.schedule.fill('work');for(const key of Object.keys(p.priorities))p.priorities[key as keyof typeof p.priorities]=0;p.priorities.cook=1;p.skills.cooking={level:8,xp:0,dailyXp:0,passion:1};
   const id=w.nextId++,health={...createMedicalRecord(w.tick),body:'hare' as const,bloodLoss:BLOOD_UNIT,death:{tick:w.tick,cause:'blood-loss' as const}};
-  const corpse:MaterialPile={id,item:'hare-corpse',kind:'corpse',quantity:1,owner:{type:'ground',x:5,z:4},corpse:{animalId:id,species:'hare',sex:'female',health},rot:{progress:0,atTick:w.tick}};w.piles.push(corpse);
+  const corpse:MaterialPile={id,item:'hare-corpse',kind:'corpse',quantity:1,owner:{type:'ground',x:5,z:4},corpse:{animalId:id,species:'hare',sex:'female',ageTicks:adultAgeTicks('hare'),health},rot:{progress:0,atTick:w.tick}};w.piles.push(corpse);
   expect(applyCommand(w,{type:'designate',kind:'butcher-spot',x:8,z:8}).ok).toBe(true);
   const spot=w.structures.find(s=>s.kind==='butcher-spot')!;expect(spot).toBeDefined();expect(applyCommand(w,{type:'bill-add',structureId:spot.id}).ok).toBe(true);refreshStock(w);
   return {w,p,corpse,spot,bill:spot.bills![0]!};
@@ -44,7 +45,8 @@ test('physical corpse collection, saved work, two conserved products, cooked mea
   const resumed=deserializeWorld(saved);stepWorld(w,200);stepWorld(resumed,200);expect(resumed).toEqual(w);
   until(w,()=>bill.target===0&&!p.cooking);expect(w.butchery?.completed).toBe(1);expect(quantity(w,'hare-corpse')).toBe(0);expect(quantity(w,'hare-meat')).toBe(w.butchery!.meat);expect(quantity(w,'light-leather')).toBe(w.butchery!.leather);expect(p.skills.cooking!.xp).toBeGreaterThan(0);
   const fire:Structure={id:w.nextId++,kind:'campfire' as const,x:11,z:8,orientation:0 as const,footprint:'standard' as const,fuel:{ticks:12000,burned:0,autoRefuel:false},bills:[]};w.structures.push(fire);expect(applyCommand(w,{type:'bill-add',structureId:fire.id}).ok).toBe(true);
-  const meal=fire.bills![0]!;expect(applyCommand(w,{type:'bill-update',structureId:fire.id,billId:meal.id,settings:{...meal,filters:{rice:false,berries:false,'hare-meat':true},destination:'drop'}}).ok).toBe(true);
+  const meal=fire.bills![0]!;const meatOnly=Object.fromEntries(Object.keys(meal.filters).map(item=>[item,item==='hare-meat'])) as typeof meal.filters;
+  expect(applyCommand(w,{type:'bill-update',structureId:fire.id,billId:meal.id,settings:{...meal,filters:meatOnly,destination:'drop'}}).ok).toBe(true);
   until(w,()=>quantity(w,'simple-meal')===1&&!p.cooking);expect(quantity(w,'hare-meat')+10).toBe(w.butchery!.meat);expect(quantity(w,'light-leather')).toBe(w.butchery!.leather);
   const meat=quantity(w,'hare-meat');p.hunger=20;until(w,()=>p.hunger>50);expect(quantity(w,'simple-meal')).toBe(0);expect(quantity(w,'hare-meat')).toBe(meat);expect(validateWorld(w)).toEqual([]);
 });

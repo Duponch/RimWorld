@@ -1,6 +1,7 @@
 import { expect,test } from 'vitest';
 import { applyCommand,createWorld,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index';
 import { ANIMAL_SPECIES,BIOME_FAUNA,animalSpecies,selectBiomeSpecies } from '../src/sim/animal-species';
+import { adultAgeTicks } from '../src/sim/animal-life';
 import { HARE_MODEL,animalBodyModel } from '../src/sim/body-model';
 import { createMedicalRecord } from '../src/sim/injury-state';
 import { BLOOD_UNIT } from '../src/sim/injury-rules';
@@ -22,9 +23,12 @@ import type { WildAnimal } from '../src/sim/wildlife-state';
 
 const dead=(w:World,species:AnimalSpeciesId,x=5,z=4):MaterialPile=>{
   const id=w.nextId++,health={...createMedicalRecord(w.tick),body:species,bloodLoss:BLOOD_UNIT,death:{tick:w.tick,cause:'blood-loss' as const}};
-  return {id,item:animalSpecies(species).corpseItem,kind:'corpse',quantity:1,owner:{type:'ground',x,z},corpse:{animalId:id,species,sex:'female',health},rot:{progress:0,atTick:w.tick}};
+  return {id,item:animalSpecies(species).corpseItem,kind:'corpse',quantity:1,owner:{type:'ground',x,z},corpse:{animalId:id,species,sex:'female',ageTicks:adultAgeTicks(species),health},rot:{progress:0,atTick:w.tick}};
 };
 const quantity=(w:World,item:MaterialPile['item'])=>w.piles.filter(p=>p.item===item).reduce((sum,p)=>sum+p.quantity,0);
+const legacyWildlife=(w:World):World=>({...w,wildlife:{...w.wildlife!,animals:w.wildlife!.animals.map(a=>{
+  const old={...a};delete (old as Partial<WildAnimal>).ageTicks;delete old.parents;delete old.pregnancy;delete old.mating;return old;
+})}});
 function until(w:World,done:()=>boolean,max=3500):void {
   for(let i=0;i<max&&!done();i++){stepWorld(w);expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);}
   expect(done(),`condition tick ${w.tick}`).toBe(true);
@@ -38,7 +42,7 @@ test('six adult species retain Core-derived needs, anatomy, attacks and products
   expect(animalBodyModel('gazelle').byId.torso.hp).toBe(28);expect(animalBodyModel('muffalo').byId.torso.hp).toBe(70);
   expect(animalBodyModel('dromedary').byId.torso.hp).toBe(64);expect(animalBodyModel('dromedary').byId.hump).toMatchObject({hp:32,coverage:.1});
   expect(animalBodyModel('deer').byId['left-front-hoof']).toBeDefined();expect(animalBodyModel('deer').byId['left-front-paw']).toBeUndefined();
-  const gazelle:WildAnimal={id:1,species:'gazelle',sex:'female',x:0,z:0,food:.7,rest:1,state:'idle',path:[],nextDecision:0};
+  const gazelle:WildAnimal={id:1,species:'gazelle',sex:'female',ageTicks:adultAgeTicks('gazelle'),x:0,z:0,food:.7,rest:1,state:'idle',path:[],nextDecision:0};
   expect(animalMeleeTools(gazelle)).toEqual(expect.arrayContaining([expect.objectContaining({damage:5.5,cooldownCore:90}),expect.objectContaining({damage:7})]));
 });
 
@@ -55,8 +59,8 @@ test('biome budgets retain omitted Core weight and use ecological weight instead
   expect(population.fullTargetWeight).toBe(full);
   expect(population.targetWeight).toBe(full*2.3/12.27);
   expect(a.wildlife!.animals.every(animal=>BIOME_FAUNA['temperate-forest'].entries.some(e=>e.species===animal.species))).toBe(true);
-  expect(validateWildlife(a,91,new Set())).toEqual([]);
-  expect(validateWildlife(a,90,new Set())).not.toEqual([]);
+  expect(validateWildlife(legacyWildlife(a),91,new Set())).toEqual([]);
+  expect(validateWildlife(legacyWildlife(a),90,new Set())).not.toEqual([]);
 });
 
 test('renewal is a saved prospective group arrival and does not reproduce or immediately refill after a loss',()=>{
@@ -66,7 +70,7 @@ test('renewal is a saved prospective group arrival and does not reproduce or imm
   expect(s.population).toMatchObject({checks:1,arrivals:1,nextCheck:w.tick+ANIMAL_POPULATION_CHECK_TICKS});
   expect(s.animals.length).toBeGreaterThan(0);expect(s.animals.every(a=>a.species==='hare')).toBe(true);
   const count=s.animals.length;advanceWildlife(w);expect(s.animals).toHaveLength(count);expect(s.population!.checks).toBe(1);
-  expect(validateWildlife(w,91,new Set())).toEqual([]);
+  expect(validateWildlife(legacyWildlife(w),91,new Set())).toEqual([]);
 });
 
 test('renewal defers safely when identity or saved counter space is exhausted',()=>{
@@ -93,9 +97,10 @@ test('corpse identity selects its body coverage, meat and leather and is rejecte
   expect(corpseProducts(hare)).toMatchObject({meat:{item:'hare-meat'},leather:{item:'light-leather'}});
   expect(corpseYield(camel).meat).toBeCloseTo(294,9);expect(corpseYield(camel).leather).toBeCloseTo(84,9);
   expect(corpseProducts(camel)).toMatchObject({meat:{item:'dromedary-meat'},leather:{item:'camelhide'}});
-  expect(validCorpseShape(camel as unknown as Record<string,unknown>,91)).toBe(true);
-  expect(validCorpseShape(camel as unknown as Record<string,unknown>,90)).toBe(false);
-  const forged=structuredClone(camel) as any;forged.corpse.health.body='muffalo';expect(validCorpseShape(forged,91)).toBe(false);
+  const legacy=structuredClone(camel);delete (legacy.corpse as {ageTicks?:number}).ageTicks;
+  expect(validCorpseShape(legacy as unknown as Record<string,unknown>,91)).toBe(true);
+  expect(validCorpseShape(legacy as unknown as Record<string,unknown>,90)).toBe(false);
+  const forged=structuredClone(legacy);forged.corpse!.health.body='muffalo';expect(validCorpseShape(forged as unknown as Record<string,unknown>,91)).toBe(false);
 });
 
 test('large butchery preflights and splits every physical output below its stack limit',()=>{

@@ -2,6 +2,7 @@ import { FRAME_SHOT_FILL,resourceShotFill,SHOT_LAYER,STRUCTURE_SHOT_FILL,itemSho
 import { footprintCells } from './definitions.ts';
 import type { Cell,StructureKind,World } from './types.ts';
 import type { ProjectileScene,ProjectileTarget } from './projectile-rules.ts';
+import { animalBodySize } from './animal-life.ts';
 
 export interface WorldProjectileTargets {
   readonly width:number;readonly height:number;readonly capturedAt:number;
@@ -22,7 +23,7 @@ const EMPTY:readonly ProjectileTarget[]=Object.freeze([]);
 export function captureWorldProjectileTargets(world:World):WorldProjectileTargets {
   const {width,height,tick:capturedAt}=world,n=width*height;
   const capacity=world.structures.length+world.jobs.length+world.resources.length+world.piles.length+world.packed.length+world.pawns.length+(world.schemaVersion>=77?world.wildlife?.animals.length??0:0)+1;
-  const ids=new Float64Array(capacity),fills=new Float64Array(capacity),xs=new Int32Array(capacity),zs=new Int32Array(capacity);
+  const ids=new Float64Array(capacity),fills=new Float64Array(capacity),bodySizes=new Float64Array(capacity),xs=new Int32Array(capacity),zs=new Int32Array(capacity);
   const kinds=new Uint8Array(capacity),layers=new Uint8Array(capacity),flags=new Uint8Array(capacity),heads=new Int32Array(n),rocks=new Uint8Array(n);
   const links=[0],next=[0],byId=new Map<number,Map<number,number>>(),ranges=PREFIX.map(()=>({start:0,end:0,ordered:true})),footprints=new Map<number,readonly Cell[]>();
   const records=new Map<number,ProjectileTarget>(),cellRecords=new Map<number,readonly ProjectileTarget[]>();let count=0;
@@ -30,8 +31,8 @@ export function captureWorldProjectileTargets(world:World):WorldProjectileTarget
   const cellIndex=(x:number,z:number)=>z*width+x;
   for(let i=0;i<n;i++)if(world.tiles[i].terrain==='rock')rocks[i]=1;
   const link=(slot:number,x:number,z:number)=>{if(!Number.isInteger(x)||!Number.isInteger(z)||x<0||z<0||x>=width||z>=height)return;const i=cellIndex(x,z);links.push(slot);next.push(heads[i]);heads[i]=links.length-1;};
-  const append=(kind:number,id:number,x:number,z:number,fill:number,layer:number,state=0,cells?:readonly Cell[])=>{
-    const slot=++count;ids[slot]=id;xs[slot]=x;zs[slot]=z;fills[slot]=fill;layers[slot]=layer;kinds[slot]=kind;flags[slot]=state;
+  const append=(kind:number,id:number,x:number,z:number,fill:number,layer:number,state=0,cells?:readonly Cell[],bodySize=0)=>{
+    const slot=++count;ids[slot]=id;xs[slot]=x;zs[slot]=z;fills[slot]=fill;bodySizes[slot]=bodySize;layers[slot]=layer;kinds[slot]=kind;flags[slot]=state;
     const range=ranges[kind];if(!range.start)range.start=slot;
     if(range.end&&id<=ids[range.end-1])range.ordered=false;range.end=slot+1;
     if(cells){const copy=cells.map(c=>({x:c.x,z:c.z}));footprints.set(slot,copy);for(const c of copy)link(slot,c.x,c.z);}else link(slot,x,z);
@@ -46,7 +47,7 @@ export function captureWorldProjectileTargets(world:World):WorldProjectileTarget
   for(const p of world.packed)if(p.owner.type==='ground')append(5,p.building.id,p.owner.x,p.owner.z,0,SHOT_LAYER.item);
   const carried=new Set(world.pawns.filter(p=>p.rescue?.phase==='carry').map(p=>p.rescue!.patientId));
   for(const p of world.pawns)if(p.state!=='dead'&&!p.health?.death&&!carried.has(p.id))append(6,p.id,p.x,p.z,0,SHOT_LAYER.pawn,['sleeping','resting','downed'].includes(p.state)?0:2);
-  if(world.schemaVersion>=77)for(const a of world.wildlife?.animals??[])if(a.state!=='dead')append(7,a.id,a.x,a.z,0,SHOT_LAYER.pawn,['sleeping','downed'].includes(a.state)?0:2);
+  if(world.schemaVersion>=77)for(const a of world.wildlife?.animals??[])if(a.state!=='dead')append(7,a.id,a.x,a.z,0,SHOT_LAYER.pawn,['sleeping','downed'].includes(a.state)?0:2,undefined,animalBodySize(a));
   const coveredAt=(slot:number,c:Cell)=>{
     if(!inBounds(c))return false;const i=cellIndex(c.x,c.z);
     if(rocks[i]&&SHOT_LAYER.building>=layers[slot])return true;
@@ -62,7 +63,7 @@ export function captureWorldProjectileTargets(world:World):WorldProjectileTarget
     } else {
       const cell=Object.freeze({x:xs[slot],z:zs[slot]}),cells=footprints.get(slot),covered=cells?cells.every(c=>coveredAt(slot,c)):coveredAt(slot,cell);
       const base={key:`${PREFIX[kinds[slot]]}:${ids[slot]}`,cell,covered,fill:fills[slot],openDoor:!!(flags[slot]&1)};
-      record=kinds[slot]>=6?Object.freeze({...base,kind:'pawn',bodySize:kinds[slot]===7?.2:1,standing:!!(flags[slot]&2),friendly:false}):Object.freeze({...base,kind:'object'});
+      record=kinds[slot]>=6?Object.freeze({...base,kind:'pawn',bodySize:kinds[slot]===7?bodySizes[slot]:1,standing:!!(flags[slot]&2),friendly:false}):Object.freeze({...base,kind:'object'});
     }
     records.set(slot,record);return record;
   };

@@ -1,5 +1,6 @@
 import { isColonist } from './affiliation.ts';
 import { animalSpecies } from './animal-species.ts';
+import { animalNutritionMax } from './animal-life.ts';
 import type { AnimalHandlingTask, DomesticCommand } from './domestic-state.ts';
 import { ingestFoodRisk } from './food-hygiene.ts';
 import { healthRandom } from './health.ts';
@@ -201,7 +202,7 @@ export function processHandling(w:World,p:Pawn,ctx:HandlingContext):void {
     const units=handlingFeedUnits(a.species);
     consumed.quantity-=units;task.quantity-=units;
     if(!consumed.quantity){w.piles.splice(w.piles.indexOf(consumed),1);task.carryPileId=null;}
-    a.food=Math.min(animalSpecies(a.species).nutrition,a.food+units*ITEM_DEFINITIONS[consumed.item].nutrition/100);
+    a.food=Math.min(animalNutritionMax(a),a.food+units*ITEM_DEFINITIONS[consumed.item].nutrition/100);
     ingestFoodRisk(w,a,foodRisk,false);
     if(a.state==='dead'||a.state==='downed'){interruptWork(w,p);return;}
   } else if(!final&&p.skills.animals)learnSkill(p.skills.animals,70_000,p);

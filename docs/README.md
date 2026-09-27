@@ -1,5 +1,9 @@
 # Documentation de Lisière
 
+**V121 — premiers âges et naissances animales :** les bêtes domestiques adultes peuvent s'accoupler, porter une grossesse et donner naissance à un jeune physique ; trois stades gouvernent taille, alimentation, produits et dépouille. La [scène préparée](../public/test-saves/v121/cycle-animal.json) rend la transition observable rapidement. [Contrat](development/animal-life.md), [relevé Core](research/animal-life-core-v121.md), [preuves et coût](history/validation-animal-life-v121.md). Schéma 121 ; reproduction sauvage, fausse couche et soins maternels restent hors périmètre.
+
+**V120 — lait et laine physiques :** le mufalo donne la laine et la dromadaire adulte femelle le lait par collecte réelle, puis piles, repas et vêtements. [Contrat](development/animal-products.md), [référence Core](research/animal-products-core-v120.md), [preuves](history/validation-animal-products-v120.md).
+
 **V114 — bâtiments et surfaces peints :** une large planche par mur en bois, porte en acier enchâssée sous un linteau en bois, dalle de toit continue au-dessus du vide et des supports voisins. De larges plages peintes habillent aussi objets, arbres, cultures, colons et animaux ; l'option « Textures 3D stylisées » active leurs matériaux texturés depuis l'accueil ou le jeu. [Contrat](development/timber-buildings.md), [validation et coût mesuré](history/validation-timber-v114.md). Schéma 109, simulation et catalogue inchangés ; cadence sous forte charge encore insuffisante.
 
 **V113 — paysage plus léger en vue détaillée :** lots de terrain et de ressources plus grands, recherche alimentaire de la faune moins répétitive. [Diagnostic CPU/GPU et décision WASM](research/performance-v113.md), [comparaisons natives, images et replays](history/validation-performance-v113.md). Le départ de trois colons approche 240 FPS dans la vue mesurée, sans garantie générale ; la charge mixte à cent colons reste limitée. Schéma 109 et gameplay inchangés.

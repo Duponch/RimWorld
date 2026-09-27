@@ -1,11 +1,12 @@
 import {expect,test} from 'vitest';
 import {createWorld} from '../src/sim/index.ts';
 import {animalInspectorView} from '../src/ui/animal-inspector.ts';
+import {adultAgeTicks} from '../src/sim/animal-life.ts';
 import type {WildAnimal} from '../src/sim/wildlife-state.ts';
 
 test('animal dossier reports only eligible owned products and current physical work',()=>{
   const world=createWorld(120,16,16);
-  const animal:WildAnimal={id:world.nextId++,species:'dromedary',sex:'female',x:5,z:6,food:.1,rest:1,state:'idle',path:[],nextDecision:world.tick,
+  const animal:WildAnimal={id:world.nextId++,species:'dromedary',sex:'female',ageTicks:adultAgeTicks('dromedary'),x:5,z:6,food:.1,rest:1,state:'idle',path:[],nextDecision:world.tick,
     domestic:{since:world.tick,care:'herbal',tameness:5,nextDecay:world.tick+45000,productFullness:.5}};
   world.wildlife={profile:'temperate-hares-v1',rng:1,animals:[animal],eatenPlants:0,eatenNutrition:0,eatenItems:0};
   expect(animalInspectorView(world,animal.id)?.species).toContain('Lait : 50 % de maturité');

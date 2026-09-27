@@ -2,11 +2,12 @@ import { expect, test } from 'vitest';
 import { animalInspectorScaffold, animalInspectorView } from '../src/ui/animal-inspector';
 import { createWorld } from '../src/sim/index';
 import { createMedicalRecord } from '../src/sim/injury-state';
+import { adultAgeTicks } from '../src/sim/animal-life';
 import type { WildAnimal } from '../src/sim/wildlife-state';
 
 function fixture() {
   const world = createWorld(901, 16, 16);
-  const animal: WildAnimal = { id: world.nextId++, species: 'hare', sex: 'female', x: 4, z: 7, food: .1, rest: .25, state: 'idle', path: [], nextDecision: world.tick };
+  const animal: WildAnimal = { id: world.nextId++, species: 'hare', sex: 'female', ageTicks: adultAgeTicks('hare'), x: 4, z: 7, food: .1, rest: .25, state: 'idle', path: [], nextDecision: world.tick };
   world.wildlife = { profile: 'temperate-hares-v1', rng: 1, animals: [animal], eatenPlants: 0, eatenNutrition: 0, eatenItems: 0 };
   return { world, animal };
 }
@@ -15,7 +16,7 @@ test('selected wild animal exposes its stored identity, needs, state and hunt de
   const { world, animal } = fixture();
   const view = animalInspectorView(world, animal.id)!;
   expect(view.title).toBe(`Lièvre ${animal.id}`);
-  expect(view.identity).toBe('Femelle · sauvage');
+  expect(view.identity).toBe('Femelle · Adulte · sauvage');
   expect(view.position).toBe('4, 7');
   expect(view.needs).toContain('Nourriture : 50 %');
   expect(view.needs).toContain('Repos : 25 %');

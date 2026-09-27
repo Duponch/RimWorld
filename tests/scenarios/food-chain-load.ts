@@ -4,6 +4,7 @@ import { newCookingBill } from '../../src/sim/cooking-bills.ts';
 import { newBuildingFuel } from '../../src/sim/fuel.ts';
 import { addGroundMaterial, refreshStock } from '../../src/sim/materials.ts';
 import { createMedicalRecord } from '../../src/sim/injury-state.ts';
+import { adultAgeTicks } from '../../src/sim/animal-life.ts';
 import { BLOOD_UNIT } from '../../src/sim/injury-rules.ts';
 import { PLANT_DEFINITIONS } from '../../src/sim/plants.ts';
 import { reconcilePower } from '../../src/sim/power.ts';
@@ -62,7 +63,7 @@ export function foodChainLoad(count:number):World {
     w.structures.push(station);
     if(butcher)for(const dz of [-1,1]) {
       const id=w.nextId++;
-      w.piles.push({id,item:'hare-corpse',kind:'corpse',quantity:1,owner:{type:'ground',x:sx-2,z:z+dz},corpse:{animalId:id,species:'hare',sex:'female',health:{...createMedicalRecord(w.tick),body:'hare',bloodLoss:BLOOD_UNIT,death:{tick:w.tick,cause:'blood-loss'}}},rot:{progress:0,atTick:w.tick}});
+      w.piles.push({id,item:'hare-corpse',kind:'corpse',quantity:1,owner:{type:'ground',x:sx-2,z:z+dz},corpse:{animalId:id,species:'hare',sex:'female',ageTicks:adultAgeTicks('hare'),health:{...createMedicalRecord(w.tick),body:'hare',bloodLoss:BLOOD_UNIT,death:{tick:w.tick,cause:'blood-loss'}}},rot:{progress:0,atTick:w.tick}});
     } else {
       addGroundMaterial(w,'food',20,{x:sx-2,z:z-1},'potato');
       addGroundMaterial(w,'food',20,{x:sx-2,z:z+1},'corn');

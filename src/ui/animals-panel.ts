@@ -5,8 +5,10 @@ import {animalBody} from '../sim/wildlife-health';
 import {animalPenStatus} from './pen-status';
 import {penRegion} from '../sim/animal-pens';
 import {ANIMAL_PRODUCTS,productFullness,productKind} from '../sim/animal-products';
+import {animalLifeStage,animalNutritionMax,gestationTicks} from '../sim/animal-life';
 
 interface DomesticRow { locate:HTMLButtonElement; details:HTMLElement }
+const stageLabel={baby:'Petit',juvenile:'Jeune',adult:'Adulte'} as const;
 const domesticRows=new WeakMap<HTMLElement,Map<number,DomesticRow>>();
 
 /** Owned animals remain physical wildlife actors. The panel is a filtered view
@@ -50,6 +52,6 @@ export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number
     const productTask=product&&active?.kind===product?active:undefined;
     const productText=product?` · ${product==='milk'?'Lait':'Laine'} ${Math.round(100*Math.max(0,Math.min(1,productFullness(a))))} %${productFullness(a)>=1?' (prêt)':''}${productTask?` · ${product==='milk'?'Traite':'Tonte'} ${productTask.phase==='interact'?`${Math.round(100*Math.max(0,Math.min(1,productTask.progress/ANIMAL_PRODUCTS[product].work)))} %`:'en approche'}`:''}`:'';
     row.details.textContent=
-      `${a.sex==='female'?'Femelle':'Mâle'} · ${condition} · ${a.x}, ${a.z} · Nourriture ${Math.round(100*a.food/species.nutrition)} % · Mobilité ${mobility} % · Soins : ${MEDICAL_CARE[a.domestic!.care]}${pen?` · ${pen}`:''}${productText}`;
+      `${a.sex==='female'?'Femelle':'Mâle'} · ${stageLabel[animalLifeStage(a)]} · ${condition} · ${a.x}, ${a.z} · Nourriture ${Math.round(100*a.food/animalNutritionMax(a))} % · Mobilité ${mobility} % · Soins : ${MEDICAL_CARE[a.domestic!.care]}${pen?` · ${pen}`:''}${a.pregnancy?` · Gestation ${Math.round(100*Math.min(1,a.pregnancy.progress/gestationTicks(a.species)))} %`:''}${productText}`;
   }
 }

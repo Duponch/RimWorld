@@ -3,6 +3,7 @@ import {expect,test} from 'vitest';
 import {ANIMAL_PRODUCTS,advanceAnimalProducts,processProduct,productGrowthFactor,productKind,productProposal,productReady,startProduct} from '../src/sim/animal-products.ts';
 import {animalHandlingHolding} from '../src/sim/animal-handling.ts';
 import {animalSpecies,faunaBiome} from '../src/sim/animal-species.ts';
+import {adultAgeTicks} from '../src/sim/animal-life.ts';
 import {pawnBody} from '../src/sim/health-rules.ts';
 import {createMedicalRecord} from '../src/sim/injury-state.ts';
 import {stepWorld} from '../src/sim/engine.ts';
@@ -23,7 +24,7 @@ function camp(species:'muffalo'|'dromedary'='dromedary',sex:'female'|'male'='fem
   for(const key of Object.keys(pawn.priorities) as (keyof typeof pawn.priorities)[])pawn.priorities[key]=0;
   pawn.priorities.handle=1;
   pawn.skills.animals={level:20,xp:0,dailyXp:0,passion:0};
-  Object.assign(animal,{species,sex,x:5,z:10,food:animalSpecies(species).nutrition,rest:1,state:'idle',path:[],motion:undefined,nextDecision:world.tick+80});
+  Object.assign(animal,{species,sex,ageTicks:adultAgeTicks(species),x:5,z:10,food:animalSpecies(species).nutrition,rest:1,state:'idle',path:[],motion:undefined,nextDecision:world.tick+80});
   animal.domestic={since:world.tick,care:'herbal',tameness:5,nextDecay:world.tick+45000,lastTraining:world.tick,productFullness:1};
   refreshStock(world);
   return {world,pawn,animal};
@@ -56,7 +57,7 @@ test('only owned female dromedaries and owned muffalo grow product; hunger bands
   advanceAnimalProducts(world);expect(animal.domestic!.productFullness).toBe(1);
   animal.sex='male';delete animal.domestic!.productFullness;
   expect(productKind(animal)).toBeUndefined();advanceAnimalProducts(world);expect(animal.domestic!.productFullness).toBeUndefined();
-  animal.species='muffalo';expect(productKind(animal)).toBe('shear');advanceAnimalProducts(world);
+  animal.species='muffalo';animal.ageTicks=adultAgeTicks('muffalo');expect(productKind(animal)).toBe('shear');advanceAnimalProducts(world);
   expect(animal.domestic!.productFullness).toBeCloseTo(1/(15*TICKS_PER_DAY));
   animal.species='deer';delete animal.domestic!.productFullness;
   advanceAnimalProducts(world);expect(animal.domestic!.productFullness).toBeUndefined();

@@ -49,7 +49,9 @@ test('civilian hunt reserves live prey, shoots, saves, collects without Haul, th
   command(w,{type:'designate',kind:'butcher-spot',x:8,z:10});const spot=w.structures.find(s=>s.kind==='butcher-spot')!;command(w,{type:'bill-add',structureId:spot.id});
   until(w,()=>!!w.butchery&&!cook.cooking);expect(w.butchery!.completed).toBe(1);expect(units(w,'hare-meat')).toBe(w.butchery!.meat);expect(units(w,'light-leather')).toBe(w.butchery!.leather);expect(units(w,'hare-meat')).toBeGreaterThanOrEqual(10);
   command(w,{type:'priority',pawnId:cook.id,work:'build',value:1});command(w,{type:'designate',kind:'campfire',x:12,z:10});until(w,()=>w.structures.some(s=>s.kind==='campfire'));
-  command(w,{type:'priority',pawnId:cook.id,work:'build',value:0});const fire=w.structures.find(s=>s.kind==='campfire')!;command(w,{type:'bill-add',structureId:fire.id});const bill=fire.bills![0]!;command(w,{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,filters:{rice:false,berries:false,'hare-meat':true},destination:'drop'}});
+  command(w,{type:'priority',pawnId:cook.id,work:'build',value:0});const fire=w.structures.find(s=>s.kind==='campfire')!;command(w,{type:'bill-add',structureId:fire.id});const bill=fire.bills![0]!;
+  const meatOnly=Object.fromEntries(Object.keys(bill.filters).map(item=>[item,item==='hare-meat'])) as typeof bill.filters;
+  command(w,{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,filters:meatOnly,destination:'drop'}});
   until(w,()=>units(w,'simple-meal')===1&&!cook.cooking);expect(units(w,'hare-meat')+10).toBe(w.butchery!.meat);expect(units(w,'light-leather')).toBe(w.butchery!.leather);expect(cook.skills.cooking!.xp).toBeGreaterThan(0);
 });
 

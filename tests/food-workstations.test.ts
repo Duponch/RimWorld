@@ -19,6 +19,7 @@ import { workplaceCamp } from './scenarios/work-environment';
 import { createMedicalRecord } from '../src/sim/injury-state';
 import { BLOOD_UNIT } from '../src/sim/injury-rules';
 import { finishButchery } from '../src/sim/butchery';
+import { adultAgeTicks } from '../src/sim/animal-life';
 import { productionWorkTotal } from '../src/sim/production-recipes';
 import { deconstructionDuration } from '../src/sim/deconstruction-rules';
 import { isCookingOrder } from '../src/sim/order-types';
@@ -82,7 +83,7 @@ test('butcher table applies full anatomical yield without changing work or grant
     const w=camp(),p=w.pawns[0]!;p.priorities.cook=1;p.x=10;p.z=9;
     const s:Structure=kind==='butcher-table'?station(w,kind):{id:w.nextId++,kind,x:10,z:10,orientation:0,footprint:'standard',bills:[]};if(kind==='butcher-spot')w.structures.push(s);
     const bill=newCookingBill(w.nextId++,'butcher-creature');s.bills!.push(bill);const id=w.nextId++;
-    w.piles.push({id,item:'hare-corpse',kind:'corpse',quantity:1,owner:{type:'ground',x:10,z:10},corpse:{animalId:id,species:'hare',sex:'female',health:{...createMedicalRecord(w.tick),body:'hare',bloodLoss:BLOOD_UNIT,death:{tick:w.tick,cause:'blood-loss'}}},rot:{progress:0,atTick:w.tick}});
+    w.piles.push({id,item:'hare-corpse',kind:'corpse',quantity:1,owner:{type:'ground',x:10,z:10},corpse:{animalId:id,species:'hare',sex:'female',ageTicks:adultAgeTicks('hare'),health:{...createMedicalRecord(w.tick),body:'hare',bloodLoss:BLOOD_UNIT,death:{tick:w.tick,cause:'blood-loss'}}},rot:{progress:0,atTick:w.tick}});
     p.cooking={recipe:'butcher-creature',stationId:s.id,billId:bill.id,spot:{x:10,z:9},actionCell:{x:10,z:10},phase:'work',ingredients:[{pileId:id,item:'hare-corpse',quantity:1,stage:'placed',cell:{x:10,z:10}}],progress:productionWorkTotal('butcher-creature'),workTicks:45,productId:null,storageId:null};p.state='working';
     const context={event:()=>{},release:()=>{throw Error('unexpected release');},move:()=>{},workRate:()=>1,search:()=>null} as unknown as ProductionContext;
     expect(finishButchery(w,p,bill,context)).toBe(true);refreshStock(w);expect(validateWorld(w)).toEqual([]);return w;

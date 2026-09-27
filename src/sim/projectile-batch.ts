@@ -2,6 +2,7 @@ import { captureWorldProjectileTargets } from './projectile-world.ts';
 import { SHOT_LAYER,itemShotFill } from './combat-content.ts';
 import type { ProjectileScene,ProjectileTarget } from './projectile-rules.ts';
 import type { World,Cell } from './types.ts';
+import { animalBodySize } from './animal-life.ts';
 
 /** Local to a synchronous projectile batch ONLY. Medical reconciliation can
  * mutate people, piles and packages. The caller discards this entire capture
@@ -26,7 +27,7 @@ export function captureProjectileBatch(world:World) {
       for(const p of current.packed)if(p.owner.type==='ground')add({key:`packed:${p.building.id}`,cell:p.owner,kind:'object',fill:0,covered:false,openDoor:false},SHOT_LAYER.item);
       const carried=new Set(current.pawns.filter(p=>p.rescue?.phase==='carry').map(p=>p.rescue!.patientId));
       for(const p of current.pawns)if(p.state!=='dead'&&!p.health?.death&&!carried.has(p.id))add({key:`pawn:${p.id}`,cell:{x:p.x,z:p.z},kind:'pawn',fill:0,covered:false,openDoor:false,standing:!['sleeping','resting','downed'].includes(p.state),bodySize:1,friendly:false},SHOT_LAYER.pawn);
-      if(current.schemaVersion>=77)for(const a of current.wildlife?.animals??[])if(a.state!=='dead')add({key:`animal:${a.id}`,cell:a,kind:'pawn',fill:0,covered:false,openDoor:false,standing:!['sleeping','downed'].includes(a.state),bodySize:.2,friendly:false},SHOT_LAYER.pawn);
+      if(current.schemaVersion>=77)for(const a of current.wildlife?.animals??[])if(a.state!=='dead')add({key:`animal:${a.id}`,cell:a,kind:'pawn',fill:0,covered:false,openDoor:false,standing:!['sleeping','downed'].includes(a.state),bodySize:animalBodySize(a),friendly:false},SHOT_LAYER.pawn);
       const rank=(key:string)=>key.startsWith('pile:')?0:key.startsWith('packed:')?1:key.startsWith('pawn:')?2:3;
       for(const list of cells.values())list.sort((a,b)=>rank(a.key)-rank(b.key)||Number(a.key.slice(a.key.indexOf(':')+1))-Number(b.key.slice(b.key.indexOf(':')+1)));
       return (friends,factor)=>{

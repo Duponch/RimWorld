@@ -12,10 +12,11 @@ import type { WildAnimal } from './wildlife-state.ts';
 import { adjacent } from './pathfinding.ts';
 import { reservedSource } from './materials.ts';
 import { animalSpecies,type AnimalSpeciesId,type AnimalMeatItem,type AnimalLeatherItem } from './animal-species.ts';
+import { adultAgeTicks,bodySizeAtAge } from './animal-life.ts';
 
 /** One corpse owns the original animal identity and frozen medical record. It is
  * not food, not a stack of abstract meat, and never also a live wildlife actor. */
-export interface CorpseState {animalId:number;species:AnimalSpeciesId;sex:'female'|'male';health:MedicalRecord;facing?:number}
+export interface CorpseState {animalId:number;species:AnimalSpeciesId;sex:'female'|'male';ageTicks:number;health:MedicalRecord;facing?:number}
 export const CORPSE_ROT_TICKS=2.5*TICKS_PER_DAY;
 export const CORPSE_DESSICATION_TICKS=5*TICKS_PER_DAY;
 export const corpseStage=(p:MaterialPile,tick:number):'fresh'|'rotting'|'desiccated'=>rotAge(p,tick)>=CORPSE_DESSICATION_TICKS?'desiccated':rotAge(p,tick)>=CORPSE_ROT_TICKS?'rotting':'fresh';
@@ -28,8 +29,9 @@ export function corpseYield(p:MaterialPile):{meat:number;leather:number} {
   const model=animalBodyModel(c.species),definition=animalSpecies(c.species);
   const h=c.health,coverage=model.parts.reduce((sum,part,i)=>sum+(h.missing.some(m=>isWithinPart(part.id,m.part,model))?0:model.coverage[i]!),0);
   const injury=h.injuries.some(i=>i.kind!=='execution-cut'&&(!i.scar||i.scar.threshold!==i.severity))?.66:1;
+  const size=bodySizeAtAge(c.species,c.ageTicks??adultAgeTicks(c.species))/definition.bodySize;
   const curve=(raw:number)=>raw<=5?raw*14/5:raw<=40?14+(raw-5)*26/35:raw;
-  return {meat:curve(definition.rawMeat*coverage*injury),leather:curve(definition.rawLeather*coverage*injury)};
+  return {meat:curve(definition.rawMeat*size*coverage*injury),leather:curve(definition.rawLeather*size*coverage*injury)};
 }
 export function corpseProducts(p:MaterialPile):{meat:{item:AnimalMeatItem;quantity:number};leather:{item:AnimalLeatherItem;quantity:number}}|undefined {
   if(!p.corpse)return;
@@ -43,7 +45,7 @@ function thermalAnchor(rot:RotState,tick:number,rate:number):RotState {
 }
 function corpsePile(a:WildAnimal,owner:MaterialOwner,rot:RotState):MaterialPile {
   return {id:a.id,kind:'corpse',item:animalCorpseItem(a.species),quantity:1,owner,rot,
-    corpse:{animalId:a.id,species:a.species,sex:a.sex,health:a.health!,...a.motion?{facing:Math.atan2(a.motion.to.x-a.motion.from.x,a.motion.to.z-a.motion.from.z)}:{}}};
+    corpse:{animalId:a.id,species:a.species,sex:a.sex,ageTicks:a.ageTicks,health:a.health!,...a.motion?{facing:Math.atan2(a.motion.to.x-a.motion.from.x,a.motion.to.z-a.motion.from.z)}:{}}};
 }
 function releaseBodyTargets(w:World,id:number):void {
   for(const p of w.pawns){

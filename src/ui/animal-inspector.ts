@@ -13,6 +13,7 @@ import { isColonist } from '../sim/affiliation';
 import type { WildAnimal } from '../sim/wildlife-state';
 import { animalPenStatus } from './pen-status';
 import { ANIMAL_PRODUCTS, productFullness, productKind } from '../sim/animal-products';
+import { animalBodySize,animalFoodPerDay,animalLifeStage,animalNutritionMax,gestationTicks } from '../sim/animal-life';
 
 export type AnimalInspectorTab = 'info' | 'health';
 export interface AnimalInspectorOptions {
@@ -47,12 +48,13 @@ const activity: Readonly<Record<WildAnimal['state'], string>> = {
 const poisonStage = { none: 'fin de récupération', initial: 'phase initiale', major: 'phase majeure', recovering: 'récupération' } as const;
 const infectionLabel = { minor: 'mineure', major: 'majeure', extreme: 'extrême', critical: 'critique' } as const;
 const percent = (value: number): string => `${Math.round(value * 100)} %`;
+const stageLabel={baby:'Petit',juvenile:'Jeune',adult:'Adulte'} as const;
 
 /** One selected-animal lookup; all other values come from that animal or its species definition. */
 export function animalInspectorView(world: World, animalId: number): AnimalInspectorView | null {
   const animal = world.wildlife?.animals.find(candidate => candidate.id === animalId);
   if (!animal) return null;
-  const species = animalSpecies(animal.species), health = animal.health;
+  const species = animalSpecies(animal.species), health = animal.health,stage=animalLifeStage(animal);
   const model = animalBodyModel(animal.species), capacities = animalBody(animal).capacities;
   const state = animal.state === 'moving' && !animal.path.length && !animal.meal && (!animal.motion || animal.motion.end <= world.tick) ? 'idle' : animal.state;
   const currentActivity = animal.strike ? 'Riposte' : animal.threat ? 'Se défend' : animal.flee ? 'Fuit' : activity[state];
@@ -81,10 +83,16 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
     `${productLabel} : ${percent(Math.max(0,Math.min(1,productFullness(animal))))} de maturité${productFullness(animal)>=1?' · prêt à récolter':''}`,
     ...(productTask?[`${productWork} : ${productTask.phase==='interact'?`${percent(Math.max(0,Math.min(1,productTask.progress/ANIMAL_PRODUCTS[product].work)))} du travail`:'en approche'}`]:[]),
   ]:[];
+  const pregnancy=animal.pregnancy?[
+    `Gestation : ${percent(Math.min(1,animal.pregnancy.progress/gestationTicks(animal.species)))} · père ${animal.pregnancy.fatherId}`,
+  ]:[];
+  const parentage=animal.parents?[
+    `Parents : mère ${animal.parents.motherId} · père ${animal.parents.fatherId}`,
+  ]:[];
   return {
     id: animal.id,
     title: `${species.label[0]!.toLocaleUpperCase('fr-FR')}${species.label.slice(1)} ${animal.id}`,
-    identity: `${animal.sex === 'female' ? 'Femelle' : 'Mâle'} · ${animal.domestic?(penStatus?'domestique':'domestique libre'):'sauvage'}`,
+    identity: `${animal.sex === 'female' ? 'Femelle' : 'Mâle'} · ${stageLabel[stage]} · ${animal.domestic?(penStatus?'domestique':'domestique libre'):'sauvage'}`,
     activity: `${currentActivity}${animal.meal && state === 'moving' ? ' vers sa nourriture' : ''}`,
     position: `${animal.x}, ${animal.z}`,
     hunted: world.hunting?.targets.includes(animal.id) ?? false,
@@ -97,14 +105,18 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
     dead:animal.state==='dead',
     species: [
       `Espèce : ${species.label}`,
-      `Taille corporelle : ${species.bodySize.toLocaleString('fr-FR')}`,
-      `Besoins alimentaires quotidiens : ${species.foodPerDay.toLocaleString('fr-FR')} unité de nutrition`,
+      `Stade de vie : ${stageLabel[stage]}`,
+      `Âge : ${(animal.ageTicks/6000).toLocaleString('fr-FR',{maximumFractionDigits:1})} jour(s)`,
+      `Taille corporelle : ${animalBodySize(animal).toLocaleString('fr-FR')}`,
+      `Besoins alimentaires quotidiens : ${animalFoodPerDay(animal).toLocaleString('fr-FR')} unité de nutrition`,
       animal.domestic?`Familiarité : ${animal.domestic.tameness} / 5`:`Apprivoisement : ${handling}`,
       ...(penStatus?[`Enclos : ${penStatus}`]:[]),
+      ...parentage,
+      ...pregnancy,
       ...productLines,
     ],
     needs: [
-      `Nourriture : ${percent(Math.max(0, Math.min(1, animal.food / species.nutrition)))}`,
+      `Nourriture : ${percent(Math.max(0, Math.min(1, animal.food / animalNutritionMax(animal))))}`,
       `Repos : ${percent(Math.max(0, Math.min(1, animal.rest)))}`,
     ],
     health:animal.domestic&&!penStatus?[`Statut : domestique libre`,...condition]:condition,
