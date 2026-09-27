@@ -1,5 +1,6 @@
 import { exposeFoodPoisoning,ingestionFoodPoison } from './food-poisoning.ts';
-import { processFoodPoisoningVomit } from './food-poisoning-runtime.ts';
+import { processFoodPoisoningVomit,processVomit,type FoodPoisonVomitContext } from './food-poisoning-runtime.ts';
+import { fluVomitChance } from './flu-rules.ts';
 import { createMedicalRecord } from './injury-state.ts';
 import { healthRandom,reconcilePawnHealth } from './health.ts';
 import { reconcileAnimalHealth } from './wildlife-health.ts';
@@ -25,15 +26,23 @@ export function ingestFoodRisk(w:World,p:Pawn|WildAnimal,food:Pick<MaterialPile,
 /** Captured movement finishes before a vomiting episode interrupts the job.
  * Carried material is released through the ordinary conservative mechanism. */
 export function processPawnVomiting(w:World,p:Pawn):boolean {
-  const state=p.health?.foodPoisoning;if(!state||p.state==='dead')return false;
-  const result=processFoodPoisoningVomit(state,w.tick,p.id%60,{
+  const state=p.health?.foodPoisoning,flu=p.health?.flu;
+  if((!state&&!flu)||p.state==='dead')return false;
+  const context:FoodPoisonVomitContext={
     awake:!['sleeping','downed'].includes(p.state)&&!p.stun,position:p,foodLevel:p.hunger,foodMax:100,
     random:()=>healthRandom(w),canStand:c=>canStandAt(w,c),deposit:c=>addFilth(w,c,'vomit'),
     start:()=>{if(p.moveCooldown>0)return false;interruptWork(w,p);p.path=[];p.state='idle';return true;},
-  });
-  p.hunger=result.foodLevel;
-  if(result.active){p.path=[];if(!['dead','downed','sleeping'].includes(p.state))p.state='idle';p.planCooldown=0;}
-  return result.active;
+  };
+  // Keep an active physical episode on its original condition. With two
+  // simultaneous illnesses, food poisoning gets the first chance to start.
+  const result=state?.vomit?processFoodPoisoningVomit(state,w.tick,p.id%60,context):
+    flu?.vomit?processVomit(flu,w.tick,p.id%60,context,fluVomitChance(flu)):
+    state?processFoodPoisoningVomit(state,w.tick,p.id%60,context):undefined;
+  const chosen=result?.active||!flu?result:processVomit(flu,w.tick,p.id%60,context,fluVomitChance(flu));
+  if(!chosen)return false;
+  p.hunger=chosen.foodLevel;
+  if(chosen.active){p.path=[];if(!['dead','downed','sleeping'].includes(p.state))p.state='idle';p.planCooldown=0;}
+  return chosen.active;
 }
 export function processAnimalVomiting(w:World,a:WildAnimal):boolean {
   const state=a.health?.foodPoisoning;if(!state||a.state==='dead')return false;

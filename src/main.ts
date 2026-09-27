@@ -22,6 +22,7 @@ import { createFrontMenu } from './ui/front-menu';
 import type { PawnTrack } from './bridge/motion-tracks';
 import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
 import { INFECTION_UNIT,infectionStage } from './sim/infection-rules';
+import { FLU_UNIT,fluStage } from './sim/flu-rules';
 import { corpseStage } from './sim/corpses';
 import { updateAnimalsPanel } from './ui/animals-panel';
 import { updateWildlifePanel } from './ui/wildlife-panel';
@@ -673,10 +674,20 @@ function renderState() {
   const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=world.pawns.filter(isColonist).length-living.length;
   const starving=living.filter(p=>(p.health?.malnutrition??0)>0).length;if(starving)alerts.push(`${starving} colon(s) en malnutrition`);
   const chilled=living.filter(p=>(p.health?.hypothermia??0)>=40000000).length;if(chilled)alerts.push(`${chilled} colon(s) en hypothermie`);
-  const infected=living.filter(p=>p.health?.infections?.cases.length);
-  const critical=infected.filter(p=>p.health!.infections!.immunity<INFECTION_UNIT&&p.health!.infections!.cases.some(c=>['extreme','critical'].includes(infectionStage(c.severity)))).length;
+  let infected=0,critical=0,gripped=0,extremeFlu=0;
+  for(const pawn of living){
+    const health=pawn.health;
+    if(health?.infections?.cases.length){
+      infected++;
+      if(health.infections.immunity<INFECTION_UNIT&&health.infections.cases.some(c=>['extreme','critical'].includes(infectionStage(c.severity))))critical++;
+    }
+    const flu=health?.flu;
+    if(flu?.severity){gripped++;if(flu.immunity<FLU_UNIT&&fluStage(flu.severity)==='extreme')extremeFlu++;}
+  }
   if(critical)alerts.push(`Urgence médicale : ${critical} colon(s) avec une infection grave`);
-  if(infected.length)alerts.push(`${infected.length} colon(s) avec une infection · consulter Santé`);
+  if(infected)alerts.push(`${infected} colon(s) avec une infection · consulter Santé`);
+  if(extremeFlu)alerts.push(`Urgence médicale : ${extremeFlu} colon(s) avec une grippe extrême`);
+  if(gripped)alerts.push(`${gripped} colon(s) grippé(s) · consulter Santé`);
   if(downed)alerts.push(`${downed} colon(s) à terre`);
   if(bleeding)alerts.push(`${bleeding} colon(s) saignent`);
   if(deaths)alerts.push(`${deaths} colon(s) décédé(s)`);

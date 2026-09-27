@@ -1,4 +1,6 @@
-# Validation courante — V126
+# Validation courante — V127
+
+V127 : [grippe, traitement et reprise](../history/validation-flu-v127.md). Calendrier Cassandra futur et biome, PRNG d'incident distinct, maladie/admissibilité bornées, soin médical avec dose physique, ancienne sauvegarde stricte, colonie préparée et parcours natif. Les autres maladies ne sont pas simulées par substitution ; aucune campagne longue ni promesse 240 FPS/×6.
 
 V126 : [activités, expressions et effets visibles](../history/validation-activity-v126.md), gestes liés aux états confirmés, lots GPU partagés, borne des fumées de feu et parcours WebGPU de bagarre, sommeil, fabrication et feu. Simulation et schéma V125 inchangés ; mesures et limites de cadence distinctes.
 

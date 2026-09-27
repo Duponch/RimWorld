@@ -488,6 +488,35 @@
       "prepared": true,
       "provenance": "Scène V125 préparée depuis la sauvegarde historique V124 sans la modifier. Une insulte est effectuée par la simulation ; la bagarre est déclenchée explicitement avec les règles physiques du moteur si le tirage spontané ne l’a pas déjà déclenchée. Les coups, blessures et effets de fin de bagarre se produisent seulement après reprise.",
       "sha256": "194442f6cc19316ffdef80a1313083bede2335b9a99b04b74f624cec5cf15607"
+    },
+    {
+      "id": "grippe-v127",
+      "release": "v127",
+      "label": "Grippe et soins · 3 colons",
+      "description": "Deux colons présentent une grippe préparée à des stades différents ; deux lits médicaux payés en bois et les médicaments physiques permettent les soins.",
+      "filename": "grippe.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 64,
+      "height": 64,
+      "tick": 0,
+      "focus": [
+        "grippe",
+        "immunité",
+        "soins",
+        "médecine",
+        "repos",
+        "humeur"
+      ],
+      "steps": [
+        "Sélectionner Ada puis Noé près du site (31, 31) : comparer gravité et immunité dans Santé et la pensée dans Besoins.",
+        "Sélectionner Mina : vérifier Médecine/Travail, puis reprendre pour que les patients gagnent les lits et que le médecin cherche physiquement un médicament.",
+        "Suivre le repos médical, la gravité et l’immunité pendant la convalescence.",
+        "Sauvegarder, recharger et vérifier que les jauges, le soin et le calendrier d’incidents continuent sans nouveau tirage."
+      ],
+      "prepared": true,
+      "provenance": "Départ Atterrissage forcé 64×64 créé par le moteur, puis deux grippes et deux lits médicaux préparés explicitement au tick zéro pour permettre un essai immédiat. Le narrateur ne les a pas tirées ; les lits coûtent 90 bois des piles initiales, et les médicaments et personnages sont ceux du départ physique normal.",
+      "sha256": "c5a8f25b97ba4f3eb1049898ee081e06007ce874e307a3623d989ad66db1b4e9"
     }
   ]
 }

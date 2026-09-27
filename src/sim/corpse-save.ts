@@ -19,7 +19,9 @@ export function validCorpseShape(p:Record<string,unknown>,version:number):boolea
     &&(version<121?c.ageTicks===undefined:int(c.ageTicks,0,Number.MAX_SAFE_INTEGER))
     &&c.animalId===p.id&&['female','male'].includes(String(c.sex))
     &&(c.facing===undefined||typeof c.facing==='number'&&Number.isFinite(c.facing)&&Math.abs(c.facing)<=Math.PI)
-    &&validateMedicalRecord(c.health,true,true,false,false,true,version>=79,version>=81,version>=84,version>=87,version>=88,version>=89,version)===null&&object(c.health)&&object(c.health.death)&&c.health.body===c.species;
+    // This validator owns animal corpses only; the human-corpse pile keeps its
+    // owner's medical record on the human pawn, validated in serialization.
+    &&validateMedicalRecord(c.health,true,true,false,false,true,version>=79,version>=81,version>=84,version>=87,version>=88,version>=89,version,false)===null&&object(c.health)&&object(c.health.death)&&c.health.body===c.species;
 }
 export function validateCorpses(w:World,version:number):string[] {
   const errors:string[]=[];

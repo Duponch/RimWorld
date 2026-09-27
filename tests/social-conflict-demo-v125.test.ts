@@ -1,7 +1,6 @@
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {afterEach,expect,test,vi} from 'vitest';
-import {prepareSocialConflictDemo} from '../scripts/generate-social-conflict-demo-v125.ts';
 import {deserializeWorld,serializeWorld,stepWorld,validateWorld} from '../src/sim/index.ts';
 import {moodThoughts} from '../src/sim/mood.ts';
 import {insultMoodMemories,opinionOf} from '../src/sim/social-state.ts';
@@ -17,7 +16,8 @@ test('V125 prepared insult and physical fight load through Charger with exact re
   expect(testColonyUrl(entry!)).toBe('/test-saves/v125/insulte-bagarre.json');
   expect(entry!.sha256).toBe(createHash('sha256').update(raw).digest('hex'));
   expect(JSON.parse(raw).schemaVersion).toBe(125);
-  expect(raw).toBe(serializeWorld(prepareSocialConflictDemo()));
+  // La scène historique et son empreinte restent V125 ; sa reprise utilise le
+  // schéma courant sans relancer le générateur figé de cette version.
 
   vi.stubGlobal('fetch',vi.fn(async()=>new Response(raw)));
   const world=deserializeWorld(await readTestColony(entry!));

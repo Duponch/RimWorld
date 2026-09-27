@@ -1,5 +1,11 @@
 # Documentation de Lisière
 
+**V127 — première maladie humaine :** une grippe peut suivre une occasion de Cassandra, évoluer en gravité et immunité, puis être soignée au lit avec un médicament réellement prélevé. [Contrat](development/flu-v127.md), [relevé Core](research/flu-core-v127.md), [preuves](history/validation-flu-v127.md). La [colonie préparée](../public/test-saves/v127/grippe.json) rend les soins testables immédiatement ; autres maladies et équilibre de campagne longue restent ouverts.
+
+**V126 — gestes et effets de contact :** travaux, bagarre, sommeil, appareils et feu utilisent les poses et signes visuels liés à leur état confirmé. [Contrat](development/activity-presentation-v126.md), [preuves](history/validation-activity-v126.md). Gameplay V125 inchangé.
+
+**V125 — conflit social :** vexation, insulte, humeur et bagarre physique avec blessures et souvenirs. [Contrat](development/social-conflict-v125.md), [relevé Core](research/social-conflict-core-v125.md), [preuves](history/validation-social-conflict-v125.md).
+
 **V124 — loisirs sociaux physiques :** table et feu de camp servent de points de rencontre activables ; les colons y prennent des places réelles ou rendent visite à un patient éveillé au lit. Le trajet, la place, la joie et les interactions suivent la simulation et la sauvegarde. La [scène préparée](../public/test-saves/v124/rencontre.json) permet d'observer deux colons autour d'une table après reprise. [Contrat](development/social-recreation-v124.md), [relevé Core](research/social-core-v124.md), [preuves](history/validation-social-v124.md), [estimation de couverture](gameplay/progress-estimate-v124.md). Les conflits, visites médicales comme travail, fêtes et autres activités sociales restent ouverts.
 
 **V123 — industrie avancée partielle :** or et plastacier minables sur les nouveaux sites, marchand exotique avec stock physique, recherches Microélectronique/Multi-analyseur/Fabrication, trois bâtiments alimentés et composant fabriqué à l'établi. [Contrat](development/industry-v123.md), [relevé Core](research/industry-core-v123.md), [validation](history/validation-industry-v123.md). Les composants avancés ne sont pas encore fabricables ; les anciennes colonies ne reçoivent rien à la migration.

@@ -58,7 +58,7 @@ function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
   const cerebral=Object.hasOwn(tolerance,'cerebral')||Object.hasOwn(bored,'cerebral');
   if(Object.keys(tolerance).length!==2+(cerebral?1:0)||Object.keys(bored).length!==2+(cerebral?1:0)||cerebral&&(w.schemaVersion<122||!range(tolerance.cerebral,0,100)||typeof bored.cerebral!=='boolean')||!['solitary','dexterity'].every(k=>range(tolerance[k],0,100)&&typeof bored[k]==='boolean'))return false;
   if(!Array.isArray(value.memories)||value.memories.length>2||new Set(value.memories.map(m=>object(m)?m.kind:null)).size!==value.memories.length||!value.memories.every(m=>object(m)&&Object.keys(m).length===2&&['ate-without-table','ate-raw-food'].includes(String(m.kind))&&integer(m.expiresAt,tick+1,tick+TICKS_PER_DAY)))return false;
-  if(value.health!==undefined&&(validateMedicalRecord(value.health,true,true,true,true,false,false,true,true,true,true,w.schemaVersion>=89)!==null||!object(value.health)||!integer(value.health.tick,0,tick)||medicalStatus(value.health as unknown as NonNullable<World['pawns'][number]['health']>)!=='mobile'))return false;
+  if(value.health!==undefined&&(validateMedicalRecord(value.health,true,true,true,true,false,false,true,true,true,true,w.schemaVersion>=89,91,w.schemaVersion>=127)!==null||!object(value.health)||!integer(value.health.tick,0,tick)||medicalStatus(value.health as unknown as NonNullable<World['pawns'][number]['health']>)!=='mobile'))return false;
   if(!validDisturbance(value.disturbance,88,tick))return false;
   const a=value.lastAttack;if(a!==undefined&&(!object(a)||Object.keys(a).length!==2||!integer(a.targetId,1,w.nextId-1)||a.targetId===value.id||!integer(a.atCore,0,tick*10)))return false;
   return true;

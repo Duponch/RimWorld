@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 125 as const;
+export const SCHEMA_VERSION = 127 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -176,6 +176,7 @@ export interface World {
   heatwaves?:import('./heatwave.ts').HeatwaveCalendar;
   research?:import('./research.ts').ResearchState;
   raids?:import('./raid-state.ts').RaidCalendar;
+  fluIncidents?:import('./flu-incidents.ts').FluIncidentCalendar;
   home?:number[];
   destroyed?:import('./barriers.ts').DestructionLedger;
   arrivals?:import('./arrival-state.ts').ArrivalState;

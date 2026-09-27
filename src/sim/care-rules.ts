@@ -5,9 +5,11 @@ import { BLOOD_UNIT,HP_UNIT,PART_INJURY_RULES } from './injury-rules.ts';
 import type { Cell,Pawn } from './types.ts';
 import { medicalCare,tendQuality,type TendMedicine } from './medicine-rules.ts';
 import { infectionTargets,infectionNeedsRest } from './infection-state.ts';
+import { FLU_UNIT } from './flu-rules.ts';
+import { fluNeedsRest,fluTendable } from './flu-state.ts';
 
 export interface TendTask { patientId:number; spot:Cell; phase:'find-medicine'|'pickup'|'approach'|'tend'; progress:number; duration?:number; urgent?:true; useMedicine?:true; medicine?:TendMedicine }
-export type TreatmentTarget={injuryId:number;part?:never;infectionId?:never}|{part:BodyPartId;injuryId?:never;infectionId?:never}|{infectionId:number;injuryId?:never;part?:never};
+export type TreatmentTarget={injuryId:number;part?:never;infectionId?:never;flu?:never}|{part:BodyPartId;injuryId?:never;infectionId?:never;flu?:never}|{infectionId:number;injuryId?:never;part?:never;flu?:never}|{flu:true;injuryId?:never;part?:never;infectionId?:never};
 export type RankedTreatment=TreatmentTarget&{priority:number;severity:number};
 export function treatmentTargets(p:Pawn):RankedTreatment[] {
   const h=p.health;if(!h||h.death||medicalCare(p)==='none')return [];
@@ -15,6 +17,7 @@ export function treatmentTargets(p:Pawn):RankedTreatment[] {
   for(const i of h.injuries)if(i.tended===undefined&&i.scar?.pain===undefined)list.push({injuryId:i.id,priority:injuryBleed(h,i)*1.5,severity:i.severity});
   for(const m of h.missing)if(freshMissing(h,m))list.push({part:m.part,priority:BODY_PARTS[m.part].hp*.12*PART_INJURY_RULES[m.part].bleed*1.5,severity:HP_UNIT});
   if(h.infections)for(const t of infectionTargets(h))list.push({infectionId:t.infectionId,priority:t.priority,severity:t.severity});
+  if(fluTendable(h))list.push({flu:true,priority:h.flu!.severity>=833_000_000?1:.025,severity:h.flu!.severity/FLU_UNIT*1000});
   return list.sort((a,b)=>b.priority-a.priority||b.severity-a.severity);
 }
 /** One medicine treats the first injury even above 20 HP, then fits later
@@ -41,10 +44,11 @@ export function treatmentTarget(p:Pawn):TreatmentTarget|undefined {
   for(const i of h.injuries)if(i.tended===undefined&&i.scar?.pain===undefined)consider({injuryId:i.id},injuryBleed(h,i)*1.5,i.severity);
   for(const m of h.missing)if(freshMissing(h,m))consider({part:m.part},BODY_PARTS[m.part].hp*.12*PART_INJURY_RULES[m.part].bleed*1.5,HP_UNIT);
   if(h.infections)for(const t of infectionTargets(h))consider({infectionId:t.infectionId},t.priority,t.severity);
+  if(fluTendable(h))consider({flu:true},h.flu!.severity>=833_000_000?1:.025,h.flu!.severity/FLU_UNIT*1000);
   return best?.target;
 }
 export const healingInjury=(p:Pawn):boolean=>!!p.health?.injuries.some(i=>i.tended!==undefined&&i.scar?.pain===undefined);
-export const medicalRestNeeded=(p:Pawn):boolean=>healingInjury(p)||!!p.health&&infectionNeedsRest(p.health);
+export const medicalRestNeeded=(p:Pawn):boolean=>healingInjury(p)||!!p.health&&(infectionNeedsRest(p.health)||fluNeedsRest(p.health));
 export const urgentTreatment=(p:Pawn):boolean=>!!treatmentTarget(p)&&!!p.health&&medicalBleed(p.health)>0&&(1-p.health.bloodLoss/BLOOD_UNIT)/medicalBleed(p.health)<.75;
 export function medicalTendSpeed(p:Pawn,light=1):number {
   const c=pawnBody(p).capacities;

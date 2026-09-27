@@ -15,7 +15,7 @@ test('V124 prepared table gathers two people in distinct seats and resumes exact
   expect(JSON.parse(raw).schemaVersion).toBe(124);
   vi.stubGlobal('fetch', vi.fn(async () => new Response(raw)));
   const world = deserializeWorld(await readTestColony(entry!));
-  expect(world.schemaVersion).toBe(125);
+  expect(world.schemaVersion).toBe(127);
   expect(validateWorld(world)).toEqual([]);
   const table = world.structures.find(s => s.kind === 'table' && s.x === 18 && s.z === 15)!;
   expect(table.gatherSpot).toBe(true);

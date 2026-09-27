@@ -17,6 +17,8 @@ export interface Injury {
 export interface MissingPart {part:BodyPartId;bornAt:number;tended?:true}
 export interface MedicalRecord {
   foodPoisoning?:import('./food-poisoning.ts').FoodPoisoningState;
+  /** A human systemic illness; absent for historical records and animals. */
+  flu?:import('./flu-types.ts').FluState;
   /** Absent is the historical human profile. Animal ownership is validated. */
   body?:import('./animal-species.ts').AnimalSpeciesId;
   tick:number; nextInjuryId:number;
@@ -29,7 +31,7 @@ export interface MedicalRecord {
   /** V84: hunger damage independent of wounds, billionths of severity. */
   malnutrition?:number;
   infections?:InfectionState;
-  death?:{tick:number;cause:'execution'|'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'|'infection'|'malnutrition'};
+  death?:{tick:number;cause:'execution'|'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'|'infection'|'malnutrition'|'flu'};
 }
 export interface MedicalContext {
   /** Stable phase in [0,59], supplied by the owning actor. */

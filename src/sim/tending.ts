@@ -10,6 +10,7 @@ import { medicalWorkRefusal } from './health-rules.ts';
 import { healthRandom,updatePawnHealth,reconcilePawnHealth } from './health.ts';
 import { tendInjury,tendMissingPart } from './injury-state.ts';
 import { tendInfection,captureInfectionTendRoom } from './infection-state.ts';
+import { tendFlu } from './flu-state.ts';
 import { infectionRoomFactor } from './infection-room.ts';
 import { learnSkill } from './skills.ts';
 import { blockedCells,reachableCells,routeToCell,workNeighbours,type Reachability } from './pathfinding.ts';
@@ -103,11 +104,12 @@ export function processTending(world:World,doctor:Pawn,context:NeedContext,light
         captureInfectionTendRoom(patient.health!,target.injuryId,roomFactor);
       }
     } else if(target.infectionId!==undefined)tendInfection(patient.health!,target.infectionId,tendQuality(quality,healthRandom(world),doctor===patient,item));
+    else if(target.flu)tendFlu(patient.health!,tendQuality(quality,healthRandom(world),doctor===patient,item));
     else tendMissingPart(patient.health!,target.part);
   }
   consumeMedicine(world,task);
   reconcilePawnHealth(world,patient);
-  context.event(`${doctor.name} a traité ${batch[0]!.infectionId!==undefined?'une infection':`${batch.length} plaie(s)`} ${doctor===patient?'sur soi':`de ${patient.name}`} ${item?`avec ${ITEM_DEFINITIONS[item].label}`:'sans médicament'}.`);
+  context.event(`${doctor.name} a traité ${batch[0]!.infectionId!==undefined?'une infection':batch[0]!.flu?'la grippe':`${batch.length} plaie(s)`} ${doctor===patient?'sur soi':`de ${patient.name}`} ${item?`avec ${ITEM_DEFINITIONS[item].label}`:'sans médicament'}.`);
   task.progress-=task.duration;
   if(!treatmentTarget(patient)||task.urgent&&doctor===patient){releaseTending(world,doctor);if(task.urgent){doctor.planCooldown=0;doctor.needCooldown=0;}}
   else if(task.useMedicine&&!task.medicine){task.phase='find-medicine';doctor.state='moving';}

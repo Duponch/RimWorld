@@ -53,6 +53,7 @@ import { adoptColonyEconomy,sampleColonyEconomy,flushColonyLosses,advanceColonyA
 import { advanceRaids,enableRaids,exitRaider } from './raids.ts';
 import { processRaider } from './raid-behavior.ts';
 import { advanceArrivals,applyArrival } from './arrivals.ts';
+import { advanceFluIncidents } from './flu-incidents.ts';
 import { updateMentalBreak,processSadWander } from './mental-break.ts';
 import { expireMealMemories } from './mood.ts';
 import { considerAutomaticCombat } from './automatic-combat.ts';
@@ -510,7 +511,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     flushColonyLosses(world);
     world.tick++;
     sampleColonyEconomy(world);
-    advanceArrivals(world);advanceHeatwaves(world);advanceVisitors(world);
+    advanceArrivals(world);advanceHeatwaves(world);advanceVisitors(world);advanceFluIncidents(world);
     const beforeWeather=world.structures;
     advanceSurfaceWeather(world,cell=>{const c={type:'designate' as const,kind:'chop' as const,...cell};if(canDesignate(world,c).ok)applyCommand(world,c);});
     if(beforeWeather!==world.structures)thermal=reconcileTemperature(world);

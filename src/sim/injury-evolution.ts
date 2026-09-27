@@ -5,6 +5,7 @@ import type { Injury,MedicalContext,MedicalRandom,MedicalRecord } from './injury
 import { advanceInfections,advanceInfectionImmunity } from './infection-evolution.ts';
 import { advanceMalnutrition } from './malnutrition.ts';
 import { advanceFoodPoisoning } from './food-poisoning.ts';
+import { advanceFlu } from './flu-evolution.ts';
 
 function heal(record:MedicalRecord,injury:Injury,amount:number,random:MedicalRandom):void {
   injury.severity-=amount;
@@ -30,7 +31,7 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
   const pending=record.injuries.filter(i=>i.infection&&i.infection.dueCore<=(record.tick+ticks)*10).length;
   if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');
   if((record.infections?.cases.length||pending)&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Infection clock exhausted');
-  if(!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;return;}
+  if(!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.flu&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;return;}
   const end=record.tick+ticks;
   while(record.tick<end) {
     record.tick++;
@@ -54,6 +55,8 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
       if(record.death)return;
     }
     advanceInfections(record,context,random);
+    if(record.death)return;
+    advanceFlu(record,context);
     if(record.death)return;
     if(record.tick%HEAL_INTERVAL===context.phase&&!context.starving) {
       let eligible=record.injuries.filter(i=>i.scar?.pain===undefined);

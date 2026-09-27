@@ -147,7 +147,7 @@ export function processAnimalCare(w:World,doctor:Pawn,ctx:AnimalCareContext,ligh
         roomFactor??=infectionRoomFactor(w,patient);captureInfectionTendRoom(record,target.injuryId,roomFactor);
       }
     }else if(target.infectionId!==undefined)tendInfection(record,target.infectionId,tendQuality(quality,healthRandom(w),false,item));
-    else tendMissingPart(record,target.part);
+    else if(target.part!==undefined)tendMissingPart(record,target.part);
   }
   consumeMedicine(w,task);reconcileAnimalHealth(w,patient);
   ctx.event(`${doctor.name} a soigné ${patient.species==='hare'?'le lièvre':'un animal'} ${patient.id} ${item?`avec ${ITEM_DEFINITIONS[item].label}`:'sans médicament'}.`);
