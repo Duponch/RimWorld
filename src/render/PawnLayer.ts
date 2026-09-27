@@ -43,6 +43,12 @@ const CROUCH_TICKS=.28*TICKS_PER_SECOND;
 const CROUCH_QUANTA=4,CROUCH_PADDING=16,CROUCH_WALK_MARK=8192;
 const POSE_SLEEP=18,POSE_DEAD=19,POSE_FIGHT_READY=22;
 const crouched=(pose:number|undefined):boolean=>pose===WORK_POSE.ground||pose===WORK_POSE.groundMelee;
+function seatedOnFurniture(pawn:Pawn):boolean {
+  if(pawn.state==='eating')return pawn.need?.kind==='eat'&&typeof pawn.need.dining?.seatId==='number';
+  if(pawn.state!=='recreating')return false;
+  const task=pawn.recreation.task;
+  return !!task&&(task.activity==='chess'||task.activity==='social-relax'||task.activity==='visit-sick')&&typeof task.seatId==='number';
+}
 function crouchAt(transition:CrouchTransition,tick:number):number {
   const fraction=THREE.MathUtils.clamp((tick-transition.start)/CROUCH_TICKS,0,1);
   const smooth=fraction*fraction*(3-2*fraction);
@@ -66,7 +72,12 @@ function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boole
   if(pawn.shooting?.stance?.phase==='cooldown')return 15;
   if(pawn.shooting?.stance)return 7;
   if(pawn.social?.fight&&!medicallyStopped(pawn))return POSE_FIGHT_READY;
-  if(pawn.state==='recreating')return pawn.recreation.task?.activity==='horseshoes'?4:pawn.recreation.task?.activity==='chess'?3:5;
+  if(pawn.state==='recreating'){
+    const activity=pawn.recreation.task?.activity;
+    if(activity==='horseshoes')return 4;
+    if(activity==='skygaze')return 5;
+    if(activity==='chess'||activity==='social-relax'||activity==='visit-sick')return seated?3:0;
+  }
   if(pawn.state==='resting'||medicallyStopped(pawn))return 1;
   if(pawn.state==='eating')return seated?3:2;
   return workPose;
@@ -450,7 +461,8 @@ export class PawnLayer {
       if(pawn.feed?.phase==='feed'){const p=pawnsById.get(pawn.feed.patientId);if(p)yaw=Math.atan2(p.x-pawn.x,p.z-pawn.z);}
       if(pawn.tend?.phase==='tend'&&pawn.tend.patientId!==pawn.id){const p=pawnsById.get(pawn.tend.patientId);if(p)yaw=Math.atan2(p.x-pawn.x,p.z-pawn.z);}
       const bed = (pawn.state === 'sleeping'||pawn.state==='resting'||pawn.state==='downed') && bedId !== null ? world.structures.find(item => item.id === bedId) : undefined;
-      let px = pawn.x, pz = pawn.z, py = pawn.state==='eating'||pawn.state==='sleeping'||pawn.state==='resting'||medicallyStopped(pawn)?0:this.travelSurfaces.get(pawn.z*world.width+pawn.x)??0;
+      const seated=seatedOnFurniture(pawn);
+      let px = pawn.x, pz = pawn.z, py = seated||pawn.state==='eating'||pawn.state==='sleeping'||pawn.state==='resting'||medicallyStopped(pawn)?0:this.travelSurfaces.get(pawn.z*world.width+pawn.x)??0;
       const body=bodies.get(pawn.id);
       const hiddenBody=pawn.body?.lostAt!==undefined||pawn.body?.pileId!==undefined&&(!body||body.owner.type==='grave');
       if(body?.owner.type==='ground'){px=body.owner.x;pz=body.owner.z;py=0;}
@@ -498,8 +510,12 @@ export class PawnLayer {
       this.workOffsets.set(pawn.id,reach);
       if(newMap)this.approachTransitions.set(pawn.id,{fromX:reach.x,fromZ:reach.z,toX:reach.x,toZ:reach.z,start:world.tick,baseX:pawn.x,baseZ:pawn.z});
       px+=reach.x;pz+=reach.z;
-      const game=pawn.state==='recreating'&&(pawn.recreation.task?.activity==='horseshoes'||pawn.recreation.task?.activity==='chess')?world.structures.find(s=>s.id===pawn.recreation.task!.buildingId):undefined;
-      if(game)yaw=Math.atan2(game.x-pawn.x,game.z-pawn.z);
+      const recreation=pawn.state==='recreating'?pawn.recreation.task:null;
+      const leisureSite=recreation&&recreation.buildingId!==null&&recreation.activity!=='skygaze'?world.structures.find(s=>s.id===recreation.buildingId):undefined;
+      const leisureTarget=recreation?.activity==='visit-sick'?pawnsById.get(recreation.patientId!):leisureSite
+        ?footprintCells(leisureSite).reduce((nearest,cell)=>(cell.x-pawn.x)**2+(cell.z-pawn.z)**2<(nearest.x-pawn.x)**2+(nearest.z-pawn.z)**2?cell:nearest)
+        :undefined;
+      if(leisureTarget)yaw=Math.atan2(leisureTarget.x-pawn.x,leisureTarget.z-pawn.z);
       const melee=pawn.melee?.strike;
       const shotTarget=pawn.shooting?.stance?pawn.shooting.order?.targetId??(pawn.shooting.stance.phase==='cooldown'?pawn.lastAttack?.targetId:undefined):undefined;
       const aim=melee?(melee.structure??pawnsById.get(melee.targetId)??world.wildlife?.animals.find(a=>a.id===melee.targetId)??world.raids?.departed.find(d=>d.pawnId===melee.targetId)?.cell):humanOpponent??(shotTarget?(pawnsById.get(shotTarget)??world.wildlife?.animals.find(a=>a.id===shotTarget)):undefined);
@@ -512,7 +528,7 @@ export class PawnLayer {
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
       this.workPoses.set(pawn.id,workPose);
       const smallMelee=!!pawn.melee?.strike&&(world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
-      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun ? 1 : 0,workActivity(pawn),animationPose(pawn,workPose,smallMelee,!!dining&&dining.seatId!==null),pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.shooting?.stance?.phase==='cooldown'?coreTimeSeconds(pawn.shooting.stance.startedAtCore,Math.floor(world.tick/1024)*1024):pawn.id * 1.7);
+      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun ? 1 : 0,workActivity(pawn),animationPose(pawn,workPose,smallMelee,seated),pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.shooting?.stance?.phase==='cooldown'?coreTimeSeconds(pawn.shooting.stance.startedAtCore,Math.floor(world.tick/1024)*1024):pawn.id * 1.7);
       const identity=appearanceOf(pawn,world.seed),variant=appearanceShape(identity);
       scratchColor.setHex(identity.skinColor);skin.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
       scratchColor.setHex(identity.hairColor);hair.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
@@ -548,9 +564,8 @@ export class PawnLayer {
       const active=!!segment && timeline.tick<segment.end;
       const onEdge=!!segment&&(active||pawn.state==='moving'||world.tick<segment.end);
       const smallMelee=!!pawn.melee?.strike&&(world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
-      const dining=pawn.need?.kind==='eat'?pawn.need.dining:null;
       const shownPose=onEdge?(medicallyStopped(pawn)?1:0)
-        :animationPose(pawn,this.workPoses.get(pawn.id)??0,smallMelee,!!dining&&dining.seatId!==null);
+        :animationPose(pawn,this.workPoses.get(pawn.id)??0,smallMelee,seatedOnFurniture(pawn));
       this.showPose(pawn.id,shownPose,timeline.tick);
       const key=`${origin}:${segment?.start}:${segment?.end}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}:${shownPose}:${pawn.path[0]?.x}:${pawn.path[0]?.z}`;
       if(this.travelKeys.get(pawn.id)===key)return;

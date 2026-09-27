@@ -93,7 +93,7 @@ test('seat destruction releases chess before a save and V121 migration adds no r
   old.structures=old.structures.filter((s:{kind:string})=>s.kind!=='chess-table');
   expect(()=>deserializeWorld(JSON.stringify({...old,structures:w.structures}))).toThrow(/version 121/i);
   const migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated.schemaVersion).toBe(124);
+  expect(migrated.schemaVersion).toBe(w.schemaVersion);
   expect(migrated.pawns.every(p=>p.recreation.tolerance.cerebral===0&&p.recreation.bored.cerebral===false&&p.recreation.tolerance.social===0&&p.recreation.bored.social===false&&p.recreation.task===null)).toBe(true);
 });
 

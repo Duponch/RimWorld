@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import type { World } from '../sim/types';
 import type { BoxBatches } from './BoxBatches';
 import { WORLD_SCALE } from '../world/scale';
+import { woodFiberDetail } from './stylized-surfaces';
 
 type RoofCell = { x: number; z: number };
 type Point = readonly [number, number, number];
@@ -79,7 +80,7 @@ export function roofSlabGeometry(cells: readonly RoofCell[], top: number): THREE
   return geometry;
 }
 
-/** Broad, irregular painted shade zones and a subordinate wood figure. */
+/** Broad, irregular painted shade zones and baked, subordinate wood fibres. */
 function roofPaint(): THREE.DataTexture {
   const size = 128, data = new Uint8Array(size * size * 4);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
@@ -88,14 +89,16 @@ function roofPaint(): THREE.DataTexture {
     const hash = ((patchX * 73856093) ^ (patchY * 19349663)) >>> 0;
     const zone = (hash % 5 - 2) * 11;
     const sweep = Math.sin(x * .075 + y * .026) * 11 + Math.sin(y * .12) * 6;
-    const grain = Math.sin(y * .59 + Math.sin(x * .11) * 2) * 3;
+    const grain = woodFiberDetail(x * .5, y * .5) * 1.8;
     const value = Math.max(160, Math.min(255, Math.round(225 + zone + sweep + grain)));
     const i = (y * size + x) * 4;
     data[i] = data[i + 1] = data[i + 2] = value; data[i + 3] = 255;
   }
   const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-  texture.magFilter = texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
   texture.needsUpdate = true;
   return texture;
 }

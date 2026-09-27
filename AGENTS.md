@@ -1,5 +1,11 @@
 # Travail sur Lisière
 
+## Fiche, assise et textures V131
+
+- Lire `docs/development/visual-polish-v131.md` et `docs/history/validation-visual-polish-v131.md`. La fiche colon suit son contenu et reste bornée à l'écran ; Journal, onglets, résumé et commandes gardent leurs marges, leurs cibles et leur ordre. Ne pas rétablir une plaque vide à hauteur fixe ni un rail d'actions tronqué. Le sol nu reste non sélectionnable ; les anciens tests qui cliquent une case doivent vérifier le monde ou le survol.
+- La détente sociale à table avec siège réel, les échecs, les visites assises et les repas ont la pose assise ; sans siège, détente/visite restent debout. L'observation du ciel seule emploie la pose de loisir allongé. La hauteur du siège n'est appliquée qu'une fois, l'orientation regarde la cible ; logique, cellules et sauvegardes restent au worker. Couvrir aussi trajet, sommeil, repos, chute et mort lors des changements de pose.
+- Le détail de craie/feuillage/bois est cuit dans les textures résidentes de V114 : mêmes tailles d'atlas, même échantillonnage par fragment, aucun nouveau lot ou passage. La variante sans textures reste sans lecture de pigment. Les mipmaps du bardage et du toit ajoutent seulement un coût initial et de mémoire ; aucune égalité FPS ni cible 240/×6 n'est présumée. Schéma 127 et PRNG métier inchangés.
+
 ## Fiches d'objets V130
 - Lire `docs/development/object-inspection-v130.md`, `docs/research/object-hud-core-v130.md` et `docs/history/validation-object-inspection-v130.md`. Objet sélectionné, lecture du sol au survol et commandes sont trois fonctions distinctes. La fiche courte donne des PV seulement quand le moteur les conserve ; n'inventer ni jauge ni commande Core manquante. Les boutons utilisent les cellules de l'atlas Architecte correspondant à leurs vraies actions.
 - Garder tous les contrôles existants (stockage, ateliers, portes, lits, mobilier, énergie) branchés après le changement de structure. Les alertes et le journal colonial ne reconstruisent leurs nœuds DOM que si leur contenu change ; aucune donnée métier ni sauvegarde ne passe dans ce cache. Le HUD droit sépare alertes, site/date, vitesse et vue ; « Conseils » mène seulement à Planning, Architecte et Recherche réels, sans mémoire de notions. Ce lot ne prouve ni parité de tous les objets, ni hausse FPS, ni Assistant Core complet.

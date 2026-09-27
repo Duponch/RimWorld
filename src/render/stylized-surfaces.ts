@@ -22,10 +22,49 @@ function broadNoise(x: number, y: number): number {
   return a * (1 - ty) + b * ty;
 }
 
+/** Fine pigment is baked into the same map as the broad washes. It has no
+ * shader node, second sample, game RNG, or per-frame work. */
+function chalkDetail(x: number, y: number, salt: number): number {
+  const dust = (hash(x + salt, y - salt) - 0.5) * 10;
+  const cellX = Math.floor(x / 4), cellY = Math.floor(y / 4);
+  const fleckX = 0.7 + hash(cellX - salt, cellY + salt) * 2.5;
+  const fleckY = 0.7 + hash(cellX + salt, cellY - salt) * 2.5;
+  const dx = x - cellX * 4 - fleckX, dy = y - cellY * 4 - fleckY;
+  const chip = dx * dx + dy * dy * 1.3 < 1.7 && hash(cellX + salt * 2, cellY - salt * 2) > 0.55;
+  return dust + (chip ? hash(cellX - 11, cellY + salt) > 0.65 ? -19 : 13 : 0);
+}
+
+/** Short, staggered leaf strokes break up the flat interiors of the large
+ * canopy patches. Their small scale disappears naturally in the mip levels. */
+function foliageDetail(x: number, y: number): number {
+  const slant = x + y * 0.28;
+  const cellX = Math.floor(slant / 7), cellY = Math.floor(y / 9);
+  const centerX = 2 + hash(cellX + 131, cellY - 71) * 3;
+  const centerY = 2 + hash(cellX - 43, cellY + 97) * 5;
+  const across = slant - cellX * 7 - centerX;
+  const along = y - cellY * 9 - centerY;
+  const width = Math.abs(across), length = Math.abs(along);
+  const stroke = width < 1.25 && length < 3 ? -31
+    : width < 2.35 && length < 3.8 ? 17 : 0;
+  return stroke + (hash(x + 83, y + 179) - 0.5) * 7;
+}
+
+/** Narrow fibres wander along the length of a board. Both cladding and roof
+ * paint bake this into their existing textures, under their broad washes. */
+export function woodFiberDetail(across: number, along: number): number {
+  const flow = across + Math.sin(along * 0.13 + across * 0.032) * 1.6
+    + Math.sin(along * 0.042 - across * 0.087);
+  const fibre = Math.sin(flow * 1.13) * 8 + Math.sin(flow * 2.47 + 0.8) * 4;
+  const darkVein = Math.max(0, Math.sin(flow * 0.58 + 0.4)) ** 12 * -20;
+  const lightVein = Math.max(0, Math.sin(flow * 0.58 - 0.5)) ** 12 * 9;
+  const pore = hash(Math.floor(across) + 29, Math.floor(along) + 73) > 0.986 ? -8 : 0;
+  return fibre + darkVein + lightVein + pore;
+}
+
 function paintedVegetation(u: number, v: number): number {
   // Two broad, wandering pigment deposits wrap across several low-poly
-  // facets. They leave large light planes between them; tiny foliage pieces
-  // inherit the same shapes through their mip levels rather than fine noise.
+  // facets. They leave large light planes between them; smaller leaf marks
+  // are added to the finished texels and fade through their mip levels.
   const warp = (broadNoise(u * 2 + 4.1, v * 2 + 8.3) - 0.5) * 0.10;
   const ax = (u - 0.24 + warp) / 0.47, ay = (v - 0.37 - warp) / 0.39;
   const first = 1 - smoothstep((Math.hypot(ax + ay * 0.15, ay - ax * 0.13) - 0.66) / 0.30);
@@ -65,7 +104,7 @@ function paintedStone(u: number, v: number): [number, number, number] {
   return [level(base + warm * 16), level(base + warm * 3 + cool * 6), level(base - warm * 9 + cool * 17)];
 }
 
-/** Original, low-frequency pigment patches for resident static surfaces.
+/** Original, broad pigment patches with subordinate baked fine detail.
  * White remains the base colour; charcoal fields and soft, stepped edges
  * give tables, machinery and panel faces broad painted variation. No game
  * random state, canvas, worker, or per-frame texture generation is involved.
@@ -80,8 +119,12 @@ export function createStylizedSurfaceTexture(style: 'surface' | 'vegetation' | '
     let value: number;
     if (style === 'stone') {
       const [red, green, blue] = paintedStone(u, v);
+      const chalk = chalkDetail(x, y, 223) * 1.25;
       const at = (y * size + x) * 4;
-      data[at] = red; data[at + 1] = green; data[at + 2] = blue; data[at + 3] = 255;
+      data[at] = Math.max(0, Math.min(255, Math.round(red + chalk)));
+      data[at + 1] = Math.max(0, Math.min(255, Math.round(green + chalk)));
+      data[at + 2] = Math.max(0, Math.min(255, Math.round(blue + chalk)));
+      data[at + 3] = 255;
       continue;
     } else if (style === 'vegetation') value = paintedVegetation(u, v);
     else {
@@ -97,7 +140,9 @@ export function createStylizedSurfaceTexture(style: 'surface' | 'vegetation' | '
       value = Math.max(178, Math.min(255, Math.round(pigment / 7) * 7));
     }
     const at = (y * size + x) * 4;
-    data[at] = data[at + 1] = data[at + 2] = value;
+    const detail = chalkDetail(x, y, style === 'vegetation' ? 157 : 37)
+      + (style === 'vegetation' ? foliageDetail(x, y) : 0);
+    data[at] = data[at + 1] = data[at + 2] = Math.max(0, Math.min(255, Math.round(value + detail)));
     data[at + 3] = 255;
   }
   if (style === 'stone') {

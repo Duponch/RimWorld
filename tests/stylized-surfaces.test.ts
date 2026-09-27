@@ -27,8 +27,19 @@ test('stylized surface is a repeatable, broad opaque grayscale pigment map', () 
       values.push(data[i]!);
     }
     expect(Math.max(...values) - Math.min(...values)).toBeGreaterThan(25);
-    const neighborDifferences = values.slice(1).map((value, index) => Math.abs(value - values[index]!));
-    expect(neighborDifferences.filter(delta => delta > 14).length).toBeLessThan(width * 2);
+    // Fine chalk marks may jump between neighbouring texels; the original
+    // painted fields must still change gradually when viewed through mips.
+    const blocks: number[] = [];
+    for (let row = 0; row < height / 4; row++) for (let col = 0; col < width / 4; col++) {
+      let sum = 0;
+      for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) sum += values[(row * 4 + y) * width + col * 4 + x]!;
+      blocks.push(sum / 16);
+    }
+    let abrupt = 0;
+    for (let row = 0; row < height / 4; row++) for (let col = 0; col < width / 4 - 1; col++) {
+      if (Math.abs(blocks[row * (width / 4) + col]! - blocks[row * (width / 4) + col + 1]!) > 14) abrupt++;
+    }
+    expect(abrupt).toBeLessThan(32);
   } finally {
     first.dispose(); second.dispose();
   }

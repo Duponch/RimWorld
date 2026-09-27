@@ -36,7 +36,8 @@ test('toits : zone tracée, pose physique, affichage, retrait et reprise par le 
     // A single builder must physically finish the entire 121-cell zone.
     await expect.poll(async()=>(await world(page)).roofing?.constructed.length,{timeout:60000}).toBe(121);
     await page.locator('[data-speed="0"]').click();await cell(page,13,13);
-    await expect(page.locator('#room-description')).toContainText('Pièce couverte · 36 / 36 cases');
+    // V129 no longer selects bare floor; the physical roof state is the oracle.
+    await expect(page.locator('#room-description')).toHaveCount(0);
     const covered=await world(page);expect(validateWorld(covered)).toEqual([]);
     await page.locator('#roof-toggle').click();await expect(page.locator('#roof-toggle')).toHaveAttribute('aria-pressed','true');
     await expectWorld(page,covered);await page.screenshot({path:'artifacts/roofing-ui-covered.png'});
@@ -49,7 +50,7 @@ test('toits : zone tracée, pose physique, affichage, retrait et reprise par le 
     await page.locator('[data-speed="0"]').click();const removed=await world(page);
     await panel(page,'menu');await page.locator('#save').click();await expect(page.locator('#load')).toBeDisabled();await page.locator('#load').click();await expectWorld(page,removed);
     await page.keyboard.press('Escape');await cell(page,13,13);
-    await expect(page.locator('#room-description')).toContainText('35 / 36 cases');
+    await expect(page.locator('#room-description')).toHaveCount(0);
     await expect(page.locator('#fps-counter')).toBeVisible();expect(errors).toEqual([]);
     const backend=await page.evaluate(()=>window.__lisiere.backend);expect(backend).toContain('WebGPU');
     await page.screenshot({path:'artifacts/roofing-ui-cutaway.png'});

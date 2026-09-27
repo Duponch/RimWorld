@@ -2,6 +2,7 @@ import { expect,test } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { createWorld } from '../src/sim/index';
 import type { Job } from '../src/sim/types';
+import type { RecreationTask } from '../src/sim/recreation-rules';
 import { PawnLayer } from '../src/render/PawnLayer';
 import { MotionTimeline } from '../src/render/MotionTimeline';
 import { WildlifeLayer } from '../src/render/WildlifeLayer';
@@ -9,6 +10,7 @@ import { headingAt,turnToward,TURN_TICKS } from '../src/render/turn-presentation
 import { pawnWorkPose,workApproach,meleeApproach,WORK_POSE } from '../src/render/work-presentation';
 import { clearGroup } from '../src/render/primitives';
 import { animalCombatCamp } from './scenarios/animal-combat';
+import { WORLD_SCALE } from '../src/world/scale';
 
 test('turns take the short arc, remain continuous when interrupted, and finish quickly',()=>{
   const start={from:0,to:0,startTick:10};
@@ -133,6 +135,81 @@ test('working subtype and sleeping or dead face pose reuse the resident motion a
   expect(motion.getZ(0)).toBe(1); // a stale fight marker cannot stand up a downed actor
   pawn.state='dead';layer.update(world,1,false);
   expect(motion.getZ(0)).toBe(19);
+  clearGroup(layer.group);
+});
+
+test('a social gathering stays upright while travelling, then sits at its reserved stool facing the table',()=>{
+  const world=createWorld(),pawn=world.pawns[0]!;
+  world.pawns=[pawn];world.structures=[];world.tick=100;
+  pawn.x=10;pawn.z=10;pawn.state='moving';pawn.path=[];
+  const table={id:world.nextId++,kind:'table' as const,x:10,z:11,orientation:0 as const,footprint:'standard' as const};
+  const stool={id:world.nextId++,kind:'stool' as const,x:10,z:10,orientation:0 as const,footprint:'standard' as const};
+  world.structures.push(table,stool);
+  pawn.recreation.task={activity:'social-relax',buildingId:table.id,seatId:stool.id,target:{x:10,z:10},phase:'travel',elapsed:0};
+  const edge={from:{x:9,z:10},to:{x:10,z:10},start:100,end:102};pawn.motion=edge;
+  const layer=new PawnLayer(),timeline=new MotionTimeline();timeline.tracks.set(pawn.id,[edge]);
+  layer.update(world,1,true);timeline.tick=100;layer.updateTravel(world,timeline);
+  const geometry=layer.feedbackSource!,motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
+  const to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
+  expect(motion.getZ(0)).toBe(0);
+  expect(to.getY(0)).toBeCloseTo(WORLD_SCALE.stoolHeight); // the confirmed edge climbs onto the stool
+  pawn.state='recreating';pawn.recreation.task.phase='active';world.tick=102;
+  layer.update(world,0,false);timeline.tick=101;layer.updateTravel(world,timeline);
+  expect(motion.getZ(0)).toBe(0); // latest state cannot seat the earlier presented edge
+  timeline.tick=102;layer.updateTravel(world,timeline);
+  expect(motion.getZ(0)).toBe(3);
+  expect(to.getY(0)).toBe(0); // seated rig already supplies the stool-height offset
+  expect(to.getW(0)).toBeCloseTo(0); // faces the table, not the old travel heading
+  expect(geometry.getAttribute('aMotion')).toBe((layer.group.children[1] as THREE.Mesh).geometry.getAttribute('aMotion'));
+  expect(pawn.x).toBe(10);expect(pawn.z).toBe(10);
+  clearGroup(layer.group);
+});
+
+test('recreation distinguishes seated play and visits from sky watching and ground relaxation',()=>{
+  const world=createWorld(),pawn=world.pawns[0]!,patient=world.pawns[1]!;
+  world.pawns=[pawn,patient];world.structures=[];world.tick=120;
+  pawn.x=10;pawn.z=10;delete pawn.motion;patient.x=12;patient.z=10;
+  const stool={id:world.nextId++,kind:'stool' as const,x:10,z:10,orientation:0 as const,footprint:'standard' as const};
+  const chess={id:world.nextId++,kind:'chess-table' as const,x:10,z:11,orientation:0 as const,footprint:'standard' as const};
+  const campfire={id:world.nextId++,kind:'campfire' as const,x:10,z:11,orientation:0 as const,footprint:'standard' as const};
+  const horseshoes={id:world.nextId++,kind:'horseshoes' as const,x:10,z:15,orientation:0 as const,footprint:'standard' as const};
+  world.structures.push(stool,chess,campfire,horseshoes);
+  const layer=new PawnLayer();
+  const inspect=(task:RecreationTask):{pose:number;height:number;yaw:number}=>{
+    pawn.state='recreating';pawn.recreation.task=task;world.tick++;
+    layer.update(world,1,true);
+    const geometry=layer.feedbackSource!,motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
+    const to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
+    return {pose:motion.getZ(0),height:to.getY(0),yaw:to.getW(0)};
+  };
+  const base={target:{x:10,z:10},phase:'active' as const,elapsed:1};
+  expect(inspect({...base,activity:'chess',buildingId:chess.id,seatId:stool.id})).toMatchObject({pose:3,height:0});
+  expect(inspect({...base,activity:'social-relax',buildingId:campfire.id}).pose).toBe(0);
+  const visit=inspect({...base,activity:'visit-sick',buildingId:null,patientId:patient.id,seatId:stool.id});
+  expect(visit.pose).toBe(3);expect(visit.height).toBe(0);expect(visit.yaw).toBeCloseTo(Math.PI/2);
+  expect(inspect({...base,activity:'visit-sick',buildingId:null,patientId:patient.id}).pose).toBe(0);
+  expect(inspect({...base,activity:'skygaze',buildingId:null}).pose).toBe(5);
+  expect(inspect({...base,activity:'horseshoes',buildingId:horseshoes.id}).pose).toBe(4);
+  clearGroup(layer.group);
+});
+
+test('bed sleep, awake medical rest, collapse, and death keep distinct lying poses',()=>{
+  const world=createWorld(),pawn=world.pawns[0]!;world.pawns=[pawn];world.structures=[];
+  pawn.x=10;pawn.z=10;delete pawn.motion;
+  const bed={id:world.nextId++,kind:'bed' as const,x:10,z:10,orientation:0 as const,footprint:'legacy-single' as const};
+  world.structures.push(bed);
+  pawn.need={kind:'sleep',phase:'sleep',bedId:bed.id,target:{x:10,z:10}};
+  const layer=new PawnLayer();
+  const inspect=()=>{
+    layer.update(world,1,true);
+    const geometry=layer.feedbackSource!;
+    return {pose:(geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute).getZ(0),height:(geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute).getY(0)};
+  };
+  pawn.state='sleeping';expect(inspect()).toMatchObject({pose:18,height:WORLD_SCALE.bedSurfaceHeight});
+  pawn.state='resting';expect(inspect()).toMatchObject({pose:1,height:WORLD_SCALE.bedSurfaceHeight});
+  pawn.state='downed';expect(inspect()).toMatchObject({pose:1,height:WORLD_SCALE.bedSurfaceHeight});
+  pawn.medicalSleep=true;expect(inspect()).toMatchObject({pose:18,height:WORLD_SCALE.bedSurfaceHeight});
+  pawn.state='dead';expect(inspect().pose).toBe(19);
   clearGroup(layer.group);
 });
 

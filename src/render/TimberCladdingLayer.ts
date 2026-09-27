@@ -5,6 +5,7 @@ import { WORLD_SCALE } from '../world/scale';
 import { doorOrientations } from '../sim/door-rules';
 import { doorLeafTop } from './door-parts';
 import { instancedPatternUv } from './texture-variation';
+import { woodFiberDetail } from './stylized-surfaces';
 
 type Point = readonly [number, number, number];
 
@@ -104,13 +105,14 @@ function grainTexture():THREE.DataTexture {
     const patchY=Math.floor((y+4*Math.sin(x*.09))/23);
     const patch=(((patchX*73856093)^(patchY*19349663))>>>0)%5-2;
     const painted=Math.sin(x*.085+y*.033)*12+Math.sin(x*.17-y*.08)*7;
-    const grain=Math.sin(y*.68+Math.sin(x*.11))*3;
+    const grain=woodFiberDetail(x,y);
     const value=Math.max(158,Math.min(255,Math.round(226+patch*10+painted+grain)));
     const i=(y*width+x)*4;data[i]=data[i+1]=data[i+2]=value;data[i+3]=255;
   }
   const texture=new THREE.DataTexture(data,width,height,THREE.RGBAFormat);
   texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
-  texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearFilter;
+  texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;
+  texture.generateMipmaps=true;
   texture.needsUpdate=true;return texture;
 }
 

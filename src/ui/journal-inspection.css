@@ -1,12 +1,12 @@
-#pawn-journal{min-height:210px}
-#pawn-journal .pawn-journal-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 15px}
-#pawn-journal .pawn-journal-filters button{min-width:108px;padding:7px 11px}
+#pawn-journal{min-height:0}
+#pawn-journal .pawn-journal-filters{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 13px}
+#pawn-journal .pawn-journal-filters button{min-width:108px;padding:8px 12px}
 #pawn-journal .pawn-journal-filters button[aria-pressed=true]{background:var(--forest);border-color:var(--forest);color:var(--paper)}
 #pawn-journal-rows{padding:0;margin:0;list-style:none}
-#pawn-journal-rows>li{display:grid;grid-template-columns:25px minmax(0,1fr);align-items:start;gap:7px;padding:9px 8px;margin:0;font-size:14px;line-height:1.45}
+#pawn-journal-rows>li{display:grid;grid-template-columns:24px minmax(0,1fr);align-items:start;gap:9px;padding:10px 8px;margin:0;font-size:14px;line-height:1.45}
 #pawn-journal-rows>li:nth-child(even){background:color-mix(in srgb,var(--paper-deep) 65%,transparent)}
 #pawn-journal-rows>li[hidden]{display:none}
 .pawn-journal-icon{display:block;width:17px;height:17px;margin-top:2px;border:2px solid var(--forest);border-radius:5px 5px 5px 1px;transform:rotate(-8deg)}
 .pawn-journal-icon-combat{border-radius:50%;border-color:var(--accent);transform:none}
 #pawn-journal-empty[hidden]{display:none}
-#pawn-journal .pawn-journal-limit{padding-top:12px;margin-top:15px;border-top:1px solid var(--line);color:var(--muted-ink);font-size:12px}
+#pawn-journal .pawn-journal-limit{padding-top:12px;margin:14px 0 0;border-top:1px solid var(--line);color:var(--muted-ink);font-size:13px;line-height:1.4}
