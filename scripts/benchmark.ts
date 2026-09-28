@@ -1,6 +1,9 @@
 import { performance } from 'node:perf_hooks';
 import { cpus, totalmem } from 'node:os';
-import { addGroundMaterial, applyCommand, createWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { SCHEMA_VERSION, addGroundMaterial, applyCommand, createWorld, deserializeWorld, refreshStock, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
+import { startingPawn } from '../src/sim/starting-pawns.ts';
+import { legacyHumanAge } from '../src/sim/human-age.ts';
 import type { World } from '../src/sim/index.ts';
 
 function fixture(count: number, withWork: boolean): World {
@@ -8,12 +11,26 @@ function fixture(count: number, withWork: boolean): World {
   world.tiles = world.tiles.map(() => ({ terrain: 'grass' }));
   world.resources = [];
   world.piles = []; world.stockpiles = [];
-  world.pawns = Array.from({ length: count }, (_, index) => ({
-    id: world.nextId++, name: `Bench ${index + 1}`, x: 1 + (index % 30) * 2, z: 1 + Math.floor(index / 30) * 2,
-    hunger: 100, rest: 100, mood: 100, comfort: 50, memories: [], jobId: null, haul: null, cooking: null, need: null, bedId: null, needCooldown: 0, state: 'idle' as const,
-    priorities: {research:0, patient:0,bedrest:0,doctor:0,art:0,craft:2,mine:0, gather: 2, build: 2, haul: 3, grow: 0 , cook: 0 }, path: [], moveCooldown: 0, planCooldown: 0,
-  }));
-  addGroundMaterial(world, 'food', count * 10, { x: 61, z: 61 });
+  world.structures = []; world.jobs = [];
+  refreshStock(world);
+  world.pawns = Array.from({ length: count }, (_, index) => {
+    const pawn = startingPawn(world.nextId++, `Bench ${index + 1}`, 1 + (index % 30) * 2,
+      1 + Math.floor(index / 30) * 2, index % 3, 50);
+    pawn.age = legacyHumanAge();
+    delete pawn.health;
+    pawn.hunger = 100; pawn.rest = 100; pawn.mood = 100;
+    pawn.schedule.fill('anything');
+    for (const work of Object.keys(pawn.priorities) as (keyof typeof pawn.priorities)[]) pawn.priorities[work] = 0;
+    pawn.priorities.gather = 2; pawn.priorities.haul = 3;
+    return pawn;
+  });
+  // Preserve the old ten-portion reserve per actor. Current stack rules require
+  // separate cells once the reserve exceeds a single pile.
+  for (let remaining = count * 10, index = 0; remaining > 0; index++) {
+    const quantity = Math.min(75, remaining);
+    addGroundMaterial(world, 'food', quantity, { x: index + 1, z: 61 }, 'legacy-portion');
+    remaining -= quantity;
+  }
   if (withWork) {
     for (let index = 0; index < Math.ceil(count * 12 / 75); index++) {
       const result = applyCommand(world, { type: 'stockpile', x: index + 1, z: 27, enabled: true, filters: { wood: true, food: false }, capacity: 75, priority: 4 });
@@ -27,6 +44,8 @@ function fixture(count: number, withWork: boolean): World {
       if (!result.ok) throw new Error(result.reason);
     }
   }
+  const errors = validateWorld(world);
+  if (errors.length) throw new Error(`Invalid fixture: ${errors.join(' ')}`);
   return world;
 }
 
@@ -36,10 +55,37 @@ function percentile(values: number[], proportion: number): number {
 }
 const rounded = (value: number): number => Math.round(value * 1000) / 1000;
 
+function option(name: string): string | undefined {
+  return process.argv.find(argument => argument.startsWith(`--${name}=`))?.slice(name.length + 3);
+}
+function boundedInteger(value: string, label: string, maximum: number): number {
+  const number = Number(value);
+  if (!Number.isSafeInteger(number) || number < 1 || number > maximum) throw new Error(`${label} must be 1..${maximum}.`);
+  return number;
+}
+const counts = option('counts')?.split(',').map(value => boundedInteger(value, 'pawn count', 300)) ?? [3, 30, 100, 300];
+if (counts.length === 0 || new Set(counts).size !== counts.length) throw new Error('Pawn counts must be distinct.');
+const samples = boundedInteger(option('samples') ?? '5', 'samples', 10);
+const checkFixtureOnly = process.argv.includes('--check-fixture');
+function checkRoundTrip(world: World, context: string): void {
+  const errors = validateWorld(world);
+  if (errors.length) throw new Error(`${context}: ${errors.join(' ')}`);
+  const serialized = serializeWorld(world), resumed = deserializeWorld(serialized);
+  if (serializeWorld(resumed) !== serialized) throw new Error(`${context}: serialization changed state.`);
+  stepWorld(world); stepWorld(resumed);
+  if (serializeWorld(resumed) !== serializeWorld(world)) throw new Error(`${context}: one-tick continuation differs.`);
+}
+
+if (checkFixtureOnly) {
+  for (const count of counts) for (const work of [false, true]) checkRoundTrip(fixture(count, work), `fixture ${count}/${work}`);
+  console.log(JSON.stringify({ check: 'valid fixtures, exact serialization and one-tick continuation', counts }));
+  process.exit(0);
+}
+
 // Warm up the actual systems before collecting wall-clock timing. No renderer is involved.
 for (let warmup = 0; warmup < 3; warmup++) stepWorld(fixture(30, true), 201);
 const rows = [];
-for (const count of [3, 30, 100, 300]) {
+for (const count of counts) {
   const dispatch: number[] = [];
   const activeTick: number[] = [];
   const idleTick: number[] = [];
@@ -48,7 +94,7 @@ for (const count of [3, 30, 100, 300]) {
   let completed = 0;
   let finalCompleted = 0;
   let stockpiledWood = 0;
-  for (let sample = 0; sample < 5; sample++) {
+  for (let sample = 0; sample < samples; sample++) {
     const working = fixture(count, true);
     let start = performance.now(); stepWorld(working); dispatch.push(performance.now() - start);
     for (let chunk = 0; chunk < 10; chunk++) {
@@ -64,25 +110,27 @@ for (const count of [3, 30, 100, 300]) {
     const material = working.piles.reduce((sum, pile) => sum + (pile.kind === 'wood' ? pile.quantity : 0), 0)
       + working.resources.reduce((sum, resource) => sum + (resource.kind === 'tree' ? resource.amount : 0), 0);
     if (material !== count * 12) throw new Error(`Material loss at count=${count}: ${material}`);
+    checkRoundTrip(working, `working ${count}/${sample}`);
     const idle = fixture(count, false);
     start = performance.now(); stepWorld(idle, 600); idleTick.push((performance.now() - start) / 600);
-    for (const world of [working, idle]) {
-      const errors = validateWorld(world);
-      if (errors.length > 0) throw new Error(errors.join(' '));
-    }
+    checkRoundTrip(idle, `idle ${count}/${sample}`);
   }
   rows.push({ pawns: count, map: '64x64', initialJobs: count,
     dispatchMedianMs: rounded(percentile(dispatch, 0.5)), dispatchMaxMs: rounded(Math.max(...dispatch)),
     busyTickMedianMs: rounded(percentile(activeTick, 0.5)), busyTickP95Ms: rounded(percentile(activeTick, 0.95)),
     idleTickMedianMs: rounded(percentile(idleTick, 0.5)), activeObservationPercent: rounded(100 * activeObservations / observations),
-    meanJobsCompletedAtTick201: completed / 5,
-    meanJobsCompletedAtTick1001: finalCompleted / 5,
-    meanWoodStoredAtTick1001: stockpiledWood / 5,
+    meanJobsCompletedAtTick201: completed / samples,
+    meanJobsCompletedAtTick1001: finalCompleted / samples,
+    meanWoodStoredAtTick1001: stockpiledWood / samples,
   });
 }
-console.log(JSON.stringify({
+const report = {
   timestamp: new Date().toISOString(), runtime: process.version, platform: process.platform, arch: process.arch,
   cpuModel: cpus()[0]?.model ?? 'unknown', logicalCPUCount: cpus().length, memoryBytes: totalmem(),
-  method: 'Schema 2; five fresh worlds/count; first tick timed separately, 200 further ticks in 20-tick batches, then 800 untimed ticks to check gathering, physical haul outcomes and material conservation; independent 600-tick idle world. Stockpile capacity covers all wood; carrier limit 10. BFS, movement, work and haul included; no GPU, browser, renderer, persistence or DOM. p95 concerns batch mean ms/tick, not individual-tick tails. Functionality differs from the former schema-1 benchmark: timings are not a controlled A/B optimization comparison.',
+  schema: SCHEMA_VERSION, counts, samples,
+  method: 'Current complete Pawn factory; open 64x64 map; first tick timed separately, 200 further ticks in 20-tick batches, then 800 untimed ticks to check gathering, physical haul outcomes and material conservation; independent 600-tick idle world. Validation and exact serialization/one-tick continuation are outside timing. Stockpile capacity covers all wood. CPU simulation only: no GPU, browser, renderer, worker bridge or DOM. p95 concerns batch mean ms/tick, not individual-tick tails. The schema-2 artifact used a different fixture; these timings are not a controlled A/B optimization comparison.',
   rows,
-}, null, 2));
+};
+mkdirSync('tmp', { recursive: true });
+writeFileSync('tmp/simulation-benchmark-current.json', JSON.stringify(report, null, 2) + '\n');
+console.log(JSON.stringify({ output: 'tmp/simulation-benchmark-current.json', ...report }, null, 2));

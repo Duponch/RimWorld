@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-09-28T17:47:27.578Z",
+  "runtime": "v24.11.1",
+  "platform": "win32",
+  "arch": "x64",
+  "cpuModel": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "logicalCPUCount": 12,
+  "memoryBytes": 17131188224,
+  "schema": 144,
+  "counts": [
+    3,
+    30,
+    100
+  ],
+  "samples": 3,
+  "method": "Current complete Pawn factory; open 64x64 map; first tick timed separately, 200 further ticks in 20-tick batches, then 800 untimed ticks to check gathering, physical haul outcomes and material conservation; independent 600-tick idle world. Validation and exact serialization/one-tick continuation are outside timing. Stockpile capacity covers all wood. CPU simulation only: no GPU, browser, renderer, worker bridge or DOM. p95 concerns batch mean ms/tick, not individual-tick tails. The schema-2 artifact used a different fixture; these timings are not a controlled A/B optimization comparison.",
+  "rows": [
+    {
+      "pawns": 3,
+      "map": "64x64",
+      "initialJobs": 3,
+      "dispatchMedianMs": 2.533,
+      "dispatchMaxMs": 3.627,
+      "busyTickMedianMs": 0.091,
+      "busyTickP95Ms": 0.169,
+      "idleTickMedianMs": 0.08,
+      "activeObservationPercent": 100,
+      "meanJobsCompletedAtTick201": 0,
+      "meanJobsCompletedAtTick1001": 3,
+      "meanWoodStoredAtTick1001": 36
+    },
+    {
+      "pawns": 30,
+      "map": "64x64",
+      "initialJobs": 30,
+      "dispatchMedianMs": 2.378,
+      "dispatchMaxMs": 3.898,
+      "busyTickMedianMs": 0.344,
+      "busyTickP95Ms": 1.043,
+      "idleTickMedianMs": 0.239,
+      "activeObservationPercent": 91.333,
+      "meanJobsCompletedAtTick201": 0,
+      "meanJobsCompletedAtTick1001": 30,
+      "meanWoodStoredAtTick1001": 360
+    },
+    {
+      "pawns": 100,
+      "map": "64x64",
+      "initialJobs": 100,
+      "dispatchMedianMs": 3.654,
+      "dispatchMaxMs": 7.135,
+      "busyTickMedianMs": 2.192,
+      "busyTickP95Ms": 4.809,
+      "idleTickMedianMs": 1.164,
+      "activeObservationPercent": 88.8,
+      "meanJobsCompletedAtTick201": 0,
+      "meanJobsCompletedAtTick1001": 100,
+      "meanWoodStoredAtTick1001": 1200
+    }
+  ]
+}

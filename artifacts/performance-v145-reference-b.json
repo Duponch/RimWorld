@@ -1,0 +1,1042 @@
+{
+  "date": "2026-09-28T17:49:43.511Z",
+  "config": {
+    "label": "v145-reference-b",
+    "origin": "http://127.0.0.1:5173/",
+    "savePath": "E:\\Code\\RimWorld\\public\\test-saves\\v98\\mixed-100.json",
+    "output": "E:\\Code\\RimWorld\\tmp\\performance-audit-v140-v145-reference-b.json",
+    "scenes": [
+      "iso-near",
+      "iso-wide",
+      "perspective-low",
+      "iso-labels"
+    ],
+    "speeds": [
+      0,
+      6
+    ],
+    "measuredSeconds": 5,
+    "warmupSeconds": 3,
+    "gpuRequested": false,
+    "shadows": true,
+    "shadowCache": true,
+    "clouds": true,
+    "labels": true,
+    "textures": true,
+    "grass": true,
+    "wind": true
+  },
+  "fixture": {
+    "path": "E:\\Code\\RimWorld\\public\\test-saves\\v98\\mixed-100.json",
+    "sha256": "4d5b34a4a37e0f478a813e472212d923cffaa4f3ed0391764d615972a5f7c26b",
+    "worldSha256": "a041752036fff16166c61561d2d9b1465e8181eceea7fdc949507f137cd3b750",
+    "schemaVersion": 91,
+    "tick": 2000,
+    "width": 250,
+    "height": 250,
+    "pawns": 104,
+    "animals": 100,
+    "resources": 11009,
+    "piles": 266
+  },
+  "host": {
+    "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+    "node": "v24.11.1",
+    "platform": "win32"
+  },
+  "protocol": "Each phase reloads the identical raw save, fixes camera pose and toggles, warms up, then measures for a fixed wall-time window. Native Chromium/WebGPU, 1920x1080, DPR 1. RAF is display paced; frame CPU includes JS and render submission, not GPU execution. Worker stepMs is simulation time per tick reported in snapshots, not total worker cost. GPU timestamps require a separate instrumented run. Three draw/triangle counters can omit retained bundle replay.",
+  "browser": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "dpr": 1,
+    "backend": "WebGPU"
+  },
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-1",
+    "device": "",
+    "description": ""
+  },
+  "gpuTimestampSupported": true,
+  "phases": [
+    {
+      "scene": "iso-near",
+      "speed": 0,
+      "prepared": {
+        "anchor": {
+          "id": 12425,
+          "x": 111,
+          "z": 109
+        },
+        "target": {
+          "x": 111,
+          "z": 109
+        },
+        "mode": "orthographic"
+      },
+      "start": {
+        "tick": 2000,
+        "schemaVersion": 144,
+        "width": 250,
+        "height": 250,
+        "pawns": 104,
+        "animals": 100,
+        "resources": 10077,
+        "piles": 266,
+        "jobs": 249,
+        "weather": {
+          "current": "clear",
+          "previous": "clear",
+          "ageCore": 0
+        },
+        "camera": {
+          "mode": "orthographic",
+          "position": [
+            243.82464008728104,
+            312.5285649112496,
+            249.63785421006227
+          ],
+          "quaternion": [
+            -0.45223700576605763,
+            0.3227467518102845,
+            0.17979977174902603,
+            0.8117809229654633
+          ],
+          "target": [
+            111,
+            0,
+            109
+          ],
+          "zoom": 2,
+          "near": 0.1,
+          "far": 735.1067811865476,
+          "span": 16.96,
+          "pixelsPerCell": 63.679245283018865,
+          "overview": false
+        },
+        "presentation": {
+          "shadows": true,
+          "shadowAutoUpdate": true,
+          "shadowNeedsUpdate": true,
+          "clouds": false,
+          "labels": false,
+          "grass": true,
+          "windStaticMeshes": 0
+        }
+      },
+      "end": {
+        "tick": 2000,
+        "weather": "clear"
+      },
+      "elapsedMs": 5023.699999999255,
+      "ticks": 0,
+      "achievedSpeed": 0,
+      "rafMs": {
+        "n": 1095,
+        "mean": 4.604292237442923,
+        "p50": 4.19999999999709,
+        "p95": 8.30000000000291,
+        "p99": 12.5,
+        "max": 58.30000000000291
+      },
+      "rafFps": 217.18864668663343,
+      "frameCpuMs": {
+        "n": 1096,
+        "mean": 1.8920620438697184,
+        "p50": 1.8999999985098839,
+        "p95": 2.5,
+        "p99": 3.199999999254942,
+        "max": 6.199999999254942
+      },
+      "workerStepMs": null,
+      "snapshotCallbackMs": null,
+      "decodeMs": null,
+      "gpuMs": null,
+      "gpuError": null,
+      "encodedDrawCalls": {
+        "n": 1096,
+        "mean": 45.98540145985402,
+        "p50": 45,
+        "p95": 45,
+        "p99": 90,
+        "max": 90
+      },
+      "encodedTriangles": {
+        "n": 1096,
+        "mean": 924423.0437956204,
+        "p50": 901329,
+        "p95": 901329,
+        "p99": 1955957,
+        "max": 1955957
+      }
+    },
+    {
+      "scene": "iso-near",
+      "speed": 6,
+      "prepared": {
+        "anchor": {
+          "id": 12425,
+          "x": 111,
+          "z": 109
+        },
+        "target": {
+          "x": 111,
+          "z": 109
+        },
+        "mode": "orthographic"
+      },
+      "start": {
+        "tick": 2000,
+        "schemaVersion": 144,
+        "width": 250,
+        "height": 250,
+        "pawns": 104,
+        "animals": 100,
+        "resources": 10077,
+        "piles": 266,
+        "jobs": 249,
+        "weather": {
+          "current": "clear",
+          "previous": "clear",
+          "ageCore": 0
+        },
+        "camera": {
+          "mode": "orthographic",
+          "position": [
+            243.82464008728104,
+            312.5285649112496,
+            249.63785421006227
+          ],
+          "quaternion": [
+            -0.45223700576605763,
+            0.3227467518102845,
+            0.17979977174902603,
+            0.8117809229654633
+          ],
+          "target": [
+            111,
+            0,
+            109
+          ],
+          "zoom": 2,
+          "near": 0.1,
+          "far": 735.1067811865476,
+          "span": 16.96,
+          "pixelsPerCell": 63.679245283018865,
+          "overview": false
+        },
+        "presentation": {
+          "shadows": true,
+          "shadowAutoUpdate": true,
+          "shadowNeedsUpdate": true,
+          "clouds": false,
+          "labels": false,
+          "grass": true,
+          "windStaticMeshes": 0
+        }
+      },
+      "end": {
+        "tick": 2068,
+        "weather": "clear"
+      },
+      "elapsedMs": 5016.900000002235,
+      "ticks": 68,
+      "achievedSpeed": 2.2590311414076987,
+      "rafMs": {
+        "n": 453,
+        "mean": 11.092715231788079,
+        "p50": 4.200000000000728,
+        "p95": 41.60000000000218,
+        "p99": 54.10000000000218,
+        "max": 99.90000000000146
+      },
+      "rafFps": 90.1492537313433,
+      "frameCpuMs": {
+        "n": 454,
+        "mean": 6.032819383232013,
+        "p50": 3.300000000745058,
+        "p95": 23.300000000745058,
+        "p99": 35.400000002235174,
+        "max": 91.5
+      },
+      "workerStepMs": {
+        "n": 68,
+        "mean": 61.3565767975393,
+        "p50": 51.70000000049671,
+        "p95": 90.5,
+        "p99": 160.39999999850988,
+        "max": 160.39999999850988
+      },
+      "snapshotCallbackMs": {
+        "n": 68,
+        "mean": 0.28088235274395523,
+        "p50": 0.09999999776482582,
+        "p95": 0.20000000298023224,
+        "p99": 6.699999999254942,
+        "max": 6.699999999254942
+      },
+      "decodeMs": {
+        "n": 68,
+        "mean": 0.6426470588673564,
+        "p50": 0.30000000074505806,
+        "p95": 2.300000000745058,
+        "p99": 2.699999999254942,
+        "max": 2.699999999254942
+      },
+      "gpuMs": null,
+      "gpuError": null,
+      "encodedDrawCalls": {
+        "n": 454,
+        "mean": 91.88546255506608,
+        "p50": 92,
+        "p95": 94,
+        "p99": 95,
+        "max": 95
+      },
+      "encodedTriangles": {
+        "n": 454,
+        "mean": 1941002.603524229,
+        "p50": 1956789,
+        "p95": 1957835,
+        "p99": 1957889,
+        "max": 1957889
+      }
+    },
+    {
+      "scene": "iso-wide",
+      "speed": 0,
+      "prepared": {
+        "anchor": {
+          "id": 12425,
+          "x": 111,
+          "z": 109
+        },
+        "target": {
+          "x": 124.5,
+          "z": 124.5
+        },
+        "mode": "orthographic"
+      },
+      "start": {
+        "tick": 2000,
+        "schemaVersion": 144,
+        "width": 250,
+        "height": 250,
+        "pawns": 104,
+        "animals": 100,
+        "resources": 10077,
+        "piles": 266,
+        "jobs": 249,
+        "weather": {
+          "current": "clear",
+          "previous": "clear",
+          "ageCore": 0
+        },
+        "camera": {
+          "mode": "orthographic",
+          "position": [
+            257.32464008728107,
+            312.5285649112496,
+            265.1378542100623
+          ],
+          "quaternion": [
+            -0.45223700576605763,
+            0.3227467518102845,
+            0.17979977174902603,
+            0.8117809229654633
+          ],
+          "target": [
+            124.50000000000003,
+            0,
+            124.50000000000003
+          ],
+          "zoom": 0.1,
+          "near": 0.1,
+          "far": 735.1067811865476,
+          "span": 339.2,
+          "pixelsPerCell": 3.1839622641509435,
+          "overview": true
+        },
+        "presentation": {
+          "shadows": true,
+          "shadowAutoUpdate": true,
+          "shadowNeedsUpdate": true,
+          "clouds": false,
+          "labels": false,
+          "grass": false,
+          "windStaticMeshes": 0
+        }
+      },
+      "end": {
+        "tick": 2000,
+        "weather": "clear"
+      },
+      "elapsedMs": 5019.60000000149,
+      "ticks": 0,
+      "achievedSpeed": 0,
+      "rafMs": {
+        "n": 1155,
+        "mean": 4.3578354978355005,
+        "p50": 4.19999999999709,
+        "p95": 4.30000000000291,
+        "p99": 8.400000000001455,
+        "max": 29.19999999999709
+      },
+      "rafFps": 229.47171835575057,
+      "frameCpuMs": {
+        "n": 1156,
+        "mean": 1.7025951557377013,
+        "p50": 1.699999999254942,
+        "p95": 2.2999999970197678,
+        "p99": 2.600000001490116,
+        "max": 3.600000001490116
+      },
+      "workerStepMs": null,
+      "snapshotCallbackMs": null,
+      "decodeMs": null,
+      "gpuMs": null,
+      "gpuError": null,
+      "encodedDrawCalls": {
+        "n": 1156,
+        "mean": 34.562283737024224,
+        "p50": 34,
+        "p95": 34,
+        "p99": 49,
+        "max": 54
+      },
+      "encodedTriangles": {
+        "n": 1156,
+        "mean": 573785.8702422145,
+        "p50": 553375,
+        "p95": 553375,
+        "p99": 1093981,
+        "max": 1442889
+      }
+    },
+    {
+      "scene": "iso-wide",
+      "speed": 6,
+      "prepared": {
+        "anchor": {
+          "id": 12425,
+          "x": 111,
+          "z": 109
+        },
+        "target": {
+          "x": 124.5,
+          "z": 124.5
+        },
+        "mode": "orthographic"
+      },
+      "start": {
+        "tick": 2000,
+        "schemaVersion": 144,
+        "width": 250,
+        "height": 250,
+        "pawns": 104,
+        "animals": 100,
+        "resources": 10077,
+        "piles": 266,
+        "jobs": 249,
+        "weather": {
+          "current": "clear",
+          "previous": "clear",
+          "ageCore": 0
+        },
+        "camera": {
+          "mode": "orthographic",
+          "position": [
+            257.32464008728107,
+            312.5285649112496,
+            265.1378542100623
+          ],
+          "quaternion": [
+            -0.45223700576605763,
+            0.3227467518102845,
+            0.17979977174902603,
+            0.8117809229654633
+          ],
+          "target": [
+            124.50000000000003,
+            0,
+            124.50000000000003
+          ],
+          "zoom": 0.1,
+          "near": 0.1,
+          "far": 735.1067811865476,
+          "span": 339.2,
+          "pixelsPerCell": 3.1839622641509435,
+          "overview": true
+        },
+        "presentation": {
+          "shadows": true,
+          "shadowAutoUpdate": true,
+          "shadowNeedsUpdate": true,
+          "clouds": false,
+          "labels": false,
+          "grass": false,
+          "windStaticMeshes": 0
+        }
+      },
+      "end": {
+        "tick": 2092,
+        "weather": "clear"
+      },
+      "elapsedMs": 5055.800000000745,
+      "ticks": 92,
+      "achievedSpeed": 3.032820391101522,
+      "rafMs": {
+        "n": 449,
+        "mean": 11.144988864142535,
+        "p50": 4.200000000004366,
+        "p95": 37.5,
+        "p99": 45.799999999995634,
+        "max": 50
+      },
+      "rafFps": 89.72642433204776,
+      "frameCpuMs": {
+        "n": 450,
+        "mean": 5.694000000043048,
+        "p50": 2.699999999254942,
+        "p95": 20.800000000745058,
+        "p99": 25.5,
+        "max": 29.600000001490116
+      },
+      "workerStepMs": {
+        "n": 92,
+        "mean": 44.93261818482342,
+        "p50": 40.23333333308498,
+        "p95": 77.5,
+        "p99": 95.30000000074506,
+        "max": 95.30000000074506
+      },
+      "snapshotCallbackMs": {
+        "n": 92,
+        "mean": 0.4304347825034157,
+        "p50": 0.10000000149011612,
+        "p95": 5.5,
+        "p99": 6.5,
+        "max": 6.5
+      },
+      "decodeMs": {
+        "n": 92,
+        "mean": 0.5663043478827762,
+        "p50": 0.30000000074505806,
+        "p95": 2.199999999254942,
+        "p99": 5.199999999254942,
+        "max": 5.199999999254942
+      },
+      "gpuMs": null,
+      "gpuError": null,
+      "encodedDrawCalls": {
+        "n": 450,
+        "mean": 51.67333333333333,
+        "p50": 49,
+        "p95": 60,
+        "p99": 60,
+        "max": 60
+      },
+      "encodedTriangles": {
+        "n": 450,
+        "mean": 1164087.5066666666,
+        "p50": 1093981,
+        "p95": 1444193,
+        "p99": 1444639,
+        "max": 1445419
+      }
+    },
+    {
+      "scene": "perspective-low",
+      "speed": 0,
+      "prepared": {
+        "anchor": {
+          "id": 12425,
+          "x": 111,
+          "z": 109
+        },
+        "target": {
+          "x": 111,
+          "z": 109
+        },
+        "mode": "perspective"
+      },
+      "start": {
+        "tick": 2000,
+        "schemaVersion": 144,
+        "width": 250,
+        "height": 250,
+        "pawns": 104,
+        "animals": 100,
+        "resources": 10077,
+        "piles": 266,
+        "jobs": 249,
+        "weather": {
+          "current": "clear",
+          "previous": "clear",
+          "ageCore": 0
+        },
+        "camera": {
+          "mode": "perspective",
+          "position": [
+            143,
+            9,
+            137
+          ],
+          "quaternion": [
+            -0.09479949766405298,
+            0.4109710863092161,
+            0.04301699993681377,
+            0.9056850220561794
+          ],
+          "target": [
+            111,
+            0,
+            109
+          ],
+          "zoom": 1,
+          "near": 0.1,
+          "far": 820.8864350760148,
+          "span": 36.00561963663155,
+          "pixelsPerCell": 673.7688213345368,
+          "overview": false
+        },
+        "presentation": {
+          "shadows": true,
+          "shadowAutoUpdate": true,
+          "shadowNeedsUpdate": true,
+          "clouds": true,
+          "labels": true,
+          "grass": true,
+          "windStaticMeshes": 0
+        }
+      },
+      "end": {
+        "tick": 2000,
+        "weather": "clear"
+      },
+      "elapsedMs": 5025.800000000745,
+      "ticks": 0,
+      "achievedSpeed": 0,
+      "rafMs": {
+        "n": 1097,
+        "mean": 4.595897903372839,
+        "p50": 4.19999999999709,
+        "p95": 8.30000000000291,
+        "p99": 12.5,
+        "max": 37.5
+      },
+      "rafFps": 217.58533827875502,
+      "frameCpuMs": {
+        "n": 1098,
+        "mean": 2.299817850670772,
+        "p50": 2.2000000029802322,
+        "p95": 3.100000001490116,
+        "p99": 4.100000001490116,
+        "max": 4.900000002235174
+      },
+      "workerStepMs": null,
+      "snapshotCallbackMs": null,
+      "decodeMs": null,
+      "gpuMs": null,
+      "gpuError": null,
+      "encodedDrawCalls": {
+        "n": 1098,
+        "mean": 75.9672131147541,
+        "p50": 74,
+        "p95": 74,
+        "p99": 134,
+        "max": 134
+      },
+      "encodedTriangles": {
+        "n": 1098,
+        "mean": 1317826.8688524591,
+        "p50": 1277095,
+        "p95": 1277095,
+        "p99": 2519417,
+        "max": 2519417
+      }
+    },
+    {
+      "scene": "perspective-low",
+      "speed": 6,
+      "prepared": {
+        "anchor": {
+          "id": 12425,
+          "x": 111,
+          "z": 109
+        },
+        "target": {
+          "x": 111,
+          "z": 109
+        },
+        "mode": "perspective"
+      },
+      "start": {
+        "tick": 2000,
+        "schemaVersion": 144,
+        "width": 250,
+        "height": 250,
+        "pawns": 104,
+        "animals": 100,
+        "resources": 10077,
+        "piles": 266,
+        "jobs": 249,
+        "weather": {
+          "current": "clear",
+          "previous": "clear",
+          "ageCore": 0
+        },
+        "camera": {
+          "mode": "perspective",
+          "position": [
+            143,
+            9,
+            137
+          ],
+          "quaternion": [
+            -0.09479949766405298,
+            0.4109710863092161,
+            0.04301699993681377,
+            0.9056850220561794
+          ],
+          "target": [
+            111,
+            0,
+            109
+          ],
+          "zoom": 1,
+          "near": 0.1,
+          "far": 820.8864350760148,
+          "span": 36.00561963663155,
+          "pixelsPerCell": 673.7688213345368,
+          "overview": false
+        },
+        "presentation": {
+          "shadows": true,
+          "shadowAutoUpdate": true,
+          "shadowNeedsUpdate": true,
+          "clouds": true,
+          "labels": true,
+          "grass": true,
+          "windStaticMeshes": 0
+        }
+      },
+      "end": {
+        "tick": 2092,
+        "weather": "clear"
+      },
+      "elapsedMs": 5020.599999997765,
+      "ticks": 92,
+      "achievedSpeed": 3.0540838412421145,
+      "rafMs": {
+        "n": 362,
+        "mean": 13.800828729281752,
+        "p50": 8.39999999999418,
+        "p95": 37.5,
+        "p99": 45.89999999999418,
+        "max": 58.40000000000873
+      },
+      "rafFps": 72.45941672171189,
+      "frameCpuMs": {
+        "n": 363,
+        "mean": 7.943526170829686,
+        "p50": 4.100000001490116,
+        "p95": 22.900000002235174,
+        "p99": 34.600000001490116,
+        "max": 37.099999997764826
+      },
+      "workerStepMs": {
+        "n": 92,
+        "mean": 45.43441554525945,
+        "p50": 40.5166666675359,
+        "p95": 81.60000000149012,
+        "p99": 108.80000000074506,
+        "max": 108.80000000074506
+      },
+      "snapshotCallbackMs": {
+        "n": 92,
+        "mean": 0.6391304347502149,
+        "p50": 0.10000000149011612,
+        "p95": 5.599999997764826,
+        "p99": 6.199999999254942,
+        "max": 6.199999999254942
+      },
+      "decodeMs": {
+        "n": 92,
+        "mean": 0.4717391303376011,
+        "p50": 0.20000000298023224,
+        "p95": 1.9000000022351742,
+        "p99": 2.400000002235174,
+        "max": 2.400000002235174
+      },
+      "gpuMs": null,
+      "gpuError": null,
+      "encodedDrawCalls": {
+        "n": 363,
+        "mean": 136.80440771349862,
+        "p50": 136,
+        "p95": 141,
+        "p99": 141,
+        "max": 141
+      },
+      "encodedTriangles": {
+        "n": 363,
+        "mean": 2519364.3663911847,
+        "p50": 2519417,
+        "p95": 2521321,
+        "p99": 2521341,
+        "max": 2521349
+      }
+    },
+    {
+      "scene": "iso-labels",
+      "speed": 0,
+      "prepared": {
+        "anchor": {
+          "id": 12425,
+          "x": 111,
+          "z": 109
+        },
+        "target": {
+          "x": 111,
+          "z": 109
+        },
+        "mode": "orthographic"
+      },
+      "start": {
+        "tick": 2000,
+        "schemaVersion": 144,
+        "width": 250,
+        "height": 250,
+        "pawns": 104,
+        "animals": 100,
+        "resources": 10077,
+        "piles": 266,
+        "jobs": 249,
+        "weather": {
+          "current": "clear",
+          "previous": "clear",
+          "ageCore": 0
+        },
+        "camera": {
+          "mode": "orthographic",
+          "position": [
+            243.82464008728104,
+            312.5285649112496,
+            249.63785421006227
+          ],
+          "quaternion": [
+            -0.45223700576605763,
+            0.3227467518102845,
+            0.17979977174902603,
+            0.8117809229654633
+          ],
+          "target": [
+            111,
+            0,
+            109
+          ],
+          "zoom": 4,
+          "near": 0.1,
+          "far": 735.1067811865476,
+          "span": 8.48,
+          "pixelsPerCell": 127.35849056603773,
+          "overview": false
+        },
+        "presentation": {
+          "shadows": true,
+          "shadowAutoUpdate": true,
+          "shadowNeedsUpdate": true,
+          "clouds": false,
+          "labels": true,
+          "grass": true,
+          "windStaticMeshes": 0
+        }
+      },
+      "end": {
+        "tick": 2000,
+        "weather": "clear"
+      },
+      "elapsedMs": 5020.39999999851,
+      "ticks": 0,
+      "achievedSpeed": 0,
+      "rafMs": {
+        "n": 1116,
+        "mean": 4.5064516129032235,
+        "p50": 4.19999999999709,
+        "p95": 8.30000000000291,
+        "p99": 8.400000000008731,
+        "max": 25
+      },
+      "rafFps": 221.90408017179683,
+      "frameCpuMs": {
+        "n": 1117,
+        "mean": 1.8304386750370558,
+        "p50": 1.800000000745058,
+        "p95": 2.400000002235174,
+        "p99": 2.7000000029802322,
+        "max": 3.400000002235174
+      },
+      "workerStepMs": null,
+      "snapshotCallbackMs": null,
+      "decodeMs": null,
+      "gpuMs": null,
+      "gpuError": null,
+      "encodedDrawCalls": {
+        "n": 1117,
+        "mean": 42.541629364368845,
+        "p50": 41,
+        "p95": 41,
+        "p99": 83,
+        "max": 83
+      },
+      "encodedTriangles": {
+        "n": 1117,
+        "mean": 928577.4404655327,
+        "p50": 892005,
+        "p95": 892005,
+        "p99": 1888381,
+        "max": 1888381
+      }
+    },
+    {
+      "scene": "iso-labels",
+      "speed": 6,
+      "prepared": {
+        "anchor": {
+          "id": 12425,
+          "x": 111,
+          "z": 109
+        },
+        "target": {
+          "x": 111,
+          "z": 109
+        },
+        "mode": "orthographic"
+      },
+      "start": {
+        "tick": 2000,
+        "schemaVersion": 144,
+        "width": 250,
+        "height": 250,
+        "pawns": 104,
+        "animals": 100,
+        "resources": 10077,
+        "piles": 266,
+        "jobs": 249,
+        "weather": {
+          "current": "clear",
+          "previous": "clear",
+          "ageCore": 0
+        },
+        "camera": {
+          "mode": "orthographic",
+          "position": [
+            243.82464008728104,
+            312.5285649112496,
+            249.63785421006227
+          ],
+          "quaternion": [
+            -0.45223700576605763,
+            0.3227467518102845,
+            0.17979977174902603,
+            0.8117809229654633
+          ],
+          "target": [
+            111,
+            0,
+            109
+          ],
+          "zoom": 4,
+          "near": 0.1,
+          "far": 735.1067811865476,
+          "span": 8.48,
+          "pixelsPerCell": 127.35849056603773,
+          "overview": false
+        },
+        "presentation": {
+          "shadows": true,
+          "shadowAutoUpdate": true,
+          "shadowNeedsUpdate": true,
+          "clouds": false,
+          "labels": true,
+          "grass": true,
+          "windStaticMeshes": 0
+        }
+      },
+      "end": {
+        "tick": 2092,
+        "weather": "clear"
+      },
+      "elapsedMs": 5041.300000000745,
+      "ticks": 92,
+      "achievedSpeed": 3.0415435172140257,
+      "rafMs": {
+        "n": 430,
+        "mean": 11.705348837209309,
+        "p50": 4.2000000000116415,
+        "p95": 37.5,
+        "p99": 45.80000000000291,
+        "max": 54.30000000000291
+      },
+      "rafFps": 85.43102934456515,
+      "frameCpuMs": {
+        "n": 431,
+        "mean": 6.341299304025563,
+        "p50": 3.099999997764826,
+        "p95": 22.800000000745058,
+        "p99": 29.199999999254942,
+        "max": 38
+      },
+      "workerStepMs": {
+        "n": 92,
+        "mean": 45.31400146636253,
+        "p50": 40.77142857068351,
+        "p95": 72.90000000223517,
+        "p99": 78.79999999701977,
+        "max": 78.79999999701977
+      },
+      "snapshotCallbackMs": {
+        "n": 92,
+        "mean": 0.5565217388793826,
+        "p50": 0.09999999776482582,
+        "p95": 5.300000000745058,
+        "p99": 6,
+        "max": 6
+      },
+      "decodeMs": {
+        "n": 92,
+        "mean": 0.39782608709419554,
+        "p50": 0.20000000298023224,
+        "p95": 1.5,
+        "p99": 1.800000000745058,
+        "max": 1.800000000745058
+      },
+      "gpuMs": null,
+      "gpuError": null,
+      "encodedDrawCalls": {
+        "n": 431,
+        "mean": 84.42691415313224,
+        "p50": 85,
+        "p95": 85,
+        "p99": 85,
+        "max": 86
+      },
+      "encodedTriangles": {
+        "n": 431,
+        "mean": 1873886.2714617169,
+        "p50": 1888381,
+        "p95": 1890247,
+        "p99": 1890293,
+        "max": 1890293
+      }
+    }
+  ],
+  "errors": [],
+  "availableLayers": {
+    "clouds": true,
+    "labels": true,
+    "shadows": true,
+    "windMaterialReplacements": 0,
+    "tuftWindDisabled": false
+  }
+}
