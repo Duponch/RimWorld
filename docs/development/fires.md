@@ -61,7 +61,7 @@ Une destruction est prévalidée avant le retrait fatal, notamment pour la place
 Le registre `World.fires.ledger` distingue :
 
 - `items` : quantités d'ItemId effectivement détruites, indépendantes de consommation et pourriture ;
-- `resources` : nombres de plantes détruites, par espèce ;
+- `resources` : nombres de plantes détruites, par catégorie de ressource (les espèces d'herbe partagent `wild-plant`) ;
 - `woodPotentialLost` : somme des `amount` des arbres détruits, soit du rendement potentiel disparu, jamais du bois déjà produit ;
 - `structures` : bâtiments détruits par cette voie ;
 - `batteryEnergyLost` : énergie perdue, en quanta de 1/120000 Wd, avec demi-quantum conservé ;
@@ -77,6 +77,8 @@ La destruction fatale prépare le retrait du bâtiment ou paquet, les dépôts d
 Le schéma 86 est validé selon ses règles strictes avant migration vers 87. Aucun feu, dommage, passé climatique ou objet n'est créé rétrospectivement ; la priorité Extinction reçoit sa valeur initiale explicite. Les anciennes versions qui contiennent des champs feu/brûlure V87 sont rejetées avant migration.
 
 Les identités de flammes et braises appartiennent au registre global. Horloges, phases, cibles, mèches, PRNG et registres sont persistés. Une réaction brûlante ne peut conserver une activité ordinaire ; l'extinction ne peut réserver une cible absente. Le validateur vérifie aussi les PV et les incompatibilités médicales, animales, de prison et de raid.
+
+La consolidation V145 corrige l'oubli de `wild-plant` dans le registre des pertes admises depuis V91 : un incendie d'herbe produisait correctement cette perte, mais rendait la sauvegarde invalide. Les versions antérieures à V91 rejettent toujours cette catégorie ; clés inconnues, quantités nulles, fractionnaires ou hors entiers exacts restent interdites. Aucun nouvel état ni changement de simulation du feu n'est ajouté. Des tests de destruction, sauvegarde et continuation exacte couvrent cette frontière.
 
 Les contrôles courts groupés couvrent travail et ordre, contact diagonal, refus de dépôt neutre, propagation/pluie, chaleur, dégâts/pertes, réparation, armure/brûlure, réaction animale, batterie et continuation. Le parcours commun distingue la traversée saisonnière **naturelle** de sa branche de feu **contrôlée**. Les preuves de cette campagne sont tenues centralement ; ce contrat ne les annonce pas terminées.
 
