@@ -30,6 +30,7 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
   } else if(command.type==='designate') {
     const affected=zonesUnderPlan(world,command);for(const id of affected.deliveries)zones.add(id);
     for(const pawn of world.pawns)if(pawn.haul?.destination.type==='aside'&&affected.growing.has(pawn.haul.destination.growingZoneId??-1))pawns.add(pawn.id);
+    if(command.kind==='deconstruct'||command.kind==='uninstall')for(const job of world.jobs)if(job.fixBreakdown&&footprintCells(job).some(c=>same(c,command)))jobs.add(job.id);
   } else if(command.type==='cancel') {
     const job=world.jobs.find(j=>footprintCells(j).some(c=>same(c,command)))??furnitureIntentAt(world,command);if(job)jobs.add(job.id);
   } else if(command.type==='area'&&(command.action==='cancel'||command.action==='remove-stockpile')) {
@@ -37,6 +38,12 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const cells=new Set(selection.cells);
     if(command.action==='cancel')for(const job of world.jobs){if([...footprintCells(job),...furnitureSourceCells(world,job)].some(c=>cells.has(c.z*world.width+c.x)))jobs.add(job.id);}
     else for(const zone of world.stockpiles)if(cells.has(zone.z*world.width+zone.x))zones.add(zone.id);
+  } else if(command.type==='area'&&(command.action==='remove-home'||command.action==='deconstruct')) {
+    const selection=queryArea(world,command);if(!selection.ok)return new Map();
+    const cells=new Set(selection.cells);
+    for(const job of world.jobs)if(job.fixBreakdown&&(
+      command.action==='remove-home'?cells.has(job.z*world.width+job.x):footprintCells(job).some(c=>cells.has(c.z*world.width+c.x))
+    ))jobs.add(job.id);
   } else if(command.type==='growing-policy'||command.type==='area'&&command.action==='remove-growing') {
     const cells=command.type==='area'?queryArea(world,command):null;
     const ids=new Set(command.type==='growing-policy'?[command.zoneId]:cells?.ok?world.growingZones.filter(z=>z.cells.some(c=>cells.cells.includes(c))).map(z=>z.id):[]);
@@ -62,6 +69,16 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const spots=new Set(world.structures.filter(s=>(s.kind==='crafting-spot'||s.kind==='butcher-spot')&&(cells?cells.has(s.z*world.width+s.x):command.type==='designate'&&same(s,command))).map(s=>s.id));
     for(const p of world.pawns)if(p.cooking&&spots.has(p.cooking.stationId))pawns.add(p.id);
   }
+  return planSelectedDrops(world,jobs,pawns);
+}
+/** Preflight a single automatic job as one transaction, including material
+ * already delivered and any piece still held by a carrier. */
+export function planJobDrops(world:World,jobId:number):DropPlan|null {
+  const pawns=new Set<number>();
+  for(const pawn of world.pawns)if(pawn.jobId===jobId||pawn.haul?.destination.type==='job'&&pawn.haul.destination.jobId===jobId)pawns.add(pawn.id);
+  return planSelectedDrops(world,new Set([jobId]),pawns);
+}
+function planSelectedDrops(world:World,jobs:Set<number>,pawns:Set<number>):DropPlan|null {
   const result:DropPlan=new Map();
   if(!jobs.size&&!pawns.size)return result;
   const shadow={...world,packed:world.packed?.map(p=>({...p,owner:{...p.owner}})),piles:world.piles.map(p=>({...p,owner:{...p.owner}}))};
@@ -107,7 +124,7 @@ export function releaseAssignments(world:World,pawn:Pawn):void {
   if(pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
   delete pawn.animalHandling;delete pawn.animalCare;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
-  if(job?.reservedBy===pawn.id){delete job.installationWork;delete job.clearance;delete job.pickTicks;job.reservedBy=null;job.status='pending';if(job.repair)delete job.repair.warmed;if(job.kind==='remove-floor'||job.kind==='flick'||job.kind==='repair'||job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct'||isRoofJob(job))resetWork(job);}
+  if(job?.reservedBy===pawn.id){delete job.installationWork;delete job.clearance;delete job.pickTicks;job.reservedBy=null;job.status='pending';if(job.repair)delete job.repair.warmed;if(job.kind==='remove-floor'||job.kind==='flick'||job.kind==='repair'||job.kind==='fix-breakdown'||job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct'||isRoofJob(job))resetWork(job);}
   delete pawn.transitExit;
   pawn.orders.active=null;
   pawn.recreation.task=null;pawn.jobId=null;pawn.haul=null;pawn.cooking=null;pawn.need=null;pawn.path=[];if(pawn.state!=='downed'&&pawn.state!=='dead')pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;

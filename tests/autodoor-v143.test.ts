@@ -9,6 +9,7 @@ import {advancePower,reconcilePower} from '../src/sim/power.ts';
 import {isFlickable,powerDemand,powerWatts} from '../src/sim/power-rules.ts';
 import {AUTODOORS_RESEARCH_COST,selectResearch} from '../src/sim/research.ts';
 import {addGroundMaterial} from '../src/sim/materials.ts';
+import {newBreakdownCalendar} from '../src/sim/breakdowns.ts';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
 import {fixturePower} from './scenarios/power.ts';
 import type {ConstructionMaterial} from '../src/sim/building-materials.ts';
@@ -167,12 +168,13 @@ test('unpowered passage still waits physically; forbid and solid corners apply t
   expect(validateWorld(w)).toEqual([]);
 });
 
-test('strict 141 to 143 migration grants no research or door, and rejects future V143 fields',()=>{
+test('strict 141 to current migration grants no research or door, and rejects future fields',()=>{
   const old=deconstructionCamp();
+  delete old.breakdown;
   (old as {schemaVersion:number}).schemaVersion=141;
   const before=structuredClone(old),rng=old.rng,nextId=old.nextId;
   const migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated).toEqual({...before,schemaVersion:143});
+  expect(migrated).toEqual({...before,schemaVersion:144,breakdown:newBreakdownCalendar(old.seed,old.tick)});
   expect(migrated.research?.autodoors).toBeUndefined();
   expect(migrated.structures.some(s=>s.kind==='autodoor')).toBe(false);
   expect(migrated.rng).toBe(rng);expect(migrated.nextId).toBe(nextId);

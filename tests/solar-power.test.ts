@@ -27,6 +27,9 @@ test('solar output follows civil sunlight, all sixteen roof cells, and ignores l
 
 test('a partial-roof solar checkpoint keeps continuation and static panel geometry through day and night',()=>{
   const world=powerExpansionFixture();world.tick=3000;
+  // This geometry-only checkpoint jumps the clock; keep the existing medical
+  // records at the same confirmed tick before asking the serializer to check it.
+  for(const pawn of world.pawns)if(pawn.health)pawn.health.tick=world.tick;
   world.research!.solarPower={points:600_000_000,completedAt:world.tick};
   const solar:Structure={id:world.nextId++,kind:'solar-generator',material:'steel',x:7,z:10,orientation:0,footprint:'standard',power:newPowerState('solar-generator')};
   world.structures.push(solar);world.roofing={constructed:[10*world.width+7],build:[],remove:[],cursor:0};

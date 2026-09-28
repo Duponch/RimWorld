@@ -79,7 +79,7 @@ export class StructureVfxLayer {
     const flutter=sin(this.tick.mul(2*Math.PI/18).add(point.x.mul(2.1)).add(point.z.mul(1.7))).mul(.12).add(.91);
     this.glowMaterial.colorNode=attribute('boxColor','vec3').mul(flutter);
     this.glow=new BoxMesh(this.boxBase,this.glowMaterial,128);
-    this.glow.name='Hot workpieces and powered indicators — resident GPU batch';
+    this.glow.name='Hot workpieces, powered indicators and breakdown marks — resident GPU batch';
     this.glow.castShadow=false;this.glow.receiveShadow=false;
 
     const smokePosition=attribute('smokePosition','vec4'),smokeShape=attribute('smokeShape','vec4');
@@ -179,7 +179,7 @@ export class StructureVfxLayer {
         }
       }else if(s.kind==='battery'){
         const cells=footprintCells(s),last=cells[cells.length-1]!,x=(s.x+last.x)/2,z=(s.z+last.z)/2;
-        const level=Math.min(4,Math.max(0,Math.ceil((s.battery?.stored??0)/BATTERY_CAPACITY*4)));
+        const level=s.breakdown?0:Math.min(4,Math.max(0,Math.ceil((s.battery?.stored??0)/BATTERY_CAPACITY*4)));
         tokens.push(`${s.id}:battery:${x}:${z}:${s.orientation}:${level}`);
         for(let i=0;i<level;i++){
           const ry=s.orientation*Math.PI/2,dx=(i-1.5)*.15,cs=Math.cos(ry),sn=Math.sin(ry);
@@ -191,6 +191,19 @@ export class StructureVfxLayer {
       }else if(s.kind==='campfire'){
         const lit=!!s.fuel?.ticks;tokens.push(`${s.id}:campfire:${s.x}:${s.z}:${lit}`);
         if(lit)puff(s.x,.47,s.z,s.id,.58,.76,1.06,7);
+      }
+      if(s.breakdown){
+        // A flat, two-piece amber exclamation remains legible from the normal
+        // overhead camera. It joins the existing status draw on snapshots only.
+        const cells=footprintCells(s);
+        const x=cells.reduce((sum,cell)=>sum+cell.x,0)/cells.length;
+        const z=cells.reduce((sum,cell)=>sum+cell.z,0)/cells.length;
+        const y=s.kind==='wind-turbine'?4.42:s.kind==='autodoor'||s.kind==='cooler'?WORLD_SCALE.wallHeight+.08:
+          s.kind==='wood-generator'?WORLD_SCALE.generatorHeight+.35:s.kind==='battery'?1.21:
+          s.kind==='solar-generator'?.67:WORLD_SCALE.stonecutterHeight+.4;
+        tokens.push(`${s.id}:breakdown:${s.breakdown.brokenAt}:${x}:${z}`);
+        glow.push({x,y,z:z-.09,sx:.115,sy:.045,sz:.255,ry:0,color:0xffac62});
+        glow.push({x,y,z:z+.16,sx:.115,sy:.045,sz:.085,ry:0,color:0xffac62});
       }
     }
     for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined){

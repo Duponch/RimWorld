@@ -3,6 +3,7 @@ import { Fn,attribute,mat4,normalLocal,positionLocal,transformNormal,uniform,sel
 import { BoxMesh } from './BoxMesh';
 import { material } from './primitives';
 import type { World } from '../sim/types';
+import { isPowerActive } from '../sim/power-rules';
 
 interface Spin {tick:number;phase:number;speed:number}
 /** Three retained blades per turbine. Only changes of power/placement upload
@@ -37,14 +38,14 @@ export class WindLayer {
   adopt(world:World,reset=false):void {
     if(reset){this.key=null;this.history.clear();}
     const turbines=world.structures.filter(s=>s.kind==='wind-turbine');
-    const key=turbines.map(s=>`${s.id}:${s.x}:${s.z}:${s.orientation}:${s.power?.on}:${s.wind?.cachedWatts}`).join('|');
+    const key=turbines.map(s=>`${s.id}:${s.x}:${s.z}:${s.orientation}:${isPowerActive(s)}:${s.wind?.cachedWatts}`).join('|');
     if(key===this.key)return;this.key=key;
     const live=new Set(turbines.map(s=>s.id));for(const id of this.history.keys())if(!live.has(id))this.history.delete(id);
     const count=turbines.length*3;if(count>this.mesh.instanceMatrix.count){const capacity=2**Math.ceil(Math.log2(count));this.mesh.allocate(this.base,capacity);this.allocateAttributes(capacity);}
     const current=this.mesh.geometry.getAttribute('windCurrent'),previous=this.mesh.geometry.getAttribute('windPrevious'),shape=this.mesh.geometry.getAttribute('windShape'),object=new THREE.Object3D(),color=new THREE.Color(0xc4cbb6);
     let index=0;
     for(const s of turbines){
-      const old=this.history.get(s.id),speed=s.power?.on?(s.wind?.cachedWatts??0)/3450*.35:0;
+      const old=this.history.get(s.id),speed=isPowerActive(s)?(s.wind?.cachedWatts??0)/3450*.35:0;
       const initial=(s.id*.61803398875%1)*Math.PI*2;
       const phase=old?(old.current.phase+(world.tick-old.current.tick)*old.current.speed)%(Math.PI*2):initial;
       const changed=!old||old.current.speed!==speed;

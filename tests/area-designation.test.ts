@@ -24,7 +24,7 @@ function until(world: World, condition: () => boolean): void {
 
 test('rectangles : sélection exacte, frontières, reprise, concurrence et conservation des annulations', () => {
   const world = fixture();
-  for (const [x, z, kind] of [[5, 5, 'tree'], [6, 5, 'tree'], [9, 7, 'tree'], [7, 5, 'berries'], [8, 5, 'rock']] as const) world.resources.push({ id: world.nextId++, x, z, kind, amount: 12 });
+  for (const [x, z, kind] of [[5, 5, 'tree'], [6, 5, 'tree'], [9, 7, 'tree'], [7, 5, 'berries']] as const) world.resources.push({ id: world.nextId++, x, z, kind, amount: 12 });
   world.resources.push({id:world.nextId++,kind:'berries',x:9,z:5,amount:10,growth:.3,growthTick:0});
   world.tiles[6 * 16 + 6]!.terrain = 'water'; world.tiles[6 * 16 + 7]!.terrain = 'rock';
   world.structures.push({ id: world.nextId++, x: 8, z: 6, kind: 'bed', orientation: 0, footprint: 'standard', quality: 'normal' });

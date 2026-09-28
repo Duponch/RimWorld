@@ -16,6 +16,6 @@ export function updateDoorControls(panel:HTMLElement,world:World,cell:Cell):void
   group.hidden=!s;if(!s)return;
   for(const setting of ['holdOpen','forbidden'] as const)group.querySelector<HTMLInputElement>(`#door-${setting}`)!.checked=s.door![setting];
   const d=s.door!,fraction=doorOpenness(s,world.tick);
-  const motion=s.kind==='autodoor'?` · ${isPowerActive(s)?'Alimentée : ouverture rapide.':'Sans courant : ouverture ordinaire.'}`:'';
+  const motion=s.kind==='autodoor'?` · ${s.breakdown?'Panne mécanique : ouverture manuelle jusqu’au remplacement du composant.':isPowerActive(s)?'Alimentée : ouverture rapide.':'Sans courant : ouverture ordinaire.'}`:'';
   group.querySelector('#door-state')!.textContent=`${d.open?fraction<1?'Ouverture…':'Ouverte':fraction>0?'Fermeture…':'Fermée'} · ${d.holdOpen?'Maintien après le prochain passage.':'Fermeture après passage ; les objets et occupants la bloquent.'}${motion}`;
 }

@@ -92,20 +92,24 @@ export function damageStructure(world:World,s:Structure,amount:number):boolean {
   const owner=packed?.owner,origin=owner?.type==='ground'?owner:owner?.type==='pawn'||owner?.type==='inventory'?world.pawns.find(p=>p.id===owner.pawnId)??s:s;
   // Refusing a fatal hit must not create a fire ledger or advance its stream.
   const state=world.fires??ensureFireState({...world});
-  const ids=new Set(world.jobs.filter(j=>j.repair?.structureId===s.id||j.deconstruction?.structureId===s.id||j.furniture?.structureId===s.id||j.flick?.structureId===s.id).map(j=>j.id));
+  const ids=new Set(world.jobs.filter(j=>j.repair?.structureId===s.id||j.fixBreakdown?.structureId===s.id||j.deconstruction?.structureId===s.id||j.furniture?.structureId===s.id||j.flick?.structureId===s.id).map(j=>j.id));
+  const breakdownIds=new Set(world.jobs.filter(j=>j.fixBreakdown?.structureId===s.id).map(j=>j.id));
+  const delivered=world.piles.filter(p=>p.owner.type==='job'&&breakdownIds.has(p.owner.jobId));
+  const serviceLoss=delivered.reduce((sum,p)=>sum+(p.item==='component'?p.quantity:0),0);
   const actors=world.pawns.filter(p=>{
     const h=p.haul;
     return p.jobId!==null&&ids.has(p.jobId)||p.research?.stationId===s.id||p.cooking?.stationId===s.id
-      ||h&&(h.whole&&h.sourcePileId===s.id||h.destination.type==='fuel'&&h.destination.structureId===s.id)
+      ||h&&(h.whole&&h.sourcePileId===s.id||h.destination.type==='fuel'&&h.destination.structureId===s.id||h.destination.type==='job'&&ids.has(h.destination.jobId))
       ||p.need?.kind==='sleep'&&p.need.bedId===s.id||p.recreation.task?.buildingId===s.id||p.recreation.task?.seatId===s.id||p.rescue?.bedId===s.id;
   });
   const plan=planStructureDestruction(world,s,actors,origin,state.rng);if(!plan)return false;
   const {salvage,drops}=plan;
   const destruction=world.destroyed??{count:0,lost:{}},lost={...destruction.lost};
   for(const cost of constructionRecipe(s).ingredients){const key=cost.item as keyof typeof lost;lost[key]=(lost[key]??0)+cost.quantity-(salvage?.returned.get(cost.item)??0);}
+  if(serviceLoss)lost.component=(lost.component??0)+serviceLoss;
   const fuelLost=s.fuel?.ticks??0,fuelBurned=s.fuel?.burned??0;
   const energy=s.battery?(s.battery.stored+(s.battery.half?.5:0)):0;
-  if(!addSafe(state.ledger.fuelTicksLost,fuelLost)||!addSafe(state.ledger.fuelTicksBurned,fuelBurned)||!addSafe(destruction.count,1)||!Object.values(lost).every(Number.isSafeInteger)||!addSafe(state.ledger.structures,1)||!Number.isSafeInteger((state.ledger.batteryEnergyLost+energy)*2))return false;
+  if(!addSafe(state.ledger.fuelTicksLost,fuelLost)||!addSafe(state.ledger.fuelTicksBurned,fuelBurned)||!addSafe(destruction.count,1)||!Object.values(lost).every(Number.isSafeInteger)||!addSafe(state.ledger.structures,1)||!addSafe(state.ledger.items.component??0,serviceLoss)||!Number.isSafeInteger((state.ledger.batteryEnergyLost+energy)*2))return false;
   world.fires=state;
   world.structures=world.structures.filter(b=>b!==s);world.packed=world.packed.filter(p=>p!==packed);
   invalidateAnimalPens(world);
@@ -117,6 +121,7 @@ export function damageStructure(world:World,s:Structure,amount:number):boolean {
     const pack=world.packed.find(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
     if(pack&&drops.has(pack.building.id))releaseFurniture(world,p,drops);
   }
+  if(delivered.length)world.piles=world.piles.filter(p=>!delivered.includes(p));
   if(salvage){state.rng=salvage.rng;for(const drop of salvage.drops)addMaterial(world,ITEM_DEFINITIONS[drop.item].kind,drop.quantity,{type:'ground',...drop.cell},drop.item);}
   for(const p of actors)interruptWork(world,p);
   removeJobs(world,ids);
@@ -126,6 +131,7 @@ export function damageStructure(world:World,s:Structure,amount:number):boolean {
     if(p.melee?.order?.structure&&p.melee.order.targetId===s.id){p.melee.order=null;p.path=[];if(!p.melee.strike)delete p.melee;}
   }
   world.destroyed={count:destruction.count+1,lost};state.ledger.structures++;state.ledger.batteryEnergyLost+=energy;state.ledger.fuelTicksLost+=fuelLost;state.ledger.fuelTicksBurned+=fuelBurned;
+  if(serviceLoss)state.ledger.items.component=(state.ledger.items.component??0)+serviceLoss;
   state.batteryWicks=state.batteryWicks.filter(w=>w.structureId!==s.id);
   detachMissingBills(world);detachMissingFlakBills(world);detachMissingGunBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);reconcilePower(world);if(installed)reconcileRoofSupport(world,false,s);refreshStock(world);return true;
 }

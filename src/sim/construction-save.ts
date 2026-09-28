@@ -12,7 +12,9 @@ export function validateConstruction(world:World,version:number):string[] {
   const errors:string[]=[];
   for(const job of world.jobs) {
     if(version<16){if(job.construction!==undefined||job.clearance!==undefined)errors.push('Legacy save contains construction phases.');continue;}
-    if(isConstruction(job)?!['blueprint','frame'].includes(job.construction!):job.construction!==undefined||job.clearance!==undefined&&!isRoofJob(job))errors.push('Invalid construction phase.');
+    if(job.kind==='fix-breakdown'
+      ? job.construction!==undefined||job.clearance!==undefined
+      : isConstruction(job)?!['blueprint','frame'].includes(job.construction!):job.construction!==undefined||job.clearance!==undefined&&!isRoofJob(job))errors.push('Invalid construction phase.');
     if(job.construction==='blueprint'&&(job.escrow.wood!==0||job.kind!=='install'&&job.progress!==0))errors.push('Blueprint already contains materials or building work.');
     if(job.clearance!==undefined) {
       const c=job.clearance,resource=world.resources.find(r=>r.id===c?.resourceId);

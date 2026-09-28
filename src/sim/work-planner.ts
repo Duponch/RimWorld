@@ -33,7 +33,8 @@ import { asideCapacity, findAsideDestination } from './haul-aside.ts';
 import { storageCapacity } from './ground-placement.ts';
 import { legacyItem, type ItemId } from './items.ts';
 import { storageAccepts } from './storage-filters.ts';
-import { constructionCapacity, constructionRecipe } from './construction-materials.ts';
+import { constructionCapacity, constructionRecipe, deliveredMaterial } from './construction-materials.ts';
+import { fixBreakdownWanted } from './breakdowns.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST } from './definitions.ts';
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
 import { cellIndex, workNeighbours, inBounds, canStopAt, hasReachableCell, reachableCells, routeToJob, interactionGoals } from './pathfinding.ts';
@@ -118,8 +119,9 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   // a failed targeted search has explored the full component and is reusable.
   // Logistics with a higher priority still uses the ordinary complete planner.
   const ready = world.jobs.filter(job => !isConstruction(job) && job.reservedBy === null && !clearingCells.has(cellIndex(world,job.x,job.z)) && pawn.priorities[workType(job)] > 0
+    &&(job.kind!=='fix-breakdown'||fixBreakdownWanted(world,job)&&deliveredMaterial(world,job,'component')===1)
     && (job.kind!=='sow'||!packedAt(world,job)) && job.escrow.wood >= JOB_WOOD_COST[job.kind] && (pawn.hunger > 20 || job.kind === 'harvest') && (job.kind!=='deconstruct'||deconstructionAvailable(world,job,pawn.id)) && (!job.furniture||furnitureReady(world,job,pawn)))
-    .map(job => ({ job, target: job, id: job.id, priority: pawn.priorities[workType(job)], rank: job.kind==='flick'?-2.5:job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? 3 : workType(job) === 'gather' ? 0 : 1, distance: Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z) }))
+    .map(job => ({ job, target: job, id: job.id, priority: pawn.priorities[workType(job)], rank: job.kind==='fix-breakdown'?-3:job.kind==='flick'?-2.5:job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? 3 : workType(job) === 'gather' ? 0 : 1, distance: Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z) }))
     .sort(compareCandidate);
   let reachable: Reachability | null = null;
   const first = ready[0];
@@ -204,10 +206,11 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     if(isConstruction(job))continue;
     const work = workType(job);
     if (job.reservedBy !== null || clearingCells.has(cellIndex(world,job.x,job.z)) || pawn.priorities[work] === 0 || (delivered.get(`${job.id}:wood`) ?? 0) < JOB_WOOD_COST[job.kind] || (pawn.hunger <= 20 && job.kind !== 'harvest')) continue;
+    if(job.kind==='fix-breakdown'&&(!fixBreakdownWanted(world,job)||(delivered.get(`${job.id}:component`)??0)!==1))continue;
     if(job.kind==='sow'&&packedAt(world,job))continue;
     if(job.furniture&&!furnitureReady(world,job,pawn))continue;
     if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id))continue;
-    const candidate: Candidate = { priority: pawn.priorities[work], rank: job.kind==='flick'?-2.5:job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? 3 : work === 'gather' ? 0 : 1, distance: Math.abs(job.x - pawn.x) + Math.abs(job.z - pawn.z), id: job.id, job, target: job };
+    const candidate: Candidate = { priority: pawn.priorities[work], rank: job.kind==='fix-breakdown'?-3:job.kind==='flick'?-2.5:job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? 3 : work === 'gather' ? 0 : 1, distance: Math.abs(job.x - pawn.x) + Math.abs(job.z - pawn.z), id: job.id, job, target: job };
     if (job.kind === 'sow' && ground.has(cellIndex(world, job.x, job.z))) {
       if (best && compareCandidate(candidate, best) >= 0) continue;
       const source = world.piles.find(p => p.owner.type === 'ground' && sameCell(p.owner, job));
@@ -236,7 +239,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     for (const job of world.jobs) {
       const items=new Map<ItemId,number>();
       for(const cost of constructionRecipe(job).ingredients){const key=`${job.id}:${cost.item}`,capacity=cost.quantity-(delivered.get(key)??0)-(jobReserved.get(key)??0);if(capacity>0)items.set(cost.item,capacity);}
-      if (items.size && constructionSiteFree(world,job,pawn.id,constructionObstacles.get(job.id))) destinations.push({ destination: { type: 'job', jobId: job.id, forConstruction:asBuilder(pawn) }, target: job, priority: 5, workPriority:constructionHaulPriority(pawn), wood: 0, food: 0,items });
+      if (items.size && (job.kind==='fix-breakdown'?fixBreakdownWanted(world,job):constructionSiteFree(world,job,pawn.id,constructionObstacles.get(job.id)))) destinations.push({ destination: { type: 'job', jobId: job.id, forConstruction:asBuilder(pawn) }, target: job, priority: 5, workPriority:constructionHaulPriority(pawn), wood: 0, food: 0,items });
     }
     if(pawn.priorities.haul>0)for (const fire of fires) destinations.push({destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:pawn.priorities.haul,wood:fuelCapacity(world,fire.id),food:0});
     if(pawn.priorities.haul>0)for (const zone of world.stockpiles) {

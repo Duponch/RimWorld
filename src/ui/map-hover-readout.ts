@@ -46,10 +46,10 @@ export function mapHoverLines(world:World,cell:Cell,lightLevel=lightCache.read(w
     switch(selected.kind){
       case 'pile': {const pile=world.piles.find(p=>p.id===selected.id);return pile?[`${ITEM_DEFINITIONS[pile.item].label} ×${pile.quantity}`]:[];}
       case 'packed': {const packed=world.packed.find(p=>p.building.id===selected.id);return packed?[`Meuble emballé · ${buildingLabels[packed.building.kind]}`]:[];}
-      case 'structure': {const structure=world.structures.find(s=>s.id===selected.id);return structure?[buildingLabels[structure.kind]]:[];}
+      case 'structure': {const structure=world.structures.find(s=>s.id===selected.id);return structure?[`${buildingLabels[structure.kind]}${structure.breakdown?' · Panne mécanique':''}`]:[];}
       case 'resource': {const resource=world.resources.find(r=>r.id===selected.id);return resource?[rockInspection(tile,resource)?.title??floraDefinition(resource)?.label??((resource.kind in PLANT_DEFINITIONS)?PLANT_DEFINITIONS[resource.kind as CropKind].label:resource.kind==='tree'?'Arbre':resource.kind)]:[];}
       case 'rock':return [rockInspection(tile)?.title??'Massif rocheux'];
-      case 'job': {const job=world.jobs.find(j=>j.id===selected.id);return job?[`Ordre · ${job.kind}`]:[];}
+      case 'job': {const job=world.jobs.find(j=>j.id===selected.id);return job?[`Ordre · ${job.kind==='fix-breakdown'?'Remplacer le composant':job.kind}`]:[];}
       case 'growing':return ['Zone de culture'];
       case 'stockpile':return ['Réserve'];
     }

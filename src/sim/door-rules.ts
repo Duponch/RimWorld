@@ -24,7 +24,7 @@ export const manualDoorOpenTicks=(s:Pick<Structure,'material'>):number=>
  * resident animation and save validator divide by this duration. */
 export const doorOpenTicks=(s:DoorSubject):number=>{
   const manual=manualDoorOpenTicks(s);
-  return s.kind==='autodoor'&&s.power?.on===true?manual/4:manual;
+  return s.kind==='autodoor'&&s.power?.on===true&&!('breakdown' in s&&s.breakdown)?manual/4:manual;
 };
 export const doorMotionTicks=(s:DoorSubject):number=>s.kind==='autodoor'?(s.door?.duration??doorOpenTicks(s)):manualDoorOpenTicks(s);
 export const newDoorState=(tick:number):DoorState=>({open:false,holdOpen:false,forbidden:false,changedAt:tick,from:0,closeAt:null,lastTouch:-12});

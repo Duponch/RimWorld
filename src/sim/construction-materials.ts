@@ -12,6 +12,8 @@ import { BUILDING_MATERIALS, CONSTRUCTION_MATERIALS, isBlockMaterial,isUpholster
 export type { ConstructionMaterial } from './building-materials.ts';
 export interface ConstructionCost { item: ItemId; quantity:number }
 export interface ConstructionRecipe { ingredients:readonly ConstructionCost[]; work:number; coreWork:number }
+/** Replacement component is a physical delivery to a maintenance intention. */
+const BREAKDOWN_RECIPE:ConstructionRecipe=Object.freeze({ingredients:Object.freeze([Object.freeze({item:'component' as const,quantity:1})]),work:100,coreWork:1000});
 type ConstructionObject={kind:JobKind;material?:ConstructionMaterial;floor?:FloorKind};
 // Core base work before the stuff factor, in Core ticks. Absence of material
 // deliberately keeps the V1–V29 historical recipe on existing objects.
@@ -106,6 +108,7 @@ export function validConstructionMaterial(kind:unknown,material:unknown,version:
 export const constructionMaterials=(kind:string):readonly ConstructionMaterial[]=>CONSTRUCTION_MATERIALS.filter(material=>validConstructionMaterial(kind,material));
 export const constructionSkillRequired=(kind:unknown):number=>kind==='autodoor'?6:kind==='cooler'?5:kind==='electric-stove'||kind==='electric-tailor-bench'||kind==='machining-table'?4:kind==='fabrication-bench'||kind==='hi-tech-research-bench'?6:kind==='multi-analyzer'?8:isHabitatFurnitureKind(kind)?FURNITURE_DEFINITIONS[kind].constructionSkill:powerConstructionSkill(kind as JobKind);
 export function constructionRecipe(entity:ConstructionObject):ConstructionRecipe {
+  if(entity.kind==='fix-breakdown')return BREAKDOWN_RECIPE;
   if(entity.kind==='lay-floor'||entity.kind==='remove-floor')return flooringRecipe(entity.floor,entity.kind==='remove-floor');
   return recipes.get(`${entity.kind}:${entity.material??'legacy'}`)!;
 }

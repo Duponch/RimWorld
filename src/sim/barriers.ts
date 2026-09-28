@@ -4,6 +4,7 @@ import { ITEM_DEFINITIONS } from './items.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import type { ConstructionMaterial } from './construction-materials.ts';
 import { releaseAssignments } from './work-release.ts';
+import { interruptWork } from './interrupted-cargo.ts';
 import { reconcileRoofSupport } from './roofing.ts';
 import { invalidateAnimalPens } from './animal-pens.ts';
 import { isRoomDoor } from './door-rules.ts';
@@ -27,13 +28,19 @@ export function damageBarrier(world:World,s:Structure,amount:number,rng=world.rn
   const lost={...ledger.lost};
   for(const c of constructionRecipe(s).ingredients){const id=c.item as ConstructionMaterial;lost[id]=(lost[id]??0)+c.quantity-(salvage?.returned.get(c.item)??0);}
   if(!Number.isSafeInteger(ledger.count+1)||Object.values(lost).some(n=>!Number.isSafeInteger(n)))return false;
-  const removed=new Set(world.jobs.filter(j=>j.repair?.structureId===s.id||j.deconstruction?.structureId===s.id).map(j=>j.id));
+  const removed=new Set(world.jobs.filter(j=>j.repair?.structureId===s.id||j.fixBreakdown?.structureId===s.id||j.deconstruction?.structureId===s.id).map(j=>j.id));
+  const delivered=world.piles.filter(p=>p.owner.type==='job'&&removed.has(p.owner.jobId));
+  const serviceLoss=delivered.reduce((sum,p)=>sum+(p.item==='component'?p.quantity:0),0);
+  if(!Number.isSafeInteger((lost.component??0)+serviceLoss))return false;
+  if(serviceLoss)lost.component=(lost.component??0)+serviceLoss;
   for(const p of world.pawns){
+    if(p.haul?.destination.type==='job'&&removed.has(p.haul.destination.jobId))interruptWork(world,p);
     if(p.jobId!==null&&removed.has(p.jobId))releaseAssignments(world,p);
     p.orders.queue=p.orders.queue.filter(o=>typeof o!=='number'||!removed.has(o));
     if(p.melee?.order?.structure&&p.melee.order.targetId===s.id){p.melee.order=null;p.path=[];if(!p.melee.strike)delete p.melee;}
   }
   world.jobs=world.jobs.filter(j=>!removed.has(j.id));
+  if(delivered.length)world.piles=world.piles.filter(p=>!delivered.includes(p));
   world.structures=world.structures.filter(b=>b!==s);
   invalidateAnimalPens(world);
   world.destroyed={count:ledger.count+1,lost};

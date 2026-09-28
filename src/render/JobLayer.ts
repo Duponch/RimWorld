@@ -14,6 +14,8 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
     const wallHeight = cutaway ? WORLD_SCALE.wallCutawayHeight : WORLD_SCALE.wallHeight;
     const orders: Placement[] = [], blueprints: Placement[] = [], frames: Placement[] = [], progress: Placement[] = [];
     for (const job of world.jobs.filter(j=>!isRoofJob(j))) {
+      // Mechanical faults have their own compact mark on the appliance.
+      if(job.kind==='fix-breakdown')continue;
       const cells = footprintCells(job);
       if(!isIconDesignationKind(job.kind))for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
       if(job.kind==='repair'||job.kind==='flick')continue;

@@ -34,7 +34,7 @@ export function buildAreaIndex(world: World): AreaIndex {
   for(const job of world.jobs)if(job.furniture){const source=world.structures.find(s=>s.id===job.furniture!.structureId);if(source)for(const c of footprintCells(source))flags[index(c)]!|=JOB;}
   // Repair is automatic maintenance, not a cancellable designation. Its existing
   // barrier already supplies occupancy; it must not prevent deconstruction.
-  for (const job of world.jobs.filter(j=>!isRoofJob(j)&&j.kind!=='repair')) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB | (job.kind==='deconstruct'||job.kind==='uninstall'||occupancyOf(job.furniture?.kind??job.kind)?.zones?0:ZONE_BLOCKED) | (occupancyOf(job.furniture?.kind??job.kind)?.zones===false?GROW_BLOCKED:0);
+  for (const job of world.jobs.filter(j=>!isRoofJob(j)&&j.kind!=='repair'&&j.kind!=='fix-breakdown')) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB | (job.kind==='deconstruct'||job.kind==='uninstall'||occupancyOf(job.furniture?.kind??job.kind)?.zones?0:ZONE_BLOCKED) | (occupancyOf(job.furniture?.kind??job.kind)?.zones===false?GROW_BLOCKED:0);
   for(const pack of world.packed??[])if(pack.owner.type==='ground'&&world.jobs.some(j=>j.furniture?.structureId===pack.building.id))flags[index(pack.owner)]!|=JOB;
   for (const storage of world.stockpiles) flags[index(storage)]! |= STORAGE;
   for (const pawn of world.pawns) {

@@ -28,7 +28,7 @@ export function approachAutodoor(world:World,pawn:Pawn,next:Cell):void {
   if(!isColonist(pawn)&&!pawn.visitor||pawn.path[0]?.x!==next.x||pawn.path[0]?.z!==next.z)return;
   const upcoming=pawn.path[1];if(!upcoming||Math.max(Math.abs(upcoming.x-next.x),Math.abs(upcoming.z-next.z))!==1)return;
   const s=doorAt(world,upcoming);
-  if(s?.kind!=='autodoor'||!s.power?.on||isBlockMaterial(s.material)||s.door?.forbidden)return;
+  if(s?.kind!=='autodoor'||!s.power?.on||s.breakdown||isBlockMaterial(s.material)||s.door?.forbidden)return;
   s.door!.lastTouch=world.tick;openDoor(world,s);
 }
 /** Index bodies/edges/items once, rather than scanning every actor for each door.

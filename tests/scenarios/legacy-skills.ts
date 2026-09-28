@@ -2,6 +2,7 @@ import { initialSkills } from '../../src/sim/skills.ts';
 import { createDefaultApparelPolicyRegistry } from '../../src/sim/apparel-policy.ts';
 import { createApparelWearCalendar } from '../../src/sim/apparel-renewal.ts';
 import { V91_ITEM_IDS } from '../../src/sim/biome-items.ts';
+import { newBreakdownCalendar } from '../../src/sim/breakdowns.ts';
 /** Historical fixtures must not smuggle V43's new actor profile into old schemas. */
 export function withoutPawnSkills<T>(world:T):T {
   for(const p of (world as {pawns:Array<{skills?:unknown}>}).pawns)delete p.skills;
@@ -109,6 +110,9 @@ export function withMigratedBasic<T>(world:T):T {
 export function withMigratedV90<T>(world:T):T {
   // V120 does not grant wool permissions to an already chosen policy.
   const w=world as any,registry=createDefaultApparelPolicyRegistry(false);
+  // Historical fixture builders remove V144. The expected current save gets
+  // its neutral future calendar, without inventing a past breakdown.
+  w.breakdown=newBreakdownCalendar(w.seed,w.tick);
   for(const structure of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)])if(['bed','table','stool'].includes(structure.kind))structure.quality='normal';
   for(const pile of w.piles??[]){if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material='cloth';if(pile.unfinished){pile.unfinished.material='cloth';pile.unfinished.units=pile.unfinished.cloth;}}
   for(const departure of w.raids?.departed??[])for(const pile of departure.items??[])if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material='cloth';
@@ -130,6 +134,7 @@ export function withoutArt<T>(world:T):T {
  * earlier payload. This is fixture construction, never production repair. */
 export function withoutV90<T>(world:T):T {
   const w=world as any;
+  delete w.breakdown;
   withoutArt(world);
   delete w.apparelWear;delete w.apparelPolicies;delete w.nextApparelPolicyId;
   for(const pawn of w.pawns??[]){

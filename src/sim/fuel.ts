@@ -37,7 +37,7 @@ export function wantsFuel(world: World, fire: Structure): boolean {
   return isFueledBuilding(fire.kind) && !!fire.fuel?.autoRefuel && fire.fuel.ticks <= fuelLimit(fire.kind)*AUTO_REFUEL_THRESHOLD && fuelCapacity(world,fire.id)>0;
 }
 export function burnFuel(world: World): void {
-  for (const fire of world.structures) if (isFueledBuilding(fire.kind) && fire.kind!=='fueled-stove' && fire.fuel && fire.fuel.ticks>0 && fire.power?.switchOn!==false) {
+  for (const fire of world.structures) if (isFueledBuilding(fire.kind) && fire.kind!=='fueled-stove' && fire.fuel && fire.fuel.ticks>0 && fire.power?.switchOn!==false&&!fire.breakdown) {
     const f=fire.fuel;let amount=1;
     if(fire.kind==='wood-generator'){const total=(f.burnRemainder??0)+11;amount=Math.floor(total/5);f.burnRemainder=total%5;}
     amount=Math.min(amount,f.ticks);f.ticks-=amount;f.burned+=amount;

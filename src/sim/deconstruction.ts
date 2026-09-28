@@ -12,6 +12,7 @@ import type { Job, Pawn, World } from './types.ts';
 export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolean {
   const structure = deconstructionTarget(world, job);
   if (!structure || !deconstructionAvailable(world, job, pawn.id)) return false;
+  if(world.jobs.some(j=>j.fixBreakdown?.structureId===structure.id))return false;
   const structures = world.structures.filter(s => s.id !== structure.id);
   const jobs = world.jobs.filter(j => j.id !== job.id);
   // The preview owns piles and escrow: planning several ingredient refunds must

@@ -19,5 +19,5 @@ export function updateCoolerControls(root:HTMLElement,w:World,s:Structure|undefi
   }
   section.dataset.target=String(state.target);
   const {cold,hot}=coolerFaces(s),view=new TemperatureView(w),blocked=coolerFaceBlocked(w,cold)||coolerFaceBlocked(w,hot);
-  section.querySelector('[data-cooler-status]')!.textContent=`Cible ${state.target.toFixed(1)} °C · ${blocked?'Face obstruée':!isPowerActive(s)?'Sans alimentation':state.high?'Refroidissement · 200 W':'Veille · 20 W'} · Bleu ${cold.x}, ${cold.z} : ${view.at(w,cold).toFixed(1)} °C · Rouge ${hot.x}, ${hot.z} : ${view.at(w,hot).toFixed(1)} °C`;
+  section.querySelector('[data-cooler-status]')!.textContent=`Cible ${state.target.toFixed(1)} °C · ${s.breakdown?'Panne mécanique':blocked?'Face obstruée':!isPowerActive(s)?'Sans alimentation':state.high?'Refroidissement · 200 W':'Veille · 20 W'} · Bleu ${cold.x}, ${cold.z} : ${view.at(w,cold).toFixed(1)} °C · Rouge ${hot.x}, ${hot.z} : ${view.at(w,hot).toFixed(1)} °C`;
 }

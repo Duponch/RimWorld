@@ -24,20 +24,20 @@ function randomPart(world:World,parts:Structure[]):Structure {
   return parts[Math.floor(world.rng/0x100000000*parts.length)]!;
 }
 function roundEven(n:number):number {const f=Math.floor(n);return n-f===.5?f+f%2:Math.round(n);}
-const wantsPower=(s:Structure):boolean=>isPowerTrader(s.kind)&&s.power!.switchOn!==false&&(s.kind!=='wood-generator'||!!s.fuel?.ticks);
+const wantsPower=(s:Structure):boolean=>isPowerTrader(s.kind)&&!s.breakdown&&s.power!.switchOn!==false&&(s.kind!=='wood-generator'||!!s.fuel?.ticks);
 /** Core's gradual randomized startup/shedding. Ten small
  * reference-time boundaries avoid aliased modulo periods (e.g. 200/6 = 33).
  * Our random stream and integer W are independent of Unity's implementation. */
 export function advancePower(world:World):void {
   reconcilePower(world);
-  const batteries=[...world.structures,...world.packed.map(p=>p.building)].filter((s):s is Structure&BatteryOwner=>!!s.battery);
+  const batteries=[...world.structures,...world.packed.map(p=>p.building)].filter((s):s is Structure&BatteryOwner=>!!s.battery&&!s.breakdown);
   if(!world.structures.some(s=>s.power)&&!batteries.length)return;
   // No actor/fuel mutation occurs inside this call. Balanced fully active
   // networks cannot change on a reference boundary: skip their ten temporary
   // candidate scans while preserving the order of RNG draws for every other net.
   const groups=connectedPowerGroups(world,cache(world).read(world)).filter(parts=>
     parts.some(s=>s.battery||!s.power!.on&&wantsPower(s))||parts.reduce((n,s)=>n+powerWatts(s,world),0)<0)
-    .map(parts=>({parts:parts.filter(s=>isPowerTrader(s.kind)),storage:parts.filter((s):s is Structure&BatteryOwner=>!!s.battery)}));
+    .map(parts=>({parts:parts.filter(s=>isPowerTrader(s.kind)),storage:parts.filter((s):s is Structure&BatteryOwner=>!!s.battery&&!s.breakdown)}));
   for(let sub=0;sub<10;sub++) {
     const coreTick=(world.tick-1)*10+sub+1;
     for(const battery of batteries)leakBattery(battery.battery);
