@@ -2,6 +2,7 @@ import type { Command, World } from '../sim/types';
 import type { Request, Response } from './protocol';
 import { DEFAULT_MAP_SIZE } from '../sim/map-config';
 import { SnapshotDecoder } from './snapshots';
+import type { AudioCue } from './audio-cues';
 
 type Payload = Request extends infer R ? R extends { id: number } ? Omit<R, 'id'> : never : never;
 
@@ -12,13 +13,17 @@ export class SimulationClient {
   private resyncing = false;
   private readonly pending = new Map<number, { resolve: (value: string | undefined) => void; reject: (reason: Error) => void; timer: ReturnType<typeof setTimeout> }>();
   onSnapshot: (world: World, stepMs: number, speed: number, replaced: boolean, motion?: import('./motion-tracks').PawnTrack[]) => void = () => {};
+  onAudioCues: (cues: readonly AudioCue[], world: World, replaced: boolean) => void = () => {};
   onError: (message: string) => void = () => {};
 
   constructor() {
     this.worker.onmessage = ({ data }: MessageEvent<Response>) => {
       if (data.type === 'snapshot') {
         const result = this.snapshots.adopt(data);
-        if (result.status === 'applied') this.onSnapshot(result.world, data.stepMs, data.speed, result.replaced, data.motion);
+        if (result.status === 'applied') {
+          this.onSnapshot(result.world, data.stepMs, data.speed, result.replaced, data.motion);
+          if (result.replaced || data.audioCues?.length) this.onAudioCues(data.audioCues ?? [], result.world, result.replaced);
+        }
         else if (result.status === 'resync' && !this.resyncing) {
           this.resyncing = true;
           void this.request({ type: 'resync' }).catch(error => this.onError(String(error)))

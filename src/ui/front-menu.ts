@@ -25,6 +25,10 @@ export interface FrontMenuOptions {
   onTexturesEnabledChange: (enabled: boolean) => boolean;
   getGroundGrassEnabled: () => boolean;
   onGroundGrassEnabledChange: (enabled: boolean) => boolean;
+  getSoundEnabled: () => boolean;
+  onSoundEnabledChange: (enabled: boolean) => boolean;
+  getSoundVolume: () => number;
+  onSoundVolumeChange: (volume: number) => boolean;
   getSaves: () => FrontMenuSave[];
   getTestColonies: () => Promise<TestColony[]>;
   onLoadTest: (save: TestColony) => Promise<void>;
@@ -268,6 +272,34 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     grassSetting.append(grassCheckbox, grassText);
     card.append(grassSetting);
     content.append(card);
+    const audioCard = element('section', 'front-card front-options');
+    audioCard.append(element('h2', '', 'Son'));
+    const soundSetting = element('label', 'front-relief front-texture-setting');
+    const soundCheckbox = element('input');
+    soundCheckbox.type = 'checkbox';
+    soundCheckbox.checked = options.getSoundEnabled();
+    soundCheckbox.addEventListener('change', () => {
+      clearError();
+      if (!options.onSoundEnabledChange(soundCheckbox.checked)) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+    });
+    const soundText = element('span');
+    soundText.append(element('strong', '', 'Effets sonores'), element('span', '', 'Bruitages spatialisés, sans musique.'));
+    soundSetting.append(soundCheckbox, soundText);
+    audioCard.append(soundSetting);
+    const volumeSetting = element('label', 'front-relief front-texture-setting front-volume-setting');
+    const volumeText = element('span');
+    volumeText.append(element('strong', '', 'Volume des effets'));
+    const volumeSlider = element('input');
+    volumeSlider.type = 'range';
+    volumeSlider.min = '0'; volumeSlider.max = '100'; volumeSlider.step = '1';
+    volumeSlider.value = String(Math.round(options.getSoundVolume() * 100));
+    volumeSlider.addEventListener('input', () => {
+      clearError();
+      if (!options.onSoundVolumeChange(Number(volumeSlider.value) / 100)) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+    });
+    volumeSetting.append(volumeText, volumeSlider);
+    audioCard.append(volumeSetting);
+    content.append(audioCard);
     footer.append(action('Retour', () => navigate('home'), 'front-back'));
   }
 

@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "events": {
+    "mining.hit": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/mining-hit-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 1.5,
+      "maxDistance": 20,
+      "loop": false
+    },
+    "woodcutting.hit": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/woodcutting-hit-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 1.8,
+      "maxDistance": 22,
+      "loop": false
+    },
+    "weapon.gunshot": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/weapon-gunshot-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 7,
+      "maxDistance": 36,
+      "loop": false
+    },
+    "weapon.melee": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/weapon-melee-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 0.12,
+      "maxDistance": 18,
+      "loop": false
+    },
+    "ambient.fire": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/ambient-fire-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 0.5,
+      "maxDistance": 22,
+      "loop": true
+    },
+    "weather.rain": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/weather-rain-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 0.5,
+      "loop": true,
+      "spatial": false
+    }
+  }
+}

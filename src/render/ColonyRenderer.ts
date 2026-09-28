@@ -74,6 +74,11 @@ import { storageZonePlacements, storageZoneSignature } from './storage-zone-pres
 import { mapObjectCells,mapObjectsAt,sameMapObject,type MapObjectSelection } from '../ui/map-object-selection';
 
 type VisualChunk = { signature: string; group: THREE.Group };
+export interface AudioFrameView {
+  tick: number;
+  paused: boolean;
+  camera: { x: number; y: number; z: number; targetX: number; targetZ: number; span: number; mode: CameraMode };
+}
 
 const scratchObject = new THREE.Object3D();
 
@@ -130,6 +135,7 @@ export class ColonyRenderer {
   onHover: (cell:Cell|null)=>void=()=>{};
   onContext: (cell:Cell,x:number,y:number,queue:boolean,targetId?:number)=>void=()=>{};
   onInteractionCancel: ()=>void=()=>{};
+  onAudioFrame?: (view: AudioFrameView) => void;
   private areaMesh: THREE.InstancedMesh | null = null;
   private areaIndex: AreaIndex | undefined;
   private areaSignature = '';
@@ -572,6 +578,7 @@ export class ColonyRenderer {
   }
 
   get cameraMode(): CameraMode { return this.rig.mode; }
+  get audioFocus(): { x: number; z: number } { return { x: this.controls.target.x, z: this.controls.target.z }; }
 
   /** Warm both projections and resident LOD variants under the loading screen.
    * Do not defer the first overview pipeline to the player's first wheel zoom. */
@@ -832,6 +839,12 @@ export class ColonyRenderer {
     // Share the confirmed presentation clock with pawn motion. Loading a save
     // restores the sky; pausing cannot continue an independent wall-clock sun.
     const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
+    if (this.onAudioFrame) this.onAudioFrame({
+      tick: skyTick,
+      paused: this.received?.speed === 0,
+      camera: { x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z,
+        targetX: this.controls.target.x, targetZ: this.controls.target.z, span: this.rig.span, mode: this.rig.mode },
+    });
     const visualWind=this.world?visualWindDirection(this.world.wind?.seed??this.world.seed,skyTick):{x:1,z:0};
     const visualWindStrength=this.world?windIntensity(this.world):0;
     if(this.world){

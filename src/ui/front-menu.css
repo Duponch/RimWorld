@@ -361,6 +361,7 @@
 .front-texture-setting { min-height: 80px; background: #fff8e9; }
 .front-texture-setting input { flex: none; margin: 0; }
 .front-texture-setting > span { min-width: 0; }
+.front-volume-setting input[type=range] { width: min(180px, 42%); accent-color: #567353; }
 .front-menu .front-test-save { background: #fff9ec; border-color: var(--line); border-radius: 10px; }
 .front-menu .front-test-detail .front-test-metadata { color: var(--ink); font-weight: 700; }
 .front-menu .front-test-detail .front-test-focus, .front-menu .front-test-preservation { color: var(--muted-ink); border-color: var(--line); }

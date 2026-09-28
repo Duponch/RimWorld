@@ -1,0 +1,166 @@
+#!/usr/bin/env node
+// Offline asset preparation only: the game never calls ElevenLabs.
+import { createHash } from 'node:crypto';
+import { readFile, mkdir, writeFile, rename, stat } from 'node:fs/promises';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const repo = resolve(here, '../..');
+const planPath = resolve(here, 'sfx-plan.json');
+const logPath = resolve(here, 'generation-log.json');
+const manifestPath = resolve(repo, 'public/assets/audio/manifest.json');
+const sfxDir = resolve(repo, 'public/assets/audio/sfx');
+
+function usage() {
+  console.log('Usage: node scripts/audio/generate-sfx.mjs [--id mining.hit] [--generate | --publish]');
+  console.log('Without an action: read-only plan and manifest check. Generation is one ID per invocation.');
+}
+
+function parseArgs(args) {
+  let id;
+  let generate = false;
+  let publish = false;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--id' && !id) id = args[++i];
+    else if (args[i] === '--generate') generate = true;
+    else if (args[i] === '--publish') publish = true;
+    else if (args[i] === '--dry-run') continue;
+    else if (args[i] === '--help') { usage(); process.exit(0); }
+    else throw new Error(`Unknown or duplicate argument: ${args[i]}`);
+  }
+  if (generate && publish) throw new Error('Choose --generate or --publish');
+  if ((generate || publish) && !id) throw new Error('An action requires one --id');
+  return { id, generate, publish };
+}
+
+function assertPlan(plan) {
+  if (plan.version !== 1 || plan.modelId !== 'eleven_text_to_sound_v2' || plan.outputFormat !== 'mp3_44100_128') {
+    throw new Error('Unsupported SFX plan version/model/format');
+  }
+  for (const [id, item] of Object.entries(plan.events ?? {})) {
+    if (!/^[a-z]+(?:\.[a-z]+)+$/.test(id)) throw new Error(`Invalid cue ID: ${id}`);
+    if (!/^[a-z0-9-]+\.mp3$/.test(item.filename)) throw new Error(`Invalid filename for ${id}`);
+    if (typeof item.prompt !== 'string' || item.prompt.length < 20 || item.prompt.length > 450) throw new Error(`Invalid prompt for ${id}`);
+    if (!(item.durationSeconds >= 0.5 && item.durationSeconds <= 30)) throw new Error(`Invalid duration for ${id}`);
+    if (!(item.promptInfluence >= 0 && item.promptInfluence <= 1)) throw new Error(`Invalid influence for ${id}`);
+    if (typeof item.loop !== 'boolean') throw new Error(`Invalid loop for ${id}`);
+    if (item.spatial !== undefined && typeof item.spatial !== 'boolean') throw new Error(`Invalid spatial setting for ${id}`);
+    if (!(item.gain > 0 && item.gain <= (item.loop ? 2 : 8))) throw new Error(`Invalid gain for ${id}`);
+    if (item.spatial !== false && !(item.maxDistance > 0)) throw new Error(`Invalid maxDistance for ${id}`);
+  }
+}
+
+function isMp3(bytes) {
+  if (bytes.length < 128) return false;
+  if (bytes.subarray(0, 3).toString('ascii') === 'ID3') return true;
+  return bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0;
+}
+
+async function main() {
+  const { id, generate, publish } = parseArgs(process.argv.slice(2));
+  const plan = JSON.parse(await readFile(planPath, 'utf8'));
+  const log = JSON.parse(await readFile(logPath, 'utf8'));
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  assertPlan(plan);
+  if (log.version !== 1 || !Array.isArray(log.generations)) throw new Error('Unsupported generation log');
+  if (manifest.version !== 1 || !manifest.events || typeof manifest.events !== 'object' || Array.isArray(manifest.events)) {
+    throw new Error('Unsupported runtime manifest');
+  }
+  const selected = id ? [[id, plan.events[id]]] : Object.entries(plan.events);
+  if (selected.some(([, item]) => !item)) throw new Error(`Unknown cue ID: ${id}`);
+  for (const [cueId, item] of selected) {
+    const published = manifest.events[cueId];
+    if (published) {
+      const src = `/assets/audio/sfx/${item.filename}`;
+      if (!published.variants?.some((variant) => variant.src === src)) throw new Error(`Manifest source differs for ${cueId}`);
+      if (!(await stat(resolve(sfxDir, item.filename)).catch(() => null))) throw new Error(`Manifest references missing asset: ${src}`);
+    }
+    const status = published ? 'published' : 'pending';
+    // API help lists 20 credits/s; overview lists 40. Show both until account billing is confirmed.
+    console.log(`${cueId}: ${status}; ${item.durationSeconds}s; loop=${item.loop}; estimated ${Math.ceil(item.durationSeconds * 20)}–${Math.ceil(item.durationSeconds * 40)} credits`);
+  }
+  if (!generate && !publish) return;
+  if (manifest.events[id]) throw new Error(`${id} already published; review it before generating a new variant`);
+  const item = plan.events[id];
+  const destination = resolve(sfxDir, item.filename);
+  const existing = await stat(destination).catch(() => null);
+  if (generate && existing) throw new Error(`${item.filename} already exists; audition or rename the candidate before regeneration`);
+  if (publish) {
+    if (!existing) throw new Error(`${item.filename} is missing; generate and audition it first`);
+    const bytes = await readFile(destination);
+    if (!isMp3(bytes)) throw new Error(`${item.filename} is not a plausible MP3`);
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    if (!log.generations.some((entry) => entry.id === id && entry.filename === item.filename && entry.sha256 === sha256)) {
+      throw new Error(`${item.filename} has no matching generation record`);
+    }
+    const nextManifest = {
+      ...manifest,
+      events: {
+        ...manifest.events,
+        [id]: {
+          variants: [{ src: `/assets/audio/sfx/${item.filename}`, gain: 1 }],
+          gain: item.gain,
+          ...(item.maxDistance ? { maxDistance: item.maxDistance } : {}),
+          loop: item.loop,
+          ...(item.spatial === false ? { spatial: false } : {}),
+        },
+      },
+    };
+    const tempManifest = `${manifestPath}.tmp-${process.pid}`;
+    await writeFile(tempManifest, `${JSON.stringify(nextManifest, null, 2)}\n`, { flag: 'wx' });
+    await rename(tempManifest, manifestPath);
+    console.log(`Published ${id}: SHA-256 ${sha256}`);
+    return;
+  }
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) throw new Error('ELEVENLABS_API_KEY is required for --generate');
+  const response = await fetch(`https://api.elevenlabs.io/v1/sound-generation?output_format=${plan.outputFormat}`, {
+    method: 'POST',
+    headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text: item.prompt,
+      model_id: plan.modelId,
+      duration_seconds: item.durationSeconds,
+      prompt_influence: item.promptInfluence,
+      loop: item.loop,
+    }),
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!response.ok) throw new Error(`ElevenLabs generation failed: HTTP ${response.status}`);
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!/audio\/mpeg|audio\/mp3|application\/octet-stream/i.test(contentType)) throw new Error(`Unexpected response type: ${contentType}`);
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.length > 8_000_000 || !isMp3(bytes)) throw new Error('Response is not a plausible MP3');
+
+  await mkdir(sfxDir, { recursive: true });
+  await writeFile(destination, bytes, { flag: 'wx' });
+  const sha256 = createHash('sha256').update(bytes).digest('hex');
+  const nextLog = {
+    ...log,
+    generations: [...log.generations, {
+      id,
+      filename: item.filename,
+      generatedAt: new Date().toISOString(),
+      provider: 'ElevenLabs',
+      modelId: plan.modelId,
+      outputFormat: plan.outputFormat,
+      prompt: item.prompt,
+      durationSeconds: item.durationSeconds,
+      promptInfluence: item.promptInfluence,
+      loop: item.loop,
+      sha256,
+      estimatedCredits: [Math.ceil(item.durationSeconds * 20), Math.ceil(item.durationSeconds * 40)],
+    }],
+  };
+  const tempLog = `${logPath}.tmp-${process.pid}`;
+  await writeFile(tempLog, `${JSON.stringify(nextLog, null, 2)}\n`, { flag: 'wx' });
+  await rename(tempLog, logPath);
+  console.log(`Generated candidate ${id}: ${bytes.length} bytes, SHA-256 ${sha256}`);
+  console.log('Audition the candidate, then publish it with --id and --publish.');
+}
+
+main().catch((error) => {
+  console.error(error.message);
+  process.exitCode = 1;
+});

@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Écouter les effets sonores — V149
+
+Les **effets sonores** sont activés par défaut après une interaction avec le jeu. Dans **Options** à l'accueil ou **Menu → Son** en partie, coupez-les ou réglez leur volume ; ce choix est conservé par le navigateur. Rapprochez la caméra d'un colon qui mine ou abat un arbre pour entendre ses contacts, ou d'un feu de camp pour entendre sa boucle ; la pluie forme une ambiance globale. Les tirs et coups de mêlée ont aussi un son. Construction, cuisine, fabrication, couture, boucherie et recherche restent silencieuses dans ce premier lot, et aucune musique n'est encore intégrée. [Portée et limites](../development/audio-sfx-v149.md).
+
 ## Fabriquer et porter un casque de reconnaissance — V148
 
 Dans **Recherche**, terminez **Vêtements complexes** et **Fabrication**, puis **Armure de reconnaissance** au bureau avancé alimenté proche d'un multi-analyseur alimenté. Gardez un établi de fabrication sous tension, un colon avec **Artisanat 6**, **30 plastaciers** et **1 composant avancé** accessibles. Le composant peut venir de la facture Fabrication avancée V139 ou d'une acquisition antérieure ; cette recherche n'est pas un préalable au casque. Ajoutez la facture **Casque de reconnaissance** à l'établi. Le colon transporte les deux matières, crée un ouvrage physique, le travaille et dépose le casque fini. Une sauvegarde pendant le travail conserve auteur, facture, parts et progression. Le casque peut être rangé, transporté et enfilé par ordre direct ou par politique vestimentaire. Il protège les yeux et la mâchoire en plus du haut de la tête, à la place du casque pare-balles sur la même couche. [Règles, adaptations et limites](../development/recon-helmet-v148.md).

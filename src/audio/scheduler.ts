@@ -1,0 +1,71 @@
+export interface AudioCue {
+  /** Stable identity of this occurrence, including across repeated snapshots. */
+  id: string;
+  tick: number;
+  kind: string;
+  x: number;
+  z: number;
+  intensity?: number;
+}
+
+const MAX_PENDING = 256;
+const MAX_SEEN = 1024;
+const RETAIN_TICKS = 12;
+
+/** Presentation-only queue. The worker may publish the same cue more than once. */
+export class AudioCueScheduler {
+  private pending: AudioCue[] = [];
+  private seen = new Map<string, number>();
+  private presentedTick = -Infinity;
+  private lastPruneTick = -Infinity;
+
+  ingest(cues: readonly AudioCue[]): void {
+    for (const cue of cues) {
+      if (!cue.id || !cue.kind || !Number.isFinite(cue.tick) ||
+        !Number.isFinite(cue.x) || !Number.isFinite(cue.z) || this.seen.has(cue.id)) continue;
+      if (cue.tick < this.presentedTick - RETAIN_TICKS) continue;
+      // Binary insertion leaves frame updates proportional only to due cues.
+      let low = 0; let high = this.pending.length;
+      while (low < high) {
+        const mid = (low + high) >>> 1;
+        if (this.pending[mid]!.tick <= cue.tick) low = mid + 1;
+        else high = mid;
+      }
+      if (low >= MAX_PENDING) continue;
+      this.pending.splice(low, 0, cue);
+      if (this.pending.length > MAX_PENDING) this.pending.pop();
+      this.seen.set(cue.id, cue.tick);
+      if (this.seen.size > MAX_SEEN) this.pruneSeen();
+    }
+  }
+
+  /** Drops late cues instead of playing a burst after a stalled/hidden tab. */
+  takeDue(presentedTick: number, maxLateTicks = 2): AudioCue[] {
+    if (!Number.isFinite(presentedTick)) return [];
+    if (presentedTick < this.presentedTick - 0.01) this.reset();
+    this.presentedTick = presentedTick;
+    let end = 0;
+    while (end < this.pending.length && this.pending[end]!.tick <= presentedTick) end++;
+    const due = this.pending.splice(0, end).filter(cue => cue.tick >= presentedTick - maxLateTicks);
+    if (presentedTick - this.lastPruneTick >= RETAIN_TICKS || this.seen.size > MAX_SEEN) {
+      this.pruneSeen();
+      this.lastPruneTick = presentedTick;
+    }
+    return due;
+  }
+
+  reset(): void {
+    this.pending.length = 0;
+    this.seen.clear();
+    this.presentedTick = -Infinity;
+    this.lastPruneTick = -Infinity;
+  }
+
+  get pendingCount(): number { return this.pending.length; }
+
+  private pruneSeen(): void {
+    for (const [id, tick] of this.seen) {
+      if (tick < this.presentedTick - RETAIN_TICKS || this.seen.size > MAX_SEEN) this.seen.delete(id);
+    }
+  }
+}

@@ -9,6 +9,7 @@ import type { World } from '../sim/types';
 import type { Request, Response } from './protocol';
 import { MAP_SIZE_PRESETS } from '../sim/map-config';
 import { SnapshotEncoder } from './snapshots';
+import { AudioCueRecorder } from './audio-cues';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 let world: World | undefined;
@@ -20,13 +21,17 @@ const send = (message: Response) => scope.postMessage(message);
 const snapshots = new SnapshotEncoder();
 const motion = new MotionRecorder();
 const presentationChanges=new PresentationChanges();
-// Tick publications use this only after both observers captured that tick.
+const audioCues=new AudioCueRecorder();
+// Tick publications use this only after the presentation observers captured that tick.
 const publishCapturedTick = (checkpoint = false) => {
-  if (world) send({...snapshots.encode(world, stepMs, speed, checkpoint), motion:motion.snapshot()});
+  if (world) {
+    const cues=audioCues.drain();
+    send({...snapshots.encode(world, stepMs, speed, checkpoint), motion:motion.snapshot(),...cues.length?{audioCues:cues}:{}});
+  }
   lastPublishedTick=world?.tick??-1;
 };
 const publish = (checkpoint = false) => {
-  if (world) {presentationChanges.capture(world);motion.capture(world);}
+  if (world) {presentationChanges.capture(world);motion.capture(world);audioCues.capture(world);}
   publishCapturedTick(checkpoint);
 };
 
@@ -39,6 +44,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       world=created;
       if(request.paused)speed=0;
       motion.reset();
+      audioCues.reset();
       clock.reset(performance.now());
     } else if (request.type === 'load') {
       // A cold load needs no temporary colony. Validate completely before the
@@ -47,6 +53,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       try { restored = deserializeWorld(request.data); }
       catch { throw new Error('Cette sauvegarde est illisible ou incompatible avec cette version. La colonie actuelle et vos sauvegardes sont conservées.'); }
       world = restored; speed = 0; motion.reset();
+      audioCues.reset();
       clock.reset(performance.now());
     } else if (request.type === 'speed') {
       if (![0, 1, 3, 6].includes(request.speed)) throw new Error('Vitesse invalide.');
@@ -80,6 +87,7 @@ function advanceSimulation(now:number):void {
     for(let i=0;i<ticks;i++) {
       const started=performance.now();stepWorld(world);simulationMs+=performance.now()-started;stepMs=simulationMs/(i+1);
       motion.capture(world);
+      audioCues.capture(world);
       if(presentationChanges.capture(world))publishCapturedTick();
     }
   }

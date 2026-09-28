@@ -23,7 +23,7 @@ import type { MaterialPile, Resource, Terrain, Tile, World } from '../sim/types.
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
 interface PileChanges { removed: number[]; upserted: MaterialPile[]; order?: number[] }
-interface SnapshotHeader { motion?:import('./motion-tracks.ts').PawnTrack[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
+interface SnapshotHeader { motion?:import('./motion-tracks.ts').PawnTrack[]; audioCues?:import('./audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 export type SnapshotMessage = SnapshotHeader & (
   | { kind: 'checkpoint'; world: World }
   | { kind: 'delta'; baseRevision: number; world: DynamicWorld; tiles?: Array<[number, Terrain, Tile['stone']?, Tile['miningDamage']?, Tile['ore']?, Tile['floor']?]>; resources?: ResourceChanges; piles?: PileChanges }

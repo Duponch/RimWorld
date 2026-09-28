@@ -1,0 +1,25 @@
+# Validation des effets sonores V149 — 29 septembre 2026
+
+V149 ajoute une couche de présentation sonore sans modifier le **schéma de sauvegarde 148**, le monde simulé ou ses flux PRNG. Le [contrat sonore](../development/audio-sfx-v149.md) distingue les six fichiers publiés des six travaux encore muets ; la [recherche ElevenLabs](../research/audio-elevenlabs-v149.md) documente leur provenance et les limites de coût et de droits. Les sons sont des adaptations propres à Lisière, sans reprise sonore de RimWorld Core.
+
+## Fonctionnement vérifié par le code et les contrôles ciblés
+
+Le worker observe la progression confirmée du minage, de l’abattage, de la construction, de la production et de la recherche, ainsi que les départs de tir et les frappes. Il joint des cues identifiés au snapshot ; le client ne les transmet qu’après adoption acceptée. La couche Web Audio les déduplique, attend le tick présenté, écarte les événements tardifs, sélectionne les sons audibles près de la caméra et borne les voix. Les boucles de feu et de pluie suivent les sources du monde adopté. Pause, menu, onglet masqué, changement de monde et coupure des effets évitent de conserver une ancienne ambiance sonore. L’activation et le volume sont proposés à l’accueil et en partie, puis conservés dans le navigateur si son stockage est disponible.
+
+Les tests ciblés audio passent **12/12** et les tests du bridge audio **14/14**. Ils couvrent notamment l’ordre, les doublons et le retard des cues, l’adoption du snapshot, les limites de charge, la sélection spatiale, la variation déterministe de présentation, la pause/reprise des boucles, le chargement borné et les transitions de travail réelles. Le build et le typage passent. Ces tests utilisent aussi des objets Web Audio simulés ; ils ne prouvent pas l’écoute sur un appareil réel.
+
+Le parcours natif renforcé passe **1/1 dans Chromium avec repli WebGL2 (17,3 s)** avec le manifeste publié : au moins un vrai MP3 local est chargé et décodé, les réglages d’activation et de volume persistent après rechargement, le compteur FPS reste visible et aucune erreur navigateur n’est remontée par ce parcours. Le journal du renderer indique `WebGPU is not available, running under WebGL2 backend`. Ce parcours vérifie le décodage et l’interface, sans capter ni juger le son effectivement entendu ; le parcours sous WebGPU reste non vérifié, même si Web Audio est indépendant du backend graphique dans le code.
+
+La **régression hors campagnes longues** passe sur **280 fichiers, 1 218 tests réussis et un test ignoré** (1 219 au total), en **200,98 s**. `npm run test:presentation` passe également : les parcours minage et abattage relèvent chacun `jumpCount=0` et `solidOccupancyCount=0`, avec un p95 d’environ **4,3 ms par image** dans ces parcours. Cette mesure de présentation ne constitue pas un profil du coût audio ni une mesure GPU ou FPS générale.
+
+Le microbanc `tmp/audio-cue-cpu-bench.mjs` (250², 100 colons, 600 structures, 3 000 captures par répétition, cinq répétitions) mesure une médiane de **0,00082 ms/capture** sans travail de poste et **0,03380 ms/capture** avec un chercheur ; la variante qui indexait toujours les structures coûtait **0,03257 ms/capture** même sans ce travail. Ce noyau CPU artificiel ne mesure pas le moteur audio du navigateur, les décodages, le rendu ou la cadence générale.
+
+## Fichiers livrés et contrôle technique
+
+Le manifeste version 1 publie **six MP3 locaux** : `mining.hit`, `woodcutting.hit`, `weapon.gunshot`, `weapon.melee`, `ambient.fire` et `weather.rain`. `scripts/audio/generation-log.json` conserve pour chacun l’identifiant de génération, le prompt, le modèle, la date et l’empreinte SHA-256 ; aucune URL signée temporaire n’y figure. Les contrôles `inspect-mp3.mjs` et `check-sfx.py` ont décodé les six fichiers comme MP3 Layer III stéréo, **44,1 kHz et 128 kb/s**. Leurs durées décodées respectives sont 0,60, 0,64, 0,68, 0,60, 8,00 et 10,00 s. Les empreintes et mesures détaillées sont conservées dans le journal et les sorties de travail sous `tmp/`.
+
+La mêlée atteint **+0,2 dBFS** en pointe décodée, avec 0,021 % d’échantillons à au moins 0,999 en valeur absolue : une écoute doit vérifier l’absence de distorsion gênante. Les raccords des boucles feu/pluie ont seulement une mesure de saut entre dernier et premier échantillon, respectivement 0,00121 et 0,00565 ; leur continuité perceptive sur plusieurs répétitions n’a pas été écoutée. Les gains du manifeste et le volume maître sont des réglages de mix, pas des mesures d’audibilité dans une scène.
+
+## Limites de validation
+
+Aucune écoute humaine en jeu, comparaison de mix sur les vitesses, mesure de charge CPU/RAF/GPU ou campagne longue n’est acquise. Les six autres cues de construction, cuisine, fabrication, couture, boucherie et recherche n’ont pas encore de fichier publié ; musique et voix restent absentes. Les limites des preuves de performance antérieures continuent de s’appliquer : aucun gain FPS, 240 FPS ou débit ×6 général n’est déduit du lot sonore.

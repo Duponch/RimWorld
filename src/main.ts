@@ -12,7 +12,7 @@ import { isBuildableFloor } from './sim/flooring';
 import { createTradeUI } from './ui/trade-panel';
 import { climateDateLabel,climateControls } from './ui/climate-inspection';
 import { WEATHER } from './sim/weather-definitions';
-import { perceivedWeather } from './sim/weather';
+import { perceivedWeather, weatherRainRate } from './sim/weather';
 import { firePosition } from './sim/fire-rules';
 import { calendarTick } from './sim/calendar';
 import { GameSession, SAVE_KEY, PREVIOUS_KEY } from './ui/game-session';
@@ -101,6 +101,7 @@ import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
 import { updateFoodStocks } from './ui/food-stocks';
 import { SimulationClient } from './bridge/SimulationClient';
+import { AudioDirector } from './audio/AudioDirector';
 import { ColonyRenderer } from './render/ColonyRenderer';
 import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell, Command } from './sim/types';
 import { TICKS_PER_DAY } from './sim/types';
@@ -121,6 +122,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = gameLayout();
 mountStorageItemControls(document.getElementById('stockpile-items')!);
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const client = new SimulationClient();
+const audio = new AudioDirector();
 let snapshot: World | undefined;
 let selectedPawn: number | undefined;
 let colonistInspector: ColonistInspectorState | undefined;
@@ -130,6 +132,33 @@ let hoveredCell:Cell|null=null;
 let lastHoverReadAt=0,lastHoverCopy='';
 let altInspectorHeld=false,lastAltReadAt=0,lastAltCopy='',mapPointerX=0,mapPointerY=0;
 const mapHoverLight=new MapHoverLightCache();
+let lastAudioSourceFocus={x:Infinity,z:Infinity};
+function syncAudioSources(world: World): void {
+  if (!soundEnabled) { audio.setContinuousSources([]); return; }
+  // Rebuild on a snapshot or a meaningful camera move, never per animation frame.
+  // Keep only nearby fire candidates so a large wildfire cannot create a source per flame.
+  const focus=renderer?.audioFocus??{x:world.width/2,z:world.height/2};
+  lastAudioSourceFocus=focus;
+  const nearby:{id:string;kind:string;x:number;z:number;gain:number;distance:number}[]=[];
+  const addFire=(id:string,x:number,z:number,gain:number)=>{
+    const distance=(x-focus.x)**2+(z-focus.z)**2;
+    if(distance>30*30)return;
+    if(nearby.length<12){nearby.push({id,kind:'ambient.fire',x,z,gain,distance});return;}
+    let worst=0;for(let i=1;i<nearby.length;i++)if(nearby[i]!.distance>nearby[worst]!.distance)worst=i;
+    if(distance<nearby[worst]!.distance)nearby[worst]={id,kind:'ambient.fire',x,z,gain,distance};
+  };
+  for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined)
+    addFire(`fire:${fire.id}`,fire.x,fire.z,Math.max(.2,Math.min(1,fire.size)));
+  for(const structure of world.structures)if(structure.kind==='campfire'&&structure.fuel?.ticks)
+    addFire(`campfire:${structure.id}`,structure.x,structure.z,.48);
+  const sources=nearby.map(({id,kind,x,z,gain})=>({id,kind,x,z,gain}));
+  const weather=perceivedWeather(world);
+  if(weather==='rain'||weather==='rainy-thunderstorm'||weather==='foggy-rain') {
+    const gain=Math.min(1,Math.max(0,weatherRainRate(world)));
+    if(gain>.05)sources.push({id:'weather:rain',kind:'weather.rain',x:focus.x,z:focus.z,gain});
+  }
+  audio.setContinuousSources(sources);
+}
 let lastStatusAlertsSignature='';
 let lastColonyHistorySignature='';
 let installationId:number|undefined;
@@ -142,12 +171,40 @@ let wallCutaway = false, foliageVisible = true, replacingWorld = false;
 let renderer: ColonyRenderer | undefined;
 const TEXTURE_PREFERENCE_KEY = 'lisiere.presentation.textures.v1';
 const GROUND_GRASS_PREFERENCE_KEY = 'lisiere.presentation.ground-grass.v1';
+const SOUND_ENABLED_PREFERENCE_KEY = 'lisiere.audio.effects.enabled.v1';
+const SOUND_VOLUME_PREFERENCE_KEY = 'lisiere.audio.effects.volume.v1';
 let texturesEnabled = true;
 let groundGrassEnabled = true;
+let soundEnabled = true;
+let soundVolume = 0.75;
 try {
   texturesEnabled = localStorage.getItem(TEXTURE_PREFERENCE_KEY) !== 'false';
   groundGrassEnabled = localStorage.getItem(GROUND_GRASS_PREFERENCE_KEY) !== 'false';
+  soundEnabled = localStorage.getItem(SOUND_ENABLED_PREFERENCE_KEY) !== 'false';
+  const storedVolume = Number(localStorage.getItem(SOUND_VOLUME_PREFERENCE_KEY));
+  if (localStorage.getItem(SOUND_VOLUME_PREFERENCE_KEY) !== null && Number.isFinite(storedVolume)) soundVolume = Math.max(0, Math.min(1, storedVolume));
 } catch { /* The defaults remain active when browser storage is unavailable. */ }
+audio.setVolume(soundVolume);
+audio.setMuted(!soundEnabled);
+function setSoundEnabled(enabled: boolean): boolean {
+  soundEnabled = enabled;
+  el<HTMLInputElement>('sound-enabled').checked = enabled;
+  audio.setMuted(!enabled);
+  if (enabled) {
+    if (snapshot) syncAudioSources(snapshot);
+    void audio.unlock().catch(() => notify('Le navigateur a bloqué le son. Réactivez les effets sonores après une interaction.', true));
+  }
+  else audio.reset();
+  try { localStorage.setItem(SOUND_ENABLED_PREFERENCE_KEY, String(enabled)); return true; }
+  catch { return false; }
+}
+function setSoundVolume(volume: number): boolean {
+  soundVolume = Math.max(0, Math.min(1, Number.isFinite(volume) ? volume : 0.75));
+  el<HTMLInputElement>('sound-volume').value = String(Math.round(soundVolume * 100));
+  audio.setVolume(soundVolume);
+  try { localStorage.setItem(SOUND_VOLUME_PREFERENCE_KEY, String(soundVolume)); return true; }
+  catch { return false; }
+}
 const textureToggle = el<HTMLInputElement>('textures-enabled');
 textureToggle.checked = texturesEnabled;
 function setTexturesEnabled(enabled: boolean): boolean {
@@ -193,6 +250,10 @@ const frontMenu = createFrontMenu(frontHost, {
   onTexturesEnabledChange: setTexturesEnabled,
   getGroundGrassEnabled: () => groundGrassEnabled,
   onGroundGrassEnabledChange: setGroundGrassEnabled,
+  getSoundEnabled: () => soundEnabled,
+  onSoundEnabledChange: setSoundEnabled,
+  getSoundVolume: () => soundVolume,
+  onSoundVolumeChange: setSoundVolume,
   onStart: async draft => replaceColony(() => session.create(draft.seed, draft.size, 'crashlanded',draft.site)),
   onLoad: async key => replaceColony(() => session.load(key)),
   getTestColonies: fetchTestColonies,
@@ -911,6 +972,14 @@ el('new-world-form').onsubmit = event => { event.preventDefault(); void attempt(
 el('show-diagnostics').onclick = () => { const hidden = !el('metrics').hidden; el('metrics').hidden = hidden; el('show-diagnostics').textContent = hidden ? 'Afficher les diagnostics' : 'Masquer les diagnostics'; };
 textureToggle.onchange = () => { if (!setTexturesEnabled(textureToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 groundGrassToggle.onchange = () => { if (!setGroundGrassEnabled(groundGrassToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
+const soundToggle = el<HTMLInputElement>('sound-enabled');
+const soundVolumeSlider = el<HTMLInputElement>('sound-volume');
+soundToggle.checked = soundEnabled;
+soundVolumeSlider.value = String(Math.round(soundVolume * 100));
+soundToggle.onchange = () => { if (!setSoundEnabled(soundToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
+soundVolumeSlider.oninput = () => { if (!setSoundVolume(Number(soundVolumeSlider.value) / 100)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
+// A user gesture is required by browsers before Web Audio can leave its suspended state.
+document.querySelector('#app')!.addEventListener('pointerdown', () => { if (soundEnabled) void audio.unlock().catch(() => {}); }, { once: true, capture: true });
 el('wall-cutaway').onclick = () => { wallCutaway = !wallCutaway; renderer?.setWallCutaway(wallCutaway); el('wall-cutaway').textContent = wallCutaway ? 'Murs : coupés' : 'Murs : hauts'; el('wall-cutaway').setAttribute('aria-pressed', String(wallCutaway)); };
 el('roof-toggle').onclick=()=>{const button=el('roof-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));button.textContent=visible?'Toits : visibles':'Toits : masqués';renderer?.setRoofsVisible(visible);};
 el('foliage-toggle').onclick = () => { foliageVisible = !foliageVisible; renderer?.setFoliageVisible(foliageVisible); el('foliage-toggle').textContent = foliageVisible ? 'Feuillage' : 'Troncs'; el('foliage-toggle').setAttribute('aria-pressed', String(!foliageVisible)); };
@@ -954,6 +1023,7 @@ document.addEventListener('keydown', event => {
 });
 client.onError = message => notify(message, true);
 client.onSnapshot = (world, cost, speed, replaced, motion) => {
+  if (replaced) audio.reset();
   const speedChanged=currentSpeed!==speed;
   const role=(p:Pawn|undefined)=>p?p.prisoner?'prisoner':isColonist(p)?'colonist':'other':'absent';
   const roleChanged=selectedPawn!==undefined&&role(snapshot?.pawns.find(p=>p.id===selectedPawn))!==role(world.pawns.find(p=>p.id===selectedPawn));
@@ -962,9 +1032,13 @@ client.onSnapshot = (world, cost, speed, replaced, motion) => {
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;renderer?.setSelectedObject(undefined);orderMenu.close();rebuildInspector();}
   else if(roleChanged){orderMenu.close();rebuildInspector();}
   renderer?.setWorld(world,replaced,speed,motion,true);
+  syncAudioSources(world);
   if(changed)renderer?.setSelectedPawns(selection.ids);
   updateMapHover();
   snapshotHud.request(changed||roleChanged||speedChanged);
+};
+client.onAudioCues = (cues) => {
+  if (soundEnabled) audio.ingestCues(cues);
 };
 async function prepareWorld(): Promise<void> {
   if (!snapshot) throw new Error('Aucune colonie à afficher.');
@@ -973,6 +1047,13 @@ async function prepareWorld(): Promise<void> {
   if (!renderer) {
     renderer = await ColonyRenderer.create(el('viewport'), pickCell, groundGrassEnabled);
     renderer.setTexturesEnabled(texturesEnabled);
+    renderer.onAudioFrame = view => {
+      audio.updateCamera(view.camera);
+      if (soundEnabled && snapshot && !document.hidden &&
+        Math.hypot(view.camera.targetX-lastAudioSourceFocus.x,view.camera.targetZ-lastAudioSourceFocus.z)>=4)
+        syncAudioSources(snapshot);
+      audio.update({ presentedTick: view.tick, paused: view.paused || frontMenu.isOpen() || replacingWorld, hidden: document.hidden });
+    };
     renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){const type=shootingControls.mode!;shootingControls.cancel();void attempt(async()=>{await client.command({type,pawnIds:selectedColonyIds(),targetId});renderState();});}return;}selectPawns(gesture);};
     renderer.onHover=cell=>{hoveredCell=cell;updateMapHover(true);};
     renderer.onInteractionCancel=()=>orderMenu.close();
@@ -984,12 +1065,14 @@ async function prepareWorld(): Promise<void> {
     };
   }
   renderer.setWorld(snapshot, true, currentSpeed, latestMotion,true);
+  syncAudioSources(snapshot);
   await renderer.preparePresentation();
   el('loading')?.remove(); renderState();
 }
 async function start() {
   if (import.meta.env.DEV && params.has('e2e')) Object.defineProperty(window, '__lisiere', { value: {
     get world() { return structuredClone(snapshot); }, get tick() { return snapshot?.tick ?? 0; }, get backend() { return renderer?.backend; },
+    get audio() { return { loadedCount: audio.loadedCount, availableSounds: audio.availableSounds }; },
     projectCell: (x: number,z: number) => renderer!.projectCell(x,z),
     projectPawn: (id:number) => renderer?.screenPawns().find(pawn=>pawn.id===id),
   } });
@@ -1012,5 +1095,5 @@ const metricsInterval = setInterval(() => {
   el('fps-counter').textContent = renderer.stats.fps > 0 ? `${Math.round(renderer.stats.fps)} FPS` : '— FPS';
   if (!el('metrics').hidden) el('metrics').textContent = `${renderer.backend} · ${renderer.stats.frameMs.toFixed(1)} ms/image · p95 ${renderer.stats.frameP95.toFixed(1)} ms · simulation ${stepMs.toFixed(2)} ms/tick`;
 }, 1000);
-window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval); client.dispose(); renderer?.dispose(); });
+window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval); client.dispose(); audio.dispose(); renderer?.dispose(); });
 void start();

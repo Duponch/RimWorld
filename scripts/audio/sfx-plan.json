@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "modelId": "eleven_text_to_sound_v2",
+  "outputFormat": "mp3_44100_128",
+  "events": {
+    "mining.hit": {
+      "filename": "mining-hit-v1.mp3",
+      "prompt": "Single close, soft steel pick tap against rough stone, short gritty mineral crumble, tactile and warm cozy colony game foley. Dry sound, gentle impact, no voice, no music, no dramatic boom, no background ambience.",
+      "durationSeconds": 0.6,
+      "promptInfluence": 0.65,
+      "loop": false,
+      "gain": 1.5,
+      "maxDistance": 20
+    },
+    "woodcutting.hit": {
+      "filename": "woodcutting-hit-v1.mp3",
+      "prompt": "Single close hand axe chop into living wood, rounded woody knock and brief leaf rustle, tactile and warm cozy colony game foley. Dry sound, gentle impact, no voice, no music, no dramatic boom, no background ambience.",
+      "durationSeconds": 0.65,
+      "promptInfluence": 0.65,
+      "loop": false,
+      "gain": 1.8,
+      "maxDistance": 22
+    },
+    "weapon.gunshot": {
+      "filename": "weapon-gunshot-v1.mp3",
+      "prompt": "Single compact old revolver shot outdoors, crisp mechanical crack with a short soft tail, readable but restrained in a warm pastel colony game. No voice, no music, no explosions, no dramatic cinematic reverb, no background ambience.",
+      "durationSeconds": 0.7,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 7,
+      "maxDistance": 36
+    },
+    "weapon.melee": {
+      "filename": "weapon-melee-v1.mp3",
+      "prompt": "Single close blunt tool strike against padded cloth and wood, small tactile thud with a tiny fabric movement, restrained warm pastel colony game foley. No voice, no pain scream, no gore, no music, no dramatic boom, no background ambience.",
+      "durationSeconds": 0.6,
+      "promptInfluence": 0.65,
+      "loop": false,
+      "gain": 0.12,
+      "maxDistance": 18
+    },
+    "ambient.fire": {
+      "filename": "ambient-fire-v1.mp3",
+      "prompt": "Seamless loop of a small contained campfire, soft irregular wood crackle and a gentle ember hiss, close warm cozy colony game ambience. Stable level and texture across loop boundary, no voice, no music, no wind, no dramatic roar.",
+      "durationSeconds": 8,
+      "promptInfluence": 0.65,
+      "loop": true,
+      "gain": 0.5,
+      "maxDistance": 22,
+      "spatial": true
+    },
+    "weather.rain": {
+      "filename": "weather-rain-v1.mp3",
+      "prompt": "Seamless loop of gentle steady rain falling on leaves and soft soil, warm cozy colony game ambience with subtle natural variation. Stable level and texture across loop boundary, no voice, no music, no thunder, no strong wind.",
+      "durationSeconds": 10,
+      "promptInfluence": 0.65,
+      "loop": true,
+      "gain": 0.5,
+      "spatial": false
+    },
+    "construction.hit": {
+      "filename": "construction-hit-v1.mp3",
+      "prompt": "Single careful carpenter hammer tap on a wooden frame, small rounded wood and nail click, tactile warm cozy colony game foley. Dry close sound, no voice, no music, no heavy crash, no background ambience.",
+      "durationSeconds": 0.65,
+      "promptInfluence": 0.65,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 20
+    },
+    "cooking.work": {
+      "filename": "cooking-work-v1.mp3",
+      "prompt": "Single short wooden spoon stir through a gently simmering ceramic pot, soft wet swish and one tiny utensil tap, warm cozy colony kitchen foley. No voice, no music, no sizzling roar, no background ambience.",
+      "durationSeconds": 0.75,
+      "promptInfluence": 0.65,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 16
+    },
+    "crafting.work": {
+      "filename": "crafting-work-v1.mp3",
+      "prompt": "Single small hand tool adjustment of a metal part on a wooden workbench, precise soft click and brief metal scrape, tactile warm cozy colony game foley. No voice, no music, no machine drone, no background ambience.",
+      "durationSeconds": 0.7,
+      "promptInfluence": 0.65,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 18
+    },
+    "tailoring.work": {
+      "filename": "tailoring-work-v1.mp3",
+      "prompt": "Single gentle sewing action, thread pulled through thick cloth then a quiet fabric snip, close tactile warm cozy colony game foley. No voice, no music, no sewing machine, no background ambience.",
+      "durationSeconds": 0.65,
+      "promptInfluence": 0.65,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 14
+    },
+    "butchering.work": {
+      "filename": "butchering-work-v1.mp3",
+      "prompt": "Single controlled kitchen knife cut against a wooden board with a soft damp cloth movement, restrained tactile colony game foley. No gore, no bone crack, no voice, no music, no background ambience.",
+      "durationSeconds": 0.65,
+      "promptInfluence": 0.65,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 18
+    },
+    "research.work": {
+      "filename": "research-work-v1.mp3",
+      "prompt": "Single short pencil scratch on parchment followed by a tiny paper movement, close dry tactile warm cozy colony study foley. No voice, no music, no keyboard, no magical chime, no background ambience.",
+      "durationSeconds": 0.7,
+      "promptInfluence": 0.65,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 14
+    }
+  }
+}

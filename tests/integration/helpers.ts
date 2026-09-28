@@ -7,7 +7,7 @@ import type { World } from '../../src/sim/types';
 
 declare global {
   interface Window {
-    __lisiere: { world: World; tick: number; backend: string; projectCell(x: number, z: number): { x: number; y: number }; projectPawn(id:number):{x:number;y:number;radius:number;depth:number}|undefined };
+    __lisiere: { world: World; tick: number; backend: string; audio: { loadedCount: number; availableSounds: number }; projectCell(x: number, z: number): { x: number; y: number }; projectPawn(id:number):{x:number;y:number;radius:number;depth:number}|undefined };
   }
 }
 

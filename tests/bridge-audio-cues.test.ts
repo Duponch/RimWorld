@@ -1,0 +1,193 @@
+import { afterEach, expect, test, vi } from 'vitest';
+import { AudioCueRecorder } from '../src/bridge/audio-cues.ts';
+import { SnapshotEncoder } from '../src/bridge/snapshots.ts';
+import { createWorld } from '../src/sim/index.ts';
+import type { Job, Pawn, World } from '../src/sim/types.ts';
+
+afterEach(() => { vi.unstubAllGlobals(); vi.resetModules(); });
+
+test('captures confirmed work, shot and melee once without playing loaded history', () => {
+  const world = createWorld(152, 32, 32);
+  const pawn = world.pawns[0]!;
+  const mine = { id: world.nextId++, kind: 'mine' as const, x: pawn.x + 1, z: pawn.z,
+    orientation: 0 as const, footprint: 'standard' as const, status: 'active' as const,
+    reservedBy: pawn.id, progress: 0, escrow: { wood: 0, food: 0 } };
+  world.jobs.push(mine);
+  pawn.jobId = mine.id;
+  pawn.state = 'working';
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  world.tick++;
+  mine.progress++;
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ kind: 'mining.hit', tick: world.tick, x: mine.x, z: mine.z }]);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  world.tick++;
+  mine.progress++;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]); // bounded work cadence
+  world.tick += 2;
+  mine.progress++;
+  recorder.capture(world);
+  expect(recorder.drain()).toHaveLength(1);
+
+  const shot = { id: world.nextId++, flight: { origin: { x: pawn.x + .5, z: pawn.z + .5 } } } as World['projectiles'] extends (infer P)[] | undefined ? P : never;
+  world.projectiles = [shot];
+  pawn.melee = { order: null, strike: { targetId: 999, atCore: world.tick * 10,
+    untilCore: world.tick * 10 + 80, tool: 'fist' as never, outcome: 'hit' } };
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([
+    { kind: 'weapon.melee', tick: world.tick, x: pawn.x, z: pawn.z },
+    { kind: 'weapon.gunshot', tick: world.tick, x: pawn.x + .5, z: pawn.z + .5 },
+  ]);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  recorder.reset();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+});
+
+test('delivers cues only after accepted snapshot adoption', async () => {
+  class FakeWorker {
+    onmessage?: (event: MessageEvent<unknown>) => void;
+    onerror?: (event: ErrorEvent) => void;
+    postMessage = vi.fn();
+    terminate = vi.fn();
+  }
+  vi.stubGlobal('Worker', FakeWorker);
+  const { SimulationClient } = await import('../src/bridge/SimulationClient.ts');
+  const client = new SimulationClient();
+  const worker = (client as unknown as { worker: FakeWorker }).worker;
+  const world = createWorld(73, 32, 32);
+  const encoder = new SnapshotEncoder();
+  const order: string[] = [];
+  client.onSnapshot = () => { order.push('snapshot'); };
+  client.onAudioCues = (cues, _world, replaced) => { order.push(replaced ? 'reset' : cues[0]!.kind); };
+  const packet = encoder.encode(world, 0, 1);
+  worker.onmessage!({ data: packet } as MessageEvent<unknown>);
+  worker.onmessage!({ data: packet } as MessageEvent<unknown>); // stale revision
+  world.tick++;
+  const next = encoder.encode(world, 0, 1);
+  next.audioCues = [{ id: 'test:1', tick: world.tick, kind: 'mining.hit', x: 1, z: 2 }];
+  worker.onmessage!({ data: next } as MessageEvent<unknown>);
+  expect(order).toEqual(['snapshot', 'reset', 'snapshot', 'mining.hit']);
+  client.dispose();
+});
+
+test('caps crowded ticks and unpublished cues', () => {
+  const world = createWorld(812, 32, 32);
+  const initialTick = world.tick;
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  for (let tick = 1; tick <= 6; tick++) {
+    world.tick++;
+    world.projectiles = Array.from({ length: 50 }, (_, index) => ({
+      id: tick * 100 + index,
+      flight: { origin: { x: index, z: tick } },
+    })) as World['projectiles'];
+    recorder.capture(world);
+  }
+  const cues = recorder.drain();
+  expect(cues).toHaveLength(128);
+  expect(cues.filter(cue => cue.tick === initialTick + 1)).toHaveLength(32);
+  expect(recorder.drain()).toEqual([]);
+});
+
+test('uses confirmed shooting cooldown when a short projectile is already gone', () => {
+  const world = createWorld(827, 32, 32), pawn = world.pawns[0]!;
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  world.tick++;
+  const emittedAtCore = world.tick * 10;
+  pawn.shooting = { order: null, stance: { phase: 'cooldown', startedAtCore: emittedAtCore,
+    endsAtCore: emittedAtCore + 96 } };
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ id: `shot:${pawn.id}:${emittedAtCore}`,
+    kind: 'weapon.gunshot', tick: world.tick, x: pawn.x + .5, z: pawn.z + .5 }]);
+  type Projectile = NonNullable<World['projectiles']>[number];
+  const projectile = { id: world.nextId++, emittedAtCore,
+    flight: { launcherKey: `pawn:${pawn.id}`, origin: { x: pawn.x + .5, z: pawn.z + .5 } } } as Projectile;
+  world.projectiles = [projectile];
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]); // same emission cannot sound twice
+  world.tick++;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+});
+
+test.each([
+  ['simple-meal', 'campfire', 'cooking.work'],
+  ['butcher-creature', 'butcher-table', 'butchering.work'],
+  ['stone-blocks', 'stonecutter', 'crafting.work'],
+  ['make-revolver', 'machining-table', 'crafting.work'],
+  ['make-component', 'fabrication-bench', 'crafting.work'],
+  ['small-sculpture', 'art-bench', 'crafting.work'],
+  ['shirt', 'tailor-bench', 'tailoring.work'],
+  ['tribalwear', 'crafting-spot', 'tailoring.work'],
+] as const)('captures %s production progress at %s as %s', (recipe, stationKind, kind) => {
+  const world = createWorld(296, 32, 32), pawn = world.pawns[0]!;
+  const station = { id: world.nextId++, kind: stationKind, x: pawn.x + 1, z: pawn.z,
+    orientation: 0 as const, footprint: 'standard' as const };
+  world.structures.push(station);
+  const task: NonNullable<Pawn['cooking']> = {
+    ...(recipe === 'simple-meal' ? {} : { recipe }), stationId: station.id, billId: world.nextId++, spot: { x: pawn.x, z: pawn.z },
+    actionCell: { x: station.x, z: station.z }, phase: 'gather', ingredients: [],
+    progress: 0, productId: null, storageId: null,
+  };
+  pawn.cooking = task;
+  pawn.state = 'moving';
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  world.tick++;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  pawn.state = 'working'; task.phase = 'work'; task.progress = 10000;
+  world.tick++;
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ kind, x: station.x, z: station.z, tick: world.tick }]);
+  task.progress += 10000;
+  world.tick++;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]); // workshop cadence
+  pawn.state = 'moving'; task.progress += 10000;
+  world.tick += 8;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]); // no travel sound even if progress is malformed
+});
+
+test('construction and research require persisted progress and an active worker', () => {
+  const world = createWorld(297, 32, 32), pawn = world.pawns[0]!;
+  const job: Job = { id: world.nextId++, kind: 'wall', x: pawn.x + 1, z: pawn.z,
+    orientation: 0 as const, footprint: 'standard' as const, status: 'active' as const,
+    reservedBy: pawn.id, progress: 0, escrow: { wood: 0, food: 0 } };
+  world.jobs.push(job);
+  pawn.jobId = job.id;
+  pawn.state = 'moving';
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  world.tick++;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  pawn.state = 'working'; job.workRemainder = 5000;
+  world.tick++;
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ kind: 'construction.hit', x: job.x, z: job.z }]);
+
+  pawn.jobId = null;
+  const station = { id: world.nextId++, kind: 'research-bench' as const, x: pawn.x + 1, z: pawn.z,
+    orientation: 0 as const, footprint: 'standard' as const };
+  world.structures.push(station);
+  pawn.research = { stationId: station.id, spot: { x: pawn.x, z: pawn.z }, worked: 0 };
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  world.tick++;
+  pawn.research.worked++;
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ kind: 'research.work', x: station.x, z: station.z }]);
+  world.tick += 8;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+});
