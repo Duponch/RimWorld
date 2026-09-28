@@ -1,3 +1,4 @@
+import { isRoomDoor } from './door-rules.ts';
 import type { World } from './types.ts';
 
 export interface ThermalRoom {cells:number[];unroofed:number;equalize:number[];door?:boolean;isolatedDoor?:boolean}
@@ -14,9 +15,9 @@ export class ThermalTopologyCache {
   private key='';
   private checks=new Map<number,number>();
   read(world:World):ThermalLayout {
-    const roofs=new Set(world.roofing?.constructed??[]),doors=world.structures.filter(s=>s.kind==='door');
+    const roofs=new Set(world.roofing?.constructed??[]),doors=world.structures.filter(s=>isRoomDoor(s.kind));
     const key=[world.width,world.height,...roofs,'doors',...doors.map(s=>s.id+'@'+s.x+':'+s.z)].join(',');
-    const buildings=new Map(world.structures.filter(s=>s.kind==='wall'||s.kind==='cooler'||s.kind==='door').map(s=>[s.z*world.width+s.x,s.kind==='door'?2:1]));
+    const buildings=new Map(world.structures.filter(s=>s.kind==='wall'||s.kind==='cooler'||isRoomDoor(s.kind)).map(s=>[s.z*world.width+s.x,isRoomDoor(s.kind)?2:1]));
     const kind=(i:number)=>buildings.get(i)??(world.tiles[i]!.terrain==='rock'?1:0);
     if(this.layout&&key===this.key&&[...this.checks].every(([i,k])=>kind(i)===k))return this.layout;
     const checks=new Map<number,number>();

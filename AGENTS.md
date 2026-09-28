@@ -1,5 +1,11 @@
 # Travail sur Lisière
 
+## Portes automatiques V143
+
+- Lire `docs/development/autodoor-v143.md`, `docs/research/autodoor-core-v143.md` et `docs/history/validation-autodoor-v143.md`. Core 1.6.4871 : Autodoors coûte 600 points après Electricity ; bâtiment d'une case avec 25 stuff, 40 aciers fixes, deux composants, 1 100 travaux Core, Construction 6 et 50 W. L'acier comme stuff totalise 65 aciers. Lisière possède déjà l'électricité au départ et convertit les travaux par dix avec facteur/offset matière.
+- Sous courant, l'ouverture prend un quart de la durée manuelle pour tous les matériaux ; bois et acier s'ouvrent dès l'approche confirmée, pierre reste lente au seuil. Sans courant, la porte reste physiquement franchissable à vitesse manuelle ; permission, maintien, traversée engagée, obstruction, pièces, toits, air et tirs restent les contrats des portes existantes. La fraction d'animation est conservée et sa durée de segment persistée lors d'une coupure/reprise. La panne mécanique aléatoire `CompBreakdownable` de Core et le remplacement direct d'un mur ne sont pas livrés.
+- Schéma 143 : valider strictement V141 avant migration neutre, sans porte, recherche, ressource ou progression rétroactive et en rejetant les champs V143 dans V141. `autodoors` est le projet, `autodoor` l'objet. Rendu dans les lots résidents de portes et de voyants, sans objet Three par porte ni calcul métier par image. Les tests ciblés, natifs et limites de mesure sont dans la preuve V143 ; ne pas inférer 240 FPS, débit ×6 ou coût GPU nul de cette intégration.
+
 ## Pigment de sol et transfert local V142
 
 - Lire `docs/development/terrain-upload-v142.md` et `docs/history/validation-terrain-upload-v142.md`. Three 0.186 ignore les `DataTexture.updateRanges` dans le renderer WebGPU et son repli WebGL : `needsUpdate` renvoie l'atlas entier de 16 Mo sur une carte 250². Après le premier upload réel, l'édition d'une seule case garde l'atlas CPU complet mais copie sa marge de 24² pixels au plus par une texture de transit réutilisée et `renderer.copyTextureToTexture` ; ne pas incrémenter la version de l'atlas résident dans ce chemin.

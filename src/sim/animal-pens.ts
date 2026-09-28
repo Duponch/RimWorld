@@ -1,5 +1,6 @@
 import type { AnimalSpeciesId } from './animal-species.ts';
 import { footprintCells } from './definitions.ts';
+import { isPassageDoor } from './door-rules.ts';
 import type { Cell, Structure, World } from './types.ts';
 
 export const PEN_ANIMALS:readonly AnimalSpeciesId[] = Object.freeze(['deer','gazelle','muffalo','dromedary']);
@@ -33,8 +34,8 @@ const terrainPassable=(world:World,i:number):boolean=>{
 };
 const penBarrier=(s:Structure):boolean=>
   s.kind==='wall'||s.kind==='cooler'||s.kind==='fence'
-  ||(s.kind==='door'||s.kind==='fence-gate')&&!(s.door?.holdOpen&&s.door.open);
-const passage=(s:Structure):boolean=>s.kind==='door'||s.kind==='fence-gate';
+  ||isPassageDoor(s.kind)&&!(s.door?.holdOpen&&s.door.open);
+const passage=(s:Structure):boolean=>isPassageDoor(s.kind);
 
 /** Mutators call this when a barrier changes within a tick; idle ticks reuse
  * the previously flooded regions after one cheap structural signature. */

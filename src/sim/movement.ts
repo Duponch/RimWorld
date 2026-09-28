@@ -3,9 +3,9 @@ import { weatherMoveFactor } from './weather-exposure.ts';
 import { isStunned } from './stun.ts';
 import { actorStepAllowed } from './combat-navigation.ts';
 import { syncPatient,carrierOf } from './rescue-state.ts';
-import { readyDoorEntry } from './doors.ts';
+import { approachAutodoor, readyDoorEntry } from './doors.ts';
 import { medicallyStopped,pawnBody } from './health-rules.ts';
-import { doorAt, doorOpenTicks as importDoorDuration } from './door-rules.ts';
+import { doorAt, doorMotionTicks as importDoorDuration } from './door-rules.ts';
 import type { Cell, Pawn, World } from './types.ts';
 import { furnitureDelay } from './furniture-travel.ts';
 import { LightEnvironmentCache, type LightReader } from './light-environment.ts';
@@ -34,5 +34,6 @@ export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReade
   }
   pawn.motion=motion;
   pawn.x=next.x; pawn.z=next.z; pawn.moveCooldown=Math.max(0,pawn.motion.end-world.tick);
+  approachAutodoor(world,pawn,next);
   syncPatient(world,pawn);return true;
 }

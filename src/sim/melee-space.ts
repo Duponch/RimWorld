@@ -1,4 +1,5 @@
 import { blockedCells,inBounds,reachableCells,routeToCell,routeCost } from './pathfinding.ts';
+import { isRoomDoor } from './door-rules.ts';
 import { captureStandability } from './furniture-travel.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import type { Cell,Pawn,World } from './types.ts';
@@ -8,7 +9,7 @@ import type { Cell,Pawn,World } from './types.ts';
 export function meleeContact(world:World,a:Cell,b:Cell,blocked=blockedCells(world,true)):boolean {
   const dx=Math.abs(a.x-b.x),dz=Math.abs(a.z-b.z);if(dx>1||dz>1)return false;
   if(!dx||!dz)return true;
-  const free=(x:number,z:number)=>!blocked[z*world.width+x]&&!world.structures.some(s=>s.kind==='door'&&s.x===x&&s.z===z);
+  const free=(x:number,z:number)=>!blocked[z*world.width+x]&&!world.structures.some(s=>isRoomDoor(s.kind)&&s.x===x&&s.z===z);
   return free(a.x,b.z)||free(b.x,a.z);
 }
 export function meleePlaces(world:World,pawn:Pawn,target:Cell,claimed:ReadonlySet<number>=new Set()):Cell[] {

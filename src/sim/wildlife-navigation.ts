@@ -4,7 +4,7 @@ import { routeToCell,hasReachableCell,inBounds } from './pathfinding.ts';
 import { jobBlocksTransit } from './construction-rules.ts';
 import { footprintCells } from './definitions.ts';
 import { captureStandability,navigationCosts,furnitureDelay } from './furniture-travel.ts';
-import { doorCorners,doorOpenness } from './door-rules.ts';
+import { doorCorners,doorOpenness,isPassageDoor } from './door-rules.ts';
 import { WeightedSearch } from './weighted-search.ts';
 import { scaleNavigationCosts } from './navigation-costs.ts';
 import type { WildAnimal } from './wildlife-state.ts';
@@ -18,7 +18,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
   const add=(s:Parameters<typeof footprintCells>[0])=>{for(const c of footprintCells(s))solids.add(c.z*width+c.x);};
   for(const s of world.structures) {
     if(s.kind==='wall'||s.kind==='cooler'||s.kind==='fence'&&!fencePassable||world.schemaVersion<22&&s.kind==='table')add(s);
-    if((s.kind==='door'||s.kind==='fence-gate')&&(s.door?.forbidden||!allowClosedGate&&(!s.door?.open||doorOpenness(s,world.tick)<1-1e-9)))solids.add(s.z*width+s.x);
+    if(isPassageDoor(s.kind)&&(s.door?.forbidden||!allowClosedGate&&(!s.door?.open||doorOpenness(s,world.tick)<1-1e-9)))solids.add(s.z*width+s.x);
   }
   for(const j of world.jobs)if(jobBlocksTransit(world,j))add(j);
   const blockedAt=(index:number)=>solids.has(index)||world.tiles[index]?.terrain==='water'||world.tiles[index]?.terrain==='rock';

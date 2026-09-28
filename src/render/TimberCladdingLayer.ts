@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 import { texture } from 'three/tsl';
 import type { World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
-import { doorOrientations } from '../sim/door-rules';
+import { doorOrientations, isRoomDoor } from '../sim/door-rules';
 import { doorLeafTop } from './door-parts';
 import { instancedPatternUv } from './texture-variation';
 import { woodFiberDetail } from './stylized-surfaces';
@@ -166,7 +166,7 @@ export class TimberCladdingLayer {
   }
   update(world:World,cutaway:boolean,reset=false):void {
     const walls=world.structures.filter(s=>s.kind==='wall'&&s.material==='wood');
-    const doors=walls.length?world.structures.filter(s=>s.kind==='door'):[];
+    const doors=walls.length?world.structures.filter(s=>isRoomDoor(s.kind)):[];
     const axes=doors.length?doorOrientations(world):new Map<number,0|1>();
     const key=`${cutaway}|${walls.map(s=>`${s.id}:${s.x}:${s.z}`).join('|')}|${doors.map(s=>`${s.id}:${s.x}:${s.z}:${axes.get(s.z*world.width+s.x)??0}`).join('|')}`;
     if(!reset&&key===this.key)return;

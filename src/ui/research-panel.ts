@@ -10,6 +10,7 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'machining',prefix:'machining',title:'Usinage',cost:1000,detail:'Atelier d’usinage électrique, 150 acier + 5 composants. Construction 4.',progress:w=>w.research?.machining,x:624,y:20},
   {id:'gunsmithing',prefix:'gunsmithing',title:'Armurerie',cost:500,detail:'Revolver (Artisanat 3) et fusil à verrou (Artisanat 5).',progress:w=>w.research?.gunsmithing,x:824,y:20},
   {id:'complex-clothing',prefix:'research',title:'Vêtements complexes',cost:600,detail:'Débloque l’établi manuel de tailleur et la chemise en tissu.',progress:w=>w.research,x:224,y:154},
+  {id:'autodoors',prefix:'autodoors',title:'Portes automatiques',cost:600,detail:'Porte à ouverture rapide sous courant : 25 matériaux, 40 acier, 2 composants ; Construction 6 et 50 W. Sans courant, elle fonctionne comme une porte ordinaire.',progress:w=>w.research?.autodoors,x:424,y:154},
   {id:'plate-armor',prefix:'plate-armor',title:'Armure de plaques',cost:600,detail:'Préalable du gilet pare-balles. La fabrication de plaques reste hors périmètre.',progress:w=>w.research?.plateArmor,x:624,y:154},
   {id:'flak-armor',prefix:'flak-armor',title:'Armure pare-balles',cost:1200,detail:'Gilet à l’atelier d’usinage, Artisanat 4.',progress:w=>w.research?.flakArmor,x:824,y:154},
   {id:'batteries',prefix:'battery',title:'Batteries',cost:400,detail:'Stocker le surplus du réseau. Batterie : 70 acier + 2 composants.',progress:w=>w.research?.batteries,x:24,y:298},
@@ -30,7 +31,7 @@ export const researchLinks: readonly (readonly [ResearchProject, ResearchProject
 const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const prerequisites=new Map<ResearchProject,string[]>([
   ['machining',['Forge']],['gunsmithing',['Usinage']],['plate-armor',['Forge','Vêtements complexes']],['flak-armor',['Usinage','Armure de plaques']],
-  ['microelectronics',['Électricité (acquise au départ)']],['multi-analyzer',['Microélectronique','Usinage']],['fabrication',['Multi-analyseur']],['advanced-fabrication',['Fabrication']],
+  ['autodoors',['Électricité (acquise au départ)']],['microelectronics',['Électricité (acquise au départ)']],['multi-analyzer',['Microélectronique','Usinage']],['fabrication',['Multi-analyseur']],['advanced-fabrication',['Fabrication']],
 ]);
 function stationIssue(world:World,project:ResearchProject):string|undefined {
   if(world.structures.some(s=>researchStationUsable(world,s,project)))return undefined;

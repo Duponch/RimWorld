@@ -1,3 +1,4 @@
+import { isRoomDoor } from './door-rules.ts';
 import type { World } from './types';
 
 export interface RoomSpace {
@@ -54,7 +55,7 @@ export class RoomTopologyCache {
     // at each read. Barrier order is captured because later objects win.
     let inputChanged = resized, count = 0;
     for (const building of world.structures) {
-      const value = building.kind === 'wall' || building.kind === 'cooler' ? 1 : building.kind === 'door' ? 2 : 0;
+      const value = building.kind === 'wall' || building.kind === 'cooler' ? 1 : isRoomDoor(building.kind) ? 2 : 0;
       if (!value) continue;
       const code = (building.z * width + building.x) * 3 + value;
       if (this.barriers[count] !== code) { this.barriers[count] = code; inputChanged = true; }

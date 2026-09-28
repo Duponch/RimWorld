@@ -38,6 +38,7 @@ export const OCCUPANCY = Object.freeze({
   'standing-lamp':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'passive-cooler': Object.freeze({clearItems:true,items:false,zones:true,store:false}),
   door: Object.freeze({clearItems:false,items:true,zones:true,store:true}),
+  autodoor: Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   stonecutter: Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   wall: Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   bed: Object.freeze({clearItems:true,items:false,zones:false,store:false}),

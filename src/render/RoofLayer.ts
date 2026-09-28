@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { isRoomDoor } from '../sim/door-rules';
 import type { World } from '../sim/types';
 import type { BoxBatches } from './BoxBatches';
 import { WORLD_SCALE } from '../world/scale';
@@ -14,7 +15,7 @@ export function roofSurfaceCells(world: World): RoofCell[] {
   const built = new Set(world.roofing?.constructed ?? []), cells = new Set(built);
   if (!built.size) return [];
   for (const s of world.structures) {
-    if (s.kind !== 'wall' && s.kind !== 'door') continue;
+    if (s.kind !== 'wall' && !isRoomDoor(s.kind)) continue;
     let near = false;
     for (let dz = -1; dz <= 1 && !near; dz++) for (let dx = -1; dx <= 1; dx++) {
       const x = s.x + dx, z = s.z + dz;
@@ -128,7 +129,7 @@ export class RoofLayer {
   }
   update(world: World, batches: BoxBatches, cutaway = false, reset = false): void {
     const state = world.roofing;
-    const supports = world.structures.filter(s => s.kind === 'wall' || s.kind === 'door')
+    const supports = world.structures.filter(s => s.kind === 'wall' || isRoomDoor(s.kind))
       .map(s => `${s.kind}:${s.x}:${s.z}`).join(',');
     const key = `${world.width}|${cutaway}|${state?.constructed.join(',')}|${supports}`;
     if (reset || this.surfaceKey !== key) {

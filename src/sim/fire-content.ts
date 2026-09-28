@@ -2,6 +2,7 @@ import { footprintCells } from './definitions.ts';
 import { structureFlammability,pileFlammability,resourceFlammability } from './thing-damage-rules.ts';
 import { firePosition } from './fire-rules.ts';
 import { FLOOR_DEFINITIONS } from './flooring.ts';
+import { isRoomDoor } from './door-rules.ts';
 import type { Cell,MaterialPile,Resource,Structure,World } from './types.ts';
 export type FireTarget={kind:'structure';value:Structure}|{kind:'pile';value:MaterialPile}|{kind:'resource';value:Resource};
 const index=(world:World,c:Cell)=>c.z*world.width+c.x;
@@ -15,7 +16,7 @@ export class FireContent {
     const add=(c:Cell,t:FireTarget)=>{const key=index(world,c),list=this.contents.get(key);if(list)list.push(t);else this.contents.set(key,[t]);};
     for(const r of world.resources)if(r.kind!=='rock')add(r,{kind:'resource',value:r});
     for(const p of world.piles)if(p.owner.type==='ground')add(p.owner,{kind:'pile',value:p});
-    for(const s of world.structures)for(const c of footprintCells(s)){add(c,{kind:'structure',value:s});if(['wall','door','cooler'].includes(s.kind))this.solids.add(index(world,c));}
+    for(const s of world.structures)for(const c of footprintCells(s)){add(c,{kind:'structure',value:s});if(s.kind==='wall'||isRoomDoor(s.kind)||s.kind==='cooler')this.solids.add(index(world,c));}
     for(const p of world.packed)if(p.owner.type==='ground')add(p.owner,{kind:'structure',value:p.building});
   }
   inside(c:Cell):boolean{return Number.isInteger(c.x)&&Number.isInteger(c.z)&&c.x>=0&&c.z>=0&&c.x<this.world.width&&c.z<this.world.height;}
@@ -25,7 +26,7 @@ export class FireContent {
     if(!this.inside(c)||['water','rock'].includes(this.world.tiles[index(this.world,c)]!.terrain))return [];
     const list=this.contents.get(index(this.world,c))??[];
     // Full edifices shield other content, including the separate conduit layer.
-    const full=list.find(t=>t.kind==='structure'&&['wall','door','cooler'].includes(t.value.kind));
+    const full=list.find(t=>t.kind==='structure'&&(t.value.kind==='wall'||isRoomDoor(t.value.kind)||t.value.kind==='cooler'));
     return (full?[full]:list).filter(t=>targetFlammability(t)>=.01);
   }
   chance(c:Cell):number {

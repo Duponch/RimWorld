@@ -4,6 +4,7 @@ import { carrierOf } from './rescue-state.ts';
 import { clearShotSegment,type ShotGrid } from './combat-space.ts';
 import { STRUCTURE_SHOT_FILL } from './combat-content.ts';
 import { footprintCells } from './definitions.ts';
+import { isRoomDoor } from './door-rules.ts';
 import { learnSkill } from './skills.ts';
 import { canStartSocialFight,finishSocialFight,startSocialFight } from './social-fight.ts';
 import { addSocialMemory,deepTalkWeight,expireSocialMemories,opinionOf,SOCIAL_LABELS,socialCompatibility,socialImpact,socialRandom,socialSeed,type SocialKind,type SocialState } from './social-state.ts';
@@ -17,7 +18,7 @@ export function canSocialize(world:World,pawn:Pawn,initiate:boolean,carried?:Rea
 /** Full obstacles only: no combat lean, no navigation and no scan of map vegetation.
  * Built lazily for this synchronous interaction pass, never retained after mutation. */
 function socialSight(world:World):ShotGrid {
-  const blocked=new Set<number>();for(const s of world.structures)if(STRUCTURE_SHOT_FILL[s.kind]>.99&&!(s.kind==='door'&&s.door?.open))for(const c of footprintCells(s))blocked.add(c.z*world.width+c.x);
+  const blocked=new Set<number>();for(const s of world.structures)if(STRUCTURE_SHOT_FILL[s.kind]>.99&&!(isRoomDoor(s.kind)&&s.door?.open))for(const c of footprintCells(s))blocked.add(c.z*world.width+c.x);
   return {width:world.width,height:world.height,coverAt:()=>undefined,blocksSight:(x,z)=>world.tiles[z*world.width+x]?.terrain==='rock'||blocked.has(z*world.width+x)};
 }
 export function goodSocialPosition(world:World,a:Pawn,b:Pawn,grid:ShotGrid=socialSight(world)):boolean {

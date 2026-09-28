@@ -1,6 +1,6 @@
 import { footprintCells } from './definitions.ts';
 import { isColonist } from './affiliation.ts';
-import { doorOpenness } from './door-rules.ts';
+import { doorOpenness,isRoomDoor } from './door-rules.ts';
 import { routeCost,routeToCell,type Reachability } from './pathfinding.ts';
 import { RoomTopologyCache,type RoomSpace,type RoomTopology } from './room-topology.ts';
 import type { Cell,Pawn,Structure,World } from './types.ts';
@@ -32,7 +32,7 @@ export function capturePrisonTopology(world:World):RoomTopology {
 /** Core FreePassage distinguishes a held/blocked door from an ordinary short
  * opening. The local physical leaf must also be fully open before entry. */
 export function prisonDoorPassable(world:World,door:Structure):boolean {
-  if(door.kind!=='door'||!door.door?.open||doorOpenness(door,world.tick)<1-1e-9)return false;
+  if(!isRoomDoor(door.kind)||!door.door?.open||doorOpenness(door,world.tick)<1-1e-9)return false;
   if(door.door.holdOpen)return true;
   const blocks=(actor:Cell&{motion?:Pawn['motion']})=>same(actor,door)||!!actor.motion&&actor.motion.end>world.tick&&same(actor.motion.from,door);
   // Core WillCloseSoon separately checks friendly pawns able to open the
@@ -69,7 +69,7 @@ export function prisonerAllowedCell(world:World,pawn:Pawn,cell:Cell,topology?:Ro
   if(!inside(world,cell)||['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain))return false;
   const map=topology??capturePrisonTopology(world),target=map.at(cell.x,cell.z);
   if(pawn.prisoner.escape){
-    if(target?.kind==='doorway')return world.structures.some(s=>s.kind==='door'&&same(s,cell)&&prisonDoorPassable(world,s));
+    if(target?.kind==='doorway')return world.structures.some(s=>isRoomDoor(s.kind)&&same(s,cell)&&prisonDoorPassable(world,s));
     return target?.kind==='space';
   }
   const current=map.at(pawn.x,pawn.z);
@@ -78,7 +78,7 @@ export function prisonerAllowedCell(world:World,pawn:Pawn,cell:Cell,topology?:Ro
 
 function escapeGoals(world:World,pawn:Pawn,topology:RoomTopology):ReadonlySet<number>|undefined {
   const cache=cacheFor(world);
-  const doors=world.structures.filter(s=>s.kind==='door'&&prisonDoorPassable(world,s)).map(s=>s.z*world.width+s.x).sort((a,b)=>a-b),doorKey=doors.join(',');
+  const doors=world.structures.filter(s=>isRoomDoor(s.kind)&&prisonDoorPassable(world,s)).map(s=>s.z*world.width+s.x).sort((a,b)=>a-b),doorKey=doors.join(',');
   const passable=new Set(doors);
   const nodeAt=(x:number,z:number):number|undefined=>{
     const cell=topology.at(x,z);return cell?.kind==='space'?cell.id:cell?.kind==='doorway'&&passable.has(z*world.width+x)?-(z*world.width+x)-1:undefined;

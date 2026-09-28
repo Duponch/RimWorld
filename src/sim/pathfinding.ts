@@ -1,5 +1,5 @@
 import { addActorObstacles,actorStepAllowed,openHostileDoor } from './combat-navigation.ts';
-import { doorCorners } from './door-rules.ts';
+import { doorCorners,isPassageDoor } from './door-rules.ts';
 import { WeightedSearch } from './weighted-search.ts';
 import { canStandAt, navigationCosts } from './furniture-travel.ts';
 import { jobBlocksTransit } from './construction-rules.ts';
@@ -22,7 +22,7 @@ export function blockedCells(world: World, physical=false): Uint8Array {
     if (terrain === 'water' || terrain === 'rock') blocked[i] = 1;
   }
   for (const structure of world.structures) {
-    if (!physical&&(structure.kind==='door'||structure.kind==='fence-gate')&&structure.door?.forbidden)blocked[cellIndex(world,structure.x,structure.z)]=1;
+    if (!physical&&isPassageDoor(structure.kind)&&structure.door?.forbidden)blocked[cellIndex(world,structure.x,structure.z)]=1;
     if ((structure.kind === 'wall'||structure.kind==='cooler') || world.schemaVersion<22&&structure.kind === 'table') for (const cell of footprintCells(structure)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
   }
   for (const job of world.jobs) {
@@ -44,7 +44,7 @@ export function canStep(world:World,from:Cell,to:Cell,blocked:Uint8Array,occupie
   const dx=to.x-from.x,dz=to.z-from.z;
   if(!inBounds(world,to.x,to.z)||Math.max(Math.abs(dx),Math.abs(dz))!==1) return false;
   const free=(x:number,z:number)=>(!blocked[cellIndex(world,x,z)]||openHostileDoor(world,from,x,z))&&!occupied.has(cellIndex(world,x,z));
-  return actorStepAllowed(world,from,to) && free(to.x,to.z) && (!dx||!dz||(free(from.x+dx,from.z)&&free(from.x,from.z+dz)&&!world.structures.some(s=>(s.kind==='door'||s.kind==='fence-gate')&&(s.x===from.x+dx&&s.z===from.z||s.x===from.x&&s.z===from.z+dz))));
+  return actorStepAllowed(world,from,to) && free(to.x,to.z) && (!dx||!dz||(free(from.x+dx,from.z)&&free(from.x,from.z+dz)&&!world.structures.some(s=>isPassageDoor(s.kind)&&(s.x===from.x+dx&&s.z===from.z||s.x===from.x&&s.z===from.z+dz))));
 }
 
 /** Occupy a destination cell (beds), unlike interaction from a neighbouring cell. */

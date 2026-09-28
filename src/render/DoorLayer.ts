@@ -2,13 +2,14 @@ import * as THREE from 'three/webgpu';
 import { Fn, attribute, mat4, normalLocal, positionLocal, transformNormal, uniform, clamp, select, texture, uv } from 'three/tsl';
 import { BoxMesh } from './BoxMesh';
 import { material } from './primitives';
-import { doorOrientations, doorOpenTicks, type DoorState } from '../sim/door-rules';
+import { doorOrientations, doorMotionTicks, isRoomDoor, type DoorState } from '../sim/door-rules';
 import type { World } from '../sim/types';
 import { DOOR_LEAF_BOTTOM, doorLeafColor, doorLeafTop } from './door-parts';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { penBoundaryAxes } from './pen-parts';
 
 const EMPTY_AXES:ReadonlyMap<number,0|1>=new Map();
+const AUTODOOR_TINT=new THREE.Color(0xa6b7b4);
 
 /** One retained leaf batch. TSL shares the pawn timeline; state uploads happen
  * on transitions, never as per-frame CPU transforms. Two segments preserve a
@@ -54,10 +55,10 @@ export class DoorLayer {
   }
   update(world:World,cutaway:boolean,reset=false):void {
     if(reset){this.history.clear();this.key='';}
-    const doors=world.structures.filter(s=>s.kind==='door'||s.kind==='fence-gate');
-    const axes=doors.some(s=>s.kind==='door')?doorOrientations(world):EMPTY_AXES;
+    const doors=world.structures.filter(s=>isRoomDoor(s.kind)||s.kind==='fence-gate');
+    const axes=doors.some(s=>isRoomDoor(s.kind))?doorOrientations(world):EMPTY_AXES;
     const gateAxes=doors.some(s=>s.kind==='fence-gate')?penBoundaryAxes(world):EMPTY_AXES;
-    const key=String(cutaway)+doors.map(s=>`${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${(s.kind==='fence-gate'?gateAxes:axes).get(s.z*world.width+s.x)??0}:${s.door!.changedAt}:${s.door!.open}`).join('|');
+    const key=String(cutaway)+doors.map(s=>`${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${(s.kind==='fence-gate'?gateAxes:axes).get(s.z*world.width+s.x)??0}:${s.door!.changedAt}:${s.door!.from}:${s.door!.open}:${doorMotionTicks(s)}`).join('|');
     if(key===this.key)return;this.key=key;
     const live=new Set(doors.map(s=>s.id));for(const id of this.history.keys())if(!live.has(id))this.history.delete(id);
     const count=doors.length*2;
@@ -66,14 +67,17 @@ export class DoorLayer {
     const object=new THREE.Object3D(),color=new THREE.Color();
     let index=0;
     for(const s of doors) {
-      const d=s.door!,old=this.history.get(s.id),changed=!old||old.current.changedAt!==d.changedAt||old.current.open!==d.open;
+      const d=s.door!,old=this.history.get(s.id),changed=!old||old.current.changedAt!==d.changedAt||old.current.from!==d.from||old.current.open!==d.open||doorMotionTicks({...s,door:old.current})!==doorMotionTicks(s);
       const pair=changed?{current:{...d},previous:old?.current??{...d}}:old!;this.history.set(s.id,pair);
       const gate=s.kind==='fence-gate',leafTop=gate?.94:doorLeafTop(cutaway),leafBottom=gate?.08:DOOR_LEAF_BOTTOM;
-      const duration=doorOpenTicks(s),angle=((gate?gateAxes:axes).get(s.z*world.width+s.x)??0)*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle);
+      const angle=((gate?gateAxes:axes).get(s.z*world.width+s.x)??0)*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle);
       for(const side of [-1,1]) {
         object.position.set(s.x+side*.215*cos,(leafTop+leafBottom)/2,s.z-side*.215*sin);object.rotation.set(0,angle,0);object.scale.set(.42,leafTop-leafBottom,gate?.085:.14);object.updateMatrix();
-        this.mesh.setMatrixAt(index,object.matrix);this.mesh.setColorAt(index,color.setHex(doorLeafColor(s.material)));
-        for(const [attribute,state] of [[current,pair.current],[previous,pair.previous]] as const)attribute.setXYZW(index,state.changedAt,state.from,(state.open?1:-1)/duration,0);
+        this.mesh.setMatrixAt(index,object.matrix);
+        color.setHex(doorLeafColor(s.material));
+        if(s.kind==='autodoor')color.lerp(AUTODOOR_TINT,.24);
+        this.mesh.setColorAt(index,color);
+        for(const [attribute,state] of [[current,pair.current],[previous,pair.previous]] as const)attribute.setXYZW(index,state.changedAt,state.from,(state.open?1:-1)/doorMotionTicks({...s,door:state}),0);
         shift.setXYZ(index,side*.45*cos,0,-side*.45*sin);index++;
       }
     }

@@ -1,3 +1,4 @@
+import { isRoomDoor } from './door-rules.ts';
 import type { Job, World } from './types.ts';
 
 /** Constructed roofs only. Natural thin/thick roofs are distinct future data. */
@@ -37,7 +38,7 @@ export class RoofContext {
     if(this.supportCells)return this.supportCells;
     const world=this.world,cells=this.supportCells=new Uint8Array(world.tiles.length);
     for(let i=0;i<world.tiles.length;i++)if(world.tiles[i]!.terrain==='rock')cells[i]=1;
-    for(const s of world.structures)if(s.kind==='wall'||s.kind==='door')cells[roofIndex(world,s)]=1;
+    for(const s of world.structures)if(s.kind==='wall'||isRoomDoor(s.kind))cells[roofIndex(world,s)]=1;
     return cells;
   }
   /** Core's 6.9-radius flood through roof cells, with the root assumed roofed.

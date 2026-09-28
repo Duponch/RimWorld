@@ -41,6 +41,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id: 'deconstruct', title: 'Déconstruire', hint: 'Retirer un bâtiment par un travail de Construction. Environ la moitié des matériaux récupérée ; aucun remboursement pour le feu de camp.', key: '', category: 'orders' },
   { id: 'cancel', title: 'Annuler', hint: 'Cliquer ou tracer un rectangle pour retirer les ordres. Les matériaux restent sur place.', key: 'X', category: 'orders' },
   { id:'door',title:'Porte',hint:'orientation automatique · ouverture au passage · choisir le matériau',key:'',category:'structure' },
+  { id:'autodoor',title:'Porte automatique',hint:'Construction 6 · recherche Portes automatiques · 50 W · passage rapide sous courant, porte ordinaire sans courant',key:'',category:'structure' },
   { id: 'wall', title: 'Mur', hint: 'une case libre · mur de 2,80 m', key: 'B', category: 'structure' },
   { id: 'fence', title: 'Clôture', hint: '1 matériau par case · limite physique pour les herbivores errants', key: '', category: 'structure' },
   { id: 'fence-gate', title: 'Portillon', hint: '25 matériaux · accès nécessaire pour conduire les animaux dans un enclos', key: '', category: 'structure' },

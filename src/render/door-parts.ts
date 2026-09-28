@@ -1,4 +1,4 @@
-import { doorOrientations } from '../sim/door-rules';
+import { doorOrientations, isRoomDoor } from '../sim/door-rules';
 import type { World } from '../sim/types';
 import type { Placement } from './primitives';
 import { buildingMaterialColor } from './building-material-color';
@@ -41,7 +41,7 @@ export function doorParts(world:World,cutaway:boolean):Placement[] {
   const axes=doorOrientations(world);
   const walls=indexWalls(world);
   const woodWalls=new Set([...walls].filter(([,wall])=>wall.material==='wood').map(([key])=>key));
-  for(const s of world.structures)if(s.kind==='door') {
+  for(const s of world.structures)if(isRoomDoor(s.kind)) {
     const axis=axes.get(s.z*world.width+s.x)??0;
     const ry=axis*Math.PI/2;
     const neighboringMaterial=doorSurroundMaterial(world,s.x,s.z,axis,walls);

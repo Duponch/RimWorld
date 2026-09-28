@@ -70,6 +70,7 @@ const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.free
   'standing-lamp': def(0, 300, 'pass-through', {steel:20}),
   'passive-cooler': def(0, 200, 'pass-through', {wood:50}),
   door: def(25, 850, 'standable'),
+  autodoor: def(25, 1100, 'standable', {steel:40,component:2}),
   fence: def(1,70,'standable'),
   'fence-gate': def(25,500,'standable'),
   'pen-marker': def(30,600,'standable'),

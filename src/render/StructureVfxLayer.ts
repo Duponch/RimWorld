@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import { Fn, attribute, cameraPosition, cross, float, positionLocal, sin, smoothstep, uniform, uv, vec2, vec3 } from 'three/tsl';
 import { BATTERY_CAPACITY } from '../sim/power-battery.ts';
 import { isPowerActive } from '../sim/power-rules.ts';
+import { doorOrientations } from '../sim/door-rules.ts';
 import { footprintCells } from '../sim/definitions.ts';
 import type { Structure, World } from '../sim/types.ts';
 import { WORLD_SCALE } from '../world/scale.ts';
@@ -137,9 +138,19 @@ export class StructureVfxLayer {
       }
     };
     const h=WORLD_SCALE.stonecutterHeight;
+    let doorAxes:ReadonlyMap<number,0|1>|undefined;
     for(const s of world.structures){
       const on=isPowerActive(s),work=working.has(s.id);
-      if(s.kind==='machining-table'||s.kind==='fabrication-bench'){
+      if(s.kind==='autodoor'){
+        doorAxes??=doorOrientations(world);
+        const axis=doorAxes.get(s.z*world.width+s.x)??0;
+        tokens.push(`${s.id}:autodoor:${s.x}:${s.z}:${axis}:${on}`);
+        if(on){
+          const ry=axis*Math.PI/2,cs=Math.cos(ry),sn=Math.sin(ry);
+          // Two tiny face indicators share the existing resident status batch.
+          for(const face of [-1,1])glow.push({x:s.x+.455*cs+face*.19*sn,y:.46,z:s.z-.455*sn+face*.19*cs,sx:.055,sy:.045,sz:.018,ry,color:0x7fd9bd});
+        }
+      }else if(s.kind==='machining-table'||s.kind==='fabrication-bench'){
         tokens.push(`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${on}:${work}`);
         if(on){
           const lx=s.kind==='machining-table'?.56:1.9,lz=s.kind==='machining-table'?.05:.55;

@@ -1,5 +1,6 @@
 import { footprintCells } from './definitions.ts';
 import { isRoofed } from './roof-rules.ts';
+import { isRoomDoor } from './door-rules.ts';
 import { reconcileTemperature } from './temperature.ts';
 import { FireContent,targetFlammability,type FireTarget } from './fire-content.ts';
 import { burnPawn,burnAnimal } from './fire-damage.ts';
@@ -154,9 +155,9 @@ export function advanceFires(w:World,weather:{rainRate:number},initialLayout:The
     // A target removal may change supports/regions in this very batch.
     if(w.structures!==oldStructures||w.piles!==oldPiles||w.resources!==oldResources||ownershipChanged())content=undefined;
     if(w.structures!==oldStructures)layout=reconcileTemperature(w);
-    const door=w.structures.some(s=>s.kind==='door'&&same(s,pos));heat(w,pos,f.size*160*(door?.15:1),layout);
+    const door=w.structures.some(s=>isRoomDoor(s.kind)&&same(s,pos));heat(w,pos,f.size*160*(door?.15:1),layout);
     f.size=Math.min(FIRE_MAX_SIZE,f.size+.00055*fuel*150);
-    if(weather.rainRate>.01&&(!isRoofed(w,pos.z*w.width+pos.x)||w.structures.some(s=>(s.kind==='wall'||s.kind==='door')&&same(s,pos)))){fireRandom(state);extinguishFire(w,f.id,10);}
+    if(weather.rainRate>.01&&(!isRoofed(w,pos.z*w.width+pos.x)||w.structures.some(s=>(s.kind==='wall'||isRoomDoor(s.kind))&&same(s,pos)))){fireRandom(state);extinguishFire(w,f.id,10);}
   }
   for(const wick of [...state.batteryWicks])if(wick.endCore<=now){
     state.batteryWicks=state.batteryWicks.filter(w=>w!==wick);const s=w.structures.find(s=>s.id===wick.structureId);if(!s?.battery)continue;

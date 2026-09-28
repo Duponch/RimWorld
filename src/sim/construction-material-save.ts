@@ -9,7 +9,7 @@ export function validateConstructionMaterials(world:World,version:number):string
     if(['fueled-stove','electric-stove','butcher-table'].includes(entity.kind)&&(version<84||entity.material!==(entity.kind==='butcher-table'?'wood':'steel')||entity.footprint!=='standard'))errors.push('Food workstation requires V84 and its fixed material.');
     if(entity.kind==='cooler'&&(version<75||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Cooler requires V75 and steel.');
     if(entity.kind==='passive-cooler'&&(version<40||entity.material!=='wood'||entity.orientation!==0))errors.push('Passive cooler requires V40, wood and fixed orientation.');
-    if(entity.kind==='door'&&(version<34||entity.material===undefined))errors.push('Door requires V34 and an explicit material.');
+    if((entity.kind==='door'||entity.kind==='autodoor')&&(version<(entity.kind==='autodoor'?143:34)||entity.material===undefined))errors.push('Door requires its schema and an explicit material.');
     if((entity.kind==='research-bench'||entity.kind==='tailor-bench')&&(version<73||entity.material===undefined))errors.push('Research and tailoring benches require V73 and explicit materials.');
     if(entity.kind==='machining-table'&&(version<101||entity.material!=='steel'))errors.push('Machining table requires V101 and steel.');
     if(entity.kind==='art-bench'&&(version<104||entity.material!=='wood'&&entity.material!=='steel'))errors.push('Art bench requires V104 and wood or steel.');

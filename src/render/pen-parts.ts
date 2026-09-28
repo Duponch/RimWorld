@@ -3,7 +3,7 @@ import type { Placement } from './primitives';
 import { buildingMaterialColor } from './building-material-color';
 
 type Structure = World['structures'][number];
-const boundary=(s:Structure):boolean=>s.kind==='fence'||s.kind==='fence-gate'||s.kind==='wall'||s.kind==='door';
+const boundary=(s:Structure):boolean=>s.kind==='fence'||s.kind==='fence-gate'||s.kind==='wall'||s.kind==='door'||s.kind==='autodoor';
 
 /** Gate and fence axes follow their neighboring boundary, without changing the
  * persisted orientation or doing work on each rendered frame. */

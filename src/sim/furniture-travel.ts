@@ -1,5 +1,5 @@
 import { fireNavigationCosts,addFireNavigationCosts } from './fire-navigation.ts';
-import { doorWait } from './door-rules.ts';
+import { doorWait,isRoomDoor } from './door-rules.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
 import { frameAt, frameCosts, FRAME_TRAVEL_DELAY } from './construction-costs.ts';
 import { overlayNavigationCosts,type NavigationCostLookup } from './navigation-costs.ts';
@@ -43,6 +43,7 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
   'standing-lamp':{delay:1.4,stand:false,repeat:false},
   'passive-cooler':{delay:3,stand:false,repeat:true},
   door:{delay:0,stand:true,repeat:false},
+  autodoor:{delay:0,stand:true,repeat:false},
   fence:{delay:2,stand:true,repeat:false},
   'fence-gate':{delay:0,stand:true,repeat:false},
   'pen-marker':{delay:0,stand:true,repeat:false},
@@ -113,7 +114,7 @@ export function navigationCosts(world:World):{costs:NavigationCostLookup|undefin
   if(world.schemaVersion>=29)for(const p of world.piles)if((p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component'||world.schemaVersion>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
   // Door wait is added after the terrain/object/material maximum, not compared
   // with it. Preserve present zero entries for fully open doors on bare floors.
-  for(const s of world.structures)if(s.kind==='door') {const i=s.z*world.width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,world.tick)/3*1000));}
+  for(const s of world.structures)if(isRoomDoor(s.kind)) {const i=s.z*world.width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,world.tick)/3*1000));}
   const fire=fireNavigationCosts(world);
   return {costs:addFireNavigationCosts(costs.size||terrainMaximum?overlayNavigationCosts(terrain,terrainMaximum,costs):undefined,fire),repeaters,stops,floors:addFireNavigationCosts(overlayNavigationCosts(terrain,terrainMaximum,floors),fire)!};
 }

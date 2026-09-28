@@ -1,4 +1,5 @@
 import { FRAME_SHOT_FILL,resourceShotFill,STRUCTURE_SHOT_FILL,itemShotFill } from './combat-content.ts';
+import { isRoomDoor } from './door-rules.ts';
 import type { ShotCover,ShotGrid } from './combat-space.ts';
 import { footprintCells } from './definitions.ts';
 import type { Cell,World } from './types.ts';
@@ -37,7 +38,7 @@ export function captureWorldShotGrid(world:World,bounds?:ShotCaptureBounds):Worl
   const footprint=(id:number,fill:number,source:number,cells:readonly Cell[])=>{
     if(fill<.01)return;const slot=append(id,fill,source);for(const c of cells)put(c.x,c.z,slot);
   };
-  for(const s of world.structures)footprint(s.id,STRUCTURE_SHOT_FILL[s.kind],s.kind==='door'&&s.door?.open?5:1,footprintCells(s));
+  for(const s of world.structures)footprint(s.id,STRUCTURE_SHOT_FILL[s.kind],isRoomDoor(s.kind)&&s.door?.open?5:1,footprintCells(s));
   for(const j of world.jobs)if(j.construction==='frame')footprint(j.id,FRAME_SHOT_FILL,2,footprintCells(j));
   for(const r of world.resources)if(valid(r.x,r.z)&&resourceShotFill(r)>0)put(r.x,r.z,append(r.id,resourceShotFill(r),3));
   for(const p of world.piles)if(p.owner.type==='ground'&&valid(p.owner.x,p.owner.z)&&itemShotFill(p.item)>0)put(p.owner.x,p.owner.z,append(p.id,itemShotFill(p.item),4));

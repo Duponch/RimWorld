@@ -1,4 +1,5 @@
 import { RoomTopologyCache } from './room-topology.ts';
+import { isRoomDoor } from './door-rules.ts';
 import type { Cell,World } from './types.ts';
 
 const caches=new WeakMap<World,RoomTopologyCache>();
@@ -7,7 +8,7 @@ const caches=new WeakMap<World,RoomTopologyCache>();
  * Connected air spaces replace the reference's proprietary region partition. */
 export function impactSoundSpace(world:World):(from:Cell,to:Cell)=>boolean {
   let cache=caches.get(world);if(!cache){cache=new RoomTopologyCache();caches.set(world,cache);}
-  const rooms=cache.read(world),open=new Set(world.structures.filter(s=>s.kind==='door'&&s.door?.open).map(s=>s.z*world.width+s.x));
+  const rooms=cache.read(world),open=new Set(world.structures.filter(s=>isRoomDoor(s.kind)&&s.door?.open).map(s=>s.z*world.width+s.x));
   const links=new Map<number,number>();
   const root=(id:number):number=>{let r=id;while(links.has(r))r=links.get(r)!;return r;};
   const node=(c:Cell):number|undefined=>{const r=rooms.at(c.x,c.z);return r?.kind==='space'?r.id:r?.kind==='doorway'&&open.has(c.z*world.width+c.x)?-1-c.z*world.width-c.x:undefined;};
