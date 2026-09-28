@@ -7,7 +7,7 @@ import { validateFires } from '../src/sim/fire-save';
 import { SCHEMA_VERSION } from '../src/sim/types';
 
 function burnedGrass() {
-  const world = createScenarioWorld(42, 32, 'crashlanded', { biome: 'arid-shrubland' });
+  const world = createScenarioWorld(42, 32, 'crashlanded', { biome: 'arid-shrubland', hilliness: 'small-hills' });
   const grass = world.resources.find(resource => resource.species === 'grass')!;
   expect(grass).toBeDefined();
   expect(damageResource(world, grass, resourceMaxHp(grass), 'fire')).toBe(true);

@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:quick": "vitest run tests/test-output.test.ts tests/breakdowns-v144.test.ts tests/breakdown-presentation-v144.test.ts tests/autodoor-world-v143.test.ts tests/autodoor-v143.test.ts tests/advanced-fabrication-v139.test.ts",
+    "test:quick": "vitest run tests/test-output.test.ts tests/fire-flora-save.test.ts tests/visitor-meal-reservation.test.ts tests/roofing.test.ts tests/breakdowns-v144.test.ts tests/breakdown-presentation-v144.test.ts tests/autodoor-world-v143.test.ts tests/autodoor-v143.test.ts tests/advanced-fabrication-v139.test.ts",
     "test:regression": "node scripts/test-regression.mjs",
     "test:campaign": "node scripts/test-campaigns.mjs",
     "test:campaign:diagnostic": "node scripts/test-campaigns.mjs --diagnostic",

@@ -77,4 +77,8 @@ test('Énergie : recherches et réseau construits depuis J24, froid, nuit, coupu
   for(const key of ['batteriesResearch','solarResearch','charged500Wd','nightSupply','frozenFood','switchCut','switchRestored','cableCut','cableRestored'])expect(player.milestones[key],context()).toBeGreaterThan(player.startTick);
   expect(ledger.steelMined,context()).toBeGreaterThan(0);expect(ledger.componentsMined,context()).toBeGreaterThan(0);expect(Object.values(ledger.meals).every(n=>n>0),context()).toBe(true);
   expect(final.stovePowered&&final.coolerPowered,context()).toBe(true);expect(final.coldFood.some(p=>p.rot?.rate===0),context()).toBe(true);
+  const electricBill=w.structures.find(s=>s.kind==='electric-stove')?.bills?.[0];
+  expect(electricBill,context()).toBeDefined();
+  expect(Object.entries(electricBill!.filters).filter(([,allowed])=>allowed).map(([item])=>item).sort(),context())
+    .toEqual(['berries','corn','hare-meat','potato','rice']);
 },1_200_000);

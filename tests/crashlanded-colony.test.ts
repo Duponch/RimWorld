@@ -1,12 +1,41 @@
+import { writeTestFileSync } from './test-output.ts';
 import { isColonist } from '../src/sim/affiliation';
 import { crashlandedDecisions, crashlandedSummary } from './scenarios/crashlanded-player';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { expect, onTestFailed, test } from 'vitest';
-import { applyCommand, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
+import { readFileSync } from 'node:fs';
+import { expect, onTestFailed, test, vi } from 'vitest';
+import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
+import { enableWildlife } from '../src/sim/wildlife.ts';
+import { HARE } from '../src/sim/wildlife-state.ts';
+import { refreshStock } from '../src/sim/materials.ts';
+import { FLORA_DEFINITIONS,weightedSpecies } from '../src/sim/biome-flora.ts';
+import { deconstructionCamp } from './scenarios/deconstruction.ts';
 import { foodAccount, woodAccount } from './scenarios/colony-player.ts';
 import { survivorPlan } from './scenarios/survivor-player.ts';
-import type { Command, Job, Resource, World } from '../src/sim/types.ts';
+import type { Command,Job,Resource,World } from '../src/sim/types.ts';
+
+const gatherProbe=vi.hoisted(()=>({active:false,records:[] as {world:unknown,kind:string,resourceKind:string,nominal:number,quantity:number|null}[]}));
+const grazingProbe=vi.hoisted(()=>({active:false,records:[] as {world:unknown,resourceId:number,resourceKind:string,amount:number,removed:boolean,confirmed:boolean}[]}));
+vi.mock('../src/sim/gathering.ts',async importOriginal=>{
+  const actual=await importOriginal<typeof import('../src/sim/gathering.ts')>();
+  return {...actual,gatherResource:(...args:Parameters<typeof actual.gatherResource>)=>{
+    const nominal=args[1].amount,quantity=actual.gatherResource(...args);
+    if(gatherProbe.active)gatherProbe.records.push({world:args[0],kind:args[2],resourceKind:args[1].kind,nominal,quantity});
+    return quantity;
+  }};
+});
+vi.mock('../src/sim/wildlife-food.ts',async importOriginal=>{
+  const actual=await importOriginal<typeof import('../src/sim/wildlife-food.ts')>();
+  return {...actual,finishAnimalMeal:(...args:Parameters<typeof actual.finishAnimalMeal>)=>{
+    const [world,animal]=args,meal=animal.meal;
+    const plant=meal?.kind==='plant'?world.resources.find(r=>r.id===meal.id):undefined;
+    const eatenBefore=world.wildlife?.eatenPlants??0;
+    const result=actual.finishAnimalMeal(...args);
+    if(grazingProbe.active&&plant)grazingProbe.records.push({world,resourceId:plant.id,resourceKind:plant.kind,amount:plant.amount,
+      removed:!world.resources.includes(plant),confirmed:(world.wildlife?.eatenPlants??0)===eatenBefore+1});
+    return result;
+  }};
+});
 
 type Summary=ReturnType<typeof crashlandedSummary>;
 interface Ledger {
@@ -15,12 +44,73 @@ interface Ledger {
   riceHarvestsByCell:Record<number,number>;mealsByStation:Record<string,number>;
   consumedByItem:Record<string,number>;lastSurvivalMealTick:number;nonRationIngestionsLastWeek:Record<number,number>;
   meals:Record<number,number>;sleep:Record<number,number>;
+  woodYieldLost:number;woodGrazed:number;woodRegrown:number;
 }
 interface Checkpoint {
   protocol:'food-chain-v84';instrumentation:2;seed:number;world:string;initial:{wood:number;food:number;steel:number;component:number};ledger:Ledger;
   milestones:Record<string,number>;journal:{tick:number;reason:string;command:Command}[];observations:Summary[];
 }
 const woodConserved=(w:World)=>woodAccount(w)+(w.fires?.ledger.items.wood??0)+(w.fires?.ledger.woodPotentialLost??0)+((w.fires?.ledger.fuelTicksLost??0)+(w.fires?.ledger.fuelTicksBurned??0))/600;
+
+test('wood loss without a completed chop is still detected by the conservation oracle',()=>{
+  const w=createWorld(42,20,20),tree:Resource={id:w.nextId++,kind:'tree',amount:12,x:10,z:10};
+  w.resources.push(tree);
+  const initial=woodConserved(w),woodYieldLost=0;
+  expect(woodConserved(w)+woodYieldLost).toBe(initial);
+  tree.amount--;
+  expect(woodConserved(w)+woodYieldLost).toBe(initial-1);
+  expect(woodConserved(w)+woodYieldLost).not.toBe(initial);
+});
+test('confirmed chopping and grazing balance physical tree wood, while an unrelated loss remains visible',()=>{
+  const chopped=deconstructionCamp(),pawn=chopped.pawns[0]!;
+  pawn.priorities.gather=2;
+  const tree:Resource={id:chopped.nextId++,kind:'tree',species:'poplar',amount:27,growth:.5,growthTick:chopped.tick,x:12,z:16};
+  chopped.resources.push(tree);
+  const initialChop=woodConserved(chopped);
+  expect(applyCommand(chopped,{type:'designate',kind:'chop',x:tree.x,z:tree.z}).ok).toBe(true);
+  gatherProbe.records.length=0;gatherProbe.active=true;
+  try{for(let i=0;i<1000&&chopped.resources.includes(tree);i++)stepWorld(chopped);}finally{gatherProbe.active=false;}
+  const production=gatherProbe.records.filter(r=>r.world===chopped&&r.kind==='chop'&&r.resourceKind==='tree');
+  expect(production).toHaveLength(1);
+  expect(production[0]).toMatchObject({kind:'chop',resourceKind:'tree',nominal:27});
+  expect(production[0]!.quantity).toBeGreaterThan(0);
+  expect(production[0]!.quantity).toBeLessThan(27);
+  expect(woodConserved(chopped)+27-production[0]!.quantity!).toBe(initialChop);
+
+  const grazed=createWorld(42,16,16);grazed.resources=[];grazed.tiles=grazed.tiles.map(()=>({terrain:'grass'}));grazed.structures=[];grazed.jobs=[];grazed.piles=[];refreshStock(grazed);
+  const poplar:Resource={id:grazed.nextId++,kind:'tree',species:'poplar',amount:27,x:3,z:3,growth:.11,growthTick:grazed.tick};
+  grazed.resources.push(poplar);enableWildlife(grazed,1);
+  const animal=grazed.wildlife!.animals[0]!;animal.x=3;animal.z=3;animal.food=0;animal.state='eating';animal.path=[];
+  animal.meal={kind:'plant',id:poplar.id,quantity:1,progress:HARE.ingestTicks-.01};
+  const initialGraze=woodConserved(grazed);
+  grazingProbe.records.length=0;grazingProbe.active=true;
+  try{stepWorld(grazed);}finally{grazingProbe.active=false;}
+  const grazing=grazingProbe.records.filter(r=>r.world===grazed&&r.resourceId===poplar.id);
+  expect(grazing).toEqual([{world:grazed,resourceId:poplar.id,resourceKind:'tree',amount:27,removed:true,confirmed:true}]);
+  expect(woodConserved(grazed)+grazing[0]!.amount).toBe(initialGraze);
+  const unrelated:Resource={id:grazed.nextId++,kind:'tree',amount:5,x:5,z:5};grazed.resources.push(unrelated);
+  const beforeLoss=woodConserved(grazed)+grazing[0]!.amount;
+  unrelated.amount--;
+  expect(woodConserved(grazed)+grazing[0]!.amount).toBe(beforeLoss-1);
+
+  const regrown=createWorld(42,20,20);regrown.tick=59;regrown.resources=[];regrown.piles=[];regrown.jobs=[];regrown.structures=[];
+  regrown.tiles=regrown.tiles.map(()=>({terrain:'grass'}));refreshStock(regrown);
+  const roll=(value:number)=>{let n=value;n^=n<<13;n^=n>>>17;n^=n<<5;return {value:n>>>0,fraction:(n>>>0)/0x100000000};};
+  let floraSeed=0;
+  for(let seed=1;seed<100000;seed++){
+    const first=roll(seed);if(first.fraction>=.2)continue;
+    const second=roll(first.value),third=roll(second.value);
+    if(FLORA_DEFINITIONS[weightedSpecies('temperate-forest',third.fraction)].kind==='tree'){floraSeed=seed;break;}
+  }
+  expect(floraSeed).toBeGreaterThan(0);
+  regrown.flora={revision:1,biome:'temperate-forest',rng:floraSeed,nextCheck:60,adoptedAt:0,capacity:400};
+  const nextId=regrown.nextId,initialRegrow=woodConserved(regrown);
+  stepWorld(regrown);
+  const born=regrown.resources.filter(r=>r.id>=nextId&&r.kind==='tree'&&r.plantLife?.bornAt===60);
+  expect(born).toHaveLength(1);
+  expect(born[0]!.amount).toBe(FLORA_DEFINITIONS[born[0]!.species!].yield);
+  expect(woodConserved(regrown)-born[0]!.amount).toBe(initialRegrow);
+});
 const checkpointFile=process.env.CRASHLANDED_CHECKPOINT;
 const resumed:Checkpoint|undefined=checkpointFile?JSON.parse(readFileSync(checkpointFile,'utf8')):undefined;
 if(resumed&&resumed.protocol!=='food-chain-v84')throw Error('Use a V84 food-chain checkpoint; a V83 20-cell camp has a different player protocol.');
@@ -55,19 +145,26 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
   const version=process.env.VALIDATION_VERSION??'v84',started=performance.now();
   let w:World=resumed?deserializeWorld(resumed.world):createScenarioWorld(seed,250,'crashlanded');
   const initial=resumed?.initial??{wood:woodAccount(w),food:foodAccount(w),steel:450,component:30};
-  const ledger:Ledger=resumed?.ledger??{consumed:0,harvested:0,cooked:0,riceHarvested:0,riceCooked:0,riceMeals:0,potatoHarvested:0,cornHarvested:0,potatoCooked:0,cornCooked:0,riceHarvestsByCell:{},mealsByStation:{},consumedByItem:{},lastSurvivalMealTick:0,nonRationIngestionsLastWeek:Object.fromEntries(w.pawns.map(p=>[p.id,0])),meals:Object.fromEntries(w.pawns.map(p=>[p.id,0])),sleep:Object.fromEntries(w.pawns.map(p=>[p.id,0]))};
+  const ledger:Ledger=resumed?.ledger??{consumed:0,harvested:0,cooked:0,riceHarvested:0,riceCooked:0,riceMeals:0,potatoHarvested:0,cornHarvested:0,potatoCooked:0,cornCooked:0,riceHarvestsByCell:{},mealsByStation:{},consumedByItem:{},lastSurvivalMealTick:0,nonRationIngestionsLastWeek:Object.fromEntries(w.pawns.map(p=>[p.id,0])),meals:Object.fromEntries(w.pawns.map(p=>[p.id,0])),sleep:Object.fromEntries(w.pawns.map(p=>[p.id,0])),woodYieldLost:0,woodGrazed:0,woodRegrown:0};
+  ledger.woodYieldLost??=0;
+  ledger.woodGrazed??=0;
+  ledger.woodRegrown??=0;
+  if(resumed)expect(woodConserved(w)+ledger.woodYieldLost+ledger.woodGrazed-ledger.woodRegrown).toBeCloseTo(initial.wood,7);
   const milestones:Record<string,number>=resumed?.milestones??{},journal:Checkpoint['journal']=resumed?.journal??[],observations:Summary[]=resumed?.observations??[];
   const primary=survivorPlan(w,true).field,initialRiceCells=new Set<number>();
   for(let z=primary.from.z;z<=primary.to.z;z++)for(let x=primary.from.x;x<=primary.to.x;x++)initialRiceCells.add(z*w.width+x);
   const checkpoint=():Checkpoint=>({protocol:'food-chain-v84',instrumentation:2,seed,world:serializeWorld(w),initial,ledger,milestones,journal,observations});
   const failureFile=`tmp/crashlanded-failed-${version}-${seed}.json`;
-  onTestFailed(()=>writeFileSync(failureFile,JSON.stringify(checkpoint())));
+  onTestFailed(()=>{
+    try{writeTestFileSync(failureFile,JSON.stringify(checkpoint()));}
+    catch{writeTestFileSync(`tmp/crashlanded-invalid-world-${version}-${seed}.json`,JSON.stringify({seed,world:w,ledger,milestones,journal,observations}));}
+  });
   const record=(name:string,yes:boolean)=>{if(yes&&milestones[name]===undefined)milestones[name]=w.tick;};
   const observe=()=>{
     const s=crashlandedSummary(w);observations.push(s);
     const context=`seed ${seed}, tick ${w.tick}; checkpoint ${failureFile}`;
     expect(validateWorld(w),context).toEqual([]);
-    expect(woodConserved(w),context).toBeCloseTo(initial.wood,7);
+    expect(woodConserved(w)+ledger.woodYieldLost+ledger.woodGrazed-ledger.woodRegrown,context).toBeCloseTo(initial.wood,7);
     expect(s.materials,context).toEqual({steel:initial.steel,component:initial.component});
     expect(foodAccount(w)+ledger.consumed+9*ledger.cooked+(w.wildlife?.eatenItems??0),context).toBe(initial.food+ledger.harvested);
     // Food poisoning can drive hunger to zero between the physical pickup and
@@ -108,7 +205,19 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
       const patient=w.pawns.find(p=>p.id===doctor.feed!.patientId),pile=w.piles.find(p=>p.id===doctor.feed!.carryPileId);
       if(patient&&pile)eating.set(patient.name,pile.item);
     }
-    stepWorld(w);
+    const nextIdBefore=w.nextId;
+    gatherProbe.records.length=0;grazingProbe.records.length=0;gatherProbe.active=true;grazingProbe.active=true;
+    try{stepWorld(w);}finally{gatherProbe.active=false;grazingProbe.active=false;}
+    for(const record of gatherProbe.records)if(record.world===w&&record.kind==='chop'&&record.resourceKind==='tree'&&record.quantity!==null){
+      expect(Number.isInteger(record.quantity)&&record.quantity>=0&&record.quantity<=record.nominal,`Invalid chopped-tree yield at tick ${w.tick}`).toBe(true);
+      ledger.woodYieldLost+=record.nominal-record.quantity;
+    }
+    for(const record of grazingProbe.records)if(record.world===w&&record.resourceKind==='tree'&&record.removed&&record.confirmed)ledger.woodGrazed+=record.amount;
+    if(w.nextId>nextIdBefore&&w.resources!==resourcesBefore)
+      for(const tree of w.resources)if(tree.id>=nextIdBefore&&tree.kind==='tree'&&tree.plantLife?.bornAt===w.tick&&tree.species){
+        expect(tree.amount,`Invalid wild-tree birth at tick ${w.tick}`).toBe(FLORA_DEFINITIONS[tree.species].yield);
+        ledger.woodRegrown+=tree.amount;
+      }
     const currentEvents=w.events.filter(e=>e.tick===w.tick);
     for(const e of currentEvents) {
       const eaten=e.message.match(/a mangé une portion \((\d+) ×/);
@@ -145,15 +254,15 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
     if(w.tick%6000===0) {
       const saved=serializeWorld(w),copy=deserializeWorld(saved);stepWorld(w,100);stepWorld(copy,100);
       expect(serializeWorld(copy)).toBe(serializeWorld(w));w=deserializeWorld(saved);
-      writeFileSync(`tmp/crashlanded-day-${version}-${seed}.json`,JSON.stringify(checkpoint()));
+      writeTestFileSync(`tmp/crashlanded-day-${version}-${seed}.json`,JSON.stringify(checkpoint()));
       // Keep milestone days independently so diagnosis does not require a fresh
       // 24-day run. These are real reached states, never a prepared fixture.
-      if([1,6,12,18,24].includes(w.tick/6000))writeFileSync(`tmp/crashlanded-day${w.tick/6000}-${version}-${seed}.json`,JSON.stringify(checkpoint()));
+      if([1,6,12,18,24].includes(w.tick/6000))writeTestFileSync(`tmp/crashlanded-day${w.tick/6000}-${version}-${seed}.json`,JSON.stringify(checkpoint()));
       console.info(`Atterrissage ${seed}: J${w.tick/6000}, ${ledger.riceHarvested} riz récoltés, ${ledger.riceMeals} repas au riz, ${Object.values(ledger.riceHarvestsByCell).filter(n=>n>=2).length}/80 cases récoltées deux fois, ${w.jobs.length} travaux`);
     }
   }
   const final=observe(),runtimeMs=performance.now()-started,report={protocol:'food-chain-v84',instrumentation:2,seed,resumed:!!resumed,runtimeMs,initial,ledger,milestones,journal,observations,final};
-  writeFileSync(`tmp/crashlanded-final-${version}-${seed}.json`,serializeWorld(w));writeFileSync(`artifacts/crashlanded-colony-${version}-${seed}.json`,JSON.stringify(report));
+  writeTestFileSync(`tmp/crashlanded-final-${version}-${seed}.json`,serializeWorld(w));writeTestFileSync(`artifacts/crashlanded-colony-${version}-${seed}.json`,JSON.stringify(report));
   const context=JSON.stringify({seed,milestones,ledger,final});
   const survivors=w.pawns.filter(isColonist);expect(survivors,context).toHaveLength(3);
   expect(survivors.every(p=>p.state!=='dead'&&p.state!=='downed'&&p.hunger>0&&p.rest>0),context).toBe(true);

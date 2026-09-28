@@ -6,7 +6,7 @@ import type { Decision } from './colony-player.ts';
 import { canDesignate, queryArea } from '../../src/sim/index.ts';
 import { isGrowingTerrain } from '../../src/sim/soil.ts';
 import { footprintCells } from '../../src/sim/definitions.ts';
-import { blockedCells } from '../../src/sim/pathfinding.ts';
+import { blockedCells,reachableCells,routeToJob,routeCost } from '../../src/sim/pathfinding.ts';
 import { plantGrowth } from '../../src/sim/plants.ts';
 import { installCommand } from '../../src/sim/furniture-commands.ts';
 import { treatmentTarget, urgentTreatment } from '../../src/sim/care-rules.ts';
@@ -132,8 +132,13 @@ function foodInfrastructureDecisions(w:World):Decision[] {
     if(!w.stockpiles.some(s=>s.filters.corpse)&&corpseCell)out.push({reason:'Prévoir une case de dépouille séparée des aliments.',command:{type:'stockpile',...corpseCell,enabled:true,filters:{wood:false,food:false,corpse:true},priority:2,capacity:1}});
     else if(w.stockpiles.some(s=>s.filters.corpse)&&!(w.hunting?.completed??0)&&!(w.butchery?.completed??0)&&!w.hunting?.targets.length&&w.piles.some(p=>p.item==='simple-meal')) {
       const hunter=w.pawns.find(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed'&&!p.draft&&!p.mental?.crisis&&!p.need&&p.hunger>55&&p.rest>55&&!!equippedWeapon(w,p));
-      const distance=(c:Cell)=>(c.x-a.x)**2+(c.z-a.z)**2;
-      const target= w.wildlife?.animals.filter(animal=>animal.state!=='dead'&&distance(animal)<35**2).sort((l,r)=>distance(l)-distance(r)||l.id-r.id)[0];
+      // Wildlife can roam beyond the old 35-cell camp ring. Choose a real
+      // reachable target from the armed hunter's position; the engine still
+      // performs its own shot-position search, pursuit and corpse transport.
+      const reach=hunter?reachableCells(w,hunter,blockedCells(w),new Set<number>()):undefined;
+      const target=reach?w.wildlife?.animals.filter(animal=>animal.state!=='dead'&&!animal.domestic)
+        .flatMap(animal=>{const path=routeToJob(w,animal,reach,true);return path?[{animal,cost:routeCost(w,path,reach)}]:[];})
+        .sort((l,r)=>l.cost-r.cost||l.animal.id-r.animal.id)[0]?.animal:undefined;
       if(hunter&&target){
         if(hunter.priorities.hunt!==1)out.push({reason:'Confier une seule chasse à la personne armée et reposée.',command:{type:'priority',pawnId:hunter.id,work:'hunt',value:1}});
         out.push({reason:'Obtenir une vraie dépouille pour la première boucherie, sans épuiser la faune.',command:{type:'hunt',animalId:target.id,enabled:true}});
