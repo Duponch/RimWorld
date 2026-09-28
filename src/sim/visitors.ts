@@ -10,6 +10,7 @@ import { processDraftSleep,type NeedContext } from './needs.ts';
 import { copyPileCondition } from './pile-condition.ts';
 import { freshRot } from './food-preservation.ts';
 import { carrierOf } from './rescue-state.ts';
+import { reservedServiceCells } from './service-reservations.ts';
 import { startingPawn } from './starting-pawns.ts';
 import { generateExoticStock,generateVisitorStock } from './trade-stock.ts';
 import { visitorArrival,visitorAtEdge,visitorExit } from './visitor-navigation.ts';
@@ -120,6 +121,9 @@ function personalMeal(w:World,p:Pawn):void {
   const source=w.piles.find(i=>p.visitor!.personalFoodIds.includes(i.id)&&i.kind==='food'&&i.owner.type==='inventory'&&i.owner.pawnId===p.id);
   if(!source)return;
   const quantity=mealQuantity(p,source,source.quantity);if(!quantity)return;
+  // Two visitors may share a physical cell, but only one may claim it as a
+  // dining service. Wait before changing ownership or splitting the ration.
+  if(reservedServiceCells(w,p.id).has(p.z*w.width+p.x))return;
   let carry=source;
   if(quantity<source.quantity){
     if(w.piles.length>=32768||!Number.isSafeInteger(w.nextId+1))return;
