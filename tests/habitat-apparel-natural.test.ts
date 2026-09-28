@@ -8,7 +8,7 @@ import { complexFurnitureUnlocked } from '../src/sim/research.ts';
 import { applyCommand, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
 import { ticksUntilRot } from '../src/sim/food-preservation.ts';
 import { footprintContains } from '../src/sim/definitions.ts';
-import { TICKS_PER_DAY } from '../src/sim/types.ts';
+import { SCHEMA_VERSION, TICKS_PER_DAY } from '../src/sim/types.ts';
 import type { Cell, Command, DesignateCommand, StructureKind, World } from '../src/sim/types.ts';
 import { crashlandedDecisions } from './scenarios/crashlanded-player.ts';
 import { energyDecisions } from './scenarios/energy-player.ts';
@@ -110,7 +110,7 @@ test('V90 natural colony continuation: furniture, flower pot and leather apparel
   const checkpoint = (): Checkpoint => ({ protocol: 'habitat-apparel-natural-v90', world: serializeWorld(world), startTick: start, horizon, targets, initialButcheryCompleted, productId, equipmentOrdered, milestones, observations, journal });
   onTestFailed(() => writeFileSync(failureFile, JSON.stringify(checkpoint())));
 
-  expect(world.schemaVersion).toBe(90);
+  expect(world.schemaVersion).toBe(SCHEMA_VERSION);
   expect(world.scenario).toMatchObject({ id: 'crashlanded', revision: 2 });
   expect(validateWorld(world), `initial natural checkpoint ${world.tick}`).toEqual([]);
   const initialLiving = livingColonists(world).map(pawn => pawn.id);
