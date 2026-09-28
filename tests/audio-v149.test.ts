@@ -111,6 +111,19 @@ describe('continuous sound selection', () => {
 });
 
 describe('one-shot burst budget', () => {
+  it('keeps non-spatial cues audible regardless of their source coordinates', () => {
+    const cues = [
+      { id: 'global', tick: 5, kind: 'ui.notice', x: 999, z: 999 },
+      { id: 'local', tick: 5, kind: 'mining.hit', x: 999, z: 999 },
+    ];
+    const events = {
+      'ui.notice': { loop: false, spatial: false, gain: 1, maxDistance: 20 },
+      'mining.hit': { loop: false, spatial: true, gain: 1, maxDistance: 20 },
+    };
+    expect(selectOneShots(cues, events, { x: 0, y: 30, z: 0, targetX: 0, targetZ: 0, span: 32 })
+      .map(cue => cue.id)).toEqual(['global']);
+  });
+
   it('prefers audible combat over nearby work and creates at most twelve candidates', () => {
     const cues = [
       ...Array.from({ length: 100 }, (_, i) => ({ id: `work:${i}`, tick: 10, kind: 'mining.hit', x: i % 10, z: 0 })),
@@ -174,6 +187,7 @@ describe('continuous voice lifecycle', () => {
       destination = new Node();
       gains: { gain: Param }[] = [];
       sources: Source[] = [];
+      panners = 0;
       listener = {
         positionX: new Param(), positionY: new Param(), positionZ: new Param(),
         forwardX: new Param(), forwardY: new Param(), forwardZ: new Param(),
@@ -185,6 +199,7 @@ describe('continuous voice lifecycle', () => {
         return node;
       }
       createPanner() {
+        this.panners++;
         return Object.assign(new Node(), {
           positionX: new Param(), positionY: new Param(), positionZ: new Param(),
           panningModel: '', distanceModel: '', refDistance: 0, maxDistance: 0, rolloffFactor: 0,
@@ -201,13 +216,14 @@ describe('continuous voice lifecycle', () => {
         version: 1, events: {
           'weather.rain': { loop: true, spatial: false, variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
           'mining.hit': { gain: 5, variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
+          'ui.notice': { spatial: false, variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
         },
       })) : new Response(new Uint8Array([1]))));
 
     const audio = new AudioDirector();
     await audio.unlock();
     expect(audio.loadedCount).toBe(1);
-    expect(audio.availableSounds).toBe(2);
+    expect(audio.availableSounds).toBe(3);
     audio.setContinuousSources([{ id: 'rain', kind: 'weather.rain', x: 0, z: 0 }]);
     const context = FakeContext.latest;
     expect(context.sources).toHaveLength(1);
@@ -229,6 +245,10 @@ describe('continuous voice lifecycle', () => {
     expect(context.sources[2]!.loop).toBe(false);
     expect(context.sources[2]!.starts).toBe(1);
     expect(context.gains[3]!.gain.value).toBeCloseTo(5 * cueVariation('mining:5').gain);
+    audio.ingestCues([{ id: 'notice:6', tick: 6, kind: 'ui.notice', x: 999, z: 999 }]);
+    audio.update({ presentedTick: 6, paused: false, hidden: false });
+    expect(context.sources).toHaveLength(4);
+    expect(context.panners).toBe(1);
     audio.dispose();
   });
 

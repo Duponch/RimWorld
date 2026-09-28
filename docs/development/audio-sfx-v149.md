@@ -8,6 +8,8 @@ Lisière vise une texture chaleureuse, tactile et lisible sous une scène 3D pas
 
 Le plan de fabrication est [sfx-plan.json](../../scripts/audio/sfx-plan.json). Les IDs correspondent aux cues du bridge :
 
+Pour un effet ponctuel futur marqué `spatial: false`, le runtime ignore ses coordonnées de monde lors de la sélection et le relie directement au gain Web Audio, sans atténuation ni `PannerNode`. Le correctif de contrat est couvert par `tests/audio-v149.test.ts` (13/13 tests ciblés après la correction) ; les six MP3 actuellement publiés ne comprennent aucun effet ponctuel global, donc il ne change pas encore le mix audible.
+
 | ID | Usage | Durée demandée | Boucle | Espace |
 | --- | --- | ---: | :---: | --- |
 | `mining.hit` | Contact outil/pierre | 0,6 s | Non | Local, 20 cases |

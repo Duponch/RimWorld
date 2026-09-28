@@ -1,7 +1,7 @@
 import type { AudioCue } from './scheduler';
 import { audibleRange, listenerPose, sourceDistance, type AudioCamera } from './spatial';
 
-export interface OneShotEventInfo { maxDistance: number; loop: boolean; gain: number }
+export interface OneShotEventInfo { maxDistance: number; loop: boolean; gain: number; spatial?: boolean }
 
 export function cueHash(id: string): number {
   let hash = 2166136261;
@@ -35,8 +35,8 @@ export function selectOneShots(
   for (const cue of cues) {
     const event = events[cue.kind];
     if (!event || event.loop || event.gain <= 0) continue;
-    const distance = sourceDistance(cue.x, cue.z, pose);
-    if (distance >= audibleRange(event.maxDistance, camera)) continue;
+    const distance = event.spatial === false ? 0 : sourceDistance(cue.x, cue.z, pose);
+    if (event.spatial !== false && distance >= audibleRange(event.maxDistance, camera)) continue;
     candidates.push({ cue, distance, priority: priority(cue.kind) });
   }
   candidates.sort((a, b) => a.priority - b.priority || a.distance - b.distance ||

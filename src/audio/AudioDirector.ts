@@ -261,7 +261,7 @@ export class AudioDirector {
     if (!context || !master || !event || event.loop || !event.gain) return;
     const pose = listenerPose(this.camera);
     const range = audibleRange(event.maxDistance, this.camera);
-    if (sourceDistance(cue.x, cue.z, pose) >= range) return;
+    if (event.spatial && sourceDistance(cue.x, cue.z, pose) >= range) return;
     const available = event.variants.filter(variant => this.buffers.get(variant.src));
     if (!available.length) return;
     const variant = available[cueHash(cue.id) % available.length]!;
@@ -277,19 +277,23 @@ export class AudioDirector {
       const source = context.createBufferSource(); source.buffer = buffer;
       const variation = cueVariation(cue.id);
       source.playbackRate.value = variation.playbackRate;
-      const panner = context.createPanner();
-      panner.panningModel = 'equalpower';
-      panner.distanceModel = 'linear';
-      panner.refDistance = 2;
-      panner.maxDistance = range;
-      panner.rolloffFactor = 1;
-      panner.positionX.value = cue.x;
-      panner.positionY.value = 0;
-      panner.positionZ.value = cue.z;
+      const panner = event.spatial ? context.createPanner() : null;
+      if (panner) {
+        panner.panningModel = 'equalpower';
+        panner.distanceModel = 'linear';
+        panner.refDistance = 2;
+        panner.maxDistance = range;
+        panner.rolloffFactor = 1;
+        panner.positionX.value = cue.x;
+        panner.positionY.value = 0;
+        panner.positionZ.value = cue.z;
+      }
       const gain = context.createGain();
       const intensity = Number.isFinite(cue.intensity) ? Math.max(0, Math.min(2, cue.intensity!)) : 1;
       gain.gain.value = Math.min(8, event.gain * variant.gain * intensity * variation.gain);
-      source.connect(panner); panner.connect(gain); gain.connect(master);
+      if (panner) { source.connect(panner); panner.connect(gain); }
+      else source.connect(gain);
+      gain.connect(master);
       voice = { source, panner, gain, kind: cue.kind, variantGain: variant.gain };
       const playingVoice = voice;
       source.onended = () => this.releaseVoice(playingVoice);
