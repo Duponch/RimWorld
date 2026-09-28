@@ -12,6 +12,24 @@ def slug(text):
 
 files = ['AGENTS.md', 'README.md'] + [str(p.relative_to(root)) for p in (root / 'docs').rglob('*.md')]
 errors = []
+# Only current entry points carry this contract. Dated evidence and archives
+# must retain the schema they actually exercised.
+current_pages = [
+    'README.md', 'docs/README.md', 'docs/ROADMAP.md',
+    'docs/gameplay/implementation-status.md',
+    'docs/development/architecture.md', 'docs/development/validation.md',
+]
+schema = int(re.search(r'export const SCHEMA_VERSION\s*=\s*(\d+)',
+    (root / 'src/sim/types.ts').read_text(encoding='utf-8')).group(1))
+def header_schema(contents):
+    header = re.sub(r'[`*_]', '', contents[:1200]).lower()
+    match = re.search(r'schéma (?:de sauvegarde |courant(?: est)? |reste )?(\d+)', header)
+    return int(match.group(1)) if match else None
+
+for name in current_pages:
+    documented = header_schema((root / name).read_text(encoding='utf-8'))
+    if documented != schema:
+        errors.append(f'{name}: current schema header {documented!r}, expected {schema}')
 links = 0
 for name in files:
     source = root / name
@@ -44,4 +62,4 @@ for entry in json.loads((root/'docs/reference/originals/manifest.json').read_tex
     source=root/'docs/reference/originals'/entry['file']
     assert source.stat().st_size == entry['bytes'], source
     assert hashlib.sha256(source.read_bytes()).hexdigest() == entry['sha256'], source
-print('Documentation checks passed; three original sources byte-identical.')
+print(f'Documentation checks passed; six current headers at schema {schema}; three original sources byte-identical.')

@@ -3,3 +3,5 @@
 *.xlsx binary
 # Preserve the user-supplied reference documents byte for byte.
 docs/new_docs/* -text
+# Preserve the instruction archive's original bytes, including historical whitespace.
+docs/history/agent-instructions-through-v144.txt -text -whitespace

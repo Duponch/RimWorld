@@ -1,6 +1,6 @@
 # Référence de performance V145 — 28 septembre 2026
 
-Cette consolidation répare les outils de mesure et établit une référence ; elle ne modifie pas le rendu ni la simulation. Le code applicatif mesuré est celui de `898b716` (V144), schéma 144. Il ne s’agit pas d’une comparaison avant/après optimisation. Les tests longs, le banc Node puis les trois passages Chromium ont été exécutés successivement, sans modification de sources applicatives pendant les captures.
+Ce sous-lot répare les outils de mesure et établit une référence sans modifier le rendu ni la simulation. Le code applicatif mesuré est celui de `898b716` (V144), schéma 144, avant la correction de concurrence entre déblaiement et abattage découverte ensuite dans la consolidation V145. Il ne s’agit pas d’une comparaison avant/après optimisation. Les tests longs, le banc Node puis les trois passages Chromium ont été exécutés successivement, sans modification de sources applicatives pendant les captures.
 
 ## Banc CPU remis en état
 
