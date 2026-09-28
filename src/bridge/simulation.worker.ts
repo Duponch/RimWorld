@@ -20,9 +20,14 @@ const send = (message: Response) => scope.postMessage(message);
 const snapshots = new SnapshotEncoder();
 const motion = new MotionRecorder();
 const presentationChanges=new PresentationChanges();
-const publish = (checkpoint = false) => {
-  if (world) {presentationChanges.capture(world);motion.capture(world);send({...snapshots.encode(world, stepMs, speed, checkpoint), motion:motion.snapshot()});}
+// Tick publications use this only after both observers captured that tick.
+const publishCapturedTick = (checkpoint = false) => {
+  if (world) send({...snapshots.encode(world, stepMs, speed, checkpoint), motion:motion.snapshot()});
   lastPublishedTick=world?.tick??-1;
+};
+const publish = (checkpoint = false) => {
+  if (world) {presentationChanges.capture(world);motion.capture(world);}
+  publishCapturedTick(checkpoint);
 };
 
 scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
@@ -75,11 +80,11 @@ function advanceSimulation(now:number):void {
     for(let i=0;i<ticks;i++) {
       const started=performance.now();stepWorld(world);simulationMs+=performance.now()-started;stepMs=simulationMs/(i+1);
       motion.capture(world);
-      if(presentationChanges.capture(world))publish();
+      if(presentationChanges.capture(world))publishCapturedTick();
     }
   }
   // Supply confirmed motion every active batch (20 ms), including batches
   // without discrete events. Do not duplicate a phase snapshot of the last tick.
-  if(ticks>0&&lastPublishedTick!==world.tick)publish();
+  if(ticks>0&&lastPublishedTick!==world.tick)publishCapturedTick();
 }
 setInterval(()=>advanceSimulation(performance.now()),20);
