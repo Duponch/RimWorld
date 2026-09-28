@@ -29,12 +29,15 @@ describe('stable management panel layouts',()=>{
 
   test('research graph contains only playable projects and physical prerequisite links',()=>{
     const ids=researchProjects.map(project=>project.id);
-    expect(ids).toHaveLength(11);
+    expect(ids).toHaveLength(16);
+    expect(ids).toContain('autodoors');
     expect(new Set(ids).size).toBe(ids.length);
     expect(researchLinks).toEqual([
       ['smithing','machining'],['machining','gunsmithing'],
       ['smithing','plate-armor'],['complex-clothing','plate-armor'],
       ['machining','flak-armor'],['plate-armor','flak-armor'],
+      ['microelectronics','multi-analyzer'],['machining','multi-analyzer'],['multi-analyzer','fabrication'],
+      ['fabrication','advanced-fabrication'],
     ]);
     for(const [from,to] of researchLinks){expect(ids).toContain(from);expect(ids).toContain(to);}
     expect(worldStyles).toContain('#research-panel .research-graph');

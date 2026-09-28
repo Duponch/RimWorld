@@ -166,7 +166,17 @@ test('plant climate: integrated local history, query independence, roof changes,
   raw.resources[0].growthThermalFactor=.5;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 38/);
   const deltaEncoder=new SnapshotEncoder(),deltaDecoder=new SnapshotDecoder();deltaDecoder.adopt(deltaEncoder.encode(legacy,0,1));legacy.resources[0]!.growthThermalFactor=0;
   const message=deltaEncoder.encode(legacy,0,1);expect(message.kind).toBe('delta');const adopted=deltaDecoder.adopt(message);expect(adopted.status).toBe('applied');if(adopted.status==='applied')expect(adopted.world.resources[0]!.growthThermalFactor).toBe(0);
-  legacy.resources[0]!.growthThermalFactor=.25;const corrupt=deltaEncoder.encode(legacy,0,1);if(corrupt.kind==='delta'){corrupt.resources!.upserted[0]!.growthThermalFactor=2;expect(deltaDecoder.adopt(corrupt).status).toBe('resync');expect((deltaDecoder as any).current?.resources[0]!.growthThermalFactor).toBe(0);}
+  legacy.resources[0]!.growthThermalFactor=.25;const corrupt=deltaEncoder.encode(legacy,0,1);if(corrupt.kind==='delta'){
+    // Existing plants travel in V140's compact [id, growth, tick, factor] delta.
+    expect(corrupt.resources?.upserted).toEqual([]);
+    expect(corrupt.resources?.growth).toBeInstanceOf(Float64Array);
+    expect(corrupt.resources?.growth?.length).toBe(4);
+    expect(corrupt.resources!.growth![0]).toBe(legacy.resources[0]!.id);
+    expect(corrupt.resources!.growth![3]).toBe(.25);
+    corrupt.resources!.growth![3]=2;
+    expect(deltaDecoder.adopt(corrupt).status).toBe('resync');
+    expect((deltaDecoder as any).current?.resources[0]!.growthThermalFactor).toBe(0);
+  }
 });
 
 test('cold farming: no new sowing, stale intent rejected, accepted sowing completes and mature harvest remains available',()=>{

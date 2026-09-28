@@ -6,12 +6,22 @@ import { SnapshotEncoder,SnapshotDecoder } from '../src/bridge/snapshots';
 import { createMachiningFixture,prepareCompletedResearch } from './scenarios/machining-v101';
 import { newCookingBill } from '../src/sim/cooking-bills';
 import { newPowerState } from '../src/sim/power-rules';
-import { withoutArt } from './scenarios/legacy-skills';
+import { SCHEMA_VERSION } from '../src/sim/types';
 
-test('immutable V90 colony migrates neutrally through V91, V101 and V103 to V104',()=>{
-  const text=gunzipSync(readFileSync('tests/fixtures/colony-v90.json.gz')).toString('utf8');
+const publishedV90Colony=()=>gunzipSync(readFileSync(new URL('./fixtures/colony-v90.json.gz',import.meta.url))).toString('utf8');
+
+test('immutable V90 colony migrates neutrally through V91, V101 and later schemas',()=>{
+  const text=publishedV90Colony();
   const old=JSON.parse(text),world=deserializeWorld(text);
-  expect(world).toEqual({...old,schemaVersion:106,pawns:old.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0,handle:0}}))});
+  expect(old.schemaVersion).toBe(90);
+  expect(world.schemaVersion).toBe(SCHEMA_VERSION);
+  expect([world.seed,world.rng,world.tick,world.nextId]).toEqual([old.seed,old.rng,old.tick,old.nextId]);
+  expect(world.research).toEqual(old.research);
+  expect(world.piles.map(p=>[p.id,p.item,p.quantity])).toEqual(old.piles.map((p:{id:number;item:string;quantity:number})=>[p.id,p.item,p.quantity]));
+  expect(world.pawns.map(p=>[p.id,p.name,p.x,p.z,p.hunger,p.rest,p.mood])).toEqual(old.pawns.map((p:{id:number;name:string;x:number;z:number;hunger:number;rest:number;mood:number})=>[p.id,p.name,p.x,p.z,p.hunger,p.rest,p.mood]));
+  expect(world.pawns.every(p=>p.priorities.art===0&&p.priorities.handle===0)).toBe(true);
+  expect(world.research?.autodoors).toBeUndefined();
+  expect(world.structures.some(s=>s.kind==='autodoor')).toBe(false);
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
 });
@@ -36,14 +46,18 @@ test('fine storage filters are atomic, optional, persisted and carried by worker
 });
 
 test('V91 rejects future research and V101 rejects broken prerequisites',()=>{
-  const base=JSON.parse(serializeWorld(createWorld(17,16,16)));
+  const base=JSON.parse(publishedV90Colony());
   for(const schemaVersion of [91,101]){
     const broken=structuredClone(base);broken.schemaVersion=schemaVersion;
     broken.research={points:0,project:'machining',machining:{points:1}};
-    expect(()=>deserializeWorld(JSON.stringify(broken))).toThrow();
+    expect(()=>deserializeWorld(JSON.stringify(broken))).toThrow(/Invalid research project/);
   }
-  const legacy=withoutArt({...structuredClone(base),schemaVersion:91});
-  expect(deserializeWorld(JSON.stringify(legacy))).toEqual({...legacy,schemaVersion:106,pawns:legacy.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0,handle:0}}))});
+  const legacy={...base,schemaVersion:91};
+  const restored=deserializeWorld(JSON.stringify(legacy));
+  expect(restored.schemaVersion).toBe(SCHEMA_VERSION);
+  expect(restored.research).toEqual(legacy.research);
+  expect(restored.research?.autodoors).toBeUndefined();
+  expect(validateWorld(restored)).toEqual([]);
 });
 
 test('V101 refuses fabricated gun bills without Armurerie while an empty unlocked table remains valid',()=>{

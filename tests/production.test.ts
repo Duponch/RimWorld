@@ -80,7 +80,7 @@ function kitchen() {
   const fire=w.structures.find(s=>s.kind==='campfire')!;
   expect(applyCommand(w,{type:'bill-add',structureId:fire.id}).ok).toBe(true);
   const bill=fire.bills![0]!;
-  const update=(settings:Partial<BillSettings>)=>applyCommand(w,{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,filters:{...bill.filters},...settings}});
+  const update=(settings:Partial<BillSettings>)=>applyCommand(w,{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,...settings,filters:{...bill.filters,...settings.filters}}});
   return {w,fire,bill,update,pawn:w.pawns[0]!};
 }
 const raw=(w:World)=>w.piles.filter(p=>p.item==='rice'||p.item==='berries').reduce((n,p)=>n+p.quantity,0);
@@ -107,7 +107,9 @@ test('cuisine physique : mélange, interruption, sauvegarde du travail, deux rep
   until(w,()=>pawn.cooking?.phase==='work'&&pawn.cooking.progress>=84000);
   expect(pawn).toMatchObject({x:8,z:7,state:'working'});
   expect(queryPawnStatus(w,pawn).reason).toContain('28 %');
-  const oldWork=JSON.parse(serializeWorld(w));(oldWork.schemaVersion=35,withoutPawnSkills(oldWork));withoutV37LightWork(oldWork);oldWork.pawns[0].cooking.progress=17;
+  const oldWork=JSON.parse(serializeWorld(w));(oldWork.schemaVersion=35,withoutPawnSkills(oldWork));withoutV37LightWork(oldWork);
+  for(const structure of oldWork.structures)for(const oldBill of structure.bills??[])delete oldBill.filters.milk;
+  oldWork.pawns[0].cooking.progress=17;
   expect(deserializeWorld(JSON.stringify(oldWork)).pawns[0]!.cooking!.progress).toBe(85000);
   oldWork.pawns[0].cooking.progress=61;expect(()=>deserializeWorld(JSON.stringify(oldWork))).toThrow(/version 35/);
   expect(queryCookingBillStatus(w,fire,bill).code).toBe('cooking');

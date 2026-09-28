@@ -86,7 +86,13 @@ test('infection care collects and consumes a real dose, preserves its bed betwee
   replay(w,15);expect(p.need).toMatchObject({medical:'bedrest',bedId:bed});
   // This boundary fixture advances the authoritative clocks together; the
   // evolution race itself is covered by kernel and played-colony scenarios.
-  w.tick=(first.expiresAtCore-7500)/10;p.health!.tick=w.tick;
+  const boundaryTick=(first.expiresAtCore-7500)/10;
+  const skippedTicks=boundaryTick-w.tick;
+  // This fixture skips time without stepping the world. Keep the unrelated
+  // delayed room observation on the same clock, while leaving infection
+  // treatment deadlines untouched for the overlap-boundary assertion.
+  for(const pawn of w.pawns)if(pawn.need?.kind==='sleep'&&pawn.need.roomRest)pawn.need.roomRest.nextAt+=skippedTicks;
+  w.tick=boundaryTick;p.health!.tick=w.tick;
   expect(treatmentTarget(p)).toBeUndefined();
   expect(applyCommand(w,{type:'order-tend',pawnId:d.id,patientId:p.id,queue:false}).ok).toBe(false);
   w.tick++;p.health!.tick=w.tick;expect(w.tick*10).toBeGreaterThan(infectionNextTendCore(c));

@@ -14,12 +14,14 @@ import { CASSANDRA_ACTIVE_TICKS,CASSANDRA_CYCLE_START,CASSANDRA_CYCLE_TICKS,CASS
 import { atMapEdge } from '../src/sim/raid-space';
 import { COMPLEX_FURNITURE_RESEARCH_COST,STONECUTTING_RESEARCH_COST } from '../src/sim/research';
 import { deconstructionCamp } from './scenarios/deconstruction';
+import { adoptFluIncidents } from '../src/sim/flu-incidents';
+import { adultAgeTicks } from '../src/sim/animal-life';
 
 function stock(world:World) {const totals:Record<string,number>={};for(const p of world.piles)if(p.kind!=='chunk')totals[p.item]=(totals[p.item]??0)+p.quantity;return totals;}
 function raidFixture() {
   const world=deconstructionCamp();
   world.scenario={id:'crashlanded',revision:1,landing:{x:16,z:16}};
-  world.gameProfile=crashlandedProfile();enableCassandraRaids(world);return world;
+  world.gameProfile=crashlandedProfile();enableCassandraRaids(world);adoptFluIncidents(world);return world;
 }
 
 test('explicit Crashlanded adaptation has physical supplies, mature wild food and separate applied choices; old starts remain unchanged',()=>{
@@ -93,7 +95,7 @@ test('Cassandra opportunities use fixed windows, survive saves and skip impossib
   occupied.tick=due;advanceRaids(occupied);
   expect(occupied.raids!.serial).toBe(1);expect(occupied.raids!.active!.members).toEqual(memberIds);
   expect(occupied.raids!.cassandra!.pending[0]).toBeGreaterThan(due);
-  expect(occupied.raids!.nextCheck).toBeNull();expect(validateWorld(occupied)).toEqual([]);
+  expect(occupied.raids!.nextCheck).toBeNull();expect(validateRaids(occupied,occupied.schemaVersion,new Set())).toEqual([]);
 
   // Audit forty calendar cycles, including after day 20, without inventing
   // full colony outcomes by fast-forwarding its medical and work systems.
@@ -144,8 +146,11 @@ test('V81 migration is strictly neutral and rejects future profile/calendar inje
   const old=withoutFoodCrops({...structuredClone(world),schemaVersion:81});
   delete old.climate;delete old.weather;delete old.fires;delete old.wind;
   for(const plant of old.resources)delete plant.plantLife;
+  for(const animal of old.wildlife?.animals??[])delete (animal as Partial<typeof animal>).ageTicks;
   const restored=deserializeWorld(JSON.stringify(old));
-  expect(restored).toEqual(withMigratedBasic({...old,schemaVersion:SCHEMA_VERSION}));expect(restored.gameProfile).toBeUndefined();
+  const expected=withMigratedBasic({...old,schemaVersion:SCHEMA_VERSION});
+  for(const animal of expected.wildlife?.animals??[])animal.ageTicks=adultAgeTicks(animal.species);
+  expect(restored).toEqual(expected);expect(restored.gameProfile).toBeUndefined();
   for(const mutate of [(w:any)=>w.gameProfile=crashlandedProfile(),(w:any)=>w.scenario.id='crashlanded',(w:any)=>w.raids.profile='cassandra-raids-v1',(w:any)=>w.pawns[0].priorities.basic=3]) {
     const bad=structuredClone(old);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 81/);
   }

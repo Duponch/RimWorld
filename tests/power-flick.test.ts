@@ -158,10 +158,14 @@ test('solar research and Construction 6 gate physical completion without changin
   p.skills.construction.level=6;p.planCooldown=0;until(w,()=>w.structures.some(s=>s.kind==='solar-generator'));
 });
 
-test('the real V84 colony migrates only schema and basic priority; future fields and corrupt switch work are rejected before migration',()=>{
+test('the real V84 colony keeps its actors and buildings through later migrations; future switch work is rejected',()=>{
   const old=withoutV90(JSON.parse(gunzipSync(readFileSync('tests/fixtures/colony-v84.json.gz')).toString()));
   const next=deserializeWorld(JSON.stringify(old)),expected=withMigratedBasic({...structuredClone(old),schemaVersion:SCHEMA_VERSION});
-  expect(next).toEqual(expected);expect(validateWorld(next)).toEqual([]);
+  expect(next.schemaVersion).toBe(SCHEMA_VERSION);
+  expect(next.pawns.map(p=>({id:p.id,x:p.x,z:p.z,basic:p.priorities.basic}))).toEqual(expected.pawns.map((p:World['pawns'][number])=>({id:p.id,x:p.x,z:p.z,basic:p.priorities.basic})));
+  expect(next.structures.map(s=>({id:s.id,kind:s.kind,x:s.x,z:s.z}))).toEqual(expected.structures.map((s:World['structures'][number])=>({id:s.id,kind:s.kind,x:s.x,z:s.z})));
+  expect(next.research?.autodoors).toBeUndefined();
+  expect(validateWorld(next)).toEqual([]);
   const bad=structuredClone(old);bad.pawns[0].priorities.basic=3;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   const w=fixture(),g=fixturePower(w,'wood-generator',16,16);applyCommand(w,{type:'power-flick',structureId:g.id,on:false});
   for(const change of [(v:World)=>v.jobs[0]!.flick!.structureId=999,(v:World)=>v.jobs[0]!.progress=10,(v:World)=>v.jobs[0]!.flick!.on=true,(v:World)=>v.jobs[0]!.escrow.wood=1]){

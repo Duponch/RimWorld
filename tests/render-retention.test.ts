@@ -78,13 +78,18 @@ test('wild flora growth rescales resident ranges from their original vertices an
 test('population growth retains GPU meshes/materials and shared poses through capacity changes and removal',()=>{
   const w=createWorld(),layer=new PawnLayer();layer.update(w,1,true);
   const original=w.pawns.slice(),meshes=[...layer.group.children] as THREE.Mesh[],materials=meshes.map(m=>m.material);
+  const partial=meshes.find(mesh=>mesh.name==='Partial material releases — resident transfer batch');
+  expect(partial).toBeDefined();
+  const pawnBatches=meshes.filter(mesh=>mesh!==partial);
   let materialDisposals=0;for(const material of materials)(material as THREE.Material).addEventListener('dispose',()=>materialDisposals++);
   for(const count of [4,5,16,17,33,2,0,3]) {
     w.pawns=Array.from({length:count},(_,i)=>original[i]??startingPawn(2000+i,`P${i}`,10+i%10,10,0,55));
     layer.setSelected(new Set(w.pawns.slice(0,1).map(p=>p.id)));layer.update(w,.5,false);
     expect(layer.group.children).toEqual(meshes);expect(materialDisposals).toBe(0);
-    meshes.forEach((m,i)=>{expect(m.material).toBe(materials[i]);expect((m.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(count);});
-    for(const name of ['aFrom','aTo','aTravel'])for(const mesh of meshes.slice(1))expect(mesh.geometry.getAttribute(name)).toBe(meshes[0]!.geometry.getAttribute(name));
+    meshes.forEach((m,i)=>expect(m.material).toBe(materials[i]));
+    pawnBatches.forEach(m=>expect((m.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(count));
+    expect((partial!.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(0);
+    for(const name of ['aFrom','aTo','aTravel'])for(const mesh of pawnBatches.slice(1))expect(mesh.geometry.getAttribute(name)).toBe(meshes[0]!.geometry.getAttribute(name));
     expect(meshes[0]!.geometry.getAttribute('aFrom').count).toBeGreaterThanOrEqual(count);
     if(count){expect(meshes[0]!.geometry.getAttribute('aTo').getX(0)).toBe(w.pawns[0]!.x);expect(meshes.find(m=>m.geometry.hasAttribute('aSelected'))!.geometry.getAttribute('aSelected').getX(0)).toBe(1);}
     const flame=meshes.find(m=>m.name.startsWith('Attached fire'))!;

@@ -54,7 +54,7 @@ test('inventory remains hidden while real cargo/equipment and ground transfers r
   }
   silver.owner={type:'pawn',pawnId:p.id};check(0,30);silver.owner={type:'inventory',pawnId:p.id};check(0,0);
   // Exercise the actual pile projection without constructing a WebGPU renderer.
-  const boxes=new BoxBatches(),pileGroup=new THREE.Group(),facade={boxes,pileGroup,pileChunks:new Map()};
+  const boxes=new BoxBatches(),pileGroup=new THREE.Group(),facade={boxes,pileGroup,pileChunks:new Map(),pawns:layer};
   const update=(ColonyRenderer.prototype as unknown as {updatePiles:(world:World,newMap:boolean)=>void}).updatePiles;
   update.call(facade,w,true);const floor=pileGroup.children.flatMap(c=>c.children) as BoxMesh[];expect(floor.every(m=>m.activeCount===0)).toBe(true);
   silver.owner={type:'ground',x:4,z:4};update.call(facade,w,false);expect(floor.reduce((n,m)=>n+m.activeCount,0)).toBe(2);
