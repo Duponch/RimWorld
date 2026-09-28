@@ -19,6 +19,36 @@ function pileCaption(pile: MaterialPile): string {
   return '';
 }
 
+function samePileLabels(a: World['piles'] | undefined, b: World['piles']): boolean {
+  if (a === b) return true;
+  if (!a || a.length !== b.length) return false;
+  for (let i = 0; i < b.length; i++) {
+    const before = a[i]!, after = b[i]!;
+    const oldLabel = before.owner.type === 'ground' ? pileCaption(before) : '';
+    const newLabel = after.owner.type === 'ground' ? pileCaption(after) : '';
+    if (oldLabel !== newLabel || oldLabel && (before.owner.type !== 'ground' ||
+      after.owner.type !== 'ground' || before.owner.x !== after.owner.x || before.owner.z !== after.owner.z)) return false;
+  }
+  return true;
+}
+
+function packedCaption(packed: World['packed'][number]): string {
+  return packed.owner.type === 'ground' && packed.building.quality
+    ? QUALITY_SHORT[packed.building.quality] : '';
+}
+
+function samePackedLabels(a: World['packed'] | undefined, b: World['packed']): boolean {
+  if (a === b) return true;
+  if (!a || a.length !== b.length) return false;
+  for (let i = 0; i < b.length; i++) {
+    const before = a[i]!, after = b[i]!;
+    const oldLabel = packedCaption(before), newLabel = packedCaption(after);
+    if (oldLabel !== newLabel || oldLabel && (before.owner.type !== 'ground' ||
+      after.owner.type !== 'ground' || before.owner.x !== after.owner.x || before.owner.z !== after.owner.z)) return false;
+  }
+  return true;
+}
+
 /** Close-zoom GUI labels, batched in one 2D canvas. No per-pile DOM or GPU mesh. */
 export class MapLabelsOverlay {
   private readonly canvas: HTMLCanvasElement;
@@ -26,12 +56,19 @@ export class MapLabelsOverlay {
   private readonly point = new Vector3();
   private readonly frustum = new Frustum();
   private readonly projectionView = new Matrix4();
-  private source: World | null | undefined;
+  private sourcePiles: World['piles'] | undefined;
+  private sourcePacked: World['packed'] | undefined;
+  private sourceWidth = -1;
   private chunks: { bounds: Box3; entries: { x: number; z: number; label: string }[] }[] = [];
   private width = 0;
   private height = 0;
   private ratio = 1;
   private visible = false;
+  private drawn = false;
+  private lastCamera: OrthographicCamera | PerspectiveCamera | null = null;
+  private readonly lastView = new Matrix4();
+  private readonly lastProjection = new Matrix4();
+  private readonly lastPosition = new Vector3();
 
   constructor(host: HTMLElement) {
     this.canvas = document.createElement('canvas');
@@ -46,9 +83,11 @@ export class MapLabelsOverlay {
     host.after(this.canvas);
   }
 
-  private index(world: World): void {
-    if (this.source === world) return;
-    this.source = world;
+  private index(world: World): boolean {
+    const unchanged = this.sourceWidth === world.width &&
+      samePileLabels(this.sourcePiles, world.piles) && samePackedLabels(this.sourcePacked, world.packed);
+    this.sourcePiles = world.piles; this.sourcePacked = world.packed; this.sourceWidth = world.width;
+    if (unchanged) return false;
     const chunks = new Map<number, { bounds: Box3; entries: { x: number; z: number; label: string }[] }>();
     const add = (x: number, z: number, label: string): void => {
       if (!label) return;
@@ -64,9 +103,10 @@ export class MapLabelsOverlay {
       chunk.entries.push({ x, z, label });
     };
     for (const pile of world.piles) if (pile.owner.type === 'ground') add(pile.owner.x, pile.owner.z, pileCaption(pile));
-    for (const packed of world.packed) if (packed.owner.type === 'ground' && packed.building.quality)
-      add(packed.owner.x, packed.owner.z, QUALITY_SHORT[packed.building.quality]);
+    for (const packed of world.packed) if (packed.owner.type === 'ground')
+      add(packed.owner.x, packed.owner.z, packedCaption(packed));
     this.chunks = [...chunks.values()];
+    return true;
   }
 
   draw(world: World | null | undefined, camera: OrthographicCamera | PerspectiveCamera, cellPixels: number, width: number, height: number): void {
@@ -74,15 +114,23 @@ export class MapLabelsOverlay {
     // scales the early exit avoids the pile scan and all canvas operations.
     if (!world || cellPixels < PILE_LABEL_MIN_CELL_PIXELS || !width || !height) {
       if (this.visible) { this.canvas.hidden = true; this.visible = false; }
+      this.drawn = false;
       return;
     }
+    const becameVisible = !this.visible;
     if (!this.visible) { this.canvas.hidden = false; this.visible = true; }
     const ratio = Math.min(2, window.devicePixelRatio || 1);
-    if (this.width !== width || this.height !== height || this.ratio !== ratio) {
+    const resized = this.width !== width || this.height !== height || this.ratio !== ratio;
+    if (resized) {
       this.width = width; this.height = height; this.ratio = ratio;
       this.canvas.width = Math.ceil(width * ratio);
       this.canvas.height = Math.ceil(height * ratio);
     }
+    camera.updateMatrixWorld();
+    const indexed = this.index(world);
+    if (this.drawn && !becameVisible && !resized && !indexed && this.lastCamera === camera &&
+      this.lastView.equals(camera.matrixWorldInverse) && this.lastProjection.equals(camera.projectionMatrix) &&
+      this.lastPosition.equals(camera.position)) return;
     const ctx = this.context;
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.clearRect(0, 0, width, height);
@@ -91,8 +139,6 @@ export class MapLabelsOverlay {
     ctx.lineJoin = 'round'; ctx.lineWidth = 2.5;
     ctx.strokeStyle = 'rgba(24, 29, 27, .85)';
     ctx.fillStyle = '#fff4d9';
-    camera.updateMatrixWorld();
-    this.index(world);
     this.frustum.setFromProjectionMatrix(this.projectionView.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
     const maxDistance = camera instanceof PerspectiveCamera
       ? perspectiveDetailRange(camera, height, PILE_LABEL_MIN_CELL_PIXELS) : Infinity;
@@ -113,6 +159,11 @@ export class MapLabelsOverlay {
         ctx.strokeText(label, screenX, y); ctx.fillText(label, screenX, y);
       }
     }
+    this.lastCamera = camera;
+    this.lastView.copy(camera.matrixWorldInverse);
+    this.lastProjection.copy(camera.projectionMatrix);
+    this.lastPosition.copy(camera.position);
+    this.drawn = true;
   }
 
   dispose(): void { this.canvas.remove(); }

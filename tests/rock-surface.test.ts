@@ -3,7 +3,39 @@ import * as THREE from 'three/webgpu';
 import { createWorld } from '../src/sim/engine';
 import { RockLayer } from '../src/render/RockLayer';
 import { writeRockCell, ROCK_VERTICES } from '../src/render/RockSurface';
-import { sameTerrainSurface } from '../src/render/terrain-state';
+import { sameTerrainSurface,terrainTileChanges,terrainSurfaceChanges } from '../src/render/terrain-state';
+
+test('terrain and rocks share sparse tile changes without rescanning unchanged cells',()=>{
+  const before=createWorld(42,32,32);
+  before.tiles=before.tiles.map(()=>({terrain:'soil'}));
+  for(let z=12;z<=18;z++)for(let x=12;x<=18;x++)before.tiles[z*32+x]={terrain:'rock'};
+  const material=new THREE.MeshStandardNodeMaterial();
+  const sparse=new RockLayer(material),reference=new RockLayer(material);
+  sparse.update(before,true);reference.update(before,true);
+  const changedIndex=15*32+15;
+  const compare=(world:typeof before,expectedCells:number)=>{
+    const changes=terrainTileChanges(before,world);
+    expect(changes).toEqual([changedIndex]);
+    const surface=terrainSurfaceChanges(before,world,changes);
+    expect(surface).toEqual([]);
+    let reads=0;
+    const counted={...world,tiles:new Proxy(world.tiles,{get(target,key,receiver){if(typeof key==='string'&&/^\d+$/.test(key))reads++;return Reflect.get(target,key,receiver);}})};
+    sparse.update(counted,false,changes??undefined);
+    reference.update(world);
+    expect(reads).toBeLessThan(512);
+    expect(sparse.stats.updatedCells).toBe(expectedCells);
+    expect(sparse.stats.updatedCells).toBe(reference.stats.updatedCells);
+    const a=sparse.mesh.geometry,b=reference.mesh.geometry;
+    expect(a.drawRange).toEqual(b.drawRange);
+    for(const name of ['position','normal','color'])expect(Array.from(a.getAttribute(name).array)).toEqual(Array.from(b.getAttribute(name).array));
+    expect(Array.from(a.index!.array)).toEqual(Array.from(b.index!.array));
+  };
+  const damage={...before,tiles:before.tiles.slice()};damage.tiles[changedIndex]={...before.tiles[changedIndex]!,miningDamage:40};
+  compare(damage,0);
+  const ore={...before,tiles:before.tiles.slice()};ore.tiles[changedIndex]={...before.tiles[changedIndex]!,ore:'steel'};
+  compare(ore,9);
+  sparse.dispose();reference.dispose();material.dispose();
+});
 
 test('continuous faceted cells: shared seams, winding, local excavation/restoration, resident buffers and map boundaries',()=>{
   const world=createWorld(42,32,32);world.tiles=world.tiles.map(()=>({terrain:'soil'}));

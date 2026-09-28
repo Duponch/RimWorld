@@ -2,7 +2,7 @@ import { expect,test } from 'vitest';
 import { stepWorld } from '../src/sim/engine.ts';
 import { updatePawnHealth } from '../src/sim/health.ts';
 import { advanceHumanAges,biologicalYears,chronologicalYears,HUMAN_YEAR_TICKS,humanAgeImmunityFactor,initialHumanAge } from '../src/sim/human-age.ts';
-import { createMedicalRecord } from '../src/sim/injury-state.ts';
+import { assessMedical,createMedicalRecord } from '../src/sim/injury-state.ts';
 import { startingPawn } from '../src/sim/starting-pawns.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
 import { acquireFlu } from '../src/sim/flu-state.ts';
@@ -65,6 +65,34 @@ test('biological birthdays can cause both Core chronic conditions and change rea
   expect(pawnBody(pawn).capacities.moving).toBeLessThan(before.moving);
   expect(pawnBody(pawn).capacities.manipulation).toBeLessThan(before.manipulation);
   expect(world.events.filter(e=>e.message.includes('80 ans'))).toHaveLength(2);
+  expect(validateWorld(world)).toEqual([]);
+  const resumed=deserializeWorld(serializeWorld(world));
+  stepWorld(world,12);stepWorld(resumed,12);
+  expect(resumed).toEqual(world);
+});
+
+test('chronic-only projections match the full medical path and react to in-place changes',()=>{
+  const world=medicalCamp(1),pawn=world.pawns[0]!,record=pawn.health=createMedicalRecord(world.tick);
+  const full=()=>assessMedical({...record,infections:{nextId:1,cases:[],immunity:0}});
+  for(const ailments of [['bad-back'],['frail'],['bad-back','frail']] as const){
+    record.ageAilments=[...ailments];
+    expect(pawnBody(pawn)).toEqual(full());
+    expect(pawnBody(pawn)).toEqual(full());
+  }
+  record.ageAilments=['bad-back'];
+  const back=pawnBody(pawn);
+  record.ageAilments.push('frail');
+  expect(pawnBody(pawn)).toEqual(full());
+  expect(pawnBody(pawn)).not.toEqual(back);
+  record.bloodLoss=100_000_000;
+  expect(pawnBody(pawn)).toEqual(full());
+  record.bloodLoss=0;record.heatstroke=400_000_000;
+  expect(pawnBody(pawn)).toEqual(full());
+  delete record.heatstroke;
+  const rng=world.rng;
+  world.tick++;updatePawnHealth(world,pawn);
+  expect(world.rng).toBe(rng);
+  expect(record.tick).toBe(world.tick);
   expect(validateWorld(world)).toEqual([]);
   const resumed=deserializeWorld(serializeWorld(world));
   stepWorld(world,12);stepWorld(resumed,12);

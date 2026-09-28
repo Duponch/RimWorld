@@ -107,13 +107,15 @@ export class RockLayer {
     g.boundingSphere=g.boundingBox.getBoundingSphere(new THREE.Sphere());
     this.stats.bufferBytes=vertices*36+(36+capacity*ROCK_INDICES)*4;
   }
-  update(world:World,reset=false):void {
+  update(world:World,reset=false,changedTiles?:readonly number[]):void {
     this.stats.updatedCells=0;
     if(!reset&&this.tiles===world.tiles)return;
     reset ||= world.width!==this.width||world.height!==this.height||world.seed!==this.seed;
     const changed:number[]=[];
     if(reset) {this.slots.clear();this.rockMask=new Uint8Array(world.tiles.length);this.width=world.width;this.height=world.height;this.seed=world.seed;}
-    for(let i=0;i<world.tiles.length;i++) {
+    const inspect=reset?undefined:changedTiles;
+    for(let n=0;n<(inspect?.length??world.tiles.length);n++) {
+      const i=inspect?inspect[n]!:n;
       const tile=world.tiles[i]!;
       const rock=tile.terrain==='rock'?(tile.ore?tile.ore==='machinery'?9:tile.ore==='gold'?10:tile.ore==='plasteel'?11:8:tile.stone?2+STONE_KINDS.indexOf(tile.stone):1):0;
       if(rock!==this.rockMask[i]) {changed.push(i);this.rockMask[i]=rock;}

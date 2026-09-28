@@ -9,17 +9,32 @@ export type NaturalPresentationChange = { resource: Resource | undefined; size: 
  * Own scalar captures also detect edits in place and checkpoint restoration. */
 export class NaturalResourcePresentation {
   private shapes:Shape[]=[];
+  private snapshotResources:readonly Resource[]|undefined;
+  private snapshotTimeInvariant=false;
   readonly changes=new Map<number,NaturalPresentationChange>();
-  read(world:World,reset=false):World|undefined {
+  /** SnapshotDecoder replaces edited resources instead of mutating them. Only
+   * callers with that guarantee may enable the reference shortcut. */
+  read(world:World,reset=false,immutableSnapshot=false):World|undefined {
     this.changes.clear();
-    let index=0,changed=reset;
-    for(const r of world.resources)if(!isCrop(r)){
+    const previous=immutableSnapshot&&!reset?this.snapshotResources:undefined;
+    if(previous===world.resources&&this.snapshotTimeInvariant)return;
+    this.snapshotResources=immutableSnapshot?world.resources:undefined;
+    let index=0,changed=reset,timeInvariant=true;
+    for(let sourceIndex=0;sourceIndex<world.resources.length;sourceIndex++){
+      const r=world.resources[sourceIndex]!;
+      if(isCrop(r))continue;
+      const stable=(r.growth??1)===1&&r.plantLife?.leaflessAt===undefined;
+      if(!stable)timeInvariant=false;
       const old=this.shapes[index++];
+      // Immature growth and temporary leaf loss can change with world.tick
+      // even while the decoder keeps the same Resource object.
+      if(previous?.[sourceIndex]===r&&old?.id===r.id&&stable)continue;
       const size=floraSize(world,r);
       if(reset||!old||old.size!==size||old.species!==r.species||old.id!==r.id||old.kind!==r.kind||old.x!==r.x||old.z!==r.z||old.stone!==r.stone||old.ripe!==(r.kind==='berries'&&harvestable(world,r))||old.leafless!==plantLeafless(world,r)){
         changed=true;this.changes.set(r.id,{resource:r,size});
       }
     }
+    this.snapshotTimeInvariant=immutableSnapshot&&timeInvariant;
     if(!changed&&index===this.shapes.length)return;
     const natural=world.resources.filter(r=>!isCrop(r));
     const present=new Set(natural.map(r=>r.id));

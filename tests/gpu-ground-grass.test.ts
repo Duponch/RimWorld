@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { createWorld } from '../src/sim/engine';
+import type { World } from '../src/sim/types';
 import { GpuGroundGrassLayer, GROUND_GRASS_MAX_BLADES, groundGrassPixels } from '../src/render/GpuGroundGrassLayer';
 import { noise } from '../src/render/StaticGeometry';
 import { TERRAIN_COLORS } from '../src/render/TerrainLayer';
@@ -84,6 +85,185 @@ describe('decorative GPU soil grass', () => {
     world.tiles = world.tiles.map((t, i) => i === 0 ? { terrain: 'soil' } : t);
     layer.update(world);
     expect((layer.map.image.data as Uint8Array)[3]).toBe(255);
+    layer.dispose();
+  });
+
+  test('dynamic snapshot replacements skip the whole-map mask while spatial changes keep exact pixels', () => {
+    const world = createWorld(121, 64, 64);
+    world.tiles = world.tiles.map(() => ({ terrain: 'soil' }));
+    world.structures = [{ id: 10, kind: 'table', x: 4, z: 4, orientation: 0, footprint: 'standard' }];
+    world.resources = [{ id: 11, kind: 'rock', x: 7, z: 7, amount: 1 },
+      { id: 12, kind: 'tree', x: 9, z: 9, amount: 1, growth: .5 }];
+    world.piles = [{ id: 13, kind: 'wood', item: 'wood', quantity: 1,
+      owner: { type: 'ground', x: 11, z: 11 } }];
+    world.packed = [{ building: { id: 14, kind: 'stool', x: 13, z: 13,
+      orientation: 0, footprint: 'standard' }, owner: { type: 'ground', x: 13, z: 13 } }];
+    let tileReads = 0;
+    world.tiles = new Proxy(world.tiles, {
+      get(target, key, receiver) {
+        if (typeof key === 'string' && /^\d+$/.test(key)) tileReads++;
+        return Reflect.get(target, key, receiver);
+      },
+    });
+    const layer = new GpuGroundGrassLayer();
+    layer.update(world);
+    const firstPixels = Uint8Array.from(layer.map.image.data as Uint8Array);
+    const firstVersion = layer.map.version;
+    tileReads = 0;
+    world.structures = world.structures.map(s => ({ ...s, damage: (s.damage ?? 0) + 1 }));
+    world.resources = world.resources.map(r => ({ ...r, amount: r.amount + 1, growth: .75 }));
+    world.piles = world.piles.map(p => ({ ...p, quantity: p.quantity + 1, owner: { ...p.owner } }));
+    world.packed = world.packed.map(p => ({ ...p, building: { ...p.building, damage: 1 },
+      owner: { ...p.owner } }));
+    layer.update(world);
+    expect(tileReads).toBe(0);
+    expect(layer.map.version).toBe(firstVersion);
+    expect(layer.map.image.data).toEqual(firstPixels);
+
+    const changedTile=5*world.width+5;
+    const damagedTiles=world.tiles.slice();
+    damagedTiles[changedTile]={...damagedTiles[changedTile]!,miningDamage:1};
+    world.tiles=new Proxy(damagedTiles,{
+      get(target,key,receiver){if(typeof key==='string'&&/^\d+$/.test(key))tileReads++;return Reflect.get(target,key,receiver);},
+    });
+    tileReads=0;
+    layer.update(world,false,[changedTile]);
+    expect(tileReads).toBeLessThan(10);
+    expect(layer.map.version).toBe(firstVersion);
+    expect(layer.map.image.data).toEqual(firstPixels);
+
+    const spatialChanges = [
+      () => { world.structures = world.structures.map(s => ({ ...s, orientation: 1 })); },
+      () => { world.resources = world.resources.map(r => r.kind === 'rock' ? { ...r, x: 8 } : r); },
+      () => { world.piles = world.piles.map(p => ({ ...p, owner: { type: 'ground', x: 12, z: 11 } })); },
+      () => { world.packed = world.packed.map(p => ({ ...p, owner: { type: 'ground', x: 14, z: 13 } })); },
+    ];
+    for (const change of spatialChanges) {
+      const version = layer.map.version;
+      change();
+      layer.update(world);
+      expect(layer.map.version).toBe(version + 1);
+      expect(layer.map.image.data).toEqual(groundGrassPixels(world));
+    }
+    layer.dispose();
+  });
+
+  test('overlapping cover remains until its last occupant leaves', () => {
+    const world = createWorld(122, 12, 12);
+    world.tiles = world.tiles.map(() => ({ terrain: 'soil' }));
+    world.structures = [{ id: 1, kind: 'wall', x: 5, z: 5, orientation: 0, footprint: 'standard' }];
+    world.resources = [{ id: 2, kind: 'rock', x: 5, z: 5, amount: 1 }];
+    world.piles = [{ id: 3, kind: 'wood', item: 'wood', quantity: 1,
+      owner: { type: 'ground', x: 5, z: 5 } }];
+    world.packed = [{ building: { id: 4, kind: 'stool', x: 5, z: 5,
+      orientation: 0, footprint: 'standard' }, owner: { type: 'ground', x: 5, z: 5 } }];
+    const layer = new GpuGroundGrassLayer();
+    layer.update(world);
+    const version = layer.map.version;
+    world.structures = [];
+    layer.update(world);
+    world.resources = [];
+    layer.update(world);
+    world.piles = [];
+    layer.update(world);
+    expect(layer.map.version).toBe(version);
+    expect(layer.map.image.data).toEqual(groundGrassPixels(world));
+    world.packed = [];
+    layer.update(world);
+    expect(layer.map.version).toBe(version + 1);
+    expect((layer.map.image.data as Uint8Array)[cell(world, 5, 5) + 3]).toBe(255);
+    expect(layer.map.image.data).toEqual(groundGrassPixels(world));
+    layer.dispose();
+  });
+
+  test('incremental atlas matches a full rebuild through random cover and surface changes', () => {
+    const world: World = createWorld(123, 18, 18);
+    world.tiles = world.tiles.map(() => ({ terrain: 'soil' }));
+    world.structures = []; world.resources = []; world.piles = []; world.packed = [];
+    const layer = new GpuGroundGrassLayer();
+    layer.update(world);
+    let state = 0x5eed1234;
+    const random = (max: number): number => {
+      state ^= state << 13; state ^= state >>> 17; state ^= state << 5;
+      return (state >>> 0) % max;
+    };
+    const position = () => ({ x: random(20) - 1, z: random(20) - 1 });
+    let id = 100;
+    const kinds = ['wall', 'table', 'solar-generator', 'wind-turbine'] as const;
+    const terrains = ['soil', 'grass', 'rich-soil', 'rock', 'water'] as const;
+    for (let step = 0; step < 500; step++) {
+      let changedTiles: number[] | undefined;
+      const operation = random(16);
+      if (operation === 0) {
+        world.structures = [...world.structures, { id: id++, kind: kinds[random(kinds.length)]!,
+          ...position(), orientation: random(4) as 0 | 1 | 2 | 3, footprint: 'standard' }];
+      } else if (operation === 1 && world.structures.length) {
+        const index = random(world.structures.length);
+        world.structures = world.structures.filter((_, i) => i !== index);
+      } else if (operation === 2 && world.structures.length) {
+        const index = random(world.structures.length);
+        world.structures = world.structures.map((s, i) => i === index ? { ...s, ...position(),
+          orientation: random(4) as 0 | 1 | 2 | 3 } : s);
+      } else if (operation === 3) {
+        world.resources = [...world.resources, { id: id++, kind: random(2) ? 'rock' : 'tree',
+          ...position(), amount: 1 }];
+      } else if (operation === 4 && world.resources.length) {
+        const index = random(world.resources.length);
+        world.resources = world.resources.filter((_, i) => i !== index);
+      } else if (operation === 5 && world.resources.length) {
+        const index = random(world.resources.length);
+        world.resources = world.resources.map((r, i) => i === index ? { ...r, ...position(),
+          kind: r.kind === 'rock' ? 'tree' : 'rock' } : r);
+      } else if (operation === 6) {
+        world.piles = [...world.piles, { id: id++, kind: 'wood', item: 'wood', quantity: 1,
+          owner: { type: 'ground', ...position() } }];
+      } else if (operation === 7 && world.piles.length) {
+        const index = random(world.piles.length);
+        world.piles = world.piles.filter((_, i) => i !== index);
+      } else if (operation === 8 && world.piles.length) {
+        const index = random(world.piles.length);
+        world.piles = world.piles.map((p, i) => i === index ? { ...p,
+          owner: random(2) ? { type: 'ground', ...position() } : { type: 'pawn', pawnId: 1 } } : p);
+      } else if (operation === 9) {
+        world.packed = [...world.packed, { building: { id: id++, kind: 'stool',
+          ...position(), orientation: 0, footprint: 'standard' }, owner: { type: 'ground', ...position() } }];
+      } else if (operation === 10 && world.packed.length) {
+        const index = random(world.packed.length);
+        world.packed = world.packed.filter((_, i) => i !== index);
+      } else if (operation === 11 && world.packed.length) {
+        const index = random(world.packed.length);
+        world.packed = world.packed.map((p, i) => i === index ? { ...p,
+          owner: random(2) ? { type: 'ground', ...position() } : { type: 'pawn', pawnId: 1 } } : p);
+      } else if (operation === 12 || operation === 13) {
+        const index = random(world.tiles.length), tile = world.tiles[index]!;
+        world.tiles = world.tiles.slice();
+        world.tiles[index] = operation === 12 ? { terrain: terrains[random(terrains.length)]!,
+          floor: random(3) ? undefined : 'wood-planks' } :
+          { ...tile, miningDamage: (tile.miningDamage ?? 0) + 1 };
+        changedTiles = [index];
+      } else if (operation === 14) {
+        world.seed = random(1_000_000);
+        world.site = { ...world.site!, revision: 2,
+          biome: random(2) ? 'temperate-forest' : 'arid-shrubland' };
+      } // Operation 15 is a paused snapshot with identical references.
+      const version = layer.map.version;
+      layer.update(world, false, changedTiles);
+      expect(layer.map.image.data, `step ${step}, operation ${operation}`).toEqual(groundGrassPixels(world));
+      if (operation === 15) expect(layer.map.version).toBe(version);
+    }
+    // Explicit force must recover from an in-place edit, and dimensions reset
+    // the counters and dirty-cell storage before the next incremental edit.
+    if (world.structures.length) world.structures[0]!.x = 2;
+    layer.update(world, true);
+    expect(layer.map.image.data).toEqual(groundGrassPixels(world));
+    const smaller = createWorld(124, 10, 10);
+    smaller.tiles = smaller.tiles.map(() => ({ terrain: 'soil' }));
+    layer.update(smaller);
+    expect(layer.map.image.data).toEqual(groundGrassPixels(smaller));
+    smaller.piles = [{ id: 9999, kind: 'wood', item: 'wood', quantity: 1,
+      owner: { type: 'ground', x: 3, z: 3 } }];
+    layer.update(smaller);
+    expect(layer.map.image.data).toEqual(groundGrassPixels(smaller));
     layer.dispose();
   });
 

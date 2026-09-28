@@ -3,10 +3,10 @@ import { foodPoisoningModifiers } from './food-poisoning.ts';
 import { FLU_UNIT,fluModifiers } from './flu-rules.ts';
 import { coldModifiers } from './cold-rules.ts';
 import { HEAT_UNIT,heatModifiers } from './heat-rules.ts';
-import type { BodyAssessment } from './body-capacities.ts';
+import { assessBody,type BodyAssessment } from './body-capacities.ts';
 import { projectedMedicalBody } from './medical-assessment-cache.ts';
 import type { BodyPartId } from './body-definition.ts';
-import { medicalModel,modelHasPart } from './body-model.ts';
+import { HUMAN_MODEL,medicalModel,modelHasPart } from './body-model.ts';
 import { BLOOD_UNIT,HP_UNIT,PAIN_UNIT,FRESH_MISSING_TICKS,INJURY_RULES,injuryPartRules,bloodConsciousness,coagulationAge,isWithinPart,scarChance,type InjuryKind,type ScarPain } from './injury-rules.ts';
 import type { Injury,MedicalRandom,MedicalRecord } from './injury-types.ts';
 import { INFECTION_DELAY_MAX_CORE,INFECTION_UNIT,infectionModifiers,injuryInfectionChance } from './infection-rules.ts';
@@ -50,7 +50,16 @@ export function medicalBleedUnits(record:MedicalRecord):number {
   for(const m of record.missing)if(freshMissing(record,m))rate+=medicalModel(record).byId[m.part].hp*HP_UNIT*36*injuryPartRules(medicalModel(record))[m.part].bleed;
   return Math.round(rate/medicalModel(record).healthScale);
 }
+/** Pure chronic conditions have three immutable projections. Keep the dynamic
+ * path for any other condition so in-place medical changes remain visible. */
+const chronicBody=(badBack:boolean,frail:boolean):BodyAssessment=>assessBody({damage:[],missing:[],pain:0,
+  movingOffset:-(badBack?.3:0)-(frail?.3:0),manipulationOffset:-(badBack?.1:0)-(frail?.3:0)},HUMAN_MODEL);
+const CHRONIC_BODIES=[chronicBody(false,false),chronicBody(true,false),chronicBody(false,true),chronicBody(true,true)] as const;
+const chronicOnly=(record:MedicalRecord):boolean=>!!record.ageAilments?.length&&!record.body&&!record.death&&
+  !record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.heatstroke&&!record.hypothermia&&
+  !record.malnutrition&&!record.infections&&!record.flu&&!record.foodPoisoning;
 export function assessMedical(record:MedicalRecord):BodyAssessment {
+  if(chronicOnly(record))return CHRONIC_BODIES[(record.ageAilments!.includes('bad-back')?1:0)+(record.ageAilments!.includes('frail')?2:0)];
   const heat=heatModifiers(record.heatstroke),cold=coldModifiers(record.hypothermia),blood=bloodConsciousness(record.bloodLoss),infection=infectionModifiers(record),flu=fluModifiers(record.flu),malnutrition=malnutritionModifiers(record.malnutrition);
   const badBack=record.ageAilments?.includes('bad-back')??false,frail=record.ageAilments?.includes('frail')??false;
   const {painOffset:_foodPain,...foodFactors}=foodPoisoningModifiers(record.foodPoisoning);

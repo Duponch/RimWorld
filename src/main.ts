@@ -10,7 +10,6 @@ import { updateBurialControls } from './ui/burial-controls';
 import { updateHygieneControls } from './ui/hygiene-controls';
 import { isBuildableFloor } from './sim/flooring';
 import { createTradeUI } from './ui/trade-panel';
-import { colonyPile } from './sim/materials';
 import { climateDateLabel,climateControls } from './ui/climate-inspection';
 import { WEATHER } from './sim/weather-definitions';
 import { perceivedWeather } from './sim/weather';
@@ -47,7 +46,6 @@ import { apparelProjection,apparelAppearance } from './render/character-apparel'
 import { createEquipmentInspection,updateEquipmentInspection } from './ui/equipment-inspection';
 import { equipmentProjection,equipmentDescription } from './render/character-equipment';
 import { bedControls,updateBedControls } from './ui/bed-controls.ts';
-import { carrierOf } from './sim/rescue-state.ts';
 import { medicalBleed } from './sim/injury-state';
 import { createHealthInspection,updateHealthInspection } from './ui/health-inspection';
 import { createPrisonerInspection,updatePrisonerInspection } from './ui/prisoner-inspection';
@@ -170,6 +168,7 @@ function setGroundGrassEnabled(enabled: boolean): boolean {
 }
 let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 let pawnSignature = '';
+const colonistButtons = new Map<number, HTMLButtonElement>();
 const selection=new PawnSelection();
 const roomInspection = new RoomInspection();
 const orderMenu=new OrderMenu(client,notify);
@@ -279,20 +278,21 @@ function setPanel(panel: Panel, preserveTool = false) {
   for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals'] as const) el(`${name}-panel`).hidden = panel !== name;
   if(panel==='animals'&&snapshot)updateAnimalsPanel(el('animals-content'),snapshot,id=>selectPawn(id));
   if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
-  if (panel === 'schedule' && snapshot) scheduleUI.update(snapshot);
-  if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot);apparelPolicyUI.update(snapshot);}
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) {
     const active = button.dataset.panel === panel;
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
   }
+  if (panel === 'schedule' && snapshot) scheduleUI.update(snapshot);
+  if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot);apparelPolicyUI.update(snapshot);}
+  if (panel === 'research' && snapshot) updateResearchPanel(el('research-content'),snapshot,c=>void attempt(()=>client.command(c)));
   el('inspector').hidden = panel !== null || (!selection.ids.size && !selectedCell);
   if (panel !== 'architect' && !preserveTool) applyTool('select');
   if (panel === null && snapshot) {
     const cell = selectedCell ?? snapshot.pawns.find(p => p.id === selectedPawn);
     if (cell) roomInspection.update(el('inspector'), snapshot, cell);
   }
-  if (panel === 'work' && snapshot) updateWorkPanel(snapshot);
+  if (panel === 'work' && snapshot) updateWorkPanel(snapshot,carriedPatientsOf(snapshot));
 }
 function applyTool(tool: Tool) {
   shootingControls.cancel();
@@ -517,7 +517,12 @@ function rebuildInspector() {
   const close = document.getElementById('inspect-close');
   if (close) close.onclick = clearSelection;
 }
-function actionLabel(pawn: Pawn) {
+function carriedPatientsOf(world: World): ReadonlySet<number> {
+  const patients = new Set<number>();
+  for (const pawn of world.pawns) if (pawn.rescue?.phase === 'carry') patients.add(pawn.rescue.patientId);
+  return patients;
+}
+function actionLabel(pawn: Pawn, carriedPatients: ReadonlySet<number>) {
   if(pawn.health?.foodPoisoning?.vomit&&pawn.state!=='dead')return 'Vomit';
   if(pawn.cleaning)return pawn.cleaning.phase==='clean'?'Nettoie':'Rejoint des traces à nettoyer';
   if(pawn.burial)return pawn.burial.phase==='bury'?'Inhume une dépouille':pawn.burial.phase==='carry'?'Transporte une dépouille vers une tombe':'Va chercher une dépouille';
@@ -533,7 +538,7 @@ function actionLabel(pawn: Pawn) {
   if(pawn.draft)return draftLabel(pawn);
   if(pawn.shooting)return pawn.shooting.stance?.phase==='cooldown'?'Récupération après tir':pawn.shooting.stance?.phase==='aim'?'Riposte · vise':'Riposte · rejoint sa position';
   if(pawn.equipmentTask)return ({equip:'Va équiper son arme',drop:'Dépose son arme',wear:pawn.state==='working'?'Enfile un vêtement':'Va chercher un vêtement',remove:'Retire un vêtement'})[pawn.equipmentTask.action];
-  if(pawn.ward||pawn.prisoner||pawn.feed||pawn.tend||pawn.state==='resting'||pawn.rescue||carrierOf(snapshot!,pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
+  if(pawn.ward||pawn.prisoner||pawn.feed||pawn.tend||pawn.state==='resting'||pawn.rescue||carriedPatients.has(pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
   if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
   if(pawn.animalHandling)return ({tame:'Apprivoisement',maintain:'Entretien de la familiarité',lead:'Conduit un animal vers son enclos',milk:'Trait un dromadaire',shear:'Tond un mufalo'})[pawn.animalHandling.kind];
@@ -553,11 +558,13 @@ function actionLabel(pawn: Pawn) {
   return job ? `${stateLabels[pawn.state]} · ${jobLabels[job.kind].toLocaleLowerCase('fr')}` : stateLabels[pawn.state];
 }
 function rebuildPawns(world: World) {
+  colonistButtons.clear();
   el('colonists').replaceChildren(...world.pawns.filter(isColonist).map((pawn, index) => {
     const button = document.createElement('button');
     button.className = 'colonist'; button.dataset.pawn = String(pawn.id);
     button.innerHTML = `<span class="portrait portrait-generated"><span class="portrait-head"></span><span class="portrait-body"></span><span class="portrait-vest"></span><span class="pawn-symbol"></span></span><strong></strong><span class="pawn-mood"><i></i></span>`;
     button.onclick = event => selectPawns({ids:[pawn.id],additive:event.shiftKey,toggle:event.shiftKey},!event.shiftKey);
+    colonistButtons.set(pawn.id, button);
     return button;
   }));
   el('work-rows').replaceChildren(...world.pawns.filter(isColonist).map(pawn => {
@@ -574,40 +581,56 @@ function rebuildPawns(world: World) {
     const activity = document.createElement('td'); activity.className = 'work-activity'; row.append(activity); return row;
   }));
 }
-function updateWorkPanel(world: World): void {
+function updateWorkPanel(world: World, carriedPatients: ReadonlySet<number>): void {
   for (const pawn of world.pawns.filter(isColonist)) {
     const row = document.querySelector<HTMLElement>(`[data-worker="${pawn.id}"]`);
     if (!row) continue;
     updateWorkSkills(row,pawn);
-    row.querySelector('.work-activity')!.textContent = actionLabel(pawn);
+    row.querySelector('.work-activity')!.textContent = actionLabel(pawn, carriedPatients);
     for (const select of row.querySelectorAll<HTMLSelectElement>('select')) select.value = String(pawn.priorities[select.dataset.work as WorkType]);
   }
 }
 function renderState() {
   if (!snapshot) return;
   const world = snapshot;
+  const colonists = world.pawns.filter(isColonist);
+  const living = colonists.filter(pawn => pawn.state !== 'dead');
+  const colonistIds = new Set(colonists.map(pawn => pawn.id));
+  const selectedColonists = colonists.filter(pawn => selection.ids.has(pawn.id) && !pawn.prisoner);
+  const carriedPatients = carriedPatientsOf(world);
   if(currentPanel==='animals')updateAnimalsPanel(el('animals-content'),world,id=>selectPawn(id));
   if(currentPanel==='wildlife')renderWildlife(world);
-  updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)));
-  scheduleUI.update(world);
-  foodPolicyUI.update(world);
-  apparelPolicyUI.update(world);
-  el('blocks').textContent=String(world.piles.reduce((n,p)=>n+(p.kind==='blocks'&&colonyPile(world,p)?p.quantity:0),0));
-  el('medicine').textContent=String(world.piles.reduce((n,p)=>n+(p.kind==='medicine'&&colonyPile(world,p)?p.quantity:0),0));
-  el('silver').textContent=String(world.piles.reduce((n,p)=>n+(p.item==='silver'&&colonyPile(world,p)?p.quantity:0),0));
-  el('component').textContent = String(world.piles.reduce((n,p)=>n+(p.item==='component'&&colonyPile(world,p)?p.quantity:0),0));
-  const cloth=world.piles.reduce((n,p)=>n+(p.item==='cloth'&&colonyPile(world,p)?p.quantity:0),0);el('cloth').textContent=String(cloth);el('cloth-stock').hidden=cloth===0;
-  el('steel').textContent = String(world.piles.reduce((n,p)=>n+(p.item==='steel'&&colonyPile(world,p)?p.quantity:0),0));
-  const rare={gold:0,plasteel:0,'advanced-component':0};
-  for(const pile of world.piles)if(pile.item==='gold'||pile.item==='plasteel'||pile.item==='advanced-component')if(colonyPile(world,pile))rare[pile.item]+=pile.quantity;
-  for(const item of ['gold','plasteel','advanced-component'] as const){el(item).textContent=String(rare[item]);el(`${item}-stock`).hidden=rare[item]===0;}
-  el('wood').textContent = String(world.stock.wood); el('food').textContent = availableNutrition(world).toFixed(1); updateFoodStocks(el('food-items'), world);
-  const carried = world.piles.filter(pile => pile.owner.type === 'pawn'&&colonyPile(world,pile)).reduce((sum, pile) => sum + pile.quantity, 0);
-  const delivered = world.piles.filter(pile => pile.owner.type === 'job').reduce((sum, pile) => sum + pile.quantity, 0);
+  if(currentPanel==='research')updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)));
+  if(currentPanel==='schedule')scheduleUI.update(world);
+  if(currentPanel==='assign'){foodPolicyUI.update(world);apparelPolicyUI.update(world);}
+  const totals = {blocks:0,medicine:0,silver:0,component:0,cloth:0,steel:0,gold:0,plasteel:0,'advanced-component':0,carried:0,delivered:0};
+  for (const pile of world.piles) {
+    const owner = pile.owner;
+    if (owner.type === 'job') totals.delivered += pile.quantity;
+    const colony = owner.type === 'ground' || (owner.type !== 'grave' && owner.type !== 'job' && colonistIds.has(owner.pawnId));
+    if (!colony) continue;
+    if (pile.kind === 'blocks') totals.blocks += pile.quantity;
+    if (pile.kind === 'medicine') totals.medicine += pile.quantity;
+    if (pile.item === 'silver') totals.silver += pile.quantity;
+    if (pile.item === 'component') totals.component += pile.quantity;
+    if (pile.item === 'cloth') totals.cloth += pile.quantity;
+    if (pile.item === 'steel') totals.steel += pile.quantity;
+    if (pile.item === 'gold' || pile.item === 'plasteel' || pile.item === 'advanced-component') totals[pile.item] += pile.quantity;
+    if (owner.type === 'pawn') totals.carried += pile.quantity;
+  }
+  el('blocks').textContent=String(totals.blocks);
+  el('medicine').textContent=String(totals.medicine);
+  el('silver').textContent=String(totals.silver);
+  el('component').textContent=String(totals.component);
+  el('cloth').textContent=String(totals.cloth);el('cloth-stock').hidden=totals.cloth===0;
+  el('steel').textContent=String(totals.steel);
+  for(const item of ['gold','plasteel','advanced-component'] as const){el(item).textContent=String(totals[item]);el(`${item}-stock`).hidden=totals[item]===0;}
+  el('wood').textContent = String(world.stock.wood); const nutrition = availableNutrition(world);el('food').textContent = nutrition.toFixed(1); updateFoodStocks(el('food-items'), world);
+  const carried = totals.carried, delivered = totals.delivered;
   el('material-status').textContent = `${carried} portées · ${delivered} au chantier`;
   el('scenario-current').textContent=(world.scenario?SCENARIOS[world.scenario.id].label:'Partie historique · départ non renseigné')+(world.site?` · ${BIOME_LABELS[world.site.biome]} · ${HILLINESS_LABELS[world.site.hilliness]}`:'');
   el('biome-current').textContent=world.site?BIOME_LABELS[world.site.biome]:'Site historique';
-  el('population').textContent = String(world.pawns.filter(p=>isColonist(p)&&p.state!=='dead').length); el('map-size').textContent = `${world.width} × ${world.height}`;
+  el('population').textContent = String(living.length); el('map-size').textContent = `${world.width} × ${world.height}`;
   el('outdoor-temperature').textContent = `Extérieur : ${outdoorTemperature(world).toFixed(1)} °C`;
   el('day').textContent = climateDateLabel(world);
   el('weather').textContent=world.weather?WEATHER[perceivedWeather(world)].label:'';
@@ -620,14 +643,14 @@ function renderState() {
     const active = Number(button.dataset.speed) === currentSpeed;
     button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
   }
-  const signature = JSON.stringify(world.pawns.filter(isColonist).map(pawn => [pawn.id, pawn.name]));
+  const signature = JSON.stringify(colonists.map(pawn => [pawn.id, pawn.name]));
   if (signature !== pawnSignature) { pawnSignature = signature; rebuildPawns(world); }
   const equipment=equipmentProjection(world),apparel=apparelProjection(world);
-  for (const pawn of world.pawns.filter(isColonist)) {
-    const button = document.querySelector<HTMLButtonElement>(`[data-pawn="${pawn.id}"]`)!;
+  for (const pawn of colonists) {
+    const button = colonistButtons.get(pawn.id)!;
     button.classList.toggle('selected', selection.ids.has(pawn.id));button.dataset.drafted=String(!!pawn.draft);
     button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
-    button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn)} · ${equipmentDescription(equipment.get(pawn.id),pawn)}`;button.dataset.equipment=equipment.get(pawn.id)?.item??'';
+    button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn,carriedPatients)} · ${equipmentDescription(equipment.get(pawn.id),pawn)}`;button.dataset.equipment=equipment.get(pawn.id)?.item??'';
     const rawLook=apparelAppearance(apparel.get(pawn.id)),look={...rawLook,color:rawLook.color??pawnBaseColor(pawn.id)};button.dataset.apparel=look.signature;
     const portrait=button.querySelector<HTMLElement>('.portrait-head')!,url=portraitDataUrl(appearanceOf(pawn,world.seed),look,equipment.get(pawn.id)?.item,portraitExpressionOf(pawn));
     if(portrait.dataset.source!==url){portrait.dataset.source=url;portrait.style.setProperty('--pawn-portrait',`url("${url}")`);}button.title+=` · ${look.description}`;
@@ -638,22 +661,22 @@ function renderState() {
     symbol.dataset.state = pawn.state==='dead'?'dead':pawn.state==='sleeping'?'sleep':'';
     (button.querySelector('i') as HTMLElement).style.width = `${pawn.state==='dead'?0:pawn.mood}%`;
   }
-  if (currentPanel === 'work') updateWorkPanel(world);
-  updateDraftControls(el('inspector'),world.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner));
-  shootingControls.update(el('inspector'),world.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner));
+  if (currentPanel === 'work') updateWorkPanel(world,carriedPatients);
+  updateDraftControls(el('inspector'),selectedColonists);
+  shootingControls.update(el('inspector'),selectedColonists);
   if(selection.ids.size>1) {
     el('group-title').textContent=`${selection.ids.size} individus sélectionnés`;
     for(const button of el('group-members').querySelectorAll<HTMLButtonElement>('button')) {
       const pawn=world.pawns.find(p=>p.id===Number(button.dataset.groupPawn));
       const animal=world.wildlife?.animals.find(a=>a.id===Number(button.dataset.groupPawn));
-      button.textContent=pawn?`${pawn.name} · ${actionLabel(pawn)}`:animal?`${animalSpecies(animal.species).label} ${animal.id}`:'Individu absent';
+      button.textContent=pawn?`${pawn.name} · ${actionLabel(pawn,carriedPatients)}`:animal?`${animalSpecies(animal.species).label} ${animal.id}`:'Individu absent';
     }
   } else if (selectedPawn !== undefined) {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
     if(pawn){const look=apparelAppearance(apparel.get(pawn.id));updatePawnAppearanceInspection(el('inspector'),world,pawn,{...look,color:look.color??pawnBaseColor(pawn.id)},equipment.get(pawn.id)?.item);}
     if (!pawn) {if(!updateAnimalInspector(el('inspector'),world,selectedPawn))clearSelection();}
     else if(pawn.prisoner){
-      el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);
+      el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn,carriedPatients);
       updatePrisonerInspection(el('inspector'),world,pawn);
       updateRecreationInspection(el('inspector'),pawn,world);
       updateJournalInspection(el('inspector'),world,pawn);
@@ -662,9 +685,9 @@ function renderState() {
         el<HTMLMeterElement>(`${need}-meter`).value=pawn.state==='dead'?0:pawn[need];
       }
     }
-    else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);}
+    else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn,carriedPatients);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);}
     else {
-      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.burning||pawn.firefighting||pawn.draft||pawn.equipmentTask||pawn.need||pawn.recreation.task||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='resting'||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn) : `${actionLabel(pawn)} · ${queryPawnStatus(world, pawn).reason}`;
+      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.burning||pawn.firefighting||pawn.draft||pawn.equipmentTask||pawn.need||pawn.recreation.task||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='resting'||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn,carriedPatients) : `${actionLabel(pawn,carriedPatients)} · ${queryPawnStatus(world, pawn).reason}`;
       updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn,world);
       updateRecreationInspection(el('inspector'),pawn,world);
       roomInspection.update(el('inspector'), world, pawn);
@@ -777,13 +800,12 @@ function renderState() {
     }));
     if (!entries.length) el('journal-items').textContent = 'Trois survivants. Une nouvelle histoire.';
   }
-  const living=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead');
   const alerts: string[] = [];
   const crises=living.filter(p=>p.mental?.crisis).length;if(crises)alerts.push(`${crises} colon(s) en errance triste`);
   const enemy=world.pawns.find(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p));
   const fires=world.fires?.items??[],fireAlert=el<HTMLButtonElement>('inspect-fire');fireAlert.hidden=!fires.length;fireAlert.textContent=`Incendie · ${fires.length} foyer${fires.length>1?'s':''} · voir`;fireAlert.onclick=()=>{const cell=firePosition(world,fires[0]!);if(cell){applyTool('select');pickCell(cell.x,cell.z);renderer?.focusCell(cell);}};
   const threatButton=el<HTMLButtonElement>('inspect-threat');threatButton.hidden=!enemy;if(enemy){threatButton.textContent='Menace armée · voir';threatButton.onclick=()=>selectPawn(enemy.id);}
-  const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=world.pawns.filter(isColonist).length-living.length;
+  const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=colonists.length-living.length;
   const starving=living.filter(p=>(p.health?.malnutrition??0)>0).length;if(starving)alerts.push(`${starving} colon(s) en malnutrition`);
   const chilled=living.filter(p=>(p.health?.hypothermia??0)>=40000000).length;if(chilled)alerts.push(`${chilled} colon(s) en hypothermie`);
   let infected=0,critical=0,gripped=0,extremeFlu=0;
@@ -803,7 +825,7 @@ function renderState() {
   if(downed)alerts.push(`${downed} colon(s) à terre`);
   if(bleeding)alerts.push(`${bleeding} colon(s) saignent`);
   if(deaths)alerts.push(`${deaths} colon(s) décédé(s)`);
-  if (availableNutrition(world) < living.length * 1.6) alerts.push('Réserves de nourriture faibles');
+  if (nutrition < living.length * 1.6) alerts.push('Réserves de nourriture faibles');
   const hungry = living.filter(pawn => pawn.hunger < 25).length;
   if (hungry) alerts.push(`${hungry} colon(s) affamé(s)`);
   if (pending) alerts.push(`${pending} ordre(s) en attente`);
@@ -939,7 +961,7 @@ client.onSnapshot = (world, cost, speed, replaced, motion) => {
   const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id)&&!world.wildlife?.animals.some(a=>a.id===id))||!!selectedObject&&!mapObjectExists(world,selectedObject);
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;renderer?.setSelectedObject(undefined);orderMenu.close();rebuildInspector();}
   else if(roleChanged){orderMenu.close();rebuildInspector();}
-  renderer?.setWorld(world,replaced,speed,motion);
+  renderer?.setWorld(world,replaced,speed,motion,true);
   if(changed)renderer?.setSelectedPawns(selection.ids);
   updateMapHover();
   snapshotHud.request(changed||roleChanged||speedChanged);
@@ -961,7 +983,7 @@ async function prepareWorld(): Promise<void> {
       if (info) el('area-feedback').textContent = `${info.width} × ${info.height} · ${info.eligible} case(s) retenue(s) · ${info.skipped} ignorée(s) — Relâcher pour appliquer · Échap pour annuler`;
     };
   }
-  renderer.setWorld(snapshot, true, currentSpeed, latestMotion);
+  renderer.setWorld(snapshot, true, currentSpeed, latestMotion,true);
   await renderer.preparePresentation();
   el('loading')?.remove(); renderState();
 }

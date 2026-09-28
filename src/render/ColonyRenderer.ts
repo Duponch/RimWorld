@@ -14,11 +14,12 @@ import { EnvironmentLighting } from './EnvironmentLighting';
 import { PresentationQueue } from './PresentationQueue';
 import { MOTION_HISTORY_TICKS } from '../bridge/motion-tracks';
 import { RoofLayer } from './RoofLayer';
-import { terrainSurfaceChanges } from './terrain-state';
+import { terrainSurfaceChanges,terrainTileChanges } from './terrain-state';
 import { doorOrientations } from '../sim/door-rules';
 import { DoorLayer } from './DoorLayer';
 import { TimberCladdingLayer } from './TimberCladdingLayer';
 import { prepareShadowPipelines } from './shadow-preparation';
+import { PausedShadowCache } from './PausedShadowCache';
 import { installCommand } from '../sim/furniture-commands';
 import type { Structure } from '../sim/types';
 import { buildJobMarkers } from './JobLayer';
@@ -79,11 +80,14 @@ const scratchObject = new THREE.Object3D();
 export class ColonyRenderer {
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
   private readonly frames = new FrameMetrics();
+  private viewportWidth=1;
+  private viewportHeight=1;
   private readonly environmentLighting = new EnvironmentLighting();
   private readonly overview = new OverviewLayer(this.environmentLighting.configure);
   private readonly timeline = new MotionTimeline();
   private readonly presentation = new PresentationQueue();
-  private received:{world:World;speed:number;tracks?:PawnTrack[]}|undefined;
+  private received:{world:World;speed:number;tracks?:PawnTrack[];immutableSnapshot:boolean}|undefined;
+  private immutableSnapshot=false;
   private hasTracks = false;
   private readonly hygiene = new HygieneLayer(this.environmentLighting.configure);
   private selectedFloor:BuildableFloorKind|undefined;
@@ -160,6 +164,7 @@ export class ColonyRenderer {
   private readonly plants = new PlantClusterLayer(this.staticMaterial,this.texturedStaticMaterial);
   private readonly designations = new DesignationIconLayer();
   private readonly daylight: DayNightLayer;
+  private readonly pausedShadow = new PausedShadowCache();
   private world: World | null = null;
   private structureKey = '';
   private jobKey = '';
@@ -240,6 +245,7 @@ export class ColonyRenderer {
     host.appendChild(renderer.domElement);
     this.mapLabels = new MapLabelsOverlay(host);
     this.daylight = new DayNightLayer(this.scene);
+    this.invalidatePausedShadow();
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
     this.scene.add(this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh);
     if (groundGrassEnabled) {
@@ -291,11 +297,13 @@ export class ColonyRenderer {
     this.resize();
   }
 
-  setWorld(world: World, resetPresentation = false, speed = 1, tracks?: PawnTrack[]): void {
+  setWorld(world: World, resetPresentation = false, speed = 1, tracks?: PawnTrack[], immutableSnapshot = false): void {
     if(this.disposed)return;
+    this.invalidatePausedShadow();
     const previous=this.received?.world;
     const reset=resetPresentation||!previous||world.tick<previous.tick||world.seed!==previous.seed||world.width!==previous.width||world.height!==previous.height;
-    this.received={world,speed,tracks};
+    this.received={world,speed,tracks,immutableSnapshot};
+    this.immutableSnapshot=immutableSnapshot;
     this.projectiles.adopt(world,reset);
     if(document.hidden)return;
     if(tracks){this.timeline.adopt(world.tick,speed,tracks,performance.now(),reset||!this.hasTracks);this.hasTracks=true;}
@@ -309,6 +317,7 @@ export class ColonyRenderer {
 
   private applyWorld(world: World, resetPresentation = false): void {
     if (this.disposed) return;
+    this.invalidatePausedShadow();
     if (resetPresentation) this.cancelDesignation();
     this.areaIndex = undefined; this.areaSignature = '';
     const now = performance.now();
@@ -317,14 +326,18 @@ export class ColonyRenderer {
     // collection is inspected once; ordinary pawn snapshots do not scan the map.
     const newMap = !previousWorld||previousWorld.seed!==world.seed||previousWorld.width!==world.width||previousWorld.height!==world.height||previousWorld.scenario?.id!==world.scenario?.id||previousWorld.scenario?.revision!==world.scenario?.revision||
       previousWorld.site?.hilliness!==world.site?.hilliness||previousWorld.site?.revision!==world.site?.revision||previousWorld.site?.biome!==world.site?.biome;
-    const terrainChanges=terrainSurfaceChanges(previousWorld,world);
+    const changedTiles=terrainTileChanges(previousWorld,world);
+    const terrainChanges=terrainSurfaceChanges(previousWorld,world,changedTiles);
+    // External setWorld callers may mutate tile collections in place. Only
+    // decoder snapshots promise identity-stable unchanged tiles.
+    const immutableTileChanges=this.immutableSnapshot?changedTiles??undefined:undefined;
     const groundChanged=terrainChanges===null||terrainChanges.length>0;
     if (newMap) this.cancelDesignation();
     // The worker epoch distinguishes a checkpoint from an ordinary delta even
     // if terrain content and simulation tick match a previous session.
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
     this.world = world;
-    this.grass?.update(world,newMap);
+    this.grass?.update(world,newMap,immutableTileChanges);
     this.fires.adopt(world,newMap);this.wind.adopt(world,newMap);
     this.environmentLighting.update(world);
     if(groundChanged) {
@@ -344,7 +357,7 @@ export class ColonyRenderer {
         this.terrainGeometryDirty=false;
       }
     }
-    this.rocks.update(world,newMap);
+    this.rocks.update(world,newMap,immutableTileChanges);
     if(!this.rocks.group.parent)this.scene.add(this.rocks.group);
     if (newMap) {
       this.boxes.clear();
@@ -432,12 +445,20 @@ export class ColonyRenderer {
     return drag !== null || selecting;
   }
 
+  private invalidatePausedShadow():void {
+    this.pausedShadow.invalidate();
+    const shadow=this.daylight.light.shadow;
+    shadow.autoUpdate=true;
+    shadow.needsUpdate=true;
+  }
+
   /** Presentation only: hidden wall volume remains blocked in the simulation. */
-  setRoofsVisible(visible:boolean):void {this.roofs.surface.visible=visible;}
+  setRoofsVisible(visible:boolean):void {if(this.roofs.surface.visible!==visible)this.invalidatePausedShadow();this.roofs.surface.visible=visible;}
   /** Switch resident material graphs. The plain variants contain no texture
    * sampling node; no image or per-frame CPU work is involved while disabled. */
   setTexturesEnabled(enabled:boolean):void {
     if(this.texturesEnabled===enabled)return;
+    this.invalidatePausedShadow();
     this.texturesEnabled=enabled;
     if(enabled&&this.world)this.refreshTerrainPaint(this.world);
     if(!enabled)this.releaseTerrainPaint();
@@ -490,6 +511,7 @@ export class ColonyRenderer {
    * update path. Re-enable lazily from the current immutable world snapshot. */
   setGroundGrassEnabled(enabled: boolean): void {
     if (this.disposed || enabled === Boolean(this.grass)) return;
+    this.invalidatePausedShadow();
     if (!enabled) {
       this.grass!.mesh.removeFromParent();
       this.grass!.dispose();
@@ -500,15 +522,17 @@ export class ColonyRenderer {
     this.scene.add(this.grass.mesh);
     if (this.world) this.grass.update(this.world, true);
   }
-  setRoofAreasVisible(visible:boolean):void {this.roofs.areas.visible=visible;}
+  setRoofAreasVisible(visible:boolean):void {if(this.roofs.areas.visible!==visible)this.invalidatePausedShadow();this.roofs.areas.visible=visible;}
   setWallCutaway(enabled: boolean): void {
     if (this.wallCutaway === enabled) return;
+    this.invalidatePausedShadow();
     this.wallCutaway = enabled;
     if (this.world) { this.roofs.update(this.world,this.boxes,this.wallCutaway);this.buildStructures(this.world); this.buildJobs(this.world); }
   }
 
   /** Hide canopies for inspection while retaining trunks and all game rules. */
   setFoliageVisible(visible: boolean): void {
+    if(this.grassVisible!==visible)this.invalidatePausedShadow();
     this.grassVisible=visible;
     if(!visible&&this.grass){this.grass.mesh.visible=false;this.grass.mesh.geometry.instanceCount=0;}
     this.resources.setFoliageVisible(visible);
@@ -522,6 +546,7 @@ export class ColonyRenderer {
    * Do not defer the first overview pipeline to the player's first wheel zoom. */
   async preparePresentation(): Promise<void> {
     this.preparing = true;
+    this.invalidatePausedShadow();
     const culling = new Map<THREE.Object3D, boolean>();
     const distant = this.overview.group.visible;
     const restoreWildlife=this.wildlife.prepare();
@@ -561,6 +586,7 @@ export class ColonyRenderer {
       restoreWind();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
+      this.invalidatePausedShadow();
       this.updateHover();
       this.frames.reset(); this.lastFrame = 0;
     }
@@ -568,16 +594,19 @@ export class ColonyRenderer {
 
   toggleCameraMode(): CameraMode {
     this.cancelDesignation();
+    this.invalidatePausedShadow();
     this.rig.setMode(this.rig.mode === 'orthographic' ? 'perspective' : 'orthographic');
     return this.rig.mode;
   }
 
   focusCell(cell:Cell):void {
+    this.invalidatePausedShadow();
     const offset=this.camera.position.clone().sub(this.controls.target);this.controls.target.set(cell.x,0,cell.z);this.camera.position.copy(this.controls.target).add(offset);this.controls.update();
   }
   focusPawn(id: number): void {
     const pawn = this.world?.pawns.find((item) => item.id === id)??this.world?.wildlife?.animals.find(a=>a.id===id);
     if (!pawn) return;
+    this.invalidatePausedShadow();
     const offset = this.camera.position.clone().sub(this.controls.target);
     const physical='body' in pawn&&this.world?pawnBodyLocation(this.world,pawn):pawn;if(!physical)return;
     this.controls.target.set(physical.x, 0, physical.z);
@@ -659,7 +688,9 @@ export class ColonyRenderer {
 
   resize(): void {
     if (this.disposed) return;
+    this.invalidatePausedShadow();
     const width = Math.max(1, this.host.clientWidth), height = Math.max(1, this.host.clientHeight);
+    this.viewportWidth=width;this.viewportHeight=height;
     this.rig.resize(width, height);
     this.renderer.setSize(width, height, false);
   }
@@ -667,11 +698,11 @@ export class ColonyRenderer {
   projectCell(x: number, z: number): { x: number; y: number } {
     this.camera.updateMatrixWorld();
     const projected = new THREE.Vector3(x, 0, z).project(this.camera);
-    return { x: (projected.x + 1) * this.host.clientWidth / 2, y: (1 - projected.y) * this.host.clientHeight / 2 };
+    return { x: (projected.x + 1) * this.viewportWidth / 2, y: (1 - projected.y) * this.viewportHeight / 2 };
   }
 
   private updateResources(world: World, newMap: boolean): void {
-    const view=this.naturalPresentation.read(world,newMap);if(!view)return;
+    const view=this.naturalPresentation.read(world,newMap,this.immutableSnapshot);if(!view)return;
     this.plants.update(view,newMap,this.naturalPresentation.changes);
     const visible={...view,resources:view.resources.filter(resource=>!isClusterPlantSpecies(resource.species))};
     this.resources.update(visible, newMap,this.naturalPresentation.changes); this.overview.update(visible,newMap,this.naturalPresentation.changes);
@@ -742,7 +773,7 @@ export class ColonyRenderer {
 
   private readonly onVisibility = (): void => {
     this.frames.reset();this.lastFrame=0;
-    if(!document.hidden&&this.received){const r=this.received;this.setWorld(r.world,true,r.speed,r.tracks);}
+    if(!document.hidden&&this.received){const r=this.received;this.setWorld(r.world,true,r.speed,r.tracks,r.immutableSnapshot);}
   };
 
   private frame(now: number): void {
@@ -753,7 +784,9 @@ export class ColonyRenderer {
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (performance.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
     if(this.hasTracks && this.world) {this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
-    if(this.world&&this.pawns.presentCargo(this.hasTracks?this.timeline.tick:THREE.MathUtils.lerp(this.timeFrom,this.timeTo,this.pawns.blend.value)*TICKS_PER_SECOND,this.world))this.updatePiles(this.world,false);
+    if(this.world&&this.pawns.presentCargo(this.hasTracks?this.timeline.tick:THREE.MathUtils.lerp(this.timeFrom,this.timeTo,this.pawns.blend.value)*TICKS_PER_SECOND,this.world)){
+      this.invalidatePausedShadow();this.updatePiles(this.world,false);
+    }
     if(this.pawns.feedbackSource)this.actionFeedback.syncTravel(this.pawns.feedbackSource);
     if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined);
     this.ropes.present(this.hasTracks?this.timeline:undefined);
@@ -789,14 +822,14 @@ export class ColonyRenderer {
       target:this.controls.target,strength:visualWindStrength,directionX:visualWind.x,directionZ:visualWind.z,
       daylight:this.daylight.sample.daylight});
     this.daylight.fitShadow(this.camera);
-    const cellPixels=this.rig.pixelsPerCell(this.host.clientHeight);
+    const cellPixels=this.rig.pixelsPerCell(this.viewportHeight);
     this.actionFeedback.setBarsDetailVisible(cellPixels>=18);
     this.actionVfx.setDetailVisible(cellPixels>=18);
     this.brawlCloud.setDetailVisible(cellPixels>=18);
     this.ropes.setDetailVisible(cellPixels>=18);
-    this.designations.present(this.camera,this.host.clientHeight,cellPixels);
+    this.designations.present(this.camera,this.viewportHeight,cellPixels);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
-    if(distant!==this.overview.group.visible)this.landscape.needsUpdate=true;
+    if(distant!==this.overview.group.visible){this.landscape.needsUpdate=true;this.invalidatePausedShadow();}
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;this.plants.group.visible=!distant;
     this.structureVfx.setDistant(distant);
     if(!distant)this.structureVfx.setView(this.camera,this.controls.target);
@@ -806,9 +839,16 @@ export class ColonyRenderer {
       else{this.grass.mesh.visible=false;this.grass.mesh.geometry.instanceCount=0;}
     }
     this.landscape.setRetained(this.backend==='WebGPU'&&distant);
+    const shadow=this.daylight.light.shadow,received=this.received;
+    const cacheEligible=this.backend==='WebGPU'&&!!this.world;
+    const paused=received?.speed===0&&(!this.hasTracks||this.timeline.tick>=received.world.tick)&&!document.hidden;
+    const reuseShadow=cacheEligible&&this.pausedShadow.canReuse(paused,this.camera,this.daylight.light,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
+    if(cacheEligible){shadow.autoUpdate=!reuseShadow;if(!reuseShadow)shadow.needsUpdate=true;}
+    else shadow.autoUpdate=true;
     this.renderer.info.reset();
     this.renderer.render(this.scene, this.camera);
-    this.mapLabels.draw(this.world, this.camera, cellPixels, this.host.clientWidth, this.host.clientHeight);
+    if(cacheEligible&&!reuseShadow)this.pausedShadow.capture(!shadow.needsUpdate,this.camera,this.daylight.light,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
+    this.mapLabels.draw(this.world, this.camera, cellPixels, this.viewportWidth, this.viewportHeight);
     this.stats.drawCalls = this.renderer.info.render.drawCalls;
     this.stats.triangles = this.renderer.info.render.triangles;
     this.frames.record(now, document.hidden);

@@ -18,15 +18,13 @@ const scratchColor = new THREE.Color();
 
 type GroundWorld = Pick<World, 'width' | 'height' | 'tiles' | 'structures' | 'resources' | 'piles' | 'packed' | 'seed' | 'site'>;
 
-function coverMask(world: GroundWorld): Uint8Array<ArrayBuffer> {
-  const blocked = new Uint8Array(world.width * world.height);
+// Each source contributes one occupant. Counts preserve cover when two things
+// overlap and one moves or is removed.
+function coverState(world: GroundWorld): { counts: Uint32Array<ArrayBuffer>; blocked: Uint8Array<ArrayBuffer> } {
+  const counts = new Uint32Array(world.width * world.height);
   const mark = (x: number, z: number): void => {
-    if (x >= 0 && z >= 0 && x < world.width && z < world.height) blocked[z * world.width + x] = 1;
+    if (x >= 0 && z >= 0 && x < world.width && z < world.height) counts[z * world.width + x]!++;
   };
-  for (let i = 0; i < world.tiles.length; i++) {
-    const tile = world.tiles[i]!;
-    if (!SOIL_TERRAINS.has(tile.terrain) || tile.floor) blocked[i] = 1;
-  }
   // All constructed footprints cover their soil. Sparse piles and minified
   // furniture mask only when physically on the ground, not when carried.
   for (const structure of world.structures) {
@@ -35,7 +33,73 @@ function coverMask(world: GroundWorld): Uint8Array<ArrayBuffer> {
   for (const resource of world.resources) if (resource.kind === 'rock') mark(resource.x, resource.z);
   for (const pile of world.piles) if (pile.owner.type === 'ground') mark(pile.owner.x, pile.owner.z);
   for (const packed of world.packed) if (packed.owner.type === 'ground') mark(packed.owner.x, packed.owner.z);
-  return blocked;
+  const blocked = new Uint8Array(counts.length);
+  for (let i = 0; i < blocked.length; i++) {
+    const tile = world.tiles[i]!;
+    if (!SOIL_TERRAINS.has(tile.terrain) || tile.floor || counts[i]) blocked[i] = 1;
+  }
+  return { counts, blocked };
+}
+
+function sameStructureCover(a: World['structures'][number] | undefined,
+  b: World['structures'][number] | undefined): boolean {
+  return a === b || !!a && !!b && a.x === b.x && a.z === b.z && a.kind === b.kind &&
+    a.orientation === b.orientation && a.footprint === b.footprint;
+}
+
+function sameRockCover(a: World['resources'][number] | undefined,
+  b: World['resources'][number] | undefined): boolean {
+  if (a === b) return true;
+  const aRock = a?.kind === 'rock', bRock = b?.kind === 'rock';
+  return aRock === bRock && (!aRock || a!.x === b!.x && a!.z === b!.z);
+}
+
+type GroundOwner = World['piles'][number]['owner'] | World['packed'][number]['owner'];
+
+function sameGroundCover(a: { owner: GroundOwner } | undefined,
+  b: { owner: GroundOwner } | undefined): boolean {
+  if (a === b) return true;
+  const aOwner = a?.owner, bOwner = b?.owner;
+  if (aOwner?.type !== 'ground') return bOwner?.type !== 'ground';
+  return bOwner?.type === 'ground' && aOwner.x === bOwner.x && aOwner.z === bOwner.z;
+}
+
+/** Index-aligned deltas are common. Reordered/inserted lists use IDs so only
+ * the actual old and new footprints become dirty. Duplicate IDs trigger a
+ * complete rebuild rather than risking incorrect counts. */
+function diffCover<T>(before: T[] | undefined, after: T[], id: (item: T) => number,
+  same: (a: T | undefined, b: T | undefined) => boolean,
+  apply: (item: T, delta: -1 | 1) => void): boolean {
+  if (before === after) return true;
+  const old = before ?? [];
+  let aligned = old.length === after.length;
+  if (aligned) for (let i = 0; i < old.length; i++) {
+    if (id(old[i]!) !== id(after[i]!)) { aligned = false; break; }
+  }
+  if (aligned) {
+    for (let i = 0; i < old.length; i++) {
+      const a = old[i]!, b = after[i]!;
+      if (!same(a, b)) { apply(a, -1); apply(b, 1); }
+    }
+    return true;
+  }
+  const oldById = new Map<number, T>(), newById = new Map<number, T>();
+  for (const item of old) {
+    const key = id(item);
+    if (oldById.has(key)) return false;
+    oldById.set(key, item);
+  }
+  for (const item of after) {
+    const key = id(item);
+    if (newById.has(key)) return false;
+    newById.set(key, item);
+  }
+  for (const [key, a] of oldById) {
+    const b = newById.get(key);
+    if (!same(a, b)) { apply(a, -1); if (b) apply(b, 1); }
+  }
+  for (const [key, b] of newById) if (!oldById.has(key) && !same(undefined, b)) apply(b, 1);
+  return true;
 }
 
 function writeGroundCell(data: Uint8Array, world: GroundWorld, i: number, blocked: Uint8Array): boolean {
@@ -58,7 +122,7 @@ function writeGroundCell(data: Uint8Array, world: GroundWorld, i: number, blocke
 
 export function groundGrassPixels(world: GroundWorld): Uint8Array<ArrayBuffer> {
   const data = new Uint8Array(world.width * world.height * 4);
-  const blocked = coverMask(world);
+  const { blocked } = coverState(world);
   for (let i = 0; i < world.width * world.height; i++) {
     writeGroundCell(data, world, i, blocked);
   }
@@ -137,6 +201,9 @@ export class GpuGroundGrassLayer {
   private previousBiome: NonNullable<World['site']>['biome'] | undefined;
   private previousPixels = new Uint8Array(0);
   private previousBlocked = new Uint8Array(0);
+  private coverCounts = new Uint32Array(0);
+  private dirtyFlags = new Uint8Array(0);
+  private readonly dirtyCells: number[] = [];
   private revision = 0;
   private readonly corner = new THREE.Vector3();
   private readonly ray = new THREE.Vector3();
@@ -227,9 +294,9 @@ export class GpuGroundGrassLayer {
   }
   presentWind(tick:number):void {this.windTick.value=((tick%7200)+7200)%7200;}
 
-  /** Cheap on ordinary snapshots. A changed tiles/structures collection is
-   * checked against the previous pixels; health/damage-only edits do not upload. */
-  update(world: World, force = false): void {
+  /** Diff spatial cover at source cells; dynamic edits leave the atlas alone.
+   * Only seed/biome, dimensions and explicit force recolour the whole map. */
+  update(world: World, force = false, changedTiles?: readonly number[]): void {
     const widthChanged = this.map.image.width !== world.width || this.map.image.height !== world.height ||
       this.previousPixels.length !== world.width * world.height * 4;
     const biome = world.site?.biome;
@@ -238,52 +305,84 @@ export class GpuGroundGrassLayer {
       this.previousResources === world.resources &&
       this.previousPiles === world.piles && this.previousPacked === world.packed &&
       this.previousBiome === biome) return;
-    const oldTiles = this.previousTiles, oldBlocked = this.previousBlocked;
+    const oldTiles = this.previousTiles;
     const seedChanged = this.previousSeed !== world.seed || this.previousBiome !== biome;
-    let surfaceChanged = widthChanged;
-    if (!surfaceChanged && oldTiles !== world.tiles) {
-      for (let i = 0; i < world.tiles.length; i++) {
-        if (oldTiles?.[i]?.terrain !== world.tiles[i]!.terrain ||
-          oldTiles[i]?.floor !== world.tiles[i]!.floor) { surfaceChanged = true; break; }
+    let fullRebuild = widthChanged || force;
+    if (!fullRebuild) {
+      const touch = (i: number): void => {
+        if (!this.dirtyFlags[i]) { this.dirtyFlags[i] = 1; this.dirtyCells.push(i); }
+      };
+      const counts = this.coverCounts;
+      let inconsistent = false;
+      const adjust = (x: number, z: number, delta: -1 | 1): void => {
+        if (x < 0 || z < 0 || x >= world.width || z >= world.height) return;
+        const i = z * world.width + x;
+        if (delta < 0 && !counts[i]) { inconsistent = true; return; }
+        counts[i] = counts[i]! + delta;
+        touch(i);
+      };
+      // Tile deltas share unchanged Tile objects. A copied array without a
+      // changed-slot list still needs one comparison pass for mining/flooring.
+      if (oldTiles !== world.tiles) {
+        const inspect = changedTiles;
+        for (let n = 0; n < (inspect?.length ?? world.tiles.length); n++) {
+          const i = inspect ? inspect[n]! : n;
+          if (oldTiles?.[i]?.terrain !== world.tiles[i]!.terrain ||
+            oldTiles[i]?.floor !== world.tiles[i]!.floor) touch(i);
+        }
       }
+      const structuresOkay = diffCover(this.previousStructures, world.structures, s => s.id,
+        sameStructureCover, (s, delta) => {
+          for (const { x, z } of footprintCells(s)) adjust(x, z, delta);
+        });
+      const resourcesOkay = structuresOkay && diffCover(this.previousResources, world.resources, r => r.id,
+        sameRockCover, (r, delta) => { if (r.kind === 'rock') adjust(r.x, r.z, delta); });
+      const pilesOkay = resourcesOkay && diffCover(this.previousPiles, world.piles, p => p.id,
+        sameGroundCover, (p, delta) => {
+          if (p.owner.type === 'ground') adjust(p.owner.x, p.owner.z, delta);
+        });
+      const packedOkay = pilesOkay && diffCover(this.previousPacked, world.packed, p => p.building.id,
+        sameGroundCover, (p, delta) => {
+          if (p.owner.type === 'ground') adjust(p.owner.x, p.owner.z, delta);
+        });
+      fullRebuild = !packedOkay || inconsistent;
     }
-    const coverSourcesChanged = surfaceChanged || this.previousStructures !== world.structures ||
-      this.previousResources !== world.resources || this.previousPiles !== world.piles ||
-      this.previousPacked !== world.packed || force;
-    let blocked = coverSourcesChanged ? coverMask(world) : oldBlocked;
-    let blockerChanged = widthChanged;
-    if (coverSourcesChanged && !widthChanged) {
-      for (let i = 0; i < blocked.length; i++) {
-        if (blocked[i] !== oldBlocked[i]) { blockerChanged = true; break; }
-      }
-      if (!blockerChanged) blocked = oldBlocked;
-    }
-    this.previousTiles = world.tiles; this.previousStructures = world.structures;
-    this.previousResources = world.resources;
-    this.previousPiles = world.piles; this.previousPacked = world.packed;
-    this.previousSeed = world.seed; this.previousBiome = biome;
-    this.previousBlocked = blocked;
-    if (widthChanged) {
-      this.previousPixels = new Uint8Array(world.width * world.height * 4);
-      for (let i = 0; i < world.tiles.length; i++)
-        writeGroundCell(this.previousPixels, world, i, blocked);
-      this.map.dispose();
-      this.map.image = { data: this.previousPixels, width: world.width, height: world.height };
-      this.dimensions.value.set(world.width, world.height);
-      this.map.needsUpdate = true; this.revision++;
-      return;
-    }
-    if (!force && !seedChanged && oldTiles === world.tiles && !blockerChanged) return;
-    // Most engine snapshots share immutable tile objects. Mining damage or
-    // door activity can replace collections without changing grass coverage.
     let changed = false;
-    for (let i = 0; i < world.tiles.length; i++) {
-      const before = oldTiles?.[i], after = world.tiles[i]!;
-      if (!force && !seedChanged && before && before.terrain === after.terrain &&
-        before.floor === after.floor && oldBlocked[i] === blocked[i]) continue;
-      changed = writeGroundCell(this.previousPixels, world, i, blocked) || changed;
+    if (fullRebuild) {
+      const { counts, blocked } = coverState(world);
+      this.coverCounts = counts;
+      this.previousBlocked = blocked;
+      if (widthChanged) {
+        this.previousPixels = new Uint8Array(world.width * world.height * 4);
+        this.dirtyFlags = new Uint8Array(world.width * world.height);
+        for (let i = 0; i < world.tiles.length; i++) writeGroundCell(this.previousPixels, world, i, blocked);
+        this.map.dispose();
+        this.map.image = { data: this.previousPixels, width: world.width, height: world.height };
+        this.dimensions.value.set(world.width, world.height);
+        this.map.needsUpdate = true; this.revision++;
+      } else {
+        for (let i = 0; i < world.tiles.length; i++)
+          changed = writeGroundCell(this.previousPixels, world, i, blocked) || changed;
+      }
+    } else if (seedChanged) {
+      for (let i = 0; i < world.tiles.length; i++) {
+        const tile = world.tiles[i]!;
+        this.previousBlocked[i] = !SOIL_TERRAINS.has(tile.terrain) || tile.floor || this.coverCounts[i] ? 1 : 0;
+        changed = writeGroundCell(this.previousPixels, world, i, this.previousBlocked) || changed;
+      }
+    } else {
+      for (const i of this.dirtyCells) {
+        const tile = world.tiles[i]!;
+        this.previousBlocked[i] = !SOIL_TERRAINS.has(tile.terrain) || tile.floor || this.coverCounts[i] ? 1 : 0;
+        changed = writeGroundCell(this.previousPixels, world, i, this.previousBlocked) || changed;
+      }
     }
+    for (const i of this.dirtyCells) this.dirtyFlags[i] = 0;
+    this.dirtyCells.length = 0;
     if (changed) { this.map.needsUpdate = true; this.revision++; }
+    this.previousTiles = world.tiles; this.previousStructures = world.structures;
+    this.previousResources = world.resources; this.previousPiles = world.piles;
+    this.previousPacked = world.packed; this.previousSeed = world.seed; this.previousBiome = biome;
   }
 
   /** Constant CPU work per image; no map walk, position buffer or simulation
