@@ -125,11 +125,35 @@ export function createTerrainPaintTexture(world:World):THREE.DataTexture {
   return texture;
 }
 
+export type TerrainPaintPatchRect={x:number;y:number;width:number;height:number};
+
+/** A single edited cell fits the small staging texture used by the renderer.
+ * Multiple edits keep the full-upload path rather than copying an enormous
+ * bounding rectangle or regenerating all mipmaps once per cell. */
+export function singleTerrainPaintPatchRect(world:Pick<World,'width'|'height'>,changed:readonly number[]):TerrainPaintPatchRect|null {
+  if(changed.length!==1)return null;
+  const index=changed[0]!;
+  if(!Number.isInteger(index)||index<0||index>=world.width*world.height)return null;
+  const scale=terrainPaintPixelsPerCell(world),x=index%world.width,z=Math.floor(index/world.width);
+  const x0=Math.max(0,(x-1)*scale),y0=Math.max(0,(z-1)*scale);
+  return {x:x0,y:y0,width:Math.min(world.width*scale,(x+2)*scale)-x0,height:Math.min(world.height*scale,(z+2)*scale)-y0};
+}
+
+/** Copy the clipped patch into the upper-left of a fixed-size staging image.
+ * Its row stride can be wider than the region at map edges. */
+export function copyTerrainPaintRect(pixels:Uint8Array,atlasWidth:number,rect:TerrainPaintPatchRect,stagingWidth:number,stagingPixels:Uint8Array):void {
+  if(rect.width>stagingWidth||rect.height*stagingWidth*4>stagingPixels.length)throw new Error('Terrain paint staging image is too small.');
+  for(let row=0;row<rect.height;row++){
+    const source=((rect.y+row)*atlasWidth+rect.x)*4;
+    stagingPixels.set(pixels.subarray(source,source+rect.width*4),row*stagingWidth*4);
+  }
+}
+
 /** Repaint the changed cell and the one-cell bleed margin. All pigment hashes
  * still use world coordinates, so patched bytes equal a complete fresh bake.
- * Three 0.186 WebGPU ignores DataTexture update ranges; GPU upload and mipmap
- * generation still cover the resident image. */
-export function patchTerrainPaintTexture(texture:THREE.DataTexture,world:World,changed:readonly number[]):number {
+ * A resident atlas can defer its GPU upload when the renderer copies a small
+ * staging texture into the edited rectangle. */
+export function patchTerrainPaintTexture(texture:THREE.DataTexture,world:World,changed:readonly number[],deferUpload=false):number {
   if(!changed.length)return 0;
   const scale=terrainPaintPixelsPerCell(world),width=world.width*scale,height=world.height*scale;
   if(texture.image.width!==width||texture.image.height!==height)throw new Error('Terrain paint texture dimensions changed.');
@@ -137,7 +161,7 @@ export function patchTerrainPaintTexture(texture:THREE.DataTexture,world:World,c
   if(!palette||palette.length!==world.tiles.length*3)throw new Error('Terrain paint palette is missing.');
   for(const index of changed)paintTileColor(world,palette,index);
   texture.clearUpdateRanges();
-  if(changed.length>16){paintPixels(world,scale,pixels,palette,0,0,width,height);texture.needsUpdate=true;return width*height;}
+  if(changed.length>16){paintPixels(world,scale,pixels,palette,0,0,width,height);if(!deferUpload)texture.needsUpdate=true;return width*height;}
   let painted=0;
   for(const index of changed){
     const x=index%world.width,z=Math.floor(index/world.width);
@@ -146,7 +170,7 @@ export function patchTerrainPaintTexture(texture:THREE.DataTexture,world:World,c
     paintPixels(world,scale,pixels,palette,x0,z0,x1,z1);
     painted+=(x1-x0)*(z1-z0);
   }
-  texture.needsUpdate=true;
+  if(!deferUpload)texture.needsUpdate=true;
   return painted;
 }
 

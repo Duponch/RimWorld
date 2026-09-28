@@ -82,6 +82,20 @@ test('a one-tile patch is byte-identical to a fresh bake, including neighboring 
   } finally {texture.dispose();fresh.dispose();edge?.dispose();}
 });
 
+test('deferred upload keeps the resident texture version while updating land and shore bytes', () => {
+  const world=createWorld(146,16,16);
+  world.tiles=world.tiles.map((_,index)=>({terrain:index%world.width===7?'water':'grass'}));
+  const texture=createTerrainPaintTexture(world),version=texture.version;
+  const changed=8*world.width+7;
+  world.tiles[changed]={terrain:'soil'};
+  const fresh=createTerrainPaintTexture(world);
+  try {
+    expect(patchTerrainPaintTexture(texture,world,[changed],true)).toBe(3*3*8*8);
+    expect(texture.version).toBe(version);
+    expect(texture.image.data).toEqual(fresh.image.data);
+  } finally {texture.dispose();fresh.dispose();}
+});
+
 test('a full 250² world retains a bounded resident paint map', () => {
   const world=createWorld(144,250,250);
   const start=performance.now(),texture=createTerrainPaintTexture(world);
@@ -97,7 +111,7 @@ test('a full 250² world retains a bounded resident paint map', () => {
     const patchStart=performance.now(),painted=patchTerrainPaintTexture(texture,world,[changed]);
     const patchMs=performance.now()-patchStart;
     expect(painted).toBe(576);
-    expect(texture.updateRanges).toHaveLength(0); // WebGPU ignores texture ranges; upload remains full
-    console.info(`terrain paint 250² one-cell patch: ${patchMs.toFixed(2)} ms CPU, ${painted} pixels recomputed; WebGPU uploads full texture`);
+    expect(texture.updateRanges).toHaveLength(0); // Direct callers retain the full-upload fallback.
+    console.info(`terrain paint 250² one-cell patch: ${patchMs.toFixed(2)} ms CPU, ${painted} pixels recomputed; direct texture update uploads full image`);
   } finally {texture.dispose();}
 });

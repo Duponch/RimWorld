@@ -30,7 +30,7 @@ import { CropLayer } from './CropLayer';
 import { PawnSelectionInput, hitActors, type ScreenPawn, type SelectionGesture } from './PawnSelectionInput';
 import { FireLayer } from './FireLayer';
 import { GrowingZoneLayer } from './GrowingZoneLayer';
-import { buildTerrain, createTerrainPaintTexture, patchTerrainPaintTexture, syncTerrainPaintUvs } from './TerrainLayer';
+import { buildTerrain, copyTerrainPaintRect, createTerrainPaintTexture, patchTerrainPaintTexture, singleTerrainPaintPatchRect, syncTerrainPaintUvs, TERRAIN_PAINT_PIXELS_PER_CELL, type TerrainPaintPatchRect } from './TerrainLayer';
 import { PaintedWater } from './PaintedWater';
 import { WeatherCloudLayer } from './WeatherCloudLayer';
 import { visualWindDirection } from './visual-weather';
@@ -148,6 +148,11 @@ export class ColonyRenderer {
   // Keep texture identity stable: terrain and water can share one GPU image and
   // one shader graph even when a new map or the texture option replaces pixels.
   private readonly terrainPaintTexture=new THREE.DataTexture(new Uint8Array([255,255,255,0]),1,1);
+  private readonly terrainPaintStaging=new THREE.DataTexture(
+    new Uint8Array((3*TERRAIN_PAINT_PIXELS_PER_CELL)**2*4),3*TERRAIN_PAINT_PIXELS_PER_CELL,3*TERRAIN_PAINT_PIXELS_PER_CELL);
+  private readonly terrainPaintPatchSource=new THREE.Box2(new THREE.Vector2(),new THREE.Vector2());
+  private readonly terrainPaintPatchDestination=new THREE.Vector2();
+  private terrainPaintResident=false;
   private readonly terrainPaintMaterial = material(0xffffff,{vertexColors:false,map:this.terrainPaintTexture});
   private readonly staticPaint=createStylizedSurfaceTexture('vegetation');
   private readonly texturedStaticMaterial=material(0xffffff,{vertexColors:true,map:this.staticPaint});
@@ -209,7 +214,13 @@ export class ColonyRenderer {
     this.terrainPaintTexture.minFilter=THREE.LinearMipmapLinearFilter;
     this.terrainPaintTexture.generateMipmaps=true;
     this.terrainPaintTexture.wrapS=this.terrainPaintTexture.wrapT=THREE.ClampToEdgeWrapping;
+    this.terrainPaintTexture.onUpdate=()=>{this.terrainPaintResident=true;};
     this.terrainPaintTexture.needsUpdate=true;
+    this.terrainPaintStaging.colorSpace=THREE.SRGBColorSpace;
+    this.terrainPaintStaging.magFilter=THREE.LinearFilter;
+    this.terrainPaintStaging.minFilter=THREE.LinearFilter;
+    this.terrainPaintStaging.generateMipmaps=false;
+    this.terrainPaintStaging.wrapS=this.terrainPaintStaging.wrapT=THREE.ClampToEdgeWrapping;
     // Renderer-owned shared material survives deletion of an individual chunk.
     // Reusing its node graph also avoids compiling a pipeline per tree batch.
     this.staticMaterial.userData.rendererOwned = true;
@@ -342,7 +353,12 @@ export class ColonyRenderer {
     this.environmentLighting.update(world);
     if(groundChanged) {
       if(terrainChanges===null||this.terrainPaintDirty)this.terrainPaintDirty=true;
-      else if(this.texturesEnabled)patchTerrainPaintTexture(this.terrainPaintMaterial.map as THREE.DataTexture,world,terrainChanges);
+      else if(this.texturesEnabled){
+        const rect=this.terrainPaintResident?singleTerrainPaintPatchRect(world,terrainChanges):null;
+        patchTerrainPaintTexture(this.terrainPaintTexture,world,terrainChanges,rect!==null);
+        if(rect)this.uploadTerrainPaintPatch(rect);
+        else this.terrainPaintResident=false;
+      }
       else this.terrainPaintDirty=true;
       if(this.texturesEnabled)this.refreshTerrainPaint(world);
       const waterTopologyChanged=terrainChanges===null||terrainChanges.some(i=>(previousWorld!.tiles[i]!.terrain==='water')!==(world.tiles[i]!.terrain==='water'));
@@ -497,10 +513,25 @@ export class ColonyRenderer {
     if(this.terrainPaintTexture.image.width!==baked.image.width||this.terrainPaintTexture.image.height!==baked.image.height)this.terrainPaintTexture.dispose();
     this.terrainPaintTexture.image=baked.image;
     this.terrainPaintTexture.userData.terrainPalette=baked.userData.terrainPalette;
+    this.terrainPaintResident=false;
     this.terrainPaintTexture.needsUpdate=true;
     this.terrainPaintDirty=false;
   }
+  private uploadTerrainPaintPatch(rect:TerrainPaintPatchRect):void {
+    const atlas=this.terrainPaintTexture.image;
+    const staging=this.terrainPaintStaging.image;
+    copyTerrainPaintRect(atlas.data as Uint8Array,atlas.width,rect,staging.width,staging.data as Uint8Array);
+    this.terrainPaintStaging.needsUpdate=true;
+    this.terrainPaintPatchSource.min.set(0,0);
+    this.terrainPaintPatchSource.max.set(rect.width,rect.height);
+    this.terrainPaintPatchDestination.set(rect.x,rect.y);
+    // Three 0.186 ignores DataTexture updateRanges in WebGPU and its WebGL
+    // fallback. The public copy API transfers only this staging image and
+    // regenerates the atlas mipmaps; the resident atlas version stays intact.
+    this.renderer.copyTextureToTexture(this.terrainPaintStaging,this.terrainPaintTexture,this.terrainPaintPatchSource,this.terrainPaintPatchDestination);
+  }
   private releaseTerrainPaint():void {
+    this.terrainPaintResident=false;
     this.terrainPaintTexture.dispose();
     this.terrainPaintTexture.image={data:new Uint8Array([255,255,255,0]),width:1,height:1};
     delete this.terrainPaintTexture.userData.terrainPalette;
@@ -1073,7 +1104,7 @@ export class ColonyRenderer {
     this.pileChunks.clear();
     this.staticMaterial.dispose();
     this.terrainPlainMaterial.dispose();
-    this.terrainPaintMaterial.dispose();this.terrainPaintTexture.dispose();
+    this.terrainPaintMaterial.dispose();this.terrainPaintTexture.dispose();this.terrainPaintStaging.dispose();
     this.texturedStaticMaterial.dispose();this.staticPaint.dispose();
     this.waterMaterial.dispose();
     this.paintedWater.dispose();

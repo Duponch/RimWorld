@@ -1,5 +1,10 @@
 # Travail sur Lisière
 
+## Pigment de sol et transfert local V142
+
+- Lire `docs/development/terrain-upload-v142.md` et `docs/history/validation-terrain-upload-v142.md`. Three 0.186 ignore les `DataTexture.updateRanges` dans le renderer WebGPU et son repli WebGL : `needsUpdate` renvoie l'atlas entier de 16 Mo sur une carte 250². Après le premier upload réel, l'édition d'une seule case garde l'atlas CPU complet mais copie sa marge de 24² pixels au plus par une texture de transit réutilisée et `renderer.copyTextureToTexture` ; ne pas incrémenter la version de l'atlas résident dans ce chemin.
+- Une carte neuve, les textures réactivées et les changements multiples gardent l'upload complet. La même carte RGBA nourrit le sol et l'alpha d'écume, y compris en vue générale ; préserver l'identité, les UV, les octets peints et la variante sans textures. La copie locale régénère toujours **toutes** les mipmaps : baisse du transfert CPU→GPU ne signifie pas coût GPU nul, ni FPS/240 FPS ou débit ×6 garantis. V142 ne change ni schéma 141, ni simulation, ni PRNG.
+
 ## Casque pare-balles V141
 
 - Lire `docs/development/flak-helmet-v141.md`, `docs/research/flak-helmet-core-v141.md` et `docs/history/validation-flak-helmet-v141.md`. Core 1.6.4871 : `Apparel_AdvancedHelmet` après Armure pare-balles, usinage, Artisanat 5, 40 matières métalliques + 2 composants ordinaires + 10 plastaciers, 8 000 travaux Core. V141 fixe l'acier principal et convertit à 800 ticks neutres locaux. Ce n'est pas le casque simple ; aucun composant avancé n'est consommé.
