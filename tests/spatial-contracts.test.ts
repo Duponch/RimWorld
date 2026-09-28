@@ -13,7 +13,8 @@ import { civilCrossingFixture } from './scenarios/civil-traffic';
 test('eight-direction routes agree with an independent relaxation oracle and preserve geometric travel time',()=>{
   let seed=12345;
   for(let run=0;run<12;run++) {
-    const w=createWorld(run,16,16);w.jobs=[];w.structures=[];
+    // Isolate the weighted frame/terrain grid from generated loose chunks.
+    const w=createWorld(run,16,16);w.jobs=[];w.structures=[];w.resources=[];w.piles=[];refreshStock(w);
     w.tiles=w.tiles.map(()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return {terrain:seed%5===0?'rock':'grass'};});w.tiles[17]={terrain:'grass'};
     for(let i=18;i<256;i++)if(w.tiles[i]!.terrain==='grass'&&i%7===0)w.jobs.push({id:w.nextId++,kind:'wall',construction:'frame',x:i%16,z:Math.floor(i/16),orientation:0,footprint:'standard',status:'pending',reservedBy:null,progress:0,escrow:{wood:0,food:0}});
     const frames=new Set(w.jobs.map(j=>j.z*16+j.x));
@@ -39,7 +40,7 @@ test('eight-direction routes agree with an independent relaxation oracle and pre
       expect(cost).toBe(oracle[i]);
     }
   }
-  const w=createWorld(1,16,16),p=w.pawns[0]!;p.x=1;p.z=1;w.tick=10;
+  const w=createWorld(1,16,16),p=w.pawns[0]!;w.piles=[];refreshStock(w);p.x=1;p.z=1;w.tick=10;
   let previousEnd=10;
   for(let i=0;i<8;i++) {
     startTravel(w,p,{x:p.x+1,z:p.z+1});
@@ -48,7 +49,7 @@ test('eight-direction routes agree with an independent relaxation oracle and pre
     previousEnd=p.motion!.end;w.tick=Math.ceil(previousEnd);
   }
   expect(previousEnd-10).toBeCloseTo(8*3*Math.SQRT2/.8,9);
-  const savedWorld=createWorld(5,16,16);savedWorld.tiles=savedWorld.tiles.map(()=>({terrain:'grass'}));savedWorld.resources=[];savedWorld.pawns=savedWorld.pawns.slice(0,1);
+  const savedWorld=createWorld(5,16,16);savedWorld.tiles=savedWorld.tiles.map(()=>({terrain:'grass'}));savedWorld.resources=[];savedWorld.piles=[];refreshStock(savedWorld);savedWorld.pawns=savedWorld.pawns.slice(0,1);
   const actor=savedWorld.pawns[0]!;actor.x=1;actor.z=1;
   startTravel(savedWorld,actor,{x:2,z:2});
   const checkpoint=serializeWorld(savedWorld),copy=deserializeWorld(checkpoint);
@@ -59,7 +60,7 @@ test('eight-direction routes agree with an independent relaxation oracle and pre
   expect(canDesignate(crossing,{type:'designate',kind:'wall',x:2,z:1}).ok).toBe(true);
   const wallThroughEdge=JSON.parse(checkpoint);wallThroughEdge.tiles[1*16+2].terrain='rock';
   expect(()=>deserializeWorld(JSON.stringify(wallThroughEdge))).toThrow(/travel/i);
-  const traffic=createWorld(6,16,16);traffic.tiles=traffic.tiles.map(()=>({terrain:'grass'}));traffic.resources=[];traffic.pawns=traffic.pawns.slice(0,2);
+  const traffic=createWorld(6,16,16);traffic.tiles=traffic.tiles.map(()=>({terrain:'grass'}));traffic.resources=[];traffic.piles=[];refreshStock(traffic);traffic.pawns=traffic.pawns.slice(0,2);
   Object.assign(traffic.pawns[0]!,{x:4,z:4});Object.assign(traffic.pawns[1]!,{x:6,z:4});
   startTravel(traffic,traffic.pawns[0]!,{x:5,z:5});
   expect(canStep(traffic,traffic.pawns[1]!,{x:5,z:4},blockedCells(traffic),new Set([4*16+4,5*16+5]))).toBe(true);

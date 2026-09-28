@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { SCHEMA_VERSION } from '../../src/sim/types';
 import { withoutPawnSkills } from '../scenarios/legacy-skills';
 import { revealCells, perform } from './player-actions';
@@ -37,9 +38,9 @@ test('atelier mixte : choix du matériau, trois cases tournées, chantier long r
     const moved=await world(page);expect(validateWorld(moved)).toEqual([]);expect(moved.packed).toEqual([]);expect(moved.piles).toEqual([]);
     expect(moved.structures[0]).toMatchObject({...bench,x:20,z:20,orientation:0});
     await page.keyboard.press('Escape');await revealCells(page,[{x:20,z:20}]);await cell(page,20,20);await expect(page.locator('#cell-title')).toContainText('Acier');await expect(page.locator('#cell-description')).toContainText('3 × 1 cases');await expect(page.locator('#fps-counter')).toBeVisible();
-    await page.screenshot({path:'artifacts/stonebench-ui.png'});expect(errors).toEqual([]);
+    await page.screenshot({path:testOutputPath('artifacts/stonebench-ui.png')});expect(errors).toEqual([]);
     await testInfo.attach('stonebench',{contentType:'application/json',body:JSON.stringify({tick:moved.tick,bench:moved.structures[0],errors})});
-  } catch(error) {await page.screenshot({path:'artifacts/stonebench-ui-failure.png'});throw error;} finally {await browser.close();}
+  } catch(error) {await page.screenshot({path:testOutputPath('artifacts/stonebench-ui-failure.png')});throw error;} finally {await browser.close();}
 });
 
 test('chantier par interface : plan sur une pile, dégagement porté, cadre, sauvegarde et achèvement',async({playwright},testInfo)=>{
@@ -71,7 +72,7 @@ test('chantier par interface : plan sur une pile, dégagement porté, cadre, sau
     },undefined,{timeout:18000,polling:'raf'});
     await expect(page.locator('#pause-banner')).toBeVisible();await cell(page,16,14);await expect(page.locator('#cell-job')).toContainText('Cadre');
     const frame=await world(page);expect(frame.jobs[0]!.escrow.wood).toBe(5);expect(validateWorld(frame)).toEqual([]);
-    await page.screenshot({path:'artifacts/construction-frame.png'});
+    await page.screenshot({path:testOutputPath('artifacts/construction-frame.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,frame);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.some(s=>s.kind==='wall'),{timeout:15000}).toBe(true);
     await page.locator('[data-speed="0"]').click();const final=await world(page);
@@ -106,7 +107,7 @@ test('meubles et réserves : conserver les piles sur table et tabouret, retirer 
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,built);
     await page.keyboard.press('Escape');await revealCells(page,[{x:17,z:14},{x:19,z:14}]);await cell(page,19,14);await expect(page.locator('#cell-storage')).toBeVisible();await expect(page.locator('#fps-counter')).toContainText('FPS');
     await expect(page.locator('#cell-title')).toContainText('Acier');
-    await page.screenshot({path:'artifacts/materials-ui.png'});expect(errors).toEqual([]);
+    await page.screenshot({path:testOutputPath('artifacts/materials-ui.png')});expect(errors).toEqual([]);
     await testInfo.attach('occupancy',{body:JSON.stringify({tick:built.tick,stock:built.stock,structures:built.structures,stored:built.stockpiles,ids,errors}),contentType:'application/json'});
   } finally {await browser.close();}
 });

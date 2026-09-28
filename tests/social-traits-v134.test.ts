@@ -8,6 +8,7 @@ import { addSocialMemory,kindWordsMoodMemories,opinionCauses,opinionOf,socialImp
 import { validateSocial } from '../src/sim/social-save.ts';
 import { arrivalTraits,validTraits } from '../src/sim/traits.ts';
 import { SCHEMA_VERSION,TICKS_PER_DAY } from '../src/sim/types.ts';
+import { withoutFutureHelmetPolicy } from './scenarios/legacy-skills.ts';
 
 test('Core social dispositions change only the eligible content and victim fight roll',()=>{
   const world=medicalCamp(2),[speaker,victim]=world.pawns;
@@ -62,6 +63,10 @@ test('kind words keep ten memories per speaker, decay, and reject forged old-sch
   expect(kindWordsMoodMemories(victim!,world.tick)[0]?.offset).toBeCloseTo(5*(1-.9**10)/.1);
   expect(validateSocial(world,134)).toEqual([]);
   const forged=structuredClone(world) as any;forged.schemaVersion=127;
+  delete forged.breakdown;
+  withoutFutureHelmetPolicy(forged);
+  for(const pawn of forged.pawns)delete pawn.age;
+  for(const departure of forged.visitors?.departed??[])delete departure.pawn.age;
   expect(()=>deserializeWorld(JSON.stringify(forged))).toThrow(/Invalid version 127 save/);
   forged.pawns[1].social.memories=[];forged.pawns[0].traits=['kind'];
   expect(()=>deserializeWorld(JSON.stringify(forged))).toThrow(/Invalid version 127 save/);

@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
 import { deconstructionCamp, fixtureBuilding } from '../scenarios/deconstruction';
 import { addGroundMaterial } from '../../src/sim/materials';
@@ -34,7 +35,7 @@ test('porte : construction, ouverture physique, maintien/interdiction, sauvegard
     await page.locator('[data-speed="0"]').click();await cell(page,16,16);await expect(page.locator('#door-state')).toContainText('Ouverte');
     await page.locator('#door-forbidden').check();await expect.poll(async()=>(await world(page)).structures.find(s=>s.kind==='door')!.door!.forbidden).toBe(true);
     const final=await world(page);expect(final.pawns[0]!.x).toBeGreaterThan(16);expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);await expect(page.locator('#fps-counter')).toBeVisible();
-    await page.screenshot({path:'artifacts/doors-ui.png'});
+    await page.screenshot({path:testOutputPath('artifacts/doors-ui.png')});
     await testInfo.attach('doors',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),openingTick:opening.tick,completedTick:final.tick,pawn:final.pawns[0],door:final.structures.find(s=>s.kind==='door'),errors})});
   } finally {await browser.close();}
 });

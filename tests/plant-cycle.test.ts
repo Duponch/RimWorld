@@ -177,7 +177,7 @@ test('growing policies, interrupted sowing, migration and resident crop slots pr
   expect(applyCommand(world,{type:'area',action:'remove-growing',from:{x:3,z:2},to:{x:3,z:2}}).ok).toBe(true);
   expect(world.growingZones).toEqual([]);
   // More inaccessible cells than the queue limit cannot starve another field.
-  const split=createWorld(42,32,32);split.tiles=split.tiles.map(()=>({terrain:'grass'}));split.resources=[];split.pawns=split.pawns.slice(0,1);
+  const split=createWorld(42,32,32);split.tiles=split.tiles.map(()=>({terrain:'grass'}));split.resources=[];split.piles=[];refreshStock(split);split.pawns=split.pawns.slice(0,1);
   Object.assign(split.pawns[0]!,{x:20,z:20,hunger:100,rest:100});
   for(let z=0;z<32;z++)split.tiles[z*32+12]={terrain:'water'};
   expect(applyCommand(split,{type:'area',action:'growing',from:{x:0,z:0},to:{x:9,z:12}}).ok).toBe(true);

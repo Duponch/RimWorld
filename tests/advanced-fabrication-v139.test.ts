@@ -14,8 +14,10 @@ import {ADVANCED_COMPONENT_REQUIREMENTS,PRODUCTION_RECIPES,productionWorkTotal,s
 import {ADVANCED_FABRICATION_RESEARCH_COST,researchStationUsable,selectResearch} from '../src/sim/research.ts';
 import {constructionRecipe} from '../src/sim/construction-materials.ts';
 import {addGroundMaterial} from '../src/sim/materials.ts';
+import {newBreakdownCalendar} from '../src/sim/breakdowns.ts';
 import {validateCooking} from '../src/sim/cooking-save.ts';
 import {prepareAdvancedIndustryDemo} from '../scripts/generate-advanced-industry-demo-v139.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import type {World} from '../src/sim/types.ts';
 
 const amount=(w:World,item:string)=>w.piles.filter(p=>p.item===item).reduce((sum,p)=>sum+p.quantity,0);
@@ -52,7 +54,7 @@ test('prepared V139 save has four physical inputs and makes its first advanced c
   expect(manifest.saves.find(s=>s.id==='industrie-avancee-v139')?.sha256).toBe(createHash('sha256').update(raw).digest('hex'));
   expect(deserializeWorld(raw)).toEqual(prepareAdvancedIndustryDemo());
   const w=deserializeWorld(raw),bench=w.structures.find(s=>s.kind==='fabrication-bench')!,pawn=w.pawns[0]!;
-  expect(w.schemaVersion).toBe(141);
+  expect(w.schemaVersion).toBe(SCHEMA_VERSION);
   expect(bench.bills?.map(b=>b.recipe)).toEqual(['make-advanced-component']);
   expect(amount(w,'component')).toBe(1);
   expect(amount(w,'steel')).toBeGreaterThanOrEqual(20);
@@ -176,9 +178,10 @@ test('four partial input stacks leave no adjacent cell; the new workpiece rests 
 
 test('V138 migration is neutral and rejects V139 research, bill, task and typed work before upgrading',()=>{
   const old=deserializeWorld(readFileSync('public/test-saves/v123/industrie.json','utf8'));
+  delete old.breakdown;
   (old as {schemaVersion:number}).schemaVersion=138;
   const before=structuredClone(old),migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated).toEqual({...before,schemaVersion:141});
+  expect(migrated).toEqual({...before,schemaVersion:SCHEMA_VERSION,breakdown:newBreakdownCalendar(old.seed,old.tick)});
   const futureResearch=structuredClone(old);futureResearch.research!.advancedFabrication={points:ADVANCED_FABRICATION_RESEARCH_COST,completedAt:futureResearch.tick};
   expect(()=>deserializeWorld(JSON.stringify(futureResearch))).toThrow('Invalid version 138 save');
   const futureBill=structuredClone(old);futureBill.structures.find(s=>s.kind==='fabrication-bench')!.bills!.push({...futureBill.structures.find(s=>s.kind==='fabrication-bench')!.bills![0]!,id:futureBill.nextId++,recipe:'make-advanced-component',filters:{component:true,steel:true,plasteel:true,gold:true}});

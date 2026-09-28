@@ -1,7 +1,8 @@
+import { writeTestFile } from '../test-output.ts';
 import { isBuildableFloor,type BuildableFloorKind } from '../../src/sim/flooring';
 import { expect, test, type Page } from '@playwright/test';
 import { isDeepStrictEqual } from 'node:util';
-import { writeFile } from 'node:fs/promises';
+
 import type { World } from '../../src/sim/types';
 
 declare global {
@@ -36,7 +37,7 @@ export async function expectWorld(page: Page, expected: World) {
     if(actual!==serialized)await test.info().attach('save-object-key-order',{contentType:'application/json',body:JSON.stringify({tick:expected.tick,semanticEquality:true})});
   } catch(error) {
     const path=test.info().outputPath('save-mismatch.json');
-    await writeFile(path,JSON.stringify({expected,actual:JSON.parse(actual),notice:await page.locator('#notice').textContent()}));
+    await writeTestFile(path,JSON.stringify({expected,actual:JSON.parse(actual),notice:await page.locator('#notice').textContent()}));
     await test.info().attach('save-mismatch',{contentType:'application/json',path});
     throw error;
   }

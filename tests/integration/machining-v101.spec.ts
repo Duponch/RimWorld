@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
 import { serializeWorld, validateWorld } from '../../src/sim/index';
 import { addMaterial } from '../../src/sim/materials';
@@ -33,7 +34,7 @@ test('research UI requires Machining before Gunsmithing and performs the final M
     await expect(page.locator('[data-machining-status]')).toContainText('Terminée');
     await expect(page.locator('[data-gunsmithing-start]')).toBeEnabled();
     const done=await world(page);expect(validateWorld(done)).toEqual([]);expect(errors).toEqual([]);
-    await page.screenshot({path:'artifacts/machining-research-v101.png'});
+    await page.screenshot({path:testOutputPath('artifacts/machining-research-v101.png')});
   } finally {await browser.close();}
 });
 
@@ -81,7 +82,7 @@ test('Architect builds a powered machining table; bill controls make two distinc
     await expect.poll(async()=>(await world(page)).piles.find(p=>p.id===rifle.id)?.owner.type,{timeout:20000}).toBe('equipment');
     await pause(page);const final=await world(page);expect(validateWorld(final)).toEqual([]);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);
-    await page.screenshot({path:'artifacts/machining-guns-v101.png'});
+    await page.screenshot({path:testOutputPath('artifacts/machining-guns-v101.png')});
     expect(errors).toEqual([]);
   } finally {await browser.close();}
 });
@@ -128,6 +129,6 @@ test('a real item-specific stockpile accepts the revolver and leaves the rifle o
     await expect(page.locator('#selected-stockpile-items [data-storage-item="revolver"]')).toBeChecked();
     await expect(page.locator('#selected-stockpile-items [data-storage-item="bolt-action-rifle"]')).not.toBeChecked();
     expect(validateWorld(moved)).toEqual([]);expect(errors).toEqual([]);
-    await page.screenshot({path:'artifacts/machining-storage-v101.png'});
+    await page.screenshot({path:testOutputPath('artifacts/machining-storage-v101.png')});
   } finally {await browser.close();}
 });

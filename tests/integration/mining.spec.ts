@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { test, expect } from '@playwright/test';
 import { miningCamp } from '../scenarios/mining';
 import { serializeWorld, validateWorld } from '../../src/sim/index';
@@ -30,7 +31,7 @@ test('miner, reprendre la roche endommagée et ranger son fragment par les comma
     await page.waitForFunction(()=>{const w=window.__lisiere.world;return w.piles.length===1&&w.piles[0]!.owner.type==='ground'&&w.piles[0]!.owner.x===19;},undefined,{polling:100});await page.locator('[data-speed="0"]').click();
     current=await world(page);expect(validateWorld(current)).toEqual([]);expect(current.piles[0]).toMatchObject({item:'granite-chunk',quantity:1,owner:{type:'ground',x:19,z:16}});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,current);await page.keyboard.press('Escape');
-    await page.screenshot({path:'artifacts/mining-ui.png'});
+    await page.screenshot({path:testOutputPath('artifacts/mining-ui.png')});
     await tool(page,'mine');await revealCells(page,[{x:12,z:11}]);await cell(page,12,11);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();await page.waitForFunction(()=>window.__lisiere.world.tiles[11*32+12]!.terrain==='rough-stone');await page.locator('[data-speed="0"]').click();
     await expect(page.locator('#steel')).toHaveText('40');
@@ -38,10 +39,10 @@ test('miner, reprendre la roche endommagée et ranger son fragment par les comma
     await page.locator('[data-speed="6"]').click();await page.waitForFunction(()=>{const w=window.__lisiere.world;return w.piles.some(p=>p.item==='steel'&&p.quantity===40&&p.owner.type==='ground'&&p.owner.x===19&&p.owner.z===17);});await page.locator('[data-speed="0"]').click();
     current=await world(page);expect(validateWorld(current)).toEqual([]);expect(current.piles.filter(p=>p.item==='steel')).toHaveLength(1);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,current);await page.keyboard.press('Escape');
-    await page.screenshot({path:'artifacts/steel-ui.png'});
+    await page.screenshot({path:testOutputPath('artifacts/steel-ui.png')});
     await revealCells(page,[{x:14,z:11}]);await cell(page,14,11);
     await expect(page.locator('#cell-description')).toContainText('2000 / 2000 PV');
-    await page.screenshot({path:'artifacts/components-deposit-ui.png'});
+    await page.screenshot({path:testOutputPath('artifacts/components-deposit-ui.png')});
     await tool(page,'mine');await cell(page,14,11);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();
     await page.waitForFunction(()=>{const w=window.__lisiere.world;if((w.tiles[11*32+14]!.miningDamage??0)>=80){(document.querySelector('[data-speed="0"]') as HTMLButtonElement).click();return true;}return false;},undefined,{polling:30});
@@ -51,10 +52,10 @@ test('miner, reprendre la roche endommagée et ranger son fragment par les comma
     await expect(page.locator('#component')).toHaveText('2');
     await tool(page,'stockpile');await page.locator('#stockpile-steel').uncheck();await page.locator('#stockpile-component').check();await revealCells(page,[{x:19,z:18}]);await cell(page,19,18);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();await page.waitForFunction(()=>window.__lisiere.world.piles.some(p=>p.item==='component'&&p.owner.type==='pawn'),undefined,{polling:20});
-    await page.screenshot({path:'artifacts/components-carried-ui.png'});
+    await page.screenshot({path:testOutputPath('artifacts/components-carried-ui.png')});
     await page.waitForFunction(()=>window.__lisiere.world.piles.some(p=>p.item==='component'&&p.quantity===2&&p.owner.type==='ground'&&p.owner.x===19&&p.owner.z===18));await page.locator('[data-speed="0"]').click();
     current=await world(page);expect(validateWorld(current)).toEqual([]);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,current);await page.keyboard.press('Escape');
-    await page.screenshot({path:'artifacts/components-stored-ui.png'});expect(errors).toEqual([]);await testInfo.attach('mining-outcome',{body:JSON.stringify({tile:current.tiles[index],piles:current.piles,errors}),contentType:'application/json'});
+    await page.screenshot({path:testOutputPath('artifacts/components-stored-ui.png')});expect(errors).toEqual([]);await testInfo.attach('mining-outcome',{body:JSON.stringify({tile:current.tiles[index],piles:current.piles,errors}),contentType:'application/json'});
   }finally{await browser.close();}
 });

@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import {test,expect} from '@playwright/test';
 import {createWorld,serializeWorld,validateWorld} from '../../src/sim/index';
 import {addGroundMaterial,refreshStock} from '../../src/sim/materials';
@@ -27,7 +28,7 @@ test('map click cycles meal and growing zone; bare soil only reports hover',asyn
     await expect(page.locator('#map-hover-readout')).toContainText('Terre ordinaire');
     await expect(page.locator('#map-hover-readout')).toContainText('Repas simple ×2');
     await cell(page,target.x,target.z);await expect(page.locator('#cell-title')).toHaveText('Repas simple');
-    await page.screenshot({path:'artifacts/map-selection-v129.png'});
+    await page.screenshot({path:testOutputPath('artifacts/map-selection-v129.png')});
     await cell(page,target.x,target.z);await expect(page.locator('#cell-title')).toHaveText('Zone de culture');
     await expect(page.locator('#growing-plant')).toHaveValue('rice');
     await cell(page,target.x,target.z);await expect(page.locator('#cell-title')).toHaveText('Repas simple');
@@ -40,7 +41,7 @@ test('map click cycles meal and growing zone; bare soil only reports hover',asyn
     await expect(page.locator('.cell-health')).toBeVisible();
     await expect(page.locator('.cell-actions')).toBeVisible();
     await expect(page.locator('#cell-chop')).toBeVisible();
-    await page.screenshot({path:'artifacts/object-inspection-v130.png'});
+    await page.screenshot({path:testOutputPath('artifacts/object-inspection-v130.png')});
     await page.locator('#cell-chop').click();
     await expect.poll(()=>page.evaluate(({x,z})=>window.__lisiere.world.jobs.some(job=>job.kind==='chop'&&job.x===x&&job.z===z),tree)).toBe(true);
     expect({errors,failedResponses}).toEqual({errors:[],failedResponses:[]});

@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { huntingCamp } from '../scenarios/hunting';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { observeErrors,panel,pawnTab,saveKey,world,expectWorld,pause } from './helpers';
@@ -89,15 +90,15 @@ test('native hunting chain: live prey, physical corpse and save, butchery, usefu
       for(let i=1;i<frames.length;i++){const a=frames[i-1]!,b=frames[i]!,dt=b.clock-a.clock;if(dt<=0||dt>2)continue;for(const p of a.pawns){const q=b.pawns.find(q=>q.id===p.id)!;const jump=Math.hypot(q.x-p.x,q.z-p.z);expect(jump).toBeLessThanOrEqual(dt*1.01+.02);maxJump=Math.max(maxJump,jump);intervals++;}}
       const cursorMaterials=await page.evaluate(()=>({hover:(window as any).__huntingHoverMaterial,area:(window as any).__huntingAreaMaterial}));
       const pipelineEvents=await page.evaluate(start=>(window as any).__huntingPipelineEvents.filter((p:any)=>p.count>start),pipelines);
-      writeFileSync(`artifacts/hunting-ui-stage-${speed}x-v79.json`,JSON.stringify({speed,start:ready.tick,corpseCarried:carried.tick,finished:final.tick,frames:frames.length,intervals,maxJump,cursorMaterials,pipelineEvents,world:final},null,2));
-      await page.screenshot({path:`artifacts/hunting-ui-${speed}x-v79.png`});
+      writeTestFileSync(`artifacts/hunting-ui-stage-${speed}x-v79.json`,JSON.stringify({speed,start:ready.tick,corpseCarried:carried.tick,finished:final.tick,frames:frames.length,intervals,maxJump,cursorMaterials,pipelineEvents,world:final},null,2));
+      await page.screenshot({path:testOutputPath(`artifacts/hunting-ui-${speed}x-v79.png`)});
       expect(intervals).toBeGreaterThan(20);expect(pipelineEvents).toHaveLength(0);
       await page.locator(`[data-pawn="${cook.id}"]`).click();await pawnTab(page,'bio');await expect(page.locator('[data-skill="cooking"]')).toContainText('Cuisine 8');await expect(page.locator('#fps-counter')).toBeVisible();
-      await page.screenshot({path:`artifacts/hunting-ui-${speed}x-v79.png`});
+      await page.screenshot({path:testOutputPath(`artifacts/hunting-ui-${speed}x-v79.png`)});
       await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);
       reports.push({speed,start:ready.tick,corpseCarried:carried.tick,finished:final.tick,meat:final.butchery!.meat,leather:final.butchery!.leather,mealsIngested:1,frames:frames.length,intervals,maxJump});
     }
-    writeFileSync('artifacts/hunting-ui-v79.json',JSON.stringify({date:new Date().toISOString(),backend:await page.evaluate(()=>window.__lisiere.backend),reports,errors,requestFailures,consoleFailures},null,2));
+    writeTestFileSync('artifacts/hunting-ui-v79.json',JSON.stringify({date:new Date().toISOString(),backend:await page.evaluate(()=>window.__lisiere.backend),reports,errors,requestFailures,consoleFailures},null,2));
     expect(errors).toEqual([]);
   } finally {await browser.close();}
 });

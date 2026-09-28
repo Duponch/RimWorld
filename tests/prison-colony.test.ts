@@ -1,5 +1,6 @@
+import { writeTestFileSync } from './test-output.ts';
 import { createHash } from 'node:crypto';
-import { readFileSync,writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { expect,onTestFailed,test } from 'vitest';
 import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index.ts';
@@ -86,7 +87,7 @@ function runPrisonJourney(stopTick?:number):void {
   const initial=resumed?.initial??{wood:woodAccount(w),food:foodAccount(w),animalEaten:w.wildlife?.eatenItems??0,steel:metalAccount(w,'steel'),component:metalAccount(w,'component'),medicine:medicines(w)};
   const journal:Checkpoint['journal']=resumed?.journal??[],observations:Checkpoint['observations']=resumed?.observations??[];
   const checkpoint=():Checkpoint=>({protocol:'prison-v86',fixtureHash,world:serializeWorld(w),player,ledger,initial,journal,observations});
-  const failureFile=stopTick===undefined?'tmp/prison-failed-v86.json':'tmp/prison-combat-diagnostic-failed-v86.json';onTestFailed(()=>writeFileSync(failureFile,JSON.stringify(checkpoint())));
+  const failureFile=stopTick===undefined?'tmp/prison-failed-v86.json':'tmp/prison-combat-diagnostic-failed-v86.json';onTestFailed(()=>writeTestFileSync(failureFile,JSON.stringify(checkpoint())));
   const context=()=>JSON.stringify({tick:w.tick,player,ledger,latest:observations.at(-1),checkpoint:failureFile});
   const observe=()=>{
     observations.push(structuredClone(prisonSummary(w,player)));const c=context();
@@ -99,7 +100,7 @@ function runPrisonJourney(stopTick?:number):void {
   const continuation=()=>{
     const saved=serializeWorld(w),copy=deserializeWorld(saved);
     try{stepWorld(w,120);stepWorld(copy,120);expect(serializeWorld(copy),context()).toBe(serializeWorld(w));}
-    catch(error){writeFileSync('tmp/prison-continuation-failed-v86.json',JSON.stringify({protocol:'prison-v86-continuation-failure',saved,actual:JSON.stringify(w),restored:JSON.stringify(copy),validation:validateWorld(w),failure:String(error)}));throw error;}
+    catch(error){writeTestFileSync('tmp/prison-continuation-failed-v86.json',JSON.stringify({protocol:'prison-v86-continuation-failure',saved,actual:JSON.stringify(w),restored:JSON.stringify(copy),validation:validateWorld(w),failure:String(error)}));throw error;}
     finally{w=deserializeWorld(saved);}
   };
   // Sixty days from the reached V85 colony is a diagnostic ceiling, not a
@@ -110,7 +111,7 @@ function runPrisonJourney(stopTick?:number):void {
     if(w.tick%250===0||w.raids?.active&&w.tick%20===0||player.targetId!==undefined&&w.tick%50===0){
       for(const d of prisonDecisions(w,player)){const result=applyCommand(w,d.command);expect(result,JSON.stringify({tick:w.tick,...d,result})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}
       if(w.tick%250===0)observe();
-      if(diagnostic&&w.tick%250===0)writeFileSync('tmp/prison-diagnostic-latest-v86.json',JSON.stringify(checkpoint()));
+      if(diagnostic&&w.tick%250===0)writeTestFileSync('tmp/prison-diagnostic-latest-v86.json',JSON.stringify(checkpoint()));
     }
     const beforeMilestones=Object.keys(player.milestones).join(','),stations=new Map(w.pawns.flatMap(p=>{const station=w.structures.find(s=>s.id===p.cooking?.stationId);return station?[[p.name,station.kind] as const]:[];}));
     const names=new Map(w.pawns.map(p=>[p.name,p.id])),tenders=new Map(w.pawns.filter(p=>p.tend).map(p=>[p.name,p.tend!.patientId]));
@@ -127,9 +128,9 @@ function runPrisonJourney(stopTick?:number):void {
       if(e.message.includes('a traité ')&&person&&tenders.get(person[0])===player.targetId)player.milestones.treatedCaptive??=w.tick;
     }
     observePrison(w,player);
-    if(Object.keys(player.milestones).join(',')!==beforeMilestones){observe();continuation();writeFileSync('tmp/prison-phase-latest-v86.json',JSON.stringify(checkpoint()));console.info(`Prison transition J${(w.tick/6000).toFixed(3)} : ${Object.keys(player.milestones).join(', ')}.`);}
+    if(Object.keys(player.milestones).join(',')!==beforeMilestones){observe();continuation();writeTestFileSync('tmp/prison-phase-latest-v86.json',JSON.stringify(checkpoint()));console.info(`Prison transition J${(w.tick/6000).toFixed(3)} : ${Object.keys(player.milestones).join(', ')}.`);}
     if(w.tick%6000===0){
-      observe();continuation();const data=JSON.stringify(checkpoint());writeFileSync('tmp/prison-latest-v86.json',data);writeFileSync(`tmp/prison-day${w.tick/6000}-v86.json`,data);
+      observe();continuation();const data=JSON.stringify(checkpoint());writeTestFileSync('tmp/prison-latest-v86.json',data);writeTestFileSync(`tmp/prison-day${w.tick/6000}-v86.json`,data);
       const supply=observations.at(-1)!.wood;
       console.info(`Prison J${w.tick/6000} : ${w.pawns.filter(isColonist).length} colons, ${player.conversations} entretiens, ${player.fedCaptive} repas captif, ${player.recruitMeals} repas recruté, ${ledger.cooked} repas produits, bois ${supply.available}/${supply.target} visé et ${supply.pendingCuts} coupes engagées.`);
     }else if(diagnostic&&w.tick%1000===0)console.info(`Prison tick ${w.tick}, ${(performance.now()-started).toFixed(0)} ms, cible ${player.targetId??'aucune'}, ${w.jobs.length} travaux.`);
@@ -137,14 +138,14 @@ function runPrisonJourney(stopTick?:number):void {
   }
   observe();continuation();const final=prisonSummary(w,player),report={protocol:'prison-v86',fixtureHash,resumed:!!resumed,fromTick:resumed?JSON.parse(resumed.world).tick:player.startTick,runtimeMs:performance.now()-started,initial,ledger,player,journal,observations,final};
   if(stopTick!==undefined){
-    writeFileSync('artifacts/prison-combat-diagnostic-v86.json',JSON.stringify(report));writeFileSync('tmp/prison-combat-diagnostic-v86.json',JSON.stringify(checkpoint()));
+    writeTestFileSync('artifacts/prison-combat-diagnostic-v86.json',JSON.stringify(report));writeTestFileSync('tmp/prison-combat-diagnostic-v86.json',JSON.stringify(checkpoint()));
     expect(player.initialColonists.every(id=>w.pawns.some(p=>p.id===id&&isColonist(p)&&p.state!=='dead')),context()).toBe(true);
     expect(w.raids?.completed,context()).toBeGreaterThan(JSON.parse(resumed!.world).raids.completed);
     expect(w.pawns.filter(p=>player.initialColonists.includes(p.id)&&p.state==='downed'),context()).toEqual([]);
     expect(journal.filter(d=>d.tick>=JSON.parse(resumed!.world).tick&&d.command.type==='order-equipment').length,context()).toBeGreaterThanOrEqual(2);
     return; // A combat diagnostic does not certify the separate recruitment journey.
   }
-  writeFileSync('artifacts/prison-colony-v86.json',JSON.stringify(report));writeFileSync('tmp/prison-final-v86.json',serializeWorld(w));writeFileSync('tmp/prison-final-checkpoint-v86.json',JSON.stringify(checkpoint()));
+  writeTestFileSync('artifacts/prison-colony-v86.json',JSON.stringify(report));writeTestFileSync('tmp/prison-final-v86.json',serializeWorld(w));writeTestFileSync('tmp/prison-final-checkpoint-v86.json',JSON.stringify(checkpoint()));
   for(const name of ['prisonReady','newRaidDowned','captureStarted','captureCarried','captured','treatedCaptive','fedCaptive','firstConversation','resistanceReduced','recruited','colonistBed'])expect(player.milestones[name],context()).toBeGreaterThanOrEqual(player.startTick);
   const recruit=w.pawns.find(p=>p.id===player.recruitId)!;
   expect(recruit?.recruitment?.fromFaction,context()).toBe('outlaws');expect(player.initialPeople.includes(recruit.id),context()).toBe(false);

@@ -2,6 +2,7 @@ import {readFileSync} from 'node:fs';
 import {expect,test} from 'vitest';
 import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import {deserializeWorld,validateWorld} from '../src/sim/serialization.ts';
+import {withMigratedV90} from './scenarios/legacy-skills.ts';
 
 const historical=()=>JSON.parse(readFileSync('public/test-saves/v124/rencontre.json','utf8'));
 
@@ -9,7 +10,7 @@ test('V124 social gathering migrates to V125 without invented disputes or fights
   const raw=historical();
   expect(raw.schemaVersion).toBe(124);
   const world=deserializeWorld(JSON.stringify(raw));
-  expect(world).toEqual({...raw,schemaVersion:SCHEMA_VERSION});
+  expect(world).toEqual(withMigratedV90({...structuredClone(raw),schemaVersion:SCHEMA_VERSION}));
   expect(validateWorld(world)).toEqual([]);
   expect(world.pawns.every(p=>!p.social?.fight&&!(p.social?.memories.some(m=>m.kind==='slight'||m.kind==='insult')))).toBe(true);
 });

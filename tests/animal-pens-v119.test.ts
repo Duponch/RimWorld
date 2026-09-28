@@ -60,6 +60,7 @@ test('marker species choice is atomic, persisted, and old saves migrate without 
   expect(serializeWorld(world)).toBe(after);
   const historical=JSON.parse(before) as World;
   historical.structures=[];historical.schemaVersion=109 as never;
+  delete historical.breakdown;
   for(const pawn of historical.pawns){
     delete pawn.age;
     delete (pawn.recreation.tolerance as Partial<typeof pawn.recreation.tolerance>).cerebral;
@@ -73,7 +74,7 @@ test('marker species choice is atomic, persisted, and old saves migrate without 
     allowedItems:policy.allowedItems.filter(item=>!item.startsWith('muffalo-wool-')&&item!=='flak-helmet'),
     allowedMaterials:policy.allowedMaterials.filter(material=>material!=='muffalo-wool')}));
   const migrated=deserializeWorld(JSON.stringify(historical));
-  expect(migrated).toEqual({...historical,schemaVersion:143,pawns:historical.pawns.map(pawn=>({...pawn,age:legacyHumanAge(),recreation:{
+  expect(migrated).toEqual({...historical,schemaVersion:world.schemaVersion,breakdown:world.breakdown,pawns:historical.pawns.map(pawn=>({...pawn,age:legacyHumanAge(),recreation:{
     ...pawn.recreation,tolerance:{...pawn.recreation.tolerance,cerebral:0,social:0},bored:{...pawn.recreation.bored,cerebral:false,social:false}
   }}))});
   expect(migrated.structures).toEqual([]);

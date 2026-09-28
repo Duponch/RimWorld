@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { readFileSync,writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/index';
 import { observeErrors,panel,pawnTab,world,expectWorld,saveKey } from './helpers';
 import { perform } from './player-actions';
@@ -24,7 +25,7 @@ test('prepared camp: pause/reload research, 1x/6x unlock, construct tailor, craf
     await panel(page,'research');await page.locator('[data-research-start]').click();await page.locator('[data-speed="1"]').click();
     await expect.poll(async()=>(await world(page)).research!.points,{timeout:20000}).toBeGreaterThan(paused.research!.points);
     await page.locator('[data-speed="6"]').click();await expect(page.locator('[data-research-status]')).toContainText('Terminée',{timeout:30000});await page.locator('[data-speed="0"]').click();
-    await page.screenshot({path:'artifacts/research-complete-v73.png'});
+    await page.screenshot({path:testOutputPath('artifacts/research-complete-v73.png')});
     for(const work of ['grow','cook','gather','haul'] as const)await perform(page,{reason:'Réserver le travail immédiat à notre nouvel atelier.',command:{type:'priority',pawnId:p.id,work,value:2}},{value:0});
     await perform(page,{reason:'Construire le poste débloqué.',command:{type:'designate',kind:'tailor-bench',material:'wood',x:8,z:12}},{value:0});
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
@@ -38,9 +39,9 @@ test('prepared camp: pause/reload research, 1x/6x unlock, construct tailor, craf
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).piles.find(i=>i.id===shirt.id)?.owner.type,{timeout:20000}).toBe('apparel');await page.locator('[data-speed="0"]').click();
     await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-apparel','cloth-shirt');await page.locator(`[data-pawn="${p.id}"]`).click();
     await pawnTab(page,'gear');await expect(page.locator('#equipment-apparel')).toContainText('Chemise');await expect(page.locator('#fps-counter')).toBeVisible();
-    await page.screenshot({path:'artifacts/research-shirt-v73.png'});const final=await world(page);expect(validateWorld(final)).toEqual([]);
+    await page.screenshot({path:testOutputPath('artifacts/research-shirt-v73.png')});const final=await world(page);expect(validateWorld(final)).toEqual([]);
     expect(final.piles.filter(i=>i.item==='cloth').reduce((n,i)=>n+i.quantity,0)).toBe(15);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);expect(errors).toEqual([]);
-    writeFileSync('artifacts/research-ui-v73.json',JSON.stringify({date:new Date().toISOString(),startTick:initial.tick,endTick:final.tick,research:final.research,shirt:final.piles.find(i=>i.id===shirt.id),errors},null,2));
+    writeTestFileSync('artifacts/research-ui-v73.json',JSON.stringify({date:new Date().toISOString(),startTick:initial.tick,endTick:final.tick,research:final.research,shirt:final.piles.find(i=>i.id===shirt.id),errors},null,2));
   }finally{await browser.close();}
 });

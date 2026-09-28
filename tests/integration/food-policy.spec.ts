@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { withoutPawnSkills } from '../scenarios/legacy-skills';
 import { expect, test } from '@playwright/test';
 import { addGroundMaterial, createWorld, deserializeWorld, serializeWorld, validateWorld } from '../../src/sim/index';
@@ -31,7 +32,7 @@ test('Assignations : régime partagé, copie, refus de suppression, faim, migrat
     for(const pawn of fixture.pawns) {await assign(pawn.id).selectOption('5');await expect.poll(async()=>(await world(page)).pawns.find(p=>p.id===pawn.id)?.foodPolicyId).toBe(5);}
     await page.locator('#manage-food-policies').click();await page.locator('#food-policy-choice').selectOption('5');await page.locator('#delete-food-policy').click();
     await expect(page.locator('#food-policy-feedback')).toContainText('utilisé');
-    await page.screenshot({path:'artifacts/food-policies-ui.png'});await page.keyboard.press('Escape');
+    await page.screenshot({path:testOutputPath('artifacts/food-policies-ui.png')});await page.keyboard.press('Escape');
     await page.getByRole('button',{name:'Fermer Assignations'}).click();await expect(page.locator('#assign-panel')).toBeHidden();
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns.every(p=>p.state==='hungry')).toBe(true);await page.locator('[data-speed="0"]').click();
     const hungry=await world(page);expect(hungry.stock.food).toBe(8);expect(hungry.pawns.every(p=>p.need===null)).toBe(true);

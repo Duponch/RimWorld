@@ -24,6 +24,15 @@ function plannedClearance(p:ReturnType<typeof plan>,sustainable:boolean):Cell[] 
     ...p.beds.flatMap(c=>[c,at(c,0,sustainable?-1:1)]),p.fire,at(p.fire,0,-1),p.table,at(p.table,0,1),...p.seats,p.pin,
     ...sustainable?[at(p.anchor,7,5),at(p.anchor,9,5),at(p.anchor,10,5),at(p.anchor,11,5),at(p.anchor,12,5),at(p.anchor,11,4)]:[]];
 }
+function roomWorkContacts(p:ReturnType<typeof plan>):Cell[] {
+  const contacts:Cell[]=[];
+  for(const c of cells(p.room))if(c.x===p.room.from.x||c.x===p.room.to.x||c.z===p.room.from.z||c.z===p.room.to.z)
+    for(const [dx,dz] of [[0,-1],[1,0],[0,1],[-1,0]]) {
+      const neighbour=at(c,dx!,dz!);
+      if(!inRect(neighbour,p.room))contacts.push(neighbour);
+    }
+  return contacts;
+}
 
 /** The leftmost bed on the first row is a visible plan anchor after save/load.
  * Construction replaces job IDs with structure IDs, so identity order is not
@@ -61,7 +70,9 @@ export function survivorPlan(w:World,sustainable=false):ReturnType<typeof plan> 
     if(land.some(c=>!seen[c.z*w.width+c.x]||rocks.has(c.z*w.width+c.x)))continue;
     if(cells(p.storage).some(c=>occupied.has(c.z*w.width+c.x)||ground.has(c.z*w.width+c.x)))continue;
     if(cells(p.field).some(c=>!isGrowingTerrain(w.tiles[c.z*w.width+c.x]!.terrain)))continue;
-    if(plannedClearance(p,sustainable).some(c=>occupied.has(c.z*w.width+c.x)))continue;
+    // A chunk cleared from a wall plan can land on its only contact cell and
+    // strand the frame. Choose an initially clear work footprint as well.
+    if(plannedClearance(p,sustainable).some(c=>occupied.has(c.z*w.width+c.x)||ground.has(c.z*w.width+c.x)))continue;
     return p;
   }
   throw Error(`No ordinary camp layout found near landing ${JSON.stringify(start)} on seed ${w.seed}`);
@@ -81,7 +92,11 @@ export function survivorDecisions(w:World,sustainable=false):Decision[] {
     for(const resource of plants)designate('cut',resource,'Dégager physiquement la végétation basse avant de tracer la réserve et le camp.');
     return out;
   }
-  if(!w.stockpiles.length)out.push({reason:'Tracer une réserve assez grande pour les provisions réelles, sur un sol libre.',command:{type:'area',action:'stockpile',...p.storage,filters:{wood:true,food:true,steel:true,component:true,medicine:true,weapon:true,apparel:true},priority:2,capacity:75}});
+  if(!w.stockpiles.length)out.push({reason:'Tracer une réserve assez grande pour les provisions réelles et les fragments dégagés, sur un sol libre.',command:{type:'area',action:'stockpile',...p.storage,filters:{wood:true,food:true,chunk:true,steel:true,component:true,medicine:true,weapon:true,apparel:true},priority:2,capacity:75}});
+  // Older checkpoints retain the original reserve policy. Amend it through
+  // ordinary commands, keeping each cell's other filters, capacity and items.
+  for(const zone of w.stockpiles)if(inRect(zone,p.storage)&&!zone.filters.chunk)
+    out.push({reason:'Autoriser les fragments dans la réserve existante, hors du dortoir.',command:{type:'stockpile',x:zone.x,z:zone.z,enabled:true,filters:{...zone.filters,chunk:true}}});
   if(!sustainable||!w.jobs.some(j=>j.furniture?.kind==='bed')&&!w.packed.some(p=>p.building.kind==='bed'))
     for(const c of p.beds)designate('bed',c,sustainable?'Installer trois couchages avec un chevet accessible depuis l’allée.':'Installer trois couchages près de l’arrivée naturelle.');
   if(!w.growingZones.length)out.push({reason:'Préparer un potager pendant que les rations initiales donnent de la marge.',command:{type:'area',action:'growing',...p.field}});
@@ -92,6 +107,14 @@ export function survivorDecisions(w:World,sustainable=false):Decision[] {
   const cook=colonists.reduce((best,pawn)=>(pawn.skills.cooking?.level??0)>(best.skills.cooking?.level??0)?pawn:best,colonists[0]!);
   for(const pawn of colonists)for(const [work,value] of Object.entries({build:pawn===builder?1:3,cook:pawn===cook?1:3,grow:pawn!==builder&&pawn!==cook?1:3,haul:2,gather:2}) as [WorkType,number][])if(pawn.priorities[work]!==value)out.push({reason:'Répartir construction, cuisine et potager selon les compétences visibles.',command:{type:'priority',pawnId:pawn.id,work,value}});
   if(w.structures.filter(s=>s.kind==='bed').length<3)return out;
+
+  // The room's final wall contacts must be walkable before enclosing the
+  // beds. Natural chunks are not hauled unless a player explicitly orders it.
+  const contacts=new Set(roomWorkContacts(p).map(c=>c.z*w.width+c.x));
+  const contactChunks=w.piles.filter(q=>q.kind==='chunk'&&q.owner.type==='ground'&&contacts.has(q.owner.z*w.width+q.owner.x));
+  for(const chunk of contactChunks)if(chunk.owner.type==='ground'&&!chunk.haulRequested)
+    out.push({reason:'Dégager un contact extérieur du dortoir vers la réserve de fragments.',command:{type:'area',action:'haul-chunks',from:chunk.owner,to:chunk.owner}});
+  if(contactChunks.length)return out;
 
   for(const c of cells(p.room))if(c.x===p.room.from.x||c.x===p.room.to.x||c.z===p.room.from.z||c.z===p.room.to.z)designate(c.x===p.door.x&&c.z===p.door.z?'door':'wall',c,'Fermer le petit dortoir en gardant une porte accessible.');
   designate(sustainable?'fueled-stove':'campfire',p.fire,'Préparer des repas à partir des premières récoltes.');
@@ -106,13 +129,21 @@ export function survivorDecisions(w:World,sustainable=false):Decision[] {
   // Replenishment follows real planned expenses; the 300 initial wood is kept.
   const wood=w.piles.filter(q=>q.item==='wood').reduce((n,q)=>n+q.quantity,0);
   if(wood<(sustainable?160:80)&&!w.jobs.some(j=>j.kind==='chop')) {
-    const trees=w.resources.filter(r=>r.kind==='tree'&&Math.hypot(r.x-p.anchor.x,r.z-p.anchor.z)<=25).sort((a,b)=>Math.hypot(a.x-p.anchor.x,a.z-p.anchor.z)-Math.hypot(b.x-p.anchor.x,b.z-p.anchor.z)||a.id-b.id);
+    // A construction or roof job clears its own tree. A second chop order on
+    // that cell would be orphaned when the builder removes the obstruction.
+    const workCells=new Set(w.jobs.flatMap(job=>footprintCells(job).map(c=>c.z*w.width+c.x)));
+    const trees=w.resources.filter(r=>r.kind==='tree'&&!workCells.has(r.z*w.width+r.x)&&Math.hypot(r.x-p.anchor.x,r.z-p.anchor.z)<=25).sort((a,b)=>Math.hypot(a.x-p.anchor.x,a.z-p.anchor.z)-Math.hypot(b.x-p.anchor.x,b.z-p.anchor.z)||a.id-b.id);
     for(const r of trees.slice(0,6))designate('chop',r,'Reconstituer le bois dépensé dans le camp et son combustible.');
   }
   const fire=w.structures.find(s=>s.kind===(sustainable?'fueled-stove':'campfire')&&s.x===p.fire.x&&s.z===p.fire.z);
   if(fire&&!fire.bills?.length)out.push({reason:sustainable?'Préparer une petite réserve de repas cuisinés.':'Maintenir trois repas simples, sans gaspiller les ingrédients.',command:{type:'bill-add',structureId:fire.id,recipe:'simple-meal'}});
   const bill=fire?.bills?.[0],mealTarget=sustainable?9:3;
-  if(fire&&bill&&(bill.mode!=='until'||bill.target!==mealTarget))out.push({reason:'Cuisiner de petites quantités pendant la croissance du potager.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{mode:'until',target:mealTarget,suspended:false,filters:{rice:true,berries:true,'hare-meat':true,...sustainable?{potato:true,corn:true}:{}},radius:35,destination:'stockpile'}}});
+  if(fire&&bill){
+    const filters=Object.fromEntries(Object.keys(bill.filters).map(item=>[item,false]));
+    Object.assign(filters,{rice:true,berries:true,'hare-meat':true,...sustainable?{potato:true,corn:true}:{}});
+    if(bill.mode!=='until'||bill.target!==mealTarget||bill.suspended||bill.radius!==35||bill.destination!=='stockpile'||Object.keys(filters).some(item=>bill.filters[item as keyof typeof bill.filters]!==filters[item]))
+      out.push({reason:'Cuisiner de petites quantités pendant la croissance du potager.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{mode:'until',target:mealTarget,suspended:false,filters,radius:35,destination:'stockpile'}}});
+  }
   if(fire&&!w.jobs.some(j=>j.kind==='harvest')&&w.piles.filter(q=>q.item==='berries'||q.item==='rice'||sustainable&&(q.item==='potato'||q.item==='corn')).reduce((n,q)=>n+q.quantity,0)<(sustainable?60:20)) {
     const berries=w.resources.filter(r=>r.kind==='berries'&&harvestable(w,r)&&Math.hypot(r.x-p.anchor.x,r.z-p.anchor.z)<35).sort((a,b)=>Math.hypot(a.x-p.anchor.x,a.z-p.anchor.z)-Math.hypot(b.x-p.anchor.x,b.z-p.anchor.z)||a.id-b.id);
     for(const r of berries.slice(0,sustainable?4:2))designate('harvest',r,'Cueillir de quoi cuisiner pendant la croissance du potager.');

@@ -5,6 +5,8 @@ import { addGroundMaterial, refreshStock } from '../src/sim/materials';
 import { gainRecreation, initialRecreation, recreationMood, updateRecreation } from '../src/sim/recreation-rules';
 import { clearThrow, horseshoeCells, recreationSiteValid, recreationSpace } from '../src/sim/recreation-space';
 import { processRecreation } from '../src/sim/recreation';
+import { legacyHumanAge } from '../src/sim/human-age';
+import { withoutFutureHelmetPolicy } from './scenarios/legacy-skills';
 
 const fixture=()=>{
   const w=createWorld(42,32,32);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];w.structures=[];
@@ -105,8 +107,13 @@ test('skygazing requires arrival; unavailable or boring activities give no joy; 
   const level=p.recreation.level;stepWorld(w,100);expect(p.recreation.task).toBeNull();expect(p.recreation.level).toBeLessThan(level);
   const old=fixture();old.pawns.forEach(p=>p.schedule.fill('anything'));
   const raw=JSON.parse(serializeWorld(old));raw.schemaVersion=123;
-  for(const pawn of raw.pawns){delete pawn.recreation.tolerance.social;delete pawn.recreation.bored.social;}
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual(old);
+  delete raw.breakdown;delete raw.fluIncidents;
+  withoutFutureHelmetPolicy(raw);
+  for(const pawn of raw.pawns){delete pawn.age;delete pawn.recreation.tolerance.social;delete pawn.recreation.bored.social;}
+  for(const departure of raw.visitors?.departed??[])delete departure.pawn.age;
+  const migrated=deserializeWorld(JSON.stringify(raw));
+  const expected=withoutFutureHelmetPolicy(structuredClone(old));for(const pawn of expected.pawns)pawn.age=legacyHumanAge();
+  expect(migrated).toEqual(expected);
   const corruptOld=structuredClone(raw);corruptOld.pawns[0].recreation.tolerance.social=12;
   expect(()=>deserializeWorld(JSON.stringify(corruptOld))).toThrow(/version 123|recreation/i);
 });

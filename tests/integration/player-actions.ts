@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { isBuildableFloor } from '../../src/sim/flooring';
 import { expect, type Page } from '@playwright/test';
 import type { Decision } from '../scenarios/colony-player';
@@ -285,7 +286,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   },{command:c,heaterTarget},{polling:100,timeout:5000});
   } catch(error) {
     const diagnostic=await page.evaluate(()=>({tick:window.__lisiere.tick,notice:document.querySelector('#notice')?.textContent,stockpiles:window.__lisiere.world.stockpiles,events:window.__lisiere.world.events.slice(-5),tool:document.querySelector('[data-tool].active')?.getAttribute('data-tool')}));
-    await page.screenshot({path:'artifacts/player-action-failure.png'});
+    await page.screenshot({path:testOutputPath('artifacts/player-action-failure.png')});
     throw new Error(`Player command did not produce its expected result: ${JSON.stringify({command:c,diagnostic})}; ${String(error)}`);
   }
 }

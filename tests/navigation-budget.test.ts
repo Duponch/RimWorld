@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 import { candidateAccess } from '../src/sim/candidate-access';
 import { applyCommand, createWorld } from '../src/sim/engine';
 import { planWork, type SearchStats } from '../src/sim/work-planner';
-import { addGroundMaterial } from '../src/sim/materials';
+import { addGroundMaterial, refreshStock } from '../src/sim/materials';
 import { deconstructionCamp, fixtureBuilding } from './scenarios/deconstruction';
 import { foodSearchGoals, selectFood } from '../src/sim/food-selection';
 import type { MaterialPile } from '../src/sim/types';
@@ -59,7 +59,9 @@ test('goal-bounded floods retain the full-flood nearest food and exact path acro
   const draw = () => { random = (Math.imul(random, 1664525) + 1013904223) >>> 0; return random; };
   for (let run = 0; run < 120; run++) {
     const w = createWorld(run, 16, 16), start = { x: 2, z: 2 };
-    w.structures = []; w.jobs = []; w.resources = [];
+    // This oracle models terrain and doors only, not the natural chunks that
+    // new worlds also carry as physical ground piles since V129.
+    w.structures = []; w.jobs = []; w.resources = []; w.piles=[]; refreshStock(w);
     w.tiles = w.tiles.map(() => ({ terrain: draw() % 5 === 0 ? 'rock' : 'grass' })); w.tiles[34] = { terrain: 'grass' };
     const doors=new Map<number,number>();
     if(run%2)for(let n=0;n<5;n++) {

@@ -10,13 +10,14 @@ import { HP_UNIT } from '../src/sim/injury-rules.ts';
 import { moodThoughts } from '../src/sim/mood.ts';
 import type { World } from '../src/sim/types.ts';
 import { SCHEMA_VERSION } from '../src/sim/types.ts';
+import { withMigratedV90 } from './scenarios/legacy-skills.ts';
 
 describe('économie V105 : adoption et relevé', () => {
   it('reprend la démonstration V104 sans modifier son contenu ni lui imposer une adoption', () => {
     const saved=readFileSync('public/test-saves/v104/sculpture.json','utf8');
     const original=JSON.parse(saved),migrated=deserializeWorld(saved);
     expect(original.schemaVersion).toBe(104);
-    expect(migrated).toEqual({...original,schemaVersion:SCHEMA_VERSION,pawns:original.pawns.map((p:any)=>({...p,priorities:{...p.priorities,handle:0}}))});
+    expect(migrated).toEqual(withMigratedV90({...structuredClone(original),schemaVersion:SCHEMA_VERSION}));
     expect(migrated.economy).toBeUndefined();
     expect(validateWorld(migrated)).toEqual([]);
   });

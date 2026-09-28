@@ -12,8 +12,8 @@ const migrated = () => deserializeWorld(JSON.stringify(v120()));
 test('strict V120 validation precedes neutral adult-age migration', () => {
   const original = v120();
   const world = migrated();
-  expect(SCHEMA_VERSION).toBe(121);
-  expect(world.schemaVersion).toBe(121);
+  expect(original.schemaVersion).toBe(120);
+  expect(world.schemaVersion).toBe(SCHEMA_VERSION);
   expect(world.wildlife?.animals.map(a => [a.id, a.ageTicks, a.parents, a.pregnancy])).toEqual(
     original.wildlife?.animals.map(a => [a.id, adultAgeTicks(a.species), undefined, undefined]),
   );

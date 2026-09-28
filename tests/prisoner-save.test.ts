@@ -9,7 +9,7 @@ import { refreshStock } from '../src/sim/materials.ts';
 import { newApparelState } from '../src/sim/apparel-rules.ts';
 import { advanceRaids } from '../src/sim/raids.ts';
 import { prisonerUiFixture,recruitmentUiFixture } from './scenarios/prison-camp.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION, type World } from '../src/sim/types.ts';
 import { withoutV90 } from './scenarios/legacy-skills.ts';
 
 const valid=(w:World)=>expect(validateWorld(w),JSON.stringify({tick:w.tick,pawns:w.pawns.map(p=>({id:p.id,state:p.state,prisoner:p.prisoner,rescue:p.rescue,ward:p.ward,need:p.need}))})).toEqual([]);
@@ -21,7 +21,7 @@ test('V85 validates before neutral migration and refuses every future prisoner r
   // Real V84 colony promoted only by the documented V84->85 basic priority.
   const old=JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/colony-v84.json.gz',import.meta.url))).toString('utf8')) as World;
   old.schemaVersion=85 as typeof old.schemaVersion;for(const p of old.pawns)p.priorities.basic=3;
-  const upgraded=deserializeWorld(JSON.stringify(old));expect(upgraded.schemaVersion).toBe(90);expect(upgraded.tick).toBe(old.tick);expect(upgraded.prisonDepartures).toBeUndefined();expect(upgraded.pawns.every(p=>!p.prisoner&&!p.recruitment&&!p.ward)).toBe(true);expect(upgraded.pawns.every(p=>p.priorities.clean===3&&p.priorities.firefight===1&&p.priorities.warden===3)).toBe(true);
+  const upgraded=deserializeWorld(JSON.stringify(old));expect(upgraded.schemaVersion).toBe(SCHEMA_VERSION);expect(upgraded.tick).toBe(old.tick);expect(upgraded.prisonDepartures).toBeUndefined();expect(upgraded.pawns.every(p=>!p.prisoner&&!p.recruitment&&!p.ward)).toBe(true);expect(upgraded.pawns.every(p=>p.priorities.clean===3&&p.priorities.firefight===1&&p.priorities.warden===3)).toBe(true);
   const base=withoutV90(prisonerUiFixture().world);base.schemaVersion=85 as typeof base.schemaVersion;for(const p of base.pawns)delete (p.priorities as Partial<typeof p.priorities>).clean;for(const p of base.pawns)delete (p.priorities as Partial<typeof p.priorities>).warden;for(const p of base.pawns)delete (p.priorities as Partial<typeof p.priorities>).firefight;
   expect(()=>deserializeWorld(JSON.stringify(base))).not.toThrow();
   rejected(base,[w=>{w.pawns[0]!.prisoner=createPrisonerState(w,w.pawns[0]!);},w=>{w.pawns[0]!.recruitment={capturedAt:0,recruitedAt:0,fromFaction:'outlaws'};},w=>{w.prisonDepartures=[];},w=>{w.structures.find(s=>s.kind==='bed')!.prisoner=true;},w=>{w.pawns[0]!.ward={kind:'chat',patientId:w.pawns[2]!.id,spot:{x:9,z:10},phase:'approach',progress:0,rapports:0};},w=>{w.pawns[0]!.priorities.warden=3;}]);

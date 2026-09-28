@@ -1,3 +1,4 @@
+import { writeTestFileSync } from './test-output.ts';
 import { withoutHunting } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { applyCommand,createWorld,stepWorld,serializeWorld,deserializeWorld,validateWorld } from '../src/sim/index';
@@ -13,7 +14,7 @@ import { refreshStock,addGroundMaterial } from '../src/sim/materials';
 import { woodAccount } from './scenarios/colony-player';
 import { builtDoorState } from '../src/sim/door-rules';
 import type { World,Structure } from '../src/sim/types';
-import { writeFileSync } from 'node:fs';
+
 import { heatwaveCamp,heatwaveDecisions } from './scenarios/heatwave-player';
 import { fixtureBuilding } from './scenarios/deconstruction';
 
@@ -88,10 +89,10 @@ test('expedition builds and supplies a refuge, lives through a naturally schedul
     if(n%200===0)for(const d of heatwaveDecisions(w))expect(applyCommand(w,d.command),d.reason).toMatchObject({ok:true});
     stepWorld(w);peak=Math.max(peak,outdoorTemperature(w));exposure=Math.max(exposure,...w.pawns.map(p=>p.health?.heatstroke??0));slept ||= w.pawns.some(p=>p.state==='sleeping');ate ||= w.pawns.some(p=>p.state==='eating');
     if(w.heatwaves?.active&&first<0){first=w.tick;expect(w.structures.some(s=>s.kind==='passive-cooler'&&s.fuel!.ticks>0)).toBe(true);expect(w.thermal?.regions.some(r=>r.cells.length===16&&r.temperature<26)).toBe(true);}
-    if(!checkpoint&&w.heatwaves?.active&&exposure>=.04*HEAT_UNIT){writeFileSync(`artifacts/heatwave-checkpoint-${process.env.VALIDATION_VERSION??`v${w.schemaVersion}`}.json`,serializeWorld(w));checkpoint=true;}
+    if(!checkpoint&&w.heatwaves?.active&&exposure>=.04*HEAT_UNIT){writeTestFileSync(`artifacts/heatwave-checkpoint-${process.env.VALIDATION_VERSION??`v${w.schemaVersion}`}.json`,serializeWorld(w));checkpoint=true;}
     if(n%1000===0){expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);expect(woodAccount(w)).toBe(initial);samples.push({tick:w.tick,outside:outdoorTemperature(w),air:w.thermal?.regions.map(r=>r.temperature),health:w.pawns.map(p=>({id:p.id,state:p.state,heat:p.health?.heatstroke??0}))});}
   }
   expect(w.heatwaves?.lastEnd).toBeDefined();expect(peak).toBeGreaterThan(44);expect(exposure).toBeGreaterThan(0);expect(ate&&slept).toBe(true);expect(w.pawns.every(p=>p.state!=='dead'&&p.state!=='downed')).toBe(true);expect(checkpoint).toBe(true);
   const copy=deserializeWorld(serializeWorld(w));stepWorld(copy,600);stepWorld(w,600);expect(copy).toEqual(w);expect(w.pawns.every(p=>!p.health?.heatstroke)).toBe(true);expect(woodAccount(w)).toBe(initial);
-  writeFileSync(`artifacts/heatwave-colony-${process.env.VALIDATION_VERSION??`v${w.schemaVersion}`}.json`,JSON.stringify({first,end:w.tick,calendar:w.heatwaves,peak,exposure:exposure/HEAT_UNIT,ate,slept,wood:woodAccount(w),coolers:w.structures.filter(s=>s.kind==='passive-cooler'),samples},null,2));
+  writeTestFileSync(`artifacts/heatwave-colony-${process.env.VALIDATION_VERSION??`v${w.schemaVersion}`}.json`,JSON.stringify({first,end:w.tick,calendar:w.heatwaves,peak,exposure:exposure/HEAT_UNIT,ate,slept,wood:woodAccount(w),coolers:w.structures.filter(s=>s.kind==='passive-cooler'),samples},null,2));
 },30000);

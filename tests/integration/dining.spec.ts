@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
 import { createWorld, serializeWorld, addGroundMaterial, refreshStock } from '../../src/sim/index';
 import { world, expectWorld, saveKey, observeErrors, panel, tool, cell, startPaused } from './helpers';
@@ -54,7 +55,7 @@ test('table et tabouret : construction UI, portion transportée, repas assis, co
     await expect(page.locator('#comfort-meter')).toBeVisible();
     await page.mouse.move(800, 480); await page.mouse.wheel(0, -850);
     await page.waitForTimeout(400); // Let camera damping settle for the pose inspection.
-    await page.screenshot({ path: 'artifacts/dining-seated.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/dining-seated.png') });
     await panel(page, 'menu'); await expect(page.locator('#fps-counter')).toBeVisible();
     await page.locator('#save').click(); await page.locator('#load').click(); await expectWorld(page, eating);
     await page.getByRole('button', { name: 'Vitesse 6 fois', exact: true }).click();

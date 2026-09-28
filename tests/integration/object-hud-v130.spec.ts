@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import {test,expect} from '@playwright/test';
 import {observeErrors} from './helpers';
 
@@ -20,7 +21,7 @@ test('HUD droit et conseils ouvrent seulement des panneaux existants',async({pla
     await page.locator('[data-guide-panel="schedule"]').click();
     await expect(page.locator('#schedule-panel')).toBeVisible();
     await expect(page.locator('.learning-readout')).not.toHaveAttribute('open');
-    await page.screenshot({path:'artifacts/object-hud-v130.png'});
+    await page.screenshot({path:testOutputPath('artifacts/object-hud-v130.png')});
     expect(errors).toEqual([]);
   }finally{await browser.close();}
 });

@@ -1,10 +1,11 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
 import { powerFixture } from '../scenarios/power';
 import { serializeWorld,validateWorld } from '../../src/sim/index';
 import { WorkEnvironmentCache } from '../../src/sim/work-environment';
 import { woodAccount } from '../scenarios/colony-player';
 import { world,observeErrors,panel,tool,cell,expectWorld,saveKey } from './helpers';
-import { writeFileSync } from 'node:fs';
+
 
 test('electricity: build and fuel through UI, visible lamp, lost supply and exact reload on native WebGPU',async({playwright})=>{
   test.setTimeout(75000);
@@ -33,7 +34,7 @@ test('electricity: build and fuel through UI, visible lamp, lost supply and exac
     const lit=await world(page),env=new WorkEnvironmentCache();expect(env.read(lit).lightAt({x:20,z:16})).toBe(.5);
     expect(woodAccount(lit)).toBe(total);expect(validateWorld(lit)).toEqual([]);
     expect(lit.piles.some(p=>p.item==='steel'||p.item==='component')).toBe(false);
-    await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:'artifacts/power-lit.png'});
+    await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:testOutputPath('artifacts/power-lit.png')});
     const built=await page.evaluate(()=>(window as any).powerProbe.pipelines as number);expect(built).toBe(start);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,lit);
     const restoredPipelines=await page.evaluate(()=>(window as any).powerProbe.pipelines as number);
@@ -44,8 +45,8 @@ test('electricity: build and fuel through UI, visible lamp, lost supply and exac
     await expect(page.locator('#cell-description')).toContainText('Non raccordée');
     const final=await world(page);expect(env.read(final).lightAt({x:20,z:16})).toBeLessThan(.3);
     expect(woodAccount(final)).toBe(total);expect(validateWorld(final)).toEqual([]);
-    await page.screenshot({path:'artifacts/power-dark.png'});
+    await page.screenshot({path:testOutputPath('artifacts/power-dark.png')});
     const end=await page.evaluate(()=>(window as any).powerProbe.pipelines as number);expect(end).toBe(restoredPipelines);expect(errors).toEqual([]);
-    writeFileSync('artifacts/power-ui-v42.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',viewport:'1440x1000',size:32,pawns:1,newPipelines:{construction:built-start,loss:end-restoredPipelines},litTick:lit.tick,finalTick:final.tick,light:{on:.5,off:env.read(final).lightAt({x:20,z:16})},deconstructed:final.deconstructed,errors},null,2)+'\n');
+    writeTestFileSync('artifacts/power-ui-v42.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',viewport:'1440x1000',size:32,pawns:1,newPipelines:{construction:built-start,loss:end-restoredPipelines},litTick:lit.tick,finalTick:final.tick,light:{on:.5,off:env.read(final).lightAt({x:20,z:16})},deconstructed:final.deconstructed,errors},null,2)+'\n');
   }finally{await browser.close();}
 });

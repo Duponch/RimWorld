@@ -40,6 +40,7 @@ test('real V82 snapshot migrates without inventing a site, terrain, clock or new
   const historical=JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/scenario-v82.json.gz',import.meta.url))).toString());
   expect(historical.schemaVersion).toBe(82);expect(historical.scenario.revision).toBe(1);
   const migrated=deserializeWorld(JSON.stringify(historical));
+  expect(migrated.resources.map(resource=>resource.id)).toEqual(historical.resources.filter((resource:{kind:string})=>resource.kind!=='rock').map((resource:{id:number})=>resource.id));
   expect(migrated).toEqual(withMigratedBasic({...historical,schemaVersion:SCHEMA_VERSION}));expect(migrated.site).toBeUndefined();
   for(const mutate of [(w:any)=>w.site=resolveSite(w.seed),(w:any)=>w.scenario.revision=2,(w:any)=>w.tiles[0]={terrain:'rich-soil'},(w:any)=>w.tiles[0]={terrain:'gravel'}]) {
     const bad=structuredClone(historical);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 82/);
@@ -49,7 +50,7 @@ test('real V82 snapshot migrates without inventing a site, terrain, clock or new
 
 test('new site provenance, physical landing and both new soils survive continuation and snapshot patches',()=>{
   const world=createScenarioWorld(42,64,'crashlanded',{hilliness:'large-hills'});
-  expect(world.site).toEqual(resolveSite(42,{hilliness:'large-hills',biome:'temperate-forest'}));expect(world.scenario!.revision).toBe(6);
+  expect(world.site).toEqual(resolveSite(42,{hilliness:'large-hills',biome:'temperate-forest'}));expect(world.scenario!.revision).toBe(8);
   expect(resolveSite(42,{hilliness:'large-hills'})).toMatchObject({revision:1,biome:'temperate-forest'});
   expect(world.research?.stonecutting).toMatchObject({completedAt:0});
   expect(world.research?.smithing).toBeUndefined();

@@ -6,13 +6,14 @@ import {createWorld} from '../src/sim/engine.ts';
 import {refreshStock} from '../src/sim/materials.ts';
 import {deserializeWorld,serializeWorld,validateWorld} from '../src/sim/serialization.ts';
 import type {World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
+import {withMigratedV90} from './scenarios/legacy-skills.ts';
 
 test('the immutable V103 room demo migrates only its schema and disabled Art priority',()=>{
   const raw=JSON.parse(readFileSync('public/test-saves/v103/salles.json','utf8'));
   expect(raw.schemaVersion).toBe(103);
   const migrated=deserializeWorld(JSON.stringify(raw));
-  expect(migrated).toEqual({...raw,schemaVersion:106,
-    pawns:raw.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),art:0,handle:0}}))});
+  expect(migrated).toEqual(withMigratedV90({...structuredClone(raw),schemaVersion:SCHEMA_VERSION}));
   expect(validateWorld(migrated)).toEqual([]);
   for(const edit of [
     (v:any)=>v.pawns[0].priorities.art=1,

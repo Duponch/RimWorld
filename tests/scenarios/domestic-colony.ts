@@ -3,6 +3,7 @@ import { addResolvedInjury,createMedicalRecord } from '../../src/sim/injury-stat
 import { addMaterial,refreshStock } from '../../src/sim/materials.ts';
 import { enableWildlife } from '../../src/sim/wildlife.ts';
 import { reconcileAnimalHealth } from '../../src/sim/wildlife-health.ts';
+import { legacyHumanAge } from '../../src/sim/human-age.ts';
 import type { World } from '../../src/sim/types.ts';
 
 /** Prepared V106 lesson, not a naturally progressed Crashlanded colony. */
@@ -14,6 +15,7 @@ export function domesticColony(seed=106817):World {
   ];
   w.jobs=[];w.structures=[];w.piles=[];w.stockpiles=[];w.growingZones=[];w.pawns=w.pawns.slice(0,1);
   const handler=w.pawns[0]!;handler.x=8;handler.z=10;handler.hunger=100;handler.rest=100;
+  handler.age=legacyHumanAge();delete handler.health;
   handler.schedule.fill('work');handler.recreation.level=100;handler.bedId=null;
   for(const key of Object.keys(handler.priorities) as (keyof typeof handler.priorities)[])handler.priorities[key]=0;
   handler.priorities.handle=1;handler.priorities.doctor=2;

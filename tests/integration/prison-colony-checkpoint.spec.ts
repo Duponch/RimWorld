@@ -1,6 +1,7 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test,type Page } from '@playwright/test';
 import { createHash } from 'node:crypto';
-import { existsSync,readFileSync,writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { isColonist } from '../../src/sim/affiliation';
 import { deserializeWorld,validateWorld } from '../../src/sim/serialization';
@@ -80,7 +81,7 @@ test('native real V86 colony: recruited fourth person, assigned bed, work and ex
     await expect(page.locator('#toggle-draft')).toBeVisible();
     await expect(page.locator('#prisoner-inspection')).toHaveCount(0);
     await expect(page.locator('#fps-counter')).toBeVisible();
-    await page.screenshot({path:'artifacts/prison-colony-native-v86.png'});
+    await page.screenshot({path:testOutputPath('artifacts/prison-colony-native-v86.png')});
     report.recruit={id:recruit.id,name:recruit.name,provenance:recruit.recruitment,
       bedId:recruit.bedId,health:recruit.health,hunger:recruit.hunger,rest:recruit.rest,
       action:await page.locator('#selected-action').textContent()};
@@ -90,7 +91,7 @@ test('native real V86 colony: recruited fourth person, assigned bed, work and ex
     await expect(page.locator('#bed-owner')).toHaveValue(String(recruit.id));
     await expect(page.locator('#bed-prisoner')).not.toBeChecked();
     await expect(page.locator('#bed-medical')).not.toBeChecked();
-    await page.screenshot({path:'artifacts/prison-colony-native-bed-v86.png'});
+    await page.screenshot({path:testOutputPath('artifacts/prison-colony-native-bed-v86.png')});
     report.bed={id:bed!.id,x:bed!.x,z:bed!.z,orientation:bed!.orientation,ownerId:recruit.id};
 
     report.stage='work-priorities';
@@ -99,7 +100,7 @@ test('native real V86 colony: recruited fourth person, assigned bed, work and ex
       await expect(page.locator(`select[data-owner="${recruit.id}"][data-work="${work}"]`)).toHaveValue(String(recruit.priorities[work]));
     }
     report.priorities=recruit.priorities;
-    await page.screenshot({path:'artifacts/prison-colony-native-work-v86.png'});
+    await page.screenshot({path:testOutputPath('artifacts/prison-colony-native-work-v86.png')});
     await page.keyboard.press('Escape');
     // Inspection and reading existing controls must not rewrite this real save.
     await expectWorld(page,initial);
@@ -121,18 +122,18 @@ test('native real V86 colony: recruited fourth person, assigned bed, work and ex
       finalTick:continued.tick,exactSaveReload:true,recruitState:afterRecruit.state,
       hunger:afterRecruit.hunger,rest:afterRecruit.rest};
     await inspectPerson(page,recruit.id);await expect(page.locator('#selected-name')).toHaveText(recruit.name);
-    await page.screenshot({path:'artifacts/prison-colony-native-continued-v86.png'});
+    await page.screenshot({path:testOutputPath('artifacts/prison-colony-native-continued-v86.png')});
     expect(errors).toEqual([]);report.status='passed';report.stage='complete';
   } catch(error) {
     report.status='failed';report.failure=String(error);
     const tag=`prison-colony-native-failed-v86-${Date.now()}`;
-    await page.screenshot({path:`artifacts/${tag}.png`}).catch(()=>{});
+    await page.screenshot({path:testOutputPath(`artifacts/${tag}.png`)}).catch(()=>{});
     const state=await world(page).catch(()=>undefined);
-    if(state){report.failureCheckpoint=`tmp/${tag}.json`;writeFileSync(String(report.failureCheckpoint),JSON.stringify(state));report.failureTick=state.tick;report.validation=validateWorld(state);}
+    if(state){report.failureCheckpoint=`tmp/${tag}.json`;writeTestFileSync(String(report.failureCheckpoint),JSON.stringify(state));report.failureTick=state.tick;report.validation=validateWorld(state);}
     report.notice=await page.locator('#notice').textContent().catch(()=>null);
-    writeFileSync(`artifacts/${tag}.json`,JSON.stringify({...report,errors},null,2));
+    writeTestFileSync(`artifacts/${tag}.json`,JSON.stringify({...report,errors},null,2));
     throw error;
   } finally {
-    writeFileSync(reportPath,JSON.stringify({...report,errors},null,2));await browser.close();
+    writeTestFileSync(reportPath,JSON.stringify({...report,errors},null,2));await browser.close();
   }
 });

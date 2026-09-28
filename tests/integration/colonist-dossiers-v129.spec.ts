@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { test, expect } from '@playwright/test';
 import { createWorld, serializeWorld, validateWorld } from '../../src/sim/index';
 import { expectWorld, observeErrors, panel, pawnTab, saveKey } from './helpers';
@@ -57,20 +58,20 @@ test('V129: colonist dossiers stay above the compact summary and expose recorded
       expect(layout.policy.left).toBeGreaterThan(layout.actions.left + 10);
       expect(layout.policy.right).toBeLessThan(layout.actions.right - 10);
       expect(layout.navigationScrollWidth).toBeLessThanOrEqual(layout.navigationWidth + 1);
-      await page.screenshot({ path: `artifacts/colonist-dossiers-v131-${viewport.width}.png` });
+      await page.screenshot({ path:testOutputPath(`artifacts/colonist-dossiers-v131-${viewport.width}.png`) });
     }
     await page.locator('[data-journal-filter="combat"]').click();
     await expect(page.locator('#pawn-journal-empty')).toBeVisible();
     await pawnTab(page, 'health');
     await expect(page.locator('.health-capacities')).toContainText('Conscience');
-    await page.screenshot({ path: 'artifacts/colonist-dossiers-v131-health.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/colonist-dossiers-v131-health.png') });
     await pawnTab(page, 'gear');
     await expect(page.locator('#equipment-details')).toContainText('Inventaire');
-    await page.screenshot({ path: 'artifacts/colonist-dossiers-v131-gear.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/colonist-dossiers-v131-gear.png') });
     await pawnTab(page, 'bio');
-    await page.screenshot({ path: 'artifacts/colonist-dossiers-v131-bio.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/colonist-dossiers-v131-bio.png') });
     await pawnTab(page, 'needs');
-    await page.screenshot({ path: 'artifacts/colonist-dossiers-v131-needs.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/colonist-dossiers-v131-needs.png') });
     await pawnTab(page, 'social');
     await expect(page.locator('#social-opinions thead')).toContainText('Avis réciproque');
     await page.locator('#toggle-draft').click();
@@ -90,9 +91,9 @@ test('V129: colonist dossiers stay above the compact summary and expose recorded
         expect(rect.top).toBeGreaterThanOrEqual(draftedLayout.actions.top);
         expect(rect.bottom).toBeLessThanOrEqual(draftedLayout.actions.bottom);
       }
-      await page.screenshot({ path: `artifacts/colonist-dossiers-v131-drafted-${viewport.width}.png` });
+      await page.screenshot({ path:testOutputPath(`artifacts/colonist-dossiers-v131-drafted-${viewport.width}.png`) });
     }
     expect(errors).toEqual([]);
-    await page.screenshot({ path: 'artifacts/colonist-dossiers-v129.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/colonist-dossiers-v129.png') });
   } finally { await browser.close(); }
 });

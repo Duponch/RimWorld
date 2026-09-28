@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
 import { roomCamp } from '../scenarios/rooms';
 import { newDoorState } from '../../src/sim/door-rules';
@@ -40,7 +41,7 @@ test('toits : zone tracée, pose physique, affichage, retrait et reprise par le 
     await expect(page.locator('#room-description')).toHaveCount(0);
     const covered=await world(page);expect(validateWorld(covered)).toEqual([]);
     await page.locator('#roof-toggle').click();await expect(page.locator('#roof-toggle')).toHaveAttribute('aria-pressed','true');
-    await expectWorld(page,covered);await page.screenshot({path:'artifacts/roofing-ui-covered.png'});
+    await expectWorld(page,covered);await page.screenshot({path:testOutputPath('artifacts/roofing-ui-covered.png')});
     await page.locator('#roof-toggle').click();
     await tool(page,'ignore-roof');await revealCells(page,[{x:10,z:10},{x:20,z:20}]);await dragRectangle(page,{x:10,z:10},{x:20,z:20});
     await expect.poll(async()=>(await world(page)).roofing?.build.length).toBe(0);
@@ -53,7 +54,7 @@ test('toits : zone tracée, pose physique, affichage, retrait et reprise par le 
     await expect(page.locator('#room-description')).toHaveCount(0);
     await expect(page.locator('#fps-counter')).toBeVisible();expect(errors).toEqual([]);
     const backend=await page.evaluate(()=>window.__lisiere.backend);expect(backend).toContain('WebGPU');
-    await page.screenshot({path:'artifacts/roofing-ui-cutaway.png'});
+    await page.screenshot({path:testOutputPath('artifacts/roofing-ui-cutaway.png')});
     await testInfo.attach('roofing',{contentType:'application/json',body:JSON.stringify({backend,roofing:removed.roofing,errors})});
   } finally {await browser.close();}
 });

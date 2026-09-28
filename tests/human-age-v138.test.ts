@@ -9,6 +9,7 @@ import { acquireFlu } from '../src/sim/flu-state.ts';
 import { pawnBody } from '../src/sim/health-rules.ts';
 import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serialization.ts';
 import { medicalCamp } from './scenarios/health.ts';
+import { withoutFutureHelmetPolicy } from './scenarios/legacy-skills.ts';
 
 test('new human ages are adult, deterministic and advance only with confirmed ticks',()=>{
   const world=medicalCamp(2),[a,b]=world.pawns,random=world.rng;
@@ -116,6 +117,8 @@ test('age affects existing infection and flu immunity through the Core age curve
 test('V135 migration validates first, gives neutral adult age and never fabricates illness',()=>{
   const current=medicalCamp(2),previous=structuredClone(current) as typeof current;
   previous.schemaVersion=135 as typeof previous.schemaVersion;
+  delete previous.breakdown;
+  withoutFutureHelmetPolicy(previous);
   for(const pawn of previous.pawns)delete pawn.age;
   const rng=previous.rng,oldTick=previous.tick;
   const forged=structuredClone(previous);

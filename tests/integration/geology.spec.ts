@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { SCHEMA_VERSION } from '../../src/sim/types';
 import { withoutPawnSkills } from '../scenarios/legacy-skills';
 import { test, expect } from '@playwright/test';
@@ -29,7 +30,7 @@ test('inspecter les cinq roches, sauvegarder leurs identités et reprendre une c
     await cell(page, 12, 14); await expect(page.locator('#cell-title')).toHaveText('Rochers · Granite');
     await expect(page.locator('#cell-description')).not.toContainText('9 unités à récolter');
     const before = await world(page); await panel(page, 'menu'); await page.locator('#save').click(); await page.locator('#load').click(); await expectWorld(page, before);
-    await page.keyboard.press('Escape'); await page.screenshot({ path: 'artifacts/geology-inspection.png' });
+    await page.keyboard.press('Escape'); await page.screenshot({ path:testOutputPath('artifacts/geology-inspection.png') });
     const old = JSON.parse(serializeWorld(fixture)); (old.schemaVersion = 26,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}
     for (const t of old.tiles) delete t.stone; for (const r of old.resources) delete r.stone;
     await page.evaluate(({ key, saved }) => localStorage.setItem(key, saved), { key: saveKey, saved: JSON.stringify(old) });

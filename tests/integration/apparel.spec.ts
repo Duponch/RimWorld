@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { apparelCamp } from '../scenarios/apparel';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { observeErrors,panel,pawnTab,saveKey,world,expectWorld } from './helpers';
@@ -32,7 +33,7 @@ test('physical clothing UI at 1x and 6x: floor, dressing, layered GPU attachment
     const dressed=await world(page);expect(validateWorld(dressed)).toEqual([]);
     await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-apparel','cloth-shirt flak-vest');
     await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'gear');await expect(page.locator('#equipment-apparel')).toContainText('Gilet pare-balles');
-    await page.screenshot({path:`artifacts/apparel-v63-${speed}x.png`});
+    await page.screenshot({path:testOutputPath(`artifacts/apparel-v63-${speed}x.png`)});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,dressed);await page.keyboard.press('Escape');
     await perform(page,{reason:'Retirer le gilet.',command:{type:'order-equipment',pawnId:p.id,itemId:vest.id,action:'remove',queue:false}},{value:0});
     await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>(await world(page)).piles.find(i=>i.id===vest.id)!.owner.type).toBe('ground');await page.locator('[data-speed="0"]').click();
@@ -43,5 +44,5 @@ test('physical clothing UI at 1x and 6x: floor, dressing, layered GPU attachment
     for(const f of frames){expect(f.vest).toBe(f.owner==='apparel'?1:0);expect(f.shirt).toBe(f.shirtOwner==='apparel'?1:0);expect(f.cargo).toBe(0);expect(f.tick).toBeLessThanOrEqual(f.play);}
     expect(errors).toEqual([]);evidence.push({speed,frames:frames.length,dressing:frames.filter(f=>f.phase==='wear'&&f.progress>0).length,removal:frames.filter(f=>f.phase==='remove'&&f.progress>0).length,finalTick:final.tick,errors});await page.close();
   }}finally{await browser.close();}
-  writeFileSync('artifacts/apparel-ui-v63.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',evidence},null,2)+'\n');
+  writeTestFileSync('artifacts/apparel-ui-v63.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',evidence},null,2)+'\n');
 });

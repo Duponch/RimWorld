@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import {test,expect} from '@playwright/test';
 import {serializeWorld,validateWorld} from '../../src/sim/index';
 import {medicalCamp} from '../scenarios/health';
@@ -44,9 +45,9 @@ test('three corpse appearances, centred shirt and thick object corners render in
     }
     await revealCells(page,[...spots,shirt]);
     expect(await page.evaluate(()=>window.__lisiere.backend)).toMatch(/webgpu/i);
-    await page.screenshot({path:'artifacts/corpse-ground-v132.png'});
+    await page.screenshot({path:testOutputPath('artifacts/corpse-ground-v132.png')});
     await cell(page,shirt.x,shirt.z);await expect(page.locator('#cell-title')).toHaveText('Chemise en tissu');
-    await page.screenshot({path:'artifacts/corpse-ground-selection-v132.png'});
+    await page.screenshot({path:testOutputPath('artifacts/corpse-ground-selection-v132.png')});
     expect(errors).toEqual([]);
   }finally{await browser.close();}
 });

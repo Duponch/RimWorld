@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { withoutPawnSkills } from '../scenarios/legacy-skills';
 import { expect, test } from '@playwright/test';
 import { createWorld, serializeWorld, deserializeWorld, validateWorld } from '../../src/sim/index';
@@ -30,7 +31,7 @@ test('Planning : peindre, annuler, clavier, copier, reprendre et réveiller phys
     await expect.poll(async()=>{const w=await world(page);return JSON.stringify(w.pawns[0]!.schedule)===JSON.stringify(w.pawns[1]!.schedule);}).toBe(true);
     await page.locator('[data-schedule-brush="sleep"]').click();await slot(ada!.id,0).click();await expect.poll(async()=>(await world(page)).pawns[0]!.schedule[0]).toBe('sleep');
     expect((await world(page)).pawns[1]!.schedule[0]).toBe('work'); // Clipboard is an independent value.
-    await page.screenshot({path:'artifacts/schedules-ui.png'});
+    await page.screenshot({path:testOutputPath('artifacts/schedules-ui.png')});
     const configured=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,configured);
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.state).toBe('sleeping');await page.locator('[data-speed="0"]').click();
     const asleep=await world(page);expect(asleep.pawns[0]!.need).toMatchObject({kind:'sleep',target:{x:13,z:13}});expect(asleep.pawns[1]!.state).not.toBe('sleeping');

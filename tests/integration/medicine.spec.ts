@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { medicineCamp } from '../scenarios/medicine';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { expectWorld,observeErrors,panel,pawnTab,saveKey,world } from './helpers';
@@ -32,7 +33,7 @@ test('patient chooses medicine ceiling; doctor collects, carries, cancels withou
     await page.locator(`[data-pawn="${patient.id}"]`).click();await pawnTab(page,'health');await page.locator('#medical-policy').selectOption('none');
     const cancelled=await world(page);expect(cancelled.pawns[0]!.tend).toBeUndefined();expect(cancelled.piles.reduce((n,p)=>n+p.quantity,0)).toBe(4);expect(cancelled.pawns[0]!.skills.medicine.xp).toBe(0);
     await page.locator('#medical-policy').selectOption('industrial');await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.tend?.phase).toBe('tend');await page.locator('[data-speed="0"]').click();
-    const work=await world(page);expect(work.pawns[0]!.skills.medicine.xp).toBe(0);await page.screenshot({path:'artifacts/medicine-v51.png'});
+    const work=await world(page);expect(work.pawns[0]!.skills.medicine.xp).toBe(0);await page.screenshot({path:testOutputPath('artifacts/medicine-v51.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,work);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.skills.medicine.xp).toBe(122500);await page.locator('[data-speed="0"]').click();
     const final=await world(page);expect(validateWorld(final)).toEqual([]);expect(final.pawns[1]!.health!.injuries.every(i=>i.tended!==undefined)).toBe(true);expect(final.piles.reduce((n,p)=>n+p.quantity,0)).toBe(3);await expect(page.locator('#medicine')).toHaveText('3');await expect(page.locator('#fps-counter')).toHaveText(/\d+ FPS/);
@@ -41,6 +42,6 @@ test('patient chooses medicine ceiling; doctor collects, carries, cancels withou
     expect(carrying.length).toBeGreaterThan(5);expect(working.length).toBeGreaterThan(5);expect(completed.length).toBeGreaterThan(1);
     for(const f of [...carrying,...working]){expect(f.cargo).toBe(19);expect(f.xp).toBe(0);expect(f.treated).toBe(0);expect(f.units).toBe(4);expect(f.work).toBe(f.phase==='tend'?1:0);expect(f.tick).toBeLessThanOrEqual(f.play);}
     for(const f of completed){expect(f.units).toBe(3);expect(f.treated).toBe(2);expect(f.cargo).toBe(0);}
-    expect(errors).toEqual([]);writeFileSync('artifacts/medicine-ui-v51.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,carrying:carrying.length,working:working.length,firstCarry:carrying[0],firstWork:working[0],firstResult:completed[0],savedTicks:[pickup.tick,carried.tick,work.tick],finishedTick:final.tick,remainingMedicine:3,errors},null,2)+'\n');
+    expect(errors).toEqual([]);writeTestFileSync('artifacts/medicine-ui-v51.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,carrying:carrying.length,working:working.length,firstCarry:carrying[0],firstWork:working[0],firstResult:completed[0],savedTicks:[pickup.tick,carried.tick,work.tick],finishedTick:final.tick,remainingMedicine:3,errors},null,2)+'\n');
   }finally{await browser.close();}
 });

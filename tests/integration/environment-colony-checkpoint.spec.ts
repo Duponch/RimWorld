@@ -1,6 +1,7 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
 import { createHash } from 'node:crypto';
-import { existsSync,readFileSync,writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { deserializeWorld,validateWorld } from '../../src/sim/serialization';
 import { isColonist } from '../../src/sim/affiliation';
@@ -40,7 +41,7 @@ test('native real seasonal colony: cold load, equipment, dates and exact continu
       await expect(card).toBeVisible();
       if(s.kind==='heater')await expect(card.locator('[data-heater-offset]')).toHaveCount(5);
       else await expect(card.locator('[data-wind-auto-cut]')).toBeVisible();
-      await page.screenshot({path:`artifacts/environment-colony-${s.kind}-v87.png`});
+      await page.screenshot({path:testOutputPath(`artifacts/environment-colony-${s.kind}-v87.png`)});
     }
     await panel(page,'menu');await expect(page.locator('#climate-adopt')).toHaveCount(0);await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     report.stage='continuation';await page.locator('[data-speed="6"]').click();
@@ -48,8 +49,8 @@ test('native real seasonal colony: cold load, equipment, dates and exact continu
     const continued=await world(page);expect(validateWorld(continued)).toEqual([]);expect(continued.climate).toEqual(initial.climate);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,continued);await page.keyboard.press('Escape');
     report.finalTick=continued.tick;report.date=climateDateLabel(continued);report.weather=continued.weather;report.fires=continued.fires?.items.length;report.errors=errors;expect(errors).toEqual([]);
-    await page.setViewportSize({width:1100,height:760});await page.screenshot({path:'artifacts/environment-colony-small-v87.png'});
-    report.status='passed';writeFileSync('artifacts/environment-colony-native-v87.json',JSON.stringify(report,null,2));
-  }catch(error){report.error=String(error);report.errors=errors;report.status='failed';const name=`artifacts/environment-colony-native-failed-v87-${Date.now()}`;await page.screenshot({path:name+'.png'}).catch(()=>{});writeFileSync(name+'.json',JSON.stringify(report,null,2));throw error;}
+    await page.setViewportSize({width:1100,height:760});await page.screenshot({path:testOutputPath('artifacts/environment-colony-small-v87.png')});
+    report.status='passed';writeTestFileSync('artifacts/environment-colony-native-v87.json',JSON.stringify(report,null,2));
+  }catch(error){report.error=String(error);report.errors=errors;report.status='failed';const name=`artifacts/environment-colony-native-failed-v87-${Date.now()}`;await page.screenshot({path:testOutputPath(name+'.png')}).catch(()=>{});writeTestFileSync(name+'.json',JSON.stringify(report,null,2));throw error;}
   finally{await browser.close();}
 });

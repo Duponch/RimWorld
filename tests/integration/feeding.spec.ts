@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { feedingCamp } from '../scenarios/feeding';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { expectWorld,observeErrors,panel,saveKey,world } from './helpers';
@@ -24,7 +25,7 @@ test('player orders feeding, sees physical food and synchronized bedside poses, 
     await perform(page,{reason:'Nourrir le blessé au lit.',command:{type:'order-feed',pawnId:doctor.id,patientId:patient.id,queue:false}},{value:0});
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.feed?.phase).toBe('feed');await page.locator('[data-speed="0"]').click();
     const during=await world(page);expect(validateWorld(during)).toEqual([]);expect(during.pawns[1]!.hunger).toBeLessThan(24);expect(during.pawns[0]!.skills.medicine.xp).toBe(0);
-    expect(during.piles.find(p=>p.owner.type==='pawn')?.quantity).toBe(1);await page.screenshot({path:'artifacts/feeding-bedside-v48.png'});
+    expect(during.piles.find(p=>p.owner.type==='pawn')?.quantity).toBe(1);await page.screenshot({path:testOutputPath('artifacts/feeding-bedside-v48.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,during);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[1]!.hunger).toBeGreaterThan(95);await page.locator('[data-speed="0"]').click();
     const finished=await world(page);expect(validateWorld(finished)).toEqual([]);expect(finished.pawns[0]!.feed).toBeUndefined();expect(finished.piles.reduce((n,p)=>n+p.quantity,0)).toBe(4);expect(finished.pawns[0]!.skills.medicine.xp).toBe(0);
@@ -32,6 +33,6 @@ test('player orders feeding, sees physical food and synchronized bedside poses, 
     const frames=await page.evaluate(()=>(window as any).__feedingFrames as {tick:number;play:number;phase:string;work:number;patientPose:number;distance:number;yaw:number;expectedYaw:number;held:boolean;food:number;hunger:number}[]);
     const feeding=frames.filter(f=>f.phase==='feed');expect(feeding.length).toBeGreaterThan(5);expect(frames.some(f=>f.phase==='deliver'&&f.held)).toBe(true);
     for(const f of feeding){expect(f.work).toBe(1);expect(f.patientPose).toBe(1);expect(f.distance).toBe(1);expect(Math.cos(f.yaw-f.expectedYaw)).toBeCloseTo(1,5);expect(f.tick).toBeLessThanOrEqual(f.play);expect(f.food).toBe(5);expect(f.hunger).toBeLessThan(24);expect(f.held).toBe(true);}
-    expect(errors).toEqual([]);writeFileSync('artifacts/feeding-ui-v48.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,bedsideFrames:feeding.length,first:feeding[0],last:feeding.at(-1),duringTick:during.tick,finishedTick:finished.tick,remaining:finished.stock.food,medicineXp:finished.pawns[0]!.skills.medicine.xp,errors},null,2)+'\n');
+    expect(errors).toEqual([]);writeTestFileSync('artifacts/feeding-ui-v48.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,bedsideFrames:feeding.length,first:feeding[0],last:feeding.at(-1),duringTick:during.tick,finishedTick:finished.tick,remaining:finished.stock.food,medicineXp:finished.pawns[0]!.skills.medicine.xp,errors},null,2)+'\n');
   }finally{await browser.close();}
 });

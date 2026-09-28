@@ -1,5 +1,6 @@
+import { writeTestFile } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
-import { writeFile } from 'node:fs/promises';
+
 import { observeErrors, startPaused } from './helpers';
 
 test('V138: the arid drago canopy joins its trunk and sways in the resident tree batch', async ({ playwright }) => {
@@ -49,12 +50,12 @@ ColonyRenderer.prototype.frame=function(now){window.__windView=this;return origi
     const canvas = page.locator('#viewport canvas');
     await page.waitForTimeout(300);
     const still = await canvas.screenshot();
-    if (process.env.V138_CAPTURE === '1') await writeFile('tmp/vegetation-v138.png', still);
+    if (process.env.V138_CAPTURE === '1') await writeTestFile('tmp/vegetation-v138.png', still);
     await test.info().attach('drago-parasol', { body: still, contentType: 'image/png' });
     await page.evaluate(() => { (window as any).__windView.resources.windTick.value = 12; });
     await page.waitForTimeout(200);
     const swaying = await canvas.screenshot();
-    if (process.env.V138_CAPTURE === '1') await writeFile('tmp/vegetation-wind-v138.png', swaying);
+    if (process.env.V138_CAPTURE === '1') await writeTestFile('tmp/vegetation-wind-v138.png', swaying);
     expect(still.equals(swaying)).toBe(false);
     expect(await page.evaluate(() => {
       const meshes: any[] = [];
@@ -78,7 +79,7 @@ ColonyRenderer.prototype.frame=function(now){window.__windView=this;return origi
       view.resources.windTick.value = 12;
     });
     await page.waitForTimeout(300);
-    if (process.env.V138_CAPTURE === '1') await writeFile('tmp/vegetation-young-v138.png', await canvas.screenshot());
+    if (process.env.V138_CAPTURE === '1') await writeTestFile('tmp/vegetation-young-v138.png', await canvas.screenshot());
     const grassMap = await page.evaluate(() => {
       const view = (window as any).__windView, grass = view.grass;
       view.resources.group.traverse((object: any) => { if (object.isMesh) object.visible = false; });
@@ -91,7 +92,7 @@ ColonyRenderer.prototype.frame=function(now){window.__windView=this;return origi
     await page.waitForTimeout(200);
     const grassPatch = { x: 100, y: 350, width: 400, height: 300 };
     const grassStill = await page.screenshot({ clip: grassPatch });
-    if (process.env.V138_CAPTURE === '1') await writeFile('tmp/vegetation-grass-v138.png', grassStill);
+    if (process.env.V138_CAPTURE === '1') await writeTestFile('tmp/vegetation-grass-v138.png', grassStill);
     await page.evaluate(() => { (window as any).__windView.grass.windTick.value = 4.5; });
     await page.waitForTimeout(200);
     expect(grassStill.equals(await page.screenshot({ clip: grassPatch }))).toBe(false);

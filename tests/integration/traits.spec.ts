@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { medicalCamp } from '../scenarios/health';
 import { applyCommand } from '../../src/sim/engine';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
@@ -40,9 +41,9 @@ test('personality in real UI: new camp, comparable physical work, thoughts, sche
     await page.locator(`[data-speed="${speed}"]`).click();await expect(page.locator('#arrival-letter')).toBeVisible();await page.locator('[data-speed="0"]').click();const pending=await world(page),offer=pending.arrivals!.pending!;
     await page.locator('#arrival-letter').click();for(const id of offer.traits!)await expect(page.locator('dialog[open]')).toContainText(TRAITS[id].label);await page.locator('#accept-arrival').click();await expect.poll(async()=>(await world(page)).pawns.length).toBe(3);
     const final=await world(page);expect(final.pawns.at(-1)!.traits).toEqual(offer.traits);expect(validateWorld(final)).toEqual([]);
-    await page.locator(`[data-pawn="${fast!.id}"]`).click();await pawnTab(page,'bio');await page.locator('[data-traits]').scrollIntoViewIfNeeded();await page.screenshot({path:`artifacts/traits-v69-${speed}x.png`});
+    await page.locator(`[data-pawn="${fast!.id}"]`).click();await pawnTab(page,'bio');await page.locator('[data-traits]').scrollIntoViewIfNeeded();await page.screenshot({path:testOutputPath(`artifacts/traits-v69-${speed}x.png`)});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);expect(errors).toEqual([]);
     proof.push({speed,generated:generated.pawns.map(p=>({name:p.name,traits:p.traits})),workingTick:working.tick,builtTick:built.tick,finalTick:final.tick,skillXp:built.pawns.map(p=>p.skills.construction.xp),schedule:final.pawns[1]!.schedule,offer,joined:final.pawns.at(-1)!.traits,errors});await page.close();
   }}finally{await browser.close();}
-  writeFileSync('artifacts/traits-ui-v69.json',JSON.stringify({date:new Date().toISOString(),controlledWorkAndCalendar:true,proof},null,2)+'\n');
+  writeTestFileSync('artifacts/traits-ui-v69.json',JSON.stringify({date:new Date().toISOString(),controlledWorkAndCalendar:true,proof},null,2)+'\n');
 });

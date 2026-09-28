@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import {test,expect} from '@playwright/test';
 import {serializeWorld,validateWorld} from '../../src/sim/index';
 import {addMaterial,refreshStock} from '../../src/sim/materials';
@@ -31,9 +32,9 @@ test('loose composite piles align with their selected ground cells in WebGPU',as
     }
     await revealCells(page,spots);
     expect(await page.evaluate(()=>window.__lisiere.backend)).toMatch(/webgpu/i);
-    await page.screenshot({path:'artifacts/visual-anchors-v133.png'});
+    await page.screenshot({path:testOutputPath('artifacts/visual-anchors-v133.png')});
     await cell(page,14,19);await expect(page.locator('#cell-title')).toContainText('Bois');
-    await page.screenshot({path:'artifacts/visual-anchors-selection-v133.png'});
+    await page.screenshot({path:testOutputPath('artifacts/visual-anchors-selection-v133.png')});
     expect(errors).toEqual([]);
   }finally{await browser.close();}
 });

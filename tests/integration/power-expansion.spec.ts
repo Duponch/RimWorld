@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect, test, type Page } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { powerExpansionFixture } from '../scenarios/power-expansion';
 import { deserializeWorld, serializeWorld, validateWorld } from '../../src/sim/serialization';
 import { batteryWattDays } from '../../src/sim/power-battery';
@@ -61,14 +62,14 @@ test('native electrical loop: research, solar, battery, physical switches and ca
     expect(validateWorld(built)).toEqual([]);expect(built.piles.filter(p=>p.item==='steel').reduce((n,p)=>n+p.quantity,0)).toBe(87);
     expect(built.piles.filter(p=>p.item==='component').reduce((n,p)=>n+p.quantity,0)).toBe(2);
     await inspect(page,solar,solar.id);await expect(page.locator('[data-power-kind="solar-generator"] [data-power-flick]')).toBeHidden();
-    await expect(page.locator('#cell-description')).toContainText('16/16 cases sans toit');await page.screenshot({path:'artifacts/power-day-v85.png'});
+    await expect(page.locator('#cell-description')).toContainText('16/16 cases sans toit');await page.screenshot({path:testOutputPath('artifacts/power-day-v85.png')});
     await inspect(page,battery,battery.id);await expect(page.locator('[data-power-kind="battery"] [data-power-flick]')).toBeHidden();
     await expect(page.locator('[data-power-kind="battery"]')).toContainText('50 %');
     await act({type:'area',action:'build-roof',from:{x:7,z:10},to:{x:7,z:10}},'Recouvrir physiquement une case du panneau, avec le mur adjacent comme support.');
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>(await world(page)).roofing?.constructed.includes(10*32+7)).toBe(true);await pause(page);
     await inspect(page,solar,solar.id);await expect(page.locator('#cell-description')).toContainText('15/16 cases sans toit');
-    await page.screenshot({path:'artifacts/power-roof-v85.png'});
+    await page.screenshot({path:testOutputPath('artifacts/power-roof-v85.png')});
     await act({type:'designate',kind:'wall',x:14,z:11,orientation:0,material:'wood'},'Construire un mur au-dessus d’un câble existant.');
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>(await world(page)).structures.some(s=>s.kind==='wall'&&s.x===14&&s.z===11)).toBe(true);await pause(page);
@@ -85,7 +86,7 @@ test('native electrical loop: research, solar, battery, physical switches and ca
     await expect.poll(async()=>(await world(page)).structures.find(s=>s.id===lamp.id)!.power!.on,{timeout:20000}).toBe(true);await pause(page);
     const wired=await world(page),cable=wired.structures.find(s=>s.kind==='power-conduit'&&s.x===14&&s.z===11)!,wall=wired.structures.find(s=>s.kind==='wall'&&s.x===14&&s.z===11)!;
     await inspect(page,cable,cable.id);await expect(page.locator('#cell-title')).toContainText('Mur');
-    await page.screenshot({path:'artifacts/power-under-wall-v85.png'});
+    await page.screenshot({path:testOutputPath('artifacts/power-under-wall-v85.png')});
     await page.locator(`[data-power-id="${cable.id}"] [data-power-remove]`).click();
     await expect.poll(async()=>(await world(page)).jobs.some(j=>j.deconstruction?.structureId===cable.id)).toBe(true);
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
@@ -102,18 +103,18 @@ test('native electrical loop: research, solar, battery, physical switches and ca
     const before=night.structures.find(s=>s.id===battery.id)!.battery!.stored;
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).tick).toBeGreaterThan(night.tick+40);await pause(page);
     const dark=await world(page);expect(powerWatts(dark.structures.find(s=>s.id===solar.id)!,dark)).toBe(0);expect(dark.structures.find(s=>s.id===lamp.id)!.power!.on).toBe(true);expect(dark.structures.find(s=>s.id===battery.id)!.battery!.stored).toBeLessThan(before);expect(validateWorld(dark)).toEqual([]);
-    await inspect(page,battery,battery.id);await page.screenshot({path:'artifacts/power-night-v85.png'});
+    await inspect(page,battery,battery.id);await page.screenshot({path:testOutputPath('artifacts/power-night-v85.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,dark);
     report.night={tick:dark.tick,solarWatts:0,lampOn:true,storedBefore:batteryWattDays({stored:before}),storedAfter:batteryWattDays(dark.structures.find(s=>s.id===battery.id)!.battery!)};
     await expect(page.locator('#fps-counter')).toBeVisible();expect(errors).toEqual([]);report.errors=errors;
-    writeFileSync('artifacts/power-native-v85.json',JSON.stringify(report,null,2));
+    writeTestFileSync('artifacts/power-native-v85.json',JSON.stringify(report,null,2));
   } catch(error) {
     const tag=`power-native-failed-v85-${Date.now()}`;
-    await page.screenshot({path:`artifacts/${tag}.png`}).catch(()=>{});
+    await page.screenshot({path:testOutputPath(`artifacts/${tag}.png`)}).catch(()=>{});
     const state=await world(page).catch(()=>undefined);
-    if(state)writeFileSync(`tmp/${tag}-checkpoint.json`,JSON.stringify(state));
+    if(state)writeTestFileSync(`tmp/${tag}-checkpoint.json`,JSON.stringify(state));
     const notice=await page.locator('#notice').textContent().catch(()=>null);
-    writeFileSync(`artifacts/${tag}.json`,JSON.stringify({...report,failure:String(error),notice,tick:state?.tick,validation:state?validateWorld(state):undefined,checkpoint:state?`tmp/${tag}-checkpoint.json`:null,errors},null,2));
+    writeTestFileSync(`artifacts/${tag}.json`,JSON.stringify({...report,failure:String(error),notice,tick:state?.tick,validation:state?validateWorld(state):undefined,checkpoint:state?`tmp/${tag}-checkpoint.json`:null,errors},null,2));
     console.info(`Failure evidence: artifacts/${tag}.json; actual checkpoint: tmp/${tag}-checkpoint.json`);
     throw error;
   } finally {await browser.close();}

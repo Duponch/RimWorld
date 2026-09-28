@@ -1,6 +1,7 @@
+import { writeTestFile, testOutputPath } from '../test-output.ts';
 import { wildlifePopulationAccount } from '../scenarios/hunting-player';
 import { expect, test, type Page } from '@playwright/test';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { perform } from './player-actions';
 import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from '../scenarios/colony-player';
 import { deserializeWorld } from '../../src/sim/serialization';
@@ -157,14 +158,14 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         await perform(page,decision,rotation);decisions.push({tick:current.tick,...decision});
       }
     }
-    await page.keyboard.press('Escape');await page.screenshot({path:`artifacts/colony-three-days-${process.env.VALIDATION_VERSION??'v66'}.png`});
+    await page.keyboard.press('Escape');await page.screenshot({path:testOutputPath(`artifacts/colony-three-days-${process.env.VALIDATION_VERSION??'v66'}.png`)});
     expect(errors).toEqual([]);
     await testInfo.attach('colony-journey',{contentType:'application/json',body:JSON.stringify(finalReport)});
   } finally {
     // Persist compact evidence even with the line reporter or a frozen browser.
-    await writeFile(`artifacts/colony-journey-${process.env.VALIDATION_VERSION??'v66'}.json`,JSON.stringify(finalReport??{complete:false,waitingFor,days,decisions,meals:[...meals],errors},null,2));
+    await writeTestFile(`artifacts/colony-journey-${process.env.VALIDATION_VERSION??'v66'}.json`,JSON.stringify(finalReport??{complete:false,waitingFor,days,decisions,meals:[...meals],errors},null,2));
     const checkpoint=[...testInfo.attachments].reverse().find(a=>a.name.startsWith('hourly-world-'));
-    if(checkpoint?.body)await writeFile('tmp/colony-last-checkpoint.json',checkpoint.body);
+    if(checkpoint?.body)await writeTestFile('tmp/colony-last-checkpoint.json',checkpoint.body);
     if(!finalReport)await testInfo.attach('colony-journey-incomplete',{contentType:'application/json',body:JSON.stringify({days,decisions,meals:[...meals],errors})});
     // A frozen renderer must not hold the test worker indefinitely in teardown.
     let timer:ReturnType<typeof setTimeout>|undefined;
@@ -210,7 +211,7 @@ test('checkpoint journey: continue the ordinary player, food ledger and third-ni
     const morning=await finishMaintenance(page,third,woodAccount(initial),decisions,rotation),final=await world(page);check(final);
     expect(final.wildlife!.eatenNutrition).toBeGreaterThan(initial.wildlife!.eatenNutrition);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);expect(errors).toEqual([]);
-    await writeFile(`artifacts/colony-continuation-${process.env.VALIDATION_VERSION??'v76'}.json`,JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,summary,morning,final:colonySummary(final),ledger:{consumed,harvested,cooked,foodReconciled:true,woodConserved:true},decisions,errors},null,2));
+    await writeTestFile(`artifacts/colony-continuation-${process.env.VALIDATION_VERSION??'v76'}.json`,JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,summary,morning,final:colonySummary(final),ledger:{consumed,harvested,cooked,foodReconciled:true,woodConserved:true},decisions,errors},null,2));
   } finally {await browser.close();}
 });
 
@@ -231,6 +232,6 @@ test('checkpoint maintenance: finish accepted work through the real UI after ord
     expect(summary.mining.steelStored).toBe(50);expect(summary.mining.steelInBuildings).toBe(150);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);
     expect(errors).toEqual([]);
-    await writeFile(`artifacts/colony-maintenance-${process.env.VALIDATION_VERSION??'v66'}.json`,JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,morning,decisions,woodConserved:true,errors},null,2));
+    await writeTestFile(`artifacts/colony-maintenance-${process.env.VALIDATION_VERSION??'v66'}.json`,JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,morning,decisions,woodConserved:true,errors},null,2));
   } finally {await browser.close();}
 });

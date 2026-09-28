@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test,type Page } from '@playwright/test';
-import { readFileSync,writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { prisonerUiFixture,recruitmentUiFixture } from '../scenarios/prison-camp';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/serialization';
@@ -44,7 +45,7 @@ test('native captivity: physical capture, care, policies, conversations and recr
     await expect.poll(async()=>(await world(page)).pawns.find(p=>p.id===actorId)?.rescue?.phase,{timeout:30000}).toBe('carry');await pause(page);
     const carried=await world(page),carrier=carried.pawns.find(p=>p.id===actorId)!,patient=carried.pawns.find(p=>p.id===patientId)!;
     expect(carrier.rescue?.capture).toBe(true);expect(patient.prisoner).toBeUndefined();expect({x:patient.x,z:patient.z}).toEqual({x:carrier.x,z:carrier.z});
-    await page.screenshot({path:'artifacts/prison-carry-v86.png'});await roundTrip(page);
+    await page.screenshot({path:testOutputPath('artifacts/prison-carry-v86.png')});await roundTrip(page);
     await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>!!(await world(page)).pawns.find(p=>p.id===patientId)?.prisoner,{timeout:30000}).toBe(true);await pause(page);
     const captured=await world(page),captive=captured.pawns.find(p=>p.id===patientId)!;
@@ -66,7 +67,7 @@ test('native captivity: physical capture, care, policies, conversations and recr
     await expect.poll(async()=>medicineUnits(await world(page)),{timeout:45000}).toBeLessThan(medicineUnits(captured));
     await expect.poll(async()=>(await world(page)).pawns.find(p=>p.id===patientId)!.hunger,{timeout:45000}).toBeGreaterThan(50);await pause(page);
     const cared=await world(page);expect(validateWorld(cared)).toEqual([]);expect(cared.pawns.find(p=>p.id===patientId)!.prisoner!.resistance).toBe(captive.prisoner!.resistance);
-    await inspectPerson(page,patientId);await page.screenshot({path:'artifacts/prison-care-v86.png'});await roundTrip(page);
+    await inspectPerson(page,patientId);await page.screenshot({path:testOutputPath('artifacts/prison-care-v86.png')});await roundTrip(page);
     report.capture={started:initial.world.tick,carrying:carried.tick,captured:captured.tick,cared:cared.tick,patientId,bedId,resistance:captive.prisoner!.resistance,medicineBefore:medicineUnits(captured),medicineAfter:medicineUnits(cared),hungerAfter:cared.pawns.find(p=>p.id===patientId)!.hunger};
 
     const boundary=recruitmentUiFixture();expect(validateWorld(boundary.world)).toEqual([]);await load(page,boundary.world);
@@ -78,7 +79,7 @@ test('native captivity: physical capture, care, policies, conversations and recr
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns.find(p=>p.id===boundary.patientId)!.prisoner?.resistance,{timeout:20000}).toBe(0);await pause(page);
     const reduced=await world(page);expect(reduced.pawns.filter(isColonist)).toHaveLength(2);expect(reduced.pawns.find(p=>p.id===boundary.patientId)!.prisoner?.mode).toBe('reduce');
     await act({type:'prisoner-mode',patientId:boundary.patientId,mode:'recruit'},'À zéro résistance, un nouvel entretien permet l’adhésion.');
-    await page.screenshot({path:'artifacts/prison-resistance-v86.png'});
+    await page.screenshot({path:testOutputPath('artifacts/prison-resistance-v86.png')});
     // Keep this identity selected across the worker’s faction transition.
     await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>isColonist((await world(page)).pawns.find(p=>p.id===boundary.patientId)!),{timeout:60000}).toBe(true);await pause(page);
@@ -86,11 +87,11 @@ test('native captivity: physical capture, care, policies, conversations and recr
     await expect(page.locator(`#colonists [data-pawn="${boundary.patientId}"]`)).toBeVisible();
     const recruited=await world(page),newColonist=recruited.pawns.find(p=>p.id===boundary.patientId)!;
     expect(recruited.pawns.filter(isColonist)).toHaveLength(3);expect(recruited.pawns).toHaveLength(boundary.world.pawns.length);expect(newColonist.prisoner).toBeUndefined();expect(newColonist.recruitment?.fromFaction).toBe('outlaws');expect(validateWorld(recruited)).toEqual([]);
-    await page.screenshot({path:'artifacts/prison-recruited-v86.png'});
+    await page.screenshot({path:testOutputPath('artifacts/prison-recruited-v86.png')});
     await act({type:'prison-bed',bedId:boundary.bedId,enabled:false},'Rendre le lit à la colonie après le recrutement.');
     await page.locator('#bed-owner').selectOption(String(boundary.patientId));await expect.poll(async()=>(await world(page)).pawns.find(p=>p.id===boundary.patientId)!.bedId).toBe(boundary.bedId);
     await panel(page,'work');await expect(page.locator(`select[data-owner="${boundary.patientId}"][data-work="warden"]`)).toBeVisible();
-    await roundTrip(page);await inspectPerson(page,boundary.patientId);await page.setViewportSize({width:1024,height:768});await expect(page.locator('#fps-counter')).toBeVisible();await expect(page.locator('#toggle-draft')).toBeVisible();await page.screenshot({path:'artifacts/prison-recruited-small-v86.png'});await page.setViewportSize({width:1440,height:1000});
+    await roundTrip(page);await inspectPerson(page,boundary.patientId);await page.setViewportSize({width:1024,height:768});await expect(page.locator('#fps-counter')).toBeVisible();await expect(page.locator('#toggle-draft')).toBeVisible();await page.screenshot({path:testOutputPath('artifacts/prison-recruited-small-v86.png')});await page.setViewportSize({width:1440,height:1000});
     report.recruitment={prepared:boundary.world.tick,conversation:conversation.tick,reduced:reduced.tick,recruited:recruited.tick,identity:boundary.patientId,provenance:newColonist.recruitment};
 
     // An actual published V85 checkpoint, not a current save with its version relabelled.
@@ -104,12 +105,12 @@ test('native captivity: physical capture, care, policies, conversations and recr
     await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:invalid});await page.locator('#load').click();
     await expect(page.locator('#notice')).toContainText(/version|schéma|incompatible|invalide|valide/i);await expectWorld(page,migrated);
     expect(await page.evaluate(key=>localStorage.getItem(key),saveKey)).toBe(invalid);
-    expect(errors).toEqual([]);report.errors=errors;writeFileSync('artifacts/prison-native-v86.json',JSON.stringify(report,null,2));
+    expect(errors).toEqual([]);report.errors=errors;writeTestFileSync('artifacts/prison-native-v86.json',JSON.stringify(report,null,2));
   } catch(error) {
-    const tag=`prison-native-failed-v86-${Date.now()}`;await page.screenshot({path:`artifacts/${tag}.png`}).catch(()=>{});
-    const state=await world(page).catch(()=>undefined);if(state)writeFileSync(`tmp/${tag}-checkpoint.json`,JSON.stringify(state));
+    const tag=`prison-native-failed-v86-${Date.now()}`;await page.screenshot({path:testOutputPath(`artifacts/${tag}.png`)}).catch(()=>{});
+    const state=await world(page).catch(()=>undefined);if(state)writeTestFileSync(`tmp/${tag}-checkpoint.json`,JSON.stringify(state));
     const notice=await page.locator('#notice').textContent().catch(()=>null);
-    writeFileSync(`artifacts/${tag}.json`,JSON.stringify({...report,failure:String(error),notice,tick:state?.tick,validation:state?validateWorld(state):undefined,checkpoint:state?`tmp/${tag}-checkpoint.json`:null,errors},null,2));
+    writeTestFileSync(`artifacts/${tag}.json`,JSON.stringify({...report,failure:String(error),notice,tick:state?.tick,validation:state?validateWorld(state):undefined,checkpoint:state?`tmp/${tag}-checkpoint.json`:null,errors},null,2));
     throw error;
   } finally {await browser.close();}
 });

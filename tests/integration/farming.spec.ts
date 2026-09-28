@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { plantClimateFixture } from '../scenarios/plant-climate';
 import { plantGrowth } from '../../src/sim/plants';
 import { test, expect } from '@playwright/test';
@@ -41,7 +42,7 @@ test('culture par interface : champ, semis GPU, inspection, politiques, maturitÃ
     const ripe=structuredClone(saved);for(const crop of ripe.resources){crop.growth=1;crop.growthTick=ripe.tick;}
     await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(ripe)});
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,ripe);
-    await page.screenshot({path:'artifacts/farming-ripe.png'});
+    await page.screenshot({path:testOutputPath('artifacts/farming-ripe.png')});
     await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>(await world(page)).resources.length,{timeout:15000}).toBe(0);
     await page.locator('[data-speed="0"]').click();
@@ -74,7 +75,7 @@ test('cold room: UI explains stopped plants, no sowing, built fire restores grow
     await page.locator('[data-speed="6"]').click();
     await page.waitForFunction(t=>{if(window.__lisiere.world.tick<t)return false;document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click();return true;},initial.tick+60);
     const cold=await world(page);expect(cold.resources).toHaveLength(1);expect(plantGrowth(cold,cold.resources[0]!)).toBe(.2);expect(cold.jobs.some(j=>j.kind==='sow')).toBe(false);
-    await cell(page,16,16);await page.screenshot({path:'artifacts/plant-climate-cold.png'});
+    await cell(page,16,16);await page.screenshot({path:testOutputPath('artifacts/plant-climate-cold.png')});
     await tool(page,'campfire');await cell(page,15,15);await page.locator('[data-speed="6"]').click();
     await page.waitForFunction(()=>{
       const w=window.__lisiere.world;
@@ -89,7 +90,7 @@ test('cold room: UI explains stopped plants, no sowing, built fire restores grow
     await expect(page.locator('#cell-description')).not.toContainText('Croissance thermique 0 %');await expect(page.locator('#fps-counter')).toBeVisible();
     await page.locator('[data-speed="6"]').click();await expect(page.locator('#cell-description .cell-facts p').filter({hasText:'Croissance :'})).toContainText('21 %',{timeout:10000});
     await page.locator('[data-speed="0"]').click();const final=await world(page);
-    await page.screenshot({path:'artifacts/plant-climate-warmed.png'});
+    await page.screenshot({path:testOutputPath('artifacts/plant-climate-warmed.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);
     expect(errors).toEqual([]);
   } finally {await browser.close();}

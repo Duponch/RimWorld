@@ -13,7 +13,7 @@ import {animalNavigation} from '../src/sim/wildlife-navigation.ts';
 import {reconcileDomesticWork} from '../src/sim/domestic-reconcile.ts';
 import {validateWorld,deserializeWorld,serializeWorld} from '../src/sim/serialization.ts';
 import {huntingCamp} from './scenarios/hunting.ts';
-import type {Structure,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type Structure,type World} from '../src/sim/types.ts';
 
 function penCamp(){
   const world=huntingCamp(),pawn=world.pawns[0]!,animal=world.wildlife!.animals[0]!;
@@ -157,8 +157,11 @@ test('version 134 rejects future rope members, then migrates a single rope witho
   const legacy=structuredClone(world);(legacy as unknown as {schemaVersion:number}).schemaVersion=134;
   expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow('Invalid version 134 save');
   if(legacy.pawns[0]?.animalHandling?.kind==='lead')delete legacy.pawns[0].animalHandling.ropees;
+  delete legacy.breakdown;
+  for(const person of legacy.pawns)delete person.age;
+  legacy.apparelPolicies=legacy.apparelPolicies?.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='flak-helmet')}));
   const migrated=deserializeWorld(JSON.stringify(legacy));
-  expect(migrated.schemaVersion).toBe(135);
+  expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   expect(migrated.pawns[0]?.animalHandling?.ropees).toBeUndefined();
   expect(migrated.wildlife?.animals).toEqual(world.wildlife?.animals);
   expect(validateWorld(migrated)).toEqual([]);

@@ -7,7 +7,8 @@ import {moodTarget,moodThoughts} from '../src/sim/mood.ts';
 import {initialRecreation} from '../src/sim/recreation-rules.ts';
 import {recreationSiteValid} from '../src/sim/recreation-space.ts';
 import {addGroundMaterial} from '../src/sim/materials.ts';
-import type {World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
+import {withMigratedV90} from './scenarios/legacy-skills.ts';
 import {roomExperienceCamp} from './scenarios/room-experience.ts';
 import {expireRoomMemories,rememberRoomUse} from '../src/sim/room-experience.ts';
 
@@ -89,7 +90,7 @@ test('owned bed observes only after its persisted delay, then refreshes at physi
 test('V101 migration preserves fields and refuses future room memories; current saves enforce family and duration bounds',()=>{
   const w=room(),raw=JSON.parse(readFileSync('public/test-saves/v101/atelier.json','utf8'));
   expect(raw.schemaVersion).toBe(101);
-  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(124);
+  const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   expect(migrated.pawns[0]!.roomMemories).toBeUndefined();
   const future=structuredClone(raw);future.pawns[0].roomMemories=[{kind:'dining',stage:3,expiresAt:future.tick+100}];
   expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/version 101|room/i);
@@ -109,11 +110,7 @@ test('immutable V101 workshop migrates without adding a thought, clock, material
   const raw=JSON.parse(readFileSync('public/test-saves/v101/atelier.json','utf8'));
   expect(raw.schemaVersion).toBe(101);
   const migrated=deserializeWorld(JSON.stringify(raw));
-  expect(migrated).toEqual({...raw,schemaVersion:124,pawns:raw.pawns.map((p:Record<string,unknown>)=>({
-    ...p,
-    priorities:{...(p.priorities as object),art:0,handle:0},
-    recreation:{...(p.recreation as object),tolerance:{...((p.recreation as {tolerance:object}).tolerance),cerebral:0,social:0},bored:{...((p.recreation as {bored:object}).bored),cerebral:false,social:false}},
-  }))});
+  expect(migrated).toEqual(withMigratedV90({...structuredClone(raw),schemaVersion:SCHEMA_VERSION}));
   expect(validateWorld(migrated)).toEqual([]);
 });
 

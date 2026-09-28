@@ -1,6 +1,7 @@
+import { writeTestFileSync } from './test-output.ts';
 import { withoutHunting } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
-import { writeFileSync } from 'node:fs';
+
 import { applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld,createWorld } from '../src/sim/index';
 import { coolerFaces,coolerFaceBlocked,newCoolerState,advanceCoolers } from '../src/sim/cooler';
 import { AIR_CONDITIONING_COST,CLOTHING_RESEARCH_COST } from '../src/sim/research';
@@ -71,10 +72,10 @@ test('player builds and researches a cold store, freezes real provisions, loses 
   const w=coldStoreCamp();let frozenAt=0,outageAt=0,frozenAge=0,measured=false,prepared=false;const actions:{tick:number;reason:string}[]=[];
   for(let i=0;i<65000;i++){
     if(w.tick%50===0)for(const d of coldStoreDecisions(w)){command(w,d.command);actions.push({tick:w.tick,reason:d.reason});}
-    stepWorld(w);if(!prepared&&(w.research?.airConditioning?.points??0)>480000000){writeFileSync(`artifacts/cold-store-preparation-v${w.schemaVersion}.json`,serializeWorld(w));prepared=true;}const meals=w.piles.filter(p=>p.item==='simple-meal'),c=w.structures.find(s=>s.kind==='cooler'),g=w.structures.find(s=>s.kind==='wood-generator');
+    stepWorld(w);if(!prepared&&(w.research?.airConditioning?.points??0)>480000000){writeTestFileSync(`artifacts/cold-store-preparation-v${w.schemaVersion}.json`,serializeWorld(w));prepared=true;}const meals=w.piles.filter(p=>p.item==='simple-meal'),c=w.structures.find(s=>s.kind==='cooler'),g=w.structures.find(s=>s.kind==='wood-generator');
     if(!frozenAt&&c&&meals.reduce((n,p)=>n+p.quantity,0)===20&&meals.every(p=>p.owner.type==='ground'&&p.rot?.rate===0)){
       frozenAt=w.tick;frozenAge=meals.reduce((n,p)=>n+rotAge(p,w.tick)*p.quantity,0);
-      writeFileSync(`artifacts/cold-store-checkpoint-v${w.schemaVersion}.json`,serializeWorld(w));
+      writeTestFileSync(`artifacts/cold-store-checkpoint-v${w.schemaVersion}.json`,serializeWorld(w));
       command(w,{type:'refuel-policy',structureId:g!.id,enabled:false});
     }
     if(frozenAt&&!measured&&w.tick>=frozenAt+1000){expect(meals.reduce((n,p)=>n+rotAge(p,w.tick)*p.quantity,0)).toBe(frozenAge);measured=true;}
@@ -82,11 +83,11 @@ test('player builds and researches a cold store, freezes real provisions, loses 
     if(w.tick%1000===0)expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);
     if(outageAt&&(w.spoiled['simple-meal']??0)===20)break;
   }
-  if(!frozenAt)writeFileSync('tmp/cold-store-failure.json',serializeWorld(w));
+  if(!frozenAt)writeTestFileSync('tmp/cold-store-failure.json',serializeWorld(w));
   expect(frozenAt).toBeGreaterThan(0);expect(measured).toBe(true);expect(outageAt).toBeGreaterThan(frozenAt);expect(w.spoiled['simple-meal']).toBe(20);expect(w.pawns.every(p=>p.state!=='dead'&&p.state!=='downed')).toBe(true);
   expect(w.piles.filter(p=>p.item==='component').reduce((n,p)=>n+p.quantity,0)).toBe(0);
   expect(w.piles.filter(p=>p.item==='steel').reduce((n,p)=>n+p.quantity,0)).toBe(10);expect(validateWorld(w)).toEqual([]);
-  writeFileSync(`artifacts/cold-store-player-v${w.schemaVersion}.json`,JSON.stringify({tick:w.tick,frozenAt,outageAt,frozenAge,spoiled:w.spoiled,structures:w.structures.map(s=>s.kind),research:w.research,actions},null,2));
+  writeTestFileSync(`artifacts/cold-store-player-v${w.schemaVersion}.json`,JSON.stringify({tick:w.tick,frozenAt,outageAt,frozenAge,spoiled:w.spoiled,structures:w.structures.map(s=>s.kind),research:w.research,actions},null,2));
 },120000);
 
 

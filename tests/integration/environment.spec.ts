@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect, test, type Page } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { environmentUiFixture } from '../scenarios/environment-camp';
 import { serializeWorld, deserializeWorld, validateWorld } from '../../src/sim/serialization';
 import { windClearance, windObstructions } from '../../src/sim/wind-rules';
@@ -84,7 +85,7 @@ test('native environment loop: climate adoption, physical fire response, wind cl
     expect(built.piles.filter(p=>p.item==='steel'||p.item==='component').reduce((n,p)=>n+p.quantity,0)).toBe(0);
     await inspectPower(page,turbine);await expect(page.locator(`[data-power-id="${turbine.id}"]`)).toContainText('1/112');
     await expect(page.locator(`[data-power-id="${turbine.id}"] [data-power-flick]`)).toBeHidden();
-    await page.screenshot({path:'artifacts/environment-wind-obstructed-v87.png'});
+    await page.screenshot({path:testOutputPath('artifacts/environment-wind-obstructed-v87.png')});
     await act({type:'wind-auto-cut',structureId:turbine.id,enabled:true},'Désigner une coupe, puis attendre l’abattage physique.');
     expect((await world(page)).resources.some(r=>r.id===fixture.treeId)).toBe(true);
     await reload(page,await world(page));await page.locator('[data-speed="6"]').click();
@@ -102,7 +103,7 @@ test('native environment loop: climate adoption, physical fire response, wind cl
     await reload(page,await world(page));
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.find(s=>s.id===heater.id)?.heater?.high).toBe(false);await pause(page);
     await inspectPower(page,heater);await expect(page.locator(`[data-power-id="${heater.id}"]`)).toContainText('17,5 W');
-    await page.screenshot({path:'artifacts/environment-heater-idle-v87.png'});
+    await page.screenshot({path:testOutputPath('artifacts/environment-heater-idle-v87.png')});
 
     report.stage='rain-cold-boundary';
     const boundary=deserializeWorld(serializeWorld(await world(page)));
@@ -117,13 +118,13 @@ test('native environment loop: climate adoption, physical fire response, wind cl
     const final=await world(page);expect(validateWorld(final)).toEqual([]);
     expect(new TemperatureView(final).at(final,heater)).toBeGreaterThan(before);
     expect(final.structures.find(s=>s.id===heater.id)!.power!.on).toBe(true);
-    await inspectPower(page,heater);await page.screenshot({path:'artifacts/environment-rain-heater-v87.png'});
+    await inspectPower(page,heater);await page.screenshot({path:testOutputPath('artifacts/environment-rain-heater-v87.png')});
     await reload(page,final);expect(await pipelines()).toBe(preparedPipelines);await expect(page.locator('#fps-counter')).toBeVisible();expect(errors).toEqual([]);
     report.boundary={initialTick:start.tick,finalTick:final.tick,airBefore:before,airAfter:new TemperatureView(final).at(final,heater),rain:weatherRainRate(final),weather:final.weather,wind:final.wind,batteryWattDays:batteryWattDays(final.structures.find(s=>s.id===fixture.batteryId)!.battery!)};
-    report.pipelines={prepared:preparedPipelines,final:await pipelines()};report.errors=errors;report.status='passed';writeFileSync('artifacts/environment-native-v87.json',JSON.stringify(report,null,2));
+    report.pipelines={prepared:preparedPipelines,final:await pipelines()};report.errors=errors;report.status='passed';writeTestFileSync('artifacts/environment-native-v87.json',JSON.stringify(report,null,2));
   }catch(error){
     const tag=`environment-native-failed-v87-${Date.now()}`,state=await world(page).catch(()=>undefined);
-    await page.screenshot({path:`artifacts/${tag}.png`}).catch(()=>{});if(state)writeFileSync(`tmp/${tag}-checkpoint.json`,JSON.stringify(state));
-    writeFileSync(`artifacts/${tag}.json`,JSON.stringify({...report,error:String(error),notice:await page.locator('#notice').textContent().catch(()=>null),checkpoint:state?`tmp/${tag}-checkpoint.json`:null,validation:state?validateWorld(state):undefined,errors},null,2));throw error;
+    await page.screenshot({path:testOutputPath(`artifacts/${tag}.png`)}).catch(()=>{});if(state)writeTestFileSync(`tmp/${tag}-checkpoint.json`,JSON.stringify(state));
+    writeTestFileSync(`artifacts/${tag}.json`,JSON.stringify({...report,error:String(error),notice:await page.locator('#notice').textContent().catch(()=>null),checkpoint:state?`tmp/${tag}-checkpoint.json`:null,validation:state?validateWorld(state):undefined,errors},null,2));throw error;
   }finally{await browser.close();}
 });

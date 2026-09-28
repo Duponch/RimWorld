@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import {expect,test} from '@playwright/test';
-import {readFileSync,writeFileSync} from 'node:fs';
+import { readFileSync } from 'node:fs';
 import {deserializeWorld,serializeWorld,validateWorld} from '../../src/sim/serialization';
 import {captureRoomQuality} from '../../src/sim/room-quality';
 import {observeErrors,world,panel,cell,saveKey,expectWorld,pause,pawnTab} from './helpers';
@@ -22,7 +23,7 @@ test('pièces vécues : inspection, repas physique, souvenir dans Besoins et rep
     await expect(page.locator('#room-description')).toContainText(`Impression : ${quality.impressiveness.toFixed(1)}`);
     await expect(page.locator('#room-description')).toContainText(`Richesse : ${quality.wealth.toFixed(1)}`);
     await expect(page.locator('#room-description')).toContainText(`Espace : ${quality.space.toFixed(1)}`);
-    await page.screenshot({path:'artifacts/room-quality-ui-v103.png'});
+    await page.screenshot({path:testOutputPath('artifacts/room-quality-ui-v103.png')});
     await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'needs');
     // Besoins opens its details automatically; its redundant summary is hidden.
     await expect(page.locator('#mood-thoughts')).toBeVisible();await expect(page.locator('[data-thought="room-dining"]')).toHaveCount(0);
@@ -34,13 +35,13 @@ test('pièces vécues : inspection, repas physique, souvenir dans Besoins et rep
     expect(finished.pawns[0]!.hunger).toBeGreaterThan(50);
     await page.locator('[data-thought="room-dining"]').scrollIntoViewIfNeeded();
     await expect(page.locator('[data-thought="room-dining"]')).toBeInViewport();
-    await page.screenshot({path:'artifacts/room-memory-ui-v103.png'});
+    await page.screenshot({path:testOutputPath('artifacts/room-memory-ui-v103.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,finished);
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'needs');
     await expect(page.locator('[data-thought="room-dining"]')).toContainText('Salle du dernier repas');
     const backend=await page.evaluate(()=>window.__lisiere.backend);expect(backend).toContain('WebGPU');expect(errors).toEqual([]);
     const report=JSON.stringify({backend,tick:finished.tick,memories:finished.pawns[0]!.roomMemories,quality,errors},(_key,value)=>value instanceof Set?[...value]:value,2);
-    writeFileSync('artifacts/room-experience-native-v103.json',report);
+    writeTestFileSync('artifacts/room-experience-native-v103.json',report);
     await testInfo.attach('room-experience',{contentType:'application/json',body:report});
   }finally{await browser.close();}
 });

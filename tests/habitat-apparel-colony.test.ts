@@ -1,4 +1,5 @@
-import { readFileSync,writeFileSync } from 'node:fs';
+import { writeTestFileSync } from './test-output.ts';
+import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { expect,onTestFailed,test } from 'vitest';
 import { isColonist } from '../src/sim/affiliation.ts';
@@ -28,7 +29,7 @@ test('V89 colony migration: habitat and tailoring survive two days, then the rep
   const raw=JSON.parse(fixtureBytes.toString('utf8')) as World;
   expect(raw.schemaVersion).toBe(89);
   let world=load();const start=world.tick,initialLiving=living(world).map(p=>p.id),initialCleaned=world.filth!.cleaned;
-  onTestFailed(()=>writeFileSync('tmp/habitat-apparel-colony-failed.json',JSON.stringify(world)));
+  onTestFailed(()=>writeTestFileSync('tmp/habitat-apparel-colony-failed.json',JSON.stringify(world)));
   expect(world.schemaVersion).toBe(SCHEMA_VERSION);expect(world.scenario).toMatchObject({id:'crashlanded',revision:2});expect(complexFurnitureUnlocked(world)).toBe(false);
   expect(validateWorld(world)).toEqual([]);
   const horizon=start+2*TICKS_PER_DAY;
@@ -96,5 +97,5 @@ test('V89 colony migration: habitat and tailoring survive two days, then the rep
   expect(living(world).every(p=>p.state!=='downed'&&p.hunger>0&&p.rest>0)).toBe(true);
   expect(validateWorld(world)).toEqual([]);expect(deserializeWorld(serializeWorld(world))).toEqual(world);
   // Keep the original V90 proof immutable; this is a fresh current-schema run.
-  writeFileSync('tmp/habitat-apparel-colony-current.json',JSON.stringify({schemaVersion:SCHEMA_VERSION,controlled:true,source:'tests/fixtures/colony-v89.json.gz',interventions:['60 cloth supplied','complex-furniture research prefilled except last 2 points','raids deferred beyond observation','maintained apparel threshold 90%'],startTick:start,endTick:world.tick,days:(world.tick-start)/TICKS_PER_DAY,minimumLiving,chair,benchId,tailored:world.tailoring?.completed,replacementId:replacement!.id,oldShirtId,cleaned:world.filth!.cleaned-initialCleaned,unfinishedContinuationExact:checkpoint,valid:true},null,2));
+  writeTestFileSync('tmp/habitat-apparel-colony-current.json',JSON.stringify({schemaVersion:SCHEMA_VERSION,controlled:true,source:'tests/fixtures/colony-v89.json.gz',interventions:['60 cloth supplied','complex-furniture research prefilled except last 2 points','raids deferred beyond observation','maintained apparel threshold 90%'],startTick:start,endTick:world.tick,days:(world.tick-start)/TICKS_PER_DAY,minimumLiving,chair,benchId,tailored:world.tailoring?.completed,replacementId:replacement!.id,oldShirtId,cleaned:world.filth!.cleaned-initialCleaned,unfinishedContinuationExact:checkpoint,valid:true},null,2));
 },180_000);

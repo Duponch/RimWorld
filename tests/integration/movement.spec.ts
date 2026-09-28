@@ -1,7 +1,8 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { withMigratedSkills, withoutPawnSkills, withoutV90 } from '../scenarios/legacy-skills';
 import { furnitureTrafficFixture } from '../scenarios/furniture-traffic';
 import { expect, test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { createWorld, serializeWorld, deserializeWorld, refreshStock, applyCommand, validateWorld } from '../../src/sim/index';
 import { observeErrors, panel, saveKey, world, expectWorld } from './helpers';
 import { civilCrossingFixture } from '../scenarios/civil-traffic';
@@ -33,7 +34,7 @@ test('civil crossing in the real worker: shared cell, save/reload, three exclusi
     await panel(page,'menu');await page.locator('#save').click();
     await expect.poll(async()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)!).tick,saveKey)).toBe(crossing.tick);
     await page.locator('#load').click();await expectWorld(page,crossing);
-    await page.keyboard.press('Escape');await page.screenshot({path:'artifacts/civil-crossing-paused.png'});
+    await page.keyboard.press('Escape');await page.screenshot({path:testOutputPath('artifacts/civil-crossing-paused.png')});
     await page.locator('[data-speed="6"]').click();
     await page.waitForFunction(()=>window.__lisiere.world.pawns.every(p=>p.state==='sleeping'),undefined,{timeout:10000});
     await page.locator('[data-speed="0"]').click();const final=await world(page);
@@ -79,7 +80,7 @@ test('GPU travel preserves speed, corners and work-facing through real worker sn
     expect(summary.samples).toBeGreaterThan(100);expect(summary.turns).toBeGreaterThan(2);
     expect(summary.maxSpeedError).toBeLessThan(.01);expect(summary.maxFacingError).toBeLessThan(.00001);expect(summary.maxTurnArc).toBeLessThan(Math.PI+.00001);
     expect(summary.workTargets).toBe(4);expect(summary.maxWorkFacingError).toBeLessThan(.00001);expect(errors).toEqual([]);
-    await page.screenshot({path:'artifacts/movement-work-facing.png'});
+    await page.screenshot({path:testOutputPath('artifacts/movement-work-facing.png')});
   } finally {await browser.close();}
 });
 
@@ -105,7 +106,7 @@ test('loaded furniture crossing shares GPU heights, preserves speed within each 
     },undefined,{timeout:22000,polling:'raf'});
     await expect(page.locator('#pause-banner')).toBeVisible();const crossing=await world(page);expect(validateWorld(crossing)).toEqual([]);
     expect(crossing.pawns.some(p=>p.haul?.phase==='deliver'&&[7,8].includes(p.x))).toBe(true);
-    await page.screenshot({path:`artifacts/furniture-crossing-${process.env.VALIDATION_VERSION??'paused'}.png`});
+    await page.screenshot({path:testOutputPath(`artifacts/furniture-crossing-${process.env.VALIDATION_VERSION??'paused'}.png`)});
     await panel(page,'menu');await page.locator('#save').click();await expect.poll(async()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)!).tick,saveKey)).toBe(crossing.tick);
     await page.locator('#load').click();await expectWorld(page,crossing);await page.keyboard.press('Escape');
     await page.locator('[data-speed="1"]').click();
@@ -125,7 +126,7 @@ test('loaded furniture crossing shares GPU heights, preserves speed within each 
     const climbs=report.frames.filter((f:any)=>f.load&&f.fromY===0&&f.toY>.7);
     const summary={samples,maxSpeedError,worstSample,epochs:[...epochs],resetSamples,boundarySamples,shared:report.shared,loadedPlateauFrames:elevated.length,loadedClimbFrames:climbs.length,crossingTick:crossing.tick,finalTick:final.tick,errors};
     await testInfo.attach('furniture-gpu-contract',{contentType:'application/json',body:JSON.stringify(summary)});
-    if(process.env.VALIDATION_VERSION)writeFileSync(`artifacts/furniture-crossing-${process.env.VALIDATION_VERSION}.json`,JSON.stringify(summary,null,2)+'\n');
+    if(process.env.VALIDATION_VERSION)writeTestFileSync(`artifacts/furniture-crossing-${process.env.VALIDATION_VERSION}.json`,JSON.stringify(summary,null,2)+'\n');
     expect(epochs.size).toBe(2);expect(samples).toBeGreaterThan(100);expect(maxSpeedError).toBeLessThan(.01);expect(report.shared).toBe(true);
     expect(elevated.length).toBeGreaterThan(5);expect(climbs.length).toBeGreaterThan(5);
     expect(final.piles.find(p=>p.item==='wood')?.owner).toEqual({type:'ground',x:2,z:8});expect(final.piles.find(p=>p.item==='rice')?.owner).toEqual({type:'ground',x:13,z:8});expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);

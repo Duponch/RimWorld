@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { equipmentCamp } from '../scenarios/equipment';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { observeErrors,panel,pawnTab,saveKey,world,expectWorld } from './helpers';
@@ -29,7 +30,7 @@ test('real equipment UI: contact before ownership, GPU hip attachment, saved app
     const equipped=await world(page);expect(validateWorld(equipped)).toEqual([]);expect(equipped.piles[0]!.id).toBe(gun.id);
     await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'gear');await expect(page.locator('#equipment-primary')).toContainText('Revolver');
     await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-equipment','revolver');await expect(page.locator('#equipment-cargo')).toHaveText('Aucun objet porté');
-    await page.screenshot({path:'artifacts/equipment-v52.png'});
+    await page.screenshot({path:testOutputPath('artifacts/equipment-v52.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,equipped);await page.keyboard.press('Escape');
     await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'gear');await page.locator('#drop-equipment').click();
     expect((await world(page)).piles[0]!.owner.type).toBe('equipment');await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).piles[0]!.owner.type).toBe('ground');await page.locator('[data-speed="0"]').click();
@@ -38,6 +39,6 @@ test('real equipment UI: contact before ownership, GPU hip attachment, saved app
     expect(approach.length).toBeGreaterThan(5);expect(held.length).toBeGreaterThan(5);expect(dropping.some(f=>f.progress===1||f.progress===2)).toBe(true);
     for(const f of frames){expect(f.equipped).toBe(f.owner==='equipment'?1:0);expect(f.cargo).toBe(0);expect(f.tick).toBeLessThanOrEqual(f.play);}
     for(const f of approach){expect(f.owner).toBe('ground');expect(f.equipped).toBe(0);}
-    expect(errors).toEqual([]);writeFileSync('artifacts/equipment-ui-v52.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,approach:approach.length,held:held.length,dropping:dropping.length,firstEquipped:held[0],savedTicks:[walking.tick,equipped.tick],finalTick:final.tick,errors},null,2)+'\n');
+    expect(errors).toEqual([]);writeTestFileSync('artifacts/equipment-ui-v52.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,approach:approach.length,held:held.length,dropping:dropping.length,firstEquipped:held[0],savedTicks:[walking.tick,equipped.tick],finalTick:final.tick,errors},null,2)+'\n');
   }finally{await browser.close();}
 });

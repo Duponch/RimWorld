@@ -1,5 +1,6 @@
+import { writeTestFileSync } from './test-output.ts';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import { adultAgeTicks, animalBodySize, animalLifeStage, animalNutritionMax, gestationTicks } from '../src/sim/animal-life.ts';
 import { stepWorld } from '../src/sim/engine.ts';
@@ -54,11 +55,11 @@ test('prepared V121 colony is directly loadable and its birth and growth continu
     const serialized = serializeWorld(expected);
     const sha256 = createHash('sha256').update(serialized).digest('hex');
     mkdirSync(new URL('../public/test-saves/v121/', import.meta.url), { recursive: true });
-    writeFileSync(fixtureUrl, serialized);
+    writeTestFileSync(fixtureUrl, serialized);
     const manifest = JSON.parse(readFileSync(manifestUrl, 'utf8')) as { version: number; saves: Record<string, unknown>[] };
     manifest.saves = manifest.saves.filter(save => save.id !== 'cycle-animal-v121');
     manifest.saves.push(entry(expected, sha256));
-    writeFileSync(manifestUrl, JSON.stringify(manifest, null, 2) + '\n');
+    writeTestFileSync(manifestUrl, JSON.stringify(manifest, null, 2) + '\n');
   }
   const manifest = JSON.parse(readFileSync(manifestUrl, 'utf8')) as { saves: { id: string; release: string; filename: string; sha256: string; prepared: boolean }[] };
   const listed = manifest.saves.find(save => save.id === 'cycle-animal-v121');

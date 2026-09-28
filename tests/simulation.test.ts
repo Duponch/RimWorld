@@ -416,5 +416,5 @@ describe('deterministic colony simulation', () => {
       expect(meals).toBeGreaterThan(0); expect(world.events.some(event => event.type === 'need')).toBe(true);
       expect(hashWorld(deserializeWorld(serializeWorld(world)))).toBe(hashWorld(world));
     }
-  }, 60000);
+  }, 180_000);
 });

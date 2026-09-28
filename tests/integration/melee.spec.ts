@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { test,expect } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { meleeCamp } from '../scenarios/melee';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { world,panel,expectWorld,observeErrors,saveKey } from './helpers';
@@ -33,6 +34,6 @@ test('native UI: choose melee, approach, GPU strike, wounds and exact save/load 
       reports.push({speed,tick:fought.tick,actors:fought.pawns.map(p=>({id:p.id,state:p.state,melee:p.melee,injuries:p.health?.injuries.length??0}))});
     }
     const presentation=await page.evaluate(()=>(window as any).__melee);expect(presentation.poses).toBeGreaterThan(0);expect(errors).toEqual([]);
-    await page.screenshot({path:`artifacts/melee-${process.env.VALIDATION_VERSION??'v59'}.png`});writeFileSync(`artifacts/melee-ui-${process.env.VALIDATION_VERSION??'v59'}.json`,JSON.stringify({reports,poses:presentation.poses,frames:presentation.frames,errors},null,2));
+    await page.screenshot({path:testOutputPath(`artifacts/melee-${process.env.VALIDATION_VERSION??'v59'}.png`)});writeTestFileSync(`artifacts/melee-ui-${process.env.VALIDATION_VERSION??'v59'}.json`,JSON.stringify({reports,poses:presentation.poses,frames:presentation.frames,errors},null,2));
   }finally{await browser.close();}
 });

@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { test, expect } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { world, pause, panel, expectWorld, observeErrors } from './helpers';
 
 test('V94 native: upright plant batch, responsive HUD and exact save', async ({playwright}) => {
@@ -16,14 +17,14 @@ test('V94 native: upright plant batch, responsive HUD and exact save', async ({p
     await page.goto('/?e2e'); const front=page.locator('.front-menu');
     await expect(front).toBeVisible();
     await expect(front).toHaveCSS('background-image', /planet.png/);
-    await page.screenshot({path:'artifacts/landscape-v94-home.png'});
+    await page.screenshot({path:testOutputPath('artifacts/landscape-v94-home.png')});
     await front.getByRole('button',{name:'Nouvelle partie',exact:true}).click();
     await front.getByRole('button',{name:'Suivant',exact:true}).click();
     await front.getByRole('radio',{name:'Récit d’aventure',exact:true}).check();
     await front.getByRole('radio',{name:'Rechargeable à tout moment',exact:true}).check();
     await front.getByRole('button',{name:'Suivant',exact:true}).click();
     await page.locator('#front-seed').fill('42');
-    await page.screenshot({path:'artifacts/landscape-v94-setup.png'});
+    await page.screenshot({path:testOutputPath('artifacts/landscape-v94-setup.png')});
     await front.getByRole('button',{name:'Démarrer',exact:true}).click();
     await expect(front).toBeHidden({timeout:60_000});await pause(page);
     expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
@@ -32,7 +33,7 @@ test('V94 native: upright plant batch, responsive HUD and exact save', async ({p
       await page.getByRole('tab',{name,exact:true}).click();
       await expect(page.locator(selector).first()).toBeVisible();
       await expect(page.locator('[role=tabpanel]:visible')).toHaveCount(1);
-      await page.screenshot({path:`artifacts/landscape-v94-${name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}.png`});
+      await page.screenshot({path:testOutputPath(`artifacts/landscape-v94-${name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}.png`)});
     }
     await page.locator('.colonist').nth(1).click();
     await expect(page.getByRole('tab',{name:'Social',exact:true})).toHaveAttribute('aria-selected','true');
@@ -53,7 +54,7 @@ test('V94 native: upright plant batch, responsive HUD and exact save', async ({p
       expect(layout.pageWidth).toBe(width);sizes.push({width,height,...layout});
     }
     report.layout=sizes;report.portraits=await page.locator('.portrait-head').evaluateAll(nodes=>nodes.map(n=>({parent:n.parentElement!.className,image:getComputedStyle(n).backgroundImage,position:getComputedStyle(n).backgroundPosition})));
-    await page.screenshot({path:'artifacts/landscape-v94-layout.png'});
+    await page.screenshot({path:testOutputPath('artifacts/landscape-v94-layout.png')});
     const prevented=await page.locator('#viewport canvas').evaluate(node=>!node.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:800,clientY:450})));
     expect(prevented).toBe(true);
     await page.keyboard.press('Escape');
@@ -81,10 +82,10 @@ test('V94 native: upright plant batch, responsive HUD and exact save', async ({p
     const saved=await world(page), elapsed=Date.now()-start;
     report.performance=await page.evaluate(()=>{const p=(window as any).__v94Frames;p.active=false;const frames=p.frames.sort((a:number,b:number)=>a-b);return {frames:frames.length,p95:frames[Math.floor(frames.length*.95)],max:frames.at(-1)};});
     report.simulation={ticks:saved.tick-before,elapsedMs:elapsed,speed:(saved.tick-before)/elapsed*1000/6};
-    await page.screenshot({path:'artifacts/landscape-v94-colony.png'});
+    await page.screenshot({path:testOutputPath('artifacts/landscape-v94-colony.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,saved);
     expect(errors).toEqual([]);
   } finally {
-    report.errors=errors;writeFileSync('artifacts/landscape-native-v94.json',JSON.stringify(report,null,2));await browser.close();
+    report.errors=errors;writeTestFileSync('artifacts/landscape-native-v94.json',JSON.stringify(report,null,2));await browser.close();
   }
 });

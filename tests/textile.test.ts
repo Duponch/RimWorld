@@ -1,3 +1,4 @@
+import { writeTestFileSync } from './test-output.ts';
 import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import * as THREE from 'three/webgpu';
@@ -8,7 +9,7 @@ import { plantGrowth,harvestRoll,harvestable } from '../src/sim/plants';
 import { growingLightIntegral } from '../src/sim/environment';
 import { availableNutrition } from '../src/sim/items';
 import { CropLayer } from '../src/render/CropLayer';
-import { writeFileSync } from 'node:fs';
+
 import type { World,Resource } from '../src/sim/types';
 import { SCHEMA_VERSION } from '../src/sim/types';
 
@@ -35,11 +36,11 @@ test('ordinary grower builds, grows, stores and replants cotton, then crafts and
     if(w.tick%6000===0){expect(validateWorld(w)).toEqual([]);days.push({day:w.tick/6000,food:w.stock.food,cloth:cloth(w),hunger:p.hunger,rest:p.rest,plants:w.resources.length});}
     if(cloth(w)===60&&w.piles.some(i=>i.item==='cloth'&&i.quantity===60&&i.owner.type==='ground'&&i.owner.x===12&&i.owner.z===8)&&w.resources.filter(r=>r.kind==='cotton'&&!initialIds.has(r.id)).length===6)break;
   }
-  writeFileSync(`artifacts/cotton-colony-${validationVersion}.json`,JSON.stringify({firstHarvest,endTick:w.tick,days,slept,ate,cloth:cloth(w),plants:w.resources.filter(r=>r.kind==='cotton').length,structures:w.structures.map(s=>s.kind)},null,2));
+  writeTestFileSync(`artifacts/cotton-colony-${validationVersion}.json`,JSON.stringify({firstHarvest,endTick:w.tick,days,slept,ate,cloth:cloth(w),plants:w.resources.filter(r=>r.kind==='cotton').length,structures:w.structures.map(s=>s.kind)},null,2));
   expect(firstHarvest).toBeGreaterThan(16*6000);expect(firstHarvest).toBeLessThan(20*6000);expect(cloth(w)).toBe(60);expect(initialIds.size).toBe(6);
   expect(w.resources.filter(r=>r.kind==='cotton'&&!initialIds.has(r.id))).toHaveLength(6);expect(w.piles.some(i=>i.item==='cloth'&&i.quantity===60&&i.owner.type==='ground'&&i.owner.x===12&&i.owner.z===8)).toBe(true);
   expect(slept&&ate).toBe(true);expect(p.state).not.toBe('dead');expect(w.structures).toHaveLength(4);expect(validateWorld(w)).toEqual([]);
-  writeFileSync(`artifacts/tailoring-cotton-checkpoint-${validationVersion}.json`,serializeWorld(w));
+  writeTestFileSync(`artifacts/tailoring-cotton-checkpoint-${validationVersion}.json`,serializeWorld(w));
   command(w,{type:'priority',pawnId:p.id,work:'craft',value:1});
   command(w,{type:'designate',kind:'crafting-spot',x:8,z:10});const spot=w.structures.find(s=>s.kind==='crafting-spot')!;
   command(w,{type:'bill-add',structureId:spot.id});
@@ -47,7 +48,7 @@ test('ordinary grower builds, grows, stores and replants cotton, then crafts and
   const garment=w.piles.find(i=>i.item==='cloth-tribalwear')!;
   command(w,{type:'order-equipment',pawnId:p.id,itemId:garment.id,action:'wear',queue:false});until(w,()=>garment.owner.type==='apparel',1000);
   expect(w.tailoring?.completed).toBe(1);expect(cloth(w)).toBe(0);expect(garment.apparel!.hitPoints).toBe(100);
-  writeFileSync(`artifacts/tailoring-colony-${validationVersion}.json`,JSON.stringify({firstHarvest,endTick:w.tick,days,slept,ate,garment,tailoring:w.tailoring,crafting:p.skills.crafting},null,2));
+  writeTestFileSync(`artifacts/tailoring-colony-${validationVersion}.json`,JSON.stringify({firstHarvest,endTick:w.tick,days,slept,ate,garment,tailoring:w.tailoring,crafting:p.skills.crafting},null,2));
 },30000);
 
 test('cotton growth uses species, fertility, light and saved thermal intervals; harvest transaction refuses a full floor',()=>{

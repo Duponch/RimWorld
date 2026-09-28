@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { selfTendingCamp } from '../scenarios/self-tending';
 import { fixtureBuilding } from '../scenarios/deconstruction';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
@@ -27,7 +28,7 @@ test('player opts into self-treatment, leaves the bed, keeps facing, cancels and
     await perform(page,{reason:'Soigner ses propres blessures.',command:{type:'order-tend',pawnId:p.id,patientId:p.id,queue:false}},{value:0});
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.tend?.phase).toBe('tend');await page.locator('[data-speed="0"]').click();
     const during=await world(page);expect(validateWorld(during)).toEqual([]);expect(Math.abs(during.pawns[0]!.x-bed.x)+Math.abs(during.pawns[0]!.z-bed.z)).toBe(1);expect(during.pawns[0]!.skills.medicine.xp).toBe(0);
-    await page.screenshot({path:'artifacts/self-tending-v49.png'});
+    await page.screenshot({path:testOutputPath('artifacts/self-tending-v49.png')});
     await page.locator('#self-tend-policy').uncheck();await expect.poll(async()=>(await world(page)).pawns[0]!.tend).toBeUndefined();expect((await world(page)).pawns[0]!.skills.medicine.xp).toBe(0);
     await page.locator('#self-tend-policy').check();await perform(page,{reason:'Reprendre après annulation.',command:{type:'order-tend',pawnId:p.id,patientId:p.id,queue:false}},{value:0});
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.tend?.phase).toBe('tend');await page.locator('[data-speed="0"]').click();
@@ -37,6 +38,6 @@ test('player opts into self-treatment, leaves the bed, keeps facing, cancels and
     const frames=await page.evaluate(()=>(window as any).__selfTendFrames as {tick:number;play:number;phase:string;x:number;z:number;work:number;lying:number;yaw:number;xp:number;treated:number}[]),working=frames.filter(f=>f.phase==='tend');
     expect(working.length).toBeGreaterThan(5);const yaw=Math.atan2(during.pawns[0]!.x-bed.x,during.pawns[0]!.z-bed.z);
     for(const f of working){expect(f.work).toBe(1);expect(f.lying).toBe(0);expect(f.x).toBe(during.pawns[0]!.x);expect(f.z).toBe(during.pawns[0]!.z);expect(Math.cos(f.yaw-yaw)).toBeCloseTo(1,5);expect(f.tick).toBeLessThanOrEqual(f.play);expect(f.xp).toBe(f.treated*87500);}
-    expect(errors).toEqual([]);writeFileSync('artifacts/self-tending-ui-v49.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,working:working.length,first:working[0],last:working.at(-1),savedTick:saved.tick,finishedTick:final.tick,quality:final.pawns[0]!.health!.injuries.map(i=>i.tended),xp:final.pawns[0]!.skills.medicine.xp,errors},null,2)+'\n');
+    expect(errors).toEqual([]);writeTestFileSync('artifacts/self-tending-ui-v49.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,working:working.length,first:working[0],last:working.at(-1),savedTick:saved.tick,finishedTick:final.tick,quality:final.pawns[0]!.health!.injuries.map(i=>i.tended),xp:final.pawns[0]!.skills.medicine.xp,errors},null,2)+'\n');
   }finally{await browser.close();}
 });

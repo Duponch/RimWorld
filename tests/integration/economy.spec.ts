@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import {expect,test,type Page} from '@playwright/test';
-import {readFileSync,writeFileSync} from 'node:fs';
+import { readFileSync } from 'node:fs';
 import {colonyWealth} from '../../src/sim/colony-wealth';
 import {quoteTrade} from '../../src/sim/trade-goods';
 import {deserializeWorld,validateWorld} from '../../src/sim/serialization';
@@ -42,7 +43,7 @@ test('économie V105 : adoption historique, contact réel, vente de sculpture, a
     expect(adopted.economy).toMatchObject({profile:'colony-prosperity-v1',adoptedAt:initial.tick,sampledAt:initial.tick,wealth});
     await expect(page.locator('#adopt-economy')).toBeHidden();
     await expect(page.locator('#colony-economy')).toContainText(`Patrimoine évalué : ${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(wealth.knownTotal)}`);
-    await page.screenshot({path:'artifacts/economy-history-v105.png'});
+    await page.screenshot({path:testOutputPath('artifacts/economy-history-v105.png')});
     await page.locator('#history-panel [data-close-panel]').click();
 
     await page.locator('#trade-letter').click();
@@ -62,7 +63,7 @@ test('économie V105 : adoption historique, contact réel, vente de sculpture, a
     await saleInput.fill('1');
     await expect(page.locator('#trade-total')).toContainText(`À recevoir : ${-q.paid} argent`);
     await expect(page.locator('#trade-confirm')).toBeEnabled();
-    await page.screenshot({path:'artifacts/economy-trade-v105.png'});
+    await page.screenshot({path:testOutputPath('artifacts/economy-trade-v105.png')});
     await page.locator('#trade-confirm').click();
     await expect(page.locator('#trade-dialog')).not.toBeVisible();
     await expect.poll(async()=>(await world(page)).trade?.count).toBe(1);
@@ -76,7 +77,7 @@ test('économie V105 : adoption historique, contact réel, vente de sculpture, a
     const afterSilver=sold.piles.filter(p=>p.item==='silver'&&p.owner.type==='ground').reduce((n,p)=>n+p.quantity,0);
     expect(afterSilver-beforeSilver).toBe(-q.paid);
     expect(validateWorld(sold)).toEqual([]);
-    await page.screenshot({path:'artifacts/economy-sold-v105.png'});
+    await page.screenshot({path:testOutputPath('artifacts/economy-sold-v105.png')});
 
     await page.locator('[data-panel="history"]').click();
     await expect(page.locator('#colony-economy')).toContainText('Patrimoine évalué :');
@@ -90,7 +91,7 @@ test('économie V105 : adoption historique, contact réel, vente de sculpture, a
     const report=JSON.stringify({backend,fixture:'economie-v105',prepared:true,adoptedAt:adopted.economy!.adoptedAt,
       initialWealth:wealth.knownTotal,artId:art.building.id,merchantId:trader.id,
       saleSilver:-q.paid,soldTick:sold.tick,receipt:sold.trade?.recent.at(-1),restored:true,errors},null,2)+'\n';
-    writeFileSync('artifacts/economy-native-v105.json',report);
+    writeTestFileSync('artifacts/economy-native-v105.json',report);
     await testInfo.attach('economy-v105',{contentType:'application/json',body:report});
   } finally {await browser.close();}
 });

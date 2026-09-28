@@ -43,7 +43,10 @@ if(process.env.WRITE_TEST_SAVES==='1'){
         expect(createHash('sha256').update(raw).digest('hex')).toBe(entry.sha256);
         const w=deserializeWorld(raw),copy=deserializeWorld(raw);
         const original=JSON.parse(raw);
-        const historical={...original,schemaVersion:w.schemaVersion};
+        const survivingResources=original.resources.filter((resource:{kind:string})=>resource.kind!=='rock');
+        expect(w.resources.map(resource=>resource.id)).toEqual(survivingResources.map((resource:{id:number})=>resource.id));
+        expect(original.resources.length-w.resources.length).toBe(original.resources.filter((resource:{kind:string})=>resource.kind==='rock').length);
+        const historical={...original,schemaVersion:w.schemaVersion,resources:survivingResources};
         expect(historicalProjection(w,historical)).toEqual(historical);
         expect(deserializeWorld(serializeWorld(w))).toEqual(w);
         expect(w.pawns.length).toBe(entry.pawns);

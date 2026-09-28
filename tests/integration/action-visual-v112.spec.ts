@@ -1,5 +1,5 @@
+import { writeTestFileSync, testOutputPath, testOutputDirectory } from '../test-output.ts';
 import { expect, test, type Page } from '@playwright/test';
-import { mkdirSync, writeFileSync } from 'node:fs';
 import { applyCommand, refreshStock, serializeWorld, validateWorld } from '../../src/sim/index';
 import { addMaterial } from '../../src/sim/materials';
 import type { World } from '../../src/sim/types';
@@ -92,7 +92,7 @@ async function load(page: Page, initial: World): Promise<void> {
 
 test('V112: four real jobs select four resident GPU gestures without changing the save', async ({ playwright }) => {
   test.setTimeout(180_000);
-  mkdirSync('artifacts', { recursive: true });
+  testOutputDirectory('artifacts');
   const browser = await playwright.chromium.launch({ channel: 'chromium', headless: false, args: [] });
   const reports: unknown[] = [], phases = new Map<Gesture, number>();
   try {
@@ -138,7 +138,7 @@ test('V112: four real jobs select four resident GPU gestures without changing th
         expect(geometry.shaderBuffers).toBeLessThanOrEqual(7);
         const saved = await world(page); expect(validateWorld(saved)).toEqual([]);
         expect(saved.tick).toBeGreaterThan(initial.tick);
-        await page.screenshot({ path: `artifacts/action-visual-v112-${kind}.png` });
+        await page.screenshot({ path:testOutputPath(`artifacts/action-visual-v112-${kind}.png`) });
         if (kind === 'chop') {
           await page.evaluate(({ x, z }) => {
             const v = (window as any).__actionVisual.view;
@@ -146,7 +146,7 @@ test('V112: four real jobs select four resident GPU gestures without changing th
             v.camera.zoom = 6; v.camera.updateProjectionMatrix(); v.controls.update();
           }, initial.pawns[0]!);
           await page.waitForTimeout(200);
-          await page.screenshot({ path: 'artifacts/action-visual-v112-chop-side.png' });
+          await page.screenshot({ path:testOutputPath('artifacts/action-visual-v112-chop-side.png') });
         }
         reports.push({ kind, tick: saved.tick, phase: expectedPhase, observedPhases:modes, workFrames: active.length,
           jobKinds: [...new Set(active.map(f => f.jobKind).filter(Boolean))],
@@ -156,7 +156,7 @@ test('V112: four real jobs select four resident GPU gestures without changing th
       } finally { await page.close(); }
     }
     expect(new Set(phases.values()).size).toBe(4);
-    writeFileSync('artifacts/action-visual-v112.json', JSON.stringify({ date: new Date().toISOString(),
+    writeTestFileSync('artifacts/action-visual-v112.json', JSON.stringify({ date: new Date().toISOString(),
       protocol: 'Native Chromium WebGPU, four separate 32² prepared jobs. Each work state and progress comes from the real worker at 6×; aMotion and resident buffer counts are observed after frame rendering. Screenshots show the paused work state. This is not a long colony run or a GPU timer.',
       phases: Object.fromEntries(phases), reports }, null, 2) + '\n');
   } finally { await browser.close(); }
@@ -164,7 +164,7 @@ test('V112: four real jobs select four resident GPU gestures without changing th
 
 test('V112: physical rifle stays visible at rest, in a real shot, and in the cached avatar', async ({ playwright }) => {
   test.setTimeout(100_000);
-  mkdirSync('artifacts', { recursive: true });
+  testOutputDirectory('artifacts');
   const browser = await playwright.chromium.launch({ channel: 'chromium', headless: false, args: [] });
   const page = await browser.newPage({ baseURL: 'http://127.0.0.1:5173', viewport: { width: 1440, height: 1000 } });
   const errors = observeErrors(page);
@@ -202,7 +202,7 @@ test('V112: physical rifle stays visible at rest, in a real shot, and in the cac
         draws: v.stats.drawCalls };
     });
     expect(rest.equipment).toBe(2);
-    await page.screenshot({ path: 'artifacts/action-visual-v112-rifle-rest.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/action-visual-v112-rifle-rest.png') });
     const ordered = structuredClone(initial);
     expect(applyCommand(ordered, { type: 'shoot', pawnIds: [shooter.id], targetId: target.id }).ok).toBe(true);
     expect(validateWorld(ordered)).toEqual([]);
@@ -221,7 +221,7 @@ test('V112: physical rifle stays visible at rest, in a real shot, and in the cac
     const shooting = await page.evaluate(() => (window as any).__actionVisual.frames.filter((f: any) => f.phase === 7));
     expect(shooting.length).toBeGreaterThan(0);
     expect(shooting.every((f: any) => f.equipment === 2)).toBe(true);
-    await page.screenshot({ path: 'artifacts/action-visual-v112-rifle-aim.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/action-visual-v112-rifle-aim.png') });
     await page.locator('[data-speed="1"]').click();
     await page.waitForFunction(() => (window as any).__actionVisual.frames.some((f: any) => f.phase === 15 && f.equipment === 2),
       undefined, { timeout: 20_000, polling: 'raf' });
@@ -230,7 +230,7 @@ test('V112: physical rifle stays visible at rest, in a real shot, and in the cac
       return frames.some(f => f.phase === 15 && f.travelClock - f.phaseOrigin >= 0 &&
         f.travelClock - f.phaseOrigin < .30);
     });
-    if (firstRecoil) await page.screenshot({ path: 'artifacts/action-visual-v112-rifle-recoil.png' });
+    if (firstRecoil) await page.screenshot({ path:testOutputPath('artifacts/action-visual-v112-rifle-recoil.png') });
     await expect.poll(async () => (await world(page)).pawns[0]!.lastAttack?.targetId).toBe(target.id);
     await pause(page);
     const afterShot = await world(page); expect(validateWorld(afterShot)).toEqual([]);
@@ -242,7 +242,7 @@ test('V112: physical rifle stays visible at rest, in a real shot, and in the cac
     expect(shotFrames.some(f => f.phase === 15 && f.equipment === 2)).toBe(true);
     expect(recoil.length).toBeGreaterThan(0);
     expect(errors).toEqual([]);
-    writeFileSync('artifacts/action-visual-v112-rifle.json', JSON.stringify({
+    writeTestFileSync('artifacts/action-visual-v112-rifle.json', JSON.stringify({
       date: new Date().toISOString(), backend: await page.evaluate(() => window.__lisiere.backend),
       aimTick: aimed.tick, shotTick: afterShot.tick, shooter: shooter.id, target: target.id,
       rest, aimFrames: shooting.length, cooldownFrames: cooldown.length,
@@ -263,7 +263,7 @@ test('V112: physical rifle stays visible at rest, in a real shot, and in the cac
 
 test('V112: colonist and hare turn through intermediate WebGPU headings on real travel edges', async ({ playwright }) => {
   test.setTimeout(90_000);
-  mkdirSync('artifacts', { recursive: true });
+  testOutputDirectory('artifacts');
   const browser = await playwright.chromium.launch({ channel: 'chromium', headless: false, args: [] });
   const page = await browser.newPage({ baseURL: 'http://127.0.0.1:5173', viewport: { width: 1440, height: 1000 } });
   const errors = observeErrors(page);
@@ -311,9 +311,9 @@ test('V112: colonist and hare turn through intermediate WebGPU headings on real 
     expect(saved.tick).toBeGreaterThan(initial.tick);
     expect(saved.pawns[0]!.x !== pawn.x || saved.pawns[0]!.z !== pawn.z).toBe(true);
     expect(saved.wildlife!.animals[0]!.x !== animal.x || saved.wildlife!.animals[0]!.z !== animal.z).toBe(true);
-    await page.screenshot({ path: 'artifacts/action-visual-v112-turns.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/action-visual-v112-turns.png') });
     expect(errors).toEqual([]);
-    writeFileSync('artifacts/action-visual-v112-turns.json', JSON.stringify({ date: new Date().toISOString(),
+    writeTestFileSync('artifacts/action-visual-v112-turns.json', JSON.stringify({ date: new Date().toISOString(),
       protocol: 'Prepared orthogonal human order queue and hare path; the ordinary worker advances both physical edges at 1×. Intermediate headings are read from the WebGPU pose attributes and shared travel clock, not inferred from cell positions.',
       tick: saved.tick, humanSamples: human.length, animalSamples: hare.length, errors }, null, 2) + '\n');
   } finally { await page.close(); await browser.close(); }

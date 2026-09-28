@@ -116,7 +116,12 @@ export function energyDecisions(w:World,s:EnergyPlayerState):Decision[] {
   const gen=find('wood-generator',p.generator),sw=find('power-switch',p.switch),cooler=find('cooler',p.cooler),stove=find('electric-stove',p.stove);
   if(cooler&&cooler.cooler?.target!==-5)out.push({reason:'Conserver les aliments sous zéro sans modifier leurs âges.',command:{type:'cooler-target',structureId:cooler.id,target:-5}});
   if(stove&&!stove.bills?.length)out.push({reason:'Ajouter les repas simples au poste électrique.',command:{type:'bill-add',structureId:stove.id,recipe:'simple-meal'}});
-  const bill=stove?.bills?.[0];if(stove&&bill&&(bill.mode!=='until'||bill.target!==9||bill.radius!==60))out.push({reason:'Maintenir neuf repas avec les récoltes existantes, dans la réserve froide.',command:{type:'bill-update',structureId:stove.id,billId:bill.id,settings:{mode:'until',target:9,suspended:false,radius:60,filters:{rice:true,berries:true,potato:true,corn:true,'hare-meat':true},destination:'stockpile'}}});
+  const bill=stove?.bills?.[0];if(stove&&bill){
+    const filters=Object.fromEntries(Object.keys(bill.filters).map(item=>[item,false]));
+    Object.assign(filters,{rice:true,berries:true,potato:true,corn:true,'hare-meat':true});
+    if(bill.mode!=='until'||bill.target!==9||bill.radius!==60||bill.suspended||bill.destination!=='stockpile'||Object.keys(filters).some(item=>bill.filters[item as keyof typeof bill.filters]!==filters[item]))
+      out.push({reason:'Maintenir neuf repas avec les récoltes existantes, dans la réserve froide.',command:{type:'bill-update',structureId:stove.id,billId:bill.id,settings:{mode:'until',target:9,suspended:false,radius:60,filters,destination:'stockpile'}}});
+  }
   const powered=!!stove&&isPowerActive(stove);for(const wood of w.structures.filter(q=>q.kind==='fueled-stove'))for(const b of wood.bills??[])if(b.suspended!==powered)out.push({reason:powered?'Utiliser le poste électrique et conserver la cuisine au bois comme secours.':'Rétablir la cuisine au bois pendant la coupure.',command:{type:'bill-update',structureId:wood.id,billId:b.id,settings:{mode:b.mode,target:b.target,filters:{...b.filters},radius:b.radius,destination:b.destination,suspended:powered}}});
   const flick=(id:number,on:boolean)=>{const q=w.structures.find(q=>q.id===id)!;if((q.power?.switchOn!==false)!==on&&!w.jobs.some(j=>j.flick?.structureId===id))out.push({reason:'Faire actionner physiquement l’interrupteur par un colon.',command:{type:'power-flick',structureId:id,on}});};
   if(gen&&s.stage!=='construct')flick(gen.id,false);

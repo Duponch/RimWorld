@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
 import { roomCamp } from '../scenarios/rooms';
 import { serializeWorld, validateWorld } from '../../src/sim/serialization';
@@ -21,7 +22,7 @@ test('pièces : inspection, porte ouverte, brèche exécutée et rechargement da
     await page.locator('.cell-environment summary').click();
     await expect(page.locator('#room-description')).toBeVisible();
     await expect(page.locator('#room-description')).toContainText('Beauté : -2.84 · laide.');
-    await page.screenshot({ path: 'artifacts/rooms-ui-enclosed.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/rooms-ui-enclosed.png') });
     await cell(page, 15, 15); await expect(page.locator('#room-description')).toContainText('Seuil');
     await page.locator('#door-holdOpen').check();
     // Use a real collection order to cross the doorway, not an injected open state.
@@ -49,7 +50,7 @@ test('pièces : inspection, porte ouverte, brèche exécutée et rechargement da
     await page.locator(`[data-pawn="${p.id}"]`).click(); await expect(page.locator('#room-description')).toContainText('Extérieur');
     expect(errors).toEqual([]); await expect(page.locator('#fps-counter')).toBeVisible();
     const backend = await page.evaluate(() => window.__lisiere.backend); expect(backend).toContain('WebGPU');
-    await page.screenshot({ path: 'artifacts/rooms-ui-breach.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/rooms-ui-breach.png') });
     await testInfo.attach('rooms', { contentType: 'application/json', body: JSON.stringify({ backend, finalTick: breached.tick, errors }) });
   } finally { await browser.close(); }
 });

@@ -45,8 +45,12 @@ test('survivors arrive with exact physical stocks and known technology on unmodi
     expect(w.scenario?.id,`${seed}/${size}`).toBe(DEFAULT_SCENARIO);
     expect(w.tiles).toEqual(terrain.tiles);expect(w.resources).toEqual(terrain.resources);
     expect(w.pawns).toHaveLength(3);expect(w.jobs).toEqual([]);expect(w.structures).toEqual([]);
-    expect(inventory(w)).toEqual({wood:300,steel:450,component:30,'survival-meal':50,medicine:30,revolver:1,'cloth-shirt':3,'flak-vest':1});
+    const natural=inventory(terrain),arrived=inventory(w);
+    for(const [item,count] of Object.entries(natural))arrived[item]-=count;
+    expect(Object.fromEntries(Object.entries(arrived).filter(([,count])=>count!==0))).toEqual({wood:300,steel:450,component:30,'survival-meal':50,medicine:30,revolver:1,'cloth-shirt':3,'flak-vest':1});
     expect(w.research).toEqual({project:null,points:CLOTHING_RESEARCH_COST,completedAt:0,airConditioning:{points:AIR_CONDITIONING_COST,completedAt:0}});
+    const naturalPileIds=new Set(terrain.piles.map(p=>p.id));
+    expect(w.piles.filter(p=>naturalPileIds.has(p.id))).toEqual(terrain.piles);
     const occupied=new Set<number>(),resources=new Set(w.resources.map(r=>r.z*w.width+r.x));
     const reach=candidateAccess(w,w.scenario!.landing,blockedCells(w),new Set());
     const border=[];
@@ -62,7 +66,7 @@ test('survivors arrive with exact physical stocks and known technology on unmodi
     }
     for(const pile of w.piles) {
       expect(pile.quantity).toBeLessThanOrEqual(ITEM_DEFINITIONS[pile.item].stackLimit);
-      if(pile.owner.type!=='ground')continue;
+      if(pile.owner.type!=='ground'||naturalPileIds.has(pile.id))continue;
       const key=pile.owner.z*w.width+pile.owner.x;expect(occupied.has(key)).toBe(false);occupied.add(key);
       expect(resources.has(key)).toBe(false);expect(reach.has(key)).toBe(true);
     }

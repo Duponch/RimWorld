@@ -1,5 +1,6 @@
+import { writeTestFile } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
-import { writeFile } from 'node:fs/promises';
+
 import { observeErrors } from './helpers';
 
 type TextureWrite = { width: number; height: number; bytes: number };
@@ -117,8 +118,8 @@ ColonyRenderer.prototype.frame=function(now){window.__terrainUploadView=this;ret
     await page.waitForTimeout(200);
     const fullReference = await capture();
     if (!partial.equals(fullReference)) {
-      await writeFile(test.info().outputPath('terrain-partial.png'), partial);
-      await writeFile(test.info().outputPath('terrain-full.png'), fullReference);
+      await writeTestFile(test.info().outputPath('terrain-partial.png'), partial);
+      await writeTestFile(test.info().outputPath('terrain-full.png'), fullReference);
     }
     expect(partial.equals(fullReference)).toBe(true);
 

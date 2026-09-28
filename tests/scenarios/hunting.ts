@@ -1,12 +1,16 @@
 import { createWorld,applyCommand } from '../../src/sim/index';
 import { addMaterial,refreshStock } from '../../src/sim/materials';
 import { enableWildlife } from '../../src/sim/wildlife';
+import { legacyHumanAge } from '../../src/sim/human-age.ts';
 import type { Pawn,World } from '../../src/sim/types';
 
 /** Controlled real-shot fixture: a healthy armed hunter, a cook and live prey.
  * Injury, death, corpse and ingredients must all arise through gameplay. */
 export function huntingCamp(seed=81733):World {
   const w=createWorld(seed,32,32);w.tick=2000;w.rng=seed;w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.jobs=[];w.structures=[];w.piles=[];w.stockpiles=[];w.growingZones=[];w.pawns=w.pawns.slice(0,2);
+  // This controlled pre-injury arena starts with healthy workers; health
+  // records created by later tests use the prepared tick explicitly.
+  for(const pawn of w.pawns){pawn.age=legacyHumanAge();delete pawn.health;}
   for(const [i,p] of w.pawns.entries()){
     Object.assign(p,{x:i===0?4:8,z:i===0?10:6,hunger:100,rest:100});p.recreation.level=100;p.schedule.fill('work');p.bedId=null;
     for(const key of Object.keys(p.priorities) as (keyof Pawn['priorities'])[])p.priorities[key]=0;

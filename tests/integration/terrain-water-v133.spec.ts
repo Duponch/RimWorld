@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
 import { observeErrors, startPaused } from './helpers';
 
@@ -36,7 +37,7 @@ ColonyRenderer.prototype.frame=function(now){window.__waterView=this;return orig
   });
   expect(close.backend).toBe('WebGPU');expect(close.paint).toBe(256);
   expect(close.water).toBeGreaterThan(0);expect(close.uv).toBe(true);
-  await page.locator('#viewport canvas').screenshot({path:'artifacts/terrain-water-v133-close.png'});
+  await page.locator('#viewport canvas').screenshot({path:testOutputPath('artifacts/terrain-water-v133-close.png')});
   await page.waitForTimeout(300);
   const paused=await page.evaluate(()=>{const v=(window as any).__waterView;return {version:v.terrainPaintTexture.version,time:v.paintedWater.time.value};});
   expect(paused).toEqual({version:close.version,time:close.time});
@@ -60,7 +61,7 @@ ColonyRenderer.prototype.frame=function(now){window.__waterView=this;return orig
   });
   expect(distant.distant).toBe(true);expect(distant.water).toBeGreaterThan(0);expect(distant.uv).toBe(true);
   expect(distant.version).toBe(close.version);
-  await page.locator('#viewport canvas').screenshot({path:'artifacts/terrain-water-v133-distant.png'});
+  await page.locator('#viewport canvas').screenshot({path:testOutputPath('artifacts/terrain-water-v133-distant.png')});
   await page.evaluate(()=>{(window as any).__waterView.setTexturesEnabled(false);});
   const plain=await page.evaluate(()=>{
     const v=(window as any).__waterView,water=v.overview.terrain.children.filter((c:any)=>c.material===v.waterMaterial);

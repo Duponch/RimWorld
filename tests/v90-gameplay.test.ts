@@ -27,9 +27,9 @@ const addApparel=(world:World,item:MaterialPile['item'],owner:MaterialPile['owne
   return world.piles.at(-1)!;
 };
 
-test('Crashlanded V90 starts at revision 5 with complex furniture genuinely known',()=>{
+test('current Crashlanded starts at revision 8 with complex furniture genuinely known',()=>{
   const world=createScenarioWorld(0x90cafe,32,'crashlanded');
-  expect(world.scenario).toMatchObject({id:'crashlanded',revision:5});
+  expect(world.scenario).toMatchObject({id:'crashlanded',revision:8});
   expect(complexFurnitureUnlocked(world)).toBe(true);
   expect(world.research?.complexFurniture).toMatchObject({completedAt:0});
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);

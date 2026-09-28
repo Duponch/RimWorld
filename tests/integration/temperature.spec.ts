@@ -1,3 +1,4 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
 import { passiveCoolingFixture } from '../scenarios/passive-cooling';
 import { stepWorld,serializeWorld,validateWorld } from '../../src/sim/index';
@@ -5,7 +6,7 @@ import { rotAge } from '../../src/sim/food-preservation';
 import { woodAccount } from '../scenarios/colony-player';
 import { world,observeErrors,panel,tool,cell,expectWorld,saveKey } from './helpers';
 import { perform } from './player-actions';
-import { writeFileSync } from 'node:fs';
+
 
 test('passive cooling: visible construction, temperature, manual refill and exact reload',async({playwright})=>{
   test.setTimeout(75000);
@@ -44,7 +45,7 @@ test('passive cooling: visible construction, temperature, manual refill and exac
     expect(control.thermal!.regions[0]!.temperature).toBeGreaterThan(22);
     const rice=cooled.piles.find(p=>p.item==='rice')!;expect(rotAge(rice,cooled.tick)).toBe(rotAge(control.piles.find(p=>p.id===rice.id)!,control.tick));
     await expect(page.locator('#fire-fuel')).toContainText('ne réfrigère pas');await expect(page.locator('#fps-counter')).toBeVisible();
-    await page.screenshot({path:'artifacts/passive-cooler-cooled.png'});
+    await page.screenshot({path:testOutputPath('artifacts/passive-cooler-cooled.png')});
     const constructionPipelines=await page.evaluate(()=>(window as any).coolingProbe.pipelines as number);expect(constructionPipelines).toBe(pipelineStart);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,cooled);
     // Independent boundary episode: initial empty reservoir, no auto refuel.
@@ -61,9 +62,9 @@ test('passive cooling: visible construction, temperature, manual refill and exac
     await page.locator('[data-speed="0"]').click();await tool(page,'select');await cell(page,16,16);
     await expect(page.locator('#fire-fuel')).toContainText('Alimenté');await expect(page.locator('#fire-auto-refuel')).not.toBeChecked();
     const final=await world(page);expect(woodAccount(final)).toBe(total);expect(validateWorld(final)).toEqual([]);
-    await page.screenshot({path:'artifacts/passive-cooler-refueled.png'});
+    await page.screenshot({path:testOutputPath('artifacts/passive-cooler-refueled.png')});
     const report=await page.evaluate(()=>{const p=(window as any).coolingProbe;p.record=false;const frames=p.frames.sort((a:number,b:number)=>a-b);return {pipelines:p.pipelines,frames:frames.length,p95:frames[Math.ceil(frames.length*.95)-1],p99:frames[Math.ceil(frames.length*.99)-1],max:frames.at(-1)};});
     expect(report.pipelines).toBe(refillPipelineStart);expect(errors).toEqual([]);
-    writeFileSync('artifacts/passive-cooler-ui-v40.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',viewport:'1440x1000',size:32,pawns:1,constructionNewPipelines:constructionPipelines-pipelineStart,refillNewPipelines:report.pipelines-refillPipelineStart,frameMsIncludingLoads:report,initialTick:initial.tick,cooledTick:cooled.tick,cooledTemperature:17,finalFuel:final.structures.find(s=>s.id===cooler.id)!.fuel,errors},null,2)+'\n');
+    writeTestFileSync('artifacts/passive-cooler-ui-v40.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',viewport:'1440x1000',size:32,pawns:1,constructionNewPipelines:constructionPipelines-pipelineStart,refillNewPipelines:report.pipelines-refillPipelineStart,frameMsIncludingLoads:report,initialTick:initial.tick,cooledTick:cooled.tick,cooledTemperature:17,finalFuel:final.structures.find(s=>s.id===cooler.id)!.fuel,errors},null,2)+'\n');
   } finally {await browser.close();}
 });

@@ -1,6 +1,7 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect, test, type Page } from '@playwright/test';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { deserializeWorld, validateWorld } from '../../src/sim/serialization';
 import { plantGrowth } from '../../src/sim/plants';
@@ -108,7 +109,7 @@ test('native real V84 colony: load, inspect crops and stations, save and continu
     await expectWorld(page, initial);
     await page.keyboard.press('Escape');
     await revealCells(page, framing);
-    await page.screenshot({ path: 'artifacts/food-colony-native-v84.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/food-colony-native-v84.png') });
 
     report.stage = 'continuation';
     await page.locator('[data-speed="6"]').click();
@@ -128,10 +129,10 @@ test('native real V84 colony: load, inspect crops and stations, save and continu
   } catch (error) {
     report.status = 'failed';
     report.failure = String(error);
-    await page.screenshot({ path: 'artifacts/food-colony-native-failure-v84.png' }).catch(() => {});
+    await page.screenshot({ path:testOutputPath('artifacts/food-colony-native-failure-v84.png') }).catch(() => {});
     throw error;
   } finally {
-    writeFileSync(reportPath, JSON.stringify({ ...report, errors }, null, 2));
+    writeTestFileSync(reportPath, JSON.stringify({ ...report, errors }, null, 2));
     await browser.close();
   }
 });

@@ -10,7 +10,7 @@ import { rawFoodPoisonChance } from '../src/sim/food-poisoning';
 import { ROT_DAYS } from '../src/sim/food-preservation';
 import { countedProducts,newCookingBill } from '../src/sim/cooking-bills';
 import { queryArea } from '../src/sim/designation';
-import type { World,Command } from '../src/sim/types';
+import { SCHEMA_VERSION, type World, type Command } from '../src/sim/types';
 
 const command=(w:World,c:Command)=>expect(applyCommand(w,c)).toMatchObject({ok:true});
 test('young biome trees can be cleared by rectangle without becoming a wood harvest',()=>{
@@ -80,7 +80,7 @@ test('until-target bills count every new material in storage and task cargo, exc
 test('published V90 colony migrates neutrally and cannot smuggle future ecology, material or filter fields into V90',()=>{
   const raw=gunzipSync(readFileSync(new URL('./fixtures/colony-v90.json.gz',import.meta.url))).toString('utf8'),old=JSON.parse(raw);
   expect(old.schemaVersion).toBe(90);const current=deserializeWorld(raw);
-  expect(current.schemaVersion).toBe(120);
+  expect(current.schemaVersion).toBe(SCHEMA_VERSION);
   expect(current.piles.map(p=>[p.id,p.item,p.quantity])).toEqual(old.piles.map((p:World['piles'][number])=>[p.id,p.item,p.quantity]));
   expect(current.piles.some(p=>p.item==='muffalo-wool')).toBe(false);
   expect(current.flora).toBeUndefined();

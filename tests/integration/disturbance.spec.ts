@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { nightEncounter } from '../scenarios/disturbance';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { world,panel,expectWorld,observeErrors,saveKey } from './helpers';
@@ -32,8 +33,8 @@ test('native night attack at 1×/6×: real impact, sleeping GPU pose, physical w
       await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,awake);await page.keyboard.press('Escape');
       reports.push({speed,awakeTick:awake.tick,deadline:awake.pawns[0].disturbance,sleepFrames:samples.filter((s:any)=>s.state==='sleeping').length,escapeFrames:samples.filter((s:any)=>s.walking>0&&s.disturbed).length});
     }
-    expect(errors).toEqual([]);await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:'artifacts/disturbance-v62.png'});
-    writeFileSync('artifacts/disturbance-ui-v62.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',reports,errors},null,2)+'\n');
-  }catch(error){writeFileSync('tmp/disturbance-ui-failed-checkpoint.json',serializeWorld(await world(page)));throw error;}
+    expect(errors).toEqual([]);await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:testOutputPath('artifacts/disturbance-v62.png')});
+    writeTestFileSync('artifacts/disturbance-ui-v62.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',reports,errors},null,2)+'\n');
+  }catch(error){writeTestFileSync('tmp/disturbance-ui-failed-checkpoint.json',serializeWorld(await world(page)));throw error;}
   finally{await browser.close();}
 });

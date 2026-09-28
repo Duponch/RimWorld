@@ -1,10 +1,11 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { test, expect, type Page } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { observeErrors, pause, panel, world, expectWorld } from './helpers';
 import { visitorTradeFixture } from '../scenarios/visitors';
 import { serializeWorld } from '../../src/sim/serialization';
 
-async function screenshot(page:Page,name:string){await page.screenshot({path:`artifacts/interface-v95-${name}.png`});}
+async function screenshot(page:Page,name:string){await page.screenshot({path:testOutputPath(`artifacts/interface-v95-${name}.png`)});}
 async function cursorOf(page:Page,selector:string){return page.locator(selector).first().evaluate(node=>getComputedStyle(node).cursor);}
 async function expectCursorKind(page:Page,selector:string,kind:string){
   await expect.poll(()=>page.locator('#app').evaluate((node,name)=>getComputedStyle(node).getPropertyValue(`--cursor-${name}`).trim(),kind)).toContain('data:image/png;base64,');
@@ -182,7 +183,7 @@ test('V95 native: stable management panels, upright plants, complete HUD and sem
     const saved=await world(page),elapsed=Date.now()-start;
     const plantPresentation=await page.evaluate(()=>{const view=(window as any).__v95View;return {instances:view.plants.instanceCount(),group:view.plants.group.name,groundGrass:'grass' in view};});
     expect(plantPresentation.instances).toBeGreaterThan(0);expect(plantPresentation.group).toBe('plant-cluster-layer');expect(plantPresentation.groundGrass).toBe(true);report.plants=plantPresentation;
-    writeFileSync('tmp/interface-v95-checkpoint.json',JSON.stringify(saved));
+    writeTestFileSync('tmp/interface-v95-checkpoint.json',JSON.stringify(saved));
     report.performance={frames:timings.length,p95:timings[Math.floor(timings.length*.95)],max:timings.at(-1),speed:(saved.tick-before)/elapsed*1000/6};
     await panel(page,'menu');await page.locator('#save').click();
     try{await expect(page.locator('#load')).toBeEnabled();}catch(error){report.saveDiagnostics=await page.evaluate(()=>({notice:document.querySelector('#notice')?.textContent,slots:localStorage.length,load:document.querySelector('#load')?.outerHTML,save:document.querySelector('#save')?.outerHTML}));throw error;}
@@ -192,7 +193,7 @@ test('V95 native: stable management panels, upright plants, complete HUD and sem
     report.fonts=await page.evaluate(()=>({sans:document.fonts.check('14px "Lisiere Sans"'),serif:document.fonts.check('23px "Lisiere Serif"')}));
     expect(errors).toEqual([]);
     report.passed=true;
-  }finally{report.errors=errors;writeFileSync('artifacts/interface-native-v95.json',JSON.stringify(report,null,2));await browser.close();}
+  }finally{report.errors=errors;writeTestFileSync('artifacts/interface-native-v95.json',JSON.stringify(report,null,2));await browser.close();}
 });
 
 test('V95 native: trade modal preserves readable controls and real contact',async({playwright})=>{
@@ -207,6 +208,6 @@ test('V95 native: trade modal preserves readable controls and real contact',asyn
     await expect(page.locator('#trade-goods')).toBeVisible({timeout:30_000});await screenshot(page,'trade');
     const rect=await page.locator('#trade-dialog').boundingBox();expect(rect!.x).toBeGreaterThanOrEqual(0);expect(rect!.y).toBeGreaterThanOrEqual(0);expect(rect!.y+rect!.height).toBeLessThanOrEqual(720);
     await page.locator('#trade-close').click();expect(errors).toEqual([]);
-    writeFileSync('artifacts/interface-trade-v95.json',JSON.stringify({passed:true,viewport:{width:1280,height:720},rect,errors}));
+    writeTestFileSync('artifacts/interface-trade-v95.json',JSON.stringify({passed:true,viewport:{width:1280,height:720},rect,errors}));
   }finally{await browser.close();}
 });

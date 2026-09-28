@@ -1,5 +1,6 @@
+import { writeTestFile } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
-import { writeFile } from 'node:fs/promises';
+
 import { serializeWorld, validateWorld } from '../../src/sim/serialization';
 import { appearanceOf } from '../../src/sim/pawn-appearance';
 import { WORK_POSE } from '../../src/render/work-presentation';
@@ -96,7 +97,7 @@ test('V136: the same colon keeps connected shoulder and waist silhouettes standi
       }
     }
   } finally {
-    await writeFile(test.info().outputPath('pawn-junction-v136-captures.json'), JSON.stringify(records, null, 2));
+    await writeTestFile(test.info().outputPath('pawn-junction-v136-captures.json'), JSON.stringify(records, null, 2));
     await browser.close();
   }
 });

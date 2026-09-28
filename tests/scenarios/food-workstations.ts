@@ -1,6 +1,7 @@
 import { applyCommand,createWorld } from '../../src/sim/index';
 import { addGroundMaterial,refreshStock } from '../../src/sim/materials';
 import { newBuildingFuel } from '../../src/sim/fuel';
+import { legacyHumanAge } from '../../src/sim/human-age.ts';
 import type { World,Structure } from '../../src/sim/types';
 
 /** Controlled engineering fixture; supplied materials are explicit, not a new
@@ -8,6 +9,7 @@ import type { World,Structure } from '../../src/sim/types';
 export function foodWorkstationCamp():World {
   const w=createWorld(8410,32,32);w.tick=2000;w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.jobs=[];w.piles=[];w.structures=[];w.stockpiles=[];w.packed=[];delete w.wildlife;delete w.arrivals;delete w.raids;delete w.heatwaves;delete w.roofing;delete w.thermal;
   w.pawns=w.pawns.slice(0,1);const p=w.pawns[0]!;Object.assign(p,{x:4,z:4,hunger:100,rest:100});p.schedule.fill('work');
+  p.age=legacyHumanAge();delete p.health;
   for(const work of Object.keys(p.priorities))p.priorities[work as keyof typeof p.priorities]=0;
   p.skills.construction.level=8;p.skills.cooking={level:10,xp:0,dailyXp:0,passion:1};refreshStock(w);return w;
 }

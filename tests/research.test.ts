@@ -1,7 +1,8 @@
+import { writeTestFileSync } from './test-output.ts';
 import { withoutHunting } from './scenarios/legacy-skills';
 import { stripV120 } from './scenarios/strip-v120';
 import { expect,test } from 'vitest';
-import { readFileSync,writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { applyCommand,createWorld,stepWorld,serializeWorld,deserializeWorld,validateWorld,footprintCells } from '../src/sim/index';
 import { footprintContains } from '../src/sim/definitions';
 import { constructionRecipe } from '../src/sim/construction-materials';
@@ -11,7 +12,7 @@ import { addGroundMaterial,refreshStock } from '../src/sim/materials';
 import type { Command,World,Structure } from '../src/sim/types';
 
 const command=(w:World,c:Command)=>expect(applyCommand(w,c),JSON.stringify(c)).toMatchObject({ok:true});
-function until(w:World,done:()=>boolean,limit=60000){for(let i=0;i<limit&&!done();i++){stepWorld(w);if(i%100===0)expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);}if(!done())writeFileSync('tmp/research-failure.json',serializeWorld(w));expect(done(),JSON.stringify({tick:w.tick,research:w.research,pawns:w.pawns.map(p=>({state:p.state,research:p.research,job:p.jobId,need:p.need,hunger:p.hunger})),jobs:w.jobs})).toBe(true);}
+function until(w:World,done:()=>boolean,limit=60000){for(let i=0;i<limit&&!done();i++){stepWorld(w);if(i%100===0)expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);}if(!done())writeTestFileSync('tmp/research-failure.json',serializeWorld(w));expect(done(),JSON.stringify({tick:w.tick,research:w.research,pawns:w.pawns.map(p=>({state:p.state,research:p.research,job:p.jobId,need:p.need,hunger:p.hunger})),jobs:w.jobs})).toBe(true);}
 function fixture(count=2){const w=createWorld(42,16,16);w.resources=[];w.structures=[];w.piles=[];w.pawns=w.pawns.slice(0,count);w.tick=2000;w.tiles=w.tiles.map(()=>({terrain:'grass'}));delete w.arrivals;delete w.raids;
   for(const [i,p] of w.pawns.entries()){p.x=3+i;p.z=3;p.hunger=p.rest=100;p.schedule.fill('work');for(const k in p.priorities)p.priorities[k as keyof typeof p.priorities]=0;p.priorities.research=1;}
   refreshStock(w);return w;}
@@ -67,7 +68,7 @@ test('cotton colony mines and builds its research chain, researches from zero, m
   command(w,{type:'designate',kind:'campfire',material:'wood',x:1,z:6});until(w,()=>w.structures.some(s=>s.kind==='campfire'),10000);
   const fire=w.structures.find(s=>s.kind==='campfire')!;command(w,{type:'bill-add',structureId:fire.id});command(w,{type:'bill-update',structureId:fire.id,billId:fire.bills![0]!.id,settings:{...fire.bills![0]!,mode:'until',target:3}});
   let slept=false,ate=false;until(w,()=>{slept ||= p.state==='sleeping';ate ||= p.state==='eating';return (w.research?.points??0)>=598*RESEARCH_SCALE;},120000);
-  writeFileSync(`artifacts/research-checkpoint-v${w.schemaVersion}.json`,serializeWorld(w));
+  writeTestFileSync(`artifacts/research-checkpoint-v${w.schemaVersion}.json`,serializeWorld(w));
   until(w,()=>w.research?.completedAt!==undefined);const done=w.research!.completedAt!;expect(w.events.filter(e=>e.message.startsWith('Recherche achevée'))).toHaveLength(1);
   command(w,{type:'designate',kind:'tailor-bench',material:'wood',x:8,z:12});until(w,()=>w.structures.some(s=>s.kind==='tailor-bench'),30000);
   const tailor=w.structures.find(s=>s.kind==='tailor-bench')!;command(w,{type:'bill-add',structureId:tailor.id,recipe:'shirt'});
@@ -76,5 +77,5 @@ test('cotton colony mines and builds its research chain, researches from zero, m
   until(w,()=>w.piles.some(i=>i.item==='cloth-shirt'&&i.owner.type==='ground'),15000);const shirt=w.piles.find(i=>i.item==='cloth-shirt')!;
   command(w,{type:'order-equipment',pawnId:p.id,itemId:shirt.id,action:'wear',queue:false});until(w,()=>shirt.owner.type==='apparel',1500);
   expect(w.piles.filter(i=>i.item==='cloth').reduce((n,i)=>n+i.quantity,0)).toBe(15);expect(slept&&ate).toBe(true);expect(w.research!.completedAt).toBe(done);expect(p.skills.intellectual!.xp).toBeGreaterThan(0);
-  writeFileSync(`artifacts/research-colony-v${w.schemaVersion}.json`,JSON.stringify({start,end:w.tick,research:w.research,skills:p.skills,shirt,slept,ate,buildings:w.structures.map(s=>s.kind),stock:w.stock},null,2));
+  writeTestFileSync(`artifacts/research-colony-v${w.schemaVersion}.json`,JSON.stringify({start,end:w.tick,research:w.research,skills:p.skills,shirt,slept,ate,buildings:w.structures.map(s=>s.kind),stock:w.stock},null,2));
 },30000);

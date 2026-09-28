@@ -1,5 +1,5 @@
 import { assertHarvestPhase,presentationStarvations,visibleSpeedResponse } from './harvest-assertions.ts';
-import { writeFile } from 'node:fs/promises';
+import { writeTestFile, testOutputPath } from '../tests/test-output.ts';
 import { resolve } from 'node:path';
 import os from 'node:os';
 import { createWorld,applyCommand,serializeWorld } from '../src/sim/index.ts';
@@ -85,6 +85,6 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
   const r=phase.recovery;
   if(r.latest<phase.tick+64||r.display>r.play||r.play>r.latest||r.latest-r.play>64||r.queued>64)throw Error('Incoherent recovery: '+JSON.stringify(r));
  }
- await page.screenshot({path:'artifacts/harvest-'+action+'-'+label+'.png'});await page.close();
+ await page.screenshot({path:testOutputPath('artifacts/harvest-'+action+'-'+label+'.png')});await page.close();
  assertHarvestPhase(phase,process.env.HARVEST_VERIFY_SPEED!=='0',process.env.HARVEST_VERIFY!=='0',switches);
- }}finally{await browser.close();await writeFile('artifacts/harvest-sync-'+label+'.json',JSON.stringify(report,null,2)+'\n');}
+ }}finally{await browser.close();await writeTestFile('artifacts/harvest-sync-'+label+'.json',JSON.stringify(report,null,2)+'\n');}

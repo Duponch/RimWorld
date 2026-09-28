@@ -1,5 +1,5 @@
+import { writeTestFileSync, testOutputPath, testOutputDirectory } from '../test-output.ts';
 import { expect, test, type Page } from '@playwright/test';
-import { mkdirSync, writeFileSync } from 'node:fs';
 import { applyCommand, refreshStock, serializeWorld, validateWorld } from '../../src/sim/index';
 import { addMaterial } from '../../src/sim/materials';
 import type { World } from '../../src/sim/types';
@@ -97,7 +97,7 @@ async function load(page: Page, initial: World): Promise<void> {
 
 test('V117: real jobs show contact, low work and confirmed tree recoil', async ({ playwright }) => {
   test.setTimeout(180_000);
-  mkdirSync('artifacts', { recursive: true });
+  testOutputDirectory('artifacts');
   const browser = await playwright.chromium.launch({ channel: 'chromium', headless: false, args: [] });
   const reports: unknown[] = [];
   try {
@@ -114,7 +114,7 @@ test('V117: real jobs show contact, low work and confirmed tree recoil', async (
             undefined, { timeout: 25_000, polling: 'raf' });
           await pause(page);
           expect(await page.evaluate(() => (window as any).__v117.frames.at(-1).phase)).toBe(16);
-          await page.screenshot({ path: `artifacts/action-visual-v117-${kind}-low.png` });
+          await page.screenshot({ path:testOutputPath(`artifacts/action-visual-v117-${kind}-low.png`) });
           await page.locator('[data-speed="1"]').click();
         }
         let liveRecoil: { before: number; after: number } | null = null;
@@ -122,7 +122,7 @@ test('V117: real jobs show contact, low work and confirmed tree recoil', async (
           await page.waitForFunction(() => (window as any).__v117.treeCaptured,
             undefined, { timeout: 25_000, polling: 'raf' });
           const before = await page.evaluate(() => (window as any).__v117.frames.at(-1).treeAngle);
-          await page.screenshot({ path: 'artifacts/action-visual-v117-chop-recoil-live.png' });
+          await page.screenshot({ path:testOutputPath('artifacts/action-visual-v117-chop-recoil-live.png') });
           const after = await page.evaluate(() => (window as any).__v117.frames.at(-1).treeAngle);
           liveRecoil = { before, after };
         }
@@ -152,7 +152,7 @@ test('V117: real jobs show contact, low work and confirmed tree recoil', async (
         expect(geometry.buffers).toBeLessThanOrEqual(7);
         const saved = await world(page); expect(validateWorld(saved)).toEqual([]);
         expect(saved.tick).toBeGreaterThan(initial.tick);
-        await page.screenshot({ path: `artifacts/action-visual-v117-${kind}.png` });
+        await page.screenshot({ path:testOutputPath(`artifacts/action-visual-v117-${kind}.png`) });
         if (kind === 'build') {
           await page.evaluate(({ x, z }) => {
             const v = (window as any).__v117.view;
@@ -160,7 +160,7 @@ test('V117: real jobs show contact, low work and confirmed tree recoil', async (
             v.camera.zoom = 6; v.camera.updateProjectionMatrix(); v.controls.update();
           }, initial.pawns[0]!);
           await page.waitForTimeout(200);
-          await page.screenshot({ path: 'artifacts/action-visual-v117-build-side.png' });
+          await page.screenshot({ path:testOutputPath('artifacts/action-visual-v117-build-side.png') });
         }
         if (kind === 'chop') {
           await page.evaluate(({ x, z }) => {
@@ -169,7 +169,7 @@ test('V117: real jobs show contact, low work and confirmed tree recoil', async (
             v.camera.zoom = 6; v.camera.updateProjectionMatrix(); v.controls.update();
           }, initial.pawns[0]!);
           await page.waitForTimeout(200);
-          await page.screenshot({ path: 'artifacts/action-visual-v117-chop-side.png' });
+          await page.screenshot({ path:testOutputPath('artifacts/action-visual-v117-chop-side.png') });
         }
         // The pause command can still deliver its final confirmed tick after the UI button responds.
         await page.waitForTimeout(350);
@@ -207,7 +207,7 @@ test('V117: real jobs show contact, low work and confirmed tree recoil', async (
         expect(errors).toEqual([]);
       } finally { await page.close(); }
     }
-    writeFileSync('artifacts/action-visual-v117.json', JSON.stringify({ date: new Date().toISOString(),
+    writeTestFileSync('artifacts/action-visual-v117.json', JSON.stringify({ date: new Date().toISOString(),
       protocol: 'Native Chromium WebGPU; four 32² prepared jobs performed by the real worker at 1× to capture brief presentation phases. Close orthographic screenshots cover each job, the low poses and tree/build side views. Poses, tree recoil and pause sampled after rendered frames; save and resident geometry checked. No long simulation or GPU timer.',
       reports }, null, 2) + '\n');
   } finally { await browser.close(); }

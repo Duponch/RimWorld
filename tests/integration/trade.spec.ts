@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { visitorTradeFixture } from '../scenarios/visitors';
 import { addGroundMaterial,addMaterial } from '../../src/sim/materials';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
@@ -32,15 +33,15 @@ test('native trade: real contact, basket, silver, deposited rifle, equipment and
     await expect(page.locator('#trade-goods')).toBeVisible({timeout:30000});
     await expect(page.locator('#inspect-threat')).toBeHidden();
     await page.locator(`input[data-pile="${rifle.id}"]`).fill('1');await expect(page.locator('#trade-total')).toContainText('À payer');
-    await page.screenshot({path:`artifacts/trade-basket-${version}.png`});
+    await page.screenshot({path:testOutputPath(`artifacts/trade-basket-${version}.png`)});
     await page.locator('#trade-confirm').click();await expect(page.locator('#trade-dialog')).not.toBeVisible();
     const bought=await world(page);expect(bought.trade?.count).toBe(1);expect(bought.piles.find(p=>p.id===rifle.id)?.owner.type).toBe('ground');expect(validateWorld(bought)).toEqual([]);
     await perform(page,{reason:'Équiper le fusil acheté',command:{type:'order-equipment',pawnId,itemId:rifle.id,action:'equip',queue:false}},{value:0});
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).piles.find(p=>p.id===rifle.id)?.owner.type,{timeout:20000}).toBe('equipment');await pause(page);
     const equipped=await world(page);expect(validateWorld(equipped)).toEqual([]);
     await page.locator(`[data-pawn="${pawnId}"]`).click();await pawnTab(page,'gear');await expect(page.locator('#equipment-primary')).toContainText('Fusil à verrou');await expect(page.locator(`[data-pawn="${pawnId}"]`)).toHaveAttribute('data-equipment','bolt-action-rifle');
-    await page.screenshot({path:`artifacts/trade-equipment-${version}.png`});
+    await page.screenshot({path:testOutputPath(`artifacts/trade-equipment-${version}.png`)});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,equipped);
-    expect(errors).toEqual([]);writeFileSync(`artifacts/trade-ui-${version}.json`,JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',fixture:'controlled visitor intro with explicit silver and rifle stock',traderId,pawnId,rifleId:rifle.id,receipt:equipped.trade?.recent.at(-1),finalTick:equipped.tick,restored:true,errors},null,2)+'\n');
+    expect(errors).toEqual([]);writeTestFileSync(`artifacts/trade-ui-${version}.json`,JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',fixture:'controlled visitor intro with explicit silver and rifle stock',traderId,pawnId,rifleId:rifle.id,receipt:equipped.trade?.recent.at(-1),finalTick:equipped.tick,restored:true,errors},null,2)+'\n');
   } finally {await browser.close();}
 });

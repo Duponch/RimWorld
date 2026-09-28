@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { test, expect, type Page } from '@playwright/test';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 import { createScenarioWorld } from '../../src/sim/new-game';
@@ -123,7 +124,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     for (const name of ['Tutoriel', 'Options', 'Mods', 'Crédits']) await expect(front(page).getByRole('button', { name: new RegExp(`^${name}`) })).toBeDisabled();
     await expect(menuButton(page, 'Reprendre la colonie')).toHaveCount(0);
     expect(await page.evaluate(key => localStorage.getItem(key), manualKey)).toBeNull();
-    await page.screenshot({ path: 'artifacts/scenario-home-v83.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/scenario-home-v83.png') });
 
     await menuButton(page, 'Nouvelle partie').click();
     await expect(page.locator('#front-title')).toHaveText('Choisir un scénario');
@@ -143,7 +144,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     await menuButton(page, 'Suivant').click();
     await expect(front(page).getByRole('alert')).toContainText('mode de sauvegarde');
     await reloadable.check();
-    await page.screenshot({ path: 'artifacts/scenario-story-v83.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/scenario-story-v83.png') });
     await menuButton(page, 'Suivant').click();
     const smallHills = front(page).getByRole('radio', { name: 'Petites collines', exact: true });
     const largeHills = front(page).getByRole('radio', { name: 'Grandes collines', exact: true });
@@ -173,7 +174,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     await expect(page.locator('#front-seed')).toHaveValue('42');
     await expect(largeHills).toBeChecked();
     await expect(page.locator('#front-site-stones')).toHaveText(stonesFor(42));
-    await page.screenshot({ path: 'artifacts/scenario-site-v83.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/scenario-site-v83.png') });
 
     await page.setViewportSize({ width: 480, height: 800 });
     await page.locator('#front-title').focus();
@@ -194,7 +195,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
       const body = menu.querySelector('.front-content')!;
       return menu.scrollWidth <= menu.clientWidth && body.scrollWidth <= body.clientWidth;
     })).toBe(true);
-    await page.screenshot({ path: 'artifacts/scenario-config-narrow-v83.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/scenario-config-narrow-v83.png') });
     await page.locator('#front-seed').fill('4294967296');
     await expect(page.locator('#front-site-stones')).toHaveText('Saisissez une graine valide.');
     await menuButton(page, 'Démarrer').click();
@@ -245,7 +246,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     await expect(page.locator('#map-hover-readout')).toContainText('fertilité 140 %');
     expect(await world(page)).toEqual(initial);
     checkpoints.richSoil = { ...richLand, description: await page.locator('#map-hover-readout').textContent() };
-    await page.screenshot({ path: 'artifacts/scenario-rich-soil-v83.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/scenario-rich-soil-v83.png') });
     await page.keyboard.press('Escape');
 
     const rotation = { value: 0 };
@@ -262,7 +263,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     expect(established.growingZones.reduce((sum, zone) => sum + zone.cells.length, 0)).toBe(20);
     expect(established.pawns).toHaveLength(3);
     checkpoints.firstDecisions = { commands: decisions.length, tick: established.tick, beds: 3, field: 20, stock: established.stock };
-    writeFileSync('tmp/scenario-established-v83.json', serializeWorld(established));
+    writeTestFileSync('tmp/scenario-established-v83.json', serializeWorld(established));
     await panel(page, 'menu');
     await page.locator('#save').click();
     await expect.poll(async () => JSON.parse(await storedWorldJson(page, manualKey))).toEqual(established);
@@ -283,8 +284,8 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     await pause(page);
     const finalWorld = await world(page);
     expect(validateWorld(finalWorld)).toEqual([]);
-    await page.screenshot({ path: 'artifacts/scenario-start-v83.png' });
-    writeFileSync('tmp/scenario-native-v83.json', serializeWorld(finalWorld));
+    await page.screenshot({ path:testOutputPath('artifacts/scenario-start-v83.png') });
+    writeTestFileSync('tmp/scenario-native-v83.json', serializeWorld(finalWorld));
     const backend = await page.evaluate(() => window.__lisiere.backend);
     const userAgent = await page.evaluate(() => navigator.userAgent);
 
@@ -379,7 +380,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     expect(await storedWorldJson(page, manualKey)).toBe(serializeWorld(finalWorld));
     expect(JSON.parse(await storedWorldJson(page, previousKey))).toEqual(finalWorld);
     checkpoints.sameSeedNewSite = { seed: recreated.seed, site: recreated.site, landing: flatLanding, tick: recreated.tick, beforeRecreation, afterRecreation };
-    await page.screenshot({ path: 'artifacts/scenario-recreated-site-v83.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/scenario-recreated-site-v83.png') });
     allErrors.push(...errors);
     await page.close();
 
@@ -401,7 +402,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     expect(await page.evaluate(key => localStorage.getItem(key), previousKey)).toBe(previousLandscapeData);
     expect(await storedWorldJson(page, manualKey)).toBe(serializeWorld(finalWorld));
     checkpoints.coldPreviousLandscape = { source: 'tests/fixtures/scenario-v82.json.gz', sourceVersion: 82, sourceSha256: previousLandscapeSha256, loadedVersion: previousLandscape.schemaVersion, tick: previousLandscape.tick, site: null };
-    await page.screenshot({ path: 'artifacts/scenario-historical-v82-landscape-v83.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/scenario-historical-v82-landscape-v83.png') });
     allErrors.push(...errors);
     await page.close();
 
@@ -426,21 +427,21 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     await expect(page.locator('#enable-heatwaves')).toBeHidden();
     expect(await page.evaluate(key => localStorage.getItem(key), previousKey)).toBe(historicalData);
     expect(await storedWorldJson(page, manualKey)).toBe(serializeWorld(finalWorld));
-    await page.screenshot({ path: 'artifacts/scenario-historical-v83.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/scenario-historical-v83.png') });
     checkpoints.coldHistorical = { source: 'artifacts/heatwave-checkpoint-v81.json', sourceVersion: 81, loadedVersion: oldWorld.schemaVersion, tick: oldWorld.tick, width: oldWorld.width };
     allErrors.push(...errors);
     expect(allErrors).toEqual([]);
-    writeFileSync('artifacts/scenario-ui-v83.json', JSON.stringify({ backend, userAgent, viewport, samples, checkpoints, errors: allErrors }, null, 2));
+    writeTestFileSync('artifacts/scenario-ui-v83.json', JSON.stringify({ backend, userAgent, viewport, samples, checkpoints, errors: allErrors }, null, 2));
   } catch (error) {
     const failureTag = `scenario-ui-v83-failed-${Date.now()}`;
     const active = context.pages().at(-1);
     if (active && !active.isClosed()) {
-      await active.screenshot({ path: `artifacts/${failureTag}.png` }).catch(() => {});
+      await active.screenshot({ path:testOutputPath(`artifacts/${failureTag}.png`) }).catch(() => {});
       const state = await active.evaluate(() => window.__lisiere?.world).catch(() => undefined);
-      if (state) writeFileSync(`tmp/${failureTag}.json`, JSON.stringify(state));
+      if (state) writeTestFileSync(`tmp/${failureTag}.json`, JSON.stringify(state));
       checkpoints.failure = { message: String(error), title: await active.locator('#front-title').textContent().catch(() => null), error: await active.locator('.front-error').textContent().catch(() => null) };
     }
-    writeFileSync(`artifacts/${failureTag}.json`, JSON.stringify({ viewport, samples, checkpoints, errors: allErrors }, null, 2));
+    writeTestFileSync(`artifacts/${failureTag}.json`, JSON.stringify({ viewport, samples, checkpoints, errors: allErrors }, null, 2));
     console.info(`Failure evidence: artifacts/${failureTag}.json; checkpoint: tmp/${failureTag}.json`);
     throw error;
   } finally {

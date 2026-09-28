@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 import {deserializeWorld,validateWorld} from '../src/sim';
 import {fetchTestColonies,parseTestColonies,readTestColony,readSaveFile,testColonyUrl,type TestColony} from '../src/ui/test-colonies';
 import {encodeStoredSave} from '../src/ui/save-storage-codec';
+import {withMigratedV90} from './scenarios/legacy-skills.ts';
 
 const save:TestColony={id:'colony',release:'v98',filename:'colony.json',label:'Colonie',description:'Test',pawns:100,colonists:100,width:250,height:250,tick:0,focus:['Énergie'],steps:['Construire'],prepared:true,provenance:'Préparée',sha256:'0'.repeat(64)};
 afterEach(()=>vi.unstubAllGlobals());
@@ -26,7 +27,7 @@ test('published catalogue keeps six V98 entries and lists the V101/V103/V104/V10
   const manifest=JSON.parse(readFileSync('public/test-saves/manifest.json','utf8'));
   const legacy=JSON.parse(readFileSync('public/test-saves/v98/manifest.json','utf8'));
   const entries=parseTestColonies(manifest);
-  expect(entries).toHaveLength(12);
+  expect(entries).toHaveLength(22);
   expect(entries.slice(0,6).map(({release,...entry})=>{expect(release).toBe('v98');return entry;})).toEqual(legacy.saves);
   for(const [id,release,filename,schemaVersion] of [['atelier-v101','v101','atelier.json',101],['salles-v103','v103','salles.json',103],['art-v104','v104','sculpture.json',104],['economie-v105','v105','economie.json',105],['lievres-v106','v106','lievres.json',106],['visages-armurerie-v109','v109','visages-armurerie.json',109]] as const){
     const entry=entries.find(e=>e.id===id)!;
@@ -37,7 +38,7 @@ test('published catalogue keeps six V98 entries and lists the V101/V103/V104/V10
     expect(original).toMatchObject({schemaVersion,tick:entry.tick,width:entry.width,height:entry.height});
     expect(original.pawns).toHaveLength(entry.pawns);
     const world=deserializeWorld(raw);
-    expect(world).toEqual({...original,schemaVersion:SCHEMA_VERSION,pawns:original.pawns.map((p:Record<string,unknown>)=>({...p,priorities:{...(p.priorities as object),...(schemaVersion<104?{art:0}:{}),...(schemaVersion<106?{handle:0}:{})}}))});
+    expect(world).toEqual(withMigratedV90({...structuredClone(original),schemaVersion:SCHEMA_VERSION}));
     expect(validateWorld(world)).toEqual([]);
   }
   vi.stubGlobal('fetch',vi.fn(async(url:string)=>new Response(readFileSync(`public${url}`,'utf8'))));

@@ -89,7 +89,8 @@ test('seat search uses the pickup position and food radius, cardinal adjacency a
     const seat = furniture(w, 'stool', 2 + distance, 2, orientation); furniture(w, 'table', 3 + distance, 2);
     until(w, () => w.pawns[0]!.state === 'eating');
     expect(w.pawns[0]!.need).toMatchObject({ dining: { seatId: expectedSeat ? seat : null } });
-    checked(w, 50); expect(w.pawns[0]!.memories.length).toBe(expectedSeat ? 0 : 1);
+    until(w, () => w.pawns[0]!.need?.kind !== 'eat');
+    expect(w.pawns[0]!.memories.length).toBe(expectedSeat ? 0 : 1);
   }
   const distant = fixture(); furniture(distant, 'stool', 3, 2); furniture(distant, 'table', 4, 2);
   addGroundMaterial(distant, 'food', 1, { x: 46, z: 2 });

@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { urgentBedCamp } from '../scenarios/urgent-care';
 import { addMaterial,refreshStock } from '../../src/sim/materials';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
@@ -29,7 +30,7 @@ test('player priorities decide urgent self-care at bed review; one real treatmen
     await perform(page,{reason:'Passer Patient après Médecin.',command:{type:'priority',pawnId:p.id,work:'patient',value:2}},{value:0});
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.tend?.phase).toBe('tend');await page.locator('[data-speed="0"]').click();
     const saved=await world(page);expect(validateWorld(saved)).toEqual([]);expect(saved.pawns[0]!.tend?.urgent).toBe(true);expect(saved.pawns[0]!.skills.medicine.xp).toBe(0);
-    await page.screenshot({path:'artifacts/urgent-care-v50.png'});await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,saved);await page.keyboard.press('Escape');
+    await page.screenshot({path:testOutputPath('artifacts/urgent-care-v50.png')});await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,saved);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.need?.kind).toBe('eat');await page.locator('[data-speed="0"]').click();
     const meal=await world(page);expect(meal.pawns[0]!.skills.medicine.xp).toBe(87500);expect(meal.pawns[0]!.health!.injuries.filter(i=>i.tended!==undefined)).toHaveLength(1);expect(meal.pawns[0]!.tend).toBeUndefined();expect(validateWorld(meal)).toEqual([]);
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.hunger).toBeGreaterThan(90);await page.locator('[data-speed="0"]').click();
@@ -38,6 +39,6 @@ test('player priorities decide urgent self-care at bed review; one real treatmen
     expect(working.length).toBeGreaterThan(5);expect(eating.length).toBeGreaterThan(5);
     for(const f of working){expect(f.work).toBe(1);expect(f.lying).toBe(0);expect(f.xp).toBe(0);expect(f.treated).toBe(0);expect(f.tick).toBeLessThanOrEqual(f.play);}
     for(const f of eating){expect(f.xp).toBe(87500);expect(f.treated).toBe(1);expect(f.work).toBe(0);}
-    expect(errors).toEqual([]);writeFileSync('artifacts/urgent-care-ui-v50.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,working:working.length,eating:eating.length,firstWork:working[0],firstMeal:eating[0],savedTick:saved.tick,mealTick:meal.tick,finishedTick:final.tick,remainingFood:9,errors},null,2)+'\n');
+    expect(errors).toEqual([]);writeTestFileSync('artifacts/urgent-care-ui-v50.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,working:working.length,eating:eating.length,firstWork:working[0],firstMeal:eating[0],savedTick:saved.tick,mealTick:meal.tick,finishedTick:final.tick,remainingFood:9,errors},null,2)+'\n');
   }finally{await browser.close();}
 });

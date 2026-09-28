@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
 import { createWorld, serializeWorld, validateWorld } from '../../src/sim/index';
 import { world, startPaused, saveKey, expectWorld, observeErrors, panel, tool, cell } from './helpers';
@@ -21,7 +22,7 @@ test('buisson persistant : inspection, récolte, sauvegarde et coupe par la vrai
     await tool(page,'select');await cell(page,18,14);await cell(page,18,14);
     await expect(page.locator('#cell-description')).toContainText('Pas encore récoltable');
     await expect(page.locator('#fps-counter')).toBeVisible();
-    await page.screenshot({path:'artifacts/bush-harvested.png'});
+    await page.screenshot({path:testOutputPath('artifacts/bush-harvested.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,picked);
     await tool(page,'cut');await cell(page,18,14);await page.locator('[data-speed="6"]').click();
     await page.waitForFunction(()=>{if(window.__lisiere.world.resources.length)return false;document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click();return true;});

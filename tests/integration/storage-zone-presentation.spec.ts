@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
 import { createWorld, serializeWorld, validateWorld } from '../../src/sim/index';
 import { addGroundMaterial, refreshStock } from '../../src/sim/materials';
@@ -31,7 +32,7 @@ test('stockpile area stays a faint overlay around stored items and remains selec
     await page.keyboard.press('Escape');
     await revealCells(page, [{ x: 15, z: 14 }, { x: 17, z: 15 }, { x: 13, z: 12 }, { x: 12, z: 12 }]);
     expect(await page.evaluate(() => window.__lisiere.backend)).toBe('WebGPU');
-    const screenshot = await page.screenshot({ path: 'artifacts/storage-zone-presentation.png' });
+    const screenshot = await page.screenshot({ path:testOutputPath('artifacts/storage-zone-presentation.png') });
     expect(screenshot.byteLength).toBeGreaterThan(10_000);
     await cell(page, 13, 12);
     await expect(page.locator('#cell-title')).toHaveText('Réserve');

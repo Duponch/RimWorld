@@ -80,6 +80,6 @@ test('Mobilier complexe is an independent 300-point project and Crashlanded revi
   expect(researchCost('complex-furniture')).toBe(300_000_000);expect(complexFurnitureUnlocked(migrated)).toBe(false);
   migrated.research!.complexFurniture={points:COMPLEX_FURNITURE_RESEARCH_COST,completedAt:migrated.tick};
   expect(complexFurnitureUnlocked(migrated)).toBe(true);expect(validateWorld(migrated)).toEqual([]);
-  expect(SCENARIOS.crashlanded.revision).toBe(5);
+  expect(SCENARIOS.crashlanded.revision).toBe(8);
   const provenance=structuredClone(migrated);provenance.scenario!.revision=5;expect(validateWorld(provenance)).toEqual([]);
 });

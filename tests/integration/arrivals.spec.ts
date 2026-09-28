@@ -1,6 +1,7 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { perform } from './player-actions';
 import { test,expect } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { createWorld } from '../../src/sim/engine';
 import { enableArrivals } from '../../src/sim/arrivals';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
@@ -17,12 +18,12 @@ test('arrival UI at 1x/6x: real worker, letter, postpone/save, edge entry and fo
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     await page.locator(`[data-speed="${speed}"]`).click();await expect(page.locator('#arrival-letter')).toBeVisible();await page.locator('#arrival-letter').focus();
     const focusTick=(await world(page)).tick;await page.waitForFunction(t=>window.__lisiere.tick>=t+5,focusTick);await expect(page.locator('#arrival-letter')).toBeFocused();await page.locator('[data-speed="0"]').click();
-    const pending=await world(page);expect(pending.pawns).toHaveLength(3);await page.locator('#arrival-letter').click();await expect(page.locator('#arrival-dialog')).toContainText('Meilleure compétence');await page.screenshot({path:`artifacts/arrival-letter-v66-${speed}x.png`});await page.locator('#postpone-arrival').click();
+    const pending=await world(page);expect(pending.pawns).toHaveLength(3);await page.locator('#arrival-letter').click();await expect(page.locator('#arrival-dialog')).toContainText('Meilleure compétence');await page.screenshot({path:testOutputPath(`artifacts/arrival-letter-v66-${speed}x.png`)});await page.locator('#postpone-arrival').click();
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,pending);await page.keyboard.press('Escape');
     await page.locator('#arrival-letter').click();await page.locator('#accept-arrival').click();await expect.poll(async()=>(await world(page)).pawns.length).toBe(4);
     const joined=await world(page),newcomer=joined.pawns.at(-1)!;expect(validateWorld(joined)).toEqual([]);expect(joined.arrivals!.accepted).toBe(1);
     await expect(page.locator(`[data-pawn="${newcomer.id}"]`)).toBeVisible();await page.locator(`[data-pawn="${newcomer.id}"]`).click();await expect(page.locator('#inspector')).toContainText(newcomer.name);
-    await page.screenshot({path:`artifacts/arrival-v66-${speed}x.png`});
+    await page.screenshot({path:testOutputPath(`artifacts/arrival-v66-${speed}x.png`)});
     await panel(page,'work');await expect(page.locator('#work-panel')).toContainText(newcomer.name);await page.keyboard.press('Escape');
     const destination=[{x:16,z:16},{x:17,z:16},{x:16,z:17},{x:17,z:17},{x:15,z:16}].find(c=>!joined.pawns.some(p=>p.x===c.x&&p.z===c.z)&&!['rock','water'].includes(joined.tiles[c.z*joined.width+c.x]!.terrain));
     expect(destination).toBeDefined();
@@ -45,5 +46,5 @@ test('arrival UI at 1x/6x: real worker, letter, postpone/save, edge entry and fo
     }
     expect(errors).toEqual([]);proof.push({speed,pendingTick:pending.tick,joinedTick:joined.tick,newcomer:{id:newcomer.id,x:newcomer.x,z:newcomer.z},walkingTick:walking.tick,refusal:true,expiration:true,formerCampActivation:true,errors});await page.close();
   }}finally{await browser.close();}
-  writeFileSync('artifacts/arrival-ui-v66.json',JSON.stringify({date:new Date().toISOString(),controlledCalendar:true,proof},null,2)+'\n');
+  writeTestFileSync('artifacts/arrival-ui-v66.json',JSON.stringify({date:new Date().toISOString(),controlledCalendar:true,proof},null,2)+'\n');
 });

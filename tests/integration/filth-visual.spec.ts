@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { serializeWorld, validateWorld } from '../../src/sim/serialization';
 import { filthVisualFixture } from '../scenarios/filth-visual';
 import { expectWorld, observeErrors, panel, pause, saveKey, world } from './helpers';
@@ -36,10 +37,10 @@ test('V107 native filth: layers, camera, physical cleaning and cold reload', asy
     const initial = await read(); expect(initial.backend).toBe('WebGPU');
     expect(initial.count).toBe(f.world.filth!.items.reduce((n, trace) => n + trace.thickness, 0));
     await revealCells(page, [{ x: 5, z: 7 }, { x: 25, z: 7 }, { x: 5, z: 17 }, { x: 25, z: 17 }]);
-    await page.screenshot({ path: 'artifacts/filth-chart-v107.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/filth-chart-v107.png') });
     await page.mouse.move(780, 450); await page.mouse.down({ button: 'right' }); await page.mouse.move(970, 490, { steps: 12 }); await page.mouse.up({ button: 'right' });
     await page.mouse.wheel(0, -240);
-    await page.screenshot({ path: 'artifacts/filth-camera-v107.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/filth-camera-v107.png') });
     const rotated = await read(); expect(rotated.poseVersion).toBe(initial.poseVersion); expect(rotated.count).toBe(initial.count);
     await expectWorld(page, f.world);
     await perform(page, { command: { type: 'clean-room', pawnId: f.pawnId, ...f.dirty }, reason: 'Retirer les cinq couches par nettoyage physique.' }, { value: 0 });
@@ -49,13 +50,13 @@ test('V107 native filth: layers, camera, physical cleaning and cold reload', asy
     expect(validateWorld(final)).toEqual([]); expect(final.filth!.cleaned).toBe(1); // Counter of fully removed traces, not layers.
     const seen = await page.evaluate(() => [...(window as any).__filthThickness].sort()); expect(seen).toEqual([0, 1, 2, 3, 4, 5]);
     expect((await read()).count).toBe(final.filth!.items.reduce((n, trace) => n + trace.thickness, 0));
-    await page.screenshot({ path: 'artifacts/filth-cleaned-v107.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/filth-cleaned-v107.png') });
     await panel(page, 'menu'); await page.locator('#save').click();
     await page.reload(); await expect(page.locator('#loading')).toHaveCount(0); await pause(page);
     await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, final); await page.keyboard.press('Escape');
     expect((await read()).count).toBe(final.filth!.items.reduce((n, trace) => n + trace.thickness, 0)); expect(errors).toEqual([]);
     const report = JSON.stringify({ prepared: true, initial, rotated, final: await read(), cleaned: final.filth!.cleaned, observedThickness: seen, exactColdReload: true, errors }, null, 2);
-    writeFileSync('artifacts/filth-native-v107.json', report); await info.attach('filth-v107', { contentType: 'application/json', body: report });
-  } catch (error) { writeFileSync('artifacts/filth-native-failure-v107.json', JSON.stringify({ error: String(error), errors, view: await read().catch(() => null) }, null, 2)); throw error; }
+    writeTestFileSync('artifacts/filth-native-v107.json', report); await info.attach('filth-v107', { contentType: 'application/json', body: report });
+  } catch (error) { writeTestFileSync('artifacts/filth-native-failure-v107.json', JSON.stringify({ error: String(error), errors, view: await read().catch(() => null) }, null, 2)); throw error; }
   finally { await browser.close(); }
 });

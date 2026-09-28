@@ -11,6 +11,7 @@ import { pawnBody } from '../src/sim/health-rules';
 import { queryPawnStatus } from '../src/sim/diagnostics';
 import { addGroundMaterial, refreshStock } from '../src/sim/materials';
 import { COMPLEX_FURNITURE_RESEARCH_COST } from '../src/sim/research';
+import { withoutFutureHelmetPolicy } from './scenarios/legacy-skills';
 
 const game = () => {
   const w=createWorld(122,32,32);
@@ -89,7 +90,12 @@ test('seat destruction releases chess before a save and V121 migration adds no r
   expect(deserializeWorld(serializeWorld(w))).toEqual(w);
 
   const old=JSON.parse(serializeWorld(w));old.schemaVersion=121;
+  delete old.breakdown;
+  delete old.fluIncidents;
+  withoutFutureHelmetPolicy(old);
   for(const p of old.pawns){delete p.recreation.tolerance.cerebral;delete p.recreation.bored.cerebral;delete p.recreation.tolerance.social;delete p.recreation.bored.social;p.recreation.task=null;p.state='idle';p.path=[];p.moveCooldown=0;delete p.motion;delete p.transitExit;}
+  for(const p of old.pawns)delete p.age;
+  for(const departure of old.visitors?.departed??[])delete departure.pawn.age;
   old.structures=old.structures.filter((s:{kind:string})=>s.kind!=='chess-table');
   expect(()=>deserializeWorld(JSON.stringify({...old,structures:w.structures}))).toThrow(/version 121/i);
   const migrated=deserializeWorld(JSON.stringify(old));

@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { readFileSync,writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/index';
 import { observeErrors,panel,pawnTab,cell,world,expectWorld,saveKey } from './helpers';
 import { perform } from './player-actions';
@@ -31,7 +32,7 @@ test('natural-cotton checkpoint: real architect, bill, interruption, saved unfin
     await perform(page,{reason:'Suspendre sans perdre le tissu ni le travail.',command:{type:'bill-update',structureId:spot.id,billId,settings:{...w.structures.find(s=>s.id===spot.id)!.bills![0]!,suspended:true}}},{value:0});
     w=await world(page);expect(w.pawns[0]!.cooking).toBeNull();expect(w.piles.find(i=>i.id===u.id)!.unfinished!.progress).toBeGreaterThan(0);
     if(u.owner.type!=='ground')throw Error('Expected a staged unfinished garment');await page.keyboard.press('Escape');await cell(page,u.owner.x,u.owner.z);
-    await expect(page.locator('[data-unfinished]')).toContainText(p.name);await page.screenshot({path:'artifacts/tailoring-unfinished-v72.png'});
+    await expect(page.locator('[data-unfinished]')).toContainText(p.name);await page.screenshot({path:testOutputPath('artifacts/tailoring-unfinished-v72.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,w);
     await perform(page,{reason:'Reprendre le même ouvrage.',command:{type:'bill-update',structureId:spot.id,billId,settings:{...w.structures.find(s=>s.id===spot.id)!.bills![0]!,suspended:false}}},{value:0});
     await page.keyboard.press('Escape');await page.locator('[data-speed="1"]').click();
@@ -44,11 +45,11 @@ test('natural-cotton checkpoint: real architect, bill, interruption, saved unfin
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).piles.find(i=>i.id===garment.id)?.owner.type,{timeout:20000}).toBe('apparel');await page.locator('[data-speed="0"]').click();
     const final=await world(page);expect(validateWorld(final)).toEqual([]);await expect(page.locator(`[data-pawn="${p.id}"]`)).toHaveAttribute('data-apparel','cloth-tribalwear');
     await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'gear');await expect(page.locator('#equipment-apparel')).toContainText('Tenue tribale');await expect(page.locator('#fps-counter')).toBeVisible();
-    await page.screenshot({path:'artifacts/tailoring-worn-v72.png'});
+    await page.screenshot({path:testOutputPath('artifacts/tailoring-worn-v72.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);
     const frames=await page.evaluate(()=>(window as any).__tailoringFrames as any[]);
     expect(frames.some(f=>f.cargo===24)).toBe(true);expect(frames.some(f=>f.cargo===26)).toBe(true);expect(frames.some(f=>f.cloth===2)).toBe(true);
     for(const f of frames){expect(f.cloth).toBe(f.owner==='apparel'?2:0);expect(f.tick).toBeLessThanOrEqual(f.play);}
-    expect(errors).toEqual([]);writeFileSync('artifacts/tailoring-ui-v72.json',JSON.stringify({date:new Date().toISOString(),source:'Natural cotton core checkpoint; all production/interrupt/wear actions through real UI',startTick:initial.tick,endTick:final.tick,garment:final.piles.find(i=>i.id===garment.id),frames:frames.length,cargoFrames:frames.filter(f=>f.cargo===24||f.cargo===26).length,errors},null,2));
+    expect(errors).toEqual([]);writeTestFileSync('artifacts/tailoring-ui-v72.json',JSON.stringify({date:new Date().toISOString(),source:'Natural cotton core checkpoint; all production/interrupt/wear actions through real UI',startTick:initial.tick,endTick:final.tick,garment:final.piles.find(i=>i.id===garment.id),frames:frames.length,cargoFrames:frames.filter(f=>f.cargo===24||f.cargo===26).length,errors},null,2));
   }finally{await browser.close();}
 });

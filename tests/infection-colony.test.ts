@@ -1,4 +1,5 @@
-import { writeFileSync } from 'node:fs';
+import { writeTestFileSync } from './test-output.ts';
+
 import { expect,onTestFailed,test } from 'vitest';
 import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index.ts';
 import { INFECTION_UNIT } from '../src/sim/infection-rules.ts';
@@ -23,9 +24,9 @@ test('real encounter, delayed infection, repeated physical care, immunity and co
   expect(w.pawns.every(p=>!p.health)).toBe(true);expect(validateWorld(w)).toEqual([]);
   const checkpoint=(name:string)=>{
     if(checkpointPaths[name])return;
-    const file=`tmp/infection-${name}-${version}.json`;writeFileSync(file,serializeWorld(w));checkpointPaths[name]=file;
+    const file=`tmp/infection-${name}-${version}.json`;writeTestFileSync(file,serializeWorld(w));checkpointPaths[name]=file;
   };
-  onTestFailed(()=>writeFileSync(`tmp/infection-failed-${version}.json`,JSON.stringify({world:serializeWorld(w),initial,milestones,journal,care,ledger,checkpointPaths,final:infectionSummary(w)},null,2)));
+  onTestFailed(()=>writeTestFileSync(`tmp/infection-failed-${version}.json`,JSON.stringify({world:serializeWorld(w),initial,milestones,journal,care,ledger,checkpointPaths,final:infectionSummary(w)},null,2)));
   const mark=(name:string,yes:boolean)=>{if(yes&&milestones[name]===undefined)milestones[name]=w.tick;};
   const advance=(state:World)=>{
     if(state.tick%10===0)for(const d of infectionDecisions(state))expect(applyCommand(state,d.command),JSON.stringify({tick:state.tick,d})).toMatchObject({ok:true});
@@ -75,7 +76,7 @@ test('real encounter, delayed infection, repeated physical care, immunity and co
     if(milestones.recovered!==undefined)break;
   }
   observe();const final=infectionSummary(w),context=JSON.stringify({milestones,care,ledger,final});
-  writeFileSync(`artifacts/infection-colony-${version}.json`,JSON.stringify({seed,start,initial,milestones,care,ledger,journal,observations,checkpointPaths,final,provenance:'Prepared clinic, initially healthy combatants, actual hostile shots and unchanged natural infection rolls.'},null,2));
+  writeTestFileSync(`artifacts/infection-colony-${version}.json`,JSON.stringify({seed,start,initial,milestones,care,ledger,journal,observations,checkpointPaths,final,provenance:'Prepared clinic, initially healthy combatants, actual hostile shots and unchanged natural infection rolls.'},null,2));
   expect(sawRisk&&sawRealGunshot,context).toBe(true);
   for(const key of ['wounded','downed','rescued','infection','firstInfectionCare','repeatedInfectionCare','immune','recovered'])expect(milestones[key],context).toBeGreaterThan(start);
   expect(milestones.infection!-milestones.wounded!,context).toBeGreaterThanOrEqual(1500);

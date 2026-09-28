@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { readFileSync,writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/index';
 import { observeErrors,panel,world,expectWorld,saveKey,cell,tool } from './helpers';
 import { perform,revealCells } from './player-actions';
@@ -32,10 +33,10 @@ test('earned research, physical freezer construction, storage, thermostat and ex
     await expect.poll(async()=>{const w=await world(page),food=w.piles.filter(p=>p.item==='simple-meal');return food.reduce((n,p)=>n+p.quantity,0)===20&&food.every(p=>p.owner.type==='ground'&&p.rot?.rate===0);},{timeout:45000}).toBe(true);await page.locator('[data-speed="0"]').click();
     const frozen=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,frozen);await page.keyboard.press('Escape');
     await revealCells(page,[{x:3,z:2}]);await cell(page,3,2);await expect(page.locator('#cooler-controls')).toContainText('Cible -5.0');
-    await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:'artifacts/cooler-v75.png'});
+    await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:testOutputPath('artifacts/cooler-v75.png')});
     await page.locator('[data-cooler-offset="null"]').click();await expect(page.locator('#cooler-controls')).toContainText('Cible 21.0');await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>(await world(page)).piles.some(p=>p.item==='simple-meal'&&(p.rot?.rate??0)>0),{timeout:25000}).toBe(true);await page.locator('[data-speed="0"]').click();
     const final=await world(page);expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);
-    writeFileSync('artifacts/cooler-ui-v75.json',JSON.stringify({date:new Date().toISOString(),start:initial.tick,frozenAt:frozen.tick,end:final.tick,research:final.research,buildings:final.structures.map(s=>s.kind),errors},null,2));
+    writeTestFileSync('artifacts/cooler-ui-v75.json',JSON.stringify({date:new Date().toISOString(),start:initial.tick,frozenAt:frozen.tick,end:final.tick,research:final.research,buildings:final.structures.map(s=>s.kind),errors},null,2));
   }finally{await browser.close();}
 });

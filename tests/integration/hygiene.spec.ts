@@ -1,6 +1,7 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
 import { createHash } from 'node:crypto';
-import { existsSync,readFileSync,writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { hygieneNativeFixture } from '../scenarios/hygiene-native';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/serialization';
@@ -38,7 +39,7 @@ test('native hygiene: physical flooring, cleaning, funeral and illness through t
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,f.world);await page.keyboard.press('Escape');
     const rotation={value:0},act=(command:Command,reason:string)=>perform(page,{command,reason},rotation);
     await inspectPerson(page,f.patientId,'health');await expect(page.locator('[data-health="food-poisoning"]')).toContainText('phase majeure');await expect(page.locator('[data-health="food-poisoning"]')).toContainText('Vomit');
-    await page.screenshot({path:'artifacts/hygiene-health-v89.png'});
+    await page.screenshot({path:testOutputPath('artifacts/hygiene-health-v89.png')});
     await act({type:'research-project',project:'smithing'},'Choisir Forge dans le panneau de recherche.');
     await expect(page.locator('[data-smithing-status]')).toContainText('En cours');await act({type:'research-project',project:null},'Suspendre sans inventer de progression.');
     await act({type:'area',action:'lay-floor',floor:'wood-planks',from:f.floorFrom,to:f.floorTo},'Tracer le plancher et livrer son bois physique.');
@@ -62,7 +63,7 @@ test('native hygiene: physical flooring, cleaning, funeral and illness through t
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>(await world(page)).pawns.find(p=>p.id===f.actorId)?.burial?.phase,{timeout:20000}).toBe('carry');await pause(page);
     const carry=await world(page),corpseId=carry.pawns.find(p=>p.id===f.bodyPawnId)!.body!.pileId!;expect(carry.piles.find(p=>p.id===corpseId)!.owner).toEqual({type:'pawn',pawnId:f.actorId});expect(validateWorld(carry)).toEqual([]);
-    await page.screenshot({path:'artifacts/hygiene-carried-body-v89.png'});
+    await page.screenshot({path:testOutputPath('artifacts/hygiene-carried-body-v89.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,carry);await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>(await world(page)).structures.find(s=>s.id===grave.id)?.grave?.corpseId,{timeout:20000}).toBe(corpseId);await pause(page);
     const buried=await world(page);expect(buried.piles.find(p=>p.id===corpseId)!.owner).toEqual({type:'grave',graveId:grave.id});expect(buried.pawns.filter(p=>p.id===f.bodyPawnId)).toHaveLength(1);expect(validateWorld(buried)).toEqual([]);
@@ -73,13 +74,13 @@ test('native hygiene: physical flooring, cleaning, funeral and illness through t
     expect(await page.evaluate(id=>window.__lisiere.projectPawn(id),f.bodyPawnId),'A buried body has no visible click proxy').toBeUndefined();
     report.projection=projection;
     await revealCells(page,[grave]);await cell(page,grave.x,grave.z);await expect(page.locator('[data-burial-status]')).toContainText('Tombe occupée');
-    await page.screenshot({path:'artifacts/hygiene-grave-v89.png'});
+    await page.screenshot({path:testOutputPath('artifacts/hygiene-grave-v89.png')});
     await act({type:'area',action:'remove-floor',from:f.floorFrom,to:f.floorFrom},'Retirer un revêtement par le même outil de Construction.');
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).tiles[f.floorFrom.z*32+f.floorFrom.x]!.floor,{timeout:20000}).toBeUndefined();await pause(page);
     const final=await world(page);expect(validateWorld(final)).toEqual([]);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);await page.keyboard.press('Escape');
     Object.assign(report,{final:final.tick,corpseId,graveId:grave.id,cleaned:final.filth!.cleaned,floors:final.tiles.filter(t=>t.floor).length,cleanlinessBefore:before,cleanlinessAfter:roomCleanliness(clean,f.dirty),errors});expect(errors).toEqual([]);
-    writeFileSync('artifacts/hygiene-native-v89.json',JSON.stringify(report,null,2));
+    writeTestFileSync('artifacts/hygiene-native-v89.json',JSON.stringify(report,null,2));
   } finally {await browser.close();}
 });
 
@@ -100,8 +101,8 @@ test('native completed V89 colony: cold load, thirty ticks and exact save/reload
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).tick,{timeout:30000}).toBeGreaterThanOrEqual(initial.tick+30);await pause(page);
     const continued=await world(page);expect(validateWorld(continued)).toEqual([]);expect(continued.climate).toEqual(initial.climate);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,continued);await page.keyboard.press('Escape');
-    await page.screenshot({path:'artifacts/hygiene-colony-native-v89.png'});expect(errors).toEqual([]);
+    await page.screenshot({path:testOutputPath('artifacts/hygiene-colony-native-v89.png')});expect(errors).toEqual([]);
     Object.assign(report,{status:'passed',finalTick:continued.tick,continuedTicks:continued.tick-initial.tick,colonists:colonists.length,floors:continued.tiles.filter(t=>t.floor).length,cleaned:continued.filth?.cleaned??0,errors});
   }catch(error){Object.assign(report,{status:'failed',error:String(error),errors});throw error;}
-  finally{writeFileSync('artifacts/hygiene-colony-native-v89.json',JSON.stringify(report,null,2));await browser.close();}
+  finally{writeTestFileSync('artifacts/hygiene-colony-native-v89.json',JSON.stringify(report,null,2));await browser.close();}
 });

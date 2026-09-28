@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { rescueCamp } from '../scenarios/rescue';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { expectWorld,observeErrors,panel,pawnTab,saveKey,world,cell } from './helpers';
@@ -25,13 +26,13 @@ test('player assigns a medical bed, orders rescue, observes a carried GPU body a
     await perform(page,{reason:'Porter le blessé jusqu’au lit médical.',command:{type:'order-rescue',pawnId:actor.id,patientId:patient.id,queue:false}},{value:0});
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.rescue?.phase).toBe('carry');await page.locator('[data-speed="0"]').click();
     const carried=await world(page);expect(validateWorld(carried)).toEqual([]);expect(carried.pawns[0]!.rescue?.phase).toBe('carry');
-    await page.screenshot({path:'artifacts/rescue-carry-v46.png'});
+    await page.screenshot({path:testOutputPath('artifacts/rescue-carry-v46.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,carried);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns[1]!.need?.kind).toBe('sleep');await page.locator('[data-speed="0"]').click();
     const delivered=await world(page);expect(validateWorld(delivered)).toEqual([]);expect(delivered.pawns[1]!.need).toMatchObject({kind:'sleep',phase:'sleep',bedId:bed.id});expect(delivered.pawns[0]!.rescue).toBeUndefined();
-    await page.locator(`[data-pawn="${patient.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('#health-inspection')).toContainText('À terre');await expect(page.locator('#fps-counter')).toHaveText(/\d+ FPS/);await page.screenshot({path:'artifacts/rescue-bed-v46.png'});
+    await page.locator(`[data-pawn="${patient.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('#health-inspection')).toContainText('À terre');await expect(page.locator('#fps-counter')).toHaveText(/\d+ FPS/);await page.screenshot({path:testOutputPath('artifacts/rescue-bed-v46.png')});
     const frames=await page.evaluate(()=> (window as unknown as {__rescueFrames:{tick:number;play:number;carrier:number[];patient:number[];mode:number;work:number;walk:number}[]}).__rescueFrames);
     expect(frames.length).toBeGreaterThan(5);for(const f of frames){expect(f.patient).toEqual(f.carrier);expect([f.mode,f.walk,f.work]).toEqual([6,0,0]);expect(f.tick).toBeLessThanOrEqual(f.play);}
-    expect(errors).toEqual([]);writeFileSync('artifacts/rescue-ui-v46.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,first:frames[0],last:frames.at(-1),carriedTick:carried.tick,deliveredTick:delivered.tick,errors},null,2)+'\n');
+    expect(errors).toEqual([]);writeTestFileSync('artifacts/rescue-ui-v46.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',frames:frames.length,first:frames[0],last:frames.at(-1),carriedTick:carried.tick,deliveredTick:delivered.tick,errors},null,2)+'\n');
   }finally{await browser.close();}
 });

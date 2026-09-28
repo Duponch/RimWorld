@@ -5,13 +5,15 @@ import {newApparelState} from '../src/sim/apparel-rules.ts';
 import {newCookingBill} from '../src/sim/cooking-bills.ts';
 import {newPowerState} from '../src/sim/power-rules.ts';
 import {CLOTHING_RESEARCH_COST,FLAK_ARMOR_RESEARCH_COST,PLATE_ARMOR_RESEARCH_COST} from '../src/sim/research.ts';
+import {newBreakdownCalendar} from '../src/sim/breakdowns.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import type {Structure,World} from '../src/sim/types.ts';
 
 const historical=():World=>JSON.parse(readFileSync('public/test-saves/v139/industrie-avancee.json','utf8')) as World;
 
 test('V139 migration keeps its physical state, policies and RNG without granting a helmet',()=>{
   const before=historical(),after=deserializeWorld(JSON.stringify(before));
-  expect(after).toEqual({...before,schemaVersion:141});
+  expect(after).toEqual({...before,schemaVersion:SCHEMA_VERSION,breakdown:newBreakdownCalendar(before.seed,before.tick)});
   expect(validateWorld(after)).toEqual([]);
   expect(after.piles.some(p=>p.item==='flak-helmet'||p.item==='unfinished-flak-helmet')).toBe(false);
   expect(after.apparelPolicies?.some(policy=>policy.allowedItems.includes('flak-helmet'))).toBe(false);
@@ -32,9 +34,11 @@ test('a file declared V139 cannot pre-own the V141 helmet, recipe, workpiece or 
   recipe.research!.flakArmor={points:FLAK_ARMOR_RESEARCH_COST,completedAt:2000};
   const bench:Structure={id:recipe.nextId++,kind:'machining-table',x:20,z:8,orientation:0,footprint:'standard',material:'steel',power:newPowerState('machining-table'),bills:[newCookingBill(recipe.nextId++,'make-flak-helmet')]};
   recipe.structures.push(bench);
-  (recipe as {schemaVersion:number}).schemaVersion=141;
+  (recipe as {schemaVersion:number}).schemaVersion=SCHEMA_VERSION;
+  recipe.breakdown=newBreakdownCalendar(recipe.seed,recipe.tick);
   expect(validateWorld(recipe)).toEqual([]);
   (recipe as {schemaVersion:number}).schemaVersion=139;
+  delete recipe.breakdown;
   expect(()=>deserializeWorld(JSON.stringify(recipe))).toThrow(/Invalid cooking bill/);
 
   const work=historical();

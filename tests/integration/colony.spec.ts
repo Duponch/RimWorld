@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { createScenarioWorld } from '../../src/sim/new-game';
 import { expect, test, type Page } from '@playwright/test';
 import { createWorld } from '../../src/sim/engine';
@@ -45,7 +46,7 @@ test('besoins physiques : repas en main, sommeil dans deux lits orientés, attri
     await page.locator('#menu-panel [data-close-panel]').click();
     await page.locator(`[data-pawn="${eating.pawns[0].id}"]`).click();
     await expect(page.locator('#selected-action')).toContainText('Mange la portion tenue en main');
-    await page.screenshot({ path: 'artifacts/needs-eating-sleeping.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/needs-eating-sleeping.png') });
     await page.getByRole('button', { name: 'Vitesse 6 fois', exact: true }).click();
     await expect.poll(async () => (await world(page)).stock.food).toBe(0);
     await page.getByRole('button', { name: 'Pause', exact: true }).click();
@@ -167,7 +168,7 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await page.locator('#delete-stockpile').click();
   await expect.poll(async () => (await world(page)).stockpiles.length).toBe(1);
   await page.keyboard.press('Escape');
-  await page.screenshot({ path: 'artifacts/colony-desktop.png' });
+  await page.screenshot({ path:testOutputPath('artifacts/colony-desktop.png') });
   expect(errors).toEqual([]);
   } finally { await browser.close(); }
 });
@@ -242,7 +243,7 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.locator('#architect-panel [data-close-panel]').click();
   }
-  await page.screenshot({ path: 'artifacts/colony-compact.png' });
+  await page.screenshot({ path:testOutputPath('artifacts/colony-compact.png') });
   // Real legacy data crosses localStorage → client → worker migration, not a patched snapshot.
   await page.evaluate(({ key, data }) => localStorage.setItem(key, data), { key: saveKey, data: JSON.stringify(legacySave) });
   await panel(page, 'menu'); await page.locator('#load').click();
@@ -294,7 +295,7 @@ test('rectangles 250² : aperçu, interruptions, rotation, politiques préservé
     await expect(page.locator('#area-feedback')).toContainText('8 case(s) retenue(s)');
     // Hold the real gesture through rendered frames to compile and inspect the instanced preview.
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-    await page.screenshot({ path: 'artifacts/area-preview-250.png' });
+    await page.screenshot({ path:testOutputPath('artifacts/area-preview-250.png') });
     await page.mouse.up();
     await expect.poll(async () => (await world(page)).stockpiles.length).toBe(8);
     await expect(page.locator('#notice')).toContainText('8 case(s) de réserve créée(s)');
@@ -343,7 +344,7 @@ test('rectangles 250² : aperçu, interruptions, rotation, politiques préservé
     expect(finished.piles.filter(pile => pile.kind === 'wood').reduce((sum, pile) => sum + pile.quantity, 0)).toBe(expectedWood);
     expect(finished.resources.some(resource => targets.some(target => target.id === resource.id))).toBe(false);
     expect(errors).toEqual([]);
-    const report = JSON.stringify({ timestamp: new Date().toISOString(), backend: await page.evaluate(() => window.__lisiere.backend), size: 250, seed: 42, interruptedGestures: ['Escape', 'right-button', 'release-over-UI', 'injected-window-blur', 'tool-change'], storageCells: 10, harvestedTrees: targets.length, conservedWood: expectedWood, screenshot: 'artifacts/area-preview-250.png', diagnostics, errors }, null, 2);
+    const report = JSON.stringify({ timestamp: new Date().toISOString(), backend: await page.evaluate(() => window.__lisiere.backend), size: 250, seed: 42, interruptedGestures: ['Escape', 'right-button', 'release-over-UI', 'injected-window-blur', 'tool-change'], storageCells: 10, harvestedTrees: targets.length, conservedWood: expectedWood, screenshot: testOutputPath('artifacts/area-preview-250.png'), diagnostics, errors }, null, 2);
     await test.info().attach('area-gameplay', { body: report, contentType: 'application/json' });
   } finally { await browser.close(); }
 });

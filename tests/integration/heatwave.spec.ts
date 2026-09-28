@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { readFileSync,writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/index';
 import { observeErrors,panel,pawnTab,world,expectWorld,saveKey } from './helpers';
 import { perform } from './player-actions';
@@ -23,8 +24,8 @@ test('real heatwave camp: warning, insulation/health inspection, physical shelte
     const sheltered=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,sheltered);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).pawns.find(q=>q.id===p.id)?.health?.heatstroke??0,{timeout:20000}).toBe(0);await page.locator('[data-speed="0"]').click();
     await perform(page,{reason:'Reprendre la vie du camp après récupération.',command:{type:'draft',pawnIds:[p.id],enabled:false}},{value:0});
-    await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:'artifacts/heatwave-refuge-v74.png'});
+    await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:testOutputPath('artifacts/heatwave-refuge-v74.png')});
     const final=await world(page);expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);
-    writeFileSync('artifacts/heatwave-ui-v74.json',JSON.stringify({date:new Date().toISOString(),start:initial.tick,end:final.tick,patient:p.id,before:p.health?.heatstroke,after:final.pawns.find(q=>q.id===p.id)?.health,errors},null,2));
+    writeTestFileSync('artifacts/heatwave-ui-v74.json',JSON.stringify({date:new Date().toISOString(),start:initial.tick,end:final.tick,patient:p.id,before:p.health?.heatstroke,after:final.pawns.find(q=>q.id===p.id)?.health,errors},null,2));
   }finally{await browser.close();}
 });

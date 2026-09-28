@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { expect, test } from '@playwright/test';
 import { addGroundMaterial, createWorld, serializeWorld, validateWorld } from '../../src/sim/index';
 import { revealCells,perform,editBill } from './player-actions';
@@ -84,7 +85,7 @@ test('V90 : choisir un pot dans Architecte et affecter une politique vestimentai
     expect(validateWorld(result)).toEqual([]);
     expect(errors).toEqual([]);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,result);
-    await page.keyboard.press('Escape');await page.screenshot({path:'artifacts/habitat-apparel-ui-v90.png'});
+    await page.keyboard.press('Escape');await page.screenshot({path:testOutputPath('artifacts/habitat-apparel-ui-v90.png')});
     await testInfo.attach('v90-ui', {
       contentType: 'application/json',
       body: JSON.stringify({ tick: result.tick, construction: 'flower-pot', apparelPolicyId: 2, apparelAutomation: true, errors }),

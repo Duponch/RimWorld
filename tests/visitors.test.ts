@@ -8,6 +8,7 @@ import { rotAge } from '../src/sim/food-preservation.ts';
 import { visitorTradeFixture } from './scenarios/visitors.ts';
 import { deconstructionCamp,fixtureBuilding } from './scenarios/deconstruction.ts';
 import type { World } from '../src/sim/types.ts';
+import { withoutFutureHelmetPolicy } from './scenarios/legacy-skills.ts';
 
 function replay(w:World,ticks:number):void {
   expect(validateWorld(w)).toEqual([]);const clone=deserializeWorld(serializeWorld(w));
@@ -51,6 +52,8 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   expect(d.pawn.appearance).toEqual(p.appearance);expect(d.pawn.appearance).toBeDefined();
   const legacy=structuredClone(w) as any;
   legacy.schemaVersion=135;
+  delete legacy.breakdown;
+  withoutFutureHelmetPolicy(legacy);
   for(const pawn of [...legacy.pawns,...legacy.visitors.departed.map((entry:any)=>entry.pawn)]){delete pawn.age;if(pawn.health)delete pawn.health.ageAilments;}
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.visitors!.departed[0]!.pawn.age).toEqual({biologicalTicks:10_800_000,chronologicalTicks:10_800_000});

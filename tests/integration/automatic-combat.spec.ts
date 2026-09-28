@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { automaticCamp } from '../scenarios/automatic-combat';
 import { applyCommand } from '../../src/sim/engine';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
@@ -34,7 +35,7 @@ test('native UI: hold/allow fire, civilian Attack from Assign/inspector, actual 
       else {await page.locator('#fire-at-will').click();await expect(page.locator('#fire-at-will')).toHaveAttribute('aria-pressed','false');}
       reports.push({speed,tick:fought.tick,actor:fought.pawns[0],target:fought.pawns[3]});
     }
-    await page.locator('[data-pawn]').first().click();await expect(page.locator('#fps-counter')).toBeVisible();expect(errors).toEqual([]);await page.screenshot({path:'artifacts/automatic-combat-v60.png'});
-    writeFileSync('artifacts/automatic-combat-ui-v60.json',JSON.stringify({reports,errors},null,2)+'\n');
+    await page.locator('[data-pawn]').first().click();await expect(page.locator('#fps-counter')).toBeVisible();expect(errors).toEqual([]);await page.screenshot({path:testOutputPath('artifacts/automatic-combat-v60.png')});
+    writeTestFileSync('artifacts/automatic-combat-ui-v60.json',JSON.stringify({reports,errors},null,2)+'\n');
   }finally{await browser.close();}
 });

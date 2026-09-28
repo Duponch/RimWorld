@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { createWorld,serializeWorld,validateWorld } from '../../src/sim/index';
 import { addGroundMaterial,refreshStock } from '../../src/sim/materials';
 import { cell,expectWorld,observeErrors,panel,pawnTab,saveKey,tool,world } from './helpers';
@@ -22,10 +23,10 @@ test('skills: player chooses a builder, sees physical learning, pauses and reloa
     await page.locator('[data-speed="0"]').click();const working=await world(page);expect(working.jobs.some(j=>j.construction==='frame')).toBe(true);expect(validateWorld(working)).toEqual([]);
     await tool(page,'select');await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'bio');
     await expect(page.locator('[data-skill="construction"]')).toContainText('Construction 10/20');await expect(page.locator('[data-skill-description]')).toContainText('Apprentissage 150 %');
-    await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:'artifacts/skills-construction.png'});
+    await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:testOutputPath('artifacts/skills-construction.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,working);
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.some(s=>s.kind==='bed')).toBe(true);
     await page.locator('[data-speed="0"]').click();const final=await world(page);expect(final.pawns[0]!.skills.construction.xp).toBeGreaterThan(working.pawns[0]!.skills.construction.xp);expect(final.piles).toEqual([]);expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);
-    writeFileSync('artifacts/skills-ui-v43.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',viewport:'1440x1000',checkpoint:working.pawns[0]!.skills,final:final.pawns[0]!.skills,bed:final.structures.find(s=>s.kind==='bed'),errors},null,2)+'\n');
+    writeTestFileSync('artifacts/skills-ui-v43.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',viewport:'1440x1000',checkpoint:working.pawns[0]!.skills,final:final.pawns[0]!.skills,bed:final.structures.find(s=>s.kind==='bed'),errors},null,2)+'\n');
   } finally {await browser.close();}
 });

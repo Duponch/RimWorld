@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { test,expect } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { world,panel,pause,expectWorld,observeErrors } from './helpers';
 import { validateWorld } from '../../src/sim/serialization';
 import { BIOME_LABELS } from '../../src/sim/site';
@@ -26,7 +27,7 @@ test('native V91: three playable biome choices, fauna, actual hunt designation, 
       await front.getByRole('button',{name:'Retour',exact:true}).click();
       await front.getByRole('button',{name:'Suivant',exact:true}).click();
       await expect(page.locator('#front-biome')).toHaveValue(biome);
-      await page.screenshot({path:`artifacts/biome-menu-v91-${biome}.png`});
+      await page.screenshot({path:testOutputPath(`artifacts/biome-menu-v91-${biome}.png`)});
       await front.getByRole('button',{name:'Démarrer',exact:true}).click();
       await expect(front).toBeHidden({timeout:60000});await pause(page);
       const initial=await world(page);expect(validateWorld(initial)).toEqual([]);
@@ -43,7 +44,7 @@ test('native V91: three playable biome choices, fauna, actual hunt designation, 
       await page.getByRole('button',{name:`Repérer ${animalSpecies(animal.species).label} ${animal.id}`,exact:true}).click();
       if(await page.locator('#wildlife-panel').isVisible()) await page.getByRole('button',{name:'Fermer Faune',exact:true}).click();
       await page.waitForTimeout(350);
-      await page.screenshot({path:`artifacts/biome-fauna-v91-${biome}.png`});
+      await page.screenshot({path:testOutputPath(`artifacts/biome-fauna-v91-${biome}.png`)});
       // Observe a short real frame window, not an accelerated biological rule.
       const profiler=process.env.V91_PROFILE?await context.newCDPSession(page):undefined;
       if(profiler){await profiler.send('Profiler.enable');await profiler.send('Profiler.start');}
@@ -61,5 +62,5 @@ test('native V91: three playable biome choices, fauna, actual hunt designation, 
       reports.push({biome,label:BIOME_LABELS[biome],plants:initial.resources.filter(r=>r.species).length,animals:initial.wildlife!.animals.map(a=>a.species),ticks:saved.tick-before,elapsedMs,actualSpeed:(saved.tick-before)/(elapsedMs/1000)/6,frames:frames.length,p95:frames[Math.floor(frames.length*.95)],max:frames.at(-1),...profile?{profile}:{},errors});
       expect(errors).toEqual([]);await context.close();
     }
-  }finally{writeFileSync(`artifacts/biomes-native-v91${process.env.V91_PROFILE?'-profile':process.env.V91_BIOME?'-'+process.env.V91_BIOME:''}.json`,JSON.stringify(reports,null,2));await browser.close();}
+  }finally{writeTestFileSync(`artifacts/biomes-native-v91${process.env.V91_PROFILE?'-profile':process.env.V91_BIOME?'-'+process.env.V91_BIOME:''}.json`,JSON.stringify(reports,null,2));await browser.close();}
 });

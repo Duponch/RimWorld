@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import {expect,test,type Page} from '@playwright/test';
 import {huntingCamp} from '../scenarios/hunting';
 import {newDoorState} from '../../src/sim/door-rules';
@@ -88,7 +89,7 @@ test('V135 WebGPU draws two physical ropes in one batch, then culls them at dist
       return {backend:view.backend,instances:view.ropes.mesh.geometry.instanceCount,visible:view.ropes.mesh.visible,uploads:view.ropes.stats.uploads};
     });
     expect(visible).toMatchObject({backend:'WebGPU',instances:2,visible:true});
-    const drawn=await page.screenshot({path:'artifacts/animal-leading-v135.png'});
+    const drawn=await page.screenshot({path:testOutputPath('artifacts/animal-leading-v135.png')});
     await page.evaluate(()=>{
       const view=(window as any).__ropeView;
       view.__ropeSetDetailVisible=view.ropes.setDetailVisible.bind(view.ropes);

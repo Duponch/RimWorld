@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { animalCombatCamp } from '../scenarios/animal-combat';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { observeErrors,panel,saveKey,world,expectWorld,pause } from './helpers';
@@ -47,10 +48,10 @@ test('native fauna targeting, real injury/flight, continuous GPU travel and save
       expect(intervals).toBeGreaterThan(10);expect(moved).toBeGreaterThan(.5);expect(frames.some(f=>f.samples.some(a=>a.health))).toBe(true);
       for(const f of frames)for(const a of f.samples)if(a.state==='dead'||a.state==='downed'){expect(a.fallen).toBeGreaterThanOrEqual(1);expect(a.walk).toBe(0);}
       expect(await page.evaluate(()=>(window as any).__animalPipelines)-pipelines).toBe(0);
-      await panel(page,'wildlife');await page.screenshot({path:`artifacts/animal-combat-${speed}x-${process.env.VALIDATION_VERSION??'v77'}.png`});
+      await panel(page,'wildlife');await page.screenshot({path:testOutputPath(`artifacts/animal-combat-${speed}x-${process.env.VALIDATION_VERSION??'v77'}.png`)});
       reports.push({speed,injuredAt:injured.tick,ended:after.tick,state:after.wildlife!.animals[0]!.state,frames:frames.length,intervals,maxJump,moved});
     }
-    expect(errors).toEqual([]);writeFileSync(`artifacts/animal-combat-ui-${process.env.VALIDATION_VERSION??'v77'}.json`,JSON.stringify({date:new Date().toISOString(),reports,errors},null,2));
+    expect(errors).toEqual([]);writeTestFileSync(`artifacts/animal-combat-ui-${process.env.VALIDATION_VERSION??'v77'}.json`,JSON.stringify({date:new Date().toISOString(),reports,errors},null,2));
   } finally {await browser.close();}
 });
 
@@ -78,7 +79,7 @@ test('native animal melee command, visible retaliation, colonist injury and stri
       await expect.poll(async()=>!!(await world(page)).pawns[0]!.health?.injuries.some(i=>i.kind==='bite'),{timeout:15000,intervals:[50]}).toBe(true);
       await pause(page);const injured=await world(page);expect(validateWorld(injured)).toEqual([]);
       await expect(page.locator(`[data-animal-health="${a.id}"]`)).toContainText(/PV|perdu/);
-      await page.screenshot({path:`artifacts/animal-melee-${speed}x-v78.png`});
+      await page.screenshot({path:testOutputPath(`artifacts/animal-melee-${speed}x-v78.png`)});
       const frames=await page.evaluate(()=>(window as any).__animalFrames as {samples:{attack:number;yaw:number;strike:boolean}[]}[]);
       expect(frames.some(f=>f.samples.some(a=>a.attack===2&&a.strike))).toBe(true);
       expect(frames.flatMap(f=>f.samples).every(a=>Number.isFinite(a.yaw))).toBe(true);
@@ -86,6 +87,6 @@ test('native animal melee command, visible retaliation, colonist injury and stri
       await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,injured);
       reports.push({speed,tick:injured.tick,animalState:injured.wildlife!.animals[0]!.state,colonistInjuries:injured.pawns[0]!.health!.injuries,frames:frames.length});
     }
-    expect(errors).toEqual([]);writeFileSync('artifacts/animal-melee-ui-v78.json',JSON.stringify({date:new Date().toISOString(),reports,errors},null,2));
+    expect(errors).toEqual([]);writeTestFileSync('artifacts/animal-melee-ui-v78.json',JSON.stringify({date:new Date().toISOString(),reports,errors},null,2));
   } finally {await browser.close();}
 });

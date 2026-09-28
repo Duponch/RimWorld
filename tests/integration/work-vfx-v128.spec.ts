@@ -1,4 +1,5 @@
-import { mkdirSync, readFileSync } from 'node:fs';
+import { testOutputPath, testOutputDirectory } from '../test-output.ts';
+import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { applyCommand, stepWorld } from '../../src/sim/engine';
 import { deserializeWorld, serializeWorld, validateWorld } from '../../src/sim/serialization';
@@ -108,8 +109,8 @@ async function load(page: Page, world: World): Promise<void> {
 
 test('V128: distinct real work particles stay in one resident WebGPU batch and freeze in pause', async ({ playwright }) => {
   test.setTimeout(150_000);
-  mkdirSync('artifacts/v128-work', { recursive: true });
-  mkdirSync('artifacts/v128-work/ab', { recursive: true });
+  testOutputDirectory('artifacts/v128-work');
+  testOutputDirectory('artifacts/v128-work/ab');
   const scenes = [
     { name: 'mine', world: gather('mine'), expected: ACTION_FX.mine },
     { name: 'chop', world: gather('chop'), expected: ACTION_FX.chop },
@@ -150,7 +151,7 @@ test('V128: distinct real work particles stay in one resident WebGPU batch and f
         expect(first.depthTest).toBe(true);
         expect(first.frustumCulled).toBe(true);
         expect(first.sharedPose).toBe(true);
-        await page.screenshot({ path: `artifacts/v128-work/${scene.name}.png` });
+        await page.screenshot({ path:testOutputPath(`artifacts/v128-work/${scene.name}.png`) });
         if(scene.name==='mine'||scene.name==='chop'){
           await page.evaluate(()=>{
             const layer=(window as any).__workVfxView.actionVfx;
@@ -160,7 +161,7 @@ test('V128: distinct real work particles stay in one resident WebGPU batch and f
           for(const offset of [1,2,3]){
             await page.evaluate(value=>{(window as any).__workVfxView.actionVfx.debugPhaseOffset=value;},offset);
             await page.waitForTimeout(80);
-            await page.screenshot({path:`artifacts/v128-work/${scene.name}-phase-${offset}.png`});
+            await page.screenshot({path:testOutputPath(`artifacts/v128-work/${scene.name}-phase-${offset}.png`)});
           }
           await page.evaluate(()=>{(window as any).__workVfxView.actionVfx.debugPhaseOffset=0;});
         }
@@ -173,7 +174,7 @@ test('V128: distinct real work particles stay in one resident WebGPU batch and f
           attr.needsUpdate = true;
         });
         await page.waitForTimeout(120);
-        await page.screenshot({ path: `artifacts/v128-work/ab/${scene.name}-off.png` });
+        await page.screenshot({ path:testOutputPath(`artifacts/v128-work/ab/${scene.name}-off.png`) });
         await page.waitForTimeout(160);
         const paused = await inspect();
         expect(paused.tick).toBe(first.tick);
@@ -189,14 +190,14 @@ test('V128: distinct real work particles stay in one resident WebGPU batch and f
             view.controls.update();
           }, { x: scene.world.pawns[0]!.x, z: scene.world.pawns[0]!.z, kind: scene.expected });
           await page.waitForTimeout(120);
-          await page.screenshot({ path: 'artifacts/v128-work/chop-side.png' });
+          await page.screenshot({ path:testOutputPath('artifacts/v128-work/chop-side.png') });
           await page.evaluate(() => {
             const attr = (window as any).__workVfxView.actionVfx.mesh.geometry.getAttribute('actionFx');
             attr.setX(0, 0);
             attr.needsUpdate = true;
           });
           await page.waitForTimeout(120);
-          await page.screenshot({ path: 'artifacts/v128-work/ab/chop-side-off.png' });
+          await page.screenshot({ path:testOutputPath('artifacts/v128-work/ab/chop-side-off.png') });
         }
         expect(errors).toEqual([]);
       } finally { await page.close(); }

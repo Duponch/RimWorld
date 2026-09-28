@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { test,expect } from '@playwright/test';
 import { workplaceCamp, fixtureFire } from '../scenarios/work-environment';
 import type { Page } from '@playwright/test';
@@ -36,7 +37,7 @@ test('atelier couvert : lire l’obscurité, construire un vrai feu, produire et
     expect(new TemperatureView(final).at(final,bench)).toBeGreaterThan(15);expect(new TemperatureView(final).at(final,bench)).toBeLessThanOrEqual(28);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);await page.keyboard.press('Escape');await cell(page,12,14);
     await expect(page.locator('#fps-counter')).toBeVisible();expect(errors).toEqual([]);
-    await page.screenshot({path:'artifacts/work-environment-ui.png'});
+    await page.screenshot({path:testOutputPath('artifacts/work-environment-ui.png')});
     await testInfo.attach('work-environment',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),tick:final.tick,bench:bench.id,blocks:20,description:await page.locator('#room-description').textContent(),errors})});
   } finally {await browser.close();}
 });
@@ -76,18 +77,18 @@ test('lumière visible : nuit, extinction, toit masqué, occlusion et deux proje
     };
     await load(night);await page.locator('#wall-cutaway').click();
     const dark=await luminance(page,15,15),outsideDark=await luminance(page,18,14);
-    await page.screenshot({path:'artifacts/interior-night-dark.png'});
+    await page.screenshot({path:testOutputPath('artifacts/interior-night-dark.png')});
     fire.fuel!.ticks=12000;await load(night);
     const lit=await luminance(page,15,15),outsideLit=await luminance(page,18,14);
     expect(lit[0]!-dark[0]!).toBeGreaterThan(35);
     expect(lit[0]!-lit[2]!).toBeGreaterThan(25);
     expect(Math.abs(outsideLit[0]!-outsideDark[0]!)).toBeLessThan(4);
-    await page.screenshot({path:'artifacts/interior-night-lit.png'});
+    await page.screenshot({path:testOutputPath('artifacts/interior-night-lit.png')});
     await page.locator('#roof-toggle').click();await page.locator('#roof-toggle').click();
     const cut=await luminance(page,15,15);expect(Math.abs(cut[0]!-lit[0]!)).toBeLessThan(4);await expectWorld(page,night);
     await page.locator('#camera-mode').click();
     const perspective=await luminance(page,15,15);expect(perspective[0]!-perspective[2]!).toBeGreaterThan(25);
-    await page.screenshot({path:'artifacts/interior-night-perspective.png'});
+    await page.screenshot({path:testOutputPath('artifacts/interior-night-perspective.png')});
     await page.locator('#camera-mode').click();
     fire.fuel!.ticks=0;await load(night);const extinguished=await luminance(page,15,15);
     expect(Math.abs(extinguished[0]!-dark[0]!)).toBeLessThan(4);

@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeTestFileSync } from './test-output.ts';
+import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { expect, onTestFailed, test } from 'vitest';
 import { isColonist } from '../src/sim/affiliation.ts';
@@ -108,7 +109,7 @@ test('V90 natural colony continuation: furniture, flower pot and leather apparel
   let equipmentOrdered = resumed?.equipmentOrdered ?? false;
   let productId: number | undefined = resumed?.productId;
   const checkpoint = (): Checkpoint => ({ protocol: 'habitat-apparel-natural-v90', world: serializeWorld(world), startTick: start, horizon, targets, initialButcheryCompleted, productId, equipmentOrdered, milestones, observations, journal });
-  onTestFailed(() => writeFileSync(failureFile, JSON.stringify(checkpoint())));
+  onTestFailed(() => writeTestFileSync(failureFile, JSON.stringify(checkpoint())));
 
   expect(world.schemaVersion).toBe(SCHEMA_VERSION);
   expect(world.scenario).toMatchObject({ id: 'crashlanded', revision: 2 });
@@ -117,8 +118,8 @@ test('V90 natural colony continuation: furniture, flower pot and leather apparel
   expect(initialLiving).toHaveLength(4);
   const saveCheckpoint = (label: string) => {
     const data = JSON.stringify(checkpoint());
-    writeFileSync('tmp/habitat-apparel-natural-v90-latest.json', data);
-    writeFileSync(`tmp/habitat-apparel-natural-v90-${label}.json`, data);
+    writeTestFileSync('tmp/habitat-apparel-natural-v90-latest.json', data);
+    writeTestFileSync(`tmp/habitat-apparel-natural-v90-${label}.json`, data);
   };
   const assertSurvival = (context: string) => {
     const survivors = new Set(livingColonists(world).map(pawn => pawn.id));
@@ -160,7 +161,7 @@ test('V90 natural colony continuation: furniture, flower pot and leather apparel
     if (counters.sowed > 0 && milestones.sowed === undefined) milestones.sowed = world.tick;
     if (counters.cooked > 0 && milestones.cooked === undefined) milestones.cooked = world.tick;
     if (counters.treated > 0 && milestones.treated === undefined) milestones.treated = world.tick;
-    writeFileSync('tmp/habitat-apparel-natural-v90-progress.json', JSON.stringify({ protocol: 'habitat-apparel-natural-v90', startTick: start, horizon, observations }, null, 2));
+    writeTestFileSync('tmp/habitat-apparel-natural-v90-progress.json', JSON.stringify({ protocol: 'habitat-apparel-natural-v90', startTick: start, horizon, observations }, null, 2));
   };
 
   const ensure = (key: keyof TargetMap, kind: StructureKind, anchor: Cell) => {
@@ -375,7 +376,7 @@ test('V90 natural colony continuation: furniture, flower pot and leather apparel
     }
   }
 
-  writeFileSync('tmp/habitat-apparel-natural-v90-final-checkpoint.json', JSON.stringify(checkpoint()));
+  writeTestFileSync('tmp/habitat-apparel-natural-v90-final-checkpoint.json', JSON.stringify(checkpoint()));
   expect(complexFurnitureUnlocked(world)).toBe(true);
   for (const kind of ['tailor-bench', 'table', 'flower-pot', 'end-table', 'dresser', 'dining-chair'] as StructureKind[]) expect(completedFurniture(kind), `Natural furniture ${kind} was not built`).toBe(true);
   const pot = world.structures.find(structure => structure.kind === 'flower-pot' && targets.pot && sameCell(structure, targets.pot));
@@ -392,5 +393,5 @@ test('V90 natural colony continuation: furniture, flower pot and leather apparel
   expect(world.tick).toBeLessThanOrEqual(horizon);
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
-  writeFileSync('tmp/habitat-apparel-natural-v90-result.json', JSON.stringify({ protocol: 'habitat-apparel-natural-v90', valid: true, startTick: start, endTick: world.tick, horizonDays: (world.tick - start) / TICKS_PER_DAY, initialButcheryCompleted, finalButcheryCompleted: world.butchery?.completed ?? 0, leatherAtStart, leatherAtEnd: lightLeather(world), productId, equipmentOrdered, targets, milestones, observations }, null, 2));
+  writeTestFileSync('tmp/habitat-apparel-natural-v90-result.json', JSON.stringify({ protocol: 'habitat-apparel-natural-v90', valid: true, startTick: start, endTick: world.tick, horizonDays: (world.tick - start) / TICKS_PER_DAY, initialButcheryCompleted, finalButcheryCompleted: world.butchery?.completed ?? 0, leatherAtStart, leatherAtEnd: lightLeather(world), productId, equipmentOrdered, targets, milestones, observations }, null, 2));
 }, 600_000);

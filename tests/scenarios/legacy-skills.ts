@@ -3,6 +3,9 @@ import { createDefaultApparelPolicyRegistry } from '../../src/sim/apparel-policy
 import { createApparelWearCalendar } from '../../src/sim/apparel-renewal.ts';
 import { V91_ITEM_IDS } from '../../src/sim/biome-items.ts';
 import { newBreakdownCalendar } from '../../src/sim/breakdowns.ts';
+import { PRODUCTION_RECIPES } from '../../src/sim/production-recipes.ts';
+import { adultAgeTicks } from '../../src/sim/animal-life.ts';
+import { newVisitorAgenda } from '../../src/sim/visitor-state.ts';
 /** Historical fixtures must not smuggle V43's new actor profile into old schemas. */
 export function withoutPawnSkills<T>(world:T):T {
   for(const p of (world as {pawns:Array<{skills?:unknown}>}).pawns)delete p.skills;
@@ -109,17 +112,40 @@ export function withMigratedBasic<T>(world:T):T {
 /** Independent expectation of V89->V90's neutral adoption. */
 export function withMigratedV90<T>(world:T):T {
   // V120 does not grant wool permissions to an already chosen policy.
-  const w=world as any,registry=createDefaultApparelPolicyRegistry(false);
+  const expected=structuredClone(world),w=expected as any,registry=createDefaultApparelPolicyRegistry(false);
   // Historical fixture builders remove V144. The expected current save gets
   // its neutral future calendar, without inventing a past breakdown.
-  w.breakdown=newBreakdownCalendar(w.seed,w.tick);
-  for(const structure of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)])if(['bed','table','stool'].includes(structure.kind))structure.quality='normal';
-  for(const pile of w.piles??[]){if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material='cloth';if(pile.unfinished){pile.unfinished.material='cloth';pile.unfinished.units=pile.unfinished.cloth;}}
-  for(const departure of w.raids?.departed??[])for(const pile of departure.items??[])if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material='cloth';
-  if(w.tailoring)w.tailoring.lostLeather=0;
-  w.apparelWear=createApparelWearCalendar(w.tick,(w.seed^w.tick^0x0a77e1)>>>0);w.apparelPolicies=registry.apparelPolicies;w.nextApparelPolicyId=registry.nextApparelPolicyId;
-  for(const pawn of w.pawns??[]){pawn.age={biologicalTicks:10800000,chronologicalTicks:10800000};pawn.beauty=40;pawn.priorities.art=0;pawn.priorities.handle=0;if(pawn.recreation){pawn.recreation.tolerance.cerebral=0;pawn.recreation.bored.cerebral=false;pawn.recreation.tolerance.social=0;pawn.recreation.bored.social=false;}if((pawn.faction??'colony')==='colony'&&!pawn.visitor&&!pawn.prisoner&&pawn.state!=='dead'){pawn.apparelPolicyId=1;pawn.apparelAutomation=false;pawn.nextApparelCheckAt=w.tick+600+pawn.id%301;}}
-  for(const departure of w.visitors?.departed??[])departure.pawn.age={biologicalTicks:10800000,chronologicalTicks:10800000};
+  w.breakdown??=newBreakdownCalendar(w.seed,w.tick);
+  // V127 schedules only future disease checks for existing profiled colonies.
+  if(w.gameProfile&&!w.fluIncidents)w.fluIncidents={profile:'cassandra-flu-v1',rng:((w.seed^0xf10a1270)>>>0)||1,
+    nextCheck:Math.max(54000,(Math.floor(w.tick/100)+1)*100),checks:0,fluDraws:0,episodes:0,cases:0};
+  // V129 retires inert decorative rocks, preserving every physical resource.
+  if(w.resources)w.resources=w.resources.filter((resource:{kind:string})=>resource.kind!=='rock');
+  if(w.visitors)w.visitors.exotic??=newVisitorAgenda(w.seed,'exotic',w.tick);
+  for(const animal of w.wildlife?.animals??[]){
+    if(animal.domestic&&(animal.species==='muffalo'||animal.species==='dromedary'&&animal.sex==='female'))animal.domestic.productFullness??=0;
+    animal.ageTicks??=adultAgeTicks(animal.species);
+  }
+  for(const pile of w.piles??[])if(pile.corpse)pile.corpse.ageTicks??=adultAgeTicks(pile.corpse.species);
+  for(const structure of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)])for(const bill of structure.bills??[]){
+    const recipe=PRODUCTION_RECIPES[bill.recipe as keyof typeof PRODUCTION_RECIPES];
+    if(recipe.inputs.includes('milk'))bill.filters.milk??=false;
+    if(recipe.inputs.includes('muffalo-wool'))bill.filters['muffalo-wool']??=false;
+  }
+  for(const structure of [...w.structures??[],...(w.packed??[]).map((p:any)=>p.building)])if(['bed','table','stool'].includes(structure.kind))structure.quality??='normal';
+  for(const pile of w.piles??[]){if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material??='cloth';if(pile.unfinished){pile.unfinished.material??='cloth';pile.unfinished.units??=pile.unfinished.cloth;}}
+  for(const departure of w.raids?.departed??[])for(const pile of departure.items??[])if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material??='cloth';
+  if(w.tailoring)w.tailoring.lostLeather??=0;
+  w.apparelWear??=createApparelWearCalendar(w.tick,(w.seed^w.tick^0x0a77e1)>>>0);w.apparelPolicies??=registry.apparelPolicies;w.nextApparelPolicyId??=registry.nextApparelPolicyId;
+  for(const pawn of w.pawns??[]){pawn.age??={biologicalTicks:10800000,chronologicalTicks:10800000};pawn.beauty??=40;pawn.priorities.art??=0;pawn.priorities.handle??=0;if(pawn.recreation){pawn.recreation.tolerance.cerebral??=0;pawn.recreation.bored.cerebral??=false;pawn.recreation.tolerance.social??=0;pawn.recreation.bored.social??=false;}if((pawn.faction??'colony')==='colony'&&!pawn.visitor&&!pawn.prisoner&&pawn.state!=='dead'){pawn.apparelPolicyId??=1;pawn.apparelAutomation??=false;pawn.nextApparelCheckAt??=w.tick+600+pawn.id%301;}}
+  for(const departure of w.visitors?.departed??[])departure.pawn.age??={biologicalTicks:10800000,chronologicalTicks:10800000};
+  return expected;
+}
+
+/** Construct a pre-V141 fixture without granting the later helmet permission. */
+export function withoutFutureHelmetPolicy<T>(world:T):T {
+  for(const policy of (world as {apparelPolicies?:{allowedItems:string[]}[]}).apparelPolicies??[])
+    policy.allowedItems=policy.allowedItems.filter(item=>item!=='flak-helmet');
   return world;
 }
 

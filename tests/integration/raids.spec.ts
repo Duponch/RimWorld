@@ -1,6 +1,7 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 const proofVersion=process.env.VALIDATION_VERSION??'v70';
 import { expect,test } from '@playwright/test';
-import { readFileSync,writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { applyCommand,stepWorld } from '../../src/sim/engine';
 import { raidDefenseDecisions } from '../scenarios/raid-player';
@@ -42,9 +43,9 @@ test('native ordinary-camp raid: letter, rally, visible combat, saved continuati
       for(const p of end.pawns.filter(p=>isColonist(p)&&p.draft)){await page.locator(`[data-pawn="${p.id}"]`).click();await page.locator('#toggle-draft').click();}
       await page.locator('[data-speed="6"]').click();await page.waitForFunction(t=>window.__lisiere.tick>=t,end.tick+160,{timeout:15000});await page.locator('[data-speed="0"]').click();
       const civilian=await world(page);expect(validateWorld(civilian)).toEqual([]);expect(civilian.pawns.filter(isColonist).every(p=>!p.draft)).toBe(true);expect(civilian.pawns.some(p=>p.id===enemy.id)||civilian.raids!.departed.some(d=>d.pawnId===enemy.id)).toBe(true);
-      await page.screenshot({path:`artifacts/raid-${proofVersion}-${speed}x.png`});reports.push({speed,start:initial.tick,end:end.tick,outcome:end.raids!.last,states:civilian.pawns.map(p=>({id:p.id,state:p.state}))});
+      await page.screenshot({path:testOutputPath(`artifacts/raid-${proofVersion}-${speed}x.png`)});reports.push({speed,start:initial.tick,end:end.tick,outcome:end.raids!.last,states:civilian.pawns.map(p=>({id:p.id,state:p.state}))});
     }
-    expect(errors).toEqual([]);writeFileSync(`artifacts/raid-ui-${proofVersion}.json`,JSON.stringify({reports,errors},null,2));
+    expect(errors).toEqual([]);writeTestFileSync(`artifacts/raid-ui-${proofVersion}.json`,JSON.stringify({reports,errors},null,2));
   }finally{await browser.close();}
 });
 
@@ -63,6 +64,6 @@ test('native retirement: saved edge finishes and GPU body/cargo/selection counts
     await page.waitForFunction(id=>!window.__lisiere.world.pawns.some((p:any)=>p.id===id),enemy.id,{timeout:15000});await page.locator('[data-speed="0"]').click();
     await expect.poll(()=>page.evaluate(()=>{const r=(window as any).__raidView;return [r.world.pawns.length,r.pawns.pawnMesh.geometry.instanceCount,r.pawns.cargoMesh.geometry.instanceCount,r.pawns.selectionMesh.geometry.instanceCount];})).toEqual([3,3,3,3]);
     const end=await world(page);expect(validateWorld(end)).toEqual([]);expect(end.raids!.departed).toHaveLength(1);expect(end.raids!.departed[0]!.items[0]!.owner).toEqual({type:'apparel',pawnId:enemy.id});expect(errors).toEqual([]);
-    writeFileSync(`artifacts/raid-retreat-ui-${proofVersion}.json`,JSON.stringify({from:walking.tick,to:end.tick,departure:end.raids!.departed[0],counts:[3,3,3,3],errors},null,2));
+    writeTestFileSync(`artifacts/raid-retreat-ui-${proofVersion}.json`,JSON.stringify({from:walking.tick,to:end.tick,departure:end.raids!.departed[0],counts:[3,3,3,3],errors},null,2));
   }finally{await browser.close();}
 });

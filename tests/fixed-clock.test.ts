@@ -35,6 +35,11 @@ test('human, cargo, selection and animal poses retain their edge through the sha
   const timeline=new MotionTimeline();timeline.adopt(1025,0,[{id:pawn.id,segments:[edge]},{id:animal.id,segments:[edge]}],0,true);
   const people=new PawnLayer(),wildlife=new WildlifeLayer();people.update(world,1,true);
   const meshes=people.group.children as THREE.Mesh[];
+  // Partial deposits introduced in V137 have world-space transfer endpoints
+  // and their own cargo clock. Only the four attached rigs share pawn travel.
+  const attached=meshes.filter(mesh=>!mesh.geometry.hasAttribute('aTransferCargo'));
+  expect(attached).toHaveLength(4);
+  expect(meshes.filter(mesh=>mesh.geometry.hasAttribute('aTransferCargo'))).toHaveLength(1);
   const position=(geometry:THREE.BufferGeometry,clock:number):number=>{
     const from=geometry.getAttribute('aFrom'),to=geometry.getAttribute('aTo'),times=geometry.getAttribute('aTravel');
     const alpha=(clock-times.getX(0))/(times.getY(0)-times.getX(0));
@@ -43,7 +48,7 @@ test('human, cargo, selection and animal poses retain their edge through the sha
   for(const tick of [1023.5,1023.75,1024,1024.25,1024.5]) {
     timeline.tick=tick;people.updateTravel(world,timeline);wildlife.update(world,timeline);
     expect(people.travelTime.value).toBe(wildlife.travelTime.value);
-    for(const mesh of meshes) {
+    for(const mesh of attached) {
       expect(mesh.geometry.getAttribute('aTravel')).toBe(meshes[0]!.geometry.getAttribute('aTravel'));
       expect(position(mesh.geometry,people.travelTime.value)).toBeCloseTo(10+(tick-1020)/6,5);
     }

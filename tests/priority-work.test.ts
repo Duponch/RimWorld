@@ -78,6 +78,8 @@ test('priority decisions share budgets, disappear on lost access or timeout with
   const raw=JSON.parse(accepted);for(const priority of [null,[],{cell:{x:1,z:1},work:'gather',startedAt:2000},{cell:{x:-1,z:1},work:'cook',startedAt:2000},{cell:{x:1,z:1},work:'cook',startedAt:2001},{cell:{x:1,z:1},work:'cook',startedAt:2000,radius:12}]) {
     const invalid=structuredClone(raw);invalid.pawns[0].priorityWork=priority;expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/priority work/);
   }
-  ((raw.schemaVersion=22,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 22/);delete raw.pawns[0].priorityWork;
+  ((raw.schemaVersion=22,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
+  for(const structure of raw.structures)for(const bill of structure.bills??[]){delete bill.filters.milk;delete bill.filters['muffalo-wool'];}
+  expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 22/);delete raw.pawns[0].priorityWork;
   const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated).toEqual(withMigratedSkills({...raw,pawns:raw.pawns.map((p:any)=>({...p,priorities: {handle:0,clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,craft:2,...p.priorities,mine:2}})),schemaVersion:SCHEMA_VERSION,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}}));expect(migrated.pawns[0]!.priorityWork).toBeUndefined();
 });

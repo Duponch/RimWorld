@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import {test,expect} from '@playwright/test';
 import {serializeWorld,deserializeWorld,stepWorld,validateWorld} from '../../src/sim/index';
 import {deconstructionCamp,fixtureBuilding} from '../scenarios/deconstruction';
@@ -32,12 +33,12 @@ test('ranger un meuble par le menu contextuel, reprendre sa cargaison, puis le r
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).packed[0]?.owner,{timeout:15000}).toEqual({type:'ground',...storage});await page.locator('[data-speed="0"]').click();
     const stored=await world(page),replay=deserializeWorld(serializeWorld(accepted));stepWorld(replay,stored.tick-replay.tick);expect(replay).toEqual(stored);
     await page.keyboard.press('Escape');await revealCells(page,[storage]);await cell(page,storage.x,storage.z);await expect(page.locator('#cell-install')).toBeVisible();
-    await page.screenshot({path:'artifacts/furniture-logistics-stored.png'});
+    await page.screenshot({path:testOutputPath('artifacts/furniture-logistics-stored.png')});
     await perform(page,{reason:'Reposer le même lit avec le transporteur.',command:{type:'install',structureId:bed.id,x:21,z:16,orientation:1}},rotation);
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.length,{timeout:15000}).toBe(2);await page.locator('[data-speed="0"]').click();
     const result=await world(page);expect(result.structures.find(s=>s.id===bed.id)).toMatchObject({x:21,z:16,orientation:1});expect(result.structures.find(s=>s.id===pin.id)).toMatchObject({x:14,z:16});expect(result.packed).toEqual([]);expect(result.pawns[0]!.bedId).toBe(bed.id);expect(result.pawns[0]!.priorities.build).toBe(0);
     expect(woodAccount(result)).toBe(initial);expect(validateWorld(result)).toEqual([]);expect(errors).toEqual([]);await expect(page.locator('#fps-counter')).toBeVisible();
-    await page.screenshot({path:'artifacts/furniture-logistics-installed.png'});
+    await page.screenshot({path:testOutputPath('artifacts/furniture-logistics-installed.png')});
     await testInfo.attach('furniture-logistics-result',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),tick:result.tick,buildings:result.structures,storage:result.stockpiles,wood:initial,resumedExactly:true,errors})});
   } finally {await browser.close();}
 });

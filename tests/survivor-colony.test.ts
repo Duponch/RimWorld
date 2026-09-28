@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeTestFileSync } from './test-output.ts';
+import { readFileSync } from 'node:fs';
 import { expect, onTestFailed, test } from 'vitest';
 import { applyCommand, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
@@ -17,6 +18,27 @@ test('Survivants : préparation naturelle reproductible et cinq commandes initia
     expect(survivorSummary(w).stored).toEqual({wood:0,steel:0,component:0,medicine:0,'survival-meal':0,'simple-meal':0});
     expect(validateWorld(w)).toEqual([]);
   }
+},20000);
+
+test('Survivants : dégager physiquement les contacts du dortoir avant ses murs',()=>{
+  const w=createScenarioWorld(93,250,'survivors');
+  const apply=(decisions:ReturnType<typeof survivorDecisions>)=>{
+    for(const decision of decisions)expect(applyCommand(w,decision.command),decision.reason).toMatchObject({ok:true});
+  };
+  apply(survivorDecisions(w));
+  while(w.tick<1500&&w.structures.filter(s=>s.kind==='bed').length<3) {
+    stepWorld(w,250);
+    if(w.structures.filter(s=>s.kind==='bed').length<3)apply(survivorDecisions(w));
+  }
+  expect(w.structures.filter(s=>s.kind==='bed')).toHaveLength(3);
+  const clearance=survivorDecisions(w),hauls=clearance.filter(d=>d.command.type==='area'&&d.command.action==='haul-chunks');
+  expect(hauls.length).toBeGreaterThan(0);
+  expect(clearance.some(d=>d.command.type==='designate'&&d.command.kind==='wall')).toBe(false);
+  apply(clearance);
+  stepWorld(w,250);
+  const walls=survivorDecisions(w).filter(d=>d.command.type==='designate'&&d.command.kind==='wall');
+  expect(walls).toHaveLength(15);
+  expect(validateWorld(w)).toEqual([]);
 },20000);
 
 test('Survivants : ancre spatiale conservée pendant livraison, achèvement partiel et reprise',()=>{
@@ -57,7 +79,7 @@ test.each(resumed?[resumed.seed]:[42,93,2048])('Survivants : trois jours dans la
   const milestones:Record<string,number>=resumed?.milestones??{},journal:Checkpoint['journal']=resumed?.journal??[],observations:Summary[]=resumed?.observations??[];
   const checkpoint=():Checkpoint=>({seed,world:serializeWorld(w),initial,ledger,milestones,journal,observations});
   const failureFile=`tmp/survivor-failed-${version}-${seed}.json`;
-  onTestFailed(()=>writeFileSync(failureFile,JSON.stringify(checkpoint())));
+  onTestFailed(()=>writeTestFileSync(failureFile,JSON.stringify(checkpoint())));
   const record=(name:string,yes:boolean)=>{if(yes&&milestones[name]===undefined)milestones[name]=w.tick;};
   const observe=()=>{
     const s=survivorSummary(w);observations.push(s);
@@ -89,12 +111,12 @@ test.each(resumed?[resumed.seed]:[42,93,2048])('Survivants : trois jours dans la
     if(w.tick%6000===0) {
       const saved=serializeWorld(w),copy=deserializeWorld(saved);stepWorld(w,100);stepWorld(copy,100);
       expect(serializeWorld(copy)).toBe(serializeWorld(w));w=deserializeWorld(saved);
-      writeFileSync(`tmp/survivor-day-${version}-${seed}.json`,JSON.stringify(checkpoint()));
+      writeTestFileSync(`tmp/survivor-day-${version}-${seed}.json`,JSON.stringify(checkpoint()));
       console.info(`Survivants ${seed}: day ${w.tick/6000}, ${w.structures.length} structures, ${w.jobs.length} jobs`);
     }
   }
   const final=observe(),report={seed,initial,ledger,milestones,journal,observations,final};
-  writeFileSync(`tmp/survivor-final-${version}-${seed}.json`,serializeWorld(w));writeFileSync(`artifacts/survivor-colony-${version}-${seed}.json`,JSON.stringify(report,null,2));
+  writeTestFileSync(`tmp/survivor-final-${version}-${seed}.json`,serializeWorld(w));writeTestFileSync(`artifacts/survivor-colony-${version}-${seed}.json`,JSON.stringify(report,null,2));
   const context=JSON.stringify({seed,milestones,ledger,final});
   expect(w.pawns,context).toHaveLength(3);expect(final.beds,context).toBe(3);expect(final.shelteredBeds,context).toBe(3);
   expect(final.walls,context).toBe(15);expect(final.doors,context).toBe(1);

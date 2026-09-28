@@ -17,7 +17,7 @@ import { createWorld } from '../src/sim/engine';
 import { updateWellbeing } from '../src/sim/wellbeing';
 
 test('catalogue V90 keeps sourced recipes, material gates and non-inert quality factors',()=>{
-  expect(Object.keys(FURNITURE_DEFINITIONS)).toHaveLength(10);
+  expect(Object.keys(FURNITURE_DEFINITIONS)).toEqual(['bed','table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot','chess-table']);
   expect(FURNITURE_DEFINITIONS['dining-chair']).toMatchObject({stuff:45,coreWork:8000,constructionSkill:4,beauty:8,comfort:.7});
   expect(FURNITURE_DEFINITIONS.armchair).toMatchObject({stuff:110,coreWork:14000,constructionSkill:5,beauty:4,comfort:.8});
   expect(FURNITURE_DEFINITIONS['table-square']).toMatchObject({width:2,depth:2,seats:8});

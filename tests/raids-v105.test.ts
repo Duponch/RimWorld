@@ -2,6 +2,7 @@ import {expect,test} from 'vitest';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
 import {crashlandedProfile} from '../src/sim/game-profile.ts';
 import {adoptColonyEconomy} from '../src/sim/colony-economy.ts';
+import {adoptFluIncidents,FLU_CHECK_INTERVAL,FLU_FIRST_CHECK} from '../src/sim/flu-incidents.ts';
 import {enableCassandraRaids,INTRO_RAID_TICK} from '../src/sim/cassandra-raids.ts';
 import {advanceRaids,chooseRaidComposition} from '../src/sim/raids.ts';
 import {validateRaids} from '../src/sim/raid-save.ts';
@@ -13,11 +14,17 @@ import type {World} from '../src/sim/types.ts';
 function fixture():World {
   const world=deconstructionCamp(3);
   world.scenario={id:'crashlanded',revision:1,landing:{x:16,z:16}};
-  world.gameProfile=crashlandedProfile();enableCassandraRaids(world);adoptColonyEconomy(world);
+  world.gameProfile=crashlandedProfile();enableCassandraRaids(world);adoptColonyEconomy(world);adoptFluIncidents(world);
   return world;
 }
+// These focused raid tests skip days without advancing other systems. Move the
+// independent, still-unused disease check into the future at each clock jump.
+function raidClock(world:World,tick:number):void {
+  world.tick=tick;
+  world.fluIncidents!.nextCheck=Math.max(FLU_FIRST_CHECK,(Math.floor(tick/FLU_CHECK_INTERVAL)+1)*FLU_CHECK_INTERVAL);
+}
 function afterIntro(world:World):void {
-  world.tick=INTRO_RAID_TICK;advanceRaids(world);
+  raidClock(world,INTRO_RAID_TICK);advanceRaids(world);
   const first=world.pawns.find(p=>p.raid)!;
   expect(world.raids!.active!.members).toEqual([first.id]);
   expect(world.raids!.active!.composition).toBeUndefined();
@@ -45,12 +52,12 @@ test('a failed introductory opportunity does not make the first ordinary raid fi
   const world=fixture(),originalTiles=structuredClone(world.tiles);
   for(let z=0;z<world.height;z++)for(let x=0;x<world.width;x++)
     if(x===0||z===0||x===world.width-1||z===world.height-1)world.tiles[z*world.width+x]={terrain:'rock'};
-  world.tick=INTRO_RAID_TICK;advanceRaids(world);
+  raidClock(world,INTRO_RAID_TICK);advanceRaids(world);
   expect(world.raids!.serial).toBe(0);
   expect(world.raids!.active).toBeUndefined();
   world.tiles=originalTiles;
   const due=world.raids!.cassandra!.pending[0]!;
-  world.tick=due;
+  raidClock(world,due);
   const economy=world.economy!;
   economy.wealth={...economy.wealth,items:100000,knownTotal:100000,knownStorytellerWealth:100000};
   economy.sampledAt=Math.floor(due/501)*501;economy.nextSampleAt=economy.sampledAt+501;
@@ -75,7 +82,7 @@ test('a failed introductory opportunity does not make the first ordinary raid fi
 test('intro is fixed; an adopted Cassandra occasion has priced physical raiders and saved roster',()=>{
   const world=fixture();afterIntro(world);
   const due=world.raids!.cassandra!.pending[0]!;
-  world.tick=due;
+  raidClock(world,due);
   const e=world.economy!;
   e.wealth={...e.wealth,items:100000,knownTotal:100000,knownStorytellerWealth:100000};
   e.sampledAt=Math.floor(due/501)*501;e.nextSampleAt=e.sampledAt+501;
@@ -122,7 +129,7 @@ test('blocked adopted occasion consumes calendar without identities or raid RNG'
   for(let z=0;z<world.height;z++)for(let x=0;x<world.width;x++)
     if(x===0||z===0||x===world.width-1||z===world.height-1)world.tiles[z*world.width+x]={terrain:'rock'};
   const due=world.raids!.cassandra!.pending[0]!,nextId=world.nextId,rng=world.raids!.rng;
-  world.tick=due;advanceRaids(world);
+  raidClock(world,due);advanceRaids(world);
   expect(world.raids!.active).toBeUndefined();
   expect(world.raids!.serial).toBe(1);
   expect(world.nextId).toBe(nextId);
@@ -133,7 +140,7 @@ test('blocked adopted occasion consumes calendar without identities or raid RNG'
 test('minimum ordinary budget makes one physical melee drifter with knife durability',()=>{
   const world=fixture();afterIntro(world);
   const due=world.raids!.cassandra!.pending[0]!,e=world.economy!;
-  world.tick=due;e.wealth={...e.wealth,items:0,structures:0,floors:0,pawnsKnown:0,
+  raidClock(world,due);e.wealth={...e.wealth,items:0,structures:0,floors:0,pawnsKnown:0,
     knownTotal:0,knownStorytellerWealth:0};
   e.sampledAt=Math.floor(due/501)*501;e.nextSampleAt=e.sampledAt+501;
   e.nextAdaptAt=Math.ceil((due+1)/3000)*3000;

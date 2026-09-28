@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { test, expect } from '@playwright/test';
 import { serializeWorld, deserializeWorld, stepWorld, validateWorld } from '../../src/sim/index';
 import { deconstructionCamp, fixtureBuilding } from '../scenarios/deconstruction';
@@ -26,7 +27,7 @@ test('le joueur désigne un rectangle, annule un meuble, priorise la déconstruc
     await perform(page,{reason:'Conserver un abattage de priorité inférieure en attente.',command:{type:'designate',kind:'chop',x:12,z:16}},rotation);
     const pending=await world(page),wall=pending.jobs.find(j=>j.deconstruction?.kind==='wall')!;
     await perform(page,{reason:'Ouvrir ce passage en premier.',command:{type:'order-job',pawnId:fixture.pawns[0]!.id,jobId:wall.id,queue:false}},rotation);
-    await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:'artifacts/deconstruction-orders.png'});
+    await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:testOutputPath('artifacts/deconstruction-orders.png')});
     const accepted=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,accepted);
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).deconstructed.count,{timeout:15000}).toBe(3);
     await page.locator('[data-speed="0"]').click();const result=await world(page);
@@ -36,7 +37,7 @@ test('le joueur désigne un rectangle, annule un meuble, priorise la déconstruc
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,result);
     const bare=[{x:18,z:14},{x:17,z:14},{x:19,z:14},{x:18,z:13}].find(c=>!result.piles.some(p=>p.owner.type==='ground'&&p.owner.x===c.x&&p.owner.z===c.z)&&!result.resources.some(r=>r.x===c.x&&r.z===c.z)&&!result.structures.some(s=>s.x===c.x&&s.z===c.z));
     expect(bare).toBeDefined();await page.keyboard.press('Escape');await revealCells(page,[bare!]);await cell(page,bare!.x,bare!.z);await expect(page.locator('#inspector')).toBeHidden();await expect(page.locator('#map-hover-readout')).toContainText('Terre ordinaire');
-    await page.screenshot({path:'artifacts/deconstruction-result.png'});
+    await page.screenshot({path:testOutputPath('artifacts/deconstruction-result.png')});
     await testInfo.attach('deconstruction-result',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),tick:result.tick,stock:result.stock,ledger:result.deconstructed,errors})});
     expect(errors).toEqual([]);
   } finally {await browser.close();}

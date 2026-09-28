@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import { SCHEMA_VERSION } from '../../src/sim/types';
 import { withoutPawnSkills } from '../scenarios/legacy-skills';
 import { expect, test } from '@playwright/test';
@@ -39,7 +40,7 @@ test('taille et construction par interface : Artisanat, vingt blocs rangés puis
     await page.locator('[data-speed="0"]').click();await cell(page,15,14);
     await expect(page.locator('#blocks')).toHaveText('20');await expect(page.locator('[data-bill-status]')).toContainText('20 / 20');await expect(page.locator('#fps-counter')).toBeVisible();
     const final=await world(page);expect(validateWorld(final)).toEqual([]);expect(final.piles.find(q=>q.kind==='blocks')?.item).toBe('marble-blocks');expect(final.piles.find(q=>q.item==='granite-chunk')?.quantity).toBe(1);expect(errors).toEqual([]);
-    await page.screenshot({path:'artifacts/stonecutting-ui.png'});
+    await page.screenshot({path:testOutputPath('artifacts/stonecutting-ui.png')});
     await panel(page,'work');await page.locator(`select[data-owner="${p.id}"][data-work="build"]`).selectOption('1');
     await tool(page,'bed');await page.locator('#construction-material').selectOption('marble-blocks');await expect(page.locator('#tool-instruction')).toContainText('Efficacité du repos : 90 %');
     await tool(page,'stonecutter');await expect(page.locator('#construction-material option')).toHaveCount(2);await expect(page.locator('#construction-material')).toHaveValue('wood');
@@ -49,7 +50,7 @@ test('taille et construction par interface : Artisanat, vingt blocs rangés puis
     await page.locator('[data-speed="0"]').click();await cell(page,19,17);await expect(page.locator('#cell-title')).toContainText('Blocs de marbre');
     const built=await world(page);expect(built.piles.filter(p=>p.kind==='blocks').reduce((n,p)=>n+p.quantity,0)).toBe(15);expect(validateWorld(built)).toEqual([]);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,built);await page.keyboard.press('Escape');
-    await page.screenshot({path:'artifacts/stone-buildings-ui.png'});expect(errors).toEqual([]);
+    await page.screenshot({path:testOutputPath('artifacts/stone-buildings-ui.png')});expect(errors).toEqual([]);
     await testInfo.attach('stonecutting',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),workTick:working.tick,tick:built.tick,blocksProduced:20,blocksRemaining:15,wall:'marble-blocks',errors})});
   } finally {await browser.close();}
 });
@@ -95,7 +96,7 @@ test('cuisine par interface : construction, facture, ingrédients portés, repri
     await expect(page.locator('#selected-action')).toContainText('Prépare un repas simple');
     await expect(page.locator('#selected-action')).not.toContainText('Aucun travail');
     await cell(page,15,14);
-    await page.screenshot({path:'artifacts/cooking-work.png'});
+    await page.screenshot({path:testOutputPath('artifacts/cooking-work.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,cooking);
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>{const w=await world(page);return w.piles.filter(p=>p.item==='simple-meal'&&p.owner.type==='ground').reduce((n,p)=>n+p.quantity,0);},{timeout:20000}).toBe(2);
@@ -117,7 +118,7 @@ test('cuisine par interface : construction, facture, ingrédients portés, repri
     await page.locator(`[data-bill="${added.id}"]`).getByRole('button',{name:'Supprimer la facture'}).click();
     await expect(page.locator('[data-bill]')).toHaveCount(1);
     await expect(page.locator('#fps-counter')).toBeVisible();
-    await page.screenshot({path:'artifacts/cooking-complete.png'});
+    await page.screenshot({path:testOutputPath('artifacts/cooking-complete.png')});
     expect(errors).toEqual([]);
     await testInfo.attach('cooking-state',{contentType:'application/json',body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend),tick:finished.tick,workCheckpoint:cooking.tick,raw:10,meals:2,errors})});
   } finally {await browser.close();}

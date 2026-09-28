@@ -13,10 +13,15 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:quick": "vitest run tests/test-output.test.ts tests/breakdowns-v144.test.ts tests/breakdown-presentation-v144.test.ts tests/autodoor-world-v143.test.ts tests/autodoor-v143.test.ts tests/advanced-fabrication-v139.test.ts",
+    "test:regression": "node scripts/test-regression.mjs",
+    "test:campaign": "node scripts/test-campaigns.mjs",
+    "test:campaign:diagnostic": "node scripts/test-campaigns.mjs --diagnostic",
     "test:integration": "playwright test",
     "bench": "node --experimental-strip-types scripts/benchmark.ts",
     "test:presentation": "node scripts/check-presentation.mjs",
-    "check": "npm run test && npm run build && npm run test:integration && npm run test:presentation"
+    "check:docs": "python scripts/check-docs.py",
+    "check": "npm run test && npm run build && npm run test:integration && npm run test:presentation && npm run check:docs"
   },
   "dependencies": {
     "three": "0.186.0"

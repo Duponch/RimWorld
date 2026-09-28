@@ -1,3 +1,4 @@
+import { testOutputPath } from '../test-output.ts';
 import {expect,test} from '@playwright/test';
 import {createWorld} from '../../src/sim/engine';
 import {newDoorState} from '../../src/sim/door-rules';
@@ -36,7 +37,7 @@ test('enclos V119 : marqueur, filtre réel, sauvegarde et rendu WebGPU',async({p
     await page.locator('#pen-controls [data-pen-species="muffalo"]').uncheck();
     await expect.poll(async()=>(await world(page)).structures.find(s=>s.id===marker.id)?.pen?.accepted.includes('muffalo')).toBe(false);
     const changed=await world(page);expect(validateWorld(changed)).toEqual([]);
-    await page.screenshot({path:'artifacts/husbandry-v119.png'});
+    await page.screenshot({path:testOutputPath('artifacts/husbandry-v119.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,changed);
     expect(errors).toEqual([]);expect(await page.evaluate(()=>window.__lisiere.backend)).toContain('WebGPU');
   }finally{await browser.close();}

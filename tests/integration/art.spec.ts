@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import {expect,test,type Page} from '@playwright/test';
-import {readFileSync,writeFileSync} from 'node:fs';
+import { readFileSync } from 'node:fs';
 import {deserializeWorld,validateWorld} from '../../src/sim/serialization';
 import {PRODUCTION_RECIPES} from '../../src/sim/production-recipes';
 import {captureRoomQuality} from '../../src/sim/room-quality';
@@ -52,7 +53,7 @@ test('art : catalogue V103 puis V104, facture réelle, œuvre minifiée, pose et
     await openEnvironment(page);
     const before=captureRoomQuality(initial).room(large)!;
     await expect(page.locator('#room-description')).toContainText(`Richesse : ${before.wealth.toFixed(1)}`);
-    await page.screenshot({path:'artifacts/art-large-prepared-v104.png'});
+    await page.screenshot({path:testOutputPath('artifacts/art-large-prepared-v104.png')});
 
     await perform(page,{reason:'Créer réellement une facture de petite sculpture.',command:{type:'bill-add',structureId:bench.id,recipe:'small-sculpture'}},{value:0});
     const withBill=await world(page),bill=withBill.structures.find(s=>s.id===bench.id)!.bills!.at(-1)!;
@@ -100,12 +101,12 @@ test('art : catalogue V103 puis V104, facture réelle, œuvre minifiée, pose et
     await expect(page.locator('#mood-thoughts')).toBeVisible();
     await expect(page.locator('#room-description')).toContainText('Impression :');
     expect(validateWorld(finished)).toEqual([]);expect(errors).toEqual([]);
-    await page.screenshot({path:'artifacts/art-installed-needs-v104.png'});
+    await page.screenshot({path:testOutputPath('artifacts/art-installed-needs-v104.png')});
     const backend=await page.evaluate(()=>window.__lisiere.backend);expect(backend).toContain('WebGPU');
     const report=JSON.stringify({backend,tick:finished.tick,artist:artist.id,large:large.id,small:small.id,
       quality:small.quality,before:{beauty:before.beauty,wealth:before.wealth},
       after:{beauty:after.beauty,wealth:after.wealth,impressiveness:after.impressiveness},errors},null,2);
-    writeFileSync('artifacts/art-native-v104.json',report);
+    writeTestFileSync('artifacts/art-native-v104.json',report);
     await testInfo.attach('art-v104',{contentType:'application/json',body:report});
   }finally{await browser.close();}
 });

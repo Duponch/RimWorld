@@ -1,5 +1,5 @@
+import { writeTestFileSync, testOutputPath, testOutputDirectory } from '../test-output.ts';
 import { expect, test, type Page } from '@playwright/test';
-import { mkdirSync, writeFileSync } from 'node:fs';
 import { applyCommand, serializeWorld, stepWorld, validateWorld } from '../../src/sim/index';
 import type { World } from '../../src/sim/types';
 import { miningCamp } from '../scenarios/mining';
@@ -62,7 +62,7 @@ async function load(page:Page,initial:World):Promise<void> {
 }
 
 test('V118: final work edge walks directly to a safe mine/tree contact',async ({playwright})=>{
-  test.setTimeout(120_000);mkdirSync('artifacts',{recursive:true});
+  test.setTimeout(120_000);testOutputDirectory('artifacts');
   const browser=await playwright.chromium.launch({channel:'chromium',headless:false,args:[]});
   const results:unknown[]=[];
   try {
@@ -92,12 +92,12 @@ test('V118: final work edge walks directly to a safe mine/tree contact',async ({
         expect(Math.min(...steps)).toBeGreaterThan(-.06);
         expect(11-settled.at(-1)!.poseX).toBeGreaterThanOrEqual(kind==='mine' ? .89 : .81);
         const saved=await world(page);expect(validateWorld(saved)).toEqual([]);
-        await page.screenshot({path:`artifacts/work-contact-v118-${kind}-side.png`});
+        await page.screenshot({path:testOutputPath(`artifacts/work-contact-v118-${kind}-side.png`)});
         results.push({kind,edgeFrames:edge.length,edgeEndX:edge.at(-1)!.toX,
           contactX:settled.at(-1)!.poseX,minFrameStep:Math.min(...steps),errors});
         expect(errors).toEqual([]);
       } finally {await page.close();}
     }
-    writeFileSync('artifacts/work-contact-v118.json',JSON.stringify({protocol:'Native Chromium WebGPU, two reserved cardinal final edges prepared by the real simulation. 1x motion, side view, saved-world validation; no GPU timer.',results},null,2)+'\n');
+    writeTestFileSync('artifacts/work-contact-v118.json',JSON.stringify({protocol:'Native Chromium WebGPU, two reserved cardinal final edges prepared by the real simulation. 1x motion, side view, saved-world validation; no GPU timer.',results},null,2)+'\n');
   } finally {await browser.close();}
 });

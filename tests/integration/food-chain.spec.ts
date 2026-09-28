@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test,type Page } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { foodWorkstationConstructionFixture } from '../scenarios/food-workstations';
 import { medicalCamp } from '../scenarios/health';
 import { fixtureBuilding } from '../scenarios/deconstruction';
@@ -53,7 +54,7 @@ test('native food chain: construct stations, choose crops, cook with physical fu
     await expect.poll(async()=>(await world(page)).resources.filter(r=>r.kind==='potato'||r.kind==='corn').length,{timeout:25000}).toBe(8);await pause(page);
     const cooked=await world(page);expect(cooked.structures.find(s=>s.id===stove.id)!.fuel!.burned).toBeGreaterThan(0);expect(cooked.piles.some(p=>p.item==='potato'||p.item==='corn')).toBe(false);expect(validateWorld(cooked)).toEqual([]);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,cooked);await page.keyboard.press('Escape');
-    await page.screenshot({path:'artifacts/food-stations-v84.png'});report.stations={tick:cooked.tick,structures:cooked.structures.map(s=>({kind:s.kind,orientation:s.orientation,fuel:s.fuel,power:s.power})),plants:cooked.resources.filter(r=>r.kind==='potato'||r.kind==='corn').map(r=>({kind:r.kind,growth:r.growth})),producedMeals:2};
+    await page.screenshot({path:testOutputPath('artifacts/food-stations-v84.png')});report.stations={tick:cooked.tick,structures:cooked.structures.map(s=>({kind:s.kind,orientation:s.orientation,fuel:s.fuel,power:s.power})),plants:cooked.resources.filter(r=>r.kind==='potato'||r.kind==='corn').map(r=>({kind:r.kind,growth:r.growth})),producedMeals:2};
     for(const speed of [1,6]) {
       const clinic=feedingFixture(),d=clinic.pawns[0]!,p=clinic.pawns[1]!;expect(validateWorld(clinic)).toEqual([]);await load(page,clinic);
       await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('[data-health="malnutrition"]')).toContainText('extrême');
@@ -65,8 +66,8 @@ test('native food chain: construct stations, choose crops, cook with physical fu
       await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('[data-health="malnutrition"]')).toContainText('Récupère progressivement');
       await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,fed);await page.keyboard.press('Escape');
       report.care.push({speed,tick:fed.tick,hunger:patient.hunger,severity:patient.health!.malnutrition,food:fed.piles.filter(p=>p.kind==='food').reduce((n,p)=>n+p.quantity,0)});
-      await page.screenshot({path:`artifacts/food-care-${speed}x-v84.png`});
+      await page.screenshot({path:testOutputPath(`artifacts/food-care-${speed}x-v84.png`)});
     }
-    report.errors=errors;expect(errors).toEqual([]);writeFileSync('artifacts/food-native-v84.json',JSON.stringify(report,null,2));
+    report.errors=errors;expect(errors).toEqual([]);writeTestFileSync('artifacts/food-native-v84.json',JSON.stringify(report,null,2));
   } finally {await browser.close();}
 });

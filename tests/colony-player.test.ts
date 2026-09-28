@@ -1,6 +1,7 @@
+import { writeTestFileSync } from './test-output.ts';
 import { enableWildlife } from '../src/sim/wildlife';
 import { wildlifePopulationAccount } from './scenarios/hunting-player';
-import { writeFileSync } from 'node:fs';
+
 import { enableArrivals } from '../src/sim/arrivals';
 import { expect, test, onTestFailed } from 'vitest';
 import { createWorld, applyCommand, stepWorld, validateWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
@@ -9,7 +10,7 @@ import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFoc
 test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp construit, stocks entretenus et reprise exacte', (seed) => {
   const version=process.env.VALIDATION_VERSION??'v74';
     let world = createWorld(seed, 250, 250);
-    onTestFailed(()=>writeFileSync(`tmp/colony-failed-${version}-${seed}.json`,JSON.stringify(world)));
+    onTestFailed(()=>writeTestFileSync(`tmp/colony-failed-${version}-${seed}.json`,JSON.stringify(world)));
     if(seed===42)enableArrivals(world);
     if(seed===93)enableWildlife(world);
     const population=seed===42?4:3;
@@ -66,8 +67,8 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
         world=deserializeWorld(saved);
       }
     }
-    writeFileSync(`tmp/colony-final-${version}-${seed}.json`,serializeWorld(world));
-    writeFileSync(`artifacts/colony-${version}-${seed}.json`,JSON.stringify({seed,report,final:colonySummary(world)},null,2));
+    writeTestFileSync(`tmp/colony-final-${version}-${seed}.json`,serializeWorld(world));
+    writeTestFileSync(`artifacts/colony-${version}-${seed}.json`,JSON.stringify({seed,report,final:colonySummary(world)},null,2));
     const context=JSON.stringify({seed,report,meals:[...meals],sleep:[...sleep]});
     expect(report[0]!.structures,context).toMatchObject({bed:3,table:1,stool:3});
     expect(report[4]!.structures,context).toEqual({'wood-generator':1,'standing-lamp':1,'passive-cooler':0,bed:population,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});

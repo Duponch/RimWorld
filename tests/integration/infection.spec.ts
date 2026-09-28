@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test,type Page } from '@playwright/test';
-import { readFileSync,writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { deserializeWorld,serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { INFECTION_UNIT } from '../../src/sim/infection-rules';
 import { infectionNextTendCore } from '../../src/sim/infection-state';
@@ -71,7 +72,7 @@ test('native infection care: physical dose/save, actual renewal and convalescenc
       expect(presentation.working).toBeGreaterThan(0);expect(presentation.lying).toBeGreaterThan(0);expect(presentation.carrying).toBeGreaterThan(0);expect(presentation.wrongFacing).toBe(0);
       const pipelinesAdded=await page.evaluate(()=>(window as any).__infectionPipelines as number)-pipelines;expect(pipelinesAdded).toBe(0);
       await page.locator('[data-health="infections"]').scrollIntoViewIfNeeded();await expect(row).toBeVisible();
-      await page.screenshot({path:`artifacts/infection-care-${speed}x-${version}.png`});
+      await page.screenshot({path:testOutputPath(`artifacts/infection-care-${speed}x-${version}.png`)});
 
       await load(page,renewal);await inspect(page,patientId);await expect(row).toContainText('Renouvellement dans');
       // Temporarily disable automatic care through the real Work table so the
@@ -94,10 +95,10 @@ test('native infection care: physical dose/save, actual renewal and convalescenc
       const recovered=await world(page);expect(validateWorld(recovered)).toEqual([]);expect(medicine(recovered)).toBe(medicine(near));
       expect(recovered.pawns[0]!.health!.infections!.immunity).toBeLessThan(INFECTION_UNIT);await expect(row).toHaveCount(0);await expect(immunity).toContainText('Infection résolue');
       await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,recovered);await page.keyboard.press('Escape');await inspect(page,patientId);
-      await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:`artifacts/infection-recovery-${speed}x-${version}.png`});
+      await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:testOutputPath(`artifacts/infection-recovery-${speed}x-${version}.png`)});
       reports.push({speed,provenance:{seed:initial.seed,declaration:initial.tick,renewal:renewal.tick,immune:immune.tick,nearRecovery:near.tick},carrySavedAt:carrying.tick,treated:infectionSummary(treated),renewed:infectionSummary(renewed),recovered:infectionSummary(recovered),presentation,pipelinesAdded});
     }
     expect(errors).toEqual([]);
-    writeFileSync(`artifacts/infection-ui-${version}.json`,JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',scope:'Player-driven care intervals from genuine core journey checkpoints; not a continuous multi-day UI run.',reports,errors},null,2));
+    writeTestFileSync(`artifacts/infection-ui-${version}.json`,JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',scope:'Player-driven care intervals from genuine core journey checkpoints; not a continuous multi-day UI run.',reports,errors},null,2));
   } finally {await browser.close();}
 });

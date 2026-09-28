@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { pursuitCamp } from '../scenarios/pursuit';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
 import { world,panel,expectWorld,observeErrors,saveKey } from './helpers';
@@ -53,8 +54,8 @@ test('native pursuit at 1×/6×: approach on GPU, actual shots, player retreat a
       }
       reports.push({speed,saveTick:travelling.tick,firstShotTick:fought.tick,samples:captured.samples.length,walkingFrames:moving.length,visibleShotSamples:captured.shots,post:fought.pawns[3].tactics?.post});
     }
-    await expect(page.locator('#fps-counter')).toBeVisible();expect(errors).toEqual([]);await page.screenshot({path:'artifacts/pursuit-v61.png'});
-    writeFileSync('artifacts/pursuit-ui-v61.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',reports,errors},null,2)+'\n');
-  }catch(error){writeFileSync('tmp/pursuit-ui-failed-checkpoint.json',serializeWorld(await world(page)));throw error;}
+    await expect(page.locator('#fps-counter')).toBeVisible();expect(errors).toEqual([]);await page.screenshot({path:testOutputPath('artifacts/pursuit-v61.png')});
+    writeTestFileSync('artifacts/pursuit-ui-v61.json',JSON.stringify({date:new Date().toISOString(),backend:'native WebGPU',reports,errors},null,2)+'\n');
+  }catch(error){writeTestFileSync('tmp/pursuit-ui-failed-checkpoint.json',serializeWorld(await world(page)));throw error;}
   finally{await browser.close();}
 });

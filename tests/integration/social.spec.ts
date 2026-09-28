@@ -1,5 +1,6 @@
+import { writeTestFileSync, testOutputPath } from '../test-output.ts';
 import { expect,test } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
+
 import { medicalCamp } from '../scenarios/health';
 import { applyCommand } from '../../src/sim/engine';
 import { serializeWorld,validateWorld } from '../../src/sim/serialization';
@@ -22,10 +23,10 @@ test('native UI 1x/6x: physical builders exchange, directed opinions and XP insp
     await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>(await world(page)).pawns[0]!.social?.memories.length??0,{intervals:[100]}).toBeGreaterThan(0);await page.locator('[data-speed="0"]').click();
     const exchanged=await world(page),[a,b]=exchanged.pawns;expect(validateWorld(exchanged)).toEqual([]);expect(exchanged.jobs.every(j=>j.progress>0)).toBe(true);expect(a!.jobId).toBe(jobs[0]);expect(b!.jobId).toBe(jobs[1]);expect(opinionOf(a!,b!.id,exchanged.tick)).toBeGreaterThan(0);expect(exchanged.pawns.some(p=>(p.skills.social?.xp??0)>0)).toBe(true);
     await page.locator(`[data-pawn="${a!.id}"]`).click();await pawnTab(page,'bio');await expect(page.locator('[data-skill-detail="social"]')).toContainText('Impact 82 %');await pawnTab(page,'social');await expect(page.locator(`[data-social-pawn="${b!.id}"]`)).toContainText('Noé');await expect(page.locator('#social-last')).toContainText('avec Noé');
-    await page.locator('#social-last').scrollIntoViewIfNeeded();await page.screenshot({path:`artifacts/social-v70-${speed}x.png`});
+    await page.locator('#social-last').scrollIntoViewIfNeeded();await page.screenshot({path:testOutputPath(`artifacts/social-v70-${speed}x.png`)});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,exchanged);await page.keyboard.press('Escape');await page.locator(`[data-speed="${speed}"]`).click();await expect.poll(async()=>(await world(page)).tick).toBeGreaterThan(exchanged.tick+15);await page.locator('[data-speed="0"]').click();
     const after=await world(page);expect(validateWorld(after)).toEqual([]);expect(after.jobs[0]!.progress).toBeGreaterThan(exchanged.jobs[0]!.progress);expect(after.pawns[0]!.social!.memories.length).toBeGreaterThan(0);expect(errors).toEqual([]);
     proof.push({speed,controlledPendingIntent:true,tick:exchanged.tick,afterTick:after.tick,jobs:after.jobs.map(j=>({id:j.id,progress:j.progress})),social:after.pawns.map(p=>({id:p.id,social:p.social,skill:p.skills.social})),errors});await page.close();
   }}finally{await browser.close();}
-  writeFileSync('artifacts/social-ui-v70.json',JSON.stringify({date:new Date().toISOString(),proof},null,2)+'\n');
+  writeTestFileSync('artifacts/social-ui-v70.json',JSON.stringify({date:new Date().toISOString(),proof},null,2)+'\n');
 });
