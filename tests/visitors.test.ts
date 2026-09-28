@@ -54,6 +54,7 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   legacy.schemaVersion=135;
   delete legacy.breakdown;
   withoutFutureHelmetPolicy(legacy);
+  for(const policy of legacy.apparelPolicies??[])policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-helmet');
   for(const pawn of [...legacy.pawns,...legacy.visitors.departed.map((entry:any)=>entry.pawn)]){delete pawn.age;if(pawn.health)delete pawn.health.ageAilments;}
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.visitors!.departed[0]!.pawn.age).toEqual({biologicalTicks:10_800_000,chronologicalTicks:10_800_000});

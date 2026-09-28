@@ -119,6 +119,7 @@ test('V135 migration validates first, gives neutral adult age and never fabricat
   previous.schemaVersion=135 as typeof previous.schemaVersion;
   delete previous.breakdown;
   withoutFutureHelmetPolicy(previous);
+  previous.apparelPolicies=previous.apparelPolicies?.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-helmet')}));
   for(const pawn of previous.pawns)delete pawn.age;
   const rng=previous.rng,oldTick=previous.tick;
   const forged=structuredClone(previous);

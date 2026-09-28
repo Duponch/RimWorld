@@ -65,7 +65,7 @@ const textileDefinition = (family: ApparelFamily, material: ApparelMaterial): Ap
   });
 };
 
-export type ApparelItem=`${ApparelMaterial}-${ApparelFamily}`|'flak-vest'|'flak-helmet';
+export type ApparelItem=`${ApparelMaterial}-${ApparelFamily}`|'flak-vest'|'flak-helmet'|'recon-helmet';
 /** Existing cloth ids stay canonical so old saves and reservations retain identity. */
 export const APPAREL:Readonly<Record<ApparelItem,ApparelDefinition>> = Object.freeze({
   'cloth-tribalwear': textileDefinition('tribalwear','cloth'),
@@ -102,6 +102,8 @@ export const APPAREL:Readonly<Record<ApparelItem,ApparelDefinition>> = Object.fr
   // Core 1.6 Apparel_AdvancedHelmet, made from steel as the local fixed
   // metallic stuff: Steel armor .90/.45/.60 times the helmet's .70 factor.
   'flak-helmet': Object.freeze({label:'Casque pare-balles',hitPoints:120,equipTicks:9,color:0x697579,coverage:apparelCoverage(['headgear'],['upper-head']),ratings:Object.freeze({sharp:.63,blunt:.315,heat:.42}),moveOffset:0,coldInsulation:.45,heatInsulation:0}),
+  // Core 1.6 Apparel_ArmorHelmetRecon: FullHead, Overhead, fixed ratings.
+  'recon-helmet': Object.freeze({label:'Casque de reconnaissance',hitPoints:120,equipTicks:12,color:0x879da4,coverage:apparelCoverage(['headgear'],['full-head']),ratings:Object.freeze({sharp:.92,blunt:.4,heat:.46}),moveOffset:0,coldInsulation:4,heatInsulation:2}),
 });
 
 export interface ApparelState {

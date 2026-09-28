@@ -109,10 +109,13 @@ test('skygazing requires arrival; unavailable or boring activities give no joy; 
   const raw=JSON.parse(serializeWorld(old));raw.schemaVersion=123;
   delete raw.breakdown;delete raw.fluIncidents;
   withoutFutureHelmetPolicy(raw);
+  for(const policy of raw.apparelPolicies??[])policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-helmet');
   for(const pawn of raw.pawns){delete pawn.age;delete pawn.recreation.tolerance.social;delete pawn.recreation.bored.social;}
   for(const departure of raw.visitors?.departed??[])delete departure.pawn.age;
   const migrated=deserializeWorld(JSON.stringify(raw));
-  const expected=withoutFutureHelmetPolicy(structuredClone(old));for(const pawn of expected.pawns)pawn.age=legacyHumanAge();
+  const expected=withoutFutureHelmetPolicy(structuredClone(old));
+  expected.apparelPolicies=expected.apparelPolicies?.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-helmet')}));
+  for(const pawn of expected.pawns)pawn.age=legacyHumanAge();
   expect(migrated).toEqual(expected);
   const corruptOld=structuredClone(raw);corruptOld.pawns[0].recreation.tolerance.social=12;
   expect(()=>deserializeWorld(JSON.stringify(corruptOld))).toThrow(/version 123|recreation/i);

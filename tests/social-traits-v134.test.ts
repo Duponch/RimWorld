@@ -65,6 +65,7 @@ test('kind words keep ten memories per speaker, decay, and reject forged old-sch
   const forged=structuredClone(world) as any;forged.schemaVersion=127;
   delete forged.breakdown;
   withoutFutureHelmetPolicy(forged);
+  for(const policy of forged.apparelPolicies??[])policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-helmet');
   for(const pawn of forged.pawns)delete pawn.age;
   for(const departure of forged.visitors?.departed??[])delete departure.pawn.age;
   expect(()=>deserializeWorld(JSON.stringify(forged))).toThrow(/Invalid version 127 save/);

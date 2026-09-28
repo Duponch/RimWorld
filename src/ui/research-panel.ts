@@ -12,7 +12,7 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'complex-clothing',prefix:'research',title:'Vêtements complexes',cost:600,detail:'Débloque l’établi manuel de tailleur et la chemise en tissu.',progress:w=>w.research,x:224,y:154},
   {id:'autodoors',prefix:'autodoors',title:'Portes automatiques',cost:600,detail:'Porte à ouverture rapide sous courant : 25 matériaux, 40 acier, 2 composants ; Construction 6 et 50 W. Sans courant, elle fonctionne comme une porte ordinaire.',progress:w=>w.research?.autodoors,x:424,y:154},
   {id:'plate-armor',prefix:'plate-armor',title:'Armure de plaques',cost:600,detail:'Préalable du gilet pare-balles. La fabrication de plaques reste hors périmètre.',progress:w=>w.research?.plateArmor,x:624,y:154},
-  {id:'flak-armor',prefix:'flak-armor',title:'Armure pare-balles',cost:1200,detail:'Gilet à l’atelier d’usinage, Artisanat 4.',progress:w=>w.research?.flakArmor,x:824,y:154},
+  {id:'flak-armor',prefix:'flak-armor',title:'Armure pare-balles',cost:1200,detail:'Gilet et casque pare-balles à l’atelier d’usinage, Artisanat 4 et 5.',progress:w=>w.research?.flakArmor,x:824,y:154},
   {id:'batteries',prefix:'battery',title:'Batteries',cost:400,detail:'Stocker le surplus du réseau. Batterie : 70 acier + 2 composants.',progress:w=>w.research?.batteries,x:24,y:298},
   {id:'solar-power',prefix:'solar',title:'Panneaux solaires',cost:600,detail:'Produire jusqu’à 1 700 W à découvert. Panneau : 100 acier + 3 composants ; Construction 6.',progress:w=>w.research?.solarPower,x:224,y:298},
   {id:'air-conditioning',prefix:'air',title:'Climatisation',cost:500,detail:'Débloque le climatiseur (90 acier + 3 composants).',progress:w=>w.research?.airConditioning,x:424,y:298},
@@ -20,6 +20,7 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'multi-analyzer',prefix:'multi-analyzer',title:'Multi-analyseur',cost:4000,detail:'Débloque le multi-analyseur. Recherche au bureau avancé alimenté ; Usinage est aussi requis.',progress:w=>w.research?.multiAnalyzer,x:624,y:432},
   {id:'fabrication',prefix:'fabrication',title:'Fabrication',cost:4000,detail:'Débloque l’établi de fabrication. Exige un bureau avancé alimenté et un multi-analyseur alimenté à proximité.',progress:w=>w.research?.fabrication,x:824,y:432},
   {id:'advanced-fabrication',prefix:'advanced-fabrication',title:'Fabrication avancée',cost:4000,detail:'Débloque la fabrication du composant avancé à l’établi alimenté : 1 composant, 20 acier, 10 plastacier et 3 or ; Artisanat 8.',progress:w=>w.research?.advancedFabrication,x:824,y:566},
+  {id:'recon-armor',prefix:'recon-armor',title:'Armure de reconnaissance',cost:6000,detail:'Casque de reconnaissance à l’établi de fabrication alimenté : 30 plastaciers, 1 composant avancé ; Artisanat 6.',progress:w=>w.research?.reconArmor,x:624,y:566},
 ];
 export const researchLinks: readonly (readonly [ResearchProject, ResearchProject])[] = [
   ['smithing','machining'],['machining','gunsmithing'],
@@ -27,15 +28,16 @@ export const researchLinks: readonly (readonly [ResearchProject, ResearchProject
   ['machining','flak-armor'],['plate-armor','flak-armor'],
   ['microelectronics','multi-analyzer'],['machining','multi-analyzer'],['multi-analyzer','fabrication'],
   ['fabrication','advanced-fabrication'],
+  ['fabrication','recon-armor'],
 ];
 const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const prerequisites=new Map<ResearchProject,string[]>([
   ['machining',['Forge']],['gunsmithing',['Usinage']],['plate-armor',['Forge','Vêtements complexes']],['flak-armor',['Usinage','Armure de plaques']],
-  ['autodoors',['Électricité (acquise au départ)']],['microelectronics',['Électricité (acquise au départ)']],['multi-analyzer',['Microélectronique','Usinage']],['fabrication',['Multi-analyseur']],['advanced-fabrication',['Fabrication']],
+  ['autodoors',['Électricité (acquise au départ)']],['microelectronics',['Électricité (acquise au départ)']],['multi-analyzer',['Microélectronique','Usinage']],['fabrication',['Multi-analyseur']],['advanced-fabrication',['Fabrication']],['recon-armor',['Fabrication','Vêtements complexes']],
 ]);
 function stationIssue(world:World,project:ResearchProject):string|undefined {
   if(world.structures.some(s=>researchStationUsable(world,s,project)))return undefined;
-  if(project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication')return project==='multi-analyzer'?'Bureau de recherche avancé alimenté requis':'Bureau avancé et multi-analyseur alimentés à proximité requis';
+  if(project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor')return project==='multi-analyzer'?'Bureau de recherche avancé alimenté requis':'Bureau avancé et multi-analyseur alimentés à proximité requis';
   return 'Bureau de recherche disponible requis';
 }
 
@@ -70,6 +72,9 @@ export function updateResearchPanel(root: HTMLElement, world: World, send: (comm
       if(from.x===to.x){
         const x=from.x+87,y1=from.y+114,y2=to.y;
         path.setAttribute('d',`M${x} ${y1} L${x} ${y2}`);
+      } else if(to.y>from.y&&to.x<from.x){
+        const x1=from.x+87,y1=from.y+114,x2=to.x+87,y2=to.y,mid=(y1+y2)/2;
+        path.setAttribute('d',`M${x1} ${y1} C${x1} ${mid},${x2} ${mid},${x2} ${y2}`);
       } else {
         const x1=from.x+174,y1=from.y+57,x2=to.x,y2=to.y+57;
         path.setAttribute('d',`M${x1} ${y1} C${x1+Math.max(18,(x2-x1)/2)} ${y1},${x2-Math.max(18,(x2-x1)/2)} ${y2},${x2} ${y2}`);

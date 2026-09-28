@@ -35,7 +35,7 @@ test('Core chain needs Fabrication, a powered high-tech desk and a powered analy
   expect(ADVANCED_FABRICATION_RESEARCH_COST).toBe(4_000_000_000);
   expect(PRODUCTION_RECIPES['make-advanced-component']).toMatchObject({station:'fabrication-bench',units:34,workTicks:1000,outputUnits:1});
   expect(ADVANCED_COMPONENT_REQUIREMENTS).toEqual({component:1,steel:20,plasteel:10,gold:3,skill:8});
-  expect(stationRecipes(w.structures.find(s=>s.kind==='fabrication-bench')!)).toEqual(['make-component','make-advanced-component']);
+  expect(stationRecipes(w.structures.find(s=>s.kind==='fabrication-bench')!)).toEqual(['make-component','make-advanced-component','make-recon-helmet']);
   delete w.research!.advancedFabrication;
   expect(selectResearch(w,'advanced-fabrication')).toMatchObject({ok:true});
   delete w.research!.fabrication;

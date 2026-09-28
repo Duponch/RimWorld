@@ -71,7 +71,7 @@ test('marker species choice is atomic, persisted, and old saves migrate without 
   for(const departure of historical.visitors?.departed??[])delete departure.pawn.age;
   for(const policy of historical.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='milk');
   historical.apparelPolicies=(historical.apparelPolicies??[]).map(policy=>({...policy,
-    allowedItems:policy.allowedItems.filter(item=>!item.startsWith('muffalo-wool-')&&item!=='flak-helmet'),
+    allowedItems:policy.allowedItems.filter(item=>!item.startsWith('muffalo-wool-')&&item!=='flak-helmet'&&item!=='recon-helmet'),
     allowedMaterials:policy.allowedMaterials.filter(material=>material!=='muffalo-wool')}));
   const migrated=deserializeWorld(JSON.stringify(historical));
   expect(migrated).toEqual({...historical,schemaVersion:world.schemaVersion,breakdown:world.breakdown,pawns:historical.pawns.map(pawn=>({...pawn,age:legacyHumanAge(),recreation:{

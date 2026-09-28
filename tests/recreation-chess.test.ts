@@ -93,6 +93,7 @@ test('seat destruction releases chess before a save and V121 migration adds no r
   delete old.breakdown;
   delete old.fluIncidents;
   withoutFutureHelmetPolicy(old);
+  for(const policy of old.apparelPolicies??[])policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-helmet');
   for(const p of old.pawns){delete p.recreation.tolerance.cerebral;delete p.recreation.bored.cerebral;delete p.recreation.tolerance.social;delete p.recreation.bored.social;p.recreation.task=null;p.state='idle';p.path=[];p.moveCooldown=0;delete p.motion;delete p.transitExit;}
   for(const p of old.pawns)delete p.age;
   for(const departure of old.visitors?.departed??[])delete departure.pawn.age;

@@ -43,7 +43,7 @@ const clonePolicy=(policy:ApparelPolicy):ApparelPolicy=>({...policy,allowedItems
 // It must not acquire later V141 headgear before its own strict validation.
 export const createDefaultApparelPolicyRegistry=(includeWool=true,includeHelmet=includeWool):ApparelPolicyRegistry=>({apparelPolicies:[DEFAULT_APPAREL_POLICY,TEXTILE_APPAREL_POLICY].map(policy=>{
   const copy=clonePolicy(policy);
-  return {...copy,allowedItems:copy.allowedItems.filter(item=>(includeWool||APPAREL[item].material!=='muffalo-wool')&&(includeHelmet||item!=='flak-helmet')),
+  return {...copy,allowedItems:copy.allowedItems.filter(item=>(includeWool||APPAREL[item].material!=='muffalo-wool')&&(includeHelmet||item!=='flak-helmet'&&item!=='recon-helmet')),
     allowedMaterials:includeWool?copy.allowedMaterials:copy.allowedMaterials.filter(material=>material!=='muffalo-wool')};
 }),nextApparelPolicyId:3});
 

@@ -36,7 +36,7 @@ function advance(w:World,done:()=>boolean,limit:number):void {
 test('Core component bill needs 12 steel, Crafting 8, Fabrication research and a powered bench',()=>{
   const {world,station}=prepared(),pawn=world.pawns[0]!;
   expect(PRODUCTION_RECIPES['make-component']).toMatchObject({station:'fabrication-bench',units:12,workTicks:500,outputUnits:1});
-  expect(stationRecipes(station)).toEqual(['make-component','make-advanced-component']);
+  expect(stationRecipes(station)).toEqual(['make-component','make-advanced-component','make-recon-helmet']);
   station.power!.on=false;
   expect(productionStationUsable(station)).toBe(false);
   station.power!.on=true;

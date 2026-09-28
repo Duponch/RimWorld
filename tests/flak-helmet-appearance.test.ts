@@ -49,7 +49,9 @@ test('helmet, vest and carried model stay in existing resident actor/cargo batch
   let helmetVertices=0;
   for(let i=0;i<dye.count;i++)if(dye.getX(i)===FLAK_HELMET_DYE){helmetVertices++;expect(bone.getX(i)).toBe(1);}
   expect(helmetVertices).toBeGreaterThan(60);
-  expect(geometry.getAttribute('position').count).toBeLessThanOrEqual(2296);
+  // V148's second resident helmet increases the shared pawn model from 2240
+  // to 2442 vertices; the V141 flak shell remains in the same actor batch.
+  expect(geometry.getAttribute('position').count).toBe(2442);
   geometry.dispose();
   const layer=new PawnLayer();layer.update(world,1,true);
   const actor=layer.feedbackSource!;

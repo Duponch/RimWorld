@@ -13,6 +13,7 @@ import { WEAPON_VISUALS } from './weapon-shape';
 // Disjoint from weapon tags; -4 is the bolt-action rifle, not the parka hood.
 export const PARKA_HOOD_DYE = -6;
 export const FLAK_HELMET_DYE = -7;
+export const RECON_HELMET_DYE = -8;
 // Face variants are resident in the same pawn batch. The vertex shader shows
 // exactly one of them; portraits project the open-eye variant at rest.
 export const PAWN_EYE_OPEN = 60;
@@ -148,6 +149,15 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
     ring(1.415,0,0,.171,.151,.035),ring(1.468,0,0,.103,.103,.025)],
   1,[0,1.04,0],APPAREL['flak-helmet'].color,FLAK_HELMET_DYE);
   addPart([.405,.026,.34],[0,1.304,.018],1,[0,1.04,0],0x424e51,FLAK_HELMET_DYE);
+  // The enclosed recon shell shares the head bone and the resident pawn rig.
+  // Its low visor and cheek guards make it distinct from the open flak helmet.
+  addShell([ring(1.065,0,0,.166,.145,.030),ring(1.16,0,0,.180,.162,.036),
+    ring(1.35,0,0,.190,.169,.040),ring(1.425,0,0,.163,.150,.034),
+    ring(1.48,0,0,.095,.096,.024)],
+  1,[0,1.04,0],APPAREL['recon-helmet'].color,RECON_HELMET_DYE);
+  addPart([.30,.075,.03],[0,1.208,.183],1,[0,1.04,0],0x344a57,RECON_HELMET_DYE);
+  addPart([.155,.105,.036],[0,1.115,.176],1,[0,1.04,0],0x536a74,RECON_HELMET_DYE);
+  for(const side of [-1,1])addPart([.052,.17,.22],[side*.167,1.14,.02],1,[0,1.04,0],0x637c84,RECON_HELMET_DYE);
   // Resident parka hood; its visibility follows the outfit attribute.
   addPart([.34,.34,.14],[0,1.17,-.12],1,[0,1.04,0],0xffffff,PARKA_HOOD_DYE);
   // Ground weapon shapes run along X. Rifle barrel rises on its sling; the

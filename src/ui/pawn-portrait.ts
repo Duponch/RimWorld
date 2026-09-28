@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { pawnGeometry,FLAK_HELMET_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from '../render/pawn-geometry';
+import { pawnGeometry,FLAK_HELMET_DYE,RECON_HELMET_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from '../render/pawn-geometry';
 import { BODY_PROPORTIONS, appearanceShape } from '../render/pawn-appearance-shape';
 import type { apparelAppearance } from '../render/character-apparel';
 import type { PawnAppearance } from '../sim/pawn-appearance';
@@ -47,15 +47,16 @@ function faces(): readonly Face[] {
 
 function visible(face: Face, variant: readonly [number, number, number, number], look: ApparelLook, weaponDye: number | undefined, expression:PortraitExpression): boolean {
   const dye = face.dye;
-  if (dye === PAWN_EYE_OPEN) return expression==='awake';
-  if (dye === PAWN_EYE_CLOSED) return expression==='sleep';
-  if (dye === PAWN_EYE_CROSS) return expression==='dead';
-  if (dye >= 200) return !!(variant[3] & (1 << (dye - 200)));
+  if (dye === PAWN_EYE_OPEN) return !look.reconHelmet && expression==='awake';
+  if (dye === PAWN_EYE_CLOSED) return !look.reconHelmet && expression==='sleep';
+  if (dye === PAWN_EYE_CROSS) return !look.reconHelmet && expression==='dead';
+  if (dye >= 200) return !look.reconHelmet && !!(variant[3] & (1 << (dye - 200)));
   if (dye >= 100) return !look.helmet && !!(variant[2] & (1 << (dye - 100)));
   if (dye === -2) return look.vest;
   if (dye === -3) return look.silhouette === 2 || look.silhouette === 3;
   if (dye === -6) return look.silhouette === 4 && !look.helmet;
-  if (dye === FLAK_HELMET_DYE) return look.helmet;
+  if (dye === FLAK_HELMET_DYE) return look.helmet && !look.reconHelmet;
+  if (dye === RECON_HELMET_DYE) return look.reconHelmet;
   if (dye === -1 || dye === -4 || dye === -5) return dye === weaponDye;
   return dye >= 0;
 }
@@ -140,7 +141,7 @@ function makeSvg(appearance: PawnAppearance, look: ApparelLook, weaponItem: stri
       art: `<polygon points="${points.map(p => `${round(p[0])},${round(p[1])}`).join(' ')}" fill="${fill}" stroke="${fill}" stroke-width=".2"/>` });
   }
   polygons.sort((a, b) => a.z - b.z);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" data-source="pawn-geometry" data-head="${appearance.headType}" data-hair="${appearance.hair}" data-beard="${appearance.beard}" data-skin="${hex(appearance.skinColor)}" data-hair-color="${hex(appearance.hairColor)}" data-helmet="${look.helmet}" data-weapon="${weaponVisual(weaponItem)?.item ?? ''}" data-expression="${expression}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" data-source="pawn-geometry" data-head="${appearance.headType}" data-hair="${appearance.hair}" data-beard="${appearance.beard}" data-skin="${hex(appearance.skinColor)}" data-hair-color="${hex(appearance.hairColor)}" data-helmet="${look.helmet}" data-recon-helmet="${look.reconHelmet}" data-weapon="${weaponVisual(weaponItem)?.item ?? ''}" data-expression="${expression}">
   <defs><linearGradient id="paper" x2="0" y2="1"><stop stop-color="#f4eee0"/><stop offset="1" stop-color="#d9d0b9"/></linearGradient><clipPath id="crop"><rect width="96" height="96" rx="6"/></clipPath></defs>
   <rect width="96" height="96" rx="6" fill="url(#paper)"/>
   <g clip-path="url(#crop)">${polygons.map(p => p.art).join('')}</g>
@@ -151,7 +152,7 @@ function makeSvg(appearance: PawnAppearance, look: ApparelLook, weaponItem: stri
 export function portraitDataUrl(appearance: PawnAppearance, look: ApparelLook, weaponItem?: string, expression:PortraitExpression='awake'): string {
   const key = [appearance.version, appearance.sex, appearance.bodyType, appearance.headType,
     appearance.hair, appearance.beard, appearance.skinColor, appearance.hairColor,
-    look.signature, look.color ?? '', look.vest, look.helmet, look.silhouette, look.pants, weaponVisual(weaponItem)?.item ?? '',expression].join('|');
+    look.signature, look.color ?? '', look.vest, look.helmet, look.reconHelmet, look.silhouette, look.pants, weaponVisual(weaponItem)?.item ?? '',expression].join('|');
   const cached = cache.get(key);
   if (cached) return cached;
   const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(makeSvg(appearance, look, weaponItem, expression))}`;

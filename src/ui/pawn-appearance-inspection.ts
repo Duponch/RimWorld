@@ -23,7 +23,7 @@ export function updatePawnAppearanceInspection(container: HTMLElement, world: Wo
   const key = [pawn.id, pawn.name, pawn.appearance ? 'saved' : 'projection',
     appearance.version, appearance.sex, appearance.bodyType, appearance.headType,
     appearance.hair, appearance.beard, appearance.skinColor, appearance.hairColor,
-    look.signature, look.color ?? '', look.vest, look.silhouette, look.pants, weaponItem ?? '',expression].join('|');
+    look.signature, look.color ?? '', look.vest, look.helmet, look.reconHelmet, look.silhouette, look.pants, weaponItem ?? '',expression].join('|');
   if (section.dataset.appearanceKey === key) return;
   section.dataset.appearanceKey = key;
   const image = section.querySelector<HTMLImageElement>('.appearance-inspection-portrait')!;

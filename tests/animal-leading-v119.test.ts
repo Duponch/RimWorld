@@ -159,7 +159,7 @@ test('version 134 rejects future rope members, then migrates a single rope witho
   if(legacy.pawns[0]?.animalHandling?.kind==='lead')delete legacy.pawns[0].animalHandling.ropees;
   delete legacy.breakdown;
   for(const person of legacy.pawns)delete person.age;
-  legacy.apparelPolicies=legacy.apparelPolicies?.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='flak-helmet')}));
+  legacy.apparelPolicies=legacy.apparelPolicies?.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='flak-helmet'&&item!=='recon-helmet')}));
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   expect(migrated.pawns[0]?.animalHandling?.ropees).toBeUndefined();

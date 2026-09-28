@@ -8,7 +8,7 @@ import {advancePower,reconcilePower} from '../src/sim/power.ts';
 import {AUTODOORS_RESEARCH_COST,BATTERIES_RESEARCH_COST} from '../src/sim/research.ts';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
 import {fixturePower} from './scenarios/power.ts';
-import type {Structure,StructureKind,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type Structure,type StructureKind,type World} from '../src/sim/types.ts';
 
 const breakable:StructureKind[]=[
   'autodoor','wood-generator','wind-turbine','battery','solar-generator',
@@ -190,9 +190,10 @@ test('V143 migration is prospective and strict; malformed V144 breakdown states 
   const current=deconstructionCamp(),old=structuredClone(current);
   (old as {schemaVersion:number}).schemaVersion=143;
   delete old.breakdown;
+  old.apparelPolicies=old.apparelPolicies?.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-helmet')}));
   const priorRng=old.rng,priorNextId=old.nextId;
   const migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated.schemaVersion).toBe(144);
+  expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   expect(migrated.breakdown).toBeDefined();
   expect(migrated.structures.some(s=>!!s.breakdown)).toBe(false);
   expect(migrated.jobs.some(j=>j.kind==='fix-breakdown')).toBe(false);

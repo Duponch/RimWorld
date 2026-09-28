@@ -13,7 +13,7 @@ import {newBreakdownCalendar} from '../src/sim/breakdowns.ts';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
 import {fixturePower} from './scenarios/power.ts';
 import type {ConstructionMaterial} from '../src/sim/building-materials.ts';
-import type {Structure,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type Structure,type World} from '../src/sim/types.ts';
 
 function unlock(w:World):void {
   w.research??={project:null,points:0};
@@ -172,9 +172,10 @@ test('strict 141 to current migration grants no research or door, and rejects fu
   const old=deconstructionCamp();
   delete old.breakdown;
   (old as {schemaVersion:number}).schemaVersion=141;
+  old.apparelPolicies=old.apparelPolicies?.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-helmet')}));
   const before=structuredClone(old),rng=old.rng,nextId=old.nextId;
   const migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated).toEqual({...before,schemaVersion:144,breakdown:newBreakdownCalendar(old.seed,old.tick)});
+  expect(migrated).toEqual({...before,schemaVersion:SCHEMA_VERSION,breakdown:newBreakdownCalendar(old.seed,old.tick)});
   expect(migrated.research?.autodoors).toBeUndefined();
   expect(migrated.structures.some(s=>s.kind==='autodoor')).toBe(false);
   expect(migrated.rng).toBe(rng);expect(migrated.nextId).toBe(nextId);
