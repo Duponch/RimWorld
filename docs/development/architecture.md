@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-État courant au schéma 148. V145–V147 entretiennent les outils et les coûts CPU ; V148 ajoute le [casque de reconnaissance](recon-helmet-v148.md) sans changer ces frontières. Les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés et ne constituent pas un inventaire fonctionnel actuel. Celui-ci est tenu dans [l’état du jeu](../gameplay/implementation-status.md).
+État courant au schéma 150. V150 ajoute la [frénésie alimentaire](food-binge-v150.md) en conservant les frontières de simulation, sauvegarde et rendu ; V149 ajoute la présentation sonore ; V145–V148 restent décrits dans leurs contrats. Les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés et ne constituent pas un inventaire fonctionnel actuel. Celui-ci est tenu dans [l’état du jeu](../gameplay/implementation-status.md).
 
 ## Objectif
 

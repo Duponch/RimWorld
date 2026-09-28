@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+**État V150 :** SYS/TEST-082 couvre désormais deux crises mineures locales, errance triste et [frénésie alimentaire](../development/food-binge-v150.md), avec perte du contrôle direct, repas physiques et récupération. Cette extension ne livre ni les autres intensités du catalogue Core, ni le trait Gourmand, ni une psychologie exhaustive ; S14 et G3 restent partiels. [Preuve V150](../history/validation-food-binge-v150.md).
+
 **V109 :** apparence humaine persistante et projection des anciens acteurs, portraits/Bio et silhouettes 3D diversifiés ; recherche et fabrication physique du gilet. Biographies, âge/vieillissement et choix complet des personnages restent absents ; casques, composants fabriqués, chaîne industrielle complète et productions animales restent ouverts. G0–G4 partiels, G5 absent, aucun jalon global clos. [Contrats](../development/pawn-appearance.md), [gilet](../development/flak-armor.md), [preuves](../history/validation-appearance-v109.md).
 
 **V108 :** tampon de présentation réduit ; mêmes déplacements, interactions et horloge physique. Aucun système supplémentaire ni jalon G0–G5 clos. [Contrat](../development/presentation-timing.md), [preuves](../history/validation-latency-v108.md).

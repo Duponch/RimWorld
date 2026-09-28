@@ -862,7 +862,10 @@ function renderState() {
     if (!entries.length) el('journal-items').textContent = 'Trois survivants. Une nouvelle histoire.';
   }
   const alerts: string[] = [];
-  const crises=living.filter(p=>p.mental?.crisis).length;if(crises)alerts.push(`${crises} colon(s) en errance triste`);
+  let sadWanderers=0,foodBingers=0;
+  for(const pawn of living){if(pawn.mental?.crisis?.kind==='sad-wander')sadWanderers++;else if(pawn.mental?.crisis?.kind==='food-binge')foodBingers++;}
+  if(sadWanderers)alerts.push(`${sadWanderers} colon(s) en errance triste`);
+  if(foodBingers)alerts.push(`${foodBingers} colon(s) en frénésie alimentaire`);
   const enemy=world.pawns.find(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p));
   const fires=world.fires?.items??[],fireAlert=el<HTMLButtonElement>('inspect-fire');fireAlert.hidden=!fires.length;fireAlert.textContent=`Incendie · ${fires.length} foyer${fires.length>1?'s':''} · voir`;fireAlert.onclick=()=>{const cell=firePosition(world,fires[0]!);if(cell){applyTool('select');pickCell(cell.x,cell.z);renderer?.focusCell(cell);}};
   const threatButton=el<HTMLButtonElement>('inspect-threat');threatButton.hidden=!enemy;if(enemy){threatButton.textContent='Menace armée · voir';threatButton.onclick=()=>selectPawn(enemy.id);}

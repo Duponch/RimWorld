@@ -40,7 +40,8 @@ export function createMoodInspection(panel:HTMLElement):void {
 export function updateMoodInspection(panel:HTMLElement,world:World,pawn:Pawn):void {
   const text=panel.querySelector<HTMLElement>('#mood-target'),list=panel.querySelector<HTMLElement>('#mood-thoughts');if(!text||!list)return;
   const view=moodInspectionView(world,pawn),dead=pawn.state==='dead';
-  text.textContent=dead?'Décédé':`${pawn.mental?.crisis?'Errance triste · ':''}Humeur ${view.current.toFixed(1)} % · cible ${view.target} %`;
+  const crisis=pawn.mental?.crisis?.kind==='food-binge'?'Frénésie alimentaire':pawn.mental?.crisis?'Errance triste':'';
+  text.textContent=dead?'Décédé':`${crisis?`${crisis} · `:''}Humeur ${view.current.toFixed(1)} % · cible ${view.target} %`;
   const gauge=panel.querySelector<HTMLElement>('#mood-gauge')!,level=panel.querySelector<HTMLElement>('#mood-gauge-fill')!;
   gauge.hidden=dead;gauge.setAttribute('aria-valuenow',String(view.current));
   gauge.setAttribute('aria-valuetext',`${view.current.toFixed(1)} %`);

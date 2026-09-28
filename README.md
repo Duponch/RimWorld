@@ -1,6 +1,6 @@
 # Lisière
 
-Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré des systèmes de RimWorld Core 1.6.4871. Le dépôt conserve le **schéma de sauvegarde 148** ; V149 ajoute des effets sonores locaux et leurs réglages de présentation, sans musique. V148 avait ajouté le casque de reconnaissance après les consolidations V145–V147. Les règles livrées, les limites et leurs preuves sont regroupées dans l’[état fonctionnel](docs/gameplay/implementation-status.md). La [feuille de route](docs/ROADMAP.md) distingue les prochains travaux de ce qui est déjà jouable.
+Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré des systèmes de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 150** ; V150 ajoute la frénésie alimentaire parmi les crises d'humeur. V149 avait ajouté six effets sonores locaux et leurs réglages, sans musique. Les règles livrées, les limites et leurs preuves sont regroupées dans l’[état fonctionnel](docs/gameplay/implementation-status.md). La [feuille de route](docs/ROADMAP.md) distingue les prochains travaux de ce qui est déjà jouable.
 
 ## Démarrer
 
@@ -23,6 +23,6 @@ npm run test:integration
 python scripts/check-docs.py
 ```
 
-Choisir les contrôles adaptés au changement selon la [stratégie de tests](docs/development/testing.md). `npm test` conserve la suite Vitest complète ; `npm run test:campaign` isole les campagnes longues avec leurs journaux. La [validation courante](docs/development/validation.md) distingue les contrôles exécutés, les reprises et les limites ; les preuves [V149](docs/history/validation-audio-v149.md), [V148](docs/history/validation-recon-helmet-v148.md) et [V147](docs/history/validation-firefighting-performance-v147.md) bornent respectivement le son, l’équipement livré et le gain CPU local. Aucune de ces preuves ne prétend que la suite exhaustive passe. Les contrats, recherches, preuves et archives sont orientés depuis l’[index documentaire](docs/README.md). Le [laboratoire de navigation GPU](http://127.0.0.1:5173/navigation.html) est une expérience séparée.
+Choisir les contrôles adaptés au changement selon la [stratégie de tests](docs/development/testing.md). `npm test` conserve la suite Vitest complète ; `npm run test:campaign` isole les campagnes longues avec leurs journaux. La [validation courante](docs/development/validation.md) distingue les contrôles exécutés, les reprises et les limites ; les preuves [V150](docs/history/validation-food-binge-v150.md), [V149](docs/history/validation-audio-v149.md) et [V148](docs/history/validation-recon-helmet-v148.md) bornent respectivement la crise alimentaire, le son et l’équipement. Aucune de ces preuves ne prétend que la suite exhaustive passe. Les contrats, recherches, preuves et archives sont orientés depuis l’[index documentaire](docs/README.md). Le [laboratoire de navigation GPU](http://127.0.0.1:5173/navigation.html) est une expérience séparée.
 
 Le [README antérieur](README-pre-v145.md) conserve les annonces et mesures datées de la période V101–V108. Son indication de version du site public ne vaut pas vérification du déploiement actuel.

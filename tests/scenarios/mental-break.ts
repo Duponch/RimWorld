@@ -8,8 +8,8 @@ import type { World } from '../../src/sim/types.ts';
 
 /** Explicit pre-existing low mood exposure, not a claim about a natural camp.
  * Entry/recovery and every subsequent action are performed by the real worker. */
-export function mentalCamp():World {
-  const w=medicalCamp(),p=w.pawns[0]!;w.rng=1;
+export function mentalCamp(seed=40):World {
+  const w=medicalCamp(),p=w.pawns[0]!;w.rng=seed; // 40 selects sad wander for the legacy UI journey; 1 selects food binge.
   w.tick+=(14-(w.tick+p.id)%15+15)%15; // Eligible check on the first worker tick, before ordinary sleep.
   Object.assign(p,{mood:0,hunger:95,rest:16.5,comfort:50});p.recreation.level=50;p.schedule.fill('anything');p.priorities.gather=1;
   mentalState(p).below=[2100,2100,2100];

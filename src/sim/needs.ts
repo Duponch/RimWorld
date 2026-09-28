@@ -62,7 +62,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   }
 
   // Sleep only ends for hunger if a physically reachable portion can be reserved.
-  const wantsFood = pawn.hunger <= (pawn.mental?.crisis?5:pawn.need?.kind === 'sleep' ? 12.5 : 30);
+  const wantsFood = pawn.mental?.crisis?.kind==='food-binge'||pawn.hunger <= (pawn.mental?.crisis?5:pawn.need?.kind === 'sleep' ? 12.5 : 30);
   let reach: Reachability | null | undefined;
   if (pawn.need?.kind !== 'eat' && wantsFood && canPlan && (world.restRules === 'adult' || pawn.rest > (pawn.need?.kind === 'sleep' ? 5 : 0))) {
     // Its old haul will be released atomically if this replacement is selected.
@@ -90,7 +90,9 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
 
   if (pawn.need?.kind === 'eat') { processEating(world, pawn, context); return true; }
 
-  if (processSleeping(world, pawn, context, canPlan)) return true;
+  // The food-binge tree has no voluntary rest provider. Collapse still creates
+  // a real sleep task and is handled here, allowing recovery on the next tick.
+  if ((pawn.need?.kind === 'sleep' || pawn.mental?.crisis?.kind !== 'food-binge') && processSleeping(world, pawn, context, canPlan)) return true;
   if (pawn.hunger <= 20) {
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
     // Fuel carried for a cooking bill is part of food preparation. Cancelling it

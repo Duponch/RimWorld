@@ -11,10 +11,9 @@ import { hasReachableCell,routeToCell,type Reachability } from './pathfinding.ts
 import { reservedServiceCells } from './service-reservations.ts';
 import type { Pawn,World } from './types.ts';
 
-/** One physical break is currently available. Stronger exposure falls back to
- * this minor content; it does not pretend to implement major/extreme behaviours. */
-export function startSadWander(world:World,pawn:Pawn):boolean {
-  if(!isColonist(pawn)||pawn.state==='downed'||moodFrozen(pawn)||pawn.mental?.crisis)return false;
+/** Stronger exposure falls back to the available minor content. */
+function startMinorBreak(world:World,pawn:Pawn,kind:'sad-wander'|'food-binge'):boolean {
+  if(!isColonist(pawn)||kind==='food-binge'&&pawn.prisoner||pawn.state==='downed'||moodFrozen(pawn)||pawn.mental?.crisis)return false;
   const thoughts=moodThoughts(world,pawn).filter(t=>t.offset<0);
   const strongest=Math.min(0,...thoughts.map(t=>t.offset));
   const candidates=thoughts.filter(t=>t.offset<=strongest*.5);
@@ -22,12 +21,14 @@ export function startSadWander(world:World,pawn:Pawn):boolean {
   const reason=candidates.find(t=>(roll+=t.offset)<0)?.label;
   delete pawn.draft;delete pawn.shooting;delete pawn.melee;delete pawn.flee;
   interruptDraftWork(world,pawn);
-  mentalState(pawn).crisis={kind:'sad-wander',age:0,target:null,waitUntil:world.tick};
+  mentalState(pawn).crisis={kind,age:0,target:null,waitUntil:world.tick};
   pawn.needCooldown=0;pawn.planCooldown=0;
-  world.events.push({tick:world.tick,type:'need',message:`${pawn.name} commence une errance triste.${reason?` Dernière cause : ${reason}.`:''}`});
+  world.events.push({tick:world.tick,type:'need',message:`${pawn.name} ${kind==='food-binge'?'commence une frénésie alimentaire':'commence une errance triste'}.${reason?` Dernière cause : ${reason}.`:''}`});
   if(world.events.length>80)world.events.splice(0,world.events.length-80);
   return true;
 }
+export const startSadWander=(world:World,pawn:Pawn):boolean=>startMinorBreak(world,pawn,'sad-wander');
+export const startFoodBinge=(world:World,pawn:Pawn):boolean=>startMinorBreak(world,pawn,'food-binge');
 
 /** Counters/cooldown are saved; the schedule derives only from tick and ID.
  * No random calls on healthy ordinary actors. */
@@ -41,7 +42,8 @@ export function updateMentalBreak(world:World,pawn:Pawn):void {
     if(pawn.state==='downed'||moodFrozen(pawn)){finishMentalBreak(world,pawn);return;}
     if((world.tick+pawn.id)%3===0) {
       m.crisis.age+=30;
-      if(m.crisis.age>=60000||m.crisis.age>=40000&&healthRandom(world)<30/(.166*60000)) {
+      const binge=m.crisis.kind==='food-binge';
+      if(m.crisis.age>=(binge?45000:60000)||m.crisis.age>=(binge?25000:40000)&&healthRandom(world)<30/(.166*60000)) {
         finishMentalBreak(world,pawn);
         // Recovery ends the crisis job as well. A carried meal stays physical;
         // interruption may retain it until the active edge/ground permits drop.
@@ -56,10 +58,13 @@ export function updateMentalBreak(world:World,pawn:Pawn):void {
   for(let i=0;i<3;i++)m.below[i]=pawn.mood<thresholds[i]! ? Math.min(2100,m.below[i]!+150):0;
   if(m.cooldown||pawn.state==='downed'||moodFrozen(pawn))return;
   const level=m.below[2]>2000?2:m.below[1]>2000?1:m.below[0]>2000?0:-1;
-  if(level>=0&&healthRandom(world)<150/(BREAK_MTB_DAYS[Math.max(0,level)]!*60000))startSadWander(world,pawn);
+  if(level>=0&&healthRandom(world)<150/(BREAK_MTB_DAYS[Math.max(0,level)]!*60000)) {
+    if(!pawn.prisoner&&healthRandom(world)<.8/(.8+.5))startFoodBinge(world,pawn);
+    else startSadWander(world,pawn);
+  }
 }
 
-export function processSadWander(world:World,pawn:Pawn,context:NeedContext,candidatesReach:()=>Reachability|null):void {
+export function processMentalBreak(world:World,pawn:Pawn,context:NeedContext,candidatesReach:()=>Reachability|null):void {
   const crisis=pawn.mental?.crisis;if(!crisis)return;
   collapseFromExhaustion(world,pawn,context);
   if(moodFrozen(pawn)){finishMentalBreak(world,pawn);return;}
@@ -97,3 +102,4 @@ export function processSadWander(world:World,pawn:Pawn,context:NeedContext,candi
   crisis.target={x:dest.x,z:dest.z};pawn.path=routeToCell(world,dest,reach)!;pawn.planCooldown=0;
   context.move(crisis.target,true);
 }
+export const processSadWander=processMentalBreak;

@@ -6,7 +6,7 @@ export interface MentalState {
   /** Local ticks awake until another mood break is allowed. */
   cooldown:number;
   catharsis:number[];
-  crisis?:{kind:'sad-wander';age:number;target:Cell|null;waitUntil:number};
+  crisis?:{kind:'sad-wander'|'food-binge';age:number;target:Cell|null;waitUntil:number};
 }
 export const BREAK_MTB_DAYS=[4,.8,.5] as const;
 export const CATHARSIS_DURATION=18000;
@@ -16,13 +16,14 @@ export function mentalState(pawn:Pawn):MentalState {
 }
 export function finishMentalBreak(world:World,pawn:Pawn,reward=true):void {
   const m=pawn.mental;if(!m?.crisis)return;
+  const kind=m.crisis.kind;
   delete m.crisis;pawn.path=[];if(!pawn.need&&pawn.state!=='downed'&&pawn.state!=='dead')pawn.state='idle';pawn.planCooldown=0;pawn.needCooldown=0;
   m.cooldown=1500;
   if(reward) {
     m.catharsis=m.catharsis.filter(t=>t>world.tick);
     if(m.catharsis.length===5)m.catharsis.shift();
     m.catharsis.push(world.tick+CATHARSIS_DURATION);
-    world.events.push({tick:world.tick,type:'need',message:`${pawn.name} sort de son errance triste.`});
+    world.events.push({tick:world.tick,type:'need',message:kind==='food-binge'?`${pawn.name} cesse sa frénésie alimentaire.`:`${pawn.name} sort de son errance triste.`});
     if(world.events.length>80)world.events.splice(0,world.events.length-80);
   }
 }

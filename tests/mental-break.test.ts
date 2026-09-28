@@ -25,7 +25,8 @@ test('exposure is sampled and random, strict thresholds reset independently, sle
   for(let i=0;i<300;i++){w.tick++;updateMentalBreak(w,p);}expect(p.mental?.cooldown).toBe(5);expect(p.mental?.crisis).toBeUndefined();expect(p.mental?.below).toEqual([2100,2100,2100]);
   p.state='idle';const replay=structuredClone(w);
   for(let i=0;i<120000&&!p.mental?.crisis;i++){w.tick++;replay.tick++;updateMentalBreak(w,p);updateMentalBreak(replay,replay.pawns[0]!);}
-  expect(p.mental?.crisis).toBeDefined();expect(replay).toEqual(w);expect(w.events.at(-1)?.message).toContain('errance triste');
+  expect(p.mental?.crisis).toBeDefined();expect(replay).toEqual(w);
+  expect(w.events.at(-1)?.message).toContain(p.mental?.crisis?.kind==='food-binge'?'frénésie alimentaire':'errance triste');
 });
 
 test('break interrupts real work and active travel, releases orders, preserves the edge and rejects direct control atomically',()=>{

@@ -1,12 +1,12 @@
 # Errance triste — V65
 
-Première crise réellement jouée : un colon cesse ses activités, abandonne ses engagements et erre lentement. Commandes individuelles, mobilisation et attaques sont refusées ; zones, horaires et politiques restent modifiables. Portrait ↝, alerte et inspection indiquent la crise. Ce contenu ne représente pas le catalogue complet des crises. [Recherche](../research/mental-break-reference.md), [preuves](../history/validation-mental-break-v65.md).
+Première crise réellement jouée : un colon cesse ses activités, abandonne ses engagements et erre lentement. Commandes individuelles, mobilisation et attaques sont refusées ; zones, horaires et politiques restent modifiables. Portrait ↝, alerte et inspection indiquent la crise. Ce contrat V65 reste propre à l'errance ; la [frénésie alimentaire V150](food-binge-v150.md) est depuis le deuxième contenu mineur. [Recherche](../research/mental-break-reference.md), [preuves](../history/validation-mental-break-v65.md).
 
 ## Déclenchement et conséquences
 
 Trois expositions indépendantes sous humeur **strictement inférieure aux seuils personnels** (neutre 35/20/5 ; V69 Résolu 26/14,857…/3,714… et Nerveux 43/24,571…/6,142…, voir [traits](traits.md)) sont échantillonnées tous les 150 ticks Core (15 locaux). Au-delà de 2 000 Core, un tirage a lieu suivant le niveau éligible le plus intense : MTB 4/0,8/0,5 jours. Ce sont des probabilités, jamais un déclenchement instantané au seuil. Les compteurs sont saturés à 2 100 car seul le franchissement intervient. Aucun nouveau déclenchement pendant sommeil, incapacité ou crise ; cooldown après récupération de 15 000 Core **éveillés**. La jauge réelle, pas sa cible, détermine l’exposition.
 
-Le catalogue actuel contient seulement l’errance triste, mineure. Un niveau supérieur se replie sur ce contenu disponible : **distribution volontairement incomplète**, ni rage ni errance psychotique inventées. Le journal choisit une cause négative importante pondérée, pas nécessairement l’événement le plus récent.
+Au moment de V65, le catalogue contenait seulement l’errance triste, mineure ; V150 y ajoute la frénésie alimentaire avec un choix pondéré. Un niveau supérieur se replie encore sur les contenus mineurs disponibles : **distribution volontairement incomplète**, ni rage ni errance psychotique inventées. Le journal choisit une cause négative importante pondérée, pas nécessairement l’événement le plus récent.
 
 Les travaux, files, postes et réservations sont libérés. Arête engagée et poses restent continues ; une cargaison garde son propriétaire jusqu’à fin d’arête et dépôt autorisé. Sol saturé : conservation et nouvelles tentatives de dépôt pendant l’errance, jamais destruction silencieuse. Le patient porté suit le contrat existant de libération sûre. L’arme et les vêtements restent équipés. Le départ est une interruption forte, y compris des postures de combat ; les projectiles déjà émis continuent.
 

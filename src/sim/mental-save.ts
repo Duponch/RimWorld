@@ -12,7 +12,7 @@ export function validateMental(world:World,version:number):string[] {
     if(Number(m.below[0])<Number(m.below[1])||Number(m.below[1])<Number(m.below[2]))errors.push('Invalid mental exposure.');
     if(m.crisis!==undefined) {
       const c=m.crisis;
-      if(!object(c)||Object.keys(c).some(k=>!['kind','age','target','waitUntil'].includes(k))||c.kind!=='sad-wander'||!integer(c.age,0,59999)||Number(c.age)%30!==0||typeof c.waitUntil!=='number'||!Number.isFinite(c.waitUntil)||c.waitUntil<0||c.waitUntil>world.tick+20.1||!(c.target===null||object(c.target)&&Object.keys(c.target).every(k=>k==='x'||k==='z')&&integer(c.target.x,0,world.width-1)&&integer(c.target.z,0,world.height-1)))errors.push('Invalid sad wander.');
+      if(!object(c)||Object.keys(c).some(k=>!['kind','age','target','waitUntil'].includes(k))||!(c.kind==='sad-wander'||version>=150&&c.kind==='food-binge')||!integer(c.age,0,c.kind==='food-binge'?44999:59999)||Number(c.age)%30!==0||typeof c.waitUntil!=='number'||!Number.isFinite(c.waitUntil)||c.waitUntil<0||c.waitUntil>world.tick+20.1||!(c.target===null||object(c.target)&&Object.keys(c.target).every(k=>k==='x'||k==='z')&&integer(c.target.x,0,world.width-1)&&integer(c.target.z,0,world.height-1)))errors.push('Invalid mental crisis.');
       else if(!(version>=87&&p.burning)&&!p.need&&p.path.length) {
         const end=p.path.at(-1)!;
         if(!object(c.target)||end.x!==c.target.x||end.z!==c.target.z)errors.push('Mental route has no matching destination.');
