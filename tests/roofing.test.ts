@@ -7,6 +7,7 @@ import { applyCommand, stepWorld } from '../src/sim/engine';
 import { serializeWorld, deserializeWorld, validateWorld } from '../src/sim/serialization';
 import { RoofContext, isRoofJob, isRoofed } from '../src/sim/roof-rules';
 import { plantGrowth } from '../src/sim/plants';
+import { gatherResource } from '../src/sim/gathering';
 import { queryOrderOptions } from '../src/sim/player-orders';
 import { roomCamp } from './scenarios/rooms';
 import { deconstructionCamp, fixtureBuilding } from './scenarios/deconstruction';
@@ -81,6 +82,86 @@ test('builders physically roof a camp, clear a tree, preserve ceiling/floor coex
   area(w,'remove-roof',13,14);until(w,()=>!isRoofed(w,14*32+13));
   const exposed=w.resources.find(r=>r.id===rice.id)!;expect(plantGrowth(w,exposed)).toBe(growth);
   stepWorld(w,300);expect(plantGrowth(w,exposed)).toBeGreaterThan(growth);
+  expect(validateWorld(w)).toEqual([]);
+});
+
+test('roof clearance and a later chop share one tree yield, release rival claims and resume exactly',()=>{
+  const w=roomCamp(),tree={id:w.nextId++,kind:'tree' as const,x:12,z:14,amount:12};w.resources.push(tree);
+  area(w,'build-roof',10,10,20,20);
+  until(w,()=>w.jobs.some(j=>j.kind==='build-roof'&&j.x===tree.x&&j.z===tree.z&&(j.clearance?.progress??0)>0));
+  const roof=w.jobs.find(j=>j.kind==='build-roof'&&j.x===tree.x&&j.z===tree.z)!,builder=w.pawns[0]!;
+  expect(applyCommand(w,{type:'priority',pawnId:builder.id,work:'gather',value:2}).ok).toBe(true);
+  expect(applyCommand(w,{type:'designate',kind:'chop',x:tree.x,z:tree.z}).ok).toBe(true);
+  const chop=w.jobs.find(j=>j.kind==='chop'&&j.x===tree.x&&j.z===tree.z)!;
+  expect(applyCommand(w,{type:'order-job',pawnId:builder.id,jobId:chop.id,queue:true}).ok).toBe(true);
+  expect(builder.orders.queue).toContain(chop.id);
+
+  const refused=deserializeWorld(serializeWorld(w));refused.nextId=Number.MAX_SAFE_INTEGER;
+  const unchanged=JSON.stringify(refused);
+  expect(gatherResource(refused,refused.resources.find(r=>r.id===tree.id)!,'chop',roof.id)).toBeNull();
+  expect(JSON.stringify(refused)).toBe(unchanged);
+
+  const replay=deserializeWorld(serializeWorld(w));
+  until(w,()=>!w.resources.some(r=>r.id===tree.id));
+  stepWorld(replay,w.tick-replay.tick);expect(replay).toEqual(w);
+  expect(w.jobs.some(j=>j.id===chop.id)).toBe(false);
+  expect(builder.orders.queue).not.toContain(chop.id);
+  expect(w.piles.filter(p=>p.item==='wood').reduce((sum,p)=>sum+p.quantity,0)).toBe(12);
+  until(w,()=>isRoofed(w,tree.z*w.width+tree.x));
+  expect(validateWorld(w)).toEqual([]);
+
+  const reverse=roomCamp(),otherTree={id:reverse.nextId++,kind:'tree' as const,x:12,z:14,amount:12};reverse.resources.push(otherTree);
+  const cutter=structuredClone(reverse.pawns[0]!);cutter.id=reverse.nextId++;cutter.name='Abatteur';cutter.x=13;cutter.z=14;
+  cutter.priorities.build=0;cutter.priorities.gather=1;reverse.pawns.push(cutter);
+  area(reverse,'build-roof',10,10,20,20);
+  until(reverse,()=>reverse.jobs.some(j=>j.kind==='build-roof'&&j.x===otherTree.x&&j.z===otherTree.z&&(j.clearance?.progress??0)>0));
+  const reverseRoof=reverse.jobs.find(j=>j.kind==='build-roof'&&j.x===otherTree.x&&j.z===otherTree.z)!;
+  expect(applyCommand(reverse,{type:'designate',kind:'chop',x:otherTree.x,z:otherTree.z}).ok).toBe(true);
+  const reverseChop=reverse.jobs.find(j=>j.kind==='chop'&&j.x===otherTree.x&&j.z===otherTree.z)!;
+  reverseChop.progress=99; // Force the legitimate cutter to finish first.
+  expect(applyCommand(reverse,{type:'order-job',pawnId:cutter.id,jobId:reverseChop.id,queue:false}).ok).toBe(true);
+  const reverseReplay=deserializeWorld(serializeWorld(reverse));
+  until(reverse,()=>!reverse.resources.some(r=>r.id===otherTree.id));
+  stepWorld(reverseReplay,reverse.tick-reverseReplay.tick);expect(reverseReplay).toEqual(reverse);
+  expect(reverse.jobs).toContain(reverseRoof);
+  expect(reverseRoof.clearance).toBeUndefined();
+  expect(reverse.jobs.some(j=>j.id===reverseChop.id)).toBe(false);
+  expect(reverse.piles.filter(p=>p.item==='wood').reduce((sum,p)=>sum+p.quantity,0)).toBe(12);
+  until(reverse,()=>isRoofed(reverse,otherTree.z*reverse.width+otherTree.x));
+  expect(validateWorld(reverse)).toEqual([]);
+
+  const active=roomCamp(),activeTree={id:active.nextId++,kind:'tree' as const,x:12,z:14,amount:12};active.resources.push(activeTree);
+  const worker=structuredClone(active.pawns[0]!);worker.id=active.nextId++;worker.name='Abatteur';worker.x=13;worker.z=14;
+  worker.priorities.build=0;worker.priorities.gather=1;active.pawns.push(worker);
+  area(active,'build-roof',10,10,20,20);
+  until(active,()=>active.jobs.some(j=>j.kind==='build-roof'&&j.x===activeTree.x&&j.z===activeTree.z&&(j.clearance?.progress??0)>0));
+  const activeRoof=active.jobs.find(j=>j.kind==='build-roof'&&j.x===activeTree.x&&j.z===activeTree.z)!;
+  expect(applyCommand(active,{type:'designate',kind:'chop',x:activeTree.x,z:activeTree.z}).ok).toBe(true);
+  const activeChop=active.jobs.find(j=>j.kind==='chop'&&j.x===activeTree.x&&j.z===activeTree.z)!;
+  expect(applyCommand(active,{type:'designate',kind:'deconstruct',x:10,z:14}).ok).toBe(true);
+  const unrelated=active.jobs.find(j=>j.kind==='deconstruct'&&j.x===10&&j.z===14)!;
+  expect(applyCommand(active,{type:'priority',pawnId:worker.id,work:'build',value:2}).ok).toBe(true);
+  expect(applyCommand(active,{type:'order-job',pawnId:worker.id,jobId:activeChop.id,queue:false}).ok).toBe(true);
+  expect(applyCommand(active,{type:'order-job',pawnId:worker.id,jobId:unrelated.id,queue:true}).ok).toBe(true);
+  expect(worker.jobId).toBe(activeChop.id);expect(worker.orders.queue).toContain(unrelated.id);
+  activeRoof.clearance!.progress=99; // The roof worker now wins the shared tree.
+  stepWorld(active);
+  expect(active.resources.some(r=>r.id===activeTree.id)).toBe(false);
+  expect(active.jobs.some(j=>j.id===activeChop.id)).toBe(false);
+  expect(active.jobs).toContain(unrelated);
+  expect(unrelated.reservedBy).toBe(worker.id);
+  expect(worker.jobId===unrelated.id||worker.orders.queue.includes(unrelated.id)).toBe(true);
+  expect(active.piles.filter(p=>p.item==='wood').reduce((sum,p)=>sum+p.quantity,0)).toBe(12);
+  expect(validateWorld(active)).toEqual([]);
+});
+
+test('a persistent berry harvest keeps its separate cutting order',()=>{
+  const w=roomCamp(),berry={id:w.nextId++,kind:'berries' as const,x:12,z:14,amount:6,growth:1,growthTick:w.tick};w.resources.push(berry);
+  expect(applyCommand(w,{type:'designate',kind:'cut',x:berry.x,z:berry.z}).ok).toBe(true);
+  const cut=w.jobs.find(j=>j.kind==='cut'&&j.x===berry.x&&j.z===berry.z)!;
+  expect(gatherResource(w,berry,'harvest')).toBe(6);
+  expect(w.resources).toContain(berry);
+  expect(w.jobs).toContain(cut);
   expect(validateWorld(w)).toEqual([]);
 });
 

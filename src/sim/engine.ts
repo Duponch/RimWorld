@@ -480,7 +480,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     const resource = world.resources.find(item => sameCell(item, job));
     if (!resource) { releaseWork(world, pawn); return; }
     if (job.kind === 'harvest' && !harvestable(world, resource)) { releaseWork(world, pawn); return; }
-    const quantity=gatherResource(world,resource,job.kind);
+    const quantity=gatherResource(world,resource,job.kind,job.id);
     if(quantity===null){setWorkUnits(job,Math.max(0,Math.round((jobDuration(world,job)-1)*WORK_FRACTIONS)));releaseWork(world,pawn);return;}
     if(job.kind!=='chop'&&quantity>0)event(world,'job',`${pawn.name} a récolté ${quantity} ${harvestProductLabel(resource)}.`);
   } else if(job.kind==='lay-floor'||job.kind==='remove-floor'){
@@ -651,7 +651,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         if(adjacent(pawn,plant)) {
           pawn.path=[];pawn.state='working';advanceWork(job.clearance,getLight().speedAt(pawn)*physicalWorkFactor(pawn,'plant',body));
           if(job.clearance.progress>=clearingDuration(plant)) {
-            const quantity=gatherResource(world,plant,plant.kind==='tree'?'chop':'cut');
+            const quantity=gatherResource(world,plant,plant.kind==='tree'?'chop':'cut',job.id);
             if(quantity!==null)event(world,'job',`${pawn.name} a dégagé le chantier${plant.kind!=='tree'&&quantity>0?` et a récolté ${quantity} ${harvestProductLabel(plant)}`:''}.`);
             releaseWork(world,pawn);wakePlanners(world);
           }
