@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-**État du dépôt :** schéma 144. La consolidation V145 organise les outils, les tests et les documents et corrige un défaut de déblaiement concurrent, sans nouveau système de jeu. L’[inventaire fonctionnel](gameplay/implementation-status.md) est la synthèse actuelle des fonctionnalités livrées, partielles et absentes. La [feuille de route](ROADMAP.md) est le calendrier des travaux ; la [validation courante](development/validation.md) borne les preuves. Les anciens résumés de versions sont conservés dans l’[index archivé](README-pre-v145.md).
+**État du dépôt :** schéma 144. La consolidation V145 organise les outils, les tests et les documents ; le [profil CPU V146](history/validation-performance-v146.md) retire une recapture de publication sans nouveau système de jeu. L’[inventaire fonctionnel](gameplay/implementation-status.md) est la synthèse actuelle des fonctionnalités livrées, partielles et absentes. La [feuille de route](ROADMAP.md) est le calendrier des travaux ; la [validation courante](development/validation.md) borne les preuves. Les anciens résumés de versions sont conservés dans l’[index archivé](README-pre-v145.md).
 
 ## Trouver la bonne information
 
