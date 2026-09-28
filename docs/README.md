@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-**État du dépôt :** schéma 144. La consolidation V145 organise les outils, les tests et les documents ; le [profil CPU V146](history/validation-performance-v146.md) retire une recapture de publication sans nouveau système de jeu. L’[inventaire fonctionnel](gameplay/implementation-status.md) est la synthèse actuelle des fonctionnalités livrées, partielles et absentes. La [feuille de route](ROADMAP.md) est le calendrier des travaux ; la [validation courante](development/validation.md) borne les preuves. Les anciens résumés de versions sont conservés dans l’[index archivé](README-pre-v145.md).
+**État du dépôt :** schéma 148. V148 ajoute la boucle du [casque de reconnaissance](development/recon-helmet-v148.md) ; V145–V147 avaient consolidé les outils et réduit des coûts CPU ciblés. L’[inventaire fonctionnel](gameplay/implementation-status.md) est la synthèse actuelle des fonctionnalités livrées, partielles et absentes. La [feuille de route](ROADMAP.md) est le calendrier des travaux ; la [validation courante](development/validation.md) borne les preuves. Les anciens résumés de versions sont conservés dans l’[index archivé](README-pre-v145.md).
 
 ## Trouver la bonne information
 
@@ -19,7 +19,7 @@
 ## Organisation
 
 - **gameplay/** décrit l’expérience présente et la cible. Une ligne de matrice ou une définition de catalogue n’est pas une livraison.
-- **development/** fixe les contrats et les frontières techniques. Les contrats les plus récents concernent les [pannes V144](development/breakdown-v144.md), les [portes automatiques V143](development/autodoor-v143.md), le [transfert local de terrain V142](development/terrain-upload-v142.md), le [casque pare-balles V141](development/flak-helmet-v141.md) et la [fabrication avancée V139](development/advanced-fabrication-v139.md).
+- **development/** fixe les contrats et les frontières techniques. Les contrats récents concernent le [casque de reconnaissance V148](development/recon-helmet-v148.md), les [pannes V144](development/breakdown-v144.md), les [portes automatiques V143](development/autodoor-v143.md), le [transfert local de terrain V142](development/terrain-upload-v142.md), le [casque pare-balles V141](development/flak-helmet-v141.md) et la [fabrication avancée V139](development/advanced-fabrication-v139.md).
 - **research/** conserve sources, versions et incertitudes. **reference/originals/** conserve le [corpus reçu](reference/originals/manifest.json) avec contrôle d’intégrité.
 - **history/** conserve les preuves et leurs conditions exactes ; une validation passée ne certifie pas automatiquement une révision ultérieure.
 - **decisions/** conserve les choix de conception et leurs remplacements.

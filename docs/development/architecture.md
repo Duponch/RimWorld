@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-État consolidé sous V145, schéma 144. Cette page décrit les frontières actuelles ; les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés et ne constituent pas un inventaire fonctionnel actuel. Celui-ci est tenu dans [l’état du jeu](../gameplay/implementation-status.md).
+État courant au schéma 148. V145–V147 entretiennent les outils et les coûts CPU ; V148 ajoute le [casque de reconnaissance](recon-helmet-v148.md) sans changer ces frontières. Les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés et ne constituent pas un inventaire fonctionnel actuel. Celui-ci est tenu dans [l’état du jeu](../gameplay/implementation-status.md).
 
 ## Objectif
 

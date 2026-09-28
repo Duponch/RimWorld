@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Fabriquer et porter un casque de reconnaissance — V148
+
+Dans **Recherche**, terminez **Vêtements complexes** et **Fabrication**, puis **Armure de reconnaissance** au bureau avancé alimenté proche d'un multi-analyseur alimenté. Gardez un établi de fabrication sous tension, un colon avec **Artisanat 6**, **30 plastaciers** et **1 composant avancé** accessibles. Le composant peut venir de la facture Fabrication avancée V139 ou d'une acquisition antérieure ; cette recherche n'est pas un préalable au casque. Ajoutez la facture **Casque de reconnaissance** à l'établi. Le colon transporte les deux matières, crée un ouvrage physique, le travaille et dépose le casque fini. Une sauvegarde pendant le travail conserve auteur, facture, parts et progression. Le casque peut être rangé, transporté et enfilé par ordre direct ou par politique vestimentaire. Il protège les yeux et la mâchoire en plus du haut de la tête, à la place du casque pare-balles sur la même couche. [Règles, adaptations et limites](../development/recon-helmet-v148.md).
+
 ## Sélection et dossiers — V129
 
 Survolez une case pour lire en bas à gauche terrain, fertilité, lumière et objets présents. Cliquez un repas, un fragment, une plante, un bâtiment ou une zone pour ouvrir sa fiche ; des clics répétés sur la même case parcourent les cibles superposées. Cliquer la terre nue ferme la fiche. Une zone agricole n'affiche son contour que lorsqu'elle est sélectionnée ou que l'outil de zone est actif. Sur un colon, Journal, Matériel, Social, Bio, Besoins et Santé s'ouvrent au-dessus du résumé et des commandes. Le Journal montre seulement les événements encore conservés. [Contrat et limites](../development/selection-inspection-v129.md).

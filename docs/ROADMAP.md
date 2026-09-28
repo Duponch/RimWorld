@@ -1,6 +1,6 @@
 # Plan de développement
 
-V145 consolide les outils, les tests et la documentation ; V146 profile la charge CPU et retire une recapture du worker ; V147 réduit un sous-coût de la proposition d'extinction. **Le schéma reste 144 et aucun nouveau système n’est livré par ces versions.** L’[état fonctionnel](gameplay/implementation-status.md) décrit le jeu présent ; la [validation courante](development/validation.md) en borne les preuves. Les priorités ci-dessous sont des travaux, pas des validations acquises.
+**Schéma courant 148.** V145 consolide les outils, les tests et la documentation ; V146 profile la charge CPU et retire une recapture du worker ; V147 réduit un sous-coût de la proposition d'extinction. Ces trois lots ont conservé la version 144 des sauvegardes, sans nouvelle mécanique. V148 ajoute le [casque de reconnaissance](development/recon-helmet-v148.md). L’[état fonctionnel](gameplay/implementation-status.md) décrit le jeu présent ; la [validation courante](development/validation.md) en borne les preuves. Les priorités ci-dessous sont des travaux, pas des validations acquises.
 
 ## Priorité actuelle
 
