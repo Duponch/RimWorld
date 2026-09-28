@@ -45,10 +45,22 @@ export function firefightingTargets(w:World,p:Pawn):FireRecord[] {
 }
 export interface FirefightingProposal {fireId:number;target:Cell;path:Cell[]}
 export function firefightingProposal(w:World,p:Pawn,reach:Reachability):FirefightingProposal|undefined {
+  const origin={x:reach.start%w.width,z:Math.floor(reach.start/w.width)};
   for(const f of firefightingTargets(w,p)){
     const target=firePosition(w,f)!;
-    const paths=[target,...workNeighbours(target,'mine')].filter(c=>inside(w,c)&&fireTouch(w,c,target)&&canStopAt(w,c,reach)).map(c=>routeToCell(w,c,reach)).filter((path):path is Cell[]=>path!==null).sort((a,b)=>a.length-b.length);
-    if(paths.length)return {fireId:f.id,target:{x:target.x,z:target.z},path:paths[0]!};
+    const cells=[target,...workNeighbours(target,'mine')]
+      .filter(c=>inside(w,c)&&fireTouch(w,c,target)&&canStopAt(w,c,reach))
+      .map((cell,index)=>({cell,index,minSteps:Math.max(Math.abs(origin.x-cell.x),Math.abs(origin.z-cell.z))}))
+      .sort((a,b)=>a.minSteps-b.minSteps||a.index-b.index);
+    let best:{path:Cell[];index:number}|undefined;
+    for(const {cell,index,minSteps} of cells){
+      // Eight-neighbour travel cannot use fewer than minSteps edges. The old
+      // stable sort chose the earliest cell when paths had equal lengths.
+      if(best&&(minSteps>best.path.length||minSteps===best.path.length&&index>best.index))continue;
+      const path=routeToCell(w,cell,reach);
+      if(path!==null&&(!best||path.length<best.path.length||path.length===best.path.length&&index<best.index))best={path,index};
+    }
+    if(best)return {fireId:f.id,target:{x:target.x,z:target.z},path:best.path};
   }
   return undefined;
 }
