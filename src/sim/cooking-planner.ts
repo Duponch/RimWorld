@@ -35,10 +35,13 @@ export function availableCookingStations(world:World,pawn:Pawn):Structure[] {
 export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:{pairs:number},options?:{stationId:number;forced:boolean}):CookingPlan|null {
   const stations=availableCookingStations(world,pawn).filter(s=>!options||s.id===options.stationId)
     .sort((a,b)=>pawn.priorities[stationWork(a)]-pawn.priorities[stationWork(b)]||distance(pawn,a)-distance(pawn,b)||a.id-b.id);
+  // Proposals below only read the World; reserve claims cannot change until
+  // the caller commits a plan. Capture the same service cells at most once.
+  let serviceCells:ReadonlySet<number>|undefined;
   for(const station of stations) {
     if(fuelStationReserved(world,station.id,pawn.id))continue;
     const spot=cookingSpot(station);
-    if(!cookingPlaceFree(world,spot)||reservedServiceCells(world,pawn.id).has(spot.z*world.width+spot.x))continue;
+    if(!cookingPlaceFree(world,spot)||(serviceCells??=reservedServiceCells(world,pawn.id)).has(spot.z*world.width+spot.x))continue;
     const toSpot=routeToCell(world,spot,reachable);
     if(!toSpot)continue;
     for(const bill of station.bills!) {

@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-**État du dépôt :** schéma 150. V150 ajoute la [frénésie alimentaire](development/food-binge-v150.md), deuxième crise mineure locale, après validation stricte de la sauvegarde 148. V149 avait ajouté les [effets sonores locaux](development/audio-sfx-v149.md), sans musique. L’[inventaire fonctionnel](gameplay/implementation-status.md) est la synthèse actuelle des fonctionnalités livrées, partielles et absentes. La [feuille de route](ROADMAP.md) est le calendrier des travaux ; la [validation courante](development/validation.md) borne les preuves. Les anciens résumés de versions sont conservés dans l’[index archivé](README-pre-v145.md).
+**État du dépôt :** schéma 150. V151 réduit le coût de la [proposition de cuisine](development/cooking-service-cache-v151.md) sans changer ses décisions ni la sauvegarde. V150 a ajouté la [frénésie alimentaire](development/food-binge-v150.md), deuxième crise mineure locale ; V149 les [effets sonores locaux](development/audio-sfx-v149.md), sans musique. L’[inventaire fonctionnel](gameplay/implementation-status.md) est la synthèse actuelle des fonctionnalités livrées, partielles et absentes. La [feuille de route](ROADMAP.md) est le calendrier des travaux ; la [validation courante](development/validation.md) borne les preuves. Les anciens résumés de versions sont conservés dans l’[index archivé](README-pre-v145.md).
 
 ## Trouver la bonne information
 
@@ -19,7 +19,7 @@
 ## Organisation
 
 - **gameplay/** décrit l’expérience présente et la cible. Une ligne de matrice ou une définition de catalogue n’est pas une livraison.
-- **development/** fixe les contrats et les frontières techniques. Les contrats récents concernent la [frénésie alimentaire V150](development/food-binge-v150.md), le [son V149](development/audio-sfx-v149.md), le [casque de reconnaissance V148](development/recon-helmet-v148.md), les [pannes V144](development/breakdown-v144.md), les [portes automatiques V143](development/autodoor-v143.md), le [transfert local de terrain V142](development/terrain-upload-v142.md), le [casque pare-balles V141](development/flak-helmet-v141.md) et la [fabrication avancée V139](development/advanced-fabrication-v139.md).
+- **development/** fixe les contrats et les frontières techniques. Les contrats récents concernent la [cuisine V151](development/cooking-service-cache-v151.md), la [frénésie alimentaire V150](development/food-binge-v150.md), le [son V149](development/audio-sfx-v149.md), le [casque de reconnaissance V148](development/recon-helmet-v148.md), les [pannes V144](development/breakdown-v144.md), les [portes automatiques V143](development/autodoor-v143.md), le [transfert local de terrain V142](development/terrain-upload-v142.md), le [casque pare-balles V141](development/flak-helmet-v141.md) et la [fabrication avancée V139](development/advanced-fabrication-v139.md).
 - **research/** conserve sources, versions et incertitudes. **reference/originals/** conserve le [corpus reçu](reference/originals/manifest.json) avec contrôle d’intégrité.
 - **history/** conserve les preuves et leurs conditions exactes ; une validation passée ne certifie pas automatiquement une révision ultérieure.
 - **decisions/** conserve les choix de conception et leurs remplacements.
