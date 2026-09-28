@@ -50,9 +50,9 @@ test('prepared V139 save has four physical inputs and makes its first advanced c
   const raw=readFileSync('public/test-saves/v139/industrie-avancee.json','utf8');
   const manifest=JSON.parse(readFileSync('public/test-saves/manifest.json','utf8')) as {saves:{id:string;sha256:string}[]};
   expect(manifest.saves.find(s=>s.id==='industrie-avancee-v139')?.sha256).toBe(createHash('sha256').update(raw).digest('hex'));
-  expect(raw).toBe(serializeWorld(prepareAdvancedIndustryDemo()));
+  expect(deserializeWorld(raw)).toEqual(prepareAdvancedIndustryDemo());
   const w=deserializeWorld(raw),bench=w.structures.find(s=>s.kind==='fabrication-bench')!,pawn=w.pawns[0]!;
-  expect(w.schemaVersion).toBe(139);
+  expect(w.schemaVersion).toBe(141);
   expect(bench.bills?.map(b=>b.recipe)).toEqual(['make-advanced-component']);
   expect(amount(w,'component')).toBe(1);
   expect(amount(w,'steel')).toBeGreaterThanOrEqual(20);
@@ -178,7 +178,7 @@ test('V138 migration is neutral and rejects V139 research, bill, task and typed 
   const old=deserializeWorld(readFileSync('public/test-saves/v123/industrie.json','utf8'));
   (old as {schemaVersion:number}).schemaVersion=138;
   const before=structuredClone(old),migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated).toEqual({...before,schemaVersion:139});
+  expect(migrated).toEqual({...before,schemaVersion:141});
   const futureResearch=structuredClone(old);futureResearch.research!.advancedFabrication={points:ADVANCED_FABRICATION_RESEARCH_COST,completedAt:futureResearch.tick};
   expect(()=>deserializeWorld(JSON.stringify(futureResearch))).toThrow('Invalid version 138 save');
   const futureBill=structuredClone(old);futureBill.structures.find(s=>s.kind==='fabrication-bench')!.bills!.push({...futureBill.structures.find(s=>s.kind==='fabrication-bench')!.bills![0]!,id:futureBill.nextId++,recipe:'make-advanced-component',filters:{component:true,steel:true,plasteel:true,gold:true}});

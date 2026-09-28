@@ -21,6 +21,7 @@ describe('small visitor economy: physical stock, condition and actual buying cat
     expect(pileMarketValue(pile('cloth-shirt',{apparel:{quality:'normal',hitPoints:100}}))).toBeCloseTo(77.22);
     expect(pileMarketValue(pile('cloth-tribalwear',{apparel:{quality:'normal',hitPoints:100}}))).toBeCloseTo(96.48);
     expect(pileMarketValue(pile('flak-vest',{apparel:{quality:'normal',hitPoints:200}}))).toBe(225);
+    expect(pileMarketValue(pile('flak-helmet',{apparel:{quality:'normal',hitPoints:120}}))).toBe(260);
     for(const item of ['cloth','wood','berries','medicine'] as const)expect(pileMarketValue(pile(item,{damage:45}))).toBe(pileMarketValue(pile(item)));
     for(const [hp,value] of [[0,0],[.5,.1],[.6,.5],[.9,1],[1,1]])expect(tradeHealthFactor(hp)).toBeCloseTo(value);
     expect(pileMarketValue(pile('legacy-portion'))).toBeUndefined();

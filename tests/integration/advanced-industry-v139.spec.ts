@@ -8,7 +8,7 @@ test('Fabrication avancée V139 : recherche, facture et ouvrage physique dans le
   test.setTimeout(150000);
   const raw=readFileSync(new URL('../../public/test-saves/v139/industrie-avancee.json',import.meta.url),'utf8');
   const prepared=deserializeWorld(raw);
-  expect(prepared.schemaVersion).toBe(139);
+  expect(prepared.schemaVersion).toBe(141);
   expect(validateWorld(prepared)).toEqual([]);
   expect(prepared.piles.some(pile=>pile.item==='advanced-component')).toBe(false);
   const bench=prepared.structures.find(structure=>structure.kind==='fabrication-bench')!;

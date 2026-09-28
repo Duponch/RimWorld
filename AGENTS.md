@@ -1,5 +1,11 @@
 # Travail sur Lisière
 
+## Casque pare-balles V141
+
+- Lire `docs/development/flak-helmet-v141.md`, `docs/research/flak-helmet-core-v141.md` et `docs/history/validation-flak-helmet-v141.md`. Core 1.6.4871 : `Apparel_AdvancedHelmet` après Armure pare-balles, usinage, Artisanat 5, 40 matières métalliques + 2 composants ordinaires + 10 plastaciers, 8 000 travaux Core. V141 fixe l'acier principal et convertit à 800 ticks neutres locaux. Ce n'est pas le casque simple ; aucun composant avancé n'est consommé.
+- Schéma 141 : valider strictement V139 avant migration neutre. Aucune recherche, pièce, facture, autorisation vestimentaire ou progression acquise rétroactivement ; anciennes politiques inchangées. Les pièces inachevées conservent matière, auteur, facture, progression et restitution atomique. Casque porté : couche de tête, 120 PV de base, protection acier normale 0,63/0,315/0,42, pas de malus de marche. Valeur de base acier normal neuf 258,8 avant arrondi Core à 260.
+- Le casque rejoint la géométrie résidente des colons et les portraits ; +86 sommets de modèle commun et branches de sommet, sans lot/instance par casque. Ne pas en déduire un coût GPU nul, 240 FPS ou un débit ×6. Les variantes métalliques, le casque initial plastacier Core et les autres casques ne sont pas livrés.
+
 ## Audit des performances V140
 
 - Lire `docs/history/validation-performance-v140.md` avant d'attribuer un ralentissement aux changements V118–V139. Les mesures A/B sur la même sauvegarde 250² séparent RAF, CPU image, adoption des snapshots et GPU horodaté ; elles ne prouvent ni 240 FPS constants ni un débit ×6. Désactiver le vent des arbres/touffes n'a pas donné de gain GPU stable dans la scène proche testée. Ombres cadrées sur le frustum et nuages transparents ont un coût GPU mesurable et variable ; le pigment 2 000² peut réenvoyer son atlas entier après édition du sol.

@@ -20,7 +20,7 @@ test('V123 industry scene loads through Charger and fabricates its first compone
   const world = deserializeWorld(loadedRaw);
   expect(validateWorld(world)).toEqual([]);
   expect(JSON.parse(raw).schemaVersion).toBe(123);
-  expect(world.schemaVersion).toBe(139);
+  expect(world.schemaVersion).toBe(141);
   expect(world.pawns[0]!.skills.crafting!.level).toBeGreaterThanOrEqual(8);
   const bench = world.structures.find(s => s.kind === 'fabrication-bench');
   expect(bench?.power?.on).toBe(true);

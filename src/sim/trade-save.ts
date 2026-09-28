@@ -26,7 +26,7 @@ export function validateTrade(w:World,version:number):string[] {
   }
   const ledger:unknown=w.trade;if(ledger===undefined)return errors;
   if(!object(ledger)||!keys(ledger,version>=105?['count','silverPaid','silverReceived','forgone','bought','sold','artBought','artSold','recent']:['count','silverPaid','silverReceived','forgone','bought','sold','recent'])||!int(ledger.count,1)||!int(ledger.silverPaid)||!int(ledger.silverReceived)||!int(ledger.forgone)||!object(ledger.bought)||!object(ledger.sold)||!Array.isArray(ledger.recent)||!ledger.recent.length||ledger.recent.length>80||ledger.recent.length!==Math.min(80,ledger.count))return [...errors,'Invalid trade ledger.'];
-  for(const totals of [ledger.bought,ledger.sold])for(const [item,n] of Object.entries(totals))if(!Object.hasOwn(ITEM_DEFINITIONS,item)||item==='silver'||version<123&&['gold','plasteel','advanced-component'].includes(item)||!int(n,1))errors.push('Invalid trade item totals.');
+  for(const totals of [ledger.bought,ledger.sold])for(const [item,n] of Object.entries(totals))if(!Object.hasOwn(ITEM_DEFINITIONS,item)||item==='silver'||version<123&&['gold','plasteel','advanced-component'].includes(item)||version<141&&item==='flak-helmet'||!int(n,1))errors.push('Invalid trade item totals.');
   for(const totals of [ledger.artBought,ledger.artSold])if(totals!==undefined){
     if(version<105||!object(totals))errors.push('Invalid art trade totals.');
     else for(const [kind,n] of Object.entries(totals))if(!isArtRecipe(kind)||!int(n,1))errors.push('Invalid art trade totals.');
@@ -42,7 +42,7 @@ export function validateTrade(w:World,version:number):string[] {
         if(version<105||!keys(l,['packedId','kind','material','quality','damage','art','quantity','unitPrice'])||!int(l.packedId,1,w.nextId-1)||!isArtRecipe(l.kind)||!isArtMaterial(l.material)||!isFurnitureQuality(l.quality)||!int(l.damage,0)||!(l.damage<sculptureMaxHitPoints(l.kind,l.material))||!object(l.art)||!keys(l.art,['authorId','createdAt'])||!int(l.art.authorId,1,w.nextId-1)||!int(l.art.createdAt,0,r.tick)||![-1,1].includes(Number(l.quantity))||typeof l.unitPrice!=='number'||!Number.isFinite(l.unitPrice)||l.unitPrice<=0){errors.push('Invalid traded sculpture line.');continue;}
         balance+=Number(l.quantity)*l.unitPrice;const total=Number(l.quantity)>0?artBought:artSold;total[l.kind]=(total[l.kind]??0)+1;
       }else{
-        if(!keys(l,['item','quantity','unitPrice'])||typeof l.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,l.item)||l.item==='silver'||version<123&&['gold','plasteel','advanced-component'].includes(l.item)||!int(l.quantity,-250000,250000)||l.quantity===0||typeof l.unitPrice!=='number'||!Number.isFinite(l.unitPrice)||l.unitPrice<=0){errors.push('Invalid traded line.');continue;}
+        if(!keys(l,['item','quantity','unitPrice'])||typeof l.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,l.item)||l.item==='silver'||version<123&&['gold','plasteel','advanced-component'].includes(l.item)||version<141&&l.item==='flak-helmet'||!int(l.quantity,-250000,250000)||l.quantity===0||typeof l.unitPrice!=='number'||!Number.isFinite(l.unitPrice)||l.unitPrice<=0){errors.push('Invalid traded line.');continue;}
         balance+=l.quantity*l.unitPrice;const total=l.quantity>0?bought:sold;total[l.item]=(total[l.item]??0)+Math.abs(l.quantity);
       }
     }

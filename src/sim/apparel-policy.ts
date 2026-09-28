@@ -39,10 +39,12 @@ export const TEXTILE_APPAREL_POLICY:ApparelPolicy=Object.freeze({
 });
 export interface ApparelPolicyRegistry {apparelPolicies:ApparelPolicy[];nextApparelPolicyId:number}
 const clonePolicy=(policy:ApparelPolicy):ApparelPolicy=>({...policy,allowedItems:[...policy.allowedItems],allowedMaterials:[...policy.allowedMaterials]});
-export const createDefaultApparelPolicyRegistry=(includeWool=true):ApparelPolicyRegistry=>({apparelPolicies:[DEFAULT_APPAREL_POLICY,TEXTILE_APPAREL_POLICY].map(policy=>{
+// The pre-V90 migration requests the old catalogue via includeWool=false.
+// It must not acquire later V141 headgear before its own strict validation.
+export const createDefaultApparelPolicyRegistry=(includeWool=true,includeHelmet=includeWool):ApparelPolicyRegistry=>({apparelPolicies:[DEFAULT_APPAREL_POLICY,TEXTILE_APPAREL_POLICY].map(policy=>{
   const copy=clonePolicy(policy);
-  return includeWool?copy:{...copy,allowedItems:copy.allowedItems.filter(item=>APPAREL[item].material!=='muffalo-wool'),
-    allowedMaterials:copy.allowedMaterials.filter(material=>material!=='muffalo-wool')};
+  return {...copy,allowedItems:copy.allowedItems.filter(item=>(includeWool||APPAREL[item].material!=='muffalo-wool')&&(includeHelmet||item!=='flak-helmet')),
+    allowedMaterials:includeWool?copy.allowedMaterials:copy.allowedMaterials.filter(material=>material!=='muffalo-wool')};
 }),nextApparelPolicyId:3});
 
 export function validApparelPolicy(policy:ApparelPolicy):boolean {

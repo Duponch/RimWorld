@@ -25,7 +25,7 @@ export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>
   'simple-meal':value(15,false,{playerCanSell:false}),'survival-meal':value(24,true),
   'granite-blocks':value(.9,false,{playerCanSell:false}),'limestone-blocks':value(.9,false,{playerCanSell:false}),
   'marble-blocks':value(.9,false,{playerCanSell:false}),'sandstone-blocks':value(.9,false,{playerCanSell:false}),'slate-blocks':value(.9,false,{playerCanSell:false}),
-  'cloth-tribalwear':gear(96.48,100,true,false,{playerCanBuy:false}),'cloth-shirt':gear(77.22,100,true),'flak-vest':gear(223.4,200,false),
+  'cloth-tribalwear':gear(96.48,100,true,false,{playerCanBuy:false}),'cloth-shirt':gear(77.22,100,true),'flak-vest':gear(223.4,200,false),'flak-helmet':gear(258.8,120,false),
   revolver:gear(135.4,100,true,true),'bolt-action-rifle':gear(253.2,100,true,true),'plasteel-knife':gear(284.256,280,false,true),
 });
 export const tradeCatalogueEntry=(item:ItemId):TradeCatalogueEntry|undefined=>TRADE_CATALOGUE[item];

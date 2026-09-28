@@ -1,7 +1,7 @@
 import {artWorkTotal,isArtRecipe} from './art-rules.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
-import { ADVANCED_COMPONENT_REQUIREMENTS,isComponentRecipe,isFlakRecipe,isGunRecipe,FLAK_REQUIREMENTS,GUN_REQUIREMENTS } from './production-recipes.ts';
+import { ADVANCED_COMPONENT_REQUIREMENTS,isComponentRecipe,isFlakRecipe,isGunRecipe,flakRequirements,FLAK_HELMET_REQUIREMENTS,FLAK_REQUIREMENTS,GUN_REQUIREMENTS } from './production-recipes.ts';
 import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
 import { productionWorkTotal, PRODUCTION_RECIPES, admittedIngredient, stationWork } from './production-recipes.ts';
@@ -22,12 +22,12 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   const queued=world.pawns.find(p=>p.orders.queue.some(o=>isCookingOrder(o)&&o.cooking.stationId===station.id&&o.cooking.billId===bill.id));
   if(queued)return {code:'queued',reason:`Production en file pour ${queued.name} ; ingrédients et poste réservés.`};
   if(bill.suspended)return {code:'suspended',reason:'Facture suspendue.'};
-  if(!productionResearchUnlocked(world,bill.recipe))return {code:'research-required',reason:bill.recipe==='make-component'?'Recherchez Fabrication pour produire des composants.':bill.recipe==='make-advanced-component'?'Recherchez Fabrication avancée pour produire des composants avancés.':isFlakRecipe(bill.recipe)?'Recherchez Gilet pare-balles après Usinage et Armure de plaques.':'Recherchez Armurerie pour fabriquer cette arme.'};
+  if(!productionResearchUnlocked(world,bill.recipe))return {code:'research-required',reason:bill.recipe==='make-component'?'Recherchez Fabrication pour produire des composants.':bill.recipe==='make-advanced-component'?'Recherchez Fabrication avancée pour produire des composants avancés.':isFlakRecipe(bill.recipe)?'Recherchez Armure pare-balles après Usinage et Armure de plaques.':'Recherchez Armurerie pour fabriquer cette arme.'};
   if(!billWanted(world,bill))return {code:'target-met',reason:bill.mode==='times'?'Quantité demandée terminée.':bill.recipe==='butcher-creature'?'Seuil de viande stockée atteint.':'Seuil de produits stockés ou portés atteint.'};
   const serving=world.pawns.find(p=>p.cooking?.stationId===station.id||p.haul?.destination.type==='fuel'&&p.haul.destination.structureId===station.id);
   if(serving)return {code:'station-busy',reason:`Poste occupé par ${serving.name}.`};
   if(!world.pawns.some(p=>p.priorities[stationWork(station)]>0))return {code:'waiting-worker',reason:'Métier désactivé pour tous les colons dans Travail.'};
-  if(!world.pawns.some(p=>p.priorities[stationWork(station)]>0&&productionWorkerQualified(p,bill.recipe)))return {code:'skill-required',reason:`Un artisan de niveau ${isComponentRecipe(bill.recipe)?8:isGunRecipe(bill.recipe)?GUN_REQUIREMENTS[bill.recipe].skill:isFlakRecipe(bill.recipe)?FLAK_REQUIREMENTS.skill:0} est nécessaire.`};
+  if(!world.pawns.some(p=>p.priorities[stationWork(station)]>0&&productionWorkerQualified(p,bill.recipe)))return {code:'skill-required',reason:`Un artisan de niveau ${isComponentRecipe(bill.recipe)?8:isGunRecipe(bill.recipe)?GUN_REQUIREMENTS[bill.recipe].skill:isFlakRecipe(bill.recipe)?flakRequirements(bill.recipe).skill:0} est nécessaire.`};
   const spot=cookingSpot(station);
   if(!cookingPlaceFree(world,spot))return {code:'blocked-workplace',reason:'La place de travail devant le poste est obstruée.'};
   if(station.kind==='electric-stove'&&!foodStationUsable(station))return {code:'no-power',reason:'Cuisinière sans alimentation électrique :350 W nécessaires.'};
@@ -47,7 +47,8 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
     if(metals.component<r.component||metals.steel<r.steel||metals.plasteel<r.plasteel||metals.gold<r.gold)return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${metals.component}/${r.component} composant · ${metals.steel}/${r.steel} acier · ${metals.plasteel}/${r.plasteel} plastacier · ${metals.gold}/${r.gold} or.`};
   }
   if(isGunRecipe(bill.recipe)){const r=GUN_REQUIREMENTS[bill.recipe];if(metals.steel<r.steel||metals.component<r.component)return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${metals.steel}/${r.steel} acier · ${metals.component}/${r.component} composants.`};}
-  if(isFlakRecipe(bill.recipe)){const r=FLAK_REQUIREMENTS;if(metals.cloth<r.cloth||metals.steel<r.steel||metals.component<r.component)return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${metals.cloth}/${r.cloth} tissu · ${metals.steel}/${r.steel} acier · ${metals.component}/${r.component} composant.`};}
+  if(bill.recipe==='make-flak-vest'){const r=FLAK_REQUIREMENTS;if(metals.cloth<r.cloth||metals.steel<r.steel||metals.component<r.component)return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${metals.cloth}/${r.cloth} tissu · ${metals.steel}/${r.steel} acier · ${metals.component}/${r.component} composant.`};}
+  if(bill.recipe==='make-flak-helmet'){const r=FLAK_HELMET_REQUIREMENTS;if(metals.steel<r.steel||metals.component<r.component||metals.plasteel<r.plasteel)return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${metals.steel}/${r.steel} acier · ${metals.component}/${r.component} composants · ${metals.plasteel}/${r.plasteel} plastacier.`};}
   if(isArtRecipe(bill.recipe))available=Math.max(0,...byMaterial.values());
   if(available<PRODUCTION_RECIPES[bill.recipe].units)return {code:'missing-ingredients',reason:`Ingrédients insuffisants : ${available}/${PRODUCTION_RECIPES[bill.recipe].units} non réservés dans le rayon et les filtres.`};
   if(reservedServiceCells(world).has(spot.z*world.width+spot.x))return {code:'workplace-occupied',reason:'La place devant le poste est réservée par une autre activité.'};

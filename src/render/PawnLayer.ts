@@ -12,7 +12,7 @@ import { apparelProjection,apparelAppearance,APPAREL_CARGO } from './character-a
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
-import { pawnGeometry,cargoGeometry,PARKA_HOOD_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
+import { pawnGeometry,cargoGeometry,PARKA_HOOD_DYE,FLAK_HELMET_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
 import { WEAPON_VISUALS,weaponVisual } from './weapon-shape';
 import { doorAt } from '../sim/door-rules';
@@ -401,8 +401,12 @@ export class PawnLayer {
         animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));
       });
       If(attribute('dye','float').equal(-3).and(attribute('aEquipment','vec4').y.notEqual(2).and(attribute('aEquipment','vec4').y.notEqual(3))),()=>{animated.assign(vec3(0));});
-      If(attribute('dye','float').equal(-2).and(attribute('aEquipment','vec4').z.lessThan(.5)),()=>{animated.assign(vec3(0));});
-      If(attribute('dye','float').equal(PARKA_HOOD_DYE).and(attribute('aEquipment','vec4').y.notEqual(4)),()=>{animated.assign(vec3(0));});
+      // The existing apparel slot packs vest (bit 0) and helmet (bit 1),
+      // without a ninth WebGPU vertex buffer or another instance stream.
+      const wornFlags=attribute('aEquipment','vec4').z,helmet=wornFlags.greaterThan(1.5);
+      If(attribute('dye','float').equal(-2).and(wornFlags.mod(2).lessThan(.5)),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(FLAK_HELMET_DYE).and(helmet.not()),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(PARKA_HOOD_DYE).and(attribute('aEquipment','vec4').y.notEqual(4).or(helmet)),()=>{animated.assign(vec3(0));});
       // One face variant is visible at a time. The pause-controlled scene
       // clock also freezes blinks and sleep poses when the game is paused.
       const dye=attribute('dye','float'),asleep=motion.z.equal(POSE_SLEEP),dead=motion.z.equal(POSE_DEAD);
@@ -412,6 +416,7 @@ export class PawnLayer {
       const face=dead.select(float(PAWN_EYE_CROSS),asleep.or(blink).select(float(PAWN_EYE_CLOSED),float(PAWN_EYE_OPEN)));
       If(dye.greaterThanEqual(PAWN_EYE_OPEN).and(dye.lessThanEqual(PAWN_EYE_CROSS)).and(dye.notEqual(face)),()=>animated.assign(vec3(0)));
       If(hiddenAppearancePart(),()=>animated.assign(vec3(0)));
+      If(helmet.and(dye.greaterThanEqual(100)).and(dye.lessThan(200)),()=>animated.assign(vec3(0)));
       const rotStage=attribute('aShape','vec4').x.div(10).floor();
       // A dried body loses the garment/hair silhouette and narrows in the
       // same resident rig. The palette below reveals a pale skeletal form.
@@ -749,7 +754,7 @@ export class PawnLayer {
       scratchColor.setHex(look.color??(isColonist(pawn)?pawnBaseColor(pawn.id):pawn.visitor&&!world.visitors?.groups.find(g=>g.id===pawn.visitor!.group)?.hostile?0x77958f:0xb74736));
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
-      equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,look.vest?1:0,look.pants);
+      equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,(look.vest?1:0)+(look.helmet?2:0),look.pants);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
       const handoff=this.handoffs.active.get(pawn.id);

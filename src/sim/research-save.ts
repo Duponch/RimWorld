@@ -49,7 +49,10 @@ export function validateResearch(world:World,version:number):string[]{
   if(version>=101&&!gunsmithingUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>isGunRecipe(b.recipe)))
     ||world.piles.some(p=>p.gunWork)||world.pawns.some(p=>p.cooking&&isGunRecipe(p.cooking.recipe))))errors.push('Locked gunsmithing production.');
   if(version>=109&&!flakArmorUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>isFlakRecipe(b.recipe)))
-    ||world.piles.some(p=>p.flakWork)||world.pawns.some(p=>p.cooking&&isFlakRecipe(p.cooking.recipe))))errors.push('Locked flak vest production.');
+    ||world.piles.some(p=>p.flakWork)||world.pawns.some(p=>p.cooking&&isFlakRecipe(p.cooking.recipe))))errors.push('Locked flak armor production.');
+  if(version<141&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-flak-helmet'))
+    ||world.piles.some(p=>p.item==='unfinished-flak-helmet'||p.flakWork?.recipe==='make-flak-helmet')
+    ||world.pawns.some(p=>p.cooking?.recipe==='make-flak-helmet'||p.orders?.queue?.some(o=>typeof o!=='number'&&'cooking' in o&&o.cooking.recipe==='make-flak-helmet'))))errors.push('Future flak helmet production.');
   if(version>=123&&!fabricationUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-component'))
     ||world.piles.some(p=>p.componentWork)||world.pawns.some(p=>p.cooking?.recipe==='make-component'||p.orders.queue.some(order=>typeof order!=='number'&&'cooking' in order&&order.cooking.recipe==='make-component'))))errors.push('Locked component production.');
   if(version>=139&&!advancedFabricationUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-advanced-component'))

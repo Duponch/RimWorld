@@ -12,6 +12,7 @@ import { WEAPON_VISUALS } from './weapon-shape';
 
 // Disjoint from weapon tags; -4 is the bolt-action rifle, not the parka hood.
 export const PARKA_HOOD_DYE = -6;
+export const FLAK_HELMET_DYE = -7;
 // Face variants are resident in the same pawn batch. The vertex shader shows
 // exactly one of them; portraits project the open-eye variant at rest.
 export const PAWN_EYE_OPEN = 60;
@@ -141,6 +142,12 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
   addShell([ring(.68,0,0,.165,.13,.029),ring(.83,0,0,.191,.148,.034),
     ring(1.015,0,0,.205,.148,.039)],0,[0,.61,0],APPAREL['flak-vest'].color,-2);
   addPart([.12,.18,.025],[0,.86,.145],0,[0,.61,0],0x404c44,-2);
+  // One resident faceted helmet follows the head bone in every pose. The
+  // upper-head shell leaves eyes, jaw and beard exposed; no actor owns a mesh.
+  addShell([ring(1.285,0,0,.170,.149,.032),ring(1.33,0,0,.188,.168,.039),
+    ring(1.415,0,0,.171,.151,.035),ring(1.468,0,0,.103,.103,.025)],
+  1,[0,1.04,0],APPAREL['flak-helmet'].color,FLAK_HELMET_DYE);
+  addPart([.405,.026,.34],[0,1.304,.018],1,[0,1.04,0],0x424e51,FLAK_HELMET_DYE);
   // Resident parka hood; its visibility follows the outfit attribute.
   addPart([.34,.34,.14],[0,1.17,-.12],1,[0,1.04,0],0xffffff,PARKA_HOOD_DYE);
   // Ground weapon shapes run along X. Rifle barrel rises on its sling; the
