@@ -23,7 +23,7 @@ export interface CookingIngredient {
 }
 /** Historical serialized envelope shared by meal and material production. */
 export interface CookingTask {
-  recipe?:'small-sculpture'|'large-sculpture'|'make-revolver'|'make-bolt-action-rifle'|'make-flak-vest'|'make-flak-helmet'|'make-recon-helmet'|'make-component'|'make-advanced-component'|'stone-blocks'|'tribalwear'|'shirt'|'pants'|'duster'|'parka'|'butcher-creature'|'fine-meal'|'cook-fine-meal-bulk'|'vegetarian-fine-meal'|'carnivore-fine-meal'|'lavish-meal'|'vegetarian-lavish-meal'|'cook-carnivore-lavish-meal'|'cook-simple-meal-bulk';
+  recipe?:'small-sculpture'|'large-sculpture'|'make-revolver'|'make-bolt-action-rifle'|'make-flak-vest'|'make-flak-helmet'|'make-recon-helmet'|'make-component'|'make-advanced-component'|'stone-blocks'|'tribalwear'|'shirt'|'pants'|'duster'|'parka'|'butcher-creature'|'fine-meal'|'cook-fine-meal-bulk'|'vegetarian-fine-meal'|'cook-vegetarian-fine-meal-bulk'|'carnivore-fine-meal'|'lavish-meal'|'vegetarian-lavish-meal'|'cook-carnivore-lavish-meal'|'cook-simple-meal-bulk';
   stationId:number;
   billId:number;
   spot:Cell;
