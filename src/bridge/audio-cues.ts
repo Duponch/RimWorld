@@ -84,7 +84,7 @@ export class AudioCueRecorder {
       } else if (pawn.cooking) {
         const task = pawn.cooking, station = stationFor(task.stationId), recipe = taskRecipe(task);
         if (station && stationAccepts(station, recipe)) {
-          const kind: AudioCueKind = recipe === 'simple-meal' || recipe === 'fine-meal' || recipe === 'lavish-meal' ? 'cooking.work'
+          const kind: AudioCueKind = recipe === 'simple-meal' || recipe === 'fine-meal' || recipe === 'vegetarian-fine-meal' || recipe === 'lavish-meal' ? 'cooking.work'
             : recipe === 'butcher-creature' ? 'butchering.work'
               : isTailoring(recipe) ? 'tailoring.work' : 'crafting.work';
           recordWork(pawn.id, `production:${station.id}:${task.billId}:${recipe}`, task.progress, kind,

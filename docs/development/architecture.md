@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-État courant au schéma 154. V154 étend les [factures à deux quotas](lavish-meal-v154.md) au plat gastronomique, après validation stricte du schéma 152 et migration neutre. V153 indexe les [réservations alimentaires animales](wildlife-reservation-index-v153.md) pendant chaque proposition sans cache entre appels. Les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés et ne constituent pas un inventaire fonctionnel actuel. Celui-ci est tenu dans [l’état du jeu](../gameplay/implementation-status.md).
+État courant au schéma 155. V155 ajoute au [plat raffiné végétarien](fine-vegetarian-v155.md) une facture à quota unique de quinze ingrédients admissibles, après validation stricte du schéma 154 et migration neutre. V154 étend les [factures à deux quotas](lavish-meal-v154.md) au plat gastronomique. V153 indexe les [réservations alimentaires animales](wildlife-reservation-index-v153.md) pendant chaque proposition sans cache entre appels. Les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés et ne constituent pas un inventaire fonctionnel actuel. Celui-ci est tenu dans [l’état du jeu](../gameplay/implementation-status.md).
 
 ## Objectif
 

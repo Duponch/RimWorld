@@ -22,10 +22,10 @@ import { learnSkill } from './skills.ts';
 import { healthRandom } from './health.ts';
 import { newApparelState, type ApparelItem } from './apparel-rules.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
-import { isComponentRecipe,isTailoring, PRODUCTION_RECIPES, PRODUCTION_WORK_SCALE, productionStationUsable, productionWorkTotal, recipeProduct, taskRecipe, taskWork, validFineMealIngredients, validLavishMealIngredients } from './production-recipes.ts';
+import { isComponentRecipe,isTailoring, PRODUCTION_RECIPES, PRODUCTION_WORK_SCALE, productionStationUsable, productionWorkTotal, recipeProduct, taskRecipe, taskWork, validFineMealIngredients, validLavishMealIngredients, validVegetarianFineMealIngredients } from './production-recipes.ts';
 import { processProductionOutput, type ProductionContext } from './production-output.ts';
 import { copyPileCondition } from './pile-condition.ts';
-import { freshRot } from './food-preservation.ts';
+import { freshRot, ticksUntilRot } from './food-preservation.ts';
 import { groundPile } from './ground-placement.ts';
 import { transferPile, reservedSource } from './materials.ts';
 import type { MaterialPile, Pawn, World } from './types.ts';
@@ -46,10 +46,15 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(!station||!bill||bill.suspended||!productionResearchUnlocked(world,taskRecipe(task))||task.phase!=='output'&&!productionWorkerQualified(pawn,taskRecipe(task))||pawn.priorities[taskWork(task)]===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&(!foodStationUsable(station)||!productionStationUsable(station)))) {context.release();return;}
   if(task.phase==='output'){processProductionOutput(world,pawn,context,bill.destination);return;}
   const recipe=PRODUCTION_RECIPES[taskRecipe(task)];
-  if(task.recipe==='fine-meal'&&!validFineMealIngredients(task.ingredients)||task.recipe==='lavish-meal'&&!validLavishMealIngredients(task.ingredients)){context.release();return;}
+  if(task.recipe==='vegetarian-fine-meal'&&bill.recipe!==task.recipe){context.release();return;}
+  if(task.recipe==='fine-meal'&&!validFineMealIngredients(task.ingredients)||task.recipe==='vegetarian-fine-meal'&&!validVegetarianFineMealIngredients(task.ingredients)||task.recipe==='lavish-meal'&&!validLavishMealIngredients(task.ingredients)){context.release();return;}
   for(const entry of task.ingredients) {
     const pile=world.piles.find(p=>p.id===entry.pileId);
-    if(!pile||isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick)||pile.item!==entry.item||pile.quantity<entry.quantity||entry.stage!=='held'&&reservedSource(world,pile.id)>pile.quantity){context.release();return;}
+    if(!pile||isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick)||task.recipe==='vegetarian-fine-meal'&&ticksUntilRot(pile,world.tick)<=0||pile.item!==entry.item||pile.quantity<entry.quantity||entry.stage!=='held'&&reservedSource(world,pile.id)>pile.quantity){context.release();return;}
+    if(task.recipe==='vegetarian-fine-meal'&&(!bill.filters[entry.item]
+      ||entry.stage==='source'&&(pile.owner.type!=='ground'||(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)
+      ||entry.stage==='placed'&&(pile.owner.type!=='ground'||pile.owner.x!==entry.cell.x||pile.owner.z!==entry.cell.z)
+      ||entry.stage==='held'&&(pile.owner.type!=='pawn'||pile.owner.pawnId!==pawn.id))){context.release();return;}
   }
   const held=task.ingredients.find(i=>i.stage==='held');
   if(held) {
@@ -122,5 +127,5 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(isTailoring(task.recipe)){(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
   task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;if(culinary)pawn.skills.cooking=completedCookingSkill(pawn,task.workTicks??0);delete task.workTicks;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
-  context.event(isGunRecipe(task.recipe)||isFlakRecipe(task.recipe)||isComponentRecipe(task.recipe)||isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='fine-meal'?`${pawn.name} a cuisiné 1 plat raffiné.`:task.recipe==='lavish-meal'?`${pawn.name} a cuisiné 1 plat gastronomique.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
+  context.event(isGunRecipe(task.recipe)||isFlakRecipe(task.recipe)||isComponentRecipe(task.recipe)||isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='fine-meal'?`${pawn.name} a cuisiné 1 plat raffiné.`:task.recipe==='vegetarian-fine-meal'?`${pawn.name} a cuisiné 1 plat végétarien raffiné.`:task.recipe==='lavish-meal'?`${pawn.name} a cuisiné 1 plat gastronomique.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
 }

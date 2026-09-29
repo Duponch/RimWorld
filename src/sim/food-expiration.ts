@@ -38,7 +38,7 @@ export function expireFood(world: World): void {
       pawn.path = []; pawn.state = pawn.moveCooldown > 0 ? 'moving' : 'working';
     }
   }
-  for (const item of ['berries', 'milk', 'rice', 'potato', 'corn', 'simple-meal','fine-meal','lavish-meal','herbal-medicine','agave-fruit',...ANIMAL_MEAT_ITEMS] as const) if (losses![item]) {
+  for (const item of ['berries', 'milk', 'rice', 'potato', 'corn', 'simple-meal','fine-meal','vegetarian-fine-meal','lavish-meal','herbal-medicine','agave-fruit',...ANIMAL_MEAT_ITEMS] as const) if (losses![item]) {
     world.spoiled[item]=(world.spoiled[item]??0)+losses![item]!;
     world.events.push({ tick: world.tick, type: 'need', message: `${losses![item]} ${ITEM_DEFINITIONS[item].label} ont pourri.` });
   }

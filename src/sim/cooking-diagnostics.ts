@@ -4,6 +4,7 @@ import { productionResearchUnlocked,productionWorkerQualified } from './machinin
 import { ADVANCED_COMPONENT_REQUIREMENTS,isComponentRecipe,isFlakRecipe,isGunRecipe,flakRequirements,FLAK_HELMET_REQUIREMENTS,RECON_HELMET_REQUIREMENTS,FLAK_REQUIREMENTS,GUN_REQUIREMENTS } from './production-recipes.ts';
 import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
+import { ticksUntilRot } from './food-preservation.ts';
 import { productionWorkTotal, PRODUCTION_RECIPES, admittedIngredient, fineMealIngredientGroup, mixedMealGroupUnits, stationWork } from './production-recipes.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { isCookingOrder } from './order-types.ts';
@@ -27,7 +28,7 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   const serving=world.pawns.find(p=>p.cooking?.stationId===station.id||p.haul?.destination.type==='fuel'&&p.haul.destination.structureId===station.id);
   if(serving)return {code:'station-busy',reason:`Poste occupé par ${serving.name}.`};
   if(!world.pawns.some(p=>p.priorities[stationWork(station)]>0))return {code:'waiting-worker',reason:'Métier désactivé pour tous les colons dans Travail.'};
-  if(!world.pawns.some(p=>p.priorities[stationWork(station)]>0&&productionWorkerQualified(p,bill.recipe)))return {code:'skill-required',reason:bill.recipe==='fine-meal'?'Un cuisinier de niveau Cuisine 6 est nécessaire.':bill.recipe==='lavish-meal'?'Un cuisinier de niveau Cuisine 8 est nécessaire.':`Un artisan de niveau ${isComponentRecipe(bill.recipe)?8:isGunRecipe(bill.recipe)?GUN_REQUIREMENTS[bill.recipe].skill:isFlakRecipe(bill.recipe)?flakRequirements(bill.recipe).skill:0} est nécessaire.`};
+  if(!world.pawns.some(p=>p.priorities[stationWork(station)]>0&&productionWorkerQualified(p,bill.recipe)))return {code:'skill-required',reason:bill.recipe==='fine-meal'||bill.recipe==='vegetarian-fine-meal'?'Un cuisinier de niveau Cuisine 6 est nécessaire.':bill.recipe==='lavish-meal'?'Un cuisinier de niveau Cuisine 8 est nécessaire.':`Un artisan de niveau ${isComponentRecipe(bill.recipe)?8:isGunRecipe(bill.recipe)?GUN_REQUIREMENTS[bill.recipe].skill:isFlakRecipe(bill.recipe)?flakRequirements(bill.recipe).skill:0} est nécessaire.`};
   const spot=cookingSpot(station);
   if(!cookingPlaceFree(world,spot))return {code:'blocked-workplace',reason:'La place de travail devant le poste est obstruée.'};
   if(station.kind==='electric-stove'&&!foodStationUsable(station))return {code:'no-power',reason:'Cuisinière sans alimentation électrique :350 W nécessaires.'};
@@ -40,10 +41,11 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   }
   const u=world.piles.find(p=>p.artWork?.billId===bill.id||p.unfinished?.billId===bill.id||p.gunWork?.billId===bill.id||p.flakWork?.billId===bill.id||p.componentWork?.billId===bill.id),work=u?.artWork??u?.gunWork??u?.flakWork??u?.componentWork??u?.unfinished;if(work)return {code:'unfinished',reason:`Ouvrage commencé : attend ${world.pawns.find(p=>p.id===work.authorId)?.name??'son auteur'} ; ${Math.floor(work.progress/(u?.artWork?artWorkTotal(u.artWork.recipe,u.artWork.material):productionWorkTotal(work.recipe))*100)} % conservés.`};
   let available=0;const byMaterial=new Map<string,number>();const metals={cloth:0,steel:0,component:0,plasteel:0,gold:0,'advanced-component':0};const fine={protein:0,vegetable:0};
-  for(const pile of world.piles)if(admittedIngredient(bill,pile.item)&&(!isAnimalCorpseItem(pile.item)||corpseFresh(pile,world.tick))&&pile.owner.type==='ground'
+  for(const pile of world.piles)if(admittedIngredient(bill,pile.item)&&(!isAnimalCorpseItem(pile.item)||corpseFresh(pile,world.tick))&&(bill.recipe!=='vegetarian-fine-meal'||ticksUntilRot(pile,world.tick)>0)&&pile.owner.type==='ground'
     &&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2<=bill.radius**2){const units=Math.max(0,pile.quantity-reservedSource(world,pile.id));available+=units;byMaterial.set(pile.item,(byMaterial.get(pile.item)??0)+units);if(pile.item==='cloth'||pile.item==='steel'||pile.item==='component'||pile.item==='plasteel'||pile.item==='gold'||pile.item==='advanced-component')metals[pile.item]+=units;if(mixedMealGroupUnits(bill.recipe)){const group=fineMealIngredientGroup(pile.item);if(group)fine[group]+=units;}}
   const mealQuota=mixedMealGroupUnits(bill.recipe);
   if(mealQuota&&(fine.protein<mealQuota||fine.vegetable<mealQuota))return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${fine.protein}/${mealQuota} protéines (viande ou lait) · ${fine.vegetable}/${mealQuota} végétaux.`};
+  if(bill.recipe==='vegetarian-fine-meal'&&available<15)return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${available}/15 végétaux crus ou lait frais non réservés.`};
   if(bill.recipe==='make-advanced-component'){
     const r=ADVANCED_COMPONENT_REQUIREMENTS;
     if(metals.component<r.component||metals.steel<r.steel||metals.plasteel<r.plasteel||metals.gold<r.gold)return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${metals.component}/${r.component} composant · ${metals.steel}/${r.steel} acier · ${metals.plasteel}/${r.plasteel} plastacier · ${metals.gold}/${r.gold} or.`};

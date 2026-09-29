@@ -20,7 +20,7 @@ export function grazingPen(world:World,a:WildAnimal):ReadonlySet<number>|undefin
 export interface AnimalFood extends Cell { id:number;kind:'plant'|'pile';quantity:number }
 // Herbivory is an explicit content profile. New nutritious items do not silently
 // become animal food; prepared meals remain admissible under the existing rule.
-const herbivoreFoods:ReadonlySet<ItemId>=new Set(['berries','rice','potato','corn','agave-fruit','simple-meal','fine-meal','lavish-meal','survival-meal','legacy-portion']);
+const herbivoreFoods:ReadonlySet<ItemId>=new Set(['berries','rice','potato','corn','agave-fruit','simple-meal','fine-meal','vegetarian-fine-meal','lavish-meal','survival-meal','legacy-portion']);
 function invalidatePlantWork(world:World,r:Resource,removed=false):void {
   const ids=new Set(world.jobs.filter(j=>j.x===r.x&&j.z===r.z&&(j.kind==='cut'||j.kind==='harvest'&&(removed||!harvestable(world,r)))).map(j=>j.id));
   if(!ids.size)return;

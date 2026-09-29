@@ -34,7 +34,7 @@ function roomHasFood(world:World,patient:Pawn,map:RoomTopology):boolean {
   const room=prisonRoom(world,patient,map);if(!room)return false;
   if(world.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===patient.id&&ITEM_DEFINITIONS[i.item].nutrition))return true;
   let nutrition=0;
-  for(const pile of world.piles)if(pile.owner.type==='ground'&&['berries','simple-meal','fine-meal','lavish-meal','survival-meal','legacy-portion'].includes(pile.item)&&prisonRoom(world,pile.owner,map)?.id===room.id){
+  for(const pile of world.piles)if(pile.owner.type==='ground'&&['berries','simple-meal','fine-meal','vegetarian-fine-meal','lavish-meal','survival-meal','legacy-portion'].includes(pile.item)&&prisonRoom(world,pile.owner,map)?.id===room.id){
     nutrition+=nutritionOf({...pile,quantity:Math.max(0,pile.quantity-reservedSource(world,pile.id))});
   }
   const wanted=world.pawns.filter(p=>secure(p)&&p.hunger<FEED_HUNGER&&prisonRoom(world,p,map)?.id===room.id).reduce((sum,p)=>sum+Math.max(0,100-p.hunger),0);

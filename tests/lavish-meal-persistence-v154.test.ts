@@ -19,7 +19,7 @@ import { visitorTradeFixture } from './scenarios/visitors.ts';
 
 function declared152(count=1): World {
   const world=medicalCamp(count);
-  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal');
+  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal');
   (world as {schemaVersion:number}).schemaVersion=152;
   return world;
 }
@@ -158,7 +158,7 @@ test('fire and trade ledgers reject future meal identities before their schema',
   const old=declared152(2);
   old.trade=structuredClone(world.trade);
   old.trade.sold={'lavish-meal':1};old.trade.recent[0]!.lines=[{item:'lavish-meal',quantity:-1,unitPrice:10}];
-  expect(validateTrade({...old,schemaVersion:154},154)).toEqual([]);
+  expect(validateTrade(old,154)).toEqual([]);
   expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/Invalid version 152 save/);
 });
 
@@ -174,7 +174,7 @@ test('a queued physical lavish order survives save and V152 rejects its future r
   pawn.orders.queue.push(proposal.order);
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
-  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal');
+  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal');
   (old as {schemaVersion:number}).schemaVersion=152;
   expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/Invalid version 152 save/);
 });
@@ -184,16 +184,16 @@ test('declared V152 rejects a lavish memory and possession in a frozen visitor a
   for(let i=0;i<3500&&!world.visitors?.departed.some(d=>d.pawn.id===traderId);i++)stepWorld(world);
   const departure=world.visitors!.departed.find(d=>d.pawn.id===traderId)!;
   expect(departure).toBeDefined();
-  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal');
+  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal');
   (old as {schemaVersion:number}).schemaVersion=152;
-  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:154});
+  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
   const withMemory=structuredClone(old);
   withMemory.visitors!.departed[0]!.pawn.memories.push({kind:'ate-lavish-meal',expiresAt:departure.tick+100});
-  expect(validateWorld({...withMemory,schemaVersion:154})).toEqual([]);
+  expect(validateWorld({...withMemory,schemaVersion:SCHEMA_VERSION})).toEqual([]);
   expect(()=>deserializeWorld(JSON.stringify(withMemory))).toThrow(/Invalid version 152 save/);
   const withFood=structuredClone(old),food=withFood.visitors!.departed[0]!.items.find(item=>item.kind==='food')!;
   expect(food).toBeDefined();food.item='lavish-meal';food.quantity=1;food.rot={progress:0,atTick:departure.tick};
-  expect(validateWorld({...withFood,schemaVersion:154})).toEqual([]);
+  expect(validateWorld({...withFood,schemaVersion:SCHEMA_VERSION})).toEqual([]);
   expect(()=>deserializeWorld(JSON.stringify(withFood))).toThrow(/Invalid version 152 save/);
 });
 
@@ -210,7 +210,7 @@ test('a physically reserved lavish task is continuable and forbidden in a declar
   expect(validateWorld(world)).toEqual([]);
   const continued=deserializeWorld(serializeWorld(world));
   stepWorld(world,30);stepWorld(continued,30);expect(continued).toEqual(world);
-  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal');
+  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal');
   (old as {schemaVersion:number}).schemaVersion=152;
   expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/Invalid version 152 save/);
   for(let i=0;i<800&&pawn.cooking?.phase!=='output';i++)stepWorld(world);
