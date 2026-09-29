@@ -9,7 +9,7 @@ import { newVisitorAgenda } from '../../src/sim/visitor-state.ts';
 /** Current default meals cannot be declared as an older save. */
 export function withoutFutureFineMealPolicy<T>(world:T):T {
   for(const policy of (world as {foodPolicies?:{allowed:string[]}[]}).foodPolicies??[])
-    policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal');
+    policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   return world;
 }
 /** Historical fixtures must not smuggle V43's new actor profile into old schemas. */

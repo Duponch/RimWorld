@@ -52,7 +52,7 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   expect(d.pawn.appearance).toEqual(p.appearance);expect(d.pawn.appearance).toBeDefined();
   const legacy=structuredClone(w) as any;
   legacy.schemaVersion=135;
-  for(const policy of legacy.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal');
+  for(const policy of legacy.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   delete legacy.breakdown;
   withoutFutureHelmetPolicy(legacy);
   for(const policy of legacy.apparelPolicies??[])policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-helmet');
@@ -62,7 +62,7 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   expect(validateWorld(migrated)).toEqual([]);
   const v150=structuredClone(w);
   (v150 as {schemaVersion:number}).schemaVersion=150;
-  for(const policy of v150.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal');
+  for(const policy of v150.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   expect(deserializeWorld(JSON.stringify(v150))).toEqual({...v150,schemaVersion:SCHEMA_VERSION});
   const futureMemory=structuredClone(v150);
   futureMemory.visitors!.departed[0]!.pawn.memories.push({kind:'ate-fine-meal',expiresAt:d.tick+100});

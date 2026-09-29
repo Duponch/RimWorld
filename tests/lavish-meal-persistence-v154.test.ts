@@ -19,7 +19,7 @@ import { visitorTradeFixture } from './scenarios/visitors.ts';
 
 function declared152(count=1): World {
   const world=medicalCamp(count);
-  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal');
+  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   (world as {schemaVersion:number}).schemaVersion=152;
   return world;
 }
@@ -174,7 +174,7 @@ test('a queued physical lavish order survives save and V152 rejects its future r
   pawn.orders.queue.push(proposal.order);
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
-  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal');
+  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   (old as {schemaVersion:number}).schemaVersion=152;
   expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/Invalid version 152 save/);
 });
@@ -184,7 +184,7 @@ test('declared V152 rejects a lavish memory and possession in a frozen visitor a
   for(let i=0;i<3500&&!world.visitors?.departed.some(d=>d.pawn.id===traderId);i++)stepWorld(world);
   const departure=world.visitors!.departed.find(d=>d.pawn.id===traderId)!;
   expect(departure).toBeDefined();
-  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal');
+  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   (old as {schemaVersion:number}).schemaVersion=152;
   expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
   const withMemory=structuredClone(old);
@@ -210,7 +210,7 @@ test('a physically reserved lavish task is continuable and forbidden in a declar
   expect(validateWorld(world)).toEqual([]);
   const continued=deserializeWorld(serializeWorld(world));
   stepWorld(world,30);stepWorld(continued,30);expect(continued).toEqual(world);
-  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal');
+  const old=structuredClone(world);for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   (old as {schemaVersion:number}).schemaVersion=152;
   expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/Invalid version 152 save/);
   for(let i=0;i<800&&pawn.cooking?.phase!=='output';i++)stepWorld(world);

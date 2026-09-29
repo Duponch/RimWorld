@@ -28,6 +28,7 @@ export function billControls(station:Structure,send:(command:Command)=>void):HTM
     if(bill.recipe==='carnivore-fine-meal'){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent='15 viandes crues · Cuisine 6';form.append(cost);}
     if(bill.recipe==='lavish-meal'){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent='10 protéines (viande ou lait) + 10 végétaux · Cuisine 8';form.append(cost);}
     if(bill.recipe==='vegetarian-lavish-meal'){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent='25 végétaux ou lait · Cuisine 8';form.append(cost);}
+    if(bill.recipe==='cook-carnivore-lavish-meal'){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent='25 viandes crues · Cuisine 8';form.append(cost);}
     if(bill.recipe==='make-advanced-component'){const cost=document.createElement('p'),r=ADVANCED_COMPONENT_REQUIREMENTS;cost.className='bill-cost';cost.textContent=`${r.component} composant · ${r.steel} acier · ${r.plasteel} plastacier · ${r.gold} or · Artisanat ${r.skill}`;form.append(cost);}
     if(isArtRecipe(bill.recipe)){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent=`${artMaterialCount(bill.recipe)} unités d’un seul matériau · travail Art · qualité selon Artistique`;form.append(cost);}
     const fields=new Map<string,HTMLInputElement|HTMLSelectElement>();
