@@ -8,7 +8,7 @@ import { captureWorldShotGrid } from './combat-world.ts';
 import { blockedCells } from './pathfinding.ts';
 import { advanceAnimalHealth,animalBody } from './wildlife-health.ts';
 import { animalEscape } from './wildlife-flight.ts';
-import { animalFoods,animalMealTarget,finishAnimalMeal,grazingPen } from './wildlife-food.ts';
+import { animalFoods,animalMealTarget,finishAnimalMeal,grazingPen,reservedPlantWorkCells } from './wildlife-food.ts';
 import { animalNavigation,moveAnimal } from './wildlife-navigation.ts';
 import { HARE,MAX_WILDLIFE,wildlifeRandom,type WildAnimal,type WildlifeState } from './wildlife-state.ts';
 import { isPlant } from './plants.ts';
@@ -108,11 +108,11 @@ export function enableWildlife(world:World,count=Math.min(12,Math.max(3,Math.flo
     s.animals.push({id:world.nextId++,species:'hare',sex:wildlifeRandom(s)<.5?'female':'male',ageTicks:adultAgeTicks('hare'),x:place.x,z:place.z,food:HARE.nutrition*(.5+.4*wildlifeRandom(s)),rest:.9+.1*wildlifeRandom(s),state:'idle',path:[],nextDecision:world.tick+1+n%60});
   }
 }
-export function reconcileWildlife(world:World,resourcesById?:ReadonlyMap<number,Resource>):void {
+export function reconcileWildlife(world:World,resourcesById?:ReadonlyMap<number,Resource>,workCells?:ReadonlySet<number>):void {
   const animals=world.wildlife?.animals??[];
   const mates=animals.some(a=>a.mating)?new Map(animals.map(a=>[a.id,a])):undefined;
   for(const a of animals){
-    if(a.meal&&!animalMealTarget(world,a,resourcesById)){delete a.meal;a.path=[];a.state=a.motion&&a.motion.end>world.tick?'moving':'idle';a.nextDecision=world.tick;}
+    if(a.meal&&!animalMealTarget(world,a,resourcesById,workCells)){delete a.meal;a.path=[];a.state=a.motion&&a.motion.end>world.tick?'moving':'idle';a.nextDecision=world.tick;}
     if(a.mating){
       const female=mates?.get(a.mating.femaleId);
       if(a.state==='dead'||!a.domestic||animalLifeStage(a)!=='adult'||!female||female.state==='dead'||!female.domestic
@@ -135,7 +135,9 @@ export function advanceWildlife(world:World):void {
   if(activePlantMeals>=16){
     mealResources=new Map();for(const resource of world.resources)mealResources.set(resource.id,resource);
   }
-  reconcileWildlife(world,mealResources);
+  let plantWorkCells:ReadonlySet<number>|undefined;
+  const getPlantWorkCells=()=>plantWorkCells??=reservedPlantWorkCells(world);
+  reconcileWildlife(world,mealResources,activePlantMeals?getPlantWorkCells():undefined);
   let nav:ReturnType<typeof animalNavigation>|undefined,hareNav:ReturnType<typeof animalNavigation>|undefined,searches=0;
   const getNav=(animal:WildAnimal)=>animal.species==='hare'||animal.species==='snow-hare'
     ?hareNav??=animalNavigation(world,false,true):nav??=animalNavigation(world);
@@ -193,14 +195,17 @@ export function advanceWildlife(world:World):void {
       a.state='idle';a.nextDecision=world.tick+1;
     }
     if(a.meal) {
-      const target=animalMealTarget(world,a,mealResources)!;
+      const target=animalMealTarget(world,a,mealResources,a.meal.kind==='plant'?getPlantWorkCells():undefined)!;
       if(contact(a,target)&&getNav(a).free(a)) {
         a.path=[];
         if(a.state!=='eating'){a.state='eating';a.meal.progress=0;}
         else if((a.meal.progress+=Math.max(.15,(.05+.95*body.capacities.eating)*(.7+.3*body.capacities.manipulation)))>=species.ingestTicks){
           const meal=a.meal,resourcesBefore=world.resources;
           finishAnimalMeal(world,a);
-          if(meal.kind==='plant'&&world.resources!==resourcesBefore)mealResources?.delete(meal.id);
+          if(meal.kind==='plant'){
+            plantWorkCells=undefined; // Eating may remove harvest/cut jobs at this cell.
+            if(world.resources!==resourcesBefore)mealResources?.delete(meal.id);
+          }
           nav=undefined;hareNav=undefined;
         }
         continue;

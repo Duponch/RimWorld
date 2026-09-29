@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import { applyCommand, canDesignate, createWorld, refreshStock, serializeWorld, validateWorld } from '../src/sim/index.ts';
 import { buildConstructionCellIndex } from '../src/sim/engine.ts';
+import { SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { constructionLineCells } from '../src/sim/construction-line.ts';
 import type { BuildLineCommand, Command } from '../src/sim/types.ts';
 
@@ -42,6 +43,25 @@ test('clôtures et câbles : même désignation groupée, matériau conservé et
   expect(applyCommand(world,line('power-conduit',2,3,5,3))).toMatchObject({ok:true,affected:4});
   expect(world.jobs.filter(job=>job.kind==='power-conduit').map(job=>[job.x,job.z,job.material])).toEqual([2,3,4,5].map(x=>[x,3,'steel']));
   expect(validateWorld(world)).toEqual([]);
+});
+
+test('ligne et clics successifs conservent exactement le World et son snapshot', () => {
+  const grouped=createWorld(42,16,16);
+  grouped.tiles=grouped.tiles.map(()=>({terrain:'grass'}));
+  grouped.resources=[];grouped.jobs=[];grouped.structures=[];grouped.piles=[];
+  grouped.tiles[6*16+7]!.terrain='water';
+  grouped.structures.push({id:grouped.nextId++,kind:'wall',x:5,z:6,orientation:0,footprint:'standard',material:'wood'});
+  refreshStock(grouped);
+  const clicked=structuredClone(grouped);
+  const stroke=line('wall',9,6,3,6);
+  const result=applyCommand(grouped,stroke);
+  let affected=0;
+  for(const cell of constructionLineCells(stroke.from,stroke.to))
+    if(applyCommand(clicked,{type:'designate',kind:'wall',material:'wood',orientation:0,...cell}).ok)affected++;
+  expect(result).toEqual({ok:true,affected,skipped:7-affected});
+  expect(serializeWorld(grouped)).toBe(serializeWorld(clicked));
+  expect(new SnapshotEncoder().encode(grouped,0,0,true))
+    .toEqual(new SnapshotEncoder().encode(clicked,0,0,true));
 });
 
 test('carte 250² : un tracé de 250 cases reste une seule commande', () => {

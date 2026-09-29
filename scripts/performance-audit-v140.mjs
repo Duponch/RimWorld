@@ -23,6 +23,10 @@ Start a Vite server for the revision under test, then set:
   PERF_SHADOWS      on/off (default on)
   PERF_SHADOW_CACHE on/off (default on; V140 paused-map optimization)
   PERF_CLOUDS       on/off (default on)
+  PERF_PRECIP       on/off (default on)
+  PERF_WEATHER      Optional prepared weather imposed in memory on PERF_WORLD
+                    (clear,fog,rain,dry-thunderstorm,rainy-thunderstorm,
+                    foggy-rain,snow-gentle,snow-hard)
   PERF_LABELS       on/off (default on)
   PERF_TEXTURES     on/off (default on)
   PERF_GRASS        on/off (default on)
@@ -61,6 +65,9 @@ const allowedScenes = new Set(['iso-near', 'iso-wide', 'perspective-low', 'iso-l
 if (!scenes.length || scenes.some(s => !allowedScenes.has(s)) || new Set(scenes).size !== scenes.length) throw new Error('Invalid or repeated PERF_SCENES.');
 const speeds = (process.env.PERF_SPEEDS ?? '0,6').split(',').map(s => Number(s.trim()));
 if (!speeds.length || speeds.some(s => ![0, 1, 3, 6].includes(s)) || new Set(speeds).size !== speeds.length) throw new Error('Invalid or repeated PERF_SPEEDS.');
+const weatherKinds = new Set(['clear', 'fog', 'rain', 'dry-thunderstorm', 'rainy-thunderstorm', 'foggy-rain', 'snow-gentle', 'snow-hard']);
+const preparedWeather = process.env.PERF_WEATHER ?? null;
+if (preparedWeather !== null && !weatherKinds.has(preparedWeather)) throw new Error('PERF_WEATHER must be one of the eight Core weather kinds.');
 const config = {
   label,
   origin: origin.href,
@@ -74,6 +81,8 @@ const config = {
   shadows: toggle('PERF_SHADOWS'),
   shadowCache: toggle('PERF_SHADOW_CACHE'),
   clouds: toggle('PERF_CLOUDS'),
+  precip: toggle('PERF_PRECIP'),
+  preparedWeather,
   labels: toggle('PERF_LABELS'),
   textures: toggle('PERF_TEXTURES'),
   grass: toggle('PERF_GRASS'),
@@ -86,10 +95,19 @@ const saved = parsed?.format === 'lisiere-save' && parsed.codec === 'gzip-base64
   ? gunzipSync(Buffer.from(parsed.payload, 'base64')).toString('utf8') : stored;
 const save = JSON.parse(saved);
 if (!Number.isSafeInteger(save.tick) || !Number.isSafeInteger(save.width) || !Array.isArray(save.pawns)) throw new Error('PERF_WORLD is not a Lisière world save.');
+if (preparedWeather !== null) {
+  if (!save.weather || save.weather.revision !== 1) throw new Error('PERF_WEATHER requires an existing revision-1 weather state in PERF_WORLD.');
+  save.weather.current = save.weather.previous = preparedWeather;
+  save.weather.ageCore = 0;
+  save.weather.durationCore = preparedWeather.includes('thunderstorm') ? 20_000 : 40_000;
+}
+const loadedSave = preparedWeather === null ? saved : JSON.stringify(save);
 const fixture = {
   path: savePath,
   sha256: createHash('sha256').update(stored).digest('hex'),
   worldSha256: createHash('sha256').update(saved).digest('hex'),
+  loadedWorldSha256: createHash('sha256').update(loadedSave).digest('hex'),
+  preparedWeather: preparedWeather === null ? null : { kind: preparedWeather, imposedInMemory: true, naturalOccurrence: false },
   schemaVersion: save.schemaVersion,
   tick: save.tick,
   width: save.width,
@@ -194,6 +212,12 @@ try {
       if (options.clouds) return originalClouds.apply(this, args);
       this.mesh.visible = false;
     };
+    const originalPrecipitation = view.precipitation?.present;
+    if (originalPrecipitation) view.precipitation.present = function(...args) {
+      if (options.precip) return originalPrecipitation.apply(this, args);
+      this.geometry.instanceCount = 0;
+      this.mesh.visible = false;
+    };
     const originalLabels = view.mapLabels?.draw;
     if (originalLabels) view.mapLabels.draw = function(...args) {
       if (options.labels) return originalLabels.apply(this, args);
@@ -227,10 +251,10 @@ try {
     return { backend:view.backend, userAgent:navigator.userAgent, dpr:window.devicePixelRatio,
       adapter:info ? {vendor:info.vendor,architecture:info.architecture,device:info.device,description:info.description} : null,
       gpuTimestampSupported:!!device?.features?.has('timestamp-query'),
-      layers:{clouds:!!originalClouds,labels:!!originalLabels,shadows:!!view.daylight.light.shadow,
+      layers:{clouds:!!originalClouds,precipitation:!!originalPrecipitation,labels:!!originalLabels,shadows:!!view.daylight.light.shadow,
         windMaterialReplacements:swappedTrees,tuftWindDisabled:!options.wind&&view.plants.mesh.material===view.plants.texturedMaterial} };
   }, { shadows: config.shadows, shadowCache: config.shadowCache,
-    clouds: config.clouds, labels: config.labels, wind: config.wind });
+    clouds: config.clouds, precip: config.precip, labels: config.labels, wind: config.wind });
   report.browser = { userAgent: runtime.userAgent, dpr: runtime.dpr, backend: runtime.backend };
   report.adapter = runtime.adapter;
   report.gpuTimestampSupported = runtime.gpuTimestampSupported;
@@ -250,7 +274,7 @@ try {
   });
 
   for (const scene of config.scenes) for (const speed of config.speeds) {
-    await page.evaluate(data => window.__performanceAudit.client.load(data), saved);
+    await page.evaluate(data => window.__performanceAudit.client.load(data), loadedSave);
     const prepared = await page.evaluate(sceneName => {
       const audit = window.__performanceAudit, view = audit.view, world = view.world;
       const rig = view.rig, controls = view.controls;
@@ -299,6 +323,8 @@ try {
           shadowAutoUpdate:view.daylight.light.shadow.autoUpdate,
           shadowNeedsUpdate:view.daylight.light.shadow.needsUpdate,
           clouds:view.clouds?.mesh.visible??false,
+          precipitation:view.precipitation?.mesh.visible??false,
+          precipitationInstances:view.precipitation?.geometry.instanceCount??0,
           labels:view.mapLabels?.canvas?.hidden===false,grass:view.grass?.mesh.visible??false,
           windStaticMeshes:(()=>{let count=0;view.resources.group.traverse(object=>{
             if(object.isMesh&&object.geometry?.hasAttribute?.('windRoot')&&

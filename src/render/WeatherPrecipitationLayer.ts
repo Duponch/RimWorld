@@ -66,6 +66,7 @@ export class WeatherPrecipitationLayer {
     side: THREE.DoubleSide, forceSinglePass: true, toneMapped: false,
   });
   private readonly dimensions = uniform(new THREE.Vector2(32, 32));
+  private readonly inverseDimensions = uniform(new THREE.Vector2(1 / 32, 1 / 32));
   private readonly columns = uniform(16);
   private readonly capacity = uniform(256);
   private readonly stride = uniform(159);
@@ -100,14 +101,16 @@ export class WeatherPrecipitationLayer {
       // Eighth-step speeds make a 192-unit phase wrap seamless for every cell.
       const speed = hash(key.add(uint(89))).mul(4).floor().mul(.125).add(.875);
       const phase = snow.select(this.snowPhase, this.rainPhase);
-      const height = hash(key.add(uint(97))).mul(FIELD_HEIGHT)
-        .sub(phase.mul(speed)).mod(FIELD_HEIGHT).add(FIELD_HEIGHT).mod(FIELD_HEIGHT);
+      // fract(x) = x - floor(x), so one normalized wrap also handles negative
+      // phase and wind offsets on both WebGPU and WebGL without a second mod.
+      const height = hash(key.add(uint(97)))
+        .sub(phase.mul(speed).mul(1 / FIELD_HEIGHT)).fract().mul(FIELD_HEIGHT);
       const y = height.add(1.7);
       const drift = this.wind.mul(float(FIELD_HEIGHT).sub(height)).mul(snow.select(.27, .13));
-      const wrappedX = rootX.add(drift.x).mod(this.dimensions.x)
-        .add(this.dimensions.x).mod(this.dimensions.x);
-      const wrappedZ = rootZ.add(drift.y).mod(this.dimensions.y)
-        .add(this.dimensions.y).mod(this.dimensions.y);
+      const wrappedX = rootX.add(drift.x).mul(this.inverseDimensions.x)
+        .fract().mul(this.dimensions.x);
+      const wrappedZ = rootZ.add(drift.y).mul(this.inverseDimensions.y)
+        .fract().mul(this.dimensions.y);
       const center = vec3(wrappedX.sub(.5), y, wrappedZ.sub(.5));
       const edge = wrappedX.min(this.dimensions.x.sub(wrappedX))
         .min(wrappedZ).min(this.dimensions.y.sub(wrappedZ));
@@ -137,10 +140,11 @@ export class WeatherPrecipitationLayer {
       return point;
     })();
     const pigmentPixel = uv().sub(vec2(.5));
-    const pigmentGrain = sin(pigmentPixel.x.mul(93).add(ink.mul(29)))
-      .mul(sin(pigmentPixel.y.mul(117).sub(ink.mul(17)))).mul(.11).add(.89);
+    const paperGrain = sin(pigmentPixel.x.mul(93).add(ink.mul(29)))
+      .mul(sin(pigmentPixel.y.mul(117).sub(ink.mul(17))));
     this.material.colorNode = mix(vec3(.64, .75, .84), vec3(.965, .947, .907), kind)
-      .mul(float(.80).add(this.daylight.mul(.20))).mul(pigmentGrain);
+      .mul(float(.80).add(this.daylight.mul(.20)))
+      .mul(paperGrain.mul(.11).add(.89));
     this.material.opacityNode = Fn(() => {
       const pixel = uv().sub(vec2(.5));
       // Uneven, tapered ink stroke rather than a rectangular rain quad.
@@ -158,8 +162,7 @@ export class WeatherPrecipitationLayer {
         .add(sin(angle.mul(11).sub(ink.mul(9))).mul(.016));
       const snow = float(1).sub(smoothstep(edge.sub(.07), edge.add(.025), radius))
         .mul(float(.70).add(float(1).sub(smoothstep(.16, .38, radius)).mul(.23)));
-      const chalk = sin(pixel.x.mul(71).add(ink.mul(37)))
-        .mul(sin(pixel.y.mul(83).sub(ink.mul(19)))).mul(.16).add(.84);
+      const chalk = paperGrain.mul(.16).add(.84);
       const inside = worldXZ.x.greaterThanEqual(-.5).and(worldXZ.x.lessThan(this.dimensions.x.sub(.5)))
         .and(worldXZ.y.greaterThanEqual(-.5)).and(worldXZ.y.lessThan(this.dimensions.y.sub(.5)));
       return mix(rain, snow, kind).mul(chalk).mul(visible).mul(inside.select(1, 0))
@@ -178,6 +181,7 @@ export class WeatherPrecipitationLayer {
   configureMap(width: number, height: number): void {
     const layout = precipitationMapLayout(width, height);
     this.dimensions.value.set(width, height);
+    this.inverseDimensions.value.set(1 / width, 1 / height);
     this.columns.value = layout.columns;
     this.capacity.value = layout.capacity;
     this.stride.value = layout.stride;

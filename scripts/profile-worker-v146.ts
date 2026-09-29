@@ -12,6 +12,7 @@ import { cpus } from 'node:os';
 import { performance } from 'node:perf_hooks';
 import { gunzipSync } from 'node:zlib';
 import { MotionRecorder } from '../src/bridge/motion-tracks.ts';
+import { AudioCueRecorder } from '../src/bridge/audio-cues.ts';
 import { PresentationChanges } from '../src/bridge/presentation-changes.ts';
 import { SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { deserializeWorld, stepWorld } from '../src/sim/index.ts';
@@ -19,7 +20,7 @@ import { deserializeWorld, stepWorld } from '../src/sim/index.ts';
 const SAVE_PATH = 'public/test-saves/v98/mixed-100.json';
 const OUTPUT_PATH = 'tmp/profile-worker-v146.json';
 const STAGES = [
-  'stepWorld', 'motionCapture', 'presentationChangesCapture',
+  'stepWorld', 'motionCapture', 'audioCapture', 'presentationChangesCapture',
   'snapshotEncode', 'motionSnapshot', 'structuredCloneProxy', 'total',
 ] as const;
 type Stage = typeof STAGES[number];
@@ -52,13 +53,14 @@ const world = deserializeWorld(rawWorld);
 const initialTick = world.tick;
 const originalSchema = JSON.parse(rawWorld).schemaVersion;
 const motion = new MotionRecorder();
+const audioCues = new AudioCueRecorder();
 const presentationChanges = new PresentationChanges();
 const snapshots = new SnapshotEncoder();
 
 function sample(): Row {
   const totalStart = performance.now();
   const row = { tick: 0, kind: 'delta' as 'checkpoint' | 'delta',
-    stepWorld: 0, motionCapture: 0, presentationChangesCapture: 0,
+    stepWorld: 0, motionCapture: 0, audioCapture: 0, presentationChangesCapture: 0,
     snapshotEncode: 0, motionSnapshot: 0, structuredCloneProxy: 0, total: 0 };
   let start = performance.now();
   stepWorld(world);
@@ -68,16 +70,22 @@ function sample(): Row {
   motion.capture(world);
   row.motionCapture += performance.now() - start;
   start = performance.now();
+  audioCues.capture(world);
+  row.audioCapture += performance.now() - start;
+  start = performance.now();
   presentationChanges.capture(world);
   row.presentationChangesCapture += performance.now() - start;
 
+  // This local profile publishes every tick, so drain the same recorder once
+  // per tick before encoding the message, as publishCapturedTick does.
+  const cues = audioCues.drain();
   start = performance.now();
   const encoded = snapshots.encode(world, row.stepWorld, 6);
   row.snapshotEncode += performance.now() - start;
   start = performance.now();
   const tracks = motion.snapshot();
   row.motionSnapshot += performance.now() - start;
-  const message = { ...encoded, motion: tracks };
+  const message = { ...encoded, motion: tracks, ...(cues.length ? { audioCues: cues } : {}) };
   start = performance.now();
   const cloned = structuredClone(message);
   row.structuredCloneProxy += performance.now() - start;
@@ -111,7 +119,7 @@ const report = {
     animals: world.wildlife?.animals.length ?? 0 },
   protocol: {
     warmupTicks: warmup, measuredTicks: ticks, publication: 'one snapshot per tick in this local profile',
-    captureCallsPerTick: { motion: 1, presentationChanges: 1 },
+    captureCallsPerTick: { motion: 1, audioCues: 1, presentationChanges: 1 },
     structuredCloneProxy: 'Node structuredClone of the complete snapshot message; a proxy for synchronous postMessage cloning, not measured worker postMessage, transfer, queueing, main-thread adoption, rendering, or GPU time',
     caveat: 'No FixedClock, 20 ms worker timer, speed pacing, event-driven publication, browser, or concurrent main thread. Percentiles describe individual consecutive ticks after warmup on this evolving world.',
   },

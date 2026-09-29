@@ -27,9 +27,16 @@ function invalidatePlantWork(world:World,r:Resource,removed=false):void {
   for(const pawn of world.pawns){if(pawn.jobId!==null&&ids.has(pawn.jobId))releaseAssignments(world,pawn);pawn.orders.queue=pawn.orders.queue.filter(order=>typeof order!=='number'||!ids.has(order));}
   world.jobs=world.jobs.filter(j=>!ids.has(j.id));
 }
-function unclaimedPlant(world:World,r:Resource,except:number):boolean {
+/** Snapshot-local job claims for repeated active-meal checks in one wildlife tick. */
+export function reservedPlantWorkCells(world:World):Set<number> {
+  const cells=new Set<number>();
+  for(const job of world.jobs)if(job.reservedBy!==null&&['harvest','cut','sow'].includes(job.kind))
+    cells.add(job.z*world.width+job.x);
+  return cells;
+}
+function unclaimedPlant(world:World,r:Resource,except:number,workCells?:ReadonlySet<number>):boolean {
   return !world.wildlife?.animals.some(a=>a.id!==except&&a.meal?.kind==='plant'&&a.meal.id===r.id)
-    &&!world.jobs.some(j=>j.reservedBy!==null&&j.x===r.x&&j.z===r.z&&['harvest','cut','sow'].includes(j.kind));
+    &&(workCells?!workCells.has(r.z*world.width+r.x):!world.jobs.some(j=>j.reservedBy!==null&&j.x===r.x&&j.z===r.z&&['harvest','cut','sow'].includes(j.kind)));
 }
 export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   const result:AnimalFood[]=[];
@@ -54,14 +61,14 @@ export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   }
   return result;
 }
-export function animalMealTarget(world:World,a:WildAnimal,resourcesById?:ReadonlyMap<number,Resource>):Cell|undefined {
+export function animalMealTarget(world:World,a:WildAnimal,resourcesById?:ReadonlyMap<number,Resource>,workCells?:ReadonlySet<number>):Cell|undefined {
   const meal=a.meal;if(!meal)return;
   const pen=grazingPen(world,a);
   if(meal.kind==='plant') {
     const r=resourcesById?resourcesById.get(meal.id):world.resources.find(r=>r.id===meal.id);
     if(!r||!isPlant(r)||plantLeafless(world,r))return;
     const growth=plantGrowth(world,r);
-    return growth>=.1&&plantNutrition(r,growth)>0&&unclaimedPlant(world,r,a.id)&&(!pen||pen.has(r.z*world.width+r.x))?r:undefined;
+    return growth>=.1&&plantNutrition(r,growth)>0&&unclaimedPlant(world,r,a.id,workCells)&&(!pen||pen.has(r.z*world.width+r.x))?r:undefined;
   }
   const p=world.piles.find(p=>p.id===meal.id);
   return p?.kind==='food'&&herbivoreFoods.has(p.item)&&p.owner.type==='ground'&&p.quantity-reservedSource(world,p.id,a.id)>=meal.quantity&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))?p.owner:undefined;

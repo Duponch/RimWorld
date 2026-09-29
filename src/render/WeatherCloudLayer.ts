@@ -15,6 +15,9 @@ const MAX_CONTIGUOUS_TICK_GAP = 600;
 // Near-profile views keep the clouds solid against the sky. As the camera
 // rises over the map, leave only a faint trace so the ground stays readable.
 const HIGH_VIEW_OPACITY = .06;
+const CLOUD_BASE_HEIGHT = 30;
+const CLOUD_BAND_SPACING = 7.5;
+const CLOUD_BAND_JITTER = 5;
 const scratch = new THREE.Object3D();
 
 export interface CloudPresentation {
@@ -207,8 +210,8 @@ export class WeatherCloudLayer {
       MIN_MAP_CLOUDS, CLOUD_COUNT,
     );
     this.mesh.boundingSphere = new THREE.Sphere(
-      new THREE.Vector3(this.centerX, 35, this.centerZ),
-      Math.hypot(this.radiusX + 24, this.radiusZ + 24, 22),
+      new THREE.Vector3(this.centerX, 40, this.centerZ),
+      Math.hypot(this.radiusX + 24, this.radiusZ + 24, 23),
     );
     this.reset();
   }
@@ -296,7 +299,9 @@ export class WeatherCloudLayer {
       const size = Math.max(.001, Math.min(fade * weatherSize * (3.2 + c * 2.7),
         clearance / this.footprintRadius));
       // Three altitude bands form a cloud volume rather than a flat ceiling.
-      scratch.position.set(this.centerX + x, 25 + (index % 3) * 6.5 + d * 5, this.centerZ + z);
+      scratch.position.set(this.centerX + x,
+        CLOUD_BASE_HEIGHT + (index % 3) * CLOUD_BAND_SPACING + d * CLOUD_BAND_JITTER,
+        this.centerZ + z);
       scratch.rotation.set(0, c * Math.PI * 2, 0);
       scratch.scale.set(size, size * (.75 + d * .24), size * (.70 + b * .24));
       scratch.updateMatrix();

@@ -88,9 +88,9 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
       expect(position.x).toBeLessThan(31.5);
       expect(position.z).toBeGreaterThanOrEqual(-.5);
       expect(position.z).toBeLessThan(31.5);
-      expect(position.y).toBeGreaterThanOrEqual(25);
-      expect(position.y).toBeLessThan(43);
-      altitudeBands.add(Math.floor((position.y - 25) / 6.5));
+      expect(position.y).toBeGreaterThanOrEqual(30);
+      expect(position.y).toBeLessThan(50);
+      altitudeBands.add(Math.floor((position.y - 30) / 7.5));
       if (fadeAttribute.getX(index) > .005) {
         const footprint = Math.max(scale.x, scale.z) * footprintRadius;
         expect(position.x - footprint).toBeGreaterThanOrEqual(-.501);
