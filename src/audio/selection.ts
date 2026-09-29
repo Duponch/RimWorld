@@ -12,6 +12,7 @@ export function cueHash(id: string): number {
 const WORK_KINDS = new Set([
   'mining.hit', 'woodcutting.hit', 'construction.hit', 'cooking.work',
   'crafting.work', 'tailoring.work', 'butchering.work', 'research.work',
+  'cleaning.work', 'medical.tend', 'maintenance.work',
 ]);
 
 /** Presentation-only variation; never consumes the simulation PRNG. */
@@ -26,8 +27,9 @@ export function cueVariation(id: string, kind?: string): { playbackRate: number;
 }
 
 function priority(kind: string): number {
+  if (kind === 'ui.threat' || kind === 'ui.colonist-death') return -1;
   if (kind === 'weapon.gunshot') return 0;
-  if (kind === 'weapon.melee') return 1;
+  if (kind === 'weapon.melee' || kind === 'weather.thunder' || kind.startsWith('animal.death.')) return 1;
   return 2;
 }
 

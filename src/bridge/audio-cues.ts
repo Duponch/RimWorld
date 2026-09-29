@@ -2,11 +2,21 @@ import type { World } from '../sim/types.ts';
 import { isConstruction } from '../sim/construction-rules.ts';
 import { isTailoring, stationAccepts, taskRecipe } from '../sim/production-recipes.ts';
 import { WORK_FRACTIONS } from '../sim/work-progress.ts';
+import { isColonist } from '../sim/affiliation.ts';
+import type { AnimalSpeciesId } from '../sim/animal-species.ts';
+
+type AnimalVoiceSpecies = Exclude<AnimalSpeciesId, 'snow-hare'>;
+const animalVoiceSpecies = (species:AnimalSpeciesId):AnimalVoiceSpecies =>
+  species === 'snow-hare' ? 'hare' : species;
 
 export type AudioCueKind = 'mining.hit' | 'woodcutting.hit' | 'construction.hit'
   | 'cooking.work' | 'crafting.work' | 'tailoring.work' | 'butchering.work' | 'research.work'
   | 'weapon.gunshot' | 'weapon.melee' | 'door.open' | 'door.close'
   | 'haul.pickup' | 'haul.drop' | 'farming.sow' | 'farming.harvest' | 'eating.work'
+  | 'cleaning.work' | 'medical.tend' | 'maintenance.work'
+  | 'autodoor.open' | 'autodoor.close' | 'weather.thunder'
+  | `animal.hurt.${AnimalVoiceSpecies}` | `animal.death.${AnimalVoiceSpecies}`
+  | 'ui.threat' | 'ui.colonist-death'
   | 'ui.click' | 'ui.reject' | 'ui.panel';
 export interface AudioCue {
   id: string;
@@ -51,6 +61,10 @@ export class AudioCueRecorder {
   private melee = new Map<number, number>();
   private doors = new Map<number, boolean>();
   private hauls = new Map<number, HaulObservation>();
+  private pawnStates = new Map<number, string>();
+  private animalStates = new Map<number, { state: string; injurySeverity: number }>();
+  private lightningCount = 0;
+  private raidId: number | null = null;
 
   reset(): void {
     this.initialized = false;
@@ -63,6 +77,10 @@ export class AudioCueRecorder {
     this.melee.clear();
     this.doors.clear();
     this.hauls.clear();
+    this.pawnStates.clear();
+    this.animalStates.clear();
+    this.lightningCount = 0;
+    this.raidId = null;
   }
 
   capture(world: World): void {
@@ -80,6 +98,8 @@ export class AudioCueRecorder {
     const melee = new Map<number, number>();
     const doors = new Map<number, boolean>();
     const hauls = new Map<number, HaulObservation>();
+    const pawnStates = new Map<number, string>();
+    const animalStates = new Map<number, { state: string; injurySeverity: number }>();
     const jobs = new Map(world.jobs.map(job => [job.id, job]));
     let stations: Map<number, World['structures'][number]> | undefined;
     const stationFor = (id: number): World['structures'][number] | undefined => {
@@ -102,6 +122,12 @@ export class AudioCueRecorder {
     };
 
     for (const pawn of world.pawns) {
+      pawnStates.set(pawn.id, pawn.state);
+      const previousPawnState = this.pawnStates.get(pawn.id);
+      if (this.initialized && previousPawnState !== undefined && previousPawnState !== 'dead'
+        && pawn.state === 'dead' && isColonist(pawn))
+        this.add({ id: `ui.colonist-death:${world.tick}:${pawn.id}`, tick: world.tick,
+          kind: 'ui.colonist-death', x: pawn.x, z: pawn.z });
       const previousHaul = previousHauls.get(pawn.id);
       const haul = pawn.haul;
       if (haul) {
@@ -126,13 +152,23 @@ export class AudioCueRecorder {
       }
       const job = pawn.jobId === null ? undefined : jobs.get(pawn.jobId);
       if (job && (job.kind === 'mine' || job.kind === 'chop' || job.kind === 'sow'
-        || job.kind === 'harvest' || job.kind === 'cut' || isConstruction(job)) && !job.furniture
+        || job.kind === 'harvest' || job.kind === 'cut' || job.kind === 'repair'
+        || job.kind === 'fix-breakdown' || isConstruction(job)) && !job.furniture
         && job.installationWork !== 'haul') {
         const kind = job.kind === 'mine' ? 'mining.hit' : job.kind === 'chop' ? 'woodcutting.hit'
           : job.kind === 'sow' ? 'farming.sow'
-            : job.kind === 'harvest' || job.kind === 'cut' ? 'farming.harvest' : 'construction.hit';
+            : job.kind === 'harvest' || job.kind === 'cut' ? 'farming.harvest'
+              : job.kind === 'repair' || job.kind === 'fix-breakdown' ? 'maintenance.work' : 'construction.hit';
         recordWork(pawn.id, `job:${job.id}`, job.progress * WORK_FRACTIONS + (job.workRemainder ?? 0), kind,
           job.x, job.z, pawn.state === 'working', WORK_CUE_INTERVAL_TICKS);
+      } else if (pawn.cleaning) {
+        const task = pawn.cleaning;
+        recordWork(pawn.id, `clean:${task.targets[0] ?? 'none'}`, task.progress, 'cleaning.work',
+          pawn.x, pawn.z, task.phase === 'clean' && pawn.state === 'working', STATION_CUE_INTERVAL_TICKS);
+      } else if (pawn.tend) {
+        const task = pawn.tend;
+        recordWork(pawn.id, `tend:${task.patientId}`, task.progress, 'medical.tend',
+          pawn.x, pawn.z, task.phase === 'tend' && pawn.state === 'working', STATION_CUE_INTERVAL_TICKS);
       } else if (pawn.need?.kind === 'eat' && pawn.need.phase === 'ingest') {
         recordWork(pawn.id, `eat:${pawn.need.sourcePileId}:${pawn.need.carryPileId}`,
           pawn.need.progress * WORK_FRACTIONS + (pawn.need.workRemainder ?? 0), 'eating.work',
@@ -178,22 +214,68 @@ export class AudioCueRecorder {
           x: projectile.flight.origin.x, z: projectile.flight.origin.z });
     }
     for (const structure of world.structures) {
-      if ((structure.kind !== 'door' && structure.kind !== 'fence-gate') || !structure.door) continue;
+      if ((structure.kind !== 'door' && structure.kind !== 'fence-gate' && structure.kind !== 'autodoor') || !structure.door) continue;
       const open = structure.door.open;
       doors.set(structure.id, open);
       const previous = previousDoors.get(structure.id);
       if (this.initialized && previous !== undefined && previous !== open) {
-        const kind = open ? 'door.open' : 'door.close';
+        const kind = structure.kind === 'autodoor'
+          ? open ? 'autodoor.open' : 'autodoor.close'
+          : open ? 'door.open' : 'door.close';
         this.add({ id: `${kind}:${world.tick}:${structure.id}`, tick: world.tick,
           kind, x: structure.x, z: structure.z });
       }
     }
+    for (const animal of world.wildlife?.animals ?? []) {
+      const injurySeverity = animal.health?.injuries.reduce((total, injury) => total + injury.severity, 0) ?? 0;
+      animalStates.set(animal.id, { state: animal.state, injurySeverity });
+      const previous = this.animalStates.get(animal.id);
+      if (!this.initialized || !previous) continue;
+      const voiceSpecies=animalVoiceSpecies(animal.species);
+      if (animal.state === 'dead' && previous.state !== 'dead')
+        this.add({ id: `animal.death:${world.tick}:${animal.id}`, tick: world.tick,
+          kind: `animal.death.${voiceSpecies}`, x: animal.x, z: animal.z });
+      else if (animal.state !== 'dead' && injurySeverity > previous.injurySeverity)
+        this.add({ id: `animal.hurt:${world.tick}:${animal.id}`, tick: world.tick,
+          kind: `animal.hurt.${voiceSpecies}`, x: animal.x, z: animal.z });
+    }
+    // Ordinary deaths become a physical corpse pile before the worker publishes
+    // its snapshot. Observe that exact identity once, without scanning all piles
+    // during snapshots where no previously live animal disappeared.
+    if (this.initialized) {
+      const missing = new Set<number>();
+      for (const [id, previous] of this.animalStates)
+        if (previous.state !== 'dead' && !animalStates.has(id)) missing.add(id);
+      if (missing.size) for (const pile of world.piles) {
+        const corpse = pile.corpse;
+        if (!corpse || !missing.has(corpse.animalId) || !corpse.health.death) continue;
+        const owner = pile.owner;
+        const position = owner.type === 'ground' ? owner
+          : owner.type === 'pawn' ? world.pawns.find(pawn => pawn.id === owner.pawnId) : undefined;
+        if (!position) continue;
+        this.add({ id: `animal.death:${world.tick}:${corpse.animalId}`, tick: world.tick,
+          kind: `animal.death.${animalVoiceSpecies(corpse.species)}`, x: position.x, z: position.z });
+      }
+    }
+    const lightningCount = world.weather?.lightningCount ?? 0;
+    const lightning = world.weather?.lastLightning;
+    if (this.initialized && lightningCount > this.lightningCount && lightning)
+      this.add({ id: `weather.thunder:${lightning.coreTick}`, tick: world.tick,
+        kind: 'weather.thunder', x: lightning.x, z: lightning.z });
+    const raidId = world.raids?.active?.phase === 'assault' ? world.raids.active.id : null;
+    if (this.initialized && raidId !== null && raidId !== this.raidId)
+      this.add({ id: `ui.threat:${world.tick}:${raidId}`, tick: world.tick,
+        kind: 'ui.threat', x: 0, z: 0 });
     this.work = work;
     this.projectiles = projectiles;
     this.shooting = shooting;
     this.melee = melee;
     this.doors = doors;
     this.hauls = hauls;
+    this.pawnStates = pawnStates;
+    this.animalStates = animalStates;
+    this.lightningCount = lightningCount;
+    this.raidId = raidId;
     this.initialized = true;
   }
 
@@ -204,7 +286,18 @@ export class AudioCueRecorder {
   }
 
   private add(cue: AudioCue): void {
-    if (this.tickCount >= MAX_CUES_PER_TICK || this.pending.length >= MAX_PENDING_CUES) return;
+    if (this.tickCount >= MAX_CUES_PER_TICK || this.pending.length >= MAX_PENDING_CUES) {
+      // Keep severe interface alerts even if many local contacts occur on the
+      // same tick. Presentation may discard one background cue, never a command.
+      if (cue.kind !== 'ui.threat' && cue.kind !== 'ui.colonist-death') return;
+      const sameTickFull = this.tickCount >= MAX_CUES_PER_TICK;
+      const displaced = this.pending.findIndex(candidate =>
+        (!sameTickFull || candidate.tick === this.tick)
+        && candidate.kind !== 'ui.threat' && candidate.kind !== 'ui.colonist-death');
+      if (displaced < 0) return;
+      if (this.pending[displaced]!.tick === this.tick) this.tickCount--;
+      this.pending.splice(displaced, 1);
+    }
     this.pending.push(cue);
     this.tickCount++;
   }

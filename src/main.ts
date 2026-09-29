@@ -105,7 +105,7 @@ import { SimulationClient } from './bridge/SimulationClient';
 import { AudioDirector } from './audio/AudioDirector';
 import { MusicDirector, type MusicMood } from './audio/MusicDirector';
 import { ambientCameraGain } from './audio/ambience';
-import { createNearbyFireCollector } from './audio/continuous';
+import { createNearbyFireCollector, createNearbyMachineCollector, runningMachineAudioSource } from './audio/continuous';
 import { listenerPose, type AudioCamera } from './audio/spatial';
 import { ColonyRenderer } from './render/ColonyRenderer';
 import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell, Command } from './sim/types';
@@ -152,11 +152,18 @@ function syncAudioSources(world: World,camera=lastAudioCamera): void {
   lastAudioSourceHeight=listener?.y??NaN;
   const weatherCameraGain=camera?ambientCameraGain(camera):1;
   const nearby=createNearbyFireCollector(focus);
+  const machinery=createNearbyMachineCollector(focus);
   for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined)
     nearby.add(`fire:${fire.id}`,fire.x,fire.z,Math.max(.2,Math.min(1,fire.size)));
-  for(const structure of world.structures)if(structure.kind==='campfire'&&structure.fuel?.ticks)
-    nearby.add(`campfire:${structure.id}`,structure.x,structure.z,.48);
-  const sources=nearby.sources();
+  for(const structure of world.structures){
+    if(structure.kind==='campfire'&&structure.fuel?.ticks)
+      nearby.add(`campfire:${structure.id}`,structure.x,structure.z,.48);
+    if(structure.kind==='wood-generator'||structure.kind==='wind-turbine'){
+      const machine=runningMachineAudioSource(structure);
+      if(machine)machinery.add(machine.id,machine.kind,machine.x,machine.z,machine.gain);
+    }
+  }
+  const sources=[...nearby.sources(),...machinery.sources()];
   const weather=perceivedWeather(world);
   if(weather==='rain'||weather==='rainy-thunderstorm'||weather==='foggy-rain') {
     const gain=Math.min(1,Math.max(0,weatherRainRate(world)));

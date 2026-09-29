@@ -33,6 +33,8 @@ import { GrowingZoneLayer } from './GrowingZoneLayer';
 import { buildTerrain, copyTerrainPaintRect, createTerrainPaintTexture, patchTerrainPaintTexture, singleTerrainPaintPatchRect, syncTerrainPaintUvs, TERRAIN_PAINT_PIXELS_PER_CELL, type TerrainPaintPatchRect } from './TerrainLayer';
 import { PaintedWater } from './PaintedWater';
 import { WeatherCloudLayer } from './WeatherCloudLayer';
+import { WeatherPrecipitationLayer } from './WeatherPrecipitationLayer';
+import { weatherRainRate, weatherSnowRate } from '../sim/weather';
 import { visualWindDirection } from './visual-weather';
 import { RockLayer } from './RockLayer';
 import { MotionTimeline } from './MotionTimeline';
@@ -165,6 +167,7 @@ export class ColonyRenderer {
   private readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
   private readonly paintedWater=new PaintedWater(this.terrainPaintTexture,this.environmentLighting.configure);
   private readonly clouds=new WeatherCloudLayer();
+  private readonly precipitation=new WeatherPrecipitationLayer();
   private readonly boxes = new BoxBatches(this.environmentLighting.configure);
   private readonly recreationHints = new RecreationHints(this.boxes);
   private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial,this.texturedStaticMaterial);
@@ -264,7 +267,7 @@ export class ColonyRenderer {
     this.daylight = new DayNightLayer(this.scene);
     this.invalidatePausedShadow();
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
-    this.scene.add(this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh);
+    this.scene.add(this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
     if (groundGrassEnabled) {
       this.grass = new GpuGroundGrassLayer(this.environmentLighting.configure);
       this.scene.add(this.grass.mesh);
@@ -384,6 +387,7 @@ export class ColonyRenderer {
     if (newMap) {
       this.boxes.clear();
       this.clouds.configureMap(world.width, world.height);
+      this.precipitation.reset();
       this.paintedWater.reset();
       this.rig.configureMap(world.width, world.height, world.scenario?.landing);
       this.daylight.configureShadow(world.width, world.height);
@@ -603,6 +607,7 @@ export class ColonyRenderer {
     const restoreDesignations=this.designations.prepareForCompile();
     const restoreFilth=this.hygiene.filth.prepareForCompile();
     const restoreClouds=this.clouds.prepareForCompile();
+    const restorePrecipitation=this.precipitation.prepareForCompile();
     try {
       // The double-sided cursor otherwise compiles both face variants on the
       // first map interaction. Include it behind the loading overlay.
@@ -621,7 +626,7 @@ export class ColonyRenderer {
       // already disabled culling when that override was captured; their own
       // restorers must therefore run last to recover their real runtime flag.
       for (const [object, value] of culling) object.frustumCulled = value;
-      restoreWind();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();
+      restoreWind();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
       this.invalidatePausedShadow();
@@ -865,6 +870,9 @@ export class ColonyRenderer {
     if(this.world)this.clouds.present({seed:this.world.seed,tick:skyTick,weather:this.world.weather,camera:this.camera,
       target:this.controls.target,strength:visualWindStrength,directionX:visualWind.x,directionZ:visualWind.z,
       daylight:this.daylight.sample.daylight});
+    if(this.world)this.precipitation.present({seed:this.world.seed,tick:skyTick,rainRate:weatherRainRate(this.world),
+      snowRate:weatherSnowRate(this.world),camera:this.camera,target:this.controls.target,
+      strength:visualWindStrength,directionX:visualWind.x,directionZ:visualWind.z,daylight:this.daylight.sample.daylight});
     this.daylight.fitShadow(this.camera);
     const cellPixels=this.rig.pixelsPerCell(this.viewportHeight);
     this.actionFeedback.setBarsDetailVisible(cellPixels>=18);
@@ -1122,6 +1130,7 @@ export class ColonyRenderer {
     this.waterMaterial.dispose();
     this.paintedWater.dispose();
     this.clouds.dispose();
+    this.precipitation.dispose();
     this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();
     this.objectSelection.geometry.dispose();(this.objectSelection.material as THREE.Material).dispose();
     this.daylight.dispose();

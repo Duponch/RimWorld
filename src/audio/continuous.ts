@@ -1,4 +1,6 @@
 import { audibleRange, listenerPose, sourceDistance, type AudioCamera } from './spatial';
+import { isPowerActive } from '../sim/power-rules.ts';
+import type { Structure } from '../sim/types.ts';
 
 export interface ContinuousSource {
   id: string;
@@ -10,6 +12,16 @@ export interface ContinuousSource {
 
 export interface ContinuousEventInfo { maxDistance: number; spatial: boolean; loop: boolean }
 
+export function runningMachineAudioSource(structure:Structure):
+  (ContinuousSource&{kind:'machine.wood-generator'|'machine.wind-turbine';gain:number})|undefined {
+  if (!isPowerActive(structure)) return;
+  if (structure.kind === 'wood-generator')
+    return {id:`wood-generator:${structure.id}`,kind:'machine.wood-generator',x:structure.x,z:structure.z,gain:.55};
+  if (structure.kind === 'wind-turbine' && (structure.wind?.cachedWatts??0)>0)
+    return {id:`wind-turbine:${structure.id}`,kind:'machine.wind-turbine',x:structure.x,z:structure.z,
+      gain:Math.max(.25,Math.min(.75,(structure.wind?.cachedWatts??0)/2500))};
+}
+
 /** Snapshot-side preselection before the four-voice Web Audio selection. The
  * focus must be the listener pose, not merely the orbit target in perspective. */
 export function createNearbyFireCollector(focus:{x:number;z:number},limit=12,radius=64) {
@@ -19,6 +31,23 @@ export function createNearbyFireCollector(focus:{x:number;z:number},limit=12,rad
       const distance=(x-focus.x)**2+(z-focus.z)**2;
       if(distance>radius*radius)return;
       const source={id,kind:'ambient.fire',x,z,gain,distance};
+      if(nearby.length<limit){nearby.push(source);return;}
+      let worst=0;for(let i=1;i<nearby.length;i++)if(nearby[i]!.distance>nearby[worst]!.distance)worst=i;
+      if(distance<nearby[worst]!.distance)nearby[worst]=source;
+    },
+    sources():ContinuousSource[]{return nearby.map(({id,kind,x,z,gain})=>({id,kind,x,z,gain}));},
+  };
+}
+
+/** Keep only nearby running machinery before passing sources to the shared
+ * voice budget. This is rebuilt on snapshots/camera moves, never per frame. */
+export function createNearbyMachineCollector(focus:{x:number;z:number},limit=8,radius=48) {
+  const nearby:(ContinuousSource&{gain:number;distance:number})[]=[];
+  return {
+    add(id:string,kind:'machine.wood-generator'|'machine.wind-turbine',x:number,z:number,gain:number):void {
+      const distance=(x-focus.x)**2+(z-focus.z)**2;
+      if(distance>radius*radius)return;
+      const source={id,kind,x,z,gain,distance};
       if(nearby.length<limit){nearby.push(source);return;}
       let worst=0;for(let i=1;i<nearby.length;i++)if(nearby[i]!.distance>nearby[worst]!.distance)worst=i;
       if(distance<nearby[worst]!.distance)nearby[worst]=source;

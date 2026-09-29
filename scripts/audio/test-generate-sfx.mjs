@@ -4,6 +4,7 @@ import { copyFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { after, test } from 'node:test';
+import { assertPlan } from './generate-sfx.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const script = join(repo, 'scripts/audio/generate-sfx.mjs');
@@ -13,6 +14,18 @@ const derived = Buffer.concat([Buffer.from('ID3'), Buffer.alloc(125, 2)]);
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const sourceFilename = 'mining-hit-v1.mp3';
 const derivedFilename = 'mining-hit-soft-compressed-v1.mp3';
+
+test('accepts hyphenated cue segments and rejects unsafe IDs', () => {
+  const item = { filename: 'machine-wood-generator-v1.mp3', prompt: 'A small wood generator running steadily in a dry loop.',
+    durationSeconds: 1, promptInfluence: 0.7, loop: true, gain: 0.5, maxDistance: 20 };
+  const plan = (id) => ({ version: 1, modelId: 'eleven_text_to_sound_v2', outputFormat: 'mp3_44100_128',
+    events: { [id]: item } });
+  assert.doesNotThrow(() => assertPlan(plan('machine.wood-generator')));
+  for (const id of ['machine..generator', 'machine.wood/../generator', 'machine.-generator',
+    'machine.generator-', 'Machine.wood-generator', 'machine.wood_generator']) {
+    assert.throws(() => assertPlan(plan(id)), /Invalid cue ID/);
+  }
+});
 
 await mkdir(fixtureRoot, { recursive: true });
 const root = await mkdtemp(join(fixtureRoot, 'generate-sfx-'));

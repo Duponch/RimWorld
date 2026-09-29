@@ -23,10 +23,12 @@ const CLUSTERED_KINDS = new Set([
   'mining.hit', 'woodcutting.hit', 'construction.hit', 'cooking.work',
   'crafting.work', 'tailoring.work', 'butchering.work', 'research.work',
   'haul.pickup', 'haul.drop', 'farming.sow', 'farming.harvest', 'eating.work',
+  'cleaning.work', 'medical.tend', 'maintenance.work',
 ]);
 function clusterGroup(kind: string): string | null {
   // An opening and closing door share one nearby acoustic patch.
-  if (kind === 'door.open' || kind === 'door.close') return 'door';
+  if (kind === 'door.open' || kind === 'door.close' || kind === 'autodoor.open' || kind === 'autodoor.close') return 'door';
+  if (kind.startsWith('animal.hurt.') || kind.startsWith('animal.death.')) return 'animal';
   return CLUSTERED_KINDS.has(kind) ? kind : null;
 }
 const NO_DECODED_MP3_ERROR = 'Aucun MP3 du manifeste audio n’a pu être décodé.';
@@ -195,8 +197,14 @@ export class AudioDirector {
     if (inactive && !wasInactive) {
       for (const [id, voice] of this.continuous) this.fadeOutContinuous(id, voice);
     } else if (!inactive && wasInactive) this.reconcileContinuous();
-    if (state.paused) return;
     const due = this.scheduler.takeDue(state.presentedTick);
+    if (state.paused) {
+      // Important messages are interface sounds: an automatic pause must not
+      // defer a raid/death alert until the player resumes the simulation.
+      for (const cue of due) if (cue.kind === 'ui.threat' || cue.kind === 'ui.colonist-death')
+        this.playInterface(cue.kind);
+      return;
+    }
     if (state.hidden || this.muted || !this.manifest || this.context?.state !== 'running') return;
     const ready = due.filter(cue => this.manifest?.events[cue.kind]?.variants.some(variant => this.buffers.get(variant.src)));
     for (const cue of selectOneShots(ready, this.manifest.events, this.camera, MAX_ONE_SHOTS_PER_FRAME)) this.playCue(cue);
@@ -245,7 +253,7 @@ export class AudioDirector {
 
   /** A decoded interface sound can play during pause or from the title menu.
    * The caller's gesture unlocks audio separately; an unavailable asset is silent. */
-  playInterface(kind: 'ui.click' | 'ui.reject' | 'ui.panel'): void {
+  playInterface(kind: 'ui.click' | 'ui.reject' | 'ui.panel' | 'ui.threat' | 'ui.colonist-death'): void {
     const context = this.context;
     const event = this.manifest?.events[kind];
     if (this.disposed || this.muted || this.hidden || this.volume === 0 ||

@@ -4,7 +4,11 @@ import { SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { newDoorState } from '../src/sim/door-rules.ts';
 import { applyDoorCommand, readyDoorEntry, updateDoors } from '../src/sim/doors.ts';
 import { createWorld } from '../src/sim/index.ts';
+import { advanceCorpses, animalCorpseItem } from '../src/sim/corpses.ts';
+import { groundCapacity } from '../src/sim/ground-placement.ts';
+import { newWeatherState } from '../src/sim/weather.ts';
 import type { Job, Pawn, World } from '../src/sim/types.ts';
+import type { WildAnimal } from '../src/sim/wildlife-state.ts';
 
 afterEach(() => { vi.unstubAllGlobals(); vi.resetModules(); });
 
@@ -125,7 +129,7 @@ test('eating cue follows actual ingest progress, not travel or loaded state', ()
   expect(recorder.drain()).toEqual([]);
 });
 
-test('wooden passage cues cover fence gates but exclude powered autodoors', () => {
+test('manual gates and autodoors use their own sounds on actual motion', () => {
   const world = createWorld(847, 32, 32);
   const gate = { id: world.nextId++, kind: 'fence-gate' as const, x: 2, z: 3,
     orientation: 0 as const, footprint: 'standard' as const, door: newDoorState(world.tick) };
@@ -140,13 +144,113 @@ test('wooden passage cues cover fence gates but exclude powered autodoors', () =
   gate.door.open = true;
   auto.door.open = true;
   recorder.capture(world);
-  expect(recorder.drain()).toMatchObject([{ kind: 'door.open', x: gate.x, z: gate.z }]);
+  expect(recorder.drain()).toMatchObject([
+    { kind: 'door.open', x: gate.x, z: gate.z },
+    { kind: 'autodoor.open', x: auto.x, z: auto.z },
+  ]);
 
   world.tick++;
   gate.door.open = false;
   auto.door.open = false;
   recorder.capture(world);
-  expect(recorder.drain()).toMatchObject([{ kind: 'door.close', x: gate.x, z: gate.z }]);
+  expect(recorder.drain()).toMatchObject([
+    { kind: 'door.close', x: gate.x, z: gate.z },
+    { kind: 'autodoor.close', x: auto.x, z: auto.z },
+  ]);
+});
+
+test('thunder follows confirmed lightning, not rain or a loaded storm', () => {
+  const world = createWorld(854, 32, 32);
+  world.weather = newWeatherState(world.seed, world.tick);
+  world.weather.current = 'rainy-thunderstorm';
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  world.tick++;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  world.weather.lightningCount++;
+  world.weather.lastLightning = { x: 8, z: 9, coreTick: world.tick * 10 };
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ kind: 'weather.thunder', x: 8, z: 9 }]);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  recorder.reset();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+});
+
+test('confirmed raid and colonist death signal once, including across a paused tick', () => {
+  const world = createWorld(855, 32, 32), pawn = world.pawns[0]!;
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  world.raids = { profile: 'camp-raids-v1', rng: 1, nextCheck: null, serial: 1, completed: 0,
+    departed: [], active: { id: 1, startedAt: world.tick, deadline: world.tick + 1000,
+      lossPermille: 500, members: [], lost: [], phase: 'assault' } };
+  recorder.capture(world);
+  expect(recorder.drain().map(cue => cue.kind)).toEqual(['ui.threat']);
+  pawn.state = 'dead';
+  recorder.capture(world);
+  expect(recorder.drain().map(cue => cue.kind)).toEqual(['ui.colonist-death']);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+});
+
+test('cleaning, tending and repairs sound only on physical work progress', () => {
+  const world = createWorld(856, 32, 32), pawn = world.pawns[0]!;
+  const recorder = new AudioCueRecorder();
+  pawn.cleaning = { targets: [1], forced: true, phase: 'approach', progress: 0 };
+  pawn.state = 'moving';
+  recorder.capture(world);
+  world.tick++; pawn.cleaning.phase = 'clean'; pawn.cleaning.progress = 1; pawn.state = 'working';
+  recorder.capture(world);
+  expect(recorder.drain().map(cue => cue.kind)).toEqual(['cleaning.work']);
+  delete pawn.cleaning;
+  pawn.tend = { patientId: 2, spot: { x: pawn.x, z: pawn.z }, phase: 'approach', progress: 0 };
+  recorder.capture(world); expect(recorder.drain()).toEqual([]);
+  world.tick++; pawn.tend.phase = 'tend'; pawn.tend.progress = 1;
+  recorder.capture(world);
+  expect(recorder.drain().map(cue => cue.kind)).toEqual(['medical.tend']);
+  delete pawn.tend;
+  const job: Job = { id: world.nextId++, kind: 'repair', x: pawn.x + 1, z: pawn.z,
+    orientation: 0, footprint: 'standard', status: 'active', reservedBy: pawn.id,
+    progress: 0, escrow: { wood: 0, food: 0 } };
+  world.jobs.push(job); pawn.jobId = job.id;
+  recorder.capture(world); expect(recorder.drain()).toEqual([]);
+  world.tick++; job.progress++;
+  recorder.capture(world);
+  expect(recorder.drain().map(cue => cue.kind)).toEqual(['maintenance.work']);
+});
+
+test('animal pain and death follow new physical damage without replaying a loaded corpse', () => {
+  const world = createWorld(857, 32, 32);
+  const cell = world.tiles.map((_, index) => ({ x: index % world.width, z: Math.floor(index / world.width) }))
+    .find(candidate => groundCapacity(world, candidate, animalCorpseItem('deer')) >= 1)!;
+  expect(cell).toBeDefined();
+  const animal: WildAnimal = { id: world.nextId++, x: cell.x, z: cell.z, species: 'deer', sex: 'female',
+    ageTicks: 1000, food: 1, rest: 1, state: 'idle', path: [], nextDecision: 0,
+    health: { body: 'deer', tick: world.tick, nextInjuryId: 2, injuries: [], missing: [], bloodLoss: 0 } };
+  world.wildlife = { profile: 'biome-herbivores-v1', rng: 1, animals: [animal],
+    eatenPlants: 0, eatenNutrition: 0, eatenItems: 0 };
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  world.tick++;
+  animal.health!.injuries.push({ id: 1, part: 'torso', kind: 'cut', severity: 1000, bornAt: world.tick });
+  recorder.capture(world);
+  expect(recorder.drain().map(cue => cue.kind)).toEqual(['animal.hurt.deer']);
+  world.tick++;
+  animal.state = 'dead';
+  animal.health!.death = { tick: world.tick, cause: 'blood-loss' };
+  advanceCorpses(world);
+  expect(world.wildlife!.animals).toEqual([]);
+  expect(world.piles.some(pile => pile.corpse?.animalId === animal.id)).toBe(true);
+  recorder.capture(world);
+  expect(recorder.drain().map(cue => cue.kind)).toEqual(['animal.death.deer']);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  recorder.reset(); recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
 });
 
 test('captures confirmed work, shot and melee once without playing loaded history', () => {
@@ -245,6 +349,24 @@ test('caps crowded ticks and unpublished cues', () => {
   expect(cues).toHaveLength(128);
   expect(cues.filter(cue => cue.tick === initialTick + 1)).toHaveLength(32);
   expect(recorder.drain()).toEqual([]);
+});
+
+test('retains a new threat alert when local contacts fill the cue limit', () => {
+  const world = createWorld(813, 32, 32);
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  world.tick++;
+  world.projectiles = Array.from({ length: 50 }, (_, index) => ({
+    id: 1000 + index,
+    flight: { origin: { x: index, z: 1 } },
+  })) as World['projectiles'];
+  world.raids = { profile: 'camp-raids-v1', rng: 1, nextCheck: null, serial: 1, completed: 0,
+    departed: [], active: { id: 1, startedAt: world.tick, deadline: world.tick + 1000,
+      lossPermille: 500, members: [], lost: [], phase: 'assault' } };
+  recorder.capture(world);
+  const cues = recorder.drain();
+  expect(cues).toHaveLength(32);
+  expect(cues.filter(cue => cue.kind === 'ui.threat')).toHaveLength(1);
 });
 
 test('uses confirmed shooting cooldown when a short projectile is already gone', () => {

@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AudioDirector, parseAudioManifest } from '../src/audio/AudioDirector';
 import { AudioCueScheduler } from '../src/audio/scheduler';
 import { audibleRange, listenerPose, sourceDistance, SPATIAL_REF_DISTANCE, SPATIAL_ROLLOFF } from '../src/audio/spatial';
-import { createNearbyFireCollector, selectContinuousSources } from '../src/audio/continuous';
+import { createNearbyFireCollector, createNearbyMachineCollector, runningMachineAudioSource, selectContinuousSources } from '../src/audio/continuous';
+import type { Structure } from '../src/sim/types';
 import { cueVariation, selectOneShots } from '../src/audio/selection';
 
 describe('audio cue presentation queue', () => {
@@ -87,6 +88,30 @@ describe('audio cue presentation queue', () => {
     })));
     expect(queue.pendingCount).toBe(256);
     expect(queue.takeDue(1)).toHaveLength(1);
+  });
+
+  it('keeps a severe alert through a full queue and a slow presentation jump', () => {
+    const queue = new AudioCueScheduler();
+    queue.ingest(Array.from({ length: 256 }, (_, i) => ({
+      id: `work:${i}`, tick: 260 + i, kind: 'woodcutting.hit', x: 1, z: 1,
+    })));
+    const alert = { id: 'raid:1', tick: 300, kind: 'ui.threat', x: 0, z: 0 };
+    queue.ingest([alert]);
+    expect(queue.pendingCount).toBe(256);
+    const due = queue.takeDue(500);
+    expect(due).toContainEqual(alert);
+    expect(due.some(cue => cue.kind === 'woodcutting.hit')).toBe(true);
+    queue.ingest([alert]);
+    expect(queue.takeDue(501).some(cue => cue.kind === 'ui.threat')).toBe(false);
+  });
+
+  it('retains a delayed colonist death alert even when the current frame has another sound', () => {
+    const queue = new AudioCueScheduler();
+    queue.takeDue(40);
+    const alert = { id: 'death:1', tick: 12, kind: 'ui.colonist-death', x: 0, z: 0 };
+    const work = { id: 'work:40', tick: 40, kind: 'mining.hit', x: 1, z: 1 };
+    queue.ingest([alert, work]);
+    expect(queue.takeDue(40)).toEqual([alert, work]);
   });
 });
 
@@ -209,6 +234,27 @@ describe('audio manifest', () => {
 });
 
 describe('continuous sound selection', () => {
+  it('sounds only a fueled generator and a producing turbine', () => {
+    const base={id:7,x:10,z:10,orientation:0,footprint:'standard',power:{on:true,parentId:null}} as const;
+    const generator={...base,kind:'wood-generator',fuel:{ticks:600,burned:0,autoRefuel:true}} as Structure;
+    expect(runningMachineAudioSource(generator)?.kind).toBe('machine.wood-generator');
+    generator.fuel!.ticks=0;
+    expect(runningMachineAudioSource(generator)).toBeUndefined();
+    const turbine={...base,kind:'wind-turbine',wind:{autoCut:false,updateCounter:0,cachedWatts:1200}} as Structure;
+    expect(runningMachineAudioSource(turbine)?.kind).toBe('machine.wind-turbine');
+    turbine.wind!.cachedWatts=0;
+    expect(runningMachineAudioSource(turbine)).toBeUndefined();
+    turbine.wind!.cachedWatts=1200; turbine.breakdown={brokenAt:5};
+    expect(runningMachineAudioSource(turbine)).toBeUndefined();
+  });
+  it('keeps only nearby active machinery candidates before the shared voice budget', () => {
+    const machines=createNearbyMachineCollector({x:10,z:10},2,20);
+    machines.add('wood:near','machine.wood-generator',11,10,.6);
+    machines.add('wind:middle','machine.wind-turbine',19,10,.4);
+    machines.add('wood:far','machine.wood-generator',40,10,.6);
+    machines.add('wind:closer','machine.wind-turbine',13,10,.4);
+    expect(machines.sources().map(source=>source.id)).toEqual(['wood:near','wind:closer']);
+  });
   it('samples fires around the low-perspective listener after rotation while bounding candidates', () => {
     const before={x:100,y:8,z:135,targetX:100,targetZ:100,span:30,mode:'perspective' as const};
     const camera={...before,x:135,z:100}; // Orbit target is unchanged; the ear moves with the camera.
@@ -677,6 +723,28 @@ describe('explicit sound preview and failed asset recovery', () => {
     audio.playInterface('ui.click');
     expect(context.sources).toHaveLength(2);
     expect(fetchMock).toHaveBeenCalledTimes(3); // Manifest plus two decoded files.
+    audio.dispose();
+  });
+
+  it('plays confirmed raid and death alerts during an automatic pause exactly once', async () => {
+    vi.stubGlobal('AudioContext', FakeContext);
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => url.endsWith('manifest.json')
+      ? new Response(JSON.stringify({ version: 1, events: {
+        'ui.threat': { spatial: false, variants: [{ src: '/assets/audio/sfx/threat.mp3' }] },
+        'ui.colonist-death': { spatial: false, variants: [{ src: '/assets/audio/sfx/death.mp3' }] },
+      } })) : new Response(new Uint8Array([1]))));
+    const audio = new AudioDirector();
+    await audio.unlock();
+    const cues = [
+      { id: 'raid:1', tick: 4, kind: 'ui.threat', x: 0, z: 0 },
+      { id: 'death:1', tick: 4, kind: 'ui.colonist-death', x: 1, z: 1 },
+    ];
+    audio.ingestCues(cues);
+    audio.update({ presentedTick: 4, paused: true, hidden: false });
+    expect(FakeContext.latest.sources.map(source => source.starts)).toEqual([1, 1]);
+    audio.ingestCues(cues);
+    audio.update({ presentedTick: 4, paused: true, hidden: false });
+    expect(FakeContext.latest.sources).toHaveLength(2);
     audio.dispose();
   });
 

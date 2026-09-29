@@ -35,12 +35,12 @@ function parseArgs(args) {
   return { id, generate, publish };
 }
 
-function assertPlan(plan) {
+export function assertPlan(plan) {
   if (plan.version !== 1 || plan.modelId !== 'eleven_text_to_sound_v2' || plan.outputFormat !== 'mp3_44100_128') {
     throw new Error('Unsupported SFX plan version/model/format');
   }
   for (const [id, item] of Object.entries(plan.events ?? {})) {
-    if (!/^[a-z]+(?:\.[a-z]+)+$/.test(id)) throw new Error(`Invalid cue ID: ${id}`);
+    if (!/^[a-z]+(?:-[a-z]+)*(?:\.[a-z]+(?:-[a-z]+)*)+$/.test(id)) throw new Error(`Invalid cue ID: ${id}`);
     if (!/^[a-z0-9-]+\.mp3$/.test(item.filename)) throw new Error(`Invalid filename for ${id}`);
     if (typeof item.prompt !== 'string' || item.prompt.length < 20 || item.prompt.length > 450) throw new Error(`Invalid prompt for ${id}`);
     if (!(item.durationSeconds >= 0.5 && item.durationSeconds <= 30)) throw new Error(`Invalid duration for ${id}`);
