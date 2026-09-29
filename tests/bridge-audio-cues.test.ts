@@ -94,10 +94,19 @@ test('captures confirmed work, shot and melee once without playing loaded histor
   mine.progress++;
   recorder.capture(world);
   expect(recorder.drain()).toEqual([]); // bounded work cadence
-  world.tick += 2;
-  mine.progress++;
-  recorder.capture(world);
-  expect(recorder.drain()).toHaveLength(1);
+  const nextHits = [];
+  for (let step = 0; step < 15; step++) {
+    world.tick++;
+    mine.progress++;
+    recorder.capture(world);
+    nextHits.push(...recorder.drain());
+  }
+  expect(nextHits.length).toBeGreaterThan(2);
+  const hitTicks = [world.tick - 16, ...nextHits.map(cue => cue.tick)];
+  for (let index = 1; index < hitTicks.length; index++) {
+    expect(hitTicks[index]! - hitTicks[index - 1]!).toBeGreaterThanOrEqual(2);
+    expect(hitTicks[index]! - hitTicks[index - 1]!).toBeLessThanOrEqual(5);
+  }
 
   const shot = { id: world.nextId++, flight: { origin: { x: pawn.x + .5, z: pawn.z + .5 } } } as World['projectiles'] extends (infer P)[] | undefined ? P : never;
   world.projectiles = [shot];
@@ -256,6 +265,102 @@ test('construction and research require persisted progress and an active worker'
   recorder.capture(world);
   expect(recorder.drain()).toMatchObject([{ kind: 'research.work', x: station.x, z: station.z }]);
   world.tick += 8;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+});
+
+test.each([
+  ['mine', 'mining.hit', 2, 5],
+  ['chop', 'woodcutting.hit', 2, 5],
+  ['wall', 'construction.hit', 2, 5],
+  ['simple-meal', 'cooking.work', 5, 11],
+  ['stone-blocks', 'crafting.work', 5, 11],
+  ['shirt', 'tailoring.work', 5, 11],
+  ['butcher-creature', 'butchering.work', 5, 11],
+  ['research', 'research.work', 5, 11],
+] as const)('%s has varied, bounded, reproducible contact gaps', (action, expectedKind, minimum, maximum) => {
+  // Prepared active task; only the increments below are observed contacts.
+  const run = () => {
+    const world = createWorld(509, 32, 32), pawn = world.pawns[0]!;
+    pawn.state = 'working';
+    let advance: () => void;
+    if (action === 'mine' || action === 'chop' || action === 'wall') {
+      const job: Job = { id: world.nextId++, kind: action, x: pawn.x + 1, z: pawn.z,
+        orientation: 0, footprint: 'standard', status: 'active', reservedBy: pawn.id,
+        progress: 0, escrow: { wood: 0, food: 0 } };
+      world.jobs.push(job);
+      pawn.jobId = job.id;
+      advance = () => { job.progress++; };
+    } else if (action === 'research') {
+      const station = { id: world.nextId++, kind: 'research-bench' as const, x: pawn.x + 1, z: pawn.z,
+        orientation: 0 as const, footprint: 'standard' as const };
+      world.structures.push(station);
+      pawn.research = { stationId: station.id, spot: { x: pawn.x, z: pawn.z }, worked: 0 };
+      advance = () => { pawn.research!.worked++; };
+    } else {
+      const stationKind: 'campfire' | 'stonecutter' | 'tailor-bench' | 'butcher-table' = action === 'simple-meal' ? 'campfire'
+        : action === 'stone-blocks' ? 'stonecutter'
+          : action === 'shirt' ? 'tailor-bench' : 'butcher-table';
+      const station = { id: world.nextId++, kind: stationKind, x: pawn.x + 1, z: pawn.z,
+        orientation: 0 as const, footprint: 'standard' as const };
+      world.structures.push(station);
+      pawn.cooking = { ...(action === 'simple-meal' ? {} : { recipe: action }),
+        stationId: station.id, billId: world.nextId++,
+        spot: { x: pawn.x, z: pawn.z }, actionCell: { x: station.x, z: station.z },
+        phase: 'work', ingredients: [], progress: 0, productId: null, storageId: null };
+      advance = () => { pawn.cooking!.progress++; };
+    }
+    const recorder = new AudioCueRecorder(), ticks: number[] = [];
+    recorder.capture(world);
+    for (let step = 0; step < 100; step++) {
+      world.tick++;
+      advance();
+      recorder.capture(world);
+      for (const cue of recorder.drain()) {
+        expect(cue.kind).toBe(expectedKind);
+        ticks.push(cue.tick);
+      }
+    }
+    return ticks;
+  };
+  const ticks = run();
+  expect(ticks).toEqual(run());
+  expect(ticks[0]).toBe(1);
+  const gaps = ticks.slice(1).map((tick, index) => tick - ticks[index]!);
+  expect(gaps.length).toBeGreaterThan(5);
+  expect(Math.min(...gaps)).toBeGreaterThanOrEqual(minimum);
+  expect(Math.max(...gaps)).toBeLessThanOrEqual(maximum);
+  expect(new Set(gaps).size).toBeGreaterThan(1);
+});
+
+test('skipped observations yield one current work cue, then a fresh gap; inactive progress stays silent', () => {
+  const world = createWorld(510, 32, 32), pawn = world.pawns[0]!;
+  const job: Job = { id: world.nextId++, kind: 'mine', x: pawn.x + 1, z: pawn.z,
+    orientation: 0, footprint: 'standard', status: 'active', reservedBy: pawn.id,
+    progress: 0, escrow: { wood: 0, food: 0 } };
+  world.jobs.push(job);
+  pawn.jobId = job.id;
+  pawn.state = 'working';
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  world.tick++;
+  job.progress++;
+  recorder.capture(world);
+  expect(recorder.drain()).toHaveLength(1);
+  world.tick += 100;
+  job.progress++;
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ tick: world.tick, kind: 'mining.hit' }]);
+  world.tick++;
+  job.progress++;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  pawn.state = 'moving';
+  world.tick += 20;
+  job.progress++;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  pawn.state = 'working';
   recorder.capture(world);
   expect(recorder.drain()).toEqual([]);
 });

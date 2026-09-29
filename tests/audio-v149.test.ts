@@ -91,6 +91,12 @@ describe('audio cue presentation queue', () => {
 });
 
 describe('sound spatialisation', () => {
+  // PannerNode uses refDistance=2, distanceModel='linear' and rolloffFactor=1.
+  // Beyond maxDistance it reaches zero; this models the signal level, not only
+  // the earlier candidate-culling decision.
+  const pannerLevel = (distance: number, range: number): number =>
+    Math.max(0, Math.min(1, (range - Math.max(2, distance)) / (range - 2)));
+
   it('uses the orthographic focus and zoom as its effective camera distance', () => {
     const pose = listenerPose({ x: 150, y: 300, z: 160, targetX: 20, targetZ: 30, span: 32, mode: 'orthographic' });
     expect(pose.x).toBe(20);
@@ -134,6 +140,37 @@ describe('sound spatialisation', () => {
     expect(selectOneShots(cue, mining, far)).toHaveLength(0);
     expect(selectContinuousSources(fire, fireInfo, near)).toHaveLength(1);
     expect(selectContinuousSources(fire, fireInfo, far)).toHaveLength(0);
+  });
+
+  it('keeps near iso mining audible but calms middle-ground work at a matched 32-cell framing', () => {
+    // CameraRig keeps this inclination and moves the perspective camera to
+    // span / (2 * tan(22.5°)) when switching from the iso projection.
+    const inclination = 2 / Math.hypot(0.85, 2, 0.9);
+    const perspectiveDistance = 32 / (2 * Math.tan(Math.PI / 8));
+    const perspectiveX = perspectiveDistance * Math.sqrt(1 - inclination ** 2);
+    const perspectiveY = perspectiveDistance * inclination;
+    const iso = { x: perspectiveX, y: perspectiveY, z: 0, targetX: 0, targetZ: 0,
+      span: 32, mode: 'orthographic' as const };
+    const perspective = { ...iso, mode: 'perspective' as const };
+    for (const [baseRange, minimumNear, maximumMiddleRatio] of [
+      [16, 0.5, 0.5], // Mining retains the former close Panner level; Chromium checks final PCM.
+      [22, 0.65, 0.65], // Woodcutting has a wider acoustic horizon.
+    ]) {
+      const isoPose = listenerPose(iso);
+      const perspectivePose = listenerPose(perspective);
+      const isoRange = audibleRange(baseRange, iso);
+      const perspectiveRange = audibleRange(baseRange, perspective);
+      const nearIso = pannerLevel(sourceDistance(0, 0, isoPose), isoRange);
+      const middleIso = pannerLevel(sourceDistance(14, 0, isoPose), isoRange);
+      const middlePerspective = pannerLevel(sourceDistance(14, 0, perspectivePose), perspectiveRange);
+      const farIso = pannerLevel(sourceDistance(-40, 0, isoPose), isoRange);
+      const farPerspective = pannerLevel(sourceDistance(-40, 0, perspectivePose), perspectiveRange);
+      expect(nearIso).toBeGreaterThan(minimumNear);
+      expect(middleIso).toBeLessThan(nearIso * maximumMiddleRatio);
+      expect(middleIso).toBeLessThanOrEqual(middlePerspective * 1.1);
+      expect(farIso).toBe(0);
+      expect(farPerspective).toBe(0);
+    }
   });
 });
 
@@ -243,6 +280,25 @@ describe('one-shot burst budget', () => {
       const id = `cue:${i}`;
       const variation = cueVariation(id);
       expect(variation).toEqual(cueVariation(id));
+      expect(variation.playbackRate).toBeGreaterThanOrEqual(0.97);
+      expect(variation.playbackRate).toBeLessThanOrEqual(1.03);
+      expect(variation.gain).toBeGreaterThanOrEqual(10 ** (-1 / 20));
+      expect(variation.gain).toBeLessThanOrEqual(10 ** (1 / 20));
+    }
+  });
+
+  it('gives work gestures a wider but bounded variation while keeping doors and combat subtle', () => {
+    for (const kind of ['mining.hit', 'woodcutting.hit', 'construction.hit', 'cooking.work',
+      'crafting.work', 'tailoring.work', 'butchering.work', 'research.work']) {
+      const variations = Array.from({ length: 256 }, (_, i) => cueVariation(`${kind}:${i}`, kind));
+      expect(variations).toEqual(Array.from({ length: 256 }, (_, i) => cueVariation(`${kind}:${i}`, kind)));
+      expect(Math.min(...variations.map(value => value.playbackRate))).toBeGreaterThanOrEqual(0.94);
+      expect(Math.max(...variations.map(value => value.playbackRate))).toBeLessThanOrEqual(1.06);
+      expect(Math.min(...variations.map(value => value.gain))).toBeGreaterThanOrEqual(10 ** (-1.5 / 20));
+      expect(Math.max(...variations.map(value => value.gain))).toBeLessThanOrEqual(10 ** (1.5 / 20));
+    }
+    for (const kind of ['door.open', 'door.close', 'weapon.gunshot', 'weapon.melee']) {
+      const variation = cueVariation(`${kind}:1`, kind);
       expect(variation.playbackRate).toBeGreaterThanOrEqual(0.97);
       expect(variation.playbackRate).toBeLessThanOrEqual(1.03);
       expect(variation.gain).toBeGreaterThanOrEqual(10 ** (-1 / 20));
@@ -442,7 +498,7 @@ describe('continuous voice lifecycle', () => {
     expect(context.sources).toHaveLength(3);
     expect(context.sources[2]!.loop).toBe(false);
     expect(context.sources[2]!.starts).toBe(1);
-    expect(context.gains[3]!.gain.value).toBeCloseTo(5 * cueVariation('mining:5').gain);
+    expect(context.gains[3]!.gain.value).toBeCloseTo(5 * cueVariation('mining:5', 'mining.hit').gain);
     expect(audio.diagnostics).toMatchObject({ state: 'running', loaded: 1,
       playedOneShots: 1, lastKind: 'mining.hit' });
     audio.ingestCues([

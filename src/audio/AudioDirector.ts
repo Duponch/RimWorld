@@ -436,7 +436,7 @@ export class AudioDirector {
     let voice: Voice | null = null;
     try {
       const source = context.createBufferSource(); source.buffer = buffer;
-      const variation = cueVariation(cue.id);
+      const variation = cueVariation(cue.id, cue.kind);
       source.playbackRate.value = variation.playbackRate;
       const panner = event.spatial ? context.createPanner() : null;
       if (panner) {

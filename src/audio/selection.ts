@@ -9,11 +9,19 @@ export function cueHash(id: string): number {
   return hash >>> 0;
 }
 
+const WORK_KINDS = new Set([
+  'mining.hit', 'woodcutting.hit', 'construction.hit', 'cooking.work',
+  'crafting.work', 'tailoring.work', 'butchering.work', 'research.work',
+]);
+
 /** Presentation-only variation; never consumes the simulation PRNG. */
-export function cueVariation(id: string): { playbackRate: number; gain: number } {
+export function cueVariation(id: string, kind?: string): { playbackRate: number; gain: number } {
   const hash = cueHash(id);
-  const playbackRate = 0.97 + (hash & 0xffff) / 0xffff * 0.06;
-  const gainDb = -1 + (hash >>> 16) / 0xffff * 2;
+  const work = kind !== undefined && WORK_KINDS.has(kind);
+  const pitchSpread = work ? 0.06 : 0.03;
+  const gainSpreadDb = work ? 1.5 : 1;
+  const playbackRate = 1 - pitchSpread + (hash & 0xffff) / 0xffff * (2 * pitchSpread);
+  const gainDb = -gainSpreadDb + (hash >>> 16) / 0xffff * (2 * gainSpreadDb);
   return { playbackRate, gain: 10 ** (gainDb / 20) };
 }
 

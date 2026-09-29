@@ -17,10 +17,22 @@ export interface AudioCue {
 
 const MAX_CUES_PER_TICK = 32;
 const MAX_PENDING_CUES = 128;
-const WORK_CUE_INTERVAL_TICKS = 3;
-const STATION_CUE_INTERVAL_TICKS = 8;
+// Short, bounded gaps keep each action legible without a metronomic loop.
+const WORK_CUE_INTERVAL_TICKS = [2, 3, 4, 5] as const;
+const STATION_CUE_INTERVAL_TICKS = [5, 6, 7, 8, 9, 10, 11] as const;
 
-type WorkObservation = { key: string; progress: number; lastCueTick: number };
+type WorkObservation = { key: string; progress: number; nextCueTick: number; cueCount: number };
+
+function workCueInterval(pawnId: number, key: string, cueCount: number, intervals: readonly number[]): number {
+  // This hash belongs to presentation only; it consumes no simulation random state.
+  let hash = (2166136261 ^ pawnId ^ Math.imul(cueCount, 0x9e3779b9)) >>> 0;
+  for (let index = 0; index < key.length; index++)
+    hash = Math.imul(hash ^ key.charCodeAt(index), 16777619) >>> 0;
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x7feb352d) >>> 0;
+  hash ^= hash >>> 15;
+  return intervals[(hash >>> 0) % intervals.length]!;
+}
 
 /** Presentation-only observer. Its state is neither simulation input nor saved. */
 export class AudioCueRecorder {
@@ -67,15 +79,17 @@ export class AudioCueRecorder {
     };
 
     const recordWork = (pawnId: number, key: string, progress: number, kind: AudioCueKind,
-      x: number, z: number, active: boolean, interval: number): void => {
+      x: number, z: number, active: boolean, intervals: readonly number[]): void => {
       const previous = previousWork.get(pawnId);
       const sameTask = previous?.key === key;
-      const lastCueTick = sameTask ? previous.lastCueTick : -Infinity;
+      const nextCueTick = sameTask ? previous.nextCueTick : -Infinity;
+      const cueCount = sameTask ? previous.cueCount : 0;
       if (this.initialized && active && sameTask && progress > previous.progress
-        && world.tick - lastCueTick >= interval) {
+        && world.tick >= nextCueTick) {
         this.add({ id: `${kind}:${world.tick}:${pawnId}:${key}`, tick: world.tick, kind, x, z });
-        work.set(pawnId, { key, progress, lastCueTick: world.tick });
-      } else work.set(pawnId, { key, progress, lastCueTick });
+        work.set(pawnId, { key, progress,
+          nextCueTick: world.tick + workCueInterval(pawnId, key, cueCount, intervals), cueCount: cueCount + 1 });
+      } else work.set(pawnId, { key, progress, nextCueTick, cueCount });
     };
 
     for (const pawn of world.pawns) {

@@ -24,10 +24,11 @@ const EAR_HEIGHT = 1.6;
 // OrthographicCamera keeps a large, nearly fixed world-space offset for map
 // clipping. Zoom changes its visible span rather than moving its position, so
 // use a virtual ear height that tracks the equivalent change in view distance.
-const ORTHOGRAPHIC_HEIGHT_PER_SPAN = 0.45;
-// The virtual ear must retain useful headroom for sounds at the focus at the
-// normal iso span; zoom-out then shortens this horizon as its ear rises.
-const ORTHOGRAPHIC_RANGE_MULTIPLIER = 1.8;
+const ORTHOGRAPHIC_HEIGHT_PER_SPAN = 0.3;
+// With Web Audio's linear distance model, a lower virtual ear and shorter
+// horizon keep the level at the focus while making it fall faster across the
+// visible ground. Increasing only the ear height would quiet nearby mining.
+const ORTHOGRAPHIC_RANGE_MULTIPLIER = 1.2;
 // Perspective already moves its physical ear away as the camera zooms out.
 // Keep the acoustic horizon stable instead of shortening it a second time.
 const PERSPECTIVE_RANGE_MULTIPLIER = 2.5;

@@ -1,5 +1,7 @@
 # Mix et couverture sonore V163
 
+**Photographie V163.** Le [recalage iso et les variantes de travaux V164](audio-variation-v164.md) décrivent l'état sonore courant ; les coefficients et décomptes ci-dessous restent ceux du lot V163.
+
 Ce lot poursuit le [contrat SFX V149](audio-sfx-v149.md), sans changer le schéma de sauvegarde 162. Sa [référence Core](../research/audio-core-v163.md) confirme plusieurs prises par geste, variations et limites de voix, ainsi que des ambiances météo attachées à la caméra. Les coefficients ci-dessous sont un réglage propre à la scène 3D de Lisière. Les fichiers ElevenLabs sont incorporés au jeu ; aucune musique ni voix n'est ajoutée.
 
 ## Contrat d'écoute

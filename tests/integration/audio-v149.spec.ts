@@ -111,6 +111,9 @@ test('V149 : un vrai contact de minage produit du PCM après le mix Web Audio', 
     const fileCount = new Set(Object.values(manifest.events).flatMap(event => event.variants.map(variant => variant.src))).size;
     expect(eventCount).toBeGreaterThanOrEqual(15);
     expect(manifest.events['woodcutting.hit']?.variants).toHaveLength(5);
+    for (const kind of ['mining.hit', 'construction.hit', 'cooking.work', 'crafting.work',
+      'tailoring.work', 'butchering.work', 'research.work'])
+      expect(manifest.events[kind]?.variants.length).toBeGreaterThanOrEqual(3);
     const initial = miningCamp(1);
     const pawn = initial.pawns[0]!;
     const target = { x: pawn.x + 1, z: pawn.z };
