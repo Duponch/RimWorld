@@ -123,6 +123,38 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
   }
   return quantity;
 }
+/** Batch form of reservedSource for a single read-only decision over many piles.
+ * Active work by exceptPawn is excluded, but its queued orders still reserve.
+ * The map is discarded before the next world mutation. */
+export function reservedSourcesByPile(world: World, exceptPawn?: number): ReadonlyMap<number, number> {
+  const quantities = new Map<number, number>();
+  const add = (pileId: number, quantity: number): void => {
+    quantities.set(pileId, (quantities.get(pileId) ?? 0) + quantity);
+  };
+  for (const animal of world.wildlife?.animals ?? [])
+    if (animal.id !== exceptPawn && animal.meal?.kind === 'pile') add(animal.meal.id, animal.meal.quantity);
+  for (const pawn of world.pawns) {
+    if (pawn.id !== exceptPawn) {
+      if (pawn.burial?.phase === 'pickup' && pawn.burial.corpseId !== undefined) add(pawn.burial.corpseId, 1);
+      if (pawn.hunting) add(pawn.hunting.animalId, 1);
+      if (pawn.equipmentTask?.action === 'equip' || pawn.equipmentTask?.action === 'wear') add(pawn.equipmentTask.itemId, 1);
+      for (const ingredient of pawn.cooking?.ingredients ?? [])
+        if (ingredient.stage !== 'held') add(ingredient.pileId, ingredient.quantity);
+      if (pawn.animalHandling?.phase === 'pickup') add(pawn.animalHandling.sourcePileId, pawn.animalHandling.quantity);
+      if (pawn.animalCare?.phase === 'pickup' && pawn.animalCare.medicine) add(pawn.animalCare.medicine.sourcePileId, pawn.animalCare.medicine.quantity);
+      if (pawn.tend?.phase === 'pickup' && pawn.tend.medicine) add(pawn.tend.medicine.sourcePileId, pawn.tend.medicine.quantity);
+      if (pawn.feed?.phase === 'pickup') add(pawn.feed.sourcePileId, pawn.feed.quantity);
+      if (pawn.ward?.kind === 'food' && pawn.ward.phase === 'pickup') add(pawn.ward.sourcePileId, pawn.ward.quantity);
+      if (pawn.haul?.phase === 'pickup') add(pawn.haul.sourcePileId, pawn.haul.quantity);
+      if (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup') add(pawn.need.sourcePileId, pawn.need.quantity ?? 1);
+    }
+    for (const task of pawn.orders?.queue ?? []) if (typeof task !== 'number') {
+      if (isCookingOrder(task)) for (const ingredient of task.cooking.ingredients) add(ingredient.pileId, ingredient.quantity);
+      else add(task.sourcePileId, task.quantity);
+    }
+  }
+  return quantities;
+}
 export function sameDestination(a: HaulDestination, b: HaulDestination): boolean {
   return a.type === b.type && (a.type === 'job' && b.type === 'job' ? a.jobId === b.jobId
     : a.type === 'fuel' && b.type === 'fuel' ? a.structureId === b.structureId

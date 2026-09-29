@@ -4,7 +4,7 @@ import type { WildAnimal } from './wildlife-state.ts';
 import { harvestable,isPlant,plantGrowth } from './plants.ts';
 import { plantLeafless } from './plant-life.ts';
 import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
-import { reservedSource } from './materials.ts';
+import { reservedSource,reservedSourcesByPile } from './materials.ts';
 import { releaseAssignments } from './work-release.ts';
 import { animalNutritionMax } from './animal-life.ts';
 import { grazingResult,plantNutrition } from './biome-flora.ts';
@@ -45,8 +45,11 @@ export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
     const growth=plantGrowth(world,r);
     if(growth>=.1&&plantNutrition(r,growth)>0&&!claimedPlants.has(r.id)&&!reservedPlantCells.has(r.z*world.width+r.x))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
   }
+  let reservations:ReadonlyMap<number,number>|undefined;
   for(const p of world.piles)if(p.kind==='food'&&herbivoreFoods.has(p.item)&&p.owner.type==='ground'&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))) {
-    const available=p.quantity-reservedSource(world,p.id,a.id),nutrition=ITEM_DEFINITIONS[p.item].nutrition/100;
+    // No reservation scan is needed when this decision sees only plants.
+    reservations??=reservedSourcesByPile(world,a.id);
+    const available=p.quantity-(reservations.get(p.id)??0),nutrition=ITEM_DEFINITIONS[p.item].nutrition/100;
     if(available>0&&nutrition>0)result.push({id:p.id,kind:'pile',x:p.owner.x,z:p.owner.z,quantity:Math.min(available,Math.max(1,Math.ceil((capacity-a.food)/nutrition)))});
   }
   return result;
