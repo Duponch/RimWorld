@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, expect, test, vi } from 'vitest';
 import { isColonist } from '../src/sim/affiliation.ts';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/index.ts';
+import { SCHEMA_VERSION } from '../src/sim/types.ts';
 import { parseTestColonies, readTestColony, testColonyUrl } from '../src/ui/test-colonies.ts';
 
 const episodes = [
@@ -36,6 +37,7 @@ test('the eight prepared weather saves are published in the player test-colony c
     expect(validateWorld(world)).toEqual([]);
     expect(world.weather?.current).toBe(weather);
     expect(world.pawns.filter(isColonist)).toHaveLength(save.colonists);
-    expect(serializeWorld(world)).toBe(raw);
+    const original = JSON.parse(raw);
+    expect(serializeWorld(world)).toBe(JSON.stringify({ ...original, schemaVersion: SCHEMA_VERSION }));
   }
 });

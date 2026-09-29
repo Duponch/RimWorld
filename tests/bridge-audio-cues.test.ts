@@ -394,6 +394,7 @@ test('uses confirmed shooting cooldown when a short projectile is already gone',
 test.each([
   ['simple-meal', 'campfire', 'cooking.work'],
   ['carnivore-fine-meal', 'fueled-stove', 'cooking.work'],
+  ['cook-carnivore-fine-meal-bulk', 'fueled-stove', 'cooking.work'],
   ['vegetarian-lavish-meal', 'fueled-stove', 'cooking.work'],
   ['butcher-creature', 'butcher-table', 'butchering.work'],
   ['stone-blocks', 'stonecutter', 'crafting.work'],

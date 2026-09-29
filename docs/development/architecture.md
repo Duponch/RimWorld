@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-État courant au schéma 162. Le [contrat V162](fine-vegetarian-bulk-v162.md) définit un quota végétarien unique de 60 ingrédients locaux pour quatre produits V155 existants ; sa [preuve](../history/validation-fine-vegetarian-bulk-v162.md) couvre ciblés, régression hors campagnes longues, build, présentation et Chromium préparé. Deux microbancs suggèrent un surcoût CPU de proposition isolé à surveiller. Le [contrat V161](fine-meal-bulk-v161.md) ajoute deux quotas indépendants à une sortie de quatre plats raffinés ; ses contrôles ciblés, la régression hors campagnes longues et Chromium préparé passent. Les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés et ne constituent pas un inventaire fonctionnel actuel. Celui-ci est tenu dans [l’état du jeu](../gameplay/implementation-status.md).
+État courant au schéma 163. Le [contrat V170](fine-carnivore-bulk-v170.md) ajoute un quota unique de 60 viandes à quatre produits V156 existants, dans le périmètre de sa [preuve](../history/validation-fine-carnivore-bulk-v170.md). Le [contrat V162](fine-vegetarian-bulk-v162.md) reste sa variante végétarienne historique. Les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés ; l’[état du jeu](../gameplay/implementation-status.md) est l’inventaire actuel.
 
 ## Objectif
 

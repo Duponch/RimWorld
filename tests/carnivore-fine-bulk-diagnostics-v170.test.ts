@@ -1,0 +1,36 @@
+import {expect,test} from 'vitest';
+import {applyCommand} from '../src/sim/index.ts';
+import {queryCookingBillStatus} from '../src/sim/cooking-diagnostics.ts';
+import {ROT_DAYS} from '../src/sim/food-preservation.ts';
+import {addGroundMaterial} from '../src/sim/materials.ts';
+import {isCookingOrder} from '../src/sim/order-types.ts';
+import {planCookingOrder,queuedCookingReason} from '../src/sim/player-cooking.ts';
+import {TICKS_PER_DAY} from '../src/sim/types.ts';
+import {foodWorkstationCamp,fixtureFoodStation} from './scenarios/food-workstations.ts';
+
+test('carnivore fine x4 diagnoses skill, 60-meat quota and freshness for direct and queued orders',()=>{
+  const world=foodWorkstationCamp(),pawn=world.pawns[0]!,station=fixtureFoodStation(world,'fueled-stove');
+  station.fuel!.ticks=6000;pawn.priorities.cook=1;pawn.skills.cooking!.level=5;
+  expect(applyCommand(world,{type:'bill-add',structureId:station.id,recipe:'cook-carnivore-fine-meal-bulk'}).ok).toBe(true);
+  const bill=station.bills![0]!;
+  addGroundMaterial(world,'food',30,{x:7,z:7},'hare-meat');
+  addGroundMaterial(world,'food',30,{x:8,z:7},'deer-meat');
+  const hare=world.piles.find(p=>p.item==='hare-meat')!;
+  expect(queryCookingBillStatus(world,station,bill)).toMatchObject({code:'skill-required',reason:expect.stringContaining('Cuisine 6')});
+  pawn.skills.cooking!.level=6;
+  expect(queryCookingBillStatus(world,station,bill).code).toBe('waiting');
+  hare.rot={progress:ROT_DAYS['hare-meat']*TICKS_PER_DAY,atTick:world.tick};
+  expect(queryCookingBillStatus(world,station,bill)).toMatchObject({code:'missing-ingredients',reason:expect.stringContaining('30/60 viandes crues fraîches')});
+  hare.rot.progress=0;
+  const proposal=planCookingOrder(world,pawn,station.id);
+  expect(proposal.label).toBe('Cuisiner quatre plats raffinés carnivores');
+  const order=proposal.order;
+  if(!order||!isCookingOrder(order))throw new Error('Expected a carnivore fine x4 proposal.');
+  pawn.orders.queue.push(order);
+  expect(queuedCookingReason(world,order)).toBeUndefined();
+  hare.rot.progress=ROT_DAYS['hare-meat']*TICKS_PER_DAY;
+  expect(queuedCookingReason(world,order)).toContain('Viande périmée, impropre aux quatre plats raffinés carnivores.');
+  hare.rot.progress=0;
+  order.cooking.ingredients[0]!.item='milk';
+  expect(queuedCookingReason(world,order)).toContain('soixante viandes crues, sans lait ni végétaux');
+});
