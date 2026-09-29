@@ -35,7 +35,7 @@ test('nuages V87 : huit états, transition Core et direction de vent visuelle pu
   expect(visualWindDirection(54321, 901.25)).not.toEqual(direction);
 });
 
-test('nuages : lot monde résident, caché en vue du dessus sans suivre la caméra', () => {
+test('nuages : lot monde résident, discret en vue haute et iso sans suivre la caméra', () => {
   const layer = new WeatherCloudLayer(), camera = lowCamera();
   layer.configureMap(32, 32);
   const initial = { seed: 7123, tick: 100.5, weather: { previous: 'clear' as const, current: 'rain' as const, ageCore: 2000 },
@@ -43,7 +43,7 @@ test('nuages : lot monde résident, caché en vue du dessus sans suivre la camé
   const mesh = layer.mesh, geometry = mesh.geometry, material = mesh.material;
   try {
     expect(mesh.isInstancedMesh).toBe(true);
-    expect(mesh.count).toBe(64);
+    expect(mesh.count).toBe(8);
     expect(mesh.castShadow).toBe(false);
     expect(mesh.receiveShadow).toBe(false);
     expect(mesh.frustumCulled).toBe(true);
@@ -56,21 +56,29 @@ test('nuages : lot monde résident, caché en vue du dessus sans suivre la camé
     expect(mesh.visible).toBe(true);
     expect(material.opacity).toBeGreaterThan(.4);
     const lowOpacity = material.opacity;
-    camera.updateMatrixWorld();
-    let upperSky = 0, mapCenter = 0;
+    let activeCentres = 0;
     const matrix = new Matrix4(), position = new Vector3(), rotation = new Quaternion(), scale = new Vector3();
+    const footprintRadius = geometry.boundingSphere!.radius + geometry.boundingSphere!.center.length();
+    const fadeAttribute = geometry.getAttribute('aCloudFade');
     for (let index = 0; index < mesh.count; index++) {
       mesh.getMatrixAt(index, matrix);
       matrix.decompose(position, rotation, scale);
-      if (scale.x < .5) continue;
-      const projected = position.clone().project(camera);
-      if (Math.abs(projected.x) <= 1 && projected.y <= 1 && projected.y >= -1 && projected.z >= -1 && projected.z <= 1) {
-        if (projected.y > .35) upperSky++;
-        if (projected.y < .1) mapCenter++;
+      expect(position.x).toBeGreaterThanOrEqual(-.5);
+      expect(position.x).toBeLessThan(31.5);
+      expect(position.z).toBeGreaterThanOrEqual(-.5);
+      expect(position.z).toBeLessThan(31.5);
+      expect(position.y).toBeGreaterThanOrEqual(18);
+      expect(position.y).toBeLessThan(29);
+      if (fadeAttribute.getX(index) > .005) {
+        const footprint = Math.max(scale.x, scale.z) * footprintRadius;
+        expect(position.x - footprint).toBeGreaterThanOrEqual(-.501);
+        expect(position.x + footprint).toBeLessThanOrEqual(31.501);
+        expect(position.z - footprint).toBeGreaterThanOrEqual(-.501);
+        expect(position.z + footprint).toBeLessThanOrEqual(31.501);
       }
+      if (scale.x > .5) activeCentres++;
     }
-    expect(upperSky).toBeGreaterThan(0);
-    expect(mapCenter).toBe(0);
+    expect(activeCentres).toBeGreaterThan(0);
     const dayColor = material.color.clone();
     layer.present({ ...initial, daylight: 0 });
     expect(material.color.equals(dayColor)).toBe(false);
@@ -88,15 +96,19 @@ test('nuages : lot monde résident, caché en vue du dessus sans suivre la camé
     overhead.lookAt(target);
     const cameraVersion = mesh.instanceMatrix.version;
     layer.present({ ...initial, camera: overhead });
-    expect(mesh.visible).toBe(false);
+    expect(mesh.visible).toBe(true);
+    expect(material.opacity).toBeGreaterThan(0);
+    expect(material.opacity).toBeLessThan(lowOpacity * .3);
     expect(mesh.instanceMatrix.version).toBe(cameraVersion);
     const ortho = new OrthographicCamera(-20, 20, 20, -20, .1, 1000);
     ortho.position.set(35, 50, 35);
     layer.present({ ...initial, camera: ortho });
-    expect(mesh.visible).toBe(false);
-    expect(cloudViewOpacity(ortho, target)).toBe(0);
+    expect(mesh.visible).toBe(true);
+    expect(material.opacity).toBeCloseTo(cloudViewOpacity(overhead, target) * visualCloudAppearance(initial.weather).opacity, 5);
+    expect(cloudViewOpacity(ortho, target)).toBeCloseTo(cloudViewOpacity(overhead, target), 5);
     expect(mesh.instanceMatrix.version).toBe(cameraVersion);
     layer.configureMap(250, 175);
+    expect(mesh.count).toBe(54);
     expect(mesh.boundingSphere!.center.x).toBe(124.5);
     expect(mesh.boundingSphere!.center.z).toBe(87);
     expect(mesh.boundingSphere!.radius).toBeGreaterThan(180);
@@ -128,7 +140,7 @@ test('nuages : le vent advecte vers sa direction, la pause et le calme figent le
       const x = index * 16 + 12;
       if (moved[x]! - initial[x]! > .5) forward++;
     }
-    expect(forward).toBeGreaterThanOrEqual(50);
+    expect(forward).toBeGreaterThanOrEqual(6);
     const version = windy.mesh.instanceMatrix.version;
     windy.present({ ...input, tick: 200, strength: 2 });
     expect(windy.mesh.instanceMatrix.version).toBe(version);
@@ -159,7 +171,7 @@ test('nuages : franchir zéro en X ne décale pas tout le champ céleste', () =>
         after[offset + 13]! - before[offset + 13]!, after[offset + 14]! - before[offset + 14]!);
       if (distance < 1) continuous++;
     }
-    expect(continuous).toBeGreaterThanOrEqual(24);
+    expect(continuous).toBeGreaterThanOrEqual(6);
   } finally { layer.dispose(); }
 });
 
@@ -172,17 +184,59 @@ test('nuages : une instance s’efface avant de revenir par le bord latéral', (
     const scale = (matrix: Matrix4) => Math.hypot(matrix.elements[0]!, matrix.elements[1]!, matrix.elements[2]!);
     const before = new Matrix4(), after = new Matrix4();
     layer.present({ ...input, tick: 0 });
+    const fade = layer.mesh.geometry.getAttribute('aCloudFade');
+    expect(fade.count).toBe(64); // resident capacity, even on a small map
+    expect(Array.from(fade.array).some(value => value > .5)).toBe(true);
     let faded = false;
-    for (let tick = 100; tick <= 50_000 && !faded; tick += 100) {
+    for (let tick = 20; tick <= 10_000 && !faded; tick += 20) {
       const previous = Array.from(layer.mesh.instanceMatrix.array);
+      const previousFade = Array.from(fade.array);
       layer.present({ ...input, tick });
       for (let index = 0; index < layer.mesh.count; index++) {
         before.fromArray(previous, index * 16);
         layer.mesh.getMatrixAt(index, after);
         const dx = after.elements[12]! - before.elements[12]!, dz = after.elements[14]! - before.elements[14]!;
-        if (Math.abs(dx) > 200 && Math.abs(dz) < 5 && scale(before) < .5 && scale(after) < .5) { faded = true; break; }
+        if (Math.abs(dx) > 25 && Math.abs(dz) < 1 && scale(before) < .5 && scale(after) < .5 &&
+            previousFade[index]! < .1 && fade.getX(index) < .1) { faded = true; break; }
       }
     }
     expect(faded).toBe(true);
+  } finally { layer.dispose(); }
+});
+
+test('nuages : carte 250², centres bornés et amas projetés dans les deux caméras', () => {
+  const layer = new WeatherCloudLayer(), focus = new Vector3(124.5, 0, 124.5);
+  const perspective = new PerspectiveCamera(45, 1.6, .1, 2000);
+  perspective.position.set(124.5, 5, 300);
+  perspective.lookAt(focus);
+  perspective.updateMatrixWorld();
+  const iso = new OrthographicCamera(-125, 125, 125, -125, .1, 1000);
+  iso.position.set(200, 200, 200);
+  iso.lookAt(focus);
+  iso.updateMatrixWorld();
+  try {
+    layer.configureMap(250, 250);
+    layer.present({ seed: 10, tick: 3000, weather: {
+      previous: 'rainy-thunderstorm', current: 'rainy-thunderstorm', ageCore: 4000,
+    }, camera: perspective, target: focus, strength: 1, directionX: 1, directionZ: 0 });
+    expect(layer.mesh.count).toBe(64);
+    const fade = layer.mesh.geometry.getAttribute('aCloudFade');
+    const matrix = new Matrix4(), center = new Vector3(), projected = new Vector3();
+    let inPerspective = 0, inIso = 0;
+    for (let index = 0; index < layer.mesh.count; index++) {
+      layer.mesh.getMatrixAt(index, matrix);
+      center.setFromMatrixPosition(matrix);
+      expect(center.x).toBeGreaterThanOrEqual(-.5);
+      expect(center.x).toBeLessThan(249.5);
+      expect(center.z).toBeGreaterThanOrEqual(-.5);
+      expect(center.z).toBeLessThan(249.5);
+      if (fade.getX(index) < .5) continue;
+      projected.copy(center).project(perspective);
+      if (Math.abs(projected.x) <= 1 && Math.abs(projected.y) <= 1 && Math.abs(projected.z) <= 1) inPerspective++;
+      projected.copy(center).project(iso);
+      if (Math.abs(projected.x) <= 1 && Math.abs(projected.y) <= 1 && Math.abs(projected.z) <= 1) inIso++;
+    }
+    expect(inPerspective).toBeGreaterThan(0);
+    expect(inIso).toBeGreaterThan(0);
   } finally { layer.dispose(); }
 });

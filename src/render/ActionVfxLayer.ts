@@ -256,17 +256,23 @@ export class ActionVfxLayer {
         .add(sin(pixel.x.mul(17).add(part)).mul(.035)).add(sin(pixel.y.mul(19)).mul(.017));
       const pebble=float(1).sub(smoothstep(.33,.38,pebbleDistance));
       const pebbleInner=float(1).sub(smoothstep(.23,.28,pebbleDistance));
-      const puffEdge=float(.37).add(sin(atan(pixel.y,pixel.x).mul(5).add(part)).mul(.033));
+      const puffAngle=atan(pixel.y,pixel.x);
+      const puffEdge=float(.37).add(sin(puffAngle.mul(5).add(part)).mul(.032))
+        .add(sin(puffAngle.mul(9).sub(part.mul(1.7))).mul(.012));
       const puff=float(1).sub(smoothstep(puffEdge.sub(.025),puffEdge.add(.02),radius));
       const puffInner=float(1).sub(smoothstep(puffEdge.sub(.095),puffEdge.sub(.045),radius));
+      const paperGrain=sin(pixel.x.mul(19).add(part.mul(3.1)))
+        .mul(sin(pixel.y.mul(17).sub(part.mul(2.7)))).mul(.5).add(.5);
       const smallSpark=stroke(-.27,-.23,.25,.26,.028).max(stroke(-.25,.15,.15,-.18,.018));
       const dusty=part.greaterThanEqual(6),firstThree=part.lessThan(3);
       const chipColor=mix(ink,part.lessThan(4).select(vec3(.48,.22,.075),vec3(.65,.35,.12)),chipInner);
       const stoneColor=mix(vec3(.20,.15,.10),vec3(.43,.31,.20),pebbleInner);
-      const chopAlpha=dusty.select(puff.mul(.68),chip),chopColor=dusty.select(mix(ink,vec3(.45,.28,.14),puffInner),chipColor);
-      const mineAlpha=part.greaterThanEqual(6).select(smallSpark,part.lessThan(4).select(pebble,puff.mul(.62)));
+      const chopDust=mix(vec3(.68,.52,.37),vec3(.86,.74,.57),paperGrain);
+      const stoneDust=mix(vec3(.64,.61,.55),vec3(.84,.79,.68),paperGrain);
+      const chopAlpha=dusty.select(puff.mul(.52),chip),chopColor=dusty.select(mix(ink,chopDust,puffInner),chipColor);
+      const mineAlpha=part.greaterThanEqual(6).select(smallSpark,part.lessThan(4).select(pebble,puff.mul(.48)));
       const mineColor=part.greaterThanEqual(6).select(part.equal(6).select(vec3(1,.67,.15),vec3(1,.40,.12)),
-        part.lessThan(4).select(stoneColor,mix(ink,vec3(.45,.31,.18),puffInner)));
+        part.lessThan(4).select(stoneColor,mix(ink,stoneDust,puffInner)));
       const buildAlpha=firstThree.select(pebble,chip),buildColor=firstThree.select(stoneColor,chipColor);
       // Food is drawn as small produce: tomato, carrot, and leafy herbs.
       const tomato=circle(0,0,.27),tomatoHeart=circle(-.045,.02,.18);
@@ -326,7 +332,7 @@ export class ActionVfxLayer {
       const isBuild=kind.equal(ACTION_FX.build).or(kind.equal(ACTION_FX.craft));
       const isTailor=kind.equal(ACTION_FX.tailor).or(kind.equal(ACTION_FX.tailorGround));
       const isButcher=kind.equal(ACTION_FX.butcher).or(kind.equal(ACTION_FX.butcherGround));
-      let workAlpha=kind.equal(ACTION_FX.art).select(artAlpha,puff.mul(.65));
+      let workAlpha=kind.equal(ACTION_FX.art).select(artAlpha,puff.mul(.50));
       workAlpha=isTailor.select(tailorAlpha,workAlpha);
       workAlpha=isButcher.select(butcherAlpha,workAlpha);
       workAlpha=kind.equal(ACTION_FX.smith).select(smithAlpha,workAlpha);
@@ -336,7 +342,8 @@ export class ActionVfxLayer {
       workAlpha=isBuild.select(buildAlpha,workAlpha);
       workAlpha=isMine.select(mineAlpha,workAlpha);
       workAlpha=kind.equal(ACTION_FX.chop).select(chopAlpha,workAlpha);
-      let workColor=kind.equal(ACTION_FX.art).select(artColor,vec3(.64,.84,.94));
+      let workColor=kind.equal(ACTION_FX.art).select(artColor,
+        mix(vec3(.73,.79,.76),vec3(.87,.88,.80),paperGrain));
       workColor=isTailor.select(tailorColor,workColor);
       workColor=isButcher.select(butcherColor,workColor);
       workColor=kind.equal(ACTION_FX.smith).select(smithColor,workColor);

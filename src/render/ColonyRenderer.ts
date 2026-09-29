@@ -387,7 +387,7 @@ export class ColonyRenderer {
     if (newMap) {
       this.boxes.clear();
       this.clouds.configureMap(world.width, world.height);
-      this.precipitation.reset();
+      this.precipitation.configureMap(world.width, world.height);
       this.paintedWater.reset();
       this.rig.configureMap(world.width, world.height, world.scenario?.landing);
       this.daylight.configureShadow(world.width, world.height);

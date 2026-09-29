@@ -1,14 +1,20 @@
 import * as THREE from 'three/webgpu';
+import { attribute, uniform } from 'three/tsl';
 import type { WeatherState } from '../sim/weather';
 import { visualCloudAppearance } from './visual-weather';
 
 const CLOUD_COUNT = 64;
-const MIN_FIELD_RADIUS = 125;
+const REFERENCE_MAP_SIDE = 250;
+const MIN_MAP_CLOUDS = 8;
 const DRIFT_PER_TICK = .008;
+const EDGE_FADE_FRACTION = .28;
 // A two-centimetre world step is below one projected pixel for these high
 // clouds and avoids resending all 64 matrices at every fractional RAF tick.
 const MATRIX_STEP = .02;
 const MAX_CONTIGUOUS_TICK_GAP = 600;
+// High views look through the cloud field onto the working map. Keep the
+// weather legible there without laying an opaque blanket over the colony.
+const HIGH_VIEW_OPACITY = .25;
 const scratch = new THREE.Object3D();
 
 export interface CloudPresentation {
@@ -42,15 +48,15 @@ function smoothstep(a: number, b: number, value: number): number {
   return t * t * (3 - 2 * t);
 }
 
-/** High angles fade out the world-space cloud draw before it can cover the
- * working map; the instances themselves keep their real world positions. */
+/** High views soften the world-space clouds over the working map. The same
+ * angle treatment in both projections avoids a visibility jump on toggle. */
 export function cloudViewOpacity(camera: THREE.OrthographicCamera | THREE.PerspectiveCamera, target: THREE.Vector3): number {
   const horizontal = Math.hypot(camera.position.x - target.x, camera.position.z - target.z);
   const elevation = Math.atan2(camera.position.y - target.y, horizontal) * 180 / Math.PI;
   const lowAngle = 1 - smoothstep(16, 38, elevation);
-  // Several translucent lobes can overlap in the same screen pixels. Fade to
-  // zero before the overhead view, then skip the whole transparent draw.
-  return camera instanceof THREE.OrthographicCamera ? 0 : lowAngle;
+  // Several translucent lobes can overlap. Above 38 degrees their opacity is
+  // capped at the same faint level in perspective and orthographic views.
+  return HIGH_VIEW_OPACITY + (1 - HIGH_VIEW_OPACITY) * lowAngle;
 }
 
 /** One resident low-poly cloud made of six faceted lobes. Every visible cloud
@@ -77,19 +83,23 @@ function cloudGeometry(): THREE.BufferGeometry {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(points, 3));
   geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
   unit.dispose();
   if (unit !== source) source.dispose();
   return geometry;
 }
 
-/** Sky-only decoration. It never casts or receives a shadow, samples a texture,
+/** World-space decoration. It never casts or receives a shadow, samples a texture,
  * changes World, or creates meshes when weather or camera state changes. */
 export class WeatherCloudLayer {
   readonly mesh: THREE.InstancedMesh<THREE.BufferGeometry, THREE.MeshBasicNodeMaterial>;
   private readonly geometry = cloudGeometry();
+  private readonly footprintRadius = this.geometry.boundingSphere!.radius + this.geometry.boundingSphere!.center.length();
   private readonly material = new THREE.MeshBasicNodeMaterial({
     color: 0xffffff, transparent: true, opacity: 0, depthWrite: false,
   });
+  private readonly opacityUniform = uniform(0);
+  private readonly edgeOpacity = new THREE.InstancedBufferAttribute(new Float32Array(CLOUD_COUNT), 1);
   private readonly nightColor = new THREE.Color(0x263248);
   private seed: number | undefined;
   private lastTick: number | undefined;
@@ -100,14 +110,16 @@ export class WeatherCloudLayer {
   private driftZ = 0;
   private centerX = 15.5;
   private centerZ = 15.5;
-  private radiusX = MIN_FIELD_RADIUS;
-  private radiusZ = MIN_FIELD_RADIUS;
+  private radiusX = 16;
+  private radiusZ = 16;
   private lastPoseSeed: number | undefined;
   private lastCoverage = NaN;
   private lastPoseX = NaN;
   private lastPoseZ = NaN;
 
   constructor() {
+    this.geometry.setAttribute('aCloudFade', this.edgeOpacity);
+    this.material.opacityNode = this.opacityUniform.mul(attribute('aCloudFade'));
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, CLOUD_COUNT);
     this.mesh.name = 'weather-clouds';
     this.mesh.castShadow = false;
@@ -128,13 +140,19 @@ export class WeatherCloudLayer {
     this.configureMap(32, 32);
   }
 
-  /** The field is anchored to the map in world coordinates and extends far
-   * enough beyond a small map to remain visible near its low-view horizon. */
+  /** The cloud centres stay inside the map's horizontal bounds. They shrink
+   * and fade at its edges before wrapping to the opposite side. */
   configureMap(width: number, height: number): void {
     this.centerX = (width - 1) / 2;
     this.centerZ = (height - 1) / 2;
-    this.radiusX = Math.max(MIN_FIELD_RADIUS, width * .6);
-    this.radiusZ = Math.max(MIN_FIELD_RADIUS, height * .6);
+    this.radiusX = width / 2;
+    this.radiusZ = height / 2;
+    // The default 250² map uses all 64 slots. Small prepared maps keep the
+    // same cloud size without stacking all 64 masses over a tiny colony.
+    this.mesh.count = THREE.MathUtils.clamp(
+      Math.round(CLOUD_COUNT * Math.sqrt(width * height) / REFERENCE_MAP_SIDE),
+      MIN_MAP_CLOUDS, CLOUD_COUNT,
+    );
     this.mesh.boundingSphere = new THREE.Sphere(
       new THREE.Vector3(this.centerX, 24, this.centerZ),
       Math.hypot(this.radiusX + 22, this.radiusZ + 22, 24),
@@ -190,6 +208,7 @@ export class WeatherCloudLayer {
     if (opacity < .002) { this.mesh.visible = false; this.lastPoseSeed = undefined; return; }
     this.mesh.visible = true;
     this.material.opacity = opacity;
+    this.opacityUniform.value = opacity;
     this.material.color.setHex(appearance.color).lerp(this.nightColor, (1 - daylightFraction) * .78);
 
     // The phase stays continuous, but a subpixel change does not trigger a
@@ -204,25 +223,33 @@ export class WeatherCloudLayer {
     this.lastPoseX = poseX;
     this.lastPoseZ = poseZ;
 
-    for (let index = 0; index < CLOUD_COUNT; index++) {
+    for (let index = 0; index < this.mesh.count; index++) {
       const a = hash01(seed ^ Math.imul(index + 1, 0x9e3779b1));
       const b = hash01(seed ^ Math.imul(index + 1, 0x6d2b79f5));
       const c = hash01(seed ^ Math.imul(index + 1, 0x45d9f3b));
       const d = hash01(seed ^ Math.imul(index + 1, 0x27d4eb2d));
       const x = wrap(a * this.radiusX * 2 + poseX, this.radiusX * 2) - this.radiusX;
       const z = wrap(b * this.radiusZ * 2 + poseZ, this.radiusZ * 2) - this.radiusZ;
-      const activation = smoothstep((index + .5) / CLOUD_COUNT - .075, (index + .5) / CLOUD_COUNT + .075, coverage);
-      // Fade at both world-space field boundaries before recycling an instance.
-      const edge = smoothstep(0, 24, this.radiusX - Math.abs(x)) *
-        smoothstep(0, 24, this.radiusZ - Math.abs(z));
-      const size = (.001 + activation * edge * (3.2 + c * 2.7));
+      const threshold = hash01(seed ^ Math.imul(index + 1, 0x7f4a7c15));
+      const activation = smoothstep(threshold - .075, threshold + .075, coverage);
+      // Map-space envelope: both size and alpha reach zero before recycling.
+      const edge = smoothstep(0, this.radiusX * EDGE_FADE_FRACTION, this.radiusX - Math.abs(x)) *
+        smoothstep(0, this.radiusZ * EDGE_FADE_FRACTION, this.radiusZ - Math.abs(z));
+      const fade = activation * edge;
+      // Shrinking alone is insufficient near a small map's border: constrain
+      // the full rotated lobe footprint inside the map before it disappears.
+      const clearance = Math.min(this.radiusX - Math.abs(x), this.radiusZ - Math.abs(z));
+      const size = Math.max(.001, Math.min(fade * (3.2 + c * 2.7),
+        clearance / this.footprintRadius));
       scratch.position.set(this.centerX + x, 18 + d * 11, this.centerZ + z);
       scratch.rotation.set(0, c * Math.PI * 2, 0);
       scratch.scale.set(size, size * (.75 + d * .24), size * (.70 + b * .24));
       scratch.updateMatrix();
       this.mesh.setMatrixAt(index, scratch.matrix);
+      this.edgeOpacity.setX(index, fade);
     }
     this.mesh.instanceMatrix.needsUpdate = true;
+    this.edgeOpacity.needsUpdate = true;
   }
 
   /** Keep the single cloud pipeline warm while the loading screen is present. */
@@ -230,7 +257,8 @@ export class WeatherCloudLayer {
     const visible = this.mesh.visible, opacity = this.material.opacity;
     this.mesh.visible = true;
     this.material.opacity = .1;
-    return () => { this.mesh.visible = visible; this.material.opacity = opacity; };
+    this.opacityUniform.value = .1;
+    return () => { this.mesh.visible = visible; this.material.opacity = opacity; this.opacityUniform.value = opacity; };
   }
 
   dispose(): void {

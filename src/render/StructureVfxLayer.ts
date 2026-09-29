@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, cameraPosition, cross, float, positionLocal, sin, smoothstep, uniform, uv, vec2, vec3 } from 'three/tsl';
+import { Fn, atan, attribute, cameraPosition, cross, float, mix, positionLocal, sin, smoothstep, uniform, uv, varying, vec2, vec3 } from 'three/tsl';
 import { BATTERY_CAPACITY } from '../sim/power-battery.ts';
 import { isPowerActive } from '../sim/power-rules.ts';
 import { doorOrientations } from '../sim/door-rules.ts';
@@ -103,12 +103,20 @@ export class StructureVfxLayer {
         .add(up.mul(positionLocal.y.mul(breadth).mul(smokeShape.w)));
     })();
     const pixel=uv().sub(vec2(.5,.5)),radius=pixel.length();
-    // A single round white disc per quad. Size, phase and opacity vary by
-    // stable emitter seed; no texture sampling or per-frame CPU particles.
-    this.smokeMaterial.colorNode=vec3(1,1,1);
-    const edge=float(1).sub(smoothstep(.27,.49,radius));
+    const seed=varying(smokePosition.w);
+    const angle=atan(pixel.y,pixel.x);
+    // Slightly faceted paper edge and broad, stable pigment variation. Both
+    // stay inside the existing billboard shader, without texture samples.
+    const contour=float(.38).add(sin(angle.mul(5).add(seed.mul(21))).mul(.033))
+      .add(sin(angle.mul(9).sub(seed.mul(13))).mul(.012));
+    const edge=float(1).sub(smoothstep(contour.sub(.075),contour.add(.018),radius));
+    const core=float(1).sub(smoothstep(contour.sub(.17),contour.sub(.075),radius));
+    const grain=sin(pixel.x.mul(19).add(seed.mul(11)))
+      .mul(sin(pixel.y.mul(17).sub(seed.mul(7)))).mul(.5).add(.5);
+    const pigment=mix(vec3(.77,.75,.69),vec3(.90,.86,.77),grain);
+    this.smokeMaterial.colorNode=mix(vec3(.59,.58,.54),pigment,core.mul(.78).add(.18));
     const birth=smoothstep(0,.17,phase),death=float(1).sub(smoothstep(.68,1,phase));
-    const density=sin(smokePosition.w.mul(39.7)).mul(.07).add(smokeShape.y.mul(.08)).add(.37);
+    const density=sin(smokePosition.w.mul(39.7)).mul(.055).add(smokeShape.y.mul(.07)).add(.31);
     this.smokeMaterial.opacityNode=edge.mul(birth).mul(death).mul(density);
     this.smoke=new THREE.Mesh(this.smokeGeometry(),this.smokeMaterial);
     this.smoke.name='Steam and smoke — resident GPU billboards';

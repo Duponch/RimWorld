@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { observeErrors, startPaused } from './helpers';
 
-test('V137: world-space clouds cross the low perspective sky and fade over the isometric map', async ({ playwright }) => {
+test('world-space clouds cross the low perspective sky and remain subtle over the isometric map', async ({ playwright }) => {
   test.setTimeout(90_000);
   const browser = await playwright.chromium.launch({ channel: 'chromium', headless: false, args: [] });
   const page = await browser.newPage({ baseURL: 'http://127.0.0.1:5173', viewport: { width: 1440, height: 1000 } });
@@ -16,6 +16,10 @@ ColonyRenderer.prototype.frame=function(now){window.__cloudView=this;return orig
     await page.waitForFunction(() => Boolean((window as any).__cloudView?.world));
     await page.evaluate(() => {
       const view = (window as any).__cloudView, world = structuredClone(view.world);
+      // This seed places a clear-weather cloud inside the small prepared map,
+      // so both projections have an on-screen mass to compare.
+      world.seed = 10;
+      world.tick = 3000; // daylight makes the cloud silhouettes reviewable
       world.weather ??= { revision: 1, originTick: world.tick, lastCoreTick: world.tick * 10,
         rng: 1, current: 'clear', previous: 'clear', ageCore: 0, durationCore: 10000,
         fireWatchCore: world.tick * 10, largeFire: false, lightningCount: 0 };
@@ -27,7 +31,9 @@ ColonyRenderer.prototype.frame=function(now){window.__cloudView=this;return orig
       view.rig.setMode('perspective');
       view.controls.enableDamping = false;
       view.controls.target.set(15.5, 0, 15.5);
-      view.camera.position.set(15.5, 4, 35.5);
+      // Look across the whole confined 32² field at a low elevation. A near
+      // ground camera cannot see its 18–29-unit cloud layer above the frustum.
+      view.camera.position.set(15.5, 5, 100);
       view.controls.update();
     });
     await expect.poll(() => page.evaluate(() => (window as any).__cloudView.clouds.mesh.visible)).toBe(true);
@@ -40,7 +46,7 @@ ColonyRenderer.prototype.frame=function(now){window.__cloudView=this;return orig
     });
     expect(low.backend).toBe('WebGPU');
     expect(low.mode).toBe('perspective');
-    expect(low.count).toBe(64);
+    expect(low.count).toBe(8);
     expect(low.opacity).toBeGreaterThan(.5);
     expect(low.castsShadow).toBe(false);
     const vegetation = await page.evaluate(() => {
@@ -81,12 +87,48 @@ ColonyRenderer.prototype.frame=function(now){window.__cloudView=this;return orig
     });
     await page.waitForTimeout(300);
     const iso = await page.evaluate(() => {
-      const cloud = (window as any).__cloudView.clouds.mesh;
-      return { visible: cloud.visible, opacity: cloud.material.opacity, matrices: Array.from(cloud.instanceMatrix.array) };
+      const view = (window as any).__cloudView, cloud = view.clouds.mesh;
+      return { visible: cloud.visible, opacity: cloud.material.opacity,
+        drawCalls: view.stats.drawCalls, triangles: view.stats.triangles,
+        matrices: Array.from(cloud.instanceMatrix.array) };
     });
-    expect(iso.visible).toBe(false);
+    expect(iso.visible).toBe(true);
+    expect(iso.opacity).toBeGreaterThan(.05);
+    expect(iso.opacity).toBeLessThan(low.opacity * .3);
     expect(iso.matrices).toEqual(worldMatrices); // orbit/projection cannot move world-space instances
-    await canvas.screenshot({ path: test.info().outputPath('weather-cloud-v137-iso.png') });
+    const isoRain = await canvas.screenshot({ path: test.info().outputPath('weather-cloud-iso-rain.png') });
+    await page.evaluate(() => {
+      const clouds = (window as any).__cloudView.clouds;
+      clouds.present = () => { clouds.mesh.visible = false; };
+    });
+    await page.waitForTimeout(300);
+    const isoRainWithoutClouds = await canvas.screenshot({ path: test.info().outputPath('weather-cloud-iso-rain-no-clouds.png') });
+    expect(isoRain.equals(isoRainWithoutClouds)).toBe(false);
+    const without = await page.evaluate(() => {
+      const stats = (window as any).__cloudView.stats;
+      return { drawCalls: stats.drawCalls, triangles: stats.triangles };
+    });
+    expect(iso.drawCalls - without.drawCalls).toBe(1);
+    expect(iso.triangles - without.triangles).toBe(960);
+    await page.evaluate(() => {
+      const view = (window as any).__cloudView;
+      view.clouds.present = (window as any).__cloudPresent;
+      view.world.weather.previous = 'clear';
+      view.world.weather.current = 'clear';
+      view.world.weather.ageCore = 4000;
+    });
+    await page.waitForTimeout(300);
+    const isoClear = await canvas.screenshot({ path: test.info().outputPath('weather-cloud-iso-clear.png') });
+    const clearOpacity = await page.evaluate(() => (window as any).__cloudView.clouds.mesh.material.opacity);
+    expect(clearOpacity).toBeGreaterThan(.05);
+    expect(clearOpacity).toBeLessThan(iso.opacity);
+    await page.evaluate(() => {
+      const clouds = (window as any).__cloudView.clouds;
+      clouds.present = () => { clouds.mesh.visible = false; };
+    });
+    await page.waitForTimeout(300);
+    const isoClearWithoutClouds = await canvas.screenshot({ path: test.info().outputPath('weather-cloud-iso-clear-no-clouds.png') });
+    expect(isoClear.equals(isoClearWithoutClouds)).toBe(false);
     expect(errors).toEqual([]);
   } finally { await browser.close(); }
 });

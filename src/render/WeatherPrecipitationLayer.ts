@@ -1,23 +1,17 @@
 import * as THREE from 'three/webgpu';
+import {
+  Fn, atan, cameraPosition, cross, float, hash, instanceIndex, mix, positionLocal,
+  sin, smoothstep, uint, uniform, uv, varyingProperty, vec2, vec3,
+} from 'three/tsl';
 
-const PARTICLE_COUNT = 256;
-const FIELD_WIDTH = 30;
-const FIELD_HEIGHT = 8;
-const scratch = new THREE.Object3D();
-
-function hash01(value: number): number {
-  let x = value | 0;
-  x = Math.imul(x ^ x >>> 16, 0x7feb352d);
-  x = Math.imul(x ^ x >>> 15, 0x846ca68b);
-  return ((x ^ x >>> 16) >>> 0) / 4294967296;
-}
+const CELL_SIZE = 2;
+const FIELD_HEIGHT = 16;
 
 function wrap(value: number, period: number): number {
   return ((value % period) + period) % period;
 }
 
-/** Core's rain rate includes snowfall for fire extinction. For presentation,
- * snow replaces the corresponding rain strokes as the weather blends. */
+/** Core rain includes snow for fire extinction; the picture replaces it. */
 export function precipitationShares(rainRate: number, snowRate: number): { rain: number; snow: number } {
   const snow = THREE.MathUtils.clamp(snowRate / .8, 0, 1);
   return { rain: THREE.MathUtils.clamp(rainRate - snow, 0, 1), snow };
@@ -25,7 +19,6 @@ export function precipitationShares(rainRate: number, snowRate: number): { rain:
 
 export interface PrecipitationPresentation {
   seed: number;
-  /** Same confirmed (possibly fractional) tick as pawn and sky presentation. */
   tick: number;
   rainRate: number;
   snowRate: number;
@@ -37,106 +30,203 @@ export interface PrecipitationPresentation {
   daylight: number;
 }
 
-/** One camera-local field, one resident quad geometry/material/instance buffer.
- * Its deterministic visual hashes never touch World or a simulation RNG. */
+function gcd(a: number, b: number): number {
+  while (b) [a, b] = [b, a % b];
+  return a;
+}
+
+/** One stable slot in each 2 × 2 block. A coprime stride spreads every
+ * intensity prefix across the whole map instead of filling its first rows. */
+export function precipitationMapLayout(width: number, height: number): { columns: number; capacity: number; stride: number } {
+  const columns = Math.ceil(width / CELL_SIZE);
+  const capacity = columns * Math.ceil(height / CELL_SIZE);
+  let stride = Math.max(1, Math.round(capacity * .61803398875));
+  while (gcd(stride, capacity) !== 1) stride++;
+  return { columns, capacity, stride };
+}
+
+function precipitationGeometry(): THREE.InstancedBufferGeometry {
+  const geometry = new THREE.InstancedBufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute([
+    -.5, -.5, 0, .5, -.5, 0, -.5, .5, 0, .5, .5, 0,
+  ], 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 0, 1, 1, 1], 2));
+  geometry.setIndex([0, 1, 2, 2, 1, 3]);
+  geometry.instanceCount = 0;
+  return geometry;
+}
+
+/** One textureless draw. The GPU places particles inside the fixed map volume
+ * and animates/recycles them independently of pan, orbit and zoom. */
 export class WeatherPrecipitationLayer {
-  readonly mesh: THREE.InstancedMesh<THREE.PlaneGeometry, THREE.MeshBasicNodeMaterial>;
-  private readonly geometry = new THREE.PlaneGeometry(1, 1);
+  readonly mesh: THREE.Mesh<THREE.InstancedBufferGeometry, THREE.MeshBasicNodeMaterial>;
+  private readonly geometry = precipitationGeometry();
   private readonly material = new THREE.MeshBasicNodeMaterial({
-    color: 0xffffff, transparent: true, opacity: .7, depthWrite: false,
-    side: THREE.DoubleSide, forceSinglePass: true,
+    color: 0xffffff, transparent: true, depthWrite: false,
+    side: THREE.DoubleSide, forceSinglePass: true, toneMapped: false,
   });
-  private lastPose = '';
-  private lastRainCount = -1;
-  private lastColorCount = -1;
+  private readonly dimensions = uniform(new THREE.Vector2(32, 32));
+  private readonly columns = uniform(16);
+  private readonly capacity = uniform(256);
+  private readonly stride = uniform(159);
+  private readonly seed = uniform(0);
+  private readonly rainPhase = uniform(0);
+  private readonly snowPhase = uniform(0);
+  private readonly snowFraction = uniform(0);
+  private readonly wind = uniform(new THREE.Vector2());
+  private readonly daylight = uniform(1);
+  private readonly perspective = uniform(0);
+  private readonly groundSlope = uniform(new THREE.Vector2());
+  private readonly cameraDirection = new THREE.Vector3();
+  private mapCapacity = 256;
 
   constructor() {
-    this.mesh = new THREE.InstancedMesh(this.geometry, this.material, PARTICLE_COUNT);
+    const kind = varyingProperty('float', 'weatherParticleKind');
+    const ink = varyingProperty('float', 'weatherParticleInk');
+    const visible = varyingProperty('float', 'weatherParticleVisible');
+    const worldXZ = varyingProperty('vec2', 'weatherParticleWorldXZ');
+    const worldY = varyingProperty('float', 'weatherParticleWorldY');
+    this.material.positionNode = Fn(() => {
+      const slot = uint(instanceIndex).mul(uint(this.stride)).mod(uint(this.capacity));
+      const cellX = float(slot.mod(uint(this.columns)));
+      const cellZ = float(slot.div(uint(this.columns)));
+      const key = uint(cellX).mul(uint(73856093))
+        .bitXor(uint(cellZ).mul(uint(19349663)))
+        .bitXor(uint(this.seed).mul(uint(83492791)));
+      const rootX = cellX.mul(CELL_SIZE).add(hash(key.add(uint(11)))
+        .mul(this.dimensions.x.sub(cellX.mul(CELL_SIZE)).min(CELL_SIZE)));
+      const rootZ = cellZ.mul(CELL_SIZE).add(hash(key.add(uint(23)))
+        .mul(this.dimensions.y.sub(cellZ.mul(CELL_SIZE)).min(CELL_SIZE)));
+      const snow = hash(key.add(uint(37))).lessThan(this.snowFraction);
+      kind.assign(snow.select(1, 0));
+      ink.assign(hash(key.add(uint(53))));
+      // Eighth-step speeds make a 128-unit phase wrap seamless for every cell.
+      const speed = hash(key.add(uint(89))).mul(4).floor().mul(.125).add(.875);
+      const phase = snow.select(this.snowPhase, this.rainPhase);
+      const height = hash(key.add(uint(97))).mul(FIELD_HEIGHT)
+        .sub(phase.mul(speed)).mod(FIELD_HEIGHT).add(FIELD_HEIGHT).mod(FIELD_HEIGHT);
+      const y = height.add(1.7);
+      const drift = this.wind.mul(float(FIELD_HEIGHT).sub(height)).mul(snow.select(.27, .13));
+      const wrappedX = rootX.add(drift.x).mod(this.dimensions.x)
+        .add(this.dimensions.x).mod(this.dimensions.x);
+      const wrappedZ = rootZ.add(drift.y).mod(this.dimensions.y)
+        .add(this.dimensions.y).mod(this.dimensions.y);
+      const center = vec3(wrappedX.sub(.5), y, wrappedZ.sub(.5));
+      const edge = wrappedX.min(this.dimensions.x.sub(wrappedX))
+        .min(wrappedZ).min(this.dimensions.y.sub(wrappedZ));
+      visible.assign(smoothstep(0, .8, height)
+        .mul(float(1).sub(smoothstep(FIELD_HEIGHT - .8, FIELD_HEIGHT, height)))
+        .mul(smoothstep(0, .6, edge)));
+      const toward = cameraPosition.sub(center);
+      const horizontalDistance = toward.xz.length();
+      const distance = horizontalDistance.max(.001);
+      const right = horizontalDistance.greaterThan(.001).select(
+        vec3(toward.z.negate().div(distance), 0, toward.x.div(distance)), vec3(1, 0, 0));
+      const facing = toward.length().greaterThan(.001).select(
+        toward.div(toward.length().max(.001)), vec3(0, 1, 0));
+      const snowUp = cross(right, facing).normalize();
+      const up = snow.select(snowUp, vec3(0, 1, 0));
+      const nearScale = mix(float(1), smoothstep(2, 8, distance).max(.001), this.perspective);
+      const projectionScale = snow.select(mix(float(1), float(.58), this.perspective), float(1));
+      const width = snow.select(float(.30).add(ink.mul(.12)),
+        float(.11).add(ink.mul(.045))).mul(nearScale).mul(projectionScale);
+      const length = snow.select(float(.30).add(ink.mul(.12)),
+        float(.68).add(ink.mul(.32))).mul(nearScale).mul(projectionScale);
+      const lean = snow.select(float(0), positionLocal.y.mul(.12));
+      const point = center.add(right.mul(positionLocal.x.mul(width)))
+        .add(up.mul(positionLocal.y.mul(length)))
+        .add(vec3(this.wind.x.mul(lean), 0, this.wind.y.mul(lean)));
+      worldXZ.assign(point.xz);
+      worldY.assign(point.y);
+      return point;
+    })();
+    const pigmentPixel = uv().sub(vec2(.5));
+    const pigmentGrain = sin(pigmentPixel.x.mul(93).add(ink.mul(29)))
+      .mul(sin(pigmentPixel.y.mul(117).sub(ink.mul(17)))).mul(.11).add(.89);
+    this.material.colorNode = mix(vec3(.64, .75, .84), vec3(.965, .947, .907), kind)
+      .mul(float(.80).add(this.daylight.mul(.20))).mul(pigmentGrain);
+    this.material.opacityNode = Fn(() => {
+      const pixel = uv().sub(vec2(.5));
+      // Uneven, tapered ink stroke rather than a rectangular rain quad.
+      const wobble = sin(pixel.y.mul(17).add(ink.mul(11))).mul(.055);
+      const strokeDistance = pixel.x.sub(wobble).abs();
+      const strokeWidth = float(.16).add(sin(pixel.y.mul(13).add(ink.mul(7))).mul(.035))
+        .add(sin(pixel.y.mul(59).sub(ink.mul(31))).mul(.025));
+      const rain = float(1).sub(smoothstep(strokeWidth, strokeWidth.add(.10), strokeDistance))
+        .mul(smoothstep(-.49, -.34, pixel.y))
+        .mul(float(1).sub(smoothstep(.32, .50, pixel.y))).mul(.78);
+      // Ragged paper/pastel disc with a translucent edge and pale centre.
+      const angle = atan(pixel.y, pixel.x);
+      const radius = pixel.length();
+      const edge = float(.43).add(sin(angle.mul(7).add(ink.mul(13))).mul(.027))
+        .add(sin(angle.mul(11).sub(ink.mul(9))).mul(.016));
+      const snow = float(1).sub(smoothstep(edge.sub(.07), edge.add(.025), radius))
+        .mul(float(.70).add(float(1).sub(smoothstep(.16, .38, radius)).mul(.23)));
+      const chalk = sin(pixel.x.mul(71).add(ink.mul(37)))
+        .mul(sin(pixel.y.mul(83).sub(ink.mul(19)))).mul(.16).add(.84);
+      const inside = worldXZ.x.greaterThanEqual(-.5).and(worldXZ.x.lessThan(this.dimensions.x.sub(.5)))
+        .and(worldXZ.y.greaterThanEqual(-.5)).and(worldXZ.y.lessThan(this.dimensions.y.sub(.5)));
+      // In orthographic view, each fragment's camera ray meets y=0 at the
+      // same projected pixel. Fade it at that ground footprint's map edge;
+      // the actual 3D particle centre and wrap volume remain world-anchored.
+      const footprint = worldXZ.add(this.groundSlope.mul(worldY));
+      const footprintEdge = footprint.x.add(.5).min(this.dimensions.x.sub(.5).sub(footprint.x))
+        .min(footprint.y.add(.5)).min(this.dimensions.y.sub(.5).sub(footprint.y));
+      const silhouette = mix(smoothstep(0, .18, footprintEdge), float(1), this.perspective);
+      return mix(rain, snow, kind).mul(chalk).mul(visible).mul(inside.select(1, 0))
+        .mul(silhouette)
+        .mul(float(.52).add(this.daylight.mul(.32)));
+    })();
+    this.mesh = new THREE.Mesh(this.geometry, this.material);
     this.mesh.name = 'weather-precipitation';
     this.mesh.castShadow = this.mesh.receiveShadow = false;
-    this.mesh.frustumCulled = true;
+    // Shader-driven vertices lie outside the static quad's CPU bounds.
+    this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 4;
-    this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    for (let index = 0; index < PARTICLE_COUNT; index++) {
-      scratch.scale.setScalar(.001);
-      scratch.updateMatrix();
-      this.mesh.setMatrixAt(index, scratch.matrix);
-      this.mesh.setColorAt(index, new THREE.Color(index % 3 === 0 ? 0xc7d6e2 : 0xe6edf3));
-    }
-    this.mesh.instanceMatrix.needsUpdate = true;
-    if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
-    this.mesh.count = 0;
     this.mesh.visible = false;
+    this.configureMap(32, 32);
+  }
+
+  configureMap(width: number, height: number): void {
+    const layout = precipitationMapLayout(width, height);
+    this.dimensions.value.set(width, height);
+    this.columns.value = layout.columns;
+    this.capacity.value = layout.capacity;
+    this.stride.value = layout.stride;
+    this.mapCapacity = layout.capacity;
+    this.reset();
   }
 
   reset(): void {
-    this.lastPose = '';
-    this.lastRainCount = -1;
-    this.lastColorCount = -1;
-    this.mesh.count = 0;
+    this.geometry.instanceCount = 0;
     this.mesh.visible = false;
   }
 
-  present({ seed, tick, rainRate, snowRate, camera, target, strength, directionX, directionZ, daylight }: PrecipitationPresentation): void {
+  present({ seed, tick, rainRate, snowRate, camera, strength, directionX, directionZ, daylight }: PrecipitationPresentation): void {
     const shares = precipitationShares(rainRate, snowRate);
-    const rainCount = Math.round(PARTICLE_COUNT * .82 * shares.rain);
-    const snowCount = Math.round(PARTICLE_COUNT * .82 * shares.snow);
-    const count = Math.min(PARTICLE_COUNT, rainCount + snowCount);
-    if (count === 0) { this.mesh.count = 0; this.mesh.visible = false; this.lastPose = ''; return; }
+    const amount = Math.min(1, shares.rain + shares.snow);
+    if (amount <= 0) { this.geometry.instanceCount = 0; this.mesh.visible = false; return; }
+    this.seed.value = seed;
+    this.rainPhase.value = wrap(tick * .75, 128);
+    this.snowPhase.value = wrap(tick * .12, 128);
+    this.snowFraction.value = shares.snow / amount;
+    this.wind.value.set(directionX, directionZ).multiplyScalar(THREE.MathUtils.clamp(strength, 0, 2));
+    this.daylight.value = THREE.MathUtils.clamp(daylight, 0, 1);
+    this.perspective.value = camera instanceof THREE.PerspectiveCamera ? 1 : 0;
+    if (camera instanceof THREE.OrthographicCamera) {
+      camera.getWorldDirection(this.cameraDirection);
+      const down = Math.max(.001, -this.cameraDirection.y);
+      this.groundSlope.value.set(this.cameraDirection.x / down, this.cameraDirection.z / down);
+    } else this.groundSlope.value.set(0, 0);
+    this.geometry.instanceCount = Math.max(1, Math.round(this.mapCapacity * amount * .82));
     this.mesh.visible = true;
-    this.mesh.count = count;
-    this.material.opacity = (.50 + .22 * THREE.MathUtils.clamp(daylight, 0, 1));
-
-    // The field follows the viewed area, without painting the whole 250² map.
-    // A low camera sees some particles between its position and the target.
-    const centerX = (camera.position.x + target.x) * .5;
-    const centerZ = (camera.position.z + target.z) * .5;
-    const yaw = Math.atan2(camera.position.x - target.x, camera.position.z - target.z);
-    const phase = Math.round(tick * 4) / 4;
-    const pose = `${seed}:${phase}:${rainCount}:${snowCount}:${centerX.toFixed(2)}:${centerZ.toFixed(2)}:${yaw.toFixed(3)}:${strength.toFixed(2)}:${directionX.toFixed(3)}:${directionZ.toFixed(3)}`;
-    if (pose === this.lastPose) return;
-    this.lastPose = pose;
-    const wind = THREE.MathUtils.clamp(strength, 0, 2) * .18;
-    const colorsChanged = rainCount !== this.lastRainCount || count !== this.lastColorCount;
-    for (let index = 0; index < count; index++) {
-      const snow = index >= rainCount;
-      const ordinal = snow ? index - rainCount : index;
-      const a = hash01(seed ^ Math.imul(ordinal + 1, snow ? 0x6d2b79f5 : 0x9e3779b1));
-      const b = hash01(seed ^ Math.imul(ordinal + 1, snow ? 0x45d9f3b : 0x27d4eb2d));
-      const c = hash01(seed ^ Math.imul(ordinal + 1, snow ? 0x17a49d83 : 0x53b9a0d7));
-      const fall = snow ? .12 : .75;
-      const y = .25 + wrap(c * FIELD_HEIGHT - phase * fall, FIELD_HEIGHT);
-      const x = centerX + (a - .5) * FIELD_WIDTH + directionX * wind * (FIELD_HEIGHT - y);
-      const z = centerZ + (b - .5) * FIELD_WIDTH + directionZ * wind * (FIELD_HEIGHT - y);
-      // A world-sized streak very close to a low perspective camera would
-      // fill hundreds of pixels. Thin it before it reaches the near plane.
-      const horizontalDistance = Math.hypot(x - camera.position.x, z - camera.position.z);
-      const nearScale = camera instanceof THREE.PerspectiveCamera
-        ? THREE.MathUtils.clamp((horizontalDistance - 2) / 6, .001, 1) : 1;
-      scratch.position.set(x, y, z);
-      scratch.rotation.set(0, yaw, snow ? c * Math.PI : -directionX * wind * .28);
-      scratch.scale.set((snow ? .11 + c * .065 : .019 + c * .012) * nearScale,
-        (snow ? .11 + c * .065 : .34 + c * .20) * nearScale, 1);
-      scratch.updateMatrix();
-      this.mesh.setMatrixAt(index, scratch.matrix);
-      // Stable tint within a single material; no per-particle material/pipeline.
-      if (colorsChanged)
-        this.mesh.setColorAt(index, new THREE.Color(snow ? 0xf3f5f7 : 0xb8cddd));
-    }
-    this.mesh.instanceMatrix.needsUpdate = true;
-    if (colorsChanged && this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
-    this.lastRainCount = rainCount;
-    this.lastColorCount = count;
-    this.mesh.boundingSphere ??= new THREE.Sphere();
-    this.mesh.boundingSphere.center.set(centerX, FIELD_HEIGHT * .5, centerZ);
-    this.mesh.boundingSphere.radius = Math.hypot(FIELD_WIDTH * .5 + wind * FIELD_HEIGHT, FIELD_WIDTH * .5 + wind * FIELD_HEIGHT, FIELD_HEIGHT);
   }
 
   prepareForCompile(): () => void {
-    const visible = this.mesh.visible, count = this.mesh.count;
+    const visible = this.mesh.visible, count = this.geometry.instanceCount;
     this.mesh.visible = true;
-    this.mesh.count = 1;
-    return () => { this.mesh.visible = visible; this.mesh.count = count; };
+    this.geometry.instanceCount = 1;
+    return () => { this.mesh.visible = visible; this.geometry.instanceCount = count; };
   }
 
   dispose(): void {
