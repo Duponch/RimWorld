@@ -5,11 +5,17 @@ import { wildlifePopulationAccount } from './scenarios/hunting-player';
 import { enableArrivals } from '../src/sim/arrivals';
 import { expect, test, onTestFailed } from 'vitest';
 import { createWorld, applyCommand, stepWorld, validateWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
+import { activeSocialFight } from '../src/sim/social-fight.ts';
+import { FEED_TICKS } from '../src/sim/feeding-rules.ts';
+import { medicalStatus } from '../src/sim/injury-state.ts';
 import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from './scenarios/colony-player';
+
+const SOCIAL_MELEE_INJURIES=new Set(['bruise','crack','crush','bite','cut','stab']);
 
 test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp construit, stocks entretenus et reprise exacte', (seed) => {
   const version=process.env.VALIDATION_VERSION??'v74';
     let world = createWorld(seed, 250, 250);
+    const naturalChunkIds=new Set(world.piles.filter(p=>p.kind==='chunk').map(p=>p.id));
     onTestFailed(()=>writeTestFileSync(`tmp/colony-failed-${version}-${seed}.json`,JSON.stringify(world)));
     if(seed===42)enableArrivals(world);
     if(seed===93)enableWildlife(world);
@@ -20,9 +26,12 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
     expect(applyCommand(world,{type:'draft',pawnIds:[world.pawns[0]!.id],enabled:false})).toMatchObject({ok:true});
     const initialWeapon=structuredClone(world.piles.find(p=>p.kind==='weapon')!);
     const initialWood = woodAccount(world), initialFood = foodAccount(world);
-    let consumed = 0, produced = 0, cooked = 0, rationAssignments = 0;
+    const initialMedicine=world.piles.filter(p=>p.kind==='medicine').reduce((n,p)=>n+p.quantity,0);
+    let consumed = 0, produced = 0, cooked = 0, rationAssignments = 0, medicineUsed=0;
     const recreationKinds=new Set<string>(), recreationPawns=new Set<number>();
-    const meals = new Map(world.pawns.map(p=>[p.id,0])), sleep = new Map(world.pawns.map(p=>[p.id,0]));
+    const meals = new Map(world.pawns.map(p=>[p.id,0])), sleep = new Map(world.pawns.map(p=>[p.id,0])), medicalBedRest=new Map(world.pawns.map(p=>[p.id,0]));
+    const socialInjuries=new Map<number,Map<number,number>>();
+    const temporarilyDowned=new Map<number,Set<number>>();
     const report: ReturnType<typeof colonySummary>[] = [];
     for (let t = 0; t < (seed === 42 ? 48000 : 30000); t++) {
       // Seed 42 also exercises the browser player's four-hour observation cadence.
@@ -32,13 +41,36 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
       }
       if(t===0)for(const decision of playerFocusDecisions(world))expect(applyCommand(world,decision.command)).toMatchObject({ok:true});
       const ingesting = world.pawns.filter(p=>p.need?.kind==='eat' && p.need.phase==='ingest' && p.need.progress===49).map(p=>({id:p.id,quantity:p.need?.kind==='eat'?p.need.quantity:0}));
+      const assistedIngesting=world.pawns.filter(p=>p.feed?.phase==='feed'&&p.feed.progress===FEED_TICKS-1).map(p=>({doctorId:p.id,patientId:p.feed!.patientId,quantity:p.feed!.quantity}));
+      const socialOpponents=new Map<number,number>();
+      for(const pawn of world.pawns){const opponentId=pawn.social?.fight?.opponentId;if(opponentId!==undefined&&activeSocialFight(world,pawn,opponentId))socialOpponents.set(pawn.id,opponentId);}
+      const injuriesBefore=new Map(world.pawns.map(p=>[p.id,new Map(p.health?.injuries.map(i=>[i.id,{bornAt:i.bornAt,severity:i.severity}])??[])]));
 
       const moods=world.pawns.map(p=>p.mood);
       stepWorld(world);
+      for(const pawn of world.pawns)for(const injury of pawn.health?.injuries??[]){
+        const previous=injuriesBefore.get(pawn.id)?.get(injury.id);
+        if(previous?.bornAt===injury.bornAt&&previous.severity>=injury.severity)continue;
+        const currentOpponent=pawn.social?.fight?.opponentId;
+        const opponentId=socialOpponents.get(pawn.id)??(currentOpponent!==undefined&&activeSocialFight(world,pawn,currentOpponent)?currentOpponent:undefined);
+        const strike=world.pawns.find(p=>p.id===opponentId)?.melee?.strike;
+        const socialImpact=opponentId!==undefined&&strike?.targetId===pawn.id&&strike.outcome==='hit'
+          &&Math.ceil(strike.atCore/10)===world.tick
+          &&SOCIAL_MELEE_INJURIES.has(injury.kind);
+        expect(socialImpact,JSON.stringify({seed,tick:world.tick,pawn:pawn.id,injury,opponentId,strike})).toBe(true);
+        let allowed=socialInjuries.get(pawn.id);if(!allowed){allowed=new Map();socialInjuries.set(pawn.id,allowed);}allowed.set(injury.id,injury.bornAt);
+      }
       for(const [i,p] of world.pawns.entries())if(p.mood-moods[i]!>.04800001||p.mood-moods[i]!<-.03200001)throw new Error(`Mood discontinuity: seed ${seed}, tick ${world.tick}, pawn ${p.id}`);
-      for (const event of world.events) if (event.tick === world.tick) { const match = event.message.match(/a récolté (\d+) (?:baies|riz)/); if (match) produced += Number(match[1]);if(event.message.includes('a cuisiné 1 repas simple'))cooked++; }
-      for (const {id,quantity} of ingesting) if(world.events.some(e=>e.tick===world.tick&&e.message.startsWith(`${world.pawns.find(p=>p.id===id)!.name} a mangé`))) { meals.set(id, (meals.get(id)??0)+1); consumed += quantity; }
+      for (const event of world.events) if (event.tick === world.tick) { const match = event.message.match(/a récolté (\d+) (?:baies|riz)/); if (match) produced += Number(match[1]);if(event.message.includes('a cuisiné 1 repas simple'))cooked++;if(event.message.includes(' a traité ')&&event.message.endsWith('avec Médicaments.'))medicineUsed++; }
+      for (const {id,quantity} of ingesting) if(world.events.some(e=>e.tick===world.tick&&e.message.startsWith(`${world.pawns.find(p=>p.id===id)!.name} a mangé`)&&!e.message.includes('avec l’aide'))) { meals.set(id, (meals.get(id)??0)+1); consumed += quantity; }
+      const feedingEvents=world.events.filter(e=>e.tick===world.tick&&e.message.includes('avec l’aide'));
+      for (const {doctorId,patientId,quantity} of assistedIngesting){
+        const patient=world.pawns.find(p=>p.id===patientId)!,doctor=world.pawns.find(p=>p.id===doctorId)!;
+        const eventIndex=feedingEvents.findIndex(e=>e.message.startsWith(`${patient.name} a mangé une portion (${quantity} × `)&&e.message.endsWith(`avec l’aide de ${doctor.name}.`));
+        if(eventIndex>=0){feedingEvents.splice(eventIndex,1);meals.set(patientId,(meals.get(patientId)??0)+1);consumed+=quantity;}
+      }
       for (const pawn of world.pawns) if (pawn.state==='sleeping' && pawn.need?.kind==='sleep' && pawn.need.bedId!==null) sleep.set(pawn.id,(sleep.get(pawn.id)??0)+1);
+      for (const pawn of world.pawns) if (pawn.state==='resting' && pawn.need?.kind==='sleep' && pawn.need.bedId!==null && pawn.need.medical) medicalBedRest.set(pawn.id,(medicalBedRest.get(pawn.id)??0)+1);
       for(const pawn of world.pawns)if(pawn.state==='recreating'&&pawn.recreation.task){recreationKinds.add(pawn.recreation.task.activity);recreationPawns.add(pawn.id);}
       if (t % 50 === 0) {
         const context=JSON.stringify({seed,...colonySummary(world)});
@@ -47,7 +79,18 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
         expect(validateWorld(world),context).toEqual([]);expect(woodAccount(world),context).toBe(initialWood);
         expect(foodAccount(world)+consumed+9*cooked+(world.wildlife?.eatenItems??0),context).toBe(initialFood+produced);
         expect(world.pawns.every(p=>p.hunger>0 && p.rest>0),context).toBe(true);
-        expect(world.pawns.every(p=>p.state!=='dead'&&p.state!=='downed'&&!p.health?.injuries.length&&!p.health?.missing.length),context).toBe(true);
+        expect(world.pawns.every(p=>{
+          const woundsAreSocial=(p.health?.injuries??[]).every(i=>socialInjuries.get(p.id)?.get(i.id)===i.bornAt);
+          const poisoningCausedDowning=p.state==='downed'&&!!p.health?.foodPoisoning?.severity&&p.health.injuries.length>0
+            &&woundsAreSocial&&medicalStatus(p.health)==='downed'
+            &&medicalStatus({...p.health,foodPoisoning:undefined})==='mobile';
+          if(poisoningCausedDowning){
+            let episodes=temporarilyDowned.get(p.id);if(!episodes){episodes=new Set();temporarilyDowned.set(p.id,episodes);}
+            episodes.add(p.health!.foodPoisoning!.bornAt);
+          }
+          return p.state!=='dead'&&!p.health?.death&&!p.health?.missing.length&&woundsAreSocial
+            &&(p.state!=='downed'||poisoningCausedDowning);
+        }),context).toBe(true);
         // Hunting may fire, but the ordinary player never targets its settlers.
         expect(world.pawns.every(p=>!p.shooting?.order||p.shooting.order.hunt===true),context).toBe(true);
         expect((world.projectiles??[]).every(p=>p.flight.intendedKey?.startsWith('animal:')&&p.arrival?.effect!=='pawn'),context).toBe(true);
@@ -69,11 +112,12 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
     }
     writeTestFileSync(`tmp/colony-final-${version}-${seed}.json`,serializeWorld(world));
     writeTestFileSync(`artifacts/colony-${version}-${seed}.json`,JSON.stringify({seed,report,final:colonySummary(world)},null,2));
-    const context=JSON.stringify({seed,report,meals:[...meals],sleep:[...sleep]});
+    const context=JSON.stringify({seed,report,meals:[...meals],sleep:[...sleep],medicalBedRest:[...medicalBedRest],medicineUsed});
+    expect([...temporarilyDowned].every(([id,episodes])=>{const p=world.pawns.find(p=>p.id===id);return !!p&&p.state!=='dead'&&p.state!=='downed'&&!!p.health&&!p.health.death&&!p.health.missing.length&&medicalStatus(p.health)==='mobile'&&!episodes.has(p.health.foodPoisoning?.bornAt??-1);}),context).toBe(true);
     expect(report[0]!.structures,context).toMatchObject({bed:3,table:1,stool:3});
     expect(report[4]!.structures,context).toEqual({'wood-generator':1,'standing-lamp':1,'passive-cooler':0,bed:population,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});
     expect(report[4]!.roofing,context).toEqual({constructed:28,planned:28,removal:0});
-    expect([...recreationKinds].sort(),context).toEqual(['horseshoes','skygaze']);expect(recreationPawns.size,context).toBe(population);
+    expect([...recreationKinds].sort(),context).toEqual(['horseshoes','skygaze','social-relax']);expect(recreationPawns.size,context).toBe(population);
     expect(cooked,context).toBeGreaterThanOrEqual(12);
     expect(rationAssignments,context).toBeGreaterThanOrEqual(3);
     expect(world.tiles.filter(t=>t.terrain==='rough-stone').length,context).toBeGreaterThanOrEqual(6);
@@ -82,13 +126,22 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
     expect(colonySummary(world).mining.steel,context).toBe(50);expect(colonySummary(world).mining.steelStored,context).toBe(50);expect(colonySummary(world).mining.steelInBuildings,context).toBe(150);expect(colonySummary(world).structures.stonecutter,context).toBe(1);
     expect(colonySummary(world).mining.componentsInBuildings,context).toBe(2);
     expect(colonySummary(world).power.filter(s=>s.on),context).toHaveLength(2);
-    expect(colonySummary(world).medicines,context).toEqual({total:30,stored:30,policies:Array(population).fill('industrial')});
-    expect(colonySummary(world).mining.stored,context).toBe(colonySummary(world).mining.chunks);
+    const medicines=colonySummary(world).medicines;
+    expect(initialMedicine,context).toBe(30);
+    expect(medicines,context).toEqual({total:initialMedicine-medicineUsed,stored:initialMedicine-medicineUsed,policies:Array(population).fill('industrial')});
+    expect(medicines.total,context).toBeGreaterThan(0);
+    const chunkStockpiles=world.stockpiles.filter(s=>s.filters.chunk);
+    const extractedChunks=world.piles.filter(p=>p.kind==='chunk'&&!naturalChunkIds.has(p.id));
+    const storedExtracted=extractedChunks.filter(p=>{const owner=p.owner;return owner.type==='ground'&&chunkStockpiles.some(s=>s.x===owner.x&&s.z===owner.z);});
+    expect(chunkStockpiles,context).toHaveLength(4);
+    expect(storedExtracted,context).toHaveLength(chunkStockpiles.length);
+    expect(chunkStockpiles.every(s=>storedExtracted.some(p=>p.owner.type==='ground'&&p.owner.x===s.x&&p.owner.z===s.z)),context).toBe(true);
+    expect(extractedChunks.filter(p=>!storedExtracted.includes(p)).every(p=>p.owner.type==='ground'&&p.haulRequested===true),context).toBe(true);
     expect(world.deconstructed.count,context).toBe(1);
     expect(world.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(world.width/2)+4);expect(world.packed,context).toEqual([]);
     const maintenance=world.jobs.filter(j=>j.growingZoneId===undefined);
-    expect(maintenance.filter(j=>j.kind!=='chop'),context).toEqual([]);
-    // Midnight is not a drained queue: prove the specific remaining fuel jobs
+    expect(maintenance.filter(j=>j.kind!=='chop'&&j.kind!=='harvest'),context).toEqual([]);
+    // Midnight is not a drained queue: prove the specific remaining resource jobs
     // finish after normal sleep, without adding orders or changing needs.
     if(maintenance.length) {
       const followup=deserializeWorld(serializeWorld(world)),ids=new Set(maintenance.map(j=>j.id));
@@ -99,7 +152,7 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
     expect(world.pawns.some(p=>p.skills.construction.xp>1000000),context).toBe(true);
     expect(world.growingZones,context).toHaveLength(2);expect(colonySummary(world).textile,context).toMatchObject({fields:1,plants:6,cloth:0}); expect(world.resources.filter(r=>r.kind==='rice').length,context).toBeGreaterThan(5); expect(world.stock.food,context).toBeGreaterThan(0);
     expect([...meals.values()].every(n=>n>=10),context).toBe(true);
-    expect([...sleep.values()].every(n=>n>4000),context).toBe(true);
+    expect([...sleep].every(([id,n])=>n>0&&n+(medicalBedRest.get(id)??0)>4000),context).toBe(true);
     expect(colonySummary(world).plantClimate,context).toEqual({slowed:0,thermalAnchors:0});
     expect(colonySummary(world).apparel.filter(i=>i.owner.type==='apparel'),context).toHaveLength(population+1);
     expect(world.structures.filter(s=>s.kind==='wall'||s.kind==='door').every(s=>world.home?.includes(s.z*world.width+s.x)),context).toBe(true);
