@@ -102,6 +102,8 @@ import { foodFreshnessLabel } from './ui/food-freshness';
 import { updateFoodStocks } from './ui/food-stocks';
 import { SimulationClient } from './bridge/SimulationClient';
 import { AudioDirector } from './audio/AudioDirector';
+import { createNearbyFireCollector } from './audio/continuous';
+import { listenerPose, type AudioCamera } from './audio/spatial';
 import { ColonyRenderer } from './render/ColonyRenderer';
 import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell, Command } from './sim/types';
 import { TICKS_PER_DAY } from './sim/types';
@@ -133,25 +135,20 @@ let lastHoverReadAt=0,lastHoverCopy='';
 let altInspectorHeld=false,lastAltReadAt=0,lastAltCopy='',mapPointerX=0,mapPointerY=0;
 const mapHoverLight=new MapHoverLightCache();
 let lastAudioSourceFocus={x:Infinity,z:Infinity};
-function syncAudioSources(world: World): void {
+let lastAudioCamera:AudioCamera|undefined;
+function syncAudioSources(world: World,camera=lastAudioCamera): void {
   if (!soundEnabled) { audio.setContinuousSources([]); return; }
-  // Rebuild on a snapshot or a meaningful camera move, never per animation frame.
-  // Keep only nearby fire candidates so a large wildfire cannot create a source per flame.
-  const focus=renderer?.audioFocus??{x:world.width/2,z:world.height/2};
+  // Rebuild on a snapshot or meaningful listener movement, never per image.
+  // A low perspective view can place the ear far from the orbit target.
+  const pose=camera?listenerPose(camera):renderer?.audioFocus??{x:world.width/2,z:world.height/2};
+  const focus={x:pose.x,z:pose.z};
   lastAudioSourceFocus=focus;
-  const nearby:{id:string;kind:string;x:number;z:number;gain:number;distance:number}[]=[];
-  const addFire=(id:string,x:number,z:number,gain:number)=>{
-    const distance=(x-focus.x)**2+(z-focus.z)**2;
-    if(distance>30*30)return;
-    if(nearby.length<12){nearby.push({id,kind:'ambient.fire',x,z,gain,distance});return;}
-    let worst=0;for(let i=1;i<nearby.length;i++)if(nearby[i]!.distance>nearby[worst]!.distance)worst=i;
-    if(distance<nearby[worst]!.distance)nearby[worst]={id,kind:'ambient.fire',x,z,gain,distance};
-  };
+  const nearby=createNearbyFireCollector(focus);
   for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined)
-    addFire(`fire:${fire.id}`,fire.x,fire.z,Math.max(.2,Math.min(1,fire.size)));
+    nearby.add(`fire:${fire.id}`,fire.x,fire.z,Math.max(.2,Math.min(1,fire.size)));
   for(const structure of world.structures)if(structure.kind==='campfire'&&structure.fuel?.ticks)
-    addFire(`campfire:${structure.id}`,structure.x,structure.z,.48);
-  const sources=nearby.map(({id,kind,x,z,gain})=>({id,kind,x,z,gain}));
+    nearby.add(`campfire:${structure.id}`,structure.x,structure.z,.48);
+  const sources=nearby.sources();
   const weather=perceivedWeather(world);
   if(weather==='rain'||weather==='rainy-thunderstorm'||weather==='foggy-rain') {
     const gain=Math.min(1,Math.max(0,weatherRainRate(world)));
@@ -1026,7 +1023,7 @@ document.addEventListener('keydown', event => {
 });
 client.onError = message => notify(message, true);
 client.onSnapshot = (world, cost, speed, replaced, motion) => {
-  if (replaced) audio.reset();
+  if (replaced) {audio.reset();lastAudioCamera=undefined;lastAudioSourceFocus={x:Infinity,z:Infinity};}
   const speedChanged=currentSpeed!==speed;
   const role=(p:Pawn|undefined)=>p?p.prisoner?'prisoner':isColonist(p)?'colonist':'other':'absent';
   const roleChanged=selectedPawn!==undefined&&role(snapshot?.pawns.find(p=>p.id===selectedPawn))!==role(world.pawns.find(p=>p.id===selectedPawn));
@@ -1051,10 +1048,12 @@ async function prepareWorld(): Promise<void> {
     renderer = await ColonyRenderer.create(el('viewport'), pickCell, groundGrassEnabled);
     renderer.setTexturesEnabled(texturesEnabled);
     renderer.onAudioFrame = view => {
+      lastAudioCamera=view.camera;
       audio.updateCamera(view.camera);
+      const pose=listenerPose(view.camera);
       if (soundEnabled && snapshot && !document.hidden &&
-        Math.hypot(view.camera.targetX-lastAudioSourceFocus.x,view.camera.targetZ-lastAudioSourceFocus.z)>=4)
-        syncAudioSources(snapshot);
+        Math.hypot(pose.x-lastAudioSourceFocus.x,pose.z-lastAudioSourceFocus.z)>=4)
+        syncAudioSources(snapshot,view.camera);
       audio.update({ presentedTick: view.tick, paused: view.paused || frontMenu.isOpen() || replacingWorld, hidden: document.hidden });
     };
     renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){const type=shootingControls.mode!;shootingControls.cancel();void attempt(async()=>{await client.command({type,pawnIds:selectedColonyIds(),targetId});renderState();});}return;}selectPawns(gesture);};

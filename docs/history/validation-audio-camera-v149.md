@@ -1,0 +1,7 @@
+# Correction du prélèvement sonore en perspective — suivi V149
+
+Le prélèvement des douze feux candidats était centré sur la cible de la caméra, alors que `AudioDirector` spatialise et sélectionne les boucles depuis `listenerPose`. En perspective basse, une rotation pouvait donc écarter un feu pourtant proche de l'oreille : caméra `(135,8,100)`, cible `(100,100)`, feu `(132,100)` ; l'ancien prélèvement le rejetait à **32** cases de la cible, tandis que l'oreille `(117,5,100)` n'en est distante que de **14,5**, sous la portée audible du feu. Une rotation sans déplacement de la cible ne relançait pas non plus le prélèvement.
+
+Le prélèvement et son seuil de déplacement de quatre cases utilisent désormais la même position d'oreille que la sélection Web Audio. La marge de prélèvement passe à **32** cases pour couvrir la portée maximale actuelle du feu (22 × 1,25 = 27,5) entre deux prélèvements ; le maximum de **douze** candidats demeure. Les boucles, le traitement pause/reprise, la limite des voix et le World ne changent pas. La caméra capturée est effacée quand le monde est remplacé.
+
+Le test ciblé ajouté à `tests/audio-v149.test.ts` reproduit la rotation à cible fixe, démontre l'audibilité du feu, sa présence dans les candidats et la borne de douze sources. Les tests audio et bridge ciblés passent **27/27** et `npm run typecheck` passe. Il n'y a pas de nouvelle écoute humaine ni de parcours navigateur natif pour ce correctif ; les six sons encore sans MP3 restent absents.

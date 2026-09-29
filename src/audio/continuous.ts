@@ -10,6 +10,23 @@ export interface ContinuousSource {
 
 export interface ContinuousEventInfo { maxDistance: number; spatial: boolean; loop: boolean }
 
+/** Snapshot-side preselection before the four-voice Web Audio selection. The
+ * focus must be the listener pose, not merely the orbit target in perspective. */
+export function createNearbyFireCollector(focus:{x:number;z:number},limit=12,radius=32) {
+  const nearby:(ContinuousSource&{gain:number;distance:number})[]=[];
+  return {
+    add(id:string,x:number,z:number,gain:number):void {
+      const distance=(x-focus.x)**2+(z-focus.z)**2;
+      if(distance>radius*radius)return;
+      const source={id,kind:'ambient.fire',x,z,gain,distance};
+      if(nearby.length<limit){nearby.push(source);return;}
+      let worst=0;for(let i=1;i<nearby.length;i++)if(nearby[i]!.distance>nearby[worst]!.distance)worst=i;
+      if(distance<nearby[worst]!.distance)nearby[worst]=source;
+    },
+    sources():ContinuousSource[]{return nearby.map(({id,kind,x,z,gain})=>({id,kind,x,z,gain}));},
+  };
+}
+
 /** Called on source/camera changes, never on each audio frame. */
 export function selectContinuousSources(
   sources: readonly ContinuousSource[],

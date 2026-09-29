@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AudioDirector, parseAudioManifest } from '../src/audio/AudioDirector';
 import { AudioCueScheduler } from '../src/audio/scheduler';
 import { audibleRange, listenerPose, sourceDistance } from '../src/audio/spatial';
-import { selectContinuousSources } from '../src/audio/continuous';
+import { createNearbyFireCollector, selectContinuousSources } from '../src/audio/continuous';
 import { cueVariation, selectOneShots } from '../src/audio/selection';
 
 describe('audio cue presentation queue', () => {
@@ -96,6 +96,25 @@ describe('audio manifest', () => {
 });
 
 describe('continuous sound selection', () => {
+  it('samples fires around the low-perspective listener after rotation while bounding candidates', () => {
+    const before={x:100,y:8,z:135,targetX:100,targetZ:100,span:30,mode:'perspective' as const};
+    const camera={...before,x:135,z:100}; // Orbit target is unchanged; the ear moves with the camera.
+    const previous=listenerPose(before),pose=listenerPose(camera);
+    expect(Math.hypot(pose.x-previous.x,pose.z-previous.z)).toBeGreaterThan(4);
+    expect(pose.x).toBeCloseTo(117.5);
+    expect(Math.hypot(132-camera.targetX,100-camera.targetZ)).toBeGreaterThan(30);
+    expect(sourceDistance(132,100,pose)).toBeLessThan(audibleRange(22,camera));
+    const nearby=createNearbyFireCollector(pose);
+    nearby.add('fire:audible',132,100,1);
+    nearby.add('fire:far',170,100,1);
+    expect(nearby.sources().map(source=>source.id)).toEqual(['fire:audible']);
+    const selected=selectContinuousSources(nearby.sources(),{'ambient.fire':{loop:true,spatial:true,maxDistance:22}},camera);
+    expect(selected.map(source=>source.id)).toEqual(['fire:audible']);
+    for(let i=0;i<20;i++)nearby.add(`fire:${i}`,pose.x+i/10,pose.z,1);
+    expect(nearby.sources()).toHaveLength(12);
+    expect(nearby.sources().some(source=>source.id==='fire:far')).toBe(false);
+  });
+
   it('keeps the closest fires and a global rain bed within four voices', () => {
     const events = {
       'ambient.fire': { loop: true, spatial: true, maxDistance: 24 },
