@@ -27,6 +27,12 @@ Pour un effet ponctuel futur marqué `spatial: false`, le runtime ignore ses coo
 
 Les durées de la table sont des **demandes de génération** ; les durées décodées des six premiers fichiers sont mesurées ci-dessous. Les six travaux supplémentaires sont préparés, sans entrée au manifeste tant que leurs fichiers ne sont pas contrôlés. Une génération de `construction.hit` est revenue sans URL exploitable et reste absente du dépôt ; les cinq autres travaux n'ont pas été générés. Les boucles publiées doivent encore être écoutées au joint et sur plusieurs répétitions. L'absence d'un ID dans le manifeste est un silence volontaire. Le manifeste ne contient que des fichiers réels, avec `variants: [{src, gain}]`, `gain`, `loop`, `maxDistance` si local et `spatial: false` si global.
 
+## Retrouver un SFX déjà généré
+
+Dans le **même compte et espace ElevenCreative** que celui utilisé par la connexion OAuth, ouvrir Sound Effects → **History**, chercher le candidat, l'écouter et utiliser l'icône de téléchargement si elle est présente ([guide officiel](https://elevenlabs.io/docs/eleven-creative/playground/sound-effects)). S'il a été produit dans un Flow, ouvrir le projet sauvegardé dans ce même espace et examiner ses nœuds de résultat, qui permettent le téléchargement ([guide Flows](https://elevenlabs.io/docs/eleven-creative/products/flows)). Ne pas relancer un nœud pour cette recherche : une nouvelle exécution consomme des crédits.
+
+L'[API `/v1/history`](https://elevenlabs.io/docs/api-reference/history/list) exclut les SFX ; une liste vide n'est pas une preuve de perte. Sans entrée dans History ou Flows ni identifiant, URL ou fichier conservé, aucune récupération n'est garantie. `construction.hit` demeure absent du dépôt et du manifeste tant qu'un MP3 réel n'a pas été récupéré puis contrôlé. [Détails et sources](../research/audio-elevenlabs-v149.md#récupération-dun-sfx-sans-identifiant--vérification-du-29-septembre-2026).
+
 ## Procédure de production
 
 Depuis la racine du dépôt :
