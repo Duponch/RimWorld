@@ -4,12 +4,12 @@
     "mining.hit": {
       "variants": [
         {
-          "src": "/assets/audio/sfx/mining-hit-soft-compressed-v1.mp3",
+          "src": "/assets/audio/sfx/mining-pickaxe-ping-v2.mp3",
           "gain": 1
         }
       ],
-      "gain": 2.5,
-      "maxDistance": 20,
+      "gain": 0.55,
+      "maxDistance": 16,
       "loop": false
     },
     "woodcutting.hit": {

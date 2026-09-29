@@ -4,13 +4,13 @@
   "outputFormat": "mp3_44100_128",
   "events": {
     "mining.hit": {
-      "filename": "mining-hit-v1.mp3",
-      "prompt": "Single close, soft steel pick tap against rough stone, short gritty mineral crumble, tactile and warm cozy colony game foley. Dry sound, gentle impact, no voice, no music, no dramatic boom, no background ambience.",
-      "durationSeconds": 0.6,
-      "promptInfluence": 0.65,
+      "filename": "mining-pickaxe-ping-v2.mp3",
+      "prompt": "Single close strike of a steel pickaxe tip on solid granite: a clear, bright metallic ping with a short natural ring and subtle stone impact underneath. Clean detailed foley, crisp attack, quick fade. No scratch, scrape, crackle, distortion, retro synth, voice, music, reverb or background ambience.",
+      "durationSeconds": 0.75,
+      "promptInfluence": 0.75,
       "loop": false,
-      "gain": 2.5,
-      "maxDistance": 20
+      "gain": 0.55,
+      "maxDistance": 16
     },
     "woodcutting.hit": {
       "filename": "woodcutting-hit-v1.mp3",

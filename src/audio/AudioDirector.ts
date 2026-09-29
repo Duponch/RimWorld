@@ -15,6 +15,9 @@ const MAX_VOICES = 24;
 const MAX_ONE_SHOTS_PER_FRAME = 12;
 const DEFAULT_RANGE = 24;
 const PREVIEW_KIND = 'mining.hit';
+const MAX_MINING_VOICES = 3;
+const MINING_CLUSTER_RADIUS = 5;
+const NO_DECODED_MP3_ERROR = 'Aucun MP3 du manifeste audio n’a pu être décodé.';
 
 function level(value: unknown, fallback: number, ceiling: number): number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= ceiling ? value : fallback;
@@ -54,7 +57,7 @@ export function parseAudioManifest(input: unknown): AudioManifest {
   return { version: 1, events };
 }
 
-interface Voice { source: AudioBufferSourceNode; gain: GainNode; panner: PannerNode | null; kind: string; variantGain: number }
+interface Voice { source: AudioBufferSourceNode; gain: GainNode; panner: PannerNode | null; kind: string; variantGain: number; x?: number; z?: number }
 
 /** Plays short world sounds on the confirmed presentation clock. No World state. */
 export class AudioDirector {
@@ -68,7 +71,7 @@ export class AudioDirector {
   private readonly voices = new Set<Voice>();
   private readonly continuous = new Map<string, Voice>();
   private continuousSources: readonly ContinuousSource[] = [];
-  private lastSelection = { x: Infinity, z: Infinity, span: 0 };
+  private lastSelection = { x: Infinity, y: Infinity, z: Infinity, span: 0 };
   private unlockPromise: Promise<void> | null = null;
   private previewPromise: Promise<void> | null = null;
   private previewOutput: GainNode | null = null;
@@ -127,7 +130,7 @@ export class AudioDirector {
       const resumed = this.context.resume();
       this.unlockPromise = Promise.resolve(resumed).then(async () => {
         if (!this.manifest) await this.loadAssets();
-        if (this.loadedCount === 0) throw new Error('Aucun MP3 du manifeste audio n’a pu être décodé.');
+        if (this.loadedCount === 0) throw new Error(NO_DECODED_MP3_ERROR);
         this.updateListener();
         this.updateMaster();
         this.reconcileContinuous();
@@ -148,9 +151,10 @@ export class AudioDirector {
     this.updateListener();
     const pose = listenerPose(camera);
     const span = camera.span ?? 32;
-    if (Math.hypot(pose.x - this.lastSelection.x, pose.z - this.lastSelection.z) >= 4 ||
+    if (Math.hypot(pose.x - this.lastSelection.x, pose.y - this.lastSelection.y,
+      pose.z - this.lastSelection.z) >= 4 ||
       span > this.lastSelection.span * 1.25 || span < this.lastSelection.span * 0.8) {
-      this.lastSelection = { x: pose.x, z: pose.z, span };
+      this.lastSelection = { x: pose.x, y: pose.y, z: pose.z, span };
       this.reconcileContinuous();
     }
   }
@@ -230,10 +234,12 @@ export class AudioDirector {
     const hadManifest = !!this.manifest;
     const unlocked = this.unlock();
     const preview = unlocked.catch(error => {
-      // A later explicit click can recover an asset after a failed first load.
-      if (!hadManifest) throw error;
+      // Only a decoded-asset failure can be recovered by this explicit click.
+      if (!(error instanceof Error && error.message === NO_DECODED_MP3_ERROR && this.manifest &&
+        (hadManifest || !this.manifest.events[PREVIEW_KIND]))) throw error;
     }).then(async () => {
       if (this.disposed || this.muted || this.volume === 0) throw new Error('L’essai sonore a été annulé.');
+      if (!this.manifest?.events[PREVIEW_KIND]) await this.refreshManifestForPreview();
       const event = this.manifest?.events[PREVIEW_KIND];
       if (!event || event.loop || !event.variants.length) throw new Error('Le son d’essai est absent du manifeste audio.');
       const variant = event.variants[0]!;
@@ -291,7 +297,7 @@ export class AudioDirector {
   private async loadAssets(): Promise<void> {
     const context = this.context;
     if (!context) return;
-    const response = await fetch(this.manifestUrl, { cache: 'force-cache' });
+    const response = await fetch(this.manifestUrl, { cache: 'no-cache' });
     if (!response.ok) throw new Error(`Audio manifest HTTP ${response.status}`);
     const manifest = parseAudioManifest(await response.json());
     const paths = [...new Set(Object.values(manifest.events).flatMap(event => event.variants.map(variant => variant.src)))];
@@ -305,8 +311,20 @@ export class AudioDirector {
     }));
     if (!this.disposed) {
       this.manifest = manifest;
-      if (this.loadedCount === 0) throw new Error('Aucun MP3 du manifeste audio n’a pu être décodé.');
+      if (this.loadedCount === 0) throw new Error(NO_DECODED_MP3_ERROR);
     }
+  }
+
+  /** A preview click can recover a stale cached manifest without discarding loaded world sounds. */
+  private async refreshManifestForPreview(): Promise<void> {
+    const response = await fetch(this.manifestUrl, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Audio manifest HTTP ${response.status}`);
+    const fresh = parseAudioManifest(await response.json());
+    const preview = fresh.events[PREVIEW_KIND];
+    if (!preview || preview.loop || !preview.variants.length)
+      throw new Error('Le son d’essai est absent du manifeste audio.');
+    if (this.disposed) return;
+    this.manifest = fresh;
   }
 
   private async fetchBuffer(src: string, cache: RequestCache): Promise<AudioBuffer | null> {
@@ -357,7 +375,7 @@ export class AudioDirector {
     const context = this.context;
     if (!context || context.state === 'closed') return;
     const pose = listenerPose(this.camera);
-    const key = [pose.x, pose.z, pose.forwardX, pose.forwardZ].map(value => value.toFixed(3)).join(',');
+    const key = [pose.x, pose.y, pose.z, pose.forwardX, pose.forwardZ].map(value => value.toFixed(3)).join(',');
     if (key === this.lastPose) return;
     this.lastPose = key;
     const listener = context.listener;
@@ -374,6 +392,17 @@ export class AudioDirector {
     const context = this.context; const master = this.master;
     const event = this.manifest?.events[cue.kind];
     if (!context || !master || !event || event.loop || !event.gain) return;
+    if (cue.kind === PREVIEW_KIND) {
+      // Several miners sharing one patch should not layer the same impact.
+      // The set is bounded by MAX_VOICES and checked only for due contacts.
+      let active = 0;
+      for (const voice of this.voices) {
+        if (voice.kind !== PREVIEW_KIND) continue;
+        if (++active >= MAX_MINING_VOICES) return;
+        if (voice.x !== undefined && voice.z !== undefined &&
+          Math.hypot(cue.x - voice.x, cue.z - voice.z) < MINING_CLUSTER_RADIUS) return;
+      }
+    }
     const pose = listenerPose(this.camera);
     const range = audibleRange(event.maxDistance, this.camera);
     if (event.spatial && sourceDistance(cue.x, cue.z, pose) >= range) return;
@@ -409,7 +438,7 @@ export class AudioDirector {
       if (panner) { source.connect(panner); panner.connect(gain); }
       else source.connect(gain);
       gain.connect(master);
-      voice = { source, panner, gain, kind: cue.kind, variantGain: variant.gain };
+      voice = { source, panner, gain, kind: cue.kind, variantGain: variant.gain, x: cue.x, z: cue.z };
       const playingVoice = voice;
       source.onended = () => this.releaseVoice(playingVoice);
       this.voices.add(voice);

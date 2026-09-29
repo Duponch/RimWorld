@@ -91,22 +91,47 @@ describe('audio cue presentation queue', () => {
 });
 
 describe('sound spatialisation', () => {
-  it('anchors a high orthographic view on its target, not its distant camera body', () => {
+  it('uses the orthographic focus and zoom as its effective camera distance', () => {
     const pose = listenerPose({ x: 150, y: 300, z: 160, targetX: 20, targetZ: 30, span: 32, mode: 'orthographic' });
     expect(pose.x).toBe(20);
     expect(pose.z).toBe(30);
-    expect(sourceDistance(21, 30, pose)).toBe(1);
+    expect(pose.y).toBeGreaterThan(1.6);
+    expect(pose.y).toBeLessThan(20);
+    expect(sourceDistance(21, 30, pose)).toBeGreaterThan(pose.y);
     expect(Math.hypot(pose.forwardX, pose.forwardZ)).toBeCloseTo(1);
   });
 
-  it('moves the listener toward a low perspective camera and narrows range at overview zoom', () => {
+  it('places the listener at the perspective camera and narrows range at overview zoom', () => {
     const pose = listenerPose({ x: 0, y: 3, z: 0, targetX: 10, targetZ: 0, mode: 'perspective' });
-    expect(pose.x).toBeLessThan(10);
-    expect(pose.x).toBeGreaterThan(0);
+    expect(pose.x).toBe(0);
+    expect(pose.y).toBe(3);
     const near = audibleRange(24, { x: 0, y: 30, z: 0, span: 16 });
     const overview = audibleRange(24, { x: 0, y: 30, z: 0, span: 128 });
     expect(overview).toBeLessThan(near);
     expect(overview).toBeLessThanOrEqual(36);
+  });
+
+  it('cuts local mining when perspective height grows even if the map focus stays fixed', () => {
+    const events = { 'mining.hit': { loop: false, spatial: true, gain: 1, maxDistance: 20 } };
+    const cues = [{ id: 'mining:near', tick: 1, kind: 'mining.hit', x: 10, z: 10 }];
+    const near = { x: 10, y: 4, z: 10, targetX: 10, targetZ: 10, span: 32, mode: 'perspective' as const };
+    expect(selectOneShots(cues, events, near)).toHaveLength(1);
+    expect(selectOneShots(cues, events, { ...near, y: 25 })).toHaveLength(0);
+    expect(selectOneShots(cues, events, { ...near, x: 35 })).toHaveLength(0);
+  });
+
+  it('cuts local work and fire as an orthographic view zooms out', () => {
+    const near = { x: 130, y: 100, z: 130, targetX: 10, targetZ: 10, span: 32, mode: 'orthographic' as const };
+    const far = { ...near, span: 96 };
+    const cue = [{ id: 'mining:near', tick: 1, kind: 'mining.hit', x: 10, z: 10 }];
+    const mining = { 'mining.hit': { loop: false, spatial: true, gain: 1, maxDistance: 20 } };
+    const fire = [{ id: 'fire', kind: 'ambient.fire', x: 10, z: 10 }];
+    const fireInfo = { 'ambient.fire': { loop: true, spatial: true, maxDistance: 22 } };
+    expect(sourceDistance(10, 10, listenerPose(far))).toBeGreaterThan(sourceDistance(10, 10, listenerPose(near)));
+    expect(selectOneShots(cue, mining, near)).toHaveLength(1);
+    expect(selectOneShots(cue, mining, far)).toHaveLength(0);
+    expect(selectContinuousSources(fire, fireInfo, near)).toHaveLength(1);
+    expect(selectContinuousSources(fire, fireInfo, far)).toHaveLength(0);
   });
 });
 
@@ -151,7 +176,7 @@ describe('continuous sound selection', () => {
     const camera={...before,x:135,z:100}; // Orbit target is unchanged; the ear moves with the camera.
     const previous=listenerPose(before),pose=listenerPose(camera);
     expect(Math.hypot(pose.x-previous.x,pose.z-previous.z)).toBeGreaterThan(4);
-    expect(pose.x).toBeCloseTo(117.5);
+    expect(pose.x).toBeCloseTo(135);
     expect(Math.hypot(132-camera.targetX,100-camera.targetZ)).toBeGreaterThan(30);
     expect(sourceDistance(132,100,pose)).toBeLessThan(audibleRange(22,camera));
     const nearby=createNearbyFireCollector(pose);
@@ -334,6 +359,9 @@ describe('continuous voice lifecycle', () => {
     expect(audio.availableSounds).toBe(3);
     audio.setContinuousSources([{ id: 'rain', kind: 'weather.rain', x: 0, z: 0 }]);
     const context = FakeContext.latest;
+    const initialEarHeight = context.listener.positionY.value;
+    audio.updateCamera({ x: 0, y: 100, z: 0, targetX: 0, targetZ: 0, span: 40, mode: 'orthographic' });
+    expect(context.listener.positionY.value).toBeGreaterThan(initialEarHeight);
     expect(context.sources).toHaveLength(1);
     expect(context.sources[0]!.loop).toBe(true);
     expect(context.sources[0]!.starts).toBe(1);
@@ -355,10 +383,17 @@ describe('continuous voice lifecycle', () => {
     expect(context.gains[3]!.gain.value).toBeCloseTo(5 * cueVariation('mining:5').gain);
     expect(audio.diagnostics).toMatchObject({ state: 'running', loaded: 1,
       playedOneShots: 1, lastKind: 'mining.hit' });
+    audio.ingestCues([
+      { id: 'mining:same-patch', tick: 5.5, kind: 'mining.hit', x: 1, z: 1 },
+      { id: 'mining:other-patch', tick: 5.5, kind: 'mining.hit', x: 10, z: 0 },
+    ]);
+    audio.update({ presentedTick: 5.5, paused: false, hidden: false });
+    expect(context.sources).toHaveLength(4); // Only the distinct patch adds a voice.
+    expect(audio.diagnostics.playedOneShots).toBe(2);
     audio.ingestCues([{ id: 'notice:6', tick: 6, kind: 'ui.notice', x: 999, z: 999 }]);
     audio.update({ presentedTick: 6, paused: false, hidden: false });
-    expect(context.sources).toHaveLength(4);
-    expect(context.panners).toBe(1);
+    expect(context.sources).toHaveLength(5);
+    expect(context.panners).toBe(2);
     audio.dispose();
   });
 
@@ -462,6 +497,73 @@ describe('explicit sound preview and failed asset recovery', () => {
   const manifest = { version: 1, events: {
     'mining.hit': { gain: 2, variants: [{ src: '/assets/audio/sfx/mining.mp3' }] },
   } };
+
+  it('refreshes a cached manifest missing the preview on the click and keeps loaded world sounds', async () => {
+    vi.stubGlobal('AudioContext', FakeContext);
+    const cooking = { variants: [{ src: '/assets/audio/sfx/cooking.mp3' }] };
+    let manifestReads = 0;
+    const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
+      if (url.endsWith('manifest.json')) {
+        manifestReads++;
+        expect(options?.cache).toBe(manifestReads === 1 ? 'no-cache' : 'no-store');
+        return new Response(JSON.stringify({ version: 1, events: manifestReads === 1
+          ? { 'cooking.work': cooking } : { ...manifest.events, 'cooking.work': cooking } }));
+      }
+      return new Response(new Uint8Array([1]));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const audio = new AudioDirector();
+    await audio.unlock();
+    expect(audio.availableSounds).toBe(1);
+    await audio.playPreview();
+    expect(manifestReads).toBe(2);
+    expect(audio.availableSounds).toBe(2);
+    expect(audio.loadedCount).toBe(2);
+    expect(fetchMock.mock.calls.filter(([url]) => url.endsWith('cooking.mp3'))).toHaveLength(1);
+    expect(FakeContext.latest.sources[0]!.starts).toBe(1);
+    await audio.playPreview();
+    expect(manifestReads).toBe(2);
+    audio.dispose();
+  });
+
+  it('reports a still incomplete fresh manifest without losing a loaded world sound', async () => {
+    vi.stubGlobal('AudioContext', FakeContext);
+    const incomplete = { version: 1, events: {
+      'cooking.work': { variants: [{ src: '/assets/audio/sfx/cooking.mp3' }] },
+    } };
+    let manifestReads = 0;
+    const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
+      if (url.endsWith('manifest.json')) {
+        manifestReads++;
+        expect(options?.cache).toBe(manifestReads === 1 ? 'no-cache' : 'no-store');
+        return new Response(JSON.stringify(incomplete));
+      }
+      return new Response(new Uint8Array([1]));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const audio = new AudioDirector();
+    await audio.unlock();
+    await expect(audio.playPreview()).rejects.toThrow('Le son d’essai est absent du manifeste audio.');
+    expect(fetchMock.mock.calls.filter(([url]) => url.endsWith('manifest.json'))).toHaveLength(2);
+    expect(fetchMock.mock.calls.filter(([url]) => url.endsWith('cooking.mp3'))).toHaveLength(1);
+    expect(audio.availableSounds).toBe(1);
+    expect(audio.loadedCount).toBe(1);
+    expect(FakeContext.latest.sources).toHaveLength(0);
+    audio.dispose();
+  });
+
+  it('does not report an absent preview when browser audio activation fails', async () => {
+    class BlockedContext extends FakeContext {
+      resume(): Promise<void> { return Promise.reject(new Error('Audio activation blocked')); }
+    }
+    vi.stubGlobal('AudioContext', BlockedContext);
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const audio = new AudioDirector();
+    await expect(audio.playPreview()).rejects.toThrow('Audio activation blocked');
+    expect(fetchMock).not.toHaveBeenCalled();
+    audio.dispose();
+  });
 
   it('rejects a manifest with zero decoded files and retries only on an explicit preview click', async () => {
     vi.stubGlobal('AudioContext', FakeContext);

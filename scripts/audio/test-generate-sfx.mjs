@@ -52,6 +52,18 @@ test('accepts a published derivative with matching local files and provenance', 
   await assert.doesNotReject(validate());
 });
 
+test('verifies the generation hash for a directly published MP3', async () => {
+  const valid = await fixture('direct-valid', ({ manifest }) => {
+    manifest.events['mining.hit'].variants[0].src = `/assets/audio/sfx/${sourceFilename}`;
+  });
+  await assert.doesNotReject(valid());
+  const changed = await fixture('direct-changed', ({ manifest, files }) => {
+    manifest.events['mining.hit'].variants[0].src = `/assets/audio/sfx/${sourceFilename}`;
+    files[sourceFilename] = derived;
+  });
+  await assert.rejects(changed(), /Published SFX source differs/);
+});
+
 test('rejects an unknown manifest source even when another variant is valid', async () => {
   const validate = await fixture('unknown', ({ manifest, files }) => {
     manifest.events['mining.hit'].variants.push({ src: '/assets/audio/sfx/unknown.mp3', gain: 1 });

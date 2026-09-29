@@ -4,6 +4,50 @@ import { applyCommand, serializeWorld, validateWorld } from '../../src/sim/index
 import { miningCamp } from '../scenarios/mining';
 import { expectWorld, saveKey } from './helpers';
 
+test('V149 : l’essai sonore récupère mining.hit après un premier manifeste incomplet', async ({ page }) => {
+    const errors = observeErrors(page);
+    const manifestResponse = await page.request.get('/assets/audio/manifest.json');
+    expect(manifestResponse.ok()).toBe(true);
+    const published = await manifestResponse.json() as { version: number; events: Record<string, unknown> };
+    expect(published.version).toBe(1);
+    expect(published.events['mining.hit']).toBeDefined();
+    const incompleteEvents = { ...published.events };
+    delete incompleteEvents['mining.hit'];
+    expect(Object.keys(incompleteEvents).length).toBeGreaterThan(0);
+
+    let manifestRequests = 0;
+    await page.route('**/assets/audio/manifest.json', async route => {
+      manifestRequests++;
+      const response = await route.fetch();
+      if (manifestRequests === 1) {
+        await route.fulfill({ response, json: { ...published, events: incompleteEvents } });
+      } else {
+        await route.fulfill({ response });
+      }
+    });
+    await page.addInitScript(() => {
+      (window as any).__previewStarts = 0;
+      const start = AudioBufferSourceNode.prototype.start;
+      AudioBufferSourceNode.prototype.start = function (...args) {
+        if (this.buffer && !this.loop) (window as any).__previewStarts++;
+        return start.apply(this, args);
+      };
+    });
+
+    await page.goto('/?e2e');
+    await page.getByRole('button', { name: 'Options' }).click();
+    await expect.poll(() => page.evaluate(() => window.__lisiere.audio.availableSounds))
+      .toBe(Object.keys(incompleteEvents).length);
+    expect(manifestRequests).toBe(1);
+    await page.locator('#front-test-sound').click();
+    await expect(page.locator('.front-card.front-options [role=status]')).toContainText('Son d’essai lancé');
+    expect(manifestRequests).toBe(2);
+    expect(await page.evaluate(() => (window as any).__previewStarts)).toBe(1);
+    await expect.poll(() => page.evaluate(() => window.__lisiere.audio.availableSounds))
+      .toBe(Object.keys(published.events).length);
+    expect(errors).toEqual([]);
+});
+
 test('V149 : sons locaux décodés, réglages conservés et présentation Chromium', async ({ page }) => {
     const errors = observeErrors(page);
     await page.addInitScript(() => {

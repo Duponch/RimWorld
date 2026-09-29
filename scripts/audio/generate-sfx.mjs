@@ -83,7 +83,12 @@ export async function assertPublishedSource(cueId, item, variant, log) {
   const filename = variant.src.slice(prefix.length);
   if (!/^[a-z0-9-]+\.mp3$/.test(filename)) throw new Error(`Unsafe manifest source for ${cueId}`);
   const bytes = await readLocalSfx(filename);
-  if (filename === item.filename) return;
+  if (filename === item.filename) {
+    const matches = log.generations.filter((entry) => entry.id === cueId &&
+      entry.filename === filename && entry.sha256 === sha256(bytes));
+    if (matches.length !== 1) throw new Error(`Published SFX source differs for ${cueId}`);
+    return;
+  }
 
   const processingLog = JSON.parse(await readFile(processingLogPath, 'utf8'));
   if (processingLog.version !== 1 || !Array.isArray(processingLog.derivations)) {

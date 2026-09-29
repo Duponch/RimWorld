@@ -21,10 +21,15 @@ export interface ListenerPose {
 }
 
 const EAR_HEIGHT = 1.6;
+// OrthographicCamera keeps a large, nearly fixed world-space offset for map
+// clipping. Zoom changes its visible span rather than moving its position, so
+// use a virtual ear height that tracks the equivalent change in view distance.
+const ORTHOGRAPHIC_HEIGHT_PER_SPAN = 0.25;
 
-/** An orthographic camera may sit hundreds of metres away solely for clipping.
- * Its orbit target, rather than its physical position, defines the audible area.
- */
+/** Perspective listens from the camera. Orthographic listens above its focus,
+ * at a height derived from zoom; its distant render-camera offset is not an
+ * acoustic distance. In both modes, the returned position drives the Web Audio
+ * listener and source-distance culling alike. */
 export function listenerPose(camera: AudioCamera): ListenerPose {
   const targetX = Number.isFinite(camera.targetX) ? camera.targetX! : camera.x;
   const targetZ = Number.isFinite(camera.targetZ) ? camera.targetZ! : camera.z;
@@ -33,14 +38,18 @@ export function listenerPose(camera: AudioCamera): ListenerPose {
   const length = Math.hypot(directionX, directionZ);
   const forwardX = length > 0.001 ? directionX / length : 0;
   const forwardZ = length > 0.001 ? directionZ / length : -1;
-  // In a low perspective view the camera itself approaches the listener's ear.
-  // High perspective and orthographic views listen around the orbit target.
-  const cameraWeight = camera.mode === 'perspective'
-    ? Math.max(0, Math.min(0.7, (20 - camera.y) / 24)) : 0;
+  if (camera.mode === 'perspective') {
+    return { x: camera.x, y: camera.y, z: camera.z, forwardX, forwardZ };
+  }
+  const span = Number.isFinite(camera.span) && camera.span! > 0 ? camera.span!
+    : Number.isFinite(camera.zoom) && camera.zoom! > 0 ? 32 / camera.zoom! : 32;
+  const offsetHeight = Math.max(0, camera.y);
+  const offsetLength = Math.hypot(directionX, offsetHeight, directionZ);
+  const verticalFraction = offsetLength > 0.001 ? offsetHeight / offsetLength : 1;
   return {
-    x: targetX + (camera.x - targetX) * cameraWeight,
-    y: EAR_HEIGHT,
-    z: targetZ + (camera.z - targetZ) * cameraWeight,
+    x: targetX,
+    y: EAR_HEIGHT + span * ORTHOGRAPHIC_HEIGHT_PER_SPAN * verticalFraction,
+    z: targetZ,
     forwardX, forwardZ,
   };
 }
@@ -54,5 +63,5 @@ export function audibleRange(baseRange: number, camera: AudioCamera): number {
 }
 
 export function sourceDistance(x: number, z: number, pose: ListenerPose): number {
-  return Math.hypot(x - pose.x, z - pose.z);
+  return Math.hypot(x - pose.x, pose.y, z - pose.z);
 }
