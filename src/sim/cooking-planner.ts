@@ -65,7 +65,8 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       const flakResumed=planFlakWork(world,pawn,station,bill,reachable,budget);if(flakResumed.plan)return flakResumed.plan;if(flakResumed.handled)continue;
       const componentResumed=planComponentWork(world,pawn,station,bill,reachable,budget);if(componentResumed.plan)return componentResumed.plan;if(componentResumed.handled)continue;
       const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
-      const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&((bill.recipe!=='vegetarian-fine-meal'&&bill.recipe!=='carnivore-fine-meal'&&bill.recipe!=='vegetarian-lavish-meal'&&bill.recipe!=='cook-carnivore-lavish-meal')||ticksUntilRot(p,world.tick)>0)&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
+      const requiresFreshIngredients=bill.recipe==='cook-simple-meal-bulk'||bill.recipe==='vegetarian-fine-meal'||bill.recipe==='carnivore-fine-meal'||bill.recipe==='vegetarian-lavish-meal'||bill.recipe==='cook-carnivore-lavish-meal';
+      const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&(!requiresFreshIngredients||ticksUntilRot(p,world.tick)>0)&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
         .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
       // No source means no pair was visited and no staging decision was made.
       // Avoid six full resource/footprint scans per empty bill, especially after

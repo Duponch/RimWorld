@@ -88,7 +88,9 @@ export function processProductionOutput(world:World,pawn:Pawn,context:Production
         const capacity=storageCapacity(world,zone,product.item,pawn.id);if(capacity<=0)continue;
         const path=routeToJob(world,zone,reach,true);if(!path)continue;
         task.storageId=zone.id;
-        if(task.recipe==='stone-blocks'||task.recipe==='butcher-creature')task.storageQuantity=Math.min(product.quantity,capacity);
+        // A bulk meal may fill a partly free stack; its remainder stays with
+        // the worker until another physical delivery succeeds.
+        if(task.recipe==='stone-blocks'||task.recipe==='butcher-creature'||task.recipe==='cook-simple-meal-bulk')task.storageQuantity=Math.min(product.quantity,capacity);
         pawn.path=path;pawn.state='moving';pawn.planCooldown=0;return;
       }
     }

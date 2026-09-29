@@ -71,7 +71,7 @@ export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:Produ
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
     &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)&&groundOccupancyAllows(world,cell);
-  if(recipe==='simple-meal'||recipe==='fine-meal'||recipe==='vegetarian-fine-meal'||recipe==='carnivore-fine-meal'||recipe==='lavish-meal'||recipe==='vegetarian-lavish-meal'||recipe==='cook-carnivore-lavish-meal')return cookingPlaceFree(world,cell);
+  if(recipe==='simple-meal'||recipe==='cook-simple-meal-bulk'||recipe==='fine-meal'||recipe==='vegetarian-fine-meal'||recipe==='carnivore-fine-meal'||recipe==='lavish-meal'||recipe==='vegetarian-lavish-meal'||recipe==='cook-carnivore-lavish-meal')return cookingPlaceFree(world,cell);
   return (cell.x!==spot.x||cell.z!==spot.z)&&Math.abs(cell.x-spot.x)+Math.abs(cell.z-spot.z)<=1
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
