@@ -7,6 +7,7 @@ import {newPowerState} from '../src/sim/power-rules.ts';
 import {advancePower,reconcilePower} from '../src/sim/power.ts';
 import {AUTODOORS_RESEARCH_COST,BATTERIES_RESEARCH_COST} from '../src/sim/research.ts';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
+import {withoutFutureFineMealPolicy} from './scenarios/legacy-skills.ts';
 import {fixturePower} from './scenarios/power.ts';
 import {SCHEMA_VERSION,type Structure,type StructureKind,type World} from '../src/sim/types.ts';
 
@@ -188,6 +189,7 @@ test('interrupting after delivery returns the same component and restarts work f
 
 test('V143 migration is prospective and strict; malformed V144 breakdown states are rejected',()=>{
   const current=deconstructionCamp(),old=structuredClone(current);
+  withoutFutureFineMealPolicy(old);
   (old as {schemaVersion:number}).schemaVersion=143;
   delete old.breakdown;
   old.apparelPolicies=old.apparelPolicies?.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-helmet')}));

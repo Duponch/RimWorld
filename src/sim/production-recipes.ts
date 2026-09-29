@@ -24,7 +24,25 @@ export type ComponentRecipe='make-component'|'make-advanced-component';
 export const isComponentRecipe=(v:unknown):v is ComponentRecipe=>v==='make-component'||v==='make-advanced-component';
 export const ADVANCED_COMPONENT_REQUIREMENTS={component:1,steel:20,plasteel:10,gold:3,skill:8} as const;
 export type AdvancedComponentMaterial=Exclude<keyof typeof ADVANCED_COMPONENT_REQUIREMENTS,'skill'>;
-export type ProductionRecipe = ArtRecipe|GunRecipe|FlakRecipe|ComponentRecipe|'simple-meal'|'stone-blocks'|TailoringRecipe|'butcher-creature';
+export type ProductionRecipe = ArtRecipe|GunRecipe|FlakRecipe|ComponentRecipe|'simple-meal'|'fine-meal'|'stone-blocks'|TailoringRecipe|'butcher-creature';
+
+/** Local raw foods all provide 0.05 nutrition per unit. Core's fine meal asks
+ * for 0.25 nutrition from each group, including milk as animal product. */
+export function fineMealIngredientGroup(item:ProductionIngredient):'protein'|'vegetable'|null {
+  if(item==='milk'||isAnimalMeat(item))return 'protein';
+  return item==='rice'||item==='berries'||item==='potato'||item==='corn'||item==='agave-fruit'?'vegetable':null;
+}
+export function validFineMealIngredients(ingredients:readonly {item:ProductionIngredient;quantity:number}[]):boolean {
+  let protein=0,vegetable=0;
+  for(const ingredient of ingredients) {
+    if(!Number.isSafeInteger(ingredient.quantity)||ingredient.quantity<=0)return false;
+    const group=fineMealIngredientGroup(ingredient.item);
+    if(group==='protein')protein+=ingredient.quantity;
+    else if(group==='vegetable')vegetable+=ingredient.quantity;
+    else return false;
+  }
+  return protein===5&&vegetable===5;
+}
 
 export type GunRecipe='make-revolver'|'make-bolt-action-rifle';
 export const isGunRecipe=(v:unknown):v is GunRecipe=>v==='make-revolver'||v==='make-bolt-action-rifle';
@@ -47,6 +65,7 @@ export const PRODUCTION_RECIPES = Object.freeze({
   parka:Object.freeze({label:'Parka',station:'tailor-bench',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:80,workTicks:800,outputUnits:1}),
   // Neutral recipe work, before station/room/light factors; Core ticks / 10.
   'simple-meal': Object.freeze({label:'Repas simple',station:'campfire',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:10,workTicks:30,outputUnits:1}),
+  'fine-meal': Object.freeze({label:'Cuisiner un plat raffiné',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:10,workTicks:45,outputUnits:1}),
   'stone-blocks': Object.freeze({label:'Blocs de pierre',station:'stonecutter',work:'craft',inputs:STONE_INPUTS as readonly ProductionIngredient[],units:1,workTicks:160,outputUnits:20}),
 } as const);
 /** Persist integer work units; rounding error is at most 0.00005 neutral ticks
@@ -79,7 +98,7 @@ export function recipeProduct(recipe:ProductionRecipe,ingredients:readonly {item
   if(recipe==='make-component')return 'component';
   if(recipe==='make-advanced-component')return 'advanced-component';
   if(isTailoring(recipe)){const resolved=material??tailoringMaterialFromIngredients(ingredients);if(!resolved)throw new RangeError('Tailoring product requires one material');return apparelItemFor(recipe,resolved);}
-  return recipe==='butcher-creature'?((ingredients[0]?.item??'hare-corpse').replace('-corpse','-meat') as ItemId):recipe==='simple-meal'?'simple-meal':blockFor(ingredients[0]!.item as StoneIngredient);
+  return recipe==='butcher-creature'?((ingredients[0]?.item??'hare-corpse').replace('-corpse','-meat') as ItemId):recipe==='simple-meal'?'simple-meal':recipe==='fine-meal'?'fine-meal':blockFor(ingredients[0]!.item as StoneIngredient);
 }
 export function isRecipeProduct(recipe:ProductionRecipe,item:ItemId):boolean {
   if(isArtRecipe(recipe))return false;
@@ -88,11 +107,11 @@ export function isRecipeProduct(recipe:ProductionRecipe,item:ItemId):boolean {
   if(recipe==='make-component')return item==='component';
   if(recipe==='make-advanced-component')return item==='advanced-component';
   if(isTailoring(recipe))return APPAREL_MATERIALS.some(material=>item===apparelItemFor(recipe,material));
-  return recipe==='butcher-creature'?(isAnimalMeat(item)||(ANIMAL_LEATHER_ITEMS as readonly string[]).includes(item)):recipe==='simple-meal'?item==='simple-meal':ITEM_DEFINITIONS[item].kind==='blocks';
+  return recipe==='butcher-creature'?(isAnimalMeat(item)||(ANIMAL_LEATHER_ITEMS as readonly string[]).includes(item)):recipe==='simple-meal'?item==='simple-meal':recipe==='fine-meal'?item==='fine-meal':ITEM_DEFINITIONS[item].kind==='blocks';
 }
 export function tailoringProduct(recipe:TailoringRecipe,material:TailoringMaterial):ApparelItem { return apparelItemFor(recipe,material); }
 
-export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle','make-flak-vest','make-flak-helmet']:station.kind==='fabrication-bench'?['make-component','make-advanced-component','make-recon-helmet']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear']:station.kind==='crafting-spot'?['tribalwear']:stationRecipe(station)?[stationRecipe(station)!]:[];
+export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle','make-flak-vest','make-flak-helmet']:station.kind==='fabrication-bench'?['make-component','make-advanced-component','make-recon-helmet']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear']:station.kind==='crafting-spot'?['tribalwear']:isStove(station.kind)?['simple-meal','fine-meal']:stationRecipe(station)?[stationRecipe(station)!]:[];
 export const stationAccepts=(station:Pick<Structure,'kind'>,recipe:ProductionRecipe):boolean=>stationRecipes(station).includes(recipe);
 
 /** Snapshot-only display total; the authoritative workpiece owns its material. */

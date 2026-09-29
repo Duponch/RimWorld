@@ -22,7 +22,7 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   if(value.heatstroke!==undefined&&(!allowHeat||!integer(value.heatstroke,1,1_000_000_000)))return fail;
   if(value.hypothermia!==undefined&&(!allowCold||!integer(value.hypothermia,1,1_000_000_000)))return fail;
   if(value.malnutrition!==undefined&&(!allowMalnutrition||!integer(value.malnutrition,1,1_000_000_000)))return fail;
-  if(!validFoodPoisoning(value.foodPoisoning,value.tick,allowFoodPoison)||animal&&object(value.foodPoisoning)&&value.foodPoisoning.cause==='dangerous-food')return fail;
+  if(!validFoodPoisoning(value.foodPoisoning,value.tick,allowFoodPoison,version)||animal&&object(value.foodPoisoning)&&value.foodPoisoning.cause==='dangerous-food')return fail;
   if(!validFlu(value as unknown as MedicalRecord,allowFlu&&!animal))return fail;
   if(value.ageAilments!==undefined&&(!Array.isArray(value.ageAilments)||value.ageAilments.length<1||value.ageAilments.length>2||new Set(value.ageAilments).size!==value.ageAilments.length||value.ageAilments.some(a=>a!=='bad-back'&&a!=='frail')))return fail;
   const ids=new Set<number>();let total=0;

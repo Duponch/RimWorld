@@ -820,7 +820,7 @@ function renderState() {
       if(structure?.kind==='horseshoes')cellDescription += ` · Dextérité · ${world.pawns.filter(p=>p.recreation.task?.buildingId===structure.id).length}/3 joueurs · places à 5 cases, ligne de vue dégagée.`;
       let inspectionIcon:UiIcon=structure||packed?'home':rock||storage?'blocks':zone||resource?'leaf':'layers';
       if(pile){
-        inspectionIcon=pile.item==='simple-meal'||pile.item==='survival-meal'?'meal'
+        inspectionIcon=pile.item==='simple-meal'||pile.item==='fine-meal'||pile.item==='survival-meal'?'meal'
           :pile.kind==='food'?'food':pile.kind==='medicine'?'medicine'
           :pile.kind==='wood'?'wood':pile.kind==='steel'?'steel'
           :pile.kind==='component'||pile.kind==='advanced-component'?'component'

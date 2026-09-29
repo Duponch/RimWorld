@@ -7,6 +7,7 @@ import {refreshStock} from '../src/sim/materials.ts';
 import {damageStructure} from '../src/sim/thing-damage.ts';
 import {structureMaxHp} from '../src/sim/thing-damage-rules.ts';
 import {legacyHumanAge} from '../src/sim/human-age.ts';
+import {withoutFutureFineMealPolicy} from './scenarios/legacy-skills.ts';
 import type {Structure,World} from '../src/sim/types.ts';
 
 function fencedWorld(){
@@ -59,6 +60,7 @@ test('marker species choice is atomic, persisted, and old saves migrate without 
   expect(failed.ok).toBe(false);
   expect(serializeWorld(world)).toBe(after);
   const historical=JSON.parse(before) as World;
+  withoutFutureFineMealPolicy(historical);
   historical.structures=[];historical.schemaVersion=109 as never;
   delete historical.breakdown;
   for(const pawn of historical.pawns){

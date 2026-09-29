@@ -10,6 +10,7 @@ import { footprintCells,footprintContains } from './definitions.ts';
 import { STRUCTURE_SHOT_FILL } from './combat-content.ts';
 import { clearShotSegment,type ShotGrid } from './combat-space.ts';
 import { isRoomDoor } from './door-rules.ts';
+import type { ItemId } from './items.ts';
 
 export type FurnitureSight=()=>ShotGrid;
 
@@ -34,9 +35,9 @@ export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment,re
   updateMood(world,pawn,body);
 }
 
-export function rememberMeal(world: World, pawn: Pawn, atTable: boolean, raw = false): void {
+export function rememberMeal(world: World, pawn: Pawn, atTable: boolean, raw = false, food?: ItemId): void {
   rememberRoomUse(world,pawn,'dining');
   // A good meal does not erase earlier memories; repeated meals refresh one entry.
-  const kinds = [...(!atTable ? ['ate-without-table' as const] : []), ...(raw ? ['ate-raw-food' as const] : [])];
+  const kinds = [...(!atTable ? ['ate-without-table' as const] : []), ...(raw ? ['ate-raw-food' as const] : []), ...(food === 'fine-meal' ? ['ate-fine-meal' as const] : [])];
   pawn.memories = [...pawn.memories.filter(memory => !kinds.includes(memory.kind)), ...kinds.map(kind => ({kind, expiresAt: world.tick + TICKS_PER_DAY}))];
 }

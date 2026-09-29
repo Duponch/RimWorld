@@ -11,6 +11,7 @@ import {AUTODOORS_RESEARCH_COST,selectResearch} from '../src/sim/research.ts';
 import {addGroundMaterial} from '../src/sim/materials.ts';
 import {newBreakdownCalendar} from '../src/sim/breakdowns.ts';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
+import {withoutFutureFineMealPolicy} from './scenarios/legacy-skills.ts';
 import {fixturePower} from './scenarios/power.ts';
 import type {ConstructionMaterial} from '../src/sim/building-materials.ts';
 import {SCHEMA_VERSION,type Structure,type World} from '../src/sim/types.ts';
@@ -170,6 +171,7 @@ test('unpowered passage still waits physically; forbid and solid corners apply t
 
 test('strict 141 to current migration grants no research or door, and rejects future fields',()=>{
   const old=deconstructionCamp();
+  withoutFutureFineMealPolicy(old);
   delete old.breakdown;
   (old as {schemaVersion:number}).schemaVersion=141;
   old.apparelPolicies=old.apparelPolicies?.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-helmet')}));

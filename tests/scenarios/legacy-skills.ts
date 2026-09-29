@@ -6,8 +6,15 @@ import { newBreakdownCalendar } from '../../src/sim/breakdowns.ts';
 import { PRODUCTION_RECIPES } from '../../src/sim/production-recipes.ts';
 import { adultAgeTicks } from '../../src/sim/animal-life.ts';
 import { newVisitorAgenda } from '../../src/sim/visitor-state.ts';
+/** A generated V152 world's defaults cannot be declared as an older save. */
+export function withoutFutureFineMealPolicy<T>(world:T):T {
+  for(const policy of (world as {foodPolicies?:{allowed:string[]}[]}).foodPolicies??[])
+    policy.allowed=policy.allowed.filter(item=>item!=='fine-meal');
+  return world;
+}
 /** Historical fixtures must not smuggle V43's new actor profile into old schemas. */
 export function withoutPawnSkills<T>(world:T):T {
+  withoutFutureFineMealPolicy(world);
   for(const p of (world as {pawns:Array<{skills?:unknown}>}).pawns)delete p.skills;
   withoutArt(world);
   withoutMedicalWork(world);
@@ -70,6 +77,7 @@ function withoutSocial(world:unknown):void {
 
 /** Authentic pre-V73 fixture, not a production sanitizer. */
 export function withoutResearch<T>(world:T):T {
+  withoutFutureFineMealPolicy(world);
   withoutHunting(world);
   withoutArt(world);
   const w=world as {research?:unknown;pawns:{research?:unknown;priorities:{research?:number};skills?:{intellectual?:unknown}}[]};
@@ -144,6 +152,7 @@ export function withMigratedV90<T>(world:T):T {
 
 /** Construct a pre-V141 fixture without granting the later helmet permission. */
 export function withoutFutureHelmetPolicy<T>(world:T):T {
+  withoutFutureFineMealPolicy(world);
   for(const policy of (world as {apparelPolicies?:{allowedItems:string[]}[]}).apparelPolicies??[])
     policy.allowedItems=policy.allowedItems.filter(item=>item!=='flak-helmet');
   return world;
@@ -159,6 +168,7 @@ export function withoutArt<T>(world:T):T {
 /** Remove only V90 fields when a test deliberately reconstructs a V89-or-
  * earlier payload. This is fixture construction, never production repair. */
 export function withoutV90<T>(world:T):T {
+  withoutFutureFineMealPolicy(world);
   const w=world as any;
   delete w.breakdown;
   withoutArt(world);

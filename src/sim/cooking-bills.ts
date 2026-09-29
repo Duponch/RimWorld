@@ -19,7 +19,7 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   if(!value||typeof value!=='object')return false;
   const v=value as BillSettings;
   return ['times','until','forever'].includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
-    &&typeof v.suspended==='boolean'&&!!v.filters&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS].includes(i))&&v.filters[i]===undefined)
+    &&typeof v.suspended==='boolean'&&!!v.filters&&!Object.hasOwn(v.filters,'fine-meal')&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS].includes(i))&&v.filters[i]===undefined)
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&['stockpile','drop'].includes(v.destination);
 }
 /** Reference resource counter includes stored items and current task cargo.
@@ -63,7 +63,7 @@ export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:Produ
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
     &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)&&groundOccupancyAllows(world,cell);
-  if(recipe==='simple-meal')return cookingPlaceFree(world,cell);
+  if(recipe==='simple-meal'||recipe==='fine-meal')return cookingPlaceFree(world,cell);
   return (cell.x!==spot.x||cell.z!==spot.z)&&Math.abs(cell.x-spot.x)+Math.abs(cell.z-spot.z)<=1
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)

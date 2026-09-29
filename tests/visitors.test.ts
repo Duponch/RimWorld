@@ -52,6 +52,7 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   expect(d.pawn.appearance).toEqual(p.appearance);expect(d.pawn.appearance).toBeDefined();
   const legacy=structuredClone(w) as any;
   legacy.schemaVersion=135;
+  for(const policy of legacy.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='fine-meal');
   delete legacy.breakdown;
   withoutFutureHelmetPolicy(legacy);
   for(const policy of legacy.apparelPolicies??[])policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-helmet');
@@ -59,6 +60,17 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.visitors!.departed[0]!.pawn.age).toEqual({biologicalTicks:10_800_000,chronologicalTicks:10_800_000});
   expect(validateWorld(migrated)).toEqual([]);
+  const v150=structuredClone(w);
+  (v150 as {schemaVersion:number}).schemaVersion=150;
+  for(const policy of v150.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal');
+  expect(deserializeWorld(JSON.stringify(v150))).toEqual({...v150,schemaVersion:152});
+  const futureMemory=structuredClone(v150);
+  futureMemory.visitors!.departed[0]!.pawn.memories.push({kind:'ate-fine-meal',expiresAt:d.tick+100});
+  expect(()=>deserializeWorld(JSON.stringify(futureMemory))).toThrow(/Invalid version 150 save/);
+  const futurePossession=structuredClone(v150),exportedFood=futurePossession.visitors!.departed[0]!.items.find(item=>item.kind==='food');
+  expect(exportedFood).toBeDefined();
+  exportedFood!.item='fine-meal';exportedFood!.rot={progress:0,atTick:d.tick};
+  expect(()=>deserializeWorld(JSON.stringify(futurePossession))).toThrow(/Invalid version 150 save/);
   const badAppearance=structuredClone(w);badAppearance.visitors!.departed[0]!.pawn.appearance!.hairColor=-1;
   expect(()=>deserializeWorld(JSON.stringify(badAppearance))).toThrow('Invalid frozen visitor departure');
   for(const missing of [null,{group:d.group,tick:d.tick,pawn:null,items:[]}] as unknown[]){

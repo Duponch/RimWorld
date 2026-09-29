@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-État courant au schéma 150. V151 réutilise les [réservations de service dans une seule proposition de cuisine](cooking-service-cache-v151.md), sans état persistant ni cache entre appels. V150 ajoute la [frénésie alimentaire](food-binge-v150.md) ; V149 ajoute la présentation sonore. Les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés et ne constituent pas un inventaire fonctionnel actuel. Celui-ci est tenu dans [l’état du jeu](../gameplay/implementation-status.md).
+État courant au schéma 152. V152 ajoute une [facture de plat raffiné à deux quotas](fine-meal-v152.md), avec validation de chaque tâche continuable et migration stricte de V150. V151 réutilise les [réservations de service dans une seule proposition de cuisine](cooking-service-cache-v151.md), sans cache entre appels. Les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés et ne constituent pas un inventaire fonctionnel actuel. Celui-ci est tenu dans [l’état du jeu](../gameplay/implementation-status.md).
 
 ## Objectif
 

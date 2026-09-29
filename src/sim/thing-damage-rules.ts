@@ -26,7 +26,7 @@ export const resourceFlammability=(r:Pick<Resource,'kind'|'species'>)=>floraDefi
 export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>):number {
   if(p.kind==='apparel')return APPAREL[p.item as keyof typeof APPAREL]?.hitPoints??0;
   if(p.kind==='weapon')return weaponMaxHitPoints(p.item);if(p.kind==='corpse')return 100;
-  if(p.kind==='food')return ['simple-meal','survival-meal','legacy-portion'].includes(p.item)?50:60;
+  if(p.kind==='food')return ['simple-meal','fine-meal','survival-meal','legacy-portion'].includes(p.item)?50:60;
   if(p.kind==='medicine')return 60;if(p.kind==='unfinished')return 50;
   return p.item==='wood'?150:p.item==='cloth'?80:p.item==='light-leather'?60:p.item==='component'?70:0;
 }

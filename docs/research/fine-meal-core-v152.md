@@ -1,0 +1,32 @@
+# Plat raffiné mixte — recherche Core 1.6.4871 pour V152
+
+**Relevé du 29 septembre 2026.** Périmètre : une seule recette `CookMealFine` et son produit `MealFine` dans RimWorld Core. Le [contrat V152](../development/fine-meal-v152.md) et sa [preuve locale](../history/validation-fine-meal-v152.md) distinguent les règles relevées des choix implémentés dans Lisière.
+
+## Provenance et corpus
+
+L'installation consultée en lecture seule indique `1.6.4871 rev590` dans `E:/Steam/steamapps/common/RimWorld/Version.txt`. Les faits chiffrés ci-dessous viennent de ses XML sous `Data/Core/Defs`, non d'une sauvegarde observée. L'[annonce officielle de la sortie 1.6](https://ludeon.com/blog/2025/07/the-rimworld-odyssey-expansion-is-out-now/) confirme que la mise à jour du jeu de base est distincte de l'extension Odyssey ; elle ne certifie ni la révision locale 4871 ni les coefficients de repas. Le [correctif officiel 1.6.4850](https://ludeon.com/blog/2026/06/update-1-6-4850-released/) est antérieur à la révision installée et n'établit pas non plus ces coefficients.
+
+La localisation française installée dans `E:/Steam/steamapps/common/RimWorld/Data/Core/Languages/French (Français).tar` donne `MealFine.label = plat raffiné` (`DefInjected/ThingDef/Items_Food.xml`), `CookMealFine.label = cuisiner un plat raffiné` (`DefInjected/RecipeDef/Recipes_Meals.xml`) et `AteFineMeal.label = a mangé un bon repas` (`DefInjected/ThoughtDef/Thoughts_Memory_Eating.xml`). L'interface V152 reprend ces libellés ; les identifiants internes restent distincts.
+
+Le corpus utilisateur oriente les chapitres 8–11, 14 et 29 : SYS/TEST-051..054 pour accès, propriété et transport ; SYS/TEST-062..064 et UI-025 pour factures, transformation et interruption ; SYS/TEST-076..080 pour alimentation et humeur ; CONST-001..007 pour unités ; CAT-005/011/015 pour aliments. Ces identifiants indiquent le domaine à tester, sans valider une recette ni imposer une architecture. Les [factures actuelles](../development/cooking.md), [postes V84](../development/food-workstations.md), [nutrition](../development/food-items.md), [fraîcheur](../development/food-preservation.md) et [intoxication](../development/food-poisoning.md) sont les contrats locaux à préserver.
+
+## Ce que les définitions Core 1.6.4871 établissent
+
+| Fait | Lecture de l'installation Core |
+| --- | --- |
+| Recette | `RecipeDefs/Recipes_Meals.xml:89-128` : `CookMealFineBase` impose Cuisine 6 ; `CookMealFine` produit un `MealFine`, accepte le mélange et sépare deux filtres. Le premier demande 0,25 nutrition de `MeatRaw` ou `AnimalProductRaw`, le second 0,25 de `PlantFoodRaw`. Le travail utilise la vitesse Cuisine. |
+| Matières candidates | `ThingDefs_Items/Items_Resource_AnimalProduct.xml:8-37` classe le lait dans `AnimalProductRaw`, à 0,05 nutrition. `Items_Resource_RawPlant.xml:19-32` fixe 0,05 et `PlantFoodRaw` pour sa famille, dont riz, pomme de terre, maïs, baies et agave ; les définitions particulières figurent vers les lignes 37–180. Les viandes crues admises par le filtre `MeatRaw` peuvent fournir l'autre quota. |
+| Produit et travail | `ThingDefs_Items/Items_Food.xml:107-116,146-174` : l'héritage cuit donne quatre jours avant pourriture ; `MealFineBase` fixe valeur marchande 20, `WorkToMake` 450, nutrition 0,9, préférence `MealFine` et `tasteThought=AteFineMeal`. La recette n'indique pas `workAmount` ni `unfinishedThingDef` : selon le contrat de travail alimentaire déjà vérifié en V84, 450 est le travail de base du produit et il n'y a pas d'ouvrage persistant distinct. |
+| Humeur | `ThoughtDefs/Thoughts_Memory_Eating.xml:21-35` : `AteFineMeal` dure un jour et donne +5. L'XML y déclare aussi un remplacement réciproque avec `AteLavishMeal` ; le repas somptueux n'est pas dans la tranche proposée. |
+| Poste | `ThingDefs_Buildings/Buildings_Production.xml:712-716,805-809` liste `CookMealFine` sur la cuisinière électrique et celle à bois. `ThingDefs_Buildings/Buildings_Temperature.xml:105-108` ne liste que le repas simple et sa version par quatre sur le feu de camp. |
+
+Les formes végétarienne, carnivore et par quatre sont des **recettes Core distinctes** (`Recipes_Meals.xml:131-281`), non des résultats automatiques de `CookMealFine`. Leur absence dans V152 reste visible au joueur. Le XML établit les catégories et nombres ; il ne prouve pas à lui seul tous les départages de piles, délais d'interface, effets du cuisinier ou comportements d'une version ultérieure.
+
+## Traduction locale V152
+
+- **Adopté** : deux quotas nutritionnels, Cuisine 6, poste à bois ou électrique, repas de nutrition 0,9, fraîcheur de quatre jours et souvenir +5 d'un jour. Les aliments locaux ci-dessus apportent chacun 0,05 nutrition : dans ce catalogue borné, 0,25 + 0,25 devient exactement **cinq unités de protéine et cinq végétales**. Le lait compte dans la protéine ; cinq laits plus cinq riz sont admissibles, dix riz seuls ne le sont pas.
+- **Adapté** : les 450 ticks Core deviennent 45 unités de travail neutre local, selon l'échelle déjà appliquée aux recettes ; facteurs du poste, du cuisinier, de la lumière, de la salle, de la température et du combustible restent actifs. Le temps effectif et le bois consommé ne sont donc pas des constantes par repas. Le classement alimentaire local préfère le plat raffiné au repas simple à distance et fraîcheur égales ; ce score n'est pas présenté comme une statistique Core.
+- **Conservé** : réservations physiques, portage, dépôt sur la surface du poste, contamination à la finition, gel/pourrissement, régimes et ingestion au contact. La recette ne justifie pas une attribution de nourriture, d'humeur ou de maladie au chargement d'une ancienne partie.
+- **Différé** : variantes végétarienne et carnivore, lots de quatre, ingrédients Core absents du catalogue local, traçabilité complète des ingrédients dans le plat fini et règles de préférence de tous les traits et gènes. Les filtres de facture locaux peuvent exclure un ingrédient sans changer son groupe nutritionnel ; ils ne remplacent pas les deux quotas.
+
+Le point de risque principal est la **somme trompeuse** : dix unités quelconques ne suffisent pas. V152 vérifie séparément 5+5 à la proposition, dans les ordres en file et au chargement, y compris si des piles différentes alimentent le même quota. Les recherches restent bornées par le budget partagé ; la présentation ne recompte pas les sources et ne sonde pas les trajets par image. Les contrôles qui étayent ces règles figurent dans la preuve locale ; ce relevé Core ne mesure aucune performance.

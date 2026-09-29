@@ -69,7 +69,7 @@ export function processFeeding(world:World,doctor:Pawn,context:NeedContext):void
   // Anchor health under the old hunger before nutrition changes. Feeding has
   // no Medicine XP and a lying patient gets no new ate-without-table thought.
   world.piles.splice(world.piles.indexOf(food),1);p.hunger=Math.min(100,p.hunger+nutritionOf(food));
-  rememberMeal(world,p,true,rawFoodThought(food.item));
+  rememberMeal(world,p,true,rawFoodThought(food.item),food.item);
   context.event(`${p.name} a mangé une portion (${t.quantity} × ${ITEM_DEFINITIONS[food.item].label}) au lit, avec l’aide de ${doctor.name}.`);
   releaseWork(world,doctor);
   ingestFoodRisk(world,p,food);

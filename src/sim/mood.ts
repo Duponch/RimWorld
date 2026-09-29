@@ -29,8 +29,8 @@ const sick=situation('sick','Malade',-5,'Grippe active ; cette pensée disparaî
 const apparel=[situation('ratty-apparel','Vêtements abîmés',-3,'Au moins une pièce portée a moins de 50 % de ses PV.'),situation('tattered-apparel','Vêtements en lambeaux',-5,'Au moins une pièce portée a moins de 20 % de ses PV.')];
 const expectationThoughts=new Map(COLONY_EXPECTATIONS.map(e=>[e.id,situation(`expectations-${e.id}`,e.label,e.moodOffset,'Attentes liées au patrimoine évalué de la colonie ; les valeurs inconnues restent exclues.')]));
 const camp=situation('camp-expectations','Attentes extrêmement basses',30,'Profil fixe de ce camp, partagé avec les loisirs ; ne varie pas encore avec la richesse.');
-const memoryLabels={'ate-without-table':'Mangé sans table','ate-raw-food':'Mangé cru'} as const;
-const memoryOffsets={'ate-without-table':-3,'ate-raw-food':-7} as const;
+const memoryLabels={'ate-without-table':'Mangé sans table','ate-raw-food':'Mangé cru','ate-fine-meal':'A mangé un bon repas'} as const;
+const memoryOffsets={'ate-without-table':-3,'ate-raw-food':-7,'ate-fine-meal':5} as const;
 
 const hungerStage=(value:number)=>value<=0?2:value<12?1:value<24?0:-1;
 const restStage=(value:number)=>value<1?2:value<14?1:value<28?0:-1;

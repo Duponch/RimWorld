@@ -13,6 +13,7 @@ import {animalNavigation} from '../src/sim/wildlife-navigation.ts';
 import {reconcileDomesticWork} from '../src/sim/domestic-reconcile.ts';
 import {validateWorld,deserializeWorld,serializeWorld} from '../src/sim/serialization.ts';
 import {huntingCamp} from './scenarios/hunting.ts';
+import {withoutFutureFineMealPolicy} from './scenarios/legacy-skills.ts';
 import {SCHEMA_VERSION,type Structure,type World} from '../src/sim/types.ts';
 
 function penCamp(){
@@ -155,6 +156,7 @@ test('version 134 rejects future rope members, then migrates a single rope witho
   for(let i=0;i<60&&pawn.animalHandling?.phase!=='lead';i++)stepWorld(world);
   expect(pawn.animalHandling?.kind).toBe('lead');
   const legacy=structuredClone(world);(legacy as unknown as {schemaVersion:number}).schemaVersion=134;
+  withoutFutureFineMealPolicy(legacy);
   expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow('Invalid version 134 save');
   if(legacy.pawns[0]?.animalHandling?.kind==='lead')delete legacy.pawns[0].animalHandling.ropees;
   delete legacy.breakdown;
