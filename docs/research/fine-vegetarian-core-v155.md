@@ -1,0 +1,27 @@
+# Plat raffiné végétarien — relevé Core 1.6.4871 pour V155
+
+**Recherche pour une mécanique planifiée, non livrée.** Ce relevé ne valide ni une implémentation locale ni une parité générale avec RimWorld. Il complète la [recherche du plat raffiné mixte V152](fine-meal-core-v152.md) et le [contrat V155](../development/fine-vegetarian-v155.md).
+
+## Provenance et portée
+
+Référence primaire locale : installation officielle `E:/Steam/steamapps/common/RimWorld`, `Version.txt` = `1.6.4871 rev590`, dans `Data/Core` sans définition d'extension. Les lignes citées ci-dessous proviennent des XML installés, relevés le 29 septembre 2026. L'archive `Data/Core/Languages/French (Français).tar` donne `MealFine_Veg.label` = **« plat végétarien raffiné »** et `CookMealFine_Veg.label` = **« cuisiner un plat raffiné végétarien »**. Ces libellés français sont des données Core ; les identifiants de Lisière restent à choisir et ne doivent pas être affichés au joueur.
+
+Deux publications officielles donnent le contexte, avec une portée plus limitée que les XML : [Ludeon, mise à jour 1.3.3200](https://ludeon.com/blog/2021/12/update-1-3-3200-improves-defense-tools-and-raid-strategies/) décrit les repas distingués par ingrédients végétariens, carnés ou mixtes et leurs filtres ; elle **ne prouve pas** les quotas, les recettes ni leur comportement exact en 1.6.4871, et certaines restrictions qu'elle mentionne dépendent d'Ideology. [Ludeon, annonce de la sortie d'Odyssey et de la mise à jour gratuite 1.6](https://ludeon.com/blog/2025/07/the-rimworld-odyssey-expansion-is-out-now/) situe Core 1.6 séparément de l'extension ; elle **ne certifie pas** la révision 4871 ni les valeurs de cette recette. Les XML installés sont la preuve des définitions de cette révision, pas une trace d'exécution du jeu.
+
+## Règles vérifiées dans les définitions
+
+| Sujet | Relevé Core 1.6.4871 | Source installée |
+| --- | --- | --- |
+| Recette distincte | `CookMealFine_Veg` hérite de `CookMealFineBase` ; elle produit un `MealFine_Veg` et non un `MealFine`. La base exige `Cooking` 6, utilise `CookSpeed`, la valeur nutritionnelle et autorise le mélange d'ingrédients. | `Defs/RecipeDefs/Recipes_Meals.xml:89–98,131–157` |
+| Quota végétarien | Un seul quota de **0,75 nutrition** accepte `PlantFoodRaw` ou `AnimalProductRaw`. Le filtre fixe exclut `MeatRaw`. Le lait appartient à `AnimalProductRaw` et vaut 0,05 nutrition ; la base des plantes alimentaires crues vaut 0,05. Plusieurs ingrédients admissibles peuvent donc contribuer au même quota. | `Recipes_Meals.xml:136–152` ; `Defs/ThingDefs_Items/Items_Resource_AnimalProduct.xml:8–37` ; `Defs/ThingDefs_Items/Items_Resource_RawPlant.xml:8–34` |
+| Produit | `MealFine_Veg` est une `ThingDef` distincte, dotée d'une image et d'une indication `NonMeat` propres. Son parent `MealFineBase` donne **0,9 nutrition**, 450 unités de travail, la catégorie de préférence `MealFine` et la pensée `AteFineMeal`. Les parents de repas cuits donnent une pile de 10, une ingestion d'une unité et une pourriture après quatre jours. | `Defs/ThingDefs_Items/Items_Food.xml:3–41,107–115,146–190` |
+| Souvenir | `AteFineMeal` dure un jour et donne **+5**. Il remplace `AteLavishMeal`, qui le remplace réciproquement. Aucune pensée spéciale végétarienne ne figure dans la définition du produit. | `Defs/ThoughtDefs/Thoughts_Memory_Eating.xml:3–34` ; `Items_Food.xml:152–155,176–190` |
+| Poste | Les listes de recettes des deux cuisinières Core, à bois et électrique, contiennent `CookMealFine_Veg`. La liste du feu de camp ne la contient pas. | `Defs/ThingDefs_Buildings/Buildings_Production.xml:712–733,805–826` ; `Defs/ThingDefs_Buildings/Buildings_Temperature.xml:105–108` |
+
+`CookMealFine` mixte conserve deux quotas séparés de 0,25 nutrition, protéines et végétaux (`Recipes_Meals.xml:100–129`). `CookMealFine_Meat` possède une autre recette et un autre produit (`Recipes_Meals.xml:159–184`). La tranche V155 ne doit donc pas transformer le repas mixte en simple option de filtre ni permettre à la viande de satisfaire le quota végétarien.
+
+## Transposition envisagée dans Lisière
+
+Les aliments crus locaux admissibles apportent chacun **0,05 nutrition** (`src/sim/items.ts`) : 0,75 correspond alors à **15 unités physiques** de végétaux crus et/ou de lait, éventuellement réparties entre plusieurs piles. « Quinze unités » est une **conversion locale**, pas une quantité d'objets fixe énoncée par Core pour tous ses contenus ou modificateurs. Le produit local distinct proposé reprendrait la nutrition 0,9 et le souvenir raffiné existant ; l'ingestion, la réservation, les filtres alimentaires, les stocks et la sauvegarde nécessitent une preuve locale avant de pouvoir être annoncés comme livrés.
+
+Le XML n'établit pas à lui seul l'ordre effectif des tâches, la sélection de sources sous accès et réservations, les chances d'intoxication, la chronologie visible, la performance, ni les variantes d'Ideology. Les œufs Core appartiennent aussi à `AnimalProductRaw`, mais leur disponibilité et leur chaîne locale ne sont pas couvertes par V155 ; le contrat local se limite aux plantes crues présentes et au lait. Les recettes en lot, la variante carnée, les plats gastronomiques végétariens et la conservation d'une composition détaillée par ingrédient restent hors de cette recherche de tranche.
