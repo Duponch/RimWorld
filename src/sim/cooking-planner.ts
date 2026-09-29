@@ -11,7 +11,7 @@ import { corpseFresh } from './corpses.ts';
 import { ticksUntilRot } from './food-preservation.ts';
 import { planUnfinished } from './tailoring-plan.ts';
 import { CARRY_CAPACITY, footprintCells } from './definitions.ts';
-import { PRODUCTION_RECIPES, admittedIngredient, fineMealIngredientGroup, mixedMealGroupUnits, validFineMealIngredients, validLavishMealIngredients, validVegetarianFineMealIngredients, validVegetarianLavishMealIngredients, validCarnivoreFineMealIngredients, validCarnivoreLavishMealIngredients, isTailoring, productionStationUsable, stationRecipe, stationWork, type ProductionIngredient } from './production-recipes.ts';
+import { PRODUCTION_RECIPES, admittedIngredient, fineMealIngredientGroup, mixedMealGroupUnits, validFineMealIngredients, validFineMealBulkIngredients, validLavishMealIngredients, validVegetarianFineMealIngredients, validVegetarianLavishMealIngredients, validCarnivoreFineMealIngredients, validCarnivoreLavishMealIngredients, isTailoring, productionStationUsable, stationRecipe, stationWork, type ProductionIngredient } from './production-recipes.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { billWanted, cookingPlaceFree, cookingSpot, ingredientPlaceFree } from './cooking-bills.ts';
 import { groundCapacity } from './ground-placement.ts';
@@ -65,7 +65,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       const flakResumed=planFlakWork(world,pawn,station,bill,reachable,budget);if(flakResumed.plan)return flakResumed.plan;if(flakResumed.handled)continue;
       const componentResumed=planComponentWork(world,pawn,station,bill,reachable,budget);if(componentResumed.plan)return componentResumed.plan;if(componentResumed.handled)continue;
       const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
-      const requiresFreshIngredients=bill.recipe==='cook-simple-meal-bulk'||bill.recipe==='vegetarian-fine-meal'||bill.recipe==='carnivore-fine-meal'||bill.recipe==='vegetarian-lavish-meal'||bill.recipe==='cook-carnivore-lavish-meal';
+      const requiresFreshIngredients=bill.recipe==='cook-simple-meal-bulk'||bill.recipe==='cook-fine-meal-bulk'||bill.recipe==='vegetarian-fine-meal'||bill.recipe==='carnivore-fine-meal'||bill.recipe==='vegetarian-lavish-meal'||bill.recipe==='cook-carnivore-lavish-meal';
       const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&(!requiresFreshIngredients||ticksUntilRot(p,world.tick)>0)&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
         .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
       // No source means no pair was visited and no staging decision was made.
@@ -98,7 +98,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
         if(!already){const key=`${cell.x}:${cell.z}`;planned.set(key,{item:pile.item as ProductionIngredient,quantity:(planned.get(key)?.quantity??0)+quantity});}
         missing-=quantity;if(!missing)break;
       }
-      if(missing||bill.recipe==='fine-meal'&&!validFineMealIngredients(ingredients)||bill.recipe==='vegetarian-fine-meal'&&!validVegetarianFineMealIngredients(ingredients)||bill.recipe==='carnivore-fine-meal'&&!validCarnivoreFineMealIngredients(ingredients)||bill.recipe==='lavish-meal'&&!validLavishMealIngredients(ingredients)||bill.recipe==='vegetarian-lavish-meal'&&!validVegetarianLavishMealIngredients(ingredients)||bill.recipe==='cook-carnivore-lavish-meal'&&!validCarnivoreLavishMealIngredients(ingredients)||!validFlakIngredients(bill.recipe,ingredients)||!validAdvancedComponentIngredients(bill.recipe,ingredients))continue; // Try the next bill if its filters admit other ingredients.
+      if(missing||bill.recipe==='fine-meal'&&!validFineMealIngredients(ingredients)||bill.recipe==='cook-fine-meal-bulk'&&!validFineMealBulkIngredients(ingredients)||bill.recipe==='vegetarian-fine-meal'&&!validVegetarianFineMealIngredients(ingredients)||bill.recipe==='carnivore-fine-meal'&&!validCarnivoreFineMealIngredients(ingredients)||bill.recipe==='lavish-meal'&&!validLavishMealIngredients(ingredients)||bill.recipe==='vegetarian-lavish-meal'&&!validVegetarianLavishMealIngredients(ingredients)||bill.recipe==='cook-carnivore-lavish-meal'&&!validCarnivoreLavishMealIngredients(ingredients)||!validFlakIngredients(bill.recipe,ingredients)||!validAdvancedComponentIngredients(bill.recipe,ingredients))continue; // Try the next bill if its filters admit other ingredients.
       const source=ingredients.find(i=>i.stage==='source'),target=source?world.piles.find(p=>p.id===source.pileId)!.owner as Cell:spot;
       return {station,priority:pawn.priorities[stationWork(station)],target,path:source?routeToJob(world,target,reachable,true)!:toSpot,task:{...(bill.recipe!=='simple-meal'?{recipe:bill.recipe}:{}),stationId:station.id,billId:bill.id,spot,actionCell:{x:target.x,z:target.z},phase:'gather',ingredients,progress:0,productId:null,storageId:null}};
       }
