@@ -1,4 +1,4 @@
-import { footprintContains,STRUCTURE_DEFINITIONS } from './definitions.ts';
+import { footprintCells,footprintContains,STRUCTURE_DEFINITIONS } from './definitions.ts';
 import { isPowerActive } from './power-rules.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
 import type { Cell,CommandResult,Orientation,Structure,World } from './types.ts';
@@ -32,11 +32,26 @@ export function adjustCoolerTarget(w:World,id:number,offset:unknown):CommandResu
  * No region => outdoor reservoir. A closed door is not an impassable face. */
 export function advanceCoolers(w:World,layout:ThermalLayout,outside:number):void {
   const regions=w.thermal?.regions??[];
+  // One synchronous thermal step only changes cooler mode and room air. Its
+  // structure footprints stay fixed, so all powered coolers can share this
+  // short-lived capture without retaining geometry across world mutations.
+  let solids:Set<number>|undefined;
+  const faceBlocked=(c:Cell):boolean=>{
+    if(!Number.isInteger(c.x)||!Number.isInteger(c.z)||c.x<0||c.z<0||c.x>=w.width||c.z>=w.height)return true;
+    const index=c.z*w.width+c.x;
+    if(w.tiles[index]!.terrain==='rock')return true;
+    if(!solids){
+      solids=new Set<number>();
+      for(const structure of w.structures)if(STRUCTURE_DEFINITIONS[structure.kind].blocksMovement)
+        for(const cell of footprintCells(structure))solids.add(cell.z*w.width+cell.x);
+    }
+    return solids.has(index);
+  };
   for(const s of w.structures){
     if(s.kind!=='cooler'||!s.cooler)continue;
     s.cooler.high=false;if(!isPowerActive(s))continue;
     const {cold,hot}=coolerFaces(s);
-    if(coolerFaceBlocked(w,cold)||coolerFaceBlocked(w,hot))continue;
+    if(faceBlocked(cold)||faceBlocked(hot))continue;
     const a=regions[layout.indices[cold.z*w.width+cold.x]!],b=regions[layout.indices[hot.z*w.width+hot.x]!];
     const coldT=a?.temperature??outside,hotT=b?.temperature??outside;
     const energy=21/6*Math.max(0,1-Math.max(hotT-coldT,hotT-40)/130);
