@@ -88,6 +88,50 @@
       "gain": 1.2,
       "maxDistance": 16,
       "loop": false
+    },
+    "crafting.work": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/crafting-work-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 0.3,
+      "maxDistance": 16,
+      "loop": false
+    },
+    "tailoring.work": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/tailoring-work-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 0.7,
+      "maxDistance": 14,
+      "loop": false
+    },
+    "butchering.work": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/butchering-work-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 0.25,
+      "maxDistance": 16,
+      "loop": false
+    },
+    "research.work": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/research-work-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 0.8,
+      "maxDistance": 14,
+      "loop": false
     }
   }
 }

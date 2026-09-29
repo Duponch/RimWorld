@@ -12,6 +12,8 @@ test('V149 : l’essai sonore récupère mining.hit après un premier manifeste 
     expect(published.version).toBe(1);
     expect(published.events['mining.hit']).toBeDefined();
     expect(published.events['construction.hit']).toBeDefined();
+    for (const kind of ['crafting.work', 'tailoring.work', 'butchering.work', 'research.work'])
+      expect(published.events[kind]).toBeDefined();
     const incompleteEvents = { ...published.events };
     delete incompleteEvents['mining.hit'];
     expect(Object.keys(incompleteEvents).length).toBeGreaterThan(0);
@@ -139,7 +141,7 @@ test('V149 : un vrai contact de minage produit du PCM après le mix Web Audio', 
     await page.locator('#load').click();
     await expectWorld(page, initial);
     await page.keyboard.press('Escape');
-    await expect.poll(() => page.evaluate(() => window.__lisiere.audio.availableSounds)).toBe(8);
+    await expect.poll(() => page.evaluate(() => window.__lisiere.audio.availableSounds)).toBe(12);
     await expect(page.locator('#sound-enabled')).toBeChecked();
     await expect(page.locator('#sound-volume')).toHaveValue('75');
     await page.locator('[data-speed="6"]').click();
@@ -182,6 +184,6 @@ test('V149 : un vrai contact de minage produit du PCM après le mix Web Audio', 
     await expect.poll(() => page.evaluate(() => (window as any).__audioProbe.context.state)).toBe('running');
     await panel(page, 'menu');
     await page.locator('#show-diagnostics').click();
-    await expect(page.locator('#metrics')).toContainText(/son actif, 8 MP3, [1-9]\d* effets, dernier mining\.hit/);
+    await expect(page.locator('#metrics')).toContainText(/son actif, 12 MP3, [1-9]\d* effets, dernier mining\.hit/);
     expect(errors).toEqual([]);
 });

@@ -15,8 +15,12 @@ const MAX_VOICES = 24;
 const MAX_ONE_SHOTS_PER_FRAME = 12;
 const DEFAULT_RANGE = 24;
 const PREVIEW_KIND = 'mining.hit';
-const MAX_MINING_VOICES = 3;
-const MINING_CLUSTER_RADIUS = 5;
+const MAX_WORK_VOICES_PER_KIND = 3;
+const WORK_CLUSTER_RADIUS = 5;
+const WORK_KINDS = new Set([
+  'mining.hit', 'woodcutting.hit', 'construction.hit', 'cooking.work',
+  'crafting.work', 'tailoring.work', 'butchering.work', 'research.work',
+]);
 const NO_DECODED_MP3_ERROR = 'Aucun MP3 du manifeste audio n’a pu être décodé.';
 
 function level(value: unknown, fallback: number, ceiling: number): number {
@@ -392,15 +396,15 @@ export class AudioDirector {
     const context = this.context; const master = this.master;
     const event = this.manifest?.events[cue.kind];
     if (!context || !master || !event || event.loop || !event.gain) return;
-    if (cue.kind === PREVIEW_KIND) {
-      // Several miners sharing one patch should not layer the same impact.
+    if (WORK_KINDS.has(cue.kind)) {
+      // Repeated work at one patch should not layer the same recording.
       // The set is bounded by MAX_VOICES and checked only for due contacts.
       let active = 0;
       for (const voice of this.voices) {
-        if (voice.kind !== PREVIEW_KIND) continue;
-        if (++active >= MAX_MINING_VOICES) return;
+        if (voice.kind !== cue.kind) continue;
+        if (++active >= MAX_WORK_VOICES_PER_KIND) return;
         if (voice.x !== undefined && voice.z !== undefined &&
-          Math.hypot(cue.x - voice.x, cue.z - voice.z) < MINING_CLUSTER_RADIUS) return;
+          Math.hypot(cue.x - voice.x, cue.z - voice.z) < WORK_CLUSTER_RADIUS) return;
       }
     }
     const pose = listenerPose(this.camera);

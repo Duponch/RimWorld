@@ -78,38 +78,38 @@
     },
     "crafting.work": {
       "filename": "crafting-work-v1.mp3",
-      "prompt": "Single small hand tool adjustment of a metal part on a wooden workbench, precise soft click and brief metal scrape, tactile warm cozy colony game foley. No voice, no music, no machine drone, no background ambience.",
+      "prompt": "One close hand-file stroke smoothing a small metal fitting on a wooden workbench: brief tactile metal rasp and soft wood contact, dry realistic foley. No synthetic tone, voice, music, machine hum or ambience.",
       "durationSeconds": 0.7,
-      "promptInfluence": 0.65,
+      "promptInfluence": 0.75,
       "loop": false,
-      "gain": 1,
-      "maxDistance": 18
+      "gain": 0.3,
+      "maxDistance": 16
     },
     "tailoring.work": {
       "filename": "tailoring-work-v1.mp3",
-      "prompt": "Single gentle sewing action, thread pulled through thick cloth then a quiet fabric snip, close tactile warm cozy colony game foley. No voice, no music, no sewing machine, no background ambience.",
+      "prompt": "Close dry hand-sewing foley: a fine needle and thread pull through thick woven cloth, then one small steel scissors snip and soft fabric rustle. No synthetic or retro tone, voice, music, sewing machine or ambience.",
       "durationSeconds": 0.65,
-      "promptInfluence": 0.65,
+      "promptInfluence": 0.75,
       "loop": false,
-      "gain": 1,
+      "gain": 0.7,
       "maxDistance": 14
     },
     "butchering.work": {
       "filename": "butchering-work-v1.mp3",
-      "prompt": "Single controlled kitchen knife cut against a wooden board with a soft damp cloth movement, restrained tactile colony game foley. No gore, no bone crack, no voice, no music, no background ambience.",
+      "prompt": "One controlled knife slice through raw meat and hide on a wooden board: brief soft wet shear and a quiet blade contact, close dry tactile foley. No bone crack, exaggerated gore, retro or synthetic sound, music, voice, or ambience.",
       "durationSeconds": 0.65,
       "promptInfluence": 0.65,
       "loop": false,
-      "gain": 1,
-      "maxDistance": 18
+      "gain": 0.25,
+      "maxDistance": 16
     },
     "research.work": {
       "filename": "research-work-v1.mp3",
-      "prompt": "Single short pencil scratch on parchment followed by a tiny paper movement, close dry tactile warm cozy colony study foley. No voice, no music, no keyboard, no magical chime, no background ambience.",
+      "prompt": "One short pencil note scratched on paper beside a small glass vial: crisp graphite-on-paper stroke, tiny paper movement and faint glass tap, close dry warm tactile study foley. No keyboard, chime, retro or synthetic sound, music, voice, or ambience.",
       "durationSeconds": 0.7,
       "promptInfluence": 0.65,
       "loop": false,
-      "gain": 1,
+      "gain": 0.8,
       "maxDistance": 14
     }
   }

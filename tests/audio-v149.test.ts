@@ -349,6 +349,7 @@ describe('continuous voice lifecycle', () => {
         version: 1, events: {
           'weather.rain': { loop: true, spatial: false, variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
           'mining.hit': { gain: 5, variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
+          'construction.hit': { variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
           'ui.notice': { spatial: false, variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
         },
       })) : new Response(new Uint8Array([1]))));
@@ -356,7 +357,7 @@ describe('continuous voice lifecycle', () => {
     const audio = new AudioDirector();
     await audio.unlock();
     expect(audio.loadedCount).toBe(1);
-    expect(audio.availableSounds).toBe(3);
+    expect(audio.availableSounds).toBe(4);
     audio.setContinuousSources([{ id: 'rain', kind: 'weather.rain', x: 0, z: 0 }]);
     const context = FakeContext.latest;
     const initialEarHeight = context.listener.positionY.value;
@@ -394,6 +395,14 @@ describe('continuous voice lifecycle', () => {
     audio.update({ presentedTick: 6, paused: false, hidden: false });
     expect(context.sources).toHaveLength(5);
     expect(context.panners).toBe(2);
+    audio.ingestCues([
+      { id: 'build:near', tick: 6.5, kind: 'construction.hit', x: 0, z: 0 },
+      { id: 'build:same-patch', tick: 6.5, kind: 'construction.hit', x: 1, z: 1 },
+      { id: 'build:other-patch', tick: 6.5, kind: 'construction.hit', x: 10, z: 0 },
+    ]);
+    audio.update({ presentedTick: 6.5, paused: false, hidden: false });
+    expect(context.sources).toHaveLength(7); // Same construction recording is heard once per patch.
+    expect(context.panners).toBe(4); // Construction and mining can coexist at one patch.
     audio.dispose();
   });
 
