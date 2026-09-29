@@ -1,12 +1,18 @@
 # Sons de jeu et production SFX V149
 
-**État : sept MP3 intégrés au dépôt et inscrits au manifeste après contrôle technique, dont `cooking.work`.** Un [parcours Chromium ciblé](../history/validation-audio-resume-v149.md) vérifie leur décodage et le démarrage d'un son de minage sur un vrai contact de travail. L'écoute humaine et le test du mix restent nécessaires : le décodage et l'appel à Web Audio ne valident ni le timbre ni l'audibilité en jeu. Le moteur audio lit `public/assets/audio/manifest.json` version 1. [Recherche API, coût et droits](../research/audio-elevenlabs-v149.md).
+**État : sept MP3 inscrits au manifeste, dont `cooking.work` et un dérivé local du minage ; l'original généré est conservé.** Un [parcours Chromium ciblé](../history/validation-audio-audibility-v149.md) mesure maintenant le signal PCM après le mix d'un vrai contact de travail. Cette mesure ne remplace pas une écoute sur l'appareil du joueur. Le moteur audio lit `public/assets/audio/manifest.json` version 1. [Recherche API, coût et droits](../research/audio-elevenlabs-v149.md).
 
 ## Essai sonore dans les Options
 
 **Essayer le son** est disponible dans les Options de l'accueil et le menu de la colonie. Un clic démarre le MP3 local publié `mining.hit` avec son gain de manifeste et le volume des effets, au centre de la sortie Web Audio, même lorsque la simulation ou le menu met le mix du monde en pause. Le bouton refuse l'essai si les effets sont désactivés ou si le volume est nul. Son message de réussite signifie que la source a démarré ; il ne garantit ni la sortie de l'appareil ni l'audibilité humaine.
 
 Un manifeste inaccessible ou invalide fait échouer l'activation ; zéro MP3 décodé n'est plus annoncé comme un chargement réussi. Les fichiers échoués restent mémorisés, sans nouvelle requête à chaque image ni sur les gestes ordinaires. Chaque clic d'essai retente une fois chaque variante en échec, avec trois chargements au plus en parallèle, puis démarre `mining.hit` si son buffer est disponible. Les buffers déjà décodés sont réutilisés. Une seule source d'essai joue à la fois ; elle est arrêtée lors d'un nouvel essai, d'une coupure des effets, d'un changement de monde ou de la fermeture de la page. [Preuve ciblée](../history/validation-audio-selftest-v149.md).
+
+## Contacts à faible cadence d'image
+
+L'observateur de la simulation émet les contacts de travail sur ses ticks confirmés. L'ancien ordonnanceur audio écartait tout contact vieux de plus de deux ticks au moment de l'image : à vitesse 6×, ou lorsque le rendu est lent, plusieurs ticks peuvent défiler entre deux images et rendre un mineur visuellement actif mais silencieux. La file conserve désormais au plus **un contact récent âgé d'au plus douze ticks** à rattraper par image lorsqu'aucun contact plus frais n'est dû. Elle ne rejoue pas une rafale d'anciens coups ; les événements plus vieux sont abandonnés. La file reste bornée à 256 entrées et ne parcourt que les contacts arrivés à échéance. Le panneau **Menu → Diagnostics** montre l'état Web Audio, les MP3 chargés, le nombre de contacts ponctuels effectivement lancés et le dernier type ; il ne mesure pas les haut-parleurs.
+
+Le MP3 de minage généré avait peu de corps malgré sa crête. Le fichier joué est maintenant `mining-hit-soft-compressed-v1.mp3`, dérivé hors jeu par compression douce de l'original inchangé. [Le journal de traitement](../../scripts/audio/processing-log.json) conserve les deux empreintes et les paramètres ; le contrôle `generate-sfx.mjs --dry-run` vérifie la chaîne original généré → dérivé publié. Cela n'ajoute aucun nœud de traitement ni calcul audio pendant le jeu. [Preuve et limites](../history/validation-audio-audibility-v149.md).
 
 ## Direction sonore
 
@@ -75,7 +81,7 @@ Cette deuxième commande vérifie le MP3 et sa trace de génération, puis ajout
 
 ## Vérification et limites
 
-Contrôle local effectué : `--dry-run`, wrapper PowerShell sans clé et [inspecteur MP3](../../scripts/audio/inspect-mp3.mjs) ; [rapport PCM](../../scripts/audio/check-sfx.py) avec `soundfile` et NumPy. Les sept MP3 publiés sont décodables, stéréo 44,1 kHz, MP3 128 kb/s. Les six premiers ont les durées attendues ; la cuisine dure effectivement 1,00 s. Mesures avant gain du manifeste :
+Contrôle initial avant le dérivé : `--dry-run`, wrapper PowerShell sans clé et [inspecteur MP3](../../scripts/audio/inspect-mp3.mjs) ; [rapport PCM](../../scripts/audio/check-sfx.py) avec `soundfile` et NumPy. Les sept MP3 initiaux étaient décodables, stéréo 44,1 kHz, MP3 128 kb/s. Les six premiers avaient les durées attendues ; la cuisine dure effectivement 1,00 s. Mesures **des originaux** avant gain du manifeste :
 
 | Son | Durée décodée | Crête | RMS | Remarque |
 | --- | ---: | ---: | ---: | --- |
@@ -87,4 +93,4 @@ Contrôle local effectué : `--dry-run`, wrapper PowerShell sans clé et [inspec
 | Pluie | 10,00 s | -16,7 dBFS | -39,3 dBFS | Joint : saut d'échantillon max 0,00565, écoute requise |
 | Cuisine | 1,00 s | -12,4 dBFS | -41,4 dBFS | 74,3 % proche du silence ; aucune saturation PCM mesurée, écoute requise |
 
-Les gains provisoires du manifeste sont **2,5 minage** (1,5 auparavant), 1,8 bois, 7 tir, 0,12 mêlée, **1 feu** (0,5 auparavant), 0,5 pluie et 1,2 cuisine. Avec le master par défaut à 0,75, les crêtes calculées d'une source isolée avant atténuation spatiale sont environ -11,5, -16, -15, -20, -11,7, -25 et -13,3 dBFS. Ces relèvements prudents répondent aux faibles niveaux PCM mesurés, sans constituer une écoute ni une mesure du mix final ou des sources superposées. Aucun fichier n'a été transcodé ou normalisé. Le moteur retente la reprise d'un contexte Web Audio suspendu lors des gestes suivants et signale un échec d'activation ; le [contrôle ciblé](../history/validation-audio-resume-v149.md) vérifie cette reprise en Chromium, sans établir de débit FPS ni de coût CPU/GPU.
+Les gains du manifeste sont **2,5 minage**, 1,8 bois, 7 tir, 0,12 mêlée, 1 feu, 0,5 pluie et 1,2 cuisine. Sur le **dérivé publié** du minage, la durée reste 0,600 s, la crête est à -14,86 dBFS et le RMS total à -43,87 dBFS, contre -16,98 et -48,81 dBFS pour l'original ; le meilleur intervalle de 50 ms gagne 3,96 dB. Ces valeurs décrivent un fichier isolé décodé, sans constituer une écoute ni une mesure du mix final sur l'appareil. Le moteur retente la reprise d'un contexte Web Audio suspendu lors des gestes suivants et signale un échec d'activation ; le [contrôle ciblé](../history/validation-audio-resume-v149.md) vérifie cette reprise en Chromium, sans établir de débit FPS ni de coût CPU/GPU.

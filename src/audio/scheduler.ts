@@ -39,14 +39,23 @@ export class AudioCueScheduler {
     }
   }
 
-  /** Drops late cues instead of playing a burst after a stalled/hidden tab. */
+  /** Recovers one missed contact on short frame jumps; drops stale bursts after stalls. */
   takeDue(presentedTick: number, maxLateTicks = 2): AudioCue[] {
     if (!Number.isFinite(presentedTick)) return [];
     if (presentedTick < this.presentedTick - 0.01) this.reset();
     this.presentedTick = presentedTick;
     let end = 0;
     while (end < this.pending.length && this.pending[end]!.tick <= presentedTick) end++;
-    const due = this.pending.splice(0, end).filter(cue => cue.tick >= presentedTick - maxLateTicks);
+    const drained = this.pending.splice(0, end);
+    const due: AudioCue[] = [];
+    let latestMissed: AudioCue | undefined;
+    for (const cue of drained) {
+      if (cue.tick >= presentedTick - maxLateTicks) due.push(cue);
+      else if (cue.tick >= presentedTick - RETAIN_TICKS) latestMissed = cue;
+    }
+    // A low-FPS frame or accelerated game may cross many ticks. One recent
+    // contact is enough to signal ongoing work; never replay its whole backlog.
+    if (!due.length && latestMissed) due.push(latestMissed);
     if (presentedTick - this.lastPruneTick >= RETAIN_TICKS || this.seen.size > MAX_SEEN) {
       this.pruneSeen();
       this.lastPruneTick = presentedTick;

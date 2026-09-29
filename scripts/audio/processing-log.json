@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "derivations": [
+    {
+      "id": "mining.hit",
+      "sourceFilename": "mining-hit-v1.mp3",
+      "sourceSha256": "d5498eda1d9ad0885b4f5bdb35a308d748e844d4429a56bf8154609401e8ba39",
+      "filename": "mining-hit-soft-compressed-v1.mp3",
+      "sha256": "ffbb35aa9d599f7df6a50be13ad84386e544a08c5fd3b99ccbbf54be50bde275",
+      "processing": {
+        "tool": "FFmpeg",
+        "version": "n4.2.2-6-gd1e8be3",
+        "filter": "acompressor=threshold=0.01:ratio=3:attack=3:release=90:makeup=3.4",
+        "encoder": "libmp3lame",
+        "bitrateKbps": 128,
+        "sampleRateHz": 44100,
+        "channels": 2,
+        "id3v2Version": 0
+      },
+      "decodedMeasurements": {
+        "source": {
+          "durationSeconds": 0.6,
+          "peakDbfs": -16.98,
+          "rmsDbfs": -48.81,
+          "activeRmsDbfs": -39.06,
+          "activeWindowPercent": 10,
+          "max50msRmsDbfs": -38.63
+        },
+        "output": {
+          "durationSeconds": 0.6,
+          "peakDbfs": -14.86,
+          "rmsDbfs": -43.87,
+          "activeRmsDbfs": -38.79,
+          "activeWindowPercent": 30,
+          "max50msRmsDbfs": -34.67
+        },
+        "activeWindowDefinition": "10 ms PCM windows with RMS above -50 dBFS"
+      },
+      "listeningValidation": "pending"
+    }
+  ]
+}

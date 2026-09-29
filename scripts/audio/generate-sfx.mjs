@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Offline asset preparation only: the game never calls ElevenLabs.
 import { createHash } from 'node:crypto';
-import { readFile, mkdir, writeFile, rename, stat } from 'node:fs/promises';
+import { readFile, mkdir, writeFile, rename, stat, realpath } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,6 +9,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const planPath = resolve(here, 'sfx-plan.json');
 const logPath = resolve(here, 'generation-log.json');
+const processingLogPath = resolve(here, 'processing-log.json');
 const manifestPath = resolve(repo, 'public/assets/audio/manifest.json');
 const sfxDir = resolve(repo, 'public/assets/audio/sfx');
 
@@ -57,6 +58,60 @@ function isMp3(bytes) {
   return bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0;
 }
 
+function sha256(bytes) {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+async function readLocalSfx(filename) {
+  if (!/^[a-z0-9-]+\.mp3$/.test(filename)) throw new Error(`Unsafe SFX filename: ${filename}`);
+  const path = resolve(sfxDir, filename);
+  const [directory, actual] = await Promise.all([
+    realpath(sfxDir),
+    realpath(path).catch(() => null),
+  ]);
+  if (!actual || dirname(actual) !== directory) throw new Error(`Missing or unsafe SFX asset: ${filename}`);
+  const details = await stat(actual);
+  if (!details.isFile()) throw new Error(`SFX asset is not a file: ${filename}`);
+  return readFile(actual);
+}
+
+export async function assertPublishedSource(cueId, item, variant, log) {
+  const prefix = '/assets/audio/sfx/';
+  if (typeof variant?.src !== 'string' || !variant.src.startsWith(prefix)) {
+    throw new Error(`Manifest source differs for ${cueId}`);
+  }
+  const filename = variant.src.slice(prefix.length);
+  if (!/^[a-z0-9-]+\.mp3$/.test(filename)) throw new Error(`Unsafe manifest source for ${cueId}`);
+  const bytes = await readLocalSfx(filename);
+  if (filename === item.filename) return;
+
+  const processingLog = JSON.parse(await readFile(processingLogPath, 'utf8'));
+  if (processingLog.version !== 1 || !Array.isArray(processingLog.derivations)) {
+    throw new Error('Unsupported processing log');
+  }
+  const matching = processingLog.derivations.filter((entry) => entry.id === cueId && entry.filename === filename);
+  if (matching.length !== 1) throw new Error(`Manifest source differs for ${cueId}`);
+  const [derivation] = matching;
+  if (derivation.sourceFilename !== item.filename ||
+      !/^[a-f0-9]{64}$/.test(derivation.sha256) ||
+      !/^[a-f0-9]{64}$/.test(derivation.sourceSha256) ||
+      sha256(bytes) !== derivation.sha256) {
+    throw new Error(`Invalid derived SFX for ${cueId}`);
+  }
+  const sourceRecords = log.generations.filter((entry) => entry.id === cueId &&
+    entry.filename === item.filename && entry.sha256 === derivation.sourceSha256);
+  if (sourceRecords.length !== 1 || sha256(await readLocalSfx(item.filename)) !== derivation.sourceSha256) {
+    throw new Error(`Derived SFX source differs for ${cueId}`);
+  }
+}
+
+export async function assertPublishedCue(cueId, item, published, log) {
+  if (!Array.isArray(published.variants) || published.variants.length === 0) {
+    throw new Error(`Manifest source differs for ${cueId}`);
+  }
+  for (const variant of published.variants) await assertPublishedSource(cueId, item, variant, log);
+}
+
 async function main() {
   const { id, generate, publish } = parseArgs(process.argv.slice(2));
   const plan = JSON.parse(await readFile(planPath, 'utf8'));
@@ -71,11 +126,7 @@ async function main() {
   if (selected.some(([, item]) => !item)) throw new Error(`Unknown cue ID: ${id}`);
   for (const [cueId, item] of selected) {
     const published = manifest.events[cueId];
-    if (published) {
-      const src = `/assets/audio/sfx/${item.filename}`;
-      if (!published.variants?.some((variant) => variant.src === src)) throw new Error(`Manifest source differs for ${cueId}`);
-      if (!(await stat(resolve(sfxDir, item.filename)).catch(() => null))) throw new Error(`Manifest references missing asset: ${src}`);
-    }
+    if (published) await assertPublishedCue(cueId, item, published, log);
     const status = published ? 'published' : 'pending';
     // API help lists 20 credits/s; overview lists 40. Show both until account billing is confirmed.
     console.log(`${cueId}: ${status}; ${item.durationSeconds}s; loop=${item.loop}; estimated ${Math.ceil(item.durationSeconds * 20)}–${Math.ceil(item.durationSeconds * 40)} credits`);
@@ -160,7 +211,9 @@ async function main() {
   console.log('Audition the candidate, then publish it with --id and --publish.');
 }
 
-main().catch((error) => {
-  console.error(error.message);
-  process.exitCode = 1;
-});
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
+}

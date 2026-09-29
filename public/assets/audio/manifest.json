@@ -4,7 +4,7 @@
     "mining.hit": {
       "variants": [
         {
-          "src": "/assets/audio/sfx/mining-hit-v1.mp3",
+          "src": "/assets/audio/sfx/mining-hit-soft-compressed-v1.mp3",
           "gain": 1
         }
       ],

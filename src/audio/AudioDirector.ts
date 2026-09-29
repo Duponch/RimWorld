@@ -80,6 +80,8 @@ export class AudioDirector {
   private hidden = false;
   private lastPose = '';
   private lastGain = -1;
+  private playedOneShots = 0;
+  private lastOneShotKind: string | null = null;
 
   constructor(manifestUrl = '/assets/audio/manifest.json') { this.manifestUrl = manifestUrl; }
 
@@ -211,6 +213,12 @@ export class AudioDirector {
 
   get needsUnlock(): boolean {
     return !this.context || this.context.state !== 'running' || !this.manifest && !this.unlockPromise;
+  }
+
+  /** Read only when diagnostics are visible; no per-frame audio graph scan. */
+  get diagnostics(): { state: string; loaded: number; playedOneShots: number; lastKind: string | null } {
+    return { state: this.context?.state ?? 'inactif', loaded: this.loadedCount,
+      playedOneShots: this.playedOneShots, lastKind: this.lastOneShotKind };
   }
 
   /** Plays a published MP3 from an explicit UI gesture, even while the simulation is paused. */
@@ -406,6 +414,8 @@ export class AudioDirector {
       source.onended = () => this.releaseVoice(playingVoice);
       this.voices.add(voice);
       source.start();
+      this.playedOneShots++;
+      this.lastOneShotKind = cue.kind;
     } catch {
       if (voice) this.releaseVoice(voice);
       // A decoding/device failure is silent and never affects the game.

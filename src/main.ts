@@ -1120,7 +1120,12 @@ async function start() {
 const metricsInterval = setInterval(() => {
   if (!renderer) return;
   el('fps-counter').textContent = renderer.stats.fps > 0 ? `${Math.round(renderer.stats.fps)} FPS` : '— FPS';
-  if (!el('metrics').hidden) el('metrics').textContent = `${renderer.backend} · ${renderer.stats.frameMs.toFixed(1)} ms/image · p95 ${renderer.stats.frameP95.toFixed(1)} ms · simulation ${stepMs.toFixed(2)} ms/tick`;
+  if (!el('metrics').hidden) {
+    const sound = audio.diagnostics;
+    const soundState = !soundEnabled ? 'coupé' : soundVolume === 0 ? 'volume 0'
+      : sound.state === 'running' ? 'actif' : sound.state === 'suspended' ? 'suspendu' : sound.state;
+    el('metrics').textContent = `${renderer.backend} · ${renderer.stats.frameMs.toFixed(1)} ms/image · p95 ${renderer.stats.frameP95.toFixed(1)} ms · simulation ${stepMs.toFixed(2)} ms/tick · son ${soundState}, ${sound.loaded} MP3, ${sound.playedOneShots} effets, dernier ${sound.lastKind ?? '—'}`;
+  }
 }, 1000);
 window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval); client.dispose(); audio.dispose(); renderer?.dispose(); });
 void start();

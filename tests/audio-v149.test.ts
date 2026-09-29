@@ -30,6 +30,56 @@ describe('audio cue presentation queue', () => {
     expect(queue.takeDue(21)).toEqual([]);
   });
 
+  it('keeps delayed mining contacts audible across skipped frames without replaying a backlog', () => {
+    const queue = new AudioCueScheduler();
+    queue.takeDue(0);
+    const frames = [
+      { presented: 20, contacts: [3, 6, 9, 12, 15] },
+      { presented: 40, contacts: [18, 21, 24, 27, 30, 33, 36] },
+      { presented: 60, contacts: [39, 42, 45, 48, 51, 54] },
+      { presented: 80, contacts: [57, 60, 63, 66, 69, 72, 75] },
+    ];
+    const heard: number[] = [];
+    for (const { presented, contacts } of frames) {
+      const cues = contacts.map(tick => ({ id: `mining:${tick}`, tick, kind: 'mining.hit', x: 1, z: 1 }));
+      // The former two-tick cutoff is silent at every one of these frames.
+      expect(cues.filter(cue => cue.tick >= presented - 2)).toEqual([]);
+      queue.ingest(cues);
+      queue.ingest(cues); // Repeated snapshot delivery must not double a contact.
+      const due = queue.takeDue(presented);
+      expect(due).toHaveLength(1);
+      heard.push(due[0]!.tick);
+      expect(queue.takeDue(presented)).toEqual([]);
+    }
+    expect(heard).toEqual([15, 36, 54, 75]);
+    expect(queue.pendingCount).toBe(0);
+  });
+
+  it('does not recover a backlog after a long presentation stall', () => {
+    const queue = new AudioCueScheduler();
+    queue.takeDue(1);
+    queue.ingest(Array.from({ length: 20 }, (_, i) => ({
+      id: `stalled:${i}`, tick: 3 + i * 3, kind: 'mining.hit', x: 1, z: 1,
+    })));
+    const fresh = { id: 'fresh', tick: 69, kind: 'mining.hit', x: 1, z: 1 };
+    queue.ingest([fresh]);
+    expect(queue.takeDue(70)).toEqual([fresh]);
+    expect(queue.pendingCount).toBe(0);
+    queue.ingest([{ id: 'current', tick: 71, kind: 'mining.hit', x: 1, z: 1 }]);
+    expect(queue.takeDue(71).map(cue => cue.id)).toEqual(['current']);
+  });
+
+  it('keeps one recent contact even when a very slow frame spans more than 24 ticks', () => {
+    const queue = new AudioCueScheduler();
+    queue.takeDue(1);
+    queue.ingest([3, 12, 24, 39, 45].map(tick => ({
+      id: `slow:${tick}`, tick, kind: 'mining.hit', x: 1, z: 1,
+    })));
+    expect(queue.takeDue(50).map(cue => cue.tick)).toEqual([45]);
+    queue.ingest([{ id: 'stale', tick: 60, kind: 'mining.hit', x: 1, z: 1 }]);
+    expect(queue.takeDue(90)).toEqual([]);
+  });
+
   it('bounds a flood of future cues without scanning them on every frame', () => {
     const queue = new AudioCueScheduler();
     queue.ingest(Array.from({ length: 500 }, (_, i) => ({
@@ -303,6 +353,8 @@ describe('continuous voice lifecycle', () => {
     expect(context.sources[2]!.loop).toBe(false);
     expect(context.sources[2]!.starts).toBe(1);
     expect(context.gains[3]!.gain.value).toBeCloseTo(5 * cueVariation('mining:5').gain);
+    expect(audio.diagnostics).toMatchObject({ state: 'running', loaded: 1,
+      playedOneShots: 1, lastKind: 'mining.hit' });
     audio.ingestCues([{ id: 'notice:6', tick: 6, kind: 'ui.notice', x: 999, z: 999 }]);
     audio.update({ presentedTick: 6, paused: false, hidden: false });
     expect(context.sources).toHaveLength(4);

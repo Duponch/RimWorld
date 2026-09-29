@@ -53,7 +53,7 @@ test('V149 : sons locaux décodés, réglages conservés et présentation Chromi
     expect(errors).toEqual([]);
 });
 
-test('V149 : un vrai contact de minage démarre un MP3 décodé après le geste utilisateur', async ({ page }) => {
+test('V149 : un vrai contact de minage produit du PCM après le mix Web Audio', async ({ page }) => {
     const errors = observeErrors(page);
     const initial = miningCamp(1);
     const pawn = initial.pawns[0]!;
@@ -63,7 +63,23 @@ test('V149 : un vrai contact de minage démarre un MP3 décodé après le geste 
     expect(validateWorld(initial)).toEqual([]);
     await page.addInitScript(({ key, saved }) => {
       localStorage.setItem(key, saved);
-      (window as any).__audioProbe = { starts: [] as { state: string; duration: number; loop: boolean }[] };
+      const probe = (window as any).__audioProbe = {
+        starts: [] as { state: string; duration: number; loop: boolean }[],
+        master: null as null | { recorder: MediaRecorder; chunks: Blob[] },
+      };
+      const connect = GainNode.prototype.connect;
+      GainNode.prototype.connect = function (this: GainNode, ...args: any[]) {
+        if (args[0] === this.context.destination && !probe.master) {
+          const stream = (this.context as AudioContext).createMediaStreamDestination();
+          (connect as any).call(this, stream);
+          const recorder = new MediaRecorder(stream.stream, { mimeType: 'audio/webm;codecs=opus' });
+          const chunks: Blob[] = [];
+          recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+          recorder.start();
+          probe.master = { recorder, chunks };
+        }
+        return connect.apply(this, args as any);
+      } as any;
       const start = AudioBufferSourceNode.prototype.start;
       AudioBufferSourceNode.prototype.start = function (...args) {
         (window as any).__audioProbe.context = this.context;
@@ -85,9 +101,42 @@ test('V149 : un vrai contact de minage démarre un MP3 décodé après le geste 
     await expect.poll(() => page.evaluate(() => (window as any).__audioProbe.starts
       .filter((source: { state: string; duration: number; loop: boolean }) => !source.loop && source.duration > 0.5)))
       .toContainEqual(expect.objectContaining({ state: 'running', loop: false }));
+    await page.waitForTimeout(750); // Include the full 0.6 s impact in the PCM capture.
+    const output = await page.evaluate(async () => {
+      const probe = (window as any).__audioProbe;
+      const capture = probe.master as { recorder: MediaRecorder; chunks: Blob[] } | null;
+      if (!capture) return null;
+      await new Promise<void>(resolve => {
+        capture.recorder.addEventListener('stop', () => resolve(), { once: true });
+        capture.recorder.stop();
+      });
+      const encoded = new Blob(capture.chunks, { type: 'audio/webm;codecs=opus' });
+      const decoded = await probe.context.decodeAudioData(await encoded.arrayBuffer());
+      let peak = 0, bestRms = 0;
+      const windowSize = Math.max(1, Math.floor(decoded.sampleRate * 0.1));
+      for (let channel = 0; channel < decoded.numberOfChannels; channel++) {
+        const samples = decoded.getChannelData(channel);
+        for (let offset = 0; offset + windowSize <= samples.length; offset += windowSize) {
+          let energy = 0;
+          for (let i = offset; i < offset + windowSize; i++) {
+            const value = samples[i]!;
+            peak = Math.max(peak, Math.abs(value));
+            energy += value * value;
+          }
+          bestRms = Math.max(bestRms, Math.sqrt(energy / windowSize));
+        }
+      }
+      return { peak, bestRms, duration: decoded.duration };
+    });
+    expect(output).not.toBeNull();
+    expect(output!.peak).toBeGreaterThan(0.02);
+    expect(output!.bestRms).toBeGreaterThan(0.002);
     await page.evaluate(() => (window as any).__audioProbe.context.suspend());
     expect(await page.evaluate(() => (window as any).__audioProbe.context.state)).toBe('suspended');
     await page.locator('[data-speed="6"]').click();
     await expect.poll(() => page.evaluate(() => (window as any).__audioProbe.context.state)).toBe('running');
+    await panel(page, 'menu');
+    await page.locator('#show-diagnostics').click();
+    await expect(page.locator('#metrics')).toContainText(/son actif, 7 MP3, [1-9]\d* effets, dernier mining\.hit/);
     expect(errors).toEqual([]);
 });
