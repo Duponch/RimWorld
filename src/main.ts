@@ -174,6 +174,7 @@ let texturesEnabled = true;
 let groundGrassEnabled = true;
 let soundEnabled = true;
 let soundVolume = 0.75;
+let audioUnlockWarningShown = false;
 try {
   texturesEnabled = localStorage.getItem(TEXTURE_PREFERENCE_KEY) !== 'false';
   groundGrassEnabled = localStorage.getItem(GROUND_GRASS_PREFERENCE_KEY) !== 'false';
@@ -183,13 +184,21 @@ try {
 } catch { /* The defaults remain active when browser storage is unavailable. */ }
 audio.setVolume(soundVolume);
 audio.setMuted(!soundEnabled);
+function unlockAudioFromGesture(): void {
+  if (!soundEnabled || !audio.needsUnlock) return;
+  void audio.unlock().then(() => { audioUnlockWarningShown = false; }).catch(() => {
+    if (audioUnlockWarningShown) return;
+    audioUnlockWarningShown = true;
+    notify('Le navigateur a bloqué le son. Cliquez à nouveau dans le jeu ou réactivez les effets sonores.', true);
+  });
+}
 function setSoundEnabled(enabled: boolean): boolean {
   soundEnabled = enabled;
   el<HTMLInputElement>('sound-enabled').checked = enabled;
   audio.setMuted(!enabled);
   if (enabled) {
     if (snapshot) syncAudioSources(snapshot);
-    void audio.unlock().catch(() => notify('Le navigateur a bloqué le son. Réactivez les effets sonores après une interaction.', true));
+    unlockAudioFromGesture();
   }
   else audio.reset();
   try { localStorage.setItem(SOUND_ENABLED_PREFERENCE_KEY, String(enabled)); return true; }
@@ -978,8 +987,11 @@ soundToggle.checked = soundEnabled;
 soundVolumeSlider.value = String(Math.round(soundVolume * 100));
 soundToggle.onchange = () => { if (!setSoundEnabled(soundToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 soundVolumeSlider.oninput = () => { if (!setSoundVolume(Number(soundVolumeSlider.value) / 100)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
-// A user gesture is required by browsers before Web Audio can leave its suspended state.
-document.querySelector('#app')!.addEventListener('pointerdown', () => { if (soundEnabled) void audio.unlock().catch(() => {}); }, { once: true, capture: true });
+// Resume directly from any later user gesture too: the browser/device can suspend an unlocked context.
+const audioGestureRoot = document.querySelector<HTMLElement>('#app')!;
+audioGestureRoot.addEventListener('pointerdown', event => { if (event.pointerType === 'mouse') unlockAudioFromGesture(); }, { capture: true });
+audioGestureRoot.addEventListener('pointerup', event => { if (event.pointerType !== 'mouse') unlockAudioFromGesture(); }, { capture: true });
+document.addEventListener('keydown', event => { if (!event.repeat) unlockAudioFromGesture(); }, { capture: true });
 el('wall-cutaway').onclick = () => { wallCutaway = !wallCutaway; renderer?.setWallCutaway(wallCutaway); el('wall-cutaway').textContent = wallCutaway ? 'Murs : coupés' : 'Murs : hauts'; el('wall-cutaway').setAttribute('aria-pressed', String(wallCutaway)); };
 el('roof-toggle').onclick=()=>{const button=el('roof-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));button.textContent=visible?'Toits : visibles':'Toits : masqués';renderer?.setRoofsVisible(visible);};
 el('foliage-toggle').onclick = () => { foliageVisible = !foliageVisible; renderer?.setFoliageVisible(foliageVisible); el('foliage-toggle').textContent = foliageVisible ? 'Feuillage' : 'Troncs'; el('foliage-toggle').setAttribute('aria-pressed', String(!foliageVisible)); };

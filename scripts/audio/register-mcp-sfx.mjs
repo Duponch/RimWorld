@@ -11,9 +11,11 @@ const repo = resolve(here, '../..');
 const args = process.argv.slice(2);
 const values = {};
 for (let i = 0; i < args.length; i += 2) {
-  if (!['--id', '--generation-id', '--billed-credits'].includes(args[i]) || !args[i + 1]) {
-    throw new Error('Usage: node scripts/audio/register-mcp-sfx.mjs --id <cue> --generation-id <ID> --billed-credits <number>');
+  if (!['--id', '--generation-id', '--billed-credits', '--duration-seconds', '--prompt-influence',
+    '--flow-id', '--session-id', '--batch-billed-credits', '--batch-generation-ids'].includes(args[i]) || !args[i + 1]) {
+    throw new Error('Usage: node scripts/audio/register-mcp-sfx.mjs --id <cue> --generation-id <ID> --billed-credits <number> [--duration-seconds <number> --prompt-influence <number> --flow-id <ID> --session-id <ID> --batch-billed-credits <number> --batch-generation-ids <IDs>]');
   }
+  if (values[args[i]] !== undefined) throw new Error(`Duplicate argument: ${args[i]}`);
   values[args[i]] = args[i + 1];
 }
 const id = values['--id'];
@@ -25,6 +27,20 @@ if (!id || !/^[A-Za-z0-9]{12,32}$/.test(generationId ?? '') || !(billedCredits >
 const plan = JSON.parse(await readFile(resolve(here, 'sfx-plan.json'), 'utf8'));
 const item = plan.events[id];
 if (!item) throw new Error(`Unknown cue ID: ${id}`);
+const durationSeconds = values['--duration-seconds'] === undefined ? item.durationSeconds : Number(values['--duration-seconds']);
+const promptInfluence = values['--prompt-influence'] === undefined ? item.promptInfluence : Number(values['--prompt-influence']);
+if (!(durationSeconds >= 0.5 && durationSeconds <= 30) || !(promptInfluence >= 0 && promptInfluence <= 1)) {
+  throw new Error('Invalid actual generation settings');
+}
+const flowId = values['--flow-id'];
+const sessionId = values['--session-id'];
+const batchBilledCredits = values['--batch-billed-credits'] === undefined ? undefined : Number(values['--batch-billed-credits']);
+const batchGenerationIds = values['--batch-generation-ids']?.split(',');
+if ([flowId, sessionId].some((value) => value !== undefined && !/^[A-Za-z0-9]{12,32}$/.test(value)) ||
+    (batchBilledCredits !== undefined && !(batchBilledCredits >= billedCredits && batchBilledCredits < 1000)) ||
+    (batchGenerationIds && (batchGenerationIds.length < 1 || batchGenerationIds.some((value) => !/^[A-Za-z0-9]{12,32}$/.test(value)) || !batchGenerationIds.includes(generationId)))) {
+  throw new Error('Invalid MCP flow or batch metadata');
+}
 const path = resolve(repo, 'public/assets/audio/sfx', item.filename);
 const bytes = await readFile(path);
 const technical = inspectMp3(bytes);
@@ -48,13 +64,17 @@ const record = {
   modelId: plan.modelId,
   outputFormat: plan.outputFormat,
   prompt: item.prompt,
-  durationSeconds: item.durationSeconds,
-  promptInfluence: item.promptInfluence,
+  durationSeconds,
+  promptInfluence,
   loop: item.loop,
   sha256,
   billedCredits,
   decodedSampleRateHz: technical.sampleRate,
   encodedBitrateKbps: technical.bitrateKbps[0],
+  ...(flowId ? { flowId } : {}),
+  ...(sessionId ? { sessionId } : {}),
+  ...(batchBilledCredits !== undefined ? { batchBilledCredits } : {}),
+  ...(batchGenerationIds ? { batchGenerationIds } : {}),
 };
 const temp = `${logPath}.tmp-${process.pid}`;
 await writeFile(temp, `${JSON.stringify({ ...log, generations: [...log.generations, record] }, null, 2)}\n`, { flag: 'wx' });

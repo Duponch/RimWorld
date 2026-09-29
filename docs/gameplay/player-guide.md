@@ -18,7 +18,7 @@ Le colon porte chaque part et travaille sur la cuisinière avant de produire **u
 
 ## Écouter les effets sonores — V149
 
-Les **effets sonores** sont activés par défaut après une interaction avec le jeu. Dans **Options** à l'accueil ou **Menu → Son** en partie, coupez-les ou réglez leur volume ; ce choix est conservé par le navigateur. Rapprochez la caméra d'un colon qui mine ou abat un arbre pour entendre ses contacts, ou d'un feu de camp pour entendre sa boucle ; la pluie forme une ambiance globale. Les tirs et coups de mêlée ont aussi un son. Construction, cuisine, fabrication, couture, boucherie et recherche restent silencieuses dans ce premier lot, et aucune musique n'est encore intégrée. [Portée et limites](../development/audio-sfx-v149.md).
+Les **effets sonores** sont activés par défaut après une interaction avec le jeu. Dans **Options** à l'accueil ou **Menu → Son** en partie, coupez-les ou réglez leur volume ; ce choix est conservé par le navigateur. Rapprochez la caméra d'un colon qui mine ou abat un arbre pour entendre ses contacts, d'un cuisinier au travail pour son geste de cuisine, ou d'un feu de camp pour entendre sa boucle ; la pluie forme une ambiance globale. Les tirs et coups de mêlée ont aussi un son. Si le navigateur bloque le son, un nouveau clic dans le jeu ou la réactivation des effets peut reprendre le contexte audio. Construction, fabrication, couture, boucherie et recherche restent silencieuses, et aucune musique n'est encore intégrée. L'audibilité et le mix demandent encore une écoute humaine. [Portée et limites](../development/audio-sfx-v149.md).
 
 ## Fabriquer et porter un casque de reconnaissance — V148
 

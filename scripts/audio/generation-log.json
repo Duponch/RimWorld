@@ -108,6 +108,33 @@
       "billedCredits": 33.33333333333333,
       "decodedSampleRateHz": 44100,
       "encodedBitrateKbps": 128
+    },
+    {
+      "id": "cooking.work",
+      "filename": "cooking-work-v1.mp3",
+      "registeredAt": "2026-09-29T07:44:19.464Z",
+      "provider": "ElevenLabs",
+      "providerRoute": "MCP creative sfx node",
+      "generationId": "YG3m2sWGv14jtDWZmCJv",
+      "modelId": "eleven_text_to_sound_v2",
+      "outputFormat": "mp3_44100_128",
+      "prompt": "Single short wooden spoon stir through a gently simmering ceramic pot, soft wet swish and one tiny utensil tap, warm cozy colony kitchen foley. No voice, no music, no sizzling roar, no background ambience.",
+      "durationSeconds": 1,
+      "promptInfluence": 0.3,
+      "loop": false,
+      "sha256": "bd26cb3bcb81f7fdd5f0712d0a2c6c6aeed6ac3847300126478c6afb777bbdcd",
+      "billedCredits": 16.666666666666664,
+      "decodedSampleRateHz": 44100,
+      "encodedBitrateKbps": 128,
+      "flowId": "5tVpP61JoLidGTnU9oJJ",
+      "sessionId": "9Ktra4Sw0iks57347xLP",
+      "batchBilledCredits": 66.66666666666666,
+      "batchGenerationIds": [
+        "F9mntIW3KfHfYYnfRCXe",
+        "YG3m2sWGv14jtDWZmCJv",
+        "aV49neumD3WBqevFZfqv",
+        "8crTH0ws520cHqDplBWV"
+      ]
     }
   ]
 }

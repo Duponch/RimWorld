@@ -9,7 +9,7 @@
       "durationSeconds": 0.6,
       "promptInfluence": 0.65,
       "loop": false,
-      "gain": 1.5,
+      "gain": 2.5,
       "maxDistance": 20
     },
     "woodcutting.hit": {
@@ -45,7 +45,7 @@
       "durationSeconds": 8,
       "promptInfluence": 0.65,
       "loop": true,
-      "gain": 0.5,
+      "gain": 1.0,
       "maxDistance": 22,
       "spatial": true
     },
@@ -73,7 +73,7 @@
       "durationSeconds": 0.75,
       "promptInfluence": 0.65,
       "loop": false,
-      "gain": 1,
+      "gain": 1.2,
       "maxDistance": 16
     },
     "crafting.work": {

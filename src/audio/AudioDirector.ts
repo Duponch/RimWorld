@@ -81,12 +81,25 @@ export class AudioDirector {
 
   /** Call directly from a trusted pointer/keyboard gesture before any await. */
   unlock(): Promise<void> {
-    if (this.disposed || typeof AudioContext === 'undefined') return Promise.resolve();
+    if (this.disposed) return Promise.resolve();
+    if (typeof AudioContext === 'undefined') return Promise.reject(new Error('Web Audio is unavailable'));
+    if (this.context?.state === 'closed') {
+      for (const voice of [...this.voices]) this.stopVoice(voice);
+      this.master?.disconnect();
+      this.context = null;
+      this.master = null;
+      this.unlockPromise = null;
+    }
     if (this.unlockPromise) {
-      if (this.context?.state === 'suspended') {
+      if (this.context && this.context.state !== 'running') {
         // Repeat directly in the new gesture if the device/browser suspended it.
-        const resumed = this.context.resume().catch(() => undefined);
-        return Promise.all([resumed, this.unlockPromise]).then(() => undefined);
+        try {
+          const resumed = this.context.resume();
+          return Promise.all([resumed, this.unlockPromise]).then(() => {
+            this.updateMaster();
+            this.reconcileContinuous();
+          });
+        } catch (error) { return Promise.reject(error); }
       }
       return this.unlockPromise;
     }
@@ -108,13 +121,14 @@ export class AudioDirector {
         this.updateListener();
         this.updateMaster();
         this.reconcileContinuous();
-      }).catch(() => {
+      }).catch(error => {
         this.unlockPromise = null; // A later gesture may retry autoplay or fetch failure.
+        throw error;
       });
       return this.unlockPromise;
-    } catch {
+    } catch (error) {
       this.unlockPromise = null;
-      return Promise.resolve();
+      return Promise.reject(error);
     }
   }
 
@@ -183,6 +197,10 @@ export class AudioDirector {
     if (!this.manifest) return 0;
     return Object.values(this.manifest.events).filter(event =>
       event.variants.some(variant => this.buffers.get(variant.src))).length;
+  }
+
+  get needsUnlock(): boolean {
+    return !this.context || this.context.state !== 'running' || !this.manifest && !this.unlockPromise;
   }
 
   /** Loading/new map must not inherit old queued or currently playing sounds. */

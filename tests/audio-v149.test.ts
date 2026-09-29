@@ -177,6 +177,41 @@ describe('one-shot burst budget', () => {
 describe('continuous voice lifecycle', () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it('reports a blocked resume and retries on a later gesture', async () => {
+    class Param {
+      value = 0;
+      setValueAtTime(value: number): void { this.value = value; }
+      setTargetAtTime(value: number): void { this.value = value; }
+      cancelScheduledValues(): void {}
+    }
+    class Node { connect(): void {} disconnect(): void {} }
+    class FakeContext {
+      state = 'suspended';
+      currentTime = 0;
+      destination = new Node();
+      resumes = 0;
+      listener = {
+        positionX: new Param(), positionY: new Param(), positionZ: new Param(),
+        forwardX: new Param(), forwardY: new Param(), forwardZ: new Param(),
+      };
+      createGain() { return Object.assign(new Node(), { gain: new Param() }); }
+      resume(): Promise<void> {
+        this.resumes++;
+        if (this.resumes === 1) return Promise.reject(new Error('blocked'));
+        this.state = 'running';
+        return Promise.resolve();
+      }
+      close(): Promise<void> { this.state = 'closed'; return Promise.resolve(); }
+    }
+    vi.stubGlobal('AudioContext', FakeContext);
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ version: 1, events: {} }))));
+    const audio = new AudioDirector();
+    await expect(audio.unlock()).rejects.toThrow('blocked');
+    await expect(audio.unlock()).resolves.toBeUndefined();
+    expect((audio as any).context.resumes).toBe(2);
+    audio.dispose();
+  });
+
   it('loops, fades on pause, restarts on resume, and stops when removed', async () => {
     class Param {
       value = 0;
