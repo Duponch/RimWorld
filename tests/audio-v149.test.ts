@@ -101,14 +101,15 @@ describe('sound spatialisation', () => {
     expect(Math.hypot(pose.forwardX, pose.forwardZ)).toBeCloseTo(1);
   });
 
-  it('places the listener at the perspective camera and narrows range at overview zoom', () => {
+  it('places the listener at the perspective camera without reducing range a second time on zoom', () => {
     const pose = listenerPose({ x: 0, y: 3, z: 0, targetX: 10, targetZ: 0, mode: 'perspective' });
     expect(pose.x).toBe(0);
     expect(pose.y).toBe(3);
-    const near = audibleRange(24, { x: 0, y: 30, z: 0, span: 16 });
-    const overview = audibleRange(24, { x: 0, y: 30, z: 0, span: 128 });
-    expect(overview).toBeLessThan(near);
-    expect(overview).toBeLessThanOrEqual(36);
+    const near = audibleRange(24, { x: 0, y: 30, z: 0, span: 16, mode: 'perspective' });
+    const overview = audibleRange(24, { x: 0, y: 30, z: 0, span: 128, mode: 'perspective' });
+    expect(overview).toBe(near);
+    expect(overview).toBe(60);
+    expect(audibleRange(24, { x: 0, y: 30, z: 0, span: 128, mode: 'orthographic' })).toBeLessThan(24);
   });
 
   it('cuts local mining when perspective height grows even if the map focus stays fixed', () => {
@@ -116,8 +117,9 @@ describe('sound spatialisation', () => {
     const cues = [{ id: 'mining:near', tick: 1, kind: 'mining.hit', x: 10, z: 10 }];
     const near = { x: 10, y: 4, z: 10, targetX: 10, targetZ: 10, span: 32, mode: 'perspective' as const };
     expect(selectOneShots(cues, events, near)).toHaveLength(1);
-    expect(selectOneShots(cues, events, { ...near, y: 25 })).toHaveLength(0);
-    expect(selectOneShots(cues, events, { ...near, x: 35 })).toHaveLength(0);
+    expect(selectOneShots(cues, events, { ...near, y: 51 })).toHaveLength(0);
+    expect(selectOneShots(cues, events, { ...near, x: 61 })).toHaveLength(0);
+    expect(selectOneShots(cues, events, { ...near, y: 25 })).toHaveLength(1);
   });
 
   it('cuts local work and fire as an orthographic view zooms out', () => {
@@ -181,7 +183,7 @@ describe('continuous sound selection', () => {
     expect(sourceDistance(132,100,pose)).toBeLessThan(audibleRange(22,camera));
     const nearby=createNearbyFireCollector(pose);
     nearby.add('fire:audible',132,100,1);
-    nearby.add('fire:far',170,100,1);
+    nearby.add('fire:far',205,100,1);
     expect(nearby.sources().map(source=>source.id)).toEqual(['fire:audible']);
     const selected=selectContinuousSources(nearby.sources(),{'ambient.fire':{loop:true,spatial:true,maxDistance:22}},camera);
     expect(selected.map(source=>source.id)).toEqual(['fire:audible']);
@@ -221,8 +223,8 @@ describe('one-shot burst budget', () => {
   it('prefers audible combat over nearby work and creates at most twelve candidates', () => {
     const cues = [
       ...Array.from({ length: 100 }, (_, i) => ({ id: `work:${i}`, tick: 10, kind: 'mining.hit', x: i % 10, z: 0 })),
-      { id: 'gun', tick: 10, kind: 'weapon.gunshot', x: 18, z: 0 },
-      { id: 'melee', tick: 10, kind: 'weapon.melee', x: 17, z: 0 },
+      { id: 'gun', tick: 10, kind: 'weapon.gunshot', x: 12, z: 0 },
+      { id: 'melee', tick: 10, kind: 'weapon.melee', x: 11, z: 0 },
       { id: 'far-gun', tick: 10, kind: 'weapon.gunshot', x: 100, z: 0 },
     ];
     const events = {
@@ -251,6 +253,62 @@ describe('one-shot burst budget', () => {
 
 describe('continuous voice lifecycle', () => {
   afterEach(() => vi.unstubAllGlobals());
+
+  it('alternates decoded one-shot variants when consecutive cue hashes choose the same file', async () => {
+    class Param {
+      value = 0;
+      setValueAtTime(value: number): void { this.value = value; }
+      setTargetAtTime(value: number): void { this.value = value; }
+      cancelScheduledValues(): void {}
+    }
+    class Node { connect(): void {} disconnect(): void {} }
+    class Source extends Node {
+      buffer: unknown;
+      playbackRate = { value: 1 };
+      onended: (() => void) | null = null;
+      start(): void {}
+      stop(): void {}
+    }
+    class FakeContext {
+      static latest: FakeContext;
+      state = 'running';
+      currentTime = 0;
+      destination = new Node();
+      sources: Source[] = [];
+      listener = {
+        positionX: new Param(), positionY: new Param(), positionZ: new Param(),
+        forwardX: new Param(), forwardY: new Param(), forwardZ: new Param(),
+      };
+      constructor() { FakeContext.latest = this; }
+      createGain() { return Object.assign(new Node(), { gain: new Param() }); }
+      createBufferSource() { const source = new Source(); this.sources.push(source); return source; }
+      decodeAudioData(bytes: ArrayBuffer): Promise<object> {
+        return Promise.resolve({ file: new Uint8Array(bytes)[0] });
+      }
+      resume(): Promise<void> { return Promise.resolve(); }
+      close(): Promise<void> { this.state = 'closed'; return Promise.resolve(); }
+    }
+    vi.stubGlobal('AudioContext', FakeContext);
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => url.endsWith('manifest.json')
+      ? new Response(JSON.stringify({ version: 1, events: {
+        'ui.notice': { spatial: false, variants: [
+          { src: '/assets/audio/sfx/a.mp3' }, { src: '/assets/audio/sfx/b.mp3' },
+        ] },
+      } })) : new Response(new Uint8Array([url.endsWith('a.mp3') ? 1 : 2]))));
+    const audio = new AudioDirector();
+    await audio.unlock();
+    for (const [tick, id] of [[1, 'notice:0'], [2, 'notice:2']] as const) {
+      audio.ingestCues([{ id, tick, kind: 'ui.notice', x: 0, z: 0 }]);
+      audio.update({ presentedTick: tick, paused: false, hidden: false });
+    }
+    const [first, second] = FakeContext.latest.sources;
+    expect(first?.buffer).not.toEqual(second?.buffer);
+    audio.reset();
+    audio.ingestCues([{ id: 'notice:0', tick: 3, kind: 'ui.notice', x: 0, z: 0 }]);
+    audio.update({ presentedTick: 3, paused: false, hidden: false });
+    expect(FakeContext.latest.sources[2]?.buffer).toEqual(first?.buffer);
+    audio.dispose();
+  });
 
   it('reports a blocked resume and retries on a later gesture', async () => {
     class Param {
@@ -350,6 +408,9 @@ describe('continuous voice lifecycle', () => {
           'weather.rain': { loop: true, spatial: false, variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
           'mining.hit': { gain: 5, variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
           'construction.hit': { variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
+          'door.open': { variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
+          'door.close': { variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
+          'weapon.gunshot': { variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
           'ui.notice': { spatial: false, variants: [{ src: '/assets/audio/sfx/rain.ogg' }] },
         },
       })) : new Response(new Uint8Array([1]))));
@@ -357,7 +418,7 @@ describe('continuous voice lifecycle', () => {
     const audio = new AudioDirector();
     await audio.unlock();
     expect(audio.loadedCount).toBe(1);
-    expect(audio.availableSounds).toBe(4);
+    expect(audio.availableSounds).toBe(7);
     audio.setContinuousSources([{ id: 'rain', kind: 'weather.rain', x: 0, z: 0 }]);
     const context = FakeContext.latest;
     const initialEarHeight = context.listener.positionY.value;
@@ -371,7 +432,7 @@ describe('continuous voice lifecycle', () => {
     expect(context.sources[0]!.stops).toBe(1);
     audio.update({ presentedTick: 1, paused: false, hidden: false });
     expect(context.sources).toHaveLength(2);
-    expect(context.gains[0]!.gain.targets.at(-1)).toBe(0.75);
+    expect(context.gains[0]!.gain.targets.at(-1)).toBeCloseTo(0.75 * 0.55);
     audio.setContinuousSources([]);
     expect(context.sources[1]!.stops).toBe(1);
     audio.ingestCues([{ id: 'mining:5', tick: 5, kind: 'mining.hit', x: 0, z: 0 }]);
@@ -386,7 +447,7 @@ describe('continuous voice lifecycle', () => {
       playedOneShots: 1, lastKind: 'mining.hit' });
     audio.ingestCues([
       { id: 'mining:same-patch', tick: 5.5, kind: 'mining.hit', x: 1, z: 1 },
-      { id: 'mining:other-patch', tick: 5.5, kind: 'mining.hit', x: 10, z: 0 },
+      { id: 'mining:other-patch', tick: 5.5, kind: 'mining.hit', x: 6, z: 0 },
     ]);
     audio.update({ presentedTick: 5.5, paused: false, hidden: false });
     expect(context.sources).toHaveLength(4); // Only the distinct patch adds a voice.
@@ -398,11 +459,23 @@ describe('continuous voice lifecycle', () => {
     audio.ingestCues([
       { id: 'build:near', tick: 6.5, kind: 'construction.hit', x: 0, z: 0 },
       { id: 'build:same-patch', tick: 6.5, kind: 'construction.hit', x: 1, z: 1 },
-      { id: 'build:other-patch', tick: 6.5, kind: 'construction.hit', x: 10, z: 0 },
+      { id: 'build:other-patch', tick: 6.5, kind: 'construction.hit', x: 6, z: 0 },
     ]);
     audio.update({ presentedTick: 6.5, paused: false, hidden: false });
     expect(context.sources).toHaveLength(7); // Same construction recording is heard once per patch.
     expect(context.panners).toBe(4); // Construction and mining can coexist at one patch.
+    audio.updateCamera({ x: 0, y: 3, z: 0, targetX: 0, targetZ: 0, span: 32, mode: 'perspective' });
+    audio.ingestCues([
+      { id: 'door:open:0', tick: 7, kind: 'door.open', x: 0, z: 0 },
+      { id: 'door:close:same-patch', tick: 7, kind: 'door.close', x: 1, z: 0 },
+      { id: 'door:close:other-patch', tick: 7, kind: 'door.close', x: 6, z: 0 },
+      { id: 'door:open:third-patch', tick: 7, kind: 'door.open', x: 12, z: 0 },
+      { id: 'door:close:over-budget', tick: 7, kind: 'door.close', x: 18, z: 0 },
+      { id: 'gun:near-door', tick: 7, kind: 'weapon.gunshot', x: 1, z: 0 },
+    ]);
+    audio.update({ presentedTick: 7, paused: false, hidden: false });
+    expect(context.sources).toHaveLength(11); // Three door voices plus the unrestricted gunshot.
+    expect(context.panners).toBe(8);
     audio.dispose();
   });
 
@@ -654,10 +727,10 @@ describe('explicit sound preview and failed asset recovery', () => {
     await audio.playPreview();
     const context = FakeContext.latest;
     expect(context.gains[0]!.gain.value).toBe(0); // The game mix remains paused.
-    expect(context.gains[1]!.gain.value).toBe(1.5);
+    expect(context.gains[1]!.gain.value).toBeCloseTo(1.5 * 0.55);
     expect(context.sources[0]!.connections).toEqual([context.gains[1]]);
     audio.setVolume(0.25);
-    expect(context.gains[1]!.gain.value).toBe(0.5);
+    expect(context.gains[1]!.gain.value).toBeCloseTo(0.5 * 0.55);
     await audio.playPreview();
     expect(context.gains).toHaveLength(2);
     expect(fetchMock).toHaveBeenCalledTimes(2);

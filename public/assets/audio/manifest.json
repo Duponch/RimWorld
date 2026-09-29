@@ -6,9 +6,17 @@
         {
           "src": "/assets/audio/sfx/mining-pickaxe-ping-v2.mp3",
           "gain": 1
+        },
+        {
+          "src": "/assets/audio/sfx/mining-pickaxe-ping-v3.mp3",
+          "gain": 1.15
+        },
+        {
+          "src": "/assets/audio/sfx/mining-pickaxe-ping-v4.mp3",
+          "gain": 0.75
         }
       ],
-      "gain": 0.55,
+      "gain": 0.35,
       "maxDistance": 16,
       "loop": false
     },
@@ -17,10 +25,48 @@
         {
           "src": "/assets/audio/sfx/woodcutting-hit-v1.mp3",
           "gain": 1
+        },
+        {
+          "src": "/assets/audio/sfx/woodcutting-hit-v2.mp3",
+          "gain": 1
+        },
+        {
+          "src": "/assets/audio/sfx/woodcutting-hit-v3.mp3",
+          "gain": 2
+        },
+        {
+          "src": "/assets/audio/sfx/woodcutting-hit-v4.mp3",
+          "gain": 2
+        },
+        {
+          "src": "/assets/audio/sfx/woodcutting-hit-v5.mp3",
+          "gain": 2.8
         }
       ],
-      "gain": 1.8,
+      "gain": 0.95,
       "maxDistance": 22,
+      "loop": false
+    },
+    "door.open": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/door-open-wood-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 0.7,
+      "maxDistance": 14,
+      "loop": false
+    },
+    "door.close": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/door-close-wood-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 0.2,
+      "maxDistance": 14,
       "loop": false
     },
     "weapon.gunshot": {
@@ -64,6 +110,17 @@
         }
       ],
       "gain": 0.5,
+      "loop": true,
+      "spatial": false
+    },
+    "weather.wind": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/weather-wind-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 0.55,
       "loop": true,
       "spatial": false
     },

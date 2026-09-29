@@ -9,7 +9,7 @@
       "durationSeconds": 0.75,
       "promptInfluence": 0.75,
       "loop": false,
-      "gain": 0.55,
+      "gain": 0.35,
       "maxDistance": 16
     },
     "woodcutting.hit": {
@@ -18,8 +18,26 @@
       "durationSeconds": 0.65,
       "promptInfluence": 0.65,
       "loop": false,
-      "gain": 1.8,
+      "gain": 0.95,
       "maxDistance": 22
+    },
+    "door.open": {
+      "filename": "door-open-wood-v1.mp3",
+      "prompt": "A small wooden colony door opens on quiet hinges: one short warm creak and light latch click, close dry realistic foley. No footsteps, voice, music or ambience.",
+      "durationSeconds": 0.8,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 0.7,
+      "maxDistance": 14
+    },
+    "door.close": {
+      "filename": "door-close-wood-v1.mp3",
+      "prompt": "A small wooden colony door closes gently: one short warm wood thud and light latch click, close dry realistic foley. No slam, footsteps, voice, music or ambience.",
+      "durationSeconds": 0.8,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 0.2,
+      "maxDistance": 14
     },
     "weapon.gunshot": {
       "filename": "weapon-gunshot-v1.mp3",
@@ -56,6 +74,15 @@
       "promptInfluence": 0.65,
       "loop": true,
       "gain": 0.5,
+      "spatial": false
+    },
+    "weather.wind": {
+      "filename": "weather-wind-v1.mp3",
+      "prompt": "Seamless loop of gentle natural wind moving through leaves and grass, soft broad airy rustle with slow irregular swells. No voice, music, rain, storm or sharp gusts.",
+      "durationSeconds": 8,
+      "promptInfluence": 0.65,
+      "loop": true,
+      "gain": 0.55,
       "spatial": false
     },
     "construction.hit": {

@@ -12,6 +12,8 @@ test('V149 : l’essai sonore récupère mining.hit après un premier manifeste 
     expect(published.version).toBe(1);
     expect(published.events['mining.hit']).toBeDefined();
     expect(published.events['construction.hit']).toBeDefined();
+    for (const kind of ['door.open', 'door.close', 'weather.wind'])
+      expect(published.events[kind]).toBeDefined();
     for (const kind of ['crafting.work', 'tailoring.work', 'butchering.work', 'research.work'])
       expect(published.events[kind]).toBeDefined();
     const incompleteEvents = { ...published.events };
@@ -102,6 +104,13 @@ test('V149 : sons locaux décodés, réglages conservés et présentation Chromi
 
 test('V149 : un vrai contact de minage produit du PCM après le mix Web Audio', async ({ page }) => {
     const errors = observeErrors(page);
+    const manifest = await (await page.request.get('/assets/audio/manifest.json')).json() as {
+      events: Record<string, { variants: { src: string }[] }>;
+    };
+    const eventCount = Object.keys(manifest.events).length;
+    const fileCount = new Set(Object.values(manifest.events).flatMap(event => event.variants.map(variant => variant.src))).size;
+    expect(eventCount).toBeGreaterThanOrEqual(15);
+    expect(manifest.events['woodcutting.hit']?.variants).toHaveLength(5);
     const initial = miningCamp(1);
     const pawn = initial.pawns[0]!;
     const target = { x: pawn.x + 1, z: pawn.z };
@@ -141,7 +150,8 @@ test('V149 : un vrai contact de minage produit du PCM après le mix Web Audio', 
     await page.locator('#load').click();
     await expectWorld(page, initial);
     await page.keyboard.press('Escape');
-    await expect.poll(() => page.evaluate(() => window.__lisiere.audio.availableSounds)).toBe(12);
+    await expect.poll(() => page.evaluate(() => window.__lisiere.audio.availableSounds)).toBe(eventCount);
+    await expect.poll(() => page.evaluate(() => window.__lisiere.audio.loadedCount)).toBe(fileCount);
     await expect(page.locator('#sound-enabled')).toBeChecked();
     await expect(page.locator('#sound-volume')).toHaveValue('75');
     await page.locator('[data-speed="6"]').click();
@@ -184,6 +194,6 @@ test('V149 : un vrai contact de minage produit du PCM après le mix Web Audio', 
     await expect.poll(() => page.evaluate(() => (window as any).__audioProbe.context.state)).toBe('running');
     await panel(page, 'menu');
     await page.locator('#show-diagnostics').click();
-    await expect(page.locator('#metrics')).toContainText(/son actif, 12 MP3, [1-9]\d* effets, dernier mining\.hit/);
+    await expect(page.locator('#metrics')).toContainText(new RegExp(`son actif, ${fileCount} MP3, [1-9]\\d* effets, dernier mining\\.hit`));
     expect(errors).toEqual([]);
 });

@@ -14,13 +14,20 @@ export interface AudioManifest { version: 1; events: Record<string, SoundEvent> 
 const MAX_VOICES = 24;
 const MAX_ONE_SHOTS_PER_FRAME = 12;
 const DEFAULT_RANGE = 24;
+// Leave headroom for overlapping work, combat and weather at the default slider level.
+const MIX_GAIN = 0.55;
 const PREVIEW_KIND = 'mining.hit';
-const MAX_WORK_VOICES_PER_KIND = 3;
-const WORK_CLUSTER_RADIUS = 5;
-const WORK_KINDS = new Set([
+const MAX_CLUSTER_VOICES = 3;
+const CLUSTER_RADIUS = 5;
+const CLUSTERED_KINDS = new Set([
   'mining.hit', 'woodcutting.hit', 'construction.hit', 'cooking.work',
   'crafting.work', 'tailoring.work', 'butchering.work', 'research.work',
 ]);
+function clusterGroup(kind: string): string | null {
+  // An opening and closing door share one nearby acoustic patch.
+  if (kind === 'door.open' || kind === 'door.close') return 'door';
+  return CLUSTERED_KINDS.has(kind) ? kind : null;
+}
 const NO_DECODED_MP3_ERROR = 'Aucun MP3 du manifeste audio n’a pu être décodé.';
 
 function level(value: unknown, fallback: number, ceiling: number): number {
@@ -74,6 +81,7 @@ export class AudioDirector {
   private readonly buffers = new Map<string, AudioBuffer | null>();
   private readonly voices = new Set<Voice>();
   private readonly continuous = new Map<string, Voice>();
+  private readonly lastPlayedVariantByKind = new Map<string, string>();
   private continuousSources: readonly ContinuousSource[] = [];
   private lastSelection = { x: Infinity, y: Infinity, z: Infinity, span: 0 };
   private unlockPromise: Promise<void> | null = null;
@@ -193,7 +201,7 @@ export class AudioDirector {
   setVolume(volume: number): void {
     if (!Number.isFinite(volume)) return;
     this.volume = Math.max(0, Math.min(1, volume));
-    if (this.previewOutput) this.previewOutput.gain.value = this.muted ? 0 : Math.min(8, this.volume * (this.manifest?.events[PREVIEW_KIND]?.gain ?? 1) * (this.manifest?.events[PREVIEW_KIND]?.variants[0]?.gain ?? 1));
+    if (this.previewOutput) this.previewOutput.gain.value = this.muted ? 0 : Math.min(8, MIX_GAIN * this.volume * (this.manifest?.events[PREVIEW_KIND]?.gain ?? 1) * (this.manifest?.events[PREVIEW_KIND]?.variants[0]?.gain ?? 1));
     this.updateMaster();
   }
 
@@ -258,7 +266,7 @@ export class AudioDirector {
         this.previewOutput = context.createGain();
         this.previewOutput.connect(context.destination);
       }
-      this.previewOutput.gain.value = Math.min(8, this.volume * event.gain * variant.gain);
+      this.previewOutput.gain.value = Math.min(8, MIX_GAIN * this.volume * event.gain * variant.gain);
       this.stopPreview();
       const source = context.createBufferSource();
       source.buffer = buffer;
@@ -278,6 +286,7 @@ export class AudioDirector {
   /** Loading/new map must not inherit old queued or currently playing sounds. */
   reset(): void {
     this.scheduler.reset();
+    this.lastPlayedVariantByKind.clear();
     this.stopPreview();
     this.continuousSources = [];
     this.continuous.clear();
@@ -367,7 +376,7 @@ export class AudioDirector {
   private updateMaster(): void {
     const context = this.context; const master = this.master;
     if (!context || !master || context.state === 'closed') return;
-    const desired = this.muted || this.paused || this.hidden ? 0 : this.volume;
+    const desired = this.muted || this.paused || this.hidden ? 0 : MIX_GAIN * this.volume;
     if (desired === this.lastGain) return;
     this.lastGain = desired;
     const now = context.currentTime;
@@ -396,15 +405,16 @@ export class AudioDirector {
     const context = this.context; const master = this.master;
     const event = this.manifest?.events[cue.kind];
     if (!context || !master || !event || event.loop || !event.gain) return;
-    if (WORK_KINDS.has(cue.kind)) {
-      // Repeated work at one patch should not layer the same recording.
+    const group = clusterGroup(cue.kind);
+    if (group) {
+      // Repeated work or doors at one patch should not layer recordings.
       // The set is bounded by MAX_VOICES and checked only for due contacts.
       let active = 0;
       for (const voice of this.voices) {
-        if (voice.kind !== cue.kind) continue;
-        if (++active >= MAX_WORK_VOICES_PER_KIND) return;
+        if (clusterGroup(voice.kind) !== group) continue;
+        if (++active >= MAX_CLUSTER_VOICES) return;
         if (voice.x !== undefined && voice.z !== undefined &&
-          Math.hypot(cue.x - voice.x, cue.z - voice.z) < WORK_CLUSTER_RADIUS) return;
+          Math.hypot(cue.x - voice.x, cue.z - voice.z) < CLUSTER_RADIUS) return;
       }
     }
     const pose = listenerPose(this.camera);
@@ -412,7 +422,10 @@ export class AudioDirector {
     if (event.spatial && sourceDistance(cue.x, cue.z, pose) >= range) return;
     const available = event.variants.filter(variant => this.buffers.get(variant.src));
     if (!available.length) return;
-    const variant = available[cueHash(cue.id) % available.length]!;
+    let variantIndex = cueHash(cue.id) % available.length;
+    if (available.length > 1 && available[variantIndex]!.src === this.lastPlayedVariantByKind.get(cue.kind))
+      variantIndex = (variantIndex + 1) % available.length;
+    const variant = available[variantIndex]!;
     const buffer = this.buffers.get(variant.src)!;
     if (this.voices.size >= MAX_VOICES) {
       const loops = new Set(this.continuous.values());
@@ -447,6 +460,7 @@ export class AudioDirector {
       source.onended = () => this.releaseVoice(playingVoice);
       this.voices.add(voice);
       source.start();
+      this.lastPlayedVariantByKind.set(cue.kind, variant.src);
       this.playedOneShots++;
       this.lastOneShotKind = cue.kind;
     } catch {

@@ -13,6 +13,7 @@ import { createTradeUI } from './ui/trade-panel';
 import { climateDateLabel,climateControls } from './ui/climate-inspection';
 import { WEATHER } from './sim/weather-definitions';
 import { perceivedWeather, weatherRainRate } from './sim/weather';
+import { windIntensity } from './sim/wind-rules';
 import { firePosition } from './sim/fire-rules';
 import { calendarTick } from './sim/calendar';
 import { GameSession, SAVE_KEY, PREVIOUS_KEY } from './ui/game-session';
@@ -102,6 +103,7 @@ import { foodFreshnessLabel } from './ui/food-freshness';
 import { updateFoodStocks } from './ui/food-stocks';
 import { SimulationClient } from './bridge/SimulationClient';
 import { AudioDirector } from './audio/AudioDirector';
+import { ambientCameraGain } from './audio/ambience';
 import { createNearbyFireCollector } from './audio/continuous';
 import { listenerPose, type AudioCamera } from './audio/spatial';
 import { ColonyRenderer } from './render/ColonyRenderer';
@@ -135,14 +137,18 @@ let lastHoverReadAt=0,lastHoverCopy='';
 let altInspectorHeld=false,lastAltReadAt=0,lastAltCopy='',mapPointerX=0,mapPointerY=0;
 const mapHoverLight=new MapHoverLightCache();
 let lastAudioSourceFocus={x:Infinity,z:Infinity};
+let lastAudioSourceHeight=NaN;
 let lastAudioCamera:AudioCamera|undefined;
 function syncAudioSources(world: World,camera=lastAudioCamera): void {
   if (!soundEnabled) { audio.setContinuousSources([]); return; }
   // Rebuild on a snapshot or meaningful listener movement, never per image.
   // A low perspective view can place the ear far from the orbit target.
-  const pose=camera?listenerPose(camera):renderer?.audioFocus??{x:world.width/2,z:world.height/2};
+  const listener=camera?listenerPose(camera):undefined;
+  const pose=listener??renderer?.audioFocus??{x:world.width/2,z:world.height/2};
   const focus={x:pose.x,z:pose.z};
   lastAudioSourceFocus=focus;
+  lastAudioSourceHeight=listener?.y??NaN;
+  const weatherCameraGain=camera?ambientCameraGain(camera):1;
   const nearby=createNearbyFireCollector(focus);
   for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined)
     nearby.add(`fire:${fire.id}`,fire.x,fire.z,Math.max(.2,Math.min(1,fire.size)));
@@ -152,8 +158,12 @@ function syncAudioSources(world: World,camera=lastAudioCamera): void {
   const weather=perceivedWeather(world);
   if(weather==='rain'||weather==='rainy-thunderstorm'||weather==='foggy-rain') {
     const gain=Math.min(1,Math.max(0,weatherRainRate(world)));
-    if(gain>.05)sources.push({id:'weather:rain',kind:'weather.rain',x:focus.x,z:focus.z,gain});
+    if(gain>.05)sources.push({id:'weather:rain',kind:'weather.rain',x:focus.x,z:focus.z,gain:gain*weatherCameraGain});
   }
+  // Shared weather field: the sound follows actual wind strength, including
+  // weather modifiers, without spending simulation RNG or scanning the map.
+  const wind=Math.max(0,Math.min(1,windIntensity(world)/2));
+  if(wind>.02)sources.push({id:'weather:wind',kind:'weather.wind',x:focus.x,z:focus.z,gain:wind*weatherCameraGain});
   audio.setContinuousSources(sources);
 }
 let lastStatusAlertsSignature='';
@@ -1048,7 +1058,7 @@ document.addEventListener('keydown', event => {
 });
 client.onError = message => notify(message, true);
 client.onSnapshot = (world, cost, speed, replaced, motion) => {
-  if (replaced) {audio.reset();lastAudioCamera=undefined;lastAudioSourceFocus={x:Infinity,z:Infinity};}
+  if (replaced) {audio.reset();lastAudioCamera=undefined;lastAudioSourceFocus={x:Infinity,z:Infinity};lastAudioSourceHeight=NaN;}
   const speedChanged=currentSpeed!==speed;
   const role=(p:Pawn|undefined)=>p?p.prisoner?'prisoner':isColonist(p)?'colonist':'other':'absent';
   const roleChanged=selectedPawn!==undefined&&role(snapshot?.pawns.find(p=>p.id===selectedPawn))!==role(world.pawns.find(p=>p.id===selectedPawn));
@@ -1077,7 +1087,8 @@ async function prepareWorld(): Promise<void> {
       audio.updateCamera(view.camera);
       const pose=listenerPose(view.camera);
       if (soundEnabled && snapshot && !document.hidden &&
-        Math.hypot(pose.x-lastAudioSourceFocus.x,pose.z-lastAudioSourceFocus.z)>=4)
+        (Math.hypot(pose.x-lastAudioSourceFocus.x,pose.z-lastAudioSourceFocus.z)>=4 ||
+          !Number.isFinite(lastAudioSourceHeight) || Math.abs(pose.y-lastAudioSourceHeight)>=2))
         syncAudioSources(snapshot,view.camera);
       audio.update({ presentedTick: view.tick, paused: view.paused || frontMenu.isOpen() || replacingWorld, hidden: document.hidden });
     };

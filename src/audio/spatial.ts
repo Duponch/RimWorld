@@ -24,7 +24,13 @@ const EAR_HEIGHT = 1.6;
 // OrthographicCamera keeps a large, nearly fixed world-space offset for map
 // clipping. Zoom changes its visible span rather than moving its position, so
 // use a virtual ear height that tracks the equivalent change in view distance.
-const ORTHOGRAPHIC_HEIGHT_PER_SPAN = 0.25;
+const ORTHOGRAPHIC_HEIGHT_PER_SPAN = 0.45;
+// The virtual ear must retain useful headroom for sounds at the focus at the
+// normal iso span; zoom-out then shortens this horizon as its ear rises.
+const ORTHOGRAPHIC_RANGE_MULTIPLIER = 1.8;
+// Perspective already moves its physical ear away as the camera zooms out.
+// Keep the acoustic horizon stable instead of shortening it a second time.
+const PERSPECTIVE_RANGE_MULTIPLIER = 2.5;
 
 /** Perspective listens from the camera. Orthographic listens above its focus,
  * at a height derived from zoom; its distant render-camera offset is not an
@@ -54,12 +60,15 @@ export function listenerPose(camera: AudioCamera): ListenerPose {
   };
 }
 
-/** Zooming out quiets distant work; a full map never becomes one listening area. */
+/** Orthographic zoom needs a virtual ear and a shrinking listening area.
+ * Perspective zoom already changes the ear's real distance to every source. */
 export function audibleRange(baseRange: number, camera: AudioCamera): number {
+  if (camera.mode === 'perspective')
+    return Math.max(2, Math.min(90, baseRange * PERSPECTIVE_RANGE_MULTIPLIER));
   const scale = Number.isFinite(camera.span) && camera.span! > 0 ? 32 / camera.span!
     : Number.isFinite(camera.zoom) && camera.zoom! > 0 ? camera.zoom! : 1;
-  const zoomFactor = Math.max(0.55, Math.min(1.25, Math.sqrt(scale)));
-  return Math.max(2, Math.min(36, baseRange * zoomFactor));
+  const zoomFactor = Math.max(0.2, Math.min(2, scale));
+  return Math.max(2, Math.min(40, baseRange * ORTHOGRAPHIC_RANGE_MULTIPLIER * zoomFactor));
 }
 
 export function sourceDistance(x: number, z: number, pose: ListenerPose): number {

@@ -12,7 +12,7 @@ export interface ContinuousEventInfo { maxDistance: number; spatial: boolean; lo
 
 /** Snapshot-side preselection before the four-voice Web Audio selection. The
  * focus must be the listener pose, not merely the orbit target in perspective. */
-export function createNearbyFireCollector(focus:{x:number;z:number},limit=12,radius=32) {
+export function createNearbyFireCollector(focus:{x:number;z:number},limit=12,radius=64) {
   const nearby:(ContinuousSource&{gain:number;distance:number})[]=[];
   return {
     add(id:string,x:number,z:number,gain:number):void {

@@ -1,6 +1,6 @@
 # Sons de jeu et production SFX V149
 
-**État : 12 MP3 inscrits au manifeste, un pour chacun des 12 cues du plan ; musique et voix absentes.** Les quatre derniers fichiers couvrent fabrication, couture, boucherie et recherche, après cuisine et construction ; les deux anciens fichiers de minage restent conservés. Un [parcours Chromium ciblé](../history/validation-audio-audibility-v149.md) mesure le signal PCM après le mix d'un vrai contact de travail. Cette mesure ne remplace pas une écoute sur l'appareil du joueur. Le moteur audio lit `public/assets/audio/manifest.json` version 1. [Recherche API, coût et droits](../research/audio-elevenlabs-v149.md), [suivi des quatre derniers SFX](../history/validation-audio-all-work-v149.md).
+**Photographie V149 : 12 MP3 inscrits au manifeste, un pour chacun des 12 cues du plan ; musique et voix absentes.** Le [mix V163](audio-mix-v163.md) est l'état sonore courant. Les quatre derniers fichiers V149 couvrent fabrication, couture, boucherie et recherche, après cuisine et construction ; les deux anciens fichiers de minage restent conservés. Un [parcours Chromium ciblé](../history/validation-audio-audibility-v149.md) mesure le signal PCM après le mix d'un vrai contact de travail. Cette mesure ne remplace pas une écoute sur l'appareil du joueur. Le moteur audio lit `public/assets/audio/manifest.json` version 1. [Recherche API, coût et droits](../research/audio-elevenlabs-v149.md), [suivi des quatre derniers SFX](../history/validation-audio-all-work-v149.md).
 
 ## Essai sonore dans les Options
 

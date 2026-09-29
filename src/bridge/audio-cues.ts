@@ -5,7 +5,7 @@ import { WORK_FRACTIONS } from '../sim/work-progress.ts';
 
 export type AudioCueKind = 'mining.hit' | 'woodcutting.hit' | 'construction.hit'
   | 'cooking.work' | 'crafting.work' | 'tailoring.work' | 'butchering.work' | 'research.work'
-  | 'weapon.gunshot' | 'weapon.melee';
+  | 'weapon.gunshot' | 'weapon.melee' | 'door.open' | 'door.close';
 export interface AudioCue {
   id: string;
   tick: number;
@@ -32,6 +32,7 @@ export class AudioCueRecorder {
   private projectiles = new Set<number>();
   private shooting = new Map<number, number>();
   private melee = new Map<number, number>();
+  private doors = new Map<number, boolean>();
 
   reset(): void {
     this.initialized = false;
@@ -42,6 +43,7 @@ export class AudioCueRecorder {
     this.projectiles.clear();
     this.shooting.clear();
     this.melee.clear();
+    this.doors.clear();
   }
 
   capture(world: World): void {
@@ -50,11 +52,13 @@ export class AudioCueRecorder {
     const previousProjectiles = this.projectiles;
     const previousShooting = this.shooting;
     const previousMelee = this.melee;
+    const previousDoors = this.doors;
     const work = new Map<number, WorkObservation>();
     const projectiles = new Set<number>();
     const shooting = new Map<number, number>();
     const emittedShots = new Set<string>();
     const melee = new Map<number, number>();
+    const doors = new Map<number, boolean>();
     const jobs = new Map(world.jobs.map(job => [job.id, job]));
     let stations: Map<number, World['structures'][number]> | undefined;
     const stationFor = (id: number): World['structures'][number] | undefined => {
@@ -121,10 +125,22 @@ export class AudioCueRecorder {
         this.add({ id: `shot:${projectile.id}`, tick: world.tick, kind: 'weapon.gunshot',
           x: projectile.flight.origin.x, z: projectile.flight.origin.z });
     }
+    for (const structure of world.structures) {
+      if ((structure.kind !== 'door' && structure.kind !== 'fence-gate') || !structure.door) continue;
+      const open = structure.door.open;
+      doors.set(structure.id, open);
+      const previous = previousDoors.get(structure.id);
+      if (this.initialized && previous !== undefined && previous !== open) {
+        const kind = open ? 'door.open' : 'door.close';
+        this.add({ id: `${kind}:${world.tick}:${structure.id}`, tick: world.tick,
+          kind, x: structure.x, z: structure.z });
+      }
+    }
     this.work = work;
     this.projectiles = projectiles;
     this.shooting = shooting;
     this.melee = melee;
+    this.doors = doors;
     this.initialized = true;
   }
 

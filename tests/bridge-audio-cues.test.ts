@@ -1,10 +1,76 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { AudioCueRecorder } from '../src/bridge/audio-cues.ts';
 import { SnapshotEncoder } from '../src/bridge/snapshots.ts';
+import { newDoorState } from '../src/sim/door-rules.ts';
+import { applyDoorCommand, readyDoorEntry, updateDoors } from '../src/sim/doors.ts';
 import { createWorld } from '../src/sim/index.ts';
 import type { Job, Pawn, World } from '../src/sim/types.ts';
 
 afterEach(() => { vi.unstubAllGlobals(); vi.resetModules(); });
+
+test('captures actual door motion once, but not loaded state or policy changes', () => {
+  const world = createWorld(846, 32, 32), pawn = world.pawns[0]!;
+  pawn.x = 1; pawn.z = 2;
+  const door = { id: world.nextId++, kind: 'door' as const, x: 2, z: 2,
+    orientation: 0 as const, footprint: 'standard' as const, door: newDoorState(world.tick) };
+  world.structures.push(door);
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]); // A loaded closed door is not an action.
+
+  expect(applyDoorCommand(world, { type: 'door-policy', structureId: door.id,
+    setting: 'forbidden', value: true }).ok).toBe(true);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  expect(applyDoorCommand(world, { type: 'door-policy', structureId: door.id,
+    setting: 'forbidden', value: false }).ok).toBe(true);
+
+  expect(readyDoorEntry(world, pawn, door)).toBe(false);
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ id: `door.open:${world.tick}:${door.id}`,
+    kind: 'door.open', tick: world.tick, x: door.x, z: door.z }]);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+
+  world.tick += 30;
+  updateDoors(world);
+  expect(door.door.open).toBe(false);
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ id: `door.close:${world.tick}:${door.id}`,
+    kind: 'door.close', tick: world.tick, x: door.x, z: door.z }]);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+
+  readyDoorEntry(world, pawn, door);
+  expect(door.door.open).toBe(true);
+  recorder.reset();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]); // A resumed open door is not replayed.
+});
+
+test('wooden passage cues cover fence gates but exclude powered autodoors', () => {
+  const world = createWorld(847, 32, 32);
+  const gate = { id: world.nextId++, kind: 'fence-gate' as const, x: 2, z: 3,
+    orientation: 0 as const, footprint: 'standard' as const, door: newDoorState(world.tick) };
+  const auto = { id: world.nextId++, kind: 'autodoor' as const, x: 3, z: 3,
+    orientation: 0 as const, footprint: 'standard' as const, door: newDoorState(world.tick) };
+  world.structures.push(gate, auto);
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+
+  world.tick++;
+  gate.door.open = true;
+  auto.door.open = true;
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ kind: 'door.open', x: gate.x, z: gate.z }]);
+
+  world.tick++;
+  gate.door.open = false;
+  auto.door.open = false;
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ kind: 'door.close', x: gate.x, z: gate.z }]);
+});
 
 test('captures confirmed work, shot and melee once without playing loaded history', () => {
   const world = createWorld(152, 32, 32);
