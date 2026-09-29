@@ -1153,9 +1153,17 @@ async function prepareWorld(): Promise<void> {
     renderer.onInteractionCancel=()=>orderMenu.close();
     renderer.onContext=(cell,x,y,queue,targetId)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner);if(selected.some(p=>p.draft))void orderMenu.openTactical(snapshot,new Set(selected.map(p=>p.id)),cell,x,y,queue,targetId);else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
     renderer.onArea = designateArea;
+    renderer.onBuildLine = (kind, from, to, material) => {
+      if (!snapshot || replacingWorld || frontMenu.isOpen()) return;
+      void attempt(async () => {
+        const response = await client.command({ type:'build-line', kind, from, to, ...(material ? { material } : {}) });
+        const result = JSON.parse(response!) as { affected:number; skipped:number };
+        notify(`${result.affected} plan(s) ${kind==='power-conduit'?'de câble':kind==='fence'?'de clôture':'de mur'} créé(s)${result.skipped ? ` · ${result.skipped} case(s) ignorée(s)` : ''}.`);
+      });
+    };
     renderer.onAreaPreview = info => {
       el('area-feedback').hidden = !info;
-      if (info) el('area-feedback').textContent = `${info.width} × ${info.height} · ${info.eligible} case(s) retenue(s) · ${info.skipped} ignorée(s) — Relâcher pour appliquer · Échap pour annuler`;
+      if (info) el('area-feedback').textContent = `${info.line?'Ligne':'Rectangle'} ${info.width} × ${info.height} · ${info.eligible} case(s) retenue(s) · ${info.skipped} ignorée(s) — Relâcher pour appliquer · Échap pour annuler`;
     };
   }
   renderer.setWorld(snapshot, true, currentSpeed, latestMotion,true);

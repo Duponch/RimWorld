@@ -1,0 +1,32 @@
+import { expect, test } from '@playwright/test';
+import { createWorld, serializeWorld, validateWorld } from '../../src/sim/index.ts';
+import { cell, dragRectangle, expectWorld, observeErrors, panel, saveKey, tool, world } from './helpers.ts';
+
+test('Architecte : ligne de murs, aperçu, Échap, sens inverse et cases bloquées', async ({page}) => {
+  test.setTimeout(90_000);
+  const errors=observeErrors(page);
+  const fixture=createWorld(42,32,32);
+  fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.resources=[];fixture.jobs=[];fixture.structures=[];
+  fixture.tiles[14*32+13]!.terrain='water';
+  await page.addInitScript(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
+  await page.goto('/?scenario=camp&size=32&e2e');await page.locator('[data-speed="0"]').click();
+  await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
+  await tool(page,'wall');
+  await dragRectangle(page,{x:10,z:14},{x:17,z:14},false);
+  await expect(page.locator('#area-feedback')).toContainText('Ligne 8 × 1 · 7 case(s) retenue(s) · 1 ignorée(s)');
+  expect((await world(page)).jobs).toEqual([]);
+  await page.keyboard.press('Escape');await page.mouse.up();
+  await expect(page.locator('#area-feedback')).toBeHidden();
+  expect((await world(page)).jobs).toEqual([]);
+  await dragRectangle(page,{x:10,z:14},{x:17,z:14},false);
+  await page.mouse.down({button:'right'});await page.mouse.up({button:'right'});await page.mouse.up();
+  expect((await world(page)).jobs).toEqual([]);
+  await dragRectangle(page,{x:17,z:14},{x:10,z:14});
+  await expect.poll(async()=>(await world(page)).jobs.length).toBe(7);
+  const planned=await world(page);
+  expect(planned.jobs.map(job=>[job.kind,job.x,job.z])).toEqual([17,16,15,14,12,11,10].map(x=>['wall',x,14]));
+  expect(validateWorld(planned)).toEqual([]);
+  await tool(page,'cancel');await cell(page,16,14);
+  await expect.poll(async()=>(await world(page)).jobs.length).toBe(6);
+  expect(errors).toEqual([]);
+});

@@ -4,6 +4,7 @@ import type { Job, Resource } from '../src/sim/types';
 import { appendFlora, isClusterPlantSpecies, type FloraParts } from '../src/render/flora-presentation';
 import { createPlantClusterGeometry, PlantClusterLayer, plantClusterPresentation } from '../src/render/PlantClusterLayer';
 import { designationIconInstances, isIconDesignationKind } from '../src/render/DesignationIconLayer';
+import { noise } from '../src/render/StaticGeometry';
 import { material } from '../src/render/primitives';
 import { NaturalResourcePresentation } from '../src/render/NaturalResourcePresentation';
 import * as THREE from 'three/webgpu';
@@ -112,11 +113,29 @@ describe('V94 resident 3D plant presentation contracts', () => {
 
   test('mine, chop, harvest and cut share the atlas row and exclude other jobs', () => {
     const world = createWorld(92, 8, 8);
+    world.resources = [];
     world.jobs = [job(1, 'mine', 1), job(2, 'chop', 2), job(3, 'harvest', 3), job(4, 'cut', 4), job(5, 'sow', 5)];
     expect(designationIconInstances(world)).toEqual([
-      { x: 1, y: 3.2, z: 2, icon: 0 }, { x: 2, y: 7.55, z: 2, icon: 1 },
+      { x: 1, y: 3.2, z: 2, icon: 0 }, { x: 2, y: 4.32, z: 2, icon: 1 },
       { x: 3, y: 1.08, z: 2, icon: 2 }, { x: 4, y: 1.08, z: 2, icon: 3 },
     ]);
     expect(isIconDesignationKind('sow')).toBe(false);
+  });
+
+  test('the chop icon follows each rendered tree height, including grown and legacy trees', () => {
+    const world = createWorld(94, 8, 8);
+    world.jobs = [job(2, 'chop', 2), job(4, 'chop', 4)];
+    world.resources = [
+      { id: 20, kind: 'tree', species: 'pine', x: 2, z: 2, amount: 10, growth: 1, growthTick: world.tick },
+      { id: 21, kind: 'tree', x: 4, z: 2, amount: 10 },
+    ];
+    const [pine, legacy] = designationIconInstances(world);
+    expect(pine!.y / 4.6).toBeGreaterThan(.68);
+    expect(pine!.y / 4.6).toBeLessThan(.76);
+    const legacyHeight = 5 + 2 * noise(4, 2, 77);
+    expect(legacy!.y / legacyHeight).toBeGreaterThan(.68);
+    expect(legacy!.y / legacyHeight).toBeLessThan(.76);
+    world.resources[0]!.growth = .5;
+    expect(designationIconInstances(world)[0]!.y).toBeLessThan(pine!.y);
   });
 });

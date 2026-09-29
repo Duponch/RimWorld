@@ -222,6 +222,7 @@ export type DesignateCommand = { type: 'designate'; kind: JobKind; targetId?:num
 export type AreaAction = 'lay-floor' | 'remove-floor' | 'home' | 'remove-home' | 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' | 'haul-chunks' | 'deconstruct' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export interface StorageSettings { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; floor?: import('./flooring.ts').FloorKind }
+export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }
 export type Command = import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
   | {type:'pen-species';markerId:number;species:import('./animal-species.ts').AnimalSpeciesId;accepted:boolean}
   | {type:'adopt-economy'}
@@ -262,6 +263,7 @@ export type Command = import('./domestic-state.ts').DomesticCommand | import('./
   | { type: 'bill-move'; structureId: number; billId: number; direction: -1 | 1 }
   | DesignateCommand
   | AreaCommand
+  | BuildLineCommand
   | { type: 'refuel-policy'; structureId: number; enabled: boolean }
   | { type: 'growing-policy'; zoneId: number; plant?: GrowingZone['plant']; allowSow: boolean; allowCut: boolean }
   | { type: 'assign-bed'; bedId: number; pawnId: number | null }

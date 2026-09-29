@@ -5,7 +5,7 @@ import {
 } from 'three/tsl';
 
 const CELL_SIZE = 2;
-const FIELD_HEIGHT = 16;
+const FIELD_HEIGHT = 24;
 
 function wrap(value: number, period: number): number {
   return ((value % period) + period) % period;
@@ -76,8 +76,6 @@ export class WeatherPrecipitationLayer {
   private readonly wind = uniform(new THREE.Vector2());
   private readonly daylight = uniform(1);
   private readonly perspective = uniform(0);
-  private readonly groundSlope = uniform(new THREE.Vector2());
-  private readonly cameraDirection = new THREE.Vector3();
   private mapCapacity = 256;
 
   constructor() {
@@ -85,7 +83,6 @@ export class WeatherPrecipitationLayer {
     const ink = varyingProperty('float', 'weatherParticleInk');
     const visible = varyingProperty('float', 'weatherParticleVisible');
     const worldXZ = varyingProperty('vec2', 'weatherParticleWorldXZ');
-    const worldY = varyingProperty('float', 'weatherParticleWorldY');
     this.material.positionNode = Fn(() => {
       const slot = uint(instanceIndex).mul(uint(this.stride)).mod(uint(this.capacity));
       const cellX = float(slot.mod(uint(this.columns)));
@@ -100,7 +97,7 @@ export class WeatherPrecipitationLayer {
       const snow = hash(key.add(uint(37))).lessThan(this.snowFraction);
       kind.assign(snow.select(1, 0));
       ink.assign(hash(key.add(uint(53))));
-      // Eighth-step speeds make a 128-unit phase wrap seamless for every cell.
+      // Eighth-step speeds make a 192-unit phase wrap seamless for every cell.
       const speed = hash(key.add(uint(89))).mul(4).floor().mul(.125).add(.875);
       const phase = snow.select(this.snowPhase, this.rainPhase);
       const height = hash(key.add(uint(97))).mul(FIELD_HEIGHT)
@@ -137,7 +134,6 @@ export class WeatherPrecipitationLayer {
         .add(up.mul(positionLocal.y.mul(length)))
         .add(vec3(this.wind.x.mul(lean), 0, this.wind.y.mul(lean)));
       worldXZ.assign(point.xz);
-      worldY.assign(point.y);
       return point;
     })();
     const pigmentPixel = uv().sub(vec2(.5));
@@ -166,15 +162,7 @@ export class WeatherPrecipitationLayer {
         .mul(sin(pixel.y.mul(83).sub(ink.mul(19)))).mul(.16).add(.84);
       const inside = worldXZ.x.greaterThanEqual(-.5).and(worldXZ.x.lessThan(this.dimensions.x.sub(.5)))
         .and(worldXZ.y.greaterThanEqual(-.5)).and(worldXZ.y.lessThan(this.dimensions.y.sub(.5)));
-      // In orthographic view, each fragment's camera ray meets y=0 at the
-      // same projected pixel. Fade it at that ground footprint's map edge;
-      // the actual 3D particle centre and wrap volume remain world-anchored.
-      const footprint = worldXZ.add(this.groundSlope.mul(worldY));
-      const footprintEdge = footprint.x.add(.5).min(this.dimensions.x.sub(.5).sub(footprint.x))
-        .min(footprint.y.add(.5)).min(this.dimensions.y.sub(.5).sub(footprint.y));
-      const silhouette = mix(smoothstep(0, .18, footprintEdge), float(1), this.perspective);
       return mix(rain, snow, kind).mul(chalk).mul(visible).mul(inside.select(1, 0))
-        .mul(silhouette)
         .mul(float(.52).add(this.daylight.mul(.32)));
     })();
     this.mesh = new THREE.Mesh(this.geometry, this.material);
@@ -207,17 +195,12 @@ export class WeatherPrecipitationLayer {
     const amount = Math.min(1, shares.rain + shares.snow);
     if (amount <= 0) { this.geometry.instanceCount = 0; this.mesh.visible = false; return; }
     this.seed.value = seed;
-    this.rainPhase.value = wrap(tick * .75, 128);
-    this.snowPhase.value = wrap(tick * .12, 128);
+    this.rainPhase.value = wrap(tick * .75, 192);
+    this.snowPhase.value = wrap(tick * .12, 192);
     this.snowFraction.value = shares.snow / amount;
     this.wind.value.set(directionX, directionZ).multiplyScalar(THREE.MathUtils.clamp(strength, 0, 2));
     this.daylight.value = THREE.MathUtils.clamp(daylight, 0, 1);
     this.perspective.value = camera instanceof THREE.PerspectiveCamera ? 1 : 0;
-    if (camera instanceof THREE.OrthographicCamera) {
-      camera.getWorldDirection(this.cameraDirection);
-      const down = Math.max(.001, -this.cameraDirection.y);
-      this.groundSlope.value.set(this.cameraDirection.x / down, this.cameraDirection.z / down);
-    } else this.groundSlope.value.set(0, 0);
     this.geometry.instanceCount = Math.max(1, Math.round(this.mapCapacity * amount * .82));
     this.mesh.visible = true;
   }

@@ -140,9 +140,10 @@ import { ITEM_DEFINITIONS } from './items.ts';
 import { constructionSkillRequired,constructionSupplied, validConstructionMaterial } from './construction-materials.ts';
 import { refreshStock } from './materials.ts';
 import { queryArea, validStorageSettings } from './designation.ts';
+import { constructionLineCells, isLineBuildKind, type LineBuildKind } from './construction-line.ts';
 import { processNeeds, updateNeeds } from './needs.ts';
 export { HUNGER_PER_TICK, REST_PER_TICK } from './needs.ts';
-import type { AreaCommand, Cell, Command, CommandResult, DesignateCommand, Job, JobKind, Pawn, RefusalCode, World } from './types.ts';
+import type { AreaCommand, BuildLineCommand, Cell, Command, CommandResult, DesignateCommand, Job, JobKind, Pawn, RefusalCode, World } from './types.ts';
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
@@ -220,8 +221,42 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   return { ok: true, affected, skipped: selection.skipped };
 }
 
+/** One ordered worker command for a straight construction stroke. Each cell is
+ * rechecked against the world left by preceding cells, just like separate clicks.
+ */
+function applyBuildLine(world: World, command: BuildLineCommand): CommandResult {
+  if (!isLineBuildKind(command.kind) || !command.from || !command.to
+    || !inBounds(world, command.from.x, command.from.z) || !inBounds(world, command.to.x, command.to.z)
+    || !validConstructionMaterial(command.kind, command.material, world.schemaVersion))
+    return refusal('invalid-command', 'Tracé ou matériau de construction invalide.');
+  const cells = constructionLineCells(command.from, command.to);
+  if (!Number.isSafeInteger(world.nextId + cells.length)) return refusal('invalid-command', 'Limite des identités atteinte.');
+  let affected = 0;
+  for (const cell of cells) {
+    const result = applyCommandInternal(world, { type: 'designate', kind: command.kind, ...cell,
+      orientation: 0, ...(command.material ? { material: command.material } : {}) });
+    if (result.ok) affected++;
+  }
+  if (!affected) return refusal('missing-target', 'Aucune case compatible sur ce tracé.');
+  return { ok: true, affected, skipped: cells.length - affected };
+}
+
+/** Snapshot-local spatial index for repeated line previews. It is never saved or
+ * reused after a World mutation; canDesignate remains the common authority. */
+export interface ConstructionCellIndex { kind: LineBuildKind; flags: Uint8Array }
+export function buildConstructionCellIndex(world: World, kind: LineBuildKind): ConstructionCellIndex {
+  const flags=new Uint8Array(world.width*world.height);
+  const mark=(cell:Cell,bit:number)=>{if(inBounds(world,cell.x,cell.z))flags[cellIndex(world,cell.x,cell.z)]!|=bit;};
+  for(const job of world.jobs)if(!isRoofJob(job)&&sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,kind))
+    for(const cell of footprintCells(job))mark(cell,1);
+  for(const structure of world.structures)if(sharesConstructionLayer(structure.kind,kind))
+    for(const cell of footprintCells(structure))mark(cell,2);
+  for(const resource of world.resources)if(resource.kind==='rock')mark(resource,4);
+  return {kind,flags};
+}
+
 /** Pure shared rule used by preview and command execution. */
-export function canDesignate(world: World, command: DesignateCommand, installing=false): CommandResult {
+export function canDesignate(world: World, command: DesignateCommand, installing=false, index?:ConstructionCellIndex): CommandResult {
   if(command?.kind==='lay-floor'||command?.kind==='remove-floor')return canDesignateFloor(world,command);
   if(command?.kind==='battery'&&!batteriesUnlocked(world))return refusal('invalid-command','Recherchez Batteries pour construire cet appareil.');
   if(command?.kind==='solar-generator'&&!solarPowerUnlocked(world))return refusal('invalid-command','Recherchez Panneaux solaires pour construire cet appareil.');
@@ -247,18 +282,19 @@ export function canDesignate(world: World, command: DesignateCommand, installing
   if (cells.some(cell => !inBounds(world, cell.x, cell.z))) return refusal('out-of-bounds', 'Empreinte hors de la carte.');
   if(command.kind==='grave'&&world.jobs.some(j=>j.kind==='lay-floor'&&cells.some(c=>sameCell(c,j))))return refusal('occupied','Un plan de sol occupe la future tombe.');
   if(command.kind==='grave'&&cells.some(c=>{const tile=world.tiles[cellIndex(world,c.x,c.z)]!;return !!tile.floor||!['grass','soil','rich-soil','gravel'].includes(tile.terrain);}))return refusal('incompatible-resource','La tombe exige un terrain meuble à creuser.');
-  if (world.jobs.some(job => !isRoofJob(job) && !(command.kind==='deconstruct'&&(job.kind==='repair'||job.kind==='fix-breakdown'||job.kind==='flick')) && sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,target?.kind??command.kind) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
+  if (index?.kind===command.kind ? cells.some(cell=>!!(index.flags[cellIndex(world,cell.x,cell.z)]!&1))
+    : world.jobs.some(job => !isRoofJob(job) && !(command.kind==='deconstruct'&&(job.kind==='repair'||job.kind==='fix-breakdown'||job.kind==='flick')) && sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,target?.kind??command.kind) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   if(command.kind==='deconstruct'||command.kind==='uninstall')return {ok:true};
   if(command.kind==='mine')return world.tiles[cellIndex(world,command.x,command.z)]!.terrain==='rock'?{ok:true}:refusal('incompatible-resource','Désigner un massif rocheux à miner.');
   if((command.kind==='crafting-spot'||command.kind==='butcher-spot')&&world.resources.some(r=>sameCell(r,command)))return refusal('occupied','Dégager la plante avant de placer cet emplacement.');
-  const resource = world.resources.find(candidate => sameCell(candidate, command));
   if (command.kind === 'chop' || command.kind === 'harvest' || command.kind === 'cut') {
+    const resource = world.resources.find(candidate => sameCell(candidate, command));
     return resource && (command.kind === 'chop' ? choppable(world,resource) : isPlant(resource)) && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
   }
   for (const cell of cells) {
     if (['water', 'rock'].includes(world.tiles[cellIndex(world, cell.x, cell.z)]!.terrain)
-      || world.resources.some(item => item.kind==='rock'&&sameCell(item, cell))
-      || world.structures.some(item => sharesConstructionLayer(item.kind,command.kind)&&footprintCells(item).some(target => sameCell(target, cell)))
+      || (index?.kind===command.kind ? !!(index.flags[cellIndex(world,cell.x,cell.z)]!&4) : world.resources.some(item => item.kind==='rock'&&sameCell(item, cell)))
+      || (index?.kind===command.kind ? !!(index.flags[cellIndex(world,cell.x,cell.z)]!&2) : world.structures.some(item => sharesConstructionLayer(item.kind,command.kind)&&footprintCells(item).some(target => sameCell(target, cell))))
       || world.pawns.some(p => p.haul?.destination.type === 'aside' && sameCell(p.haul.destination, cell))
       || cookingCellReserved(world,cell)) {
       return refusal('occupied', 'Construction impossible : terrain, ouvrage ou réservation incompatible dans l’empreinte.');
@@ -371,6 +407,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     const result=applyBillCommand(world,command,drops);if(result.ok){detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);wakePlanners(world);refreshStock(world);}return result;
   }
   if (command.type === 'area') return applyArea(world, command,drops);
+  if (command.type === 'build-line') return applyBuildLine(world, command);
   if (command.type === 'refuel-policy') {
     const fire=refuelable(world,command.structureId);
     if (!fire || typeof command.enabled!=='boolean') return refusal('invalid-command','Bâtiment ou réglage de ravitaillement invalide.');

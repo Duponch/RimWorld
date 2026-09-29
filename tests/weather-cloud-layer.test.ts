@@ -15,6 +15,13 @@ const lowCamera = () => {
 test('nuages V87 : huit états, transition Core et direction de vent visuelle pure', () => {
   expect(WEATHER_KINDS).toHaveLength(8);
   expect(WEATHER_KINDS).not.toContain('overcast');
+  const clearSky = visualCloudAppearance({ current: 'clear', previous: 'clear', ageCore: 4000 });
+  const stormSky = visualCloudAppearance({ current: 'rainy-thunderstorm', previous: 'rainy-thunderstorm', ageCore: 4000 });
+  expect((clearSky.color >>> 16) & 255).toBeGreaterThan(clearSky.color & 255);
+  expect((stormSky.color >>> 16) & 255).toBeGreaterThan(stormSky.color & 255);
+  expect(stormSky.color).toBeLessThan(clearSky.color);
+  for (const kind of ['rain', 'foggy-rain', 'rainy-thunderstorm', 'snow-hard'] as const)
+    expect(visualCloudAppearance({ current: kind, previous: kind, ageCore: 4000 }).coverage).toBeGreaterThan(clearSky.coverage * 3);
   for (const kind of WEATHER_KINDS) {
     const appearance = visualCloudAppearance({ current: kind, previous: kind, ageCore: 4000 });
     expect(appearance.coverage).toBeGreaterThan(0);
@@ -49,14 +56,28 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
     expect(mesh.frustumCulled).toBe(true);
     expect(mesh.boundingSphere!.center.x).toBe(15.5);
     expect(mesh.boundingSphere!.center.z).toBe(15.5);
-    expect(material.depthWrite).toBe(false);
+    expect(material.depthWrite).toBe(true);
+    expect(material.vertexColors).toBe(true);
+    expect(geometry.getAttribute('color').count).toBe(geometry.getAttribute('position').count);
+    expect(geometry.getAttribute('position').count / 3).toBe(295);
+    expect(new Set(Array.from(geometry.getAttribute('color').array)).size).toBeGreaterThan(12);
     expect(geometry.getAttribute('position').count * mesh.count / 3).toBeLessThan(8000);
     expect(cloudViewOpacity(camera, target)).toBeGreaterThan(.9);
+    const elevationSamples = [8, 20, 32, 44, 60].map(degrees => {
+      const radians = degrees * Math.PI / 180;
+      const sample = lowCamera();
+      sample.position.set(target.x, Math.sin(radians) * 40, target.z + Math.cos(radians) * 40);
+      return cloudViewOpacity(sample, target);
+    });
+    expect(elevationSamples.every((value, index) => index === 0 || value < elevationSamples[index - 1]!)).toBe(true);
+    expect(elevationSamples[0]).toBeGreaterThan(.9);
+    expect(elevationSamples.at(-1)).toBeCloseTo(.06, 5);
     layer.present(initial);
     expect(mesh.visible).toBe(true);
     expect(material.opacity).toBeGreaterThan(.4);
     const lowOpacity = material.opacity;
     let activeCentres = 0;
+    const altitudeBands = new Set<number>();
     const matrix = new Matrix4(), position = new Vector3(), rotation = new Quaternion(), scale = new Vector3();
     const footprintRadius = geometry.boundingSphere!.radius + geometry.boundingSphere!.center.length();
     const fadeAttribute = geometry.getAttribute('aCloudFade');
@@ -67,8 +88,9 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
       expect(position.x).toBeLessThan(31.5);
       expect(position.z).toBeGreaterThanOrEqual(-.5);
       expect(position.z).toBeLessThan(31.5);
-      expect(position.y).toBeGreaterThanOrEqual(18);
-      expect(position.y).toBeLessThan(29);
+      expect(position.y).toBeGreaterThanOrEqual(25);
+      expect(position.y).toBeLessThan(43);
+      altitudeBands.add(Math.floor((position.y - 25) / 6.5));
       if (fadeAttribute.getX(index) > .005) {
         const footprint = Math.max(scale.x, scale.z) * footprintRadius;
         expect(position.x - footprint).toBeGreaterThanOrEqual(-.501);
@@ -79,6 +101,7 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
       if (scale.x > .5) activeCentres++;
     }
     expect(activeCentres).toBeGreaterThan(0);
+    expect(altitudeBands.size).toBeGreaterThanOrEqual(3);
     const dayColor = material.color.clone();
     layer.present({ ...initial, daylight: 0 });
     expect(material.color.equals(dayColor)).toBe(false);
@@ -106,6 +129,12 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
     expect(mesh.visible).toBe(true);
     expect(material.opacity).toBeCloseTo(cloudViewOpacity(overhead, target) * visualCloudAppearance(initial.weather).opacity, 5);
     expect(cloudViewOpacity(ortho, target)).toBeCloseTo(cloudViewOpacity(overhead, target), 5);
+    expect(mesh.instanceMatrix.version).toBe(cameraVersion);
+    ortho.zoom = 6;
+    ortho.updateProjectionMatrix();
+    expect(cloudViewOpacity(ortho, target)).toBe(0);
+    layer.present({ ...initial, camera: ortho });
+    expect(mesh.visible).toBe(false);
     expect(mesh.instanceMatrix.version).toBe(cameraVersion);
     layer.configureMap(250, 175);
     expect(mesh.count).toBe(54);

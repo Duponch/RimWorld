@@ -6,14 +6,14 @@ type CloudStyle = Readonly<{ coverage: number; opacity: number; color: number }>
 /** Artistic sky coverage for the eight V87 Core weather states. This table has
  * no effect on weather weights, light, temperature, wind power or saves. */
 const CLOUD_STYLE: Readonly<Record<WeatherKind, CloudStyle>> = {
-  clear: { coverage: .24, opacity: .56, color: 0xf5f3e9 },
-  fog: { coverage: .52, opacity: .64, color: 0xc2cbd0 },
-  rain: { coverage: .74, opacity: .72, color: 0x9da9b5 },
-  'dry-thunderstorm': { coverage: .84, opacity: .76, color: 0x7e8a9e },
-  'rainy-thunderstorm': { coverage: .96, opacity: .80, color: 0x687587 },
-  'foggy-rain': { coverage: .88, opacity: .76, color: 0x9099a3 },
-  'snow-gentle': { coverage: .66, opacity: .70, color: 0xd9dfe2 },
-  'snow-hard': { coverage: .90, opacity: .76, color: 0xaab8c6 },
+  clear: { coverage: .24, opacity: .98, color: 0xffe2aa },
+  fog: { coverage: .70, opacity: .98, color: 0xe3cfaa },
+  rain: { coverage: .88, opacity: .99, color: 0xccbaa0 },
+  'dry-thunderstorm': { coverage: .94, opacity: .99, color: 0xaea08f },
+  'rainy-thunderstorm': { coverage: 1, opacity: 1, color: 0x9e9488 },
+  'foggy-rain': { coverage: .97, opacity: .99, color: 0xc5b6a1 },
+  'snow-gentle': { coverage: .80, opacity: .99, color: 0xf4e8d0 },
+  'snow-hard': { coverage: .97, opacity: 1, color: 0xded2bd },
 };
 
 const clamp01 = (value: number): number => Math.max(0, Math.min(1, value));

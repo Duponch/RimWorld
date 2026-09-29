@@ -1,0 +1,11 @@
+# Validation ciblée — tracé de construction
+
+29 septembre 2026. [Contrat](../development/construction-line-v168.md) et [recherche Core](../research/construction-line-core-v168.md). Ce lot ajoute une interaction de désignation, sans nouveau contenu persistant ni schéma.
+
+- `npx vitest run tests/construction-line.test.ts tests/area-designation.test.ts tests/construction.test.ts` : **3 fichiers, 9 tests réussis**. Le nouveau parcours vérifie sens inverse, axe dominant, matériaux, obstacles, refus avant mutation, placement partiel, annulation, sauvegarde valide et 250 cases sur 250². Le test d'index compare l'aperçu à l'oracle de placement case par case.
+- `npm run build` : TypeScript et Vite réussis. L'avertissement de taille de chunk préexistante ne constitue pas un échec.
+- `npx playwright test tests/integration/construction-line.spec.ts` : **1 parcours Chromium réussi**, vrai pointeur. Aperçu pendant le maintien, aucune commande avant relâchement, Échap et clic droit annulent, ligne inversée, eau ignorée et retrait d'un plan sont vérifiés. Un passage intermédiaire a échoué avant le geste : navigateur logiciel à 1 FPS, tandis que le helper demandait trois images stables en 2,5 s. L'attente du helper a été portée à 8 s ; le passage final réussit. Ce premier échec n'était pas un échec de construction.
+- Après la mise en cache de l'index d'aperçu pour les mouvements d'un même tracé, le même parcours Chromium passe de nouveau **1/1**. L'index est invalidé à l'adoption du snapshot et à l'annulation. Le microbanc ci-dessous mesure sa construction initiale ; il ne chiffre pas séparément les mouvements suivants.
+- Microbanc CPU isolé Vitest sur carte générée 250², ligne de 250 cases : 226 plans, 24 cases incompatibles. Aperçu exact avec index éphémère **3,8 ms** (index inclus), contre **55,1 ms** avant optimisation. Commande groupée observée **46,4 à 76,9 ms** selon le passage. Ces temps ne mesurent pas le rendu WebGPU, la latence du worker en partie naturelle, ni un débit global. Les campagnes longues et le navigateur exhaustif ne sont pas exercés.
+
+Les rectangles existants pour sols, zones et désignations sont conservés ; leurs deux suites ciblées ci-dessus passent. Les formes alternatives du Core et les outils non linéaires restent hors du lot.

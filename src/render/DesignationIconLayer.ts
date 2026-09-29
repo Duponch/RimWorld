@@ -2,11 +2,13 @@ import * as THREE from 'three/webgpu';
 import { attribute, cameraPosition, cameraViewMatrix, texture, uniform, uv, vec2, vec4 } from 'three/tsl';
 import type { Job, World } from '../sim/types';
 import { floraSize, floraTreeHeight } from './flora-presentation';
+import { noise } from './StaticGeometry';
 import { perspectiveDetailRange, screenSpriteScale } from './map-overlay-detail';
 import { WORLD_SCALE } from '../world/scale';
 
 export const DESIGNATION_MIN_CELL_PIXELS = 32;
 export const DESIGNATION_ICON_PIXELS = 30;
+const CHOP_ICON_HEIGHT_FRACTION = .72;
 export const DESIGNATION_ICON_KINDS = ['mine', 'chop', 'harvest', 'cut'] as const;
 export type DesignationIconKind = typeof DESIGNATION_ICON_KINDS[number];
 const ICON_INDEX: Readonly<Record<DesignationIconKind, number>> = { mine: 0, chop: 1, harvest: 2, cut: 3 };
@@ -20,7 +22,10 @@ export function designationIconInstances(world: World): DesignationIconInstance[
   const trees=jobs.some(j=>j.kind==='chop')?new Map(world.resources.filter(r=>r.kind==='tree').map(r=>[r.z*world.width+r.x,r])):undefined;
   return jobs.map(job => {
     const tree=trees?.get(job.z*world.width+job.x);
-    const y=job.kind==='chop'?(tree?.species?floraTreeHeight(tree)*floraSize(world,tree)*1.05:WORLD_SCALE.treeMaxHeight)+.55:job.kind==='mine'?3.2:1.08;
+    const treeHeight=tree?.species?floraTreeHeight(tree)*floraSize(world,tree)
+      :tree?WORLD_SCALE.treeMinHeight+noise(tree.x,tree.z,77)*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight)
+      :(WORLD_SCALE.treeMinHeight+WORLD_SCALE.treeMaxHeight)/2;
+    const y=job.kind==='chop'?treeHeight*CHOP_ICON_HEIGHT_FRACTION:job.kind==='mine'?3.2:1.08;
     return { x: job.x, y, z: job.z, icon: ICON_INDEX[job.kind as DesignationIconKind] };
   });
 }

@@ -57,7 +57,6 @@ test('panoramique, orbite et zoom à tick gelé ne modifient pas le volume ni la
       dimensions: { value: Vector2 }; columns: { value: number };
       capacity: { value: number }; stride: { value: number };
       rainPhase: { value: number }; snowPhase: { value: number };
-      groundSlope: { value: Vector2 };
     };
     const volume = [state.dimensions.value.x, state.dimensions.value.y,
       state.columns.value, state.capacity.value, state.stride.value];
@@ -68,16 +67,12 @@ test('panoramique, orbite et zoom à tick gelé ne modifient pas le volume ni la
     moving.zoom = 2;
     moving.updateProjectionMatrix();
     layer.present({ ...input, camera: moving, target: target.clone().add(new Vector3(10, 0, 8)) });
-    expect([state.groundSlope.value.x, state.groundSlope.value.y]).toEqual([0, 0]);
     expect([state.dimensions.value.x, state.dimensions.value.y,
       state.columns.value, state.capacity.value, state.stride.value]).toEqual(volume);
     expect([state.rainPhase.value, state.snowPhase.value]).toEqual(phases);
     const iso = new OrthographicCamera(-20, 20, 20, -20, .1, 1000);
     iso.position.set(100, 95, -20); iso.lookAt(target);
     layer.present({ ...input, camera: iso });
-    const direction = iso.getWorldDirection(new Vector3());
-    expect(state.groundSlope.value.x).toBeCloseTo(direction.x / -direction.y);
-    expect(state.groundSlope.value.y).toBeCloseTo(direction.z / -direction.y);
     expect([state.dimensions.value.x, state.dimensions.value.y,
       state.columns.value, state.capacity.value, state.stride.value]).toEqual(volume);
     expect([state.rainPhase.value, state.snowPhase.value]).toEqual(phases);

@@ -12,9 +12,9 @@ const EDGE_FADE_FRACTION = .28;
 // clouds and avoids resending all 64 matrices at every fractional RAF tick.
 const MATRIX_STEP = .02;
 const MAX_CONTIGUOUS_TICK_GAP = 600;
-// High views look through the cloud field onto the working map. Keep the
-// weather legible there without laying an opaque blanket over the colony.
-const HIGH_VIEW_OPACITY = .25;
+// Near-profile views keep the clouds solid against the sky. As the camera
+// rises over the map, leave only a faint trace so the ground stays readable.
+const HIGH_VIEW_OPACITY = .06;
 const scratch = new THREE.Object3D();
 
 export interface CloudPresentation {
@@ -48,44 +48,97 @@ function smoothstep(a: number, b: number, value: number): number {
   return t * t * (3 - 2 * t);
 }
 
-/** High views soften the world-space clouds over the working map. The same
- * angle treatment in both projections avoids a visibility jump on toggle. */
+/** High views soften the world-space clouds over the working map. Close
+ * orthographic inspection fades them completely before they cover actors. */
 export function cloudViewOpacity(camera: THREE.OrthographicCamera | THREE.PerspectiveCamera, target: THREE.Vector3): number {
   const horizontal = Math.hypot(camera.position.x - target.x, camera.position.z - target.z);
   const elevation = Math.atan2(camera.position.y - target.y, horizontal) * 180 / Math.PI;
-  const lowAngle = 1 - smoothstep(16, 38, elevation);
-  // Several translucent lobes can overlap. Above 38 degrees their opacity is
-  // capped at the same faint level in perspective and orthographic views.
-  return HIGH_VIEW_OPACITY + (1 - HIGH_VIEW_OPACITY) * lowAngle;
+  const lowAngle = 1 - smoothstep(12, 50, elevation);
+  // The same continuous elevation fade applies to both camera projections.
+  // A close orthographic zoom adds a separate fade before clouds cover actors.
+  const angleOpacity = HIGH_VIEW_OPACITY + (1 - HIGH_VIEW_OPACITY) * lowAngle;
+  const closeIsoFade = camera instanceof THREE.OrthographicCamera
+    ? 1 - smoothstep(2.5, 4.5, camera.zoom)
+    : 1;
+  return angleOpacity * closeIsoFade;
 }
 
-/** One resident low-poly cloud made of six faceted lobes. Every visible cloud
- * reuses this geometry through one InstancedMesh and one material. */
+/** Four broad paper-cut masses. Their imperfect rims and translucent paint
+ * washes are baked into one geometry with vertex colours, not extra meshes. */
 function cloudGeometry(): THREE.BufferGeometry {
-  const source = new THREE.IcosahedronGeometry(1, 0);
-  const unit = source.index ? source.toNonIndexed() : source;
-  const position = unit.getAttribute('position');
+  // The central dome, two shoulders and one forward foot overlap like the
+  // hand-painted cardboard model, while keeping a readable outer silhouette.
   const lobes = [
-    [-1.45, -.12, 0, 1.05, .60, .85],
-    [-.65, .30, -.20, 1.20, .83, .85],
-    [.42, .20, .10, 1.42, .78, .95],
-    [1.46, -.14, .08, 1.05, .57, .80],
-    [-.35, -.30, .45, 1.20, .53, .80],
-    [.65, -.26, -.40, 1.15, .50, .75],
+    [0, .19, -.21, 1.37, 1.20, 1.02],
+    [-1.39, -.18, .06, 1.03, .78, .91],
+    [1.38, -.18, .04, 1.02, .77, .88],
+    [.12, -.42, .79, .87, .58, .76],
   ] as const;
-  const points = new Float32Array(lobes.length * position.count * 3);
-  let offset = 0;
-  for (const [x, y, z, sx, sy, sz] of lobes) for (let vertex = 0; vertex < position.count; vertex++) {
-    points[offset++] = x + position.getX(vertex) * sx;
-    points[offset++] = y + position.getY(vertex) * sy;
-    points[offset++] = z + position.getZ(vertex) * sz;
+  const SIDES = 7;
+  const rings = [
+    [-.46, .72], [-.18, 1], [.31, .88], [.73, .49],
+  ] as const;
+  const points: number[] = [], colors: number[] = [];
+  const washPoints: number[] = [], washColors: number[] = [];
+  const normal = new THREE.Vector3(), ab = new THREE.Vector3(), ac = new THREE.Vector3();
+  const pushTriangle = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3, tone: number, wash = false) => {
+    const vertices = wash ? washPoints : points, pigment = wash ? washColors : colors;
+    vertices.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+    for (let vertex = 0; vertex < 3; vertex++) pigment.push(tone, tone * .975, tone * .85);
+  };
+  let faceIndex = 0;
+  const addFace = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3, lobe: number) => {
+    normal.copy(ab.subVectors(b, a)).cross(ac.subVectors(c, a)).normalize();
+    const grain = hash01(Math.imul(lobe + 3, 19013) ^ Math.imul(++faceIndex, 8171));
+    const tone = THREE.MathUtils.clamp(.69 + normal.y * .27 + grain * .10, .52, 1.07);
+    pushTriangle(a, b, c, tone);
+    // Broad low-contrast washes lie within individual cardboard facets. A
+    // slight normal offset prevents z-fighting without adding a paint layer.
+    if (normal.y > -.18 && grain > .52) {
+      const mix = (wa: number, wb: number, wc: number) => a.clone().multiplyScalar(wa)
+        .addScaledVector(b, wb).addScaledVector(c, wc).addScaledVector(normal, .012);
+      const p = mix(.69, .23, .08), q = mix(.13, .68, .19), r = mix(.18, .16, .66);
+      const washTone = tone * (grain > .79 ? 1.055 : .955);
+      if (ab.subVectors(q, p).cross(ac.subVectors(r, p)).dot(normal) < 0)
+        pushTriangle(p, r, q, washTone, true);
+      else pushTriangle(p, q, r, washTone, true);
+    }
+  };
+  for (let lobe = 0; lobe < lobes.length; lobe++) {
+    const [x, y, z, sx, sy, sz] = lobes[lobe]!;
+    const rim = Array.from({ length: SIDES }, (_, side) =>
+      .93 + hash01(Math.imul(lobe + 11, 11939) ^ Math.imul(side + 1, 32909)) * .14);
+    const angleOffset = hash01(lobe * 19871 + 3) * .22;
+    const levels = rings.map(([height, radius], level) =>
+      Array.from({ length: SIDES }, (_, side) => {
+        const angle = side * Math.PI * 2 / SIDES + angleOffset;
+        const cut = radius * rim[side]! * (1 + (hash01(lobe * 1129 + level * 73 + side) - .5) * .035);
+        return new THREE.Vector3(x + Math.cos(angle) * sx * cut,
+          y + height * sy, z + Math.sin(angle) * sz * cut);
+      }));
+    for (let level = 0; level < levels.length - 1; level++) {
+      const lower = levels[level]!, upper = levels[level + 1]!;
+      for (let side = 0; side < SIDES; side++) {
+        const next = (side + 1) % SIDES;
+        addFace(lower[side]!, upper[side]!, upper[next]!, lobe);
+        addFace(lower[side]!, upper[next]!, lower[next]!, lobe);
+      }
+    }
+    const top = new THREE.Vector3(x, y + .81 * sy, z);
+    const bottom = new THREE.Vector3(x, y - .56 * sy, z);
+    for (let side = 0; side < SIDES; side++) {
+      const next = (side + 1) % SIDES;
+      addFace(levels[3]![side]!, top, levels[3]![next]!, lobe);
+      addFace(levels[0]![side]!, levels[0]![next]!, bottom, lobe);
+    }
   }
+  points.push(...washPoints);
+  colors.push(...washColors);
   const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(points, 3));
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
-  unit.dispose();
-  if (unit !== source) source.dispose();
   return geometry;
 }
 
@@ -96,11 +149,11 @@ export class WeatherCloudLayer {
   private readonly geometry = cloudGeometry();
   private readonly footprintRadius = this.geometry.boundingSphere!.radius + this.geometry.boundingSphere!.center.length();
   private readonly material = new THREE.MeshBasicNodeMaterial({
-    color: 0xffffff, transparent: true, opacity: 0, depthWrite: false,
+    color: 0xffffff, vertexColors: true, transparent: true, opacity: 0, depthWrite: true, fog: false,
   });
   private readonly opacityUniform = uniform(0);
   private readonly edgeOpacity = new THREE.InstancedBufferAttribute(new Float32Array(CLOUD_COUNT), 1);
-  private readonly nightColor = new THREE.Color(0x263248);
+  private readonly nightColor = new THREE.Color(0x383834);
   private seed: number | undefined;
   private lastTick: number | undefined;
   private lastStrength = 0;
@@ -132,7 +185,7 @@ export class WeatherCloudLayer {
       scratch.scale.setScalar(.001);
       scratch.updateMatrix();
       this.mesh.setMatrixAt(index, scratch.matrix);
-      this.mesh.setColorAt(index, new THREE.Color().setScalar(.88 + hash01(index * 38711) * .12));
+      this.mesh.setColorAt(index, new THREE.Color().setScalar(.96 + hash01(index * 38711) * .04));
     }
     this.mesh.instanceMatrix.needsUpdate = true;
     if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
@@ -154,8 +207,8 @@ export class WeatherCloudLayer {
       MIN_MAP_CLOUDS, CLOUD_COUNT,
     );
     this.mesh.boundingSphere = new THREE.Sphere(
-      new THREE.Vector3(this.centerX, 24, this.centerZ),
-      Math.hypot(this.radiusX + 22, this.radiusZ + 22, 24),
+      new THREE.Vector3(this.centerX, 35, this.centerZ),
+      Math.hypot(this.radiusX + 24, this.radiusZ + 24, 22),
     );
     this.reset();
   }
@@ -239,9 +292,11 @@ export class WeatherCloudLayer {
       // Shrinking alone is insufficient near a small map's border: constrain
       // the full rotated lobe footprint inside the map before it disappears.
       const clearance = Math.min(this.radiusX - Math.abs(x), this.radiusZ - Math.abs(z));
-      const size = Math.max(.001, Math.min(fade * (3.2 + c * 2.7),
+      const weatherSize = 1 + coverage * .23;
+      const size = Math.max(.001, Math.min(fade * weatherSize * (3.2 + c * 2.7),
         clearance / this.footprintRadius));
-      scratch.position.set(this.centerX + x, 18 + d * 11, this.centerZ + z);
+      // Three altitude bands form a cloud volume rather than a flat ceiling.
+      scratch.position.set(this.centerX + x, 25 + (index % 3) * 6.5 + d * 5, this.centerZ + z);
       scratch.rotation.set(0, c * Math.PI * 2, 0);
       scratch.scale.set(size, size * (.75 + d * .24), size * (.70 + b * .24));
       scratch.updateMatrix();

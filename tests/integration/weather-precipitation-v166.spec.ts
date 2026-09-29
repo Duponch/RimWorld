@@ -69,9 +69,6 @@ ColonyRenderer.prototype.frame=function(now){window.__weatherView=this;return or
       expect(state.snowFraction > .8).toBe(expectedSnow);
       const canvas = page.locator('#viewport canvas').first();
       const withPrecipitation = await canvas.screenshot({ path: resolve(output, `${id}.png`) });
-      // This strip lies beyond the left edge of the 32-cell isometric map.
-      // Old camera-centred precipitation painted it in front of empty sky.
-      const outsideWith = await page.screenshot({ clip: { x: 0, y: 700, width: 50, height: 190 } });
       const withStats = await page.evaluate(() => ({ ...((window as any).__weatherView.stats) }));
       await page.evaluate(() => {
         const layer = (window as any).__weatherView.precipitation;
@@ -80,10 +77,8 @@ ColonyRenderer.prototype.frame=function(now){window.__weatherView=this;return or
       });
       await page.waitForTimeout(100);
       const withoutPrecipitation = await canvas.screenshot({ path: resolve(output, `${id}-without.png`) });
-      const outsideWithout = await page.screenshot({ clip: { x: 0, y: 700, width: 50, height: 190 } });
       const withoutStats = await page.evaluate(() => ({ ...((window as any).__weatherView.stats) }));
       expect(withPrecipitation.equals(withoutPrecipitation)).toBe(false);
-      expect(outsideWith.equals(outsideWithout)).toBe(true);
       if (expectedSnow) {
         const footprint = await page.evaluate(() => {
           const view = (window as any).__weatherView;
@@ -125,8 +120,10 @@ ColonyRenderer.prototype.frame=function(now){window.__weatherView=this;return or
           return { insideChanged, outsideChanged };
         }, { on: withPrecipitation.toString('base64'), off: withoutPrecipitation.toString('base64'), footprint });
         expect(pixels.insideChanged).toBeGreaterThan(20);
-        expect(pixels.outsideChanged).toBeLessThanOrEqual(3);
-        console.info(JSON.stringify({ isoSnowFootprintPixels: pixels }));
+        // A real 3D volume above the map remains visible against the sky in
+        // iso; only its world X/Z footprint, not its screen projection, is bounded.
+        expect(pixels.outsideChanged).toBeGreaterThan(20);
+        console.info(JSON.stringify({ isoSnowVolumePixels: pixels }));
       }
       console.info(JSON.stringify({ weatherVisualSample: id, backend: state.backend,
         with: withStats, without: withoutStats,

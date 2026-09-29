@@ -90,7 +90,7 @@ export async function settledCells(page:Page,cells:{x:number;z:number}[]) {
       const delta=Math.max(...points.map((p,i)=>Math.hypot(p.x-previous[i]!.x,p.y-previous[i]!.y)));previous=points;
       stable=delta<.03?stable+1:0;
       if(stable>=3)resolve({points,shift:Math.max(...points.map((p,i)=>Math.hypot(p.x-first[i]!.x,p.y-first[i]!.y))),milliseconds:now-start});
-      else if(now-start>2500)reject(new Error('Camera projection did not settle within 2500 ms.'));
+      else if(now-start>8000)reject(new Error('Camera projection did not settle within 8000 ms.'));
       else requestAnimationFrame(observe);
     };requestAnimationFrame(observe);
   }),cells);

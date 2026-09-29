@@ -119,6 +119,12 @@ export function actionFxForPawn(
  * resident quads amount to 3,200 vertices and 4,800 indices. Brawls use the
  * dedicated instanced volumetric layer, never a duplicate sprite cloud. */
 export const SPRITES_PER_PAWN = 8;
+// Reclining rotates the head to roughly 0.66 m in front of the pose origin,
+// with its upper surface about 0.36 m above it. Begin the first Z just clear
+// of that surface; the existing ascent then carries subsequent signs upward.
+const SLEEP_SIGN_HEAD_DISTANCE = .70;
+const SLEEP_SIGN_BASE_HEIGHT = .58;
+const SLEEP_SIGN_RISE = .55;
 const sourceNames = ['aFrom', 'aTo', 'aTravel'] as const;
 
 function spriteGeometry(): THREE.InstancedBufferGeometry {
@@ -178,9 +184,9 @@ export class ActionVfxLayer {
       const contactSide=part.lessThan(4).select(workerSide.mul(fx.x.equal(ACTION_FX.mine).select(.61,.58)),
         cameraSide.mul(fx.x.equal(ACTION_FX.mine).select(.73,.84)));
       const workTarget=rockOrTree.select(target.add(vec3(contactSide.x,0,contactSide.y)),target);
-      const sleepOffset = vec3(sin(pose.w).mul(-1.05).add(sin(sleepCycle.mul(2*Math.PI)).mul(.11)).add(part.mul(.035)),
-        float(1.20).add(sleepCycle.mul(.73)),
-        cos(pose.w).mul(-1.05).add(part.mul(.05)));
+      const sleepOffset = vec3(sin(pose.w).mul(-SLEEP_SIGN_HEAD_DISTANCE).add(sin(sleepCycle.mul(2*Math.PI)).mul(.11)).add(part.mul(.035)),
+        float(SLEEP_SIGN_BASE_HEIGHT).add(sleepCycle.mul(SLEEP_SIGN_RISE)),
+        cos(pose.w).mul(-SLEEP_SIGN_HEAD_DISTANCE).add(part.mul(.05)));
       const mealOffset=vec3(sin(pose.w).mul(.33).add(cos(angle).mul(.24)),
         float(1.48).add(workCycle.mul(.30)),
         cos(pose.w).mul(.33).add(sin(angle).mul(.24)));

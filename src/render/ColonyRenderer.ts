@@ -54,8 +54,9 @@ import { TICKS_PER_SECOND } from '../sim/types';
 import { windIntensity } from '../sim/wind-rules';
 import { calendarTick } from '../sim/calendar';
 import { footprintCells,STRUCTURE_DEFINITIONS } from '../sim/definitions';
-import { canDesignate } from '../sim/engine';
+import { buildConstructionCellIndex, canDesignate, type ConstructionCellIndex } from '../sim/engine';
 import { buildAreaIndex, isAreaAction, queryArea } from '../sim/designation';
+import { constructionLineCells, isLineBuildKind, type LineBuildKind } from '../sim/construction-line';
 import type { AreaIndex } from '../sim/designation';
 import { WORLD_SCALE } from '../world/scale';
 import { CameraRig, type CameraMode } from './CameraRig';
@@ -140,10 +141,13 @@ export class ColonyRenderer {
   onAudioFrame?: (view: AudioFrameView) => void;
   private areaMesh: THREE.InstancedMesh | null = null;
   private areaIndex: AreaIndex | undefined;
+  private constructionIndex: ConstructionCellIndex | undefined;
   private areaSignature = '';
-  private areaDrag: { pointerId: number; action: AreaAction; from: Cell } | null = null;
+  private areaDrag: ({ pointerId: number; action: AreaAction; from: Cell }
+    | { pointerId: number; kind: LineBuildKind; from: Cell; material?: ConstructionMaterial }) | null = null;
   onArea: (action: AreaAction, from: Cell, to: Cell) => void = () => {};
-  onAreaPreview: (info: { width: number; height: number; eligible: number; skipped: number } | null) => void = () => {};
+  onBuildLine: (kind: LineBuildKind, from: Cell, to: Cell, material?: ConstructionMaterial) => void = () => {};
+  onAreaPreview: (info: { width: number; height: number; eligible: number; skipped: number; line?: boolean } | null) => void = () => {};
   private readonly raycaster = new THREE.Raycaster();
   private readonly ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   private readonly pointer = new THREE.Vector2();
@@ -339,7 +343,7 @@ export class ColonyRenderer {
     if (this.disposed) return;
     this.invalidatePausedShadow();
     if (resetPresentation) this.cancelDesignation();
-    this.areaIndex = undefined; this.areaSignature = '';
+    this.areaIndex = undefined; this.constructionIndex = undefined; this.areaSignature = '';
     const now = performance.now();
     const previousWorld = this.world;
     // Worker deltas keep immutable terrain/resources references stable. A changed
@@ -434,7 +438,10 @@ export class ColonyRenderer {
   setFloorSelection(floor:BuildableFloorKind|undefined):void {
     if(floor!==this.selectedFloor)this.cancelDesignation();this.selectedFloor=floor;
   }
-  setConstructionMaterial(value:ConstructionMaterial|undefined):void {this.constructionMaterial=value;this.updateHover();}
+  setConstructionMaterial(value:ConstructionMaterial|undefined):void {
+    if (this.constructionMaterial!==value && this.areaDrag) this.cancelDesignation();
+    this.constructionMaterial=value;this.updateHover();
+  }
 
   setTool(tool: string): void {
     if (tool !== this.tool) this.cancelDesignation();
@@ -461,6 +468,7 @@ export class ColonyRenderer {
     const selecting=this.selectionInput.cancel();this.onInteractionCancel();
     const drag = this.areaDrag;
     this.areaDrag = null; this.pointerDown = null; this.areaSignature = ''; this.hoverCell = null;
+    this.constructionIndex = undefined;
     this.onHover(null);
     this.controls.enabled = true;
     if (drag && this.renderer.domElement.hasPointerCapture(drag.pointerId)) this.renderer.domElement.releasePointerCapture(drag.pointerId);
@@ -948,9 +956,11 @@ export class ColonyRenderer {
     this.pointerDown = { x: event.clientX, y: event.clientY, button: event.button, pointerId: event.pointerId };
     this.renderer.domElement.focus({ preventScroll: true });
     const from = this.pick(event);
-    if (event.button === 0 && event.isPrimary && from && isAreaAction(this.tool)) {
+    if (event.button === 0 && event.isPrimary && from && (isAreaAction(this.tool) || isLineBuildKind(this.tool))) {
       event.stopImmediatePropagation(); event.preventDefault();
-      this.areaDrag = { pointerId: event.pointerId, action: this.tool, from };
+      this.areaDrag = isLineBuildKind(this.tool)
+        ? { pointerId: event.pointerId, kind: this.tool, from, material: this.constructionMaterial }
+        : { pointerId: event.pointerId, action: this.tool as AreaAction, from };
       this.controls.enabled = false; this.keys.clear();
       this.renderer.domElement.setPointerCapture(event.pointerId);
       this.hoverCell = from; this.areaSignature = ''; this.updateHover();
@@ -963,7 +973,10 @@ export class ColonyRenderer {
       if (event.pointerId !== drag.pointerId || event.button !== 0) return;
       const to = this.pointerOnCanvas(event) ? this.pick(event, true) : null;
       this.cancelDesignation();
-      if (to) this.onArea(drag.action, drag.from, to);
+      if (to) {
+        if ('action' in drag) this.onArea(drag.action, drag.from, to);
+        else this.onBuildLine(drag.kind, drag.from, to, drag.material);
+      }
       return;
     }
     const down = this.pointerDown; this.pointerDown = null;
@@ -995,15 +1008,28 @@ export class ColonyRenderer {
       this.hover.visible = false; if (this.areaMesh) this.areaMesh.visible = false;
       this.areaSignature = ''; this.onAreaPreview(null); return;
     }
-    const signature = `${drag.action}:${drag.from.x}:${drag.from.z}:${cell.x}:${cell.z}`;
+    const action = 'action' in drag ? drag.action : drag.kind;
+    const signature = `${action}:${drag.from.x}:${drag.from.z}:${cell.x}:${cell.z}`;
     if (signature === this.areaSignature) return;
     this.areaSignature = signature;
-    this.areaIndex ??= buildAreaIndex(world);
-    const result = queryArea(world, { type: 'area', action: drag.action, from: drag.from, to: cell, ...(drag.action==='lay-floor'?{floor:this.selectedFloor}:{}) }, this.areaIndex);
-    if (!result.ok) return;
-    const { bounds, cells, skipped } = result;
+    let bounds: { minX:number; maxX:number; minZ:number; maxZ:number }, cells: number[], skipped: number;
+    if ('action' in drag) {
+      this.areaIndex ??= buildAreaIndex(world);
+      const result = queryArea(world, { type: 'area', action: drag.action, from: drag.from, to: cell, ...(drag.action==='lay-floor'?{floor:this.selectedFloor}:{}) }, this.areaIndex);
+      if (!result.ok) return;
+      ({ bounds, cells, skipped } = result);
+    } else {
+      const line = constructionLineCells(drag.from, cell);
+      const end = line[line.length-1]!;
+      bounds = { minX:Math.min(drag.from.x,end.x), maxX:Math.max(drag.from.x,end.x), minZ:Math.min(drag.from.z,end.z), maxZ:Math.max(drag.from.z,end.z) };
+      if (this.constructionIndex?.kind !== drag.kind) this.constructionIndex=buildConstructionCellIndex(world,drag.kind);
+      const index=this.constructionIndex;
+      cells = line.filter(position => canDesignate(world,{type:'designate',kind:drag.kind,...position,orientation:0,...(drag.material?{material:drag.material}:{})},false,index).ok)
+        .map(position => position.z*world.width+position.x);
+      skipped = line.length-cells.length;
+    }
     const width = bounds.maxX - bounds.minX + 1, height = bounds.maxZ - bounds.minZ + 1;
-    const color = drag.action === 'cancel' || drag.action === 'remove-stockpile' ? 0xf49b7c : 0x9de7c9;
+    const color = action === 'cancel' || action === 'remove-stockpile' ? 0xf49b7c : 0x9de7c9;
     this.hover.visible = true; this.hover.scale.set(width, height, 1);
     this.hover.position.set((bounds.minX + bounds.maxX) / 2, 0.045, (bounds.minZ + bounds.maxZ) / 2);
     const hoverMat = this.hover.material as THREE.MeshBasicNodeMaterial;
@@ -1027,7 +1053,7 @@ export class ColonyRenderer {
       }
       this.areaMesh.instanceMatrix.needsUpdate = true; this.areaMesh.computeBoundingSphere();
     }
-    this.onAreaPreview({ width, height, eligible: cells.length, skipped });
+    this.onAreaPreview({ width, height, eligible: cells.length, skipped, line:'kind' in drag });
   }
   private disposeAreaMesh(): void {
     if (!this.areaMesh) return;

@@ -1,0 +1,11 @@
+# Tracé rectiligne Architecte — contrat de présentation
+
+29 septembre 2026. Interaction ajoutée aux chantiers existants, sans nouvel objet ni schéma de sauvegarde. [Relecture Core et limites](../research/construction-line-core-v168.md), [contrat de construction](construction.md).
+
+Un clic sur Mur, Clôture ou Câble construit un plan sur une case par la même commande groupée qu'un tracé. Tant que le bouton principal est maintenu, l'aperçu montre une ligne droite et le nombre de cases admissibles/ignorées. Le relâchement sur la carte soumet un seul `build-line` au worker, qui vérifie les bornes, le type, le matériau et la limite des identités avant toute mutation. Chaque cellule est ensuite désignée dans l'ordre du geste et revalidée contre l'état laissé par les précédentes. Une case incompatible n'empêche pas les suivantes ; si aucune ne passe, la commande est refusée sans mutation. Le bridge conserve son acquittement ordonné et n'adopte qu'un résultat de commande.
+
+L'aperçu construit un index éphémère des obstacles sur le snapshot affiché et le réutilise pendant les mouvements du même tracé. Une adoption de snapshot, un changement d'outil ou l'annulation l'invalide ; chaque cellule continue de passer par `canDesignate`. Aucune donnée de cet index n'entre dans la sauvegarde.
+
+Le geste partant hors carte ou se terminant sur un panneau ne soumet rien. Échap, clic droit, perte de focus/capture, changement de carte, outil ou matériau annulent le tracé sans plan. Le rectangle d'annulation existant retire les plans selon ses propres règles de conservation. La pose de sol et les autres rectangles existants restent distincts.
+
+Contrôles ciblés : sens inverse, départage d'axe, obstacle, saturation d'identifiants et matériau invalide, clôture/câble, annulation de plans, sauvegarde valide et interaction Chromium par vrai pointeur. Sur une carte générée 250², un tracé de 250 cases produit 226 plans et ignore 24 cases. Après index spatial éphémère, l'aperçu exact prend **3,8 ms** dans un test CPU isolé, index compris, contre 55,1 ms avant cette correction ; la commande groupée mesurée séparément varie de **46 à 77 ms** selon le passage. Ce microbanc n'établit ni le temps du worker sous charge, ni la durée RAF, ni un coût GPU.
