@@ -6,10 +6,10 @@ import { newBreakdownCalendar } from '../../src/sim/breakdowns.ts';
 import { PRODUCTION_RECIPES } from '../../src/sim/production-recipes.ts';
 import { adultAgeTicks } from '../../src/sim/animal-life.ts';
 import { newVisitorAgenda } from '../../src/sim/visitor-state.ts';
-/** A generated V152 world's defaults cannot be declared as an older save. */
+/** Current default meals cannot be declared as an older save. */
 export function withoutFutureFineMealPolicy<T>(world:T):T {
   for(const policy of (world as {foodPolicies?:{allowed:string[]}[]}).foodPolicies??[])
-    policy.allowed=policy.allowed.filter(item=>item!=='fine-meal');
+    policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal');
   return world;
 }
 /** Historical fixtures must not smuggle V43's new actor profile into old schemas. */

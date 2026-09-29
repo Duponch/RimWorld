@@ -68,6 +68,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   corn: Object.freeze({ label: 'Maïs', kind: 'food', stackLimit: 75, nutrition: 5, maxIngest: 75, color: 0xe0be56 }),
   'simple-meal': Object.freeze({ label: 'Repas simple', kind: 'food', stackLimit: 10, nutrition: 90, maxIngest: 1, color: 0xe4b274 }),
   'fine-meal': Object.freeze({ label: 'Plat raffiné', kind: 'food', stackLimit: 10, nutrition: 90, maxIngest: 1, color: 0xd9a686 }),
+  'lavish-meal': Object.freeze({ label: 'Plat gastronomique', kind: 'food', stackLimit: 10, nutrition: 100, maxIngest: 1, color: 0xe2be8f }),
   'survival-meal': Object.freeze({ label: 'Repas de survie', kind: 'food', stackLimit: 10, nutrition: 90, maxIngest: 1, color: 0xc7b96b }),
   'legacy-portion': Object.freeze({ label: 'Portion historique', kind: 'food', stackLimit: 75, nutrition: 35, maxIngest: 1, color: 0xba745a }),
 } as const);

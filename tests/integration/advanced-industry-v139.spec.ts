@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect,test } from '@playwright/test';
 import { deserializeWorld,validateWorld } from '../../src/sim/serialization';
+import { SCHEMA_VERSION } from '../../src/sim/types';
 import { cell,expectWorld,observeErrors,panel,pause,saveKey,world } from './helpers';
 import { revealCells } from './player-actions';
 
@@ -8,7 +9,8 @@ test('Fabrication avancée V139 : recherche, facture et ouvrage physique dans le
   test.setTimeout(150000);
   const raw=readFileSync(new URL('../../public/test-saves/v139/industrie-avancee.json',import.meta.url),'utf8');
   const prepared=deserializeWorld(raw);
-  expect(prepared.schemaVersion).toBe(141);
+  expect(JSON.parse(raw).schemaVersion).toBe(139);
+  expect(prepared.schemaVersion).toBe(SCHEMA_VERSION);
   expect(validateWorld(prepared)).toEqual([]);
   expect(prepared.piles.some(pile=>pile.item==='advanced-component')).toBe(false);
   const bench=prepared.structures.find(structure=>structure.kind==='fabrication-bench')!;

@@ -1,6 +1,6 @@
 # Lisière
 
-Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré des systèmes de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 152** ; V152 ajoute le plat raffiné mixte sur cuisinière avec cinq protéines, cinq végétaux et Cuisine 6. V151 avait réduit un sous-coût CPU de la proposition de cuisine ; V150 avait ajouté la frénésie alimentaire. Les règles livrées, les limites et leurs preuves sont regroupées dans l’[état fonctionnel](docs/gameplay/implementation-status.md). La [feuille de route](docs/ROADMAP.md) distingue les prochains travaux de ce qui est déjà jouable.
+Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré des systèmes de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 154** ; V154 livre le plat gastronomique mixte sur cuisinière avec dix protéines, dix végétaux et Cuisine 8, après le plat raffiné V152. Sa [preuve d'intégration](docs/history/validation-lavish-meal-v154.md) réunit tests ciblés, régression finale et parcours Chromium préparé, avec leurs limites. Les règles livrées, les limites et leurs preuves sont regroupées dans l’[état fonctionnel](docs/gameplay/implementation-status.md). La [feuille de route](docs/ROADMAP.md) distingue les prochains travaux de ce qui est déjà jouable.
 
 ## Démarrer
 

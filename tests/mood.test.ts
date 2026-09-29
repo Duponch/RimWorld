@@ -61,7 +61,7 @@ test('situations follow physical removal, meal memories refresh without stacking
 });
 
 test('strict V63 adoption preserves mood, needs, memories and PRNG then follows new dynamics with exact continuation',()=>{
-  const old=camp(),p=old.pawns[0]!;rememberMeal(old,p,false);p.mood=87.25;for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal');((old as any).schemaVersion=63,withoutResearch(old));
+  const old=camp(),p=old.pawns[0]!;rememberMeal(old,p,false);p.mood=87.25;for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal');((old as any).schemaVersion=63,withoutResearch(old));
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(withMigratedResearch({...old,schemaVersion:SCHEMA_VERSION}));
   const copy=deserializeWorld(serializeWorld(migrated));stepWorld(migrated,60);stepWorld(copy,60);expect(copy).toEqual(migrated);expect(migrated.pawns[0]!.mood).toBeCloseTo(87.25-60*.032,8);valid(migrated);
   for(const mutate of [(v:any)=>v.pawns[0].mood=101,(v:any)=>v.pawns[0].memories[0].expiresAt=v.tick,(v:any)=>v.pawns[0].memories.push({...v.pawns[0].memories[0]})]){const v=structuredClone(old);mutate(v);expect(()=>deserializeWorld(JSON.stringify(v))).toThrow(/version 63/);}

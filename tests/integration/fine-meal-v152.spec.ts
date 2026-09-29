@@ -1,6 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {expect,test} from '@playwright/test';
 import {deserializeWorld,validateWorld} from '../../src/sim/serialization.ts';
+import {SCHEMA_VERSION} from '../../src/sim/types.ts';
 import {cell,expectWorld,observeErrors,panel,pause,pawnTab,saveKey,world} from './helpers.ts';
 import {editBill,revealCells} from './player-actions.ts';
 
@@ -11,7 +12,8 @@ test('V152 prepared milk and rice become a fine meal through the UI and a real i
   const stove=prepared.structures.find(s=>s.kind==='fueled-stove')!;
   // The prepared save supplies a built/fueled stove, two people and raw food only.
   // Bill creation, physical collection, work, output and ingestion occur below.
-  expect(prepared.schemaVersion).toBe(152);
+  expect(JSON.parse(raw).schemaVersion).toBe(152);
+  expect(prepared.schemaVersion).toBe(SCHEMA_VERSION);
   expect(prepared.piles.filter(p=>p.item==='milk'||p.item==='rice').map(p=>[p.item,p.quantity])).toEqual([['milk',5],['rice',5]]);
   expect(prepared.piles.some(p=>p.item==='fine-meal')).toBe(false);
   expect(stove.bills).toEqual([]);

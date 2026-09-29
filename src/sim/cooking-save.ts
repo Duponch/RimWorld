@@ -2,7 +2,7 @@ import {isArtRecipe,artWorkTotal,isArtMaterial} from './art-rules.ts';
 import {furnitureSlot} from './furniture-haul-rules.ts';
 import { V91_ITEM_IDS } from './biome-items.ts';
 import { V120_ANIMAL_PRODUCT_ITEMS } from './animal-product-items.ts';
-import { isComponentRecipe,isFlakRecipe,flakWorkpiece,isGunRecipe, isTailoring, unfinishedItem, stationAccepts, PRODUCTION_RECIPES, productionWorkTotal, legacyProductionTicks, stationRecipe, taskRecipe, taskWork, isRecipeProduct, blockFor, validFineMealIngredients, type ProductionIngredient, type StoneIngredient } from './production-recipes.ts';
+import { isComponentRecipe,isFlakRecipe,flakWorkpiece,isGunRecipe, isTailoring, unfinishedItem, stationAccepts, PRODUCTION_RECIPES, productionWorkTotal, legacyProductionTicks, stationRecipe, taskRecipe, taskWork, isRecipeProduct, blockFor, validFineMealIngredients, validLavishMealIngredients, type ProductionIngredient, type StoneIngredient } from './production-recipes.ts';
 import { validAdvancedComponentIngredients,validFlakIngredients,validGunIngredients } from './machining.ts';
 import { fuelStationReserved } from './fuel.ts';
 import { componentWorkpiecePlaceFree,cookingSpot, ingredientPlaceFree, ingredientWithinReach, validBillSettings } from './cooking-bills.ts';
@@ -21,7 +21,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
     if(!recipe||version<32&&recipe==='stone-blocks'||version<72&&recipe==='tribalwear'||version<79&&recipe==='butcher-creature'||version<101&&s.kind==='machining-table'||version<104&&s.kind==='art-bench'||version<123&&s.kind==='fabrication-bench') {if(s.bills!==undefined)errors.push('Bills attached to a non-workstation.');continue;}
     if(!Array.isArray(s.bills)||s.bills.length>64){errors.push('Invalid workstation bills.');continue;}
     for(const b of s.bills) {
-      if(!record(b)||!int(b.id,1,w.nextId-1)||!stationAccepts(s,b.recipe)||version<152&&b.recipe==='fine-meal'||version<101&&isGunRecipe(b.recipe)||version<104&&isArtRecipe(b.recipe)||version<109&&isFlakRecipe(b.recipe)||version<141&&b.recipe==='make-flak-helmet'||version<148&&b.recipe==='make-recon-helmet'||version<123&&b.recipe==='make-component'||version<139&&b.recipe==='make-advanced-component'||!validBillSettings(b,b.recipe,version)||Object.hasOwn(b.filters??{},'fine-meal')||version<148&&Object.keys(b.filters??{}).some(i=>i==='recon-helmet'||i==='unfinished-recon-helmet')||version<120&&Object.keys(b.filters??{}).some(i=>V120_ANIMAL_PRODUCT_ITEMS.includes(i))||version<91&&Object.keys(b.filters??{}).some(i=>V91_ITEM_IDS.includes(i))||version<79&&b.filters&&Object.hasOwn(b.filters,'hare-meat')||version<84&&b.filters&&['potato','corn'].some(i=>Object.hasOwn(b.filters,i)))errors.push('Invalid cooking bill.');
+      if(!record(b)||!int(b.id,1,w.nextId-1)||!stationAccepts(s,b.recipe)||version<152&&b.recipe==='fine-meal'||version<154&&b.recipe==='lavish-meal'||version<101&&isGunRecipe(b.recipe)||version<104&&isArtRecipe(b.recipe)||version<109&&isFlakRecipe(b.recipe)||version<141&&b.recipe==='make-flak-helmet'||version<148&&b.recipe==='make-recon-helmet'||version<123&&b.recipe==='make-component'||version<139&&b.recipe==='make-advanced-component'||!validBillSettings(b,b.recipe,version)||Object.hasOwn(b.filters??{},'fine-meal')||Object.hasOwn(b.filters??{},'lavish-meal')||version<148&&Object.keys(b.filters??{}).some(i=>i==='recon-helmet'||i==='unfinished-recon-helmet')||version<120&&Object.keys(b.filters??{}).some(i=>V120_ANIMAL_PRODUCT_ITEMS.includes(i))||version<91&&Object.keys(b.filters??{}).some(i=>V91_ITEM_IDS.includes(i))||version<79&&b.filters&&Object.hasOwn(b.filters,'hare-meat')||version<84&&b.filters&&['potato','corn'].some(i=>Object.hasOwn(b.filters,i)))errors.push('Invalid cooking bill.');
       else {if(ids.has(b.id))errors.push('Duplicate bill identity.');ids.add(b.id);}
     }
   }
@@ -31,8 +31,8 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
     if(!int(p.priorities.cook,0,4))errors.push('Invalid cooking priority.');
     if(p.cooking===null)continue;
     const c=p.cooking;
-    if(c?.recipe==='fine-meal'&&c.phase==='interrupted'){errors.push('Fine meal has no resumable interrupted work.');continue;}
-    if(!record(c)||c.recipe!==undefined&&(!((version>=32&&c.recipe==='stone-blocks')||(version>=72&&c.recipe==='tribalwear')||(version>=73&&c.recipe==='shirt')||(version>=79&&c.recipe==='butcher-creature')||(version>=90&&['pants','duster','parka'].includes(String(c.recipe)))||(version>=101&&isGunRecipe(c.recipe))||(version>=104&&isArtRecipe(c.recipe))||(version>=109&&c.recipe==='make-flak-vest')||(version>=141&&c.recipe==='make-flak-helmet')||(version>=148&&c.recipe==='make-recon-helmet')||(version>=123&&c.recipe==='make-component')||(version>=139&&c.recipe==='make-advanced-component')||(version>=152&&c.recipe==='fine-meal')))){errors.push('Invalid or future production recipe.');continue;}
+    if((c?.recipe==='fine-meal'||c?.recipe==='lavish-meal')&&c.phase==='interrupted'){errors.push('Meal has no resumable interrupted work.');continue;}
+    if(!record(c)||c.recipe!==undefined&&(!((version>=32&&c.recipe==='stone-blocks')||(version>=72&&c.recipe==='tribalwear')||(version>=73&&c.recipe==='shirt')||(version>=79&&c.recipe==='butcher-creature')||(version>=90&&['pants','duster','parka'].includes(String(c.recipe)))||(version>=101&&isGunRecipe(c.recipe))||(version>=104&&isArtRecipe(c.recipe))||(version>=109&&c.recipe==='make-flak-vest')||(version>=141&&c.recipe==='make-flak-helmet')||(version>=148&&c.recipe==='make-recon-helmet')||(version>=123&&c.recipe==='make-component')||(version>=139&&c.recipe==='make-advanced-component')||(version>=152&&c.recipe==='fine-meal')||(version>=154&&c.recipe==='lavish-meal')))){errors.push('Invalid or future production recipe.');continue;}
     const recipe=PRODUCTION_RECIPES[taskRecipe(c)];
     if(c.workTicks!==undefined&&(version<79||taskWork(c)!=='cook'||c.phase!=='work'||!int(c.workTicks,1,Math.floor(Number.MAX_SAFE_INTEGER/1000))))errors.push('Invalid cooking work duration.');
     if(c.storageQuantity!==undefined&&(version<32||c.recipe!=='stone-blocks'&&c.recipe!=='butcher-creature'||c.phase!=='output'||c.storageId===null||!int(c.storageQuantity,1,recipe.outputUnits)))errors.push('Invalid production output quantity.');
@@ -71,7 +71,8 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
         ||isGunRecipe(c.recipe)&&c.phase!=='interrupted'&&!unfinished&&!validGunIngredients(c.recipe,c.ingredients)
         ||isFlakRecipe(c.recipe)&&c.phase!=='interrupted'&&!unfinished&&!validFlakIngredients(c.recipe,c.ingredients)
         ||c.recipe==='make-advanced-component'&&c.phase!=='interrupted'&&!unfinished&&!validAdvancedComponentIngredients(c.recipe,c.ingredients)
-        ||c.recipe==='fine-meal'&&c.phase!=='interrupted'&&!validFineMealIngredients(c.ingredients))errors.push('Invalid recipe quantity or phase.');
+        ||c.recipe==='fine-meal'&&c.phase!=='interrupted'&&!validFineMealIngredients(c.ingredients)
+        ||c.recipe==='lavish-meal'&&c.phase!=='interrupted'&&!validLavishMealIngredients(c.ingredients))errors.push('Invalid recipe quantity or phase.');
       if(isArtRecipe(c.recipe)&&!unfinished&&c.phase!=='interrupted'&&(new Set(c.ingredients.map(i=>i.item)).size!==1||!isArtMaterial(c.ingredients[0]?.item)))errors.push('Sculpture requires homogeneous material.');
       const held=c.ingredients.filter(i=>i.stage==='held');
       if(held.length>1||owned.length!==held.length||held.length&&owned[0]?.id!==held[0]?.pileId)errors.push('Invalid ingredient cargo.');

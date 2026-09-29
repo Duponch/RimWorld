@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 152 as const;
+export const SCHEMA_VERSION = 154 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -36,7 +36,7 @@ export interface HaulTask {
   pickupCell?: Cell;
 }
 export interface DiningPlace { target: Cell; seatId: number | null; tableId: number | null }
-export interface Memory { kind: 'ate-without-table' | 'ate-raw-food' | 'ate-fine-meal'; expiresAt: number }
+export interface Memory { kind: 'ate-without-table' | 'ate-raw-food' | 'ate-fine-meal' | 'ate-lavish-meal'; expiresAt: number }
 export type NeedTask =
   | { kind: 'eat'; phase: 'pickup' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number; carryPileId: number | null; quantity: number; progress: number; workRemainder?:number; dining: DiningPlace | null }
   | { kind: 'sleep'; roomRest?:import('./room-experience.ts').RoomRest; medical?:'patient'|'bedrest'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };

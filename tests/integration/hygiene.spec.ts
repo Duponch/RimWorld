@@ -9,7 +9,7 @@ import { isColonist } from '../../src/sim/affiliation';
 import { roomCleanliness } from '../../src/sim/filth';
 import { cell,expectWorld,observeErrors,panel,pause,saveKey,world } from './helpers';
 import { inspectPerson,perform,revealCells } from './player-actions';
-import type { Command } from '../../src/sim/types';
+import { SCHEMA_VERSION, type Command } from '../../src/sim/types';
 
 // Read the actual resident GPU attributes after each real frame. This observer
 // neither changes the World nor advances the confirmed presentation clock.
@@ -38,10 +38,10 @@ test('native hygiene: physical flooring, cleaning, funeral and illness through t
     await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await pause(page);
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,f.world);await page.keyboard.press('Escape');
     const rotation={value:0},act=(command:Command,reason:string)=>perform(page,{command,reason},rotation);
-    await inspectPerson(page,f.patientId,'health');await expect(page.locator('[data-health="food-poisoning"]')).toContainText('phase majeure');await expect(page.locator('[data-health="food-poisoning"]')).toContainText('Vomit');
+    await inspectPerson(page,f.patientId,'health');await expect(page.locator('[data-health="food-poisoning"]')).toContainText('phase majeure');await expect(page.locator('[data-health="food-poisoning"]')).toContainText('vomissements');
     await page.screenshot({path:testOutputPath('artifacts/hygiene-health-v89.png')});
     await act({type:'research-project',project:'smithing'},'Choisir Forge dans le panneau de recherche.');
-    await expect(page.locator('[data-smithing-status]')).toContainText('En cours');await act({type:'research-project',project:null},'Suspendre sans inventer de progression.');
+    await expect(page.locator('[data-smithing-status]')).toContainText('En attente du poste');await act({type:'research-project',project:null},'Suspendre sans inventer de progression.');
     await act({type:'area',action:'lay-floor',floor:'wood-planks',from:f.floorFrom,to:f.floorTo},'Tracer le plancher et livrer son bois physique.');
     await act({type:'designate',kind:'grave',...f.graveCell,orientation:0},'Creuser une vraie tombe sans ajouter de matériau.');
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
@@ -51,8 +51,8 @@ test('native hygiene: physical flooring, cleaning, funeral and illness through t
     await act({type:'area',action:'home',from:{x:9,z:9},to:{x:11,z:11}},'Le foyer donne le périmètre de nettoyage.');
     await act({type:'priority',pawnId:f.actorId,work:'clean',value:1},'Activer Nettoyage dans Travail.');
     const before=roomCleanliness(built,f.dirty)!;
-    await act({type:'clean-room',pawnId:f.actorId,...f.dirty},'Nettoyer la pièce par travail au contact.');
-    await expect(page.locator('#room-description')).toContainText('Propreté');
+    // The bare floor is no longer selectable. Home-area cleaning is now
+    // assigned through the real Work priority and completed at contact.
     await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
     await expect.poll(async()=>(await world(page)).filth!.items.some(i=>i.id===f.dirtId),{timeout:20000}).toBe(false);await pause(page);
     const clean=await world(page);expect(roomCleanliness(clean,f.dirty)!).toBeGreaterThan(before);expect(clean.filth!.cleaned).toBeGreaterThan(0);
@@ -88,10 +88,10 @@ test('native completed V89 colony: cold load, thirty ticks and exact save/reload
   const source='tests/fixtures/colony-v89.json.gz';
   test.skip(!existsSync(source),'Requires the real completed V89 colony; a skip is not validation.');test.setTimeout(120000);
   const data=gunzipSync(readFileSync(source)).toString('utf8'),raw=JSON.parse(data),initial=deserializeWorld(data);
-  expect(raw.schemaVersion).toBe(89);expect(initial.schemaVersion).toBe(90);expect(validateWorld(initial)).toEqual([]);
+  expect(raw.schemaVersion).toBe(89);expect(initial.schemaVersion).toBe(SCHEMA_VERSION);expect(validateWorld(initial)).toEqual([]);
   const colonists=initial.pawns.filter(p=>isColonist(p)&&p.state!=='dead');expect(colonists.length).toBeGreaterThanOrEqual(4);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]}),page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
-  const report:any={version:90,sourceVersion:89,controlled:false,source,sha256:createHash('sha256').update(data).digest('hex'),initialTick:initial.tick,status:'running'};
+  const report:any={version:SCHEMA_VERSION,sourceVersion:89,controlled:false,source,sha256:createHash('sha256').update(data).digest('hex'),initialTick:initial.tick,status:'running'};
   try {
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data});await page.goto('/?e2e');
     const front=page.locator('.front-menu');await expect(front).toBeVisible();await front.getByRole('button',{name:'Charger une partie',exact:true}).click();

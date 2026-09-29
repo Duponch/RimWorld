@@ -13,7 +13,7 @@ export function validFoodContamination(value:unknown,item:ItemId,allowed:boolean
  * used for retained corpses and off-map records without a live map). */
 export function validFoodPoisoning(value:unknown,tick:number,allowed:boolean,version=91):boolean {
   if(value===undefined)return true;
-  if(!allowed||!object(value)||!keys(value,['severity','bornAt','cause','item','vomit'])||!integer(value.severity,0,FOOD_POISON_UNIT)||!integer(value.bornAt,0,tick)||typeof value.cause!=='string'||!FOOD_POISON_CAUSES.includes(value.cause as typeof FOOD_POISON_CAUSES[number])||typeof value.item!=='string'||version<152&&value.item==='fine-meal'||!Object.hasOwn(ITEM_DEFINITIONS,value.item)||ITEM_DEFINITIONS[value.item as ItemId].kind!=='food')return false;
+  if(!allowed||!object(value)||!keys(value,['severity','bornAt','cause','item','vomit'])||!integer(value.severity,0,FOOD_POISON_UNIT)||!integer(value.bornAt,0,tick)||typeof value.cause!=='string'||!FOOD_POISON_CAUSES.includes(value.cause as typeof FOOD_POISON_CAUSES[number])||typeof value.item!=='string'||version<154&&value.item==='lavish-meal'||version<152&&value.item==='fine-meal'||!Object.hasOwn(ITEM_DEFINITIONS,value.item)||ITEM_DEFINITIONS[value.item as ItemId].kind!=='food')return false;
   if(value.cause==='dangerous-food'?!rawFoodPoisonChance(value.item as ItemId):!foodCanCarryPoison(value.item as ItemId))return false;
   if(value.vomit===undefined)return Number(value.severity)>0;
   return object(value.vomit)&&keys(value.vomit,['remainingCore','cell'])&&integer(value.vomit.remainingCore,1,899)&&object(value.vomit.cell)&&keys(value.vomit.cell,['x','z'])&&integer(value.vomit.cell.x,0)&&integer(value.vomit.cell.z,0);

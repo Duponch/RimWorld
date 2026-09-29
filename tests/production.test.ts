@@ -45,7 +45,7 @@ test('feu construit, deux jours de combustion, ravitaillement concurrent et inte
   const migrated=deserializeWorld(JSON.stringify(v9));
   expect(migrated.pawns.every(p=>p.cooking===null&&p.priorities.cook===2)).toBe(true);
   migrated.pawns.forEach(p=>p.priorities.cook=0);
-  const historicalExpected=structuredClone(w);historicalExpected.restRules='legacy';for(const policy of historicalExpected.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal');historicalExpected.pawns.forEach(p=>{delete p.appearance;p.schedule.fill('anything');p.recreation=initialRecreation();});expect(migrated).toEqual(withMigratedSkills(historicalExpected));
+  const historicalExpected=structuredClone(w);historicalExpected.restRules='legacy';for(const policy of historicalExpected.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal');historicalExpected.pawns.forEach(p=>{delete p.appearance;p.schedule.fill('anything');p.recreation=initialRecreation();});expect(migrated).toEqual(withMigratedSkills(historicalExpected));
   expect(applyCommand(w,{type:'designate',kind:'campfire',x:8,z:8}).ok).toBe(true);
   until(w,()=>w.structures.some(s=>s.kind==='campfire'));
   const fire=w.structures.find(s=>s.kind==='campfire')!;
@@ -107,7 +107,7 @@ test('cuisine physique : mélange, interruption, sauvegarde du travail, deux rep
   until(w,()=>pawn.cooking?.phase==='work'&&pawn.cooking.progress>=84000);
   expect(pawn).toMatchObject({x:8,z:7,state:'working'});
   expect(queryPawnStatus(w,pawn).reason).toContain('28 %');
-  const oldWork=JSON.parse(serializeWorld(w));for(const policy of oldWork.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='fine-meal');(oldWork.schemaVersion=35,withoutPawnSkills(oldWork));withoutV37LightWork(oldWork);
+  const oldWork=JSON.parse(serializeWorld(w));for(const policy of oldWork.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='fine-meal'&&item!=='lavish-meal');(oldWork.schemaVersion=35,withoutPawnSkills(oldWork));withoutV37LightWork(oldWork);
   for(const structure of oldWork.structures)for(const oldBill of structure.bills??[])delete oldBill.filters.milk;
   oldWork.pawns[0].cooking.progress=17;
   expect(deserializeWorld(JSON.stringify(oldWork)).pawns[0]!.cooking!.progress).toBe(85000);

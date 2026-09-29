@@ -17,7 +17,7 @@ export function initialFoodPolicies(includeMeat=true,includeFoodCrops=true,inclu
   const items=FOOD_ITEMS.filter(id=>(includeBiomes||!V91_ITEM_IDS.includes(id))&&(includeMeat||id!=='hare-meat')&&(includeFoodCrops||id!=='potato'&&id!=='corn')&&(includeMilk||id!=='milk'));
   return [
     {id: 1, name: 'Sans restriction', allowed: [...items]},
-    {id: 2, name: 'Repas uniquement', allowed: ['simple-meal', 'fine-meal', 'survival-meal', 'legacy-portion']},
+    {id: 2, name: 'Repas uniquement', allowed: ['simple-meal', 'fine-meal', 'lavish-meal', 'survival-meal', 'legacy-portion']},
     {id: 3, name: 'Sans rations', allowed: items.filter(id => id !== 'survival-meal')},
     {id: 4, name: 'Rien', allowed: []},
   ];

@@ -7,7 +7,7 @@ import { visitorAtEdge,visitorArrival } from '../src/sim/visitor-navigation.ts';
 import { rotAge } from '../src/sim/food-preservation.ts';
 import { visitorTradeFixture } from './scenarios/visitors.ts';
 import { deconstructionCamp,fixtureBuilding } from './scenarios/deconstruction.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION, type World } from '../src/sim/types.ts';
 import { withoutFutureHelmetPolicy } from './scenarios/legacy-skills.ts';
 
 function replay(w:World,ticks:number):void {
@@ -52,7 +52,7 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   expect(d.pawn.appearance).toEqual(p.appearance);expect(d.pawn.appearance).toBeDefined();
   const legacy=structuredClone(w) as any;
   legacy.schemaVersion=135;
-  for(const policy of legacy.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='fine-meal');
+  for(const policy of legacy.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='fine-meal'&&item!=='lavish-meal');
   delete legacy.breakdown;
   withoutFutureHelmetPolicy(legacy);
   for(const policy of legacy.apparelPolicies??[])policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-helmet');
@@ -62,8 +62,8 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   expect(validateWorld(migrated)).toEqual([]);
   const v150=structuredClone(w);
   (v150 as {schemaVersion:number}).schemaVersion=150;
-  for(const policy of v150.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal');
-  expect(deserializeWorld(JSON.stringify(v150))).toEqual({...v150,schemaVersion:152});
+  for(const policy of v150.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal');
+  expect(deserializeWorld(JSON.stringify(v150))).toEqual({...v150,schemaVersion:SCHEMA_VERSION});
   const futureMemory=structuredClone(v150);
   futureMemory.visitors!.departed[0]!.pawn.memories.push({kind:'ate-fine-meal',expiresAt:d.tick+100});
   expect(()=>deserializeWorld(JSON.stringify(futureMemory))).toThrow(/Invalid version 150 save/);

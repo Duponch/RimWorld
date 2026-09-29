@@ -1,0 +1,23 @@
+# Validation du plat gastronomique mixte V154
+
+**Livré et validé dans le périmètre décrit au 29 septembre 2026.** Le [contrat](../development/lavish-meal-v154.md) et la [recherche Core](../research/lavish-meal-core-v154.md) couvrent une seule facture mixte. La régression finale ci-dessous a été exécutée après les correctifs du compteur « jusqu'à X » et des contrôles de tombe. Les scènes préparées, le navigateur ciblé et les mesures de présentation gardent les limites indiquées.
+
+| Famille | Résultat établi | Limite ou contrôle restant |
+| --- | --- | --- |
+| Production, ingestion et humeur | Neuf tests de gameplay ciblés passés sur la recette, le produit et leurs interactions. Deux quotas physiques de dix ingrédients, Cuisine 8, ingestion et souvenir +12 sont implémentés. | Les tests ciblés ne mesurent ni l'accès et la fréquence de fabrication en colonie naturelle, ni toutes les variantes Core. |
+| Sauvegarde et commandes | 59 tests ciblés de persistance passés. Le schéma 152 est validé strictement avant migration neutre 152 → 154 ; la continuation V154 conserve les identités, quantités, réservations et phases de cuisine. | Les fixtures historiques restent immuables ; ces tests ne représentent pas une campagne naturelle. |
+| Interface et transitions réelles | `tests/integration/lavish-meal-v154.spec.ts` : Chromium **1/1**, **57,2 s**. La scène préparée migre V152, puis l'interface et le worker exécutent facture, collecte, cuisson physique, livraison, ingestion et souvenir. Les parcours affectés `advanced-industry-v139` et `fine-meal-v152` passent chacun **1/1**. Les branches froide/rechargement et active de `hygiene` passent chacune **1/1** ; branche active **42,2 s de test / 46,4 s au total** après correction. | Scènes préparées ; ni campagne naturelle ni temps GPU isolé. L'oracle hygiène a été adapté aux contrôles UI actuels et un défaut réel d'affichage des contrôles de tombe après sélection a été corrigé dans `src/main.ts`. Ces parcours ciblés ne valent pas suite navigateur exhaustive. |
+| Régression et build finaux | Après les deux correctifs : `npm run test:regression` **292/292 fichiers, 1 263 tests passés et un ignoré (1 264 au total), 205,21 s**. `npm run build` passe le typage TypeScript et Vite compile **609 modules**. | Régression hors campagnes longues ; elle ne couvre pas la suite navigateur exhaustive. |
+| Présentation | `npm run test:presentation` passe : minage **7 711 images**, p95 **6,1 ms**, `jumpCount=0`, `solidOccupancy=0` ; coupe **7 788 images**, p95 **6,1 ms**, `jumpCount=0`, `solidOccupancy=0`. | Statistiques du chemin de présentation mesuré, sans mesure de FPS général ni temps GPU isolé. |
+| Planificateur CPU | Oracle de décisions et snapshots identiques. Microbanc ciblé : `mixed-100` **128,44 → 127,62 ms** (×1,006) ; scène V152 préparée **8,36 → 8,07 ms** (×1,036). | Écarts de l'ordre du bruit de mesure ; aucun gain général revendiqué. Pas de mesure de tick complet, worker, RAF, GPU ou FPS. |
+
+La fixture Chromium part d'une **copie en mémoire** de `public/test-saves/v152/repas-fin.json` : deux personnes, une cuisinière à bois alimentée, dix laits, dix riz et un souvenir raffiné chez le mangeur. Le fichier historique reste immuable. Le joueur autorise ensuite le nouveau repas et ajoute la facture par l'interface. Le scénario vérifie les transitions physiques après cette préparation ; il ne prouve pas que ces ressources apparaissent souvent dans une colonie ordinaire.
+
+Le correctif postérieur à la première régression porte sur le comptage en réserve du mode « jusqu'à X ». Le parcours hygiène a ensuite conduit à corriger l'affichage des contrôles de tombe à la sélection. Leurs tests ciblés et la régression finale passent après ces deux corrections. Le pilote commun de colonie V153 et le correctif audio spatial disposent de [preuves distinctes](validation-colony-pilot-v153.md) et [d'un dossier audio](validation-audio-camera-v149.md) ; leurs résultats ne sont pas attribués à V154.
+
+## Portée des contrôles
+
+- Parcours Chromium hérités touchés : `advanced-industry-v139` **1/1**, `fine-meal-v152` **1/1**, branches froide et active de `hygiene` **1/1 chacune**. Le groupe navigateur exhaustif n'a pas été exécuté.
+- Contrôle documentaire `npm run check:docs` : **passé** sur l'arbre documentaire courant (539 documents, 5 293 liens locaux, 25 identifiants de domaine et cinq familles de validation préservés ; six en-têtes courants au schéma 154 et trois sources originales identiques octet pour octet).
+
+Les campagnes naturelles longues ne sont pas rejouées systématiquement pour cette tranche ; aucune conclusion de fréquence, de cadence globale ou de parité exhaustive Core n'en découle.

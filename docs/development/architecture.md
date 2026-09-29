@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-État courant au schéma 152. V152 ajoute une [facture de plat raffiné à deux quotas](fine-meal-v152.md), avec validation de chaque tâche continuable et migration stricte de V150. V151 réutilise les [réservations de service dans une seule proposition de cuisine](cooking-service-cache-v151.md), sans cache entre appels. Les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés et ne constituent pas un inventaire fonctionnel actuel. Celui-ci est tenu dans [l’état du jeu](../gameplay/implementation-status.md).
+État courant au schéma 154. V154 étend les [factures à deux quotas](lavish-meal-v154.md) au plat gastronomique, après validation stricte du schéma 152 et migration neutre. V153 indexe les [réservations alimentaires animales](wildlife-reservation-index-v153.md) pendant chaque proposition sans cache entre appels. Les notes de livraison V6–V88 sont dans [l’archive](architecture-pre-v145.md). Les ADR ci-dessous restent datés et ne constituent pas un inventaire fonctionnel actuel. Celui-ci est tenu dans [l’état du jeu](../gameplay/implementation-status.md).
 
 ## Objectif
 

@@ -3,7 +3,7 @@ import { productionResearchUnlocked,productionWorkerQualified } from './machinin
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel, isButcherStation } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
-import { isFlakRecipe,stationRecipe, stationWork, taskRecipe, validFineMealIngredients, type ProductionIngredient } from './production-recipes.ts';
+import { isFlakRecipe,stationRecipe, stationWork, taskRecipe, validFineMealIngredients, validLavishMealIngredients, type ProductionIngredient } from './production-recipes.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { billWanted, componentWorkpiecePlaceFree,cookingPlaceFree, cookingSpot, ingredientPlaceFree, ingredientWithinReach } from './cooking-bills.ts';
 import { planCooking } from './cooking-planner.ts';
@@ -33,7 +33,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(!routeToCell(world,spot,reach))return no('Aucun accès à la place de cuisine.');
   const plan=planCooking(world,pawn,reach,budget,{stationId,forced});
   if(!plan)return no(!usesCookingFuel(station.kind)||station.fuel?.ticks?'Aucune recette réalisable : ingrédients autorisés dans le rayon, accès ou dépôt insuffisants.':'Aucun bois disponible et accessible pour rallumer le feu.');
-  return {label:plan.refuel?'Ravitailler avant de cuisiner':isButcherStation(station.kind)?'Dépecer une créature':station.kind==='tailor-bench'?'Confectionner un vêtement':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='art-bench'?'Sculpter une œuvre':station.kind==='fabrication-bench'?(plan.task?.recipe==='make-recon-helmet'?'Fabriquer un casque de reconnaissance':'Fabriquer un composant'):station.kind==='machining-table'?(plan.task?.recipe==='make-flak-helmet'?'Fabriquer un casque pare-balles':plan.task&&isFlakRecipe(plan.task.recipe)?'Fabriquer un gilet pare-balles':'Fabriquer une arme'):station.kind==='stonecutter'?'Tailler des blocs de pierre':plan.task?.recipe==='fine-meal'?'Cuisiner un plat raffiné':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
+  return {label:plan.refuel?'Ravitailler avant de cuisiner':isButcherStation(station.kind)?'Dépecer une créature':station.kind==='tailor-bench'?'Confectionner un vêtement':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='art-bench'?'Sculpter une œuvre':station.kind==='fabrication-bench'?(plan.task?.recipe==='make-recon-helmet'?'Fabriquer un casque de reconnaissance':'Fabriquer un composant'):station.kind==='machining-table'?(plan.task?.recipe==='make-flak-helmet'?'Fabriquer un casque pare-balles':plan.task&&isFlakRecipe(plan.task.recipe)?'Fabriquer un gilet pare-balles':'Fabriquer une arme'):station.kind==='stonecutter'?'Tailler des blocs de pierre':plan.task?.recipe==='fine-meal'?'Cuisiner un plat raffiné':plan.task?.recipe==='lavish-meal'?'Cuisiner un plat gastronomique':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
 }
 
 /** Waiting recipes reserve real ingredients, the work spot and typed staging. */
@@ -46,8 +46,9 @@ export function queuedCookingReason(world:World,order:CookingOrder):string|undef
   if(spot.x!==c.spot.x||spot.z!==c.spot.z||!cookingPlaceFree(view,spot)||fuelStationReserved(view,station.id)||reservedServiceCells(view).has(cellIndex(view,spot.x,spot.z)))return 'Poste ou place de cuisine indisponible.';
   const incoming=new Map<number,{item:ProductionIngredient;quantity:number}>(),sources=new Map<number,number>();
   const author=world.pawns.find(p=>p.orders.queue.includes(order));
-  if(author&&!productionWorkerQualified(author,bill.recipe))return bill.recipe==='fine-meal'?'Cuisine 6 nécessaire.':'Compétence Artisanat insuffisante.';
+  if(author&&!productionWorkerQualified(author,bill.recipe))return bill.recipe==='fine-meal'?'Cuisine 6 nécessaire.':bill.recipe==='lavish-meal'?'Cuisine 8 nécessaire.':'Compétence Artisanat insuffisante.';
   if(bill.recipe==='fine-meal'&&!validFineMealIngredients(c.ingredients))return 'Le plat raffiné exige cinq protéines (viande ou lait) et cinq végétaux.';
+  if(bill.recipe==='lavish-meal'&&!validLavishMealIngredients(c.ingredients))return 'Le plat gastronomique exige dix protéines (viande ou lait) et dix végétaux.';
   for(const i of c.ingredients) {
     const pile=view.piles.find(p=>p.id===i.pileId);
     const work=pile?.artWork??pile?.gunWork??pile?.flakWork??pile?.componentWork??pile?.unfinished,bound=work?.billId===bill.id;
