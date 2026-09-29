@@ -186,10 +186,11 @@ audio.setVolume(soundVolume);
 audio.setMuted(!soundEnabled);
 function unlockAudioFromGesture(): void {
   if (!soundEnabled || !audio.needsUnlock) return;
-  void audio.unlock().then(() => { audioUnlockWarningShown = false; }).catch(() => {
+  void audio.unlock().then(() => { audioUnlockWarningShown = false; }).catch(error => {
     if (audioUnlockWarningShown) return;
     audioUnlockWarningShown = true;
-    notify('Le navigateur a bloqué le son. Cliquez à nouveau dans le jeu ou réactivez les effets sonores.', true);
+    const assetFailure = error instanceof Error && (error.message.includes('MP3') || error.message.includes('Audio manifest'));
+    notify(assetFailure ? 'Le chargement des bruitages a échoué. Ouvrez Options → Son et cliquez sur « Essayer le son » pour réessayer.' : 'Le navigateur a bloqué le son. Cliquez à nouveau dans le jeu ou réactivez les effets sonores.', true);
   });
 }
 function setSoundEnabled(enabled: boolean): boolean {
@@ -260,6 +261,7 @@ const frontMenu = createFrontMenu(frontHost, {
   onSoundEnabledChange: setSoundEnabled,
   getSoundVolume: () => soundVolume,
   onSoundVolumeChange: setSoundVolume,
+  onTestSound: () => audio.playPreview(),
   onStart: async draft => replaceColony(() => session.create(draft.seed, draft.size, 'crashlanded',draft.site)),
   onLoad: async key => replaceColony(() => session.load(key)),
   getTestColonies: fetchTestColonies,
@@ -987,6 +989,17 @@ soundToggle.checked = soundEnabled;
 soundVolumeSlider.value = String(Math.round(soundVolume * 100));
 soundToggle.onchange = () => { if (!setSoundEnabled(soundToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 soundVolumeSlider.oninput = () => { if (!setSoundVolume(Number(soundVolumeSlider.value) / 100)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
+const testSoundButton = el<HTMLButtonElement>('test-sound');
+const testSoundStatus = el<HTMLElement>('test-sound-status');
+testSoundButton.onclick = () => {
+  testSoundButton.disabled = true;
+  testSoundStatus.textContent = 'Chargement du son d’essai…';
+  void audio.playPreview().then(() => {
+    testSoundStatus.textContent = 'Son d’essai lancé. Vérifiez le volume de votre appareil si vous ne l’entendez pas.';
+  }).catch(error => {
+    testSoundStatus.textContent = error instanceof Error ? error.message : 'Le son d’essai a échoué.';
+  }).finally(() => { testSoundButton.disabled = false; });
+};
 // Resume directly from any later user gesture too: the browser/device can suspend an unlocked context.
 const audioGestureRoot = document.querySelector<HTMLElement>('#app')!;
 audioGestureRoot.addEventListener('pointerdown', event => { if (event.pointerType === 'mouse') unlockAudioFromGesture(); }, { capture: true });

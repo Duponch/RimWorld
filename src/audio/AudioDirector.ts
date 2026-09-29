@@ -14,6 +14,7 @@ export interface AudioManifest { version: 1; events: Record<string, SoundEvent> 
 const MAX_VOICES = 24;
 const MAX_ONE_SHOTS_PER_FRAME = 12;
 const DEFAULT_RANGE = 24;
+const PREVIEW_KIND = 'mining.hit';
 
 function level(value: unknown, fallback: number, ceiling: number): number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= ceiling ? value : fallback;
@@ -69,6 +70,9 @@ export class AudioDirector {
   private continuousSources: readonly ContinuousSource[] = [];
   private lastSelection = { x: Infinity, z: Infinity, span: 0 };
   private unlockPromise: Promise<void> | null = null;
+  private previewPromise: Promise<void> | null = null;
+  private previewOutput: GainNode | null = null;
+  private previewSource: AudioBufferSourceNode | null = null;
   private disposed = false;
   private volume = 0.75;
   private muted = false;
@@ -84,6 +88,9 @@ export class AudioDirector {
     if (this.disposed) return Promise.resolve();
     if (typeof AudioContext === 'undefined') return Promise.reject(new Error('Web Audio is unavailable'));
     if (this.context?.state === 'closed') {
+      this.stopPreview();
+      this.previewOutput?.disconnect();
+      this.previewOutput = null;
       for (const voice of [...this.voices]) this.stopVoice(voice);
       this.master?.disconnect();
       this.context = null;
@@ -118,6 +125,7 @@ export class AudioDirector {
       const resumed = this.context.resume();
       this.unlockPromise = Promise.resolve(resumed).then(async () => {
         if (!this.manifest) await this.loadAssets();
+        if (this.loadedCount === 0) throw new Error('Aucun MP3 du manifeste audio n’a pu être décodé.');
         this.updateListener();
         this.updateMaster();
         this.reconcileContinuous();
@@ -175,12 +183,14 @@ export class AudioDirector {
   setVolume(volume: number): void {
     if (!Number.isFinite(volume)) return;
     this.volume = Math.max(0, Math.min(1, volume));
+    if (this.previewOutput) this.previewOutput.gain.value = this.muted ? 0 : Math.min(8, this.volume * (this.manifest?.events[PREVIEW_KIND]?.gain ?? 1) * (this.manifest?.events[PREVIEW_KIND]?.variants[0]?.gain ?? 1));
     this.updateMaster();
   }
 
   setMuted(muted: boolean): void {
     if (this.muted === muted) return;
     this.muted = muted;
+    if (muted) this.stopPreview();
     this.updateMaster();
     if (muted) {
       for (const [id, voice] of this.continuous) this.fadeOutContinuous(id, voice);
@@ -203,9 +213,54 @@ export class AudioDirector {
     return !this.context || this.context.state !== 'running' || !this.manifest && !this.unlockPromise;
   }
 
+  /** Plays a published MP3 from an explicit UI gesture, even while the simulation is paused. */
+  playPreview(): Promise<void> {
+    if (this.previewPromise) return this.previewPromise;
+    if (this.muted) return Promise.reject(new Error('Activez les effets sonores pour faire l’essai.'));
+    if (this.volume === 0) return Promise.reject(new Error('Montez le volume des effets pour faire l’essai.'));
+    // resume() is called synchronously while this gesture still has browser activation.
+    const hadManifest = !!this.manifest;
+    const unlocked = this.unlock();
+    const preview = unlocked.catch(error => {
+      // A later explicit click can recover an asset after a failed first load.
+      if (!hadManifest) throw error;
+    }).then(async () => {
+      if (this.disposed || this.muted || this.volume === 0) throw new Error('L’essai sonore a été annulé.');
+      const event = this.manifest?.events[PREVIEW_KIND];
+      if (!event || event.loop || !event.variants.length) throw new Error('Le son d’essai est absent du manifeste audio.');
+      const variant = event.variants[0]!;
+      // A click retries each failed MP3 once, so other world sounds can recover too.
+      await this.retryFailedAssets();
+      const buffer = this.buffers.get(variant.src);
+      if (!buffer) throw new Error(`Le MP3 d’essai ne peut pas être chargé ou décodé : ${variant.src}`);
+      const context = this.context;
+      if (!context || context.state !== 'running') throw new Error('Le navigateur n’a pas activé la sortie audio.');
+      if (this.disposed || this.muted || this.volume === 0) throw new Error('L’essai sonore a été annulé.');
+      if (!this.previewOutput) {
+        this.previewOutput = context.createGain();
+        this.previewOutput.connect(context.destination);
+      }
+      this.previewOutput.gain.value = Math.min(8, this.volume * event.gain * variant.gain);
+      this.stopPreview();
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.previewOutput);
+      this.previewSource = source;
+      source.onended = () => {
+        if (this.previewSource === source) this.previewSource = null;
+        source.disconnect();
+      };
+      try { source.start(); }
+      catch (error) { this.stopPreview(); throw error; }
+    });
+    this.previewPromise = preview.finally(() => { this.previewPromise = null; });
+    return this.previewPromise;
+  }
+
   /** Loading/new map must not inherit old queued or currently playing sounds. */
   reset(): void {
     this.scheduler.reset();
+    this.stopPreview();
     this.continuousSources = [];
     this.continuous.clear();
     for (const voice of [...this.voices]) this.stopVoice(voice);
@@ -217,6 +272,8 @@ export class AudioDirector {
     this.reset();
     this.buffers.clear();
     this.manifest = null;
+    this.previewOutput?.disconnect();
+    this.previewOutput = null;
     this.master?.disconnect();
     this.master = null;
     void this.context?.close().catch(() => undefined);
@@ -234,15 +291,47 @@ export class AudioDirector {
     await Promise.all(Array.from({ length: Math.min(3, paths.length) }, async () => {
       while (next < paths.length && !this.disposed) {
         const src = paths[next++]!;
-        try {
-          const file = await fetch(src, { cache: 'force-cache' });
-          if (!file.ok) throw new Error(`Audio asset HTTP ${file.status}`);
-          const buffer = await context.decodeAudioData(await file.arrayBuffer());
-          if (!this.disposed) this.buffers.set(src, buffer);
-        } catch { if (!this.disposed) this.buffers.set(src, null); }
+        const buffer = await this.fetchBuffer(src, 'force-cache');
+        if (!this.disposed) this.buffers.set(src, buffer);
       }
     }));
-    if (!this.disposed) this.manifest = manifest;
+    if (!this.disposed) {
+      this.manifest = manifest;
+      if (this.loadedCount === 0) throw new Error('Aucun MP3 du manifeste audio n’a pu être décodé.');
+    }
+  }
+
+  private async fetchBuffer(src: string, cache: RequestCache): Promise<AudioBuffer | null> {
+    const context = this.context;
+    if (!context || this.disposed) return null;
+    try {
+      const file = await fetch(src, { cache });
+      if (!file.ok) throw new Error(`Audio asset HTTP ${file.status}`);
+      return await context.decodeAudioData(await file.arrayBuffer());
+    } catch { return null; }
+  }
+
+  private async retryFailedAssets(): Promise<void> {
+    if (!this.manifest) return;
+    const paths = [...new Set(Object.values(this.manifest.events).flatMap(event =>
+      event.variants.map(variant => variant.src)))].filter(src => !this.buffers.get(src));
+    let next = 0;
+    await Promise.all(Array.from({ length: Math.min(3, paths.length) }, async () => {
+      while (next < paths.length && !this.disposed) {
+        const src = paths[next++]!;
+        const buffer = await this.fetchBuffer(src, 'reload');
+        if (!this.disposed) this.buffers.set(src, buffer);
+      }
+    }));
+  }
+
+  private stopPreview(): void {
+    const source = this.previewSource;
+    if (!source) return;
+    this.previewSource = null;
+    source.onended = null;
+    try { source.stop(); } catch { /* It may have ended already. */ }
+    source.disconnect();
   }
 
   private updateMaster(): void {

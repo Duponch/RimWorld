@@ -6,6 +6,14 @@ import { expectWorld, saveKey } from './helpers';
 
 test('V149 : sons locaux décodés, réglages conservés et présentation Chromium', async ({ page }) => {
     const errors = observeErrors(page);
+    await page.addInitScript(() => {
+      (window as any).__previewStarts = 0;
+      const start = AudioBufferSourceNode.prototype.start;
+      AudioBufferSourceNode.prototype.start = function (...args) {
+        if (this.buffer && !this.loop) (window as any).__previewStarts++;
+        return start.apply(this, args);
+      };
+    });
     await startPaused(page);
     await expect(page.locator('#fps-counter')).toBeVisible();
     const backend = await page.evaluate(() => window.__lisiere.backend);
@@ -17,7 +25,13 @@ test('V149 : sons locaux décodés, réglages conservés et présentation Chromi
     const enabled = page.locator('#sound-enabled');
     const volume = page.locator('#sound-volume');
     await expect(enabled).toBeChecked();
+    await page.locator('#test-sound').click();
+    await expect(page.locator('#test-sound-status')).toContainText('Son d’essai lancé');
+    expect(await page.evaluate(() => (window as any).__previewStarts)).toBe(1);
     await enabled.uncheck();
+    await page.locator('#test-sound').click();
+    await expect(page.locator('#test-sound-status')).toContainText('Activez les effets sonores');
+    expect(await page.evaluate(() => (window as any).__previewStarts)).toBe(1);
     await volume.evaluate((input: HTMLInputElement) => {
       input.value = '42';
       input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -28,8 +42,14 @@ test('V149 : sons locaux décodés, réglages conservés et présentation Chromi
     }))).toEqual({ enabled: 'false', volume: '0.42' });
     await page.goto('/');
     await page.getByRole('button', { name: 'Options' }).click();
-    await expect(page.locator('.front-menu .front-texture-setting').filter({ hasText: 'Effets sonores' }).locator('input[type=checkbox]')).not.toBeChecked();
+    const frontEnabled = page.locator('.front-menu .front-texture-setting').filter({ hasText: 'Effets sonores' }).locator('input[type=checkbox]');
+    await expect(frontEnabled).not.toBeChecked();
     await expect(page.locator('.front-volume-setting input[type=range]')).toHaveValue('42');
+    await page.locator('#front-test-sound').click();
+    await expect(page.locator('.front-error')).toContainText('Activez les effets sonores');
+    await frontEnabled.check();
+    await page.locator('#front-test-sound').click();
+    await expect(page.locator('.front-card.front-options [role=status]')).toContainText('Son d’essai lancé');
     expect(errors).toEqual([]);
 });
 

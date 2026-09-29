@@ -29,6 +29,7 @@ export interface FrontMenuOptions {
   onSoundEnabledChange: (enabled: boolean) => boolean;
   getSoundVolume: () => number;
   onSoundVolumeChange: (volume: number) => boolean;
+  onTestSound: () => Promise<void>;
   getSaves: () => FrontMenuSave[];
   getTestColonies: () => Promise<TestColony[]>;
   onLoadTest: (save: TestColony) => Promise<void>;
@@ -299,6 +300,22 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     });
     volumeSetting.append(volumeText, volumeSlider);
     audioCard.append(volumeSetting);
+    const testSound = action('Essayer le son', () => {
+      if (testSound.disabled) return;
+      clearError();
+      testSound.disabled = true;
+      testResult.textContent = 'Chargement du son d’essai…';
+      void options.onTestSound().then(() => {
+        testResult.textContent = 'Son d’essai lancé. Vérifiez le volume de votre appareil si vous ne l’entendez pas.';
+      }).catch(cause => {
+        testResult.textContent = '';
+        showError(cause instanceof Error ? cause.message : 'Le son d’essai a échoué.');
+      }).finally(() => { if (testSound.isConnected) testSound.disabled = false; });
+    });
+    testSound.id = 'front-test-sound';
+    const testResult = element('p', 'front-small');
+    testResult.setAttribute('role', 'status');
+    audioCard.append(testSound, testResult);
     content.append(audioCard);
     footer.append(action('Retour', () => navigate('home'), 'front-back'));
   }

@@ -2,6 +2,12 @@
 
 **État : sept MP3 intégrés au dépôt et inscrits au manifeste après contrôle technique, dont `cooking.work`.** Un [parcours Chromium ciblé](../history/validation-audio-resume-v149.md) vérifie leur décodage et le démarrage d'un son de minage sur un vrai contact de travail. L'écoute humaine et le test du mix restent nécessaires : le décodage et l'appel à Web Audio ne valident ni le timbre ni l'audibilité en jeu. Le moteur audio lit `public/assets/audio/manifest.json` version 1. [Recherche API, coût et droits](../research/audio-elevenlabs-v149.md).
 
+## Essai sonore dans les Options
+
+**Essayer le son** est disponible dans les Options de l'accueil et le menu de la colonie. Un clic démarre le MP3 local publié `mining.hit` avec son gain de manifeste et le volume des effets, au centre de la sortie Web Audio, même lorsque la simulation ou le menu met le mix du monde en pause. Le bouton refuse l'essai si les effets sont désactivés ou si le volume est nul. Son message de réussite signifie que la source a démarré ; il ne garantit ni la sortie de l'appareil ni l'audibilité humaine.
+
+Un manifeste inaccessible ou invalide fait échouer l'activation ; zéro MP3 décodé n'est plus annoncé comme un chargement réussi. Les fichiers échoués restent mémorisés, sans nouvelle requête à chaque image ni sur les gestes ordinaires. Chaque clic d'essai retente une fois chaque variante en échec, avec trois chargements au plus en parallèle, puis démarre `mining.hit` si son buffer est disponible. Les buffers déjà décodés sont réutilisés. Une seule source d'essai joue à la fois ; elle est arrêtée lors d'un nouvel essai, d'une coupure des effets, d'un changement de monde ou de la fermeture de la page. [Preuve ciblée](../history/validation-audio-selftest-v149.md).
+
 ## Direction sonore
 
 Lisière vise une texture chaleureuse, tactile et lisible sous une scène 3D pastel/craie. Les petits impacts doivent informer du contact physique sans devenir percussifs à grande échelle. Les sons de combat restent sobres et distincts des gestes de travail. La pluie et le feu forment un fond doux, sans musique ni voix et sans masquer les ordres ou alertes. Aucun prompt ne demande une imitation de l'audio RimWorld ; les sons sont une adaptation propre au jeu.

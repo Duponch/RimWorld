@@ -195,6 +195,7 @@ describe('continuous voice lifecycle', () => {
         forwardX: new Param(), forwardY: new Param(), forwardZ: new Param(),
       };
       createGain() { return Object.assign(new Node(), { gain: new Param() }); }
+      decodeAudioData(): Promise<object> { return Promise.resolve({}); }
       resume(): Promise<void> {
         this.resumes++;
         if (this.resumes === 1) return Promise.reject(new Error('blocked'));
@@ -204,7 +205,10 @@ describe('continuous voice lifecycle', () => {
       close(): Promise<void> { this.state = 'closed'; return Promise.resolve(); }
     }
     vi.stubGlobal('AudioContext', FakeContext);
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ version: 1, events: {} }))));
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => url.endsWith('manifest.json')
+      ? new Response(JSON.stringify({ version: 1, events: {
+        'mining.hit': { variants: [{ src: '/assets/audio/sfx/mining.mp3' }] },
+      } })) : new Response(new Uint8Array([1]))));
     const audio = new AudioDirector();
     await expect(audio.unlock()).rejects.toThrow('blocked');
     await expect(audio.unlock()).resolves.toBeUndefined();
@@ -354,6 +358,152 @@ describe('continuous voice lifecycle', () => {
     expect(audio.loadedCount).toBe(13);
     expect(peakFetches).toBeLessThanOrEqual(3);
     expect(peakDecodes).toBeLessThanOrEqual(3);
+    audio.dispose();
+  });
+});
+
+describe('explicit sound preview and failed asset recovery', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  class Param {
+    value = 0;
+    setValueAtTime(value: number): void { this.value = value; }
+    setTargetAtTime(value: number): void { this.value = value; }
+    cancelScheduledValues(): void {}
+  }
+  class Node {
+    connections: Node[] = [];
+    disconnected = false;
+    connect(node: Node): void { this.connections.push(node); }
+    disconnect(): void { this.disconnected = true; }
+  }
+  class Source extends Node {
+    buffer: unknown;
+    onended: (() => void) | null = null;
+    starts = 0;
+    stops = 0;
+    start(): void { this.starts++; }
+    stop(): void { this.stops++; }
+  }
+  class FakeContext {
+    static latest: FakeContext;
+    state = 'running';
+    currentTime = 0;
+    destination = new Node();
+    gains: (Node & { gain: Param })[] = [];
+    sources: Source[] = [];
+    listener = {
+      positionX: new Param(), positionY: new Param(), positionZ: new Param(),
+      forwardX: new Param(), forwardY: new Param(), forwardZ: new Param(),
+    };
+    constructor() { FakeContext.latest = this; }
+    createGain() {
+      const gain = Object.assign(new Node(), { gain: new Param() });
+      this.gains.push(gain);
+      return gain;
+    }
+    createBufferSource() { const source = new Source(); this.sources.push(source); return source; }
+    decodeAudioData(): Promise<object> { return Promise.resolve({ duration: 0.6 }); }
+    resume(): Promise<void> { this.state = 'running'; return Promise.resolve(); }
+    close(): Promise<void> { this.state = 'closed'; return Promise.resolve(); }
+  }
+  const manifest = { version: 1, events: {
+    'mining.hit': { gain: 2, variants: [{ src: '/assets/audio/sfx/mining.mp3' }] },
+  } };
+
+  it('rejects a manifest with zero decoded files and retries only on an explicit preview click', async () => {
+    vi.stubGlobal('AudioContext', FakeContext);
+    let mp3Fetches = 0;
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.endsWith('manifest.json')) return new Response(JSON.stringify(manifest));
+      mp3Fetches++;
+      return mp3Fetches === 1 ? new Response('', { status: 503 }) : new Response(new Uint8Array([1]));
+    }));
+    const audio = new AudioDirector();
+    await expect(audio.unlock()).rejects.toThrow('Aucun MP3');
+    expect(audio.loadedCount).toBe(0);
+    expect(audio.needsUnlock).toBe(false); // Ordinary gestures must not keep retrying a failed download.
+    audio.update({ presentedTick: 10, paused: false, hidden: false });
+    await expect(audio.unlock()).rejects.toThrow('Aucun MP3');
+    expect(mp3Fetches).toBe(1);
+    await audio.playPreview();
+    expect(mp3Fetches).toBe(2);
+    expect(audio.loadedCount).toBe(1);
+    expect(FakeContext.latest.sources).toHaveLength(1);
+    expect(FakeContext.latest.sources[0]!.starts).toBe(1);
+    await audio.playPreview();
+    expect(mp3Fetches).toBe(2);
+    expect(FakeContext.latest.sources[0]!.stops).toBe(1);
+    audio.dispose();
+    expect(FakeContext.latest.sources[1]!.stops).toBe(1);
+    expect(FakeContext.latest.gains.every(gain => gain.disconnected)).toBe(true);
+  });
+
+  it('reports a missing manifest or an unavailable preview MP3 clearly', async () => {
+    vi.stubGlobal('AudioContext', FakeContext);
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => url.endsWith('manifest.json')
+      ? new Response('', { status: 404 }) : new Response('', { status: 404 })));
+    const missing = new AudioDirector();
+    await expect(missing.playPreview()).rejects.toThrow('Audio manifest HTTP 404');
+    missing.dispose();
+
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => url.endsWith('manifest.json')
+      ? new Response(JSON.stringify(manifest)) : new Response('', { status: 404 })));
+    const failed = new AudioDirector();
+    await expect(failed.playPreview()).rejects.toThrow('Aucun MP3');
+    await expect(failed.playPreview()).rejects.toThrow('Le MP3 d’essai ne peut pas être chargé');
+    expect(FakeContext.latest.sources).toHaveLength(0);
+    failed.dispose();
+  });
+
+  it('recovers another failed world sound on an explicit preview without refetching decoded files', async () => {
+    vi.stubGlobal('AudioContext', FakeContext);
+    const attempts = new Map<string, number>();
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.endsWith('manifest.json')) return new Response(JSON.stringify({ version: 1, events: {
+        ...manifest.events,
+        'cooking.work': { variants: [{ src: '/assets/audio/sfx/cooking.mp3' }] },
+      } }));
+      attempts.set(url, (attempts.get(url) ?? 0) + 1);
+      if (url.endsWith('cooking.mp3') && attempts.get(url) === 1) return new Response('', { status: 503 });
+      return new Response(new Uint8Array([1]));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const audio = new AudioDirector();
+    await audio.unlock();
+    expect(audio.loadedCount).toBe(1);
+    await audio.playPreview();
+    expect(audio.loadedCount).toBe(2);
+    expect(attempts.get('/assets/audio/sfx/cooking.mp3')).toBe(2);
+    expect(attempts.get('/assets/audio/sfx/mining.mp3')).toBe(1);
+    await audio.playPreview();
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    audio.dispose();
+  });
+
+  it('plays while paused through a reused direct output and obeys mute and volume', async () => {
+    vi.stubGlobal('AudioContext', FakeContext);
+    const fetchMock = vi.fn(async (url: string) => url.endsWith('manifest.json')
+      ? new Response(JSON.stringify(manifest)) : new Response(new Uint8Array([1])));
+    vi.stubGlobal('fetch', fetchMock);
+    const audio = new AudioDirector();
+    audio.update({ presentedTick: 1, paused: true, hidden: false });
+    await audio.playPreview();
+    const context = FakeContext.latest;
+    expect(context.gains[0]!.gain.value).toBe(0); // The game mix remains paused.
+    expect(context.gains[1]!.gain.value).toBe(1.5);
+    expect(context.sources[0]!.connections).toEqual([context.gains[1]]);
+    audio.setVolume(0.25);
+    expect(context.gains[1]!.gain.value).toBe(0.5);
+    await audio.playPreview();
+    expect(context.gains).toHaveLength(2);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    audio.setMuted(true);
+    expect(context.sources[1]!.stops).toBe(1);
+    await expect(audio.playPreview()).rejects.toThrow('Activez les effets sonores');
+    audio.setMuted(false);
+    audio.setVolume(0);
+    await expect(audio.playPreview()).rejects.toThrow('Montez le volume');
     audio.dispose();
   });
 });
