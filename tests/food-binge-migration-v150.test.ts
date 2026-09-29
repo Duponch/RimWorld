@@ -8,7 +8,7 @@ import {medicalCamp} from './scenarios/health.ts';
 function declared148(withWander=false):World {
   const world=medicalCamp();
   if(withWander)expect(startSadWander(world,world.pawns[0]!)).toBe(true);
-  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal');
+  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal');
   (world as {schemaVersion:number}).schemaVersion=148;
   return world;
 }

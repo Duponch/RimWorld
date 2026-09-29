@@ -16,7 +16,7 @@ import {foodWorkstationCamp,fixtureFoodStation} from './scenarios/food-workstati
 const ITEM='carnivore-fine-meal' as const;
 function declared155():World {
   const world=medicalCamp();
-  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM);
+  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='vegetarian-lavish-meal');
   (world as {schemaVersion:number}).schemaVersion=155;
   return world;
 }
