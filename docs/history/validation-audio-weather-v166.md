@@ -14,3 +14,5 @@ Relevé du 29 septembre 2026, schéma 162 inchangé. Les [contrats audio](../dev
 ## Limites de cette preuve
 
 L'écoute humaine du bois avec et sans musique dans les deux caméras, et l'écoute des nouvelles prises animales, restent à réaliser sur l'appareil du joueur ; les mesures numériques ne prouvent pas le confort ni le timbre perçu. Le coût CPU du décodage au déverrouillage, la mémoire réelle Web Audio, le GPU matériel et les FPS natifs sous pluie/neige restent à mesurer. Les scènes météo préparées ne prouvent ni fréquence naturelle ni cohérence saisonnière. Aucun nouveau test de sauvegarde d'une transition météo naturelle n'est revendiqué : les huit fichiers imposent un état établi au tick zéro puis passent chargement strict et round trip. Les tests navigateur ont utilisé WebGL 2 logiciel. Les campagnes longues et la suite de régression générale ne sont pas incluses dans cette validation ciblée.
+
+**Publication complémentaire :** ces huit scènes sont désormais accessibles dans **Charger une partie → Colonies de test** ; [la preuve du correctif de catalogue](validation-weather-catalog-v166.md) couvre séparément leur présence et leur chargement par le menu.

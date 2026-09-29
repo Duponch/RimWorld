@@ -574,6 +574,194 @@
       "prepared": true,
       "provenance": "Scène V139 préparée depuis la sauvegarde V123 sans la modifier : recherche avancée acquise, trois nouvelles piles et facture avancée explicites. Aucun composant avancé, ouvrage ou second établi n’est préfabriqué ; le premier produit vient du moteur après reprise.",
       "sha256": "cafbc83783fab1e858229fc7021cc6c6761d3d9b19547a2ada9a67271e18dfc0"
+    },
+    {
+      "release": "v166",
+      "id": "weather-clear-v166",
+      "label": "Temps clair · 3 colons",
+      "description": "Temps clair établi, témoin sans précipitation.",
+      "filename": "clear-prepared.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "temps clair",
+        "témoin sans précipitation"
+      ],
+      "steps": [
+        "Observer le ciel et vérifier l’absence de pluie et de neige.",
+        "Basculer entre caméra isométrique et perspective basse pour comparer la scène."
+      ],
+      "prepared": true,
+      "provenance": "Scène V166 préparée depuis le même départ 32 × 32 au tick zéro : la météo établie est imposée explicitement. La saison et la fréquence naturelle de cette météo ne sont pas démontrées ; aucune frappe de foudre passée n’est ajoutée.",
+      "sha256": "b4453cfc024dfdb9f637cbae13d0e07318b5462bbcdada0a668c981db8bc388f"
+    },
+    {
+      "release": "v166",
+      "id": "weather-fog-v166",
+      "label": "Brouillard · 3 colons",
+      "description": "Brouillard établi, témoin sans précipitation.",
+      "filename": "fog-prepared.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "brouillard",
+        "témoin sans précipitation"
+      ],
+      "steps": [
+        "Observer le ciel et vérifier l’absence de pluie et de neige.",
+        "Comparer la visibilité avec le temps clair préparé."
+      ],
+      "prepared": true,
+      "provenance": "Scène V166 préparée depuis le même départ 32 × 32 au tick zéro : la météo établie est imposée explicitement. La saison et la fréquence naturelle de cette météo ne sont pas démontrées ; aucune frappe de foudre passée n’est ajoutée.",
+      "sha256": "bec83c9d54f666b6d61e6dcf52903dfaa92e69a3aa06872a9ffe3aa5b690ef7e"
+    },
+    {
+      "release": "v166",
+      "id": "weather-rain-v166",
+      "label": "Pluie · 3 colons",
+      "description": "Pluie établie, préparation visuelle explicite.",
+      "filename": "rain-prepared.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "pluie",
+        "traînées visibles",
+        "caméra"
+      ],
+      "steps": [
+        "Observer les traits de pluie autour du camp en caméra isométrique.",
+        "Passer en perspective basse puis mettre en pause pour inspecter la pluie au même tick."
+      ],
+      "prepared": true,
+      "provenance": "Scène V166 préparée depuis le même départ 32 × 32 au tick zéro : la météo établie est imposée explicitement. La saison et la fréquence naturelle de cette météo ne sont pas démontrées ; aucune frappe de foudre passée n’est ajoutée.",
+      "sha256": "70b59776c5a86f7e17e52e618b220ec8adfbd447467db4e8fb52035ee8e41fd6"
+    },
+    {
+      "release": "v166",
+      "id": "weather-dry-thunderstorm-v166",
+      "label": "Orage sec · 3 colons",
+      "description": "Orage sec établi, sans frappe historique ajoutée.",
+      "filename": "dry-thunderstorm-prepared.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "orage sec",
+        "absence de précipitation"
+      ],
+      "steps": [
+        "Observer le ciel sombre sans pluie ni neige.",
+        "Reprendre la partie pour laisser les événements météo futurs suivre la simulation."
+      ],
+      "prepared": true,
+      "provenance": "Scène V166 préparée depuis le même départ 32 × 32 au tick zéro : la météo établie est imposée explicitement. La saison et la fréquence naturelle de cette météo ne sont pas démontrées ; aucune frappe de foudre passée n’est ajoutée.",
+      "sha256": "842a468b9b08a15b9fcfc55fb056c7b13501d71804c4ba424623520f64bedee6"
+    },
+    {
+      "release": "v166",
+      "id": "weather-foggy-rain-v166",
+      "label": "Pluie et brouillard · 3 colons",
+      "description": "Pluie et brouillard établis, préparation visuelle explicite.",
+      "filename": "foggy-rain-prepared.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "pluie",
+        "brouillard",
+        "caméra"
+      ],
+      "steps": [
+        "Observer ensemble les nuages, le brouillard et les traits de pluie.",
+        "Comparer les deux vues de caméra autour du camp."
+      ],
+      "prepared": true,
+      "provenance": "Scène V166 préparée depuis le même départ 32 × 32 au tick zéro : la météo établie est imposée explicitement. La saison et la fréquence naturelle de cette météo ne sont pas démontrées ; aucune frappe de foudre passée n’est ajoutée.",
+      "sha256": "6b63e9740eb9c74a92aed5b9f9f4a8357171d11138dc0cbcee0052dfc9106382"
+    },
+    {
+      "release": "v166",
+      "id": "weather-snow-gentle-v166",
+      "label": "Neige légère · 3 colons",
+      "description": "Neige légère établie, préparation visuelle explicite.",
+      "filename": "snow-gentle-prepared.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "neige légère",
+        "flocons visibles"
+      ],
+      "steps": [
+        "Observer les flocons près du camp et vérifier l’absence de seconde pluie artificielle.",
+        "Comparer leur densité avec la neige forte préparée."
+      ],
+      "prepared": true,
+      "provenance": "Scène V166 préparée depuis le même départ 32 × 32 au tick zéro : la météo établie est imposée explicitement. La saison et la fréquence naturelle de cette météo ne sont pas démontrées ; aucune frappe de foudre passée n’est ajoutée.",
+      "sha256": "5a118064e39a2fc6850e9b6ea97892f302206e98648b5ef39e044095badb0700"
+    },
+    {
+      "release": "v166",
+      "id": "weather-snow-hard-v166",
+      "label": "Neige forte · 3 colons",
+      "description": "Neige forte établie, préparation visuelle explicite.",
+      "filename": "snow-hard-prepared.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "neige forte",
+        "flocons visibles",
+        "caméra"
+      ],
+      "steps": [
+        "Observer les flocons en caméra isométrique et en perspective basse.",
+        "Mettre en pause pour inspecter le champ de neige sans déplacement du temps."
+      ],
+      "prepared": true,
+      "provenance": "Scène V166 préparée depuis le même départ 32 × 32 au tick zéro : la météo établie est imposée explicitement. La saison et la fréquence naturelle de cette météo ne sont pas démontrées ; aucune frappe de foudre passée n’est ajoutée.",
+      "sha256": "cdea3b024064b73a564d8c989908b0d2ca4eb94283e34881de49d9f92754ddb5"
+    },
+    {
+      "release": "v166",
+      "id": "weather-rainy-thunderstorm-v166",
+      "label": "Orage pluvieux · 3 colons",
+      "description": "Orage pluvieux établi, sans frappe historique ajoutée.",
+      "filename": "rainy-thunderstorm-prepared.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "orage pluvieux",
+        "pluie",
+        "ciel sombre"
+      ],
+      "steps": [
+        "Observer la pluie sous les nuages sombres en caméra isométrique.",
+        "Passer en perspective basse pour comparer la visibilité des traits de pluie."
+      ],
+      "prepared": true,
+      "provenance": "Scène V166 préparée depuis le même départ 32 × 32 au tick zéro : la météo établie est imposée explicitement. La saison et la fréquence naturelle de cette météo ne sont pas démontrées ; aucune frappe de foudre passée n’est ajoutée.",
+      "sha256": "80dcae0f0601f935607eebf75622ca98b92192d6c88420c50196646781496acf"
     }
   ]
 }
