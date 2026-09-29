@@ -138,6 +138,78 @@
       "loop": false,
       "gain": 0.8,
       "maxDistance": 14
+    },
+    "ui.click": {
+      "filename": "ui-click-v165-1.mp3",
+      "prompt": "One quiet, soft tactile button click, short rounded wood and felt tap; clean dry UI feedback, no voice or music.",
+      "durationSeconds": 0.65,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 0.24,
+      "spatial": false
+    },
+    "ui.reject": {
+      "filename": "ui-reject-v165-1.mp3",
+      "prompt": "One muted low wooden tick with a tiny dull rattle, gentle invalid-action feedback, clean dry UI sound, no voice or music.",
+      "durationSeconds": 0.65,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 0.32,
+      "spatial": false
+    },
+    "ui.panel": {
+      "filename": "ui-panel-v165-1.mp3",
+      "prompt": "One soft paper card slide and light wooden tab tap, short clean UI panel opening gesture, no voice or music.",
+      "durationSeconds": 0.7,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 0.32,
+      "spatial": false
+    },
+    "haul.pickup": {
+      "filename": "haul-pickup-v165-1.mp3",
+      "prompt": "One small cloth-wrapped bundle lifted from a wooden floor, brief soft fabric rustle and wood contact, dry close foley, no footsteps or voice.",
+      "durationSeconds": 0.75,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 0.35,
+      "maxDistance": 22
+    },
+    "haul.drop": {
+      "filename": "haul-drop-v165-1.mp3",
+      "prompt": "One small cloth-wrapped bundle set gently on a wooden floor, brief low soft thud and fabric rustle, dry close foley, no footsteps or voice.",
+      "durationSeconds": 0.75,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 0.25,
+      "maxDistance": 22
+    },
+    "farming.sow": {
+      "filename": "farming-sow-v165-1.mp3",
+      "prompt": "One small handful of seeds pressed into loose soil with fingertips, brief soft earth pat and tiny dry grains, close natural foley, no voice or music.",
+      "durationSeconds": 0.7,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 0.35,
+      "maxDistance": 20
+    },
+    "farming.harvest": {
+      "filename": "farming-harvest-v165-1.mp3",
+      "prompt": "One ripe stalk snipped and gathered by hand, short dry leaf rustle and soft plant stem cut, close natural foley, no voice or music.",
+      "durationSeconds": 0.7,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 0.28,
+      "maxDistance": 20
+    },
+    "eating.work": {
+      "filename": "eating-work-v165-1.mp3",
+      "prompt": "One subtle bite of a cooked meal with a light ceramic bowl and wooden spoon contact, restrained close eating foley, no voice or music.",
+      "durationSeconds": 0.7,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 0.2,
+      "maxDistance": 16
     }
   }
 }

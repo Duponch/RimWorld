@@ -5,7 +5,9 @@ import { WORK_FRACTIONS } from '../sim/work-progress.ts';
 
 export type AudioCueKind = 'mining.hit' | 'woodcutting.hit' | 'construction.hit'
   | 'cooking.work' | 'crafting.work' | 'tailoring.work' | 'butchering.work' | 'research.work'
-  | 'weapon.gunshot' | 'weapon.melee' | 'door.open' | 'door.close';
+  | 'weapon.gunshot' | 'weapon.melee' | 'door.open' | 'door.close'
+  | 'haul.pickup' | 'haul.drop' | 'farming.sow' | 'farming.harvest' | 'eating.work'
+  | 'ui.click' | 'ui.reject' | 'ui.panel';
 export interface AudioCue {
   id: string;
   tick: number;
@@ -20,8 +22,11 @@ const MAX_PENDING_CUES = 128;
 // Short, bounded gaps keep each action legible without a metronomic loop.
 const WORK_CUE_INTERVAL_TICKS = [2, 3, 4, 5] as const;
 const STATION_CUE_INTERVAL_TICKS = [5, 6, 7, 8, 9, 10, 11] as const;
+const EATING_CUE_INTERVAL_TICKS = [4, 5, 6, 7] as const;
 
 type WorkObservation = { key: string; progress: number; nextCueTick: number; cueCount: number };
+type HaulObservation = { sourcePileId: number; phase: 'pickup' | 'deliver'; carryPileId: number | null;
+  x: number; z: number; whole: boolean };
 
 function workCueInterval(pawnId: number, key: string, cueCount: number, intervals: readonly number[]): number {
   // This hash belongs to presentation only; it consumes no simulation random state.
@@ -45,6 +50,7 @@ export class AudioCueRecorder {
   private shooting = new Map<number, number>();
   private melee = new Map<number, number>();
   private doors = new Map<number, boolean>();
+  private hauls = new Map<number, HaulObservation>();
 
   reset(): void {
     this.initialized = false;
@@ -56,6 +62,7 @@ export class AudioCueRecorder {
     this.shooting.clear();
     this.melee.clear();
     this.doors.clear();
+    this.hauls.clear();
   }
 
   capture(world: World): void {
@@ -65,12 +72,14 @@ export class AudioCueRecorder {
     const previousShooting = this.shooting;
     const previousMelee = this.melee;
     const previousDoors = this.doors;
+    const previousHauls = this.hauls;
     const work = new Map<number, WorkObservation>();
     const projectiles = new Set<number>();
     const shooting = new Map<number, number>();
     const emittedShots = new Set<string>();
     const melee = new Map<number, number>();
     const doors = new Map<number, boolean>();
+    const hauls = new Map<number, HaulObservation>();
     const jobs = new Map(world.jobs.map(job => [job.id, job]));
     let stations: Map<number, World['structures'][number]> | undefined;
     const stationFor = (id: number): World['structures'][number] | undefined => {
@@ -93,12 +102,41 @@ export class AudioCueRecorder {
     };
 
     for (const pawn of world.pawns) {
+      const previousHaul = previousHauls.get(pawn.id);
+      const haul = pawn.haul;
+      if (haul) {
+        hauls.set(pawn.id, { sourcePileId: haul.sourcePileId, phase: haul.phase,
+          carryPileId: haul.carryPileId, x: pawn.x, z: pawn.z, whole: haul.whole === true });
+        if (this.initialized && previousHaul?.sourcePileId === haul.sourcePileId
+          && previousHaul.phase === 'pickup' && haul.phase === 'deliver'
+          && haul.carryPileId !== null) {
+          this.add({ id: `haul.pickup:${world.tick}:${pawn.id}:${haul.carryPileId}`,
+            tick: world.tick, kind: 'haul.pickup', x: pawn.x, z: pawn.z });
+        }
+      }
+      if (this.initialized && previousHaul?.phase === 'deliver' && previousHaul.carryPileId !== null
+        && (!haul || haul.carryPileId !== previousHaul.carryPileId)) {
+        const stillCarried = previousHaul.whole
+          ? world.packed.some(pack => pack.building.id === previousHaul.carryPileId
+            && pack.owner.type === 'pawn' && pack.owner.pawnId === pawn.id)
+          : world.piles.some(pile => pile.id === previousHaul.carryPileId
+            && pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
+        if (!stillCarried) this.add({ id: `haul.drop:${world.tick}:${pawn.id}:${previousHaul.carryPileId}`,
+          tick: world.tick, kind: 'haul.drop', x: pawn.x, z: pawn.z });
+      }
       const job = pawn.jobId === null ? undefined : jobs.get(pawn.jobId);
-      if (job && (job.kind === 'mine' || job.kind === 'chop' || isConstruction(job)) && !job.furniture
+      if (job && (job.kind === 'mine' || job.kind === 'chop' || job.kind === 'sow'
+        || job.kind === 'harvest' || job.kind === 'cut' || isConstruction(job)) && !job.furniture
         && job.installationWork !== 'haul') {
-        const kind = job.kind === 'mine' ? 'mining.hit' : job.kind === 'chop' ? 'woodcutting.hit' : 'construction.hit';
+        const kind = job.kind === 'mine' ? 'mining.hit' : job.kind === 'chop' ? 'woodcutting.hit'
+          : job.kind === 'sow' ? 'farming.sow'
+            : job.kind === 'harvest' || job.kind === 'cut' ? 'farming.harvest' : 'construction.hit';
         recordWork(pawn.id, `job:${job.id}`, job.progress * WORK_FRACTIONS + (job.workRemainder ?? 0), kind,
           job.x, job.z, pawn.state === 'working', WORK_CUE_INTERVAL_TICKS);
+      } else if (pawn.need?.kind === 'eat' && pawn.need.phase === 'ingest') {
+        recordWork(pawn.id, `eat:${pawn.need.sourcePileId}:${pawn.need.carryPileId}`,
+          pawn.need.progress * WORK_FRACTIONS + (pawn.need.workRemainder ?? 0), 'eating.work',
+          pawn.x, pawn.z, pawn.state === 'eating', EATING_CUE_INTERVAL_TICKS);
       } else if (pawn.cooking) {
         const task = pawn.cooking, station = stationFor(task.stationId), recipe = taskRecipe(task);
         if (station && stationAccepts(station, recipe)) {
@@ -155,6 +193,7 @@ export class AudioCueRecorder {
     this.shooting = shooting;
     this.melee = melee;
     this.doors = doors;
+    this.hauls = hauls;
     this.initialized = true;
   }
 

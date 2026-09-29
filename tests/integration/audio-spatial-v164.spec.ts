@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { audibleRange, listenerPose, type AudioCamera } from '../../src/audio/spatial';
+import { audibleRange, listenerPose, SPATIAL_REF_DISTANCE, SPATIAL_ROLLOFF, type AudioCamera } from '../../src/audio/spatial';
 
-test('V164 : le Panner Web Audio calme le travail iso à mi-distance sans étouffer le foyer', async ({ page }) => {
+test('le Panner Web Audio garde une faible queue lointaine dans les deux projections', async ({ page }) => {
   const span = 32;
   const inclination = 2 / Math.hypot(0.85, 2, 0.9);
   const distance = span / (2 * Math.tan(Math.PI / 8));
@@ -23,7 +23,7 @@ test('V164 : le Panner Web Audio calme le travail iso à mi-distance sans étouf
       perspective: audibleRange(22, { ...camera, mode: 'perspective' }),
     },
   };
-  const energy = await page.evaluate(async ({ poses, ranges }) => {
+  const energy = await page.evaluate(async ({ poses, ranges, refDistance, rolloff }) => {
     const measure = async (ear: { x: number; y: number; z: number }, sourceX: number, range: number) => {
       const length = 4410;
       const context = new OfflineAudioContext(2, length, 44100);
@@ -33,10 +33,10 @@ test('V164 : le Panner Web Audio calme le travail iso à mi-distance sans étouf
       source.buffer = buffer;
       const panner = context.createPanner();
       panner.panningModel = 'equalpower';
-      panner.distanceModel = 'linear';
-      panner.refDistance = 2;
+      panner.distanceModel = 'exponential';
+      panner.refDistance = refDistance;
       panner.maxDistance = range;
-      panner.rolloffFactor = 1;
+      panner.rolloffFactor = rolloff;
       panner.positionX.value = sourceX;
       context.listener.positionX.value = ear.x;
       context.listener.positionY.value = ear.y;
@@ -51,23 +51,27 @@ test('V164 : le Panner Web Audio calme le travail iso à mi-distance sans étouf
       }
       return Math.sqrt(sum / (2 * (length - 400)));
     };
-    const result: Record<string, { nearIso: number; middleIso: number; middlePerspective: number; farIso: number }> = {};
+    const result: Record<string, { nearIso: number; middleIso: number; middlePerspective: number; farIso: number; farPerspective: number }> = {};
     for (const kind of ['mining', 'wood'] as const) {
       result[kind] = {
         nearIso: await measure(poses.iso, 0, ranges[kind].iso),
         middleIso: await measure(poses.iso, 14, ranges[kind].iso),
         middlePerspective: await measure(poses.perspective, 14, ranges[kind].perspective),
-        farIso: await measure(poses.iso, -40, ranges[kind].iso),
+        farIso: await measure(poses.iso, 40, ranges[kind].iso),
+        farPerspective: await measure(poses.perspective, 40, ranges[kind].perspective),
       };
     }
     return result;
-  }, { poses, ranges });
+  }, { poses, ranges, refDistance: SPATIAL_REF_DISTANCE, rolloff: SPATIAL_ROLLOFF });
 
   for (const kind of ['mining', 'wood']) {
     const measured = energy[kind]!;
-    expect(measured.nearIso).toBeGreaterThan(0.15);
-    expect(measured.middleIso).toBeLessThan(measured.nearIso * 0.7);
-    expect(measured.middleIso).toBeLessThanOrEqual(measured.middlePerspective * 1.1);
-    expect(measured.farIso).toBeLessThan(0.0001);
+    expect(measured.nearIso).toBeGreaterThan(0.08);
+    expect(measured.middleIso).toBeLessThan(measured.nearIso * 0.55);
+    expect(measured.middlePerspective).toBeGreaterThan(0.01);
+    expect(measured.farIso).toBeGreaterThan(0.005);
+    expect(measured.farIso).toBeLessThan(measured.middleIso * 0.4);
+    expect(measured.farPerspective).toBeGreaterThan(0.005);
+    expect(measured.farPerspective).toBeLessThan(0.04);
   }
 });

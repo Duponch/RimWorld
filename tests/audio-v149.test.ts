@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AudioDirector, parseAudioManifest } from '../src/audio/AudioDirector';
 import { AudioCueScheduler } from '../src/audio/scheduler';
-import { audibleRange, listenerPose, sourceDistance } from '../src/audio/spatial';
+import { audibleRange, listenerPose, sourceDistance, SPATIAL_REF_DISTANCE, SPATIAL_ROLLOFF } from '../src/audio/spatial';
 import { createNearbyFireCollector, selectContinuousSources } from '../src/audio/continuous';
 import { cueVariation, selectOneShots } from '../src/audio/selection';
 
@@ -91,11 +91,10 @@ describe('audio cue presentation queue', () => {
 });
 
 describe('sound spatialisation', () => {
-  // PannerNode uses refDistance=2, distanceModel='linear' and rolloffFactor=1.
-  // Beyond maxDistance it reaches zero; this models the signal level, not only
-  // the earlier candidate-culling decision.
+  // Web Audio's exponential Panner has a gentle distant tail. Culling at the
+  // explicit horizon is separate from the node's clamped distance gain.
   const pannerLevel = (distance: number, range: number): number =>
-    Math.max(0, Math.min(1, (range - Math.max(2, distance)) / (range - 2)));
+    (Math.max(SPATIAL_REF_DISTANCE, Math.min(distance, range)) / SPATIAL_REF_DISTANCE) ** -SPATIAL_ROLLOFF;
 
   it('uses the orthographic focus and zoom as its effective camera distance', () => {
     const pose = listenerPose({ x: 150, y: 300, z: 160, targetX: 20, targetZ: 30, span: 32, mode: 'orthographic' });
@@ -114,7 +113,7 @@ describe('sound spatialisation', () => {
     const near = audibleRange(24, { x: 0, y: 30, z: 0, span: 16, mode: 'perspective' });
     const overview = audibleRange(24, { x: 0, y: 30, z: 0, span: 128, mode: 'perspective' });
     expect(overview).toBe(near);
-    expect(overview).toBe(60);
+    expect(overview).toBe(64);
     expect(audibleRange(24, { x: 0, y: 30, z: 0, span: 128, mode: 'orthographic' })).toBeLessThan(24);
   });
 
@@ -123,8 +122,8 @@ describe('sound spatialisation', () => {
     const cues = [{ id: 'mining:near', tick: 1, kind: 'mining.hit', x: 10, z: 10 }];
     const near = { x: 10, y: 4, z: 10, targetX: 10, targetZ: 10, span: 32, mode: 'perspective' as const };
     expect(selectOneShots(cues, events, near)).toHaveLength(1);
-    expect(selectOneShots(cues, events, { ...near, y: 51 })).toHaveLength(0);
-    expect(selectOneShots(cues, events, { ...near, x: 61 })).toHaveLength(0);
+    expect(selectOneShots(cues, events, { ...near, y: 65 })).toHaveLength(0);
+    expect(selectOneShots(cues, events, { ...near, x: 75 })).toHaveLength(0);
     expect(selectOneShots(cues, events, { ...near, y: 25 })).toHaveLength(1);
   });
 
@@ -142,7 +141,7 @@ describe('sound spatialisation', () => {
     expect(selectContinuousSources(fire, fireInfo, far)).toHaveLength(0);
   });
 
-  it('keeps near iso mining audible but calms middle-ground work at a matched 32-cell framing', () => {
+  it('keeps a progressively quieter distant tail in both cameras at a matched 32-cell framing', () => {
     // CameraRig keeps this inclination and moves the perspective camera to
     // span / (2 * tan(22.5°)) when switching from the iso projection.
     const inclination = 2 / Math.hypot(0.85, 2, 0.9);
@@ -152,10 +151,7 @@ describe('sound spatialisation', () => {
     const iso = { x: perspectiveX, y: perspectiveY, z: 0, targetX: 0, targetZ: 0,
       span: 32, mode: 'orthographic' as const };
     const perspective = { ...iso, mode: 'perspective' as const };
-    for (const [baseRange, minimumNear, maximumMiddleRatio] of [
-      [16, 0.5, 0.5], // Mining retains the former close Panner level; Chromium checks final PCM.
-      [22, 0.65, 0.65], // Woodcutting has a wider acoustic horizon.
-    ]) {
+    for (const baseRange of [16, 22]) {
       const isoPose = listenerPose(iso);
       const perspectivePose = listenerPose(perspective);
       const isoRange = audibleRange(baseRange, iso);
@@ -163,13 +159,16 @@ describe('sound spatialisation', () => {
       const nearIso = pannerLevel(sourceDistance(0, 0, isoPose), isoRange);
       const middleIso = pannerLevel(sourceDistance(14, 0, isoPose), isoRange);
       const middlePerspective = pannerLevel(sourceDistance(14, 0, perspectivePose), perspectiveRange);
-      const farIso = pannerLevel(sourceDistance(-40, 0, isoPose), isoRange);
-      const farPerspective = pannerLevel(sourceDistance(-40, 0, perspectivePose), perspectiveRange);
-      expect(nearIso).toBeGreaterThan(minimumNear);
-      expect(middleIso).toBeLessThan(nearIso * maximumMiddleRatio);
-      expect(middleIso).toBeLessThanOrEqual(middlePerspective * 1.1);
-      expect(farIso).toBe(0);
-      expect(farPerspective).toBe(0);
+      const farIso = pannerLevel(sourceDistance(40, 0, isoPose), isoRange);
+      const farPerspective = pannerLevel(sourceDistance(40, 0, perspectivePose), perspectiveRange);
+      expect(nearIso).toBeLessThan(0.5);
+      expect(middleIso).toBeLessThan(nearIso * 0.5);
+      expect(farIso).toBeGreaterThan(0);
+      expect(farIso).toBeLessThan(middleIso * 0.35);
+      expect(farPerspective).toBeGreaterThan(0);
+      expect(farPerspective).toBeLessThan(0.1);
+      expect(middlePerspective).toBeLessThan(0.1);
+      expect(isoRange).toBeGreaterThan(baseRange * 2.8);
     }
   });
 });
@@ -435,6 +434,7 @@ describe('continuous voice lifecycle', () => {
       gains: { gain: Param }[] = [];
       sources: Source[] = [];
       panners = 0;
+      lastPanner: (Node & { distanceModel: string; refDistance: number; rolloffFactor: number; maxDistance: number }) | null = null;
       listener = {
         positionX: new Param(), positionY: new Param(), positionZ: new Param(),
         forwardX: new Param(), forwardY: new Param(), forwardZ: new Param(),
@@ -447,10 +447,12 @@ describe('continuous voice lifecycle', () => {
       }
       createPanner() {
         this.panners++;
-        return Object.assign(new Node(), {
+        const node = Object.assign(new Node(), {
           positionX: new Param(), positionY: new Param(), positionZ: new Param(),
           panningModel: '', distanceModel: '', refDistance: 0, maxDistance: 0, rolloffFactor: 0,
         });
+        this.lastPanner = node;
+        return node;
       }
       createBufferSource() { const source = new Source(); this.sources.push(source); return source; }
       decodeAudioData(): Promise<object> { return Promise.resolve({}); }
@@ -488,7 +490,7 @@ describe('continuous voice lifecycle', () => {
     expect(context.sources[0]!.stops).toBe(1);
     audio.update({ presentedTick: 1, paused: false, hidden: false });
     expect(context.sources).toHaveLength(2);
-    expect(context.gains[0]!.gain.targets.at(-1)).toBeCloseTo(0.75 * 0.55);
+    expect(context.gains[0]!.gain.targets.at(-1)).toBeCloseTo(0.75 * 0.55 * 0.75);
     audio.setContinuousSources([]);
     expect(context.sources[1]!.stops).toBe(1);
     audio.ingestCues([{ id: 'mining:5', tick: 5, kind: 'mining.hit', x: 0, z: 0 }]);
@@ -498,6 +500,9 @@ describe('continuous voice lifecycle', () => {
     expect(context.sources).toHaveLength(3);
     expect(context.sources[2]!.loop).toBe(false);
     expect(context.sources[2]!.starts).toBe(1);
+    expect(context.lastPanner).toMatchObject({ distanceModel: 'exponential',
+      refDistance: SPATIAL_REF_DISTANCE, rolloffFactor: SPATIAL_ROLLOFF,
+      maxDistance: audibleRange(24, { x: 0, y: 100, z: 0, targetX: 0, targetZ: 0, span: 40, mode: 'orthographic' }) });
     expect(context.gains[3]!.gain.value).toBeCloseTo(5 * cueVariation('mining:5', 'mining.hit').gain);
     expect(audio.diagnostics).toMatchObject({ state: 'running', loaded: 1,
       playedOneShots: 1, lastKind: 'mining.hit' });
@@ -604,6 +609,7 @@ describe('explicit sound preview and failed asset recovery', () => {
   }
   class Source extends Node {
     buffer: unknown;
+    playbackRate = { value: 1 };
     onended: (() => void) | null = null;
     starts = 0;
     stops = 0;
@@ -635,6 +641,44 @@ describe('explicit sound preview and failed asset recovery', () => {
   const manifest = { version: 1, events: {
     'mining.hit': { gain: 2, variants: [{ src: '/assets/audio/sfx/mining.mp3' }] },
   } };
+
+  it('plays decoded interface cues during pause through the common SFX mix without another unlock', async () => {
+    vi.stubGlobal('AudioContext', FakeContext);
+    const fetchMock = vi.fn(async (url: string) => url.endsWith('manifest.json')
+      ? new Response(JSON.stringify({ version: 1, events: {
+        'ui.click': { spatial: false, variants: [
+          { src: '/assets/audio/sfx/click-1.mp3' },
+          { src: '/assets/audio/sfx/click-2.mp3' },
+        ] },
+      } })) : new Response(new Uint8Array([1])));
+    vi.stubGlobal('fetch', fetchMock);
+    const audio = new AudioDirector();
+    audio.playInterface('ui.click'); // No implicit context creation or fetch.
+    expect(fetchMock).not.toHaveBeenCalled();
+    await audio.unlock();
+    const context = FakeContext.latest;
+    audio.update({ presentedTick: 1, paused: true, hidden: false });
+    expect(context.gains[0]!.gain.value).toBe(0);
+    audio.playInterface('ui.click');
+    expect(context.sources).toHaveLength(1);
+    expect(context.sources[0]!.starts).toBe(1);
+    expect(context.gains[1]!.connections).toEqual([context.destination]);
+    expect(context.gains[1]!.gain.value).toBeCloseTo(0.55 * 0.75 * 0.75);
+    expect(context.gains[2]!.gain.value).toBeCloseTo(cueVariation('ui.click:0', 'ui.click').gain);
+    expect(context.gains[2]!.connections).toEqual([context.gains[1]]);
+    audio.setVolume(0.25);
+    expect(context.gains[1]!.gain.value).toBeCloseTo(0.55 * 0.75 * 0.25);
+    audio.playInterface('ui.click');
+    expect(context.sources).toHaveLength(2);
+    expect(context.sources[1]!.buffer).not.toBe(context.sources[0]!.buffer);
+    audio.playInterface('ui.reject'); // Missing event is silent.
+    audio.setMuted(true);
+    expect(context.gains[1]!.gain.value).toBe(0);
+    audio.playInterface('ui.click');
+    expect(context.sources).toHaveLength(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3); // Manifest plus two decoded files.
+    audio.dispose();
+  });
 
   it('refreshes a cached manifest missing the preview on the click and keeps loaded world sounds', async () => {
     vi.stubGlobal('AudioContext', FakeContext);
@@ -783,10 +827,10 @@ describe('explicit sound preview and failed asset recovery', () => {
     await audio.playPreview();
     const context = FakeContext.latest;
     expect(context.gains[0]!.gain.value).toBe(0); // The game mix remains paused.
-    expect(context.gains[1]!.gain.value).toBeCloseTo(1.5 * 0.55);
+    expect(context.gains[1]!.gain.value).toBeCloseTo(1.5 * 0.55 * 0.75);
     expect(context.sources[0]!.connections).toEqual([context.gains[1]]);
     audio.setVolume(0.25);
-    expect(context.gains[1]!.gain.value).toBeCloseTo(0.5 * 0.55);
+    expect(context.gains[1]!.gain.value).toBeCloseTo(0.5 * 0.55 * 0.75);
     await audio.playPreview();
     expect(context.gains).toHaveLength(2);
     expect(fetchMock).toHaveBeenCalledTimes(2);

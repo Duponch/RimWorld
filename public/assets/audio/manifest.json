@@ -237,6 +237,91 @@
       "gain": 0.8,
       "maxDistance": 14,
       "loop": false
+    },
+    "ui.click": {
+      "variants": [
+        { "src": "/assets/audio/sfx/ui-click-v165-1.mp3", "gain": 1 },
+        { "src": "/assets/audio/sfx/ui-click-v165-2.mp3", "gain": 1.18 },
+        { "src": "/assets/audio/sfx/ui-click-v165-4.mp3", "gain": 1.1 }
+      ],
+      "gain": 0.24,
+      "loop": false,
+      "spatial": false
+    },
+    "ui.reject": {
+      "variants": [
+        { "src": "/assets/audio/sfx/ui-reject-v165-1.mp3", "gain": 5 },
+        { "src": "/assets/audio/sfx/ui-reject-v165-2.mp3", "gain": 1.2 },
+        { "src": "/assets/audio/sfx/ui-reject-v165-4.mp3", "gain": 1.6 }
+      ],
+      "gain": 0.32,
+      "loop": false,
+      "spatial": false
+    },
+    "ui.panel": {
+      "variants": [
+        { "src": "/assets/audio/sfx/ui-panel-v165-1.mp3", "gain": 3 },
+        { "src": "/assets/audio/sfx/ui-panel-v165-2.mp3", "gain": 1.3 },
+        { "src": "/assets/audio/sfx/ui-panel-v165-3.mp3", "gain": 3 },
+        { "src": "/assets/audio/sfx/ui-panel-v165-4.mp3", "gain": 0.65 }
+      ],
+      "gain": 0.32,
+      "loop": false,
+      "spatial": false
+    },
+    "haul.pickup": {
+      "variants": [
+        { "src": "/assets/audio/sfx/haul-pickup-v165-1.mp3", "gain": 8 },
+        { "src": "/assets/audio/sfx/haul-pickup-v165-2.mp3", "gain": 1.7 },
+        { "src": "/assets/audio/sfx/haul-pickup-v165-3.mp3", "gain": 2.3 },
+        { "src": "/assets/audio/sfx/haul-pickup-v165-4.mp3", "gain": 4 }
+      ],
+      "gain": 0.35,
+      "maxDistance": 22,
+      "loop": false
+    },
+    "haul.drop": {
+      "variants": [
+        { "src": "/assets/audio/sfx/haul-drop-v165-1.mp3", "gain": 0.48 },
+        { "src": "/assets/audio/sfx/haul-drop-v165-2.mp3", "gain": 0.85 },
+        { "src": "/assets/audio/sfx/haul-drop-v165-3.mp3", "gain": 0.35 },
+        { "src": "/assets/audio/sfx/haul-drop-v165-4.mp3", "gain": 0.5 }
+      ],
+      "gain": 0.25,
+      "maxDistance": 22,
+      "loop": false
+    },
+    "farming.sow": {
+      "variants": [
+        { "src": "/assets/audio/sfx/farming-sow-v165-1.mp3", "gain": 1.6 },
+        { "src": "/assets/audio/sfx/farming-sow-v165-2.mp3", "gain": 1 },
+        { "src": "/assets/audio/sfx/farming-sow-v165-3.mp3", "gain": 1.25 },
+        { "src": "/assets/audio/sfx/farming-sow-v165-4.mp3", "gain": 1 }
+      ],
+      "gain": 0.35,
+      "maxDistance": 20,
+      "loop": false
+    },
+    "farming.harvest": {
+      "variants": [
+        { "src": "/assets/audio/sfx/farming-harvest-v165-1.mp3", "gain": 1 },
+        { "src": "/assets/audio/sfx/farming-harvest-v165-2.mp3", "gain": 1 },
+        { "src": "/assets/audio/sfx/farming-harvest-v165-3.mp3", "gain": 2.5 },
+        { "src": "/assets/audio/sfx/farming-harvest-v165-4.mp3", "gain": 3 }
+      ],
+      "gain": 0.28,
+      "maxDistance": 20,
+      "loop": false
+    },
+    "eating.work": {
+      "variants": [
+        { "src": "/assets/audio/sfx/eating-work-v165-1.mp3", "gain": 1 },
+        { "src": "/assets/audio/sfx/eating-work-v165-2.mp3", "gain": 1 },
+        { "src": "/assets/audio/sfx/eating-work-v165-4.mp3", "gain": 1.4 }
+      ],
+      "gain": 0.2,
+      "maxDistance": 16,
+      "loop": false
     }
   }
 }

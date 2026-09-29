@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-29",
+  "provider": "ElevenLabs",
+  "providerRoute": "OAuth ElevenCreative Flows music node",
+  "flowId": "MGdUCjgY9KrZGDaYzUI9",
+  "modelId": "eleven_music_v2",
+  "variationsPerNode": 1,
+  "instrumental": true,
+  "outputFormatObserved": "mp3_48000_192 stereo",
+  "costEstimateBeforeGeneration": {
+    "credits": 17150,
+    "priceCents": 343,
+    "note": "Connecteur estimate_only pour trois noeuds ; estimation, non facturation."
+  },
+  "connectorReportedTotal": {
+    "credits": 10290,
+    "priceCents": 205.8,
+    "currency": "usd",
+    "note": "Somme des trois résultats du connecteur ; aucun relevé de facturation indépendant."
+  },
+  "rights": {
+    "gameDestination": "gratuit et non monétisé selon précision utilisateur du 29 septembre 2026",
+    "musicPlan": "non vérifié",
+    "downloadObserved": true,
+    "distributionCheck": "Revérifier les conditions Music et le forfait avant toute monétisation ou distribution sous un autre régime."
+  },
+  "processing": "Fichiers MP3 fournis directement par ElevenLabs, sans réencodage. Gain de piste recommandé au lecteur ; aucun traitement audio à l'exécution hormis gain/fondu.",
+  "measurement": "Lecture PCM par soundfile des MP3 publiés ; RMS du fichier entier et crête des échantillons. Ce n'est pas une mesure LUFS ni une écoute humaine.",
+  "tracks": [
+    {
+      "role": "day",
+      "id": "lisiere-aube-v1",
+      "filename": "lisiere-aube-v1.mp3",
+      "flowNodeId": "NOp9CDOLU3ftUQbTIOsy",
+      "sessionId": "NyKVNhgbmqPm22Yyho4l",
+      "generationId": "J6mtJUN89Bq8OdIxKPsl",
+      "prompt": "Instrumental pastoral chamber-folk background music, warm and gently optimistic at about 74 BPM. Felt piano melodies, delicate nylon-string plucks, soft sustained strings and rounded bass, with subtle harmonic turns and new phrases across nearly four minutes; spacious, restrained dynamics, no drums or vocals.",
+      "requestedDurationSeconds": 224,
+      "decodedDurationSeconds": 224,
+      "channels": 2,
+      "sampleRateHz": 48000,
+      "bytes": 5394417,
+      "sha256": "36f88a3c7be9a78d460caf10247dfd7ceddc4b062a6dda523bc7a5a0827d7289",
+      "decodedPeakDbfs": -1.06,
+      "decodedRmsDbfs": -16.74,
+      "suggestedTrackGain": 0.4,
+      "connectorReportedCredits": 3360,
+      "connectorReportedPriceCents": 67.2
+    },
+    {
+      "role": "night",
+      "id": "lisiere-veille-v1",
+      "filename": "lisiere-veille-v1.mp3",
+      "flowNodeId": "BgrZ0W4vjRXjK9LPoAGV",
+      "sessionId": "bTRy5vVpSSSaCJL3gBS7",
+      "generationId": "n9rc38c9sGGT03BFkqo8",
+      "prompt": "Instrumental reflective ambient chamber music, quiet and contemplative at about 68 BPM. Sparse felt piano, soft bell counterpoint, airy strings and a warm low pad; melodic motifs evolve through several gentle sections with pauses and resolution across nearly four minutes, no beat-heavy drums or vocals.",
+      "requestedDurationSeconds": 229,
+      "decodedDurationSeconds": 229,
+      "channels": 2,
+      "sampleRateHz": 48000,
+      "bytes": 5514225,
+      "sha256": "67dcd3b07e9b0e1364105800b8bb60ff23d6bdc4d5dbdaa43041e28afccbe086",
+      "decodedPeakDbfs": -0.85,
+      "decodedRmsDbfs": -24.64,
+      "suggestedTrackGain": 0.75,
+      "connectorReportedCredits": 3435,
+      "connectorReportedPriceCents": 68.7
+    },
+    {
+      "role": "tension",
+      "id": "lisiere-alerte-v1",
+      "filename": "lisiere-alerte-v1.mp3",
+      "flowNodeId": "hUB66w9PcBkFXMj3SXny",
+      "sessionId": "uGvIDoMmIcFuyEirLKcP",
+      "generationId": "oAzZQkVn1VeRLXSMx7d1",
+      "prompt": "Instrumental restrained tension music for a thoughtful strategy game, steady at about 88 BPM. Muted piano figures, low string pulses, soft mallet percussion and discreet synth bass in minor-modal harmony; gradual rises and releases across nearly four minutes, never bombastic, no sharp impacts or vocals.",
+      "requestedDurationSeconds": 233,
+      "decodedDurationSeconds": 233,
+      "channels": 2,
+      "sampleRateHz": 48000,
+      "bytes": 5610417,
+      "sha256": "f14049621c41558766715cf1752b2146ae1b3b9b37622fb1a2bd694210604057",
+      "decodedPeakDbfs": -0.39,
+      "decodedRmsDbfs": -14.69,
+      "suggestedTrackGain": 0.32,
+      "connectorReportedCredits": 3495,
+      "connectorReportedPriceCents": 69.9
+    }
+  ]
+}

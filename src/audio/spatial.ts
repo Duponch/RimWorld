@@ -25,13 +25,19 @@ const EAR_HEIGHT = 1.6;
 // clipping. Zoom changes its visible span rather than moving its position, so
 // use a virtual ear height that tracks the equivalent change in view distance.
 const ORTHOGRAPHIC_HEIGHT_PER_SPAN = 0.3;
-// With Web Audio's linear distance model, a lower virtual ear and shorter
-// horizon keep the level at the focus while making it fall faster across the
-// visible ground. Increasing only the ear height would quiet nearby mining.
-const ORTHOGRAPHIC_RANGE_MULTIPLIER = 1.2;
+// The virtual ear still leaves the map overview quiet, while a wider explicit
+// horizon lets the exponential Panner taper distant contacts to a faint tail.
+const ORTHOGRAPHIC_RANGE_MULTIPLIER = 3.2;
 // Perspective already moves its physical ear away as the camera zooms out.
 // Keep the acoustic horizon stable instead of shortening it a second time.
-const PERSPECTIVE_RANGE_MULTIPLIER = 2.5;
+const PERSPECTIVE_RANGE_MULTIPLIER = 4;
+// Keep the horizon within the nearby fire collector's 64-cell radius.
+const MAX_AUDIBLE_RANGE = 64;
+
+/** Shared Panner parameters for one-shots and spatial ambience. Distance is
+ * clamped by Web Audio; source selection supplies the explicit hard horizon. */
+export const SPATIAL_REF_DISTANCE = 6.25;
+export const SPATIAL_ROLLOFF = 1.6;
 
 /** Perspective listens from the camera. Orthographic listens above its focus,
  * at a height derived from zoom; its distant render-camera offset is not an
@@ -65,11 +71,13 @@ export function listenerPose(camera: AudioCamera): ListenerPose {
  * Perspective zoom already changes the ear's real distance to every source. */
 export function audibleRange(baseRange: number, camera: AudioCamera): number {
   if (camera.mode === 'perspective')
-    return Math.max(2, Math.min(90, baseRange * PERSPECTIVE_RANGE_MULTIPLIER));
+    return Math.max(2, Math.min(MAX_AUDIBLE_RANGE, baseRange * PERSPECTIVE_RANGE_MULTIPLIER));
   const scale = Number.isFinite(camera.span) && camera.span! > 0 ? 32 / camera.span!
     : Number.isFinite(camera.zoom) && camera.zoom! > 0 ? camera.zoom! : 1;
-  const zoomFactor = Math.max(0.2, Math.min(2, scale));
-  return Math.max(2, Math.min(40, baseRange * ORTHOGRAPHIC_RANGE_MULTIPLIER * zoomFactor));
+  // A map overview should still leave local work behind: its virtual ear
+  // rises as the listening footprint shrinks faster than the visible span.
+  const zoomFactor = Math.max(0.2, Math.min(2, scale)) ** 1.5;
+  return Math.max(2, Math.min(MAX_AUDIBLE_RANGE, baseRange * ORTHOGRAPHIC_RANGE_MULTIPLIER * zoomFactor));
 }
 
 export function sourceDistance(x: number, z: number, pose: ListenerPose): number {

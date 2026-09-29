@@ -1,5 +1,5 @@
 import { AudioCueScheduler, type AudioCue } from './scheduler';
-import { audibleRange, listenerPose, sourceDistance, type AudioCamera } from './spatial';
+import { audibleRange, listenerPose, sourceDistance, SPATIAL_REF_DISTANCE, SPATIAL_ROLLOFF, type AudioCamera } from './spatial';
 import { selectContinuousSources, type ContinuousSource, type ContinuousEventInfo } from './continuous';
 import { cueHash, cueVariation, selectOneShots } from './selection';
 
@@ -15,13 +15,14 @@ const MAX_VOICES = 24;
 const MAX_ONE_SHOTS_PER_FRAME = 12;
 const DEFAULT_RANGE = 24;
 // Leave headroom for overlapping work, combat and weather at the default slider level.
-const MIX_GAIN = 0.55;
+const MIX_GAIN = 0.55 * 0.75;
 const PREVIEW_KIND = 'mining.hit';
 const MAX_CLUSTER_VOICES = 3;
 const CLUSTER_RADIUS = 5;
 const CLUSTERED_KINDS = new Set([
   'mining.hit', 'woodcutting.hit', 'construction.hit', 'cooking.work',
   'crafting.work', 'tailoring.work', 'butchering.work', 'research.work',
+  'haul.pickup', 'haul.drop', 'farming.sow', 'farming.harvest', 'eating.work',
 ]);
 function clusterGroup(kind: string): string | null {
   // An opening and closing door share one nearby acoustic patch.
@@ -77,6 +78,7 @@ export class AudioDirector {
   private camera: AudioCamera = { x: 0, y: 30, z: 0, targetX: 0, targetZ: 0, span: 32, mode: 'orthographic' };
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
+  private interfaceOutput: GainNode | null = null;
   private manifest: AudioManifest | null = null;
   private readonly buffers = new Map<string, AudioBuffer | null>();
   private readonly voices = new Set<Voice>();
@@ -110,8 +112,10 @@ export class AudioDirector {
       this.previewOutput = null;
       for (const voice of [...this.voices]) this.stopVoice(voice);
       this.master?.disconnect();
+      this.interfaceOutput?.disconnect();
       this.context = null;
       this.master = null;
+      this.interfaceOutput = null;
       this.unlockPromise = null;
     }
     if (this.unlockPromise) {
@@ -201,6 +205,7 @@ export class AudioDirector {
   setVolume(volume: number): void {
     if (!Number.isFinite(volume)) return;
     this.volume = Math.max(0, Math.min(1, volume));
+    if (this.interfaceOutput) this.interfaceOutput.gain.value = this.muted ? 0 : MIX_GAIN * this.volume;
     if (this.previewOutput) this.previewOutput.gain.value = this.muted ? 0 : Math.min(8, MIX_GAIN * this.volume * (this.manifest?.events[PREVIEW_KIND]?.gain ?? 1) * (this.manifest?.events[PREVIEW_KIND]?.variants[0]?.gain ?? 1));
     this.updateMaster();
   }
@@ -208,6 +213,7 @@ export class AudioDirector {
   setMuted(muted: boolean): void {
     if (this.muted === muted) return;
     this.muted = muted;
+    if (this.interfaceOutput) this.interfaceOutput.gain.value = muted ? 0 : MIX_GAIN * this.volume;
     if (muted) this.stopPreview();
     this.updateMaster();
     if (muted) {
@@ -235,6 +241,56 @@ export class AudioDirector {
   get diagnostics(): { state: string; loaded: number; playedOneShots: number; lastKind: string | null } {
     return { state: this.context?.state ?? 'inactif', loaded: this.loadedCount,
       playedOneShots: this.playedOneShots, lastKind: this.lastOneShotKind };
+  }
+
+  /** A decoded interface sound can play during pause or from the title menu.
+   * The caller's gesture unlocks audio separately; an unavailable asset is silent. */
+  playInterface(kind: 'ui.click' | 'ui.reject' | 'ui.panel'): void {
+    const context = this.context;
+    const event = this.manifest?.events[kind];
+    if (this.disposed || this.muted || this.hidden || this.volume === 0 ||
+      !context || context.state !== 'running' || !event || event.loop || event.spatial || !event.gain) return;
+    const available = event.variants.filter(variant => this.buffers.get(variant.src));
+    if (!available.length) return;
+    let variantIndex = this.playedOneShots % available.length;
+    if (available.length > 1 && available[variantIndex]!.src === this.lastPlayedVariantByKind.get(kind))
+      variantIndex = (variantIndex + 1) % available.length;
+    const variant = available[variantIndex]!;
+    if (this.voices.size >= MAX_VOICES) {
+      const loops = new Set(this.continuous.values());
+      const victim = [...this.voices].find(voice => !loops.has(voice));
+      if (!victim) return;
+      this.stopVoice(victim);
+    }
+    let voice: Voice | null = null;
+    try {
+      if (!this.interfaceOutput) {
+        const output = context.createGain();
+        output.gain.value = MIX_GAIN * this.volume;
+        output.connect(context.destination);
+        this.interfaceOutput = output;
+      }
+      const source = context.createBufferSource();
+      source.buffer = this.buffers.get(variant.src)!;
+      const variation = cueVariation(`${kind}:${this.playedOneShots}`, kind);
+      source.playbackRate.value = variation.playbackRate;
+      const gain = context.createGain();
+      gain.gain.value = Math.min(8, event.gain * variant.gain * variation.gain);
+      source.connect(gain);
+      // This separate output follows the SFX slider and mute immediately,
+      // while the world master remains silent during a simulation pause.
+      gain.connect(this.interfaceOutput);
+      voice = { source, gain, panner: null, kind, variantGain: variant.gain };
+      const playingVoice = voice;
+      source.onended = () => this.releaseVoice(playingVoice);
+      this.voices.add(voice);
+      source.start();
+      this.lastPlayedVariantByKind.set(kind, variant.src);
+      this.playedOneShots++;
+      this.lastOneShotKind = kind;
+    } catch {
+      if (voice) this.releaseVoice(voice);
+    }
   }
 
   /** Plays a published MP3 from an explicit UI gesture, even while the simulation is paused. */
@@ -303,6 +359,8 @@ export class AudioDirector {
     this.previewOutput = null;
     this.master?.disconnect();
     this.master = null;
+    this.interfaceOutput?.disconnect();
+    this.interfaceOutput = null;
     void this.context?.close().catch(() => undefined);
     this.context = null;
   }
@@ -441,10 +499,10 @@ export class AudioDirector {
       const panner = event.spatial ? context.createPanner() : null;
       if (panner) {
         panner.panningModel = 'equalpower';
-        panner.distanceModel = 'linear';
-        panner.refDistance = 2;
+        panner.distanceModel = 'exponential';
+        panner.refDistance = SPATIAL_REF_DISTANCE;
         panner.maxDistance = range;
-        panner.rolloffFactor = 1;
+        panner.rolloffFactor = SPATIAL_ROLLOFF;
         panner.positionX.value = cue.x;
         panner.positionY.value = 0;
         panner.positionZ.value = cue.z;
@@ -520,10 +578,10 @@ export class AudioDirector {
         const panner = event.spatial ? context.createPanner() : null;
         if (panner) {
           panner.panningModel = 'equalpower';
-          panner.distanceModel = 'linear';
-          panner.refDistance = 2;
+          panner.distanceModel = 'exponential';
+          panner.refDistance = SPATIAL_REF_DISTANCE;
           panner.maxDistance = audibleRange(event.maxDistance, this.camera);
-          panner.rolloffFactor = 1;
+          panner.rolloffFactor = SPATIAL_ROLLOFF;
           panner.positionX.value = source.x;
           panner.positionY.value = 0;
           panner.positionZ.value = source.z;

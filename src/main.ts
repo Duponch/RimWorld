@@ -103,6 +103,7 @@ import { foodFreshnessLabel } from './ui/food-freshness';
 import { updateFoodStocks } from './ui/food-stocks';
 import { SimulationClient } from './bridge/SimulationClient';
 import { AudioDirector } from './audio/AudioDirector';
+import { MusicDirector, type MusicMood } from './audio/MusicDirector';
 import { ambientCameraGain } from './audio/ambience';
 import { createNearbyFireCollector } from './audio/continuous';
 import { listenerPose, type AudioCamera } from './audio/spatial';
@@ -127,6 +128,7 @@ mountStorageItemControls(document.getElementById('stockpile-items')!);
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const client = new SimulationClient();
 const audio = new AudioDirector();
+const music = new MusicDirector();
 let snapshot: World | undefined;
 let selectedPawn: number | undefined;
 let colonistInspector: ColonistInspectorState | undefined;
@@ -180,10 +182,14 @@ const TEXTURE_PREFERENCE_KEY = 'lisiere.presentation.textures.v1';
 const GROUND_GRASS_PREFERENCE_KEY = 'lisiere.presentation.ground-grass.v1';
 const SOUND_ENABLED_PREFERENCE_KEY = 'lisiere.audio.effects.enabled.v1';
 const SOUND_VOLUME_PREFERENCE_KEY = 'lisiere.audio.effects.volume.v1';
+const MUSIC_ENABLED_PREFERENCE_KEY = 'lisiere.audio.music.enabled.v1';
+const MUSIC_VOLUME_PREFERENCE_KEY = 'lisiere.audio.music.volume.v1';
 let texturesEnabled = true;
 let groundGrassEnabled = true;
 let soundEnabled = true;
 let soundVolume = 0.75;
+let musicEnabled = true;
+let musicVolume = 0.5;
 let audioUnlockWarningShown = false;
 try {
   texturesEnabled = localStorage.getItem(TEXTURE_PREFERENCE_KEY) !== 'false';
@@ -191,9 +197,15 @@ try {
   soundEnabled = localStorage.getItem(SOUND_ENABLED_PREFERENCE_KEY) !== 'false';
   const storedVolume = Number(localStorage.getItem(SOUND_VOLUME_PREFERENCE_KEY));
   if (localStorage.getItem(SOUND_VOLUME_PREFERENCE_KEY) !== null && Number.isFinite(storedVolume)) soundVolume = Math.max(0, Math.min(1, storedVolume));
+  musicEnabled = localStorage.getItem(MUSIC_ENABLED_PREFERENCE_KEY) !== 'false';
+  const storedMusicVolume = Number(localStorage.getItem(MUSIC_VOLUME_PREFERENCE_KEY));
+  if (localStorage.getItem(MUSIC_VOLUME_PREFERENCE_KEY) !== null && Number.isFinite(storedMusicVolume)) musicVolume = Math.max(0, Math.min(1, storedMusicVolume));
 } catch { /* The defaults remain active when browser storage is unavailable. */ }
 audio.setVolume(soundVolume);
 audio.setMuted(!soundEnabled);
+music.setVolume(musicVolume);
+music.setEnabled(musicEnabled);
+music.setHidden(document.hidden);
 function unlockAudioFromGesture(): void {
   if (!soundEnabled || !audio.needsUnlock) return;
   void audio.unlock().then(() => { audioUnlockWarningShown = false; }).catch(error => {
@@ -221,6 +233,25 @@ function setSoundVolume(volume: number): boolean {
   audio.setVolume(soundVolume);
   try { localStorage.setItem(SOUND_VOLUME_PREFERENCE_KEY, String(soundVolume)); return true; }
   catch { return false; }
+}
+function setMusicEnabled(enabled: boolean): boolean {
+  musicEnabled = enabled;
+  el<HTMLInputElement>('music-enabled').checked = enabled;
+  music.setEnabled(enabled);
+  try { localStorage.setItem(MUSIC_ENABLED_PREFERENCE_KEY, String(enabled)); return true; }
+  catch { return false; }
+}
+function setMusicVolume(volume: number): boolean {
+  musicVolume = Math.max(0, Math.min(1, Number.isFinite(volume) ? volume : 0.5));
+  el<HTMLInputElement>('music-volume').value = String(Math.round(musicVolume * 100));
+  music.setVolume(musicVolume);
+  try { localStorage.setItem(MUSIC_VOLUME_PREFERENCE_KEY, String(musicVolume)); return true; }
+  catch { return false; }
+}
+function musicMood(world: World): MusicMood {
+  if (world.pawns.some(pawn => pawn.faction === 'outlaws' && !pawn.prisoner && activeThreat(pawn))) return 'tension';
+  const hour = 24 * (calendarTick(world) % TICKS_PER_DAY) / TICKS_PER_DAY;
+  return hour >= 6 && hour < 20 ? 'day' : 'night';
 }
 const textureToggle = el<HTMLInputElement>('textures-enabled');
 textureToggle.checked = texturesEnabled;
@@ -272,6 +303,10 @@ const frontMenu = createFrontMenu(frontHost, {
   getSoundVolume: () => soundVolume,
   onSoundVolumeChange: setSoundVolume,
   onTestSound: () => audio.playPreview(),
+  getMusicEnabled: () => musicEnabled,
+  onMusicEnabledChange: setMusicEnabled,
+  getMusicVolume: () => musicVolume,
+  onMusicVolumeChange: setMusicVolume,
   onStart: async draft => replaceColony(() => session.create(draft.seed, draft.size, 'crashlanded',draft.site)),
   onLoad: async key => replaceColony(() => session.load(key)),
   getTestColonies: fetchTestColonies,
@@ -322,7 +357,7 @@ function notify(message: string, error = false) {
   noticeTimer = setTimeout(() => { el('notice').hidden = true; }, error ? 8000 : 4000);
 }
 async function attempt(action: () => Promise<unknown>) {
-  try { await action(); } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
+  try { await action(); } catch (error) { audio.playInterface('ui.reject'); notify(error instanceof Error ? error.message : String(error), true); }
 }
 const scheduleUI = createScheduleControls(el('schedule-panel'), command => attempt(async () => {
   await client.command(command); renderState();
@@ -999,6 +1034,12 @@ soundToggle.checked = soundEnabled;
 soundVolumeSlider.value = String(Math.round(soundVolume * 100));
 soundToggle.onchange = () => { if (!setSoundEnabled(soundToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 soundVolumeSlider.oninput = () => { if (!setSoundVolume(Number(soundVolumeSlider.value) / 100)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
+const musicToggle = el<HTMLInputElement>('music-enabled');
+const musicVolumeSlider = el<HTMLInputElement>('music-volume');
+musicToggle.checked = musicEnabled;
+musicVolumeSlider.value = String(Math.round(musicVolume * 100));
+musicToggle.onchange = () => { if (!setMusicEnabled(musicToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
+musicVolumeSlider.oninput = () => { if (!setMusicVolume(Number(musicVolumeSlider.value) / 100)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 const testSoundButton = el<HTMLButtonElement>('test-sound');
 const testSoundStatus = el<HTMLElement>('test-sound-status');
 testSoundButton.onclick = () => {
@@ -1012,9 +1053,16 @@ testSoundButton.onclick = () => {
 };
 // Resume directly from any later user gesture too: the browser/device can suspend an unlocked context.
 const audioGestureRoot = document.querySelector<HTMLElement>('#app')!;
-audioGestureRoot.addEventListener('pointerdown', event => { if (event.pointerType === 'mouse') unlockAudioFromGesture(); }, { capture: true });
-audioGestureRoot.addEventListener('pointerup', event => { if (event.pointerType !== 'mouse') unlockAudioFromGesture(); }, { capture: true });
-document.addEventListener('keydown', event => { if (!event.repeat) unlockAudioFromGesture(); }, { capture: true });
+audioGestureRoot.addEventListener('pointerdown', event => { if (event.pointerType === 'mouse') { unlockAudioFromGesture(); music.unlock(); } }, { capture: true });
+audioGestureRoot.addEventListener('pointerup', event => { if (event.pointerType !== 'mouse') { unlockAudioFromGesture(); music.unlock(); } }, { capture: true });
+document.addEventListener('keydown', event => { if (!event.repeat) { unlockAudioFromGesture(); music.unlock(); } }, { capture: true });
+audioGestureRoot.addEventListener('click', event => {
+  const button = event.target instanceof Element ? event.target.closest('button') : null;
+  if (!button || button.disabled || button.id === 'test-sound' || button.id === 'front-test-sound') return;
+  const panelButton = button.matches('[data-panel], [data-guide-panel], [data-close-panel], .front-back, .front-next');
+  audio.playInterface(panelButton ? 'ui.panel' : 'ui.click');
+}, { capture: true });
+document.addEventListener('visibilitychange', () => music.setHidden(document.hidden));
 el('wall-cutaway').onclick = () => { wallCutaway = !wallCutaway; renderer?.setWallCutaway(wallCutaway); el('wall-cutaway').textContent = wallCutaway ? 'Murs : coupés' : 'Murs : hauts'; el('wall-cutaway').setAttribute('aria-pressed', String(wallCutaway)); };
 el('roof-toggle').onclick=()=>{const button=el('roof-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));button.textContent=visible?'Toits : visibles':'Toits : masqués';renderer?.setRoofsVisible(visible);};
 el('foliage-toggle').onclick = () => { foliageVisible = !foliageVisible; renderer?.setFoliageVisible(foliageVisible); el('foliage-toggle').textContent = foliageVisible ? 'Feuillage' : 'Troncs'; el('foliage-toggle').setAttribute('aria-pressed', String(!foliageVisible)); };
@@ -1063,6 +1111,7 @@ client.onSnapshot = (world, cost, speed, replaced, motion) => {
   const role=(p:Pawn|undefined)=>p?p.prisoner?'prisoner':isColonist(p)?'colonist':'other':'absent';
   const roleChanged=selectedPawn!==undefined&&role(snapshot?.pawns.find(p=>p.id===selectedPawn))!==role(world.pawns.find(p=>p.id===selectedPawn));
   snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
+  music.setMood(musicMood(world));
   const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id)&&!world.wildlife?.animals.some(a=>a.id===id))||!!selectedObject&&!mapObjectExists(world,selectedObject);
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;renderer?.setSelectedObject(undefined);orderMenu.close();rebuildInspector();}
   else if(roleChanged){orderMenu.close();rebuildInspector();}
@@ -1110,7 +1159,7 @@ async function prepareWorld(): Promise<void> {
 async function start() {
   if (import.meta.env.DEV && params.has('e2e')) Object.defineProperty(window, '__lisiere', { value: {
     get world() { return structuredClone(snapshot); }, get tick() { return snapshot?.tick ?? 0; }, get backend() { return renderer?.backend; },
-    get audio() { return { loadedCount: audio.loadedCount, availableSounds: audio.availableSounds }; },
+    get audio() { return { loadedCount: audio.loadedCount, availableSounds: audio.availableSounds, music: music.diagnostics }; },
     projectCell: (x: number,z: number) => renderer!.projectCell(x,z),
     projectPawn: (id:number) => renderer?.screenPawns().find(pawn=>pawn.id===id),
   } });
@@ -1135,8 +1184,9 @@ const metricsInterval = setInterval(() => {
     const sound = audio.diagnostics;
     const soundState = !soundEnabled ? 'coupé' : soundVolume === 0 ? 'volume 0'
       : sound.state === 'running' ? 'actif' : sound.state === 'suspended' ? 'suspendu' : sound.state;
-    el('metrics').textContent = `${renderer.backend} · ${renderer.stats.frameMs.toFixed(1)} ms/image · p95 ${renderer.stats.frameP95.toFixed(1)} ms · simulation ${stepMs.toFixed(2)} ms/tick · son ${soundState}, ${sound.loaded} MP3, ${sound.playedOneShots} effets, dernier ${sound.lastKind ?? '—'}`;
+    const song = music.diagnostics;
+    el('metrics').textContent = `${renderer.backend} · ${renderer.stats.frameMs.toFixed(1)} ms/image · p95 ${renderer.stats.frameP95.toFixed(1)} ms · simulation ${stepMs.toFixed(2)} ms/tick · son ${soundState}, ${sound.loaded} MP3, ${sound.playedOneShots} effets, dernier ${sound.lastKind ?? '—'} · musique ${song.state}${song.track ? ` (${song.track})` : ''}`;
   }
 }, 1000);
-window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval); client.dispose(); audio.dispose(); renderer?.dispose(); });
+window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval); client.dispose(); audio.dispose(); music.dispose(); renderer?.dispose(); });
 void start();

@@ -48,6 +48,83 @@ test('captures actual door motion once, but not loaded state or policy changes',
   expect(recorder.drain()).toEqual([]); // A resumed open door is not replayed.
 });
 
+test('haul sounds follow carried identity across pickup and release, without replaying loaded cargo', () => {
+  const world = createWorld(848, 32, 32), pawn = world.pawns[0]!;
+  const sourceId = world.nextId++, carryId = world.nextId++;
+  pawn.haul = { sourcePileId: sourceId, quantity: 1, phase: 'pickup',
+    destination: { type: 'stockpile', stockpileId: 1 }, carryPileId: null };
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+
+  world.tick++;
+  pawn.haul.phase = 'deliver'; pawn.haul.carryPileId = carryId;
+  world.piles.push({ id: carryId, kind: 'wood', item: 'wood', quantity: 1,
+    owner: { type: 'pawn', pawnId: pawn.id } });
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ kind: 'haul.pickup', x: pawn.x, z: pawn.z }]);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+
+  world.tick++;
+  pawn.haul = null;
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]); // Still owned by the pawn: no physical drop.
+  recorder.reset();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]); // Loaded cargo is not replayed.
+
+  pawn.haul = { sourcePileId: sourceId, quantity: 1, phase: 'deliver',
+    destination: { type: 'stockpile', stockpileId: 1 }, carryPileId: carryId };
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  world.tick++;
+  pawn.haul = null;
+  world.piles.find(pile => pile.id === carryId)!.owner = { type: 'ground', x: pawn.x, z: pawn.z };
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ kind: 'haul.drop', x: pawn.x, z: pawn.z }]);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+});
+
+test.each([
+  ['sow', 'farming.sow'], ['harvest', 'farming.harvest'], ['cut', 'farming.harvest'],
+] as const)('captures active %s progress as %s, never a loaded task', (jobKind, cueKind) => {
+  const world = createWorld(849, 32, 32), pawn = world.pawns[0]!;
+  const job: Job = { id: world.nextId++, kind: jobKind, x: pawn.x + 1, z: pawn.z,
+    orientation: 0, footprint: 'standard', status: 'active', reservedBy: pawn.id,
+    progress: 0, escrow: { wood: 0, food: 0 },
+    ...(jobKind === 'sow' ? { growingZoneId: 1 } : {}) };
+  world.jobs.push(job);
+  pawn.jobId = job.id; pawn.state = 'working';
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  world.tick++; job.progress++;
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ kind: cueKind, tick: world.tick, x: job.x, z: job.z }]);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+});
+
+test('eating cue follows actual ingest progress, not travel or loaded state', () => {
+  const world = createWorld(850, 32, 32), pawn = world.pawns[0]!;
+  pawn.need = { kind: 'eat', phase: 'travel', sourcePileId: world.nextId++, carryPileId: world.nextId++,
+    quantity: 1, progress: 0, dining: { target: { x: pawn.x, z: pawn.z }, seatId: null, tableId: null } };
+  pawn.state = 'moving';
+  const recorder = new AudioCueRecorder();
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  world.tick++; pawn.need.phase = 'ingest'; pawn.state = 'eating';
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+  world.tick++; pawn.need.progress++;
+  recorder.capture(world);
+  expect(recorder.drain()).toMatchObject([{ kind: 'eating.work', tick: world.tick, x: pawn.x, z: pawn.z }]);
+  recorder.capture(world);
+  expect(recorder.drain()).toEqual([]);
+});
+
 test('wooden passage cues cover fence gates but exclude powered autodoors', () => {
   const world = createWorld(847, 32, 32);
   const gate = { id: world.nextId++, kind: 'fence-gate' as const, x: 2, z: 3,

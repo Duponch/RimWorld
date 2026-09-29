@@ -30,6 +30,10 @@ export interface FrontMenuOptions {
   getSoundVolume: () => number;
   onSoundVolumeChange: (volume: number) => boolean;
   onTestSound: () => Promise<void>;
+  getMusicEnabled: () => boolean;
+  onMusicEnabledChange: (enabled: boolean) => boolean;
+  getMusicVolume: () => number;
+  onMusicVolumeChange: (volume: number) => boolean;
   getSaves: () => FrontMenuSave[];
   getTestColonies: () => Promise<TestColony[]>;
   onLoadTest: (save: TestColony) => Promise<void>;
@@ -284,7 +288,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
       if (!options.onSoundEnabledChange(soundCheckbox.checked)) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
     });
     const soundText = element('span');
-    soundText.append(element('strong', '', 'Effets sonores'), element('span', '', 'Bruitages spatialisés, sans musique.'));
+    soundText.append(element('strong', '', 'Effets sonores'), element('span', '', 'Bruitages et ambiances, indépendants de la musique.'));
     soundSetting.append(soundCheckbox, soundText);
     audioCard.append(soundSetting);
     const volumeSetting = element('label', 'front-relief front-texture-setting front-volume-setting');
@@ -316,6 +320,33 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     const testResult = element('p', 'front-small');
     testResult.setAttribute('role', 'status');
     audioCard.append(testSound, testResult);
+    const musicSetting = element('label', 'front-relief front-texture-setting');
+    const musicCheckbox = element('input');
+    musicCheckbox.type = 'checkbox';
+    musicCheckbox.id = 'front-music-enabled';
+    musicCheckbox.checked = options.getMusicEnabled();
+    musicCheckbox.addEventListener('change', () => {
+      clearError();
+      if (!options.onMusicEnabledChange(musicCheckbox.checked)) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+    });
+    const musicText = element('span');
+    musicText.append(element('strong', '', 'Musique'), element('span', '', 'Compositions instrumentales longues, jouées entre des pauses.'));
+    musicSetting.append(musicCheckbox, musicText);
+    audioCard.append(musicSetting);
+    const musicVolumeSetting = element('label', 'front-relief front-texture-setting front-volume-setting');
+    const musicVolumeText = element('span');
+    musicVolumeText.append(element('strong', '', 'Volume de la musique'));
+    const musicVolumeSlider = element('input');
+    musicVolumeSlider.type = 'range';
+    musicVolumeSlider.id = 'front-music-volume';
+    musicVolumeSlider.min = '0'; musicVolumeSlider.max = '100'; musicVolumeSlider.step = '1';
+    musicVolumeSlider.value = String(Math.round(options.getMusicVolume() * 100));
+    musicVolumeSlider.addEventListener('input', () => {
+      clearError();
+      if (!options.onMusicVolumeChange(Number(musicVolumeSlider.value) / 100)) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+    });
+    musicVolumeSetting.append(musicVolumeText, musicVolumeSlider);
+    audioCard.append(musicVolumeSetting);
     content.append(audioCard);
     footer.append(action('Retour', () => navigate('home'), 'front-back'));
   }

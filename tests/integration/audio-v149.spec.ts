@@ -16,6 +16,9 @@ test('V149 : l’essai sonore récupère mining.hit après un premier manifeste 
       expect(published.events[kind]).toBeDefined();
     for (const kind of ['crafting.work', 'tailoring.work', 'butchering.work', 'research.work'])
       expect(published.events[kind]).toBeDefined();
+    for (const kind of ['ui.click', 'ui.reject', 'ui.panel', 'haul.pickup', 'haul.drop',
+      'farming.sow', 'farming.harvest', 'eating.work'])
+      expect(published.events[kind]).toBeDefined();
     const incompleteEvents = { ...published.events };
     delete incompleteEvents['mining.hit'];
     expect(Object.keys(incompleteEvents).length).toBeGreaterThan(0);
@@ -34,7 +37,8 @@ test('V149 : l’essai sonore récupère mining.hit après un premier manifeste 
       (window as any).__previewStarts = 0;
       const start = AudioBufferSourceNode.prototype.start;
       AudioBufferSourceNode.prototype.start = function (...args) {
-        if (this.buffer && !this.loop) (window as any).__previewStarts++;
+        if (this.buffer && !this.loop && this.buffer.duration > 0.7 && this.buffer.duration < 0.8)
+          (window as any).__previewStarts++;
         return start.apply(this, args);
       };
     });
@@ -59,7 +63,8 @@ test('V149 : sons locaux décodés, réglages conservés et présentation Chromi
       (window as any).__previewStarts = 0;
       const start = AudioBufferSourceNode.prototype.start;
       AudioBufferSourceNode.prototype.start = function (...args) {
-        if (this.buffer && !this.loop) (window as any).__previewStarts++;
+        if (this.buffer && !this.loop && this.buffer.duration > 0.7 && this.buffer.duration < 0.8)
+          (window as any).__previewStarts++;
         return start.apply(this, args);
       };
     });
@@ -93,7 +98,8 @@ test('V149 : sons locaux décodés, réglages conservés et présentation Chromi
     await page.getByRole('button', { name: 'Options' }).click();
     const frontEnabled = page.locator('.front-menu .front-texture-setting').filter({ hasText: 'Effets sonores' }).locator('input[type=checkbox]');
     await expect(frontEnabled).not.toBeChecked();
-    await expect(page.locator('.front-volume-setting input[type=range]')).toHaveValue('42');
+    await expect(page.locator('.front-volume-setting').filter({ hasText: 'Volume des effets' })
+      .locator('input[type=range]')).toHaveValue('42');
     await page.locator('#front-test-sound').click();
     await expect(page.locator('.front-error')).toContainText('Activez les effets sonores');
     await frontEnabled.check();
@@ -113,6 +119,9 @@ test('V149 : un vrai contact de minage produit du PCM après le mix Web Audio', 
     expect(manifest.events['woodcutting.hit']?.variants).toHaveLength(5);
     for (const kind of ['mining.hit', 'construction.hit', 'cooking.work', 'crafting.work',
       'tailoring.work', 'butchering.work', 'research.work'])
+      expect(manifest.events[kind]?.variants.length).toBeGreaterThanOrEqual(3);
+    for (const kind of ['ui.click', 'ui.reject', 'ui.panel', 'haul.pickup', 'haul.drop',
+      'farming.sow', 'farming.harvest', 'eating.work'])
       expect(manifest.events[kind]?.variants.length).toBeGreaterThanOrEqual(3);
     const initial = miningCamp(1);
     const pawn = initial.pawns[0]!;
@@ -157,9 +166,11 @@ test('V149 : un vrai contact de minage produit du PCM après le mix Web Audio', 
     await expect.poll(() => page.evaluate(() => window.__lisiere.audio.loadedCount)).toBe(fileCount);
     await expect(page.locator('#sound-enabled')).toBeChecked();
     await expect(page.locator('#sound-volume')).toHaveValue('75');
+    const beforeWorkStarts = await page.evaluate(() => (window as any).__audioProbe.starts.length as number);
     await page.locator('[data-speed="6"]').click();
-    await expect.poll(() => page.evaluate(() => (window as any).__audioProbe.starts
-      .filter((source: { state: string; duration: number; loop: boolean }) => !source.loop && source.duration > 0.5)))
+    await expect.poll(() => page.evaluate((baseline) => (window as any).__audioProbe.starts
+      .slice(baseline)
+      .filter((source: { state: string; duration: number; loop: boolean }) => !source.loop && source.duration > 0.7 && source.duration < 0.8), beforeWorkStarts))
       .toContainEqual(expect.objectContaining({ state: 'running', loop: false }));
     await page.waitForTimeout(750); // Include the full 0.6 s impact in the PCM capture.
     const output = await page.evaluate(async () => {
@@ -189,7 +200,9 @@ test('V149 : un vrai contact de minage produit du PCM après le mix Web Audio', 
       return { peak, bestRms, duration: decoded.duration };
     });
     expect(output).not.toBeNull();
-    expect(output!.peak).toBeGreaterThan(0.02);
+    // V165 lowers the complete SFX bus by 25%; retain the former 0.02
+    // audibility floor relative to that intentional mix adjustment.
+    expect(output!.peak).toBeGreaterThan(0.02 * 0.75);
     expect(output!.bestRms).toBeGreaterThan(0.002);
     await page.evaluate(() => (window as any).__audioProbe.context.suspend());
     expect(await page.evaluate(() => (window as any).__audioProbe.context.state)).toBe('suspended');
@@ -197,6 +210,6 @@ test('V149 : un vrai contact de minage produit du PCM après le mix Web Audio', 
     await expect.poll(() => page.evaluate(() => (window as any).__audioProbe.context.state)).toBe('running');
     await panel(page, 'menu');
     await page.locator('#show-diagnostics').click();
-    await expect(page.locator('#metrics')).toContainText(new RegExp(`son actif, ${fileCount} MP3, [1-9]\\d* effets, dernier mining\\.hit`));
+    await expect(page.locator('#metrics')).toContainText(new RegExp(`son actif, ${fileCount} MP3, [1-9]\\d* effets`));
     expect(errors).toEqual([]);
 });
