@@ -30,7 +30,7 @@ export function foodPoisonFromRecipe(cleanliness:number|null,level:number,random
   if(chance(cookFoodPoisonChance(level),random))return {fraction:1,cause:'incompetent-cook'};
   return undefined;
 }
-export function foodCanCarryPoison(item:ItemId):boolean {return item==='simple-meal'||item==='fine-meal'||item==='vegetarian-fine-meal'||item==='lavish-meal'||item==='survival-meal';}
+export function foodCanCarryPoison(item:ItemId):boolean {return item==='simple-meal'||item==='fine-meal'||item==='vegetarian-fine-meal'||item==='carnivore-fine-meal'||item==='lavish-meal'||item==='survival-meal';}
 export function rawFoodPoisonChance(item:ItemId):number {
   return item==='berries'||item==='milk'||item==='rice'||item==='potato'||item==='corn'||item==='agave-fruit'||isAnimalMeat(item)?.02:0;
 }

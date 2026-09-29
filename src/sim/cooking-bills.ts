@@ -20,7 +20,7 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   if(!value||typeof value!=='object')return false;
   const v=value as BillSettings;
   return ['times','until','forever'].includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
-    &&typeof v.suspended==='boolean'&&!!v.filters&&!Object.hasOwn(v.filters,'fine-meal')&&!Object.hasOwn(v.filters,'vegetarian-fine-meal')&&!Object.hasOwn(v.filters,'lavish-meal')&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS].includes(i))&&v.filters[i]===undefined)
+    &&typeof v.suspended==='boolean'&&!!v.filters&&!Object.hasOwn(v.filters,'fine-meal')&&!Object.hasOwn(v.filters,'vegetarian-fine-meal')&&!Object.hasOwn(v.filters,'carnivore-fine-meal')&&!Object.hasOwn(v.filters,'lavish-meal')&&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS].includes(i))&&v.filters[i]===undefined)
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&['stockpile','drop'].includes(v.destination);
 }
 /** Reference resource counter includes stored items and current task cargo.
@@ -34,7 +34,7 @@ export function countedProducts(world:World,bill?:CookingBill):number {
   let products=COUNTED_PRODUCTS.get(recipe);
   if(!products){products=new Set(Object.keys(ITEM_DEFINITIONS).filter(item=>recipe==='butcher-creature'?isAnimalMeat(item):isRecipeProduct(recipe,item as keyof typeof ITEM_DEFINITIONS)));COUNTED_PRODUCTS.set(recipe,products);}
   const stored=new Map(world.stockpiles.map(z=>[z.z*world.width+z.x,z] as const));
-  const meal=recipe==='fine-meal'||recipe==='vegetarian-fine-meal'||recipe==='lavish-meal';
+  const meal=recipe==='fine-meal'||recipe==='vegetarian-fine-meal'||recipe==='carnivore-fine-meal'||recipe==='lavish-meal';
   return world.piles.reduce((n,p)=>{
     if(!products.has(p.item))return n;
     if(p.owner.type==='pawn'&&bill?.recipe!=='butcher-creature'||isFlakRecipe(recipe)&&p.owner.type==='apparel')return n+p.quantity;
@@ -71,7 +71,7 @@ export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:Produ
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
     &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)&&groundOccupancyAllows(world,cell);
-  if(recipe==='simple-meal'||recipe==='fine-meal'||recipe==='vegetarian-fine-meal'||recipe==='lavish-meal')return cookingPlaceFree(world,cell);
+  if(recipe==='simple-meal'||recipe==='fine-meal'||recipe==='vegetarian-fine-meal'||recipe==='carnivore-fine-meal'||recipe==='lavish-meal')return cookingPlaceFree(world,cell);
   return (cell.x!==spot.x||cell.z!==spot.z)&&Math.abs(cell.x-spot.x)+Math.abs(cell.z-spot.z)<=1
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)

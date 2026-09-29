@@ -24,7 +24,7 @@ export type ComponentRecipe='make-component'|'make-advanced-component';
 export const isComponentRecipe=(v:unknown):v is ComponentRecipe=>v==='make-component'||v==='make-advanced-component';
 export const ADVANCED_COMPONENT_REQUIREMENTS={component:1,steel:20,plasteel:10,gold:3,skill:8} as const;
 export type AdvancedComponentMaterial=Exclude<keyof typeof ADVANCED_COMPONENT_REQUIREMENTS,'skill'>;
-export type ProductionRecipe = ArtRecipe|GunRecipe|FlakRecipe|ComponentRecipe|'simple-meal'|'fine-meal'|'vegetarian-fine-meal'|'lavish-meal'|'stone-blocks'|TailoringRecipe|'butcher-creature';
+export type ProductionRecipe = ArtRecipe|GunRecipe|FlakRecipe|ComponentRecipe|'simple-meal'|'fine-meal'|'vegetarian-fine-meal'|'carnivore-fine-meal'|'lavish-meal'|'stone-blocks'|TailoringRecipe|'butcher-creature';
 
 /** Local raw foods all provide 0.05 nutrition per unit. Core's mixed fine and
  * lavish meals ask 0.25 and 0.5 from each group; milk is an animal product. */
@@ -43,6 +43,15 @@ export function validVegetarianFineMealIngredients(ingredients:readonly {item:Pr
   let units=0;
   for(const ingredient of ingredients){
     if(!Number.isSafeInteger(ingredient.quantity)||ingredient.quantity<=0||ingredient.item!=='milk'&&fineMealIngredientGroup(ingredient.item)!=='vegetable')return false;
+    units+=ingredient.quantity;
+  }
+  return units===15;
+}
+/** One 0.75 nutrition quota: only raw animal meat, never milk or plants. */
+export function validCarnivoreFineMealIngredients(ingredients:readonly {item:ProductionIngredient;quantity:number}[]):boolean {
+  let units=0;
+  for(const ingredient of ingredients){
+    if(!Number.isSafeInteger(ingredient.quantity)||ingredient.quantity<=0||!isAnimalMeat(ingredient.item))return false;
     units+=ingredient.quantity;
   }
   return units===15;
@@ -83,6 +92,7 @@ export const PRODUCTION_RECIPES = Object.freeze({
   'simple-meal': Object.freeze({label:'Repas simple',station:'campfire',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:10,workTicks:30,outputUnits:1}),
   'fine-meal': Object.freeze({label:'Cuisiner un plat raffiné',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:10,workTicks:45,outputUnits:1}),
   'vegetarian-fine-meal': Object.freeze({label:'Cuisiner un plat raffiné végétarien',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk','potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:15,workTicks:45,outputUnits:1}),
+  'carnivore-fine-meal': Object.freeze({label:'Cuisiner un plat raffiné carnivore',station:'fueled-stove',work:'cook',inputs:ANIMAL_MEAT_ITEMS as readonly ProductionIngredient[],units:15,workTicks:45,outputUnits:1}),
   'lavish-meal': Object.freeze({label:'Cuisiner un plat gastronomique',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:20,workTicks:80,outputUnits:1}),
   'stone-blocks': Object.freeze({label:'Blocs de pierre',station:'stonecutter',work:'craft',inputs:STONE_INPUTS as readonly ProductionIngredient[],units:1,workTicks:160,outputUnits:20}),
 } as const);
@@ -116,7 +126,7 @@ export function recipeProduct(recipe:ProductionRecipe,ingredients:readonly {item
   if(recipe==='make-component')return 'component';
   if(recipe==='make-advanced-component')return 'advanced-component';
   if(isTailoring(recipe)){const resolved=material??tailoringMaterialFromIngredients(ingredients);if(!resolved)throw new RangeError('Tailoring product requires one material');return apparelItemFor(recipe,resolved);}
-  return recipe==='butcher-creature'?((ingredients[0]?.item??'hare-corpse').replace('-corpse','-meat') as ItemId):recipe==='simple-meal'?'simple-meal':recipe==='fine-meal'?'fine-meal':recipe==='vegetarian-fine-meal'?'vegetarian-fine-meal':recipe==='lavish-meal'?'lavish-meal':blockFor(ingredients[0]!.item as StoneIngredient);
+  return recipe==='butcher-creature'?((ingredients[0]?.item??'hare-corpse').replace('-corpse','-meat') as ItemId):recipe==='simple-meal'?'simple-meal':recipe==='fine-meal'?'fine-meal':recipe==='vegetarian-fine-meal'?'vegetarian-fine-meal':recipe==='carnivore-fine-meal'?'carnivore-fine-meal':recipe==='lavish-meal'?'lavish-meal':blockFor(ingredients[0]!.item as StoneIngredient);
 }
 export function isRecipeProduct(recipe:ProductionRecipe,item:ItemId):boolean {
   if(isArtRecipe(recipe))return false;
@@ -125,11 +135,11 @@ export function isRecipeProduct(recipe:ProductionRecipe,item:ItemId):boolean {
   if(recipe==='make-component')return item==='component';
   if(recipe==='make-advanced-component')return item==='advanced-component';
   if(isTailoring(recipe))return APPAREL_MATERIALS.some(material=>item===apparelItemFor(recipe,material));
-  return recipe==='butcher-creature'?(isAnimalMeat(item)||(ANIMAL_LEATHER_ITEMS as readonly string[]).includes(item)):recipe==='simple-meal'?item==='simple-meal':recipe==='fine-meal'?item==='fine-meal':recipe==='vegetarian-fine-meal'?item==='vegetarian-fine-meal':recipe==='lavish-meal'?item==='lavish-meal':ITEM_DEFINITIONS[item].kind==='blocks';
+  return recipe==='butcher-creature'?(isAnimalMeat(item)||(ANIMAL_LEATHER_ITEMS as readonly string[]).includes(item)):recipe==='simple-meal'?item==='simple-meal':recipe==='fine-meal'?item==='fine-meal':recipe==='vegetarian-fine-meal'?item==='vegetarian-fine-meal':recipe==='carnivore-fine-meal'?item==='carnivore-fine-meal':recipe==='lavish-meal'?item==='lavish-meal':ITEM_DEFINITIONS[item].kind==='blocks';
 }
 export function tailoringProduct(recipe:TailoringRecipe,material:TailoringMaterial):ApparelItem { return apparelItemFor(recipe,material); }
 
-export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle','make-flak-vest','make-flak-helmet']:station.kind==='fabrication-bench'?['make-component','make-advanced-component','make-recon-helmet']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear']:station.kind==='crafting-spot'?['tribalwear']:isStove(station.kind)?['simple-meal','fine-meal','vegetarian-fine-meal','lavish-meal']:stationRecipe(station)?[stationRecipe(station)!]:[];
+export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle','make-flak-vest','make-flak-helmet']:station.kind==='fabrication-bench'?['make-component','make-advanced-component','make-recon-helmet']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear']:station.kind==='crafting-spot'?['tribalwear']:isStove(station.kind)?['simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal']:stationRecipe(station)?[stationRecipe(station)!]:[];
 export const stationAccepts=(station:Pick<Structure,'kind'>,recipe:ProductionRecipe):boolean=>stationRecipes(station).includes(recipe);
 
 /** Snapshot-only display total; the authoritative workpiece owns its material. */

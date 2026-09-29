@@ -1,25 +1,26 @@
-import {planArtWork} from './art-work-plan.ts';
-import {isArtRecipe} from './art-rules.ts';
-import { productionResearchUnlocked,productionWorkerQualified,validAdvancedComponentIngredients,validFlakIngredients } from './machining.ts';
-import { planGunWork } from './gun-work-plan.ts';
-import { planFlakWork } from './flak-work-plan.ts';
-import { planComponentWork } from './component-work-plan.ts';
-import { isGunRecipe,GUN_REQUIREMENTS,isFlakRecipe,flakRequirements,ADVANCED_COMPONENT_REQUIREMENTS,type AdvancedComponentMaterial } from './production-recipes.ts';
-import { isAnimalCorpseItem } from './biome-items.ts';
-import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
-import { corpseFresh } from './corpses.ts';
-import { ticksUntilRot } from './food-preservation.ts';
-import { planUnfinished } from './tailoring-plan.ts';
-import { CARRY_CAPACITY, footprintCells } from './definitions.ts';
-import { PRODUCTION_RECIPES, admittedIngredient, fineMealIngredientGroup, mixedMealGroupUnits, validFineMealIngredients, validLavishMealIngredients, validVegetarianFineMealIngredients, validCarnivoreFineMealIngredients, isTailoring, productionStationUsable, stationRecipe, stationWork, type ProductionIngredient } from './production-recipes.ts';
-import { reservedServiceCells } from './service-reservations.ts';
-import { billWanted, cookingPlaceFree, cookingSpot, ingredientPlaceFree } from './cooking-bills.ts';
-import { groundCapacity } from './ground-placement.ts';
-import { reservedSource } from './materials.ts';
-import { fuelCapacity, fuelStationReserved } from './fuel.ts';
-import { routeToCell, routeToJob, type Reachability } from './pathfinding.ts';
-import type { CookingTask, CookingIngredient } from './cooking-types.ts';
-import type { Cell, HaulTask, Pawn, Structure, World } from './types.ts';
+/** Frozen V155 cooking planner from c6d465d3b42ef51a25fb2a12b7e0a9617c5fc922, for the V156 oracle. */
+import {planArtWork} from '../src/sim/art-work-plan.ts';
+import {isArtRecipe} from '../src/sim/art-rules.ts';
+import { productionResearchUnlocked,productionWorkerQualified,validAdvancedComponentIngredients,validFlakIngredients } from '../src/sim/machining.ts';
+import { planGunWork } from '../src/sim/gun-work-plan.ts';
+import { planFlakWork } from '../src/sim/flak-work-plan.ts';
+import { planComponentWork } from '../src/sim/component-work-plan.ts';
+import { isGunRecipe,GUN_REQUIREMENTS,isFlakRecipe,flakRequirements,ADVANCED_COMPONENT_REQUIREMENTS,type AdvancedComponentMaterial } from '../src/sim/production-recipes.ts';
+import { isAnimalCorpseItem } from '../src/sim/biome-items.ts';
+import { foodStationUsable, usesCookingFuel } from '../src/sim/food-workstations.ts';
+import { corpseFresh } from '../src/sim/corpses.ts';
+import { ticksUntilRot } from '../src/sim/food-preservation.ts';
+import { planUnfinished } from '../src/sim/tailoring-plan.ts';
+import { CARRY_CAPACITY, footprintCells } from '../src/sim/definitions.ts';
+import { PRODUCTION_RECIPES, admittedIngredient, fineMealIngredientGroup, mixedMealGroupUnits, validFineMealIngredients, validLavishMealIngredients, validVegetarianFineMealIngredients, isTailoring, productionStationUsable, stationRecipe, stationWork, type ProductionIngredient } from '../src/sim/production-recipes.ts';
+import { reservedServiceCells } from '../src/sim/service-reservations.ts';
+import { billWanted, cookingPlaceFree, cookingSpot, ingredientPlaceFree } from '../src/sim/cooking-bills.ts';
+import { groundCapacity } from '../src/sim/ground-placement.ts';
+import { reservedSource } from '../src/sim/materials.ts';
+import { fuelCapacity, fuelStationReserved } from '../src/sim/fuel.ts';
+import { routeToCell, routeToJob, type Reachability } from '../src/sim/pathfinding.ts';
+import type { CookingTask, CookingIngredient } from '../src/sim/cooking-types.ts';
+import type { Cell, HaulTask, Pawn, Structure, World } from '../src/sim/types.ts';
 
 export interface CookingPlan {station:Structure;priority:number;target:Cell;path:Cell[];task?:CookingTask;refuel?:HaulTask}
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
@@ -33,7 +34,7 @@ export function availableCookingStations(world:World,pawn:Pawn):Structure[] {
 }
 /** Select without mutation. The ordinary planner compares this proposal with
  * construction/growing/hauling before committing its reservations. */
-export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:{pairs:number},options?:{stationId:number;forced:boolean}):CookingPlan|null {
+export function legacyPlanCooking(world:World,pawn:Pawn,reachable:Reachability,budget:{pairs:number},options?:{stationId:number;forced:boolean}):CookingPlan|null {
   const stations=availableCookingStations(world,pawn).filter(s=>!options||s.id===options.stationId)
     .sort((a,b)=>pawn.priorities[stationWork(a)]-pawn.priorities[stationWork(b)]||distance(pawn,a)-distance(pawn,b)||a.id-b.id);
   // Proposals below only read the World; reserve claims cannot change until
@@ -65,7 +66,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       const flakResumed=planFlakWork(world,pawn,station,bill,reachable,budget);if(flakResumed.plan)return flakResumed.plan;if(flakResumed.handled)continue;
       const componentResumed=planComponentWork(world,pawn,station,bill,reachable,budget);if(componentResumed.plan)return componentResumed.plan;if(componentResumed.handled)continue;
       const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
-      const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&((bill.recipe!=='vegetarian-fine-meal'&&bill.recipe!=='carnivore-fine-meal')||ticksUntilRot(p,world.tick)>0)&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
+      const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&(bill.recipe!=='vegetarian-fine-meal'||ticksUntilRot(p,world.tick)>0)&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
         .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
       // No source means no pair was visited and no staging decision was made.
       // Avoid six full resource/footprint scans per empty bill, especially after
@@ -97,7 +98,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
         if(!already){const key=`${cell.x}:${cell.z}`;planned.set(key,{item:pile.item as ProductionIngredient,quantity:(planned.get(key)?.quantity??0)+quantity});}
         missing-=quantity;if(!missing)break;
       }
-      if(missing||bill.recipe==='fine-meal'&&!validFineMealIngredients(ingredients)||bill.recipe==='vegetarian-fine-meal'&&!validVegetarianFineMealIngredients(ingredients)||bill.recipe==='carnivore-fine-meal'&&!validCarnivoreFineMealIngredients(ingredients)||bill.recipe==='lavish-meal'&&!validLavishMealIngredients(ingredients)||!validFlakIngredients(bill.recipe,ingredients)||!validAdvancedComponentIngredients(bill.recipe,ingredients))continue; // Try the next bill if its filters admit other ingredients.
+      if(missing||bill.recipe==='fine-meal'&&!validFineMealIngredients(ingredients)||bill.recipe==='vegetarian-fine-meal'&&!validVegetarianFineMealIngredients(ingredients)||bill.recipe==='lavish-meal'&&!validLavishMealIngredients(ingredients)||!validFlakIngredients(bill.recipe,ingredients)||!validAdvancedComponentIngredients(bill.recipe,ingredients))continue; // Try the next bill if its filters admit other ingredients.
       const source=ingredients.find(i=>i.stage==='source'),target=source?world.piles.find(p=>p.id===source.pileId)!.owner as Cell:spot;
       return {station,priority:pawn.priorities[stationWork(station)],target,path:source?routeToJob(world,target,reachable,true)!:toSpot,task:{...(bill.recipe!=='simple-meal'?{recipe:bill.recipe}:{}),stationId:station.id,billId:bill.id,spot,actionCell:{x:target.x,z:target.z},phase:'gather',ingredients,progress:0,productId:null,storageId:null}};
       }

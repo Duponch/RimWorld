@@ -21,7 +21,7 @@ const ITEM = 'vegetarian-fine-meal' as const;
 
 function declared154(count=1): World {
   const world=medicalCamp(count);
-  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM);
+  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='carnivore-fine-meal');
   (world as {schemaVersion:number}).schemaVersion=154;
   return world;
 }
@@ -136,7 +136,7 @@ test('queued and active physical vegetarian tasks survive V155 and cannot appear
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
   const oldQueue=structuredClone(world);
-  for(const policy of oldQueue.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM);
+  for(const policy of oldQueue.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='carnivore-fine-meal');
   (oldQueue as {schemaVersion:number}).schemaVersion=154;
   expect(()=>deserializeWorld(JSON.stringify(oldQueue))).toThrow(/Invalid version 154 save/);
   pawn.orders.queue=[];
@@ -148,7 +148,7 @@ test('queued and active physical vegetarian tasks survive V155 and cannot appear
   const continued=deserializeWorld(serializeWorld(world));
   stepWorld(world,30);stepWorld(continued,30);expect(continued).toEqual(world);
   const oldActive=structuredClone(world);
-  for(const policy of oldActive.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM);
+  for(const policy of oldActive.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='carnivore-fine-meal');
   (oldActive as {schemaVersion:number}).schemaVersion=154;
   expect(()=>deserializeWorld(JSON.stringify(oldActive))).toThrow(/Invalid version 154 save/);
 });
@@ -159,7 +159,7 @@ test('declared V154 rejects a new meal in a frozen visitor possession',()=>{
   const departure=world.visitors!.departed.find(d=>d.pawn.id===traderId)!;
   expect(departure).toBeDefined();
   const old=structuredClone(world);
-  for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM);
+  for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='carnivore-fine-meal');
   (old as {schemaVersion:number}).schemaVersion=154;
   expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
   const withFood=structuredClone(old),food=withFood.visitors!.departed[0]!.items.find(item=>item.kind==='food')!;

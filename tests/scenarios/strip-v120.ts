@@ -9,7 +9,7 @@ export function stripV120<T>(world:T):T {
     structures?:Array<{bills?:Array<{filters:Record<string,boolean>}>}>;
     packed?:Array<{building:{bills?:Array<{filters:Record<string,boolean>}>}} >;
   };
-  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter(item=>item!=='milk'&&item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal');
+  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter(item=>item!=='milk'&&item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal');
   for(const policy of w.apparelPolicies??[]){
     policy.allowedItems=policy.allowedItems.filter(item=>!item.startsWith('muffalo-wool-'));
     policy.allowedMaterials=policy.allowedMaterials.filter(item=>item!=='muffalo-wool');

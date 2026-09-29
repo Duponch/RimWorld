@@ -25,6 +25,7 @@ export function billControls(station:Structure,send:(command:Command)=>void):HTM
     if(bill.recipe==='make-component'){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent='12 acier · Artisanat 8';form.append(cost);}
     if(bill.recipe==='fine-meal'){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent='5 protéines (viande ou lait) + 5 végétaux · Cuisine 6';form.append(cost);}
     if(bill.recipe==='vegetarian-fine-meal'){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent='15 végétaux ou lait · Cuisine 6';form.append(cost);}
+    if(bill.recipe==='carnivore-fine-meal'){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent='15 viandes crues · Cuisine 6';form.append(cost);}
     if(bill.recipe==='lavish-meal'){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent='10 protéines (viande ou lait) + 10 végétaux · Cuisine 8';form.append(cost);}
     if(bill.recipe==='make-advanced-component'){const cost=document.createElement('p'),r=ADVANCED_COMPONENT_REQUIREMENTS;cost.className='bill-cost';cost.textContent=`${r.component} composant · ${r.steel} acier · ${r.plasteel} plastacier · ${r.gold} or · Artisanat ${r.skill}`;form.append(cost);}
     if(isArtRecipe(bill.recipe)){const cost=document.createElement('p');cost.className='bill-cost';cost.textContent=`${artMaterialCount(bill.recipe)} unités d’un seul matériau · travail Art · qualité selon Artistique`;form.append(cost);}
