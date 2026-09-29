@@ -1,6 +1,6 @@
 # Sons de jeu et production SFX V149
 
-**État : sept MP3 inscrits au manifeste, dont `cooking.work` et un nouveau contact de pioche ; les deux anciens fichiers de minage restent conservés.** Un [parcours Chromium ciblé](../history/validation-audio-audibility-v149.md) mesure le signal PCM après le mix d'un vrai contact de travail. Cette mesure ne remplace pas une écoute sur l'appareil du joueur. Le moteur audio lit `public/assets/audio/manifest.json` version 1. [Recherche API, coût et droits](../research/audio-elevenlabs-v149.md).
+**État : huit MP3 inscrits au manifeste, dont `cooking.work`, `construction.hit` et un nouveau contact de pioche ; les deux anciens fichiers de minage restent conservés.** Un [parcours Chromium ciblé](../history/validation-audio-audibility-v149.md) mesure le signal PCM après le mix d'un vrai contact de travail. Cette mesure ne remplace pas une écoute sur l'appareil du joueur. Le moteur audio lit `public/assets/audio/manifest.json` version 1. [Recherche API, coût et droits](../research/audio-elevenlabs-v149.md).
 
 ## Essai sonore dans les Options
 
@@ -20,7 +20,7 @@ Lisière vise une texture chaleureuse, tactile et lisible sous une scène 3D pas
 
 Le plan de fabrication est [sfx-plan.json](../../scripts/audio/sfx-plan.json). Les IDs correspondent aux cues du bridge :
 
-Pour un effet ponctuel futur marqué `spatial: false`, le runtime ignore ses coordonnées de monde lors de la sélection et le relie directement au gain Web Audio, sans atténuation ni `PannerNode`. Le correctif de contrat est couvert par `tests/audio-v149.test.ts` (13/13 tests ciblés après la correction) ; les sept MP3 actuellement publiés ne comprennent aucun effet ponctuel global, donc il ne change pas encore le mix audible.
+Pour un effet ponctuel futur marqué `spatial: false`, le runtime ignore ses coordonnées de monde lors de la sélection et le relie directement au gain Web Audio, sans atténuation ni `PannerNode`. Le correctif de contrat est couvert par `tests/audio-v149.test.ts` (13/13 tests ciblés après la correction) ; les huit MP3 actuellement publiés ne comprennent aucun effet ponctuel global, donc il ne change pas encore le mix audible.
 
 | ID | Usage | Durée demandée | Boucle | Espace |
 | --- | --- | ---: | :---: | --- |
@@ -30,20 +30,20 @@ Pour un effet ponctuel futur marqué `spatial: false`, le runtime ignore ses coo
 | `weapon.melee` | Frappe rapprochée | 0,6 s | Non | Local, 18 cases |
 | `ambient.fire` | Petit feu stable | 8 s | Oui | Local, 22 cases |
 | `weather.rain` | Pluie douce stable | 10 s | Oui | Globale (`spatial: false`) |
-| `construction.hit` | Petit coup de construction | 0,65 s | Non | Local, 20 cases |
+| `construction.hit` | Petit coup de construction | 0,65 s | Non | Local, 16 cases |
 | `cooking.work` | Travail de cuisine | 0,75 s | Non | Local, 16 cases |
 | `crafting.work` | Travail d'établi | 0,7 s | Non | Local, 18 cases |
 | `tailoring.work` | Couture | 0,65 s | Non | Local, 14 cases |
 | `butchering.work` | Découpe de boucherie | 0,65 s | Non | Local, 18 cases |
 | `research.work` | Recherche sur papier | 0,7 s | Non | Local, 14 cases |
 
-Les durées de la table sont des **demandes de génération** ; les durées décodées des six premiers fichiers sont mesurées ci-dessous. `cooking.work` a été généré ensuite avec les paramètres effectifs du connecteur : durée décodée de 1,00 s et influence de prompt 0,3, au lieu des 0,75 s et 0,65 demandés dans le plan. Ce fichier est publié après contrôle technique, avec un gain de 1,2 ; son écoute artistique et son audibilité dans le mix restent à vérifier. Une génération de `construction.hit` est revenue sans URL exploitable et reste absente du dépôt. Les quatre autres travaux préparés (`crafting.work`, `tailoring.work`, `butchering.work`, `research.work`) n'ont pas été générés. Les boucles publiées doivent encore être écoutées au joint et sur plusieurs répétitions. L'absence d'un ID dans le manifeste est un silence volontaire. Le manifeste ne contient que des fichiers réels, avec `variants: [{src, gain}]`, `gain`, `loop`, `maxDistance` si local et `spatial: false` si global.
+Les durées de la table sont des **demandes de génération** ; les mesures disponibles des fichiers publiés sont précisées ci-dessous. `cooking.work` a été généré avec les paramètres effectifs du connecteur : durée décodée de 1,00 s et influence de prompt 0,3, au lieu des 0,75 s et 0,65 demandés dans le plan. Ce fichier est publié avec un gain de 1,2 ; son écoute artistique et son audibilité dans le mix restent à vérifier. Une première génération de `construction.hit` est revenue sans URL exploitable et n'a pas été récupérée. Le MP3 maintenant publié provient d'une **nouvelle génération unique**, demandée à 0,65 s, sans boucle et avec influence de prompt 0,75. Il se décode sur 0,64 s ; sa crête élevée motive un gain de manifeste de 0,25 et une portée de 16 cases. Son écoute humaine et son audibilité en scène restent à vérifier. Les quatre autres travaux préparés (`crafting.work`, `tailoring.work`, `butchering.work`, `research.work`) n'ont pas été générés. Les boucles publiées doivent encore être écoutées au joint et sur plusieurs répétitions. L'absence d'un ID dans le manifeste est un silence volontaire. Le manifeste ne contient que des fichiers réels, avec `variants: [{src, gain}]`, `gain`, `loop`, `maxDistance` si local et `spatial: false` si global. [Suivi de construction](../history/validation-audio-construction-v149.md).
 
 ## Retrouver un SFX déjà généré
 
 Dans le **même compte et espace ElevenCreative** que celui utilisé par la connexion OAuth, ouvrir Sound Effects → **History**, chercher le candidat, l'écouter et utiliser l'icône de téléchargement si elle est présente ([guide officiel](https://elevenlabs.io/docs/eleven-creative/playground/sound-effects)). S'il a été produit dans un Flow, ouvrir le projet sauvegardé dans ce même espace et examiner ses nœuds de résultat, qui permettent le téléchargement ([guide Flows](https://elevenlabs.io/docs/eleven-creative/products/flows)). Ne pas relancer un nœud pour cette recherche : une nouvelle exécution consomme des crédits.
 
-L'[API `/v1/history`](https://elevenlabs.io/docs/api-reference/history/list) exclut les SFX ; une liste vide n'est pas une preuve de perte. Sans entrée dans History ou Flows ni identifiant, URL ou fichier conservé, aucune récupération n'est garantie. `construction.hit` demeure absent du dépôt et du manifeste tant qu'un MP3 réel n'a pas été récupéré puis contrôlé. [Détails et sources](../research/audio-elevenlabs-v149.md#récupération-dun-sfx-sans-identifiant--vérification-du-29-septembre-2026).
+L'[API `/v1/history`](https://elevenlabs.io/docs/api-reference/history/list) exclut les SFX ; une liste vide n'est pas une preuve de perte. Sans entrée dans History ou Flows ni identifiant, URL ou fichier conservé, aucune récupération n'est garantie. Cette démarche concerne le **premier candidat** de `construction.hit`, resté introuvable ; le MP3 désormais publié vient d'une génération distincte, enregistrée avec son identifiant et son empreinte. [Détails et sources](../research/audio-elevenlabs-v149.md#récupération-dun-sfx-sans-identifiant--vérification-du-29-septembre-2026).
 
 ## Procédure de production
 
@@ -56,7 +56,7 @@ $env:NPM_CONFIG_CACHE='E:/Code/RimWorld/tmp/host-cache/npm-cache'
 node scripts/audio/generate-sfx.mjs --dry-run
 ```
 
-Le contrôle est en lecture seule et n'utilise aucune clé. Les sept fichiers publiés ont été générés via OAuth MCP, sans clé API locale ; [generation-log.json](../../scripts/audio/generation-log.json) conserve leurs IDs, prompts, paramètres effectifs, coûts et SHA-256, sans URL signée. Le script Node avec `ELEVENLABS_API_KEY` est une solution de repli si le flux MCP n'est pas disponible. Sous Windows, l'[assistant de connexion](../../scripts/audio/connect-elevenlabs.ps1) peut alors demander cette clé sans écho une seule fois et la conserver chiffrée avec DPAPI sous `tmp/host-cache/audio/`, répertoire ignoré par Git :
+Le contrôle est en lecture seule et n'utilise aucune clé. Les huit fichiers publiés ont été générés via OAuth MCP, sans clé API locale ; [generation-log.json](../../scripts/audio/generation-log.json) conserve leurs IDs, prompts, paramètres effectifs, coûts et SHA-256, sans URL signée. Le script Node avec `ELEVENLABS_API_KEY` est une solution de repli si le flux MCP n'est pas disponible. Sous Windows, l'[assistant de connexion](../../scripts/audio/connect-elevenlabs.ps1) peut alors demander cette clé sans écho une seule fois et la conserver chiffrée avec DPAPI sous `tmp/host-cache/audio/`, répertoire ignoré par Git :
 
 ```powershell
 ./scripts/audio/connect-elevenlabs.ps1 -Connect
@@ -81,7 +81,7 @@ Cette deuxième commande vérifie le MP3 et sa trace de génération, puis ajout
 
 ## Vérification et limites
 
-Contrôle initial avant le dérivé : `--dry-run`, wrapper PowerShell sans clé et [inspecteur MP3](../../scripts/audio/inspect-mp3.mjs) ; [rapport PCM](../../scripts/audio/check-sfx.py) avec `soundfile` et NumPy. Les sept MP3 initiaux étaient décodables, stéréo 44,1 kHz, MP3 128 kb/s. Les six premiers avaient les durées attendues ; la cuisine dure effectivement 1,00 s. Mesures **des originaux** avant gain du manifeste :
+Contrôle initial avant le dérivé : `--dry-run`, wrapper PowerShell sans clé et [inspecteur MP3](../../scripts/audio/inspect-mp3.mjs) ; [rapport PCM](../../scripts/audio/check-sfx.py) avec `soundfile` et NumPy. Les sept MP3 de ce contrôle historique étaient décodables, stéréo 44,1 kHz, MP3 128 kb/s. Les six premiers avaient les durées attendues ; la cuisine dure effectivement 1,00 s. Le huitième, la construction, a ensuite été contrôlé techniquement à part. Mesures **des originaux** avant gain du manifeste :
 
 | Son | Durée décodée | Crête | RMS | Remarque |
 | --- | ---: | ---: | ---: | --- |
@@ -92,5 +92,6 @@ Contrôle initial avant le dérivé : `--dry-run`, wrapper PowerShell sans clé 
 | Feu | 8,00 s | -9,2 dBFS | -44,6 dBFS | Joint : saut d'échantillon max 0,00121, écoute requise |
 | Pluie | 10,00 s | -16,7 dBFS | -39,3 dBFS | Joint : saut d'échantillon max 0,00565, écoute requise |
 | Cuisine | 1,00 s | -12,4 dBFS | -41,4 dBFS | 74,3 % proche du silence ; aucune saturation PCM mesurée, écoute requise |
+| Construction | 0,64 s | +1,0 dBFS | -22,7 dBFS | 0,019 % des échantillons PCM près de l'écrêtage ; écoute requise |
 
-Les gains du manifeste sont **2,5 minage**, 1,8 bois, 7 tir, 0,12 mêlée, 1 feu, 0,5 pluie et 1,2 cuisine. Sur le **dérivé publié** du minage, la durée reste 0,600 s, la crête est à -14,86 dBFS et le RMS total à -43,87 dBFS, contre -16,98 et -48,81 dBFS pour l'original ; le meilleur intervalle de 50 ms gagne 3,96 dB. Ces valeurs décrivent un fichier isolé décodé, sans constituer une écoute ni une mesure du mix final sur l'appareil. Le moteur retente la reprise d'un contexte Web Audio suspendu lors des gestes suivants et signale un échec d'activation ; le [contrôle ciblé](../history/validation-audio-resume-v149.md) vérifie cette reprise en Chromium, sans établir de débit FPS ni de coût CPU/GPU.
+Les gains actuels du manifeste sont **0,55 minage**, 1,8 bois, 7 tir, 0,12 mêlée, 1 feu, 0,5 pluie, 0,25 construction et 1,2 cuisine. Sur le **dérivé antérieur** du minage, la durée restait 0,600 s, la crête était à -14,86 dBFS et le RMS total à -43,87 dBFS, contre -16,98 et -48,81 dBFS pour l'original ; le meilleur intervalle de 50 ms gagnait 3,96 dB. Le manifeste joue désormais `mining-pickaxe-ping-v2.mp3`, décrit plus haut. Ces valeurs décrivent des fichiers isolés décodés, sans constituer une écoute ni une mesure du mix final sur l'appareil. Le moteur retente la reprise d'un contexte Web Audio suspendu lors des gestes suivants et signale un échec d'activation ; le [contrôle ciblé](../history/validation-audio-resume-v149.md) vérifie cette reprise en Chromium, sans établir de débit FPS ni de coût CPU/GPU.

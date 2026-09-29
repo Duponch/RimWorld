@@ -67,6 +67,17 @@
       "loop": true,
       "spatial": false
     },
+    "construction.hit": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/construction-hammer-wood-v1.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 0.25,
+      "maxDistance": 16,
+      "loop": false
+    },
     "cooking.work": {
       "variants": [
         {

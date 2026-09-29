@@ -59,13 +59,13 @@
       "spatial": false
     },
     "construction.hit": {
-      "filename": "construction-hit-v1.mp3",
-      "prompt": "Single careful carpenter hammer tap on a wooden frame, small rounded wood and nail click, tactile warm cozy colony game foley. Dry close sound, no voice, no music, no heavy crash, no background ambience.",
+      "filename": "construction-hammer-wood-v1.mp3",
+      "prompt": "One real carpenter's hammer striking a nail into a dry pine frame: a single compact metal-on-nail click followed by a warm rounded wood knock and brief natural decay. Close, dry, realistic foley. No repeated hits, scrape, synthetic or retro tones, voice, music, heavy crash, reverb or background ambience.",
       "durationSeconds": 0.65,
-      "promptInfluence": 0.65,
+      "promptInfluence": 0.75,
       "loop": false,
-      "gain": 1,
-      "maxDistance": 20
+      "gain": 0.25,
+      "maxDistance": 16
     },
     "cooking.work": {
       "filename": "cooking-work-v1.mp3",
