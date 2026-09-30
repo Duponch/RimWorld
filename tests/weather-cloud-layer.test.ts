@@ -88,9 +88,9 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
       expect(position.x).toBeLessThan(31.5);
       expect(position.z).toBeGreaterThanOrEqual(-.5);
       expect(position.z).toBeLessThan(31.5);
-      expect(position.y).toBeGreaterThanOrEqual(30);
-      expect(position.y).toBeLessThan(50);
-      altitudeBands.add(Math.floor((position.y - 30) / 7.5));
+      expect(position.y).toBeGreaterThanOrEqual(34);
+      expect(position.y).toBeLessThan(54);
+      altitudeBands.add(Math.floor((position.y - 34) / 7.5));
       if (fadeAttribute.getX(index) > .005) {
         const footprint = Math.max(scale.x, scale.z) * footprintRadius;
         expect(position.x - footprint).toBeGreaterThanOrEqual(-.501);
@@ -102,6 +102,27 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
     }
     expect(activeCentres).toBeGreaterThan(0);
     expect(altitudeBands.size).toBeGreaterThanOrEqual(3);
+    const skyCamera = new PerspectiveCamera(45, 1.44, .1, 2000);
+    skyCamera.position.set(15.5, 25, 100);
+    skyCamera.lookAt(new Vector3(15.5, 22, 15.5));
+    skyCamera.updateMatrixWorld();
+    const isoSkyCamera = new OrthographicCamera(-24.4224, 24.4224, 16.96, -16.96, .1, 1000);
+    isoSkyCamera.position.set(37.5, 50, 38.5);
+    isoSkyCamera.lookAt(target);
+    isoSkyCamera.updateMatrixWorld();
+    const inView = (view: PerspectiveCamera | OrthographicCamera) => {
+      let count = 0;
+      for (let index = 0; index < mesh.count; index++) {
+        if (fadeAttribute.getX(index) < .5) continue;
+        mesh.getMatrixAt(index, matrix);
+        projected.setFromMatrixPosition(matrix).project(view);
+        if (Math.abs(projected.x) <= 1 && Math.abs(projected.y) <= 1 && Math.abs(projected.z) <= 1) count++;
+      }
+      return count;
+    };
+    const projected = new Vector3();
+    expect(inView(skyCamera)).toBeGreaterThan(0);
+    expect(inView(isoSkyCamera)).toBeGreaterThan(0);
     const dayColor = material.color.clone();
     layer.present({ ...initial, daylight: 0 });
     expect(material.color.equals(dayColor)).toBe(false);

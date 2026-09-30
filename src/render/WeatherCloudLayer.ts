@@ -15,7 +15,7 @@ const MAX_CONTIGUOUS_TICK_GAP = 600;
 // Near-profile views keep the clouds solid against the sky. As the camera
 // rises over the map, leave only a faint trace so the ground stays readable.
 const HIGH_VIEW_OPACITY = .06;
-const CLOUD_BASE_HEIGHT = 30;
+const CLOUD_BASE_HEIGHT = 34;
 const CLOUD_BAND_SPACING = 7.5;
 const CLOUD_BAND_JITTER = 5;
 const scratch = new THREE.Object3D();
@@ -210,7 +210,7 @@ export class WeatherCloudLayer {
       MIN_MAP_CLOUDS, CLOUD_COUNT,
     );
     this.mesh.boundingSphere = new THREE.Sphere(
-      new THREE.Vector3(this.centerX, 40, this.centerZ),
+      new THREE.Vector3(this.centerX, 44, this.centerZ),
       Math.hypot(this.radiusX + 24, this.radiusZ + 24, 23),
     );
     this.reset();
