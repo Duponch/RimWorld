@@ -82,9 +82,40 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
   await form.locator(`[data-apply-bill="${id}"]`).click();
 }
 
+/** At overview scale actor hit circles can cover neighbouring ground cells.
+ * Pan and zoom through the real controls until this cell has a clear ground
+ * point; a tactical actor click intentionally opens an attack menu instead. */
+async function groundOrderPoint(page:Page,target:{x:number;z:number}):Promise<{x:number;y:number}> {
+  await revealCells(page,[target]);
+  const observations:unknown[]=[];
+  for(let attempt=0;attempt<12;attempt++) {
+    await settledCells(page,[target]);
+    const aim=await page.evaluate(target=>{
+      const canvas=document.querySelector<HTMLCanvasElement>('#viewport canvas')!,b=canvas.getBoundingClientRect();
+      const actors=[...window.__lisiere.world.pawns,...(window.__lisiere.world.wildlife?.animals??[])].flatMap(a=>{const p=window.__lisiere.projectPawn(a.id);return p?[p]:[];});
+      const points=[[0,0],[-.35,-.35],[-.35,.35],[.35,-.35],[.35,.35]].map(([dx,dz])=>{
+        const p=window.__lisiere.projectCell(target.x+dx,target.z+dz),x=b.x+p.x,y=b.y+p.y;
+        return {x,y,clear:document.elementFromPoint(x,y)===canvas&&actors.every(a=>Math.hypot(x-a.x,y-a.y)>a.radius+1)};
+      });
+      const center=points[0]!,anchor={x:b.x+b.width*.72,y:b.y+b.height*.30};
+      if(document.elementFromPoint(anchor.x,anchor.y)!==canvas)throw Error('Ground-order camera anchor is covered by UI.');
+      return {point:points.find(p=>p.clear),center,anchor,points,actors};
+    },target);
+    if(aim.point)return aim.point;
+    observations.push(aim);
+    const dx=aim.anchor.x-aim.center.x,dy=aim.anchor.y-aim.center.y;
+    if(Math.hypot(dx,dy)>180) {
+      await page.mouse.move(aim.anchor.x,aim.anchor.y);await page.mouse.down({button:'middle'});
+      await page.mouse.move(aim.anchor.x+Math.max(-250,Math.min(250,dx)),aim.anchor.y+Math.max(-180,Math.min(180,dy)),{steps:8});await page.mouse.up({button:'middle'});
+    } else {await page.mouse.move(aim.anchor.x,aim.anchor.y);await page.mouse.wheel(0,-300);}
+  }
+  await page.screenshot({path:testOutputPath('artifacts/ground-order-failure.png')});
+  throw Error(`No visible ground point for tactical movement: ${JSON.stringify({target,observations})}`);
+}
+
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
-  let heaterTarget:number|undefined;
+  let heaterTarget:number|undefined,billIndex:number|undefined;
   if(c.type==='answer-arrival'){await page.locator('#arrival-letter').click();await page.locator(c.accept?'#accept-arrival':'#reject-arrival').click();await expect(page.locator('#arrival-dialog')).not.toBeVisible();await expect(page.locator('#arrival-letter')).toHaveCount(0);return;}
   if(c.type==='enable-arrivals'){await panel(page,'menu');if(!await page.locator('.legacy-scenario-settings').evaluate(node=>node.hasAttribute('open')))await page.locator('.legacy-scenario-settings>summary').click();await page.locator('#enable-arrivals').click();await expect(page.locator('#enable-arrivals')).toBeHidden();await page.keyboard.press('Escape');return;}
   if(c.type==='draft'||c.type==='draft-move'||c.type==='draft-stop') {
@@ -94,8 +125,8 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
       const current=await world(page);if(c.pawnIds.some(id=>!!current.pawns.find(p=>p.id===id)?.draft!==c.enabled))await page.locator('#toggle-draft').click();
     } else if(c.type==='draft-stop')await page.locator('#stop-draft').click();
     else {
-      await revealCells(page,[c.target]);const point=await page.evaluate(t=>window.__lisiere.projectCell(t.x,t.z),c.target),bounds=(await page.locator('#viewport canvas').boundingBox())!;
-      if(c.queue)await page.keyboard.down('Shift');await page.mouse.click(bounds.x+point.x,bounds.y+point.y,{button:'right'});if(c.queue)await page.keyboard.up('Shift');
+      const point=await groundOrderPoint(page,c.target);
+      if(c.queue)await page.keyboard.down('Shift');await page.mouse.click(point.x,point.y,{button:'right'});if(c.queue)await page.keyboard.up('Shift');
     }
   } else if(c.type==='hunt') {
     await panel(page,'wildlife');await page.locator(`[data-animal-hunt="${c.animalId}"]`).setChecked(c.enabled);
@@ -212,7 +243,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     }
     await revealCells(page,[c]);
     await cell(page,c.x,c.z);
-  } else if(c.type==='bill-add'||c.type==='bill-update') {
+  } else if(c.type==='bill-add'||c.type==='bill-update'||c.type==='bill-move') {
     const w=await world(page),station=w.structures.find(s=>s.id===c.structureId)!;
     await page.keyboard.press('Escape');await revealCells(page,[station]);
     // As for furniture installation, an overlapping pawn can be selected first.
@@ -223,9 +254,13 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
       const first=stationRecipes(station)[0];
       await page.locator(!c.recipe||c.recipe===first?'#add-cooking-bill':`#add-bill-${c.recipe}`).click();
     }
-    else await editBill(page,c.billId,c.settings);
+    else if(c.type==='bill-update')await editBill(page,c.billId,c.settings);
+    else {
+      billIndex=station.bills!.findIndex(b=>b.id===c.billId);
+      await page.locator(`[data-bill="${c.billId}"]`).getByRole('button',{name:c.direction===-1?'Monter la facture':'Descendre la facture',exact:true}).click();
+    }
   } else throw new Error(`Player UI action not supported: ${c.type}`);
-  try { await page.waitForFunction(({command:c,heaterTarget})=>{
+  try { await page.waitForFunction(({command:c,heaterTarget,billIndex})=>{
     const w=window.__lisiere.world;
     if(c.type==='growing-policy'){const z=w.growingZones.find(z=>z.id===c.zoneId);return !!z&&(!c.plant||z.plant===c.plant)&&z.allowSow===c.allowSow&&z.allowCut===c.allowCut;}
     if(c.type==='hunt')return !!w.hunting?.targets.includes(c.animalId)===c.enabled;
@@ -263,6 +298,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='grave-policy'){const g=w.structures.find(s=>s.id===c.graveId)?.grave;return g?.colonists===c.colonists&&g.strangers===c.strangers;}
     if(c.type==='priority')return w.pawns.find(p=>p.id===c.pawnId)?.priorities[c.work]===c.value;
     if(c.type==='bill-add')return !!w.structures.find(s=>s.id===c.structureId)?.bills?.some(b=>!c.recipe||b.recipe===c.recipe);
+    if(c.type==='bill-move'){const bills=w.structures.find(s=>s.id===c.structureId)?.bills;return !!bills&&billIndex!==undefined&&bills.findIndex(b=>b.id===c.billId)===Math.max(0,Math.min(bills.length-1,billIndex+c.direction));}
     if(c.type==='bill-update') {const b=w.structures.find(s=>s.id===c.structureId)?.bills?.find(b=>b.id===c.billId);return !!b&&b.mode===c.settings.mode&&b.target===c.settings.target&&b.suspended===c.settings.suspended;}
     if(c.type==='area') {
       if(c.action==='home'||c.action==='remove-home'){for(let z=Math.min(c.from.z,c.to.z);z<=Math.max(c.from.z,c.to.z);z++)for(let x=Math.min(c.from.x,c.to.x);x<=Math.max(c.from.x,c.to.x);x++)if(!!w.home?.includes(z*w.width+x)!==(c.action==='home'))return false;return true;}
@@ -283,7 +319,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='stockpile')return w.stockpiles.some(s=>s.x===c.x&&s.z===c.z);
     if(c.type==='designate'&&(c.kind==='butcher-spot'||c.kind==='crafting-spot'))return w.structures.some(s=>s.kind===c.kind&&s.x===c.x&&s.z===c.z);
     return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind&&(!c.material||j.material===c.material)&&(!c.targetId||(j.deconstruction??j.furniture)?.structureId===c.targetId));
-  },{command:c,heaterTarget},{polling:100,timeout:5000});
+  },{command:c,heaterTarget,billIndex},{polling:100,timeout:5000});
   } catch(error) {
     const diagnostic=await page.evaluate(()=>({tick:window.__lisiere.tick,notice:document.querySelector('#notice')?.textContent,stockpiles:window.__lisiere.world.stockpiles,events:window.__lisiere.world.events.slice(-5),tool:document.querySelector('[data-tool].active')?.getAttribute('data-tool')}));
     await page.screenshot({path:testOutputPath('artifacts/player-action-failure.png')});

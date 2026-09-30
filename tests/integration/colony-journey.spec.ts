@@ -1,4 +1,5 @@
 import { writeTestFile, testOutputPath } from '../test-output.ts';
+import { createSimpleMealLedger, observeSimpleMealLedger } from '../scenarios/simple-meal-ledger.ts';
 import { wildlifePopulationAccount } from '../scenarios/hunting-player';
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
@@ -34,14 +35,21 @@ async function waitForTick(page:Page,tick:number):Promise<void> {
 
 
 type PlayerLog={tick:number;reason:string;command:unknown}[];
-async function finishMaintenance(page:Page,current:World,initialWood:number,decisions:PlayerLog,rotation:{value:number}) {
+function requireEventCoverage(current:World,observedTick:number):void {
+  expect(current.tick,'Food observations must follow confirmed ticks').toBeGreaterThanOrEqual(observedTick);
+  // The product journal keeps at most 80 events. A full window starting after
+  // our last observation cannot prove the missing transitions: fail with the
+  // checkpoint instead of silently inventing food production or loss.
+  if(current.events.length>=80)expect(current.events[0]!.tick,`Event window lost coverage after tick ${observedTick}; current tick ${current.tick}`).toBeLessThanOrEqual(observedTick+1);
+}
+async function finishMaintenance(page:Page,current:World,initialWood:number,decisions:PlayerLog,rotation:{value:number},observe?:(w:World)=>void) {
   const summary=colonySummary(current);let morning:ReturnType<typeof colonySummary>|undefined;
   // A fragment produced since the previous observation must first be
   // designated. Follow the ordinary night's sleep, transport and crafting
   // through the UI; do not demand an empty maintenance queue at midnight.
   const maintenance=current.jobs.filter(j=>j.growingZoneId===undefined).map(j=>j.id);
   if(summary.mining.chunks>summary.mining.stored||maintenance.length||summary.mining.steelStored<summary.mining.steel) {
-    const haul=playerDecisions(current).filter(d=>d.command.type==='area'&&d.command.action==='haul-chunks');
+    const haul=playerDecisions(current,{bulkMeals:true}).filter(d=>d.command.type==='area'&&d.command.action==='haul-chunks');
     // Previously designated or already carried chunks need no duplicate command.
     for(const d of haul){await perform(page,d,rotation);decisions.push({tick:current.tick,...d});}
     const planned=await world(page);expect(validateWorld(planned)).toEqual([]);
@@ -50,7 +58,7 @@ async function finishMaintenance(page:Page,current:World,initialWood:number,deci
     for(let interval=1;interval<=3;interval++) {
       await page.locator('[data-speed="6"]').click();await waitForTick(page,planned.tick+interval*1000);
       await page.locator('[data-speed="0"]').click();await expect(page.locator('#pause-banner')).toBeVisible();
-      const next=await world(page);expect(validateWorld(next)).toEqual([]);expect(woodAccount(next)).toBe(initialWood);
+      const next=await world(page);observe?.(next);expect(validateWorld(next)).toEqual([]);expect(woodAccount(next)).toBe(initialWood);
       morning=colonySummary(next);
       if(!next.jobs.some(j=>maintenance.includes(j.id))&&morning.mining.steelStored===50&&morning.mining.stored===morning.mining.chunks&&(summary.mining.blocks!==15||summary.mining.chunks===0||morning.mining.blocksStored===35))break;
     }
@@ -71,7 +79,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}});
   page.setDefaultTimeout(10000);
   const errors=observeErrors(page), decisions:{tick:number;reason:string;command:unknown}[]=[], days:ReturnType<typeof colonySummary>[]=[];
-  const harvests=new Map<string,number>(), meals=new Map<string,number>(), sleepers=new Set<number>(), cooked=new Set<string>();const recreationActivities=new Set<string>(),clearedSites=new Set<string>();let finalReport:unknown,waitingFor=0;let morning:ReturnType<typeof colonySummary>|undefined;
+  const harvests=new Map<string,number>(), meals=new Map<string,number>(), sleepers=new Set<number>();const recreationActivities=new Set<string>(),clearedSites=new Set<string>();let finalReport:unknown,waitingFor=0;let morning:ReturnType<typeof colonySummary>|undefined;
   try {
     // No injected fixture, inventory, clocks or simulation speed outside the UI.
     await page.goto('/?scenario=camp&e2e&seed=42');await expect(page.locator('#loading')).toHaveCount(0);
@@ -81,7 +89,15 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
     expect(initial.piles.filter(p=>p.kind==='food').map(p=>[p.item,p.quantity])).toEqual([['survival-meal',10],['survival-meal',8]]);
     await expect(page.locator('#food-items [data-item="survival-meal"] strong')).toHaveText('18');
     await expect(page.locator('#food-items [data-item="legacy-portion"]')).toBeHidden();
-    const initialWood=woodAccount(initial), initialFood=foodAccount(initial);const rotation={value:0};
+    const initialWood=woodAccount(initial), initialFood=foodAccount(initial);const cookingLedger=createSimpleMealLedger(initial.events),rotation={value:0};
+    let foodObservedTick=initial.tick;
+    const observeFood=(current:World)=>{
+      requireEventCoverage(current,foodObservedTick);
+      for(const e of current.events)if(e.type==='need'&&e.message.includes('a mangé une portion'))meals.set(`${e.tick}:${e.message}`,Number(e.message.match(/portion \((\d+) /)?.[1]??0));
+      for(const e of current.events){const match=e.message.match(/a récolté (\d+) (?:baies|riz)/);if(match)harvests.set(`${e.tick}:${e.message}`,Number(match[1]));}
+      observeSimpleMealLedger(cookingLedger,current.events);foodObservedTick=current.tick;
+      expect(foodAccount(current)+(current.wildlife?.eatenItems??0)+cookingLedger.totals.unitDelta+[...meals.values()].reduce((a,b)=>a+b,0)).toBe(initialFood+[...harvests.values()].reduce((a,b)=>a+b,0));
+    };
     for(const d of playerArrivalDecisions(initial))await perform(page,d,rotation);
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>playerArrivalComplete(await world(page))).toBe(true);await page.locator('[data-speed="0"]').click();
     await perform(page,{reason:'Reprendre les travaux civils après la reconnaissance.',command:{type:'draft',pawnIds:[initial.pawns[0]!.id],enabled:false}},rotation);
@@ -92,7 +108,11 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         await page.locator('[data-speed="0"]').click();await expect(page.locator('#pause-banner')).toBeVisible();
       }
       const current=await world(page), summary=colonySummary(current), context=JSON.stringify(summary);
-      await testInfo.attach(`hourly-world-${hour}`,{contentType:'application/json',body:JSON.stringify(current)});
+      const checkpoint=JSON.stringify(current);
+      // Playwright can materialize an attachment body as a path. Save directly
+      // at observation time so a timeout cannot discard the replay checkpoint.
+      await writeTestFile('tmp/colony-last-checkpoint.json',checkpoint);
+      await testInfo.attach(`hourly-world-${hour}`,{contentType:'application/json',body:checkpoint});
       expect(summary.equipment).toHaveLength(1);if(hour)expect(summary.equipment[0]!.owner.type).toBe('equipment');
       expect(validateWorld(current),context).toEqual([]);expect(woodAccount(current),context).toBe(initialWood);
       expect(summary.thermal.outdoors).toBeGreaterThanOrEqual(14);expect(summary.thermal.outdoors).toBeLessThanOrEqual(28);
@@ -105,9 +125,7 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         expect(light.travelFactor).toBeGreaterThanOrEqual(.8*apparel);expect(light.travelFactor).toBeLessThanOrEqual(1);
       }
       expect(current.pawns.every(p=>p.hunger>0&&p.rest>0),context).toBe(true);
-      for(const e of current.events)if(e.type==='need'&&e.message.includes('a mangé une portion'))meals.set(`${e.tick}:${e.message}`,Number(e.message.match(/portion \((\d+) /)?.[1] ?? 0));
-      for(const e of current.events) {const match=e.message.match(/a récolté (\d+) (?:baies|riz)/);if(match)harvests.set(`${e.tick}:${e.message}`,Number(match[1]));}
-      for(const e of current.events)if(e.message.includes('a cuisiné 1 repas simple'))cooked.add(`${e.tick}:${e.message}`);
+      observeFood(current);
       for(const e of current.events)if(e.message.includes('a dégagé le chantier'))clearedSites.add(`${e.tick}:${e.message}`);
       for(const e of current.events)if(e.message.includes('commence à')){if(e.message.includes('fers à cheval'))recreationActivities.add('horseshoes');if(e.message.includes('observer le ciel'))recreationActivities.add('skygaze');}
       for(const p of current.pawns)if(p.state==='sleeping'&&p.need?.kind==='sleep'&&p.need.bedId!==null)sleepers.add(p.id);
@@ -132,25 +150,27 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
         expect(summary.medicines,context).toEqual({total:30,stored:30,policies:['industrial','industrial','industrial','industrial']});
         expect(summary.roofing,context).toEqual({constructed:28,planned:28,removal:0});expect(current.stock.food,context).toBeGreaterThan(0);expect(sleepers.size,context).toBe(4);expect(current.arrivals?.accepted,context).toBe(1);expect(current.pawns,context).toHaveLength(4);
         expect(wildlifePopulationAccount(current)).toBe(12);expect(current.wildlife!.eatenNutrition).toBeGreaterThan(0);
-        expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+(current.wildlife?.eatenItems??0)+9*cooked.size+[...meals.values()].reduce((a,b)=>a+b,0),context).toBe(initialFood+[...harvests.values()].reduce((a,b)=>a+b,0));
+        expect(meals.size,context).toBeGreaterThanOrEqual(18);expect(foodAccount(current)+(current.wildlife?.eatenItems??0)+cookingLedger.totals.unitDelta+[...meals.values()].reduce((a,b)=>a+b,0),context).toBe(initialFood+[...harvests.values()].reduce((a,b)=>a+b,0));
         expect(current.piles.filter(p=>p.kind==='food').every(p=>['berries','survival-meal','rice','simple-meal','hare-meat'].includes(p.item))).toBe(true);
-        expect(cooked.size,context).toBeGreaterThanOrEqual(6);
+        expect(cookingLedger.totals.portions,context).toBeGreaterThanOrEqual(6);
+        expect(cookingLedger.totals.bulkOperations,context).toBeGreaterThanOrEqual(1);
         expect(current.pawns.some(p=>p.skills.construction.xp>1000000),context).toBe(true);
         expect(decisions.filter(d=>{const c=d.command as {type:string;policyId?:number};return c.type==='food-policy-assign'&&c.policyId===3;}).length,context).toBeGreaterThanOrEqual(3);
         expect([...recreationActivities].sort(),context).toEqual(['horseshoes','skygaze']);
         expect(clearedSites.size,context).toBeGreaterThan(0);
         if(summary.mining.blocks===15&&summary.mining.chunks===0) {
-          const replenish=playerDecisions(current).find(d=>d.command.type==='designate'&&d.command.kind==='mine');
+          const replenish=playerDecisions(current,{bulkMeals:true}).find(d=>d.command.type==='designate'&&d.command.kind==='mine');
           expect(replenish,'A low block reserve without a chunk must trigger new mining').toBeDefined();
           await perform(page,replenish!,rotation);decisions.push({tick:current.tick,...replenish!});
           const planned=await world(page);expect(planned.jobs.filter(j=>j.kind==='mine')).toHaveLength(1);expect(validateWorld(planned)).toEqual([]);
           await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,planned);
         }
-        morning=await finishMaintenance(page,await world(page),initialWood,decisions,rotation);
-        finalReport={morning,clearedSites:clearedSites.size,recreationActivities:[...recreationActivities],cooked:cooked.size,backend:await page.evaluate(()=>window.__lisiere.backend),days,meals:meals.size,sleepers:sleepers.size,woodConserved:true,foodReconciled:true,decisions,errors};
+        morning=await finishMaintenance(page,await world(page),initialWood,decisions,rotation,observeFood);
+        observeFood(await world(page));
+        finalReport={morning,clearedSites:clearedSites.size,recreationActivities:[...recreationActivities],cooked:cookingLedger.totals.portions,cooking:{...cookingLedger.totals},backend:await page.evaluate(()=>window.__lisiere.backend),days,meals:meals.size,sleepers:sleepers.size,woodConserved:true,foodReconciled:true,decisions,errors};
         break;
       }
-      for(const decision of playerDecisions(current)) {
+      for(const decision of playerDecisions(current,{bulkMeals:true})) {
         await test.step(`${decision.reason} ${JSON.stringify(decision.command)}`,()=>perform(page,decision,rotation));
         decisions.push({tick:current.tick,...decision});
       }
@@ -164,8 +184,6 @@ test('partie de trois jours : un joueur équipe son camp et entretient ses stock
   } finally {
     // Persist compact evidence even with the line reporter or a frozen browser.
     await writeTestFile(`artifacts/colony-journey-${process.env.VALIDATION_VERSION??'v66'}.json`,JSON.stringify(finalReport??{complete:false,waitingFor,days,decisions,meals:[...meals],errors},null,2));
-    const checkpoint=[...testInfo.attachments].reverse().find(a=>a.name.startsWith('hourly-world-'));
-    if(checkpoint?.body)await writeTestFile('tmp/colony-last-checkpoint.json',checkpoint.body);
     if(!finalReport)await testInfo.attach('colony-journey-incomplete',{contentType:'application/json',body:JSON.stringify({days,decisions,meals:[...meals],errors})});
     // A frozen renderer must not hold the test worker indefinitely in teardown.
     let timer:ReturnType<typeof setTimeout>|undefined;
@@ -187,19 +205,21 @@ test('checkpoint journey: continue the ordinary player, food ledger and third-ni
     await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
     const eventKey=(e:World['events'][number])=>`${e.tick}:${e.type}:${e.message}`,seen=new Set(initial.events.map(eventKey));
-    let consumed=0,harvested=0,cooked=0;
+    let consumed=0,harvested=0,foodObservedTick=initial.tick;const cookingLedger=createSimpleMealLedger(initial.events);
     const check=(w:World)=>{
+      requireEventCoverage(w,foodObservedTick);
       expect(validateWorld(w)).toEqual([]);expect(woodAccount(w)).toBe(woodAccount(initial));
       for(const e of w.events)if(!seen.has(eventKey(e))){
         seen.add(eventKey(e));const harvest=e.message.match(/a récolté (\d+) (?:baies|riz)/),meal=e.message.match(/a mangé une portion \((\d+) /);
-        if(harvest)harvested+=Number(harvest[1]);if(meal)consumed+=Number(meal[1]);if(e.message.includes('a cuisiné 1 repas simple'))cooked++;
+        if(harvest)harvested+=Number(harvest[1]);if(meal)consumed+=Number(meal[1]);
       }
-      expect(foodAccount(w)+consumed+9*cooked+(w.wildlife?.eatenItems??0)-(initial.wildlife?.eatenItems??0)).toBe(foodAccount(initial)+harvested);
+      observeSimpleMealLedger(cookingLedger,w.events);foodObservedTick=w.tick;
+      expect(foodAccount(w)+consumed+cookingLedger.totals.unitDelta+(w.wildlife?.eatenItems??0)-(initial.wildlife?.eatenItems??0)).toBe(foodAccount(initial)+harvested);
       expect(w.pawns.every(p=>p.hunger>0&&p.rest>0&&p.state!=='dead'&&p.state!=='downed')).toBe(true);
       expect(wildlifePopulationAccount(w)).toBe(12);
     };
     for(let target=initial.tick+1000;target<=Math.max(initial.tick+1000,18000+initial.tick%1000);target+=1000){
-      const current=await world(page);for(const d of playerDecisions(current)){await perform(page,d,rotation);decisions.push({tick:current.tick,...d});}
+      const current=await world(page);for(const d of playerDecisions(current,{bulkMeals:true})){await perform(page,d,rotation);decisions.push({tick:current.tick,...d});}
       await page.locator('[data-speed="6"]').click();await waitForTick(page,target);
       await page.locator('[data-speed="0"]').click();await expect(page.locator('[data-speed="0"]')).toHaveAttribute('aria-pressed','true');check(await world(page));
     }
@@ -208,10 +228,10 @@ test('checkpoint journey: continue the ordinary player, food ledger and third-ni
     expect(summary.roofing).toEqual({constructed:28,planned:28,removal:0});expect(summary.mining.steel).toBe(50);expect(summary.mining.steelInBuildings).toBe(150);
     expect(summary.medicines).toEqual({total:30,stored:30,policies:Array(4).fill('industrial')});expect(summary.apparel.filter(i=>i.owner.type==='apparel')).toHaveLength(5);
     expect(third.growingZones.find(z=>z.plant==='cotton')?.cells).toHaveLength(6);expect(third.arrivals?.accepted).toBe(1);
-    const morning=await finishMaintenance(page,third,woodAccount(initial),decisions,rotation),final=await world(page);check(final);
+    const morning=await finishMaintenance(page,third,woodAccount(initial),decisions,rotation,check),final=await world(page);check(final);
     expect(final.wildlife!.eatenNutrition).toBeGreaterThan(initial.wildlife!.eatenNutrition);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,final);expect(errors).toEqual([]);
-    await writeTestFile(`artifacts/colony-continuation-${process.env.VALIDATION_VERSION??'v76'}.json`,JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,summary,morning,final:colonySummary(final),ledger:{consumed,harvested,cooked,foodReconciled:true,woodConserved:true},decisions,errors},null,2));
+    await writeTestFile(`artifacts/colony-continuation-${process.env.VALIDATION_VERSION??'v76'}.json`,JSON.stringify({date:new Date().toISOString(),initialTick:initial.tick,finalTick:final.tick,summary,morning,final:colonySummary(final),ledger:{consumed,harvested,cooking:{...cookingLedger.totals},foodReconciled:true,woodConserved:true},decisions,errors},null,2));
   } finally {await browser.close();}
 });
 

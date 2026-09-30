@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-**Schéma courant 166 ; V173 livré dans le périmètre de sa preuve.**
+**Schéma courant 166 ; consolidation du pilote alimentaire V174 livrée dans son périmètre contrôlé.** Le [contrat V174](development/colony-food-continuity-v174.md) et sa [preuve](history/validation-colony-food-v174.md) suivent la facture simple par quatre et le secours unitaire dans le pilote commun, sans nouvelle mécanique du jeu. Les contrôles courts, deux scènes UI préparées et trois graines de simulation passent ; le parcours UI ordinaire de trois jours reste incomplet. Les preuves de recette V160 et V173 restent distinctes.
 
 **V173 livré dans le périmètre contrôlé :** le [contrat des quatre plats gastronomiques carnivores](development/lavish-carnivore-bulk-v173.md), fondé sur la [recherche Core](research/lavish-carnivore-bulk-core-v173.md), ajoute une facture de 100 viandes crues admissibles pour quatre produits V159 existants. Sa [preuve V173](history/validation-lavish-carnivore-bulk-v173.md) borne ciblés, Chromium préparé, régression hors campagnes longues, build et présentation, ainsi que le signal CPU de proposition isolée. Le catalogue et le guide décrivent son usage ; acquisition naturelle et campagnes longues restent hors preuve.
 

@@ -1,4 +1,5 @@
 import { writeTestFileSync } from './test-output.ts';
+import { createSimpleMealLedger, observeSimpleMealLedger } from './scenarios/simple-meal-ledger.ts';
 import { enableWildlife } from '../src/sim/wildlife';
 import { wildlifePopulationAccount } from './scenarios/hunting-player';
 
@@ -27,7 +28,9 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
     const initialWeapon=structuredClone(world.piles.find(p=>p.kind==='weapon')!);
     const initialWood = woodAccount(world), initialFood = foodAccount(world);
     const initialMedicine=world.piles.filter(p=>p.kind==='medicine').reduce((n,p)=>n+p.quantity,0);
-    let consumed = 0, produced = 0, cooked = 0, rationAssignments = 0, medicineUsed=0;
+    let consumed = 0, produced = 0, rationAssignments = 0, medicineUsed=0;
+    const cookingLedger=createSimpleMealLedger(world.events);
+    onTestFailed(()=>writeTestFileSync(`tmp/colony-ledger-failed-${version}-${seed}.json`,JSON.stringify({tick:world.tick,initialFood,consumed,produced,cooking:cookingLedger})));
     const recreationKinds=new Set<string>(), recreationPawns=new Set<number>();
     const meals = new Map(world.pawns.map(p=>[p.id,0])), sleep = new Map(world.pawns.map(p=>[p.id,0])), medicalBedRest=new Map(world.pawns.map(p=>[p.id,0]));
     const socialInjuries=new Map<number,Map<number,number>>();
@@ -35,7 +38,7 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
     const report: ReturnType<typeof colonySummary>[] = [];
     for (let t = 0; t < (seed === 42 ? 48000 : 30000); t++) {
       // Seed 42 also exercises the browser player's four-hour observation cadence.
-      if (t % (seed===42?1000:250) === 0) for (const decision of playerDecisions(world)) {
+      if (t % (seed===42?1000:250) === 0) for (const decision of playerDecisions(world,{bulkMeals:true})) {
         expect(applyCommand(world, decision.command), JSON.stringify({seed,t,decision})).toMatchObject({ok:true});
         if(decision.command.type==='food-policy-assign'&&decision.command.policyId===3)rationAssignments++;
       }
@@ -61,7 +64,8 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
         let allowed=socialInjuries.get(pawn.id);if(!allowed){allowed=new Map();socialInjuries.set(pawn.id,allowed);}allowed.set(injury.id,injury.bornAt);
       }
       for(const [i,p] of world.pawns.entries())if(p.mood-moods[i]!>.04800001||p.mood-moods[i]!<-.03200001)throw new Error(`Mood discontinuity: seed ${seed}, tick ${world.tick}, pawn ${p.id}`);
-      for (const event of world.events) if (event.tick === world.tick) { const match = event.message.match(/a récolté (\d+) (?:baies|riz)/); if (match) produced += Number(match[1]);if(event.message.includes('a cuisiné 1 repas simple'))cooked++;if(event.message.includes(' a traité ')&&event.message.endsWith('avec Médicaments.'))medicineUsed++; }
+      for (const event of world.events) if (event.tick === world.tick) { const match = event.message.match(/a récolté (\d+) (?:baies|riz)/); if (match) produced += Number(match[1]);if(event.message.includes(' a traité ')&&event.message.endsWith('avec Médicaments.'))medicineUsed++; }
+      observeSimpleMealLedger(cookingLedger,world.events.filter(e=>e.tick===world.tick));
       for (const {id,quantity} of ingesting) if(world.events.some(e=>e.tick===world.tick&&e.message.startsWith(`${world.pawns.find(p=>p.id===id)!.name} a mangé`)&&!e.message.includes('avec l’aide'))) { meals.set(id, (meals.get(id)??0)+1); consumed += quantity; }
       const feedingEvents=world.events.filter(e=>e.tick===world.tick&&e.message.includes('avec l’aide'));
       for (const {doctorId,patientId,quantity} of assistedIngesting){
@@ -77,7 +81,7 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
         expect(world.piles.filter(p=>p.kind==='weapon')).toHaveLength(1);expect(world.piles.find(p=>p.id===initialWeapon.id)?.weapon).toEqual(initialWeapon.weapon);
         if(t>=250)expect(world.piles.find(p=>p.id===initialWeapon.id)?.owner.type).toBe('equipment');
         expect(validateWorld(world),context).toEqual([]);expect(woodAccount(world),context).toBe(initialWood);
-        expect(foodAccount(world)+consumed+9*cooked+(world.wildlife?.eatenItems??0),context).toBe(initialFood+produced);
+        expect(foodAccount(world)+consumed+cookingLedger.totals.unitDelta+(world.wildlife?.eatenItems??0),context).toBe(initialFood+produced);
         expect(world.pawns.every(p=>p.hunger>0 && p.rest>0),context).toBe(true);
         expect(world.pawns.every(p=>{
           const woundsAreSocial=(p.health?.injuries??[]).every(i=>socialInjuries.get(p.id)?.get(i.id)===i.bornAt);
@@ -111,14 +115,15 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
       }
     }
     writeTestFileSync(`tmp/colony-final-${version}-${seed}.json`,serializeWorld(world));
-    writeTestFileSync(`artifacts/colony-${version}-${seed}.json`,JSON.stringify({seed,report,final:colonySummary(world)},null,2));
+    writeTestFileSync(`artifacts/colony-${version}-${seed}.json`,JSON.stringify({seed,report,cooking:{...cookingLedger.totals},final:colonySummary(world)},null,2));
     const context=JSON.stringify({seed,report,meals:[...meals],sleep:[...sleep],medicalBedRest:[...medicalBedRest],medicineUsed});
     expect([...temporarilyDowned].every(([id,episodes])=>{const p=world.pawns.find(p=>p.id===id);return !!p&&p.state!=='dead'&&p.state!=='downed'&&!!p.health&&!p.health.death&&!p.health.missing.length&&medicalStatus(p.health)==='mobile'&&!episodes.has(p.health.foodPoisoning?.bornAt??-1);}),context).toBe(true);
     expect(report[0]!.structures,context).toMatchObject({bed:3,table:1,stool:3});
     expect(report[4]!.structures,context).toEqual({'wood-generator':1,'standing-lamp':1,'passive-cooler':0,bed:population,table:1,stool:3,wall:7,campfire:1,horseshoes:1,stonecutter:1,door:1});
     expect(report[4]!.roofing,context).toEqual({constructed:28,planned:28,removal:0});
     expect([...recreationKinds].sort(),context).toEqual(['horseshoes','skygaze','social-relax']);expect(recreationPawns.size,context).toBe(population);
-    expect(cooked,context).toBeGreaterThanOrEqual(12);
+    expect(cookingLedger.totals.portions,context).toBeGreaterThanOrEqual(12);
+    expect(cookingLedger.totals.bulkOperations,context).toBeGreaterThanOrEqual(1);
     expect(rationAssignments,context).toBeGreaterThanOrEqual(3);
     expect(world.tiles.filter(t=>t.terrain==='rough-stone').length,context).toBeGreaterThanOrEqual(6);
     expect(colonySummary(world).mining.blocks,context).toBe(35);expect(colonySummary(world).mining.blocksStored,context).toBe(35);

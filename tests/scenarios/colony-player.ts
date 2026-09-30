@@ -19,6 +19,8 @@ import { miningDecisions } from './mining-player.ts';
 import { installCommand } from '../../src/sim/furniture-commands.ts';
 import { queryOrderOptions } from '../../src/sim/player-orders.ts';
 import { planCookingOrder } from '../../src/sim/player-cooking.ts';
+import { isCookingOrder } from '../../src/sim/order-types.ts';
+import { PRODUCTION_RECIPES } from '../../src/sim/production-recipes.ts';
 import { plantGrowth, plantTemperatureFactor } from '../../src/sim/plants.ts';
 import { availableNutrition } from '../../src/sim/items.ts';
 import { spoiledUnits } from '../../src/sim/food-preservation.ts';
@@ -72,7 +74,7 @@ export function playerFocusDecisions(world:World):Decision[] {
  * Reads visible colony state, never writes it or injects inventory/needs.
  * Both the fast simulation and the real UI journey execute these intentions.
  */
-export function playerDecisions(world: World): Decision[] {
+export function playerDecisions(world: World, options: { bulkMeals?: boolean } = {}): Decision[] {
   const colonists=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead');
   if(world.raids?.active||world.raids?.last&&colonists.some(p=>p.draft))return raidDefenseDecisions(world);
   const cx = Math.floor(world.width / 2), cz = Math.floor(world.height / 2);
@@ -151,12 +153,40 @@ export function playerDecisions(world: World): Decision[] {
   const ingredientSeat=world.structures.find(s=>s.kind==='stool'&&s.x===cx&&s.z===cz-1);
   if(ingredientSeat&&!world.stockpiles.some(z=>z.x===ingredientSeat.x&&z.z===ingredientSeat.z))out.push({reason:'Garder une petite réserve alimentaire sur le tabouret près du feu.',command:{type:'stockpile',x:ingredientSeat.x,z:ingredientSeat.z,enabled:true,filters:{wood:false,food:true},priority:2,capacity:75}});
   for(const fire of world.structures.filter(s=>s.kind==='campfire')) {
-    const bill=fire.bills?.[0];
-    if(!bill)out.push({reason:'Installer une première recette de repas simple au feu de camp.',command:{type:'bill-add',structureId:fire.id}});
-    else if(bill.mode!=='until'||bill.target!==colonists.length*2)out.push({reason:'Maintenir environ deux repas préparés par colon en réserve.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,mode:'until',target:colonists.length*2}}});
-    else if(!world.piles.some(p=>p.item==='simple-meal')) {
-      const cook=colonists.find(p=>p.priorities.cook>0&&p.hunger>35&&p.rest>35&&!p.cooking&&!p.haul&&!p.need&&p.jobId===null&&p.orders.active===null&&!p.orders.queue.length&&!p.priorityWork&&planCookingOrder(world,p,fire.id).order);
-      if(cook)out.push({reason:'Prioriser un repas quand la réserve de repas préparés est vide.',command:{type:'order-cook',pawnId:cook.id,structureId:fire.id,queue:false}});
+    if(!options.bulkMeals) {
+      const bill=fire.bills?.[0];
+      if(!bill)out.push({reason:'Installer une première recette de repas simple au feu de camp.',command:{type:'bill-add',structureId:fire.id}});
+      else if(bill.mode!=='until'||bill.target!==colonists.length*2)out.push({reason:'Maintenir environ deux repas préparés par colon en réserve.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{...bill,mode:'until',target:colonists.length*2}}});
+      else if(!world.piles.some(p=>p.item==='simple-meal')) {
+        const cook=colonists.find(p=>p.priorities.cook>0&&p.hunger>35&&p.rest>35&&!p.cooking&&!p.haul&&!p.need&&p.jobId===null&&p.orders.active===null&&!p.orders.queue.length&&!p.priorityWork&&planCookingOrder(world,p,fire.id).order);
+        if(cook)out.push({reason:'Prioriser un repas quand la réserve de repas préparés est vide.',command:{type:'order-cook',pawnId:cook.id,structureId:fire.id,queue:false}});
+      }
+      continue;
+    }
+    const bills=fire.bills??[],bulk=bills.find(b=>b.recipe==='cook-simple-meal-bulk'),single=bills.find(b=>b.recipe==='simple-meal');
+    // A new fire receives x4 first. On a resumed fire, bill-move changes only
+    // priority and leaves every active or queued cooking task untouched.
+    if(!bulk)out.push({reason:'Prévoir quatre repas simples lorsque les quarante ingrédients sont accessibles.',command:{type:'bill-add',structureId:fire.id,recipe:'cook-simple-meal-bulk'}});
+    if(!single)out.push({reason:'Garder une cuisson unitaire de secours lorsque le lot de quatre est impossible.',command:{type:'bill-add',structureId:fire.id,recipe:'simple-meal'}});
+    if(bulk)for(let index=bills.indexOf(bulk);index>0;index--)
+      out.push({reason:'Donner priorité au lot de quatre sans interrompre la cuisson en cours.',command:{type:'bill-move',structureId:fire.id,billId:bulk.id,direction:-1}});
+    const target=colonists.length*2;
+    for(const bill of [bulk,single])if(bill) {
+      const inputs=PRODUCTION_RECIPES[bill.recipe].inputs;
+      const complete=inputs.every(item=>typeof bill.filters[item]==='boolean');
+      const engaged=world.pawns.some(p=>p.cooking?.stationId===fire.id&&p.cooking.billId===bill.id
+        ||p.orders.queue.some(o=>isCookingOrder(o)&&o.cooking.stationId===fire.id&&o.cooking.billId===bill.id));
+      // bill-update releases active work in the simulation, so wait until it
+      // finishes even when the only missing setting is the target count.
+      if(!engaged&&(bill.mode!=='until'||bill.target!==target||!complete))
+        out.push({reason:'Maintenir le même nombre de portions par les deux factures et leurs filtres complets.',command:{type:'bill-update',structureId:fire.id,billId:bill.id,settings:{mode:'until',target,suspended:bill.suspended,filters:Object.fromEntries(inputs.map(item=>[item,bill.filters[item]??true])),radius:bill.radius,destination:bill.destination}}});
+    }
+    // Let the normal planner select x4 when possible and fall through to the
+    // unit bill when fewer than forty usable units can be reserved. A direct
+    // order is only sent to an idle cook, never over another active task.
+    if(bulk&&single&&bills[0]===bulk&&!world.piles.some(p=>p.item==='simple-meal')) {
+      const cook=colonists.find(p=>p.state==='idle'&&p.priorities.cook>0&&p.hunger>35&&p.rest>35&&!p.cooking&&!p.haul&&!p.need&&p.jobId===null&&p.orders.active===null&&!p.orders.queue.length&&!p.priorityWork&&planCookingOrder(world,p,fire.id).order);
+      if(cook)out.push({reason:'Prioriser une cuisson réalisable lorsque la réserve de repas préparés est vide.',command:{type:'order-cook',pawnId:cook.id,structureId:fire.id,queue:false}});
     }
   }
   if (!world.growingZones.length && world.structures.filter(s => s.kind === 'bed').length === 3) out.push({reason:'Semer un premier potager près du camp, tout en continuant à cueillir pendant sa croissance.',command:{type:'area',action:'growing',from:{x:cx-2,z:cz+5},to:{x:cx+2,z:cz+7}}});
