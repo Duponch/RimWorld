@@ -4,6 +4,7 @@ import { expect, type Page } from '@playwright/test';
 import type { Decision } from '../scenarios/colony-player';
 import type { BillSettings } from '../../src/sim/cooking-types';
 import { stationRecipes } from '../../src/sim/production-recipes';
+import { mapObjectsAt } from '../../src/ui/map-object-selection';
 import { world, panel, pawnTab, tool, cell, dragRectangle, settledCells, type PawnInspectorTab } from './helpers';
 
 export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise<void> {
@@ -223,7 +224,8 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     const source=object??(pack?.owner.type==='ground'?pack.owner:undefined);if(!source)throw new Error('Furniture source not on map');
     await page.keyboard.press('Escape');await revealCells(page,[source]);
     // An overlapping colonist can be the first selection; cycle like a player.
-    for(let i=0;i<=w.pawns.length;i++){await cell(page,source.x,source.z);if(await page.locator('#cell-install').isVisible())break;}
+    for(let i=0;i<w.pawns.length+mapObjectsAt(w,source).length+1;i++){await revealCells(page,[source]);await cell(page,source.x,source.z);if(await page.locator('#cell-install').isVisible()&&await page.locator('#cell-install').getAttribute('data-furniture-id')===String(c.structureId))break;}
+    await expect(page.locator('#cell-install')).toHaveAttribute('data-furniture-id',String(c.structureId));
     await page.locator('#cell-install').click({timeout:5000});rotation.value=(object??pack!.building).orientation;
     while(rotation.value!==c.orientation){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     await revealCells(page,[c]);await cell(page,c.x,c.z);
@@ -231,7 +233,8 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     const w=await world(page),target=w.structures.find(s=>s.id===c.targetId)!;
     await page.keyboard.press('Escape');await revealCells(page,[target]);
     const button=target.kind==='power-conduit'?`[data-power-id="${target.id}"] [data-power-remove]`:c.kind==='uninstall'?'#cell-uninstall':'#cell-deconstruct';
-    for(let i=0;i<=w.pawns.length;i++){await cell(page,target.x,target.z);if(await page.locator(button).isVisible())break;}
+    for(let i=0;i<w.pawns.length+mapObjectsAt(w,target).length+1;i++){await revealCells(page,[target]);await cell(page,target.x,target.z);if(await page.locator(button).isVisible()&&(c.kind!=='uninstall'||await page.locator(button).getAttribute('data-furniture-id')===String(c.targetId)))break;}
+    if(c.kind==='uninstall')await expect(page.locator(button)).toHaveAttribute('data-furniture-id',String(c.targetId));
     await page.locator(button).click();
   } else if(c.type==='designate' && c.kind !== 'flick' && c.kind !== 'sow' && c.kind !== 'install') {
     if(c.kind==='repair')throw Error('Repair uses the home area');
@@ -247,8 +250,8 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     const w=await world(page),station=w.structures.find(s=>s.id===c.structureId)!;
     await page.keyboard.press('Escape');await revealCells(page,[station]);
     // As for furniture installation, an overlapping pawn can be selected first.
-    // Cycle the real pointer selection until the station is inspected.
-    for(let i=0;i<=w.pawns.length;i++){await cell(page,station.x,station.z);if(await page.locator('#add-cooking-bill').isVisible())break;}
+    // Its inspector can cover the next click; pan before cycling the selection.
+    for(let i=0;i<=w.pawns.length;i++){await revealCells(page,[station]);await cell(page,station.x,station.z);if(await page.locator('#add-cooking-bill').isVisible())break;}
     await expect(page.locator('#add-cooking-bill')).toBeVisible();
     if(c.type==='bill-add'){
       const first=stationRecipes(station)[0];

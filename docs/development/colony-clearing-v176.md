@@ -1,0 +1,39 @@
+# Déblaiement borné du pilote V176
+
+Consolidation de tests et correction d'inspection au **schéma 166**, sans nouvelle mécanique du jeu. Elle complète la [continuité alimentaire V174](colony-food-continuity-v174.md) et corrige une politique de joueur de test, pas la simulation. La [recherche Core](../research/colony-clearing-core-v176.md) et la [preuve](../history/validation-colony-clearing-v176.md) distinguent règles existantes, périmètre choisi et contrôles exécutés.
+
+## Politique commune
+
+Le pilote de minage attend toujours le premier camp et le tick 6 000. Il désigne au transport les fragments au sol présents sur les empreintes des ouvrages et travaux du camp, leurs contacts cardinaux, les cellules cultivées ou de stockage, ainsi que le sol brut ouvert par le minage. Les autres fragments naturels restent disponibles sur la carte ; aucun objet n'est supprimé ni déplacé par le pilote.
+
+Les fragments déjà portés vers une réserve de fragments appartiennent encore à ce suivi. Une reprise ne doit ni oublier la cargaison, ni réémettre la désignation déjà consommée lors de sa prise. Le manque de fragment pour la taille de pierre se juge dans ce même périmètre : une pierre naturelle lointaine ne supprime plus la prochaine petite demande de minage. Les réservations, collectes, durées, probabilités de production et destinations restent celles du jeu.
+
+La facture de taille peut utiliser les fragments naturels accessibles aussi bien que ceux extraits : le produit n'a pas de provenance minière persistée. Deux cases de blocs sont prévues avant la production pour accueillir les types différents rencontrés dans ce camp. Avec une seule case occupée par une autre pierre, un produit restait au sol, ne comptait pas dans « jusqu'à X » et pouvait provoquer une production supplémentaire. Ce choix du pilote ne change ni compteur de facture ni limite de pile du jeu.
+
+Cette politique est appelée par les pilotes CPU et UI. Les empreintes viennent du contrat logique partagé, pas d'une distance arbitraire au centre de la carte. C'est un choix de test pour entretenir ce camp, pas un nouveau rayon d'activité imposé aux joueurs.
+
+## Oracles et continuation
+
+La maintenance UI suit les fragments utiles, y compris ceux portés, puis ajoute ceux apparus pendant ses observations. Une prise crée une nouvelle identité de cargaison : toute nouvelle pile de fragments observée est suivie, même si une interruption l'a déposée hors du camp. Sa désignation de reprise passe par l'interface réelle. La disparition d'un ID source ne constitue donc pas à elle seule la preuve d'une consommation.
+
+Un bilan indépendant additionne, par pierre, vingt unités par fragment, les blocs physiques de tous propriétaires, les matériaux incorporés aux structures et meubles emballés, et les pertes de déconstruction. Les piles livrées aux chantiers ne sont comptées qu'une fois. La masse doit rester identique hors extraction ; une case de roche effectivement ouverte autorise une hausse de zéro ou vingt unités de sa pierre. Le pilote CPU observe les ouvertures à chaque tick et vérifie la masse tous les cinquante ticks ; la maintenance UI vérifie chaque intervalle, sans nouvelle désignation de minage dans celui-ci. Ce bilan ne recalcule pas le tirage PRNG : les rendements déduits de la masse sont identifiés comme tels, et la hausse autorisée reste une borne.
+
+Les quatre réserves de fragments existent réellement et leur contenu doit respecter filtres et capacité ; elles n'ont pas à rester toutes pleines après consommation par la taille. La maintenance exige stockage ou consommation et conserve les assertions d'achèvement des travaux acceptés, d'acier stocké et de production de blocs. Elle ne réclame plus le rangement de tous les fragments naturels de la carte. Les bilans alimentaires et de bois, besoins, population, sauvegardes et reprises ne sont pas assouplis.
+
+Les nouveaux diagnostics vont sous `tmp/`, avec une copie du checkpoint antérieur avant son remplacement. Examiner un échec au checkpoint avant de relancer le départ. Une continuation depuis ce checkpoint et un parcours depuis un départ naturel constituent deux preuves différentes.
+
+Le parcours UI exige l'apprentissage persistant d'au moins un bâtisseur initial, identifié par ID : niveau supérieur au départ, ou même niveau avec XP net supérieur. Le seuil historique de 1 000 XP résiduels en trois jours n'est pas une règle du [contrat des compétences](skills.md) ; passion, vitesse, oubli et durée de travail changent cette quantité. La comparaison suit aussi un passage de niveau et exclut le profil accordé à un nouvel arrivant. Les sauvegardes journalières restent exactement comparées, compétences comprises.
+
+Le pilote UI peut devoir cliquer plusieurs fois une case occupée par un colon et un atelier. La première sélection agrandit parfois l'inspecteur et masque le clic suivant : chaque tentative révèle de nouveau la case par les gestes ordinaires de caméra avant de cliquer. Le contrôle `elementFromPoint` exige toujours un canvas visible. Le rejeu opt-in `COLONY_ACTIONS_CHECKPOINT` charge un vrai checkpoint en pause, réapplique ses décisions par l'interface, puis exige tick inchangé, conservation et reprise exacte ; il ne prouve pas les jours qui suivent.
+
+## Inspection des meubles
+
+Le parcours UI a révélé deux régressions de l'inspection : les contrôles de meuble n'étaient ni montés ni actualisés pour un paquet sélectionné ; l'annulation d'une réinstallation était cachée sur le meuble source malgré son intention de transfert existante. Monter et actualiser « Installer » pour le paquet au sol, puis exposer l'annulation de l'intention appartenant au meuble sélectionné rétablit le [contrat de transfert](furniture-transfer.md). Les commandes, accès, réservations, identité, matériaux, portage et pose physique restent inchangés. Le parcours dédié conserve l'annulation sur source et la reprise pendant portage, puis vérifie explicitement le bouton du piquet emballé avant sa pose.
+
+La [sélection par objet V129](selection-inspection-v129.md) remplace l'ancienne inspection regroupée V26 : sur une case partagée, chaque bouton cible l'ID du meuble sélectionné. Un paquet expose « Installer », le meuble installé expose « Réinstaller » et « Désinstaller ». Le pilote vérifie cet ID avant le clic. Si un autre travail, notamment un toit, prend priorité dans la résolution de la commande d'annulation par coordonnées, le bouton de la source est masqué ; le joueur peut sélectionner le plan de réinstallation à sa destination. Aucun protocole de commande ni règle de simulation n'est changé.
+
+## Charge et validation
+
+La politique reste du code de test, appelé aux observations du joueur ; elle n'ajoute aucun travail au tick du jeu ou au rendu. Son périmètre est construit une fois par requête, sans route ni mutation métier. Le correctif produit intervient dans l'inspection existante, sans changer la simulation, les shaders ou les lots graphiques. Une diminution des commandes du pilote ne prouve aucun gain CPU/GPU général ; le coût du correctif d'interface n'est pas chronométré.
+
+Contrôler les choix de périmètre, la collecte réelle et la reprise en cours de portage, puis le pilote commun 250² sur ses trois graines. Le parcours UI ordinaire conserve son départ naturel, ses commandes visibles et son horizon de trois jours. Sa borne globale passe de dix à quinze minutes : le parcours observé atteint le tick 15 019 après environ 590 secondes et 193 décisions, puis sa continuation passe en 1,8 minute sous sa borne séparée de 240 secondes. Les délais locaux de clic (10 secondes) et de progression (30/35 secondes) restent inchangés pour détecter un blocage. Le pilote ferme les panneaux par Échap avant de reprendre le temps, comme un joueur. Sources gelées ; campagnes de simulation puis navigateur natif successifs. La preuve indique ce qui a effectivement passé ; aucune réussite ciblée ne clôt G0, G1 ou la parité Core.

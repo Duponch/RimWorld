@@ -614,10 +614,12 @@ function rebuildInspector() {
     if(selectedObject?.kind==='structure'){
       doorControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
       penControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
-      furnitureControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)),id=>{const object=furnitureObject(snapshot!,id);if(!object)return;setPanel('architect');applyTool('install');installationId=id;placementOrientation=object.orientation;renderer?.setPlacementRotation(placementOrientation);renderer?.setFurniturePlacement(object);});
-      panel.querySelector('.cell-actions')?.append(...panel.querySelectorAll('#cell-uninstall, #cell-install'));
       gatherSpotControls(panel,(structureId,enabled)=>attempt(async()=>{await client.command({type:'gather-spot',structureId,enabled});renderState();}));
       bedControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
+    }
+    if(selectedObject?.kind==='structure'||selectedObject?.kind==='packed'){
+      furnitureControls(panel,()=>snapshot,()=>selectedCell,()=>selectedObject?.id,c=>void attempt(()=>client.command(c)),id=>{const object=furnitureObject(snapshot!,id);if(!object)return;setPanel('architect');applyTool('install');installationId=id;placementOrientation=object.orientation;renderer?.setPlacementRotation(placementOrientation);renderer?.setFurniturePlacement(object);});
+      panel.querySelector('.cell-actions')?.append(...panel.querySelectorAll('#cell-uninstall, #cell-install'));
     }
     const fire=selectedObject?.kind==='structure'?snapshot?.structures.find(s=>s.id===selectedObject!.id&&(stationRecipe(s)!==null||s.kind==='passive-cooler'||s.kind==='wood-generator')):undefined;
     if(fire) {
@@ -825,14 +827,14 @@ function renderState() {
     else {
       const resource = selectedObject.kind==='resource'?world.resources.find(item=>item.id===selectedObject!.id):undefined;
       const structure = selectedObject.kind==='structure'?world.structures.find(item=>item.id===selectedObject!.id):undefined;
-      const job = selectedObject.kind==='job'?world.jobs.find(item=>item.id===selectedObject!.id):structure||selectedObject.kind==='packed'?furnitureIntentAt(world,selectedCell):undefined;
+      const job = selectedObject.kind==='job'?world.jobs.find(item=>item.id===selectedObject!.id):structure||selectedObject.kind==='packed'?world.jobs.find(item=>item.furniture?.structureId===selectedObject!.id):undefined;
       const storage = selectedObject.kind==='stockpile'?world.stockpiles.find(item=>item.id===selectedObject!.id):undefined;
       const pile = selectedObject.kind==='pile'?world.piles.find(item=>item.id===selectedObject!.id):undefined;
       const piles = pile?[pile]:[];
-      if(structure)updateFurnitureControls(el('inspector'),world,selectedCell);
+      const packed=selectedObject.kind==='packed'?world.packed.find(p=>p.building.id===selectedObject!.id&&p.owner.type==='ground'):undefined;
+      if(structure||packed)updateFurnitureControls(el('inspector'),world,selectedCell,selectedObject.id);
       updateGatherSpotControls(el('inspector'),structure);
       if(structure){updateDoorControls(el('inspector'),world,selectedCell);updatePenControls(el('inspector'),world,selectedCell);roomInspection.update(el('inspector'), world, selectedCell);}
-      const packed=selectedObject.kind==='packed'?world.packed.find(p=>p.building.id===selectedObject!.id&&p.owner.type==='ground'):undefined;
       const zone=selectedObject.kind==='growing'?world.growingZones.find(z=>z.id===selectedObject!.id):undefined;
       el('cell-title').textContent = packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : pile ? ITEM_DEFINITIONS[pile.item].label : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]}` : zone ? 'Zone de culture' : storage ? 'Réserve' : 'Massif rocheux';
       let cellDescription = resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Capacité : ${storage.capacity}` : '';
@@ -891,7 +893,9 @@ function renderState() {
       if(structure&&stationRecipe(structure))updateBillControls(el('inspector'),structure,world);
       el('cell-deconstruct').hidden=!structure||!!job&&job.kind!=='repair'&&job.kind!=='fix-breakdown'&&job.kind!=='flick';
       el('cell-deconstruct').onclick=()=>{if(structure)void attempt(()=>client.command({type:'designate',kind:'deconstruct',targetId:structure.id,x:structure.x,z:structure.z}));};
-      el('cell-cancel').hidden=selectedObject.kind!=='job'||!job||job.kind==='repair'||job.kind==='fix-breakdown';
+      // The coordinate command must resolve to the intent shown in this inspector.
+      const cancelTarget=job&&(world.jobs.find(item=>footprintCells(item).some(cell=>cell.x===x&&cell.z===z))??furnitureIntentAt(world,selectedCell));
+      el('cell-cancel').hidden=!job||job.kind==='repair'||job.kind==='fix-breakdown'||cancelTarget?.id!==job.id||selectedObject.kind!=='job'&&job.furniture?.structureId!==selectedObject.id;
       el('cell-storage').hidden = !storage;
       if(structure)updateBedControls(el('inspector'),world,structure);
       if (storage) {

@@ -24,6 +24,11 @@ test('le joueur réinstalle un lit tourné, reprend son portage sauvegardé puis
   await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.find(s=>s.id===bed.id)?.x,{timeout:15000}).toBe(23);await page.locator('[data-speed="0"]').click();
   const installed=await world(page),replay=deserializeWorld(serializeWorld(accepted));stepWorld(replay,installed.tick-replay.tick);expect(replay).toEqual(installed);expect(installed.pawns[0]!.bedId).toBe(bed.id);expect(installed.structures.find(s=>s.id===bed.id)?.orientation).toBe(3);
   await page.keyboard.press('Escape');await revealCells(page,[pin]);await cell(page,pin.x,pin.z);await page.locator('#cell-uninstall').click();await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).packed.length,{timeout:15000}).toBe(1);await page.locator('[data-speed="0"]').click();
+  const packedPin=(await world(page)).packed.find(p=>p.building.id===pin.id)!;
+  expect(packedPin.owner.type).toBe('ground');
+  if(packedPin.owner.type!=='ground')throw new Error('The uninstalled pin must be on the ground.');
+  await page.keyboard.press('Escape');await revealCells(page,[packedPin.owner]);await cell(page,packedPin.owner.x,packedPin.owner.z);
+  await expect(page.locator('#cell-install')).toBeVisible();await expect(page.locator('#cell-install')).toHaveText('Installer');
   await perform(page,{reason:'Installer le piquet emballé.',command:{type:'install',structureId:pin.id,x:21,z:13,orientation:0}},rotation);
   await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.find(s=>s.id===pin.id)?.x,{timeout:15000}).toBe(21);await page.locator('[data-speed="0"]').click();
   const result=await world(page);expect(result.structures).toHaveLength(2);expect(result.packed).toEqual([]);expect(woodAccount(result)).toBe(initial);expect(validateWorld(result)).toEqual([]);expect(errors).toEqual([]);await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:testOutputPath('artifacts/furniture-installed.png')});

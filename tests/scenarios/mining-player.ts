@@ -1,8 +1,39 @@
 import { requiredMaterial } from '../../src/sim/construction-materials.ts';
 import { canDesignate } from '../../src/sim/engine.ts';
 import { buildAreaIndex, queryArea } from '../../src/sim/designation.ts';
-import type { World } from '../../src/sim/types.ts';
+import { footprintCells } from '../../src/sim/definitions.ts';
+import type { MaterialPile, World } from '../../src/sim/types.ts';
 import type { Decision } from './colony-player.ts';
+
+/** Chunks relevant to the occupied camp or produced by its mining orders.
+ * Natural chunks elsewhere on the map remain available for later player orders.
+ * A one-cell contact around buildings leaves the ordinary work/haul route open. */
+export function campChunks(world:World):MaterialPile[] {
+  const contact=new Set<number>();
+  const carried=new Set<number>();
+  const add=(x:number,z:number)=>{if(x>=0&&z>=0&&x<world.width&&z<world.height)contact.add(z*world.width+x);};
+  for(const entity of [...world.structures,...world.jobs.filter(j=>!['mine','chop','harvest','cut'].includes(j.kind))])
+    for(const cell of footprintCells(entity)) {
+      add(cell.x,cell.z);
+      for(const [dx,dz] of [[-1,0],[1,0],[0,-1],[0,1]])add(cell.x+dx!,cell.z+dz!);
+    }
+  for(const zone of world.growingZones)for(const cell of zone.cells)contact.add(cell);
+  for(const zone of world.stockpiles)add(zone.x,zone.z);
+  for(const pawn of world.pawns) {
+    const haul=pawn.haul,destination=haul?.destination;
+    if(haul?.carryPileId!==null&&haul?.carryPileId!==undefined&&destination?.type==='stockpile'
+      &&world.stockpiles.some(s=>s.id===destination.stockpileId&&s.filters.chunk))carried.add(haul.carryPileId);
+  }
+  return world.piles.filter(p=>p.kind==='chunk'&&(p.owner.type==='ground'&&(
+    contact.has(p.owner.z*world.width+p.owner.x)
+    ||world.tiles[p.owner.z*world.width+p.owner.x]?.terrain==='rough-stone'
+  )||p.owner.type==='pawn'&&carried.has(p.id)));
+}
+
+export function campChunkNeedsHaul(world:World,p:MaterialPile):boolean {
+  const owner=p.owner;
+  return p.kind==='chunk'&&owner.type==='ground'&&!world.stockpiles.some(s=>s.filters.chunk&&s.x===owner.x&&s.z===owner.z);
+}
 
 /** Expand the camp only after its first shelter and food buffer exist. The
  * player opens four exposed cells, then explicitly requests chunk storage. */
@@ -11,7 +42,8 @@ export function miningDecisions(world:World):Decision[] {
   const out:Decision[]=[],cx=Math.floor(world.width/2),cz=Math.floor(world.height/2);
   const mined=world.tiles.filter(t=>t.terrain==='rough-stone').length;
   const pending=world.jobs.filter(j=>j.kind==='mine').length;
-  const missingChunk=world.structures.some(s=>s.kind==='stonecutter')&&world.piles.reduce((n,p)=>n+(p.kind==='blocks'?p.quantity:0),0)<20&&!world.piles.some(p=>p.kind==='chunk'&&p.item!=='legacy-chunk');
+  const chunks=campChunks(world);
+  const missingChunk=world.structures.some(s=>s.kind==='stonecutter')&&world.piles.reduce((n,p)=>n+(p.kind==='blocks'?p.quantity:0),0)<20&&!chunks.some(p=>p.item!=='legacy-chunk');
   // Keep a small area pending: the player checks only every few hours and
   // natural stone is not guaranteed to yield a chunk on each excavation.
   const targetCount=missingChunk?Math.max(4,mined+4):4;
@@ -52,6 +84,6 @@ export function miningDecisions(world:World):Decision[] {
     const x=cx+5,z=cz+i-1;
     if(!world.stockpiles.some(s=>s.x===x&&s.z===z))out.push({reason:'Réserver des cases aux fragments, sans les mélanger aux aliments.',command:{type:'stockpile',x,z,enabled:true,filters:{wood:false,food:false,chunk:true},capacity:1}});
   }
-  for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground'&&!p.haulRequested&&!world.stockpiles.some(s=>s.filters.chunk&&p.owner.type==='ground'&&s.x===p.owner.x&&s.z===p.owner.z))out.push({reason:'Désigner les fragments extraits pour leur transport.',command:{type:'area',action:'haul-chunks',from:p.owner,to:p.owner}});
+  for(const p of chunks)if(campChunkNeedsHaul(world,p)&&!p.haulRequested&&p.owner.type==='ground')out.push({reason:'Dégager les fragments utiles au camp et ceux extraits pour la taille de pierre.',command:{type:'area',action:'haul-chunks',from:p.owner,to:p.owner}});
   return out;
 }

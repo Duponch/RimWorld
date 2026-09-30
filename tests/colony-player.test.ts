@@ -10,13 +10,16 @@ import { activeSocialFight } from '../src/sim/social-fight.ts';
 import { FEED_TICKS } from '../src/sim/feeding-rules.ts';
 import { medicalStatus } from '../src/sim/injury-state.ts';
 import { playerArrivalDecisions,playerArrivalComplete,playerDecisions, playerFocusDecisions, colonySummary, woodAccount, foodAccount } from './scenarios/colony-player';
+import { campChunks, campChunkNeedsHaul } from './scenarios/mining-player';
+import { completedStoneOpenings, emptyStoneAmounts, pendingStoneOpenings, stoneMatter } from './scenarios/stone-balance';
+import { STONE_KINDS } from '../src/sim/geology.ts';
+import { storageAccepts } from '../src/sim/storage-filters.ts';
 
 const SOCIAL_MELEE_INJURIES=new Set(['bruise','crack','crush','bite','cut','stab']);
 
 test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp construit, stocks entretenus et reprise exacte', (seed) => {
   const version=process.env.VALIDATION_VERSION??'v74';
     let world = createWorld(seed, 250, 250);
-    const naturalChunkIds=new Set(world.piles.filter(p=>p.kind==='chunk').map(p=>p.id));
     onTestFailed(()=>writeTestFileSync(`tmp/colony-failed-${version}-${seed}.json`,JSON.stringify(world)));
     if(seed===42)enableArrivals(world);
     if(seed===93)enableWildlife(world);
@@ -28,6 +31,21 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
     const initialWeapon=structuredClone(world.piles.find(p=>p.kind==='weapon')!);
     const initialWood = woodAccount(world), initialFood = foodAccount(world);
     const initialMedicine=world.piles.filter(p=>p.kind==='medicine').reduce((n,p)=>n+p.quantity,0);
+    let stoneAtLastCheck=stoneMatter(world);
+    const openingsSinceCheck=emptyStoneAmounts(),inferredYields=emptyStoneAmounts();
+    const stoneOpenings:{tick:number;stone:typeof STONE_KINDS[number]}[]=[];
+    const checkStoneMatter=()=>{
+      const now=stoneMatter(world);
+      for(const stone of STONE_KINDS){
+        const delta=now[stone]-stoneAtLastCheck[stone],context=JSON.stringify({seed,tick:world.tick,stone,before:stoneAtLastCheck[stone],after:now[stone],openings:openingsSinceCheck[stone]});
+        expect(delta,context).toBeGreaterThanOrEqual(0);
+        expect(delta,context).toBeLessThanOrEqual(20*openingsSinceCheck[stone]);
+        expect(delta%20,context).toBe(0);
+        inferredYields[stone]+=delta/20;
+        openingsSinceCheck[stone]=0;
+      }
+      stoneAtLastCheck=now;
+    };
     let consumed = 0, produced = 0, rationAssignments = 0, medicineUsed=0;
     const cookingLedger=createSimpleMealLedger(world.events);
     onTestFailed(()=>writeTestFileSync(`tmp/colony-ledger-failed-${version}-${seed}.json`,JSON.stringify({tick:world.tick,initialFood,consumed,produced,cooking:cookingLedger})));
@@ -50,7 +68,12 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
       const injuriesBefore=new Map(world.pawns.map(p=>[p.id,new Map(p.health?.injuries.map(i=>[i.id,{bornAt:i.bornAt,severity:i.severity}])??[])]));
 
       const moods=world.pawns.map(p=>p.mood);
+      const possibleStoneOpenings=pendingStoneOpenings(world);
       stepWorld(world);
+      for(const stone of completedStoneOpenings(world,possibleStoneOpenings)){
+        openingsSinceCheck[stone]++;
+        stoneOpenings.push({tick:world.tick,stone});
+      }
       for(const pawn of world.pawns)for(const injury of pawn.health?.injuries??[]){
         const previous=injuriesBefore.get(pawn.id)?.get(injury.id);
         if(previous?.bornAt===injury.bornAt&&previous.severity>=injury.severity)continue;
@@ -77,6 +100,7 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
       for (const pawn of world.pawns) if (pawn.state==='resting' && pawn.need?.kind==='sleep' && pawn.need.bedId!==null && pawn.need.medical) medicalBedRest.set(pawn.id,(medicalBedRest.get(pawn.id)??0)+1);
       for(const pawn of world.pawns)if(pawn.state==='recreating'&&pawn.recreation.task){recreationKinds.add(pawn.recreation.task.activity);recreationPawns.add(pawn.id);}
       if (t % 50 === 0) {
+        checkStoneMatter();
         const context=JSON.stringify({seed,...colonySummary(world)});
         expect(world.piles.filter(p=>p.kind==='weapon')).toHaveLength(1);expect(world.piles.find(p=>p.id===initialWeapon.id)?.weapon).toEqual(initialWeapon.weapon);
         if(t>=250)expect(world.piles.find(p=>p.id===initialWeapon.id)?.owner.type).toBe('equipment');
@@ -114,8 +138,9 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
         world=deserializeWorld(saved);
       }
     }
+    checkStoneMatter();
     writeTestFileSync(`tmp/colony-final-${version}-${seed}.json`,serializeWorld(world));
-    writeTestFileSync(`artifacts/colony-${version}-${seed}.json`,JSON.stringify({seed,report,cooking:{...cookingLedger.totals},final:colonySummary(world)},null,2));
+    writeTestFileSync(`artifacts/colony-${version}-${seed}.json`,JSON.stringify({seed,report,cooking:{...cookingLedger.totals},stone:{openings:stoneOpenings,inferredYields,matter:stoneAtLastCheck},final:colonySummary(world)},null,2));
     const context=JSON.stringify({seed,report,meals:[...meals],sleep:[...sleep],medicalBedRest:[...medicalBedRest],medicineUsed});
     expect([...temporarilyDowned].every(([id,episodes])=>{const p=world.pawns.find(p=>p.id===id);return !!p&&p.state!=='dead'&&p.state!=='downed'&&!!p.health&&!p.health.death&&!p.health.missing.length&&medicalStatus(p.health)==='mobile'&&!episodes.has(p.health.foodPoisoning?.bornAt??-1);}),context).toBe(true);
     expect(report[0]!.structures,context).toMatchObject({bed:3,table:1,stool:3});
@@ -125,6 +150,7 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
     expect(cookingLedger.totals.portions,context).toBeGreaterThanOrEqual(12);
     expect(cookingLedger.totals.bulkOperations,context).toBeGreaterThanOrEqual(1);
     expect(rationAssignments,context).toBeGreaterThanOrEqual(3);
+    expect(stoneOpenings.length,context).toBeGreaterThanOrEqual(4);
     expect(world.tiles.filter(t=>t.terrain==='rough-stone').length,context).toBeGreaterThanOrEqual(6);
     expect(colonySummary(world).mining.blocks,context).toBe(35);expect(colonySummary(world).mining.blocksStored,context).toBe(35);
     expect(colonySummary(world).mining.components,context).toBe(4);expect(colonySummary(world).mining.componentsStored,context).toBe(4);
@@ -136,12 +162,13 @@ test.each([42,93,2048])('joueur ordinaire : cinq à huit jours, graine %i, camp 
     expect(medicines,context).toEqual({total:initialMedicine-medicineUsed,stored:initialMedicine-medicineUsed,policies:Array(population).fill('industrial')});
     expect(medicines.total,context).toBeGreaterThan(0);
     const chunkStockpiles=world.stockpiles.filter(s=>s.filters.chunk);
-    const extractedChunks=world.piles.filter(p=>p.kind==='chunk'&&!naturalChunkIds.has(p.id));
-    const storedExtracted=extractedChunks.filter(p=>{const owner=p.owner;return owner.type==='ground'&&chunkStockpiles.some(s=>s.x===owner.x&&s.z===owner.z);});
     expect(chunkStockpiles,context).toHaveLength(4);
-    expect(storedExtracted,context).toHaveLength(chunkStockpiles.length);
-    expect(chunkStockpiles.every(s=>storedExtracted.some(p=>p.owner.type==='ground'&&p.owner.x===s.x&&p.owner.z===s.z)),context).toBe(true);
-    expect(extractedChunks.filter(p=>!storedExtracted.includes(p)).every(p=>p.owner.type==='ground'&&p.haulRequested===true),context).toBe(true);
+    for(const zone of chunkStockpiles){
+      const occupants=world.piles.filter(p=>p.owner.type==='ground'&&p.owner.x===zone.x&&p.owner.z===zone.z);
+      expect(occupants.every(p=>p.kind==='chunk'&&storageAccepts(zone,p.item)),context).toBe(true);
+      expect(occupants.reduce((n,p)=>n+p.quantity,0),context).toBeLessThanOrEqual(zone.capacity);
+    }
+    for(const pile of campChunks(world))if(campChunkNeedsHaul(world,pile))expect(pile.haulRequested,context).toBe(true);
     expect(world.deconstructed.count,context).toBe(1);
     expect(world.structures.find(s=>s.kind==='horseshoes')?.x,context).toBe(Math.floor(world.width/2)+4);expect(world.packed,context).toEqual([]);
     const maintenance=world.jobs.filter(j=>j.growingZoneId===undefined);
