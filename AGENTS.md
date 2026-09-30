@@ -13,6 +13,8 @@
 - V164 prolonge le [mix sonore courant](docs/development/audio-variation-v164.md) sans migration : iso recalibrée, trois prises pour les six autres travaux et cadence bornée non métronomique. Lire sa [recherche Web Audio](docs/research/audio-spatial-web-v164.md) et sa [preuve](docs/history/validation-audio-variation-v164.md) ; V163/V149 restent des photographies historiques.
 - V165 livre dans le périmètre de sa [preuve ciblée](docs/history/validation-audio-v165.md) le [mix sonore et musical courant](docs/development/audio-mix-v165.md) sans migration : huit nouveaux événements, atténuation exponentielle et trois pistes longues. Lire la [recherche Core des effets](docs/research/audio-sfx-core-v165.md) et la [recherche musicale](docs/research/audio-music-core-v165.md) ; V164 reste une photographie historique.
 
+- V175 enrichit le [son courant](docs/development/audio-v175.md) sans migration : dix musiques, rotation par contexte, deux lecteurs au maximum, et huit contacts confirmés avec quatre prises chacun. Lire l’[audit Core](docs/research/audio-coverage-core-v175.md), la [recherche musicale](docs/research/audio-music-core-v175.md) et la [preuve](docs/history/validation-audio-v175.md). Cinq générations musicales sont refusées pour crédits insuffisants ; ne pas les publier ni régénérer automatiquement. Le dernier coup d’extinction non observable reste silencieux.
+
 ## Cible et contenu
 
 - RimWorld Core d’abord, extensions après G5 sauf demande utilisateur ultérieure. Référence Core des derniers relevés : 1.6.4871. Conserver ses boucles et interactions ; toute adaptation doit être motivée, documentée et distinguée d’une règle vérifiée. Ne jamais promettre une parité exhaustive.

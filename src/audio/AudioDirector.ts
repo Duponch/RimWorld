@@ -23,7 +23,8 @@ const CLUSTERED_KINDS = new Set([
   'mining.hit', 'woodcutting.hit', 'construction.hit', 'cooking.work',
   'crafting.work', 'tailoring.work', 'butchering.work', 'research.work',
   'haul.pickup', 'haul.drop', 'farming.sow', 'farming.harvest', 'eating.work',
-  'cleaning.work', 'medical.tend', 'maintenance.work',
+  'cleaning.work', 'medical.tend', 'maintenance.work', 'deconstruction.work', 'firefighting.beat',
+  'weapon.impact-ground', 'weapon.impact-barrier', 'weapon.impact-flesh',
 ]);
 function clusterGroup(kind: string): string | null {
   // An opening and closing door share one nearby acoustic patch.

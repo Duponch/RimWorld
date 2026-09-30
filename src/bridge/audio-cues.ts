@@ -4,6 +4,7 @@ import { isTailoring, stationAccepts, taskRecipe } from '../sim/production-recip
 import { WORK_FRACTIONS } from '../sim/work-progress.ts';
 import { isColonist } from '../sim/affiliation.ts';
 import type { AnimalSpeciesId } from '../sim/animal-species.ts';
+import { actualPowerSwitch, canFlickPower } from '../sim/power-flick.ts';
 
 type AnimalVoiceSpecies = Exclude<AnimalSpeciesId, 'snow-hare'>;
 const animalVoiceSpecies = (species:AnimalSpeciesId):AnimalVoiceSpecies =>
@@ -11,9 +12,11 @@ const animalVoiceSpecies = (species:AnimalSpeciesId):AnimalVoiceSpecies =>
 
 export type AudioCueKind = 'mining.hit' | 'woodcutting.hit' | 'construction.hit'
   | 'cooking.work' | 'crafting.work' | 'tailoring.work' | 'butchering.work' | 'research.work'
-  | 'weapon.gunshot' | 'weapon.melee' | 'door.open' | 'door.close'
+  | 'weapon.gunshot' | 'weapon.melee' | 'weapon.impact-ground' | 'weapon.impact-barrier'
+  | 'weapon.impact-flesh' | 'door.open' | 'door.close'
   | 'haul.pickup' | 'haul.drop' | 'farming.sow' | 'farming.harvest' | 'eating.work'
-  | 'cleaning.work' | 'medical.tend' | 'maintenance.work'
+  | 'cleaning.work' | 'medical.tend' | 'maintenance.work' | 'firefighting.beat'
+  | 'power.switch-on' | 'power.switch-off' | 'deconstruction.work' | 'building.deconstructed'
   | 'autodoor.open' | 'autodoor.close' | 'weather.thunder'
   | `animal.hurt.${AnimalVoiceSpecies}` | `animal.death.${AnimalVoiceSpecies}`
   | 'ui.threat' | 'ui.colonist-death'
@@ -37,6 +40,8 @@ const EATING_CUE_INTERVAL_TICKS = [4, 5, 6, 7] as const;
 type WorkObservation = { key: string; progress: number; nextCueTick: number; cueCount: number };
 type HaulObservation = { sourcePileId: number; phase: 'pickup' | 'deliver'; carryPileId: number | null;
   x: number; z: number; whole: boolean };
+type DeconstructionObservation = { structureId: number; progress: number; reservedBy: number | null;
+  x: number; z: number };
 
 function workCueInterval(pawnId: number, key: string, cueCount: number, intervals: readonly number[]): number {
   // This hash belongs to presentation only; it consumes no simulation random state.
@@ -57,12 +62,20 @@ export class AudioCueRecorder {
   private readonly pending: AudioCue[] = [];
   private work = new Map<number, WorkObservation>();
   private projectiles = new Set<number>();
+  private projectileArrivals = new Set<number>();
   private shooting = new Map<number, number>();
   private melee = new Map<number, number>();
   private doors = new Map<number, boolean>();
   private hauls = new Map<number, HaulObservation>();
   private pawnStates = new Map<number, string>();
   private animalStates = new Map<number, { state: string; injurySeverity: number }>();
+  private firefighting = new Map<number, { fireId: number; cooldownCore: number }>();
+  private fireIds = new Set<number>();
+  private switches = new Map<number, boolean>();
+  private flickJobs = new Map<number, boolean>();
+  private deconstructionJobs = new Map<number, DeconstructionObservation>();
+  private structures = new Set<number>();
+  private deconstructionCount = 0;
   private lightningCount = 0;
   private raidId: number | null = null;
 
@@ -73,12 +86,20 @@ export class AudioCueRecorder {
     this.pending.length = 0;
     this.work.clear();
     this.projectiles.clear();
+    this.projectileArrivals.clear();
     this.shooting.clear();
     this.melee.clear();
     this.doors.clear();
     this.hauls.clear();
     this.pawnStates.clear();
     this.animalStates.clear();
+    this.firefighting.clear();
+    this.fireIds.clear();
+    this.switches.clear();
+    this.flickJobs.clear();
+    this.deconstructionJobs.clear();
+    this.structures.clear();
+    this.deconstructionCount = 0;
     this.lightningCount = 0;
     this.raidId = null;
   }
@@ -87,12 +108,14 @@ export class AudioCueRecorder {
     if (world.tick !== this.tick) { this.tick = world.tick; this.tickCount = 0; }
     const previousWork = this.work;
     const previousProjectiles = this.projectiles;
+    const previousProjectileArrivals = this.projectileArrivals;
     const previousShooting = this.shooting;
     const previousMelee = this.melee;
     const previousDoors = this.doors;
     const previousHauls = this.hauls;
     const work = new Map<number, WorkObservation>();
     const projectiles = new Set<number>();
+    const projectileArrivals = new Set<number>();
     const shooting = new Map<number, number>();
     const emittedShots = new Set<string>();
     const melee = new Map<number, number>();
@@ -100,7 +123,31 @@ export class AudioCueRecorder {
     const hauls = new Map<number, HaulObservation>();
     const pawnStates = new Map<number, string>();
     const animalStates = new Map<number, { state: string; injurySeverity: number }>();
-    const jobs = new Map(world.jobs.map(job => [job.id, job]));
+    const firefighting = new Map<number, { fireId: number; cooldownCore: number }>();
+    const fireIds = new Set((world.fires?.items ?? []).map(fire => fire.id));
+    const switches = new Map<number, boolean>();
+    const flickJobs = new Map<number, boolean>();
+    const deconstructionJobs = new Map<number, DeconstructionObservation>();
+    const jobs = new Map<number, World['jobs'][number]>();
+    for (const job of world.jobs) {
+      jobs.set(job.id, job);
+      // Pending work cannot finish between two captures: both actions need at
+      // least two contacted ticks. Follow targets from the first work tick.
+      if (job.kind === 'flick' && job.flick && job.progress > 0)
+        flickJobs.set(job.flick.structureId, job.flick.on);
+      if (job.kind === 'deconstruct' && job.deconstruction && job.reservedBy !== null
+        && (job.progress > 0 || (job.workRemainder ?? 0) > 0))
+        deconstructionJobs.set(job.id, { structureId: job.deconstruction.structureId,
+          progress: job.progress * WORK_FRACTIONS + (job.workRemainder ?? 0),
+          reservedBy: job.reservedBy, x: job.x, z: job.z });
+    }
+    const watchedTargets = new Set<number>();
+    for (const job of this.deconstructionJobs.values()) watchedTargets.add(job.structureId);
+    for (const job of deconstructionJobs.values()) watchedTargets.add(job.structureId);
+    const watchedSwitches = new Set<number>();
+    for (const id of this.flickJobs.keys()) watchedSwitches.add(id);
+    for (const id of flickJobs.keys()) watchedSwitches.add(id);
+    const structures = new Set<number>();
     let stations: Map<number, World['structures'][number]> | undefined;
     const stationFor = (id: number): World['structures'][number] | undefined => {
       stations ??= new Map(world.structures.map(station => [station.id, station]));
@@ -123,6 +170,16 @@ export class AudioCueRecorder {
 
     for (const pawn of world.pawns) {
       pawnStates.set(pawn.id, pawn.state);
+      const beat = pawn.firefighting;
+      if (beat) {
+        firefighting.set(pawn.id, { fireId: beat.fireId, cooldownCore: beat.cooldownCore });
+        const previousBeat = this.firefighting.get(pawn.id);
+        if (this.initialized && pawn.state === 'working' && beat.phase === 'beat'
+          && this.fireIds.has(beat.fireId)
+          && beat.cooldownCore > (previousBeat?.fireId === beat.fireId ? previousBeat.cooldownCore : 0))
+          this.add({ id: `firefighting.beat:${world.tick}:${pawn.id}:${beat.fireId}`,
+            tick: world.tick, kind: 'firefighting.beat', x: pawn.x, z: pawn.z });
+      }
       const previousPawnState = this.pawnStates.get(pawn.id);
       if (this.initialized && previousPawnState !== undefined && previousPawnState !== 'dead'
         && pawn.state === 'dead' && isColonist(pawn))
@@ -153,11 +210,13 @@ export class AudioCueRecorder {
       const job = pawn.jobId === null ? undefined : jobs.get(pawn.jobId);
       if (job && (job.kind === 'mine' || job.kind === 'chop' || job.kind === 'sow'
         || job.kind === 'harvest' || job.kind === 'cut' || job.kind === 'repair'
+        || job.kind === 'deconstruct'
         || job.kind === 'fix-breakdown' || isConstruction(job)) && !job.furniture
         && job.installationWork !== 'haul') {
         const kind = job.kind === 'mine' ? 'mining.hit' : job.kind === 'chop' ? 'woodcutting.hit'
           : job.kind === 'sow' ? 'farming.sow'
-            : job.kind === 'harvest' || job.kind === 'cut' ? 'farming.harvest'
+          : job.kind === 'harvest' || job.kind === 'cut' ? 'farming.harvest'
+            : job.kind === 'deconstruct' ? 'deconstruction.work'
               : job.kind === 'repair' || job.kind === 'fix-breakdown' ? 'maintenance.work' : 'construction.hit';
         recordWork(pawn.id, `job:${job.id}`, job.progress * WORK_FRACTIONS + (job.workRemainder ?? 0), kind,
           job.x, job.z, pawn.state === 'working', WORK_CUE_INTERVAL_TICKS);
@@ -207,6 +266,17 @@ export class AudioCueRecorder {
     }
     for (const projectile of world.projectiles ?? []) {
       projectiles.add(projectile.id);
+      const arrival = projectile.arrival;
+      if (arrival) {
+        projectileArrivals.add(projectile.id);
+        const kind: AudioCueKind | undefined = arrival.kind !== 'impact' ? undefined
+          : arrival.effect === 'ground' ? 'weapon.impact-ground'
+            : arrival.effect === 'barrier' ? 'weapon.impact-barrier'
+              : arrival.effect === 'pawn' || arrival.effect === 'animal' ? 'weapon.impact-flesh' : undefined;
+        if (this.initialized && kind && !previousProjectileArrivals.has(projectile.id))
+          this.add({ id: `${kind}:${projectile.id}`, tick: world.tick, kind,
+            x: arrival.point.x, z: arrival.point.z });
+      }
       const launcher = projectile.flight.launcherKey;
       const shotKey = launcher?.startsWith('pawn:') ? `${launcher.slice(5)}:${projectile.emittedAtCore}` : undefined;
       if (this.initialized && !previousProjectiles.has(projectile.id) && (!shotKey || !emittedShots.has(shotKey)))
@@ -214,6 +284,17 @@ export class AudioCueRecorder {
           x: projectile.flight.origin.x, z: projectile.flight.origin.z });
     }
     for (const structure of world.structures) {
+      if (watchedTargets.size && watchedTargets.has(structure.id)) structures.add(structure.id);
+      if (watchedSwitches.size && watchedSwitches.has(structure.id) && canFlickPower(structure)) {
+        const on = actualPowerSwitch(structure);
+        switches.set(structure.id, on);
+        const previousOn = this.switches.get(structure.id);
+        if (this.initialized && previousOn !== undefined && previousOn !== on
+          && this.flickJobs.get(structure.id) === on)
+          this.add({ id: `power.switch-${on ? 'on' : 'off'}:${world.tick}:${structure.id}`,
+            tick: world.tick, kind: on ? 'power.switch-on' : 'power.switch-off',
+            x: structure.x, z: structure.z });
+      }
       if ((structure.kind !== 'door' && structure.kind !== 'fence-gate' && structure.kind !== 'autodoor') || !structure.door) continue;
       const open = structure.door.open;
       doors.set(structure.id, open);
@@ -225,6 +306,19 @@ export class AudioCueRecorder {
         this.add({ id: `${kind}:${world.tick}:${structure.id}`, tick: world.tick,
           kind, x: structure.x, z: structure.z });
       }
+    }
+    // The deconstruction ledger is incremented only by a successful physical
+    // finish. Match its delta to disappeared active jobs and their exact targets;
+    // a cancellation or unrelated destruction must not sound like success.
+    if (this.initialized && world.deconstructed.count > this.deconstructionCount) {
+      const completed = [...this.deconstructionJobs.entries()].filter(([jobId, previous]) =>
+        previous.reservedBy !== null && previous.progress > 0
+        && !deconstructionJobs.has(jobId) && this.structures.has(previous.structureId)
+        && !structures.has(previous.structureId));
+      if (completed.length === world.deconstructed.count - this.deconstructionCount)
+        for (const [jobId, previous] of completed)
+          this.add({ id: `building.deconstructed:${jobId}:${previous.structureId}`,
+            tick: world.tick, kind: 'building.deconstructed', x: previous.x, z: previous.z });
     }
     for (const animal of world.wildlife?.animals ?? []) {
       const injurySeverity = animal.health?.injuries.reduce((total, injury) => total + injury.severity, 0) ?? 0;
@@ -268,12 +362,20 @@ export class AudioCueRecorder {
         kind: 'ui.threat', x: 0, z: 0 });
     this.work = work;
     this.projectiles = projectiles;
+    this.projectileArrivals = projectileArrivals;
     this.shooting = shooting;
     this.melee = melee;
     this.doors = doors;
     this.hauls = hauls;
     this.pawnStates = pawnStates;
     this.animalStates = animalStates;
+    this.firefighting = firefighting;
+    this.fireIds = fireIds;
+    this.switches = switches;
+    this.flickJobs = flickJobs;
+    this.deconstructionJobs = deconstructionJobs;
+    this.structures = structures;
+    this.deconstructionCount = world.deconstructed.count;
     this.lightningCount = lightningCount;
     this.raidId = raidId;
     this.initialized = true;

@@ -390,6 +390,86 @@
       "loop": false,
       "gain": 0.09,
       "maxDistance": 24
+    },
+    "weapon.impact-ground": {
+      "filename": "weapon-impact-ground-v175-take-1.mp3",
+      "prompt": "One small bullet striking dry soil and gritty stone, a compact muted dirt tick with tiny scattered grains, realistic close dry foley for a warm colony game. Single impact then silence, no gunshot, music, voice, dramatic reverb or cartoon sound.",
+      "durationSeconds": 0.6,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 24,
+      "spatial": true
+    },
+    "weapon.impact-barrier": {
+      "filename": "weapon-impact-barrier-v175-take-1.mp3",
+      "prompt": "One bullet striking a timber barrier, crisp short wooden knock and small splinter rattle, realistic restrained close dry foley for a warm colony game. Single impact then silence, no gunshot, metallic explosion, music or voice.",
+      "durationSeconds": 0.6,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 24,
+      "spatial": true
+    },
+    "weapon.impact-flesh": {
+      "filename": "weapon-impact-flesh-v175-take-1.mp3",
+      "prompt": "One restrained projectile impact into padded cloth and flesh, brief soft organic thump with a tiny fabric rustle, realistic close dry game foley, gentle and not gruesome. Single impact then silence, no scream, gunshot, splatter, music or ambience.",
+      "durationSeconds": 0.5,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 20,
+      "spatial": true
+    },
+    "firefighting.beat": {
+      "filename": "firefighting-beat-v175-take-1.mp3",
+      "prompt": "One firm sweep of heavy cloth beating out a small ground fire, soft fabric swish followed by a muted earthy slap and tiny hiss, realistic dry close foley, restrained and tactile. One gesture then silence, no voice, music, sustained fire or dramatic whoosh.",
+      "durationSeconds": 0.65,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 16,
+      "spatial": true
+    },
+    "power.switch-on": {
+      "filename": "power-switch-on-v175-take-1.mp3",
+      "prompt": "One small mechanical electrical toggle switched on, warm tiny click with a short contact clunk, realistic close dry foley, quiet tactile utility switch. Single operation then silence, no electronic beep, buzz loop, voice, music or ambience.",
+      "durationSeconds": 0.5,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 4,
+      "maxDistance": 14,
+      "spatial": true
+    },
+    "power.switch-off": {
+      "filename": "power-switch-off-v175-take-1.mp3",
+      "prompt": "One small mechanical electrical toggle switched off, light released spring click and soft wooden contact tick, realistic close dry foley, quiet tactile utility switch. Single operation then silence, no electronic beep, buzz loop, voice, music or ambience.",
+      "durationSeconds": 0.5,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 14,
+      "spatial": true
+    },
+    "deconstruction.work": {
+      "filename": "deconstruction-work-v175-take-1.mp3",
+      "prompt": "One hand tool prying a nail from a wooden joint, small warm wood creak, compact metal tool click and short splinter rustle, realistic dry close manual dismantling foley. One gesture then silence, no hammering loop, music, voice or destructive crash.",
+      "durationSeconds": 0.75,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 16,
+      "spatial": true
+    },
+    "building.deconstructed": {
+      "filename": "building-deconstructed-v175-take-1.mp3",
+      "prompt": "A small dismantled wooden structure settling into loose reusable materials, a brief restrained clatter of timber pieces and two tiny metal ticks, soft realistic dry close foley for a cozy colony game. No massive collapse, explosion, voice, music or ambience.",
+      "durationSeconds": 1,
+      "promptInfluence": 0.7,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 20,
+      "spatial": true
     }
   }
 }

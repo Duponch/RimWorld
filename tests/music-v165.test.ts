@@ -17,13 +17,14 @@ class FakeAudio {
 afterEach(() => { vi.useRealTimers(); });
 
 describe('musique V165', () => {
-  it('alterne les longues pistes calmes et réserve la tension à la menace', () => {
+  it('réserve chaque famille au bon contexte', () => {
     expect(chooseMusicTrack('day', null)?.id).toBe('aube');
     expect(chooseMusicTrack('night', null)?.id).toBe('veille');
-    expect(chooseMusicTrack('day', 'aube')?.id).toBe('veille');
-    expect(chooseMusicTrack('night', 'veille')?.id).toBe('aube');
+    expect(chooseMusicTrack('day', 'aube')?.mood).toBe('day');
+    expect(chooseMusicTrack('night', 'veille')?.mood).toBe('night');
     expect(chooseMusicTrack('tension', 'aube')?.id).toBe('alerte');
     expect(chooseMusicTrack('day', 'alerte')?.id).toBe('aube');
+    expect(MUSIC_TRACKS).toHaveLength(10);
     expect(MUSIC_TRACKS.every(track => track.src.startsWith('/assets/audio/music/'))).toBe(true);
   });
 
@@ -68,7 +69,7 @@ describe('musique V165', () => {
     expect(players).toHaveLength(1);
     vi.advanceTimersByTime(37000);
     await Promise.resolve();
-    expect(players[1]?.src).toContain('veille');
+    expect(players[1]?.src).toContain('atelier');
     music.dispose();
   });
 

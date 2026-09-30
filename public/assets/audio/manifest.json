@@ -493,6 +493,198 @@
       "gain": 0.09,
       "maxDistance": 24,
       "loop": false
+    },
+    "weapon.impact-ground": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/weapon-impact-ground-v175-take-1.mp3",
+          "gain": 0.622
+        },
+        {
+          "src": "/assets/audio/sfx/weapon-impact-ground-v175-take-2.mp3",
+          "gain": 0.643
+        },
+        {
+          "src": "/assets/audio/sfx/weapon-impact-ground-v175-take-3.mp3",
+          "gain": 0.633
+        },
+        {
+          "src": "/assets/audio/sfx/weapon-impact-ground-v175-take-4.mp3",
+          "gain": 3.187
+        }
+      ],
+      "gain": 1,
+      "maxDistance": 24,
+      "loop": false,
+      "spatial": true
+    },
+    "weapon.impact-barrier": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/weapon-impact-barrier-v175-take-1.mp3",
+          "gain": 0.66
+        },
+        {
+          "src": "/assets/audio/sfx/weapon-impact-barrier-v175-take-2.mp3",
+          "gain": 0.574
+        },
+        {
+          "src": "/assets/audio/sfx/weapon-impact-barrier-v175-take-3.mp3",
+          "gain": 0.638
+        },
+        {
+          "src": "/assets/audio/sfx/weapon-impact-barrier-v175-take-4.mp3",
+          "gain": 4.435
+        }
+      ],
+      "gain": 1,
+      "maxDistance": 24,
+      "loop": false,
+      "spatial": true
+    },
+    "weapon.impact-flesh": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/weapon-impact-flesh-v175-take-1.mp3",
+          "gain": 0.413
+        },
+        {
+          "src": "/assets/audio/sfx/weapon-impact-flesh-v175-take-2.mp3",
+          "gain": 0.886
+        },
+        {
+          "src": "/assets/audio/sfx/weapon-impact-flesh-v175-take-3.mp3",
+          "gain": 0.264
+        },
+        {
+          "src": "/assets/audio/sfx/weapon-impact-flesh-v175-take-4.mp3",
+          "gain": 0.335
+        }
+      ],
+      "gain": 1,
+      "maxDistance": 20,
+      "loop": false,
+      "spatial": true
+    },
+    "firefighting.beat": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/firefighting-beat-v175-take-1.mp3",
+          "gain": 0.687
+        },
+        {
+          "src": "/assets/audio/sfx/firefighting-beat-v175-take-2.mp3",
+          "gain": 0.371
+        },
+        {
+          "src": "/assets/audio/sfx/firefighting-beat-v175-take-3.mp3",
+          "gain": 0.529
+        },
+        {
+          "src": "/assets/audio/sfx/firefighting-beat-v175-take-4.mp3",
+          "gain": 0.418
+        }
+      ],
+      "gain": 1,
+      "maxDistance": 16,
+      "loop": false,
+      "spatial": true
+    },
+    "power.switch-on": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/power-switch-on-v175-take-1.mp3",
+          "gain": 0.16825
+        },
+        {
+          "src": "/assets/audio/sfx/power-switch-on-v175-take-2.mp3",
+          "gain": 0.273
+        },
+        {
+          "src": "/assets/audio/sfx/power-switch-on-v175-take-3.mp3",
+          "gain": 7.552
+        },
+        {
+          "src": "/assets/audio/sfx/power-switch-on-v175-take-4.mp3",
+          "gain": 0.14775
+        }
+      ],
+      "gain": 4,
+      "maxDistance": 14,
+      "loop": false,
+      "spatial": true
+    },
+    "power.switch-off": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/power-switch-off-v175-take-1.mp3",
+          "gain": 0.649
+        },
+        {
+          "src": "/assets/audio/sfx/power-switch-off-v175-take-2.mp3",
+          "gain": 0.726
+        },
+        {
+          "src": "/assets/audio/sfx/power-switch-off-v175-take-3.mp3",
+          "gain": 0.983
+        },
+        {
+          "src": "/assets/audio/sfx/power-switch-off-v175-take-4.mp3",
+          "gain": 0.919
+        }
+      ],
+      "gain": 1,
+      "maxDistance": 14,
+      "loop": false,
+      "spatial": true
+    },
+    "deconstruction.work": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/deconstruction-work-v175-take-1.mp3",
+          "gain": 0.642
+        },
+        {
+          "src": "/assets/audio/sfx/deconstruction-work-v175-take-2.mp3",
+          "gain": 0.723
+        },
+        {
+          "src": "/assets/audio/sfx/deconstruction-work-v175-take-3.mp3",
+          "gain": 0.584
+        },
+        {
+          "src": "/assets/audio/sfx/deconstruction-work-v175-take-4.mp3",
+          "gain": 0.609
+        }
+      ],
+      "gain": 1,
+      "maxDistance": 16,
+      "loop": false,
+      "spatial": true
+    },
+    "building.deconstructed": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/building-deconstructed-v175-take-1.mp3",
+          "gain": 0.607
+        },
+        {
+          "src": "/assets/audio/sfx/building-deconstructed-v175-take-2.mp3",
+          "gain": 0.521
+        },
+        {
+          "src": "/assets/audio/sfx/building-deconstructed-v175-take-3.mp3",
+          "gain": 0.646
+        },
+        {
+          "src": "/assets/audio/sfx/building-deconstructed-v175-take-4.mp3",
+          "gain": 0.57
+        }
+      ],
+      "gain": 1,
+      "maxDistance": 20,
+      "loop": false,
+      "spatial": true
     }
   }
 }
