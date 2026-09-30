@@ -1,8 +1,8 @@
 # Documentation de Lisière
 
-**Derniers lots V170 et V169 :** le [plat raffiné carnivore par quatre](history/validation-fine-carnivore-bulk-v170.md) est livré dans sa boucle physique ciblée ; l'[audit CPU/GPU](history/validation-performance-v169.md) relève les nuages et isole les coûts de la météo et de la faune. Le [tracé de construction V168](history/validation-construction-line-v168.md) reste disponible.
+**V171 livré dans le périmètre validé :** le [plat gastronomique mixte par quatre](development/lavish-meal-bulk-v171.md), fondé sur la [recherche Core](research/lavish-bulk-core-v171.md), transforme 40 protéines + 40 végétaux en quatre plats existants. Sa [preuve V171](history/validation-lavish-bulk-v171.md) distingue résultats acquis et limites CPU/GPU. Le [plat raffiné carnivore V170](history/validation-fine-carnivore-bulk-v170.md) et l'[audit CPU/GPU V169](history/validation-performance-v169.md) gardent leurs preuves datées. La [variante végétarienne V172](development/lavish-vegetarian-bulk-v172.md) est seulement proposée.
 
-**État du dépôt :** schéma 163. La [recette V170](development/fine-carnivore-bulk-v170.md) est livrée dans le périmètre de sa [preuve](history/validation-fine-carnivore-bulk-v170.md) ; la [recherche V171](research/lavish-bulk-core-v171.md) et son [contrat](development/lavish-meal-bulk-v171.md) restent prévisionnels. L’[inventaire fonctionnel](gameplay/implementation-status.md) distingue livré, partiel et absent ; la [feuille de route](ROADMAP.md) est le calendrier des travaux et la [validation courante](development/validation.md) borne les preuves.
+**État du dépôt :** schéma 164, V171 livré dans le périmètre de sa preuve. La [recette V170](development/fine-carnivore-bulk-v170.md) conserve sa [preuve](history/validation-fine-carnivore-bulk-v170.md) au schéma 163. L’[inventaire fonctionnel](gameplay/implementation-status.md) distingue livré, partiel et absent ; la [feuille de route](ROADMAP.md) est le calendrier des travaux et la [validation courante](development/validation.md) borne les preuves.
 
 ## Trouver la bonne information
 
@@ -21,7 +21,7 @@
 ## Organisation
 
 - **gameplay/** décrit l’expérience présente et la cible. Une ligne de matrice ou une définition de catalogue n’est pas une livraison.
-- **development/** fixe les contrats et les frontières techniques. Les lots [raffiné carnivore ×4 V170](development/fine-carnivore-bulk-v170.md), [raffiné végétarien ×4 V162](development/fine-vegetarian-bulk-v162.md), [raffiné mixte ×4 V161](development/fine-meal-bulk-v161.md) et [simple ×4 V160](development/simple-meal-bulk-v160.md) sont livrés dans leurs périmètres prouvés. Les autres contrats récents restent accessibles par domaine dans ce répertoire.
+- **development/** fixe les contrats et les frontières techniques. Le [gastronomique mixte ×4 V171](development/lavish-meal-bulk-v171.md), le [raffiné carnivore ×4 V170](development/fine-carnivore-bulk-v170.md), le [raffiné végétarien ×4 V162](development/fine-vegetarian-bulk-v162.md), le [raffiné mixte ×4 V161](development/fine-meal-bulk-v161.md) et le [simple ×4 V160](development/simple-meal-bulk-v160.md) sont livrés dans leurs périmètres prouvés. Le [gastronomique végétarien ×4 V172](development/lavish-vegetarian-bulk-v172.md) reste un contrat proposé.
 - **research/** conserve sources, versions et incertitudes. **reference/originals/** conserve le [corpus reçu](reference/originals/manifest.json) avec contrôle d’intégrité.
 - **history/** conserve les preuves et leurs conditions exactes ; une validation passée ne certifie pas automatiquement une révision ultérieure.
 - **decisions/** conserve les choix de conception et leurs remplacements.
