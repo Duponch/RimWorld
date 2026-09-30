@@ -396,6 +396,7 @@ test.each([
   ['carnivore-fine-meal', 'fueled-stove', 'cooking.work'],
   ['cook-carnivore-fine-meal-bulk', 'fueled-stove', 'cooking.work'],
   ['cook-lavish-meal-bulk', 'fueled-stove', 'cooking.work'],
+  ['cook-vegetarian-lavish-meal-bulk', 'fueled-stove', 'cooking.work'],
   ['vegetarian-lavish-meal', 'fueled-stove', 'cooking.work'],
   ['butcher-creature', 'butcher-table', 'butchering.work'],
   ['stone-blocks', 'stonecutter', 'crafting.work'],
