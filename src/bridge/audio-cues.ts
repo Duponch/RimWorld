@@ -176,7 +176,7 @@ export class AudioCueRecorder {
       } else if (pawn.cooking) {
         const task = pawn.cooking, station = stationFor(task.stationId), recipe = taskRecipe(task);
         if (station && stationAccepts(station, recipe)) {
-          const kind: AudioCueKind = recipe === 'simple-meal' || recipe === 'cook-simple-meal-bulk' || recipe === 'fine-meal' || recipe === 'cook-fine-meal-bulk' || recipe === 'vegetarian-fine-meal' || recipe === 'cook-vegetarian-fine-meal-bulk' || recipe === 'carnivore-fine-meal' || recipe === 'cook-carnivore-fine-meal-bulk' || recipe === 'lavish-meal' || recipe === 'cook-lavish-meal-bulk' || recipe === 'vegetarian-lavish-meal' || recipe === 'cook-vegetarian-lavish-meal-bulk' || recipe === 'cook-carnivore-lavish-meal' ? 'cooking.work'
+          const kind: AudioCueKind = recipe === 'simple-meal' || recipe === 'cook-simple-meal-bulk' || recipe === 'fine-meal' || recipe === 'cook-fine-meal-bulk' || recipe === 'vegetarian-fine-meal' || recipe === 'cook-vegetarian-fine-meal-bulk' || recipe === 'carnivore-fine-meal' || recipe === 'cook-carnivore-fine-meal-bulk' || recipe === 'lavish-meal' || recipe === 'cook-lavish-meal-bulk' || recipe === 'vegetarian-lavish-meal' || recipe === 'cook-vegetarian-lavish-meal-bulk' || recipe === 'cook-carnivore-lavish-meal' || recipe === 'cook-carnivore-lavish-meal-bulk' ? 'cooking.work'
             : recipe === 'butcher-creature' ? 'butchering.work'
               : isTailoring(recipe) ? 'tailoring.work' : 'crafting.work';
           recordWork(pawn.id, `production:${station.id}:${task.billId}:${recipe}`, task.progress, kind,
