@@ -14,7 +14,7 @@ export const PLANT_DEFINITIONS = Object.freeze({
 });
 export const isPlant = (plant: Resource): boolean => plant.species!==undefined || plant.kind === 'berries' || isCropKind(plant.kind);
 export const isCrop = (plant: Pick<Resource,'kind'>): plant is Pick<Resource,'kind'>&{kind:CropKind} => isCropKind(plant.kind);
-export const harvestProductLabel = (plant:Resource):string => plant.species?FLORA_DEFINITIONS[plant.species].product==='wood'?'bois':FLORA_DEFINITIONS[plant.species].product==='agave-fruit'?'agave':FLORA_DEFINITIONS[plant.species].product==='berries'?'baies':FLORA_DEFINITIONS[plant.species].label:
+export const harvestProductLabel = (plant:Resource):string => plant.species?FLORA_DEFINITIONS[plant.species].product==='wood'?'bois':FLORA_DEFINITIONS[plant.species].product==='agave-fruit'?'agave':FLORA_DEFINITIONS[plant.species].product==='berries'?'baies':FLORA_DEFINITIONS[plant.species].product==='herbal-medicine'?'dose de médicament à base de plantes':FLORA_DEFINITIONS[plant.species].label:
   plant.kind==='cotton'?'tissu':plant.kind==='rice'?'riz':plant.kind==='potato'?'pommes de terre':plant.kind==='corn'?'maïs':'baies';
 
 export const BERRY_GROW_DAYS = 6;
@@ -76,7 +76,10 @@ export const harvestable = (world: World, plant: Resource): boolean => isPlant(p
 export function berryYield(world: World, plant: Resource): number {
   const growth = plantGrowth(world, plant);
   const minimum=plant.species?FLORA_DEFINITIONS[plant.species].harvestMinGrowth:HARVEST_MIN_GROWTH;
-  return growth > minimum ? plant.amount * (.5 + .5 * (growth - minimum) / (1 - minimum)) : 0;
+  if(growth<=minimum)return 0;
+  const remaining=plant.species==='healroot-wild'?Math.max(0,Math.min(1,1-(plant.damage??0)/FLORA_DEFINITIONS['healroot-wild'].hitPoints)):1;
+  const health=plant.species==='healroot-wild'?.5+.5*remaining:1;
+  return plant.amount * (.5 + .5 * (growth - minimum) / (1 - minimum)) * health;
 }
 /** Preview stochastic rounding without consuming RNG until placement succeeds. */
 export function harvestRoll(world: World, plant: Resource): { quantity: number; rng: number } {

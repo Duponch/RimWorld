@@ -1,5 +1,7 @@
 # Healroot Core — recherche préparatoire pour un lot ultérieur
 
+Note préparatoire historique : le [relevé V178](healroot-core-v178.md) et le [contrat sauvage](../development/healroot-wild-v178.md) fixent désormais la tranche retenue. Le statut ci-dessous est celui de cette préparation du 30 septembre, sans livrer la culture domestique.
+
 **Statut : proposé, non livré.** Cette note prépare un éventuel lot après la consolidation V176. Elle ne change ni le calendrier G0–G5, ni le catalogue jouable, ni le schéma courant. Relevé du 30 septembre 2026 sur l'installation locale **RimWorld Core 1.6.4871 rev590** (`E:/Steam/steamapps/common/RimWorld/Version.txt`), recoupé avec le code décompilé disponible en ligne. Les définitions XML installées sont la source de référence pour les nombres ; le miroir de code renseigne le comportement, mais son `master` n'est pas identifié comme l'assemblage exact de cette installation.
 
 ## Provenance et règles vérifiées

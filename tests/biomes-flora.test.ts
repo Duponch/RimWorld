@@ -13,7 +13,7 @@ import { siteClimateDefinition } from '../src/sim/site-climate';
 import { refreshStock } from '../src/sim/materials';
 import { applyPlantFrost,plantLeafless } from '../src/sim/plant-life';
 import { updatePlantTemperatures } from '../src/sim/thermal-plants';
-import type { Resource,World } from '../src/sim/types';
+import { SCHEMA_VERSION, type Resource, type World } from '../src/sim/types';
 
 const biomes:BiomeId[]=['temperate-forest','boreal-forest','arid-shrubland'];
 
@@ -61,7 +61,7 @@ test('three explicit biomes generate deterministic, distinct and fully identifie
   for(const biome of biomes){
     const world=biomeWorld(biome),copy=biomeWorld(biome),plants=world.resources.filter(resource=>resource.species!==undefined);
     expect(world.site).toMatchObject({revision:2,biome});expect(world.flora).toMatchObject({revision:1,biome,capacity:plants.length});
-    expect(validateWildFlora(world,91)).toBe(true);expect(copy.resources).toEqual(world.resources);
+    expect(validateWildFlora(world,SCHEMA_VERSION)).toBe(true);expect(copy.resources).toEqual(world.resources);
     const allowed=new Set(Object.keys(BIOME_FLORA[biome].weights));
     expect(plants.length).toBeGreaterThan(0);expect(plants.every(plant=>allowed.has(plant.species!))).toBe(true);
     for(const plant of plants)observed.add(plant.species!);
@@ -126,15 +126,15 @@ test('renewal is prospective, bounded, excludes occupied habitat and invalidates
   world.tick=state.nextCheck;const blockedReference=world.resources;advanceWildFlora(world);
   expect(world.resources).toBe(blockedReference);expect(world.resources).toEqual([]);
   world.growingZones=[];state.rng=1;world.tick=state.nextCheck;const oldReference=world.resources;advanceWildFlora(world);
-  expect(world.resources).not.toBe(oldReference);expect(world.resources).toHaveLength(1);expect(validateWildFlora(world,91)).toBe(true);
+  expect(world.resources).not.toBe(oldReference);expect(world.resources).toHaveLength(1);expect(validateWildFlora(world,SCHEMA_VERSION)).toBe(true);
   state.capacity=1;world.tick=state.nextCheck;const saturatedReference=world.resources,rng=state.rng;advanceWildFlora(world);
-  expect(world.resources).toBe(saturatedReference);expect(state.rng).toBe(rng);expect(validateWildFlora(world,91)).toBe(true);
+  expect(world.resources).toBe(saturatedReference);expect(state.rng).toBe(rng);expect(validateWildFlora(world,SCHEMA_VERSION)).toBe(true);
   world.resources=[];world.nextId=Number.MAX_SAFE_INTEGER;state.rng=1;world.tick=state.nextCheck;advanceWildFlora(world);
   expect(world.resources).toEqual([]);expect(world.nextId).toBe(Number.MAX_SAFE_INTEGER);
   world.width=250;world.height=250;world.tiles=Array.from({length:62500},()=>({terrain:'grass' as const}));
   state.capacity=62500;state.rng=1;world.nextId=Number.MAX_SAFE_INTEGER-1;world.tick=state.nextCheck;advanceWildFlora(world);
   expect(world.resources).toHaveLength(1);expect(world.nextId).toBe(Number.MAX_SAFE_INTEGER);
-  const invalid={...state,capacity:world.width*world.height+1};world.flora=invalid;expect(validateWildFlora(world,91)).toBe(false);
+  const invalid={...state,capacity:world.width*world.height+1};world.flora=invalid;expect(validateWildFlora(world,SCHEMA_VERSION)).toBe(false);
 });
 
 test('flora state and its private stream resume exactly without retroactive legacy adoption',()=>{
@@ -144,7 +144,7 @@ test('flora state and its private stream resume exactly without retroactive lega
   world.tick=world.flora!.nextCheck;resumed.tick=resumed.flora!.nextCheck;
   advanceWildFlora(world);advanceWildFlora(resumed);
   expect(resumed.resources).toEqual(world.resources);expect(resumed.flora).toEqual(world.flora);
-  expect(validateWildFlora(world,91)).toBe(true);
+  expect(validateWildFlora(world,SCHEMA_VERSION)).toBe(true);
   const legacy=generateSiteWorld(42,32,32,resolveSite(42,{hilliness:'small-hills'}));
   expect(validateWildFlora(legacy,90)).toBe(true);expect(legacy.flora).toBeUndefined();
 });

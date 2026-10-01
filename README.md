@@ -1,6 +1,6 @@
 # Lisière
 
-Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré des systèmes de RimWorld Core 1.6.4871. Le dépôt utilise actuellement le **schéma de sauvegarde 166**. La [facture gastronomique carnivore par quatre V173](docs/development/lavish-carnivore-bulk-v173.md) transforme 100 viandes crues admissibles en quatre `carnivore-lavish-meal` V159 existants, sur cuisinière avec Cuisine 8. Elle est livrée dans le périmètre de sa [preuve](docs/history/validation-lavish-carnivore-bulk-v173.md), avec collecte, reprise, stockage et ingestion d'une portion en Chromium préparé ; les limites CPU et les contrôles non exercés y restent explicites. Les règles et preuves sont regroupées dans l’[état fonctionnel](docs/gameplay/implementation-status.md) ; la [feuille de route](docs/ROADMAP.md) distingue les prochains travaux de ce qui est déjà jouable.
+Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 167**. La [cueillette médicinale sauvage V178](docs/development/healroot-wild-v178.md) relie une plante générée, sa récolte en dose physique, le stockage et les soins existants. La culture domestique et la compétence Plantes restent différées. Les règles et preuves sont regroupées dans l’[état fonctionnel](docs/gameplay/implementation-status.md) ; la [feuille de route](docs/ROADMAP.md) distingue travaux ouverts et contenu jouable, et la [validation courante](docs/development/validation.md) borne les contrôles.
 
 ## Démarrer
 

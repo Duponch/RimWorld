@@ -17,6 +17,8 @@
 
 - V177 extrait le [cache terrain des snapshots](docs/development/snapshot-cache-v177.md), sans migration ni nouveau protocole. Lire sa [recherche Web](docs/research/snapshot-cache-web-v177.md) et sa [preuve](docs/history/validation-snapshot-cache-v177.md) avant modification : copie des cinq primitives, comparaison complète à chaque publication même au même tick, réutilisation au checkpoint et reset exact après changement de taille. Le gain de reset isolé ne prouve pas une accélération générale.
 
+- V178 ouvre la [cueillette médicinale sauvage](docs/development/healroot-wild-v178.md) au schéma 167 : validation stricte 166 avant migration neutre, sans plante/dose/tirage rétroactif. Lire la [recherche Core](docs/research/healroot-core-v178.md) et la validation courante. `healroot-wild` tempéré/boréal, récolte réelle 40 ticks neutres, produit herbal existant, destruction même si rendement nul ; PV modulent ce rendement, pâture ≥65 %, base graphique visible sans feuilles. Compétence Plantes, échec humain et culture domestique restent différés ; ne pas redistribuer les poids Core absents.
+
 ## Cible et contenu
 
 - RimWorld Core d’abord, extensions après G5 sauf demande utilisateur ultérieure. Référence Core des derniers relevés : 1.6.4871. Conserver ses boucles et interactions ; toute adaptation doit être motivée, documentée et distinguée d’une règle vérifiée. Ne jamais promettre une parité exhaustive.

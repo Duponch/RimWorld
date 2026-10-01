@@ -1,5 +1,7 @@
 # Médicaments et plafonds individuels — V51
 
+**Acquisition sauvage courante V178 :** la [racine médicinale](healroot-wild-v178.md) des forêts tempérées/boréales fournit directement la dose herbal existante, par récolte réelle puis transport et soins. Le [relevé Core](../research/healroot-core-v178.md) borne croissance, rendement et adaptations. La culture domestique reste différée faute de compétence Plantes ; les limites ci-dessous sont celles du lot historique V51, pas une description exhaustive des ajouts ultérieurs.
+
 V81 étend cette chaîne aux [infections de plaies](infections.md), sans nouveau produit ni dose gratuite. Les principes de prélèvement, conservation, politique du patient et résultat physique restent communs ; les renouvellements d’un traitement infectieux deviennent des opérations distinctes.
 
 17 septembre 2026. [Recherche recoupée](../research/medicines-reference.md), [soins](tending.md), [auto-soins](self-tending.md), [conservation](food-preservation.md), [validation](validation.md). Corpus chapitres 8/9/11/15, SYS/TEST-051..054 et 094/096, CAT-018.

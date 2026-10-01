@@ -38,6 +38,7 @@ export function validateWildFlora(world:Pick<World,'flora'|'site'|'tick'|'width'
   let present=0;
   for(const resource of world.resources)if(resource.species!==undefined) {
     if(!isPlantSpecies(resource.species))return false;
+    if(resource.species==='healroot-wild'&&version<167)return false;
     const definition=FLORA_DEFINITIONS[resource.species];
     const growthTick=resource.growthTick;
     if(resource.kind!==definition.kind||resource.amount!==definition.yield||typeof resource.growth!=='number'||!Number.isFinite(resource.growth)||resource.growth<0||resource.growth>1||

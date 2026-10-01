@@ -6,6 +6,7 @@ const record=(v:unknown):v is Record<string,unknown>=>typeof v==='object'&&v!==n
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 
 export function validPlantLife(plant:Partial<Resource>,version:number,world:Pick<World,'tick'|'climate'>):boolean {
+  if(plant.species==='healroot-wild'&&version<167)return false;
   const life:unknown=plant.plantLife;
   if(life===undefined)return !world.climate||!isPlant(plant as Resource);
   if(version<87||!world.climate||!isPlant(plant as Resource)||!record(life)||!Object.keys(life).every(k=>['since','bornAt','age','darkTicks','leaflessAt','nextCheck'].includes(k)))return false;

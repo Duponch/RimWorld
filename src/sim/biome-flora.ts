@@ -6,7 +6,7 @@ export type BiomeId = typeof BIOMES[number];
 
 export const PLANT_SPECIES = [
   'grass','tall-grass','brambles','berry-bush','oak','poplar',
-  'moss','pine','birch','agave','saguaro','drago',
+  'moss','pine','birch','agave','saguaro','drago','healroot-wild',
 ] as const;
 export type PlantSpecies = typeof PLANT_SPECIES[number];
 
@@ -44,6 +44,7 @@ export const FLORA_DEFINITIONS:Readonly<Record<PlantSpecies,FloraDefinition>>=Ob
   agave:{label:'Agave',kind:'wild-plant',growDays:6,minFertility:.7,sensitivity:.5,harvestMinGrowth:.65,yield:10,product:'agave-fruit',persistent:false,nutrition:.2,hitPoints:120,flammability:1,maxGrowthTemperature:75,coldLeafless:false,lifespanMultiplier:8},
   saguaro:{label:'Saguaro',kind:'tree',growDays:5,minFertility:.05,sensitivity:0,harvestMinGrowth:.2,yield:15,product:'wood',persistent:false,nutrition:2,hitPoints:130,flammability:.8,maxGrowthTemperature:75,coldLeafless:true,lifespanMultiplier:40},
   drago:{label:'Drago',kind:'tree',growDays:15,minFertility:.7,sensitivity:.5,harvestMinGrowth:.4,yield:25,product:'wood',persistent:false,nutrition:2,hitPoints:200,flammability:.8,maxGrowthTemperature:75,coldLeafless:false,lifespanMultiplier:9},
+  'healroot-wild':{label:'Racine de guérison sauvage',kind:'wild-plant',growDays:10,minFertility:.7,sensitivity:1,harvestMinGrowth:.65,yield:1,product:'herbal-medicine',persistent:false,nutrition:.2,hitPoints:60,flammability:1,maxGrowthTemperature:58,coldLeafless:true,lifespanMultiplier:8},
 });
 
 export interface BiomeFloraProfile {
@@ -56,8 +57,8 @@ export interface BiomeFloraProfile {
 /** Omitted Core species keep their share: implementedWeight / totalCoreWeight
  * reduces the physical population before selection among delivered species. */
 export const BIOME_FLORA:Readonly<Record<BiomeId,BiomeFloraProfile>>=Object.freeze({
-  'temperate-forest':{plantDensity:.65,regrowDays:20,totalCoreWeight:15.9,weights:{grass:5,'tall-grass':2,brambles:1,oak:.5,poplar:.5,'berry-bush':.05}},
-  'boreal-forest':{plantDensity:.40,regrowDays:25,totalCoreWeight:44.22,weights:{grass:9,moss:4,brambles:2,pine:5,birch:1.5,poplar:1.2,'berry-bush':.16}},
+  'temperate-forest':{plantDensity:.65,regrowDays:20,totalCoreWeight:15.9,weights:{grass:5,'tall-grass':2,brambles:1,oak:.5,poplar:.5,'berry-bush':.05,'healroot-wild':.05}},
+  'boreal-forest':{plantDensity:.40,regrowDays:25,totalCoreWeight:44.22,weights:{grass:9,moss:4,brambles:2,pine:5,birch:1.5,poplar:1.2,'berry-bush':.16,'healroot-wild':.16}},
   'arid-shrubland':{plantDensity:.24,regrowDays:27,totalCoreWeight:16.46,weights:{grass:7,agave:.2,saguaro:.26,drago:.2,'berry-bush':.1}},
 });
 

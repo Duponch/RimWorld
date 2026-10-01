@@ -48,7 +48,12 @@ export function jobDuration(world: World, job: Job, capturedResource?:Resource|n
   if(job.kind==='repair')return job.repair?.warmed?20:80;
   if(job.kind==='deconstruct')return deconstructionDuration(job);
   if(job.material!==undefined)return constructionRecipe(job).work;
-  return (job.kind === 'harvest' || job.kind === 'cut') && isCrop((capturedResource===undefined?resourceCells(world).get(index(world, job)):capturedResource)??{kind:'rock'}) ? 20 : JOB_DURATION[job.kind];
+  if(job.kind==='harvest'||job.kind==='cut'){
+    const resource=capturedResource===undefined?resourceCells(world).get(index(world,job)):capturedResource;
+    if(job.kind==='harvest'&&resource?.species==='healroot-wild')return 40;
+    if(isCrop(resource??{kind:'rock'}))return 20;
+  }
+  return JOB_DURATION[job.kind];
 }
 interface Context { resources: Map<number, Resource>; fixed: Set<number>; temperatures:TemperatureView }
 function context(world: World, queriedCells?:readonly number[]): Context {

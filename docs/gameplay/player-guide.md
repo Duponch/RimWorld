@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Cueillir des plantes médicinales — V178
+
+Dans une forêt tempérée ou boréale, sélectionnez une **Racine de guérison sauvage** et vérifiez sa croissance. Au-dessus de 65 %, choisissez **Récolter** : un colon doit rejoindre la plante puis travailler. Un pied mûr intact fournit une dose de **Plantes médicinales** au sol et disparaît ; avant maturité ou après dommages, l'arrondi peut ne rien donner. **Couper** dégage le terrain sans médicament. Les animaux peuvent aussi brouter la plante vivante à partir de 65 %.
+
+Autorisez **Médicaments** dans une réserve et affectez Transport pour ranger les doses. Réglez le plafond du patient dans Santé : le médecin collecte réellement la dose avant les soins. Les plantes médicinales ne sont pas de la nourriture, se périment en 150 jours à taux normal et plafonnent la qualité du soin à 70 %. La culture domestique reste indisponible ; toutes les graines et tous les sites ne garantissent pas une racine proche. [Contrat et limites](../development/healroot-wild-v178.md).
+
 ## Cuisiner quatre plats gastronomiques carnivores — V173
 
 Sur une **Cuisinière à bois** alimentée ou une **Cuisinière électrique** sous courant, ajoutez **« Cuisiner des plats gastronomiques carnivores x4 »** et affectez à Cuisine un colon de niveau **8** ou plus. Rendez accessibles **100 viandes crues admissibles**, issues de la chasse ou récupération puis de la boucherie. Plusieurs espèces et piles peuvent se compléter ; lait, végétaux, dépouille non dépecée, repas cuit et viande pourrie ne comblent pas le quota. Le feu de camp ne propose pas cette facture. Si le travail attend, vérifiez filtres et rayon, chemins, réservations, combustible ou courant et cases libres au poste et à la destination.
