@@ -19,6 +19,7 @@ import { validApparelShape } from '../sim/apparel-save.ts';
 import { validWeaponShape } from '../sim/equipment-save.ts';
 import { pileMaxHp } from '../sim/thing-damage-rules.ts';
 import type { MaterialPile, Resource, Terrain, Tile, World } from '../sim/types.ts';
+import { TileSnapshotCache } from './tile-snapshot-cache.ts';
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
@@ -90,11 +91,7 @@ export class SnapshotEncoder {
   private revision = 0;
   private width = 0;
   private height = 0;
-  private terrain: Terrain[] = [];
-  private damage: Tile['miningDamage'][] = [];
-  private ores: Tile['ore'][] = [];
-  private floors: Tile['floor'][] = [];
-  private stones: Tile['stone'][] = [];
+  private tiles = new TileSnapshotCache();
   private resources = new Map<number, Resource>();
   private orderedResources: Resource[] = [];
   private piles = new Map<number, MaterialPile>();
@@ -108,8 +105,7 @@ export class SnapshotEncoder {
     const header: SnapshotHeader = { type: 'snapshot', epoch: this.epoch, revision: this.revision, stepMs, speed };
     if (replacement || checkpoint) {
       this.source = world; this.width = world.width; this.height = world.height;
-      this.terrain = world.tiles.map(tile => tile.terrain);
-      this.stones = world.tiles.map(tile => tile.stone);this.damage=world.tiles.map(t=>t.miningDamage);this.ores=world.tiles.map(t=>t.ore);this.floors=world.tiles.map(t=>t.floor);
+      this.tiles.reset(world.tiles);
       this.orderedResources = world.resources.map(copyResource);
       this.resources = new Map(this.orderedResources.map(resource => [resource.id, resource]));
       this.orderedPiles = world.piles.map(copyPile);
@@ -117,14 +113,7 @@ export class SnapshotEncoder {
       return { ...header, kind: 'checkpoint', world };
     }
 
-    const tiles: Array<[number, Terrain, Tile['stone']?, Tile['miningDamage']?, Tile['ore']?, Tile['floor']?]> = [];
-    for (let index = 0; index < world.tiles.length; index++) {
-      const {terrain,stone,miningDamage:damage,ore,floor}=world.tiles[index]!;
-      if (this.terrain[index] !== terrain || this.stones[index] !== stone || this.damage[index]!==damage || this.ores[index]!==ore || this.floors[index]!==floor) {
-        tiles.push(floor!==undefined?[index,terrain,stone,damage,ore,floor]:ore!==undefined?[index,terrain,stone,damage,ore]:damage!==undefined?[index,terrain,stone,damage]:stone === undefined ? [index, terrain] : [index, terrain, stone]);
-        this.terrain[index] = terrain; this.stones[index] = stone;this.damage[index]=damage;this.ores[index]=ore;this.floors[index]=floor;
-      }
-    }
+    const tiles = this.tiles.diff(world.tiles);
     const upserted: Resource[] = [];
     const growthValues:number[]=[],growthUpdates:Resource[]=[];
     let nextOrder: Resource[] | undefined = world.resources.length !== this.orderedResources.length ? [] : undefined;

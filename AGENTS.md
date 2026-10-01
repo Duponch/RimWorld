@@ -15,6 +15,8 @@
 
 - V175 enrichit le [son courant](docs/development/audio-v175.md) sans migration : dix musiques, rotation par contexte, deux lecteurs au maximum, et huit contacts confirmés avec quatre prises chacun. Lire l’[audit Core](docs/research/audio-coverage-core-v175.md), la [recherche musicale](docs/research/audio-music-core-v175.md) et la [preuve](docs/history/validation-audio-v175.md). Cinq générations musicales sont refusées pour crédits insuffisants ; ne pas les publier ni régénérer automatiquement. Le dernier coup d’extinction non observable reste silencieux.
 
+- V177 extrait le [cache terrain des snapshots](docs/development/snapshot-cache-v177.md), sans migration ni nouveau protocole. Lire sa [recherche Web](docs/research/snapshot-cache-web-v177.md) et sa [preuve](docs/history/validation-snapshot-cache-v177.md) avant modification : copie des cinq primitives, comparaison complète à chaque publication même au même tick, réutilisation au checkpoint et reset exact après changement de taille. Le gain de reset isolé ne prouve pas une accélération générale.
+
 ## Cible et contenu
 
 - RimWorld Core d’abord, extensions après G5 sauf demande utilisateur ultérieure. Référence Core des derniers relevés : 1.6.4871. Conserver ses boucles et interactions ; toute adaptation doit être motivée, documentée et distinguée d’une règle vérifiée. Ne jamais promettre une parité exhaustive.

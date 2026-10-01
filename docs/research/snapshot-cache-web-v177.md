@@ -1,0 +1,17 @@
+# Cache de tuiles et transfert des snapshots V177 — recherche Web
+
+V177 concerne l’implémentation JavaScript de l’encodeur, sans règle RimWorld à adopter et sans nouvelle mécanique. Sources consultées le 1er octobre 2026. Cette recherche vérifie les propriétés générales du moteur et du transfert Web ; les bénéfices locaux sont bornés par la [preuve](../history/validation-snapshot-cache-v177.md).
+
+## Sources primaires et portée
+
+- [V8, *Elements kinds*](https://v8.dev/blog/elements-kinds) décrit les représentations spécialisées des éléments d’un tableau, leurs transitions et le coût possible des accès polymorphes. Un tableau peut changer de représentation selon les valeurs insérées ; la simple juxtaposition de cinq primitives par tuile ne promet donc ni accès plus rapide, ni stockage plus compact. L’article suggère de mesurer les cas réels et distingue les tableaux ordinaires des tableaux typés. Le cache V177 est un tableau JavaScript de valeurs pouvant avoir plusieurs types et `undefined`, pas un `TypedArray` homogène.
+- [MDN, `Worker.postMessage()`](https://developer.mozilla.org/en-US/docs/Web/API/Worker/postMessage) indique que le message doit être pris en charge par l’algorithme de clonage structuré et que l’envoi ajoute une tâche à la boucle d’événements du port destinataire. L’encodage local est donc distinct de l’envoi et du traitement côté réception.
+- [MDN, *The structured clone algorithm*](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) documente la copie récursive des objets pris en charge et les valeurs transférables. Cette sémantique permet de raisonner sur l’indépendance des messages reçus, mais ne donne pas un temps de copie ni un coût de file pour notre payload.
+
+## Décision locale et vérification attendue
+
+Le candidat range les cinq valeurs primitives de chaque tuile côte à côte dans un seul tableau privé de l’encodeur et réutilise ses slots aux checkpoints. Cette disposition peut modifier les coûts d’accès et d’allocation par rapport aux cinq tableaux antérieurs ; son sens et sa taille d’effet exigent une mesure locale. Elle n’évite aucun parcours : chaque publication delta compare tous les champs de toutes les cases, y compris lorsque `World.tiles` ou une tuile garde la même identité et lorsque le tick ne change pas. Les références mutables seraient un témoin invalide. Un checkpoint ou un nouveau monde reconstruit la copie complète. Aucun gain mémoire n’est démontré par cette organisation.
+
+Le clone structuré exécuté dans Node par le profil local V146 est un **proxy** du coût de copie, pas le `postMessage` du vrai worker. Il ne mesure pas l’ordonnancement du message, son adoption et décodage dans Chromium, l’application au tick présenté, le CPU d’image, le RAF ou le GPU. Un éventuel changement du temps d’encodage ne doit pas être converti en débit ×6 ou FPS. La méthode du [contrat de mesure](../development/performance-measurement.md) impose des passes successives avec sources gelées et des postes de coût séparés ; la [preuve V169](../history/validation-performance-v169.md) illustre aussi la variabilité des reprises navigateur et l’absence de gain GPU garanti à partir d’une simplification de code.
+
+Le contrat d’égalité est décrit dans [V177](../development/snapshot-cache-v177.md). Les tests et mesures appartiennent à sa [preuve](../history/validation-snapshot-cache-v177.md), distincte des propriétés documentées par ces sources.

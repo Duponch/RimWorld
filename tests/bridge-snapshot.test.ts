@@ -57,6 +57,68 @@ test('floor placement, burning and removal cross worker deltas without mutating 
   const result=decoder.adopt(message);expect(result.status).toBe('applied');if(result.status==='applied')expect(result.world).toEqual(source);
 });
 
+test('same-tick tile edits preserve all five fields across delta and checkpoint resets', () => {
+  const source = createWorld(177, 16, 16), encoder = new SnapshotEncoder(), decoder = new SnapshotDecoder();
+  source.tiles[0] = { terrain: 'soil' };
+  source.tiles[1] = { terrain: 'rock', stone: 'granite' };
+  const frames: Array<{ world: World; frozen: World }> = [];
+  const send = (checkpoint = false): SnapshotMessage => {
+    const packet = structuredClone(encoder.encode(source, 0, 6, checkpoint));
+    const result = decoder.adopt(packet);
+    expect(result.status).toBe('applied');
+    if (result.status !== 'applied') throw Error(result.status);
+    expect(result.world).toEqual(source);
+    for (const frame of frames) expect(frame.world).toEqual(frame.frozen);
+    frames.push({ world: result.world, frozen: structuredClone(result.world) });
+    return packet;
+  };
+  send();
+  source.tiles[0]!.floor = 'wood-planks';
+  source.tiles[1]!.stone = 'marble';
+  source.tiles[1]!.miningDamage = 80;
+  source.tiles[1]!.ore = 'steel';
+  const changed = send();
+  expect(changed.kind).toBe('delta');
+  if (changed.kind !== 'delta') throw Error('delta expected');
+  expect(changed.tiles).toEqual([[0, 'soil', undefined, undefined, undefined, 'wood-planks'], [1, 'rock', 'marble', 80, 'steel']]);
+  send(true);
+  const repeated = send();
+  expect(repeated.kind === 'delta' && repeated.tiles).toBeUndefined();
+  source.tiles[0]!.terrain = 'grass';
+  delete source.tiles[0]!.floor;
+  source.tiles[1] = { terrain: 'rough-stone', stone: 'marble' };
+  const removed = send();
+  expect(removed.kind).toBe('delta');
+  if (removed.kind !== 'delta') throw Error('delta expected');
+  expect(removed.tiles).toEqual([[0, 'grass'], [1, 'rough-stone', 'marble']]);
+  expect(source.tick).toBe(0);
+});
+
+test('map replacement resets tile caches when dimensions shrink and grow', () => {
+  const encoder = new SnapshotEncoder(), decoder = new SnapshotDecoder();
+  const frames: Array<{ world: World; frozen: World }> = [];
+  for (const [sequence, size] of [32, 16, 48, 16].entries()) {
+    const source = createWorld(177 + sequence, size, size);
+    source.tiles[0] = { terrain: 'soil', floor: 'wood-planks' };
+    const checkpoint = structuredClone(encoder.encode(source, 0, 6));
+    expect(checkpoint.kind).toBe('checkpoint');
+    expect(checkpoint.epoch).toBe(sequence + 1);
+    const initial = decoder.adopt(checkpoint);
+    expect(initial.status).toBe('applied');
+    if (initial.status !== 'applied') throw Error(initial.status);
+    expect(initial.world).toEqual(source);
+    frames.push({ world: initial.world, frozen: structuredClone(initial.world) });
+    delete source.tiles[0]!.floor;
+    const delta = structuredClone(encoder.encode(source, 0, 6));
+    expect(delta.kind === 'delta' && delta.tiles).toEqual([[0, 'soil']]);
+    const updated = decoder.adopt(delta);
+    expect(updated.status).toBe('applied');
+    if (updated.status !== 'applied') throw Error(updated.status);
+    expect(updated.world).toEqual(source);
+    for (const frame of frames) expect(frame.world).toEqual(frame.frozen);
+  }
+});
+
 test('snapshots preserve exact state and previous frames through harvest, patches, replacement and recovery', () => {
   const encoder = new SnapshotEncoder(); const decoder = new SnapshotDecoder();
   let source = createWorld(42, 32, 32);
