@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Schéma courant 167. La [cueillette médicinale sauvage V178](healroot-wild-v178.md) ajoute une espèce persistée et valide strictement 166 avant migration neutre 166→167. Elle réutilise les ressources végétales, le PRNG privé de renouvellement, les piles herbal, le transport et les soins ; aucune plante ni dose rétroactive et aucun nouveau protocole. Sa présentation rejoint le lot résident de buissons, sans capacité globale par espèce. Compétence Plantes et culture restent différées. Le [cache V177](snapshot-cache-v177.md) et les recettes V173 gardent leurs preuves propres ; les notes V6–V88 sont dans [l’archive](architecture-pre-v145.md). L’[état du jeu](../gameplay/implementation-status.md) est l’inventaire actuel.
+Schéma courant 168. La [compétence Plantes V179](plants-skill-v179.md) valide strictement 167 avant migration neutre 167→168, sans profil ou XP rétroactif. Le module de statistiques centralise capacités et apprentissage au contact ; les tirages de récolte restent atomiques avec le dépôt. Le bridge refuse un profil Plantes invalide avant adoption, sans nouveau protocole. La scène de test se télécharge à la demande. Le rendu et ses lots GPU restent inchangés. [Cueillette V178](healroot-wild-v178.md), [cache V177](snapshot-cache-v177.md) et notes [historiques V6–V88](architecture-pre-v145.md) gardent leurs contrats propres ; l’[inventaire](../gameplay/implementation-status.md) décrit le contenu actuel.
 
 ## Objectif
 

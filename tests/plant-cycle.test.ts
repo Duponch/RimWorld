@@ -111,12 +111,13 @@ test('renewable bush: conditions, strict threshold, physical yield, repeated har
   finish(world,'harvest');expect(world.stock.food).toBe(20);expect(world.resources[0]!.id).toBe(id);
   finish(world,'cut');expect(world.resources).toEqual([]);expect(world.stock.food).toBe(20);
   const mature=fixture();finish(mature,'cut');expect(mature.resources).toEqual([]);expect(mature.stock.food).toBe(10);
-  const emptyYield=fixture();emptyYield.rng=8192;Object.assign(emptyYield.resources[0]!,{amount:1,growth:.6501,growthTick:0});
-  expect(harvestRoll(emptyYield,emptyYield.resources[0]!).quantity).toBe(0);finish(emptyYield,'harvest');
-  expect(emptyYield.stock.food).toBe(0);expect(emptyYield.rng).not.toBe(8192);
+  // V179 human harvest draws failure first, then rounding (42: .0026, .6603).
+  const emptyYield=fixture();emptyYield.rng=42;Object.assign(emptyYield.resources[0]!,{amount:1,growth:.6501,growthTick:0});
+  expect(harvestRoll(emptyYield,emptyYield.resources[0]!,emptyYield.pawns[0]).quantity).toBe(0);finish(emptyYield,'harvest');
+  expect(emptyYield.stock.food).toBe(0);expect(emptyYield.rng).not.toBe(42);
   const early=fixture();Object.assign(early.resources[0]!,{growth:.81,growthTick:0});
   expect(berryYield(early,early.resources[0]!)).toBeCloseTo(7.285714,5);
-  const rolled=harvestRoll(early,early.resources[0]!);expect([7,8]).toContain(rolled.quantity);
+  const rolled=harvestRoll(early,early.resources[0]!,early.pawns[0]);expect([7,8]).toContain(rolled.quantity);
   const earlyCopy=deserializeWorld(serializeWorld(early));finish(early,'harvest');finish(earlyCopy,'harvest');
   expect(early.stock.food).toBe(rolled.quantity);expect(serializeWorld(earlyCopy)).toBe(serializeWorld(early));
 });

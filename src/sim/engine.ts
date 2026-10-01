@@ -86,6 +86,7 @@ import { carrierOf } from './rescue-state.ts';
 import { exitPrisoner } from './prisoner-exit.ts';
 import { feedingWork } from './feeding-rules.ts';
 import { tickSkills, constructionWorkRate } from './skills.ts';
+import { plantWorkRate } from './plant-skills.ts';
 import { advancePower, reconcilePower } from './power.ts';
 import { isElectrical, newPowerState } from './power-rules.ts';
 import { autoRoofRooms, designateRoofArea, scheduleRoofs, reconcileRoofJobs, reconcileRoofSupport, finishRoofJob } from './roofing.ts';
@@ -125,8 +126,8 @@ import { applyBillCommand } from './cooking-commands.ts';
 import { cookingCellReserved } from './cooking-bills.ts';
 import { burnFuel, refuelable, newBuildingFuel, isFueledBuilding } from './fuel.ts';
 import { processHaul } from './hauling.ts';
-import { scheduleGrowing, cancelGrowingJobs, growingJobValid, finishSowing, jobDuration, growingZoneAt } from './farming.ts';
-import { isPlant, harvestable,choppable } from './plants.ts';
+import { scheduleGrowing, cancelGrowingJobs, growingJobValid, finishSowing, jobDuration, growingZoneAt, resourceAt } from './farming.ts';
+import { isPlant, harvestable,choppable,berryYield } from './plants.ts';
 import { search, searchCandidates, destinationValid, planWork, workType, type SearchBudget, type NavigationGrid } from './work-planner.ts';
 import { releaseAssignments, planCommandDrops, commitDrop, releaseWork, type DropPlan } from './work-release.ts';
 import { validDiningPlace } from './dining.ts';
@@ -517,7 +518,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     const resource = world.resources.find(item => sameCell(item, job));
     if (!resource) { releaseWork(world, pawn); return; }
     if (job.kind === 'harvest' && !harvestable(world, resource)) { releaseWork(world, pawn); return; }
-    const quantity=gatherResource(world,resource,job.kind,job.id);
+    const quantity=gatherResource(world,resource,job.kind,job.id,pawn);
     if(quantity===null){setWorkUnits(job,Math.max(0,Math.round((jobDuration(world,job)-1)*WORK_FRACTIONS)));releaseWork(world,pawn);return;}
     if(job.kind!=='chop'&&quantity>0)event(world,'job',`${pawn.name} a récolté ${quantity} ${harvestProductLabel(resource)}.`);
   } else if(job.kind==='lay-floor'||job.kind==='remove-floor'){
@@ -686,9 +687,9 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         const plant=world.resources.find(r=>r.id===job.clearance!.resourceId);
         if(!plant){releaseWork(world,pawn);continue;}
         if(adjacent(pawn,plant)) {
-          pawn.path=[];pawn.state='working';advanceWork(job.clearance,getLight().speedAt(pawn)*physicalWorkFactor(pawn,'plant',body));
+          pawn.path=[];pawn.state='working';advanceWork(job.clearance,getLight().speedAt(pawn)*plantWorkRate(pawn,body,plant.kind==='tree'&&choppable(world,plant)&&berryYield(world,plant)>0));
           if(job.clearance.progress>=clearingDuration(plant)) {
-            const quantity=gatherResource(world,plant,plant.kind==='tree'?'chop':'cut',job.id);
+            const quantity=gatherResource(world,plant,plant.kind==='tree'?'chop':'cut',job.id,pawn);
             if(quantity!==null)event(world,'job',`${pawn.name} a dégagé le chantier${plant.kind!=='tree'&&quantity>0?` et a récolté ${quantity} ${harvestProductLabel(plant)}`:''}.`);
             releaseWork(world,pawn);wakePlanners(world);
           }
@@ -725,7 +726,11 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       }
       const cells = footprintCells(job);
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {
-        pawn.path = []; pawn.state = 'working'; advanceWork(job,constructionWorkRate(pawn,job,getLight().speedAt(pawn),body));
+        pawn.path = []; pawn.state = 'working';
+        const plantJob=job.kind==='sow'||job.kind==='harvest'||job.kind==='cut'||job.kind==='chop';
+        const tree=job.kind==='chop'?resourceAt(world,job.z*world.width+job.x):undefined;
+        const plantLearning=job.kind==='sow'||job.kind==='harvest'||!!tree&&choppable(world,tree)&&berryYield(world,tree)>0;
+        advanceWork(job,plantJob?getLight().speedAt(pawn)*plantWorkRate(pawn,body,plantLearning):constructionWorkRate(pawn,job,getLight().speedAt(pawn),body));
         if (workProgress(job) >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
       } else moveToward(world, pawn, job, false, getBlocked, budget,false,getLight);
     }

@@ -19,7 +19,7 @@ function accept(w:World,c:Command){expect(applyCommand(w,c)).toMatchObject({ok:t
 function reject(w:World,c:Command){const before=serializeWorld(w);expect(applyCommand(w,c).ok).toBe(false);expect(serializeWorld(w)).toBe(before);}
 function tick(w:World){stepWorld(w);expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);}
 function until(w:World,predicate:()=>boolean,max=400){for(let i=0;i<max&&!predicate();i++)tick(w);expect(predicate()).toBe(true);}
-function woodJob(w:World){w.resources.push({id:w.nextId++,kind:'tree',x:10,z:12,amount:12});accept(w,{type:'designate',kind:'chop',x:10,z:12});return w.jobs.at(-1)!;}
+function woodJob(w:World){w.resources=[...w.resources,{id:w.nextId++,kind:'tree',x:10,z:12,amount:12}];accept(w,{type:'designate',kind:'chop',x:10,z:12});return w.jobs.at(-1)!;}
 
 test('queued cooking reserves mixed ingredients and staging, follows bill order, survives every phase with disabled work and produces exactly one meal',()=>{
   const w=camp(),[p,q]=w.pawns,s=fire(w),job=woodJob(w);p!.priorities={handle:0,clean:0,firefight:0,warden:0,basic:3,hunt:0,research:0, patient:0,bedrest:0,doctor:0,art:0,craft:2,mine:2,haul:0,build:0,gather:1,grow:0,cook:1};
@@ -63,7 +63,7 @@ test('forced sowing clearance uses growing assignment, survives regenerated inte
   p.planCooldown=20;until(w,()=>w.jobs.some(j=>j.kind==='sow'));const sow=w.jobs.find(j=>j.kind==='sow')!,job=woodJob(w);
   accept(w,{type:'order-job',pawnId:p.id,jobId:job.id,queue:false});const c:Command={type:'order-haul',pawnId:p.id,target:{type:'clear-sow',jobId:sow.id},queue:true};accept(w,c);
   const order=p.orders.queue[0]!;expect(typeof order!=='number'&&!isCookingOrder(order)&&order.destination).toMatchObject({type:'aside',growingZoneId:w.growingZones[0]!.id,sowCell:{x:14,z:12}});
-  w.jobs=w.jobs.filter(j=>j.id!==sow.id);expect(validateWorld(w)).toEqual([]);const copy=deserializeWorld(serializeWorld(w));
+  w.jobs=w.jobs.filter(j=>j.id!==sow.id);expect(validateWorld(w)).toEqual([]);const copy=deserializeWorld(serializeWorld(w));expect(copy).toEqual(w);
   accept(w,{type:'priority',pawnId:p.id,work:'grow',value:0});accept(copy,{type:'priority',pawnId:p.id,work:'grow',value:0});
   for(let i=0;i<250&&p.haul?.phase!=='deliver';i++){tick(w);stepWorld(copy);expect(w).toEqual(copy);}
   expect(p.haul?.phase).toBe('deliver');const held=w.piles.find(p=>p.owner.type==='pawn')!,age=rotAge(held,w.tick);

@@ -1,8 +1,14 @@
 # Guide joueur
 
+## Tester les racines médicinales et Plantes — V179
+
+Ouvrez **Charger une partie → Colonies de test → Racines et soins · 3 colons**. La fiche guide la récolte par Ada, le transport vers la réserve, puis le soin de Noé. La carte est boréale et la plante naturelle ; la contusion et les réglages sont préparés. La partie démarre en pause, sans médicament herbal déjà récolté.
+
+Dans **Bio**, Plantes indique niveau, expérience, vitesse et chances de récolte ; **Travail** affiche niveau/passion sous Culture et Récolte. On apprend au contact pendant le travail, pas pendant le trajet. Sous niveau 8, une récolte peut échouer ; au-dessus, le rendement peut être augmenté. La santé influe aussi sur ces statistiques. Les arbres ne subissent pas cet échec. [Règles et limites](../development/plants-skill-v179.md). Le semis médicinal domestique reste absent.
+
 ## Cueillir des plantes médicinales — V178
 
-Dans une forêt tempérée ou boréale, sélectionnez une **Racine de guérison sauvage** et vérifiez sa croissance. Au-dessus de 65 %, choisissez **Récolter** : un colon doit rejoindre la plante puis travailler. Un pied mûr intact fournit une dose de **Plantes médicinales** au sol et disparaît ; avant maturité ou après dommages, l'arrondi peut ne rien donner. **Couper** dégage le terrain sans médicament. Les animaux peuvent aussi brouter la plante vivante à partir de 65 %.
+Dans une forêt tempérée ou boréale, sélectionnez une **Racine de guérison sauvage** et vérifiez sa croissance. Au-dessus de 65 %, choisissez **Récolter** : un colon doit rejoindre la plante puis travailler. À Plantes 8 et capacités intactes, un pied mûr intact fournit une dose de **Plantes médicinales** au sol et disparaît ; avant maturité ou après dommages, l'arrondi peut ne rien donner. **Couper** dégage le terrain sans médicament. Les animaux peuvent aussi brouter la plante vivante à partir de 65 %.
 
 Autorisez **Médicaments** dans une réserve et affectez Transport pour ranger les doses. Réglez le plafond du patient dans Santé : le médecin collecte réellement la dose avant les soins. Les plantes médicinales ne sont pas de la nourriture, se périment en 150 jours à taux normal et plafonnent la qualité du soin à 70 %. La culture domestique reste indisponible ; toutes les graines et tous les sites ne garantissent pas une racine proche. [Contrat et limites](../development/healroot-wild-v178.md).
 

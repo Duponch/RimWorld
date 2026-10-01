@@ -12,11 +12,13 @@ import {deserializeWorld,serializeWorld,validateWorld} from '../src/sim/serializ
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {medicalCamp} from './scenarios/health.ts';
 import {foodWorkstationCamp,fixtureFoodStation} from './scenarios/food-workstations.ts';
+import {withoutPlantsSkill} from './scenarios/legacy-skills.ts';
 
 const ITEM='carnivore-fine-meal' as const;
 function declared155():World {
   const world=medicalCamp();
   for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
+  withoutPlantsSkill(world);
   (world as {schemaVersion:number}).schemaVersion=155;
   return world;
 }
@@ -67,7 +69,7 @@ test('V156 queued and active meat tasks preserve physical reservations across sa
   pawn.orders.queue.push(proposal.order);
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
-  const oldQueue=structuredClone(world);for(const policy of oldQueue.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
+  const oldQueue=withoutPlantsSkill(structuredClone(world));for(const policy of oldQueue.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   (oldQueue as {schemaVersion:number}).schemaVersion=155;
   expect(()=>deserializeWorld(JSON.stringify(oldQueue))).toThrow(/Invalid version 155 save/);
   pawn.orders.queue=[];stove.bills![0]!.destination='drop';
@@ -76,7 +78,7 @@ test('V156 queued and active meat tasks preserve physical reservations across sa
   expect(validateWorld(world)).toEqual([]);
   const resumed=deserializeWorld(serializeWorld(world));
   stepWorld(world,30);stepWorld(resumed,30);expect(resumed).toEqual(world);
-  const oldActive=structuredClone(world);for(const policy of oldActive.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
+  const oldActive=withoutPlantsSkill(structuredClone(world));for(const policy of oldActive.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   (oldActive as {schemaVersion:number}).schemaVersion=155;
   expect(()=>deserializeWorld(JSON.stringify(oldActive))).toThrow(/Invalid version 155 save/);
 });

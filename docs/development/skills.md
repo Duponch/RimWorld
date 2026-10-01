@@ -1,4 +1,8 @@
-# Compétences — Construction, Médecine, Tir et Mêlée
+# Compétences
+
+**État courant V179 : onze compétences actives sur douze Core.** Construction, Médecine, Tir, Mêlée, Social, Artisanat, Intellect, Cuisine, Artistique, Animaux et [Plantes](plants-skill-v179.md) ont des producteurs/consommateurs réels. Minage reste sans compétence propre. Plantes réutilise XP, passions, traits, saturation et oubli ; son absence historique vaut profil neutre 8 sans pratique rétroactive, à distinguer des anciens profils facultatifs lus à zéro. Bio et Travail reflètent ces règles.
+
+## Historique des producteurs
 
 V73 active **Intellect**, septième compétence : vitesse de recherche et XP pendant le travail au bureau, profils neufs 8/3/6, historique absent neutre 0. Passion/traits/saturation/oubli communs ; [contrat](research.md). Les cinq autres compétences Core restent à brancher.
 
@@ -18,7 +22,7 @@ Médecine utilise les mêmes règles de milli-XP, passion, saturation, oubli et 
 
 ## État et temps
 
-`Pawn.skills` contient Construction, Médecine, Tir, Mêlée et les profils facultatifs Social/Artisanat : niveau 0–20, expérience et bilan quotidien en milli-XP, passion 0/1/2, plus la dernière remise à zéro. Aucune horloge réelle, tirage aléatoire ou cache dérivé n'affecte l'apprentissage. Trois profils de Construction : Ada 8/passion, Noé 10/passion brûlante, Mina 4/sans passion. Ces choix ne reproduisent pas la génération de biographies Core ; les compétences non actives ne reçoivent pas de nombres fictifs. Médecine utilise Ada 6/passion, Noé 3/sans passion, Mina 8/passion brûlante ; vitesse, qualité et XP s’appliquent aux traitements réels du [contrat V47](tending.md). Les profils et règles de Tir sont dans le [contrat V56](shooting.md).
+`Pawn.skills` contient Construction, Médecine, Tir, Mêlée et les profils facultatifs Social/Artisanat/Intellect/Cuisine/Artistique/Animaux/Plantes : niveau 0–20, expérience et bilan quotidien en milli-XP, passion 0/1/2, plus la dernière remise à zéro. Aucune horloge réelle, tirage aléatoire ou cache dérivé n'affecte l'apprentissage. Trois profils de Construction : Ada 8/passion, Noé 10/passion brûlante, Mina 4/sans passion. Ces choix ne reproduisent pas la génération de biographies Core ; les compétences non actives ne reçoivent pas de nombres fictifs. Médecine utilise Ada 6/passion, Noé 3/sans passion, Mina 8/passion brûlante ; vitesse, qualité et XP s’appliquent aux traitements réels du [contrat V47](tending.md). Les profils et règles de Tir sont dans le [contrat V56](shooting.md).
 
 Seuil vers le niveau suivant : 1 000–10 000 XP entre niveaux 0–9, puis 12 000–30 000 entre 10–19. Au niveau 20, réserve plafonnée à 29 999 XP. L'oubli permet une dette jusqu'à −1 000 XP avant la perte d'un niveau. Il se produit tous les vingt ticks locaux, déphasé par ID, pour les niveaux 10–20 : 0,1 / 0,2 / 0,4 / 0,6 / 1 / 1,8 / 2,8 / 4 / 6 / 8 / 12 XP par intervalle. Aucun oubli aux niveaux inférieurs.
 

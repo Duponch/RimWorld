@@ -1,4 +1,5 @@
-import { TICKS_PER_DAY, type Resource, type World } from './types.ts';
+import { TICKS_PER_DAY, type Pawn, type Resource, type World } from './types.ts';
+import { plantHarvestYield } from './plant-skills.ts';
 import { isRoofed, roofIndex } from './roof-rules.ts';
 import { annualGrowingLightIntegral } from './environment.ts';
 import { soilFertility } from './soil.ts';
@@ -82,7 +83,20 @@ export function berryYield(world: World, plant: Resource): number {
   return plant.amount * (.5 + .5 * (growth - minimum) / (1 - minimum)) * health;
 }
 /** Preview stochastic rounding without consuming RNG until placement succeeds. */
-export function harvestRoll(world: World, plant: Resource): { quantity: number; rng: number } {
+export function harvestRoll(world: World, plant: Resource, worker?:Pawn): { quantity: number; rng: number } {
+  // Real human work uses Core's failure -> base RoundRandom -> surplus
+  // RoundRandom order. Preview in a private stream: refused placement must
+  // neither destroy a plant nor advance the authoritative RNG.
+  if(worker){
+    let rng=world.rng;
+    const random=()=>{rng^=rng<<13;rng^=rng>>>17;rng^=rng<<5;rng>>>=0;return rng/0x100000000;};
+    const round=(value:number)=>Math.floor(value)+(random()<value%1?1:0);
+    const efficiency=plantHarvestYield(worker);
+    if(plant.kind!=='tree'&&random()>efficiency)return {quantity:0,rng};
+    let quantity=round(berryYield(world,plant));
+    if(efficiency>1)quantity=round(quantity*efficiency);
+    return {quantity,rng};
+  }
   const raw = berryYield(world, plant), whole = Math.floor(raw);
   if (raw === whole) return { quantity: whole, rng: world.rng };
   let rng = world.rng; rng ^= rng << 13; rng ^= rng >>> 17; rng ^= rng << 5; rng >>>= 0;

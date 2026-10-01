@@ -7,6 +7,7 @@ import {validCookingOrder} from '../src/sim/player-cooking-save.ts';
 import {planCookingOrder} from '../src/sim/player-cooking.ts';
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {foodWorkstationCamp,fixtureFoodStation} from './scenarios/food-workstations.ts';
+import {withoutPlantsSkill} from './scenarios/legacy-skills.ts';
 
 const RECIPE='cook-carnivore-lavish-meal-bulk' as const;
 function prepared():World {
@@ -18,7 +19,7 @@ function prepared():World {
   return world;
 }
 function declared165(world:World):World {
-  const old=structuredClone(world);
+  const old=withoutPlantsSkill(structuredClone(world));
   (old as {schemaVersion:number}).schemaVersion=165;
   return old;
 }

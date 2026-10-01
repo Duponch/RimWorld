@@ -8,7 +8,7 @@ import { rotAge } from '../src/sim/food-preservation.ts';
 import { visitorTradeFixture } from './scenarios/visitors.ts';
 import { deconstructionCamp,fixtureBuilding } from './scenarios/deconstruction.ts';
 import { SCHEMA_VERSION, type World } from '../src/sim/types.ts';
-import { withoutFutureHelmetPolicy } from './scenarios/legacy-skills.ts';
+import { withoutFutureHelmetPolicy,withoutPlantsSkill } from './scenarios/legacy-skills.ts';
 
 function replay(w:World,ticks:number):void {
   expect(validateWorld(w)).toEqual([]);const clone=deserializeWorld(serializeWorld(w));
@@ -62,6 +62,7 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   expect(validateWorld(migrated)).toEqual([]);
   const v150=structuredClone(w);
   (v150 as {schemaVersion:number}).schemaVersion=150;
+  withoutPlantsSkill(v150);
   for(const policy of v150.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   expect(deserializeWorld(JSON.stringify(v150))).toEqual({...v150,schemaVersion:SCHEMA_VERSION});
   const futureMemory=structuredClone(v150);

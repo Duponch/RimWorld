@@ -1,6 +1,6 @@
 # Lisière
 
-Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 167**. La [cueillette médicinale sauvage V178](docs/development/healroot-wild-v178.md) relie une plante générée, sa récolte en dose physique, le stockage et les soins existants. La culture domestique et la compétence Plantes restent différées. Les règles et preuves sont regroupées dans l’[état fonctionnel](docs/gameplay/implementation-status.md) ; la [feuille de route](docs/ROADMAP.md) distingue travaux ouverts et contenu jouable, et la [validation courante](docs/development/validation.md) borne les contrôles.
+Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 168**. La [compétence Plantes V179](docs/development/plants-skill-v179.md) agit sur les travaux et les récoltes existants ; « Racines et soins » est accessible dans Charger une partie → Colonies de test. La [cueillette sauvage V178](docs/development/healroot-wild-v178.md) fournit des doses physiques ; le semis médicinal domestique reste différé. L’[état fonctionnel](docs/gameplay/implementation-status.md), la [feuille de route](docs/ROADMAP.md) et la [validation courante](docs/development/validation.md) distinguent contenu, priorités et preuves.
 
 ## Démarrer
 

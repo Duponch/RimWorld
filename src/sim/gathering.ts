@@ -6,15 +6,15 @@ import { FLORA_DEFINITIONS } from './biome-flora.ts';
 import { isCrop, AFTER_HARVEST_GROWTH, choppable, harvestable, harvestRoll } from './plants.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { releaseWork } from './work-release.ts';
-import type { Resource, World } from './types.ts';
+import type { Pawn, Resource, World } from './types.ts';
 
 /** Harvest and construction clearing share one conservative producer. null
  * leaves resource, RNG and material unchanged when output cannot be placed. */
-export function gatherResource(world: World, resource: Resource, kind:'chop'|'harvest'|'cut', producerJobId?:number): number|null {
+export function gatherResource(world: World, resource: Resource, kind:'chop'|'harvest'|'cut', producerJobId?:number, worker?:Pawn): number|null {
   if(kind==='harvest'&&!harvestable(world,resource)||kind==='chop'&&!choppable(world,resource))return null;
   // Historical bushes keep their established cut yield. Only V91 species use
   // product-free cutting as vegetation/construction clearing.
-  const roll=kind==='chop'&&!resource.species?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&resource.species?{quantity:0,rng:world.rng}:harvestRoll(world,resource);
+  const roll=kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&resource.species?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
   if(roll.quantity>0) {
     const item=resource.species?FLORA_DEFINITIONS[resource.species].product:
       kind==='chop'?'wood':isCrop(resource)?cropProduct(resource.kind):world.foodRules==='legacy'?'legacy-portion':'berries';

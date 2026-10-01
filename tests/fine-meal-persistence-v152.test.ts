@@ -10,10 +10,12 @@ import { stepWorld } from '../src/sim/engine.ts';
 import { SCHEMA_VERSION, type World } from '../src/sim/types.ts';
 import { medicalCamp } from './scenarios/health.ts';
 import { fixtureFoodStation } from './scenarios/food-workstations.ts';
+import { withoutPlantsSkill } from './scenarios/legacy-skills.ts';
 
 function declared150():World {
   const world=medicalCamp();
   for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
+  withoutPlantsSkill(world);
   (world as {schemaVersion:number}).schemaVersion=150;
   return world;
 }

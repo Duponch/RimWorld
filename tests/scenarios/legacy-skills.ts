@@ -6,8 +6,16 @@ import { newBreakdownCalendar } from '../../src/sim/breakdowns.ts';
 import { PRODUCTION_RECIPES } from '../../src/sim/production-recipes.ts';
 import { adultAgeTicks } from '../../src/sim/animal-life.ts';
 import { newVisitorAgenda } from '../../src/sim/visitor-state.ts';
+/** Historical fixture construction only: V167 and earlier had no Plants skill. */
+export function withoutPlantsSkill<T>(world:T):T {
+  const w=world as {pawns?:{skills?:{plants?:unknown}}[];visitors?:{departed?:{pawn:{skills?:{plants?:unknown}}}[]}};
+  for(const pawn of w.pawns??[])if(pawn.skills)delete pawn.skills.plants;
+  for(const departure of w.visitors?.departed??[])if(departure.pawn.skills)delete departure.pawn.skills.plants;
+  return world;
+}
 /** Current default meals cannot be declared as an older save. */
 export function withoutFutureFineMealPolicy<T>(world:T):T {
+  withoutPlantsSkill(world);
   for(const policy of (world as {foodPolicies?:{allowed:string[]}[]}).foodPolicies??[])
     policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   return world;
@@ -120,7 +128,7 @@ export function withMigratedBasic<T>(world:T):T {
 /** Independent expectation of V89->V90's neutral adoption. */
 export function withMigratedV90<T>(world:T):T {
   // V120 does not grant wool permissions to an already chosen policy.
-  const expected=structuredClone(world),w=expected as any,registry=createDefaultApparelPolicyRegistry(false);
+  const expected=withoutPlantsSkill(structuredClone(world)),w=expected as any,registry=createDefaultApparelPolicyRegistry(false);
   // Historical fixture builders remove V144. The expected current save gets
   // its neutral future calendar, without inventing a past breakdown.
   w.breakdown??=newBreakdownCalendar(w.seed,w.tick);
@@ -160,6 +168,7 @@ export function withoutFutureHelmetPolicy<T>(world:T):T {
 
 /** Authentic pre-V104 test payloads have no Art work priority or practice. */
 export function withoutArt<T>(world:T):T {
+  withoutPlantsSkill(world);
   const w=world as any;
   for(const pawn of w.pawns??[]){delete pawn.priorities.art;delete pawn.priorities.handle;if(pawn.skills){delete pawn.skills.artistic;delete pawn.skills.animals;}}
   return world;

@@ -8,7 +8,7 @@ V83 : `soilFertility` partage les fertilités terre ordinaire (`grass`) 1, terre
 
 V39 : [croissance et semis sous température locale](plant-temperature.md). Le site historique quotidien 14–28 °C demeure favorable sans adoption du climat ; le froid et la chaleur des volumes conservés modifient réellement la croissance. Les nouveaux semis attendent une température admissible. V87 prolonge ce contrat par les saisons du site adopté, la mortalité et les feuilles décrites ci-dessous.
 
-État courant : 20 septembre 2026. [Coton et tissu V71](textiles.md) ajoutent le choix d’espèce et une récolte non alimentaire ; la confection suit son contrat V72. Tranche G1 ; [recherche et limites de fidélité](../research/farming-reference.md). L'agriculture n'est pas un domaine terminé.
+État courant : 2 octobre 2026. [Plantes V179](plants-skill-v179.md) apporte vitesse, XP et rendement aux travaux ci-dessous ; leurs durées sont des unités neutres, pas une durée identique pour chaque niveau. [Coton et tissu V71](textiles.md) ajoutent le choix d’espèce et une récolte non alimentaire ; la confection suit son contrat V72. Tranche G1 ; [recherche et limites de fidélité](../research/farming-reference.md). L'agriculture n'est pas un domaine terminé.
 
 ## Contrat livré
 
@@ -18,7 +18,7 @@ Le semis demande 17 ticks de notre horloge, puis crée un plant à croissance 0,
 
 Désactiver Semis laisse récolter le riz mûr, même avec Coupe désactivée. Sans semis, les autres plantes récoltables mûres peuvent être récoltées si Coupe est autorisée. Retirer une zone conserve les plantes et annule ses travaux générés. Les coupes/récoltes désignées indépendamment restent distinctes. V20 annule aussi les dégagements manuels attachés à cette zone, avec dépôt conservatif des cargaisons. Annuler un travail automatique sans modifier la zone permet sa redécouverte ultérieure.
 
-Le riz au sol rejoint les piles, réservations, transport et ingestion existants : pile de 75 maximum, nutrition 0,05 par unité, souvenir « mangé cru » −7 pendant un jour, cumulable avec le souvenir sans table. La première [cuisine](cooking.md) transforme riz/baies en repas simples depuis V10 ; les [cultures V84](food-crops.md) et [postes alimentaires](food-workstations.md) complètent cette filière avec la compétence Cuisine. Intoxications et compétence Plantes restent absentes ; le [choix alimentaire](food-items.md) et les régimes gardent leurs contrats propres.
+Le riz au sol rejoint les piles, réservations, transport et ingestion existants : pile de 75 maximum, nutrition 0,05 par unité, souvenir « mangé cru » −7 pendant un jour, cumulable avec le souvenir sans table. La première [cuisine](cooking.md) transforme riz/baies en repas simples depuis V10 ; les [cultures V84](food-crops.md) et [postes alimentaires](food-workstations.md) complètent cette filière avec la compétence Cuisine. Intoxications V89 et compétence Plantes V179 ont leurs contrats ; le [choix alimentaire](food-items.md) et les régimes gardent leurs contrats propres.
 
 ## Croissance et environnement
 
@@ -45,7 +45,7 @@ V87 valide strictement V86 avant migration. Les cultures et leur croissance sont
 
 ## Écarts restant ouverts
 
-Depuis V9, les piles bloquant un semis sont déplacées physiquement hors des cultures par le cultivateur, même sans réserve et avec Transport désactivé. Les fragments physiques des sites V83 peuvent aussi être transportés ; seuls les anciens fragments décoratifs restent non collectables. V87 ajoute points de vie et mortalité aux quatre cultures et aux baies. Le coût fin de déplacement entre espèces et les aptitudes Plantes du cultivateur restent ouverts. Le système ne simule ni maladies végétales, fertilisation artificielle, cultures supplémentaires, croissance biologique des arbres ni perte de rendement liée à une mauvaise compétence. Les sols actuels et la forêt tempérée ne représentent pas tous les biomes.
+Depuis V9, les piles bloquant un semis sont déplacées physiquement hors des cultures par le cultivateur, même sans réserve et avec Transport désactivé. Les fragments physiques des sites V83 peuvent aussi être transportés ; seuls les anciens fragments décoratifs restent non collectables. V87 ajoute points de vie et mortalité aux quatre cultures et aux baies. Le coût fin de déplacement entre espèces et les autres aptitudes agricoles restent ouverts. Le système ne simule pas les maladies végétales ou une fertilisation artificielle ; le catalogue de cultures, les lampes horticoles et les facteurs globaux de travail restent incomplets. Les trois biomes locaux ne représentent pas tous les biomes Core.
 
 Les scénarios approfondis prolongent `plant-cycle.test.ts`, le joueur ordinaire et son parcours UI : croissance indépendante de la cadence d'observation, interruption, réglages, reprise exacte, premier rendement physique, stockage, second semis et stabilité des buffers. Les preuves d'exécution sont dans [validation](validation.md).
 

@@ -15,12 +15,14 @@ import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {medicalCamp} from './scenarios/health.ts';
 import {foodWorkstationCamp,fixtureFoodStation} from './scenarios/food-workstations.ts';
 import {visitorTradeFixture} from './scenarios/visitors.ts';
+import {withoutPlantsSkill} from './scenarios/legacy-skills.ts';
 
 const ITEM='vegetarian-lavish-meal' as const;
 const withoutFutureMeals=<T extends string>(items:readonly T[]):T[]=>items.filter(item=>item!==ITEM&&item!=='carnivore-lavish-meal');
 function declared156():World {
   const world=medicalCamp();
   for(const policy of world.foodPolicies)policy.allowed=withoutFutureMeals(policy.allowed);
+  withoutPlantsSkill(world);
   (world as {schemaVersion:number}).schemaVersion=156;
   return world;
 }
@@ -71,7 +73,7 @@ test('V156 trade receipts and frozen visitor cargo reject the new meal',()=>{
   for(let i=0;i<3500&&!visitorWorld.visitors?.departed.some(d=>d.pawn.id===traderId);i++)stepWorld(visitorWorld);
   const departure=visitorWorld.visitors!.departed.find(d=>d.pawn.id===traderId)!;
   expect(departure).toBeDefined();
-  const old=structuredClone(visitorWorld);
+  const old=withoutPlantsSkill(structuredClone(visitorWorld));
   for(const policy of old.foodPolicies)policy.allowed=withoutFutureMeals(policy.allowed);
   (old as {schemaVersion:number}).schemaVersion=156;
   expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
@@ -93,7 +95,7 @@ test('V157 queued and active tasks preserve physical reservations and reject V15
   pawn.orders.queue.push(proposal.order);
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
-  const oldQueue=structuredClone(world);for(const policy of oldQueue.foodPolicies)policy.allowed=withoutFutureMeals(policy.allowed);
+  const oldQueue=withoutPlantsSkill(structuredClone(world));for(const policy of oldQueue.foodPolicies)policy.allowed=withoutFutureMeals(policy.allowed);
   (oldQueue as {schemaVersion:number}).schemaVersion=156;
   expect(()=>deserializeWorld(JSON.stringify(oldQueue))).toThrow(/Invalid version 156 save/);
   pawn.orders.queue=[];stove.bills![0]!.destination='drop';
@@ -102,7 +104,7 @@ test('V157 queued and active tasks preserve physical reservations and reject V15
   expect(validateWorld(world)).toEqual([]);
   const resumed=deserializeWorld(serializeWorld(world));
   stepWorld(world,30);stepWorld(resumed,30);expect(resumed).toEqual(world);
-  const oldActive=structuredClone(world);for(const policy of oldActive.foodPolicies)policy.allowed=withoutFutureMeals(policy.allowed);
+  const oldActive=withoutPlantsSkill(structuredClone(world));for(const policy of oldActive.foodPolicies)policy.allowed=withoutFutureMeals(policy.allowed);
   (oldActive as {schemaVersion:number}).schemaVersion=156;
   expect(()=>deserializeWorld(JSON.stringify(oldActive))).toThrow(/Invalid version 156 save/);
 });

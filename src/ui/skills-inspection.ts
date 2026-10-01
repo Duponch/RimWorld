@@ -2,6 +2,7 @@ import { createTraitsInspection,updateTraitsInspection,traitSummary } from './tr
 import { intellectualSkill } from '../sim/research';
 import { craftingSkill } from '../sim/crafting-quality';
 import { artisticSkill } from '../sim/art-rules';
+import { plantSkill,plantWorkSpeed,plantHarvestYield } from '../sim/plant-skills';
 import { cookingSkill,cookingSpeed,butcherySpeed,butcheryEfficiency } from '../sim/cooking-statistics';
 import { constructionSpeed, learningFactor, XP_SCALE, xpRequired } from '../sim/skills.ts';
 import { medicalTendSpeed,medicalTendQuality } from '../sim/care-rules.ts';
@@ -11,12 +12,13 @@ import type { Pawn } from '../sim/types.ts';
 import { SKILL_PASSION_LABELS,setCompactSkillPassion,setSkillPassion } from './skill-passion';
 
 type SkillEntry = {
-  skill: 'animals'|'construction'|'medicine'|'intellectual'|'crafting'|'artistic'|'cooking'|'shooting'|'melee'|'social';
+  skill: 'animals'|'plants'|'construction'|'medicine'|'intellectual'|'crafting'|'artistic'|'cooking'|'shooting'|'melee'|'social';
   progress?: string;
   description?: string;
 };
 const SKILL_ENTRIES: readonly SkillEntry[] = [
   {skill:'animals',progress:'data-animals-xp'},
+  {skill:'plants',progress:'data-plants-xp'},
   {skill:'construction',progress:'data-skill-xp',description:'data-skill-description'},
   {skill:'medicine',progress:'data-medicine-xp',description:'data-medicine-description'},
   {skill:'intellectual'},
@@ -66,6 +68,10 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
   setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="animals"]')!,`Animaux ${animals.level}/20`,animals.passion);
   panel.querySelector<HTMLElement>('[data-skill-detail="animals"]')!.textContent=`${(animals.xp/XP_SCALE).toFixed(1)} XP · Apprivoisement et entretien. Niveau 8 requis pour le lièvre.`;
   const ap=panel.querySelector<HTMLProgressElement>('[data-animals-xp]')!;ap.value=Math.max(0,animals.xp/xpRequired(animals.level));ap.setAttribute('aria-label','Expérience Animaux');
+  const plants=plantSkill(pawn),yieldStat=plantHarvestYield(pawn);
+  setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="plants"]')!,`Plantes ${plants.level}/20`,plants.passion);
+  const pp=panel.querySelector<HTMLProgressElement>('[data-plants-xp]')!;pp.value=Math.max(0,plants.xp/xpRequired(plants.level));pp.setAttribute('aria-label','Expérience Plantes');
+  panel.querySelector<HTMLElement>('[data-skill-detail="plants"]')!.textContent=`${(plants.xp/XP_SCALE).toFixed(1)} / ${xpRequired(plants.level)/XP_SCALE} XP · Travail ${Math.round(plantWorkSpeed(pawn)*100)} % avant lumière · Réussite de récolte ${Math.round(Math.min(1,yieldStat)*100)} % · Bonus de rendement ${Math.round(Math.max(0,yieldStat-1)*100)} % · Apprentissage ${Math.round(learningFactor(plants,pawn)*100)} %. Les arbres ne subissent pas d’échec de récolte.${pawn.skills.plants?'':' Profil historique neutre, sans pratique antérieure.'}`;
   const art=artisticSkill(pawn);
   setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="artistic"]')!,`Artistique ${art.level}/20`,art.passion);
   panel.querySelector<HTMLElement>('[data-skill-detail="artistic"]')!.textContent=`${(art.xp/XP_SCALE).toFixed(1)} / ${xpRequired(art.level)/XP_SCALE} XP · détermine la qualité des sculptures, sans accélérer le travail. Apprentissage ${Math.round(learningFactor(art,pawn)*100)} %.`;
@@ -88,6 +94,12 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
 }
 export function updateWorkSkills(row:HTMLElement,pawn:Pawn):void {
   row.title=traitSummary(pawn);
+  for(const work of ['grow','gather'] as const){
+    const select=row.querySelector<HTMLSelectElement>(`[data-work="${work}"]`);if(!select)continue;
+    let label=select.parentElement!.querySelector<HTMLElement>('.work-plants');if(!label){label=document.createElement('small');label.className='work-plants';select.parentElement!.append(label);}
+    const skill=plantSkill(pawn);setCompactSkillPassion(label,skill.level,skill.passion,'Plantes');
+    select.title=`Plantes ${skill.level}/20 · ${SKILL_PASSION_LABELS[skill.passion]} · vitesse ${Math.round(plantWorkSpeed(pawn)*100)} % avant lumière · semis, récolte et abattage`;
+  }
   const handle=row.querySelector<HTMLSelectElement>('[data-work="handle"]');
   if(handle){let label=handle.parentElement!.querySelector<HTMLElement>('.work-animals');if(!label){label=document.createElement('small');label.className='work-animals';handle.parentElement!.append(label);}const a=pawn.skills.animals;setCompactSkillPassion(label,a?.level??0,a?.passion??0,'Animaux');handle.title='Apprivoisement et entretien des lièvres · niveau Animaux 8 requis';}
   const warden=row.querySelector<HTMLSelectElement>('[data-work="warden"]');

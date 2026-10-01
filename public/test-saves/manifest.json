@@ -762,6 +762,35 @@
       "prepared": true,
       "provenance": "Scène V166 préparée depuis le même départ 32 × 32 au tick zéro : la météo établie est imposée explicitement. La saison et la fréquence naturelle de cette météo ne sont pas démontrées ; aucune frappe de foudre passée n’est ajoutée.",
       "sha256": "80dcae0f0601f935607eebf75622ca98b92192d6c88420c50196646781496acf"
+    },
+    {
+      "id": "racines-et-soins-v179",
+      "release": "v179",
+      "label": "Racines et soins · 3 colons",
+      "description": "Forêt boréale naturelle 250 × 250, racine mûre désignée, Ada Plantes 8, réserve médicale et contusion légère préparée chez Noé. La dose et le soin attendent les vrais travaux.",
+      "filename": "racines-et-soins.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 250,
+      "height": 250,
+      "tick": 0,
+      "focus": [
+        "racine de guérison sauvage",
+        "compétence Plantes",
+        "récolte",
+        "transport",
+        "réserve médicale",
+        "soin avec plante médicinale"
+      ],
+      "steps": [
+        "À (127, 143), sélectionner la racine sauvage mûre déjà désignée. Inspecter Plantes 8 dans Bio d’Ada et sa priorité Récolte 1 dans Travail ; reprendre pour observer son trajet, le travail et une dose au sol.",
+        "La réserve médicale filtrée est en (127, 126). Dans Travail, régler Transport d’Ada sur 1 puis ordonner le transport de la dose récoltée ; suivre sa cargaison jusqu’à la réserve.",
+        "Noé porte une contusion légère au bras gauche, préparée dès le départ. Dans Santé, vérifier son plafond « Plantes médicinales », activer Auto-soin, puis régler Médecin de Noé sur 1 et ordonner son auto-soin ; observer la consommation de la dose physique.",
+        "Sauvegarder puis recharger pendant une tâche pour vérifier sa continuation. Les autres travaux sont désactivés dans cette scène préparée ; rétablir leurs priorités pour poursuivre librement la colonie."
+      ],
+      "prepared": true,
+      "provenance": "Création Crashlanded ordinaire au schéma 168, graine 42, petit relief boréal et profil Plantes initial, sans modification de la flore naturelle ni dose herbal ajoutée. Seuls une réserve, une désignation, les priorités et besoins de départ, ainsi qu’une contusion localisée déterministe sont préparés ; récolte, transport et soin restent à accomplir après reprise.",
+      "sha256": "8d78cdb940a76050f4f270b454f7ea2b5a4de927cdd5304a1d74a52e5f7d2c49"
     }
   ]
 }
