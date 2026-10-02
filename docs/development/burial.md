@@ -1,5 +1,7 @@
 # Dépouilles humaines et sépultures
 
+État courant : [V181](bereavement-v181.md) ajoute les pensées dirigées de mort d’un ami ou rival. Les descriptions et absences de deuil ci-dessous sont celles du contrat historique ; témoins, pensée générale de décès colonial, parenté et romance restent distincts.
+
 V89 — **validée dans son périmètre**. [Référence Core 1.6.4871](../research/human-burial-reference-v89.md), [preuves communes](../history/validation-hygiene-v89.md). La chaîne jouable est décès réel → corps accessible → transport → tombe construite → inhumation persistée ; la déconstruction restitue le même corps. Le pilote avec reprises conserve trois identités effectivement inhumées, distinctes des situations contrôlées de saturation, interruption et destruction. [ROADMAP](../ROADMAP.md) reste l'unique calendrier.
 
 ## Identité et propriété

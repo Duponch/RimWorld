@@ -1,6 +1,6 @@
 # Lisière
 
-Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 169**. [V180](docs/development/cassandra-misc-v180.md) ouvre les canicules naturelles de Cassandra partielle et la colonie de test « Canicule et refuge ». L’[inventaire](docs/gameplay/implementation-status.md), la [roadmap](docs/ROADMAP.md) et la [validation](docs/development/validation.md) distinguent contenu, priorités et preuves.
+Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 170**. [V181](docs/development/bereavement-v181.md) relie la mort d’un ami ou d’un rival aux opinions et à l’humeur ; « Deuil et souvenirs » permet de l’essayer. L’[inventaire](docs/gameplay/implementation-status.md), la [roadmap](docs/ROADMAP.md) et la [validation](docs/development/validation.md) distinguent contenu, priorités et preuves.
 
 ## Démarrer
 

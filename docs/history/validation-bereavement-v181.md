@@ -1,0 +1,35 @@
+# Validation — Deuil dirigé V181
+
+**2 octobre 2026.** Base `761a634` (V180), schéma **170** après validation stricte **169** et migration neutre. Le [contrat](../development/bereavement-v181.md) et la [recherche Core](../research/bereavement-core-v181.md) bornent cette tranche aux souvenirs dirigés de mort d’un ami ou rival. Les originaux du corpus et sauvegardes historiques n’ont pas été régénérés.
+
+## Simulation et persistance
+
+Le groupement initial passe **26/26 tests sur dix fichiers**, puis l’extension V181 **12/12 sur quatre fichiers**, dont cinq déjà exercés : **33 contrôles distincts sur onze fichiers**. Ils couvrent seuils ±20 et opinions intermédiaires, sens dirigé, intensité, rival fort, durées/expiration, noms distincts et homonymes, destinataires endormis/à terre, Sanguinaire, exclusions, cinq morts par famille, unicité, sauvegarde/reprise, transmission au même tick et refus atomique de métadonnées invalides. L’inhumation se réalise par ordre, déplacement, prélèvement, portage et dépôt véritables ; détruire la dépouille conserve l’identité et la mémoire. Une ancienne colonie V89 avec 36 morts et la scène publique V180 reprennent sans souvenirs rétrospectifs. Les tests de repas, corps, échanges et catalogue voisins passent dans ce groupement.
+
+Le premier ciblé isolé de l’agent trouvait **3/4** : une assertion supposait que la blessure au cœur consommait nécessairement un tirage. Cette assertion a été retirée ; la comparaison au même décès sans opinion reste et vérifie que le deuil ne consomme aucun PRNG. Il s’agissait d’un oracle de test incorrect, pas d’un comportement produit réparé.
+
+## Essai public
+
+[Deuil et souvenirs](../../public/test-saves/v181/deuil-et-souvenirs.json), aride naturel 250², trois colons, graine 13312, tick initial 0 ; SHA-256 `d2c5b54f53def4b713c913a190e9824e467e1b5962fb76eb47fe11c7aad3178d`. Mina est vivante à terre avec blessure et perte de sang préparées ; Ada et Noé ont des souvenirs sociaux initiaux opposés, sans prétendre que les conversations ont été jouées. Le premier tick médical réalise la mort par perte de sang et les pensées. Aucun stock supplémentaire. Le catalogue contient 33 entrées et garde un plafond contrôlé de 48, sans changer les 32 fichiers précédents.
+
+## Contrôles finaux
+
+La régression hors campagnes longues passe sur **355/355 fichiers : 1 558 tests réussis et un ignoré sur 1 559**, en **308,67 s**. Cette passe précède deux retouches finales bornées : garde des destinataires à la validation, puis parcours commun Plantes/deuil au bridge. Leurs contrats sont rejoués séparément : **22/22 sur six fichiers** pour destinataires, morts retenus, corps, migrations et bridge ; puis **63/63 sur six fichiers** pour adoption, piles, sons et champs Plantes/agenda voisins. L’arrondi de la cible d’humeur est une retouche d’affichage vérifiée dans le navigateur final ; la valeur persistée et la cible de simulation gardent leur précision. Pas de seconde régression générale après ces retouches, ni campagne naturelle longue.
+
+Le build final TypeScript/Vite passe, **619 modules**, avec l’avertissement préexistant des chunks dépassant 500 ko. Le navigateur natif passe **2/2 parcours en 1,2 min** : V181 public (17,3 s) et humeur à 1×/6× (53,6 s). La scène V181 charge depuis les 33 entrées de Charger, conserve une patiente vivante à t0, observe la mort à t1 puis pause à t2, inspecte Ada/Noé, sauvegarde et recharge exactement. Corps physique `6105`, personne `6073`, opinions capturées +41/−42, aucune erreur de console. Les captures montrent l’effet négatif/positif dans Besoins et la jauge distincte ; elles ont été inspectées. Les tests d’humeur voisins réalisent ingestion, retrait de vêtement et reprise, sans état final injecté. Sources servies gelées ; les deux parcours utilisent Chromium natif et la scène V181 vérifie WebGPU.
+
+La présentation passe sur Chromium/WebGPU natif, 250², trois colons, 45 secondes par action avec changements 1×/6×/1×/3× : **minage 10 762 images**, **abattage 10 720**, p95 **4,3 ms** chacune, maxima **20,9/33,3 ms** ; zéro saut, occupation solide ou image affamée. Ce contrôle de cadence ne mesure pas le GPU directement et ne remplace pas une charge à forte population. `check:docs` passe : **626 documents, 5 980 liens**, six en-têtes au schéma 170, trois originaux conservés octet pour octet. Le diff est vérifié avant le commit.
+
+## Coût CPU et retouche du bridge
+
+Microbanc Node isolé, Ryzen 5 3600 (12 processeurs logiques), carte boreale naturelle 250², trois colons/huit animaux ; 60 ticks par échantillon. Partie bridge séparée : 100 personnes préparées, 60 deltas au même tick, deux chauffes et **A/B/B/A ×4** face aux sources gelées `761a634`. L’oracle compare exactement World, paquets et tous les PRNG, en normalisant seulement le numéro de schéma. Les empreintes sources avant/après chaque série sont identiques.
+
+Avant regroupement, les moyennes d’adoption passent de **2,654 à 2,927 ms**, puis de **2,081 à 3,119 ms** ; la seconde série comprend une pointe actuelle de 10,842 ms, contre une médiane de 1,794 ms. La validation de deuil ajoutait alors un parcours des personnes et appelait le validateur même sans mémoire. La correction réutilise le parcours Plantes et n’appelle le validateur que si le champ existe. Après regroupement, les deux comparaisons donnent **2,695→2,238 ms** et **2,732→2,268 ms**. Ce sont les temps de 60 adoptions, pas d’une image ni d’un tick. Les séries ne garantissent pas une accélération générale ni une causalité chiffrée de −17 % sur toute adoption.
+
+Les moyennes des batches de simulation changent de sens : **102,868→95,456**, **83,463→79,687**, **115,433→113,589**, puis **80,719→88,420 ms**. Aucun gain ou surcoût causal stable du tick complet n’est établi par ces charges courtes. La mémoire est absente dans ces mondes ordinaires ; cette mesure ne couvre pas une population entière en deuil ou une rafale de décès. Les allocations d’expiration sont aussi évitées tant qu’aucun souvenir n’expire.
+
+Empreinte finale mesurée : baseline 626 fichiers `8a6e2c19d59d8ecf43655d68f4db6501b68570a55bb8556ea98b7373190fa8a4` ; courant 628 fichiers `adb5a68957851c1f630ed36a7161b96163b09d2e7b1066e6fe989e7c4cbcb2dd`. Les séries intermédiaires précèdent le regroupement ou l’arrondi d’UI ; leurs limites sont distinguées ici. La retouche utilisateur préexistante de `GpuGroundGrassLayer.ts` participe au hash courant, sans être modifiée ni incluse au commit et sans être exécutée par le banc Node. Sorties nouvelles sous `tmp/`, aucun résultat JSON n’est ajouté aux preuves historiques.
+
+## Limites
+
+Destinataires limités aux colons présents libres ; connaissance des victimes assimilée à leur représentation sur la carte. Pensées générales de mort coloniale, témoins, culpabilité du prisonnier, proches/famille/romance, Psychopathe, sentiments hors carte et campagnes naturelles de fréquence restent non livrés ou non exercés. Aucun nouveau dessin ou lot graphique ; absence de passe supplémentaire ne prouve pas un coût GPU nul, 240 FPS constants ou ×6 général. Les mesures CPU et le contrôle de présentation restent distincts de ces garanties.

@@ -14,6 +14,7 @@ import type { InjuryKind } from './injury-rules.ts';
 import type { Pawn,World } from './types.ts';
 import { malnutritionRate } from './malnutrition.ts';
 import { humanAgeImmunityFactor } from './human-age.ts';
+import { notifyPawnDeath } from './bereavement.ts';
 
 export function healthRandom(world:Pick<World,'rng'>):number {let n=world.rng;n^=n<<13;n^=n>>>17;n^=n<<5;world.rng=n>>>0;return world.rng/0x100000000;}
 function announce(world:World,message:string):void {world.events.push({tick:world.tick,type:'need',message});if(world.events.length>80)world.events.splice(0,world.events.length-80);}
@@ -34,6 +35,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
       if(status==='downed'&&bed)pawn.need=bed;
       if(status==='downed'&&wasSleeping)pawn.medicalSleep=true;else delete pawn.medicalSleep;
       pawn.collapsePending=false;pawn.restZeroTicks=0;pawn.state=status;
+      if(status==='dead')notifyPawnDeath(world,pawn);
       announce(world,status==='dead'?`${pawn.name} est décédé.`:`${pawn.name} est à terre.`);
     }
     dropIncapacitatedEquipment(world,pawn);return;

@@ -23,6 +23,8 @@
 
 ## Cible et contenu
 
+- V181 relie les [décès aux opinions ami/rival](docs/development/bereavement-v181.md), schéma 170 après validation stricte 169 et migration neutre. Lire sa [recherche Core](docs/research/bereavement-core-v181.md) et sa [preuve](docs/history/validation-bereavement-v181.md). Mémoires dirigées au seul décès futur, opinions figées, références mortes conservées, cinq par famille et échéances individuelles ; homonymes regroupés selon Core. Destinataires colons présents libres, sans deuil rétroactif. Témoins, décès colonial neutre, famille/romance et hors carte restent différés ; équilibrer les domaines avant d'approfondir ces variantes.
+
 - V180 ouvre la [canicule naturelle de Cassandra partielle](docs/development/cassandra-misc-v180.md), schéma 169 après validation stricte 168 et migration neutre. Lire sa [recherche Core](docs/research/cassandra-misc-core-v180.md) et sa [preuve](docs/history/validation-cassandra-misc-v180.md). Calendrier Misc privé optionnel, adoption prospective à la reprise ; les 15,9 tickets absents ne deviennent pas des canicules. Saison ≥20 °C, cooldown trente jours depuis le déclenchement, chaleur partagée ; camps historiques inchangés. La priorité utilisateur est d’équilibrer les grandes boucles : la roadmap ne désigne plus le semis médicinal comme prochain lot automatique.
 
 - RimWorld Core d’abord, extensions après G5 sauf demande utilisateur ultérieure. Référence Core des derniers relevés : 1.6.4871. Conserver ses boucles et interactions ; toute adaptation doit être motivée, documentée et distinguée d’une règle vérifiée. Ne jamais promettre une parité exhaustive.

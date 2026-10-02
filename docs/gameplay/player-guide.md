@@ -291,7 +291,7 @@ Une fois terminé, construisez un **Établi de tailleur** (3×1, 75 bois ou acie
 
 Les colons éveillés peuvent bavarder ou avoir une discussion approfondie en travaillant ou en se croisant à six cases au plus, avec vue dégagée. Rapprocher les postes favorise les rencontres ; dormir, être à terre ou combattre empêche ces échanges ordinaires. Sélectionnez un colon puis **Social · opinions** : dernier échange, opinion de chaque personne dans les deux sens, causes et vieillissement des souvenirs. Les deux personnes peuvent réagir différemment ; la compétence Social progresse chez celle qui engage l’échange.
 
-Le bavardage s’accumule jusqu’à +10 d’opinion affichée puis décroît ; une discussion laisse un souvenir de vingt jours, atténué à la fin. Aucun bonus direct d’humeur pour ces deux échanges. Insultes, disputes, couples, famille et deuil restent à venir. [Règles détaillées](../development/social.md).
+Le bavardage s’accumule jusqu’à +10 d’opinion affichée puis décroît ; une discussion laisse un souvenir de vingt jours, atténué à la fin. Aucun bonus direct d’humeur pour ces deux échanges. Les insultes et bagarres V125, les dispositions V134 et le deuil ami/rival V181 complètent ces échanges ; couples, famille, témoins et pensée générale de décès colonial restent absents. [Règles détaillées](../development/social.md).
 
 ## Personnalité des colons
 
@@ -828,4 +828,10 @@ Dans **Architecte → Meubles → Tombe**, placez un ouvrage de deux cases sur u
 
 Activez **Transport**, ou sélectionnez un défunt et utilisez **Inhumer** avec un transporteur et une tombe admissibles. Le colon rejoint le corps, le porte réellement puis l'inhume au contact. Si une interruption ne permet aucun dépôt au sol, il conserve sa cargaison. Vêtements et possessions encore attachées suivent la dépouille ; une arme déjà lâchée reste un objet indépendant. Déconstruire la tombe restitue le même corps quand une place est disponible.
 
-Un corps exposé devient putréfié après 2,5 jours de vieillissement thermique puis desséché après cinq ; le froid ralentit ce vieillissement. Un corps putréfié exposé peut salir les alentours avec de la bile. L'inhumation suspend le vieillissement sans effacer l'âge acquis. La destruction par le feu conserve le dossier historique mais retire le corps et ses possessions encore attachées. Déshabillage volontaire, dégradation extérieure complète, cérémonie et deuil restent absents. [Contrat et limites](../development/burial.md).
+Un corps exposé devient putréfié après 2,5 jours de vieillissement thermique puis desséché après cinq ; le froid ralentit ce vieillissement. Un corps putréfié exposé peut salir les alentours avec de la bile. L'inhumation suspend le vieillissement sans effacer l'âge acquis. La destruction par le feu conserve le dossier historique mais retire le corps et ses possessions encore attachées. Déshabillage volontaire, dégradation extérieure complète, cérémonie et deuil familial restent absents ; V181 relie séparément les décès aux opinions existantes. [Contrat et limites](../development/burial.md).
+
+## Mort d’un ami ou rival — V181
+
+Après le décès réel d’une personne connue, un colon vivant présent qui l’appréciait assez reçoit une pensée négative ; s’il la détestait, il peut ressentir du soulagement. Dans Besoins, la pensée nomme la personne et indique son effet et sa durée restante. Son intensité dépend de l’opinion au décès ; enterrer le corps ou laisser expirer les anciens échanges ne la renouvelle pas. Le sommeil gèle encore la jauge d’humeur, mais ne bloque pas la mémoire. Une opinion entre −19 et +19 ne crée aucune de ces pensées ; la pensée générale de décès colonial n’est pas encore livrée.
+
+Pour observer le fonctionnement : Charger une partie → Colonies de test → **Deuil et souvenirs · 3 colons**. Mina est encore vivante, mais son hémorragie préparée devient fatale au premier tick. Mettre en pause puis lire Besoins d’Ada et de Noé ; leurs opinions initiales sont explicitement préparées. Sauvegarder et recharger conserve mort, corps, identités et souvenirs. [Contrat et limites](../development/bereavement-v181.md).

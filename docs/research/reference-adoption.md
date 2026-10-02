@@ -341,3 +341,5 @@ Chapitre 12, SYS/TEST-070, 071, 072, 075 relus dans les originaux. **Adopter** t
 ## Secours V46 — 17 septembre
 
 Chapitre 15, SYS/TEST-094 et 096, chapitres 8/9 : adopter patient unique, réservation de lit, trajet et interruption ; adapter contacts 3D, état sparse persistant et trajectoire GPU ; différer traitement, alimentation assistée, politiques et dangers aux tranches suivantes. [Contrat](../development/rescue.md), [recherche fraîche et degré de certitude](care-preparation.md). Les entrées de tests ont enrichi six scénarios croisés, pas une suite par ligne du corpus.
+
+V181 — chapitre 14, **SYS/TEST-081/086/087/088** et chapitre 15 **SYS/TEST-096/097** : adopter mémoire temporaire distincte de l’opinion dirigée, transition réelle de décès, identité conservée et reprise ; adapter destinataires aux colons présents libres et connaissance aux humains représentés. [Confrontation Core](bereavement-core-v181.md), [contrat](../development/bereavement-v181.md). Différer témoin, décès colonial neutre, famille/romance et sentiments hors carte. Les originaux sont conservés.

@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 169 as const;
+export const SCHEMA_VERSION = 170 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -88,6 +88,7 @@ export interface Pawn extends Cell {
   heatRefuge?:import('./heat-refuge.ts').HeatRefuge;
   research?:import('./research.ts').ResearchTask;
   social?:import('./social-state.ts').SocialState;
+  bereavement?:import('./bereavement.ts').DeathMemory[];
   raid?:import('./raid-state.ts').RaiderState;
   traits?: import('./traits.ts').TraitId[];
   mental?: import('./mental-state.ts').MentalState;

@@ -822,6 +822,36 @@
       "prepared": true,
       "provenance": "Départ Crashlanded ordinaire, graine 13312, broussailles arides 250 × 250, schéma 169. Date civile préparée à 26 399 : calendriers Cassandra, maladie, visiteurs, économie, météo, vent, flore, faune, vêtements et pannes réancrés prospectivement par leurs fabriques ; aucun historique de ressource, XP ou maladie accordé. Refuge en bois déjà construit et couvert, deux lits et refroidisseur initial : 260 bois déduits des 300 de départ, 40 bois conservés en piles. Le billet d’introduction déterministe et la canicule elle-même sont résolus uniquement par stepWorld après chargement.",
       "sha256": "d84dfa6c0c21e844d685cffe5ba2cc2b7ad223e8680484c33cdaf832498b898f"
+    },
+    {
+      "id": "deuil-et-souvenirs-v181",
+      "release": "v181",
+      "label": "Deuil et souvenirs · 3 colons",
+      "description": "Une patiente à terre perd encore du sang. Deux survivants ont des opinions préparées opposées ; reprendre pour observer le décès réel et leurs pensées.",
+      "filename": "deuil-et-souvenirs.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 250,
+      "height": 250,
+      "tick": 0,
+      "focus": [
+        "décès",
+        "deuil",
+        "rivalité",
+        "opinion",
+        "pensées et humeur",
+        "dépouille",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Inspecter Mina dans Santé : elle est à terre, sa blessure saigne et son dossier n’indique encore aucun décès.",
+        "Inspecter Social de Ada puis Noé : leurs opinions dirigées envers Mina sont préparées et opposées.",
+        "Reprendre à 1× : Mina meurt de sa perte de sang au premier tick simulé. Mettre en pause et lire dans Besoins les pensées distinctes de Ada et Noé.",
+        "Sauvegarder puis recharger : vérifier la même dépouille, la même identité et les deux souvenirs avec leurs échéances."
+      ],
+      "prepared": true,
+      "provenance": "Départ Crashlanded Core adapté, graine 13312, broussailles arides naturelles 250 × 250, schéma 170. Blessure au torse et perte de sang presque fatale préparées sur Mina, encore vivante et à terre. Trois souvenirs de discussion de Ada et deux souvenirs de bagarre rageante de Noé envers elle sont injectés comme opinions initiales dirigées ; ces rencontres ne sont pas présentées comme jouées. Aucun stock, compétence, ressource, traitement ou décès rétroactif n’est accordé. La mort par hémorragie, le corps et les pensées de deuil proviennent uniquement d’un vrai stepWorld après chargement.",
+      "sha256": "d2c5b54f53def4b713c913a190e9824e467e1b5962fb76eb47fe11c7aad3178d"
     }
   ]
 }

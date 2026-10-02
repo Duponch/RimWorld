@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Schéma courant 169. [Cassandra Misc V180](cassandra-misc-v180.md) ajoute un calendrier privé optionnel, validé strictement au chargement et au bridge. Le schéma 168 est validé avant migration neutre ; une ancienne partie du profil adopte le flux prospectivement à la reprise de la simulation, sans histoire ou tirage passé. Chaleur, refuges et rendu gardent leurs propriétaires. [Plantes V179](plants-skill-v179.md), [cache V177](snapshot-cache-v177.md) et notes [historiques](architecture-pre-v145.md) gardent leurs contrats ; l’[inventaire](../gameplay/implementation-status.md) décrit le contenu actuel.
+Schéma courant 170. [Deuil V181](bereavement-v181.md) ajoute des mémoires dirigées optionnelles, attribuées au passage médical réel au décès ; l’opinion est figée, les identités mortes sont conservées et le bridge valide avant adoption. Le schéma 169 est validé avant migration neutre, sans deuil des morts historiques. [Cassandra V180](cassandra-misc-v180.md), [Plantes V179](plants-skill-v179.md), [cache V177](snapshot-cache-v177.md) et notes [historiques](architecture-pre-v145.md) gardent leurs contrats ; l’[inventaire](../gameplay/implementation-status.md) décrit le contenu actuel.
 
 ## Objectif
 

@@ -17,6 +17,9 @@ test('test catalogue rejects invalid paths, duplicate identities and inconsisten
   expect(()=>parseTestColonies({...manifest,saves:[save,save]})).toThrow('invalide');
   expect(()=>parseTestColonies({...manifest,saves:[save,{...save,id:'other'}]})).toThrow('invalide');
   expect(()=>parseTestColonies({...manifest,saves:[]})).toThrow('invalide');
+  const many=(count:number)=>Array.from({length:count},(_,i)=>({...save,id:`colony-${i}`,filename:`colony-${i}.json`}));
+  expect(parseTestColonies({...manifest,saves:many(48)})).toHaveLength(48);
+  expect(()=>parseTestColonies({...manifest,saves:many(49)})).toThrow('invalide');
   expect(()=>testColonyUrl({...save,release:'../v103'})).toThrow('inconnu');
   expect(()=>testColonyUrl({...save,filename:'../salles.json'})).toThrow('inconnu');
   const legacy={version:1,release:'v98',saves:[Object.fromEntries(Object.entries(save).filter(([key])=>key!=='release'))]};
@@ -27,7 +30,7 @@ test('published catalogue keeps six V98 entries and lists the V101/V103/V104/V10
   const manifest=JSON.parse(readFileSync('public/test-saves/manifest.json','utf8'));
   const legacy=JSON.parse(readFileSync('public/test-saves/v98/manifest.json','utf8'));
   const entries=parseTestColonies(manifest);
-  expect(entries).toHaveLength(32);
+  expect(entries).toHaveLength(33);
   expect(entries.slice(0,6).map(({release,...entry})=>{expect(release).toBe('v98');return entry;})).toEqual(legacy.saves);
   for(const [id,release,filename,schemaVersion] of [['atelier-v101','v101','atelier.json',101],['salles-v103','v103','salles.json',103],['art-v104','v104','sculpture.json',104],['economie-v105','v105','economie.json',105],['lievres-v106','v106','lievres.json',106],['visages-armurerie-v109','v109','visages-armurerie.json',109]] as const){
     const entry=entries.find(e=>e.id===id)!;

@@ -8,6 +8,7 @@ import { APPAREL } from './apparel-rules.ts';
 import { pawnBody } from './health-rules.ts';
 import { medicalPain } from './injury-state.ts';
 import { insultMoodMemories,kindWordsMoodMemories } from './social-state.ts';
+import { bereavementThoughts,expireBereavement } from './bereavement.ts';
 import type { BodyAssessment } from './body-capacities.ts';
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 
@@ -47,6 +48,7 @@ export function moodThoughts(world:World,pawn:Pawn):readonly MoodThought[] {
   if(pawn.state==='dead')return [];
   const expectation=colonyExpectation(world,pawn);
   const thoughts:MoodThought[]=[expectation?expectationThoughts.get(expectation.id)!:camp,...roomMoodThoughts(world,pawn)];
+  if(pawn.bereavement)thoughts.push(...bereavementThoughts(world,pawn));
   const difficultyMood=colonistMoodOffset(world,pawn);
   if(difficultyMood)thoughts.push(situation('difficulty-mood','Récit d’aventure',difficultyMood,'Bonus d’humeur du niveau d’aventure choisi.'));
   for(const id of pawn.traits??[]){const trait=TRAITS[id];if(trait.mood)thoughts.push({id:`trait-${id}`,label:trait.label,offset:trait.mood,kind:'situation',description:trait.description});}
@@ -85,6 +87,7 @@ export function updateMood(world:World,pawn:Pawn,body?:BodyAssessment):void {
   pawn.mood=target>pawn.mood?Math.min(target,pawn.mood+amount):Math.max(target,pawn.mood-amount);
 }
 export function expireMealMemories(world:World,pawn:Pawn):void {
+  if(pawn.bereavement)expireBereavement(pawn,world.tick);
   expireRoomMemories(world,pawn);
   if(pawn.deniedJoining?.some(t=>t<=world.tick)){pawn.deniedJoining=pawn.deniedJoining.filter(t=>t>world.tick);if(!pawn.deniedJoining.length)delete pawn.deniedJoining;}
   if(pawn.memories.some(m=>m.expiresAt<=world.tick))pawn.memories=pawn.memories.filter(m=>m.expiresAt>world.tick);

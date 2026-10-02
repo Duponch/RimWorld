@@ -1,5 +1,7 @@
 # Humeur et pensées explicables — V64
 
+État courant : [V181](bereavement-v181.md) ajoute les pensées dirigées de mort d’un ami ou rival. Les descriptions et absences de deuil ci-dessous sont celles du contrat historique ; témoins, pensée générale de décès colonial, parenté et romance restent distincts.
+
 V70 : [bavardage/discussion](social.md) ajoutent des opinions dirigées, **aucune** pensée d’humeur. Deuil, insultes et autres pensées sociales restent absents.
 
 V69 : [Optimiste/Pessimiste](traits.md) ajoutent une pensée de situation +6/−6 à la cible ; sommeil/jauge/règles de mémoire inchangés. Résolu/Nerveux influencent seulement les seuils de crise ; aucune pénalité directe d’humeur.

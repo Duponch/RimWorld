@@ -1,5 +1,7 @@
 # Interactions passives et opinions — V70
 
+État courant : [V181](bereavement-v181.md) ajoute les pensées dirigées de mort d’un ami ou rival. Les descriptions et absences de deuil ci-dessous sont celles du contrat historique ; témoins, pensée générale de décès colonial, parenté et romance restent distincts.
+
 [Recherche et limites de version](../research/social-reference.md). Première tranche sociale de l’étape 3, obtenable dans un camp ordinaire pendant travail, déplacements et besoins éveillés. Le joueur consulte **Social · opinions** dans l’inspection. Il peut rapprocher postes et activités ; aucune commande « amitié », téléportation ou interruption de tâche.
 
 ## Contrat

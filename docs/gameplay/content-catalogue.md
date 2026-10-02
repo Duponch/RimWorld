@@ -216,7 +216,7 @@ Les identifiants ci-dessous sont jouables dans le périmètre validé V89. Les p
 
 | Registre / identifiant local | Comportement intégré | Limites |
 |---|---|---|
-| Objet `human-corpse` | Une dépouille humaine par pile ; même personne, anatomie et possessions attachées. Propriétaire sol, porteur ou tombe ; frais, putréfié puis desséché selon âge thermique ; bile lors de putréfaction exposée. | Aucun nouveau vivant ni dossier dupliqué. Déshabillage volontaire, consommation humaine, disparition spontanée par détérioration et conséquences de deuil absents. Observation prospective des anciens morts, sans passé thermique inventé. |
+| Objet `human-corpse` | Une dépouille humaine par pile ; même personne, anatomie et possessions attachées. Propriétaire sol, porteur ou tombe ; frais, putréfié puis desséché selon âge thermique ; bile lors de putréfaction exposée. | Aucun nouveau vivant ni dossier dupliqué. Déshabillage volontaire, consommation humaine, disparition spontanée par détérioration absents ; V181 ajoute séparément les conséquences d’opinion sur les colons présents. Observation prospective des anciens morts, sans passé thermique inventé. |
 | Structure `grave` | Tombe 1×2 orientable sur terrain naturel creusable ; aucune matière/recherche, 80 ticks locaux de construction neutre ; un corps, filtres colons/étrangers et affectation nominative. Transport puis inhumation au contact en 50 ticks. | Pas de cercueil, sarcophage, cérémonie ni qualité. Ni paquet ni support de toit. L'âge thermique du corps s'arrête en tombe ; déconstruction avec restitution physique du même corps. |
 | Traces `dirt`, `trash`, `blood`, `ash`, `vomit`, `corpse-bile` | Terre, déchets, sang, cendres, vomi et bile ; couche indépendante des piles, épaisseur 1–5, déplacement au pied selon type, durée/effacement persistés et score de pièce. | Ne sont ni ressources ni objets transportables ; une trace épaisse ne multiplie pas sa contribution à la propreté. Catalogue limité à ces six types. |
 | Métier `clean`, tâche `cleaning` | Nettoyage à priorité initiale 3, foyer manuel, accès et travail au contact couche par couche ; ordre de pièce. | Pas d'aspiration distante, de matière récupérée ni d'expérience inventée. Les réservations de traces sont distinctes du transit. |
@@ -369,3 +369,9 @@ Nouvelle famille `door`, sept variantes : bois, acier, granite, calcaire, marbre
 ## Cargaison interrompue V44
 
 Aucun objet ajouté : la pile ou le meuble déjà porté garde son identité quand la fatigue impose le sommeil sans dépôt libre. Cela ne livre ni inventaire personnel, ni équipement, ni corps transportable. [Contrat et limites](../development/interrupted-cargo.md).
+
+## Souvenirs de décès — V181
+
+| Contenu | Acquisition et effet | Limites |
+|---|---|---|
+| `friend-died` / `rival-died` | Mort humaine réelle connue ; opinion dirigée ≥20 / ≤−20 du colon vivant présent. Humeur −10 / +10 modulée de 0,15 à 1 ; vingt / dix jours, cinq par famille, échéances individuelles. [Contrat](../development/bereavement-v181.md). | Pas d’objet matériel ni de pensée générale pour une opinion neutre. Destinataires visiteurs, prisonniers et hors carte ; témoins, famille et romance différés. |

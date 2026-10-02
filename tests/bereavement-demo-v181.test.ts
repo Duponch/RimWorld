@@ -1,0 +1,76 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { expect, test } from 'vitest';
+import { bereavementDemoActors, bereavementDemoManifestEntry, prepareBereavementDemo } from '../scripts/generate-bereavement-demo-v181.ts';
+import { bereavementThoughts, FRIEND_DEATH_DURATION, RIVAL_DEATH_DURATION } from '../src/sim/bereavement.ts';
+import { stepWorld } from '../src/sim/engine.ts';
+import { BLOOD_UNIT } from '../src/sim/injury-rules.ts';
+import { moodThoughts } from '../src/sim/mood.ts';
+import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization.ts';
+import { opinionOf } from '../src/sim/social-state.ts';
+
+const fixtureUrl = new URL('../public/test-saves/v181/deuil-et-souvenirs.json', import.meta.url);
+const EXPECTED_SHA256 = 'd2c5b54f53def4b713c913a190e9824e467e1b5962fb76eb47fe11c7aad3178d';
+
+test('V181 public scene preserves its prepared provenance, ownership and a living patient until the real medical tick', () => {
+  const raw = readFileSync(fixtureUrl, 'utf8');
+  const hash = createHash('sha256').update(raw).digest('hex');
+  expect(hash).toBe(EXPECTED_SHA256);
+  const world = deserializeWorld(raw);
+  expect(world).toEqual(prepareBereavementDemo());
+  expect(world.schemaVersion).toBe(170);
+  expect(world.width).toBe(250);
+  expect(world.height).toBe(250);
+  expect(world.tick).toBe(0);
+  expect(world.pawns).toHaveLength(3);
+  const { patient, friend, rival } = bereavementDemoActors(world);
+  expect(patient.state).toBe('downed');
+  expect(patient.health).toMatchObject({ tick: 0, bloodLoss: BLOOD_UNIT - 1, injuries: [{ id: 1, part: 'torso', kind: 'cut', severity: 10_000 }] });
+  expect(patient.health?.death).toBeUndefined();
+  expect(patient.body).toBeUndefined();
+  expect(world.piles.some(pile => pile.item === 'human-corpse')).toBe(false);
+  expect(opinionOf(friend, patient.id, world.tick)).toBeGreaterThanOrEqual(20);
+  expect(opinionOf(rival, patient.id, world.tick)).toBeLessThanOrEqual(-20);
+  expect(bereavementThoughts(world, friend)).toEqual([]);
+  expect(bereavementThoughts(world, rival)).toEqual([]);
+  expect(friend.bereavement).toBeUndefined();
+  expect(rival.bereavement).toBeUndefined();
+  expect(world.pawns.every(pawn => Object.values(pawn.priorities).every(priority => priority === 0))).toBe(true);
+  expect(bereavementDemoManifestEntry(world, hash)).toMatchObject({ id: 'deuil-et-souvenirs-v181', tick: 0, prepared: true, sha256: hash });
+  expect(validateWorld(world)).toEqual([]);
+});
+
+test('V181 one real world step causes blood-loss death, directed thoughts, body identity and exact resumed continuation', () => {
+  const world = deserializeWorld(readFileSync(fixtureUrl, 'utf8'));
+  const before = serializeWorld(world);
+  const { patient, friend, rival } = bereavementDemoActors(world);
+  const firstId = patient.id;
+  const stockBefore = world.piles.filter(pile => pile.item !== 'human-corpse').map(pile => ({ id: pile.id, item: pile.item, quantity: pile.quantity, owner: pile.owner }));
+  const friendOpinion = opinionOf(friend, patient.id, world.tick);
+  const rivalOpinion = opinionOf(rival, patient.id, world.tick);
+  stepWorld(world);
+  expect(world.tick).toBe(1);
+  expect(patient.id).toBe(firstId);
+  expect(patient.state).toBe('dead');
+  expect(patient.health?.death).toEqual({ tick: 1, cause: 'blood-loss' });
+  expect(patient.health?.bloodLoss).toBe(BLOOD_UNIT);
+  expect(world.events.some(event => event.tick === 1 && event.message === 'Mina est décédé.')).toBe(true);
+  const corpse = world.piles.find(pile => pile.item === 'human-corpse' && pile.humanCorpse?.pawnId === firstId);
+  expect(corpse).toBeDefined();
+  expect(patient.body?.pileId).toBe(corpse?.id);
+  expect(world.piles.filter(pile => pile.item !== 'human-corpse').map(pile => ({ id: pile.id, item: pile.item, quantity: pile.quantity, owner: pile.owner }))).toEqual(stockBefore);
+  expect(friend.bereavement).toEqual([{ otherId: firstId, kind: 'friend-died', at: 1, opinion: friendOpinion }]);
+  expect(rival.bereavement).toEqual([{ otherId: firstId, kind: 'rival-died', at: 1, opinion: rivalOpinion }]);
+  expect(bereavementThoughts(world, friend)).toMatchObject([{ id: `friend-died-${firstId}`, label: 'Mort de Mina (ami)', expiresAt: 1 + FRIEND_DEATH_DURATION }]);
+  expect(bereavementThoughts(world, rival)).toMatchObject([{ id: `rival-died-${firstId}`, label: 'Mort de Mina (rival)', expiresAt: 1 + RIVAL_DEATH_DURATION }]);
+  expect(moodThoughts(world, friend).some(thought => thought.id === `friend-died-${firstId}` && thought.offset < 0)).toBe(true);
+  expect(moodThoughts(world, rival).some(thought => thought.id === `rival-died-${firstId}` && thought.offset > 0)).toBe(true);
+  expect(validateWorld(world)).toEqual([]);
+  const resumed = deserializeWorld(serializeWorld(world));
+  for (let tick = 0; tick < 24; tick++) { stepWorld(world); stepWorld(resumed); }
+  expect(resumed).toEqual(world);
+  expect(world.pawns.find(pawn => pawn.id === firstId)?.health?.death).toEqual({ tick: 1, cause: 'blood-loss' });
+  expect(world.piles.filter(pile => pile.humanCorpse?.pawnId === firstId)).toHaveLength(1);
+  expect(validateWorld(world)).toEqual([]);
+  expect(deserializeWorld(before).pawns.find(pawn => pawn.id === firstId)?.state).toBe('downed');
+});
