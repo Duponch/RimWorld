@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { attribute, uniform } from 'three/tsl';
+import { Fn, attribute, hash, instanceIndex, positionLocal, smoothstep as shaderSmoothstep, uint, uniform, viewportSize, viewportUV } from 'three/tsl';
 import type { WeatherState } from '../sim/weather';
 import { visualCloudAppearance } from './visual-weather';
 
@@ -15,9 +15,15 @@ const MAX_CONTIGUOUS_TICK_GAP = 600;
 // Near-profile views keep the clouds solid against the sky. As the camera
 // rises over the map, leave only a faint trace so the ground stays readable.
 const HIGH_VIEW_OPACITY = .06;
+// Radii are fractions of the viewport's shorter dimension, in physical pixels.
+export const CLOUD_CLEAR_RADIUS = .18;
+export const CLOUD_CLEAR_SOFT_EDGE = .08;
+// Full signed ranges around each lobe's pivot. Keep neighbouring lobes joined.
+export const CLOUD_SHAPE = { stretch: [.30, .22, .28], shift: [.16, .10, .16] } as const;
 const CLOUD_BASE_HEIGHT = 34;
 const CLOUD_BAND_SPACING = 7.5;
 const CLOUD_BAND_JITTER = 5;
+const MAX_CLOUD_SIZE = 1.23 * 5.9;
 const scratch = new THREE.Object3D();
 
 export interface CloudPresentation {
@@ -56,7 +62,7 @@ function smoothstep(a: number, b: number, value: number): number {
 export function cloudViewOpacity(camera: THREE.OrthographicCamera | THREE.PerspectiveCamera, target: THREE.Vector3): number {
   const horizontal = Math.hypot(camera.position.x - target.x, camera.position.z - target.z);
   const elevation = Math.atan2(camera.position.y - target.y, horizontal) * 180 / Math.PI;
-  const lowAngle = 1 - smoothstep(12, 50, elevation);
+  const lowAngle = 1 - smoothstep(34, 65, elevation);
   // The same continuous elevation fade applies to both camera projections.
   // A close orthographic zoom adds a separate fade before clouds cover actors.
   const angleOpacity = HIGH_VIEW_OPACITY + (1 - HIGH_VIEW_OPACITY) * lowAngle;
@@ -64,6 +70,13 @@ export function cloudViewOpacity(camera: THREE.OrthographicCamera | THREE.Perspe
     ? 1 - smoothstep(2.5, 4.5, camera.zoom)
     : 1;
   return angleOpacity * closeIsoFade;
+}
+
+/** Reference for the viewport-space shader mask, used by the focused tests. */
+export function cloudScreenMask(x: number, y: number, width: number, height: number): number {
+  const shorter = Math.max(1, Math.min(width, height));
+  const radius = Math.hypot(x - width * .5, y - height * .5) / shorter;
+  return smoothstep(CLOUD_CLEAR_RADIUS, CLOUD_CLEAR_RADIUS + CLOUD_CLEAR_SOFT_EDGE, radius);
 }
 
 /** Four broad paper-cut masses. Their imperfect rims and translucent paint
@@ -81,12 +94,15 @@ function cloudGeometry(): THREE.BufferGeometry {
   const rings = [
     [-.46, .72], [-.18, 1], [.31, .88], [.73, .49],
   ] as const;
-  const points: number[] = [], colors: number[] = [];
-  const washPoints: number[] = [], washColors: number[] = [];
+  const points: number[] = [], colors: number[] = [], pivots: number[] = [];
+  const washPoints: number[] = [], washColors: number[] = [], washPivots: number[] = [];
   const normal = new THREE.Vector3(), ab = new THREE.Vector3(), ac = new THREE.Vector3();
-  const pushTriangle = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3, tone: number, wash = false) => {
+  const pushTriangle = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3, tone: number, lobe: number, wash = false) => {
     const vertices = wash ? washPoints : points, pigment = wash ? washColors : colors;
+    const shapes = wash ? washPivots : pivots;
     vertices.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+    const [x, y, z] = lobes[lobe]!;
+    for (let vertex = 0; vertex < 3; vertex++) shapes.push(x, y, z, lobe);
     for (let vertex = 0; vertex < 3; vertex++) pigment.push(tone, tone * .975, tone * .85);
   };
   let faceIndex = 0;
@@ -94,7 +110,7 @@ function cloudGeometry(): THREE.BufferGeometry {
     normal.copy(ab.subVectors(b, a)).cross(ac.subVectors(c, a)).normalize();
     const grain = hash01(Math.imul(lobe + 3, 19013) ^ Math.imul(++faceIndex, 8171));
     const tone = THREE.MathUtils.clamp(.69 + normal.y * .27 + grain * .10, .52, 1.07);
-    pushTriangle(a, b, c, tone);
+    pushTriangle(a, b, c, tone, lobe);
     // Broad low-contrast washes lie within individual cardboard facets. A
     // slight normal offset prevents z-fighting without adding a paint layer.
     if (normal.y > -.18 && grain > .52) {
@@ -103,8 +119,8 @@ function cloudGeometry(): THREE.BufferGeometry {
       const p = mix(.69, .23, .08), q = mix(.13, .68, .19), r = mix(.18, .16, .66);
       const washTone = tone * (grain > .79 ? 1.055 : .955);
       if (ab.subVectors(q, p).cross(ac.subVectors(r, p)).dot(normal) < 0)
-        pushTriangle(p, r, q, washTone, true);
-      else pushTriangle(p, q, r, washTone, true);
+        pushTriangle(p, r, q, washTone, lobe, true);
+      else pushTriangle(p, q, r, washTone, lobe, true);
     }
   };
   for (let lobe = 0; lobe < lobes.length; lobe++) {
@@ -137,12 +153,30 @@ function cloudGeometry(): THREE.BufferGeometry {
   }
   points.push(...washPoints);
   colors.push(...washColors);
+  pivots.push(...washPivots);
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geometry.setAttribute('aCloudLobe', new THREE.Float32BufferAttribute(pivots, 4));
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
   return geometry;
+}
+
+/** Bound every possible seeded lobe, including its paint-offset vertices. */
+function cloudShapeBounds(geometry: THREE.BufferGeometry): { radius: number; minY: number; maxY: number } {
+  const positions = geometry.getAttribute('position'), lobes = geometry.getAttribute('aCloudLobe');
+  let radius = 0, minY = Infinity, maxY = -Infinity;
+  for (let index = 0; index < positions.count; index++) {
+    const x = positions.getX(index), y = positions.getY(index), z = positions.getZ(index);
+    const dx = Math.abs(x - lobes.getX(index)) * CLOUD_SHAPE.stretch[0] * .5 + CLOUD_SHAPE.shift[0] * .5;
+    const dy = Math.abs(y - lobes.getY(index)) * CLOUD_SHAPE.stretch[1] * .5 + CLOUD_SHAPE.shift[1] * .5;
+    const dz = Math.abs(z - lobes.getZ(index)) * CLOUD_SHAPE.stretch[2] * .5 + CLOUD_SHAPE.shift[2] * .5;
+    radius = Math.max(radius, Math.hypot(Math.abs(x) + dx, Math.abs(z) + dz));
+    minY = Math.min(minY, y - dy);
+    maxY = Math.max(maxY, y + dy);
+  }
+  return { radius, minY, maxY };
 }
 
 /** World-space decoration. It never casts or receives a shadow, samples a texture,
@@ -150,11 +184,14 @@ function cloudGeometry(): THREE.BufferGeometry {
 export class WeatherCloudLayer {
   readonly mesh: THREE.InstancedMesh<THREE.BufferGeometry, THREE.MeshBasicNodeMaterial>;
   private readonly geometry = cloudGeometry();
-  private readonly footprintRadius = this.geometry.boundingSphere!.radius + this.geometry.boundingSphere!.center.length();
+  private readonly shapeBounds = cloudShapeBounds(this.geometry);
+  private readonly footprintRadius = this.shapeBounds.radius;
+  private readonly matrixBasis: THREE.InstancedInterleavedBuffer;
   private readonly material = new THREE.MeshBasicNodeMaterial({
-    color: 0xffffff, vertexColors: true, transparent: true, opacity: 0, depthWrite: true, fog: false,
+    color: 0xffffff, vertexColors: true, transparent: true, opacity: 0, depthWrite: true, alphaTest: .001, fog: false,
   });
   private readonly opacityUniform = uniform(0);
+  private readonly shapeSeed = uniform(0, 'uint');
   private readonly edgeOpacity = new THREE.InstancedBufferAttribute(new Float32Array(CLOUD_COUNT), 1);
   private readonly nightColor = new THREE.Color(0x383834);
   private seed: number | undefined;
@@ -174,9 +211,43 @@ export class WeatherCloudLayer {
   private lastPoseZ = NaN;
 
   constructor() {
-    this.geometry.setAttribute('aCloudFade', this.edgeOpacity);
-    this.material.opacityNode = this.opacityUniform.mul(attribute('aCloudFade'));
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, CLOUD_COUNT);
+    // Alias the existing CPU matrices, without copying them. Three's internal
+    // instancing uniform cannot be accessed from positionNode; these three
+    // columns add one fixed 4 KiB GPU mirror, uploaded only with a changed pose.
+    this.matrixBasis = new THREE.InstancedInterleavedBuffer(this.mesh.instanceMatrix.array, 16)
+      .setUsage(THREE.DynamicDrawUsage);
+    for (let column = 0; column < 3; column++)
+      this.geometry.setAttribute(`aCloudMatrix${column}`, new THREE.InterleavedBufferAttribute(this.matrixBasis, 3, column * 4));
+    this.geometry.setAttribute('aCloudFade', this.edgeOpacity);
+    // Fragment position, not the instance centre, cuts even a large cloud out
+    // of the screen centre. Pixel units make the circular hole aspect-correct.
+    this.material.opacityNode = Fn(() => {
+      // Materialize the vec2 before reading its components: a chained .zw.x
+      // swizzle fails in the native Tint compiler on the supported browser.
+      const size = viewportSize.toConst();
+      const pixelsFromCentre = viewportUV.sub(.5).mul(size);
+      const distance = pixelsFromCentre.length().div(size.x.min(size.y));
+      const clearCentre = shaderSmoothstep(CLOUD_CLEAR_RADIUS, CLOUD_CLEAR_RADIUS + CLOUD_CLEAR_SOFT_EDGE, distance);
+      return this.opacityUniform.mul(attribute('aCloudFade')).mul(clearCentre);
+    })();
+    this.material.positionNode = Fn(() => {
+      const lobe = attribute('aCloudLobe', 'vec4').toConst();
+      const key = uint(instanceIndex).mul(uint(73856093)).bitXor(uint(lobe.w).mul(uint(19349663))).bitXor(uint(this.shapeSeed)).toConst();
+      // Three has already applied the instance matrix. Transform a local
+      // deformation with its existing 3x3 basis so it rotates and shrinks with
+      // the cloud, including the minimum-size slots at the recycling edge.
+      const point = attribute('position', 'vec3').toConst();
+      const deltaX = point.x.sub(lobe.x).mul(hash(key).sub(.5).mul(CLOUD_SHAPE.stretch[0]))
+        .add(hash(key.add(uint(37))).sub(.5).mul(CLOUD_SHAPE.shift[0])).toConst();
+      const deltaY = point.y.sub(lobe.y).mul(hash(key.add(uint(11))).sub(.5).mul(CLOUD_SHAPE.stretch[1]))
+        .add(hash(key.add(uint(43))).sub(.5).mul(CLOUD_SHAPE.shift[1])).toConst();
+      const deltaZ = point.z.sub(lobe.z).mul(hash(key.add(uint(23))).sub(.5).mul(CLOUD_SHAPE.stretch[2]))
+        .add(hash(key.add(uint(53))).sub(.5).mul(CLOUD_SHAPE.shift[2])).toConst();
+      return positionLocal.add(attribute('aCloudMatrix0', 'vec3').mul(deltaX))
+        .add(attribute('aCloudMatrix1', 'vec3').mul(deltaY))
+        .add(attribute('aCloudMatrix2', 'vec3').mul(deltaZ));
+    })();
     this.mesh.name = 'weather-clouds';
     this.mesh.castShadow = false;
     this.mesh.receiveShadow = false;
@@ -188,9 +259,12 @@ export class WeatherCloudLayer {
       scratch.scale.setScalar(.001);
       scratch.updateMatrix();
       this.mesh.setMatrixAt(index, scratch.matrix);
-      this.mesh.setColorAt(index, new THREE.Color().setScalar(.96 + hash01(index * 38711) * .04));
+      const pigment = hash01(index * 38711);
+      this.mesh.setColorAt(index, new THREE.Color().setRGB(.88 + pigment * .13,
+        .90 + hash01(index * 24407 + 3) * .10, .90 + hash01(index * 19391 + 9) * .08));
     }
     this.mesh.instanceMatrix.needsUpdate = true;
+    this.matrixBasis.needsUpdate = true;
     if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
     this.mesh.visible = false;
     this.configureMap(32, 32);
@@ -209,10 +283,10 @@ export class WeatherCloudLayer {
       Math.round(CLOUD_COUNT * Math.sqrt(width * height) / REFERENCE_MAP_SIDE),
       MIN_MAP_CLOUDS, CLOUD_COUNT,
     );
-    this.mesh.boundingSphere = new THREE.Sphere(
-      new THREE.Vector3(this.centerX, 44, this.centerZ),
-      Math.hypot(this.radiusX + 24, this.radiusZ + 24, 23),
-    );
+    const minY = CLOUD_BASE_HEIGHT + this.shapeBounds.minY * MAX_CLOUD_SIZE;
+    const maxY = CLOUD_BASE_HEIGHT + 2 * CLOUD_BAND_SPACING + CLOUD_BAND_JITTER + this.shapeBounds.maxY * MAX_CLOUD_SIZE;
+    this.mesh.boundingSphere = new THREE.Sphere(new THREE.Vector3(this.centerX, (minY + maxY) * .5, this.centerZ),
+      Math.hypot(this.radiusX, this.radiusZ, (maxY - minY) * .5) + .01);
     this.reset();
   }
 
@@ -257,10 +331,14 @@ export class WeatherCloudLayer {
 
   present({ seed, tick, weather, camera, target, strength, directionX, directionZ, daylight = 1 }: CloudPresentation): void {
     this.advance(seed, tick, strength, directionX, directionZ);
+    this.shapeSeed.value = seed >>> 0;
     const angleOpacity = cloudViewOpacity(camera, target);
     const appearance = visualCloudAppearance(weather);
     const daylightFraction = THREE.MathUtils.clamp(daylight, 0, 1);
-    const opacity = angleOpacity * appearance.opacity * (.64 + .36 * daylightFraction);
+    // Low and moderately low views keep each established lobe fully solid.
+    // Night changes its pigment, while angle, the screen opening, spawn and
+    // map edges supply the intentional transparency.
+    const opacity = angleOpacity;
     if (opacity < .002) { this.mesh.visible = false; this.lastPoseSeed = undefined; return; }
     this.mesh.visible = true;
     this.material.opacity = opacity;
@@ -299,9 +377,11 @@ export class WeatherCloudLayer {
       const size = Math.max(.001, Math.min(fade * weatherSize * (3.2 + c * 2.7),
         clearance / this.footprintRadius));
       // Three altitude bands form a cloud volume rather than a flat ceiling.
-      scratch.position.set(this.centerX + x,
+      // The positive scale floor also stays inside the map at zero clearance.
+      const margin = this.footprintRadius * size;
+      scratch.position.set(this.centerX + THREE.MathUtils.clamp(x, -this.radiusX + margin, this.radiusX - margin),
         CLOUD_BASE_HEIGHT + (index % 3) * CLOUD_BAND_SPACING + d * CLOUD_BAND_JITTER,
-        this.centerZ + z);
+        this.centerZ + THREE.MathUtils.clamp(z, -this.radiusZ + margin, this.radiusZ - margin));
       scratch.rotation.set(0, c * Math.PI * 2, 0);
       scratch.scale.set(size, size * (.75 + d * .24), size * (.70 + b * .24));
       scratch.updateMatrix();
@@ -309,6 +389,7 @@ export class WeatherCloudLayer {
       this.edgeOpacity.setX(index, fade);
     }
     this.mesh.instanceMatrix.needsUpdate = true;
+    this.matrixBasis.needsUpdate = true;
     this.edgeOpacity.needsUpdate = true;
   }
 

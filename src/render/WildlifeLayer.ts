@@ -1,8 +1,9 @@
 import { attachedFireMesh } from './FireLayer';
 import * as THREE from 'three/webgpu';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
-import { Fn,If,attribute,cos,sin,float,positionLocal,vec3,uniform,mix,min } from 'three/tsl';
+import { Fn,If,attribute,cos,sin,float,normalLocal,positionLocal,vec3,uniform,mix } from 'three/tsl';
 import { hareGeometry } from './hare-geometry';
+import { animalParts } from './animal-shape';
 import { material } from './primitives';
 import { pawnPresentationPose } from './pawn-presentation';
 import { headingAt,turnToward,TURN_TICKS,type TurnHeading } from './turn-presentation';
@@ -32,10 +33,20 @@ class SpeciesRig {
   private headings=new Map<number,TurnHeading>();
   private readonly gait=new GaitPhaseTracker();
   private readonly gaitRate:number;
+  private readonly restingHeight:number;
+  private readonly restingRadius:number;
   private animals:NonNullable<World['wildlife']>['animals']=[];
   private surfaces:ReadonlyMap<number,number>=new Map();
   constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,surfaceTexture:THREE.Texture,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
     this.gaitRate=animalGaitRadiansPerUnit(species);
+    const geometry=hareGeometry(MAX_WILDLIFE,species);
+    geometry.computeBoundingBox();
+    const bounds=geometry.boundingBox!;
+    // A live sleeper or downed animal rolls onto its side around the trunk.
+    // The full bind-space width sets its floor and height; no axis is crushed.
+    const restFloor=.025-bounds.min.x,bodyCenter=animalParts(species)[0]!.center[1];
+    this.restingHeight=bounds.max.x+restFloor;
+    this.restingRadius=Math.max(Math.abs(bodyCenter-bounds.min.y),Math.abs(bodyCenter-bounds.max.y),Math.abs(bounds.min.z),Math.abs(bounds.max.z))+.1;
     const mat=material(0xffffff);configure?.(mat);mat.colorNode=mix(attribute('color','vec3'),vec3(.42,.4,.37),attribute('aAnimal','vec4').z.sub(1).max(0));
     mat.positionNode=Fn(()=>{
       const pose=pawnPresentationPose(this),state=attribute('aAnimal','vec4'),bone=attribute('boneId','float'),pivot=attribute('bindPivot','vec3');
@@ -56,11 +67,21 @@ class SpeciesRig {
       });
       const p=positionLocal.sub(pivot),c=cos(angle),s=sin(angle);
       const q=vec3(p.x,p.y.mul(c).sub(p.z.mul(s)),p.z.mul(c).add(p.y.mul(s))).add(pivot).toVar();
-      q.y.mulAssign(float(1).sub(min(state.z,1).mul(.5)));q.y.addAssign(sin(phase).abs().mul(.08).mul(state.x));
+      const n=normalLocal.toVar();
+      const normal=vec3(n.x,n.y.mul(c).sub(n.z.mul(s)),n.z.mul(c).add(n.y.mul(s))).toVar();
+      If(state.z.equal(1),()=>{
+        const x=q.x.toVar(),y=q.y.toVar(),nx=normal.x.toVar();
+        q.x.assign(float(bodyCenter).sub(y));q.y.assign(x.add(restFloor));
+        normal.x.assign(normal.y.negate());normal.y.assign(nx);
+      });
+      // Keep the established corpse silhouette and its ground-body proxy.
+      If(state.z.greaterThan(1.5),()=>{q.y.mulAssign(.5);normal.y.mulAssign(2);});
+      q.y.addAssign(sin(phase).abs().mul(.08).mul(state.x));
       If(state.x.lessThan(.5).and(state.y.lessThan(.5)).and(state.z.lessThan(.5)).and(bone.equal(0).or(bone.greaterThanEqual(3))),()=>{
         q.y.addAssign(sin(this.time.add(state.w)).mul(.006));
       });
       const cy=cos(pose.w),sy=sin(pose.w);
+      normalLocal.assign(vec3(normal.x.mul(cy).add(normal.z.mul(sy)),normal.y,normal.z.mul(cy).sub(normal.x.mul(sy))).normalize());
       return vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy)))
         .mul(attribute('aScale','float')).add(pose.xyz);
     })();
@@ -68,8 +89,7 @@ class SpeciesRig {
     textured.positionNode=mat.positionNode;
     textured.colorNode=mat.colorNode.mul(actorSurfaceShade(surfaceTexture));
     this.plainMaterial=mat;this.texturedMaterial=textured;
-    this.mesh=new THREE.Mesh(hareGeometry(MAX_WILDLIFE,this.species),textured);this.mesh.name=`Wild ${this.species} — GPU rig`;this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6);
-    this.mesh.geometry.computeBoundingBox();
+    this.mesh=new THREE.Mesh(geometry,textured);this.mesh.name=`Wild ${this.species} — GPU rig`;this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6);
     this.selection=pawnSelectionMesh(this.mesh.geometry as THREE.InstancedBufferGeometry,this);this.selection.visible=false;
   }
   setTexturesEnabled(enabled:boolean):void {this.mesh.material=enabled?this.texturedMaterial:this.plainMaterial;}
@@ -86,11 +106,17 @@ class SpeciesRig {
     const radius=Math.max(box.max.x-box.min.x,box.max.z-box.min.z)/2+.1;
     this.animals.forEach((a,i)=>{
       const start=times.getX(i),end=times.getY(i),alpha=end>start?THREE.MathUtils.clamp((this.travelTime.value-start)/(end-start),0,1):1;
-      const growth=scale.getX(i),height=box.max.y*growth*(1-Math.min(1,state.getZ(i))*.5);
-      visit(a.id,this.species,THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),times.getW(i),alpha)),THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),height,radius*growth);
+      const growth=scale.getX(i),posture=state.getZ(i);
+      const height=(posture===1?this.restingHeight:box.max.y*(posture>=2?.5:1))*growth;
+      visit(a.id,this.species,THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),times.getW(i),alpha)),THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),height,(posture===1?this.restingRadius:radius)*growth);
     });
   }
-  prepare():()=>void {const g=this.mesh.geometry as THREE.InstancedBufferGeometry,n=g.instanceCount;g.instanceCount=Math.max(1,n);return ()=>{g.instanceCount=n;};}
+  prepare():()=>void {
+    const g=this.mesh.geometry as THREE.InstancedBufferGeometry,fire=this.flames.geometry as THREE.InstancedBufferGeometry;
+    const n=g.instanceCount,f=fire.instanceCount;
+    g.instanceCount=Math.max(1,n);fire.instanceCount=Math.max(1,f);
+    return ()=>{g.instanceCount=n;fire.instanceCount=f;};
+  }
   update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,reset=false):void {
     const changed=this.source!==world;
     if(reset){this.headings.clear();this.keys.clear();this.gait.clear();}
@@ -104,8 +130,13 @@ class SpeciesRig {
     const fireSize=this.mesh.geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
     const burning=new Map((world.fires?.items??[]).filter(f=>f.attachedAnimalId!==undefined).map(f=>[f.attachedAnimalId!,f.size]));
     const animals=this.animals;
-    animals.forEach((a,i)=>fireSize.setX(i,burning.has(a.id)?Math.max(.5,burning.get(a.id)!):0));if(!animals.length)fireSize.setX(0,0);fireSize.needsUpdate=true;
-    (this.flames.geometry as THREE.InstancedBufferGeometry).instanceCount=Math.max(1,animals.length);
+    let fireCount=0;
+    animals.forEach((a,i)=>{
+      const size=burning.get(a.id);fireSize.setX(i,size===undefined?0:Math.max(.5,size));
+      if(size!==undefined)fireCount=i+1;
+    });if(!animals.length)fireSize.setX(0,0);fireSize.needsUpdate=true;
+    // Keep actor indices intact while omitting every trailing inactive slot.
+    (this.flames.geometry as THREE.InstancedBufferGeometry).instanceCount=fireCount;
     }
     const animals=this.animals;g.instanceCount=animals.length;let dirty=false;
     animals.forEach((a,i)=>{
@@ -135,8 +166,9 @@ class SpeciesRig {
         fromX:from.getX(i),fromZ:from.getZ(i),toX:to.getX(i),toZ:to.getZ(i),
       },tick,this.gaitRate):undefined;
       if(!stepping)this.gait.halt(a.id,tick,this.gaitRate);
-      state.setXYZW(i,stepping?1:0,!traveling&&a.strike&&!a.stun?2:!traveling&&a.state==='eating'?1:0,
-        a.state==='dead'?2:fallen||!traveling&&a.state==='sleeping'?1:0,
+      const resting=a.state==='downed'||!traveling&&a.state==='sleeping';
+      state.setXYZW(i,stepping?1:0,!fallen&&!resting&&!traveling&&a.strike&&!a.stun?2:!traveling&&a.state==='eating'?1:0,
+        a.state==='dead'?2:resting?1:0,
         gaitPhase??(a.strike?coreTimeSeconds(a.strike.atCore,origin):a.id%30));
       scale.setX(i,growth);
     });

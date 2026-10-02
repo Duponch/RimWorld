@@ -107,7 +107,7 @@ import { updateFoodStocks } from './ui/food-stocks';
 import { SimulationClient } from './bridge/SimulationClient';
 import { AudioDirector } from './audio/AudioDirector';
 import { MusicDirector, type MusicMood } from './audio/MusicDirector';
-import { ambientCameraGain } from './audio/ambience';
+import { ambientCameraGain, FoliageAmbience } from './audio/ambience';
 import { createNearbyFireCollector, createNearbyMachineCollector, runningMachineAudioSource } from './audio/continuous';
 import { listenerPose, type AudioCamera } from './audio/spatial';
 import { ColonyRenderer } from './render/ColonyRenderer';
@@ -144,6 +144,7 @@ const mapHoverLight=new MapHoverLightCache();
 let lastAudioSourceFocus={x:Infinity,z:Infinity};
 let lastAudioSourceHeight=NaN;
 let lastAudioCamera:AudioCamera|undefined;
+const foliageAmbience = new FoliageAmbience();
 function syncAudioSources(world: World,camera=lastAudioCamera): void {
   if (!soundEnabled) { audio.setContinuousSources([]); return; }
   // Rebuild on a snapshot or meaningful listener movement, never per image.
@@ -172,10 +173,10 @@ function syncAudioSources(world: World,camera=lastAudioCamera): void {
     const gain=Math.min(1,Math.max(0,weatherRainRate(world)));
     if(gain>.05)sources.push({id:'weather:rain',kind:'weather.rain',x:focus.x,z:focus.z,gain:gain*weatherCameraGain});
   }
-  // Shared weather field: the sound follows actual wind strength, including
-  // weather modifiers, without spending simulation RNG or scanning the map.
+  // One foliage loop follows wind and nearby canopy, using a snapshot census.
   const wind=Math.max(0,Math.min(1,windIntensity(world)/2));
-  if(wind>.02)sources.push({id:'weather:wind',kind:'weather.wind',x:focus.x,z:focus.z,gain:wind*weatherCameraGain});
+  const rustle=wind*weatherCameraGain*foliageAmbience.gain(focus.x,focus.z);
+  if(rustle>.001)sources.push({id:'weather:wind',kind:'weather.wind',x:focus.x,z:focus.z,gain:rustle});
   audio.setContinuousSources(sources);
 }
 let lastStatusAlertsSignature='';
@@ -231,7 +232,7 @@ function setSoundEnabled(enabled: boolean): boolean {
   el<HTMLInputElement>('sound-enabled').checked = enabled;
   audio.setMuted(!enabled);
   if (enabled) {
-    if (snapshot) syncAudioSources(snapshot);
+    if (snapshot) { foliageAmbience.adopt(snapshot); syncAudioSources(snapshot); }
     unlockAudioFromGesture();
   }
   else audio.reset();
@@ -1130,6 +1131,7 @@ client.onSnapshot = (world, cost, speed, replaced, motion) => {
   const role=(p:Pawn|undefined)=>p?p.prisoner?'prisoner':isColonist(p)?'colonist':'other':'absent';
   const roleChanged=selectedPawn!==undefined&&role(snapshot?.pawns.find(p=>p.id===selectedPawn))!==role(world.pawns.find(p=>p.id===selectedPawn));
   snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
+  if(soundEnabled)foliageAmbience.adopt(world);
   music.setMood(musicMood(world));
   const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id)&&!world.wildlife?.animals.some(a=>a.id===id))||!!selectedObject&&!mapObjectExists(world,selectedObject);
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;renderer?.setSelectedObject(undefined);orderMenu.close();rebuildInspector();}

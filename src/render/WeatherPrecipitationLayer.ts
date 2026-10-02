@@ -120,22 +120,27 @@ export class WeatherPrecipitationLayer {
       const toward = cameraPosition.sub(center);
       const horizontalDistance = toward.xz.length();
       const distance = horizontalDistance.max(.001);
-      const right = horizontalDistance.greaterThan(.001).select(
+      const cameraRight = horizontalDistance.greaterThan(.001).select(
         vec3(toward.z.negate().div(distance), 0, toward.x.div(distance)), vec3(1, 0, 0));
       const facing = toward.length().greaterThan(.001).select(
         toward.div(toward.length().max(.001)), vec3(0, 1, 0));
-      const snowUp = cross(right, facing).normalize();
-      const up = snow.select(snowUp, vec3(0, 1, 0));
+      const snowUp = cross(cameraRight, facing).normalize();
+      // The world-space particle drifts .13 wind units for every unit it
+      // falls. Give its ink stroke exactly that trajectory in both cameras.
+      const rainUp = vec3(this.wind.x.mul(-.13), 1, this.wind.y.mul(-.13)).normalize();
+      const rainAcross = cross(facing, rainUp),acrossLength=rainAcross.length();
+      const rainRight = acrossLength.greaterThan(.001).select(
+        rainAcross.div(acrossLength.max(.001)),cameraRight);
+      const right = snow.select(cameraRight,rainRight);
+      const up = snow.select(snowUp,rainUp);
       const nearScale = mix(float(1), smoothstep(2, 8, distance).max(.001), this.perspective);
       const projectionScale = snow.select(mix(float(1), float(.58), this.perspective), float(1));
       const width = snow.select(float(.30).add(ink.mul(.12)),
         float(.11).add(ink.mul(.045))).mul(nearScale).mul(projectionScale);
       const length = snow.select(float(.30).add(ink.mul(.12)),
         float(.68).add(ink.mul(.32))).mul(nearScale).mul(projectionScale);
-      const lean = snow.select(float(0), positionLocal.y.mul(.12));
       const point = center.add(right.mul(positionLocal.x.mul(width)))
-        .add(up.mul(positionLocal.y.mul(length)))
-        .add(vec3(this.wind.x.mul(lean), 0, this.wind.y.mul(lean)));
+        .add(up.mul(positionLocal.y.mul(length)));
       worldXZ.assign(point.xz);
       return point;
     })();
@@ -199,7 +204,7 @@ export class WeatherPrecipitationLayer {
     const amount = Math.min(1, shares.rain + shares.snow);
     if (amount <= 0) { this.geometry.instanceCount = 0; this.mesh.visible = false; return; }
     this.seed.value = seed;
-    this.rainPhase.value = wrap(tick * .75, 192);
+    this.rainPhase.value = wrap(tick, 192);
     this.snowPhase.value = wrap(tick * .12, 192);
     this.snowFraction.value = shares.snow / amount;
     this.wind.value.set(directionX, directionZ).multiplyScalar(THREE.MathUtils.clamp(strength, 0, 2));

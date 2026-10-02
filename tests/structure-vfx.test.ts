@@ -11,6 +11,34 @@ import { ensureFireState } from '../src/sim/fire-rules.ts';
 const structure=(kind:Structure['kind'],id:number,x=8,z=8):Structure=>({id,kind,x,z,orientation:0,footprint:'standard'});
 
 describe('resident structure effects',()=>{
+  it('keeps paper flame faces outward and its cap visible from above with front-face culling',()=>{
+    const fire=new FireLayer();
+    try{
+      const geometry=fire.mesh.geometry,positions=geometry.getAttribute('position'),indices=geometry.getIndex()!;
+      const a=new Vector3(),b=new Vector3(),c=new Vector3(),ab=new Vector3(),ac=new Vector3(),normal=new Vector3(),centre=new Vector3();
+      const boundary=new Map<string,number>();
+      for(let offset=0;offset<indices.count;offset+=3){
+        const ids=[indices.getX(offset),indices.getX(offset+1),indices.getX(offset+2)];
+        a.fromBufferAttribute(positions,ids[0]!);b.fromBufferAttribute(positions,ids[1]!);c.fromBufferAttribute(positions,ids[2]!);
+        normal.crossVectors(ab.subVectors(b,a),ac.subVectors(c,a));
+        centre.copy(a).add(b).add(c).multiplyScalar(1/3);
+        expect(normal.lengthSq()).toBeGreaterThan(1e-10);
+        // The lower two bands rise monotonically; the upper cut tongues have
+        // folds whose radial normal can point inward despite coherent winding.
+        if(offset<48*3)expect(normal.x*centre.x+normal.z*centre.z).toBeGreaterThan(0);
+        if(offset>=72*3)expect(normal.y).toBeGreaterThan(0);
+        for(let i=0;i<3;i++){
+          const from=ids[i]!,to=ids[(i+1)%3]!,key=[Math.min(from,to),Math.max(from,to)].join(':');
+          boundary.set(key,(boundary.get(key)??0)+(from<to?1:-1));
+        }
+      }
+      // Only the twelve bottom edges remain open against the ground; all
+      // shared edges have opposite direction, so no fold flips its winding.
+      expect([...boundary.values()].filter(value=>value!==0)).toHaveLength(12);
+      expect((fire.mesh.material as THREE.Material).side).toBe(0);
+    }finally{fire.dispose();}
+  });
+
   it('shows hot steel and smoke only during confirmed powered production work',()=>{
     const world=createWorld(1251,20,20),table=structure('machining-table',900);
     world.structures=[table];table.power={on:true,parentId:null};
@@ -58,7 +86,7 @@ describe('resident structure effects',()=>{
     layer.dispose();
   });
 
-  it('draws lit campfire cones in the existing fire batch, without static boxes',()=>{
+  it('draws lit campfire flames in the existing fire batch, without static boxes',()=>{
     const world=createWorld(1253,20,20),camp=structure('campfire',904);
     camp.fuel={ticks:0,burned:0,autoRefuel:true};world.structures=[camp];
     const fire=new FireLayer();fire.adopt(world,true);
@@ -70,6 +98,32 @@ describe('resident structure effects',()=>{
     camp.fuel.ticks=0;fire.adopt(world);
     expect(a.getW(0)).toBe(0);
     fire.dispose();
+  });
+
+  it('starts ground smoke near the flame tip and scales its climb with fire size',()=>{
+    const world=createWorld(1255,24,24),state=ensureFireState(world);
+    for(const [id,x,size] of [[970,8,.1],[971,12,1.75]])
+      state.items.push({id,x,z:10,size,bornCore:0,nextPulseCore:15,complexCore:150,spreadCore:150});
+    const fire=new FireLayer(),vfx=new StructureVfxLayer();
+    const target=new Vector3(10,0,10),camera=new OrthographicCamera(-18,18,18,-18,.1,150);
+    camera.position.set(28,35,28);camera.lookAt(target);camera.updateProjectionMatrix();camera.updateMatrixWorld();
+    try {
+      fire.adopt(world,true);vfx.adopt(world,true);vfx.setView(camera,target);
+      const flame=fire.mesh.geometry.getAttribute('firePosition') as THREE.InstancedBufferAttribute;
+      const vertices=fire.mesh.geometry.getAttribute('position') as THREE.BufferAttribute;
+      const flameHeight=Math.max(...Array.from({length:vertices.count},(_,i)=>vertices.getY(i)));
+      const position=vfx.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute;
+      const shape=vfx.smoke.geometry.getAttribute('smokeShape') as THREE.InstancedBufferAttribute;
+      expect(vfx.smoke.geometry.instanceCount).toBe(2*GROUND_SMOKE_PUFFS);
+      expect(flame.getW(1)).toBeGreaterThan(flame.getW(0));
+      for(const index of [0,1]){
+        const visibleTip=flameHeight*flame.getW(index);
+        expect(position.getY(index*GROUND_SMOKE_PUFFS)).toBeGreaterThan(visibleTip*.7);
+        expect(position.getY(index*GROUND_SMOKE_PUFFS)).toBeLessThan(visibleTip*1.05);
+      }
+      expect(position.getY(GROUND_SMOKE_PUFFS)).toBeGreaterThan(position.getY(0));
+      expect(shape.getZ(GROUND_SMOKE_PUFFS)).toBeGreaterThan(shape.getZ(0));
+    } finally {fire.dispose();vfx.dispose();}
   });
 
   it('caps denser ground smoke to 128 camera-local fires and refreshes it after panning',()=>{

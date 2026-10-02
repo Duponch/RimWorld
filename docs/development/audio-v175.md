@@ -1,5 +1,7 @@
 # Musiques et contacts sonores — V175
 
+Le [correctif V185](visual-audio-v185.md) module désormais le bruissement par la canopée locale, sans nouveau MP3, musique ni voix par arbre. Les autres contrats V175 restent applicables.
+
 Ce lot enrichit la présentation sonore sans modifier la simulation, son PRNG, le schéma 166 ou les sauvegardes. Il prolonge le [mix V165](audio-mix-v165.md) et la [couverture V166](audio-coverage-v166.md), à partir des [recherches musicales](../research/audio-music-core-v175.md) et de l'[audit des effets jouables](../research/audio-coverage-core-v175.md). Sa [preuve](../history/validation-audio-v175.md) distingue les contrôles techniques d'une écoute humaine.
 
 ## Catalogue musical publié

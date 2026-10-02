@@ -599,6 +599,7 @@ export class ColonyRenderer {
     this.invalidatePausedShadow();
     const culling = new Map<THREE.Object3D, boolean>();
     const distant = this.overview.group.visible;
+    const restorePawnFires=this.pawns.prepareFiresForCompile();
     const restoreWildlife=this.wildlife.prepare();
     const restoreRopes=this.ropes.prepareForCompile();
     const restoreFeedback=this.actionFeedback.prepareForCompile();
@@ -634,7 +635,7 @@ export class ColonyRenderer {
       // already disabled culling when that override was captured; their own
       // restorers must therefore run last to recover their real runtime flag.
       for (const [object, value] of culling) object.frustumCulled = value;
-      restoreWind();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
+      restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
       this.invalidatePausedShadow();

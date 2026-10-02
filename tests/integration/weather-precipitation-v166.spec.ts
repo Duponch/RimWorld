@@ -11,7 +11,7 @@ const output = resolve('tmp/weather-v166');
 test('V166 : pluie, neige et orage préparés traversent le chargement réel et restent visibles en pause', async ({ playwright }) => {
   test.setTimeout(180_000);
   mkdirSync(output, { recursive: true });
-  const browser = await playwright.chromium.launch({ channel: 'chromium', headless: false });
+  const browser = await playwright.chromium.launch({ channel: 'chromium', headless: false, args: [] });
   const page = await browser.newPage({ baseURL: 'http://127.0.0.1:5173', viewport: { width: 1440, height: 1000 } });
   const errors = observeErrors(page);
   try {
@@ -127,7 +127,7 @@ ColonyRenderer.prototype.frame=function(now){window.__weatherView=this;return or
       }
       console.info(JSON.stringify({ weatherVisualSample: id, backend: state.backend,
         with: withStats, without: withoutStats,
-        note: 'Capture indicative en pause sur backend logiciel; ni benchmark GPU ni comparaison de cadence.' }));
+        note: 'Capture native préparée en pause; ni benchmark GPU ni comparaison de cadence.' }));
       await page.evaluate(() => { (window as any).__weatherView.precipitation.present = (window as any).__weatherPresent; });
       await page.waitForTimeout(100);
       expect(await page.evaluate(() => (window as any).__weatherView.precipitation.mesh.geometry.getAttribute('position').version)).toBe(state.vertexVersion);

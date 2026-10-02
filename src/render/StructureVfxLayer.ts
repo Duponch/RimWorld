@@ -7,6 +7,7 @@ import { footprintCells } from '../sim/definitions.ts';
 import type { Structure, World } from '../sim/types.ts';
 import { WORLD_SCALE } from '../world/scale.ts';
 import { BoxMesh, configureBoxMaterial } from './BoxMesh.ts';
+import { groundFireSmokeProfile } from './fire-paper.ts';
 
 type Glow = { x:number; y:number; z:number; sx:number; sy:number; sz:number; ry:number; color:number };
 type Smoke = { x:number; y:number; z:number; seed:number; size:number; opacityBias:number; rise:number };
@@ -250,10 +251,13 @@ export class StructureVfxLayer {
       shapes.setXYZW(i,item.size,item.opacityBias,item.rise,1);
     }
     let i=this.structuralSmoke.length;
-    for(const fire of fires)for(let puff=0;puff<GROUND_SMOKE_PUFFS;puff++){
-      const spread=phase(fire.id,puff+21),shape=phase(fire.id,puff+47);
-      positions.setXYZW(i,fire.x+(spread-.5)*.23,.35,fire.z+(shape-.5)*.19,phase(fire.id,puff));
-      shapes.setXYZW(i++,.53*Math.max(.6,fire.size)*(.55+phase(fire.id,puff+83)*.95),.84,1.12*(.8+shape*.35),1);
+    for(const fire of fires){
+      const profile=groundFireSmokeProfile(fire.size);
+      for(let puff=0;puff<GROUND_SMOKE_PUFFS;puff++){
+        const spread=phase(fire.id,puff+21),shape=phase(fire.id,puff+47);
+        positions.setXYZW(i,fire.x+(spread-.5)*.23,profile.originY,fire.z+(shape-.5)*.19,phase(fire.id,puff));
+        shapes.setXYZW(i++,profile.breadth*(.55+phase(fire.id,puff+83)*.95),.84,profile.rise*(.8+shape*.35),1);
+      }
     }
     this.smoke.geometry.instanceCount=count;this.smoke.visible=count>0;
     if(count){positions.needsUpdate=true;shapes.needsUpdate=true;}
@@ -282,12 +286,18 @@ export class StructureVfxLayer {
     this.frustum.setFromProjectionMatrix(this.viewProjection);
     const nearest:FireCandidate[]=[];
     for(const chunk of this.fireChunks){
-      this.chunkSphere.center.set(chunk.x+7.5,.6,chunk.z+7.5);
-      this.chunkSphere.radius=13;
+      this.chunkSphere.center.set(chunk.x+7.5,4,chunk.z+7.5);
+      this.chunkSphere.radius=23;
       if(!this.frustum.intersectsSphere(this.chunkSphere))continue;
       for(const fire of chunk.fires){
-        this.firePoint.set(fire.x,.6,fire.z);
-        if(!this.frustum.containsPoint(this.firePoint))continue;
+        const profile=groundFireSmokeProfile(fire.size);
+        const maxRise=profile.rise*1.15;
+        this.firePoint.set(fire.x,profile.originY+maxRise*.5,fire.z);
+        this.chunkSphere.center.copy(this.firePoint);
+        // Include full strong-wind drift, size variation and billboard corners,
+        // not just the central rising column. The 128-source cap still applies.
+        this.chunkSphere.radius=Math.hypot(maxRise*.5,maxRise*.84)+profile.breadth*1.73+.25;
+        if(!this.frustum.intersectsSphere(this.chunkSphere))continue;
         const dx=fire.x-target.x,dz=fire.z-target.z;
         offerFire(nearest,{fire,distance:dx*dx+dz*dz});
       }

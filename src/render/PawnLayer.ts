@@ -169,6 +169,13 @@ export class PawnLayer {
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
   private rescuePairs:readonly (readonly [number,number])[]=[];
   constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void) {}
+  /** Warm the resident fire graph before the first burning actor appears. */
+  prepareFiresForCompile():()=>void {
+    if(!this.fireMesh)return ()=>{};
+    const geometry=this.fireMesh.geometry as THREE.InstancedBufferGeometry,count=geometry.instanceCount;
+    geometry.instanceCount=Math.max(1,count);
+    return ()=>{geometry.instanceCount=count;};
+  }
   private showPose(id:number,pose:number,tick:number):void {
     const previous=this.shownPoses.get(id);
     if(previous===pose)return;
@@ -634,9 +641,14 @@ export class PawnLayer {
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
     const flames=geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
     const burning=new Map((world.fires?.items??[]).filter(f=>f.attachedPawnId!==undefined).map(f=>[f.attachedPawnId!,f.size]));
-    world.pawns.forEach((p,i)=>flames.setX(i,burning.has(p.id)?Math.max(.5,burning.get(p.id)!):0));
+    let fireCount=0;
+    world.pawns.forEach((p,i)=>{
+      const size=burning.has(p.id)?Math.max(.5,burning.get(p.id)!):0;
+      flames.setX(i,size);if(size>0)fireCount=i+1;
+    });
     if(!world.pawns.length)flames.setX(0,0);flames.needsUpdate=true;
-    (this.fireMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount=world.pawns.length;
+    // Keep actor indices and shared attributes; omit only the unused tail.
+    (this.fireMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount=fireCount;
     const fromAttribute = geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
     const toAttribute = geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
     const travelAttribute = geometry.getAttribute('aTravel') as THREE.InstancedBufferAttribute;

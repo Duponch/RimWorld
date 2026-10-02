@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
-import { Matrix4, OrthographicCamera, PerspectiveCamera, Quaternion, Vector3 } from 'three/webgpu';
-import { WeatherCloudLayer, cloudViewOpacity } from '../src/render/WeatherCloudLayer';
+import { InterleavedBufferAttribute, Matrix4, OrthographicCamera, PerspectiveCamera, Quaternion, Vector3 } from 'three/webgpu';
+import { CLOUD_CLEAR_RADIUS, CLOUD_CLEAR_SOFT_EDGE, CLOUD_SHAPE, WeatherCloudLayer, cloudScreenMask, cloudViewOpacity } from '../src/render/WeatherCloudLayer';
 import { visualCloudAppearance, visualWindDirection } from '../src/render/visual-weather';
 import { WEATHER_KINDS } from '../src/sim/weather-definitions';
 
@@ -11,6 +11,25 @@ const lowCamera = () => {
   camera.lookAt(target);
   return camera;
 };
+
+// PCG uint reference, independently evaluated on the CPU for the TSL hash.
+function gpuHash(seed: number): number {
+  const state = (Math.imul(seed, 747796405) + 2891336453) >>> 0;
+  const word = Math.imul((state >>> ((state >>> 28) + 4)) ^ state, 277803737) >>> 0;
+  return (((word >>> 22) ^ word) >>> 0) / 4294967296;
+}
+
+function cloudVertex(layer: WeatherCloudLayer, seed: number, instance: number, vertex: number, matrix: Matrix4, point: Vector3): Vector3 {
+  const geometry = layer.mesh.geometry, positions = geometry.getAttribute('position'), lobes = geometry.getAttribute('aCloudLobe');
+  const key = (Math.imul(instance, 73856093) ^ Math.imul(lobes.getW(vertex), 19349663) ^ seed) >>> 0;
+  const hashes = [0, 11, 23], shifts = [37, 43, 53];
+  for (let axis = 0; axis < 3; axis++) {
+    const original = positions.getComponent(vertex, axis), relative = original - lobes.getComponent(vertex, axis);
+    point.setComponent(axis, original + relative * (gpuHash((key + hashes[axis]!) >>> 0) - .5) * CLOUD_SHAPE.stretch[axis]!
+      + (gpuHash((key + shifts[axis]!) >>> 0) - .5) * CLOUD_SHAPE.shift[axis]!);
+  }
+  return point.applyMatrix4(matrix);
+}
 
 test('nuages V87 : huit états, transition Core et direction de vent visuelle pure', () => {
   expect(WEATHER_KINDS).toHaveLength(8);
@@ -42,6 +61,18 @@ test('nuages V87 : huit états, transition Core et direction de vent visuelle pu
   expect(visualWindDirection(54321, 901.25)).not.toEqual(direction);
 });
 
+test('nuages : trou central circulaire en pixels, complètement transparent avant le fondu', () => {
+  for (const [width, height] of [[1600, 900], [900, 1600], [900, 900]]) {
+    const short = Math.min(width, height), cx = width / 2, cy = height / 2;
+    expect(cloudScreenMask(cx, cy, width, height)).toBe(0);
+    expect(cloudScreenMask(cx + short * CLOUD_CLEAR_RADIUS * .99, cy, width, height)).toBe(0);
+    expect(cloudScreenMask(cx, cy + short * CLOUD_CLEAR_RADIUS * .99, width, height)).toBe(0);
+    expect(cloudScreenMask(cx + short * (CLOUD_CLEAR_RADIUS + CLOUD_CLEAR_SOFT_EDGE / 2), cy, width, height)).toBeCloseTo(.5);
+    expect(cloudScreenMask(cx, cy + short * (CLOUD_CLEAR_RADIUS + CLOUD_CLEAR_SOFT_EDGE / 2), width, height)).toBeCloseTo(.5);
+    expect(cloudScreenMask(cx + short * (CLOUD_CLEAR_RADIUS + CLOUD_CLEAR_SOFT_EDGE), cy, width, height)).toBe(1);
+  }
+});
+
 test('nuages : lot monde résident, discret en vue haute et iso sans suivre la caméra', () => {
   const layer = new WeatherCloudLayer(), camera = lowCamera();
   layer.configureMap(32, 32);
@@ -57,7 +88,25 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
     expect(mesh.boundingSphere!.center.x).toBe(15.5);
     expect(mesh.boundingSphere!.center.z).toBe(15.5);
     expect(material.depthWrite).toBe(true);
+    expect(material.alphaTest).toBeGreaterThan(0); // alpha-zero fragments must not occlude the map's depth
     expect(material.vertexColors).toBe(true);
+    expect(material.positionNode).not.toBeNull();
+    expect(material.opacityNode).not.toBeNull();
+    const matrixBasis = geometry.getAttribute('aCloudMatrix0');
+    expect(matrixBasis).toBeInstanceOf(InterleavedBufferAttribute);
+    if (!(matrixBasis instanceof InterleavedBufferAttribute)) throw new Error('Cloud matrix basis must alias its existing interleaved array.');
+    expect(matrixBasis.data.array).toBe(mesh.instanceMatrix.array);
+    expect(matrixBasis.data.array.byteLength).toBe(4096);
+    expect(matrixBasis.data.stride).toBe(16);
+    for (let column = 0; column < 3; column++) {
+      const alias = geometry.getAttribute(`aCloudMatrix${column}`);
+      expect(alias instanceof InterleavedBufferAttribute && alias.data === matrixBasis.data).toBe(true);
+      expect(alias.count).toBe(64);
+    }
+    const lobeAttribute = geometry.getAttribute('aCloudLobe');
+    expect(lobeAttribute.count).toBe(geometry.getAttribute('position').count);
+    expect(new Set(Array.from({ length: lobeAttribute.count }, (_, index) => lobeAttribute.getW(index)))).toEqual(new Set([0, 1, 2, 3]));
+    expect(new Set(Array.from(mesh.instanceColor!.array)).size).toBeGreaterThan(20);
     expect(geometry.getAttribute('color').count).toBe(geometry.getAttribute('position').count);
     expect(geometry.getAttribute('position').count / 3).toBe(295);
     expect(new Set(Array.from(geometry.getAttribute('color').array)).size).toBeGreaterThan(12);
@@ -69,17 +118,18 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
       sample.position.set(target.x, Math.sin(radians) * 40, target.z + Math.cos(radians) * 40);
       return cloudViewOpacity(sample, target);
     });
-    expect(elevationSamples.every((value, index) => index === 0 || value < elevationSamples[index - 1]!)).toBe(true);
-    expect(elevationSamples[0]).toBeGreaterThan(.9);
-    expect(elevationSamples.at(-1)).toBeCloseTo(.06, 5);
+    expect(elevationSamples.slice(0, 3)).toEqual([1, 1, 1]);
+    expect(elevationSamples[3]).toBeLessThan(1);
+    expect(elevationSamples[3]).toBeGreaterThan(elevationSamples[4]!);
+    expect(elevationSamples[4]).toBeGreaterThan(.06);
+    expect(cloudViewOpacity(new PerspectiveCamera(), target)).toBe(1);
     layer.present(initial);
     expect(mesh.visible).toBe(true);
-    expect(material.opacity).toBeGreaterThan(.4);
+    expect(material.opacity).toBe(1);
     const lowOpacity = material.opacity;
     let activeCentres = 0;
     const altitudeBands = new Set<number>();
     const matrix = new Matrix4(), position = new Vector3(), rotation = new Quaternion(), scale = new Vector3();
-    const footprintRadius = geometry.boundingSphere!.radius + geometry.boundingSphere!.center.length();
     const fadeAttribute = geometry.getAttribute('aCloudFade');
     for (let index = 0; index < mesh.count; index++) {
       mesh.getMatrixAt(index, matrix);
@@ -91,13 +141,6 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
       expect(position.y).toBeGreaterThanOrEqual(34);
       expect(position.y).toBeLessThan(54);
       altitudeBands.add(Math.floor((position.y - 34) / 7.5));
-      if (fadeAttribute.getX(index) > .005) {
-        const footprint = Math.max(scale.x, scale.z) * footprintRadius;
-        expect(position.x - footprint).toBeGreaterThanOrEqual(-.501);
-        expect(position.x + footprint).toBeLessThanOrEqual(31.501);
-        expect(position.z - footprint).toBeGreaterThanOrEqual(-.501);
-        expect(position.z + footprint).toBeLessThanOrEqual(31.501);
-      }
       if (scale.x > .5) activeCentres++;
     }
     expect(activeCentres).toBeGreaterThan(0);
@@ -126,12 +169,16 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
     const dayColor = material.color.clone();
     layer.present({ ...initial, daylight: 0 });
     expect(material.color.equals(dayColor)).toBe(false);
+    expect(material.opacity).toBe(1);
     expect(material.color.r + material.color.g + material.color.b).toBeLessThan(dayColor.r + dayColor.g + dayColor.b);
     const version = mesh.instanceMatrix.version;
+    const basisVersion = matrixBasis.data.version;
     layer.present(initial);
     expect(mesh.instanceMatrix.version).toBe(version);
+    expect(matrixBasis.data.version).toBe(basisVersion);
     layer.present({ ...initial, tick: 104.5 });
     expect(mesh.instanceMatrix.version).toBeGreaterThan(version);
+    expect(matrixBasis.data.version).toBeGreaterThan(basisVersion);
     expect(mesh.geometry).toBe(geometry);
     expect(mesh.material).toBe(material);
 
@@ -145,10 +192,10 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
     expect(material.opacity).toBeLessThan(lowOpacity * .3);
     expect(mesh.instanceMatrix.version).toBe(cameraVersion);
     const ortho = new OrthographicCamera(-20, 20, 20, -20, .1, 1000);
-    ortho.position.set(35, 50, 35);
+    ortho.position.copy(overhead.position);
     layer.present({ ...initial, camera: ortho });
     expect(mesh.visible).toBe(true);
-    expect(material.opacity).toBeCloseTo(cloudViewOpacity(overhead, target) * visualCloudAppearance(initial.weather).opacity, 5);
+    expect(material.opacity).toBeCloseTo(cloudViewOpacity(overhead, target), 5);
     expect(cloudViewOpacity(ortho, target)).toBeCloseTo(cloudViewOpacity(overhead, target), 5);
     expect(mesh.instanceMatrix.version).toBe(cameraVersion);
     ortho.zoom = 6;
@@ -161,9 +208,46 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
     expect(mesh.count).toBe(54);
     expect(mesh.boundingSphere!.center.x).toBe(124.5);
     expect(mesh.boundingSphere!.center.z).toBe(87);
-    expect(mesh.boundingSphere!.radius).toBeGreaterThan(180);
+    expect(mesh.boundingSphere!.radius).toBeGreaterThan(Math.hypot(125, 87.5));
   } finally { layer.dispose(); }
   expect(mesh.parent).toBeNull();
+});
+
+test('seeded GPU lobe vertices stay inside the map and actual frustum sphere, including recycling slots', () => {
+  const layer = new WeatherCloudLayer(), camera = lowCamera(), matrix = new Matrix4(), point = new Vector3(), center = new Vector3();
+  let minimumScaleSlots = 0;
+  try {
+    for (const [width, height] of [[32, 32], [250, 250], [250, 175]]) for (const seed of [1, 441, 0x12345679, 0xffffffff]) {
+      layer.configureMap(width!, height!);
+      for (const tick of [0, 599, 1198]) {
+        layer.present({ seed, tick, weather: { previous: 'rainy-thunderstorm', current: 'clear', ageCore: tick ? 4000 : 0 },
+          camera, target, strength: 2, directionX: 1, directionZ: -.6 });
+        for (let instance = 0; instance < layer.mesh.count; instance++) {
+          layer.mesh.getMatrixAt(instance, matrix);
+          center.setFromMatrixPosition(matrix);
+          const scale = Math.hypot(matrix.elements[0]!, matrix.elements[1]!, matrix.elements[2]!);
+          if (scale < .00101) minimumScaleSlots++;
+          let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, furthest = 0, reach = 0;
+          for (let vertex = 0; vertex < layer.mesh.geometry.getAttribute('position').count; vertex++) {
+            cloudVertex(layer, seed, instance, vertex, matrix, point);
+            minX = Math.min(minX, point.x); maxX = Math.max(maxX, point.x);
+            minZ = Math.min(minZ, point.z); maxZ = Math.max(maxZ, point.z);
+            furthest = Math.max(furthest, point.distanceTo(layer.mesh.boundingSphere!.center));
+            reach = Math.max(reach, point.distanceTo(center));
+          }
+          expect(minX).toBeGreaterThanOrEqual(-.50001);
+          expect(maxX).toBeLessThanOrEqual(width! - .49999);
+          expect(minZ).toBeGreaterThanOrEqual(-.50001);
+          expect(maxZ).toBeLessThanOrEqual(height! - .49999);
+          expect(furthest).toBeLessThanOrEqual(layer.mesh.boundingSphere!.radius);
+          // The complete seeded geometry collapses with its instance. The
+          // previous world-space offset left a full-size lobe at scale .001.
+          if (scale < .00101) expect(reach).toBeLessThan(.005);
+        }
+      }
+    }
+    expect(minimumScaleSlots).toBeGreaterThan(0);
+  } finally { layer.dispose(); }
 });
 
 test('nuages : le vent advecte vers sa direction, la pause et le calme figent le lot', () => {

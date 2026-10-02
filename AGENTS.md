@@ -27,6 +27,8 @@
 
 ## Cible et contenu
 
+- V185 corrige la [présentation et le feuillage sonore](docs/development/visual-audio-v185.md), sans migration au schéma 173. Lire sa [recherche technique](docs/research/visual-audio-web-v185.md) et sa [preuve](docs/history/validation-visual-audio-v185.md) : pose animale rigide, trou central des nuages avec discard de profondeur, déformation locale après instanciation, pluie alignée et accélérée, feu papier et fumée dimensionnée, fragments variés et canopée sonore locale. Le surcoût GPU mesuré reste borné à une scène préparée ; aucun coût nul ou gain général annoncé.
+
 - V183 ouvre la [première quête locale d'asile](docs/development/quest-local-v183.md), schéma 172 après validation stricte 171 et migration neutre. Lire la [recherche Core](docs/research/quest-local-core-v183.md) et la [preuve](docs/history/validation-quest-v183.md). Activation prospective Atterrissage/Cassandra, offre 0,3 jour, arrivée physique puis un poursuivant au couteau ; conclusion neutre soixante ticks après apparition effective, indépendante de la défense. Calendrier J8/espacement huit jours et menace minimale adaptés ; pas de graphe, butin, planète ou hospitalité générale. Le registre carte/scout conserve provenance du colon et origine du raid ; anciens dossiers bornés sans retirer les liens actifs.
 
 - V181 relie les [décès aux opinions ami/rival](docs/development/bereavement-v181.md), schéma 170 après validation stricte 169 et migration neutre. Lire sa [recherche Core](docs/research/bereavement-core-v181.md) et sa [preuve](docs/history/validation-bereavement-v181.md). Mémoires dirigées au seul décès futur, opinions figées, références mortes conservées, cinq par famille et échéances individuelles ; homonymes regroupés selon Core. Destinataires colons présents libres, sans deuil rétroactif. Témoins, décès colonial neutre, famille/romance et hors carte restent différés ; équilibrer les domaines avant d'approfondir ces variantes.
@@ -60,7 +62,7 @@
 
 ## Collaboration et environnement
 
-- L’utilisateur demande des sous-agents **GPT‑6 Sol** pour réduire sa consommation, avec raisonnement élevé, ou très élevé pour un diagnostic complexe. Missions bornées, propriétaires de fichiers distincts, intégration centrale ; ne pas déléguer ces contrats à Luna. Avancer de manière autonome sur les travaux autorisés, sans lancer un nouveau chantier pendant une consolidation demandée.
+- L’utilisateur demande désormais des sous-agents **GPT‑6.1 Sol** pour réduire sa consommation, avec raisonnement élevé, ou très élevé pour un diagnostic complexe. Missions bornées, propriétaires de fichiers distincts, intégration centrale ; ne pas déléguer ces contrats à Luna. Avancer de manière autonome sur les travaux autorisés, sans lancer un nouveau chantier pendant une consolidation demandée.
 - Commits locaux autorisés, avec changement concret, validation et état du plan. L’utilisateur pousse lui-même : ne pas effectuer de push automatiquement.
 - C: est contraint. Pour les commandes de cette session, définir `TEMP` et `TMP` sur `E:/Code/RimWorld/tmp/host-cache/temp`, `NPM_CONFIG_CACHE` sur `E:/Code/RimWorld/tmp/host-cache/npm-cache`. Ne pas déplacer à chaud journal de conversation, pièces jointes ou runtimes actifs. Les anciens déplacements vérifiés et jonctions sont décrits dans l’archive V135.
 - `E:/Code/Antsystem` est une référence en lecture seule. Blender seulement sur demande ou tâche d’asset explicitement prévue. Dépendances stables vérifiées avant mise à jour, versions épinglées avec lockfile.

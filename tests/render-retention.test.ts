@@ -87,7 +87,7 @@ test('population growth retains GPU meshes/materials and shared poses through ca
     layer.setSelected(new Set(w.pawns.slice(0,1).map(p=>p.id)));layer.update(w,.5,false);
     expect(layer.group.children).toEqual(meshes);expect(materialDisposals).toBe(0);
     meshes.forEach((m,i)=>expect(m.material).toBe(materials[i]));
-    pawnBatches.forEach(m=>expect((m.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(count));
+    pawnBatches.forEach(m=>expect((m.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(m.name.startsWith('Attached fire')?0:count));
     expect((partial!.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(0);
     for(const name of ['aFrom','aTo','aTravel'])for(const mesh of pawnBatches.slice(1))expect(mesh.geometry.getAttribute(name)).toBe(meshes[0]!.geometry.getAttribute(name));
     expect(meshes[0]!.geometry.getAttribute('aFrom').count).toBeGreaterThanOrEqual(count);

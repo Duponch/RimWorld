@@ -1,6 +1,6 @@
 # Plan de développement
 
-**Schéma courant 173 ; V184 ouvre l’orage sec localisé de Cassandra.** Le [contrat](development/flashstorm-v184.md), la [recherche Core](research/flashstorm-core-v184.md) et la [preuve](history/validation-flashstorm-v184.md) distinguent incident localisé, météo ordinaire et conséquences de feu. L’[inventaire](gameplay/implementation-status.md) décrit le jeu ; la [validation courante](development/validation.md) borne les preuves. Aucun lot ciblé ne ferme à lui seul un jalon G0–G5.
+**Schéma courant 173 ; V185 corrige la présentation et le feuillage sonore.** Ce [lot demandé](development/visual-audio-v185.md) ne livre pas de nouvelle mécanique ; sa [preuve](history/validation-visual-audio-v185.md) sépare CPU, GPU et contrôles visuels. L’[orage sec localisé V184](development/flashstorm-v184.md) reste la dernière progression fonctionnelle. L’[inventaire](gameplay/implementation-status.md) décrit le jeu ; la [validation courante](development/validation.md) borne les preuves. Les priorités G0–G5 restent ouvertes.
 
 ## Priorité actuelle
 
