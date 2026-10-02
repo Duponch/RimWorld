@@ -1,5 +1,6 @@
 import { captureStandability } from './furniture-travel.ts';
 import { isRoofed } from './roof-rules.ts';
+import { preventsRain } from './flashstorm.ts';
 import { WEATHER,WEATHER_KINDS,rainfallWeight,type WeatherKind } from './weather-definitions.ts';
 import type { Cell,World } from './types.ts';
 
@@ -32,9 +33,10 @@ export function perceivedWeather(w:World):WeatherKind {
   return weatherTransition(w)<threshold?s.previous:s.current;
 }
 export function weatherWeights(w:World,temperature:number,rainfall:number):Array<{kind:WeatherKind;weight:number}> {
-  const s=w.weather;
+  const s=w.weather,dry=preventsRain(w);
   return WEATHER_KINDS.map(kind=>{const d=WEATHER[kind];
-    const allowed=(kind==='clear'||kind!==s?.current)&&temperature>=d.minimum&&temperature<=d.maximum&&(!d.storm||w.tick>=48000);
+    const allowed=(kind==='clear'||kind!==s?.current)&&temperature>=d.minimum&&temperature<=d.maximum&&(!d.storm||w.tick>=48000)
+      &&(!dry||d.rain<=.1);
     return {kind,weight:allowed?d.weight*rainfallWeight(kind,rainfall)*(s?.largeFire&&d.rain>.1?15:1):0};
   });
 }
@@ -59,6 +61,8 @@ function strikeCell(w:World,s:WeatherState):Cell|undefined {
  * The event callback immediately applies physical fire before another strike. */
 export function advanceWeather(w:World,inputs:WeatherInputs):void {
   const s=w.weather;if(!s)return;
+  // Core filters the next weather rather than erasing the outgoing rain.
+  if(w.flashstorm?.active?.start===w.tick&&WEATHER[s.current].rain>.1)nextWeather(w,inputs);
   const end=w.tick*10;
   for(let core=s.lastCoreTick+1;core<=end;core++){
     if(core%426===0){s.largeFire=inputs.fireDanger()>90;s.fireWatchCore=core;}

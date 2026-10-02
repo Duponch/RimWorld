@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Schéma courant 172. La [quête locale V183](quest-local-v183.md) conserve un calendrier privé et des dossiers bornés, avec liens bidirectionnels de personne/raid ; la création de raid est partagée sans détourner l’agenda Cassandra. Le schéma 171 est validé strictement avant migration neutre, sans offre ni personne rétroactive. La [reconnaissance V182](caravan-scout-v182.md) réutilise les validateurs sur une projection du registre carte/hors carte sans mutation ; positions, stock et rendu restent ceux de la carte. Les [notes historiques](architecture-pre-v145.md) conservent leurs contrats.
+Schéma courant 173. L’[orage sec localisé V184](flashstorm-v184.md) conserve un état optionnel créé au premier incident futur, avec centre, échéances Core et PRNG privé. Il réutilise le feu et la publication météo ; aucune recherche spatiale par image. Le schéma 172 est validé strictement avant migration neutre. La [quête V183](quest-local-v183.md) et la [reconnaissance V182](caravan-scout-v182.md) gardent leurs registres physiques. Les [notes historiques](architecture-pre-v145.md) conservent leurs contrats.
 
 ## Objectif
 

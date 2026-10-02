@@ -13,7 +13,12 @@ export function validateWeather(w:World,version:number):string[] {
     ||typeof s.largeFire!=='boolean'||!Number.isSafeInteger(s.lightningCount)||s.lightningCount<0)return error;
   const l=s.lastLightning;
   const storm=s.current==='dry-thunderstorm'||s.current==='rainy-thunderstorm';
-  if(!(s.durationCore===10000&&s.current==='clear'&&s.previous==='clear'||storm&&s.durationCore>=15000&&s.durationCore<=40000||!storm&&s.durationCore>=16000&&s.durationCore<=160000)||s.lightningCount>(s.lastCoreTick-s.originTick*10)*2)return error;
+  const localized=version>=173?w.flashstorm?.totalStrikes??0:0;
+  if(!Number.isSafeInteger(localized)||localized<0)return error;
+  // Preserve the historical two-weather-events ceiling; only actual persisted
+  // localized strikes can extend it. Flashstorm shape is validated separately.
+  const maximum=Math.min(Number.MAX_SAFE_INTEGER,(s.lastCoreTick-s.originTick*10)*2+localized);
+  if(!(s.durationCore===10000&&s.current==='clear'&&s.previous==='clear'||storm&&s.durationCore>=15000&&s.durationCore<=40000||!storm&&s.durationCore>=16000&&s.durationCore<=160000)||s.lightningCount>maximum)return error;
   if((s.lightningCount===0)!==(l===undefined))return error;
   if(l!==undefined&&(!l||typeof l!=='object'||Array.isArray(l)||Object.keys(l).some(k=>!['x','z','coreTick'].includes(k))||!Number.isSafeInteger(l.x)||l.x<0||l.x>=w.width||!Number.isSafeInteger(l.z)||l.z<0||l.z>=w.height||!Number.isSafeInteger(l.coreTick)||l.coreTick<=s.originTick*10||l.coreTick>s.lastCoreTick))return error;
   return [];

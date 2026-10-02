@@ -1,5 +1,13 @@
 # Guide joueur
 
+## Faire face à l’orage sec localisé — V184
+
+Dans **Atterrissage forcé / Cassandra partielle**, un incident divers peut annoncer un **Orage sec localisé**. Il est distinct de la météo **Orage sec** : la lettre signale une zone de frappes répétées, même si le temps affiché porte un autre nom. Le tirage n’est pas garanti et la condition finit indépendamment des incendies qu’elle a déclenchés.
+
+Surveillez les feux et les blessés. Les impacts visent des cases praticables sans toit ; couvrir un abri protège sa case d’une frappe directe, sans rendre tout son voisinage invulnérable. Affectez la priorité **Incendie** dans **Travail**, laissez l’accès aux foyers, déplacez les colons exposés et soignez les brûlures. L’extinction et les soins demandent de vrais déplacements et contacts. La pluie présente au début peut continuer pendant sa transition et éteindre des feux ; ne comptez pas sur une nouvelle pluie pendant l’événement ni juste après. Aucune ressource ni récompense n’est produite par l’orage.
+
+Pour un essai court, ouvrez **Charger une partie → Colonies de test → Orage sec et incendies · 3 colons**. La date et le tirage Misc sont préparés ; chargez en pause, reprenez, puis observez les frappes et les réactions réelles. Aucun impact ni feu n’est précréé. Cette scène ne mesure pas la fréquence d’une partie naturelle. [Contrat et limites V184](../development/flashstorm-v184.md), [parcours contrôlé dans le navigateur](../history/validation-flashstorm-v184.md).
+
 ## Choisir l’asile d’un réfugié poursuivi — V183
 
 Dans **Quêtes**, un départ Atterrissage/Cassandra peut activer prospectivement les offres locales. Premier contrôle après huit jours, puis offres espacées selon le calendrier local adapté. Avant acceptation, lisez le profil, les délais et la menace : un nouveau colon avec sa chemise, puis un bandit au couteau. Aucun butin n’est promis. Refuser ou laisser expirer n’engage aucune poursuite et ne pénalise pas l’humeur.

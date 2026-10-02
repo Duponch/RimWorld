@@ -913,6 +913,37 @@
       "prepared": true,
       "provenance": "Départ Atterrissage/Cassandra Core adapté, graine 13313, broussailles arides naturelles 250 × 250, schéma 172. Horloge préparée prospectivement au premier contrôle de la quête ; autres calendriers réadoptés à cette date sans résolution rétroactive. L’offre est créée par advanceQuests, sans colon, possession ni raid précréés. Acceptation, arrivée au bord, poursuite et conclusion exigent les commandes et transitions réelles après chargement. Aucun butin ni verdict de victoire de quête n’est promis.",
       "sha256": "4e7ebd747679916b4113ec2a0838006759d9b2e844569f9c997d0e035ec94d37"
+    },
+    {
+      "id": "orage-sec-et-incendies-v184",
+      "release": "v184",
+      "label": "Orage sec et incendies · 3 colons",
+      "description": "L’occasion Misc de Cassandra arrive au prochain tick ; l’orage sec localisé et ses frappes restent à jouer sur une carte naturelle 250 × 250.",
+      "filename": "orage-sec-et-incendies.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 250,
+      "height": 250,
+      "tick": 26399,
+      "focus": [
+        "Cassandra",
+        "orage sec localisé",
+        "foudre",
+        "incendie",
+        "zone Foyer",
+        "Extinction",
+        "soins",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause puis reprendre à 1× : la véritable occasion Misc est résolue au tick suivant. Lire la lettre Orage sec localisé.",
+        "Suivre la zone indiquée, les frappes réellement confirmées et les feux éventuels. Une frappe peut laisser le terrain sans incendie ; ne pas confondre fin de la condition et fin des feux.",
+        "Dans Architecte, placer une zone Foyer autour d’un feu accessible et vérifier la priorité Extinction dans Travail. Observer le trajet et les coups au contact avant de conclure à une extinction.",
+        "Sauvegarder pendant la condition et recharger : vérifier centre, échéance, compteurs, dégâts, pertes et continuation sans nouvelle occasion."
+      ],
+      "prepared": true,
+      "provenance": "Départ Atterrissage/Cassandra Core adapté, graine 12456, broussailles arides naturelles 250 × 250, schéma 173. Horloge civile préparée à 26399 ; calendriers météo, feu, raids, maladie, visiteurs, économie, faune, flore, vêtements et pannes réadoptés prospectivement, sans résolution rétroactive. Le premier tirage Misc vaut 1.140378 sur 16,9 et vise le ticket Flashstorm [1 ; 1,4). Les trois colons et les stocks physiques sont ceux du départ ; aucun feu, impact, dommage, stock ou colon supplémentaire n’est précréé. L’incident, les frappes et les réactions physiques exigent les vrais ticks après chargement.",
+      "sha256": "e5b8efcf61282546c0b8e8149a6d205dc6095a2c1563a76865f35b63fedf8da4"
     }
   ]
 }

@@ -5,6 +5,7 @@ import { isFloorKind } from '../sim/flooring.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validPlantSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
+import { validFlashstorm } from '../sim/flashstorm-save.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
 import { validateScoutRegistry } from '../sim/caravan-save.ts';
 import { validateQuests } from '../sim/quest-save.ts';
@@ -224,6 +225,7 @@ export class SnapshotDecoder {
       if(pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,message.world.schemaVersion,message.world))return resync('Souvenir de décès invalide pour ce snapshot.');
     }
     if(!validMiscIncidents(message.world.miscIncidents,message.world.schemaVersion,message.world))return resync('Calendrier d’incidents divers invalide pour ce snapshot.');
+    if(!validFlashstorm(message.world.flashstorm,message.world.schemaVersion,message.world))return resync('Orage sec localisé invalide pour ce snapshot.');
     let next: World;
     let reindexResources = message.kind === 'checkpoint';
     let reindexPiles = message.kind === 'checkpoint';

@@ -19,7 +19,7 @@ test('public Roots and care colony loads from the catalogue and teaches Plants t
     if(await front.isHidden()){await panel(page,'menu');await page.locator('#browse-saves').click();}
     else await front.getByRole('button',{name:'Charger une partie',exact:true}).click();
     await front.getByRole('button',{name:'Colonies de test'}).click();
-    await expect(front.locator('input[name="test-colony"]')).toHaveCount(35);
+    await expect(front.locator('input[name="test-colony"]')).toHaveCount(36);
     await front.locator('input[name="test-colony"][value="racines-et-soins-v179"]').check();
     await expect(front).toContainText('Racines et soins · 3 colons');
     await page.screenshot({path:testOutputPath('artifacts/plants-v179-catalogue.png')});

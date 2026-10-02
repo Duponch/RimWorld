@@ -132,7 +132,7 @@ export function groundGrassPixels(world: GroundWorld): Uint8Array<ArrayBuffer> {
 function bladeGeometry(): THREE.InstancedBufferGeometry {
   const geometry = new THREE.InstancedBufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([
-    -.022, 0, 0, .022, 0, 0, -.0025, 1, .029, .0025, 1, .029,
+    -.033, 0, 0, .033, 0, 0, -.00375, 1, .029, .00375, 1, .029,
   ], 3));
   geometry.setAttribute('normal', new THREE.Float32BufferAttribute([
     0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
