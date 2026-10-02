@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 170 as const;
+export const SCHEMA_VERSION = 171 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -157,6 +157,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  scout?:import('./caravan-state.ts').ScoutState;
   breakdown?:import('./breakdowns.ts').BreakdownCalendar;
   economy?:import('./colony-economy.ts').ColonyEconomy;
   apparelWear?:import('./apparel-renewal.ts').ApparelWearState;
@@ -225,7 +226,7 @@ export type AreaAction = 'lay-floor' | 'remove-floor' | 'home' | 'remove-home' |
 export interface StorageSettings { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; floor?: import('./flooring.ts').FloorKind }
 export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }
-export type Command = import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
+export type Command = import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
   | {type:'pen-species';markerId:number;species:import('./animal-species.ts').AnimalSpeciesId;accepted:boolean}
   | {type:'adopt-economy'}
   | {type:'climate-adopt'}

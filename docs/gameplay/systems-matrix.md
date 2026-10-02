@@ -235,3 +235,7 @@ V37 étend la lumière aux travaux et déplacements des domaines S02/S04/S06/S09
 V43 commence S13/S14 via Construction et son apprentissage individuel ; [contrat](../development/skills.md). Les fondations humaines passent avant l’approfondissement électrique, conformément à la ROADMAP. Aucun jalon ni domaine de personnalité n’est déclaré complet.
 
 Socle santé sous V43 : SYS/TEST-089..091 et 096 alimentent l’arbre et les calculs de capacités [codés/testés isolément](../development/body.md). V45 active producteurs de toit, persistance et transitions ; secours livrés en V46 ; soins physiques restent à livrer.
+
+## Tranche S22 ouverte
+
+La [reconnaissance V182](../development/caravan-scout-v182.md) ouvre S22/G5 avec un départ individuel physique, provisions existantes, besoins hors carte et retour au foyer conservant les identités. Le trajet de six heures est une adaptation abstraite. Les rencontres, groupe divisé, transfert entre deux cartes et mort/secours en voyage restent hors de cette tranche ; elle ne clôture ni S22 ni G5. [Preuve bornée](../history/validation-scout-v182.md).

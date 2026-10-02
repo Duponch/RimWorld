@@ -1,6 +1,6 @@
 # Lisière
 
-Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 170**. [V181](docs/development/bereavement-v181.md) relie la mort d’un ami ou d’un rival aux opinions et à l’humeur ; « Deuil et souvenirs » permet de l’essayer. L’[inventaire](docs/gameplay/implementation-status.md), la [roadmap](docs/ROADMAP.md) et la [validation](docs/development/validation.md) distinguent contenu, priorités et preuves.
+Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 171**. [V182](docs/development/caravan-scout-v182.md) ouvre une reconnaissance courte : chargement physique, voyage hors carte et retour avec les mêmes personnes et possessions. « Reconnaissance et retour » permet de l’essayer. L’[inventaire](docs/gameplay/implementation-status.md), la [roadmap](docs/ROADMAP.md) et la [validation](docs/development/validation.md) distinguent contenu, priorités et preuves.
 
 ## Démarrer
 

@@ -53,7 +53,7 @@ export function observeErrors(page: Page): string[] {
   return errors;
 }
 
-export async function panel(page: Page, name: 'wildlife' | 'research' | 'architect' | 'work' | 'schedule' | 'assign' | 'menu') {
+export async function panel(page: Page, name: 'world' | 'wildlife' | 'research' | 'architect' | 'work' | 'schedule' | 'assign' | 'menu') {
     // Snapshot adoption precedes GPU preparation and the closing of old panels.
     // Wait for the same interactive state a player needs, not just visibility.
     await expect(page.locator('.game-shell')).toHaveJSProperty('inert', false);

@@ -116,6 +116,8 @@ import { INGEST_TICKS } from './eating.ts';
 import { validDiningPlace } from './dining.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { SCHEMA_VERSION, TICKS_PER_DAY } from './types.ts';
+import { validateScoutRegistry } from './caravan-save.ts';
+import { scoutRegistryView,scoutOnMapId } from './caravan-trip.ts';
 import { adultAgeTicks } from './animal-life.ts';
 import { adoptFluIncidents } from './flu-incidents.ts';
 import { validFluIncidents } from './flu-incidents-save.ts';
@@ -135,10 +137,11 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
-  if (!record(input)) return ['World must be an object.'];
+  if (!record(raw)) return ['World must be an object.'];
+  let input=raw;
   if (version >= 5 && !oneOf(input.foodRules, ['legacy', 'adult'])) errors.push('Invalid food rules profile.');
   if (version < 5 && input.foodRules !== undefined) errors.push('Legacy save contains version 5 fields.');
   if (input.schemaVersion !== version) errors.push('Unsupported schema version; migrate older saves through deserializeWorld.');
@@ -153,6 +156,12 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   const size = input.width * input.height;
   const arrays = ['tiles', 'pawns', 'resources', 'structures', 'jobs', 'piles', 'stockpiles', 'events'] as const;
   if (arrays.some(key => !Array.isArray(input[key]))) return [...errors, 'Missing world arrays.'];
+  const scoutErrors=validateScoutRegistry(input as unknown as World,version);
+  if(scoutErrors.length)return [...errors,...scoutErrors];
+  // A projection validates every original Pawn/possession once with the common
+  // rules. It never changes map arrays, persisted owners or derived map stock.
+  const offMapScout=input.scout&&record(input.scout)&&record(input.scout.pawn)?input.scout.pawn:undefined;
+  input=scoutRegistryView(input as unknown as World) as unknown as Record<string,unknown>;
   const tiles = input.tiles as unknown[];
   if (tiles.length !== size || tiles.some(tile => !record(tile) || !oneOf(tile.terrain, ['grass', 'soil', 'water', 'rock', ...(version>=28?['rough-stone']:[]), ...(version>=83?['rich-soil','gravel']:[])]) || !validStoneIdentity(tile.stone, tile.terrain, version))) errors.push('Invalid terrain grid.');
   if (!stock(input.stock)) errors.push('Invalid derived stock.');
@@ -423,7 +432,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     }
   }
   const isImpassable = (cell: { x: number; z: number }): boolean => ['water', 'rock'].includes(world.tiles[cellKey(cell)]!.terrain);
-  const spatialPawns=world.pawns.filter(pawn=>!(version>=89&&pawn.state==='dead'&&(pawn.body?.pileId!==undefined||pawn.body?.lostAt!==undefined))),spatialPawnSet=new Set(spatialPawns);
+  const spatialPawns=world.pawns.filter(pawn=>pawn.id!==offMapScout?.id&&!(version>=89&&pawn.state==='dead'&&(pawn.body?.pileId!==undefined||pawn.body?.lostAt!==undefined))),spatialPawnSet=new Set(spatialPawns);
   for (const item of [...world.resources, ...spatialPawns, ...world.stockpiles]) if (isImpassable(item)) errors.push('Entity placed on impassable terrain.');
   for (const [key,item] of [...structureCells, ...jobCells]) if (item.kind!=='mine'&&['water', 'rock'].includes(world.tiles[key]!.terrain)) errors.push('Footprint on impassable terrain.');
   for (const resource of world.resources) if (structureCells.has(cellKey(resource))&&!conduitKeepsPlant(structureCells.get(cellKey(resource))!.kind,resource.kind)) errors.push('Resource overlaps a structure.');
@@ -453,7 +462,7 @@ function validateSchema(input: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
     if (owned.length > 1 || (owned.length === 1 && !(version>=106&&pawn.animalHandling&&pawn.animalHandling.phase!=='pickup') && !(version>=106&&pawn.animalCare?.medicine&&pawn.animalCare.phase!=='pickup') && !(version>=89&&pawn.burial&&pawn.burial.phase!=='pickup') && !(version>=86&&pawn.ward?.kind==='food'&&pawn.ward.phase==='deliver') && !(version>=51&&pawn.tend?.medicine&&pawn.tend.phase!=='pickup') && !(version>=48&&pawn.feed&&pawn.feed.phase!=='pickup') && !(version>=44&&pawn.interruptedCargo) && !(version >= 10 && pawn.cooking) && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
     if (version>=86&&pawn.ward || version>=73&&pawn.research || pawn.jobId !== null || pawn.haul !== null || version>=52&&pawn.equipmentTask || version>=48&&pawn.feed || version>=47&&pawn.tend || version>=46&&pawn.rescue || version >= 10 && pawn.cooking) { if (!['moving', 'working'].includes(pawn.state)) errors.push('Assigned pawn has incompatible state.'); }
-    else if (!(version>=106&&(pawn.animalHandling||pawn.animalCare))&&!(version>=89&&(pawn.burial||pawn.cleaning))&&!(version>=88&&(pawn.visitor||pawn.trade))&&!(version>=87&&(pawn.burning||pawn.firefighting))&&!(version>=86&&pawn.prisoner)&&!(version>=79&&pawn.hunting)&&!(version>=74&&pawn.heatRefuge)&&!(version>=68&&pawn.raid)&&!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
+    else if (!(version>=171&&scoutOnMapId(world)===pawn.id)&&!(version>=106&&(pawn.animalHandling||pawn.animalCare))&&!(version>=89&&(pawn.burial||pawn.cleaning))&&!(version>=88&&(pawn.visitor||pawn.trade))&&!(version>=87&&(pawn.burning||pawn.firefighting))&&!(version>=86&&pawn.prisoner)&&!(version>=79&&pawn.hunting)&&!(version>=74&&pawn.heatRefuge)&&!(version>=68&&pawn.raid)&&!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
     if (!legacyV2) {
       if (pawn.bedId !== null) {
         if (![...world.structures,...(world.packed??[]).map(p=>p.building)].some(bed => bed.kind === 'bed' && !bed.medical && bed.id === pawn.bedId) || bedOwners.has(pawn.bedId)) errors.push('Invalid or duplicate bed ownership.');
@@ -984,6 +993,10 @@ export function deserializeWorld(serialized: string): World {
     const errors=validateSchema(input,169);if(errors.length)throw new Error('Invalid version 169 save: '+errors.join(' '));
     // Death memories arise at future transitions, never from retained historical bodies.
     input.schemaVersion=170;
+  }
+  if(record(input)&&input.schemaVersion===170){
+    const errors=validateSchema(input,170);if(errors.length)throw new Error('Invalid version 170 save: '+errors.join(' '));
+    input.schemaVersion=171;
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;

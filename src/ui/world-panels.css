@@ -1,6 +1,14 @@
 /* The native menus are compact work surfaces; the cream/forest identity remains Lisière's. */
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
+#world-panel .scout-content{padding:4px 8px 12px;max-width:760px}
+#world-panel .scout-form{display:flex;flex-wrap:wrap;gap:12px;align-items:end;padding:14px;border:1px solid var(--line);border-radius:9px;background:#fff9ec}
+#world-panel .scout-form label{display:flex;flex-direction:column;gap:6px;min-width:140px;max-width:100%;font-weight:700}
+#world-panel .scout-form select{min-height:37px;max-width:100%;padding:6px 10px;border:1px solid #bd9b60;border-radius:8px;background:#fff9ed;color:var(--ink);font:inherit}
+#world-panel #scout-status{font-weight:700;margin-top:18px}
+#world-panel #scout-needs,#world-panel #scout-possessions{line-height:1.6}
+#world-panel #scout-unload-list{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+
 #wildlife-panel .fauna-combat{
   display:grid;grid-template-columns:auto minmax(165px,1fr) auto auto;
   align-items:center;gap:8px 10px;margin:0 0 12px;padding:10px 12px;

@@ -8,6 +8,7 @@ import { BLOOD_UNIT } from '../src/sim/injury-rules.ts';
 import { moodThoughts } from '../src/sim/mood.ts';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization.ts';
 import { opinionOf } from '../src/sim/social-state.ts';
+import { SCHEMA_VERSION } from '../src/sim/types.ts';
 
 const fixtureUrl = new URL('../public/test-saves/v181/deuil-et-souvenirs.json', import.meta.url);
 const EXPECTED_SHA256 = 'd2c5b54f53def4b713c913a190e9824e467e1b5962fb76eb47fe11c7aad3178d';
@@ -18,7 +19,8 @@ test('V181 public scene preserves its prepared provenance, ownership and a livin
   expect(hash).toBe(EXPECTED_SHA256);
   const world = deserializeWorld(raw);
   expect(world).toEqual(prepareBereavementDemo());
-  expect(world.schemaVersion).toBe(170);
+  expect(JSON.parse(raw).schemaVersion).toBe(170);
+  expect(world.schemaVersion).toBe(SCHEMA_VERSION);
   expect(world.width).toBe(250);
   expect(world.height).toBe(250);
   expect(world.tick).toBe(0);

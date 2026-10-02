@@ -28,6 +28,7 @@ import { updateAnimalsPanel } from './ui/animals-panel';
 import { updateWildlifePanel } from './ui/wildlife-panel';
 import { createHeatwaveUI } from './ui/heatwave';
 import { updateResearchPanel } from './ui/research-panel';
+import { createScoutUI } from './ui/scout-panel';
 import { mountStorageItemControls,readStorageItemControls } from './ui/storage-item-controls';
 import './ui/storage-item-controls.css';
 import { updateUnfinishedInspection } from './ui/unfinished-inspection';
@@ -180,6 +181,7 @@ let lastColonyHistorySignature='';
 let installationId:number|undefined;
 let currentTool: Tool = 'select';
 let currentPanel: Panel = null;
+const scoutUI=createScoutUI(el('scout-content'),c=>void attempt(()=>client.command(c)));
 let currentCategory: ArchitectCategory = 'orders';
 let placementOrientation: Orientation = 0;
 let currentSpeed = 1, lastSpeed = 1, stepMs = 0;
@@ -396,7 +398,8 @@ function setPanel(panel: Panel, preserveTool = false) {
   currentPanel = panel;
   syncStorageButtons();
   scheduleUI.cancel();
-  for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals'] as const) el(`${name}-panel`).hidden = panel !== name;
+  for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals', 'world'] as const) el(`${name}-panel`).hidden = panel !== name;
+  if(panel==='world'&&snapshot)scoutUI.update(snapshot);
   if(panel==='animals'&&snapshot)updateAnimalsPanel(el('animals-content'),snapshot,id=>selectPawn(id));
   if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) {
@@ -724,6 +727,7 @@ function renderState() {
   if(currentPanel==='animals')updateAnimalsPanel(el('animals-content'),world,id=>selectPawn(id));
   if(currentPanel==='wildlife')renderWildlife(world);
   if(currentPanel==='research')updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)));
+  if(currentPanel==='world')scoutUI.update(world);
   if(currentPanel==='schedule')scheduleUI.update(world);
   if(currentPanel==='assign'){foodPolicyUI.update(world);apparelPolicyUI.update(world);}
   const totals = {blocks:0,medicine:0,silver:0,component:0,cloth:0,steel:0,gold:0,plasteel:0,'advanced-component':0,carried:0,delivered:0};

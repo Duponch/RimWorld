@@ -100,6 +100,7 @@ export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):
 }
 export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {
   let quantity = 0;
+  if(world.scout?.phase==='loading'&&world.scout.pawnId!==exceptPawn&&world.scout.sourcePileId===pileId)quantity+=world.scout.quantity;
   for(const a of world.wildlife?.animals??[])if(a.id!==exceptPawn&&a.meal?.kind==='pile'&&a.meal.id===pileId)quantity+=a.meal.quantity;
   for (const pawn of world.pawns) {
     if (pawn.id !== exceptPawn) {
@@ -131,6 +132,7 @@ export function reservedSourcesByPile(world: World, exceptPawn?: number): Readon
   const add = (pileId: number, quantity: number): void => {
     quantities.set(pileId, (quantities.get(pileId) ?? 0) + quantity);
   };
+  if(world.scout?.phase==='loading'&&world.scout.pawnId!==exceptPawn)add(world.scout.sourcePileId,world.scout.quantity);
   for (const animal of world.wildlife?.animals ?? [])
     if (animal.id !== exceptPawn && animal.meal?.kind === 'pile') add(animal.meal.id, animal.meal.quantity);
   for (const pawn of world.pawns) {
@@ -174,4 +176,4 @@ export function groundQuantity(world: World, cell: Cell): number {
 }
 
 /** Colony HUD excludes possessions of neutral or hostile people. */
-export function colonyPile(world:World,pile:MaterialPile):boolean {const o=pile.owner;return o.type==='ground'||o.type!=='job'&&o.type!=='grave'&&world.pawns.some(p=>p.id===o.pawnId&&isColonist(p));}
+export function colonyPile(world:World,pile:MaterialPile):boolean {const o=pile.owner;return o.type==='ground'||o.type!=='job'&&o.type!=='grave'&&o.type!=='inventory'&&world.pawns.some(p=>p.id===o.pawnId&&isColonist(p));}

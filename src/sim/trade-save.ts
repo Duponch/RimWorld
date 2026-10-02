@@ -22,7 +22,8 @@ export function validateTrade(w:World,version:number):string[] {
   }
   for(const pile of w.piles)if(pile.owner.type==='inventory'){
     const p=w.pawns.find(p=>p.id===('pawnId' in pile.owner?pile.owner.pawnId:-1));
-    if(!p?.visitor||pile.kind==='corpse'||pile.kind==='unfinished')errors.push('Invalid inventory ownership.');
+    const scoutRation=version>=171&&!!p&&isColonist(p)&&!p.prisoner&&pile.item==='survival-meal'&&pile.quantity<=3&&pile.foodPoison===undefined;
+    if(!p?.visitor&&!scoutRation||pile.kind==='corpse'||pile.kind==='unfinished')errors.push('Invalid inventory ownership.');
   }
   const ledger:unknown=w.trade;if(ledger===undefined)return errors;
   if(!object(ledger)||!keys(ledger,version>=105?['count','silverPaid','silverReceived','forgone','bought','sold','artBought','artSold','recent']:['count','silverPaid','silverReceived','forgone','bought','sold','recent'])||!int(ledger.count,1)||!int(ledger.silverPaid)||!int(ledger.silverReceived)||!int(ledger.forgone)||!object(ledger.bought)||!object(ledger.sold)||!Array.isArray(ledger.recent)||!ledger.recent.length||ledger.recent.length>80||ledger.recent.length!==Math.min(80,ledger.count))return [...errors,'Invalid trade ledger.'];

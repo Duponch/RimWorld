@@ -852,6 +852,38 @@
       "prepared": true,
       "provenance": "Départ Crashlanded Core adapté, graine 13312, broussailles arides naturelles 250 × 250, schéma 170. Blessure au torse et perte de sang presque fatale préparées sur Mina, encore vivante et à terre. Trois souvenirs de discussion de Ada et deux souvenirs de bagarre rageante de Noé envers elle sont injectés comme opinions initiales dirigées ; ces rencontres ne sont pas présentées comme jouées. Aucun stock, compétence, ressource, traitement ou décès rétroactif n’est accordé. La mort par hémorragie, le corps et les pensées de deuil proviennent uniquement d’un vrai stepWorld après chargement.",
       "sha256": "d2c5b54f53def4b713c913a190e9824e467e1b5962fb76eb47fe11c7aad3178d"
+    },
+    {
+      "id": "reconnaissance-et-retour-v182",
+      "release": "v182",
+      "label": "Reconnaissance et retour · 3 colons",
+      "description": "Ada et une pile de quatre rations sont préparées près d’une bordure. Choisissez-en trois dans Monde, puis observez leur chargement, la sortie réelle et le retour après six heures de jeu.",
+      "filename": "reconnaissance-et-retour.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 250,
+      "height": 250,
+      "tick": 0,
+      "focus": [
+        "Monde",
+        "reconnaissance",
+        "caravane",
+        "chargement",
+        "sortie",
+        "faim",
+        "provisions",
+        "retour",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Dans Monde, choisir Ada, la pile de quatre repas près du bord (124, 1) et trois rations, puis lancer la préparation.",
+        "Reprendre à 1× : voir le colon rejoindre la pile, charger trois portions au contact et marcher jusqu’à une bordure libre. Une portion reste au sol à la source.",
+        "Pendant les six heures de jeu du circuit abstrait, suivre les besoins et le nombre exact de rations ; une portion est consommée depuis le manifeste du voyageur.",
+        "Au retour, retrouver le même colon, ses vêtements/équipement et les portions restantes déposées au bord ; sauvegarder et reprendre à chaque phase pour vérifier la continuité."
+      ],
+      "prepared": true,
+      "provenance": "Départ Crashlanded Core adapté, graine 13312, broussailles arides naturelles 250 × 250, schéma 171. Ada est préparée saine, libre, nourrie à 45 % et reposée à 90 % à deux cases d’une bordure accessible. Quatre rations de survie déjà présentes sont déplacées près d’elle par division d’une pile initiale, sans création nette ; les deux autres colons restent au foyer, leurs travaux ordinaires désactivés pour cette observation. Les calendriers Core de raids et de maladie sont conservés, sans occasion pendant ce court circuit ; visites, météo et canicule sont écartées de cette scène préparée. Aucune reconnaissance n’a encore eu lieu : chargement, contact, sortie, consommation et retour exigent les commandes et transitions réelles après chargement.",
+      "sha256": "991ff54400b0077386c33cde80047d71cb974fb8456d50bbdf86c34b858f9689"
     }
   ]
 }

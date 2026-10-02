@@ -375,3 +375,7 @@ Aucun objet ajouté : la pile ou le meuble déjà porté garde son identité qua
 | Contenu | Acquisition et effet | Limites |
 |---|---|---|
 | `friend-died` / `rival-died` | Mort humaine réelle connue ; opinion dirigée ≥20 / ≤−20 du colon vivant présent. Humeur −10 / +10 modulée de 0,15 à 1 ; vingt / dix jours, cinq par famille, échéances individuelles. [Contrat](../development/bereavement-v181.md). | Pas d’objet matériel ni de pensée générale pour une opinion neutre. Destinataires visiteurs, prisonniers et hors carte ; témoins, famille et romance différés. |
+
+## Première boucle hors carte
+
+**Reconnaissance individuelle — partielle.** Le panneau Monde prépare un circuit de six heures avec deux ou trois `survival-meal` déjà existants. Chargement au contact, propriétaire unique hors carte, alimentation puis retour des mêmes identités sont jouables. Les restes sont déposés au bord ; une annulation chargée permet le déchargement sur la case actuelle libre. Il n’y a ni récompense, objet supplémentaire, planète, commerce extérieur, animal porteur ni groupe. [Contrat V182](../development/caravan-scout-v182.md), [recherche Core](../research/caravan-core-v182.md), [preuve](../history/validation-scout-v182.md).

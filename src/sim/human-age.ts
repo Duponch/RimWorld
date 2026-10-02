@@ -95,13 +95,16 @@ function birthday(world:World,pawn:Pawn,years:number):void {
  * follows the world clock after death, just as Core derives it from birth time. */
 export function advanceHumanAges(world:World):void {
   if(world.schemaVersion<138)return;
-  for(const pawn of world.pawns){
-    const age=pawn.age;if(!age)continue;
+  for(const pawn of world.pawns)advanceHumanAge(world,pawn);
+}
+/** The same confirmed-clock rule also serves a retained off-map person. */
+export function advanceHumanAge(world:World,pawn:Pawn):void {
+  if(world.schemaVersion<138)return;
+    const age=pawn.age;if(!age)return;
     if(age.chronologicalTicks<Number.MAX_SAFE_INTEGER)age.chronologicalTicks++;
-    if(pawn.state==='dead'||age.biologicalTicks>=Number.MAX_SAFE_INTEGER)continue;
+    if(pawn.state==='dead'||age.biologicalTicks>=Number.MAX_SAFE_INTEGER)return;
     age.biologicalTicks++;
     if(age.biologicalTicks%HUMAN_YEAR_TICKS===0)birthday(world,pawn,biologicalYears(age));
-  }
 }
 
 export function validHumanAge(value:unknown,version:number):boolean {

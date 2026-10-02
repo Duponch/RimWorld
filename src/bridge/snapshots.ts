@@ -6,6 +6,8 @@ import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validPlantSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
+import { validateScoutRegistry } from '../sim/caravan-save.ts';
+import { scoutRegistryView } from '../sim/caravan-trip.ts';
 import { resourceMaxHp } from '../sim/thing-damage-rules.ts';
 import { validPlantThermalFactor } from '../sim/thermal-plants.ts';
 import { isPlant } from '../sim/plants.ts';
@@ -51,7 +53,7 @@ function equalPileValue(a:unknown,b:unknown):boolean {
 const copyPile=(pile:MaterialPile):MaterialPile=>structuredClone(pile);
 
 /** Check a transported pile using the same item and optional-state contracts as saves. */
-function validPile(pile:MaterialPile,world:DynamicWorld):boolean {
+function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
   if(!pile||typeof pile!=='object'||Array.isArray(pile)||!Number.isSafeInteger(pile.id)||pile.id<1||pile.id>=world.nextId
     ||typeof pile.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,pile.item))return false;
   const definition=ITEM_DEFINITIONS[pile.item],owner=pile.owner;
@@ -318,6 +320,12 @@ export class SnapshotDecoder {
       // DynamicWorld is a complete replacement, not a partial field patch.
       // In particular an absent sparse collection means it was removed.
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
+    }
+    if(validateScoutRegistry(next,next.schemaVersion).length)return resync('Registre de reconnaissance invalide.');
+    if(next.scout&&(next.scout.phase==='travelling'||next.scout.phase==='awaiting-entry')){
+      const registry=scoutRegistryView(next),pawn=next.scout.pawn;
+      if(!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
+        ||next.scout.items.some(pile=>!validPile(pile,registry)))return resync('Voyageur ou possession hors carte invalide.');
     }
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     const replaced = message.epoch !== this.epoch;
