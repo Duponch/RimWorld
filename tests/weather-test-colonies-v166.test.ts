@@ -22,7 +22,7 @@ afterEach(() => vi.unstubAllGlobals());
 test('the eight prepared weather saves are published in the player test-colony catalogue', async () => {
   const manifest = JSON.parse(readFileSync('public/test-saves/manifest.json', 'utf8'));
   const saves = parseTestColonies(manifest);
-  expect(saves).toHaveLength(31);
+  expect(saves).toHaveLength(32);
   expect(saves.filter(save => save.release === 'v166')).toHaveLength(8);
   vi.stubGlobal('fetch', vi.fn(async (url: string) =>
     new Response(readFileSync(`public${url}`, 'utf8'))));

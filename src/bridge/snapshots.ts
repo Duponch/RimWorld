@@ -4,6 +4,7 @@ import { validComponentWorkShape } from '../sim/component-work.ts';
 import { isFloorKind } from '../sim/flooring.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validPlantSkill } from '../sim/skills-save.ts';
+import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
 import { resourceMaxHp } from '../sim/thing-damage-rules.ts';
 import { validPlantThermalFactor } from '../sim/thermal-plants.ts';
 import { isPlant } from '../sim/plants.ts';
@@ -215,6 +216,7 @@ export class SnapshotDecoder {
       || !Number.isSafeInteger(message.revision) || message.revision < 1) return resync('Révision de snapshot invalide.');
     if (message.epoch < this.epoch || (message.epoch === this.epoch && message.revision <= this.revision)) return { status: 'stale' };
     if(message.world.pawns.some(pawn=>!validPlantSkill(pawn.skills?.plants,message.world.schemaVersion)))return resync('Compétence Plantes invalide pour ce snapshot.');
+    if(!validMiscIncidents(message.world.miscIncidents,message.world.schemaVersion,message.world))return resync('Calendrier d’incidents divers invalide pour ce snapshot.');
     let next: World;
     let reindexResources = message.kind === 'checkpoint';
     let reindexPiles = message.kind === 'checkpoint';

@@ -791,6 +791,37 @@
       "prepared": true,
       "provenance": "Création Crashlanded ordinaire au schéma 168, graine 42, petit relief boréal et profil Plantes initial, sans modification de la flore naturelle ni dose herbal ajoutée. Seuls une réserve, une désignation, les priorités et besoins de départ, ainsi qu’une contusion localisée déterministe sont préparés ; récolte, transport et soin restent à accomplir après reprise.",
       "sha256": "8d78cdb940a76050f4f270b454f7ea2b5a4de927cdd5304a1d74a52e5f7d2c49"
+    },
+    {
+      "id": "canicule-et-refuge-v180",
+      "release": "v180",
+      "label": "Canicule et refuge · 3 colons",
+      "description": "Broussailles arides naturelles 250 × 250. L’occasion d’introduction de Cassandra arrive au prochain tick ; un refuge couvert avec refroidisseur passif, deux lits et des provisions est préparé.",
+      "filename": "canicule-et-refuge.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 250,
+      "height": 250,
+      "tick": 26399,
+      "focus": [
+        "Cassandra",
+        "canicule naturelle",
+        "alerte",
+        "température",
+        "refuge couvert",
+        "refroidisseur passif",
+        "Santé",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Reprendre à 1× depuis le tick 26 399. La véritable occasion d’introduction de Cassandra est résolue au tick suivant ; vérifier la lettre Canicule et son conseil de refuge.",
+        "Repérer le refuge couvert autour de (123, 117), son refroidisseur passif alimenté, les deux lits et les 40 bois restants ; comparer la température intérieure et extérieure pendant la rampe.",
+        "Inspecter Santé des trois colons, surveiller les coups de chaleur et leurs déplacements réels vers le refuge. La nourriture et le bois sont des piles physiques de départ.",
+        "Sauvegarder pendant la canicule puis recharger : vérifier que la lettre, la rampe thermique, les stocks et les personnes continuent sans second incident."
+      ],
+      "prepared": true,
+      "provenance": "Départ Crashlanded ordinaire, graine 13312, broussailles arides 250 × 250, schéma 169. Date civile préparée à 26 399 : calendriers Cassandra, maladie, visiteurs, économie, météo, vent, flore, faune, vêtements et pannes réancrés prospectivement par leurs fabriques ; aucun historique de ressource, XP ou maladie accordé. Refuge en bois déjà construit et couvert, deux lits et refroidisseur initial : 260 bois déduits des 300 de départ, 40 bois conservés en piles. Le billet d’introduction déterministe et la canicule elle-même sont résolus uniquement par stepWorld après chargement.",
+      "sha256": "d84dfa6c0c21e844d685cffe5ba2cc2b7ad223e8680484c33cdaf832498b898f"
     }
   ]
 }

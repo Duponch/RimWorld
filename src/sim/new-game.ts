@@ -3,6 +3,7 @@ import { enableVisitors } from './visitors.ts';
 import { enableArrivals } from './arrivals.ts';
 import { enableCassandraRaids } from './cassandra-raids.ts';
 import { adoptFluIncidents } from './flu-incidents.ts';
+import { adoptMiscIncidents } from './cassandra-misc.ts';
 import { crashlandedProfile } from './game-profile.ts';
 import { setupEncounter } from './encounter-scenario.ts';
 import { generateWorld } from './generation.ts';
@@ -102,7 +103,7 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
   if(id==='sentry')setupEncounter(world);
   else {
     initializeCampTraits(world);
-    if(id==='crashlanded'){world.gameProfile=crashlandedProfile();world.research!.stonecutting={points:STONECUTTING_RESEARCH_COST,completedAt:0};world.research!.complexFurniture={points:COMPLEX_FURNITURE_RESEARCH_COST,completedAt:0};enableCassandraRaids(world);adoptFluIncidents(world);}
+    if(id==='crashlanded'){world.gameProfile=crashlandedProfile();world.research!.stonecutting={points:STONECUTTING_RESEARCH_COST,completedAt:0};world.research!.complexFurniture={points:COMPLEX_FURNITURE_RESEARCH_COST,completedAt:0};enableCassandraRaids(world);adoptFluIncidents(world);adoptMiscIncidents(world);}
     else {enableArrivals(world);enableRaids(world);enableHeatwaves(world);}
     if(site?.revision===2)enableBiomeWildlife(world,site.biome);else if(natural)enableWildlife(world,undefined,'natural');else enableWildlife(world);
   }

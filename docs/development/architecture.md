@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Schéma courant 168. La [compétence Plantes V179](plants-skill-v179.md) valide strictement 167 avant migration neutre 167→168, sans profil ou XP rétroactif. Le module de statistiques centralise capacités et apprentissage au contact ; les tirages de récolte restent atomiques avec le dépôt. Le bridge refuse un profil Plantes invalide avant adoption, sans nouveau protocole. La scène de test se télécharge à la demande. Le rendu et ses lots GPU restent inchangés. [Cueillette V178](healroot-wild-v178.md), [cache V177](snapshot-cache-v177.md) et notes [historiques V6–V88](architecture-pre-v145.md) gardent leurs contrats propres ; l’[inventaire](../gameplay/implementation-status.md) décrit le contenu actuel.
+Schéma courant 169. [Cassandra Misc V180](cassandra-misc-v180.md) ajoute un calendrier privé optionnel, validé strictement au chargement et au bridge. Le schéma 168 est validé avant migration neutre ; une ancienne partie du profil adopte le flux prospectivement à la reprise de la simulation, sans histoire ou tirage passé. Chaleur, refuges et rendu gardent leurs propriétaires. [Plantes V179](plants-skill-v179.md), [cache V177](snapshot-cache-v177.md) et notes [historiques](architecture-pre-v145.md) gardent leurs contrats ; l’[inventaire](../gameplay/implementation-status.md) décrit le contenu actuel.
 
 ## Objectif
 

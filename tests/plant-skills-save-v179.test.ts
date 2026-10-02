@@ -3,13 +3,14 @@ import { SnapshotDecoder, SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { createWorld } from '../src/sim/index.ts';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization.ts';
 import { plantWorkRate } from '../src/sim/plant-skills.ts';
+import { SCHEMA_VERSION } from '../src/sim/types.ts';
 
 test('V167 validates strictly before neutral V168 migration with no past Plants practice or RNG draw', () => {
   const current=createWorld(42),legacy=JSON.parse(serializeWorld(current));
   for(const pawn of legacy.pawns)delete pawn.skills.plants;
   legacy.schemaVersion=167;
   const before=JSON.stringify(legacy),migrated=deserializeWorld(before);
-  expect(migrated).toEqual({...legacy,schemaVersion:168});
+  expect(migrated).toEqual({...legacy,schemaVersion:SCHEMA_VERSION});
   expect(JSON.stringify(legacy)).toBe(before);
   expect(migrated.pawns.every(pawn=>pawn.skills.plants===undefined)).toBe(true);
   expect(migrated.rng).toBe(legacy.rng);

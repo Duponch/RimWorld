@@ -9,7 +9,11 @@ export function enableHeatwaves(w:World):void {
   const s=w.heatwaves={profile:'camp-heat-v1' as const,rng:((w.seed^0x4ea774)>>>0)||1,nextAt:0,serial:0};
   s.nextAt=w.tick+Math.floor((6+random(s))*TICKS_PER_DAY);
 }
-export function heatwaveOffset(tick:number,state?:HeatwaveCalendar):number {
+/** Both clocks own their histories; the thermal effect has one shared shape. */
+export function activeHeatwave(world:Pick<World,'heatwaves'|'miscIncidents'>):{active?:{start:number;end:number}}|undefined {
+  return world.miscIncidents?.active?world.miscIncidents:world.heatwaves;
+}
+export function heatwaveOffset(tick:number,state?:{active?:{start:number;end:number}}):number {
   const a=state?.active;return a?17*Math.max(0,Math.min(1,(tick-a.start)/1200,(a.end-tick)/1200)):0;
 }
 export function advanceHeatwaves(w:World):void {

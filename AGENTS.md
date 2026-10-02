@@ -23,6 +23,8 @@
 
 ## Cible et contenu
 
+- V180 ouvre la [canicule naturelle de Cassandra partielle](docs/development/cassandra-misc-v180.md), schéma 169 après validation stricte 168 et migration neutre. Lire sa [recherche Core](docs/research/cassandra-misc-core-v180.md) et sa [preuve](docs/history/validation-cassandra-misc-v180.md). Calendrier Misc privé optionnel, adoption prospective à la reprise ; les 15,9 tickets absents ne deviennent pas des canicules. Saison ≥20 °C, cooldown trente jours depuis le déclenchement, chaleur partagée ; camps historiques inchangés. La priorité utilisateur est d’équilibrer les grandes boucles : la roadmap ne désigne plus le semis médicinal comme prochain lot automatique.
+
 - RimWorld Core d’abord, extensions après G5 sauf demande utilisateur ultérieure. Référence Core des derniers relevés : 1.6.4871. Conserver ses boucles et interactions ; toute adaptation doit être motivée, documentée et distinguée d’une règle vérifiée. Ne jamais promettre une parité exhaustive.
 - Le [corpus utilisateur](docs/research/reference-adoption.md) est la référence fonctionnelle principale, à confronter aux recherches et observations de parties. Lire les chapitres du domaine ; conserver les identifiants SYS/TEST/CONST/UI/STAT/GAP, provenance et décision adopter/adapter/différer/vérifier. Ne pas appliquer automatiquement ses architectures, nombres ou priorités ; ses statuts ne prouvent pas une validation locale. Préserver les originaux.
 - À chaque nouvelle mécanique, effectuer une recherche Internet précise, vérifier version, détails et cas limites et consigner certitudes/divergences. Une sauvegarde observée n’est ni une règle universelle ni le calendrier du projet.

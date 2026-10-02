@@ -33,6 +33,7 @@ import { cancelHunting } from './hunting-state.ts';
 import { advanceCorpses } from './corpses.ts';
 import { advanceWildlife,enableWildlife,reconcileWildlife } from './wildlife.ts';
 import { enableHeatwaves,advanceHeatwaves } from './heatwave.ts';
+import { adoptMiscIncidents,advanceMiscIncidents } from './cassandra-misc.ts';
 import { advanceHeatExposure } from './heat-exposure.ts';
 import { processHeatRefuge } from './heat-refuge.ts';
 import { newHeaterState,adjustHeaterTarget } from './heater.ts';
@@ -550,13 +551,16 @@ const workEnvironments=new WeakMap<World,WorkEnvironmentCache>();
 export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-planner.ts').SearchStats): void {
   if (!Number.isInteger(ticks) || ticks < 0 || ticks > 100000) throw new Error('Tick count must be an integer between 0 and 100000.');
   if(!ticks)return;
+  // Old profiles start this new stream prospectively, when play resumes.
+  // Loading or pausing never invents a past opportunity or heat exposure.
+  adoptMiscIncidents(world);
   let thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
     flushColonyLosses(world);
     world.tick++;
     advanceHumanAges(world);
     sampleColonyEconomy(world);
-    advanceArrivals(world);advanceHeatwaves(world);advanceVisitors(world);advanceFluIncidents(world);
+    advanceArrivals(world);advanceHeatwaves(world);advanceMiscIncidents(world);advanceVisitors(world);advanceFluIncidents(world);
     const beforeWeather=world.structures;
     advanceSurfaceWeather(world,cell=>{const c={type:'designate' as const,kind:'chop' as const,...cell};if(canDesignate(world,c).ok)applyCommand(world,c);});
     if(beforeWeather!==world.structures)thermal=reconcileTemperature(world);

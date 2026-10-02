@@ -16,14 +16,17 @@ test('V179 catalogue scene harvests its natural root, hauls one physical dose, a
   const entries = parseTestColonies(JSON.parse(readFileSync('public/test-saves/manifest.json', 'utf8')));
   const entry = entries.find(save => save.id === 'racines-et-soins-v179');
   expect(entry).toMatchObject({ release: 'v179', filename: 'racines-et-soins.json', prepared: true, pawns: 3, colonists: 3, width: 250, height: 250 });
-  expect(entries).toHaveLength(31);
+  expect(entries).toHaveLength(32);
   expect(entry!.sha256).toBe(createHash('sha256').update(raw).digest('hex'));
-  expect(JSON.parse(raw).schemaVersion).toBe(SCHEMA_VERSION);
+  expect(JSON.parse(raw).schemaVersion).toBe(168); // Immutable V179 bytes.
   vi.stubGlobal('fetch', vi.fn(async () => new Response(raw)));
   expect(await readTestColony(entry!)).toBe(raw);
   const world = deserializeWorld(raw);
   expect(world.schemaVersion).toBe(SCHEMA_VERSION);
-  expect(world).toEqual(prepareHealrootDemo());
+  const prepared=prepareHealrootDemo();
+  // The old fixture gains no Misc calendar merely by being loaded.
+  delete prepared.miscIncidents;
+  expect(world).toEqual(prepared);
   expect(validateWorld(world)).toEqual([]);
 
   const plant = world.resources.find(resource => resource.id === 7436);

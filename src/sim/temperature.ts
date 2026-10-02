@@ -1,13 +1,13 @@
 import { seasonalOutdoorTemperature } from './site-climate.ts';
 import { advanceCoolers } from './cooler.ts';
-import { heatwaveOffset } from './heatwave.ts';
+import { activeHeatwave,heatwaveOffset } from './heatwave.ts';
 import { applyThermalSources } from './thermal-sources.ts';
 import { TICKS_PER_DAY, type Cell, type World } from './types.ts';
 import { ThermalTopologyCache, type ThermalLayout } from './thermal-topology.ts';
 
 export interface ThermalRegion {cells:number[];temperature:number}
 export interface ThermalState {regions:ThermalRegion[]}
-export function outdoorTemperature(input:number|Pick<World,'tick'|'heatwaves'|'gameProfile'|'climate'>):number {const tick=typeof input==='number'?input:input.tick;return (typeof input==='number'?21+7*Math.cos(2*Math.PI*(input%TICKS_PER_DAY/TICKS_PER_DAY+.32)):seasonalOutdoorTemperature(input))+heatwaveOffset(tick,typeof input==='number'?undefined:input.heatwaves);}
+export function outdoorTemperature(input:number|Pick<World,'tick'|'heatwaves'|'miscIncidents'|'gameProfile'|'climate'>):number {const tick=typeof input==='number'?input:input.tick;return (typeof input==='number'?21+7*Math.cos(2*Math.PI*(input%TICKS_PER_DAY/TICKS_PER_DAY+.32)):seasonalOutdoorTemperature(input))+heatwaveOffset(tick,typeof input==='number'?undefined:activeHeatwave(input));}
 const contexts=new WeakMap<World,ThermalTopologyCache>();
 export function thermalLayout(world:World):ThermalLayout {
   let cache=contexts.get(world);if(!cache){cache=new ThermalTopologyCache();contexts.set(world,cache);}return cache.read(world);

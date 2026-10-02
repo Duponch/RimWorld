@@ -1,5 +1,7 @@
 # Première pression climatique — V74
 
+**État courant V180 :** le [flux Misc de Cassandra partielle](cassandra-misc-v180.md) ouvre désormais les canicules naturelles dans Atterrissage forcé, avec admissibilité saisonnière et cooldown depuis le début. Il partage les effets thermiques ci-dessous mais garde son propre calendrier. La cadence garantie décrite dans la livraison V74 concerne uniquement les camps historiques ; les [preuves V180](../history/validation-cassandra-misc-v180.md) sont distinctes.
+
 **Référence du 20 septembre :** le [Core 1.6.4871 inspecté](../research/colony-pacing-reference.md) sélectionne les canicules parmi les incidents admissibles, sans rendez-vous garanti à la première semaine. Le calendrier prototype ci-dessous reste livré pour les camps historiques. Le profil Cassandra d'Atterrissage forcé ne l'active pas et ne propose pas son bouton d'activation ; l'intégration de cet incident au narrateur reste distincte des effets thermiques déjà présents.
 
 **V87 validée** prolonge l'air extérieur par le [climat annuel du site](site-climate.md), la [météo et le chauffage](wind-heater.md), et la chaleur des [incendies](fires.md). Ces systèmes utilisent le même air local sans ajouter une canicule obligatoire au narrateur. Leur [campagne commune](../history/validation-environment-v87.md) ne remplace pas les preuves V74.

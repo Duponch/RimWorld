@@ -10,6 +10,7 @@ test('V166 is validated before a neutral V167 migration with no retrospective ac
   // including the existing climate/flora state, not an old fixture rewritten.
   const world = createScenarioWorld(42, 32, 'crashlanded', { biome: 'arid-shrubland', hilliness: 'small-hills' });
   const legacy = JSON.parse(serializeWorld(world));
+  delete legacy.miscIncidents; // V166 had no V180 storyteller stream.
   for(const pawn of legacy.pawns)delete pawn.skills.plants;
   legacy.schemaVersion = 166;
   const before = JSON.stringify(legacy);
@@ -28,6 +29,7 @@ test('future wild species in an old resource delta is rejected without adopting 
   const world = createScenarioWorld(42, 32, 'crashlanded', { biome: 'arid-shrubland', hilliness: 'small-hills' });
   const encoder = new SnapshotEncoder(), decoder = new SnapshotDecoder();
   for(const pawn of world.pawns)delete pawn.skills.plants;
+  delete world.miscIncidents;
   // Model an existing V166 stream. A later corrupted upsert must not upgrade it.
   const oldStream = { ...world, schemaVersion: 166 } as unknown as World;
   const checkpoint = encoder.encode(oldStream, 0, 0);

@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Canicules et refuge — V180
+
+Dans **Atterrissage forcé**, Cassandra partielle peut désormais déclencher une canicule si la saison est suffisamment chaude. Elle n’est pas garantie ; les incidents divers restent peu couverts. Une lettre à droite indique la chaleur ajoutée et les moyens de protection. Fermez et couvrez un refuge, ravitaillez le refroidisseur, vérifiez les températures et la plage confortable dans Santé. Les vêtements, trajets, secours et provisions sont réels ; panser une personne ne la refroidit pas.
+
+Pour un essai court, ouvrez **Charger une partie → Colonies de test → Canicule et refuge · 3 colons**. La fiche indique ce qui est préparé ; reprendre fait réellement démarrer la canicule. Le [contrat V180](../development/cassandra-misc-v180.md) distingue ce test de la fréquence d’une partie naturelle. Les anciennes colonies du profil adoptent le nouveau calendrier à leur reprise, sans incidents passés ; les camps historiques gardent leur cadence.
+
 ## Tester les racines médicinales et Plantes — V179
 
 Ouvrez **Charger une partie → Colonies de test → Racines et soins · 3 colons**. La fiche guide la récolte par Ada, le transport vers la réserve, puis le soin de Noé. La carte est boréale et la plante naturelle ; la contusion et les réglages sont préparés. La partie démarre en pause, sans médicament herbal déjà récolté.
