@@ -34,6 +34,8 @@ Le scénario d'accident commence par un retrait réel de support via l'interface
 
 ## Fréquence et limites
 
+V183 conserve la borne brute de treize cases/s comme alerte du banc de récolte. Une approche de travail décalée de 0,18 case peut dépasser cette vitesse visuelle à 6× tout en restant continue. La sonde conserve donc les primitives des deux frames : un excès n'est classé continu que sur la même arête confirmée et les mêmes bornes GPU, dans une enveloppe de contact bornée, avec poses et horloges concordantes. Le compteur brut demeure dans le rapport ; segment changé, témoin incomplet ou téléportation restent signalés. Les témoins négatifs et le diagnostic sont dans la [preuve V183](../history/validation-quest-v183.md). Cette correction d'oracle ne change aucune règle de déplacement du jeu.
+
 Le contrôle temporel natif est requis pour horloge, bridge, interpolation, transitions visuelles et changements de cadence. Un nouveau travail physique enrichit d’abord son parcours métier puis le contrôle de synchronisation concerné. Pour une retouche de texte/couleur, une inspection ciblée suffit. Regrouper les tests en fin de lot, sans lancer une partie longue à chaque modification.
 
 Lors d’une livraison, distinguer explicitement **simulation validée**, **parcours navigateur joué**, **présentation observée**, **performances mesurées** et **situations non exercées**. Aucune de ces preuves ne remplace les autres. Un test absent, ignoré ou sans backend attendu ne vaut pas succès. Un scénario périodique ou une mesure conservée dans Git n’est pas automatiquement une protection continue : ce dépôt n’annonce pas de CI matérielle distante.

@@ -7,6 +7,7 @@ import { validPlantSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
 import { validateScoutRegistry } from '../sim/caravan-save.ts';
+import { validateQuests } from '../sim/quest-save.ts';
 import { scoutRegistryView } from '../sim/caravan-trip.ts';
 import { resourceMaxHp } from '../sim/thing-damage-rules.ts';
 import { validPlantThermalFactor } from '../sim/thermal-plants.ts';
@@ -322,6 +323,7 @@ export class SnapshotDecoder {
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
     if(validateScoutRegistry(next,next.schemaVersion).length)return resync('Registre de reconnaissance invalide.');
+    if(validateQuests(next.quests?scoutRegistryView(next):next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
     if(next.scout&&(next.scout.phase==='travelling'||next.scout.phase==='awaiting-entry')){
       const registry=scoutRegistryView(next),pawn=next.scout.pawn;
       if(!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)

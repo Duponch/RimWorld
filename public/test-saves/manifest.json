@@ -884,6 +884,35 @@
       "prepared": true,
       "provenance": "Départ Crashlanded Core adapté, graine 13312, broussailles arides naturelles 250 × 250, schéma 171. Ada est préparée saine, libre, nourrie à 45 % et reposée à 90 % à deux cases d’une bordure accessible. Quatre rations de survie déjà présentes sont déplacées près d’elle par division d’une pile initiale, sans création nette ; les deux autres colons restent au foyer, leurs travaux ordinaires désactivés pour cette observation. Les calendriers Core de raids et de maladie sont conservés, sans occasion pendant ce court circuit ; visites, météo et canicule sont écartées de cette scène préparée. Aucune reconnaissance n’a encore eu lieu : chargement, contact, sortie, consommation et retour exigent les commandes et transitions réelles après chargement.",
       "sha256": "991ff54400b0077386c33cde80047d71cb974fb8456d50bbdf86c34b858f9689"
+    },
+    {
+      "id": "asile-et-poursuite-v183",
+      "release": "v183",
+      "label": "Asile et poursuite · 3 colons",
+      "description": "Émile demande asile. Dans Quêtes, examinez ses compétences et la poursuite annoncée, puis acceptez ou refusez avant l’expiration.",
+      "filename": "asile-et-poursuite.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 250,
+      "height": 250,
+      "tick": 48000,
+      "focus": [
+        "Quêtes",
+        "asile",
+        "offre",
+        "réfugié poursuivi",
+        "raid physique",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Ouvrir Quêtes depuis la lettre dans les alertes ; lire le profil, la menace et les délais, puis accepter l’asile.",
+        "Reprendre à 1× : attendre l’entrée réelle du nouveau colon avec sa chemise, puis sauvegarder et charger avant l’arrivée du raid.",
+        "Observer l’unique bandit au couteau arriver par une bordure admissible. Défendre la colonie avec les commandes ordinaires.",
+        "Après le raid, vérifier la conclusion neutre de la quête, l’identité du colon et le bilan séparé de l’assaut."
+      ],
+      "prepared": true,
+      "provenance": "Départ Atterrissage/Cassandra Core adapté, graine 13313, broussailles arides naturelles 250 × 250, schéma 172. Horloge préparée prospectivement au premier contrôle de la quête ; autres calendriers réadoptés à cette date sans résolution rétroactive. L’offre est créée par advanceQuests, sans colon, possession ni raid précréés. Acceptation, arrivée au bord, poursuite et conclusion exigent les commandes et transitions réelles après chargement. Aucun butin ni verdict de victoire de quête n’est promis.",
+      "sha256": "4e7ebd747679916b4113ec2a0838006759d9b2e844569f9c997d0e035ec94d37"
     }
   ]
 }

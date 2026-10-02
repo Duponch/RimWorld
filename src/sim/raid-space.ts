@@ -20,7 +20,7 @@ function strategic(world:World,start:Cell,goals:ReadonlySet<number>):Cell[]|null
     if(i>=w)visit(i-w);if(i%w+1<w)visit(i+1);if(i+w<n)visit(i+w);if(i%w)visit(i-1);
   }return null;
 }
-export function raidEntries(world:World,salt:number,count:number):Cell[]|null {
+export function raidEntries(world:World,salt:number,count:number,preferred?:Cell):Cell[]|null {
   const centers=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed');if(!centers.length)return null;
   const hypothetical={...world,structures:world.structures.filter(s=>!isBarrier(s))},blocked=blockedCells(hypothetical),stands=captureStandability(world);
   const occupied=new Set(world.pawns.flatMap(p=>[p.z*world.width+p.x,...(p.motion&&p.motion.end>world.tick?[p.motion.from.z*world.width+p.motion.from.x]:[])]));
@@ -32,9 +32,10 @@ export function raidEntries(world:World,salt:number,count:number):Cell[]|null {
   const visit=(i:number)=>{if(!blocked[i]&&!reached[i]){reached[i]=1;queue[tail++]=i;}};
   while(head<tail){const i=queue[head++]!,x=i%world.width;if(i>=world.width)visit(i-world.width);if(x+1<world.width)visit(i+1);if(i+world.width<blocked.length)visit(i+world.width);if(x)visit(i-1);}
   const edges:Cell[]=[];
-  for(let z=0;z<world.height;z++)for(let x=0;x<world.width;x++)if(edge(world,{x,z})){const c={x,z},i=z*world.width+x;if(!occupied.has(i)&&stands(c)&&!barriers.has(i)&&reached[i])edges.push(c);}
+  const sameBorder=(x:number,z:number)=>!preferred||preferred.x===0&&x===0||preferred.x===world.width-1&&x===world.width-1||preferred.z===0&&z===0||preferred.z===world.height-1&&z===world.height-1;
+  for(let z=0;z<world.height;z++)for(let x=0;x<world.width;x++)if(edge(world,{x,z})&&sameBorder(x,z)){const c={x,z},i=z*world.width+x;if(!occupied.has(i)&&stands(c)&&!barriers.has(i)&&reached[i])edges.push(c);}
   if(edges.length<count)return null;
-  const first=edges[salt%edges.length]!;edges.sort((a,b)=>distanceSquared(a,first)-distanceSquared(b,first)||a.z-b.z||a.x-b.x);
+  const first=preferred??edges[salt%edges.length]!;edges.sort((a,b)=>distanceSquared(a,first)-distanceSquared(b,first)||a.z-b.z||a.x-b.x);
   return edges.slice(0,count);
 }
 export interface RaidRoute { path:Cell[]; goal:Cell; barrier?:Structure }

@@ -46,6 +46,7 @@ import { validBereavement } from './bereavement-save.ts';
 import { validateBarriers } from './barrier-save.ts';
 import { validateRaids } from './raid-save.ts';
 import { validateArrivals } from './arrival-save.ts';
+import { validateQuests } from './quest-save.ts';
 import { validTraits } from './traits.ts';
 import { validateMental } from './mental-save.ts';
 import { validApparelShape,validateApparel } from './apparel-save.ts';
@@ -137,7 +138,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -380,6 +381,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!errors.length)errors.push(...validatePrisoners(world,version,ids));
   if(errors.length)return errors;
   errors.push(...validateArrivals(world,version));
+  errors.push(...validateQuests(world,version));
   errors.push(...validateMental(world,version));
   errors.push(...validateSocial(world,version));
   for(const pawn of world.pawns)if(!validBereavement(pawn.bereavement,pawn.id,version,world))errors.push('Invalid bereavement memory.');
@@ -997,6 +999,11 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===170){
     const errors=validateSchema(input,170);if(errors.length)throw new Error('Invalid version 170 save: '+errors.join(' '));
     input.schemaVersion=171;
+  }
+  if(record(input)&&input.schemaVersion===171){
+    const errors=validateSchema(input,171);if(errors.length)throw new Error('Invalid version 171 save: '+errors.join(' '));
+    // The quest calendar is enabled only through a later player decision.
+    input.schemaVersion=172;
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;

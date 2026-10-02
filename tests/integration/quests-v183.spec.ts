@@ -1,0 +1,84 @@
+import {readFileSync} from 'node:fs';
+import {expect,test} from '@playwright/test';
+import {deserializeWorld,validateWorld} from '../../src/sim/serialization.ts';
+import {testOutputPath,writeTestFile} from '../test-output.ts';
+import {expectWorld,observeErrors,pause,world} from './helpers.ts';
+
+test('V183 native quest menus accept a real asylum offer, resume before entry, then show raid and neutral conclusion',async({playwright})=>{
+  test.setTimeout(180_000);
+  const prepared=deserializeWorld(readFileSync('public/test-saves/v183/asile-et-poursuite.json','utf8'));
+  const offer=prepared.quests!.entries[0]!,calendarRng=prepared.raids!.rng;
+  const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
+  const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}});
+  const errors=observeErrors(page);
+  try{
+    await page.goto('/?e2e');
+    const front=page.locator('.front-menu');
+    await front.getByRole('button',{name:'Charger une partie',exact:true}).click();
+    await front.getByRole('button',{name:'Colonies de test'}).click();
+    await front.locator('input[name="test-colony"][value="asile-et-poursuite-v183"]').check();
+    await front.getByRole('button',{name:'Charger cette colonie'}).click();
+    await expectWorld(page,prepared);
+    expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
+    await expect(page.locator('#quest-letter')).toBeVisible();
+    await page.locator('#quest-letter').click();
+    await expect(page.locator('#quests-panel')).toBeVisible();
+    await expect(page.locator('#quest-details')).toContainText('un bandit au couteau');
+    expect(offer.raidDelay).toBe(225);
+    await expect(page.locator('#quest-timing')).toContainText('54 min');
+    await page.screenshot({path:testOutputPath('artifacts/quest-v183-offer.png')});
+    await page.locator('#accept-quest').click();
+    await expect.poll(async()=>((await world(page)).quests?.entries[0]?.status)).toBe('accepted');
+    await pause(page);
+    const accepted=await world(page);
+    expect(accepted.pawns).toHaveLength(3);expect(accepted.raids!.active).toBeUndefined();
+    expect(validateWorld(accepted)).toEqual([]);
+    await page.locator('[data-panel="menu"]').click();await page.locator('#save').click();await page.locator('#load').click();
+    await expectWorld(page,accepted);
+    await page.locator('[data-panel="quests"]').click();
+    await expect(page.locator('#quest-status')).toContainText('son arrivée reste attendue');
+    await page.locator('[data-speed="6"]').click();
+    await page.waitForFunction(()=>{
+      const q=window.__lisiere.world.quests?.entries[0];
+      if(q?.arrivedAt===undefined)return false;
+      document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click();return true;
+    },undefined,{polling:50,timeout:30_000});
+    await pause(page);
+    const arrived=await world(page),joined=arrived.quests!.entries[0]!;
+    expect(joined.pawnId).toBeDefined();
+    expect(arrived.pawns.find(p=>p.id===joined.pawnId)?.name).toBe(offer.name);
+    expect(arrived.piles.filter(p=>p.owner.type==='apparel'&&p.owner.pawnId===joined.pawnId&&p.item==='cloth-shirt')).toHaveLength(1);
+    expect(arrived.raids!.active).toBeUndefined();expect(validateWorld(arrived)).toEqual([]);
+    await page.screenshot({path:testOutputPath('artifacts/quest-v183-arrived.png')});
+    await page.locator('[data-speed="6"]').click();
+    await page.waitForFunction(()=>{
+      const q=window.__lisiere.world.quests?.entries[0];
+      if(q?.raidAt===undefined)return false;
+      document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click();return true;
+    },undefined,{polling:50,timeout:40_000});
+    await pause(page);
+    const pursued=await world(page),quest=pursued.quests!.entries[0]!,group=pursued.raids!.active!;
+    expect(group.originQuestId).toBe(quest.id);expect(group.members).toHaveLength(1);
+    const raider=pursued.pawns.find(p=>p.id===group.members[0])!;
+    expect(pursued.piles.some(p=>p.item==='plasteel-knife'&&p.owner.type==='equipment'&&p.owner.pawnId===raider.id)).toBe(true);
+    expect(pursued.raids!.rng).toBe(calendarRng);
+    expect(validateWorld(pursued)).toEqual([]);
+    await page.screenshot({path:testOutputPath('artifacts/quest-v183-pursuit.png')});
+    await page.locator('[data-speed="6"]').click();
+    await page.waitForFunction(()=>{
+      if(window.__lisiere.world.quests?.entries[0]?.status!=='concluded')return false;
+      document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click();return true;
+    },undefined,{polling:50,timeout:30_000});
+    await pause(page);
+    const concluded=await world(page),ending=concluded.quests!.entries[0]!;
+    expect(ending.status).toBe('concluded');expect(ending.endedAt).toBe(ending.raidAt!+60);
+    expect(concluded.pawns.find(p=>p.id===joined.pawnId)?.name).toBe(offer.name);
+    expect(concluded.raids!.rng).toBe(calendarRng);
+    expect(validateWorld(concluded)).toEqual([]);
+    await expect(page.locator('#quest-status')).toContainText('issue neutre');
+    await expect(page.locator('#quest-history')).toContainText(offer.name);
+    await page.screenshot({path:testOutputPath('artifacts/quest-v183-concluded.png')});
+    expect(errors).toEqual([]);
+    writeTestFile(testOutputPath('artifacts/quest-v183-ui-proof.json'),JSON.stringify({backend:'native WebGPU',seed:prepared.seed,map:[250,250],offerId:offer.id,offerAt:offer.offeredAt,acceptedAt:accepted.quests!.entries[0]!.acceptedAt,arrivedAt:joined.arrivedAt,pawnId:joined.pawnId,raidAt:quest.raidAt,raidGroupId:group.id,endedAt:ending.endedAt,raidCalendarRng:calendarRng,errors},null,2));
+  }finally{await browser.close();}
+});

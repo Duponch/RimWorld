@@ -1,6 +1,6 @@
 # Lisière
 
-Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 171**. [V182](docs/development/caravan-scout-v182.md) ouvre une reconnaissance courte : chargement physique, voyage hors carte et retour avec les mêmes personnes et possessions. « Reconnaissance et retour » permet de l’essayer. L’[inventaire](docs/gameplay/implementation-status.md), la [roadmap](docs/ROADMAP.md) et la [validation](docs/development/validation.md) distinguent contenu, priorités et preuves.
+Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 172**. [V183](docs/development/quest-local-v183.md) ouvre une première quête locale : accepter l’asile d’une personne poursuivie, accueillir son entrée physique puis faire face au raid annoncé. « Asile et poursuite » permet de l’essayer. L’[inventaire](docs/gameplay/implementation-status.md), la [roadmap](docs/ROADMAP.md) et la [validation](docs/development/validation.md) distinguent contenu, priorités et preuves.
 
 ## Démarrer
 

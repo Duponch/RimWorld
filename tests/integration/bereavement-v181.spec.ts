@@ -18,7 +18,7 @@ test('V181 catalogue scene plays one true blood-loss death and shows opposite sa
     if (await front.isHidden()) { await panel(page, 'menu'); await page.locator('#browse-saves').click(); }
     else await front.getByRole('button', { name: 'Charger une partie', exact: true }).click();
     await front.getByRole('button', { name: 'Colonies de test' }).click();
-    await expect(front.locator('input[name="test-colony"]')).toHaveCount(34);
+    await expect(front.locator('input[name="test-colony"]')).toHaveCount(35);
     await front.locator('input[name="test-colony"][value="deuil-et-souvenirs-v181"]').check();
     await expect(front).toContainText('Deuil et souvenirs · 3 colons');
     await page.screenshot({ path: testOutputPath('artifacts/bereavement-v181-catalogue.png') });

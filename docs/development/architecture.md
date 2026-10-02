@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Schéma courant 171. La [reconnaissance V182](caravan-scout-v182.md) sépare l’intention sur carte et le registre hors carte propriétaire des objets originaux. Les validateurs ordinaires réutilisent une projection de registre sans mutation ; positions locales, stock disponible et rendu restent ceux de la carte. Le schéma 170 est validé avant migration neutre, sans voyage ni provisions rétroactifs. [Deuil V181](bereavement-v181.md), [Cassandra V180](cassandra-misc-v180.md), [Plantes V179](plants-skill-v179.md), [cache V177](snapshot-cache-v177.md) et notes [historiques](architecture-pre-v145.md) gardent leurs contrats.
+Schéma courant 172. La [quête locale V183](quest-local-v183.md) conserve un calendrier privé et des dossiers bornés, avec liens bidirectionnels de personne/raid ; la création de raid est partagée sans détourner l’agenda Cassandra. Le schéma 171 est validé strictement avant migration neutre, sans offre ni personne rétroactive. La [reconnaissance V182](caravan-scout-v182.md) réutilise les validateurs sur une projection du registre carte/hors carte sans mutation ; positions, stock et rendu restent ceux de la carte. Les [notes historiques](architecture-pre-v145.md) conservent leurs contrats.
 
 ## Objectif
 

@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+**V183 :** une première quête locale d'asile relie choix, arrivée physique et poursuivant, puis une conclusion neutre indépendante du combat. S20 et S23 restent partiels : calendrier et menace adaptés, pas de graphe, sites ni récompenses matérielles. SYS-136..144 / UI-029..031 sont des références partielles, pas des familles entièrement validées. [Contrat](../development/quest-local-v183.md), [recherche Core](../research/quest-local-core-v183.md), [preuve bornée](../history/validation-quest-v183.md).
+
 **État V150 :** SYS/TEST-082 couvre désormais deux crises mineures locales, errance triste et [frénésie alimentaire](../development/food-binge-v150.md), avec perte du contrôle direct, repas physiques et récupération. Cette extension ne livre ni les autres intensités du catalogue Core, ni le trait Gourmand, ni une psychologie exhaustive ; S14 et G3 restent partiels. [Preuve V150](../history/validation-food-binge-v150.md).
 
 **V109 :** apparence humaine persistante et projection des anciens acteurs, portraits/Bio et silhouettes 3D diversifiés ; recherche et fabrication physique du gilet. Biographies, âge/vieillissement et choix complet des personnages restent absents ; casques, composants fabriqués, chaîne industrielle complète et productions animales restent ouverts. G0–G4 partiels, G5 absent, aucun jalon global clos. [Contrats](../development/pawn-appearance.md), [gilet](../development/flak-armor.md), [preuves](../history/validation-appearance-v109.md).

@@ -3,7 +3,7 @@ import { addMaterial } from '../src/sim/materials.ts';
 import { injurePawn } from '../src/sim/health.ts';
 import { applyCommand, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
 import { medicalCamp } from './scenarios/health.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
 
 type OffMap = Extract<NonNullable<World['scout']>, { phase: 'travelling' | 'awaiting-entry' }>;
 
@@ -49,7 +49,7 @@ test('schema 170 migrates neutrally and rejects a future scout field before migr
   const old = JSON.parse(serializeWorld(medicalCamp(2)));
   old.schemaVersion = 170;
   const migrated = deserializeWorld(JSON.stringify(old));
-  expect(migrated.schemaVersion).toBe(171);
+  expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   expect(migrated.scout).toBeUndefined();
   expect({ ...migrated, schemaVersion: 170 }).toEqual(old);
   old.scout = { phase: 'travelling' };

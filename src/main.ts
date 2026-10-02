@@ -29,6 +29,7 @@ import { updateWildlifePanel } from './ui/wildlife-panel';
 import { createHeatwaveUI } from './ui/heatwave';
 import { updateResearchPanel } from './ui/research-panel';
 import { createScoutUI } from './ui/scout-panel';
+import { createQuestUI } from './ui/quests';
 import { mountStorageItemControls,readStorageItemControls } from './ui/storage-item-controls';
 import './ui/storage-item-controls.css';
 import { updateUnfinishedInspection } from './ui/unfinished-inspection';
@@ -398,7 +399,7 @@ function setPanel(panel: Panel, preserveTool = false) {
   currentPanel = panel;
   syncStorageButtons();
   scheduleUI.cancel();
-  for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals', 'world'] as const) el(`${name}-panel`).hidden = panel !== name;
+  for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals', 'world', 'quests'] as const) el(`${name}-panel`).hidden = panel !== name;
   if(panel==='world'&&snapshot)scoutUI.update(snapshot);
   if(panel==='animals'&&snapshot)updateAnimalsPanel(el('animals-content'),snapshot,id=>selectPawn(id));
   if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
@@ -977,13 +978,14 @@ function renderState() {
     lastStatusAlertsSignature=alertSignature;
     el('status-alerts').replaceChildren(...alertRows.map(row=>{const item=document.createElement('p');item.textContent=row.text;if(row.kind)item.dataset.alert=row.kind;return item;}));
   }
-  economyUI.update(world);arrivalUI.update(world);raidUI.update(world);heatwaveUI.update(world);tradeUI.update(world);
+  economyUI.update(world);arrivalUI.update(world);questUI.update(world);raidUI.update(world);heatwaveUI.update(world);tradeUI.update(world);
 }
 const heatwaveUI=createHeatwaveUI(command=>client.command(command));
 const economyUI=createColonyEconomyUI(el('colony-economy'),command=>client.command(command));
 const raidUI=createRaidUI(command=>client.command(command),id=>renderer?.focusPawn(id));
 const tradeUI=createTradeUI(command=>client.command(command),()=>client.setSpeed(0),id=>renderer?.focusPawn(id),async()=>{if(currentSpeed===0)await client.setSpeed(1);});
 const arrivalUI=createArrivalUI(command=>client.command(command));
+const questUI=createQuestUI(command=>client.command(command));
 function syncStorageButtons() {
   shell.inert = replacingWorld || frontMenu.isOpen() || !snapshot;
   for(const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]'))button.disabled=replacingWorld||currentPanel==='menu';

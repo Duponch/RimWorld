@@ -17,7 +17,7 @@ test('V182 native menus load a prepared scout, play the physical roundtrip and r
     const front=page.locator('.front-menu');
     await front.getByRole('button',{name:'Charger une partie',exact:true}).click();
     await front.getByRole('button',{name:'Colonies de test'}).click();
-    await expect(front.locator('input[name="test-colony"]')).toHaveCount(34);
+    await expect(front.locator('input[name="test-colony"]')).toHaveCount(35);
     await front.locator('input[name="test-colony"][value="reconnaissance-et-retour-v182"]').check();
     await front.getByRole('button',{name:'Charger cette colonie'}).click();
     await expectWorld(page,expected);

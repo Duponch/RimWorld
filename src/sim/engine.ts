@@ -58,6 +58,7 @@ import { adoptColonyEconomy,sampleColonyEconomy,flushColonyLosses,advanceColonyA
 import { advanceRaids,enableRaids,exitRaider } from './raids.ts';
 import { processRaider } from './raid-behavior.ts';
 import { advanceArrivals,applyArrival } from './arrivals.ts';
+import { advanceQuests,applyQuestCommand } from './quests.ts';
 import { advanceFluIncidents } from './flu-incidents.ts';
 import { updateMentalBreak,processMentalBreak } from './mental-break.ts';
 import { expireMealMemories } from './mood.ts';
@@ -355,6 +356,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='enable-visitors'||command.type==='order-trade'||command.type==='cancel-trade'||command.type==='trade-execute')return applyTrade(world,command);
   if(command.type==='enable-raids'){enableRaids(world);return {ok:true};}
   if(command.type==='enable-arrivals'||command.type==='answer-arrival')return applyArrival(world,command);
+  if(command.type==='enable-quests'||command.type==='answer-quest')return applyQuestCommand(world,command);
   if(command.type==='prison-bed')return applyPrisonBed(world,command);
   if(command.type==='prisoner-mode')return applyPrisonerMode(world,command);
   if(actors.some(id=>{const p=world.pawns.find(p=>p.id===id);return p&&!isColonist(p)&&!(p.prisoner&&['medical-care','medical-policy','food-policy-assign'].includes(command.type));}))return refusal('invalid-command','Cette personne ne fait pas partie de la colonie.');
@@ -758,6 +760,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     if(scoutId!==null){const pawn=world.pawns.find(p=>p.id===scoutId);if(pawn)departScout(world,pawn);}
     advanceColonyAdaptation(world);
     advanceRaids(world);
+    advanceQuests(world);
     advanceSocial(world);
     if(world.roofing)reconcileRoofJobs(world,roofs);
     reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);reconcileWildlife(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);

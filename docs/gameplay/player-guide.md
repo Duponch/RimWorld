@@ -1,5 +1,13 @@
 # Guide joueur
 
+## Choisir l’asile d’un réfugié poursuivi — V183
+
+Dans **Quêtes**, un départ Atterrissage/Cassandra peut activer prospectivement les offres locales. Premier contrôle après huit jours, puis offres espacées selon le calendrier local adapté. Avant acceptation, lisez le profil, les délais et la menace : un nouveau colon avec sa chemise, puis un bandit au couteau. Aucun butin n’est promis. Refuser ou laisser expirer n’engage aucune poursuite et ne pénalise pas l’humeur.
+
+Accepter engage les échéances. La personne entre réellement par une bordure accessible ; le bandit arrive près du même point. Une bordure bloquée ou un raid déjà actif peut retarder l’arrivée annoncée, sans téléportation. La conclusion neutre de la quête, soixante ticks après l’apparition du raid, ne signifie pas victoire : défense, blessés et besoins restent à gérer. Le dossier et les identités survivent à la sauvegarde.
+
+Pour essayer : **Charger une partie → Colonies de test → Asile et poursuite · 3 colons**. La date et les besoins sont préparés ; aucun colon ni raid n’est précréé. Acceptez dans Quêtes, reprenez puis sauvegardez avant la poursuite pour contrôler la reprise. [Contrat et limites](../development/quest-local-v183.md).
+
 ## Canicules et refuge — V180
 
 Dans **Atterrissage forcé**, Cassandra partielle peut désormais déclencher une canicule si la saison est suffisamment chaude. Elle n’est pas garantie ; les incidents divers restent peu couverts. Une lettre à droite indique la chaleur ajoutée et les moyens de protection. Fermez et couvrez un refuge, ravitaillez le refroidisseur, vérifiez les températures et la plage confortable dans Santé. Les vêtements, trajets, secours et provisions sont réels ; panser une personne ne la refroidit pas.

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { assertHarvestPhase,presentationStarvations,visibleSpeedResponse } from '../scripts/harvest-assertions';
+import { assertHarvestPhase,confirmedTravelExcess,presentationStarvations,visibleSpeedResponse,type TravelFrameWitness } from '../scripts/harvest-assertions';
 import { expect, test } from 'vitest';
 import { FrameMetrics } from '../src/render/FrameMetrics';
 
@@ -41,4 +41,36 @@ test('stalled presentation means a full second without tick progress, not ordina
   const stall=[{at:0,play:10,speed:6},{at:500,play:10,speed:6},{at:1001,play:10,speed:6},{at:1200,play:10,speed:6}];
   expect(presentationStarvations(stall)).toEqual([{previous:stall[0],current:stall[2]}]);
   expect(presentationStarvations([{at:0,play:10,speed:0},{at:1200,play:10,speed:0}])).toEqual([]);
+});
+
+test('a recorded chop contact edge exceeds the raw speed alarm yet follows one unchanged confirmed trajectory',()=>{
+  const dt=29.1,segment={from:{x:117,z:122},to:{x:116,z:122},start:2744,end:2747};
+  const from={x:117,z:121.92060089111328},to={x:115.81999969482422,z:122};
+  const previous:TravelFrameWitness={position:{x:116.78413861084002,z:121.93512563476561},
+    from,to,start:116,end:116.5,time:(2744.5488-2048)/6,play:2744.5488,segment};
+  const current:TravelFrameWitness={...previous,position:{x:116.37208250427268,z:121.96285180358885},
+    time:(2745.5964-2048)/6,play:2745.5964};
+  expect(Math.hypot(current.position.x-previous.position.x,current.position.z-previous.position.z))
+    .toBeGreaterThan(dt*.013+.02);
+  expect(confirmedTravelExcess(previous,current,dt)).toBe(true);
+
+  const teleport=structuredClone(current);teleport.position.x-=1;
+  expect(confirmedTravelExcess(previous,teleport,dt)).toBe(false);
+
+  const replacedBound=structuredClone(current);replacedBound.to.x-=.1;
+  const alpha=(replacedBound.time-replacedBound.start)/(replacedBound.end-replacedBound.start);
+  replacedBound.position.x=replacedBound.from.x+(replacedBound.to.x-replacedBound.from.x)*alpha;
+  replacedBound.position.z=replacedBound.from.z+(replacedBound.to.z-replacedBound.from.z)*alpha;
+  expect(confirmedTravelExcess(previous,replacedBound,dt)).toBe(false);
+
+  const skippedClock=structuredClone(current);skippedClock.play+=.1;skippedClock.time+=.1/6;
+  const advanced=(skippedClock.time-skippedClock.start)/(skippedClock.end-skippedClock.start);
+  skippedClock.position.x=skippedClock.from.x+(skippedClock.to.x-skippedClock.from.x)*advanced;
+  skippedClock.position.z=skippedClock.from.z+(skippedClock.to.z-skippedClock.from.z)*advanced;
+  expect(confirmedTravelExcess(previous,skippedClock,dt)).toBe(false);
+
+  const changedSegment=structuredClone(current);changedSegment.segment.start++;
+  expect(confirmedTravelExcess(previous,changedSegment,dt)).toBe(false);
+  const invalidTime=structuredClone(current);invalidTime.time=NaN;
+  expect(confirmedTravelExcess(previous,invalidTime,dt)).toBe(false);
 });

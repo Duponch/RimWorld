@@ -9,6 +9,8 @@
 #world-panel #scout-needs,#world-panel #scout-possessions{line-height:1.6}
 #world-panel #scout-unload-list{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
 
+#quests-panel .quest-response{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+
 #wildlife-panel .fauna-combat{
   display:grid;grid-template-columns:auto minmax(165px,1fr) auto auto;
   align-items:center;gap:8px 10px;margin:0 0 12px;padding:10px 12px;

@@ -18,7 +18,7 @@ test('V180 public Cassandra heat scene loads from the catalogue, alerts, and res
     if (await front.isHidden()) { await panel(page, 'menu'); await page.locator('#browse-saves').click(); }
     else await front.getByRole('button', { name: 'Charger une partie', exact: true }).click();
     await front.getByRole('button', { name: 'Colonies de test' }).click();
-    await expect(front.locator('input[name="test-colony"]')).toHaveCount(34);
+    await expect(front.locator('input[name="test-colony"]')).toHaveCount(35);
     await front.locator('input[name="test-colony"][value="canicule-et-refuge-v180"]').check();
     await expect(front).toContainText('Canicule et refuge · 3 colons');
     await page.screenshot({ path: testOutputPath('artifacts/misc-v180-catalogue.png') });
