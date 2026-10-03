@@ -69,15 +69,18 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
         const reach=search.advance(indices),food=cells.filter(c=>hasReachableCell(reach,c.z*width+c.x)).sort((a,b)=>reach.costs[a.z*width+a.x]!-reach.costs[b.z*width+b.x]!)[0];
         if(food){const path=routeToCell(world,food,search.finish(indices));return path?{kind:'food',path}:undefined;}
       }
-      // Food failure already exhausted the field. Without food, complete it
-      // before comparing every prey by biological score, not path distance.
-      const reach=search.finish();
+      // Biological rank comes before travel distance. Resume the same field
+      // for each candidate; settled equal-cost layers retain full-flood parents.
       for(const target of prey){
         const contacts=[target,{x:target.x-1,z:target.z},{x:target.x+1,z:target.z},{x:target.x,z:target.z-1},{x:target.x,z:target.z+1}]
-          .filter(c=>free(c)&&hasReachableCell(reach,c.z*width+c.x)).sort((a,b)=>reach.costs[a.z*width+a.x]!-reach.costs[b.z*width+b.x]!);
-        const path=contacts[0]&&routeToCell(world,contacts[0],reach);if(path)return {kind:'prey',path,targetId:target.id};
+          .filter(free);
+        if(!contacts.length)continue;
+        const reach=search.advance(new Set(contacts.map(c=>c.z*width+c.x)));
+        const contact=contacts.filter(c=>hasReachableCell(reach,c.z*width+c.x)).sort((a,b)=>reach.costs[a.z*width+a.x]!-reach.costs[b.z*width+b.x]!)[0];
+        const path=contact&&routeToCell(world,contact,reach);if(path)return {kind:'prey',path,targetId:target.id};
       }
       if(!exitFallback)return;
+      const reach=search.finish();
       const edges:Cell[]=[];
       for(let x=0;x<width;x++)edges.push({x,z:0},{x,z:world.height-1});
       for(let z=1;z<world.height-1;z++)edges.push({x:0,z},{x:width-1,z});

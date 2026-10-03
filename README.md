@@ -2,6 +2,8 @@
 
 Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 178**. [V190](docs/development/predation-v190.md) ouvre une première boucle de prédation avec le renard roux sauvage : choix d'une proie, poursuite, combat anatomique, dépouille physique et ingestion au contact. Sa viande et sa fourrure rejoignent cuisine et confection. La colonie préparée « Renard et prédation » permet d'observer ces transitions ; la [validation courante](docs/development/validation.md) distingue les contrôles acquis des preuves encore attendues. Autres prédateurs, chasse des humains, domestication du renard et catalogue Core exhaustif restent ouverts.
 
+[V191](docs/development/prey-navigation-v191.md) optimise la navigation vers les proies, sans nouvelle mécanique ni migration. Une recherche progressive unique doit conserver exactement décision, contact, coût et trajet V190. Les contrôles ciblés et la mesure CPU isolée sont acquis ; leur [preuve dédiée](docs/history/validation-prey-navigation-v191.md) conserve leur périmètre et leurs limites, sans annoncer de gain général.
+
 ## Démarrer
 
 Node.js 22.12 ou plus récent et un navigateur avec accélération graphique sont requis. Les dépendances sont épinglées.

@@ -163,11 +163,11 @@ test('one shared weighted field per tick rotates between two hungry hunters with
   const other = structuredClone(animal(w, foxId)); other.id = w.nextId++; other.x = 10; other.z = 16;
   w.wildlife!.animals.push(other); validPredation(w);
   const seen = new Set<number>();
-  const search = vi.spyOn(WeightedSearch.prototype, 'finish');
+  const search = vi.spyOn(WeightedSearch.prototype, 'advance');
   try {
     for (let i = 0; i < 8; i++) {
       search.mockClear(); stepWorld(w); validPredation(w);
-      expect(search.mock.calls.length, `global path fields at tick ${w.tick}`).toBeLessThanOrEqual(1);
+      expect(new Set(search.mock.contexts).size, `global path field identities at tick ${w.tick}`).toBeLessThanOrEqual(1);
       for (const id of [foxId, other.id]) if (animal(w, id).predation?.targetId === preyId) seen.add(id);
       if (w.wildlife!.animals.some(a => a.id === preyId)) expect(reservedSource(w, preyId)).toBe(0);
     }
