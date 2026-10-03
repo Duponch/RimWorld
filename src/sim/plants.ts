@@ -2,6 +2,7 @@ import { TICKS_PER_DAY, type Pawn, type Resource, type World } from './types.ts'
 import { plantHarvestYield } from './plant-skills.ts';
 import { isRoofed, roofIndex } from './roof-rules.ts';
 import { annualGrowingLightIntegral } from './environment.ts';
+import { climateTick,type ClimateWorld } from './site-climate.ts';
 import { soilFertility } from './soil.ts';
 import { isCropKind, type CropKind } from './crops.ts';
 import { FLORA_DEFINITIONS } from './biome-flora.ts';
@@ -60,14 +61,23 @@ export function legacyPlantGrowth(world: World, plant: Resource): number {
   const elapsed = favorableTicks(world.tick) - favorableTicks(plant.growthTick ?? world.tick);
   return clamp(base + elapsed * plantGrowthRate(1, 21, plantFertility(world, plant)) / (BERRY_GROW_DAYS * TICKS_PER_DAY));
 }
+/** Full light during the existing inclusive civil growing window. Differences
+ * integrate (anchor,tick], just like the natural-light prefix. No accumulated
+ * per-plant integral or elapsed-day loop is needed. */
+export function fullGrowingLightIntegral(world:ClimateWorld,tick=world.tick):number {
+  const civil=climateTick(world,tick),day=Math.floor(civil/TICKS_PER_DAY),remainder=civil-day*TICKS_PER_DAY;
+  const start=TICKS_PER_DAY*.25,end=TICKS_PER_DAY*.8,count=end-start+1;
+  return day*count+Math.max(0,Math.min(count,remainder-start+1));
+}
 export function plantGrowth(world: World, plant: Resource): number {
   if (!isPlant(plant)) return 1;
   const base = plant.growth ?? 1;
-  if(isRoofed(world,roofIndex(world,plant)))return base;
+  if(plant.growthLight==='dark'||plant.growthLight!=='artificial-full'&&isRoofed(world,roofIndex(world,plant)))return base;
   if (base >= 1) return 1;
   const def = plant.species?FLORA_DEFINITIONS[plant.species]:PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS], fertility = plantFertility(world, plant);
   if (fertility < def.minFertility) return base;
-  const lightTime = annualGrowingLightIntegral(world) - annualGrowingLightIntegral(world, plant.growthTick ?? world.tick);
+  const integral=plant.growthLight==='artificial-full'?fullGrowingLightIntegral:annualGrowingLightIntegral;
+  const lightTime = integral(world) - integral(world, plant.growthTick ?? world.tick);
   const factor = (plant.growthThermalFactor ?? 1) * (1 - def.sensitivity + fertility * def.sensitivity);
   return clamp(base + lightTime * factor / (def.growDays * TICKS_PER_DAY));
 }

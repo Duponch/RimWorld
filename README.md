@@ -1,6 +1,6 @@
 # Lisière
 
-Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 176**. [V188](docs/development/storage-condition-v188.md) ajoute le tri des réserves par qualité et état réel, pour les piles et les meubles emballés. La colonie préparée « Tri des réserves » permet de régler les critères puis d'observer le portage et la reprise. La [preuve](docs/history/validation-storage-condition-v188.md) borne les contrôles ciblés, le parcours natif et le coût CPU isolé ; étagères, fraîcheur, contamination et campagnes longues restent ouverts.
+Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 177**. [V189](docs/development/greenhouse-v189.md) relie énergie, toiture et agriculture avec une lampe horticole sur sol existant. La colonie préparée « Serre électrique » permet de construire, alimenter et récolter sous toit. La [preuve](docs/history/validation-greenhouse-v189.md) borne les contrôles et le coût CPU isolé ; hydroponie et catalogue Core exhaustif restent ouverts.
 
 ## Démarrer
 

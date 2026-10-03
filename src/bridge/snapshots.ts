@@ -40,8 +40,10 @@ export type SnapshotMessage = SnapshotHeader & (
   | { kind: 'delta'; baseRevision: number; world: DynamicWorld; tiles?: Array<[number, Terrain, Tile['stone']?, Tile['miningDamage']?, Tile['ore']?, Tile['floor']?]>; resources?: ResourceChanges; piles?: PileChanges }
 );
 
+import { validPlantGrowthLight } from '../sim/plant-light-save.ts';
+
 const equalResourceBase = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind && a.species === b.species
-  && a.x === b.x && a.z === b.z && a.amount === b.amount && a.stone === b.stone && a.damage === b.damage
+  && a.growthLight === b.growthLight && a.x === b.x && a.z === b.z && a.amount === b.amount && a.stone === b.stone && a.damage === b.damage
   && a.plantLife?.since === b.plantLife?.since && a.plantLife?.bornAt === b.plantLife?.bornAt
   && a.plantLife?.age === b.plantLife?.age && a.plantLife?.darkTicks === b.plantLife?.darkTicks
   && a.plantLife?.leaflessAt === b.plantLife?.leaflessAt && a.plantLife?.nextCheck === b.plantLife?.nextCheck;
@@ -270,7 +272,7 @@ export class SnapshotDecoder {
           touched.add(id);
         }
         for (const resource of upserted) {
-          if(!validPlantLife(resource,message.world.schemaVersion,message.world)||resource.damage!==undefined&&(message.world.schemaVersion<87||!Number.isSafeInteger(resource.damage)||resource.damage<1||resource.damage>=resourceMaxHp(resource)))return resync('État végétal invalide.');
+          if(!validPlantGrowthLight(resource,message.world.schemaVersion,message.world.tick)||!validPlantLife(resource,message.world.schemaVersion,message.world)||resource.damage!==undefined&&(message.world.schemaVersion<87||!Number.isSafeInteger(resource.damage)||resource.damage<1||resource.damage>=resourceMaxHp(resource)))return resync('État végétal invalide.');
           if (!validPlantThermalFactor(resource,message.world.schemaVersion)) return resync('Facteur thermique végétal invalide.');
           if (!validStoneIdentity(resource.stone, resource.kind, message.world.schemaVersion)) return resync('Identité géologique invalide.');
           if (touched.has(resource.id)) return resync('Ressource modifiée plusieurs fois.');
@@ -330,6 +332,8 @@ export class SnapshotDecoder {
       // In particular an absent sparse collection means it was removed.
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
+    if(next.resources.some(resource=>!validPlantGrowthLight(resource,next.schemaVersion,next.tick)))return resync('Régime lumineux végétal invalide.');
+    if(next.schemaVersion<177&&[...next.structures,...next.jobs,...(next.packed??[]).map(p=>p.building)].some(s=>s.kind==='sun-lamp'))return resync('Lampe horticole future.');
     if(validateScoutRegistry(next,next.schemaVersion).length)return resync('Registre de reconnaissance invalide.');
     if(!validWildlifeExitState(next,next.schemaVersion))return resync('Départ de faune invalide.');
     if(validateQuests(next.quests?scoutRegistryView(next):next,next.schemaVersion).length)return resync('Dossier de quête invalide.');

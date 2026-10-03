@@ -3,6 +3,8 @@ import { adoptWeather,advanceWeather,weatherRainRate } from './weather.ts';
 import { adoptWind,advanceWind } from './wind.ts';
 import { advanceTemperature,outdoorTemperature,reconcileTemperature } from './temperature.ts';
 import { updatePlantTemperatures } from './thermal-plants.ts';
+import { reconcilePlantLighting } from './plant-lighting.ts';
+import { LightEnvironmentCache,type LightReader } from './light-environment.ts';
 import { advancePlantLife } from './plant-life.ts';
 import { advanceFires,fireDanger,igniteLightning } from './fire.ts';
 import { ensureFireState } from './fire-rules.ts';
@@ -29,13 +31,16 @@ export function advanceSurfaceWeather(world:World,chop:(cell:Cell)=>void):void {
   });
   if(world.wind)advanceWind(world,chop);
 }
-export function advanceSurfaceTemperature(world:World,layout:ThermalLayout):ThermalLayout {
+const lightCaches=new WeakMap<World,LightEnvironmentCache>();
+export function advanceSurfaceTemperature(world:World,layout:ThermalLayout,providedLight?:LightReader):ThermalLayout {
+  const light=providedLight??(()=>{let cache=lightCaches.get(world);if(!cache){cache=new LightEnvironmentCache();lightCaches.set(world,cache);}return cache.read(world);});
   advanceTemperature(world,layout);
   const before=world.structures;
   if(world.fires)advanceFires(world,{rainRate:weatherRainRate(world)},layout);
   if(before!==world.structures)layout=reconcileTemperature(world);
+  reconcilePlantLighting(world,light);
   updatePlantTemperatures(world,layout);
-  if(world.climate)advancePlantLife(world,layout);
+  if(world.climate)advancePlantLife(world,layout,light);
   advanceWildFlora(world);
   return layout;
 }

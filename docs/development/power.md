@@ -4,12 +4,15 @@
 
 **V87 validée.** [Éolienne, radiateur et météo](wind-heater.md), [climat annuel](site-climate.md) et [incendies](fires.md) prolongent ce réseau. Les règles ajoutées ci-dessous décrivent l'implémentation livrée ; leur campagne commune, les vrais clics et les mesures sont suivis dans les [preuves V87](../history/validation-environment-v87.md), sans remplacer les preuves V85.
 
+La [serre électrique V189](greenhouse-v189.md), dont le [parcours préparé](../history/validation-greenhouse-v189.md) est acquis dans le périmètre ciblé, ajoute la lampe horticole à ce réseau sans nouveau projet de recherche ni puissance offerte. [Valeurs et adaptations Core](../research/greenhouse-core-v189.md).
+
 ## Contenu et construction
 
 | Appareil | Matériaux ; travail neutre local ; emprise | Fonction |
 |---|---|---|
 | Générateur à bois | 100 acier + 2 composants ; 250 ticks ; 2×2 | 1 000 W ; capacité 75 bois ; 22 bois/jour lorsqu'allumé |
 | Lampe sur pied | 20 acier ; 30 ticks ; 1×1 | 30 W ; lumière ordinaire jusqu'à 50 % |
+| Lampe horticole — V189 | 40 acier ; 33 ticks ; 1×1 traversable ; 50 PV | 2 900 W pendant l'horaire civil strict 06:00 < heure < 19:12 ; lumière agricole à 100 % dans sa couverture effective |
 | Climatiseur | 90 acier + 3 composants ; 160 ticks ; 1×1 orientable | 20/200 W ; froid et rejet de chaleur |
 | Cuisinière électrique | 80 acier + 2 composants ; 200 ticks ; 3×1 orientable | 350 W lorsqu'alimentée ; factures physiques |
 | Conduit | 1 acier ; 3,5 ticks ; 1×1 | Transmission dans une couche compatible avec murs, portes et consommateurs |
@@ -39,7 +42,7 @@ Le consommateur cherche dans un carré de six cases pouvant toucher une case sec
 
 La commande marche/arrêt crée un travail `flick`, assigné selon **Tâches élémentaires**. Le colon rejoint une face accessible, puis effectue quinze ticks Core de service, terminés au deuxième tick local. Aucun bonus de Construction, lumière ou XP ne raccourcit ce geste. Le bouton produit une intention visible, pas une coupure à distance. Une demande opposée retire le travail devenu inutile ; le retrait de l'objet invalide les tâches liées. Une interruption reprend l'attente depuis zéro. À priorité égale, le geste précède les travaux ordinaires et le repos au lit, tout en laissant passer la prise en charge médicale. L'ordre sous mobilisation proposé par Core reste absent : le colon doit être démobilisé dans Lisière.
 
-`switchOn` est le vrai interrupteur, absent signifie activé ; `on` est l'alimentation effective. Une pénurie ne change pas l'interrupteur. Lampe, générateur à bois, cuisinière électrique, climatiseur et radiateur possèdent une extinction individuelle. Batterie, solaire et éolienne n'en possèdent pas : leur isolation passe par le réseau.
+`switchOn` est le vrai interrupteur, absent signifie activé ; `on` est l'alimentation effective. Une pénurie ne change pas l'interrupteur. Lampes sur pied et horticole, générateur à bois, cuisinière électrique, climatiseur et radiateur possèdent une extinction individuelle. Batterie, solaire et éolienne n'en possèdent pas : leur isolation passe par le réseau. La lampe horticole possède aussi un horaire civil automatique strict, distinct de cet interrupteur ; revenir dans la plage ne lui accorde pas un démarrage gratuit. Elle ne possède pas de panne mécanique propre ; une panne de source peut couper son courant.
 
 ## Combustible, puissance et réserve
 
@@ -61,7 +64,9 @@ Le stock entier vaut 1/120 000 Wd par unité, capacité 72 000 000. V87 ajoute l
 
 Le solaire utilise le jour local commun à la lumière, notamment l'arrivée à 06 h du nouveau profil, et les cases non couvertes de son emprise 4×4. Avec le climat V87, latitude, date annuelle et heure pilotent cette lumière ; une partie historique sans adoption garde son jour fixe. Les huit météos de surface retenues ont un plafond lumineux Core de 1 : aucun malus arbitraire de nuages n'est ajouté au solaire. Ni lampes ni ombres décoratives 3D ne créent de puissance solaire. Les toits naturels restent absents.
 
-Le générateur actif éclaire et chauffe selon le modèle historique ; la lampe éclaire sans chauffer. Climatiseur et cuisinière dépendent de leur vraie alimentation. Une coupure respecte leurs contrats de travail et conservation : ingrédients, ouvrages, réservations réconciliées et âges ne sont pas effacés. La lumière et le réseau doivent être observables après une commutation autoritaire.
+Le générateur actif éclaire et chauffe selon le modèle historique ; la lampe sur pied éclaire sans chauffer. La lampe horticole active apporte 3 unités de chaleur par seconde Core dans son vrai volume d'air, sans thermostat. Sa lumière blanche logique de portée 14 fournit 100 % uniquement dans le masque de diffusion coût < 700 ; la présentation reste plafonnée à 50 %. Une lampe ordinaire reste insuffisante pour les cultures. Climatiseur et cuisinière dépendent de leur vraie alimentation. Une coupure respecte les contrats de travail, croissance et conservation : ingrédients, ouvrages, réservations réconciliées et âges ne sont pas effacés. La lumière et le réseau doivent être observables après une commutation autoritaire.
+
+La lampe horticole s'emballe et se réinstalle comme un meuble entier : identité et PV conservés, paquet déconnecté et non alimenté. Le transport exige accès, réservation et portage ; la réinstallation attend le réseau et l'horaire réels. Le schéma 177 valide strictement 176 avant migration neutre, sans ajouter de lampe, courant, sol ou plante aux anciennes parties.
 
 Le radiateur chauffe le vrai volume d'air jusqu'à sa consigne, avec baisse d'efficacité lorsque la pièce est déjà chaude ; il ne retient pas de chaleur dans le réservoir extérieur. La coupe automatique de l'éolienne demande des travaux ordinaires et n'efface pas ses obstacles au clic. Vent, contrôle périodique de puissance et météo persistent séparément de la présentation. Les [incendies V87](fires.md) peuvent endommager les appareils et amorcer la mèche d'une batterie suffisamment chargée ; la destruction retire connexion, charge et combustible avec leurs pertes explicites.
 

@@ -1,4 +1,5 @@
 import { isPowerActive } from '../sim/power-rules';
+import { sunLampActive } from '../sim/sun-lamp';
 import { isPowerTransmitter } from '../sim/power-grid';
 import { footprintCells } from '../sim/definitions';
 import type { World } from '../sim/types';
@@ -13,7 +14,7 @@ export function electricalParts(world:World,cutaway=false):Placement[] {
   const transmitters=new Set<number>();
   for(const s of world.structures)if(isPowerTransmitter(s.kind))for(const c of footprintCells(s))transmitters.add(c.z*world.width+c.x);
   for(const s of world.structures) {
-    const on=isPowerActive(s);
+    const on=s.kind==='sun-lamp'?sunLampActive(world,s):isPowerActive(s);
     if(s.kind==='power-conduit') {
       out.push({x:s.x,z:s.z,y:.055,sx:.18,sy:.07,sz:.18,color:0xac8258});
       for(const [dx,dz] of [[-1,0],[1,0],[0,-1],[0,1]]) {
@@ -60,6 +61,14 @@ export function electricalParts(world:World,cutaway=false):Placement[] {
       const h=cutaway?WORLD_SCALE.wallCutawayHeight:WORLD_SCALE.wallHeight,ry=s.orientation*Math.PI/2;
       out.push({x:s.x,z:s.z,y:h/2,sx:.94,sy:h,sz:.88,ry,color:0x8d9d98});
       for(const sign of [-1,1])for(const y of [.25,.5,.75])out.push({x:s.x+Math.sin(ry)*.455*sign,z:s.z+Math.cos(ry)*.455*sign,y:y*h,sx:.68,sy:.075,sz:.055,ry,color:sign>0?0x559bb6:0xb77757});
+    } else if(s.kind==='sun-lamp') {
+      // Broad chalk reflector and two downward strips share the resident
+      // furniture material; illumination comes from the common light field.
+      out.push({x:s.x,z:s.z,y:.055,sx:.56,sy:.11,sz:.56,color:0x68786f},
+        {x:s.x,z:s.z,y:WORLD_SCALE.lampHeight/2,sx:.1,sy:WORLD_SCALE.lampHeight,sz:.1,color:0x8b9a8e},
+        {x:s.x,z:s.z,y:WORLD_SCALE.lampHeight+.08,sx:.9,sy:.16,sz:.72,color:0xabb9a2},
+        {x:s.x,z:s.z,y:WORLD_SCALE.lampHeight+.18,sx:.74,sy:.05,sz:.56,color:0x7d9085});
+      for(const z of [-.2,.2])out.push({x:s.x,z:s.z+z,y:WORLD_SCALE.lampHeight-.015,sx:.76,sy:.055,sz:.12,color:on?0xf3f1cc:0x879287});
     } else if(s.kind==='standing-lamp') {
       out.push({x:s.x,z:s.z,y:.05,sx:.44,sy:.1,sz:.44,color:0x5f6f6c},
         {x:s.x,z:s.z,y:WORLD_SCALE.lampHeight/2,sx:.08,sy:WORLD_SCALE.lampHeight,sz:.08,color:0x758580},

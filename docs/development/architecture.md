@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Schéma courant 176. Les [conditions de stockage V188](storage-condition-v188.md) sont optionnelles ; 175 est validé strictement avant migration neutre. Admission et réservation utilisent l'état de l'objet réel ou du bâtiment emballé. Les candidats géométriques sont partagés par type ; l'admission est regroupée par plage et état uniquement pendant la décision, sans cache autoritaire entre ticks. La génération de qualité et les compteurs de facture restent distincts du stockage. Les archives du [secours civil V187](pod-rescue-v187.md) continuent d'être validées à leur horloge et à leur schéma historique dans une projection neutre. La [preuve V188](../history/validation-storage-condition-v188.md) ne vaut pas mesure générale CPU/GPU.
+Schéma courant 177. La [serre électrique V189](greenhouse-v189.md) valide strictement 176 avant migration neutre. Les plantes capturent le régime lumineux de leur intervalle ; toute transition solde la croissance acquise avant adoption du futur éclairage. L’absence de lampe horticole conserve le chemin historique. Les champs lumineux et index agricoles sont dérivés par World, sans dépendance à la caméra ; leur régime stable évite un parcours des plantes par tick. Le niveau logique agricole à 100 % reste distinct du champ graphique plafonné à 50 %. La [preuve V189](../history/validation-greenhouse-v189.md) ne vaut pas mesure générale CPU/GPU.
 
 ## Objectif
 

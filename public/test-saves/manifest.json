@@ -1033,6 +1033,37 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32 au schéma 176, graine 188 : terrain aplani, deux rectangles de réserve de trois cases, six objets au sol ajoutés explicitement (deux chemises, deux revolvers, deux lits en bois emballés). Qualités médiocre/bon et PV voisins de 45/80 % ; les lits utilisent leurs PV entiers réels. Besoins, positions et priorités des trois colons préparés, habillement automatique désactivé. Aucun trajet, réservation, transport achevé, installation ou compteur crédité. Ne démontre ni campagne autonome ni charge 250×250.",
       "sha256": "fd52ba06a49c7b611806b86238fbdf72474f2e564eb96af510a3a1c2c3a2c85c"
+    },
+    {
+      "id": "serre-electrique-v189",
+      "release": "v189",
+      "label": "Serre électrique · 3 colons",
+      "description": "Construire une lampe horticole dans une pièce couverte, observer ses 2 900 W sur trois générateurs, puis la croissance et la récolte réelles du riz.",
+      "filename": "serre-electrique.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 2000,
+      "focus": [
+        "lampe horticole",
+        "construction",
+        "livraison acier",
+        "réseau électrique",
+        "toit",
+        "croissance",
+        "récolte",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause : la pièce de 12 × 12 et son toit existent, mais la lampe en (13,13) est encore un plan. Les 40 acier attendent au sol en (11,7).",
+        "Reprendre à 1× : Ada, Construction 1, livre l’acier par la porte nord puis construit la lampe. Les trois générateurs à droite ont chacun 75 bois préparés dans leur réservoir.",
+        "Inspecter la lampe : vérifier son raccordement, sa demande de 2 900 W et sa couverture réelle. Les trois plants de riz en (12–14,15), préparés à 98,5 %, doivent encore croître sous le toit avant la récolte de Noé, Plantes 8.",
+        "Sauvegarder pendant la livraison ou le travail au chantier, recharger puis reprendre. Les objets et le chantier continuent sans double livraison. La zone est réglée pour récolter sans ressemer ; réactiver le semis pour prolonger librement la scène."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32 au schéma 177, graine 189, tick local 2000 et environnement historique tempéré à 21 °C. Terrain aplani en grass ; enceinte 12×12 avec 43 murs en bois, une porte nord et 100 cellules de toiture physique intérieure. Trois générateurs de 1 000 W préexistants, chacun chargé explicitement de 75 bois (45 000 unités de réserve), et cinq conduits contigus ; aucun démarrage de lampe accordé. Trois riz à 98,5 % et six unités de rendement de base chacun, ancrés au tick initial sous toit ; zone récolte seule. Une pile de 40 acier au sol et un plan de lampe non livré/non construit. Trois colons ordinaires repositionnés, santé neutre préparée sans blessure ni affection, besoins hauts, habillement automatique désactivé, Ada Construction 1/Construction et Manutention, Noé Plantes 8/Culture, autres travaux désactivés. Aucun transport, travail, récolte, repas ou compteur achevé. Ne démontre ni campagne naturelle ni charge 250×250.",
+      "sha256": "d7572e89ef7e4da82ab2ae583f753c2ce53393a513df0ede2325a0bd6cc2e2ea"
     }
   ]
 }

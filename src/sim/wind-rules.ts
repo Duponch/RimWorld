@@ -8,7 +8,7 @@ export const WIND_RATED_OUTPUT=2300;
 export const WIND_MAX_OUTPUT=3450;
 const directions=[[0,1],[1,0],[0,-1],[-1,0]] as const;
 /** Core blockWind, independently audited from movement, height and fill. */
-export const WIND_BLOCKERS:ReadonlySet<StructureKind>=new Set(['wall','door','autodoor','cooler','heater','wood-generator','wind-turbine','battery']);
+export const WIND_BLOCKERS:ReadonlySet<StructureKind>=new Set(['wall','door','autodoor','cooler','heater','sun-lamp','wood-generator','wind-turbine','battery']);
 export function windClearance(s:Cell&{orientation?:Orientation}):Cell[]{
   const d=directions[s.orientation??0]!,side=directions[((s.orientation??0)+1)%4]!,cells:Cell[]=[];
   for(let along=-6;along<=11;along++){

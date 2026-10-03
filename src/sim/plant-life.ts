@@ -6,6 +6,7 @@ import { annualNaturalLight } from './environment.ts';
 import { isRoofed } from './roof-rules.ts';
 import { outdoorTemperature } from './temperature.ts';
 import { damageResource } from './thing-damage.ts';
+import type { LightEnvironment,LightReader } from './light-environment.ts';
 
 /** since starts observation. bornAt exists only when actual sowing is known. */
 export interface PlantLife {
@@ -49,7 +50,7 @@ const indices=new WeakMap<World,LifeIndex>();
 
 /** One stable phase per plant. No map scan or persistent topology capture per
  * query; root supplies the currently reconciled thermal layout once per tick. */
-export function advancePlantLife(world:World,layout:ThermalLayout):void {
+export function advancePlantLife(world:World,layout:ThermalLayout,providedLight?:LightEnvironment|LightReader):void {
   if(!world.climate)return;
   let index=indices.get(world);
   if(!index||index.source!==world.resources) {
@@ -60,6 +61,10 @@ export function advancePlantLife(world:World,layout:ThermalLayout):void {
   const due=index.buckets[world.tick%PLANT_LIFE_INTERVAL]!;
   if(!due.length)return;
   const outside=outdoorTemperature(world),light=annualNaturalLight(world);
+  const needsArtificial=providedLight!==undefined&&world.structures.some(s=>s.kind==='sun-lamp');
+  // Older direct callers retain their natural-light rules. Resolve an actual
+  // environment lazily, only when a living plant reaches its individual check.
+  let environment:LightEnvironment|undefined;
   for(const plant of due) {
     const life=plant.plantLife!;
     if(life.nextCheck!==world.tick||!isPlant(plant))continue;
@@ -67,8 +72,10 @@ export function advancePlantLife(world:World,layout:ThermalLayout):void {
     life.nextCheck+=PLANT_LIFE_INTERVAL;life.age+=elapsed;
     const cell=plant.z*world.width+plant.x,outdoors=layout.indices[cell]!<0;
     if(applyPlantFrost(world,plant,outdoors,outside))continue;
-    const canSeeSun=!isRoofed(world,cell)&&Math.max(0,(light-.51)/.49)>.001;
-    life.darkTicks=canSeeSun?0:life.darkTicks+elapsed;
+    if(needsArtificial&&!environment)environment=typeof providedLight==='function'?providedLight():providedLight;
+    const glow=environment?environment.lightAt(plant):isRoofed(world,cell)?0:light;
+    const sufficientlyLit=Math.max(0,(glow-.51)/.49)>.001;
+    life.darkTicks=sufficientlyLit?0:life.darkTicks+elapsed;
     const definition=plant.species?FLORA_DEFINITIONS[plant.species]:PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS];
     const aged=life.age>definition.growDays*(plant.species?FLORA_DEFINITIONS[plant.species].lifespanMultiplier:8)*6000;
     if(aged||life.darkTicks>45000)damageResource(world,plant,10,aged?'age':'darkness');

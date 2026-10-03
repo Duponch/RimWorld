@@ -1,5 +1,15 @@
 # Guide joueur
 
+## Cultiver sous un toit avec une lampe horticole — V189
+
+Dans **Architecte → Meubles**, construisez une **Lampe horticole** : **40 acier**, **33 ticks neutres** et **50 PV**, sur une case traversable. Reliez-la à un réseau capable de fournir **2 900 W**. Elle demande un démarrage réel et s'allume automatiquement après **6 h**, puis s'éteint à **19 h 12** ; elle reste éteinte aux deux bornes exactes. Son interrupteur demande aussi le déplacement d'un colon et un contact, avec **Tâches élémentaires** autorisées.
+
+Au survol, la couverture indique les cases prévues si la lampe est alimentée. La portée de diffusion est de 14 cases, mais les murs, roches et portes limitent l'éclairage ; la zone qui fournit **100 % de lumière de croissance** dépend de cette propagation. Le rendu plafonne la luminosité visible à 50 % : consultez aussi l'inspection pour connaître la lumière de gameplay. Une lampe sur pied ou plusieurs feux à 50 % ne suffisent pas pour cultiver sous un toit et ne protègent pas une plante contre une obscurité prolongée.
+
+La lampe fournit la lumière, pas le sol ni une température garantie. Vérifiez fertilité, température et repos végétal : un toit opaque peut désormais abriter les cultures couvertes par la lampe, mais une pièce trop froide ou trop chaude bloque encore leur croissance. La lampe ajoute **3 unités de chaleur par seconde Core** dans l'air de la pièce, sans thermostat ; chauffage et refroidissement restent à gérer. Une coupure arrête l'apport lumineux sans rattrapage ultérieur. Désinstaller conserve la lampe et ses PV dans un meuble emballé, à transporter et réinstaller physiquement ; l'emballage n'éclaire pas.
+
+La scène préparée **« Serre électrique »** (`serre-electrique-v189`) permet de vérifier la toiture, le réseau et les plantes en pause, puis d'observer croissance, coupure au contact et redémarrage, avec sauvegarde pendant le parcours. Le [parcours natif ciblé](../history/validation-greenhouse-v189.md) passe ; il ne prouve pas une campagne autonome. Les anciennes parties ne reçoivent ni lampe, ni acier, ni croissance passée au chargement. Hydroponie et nouvelles cultures restent absentes. [Règles et limites](../development/greenhouse-v189.md).
+
 ## Trier par qualité et points de vie — V188
 
 Dans **Architecte → Zones → Réserve**, ou en inspectant une case de réserve, activez **Limiter la qualité** et/ou **Limiter les points de vie**. Choisissez une qualité minimale et maximale parmi les sept qualités, et des PV minimum/maximum entiers de 0 à 100 %. Les bornes sont incluses ; une plage inversée est refusée. **Appliquer les réglages** modifie la case inspectée. Un rectangle donne ses réglages aux nouvelles cases ; les cases de réserve déjà présentes gardent les leurs.
@@ -835,11 +845,11 @@ Dans **Architecte → Zones**, tracer **Construire un toit**. Les bâtisseurs re
 
 **Retirer un toit** commande son retrait et empêche sa repose automatique. **Ignorer le toit** efface les zones sans enlever la couverture. Le bouton **Toits : masqués/visibles** change seulement la vue. L’inspection indique les cases couvertes, indépendamment de ce bouton.
 
-Les plantes cultivées et les baies ne poussent pas sans soleil sous un toit ; les colons cherchent ailleurs pour regarder le ciel. Les pièces ont une température locale et les ateliers tiennent compte de leur milieu. Sous climat V87, les plantes présentes subissent les effets du froid, de l’obscurité prolongée et du vieillissement biologique. Retirer un support peut faire tomber la couverture et blesser les colons dessous. Les dégâts d’effondrement aux objets et les gravats restent absents. Les toits naturels des montagnes ne sont pas présents.
+Les plantes cultivées et les baies ne poussent pas sous un toit sans lumière agricole suffisante ; la lampe horticole V189 peut la fournir dans sa couverture effective. Les colons cherchent toujours ailleurs pour regarder le ciel. Les pièces ont une température locale et les ateliers tiennent compte de leur milieu. Sous climat V87, les plantes présentes subissent les effets du froid, de l’obscurité prolongée et du vieillissement biologique. Retirer un support peut faire tomber la couverture et blesser les colons dessous. Les dégâts d’effondrement aux objets et les gravats restent absents. Les toits naturels des montagnes ne sont pas présents.
 
 ## Éclairer les ateliers
 
-La lumière de gameplay figure dans l’inspection. Un toit coupe la lumière du ciel. Un feu allumé éclaire les cases proches, jusqu’à 50 %, même la nuit ; murs, roches et portes arrêtent cette diffusion. Plusieurs feux ne dépassent pas 50 % : ils ne permettent pas de faire pousser du riz sous un toit.
+La lumière de gameplay figure dans l’inspection. Un toit coupe la lumière du ciel. Un feu allumé éclaire les cases proches, jusqu’à 50 %, même la nuit ; murs, roches et portes arrêtent cette diffusion. Plusieurs feux ne dépassent pas 50 % : ils ne permettent pas de faire pousser du riz sous un toit. La lampe horticole V189 apporte 100 % de lumière logique aux cases couvertes par sa propagation, avec alimentation et horaire propres ; la température et le sol restent à vérifier.
 
 Éclairez **la place du colon devant le poste**. À 30 % de lumière, sa vitesse de production ne subit plus de pénalité lumineuse ; dans l’obscurité complète, elle tombe à 80 %. La taille demande 160 ticks de travail dans un atelier éclairé, 200 dehors éclairé, 250 dehors dans le noir. Le feu éclairant son cuisinier demande 60 ticks par repas à l’intérieur, 75 dehors.
 

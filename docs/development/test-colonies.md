@@ -1,4 +1,6 @@
-# Bibliothèque de colonies de test — V98 à V187
+# Bibliothèque de colonies de test — V98 à V189
+
+**V189 — « Serre électrique · 3 colons »** est la 40e fiche. Scène préparée 32² au schéma 177 : enceinte couverte, trois générateurs chargés, trois riz à 98,5 %, un plan de lampe et 40 acier au sol. Livraison, construction, alimentation, croissance et récolte restent à effectuer. [Générateur](../../scripts/generate-greenhouse-demo-v189.ts), [contrat](greenhouse-v189.md), [preuve](../history/validation-greenhouse-v189.md). Les trente-neuf fichiers antérieurs conservent leurs octets et leurs schémas historiques.
 
 **V187 — « Capsule civile et secours · 3 colons »** est la 38e fiche. Scène préparée 32² au schéma 175, lit médical, doses et repas ajoutés explicitement, médecin configuré. La sauvegarde contient seulement une capsule en attente ; son occupant, sa chemise et ses blessures sont produits à l’ouverture. Ordre direct, portage, dépôt, soins et récupération restent à effectuer. [Générateur](../../scripts/generate-pod-rescue-demo-v187.ts), [contrat](pod-rescue-v187.md), [preuve](../history/validation-pod-rescue-v187.md). Les trente-sept fichiers antérieurs conservent leurs octets et leurs schémas historiques.
 

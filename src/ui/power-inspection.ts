@@ -5,6 +5,7 @@ import { solarUnroofedCells } from '../sim/solar-rules';
 import { annualNaturalLight } from '../sim/environment';
 import { windIntensity, windObstructions } from '../sim/wind-rules';
 import { TemperatureView } from '../sim/temperature';
+import { sunLampActive, sunLampScheduled } from '../sim/sun-lamp';
 import type { Structure, World } from '../sim/types';
 
 const cache = new PowerTopologyCache();
@@ -17,7 +18,7 @@ export function powerInspection(world: World, structure: Structure, compact=fals
   const group = connectedPowerGroups(world, topology).find(g => g.some(s => s.id === structure.id));
   const supply = group?.reduce((n, s) => n + Math.max(0, powerWatts(s, world)), 0) ?? 0;
   const used = group?.reduce((n, s) => n - Math.min(0, powerWatts(s, world)), 0) ?? 0;
-  const required = group?.reduce((n, s) => n + (s.power?.switchOn === false || s.breakdown ? 0 : powerDemand(s)), 0) ?? 0;
+  const required = group?.reduce((n, s) => n + (s.power?.switchOn === false || s.breakdown || s.kind === 'sun-lamp' && !sunLampScheduled(world) ? 0 : powerDemand(s)), 0) ?? 0;
   const batteries = group?.filter(s => s.battery) ?? [];
   const stored = batteries.reduce((n, s) => n + batteryWattDays(s.battery!), 0);
   let detail: string;
@@ -37,6 +38,12 @@ export function powerInspection(world: World, structure: Structure, compact=fals
     const temperature = new TemperatureView(world).at(world, structure);
     const state = structure.breakdown ? 'En panne' : structure.power.switchOn === false ? 'Arrêt manuel' : !isPowerActive(structure) ? 'Sans alimentation' : structure.heater?.high ? 'Chauffage' : 'Veille';
     detail = `Cible ${(structure.heater?.target ?? 21).toFixed(1)} °C · air ${temperature.toFixed(1)} °C · ${state} · demande ${watts(powerDemand(structure))} · chauffe l’air de la pièce fermée, sans refroidissement`;
+  } else if (structure.kind === 'sun-lamp') {
+    const scheduled = sunLampScheduled(world);
+    const state = structure.breakdown ? 'En panne' : structure.power.switchOn === false ? 'Arrêt manuel' : !scheduled ? 'Repos des plantes (horaire)' : structure.power.parentId === null ? 'Non raccordée' : sunLampActive(world,structure) ? 'Allumée' : 'Alimentation en attente';
+    detail = `${state} · 2 900 W en activité · horaire : après 06:00 et avant 19:12 · cultures sous toit dans la zone éclairée, selon le sol et la température · Survol : couverture prévue si alimentée`;
+    const parent = structure.power.parentId === null ? undefined : topology.sources.get(structure.power.parentId);
+    if (parent) detail += ` · raccordée au réseau en ${parent.x}, ${parent.z}`;
   } else if (structure.kind === 'battery') {
     detail = `Stockage ${batteryWattDays(structure.battery ?? {stored: 0}).toFixed(2)} / 600 W·j · rendement de charge 50 % · autodécharge 5 W${structure.breakdown ? ' · Batterie hors service' : ''}`;
   } else if (structure.kind === 'power-switch') {

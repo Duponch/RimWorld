@@ -22,12 +22,13 @@ const SECOND_ATLAS = [
   'ignore-roof', 'remove-growing', 'stockpile', 'home', 'remove-home', 'remove-stockpile',
 ] as const;
 
-export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'fence','fence-gate','pen-marker']:id==='horseshoes'?[id,'chess-table']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='tailor-bench'?[id,'art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
+export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'fence','fence-gate','pen-marker']:id==='horseshoes'?[id,'chess-table']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='tailor-bench'?[id,'art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
 
 // Small original vector additions share the existing Architecte icon installer.
 // They do not change the historical two-atlas coordinates.
 const vectorIcon=(body:string):string=>`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><g fill="none" stroke="#365647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`)}")`;
 const CUSTOM_ICONS:Readonly<Record<string,string>>=Object.freeze({
+  'sun-lamp':vectorIcon('<path d="M8 9h24l3 6H5zM20 15v19M13 35h14M10 20l-2 5M30 20l2 5M15 20v4M25 20v4"/><path d="M24 32c0-5 4-6 8-5-1 4-4 6-8 5M24 32l5-3" fill="#b8cc9e"/>'),
   autodoor:vectorIcon('<path d="M5 7h30v29H5zM10 12h9v20h-9zM21 12h9v20h-9zM20 8v27"/><path d="m25 16-3 5h3l-2 5 5-7h-3l2-3"/><circle cx="7.5" cy="20" r="1.3" fill="#365647" stroke="none"/>'),
   fence:vectorIcon('<path d="M5 9v27M20 9v27M35 9v27M5 15h30M5 29h30"/><path d="M5 9l3 3M20 9l3 3M35 9l-3 3"/>'),
   'fence-gate':vectorIcon('<path d="M5 9v27M35 9v27M5 15h30M5 29h30M12 15v14M28 15v14M20 16v13"/><circle cx="24" cy="23" r="1" fill="#365647"/>'),

@@ -286,7 +286,11 @@ export class ColonyRenderer {
     this.hover.position.y = 0.08;
     this.hover.visible = false;
     this.hover.renderOrder = 5;
-    this.objectSelection = new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:0xfff5d6,side:THREE.DoubleSide,depthTest:false,depthWrite:false}));
+    const selectionGeometry=new THREE.BufferGeometry();
+    // A degenerate resident triangle warms the same position-only selection
+    // pipeline under loading, before the first object inspection.
+    selectionGeometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(9),3));
+    this.objectSelection = new THREE.Mesh(selectionGeometry,new THREE.MeshBasicMaterial({color:0xfff5d6,side:THREE.DoubleSide,depthTest:false,depthWrite:false}));
     this.objectSelection.visible=false;this.objectSelection.frustumCulled=false;this.objectSelection.renderOrder=20;
     this.scene.add(this.hover,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group,this.podRescue.group);
     this.selectionInput=new PawnSelectionInput(renderer.domElement,{
@@ -629,6 +633,7 @@ export class ColonyRenderer {
       // The double-sided cursor otherwise compiles both face variants on the
       // first map interaction. Include it behind the loading overlay.
       this.hover.visible = true;
+      this.objectSelection.visible = true;
       this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = true;
       this.rocks.setDistant(false); this.rocks.mesh.visible = true;
       this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
@@ -649,6 +654,7 @@ export class ColonyRenderer {
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
       this.invalidatePausedShadow();
+      this.updateSelectedObject();
       this.updateHover();
       this.frames.reset(); this.lastFrame = 0;
     }
@@ -682,6 +688,7 @@ export class ColonyRenderer {
     return this.world?this.growing.update(this.world,reset,this.tool==='growing'||this.tool==='remove-growing',this.selectedObject?.kind==='growing'?this.selectedObject.id:undefined):false;
   }
   private updateSelectedObject():void {
+    if(this.preparing)return;
     if(this.selectedObject?.kind==='growing'||this.selectedObject?.kind==='stockpile'){
       this.objectSelection.visible=false;this.objectSelectionSignature='';return;
     }
@@ -1067,6 +1074,7 @@ export class ColonyRenderer {
     (this.areaMesh.material as THREE.Material).dispose(); this.areaMesh = null;
   }
   private updateHover(): void {
+    if(this.preparing)return;
     if (this.areaDrag) { this.updateAreaPreview(); return; }
     const cell = this.hoverCell;
     this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined);
@@ -1074,6 +1082,8 @@ export class ColonyRenderer {
     if(this.world&&turbine)this.recreationHints.wind(this.world,turbine);
     const cooler=this.tool==='select'?this.world?.structures.find(s=>s.kind==='cooler'&&s.x===cell?.x&&s.z===cell?.z):undefined;
     if(cell&&(this.tool==='cooler'||cooler))this.recreationHints.cooler(cell,cooler?.orientation??this.placementRotation);
+    const sunLamp=this.tool==='select'?this.world?.structures.find(s=>s.kind==='sun-lamp'&&s.x===cell?.x&&s.z===cell?.z):undefined;
+    if(this.world&&cell&&(this.tool==='sun-lamp'||sunLamp||this.tool==='install'&&this.furniturePlacement?.kind==='sun-lamp'))this.recreationHints.sunLamp(this.world,cell);
     this.hover.visible = !!cell&&this.tool!=='select';
     if(this.tool==='select'){this.renderer.domElement.title='';return;}
     if (!cell || !this.world) return;
@@ -1083,15 +1093,15 @@ export class ColonyRenderer {
     this.hover.scale.set(maxX-minX+1, maxZ-minZ+1, 1);
     this.hover.position.set((minX+maxX)/2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (minZ+maxZ)/2);
     const placeable=this.tool in STRUCTURE_DEFINITIONS||['mine','uninstall','deconstruct','chop','harvest','cut'].includes(this.tool);
-    const validity = this.tool==='lay-floor'||this.tool==='remove-floor'?canDesignate(this.world,{type:'designate',kind:this.tool,...cell,...this.tool==='lay-floor'?{floor:this.selectedFloor}:{}}):this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:['standing-lamp','small-sculpture','large-sculpture'].includes(this.furniturePlacement.kind)?0:this.placementRotation},true):placeable
-      ? canDesignate(this.world, { type:'designate',kind:this.tool as JobKind,...cell,...(this.constructionMaterial?{material:this.constructionMaterial}:{}),orientation:this.tool==='solar-generator'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='wood-generator'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='autodoor'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
+    const validity = this.tool==='lay-floor'||this.tool==='remove-floor'?canDesignate(this.world,{type:'designate',kind:this.tool,...cell,...this.tool==='lay-floor'?{floor:this.selectedFloor}:{}}):this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(this.furniturePlacement.kind)?0:this.placementRotation},true):placeable
+      ? canDesignate(this.world, { type:'designate',kind:this.tool as JobKind,...cell,...(this.constructionMaterial?{material:this.constructionMaterial}:{}),orientation:this.tool==='solar-generator'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='wood-generator'||this.tool==='sun-lamp'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='autodoor'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
     this.renderer.domElement.title = validity?.reason ?? '';
   }
   private onPointerLeave = (): void => {
-    this.recreationHints.group.visible=false;
-    this.hoverCell = null; this.hover.visible = false;
+    if(!this.preparing)this.recreationHints.group.visible=false;
+    this.hoverCell = null; if(!this.preparing)this.hover.visible = false;
     this.onHover(null);
     if (this.areaDrag) this.updateAreaPreview(); else this.pointerDown = null;
   };

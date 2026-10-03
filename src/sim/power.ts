@@ -1,6 +1,7 @@
 import { PowerTopologyCache, bestPowerParent, validPowerParent, connectedPowerGroups } from './power-topology.ts';
 import { powerWatts,powerPotential,isPowerTrader } from './power-rules.ts';
 import { isPowerConnector } from './power-grid.ts';
+import { sunLampScheduled } from './sun-lamp.ts';
 import { BATTERY_START_RESERVE,BATTERY_START_THRESHOLD,batteryQuanta,leakBattery,chargeBatteries,dischargeBatteries,type BatteryOwner } from './power-battery.ts';
 import type { World, Structure } from './types.ts';
 
@@ -12,6 +13,9 @@ export function reconcilePower(world:World):void {
   const topology=cache(world).read(world);
   for(const s of world.structures)if(isPowerConnector(s.kind)&&s.power) {
     const p=s.power;
+    // Clear before the balanced-network fast path. The player's actual switch
+    // and connection survive the night; morning still uses ordinary startup.
+    if(s.kind==='sun-lamp'&&!sunLampScheduled(world))p.on=false;
     if(p.parentId===null||!validPowerParent(topology,s,p.parentId)) {
       const parent=bestPowerParent(topology,s);
       if(parent!==p.parentId){p.parentId=parent;p.on=false;}
@@ -24,7 +28,7 @@ function randomPart(world:World,parts:Structure[]):Structure {
   return parts[Math.floor(world.rng/0x100000000*parts.length)]!;
 }
 function roundEven(n:number):number {const f=Math.floor(n);return n-f===.5?f+f%2:Math.round(n);}
-const wantsPower=(s:Structure):boolean=>isPowerTrader(s.kind)&&!s.breakdown&&s.power!.switchOn!==false&&(s.kind!=='wood-generator'||!!s.fuel?.ticks);
+const wantsPower=(s:Structure,world:World):boolean=>isPowerTrader(s.kind)&&!s.breakdown&&s.power!.switchOn!==false&&(s.kind!=='wood-generator'||!!s.fuel?.ticks)&&(s.kind!=='sun-lamp'||sunLampScheduled(world));
 /** Core's gradual randomized startup/shedding. Ten small
  * reference-time boundaries avoid aliased modulo periods (e.g. 200/6 = 33).
  * Our random stream and integer W are independent of Unity's implementation. */
@@ -36,7 +40,7 @@ export function advancePower(world:World):void {
   // networks cannot change on a reference boundary: skip their ten temporary
   // candidate scans while preserving the order of RNG draws for every other net.
   const groups=connectedPowerGroups(world,cache(world).read(world)).filter(parts=>
-    parts.some(s=>s.battery||!s.power!.on&&wantsPower(s))||parts.reduce((n,s)=>n+powerWatts(s,world),0)<0)
+    parts.some(s=>s.battery||!s.power!.on&&wantsPower(s,world))||parts.reduce((n,s)=>n+powerWatts(s,world),0)<0)
     .map(parts=>({parts:parts.filter(s=>isPowerTrader(s.kind)),storage:parts.filter((s):s is Structure&BatteryOwner=>!!s.battery&&!s.breakdown)}));
   for(let sub=0;sub<10;sub++) {
     const coreTick=(world.tick-1)*10+sub+1;
@@ -46,7 +50,7 @@ export function advancePower(world:World):void {
       const stored=storage.reduce((n,s)=>n+batteryQuanta(s.battery),0);
       if(stored+balance*2>=0) {
         const available=stored-(storage.length&&stored>=BATTERY_START_THRESHOLD?BATTERY_START_RESERVE:0);
-        const waiting=available+balance*2>=0?parts.filter(s=>!s.power!.on&&wantsPower(s)):[];
+        const waiting=available+balance*2>=0?parts.filter(s=>!s.power!.on&&wantsPower(s,world)):[];
         if(waiting.length&&coreTick%Math.max(30,Math.floor(200/waiting.length))===0)for(let n=0;n<Math.max(1,roundEven(waiting.length*.05));n++) {
           const s=randomPart(world,waiting),cost=-powerPotential(s,world);
           if(!s.power!.on&&stored+balance*2>=cost*2){s.power!.on=true;balance-=cost;}

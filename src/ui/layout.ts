@@ -66,6 +66,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   {id:'battery',title:'Batterie',hint:'1 × 2 · 600 Wj · rendement de charge 50 % · recherche Batteries · Q / E pour tourner',key:'',category:'power'},
   {id:'solar-generator',title:'Générateur solaire',hint:'4 × 4 · jusqu’à 1 700 W au soleil · sans toit · Construction 6 · recherche Panneaux solaires',key:'',category:'power'},
   {id:'standing-lamp',title:'Lampe sur pied',hint:'30 W · raccordement à un réseau proche · n’éclaire que si alimentée',key:'',category:'furniture'},
+  {id:'sun-lamp',title:'Lampe horticole',hint:'2 900 W · cultures sous toit dans la zone éclairée · arrêt automatique la nuit · Survol : couverture prévue si alimentée',key:'',category:'furniture'},
   { id: 'passive-cooler', title: 'Refroidisseur passif', hint: 'combustible initial inclus · seuil de 17 °C · 10 bois/jour', key: '', category: 'temperature' },
   { id: 'campfire', title: 'Feu de camp', hint: 'combustible initial inclus · brûle 10 bois par jour', key: '', category: 'temperature' },
   {id:'research-bench',title:'Bureau de recherche simple',hint:'3 × 2 · 75 matériaux + 25 acier · Q / E pour tourner',key:'',category:'production'},

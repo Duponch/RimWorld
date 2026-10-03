@@ -126,6 +126,8 @@ import { createFlowerPotState,cutFlowerPotPlant,flowerPotCanUninstall } from './
 import type { LightEnvironment } from './light-environment.ts';
 import { advanceWork,workProgress,setWorkUnits,WORK_FRACTIONS } from './work-progress.ts';
 import { TemperatureView, reconcileTemperature, advanceTemperature } from './temperature.ts';
+import { lightSources } from './light-sources.ts';
+import { reconcilePlantLighting } from './plant-lighting.ts';
 import { updatePlantTemperatures } from './thermal-plants.ts';
 import { updateFoodTemperatures } from './thermal-food.ts';
 import { applyBillCommand } from './cooking-commands.ts';
@@ -154,7 +156,7 @@ import type { AreaCommand, BuildLineCommand, Cell, Command, CommandResult, Desig
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { autodoor:'construction de porte automatique', fence:'construction de clôture','fence-gate':'construction de portillon','pen-marker':'construction de marqueur d’enclos', 'art-bench':'construction de l’atelier de sculpture','small-sculpture':'petite sculpture','large-sculpture':'grande sculpture', 'machining-table':'construction de l’atelier d’usinage','fabrication-bench':'construction de l’établi de fabrication','hi-tech-research-bench':'construction du bureau de recherche haute technologie','multi-analyzer':'construction du multi-analyseur', grave:'creusement de tombe','lay-floor':'pose de sol','remove-floor':'retrait de sol',heater:'construction de radiateur','wind-turbine':'construction d’éolienne',flick:'commutation électrique','power-conduit':'construction de conduit','power-switch':'construction d’interrupteur',battery:'construction de batterie','solar-generator':'construction de panneau solaire', 'fueled-stove':'construction de cuisinière à bois','electric-stove':'construction de cuisinière électrique','butcher-table':'construction de table de boucherie', 'butcher-spot':'emplacement de boucherie', cooler:'construction de climatiseur', 'research-bench':'construction de bureau de recherche','tailor-bench':'construction d’établi de tailleur','electric-tailor-bench':'construction d’établi de tailleur électrique', 'crafting-spot':'emplacement d’artisanat', repair:'réparer', 'fix-breakdown':'remplacer un composant en panne', 'wood-generator':'construction de générateur à bois', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis', horseshoes: 'construction de piquet de fers à cheval', 'chess-table':'construction de table d’échecs', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table','table-square':'construction de table carrée','table-long':'construction de table longue', stool: 'construction de tabouret','dining-chair':'construction de chaise',armchair:'construction de fauteuil','end-table':'construction de table de chevet',dresser:'construction de commode','flower-pot':'construction de pot de fleurs' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = { autodoor:'construction de porte automatique', fence:'construction de clôture','fence-gate':'construction de portillon','pen-marker':'construction de marqueur d’enclos', 'art-bench':'construction de l’atelier de sculpture','small-sculpture':'petite sculpture','large-sculpture':'grande sculpture', 'machining-table':'construction de l’atelier d’usinage','fabrication-bench':'construction de l’établi de fabrication','hi-tech-research-bench':'construction du bureau de recherche haute technologie','multi-analyzer':'construction du multi-analyseur', grave:'creusement de tombe','lay-floor':'pose de sol','remove-floor':'retrait de sol',heater:'construction de radiateur','wind-turbine':'construction d’éolienne',flick:'commutation électrique','power-conduit':'construction de conduit','power-switch':'construction d’interrupteur',battery:'construction de batterie','solar-generator':'construction de panneau solaire', 'fueled-stove':'construction de cuisinière à bois','electric-stove':'construction de cuisinière électrique','butcher-table':'construction de table de boucherie', 'butcher-spot':'emplacement de boucherie', cooler:'construction de climatiseur', 'research-bench':'construction de bureau de recherche','tailor-bench':'construction d’établi de tailleur','electric-tailor-bench':'construction d’établi de tailleur électrique', 'crafting-spot':'emplacement d’artisanat', repair:'réparer', 'fix-breakdown':'remplacer un composant en panne', 'wood-generator':'construction de générateur à bois', 'sun-lamp':'construction de lampe horticole', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis', horseshoes: 'construction de piquet de fers à cheval', 'chess-table':'construction de table d’échecs', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', table: 'construction de table','table-square':'construction de table carrée','table-long':'construction de table longue', stool: 'construction de tabouret','dining-chair':'construction de chaise',armchair:'construction de fauteuil','end-table':'construction de table de chevet',dresser:'construction de commode','flower-pot':'construction de pot de fleurs' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -279,7 +281,7 @@ export function canDesignate(world: World, command: DesignateCommand, installing
   if(command?.kind==='autodoor'&&!autodoorsUnlocked(world))return refusal('invalid-command','Recherchez Portes automatiques pour construire cette porte.');
   if((command?.kind==='tailor-bench'||command?.kind==='electric-tailor-bench')&&!clothingUnlocked(world))return refusal('invalid-command','Recherchez Vêtements complexes pour construire cet établi.');
   if(command&&isHabitatFurnitureKind(command.kind)&&FURNITURE_DEFINITIONS[command.kind].research==='complex-furniture'&&!complexFurnitureUnlocked(world))return refusal('invalid-command','Recherchez Mobilier complexe pour construire ce meuble.');
-  if (!command || ![...(installing?['small-sculpture','large-sculpture']:[]),'art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench','grave','heater','wind-turbine','power-conduit','power-switch','battery','solar-generator','fueled-stove','electric-stove','butcher-table','butcher-spot','cooler','research-bench','tailor-bench','electric-tailor-bench','crafting-spot','wood-generator','standing-lamp','passive-cooler','door','autodoor','fence','fence-gate','pen-marker','stonecutter', 'mine', 'uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table','table-square','table-long', 'stool','dining-chair','armchair','end-table','dresser','flower-pot', 'campfire', 'horseshoes', 'chess-table'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
+  if (!command || ![...(installing?['small-sculpture','large-sculpture']:[]),'art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench','grave','heater','wind-turbine','power-conduit','power-switch','battery','solar-generator','fueled-stove','electric-stove','butcher-table','butcher-spot','cooler','research-bench','tailor-bench','electric-tailor-bench','crafting-spot','wood-generator','sun-lamp','standing-lamp','passive-cooler','door','autodoor','fence','fence-gate','pen-marker','stonecutter', 'mine', 'uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'table','table-square','table-long', 'stool','dining-chair','armchair','end-table','dresser','flower-pot', 'campfire', 'horseshoes', 'chess-table'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
   if((isRoomDoor(command.kind)||command.kind==='fence-gate'||command.kind==='pen-marker'||command.kind==='passive-cooler'||isElectrical(command.kind)&&command.kind!=='machining-table'&&command.kind!=='hi-tech-research-bench'&&command.kind!=='fabrication-bench'&&command.kind!=='cooler'&&command.kind!=='electric-stove'&&command.kind!=='battery'&&command.kind!=='wind-turbine')&&command.orientation!==undefined&&command.orientation!==0)return refusal('invalid-command','Ce bâtiment ne se tourne pas manuellement.');
   if (command.orientation !== undefined && (!Number.isInteger(command.orientation) || command.orientation < 0 || command.orientation > 3)) return refusal('invalid-command', 'Orientation invalide.');
   if(!validConstructionMaterial(command.kind,command.material,world.schemaVersion))return refusal('invalid-command','Matériau incompatible avec cette construction.');
@@ -320,7 +322,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
     reconcileWildlife(world);
     detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     if(command.type.startsWith('order-')&&'pawnId' in command){const actor=world.pawns.find(p=>p.id===command.pawnId);if(actor)delete actor.flee;}
-    reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);reconcileOrders(world);const thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
+    reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);reconcileOrders(world);const thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
   return result;
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
@@ -569,16 +571,23 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
   event(world, 'job', `${pawn.name} a terminé le travail : ${JOB_LABEL[job.kind]}.`); wakePlanners(world);
 }
 const workEnvironments=new WeakMap<World,WorkEnvironmentCache>();
+function environmentCache(world:World):WorkEnvironmentCache {
+  let cache=workEnvironments.get(world);if(!cache){cache=new WorkEnvironmentCache();workEnvironments.set(world,cache);}return cache;
+}
+const readPlantLight=(world:World):LightEnvironment=>environmentCache(world).readLight(world);
+const plantLightSourcesKey=(world:World):string=>lightSources(world).map(s=>`${s.cell}:${s.radius}:${s.red}:${s.green}:${s.blue}:${s.overlightRadius??0}`).join('|');
 export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-planner.ts').SearchStats): void {
   if (!Number.isInteger(ticks) || ticks < 0 || ticks > 100000) throw new Error('Tick count must be an integer between 0 and 100000.');
   if(!ticks)return;
   // Old profiles start this new stream prospectively, when play resumes.
   // Loading or pausing never invents a past opportunity or heat exposure.
   adoptMiscIncidents(world);
-  let thermal=reconcileTemperature(world);updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
+  let thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
     flushColonyLosses(world);
     world.tick++;
+    let light:LightEnvironment|undefined,lightKey:string|undefined;
+    const getLight=()=>{if(!light){light=readPlantLight(world);lightKey=plantLightSourcesKey(world);}return light;};
     advanceHumanAges(world);
     sampleColonyEconomy(world);
     advanceArrivals(world);advanceHeatwaves(world);advanceMiscIncidents(world);advanceVisitors(world);advancePodRescues(world);advanceFluIncidents(world);
@@ -588,7 +597,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     advancePower(world);
     advanceBreakdowns(world);
     expireFood(world);
-    thermal=advanceSurfaceTemperature(world,thermal);
+    thermal=advanceSurfaceTemperature(world,thermal,getLight);
     burnFuel(world);
     advanceTameness(world);reconcileDomesticWork(world);advanceWildlife(world);
     updateDoors(world);
@@ -603,13 +612,11 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     let blocked: Uint8Array | undefined;
     let roofs: RoofContext | undefined;
     let environment:WorkEnvironment|undefined;
-    let light:LightEnvironment|undefined;
     let furnitureSight:ReturnType<typeof captureWorldShotGrid>|undefined;
     const getEnvironmentCache=()=>{
-      let cache=workEnvironments.get(world);if(!cache){cache=new WorkEnvironmentCache();workEnvironments.set(world,cache);}
-      return cache;
+      return environmentCache(world);
     };
-    const getLight=()=>light??=getEnvironmentCache().readLight(world);
+    if(structuresBeforeCombat!==world.structures)light=undefined;
     const getEnvironment=()=>environment??=getEnvironmentCache().read(world,getLight());
     const getFurnitureSight=()=>furnitureSight??=captureWorldShotGrid(world);
     const getThreats=()=>threatQueries(world);
@@ -781,7 +788,8 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     refreshStock(world);
     if(thermalDirty)thermal=reconcileTemperature(world);
     updateFoodTemperatures(world,thermal);
-    updatePlantTemperatures(world,thermal);reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);
+    if(light&&lightKey!==plantLightSourcesKey(world))light=undefined;
+    reconcilePlantLighting(world,getLight);updatePlantTemperatures(world,thermal);reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns)reconcileWeaponMemory(world,pawn);
   }
 }
 import { updatePawnHealth,reconcilePawnHealth } from './health.ts';

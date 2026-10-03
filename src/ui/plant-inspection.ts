@@ -3,8 +3,14 @@ import { plantLeafless } from '../sim/plant-life';
 import { resourceMaxHp } from '../sim/thing-damage-rules';
 import { calendarTick } from '../sim/calendar';
 import { annualNaturalLight } from '../sim/environment';
+import { isRoofed,roofIndex } from '../sim/roof-rules';
+import { LightEnvironmentCache } from '../sim/light-environment';
+const lightCaches=new WeakMap<World,LightEnvironmentCache>();
+function plantLight(world:World,plant:Resource):number {
+  if(!world.structures.some(s=>s.kind==='sun-lamp'))return isRoofed(world,roofIndex(world,plant))?0:annualNaturalLight(world);
+  let cache=lightCaches.get(world);if(!cache){cache=new LightEnvironmentCache();lightCaches.set(world,cache);}return cache.read(world).lightAt(plant);
+}
 import { harvestProductLabel, plantGrowth, harvestable, berryYield, plantResting, plantTemperatureFactorFor,choppable, sowingTemperatureAllowed, isPlant, plantFertility, PLANT_DEFINITIONS } from '../sim/plants';
-import { isRoofed, roofIndex } from '../sim/roof-rules';
 import { TemperatureView } from '../sim/temperature';
 import type { Cell, Resource, World } from '../sim/types';
 
@@ -14,7 +20,7 @@ export function plantInspection(world:World,plant:Resource):string {
   if(plantLeafless(world,plant))constraints.push('Sans feuilles · broutage suspendu');
   if(plant.damage)constraints.push(`État ${resourceMaxHp(plant)-plant.damage}/${resourceMaxHp(plant)}`);
   if(plantResting(calendarTick(world)))constraints.push('Repos nocturne');
-  if(isRoofed(world,roofIndex(world,plant))||annualNaturalLight(world)<=.51)constraints.push('Lumière insuffisante');
+  const light=plantLight(world,plant);if(light<=.51)constraints.push('Lumière insuffisante');else if(plant.growthLight==='artificial-full')constraints.push('Lumière horticole 100 %');
   if(factor<1)constraints.push(`Température ${temperature.toFixed(1)} °C · Croissance thermique ${Math.round(factor*100)} %`);
   if(isPlant(plant)) {
     const def=floraDefinition(plant)??PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS],fertility=plantFertility(world,plant);

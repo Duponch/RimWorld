@@ -34,7 +34,9 @@ export class EnvironmentLightField {
       bounds.maxX = Math.max(bounds.maxX, x + 1.1); bounds.maxZ = Math.max(bounds.maxZ, z + 1.1);
     };
     for (let i = 0; i < size; i++) {
-      data[i * 4] = Math.round(light[i]! * 510);
+      // The business field may reach full growth light. Rendering retains its
+      // existing half-light range without wrapping a full value in one byte.
+      data[i * 4] = Math.round(Math.min(.5, light[i]!) * 510);
       if (data[i * 4]) include(i);
       data[i * 4 + 1] = 0;
       data[i * 4 + 2] = topology.at(i % world.width, Math.floor(i / world.width))?.kind === 'space' ? 0 : 255;

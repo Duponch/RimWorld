@@ -41,6 +41,7 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
   'crafting-spot':{delay:0,stand:true,repeat:false},
   'wood-generator':{delay:5,stand:false,repeat:true},
   'standing-lamp':{delay:1.4,stand:false,repeat:false},
+  'sun-lamp':{delay:1.4,stand:false,repeat:false},
   'passive-cooler':{delay:3,stand:false,repeat:true},
   door:{delay:0,stand:true,repeat:false},
   autodoor:{delay:0,stand:true,repeat:false},

@@ -1,5 +1,6 @@
 import { isPowerActive } from './power-rules.ts';
 import { applyHeaterHeat } from './heater.ts';
+import { SUN_LAMP_HEAT_PER_SECOND,sunLampActive } from './sun-lamp.ts';
 import type { Structure, World } from './types.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
 
@@ -11,6 +12,13 @@ export function applyThermalSources(world:World,layout:ThermalLayout):void {
   for(const source of world.structures) {
     if(source.kind==='heater'){applyHeaterHeat(world,source,layout);continue;}
     if(!regions)continue;
+    if(source.kind==='sun-lamp') {
+      if(!sunLampActive(world,source))continue;
+      const id=layout.indices[source.z*world.width+source.x]!;if(id<0)continue;
+      const room=regions[id]!;
+      room.temperature=Math.min(1000,room.temperature+SUN_LAMP_HEAT_PER_SECOND/6/room.cells.length);
+      continue;
+    }
     if(source.kind==='electric-stove'?!isPowerActive(source):!source.fuel?.ticks)continue;
     const id=layout.indices[source.z*world.width+source.x]!;if(id<0)continue;
     const room=regions[id]!;
