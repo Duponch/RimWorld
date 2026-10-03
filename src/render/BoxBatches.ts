@@ -5,6 +5,8 @@ import type { Placement } from './primitives';
 import { BoxMesh, configureBoxMaterial } from './BoxMesh';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { instancedBoxPatternUv } from './texture-variation';
+import { chunkContour, configureChunkMaterial, createChunkGeometry, isSmallChunk } from './chunk-shape';
+import { chunkPaintUv, createChunkSurfacePaint } from './chunk-surface-paint';
 
 const object = new THREE.Object3D(), color = new THREE.Color();
 type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'storage-home' | 'border';
@@ -15,14 +17,18 @@ type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'storage-home' | 'border
  */
 export class BoxBatches {
   private readonly geometry = new THREE.BoxGeometry(1, 1, 1);
-  private readonly roundedRockGeometry = new THREE.DodecahedronGeometry(1, 0);
+  private readonly roundedRockGeometry = createChunkGeometry();
+  private readonly smallRockGeometry = createChunkGeometry(true);
   private readonly surfaceTexture = createStylizedSurfaceTexture();
+  private readonly rockTexture = createChunkSurfacePaint();
   private readonly texturedSolid = material(0xffffff);
+  private readonly plainRock = material(0xffffff);
+  private readonly texturedRock = material(0xffffff);
   private readonly materials: Record<Style, THREE.NodeMaterial> = {
     solid: material(0xffffff),
-    // Core's ZoneColorUtility uses 0.09 alpha for ground zones. The edit-only
-    // home area keeps its former stronger tint on a separate resident batch.
-    storage: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.09, depthWrite: false }),
+    // A more discreet local presentation than Core's 0.09 ground-zone alpha.
+    // The edit-only home area keeps its stronger tint on a resident batch.
+    storage: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.055, depthWrite: false }),
     'storage-home': new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, depthWrite: false }),
     border: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, depthWrite: false }),
     overlay: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.48, depthWrite: false }),
@@ -30,16 +36,25 @@ export class BoxBatches {
   };
   private readonly batches = new Map<string, BoxMesh>();
   private texturesEnabled = true;
+  private roundedRockWarm = false;
 
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void) {
     configure?.(this.materials.solid as THREE.MeshStandardNodeMaterial);
     configure?.(this.texturedSolid);
+    configure?.(this.plainRock);
+    configure?.(this.texturedRock);
     this.geometry.userData.rendererOwned = true;
     this.roundedRockGeometry.userData.rendererOwned = true;
+    this.smallRockGeometry.userData.rendererOwned = true;
     for (const mat of Object.values(this.materials)) { mat.userData.rendererOwned = true; configureBoxMaterial(mat); }
     this.texturedSolid.userData.rendererOwned = true;
     configureBoxMaterial(this.texturedSolid);
     this.texturedSolid.colorNode = attribute('boxColor', 'vec3').mul(texture(this.surfaceTexture, instancedBoxPatternUv()).rgb);
+    for (const mat of [this.plainRock, this.texturedRock]) {
+      mat.userData.rendererOwned = true;
+      configureChunkMaterial(mat);
+    }
+    this.texturedRock.colorNode = attribute('boxColor', 'vec3').mul(texture(this.rockTexture, chunkPaintUv()).rgb);
   }
 
   /** Select a resident pipeline. The plain one has no texture node or map, so
@@ -50,13 +65,28 @@ export class BoxBatches {
     const chosen = enabled ? this.texturedSolid : this.materials.solid;
     for (const mesh of this.batches.values()) {
       if (mesh.material === this.texturedSolid || mesh.material === this.materials.solid) mesh.material = chosen;
+      else if (mesh.material === this.texturedRock || mesh.material === this.plainRock) mesh.material = enabled ? this.texturedRock : this.plainRock;
     }
   }
 
   set(group: THREE.Group, key: string, items: Placement[], style: Style = 'solid', shadows = true): void {
+    if (style === 'solid' && key.startsWith('pile:') && !this.roundedRockWarm) {
+      // Two resident, empty sentinels warm both rock geometries even on a map
+      // without fragments. They are shared across the spatial map chunks.
+      for(const [suffix,geometry] of [['rounded-rock',this.roundedRockGeometry],['small-rock',this.smallRockGeometry]] as const){
+        const warm = new BoxMesh(geometry, this.texturesEnabled ? this.texturedRock : this.plainRock, 1);
+        this.allocateRockContour(warm);
+        warm.name = `pile-${suffix}-warm`;
+        warm.castShadow = shadows; warm.receiveShadow = true; warm.activeCount = 0;
+        group.add(warm); this.batches.set(warm.name, warm);
+      }
+      this.roundedRockWarm = true;
+    }
     if (style === 'solid' && (items.some(item=>item.shape==='rounded-rock') || this.batches.has(`${key}:rounded-rock`))) {
       this.setGeometry(group,key,items.filter(item=>item.shape!=='rounded-rock'),this.geometry,style,shadows);
-      this.setGeometry(group,`${key}:rounded-rock`,items.filter(item=>item.shape==='rounded-rock'),this.roundedRockGeometry,style,shadows);
+      const rocks=items.filter(item=>item.shape==='rounded-rock');
+      this.setGeometry(group,`${key}:rounded-rock`,rocks.filter(item=>!isSmallChunk(item.key,item.sx)),this.roundedRockGeometry,style,shadows);
+      this.setGeometry(group,`${key}:small-rock`,rocks.filter(item=>isSmallChunk(item.key,item.sx)),this.smallRockGeometry,style,shadows);
       return;
     }
     this.setGeometry(group,key,items,this.geometry,style,shadows);
@@ -64,9 +94,13 @@ export class BoxBatches {
 
   private setGeometry(group: THREE.Group, key: string, items: Placement[], geometry: THREE.BufferGeometry, style: Style, shadows: boolean): void {
     let mesh = this.batches.get(key);
-    const chosen = style === 'solid' && this.texturesEnabled ? this.texturedSolid : this.materials[style];
+    const rock=geometry===this.roundedRockGeometry||geometry===this.smallRockGeometry;
+    const chosen = style === 'solid' && rock
+      ? (this.texturesEnabled ? this.texturedRock : this.plainRock)
+      : style === 'solid' && this.texturesEnabled ? this.texturedSolid : this.materials[style];
     if (!mesh) {
       mesh = new BoxMesh(geometry, chosen, Math.max(256, 2 ** Math.ceil(Math.log2(items.length || 1))));
+      if(rock)this.allocateRockContour(mesh);
       mesh.name = key;
       mesh.castShadow = style === 'solid' && shadows; mesh.receiveShadow = true;
       group.add(mesh); this.batches.set(key, mesh);
@@ -74,6 +108,7 @@ export class BoxBatches {
       // Release the old per-instance buffers before replacing their capacity.
       const capacity = 2 ** Math.ceil(Math.log2(items.length));
       mesh.allocate(geometry, capacity);
+      if(rock)this.allocateRockContour(mesh);
     }
     if (mesh.material !== chosen) mesh.material = chosen;
     mesh.activeCount = items.length;
@@ -82,14 +117,21 @@ export class BoxBatches {
       object.position.set(item.x, item.y, item.z); object.rotation.set(0, item.ry ?? 0, 0);
       object.scale.set(item.sx ?? 1, item.sy ?? 1, item.sz ?? 1); object.updateMatrix();
       mesh.setMatrixAt(i, object.matrix); mesh.setColorAt(i, color.setHex(item.color ?? 0xffffff));
+      if(rock)(mesh.geometry.getAttribute('chunkContour') as THREE.InstancedBufferAttribute).setXYZW(i,...chunkContour(item.key));
     }
     mesh.instanceMatrix.needsUpdate = true; mesh.colorBuffer.needsUpdate = true;
+    if(rock)mesh.geometry.getAttribute('chunkContour').needsUpdate=true;
     mesh.computeBoundingSphere();
+  }
+
+  private allocateRockContour(mesh: BoxMesh): void {
+    mesh.geometry.setAttribute('chunkContour',new THREE.InstancedBufferAttribute(new Float32Array(mesh.instanceMatrix.count*4),4).setUsage(THREE.StaticDrawUsage));
   }
 
   clear(): void {
     for (const mesh of this.batches.values()) { mesh.removeFromParent(); mesh.dispose(); }
     this.batches.clear();
+    this.roundedRockWarm = false;
   }
 
   /** Empty batches otherwise miss the real shadow pass. Expose one degenerate
@@ -111,8 +153,8 @@ export class BoxBatches {
   }
 
   dispose(): void {
-    this.clear(); this.geometry.dispose(); this.roundedRockGeometry.dispose();
+    this.clear(); this.geometry.dispose(); this.roundedRockGeometry.dispose();this.smallRockGeometry.dispose();
     for (const mat of Object.values(this.materials)) mat.dispose();
-    this.texturedSolid.dispose(); this.surfaceTexture.dispose();
+    this.texturedSolid.dispose(); this.plainRock.dispose(); this.texturedRock.dispose(); this.surfaceTexture.dispose();this.rockTexture.dispose();
   }
 }

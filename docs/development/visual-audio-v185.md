@@ -1,5 +1,18 @@
 # Corrections visuelles et feuillage sonore — V185
 
+## Retouches du 3 octobre 2026 — validation manuelle demandée
+
+Les sections V185 ci-dessous décrivent la livraison historique `98b7480`. Les retouches suivantes la remplacent sur les points cités, sans modifier le schéma 173 ni les règles de simulation. À la demande de l'utilisateur, aucun test, build, benchmark ou parcours navigateur automatique n'a été exécuté pour ces retouches ; la preuve historique V185 ne les valide pas.
+
+- Le feu retrouve le cône original de dix triangles, avec une carte peinte partagée, contraste renforcé et décalage des dessins entre instances. La fumée/vapeur devient ronde et plus petite ; sept bouffées par feu au sol remplacent cinq, toujours sur les 128 sources sélectionnées au maximum. La combustion reçoit plusieurs gris jusqu'au presque noir.
+- Le trou central des nuages passe à 27 % du petit côté de l'écran, avec raccord jusqu'à 35 %. L'opacité devient exactement nulle à partir de 65° d'élévation, sans écriture de profondeur pendant les fondus. Quatre lobes disponibles permettent des assemblages de deux à quatre masses avec contours variés ; leur peinture est cuite une fois dans une carte partagée. Les attributs statiques et instanciés restent entrelacés.
+- Les six espèces animales reçoivent trois cartes de pelage partagées, avec coordonnées métriques préparées avant animation. Les fragments gardent des échelles uniformes, une grosse masse et zéro, un ou deux satellites ; les enveloppes projetées servent à éviter les interpénétrations. Le maximum est de 68 triangles, mais un lot satellite peut ajouter un draw par chunk occupé. Leur texture reprend le dessin pastel antérieur avec contraste cuit renforcé, sans les nouvelles veines ramifiées.
+- Champs, réserves et aire de survol d'éolienne emploient un voile discret à 0,055. Les contours de zones sont retirés, y compris à la sélection ; les coins des autres objets restent inchangés. La phase de chute de pluie passe à `tick × 1,15`, soit +15 %, avec bouclage conservé à 192 ; neige et direction de pluie restent inchangées.
+
+Les textures restent dans les matériaux résidents et ne sont pas prélevées quand leur option est désactivée. Les peintures sont précalculées, pas superposées dans des draws de peinture séparés. Davantage de fumée, de données de forme et de prélèvements pour les nuages ont néanmoins un coût ; aucune mesure de ce lot ni garantie de coût nul n'est annoncée. Les anciens oracles imposant deux masses par fragment, les contours de zone ou les paramètres V185 doivent être actualisés lors d'une prochaine validation, sans retirer leurs invariants utiles.
+
+## Livraison historique V185
+
 V185 corrige sept éléments de présentation : animaux couchés, flammes, fumée, nuages, fragments de pierre, pluie et bruissement du feuillage. Le schéma reste **173**, sans migration, nouvelle mécanique ni modification des règles de météo, de feu ou de vie animale. La [recherche technique](../research/visual-audio-web-v185.md) distingue les garanties des API et les choix artistiques locaux ; les résultats d’exécution appartiennent à la [validation courante](validation.md).
 
 Ce contrat actualise les points concernés des [surfaces animales V136](animal-surface-v136.md), des [nuages V137](visual-weather-v137.md), des [précipitations V166](weather-precipitation-v166.md) et du [son V175](audio-v175.md). Les autres obligations de ces domaines et la [préparation des ombres](shadow-preparation.md) restent applicables.

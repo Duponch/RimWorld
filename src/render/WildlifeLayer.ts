@@ -1,4 +1,4 @@
-import { attachedFireMesh } from './FireLayer';
+import { attachedFireMesh, setFireTexturesEnabled } from './FireLayer';
 import * as THREE from 'three/webgpu';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { Fn,If,attribute,cos,sin,float,normalLocal,positionLocal,vec3,uniform,mix } from 'three/tsl';
@@ -13,8 +13,7 @@ import type { MotionTimeline } from './MotionTimeline';
 import { furnitureSurfaces } from './furniture-motion';
 import { travelHeight } from './furniture-motion';
 import { pawnSelectionMesh } from './PawnSelectionLayer';
-import { createStylizedSurfaceTexture } from './stylized-surfaces';
-import { actorSurfaceShade } from './actor-surface';
+import { animalCoat,animalCoatShade,bakeAnimalCoatCoordinates,createAnimalCoatTexture } from './animal-surface-paint';
 import { animalBodySize } from '../sim/animal-life';
 import { animalSpecies } from '../sim/animal-species';
 import { GaitPhaseTracker,animalGaitRadiansPerUnit } from './gait-presentation';
@@ -40,6 +39,7 @@ class SpeciesRig {
   constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,surfaceTexture:THREE.Texture,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
     this.gaitRate=animalGaitRadiansPerUnit(species);
     const geometry=hareGeometry(MAX_WILDLIFE,species);
+    bakeAnimalCoatCoordinates(geometry,species);
     geometry.computeBoundingBox();
     const bounds=geometry.boundingBox!;
     // A live sleeper or downed animal rolls onto its side around the trunk.
@@ -87,12 +87,12 @@ class SpeciesRig {
     })();
     const textured=material(0xffffff);configure?.(textured);
     textured.positionNode=mat.positionNode;
-    textured.colorNode=mat.colorNode.mul(actorSurfaceShade(surfaceTexture));
+    textured.colorNode=mat.colorNode.mul(animalCoatShade(surfaceTexture));
     this.plainMaterial=mat;this.texturedMaterial=textured;
     this.mesh=new THREE.Mesh(geometry,textured);this.mesh.name=`Wild ${this.species} — GPU rig`;this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6);
     this.selection=pawnSelectionMesh(this.mesh.geometry as THREE.InstancedBufferGeometry,this);this.selection.visible=false;
   }
-  setTexturesEnabled(enabled:boolean):void {this.mesh.material=enabled?this.texturedMaterial:this.plainMaterial;}
+  setTexturesEnabled(enabled:boolean):void {this.mesh.material=enabled?this.texturedMaterial:this.plainMaterial;setFireTexturesEnabled(this.flames,enabled);}
   setSelected(ids:ReadonlySet<number>):void {
     this.selected=ids;const geometry=this.selection.geometry as THREE.InstancedBufferGeometry,flags=geometry.getAttribute('aSelected') as THREE.InstancedBufferAttribute;
     geometry.instanceCount=this.animals.length;
@@ -179,11 +179,11 @@ class SpeciesRig {
 /** Six small resident actor batches; geometry never depends on population or frame. */
 export class WildlifeLayer {
   readonly mesh=new THREE.Group();readonly flames=new THREE.Group();readonly travelTime=uniform(0);
-  private readonly surfaceTexture=createStylizedSurfaceTexture();
+  private readonly surfaceTextures={soft:createAnimalCoatTexture('soft'),short:createAnimalCoatTexture('short'),shaggy:createAnimalCoatTexture('shaggy')};
   private texturesEnabled=true;
   private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();
   constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void){
-    this.rigs=['hare','snow-hare','deer','muffalo','gazelle','dromedary'].map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTexture,configure));
+    this.rigs=['hare','snow-hare','deer','muffalo','gazelle','dromedary'].map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTextures[animalCoat(species)],configure));
     for(const rig of this.rigs){this.mesh.add(rig.mesh,rig.selection);this.flames.add(rig.flames);}
   }
   setTexturesEnabled(enabled:boolean):void {if(this.texturesEnabled===enabled)return;this.texturesEnabled=enabled;for(const rig of this.rigs)rig.setTexturesEnabled(enabled);}
@@ -198,6 +198,6 @@ export class WildlifeLayer {
       (r.flames.material as THREE.Material).dispose();
       (r.selection.material as THREE.Material).dispose();
     }
-    this.surfaceTexture.dispose();
+    for(const texture of Object.values(this.surfaceTextures))texture.dispose();
   }
 }

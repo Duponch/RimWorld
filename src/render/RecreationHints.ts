@@ -12,7 +12,7 @@ export class RecreationHints {
   constructor(private readonly batches: BoxBatches) {}
   wind(world:World,turbine:Cell&{orientation:Orientation}):void {
     this.group.visible=true;const obstacles=new WindObstructionView(world);
-    this.batches.set(this.group,'recreation-places',windClearance(turbine).filter(c=>c.x>=0&&c.z>=0&&c.x<world.width&&c.z<world.height).map(c=>({...c,y:.045,sx:.9,sy:.015,sz:.9,color:obstacles.blocked(c)?0xcc6750:0x85bca9})),'overlay',false);
+    this.batches.set(this.group,'recreation-places',windClearance(turbine).filter(c=>c.x>=0&&c.z>=0&&c.x<world.width&&c.z<world.height).map(c=>({...c,y:.026,sx:1,sy:.014,sz:1,color:obstacles.blocked(c)?0xb97c68:0x879f8c})),'storage',false);
   }
   cooler(cell:Cell,orientation:Orientation):void {
     this.group.visible=true;const {cold,hot}=coolerFaces({...cell,orientation});

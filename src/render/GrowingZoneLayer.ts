@@ -11,17 +11,16 @@ export class GrowingZoneLayer {
     const signature = `${showAll}:${selectedId??''}:`+world.growingZones.map(z => `${z.id}:${z.allowSow}:${z.cells.join(',')}`).join('|');
     if (!reset && signature === this.signature) return false;
     this.signature = signature;
-    const edges: Placement[] = [];
+    const surfaces: Placement[] = [];
+    const palette=[0x79a46a,0xaaa36a,0x94aa69,0xaaa57c,0x7baa84];
     for (const zone of world.growingZones) {
-      if(!showAll&&zone.id!==selectedId)continue;
-      const cells = new Set(zone.cells), color = zone.allowSow ? 0x849f69 : 0x9a9170;
-      for (const cell of cells) {
+      const color = zone.allowSow ? palette[(zone.id-1)%palette.length]! : 0x9a9170;
+      for (const cell of zone.cells) {
         const x = cell % world.width, z = Math.floor(cell / world.width);
-        for (const dx of [-1, 1]) if (x + dx < 0 || x + dx >= world.width || !cells.has(cell + dx)) edges.push({x:x+dx*.48,z,y:.035,sx:.035,sy:.02,sz:1,color});
-        for (const dz of [-1, 1]) if (!cells.has(cell + dz * world.width)) edges.push({x,z:z+dz*.48,y:.035,sx:1,sy:.02,sz:.035,color});
+        surfaces.push({x,z,y:.021,sx:1,sy:.014,sz:1,color});
       }
     }
-    this.boxes.set(this.group, 'growing-borders', edges, 'overlay', false);
+    this.boxes.set(this.group, 'growing-borders', surfaces, 'storage', false);
     return true;
   }
 }

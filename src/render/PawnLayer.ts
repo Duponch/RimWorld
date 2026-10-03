@@ -7,7 +7,7 @@ import { BIOME_CARGO } from './biome-cargo';
 import { isAnimalMeat } from '../sim/biome-items';
 import type { ApparelItem } from '../sim/apparel-rules';
 import { firePosition } from '../sim/fire-rules';
-import { attachedFireMesh } from './FireLayer';
+import { attachedFireMesh, setFireTexturesEnabled } from './FireLayer';
 import { apparelProjection,apparelAppearance,APPAREL_CARGO } from './character-apparel';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
@@ -195,6 +195,7 @@ export class PawnLayer {
     if (this.texturesEnabled === enabled) return;
     this.texturesEnabled = enabled;
     if (this.pawnMesh) this.pawnMesh.material = enabled ? this.texturedMaterial! : this.plainMaterial!;
+    if (this.fireMesh) setFireTexturesEnabled(this.fireMesh,enabled);
   }
   private readonly travelKeys = new Map<number,string>();
   private createPawnMesh(count: number): void {
@@ -521,7 +522,7 @@ export class PawnLayer {
     this.cargoMesh.castShadow = true;
     this.cargoMesh.receiveShadow = true;
     this.group.add(this.cargoMesh);
-    this.fireMesh=attachedFireMesh(geometry,this);this.group.add(this.fireMesh);
+    this.fireMesh=attachedFireMesh(geometry,this);setFireTexturesEnabled(this.fireMesh,this.texturesEnabled);this.group.add(this.fireMesh);
     this.selectionMesh=pawnSelectionMesh(geometry,this);this.group.add(this.selectionMesh);
     const partial=cargoGeometry();
     partial.setAttribute('aTransferFrom',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.DynamicDrawUsage));

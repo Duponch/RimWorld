@@ -14,9 +14,9 @@ export function storageZoneSignature(stockpiles: readonly StockpileCell[]): stri
   return stockpiles.map(storage => `${storage.id}:${storage.x}:${storage.z}:${settingsKey(storage)}`).join('|');
 }
 
-/** The simulation stores one stockpile record per cell. Adjacent cells with
- * equal settings share one visual tint and perimeter, without a grid through
- * the items. This grouping never enters save data or simulation decisions. */
+/** Adjacent cells with equal settings share one subtle tint. The empty border
+ * result preserves the caller contract without constructing hidden outlines.
+ * This grouping never enters save data or simulation decisions. */
 export function storageZonePlacements(width: number, stockpiles: readonly StockpileCell[]): { cells: Placement[]; borders: Placement[] } {
   const cells: Placement[] = [], borders: Placement[] = [];
   const keys = new Map(stockpiles.map(storage => [storage.z * width + storage.x, settingsKey(storage)]));
@@ -46,10 +46,6 @@ export function storageZonePlacements(width: number, stockpiles: readonly Stockp
     const component = components.get(index)!;
     const color = componentColors[component]!;
     cells.push({ x: storage.x, z: storage.z, y: 0.021, sx: 1, sy: 0.014, sz: 1, color });
-    if (x === 0 || components.get(index - 1) !== component) borders.push({ x: x - 0.465, z, y: 0.028, sx: 0.025, sy: 0.015, sz: 0.95, color });
-    if (x === width - 1 || components.get(index + 1) !== component) borders.push({ x: x + 0.465, z, y: 0.028, sx: 0.025, sy: 0.015, sz: 0.95, color });
-    if (components.get(index - width) !== component) borders.push({ x, z: z - 0.465, y: 0.028, sx: 0.95, sy: 0.015, sz: 0.025, color });
-    if (components.get(index + width) !== component) borders.push({ x, z: z + 0.465, y: 0.028, sx: 0.95, sy: 0.015, sz: 0.025, color });
   }
   return { cells, borders };
 }

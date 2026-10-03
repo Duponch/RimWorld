@@ -1,7 +1,8 @@
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, hash, instanceIndex, positionLocal, smoothstep as shaderSmoothstep, uint, uniform, viewportSize, viewportUV } from 'three/tsl';
+import { Fn, If, attribute, materialColor, positionLocal, smoothstep as shaderSmoothstep, texture, uniform, viewportSize, viewportUV } from 'three/tsl';
 import type { WeatherState } from '../sim/weather';
 import { visualCloudAppearance } from './visual-weather';
+import { createCloudPaint } from './cloud-surface-paint';
 
 const CLOUD_COUNT = 64;
 const REFERENCE_MAP_SIDE = 250;
@@ -12,14 +13,11 @@ const EDGE_FADE_FRACTION = .28;
 // clouds and avoids resending all 64 matrices at every fractional RAF tick.
 const MATRIX_STEP = .02;
 const MAX_CONTIGUOUS_TICK_GAP = 600;
-// Near-profile views keep the clouds solid against the sky. As the camera
-// rises over the map, leave only a faint trace so the ground stays readable.
-const HIGH_VIEW_OPACITY = .06;
 // Radii are fractions of the viewport's shorter dimension, in physical pixels.
-export const CLOUD_CLEAR_RADIUS = .18;
+export const CLOUD_CLEAR_RADIUS = .27;
 export const CLOUD_CLEAR_SOFT_EDGE = .08;
-// Full signed ranges around each lobe's pivot. Keep neighbouring lobes joined.
-export const CLOUD_SHAPE = { stretch: [.30, .22, .28], shift: [.16, .10, .16] } as const;
+// Maximum local scale and full signed shift ranges, including optional lobes.
+export const CLOUD_SHAPE = { stretch: [1.60, 1.42, 1.60], shift: [.36, .384, .66] } as const;
 const CLOUD_BASE_HEIGHT = 34;
 const CLOUD_BAND_SPACING = 7.5;
 const CLOUD_BAND_JITTER = 5;
@@ -57,7 +55,7 @@ function smoothstep(a: number, b: number, value: number): number {
   return t * t * (3 - 2 * t);
 }
 
-/** High views soften the world-space clouds over the working map. Close
+/** High views remove the world-space clouds over the working map. Close
  * orthographic inspection fades them completely before they cover actors. */
 export function cloudViewOpacity(camera: THREE.OrthographicCamera | THREE.PerspectiveCamera, target: THREE.Vector3): number {
   const horizontal = Math.hypot(camera.position.x - target.x, camera.position.z - target.z);
@@ -65,11 +63,10 @@ export function cloudViewOpacity(camera: THREE.OrthographicCamera | THREE.Perspe
   const lowAngle = 1 - smoothstep(34, 65, elevation);
   // The same continuous elevation fade applies to both camera projections.
   // A close orthographic zoom adds a separate fade before clouds cover actors.
-  const angleOpacity = HIGH_VIEW_OPACITY + (1 - HIGH_VIEW_OPACITY) * lowAngle;
   const closeIsoFade = camera instanceof THREE.OrthographicCamera
     ? 1 - smoothstep(2.5, 4.5, camera.zoom)
     : 1;
-  return angleOpacity * closeIsoFade;
+  return lowAngle * closeIsoFade;
 }
 
 /** Reference for the viewport-space shader mask, used by the focused tests. */
@@ -79,11 +76,11 @@ export function cloudScreenMask(x: number, y: number, width: number, height: num
   return smoothstep(CLOUD_CLEAR_RADIUS, CLOUD_CLEAR_RADIUS + CLOUD_CLEAR_SOFT_EDGE, radius);
 }
 
-/** Four broad paper-cut masses. Their imperfect rims and translucent paint
+/** Four available paper-cut masses. Their imperfect rims and translucent paint
  * washes are baked into one geometry with vertex colours, not extra meshes. */
 function cloudGeometry(): THREE.BufferGeometry {
-  // The central dome, two shoulders and one forward foot overlap like the
-  // hand-painted cardboard model, while keeping a readable outer silhouette.
+  // The dome and left shoulder always join; the right and forward masses are
+  // optional parts of the seeded assembly, all in the same resident geometry.
   const lobes = [
     [0, .19, -.21, 1.37, 1.20, 1.02],
     [-1.39, -.18, .06, 1.03, .78, .91],
@@ -157,7 +154,42 @@ function cloudGeometry(): THREE.BufferGeometry {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-  geometry.setAttribute('aCloudLobe', new THREE.Float32BufferAttribute(pivots, 4));
+  // These angular/ring basis terms are baked once, including the washes.
+  // Seeded instance coefficients change actual local rims, not just a lobe's
+  // affine transform; neither hashes nor trigonometry run in the vertex shader.
+  const contour: number[] = [];
+  for (let index = 0; index < points.length / 3; index++) {
+    const x = points[index * 3]! - pivots[index * 4]!;
+    const y = points[index * 3 + 1]! - pivots[index * 4 + 1]!;
+    const z = points[index * 3 + 2]! - pivots[index * 4 + 2]!;
+    const angle = Math.atan2(z, x);
+    const ring = THREE.MathUtils.clamp(.78 + y * .20, .55, 1);
+    contour.push(Math.cos(angle) * .60 * ring, Math.sin(angle) * .60 * ring,
+      Math.cos(angle * 2 + y) * .40 * ring, Math.sin(angle * 3 - y) * .35 * ring);
+  }
+  const shapeData = new Float32Array(points.length / 3 * 10);
+  const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();
+  const tangent=new THREE.Vector3(),bitangent=new THREE.Vector3(),axis=new THREE.Vector3();
+  for (let index = 0; index < points.length / 3; index++) {
+    if(index%3===0){
+      a.fromArray(points,index*3);b.fromArray(points,(index+1)*3);c.fromArray(points,(index+2)*3);
+      normal.copy(ab.subVectors(b,a)).cross(ac.subVectors(c,a)).normalize();
+      axis.set(Math.abs(normal.z)>.9?1:0,0,Math.abs(normal.z)>.9?0:1);
+      tangent.copy(axis).addScaledVector(normal,-axis.dot(normal)).normalize();
+      bitangent.crossVectors(normal,tangent).normalize();
+    }
+    for (let component = 0; component < 4; component++) {
+      shapeData[index * 10 + component] = pivots[index * 4 + component]!;
+      shapeData[index * 10 + 4 + component] = contour[index * 4 + component]!;
+    }
+    a.fromArray(points,index*3);
+    shapeData[index*10+8]=a.dot(tangent)/2.1+pivots[index*4+3]!*.23;
+    shapeData[index*10+9]=a.dot(bitangent)/2.1;
+  }
+  const shapeBuffer = new THREE.InterleavedBuffer(shapeData, 10);
+  geometry.setAttribute('aCloudLobe', new THREE.InterleavedBufferAttribute(shapeBuffer, 4, 0));
+  geometry.setAttribute('aCloudContour', new THREE.InterleavedBufferAttribute(shapeBuffer, 4, 4));
+  geometry.setAttribute('aCloudPaintUv', new THREE.InterleavedBufferAttribute(shapeBuffer, 2, 8));
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
   return geometry;
@@ -169,17 +201,17 @@ function cloudShapeBounds(geometry: THREE.BufferGeometry): { radius: number; min
   let radius = 0, minY = Infinity, maxY = -Infinity;
   for (let index = 0; index < positions.count; index++) {
     const x = positions.getX(index), y = positions.getY(index), z = positions.getZ(index);
-    const dx = Math.abs(x - lobes.getX(index)) * CLOUD_SHAPE.stretch[0] * .5 + CLOUD_SHAPE.shift[0] * .5;
-    const dy = Math.abs(y - lobes.getY(index)) * CLOUD_SHAPE.stretch[1] * .5 + CLOUD_SHAPE.shift[1] * .5;
-    const dz = Math.abs(z - lobes.getZ(index)) * CLOUD_SHAPE.stretch[2] * .5 + CLOUD_SHAPE.shift[2] * .5;
-    radius = Math.max(radius, Math.hypot(Math.abs(x) + dx, Math.abs(z) + dz));
-    minY = Math.min(minY, y - dy);
-    maxY = Math.max(maxY, y + dy);
+    const px = lobes.getX(index), py = lobes.getY(index), pz = lobes.getZ(index);
+    const extentX = Math.abs(px) * 1.24 + Math.abs(x - px) * CLOUD_SHAPE.stretch[0] + CLOUD_SHAPE.shift[0] * .5;
+    const extentZ = Math.abs(pz) * 1.24 + Math.abs(z - pz) * CLOUD_SHAPE.stretch[2] + CLOUD_SHAPE.shift[2] * .5;
+    radius = Math.max(radius, Math.hypot(extentX, extentZ));
+    minY = Math.min(minY, py + Math.min(0, y - py) * CLOUD_SHAPE.stretch[1] - CLOUD_SHAPE.shift[1] * .5);
+    maxY = Math.max(maxY, py + Math.max(0, y - py) * CLOUD_SHAPE.stretch[1] + CLOUD_SHAPE.shift[1] * .5);
   }
   return { radius, minY, maxY };
 }
 
-/** World-space decoration. It never casts or receives a shadow, samples a texture,
+/** World-space decoration. It never casts or receives a shadow,
  * changes World, or creates meshes when weather or camera state changes. */
 export class WeatherCloudLayer {
   readonly mesh: THREE.InstancedMesh<THREE.BufferGeometry, THREE.MeshBasicNodeMaterial>;
@@ -188,10 +220,18 @@ export class WeatherCloudLayer {
   private readonly footprintRadius = this.shapeBounds.radius;
   private readonly matrixBasis: THREE.InstancedInterleavedBuffer;
   private readonly material = new THREE.MeshBasicNodeMaterial({
-    color: 0xffffff, vertexColors: true, transparent: true, opacity: 0, depthWrite: true, alphaTest: .001, fog: false,
+    // Faded volumes must not occlude later transparent/background passes.
+    // opacityNode is the only alpha source; leave the material factor neutral.
+    color: 0xffffff, vertexColors: true, transparent: true, opacity: 1, depthWrite: false, alphaTest: .001, fog: false,
   });
   private readonly opacityUniform = uniform(0);
-  private readonly shapeSeed = uniform(0, 'uint');
+  private readonly paintMap=createCloudPaint();
+  private readonly paintEnabled=uniform(true);
+  private readonly variantData = new THREE.InstancedInterleavedBuffer(new Float32Array(CLOUD_COUNT * 12), 12);
+  private readonly profile = new THREE.InterleavedBufferAttribute(this.variantData, 4, 0);
+  private readonly assembly = new THREE.InterleavedBufferAttribute(this.variantData, 4, 4);
+  private readonly shapeOffset = new THREE.InterleavedBufferAttribute(this.variantData, 4, 8);
+  private lastShapeSeed: number | undefined;
   private readonly edgeOpacity = new THREE.InstancedBufferAttribute(new Float32Array(CLOUD_COUNT), 1);
   private readonly nightColor = new THREE.Color(0x383834);
   private seed: number | undefined;
@@ -220,6 +260,17 @@ export class WeatherCloudLayer {
     for (let column = 0; column < 3; column++)
       this.geometry.setAttribute(`aCloudMatrix${column}`, new THREE.InterleavedBufferAttribute(this.matrixBasis, 3, column * 4));
     this.geometry.setAttribute('aCloudFade', this.edgeOpacity);
+    this.geometry.setAttribute('aCloudProfile', this.profile);
+    this.geometry.setAttribute('aCloudAssembly', this.assembly);
+    this.geometry.setAttribute('aCloudOffset', this.shapeOffset);
+    this.material.colorNode=Fn(()=>{
+      const pigment=materialColor.toVar();
+      If(this.paintEnabled,()=>{
+        const coords=attribute('aCloudPaintUv','vec2').add(attribute('aCloudProfile','vec4').xz.mul(.27));
+        pigment.mulAssign(texture(this.paintMap,coords).rgb);
+      });
+      return pigment;
+    })();
     // Fragment position, not the instance centre, cuts even a large cloud out
     // of the screen centre. Pixel units make the circular hole aspect-correct.
     this.material.opacityNode = Fn(() => {
@@ -233,17 +284,24 @@ export class WeatherCloudLayer {
     })();
     this.material.positionNode = Fn(() => {
       const lobe = attribute('aCloudLobe', 'vec4').toConst();
-      const key = uint(instanceIndex).mul(uint(73856093)).bitXor(uint(lobe.w).mul(uint(19349663))).bitXor(uint(this.shapeSeed)).toConst();
+      const profile = attribute('aCloudProfile', 'vec4').toConst();
+      const assembly = attribute('aCloudAssembly', 'vec4').toConst();
+      const offset = attribute('aCloudOffset', 'vec4').toConst();
+      // Two joined lobes are always present. The right and forward masses
+      // may collapse to a point, giving deterministic two-to-four assemblies.
+      const scale = lobe.w.equal(1).select(assembly.x, lobe.w.equal(2).select(assembly.y,
+        lobe.w.equal(3).select(assembly.z, 1))).toConst();
+      const radial = attribute('aCloudContour', 'vec4').dot(profile).mul(.14).add(1).toConst();
       // Three has already applied the instance matrix. Transform a local
       // deformation with its existing 3x3 basis so it rotates and shrinks with
       // the cloud, including the minimum-size slots at the recycling edge.
       const point = attribute('position', 'vec3').toConst();
-      const deltaX = point.x.sub(lobe.x).mul(hash(key).sub(.5).mul(CLOUD_SHAPE.stretch[0]))
-        .add(hash(key.add(uint(37))).sub(.5).mul(CLOUD_SHAPE.shift[0])).toConst();
-      const deltaY = point.y.sub(lobe.y).mul(hash(key.add(uint(11))).sub(.5).mul(CLOUD_SHAPE.stretch[1]))
-        .add(hash(key.add(uint(43))).sub(.5).mul(CLOUD_SHAPE.shift[1])).toConst();
-      const deltaZ = point.z.sub(lobe.z).mul(hash(key.add(uint(23))).sub(.5).mul(CLOUD_SHAPE.stretch[2]))
-        .add(hash(key.add(uint(53))).sub(.5).mul(CLOUD_SHAPE.shift[2])).toConst();
+      const deltaX = point.x.sub(lobe.x).mul(scale).mul(radial).add(lobe.x.mul(scale))
+        .add(offset.x.mul(lobe.w.sub(2)).mul(.35).mul(scale)).sub(point.x).toConst();
+      const deltaY = point.y.sub(lobe.y).mul(scale).mul(profile.y.mul(.14).add(1)).add(lobe.y)
+        .add(offset.y.mul(lobe.w).mul(.4)).sub(point.y).toConst();
+      const deltaZ = point.z.sub(lobe.z).mul(scale).mul(radial).add(lobe.z.mul(scale))
+        .add(offset.z.mul(lobe.w).mul(.3).mul(scale)).sub(point.z).toConst();
       return positionLocal.add(attribute('aCloudMatrix0', 'vec3').mul(deltaX))
         .add(attribute('aCloudMatrix1', 'vec3').mul(deltaY))
         .add(attribute('aCloudMatrix2', 'vec3').mul(deltaZ));
@@ -267,7 +325,24 @@ export class WeatherCloudLayer {
     this.matrixBasis.needsUpdate = true;
     if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
     this.mesh.visible = false;
+    this.configureShapes(0);
     this.configureMap(32, 32);
+  }
+
+  /** Fill the same resident buffers only when a map's visual seed changes. */
+  private configureShapes(seed: number): void {
+    if (seed === this.lastShapeSeed) return;
+    this.lastShapeSeed = seed;
+    for (let index = 0; index < CLOUD_COUNT; index++) {
+      const key = seed ^ Math.imul(index + 1, 0x9e3779b1);
+      const draw = (salt: number) => hash01(key ^ Math.imul(salt, 0x6d2b79f5));
+      this.profile.setXYZW(index, draw(1) * 2 - 1, draw(2) * 2 - 1, draw(3) * 2 - 1, draw(4) * 2 - 1);
+      this.assembly.setXYZW(index, .76 + draw(5) * .48, draw(9) < .30 ? 0 : .76 + draw(6) * .48,
+        draw(7) < .30 ? 0 : .72 + draw(8) * .42, 0);
+      this.shapeOffset.setXYZW(index, (draw(11) - .5) * .40, (draw(12) - .5) * .24,
+        (draw(13) - .5) * .44, 0);
+    }
+    this.variantData.needsUpdate = true;
   }
 
   /** The cloud centres stay inside the map's horizontal bounds. They shrink
@@ -331,7 +406,7 @@ export class WeatherCloudLayer {
 
   present({ seed, tick, weather, camera, target, strength, directionX, directionZ, daylight = 1 }: CloudPresentation): void {
     this.advance(seed, tick, strength, directionX, directionZ);
-    this.shapeSeed.value = seed >>> 0;
+    this.configureShapes(seed);
     const angleOpacity = cloudViewOpacity(camera, target);
     const appearance = visualCloudAppearance(weather);
     const daylightFraction = THREE.MathUtils.clamp(daylight, 0, 1);
@@ -339,10 +414,9 @@ export class WeatherCloudLayer {
     // Night changes its pigment, while angle, the screen opening, spawn and
     // map edges supply the intentional transparency.
     const opacity = angleOpacity;
+    this.opacityUniform.value = opacity;
     if (opacity < .002) { this.mesh.visible = false; this.lastPoseSeed = undefined; return; }
     this.mesh.visible = true;
-    this.material.opacity = opacity;
-    this.opacityUniform.value = opacity;
     this.material.color.setHex(appearance.color).lerp(this.nightColor, (1 - daylightFraction) * .78);
 
     // The phase stays continuous, but a subpixel change does not trigger a
@@ -395,16 +469,18 @@ export class WeatherCloudLayer {
 
   /** Keep the single cloud pipeline warm while the loading screen is present. */
   prepareForCompile(): () => void {
-    const visible = this.mesh.visible, opacity = this.material.opacity;
+    const visible = this.mesh.visible, opacity = this.opacityUniform.value;
     this.mesh.visible = true;
-    this.material.opacity = .1;
     this.opacityUniform.value = .1;
-    return () => { this.mesh.visible = visible; this.material.opacity = opacity; this.opacityUniform.value = opacity; };
+    return () => { this.mesh.visible = visible; this.opacityUniform.value = opacity; };
   }
+
+  setTexturesEnabled(enabled:boolean):void {this.paintEnabled.value=enabled;}
 
   dispose(): void {
     this.mesh.removeFromParent();
     this.geometry.dispose();
     this.material.dispose();
+    this.paintMap.dispose();
   }
 }

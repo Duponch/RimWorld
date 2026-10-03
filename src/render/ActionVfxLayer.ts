@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, atan, cameraPosition, cos, dot, float, mix, sin, smoothstep, uniform, uv, varying, vec2, vec3, vec4 } from 'three/tsl';
+import { Fn, attribute, cameraPosition, cos, dot, float, mix, sin, smoothstep, uniform, uv, varying, vec2, vec3, vec4 } from 'three/tsl';
 import type { Pawn, World } from '../sim/types';
 import { TICKS_PER_SECOND } from '../sim/types';
 import { footprintCells } from '../sim/definitions';
@@ -262,9 +262,7 @@ export class ActionVfxLayer {
         .add(sin(pixel.x.mul(17).add(part)).mul(.035)).add(sin(pixel.y.mul(19)).mul(.017));
       const pebble=float(1).sub(smoothstep(.33,.38,pebbleDistance));
       const pebbleInner=float(1).sub(smoothstep(.23,.28,pebbleDistance));
-      const puffAngle=atan(pixel.y,pixel.x);
-      const puffEdge=float(.37).add(sin(puffAngle.mul(5).add(part)).mul(.032))
-        .add(sin(puffAngle.mul(9).sub(part.mul(1.7))).mul(.012));
+      const puffEdge=float(.39);
       const puff=float(1).sub(smoothstep(puffEdge.sub(.025),puffEdge.add(.02),radius));
       const puffInner=float(1).sub(smoothstep(puffEdge.sub(.095),puffEdge.sub(.045),radius));
       const paperGrain=sin(pixel.x.mul(19).add(part.mul(3.1)))

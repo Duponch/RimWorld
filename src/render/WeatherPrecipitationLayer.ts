@@ -204,7 +204,7 @@ export class WeatherPrecipitationLayer {
     const amount = Math.min(1, shares.rain + shares.snow);
     if (amount <= 0) { this.geometry.instanceCount = 0; this.mesh.visible = false; return; }
     this.seed.value = seed;
-    this.rainPhase.value = wrap(tick, 192);
+    this.rainPhase.value = wrap(tick * 1.15, 192);
     this.snowPhase.value = wrap(tick * .12, 192);
     this.snowFraction.value = shares.snow / amount;
     this.wind.value.set(directionX, directionZ).multiplyScalar(THREE.MathUtils.clamp(strength, 0, 2));

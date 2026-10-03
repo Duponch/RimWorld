@@ -523,6 +523,8 @@ export class ColonyRenderer {
     this.overview.setTexturesEnabled(enabled);
     this.pawns.setTexturesEnabled(enabled);
     this.wildlife.setTexturesEnabled(enabled);
+    this.fires.setTexturesEnabled(enabled);
+    this.clouds.setTexturesEnabled(enabled);
     this.landscape.needsUpdate=true;
   }
   private refreshTerrainPaint(world:World):void {
@@ -617,6 +619,7 @@ export class ColonyRenderer {
     const restoreFilth=this.hygiene.filth.prepareForCompile();
     const restoreClouds=this.clouds.prepareForCompile();
     const restorePrecipitation=this.precipitation.prepareForCompile();
+    const restoreBoxes=this.boxes.prepareEmptyShadows();
     try {
       // The double-sided cursor otherwise compiles both face variants on the
       // first map interaction. Include it behind the loading overlay.
@@ -636,6 +639,7 @@ export class ColonyRenderer {
       // restorers must therefore run last to recover their real runtime flag.
       for (const [object, value] of culling) object.frustumCulled = value;
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
+      restoreBoxes();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
       this.invalidatePausedShadow();
@@ -672,6 +676,9 @@ export class ColonyRenderer {
     return this.world?this.growing.update(this.world,reset,this.tool==='growing'||this.tool==='remove-growing',this.selectedObject?.kind==='growing'?this.selectedObject.id:undefined):false;
   }
   private updateSelectedObject():void {
+    if(this.selectedObject?.kind==='growing'||this.selectedObject?.kind==='stockpile'){
+      this.objectSelection.visible=false;this.objectSelectionSignature='';return;
+    }
     const cells=this.world&&this.selectedObject?mapObjectCells(this.world,this.selectedObject):[];
     if(!cells.length){this.objectSelection.visible=false;this.objectSelectionSignature='';return;}
     let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity,shape=2166136261;
@@ -690,15 +697,7 @@ export class ColonyRenderer {
       vertices.push(ax+nx,y,az+nz,bx+nx,y,bz+nz,bx-nx,y,bz-nz,
         ax+nx,y,az+nz,bx-nx,y,bz-nz,ax-nx,y,az-nz);
     };
-    if(this.selectedObject?.kind==='growing'||this.selectedObject?.kind==='stockpile'){
-      const inside=new Set(cells.map(c=>`${c.x}:${c.z}`));
-      for(const cell of cells){const x=cell.x,z=cell.z;
-        if(!inside.has(`${x}:${z-1}`))stroke(x-.48,z-.48,x+.48,z-.48);
-        if(!inside.has(`${x+1}:${z}`))stroke(x+.48,z-.48,x+.48,z+.48);
-        if(!inside.has(`${x}:${z+1}`))stroke(x+.48,z+.48,x-.48,z+.48);
-        if(!inside.has(`${x-1}:${z}`))stroke(x-.48,z+.48,x-.48,z-.48);
-      }
-    }else for(const x of [minX,maxX])for(const z of [minZ,maxZ]){
+    for(const x of [minX,maxX])for(const z of [minZ,maxZ]){
       const dx=x===minX?1:-1,dz=z===minZ?1:-1;
       stroke(x,z,x+dx*length,z);stroke(x,z,x,z+dz*length);
     }
@@ -765,11 +764,11 @@ export class ColonyRenderer {
   private buildJobs(world: World): void { buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes);this.designations.update(world); }
 
   private buildStorage(world: World): void {
-    const { cells, borders } = storageZonePlacements(world.width, world.stockpiles);
+    const { cells } = storageZonePlacements(world.width, world.stockpiles);
     const home: Placement[] = [];
     if(this.tool==='home'||this.tool==='remove-home')for(const i of world.home??[])home.push({x:i%world.width,z:Math.floor(i/world.width),y:.04,sx:.94,sy:.014,sz:.94,color:0x779ee6});
     this.boxes.set(this.storageGroup, 'storage-cells', cells, 'storage', false);
-    this.boxes.set(this.storageGroup, 'storage-borders', borders, 'border', false);
+    this.boxes.set(this.storageGroup, 'storage-borders', [], 'border', false);
     this.boxes.set(this.storageGroup, 'storage-home', home, 'storage-home', false);
   }
 

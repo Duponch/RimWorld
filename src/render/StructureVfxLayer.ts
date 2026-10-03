@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { Fn, atan, attribute, cameraPosition, cross, float, mix, positionLocal, sin, smoothstep, uniform, uv, varying, vec2, vec3 } from 'three/tsl';
+import { Fn, attribute, cameraPosition, cross, float, mix, positionLocal, sin, smoothstep, uniform, uv, varying, vec2, vec3 } from 'three/tsl';
 import { BATTERY_CAPACITY } from '../sim/power-battery.ts';
 import { isPowerActive } from '../sim/power-rules.ts';
 import { doorOrientations } from '../sim/door-rules.ts';
@@ -16,7 +16,7 @@ type FireChunk = { x:number; z:number; fires:GroundFire[] };
 type FireCandidate = { fire:GroundFire; distance:number };
 const FIRE_CHUNK_SIZE=16;
 const MAX_GROUND_SMOKE_SOURCES=128;
-export const GROUND_SMOKE_PUFFS=5;
+export const GROUND_SMOKE_PUFFS=7;
 const object=new THREE.Object3D(), color=new THREE.Color();
 
 // Keep only the nearest visible flames without sorting every fire. The heap
@@ -99,23 +99,28 @@ export class StructureVfxLayer {
       const right=distance.greaterThan(.001).select(
         vec3(horizontal.x.div(distance.max(.001)),0,horizontal.y.div(distance.max(.001))),vec3(1,0,0));
       const up=cross(facing,right).normalize();
-      const breadth=smokeShape.x.mul(float(.59).add(phase.mul(1.04)));
+      const breadth=smokeShape.x.mul(float(.59).add(phase.mul(1.04))).mul(.72);
       return center.add(right.mul(positionLocal.x.mul(breadth)))
         .add(up.mul(positionLocal.y.mul(breadth).mul(smokeShape.w)));
     })();
     const pixel=uv().sub(vec2(.5,.5)),radius=pixel.length();
     const seed=varying(smokePosition.w);
-    const angle=atan(pixel.y,pixel.x);
-    // Slightly faceted paper edge and broad, stable pigment variation. Both
-    // stay inside the existing billboard shader, without texture samples.
-    const contour=float(.38).add(sin(angle.mul(5).add(seed.mul(21))).mul(.033))
-      .add(sin(angle.mul(9).sub(seed.mul(13))).mul(.012));
+    // Round paper puffs: removing the angular lobes also removes the star-like
+    // silhouette and two trigonometric contour evaluations per fragment.
+    const contour=float(.42);
     const edge=float(1).sub(smoothstep(contour.sub(.075),contour.add(.018),radius));
     const core=float(1).sub(smoothstep(contour.sub(.17),contour.sub(.075),radius));
     const grain=sin(pixel.x.mul(19).add(seed.mul(11)))
       .mul(sin(pixel.y.mul(17).sub(seed.mul(7)))).mul(.5).add(.5);
     const pigment=mix(vec3(.77,.75,.69),vec3(.90,.86,.77),grain);
-    this.smokeMaterial.colorNode=mix(vec3(.59,.58,.54),pigment,core.mul(.78).add(.18));
+    const steam=mix(vec3(.59,.58,.54),pigment,core.mul(.78).add(.18));
+    // Combustion puffs keep their seed throughout the rise: light ash, middle
+    // greys and occasional charcoal. Steam retains its existing pale wash.
+    const tone=seed.mul(17.13).fract();
+    const grey=mix(vec3(.075,.08,.075),vec3(.87,.88,.86),tone.mul(tone));
+    const soot=tone.greaterThan(.88).select(vec3(.025,.03,.025),grey);
+    const smokePaint=soot.mul(grain.mul(.09).add(.93)).add(core.mul(.035));
+    this.smokeMaterial.colorNode=varying(smokeShape.y).greaterThan(.7).select(smokePaint,steam);
     const birth=smoothstep(0,.17,phase),death=float(1).sub(smoothstep(.68,1,phase));
     const density=sin(smokePosition.w.mul(39.7)).mul(.055).add(smokeShape.y.mul(.07)).add(.31);
     this.smokeMaterial.opacityNode=edge.mul(birth).mul(death).mul(density);
@@ -139,7 +144,7 @@ export class StructureVfxLayer {
     const working=new Set<number>();
     for(const pawn of world.pawns)if(pawn.state==='working'&&pawn.cooking?.phase==='work')working.add(pawn.cooking.stationId);
     const glow:Glow[]=[],smoke:Smoke[]=[],groundFires:GroundFire[]=[],tokens:string[]=[];
-    const puff=(x:number,y:number,z:number,id:number,size:number,opacityBias:number,rise:number,count=7)=>{
+    const puff=(x:number,y:number,z:number,id:number,size:number,opacityBias:number,rise:number,count=9)=>{
       for(let i=0;i<count;i++){
         const spread=phase(id,i+23),shape=phase(id,i+61);
         smoke.push({x:x+(spread-.5)*.19,y,z:z+(shape-.5)*.16,seed:phase(id,i),
@@ -177,7 +182,7 @@ export class StructureVfxLayer {
         if(s.kind==='electric-stove'&&on)glow.push(local(s,.8,h+.22,.37,.13,.04,.11,0x8ed7be));
         if(active){
           const emitter=local(s,-.58,h+.26,-.04,.1,.1,.1,0xffffff);
-          puff(emitter.x,emitter.y,emitter.z,s.id,.52,s.kind==='fueled-stove'?.25:0,.82,8);
+          puff(emitter.x,emitter.y,emitter.z,s.id,.52,s.kind==='fueled-stove'?.25:0,.82,10);
           glow.push(local(s,-.58,h+.105,-.04,.35,.015,.36,0xffa260));
         }
       }else if(s.kind==='hi-tech-research-bench'||s.kind==='multi-analyzer'){
@@ -196,10 +201,10 @@ export class StructureVfxLayer {
         }
       }else if(s.kind==='wood-generator'){
         tokens.push(`${s.id}:wood-generator:${s.x}:${s.z}:${on}`);
-        if(on){glow.push({x:s.x+.13,y:.58,z:s.z+1.23,sx:.42,sy:.07,sz:.025,ry:0,color:0xffa456});puff(s.x+.13,WORLD_SCALE.generatorHeight+.73,s.z-.04,s.id,.68,.9,1.32,8);}
+        if(on){glow.push({x:s.x+.13,y:.58,z:s.z+1.23,sx:.42,sy:.07,sz:.025,ry:0,color:0xffa456});puff(s.x+.13,WORLD_SCALE.generatorHeight+.73,s.z-.04,s.id,.68,.9,1.32,10);}
       }else if(s.kind==='campfire'){
         const lit=!!s.fuel?.ticks;tokens.push(`${s.id}:campfire:${s.x}:${s.z}:${lit}`);
-        if(lit)puff(s.x,.47,s.z,s.id,.58,.76,1.06,7);
+        if(lit)puff(s.x,.47,s.z,s.id,.58,.76,1.06,9);
       }
       if(s.breakdown){
         // A flat, two-piece amber exclamation remains legible from the normal
