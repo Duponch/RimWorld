@@ -195,13 +195,13 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
  */
 export function cargoGeometry(): THREE.InstancedBufferGeometry {
   const data: number[] = [];
-  const part = (size: number[], center: number[], kind: number, color: number) => {
+  const part = (size: number[], center: number[], kind: number, color: number,corpsePartMask=0) => {
     const box = new THREE.BoxGeometry(size[0], size[1], size[2]).toNonIndexed();
     const positions = box.getAttribute('position'), normals = box.getAttribute('normal');
     const tint = new THREE.Color(color);
     for (let i = 0; i < positions.count; i++) data.push(
       positions.getX(i) + center[0], positions.getY(i) + center[1], positions.getZ(i) + center[2],
-      normals.getX(i), normals.getY(i), normals.getZ(i), tint.r, tint.g, tint.b, kind,
+      normals.getX(i), normals.getY(i), normals.getZ(i), tint.r, tint.g, tint.b, kind,corpsePartMask,
     );
     box.dispose();
   };
@@ -229,19 +229,20 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   part([.48,.10,.50],[0,0,0],25,0xd8c8a2);part([.12,.08,.12],[.15,.09,-.13],25,0x5d716e);
   BLOCK_ITEMS.forEach((item,i)=>{part([.27,.17,.36],[-.145,0,0],12+i,ITEM_DEFINITIONS[item].color);part([.27,.17,.36],[.145,0,0],12+i,ITEM_DEFINITIONS[item].color);});
   CHUNK_ITEMS.forEach((item,i)=>{part([.52,.34,.42],[0,0,0],5+i,ITEM_DEFINITIONS[item].color);part([.22,.2,.27],[.18,-.05,-.12],5+i,ITEM_DEFINITIONS[item].color);});
-  for(const p of corpseParts(0,0))part([p.sx!,p.sy!,p.sz!],[p.x,p.y-.16,p.z],27,p.color!);
+  for(const p of corpseParts(0,0))part([p.sx!,p.sy!,p.sz!],[p.x,p.y-.16,p.z],27,p.color!,p.corpsePartMask);
   part([.52,.07,.35],[0,0,0],28,ITEM_DEFINITIONS['light-leather'].color);
   part([.38,.18,.32],[0,0,0],29,ITEM_DEFINITIONS['hare-meat'].color);
   for(const [item,kind] of Object.entries(BIOME_CARGO)){
-    if(item.endsWith('-corpse'))for(const p of corpseParts(0,0,'fresh',0,item.replace('-corpse','')))part([p.sx!,p.sy!,p.sz!],[p.x,p.y-.16,p.z],kind,p.color!);
+    if(item.endsWith('-corpse'))for(const p of corpseParts(0,0,'fresh',0,item.replace('-corpse','')))part([p.sx!,p.sy!,p.sz!],[p.x,p.y-.16,p.z],kind,p.color!,p.corpsePartMask);
     else part([.5,.12,.36],[0,0,0],kind,ITEM_DEFINITIONS[item as keyof typeof ITEM_DEFINITIONS].color);
   }
-  const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 10);
+  const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 11);
   const geometry = new THREE.InstancedBufferGeometry();
   geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(vertices, 3, 0));
   geometry.setAttribute('normal', new THREE.InterleavedBufferAttribute(vertices, 3, 3));
   geometry.setAttribute('color', new THREE.InterleavedBufferAttribute(vertices, 3, 6));
   geometry.setAttribute('cargoKind', new THREE.InterleavedBufferAttribute(vertices, 1, 9));
+  geometry.setAttribute('corpsePartMask', new THREE.InterleavedBufferAttribute(vertices, 1, 10));
   geometry.instanceCount = 0;
   return geometry;
 }

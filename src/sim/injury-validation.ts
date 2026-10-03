@@ -18,7 +18,7 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   const bodyPartExists=(id:unknown)=>modelHasPart(model,id);
   const fail='Invalid medical record';
   if(!object(value)||!keys(value,[...(animal?['body']:[]),'tick','nextInjuryId','injuries','missing','bloodLoss','death',...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infections']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFoodPoison?['foodPoisoning']:[]),...(allowFlu&&!animal?['flu']:[]),...(version>=138&&!animal?['ageAilments']:[])])||!integer(value.tick)||!integer(value.nextInjuryId,1)||!integer(value.bloodLoss,0,BLOOD_UNIT)||!Array.isArray(value.injuries)||!Array.isArray(value.missing))return fail;
-  if(animal&&(!species||version<91&&species!=='hare'))return fail;
+  if(animal&&(!species||version<91&&species!=='hare'||version<178&&species==='red-fox'))return fail;
   if(value.heatstroke!==undefined&&(!allowHeat||!integer(value.heatstroke,1,1_000_000_000)))return fail;
   if(value.hypothermia!==undefined&&(!allowCold||!integer(value.hypothermia,1,1_000_000_000)))return fail;
   if(value.malnutrition!==undefined&&(!allowMalnutrition||!integer(value.malnutrition,1,1_000_000_000)))return fail;

@@ -1,6 +1,8 @@
 import { validateMedicalRecord } from './injury-validation.ts';
 import type { World } from './types.ts';
 import { animalSpecies,isAnimalSpecies } from './animal-species.ts';
+import { validCorpseConsumption } from './corpse-anatomy.ts';
+import type { CorpseState } from './corpses.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
@@ -14,20 +16,22 @@ export function validCorpseRot(v:unknown,tick:number,death:number):boolean {
 export function validCorpseShape(p:Record<string,unknown>,version:number):boolean {
   if(p.kind!=='corpse')return p.corpse===undefined;
   const c=p.corpse;
-  return version>=79&&object(c)&&isAnimalSpecies(c.species)&&(version>=91||c.species==='hare')&&p.item===animalSpecies(c.species).corpseItem&&p.quantity===1&&object(p.owner)&&['ground','pawn'].includes(String(p.owner.type))
-    &&Object.keys(c).every(k=>['animalId','species','sex','health','facing',...version>=121?['ageTicks']:[]].includes(k))
+  return version>=79&&object(c)&&isAnimalSpecies(c.species)&&(version>=178||String(c.species)!=='red-fox')&&(version>=91||c.species==='hare')&&p.item===animalSpecies(c.species).corpseItem&&p.quantity===1&&object(p.owner)&&['ground','pawn'].includes(String(p.owner.type))
+    &&Object.keys(c).every(k=>['animalId','species','sex','health','facing',...version>=121?['ageTicks']:[],...version>=178?['consumedParts']:[]].includes(k))
     &&(version<121?c.ageTicks===undefined:int(c.ageTicks,0,Number.MAX_SAFE_INTEGER))
     &&c.animalId===p.id&&['female','male'].includes(String(c.sex))
     &&(c.facing===undefined||typeof c.facing==='number'&&Number.isFinite(c.facing)&&Math.abs(c.facing)<=Math.PI)
     // This validator owns animal corpses only; the human-corpse pile keeps its
     // owner's medical record on the human pawn, validated in serialization.
-    &&validateMedicalRecord(c.health,true,true,false,false,true,version>=79,version>=81,version>=84,version>=87,version>=88,version>=89,version,false)===null&&object(c.health)&&object(c.health.death)&&c.health.body===c.species;
+    &&validateMedicalRecord(c.health,true,true,false,false,true,version>=79,version>=81,version>=84,version>=87,version>=88,version>=89,version,false)===null&&object(c.health)&&object(c.health.death)&&c.health.body===c.species
+    &&validCorpseConsumption(c as unknown as CorpseState);
 }
 export function validateCorpses(w:World,version:number):string[] {
   const errors:string[]=[];
   for(const p of w.piles)if(p.kind==='corpse'&&p.item!=='human-corpse') {
     if(!validCorpseShape(p as unknown as Record<string,unknown>,version)){errors.push('Invalid corpse state.');continue;}
     const c=p.corpse!;
+    if(!validCorpseConsumption(c,w.tick))errors.push('Invalid consumed corpse anatomy or clock.');
     if(!validCorpseRot(p.rot,w.tick,c.health.death!.tick)||c.health.tick>w.tick||Array.isArray(w.wildlife?.animals)&&w.wildlife.animals.some(a=>a?.id===c.animalId))errors.push('Invalid corpse age, clock or duplicated animal.');
   }
   return errors;

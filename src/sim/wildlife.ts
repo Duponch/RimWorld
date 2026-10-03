@@ -19,6 +19,7 @@ import { animalHandlingHolding } from './animal-handling.ts';
 import { animalCareInProgress,animalCareTargets } from './animal-care.ts';
 import { adultAgeTicks, advanceAnimalLife, animalFoodPerDay, animalLifeStage, animalNutritionMax } from './animal-life.ts';
 import { atMapEdge,cancelAnimalExit,exitSuppressed,finishAnimalExits,stopExitTargeting,WILDLIFE_EXIT_FOOD_CHECK } from './wildlife-exit.ts';
+import { animalPreyCandidates,animalPredationTarget,reconcileAnimalPredation,cancelAnimalPredation } from './wildlife-predation.ts';
 const contact=(a:Cell,b:Cell)=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z)<=1;
 const neighbours=(c:Cell):Cell[]=>[{x:c.x,z:c.z},{x:c.x-1,z:c.z},{x:c.x+1,z:c.z},{x:c.x,z:c.z-1},{x:c.x,z:c.z+1}];
 export const ANIMAL_POPULATION_CHECK_TICKS=122; // 1,220 Core ticks; Core checks every 1,213.
@@ -58,9 +59,9 @@ export const wildPopulationWeight=(s:WildlifeState)=>s.animals.reduce((sum,a)=>s
  * this bounded catalogue, leaving unavailable Core species unredistributed. */
 export function enableBiomeWildlife(world:World,biomeId:FaunaBiomeId):void {
   if(world.wildlife)return;
-  const biome=faunaBiome(biomeId),implemented=biome.entries.reduce((n,e)=>n+e.commonality,0);
+  const biome=faunaBiome(biomeId,world.schemaVersion>=178),implemented=biome.entries.reduce((n,e)=>n+e.commonality,0);
   const fullTargetWeight=world.width*world.height*biome.animalDensity/10000,targetWeight=fullTargetWeight*implemented/biome.totalCommonality;
-  const s=world.wildlife={profile:'biome-herbivores-v1',rng:(world.seed^0x784caf31)>>>0||1,animals:[],eatenPlants:0,eatenNutrition:0,eatenItems:0,
+  const s=world.wildlife={profile:world.schemaVersion>=178?'biome-fauna-v2':'biome-herbivores-v1',rng:(world.seed^0x784caf31)>>>0||1,animals:[],eatenPlants:0,eatenNutrition:0,eatenItems:0,
     population:{biome:biomeId,fullTargetWeight,targetWeight,nextCheck:world.tick+ANIMAL_POPULATION_CHECK_TICKS,checks:0,arrivals:0}};
   for(let attempts=0;attempts<256&&wildPopulationWeight(s)<targetWeight&&s.animals.length<MAX_WILDLIFE;attempts++){
     let roll=wildlifeRandom(s)*implemented,speciesId:AnimalSpeciesId|undefined;
@@ -71,11 +72,11 @@ export function enableBiomeWildlife(world:World,biomeId:FaunaBiomeId):void {
 }
 
 function advancePopulation(world:World,s:WildlifeState):void {
-  const population=s.population;if(s.profile!=='biome-herbivores-v1'||!population||world.tick<population.nextCheck)return;
+  const population=s.population;if(!['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)||!population||world.tick<population.nextCheck)return;
   if(!Number.isSafeInteger(population.checks+1))return;
   population.nextCheck=world.tick+ANIMAL_POPULATION_CHECK_TICKS;population.checks++;
   if(wildPopulationWeight(s)>=population.targetWeight||s.animals.length>=MAX_WILDLIFE)return;
-  const biome=faunaBiome(population.biome);
+  const biome=faunaBiome(population.biome,s.profile==='biome-fauna-v2');
   const maximumGroup=biome.entries.reduce((maximum,entry)=>Math.max(maximum,animalSpecies(entry.species).wildGroupSize[1]),0);
   if(!Number.isSafeInteger(population.arrivals+1)||!Number.isSafeInteger(world.nextId+Math.min(maximumGroup,MAX_WILDLIFE-s.animals.length)))return;
   if(wildlifeRandom(s)>=.026955556*biome.animalDensity)return;
@@ -113,6 +114,7 @@ export function reconcileWildlife(world:World,resourcesById?:ReadonlyMap<number,
   const animals=world.wildlife?.animals??[];
   const mates=animals.some(a=>a.mating)?new Map(animals.map(a=>[a.id,a])):undefined;
   for(const a of animals){
+    if(a.predation)reconcileAnimalPredation(world,a);
     if(a.exiting&&exitSuppressed(a))cancelAnimalExit(world,a);
     if(a.meal&&!animalMealTarget(world,a,resourcesById,workCells)){delete a.meal;a.path=[];a.state=a.motion&&a.motion.end>world.tick?'moving':'idle';a.nextDecision=world.tick;}
     if(a.mating){
@@ -141,7 +143,7 @@ export function advanceWildlife(world:World):void {
   const getPlantWorkCells=()=>plantWorkCells??=reservedPlantWorkCells(world);
   reconcileWildlife(world,mealResources,activePlantMeals?getPlantWorkCells():undefined);
   let nav:ReturnType<typeof animalNavigation>|undefined,hareNav:ReturnType<typeof animalNavigation>|undefined,searches=0;
-  const getNav=(animal:WildAnimal)=>animal.species==='hare'||animal.species==='snow-hare'
+  const getNav=(animal:WildAnimal)=>animal.species==='hare'||animal.species==='snow-hare'||animalSpecies(animal.species).predator
     ?hareNav??=animalNavigation(world,false,true):nav??=animalNavigation(world);
   let physical:Uint8Array|undefined,shot:ReturnType<typeof captureWorldShotGrid>|undefined;
   const getPhysical=()=>physical??=blockedCells(world,true),getShot=()=>shot??=captureWorldShotGrid(world);
@@ -166,14 +168,42 @@ export function advanceWildlife(world:World):void {
     const medicalRest=!!a.domestic&&a.domestic.care!=='none'&&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike
       &&animalCareTargets(a).length>0;
     const nutrition=animalNutritionMax(a);
-    a.food=Math.max(0,a.food-animalFoodPerDay(a)/6000*malnutritionModifiers(a.health?.malnutrition).hungerFactor*(a.food<nutrition*.18?.25:a.food<nutrition*.36?.5:1));
+    const wantFood=species.predator?.3:.45,urgent=species.predator?.12:.18,hungry=species.predator?.24:.36;
+    a.food=Math.max(0,a.food-animalFoodPerDay(a)/6000*malnutritionModifiers(a.health?.malnutrition).hungerFactor*(a.food<nutrition*urgent?.25:a.food<nutrition*hungry?.5:1));
     a.rest=Math.max(0,Math.min(1,a.rest+(a.state==='sleeping'?.0003809524*.8:-.00015833333*(a.rest<.01?.6:a.rest<.14?.3:a.rest<.28?.7:1))));
     if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
     if(processAnimalVomiting(world,a))continue;
     if(a.state==='downed'||a.motion&&a.motion.end>world.tick)continue;
+    if(a.predation&&(a.burning||a.flee))cancelAnimalPredation(world,a);
     if(a.burning&&processBurningAnimal(world,a,{free:c=>getNav(a).free(c),route:goals=>{if(searches>=1)return null;searches++;return getNav(a).route(a,goals);},move:()=>{moveAnimal(world,a,getNav(a).step,body.capacities.moving);}}))continue;
     if(moveAnimalMelee(world,a,()=>getNav(a),getPhysical,getShot))continue;
     if(a.stun)continue;
+    if(a.predation){
+      const target=animalPredationTarget(world,a);
+      if(!target){
+        const pile=world.piles.find(p=>p.id===a.predation!.targetId&&p.corpse);
+        if(pile){
+          const food=animalFoods(world,a).find(f=>f.id===pile.id);
+          if(!food){cancelAnimalPredation(world,a);continue;}
+          if(searches>=1)continue;
+          searches++;const path=getNav(a).route(a,neighbours(food));
+          if(path){cancelAnimalPredation(world,a);a.meal={kind:'pile',id:food.id,quantity:1,progress:0};a.path=path;a.state='moving';a.nextDecision=world.tick;}
+          else cancelAnimalPredation(world,a);
+        }
+        // A retained dead actor must complete its fall and become a real pile.
+        continue;
+      }
+      if(contact(a,target)){a.path=[];a.state='idle';continue;}
+      const end=a.path.at(-1);
+      if(!end||!contact(end,target)||world.tick>=a.nextDecision){
+        if(searches>=1)continue;
+        searches++;const path=getNav(a).route(a,neighbours(target));
+        if(!path){cancelAnimalPredation(world,a);a.nextDecision=world.tick+25;continue;}
+        a.path=path;a.nextDecision=world.tick+25;
+      }
+      if(a.path.length)moveAnimal(world,a,getNav(a).step,body.capacities.moving);
+      continue;
+    }
     if(a.flee){
       if(world.tick>=a.flee.until){delete a.flee;a.path=[];a.state='idle';}
       else {
@@ -199,7 +229,8 @@ export function advanceWildlife(world:World):void {
       a.state='idle';a.nextDecision=world.tick+1;
     }
     if(a.meal) {
-      const target=animalMealTarget(world,a,mealResources,a.meal.kind==='plant'?getPlantWorkCells():undefined)!;
+      const target=animalMealTarget(world,a,mealResources,a.meal.kind==='plant'?getPlantWorkCells():undefined);
+      if(!target){delete a.meal;a.path=[];a.state='idle';a.nextDecision=world.tick;continue;}
       if(contact(a,target)&&getNav(a).free(a)) {
         a.path=[];
         if(a.state!=='eating'){a.state='eating';a.meal.progress=0;}
@@ -223,7 +254,12 @@ export function advanceWildlife(world:World):void {
       let checked=false;
       if((arrived||!a.path.length||world.tick>=a.exiting.nextFoodCheck)&&a.nextDecision<=world.tick&&searches<1){
         searches++;
-        const food=animalFoods(world,a),route=getNav(a).foodOrExitRoute(a,food.flatMap(neighbours));
+        const food=animalFoods(world,a),route=species.predator
+          ?getNav(a).foodPreyOrExitRoute(a,food.flatMap(neighbours),animalPreyCandidates(world,a),true)
+          :getNav(a).foodOrExitRoute(a,food.flatMap(neighbours));
+        if(route?.kind==='prey'){
+          delete a.exiting;a.predation={targetId:route.targetId!,startedAtCore:world.tick*10,firstHit:true};a.path=route.path;a.state='moving';a.nextDecision=world.tick;continue;
+        }
         if(route?.kind==='food'){
           const end=route.path.at(-1)??a,target=food.find(f=>contact(end,f))!;
           delete a.exiting;a.meal={kind:target.kind,id:target.id,quantity:target.quantity,progress:0};
@@ -241,11 +277,14 @@ export function advanceWildlife(world:World):void {
     if(a.mating)continue;
     if(a.nextDecision>world.tick)continue;
     const n=getNav(a);
-    if(a.food<nutrition*.45&&searches<1) {
+    if(a.food<nutrition*wantFood&&searches<1) {
       searches++;
       const food=animalFoods(world,a),goals=food.flatMap(neighbours);
-      const choice=a.food<=0&&!a.domestic?n.foodOrExitRoute(a,goals):undefined;
-      const path=choice?.kind==='food'?choice.path:a.food<=0&&!a.domestic?undefined:n.route(a,goals);
+      const choice=species.predator?n.foodPreyOrExitRoute(a,goals,animalPreyCandidates(world,a),a.food<=0&&!a.domestic):a.food<=0&&!a.domestic?n.foodOrExitRoute(a,goals):undefined;
+      if(choice?.kind==='prey'){
+        a.predation={targetId:choice.targetId!,startedAtCore:world.tick*10,firstHit:true};a.path=choice.path;a.state='moving';a.nextDecision=world.tick;continue;
+      }
+      const path=choice?.kind==='food'?choice.path:species.predator||a.food<=0&&!a.domestic?undefined:n.route(a,goals);
       if(path) {
         const end=path.at(-1)??a,target=food.find(f=>contact(end,f))!;
         a.meal={kind:target.kind,id:target.id,quantity:target.quantity,progress:0};a.path=path;a.state='moving';a.nextDecision=world.tick;continue;
@@ -255,7 +294,7 @@ export function advanceWildlife(world:World):void {
         a.state='moving';a.nextDecision=world.tick;continue;
       }
       a.nextDecision=world.tick+100;a.state='hungry';
-    } else if(a.food<nutrition*.45)continue;
+    } else if(a.food<nutrition*wantFood)continue;
     if((medicalRest?a.food>=nutrition*.45:a.rest<.3||night&&a.rest<.75)&&!a.sleepUntilCore&&n.free(a)) {a.state='sleeping';continue;}
     // Bounded neighbouring moves avoid full-map wandering floods. No random
     // walk through walls/closed doors; diagonal length stays Euclidean.

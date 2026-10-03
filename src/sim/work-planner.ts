@@ -159,6 +159,9 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     if (pile.owner.type === 'job') {const key=`${pile.owner.jobId}:${pile.item}`;delivered.set(key, (delivered.get(key) ?? 0) + pile.quantity);}
     if (pile.owner.type === 'ground') { const key = cellIndex(world, pile.owner.x, pile.owner.z); ground.set(key, (ground.get(key) ?? 0) + pile.quantity); }
   }
+  // Match reservedSource: an animal's active meal claims its pile quantity,
+  // including the whole indivisible corpse. This capture lives only in planWork.
+  for(const animal of world.wildlife?.animals??[])if(animal.meal?.kind==='pile')sourceReserved.set(animal.meal.id,(sourceReserved.get(animal.meal.id)??0)+animal.meal.quantity);
   for(const worker of world.pawns)if(worker.hunting)sourceReserved.set(worker.hunting.animalId,(sourceReserved.get(worker.hunting.animalId)??0)+1);
   for (const worker of world.pawns) if (worker.need?.kind === 'eat' && worker.need.phase === 'pickup') sourceReserved.set(worker.need.sourcePileId, (sourceReserved.get(worker.need.sourcePileId) ?? 0) + worker.need.quantity);
   for(const worker of world.pawns)if(worker.equipmentTask?.action==='equip'||worker.equipmentTask?.action==='wear'){const id=worker.equipmentTask.itemId;sourceReserved.set(id,(sourceReserved.get(id)??0)+1);}

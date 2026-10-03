@@ -220,7 +220,9 @@ export class BrawlCloudLayer {
     voxelMaterial.colorNode = attribute('aPartTwo','vec4').xyz;
     this.addMesh(voxel,voxelMaterial);
 
-    const shadowMaterial = new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide,transparent:true,depthWrite:false});
+    // This flat ground projection has no front/back transparency ordering.
+    // Keep compilation and repeated loading passes on the same side variant.
+    const shadowMaterial = new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide,transparent:true,depthWrite:false,forceSinglePass:true});
     shadowMaterial.positionNode = Fn(() => pairCenter(this.clock).add(positionLocal.mul(SCALE)).add(vec3(0,.025,0)))();
     shadowMaterial.colorNode = vec4(rgb(0x5c5344),.45);
     this.addMesh(shadow,shadowMaterial);

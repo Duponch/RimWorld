@@ -20,12 +20,15 @@ function model(kind:BodyModel['kind'],healthScale:number,parts:readonly BodyPart
   }));
   return Object.freeze({kind,healthScale,parts,byId,index,parents,coverage});
 }
+const animalBaseHp:Partial<Record<AnimalSpeciesId,Readonly<Partial<Record<BodyPartId,number>>>>>={};
 function quadruped(species:AnimalSpeciesId):readonly BodyPart[] {
   const definition=ANIMAL_SPECIES[species],hoofed=definition.bodyTemplate!=='paws';
   const parts:BodyPart[]=[];
+  const baseHp:Partial<Record<BodyPartId,number>>={};
   const add=(id:BodyPartId,label:string,parent:BodyPartId|null,hp:number,coverage:number,inside=false,destroyable=true)=>{
     const ancestor=parent?parts.find(p=>p.id===parent):undefined;
     if(parent&&!ancestor)throw new Error('Missing anatomical parent');
+    baseHp[id]=hp;
     parts.push(Object.freeze({id,label,parent,hp:Math.ceil(hp*definition.healthScale),coverage,groups:Object.freeze([]),
       depth:inside?'inside':ancestor?.depth??'outside',height:id==='neck'?'top':id.endsWith('-leg')?'bottom':ancestor?.height??'middle',destroyable,conceptual:false}));
   };
@@ -43,6 +46,7 @@ function quadruped(species:AnimalSpeciesId):readonly BodyPart[] {
     add(`${side}-${end}-leg`,`Patte ${name}`,'torso',30,hoofed?.065:.07);
     add(`${side}-${end}-${hoofed?'hoof':'paw'}`,`${hoofed?'Sabot':'Pied'} ${name}`,`${side}-${end}-leg`,10,.15);
   }
+  animalBaseHp[species]=Object.freeze(baseHp);
   return Object.freeze(parts);
 }
 export const HUMAN_MODEL=model('human',1,HUMAN_BODY);
@@ -51,5 +55,7 @@ export const ANIMAL_BODY_MODELS:Readonly<Record<AnimalSpeciesId,BodyModel>>=Obje
 ) as Record<AnimalSpeciesId,BodyModel>);
 export const HARE_MODEL=ANIMAL_BODY_MODELS.hare;
 export const animalBodyModel=(species:AnimalSpeciesId):BodyModel=>ANIMAL_BODY_MODELS[species];
+/** Raw Core definition HP before the species multiplier and ceiling. */
+export const animalPartBaseHp=(species:AnimalSpeciesId,part:BodyPartId):number=>animalBaseHp[species]?.[part]??0;
 export const medicalModel=(record:{body?:AnimalSpeciesId}):BodyModel=>isAnimalSpecies(record.body)?animalBodyModel(record.body):HUMAN_MODEL;
 export const modelHasPart=(model:BodyModel,id:unknown):id is BodyPartId=>typeof id==='string'&&Object.hasOwn(model.byId,id);

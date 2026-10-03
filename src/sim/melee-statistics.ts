@@ -4,8 +4,8 @@ import { pawnBody } from './health-rules.ts';
 import { partMissing } from './injury-state.ts';
 import type { Pawn,World } from './types.ts';
 
-export type MeleeDamage='blunt'|'poke'|'bite'|'cut'|'stab';
-export type MeleeToolId='left-fist'|'right-fist'|'head'|'teeth'|'grip'|'barrel'|'barrel-poke'|'knife-handle'|'knife-blade'|'knife-point';
+export type MeleeDamage='blunt'|'poke'|'bite'|'scratch'|'cut'|'stab';
+export type MeleeToolId='left-fist'|'right-fist'|'left-claw'|'right-claw'|'head'|'teeth'|'grip'|'barrel'|'barrel-poke'|'knife-handle'|'knife-blade'|'knife-point';
 export interface MeleeTool { id:MeleeToolId; damage:number; penetration:number; kind:MeleeDamage; cooldownCore:number; weight:number }
 export const meleeRecoveryCore=(id:MeleeToolId):number=>id==='knife-blade'?72:id==='knife-point'||id==='knife-handle'?96:120;
 export function curve(x:number,points:readonly (readonly [number,number])[]):number {

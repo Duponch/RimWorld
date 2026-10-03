@@ -1,5 +1,7 @@
 # Faune autonome — contrat V76
 
+**Extension courante V190 :** le [contrat de prédation](predation-v190.md) relie le renard roux sauvage à la nourriture accessible, au choix d'une proie, à la poursuite, à la mêlée anatomique et à l'ingestion physique de sa dépouille. Le schéma 178 valide strictement 177 avant migration neutre ; le profil `biome-fauna-v2` concerne les nouvelles populations, sans réécriture des profils herbivores anciens. Nourriture, proie et bordure partagent un seul champ de navigation et le budget tournant existant. Autres prédateurs et reproduction sauvage restent différés. Les exclusions V76–V91 ci-dessous gardent leur portée historique.
+
 **Extension V91 :** cinq herbivores deviennent obtenables selon trois biomes, avec populations, besoins, corps et produits propres. Le lièvre des neiges reste préparatoire car son habitat local, la toundra, n’est pas sélectionnable. Voir le [contrat courant de diversité](fauna-diversity.md). Les limites « une seule espèce » ci-dessous décrivent le périmètre historique V76–V79.
 
 **Extension V79 :** [chasse civile](hunting.md), [corps transportables](corpses.md), [boucherie/viande/cuir](butchery.md) complètent ce contrat. Les mentions de leur absence ci-dessous décrivent le périmètre historique V76–V78 ; élevage, autres espèces et corps humains restent absents.

@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest';
+import { withoutPredatorFoodPolicies,withoutPredatorApparelPolicies } from './scenarios/legacy-save';
 import { createWorld,deserializeWorld,serializeWorld,validateWorld } from '../src/sim/index';
 import { enableWildlife } from '../src/sim/wildlife';
 import { refreshStock } from '../src/sim/materials';
@@ -19,7 +20,7 @@ function fixture(){
 }
 
 test('173 is validated before neutral adoption; no departures or random draws are invented',()=>{
-  const w=fixture(),legacy=JSON.parse(serializeWorld(w));legacy.schemaVersion=173;
+  const w=fixture(),legacy=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(w))));legacy.schemaVersion=173;
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated).toEqual({...legacy,schemaVersion:SCHEMA_VERSION});
   expect(migrated.wildlife?.exitedAnimals).toBeUndefined();

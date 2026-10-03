@@ -1,5 +1,4 @@
-import { animalBodyModel } from './body-model.ts';
-import { isWithinPart } from './injury-rules.ts';
+import { corpseCoverage,corpsePartAbsent,type ConsumedPart } from './corpse-anatomy.ts';
 import { groundCapacity } from './ground-placement.ts';
 import { rotAge,rotRateAtTemperature,type RotState } from './food-preservation.ts';
 import { cancelMelee } from './melee-state.ts';
@@ -16,7 +15,8 @@ import { adultAgeTicks,bodySizeAtAge } from './animal-life.ts';
 
 /** One corpse owns the original animal identity and frozen medical record. It is
  * not food, not a stack of abstract meat, and never also a live wildlife actor. */
-export interface CorpseState {animalId:number;species:AnimalSpeciesId;sex:'female'|'male';ageTicks:number;health:MedicalRecord;facing?:number}
+export type { ConsumedPart } from './corpse-anatomy.ts';
+export interface CorpseState {animalId:number;species:AnimalSpeciesId;sex:'female'|'male';ageTicks:number;health:MedicalRecord;facing?:number;consumedParts?:ConsumedPart[]}
 export const CORPSE_ROT_TICKS=2.5*TICKS_PER_DAY;
 export const CORPSE_DESSICATION_TICKS=5*TICKS_PER_DAY;
 export const corpseStage=(p:MaterialPile,tick:number):'fresh'|'rotting'|'desiccated'=>rotAge(p,tick)>=CORPSE_DESSICATION_TICKS?'desiccated':rotAge(p,tick)>=CORPSE_ROT_TICKS?'rotting':'fresh';
@@ -26,9 +26,9 @@ export const corpseFresh=(p:MaterialPile,tick:number):boolean=>p.kind==='corpse'
  * subtrees lose their coverage once; ordinary wounds have one global penalty. */
 export function corpseYield(p:MaterialPile):{meat:number;leather:number} {
   const c=p.corpse;if(!c)return {meat:0,leather:0};
-  const model=animalBodyModel(c.species),definition=animalSpecies(c.species);
-  const h=c.health,coverage=model.parts.reduce((sum,part,i)=>sum+(h.missing.some(m=>isWithinPart(part.id,m.part,model))?0:model.coverage[i]!),0);
-  const injury=h.injuries.some(i=>i.kind!=='execution-cut'&&(!i.scar||i.scar.threshold!==i.severity))?.66:1;
+  const definition=animalSpecies(c.species);
+  const h=c.health,coverage=corpseCoverage(c);
+  const injury=h.injuries.some(i=>!corpsePartAbsent(c,i.part)&&i.kind!=='execution-cut'&&(!i.scar||i.scar.threshold!==i.severity))?.66:1;
   const size=bodySizeAtAge(c.species,c.ageTicks??adultAgeTicks(c.species))/definition.bodySize;
   const curve=(raw:number)=>raw<=5?raw*14/5:raw<=40?14+(raw-5)*26/35:raw;
   return {meat:curve(definition.rawMeat*size*coverage*injury),leather:curve(definition.rawLeather*size*coverage*injury)};
@@ -48,6 +48,11 @@ function corpsePile(a:WildAnimal,owner:MaterialOwner,rot:RotState):MaterialPile 
     corpse:{animalId:a.id,species:a.species,sex:a.sex,ageTicks:a.ageTicks,health:a.health!,...a.motion?{facing:Math.atan2(a.motion.to.x-a.motion.from.x,a.motion.to.z-a.motion.from.z)}:{}}};
 }
 function releaseBodyTargets(w:World,id:number):void {
+  for(const animal of w.wildlife?.animals??[])if(animal.threat?.targetId===id||animal.retaliation?.targetId===id){
+    delete animal.threat;delete animal.retaliation;animal.path=[];
+    if((animal.motion?.end??0)<=w.tick)animal.state='idle';
+    animal.nextDecision=Math.min(animal.nextDecision,w.tick);
+  }
   for(const p of w.pawns){
     if(p.melee?.order?.targetId===id){cancelMelee(p);p.path=[];}
     if(p.shooting?.order?.targetId===id){cancelShooting(p);p.path=[];}

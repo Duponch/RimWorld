@@ -28,13 +28,15 @@ export interface WildAnimal extends Cell {
   threat?:{targetId:number;harmedAtCore:number};
   retaliation?:{targetId:number;untilCore:number};
   strike?:NonNullable<import('./melee-state.ts').MeleeState['strike']>;
+  /** Physical predator hunt; never a reservation of the living prey. */
+  predation?:{targetId:number;startedAtCore:number;firstHit:boolean};
   sleepUntilCore?:number;
   path:Cell[]; motion?:TravelSegment; nextDecision:number;
   meal?:{kind:'plant'|'pile';id:number;quantity:number;progress:number};
   exiting?:{destination:Cell;nextFoodCheck:number};
 }
 export interface WildlifeState {
-  profile:'temperate-hares-v1'|'biome-herbivores-v1'; rng:number; animals:WildAnimal[];
+  profile:'temperate-hares-v1'|'biome-herbivores-v1'|'biome-fauna-v2'; rng:number; animals:WildAnimal[];
   eatenPlants:number; eatenNutrition:number; eatenItems:number;
   exitedAnimals?:number;
   population?:{biome:FaunaBiomeId;fullTargetWeight:number;targetWeight:number;nextCheck:number;checks:number;arrivals:number};

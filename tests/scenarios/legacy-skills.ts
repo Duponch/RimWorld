@@ -128,7 +128,7 @@ export function withMigratedBasic<T>(world:T):T {
 /** Independent expectation of V89->V90's neutral adoption. */
 export function withMigratedV90<T>(world:T):T {
   // V120 does not grant wool permissions to an already chosen policy.
-  const expected=withoutPlantsSkill(structuredClone(world)),w=expected as any,registry=createDefaultApparelPolicyRegistry(false);
+  const expected=withoutPlantsSkill(structuredClone(world)),w=expected as any,registry=createDefaultApparelPolicyRegistry(false,false,false);
   // Historical fixture builders remove V144. The expected current save gets
   // its neutral future calendar, without inventing a past breakdown.
   w.breakdown??=newBreakdownCalendar(w.seed,w.tick);

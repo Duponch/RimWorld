@@ -15,7 +15,7 @@ import { travelHeight } from './furniture-motion';
 import { pawnSelectionMesh } from './PawnSelectionLayer';
 import { animalCoat,animalCoatShade,bakeAnimalCoatCoordinates,createAnimalCoatTexture } from './animal-surface-paint';
 import { animalBodySize } from '../sim/animal-life';
-import { animalSpecies } from '../sim/animal-species';
+import { ANIMAL_SPECIES_IDS,animalSpecies } from '../sim/animal-species';
 import { GaitPhaseTracker,animalGaitRadiansPerUnit } from './gait-presentation';
 
 /** Resident capacity and node graph. CPU supplies edges/phases at snapshots
@@ -143,13 +143,15 @@ class SpeciesRig {
       const edge=timeline?.segment(a.id)??a.motion,active=!!edge&&tick>=edge.start&&tick<edge.end;
       const growth=animalBodySize(a)/animalSpecies(a.species).bodySize;
       const fromFraction=edge&&'fromFraction' in edge?edge.fromFraction:undefined,toFraction=edge&&'toFraction' in edge?edge.toFraction:undefined;
-      const key=`${i}:${origin}:${edge?.start}:${edge?.end}:${fromFraction}:${toFraction}:${active}:${a.state}:${a.meal?.id}:${a.strike?.atCore}:${a.stun?.untilCore}:${a.threat?.targetId}:${growth}`;if(this.keys.get(a.id)===key)return;this.keys.set(a.id,key);dirty=true;
+      const key=`${i}:${origin}:${edge?.start}:${edge?.end}:${fromFraction}:${toFraction}:${active}:${a.state}:${a.meal?.id}:${a.strike?.atCore}:${a.stun?.untilCore}:${a.threat?.targetId}:${a.predation?.targetId}:${growth}`;if(this.keys.get(a.id)===key)return;this.keys.set(a.id,key);dirty=true;
       const fallen=a.state==='dead'||a.state==='downed';
       const traveling=!!edge&&(active||a.state==='moving'&&world.tick<edge.end);
       const f=traveling?edge.from:a,t=traveling?edge.to:a;
       let yaw=edge?Math.atan2(edge.to.x-edge.from.x,edge.to.z-edge.from.z):0;
       if(!traveling&&a.meal){const m=a.meal,target=m.kind==='plant'?world.resources.find(r=>r.id===m.id):world.piles.find(p=>p.id===m.id)?.owner;if(target&&'x' in target&&(target.x!==a.x||target.z!==a.z))yaw=Math.atan2(target.x-a.x,target.z-a.z);}
-      if(!traveling&&(a.strike||a.threat)){const target=world.pawns.find(p=>p.id===(a.strike?.targetId??a.threat?.targetId));if(target&&(target.x!==a.x||target.z!==a.z))yaw=Math.atan2(target.x-a.x,target.z-a.z);}
+      if(!traveling&&(a.strike||a.threat||a.predation)){const targetId=a.strike?.targetId??a.threat?.targetId??a.predation?.targetId;
+        const target=world.pawns.find(p=>p.id===targetId)??world.wildlife?.animals.find(p=>p.id===targetId);
+        if(target&&(target.x!==a.x||target.z!==a.z))yaw=Math.atan2(target.x-a.x,target.z-a.z);}
       const previous=this.headings.get(a.id);
       let heading=turnToward(previous,yaw,traveling?edge.start:tick);
       if(traveling&&previous&&heading===previous&&previous.startTick!==edge.start)heading={from:headingAt(previous,edge.start),to:previous.to,startTick:edge.start};
@@ -183,7 +185,7 @@ export class WildlifeLayer {
   private texturesEnabled=true;
   private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();
   constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void){
-    this.rigs=['hare','snow-hare','deer','muffalo','gazelle','dromedary'].map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTextures[animalCoat(species)],configure));
+    this.rigs=ANIMAL_SPECIES_IDS.map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTextures[animalCoat(species)],configure));
     for(const rig of this.rigs){this.mesh.add(rig.mesh,rig.selection);this.flames.add(rig.flames);}
   }
   setTexturesEnabled(enabled:boolean):void {if(this.texturesEnabled===enabled)return;this.texturesEnabled=enabled;for(const rig of this.rigs)rig.setTexturesEnabled(enabled);}

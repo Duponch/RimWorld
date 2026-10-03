@@ -24,7 +24,7 @@ export function validAnimalExit(w:Pick<World,'width'|'height'|'tick'>,version:nu
     ||!int(exit.destination.x,0,w.width-1)||!int(exit.destination.z,0,w.height-1)
     ||!(exit.destination.x===0||exit.destination.z===0||exit.destination.x===w.width-1||exit.destination.z===w.height-1)
     ||!int(exit.nextFoodCheck,0,Math.min(Number.MAX_SAFE_INTEGER,w.tick+100))
-    ||a.food>0||a.domestic||a.meal||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun
+    ||a.food>0||a.domestic||a.meal||a.predation||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun
     ||!['idle','moving','hungry'].includes(a.state)||!Array.isArray(a.path))return false;
   const last=a.path.at(-1);
   return !last||last.x===exit.destination.x&&last.z===exit.destination.z;
@@ -35,16 +35,31 @@ export function validWildlifeExitState(w:Pick<World,'width'|'height'|'tick'|'wil
     &&(s.exitedAnimals===undefined||version>=174&&int(s.exitedAnimals,1))
     &&s.animals.every(a=>object(a)&&validAnimalExit(w,version,a));
 }
+/** Snapshot boundary: identity and sparse intent only, no path flood. */
+export function validWildlifePredationState(w:Pick<World,'tick'|'wildlife'|'piles'|'nextId'>,version:number):boolean {
+  const s=w.wildlife;if(!s)return true;
+  if(!object(s)||!Array.isArray(s.animals)||version<178&&s.profile==='biome-fauna-v2')return false;
+  return s.animals.every(a=>{
+    if(!object(a)||version<178&&a.species==='red-fox')return false;
+    const hunt:unknown=a.predation;if(hunt===undefined)return true;
+    return version>=178&&isAnimalSpecies(a.species)&&animalSpecies(a.species).predator===true&&object(hunt)
+      &&keys(hunt,['targetId','startedAtCore','firstHit'])&&int(hunt.targetId,1,w.nextId-1)&&hunt.targetId!==a.id
+      &&int(hunt.startedAtCore,0,w.tick*10)&&typeof hunt.firstHit==='boolean'
+      &&!a.domestic&&!a.meal&&!a.exiting&&!a.flee&&!a.burning&&['idle','moving'].includes(a.state)
+      &&(s.animals.some(other=>other.id===hunt.targetId)||w.piles.some(p=>p.corpse?.animalId===hunt.targetId));
+  });
+}
 export function validateWildlife(w:World,version:number,ids:Set<number>):string[] {
   const s=w.wildlife;if(s===undefined)return [];
   const errors:string[]=[];
+  if(!validWildlifePredationState(w,version))errors.push('Invalid wildlife predation state.');
   if(!validWildlifeExitState(w,version))errors.push('Invalid wildlife exit state.');
-  if(version<76||!object(s)||!['temperate-hares-v1',...(version>=91?['biome-herbivores-v1']:[])].includes(String(s.profile))
-    ||!keys(s,['profile','rng','animals','eatenPlants','eatenNutrition','eatenItems',...(version>=174?['exitedAnimals']:[]),...(s.profile==='biome-herbivores-v1'?['population']:[])])
+  if(version<76||!object(s)||!['temperate-hares-v1',...(version>=91?['biome-herbivores-v1']:[]),...(version>=178?['biome-fauna-v2']:[])].includes(String(s.profile))
+    ||!keys(s,['profile','rng','animals','eatenPlants','eatenNutrition','eatenItems',...(version>=174?['exitedAnimals']:[]),...(['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)?['population']:[])])
     ||!int(s.rng,1,0xffffffff)||!Array.isArray(s.animals)||s.animals.length>MAX_WILDLIFE||!int(s.eatenPlants)||!int(s.eatenItems)||!finite(s.eatenNutrition,0,Number.MAX_SAFE_INTEGER))return ['Invalid wildlife state.'];
-  if(s.profile==='biome-herbivores-v1'){
+  if(['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)){
     const p=s.population;if(!object(p)||!keys(p,['biome','fullTargetWeight','targetWeight','nextCheck','checks','arrivals'])||!['temperate-forest','boreal-forest','arid-shrubland','tundra'].includes(String(p.biome)))return ['Invalid wildlife population state.'];
-    const biome=faunaBiome(p.biome as Parameters<typeof faunaBiome>[0]),full=w.width*w.height*biome.animalDensity/10000,implemented=biome.entries.reduce((n,e)=>n+e.commonality,0),target=full*implemented/biome.totalCommonality;
+    const biome=faunaBiome(p.biome as Parameters<typeof faunaBiome>[0],s.profile==='biome-fauna-v2'),full=w.width*w.height*biome.animalDensity/10000,implemented=biome.entries.reduce((n,e)=>n+e.commonality,0),target=full*implemented/biome.totalCommonality;
     if(p.fullTargetWeight!==full||p.targetWeight!==target||!int(p.nextCheck,w.tick+1,w.tick+122)||!int(p.checks)||!int(p.arrivals,0,p.checks))return ['Invalid wildlife population state.'];
   } else if(s.population!==undefined)return ['Invalid wildlife population state.'];
   if(s.animals.some(a=>!object(a)))return ['Invalid wild animal.'];
@@ -52,7 +67,7 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
   let navigation:ReturnType<typeof animalNavigation>|undefined,hareNavigation:ReturnType<typeof animalNavigation>|undefined;
   const cell=(c:unknown):c is {x:number;z:number}=>object(c)&&keys(c,['x','z'])&&int(c.x,0,w.width-1)&&int(c.z,0,w.height-1);
   for(const a of s.animals) {
-    if(!object(a)||!keys(a,['id','species','sex','x','z','food','rest','state','path','motion','nextDecision','meal',...(version>=77?['health','flee','stagger','sleepUntilCore']:[]),...(version>=78?['threat','retaliation','strike','stun']:[]),...(version>=79?['corpseRot']:[]),...(version>=87?['burning']:[]),...(version>=106?['domestic','taming']:[]),...(version>=121?['ageTicks','parents','pregnancy','mating']:[]),...(version>=174?['exiting']:[])])||!int(a.id,1,w.nextId-1)||!int(a.x,0,w.width-1)||!int(a.z,0,w.height-1)||!isAnimalSpecies(a.species)||(version<91||s.profile==='temperate-hares-v1')&&a.species!=='hare'||s.profile==='biome-herbivores-v1'&&!faunaBiome(s.population!.biome).entries.some(e=>e.species===a.species)&&!(version>=119&&!!a.domestic)||!['female','male'].includes(a.sex)||!finite(a.food,0,animalSpecies(a.species).nutrition)||!finite(a.rest,0,1)||!['idle','moving','eating','sleeping','hungry',...(version>=77?['downed','dead']:[])].includes(a.state)||!int(a.nextDecision,0,w.tick+100)||!Array.isArray(a.path)||a.path.length>w.width*w.height||!a.path.every(cell)){errors.push('Invalid wild animal.');continue;}
+    if(!object(a)||!keys(a,['id','species','sex','x','z','food','rest','state','path','motion','nextDecision','meal',...(version>=77?['health','flee','stagger','sleepUntilCore']:[]),...(version>=78?['threat','retaliation','strike','stun']:[]),...(version>=79?['corpseRot']:[]),...(version>=87?['burning']:[]),...(version>=106?['domestic','taming']:[]),...(version>=121?['ageTicks','parents','pregnancy','mating']:[]),...(version>=174?['exiting']:[]),...(version>=178?['predation']:[])])||!int(a.id,1,w.nextId-1)||!int(a.x,0,w.width-1)||!int(a.z,0,w.height-1)||!isAnimalSpecies(a.species)||version<178&&a.species==='red-fox'||(version<91||s.profile==='temperate-hares-v1')&&a.species!=='hare'||['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)&&!faunaBiome(s.population!.biome,s.profile==='biome-fauna-v2').entries.some(e=>e.species===a.species)&&!(version>=119&&!!a.domestic)||!['female','male'].includes(a.sex)||!finite(a.food,0,animalSpecies(a.species).nutrition)||!finite(a.rest,0,1)||!['idle','moving','eating','sleeping','hungry',...(version>=77?['downed','dead']:[])].includes(a.state)||!int(a.nextDecision,0,w.tick+100)||!Array.isArray(a.path)||a.path.length>w.width*w.height||!a.path.every(cell)){errors.push('Invalid wild animal.');continue;}
     if(version>=121){
       if(!int(a.ageTicks))errors.push('Invalid animal age.');
       const parents:unknown=a.parents;
@@ -81,6 +96,12 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
         else matingFemales.add(Number(mating.femaleId));
       }
     }
+    const hunt:unknown=a.predation;
+    if(hunt!==undefined&&(!object(hunt)||!keys(hunt,['targetId','startedAtCore','firstHit'])
+      ||version<178||!animalSpecies(a.species).predator||a.domestic||a.meal||a.exiting||a.flee||a.burning
+      ||!['idle','moving'].includes(a.state)||!int(hunt.targetId,1,w.nextId-1)||hunt.targetId===a.id
+      ||!int(hunt.startedAtCore,0,w.tick*10)||typeof hunt.firstHit!=='boolean'
+      ||!s.animals.some(other=>other.id===hunt.targetId)&&!w.piles.some(p=>p.corpse?.animalId===hunt.targetId)))errors.push('Invalid animal predation.');
     if(a.corpseRot!==undefined&&(version<79||a.state!=='dead'||!a.health?.death||!validCorpseRot(a.corpseRot,w.tick,a.health.death.tick)))errors.push('Invalid retained animal corpse age.');
     if(ids.has(a.id))errors.push('Duplicate wildlife identity.');ids.add(a.id);
     if(['water','rock'].includes(w.tiles[a.z*w.width+a.x]!.terrain)||w.structures.some(s=>(s.kind==='wall'||s.kind==='cooler')&&s.x===a.x&&s.z===a.z))errors.push('Wildlife inside solid terrain.');
@@ -89,19 +110,19 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
       if(a.health.death?a.health.tick>w.tick:a.health.tick!==w.tick)errors.push('Invalid animal medical clock.');
       const status=medicalStatus(a.health);if(status==='mobile'?a.state==='dead'||a.state==='downed':a.state!==status)errors.push('Invalid animal medical state.');
     } else if(a.state==='dead'||a.state==='downed')errors.push('Animal stopped without health record.');
-    if((a.state==='dead'||a.state==='downed')&&(a.path.length||a.meal||a.flee||a.threat||a.retaliation||a.strike||a.stun))errors.push('Incapacitated animal retains activity.');
+    if((a.state==='dead'||a.state==='downed')&&(a.path.length||a.meal||a.predation||a.flee||a.threat||a.retaliation||a.strike||a.stun))errors.push('Incapacitated animal retains activity.');
     if(!validStagger(a.stagger,version,w.tick)||a.sleepUntilCore!==undefined&&!int(a.sleepUntilCore,w.tick*10+1,w.tick*10+1000))errors.push('Invalid animal impact delay.');
     if(a.flee!==undefined&&(!object(a.flee)||!keys(a.flee,['danger','until'])||!cell(a.flee.danger)||!int(a.flee.until,w.tick+1,w.tick+600)||a.meal||!['idle','moving'].includes(a.state)))errors.push('Invalid animal flight.');
-    if(!validStunShape(a.stun,version,w.tick))errors.push('Invalid animal stun.');
-    if(a.threat!==undefined&&(!object(a.threat)||!keys(a.threat,['targetId','harmedAtCore'])||!int(a.threat.harmedAtCore,Math.max(0,w.tick*10-400),w.tick*10)||!w.pawns.some(p=>p.id===a.threat!.targetId)||a.meal||a.flee||!['idle','moving'].includes(a.state)))errors.push('Invalid animal melee threat.');
+    if(!validStunShape(a.stun,version,w.tick,version>=178?420:45))errors.push('Invalid animal stun.');
+    if(a.threat!==undefined&&(!object(a.threat)||!keys(a.threat,['targetId','harmedAtCore'])||!int(a.threat.harmedAtCore,Math.max(0,w.tick*10-400),w.tick*10)||!w.pawns.some(p=>p.id===a.threat!.targetId)&&!(version>=178&&s.animals.some(other=>other.id===a.threat!.targetId&&other.id!==a.id))||a.meal||a.flee||!['idle','moving'].includes(a.state)))errors.push('Invalid animal melee threat.');
     if(a.retaliation!==undefined&&(!object(a.retaliation)||!keys(a.retaliation,['targetId','untilCore'])||!a.threat||a.retaliation.targetId!==a.threat.targetId||!int(a.retaliation.untilCore,w.tick*10+1,w.tick*10+200)||a.strike))errors.push('Invalid animal retaliation job.');
-    if(a.strike!==undefined&&(!object(a.strike)||!keys(a.strike,['targetId','atCore','untilCore','tool','outcome'])||!int(a.strike.targetId,1)||!int(a.strike.atCore,0,w.tick*10)||!int(a.strike.untilCore,w.tick*10+1)||!['hit','miss','dodge'].includes(String(a.strike.outcome))||!animalSpecies(a.species).melee.some(t=>t.id===a.strike!.tool&&a.strike!.untilCore-a.strike!.atCore===t.cooldownCore)||!w.pawns.some(p=>p.id===a.strike!.targetId)&&!w.raids?.departed.some(d=>d.pawnId===a.strike!.targetId)||a.meal||a.path.length||(a.motion?.end??0)>w.tick||a.state!=='idle'))errors.push('Invalid animal melee recovery.');
+    if(a.strike!==undefined&&(!object(a.strike)||!keys(a.strike,['targetId','atCore','untilCore','tool','outcome'])||!int(a.strike.targetId,1)||!int(a.strike.atCore,0,w.tick*10)||!int(a.strike.untilCore,w.tick*10+1)||!['hit','miss','dodge'].includes(String(a.strike.outcome))||!animalSpecies(a.species).melee.some(t=>t.id===a.strike!.tool&&a.strike!.untilCore-a.strike!.atCore===t.cooldownCore)||!w.pawns.some(p=>p.id===a.strike!.targetId)&&!w.raids?.departed.some(d=>d.pawnId===a.strike!.targetId)&&!(version>=178&&(s.animals.some(other=>other.id===a.strike!.targetId&&other.id!==a.id)||w.piles.some(p=>p.corpse?.animalId===a.strike!.targetId)))||a.meal||a.path.length||(a.motion?.end??0)>w.tick||a.state!=='idle'))errors.push('Invalid animal melee recovery.');
     const m=a.motion;
     if(m!==undefined) {
       if(!object(m)||!keys(m,['from','to','start','end','speedFactor','terrainDelay',...(version>=77?['stagger']:[]),...(version>=78?['stuns']:[])])||!cell(m.from)||!cell(m.to)||!finite(m.start,0,w.tick)||!finite(m.end,0,w.tick+100)||m.end<=m.start||Math.max(Math.abs(m.from.x-m.to.x),Math.abs(m.from.z-m.to.z))!==1||m.to.x!==a.x||m.to.z!==a.z||!(version>=77?finite(m.speedFactor,version>=87?.096*.8:.096,3):[3,.6].includes(m.speedFactor!))||!finite(m.terrainDelay,0,50)||!validSlowIntervals(m.stagger,version,m.start,w.tick)||!validSlowIntervals(m.stuns,version,m.start,w.tick)||Math.abs(m.end-travelEnd(m))>1e-7)errors.push('Invalid wildlife motion.');
       else if(m.end>w.tick){
         if(!['moving','downed','dead'].includes(a.state))errors.push('Active wildlife edge without movement.');
-        const pathNavigation=a.species==='hare'||a.species==='snow-hare'
+        const pathNavigation=a.species==='hare'||a.species==='snow-hare'||animalSpecies(a.species).predator
           ?(hareNavigation??=animalNavigation(w,false,true)):(navigation??=animalNavigation(w));
         if(!pathNavigation.step(m.from,m.to))errors.push('Wildlife edge crosses a solid obstacle.');
       }
@@ -114,7 +135,7 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
       const target=animalMealTarget(w,a);
       if(a.state==='moving'&&m.progress!==0)errors.push('Animal chewed during travel.');
       const pile=m.kind==='pile'?w.piles.find(p=>p.id===m.id):undefined;
-      if(pile&&m.quantity>Math.max(1,Math.ceil(species.nutrition/(ITEM_DEFINITIONS[pile.item].nutrition/100))))errors.push('Oversized wildlife meal.');
+      if(pile&&!pile.corpse&&m.quantity>Math.max(1,Math.ceil(species.nutrition/(ITEM_DEFINITIONS[pile.item].nutrition/100))))errors.push('Oversized wildlife meal.');
       if(!target)errors.push('Missing or overreserved wildlife food.');
       else if(a.state==='eating'&&(a.path.length||Math.abs(a.x-target.x)+Math.abs(a.z-target.z)>1))errors.push('Remote animal ingestion.');
     } else if(a.state==='eating')errors.push('Animal eating without food.');

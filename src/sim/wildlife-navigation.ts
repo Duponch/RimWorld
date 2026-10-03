@@ -60,12 +60,35 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     return path?{kind:'exit',path}:undefined;
   }
   return {free,step,route:(a:Cell,goals:Cell[])=>findRoute(a,goals)?.path,
-    foodOrExitRoute:(a:Cell,goals:Cell[])=>findRoute(a,goals,true)};
+    foodOrExitRoute:(a:Cell,goals:Cell[])=>findRoute(a,goals,true),
+    foodPreyOrExitRoute(a:Cell,goals:Cell[],prey:readonly (Cell&{id:number})[],exitFallback=false):{kind:'food'|'prey'|'exit';path:Cell[];targetId?:number}|undefined {
+      const cells=goals.filter(free),indices=new Set(cells.map(c=>c.z*width+c.x));
+      if(!indices.size&&!prey.length&&!exitFallback)return;
+      const n=navigationCosts(world),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+      if(indices.size){
+        const reach=search.advance(indices),food=cells.filter(c=>hasReachableCell(reach,c.z*width+c.x)).sort((a,b)=>reach.costs[a.z*width+a.x]!-reach.costs[b.z*width+b.x]!)[0];
+        if(food){const path=routeToCell(world,food,search.finish(indices));return path?{kind:'food',path}:undefined;}
+      }
+      // Food failure already exhausted the field. Without food, complete it
+      // before comparing every prey by biological score, not path distance.
+      const reach=search.finish();
+      for(const target of prey){
+        const contacts=[target,{x:target.x-1,z:target.z},{x:target.x+1,z:target.z},{x:target.x,z:target.z-1},{x:target.x,z:target.z+1}]
+          .filter(c=>free(c)&&hasReachableCell(reach,c.z*width+c.x)).sort((a,b)=>reach.costs[a.z*width+a.x]!-reach.costs[b.z*width+b.x]!);
+        const path=contacts[0]&&routeToCell(world,contacts[0],reach);if(path)return {kind:'prey',path,targetId:target.id};
+      }
+      if(!exitFallback)return;
+      const edges:Cell[]=[];
+      for(let x=0;x<width;x++)edges.push({x,z:0},{x,z:world.height-1});
+      for(let z=1;z<world.height-1;z++)edges.push({x:0,z},{x:width-1,z});
+      const edge=edges.filter(c=>free(c)&&hasReachableCell(reach,c.z*width+c.x)).sort((a,b)=>reach.costs[a.z*width+a.x]!-reach.costs[b.z*width+b.x]!)[0];
+      const path=edge&&routeToCell(world,edge,reach);return path?{kind:'exit',path}:undefined;
+    }};
 }
 export function moveAnimal(world:World,a:WildAnimal,step:(a:Cell,b:Cell)=>boolean,moving=1):boolean {
   const next=a.path[0];if(!next)return false;
   if(!step(a,next)){a.path=[];delete a.meal;a.state='idle';a.nextDecision=world.tick+10;return false;}
-  const species=animalSpecies(a.species),pace=(a.meal||a.flee||a.retaliation||a.burning?species.moveTicks:species.walkTicks)/(moving*weatherMoveFactor(world,a)),delay=furnitureDelay(world,a,next),start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
+  const species=animalSpecies(a.species),pace=(a.meal||a.flee||a.retaliation||a.predation||a.burning?species.moveTicks:species.walkTicks)/(moving*weatherMoveFactor(world,a)),delay=furnitureDelay(world,a,next),start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
   a.motion={from:{x:a.x,z:a.z},to:{...next},start,end:start+Math.hypot(next.x-a.x,next.z-a.z)*pace+delay,speedFactor:3/pace,terrainDelay:delay};
   if(a.stagger&&a.stagger.untilCore/10>start){a.motion.stagger=mergeSlowIntervals([{start:Math.max(start,a.stagger.sinceCore/10),end:a.stagger.untilCore/10}]);a.motion.end=travelEnd(a.motion);}
   a.x=next.x;a.z=next.z;a.path.shift();a.state='moving';return true;

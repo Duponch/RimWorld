@@ -11,7 +11,7 @@ const capturedApparelCandidates=(version:number):MaterialPile[]=>{
   const seen=new Set<string>(),out:MaterialPile[]=[];
   for(const item of Object.keys(APPAREL) as ApparelItem[]){
     const historical=item==='flak-vest'||item==='cloth-shirt'||version>=72&&item==='cloth-tribalwear';
-    if(version<90&&!historical||version<91&&V91_ITEM_IDS.includes(item)||version<120&&V120_ANIMAL_PRODUCT_ITEMS.includes(item)||version<141&&item==='flak-helmet'||version<148&&item==='recon-helmet')continue;
+    if(version<90&&!historical||version<91&&V91_ITEM_IDS.includes(item)||version<120&&V120_ANIMAL_PRODUCT_ITEMS.includes(item)||version<141&&item==='flak-helmet'||version<148&&item==='recon-helmet'||version<178&&item.startsWith('foxfur-'))continue;
     const key=APPAREL[item].family??item;
     if(seen.has(key))continue;
     seen.add(key);out.push(capturedApparel(item));
@@ -24,7 +24,7 @@ export function validApparelShape(p:Record<string,unknown>,version:number):boole
   if(version<63||typeof p.item!=='string'||!Object.hasOwn(APPAREL,p.item)||!record(a))return false;
   const item=p.item as ApparelItem,definition=APPAREL[item];
   const historical=item==='flak-vest'||item==='cloth-shirt'||version>=72&&item==='cloth-tribalwear';
-  if(version<90&&!historical||version<91&&V91_ITEM_IDS.includes(item)||version<120&&V120_ANIMAL_PRODUCT_ITEMS.includes(item)||version<141&&item==='flak-helmet'||version<148&&item==='recon-helmet')return false;
+  if(version<90&&!historical||version<91&&V91_ITEM_IDS.includes(item)||version<120&&V120_ANIMAL_PRODUCT_ITEMS.includes(item)||version<141&&item==='flak-helmet'||version<148&&item==='recon-helmet'||version<178&&item.startsWith('foxfur-'))return false;
   return Object.keys(a).every(k=>['quality','hitPoints','forbidden',...(version>=90?['material','forced']:[])].includes(k))
     &&typeof a.quality==='string'&&(WEAPON_QUALITIES as readonly string[]).includes(a.quality)
     &&typeof a.hitPoints==='number'&&Number.isInteger(a.hitPoints)&&a.hitPoints>0&&a.hitPoints<=definition.hitPoints

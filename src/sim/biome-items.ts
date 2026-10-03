@@ -1,5 +1,13 @@
 /** Core 1.6.4871 products; source notes: docs/research/biome-products-reference-v91.md. */
 export const BIOME_ITEM_DEFINITIONS = Object.freeze({
+  'red-fox-corpse':Object.freeze({label:'Dépouille de renard roux',kind:'corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x9b9981}),
+  'red-fox-meat':Object.freeze({label:'Viande de renard',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xba6259}),
+  foxfur:Object.freeze({label:'Fourrure de renard',kind:'textile',stackLimit:75,nutrition:0,maxIngest:0,color:0xb26422}),
+  'foxfur-tribalwear':Object.freeze({label:'Tenue tribale en fourrure de renard',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xb26422}),
+  'foxfur-shirt':Object.freeze({label:'Chemise en fourrure de renard',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xb26422}),
+  'foxfur-pants':Object.freeze({label:'Pantalon en fourrure de renard',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xb26422}),
+  'foxfur-duster':Object.freeze({label:'Cache-poussière en fourrure de renard',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xb26422}),
+  'foxfur-parka':Object.freeze({label:'Parka en fourrure de renard',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xb26422}),
   'snow-hare-corpse':Object.freeze({label:'Dépouille de lièvre des neiges',kind:'corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x9b9981}),
   'snow-hare-meat':Object.freeze({label:'Viande de lièvre des neiges',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xba6259}),
   'deer-corpse':Object.freeze({label:'Dépouille de cerf',kind:'corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x9b9981}),
@@ -30,9 +38,10 @@ export const BIOME_ITEM_DEFINITIONS = Object.freeze({
   'camelhide-parka':Object.freeze({label:'Parka en cuir de chameau',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xc3a375}),
   'agave-fruit':Object.freeze({label:'Fruits d’agave',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0x9fac5c}),
 } as const);
-export const V91_ITEM_IDS:readonly string[]=Object.freeze(Object.keys(BIOME_ITEM_DEFINITIONS));
-export const ANIMAL_MEAT_ITEMS=['hare-meat','snow-hare-meat','deer-meat','muffalo-meat','gazelle-meat','dromedary-meat'] as const;
-export const ANIMAL_CORPSE_ITEMS=['hare-corpse','snow-hare-corpse','deer-corpse','muffalo-corpse','gazelle-corpse','dromedary-corpse'] as const;
-export const ANIMAL_LEATHER_ITEMS=['light-leather','plainleather','bluefur','camelhide'] as const;
+export const V190_ITEM_IDS:readonly string[]=Object.freeze(Object.keys(BIOME_ITEM_DEFINITIONS).filter(id=>id.startsWith('red-fox-')||id==='foxfur'||id.startsWith('foxfur-')));
+export const V91_ITEM_IDS:readonly string[]=Object.freeze(Object.keys(BIOME_ITEM_DEFINITIONS).filter(id=>!V190_ITEM_IDS.includes(id)));
+export const ANIMAL_MEAT_ITEMS=['hare-meat','snow-hare-meat','deer-meat','muffalo-meat','gazelle-meat','dromedary-meat','red-fox-meat'] as const;
+export const ANIMAL_CORPSE_ITEMS=['hare-corpse','snow-hare-corpse','deer-corpse','muffalo-corpse','gazelle-corpse','dromedary-corpse','red-fox-corpse'] as const;
+export const ANIMAL_LEATHER_ITEMS=['light-leather','plainleather','bluefur','camelhide','foxfur'] as const;
 export const isAnimalMeat=(item:string):item is typeof ANIMAL_MEAT_ITEMS[number] => (ANIMAL_MEAT_ITEMS as readonly string[]).includes(item);
 export const isAnimalCorpseItem=(item:string):item is typeof ANIMAL_CORPSE_ITEMS[number] => (ANIMAL_CORPSE_ITEMS as readonly string[]).includes(item);

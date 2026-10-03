@@ -14,9 +14,9 @@ export function validMeleeShape(value:unknown,version:number,tick:number):boolea
   if(s===null)return o!==null;
   return object(s)&&keys(s,['targetId','atCore','untilCore','tool','outcome',...(version>=67?['structure']:[])])&&(s.structure===undefined||object(s.structure)&&keys(s.structure,['x','z'])&&integer(s.structure.x,0)&&integer(s.structure.z,0)&&s.outcome==='hit')&&integer(s.targetId,1)&&integer(s.atCore,0,tick*10)&&integer(s.untilCore,tick*10+1)&&s.untilCore-s.atCore===meleeRecoveryCore(s.tool as MeleeToolId)&&['left-fist','right-fist','head','teeth','grip','barrel','barrel-poke',...(version>=88?['knife-handle','knife-blade','knife-point']:[])].includes(String(s.tool))&&['hit','miss','dodge'].includes(String(s.outcome));
 }
-export function validStunShape(value:unknown,version:number,tick:number):boolean {
+export function validStunShape(value:unknown,version:number,tick:number,maxDuration=45):boolean {
   if(value===undefined)return true;
-  return version>=59&&object(value)&&keys(value,['sinceCore','untilCore'])&&integer(value.sinceCore,0,tick*10)&&integer(value.untilCore,tick*10+1,tick*10+45)&&value.untilCore-value.sinceCore>=45;
+  return version>=59&&object(value)&&keys(value,['sinceCore','untilCore'])&&integer(value.sinceCore,0,tick*10)&&integer(value.untilCore,tick*10+1,tick*10+maxDuration)&&value.untilCore-value.sinceCore>=45;
 }
 export function validateMelee(world:World):string[] {
   const errors:string[]=[];

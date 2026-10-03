@@ -1,9 +1,9 @@
 import type { World } from '../sim/types';
 import { animalSpecies } from '../sim/animal-species';
 import { canTameSpecies } from '../sim/animal-handling';
+import { animalActivity } from './animal-activity';
 import './world-panels.css';
 
-const labels={idle:'Se repose',moving:'Se déplace',eating:'Mange',sleeping:'Dort',hungry:'Cherche à manger',downed:'À terre',dead:'Mort'};
 interface FaunaRow { hunt:HTMLInputElement; tame?:HTMLInputElement; activity:HTMLElement; position:HTMLElement }
 const faunaRows=new WeakMap<HTMLElement,Map<number,FaunaRow>>();
 
@@ -58,8 +58,7 @@ export function updateWildlifePanel(root:HTMLElement,world:World,focus:(id:numbe
     const checkbox=row.hunt;checkbox.checked=huntTargets.has(a.id);checkbox.disabled=a.state==='dead'||!hunt;checkbox.onchange=()=>hunt?.(a.id,checkbox.checked);
     const tameCheck=row.tame;
     if(tameCheck){tameCheck.checked=!!a.taming?.designated;tameCheck.disabled=a.state==='dead'||!tame;tameCheck.onchange=()=>tame?.(a.id,tameCheck.checked);}
-    const state=a.state==='moving'&&!a.path.length&&!a.meal&&(!a.motion||a.motion.end<=world.tick)?'idle':a.state;
-    row.activity.textContent=`${a.strike?'Riposte':a.threat?'Se défend':a.flee?'Fuit':a.exiting?'Quitte la carte faute de nourriture':labels[state]}${a.meal&&state==='moving'?' vers sa nourriture':''}`;
+    row.activity.textContent=animalActivity(world,a);
     row.position.textContent=`${a.x}, ${a.z}`;
   }
   const targetChoice=root.querySelector<HTMLSelectElement>('[data-fauna-target-choice]')!;

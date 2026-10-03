@@ -54,7 +54,7 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
     if(a.kind!=='exit'&&animalImpactNoise(world,{x:Math.floor(a.point.x),z:Math.floor(a.point.z)},p.flight.launcherKey,core)){targets=undefined;scenes.clear();afterImpact?.();}
     if(animal){
       const launcher=world.pawns.find(pawn=>`pawn:${pawn.id}`===p.flight.launcherKey);
-      damageAnimalWithBullet(world,animal,{damage:profile.damage},core,launcher);
+      damageAnimalWithBullet(world,animal,{damage:profile.damage},core,launcher,launcher?.id);
       targets=undefined;scenes.clear();afterImpact?.();
     }
     if(barrier){

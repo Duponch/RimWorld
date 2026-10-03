@@ -1,4 +1,4 @@
-import { V91_ITEM_IDS } from './biome-items.ts';
+import { V91_ITEM_IDS,V190_ITEM_IDS } from './biome-items.ts';
 import { initialFoodPolicies, MAX_FOOD_POLICIES, validAllowedFood, validPolicyName } from './food-policy.ts';
 import type { World } from './types.ts';
 
@@ -10,7 +10,7 @@ export function validateFoodPolicies(world: World, version: number): string[] {
   if (!Array.isArray(world.foodPolicies) || world.foodPolicies.length < 1 || world.foodPolicies.length > MAX_FOOD_POLICIES) return [...errors, 'Invalid food policies.'];
   for (const p of world.foodPolicies) {
     if (!p || typeof p !== 'object' || !Number.isSafeInteger(p.id) || p.id < 1 || p.id >= world.nextFoodPolicyId || ids.has(p.id)
-      || !validPolicyName(p.name) || !validAllowedFood(p.allowed)||version<157&&p.allowed.includes('vegetarian-lavish-meal')||version<159&&p.allowed.includes('carnivore-lavish-meal')||version<156&&p.allowed.includes('carnivore-fine-meal')||version<155&&p.allowed.includes('vegetarian-fine-meal')||version<154&&p.allowed.includes('lavish-meal')||version<152&&p.allowed.includes('fine-meal')||version<120&&p.allowed.includes('milk')||version<91&&p.allowed.some(i=>V91_ITEM_IDS.includes(i)) || version<79&&p.allowed.includes('hare-meat')
+      || !validPolicyName(p.name) || !validAllowedFood(p.allowed)||version<178&&p.allowed.some(i=>V190_ITEM_IDS.includes(i))||version<157&&p.allowed.includes('vegetarian-lavish-meal')||version<159&&p.allowed.includes('carnivore-lavish-meal')||version<156&&p.allowed.includes('carnivore-fine-meal')||version<155&&p.allowed.includes('vegetarian-fine-meal')||version<154&&p.allowed.includes('lavish-meal')||version<152&&p.allowed.includes('fine-meal')||version<120&&p.allowed.includes('milk')||version<91&&p.allowed.some(i=>V91_ITEM_IDS.includes(i)) || version<79&&p.allowed.includes('hare-meat')
       || version<84&&(p.allowed.includes('potato')||p.allowed.includes('corn'))) {errors.push('Invalid food policy.');continue;}
     ids.add(p.id);
   }
@@ -20,7 +20,7 @@ export function validateFoodPolicies(world: World, version: number): string[] {
 export function initializeFoodPolicies(world: World): void {
   (world as unknown as {schemaVersion:number}).schemaVersion = 13;
   // Historical V13 policies cannot acquire meals introduced in later schemas.
-  world.foodPolicies = initialFoodPolicies(false,false,false,false).map(policy=>({...policy,allowed:policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal')}));
+  world.foodPolicies = initialFoodPolicies(false,false,false,false,false).map(policy=>({...policy,allowed:policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal')}));
   world.nextFoodPolicyId = 5;
   for (const pawn of world.pawns) pawn.foodPolicyId = 1;
   // Preserve all existing jobs, piles, routes, need/food profiles and entity IDs.

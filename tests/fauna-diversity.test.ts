@@ -1,6 +1,6 @@
 import { expect,test } from 'vitest';
 import { applyCommand,createWorld,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index';
-import { ANIMAL_SPECIES,BIOME_FAUNA,animalSpecies,selectBiomeSpecies } from '../src/sim/animal-species';
+import { ANIMAL_SPECIES,BIOME_FAUNA,animalSpecies,faunaBiome,selectBiomeSpecies } from '../src/sim/animal-species';
 import { adultAgeTicks } from '../src/sim/animal-life';
 import { HARE_MODEL,animalBodyModel } from '../src/sim/body-model';
 import { createMedicalRecord } from '../src/sim/injury-state';
@@ -26,6 +26,13 @@ const dead=(w:World,species:AnimalSpeciesId,x=5,z=4):MaterialPile=>{
   return {id,item:animalSpecies(species).corpseItem,kind:'corpse',quantity:1,owner:{type:'ground',x,z},corpse:{animalId:id,species,sex:'female',ageTicks:adultAgeTicks(species),health},rot:{progress:0,atTick:w.tick}};
 };
 const quantity=(w:World,item:MaterialPile['item'])=>w.piles.filter(p=>p.item===item).reduce((sum,p)=>sum+p.quantity,0);
+/** Generate the old ecological profile prospectively, then continue it under
+ * today's schema. Never rewrite a v2 population or delete generated foxes. */
+function historicalBiomeWorld(seed:number):World {
+  const w=createWorld(seed,80,80),current=w.schemaVersion;delete w.wildlife;
+  (w as unknown as {schemaVersion:number}).schemaVersion=91;enableBiomeWildlife(w,'temperate-forest');w.schemaVersion=current;
+  return w;
+}
 const legacyWildlife=(w:World):World=>({...w,wildlife:{...w.wildlife!,animals:w.wildlife!.animals.map(a=>{
   const old={...a};delete (old as Partial<WildAnimal>).ageTicks;delete old.parents;delete old.pregnancy;delete old.mating;return old;
 })}});
@@ -35,7 +42,13 @@ function until(w:World,done:()=>boolean,max=3500):void {
 }
 
 test('six adult species retain Core-derived needs, anatomy, attacks and products without changing the hare profile',()=>{
-  expect(Object.keys(ANIMAL_SPECIES)).toEqual(['hare','snow-hare','deer','muffalo','gazelle','dromedary']);
+  const historical=['hare','snow-hare','deer','muffalo','gazelle','dromedary'] as const;
+  expect(Object.keys(ANIMAL_SPECIES)).toEqual([...historical,'red-fox']);
+  for(const [index,species] of historical.entries()){
+    expect(animalSpecies(species)).toMatchObject({nutrition:[.2,.2,1.2,2.4,.7,2.1][index],foodPerDay:[.18,.18,.32,.86,.24,.86][index],combatPower:[33,33,50,100,40,90][index]});
+    expect(animalSpecies(species).predator).toBeUndefined();
+  }
+  expect(animalSpecies('red-fox')).toMatchObject({predator:true,maxPreySize:.8,combatPower:45,nutrition:.55,foodPerDay:.16});
   expect(animalSpecies('hare')).toMatchObject({nutrition:.2,foodPerDay:.18,moveTicks:1,walkTicks:5,healthScale:.4,rawMeat:28,rawLeather:8});
   expect(animalSpecies('snow-hare')).toMatchObject({nutrition:.2,foodPerDay:.18,healthScale:.4,meatItem:'snow-hare-meat'});
   expect(HARE_MODEL.byId.torso.hp).toBe(16);expect(animalBodyModel('deer').byId.torso.hp).toBe(36);
@@ -48,23 +61,38 @@ test('six adult species retain Core-derived needs, anatomy, attacks and products
 
 test('biome budgets retain omitted Core weight and use ecological weight instead of a density-derived head count',()=>{
   expect(BIOME_FAUNA['temperate-forest']).toMatchObject({animalDensity:3.7,totalCommonality:12.27});
-  expect(BIOME_FAUNA['boreal-forest'].entries.map(e=>e.species)).toEqual(['hare','deer','muffalo']);
+  expect(faunaBiome('boreal-forest',false).entries.map(e=>e.species)).toEqual(['hare','deer','muffalo']);
+  expect(BIOME_FAUNA['boreal-forest'].entries.map(e=>e.species)).toEqual(['hare','deer','muffalo','red-fox']);
   expect(BIOME_FAUNA.tundra.entries.map(e=>e.species)).toEqual(['hare','snow-hare','muffalo']);
   expect(selectBiomeSpecies(BIOME_FAUNA['temperate-forest'],0)).toBe('hare');
   expect(selectBiomeSpecies(BIOME_FAUNA['temperate-forest'],.9)).toBeUndefined();
-  const a=createWorld(91001,80,80);delete a.wildlife;enableBiomeWildlife(a,'temperate-forest');
-  const b=createWorld(91001,80,80);delete b.wildlife;enableBiomeWildlife(b,'temperate-forest');
+  for(const id of ['temperate-forest','boreal-forest'] as const){
+    const old=faunaBiome(id,false),current=faunaBiome(id);
+    expect(current.entries).toEqual([...old.entries,{species:'red-fox',commonality:.07}]);
+    expect(current.totalCommonality).toBe(old.totalCommonality);
+    const oldShare=old.entries.reduce((sum,e)=>sum+e.commonality,0),foxRoll=(oldShare+.035)/old.totalCommonality;
+    expect(selectBiomeSpecies(old,foxRoll)).toBeUndefined();expect(selectBiomeSpecies(current,foxRoll)).toBe('red-fox');
+    expect(selectBiomeSpecies(old,.9)).toBeUndefined();expect(selectBiomeSpecies(current,.9)).toBeUndefined();
+  }
+  const a=historicalBiomeWorld(91001),b=historicalBiomeWorld(91001);
   expect(b.wildlife).toEqual(a.wildlife);
   const population=a.wildlife!.population!,full=80*80*3.7/10000;
   expect(population.fullTargetWeight).toBe(full);
   expect(population.targetWeight).toBe(full*2.3/12.27);
-  expect(a.wildlife!.animals.every(animal=>BIOME_FAUNA['temperate-forest'].entries.some(e=>e.species===animal.species))).toBe(true);
+  expect(a.wildlife!.profile).toBe('biome-herbivores-v1');
+  const saved=serializeWorld(a),resumed=deserializeWorld(saved);
+  expect(resumed.wildlife).toEqual(a.wildlife);expect(serializeWorld(resumed)).toBe(saved);
+  const prospective=createWorld(91001,80,80);delete prospective.wildlife;enableBiomeWildlife(prospective,'temperate-forest');
+  expect(prospective.wildlife!.profile).toBe('biome-fauna-v2');
+  expect(prospective.wildlife!.population!.targetWeight).toBeCloseTo(full*2.37/12.27,12);
+  expect(validateWildlife(legacyWildlife(prospective),91,new Set())).not.toEqual([]);
+  expect(a.wildlife!.animals.every(animal=>faunaBiome('temperate-forest',false).entries.some(e=>e.species===animal.species))).toBe(true);
   expect(validateWildlife(legacyWildlife(a),91,new Set())).toEqual([]);
   expect(validateWildlife(legacyWildlife(a),90,new Set())).not.toEqual([]);
 });
 
 test('renewal is a saved prospective group arrival and does not reproduce or immediately refill after a loss',()=>{
-  const w=createWorld(91002,80,80);delete w.wildlife;enableBiomeWildlife(w,'temperate-forest');
+  const w=historicalBiomeWorld(91002);
   const s=w.wildlife!;s.animals=[];s.rng=1;s.population!.nextCheck=w.tick;
   advanceWildlife(w);
   expect(s.population).toMatchObject({checks:1,arrivals:1,nextCheck:w.tick+ANIMAL_POPULATION_CHECK_TICKS});

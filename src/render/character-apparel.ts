@@ -17,10 +17,11 @@ export function apparelAppearance(pieces:readonly MaterialPile[]=[]) {
     helmet:pieces.some(p=>p.item==='flak-helmet'||p.item==='recon-helmet'),
     reconHelmet:pieces.some(p=>p.item==='recon-helmet'),
     silhouette:outer?(definition!.family==='parka'?4:3):tribal?2:shirt?1:0,
-    pants:pants?((['cloth','light-leather','plainleather','bluefur','camelhide','muffalo-wool'].indexOf(APPAREL[pants.item as ApparelItem].material??'cloth')+1)):0,
+    pants:pants?((['cloth','light-leather','plainleather','bluefur','camelhide','muffalo-wool','foxfur'].indexOf(APPAREL[pants.item as ApparelItem].material??'cloth')+1)):0,
     color:definition?.color,signature:pieces.map(p=>p.item).sort().join(' '),description:pieces.map(apparelLabel).join(', ')||'Aucun vêtement équipé'};
 }
 export const APPAREL_CARGO:Readonly<Record<ApparelItem,number>>=Object.freeze({
+  'foxfur-tribalwear':76,'foxfur-shirt':77,'foxfur-pants':78,'foxfur-duster':79,'foxfur-parka':80,
   'plainleather-tribalwear':39,
   'plainleather-shirt':40,
   'plainleather-pants':41,

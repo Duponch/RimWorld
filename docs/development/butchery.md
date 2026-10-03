@@ -1,5 +1,7 @@
 # Boucherie physique et Cuisine — V79
 
+**Extension courante V190 :** la [prédation animale](predation-v190.md) ajoute la dépouille de renard, sa viande et `foxfur`, et projette les parties déjà consommées dans le rendement restant de toute dépouille animale. Une partie absente n'est pas produite une seconde fois ; les blessures sur ses sous-arbres ne maintiennent pas la pénalité de lésions. Réservations de boucherie et ingestion animale s'excluent sur la pile entière, sans toucher aux transactions physiques de collecte et de sortie. La fourrure rejoint les cinq familles vestimentaires existantes. Schéma 178, migration neutre après validation stricte 177 ; les limites V79 ci-dessous ne décrivent pas le catalogue courant.
+
 **Extension V91 :** chaque espèce conserve sa viande et son cuir; les grands rendements sont prévalidés puis répartis en piles physiques de 75 au plus, sans perdre leur âge lors d’une fusion. Voir [faune diversifiée](fauna-diversity.md). Les passages « lièvre seulement » ci-dessous décrivent V79.
 
 V84 ajoute la [table de boucherie construite](food-workstations.md), trois cases et 95 bois : rendement de poste 100 %, mêmes 450 ticks Core de préparation. L'emplacement gratuit conserve ses 70 %. La propreté d'objet, les salissures et l'intoxication ne sont pas encore actives.

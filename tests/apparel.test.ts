@@ -1,4 +1,5 @@
 import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
+import { withoutPredatorFoodPolicies } from './scenarios/legacy-save';
 import { stripV120 } from './scenarios/strip-v120';
 import { expect,test } from 'vitest';
 import { equipmentCamp } from './scenarios/equipment';
@@ -57,7 +58,7 @@ test('full ground rejects removal without deletion, injury interruption retains 
 });
 
 test('strict V62 migration invents no clothing; V63 rejects impossible owners, metadata, conflicts, phases and future fields',()=>{
-  const old=stripV120(equipmentCamp(1));((old as any).schemaVersion=62,withoutResearch(old));const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(stripV120(withMigratedResearch({...old,schemaVersion:SCHEMA_VERSION})));
+  const old=withoutPredatorFoodPolicies(stripV120(equipmentCamp(1)));((old as any).schemaVersion=62,withoutResearch(old));const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(stripV120(withMigratedResearch({...old,schemaVersion:SCHEMA_VERSION})));
   const w=apparelCamp(1),vest=w.piles[0]!;wear(w,vest);
   const invalid=(mutate:(v:World)=>void)=>{const v=structuredClone(w);mutate(v);expect(()=>deserializeWorld(JSON.stringify(v))).toThrow();};
   invalid(v=>{(v as any).schemaVersion=62;});invalid(v=>{v.piles[0]!.quantity=2;});invalid(v=>{v.piles[0]!.apparel!.hitPoints=201;});invalid(v=>{v.piles[0]!.apparel!.quality='unknown' as any;});

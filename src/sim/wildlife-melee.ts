@@ -13,6 +13,8 @@ import type { disturbanceEvents } from './disturbance.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import type { Cell,World } from './types.ts';
 import { animalSpecies } from './animal-species.ts';
+import { combatTarget,isAnimalTarget } from './combat-target.ts';
+import { animalPredationTarget,cancelAnimalPredation,reconcileAnimalPredation } from './wildlife-predation.ts';
 
 export function animalMeleeTools(a:WildAnimal):MeleeTool[]{
   const tools:MeleeTool[]=[];
@@ -24,8 +26,8 @@ export function animalMeleeTools(a:WildAnimal):MeleeTool[]{
  * no leaning through walls, no attack on a disabled/carried/sleeping person. */
 export function animalMeleeTarget(w:World,a:WildAnimal,core:number,grid?:ShotGrid){
   const threat=a.threat;if(!threat||core>threat.harmedAtCore+400)return;
-  const p=w.pawns.find(p=>p.id===threat.targetId);
-  if(!p||['dead','downed','sleeping'].includes(p.state)||p.medicalSleep||carrierOf(w,p.id)||(p.x-a.x)**2+(p.z-a.z)**2>9)return;
+  const p=combatTarget(w,threat.targetId);
+  if(!p||p.id===a.id||['dead','downed','sleeping'].includes(p.state)||!isAnimalTarget(p)&&(p.medicalSleep||carrierOf(w,p.id))||(p.x-a.x)**2+(p.z-a.z)**2>9)return;
   return clearShotSegment(grid??captureWorldShotGrid(w),a,p)?p:undefined;
 }
 /** Bounded Dijkstra in the threat's 3-cell neighbourhood. It uses the same
@@ -45,6 +47,14 @@ function approach(w:World,a:WildAnimal,target:Cell,nav:ReturnType<typeof animalN
   }
 }
 export function moveAnimalMelee(w:World,a:WildAnimal,nav:()=>ReturnType<typeof animalNavigation>,blocked:()=>Uint8Array,grid:()=>ShotGrid):boolean {
+  // Global pursuit belongs to the wildlife decision's shared navigation budget.
+  // Only an already committed recovery/stun owns the actor here.
+  if(a.predation){
+    if(a.strike||a.stun){a.path=[];a.state='idle';return true;}
+    const prey=animalPredationTarget(w,a);
+    if(prey&&(prey.motion?.end??0)<=w.tick&&meleeContact(w,a,prey,blocked())){a.path=[];a.state='idle';return true;}
+    return false;
+  }
   if(!a.threat&&!a.retaliation&&!a.strike)return false;
   const target=a.threat?animalMeleeTarget(w,a,w.tick*10,grid()):undefined;
   if(!target){delete a.threat;delete a.retaliation;a.path=[];}
@@ -60,14 +70,24 @@ export function advanceAnimalMelee(w:World,a:WildAnimal,core:number,blocked:()=>
   if(a.stun&&core>=a.stun.untilCore)delete a.stun;
   if(a.state==='dead'||a.state==='downed')return false;
   if(a.strike&&core>=a.strike.untilCore)delete a.strike;
+  reconcileAnimalPredation(w,a,core);
   // The job may expire mid-edge. Release its intent without discarding the
   // captured physical movement; a later decision may start a fresh response.
   if(a.retaliation&&core>=a.retaliation.untilCore){delete a.retaliation;a.path=[];}
-  const target=a.threat?animalMeleeTarget(w,a,core,grid()):undefined;
-  if(!target){if(a.threat||a.retaliation)a.path=[];delete a.threat;delete a.retaliation;return false;}
+  const hunt=a.predation,target=hunt?animalPredationTarget(w,a,core):a.threat?animalMeleeTarget(w,a,core,grid()):undefined;
+  if(!target){
+    if(!hunt){if(a.threat||a.retaliation)a.path=[];delete a.threat;delete a.retaliation;}
+    return false;
+  }
   if(a.strike||a.stun&&a.stun.untilCore>core||(a.motion?.end??0)>core/10)return false;
-  if(!a.retaliation||core>=a.retaliation.untilCore)a.retaliation={targetId:target.id,untilCore:core+200};
+  if(hunt&&(target.motion?.end??0)>core/10)return false;
+  if(!hunt&&(!a.retaliation||core>=a.retaliation.untilCore))a.retaliation={targetId:target.id,untilCore:core+200};
   if(!meleeContact(w,a,target,blocked()))return false;
-  const state={rng:w.rng},tool=chooseMeleeTool(animalMeleeTools(a),()=>healthRandom(state));if(!tool)return false;
-  strikeLivingTarget(w,a,target,tool,core,state,disturbance);return true;
+  const state={rng:w.rng},tool=chooseMeleeTool(animalMeleeTools(a),()=>healthRandom(state));
+  if(!tool){if(hunt)cancelAnimalPredation(w,a);return false;}
+  const surprise=!!hunt?.firstHit;
+  const surpriseStun=surprise?animalSpecies(a.species).melee.find(t=>t.id===tool.id)?.surpriseStun:undefined;
+  strikeLivingTarget(w,a,target,tool,core,state,disturbance,{surprise,surpriseStun});
+  if(hunt)hunt.firstHit=false;
+  return true;
 }

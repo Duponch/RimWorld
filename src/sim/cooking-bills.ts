@@ -1,5 +1,5 @@
 import {isArtRecipe} from './art-rules.ts';
-import { V91_ITEM_IDS, isAnimalMeat } from './biome-items.ts';
+import { V91_ITEM_IDS,V190_ITEM_IDS, isAnimalMeat } from './biome-items.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { isFoodWorkstation } from './food-workstations.ts';
 import { groundOccupancyAllows } from './occupancy.ts';
@@ -23,7 +23,7 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
     &&['times','until','forever'].includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
     &&typeof v.suspended==='boolean'&&!!v.filters&&typeof v.filters==='object'&&!Array.isArray(v.filters)
     &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i))
-    &&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS].includes(i))&&v.filters[i]===undefined)
+    &&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS,...V190_ITEM_IDS].includes(i))&&v.filters[i]===undefined)
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&['stockpile','drop'].includes(v.destination);
 }
 /** Reference resource counter includes stored items and current task cargo.

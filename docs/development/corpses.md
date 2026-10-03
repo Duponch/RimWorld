@@ -1,5 +1,7 @@
 # Dépouilles animales — V79
 
+**Extension courante V190 :** une dépouille animale fraîche au sol devient ingérable par le renard sauvage selon le [contrat de prédation](predation-v190.md). `consumedParts` décrit les sous-arbres retirés après le décès sans modifier son dossier médical figé ; quantité un, identité, sexe et âge thermique restent conservés jusqu'au retrait du tronc. Réservation exclusive, contact, temps d'ingestion et récupération des frappes référentes sont requis. Présentation et rendement de boucherie consultent la même anatomie restante. Une dépouille portée, pourrie ou encore retenue comme acteur n'est pas ingérable. Schéma 178 après validation stricte 177 et migration neutre ; les exclusions alimentaires V79 ci-dessous sont historiques.
+
 **Extension V91 :** les dépouilles de cerf, mufalo, gazelle et dromadaire sont obtenables et conservent leur corps, viande et cuir propres; celle du lièvre des neiges est préparée pour la toundra non sélectionnable. Les sections centrées sur le lièvre gardent le contrat historique V79. Voir [faune diversifiée](fauna-diversity.md).
 
 Le lièvre mort devient un objet entier de type `corpse`, `hare-corpse`, quantité un. La pile reprend son identifiant ; `corpse` garde espèce, sexe et dossier anatomique, dont l'instant et la cause du décès. Il n'existe jamais simultanément comme acteur et comme pile. Une dépouille ne constitue pas de la viande ingérable : la boucherie produit les aliments séparément.

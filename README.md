@@ -1,6 +1,6 @@
 # Lisière
 
-Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 177**. [V189](docs/development/greenhouse-v189.md) relie énergie, toiture et agriculture avec une lampe horticole sur sol existant. La colonie préparée « Serre électrique » permet de construire, alimenter et récolter sous toit. La [preuve](docs/history/validation-greenhouse-v189.md) borne les contrôles et le coût CPU isolé ; hydroponie et catalogue Core exhaustif restent ouverts.
+Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 178**. [V190](docs/development/predation-v190.md) ouvre une première boucle de prédation avec le renard roux sauvage : choix d'une proie, poursuite, combat anatomique, dépouille physique et ingestion au contact. Sa viande et sa fourrure rejoignent cuisine et confection. La colonie préparée « Renard et prédation » permet d'observer ces transitions ; la [validation courante](docs/development/validation.md) distingue les contrôles acquis des preuves encore attendues. Autres prédateurs, chasse des humains, domestication du renard et catalogue Core exhaustif restent ouverts.
 
 ## Démarrer
 

@@ -10,6 +10,7 @@ import { animalSpecies } from './animal-species.ts';
 import { animalNutritionMax } from './animal-life.ts';
 import type { Cell,World } from './types.ts';
 import { malnutritionRate } from './malnutrition.ts';
+import { cancelAnimalPredation } from './wildlife-predation.ts';
 
 const HEALTHY_ANIMALS=new Map<WildAnimal['species'],ReturnType<typeof assessBody>>();
 export const animalBody=(a:WildAnimal)=>{
@@ -21,7 +22,7 @@ export function reconcileAnimalHealth(w:World,a:WildAnimal):void {
   const status=medicalStatus(a.health);
   if(status!=='mobile') {
     const changed=a.state!==status;
-    a.state=status;a.path=[];delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;delete a.strike;delete a.stun;delete a.exiting;
+    a.state=status;a.path=[];delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;delete a.strike;delete a.stun;delete a.exiting;delete a.predation;
     // Keep a captured edge. Presentation finishes its continuous falling path.
     if(changed){w.events.push({tick:w.tick,type:'need',message:`${animalSpecies(a.species).label} ${a.id} ${status==='dead'?'est mort':'est à terre'}.`});if(w.events.length>80)w.events.splice(0,w.events.length-80);}
   } else if(a.state==='downed'){a.state='idle';a.nextDecision=w.tick;}
@@ -38,6 +39,7 @@ export function advanceAnimalHealth(w:World,a:WildAnimal):void {
 }
 export function scareAnimal(w:World,a:WildAnimal,danger:Cell,core:number):void {
   if(a.state==='dead'||a.state==='downed')return;
+  cancelAnimalPredation(w,a);
   a.sleepUntilCore=Math.max(a.sleepUntilCore??0,core+1000);
   delete a.threat;delete a.retaliation;
   a.flee={danger:{x:danger.x,z:danger.z},until:w.tick+600};
@@ -46,7 +48,7 @@ export function scareAnimal(w:World,a:WildAnimal,danger:Cell,core:number):void {
 }
 /** Real projectile producer. Commit localized injuries, death roll and PRNG
  * together; no global animal hit-point counter or resource creation. */
-export function damageAnimalWithBullet(w:World,a:WildAnimal,hit:UnarmoredBullet,core=w.tick*10,danger?:Cell):void {
+export function damageAnimalWithBullet(w:World,a:WildAnimal,hit:UnarmoredBullet,core=w.tick*10,danger?:Cell,instigatorId?:number):void {
   const model=animalBodyModel(a.species);validateUnarmoredBullet(hit,model);
   if(!Number.isSafeInteger(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)throw new Error('Invalid animal impact time');
   if(w.schemaVersion<77||!w.wildlife?.animals.includes(a))throw new Error('Invalid animal impact owner');
@@ -56,8 +58,11 @@ export function damageAnimalWithBullet(w:World,a:WildAnimal,hit:UnarmoredBullet,
   const record=a.health??{...createMedicalRecord(w.tick),body:a.species};
   const impact=resolveUnarmoredBullet(record,hit,()=>healthRandom(random));
   if(!impact.selected)return;
+  const preyId=a.predation?.targetId;
   commitAnimalImpact(w,a,impact.record,random);
-  if(danger)scareAnimal(w,a,danger,core);
+  // A predator's own prey is not a third-party ranged interruption. Without
+  // an identified instigator, preserve the hunt rather than invent ownership.
+  if(danger&&(preyId===undefined||instigatorId!==undefined&&instigatorId!==preyId))scareAnimal(w,a,danger,core);
   delayAnimalImpact(a,core);
 }
 /** Shared violent-injury transaction; delayed blood loss never enters it. */
@@ -65,12 +70,12 @@ export function commitAnimalImpact(w:World,a:WildAnimal,record:import('./injury-
   if(a.state!=='downed'&&medicalStatus(record)==='downed'&&healthRandom(random)<.5)record.death={tick:w.tick,cause:'downed'};
   w.rng=random.rng;a.health=record;reconcileAnimalHealth(w,a);
 }
-export function delayAnimalImpact(a:WildAnimal,core:number,stun=false):void {
+export function delayAnimalImpact(a:WildAnimal,core:number,stun=false,stunDurationCore=45):void {
   if(a.state==='dead')return;
   // Revolver stopping power .5 exceeds this species' body size .2.
   const at=core/10;
   a.stagger={sinceCore:a.stagger&&a.stagger.untilCore>=core?a.stagger.sinceCore:core,untilCore:Math.max(a.stagger?.untilCore??0,core+95)};
-  if(stun&&a.state!=='downed')a.stun={sinceCore:a.stun&&a.stun.untilCore>=core?a.stun.sinceCore:core,untilCore:Math.max(a.stun?.untilCore??0,core+45)};
+  if(stun&&a.state!=='downed')a.stun={sinceCore:a.stun&&a.stun.untilCore>=core?a.stun.sinceCore:core,untilCore:Math.max(a.stun?.untilCore??0,core+stunDurationCore)};
   if(stun&&a.exiting){delete a.exiting;a.path=[];}
   if(a.motion&&a.motion.end>at){const m={...a.motion,stagger:mergeSlowIntervals([...(a.motion.stagger??[]),{start:Math.max(a.motion.start,at),end:a.stagger.untilCore/10}])};if(stun&&a.stun)m.stuns=mergeSlowIntervals([...(m.stuns??[]),{start:Math.max(m.start,at),end:a.stun!.untilCore/10}]);m.end=travelEnd(m);a.motion=m;}
 }

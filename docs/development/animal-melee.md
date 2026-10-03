@@ -1,5 +1,7 @@
 # Mêlée interespèces — V78
 
+**Extension courante V190 :** la [prédation du renard roux sauvage](predation-v190.md) réutilise `living-melee` pour les attaques entre animaux, y compris contre une victime à terre. Menace et riposte conservent l'identité de l'agresseur réel ; la poursuite relève de la navigation globale partagée, sans flood au sous-pas de combat. Le premier coup surprise et les outils du renard suivent le contrat V190, dont Scratch représenté par `cut` et le supplément Stun de 420 ticks Core. Interruption et changement d'acteur en dépouille conservent les récupérations engagées. Le schéma 178 valide strictement 177 sans combat rétroactif ; les règles et limites V78 ci-dessous restent historiques.
+
 **Extension V79 :** [chasse civile](hunting.md), [corps transportables](corpses.md), [boucherie/viande/cuir](butchery.md) complètent ce contrat. Les mentions de leur absence ci-dessous décrivent le périmètre historique V76–V78 ; élevage, autres espèces et corps humains restent absents.
 
 Décision du joueur : mobiliser un colon puis **Faune → Attaquer au contact**. Le colon approche réellement, frappe avec ses outils naturels ou son revolver ; un lièvre agressé peut mordre et blesser le colon. Les soins humains existants restent le moyen de traiter ces blessures. Le tir dirigé V77 reste disponible.

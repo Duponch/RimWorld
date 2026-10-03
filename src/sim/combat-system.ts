@@ -14,7 +14,8 @@ import type { World } from './types.ts';
 export function advanceWorldCombat(world:World):void {
   const disturbance=disturbanceEvents(world);
   const people=world.pawns.filter(p=>p.shooting||p.melee),targets=new Set(people.map(p=>p.melee?.order?.targetId));
-  const shooters=[...people,...(world.wildlife?.animals.filter(a=>a.threat||a.strike||a.retaliation||a.stun||targets.has(a.id))??[])].sort((a,b)=>a.id-b.id);
+  const animalTargets=new Set(world.wildlife?.animals.flatMap(a=>a.predation?[a.predation.targetId]:[])??[]);
+  const shooters=[...people,...(world.wildlife?.animals.filter(a=>a.predation||a.threat||a.strike||a.retaliation||a.stun||targets.has(a.id)||animalTargets.has(a.id))??[])].sort((a,b)=>a.id-b.id);
   if(!shooters.length){advanceWorldProjectiles(world,undefined,undefined,disturbance);return;}
   const batch=combatShotBatch(world);
   let queries=shootingQueries(world,batch.read);

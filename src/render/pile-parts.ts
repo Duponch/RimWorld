@@ -10,8 +10,9 @@ import type { MaterialKind } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import type { Placement } from './primitives';
 import { corpseParts,type CorpseStage } from './corpse-presentation';
+import type { CorpseState } from '../sim/corpses';
 
-export interface PileBundle {x:number;z:number;kind:MaterialKind;item:ItemId;quantity:number;supplied:boolean;surface?:PileSurface;corpseStage?:CorpseStage;facing?:number}
+export interface PileBundle {x:number;z:number;kind:MaterialKind;item:ItemId;quantity:number;supplied:boolean;surface?:PileSurface;corpseStage?:CorpseStage;facing?:number;corpse?:CorpseState}
 
 /** Static content rebuilt only when a chunk's pile signature changes. Every
  * item shares that chunk's already resident mesh and material. */
@@ -32,7 +33,7 @@ export function pileParts(bundles:readonly PileBundle[]):Placement[] {
         ends.push({ x: x + WORLD_SCALE.pileWidth / 2 + 0.003, z: lz, y, sx: 0.012, sy: 0.095, sz: 0.095 });
       }
     } else if(bundle.kind==='corpse'){
-      food.push(...corpseParts(bundle.x,z,bundle.corpseStage??'fresh',bundle.facing??0,bundle.item.replace('-corpse','')));
+      food.push(...corpseParts(bundle.x,z,bundle.corpseStage??'fresh',bundle.facing??0,bundle.item.replace('-corpse',''),bundle.corpse));
     } else if(bundle.item==='unfinished-gun'){
       food.push({x,z,y:.07,sx:.62,sy:.10,sz:.24,color:0x63777d},{x:x-.20,z,y:.16,sx:.08,sy:.09,sz:.29,color:0x9f8160},{x:x+.12,z,y:.13,sx:.33,sy:.06,sz:.08,color:0xa9b5b8});
     } else if(bundle.kind==='unfinished'){

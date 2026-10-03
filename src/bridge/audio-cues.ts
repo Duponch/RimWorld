@@ -6,9 +6,11 @@ import { isColonist } from '../sim/affiliation.ts';
 import type { AnimalSpeciesId } from '../sim/animal-species.ts';
 import { actualPowerSwitch, canFlickPower } from '../sim/power-flick.ts';
 
-type AnimalVoiceSpecies = Exclude<AnimalSpeciesId, 'snow-hare'>;
-const animalVoiceSpecies = (species:AnimalSpeciesId):AnimalVoiceSpecies =>
-  species === 'snow-hare' ? 'hare' : species;
+type AnimalVoiceSpecies = Exclude<AnimalSpeciesId, 'snow-hare'|'red-fox'>;
+/** No fox recording is shipped; keep its voice silent rather than borrowing a
+ * hare sound. Confirmed melee contacts can use the existing shared cue. */
+const animalVoiceSpecies = (species:AnimalSpeciesId):AnimalVoiceSpecies|undefined =>
+  species==='red-fox'?undefined:species === 'snow-hare' ? 'hare' : species;
 
 export type AudioCueKind = 'mining.hit' | 'woodcutting.hit' | 'construction.hit'
   | 'cooking.work' | 'crafting.work' | 'tailoring.work' | 'butchering.work' | 'research.work'
@@ -321,11 +323,17 @@ export class AudioCueRecorder {
             tick: world.tick, kind: 'building.deconstructed', x: previous.x, z: previous.z });
     }
     for (const animal of world.wildlife?.animals ?? []) {
+      if(animal.strike){
+        melee.set(animal.id,animal.strike.atCore);
+        if(this.initialized&&previousMelee.get(animal.id)!==animal.strike.atCore)
+          this.add({id:`melee:${animal.strike.atCore}:${animal.id}`,tick:world.tick,kind:'weapon.melee',x:animal.x,z:animal.z});
+      }
       const injurySeverity = animal.health?.injuries.reduce((total, injury) => total + injury.severity, 0) ?? 0;
       animalStates.set(animal.id, { state: animal.state, injurySeverity });
       const previous = this.animalStates.get(animal.id);
       if (!this.initialized || !previous) continue;
       const voiceSpecies=animalVoiceSpecies(animal.species);
+      if(!voiceSpecies)continue;
       if (animal.state === 'dead' && previous.state !== 'dead')
         this.add({ id: `animal.death:${world.tick}:${animal.id}`, tick: world.tick,
           kind: `animal.death.${voiceSpecies}`, x: animal.x, z: animal.z });
@@ -343,12 +351,13 @@ export class AudioCueRecorder {
       if (missing.size) for (const pile of world.piles) {
         const corpse = pile.corpse;
         if (!corpse || !missing.has(corpse.animalId) || !corpse.health.death) continue;
+        const voiceSpecies=animalVoiceSpecies(corpse.species);if(!voiceSpecies)continue;
         const owner = pile.owner;
         const position = owner.type === 'ground' ? owner
           : owner.type === 'pawn' ? world.pawns.find(pawn => pawn.id === owner.pawnId) : undefined;
         if (!position) continue;
         this.add({ id: `animal.death:${world.tick}:${corpse.animalId}`, tick: world.tick,
-          kind: `animal.death.${animalVoiceSpecies(corpse.species)}`, x: position.x, z: position.z });
+          kind: `animal.death.${voiceSpecies}`, x: position.x, z: position.z });
       }
     }
     const lightningCount = world.weather?.lightningCount ?? 0;

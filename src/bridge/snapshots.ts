@@ -8,7 +8,9 @@ import { validPlantSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
 import { validFlashstorm } from '../sim/flashstorm-save.ts';
 import { validPawnPodRescue,validPodRescueTransportBindings } from '../sim/pod-rescue-save.ts';
-import { validWildlifeExitState } from '../sim/wildlife-save.ts';
+import { validWildlifeExitState,validWildlifePredationState } from '../sim/wildlife-save.ts';
+import { validCorpseConsumption } from '../sim/corpse-anatomy.ts';
+import { V190_ITEM_IDS } from '../sim/biome-items.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
 import { validateScoutRegistry } from '../sim/caravan-save.ts';
 import { validateQuests } from '../sim/quest-save.ts';
@@ -90,6 +92,8 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
   return validFoodContamination(pile.foodPoison,pile.item,world.schemaVersion>=89)
     &&(pile.item==='human-corpse'?validHumanCorpseShape(pile.humanCorpse,world.schemaVersion,world.tick):pile.humanCorpse===undefined)
     &&(pile.item==='human-corpse'||validCorpseShape(record,world.schemaVersion))
+    &&(!pile.corpse||validCorpseConsumption(pile.corpse,world.tick))
+    &&(world.schemaVersion>=178||!V190_ITEM_IDS.includes(pile.item))
     &&validUnfinishedShape(record,world.schemaVersion)&&validGunWorkShape(record,world.schemaVersion)
     &&validArtWorkShape(record,world.schemaVersion)&&validFlakWorkShape(record,world.schemaVersion)&&validComponentWorkShape(record,world.schemaVersion)
     &&validApparelShape(record,world.schemaVersion)
@@ -336,6 +340,7 @@ export class SnapshotDecoder {
     if(next.schemaVersion<177&&[...next.structures,...next.jobs,...(next.packed??[]).map(p=>p.building)].some(s=>s.kind==='sun-lamp'))return resync('Lampe horticole future.');
     if(validateScoutRegistry(next,next.schemaVersion).length)return resync('Registre de reconnaissance invalide.');
     if(!validWildlifeExitState(next,next.schemaVersion))return resync('Départ de faune invalide.');
+    if(!validWildlifePredationState(next,next.schemaVersion))return resync('Prédation de faune invalide.');
     if(validateQuests(next.quests?scoutRegistryView(next):next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
     if(next.scout&&(next.scout.phase==='travelling'||next.scout.phase==='awaiting-entry')){
       const registry=scoutRegistryView(next),pawn=next.scout.pawn;

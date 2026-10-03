@@ -3,6 +3,7 @@ import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serial
 import { SnapshotDecoder,SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { SCHEMA_VERSION,type Resource,type World } from '../src/sim/types.ts';
 import { deconstructionCamp } from './scenarios/deconstruction.ts';
+import { withoutPredatorFoodPolicies,withoutPredatorApparelPolicies } from './scenarios/legacy-save.ts';
 
 function camp():World {
   const w=deconstructionCamp(1);w.tick=2000;
@@ -10,7 +11,7 @@ function camp():World {
   return w;
 }
 test('V176 is validated strictly before neutral V177 migration, without lighting or resources retroactively added',()=>{
-  const old=camp();old.schemaVersion=176 as World['schemaVersion'];const before=structuredClone(old);
+  const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(camp()));old.schemaVersion=176 as World['schemaVersion'];const before=structuredClone(old);
   expect(deserializeWorld(JSON.stringify(old))).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(old).toEqual(before);
   for(const mode of ['dark','artificial-full','natural',true]){
     const bad=structuredClone(old);Object.assign(bad.resources[0]!,{growthLight:mode});

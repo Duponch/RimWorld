@@ -1,5 +1,6 @@
 import { appearanceOf } from '../sim/pawn-appearance';
 import { corpseStage,CORPSE_ROT_TICKS,CORPSE_DESSICATION_TICKS } from '../sim/corpses';
+import { corpseVisualMask } from './corpse-presentation';
 import { humanCorpseAge } from '../sim/human-corpses';
 import { appearanceShape,pawnBaseColor } from './pawn-appearance-shape';
 import { pawnMorph,hiddenAppearancePart } from './pawn-appearance-nodes';
@@ -94,7 +95,9 @@ const scratchColor = new THREE.Color();
 function cargoAppearance(load:MaterialPile|undefined):readonly [number,number] {
   if(!load)return [0,0];
   const kind=BIOME_CARGO[load.item]??(load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:isAnimalMeat(load.item)?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2);
-  const size=load.kind==='corpse'||load.kind==='unfinished'||load.kind==='weapon'||load.kind==='apparel'?1:Math.min(1,load.quantity/CARRY_CAPACITY);
+  // Corpse loads are indivisible. Negative y encodes their exact anatomical
+  // mask in the existing actor stream; no extra per-actor GPU attribute.
+  const size=load.corpse?-1-corpseVisualMask(load.corpse):load.kind==='corpse'||load.kind==='unfinished'||load.kind==='weapon'||load.kind==='apparel'?1:Math.min(1,load.quantity/CARRY_CAPACITY);
   return [kind,size];
 }
 /** Packed into the existing appearance stream; no extra vertex buffer. */
@@ -451,6 +454,7 @@ export class PawnLayer {
       {const color=new THREE.Color(0x839ac5);If(legs.and(attribute('aEquipment','vec4').w.equal(4)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
       {const color=new THREE.Color(0xc3a375);If(legs.and(attribute('aEquipment','vec4').w.equal(5)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
       {const color=new THREE.Color(0xb3c0ba);If(legs.and(attribute('aEquipment','vec4').w.equal(6)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
+      {const color=new THREE.Color(0xb26422);If(legs.and(attribute('aEquipment','vec4').w.equal(7)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
       const stage=attribute('aShape','vec4').x.div(10).floor();
       {const red=new THREE.Color(0x965f58);If(stage.equal(1),()=>tint.assign(mix(tint,vec3(red.r,red.g,red.b),.7)));}
       {const bone=new THREE.Color(0xc9bd9b),dark=new THREE.Color(0x554e43);
@@ -491,7 +495,11 @@ export class PawnLayer {
       const pose = pawnPresentationPose(this);
       const load = attribute('aCargo', 'vec4');
       const scale = float(0).toVar();
-      If(attribute('cargoKind', 'float').equal(load.x), () => { scale.assign(load.y.mul(0.25).add(0.75)); });
+      If(attribute('cargoKind', 'float').equal(load.x), () => {
+        scale.assign(load.y.lessThan(0).select(float(1),load.y).mul(0.25).add(0.75));
+        const bit=attribute('corpsePartMask','float');
+        If(bit.greaterThan(0).and(load.y.lessThan(0)).and(load.y.negate().sub(1).div(bit.max(1)).floor().mod(2).greaterThan(.5)),()=>scale.assign(0));
+      });
       const height = float(WORLD_SCALE.carriedHeight).toVar();
       If(attribute('aMotion','vec4').z.equal(1).or(attribute('aMotion','vec4').z.equal(POSE_SLEEP)).or(attribute('aMotion','vec4').z.equal(POSE_DEAD)),()=>{height.assign(.28);});
       If(attribute('aMotion', 'vec4').z.greaterThan(1.5).and(attribute('aMotion','vec4').z.lessThan(3.5)), () => { height.assign(sin(this.time.mul(4).add(attribute('aMotion', 'vec4').w)).mul(0.08).add(1.32)); });
@@ -532,8 +540,10 @@ export class PawnLayer {
     partialMat.colorNode=attribute('color','vec3');
     partialMat.positionNode=Fn(()=>{
       const from=attribute('aTransferFrom','vec4'),to=attribute('aTransferTo','vec4'),load=attribute('aTransferCargo','vec4');
-      const visible=attribute('cargoKind','float').equal(load.x);
-      const scale=visible.select(load.y.mul(.25).add(.75),float(0));
+      const bit=attribute('corpsePartMask','float');
+      const absent=bit.greaterThan(0).and(load.y.lessThan(0)).and(load.y.negate().sub(1).div(bit.max(1)).floor().mod(2).greaterThan(.5));
+      const visible=attribute('cargoKind','float').equal(load.x).and(absent.not());
+      const scale=visible.select(load.y.lessThan(0).select(float(1),load.y).mul(.25).add(.75),float(0));
       const part=positionLocal.mul(scale),c=cos(from.w),s=sin(from.w);
       const carried=vec3(part.x.mul(c).add(part.z.mul(s)),part.y,part.z.mul(c).sub(part.x.mul(s))).add(from.xyz);
       const landed=positionLocal.mul(visible.select(to.w,float(0))).add(to.xyz);

@@ -1,5 +1,7 @@
 # Faune diversifiée — contrat V91
 
+**Extension courante V190 :** le [renard roux sauvage et sa prédation](predation-v190.md) complètent les forêts tempérées et boréales. Les nouvelles populations utilisent `biome-fauna-v2` avec son poids Core, sans redistribuer les espèces absentes ; `biome-herbivores-v1` garde exactement ses entrées et cibles historiques. Corps quadrupède, puissance, outils, régime, dépouille, viande et fourrure suivent un profil propre. La fourrure fournit cinq variantes vestimentaires ; renard apprivoisable, reproduction et autres prédateurs restent différés. Le schéma 178 valide strictement 177 puis migre sans animal ni produit offert. Les sections V91 ci-dessous restent la photographie du lot herbivore.
+
 V91 étend la boucle V76–V79 à cinq herbivores obtenables dans les trois nouveaux biomes : lièvre, cerf, mufalo, gazelle et dromadaire. Le lièvre des neiges possède un profil moteur complet et testé, mais son habitat Core local est la toundra, biome non sélectionnable dans ce lot; il reste donc préparatoire. [Valeurs, sources et écarts](../research/fauna-diversity-reference-v91.md).
 
 ## Espèces et autorité commune

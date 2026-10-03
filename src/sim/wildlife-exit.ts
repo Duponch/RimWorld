@@ -3,6 +3,7 @@ import { cancelMelee } from './melee-state.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { animalSpecies } from './animal-species.ts';
+import { cancelAnimalPredation } from './wildlife-predation.ts';
 import type { Cell,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 
@@ -16,7 +17,7 @@ export function cancelAnimalExit(w:World,a:WildAnimal):void {
   if(a.state==='moving'&&!a.path.length&&(a.motion?.end??0)<=w.tick)a.state='idle';
   a.nextDecision=Math.min(a.nextDecision,w.tick);
 }
-export const exitSuppressed=(a:WildAnimal)=>!!(a.domestic||a.meal||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun)
+export const exitSuppressed=(a:WildAnimal)=>!!(a.domestic||a.meal||a.predation||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun)
   ||a.food>0||['downed','dead','sleeping','eating'].includes(a.state);
 
 /** Stop targeting without deleting an already committed recovery. */
@@ -32,6 +33,12 @@ export function stopExitTargeting(w:World,id:number):boolean {
       p.path=[];p.planCooldown=0;p.state=(p.motion?.end??0)>w.tick?'moving':'idle';
     }
     if(p.melee?.strike?.targetId===id)recovering=true;
+  }
+  for(const animal of w.wildlife?.animals??[]){
+    if(animal.predation?.targetId===id)cancelAnimalPredation(w,animal);
+    if(animal.threat?.targetId===id)delete animal.threat;
+    if(animal.retaliation?.targetId===id)delete animal.retaliation;
+    if(animal.strike?.targetId===id)recovering=true;
   }
   return recovering;
 }

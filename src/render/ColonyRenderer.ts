@@ -6,6 +6,7 @@ import type { ConstructionMaterial } from '../sim/construction-materials';
 import { WindLayer } from './WindLayer';
 import { pileParts,type PileBundle } from './pile-parts';
 import { corpseStage } from '../sim/corpses';
+import { corpseVisualMask } from './corpse-presentation';
 import { WildlifeLayer } from './WildlifeLayer';
 import { RopeLayer } from './RopeLayer';
 import { NaturalResourcePresentation } from './NaturalResourcePresentation';
@@ -809,10 +810,10 @@ export class ColonyRenderer {
       const job = pile.owner.type === 'job' ? jobById.get(pile.owner.jobId) : undefined;
       if (pile.owner.type === 'job' && !job) continue;
       const position = pile.owner.type === 'ground' ? pile.owner : job!;
-      const key = `${position.x}:${position.z}:${pile.item}:${job ? 'job' : 'ground'}`;
+      const key = `${position.x}:${position.z}:${pile.item}:${job ? 'job' : 'ground'}${pile.corpse?`:${pile.id}`:''}`;
       const bundle = cells.get(key);
       if (bundle) bundle.quantity += quantity;
-      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity, supplied: !!job, surface:job?undefined:surfaces.get(position.z*world.width+position.x),...(pile.kind==='corpse'?{corpseStage:corpseStage(pile,world.tick),facing:pile.corpse?.facing??0}:{}) });
+      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity, supplied: !!job, surface:job?undefined:surfaces.get(position.z*world.width+position.x),...(pile.kind==='corpse'?{corpseStage:corpseStage(pile,world.tick),facing:pile.corpse?.facing??0,corpse:pile.corpse}:{}) });
     }
     const chunks = new Map<string, PileBundle[]>();
     for (const bundle of cells.values()) {
@@ -824,7 +825,7 @@ export class ColonyRenderer {
       this.boxes.set(chunk.group, `pile:${key}`, []); chunk.signature = '';
     }
     for (const [key, bundles] of chunks) {
-      const signature = bundles.map(bundle => `${bundle.x}:${bundle.z}:${bundle.item}:${bundle.quantity}:${bundle.supplied}:${bundle.corpseStage??''}:${bundle.facing??0}:${bundle.surface?Object.values(bundle.surface).join(','):'ground'}`).join('|');
+      const signature = bundles.map(bundle => `${bundle.x}:${bundle.z}:${bundle.item}:${bundle.quantity}:${bundle.supplied}:${bundle.corpseStage??''}:${bundle.facing??0}:${bundle.corpse?corpseVisualMask(bundle.corpse):0}:${bundle.surface?Object.values(bundle.surface).join(','):'ground'}`).join('|');
       const previous = this.pileChunks.get(key);
       if (previous?.signature === signature) continue;
       const group = previous?.group ?? new THREE.Group();

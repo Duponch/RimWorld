@@ -1,5 +1,6 @@
 import { withoutHunting,withMigratedHunting } from './scenarios/legacy-skills';
 import { stripV120 } from './scenarios/strip-v120';
+import { withoutPredatorFoodPolicies,withoutPredatorApparelPolicies } from './scenarios/legacy-save';
 import { expect,test } from 'vitest';
 import { applyCommand,stepWorld,validateWorld,serializeWorld,deserializeWorld } from '../src/sim/index';
 import { HARE_MODEL,HUMAN_MODEL } from '../src/sim/body-model';
@@ -96,9 +97,9 @@ test('flight negotiates an enclosure, captured diagonal remains continuous after
 });
 
 test('V76 migration is neutral and corruption cannot cross species, clocks, phases or projectile schemas',()=>{
-  const w=animalCombatCamp(),a=w.wildlife!.animals[0]!,legacy=stripV120(structuredClone(w)) as any;legacy.schemaVersion=76;withoutHunting(legacy);
+  const w=withoutPredatorFoodPolicies(animalCombatCamp()),a=w.wildlife!.animals[0]!,legacy=stripV120(structuredClone(w)) as any;legacy.schemaVersion=76;withoutHunting(legacy);
   for(const animal of legacy.wildlife.animals){delete animal.ageTicks;delete animal.parents;delete animal.pregnancy;delete animal.mating;}
-  const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated).toEqual(stripV120(withMigratedHunting(w)));expect(migrated.wildlife!.animals[0]!.health).toBeUndefined();
+  const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated).toEqual(withoutPredatorApparelPolicies(stripV120(withMigratedHunting(w))));expect(migrated.wildlife!.animals[0]!.health).toBeUndefined();
   legacy.wildlife.animals[0].health=record();expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow();
   damageAnimalWithBullet(w,a,{part:'tail',damage:1});expect(validateWorld(w)).toEqual([]);
   for(const mutate of [(s:any)=>s.wildlife.animals[0].health.body='human',(s:any)=>s.wildlife.animals[0].health.injuries[0].part='left-hand',(s:any)=>s.wildlife.animals[0].health.tick++,

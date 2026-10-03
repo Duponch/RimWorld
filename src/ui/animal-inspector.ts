@@ -10,8 +10,8 @@ import { animalBody } from '../sim/wildlife-health';
 import { handlingSkill,tameRefusal } from '../sim/animal-handling';
 import { MEDICAL_CARE,type MedicalCare } from '../sim/medicine-rules';
 import { isColonist } from '../sim/affiliation';
-import type { WildAnimal } from '../sim/wildlife-state';
 import { animalPenStatus } from './pen-status';
+import { animalActivity } from './animal-activity';
 import { ANIMAL_PRODUCTS, productFullness, productKind } from '../sim/animal-products';
 import { animalBodySize,animalFoodPerDay,animalLifeStage,animalNutritionMax,gestationTicks } from '../sim/animal-life';
 
@@ -41,10 +41,6 @@ export interface AnimalInspectorView {
   health: readonly string[];
 }
 
-const activity: Readonly<Record<WildAnimal['state'], string>> = {
-  idle: 'Se repose', moving: 'Se déplace', eating: 'Mange', sleeping: 'Dort',
-  hungry: 'Cherche à manger', downed: 'À terre', dead: 'Mort',
-};
 const poisonStage = { none: 'fin de récupération', initial: 'phase initiale', major: 'phase majeure', recovering: 'récupération' } as const;
 const infectionLabel = { minor: 'mineure', major: 'majeure', extreme: 'extrême', critical: 'critique' } as const;
 const percent = (value: number): string => `${Math.round(value * 100)} %`;
@@ -56,8 +52,6 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
   if (!animal) return null;
   const species = animalSpecies(animal.species), health = animal.health,stage=animalLifeStage(animal);
   const model = animalBodyModel(animal.species), capacities = animalBody(animal).capacities;
-  const state = animal.state === 'moving' && !animal.path.length && !animal.meal && (!animal.motion || animal.motion.end <= world.tick) ? 'idle' : animal.state;
-  const currentActivity = animal.strike ? 'Riposte' : animal.threat ? 'Se défend' : animal.flee ? 'Fuit' : animal.exiting ? 'Quitte la carte faute de nourriture' : activity[state];
   const injuries = health?.injuries.map(injury => `${model.byId[injury.part].label} : ${injury.scar?.pain !== undefined ? 'Cicatrice' : INJURY_RULES[injury.kind].label}, −${(injury.severity / HP_UNIT).toFixed(2)} PV${injury.tended !== undefined ? ` (traitée, qualité ${Math.round(injury.tended / 10)} %)` : ''}`) ?? [];
   const missing = health?.missing.map(part => `${model.byId[part.part].label} : partie perdue${part.tended ? ' (plaie traitée)' : ''}`) ?? [];
   const cases = health?.infections?.cases.map(infection => `${model.byId[infection.part].label} : infection ${infectionLabel[infectionStage(infection.severity)]}, ${(infection.severity * 100 / INFECTION_UNIT).toFixed(1)} %`) ?? [];
@@ -93,7 +87,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
     id: animal.id,
     title: `${species.label[0]!.toLocaleUpperCase('fr-FR')}${species.label.slice(1)} ${animal.id}`,
     identity: `${animal.sex === 'female' ? 'Femelle' : 'Mâle'} · ${stageLabel[stage]} · ${animal.domestic?(penStatus?'domestique':'domestique libre'):'sauvage'}`,
-    activity: `${currentActivity}${animal.meal && state === 'moving' ? ' vers sa nourriture' : ''}`,
+    activity: animalActivity(world,animal),
     position: `${animal.x}, ${animal.z}`,
     hunted: world.hunting?.targets.includes(animal.id) ?? false,
     canHunt: animal.state !== 'dead'&&!animal.domestic,
@@ -105,6 +99,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
     dead:animal.state==='dead',
     species: [
       `Espèce : ${species.label}`,
+      `Régime : ${species.predator?'carnivore · viande, repas et dépouilles fraîches':'herbivore'}`,
       `Stade de vie : ${stageLabel[stage]}`,
       `Âge : ${(animal.ageTicks/6000).toLocaleString('fr-FR',{maximumFractionDigits:1})} jour(s)`,
       `Taille corporelle : ${animalBodySize(animal).toLocaleString('fr-FR')}`,

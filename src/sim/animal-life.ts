@@ -9,7 +9,7 @@ import { TICKS_PER_DAY, type Cell, type World } from './types.ts';
 /** Core 1.6.4871 life-stage ages are years of 60 days. */
 const YEAR=TICKS_PER_DAY*60;
 export const juvenileAgeTicks=(species:AnimalSpeciesId):number=>Math.round((species==='muffalo'||species==='dromedary'?.25:.1)*YEAR);
-export const adultAgeTicks=(species:AnimalSpeciesId):number=>Math.round((species==='deer'||species==='muffalo'||species==='dromedary'?.3333:.2222)*YEAR);
+export const adultAgeTicks=(species:AnimalSpeciesId):number=>Math.round((species==='deer'||species==='muffalo'||species==='dromedary'||species==='red-fox'?.3333:.2222)*YEAR);
 export const gestationTicks=(species:AnimalSpeciesId):number=>Math.round((species==='muffalo'||species==='dromedary'?6.66:5.661)*TICKS_PER_DAY);
 export const animalLifeStage=(a:WildAnimal):'baby'|'juvenile'|'adult'=>a.ageTicks>=adultAgeTicks(a.species)?'adult':a.ageTicks>=juvenileAgeTicks(a.species)?'juvenile':'baby';
 export const bodySizeAtAge=(species:AnimalSpeciesId,ageTicks:number):number=>animalSpecies(species).bodySize*
