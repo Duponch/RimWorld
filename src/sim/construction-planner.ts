@@ -29,7 +29,7 @@ export function constructionCandidates(world:World,pawn:Pawn,blocked:Uint8Array,
       if((pawn.priorities.build>0||job.kind==='install'&&pawn.priorities.haul>0)&&plant.kind!=='rock'&&canReach(world,target,reach,false))result.push({...base,priority:job.kind==='install'?constructionHaulPriority(pawn):pawn.priorities.build,target,job,clearance:{resourceId:plant.id,progress:0}});
     } else if(pile?.owner.type==='ground') {
       if(reservedSource(world,pile.id)>0||!canReach(world,pile.owner,reach,true))continue;
-      const quantity=Math.min(CARRY_CAPACITY,pile.quantity),destination=findAsideDestination(world,pile.owner,pile.item,quantity,blocked,budget);
+      const quantity=Math.min(CARRY_CAPACITY,pile.quantity),destination=findAsideDestination(world,pile.owner,pile,quantity,blocked,budget);
       if(destination)result.push({...base,priority:constructionHaulPriority(pawn),target:pile.owner,sourceId:pile.id,quantity,destination:{...destination,constructionId:job.id,forConstruction:asBuilder(pawn)}});
     } else if(obstacle.pack) {
       const candidate=planFurnitureTransport(world,pawn,obstacle.pack,blocked,reach,budget,job);if(candidate)result.push(candidate);

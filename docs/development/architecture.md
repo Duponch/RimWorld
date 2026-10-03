@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Schéma courant 175. Le [secours civil V187](pod-rescue-v187.md) persiste la capsule, sa provenance, l’admission au dépôt réel et le devenir du patient. Le schéma 174 est validé strictement avant migration neutre. Une éligibilité clinique ciblée réutilise les services physiques sans accorder d’autorité coloniale. Les départs figés sont validés séparément à leur propre horloge par les règles communes, dans une projection neutre sans génération ni tirage. Un unique lot résident de six éléments présente la capsule, avec animation GPU par uniforms. La [preuve](../history/validation-pod-rescue-v187.md) ne vaut pas mesure générale CPU/GPU.
+Schéma courant 176. Les [conditions de stockage V188](storage-condition-v188.md) sont optionnelles ; 175 est validé strictement avant migration neutre. Admission et réservation utilisent l'état de l'objet réel ou du bâtiment emballé. Les candidats géométriques sont partagés par type ; l'admission est regroupée par plage et état uniquement pendant la décision, sans cache autoritaire entre ticks. La génération de qualité et les compteurs de facture restent distincts du stockage. Les archives du [secours civil V187](pod-rescue-v187.md) continuent d'être validées à leur horloge et à leur schéma historique dans une projection neutre. La [preuve V188](../history/validation-storage-condition-v188.md) ne vaut pas mesure générale CPU/GPU.
 
 ## Objectif
 

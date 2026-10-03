@@ -42,7 +42,7 @@ export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget,a
     if(job&&reserved>0)continue;
     const quantity=Math.min(CARRY_CAPACITY,capacity,pile.quantity-reserved);if(quantity<=0)continue;
     if(!canReach(world,pile.owner,reach,true))continue;
-    const aside=job?findAsideDestination(world,pile.owner,pile.item,quantity,blocked,budget):null;
+    const aside=job?findAsideDestination(world,pile.owner,pile,quantity,blocked,budget):null;
     if(job&&!aside)return no('Aucune cellule proche accessible pour déposer la pile.');
     const destination:HaulDestination=fire?{type:'fuel',structureId:fire.id,forced:true}:target.type==='clear-sow'?{...aside!,growingZoneId:job!.growingZoneId,sowCell:{x:job!.x,z:job!.z}}:{...aside!,constructionId:job!.id,forConstruction:asBuilder(pawn)};
     const distance=Math.abs(pawn.x-pile.owner.x)+Math.abs(pawn.z-pile.owner.z);

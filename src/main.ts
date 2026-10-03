@@ -31,7 +31,7 @@ import { createFlashstormUI } from './ui/flashstorm';
 import { updateResearchPanel } from './ui/research-panel';
 import { createScoutUI } from './ui/scout-panel';
 import { createQuestUI } from './ui/quests';
-import { mountStorageItemControls,readStorageItemControls } from './ui/storage-item-controls';
+import { mountStorageItemControls,readStorageItemControls,mountStorageConditionControls,readStorageConditionControls } from './ui/storage-item-controls';
 import './ui/storage-item-controls.css';
 import { updateUnfinishedInspection } from './ui/unfinished-inspection';
 import { createSocialInspection,updateSocialInspection } from './ui/social-inspection';
@@ -129,6 +129,7 @@ const params = new URLSearchParams(location.search);
 const diagnosticStart = params.has('scenario');
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = gameLayout();
 mountStorageItemControls(document.getElementById('stockpile-items')!);
+mountStorageConditionControls(document.getElementById('stockpile-items')!);
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const client = new SimulationClient();
 const audio = new AudioDirector();
@@ -541,9 +542,11 @@ function clearSelection() {
 function readStorageSettings(prefix: string) {
   const capacity = Number(el<HTMLInputElement>(`${prefix}-capacity`).value);
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > ITEM_DEFINITIONS.silver.stackLimit) throw new Error(`La capacité doit être un entier entre 1 et ${ITEM_DEFINITIONS.silver.stackLimit}.`);
+  const conditions=readStorageConditionControls(el(`${prefix}-items`));
   return {
     filters: { silver:el<HTMLInputElement>(`${prefix}-silver`).checked, corpse:el<HTMLInputElement>(`${prefix}-corpse`).checked, unfinished:el<HTMLInputElement>(`${prefix}-unfinished`).checked, textile:el<HTMLInputElement>(`${prefix}-textile`).checked, apparel:el<HTMLInputElement>(`${prefix}-apparel`).checked, weapon:el<HTMLInputElement>(`${prefix}-weapon`).checked, medicine:el<HTMLInputElement>(`${prefix}-medicine`).checked, component: el<HTMLInputElement>(`${prefix}-component`).checked, 'advanced-component':el<HTMLInputElement>(`${prefix}-advanced-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, gold:el<HTMLInputElement>(`${prefix}-gold`).checked, plasteel:el<HTMLInputElement>(`${prefix}-plasteel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
     items:readStorageItemControls(el(`${prefix}-items`)),
+    quality:conditions.quality,hitPoints:conditions.hitPoints,
     priority: Number(el<HTMLSelectElement>(`${prefix}-priority`).value), capacity,
   };
 }
@@ -595,6 +598,7 @@ function rebuildInspector() {
     panel.innerHTML = `<div class="cell-summary"><div class="cell-card"><div class="panel-heading cell-heading"><span class="cell-illustration ui-icon" aria-hidden="true"></span><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="cell-description"></div><p id="cell-materials"></p><p id="cell-job"></p></div><div class="cell-actions" role="group" aria-label="Commandes de l’objet"><button id="weapon-permission" class="secondary-action" hidden></button><button id="cell-chop" class="secondary-action" hidden>Couper du bois</button><button id="cell-harvest" class="secondary-action" hidden>Récolter</button><button id="cell-cut" class="secondary-action" hidden>Déraciner</button><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button></div></div><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
     const storage = selectedObject?.kind==='stockpile'?snapshot?.stockpiles.find(item => item.id===selectedObject!.id):undefined;
     mountStorageItemControls(el('selected-stockpile-items'),storage?.items);
+    mountStorageConditionControls(el('selected-stockpile-items'),storage);
     if (storage) {
       el<HTMLInputElement>('selected-stockpile-silver').checked=storage.filters.silver??false;
       el<HTMLInputElement>('selected-stockpile-corpse').checked=storage.filters.corpse??false;

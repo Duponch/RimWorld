@@ -33,13 +33,14 @@ import { asideCapacity, findAsideDestination } from './haul-aside.ts';
 import { storageCapacity } from './ground-placement.ts';
 import { legacyItem, type ItemId } from './items.ts';
 import { storageAccepts } from './storage-filters.ts';
+import { storageConditionKey } from './storage-condition.ts';
 import { constructionCapacity, constructionRecipe, deliveredMaterial } from './construction-materials.ts';
 import { fixBreakdownWanted } from './breakdowns.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST } from './definitions.ts';
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
 import { cellIndex, workNeighbours, inBounds, canStopAt, hasReachableCell, reachableCells, routeToJob, interactionGoals } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
-import type { Cell, HaulDestination, Job, JobKind, MaterialKind, Pawn, WorkType, World } from './types.ts';
+import type { Cell, HaulDestination, Job, JobKind, MaterialKind, MaterialPile, Pawn, WorkType, World } from './types.ts';
 export const PLAN_INTERVAL=20;
 export interface SearchStats { searches:{pawnId:number;mode:'all'|'nearest'|'full';visited:number;unreachedGroups:number;connectivityVisited?:number}[] }
 export interface SearchBudget { remaining:number; pairs:number; stats?:SearchStats }
@@ -67,16 +68,17 @@ export function destinationCell(world: World, destination: HaulDestination): (Ce
   if (destination.type === 'fuel') return world.structures.find(s=>s.id===destination.structureId) ?? null;
   return destination.type === 'job' ? world.jobs.find(job => job.id === destination.jobId) ?? null : world.stockpiles.find(zone => zone.id === destination.stockpileId) ?? null;
 }
-export function destinationCapacity(world: World, destination: HaulDestination, kind: MaterialKind, exceptPawn?: number, item: ItemId = legacyItem(kind)): number {
+export function destinationCapacity(world: World, destination: HaulDestination, kind: MaterialKind, exceptPawn?: number, subject: ItemId|MaterialPile = legacyItem(kind)): number {
+  const item=typeof subject==='string'?subject:subject.item;
   if (destination.type === 'fuel') return kind==='wood' ? fuelCapacity(world,destination.structureId,exceptPawn,destination.forced) : 0;
   if (destination.type === 'aside'&&!validSowingClearance(world,destination))return 0;
-  if (destination.type === 'aside') return asideCapacity(world, destination, item, exceptPawn);
+  if (destination.type === 'aside') return asideCapacity(world, destination, subject, exceptPawn);
   if (destination.type === 'job') {
     const job = world.jobs.find(item => item.id === destination.jobId);
     return job ? constructionCapacity(world,job,item,exceptPawn) : 0;
   }
   const zone = world.stockpiles.find(item => item.id === destination.stockpileId);
-  return zone ? storageCapacity(world, zone, item, exceptPawn) : 0;
+  return zone ? storageCapacity(world, zone, subject, exceptPawn) : 0;
 }
 export function destinationValid(world: World, pawn: Pawn): boolean {
   const task = pawn.haul; if (!task) return false;
@@ -84,7 +86,7 @@ export function destinationValid(world: World, pawn: Pawn): boolean {
   const pile = world.piles.find(item => item.id === (task.phase === 'pickup' ? task.sourcePileId : task.carryPileId));
   const destination=task.destination;
   if(destination.type==='aside'&&destination.constructionId!==undefined&&!world.jobs.some(j=>j.id===destination.constructionId))return false;
-  return !!pile && destinationCapacity(world, task.destination, pile.kind, pawn.id, pile.item) >= task.quantity;
+  return !!pile && destinationCapacity(world, task.destination, pile.kind, pawn.id, pile) >= task.quantity;
 }
 interface Candidate { animalHandling?:NonNullable<ReturnType<typeof handlingProposal>>; animalCare?:NonNullable<ReturnType<typeof animalCareProposal>>; firefighting?:NonNullable<ReturnType<typeof firefightingProposal>>; ward?:NonNullable<ReturnType<typeof wardenProposal>>; hunting?:NonNullable<ReturnType<typeof huntingProposal>>; research?:NonNullable<ReturnType<typeof researchProposal>>; feed?:NonNullable<ReturnType<typeof feedingProposal>>; patientRest?:NonNullable<ReturnType<typeof patientProposal>>; tend?:NonNullable<ReturnType<typeof tendingProposal>>; rescue?:{patientId:number;bedId:number;path:Cell[]}; whole?:true; clearance?:{resourceId:number;progress:number}; cooking?: CookingPlan; priority: number; rank: number; distance: number; id: number; job?: Job; sourceId?: number; quantity?: number; destination?: HaulDestination; target: Cell }
 interface Candidate {animalLeading?:NonNullable<ReturnType<typeof leadingProposal>>;animalProduct?:NonNullable<ReturnType<typeof productProposal>>}
@@ -136,7 +138,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       const path=routeToJob(world,first.job,reachable,!!source);
       if (path) {
         const quantity=source?Math.min(CARRY_CAPACITY,source.quantity):0;
-        const destination=source?findAsideDestination(world,first.job,source.item,quantity,blocked,budget):null;
+        const destination=source?findAsideDestination(world,first.job,source,quantity,blocked,budget):null;
         if (!source || destination) {
           if (source && destination) pawn.haul={sourcePileId:source.id,quantity,phase:'pickup',destination,carryPileId:null};
           else {first.job.reservedBy=pawn.id;first.job.status='active';pawn.jobId=first.job.id;}
@@ -218,7 +220,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       // for an obstruction already being removed.
       if (!source || sourceReserved.has(source.id) || !canReach(world, job, reachable, true)) continue;
       const quantity = Math.min(CARRY_CAPACITY, source.quantity);
-      const destination = findAsideDestination(world, job, source.item, quantity, blocked, budget);
+      const destination = findAsideDestination(world, job, source, quantity, blocked, budget);
       if (destination) best = { ...candidate, job: undefined, sourceId: source.id, quantity, destination };
       continue;
     }
@@ -260,13 +262,13 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       const destination = destinations[index % destinations.length]!;
       if(destination.destination.type==='stockpile') {
         const zone=zonesByCell.get(cellIndex(world,destination.target.x,destination.target.z))!;
-        if(!storageAccepts(zone,pile.item))continue;
+        if(!storageAccepts(zone,pile))continue;
       }
       let capacity=destination.items?.get(pile.item)??destination[pile.kind]??0;
       if (sameCell(pile.owner, destination.target)) continue;
       const sourceZone = zonesByCell.get(cellIndex(world, pile.owner.x, pile.owner.z));
       const excess = sourceZone ? Math.max(0, (ground.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0) - sourceZone.capacity) : 0;
-      const sourceAdmits=sourceZone&&storageAccepts(sourceZone,pile.item);
+      const sourceAdmits=sourceZone&&storageAccepts(sourceZone,pile);
       const currentPriority = sourceAdmits && !excess ? sourceZone!.priority : 0;
       if (destination.priority <= currentPriority) continue;
       let available = pile.quantity - (sourceReserved.get(pile.id) ?? 0);
@@ -280,9 +282,10 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       if(best&&compareCandidate(candidate,best)>=0)continue;
       // Same-priority storage pairs cannot win; avoid their pure capacity scan.
       if(destination.destination.type==='stockpile') {
-        const key=`${destination.destination.stockpileId}:${pile.item}`;
+        const zone=zonesByCell.get(cellIndex(world,destination.target.x,destination.target.z))!;
+        const key=`${destination.destination.stockpileId}:${zone.quality||zone.hitPoints?storageConditionKey(pile):pile.item}`;
         let cached=storageCapacities.get(key);
-        if(cached===undefined){cached=storageCapacity(world,zonesByCell.get(cellIndex(world,destination.target.x,destination.target.z))!,pile.item);storageCapacities.set(key,cached);}
+        if(cached===undefined){cached=storageCapacity(world,zone,pile);storageCapacities.set(key,cached);}
         capacity=cached;
       }
       if (capacity <= 0) continue;

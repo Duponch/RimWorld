@@ -7,3 +7,14 @@
 .storage-item-list summary{font-weight:600;cursor:var(--cursor-pointer,pointer)}
 .storage-item-list details label{padding-left:8px}
 .bill-cost{font-weight:600;margin:4px 0 8px}
+.storage-condition-controls{border:1px solid var(--line,#c9bea4);border-radius:8px;padding:10px 12px;margin:12px 0 0;min-width:0}
+.storage-condition-controls legend{padding:0 6px;font-weight:650}
+.storage-condition-range+.storage-condition-range{border-top:1px solid var(--line,#c9bea4);margin-top:10px;padding-top:10px}
+.storage-condition-range>label{display:flex;align-items:center;gap:7px;min-height:28px;line-height:1.35}
+.storage-condition-range input[type=checkbox]{flex:0 0 auto;margin:0}
+.storage-condition-range small{display:block;line-height:1.4;margin-top:5px;color:var(--muted,#766a55)}
+.storage-condition-values:not([hidden]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:7px}
+.storage-condition-values label{display:flex;flex-direction:column;gap:4px;font-size:.9rem;min-width:0}
+.storage-condition-values select,.storage-condition-values input{box-sizing:border-box;width:100%;min-width:0;padding:5px 7px}
+.storage-condition-values :invalid{border-color:var(--danger,#a04436)}
+.storage-condition-feedback{margin:6px 0 0;font-size:.88rem;line-height:1.4;color:var(--danger,#a04436)}

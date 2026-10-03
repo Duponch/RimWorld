@@ -2,6 +2,7 @@ import { asBuilder, constructionHaulPriority, containsCell, isConstruction } fro
 import { furnitureAsideAllowed, furnitureSlot } from './furniture-haul-rules.ts';
 import { reservedSource } from './materials.ts';
 import { storageOccupancyAllows } from './occupancy.ts';
+import { storageConditionAccepts,storageConditionKey } from './storage-condition.ts';
 import { inBounds, type Reachability } from './pathfinding.ts';
 import { canReach } from './work-planner.ts';
 import type { PackedFurniture } from './furniture-rules.ts';
@@ -14,22 +15,28 @@ export interface FurnitureHaulCandidate { whole:true;priority:number;rank:number
  * or reachable. Rebuilt from authoritative state at every decision. */
 export function mayImproveFurnitureStorage(world:World):boolean {
   if(!world.packed.length)return false;
-  const priorities=new Map<number,number>();let highest=0;
-  for(const z of world.stockpiles)if(z.filters.furniture){priorities.set(z.z*world.width+z.x,z.priority);highest=Math.max(highest,z.priority);}
-  if(!highest)return false;
+  const zones=world.stockpiles.filter(z=>z.filters.furniture),byCell=new Map(zones.map(z=>[z.z*world.width+z.x,z]));
+  if(!zones.length)return false;
+  const highestByCondition=new Map<string,number>();
   const assigned=new Set(world.jobs.flatMap(j=>j.furniture?[j.furniture.structureId]:[]));
-  return world.packed.some(p=>p.owner.type==='ground'&&!assigned.has(p.building.id)&&(priorities.get(p.owner.z*world.width+p.owner.x)??0)<highest&&reservedSource(world,p.building.id)===0);
+  return world.packed.some(p=>{
+    if(p.owner.type!=='ground'||assigned.has(p.building.id)||reservedSource(world,p.building.id)!==0)return false;
+    const key=storageConditionKey(p.building);let highest=highestByCondition.get(key);
+    if(highest===undefined){highest=0;for(const z of zones)if(storageConditionAccepts(z,p.building))highest=Math.max(highest,z.priority);highestByCondition.set(key,highest);}
+    const source=byCell.get(p.owner.z*world.width+p.owner.x),priority=source&&storageConditionAccepts(source,p.building)?source.priority:0;
+    return priority<highest;
+  });
 }
 
 export function planFurnitureTransport(world:World,pawn:Pawn,pack:PackedFurniture,blocked:Uint8Array,reach:Reachability,budget:{pairs:number},parent?:Job,storageAccess=new Map<number,boolean>()):FurnitureHaulCandidate|undefined {
   if(pack.owner.type!=='ground'||reservedSource(world,pack.building.id)>0||world.jobs.some(j=>j.furniture?.structureId===pack.building.id))return;
   const work=parent?parent.kind==='sow'?pawn.priorities.grow||Infinity:constructionHaulPriority(pawn):pawn.priorities.haul||Infinity;
   if(!Number.isFinite(work)||parent?.reservedBy!==undefined&&parent.reservedBy!==null||!canReach(world,pack.owner,reach,true))return;
-  const origin=pack.owner,current=world.stockpiles.find(z=>z.x===origin.x&&z.z===origin.z),priority=parent?0:current?.filters.furniture?current.priority:0;
+  const origin=pack.owner,current=world.stockpiles.find(z=>z.x===origin.x&&z.z===origin.z),priority=parent?0:current?.filters.furniture&&storageConditionAccepts(current,pack.building)?current.priority:0;
   let best:{cell:Cell;id:number;priority:number;cost:number}|undefined;
   if(!parent)for(const zone of world.stockpiles) {
     if(budget.pairs--<=0){budget.pairs=0;return;}
-    if(!zone.filters.furniture||zone.priority<=priority||distance(zone,origin)===0)continue;
+    if(!zone.filters.furniture||!storageConditionAccepts(zone,pack.building)||zone.priority<=priority||distance(zone,origin)===0)continue;
     // One synchronous decision sees unchanged occupancy/reservations. A source
     // does not change a destination's capacity or the actor's connectivity.
     let usable=storageAccess.get(zone.id);
@@ -46,7 +53,7 @@ export function planFurnitureTransport(world:World,pawn:Pawn,pack:PackedFurnitur
       const queue:Cell[]=[origin],seen=new Set([origin.z*world.width+origin.x]);
       for(let i=0;i<queue.length&&budget.pairs>0;i++) {
         const c=queue[i]!;budget.pairs--;
-        if(i>0&&!world.pawns.some(p=>p.x===c.x&&p.z===c.z)&&furnitureAsideAllowed(world,c)){target=c;break;}
+        if(i>0&&!world.pawns.some(p=>p.x===c.x&&p.z===c.z)&&furnitureAsideAllowed(world,c,undefined,pack.building)){target=c;break;}
         for(const [dx,dz] of [[0,-1],[1,0],[0,1],[-1,0]]) {
           const x=c.x+dx!,z=c.z+dz!,key=z*world.width+x;
           if(inBounds(world,x,z)&&!blocked[key]&&!seen.has(key)){seen.add(key);queue.push({x,z});}

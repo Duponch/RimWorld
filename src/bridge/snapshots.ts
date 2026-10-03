@@ -1,4 +1,5 @@
 import { validArtWorkShape } from '../sim/art-work.ts';
+import { validStorageConditions } from '../sim/storage-condition.ts';
 import { validFlakWorkShape } from '../sim/flak-work.ts';
 import { validComponentWorkShape } from '../sim/component-work.ts';
 import { isFloorKind } from '../sim/flooring.ts';
@@ -222,6 +223,7 @@ export class SnapshotDecoder {
     if (!Number.isSafeInteger(message.epoch) || message.epoch < 1
       || !Number.isSafeInteger(message.revision) || message.revision < 1) return resync('Révision de snapshot invalide.');
     if (message.epoch < this.epoch || (message.epoch === this.epoch && message.revision <= this.revision)) return { status: 'stale' };
+    if(!Array.isArray(message.world.stockpiles)||message.world.stockpiles.some(zone=>!validStorageConditions(zone,message.world.schemaVersion)))return resync('Plages de qualité ou de PV de réserve invalides pour ce snapshot.');
     for(const pawn of message.world.pawns){
       if(!validPawnPodRescue(pawn,message.world.schemaVersion,message.world))return resync('Mandat de secours civil invalide pour ce snapshot.');
       if(!validPlantSkill(pawn.skills?.plants,message.world.schemaVersion))return resync('Compétence Plantes invalide pour ce snapshot.');

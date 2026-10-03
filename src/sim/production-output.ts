@@ -5,6 +5,7 @@ import { groundCapacity, groundPile, nearbyGround, storageCapacity } from './gro
 import { furnitureAsideAllowed, furnitureSlot } from './furniture-haul-rules.ts';
 import { storageOccupancyAllows } from './occupancy.ts';
 import { storageAccepts } from './storage-filters.ts';
+import { storageConditionAccepts } from './storage-condition.ts';
 import { refreshStock, transferPile } from './materials.ts';
 import { routeToJob, type Reachability } from './pathfinding.ts';
 import type { NeedContext } from './needs.ts';
@@ -38,14 +39,14 @@ function processArtOutput(world:World,pawn:Pawn,context:ProductionContext,destin
   if(!pack||pack.owner.type!=='pawn'||pack.owner.pawnId!==pawn.id){context.release();return;}
   if(destination==='stockpile'){
     const target=world.stockpiles.find(s=>s.id===task.storageId);
-    if(target?.filters.furniture&&storageOccupancyAllows(world,target)&&furnitureSlot(world,target,pawn.id)){
+    if(target?.filters.furniture&&storageConditionAccepts(target,pack.building)&&storageOccupancyAllows(world,target)&&furnitureSlot(world,target,pawn.id)){
       task.actionCell={x:target.x,z:target.z};
       if(!near(pawn,target)){context.move(target,false);return;}
       pack.owner={type:'ground',x:target.x,z:target.z};finish(pawn);return;
     }
     task.storageId=null;delete task.storageQuantity;
     if(pawn.planCooldown>0)return;
-    const targets=world.stockpiles.filter(s=>s.filters.furniture&&storageOccupancyAllows(world,s)&&furnitureSlot(world,s,pawn.id))
+    const targets=world.stockpiles.filter(s=>s.filters.furniture&&storageConditionAccepts(s,pack.building)&&storageOccupancyAllows(world,s)&&furnitureSlot(world,s,pawn.id))
       .sort((a,b)=>b.priority-a.priority||(pawn.x-a.x)**2+(pawn.z-a.z)**2-((pawn.x-b.x)**2+(pawn.z-b.z)**2)||a.id-b.id);
     if(targets.length){
       const reach=context.candidates?context.candidates():context.search();if(!reach)return;
@@ -56,7 +57,7 @@ function processArtOutput(world:World,pawn:Pawn,context:ProductionContext,destin
     }
   }
   if(pawn.planCooldown>0)return;
-  const targets=nearbyGround(world,pawn).filter(c=>furnitureAsideAllowed(world,c,pawn.id));
+  const targets=nearbyGround(world,pawn).filter(c=>furnitureAsideAllowed(world,c,pawn.id,pack.building));
   const close=targets.find(c=>near(pawn,c));
   if(close){task.actionCell={...close};pack.owner={type:'ground',...close};finish(pawn);return;}
   if(targets.length){
@@ -73,19 +74,19 @@ export function processProductionOutput(world:World,pawn:Pawn,context:Production
   if(!product){context.release();return;}
   if(destination==='stockpile') {
     const target=world.stockpiles.find(s=>s.id===task.storageId),quantity=task.storageQuantity??product.quantity;
-    if(target&&storageCapacity(world,target,product.item,pawn.id)>=quantity) {
+    if(target&&storageCapacity(world,target,product,pawn.id)>=quantity) {
       task.actionCell={x:target.x,z:target.z};
       if(!near(pawn,target)){context.move(target,false);return;}
       depositAndContinue(world,pawn,product,target,quantity);return;
     }
     task.storageId=null;delete task.storageQuantity;
     if(pawn.planCooldown>0)return;
-    const targets=world.stockpiles.filter(s=>storageAccepts(s,product.item))
+    const targets=world.stockpiles.filter(s=>storageAccepts(s,product))
       .sort((a,b)=>b.priority-a.priority||(pawn.x-a.x)**2+(pawn.z-a.z)**2-((pawn.x-b.x)**2+(pawn.z-b.z)**2)||a.id-b.id);
     if(targets.length) {
       const reach=context.candidates?context.candidates():context.search();if(!reach)return;
       for(const zone of targets) {
-        const capacity=storageCapacity(world,zone,product.item,pawn.id);if(capacity<=0)continue;
+        const capacity=storageCapacity(world,zone,product,pawn.id);if(capacity<=0)continue;
         const path=routeToJob(world,zone,reach,true);if(!path)continue;
         task.storageId=zone.id;
         // A bulk meal may fill a partly free stack; its remainder stays with

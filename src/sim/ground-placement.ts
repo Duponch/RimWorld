@@ -66,8 +66,9 @@ function reservedAt(world:World,task:HaulTask,cell:Cell,item:ItemId,zone?:Stockp
 export function groundCapacity(world: World, cell: Cell, item: ItemId, exceptPawn?: number): number {
   return cellCapacity(world,cell,item,ITEM_DEFINITIONS[item].stackLimit,exceptPawn);
 }
-export function storageCapacity(world: World, zone: StockpileCell, item: ItemId, exceptPawn?: number): number {
-  return storageAccepts(zone,item) ? cellCapacity(world,zone,item,zone.capacity,exceptPawn,zone) : 0;
+export function storageCapacity(world: World, zone: StockpileCell, subject: ItemId|MaterialPile, exceptPawn?: number): number {
+  const item=typeof subject==='string'?subject:subject.item;
+  return storageAccepts(zone,subject) ? cellCapacity(world,zone,item,zone.capacity,exceptPawn,zone) : 0;
 }
 export function planGroundPlacement(world: World, quantity: number, origin: Cell, item: ItemId, reachable?: (cell:Cell)=>boolean): {cell:Cell; quantity:number}[] | null {
   const result: {cell:Cell;quantity:number}[]=[];

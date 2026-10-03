@@ -150,7 +150,7 @@ import { queryArea, validStorageSettings } from './designation.ts';
 import { constructionLineCells, isLineBuildKind, type LineBuildKind } from './construction-line.ts';
 import { processNeeds, updateNeeds } from './needs.ts';
 export { HUNGER_PER_TICK, REST_PER_TICK } from './needs.ts';
-import type { AreaCommand, BuildLineCommand, Cell, Command, CommandResult, DesignateCommand, Job, JobKind, Pawn, RefusalCode, World } from './types.ts';
+import type { AreaCommand, BuildLineCommand, Cell, Command, CommandResult, DesignateCommand, Job, JobKind, Pawn, RefusalCode, StorageSettings, World } from './types.ts';
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
@@ -170,6 +170,10 @@ function wakePlanners(world: World): void {
 /** One authoritative command, evaluated against the state at execution, without
  * per-cell worker messages or repeated scans of every resource for every cell.
  */
+const copyStorageConditions=(settings:StorageSettings)=>({
+  ...(settings.quality!==undefined?{quality:{...settings.quality}}:{}),
+  ...(settings.hitPoints!==undefined?{hitPoints:{...settings.hitPoints}}:{}),
+});
 function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandResult {
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
@@ -197,7 +201,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
     world.growingZones = world.growingZones.map(zone => ({...zone, cells: zone.cells.filter(c => !selected.has(c))})).filter(z => z.cells.length);
     world.growingCursor = 0;
   } else if (command.action === 'stockpile') {
-    for (const index of selection.cells) world.stockpiles.push({ id: world.nextId++, x: index % world.width, z: Math.floor(index / world.width), filters: { ...(command.filters ?? { wood: true, food: true }) },...(command.items!==undefined?{items:{...command.items}}:{}), priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });
+    for (const index of selection.cells) world.stockpiles.push({ id: world.nextId++, x: index % world.width, z: Math.floor(index / world.width), filters: { ...(command.filters ?? { wood: true, food: true }) },...(command.items!==undefined?{items:{...command.items}}:{}),...copyStorageConditions(command), priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });
   } else {
     const cells = new Set(selection.cells);
     if (command.action === 'remove-stockpile') {
@@ -483,10 +487,12 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
         || [...world.structures, ...world.jobs].some(item => !['deconstruct','uninstall'].includes(item.kind)&&occupancyOf('furniture' in item?item.furniture?.kind??item.kind:item.kind)?.zones!==true&&occupies(item,command))) return refusal('occupied', 'Stockage impossible sur cette cellule occupée ou infranchissable.');
       if (existing) {
         if(Object.hasOwn(command,'items')){if(command.items===undefined)delete existing.items;else existing.items={...command.items};}
+        if(Object.hasOwn(command,'quality')){if(command.quality===undefined)delete existing.quality;else existing.quality={...command.quality};}
+        if(Object.hasOwn(command,'hitPoints')){if(command.hitPoints===undefined)delete existing.hitPoints;else existing.hitPoints={...command.hitPoints};}
         existing.filters = command.filters ? { ...command.filters } : existing.filters;
         existing.priority = command.priority ?? existing.priority;
         existing.capacity = command.capacity ?? existing.capacity;
-      } else world.stockpiles.push({ id: world.nextId++, x: command.x, z: command.z, filters: { ...(command.filters ?? { wood: true, food: true }) },...(command.items!==undefined?{items:{...command.items}}:{}), priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });
+      } else world.stockpiles.push({ id: world.nextId++, x: command.x, z: command.z, filters: { ...(command.filters ?? { wood: true, food: true }) },...(command.items!==undefined?{items:{...command.items}}:{}),...copyStorageConditions(command), priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });
     }
     for(const pawn of world.pawns)if(pawn.cooking?.storageId===existing?.id&&pawn.cooking){pawn.cooking.storageId=null;delete pawn.cooking.storageQuantity;pawn.path=[];pawn.planCooldown=0;}
     // Re-evaluate pending capacity reservations atomically after the policy change.

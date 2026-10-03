@@ -4,7 +4,8 @@ import { packedAt } from './furniture-rules.ts';
 import { reservedSource } from './materials.ts';
 import { validSowingClearance } from './sowing-clearance.ts';
 import { storageOccupancyAllows } from './occupancy.ts';
-import type { Cell, HaulDestination, HaulTask, World } from './types.ts';
+import { storageConditionAccepts } from './storage-condition.ts';
+import type { Cell, HaulDestination, HaulTask, Structure,World } from './types.ts';
 
 export function furnitureHaulCell(world:World,d:HaulDestination):Cell|undefined {
   return d.type==='aside'?d:d.type==='stockpile'?world.stockpiles.find(z=>z.id===d.stockpileId):undefined;
@@ -13,11 +14,11 @@ export function furnitureHaulCell(world:World,d:HaulDestination):Cell|undefined 
 export function furnitureSlot(world:World,c:Cell,exceptPawn?:number):boolean {
   return !groundPile(world,c)&&!packedAt(world,c)&&groundCapacity(world,c,'wood',exceptPawn)===MAX_STACK;
 }
-export function furnitureAsideAllowed(world:World,c:Cell,exceptPawn?:number):boolean {
+export function furnitureAsideAllowed(world:World,c:Cell,exceptPawn?:number,subject?:Structure):boolean {
   if(world.resources.some(r=>r.x===c.x&&r.z===c.z)||world.growingZones.some(z=>z.cells.includes(c.z*world.width+c.x))
     ||world.jobs.some(j=>footprintCells(j).some(p=>p.x===c.x&&p.z===c.z)))return false;
   const zone=world.stockpiles.find(z=>z.x===c.x&&z.z===c.z);
-  return (!zone||zone.filters.furniture===true&&storageOccupancyAllows(world,c))&&furnitureSlot(world,c,exceptPawn);
+  return (!zone||zone.filters.furniture===true&&(!subject||storageConditionAccepts(zone,subject))&&storageOccupancyAllows(world,c))&&furnitureSlot(world,c,exceptPawn);
 }
 export function furnitureHaulValid(world:World,task:HaulTask,pawnId?:number):boolean {
   if(!task.whole||task.quantity!==1)return false;
@@ -28,8 +29,8 @@ export function furnitureHaulValid(world:World,task:HaulTask,pawnId?:number):boo
   } else if(pack.owner.type!=='pawn'||pack.owner.pawnId!==pawnId||task.carryPileId!==pack.building.id)return false;
   if(d.type==='stockpile') {
     const zone=world.stockpiles.find(z=>z.id===d.stockpileId);
-    return zone?.filters.furniture===true&&storageOccupancyAllows(world,c)&&furnitureSlot(world,c,pawnId);
+    return zone?.filters.furniture===true&&storageConditionAccepts(zone,pack.building)&&storageOccupancyAllows(world,c)&&furnitureSlot(world,c,pawnId);
   }
   if(d.type!=='aside'||!validSowingClearance(world,d)||d.constructionId!==undefined&&!world.jobs.some(j=>j.id===d.constructionId))return false;
-  return furnitureAsideAllowed(world,c,pawnId);
+  return furnitureAsideAllowed(world,c,pawnId,pack.building);
 }

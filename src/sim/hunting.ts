@@ -19,7 +19,7 @@ import { isColonist } from './affiliation.ts';
 import { animalCorpseItem,pickUpRetainedCorpse } from './corpses.ts';
 import type { NeedContext } from './needs.ts';
 import type { WildAnimal } from './wildlife-state.ts';
-import type { Cell,Pawn,World,CommandResult } from './types.ts';
+import type { Cell,MaterialPile,Pawn,World,CommandResult } from './types.ts';
 
 export function designateHunt(w:World,c:HuntingCommand):CommandResult {
   const a=w.wildlife?.animals.find(a=>a.id===c.animalId);
@@ -73,12 +73,16 @@ function collect(w:World,p:Pawn,ctx:HuntContext):void {
   if(retained&&(retained.motion?.end??0)>w.tick)return;
   const sourceCell=body?.owner.type==='ground'?body.owner:retained!;
   const corpseItem=body?.item??animalCorpseItem(retained!.species);
+  // A retained animal becomes the same undamaged corpse at pickup. This
+  // read-only condition view prevalidates that existing conversion, without
+  // allocating a pile or moving its owner before a destination is available.
+  const corpse:MaterialPile=body??{id:retained!.id,kind:'corpse',item:corpseItem,quantity:1,owner:{type:'ground',x:sourceCell.x,z:sourceCell.z}};
   if(p.planCooldown>0){
     if(retained&&p.path.length){ctx.move(sourceCell,true);if(!p.path.length)p.planCooldown=0;}
     return;
   }
-  const current=w.stockpiles.find(z=>z.x===sourceCell.x&&z.z===sourceCell.z&&storageAccepts(z,corpseItem));
-  const zones=w.stockpiles.filter(z=>(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&storageAccepts(z,corpseItem)&&storageCapacity(w,z,corpseItem,p.id)>=1)
+  const current=w.stockpiles.find(z=>z.x===sourceCell.x&&z.z===sourceCell.z&&storageAccepts(z,corpse));
+  const zones=w.stockpiles.filter(z=>(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&storageAccepts(z,corpse)&&storageCapacity(w,z,corpse,p.id)>=1)
     .sort((a,b)=>b.priority-a.priority||(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
   if(!zones.length){stop(p);return;}
   const reach=ctx.candidates();if(!reach)return;
