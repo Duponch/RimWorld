@@ -2,6 +2,7 @@ import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills'
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { withoutPawnSkills } from './scenarios/legacy-skills';
 import { stripV120 } from './scenarios/strip-v120';
+import { withoutPredatorFoodPolicies } from './scenarios/legacy-save';
 import { expect, test } from 'vitest';
 import { applyCommand, stepWorld } from '../src/sim/engine';
 import { serializeWorld, deserializeWorld, validateWorld } from '../src/sim/serialization';
@@ -30,7 +31,7 @@ test('roof support requires a connected 6.9-radius path, separated from areas, a
   expect(new RoofContext(w).supported(16*32+16)).toBe(true);
   expect(new RoofContext(w).supported(16*32+17)).toBe(false);
   expect(validateWorld(w)).toEqual([]);
-  const legacy=structuredClone(w) as unknown as Record<string,unknown>;((legacy.schemaVersion=34,withoutResearch(legacy)),withoutPawnSkills(legacy),stripV120(legacy));
+  const legacy=withoutPredatorFoodPolicies(structuredClone(w)) as unknown as Record<string,unknown>;((legacy.schemaVersion=34,withoutResearch(legacy)),withoutPawnSkills(legacy),stripV120(legacy));
   for(const pawn of legacy.pawns as Array<{recreation:{tolerance:Record<string,unknown>;bored:Record<string,unknown>}}>) {
     delete pawn.recreation.tolerance.cerebral;delete pawn.recreation.bored.cerebral;
     delete pawn.recreation.tolerance.social;delete pawn.recreation.bored.social;

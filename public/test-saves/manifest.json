@@ -1157,6 +1157,37 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32 au schéma 180 à partir de medicalCamp/commercialDemoCamp, graine 42 et tick 3000. Terrain grass dégagé, trois colons adultes libres ; travaux désactivés, repos et récréation 100 %, faim de Basile/Céleste 100 % et d’Ada 35 % pour observer un repas réel pendant le circuit. Ada en (4,12), quatre repas de survie au sol en (5,12), 500 argent au sol en (8,12) et 100 en (9,12), autres résidents en (10,16)/(12,16). Dossiers médicaux sains, automatisme vestimentaire désactivé ; animaux et incidents naturels exclus de ce contrôle borné. Aucun voyage, manifeste, route, inventaire chargé, stock de comptoir, achat, ration consommée, retour ou dépôt accordé. Pas de planète, rencontre, acquisition naturelle, campagne ni preuve de charge 250×250.",
       "sha256": "a9c58cb58ba62fbbc5d095ea38256514b00184e0dc3ccaf66f9a876ed8650df4"
+    },
+    {
+      "id": "pluie-et-appareils-v194",
+      "release": "v194",
+      "label": "Pluie et appareils · 3 colons",
+      "description": "Observer une décharge sous la pluie sur une batterie exposée, protéger réellement son ancrage, éteindre les feux et réparer les dégâts.",
+      "filename": "pluie-et-appareils.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "précipitations",
+        "exposition électrique",
+        "toit physique",
+        "arrêt physique",
+        "incendie",
+        "extinction",
+        "réparation",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause. La batterie en (10,10) est exposée et chargée à 101 W·j ; le radiateur en (18,10) a un toit, celui en (18,16) est arrêté. Le générateur est alimenté en bois ; les radiateurs doivent encore démarrer sur le réseau réel.",
+        "Inspecter puis reprendre à 1×. La graine préparée permet une première décharge sur la batterie ; aucun impact ni incendie n’est déjà présent. Sauvegarder avant et après le contact, puis reprendre.",
+        "Dans Architecte, désigner un toit sur l’ancrage (10,10), soutenu par le mur adjacent. Dans Travail, donner Construction et Manutention à un colon ; attendre la vraie pose. Pour le radiateur exposé, demander l’arrêt depuis son inspection et attendre le contact d’un colon.",
+        "Donner Extinction à un colon, observer son déplacement et ses coups sur le feu. La zone de foyer préparée permet ensuite les réparations avec Construction. La pluie peut aussi éteindre des feux ; cela ne prouve pas à elle seule le travail d’un colon."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32 au schéma 181, createWorld(6160), tick 0. Trois colons adultes libres sains en (8,13/15/17), besoins hauts, Construction 8, travaux désactivés pour laisser la décision au joueur. Terrain grass dégagé, six sols bois autour de la batterie. Recherche Batteries achevée explicitement au tick 0, sans travail de recherche revendiqué. Quatre appareils candidats : batterie 1×2 exposée à 101 W·j, radiateur sous une cellule de toit soutenue par un mur, radiateur arrêté et radiateur exposé. Générateur existant avec 75 bois dans son réservoir, cinq conduits physiques raccordant la batterie ; raccords des consommateurs calculés par reconcilePower, démarrage non accordé. Deux murs de soutien, zone de foyer, 40 bois, trois composants et six repas de survie réellement au sol. Pluie préparée stable, aucun état de risque adopté, tirage, décharge, feu, dommage, route, actionnement, chantier, extinction ou réparation achevé. La graine privée dérivée sera adoptée prospectivement au premier tick ; elle ne démontre pas une fréquence naturelle. Pas de nouveau ticket Zzztt, grande explosion, vidage du réseau, son dédié, campagne ou preuve de charge 250×250.",
+      "sha256": "8789f8c32d8c867ddac6e6da7ff1aff610a29ca550992b2080fc958f1d5040b2"
     }
   ]
 }

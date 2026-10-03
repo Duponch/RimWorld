@@ -15,11 +15,11 @@ export function validatePower(world:World,version:number):string[] {
     }else if(battery!==undefined)errors.push('Unexpected battery energy.');
     if(!isElectrical(s.kind)){if(p!==undefined)errors.push('Unexpected power state.');continue;}
     if(s.kind==='sun-lamp'&&version<177||s.kind==='machining-table'&&version<101||['hi-tech-research-bench','multi-analyzer','fabrication-bench'].includes(s.kind)&&version<123||s.kind==='autodoor'&&version<143||version<42||s.kind==='electric-stove'&&version<84||s.kind==='electric-tailor-bench'&&version<90||['battery','solar-generator','power-conduit','power-switch'].includes(s.kind)&&version<85||['heater','wind-turbine'].includes(s.kind)&&version<87||!p||typeof p!=='object'||Array.isArray(p)||typeof p.on!=='boolean'||s.kind!=='cooler'&&s.kind!=='electric-stove'&&s.kind!=='electric-tailor-bench'&&s.kind!=='machining-table'&&s.kind!=='hi-tech-research-bench'&&s.kind!=='fabrication-bench'&&s.kind!=='battery'&&s.kind!=='wind-turbine'&&s.orientation!==0
-      ||s.footprint!=='standard'||(s.kind==='autodoor'?!(s.material==='wood'||s.material==='steel'||isBlockMaterial(s.material)):s.kind==='electric-tailor-bench'?!['wood','steel'].includes(s.material??''):s.material!=='steel')||Object.keys(p).some(k=>!['on','parentId',...(version>=85&&isFlickable(s.kind)?['switchOn']:[])].includes(k))
+      ||s.footprint!=='standard'||(s.kind==='autodoor'?!(s.material==='wood'||s.material==='steel'||isBlockMaterial(s.material)):s.kind==='electric-tailor-bench'?!['wood','steel'].includes(s.material??''):s.material!=='steel')||Object.keys(p).some(k=>!['on','parentId',...(version>=85&&isFlickable(s.kind)&&(s.kind!=='electric-tailor-bench'||version>=181)?['switchOn']:[])].includes(k))
       ||p.switchOn!==undefined&&typeof p.switchOn!=='boolean'||p.switchOn===false&&p.on
       ||!(p.parentId===null||Number.isSafeInteger(p.parentId)&&p.parentId>0)) {errors.push('Invalid electrical state.');continue;}
     if(isPowerTransmitter(s.kind)&&p.parentId!==null||!isPowerTrader(s.kind)&&p.on||packed&&(p.on||p.parentId!==null))errors.push('Invalid power owner.');
-    if(isPowerConnector(s.kind)&&(p.on&&p.parentId===null||p.parentId!==null&&!validPowerParent(topology,s,p.parentId)))errors.push('Invalid electrical parent.');
+    if(isPowerConnector(s.kind)&&(s.kind!=='electric-tailor-bench'||version>=181)&&(p.on&&p.parentId===null||p.parentId!==null&&!validPowerParent(topology,s,p.parentId)))errors.push('Invalid electrical parent.');
   }
   for(const j of world.jobs)if('power' in j||'battery' in j)errors.push('Blueprint cannot supply power.');
   return errors;

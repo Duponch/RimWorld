@@ -53,7 +53,7 @@ export function validatePowerFlicks(world:World,version:number):string[] {
     if(j.kind!=='flick'){if(f!==undefined)errors.push('Unexpected switch job.');continue;}
     if(version<85||!f||typeof f!=='object'||Array.isArray(f)||Object.keys(f).some(k=>!['structureId','kind','on'].includes(k))||!Number.isSafeInteger(f.structureId)||typeof f.on!=='boolean'){errors.push('Invalid switch job.');continue;}
     const s=world.structures.find(s=>s.id===f.structureId);
-    if(!s||!canFlickPower(s)||actualPowerSwitch(s)===f.on||seen.has(f.structureId)||s.kind!==f.kind||s.x!==j.x||s.z!==j.z||j.orientation!==s.orientation||j.footprint!=='standard'
+    if(!s||!canFlickPower(s)||s.kind==='electric-tailor-bench'&&version<181||actualPowerSwitch(s)===f.on||seen.has(f.structureId)||s.kind!==f.kind||s.x!==j.x||s.z!==j.z||j.orientation!==s.orientation||j.footprint!=='standard'
       ||j.material!==undefined||j.construction||j.furniture||j.deconstruction||j.repair||j.clearance||j.growingZoneId!==undefined||j.workRemainder!==undefined||![0,10].includes(j.progress)||j.progress>0&&j.reservedBy===null||j.escrow.wood||j.escrow.food
       ||world.jobs.some(other=>(other.deconstruction?.structureId??other.furniture?.structureId)===f.structureId))errors.push('Switch job does not match its device.');
     seen.add(f.structureId);

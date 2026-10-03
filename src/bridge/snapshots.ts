@@ -7,6 +7,7 @@ import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validPlantSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
 import { validFlashstorm } from '../sim/flashstorm-save.ts';
+import { validRainElectrical } from '../sim/rain-electric-save.ts';
 import { validPawnPodRescue,validPodRescueTransportBindings } from '../sim/pod-rescue-save.ts';
 import { validWildlifeExitState,validWildlifePredationState } from '../sim/wildlife-save.ts';
 import { validCorpseConsumption } from '../sim/corpse-anatomy.ts';
@@ -255,6 +256,8 @@ export class SnapshotDecoder {
     }
     if(!validMiscIncidents(message.world.miscIncidents,message.world.schemaVersion,message.world))return resync('Calendrier d’incidents divers invalide pour ce snapshot.');
     if(!validFlashstorm(message.world.flashstorm,message.world.schemaVersion,message.world))return resync('Orage sec localisé invalide pour ce snapshot.');
+    if((message.world.schemaVersion<181&&Object.hasOwn(message.world,'rainElectrical'))
+      ||!validRainElectrical(message.world.rainElectrical,message.world.schemaVersion,message.world))return resync('Exposition électrique aux précipitations invalide pour ce snapshot.');
     if(!validPodRescueTransportBindings(message.world))return resync('Secours civil invalide pour ce snapshot.');
     let next: World;
     let reindexResources = message.kind === 'checkpoint';

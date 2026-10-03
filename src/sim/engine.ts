@@ -98,6 +98,7 @@ import { feedingWork } from './feeding-rules.ts';
 import { tickSkills, constructionWorkRate } from './skills.ts';
 import { plantWorkRate } from './plant-skills.ts';
 import { advancePower, reconcilePower } from './power.ts';
+import { adoptRainElectrical,advanceRainElectrical } from './rain-electric.ts';
 import { isElectrical, newPowerState } from './power-rules.ts';
 import { autoRoofRooms, designateRoofArea, scheduleRoofs, reconcileRoofJobs, reconcileRoofSupport, finishRoofJob } from './roofing.ts';
 import { isRoofArea, isRoofJob, roofJobWanted, RoofContext } from './roof-rules.ts';
@@ -590,6 +591,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   // Old profiles start this new stream prospectively, when play resumes.
   // Loading or pausing never invents a past opportunity or heat exposure.
   adoptMiscIncidents(world);
+  adoptRainElectrical(world);
   let thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
     flushColonyLosses(world);
@@ -603,6 +605,9 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     advanceSurfaceWeather(world,cell=>{const c={type:'designate' as const,kind:'chop' as const,...cell};if(canDesignate(world,c).ok)applyCommand(world,c);});
     if(beforeWeather!==world.structures)thermal=reconcileTemperature(world);
     advancePower(world);
+    const beforeElectricalRain=world.structures;
+    advanceRainElectrical(world);
+    if(beforeElectricalRain!==world.structures)thermal=reconcileTemperature(world);
     advanceBreakdowns(world);
     expireFood(world);
     thermal=advanceSurfaceTemperature(world,thermal,getLight);

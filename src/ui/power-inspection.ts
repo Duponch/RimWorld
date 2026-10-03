@@ -6,14 +6,28 @@ import { annualNaturalLight } from '../sim/environment';
 import { windIntensity, windObstructions } from '../sim/wind-rules';
 import { TemperatureView } from '../sim/temperature';
 import { sunLampActive, sunLampScheduled } from '../sim/sun-lamp';
+import { isRainElectricalKind, rainElectricalEligible } from '../sim/rain-electric';
+import { isRoofed } from '../sim/roof-rules';
 import type { Structure, World } from '../sim/types';
 
 const cache = new PowerTopologyCache();
 const watts = (n: number) => `${n.toLocaleString('fr-FR', {maximumFractionDigits: 1})} W`;
 
+/** Snapshot projection only: requesting a switch or roof does not protect it. */
+export function rainElectricalInspection(world: World, structure: Structure): string {
+  if (world.schemaVersion < 181 || !isRainElectricalKind(structure.kind)) return '';
+  if (isRoofed(world, structure.z * world.width + structure.x)) return 'Précipitations : protégé par le toit au-dessus de son ancrage';
+  if (structure.kind === 'battery') return rainElectricalEligible(world, structure)
+    ? 'Précipitations : batterie exposée et chargée au-delà de 100 W·j · risque de décharge et d’incendie · protéger son ancrage par un toit'
+    : 'Précipitations : batterie exposée, charge de 100 W·j ou moins · sans risque de décharge à cette charge';
+  return rainElectricalEligible(world, structure)
+    ? 'Précipitations : appareil exposé et alimenté · risque de décharge et d’incendie · construire un toit ou demander son arrêt physique'
+    : 'Précipitations : appareil exposé, actuellement arrêté ou sans alimentation · risque s’il se remet en marche';
+}
+
 export function powerInspection(world: World, structure: Structure, compact=false): string {
   if (!isElectrical(structure.kind) || !structure.power) return '';
-  if (compact && structure.breakdown) return ' · Panne mécanique.';
+  if (compact && structure.breakdown) return ` · Panne mécanique${rainElectricalInspection(world, structure) ? ` · ${rainElectricalInspection(world, structure)}` : ''}.`;
   const topology = cache.read(world);
   const group = connectedPowerGroups(world, topology).find(g => g.some(s => s.id === structure.id));
   const supply = group?.reduce((n, s) => n + Math.max(0, powerWatts(s, world)), 0) ?? 0;
@@ -61,5 +75,7 @@ export function powerInspection(world: World, structure: Structure, compact=fals
   }
   if (group) detail += ` · Réseau : ${watts(supply)} produits, ${watts(used)} utilisés (${watts(required)} demandés) · ${batteries.length ? `${stored.toFixed(2)} / ${batteries.length * 600} W·j stockés` : 'aucune batterie raccordée'}`;
   if(structure.breakdown)detail=`Panne mécanique : composant à remplacer par un colon en Construction (1 composant ordinaire, zone de foyer requise) · ${detail}`;
+  const rain = rainElectricalInspection(world, structure);
+  if (rain) detail += ` · ${rain}`;
   return ` · ${detail}.`;
 }

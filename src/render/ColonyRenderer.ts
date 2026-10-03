@@ -1,3 +1,4 @@
+import { AreaPreviewLayer } from './AreaPreviewLayer';
 import { HygieneLayer } from './HygieneLayer';
 import { ReentrantRenderer } from './ReentrantRenderer';
 import { pawnBodyLocation } from '../sim/human-corpses';
@@ -85,7 +86,6 @@ export interface AudioFrameView {
   camera: { x: number; y: number; z: number; targetX: number; targetZ: number; span: number; mode: CameraMode };
 }
 
-const scratchObject = new THREE.Object3D();
 
 export class ColonyRenderer {
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
@@ -142,7 +142,7 @@ export class ColonyRenderer {
   onContext: (cell:Cell,x:number,y:number,queue:boolean,targetId?:number)=>void=()=>{};
   onInteractionCancel: ()=>void=()=>{};
   onAudioFrame?: (view: AudioFrameView) => void;
-  private areaMesh: THREE.InstancedMesh | null = null;
+  private readonly areaPreview=new AreaPreviewLayer();
   private areaIndex: AreaIndex | undefined;
   private constructionIndex: ConstructionCellIndex | undefined;
   private areaSignature = '';
@@ -274,7 +274,7 @@ export class ColonyRenderer {
     this.daylight = new DayNightLayer(this.scene);
     this.invalidatePausedShadow();
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
-    this.scene.add(this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
+    this.scene.add(this.areaPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
     if (groundGrassEnabled) {
       this.grass = new GpuGroundGrassLayer(this.environmentLighting.configure);
       this.scene.add(this.grass.mesh);
@@ -480,7 +480,7 @@ export class ColonyRenderer {
     this.onHover(null);
     this.controls.enabled = true;
     if (drag && this.renderer.domElement.hasPointerCapture(drag.pointerId)) this.renderer.domElement.releasePointerCapture(drag.pointerId);
-    if (this.areaMesh) this.areaMesh.visible = false;
+    this.areaPreview.hide();
     this.hover.visible = false;
     (this.hover.material as THREE.MeshBasicNodeMaterial).opacity = 0.55;
     this.onAreaPreview(null);
@@ -630,6 +630,7 @@ export class ColonyRenderer {
     const restorePodRescue=this.podRescue.prepareForCompile();
     const restorePrecipitation=this.precipitation.prepareForCompile();
     const restoreBoxes=this.boxes.prepareEmptyShadows();
+    const restoreArea=this.areaPreview.prepareForCompile();
     try {
       // The double-sided cursor otherwise compiles both face variants on the
       // first map interaction. Include it behind the loading overlay.
@@ -650,7 +651,7 @@ export class ColonyRenderer {
       // restorers must therefore run last to recover their real runtime flag.
       for (const [object, value] of culling) object.frustumCulled = value;
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
-      restoreBoxes();
+      restoreBoxes();restoreArea();
       restorePodRescue();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
@@ -1019,7 +1020,7 @@ export class ColonyRenderer {
     const drag = this.areaDrag, world = this.world, cell = this.hoverCell;
     if (!drag || !world) return;
     if (!cell) {
-      this.hover.visible = false; if (this.areaMesh) this.areaMesh.visible = false;
+      this.hover.visible = false; this.areaPreview.hide();
       this.areaSignature = ''; this.onAreaPreview(null); return;
     }
     const action = 'action' in drag ? drag.action : drag.kind;
@@ -1048,31 +1049,8 @@ export class ColonyRenderer {
     this.hover.position.set((bounds.minX + bounds.maxX) / 2, 0.045, (bounds.minZ + bounds.maxZ) / 2);
     const hoverMat = this.hover.material as THREE.MeshBasicNodeMaterial;
     hoverMat.opacity = 0.12; hoverMat.color.setHex(cells.length ? color : 0xe46f58);
-    if (cells.length && (!this.areaMesh || this.areaMesh.instanceMatrix.count < cells.length)) {
-      this.disposeAreaMesh();
-      const capacity = Math.min(world.width * world.height, 2 ** Math.ceil(Math.log2(Math.max(16, cells.length))));
-      const mat = new THREE.MeshBasicNodeMaterial({ color, transparent: true, opacity: 0.48, depthWrite: false, side: THREE.DoubleSide, forceSinglePass:true });
-      this.areaMesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.86, 0.86).rotateX(-Math.PI / 2), mat, capacity);
-      this.areaMesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
-      this.areaMesh.renderOrder = 6;
-      this.scene.add(this.areaMesh);
-    }
-    if (this.areaMesh) {
-      this.areaMesh.visible = cells.length > 0; this.areaMesh.count = cells.length;
-      (this.areaMesh.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
-      scratchObject.rotation.set(0, 0, 0); scratchObject.scale.set(1, 1, 1);
-      for (let i = 0; i < cells.length; i++) {
-        scratchObject.position.set(cells[i]! % world.width, 0.065, Math.floor(cells[i]! / world.width));
-        scratchObject.updateMatrix(); this.areaMesh.setMatrixAt(i, scratchObject.matrix);
-      }
-      this.areaMesh.instanceMatrix.needsUpdate = true; this.areaMesh.computeBoundingSphere();
-    }
+    this.areaPreview.update(world.width,world.width*world.height,cells,color);
     this.onAreaPreview({ width, height, eligible: cells.length, skipped, line:'kind' in drag });
-  }
-  private disposeAreaMesh(): void {
-    if (!this.areaMesh) return;
-    this.scene.remove(this.areaMesh); this.areaMesh.dispose(); this.areaMesh.geometry.dispose();
-    (this.areaMesh.material as THREE.Material).dispose(); this.areaMesh = null;
   }
   private updateHover(): void {
     if(this.preparing)return;
@@ -1129,7 +1107,7 @@ export class ColonyRenderer {
   dispose(): void {
     this.selectionInput.dispose();
     if (this.disposed) return;
-    this.cancelDesignation(); this.disposeAreaMesh();
+    this.cancelDesignation(); this.areaPreview.dispose();
     this.disposed = true;
     this.renderer.setAnimationLoop(null);
     this.resizeObserver.disconnect();

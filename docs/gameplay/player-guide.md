@@ -1,5 +1,17 @@
 # Guide joueur
 
+## Protéger les appareils électriques des précipitations — V194
+
+La pluie peut exposer une batterie chargée ou un appareil vulnérable alimenté. Le toit doit couvrir son ancre ; couvrir une autre case de son empreinte ne suffit pas. Les catégories concernées sont batterie, chauffage, cuisinière électrique, banc de couture électrique, table d'usinage, banc de fabrication, banc de recherche avancée, multi-analyseur et lampe horticole. Pour les consommateurs, l'arrêt doit être effectif dans le réseau. Pour une batterie, le risque exige strictement plus de 100 Wd ; sa charge reste conservée pendant son transport réel et son emballage.
+
+Protégez ces appareils avec la toiture existante, leur arrêt ou leur déplacement physique. Une sélection couverte ou éteinte peut être refusée sans nouvelle sélection : aucun déclenchement n'est garanti par une pluie. L'impact Flame de rayon 1,9 peut causer de vrais dégâts, de la chaleur et du feu ; utilisez les ordres existants d'extinction et de réparation. Il ne vide pas toutes les batteries du réseau. Lampes ordinaires, climatiseurs, générateurs, conduits, interrupteurs et portes automatiques n'appartiennent pas à cette sélection.
+
+L'inspection indique protection du toit, charge de batterie ou alimentation effective. **Demander l'arrêt** crée une tâche de Manutention : attendre le contact du colon et l'arrêt réel. L'atelier de couture électrique se raccorde désormais au réseau comme les autres consommateurs et dispose de cette commande ; ses 120 W et ses recettes existantes restent inchangés. Un plan de toit ne protège pas encore l'appareil : attendre la pose par un colon en Construction. La neige peut aussi présenter ce danger.
+
+Dans **Charger → Colonies de test**, la **44e colonie « Pluie et appareils · 3 colons »** prépare pluie, réseau, batterie exposée à 101 W·j, radiateur couvert, radiateur arrêté et radiateur exposé, sur 32×32. Aucun feu ni dommage n'existe au chargement. Reprendre pour observer la première décharge ; sauvegarder et recharger avant et après le contact. Désigner un toit sur l'ancrage de la batterie depuis Architecte, demander l'arrêt du radiateur exposé et régler Construction, Manutention et Extinction dans Travail. Observer déplacements, actionnement, pose, coups d'extinction puis réparations dans le foyer préparé. La pluie peut éteindre un feu sans intervention : cela ne démontre pas le travail d'un colon.
+
+Le risque est adopté à la reprise future d'un monde avec météo ; pause, chargement et migration ne rejouent pas les pluies passées. Le schéma 181 valide strictement 180 avant migration neutre. Aucun son électrique dédié ni court-circuit aléatoire Zzztt du réseau n'est ajouté. Le [contrat](../development/rain-electric-v194.md), la [recherche Core](../research/rain-electric-core-v194.md) et la [preuve bornée](../history/validation-rain-electric-v194.md) distinguent cette scène préparée d'une fréquence naturelle, d'une campagne longue ou d'une mesure générale de performance.
+
 ## Préparer une expédition commerciale — V193
 
 Cette tranche livre un **comptoir civil unique**, rejoint par un colon adulte libre, sain, disponible et capable de parler et d’entendre, avec un autre résident capable au foyer. Reconnaissance et commerce ne peuvent pas partir ensemble. Préparez **deux ou trois repas de survie sains**, une somme entière positive d’**argent au sol**, et des accès libres aux sources et à la bordure. Le colon doit avoir terminé son travail et vidé son inventaire préalable ; aucun chantier n’est interrompu silencieusement.

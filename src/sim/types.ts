@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 180 as const;
+export const SCHEMA_VERSION = 181 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -164,6 +164,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  rainElectrical?:import('./rain-electric.ts').RainElectricalState;
   commercialTrip?:import('./commercial-state.ts').CommercialTrip;
   civilianPost?:import('./commercial-state.ts').CivilianPost;
   quests?:import('./quest-state.ts').QuestCalendar;

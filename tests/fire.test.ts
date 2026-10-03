@@ -18,6 +18,7 @@ import { injuryBleed,medicalPain } from '../src/sim/injury-state';
 import { newPowerState } from '../src/sim/power-rules';
 import { newBuildingFuel } from '../src/sim/fuel';
 import { withoutV90 } from './scenarios/legacy-skills';
+import { withoutPredatorFoodPolicies } from './scenarios/legacy-save';
 import { stripV120 } from './scenarios/strip-v120';
 import { footprintCells } from '../src/sim/definitions';
 import { BATTERIES_RESEARCH_COST } from '../src/sim/research';
@@ -188,7 +189,7 @@ test('strict fire/HP migration rejects old burns and malformed phases or duplica
   expect(validateFires(w,86)).not.toEqual([]);
   const record={tick:0,nextInjuryId:2,injuries:[{id:1,part:'torso',kind:'burn',severity:1000,bornAt:0}],missing:[],bloodLoss:0};
   expect(validateMedicalRecord(record,true,true,true,true,false,false,true,true,false)).not.toBeNull();expect(validateMedicalRecord(record,true,true,true,true,false,false,true,true,true)).toBeNull();
-  const old=stripV120(withoutV90(fireCamp())) as unknown as Record<string,unknown>;old.schemaVersion=86;
+  const old=withoutPredatorFoodPolicies(stripV120(withoutV90(fireCamp()))) as unknown as Record<string,unknown>;old.schemaVersion=86;
   for(const animal of (old as unknown as World).wildlife?.animals??[]){delete (animal as {ageTicks?:number}).ageTicks;delete animal.parents;delete animal.pregnancy;delete animal.mating;}
   for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).clean;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).firefight;
   const loaded=deserializeWorld(JSON.stringify(old));expect(loaded.fires).toBeUndefined();expect(loaded.pawns[0]!.priorities.firefight).toBe(1);
