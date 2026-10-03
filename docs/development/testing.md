@@ -46,6 +46,8 @@ Maintenir peu de scénarios riches : effets de jeu, invariants, cas limites et d
 
 La cohérence de notre simulation et la fidélité à RimWorld sont deux validations distinctes. Une règle de référence précise source, version, unité et contexte. La continuation de notre monde doit être exacte pour une même version de règles ; notre PRNG n’a pas à produire la séquence de RimWorld. Un oracle doit avoir une implémentation indépendante du chemin qu’il contrôle.
 
+Pour une correction de continuité comme la [poursuite V197](melee-pursuit-v197.md), l'oracle observe les transitions et les intervalles entre segments, puis rapproche chaque immobilité d'une cause admissible : récupération après tentative, étourdissement, arête encore engagée, obstacle ou absence de route sous budget. Exercer aussi le délai de recherche et l'expiration de décision en cours de poursuite, en conservant une cible mobile et un accès physique réel. Une blessure finale, une distance parcourue ou une moyenne de FPS peut réussir malgré des pauses périodiques ; ces seuls résultats ne remplacent pas les assertions temporelles de simulation et les segments observés aux vraies frames. Garder le checkpoint et la séquence en échec, sans supprimer les contrôles de blocage et de récupération pour obtenir une continuité apparente.
+
 Regrouper les changements cohérents avant de lancer leur lot de contrôles. Après un échec, corriger sa cause et rejouer les scénarios concernés. Ne pas desserrer un seuil uniquement pour obtenir un résultat vert. Un fichier de rapport ancien reste daté ; il n’est pas une preuve d’exécution sur le code présent.
 
 ## Choisir les contrôles

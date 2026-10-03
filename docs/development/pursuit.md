@@ -1,5 +1,7 @@
 # Approche autonome et positions de tir — V61
 
+V197 corrige les [pauses artificielles de poursuite](melee-pursuit-v197.md), sans migration au schéma 182 : révision différée sous budget, engagement conservé lorsque la même cible est retenue et début de route sûr parcouru pendant le délai de recherche. Les échéances ci-dessous demandent un réexamen ; elles n'imposent pas l'annulation périodique d'une poursuite valide. La [lecture Core actuelle](../research/melee-pursuit-core-v197.md) précise cette distinction.
+
 V62 complète ce contrat par les [réveils après impacts et dommages](disturbance.md). Sommeil, repos médical, incapacité et deux échéances sont distincts ; les interruptions générales des autres emplois restent partielles. Les absences mentionnées dans les bilans anciens ci-dessous sont historiques.
 [Recherche fraîche et limites](../research/pursuit-reference.md). Dans une nouvelle **Rencontre armée**, l'adversaire rejoint un poste depuis lequel il peut tirer sur une cible humaine visible ; désarmé, il rejoint le contact. Ce mandat individuel ne déclenche aucun raid ni spawn. Les anciennes sentinelles sans mandat restent fixes.
 

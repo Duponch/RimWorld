@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V197 — correction de continuité en mêlée, schéma 182 inchangé.** Lire le [contrat](development/melee-pursuit-v197.md), la [recherche Core](research/melee-pursuit-core-v197.md) et la [preuve](history/validation-melee-pursuit-v197.md). Les tests distinguent maintenant durée de poursuite, pauses indues et récupération réelle, au lieu du seul résultat final.
+
 **V196 — sang, dépouilles et douleur, schéma 182 inchangé.** Lire le [contrat](development/visual-blood-v196.md), la [recherche Core/technique](research/visual-blood-core-web-v196.md) et la [preuve](history/validation-visual-blood-v196.md). La 46e colonie de test prépare les rendus et laisse accomplir repas, portage et coups. Le jeu réutilise les lots existants ; les coûts supplémentaires de données/sommets/pigment et les limites de culling sont explicités. La texture fine du terrain sur l’herbe est différée. [V195](development/healroot-domestic-v195.md) reste le point d’entrée de la culture médicinale.
 
 La première expédition commerciale reste dans le périmètre du [contrat V193](development/caravan-trade-v193.md), de la [recherche Core](research/caravan-trade-core-v193.md) et de sa [preuve ciblée](history/validation-commercial-v193.md). Les possessions quittent et reviennent physiquement avec leur propriétaire ; devis, charge et stock du comptoir restent distincts des ressources coloniales. Les contrôles ciblés ne valent ni campagne naturelle ni commerce mondial exhaustif.

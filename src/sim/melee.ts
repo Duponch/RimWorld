@@ -21,6 +21,8 @@ import type { LightReader } from './light-environment.ts';
 import type { NavigationGrid,SearchBudget } from './work-planner.ts';
 import type { CommandResult,Pawn,World } from './types.ts';
 
+const EMPTY:ReadonlySet<number>=new Set();
+
 function targetFor(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id)):LivingTarget|undefined {
   const order=pawn.melee?.order;
   const p=order?combatTarget(world,order.targetId):undefined;
@@ -115,11 +117,22 @@ export function processMelee(world:World,pawn:Pawn,getBlocked:NavigationGrid,bud
   if(meleeContact(world,pawn,target,getBlocked())){pawn.path=[];pawn.state='idle';return;}
   if(!isColonist(pawn)&&!pawn.tactics&&!pawn.raid||m.order?.auto==='draft'){cancelMelee(pawn);return;}
   const blocked=getBlocked(),end=pawn.path.at(-1),next=pawn.path[0];
-  if(!next||!end||!meleeContact(world,end,target,blocked)||!canStep(world,pawn,next,blocked,new Set())) {
-    if(!budget.remaining||pawn.planCooldown)return;
-    budget.remaining--;pawn.planCooldown=20;
-    const path=meleeRoute(world,pawn,meleePlaces(world,pawn,target),blocked);
-    if(!path){if(m.order?.auto==='social')finishSocialFight(world,pawn);else {cancelMelee(pawn);pawn.path=[];pawn.state='idle';}return;}pawn.path=path;
+  const traversable=!!next&&canStep(world,pawn,next,blocked,EMPTY);
+  if(!traversable||!end||!meleeContact(world,end,target,blocked)) {
+    if(!budget.remaining||pawn.planCooldown) {
+      // A moving target makes the goal stale, not the safe route prefix.
+      // Throttling a new search must not throttle physical pursuit as well.
+      if(!traversable){pawn.path=[];pawn.state='idle';return;}
+    }else{
+      budget.remaining--;pawn.planCooldown=20;
+      const path=meleeRoute(world,pawn,meleePlaces(world,pawn,target),blocked);
+      if(!path){if(m.order?.auto==='social')finishSocialFight(world,pawn);else {cancelMelee(pawn);pawn.path=[];pawn.state='idle';}return;}pawn.path=path;
+    }
   }
-  const step=pawn.path[0];if(step){pawn.state='moving';if(startTravel(world,pawn,step,getLight))pawn.path.shift();}
+  const step=pawn.path[0];if(step){pawn.state='moving';if(startTravel(world,pawn,step,getLight)){
+    pawn.path.shift();
+    // An exhausted successful route may need another goal when this edge
+    // finishes. Failed searches retain their backoff; they commit no step.
+    if(!pawn.path.length)pawn.planCooldown=0;
+  }}
 }

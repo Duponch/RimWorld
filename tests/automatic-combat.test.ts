@@ -84,6 +84,7 @@ test('visibility/hostility/forced work filter before scoring; cover, recent targ
 test('V59 validation precedes neutral migration; automatic ownership, counters and remembered tick are strict',()=>{
   const w=camp(),p=w.pawns[0];const old=JSON.parse(serializeWorld(w));(old.schemaVersion=59,withoutResearch(old));delete old.pawns[0].draft.holdFire;
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect(migrated.pawns[0].lastAttack).toBeUndefined();
+  const futureFood=structuredClone(old);futureFood.foodPolicies[0].allowed.push('red-fox-meat');expect(()=>deserializeWorld(JSON.stringify(futureFood))).toThrow('version 59');
   old.pawns[0].draft.holdFire=true;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow('version 59');
   fire(w,true);run(w,1);const saved=JSON.parse(serializeWorld(w));saved.pawns[0].shooting.order.auto={kind:'response',remaining:3,until:w.tick+200};expect(()=>deserializeWorld(JSON.stringify(saved))).toThrow();
   const civilian=JSON.parse(serializeWorld(w));delete civilian.pawns[0].draft;civilian.pawns[0].hostilityResponse='attack';civilian.pawns[0].shooting.order.auto={kind:'response',remaining:0,until:w.tick+200};expect(()=>deserializeWorld(JSON.stringify(civilian))).toThrow('automatic shooting phase');

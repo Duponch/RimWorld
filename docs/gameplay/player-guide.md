@@ -502,6 +502,8 @@ Mobilisez un colon équipé puis utilisez **Tirer sur une cible** et cliquez la 
 
 **Affectations → Réaction hostile** propose Fuir (défaut), Attaquer et Ignorer. Un civil éveillé sans ordre imposé fuit une menace visible à moins de huit cases, cherche un refuge puis attend avant de reprendre ses activités. Un ordre direct ou la mobilisation prévaut. Les portes fermées protègent du passage hostile ; une porte ouverte, même interdite à vos colons, peut laisser passer l’ennemi.
 
+La poursuite en mêlée continue sur un trajet encore praticable pendant son recalcul ; réévaluer la même cible ne provoque plus de repos périodique. Une porte, un obstacle, un état occupé ou la récupération après une tentative de coup peuvent toujours interrompre le mouvement. [Correction V197](../development/melee-pursuit-v197.md).
+
 **Limites importantes :** les sauvegardes créées avant V61 gardent leur sentinelle fixe ; son mandat est indiqué dans l’inspection. Le nouvel adversaire recherche des cibles visibles et des postes individuels, sans raid, poursuite omnisciente, attaque de porte ni tactique de groupe. Le tir sur un adversaire debout adjacent est refusé ; utilisez la mêlée. Chemise/gilet protègent désormais les parties couvertes ; armures supplémentaires et diplomatie restent absentes. Le nouveau parcours public utilise Atterrissage forcé partiel. [Détails V61](../development/pursuit.md).
 
 ## Capturer et recruter — V86 livrée

@@ -103,7 +103,10 @@ export function withoutHunting<T>(world:T):T {
   withoutFoodCrops(world);
   const w=world as any;delete w.hunting;delete w.butchery;
   if(w.spoiled){delete w.spoiled['hare-meat'];for(const id of V91_ITEM_IDS)delete w.spoiled[id];}
-  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>id!=='hare-meat'&&!V91_ITEM_IDS.includes(id));
+  // Current defaults include V190 fox meat (schema 178). Constructing a
+  // pre-V79 payload must omit it too; migration preserves the old policy and
+  // production validation must still reject an injected future permission.
+  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((id:string)=>id!=='hare-meat'&&id!=='red-fox-meat'&&!V91_ITEM_IDS.includes(id));
   const task=(c:any)=>{if(c)delete c.workTicks;};
   const bills=(s:any)=>{for(const b of s.bills??[]){delete b.filters['hare-meat'];delete b.filters['hare-corpse'];for(const id of V91_ITEM_IDS)delete b.filters[id];}};
   for(const s of w.structures??[])bills(s);for(const p of w.packed??[])bills(p.building);

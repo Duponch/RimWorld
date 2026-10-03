@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+Schéma courant 182 : [V197](melee-pursuit-v197.md) sépare le délai de recherche de l’exécution d’un préfixe de route sûr, puis conserve l’engagement à la révision d’une même cible. Les champs persistés, budgets et arêtes capturées existants sont réutilisés. Aucun changement de renderer, buffer GPU, protocole ou migration ; la [preuve](../history/validation-melee-pursuit-v197.md) distingue chronologie validée et performances générales non mesurées.
+
 Schéma courant 182 : [V196](visual-blood-v196.md) ne change ni simulation ni sauvegarde. Le sang de l’herbe est préparé dans la carte RGBA existante ; les traces corporelles utilisent un mot dérivé par acteur dans les streams entrelacés. Les sept rigs animaux servent aussi aux piles et corps portés, via les primitives de cargaison du porteur, sans mesh individuel. Les voix lisent le compteur médical existant et le sexe projeté du rendu, sans PRNG audio de simulation. Les [limites de coût et de validation](../history/validation-visual-blood-v196.md) restent explicites. [V195](healroot-domestic-v195.md) conserve sa migration stricte 181→182 et ses buissons médicinaux résidents.
 
 [V194](rain-electric-v194.md) conserve son état optionnel et son PRNG privé de risque électrique sous précipitations, adoptés prospectivement. Toit et alimentation restent autoritaires ; dégâts Flame, protection et récupération sont physiques. Sa [preuve](../history/validation-rain-electric-v194.md) reste historique.

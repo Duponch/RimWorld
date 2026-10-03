@@ -56,6 +56,7 @@ test('accessible colony route is preferred to destruction; retreat exits physica
 
 test('strict V67 migration enables no attack, rejects new mandates and calendar contradictions',()=>{
   const w=deconstructionCamp(),old=withoutResearch({...structuredClone(w),schemaVersion:67});expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedResearch(w));expect(w.raids).toBeUndefined();
+  const futureFood=structuredClone(old);futureFood.foodPolicies[0]!.allowed.push('red-fox-meat');expect(()=>deserializeWorld(JSON.stringify(futureFood))).toThrow('version 67');
   const raid=attackCamp();expect(()=>deserializeWorld(JSON.stringify({...raid,schemaVersion:67}))).toThrow();
   for(const mutate of [(v:World)=>v.raids!.completed=1,(v:World)=>v.raids!.active!.members=[v.pawns[0]!.id],(v:World)=>v.raids!.active!.lost=[999999],(v:World)=>v.raids!.active!.deadline=5,(v:World)=>{v.raids!.active!.phase='withdraw';v.raids!.active!.reason='timeout';v.pawns.find(p=>p.raid)!.raid!.exiting=true;},(v:World)=>v.pawns.find(p=>p.raid)!.raid!.exiting=true,(v:World)=>Object.assign(v.raids!,{unknown:1})]){const bad=structuredClone(raid);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
   const original=serializeWorld(w);expect(applyCommand(w,{type:'enable-raids'}).ok).toBe(true);expect(serializeWorld(w)).not.toBe(original);expect(validateWorld(w)).toEqual([]);

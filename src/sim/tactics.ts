@@ -5,7 +5,7 @@ import { clearShotSegment,findShotLine } from './combat-space.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
 import { equippedWeapon } from './equipment-rules.ts';
 import { healthRandom } from './health.ts';
-import { meleePlaces } from './melee-space.ts';
+import { meleeContact,meleePlaces } from './melee-space.ts';
 import { meleeTools } from './melee-statistics.ts';
 import { processMelee,startSentryMelee } from './melee.ts';
 import { cancelMelee } from './melee-state.ts';
@@ -58,7 +58,19 @@ export function processTactics(world:World,p:Pawn,getBlocked:NavigationGrid,budg
   const weapon=equippedWeapon(world,p),queries=shootingQueries(world);
   const range=weapon?.weapon&&!p.equipmentDropPending&&queries.body(p).capacities.manipulation>0?rangedWeaponProfile(weapon.item,weapon.weapon.quality)?.range??0:0;
   const expired=world.tick*10>=t.reviewAtCore;
-  if(expired){clearEngagement(p);target=undefined;}
+  if(expired&&t.targetId!==null&&budget.remaining&&!p.planCooldown) {
+    // Review is a new query, not an order to stop a still-valid pursuit.
+    // Keep the current intent while this query is throttled; a same-target
+    // result preserves its route/stance instead of inheriting an idle backoff.
+    budget.remaining--;p.planCooldown=20;
+    const reviewed=acquire(world,p,range,getBlocked());
+    if(!reviewed){clearEngagement(p);p.state='idle';return;}
+    if(reviewed.id!==t.targetId)clearEngagement(p);
+    else if(p.melee&&range&&!meleeContact(world,p,reviewed,getBlocked())){
+      cancelMelee(p);p.path=[];t.post=null;
+    }
+    target=reviewed;t.targetId=reviewed.id;t.reviewAtCore=reviewAt(world,!range);p.planCooldown=0;
+  }
   if(!t.targetId) {
     if(!budget.remaining||p.planCooldown){p.state='idle';return;}
     budget.remaining--;p.planCooldown=20;
