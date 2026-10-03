@@ -4,6 +4,8 @@ import { validFlakWorkShape } from '../sim/flak-work.ts';
 import { validComponentWorkShape } from '../sim/component-work.ts';
 import { isFloorKind } from '../sim/flooring.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
+import { isCropKindInVersion } from '../sim/crops.ts';
+import { validFireResourceLosses } from '../sim/fire-save.ts';
 import { validPlantSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
 import { validFlashstorm } from '../sim/flashstorm-save.ts';
@@ -48,6 +50,23 @@ export type SnapshotMessage = SnapshotHeader & (
 );
 
 import { validPlantGrowthLight } from '../sim/plant-light-save.ts';
+
+/** The new cultivated identity must not enter an older transport stream, even
+ * without growth fields. Keep its physical and vital bounds shared with saves. */
+function validDomesticHealroot(resource:Resource,world:World|DynamicWorld):boolean {
+  if(resource.kind!=='healroot')return true;
+  if(world.schemaVersion<182||resource.amount!==1||resource.species!==undefined
+    ||!Number.isSafeInteger(resource.id)||resource.id<1||resource.id>=world.nextId
+    ||!Number.isSafeInteger(resource.x)||resource.x<0||resource.x>=world.width
+    ||!Number.isSafeInteger(resource.z)||resource.z<0||resource.z>=world.height
+    ||!validStoneIdentity(resource.stone,resource.kind,world.schemaVersion)
+    ||!validPlantLife(resource,world.schemaVersion,world)
+    ||!validPlantThermalFactor(resource,world.schemaVersion)
+    ||resource.damage!==undefined&&(!Number.isSafeInteger(resource.damage)||resource.damage<1||resource.damage>=resourceMaxHp(resource)))return false;
+  return resource.growth===undefined&&resource.growthTick===undefined
+    ||typeof resource.growth==='number'&&Number.isFinite(resource.growth)&&resource.growth>=0&&resource.growth<=1
+      &&Number.isSafeInteger(resource.growthTick)&&resource.growthTick!>=0&&resource.growthTick!<=world.tick;
+}
 
 /** Sparse clinical transport guard. Full anatomy, permissions and possession
  * relations remain save-validator responsibilities. A dead dossier uses its
@@ -248,6 +267,8 @@ export class SnapshotDecoder {
       || !Number.isSafeInteger(message.revision) || message.revision < 1) return resync('Révision de snapshot invalide.');
     if (message.epoch < this.epoch || (message.epoch === this.epoch && message.revision <= this.revision)) return { status: 'stale' };
     if(!Array.isArray(message.world.stockpiles)||message.world.stockpiles.some(zone=>!validStorageConditions(zone,message.world.schemaVersion)))return resync('Plages de qualité ou de PV de réserve invalides pour ce snapshot.');
+    if(!Array.isArray(message.world.growingZones)||message.world.growingZones.some(zone=>!zone||!isCropKindInVersion(zone.plant,message.world.schemaVersion)))return resync('Culture future ou inconnue dans ce snapshot.');
+    if(message.world.fires!==undefined&&!validFireResourceLosses(message.world.fires?.ledger?.resources,message.world.schemaVersion))return resync('Pertes végétales du feu invalides pour ce snapshot.');
     for(const pawn of message.world.pawns){
       if(!validSurgeryTransport(pawn,message.world))return resync('État chirurgical ou anesthésique invalide pour ce snapshot.');
       if(!validPawnPodRescue(pawn,message.world.schemaVersion,message.world))return resync('Mandat de secours civil invalide pour ce snapshot.');
@@ -297,7 +318,7 @@ export class SnapshotDecoder {
           touched.add(id);
         }
         for (const resource of upserted) {
-          if(!validPlantGrowthLight(resource,message.world.schemaVersion,message.world.tick)||!validPlantLife(resource,message.world.schemaVersion,message.world)||resource.damage!==undefined&&(message.world.schemaVersion<87||!Number.isSafeInteger(resource.damage)||resource.damage<1||resource.damage>=resourceMaxHp(resource)))return resync('État végétal invalide.');
+          if(!validDomesticHealroot(resource,message.world)||!validPlantGrowthLight(resource,message.world.schemaVersion,message.world.tick)||!validPlantLife(resource,message.world.schemaVersion,message.world)||resource.damage!==undefined&&(message.world.schemaVersion<87||!Number.isSafeInteger(resource.damage)||resource.damage<1||resource.damage>=resourceMaxHp(resource)))return resync('État végétal invalide.');
           if (!validPlantThermalFactor(resource,message.world.schemaVersion)) return resync('Facteur thermique végétal invalide.');
           if (!validStoneIdentity(resource.stone, resource.kind, message.world.schemaVersion)) return resync('Identité géologique invalide.');
           if (touched.has(resource.id)) return resync('Ressource modifiée plusieurs fois.');
@@ -367,7 +388,7 @@ export class SnapshotDecoder {
         foreignIds.add(entity.id);
       }
     }
-    if(next.resources.some(resource=>foreignIds.has(resource.id)||!validPlantGrowthLight(resource,next.schemaVersion,next.tick)))return resync('Régime lumineux végétal ou identité commerciale invalide.');
+    if(next.resources.some(resource=>foreignIds.has(resource.id)||!validDomesticHealroot(resource,next)||!validPlantGrowthLight(resource,next.schemaVersion,next.tick)))return resync('État végétal ou identité commerciale invalide.');
     if(foreignIds.size){
       const collides=(entities:readonly {id:number}[])=>entities.some(e=>foreignIds.has(e.id));
       if([next.pawns,next.piles,next.structures,next.jobs,next.stockpiles,next.growingZones,next.wildlife?.animals??[],next.filth?.items??[],next.fires?.items??[],next.fires?.embers??[],next.projectiles??[]].some(collides)

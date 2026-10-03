@@ -7,7 +7,10 @@ const CULTURE_HELP:Record<CropKind,string>={
   potato:'Un plant mûr donne 11 pommes de terre. Cycle intermédiaire, moins pénalisé par le gravier ; le gain en terre riche est aussi plus faible. Conservation : 30 jours à température ambiante.',
   corn:'Un plant mûr donne 22 unités de maïs. Cycle long et sensible à la fertilité : prévoyez de quoi manger avant la récolte. Conservation : 60 jours à température ambiante.',
   cotton:'Le coton mûr donne 10 tissus. Cycle plus long que le riz ; le tissu sert à confectionner une tenue tribale, puis une chemise après recherche.',
+  healroot:'Plantes 8 requis pour commencer le semis seulement ; récolte et dégagement restent accessibles sans ce minimum. Une racine mûre intacte peut donner une dose de médicament à base de plantes, selon le récolteur. Sept jours de croissance nominale, modulés par sol, lumière, température et repos. Travail de base : semis 80 ticks, récolte 40 ticks ; la durée réelle dépend du colon et du milieu. La coupe de dégagement ne donne aucune dose.',
 };
+
+export const growingCultureHelp=(kind:CropKind):string=>CULTURE_HELP[kind];
 
 export function growingControls(zone: GrowingZone, send: (command: Command) => void): HTMLElement {
   const panel = document.createElement('div'); panel.className = 'storage-settings';
@@ -17,7 +20,7 @@ export function growingControls(zone: GrowingZone, send: (command: Command) => v
   for(const kind of CROP_KINDS){const option=document.createElement('option');option.value=kind;option.textContent=PLANT_DEFINITIONS[kind].label;plant.append(option);}
   plant.value=zone.plant;choice.append('Culture ',plant);panel.append(choice);
   const help=document.createElement('p');help.className='muted';
-  const updateHelp=()=>{help.textContent=CULTURE_HELP[plant.value as CropKind];};
+  const updateHelp=()=>{help.textContent=growingCultureHelp(plant.value as CropKind);};
   updateHelp();plant.addEventListener('change',updateHelp);
   panel.append(help);
   const controls = new Map<string, HTMLInputElement>();

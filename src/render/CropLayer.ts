@@ -2,11 +2,11 @@ import { plantLeafless } from '../sim/plant-life';
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { plantGrowth } from '../sim/plants';
-import { CROP_KINDS, type CropKind } from '../sim/crops';
+import { RESIDENT_CROP_KINDS, type ResidentCropKind } from './flora-presentation';
 import type { World } from '../sim/types';
 
 /** Dedicated resident instancing: sowing never rebuilds forest/rock geometry. */
-function cropGeometry(kind:CropKind):THREE.BufferGeometry {
+function cropGeometry(kind:ResidentCropKind):THREE.BufferGeometry {
   let parts:THREE.BufferGeometry[];
   if(kind==='corn') {
     const stalk=new THREE.CylinderGeometry(.045,.065,1.5,5).translate(0,.75,0);
@@ -33,11 +33,12 @@ class CropBatch {
   private readonly slots = new Map<number, number>();
   private readonly free: number[] = [];
   private used = 0;
+  private version = 0;
   private readonly transform = new THREE.Object3D();
   private readonly color = new THREE.Color();
   private readonly green = new THREE.Color(0x80a24a);
   private readonly ripe = new THREE.Color(0xcfb665);
-  constructor(private readonly group:THREE.Group,private readonly kind:CropKind,private material: THREE.Material) {
+  constructor(private readonly group:THREE.Group,private readonly kind:ResidentCropKind,private material: THREE.Material) {
     if(kind==='cotton')this.ripe.setHex(0xf0ead7);
     if(kind==='potato')this.ripe.setHex(0x83964a);
     this.geometry = cropGeometry(kind);
@@ -56,10 +57,11 @@ class CropBatch {
     return mesh;
   }
   prepareForCompile(): () => void {
-    const count = this.mesh.count; this.mesh.count = Math.max(1, count);
-    return () => { this.mesh.count = count; };
+    const mesh=this.mesh,count=mesh.count,version=this.version;mesh.count=Math.max(1,count);
+    return () => { if(this.mesh===mesh&&this.version===version)mesh.count=count; };
   }
   update(world: World, reset: boolean): void {
+    this.version++;
     if (reset) { this.slots.clear(); this.free.length = 0; this.used = 0; this.mesh.count = 0; }
     const crops = world.resources.filter(r => r.kind === this.kind), alive = new Set(crops.map(r => r.id));
     for (const [id, slot] of this.slots) if (!alive.has(id)) {
@@ -102,7 +104,7 @@ class CropBatch {
 export class CropLayer {
   readonly group=new THREE.Group();
   private readonly batches:CropBatch[];
-  constructor(private readonly plainMaterial:THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial){this.batches=CROP_KINDS.map(kind=>new CropBatch(this.group,kind,texturedMaterial));}
+  constructor(private readonly plainMaterial:THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial){this.batches=RESIDENT_CROP_KINDS.map(kind=>new CropBatch(this.group,kind,texturedMaterial));}
   setTexturesEnabled(enabled:boolean):void {for(const batch of this.batches)batch.setMaterial(enabled?this.texturedMaterial:this.plainMaterial);}
   prepareForCompile():()=>void {const restore=this.batches.map(b=>b.prepareForCompile());return()=>restore.forEach(f=>f());}
   update(world:World,reset:boolean):void {for(const batch of this.batches)batch.update(world,reset);}

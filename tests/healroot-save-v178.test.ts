@@ -4,15 +4,26 @@ import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/seri
 import { SnapshotDecoder, SnapshotEncoder } from '../src/bridge/snapshots';
 import { jobDuration } from '../src/sim/farming';
 import { SCHEMA_VERSION, type Job, type World } from '../src/sim/types';
+import { enableBiomeWildlife } from '../src/sim/wildlife';
+import { withoutPredatorFoodPolicies, withoutPredatorApparelPolicies } from './scenarios/legacy-save';
+
+function historicalAridWorld():World {
+  const current=createScenarioWorld(42,32,'crashlanded',{biome:'arid-shrubland',hilliness:'small-hills'});
+  const legacy=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(current)) as World));
+  delete legacy.miscIncidents;
+  for(const pawn of legacy.pawns)delete pawn.skills.plants;
+  legacy.schemaVersion=166 as World['schemaVersion'];
+  // Construct the pre-predator ecological profile under its own version. Do
+  // not relabel an already generated v2 population or remove individual foxes.
+  delete legacy.wildlife;
+  enableBiomeWildlife(legacy,'arid-shrubland');
+  return legacy;
+}
 
 test('V166 is validated before a neutral V167 migration with no retrospective acquisition', () => {
   // Arid generation contains no new species: this is a valid V166 shape,
   // including the existing climate/flora state, not an old fixture rewritten.
-  const world = createScenarioWorld(42, 32, 'crashlanded', { biome: 'arid-shrubland', hilliness: 'small-hills' });
-  const legacy = JSON.parse(serializeWorld(world));
-  delete legacy.miscIncidents; // V166 had no V180 storyteller stream.
-  for(const pawn of legacy.pawns)delete pawn.skills.plants;
-  legacy.schemaVersion = 166;
+  const legacy = historicalAridWorld();
   const before = JSON.stringify(legacy);
   const migrated = deserializeWorld(before);
   expect(migrated).toEqual({ ...legacy, schemaVersion: SCHEMA_VERSION });
@@ -26,27 +37,33 @@ test('V166 is validated before a neutral V167 migration with no retrospective ac
 });
 
 test('future wild species in an old resource delta is rejected without adopting candidate changes', () => {
-  const world = createScenarioWorld(42, 32, 'crashlanded', { biome: 'arid-shrubland', hilliness: 'small-hills' });
+  const oldStream = historicalAridWorld();
   const encoder = new SnapshotEncoder(), decoder = new SnapshotDecoder();
-  for(const pawn of world.pawns)delete pawn.skills.plants;
-  delete world.miscIncidents;
   // Model an existing V166 stream. A later corrupted upsert must not upgrade it.
-  const oldStream = { ...world, schemaVersion: 166 } as unknown as World;
-  const checkpoint = encoder.encode(oldStream, 0, 0);
-  expect(decoder.adopt(checkpoint).status).toBe('applied');
+  // Mirror postMessage cloning: the decoder must never share mutable worker
+  // objects with later test edits, including its initial checkpoint.
+  const checkpoint = structuredClone(encoder.encode(oldStream, 0, 0));
+  const initial=decoder.adopt(checkpoint);
+  expect(initial.status,initial.status==='resync'?initial.reason:'Historical checkpoint').toBe('applied');
+  if(initial.status!=='applied')throw new Error('Historical checkpoint refused.');
+  const retained=structuredClone(initial.world);
   const root = oldStream.resources.find(resource => resource.kind === 'wild-plant')!;
   Object.assign(root, { species: 'healroot-wild', amount: 1 });
-  const delta = encoder.encode(oldStream, 0, 0);
+  const delta = structuredClone(encoder.encode(oldStream, 0, 0));
   expect(delta.kind).toBe('delta');
   const rejected = decoder.adopt(delta);
   expect(rejected.status).toBe('resync');
+  expect(initial.world).toEqual(retained);
   // Rejection leaves the accepted revision available for a corrected packet.
   root.species = 'grass'; root.amount = 0;
   const corrected = structuredClone(delta);
   if(corrected.kind !== 'delta')throw new Error('Expected resource delta.');
   const patch = corrected.resources!.upserted.find(resource => resource.id === root.id)!;
   Object.assign(patch, { species: 'grass', amount: 0 });
-  expect(decoder.adopt(corrected).status).toBe('applied');
+  const repaired=decoder.adopt(corrected);
+  expect(repaired.status).toBe('applied');
+  if(repaired.status==='applied')expect(repaired.world.schemaVersion).toBe(166);
+  expect(initial.world).toEqual(retained);
 });
 
 test('only harvesting wild healroot receives the Core-scaled forty-tick duration', () => {

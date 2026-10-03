@@ -8,6 +8,7 @@ import { isCropKind, type CropKind } from './crops.ts';
 import { FLORA_DEFINITIONS } from './biome-flora.ts';
 
 export const PLANT_DEFINITIONS = Object.freeze({
+  healroot: { label: 'Racine médicinale', growDays: 7, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 1 },
   cotton: { label: 'Coton', growDays: 8, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 10 },
   berries: { label: 'Buisson de baies', growDays: 6, minFertility: .5, sensitivity: .5, afterHarvest: .3, yield: 10 },
   rice: { label: 'Riz', growDays: 3, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 6 },
@@ -17,7 +18,7 @@ export const PLANT_DEFINITIONS = Object.freeze({
 export const isPlant = (plant: Resource): boolean => plant.species!==undefined || plant.kind === 'berries' || isCropKind(plant.kind);
 export const isCrop = (plant: Pick<Resource,'kind'>): plant is Pick<Resource,'kind'>&{kind:CropKind} => isCropKind(plant.kind);
 export const harvestProductLabel = (plant:Resource):string => plant.species?FLORA_DEFINITIONS[plant.species].product==='wood'?'bois':FLORA_DEFINITIONS[plant.species].product==='agave-fruit'?'agave':FLORA_DEFINITIONS[plant.species].product==='berries'?'baies':FLORA_DEFINITIONS[plant.species].product==='herbal-medicine'?'dose de médicament à base de plantes':FLORA_DEFINITIONS[plant.species].label:
-  plant.kind==='cotton'?'tissu':plant.kind==='rice'?'riz':plant.kind==='potato'?'pommes de terre':plant.kind==='corn'?'maïs':'baies';
+  plant.kind==='healroot'?'dose de médicament à base de plantes':plant.kind==='cotton'?'tissu':plant.kind==='rice'?'riz':plant.kind==='potato'?'pommes de terre':plant.kind==='corn'?'maïs':'baies';
 
 export const BERRY_GROW_DAYS = 6;
 export const HARVEST_MIN_GROWTH = .65;
@@ -88,8 +89,9 @@ export function berryYield(world: World, plant: Resource): number {
   const growth = plantGrowth(world, plant);
   const minimum=plant.species?FLORA_DEFINITIONS[plant.species].harvestMinGrowth:HARVEST_MIN_GROWTH;
   if(growth<=minimum)return 0;
-  const remaining=plant.species==='healroot-wild'?Math.max(0,Math.min(1,1-(plant.damage??0)/FLORA_DEFINITIONS['healroot-wild'].hitPoints)):1;
-  const health=plant.species==='healroot-wild'?.5+.5*remaining:1;
+  const medicinal=plant.kind==='healroot'||plant.species==='healroot-wild';
+  const remaining=medicinal?Math.max(0,Math.min(1,1-(plant.damage??0)/FLORA_DEFINITIONS['healroot-wild'].hitPoints)):1;
+  const health=medicinal?.5+.5*remaining:1;
   return plant.amount * (.5 + .5 * (growth - minimum) / (1 - minimum)) * health;
 }
 /** Preview stochastic rounding without consuming RNG until placement succeeds. */

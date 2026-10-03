@@ -13,7 +13,7 @@ export const STRUCTURE_SHOT_FILL:Readonly<Record<StructureKind,number>>=Object.f
   'passive-cooler':.4,stool:.2,'dining-chair':.2,armchair:.3,'end-table':.2,dresser:.4,'flower-pot':.2,campfire:.2,'standing-lamp':.2,'sun-lamp':.2,horseshoes:0,'chess-table':.4,
 });
 export const RESOURCE_SHOT_FILL:Readonly<Record<ResourceKind,number>>=Object.freeze({
-  tree:.25,berries:.2,'wild-plant':0,rice:0,potato:0,corn:0,cotton:0,
+  tree:.25,berries:.2,'wild-plant':0,rice:0,potato:0,corn:0,cotton:0,healroot:0,
   // These small decorative pebbles are not the haulable Core chunks. Their
   // replacement by actual chunks is deferred; don't create invisible cover.
   rock:0,

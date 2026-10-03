@@ -8,7 +8,8 @@ import { releaseWork, type DropPlan } from './work-release.ts';
 import { isGrowingTerrain } from './soil.ts';
 import { createPlantLife } from './plant-life.ts';
 import { sowDaylily } from './flower-pot.ts';
-import type { GrowingZone, Job, JobKind, Resource, World } from './types.ts';
+import { plantSkill } from './plant-skills.ts';
+import type { GrowingZone, Job, JobKind, Pawn, Resource, World } from './types.ts';
 
 export const FARM_SCAN_INTERVAL = 10;
 export const FARM_SCAN_BUDGET = 512;
@@ -27,21 +28,27 @@ function resourceCells(world: World): Map<number, Resource> {
   }
   return cached.cells;
 }
-const zonesCache = new WeakMap<World, { source: GrowingZone[]; entries: { zone: GrowingZone; cell: number }[]; byCell: Map<number, GrowingZone> }>();
+const zonesCache = new WeakMap<World, { source: GrowingZone[]; entries: { zone: GrowingZone; cell: number }[]; byCell: Map<number, GrowingZone>; byId: Map<number,GrowingZone> }>();
 function zoneCells(world: World) {
   let cached = zonesCache.get(world);
   if (!cached || cached.source !== world.growingZones) {
     const entries = world.growingZones.flatMap(zone => zone.cells.map(cell => ({ zone, cell })));
-    cached = { source: world.growingZones, entries, byCell: new Map(entries.map(e => [e.cell, e.zone])) };
+    cached = { source: world.growingZones, entries, byCell: new Map(entries.map(e => [e.cell, e.zone])), byId:new Map(world.growingZones.map(zone=>[zone.id,zone])) };
     zonesCache.set(world, cached);
   }
   return cached;
 }
 export const growingZoneAt = (world: World, cell: number): GrowingZone | undefined => zoneCells(world).byCell.get(cell);
+/** Admission only: accepted work keeps its captured reservation even if the
+ * worker later loses a level. Clearing and harvesting have no sowing minimum. */
+export function sowingJobAllowed(world:World,pawn:Pawn,job:Pick<Job,'kind'|'growingZoneId'>):boolean {
+  return job.kind!=='sow'||job.growingZoneId===undefined||zoneCells(world).byId.get(job.growingZoneId)?.plant!=='healroot'||plantSkill(pawn).level>=8;
+}
 /** Presentation may supply the already captured target; omission keeps the
  * simulation's existing spatial cache. null means the target is absent. */
 export function jobDuration(world: World, job: Job, capturedResource?:Resource|null): number {
   if(job.flowerPotId!==undefined&&job.kind==='sow')return 54;
+  if(job.kind==='sow'&&job.growingZoneId!==undefined&&zoneCells(world).byId.get(job.growingZoneId)?.plant==='healroot')return 80;
   if(job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave')return constructionRecipe(job).work;
   if(job.kind==='mine'&&job.pickTicks!==undefined)return job.pickTicks/10;
   if(job.furniture)return furnitureDuration(world,job);
@@ -50,7 +57,7 @@ export function jobDuration(world: World, job: Job, capturedResource?:Resource|n
   if(job.material!==undefined)return constructionRecipe(job).work;
   if(job.kind==='harvest'||job.kind==='cut'){
     const resource=capturedResource===undefined?resourceCells(world).get(index(world,job)):capturedResource;
-    if(job.kind==='harvest'&&resource?.species==='healroot-wild')return 40;
+    if(job.kind==='harvest'&&(resource?.species==='healroot-wild'||resource?.kind==='healroot'))return 40;
     if(isCrop(resource??{kind:'rock'}))return 20;
   }
   return JOB_DURATION[job.kind];

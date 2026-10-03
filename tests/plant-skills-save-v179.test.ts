@@ -4,9 +4,10 @@ import { createWorld } from '../src/sim/index.ts';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization.ts';
 import { plantWorkRate } from '../src/sim/plant-skills.ts';
 import { SCHEMA_VERSION } from '../src/sim/types.ts';
+import { withoutPredatorFoodPolicies, withoutPredatorApparelPolicies } from './scenarios/legacy-save.ts';
 
 test('V167 validates strictly before neutral V168 migration with no past Plants practice or RNG draw', () => {
-  const current=createWorld(42),legacy=JSON.parse(serializeWorld(current));
+  const current=createWorld(42),legacy=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(current))));
   for(const pawn of legacy.pawns)delete pawn.skills.plants;
   legacy.schemaVersion=167;
   const before=JSON.stringify(legacy),migrated=deserializeWorld(before);

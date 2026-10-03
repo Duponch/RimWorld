@@ -6,6 +6,7 @@ const record=(v:unknown):v is Record<string,unknown>=>typeof v==='object'&&v!==n
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 
 export function validPlantLife(plant:Partial<Resource>,version:number,world:Pick<World,'tick'|'climate'>):boolean {
+  if(plant.kind==='healroot'&&version<182)return false;
   if(plant.species==='healroot-wild'&&version<167)return false;
   const life:unknown=plant.plantLife;
   if(life===undefined)return !world.climate||!isPlant(plant as Resource);
@@ -14,5 +15,5 @@ export function validPlantLife(plant:Partial<Resource>,version:number,world:Pick
     !integer(life.nextCheck,world.tick+1,world.tick+PLANT_LIFE_INTERVAL)||life.nextCheck%PLANT_LIFE_INTERVAL!==(plant.id!+1)%PLANT_LIFE_INTERVAL)return false;
   if(life.age!==Math.max(0,life.nextCheck-PLANT_LIFE_INTERVAL-life.since))return false;
   if(life.bornAt!==undefined&&life.bornAt!==life.since)return false;
-  return life.leaflessAt===undefined||(plant.kind==='berries'||plant.species!==undefined)&&integer(life.leaflessAt,life.since,world.tick)&&life.leaflessAt%PLANT_LIFE_INTERVAL===(plant.id!+1)%PLANT_LIFE_INTERVAL;
+  return life.leaflessAt===undefined||(plant.kind==='berries'||plant.kind==='healroot'||plant.species!==undefined)&&integer(life.leaflessAt,life.since,world.tick)&&life.leaflessAt%PLANT_LIFE_INTERVAL===(plant.id!+1)%PLANT_LIFE_INTERVAL;
 }

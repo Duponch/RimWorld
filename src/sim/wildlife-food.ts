@@ -48,7 +48,7 @@ function unclaimedPlant(world:World,r:Resource,except:number,workCells?:Readonly
     &&(workCells?!workCells.has(r.z*world.width+r.x):!world.jobs.some(j=>j.reservedBy!==null&&j.x===r.x&&j.z===r.z&&['harvest','cut','sow'].includes(j.kind)));
 }
 function grazeablePlant(r:Resource,growth:number):boolean {
-  return growth>=(r.species==='healroot-wild'?.65:.1)&&plantNutrition(r,growth)>0;
+  return growth>=(r.species==='healroot-wild'||r.kind==='healroot'?.65:.1)&&plantNutrition(r,growth)>0;
 }
 export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   const result:AnimalFood[]=[];

@@ -66,7 +66,7 @@ export const isBiomeId=(value:unknown):value is BiomeId=>(BIOMES as readonly unk
 export const isPlantSpecies=(value:unknown):value is PlantSpecies=>(PLANT_SPECIES as readonly unknown[]).includes(value);
 export const floraDefinition=(resource:Pick<Resource,'species'>):FloraDefinition|undefined=>resource.species?FLORA_DEFINITIONS[resource.species]:undefined;
 
-const LEGACY_NUTRITION:Readonly<Record<string,number>>={berries:.35,rice:.18,potato:.25,corn:.4,cotton:.2};
+const LEGACY_NUTRITION:Readonly<Record<string,number>>={berries:.35,rice:.18,potato:.25,corn:.4,cotton:.2,healroot:.2};
 export function plantNutrition(resource:Pick<Resource,'kind'|'species'>,growth:number):number {
   const perPlant=resource.species?FLORA_DEFINITIONS[resource.species].nutrition:LEGACY_NUTRITION[resource.kind]??0;
   return perPlant*Math.max(0,Math.min(1,growth));

@@ -9,6 +9,11 @@ const keys=(v:object,allowed:readonly string[])=>Object.keys(v).every(k=>allowed
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const finite=(v:unknown,min:number,max:number):v is number=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
 const cell=(w:World,c:unknown,strict=true):c is {x:number;z:number}=>object(c)&&(!strict||keys(c,['x','z']))&&int(c.x,0,w.width-1)&&int(c.z,0,w.height-1);
+/** Sparse loss keys have their own schema gate, even when no plant remains. */
+export function validFireResourceLosses(value:unknown,version:number):boolean {
+  return object(value)&&Object.entries(value).every(([kind,count])=>
+    (['tree','berries','rice','potato','corn','cotton'].includes(kind)||version>=91&&kind==='wild-plant'||version>=182&&kind==='healroot')&&int(count,1));
+}
 export function validBurningReaction(w:World,v:unknown,version:number):v is BurningReaction {
   return version>=87&&object(v)&&keys(v,['phase','remainingCore','target'])&&['panic','extinguish'].includes(String(v.phase))&&int(v.remainingCore,0,v.phase==='extinguish'?150:10)&&(v.target===undefined||v.phase==='panic'&&cell(w,v.target));
 }
@@ -35,7 +40,7 @@ export function validateFires(w:World,version:number,ids?:Set<number>):string[] 
   for(const e of s.embers){if(!object(e)||!keys(e,['id','from','to','impactCore'])||!cell(w,e.from)||!cell(w,e.to)||!int(e.impactCore,now+1,now+130)||Math.hypot(e.to.x-e.from.x,e.to.z-e.from.z)>Math.sqrt(5)+1e-9){errors.push('Invalid fire ember.');continue;}identity(e.id);}
   const wicks=new Set<number>();for(const wick of s.batteryWicks){if(!object(wick)||!keys(wick,['structureId','endCore'])||!int(wick.structureId,1,w.nextId-1)||!int(wick.endCore,now+1,now+150)||wicks.has(wick.structureId)||!w.structures.some(b=>b.kind==='battery'&&b.id===wick.structureId))errors.push('Invalid battery fire fuse.');else wicks.add(wick.structureId);}
   const l=s.ledger;
-  if(!object(l)||!keys(l,['items','resources','structures','extinguished','ignitions','batteryEnergyLost','fuelTicksLost','fuelTicksBurned','woodPotentialLost'])||!object(l.items)||!object(l.resources)||!int(l.woodPotentialLost)||!int(l.fuelTicksLost)||!int(l.fuelTicksBurned)||!int(l.structures)||!int(l.extinguished)||!int(l.ignitions)||!finite(l.batteryEnergyLost,0,Number.MAX_SAFE_INTEGER)||!Number.isSafeInteger(l.batteryEnergyLost*2)||Object.entries(l.items).some(([k,v])=>!Object.hasOwn(ITEM_DEFINITIONS,k)||version<152&&k==='fine-meal'||version<154&&k==='lavish-meal'||version<155&&k==='vegetarian-fine-meal'||version<156&&k==='carnivore-fine-meal'||version<157&&k==='vegetarian-lavish-meal'||version<159&&k==='carnivore-lavish-meal'||!int(v,1))||Object.entries(l.resources).some(([k,v])=>(!['tree','berries','rice','potato','corn','cotton'].includes(k)&&!(version>=91&&k==='wild-plant'))||!int(v,1)))errors.push('Invalid fire loss ledger.');
+  if(!object(l)||!keys(l,['items','resources','structures','extinguished','ignitions','batteryEnergyLost','fuelTicksLost','fuelTicksBurned','woodPotentialLost'])||!object(l.items)||!object(l.resources)||!int(l.woodPotentialLost)||!int(l.fuelTicksLost)||!int(l.fuelTicksBurned)||!int(l.structures)||!int(l.extinguished)||!int(l.ignitions)||!finite(l.batteryEnergyLost,0,Number.MAX_SAFE_INTEGER)||!Number.isSafeInteger(l.batteryEnergyLost*2)||Object.entries(l.items).some(([k,v])=>!Object.hasOwn(ITEM_DEFINITIONS,k)||version<152&&k==='fine-meal'||version<154&&k==='lavish-meal'||version<155&&k==='vegetarian-fine-meal'||version<156&&k==='carnivore-fine-meal'||version<157&&k==='vegetarian-lavish-meal'||version<159&&k==='carnivore-lavish-meal'||!int(v,1))||!validFireResourceLosses(l.resources,version))errors.push('Invalid fire loss ledger.');
   // Active fires and recorded extinctions are disjoint subsets of ignitions.
   // The subtraction avoids overflow and reserves an exact counter increment
   // for every remaining fire, even at the safe-integer boundary.

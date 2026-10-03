@@ -18,6 +18,8 @@ Un `finally` restaure les comptes et les valeurs exactes des matrices, avec les 
 
 Ce choix déplace de la compilation vers le chargement initial. Il ne supprime ni son coût, ni les éventuelles compilations de nouveaux matériaux. À l’ajout d’un nouveau lot graphique, vérifier sa préparation et enrichir le même audit ; ne pas multiplier les meshes individuels ni désactiver silencieusement les ombres.
 
+La vue éloignée suit le même contrat avec `OverviewBatch` : quatre attributs de matrice nommés, `geometry.instanceCount`, réserves propres à chaque catégorie et préparation restaurable selon la révision. Son buffer de teinte se nomme `colorBuffer` ; le nom `instanceColor` déclenche dans `NodeMaterial` r186 un varying implicite incompatible avec ce Mesh personnalisé. Les bornes du modèle et celles de l'ensemble des instances restent distinctes. La [preuve V195](../history/validation-healroot-domestic-v195.md) contrôle matériellement la croissance 16→32, les couleurs et les pipelines dans les deux projections, sans conclure à un coût GPU nul.
+
 ## Croissance des piles V29
 
 Cent mineurs d’acier ont révélé un autre cas : `pile:7:7` passe de 256 à 512 éléments, et deux programmes sont créés en jeu. Le [diagnostic des sources shader](../../artifacts/steel-render-diff.json) montre des noms `NodeBuffer_<id>` différents. Le [WGSLNodeBuilder officiel r186](https://github.com/mrdoob/three.js/blob/r186/src/renderers/webgpu/nodes/WGSLNodeBuilder.js) génère effectivement ces noms pour les buffers anonymes. Passer simplement aux buffers storage ne suffit pas ; précompiler une autre instance de même capacité ne suffit pas non plus. Ces essais ne sont pas conservés dans le moteur.

@@ -1,6 +1,6 @@
-import { floraSize } from './flora-presentation';
+import { floraSize,isResidentCrop } from './flora-presentation';
 import { plantLeafless } from '../sim/plant-life';
-import { harvestable,isCrop } from '../sim/plants';
+import { harvestable } from '../sim/plants';
 import type { Resource,World } from '../sim/types';
 
 type Shape=Pick<Resource,'id'|'kind'|'x'|'z'|'stone'|'species'>&{ripe:boolean;leafless:boolean;size:number};
@@ -22,7 +22,7 @@ export class NaturalResourcePresentation {
     let index=0,changed=reset,timeInvariant=true;
     for(let sourceIndex=0;sourceIndex<world.resources.length;sourceIndex++){
       const r=world.resources[sourceIndex]!;
-      if(isCrop(r))continue;
+      if(isResidentCrop(r))continue;
       const stable=(r.growth??1)===1&&r.plantLife?.leaflessAt===undefined;
       if(!stable)timeInvariant=false;
       const old=this.shapes[index++];
@@ -36,7 +36,7 @@ export class NaturalResourcePresentation {
     }
     this.snapshotTimeInvariant=immutableSnapshot&&timeInvariant;
     if(!changed&&index===this.shapes.length)return;
-    const natural=world.resources.filter(r=>!isCrop(r));
+    const natural=world.resources.filter(r=>!isResidentCrop(r));
     const present=new Set(natural.map(r=>r.id));
     for(const old of this.shapes)if(!present.has(old.id))this.changes.set(old.id,{resource:undefined,size:0});
     this.shapes=natural.map((r,i)=>{

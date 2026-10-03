@@ -1,6 +1,5 @@
-import { appendFlora,floraSize,isClusterPlantSpecies } from './flora-presentation';
+import { appendFlora,floraSize,isClusterPlantSpecies,isMedicinalPlant,isResidentCrop } from './flora-presentation';
 import { plantLeafless } from '../sim/plant-life';
-import { isCrop } from '../sim/plants';
 import { stoneColor } from './stone-palette';
 import { harvestable } from '../sim/plants';
 import { workProgress } from '../sim/work-progress';
@@ -78,7 +77,7 @@ function resizeResources(group:THREE.Group,resources:Map<number,World['resources
 }
 
 function visibleResourceKeys(world:World,r:World['resources'][number]):number[]{
-  if(r.kind!=='berries'&&!r.species)return [r.id];
+  if(r.kind!=='berries'&&!r.species&&!isMedicinalPlant(r))return [r.id];
   return [r.id,...(plantLeafless(world,r)?[]:[-r.id*2]),...(harvestable(world,r)?[-r.id*2-1]:[])];
 }
 
@@ -241,7 +240,7 @@ export class ResourceLayer {
         const oldKey=this.resourceChunks.get(id);
         if(oldKey)affected.add(oldKey);
         const resource=change.resource;
-        const key=resource&&!isCrop(resource)&&!isClusterPlantSpecies(resource.species)
+        const key=resource&&!isResidentCrop(resource)&&!isClusterPlantSpecies(resource.species)
           ?`${Math.floor(resource.x/WORLD_SCALE.chunkSize)}:${Math.floor(resource.z/WORLD_SCALE.chunkSize)}`:undefined;
         nextKeys.set(id,key);
         if(key)affected.add(key);
@@ -256,7 +255,7 @@ export class ResourceLayer {
     // Visit the world in its original order so ranges inside a changed chunk
     // remain identical to a complete update, even after deletion or movement.
     for (const resource of world.resources) {
-      if(!partial&&(isCrop(resource)||isClusterPlantSpecies(resource.species)))continue;
+      if(!partial&&(isResidentCrop(resource)||isClusterPlantSpecies(resource.species)))continue;
       const key=partial
         ?nextKeys.has(resource.id)?nextKeys.get(resource.id):this.resourceChunks.get(resource.id)
         :`${Math.floor(resource.x/WORLD_SCALE.chunkSize)}:${Math.floor(resource.z/WORLD_SCALE.chunkSize)}`;
@@ -298,7 +297,7 @@ export class ResourceLayer {
         const parts = [trunks, crowns, upperCrowns, rocks, bushes, berries];
         const lengths = parts.map(items => items.length);
         const n = noise(x, z, 77), turn = n * Math.PI * 2;
-        if(resource.species){appendFlora({trunks,crowns,cones,blades,cacti,bushes,fruit:berries},world,resource,turn);continue;}
+        if(resource.species||isMedicinalPlant(resource)){appendFlora({trunks,crowns,cones,blades,cacti,bushes,fruit:berries},world,resource,turn);continue;}
         if (resource.kind === 'tree') {
           const height = WORLD_SCALE.treeMinHeight + n * (WORLD_SCALE.treeMaxHeight - WORLD_SCALE.treeMinHeight);
           const radius = 0.8 + n * 0.32;

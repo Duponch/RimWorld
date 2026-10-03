@@ -12,9 +12,9 @@ import type { Pawn, Resource, World } from './types.ts';
  * leaves resource, RNG and material unchanged when output cannot be placed. */
 export function gatherResource(world: World, resource: Resource, kind:'chop'|'harvest'|'cut', producerJobId?:number, worker?:Pawn): number|null {
   if(kind==='harvest'&&!harvestable(world,resource)||kind==='chop'&&!choppable(world,resource))return null;
-  // Historical bushes keep their established cut yield. Only V91 species use
-  // product-free cutting as vegetation/construction clearing.
-  const roll=kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&resource.species?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
+  // Medicinal roots and V91 species clear without product. Historical bushes
+  // and other crops keep their established cut yield.
+  const roll=kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&(resource.species||resource.kind==='healroot')?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
   if(roll.quantity>0) {
     const item=resource.species?FLORA_DEFINITIONS[resource.species].product:
       kind==='chop'?'wood':isCrop(resource)?cropProduct(resource.kind):world.foodRules==='legacy'?'legacy-portion':'berries';

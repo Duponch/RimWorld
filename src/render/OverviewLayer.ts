@@ -1,15 +1,19 @@
-import { floraSize,floraColor,floraIdentity,isClusterPlantSpecies } from './flora-presentation';
-import { isCrop } from '../sim/plants';
+import { floraSize,floraColor,floraIdentity,isClusterPlantSpecies,isMedicinalPlant,isResidentCrop } from './flora-presentation';
+import { plantLeafless } from '../sim/plant-life';
 import { stoneColor } from './stone-palette';
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { World, ResourceKind } from '../sim/types';
+import type { World, Resource } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { noise } from './StaticGeometry';
 import { clearGroup } from './primitives';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import type { NaturalPresentationChange } from './NaturalResourcePresentation';
 import { syncTerrainPaintUvs } from './TerrainLayer';
+import { OverviewBatch,configureOverviewMaterial } from './OverviewBatch';
+
+type OverviewKind='tree'|'berries'|'wild-plant'|'rock';
+const overviewKind=(r:Resource):OverviewKind=>r.kind==='healroot'?'wild-plant':r.kind as OverviewKind;
 
 /** Resident distant representation. Switching zoom never rebuilds geometry.
  * Terrain keeps its exact heights/colors. Tiny fruit/branches yield to silhouettes. */
@@ -17,8 +21,10 @@ export class OverviewLayer {
   readonly group=new THREE.Group();
   private readonly terrain=new THREE.Group();
   private readonly vegetation=new THREE.Group();
-  private readonly batches=new Map<ResourceKind,THREE.InstancedMesh>();
-  private readonly slots=new Map<number,{kind:ResourceKind;slot:number;signature:string}>();
+  private readonly batches=new Map<OverviewKind,OverviewBatch>();
+  private readonly slots=new Map<number,{kind:OverviewKind;slot:number;signature:string}>();
+  private readonly used=new Map<OverviewKind,number>();
+  private readonly free=new Map<OverviewKind,number[]>();
   private readonly transform=new THREE.Object3D();
   private readonly tint=new THREE.Color();
   private readonly paint=createStylizedSurfaceTexture();
@@ -26,7 +32,8 @@ export class OverviewLayer {
   private readonly plainSurface=new THREE.MeshStandardNodeMaterial({roughness:0.95,vertexColors:true});
   private texturesEnabled=true;
   private foliage=true;
-  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void){for(const mat of [this.surface,this.plainSurface]){configure?.(mat);mat.userData.rendererOwned=true;}this.group.add(this.terrain,this.vegetation);this.group.visible=false;}
+  private revision=0;
+  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void){for(const mat of [this.surface,this.plainSurface]){configure?.(mat);configureOverviewMaterial(mat);mat.userData.rendererOwned=true;}this.group.add(this.terrain,this.vegetation);this.group.visible=false;}
   setTexturesEnabled(enabled:boolean):void {
     if(this.texturesEnabled===enabled)return;
     this.texturesEnabled=enabled;
@@ -50,11 +57,34 @@ export class OverviewLayer {
     syncTerrainPaintUvs(world,this.terrain,next,painted);
   }
   setFoliageVisible(visible:boolean):void {this.foliage=visible;const trees=this.batches.get('tree');if(trees)trees.geometry.setDrawRange(0,visible?Infinity:trees.geometry.userData.trunkIndices);}
+  private createBatch(geometry:THREE.BufferGeometry,capacity:number):OverviewBatch {
+    const mesh=new OverviewBatch(geometry,this.texturesEnabled?this.surface:this.plainSurface,capacity);
+    geometry.dispose();return mesh;
+  }
+  private releaseSlot(id:number,dirty:Set<OverviewKind>):void {
+    const previous=this.slots.get(id);if(!previous)return;
+    this.transform.scale.set(0,0,0);this.transform.updateMatrix();
+    this.batches.get(previous.kind)!.setMatrixAt(previous.slot,this.transform.matrix);
+    this.free.get(previous.kind)!.push(previous.slot);this.slots.delete(id);dirty.add(previous.kind);
+  }
+  private claimSlot(kind:OverviewKind,area:number,dirty:Set<OverviewKind>):number {
+    const free=this.free.get(kind)!,used=this.used.get(kind)!,slot=free.pop()??used;
+    if(slot===used)this.used.set(kind,used+1);
+    const mesh=this.batches.get(kind)!;
+    if(slot>=mesh.instanceMatrix.count){
+      const matrices=mesh.instanceMatrix.array,colors=mesh.colorBuffer.array,count=mesh.activeCount;
+      mesh.allocate(mesh.geometry,Math.min(area,2**Math.ceil(Math.log2(slot+1))));
+      mesh.instanceMatrix.array.set(matrices);mesh.colorBuffer.array.set(colors);mesh.activeCount=count;
+    }
+    mesh.activeCount=Math.max(mesh.activeCount,slot+1);dirty.add(kind);return slot;
+  }
   update(world:World,reset:boolean,changes?:ReadonlyMap<number,NaturalPresentationChange>):void {
+    this.revision++;
     if(reset) {
-      clearGroup(this.vegetation);this.slots.clear();this.batches.clear();
+      for(const mesh of this.batches.values())mesh.dispose();
+      this.vegetation.clear();this.slots.clear();this.batches.clear();this.used.clear();this.free.clear();
       for(const kind of ['tree','berries','wild-plant','rock'] as const) {
-        const count=world.resources.filter(r=>r.kind===kind).length;
+        const count=world.resources.filter(r=>!isResidentCrop(r)&&!isClusterPlantSpecies(r.species)&&overviewKind(r)===kind).length;
         const paint=(g:THREE.BufferGeometry,color:number)=>{const c=new THREE.Color(color),data=new Float32Array(g.getAttribute('position').count*3);for(let i=0;i<data.length;i+=3)data.set([c.r,c.g,c.b],i);g.setAttribute('color',new THREE.BufferAttribute(data,3));return g;};
         const trunk=kind==='tree'?paint(new THREE.CylinderGeometry(.1,.16,.5,4).translate(0,-.25,0),0x70573e):null;
         const crown=kind==='tree'?paint((world.site?new THREE.IcosahedronGeometry(1,0).scale(1,.4,1):new THREE.ConeGeometry(1,.8,4)).translate(0,.1,0),0x5f7c52):null;
@@ -66,40 +96,60 @@ export class OverviewLayer {
         // Three r186 uploads DynamicDrawUsage attributes on every render even
         // when their version is unchanged. These matrices change on snapshots
         // only; StaticDrawUsage still uploads each explicit needsUpdate below.
-        const mesh=new THREE.InstancedMesh(geometry,this.texturesEnabled?this.surface:this.plainSurface,Math.max(1,count));mesh.count=count;
+        const capacity=Math.min(world.width*world.height,2**Math.ceil(Math.log2(Math.max(16,count))));
+        const mesh=this.createBatch(geometry,capacity);
+        mesh.name=`overview-${kind}`;
+        this.used.set(kind,0);this.free.set(kind,[]);
         this.batches.set(kind,mesh);this.vegetation.add(mesh);
       }
     }
-    // Unknown additions or kind changes need resized resident batches. A
-    // presentation delta lets ordinary growth/removal skip the full resource
-    // scan while retaining the same stable slots and buffers.
+    // Births claim/reuse slots in their existing batch. They must not rebuild
+    // unrelated vegetation when a medicinal crop is actually sown.
     const delta = !reset ? changes : undefined;
     const changedResources = delta
-      ? [...delta.values()].flatMap(({resource})=>resource&&!isCrop(resource)&&!isClusterPlantSpecies(resource.species)?[resource]:[])
-      : world.resources.filter(r=>!isCrop(r));
-    if(!reset && changedResources.some(r=>!this.slots.has(r.id)||this.slots.get(r.id)!.kind!==r.kind)) {this.update(world,true);return;}
-    let boundsChanged=reset; const dirty=new Set<ResourceKind>();
-    const counts={'wild-plant':0,tree:0,berries:0,rock:0,rice:0,potato:0,corn:0,cotton:0};
-    const alive=delta?undefined:new Set<number>();
-    for(const r of changedResources) {
-      alive?.add(r.id);const signature=floraIdentity(world,r),previous=this.slots.get(r.id);
-      const slot=reset?counts[r.kind]++:previous!.slot;
-      if(!reset&&previous?.signature===signature)continue;
-      boundsChanged=true;dirty.add(r.kind);
-      const mesh=this.batches.get(r.kind)!,n=noise(r.x,r.z,77);
-      const height=r.kind==='tree'?WORLD_SCALE.treeMinHeight+n*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight):r.kind==='rock'?0.7:0.75;
-      const width=r.kind==='tree'?0.8+n*0.32:0.45,size=floraSize(world,r);
-      this.transform.position.set(r.x,height*size/2,r.z);this.transform.rotation.set(0,n*Math.PI*2,0);this.transform.scale.set(width*size,height*size,width*size);this.transform.updateMatrix();
-      mesh.setMatrixAt(slot,this.transform.matrix);this.tint.setHex(r.species&&r.kind!=='tree'?floraColor(r):r.kind==='tree'?0xffffff:r.kind==='rock'?(r.stone?stoneColor(r.stone):0x92998d):0x697b55);mesh.setColorAt(slot,this.tint);
-      this.slots.set(r.id,{kind:r.kind,slot,signature});
+      ? [...delta.values()].flatMap(({resource})=>resource&&!isResidentCrop(resource)&&!isClusterPlantSpecies(resource.species)?[resource]:[])
+      : world.resources.filter(r=>!isResidentCrop(r)&&!isClusterPlantSpecies(r.species));
+    const dirty=new Set<OverviewKind>();
+    if(delta){
+      for(const [id,{resource}] of delta){const previous=this.slots.get(id);
+        if(previous&&(!resource||isResidentCrop(resource)||isClusterPlantSpecies(resource.species)||previous.kind!==overviewKind(resource)))this.releaseSlot(id,dirty);
+      }
+    }else if(!reset){
+      const present=new Map(changedResources.map(r=>[r.id,r]));
+      for(const [id,previous] of this.slots){const r=present.get(id);if(!r||previous.kind!==overviewKind(r))this.releaseSlot(id,dirty);}
     }
-    this.transform.scale.set(0,0,0);this.transform.updateMatrix();
-    const removed=delta
-      ? [...delta].filter(([, {resource}])=>!resource||isCrop(resource)||isClusterPlantSpecies(resource.species)).map(([id])=>[id,this.slots.get(id)] as const)
-      : [...this.slots].filter(([id])=>!alive!.has(id));
-    for(const [,slot] of removed) if(slot&&slot.signature!=='removed') {this.batches.get(slot.kind)!.setMatrixAt(slot.slot,this.transform.matrix);slot.signature='removed';dirty.add(slot.kind);}
-    for(const kind of dirty) {const mesh=this.batches.get(kind)!;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;if(boundsChanged)mesh.computeBoundingSphere();}
+    for(const r of changedResources) {
+      const signature=floraIdentity(world,r),previous=this.slots.get(r.id);
+      const kind=overviewKind(r),slot=previous?.slot??this.claimSlot(kind,world.width*world.height,dirty);
+      if(!reset&&previous?.signature===signature)continue;
+      dirty.add(kind);
+      const mesh=this.batches.get(kind)!,n=noise(r.x,r.z,77),medicinal=isMedicinalPlant(r);
+      const height=r.kind==='tree'?WORLD_SCALE.treeMinHeight+n*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight):r.kind==='rock'?0.7:medicinal?(plantLeafless(world,r)?.12:.38):0.75;
+      const width=r.kind==='tree'?0.8+n*0.32:medicinal?.3:0.45,size=floraSize(world,r);
+      this.transform.position.set(r.x,height*size/2,r.z);this.transform.rotation.set(0,n*Math.PI*2,0);this.transform.scale.set(width*size,height*size,width*size);this.transform.updateMatrix();
+      mesh.setMatrixAt(slot,this.transform.matrix);this.tint.setHex((r.species||medicinal)&&r.kind!=='tree'?floraColor(r):r.kind==='tree'?0xffffff:r.kind==='rock'?(r.stone?stoneColor(r.stone):0x92998d):0x697b55);mesh.setColorAt(slot,this.tint);
+      this.slots.set(r.id,{kind,slot,signature});
+    }
+    for(const kind of dirty) {const mesh=this.batches.get(kind)!;mesh.instanceMatrix.needsUpdate=true;mesh.colorBuffer.needsUpdate=true;mesh.computeBoundingSphere();}
     this.setFoliageVisible(this.foliage);
   }
-  dispose():void {clearGroup(this.terrain);clearGroup(this.vegetation);this.surface.dispose();this.plainSurface.dispose();this.paint.dispose();}
+  prepareForCompile():()=>void {
+    const revision=this.revision;
+    const states=[...this.batches.values()].map(mesh=>{
+      const geometry=mesh.geometry,count=mesh.activeCount,visible=mesh.visible;
+      const sphere=mesh.boundingSphere.clone(),first=mesh.instanceMatrix.array.slice(0,16);
+      if(count===0){mesh.setMatrixAt(0,new THREE.Matrix4());mesh.activeCount=1;mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();}
+      mesh.visible=true;
+      return {mesh,geometry,count,visible,sphere,first};
+    });
+    return ()=>{
+      if(this.revision!==revision)return;
+      for(const {mesh,geometry,count,visible,sphere,first} of states){
+        if(mesh.geometry!==geometry)continue;
+        if(count===0){mesh.instanceMatrix.array.set(first,0);mesh.instanceMatrix.needsUpdate=true;}
+        mesh.activeCount=count;mesh.visible=visible;mesh.boundingSphere.copy(sphere);
+      }
+    };
+  }
+  dispose():void {clearGroup(this.terrain);for(const mesh of this.batches.values())mesh.dispose();this.vegetation.clear();this.surface.dispose();this.plainSurface.dispose();this.paint.dispose();}
 }

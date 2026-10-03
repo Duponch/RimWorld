@@ -24,6 +24,7 @@ import { furnitureStorageCandidates, mayImproveFurnitureStorage } from './furnit
 import { furnitureReady, packedAt } from './furniture-rules.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { validSowingClearance } from './sowing-clearance.ts';
+import { sowingJobAllowed } from './farming.ts';
 import { constructionCandidates } from './construction-planner.ts';
 import { haulReservations } from './haul-reservations.ts';
 import { asBuilder, constructionHaulPriority, constructionObstructions, constructionSiteFree, isConstruction } from './construction-rules.ts';
@@ -128,7 +129,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   // Logistics with a higher priority still uses the ordinary complete planner.
   const ready = world.jobs.filter(job => !isConstruction(job) && job.reservedBy === null && !clearingCells.has(cellIndex(world,job.x,job.z)) && pawn.priorities[workType(job)] > 0
     &&(job.kind!=='fix-breakdown'||fixBreakdownWanted(world,job)&&deliveredMaterial(world,job,'component')===1)
-    && (job.kind!=='sow'||!packedAt(world,job)) && job.escrow.wood >= JOB_WOOD_COST[job.kind] && (pawn.hunger > 20 || job.kind === 'harvest') && (job.kind!=='deconstruct'||deconstructionAvailable(world,job,pawn.id)) && (!job.furniture||furnitureReady(world,job,pawn)))
+    && sowingJobAllowed(world,pawn,job) && (job.kind!=='sow'||!packedAt(world,job)) && job.escrow.wood >= JOB_WOOD_COST[job.kind] && (pawn.hunger > 20 || job.kind === 'harvest') && (job.kind!=='deconstruct'||deconstructionAvailable(world,job,pawn.id)) && (!job.furniture||furnitureReady(world,job,pawn)))
     .map(job => ({ job, target: job, id: job.id, priority: pawn.priorities[workType(job)], rank: job.kind==='fix-breakdown'?-3:job.kind==='flick'?-2.5:job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? 3 : workType(job) === 'gather' ? 0 : 1, distance: Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z) }))
     .sort(compareCandidate);
   let reachable: Reachability | null = null;
@@ -241,7 +242,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       if (destination) best = { ...candidate, job: undefined, sourceId: source.id, quantity, destination };
       continue;
     }
-    if ((!best || compareCandidate(candidate,best)<0) && canReach(world,job,reachable,false)) best=candidate;
+    if (sowingJobAllowed(world,pawn,job) && (!best || compareCandidate(candidate,best)<0) && canReach(world,job,reachable,false)) best=candidate;
   }
   for(const candidate of furnitureStorageCandidates(world,pawn,blocked,reachable,budget))if(!best||compareCandidate(candidate,best)<0)best=candidate;
   const constructionObstacles=constructionObstructions(world);

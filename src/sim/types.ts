@@ -1,11 +1,11 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 181 as const;
+export const SCHEMA_VERSION = 182 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone' | 'rich-soil' | 'gravel';
-export type ResourceKind = 'wild-plant' | 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton';
+export type ResourceKind = 'wild-plant' | 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton' | 'healroot';
 export type MaterialKind = 'silver' | 'corpse' | 'wood' | 'food' | 'chunk' | 'steel' | 'gold' | 'plasteel' | 'advanced-component' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
 export type StructureKind = 'art-bench' | 'small-sculpture' | 'large-sculpture' | 'machining-table' | 'fabrication-bench' | 'hi-tech-research-bench' | 'multi-analyzer' | 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'sun-lamp' | 'standing-lamp' | 'passive-cooler' | 'door' | 'autodoor' | 'wall' | 'fence' | 'fence-gate' | 'pen-marker' | 'bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'chess-table' | 'stonecutter';
 export type JobKind = 'lay-floor' | 'remove-floor' | 'flick' | 'repair' | 'fix-breakdown' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
@@ -22,7 +22,7 @@ export type MaterialOwner = {type:'grave';graveId:number} | ({ type: 'ground' } 
 export interface MaterialPile { componentWork?:import('./component-work.ts').ComponentWork; flakWork?:import('./flak-work.ts').FlakWork; artWork?:import('./art-work.ts').ArtWork; gunWork?:import('./gun-work.ts').GunWork; humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
 export type StorageFilters = { silver?:boolean; corpse?:boolean; wood:boolean; food:boolean; unfinished?:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; gold?:boolean; plasteel?:boolean; component?:boolean; 'advanced-component'?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
 export interface StockpileCell extends Cell, StorageConditions { items?:Partial<Record<ItemId,boolean>>; id: number; filters: StorageFilters; priority: number; capacity: number }
-export interface GrowingZone { id: number; cells: number[]; plant: 'rice' | 'cotton' | 'potato' | 'corn'; allowSow: boolean; allowCut: boolean }
+export interface GrowingZone { id: number; cells: number[]; plant: 'rice' | 'cotton' | 'potato' | 'corn' | 'healroot'; allowSow: boolean; allowCut: boolean }
 export type HaulDestination = { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number; forHunting?: true } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
 export interface HaulTask {
   /** A whole furniture identity, never a divisible material pile. */

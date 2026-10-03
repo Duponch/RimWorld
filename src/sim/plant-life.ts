@@ -38,7 +38,7 @@ export const plantLeafless=(world:Pick<World,'tick'>,plant:Resource):boolean=>
 export function applyPlantFrost(world:World,plant:Resource,usesOutside:boolean,temperature:number):boolean {
   const life=plant.plantLife;if(!life||!isPlant(plant))return false;
   if(usesOutside&&temperature<plantFrostThreshold(plant.id)) {
-    if(!plant.species&&plant.kind!=='berries')return damageResource(world,plant,100000,'frost');
+    if(!plant.species&&plant.kind!=='berries'&&plant.kind!=='healroot')return damageResource(world,plant,100000,'frost');
     if(plant.species&&!FLORA_DEFINITIONS[plant.species].coldLeafless)return false;
     life.leaflessAt=world.tick;
   } else if(life.leaflessAt!==undefined&&world.tick-life.leaflessAt>=6000)delete life.leaflessAt;

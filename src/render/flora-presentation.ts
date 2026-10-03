@@ -1,14 +1,21 @@
 import { plantGrowth } from '../sim/plants';
+import { plantLeafless } from '../sim/plant-life';
 import type { Resource,World } from '../sim/types';
 import type { Placement } from './primitives';
 
+/** Dedicated crop geometry is deliberately closed: new domain crops do not
+ * allocate another map-sized instance array. Medicinal plants use shrub chunks. */
+export const RESIDENT_CROP_KINDS=['rice','potato','corn','cotton'] as const;
+export type ResidentCropKind=typeof RESIDENT_CROP_KINDS[number];
+export const isResidentCrop=(r:Pick<Resource,'kind'>):boolean=>(RESIDENT_CROP_KINDS as readonly string[]).includes(r.kind);
+export const isMedicinalPlant=(r:Pick<Resource,'kind'|'species'>):boolean=>r.kind==='healroot'||r.species==='healroot-wild';
 /** Four visible growth steps keep the forest resident between shape changes. */
-export const floraSize=(world:World,r:Resource):number=>!r.species?1:(r.growth??1)===1?1:.3+.7*Math.ceil(plantGrowth(world,r)*4)/4;
+export const floraSize=(world:World,r:Resource):number=>!r.species&&!isMedicinalPlant(r)?1:(r.growth??1)===1?1:.3+.7*Math.ceil(plantGrowth(world,r)*4)/4;
 const FLORA_COLORS={pine:0x47684c,birch:0x8fa467,oak:0x57754d,poplar:0x849752,drago:0x728966,saguaro:0x698661,agave:0x839c89,moss:0x718356,grass:0x929357,'tall-grass':0x7d8a4f,brambles:0x556648,'berry-bush':0x677b55,'healroot-wild':0x829b74};
-export const floraColor=(r:Resource):number=>FLORA_COLORS[r.species??'berry-bush'];
+export const floraColor=(r:Resource):number=>FLORA_COLORS[isMedicinalPlant(r)?'healroot-wild':r.species??'berry-bush'];
 export const isClusterPlantSpecies=(species:Resource['species']):boolean=>species==='grass'||species==='tall-grass';
 export const floraTreeHeight=(r:Resource):number=>r.species==='saguaro'?2.2:r.species==='drago'?3.25:r.species==='pine'?4.6:r.species==='poplar'?4.3:3.8;
-export const floraIdentity=(world:World,r:Resource):string=>`${r.kind}:${r.x}:${r.z}:${r.stone??''}:${r.species??''}:${floraSize(world,r)}`;
+export const floraIdentity=(world:World,r:Resource):string=>`${r.kind}:${r.x}:${r.z}:${r.stone??''}:${r.species??''}:${floraSize(world,r)}:${isMedicinalPlant(r)&&plantLeafless(world,r)}`;
 
 export interface FloraParts {trunks:Placement[];crowns:Placement[];cones:Placement[];bushes:Placement[];blades:Placement[];cacti:Placement[];fruit:Placement[]}
 /** Compact 3D meshes for trees, shrubs and agave. Grass species use their one
@@ -36,7 +43,7 @@ export function appendFlora(parts:FloraParts,world:World,r:Resource,turn:number)
         if(!drago)add(parts.crowns,{y:height*.87,sx:.66,sy:height*.16,sz:.66,ry:turn+.5});
       }
     }
-  } else if(r.species==='healroot-wild') {
+  } else if(isMedicinalPlant(r)) {
     // A low rosette and three pale leaves share the existing bush geometry and
     // chunk buffers. The mauve crown distinguishes the medicinal plant from
     // ordinary brambles without adding a resident species-sized batch.

@@ -21,7 +21,7 @@ const STUFF_BUILDINGS=new Set(['fence','fence-gate','pen-marker','wall','door','
 export const structureMaxHp=(s:Pick<Structure,'kind'|'material'>)=>Math.round((BUILDINGS[s.kind]?.[0]??0)*(STUFF_BUILDINGS.has(s.kind)?STUFF_HP[s.material??'wood']??1:1));
 export const structureFlammability=(s:Pick<Structure,'kind'|'material'>)=>(BUILDINGS[s.kind]?.[1]??0)*(STUFF_BUILDINGS.has(s.kind)?s.material?.endsWith('-blocks')?0:s.material==='steel'?.4:1:1);
 export const structureLeavesResources=(s:Pick<Structure,'kind'>)=>BUILDINGS[s.kind]?.[2]??false;
-export const resourceMaxHp=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.hitPoints??(r.kind==='tree'?200:r.kind==='berries'?120:r.kind==='corn'?150:r.kind==='rock'?0:85);
+export const resourceMaxHp=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.hitPoints??(r.kind==='healroot'?60:r.kind==='tree'?200:r.kind==='berries'?120:r.kind==='corn'?150:r.kind==='rock'?0:85);
 export const resourceFlammability=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.flammability??(r.kind==='rock'?0:r.kind==='tree'?.8:1);
 export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>):number {
   if(p.kind==='apparel')return APPAREL[p.item as keyof typeof APPAREL]?.hitPoints??0;

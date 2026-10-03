@@ -622,6 +622,7 @@ export class ColonyRenderer {
     const restoreDoors=this.doors.prepareForCompile();
     const restoreTimber=this.timber.prepareForCompile();
     const restoreCrops = this.crops.prepareForCompile();
+    const restoreOverview = this.overview.prepareForCompile();
     const restorePlants = this.plants.prepareForCompile();
     const restoreGrass = this.grass?.prepareForCompile() ?? (() => {});
     const restoreDesignations=this.designations.prepareForCompile();
@@ -652,6 +653,7 @@ export class ColonyRenderer {
       for (const [object, value] of culling) object.frustumCulled = value;
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
       restoreBoxes();restoreArea();
+      restoreOverview();
       restorePodRescue();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;

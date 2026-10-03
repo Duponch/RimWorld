@@ -4,6 +4,7 @@ import { createWorld } from '../src/sim/engine';
 import type { Resource, World } from '../src/sim/types';
 import { NaturalResourcePresentation } from '../src/render/NaturalResourcePresentation';
 import { OverviewLayer } from '../src/render/OverviewLayer';
+import type { OverviewBatch } from '../src/render/OverviewBatch';
 import { PlantClusterLayer } from '../src/render/PlantClusterLayer';
 import { material } from '../src/render/primitives';
 import { isClusterPlantSpecies } from '../src/render/flora-presentation';
@@ -15,8 +16,8 @@ function resource(id:number,kind:Resource['kind'],species:Resource['species'],x:
 function overviewBuffers(layer:OverviewLayer):unknown[] {
   const vegetation=layer.group.children[1] as THREE.Group;
   return vegetation.children.map(child=>{
-    const mesh=child as THREE.InstancedMesh;
-    return {count:mesh.count,matrix:Array.from(mesh.instanceMatrix.array),color:mesh.instanceColor?Array.from(mesh.instanceColor.array):null};
+    const mesh=child as OverviewBatch;
+    return {count:mesh.activeCount,matrix:Array.from(mesh.instanceMatrix.array),color:Array.from(mesh.colorBuffer.array)};
   });
 }
 

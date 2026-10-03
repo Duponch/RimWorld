@@ -16,7 +16,7 @@ import { footprintCells } from './definitions.ts';
 import { constructionSkillRequired,constructionSupplied } from './construction-materials.ts';
 import { isRoofJob } from './roof-rules.ts';
 import { asBuilder, constructionHaulPriority, constructionObstruction, constructionSiteFree, isConstruction } from './construction-rules.ts';
-import { growingJobValid } from './farming.ts';
+import { growingJobValid, sowingJobAllowed } from './farming.ts';
 import { groundPile } from './ground-placement.ts';
 import { harvestable } from './plants.ts';
 import { blockedCells, cellIndex, interactionGoals, reachableCells, routeToJob } from './pathfinding.ts';
@@ -47,6 +47,7 @@ export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=fals
   if (!accepted&&(job.kind==='install'?!Number.isFinite(constructionHaulPriority(pawn)):!pawn.priorities[workType(job)])) return 'Ce travail est désactivé dans le tableau Travail.';
   if (job.reservedBy !== null && job.reservedBy !== pawn.id) return 'Travail réservé par un autre colon.';
   if (job.growingZoneId !== undefined && !growingJobValid(world,job)) return 'La culture ne permet plus ce travail.';
+  if(!accepted&&!sowingJobAllowed(world,pawn,job))return 'Plantes 8 nécessaire pour semer cette racine médicinale.';
   if(job.kind==='mine'&&world.tiles[job.z*world.width+job.x]?.terrain!=='rock')return 'Le massif a disparu.';
   if (job.kind === 'harvest') {
     const plant = world.resources.find(r=>r.x===job.x&&r.z===job.z);

@@ -1188,6 +1188,36 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32 au schéma 181, createWorld(6160), tick 0. Trois colons adultes libres sains en (8,13/15/17), besoins hauts, Construction 8, travaux désactivés pour laisser la décision au joueur. Terrain grass dégagé, six sols bois autour de la batterie. Recherche Batteries achevée explicitement au tick 0, sans travail de recherche revendiqué. Quatre appareils candidats : batterie 1×2 exposée à 101 W·j, radiateur sous une cellule de toit soutenue par un mur, radiateur arrêté et radiateur exposé. Générateur existant avec 75 bois dans son réservoir, cinq conduits physiques raccordant la batterie ; raccords des consommateurs calculés par reconcilePower, démarrage non accordé. Deux murs de soutien, zone de foyer, 40 bois, trois composants et six repas de survie réellement au sol. Pluie préparée stable, aucun état de risque adopté, tirage, décharge, feu, dommage, route, actionnement, chantier, extinction ou réparation achevé. La graine privée dérivée sera adoptée prospectivement au premier tick ; elle ne démontre pas une fréquence naturelle. Pas de nouveau ticket Zzztt, grande explosion, vidage du réseau, son dédié, campagne ou preuve de charge 250×250.",
       "sha256": "8789f8c32d8c867ddac6e6da7ff1aff610a29ca550992b2080fc958f1d5040b2"
+    },
+    {
+      "id": "champ-medicinal-v195",
+      "release": "v195",
+      "label": "Champ médicinal et soins · 3 colons",
+      "description": "Changer une case de riz vide en racine médicinale, semer avec Plantes 8, puis récolter un pied mûr préparé, ranger la dose et soigner une contusion.",
+      "filename": "champ-medicinal.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "culture médicinale",
+        "Plantes 8 au semis",
+        "récolte sous Plantes 8",
+        "médicament physique",
+        "stockage",
+        "soins",
+        "reprise"
+      ],
+      "steps": [
+        "En pause, sélectionner la case de culture vide en (13,16). Choisir Racine médicinale, appliquer les réglages et activer Culture pour Ada (Plantes 8). Le second colon est Plantes 7 : il ne peut pas commencer ce semis, même avec un ordre forcé.",
+        "Reprendre : observer le déplacement, le travail de semis et le plant nouveau. Son budget neutre est 80 ticks locaux ; sept jours biologiques de croissance ne sont pas accélérés. Sauvegarder et recharger pendant le travail.",
+        "Le pied mûr en (18,16) est explicitement préparé pour ne pas attendre plusieurs journées dans ce contrôle court. Désigner Récolter et activer Récolte pour le second colon Plantes 7. Son risque d’échec existe ; la dose n’est jamais précréditée. Désactiver Culture si vous voulez observer séparément le ressemis.",
+        "Activer Transport, ranger la dose dans la réserve Médicaments (16,12). Le troisième colon a une contusion préparée au bras gauche et un plafond Plantes médicinales. Activer son Auto-soin dans Santé et Médecin dans Travail, puis observer collecte et consommation au soin."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32 au schéma 182, createWorld(42), tick0. Sol grass dégagé ; trois colons adultes libres avec besoins hauts, horaires Travail et travaux initialement désactivés. Profils Plantes 8/7/8 préparés, sans XP. Santé remise saine, puis contusion5PV du bras gauche du troisième colon, plafond herbal. Climat adopté au tick0. Un healroot mûr à (18,16), identité/PV intacts/âge zéro explicitement préparés ; ce stade ne prouve pas sept journées de croissance naturelle. Une case de riz vide (13,16), réserve médicale25 (16,12), six repas de survie réels au sol. Aucune tâche, route, semis, récolte, dose herbal, portage, soin ou progression préalable. Le semis vide et tous les contacts restent à accomplir ; les anciennes colonies ne sont pas régénérées.",
+      "sha256": "dd0def3f182ee1b9b535613d97395cb657049a799d9b7558bfb4d791d98c0b12"
     }
   ]
 }

@@ -45,7 +45,8 @@ try{for(const action of (process.env.HARVEST_ACTIONS??'mine,chop').split(',')){
  const p=w.pawns[0],c=action==='mine'?w.tiles.map((t,i)=>({t,x:i%250,z:Math.floor(i/250)})).filter(v=>v.t.terrain==='rock').sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2))[0]:p;
  const command={type:'area',action,from:{x:Math.max(0,c.x-20),z:Math.max(0,c.z-20)},to:{x:Math.min(249,c.x+20),z:Math.min(249,c.z+20)}};
  if(!applyCommand(w,command).ok)throw Error('Designation rejected');
- const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.setDefaultTimeout(30000);
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[],failedRequests=[];page.setDefaultTimeout(30000);
+ page.on('requestfailed',request=>failedRequests.push({url:request.url(),failure:request.failure()?.errorText,resourceType:request.resourceType(),at:Date.now()}));
  if(process.env.HARVEST_TRACE==='1'){
   // Diagnostic only: compare worker publication with main-thread receipt in a
   // shared time origin. No production protocol or simulation state is changed.
@@ -67,6 +68,12 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
  await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()+`\nconst originalSync=client.onSnapshot;client.onSnapshot=(...args)=>{window.__sync.stepMs=args[1];return originalSync(...args);};`});});
  await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(w));
  await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&size=250');await page.waitForFunction(()=>!!window.__lisiere);
+ const prepareStarted=performance.now();
+ await page.waitForFunction(()=>!document.querySelector('.game-shell').inert&&!document.querySelector('[data-speed="0"]').disabled,undefined,{timeout:60000}).catch(async error=>{
+  report.preparationFailure={action,errors,elapsed:performance.now()-prepareStarted,state:await page.evaluate(()=>({preparing:window.__sync?.view?.preparing,backend:window.__lisiere?.backend,tick:window.__lisiere?.world?.tick,text:document.querySelector('.front-menu')?.textContent}))};
+  await page.screenshot({path:testOutputPath('artifacts/harvest-preparation-'+action+'-'+label+'.png')});throw error;
+ });
+ (report.preparation??=[]).push({action,ms:performance.now()-prepareStarted});
  await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();await page.keyboard.press('Escape');
  await page.waitForFunction(()=>!document.querySelector('.game-shell').inert);
  await page.evaluate(()=>{window.__sync.active=true;});await page.locator('[data-speed="'+initialSpeed+'"]').click();
@@ -78,7 +85,9 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
  const starvedFrames=starvation.length;
  const trace=process.env.HARVEST_TRACE==='1'?{longTasks:data.longTasks,workerBatchMs:Object.fromEntries(['wakeGap','simulation','encoding','sending','elapsed'].map(k=>[k,stats((data.workerBatches??[]).filter(b=>b.speed>0).map(b=>b[k]))])),slowWorkerBatches:(data.workerBatches??[]).filter(b=>b.speed>0&&(b.elapsed>20||b.wakeGap>50)),workerDeliveryMs:stats((data.workerSnapshots??[]).map(s=>s.received-s.published)),workerPublicationGapMs:stats((data.workerSnapshots??[]).flatMap((s,i,a)=>i&&s.speed===a[i-1].speed?[s.published-a[i-1].published]:[])),starvationContext:starvation.slice(0,10).map(s=>({frames:data.frames.filter(f=>Math.abs(f.at-s.current.at)<300),snapshots:data.snapshots.filter(f=>Math.abs(f.at-s.current.at)<300),worker:(data.workerSnapshots??[]).filter(f=>Math.abs(f.received-s.current.at)<300),batches:(data.workerBatches??[]).filter(b=>Math.abs(b.at-s.current.at)<300)}))}:{};
  const phase={starvation:starvation.slice(0,10),starvedFrames,controls:data.controls,action,command,initialJobs:w.jobs.length,adapter:data.adapter,errors,tick:data.tick,remainingJobs:data.jobs,stepMs:data.stepMs,frames:stats(data.frames.filter(f=>f.dt>0).map(f=>f.dt)),frameCpu:stats(data.frames.map(f=>f.cpu)),lagTicks:stats(data.frames.map(f=>f.lag)),adoptions:stats(data.snapshots.map(s=>s.ms)),deliveries:stats(data.snapshots.filter(s=>s.method==='setWorld').map(s=>s.ms)),sceneApplications:stats(data.snapshots.filter(s=>s.method==='applyWorld').map(s=>s.ms)),jumpCount:data.jumps.length,jumps:data.jumps.slice(0,80),rawJumpCount:data.rawJumpCount,continuousTravelExcessCount:data.continuousTravelExcess.length,continuousTravelExcess:data.continuousTravelExcess.slice(0,10),contactStalls:data.contactStalls,gapCount:data.gaps.length,gaps:data.gaps.slice(0,5),solidOccupancyCount:data.solidOccupancy.length,solidOccupancy:data.solidOccupancy.slice(0,5),removals:data.removals,lagTimeline:data.frames.filter((_,i)=>i%240===0).map(f=>({tick:f.tick,play:f.play,lag:f.lag}))};report.phases.push(phase);console.log(JSON.stringify({action,frames:phase.frames,jumpCount:phase.jumpCount,rawJumpCount:phase.rawJumpCount,continuousTravelExcessCount:phase.continuousTravelExcessCount,solidOccupancyCount:phase.solidOccupancyCount}));
- Object.assign(phase,trace);
+ Object.assign(phase,trace,{failedRequests});
+ // Preserve a completed phase even if the host interrupts the next page.
+ await writeTestFile('artifacts/harvest-sync-'+label+'.json',JSON.stringify(report,null,2)+'\n');
  if(process.env.HARVEST_RECOVERY==='1'){
   await page.locator('[data-speed="6"]').click();
   // Exceed the 64-tick history at 36 ticks/s. This isolated page stall is outside
