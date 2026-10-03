@@ -1,5 +1,6 @@
 import type { Command,Pawn } from '../sim/types';
 import { isColonist } from '../sim/affiliation';
+import { setTooltip } from './tooltip';
 
 export const draftLabel=(p:Pawn):string=>p.shooting?.stance?.phase==='aim'?'Mobilisé · vise':p.shooting?.stance?.phase==='cooldown'?'Mobilisé · récupération après tir':p.shooting?.order?'Mobilisé · rejoint sa position de tir':p.need?.kind==='sleep'?'Mobilisé · effondré de fatigue':p.draft?.target&& (p.x!==p.draft.target.x||p.z!==p.draft.target.z||p.moveCooldown>0)?`Mobilisé · vers ${p.draft.target.x}, ${p.draft.target.z}`:'Mobilisé · attend les ordres';
 /** UI selection policy. The worker remains the authority when health changes. */
@@ -28,4 +29,8 @@ export function updateDraftControls(parent:HTMLElement,pawns:Pawn[]):void {
   const fire=parent.querySelector<HTMLButtonElement>('#fire-at-will')!;fire.hidden=!drafted.length;fire.disabled=!drafted.length;fire.setAttribute('aria-pressed',String(drafted.length>0&&drafted.every(p=>!p.draft!.holdFire)));fire.textContent=drafted.some(p=>p.draft?.holdFire)?'Tirer à volonté : désactivé / mixte':'Tirer à volonté : activé';
   const excluded=pawns.length-eligible.length,scope=excluded?`${excluded} membre(s) indisponible(s) ou hors colonie exclus. `:'';
   parent.querySelector('#draft-help')!.textContent=scope+(all?`Clic droit sur le sol : déplacement. Clic droit sur une cible : options d’attaque. Maj : file de déplacements. ${drafted.reduce((n,p)=>n+p.draft!.queue.length,0)} déplacement(s) en attente.`:drafted.length?'Sélection mixte : R mobilise les autres colons disponibles. Les ordres tactiques concernent seulement les mobilisés.':!eligible.length?'Aucun colon libre capable d’être mobilisé.':'R mobilise les colons disponibles.');
+  setTooltip(toggle,{title:all?'Démobiliser':'Mobiliser',body:parent.querySelector('#draft-help')!.textContent??'',rows:[{label:'Raccourci',value:'R'}]});
+  setTooltip(stop,{title:'Arrêter l’ordre',body:'Arrêter les déplacements et attaques tactiques en cours. Les colons restent mobilisés.'});
+  setTooltip(fire,{title:'Tirer à volonté',body:'Autoriser ou suspendre les tirs automatiques des colons mobilisés.'});
+  setTooltip(parent.querySelector<HTMLElement>('#inspector-hostility-label')!,{title:'Réaction hostile',body:'Comportement autonome face à une menace lorsque le colon n’est pas mobilisé : fuir, attaquer ou ignorer.'});
 }

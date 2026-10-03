@@ -33,8 +33,14 @@ export function setSkillPassion(element: HTMLElement, leading: string, passion: 
   const passionLabel = SKILL_PASSION_LABELS[passion]!;
   const accessible = `${leading} · ${passionLabel}${trailing}`;
   if (element.getAttribute('aria-label') === accessible) return;
-  element.replaceChildren(document.createTextNode(`${leading} · ${passionLabel}`));
-  appendIcons(element, passion);
+  const match=/^(.*?) (\d+)\/20$/.exec(leading);
+  if(match){
+    const name=document.createElement('span');name.className='skill-caption';name.textContent=match[1]!;
+    const value=document.createElement('span');value.className='skill-rating';value.textContent=` ${match[2]}/20`;
+    const flames=document.createElement('span');flames.className='skill-flames';appendIcons(flames,passion);
+    element.replaceChildren(name,value,flames);
+  }else element.replaceChildren(document.createTextNode(leading));
+  if(!match)appendIcons(element, passion);
   if (trailing) element.append(document.createTextNode(trailing));
   element.title = accessible;
   element.setAttribute('aria-label', accessible);

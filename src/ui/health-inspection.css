@@ -1,0 +1,41 @@
+/* Core's clinical hierarchy, using Lisière's existing paper and pastel ink. */
+#health-inspection.health-core-dossier{padding:0;border:0;border-radius:0;background:transparent}
+#health-inspection.health-core-dossier .health-subtabs{display:flex;gap:0;margin:0;border-bottom:1px solid var(--line)}
+#health-inspection.health-core-dossier .health-subtabs button{min-height:34px;padding:6px 13px;border:1px solid var(--line);border-bottom:0;border-radius:9px 9px 0 0;background:var(--paper-deep);box-shadow:none;color:var(--muted-ink);font-size:14px;line-height:1.3}
+#health-inspection.health-core-dossier .health-subtabs button[aria-selected=true]{background:var(--paper);color:var(--ink);font-weight:600}
+#health-inspection.health-core-dossier .health-dossier{display:grid;grid-template-columns:minmax(205px,.39fr) minmax(0,.61fr);gap:0;align-items:stretch;min-height:340px}
+#health-inspection.health-core-dossier [hidden]{display:none!important}
+#health-inspection.health-core-dossier .health-overview{padding:12px 14px 12px 0;border-right:1px solid var(--line)}
+#health-inspection.health-core-dossier .health-overview>label{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px;min-height:25px;margin:0 0 3px;font-size:13px;line-height:1.3}
+#health-inspection.health-core-dossier .health-overview>label:has(#self-tend-policy){display:flex;justify-content:space-between}
+#health-inspection.health-core-dossier .health-overview>label input{order:0;accent-color:var(--forest)}
+#health-inspection.health-core-dossier .health-overview select{width:100%;min-width:0;min-height:26px;height:26px;padding:3px 21px 3px 6px;font-size:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#health-inspection.health-core-dossier [data-health=self-tend-hint]{display:block;margin:5px 0;font-size:12px;line-height:1.3;color:var(--muted-ink)}
+#health-inspection.health-core-dossier [data-health=self-tend-hint]:empty{display:none}
+#health-inspection.health-core-dossier .health-status{margin:7px 0;padding:3px 0;border:0;border-radius:0;background:transparent;color:var(--accent);font-size:13px;line-height:1.35}
+#health-inspection.health-core-dossier .health-capacities{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 8px;margin:8px 0 0;padding:6px 0 0;border-top:1px solid var(--line);font-size:13px;line-height:1.3}
+#health-inspection.health-core-dossier .health-capacities dt,#health-inspection.health-core-dossier .health-capacities dd{margin:0;padding:2px 0;line-height:1.3}
+#health-inspection.health-core-dossier .health-capacities dd{color:var(--forest);font-variant-numeric:tabular-nums}
+#health-inspection.health-core-dossier .health-capacities dd[data-reduced=true]{color:#9b6840}
+#health-inspection.health-core-dossier .health-conditions{display:flex;flex-direction:column;min-width:0;padding:12px 0 0 13px}
+#health-inspection.health-core-dossier .health-accessible-heading{position:absolute;width:1px;height:1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+#health-inspection.health-core-dossier .health-injury-list:empty{min-height:0}
+#health-inspection.health-core-dossier .health-injury-row{display:grid;grid-template-columns:minmax(90px,.42fr) minmax(0,.58fr) 24px;align-items:baseline;gap:6px;margin:0;padding:6px 7px;border:0;font-size:14px;line-height:1.35}
+#health-inspection.health-core-dossier .health-injury-row:nth-child(odd){background:color-mix(in srgb,var(--paper-deep) 65%,transparent)}
+#health-inspection.health-core-dossier .health-injury-row strong{font-weight:500;color:var(--accent)}
+#health-inspection.health-core-dossier .health-condition-info{align-self:center;justify-self:end;color:var(--muted-ink);font-size:15px;white-space:nowrap}
+#health-inspection.health-core-dossier .health-condition-info[data-bleeding=true]{color:#ad665e;font-size:12px}
+#health-inspection.health-core-dossier .health-conditions>[data-health=infections],#health-inspection.health-core-dossier .health-conditions>[data-health=flu]{padding:0;border:0}
+#health-inspection.health-core-dossier [data-health=immunity]{margin:6px 7px;color:var(--muted-ink);font-size:12px;line-height:1.35}
+#health-inspection.health-core-dossier .health-conditions>p:not(:empty),#health-inspection.health-core-dossier [data-flu=summary]{margin:0;padding:6px 7px;border:0;font-size:14px;line-height:1.35}
+#health-inspection.health-core-dossier .health-conditions>p.health-empty{color:var(--muted-ink)}
+#health-inspection.health-core-dossier .health-conditions>p.health-bleeding{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);color:#9b6840;font-size:13px}
+#health-inspection.health-core-dossier .health-conditions>p.health-bleeding:empty{display:none}
+#health-inspection.health-core-dossier .health-operations{min-height:250px;padding:12px 0}
+#health-inspection.health-core-dossier .health-operations>p{margin:0 0 10px;font-size:14px;line-height:1.4}
+#health-inspection.health-core-dossier .health-operation-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line)}
+#health-inspection.health-core-dossier .health-operation-row small{color:var(--muted-ink);font-size:12px;line-height:1.3}
+#health-inspection.health-core-dossier .health-operation-row button{min-height:32px;padding:5px 10px;font-size:13px;line-height:1.3}
+#health-inspection.health-core-dossier [tabindex='0']:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:600px){#health-inspection.health-core-dossier .health-dossier{grid-template-columns:minmax(165px,.44fr) minmax(0,.56fr)}#health-inspection.health-core-dossier .health-overview{padding-right:9px}#health-inspection.health-core-dossier .health-conditions{padding-left:8px}#health-inspection.health-core-dossier .health-capacities{font-size:12px}#health-inspection.health-core-dossier .health-injury-row{grid-template-columns:minmax(70px,.4fr) minmax(0,.6fr) 18px;font-size:12px}}
+@media(max-width:420px){#health-inspection.health-core-dossier .health-dossier{grid-template-columns:1fr}#health-inspection.health-core-dossier .health-overview{border-right:0;border-bottom:1px solid var(--line)}#health-inspection.health-core-dossier .health-conditions{padding-left:0;min-height:170px}}

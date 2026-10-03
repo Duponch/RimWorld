@@ -8,6 +8,7 @@ import { roomCleanliness } from '../sim/filth';
 import { BEAUTY_BAND_LABEL } from '../sim/room-beauty';
 import { IMPRESSION_LABELS } from '../sim/room-impressiveness';
 import { RoomBeautyInspection } from './room-beauty-inspection';
+import { setTooltip } from './tooltip';
 
 /** One cache per inspector owner, refreshed on snapshots/selection, never RAF. */
 export class RoomInspection {
@@ -18,7 +19,7 @@ export class RoomInspection {
     if (panel.hidden) return;
     let line = panel.querySelector<HTMLElement>('#room-description');
     if (!line) {
-      line = document.createElement('p'); line.id = 'room-description'; line.className = 'muted';
+      line = document.createElement('div'); line.id = 'room-description'; line.className = 'muted';
       // Keep habitat information near the selected object's description.
       if(panel.classList.contains('cell-inspector-host')){
         const details=document.createElement('details');details.className='cell-environment';
@@ -57,13 +58,19 @@ export class RoomInspection {
     }
     if (line.dataset.copy !== text) {
       line.dataset.copy=text;
-      line.replaceChildren(...text.split(/ (?=Température :|Propreté :|Beauté :|Impression :|Richesse :|Espace :|Lumière :|Vitesse de travail|Production :|Toit construit|Zone :)/).map(part=>{
+      const facts=text.split(/ (?=Température :|Propreté :|Beauté :|Impression :|Richesse :|Espace :|Lumière :|Vitesse de travail|Production :|Toit construit|Zone :)/).map(part=>{
         const item=document.createElement('span');item.className='room-fact';
         const separator=part.indexOf(' : ');
         if(separator>0){const label=document.createElement('span');label.textContent=part.slice(0,separator+3);const value=document.createElement('strong');value.textContent=part.slice(separator+3);item.append(label,value);}
         else item.textContent=part;
         return item;
-      }));
+      });
+      if(panel.classList.contains('colonist-inspector-host')){
+        const previous=line.querySelector<HTMLDetailsElement>('details');
+        const disclosure=document.createElement('details');disclosure.className='room-context-toggle';disclosure.open=previous?.open??false;
+        const summary=document.createElement('summary');summary.textContent='Environnement';setTooltip(summary,{title:'Environnement',body:text});
+        disclosure.append(summary,...facts);line.replaceChildren(disclosure);
+      }else line.replaceChildren(...facts);
     }
     line.hidden = !text;
   }

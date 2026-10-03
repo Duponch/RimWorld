@@ -10,7 +10,7 @@ import {
 describe('colonist inspector structure', () => {
   test('offers the six human records in Core order and only exposes Prisonnier for a captive', () => {
     expect(colonistInspectorTabs(false).map(tab => tab.label)).toEqual(['Journal', 'Matériel', 'Social', 'Bio', 'Besoins', 'Santé']);
-    expect(colonistInspectorTabs(true).map(tab => tab.label)).toEqual(['Journal', 'Matériel', 'Social', 'Bio', 'Besoins', 'Santé', 'Prisonnier']);
+    expect(colonistInspectorTabs(true).map(tab => tab.label)).toEqual(['Journal', 'Matériel', 'Prisonnier', 'Social', 'Bio', 'Besoins', 'Santé']);
   });
 
   test('keeps the chosen record across identity selection and rejects an inapplicable prisoner record', () => {

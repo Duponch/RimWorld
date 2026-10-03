@@ -44,7 +44,7 @@ import { resourceMaxHp } from './sim/thing-damage-rules';
 import { rockMaxHP } from './sim/mining-rules';
 import { createArrivalUI } from './ui/arrivals';
 import { createMoodInspection,updateMoodInspection } from './ui/mood-inspection';
-import { isColonist,activeThreat,isAdmittedGuest } from './sim/affiliation';
+import { isColonist,activeThreat } from './sim/affiliation';
 import { ShootingControls } from './ui/shooting-controls';
 const shootingControls=new ShootingControls();
 import { createDraftControls,updateDraftControls,toggleDraft,draftLabel } from './ui/drafting-controls';
@@ -81,7 +81,6 @@ import { OrderMenu } from './ui/order-menu';
 import type { SelectionGesture } from './render/PawnSelectionInput';
 import { createScheduleControls } from './ui/schedule-controls';
 import { createFoodPolicyControls } from './ui/food-policy-controls';
-import { createPodRescueInspection,updatePodRescueInspection } from './ui/pod-rescue-inspection';
 import { createApparelPolicyControls } from './ui/apparel-policy-controls';
 import { billControls, updateBillControls } from './ui/bill-controls';
 import { growingControls } from './ui/growing-controls';
@@ -104,6 +103,11 @@ import { installVisualIdentity, type UiIcon } from './ui/visual-identity';
 import { installArchitectIcons } from './ui/architect-icons';
 import { syncToolCursor } from './ui/tool-cursors';
 import { mountColonistInspector, updateColonistInspector, colonistInspectorState, type ColonistInspectorState } from './ui/colonist-inspector';
+import { installTooltips, dismissTooltip, setTooltip } from './ui/tooltip';
+import { pawnNeedsMarkup, updatePawnInspection } from './ui/pawn-inspection';
+import { openObjectInformation } from './ui/object-information';
+import { itemInformation } from './ui/item-information';
+import { healthCapacityRows } from './ui/health-inspection';
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
 import { updateFoodStocks } from './ui/food-stocks';
@@ -121,7 +125,7 @@ import { footprintCells, queryJobStatus, queryPawnStatus } from './sim/index';
 import { gameLayout, storageSettings, toolDefinitions, workColumns } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 
-import { recreationInspection, updateRecreationInspection } from './ui/recreation-inspection';
+import { updateRecreationInspection } from './ui/recreation-inspection';
 import { gatherSpotControls, updateGatherSpotControls } from './ui/gather-spot-controls';
 const jobLabels: Record<JobKind, string> = { fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', bed: 'Construction du lit', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
@@ -307,6 +311,7 @@ const shell = document.querySelector<HTMLElement>('.game-shell')!;
 const inspectorSizeObserver=new ResizeObserver(()=>shell.style.setProperty('--hover-inspector-height',`${el('inspector').hidden?0:el('inspector').getBoundingClientRect().height}px`));
 inspectorSizeObserver.observe(el('inspector'));
 installVisualIdentity(document.querySelector<HTMLElement>('#app')!);
+installTooltips(document.body);
 installArchitectIcons(document.querySelector<HTMLElement>('#app')!);
 // Suppress browser chrome without cancelling the game's own order-menu handler.
 document.querySelector('#app')!.addEventListener('contextmenu', event => event.preventDefault());
@@ -402,6 +407,7 @@ function setCategory(category: ArchitectCategory) {
 function selectedColonyIds():number[]{return snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner).map(p=>p.id)??[];}
 function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>selectPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:selectedColonyIds(),targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId:id,enabled});renderState();}));}
 function setPanel(panel: Panel, preserveTool = false) {
+  dismissTooltip();
   // Every exit path (tabs, map, portraits and shortcuts) releases this pause.
   if (currentPanel === 'menu' && panel !== 'menu' && menuResumeSpeed !== undefined && !replacingWorld && !frontMenu.isOpen()) {
     const speed = menuResumeSpeed; menuResumeSpeed = undefined;
@@ -559,15 +565,13 @@ function readStorageSettings(prefix: string) {
     priority: Number(el<HTMLSelectElement>(`${prefix}-priority`).value), capacity,
   };
 }
-function pawnNeedsMarkup():string {
-  return `<div class="needs">${(['hunger', 'rest', 'comfort'] as const).map((need, index) => `<label>${['Nourriture', 'Repos', 'Confort'][index]} <span id="selected-${need}"></span></label><meter id="${need}-meter" min="0" max="100" low="25" optimum="100"></meter>`).join('')}</div>${recreationInspection()}`;
-}
 function rotatePlacement(direction = 1) {
   placementOrientation = ((placementOrientation + direction + 4) % 4) as Orientation;
   renderer?.setPlacementRotation(placementOrientation);
   el('placement-orientation').textContent = `${placementOrientation * 90}°`;
 }
 function rebuildInspector() {
+  dismissTooltip();
   const panel = el('inspector');
   panel.hidden = currentPanel !== null || (!selection.ids.size && !selectedCell);
   panel.classList.remove('colonist-inspector-host','animal-inspector-host','cell-inspector-host');
@@ -580,28 +584,29 @@ function rebuildInspector() {
     }
   } else if(selectedPawn!==undefined&&snapshot?.wildlife?.animals.some(a=>a.id===selectedPawn)) {
     createAnimalInspector(panel,{onTame:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId,enabled});renderState();}),onCarePolicy:(animalId,care)=>void attempt(async()=>{await client.command({type:'animal-care-policy',animalId,care});renderState();}),onHunt:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId,enabled});renderState();}),onClose:clearSelection});
-  } else if(selectedPawn!==undefined&&snapshot?.pawns.some(p=>p.id===selectedPawn&&p.prisoner)) {
-    panel.innerHTML=`<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p>${pawnNeedsMarkup()}`;
-    createPrisonerInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},c=>void attempt(()=>client.command(c)),renderState);
-    createJournalInspection(panel);
-  } else if(selectedPawn!==undefined&&snapshot?.pawns.some(p=>p.id===selectedPawn&&!isColonist(p))) {
-    panel.innerHTML='<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><p>Personne extérieure à la colonie.</p><p id="enemy-mandate"></p>';
-    createEquipmentInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},()=>{});
-    const outside=snapshot.pawns.find(p=>p.id===selectedPawn)!;
-    el('enemy-mandate').textContent=outside.podRescue?'Naufragé civil · secours direct vers un lit disponible.':outside.visitor?'Visiteur neutre · consultez Visiteurs / Commerce à droite.':outside.tactics?'Mandat : approche autonome des cibles visibles.':'Mandat historique : sentinelle fixe.';
-    createHealthInspection(panel,outside.podRescue?()=>snapshot?.pawns.find(p=>p.id===selectedPawn):undefined,outside.podRescue?c=>void attempt(()=>client.command(c)):undefined,false);
-    if(outside.podRescue)createPodRescueInspection(panel,()=>snapshot?.pawns.find(p=>p.id===selectedPawn),c=>void attempt(()=>client.command(c)));
-  } else if (selectedPawn !== undefined) {
-    panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p>${pawnNeedsMarkup()}<button class="secondary-action" id="manage-work">Gérer le travail</button>`;
+  } else if (selectedPawn !== undefined && snapshot?.pawns.some(p=>p.id===selectedPawn)) {
+    const inspected=snapshot.pawns.find(p=>p.id===selectedPawn)!;
+    const managed=isColonist(inspected)&&!inspected.prisoner;
+    const current=()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;};
+    const send=(command:Command)=>void attempt(()=>client.command(command));
+    panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="selected-information" aria-label="Informations sur le personnage">i</button><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p>${pawnNeedsMarkup()}${managed?'<button class="secondary-action" id="manage-work">Gérer le travail</button>':''}`;
+    el('selected-information').onclick=()=>{const state=current();if(state)openObjectInformation({title:state.pawn.name,description:actionLabel(state.pawn,carriedPatientsOf(state.world)),rows:[...healthCapacityRows(state.pawn).map(row=>({...row,category:'Capacités',description:'Capacité actuelle du personnage. Les détails anatomiques et facteurs actifs se consultent dans Santé.'})),...Object.entries(state.pawn.skills).map(([skill,value])=>({category:'Compétences',label:({construction:'Construction',medicine:'Médecine',plants:'Plantes',animals:'Animaux',cooking:'Cuisine',crafting:'Artisanat',artistic:'Artistique',shooting:'Tir',melee:'Mêlée',social:'Social',intellectual:'Intellectuel'} as Record<string,string>)[skill]??skill,value:`${value.level} / 20`,description:'Niveau actuel. Bio expose l’expérience et les effets sur les travaux.'}))]});};
+    setTooltip(el('selected-information'),{title:'Informations',body:'Afficher les statistiques disponibles du personnage.'});
     createMoodInspection(panel);
     createSocialInspection(panel,renderState);
     createJournalInspection(panel);
-    el('manage-work').onclick = () => setPanel('work');
-    const orders=document.createElement('p');orders.id='selected-orders';panel.append(orders);
-    const cancel=document.createElement('button');cancel.id='clear-orders';cancel.textContent='Annuler les ordres directs';
-    createEquipmentInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},c=>void attempt(()=>client.command(c)));
-    createSkillsInspection(panel);createHealthInspection(panel,()=>snapshot?.pawns.find(p=>p.id===selectedPawn),c=>void attempt(()=>client.command(c)),true,{request:(pawnId,part)=>void attempt(()=>client.command({type:'surgery-request',pawnId,part})),cancel:pawnId=>void attempt(()=>client.command({type:'surgery-cancel',pawnId}))});
-    cancel.onclick=()=>{if(selectedPawn!==undefined)void attempt(()=>client.command({type:'clear-orders',pawnId:selectedPawn!}));};panel.append(cancel);
+    createSkillsInspection(panel);
+    createEquipmentInspection(panel,current,send);
+    createHealthInspection(panel,()=>current()?.pawn,send,managed,managed?{request:(pawnId,part)=>send({type:'surgery-request',pawnId,part}),cancel:pawnId=>send({type:'surgery-cancel',pawnId})}:undefined);
+    if(inspected.prisoner)createPrisonerInspection(panel,current,send);
+    if(managed){
+      el('manage-work').onclick = () => setPanel('work');
+      const orders=document.createElement('p');orders.id='selected-orders';panel.append(orders);
+      const cancel=document.createElement('button');cancel.id='clear-orders';cancel.textContent='Annuler les ordres directs';
+      cancel.onclick=()=>{if(selectedPawn!==undefined)send({type:'clear-orders',pawnId:selectedPawn});};panel.append(cancel);
+      setTooltip(el('manage-work'),{title:'Travail',body:'Ouvrir les priorités de travail de la colonie.'});
+      setTooltip(cancel,{title:'Annuler les ordres',body:'Interrompre les ordres directs de ce colon et lui rendre son autonomie.'});
+    }
   } else if (selectedCell) {
     panel.classList.add('cell-inspector-host');
     panel.innerHTML = `<div class="cell-summary"><div class="cell-card"><div class="panel-heading cell-heading"><span class="cell-illustration ui-icon" aria-hidden="true"></span><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="cell-description"></div><p id="cell-materials"></p><p id="cell-job"></p></div><div class="cell-actions" role="group" aria-label="Commandes de l’objet"><button id="weapon-permission" class="secondary-action" hidden></button><button id="cell-chop" class="secondary-action" hidden>Couper du bois</button><button id="cell-harvest" class="secondary-action" hidden>Récolter</button><button id="cell-cut" class="secondary-action" hidden>Déraciner</button><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button></div></div><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
@@ -651,9 +656,19 @@ function rebuildInspector() {
     const zone = selectedObject?.kind==='growing'?snapshot?.growingZones.find(z=>z.id===selectedObject!.id):undefined;
     if (zone) panel.append(growingControls(zone, command => void attempt(async () => { await client.command(command); rebuildInspector(); renderState(); })));
   } else panel.replaceChildren();
+  if(selectedCell&&selectedObject){
+    const heading=panel.querySelector('.cell-heading');
+    if(heading){const info=document.createElement('button');info.id='cell-information';info.textContent='i';info.setAttribute('aria-label','Informations sur l’objet');
+      info.onclick=()=>{if(!snapshot||!selectedObject)return;const pile=selectedObject.kind==='pile'?snapshot.piles.find(p=>p.id===selectedObject!.id):undefined;
+        if(pile){openObjectInformation(itemInformation(pile));return;}
+        const rows=[...panel.querySelectorAll<HTMLElement>('.cell-facts>p')].map(line=>({category:'Propriétés',label:line.querySelector('span')?.textContent?.replace(/\s*:\s*$/,'')??'État',value:line.querySelector('strong')?.textContent??line.textContent??'',description:line.textContent??''}));
+        const health=panel.querySelector('.cell-health-caption strong');if(health)rows.unshift({category:'Propriétés',label:'Points de vie',value:health.textContent??'',description:'État réel de cet objet.'});
+        openObjectInformation({title:panel.querySelector('#cell-title')?.textContent??'Objet',description:panel.querySelector('#cell-description')?.textContent??'',rows});};
+      setTooltip(info,{title:'Informations',body:'Afficher les propriétés de cet objet et rechercher une statistique.'});heading.querySelector('#inspect-close')?.before(info);}
+  }
   if(selection.ids.size&&snapshot?.pawns.some(p=>selection.ids.has(p.id)&&isColonist(p))){createDraftControls(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner)??[],c=>void attempt(async()=>{await client.command(c);renderState();}));shootingControls.create(panel,()=>snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner)??[],()=>renderState());}
   const inspected = snapshot?.pawns.find(p => p.id === selectedPawn);
-  if (inspected && selection.ids.size <= 1 && (isColonist(inspected) || inspected.prisoner)) {
+  if (inspected && selection.ids.size <= 1) {
     colonistInspector = colonistInspectorState(colonistInspector, inspected.id, !!inspected.prisoner);
     mountColonistInspector(panel, { ...colonistInspector, prisoner: !!inspected.prisoner, onTabChange: tab => {
       colonistInspector = { pawnId: inspected.id, activeTab: tab }; renderState();
@@ -832,25 +847,22 @@ function renderState() {
     else if(pawn.prisoner){
       el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn,carriedPatients);
       updatePrisonerInspection(el('inspector'),world,pawn);
-      updateRecreationInspection(el('inspector'),pawn,world);
-      updateJournalInspection(el('inspector'),world,pawn);
-      for(const need of ['hunger','rest','comfort','mood'] as const){
-        el(`selected-${need}`).textContent=pawn.state==='dead'?'—':`${Math.round(pawn[need])} %`;
-        el<HTMLMeterElement>(`${need}-meter`).value=pawn.state==='dead'?0:pawn[need];
-      }
     }
-    else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn,carriedPatients);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);if(pawn.podRescue)updatePodRescueInspection(el('inspector'),world,pawn);if(pawn.podRescue)el('enemy-mandate').textContent=isAdmittedGuest(pawn)?'Naufragé civil accueilli · soins et alimentation au lit, puis départ après récupération.':'Naufragé civil · secours direct vers un lit disponible.';}
+    else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn,carriedPatients);}
     else {
-      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.burning||pawn.firefighting||pawn.draft||pawn.equipmentTask||pawn.need||pawn.recreation.task||pawn.feed||pawn.tend||pawn.surgery||pawn.rescue||pawn.state==='resting'||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn,carriedPatients) : `${actionLabel(pawn,carriedPatients)} · ${queryPawnStatus(world, pawn).reason}`;
-      updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn,world);
-      updateRecreationInspection(el('inspector'),pawn,world);
-      roomInspection.update(el('inspector'), world, pawn);
+      el('selected-name').textContent = pawn.name; el('selected-action').textContent = actionLabel(pawn,carriedPatients);
       el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file${pawn.priorityWork?` · Priorité case ${pawn.priorityWork.cell.x}, ${pawn.priorityWork.cell.z}`:''}`;
       el<HTMLButtonElement>('clear-orders').disabled=pawn.orders.active===null&&!pawn.orders.queue.length&&!pawn.priorityWork;
+    }
+    if(pawn){
+      updatePawnInspection(el('inspector'),world,pawn,c=>void attempt(()=>client.command(c)));
+      updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn,world);updateHealthInspection(el('inspector'),pawn,world);
+      updateRecreationInspection(el('inspector'),pawn,world);
+      roomInspection.update(el('inspector'), world, pawn);
       updateMoodInspection(el('inspector'),world,pawn);
       updateSocialInspection(el('inspector'),world,pawn);
       updateJournalInspection(el('inspector'),world,pawn);
-      for (const need of ['hunger', 'rest', 'comfort'] as const) { el(`selected-${need}`).textContent = pawn.state==='dead'?'—':`${Math.round(pawn[need])} %`; el<HTMLMeterElement>(`${need}-meter`).value = pawn.state==='dead'?0:pawn[need]; }
+      setTooltip(el('selected-action'),{title:'Activité',body:queryPawnStatus(world,pawn).reason});
     }
   } else if (selectedCell) {
     const { x, z } = selectedCell;

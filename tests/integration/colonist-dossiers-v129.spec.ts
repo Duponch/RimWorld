@@ -29,8 +29,8 @@ test('V129: colonist dossiers stay above the compact summary and expose recorded
     });
     expect(geometry.tabsTop - geometry.pageBottom).toBeGreaterThanOrEqual(7);
     expect(geometry.summaryTop - geometry.tabsBottom).toBeGreaterThanOrEqual(7);
-    expect([geometry.pageRadius, geometry.tabRadius, geometry.summaryRadius]).toEqual(['10px', '8px', '10px']);
-    expect(geometry.pageWidth).toBeGreaterThan(650);
+    expect([geometry.pageRadius, geometry.tabRadius, geometry.summaryRadius]).toEqual(['10px', '6px', '10px']);
+    expect(geometry.pageWidth).toBe(514);
     await pawnTab(page, 'journal');
     await expect(page.locator('#pawn-journal-rows')).toContainText('Bavardage entre');
     for (const viewport of [{ width: 1366, height: 768 }, { width: 1522, height: 1195 }]) {
@@ -52,7 +52,7 @@ test('V129: colonist dossiers stay above the compact summary and expose recorded
       });
       expect(layout.inspector.top).toBeGreaterThanOrEqual(0);
       expect(layout.inspector.bottom).toBeLessThanOrEqual(viewport.height - 75);
-      expect(layout.pages.height).toBeLessThan(370);
+      expect(layout.pages.height).toBeLessThanOrEqual(510);
       expect(layout.card.left).toBeGreaterThan(layout.pages.left + 12);
       expect(layout.card.right).toBeLessThan(layout.pages.right - 12);
       expect(layout.policy.left).toBeGreaterThan(layout.actions.left + 10);
@@ -60,7 +60,7 @@ test('V129: colonist dossiers stay above the compact summary and expose recorded
       expect(layout.navigationScrollWidth).toBeLessThanOrEqual(layout.navigationWidth + 1);
       await page.screenshot({ path:testOutputPath(`artifacts/colonist-dossiers-v131-${viewport.width}.png`) });
     }
-    await page.locator('[data-journal-filter="combat"]').click();
+    await page.locator('[data-journal-filter="social"]').click();
     await expect(page.locator('#pawn-journal-empty')).toBeVisible();
     await pawnTab(page, 'health');
     await expect(page.locator('.health-capacities')).toContainText('Conscience');

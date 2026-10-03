@@ -13,16 +13,24 @@ test('skills: player chooses a builder, sees physical learning, pauses and reloa
   try {
     const initial=createWorld(43,32,32);initial.tick=3000;initial.tiles=initial.tiles.map(()=>({terrain:'grass'}));initial.resources=[];initial.piles=[];initial.pawns=initial.pawns.slice(1,2);
     const p=initial.pawns[0]!;p.x=10;p.z=10;p.hunger=100;p.rest=100;p.recreation.level=100;p.schedule.fill('anything');
+    // This prepared construction scene starts at midday. Generation can now
+    // include a stable old-age condition; preserve it and anchor its record to
+    // the prepared clock rather than serializing a live tick-0 dossier at 3000.
+    if(p.health)p.health.tick=initial.tick;
     addGroundMaterial(initial,'wood',45,{x:9,z:10},'wood');refreshStock(initial);
+    expect(validateWorld(initial)).toEqual([]);
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?scenario=camp&size=32&e2e');await expect(page.locator('#loading')).toHaveCount(0);
     await page.locator('[data-speed="0"]').click();await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
-    await panel(page,'work');const control=page.locator(`[data-owner="${p.id}"][data-work="build"]`);await expect(control).toHaveAttribute('title',/Construction 10\/20/);
+    await panel(page,'work');const control=page.locator(`[data-owner="${p.id}"][data-work="build"]`);await control.hover();
+    await expect(page.locator('#game-tooltip')).toBeVisible();await expect(page.locator('#game-tooltip')).toContainText('Construction 10/20');
     await control.selectOption('1');await tool(page,'bed');await revealCells(page,[{x:11,z:10}]);await cell(page,11,10);
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).pawns[0]!.skills.construction.xp).toBeGreaterThan(0);
     await page.locator('[data-speed="0"]').click();const working=await world(page);expect(working.jobs.some(j=>j.construction==='frame')).toBe(true);expect(validateWorld(working)).toEqual([]);
     await tool(page,'select');await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'bio');
-    await expect(page.locator('[data-skill="construction"]')).toContainText('Construction 10/20');await expect(page.locator('[data-skill-description]')).toContainText('Apprentissage 150 %');
+    await expect(page.locator('[data-skill="construction"]')).toContainText('Construction 10/20');
+    await page.locator('[data-skill-entry="construction"]').hover();
+    await expect(page.locator('#game-tooltip')).toBeVisible();await expect(page.locator('#game-tooltip')).toContainText('Apprentissage 150 %');
     await expect(page.locator('#fps-counter')).toBeVisible();await page.screenshot({path:testOutputPath('artifacts/skills-construction.png')});
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,working);
     await page.locator('[data-speed="6"]').click();await expect.poll(async()=>(await world(page)).structures.some(s=>s.kind==='bed')).toBe(true);

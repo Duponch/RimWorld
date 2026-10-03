@@ -89,7 +89,7 @@ test('V192 prepared therapeutic surgery uses the Health UI, actual bed/dose/work
     await capture('prepared',prepared);
     const resident=stages.prepared!.frame;expect(resident.instances).toBe(3);
     expect(Math.floor(resident.shapes.find(s=>s.id===control.id)!.word/100)).toBe(8);
-    await page.locator(`[data-pawn="${patient.id}"]`).click();await pawnTab(page,'health');
+    await page.locator(`[data-pawn="${patient.id}"]`).click();await pawnTab(page,'health');await page.locator('[data-health-tab="operations"]').click();
     const health=page.locator('[data-colonist-panel="health"]');
     await expect(health.locator('[data-surgery-part="left-arm"]')).toBeEnabled();
     for(const part of ['right-arm','left-leg','right-leg'])await expect(health.locator(`[data-surgery-part="${part}"]`)).toBeDisabled();

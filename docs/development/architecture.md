@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+Schéma courant 182 : [V199](colonist-ui-v199.md) ne change ni simulation, worker, renderer ni sauvegarde. Les nœuds UI existants sont déplacés sans cloner leurs écouteurs ; une infobulle déléguée réutilisable reçoit des données préparées à la cadence HUD, et une fiche modale affiche les propriétés projetées lors de son ouverture. Pas de requête métier à chaque mouvement de souris ni nouvelle boucle RAF continue. [Recherche](../research/colonist-ui-core-v199.md), [preuve et limites](../history/validation-colonist-ui-v199.md).
+
 Schéma courant 182 : [V198](movement-continuity-v198.md) dissocie observation de fuite, budget de recherche et suivi d’un trajet déjà sûr ; la sortie de production reprend sa destination persistée. Aucun champ, migration, renderer, buffer ou protocole ajouté. Le [diagnostic](../research/navigation-cpu-gpu-v198.md) conserve la navigation GPU au laboratoire ; les [preuves](../history/validation-movement-v198.md) distinguent coût CPU absolu, continuité et performances non mesurées.
 
 Schéma courant 182 : [V197](melee-pursuit-v197.md) sépare le délai de recherche de l’exécution d’un préfixe de route sûr, puis conserve l’engagement à la révision d’une même cible. Les champs persistés, budgets et arêtes capturées existants sont réutilisés. Aucun changement de renderer, buffer GPU, protocole ou migration ; la [preuve](../history/validation-melee-pursuit-v197.md) distingue chronologie validée et performances générales non mesurées.

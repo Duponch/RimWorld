@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V199 — dossiers compacts et informations au survol, schéma 182 inchangé.** Lire le [contrat UI](development/colonist-ui-v199.md), le [relevé des quatorze captures et du Core](research/colonist-ui-core-v199.md) et la [preuve ciblée](history/validation-colonist-ui-v199.md). Palette pastel conservée ; les informations non simulées restent absentes.
+
 **V198 — continuité et diagnostic CPU, schéma 182 inchangé.** Lire le [contrat](development/movement-continuity-v198.md), la [recherche Core et technique](research/navigation-cpu-gpu-v198.md) et la [preuve](history/validation-movement-v198.md). Distinguer attente normale au refuge, arrêt de contrôleur et coût du solveur ; le laboratoire GPU reste isolé.
 
 **V197 — correction de continuité en mêlée, schéma 182 inchangé.** Lire le [contrat](development/melee-pursuit-v197.md), la [recherche Core](research/melee-pursuit-core-v197.md) et la [preuve](history/validation-melee-pursuit-v197.md). Les tests distinguent maintenant durée de poursuite, pauses indues et récupération réelle, au lieu du seul résultat final.

@@ -10,6 +10,10 @@ import { socialImpact } from '../sim/social-state';
 import { biologicalYears,chronologicalYears } from '../sim/human-age.ts';
 import type { Pawn } from '../sim/types.ts';
 import { SKILL_PASSION_LABELS,setCompactSkillPassion,setSkillPassion } from './skill-passion';
+import { setTooltip } from './tooltip';
+import type { World } from '../sim/types';
+import { appearanceOf } from '../sim/pawn-appearance';
+import './pawn-dossiers-v199.css';
 
 type SkillEntry = {
   skill: 'animals'|'plants'|'construction'|'medicine'|'intellectual'|'crafting'|'artistic'|'cooking'|'shooting'|'melee'|'social';
@@ -17,17 +21,17 @@ type SkillEntry = {
   description?: string;
 };
 const SKILL_ENTRIES: readonly SkillEntry[] = [
-  {skill:'animals',progress:'data-animals-xp'},
-  {skill:'plants',progress:'data-plants-xp'},
-  {skill:'construction',progress:'data-skill-xp',description:'data-skill-description'},
-  {skill:'medicine',progress:'data-medicine-xp',description:'data-medicine-description'},
-  {skill:'intellectual'},
-  {skill:'crafting',progress:'data-crafting-xp'},
-  {skill:'artistic',progress:'data-artistic-xp'},
-  {skill:'cooking',progress:'data-cooking-xp',description:'data-cooking-description'},
   {skill:'shooting',progress:'data-shooting-xp'},
   {skill:'melee',progress:'data-melee-xp'},
+  {skill:'construction',progress:'data-skill-xp',description:'data-skill-description'},
+  {skill:'cooking',progress:'data-cooking-xp',description:'data-cooking-description'},
+  {skill:'plants',progress:'data-plants-xp'},
+  {skill:'animals',progress:'data-animals-xp'},
+  {skill:'crafting',progress:'data-crafting-xp'},
+  {skill:'artistic',progress:'data-artistic-xp'},
+  {skill:'medicine',progress:'data-medicine-xp',description:'data-medicine-description'},
   {skill:'social',progress:'data-social-xp'},
+  {skill:'intellectual'},
 ];
 /** Core displays biological age first and chronological age in parentheses. */
 export function humanAgeText(pawn:Pawn):string {
@@ -37,24 +41,33 @@ export function humanAgeText(pawn:Pawn):string {
   return `Âge : ${biological} ans${biological===chronological?'':` (${chronological} chronologiques)`}`;
 }
 
-function createSkillEntry(entry:SkillEntry):HTMLDetailsElement {
-  const details=document.createElement('details');details.className='skill-entry';details.dataset.skillEntry=entry.skill;
-  const summary=document.createElement('summary'),label=document.createElement('span');label.dataset.skill=entry.skill;summary.append(label);
-  if(entry.progress){const progress=document.createElement('progress');progress.max=1;progress.setAttribute(entry.progress,'');summary.append(progress);}
+function createSkillEntry(entry:SkillEntry):HTMLElement {
+  const details=document.createElement('div');details.className='skill-entry';details.dataset.skillEntry=entry.skill;details.tabIndex=0;
+  const summary=document.createElement('div'),label=document.createElement('span');summary.className='skill-entry-heading';label.dataset.skill=entry.skill;summary.append(label);
+  const level=document.createElement('span');level.className='skill-level-bar';level.setAttribute('aria-hidden','true');summary.prepend(level);
+  if(entry.progress){const progress=document.createElement('progress');progress.max=1;progress.hidden=true;progress.setAttribute(entry.progress,'');summary.append(progress);}
   const description=document.createElement('p');description.className='skill-entry-details muted';description.dataset.skillDetail=entry.skill;
   if(entry.description)description.setAttribute(entry.description,'');
-  details.append(summary,description);return details;
+  description.hidden=true;details.append(summary,description);return details;
 }
 
 export function createSkillsInspection(panel:HTMLElement):void {
   const details=document.createElement('details');details.className='skills-inspection';
   const summary=document.createElement('summary');summary.textContent='Biographie · compétences';
   const age=document.createElement('p');age.className='pawn-age';age.dataset.pawnAge='';
-  details.append(summary,age,...SKILL_ENTRIES.map(createSkillEntry));
-  createTraitsInspection(details);panel.append(details);
+  const identity=document.createElement('section');identity.className='bio-identity';
+  const name=document.createElement('h3');name.dataset.bioName='';
+  const sex=document.createElement('p');sex.dataset.bioSex='';identity.append(name,sex,age);
+  createTraitsInspection(identity);
+  const skills=document.createElement('section');skills.className='bio-skills';skills.setAttribute('aria-label','Compétences');
+  const heading=document.createElement('h3');heading.textContent='Compétences';skills.append(heading,...SKILL_ENTRIES.map(createSkillEntry));
+  const columns=document.createElement('div');columns.className='bio-columns';columns.append(identity,skills);
+  details.append(summary,columns);panel.append(details);
 }
-export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
+export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn,world?:World):void {
   updateTraitsInspection(panel,pawn);
+  const name=panel.querySelector<HTMLElement>('[data-bio-name]');if(name)name.textContent=pawn.name;
+  const sex=panel.querySelector<HTMLElement>('[data-bio-sex]');if(sex)sex.textContent=`${(world?appearanceOf(pawn,world.seed):pawn.appearance)?.sex==='female'?'Femme':'Homme'} · ${pawn.prisoner?'Prisonnier':pawn.visitor?'Visiteur':pawn.faction==='outlaws'?'Hors-la-loi':'Colon'}`;
   const age=panel.querySelector<HTMLElement>('[data-pawn-age]');if(age){age.textContent=humanAgeText(pawn);age.hidden=!age.textContent;}
   const s=pawn.skills.construction,label=panel.querySelector('[data-skill="construction"]');if(!label)return;
   setSkillPassion(label as HTMLElement,`Construction ${s.level}/20`,s.passion);
@@ -91,6 +104,14 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn):void {
   setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="medicine"]')!,`Médecine ${m.level}/20`,m.passion);
   const mp=panel.querySelector<HTMLProgressElement>('[data-medicine-xp]')!;mp.value=Math.max(0,m.xp/xpRequired(m.level));mp.setAttribute('aria-label','Expérience de médecine');
   panel.querySelector('[data-medicine-description]')!.textContent=`${(m.xp/XP_SCALE).toFixed(1)} / ${xpRequired(m.level)/XP_SCALE} XP · Vitesse ${Math.round(medicalTendSpeed(pawn)*100)} % avant lumière · Qualité de base ${Math.round(medicalTendQuality(pawn)*100)} % avant matériel et variation · Apprentissage ${Math.round(learningFactor(m,pawn)*100)} %.`;
+  for(const entry of SKILL_ENTRIES){
+    const row=panel.querySelector<HTMLElement>(`[data-skill-entry="${entry.skill}"]`)!;
+    const skill=pawn.skills[entry.skill]??{level:0,xp:0,dailyXp:0,passion:0 as const};
+    row.querySelector<HTMLElement>('.skill-level-bar')!.style.width=`${Math.max(0,Math.min(100,skill.level/20*100))}%`;
+    const label=row.querySelector<HTMLElement>('[data-skill]')!;
+    setTooltip(row,{title:label.getAttribute('aria-label')??'',body:row.querySelector<HTMLElement>('[data-skill-detail]')!.textContent??'',rows:[{label:'Expérience du niveau',value:`${(skill.xp/XP_SCALE).toFixed(1)} / ${xpRequired(skill.level)/XP_SCALE}`},{label:'Apprentissage',value:`${Math.round(learningFactor(skill,pawn)*100)} %`}]});
+    label.removeAttribute('title');
+  }
 }
 export function updateWorkSkills(row:HTMLElement,pawn:Pawn):void {
   row.title=traitSummary(pawn);

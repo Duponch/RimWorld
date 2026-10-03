@@ -1,0 +1,52 @@
+#inspector .bio-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.04fr);gap:20px}
+#inspector .bio-identity{min-width:0}
+#inspector .bio-identity h3[data-bio-name]{font-size:18px;margin-bottom:4px}
+#inspector .bio-identity .pawn-age{padding:0;margin:4px 0 22px;border:0}
+#inspector .bio-identity [data-traits]{list-style:none;padding:0;margin:0 0 10px}
+#inspector .bio-identity [data-traits] li{margin:0;padding:5px 0;color:var(--forest);font-weight:600}
+#inspector .bio-identity [data-traits] li:hover{background:var(--paper-deep)}
+#inspector .bio-identity .trait-stat-entry{font-size:12px;color:var(--muted-ink);margin-top:16px}
+#inspector .bio-identity .trait-stat-entry p{display:none}
+#inspector .bio-skills{min-width:0}
+#inspector .bio-skills .skill-entry{position:relative;margin:0 0 5px;padding:0;border:0;border-radius:3px;cursor:default}
+#inspector .bio-skills .skill-entry-heading{position:relative;min-height:26px;padding:3px 5px;box-sizing:border-box;background:#daceb84d;border-radius:2px}
+#inspector .bio-skills [data-skill]{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) 4ch 25px;align-items:center;gap:3px;width:100%;font-size:13px;line-height:20px}
+#inspector .bio-skills .skill-rating{text-align:right;font-variant-numeric:tabular-nums;font-size:11px}
+#inspector .bio-skills .skill-flames{display:flex;justify-content:center;align-items:center;white-space:nowrap}
+#inspector .bio-skills .skill-flames .skill-passion{flex:none;width:12px!important;height:16px!important}
+#inspector .bio-skills .skill-level-bar{position:absolute;inset:0 auto 0 0;background:#bdcbb080;border-radius:2px}
+#inspector .bio-skills .skill-entry:hover .skill-entry-heading{outline:1px solid var(--accent)}
+#inspector .bio-skills [hidden]{display:none}
+#inspector .pawn-needs-columns{display:grid;grid-template-columns:minmax(0,225fr) minmax(0,355fr);gap:16px}
+#inspector .pawn-needs-list,#inspector .pawn-thoughts-list{min-width:0}
+#inspector .pawn-needs-list .needs{display:block;margin:0;padding:0;border:0;background:transparent}
+#inspector .pawn-needs-list .pawn-need{padding:8px 12px 12px 0;min-height:62px;box-sizing:border-box}
+#inspector .pawn-needs-list .pawn-need:hover{background:#e9d7b850}
+#inspector .pawn-needs-list .pawn-need label{display:block;margin:0 0 6px;font-size:14px;font-weight:500;text-align:center}
+#inspector .pawn-needs-list label span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+#inspector .pawn-needs-list meter{display:block;appearance:none;box-sizing:border-box;width:100%;height:18px;border:1px solid #768c81;background:#dbd5c1;border-radius:0}
+#inspector .pawn-needs-list meter::-webkit-meter-bar{border:0;border-radius:0;background:#dbd5c1;height:16px}
+#inspector .pawn-needs-list meter::-webkit-meter-optimum-value,#inspector .pawn-needs-list meter::-webkit-meter-suboptimum-value,#inspector .pawn-needs-list meter::-webkit-meter-even-less-good-value{border-radius:0;background:#72aaa8}
+#inspector .pawn-needs-list .minor-needs{width:73%;padding-top:10px}
+#inspector .pawn-needs-list .minor-needs .pawn-need{min-height:50px;padding-block:4px 10px}
+#inspector .pawn-needs-list .minor-needs label{font-size:12px}
+#inspector .pawn-needs-list .minor-needs meter{height:13px}
+#inspector .pawn-needs-list .minor-needs meter::-webkit-meter-bar{height:11px}
+#inspector .pawn-needs-list #room-description{margin:12px 0 0;padding:8px 0 0;border:0;border-top:1px solid var(--line);background:none;font-size:11px;color:var(--muted-ink)}
+#inspector .pawn-thoughts-list #mood-inspection{display:block;margin:0;padding:0;border:0;background:transparent}
+#inspector .pawn-thoughts-list #mood-inspection>summary{display:none}
+#inspector .pawn-thoughts-list .mood-caption{display:flex;justify-content:space-between;align-items:baseline;margin:8px 0 6px}
+#inspector .pawn-thoughts-list .mood-caption strong{font-size:14px;font-weight:500}
+#inspector .pawn-thoughts-list .mood-caption span{font-size:12px;color:var(--muted-ink)}
+#inspector .pawn-thoughts-list #mood-gauge{height:18px;margin:0 0 24px;border:1px solid #768c81}
+#inspector .pawn-thoughts-list #mood-gauge-fill{background:#72aaa8}
+#inspector .pawn-thoughts-list #mood-target{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+#inspector .pawn-thoughts-list #mood-thoughts li{padding:4px 5px;min-height:24px;box-sizing:border-box;margin:0;border:0;background:transparent;font-size:13px;line-height:1.3}
+#inspector .pawn-thoughts-list #mood-thoughts li:hover{background:var(--paper-deep)}
+#inspector #social-inspection #social-opinions{margin:0 0 12px;font-size:13px}
+#inspector #social-inspection #social-opinions th,#inspector #social-inspection #social-opinions td{padding:4px 6px;border:0}
+#inspector #social-inspection #social-opinions tbody tr:nth-child(odd){background:transparent}
+#inspector #social-inspection #social-opinions tr:hover{background:var(--paper-deep)}
+#inspector #social-inspection #social-history{list-style:none;padding:0;margin:8px 0 0;border-top:1px solid var(--line)}
+#inspector #social-inspection #social-history li{margin:0;padding:5px 4px;font-size:12px;border-bottom:1px solid #d8c7a644}
+@media(max-width:540px){#inspector .bio-columns{gap:12px;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}#inspector .pawn-needs-columns{gap:10px;grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr)}}

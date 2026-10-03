@@ -1,14 +1,9 @@
 import type { Command,Pawn,World } from '../sim/types';
-import { createHealthInspection,updateHealthInspection } from './health-inspection';
-import { createEquipmentInspection,updateEquipmentInspection } from './equipment-inspection';
-import { createSkillsInspection,updateSkillsInspection } from './skills-inspection';
-import { createSocialInspection,updateSocialInspection } from './social-inspection';
-import { createMoodInspection,updateMoodInspection } from './mood-inspection';
 
 const MODES={maintain:'Soins et nourriture',reduce:'Réduire la résistance',recruit:'Recruter'} as const;
 
 /** A captive is inspectable and receives care policies, never colonist orders. */
-export function createPrisonerInspection(panel:HTMLElement,current:()=>{world:World;pawn:Pawn}|undefined,send:(command:Command)=>void,onOpen:()=>void):void {
+export function createPrisonerInspection(panel:HTMLElement,current:()=>{world:World;pawn:Pawn}|undefined,send:(command:Command)=>void):void {
   const box=document.createElement('section');box.id='prisoner-inspection';box.setAttribute('aria-label','Prisonnier');
   const status=document.createElement('p');status.id='prisoner-status';
   const resistance=document.createElement('p');resistance.id='prisoner-resistance';
@@ -24,9 +19,6 @@ export function createPrisonerInspection(panel:HTMLElement,current:()=>{world:Wo
   foodLabel.append('Régime alimentaire ',food);
   const care=document.createElement('p');care.className='muted';care.textContent='Geôlier apporte la nourriture et mène les conversations. Médecin assure les soins. Les régimes partagés se modifient dans Assignations.';
   box.append(status,resistance,progress,modeLabel,hint,needs,foodLabel,care);panel.append(box);
-  createHealthInspection(panel,()=>current()?.pawn,send,false);
-  createEquipmentInspection(panel,current,()=>{});
-  createSkillsInspection(panel);createSocialInspection(panel,onOpen);createMoodInspection(panel);
 }
 
 export function updatePrisonerInspection(panel:HTMLElement,world:World,pawn:Pawn):void {
@@ -43,5 +35,4 @@ export function updatePrisonerInspection(panel:HTMLElement,world:World,pawn:Pawn
   const food=box.querySelector<HTMLSelectElement>('#prisoner-food-policy')!,signature=JSON.stringify(world.foodPolicies.map(f=>[f.id,f.name]));
   if(food.dataset.signature!==signature){food.dataset.signature=signature;food.replaceChildren(...world.foodPolicies.map(f=>new Option(f.name,String(f.id))));}
   food.value=String(pawn.foodPolicyId);food.disabled=pawn.state==='dead';
-  updateHealthInspection(panel,pawn,world);updateEquipmentInspection(panel,world,pawn);updateSkillsInspection(panel,pawn);updateSocialInspection(panel,world,pawn);updateMoodInspection(panel,world,pawn);
 }

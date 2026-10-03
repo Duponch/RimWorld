@@ -5,6 +5,8 @@ export interface ColonistInspectorState {
   activeTab: ColonistInspectorTab;
 }
 
+import { dismissTooltip, setTooltip } from './tooltip';
+
 export interface ColonistInspectorOptions extends ColonistInspectorState {
   prisoner: boolean;
   onTabChange: (tab: ColonistInspectorTab) => void;
@@ -19,14 +21,14 @@ interface InspectorTabDefinition {
 const TAB_DEFINITIONS: readonly InspectorTabDefinition[] = Object.freeze([
   { id: 'journal', label: 'Journal', selectors: ['#pawn-journal'] },
   { id: 'gear', label: 'Matériel', selectors: ['#equipment-details'] },
+  { id: 'prisoner', label: 'Prisonnier', selectors: ['#prisoner-inspection'] },
   { id: 'social', label: 'Social', selectors: ['#social-inspection'] },
   { id: 'bio', label: 'Bio', selectors: ['.skills-inspection'] },
   { id: 'needs', label: 'Besoins', selectors: ['.needs', '#recreation-tolerance', '#mood-inspection', '#room-description'] },
   { id: 'health', label: 'Santé', selectors: ['#health-inspection', '#hygiene-controls', '#burial-controls'] },
-  { id: 'prisoner', label: 'Prisonnier', selectors: ['#prisoner-inspection'] },
 ]);
 
-const SUMMARY_SELECTORS = ['.panel-heading', '#selected-action'] as const;
+const SUMMARY_SELECTORS = ['.panel-heading', '#selected-identity', '#selected-action', '#enemy-mandate'] as const;
 const ACTION_SELECTORS = ['#draft-controls', '#manage-work', '#selected-orders', '#clear-orders'] as const;
 
 export function colonistInspectorLayoutContract(): {
@@ -92,7 +94,7 @@ export function refreshColonistInspectorLayout(root: HTMLElement): void {
   // RoomInspection inserts next to the action even after the summary is mounted.
   // Rehome this late-created node explicitly; normal collection skips summary nodes.
   const needs = root.querySelector<HTMLElement>('[data-colonist-panel="needs"]');
-  if (context && needs && context.parentElement !== needs) needs.append(context);
+  if (context && needs && !context.closest('[data-colonist-panel="needs"]')) needs.append(context);
   moveMatches(root, SUMMARY_SELECTORS, summary);
   moveMatches(root, ACTION_SELECTORS, actions);
   for (const definition of TAB_DEFINITIONS) {
@@ -100,10 +102,30 @@ export function refreshColonistInspectorLayout(root: HTMLElement): void {
     if (!panel) continue;
     moveMatches(root, definition.selectors, panel);
   }
+  // One left need list and one right thought list; each domain still owns its
+  // live nodes and command listeners. Collect late room descriptions as well.
+  if (needs) {
+    let columns = needs.querySelector<HTMLElement>('.pawn-needs-columns');
+    if (!columns) {
+      columns = document.createElement('div'); columns.className = 'pawn-needs-columns';
+      const left = document.createElement('section'); left.className = 'pawn-needs-list';
+      left.setAttribute('aria-label', 'Besoins');
+      const right = document.createElement('section'); right.className = 'pawn-thoughts-list';
+      right.setAttribute('aria-label', 'Humeur et pensées'); columns.append(left, right); needs.append(columns);
+    }
+    for (const node of needs.querySelectorAll<HTMLElement>(':scope > .needs, :scope > #recreation-tolerance, :scope > #room-description')) columns.children[0]!.append(node);
+    const mood = needs.querySelector<HTMLElement>(':scope > #mood-inspection');
+    if (mood) columns.children[1]!.append(mood);
+  }
 }
 
 export function setColonistInspectorTab(root: HTMLElement, requested: ColonistInspectorTab, prisoner: boolean): ColonistInspectorTab {
   const active = resolveColonistInspectorTab(requested, prisoner);
+  if (root.dataset.colonistInspectorTab === active) return active;
+  dismissTooltip();
+  const dimensions = { journal:[630,510], gear:[460,450], social:[540,510], bio:[514,489], needs:[580,520], health:[630,430], prisoner:[460,450] } as const;
+  root.style.setProperty('--dossier-width', `${dimensions[active][0]}px`);
+  root.style.setProperty('--dossier-height', `${dimensions[active][1]}px`);
   for (const button of root.querySelectorAll<HTMLButtonElement>('[data-colonist-tab]')) {
     const selected = button.dataset.colonistTab === active;
     button.setAttribute('aria-selected', String(selected));
@@ -113,6 +135,7 @@ export function setColonistInspectorTab(root: HTMLElement, requested: ColonistIn
     const selected = panel.dataset.colonistPanel === active;
     panel.hidden = !selected;
     for (const details of panel.querySelectorAll<HTMLDetailsElement>(':scope > details')) details.open = selected;
+    const mood=panel.querySelector<HTMLDetailsElement>('#mood-inspection');if(mood)mood.open=selected;
   }
   root.dataset.colonistInspectorTab = active;
   return active;
@@ -141,6 +164,17 @@ export function mountColonistInspector(root: HTMLElement, options: ColonistInspe
     options.onTabChange(tab);
   };
   for (const button of buttons) {
+    const title = button.textContent ?? '';
+    const descriptions: Record<ColonistInspectorTab, string> = {
+      bio:'Âge, traits et compétences. Survoler une compétence pour consulter son expérience et ses effets.',
+      needs:'Nourriture, sommeil, confort, loisirs et pensées qui influencent l’humeur.',
+      health:'Capacités, blessures, maladies et politiques de soins. Les opérations se demandent dans leur sous-onglet.',
+      gear:'Arme, vêtements et objets réellement possédés ou transportés.',
+      social:'Opinions réciproques et interactions consignées avec les autres personnes.',
+      journal:'Échanges et combats consignés pour cette personne.',
+      prisoner:'Mode de détention, résistance, régime et recrutement.',
+    };
+    setTooltip(button, { title, body: descriptions[button.dataset.colonistTab as ColonistInspectorTab] });
     button.addEventListener('click', () => choose(button));
     button.addEventListener('keydown', event => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;

@@ -1,5 +1,7 @@
 # Lisière
 
+**V199 — refonte des dossiers et infobulles, schéma 182 inchangé.** Les fiches humaines, Animaux et Recherche reprennent la hiérarchie Core en conservant la palette pastel. [Contrat](docs/development/colonist-ui-v199.md), [référence et écarts](docs/research/colonist-ui-core-v199.md), [validation ciblée](docs/history/validation-colonist-ui-v199.md). Présentation des données existantes, sans nouvelle mécanique.
+
 **V198 — continuité des déplacements, schéma 182 inchangé.** La fuite civile repart dès sa réobservation de danger sous budget ; les prédateurs conservent leur préfixe sûr et les produits rejoignent un dépôt libre au-delà des voisins occupés. [Contrat](docs/development/movement-continuity-v198.md), [recherche Core/CPU/GPU](docs/research/navigation-cpu-gpu-v198.md), [preuve ciblée](docs/history/validation-movement-v198.md). Correction de l’existant, sans nouveau contenu ni navigation GPU activée.
 
 **V197 — poursuite de mêlée continue, schéma 182 inchangé.** Le renouvellement d’un chemin et la révision périodique d’une même cible ne créent plus de pauses artificielles. Les recherches restent bornées ; obstacles, contacts et récupérations restent physiques. [Contrat](docs/development/melee-pursuit-v197.md), [recherche Core](docs/research/melee-pursuit-core-v197.md), [preuve ciblée](docs/history/validation-melee-pursuit-v197.md). Correctif du combat existant, sans nouvelle mécanique.

@@ -1,4 +1,5 @@
 import { TRAITS,breakThresholds,globalLearningFactor,type TraitBearer } from '../sim/traits';
+import { setTooltip } from './tooltip';
 
 export function traitSummary(pawn:TraitBearer):string {
   return pawn.traits?.map(id=>TRAITS[id].label).join(' · ')??'Aucun trait attribué';
@@ -16,7 +17,9 @@ export function updateTraitsInspection(panel:HTMLElement,pawn:TraitBearer):void 
   const signature=JSON.stringify(pawn.traits??[]);
   if(list.dataset.signature!==signature){
     list.dataset.signature=signature;
-    list.replaceChildren(...(pawn.traits?.map(id=>{const li=document.createElement('li');li.dataset.trait=id;const details=document.createElement('details');details.className='trait-entry';const summary=document.createElement('summary');summary.textContent=TRAITS[id].label;const description=document.createElement('p');description.textContent=TRAITS[id].description;details.append(summary,description);li.append(details);return li;})??[Object.assign(document.createElement('li'),{textContent:'Aucun trait attribué. Les personnes des anciennes sauvegardes conservent leur profil neutre.'})]));
+    list.replaceChildren(...(pawn.traits?.map(id=>{const li=document.createElement('li');li.dataset.trait=id;li.tabIndex=0;li.textContent=TRAITS[id].label;setTooltip(li,{title:TRAITS[id].label,body:TRAITS[id].description});return li;})??[Object.assign(document.createElement('li'),{textContent:'Aucun trait'})]));
   }
   panel.querySelector('[data-trait-stats]')!.textContent=`Apprentissage général ${Math.round(globalLearningFactor(pawn)*100)} %. Risque de crise sous ${breakThresholds(pawn).map(n=>Number(n.toFixed(2))).join(' / ')} % d’humeur (mineur / majeur / extrême). Le risque ne déclenche pas une crise immédiatement ; errance triste et frénésie alimentaire sont les deux crises disponibles.`;
+  const stats=panel.querySelector<HTMLElement>('.trait-stat-entry')!;
+  setTooltip(stats,{title:'Effets du profil',body:panel.querySelector('[data-trait-stats]')!.textContent??''});
 }

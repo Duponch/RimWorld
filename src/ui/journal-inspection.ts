@@ -1,5 +1,7 @@
 import type { Pawn, World } from '../sim/types';
 import { SOCIAL_LABELS } from '../sim/social-state';
+import { TICKS_PER_DAY } from '../sim/types';
+import { setTooltip } from './tooltip';
 
 export type JournalFilter = 'all' | 'social' | 'combat';
 export interface JournalRow { tick: number; kind: 'social' | 'combat'; text: string }
@@ -35,12 +37,12 @@ export function createJournalInspection(panel: HTMLElement): void {
     button.type = 'button';
     button.dataset.journalFilter = id;
     button.textContent = label;
-    button.setAttribute('aria-pressed', String(id === 'all'));
+    button.setAttribute('role','checkbox');button.setAttribute('aria-checked',String(id!=='all'));
+    button.setAttribute('aria-pressed', String(id!=='all'));
+    setTooltip(button,{title:label,body:id==='all'?'Afficher toutes les entrées conservées, quels que soient les deux filtres.':`Afficher ou masquer les entrées ${id==='social'?'sociales':'de combat'}. Ce réglage est indépendant de l’autre filtre.`});
     button.addEventListener('click', () => {
-      details.dataset.filter = id;
-      for (const item of filters.querySelectorAll<HTMLButtonElement>('button')) {
-        item.setAttribute('aria-pressed', String(item === button));
-      }
+      details.dataset[id]=String(details.dataset[id]!=='true');
+      button.setAttribute('aria-checked',details.dataset[id]!);button.setAttribute('aria-pressed',details.dataset[id]!);
       refreshJournalFilter(details);
     });
     filters.append(button);
@@ -52,17 +54,17 @@ export function createJournalInspection(panel: HTMLElement): void {
   empty.textContent = 'Aucune entrée conservée.';
   const limit = document.createElement('p');
   limit.className = 'pawn-journal-limit';
-  limit.textContent = 'Le journal affiche les échanges consignés dans cette partie ; l’historique ancien n’est pas conservé.';
-  details.dataset.filter = 'all';
+  limit.textContent = 'Historique des événements';limit.tabIndex=0;
+  setTooltip(limit,{title:'Journal',body:'Les entrées proviennent des événements conservés dans cette partie. Un événement ancien qui n’a pas été consigné ne peut pas être reconstitué.'});
+  details.dataset.all='false';details.dataset.social='true';details.dataset.combat='true';
   details.append(summary, filters, list, empty, limit);
   panel.append(details);
 }
 
 function refreshJournalFilter(details: HTMLDetailsElement): void {
-  const filter = details.dataset.filter as JournalFilter || 'all';
   let visible = 0;
   for (const row of details.querySelectorAll<HTMLElement>('#pawn-journal-rows > li')) {
-    row.hidden = filter !== 'all' && row.dataset.kind !== filter;
+    row.hidden = details.dataset.all!=='true'&&details.dataset[row.dataset.kind!]==='false';
     if (!row.hidden) visible++;
   }
   const empty = details.querySelector<HTMLElement>('#pawn-journal-empty');
@@ -75,8 +77,8 @@ export function updateJournalInspection(panel: HTMLElement, world: World, pawn: 
   const rows = pawnJournalRows(world, pawn);
   const signature = JSON.stringify([pawn.id, rows]);
   const list = details.querySelector<HTMLOListElement>('#pawn-journal-rows');
-  if (!list || list.dataset.signature === signature) return;
-  list.dataset.signature = signature;
+  if (!list) return;
+  if(list.dataset.signature!==signature){list.dataset.signature = signature;
   list.replaceChildren(...rows.map(row => {
     const entry = document.createElement('li');
     entry.dataset.kind = row.kind;
@@ -85,8 +87,10 @@ export function updateJournalInspection(panel: HTMLElement, world: World, pawn: 
     icon.setAttribute('aria-hidden', 'true');
     const text = document.createElement('span');
     text.textContent = row.text;
+    entry.tabIndex=0;
     entry.append(icon, text);
     return entry;
-  }));
+  }));}
+  rows.forEach((row,index)=>setTooltip(list.children[index] as HTMLElement,{title:row.kind==='social'?'Interaction sociale':'Combat',body:`Il y a ${((world.tick-row.tick)/(TICKS_PER_DAY/24)).toFixed(1)} h.\n${row.text}`}));
   refreshJournalFilter(details);
 }

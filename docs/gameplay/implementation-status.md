@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V199 — dossiers compacts, schéma courant 182 inchangé.** Santé et Opérations, besoins/humeur séparés, Bio en deux colonnes, possessions physiques, opinions et journal filtrable sont réorganisés. Fiches `i` et infobulles communes, tableaux Animaux et Recherche. [Contrat](../development/colonist-ui-v199.md), [référence Core et manques](../research/colonist-ui-core-v199.md), [preuves ciblées](../history/validation-colonist-ui-v199.md). Histoires personnelles, Minage et famille/romance ne sont pas inventés.
+
 **V198 — déplacements existants corrigés, schéma courant 182 inchangé.** Un civil repart après l’observation du danger au refuge ; l’attente périodique Core demeure. Un prédateur poursuit son préfixe sûr sous budget différé. Un repas ou une sculpture rejoint physiquement une case libre après encombrement de ses voisins. [Contrat](../development/movement-continuity-v198.md), [recherche](../research/navigation-cpu-gpu-v198.md), [preuve et limites](../history/validation-movement-v198.md). Aucun nouveau contenu ni solveur GPU en production.
 
 **V197 — poursuite de mêlée, schéma courant 182 inchangé.** Un poursuivant peut continuer son trajet sûr pendant le délai de recalcul ; une révision gardant la même cible conserve l’engagement. Ni vitesse artificielle ni coup à distance. [Contrat](../development/melee-pursuit-v197.md), [recherche](../research/melee-pursuit-core-v197.md), [preuve et limites](../history/validation-melee-pursuit-v197.md). Le combat est corrigé dans son périmètre existant, sans nouveau contenu.

@@ -1,0 +1,7 @@
+.game-tooltip{position:fixed;z-index:1200;pointer-events:none;box-sizing:border-box;width:max-content;max-width:min(300px,calc(100vw - 16px));max-height:calc(100dvh - 16px);overflow:hidden;padding:10px 12px;border:1px solid #a58c61;border-radius:6px;background:#fff8e8;color:var(--ink);box-shadow:0 4px 16px #18282045;font:13px/1.35 'Lisiere Sans',sans-serif;white-space:pre-line;overflow-wrap:anywhere}
+.game-tooltip[hidden]{display:none}
+.game-tooltip>strong{display:block;margin:0 0 6px;color:var(--forest);font-weight:700}
+.game-tooltip p{margin:0}
+.game-tooltip dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;margin:8px 0 0;padding-top:7px;border-top:1px solid var(--line)}
+.game-tooltip dt,.game-tooltip dd{margin:0}
+.game-tooltip dd{text-align:right;font-variant-numeric:tabular-nums;color:#73522a}

@@ -1,6 +1,7 @@
 import { breakThresholds } from '../sim/traits';
 import { moodTarget,moodThoughts } from '../sim/mood';
 import { TICKS_PER_DAY,type Pawn,type World } from '../sim/types';
+import { setTooltip } from './tooltip';
 
 export interface MoodInspectionView {
   current:number;
@@ -28,13 +29,14 @@ export function moodInspectionView(world:World,pawn:Pawn):MoodInspectionView {
 export function createMoodInspection(panel:HTMLElement):void {
   const details=document.createElement('details');details.id='mood-inspection';
   const heading=document.createElement('summary');heading.textContent='Humeur';
+  const caption=document.createElement('div');caption.className='mood-caption';caption.innerHTML='<strong>Humeur</strong><span data-mood-current></span>';
   const gauge=document.createElement('div');gauge.id='mood-gauge';gauge.setAttribute('role','meter');gauge.setAttribute('aria-label','Humeur actuelle');gauge.setAttribute('aria-valuemin','0');gauge.setAttribute('aria-valuemax','100');
   const fill=document.createElement('span');fill.id='mood-gauge-fill';gauge.append(fill);
   for(let i=0;i<3;i++){const marker=document.createElement('span');marker.className='mood-gauge-marker';marker.dataset.moodThreshold=String(i);gauge.append(marker);}
   const target=document.createElement('p');target.id='mood-target';
   const risks=document.createElement('p');risks.id='mood-break-thresholds';
   const list=document.createElement('ul');list.id='mood-thoughts';
-  details.append(heading,gauge,target,risks,list);const anchor=panel.querySelector('#manage-work');if(anchor)anchor.before(details);else panel.append(details);
+  gauge.tabIndex=0;details.append(heading,caption,gauge,target,risks,list);const anchor=panel.querySelector('#manage-work');if(anchor)anchor.before(details);else panel.append(details);
 }
 
 export function updateMoodInspection(panel:HTMLElement,world:World,pawn:Pawn):void {
@@ -42,6 +44,7 @@ export function updateMoodInspection(panel:HTMLElement,world:World,pawn:Pawn):vo
   const view=moodInspectionView(world,pawn),dead=pawn.state==='dead';
   const crisis=pawn.mental?.crisis?.kind==='food-binge'?'Frénésie alimentaire':pawn.mental?.crisis?'Errance triste':'';
   text.textContent=dead?'Décédé':`${crisis?`${crisis} · `:''}Humeur ${view.current.toFixed(1)} % · cible ${Number(view.target.toFixed(1))} %`;
+  panel.querySelector('[data-mood-current]')!.textContent=dead?'—':`${Math.round(view.current)} %`;
   const gauge=panel.querySelector<HTMLElement>('#mood-gauge')!,level=panel.querySelector<HTMLElement>('#mood-gauge-fill')!;
   gauge.hidden=dead;gauge.setAttribute('aria-valuenow',String(view.current));
   gauge.setAttribute('aria-valuetext',`${view.current.toFixed(1)} %`);
@@ -50,10 +53,11 @@ export function updateMoodInspection(panel:HTMLElement,world:World,pawn:Pawn):vo
     marker.style.left=`${Math.max(0,Math.min(100,view.thresholds[Number(marker.dataset.moodThreshold)]??0))}%`;
   }
   panel.querySelector('#mood-break-thresholds')!.textContent=dead?'':`Seuils : ${view.thresholds.map(n=>Number(n.toFixed(2))).join(' / ')} %`;
+  setTooltip(gauge,{title:'Humeur',body:dead?'Décédé':'L’humeur évolue progressivement vers la somme des pensées. Les repères indiquent les seuils de risque de crise mentale.',rows:[{label:'Actuelle',value:`${view.current.toFixed(1)} %`},{label:'Cible',value:`${Number(view.target.toFixed(1))} %`},...view.thresholds.map((n,i)=>({label:['Risque mineur','Risque majeur','Risque extrême'][i]!,value:`${Number(n.toFixed(2))} %`}))]});
   const signature=JSON.stringify(view.thoughts);if(list.dataset.signature===signature)return;list.dataset.signature=signature;
   list.replaceChildren(...view.thoughts.map(thought=>{
     const li=document.createElement('li');li.dataset.thought=thought.id;
-    li.title=thought.tooltip;
+    li.tabIndex=0;setTooltip(li,{title:thought.label,body:thought.tooltip,rows:[{label:'Effet sur l’humeur',value:thought.display}]});
     const label=document.createElement('span');label.textContent=thought.label;
     const value=document.createElement('strong');value.textContent=thought.display;value.dataset.sign=thought.offset>0?'positive':'negative';
     li.append(label,value);return li;
