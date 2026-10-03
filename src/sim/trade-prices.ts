@@ -19,7 +19,7 @@ export function tradeHealthFactor(fraction:number):number {
   if(hp<.9)return .5+(hp-.6)*(5/3);
   return 1;
 }
-export function pileMarketValue(pile:MaterialPile):number|undefined {
+export function pileMarketValue(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'>):number|undefined {
   const entry=tradeCatalogueEntry(pile.item);if(!entry)return undefined;
   let value=entry.baseMarketValue;
   if(entry.hasQuality){
@@ -33,8 +33,18 @@ export function pileMarketValue(pile:MaterialPile):number|undefined {
 /** Pricing is separate from permission, source reachability and the atomic transfer.
  * The caller must also check tradeRefusal and current physical availability. */
 export function tradeUnitPrice(pile:MaterialPile,direction:TradeDirection,improvement:number,priceLoss=0):number|undefined {
+  if(!Number.isFinite(improvement)||improvement<0||improvement>.395)return undefined;
+  return priceWithImprovement(pile,direction,improvement,priceLoss);
+}
+/** Settlement's two percentage points follow the Pawn stat clamp. This does
+ * not broaden the historical visitor's admissible improvement range. */
+export function settlementTradeUnitPrice(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'>,direction:TradeDirection,negotiatorImprovement:number,priceLoss=0):number|undefined {
+  if(!Number.isFinite(negotiatorImprovement)||negotiatorImprovement<0||negotiatorImprovement>.395)return undefined;
+  return priceWithImprovement(pile,direction,negotiatorImprovement+.02,priceLoss);
+}
+function priceWithImprovement(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'>,direction:TradeDirection,improvement:number,priceLoss:number):number|undefined {
   const marketValue=pileMarketValue(pile),entry=tradeCatalogueEntry(pile.item);
-  if(marketValue===undefined||!entry||!Number.isFinite(improvement)||!Number.isFinite(priceLoss)||improvement<0||improvement>.395||priceLoss<0||priceLoss>1)return undefined;
+  if(marketValue===undefined||!entry||!Number.isFinite(priceLoss)||priceLoss<0||priceLoss>1)return undefined;
   if(pile.item==='silver')return 1;
   const roundUnit=(n:number)=>n>99.5?roundTradeSilver(n):n;
   const buy=roundUnit(Math.max(.5,marketValue*1.4*(1+priceLoss)*(1-improvement)));

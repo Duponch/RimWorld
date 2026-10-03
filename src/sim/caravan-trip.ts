@@ -1,6 +1,6 @@
+import { commercialRegistryView } from './commercial-trip.ts';
+import { findCivilianReturnEntry } from './civilian-return.ts';
 import { isColonist } from './affiliation.ts';
-import { candidateAccess } from './candidate-access.ts';
-import { captureStandability } from './furniture-travel.ts';
 import { adultHungerFactor, ITEM_DEFINITIONS } from './items.ts';
 import { foodAllowed } from './food-policy.ts';
 import { groundCapacity } from './ground-placement.ts';
@@ -9,7 +9,6 @@ import { medicalStatus } from './injury-state.ts';
 import { malnutritionModifiers } from './malnutrition.ts';
 import { expireMealMemories } from './mood.ts';
 import { HUNGER_PER_TICK } from './needs.ts';
-import { blockedCells } from './pathfinding.ts';
 import { updateRest } from './rest.ts';
 import { tickSkills } from './skills.ts';
 import { expireSocialMemories } from './social-state.ts';
@@ -31,7 +30,7 @@ export function scoutPawn(w:World):Pawn|null {
  * It is never installed into World or used by movement, stocks or rendering. */
 export function scoutRegistryView(w:World):World {
   const state=w.scout;
-  return state&&!onMap(state)?{...w,pawns:[...w.pawns,state.pawn],piles:[...w.piles,...state.items]}:w;
+  return state&&!onMap(state)?{...w,pawns:[...w.pawns,state.pawn],piles:[...w.piles,...state.items]}:commercialRegistryView(w);
 }
 
 function acuteCondition(p:Pawn):boolean {
@@ -49,7 +48,7 @@ function unstable(p:Pawn,w:World):boolean {
 
 /** Beginning a trip cannot silently interrupt work or export another cargo. */
 export function scoutEligible(w:World,p:Pawn):string|null {
-  if(w.scout)return 'Une reconnaissance est déjà en cours.';
+  if(w.scout||w.commercialTrip)return 'Un voyage est déjà en cours.';
   const preparation=scoutPreparationReason(w,p);if(preparation)return preparation;
   if(activeTask(p)||p.state!=='idle'||p.path.length||p.moveCooldown>0||(p.motion?.end??0)>w.tick)return 'Le colon doit être libre de tout travail ou déplacement.';
   if(w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'Déposez d’abord la cargaison de travail ou le meuble porté.';
@@ -61,7 +60,7 @@ export function scoutEligible(w:World,p:Pawn):string|null {
  * since become hungry or tired; the unloading module checks the actual pile
  * and physical ground capacity. */
 export function scoutUnloadEligible(w:World,p:Pawn):string|null {
-  if(w.scout)return 'Terminez ou annulez la reconnaissance en cours.';
+  if(w.scout||w.commercialTrip)return 'Terminez ou annulez le voyage en cours.';
   if(!w.pawns.includes(p)||!isColonist(p)||p.prisoner||p.visitor||p.state==='dead'||p.state==='downed')return 'Choisissez un colon libre et présent.';
   if(unstable(p,w)||activeTask(p)||p.state!=='idle'||p.path.length||p.moveCooldown>0||(p.motion?.end??0)>w.tick)return 'Le colon doit être libre de tout travail, combat ou déplacement.';
   if(w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'Déposez d’abord la cargaison de travail ou le meuble porté.';
@@ -115,33 +114,11 @@ export function departScout(w:World,p:Pawn):boolean {
 }
 
 function returnEntry(w:World,s:Extract<ScoutState,{phase:'travelling'|'awaiting-entry'}>):Cell|null {
-  if(w.pawns.length+1>w.width*w.height||w.piles.length+s.items.length>32768)return null;
-  const residents=w.pawns.filter(p=>isColonist(p)&&!p.prisoner&&p.state!=='dead'&&p.state!=='downed');
-  const blocked=blockedCells(w),stand=captureStandability(w),occupied=new Set<number>();
-  for(const p of w.pawns){occupied.add(p.z*w.width+p.x);if(p.motion&&p.motion.end>w.tick){occupied.add(p.motion.from.z*w.width+p.motion.from.x);occupied.add(p.motion.to.z*w.width+p.motion.to.x);}}
-  // A sealed edge needs no connectivity capture. Open candidates usually need
-  // only one resident's component, and never need weighted movement costs.
-  const access=new Map<number,ReturnType<typeof candidateAccess>>();
-  const empty:ReadonlySet<number>=new Set();
-  const reachable=(i:number):boolean=>{
-    if(!residents.length)return true;
-    for(const p of residents){
-      let query=access.get(p.id);
-      if(!query){query=candidateAccess(w,p,blocked,empty,true);access.set(p.id,query);}
-      if(query.has(i))return true;
-    }
-    return false;
-  };
-  const edges:Cell[]=[];
-  for(let x=0;x<w.width;x++){edges.push({x,z:0});if(w.height>1)edges.push({x,z:w.height-1});}
-  for(let z=1;z<w.height-1;z++){edges.push({x:0,z});if(w.width>1)edges.push({x:w.width-1,z});}
-  edges.sort((a,b)=>(same(a,s.entry)?-1:same(b,s.entry)?1:0)||((a.x-s.entry.x)**2+(a.z-s.entry.z)**2)-((b.x-s.entry.x)**2+(b.z-s.entry.z)**2)||a.z-b.z||a.x-b.x);
-  return edges.find(c=>{const i=c.z*w.width+c.x;
-    return !blocked[i]&&!occupied.has(i)&&stand(c)&&reachable(i)
-      &&!w.piles.some(p=>p.owner.type==='ground'&&same(p.owner,c))
-      &&!w.packed.some(p=>p.owner.type==='ground'&&same(p.owner,c))
-      &&s.items.every(p=>p.owner.type!=='inventory'||groundCapacity(w,c,p.item)>=p.quantity);
-  })??null;
+  if(w.piles.length+s.items.length>32768)return null;
+  return findCivilianReturnEntry(w,s.entry,c=>
+    !w.piles.some(p=>p.owner.type==='ground'&&same(p.owner,c))
+    &&!w.packed.some(p=>p.owner.type==='ground'&&same(p.owner,c))
+    &&s.items.every(p=>p.owner.type!=='inventory'||groundCapacity(w,c,p.item)>=p.quantity));
 }
 
 function consumeTrailFood(w:World,s:Extract<ScoutState,{phase:'travelling'|'awaiting-entry'}>):void {
@@ -185,3 +162,5 @@ export function advanceScoutTrip(w:World):void {
   w.pawns.push(s.pawn);w.piles.push(...s.items);delete w.scout;
   log(w,`${s.pawn.name} revient au bord de la colonie avec ses possessions restantes.`);
 }
+
+export { activeTask as scoutActiveTask,unstable as scoutUnstable };

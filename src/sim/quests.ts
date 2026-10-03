@@ -9,7 +9,7 @@ import { QUEST_HISTORY_LIMIT,QUEST_OFFER_TICKS,QUEST_RETRY_TICKS,type JoinerQues
 import { TICKS_PER_DAY,type CommandResult,type World } from './types.ts';
 
 export const questsSupported=(w:World):boolean=>!!w.gameProfile&&w.raids?.profile==='cassandra-raids-v1';
-const offMap=(w:World)=>w.scout&&(w.scout.phase==='travelling'||w.scout.phase==='awaiting-entry')?w.scout:undefined;
+const offMap=(w:World)=>w.scout&&(w.scout.phase==='travelling'||w.scout.phase==='awaiting-entry')?w.scout:w.commercialTrip&&'pawn' in w.commercialTrip?w.commercialTrip:undefined;
 function admission(w:World):boolean {
   const exported=offMap(w);
   return w.pawns.length+(exported?1:0)+1<=w.width*w.height

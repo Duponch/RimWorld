@@ -49,7 +49,7 @@ export function resolveSelectedPodRescue(w:World,seed:number):boolean {
   const state=w.podRescues;
   if(!Number.isInteger(seed)||seed<1||seed>0xffffffff||state?.pending||
     (state?.incidents.length??0)>=POD_RESCUE_LIMIT||(state?.serial??0)>=POD_RESCUE_LIMIT||
-    w.pawns.length>=w.width*w.height||w.piles.length>=32768||!Number.isSafeInteger(w.nextId+2)||
+    !civilianAdmissionFits(w,1,1)||!Number.isSafeInteger(w.nextId+2)||
     !Number.isSafeInteger(w.tick+POD_RESCUE_FALL_TICKS+POD_RESCUE_OPEN_TICKS))return false;
   const cell=landingCell(w,seed);if(!cell)return false;
   const s=w.podRescues??={profile:'civilian-pod-rescue-v1',serial:0,incidents:[],departed:[]};
@@ -58,7 +58,7 @@ export function resolveSelectedPodRescue(w:World,seed:number):boolean {
   emit(w,'Une capsule civile descend : une personne blessée pourra être secourue après son ouverture.');return true;
 }
 function openPod(w:World,pending:PodRescuePending):boolean {
-  if(w.pawns.length>=w.width*w.height||w.piles.length>=32768||!Number.isSafeInteger(w.nextId+2)||!openingFree(w,pending))return false;
+  if(!civilianAdmissionFits(w,1,1)||!Number.isSafeInteger(w.nextId+2)||!openingFree(w,pending))return false;
   const rng={rng:pending.seed},p=startingPawn(w.nextId,`Naufragé ${pending.id}`,pending.cell.x,pending.cell.z,0,55,pending.seed,w.tick);
   p.faction='outlanders';p.foodPolicyId=w.foodPolicies[0]!.id;p.podRescue={incidentId:pending.id};
   delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
@@ -126,3 +126,4 @@ export function exitPodRescue(w:World,p:Pawn):boolean {
   w.pawns=w.pawns.filter(q=>q!==p);w.piles=w.piles.filter(i=>!items.includes(i));w.packed=w.packed.filter(i=>!packed.includes(i));
   emit(w,`${p.name} quitte la carte avec ses possessions restantes.`);return true;
 }
+import { civilianAdmissionFits } from './civilian-away.ts';

@@ -40,7 +40,7 @@ export function applyArrival(world:World,command:ArrivalCommand):CommandResult {
     }
     s!.declined++;delete s!.pending;log(world,`La demande de ${o.name} a été refusée.`);return {ok:true};
   }
-  if(world.pawns.length>=world.width*world.height||world.piles.length>=32768||world.nextId>Number.MAX_SAFE_INTEGER-2)return refuse('La carte ne peut plus accueillir cette personne.');
+  if(!civilianAdmissionFits(world,1,1)||world.nextId>Number.MAX_SAFE_INTEGER-2)return refuse('La carte ne peut plus accueillir cette personne.');
   const entry=arrivalEntry(world,s!.rng);if(!entry)return refuse('Aucune entrée libre et accessible depuis la colonie. La demande reste ouverte.');
   const pawn=startingPawn(world.nextId,o.name,entry.x,entry.z,o.profile,55,world.seed,world.tick);
   if(o.traits)pawn.traits=[...o.traits];
@@ -53,3 +53,4 @@ export function applyArrival(world:World,command:ArrivalCommand):CommandResult {
   log(world,`${pawn.name} rejoint la colonie par le bord de la carte avec sa chemise. Prévoyez un couchage et ses affectations.`);
   return {ok:true};
 }
+import { civilianAdmissionFits } from './civilian-away.ts';

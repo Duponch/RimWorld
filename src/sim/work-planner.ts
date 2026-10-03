@@ -1,3 +1,4 @@
+import { commercialReservedSources } from './commercial-reservations.ts';
 import { surgeryProposal,startSurgery } from './surgery.ts';
 import { handlingWanted,handlingProposal,startHandling } from './animal-handling.ts';
 import { leadingWanted,leadingProposal,startLeading } from './animal-leading.ts';
@@ -101,6 +102,9 @@ export function canReach(world: World, target: Cell & { kind?: JobKind }, reacha
   return false;
 }
 export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, occupied: ReadonlySet<number>, budget: SearchBudget): void {
+  const trip=world.commercialTrip;
+  if(world.scout&&(world.scout.phase==='loading'||world.scout.phase==='leaving')&&world.scout.pawnId===pawn.id
+    ||trip&&(trip.phase==='loading'||trip.phase==='leaving'||trip.phase==='unloading')&&trip.pawnId===pawn.id){pawn.planCooldown=20;return;}
   if(medicalWorkRefusal(pawn)){pawn.planCooldown=20;return;}
   // Never enumerate logistics after another colonist exhausted the shared search budget.
   if (budget.remaining === 0 || budget.pairs === 0) return;
@@ -161,6 +165,8 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     if (pile.owner.type === 'job') {const key=`${pile.owner.jobId}:${pile.item}`;delivered.set(key, (delivered.get(key) ?? 0) + pile.quantity);}
     if (pile.owner.type === 'ground') { const key = cellIndex(world, pile.owner.x, pile.owner.z); ground.set(key, (ground.get(key) ?? 0) + pile.quantity); }
   }
+  if(world.scout?.phase==='loading')sourceReserved.set(world.scout.sourcePileId,(sourceReserved.get(world.scout.sourcePileId)??0)+world.scout.quantity);
+  for(const [id,quantity] of commercialReservedSources(world))sourceReserved.set(id,(sourceReserved.get(id)??0)+quantity);
   // Match reservedSource: an animal's active meal claims its pile quantity,
   // including the whole indivisible corpse. This capture lives only in planWork.
   for(const animal of world.wildlife?.animals??[])if(animal.meal?.kind==='pile')sourceReserved.set(animal.meal.id,(sourceReserved.get(animal.meal.id)??0)+animal.meal.quantity);

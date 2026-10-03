@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { prepareScoutDemo, scoutDemoActors, scoutDemoManifestEntry } from '../scripts/generate-scout-demo-v182.ts';
+import { SCOUT_DEMO_SEED, scoutDemoActors, scoutDemoManifestEntry } from '../scripts/generate-scout-demo-v182.ts';
 import { scoutEligible } from '../src/sim/caravan-trip.ts';
 import { applyCommand, stepWorld } from '../src/sim/engine.ts';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization.ts';
@@ -29,9 +29,16 @@ test('V182 public scene is a byte-stable prepared 250² colony, not an already d
   const raw = readFileSync(fixtureUrl, 'utf8');
   const sha256 = createHash('sha256').update(raw).digest('hex');
   expect(sha256).toBe(EXPECTED_SHA256);
+  const historical = JSON.parse(raw);
+  expect(historical).toMatchObject({
+    schemaVersion: 171, seed: SCOUT_DEMO_SEED,
+    site: { revision: 2, biome: 'arid-shrubland', hilliness: 'small-hills', river: 'none', stones: ['marble', 'limestone'] },
+    scenario: { id: 'crashlanded', revision: 8, landing: { x: 124, z: 124 } },
+  });
   const world = deserializeWorld(raw);
-  expect(world).toEqual(prepareScoutDemo());
-  expect(JSON.parse(raw).schemaVersion).toBe(171);
+  // The published V182 colony is historical: later generators may add content.
+  // Its migrations preserve every possession, permission and clock verbatim.
+  expect(world).toEqual({ ...historical, schemaVersion: SCHEMA_VERSION });
   expect(world.schemaVersion).toBe(SCHEMA_VERSION);
   expect(world.width).toBe(250);
   expect(world.height).toBe(250);

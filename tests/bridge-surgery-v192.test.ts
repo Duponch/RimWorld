@@ -6,7 +6,7 @@ import { reconcilePawnHealth } from '../src/sim/health.ts';
 import { createMedicalRecord } from '../src/sim/injury-state.ts';
 import { refreshStock } from '../src/sim/materials.ts';
 import { validateWorld } from '../src/sim/serialization.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
 
 /** Prepared transport states; physical acquisition and administration are
  * exercised by surgery-orchestration-v192, not claimed by this shape fixture. */
@@ -72,7 +72,7 @@ test('invalid surgery and anesthetic shapes reject a checkpoint and a same-tick 
 
 test('178 transport refuses all future surgical fields while its neutral historical frame remains acceptable',()=>{
   const w=surgeryCamp().world;delete w.pawns[1]!.health!.infections;
-  (w as {schemaVersion:number}).schemaVersion=178;expect(validateWorld({...w,schemaVersion:179})).toEqual([]);
+  (w as {schemaVersion:number}).schemaVersion=178;expect(validateWorld({...w,schemaVersion:SCHEMA_VERSION})).toEqual([]);
   const good=structuredClone(new SnapshotEncoder().encode(w,0,1)),future=frame('work');
   expect(new SnapshotDecoder().adopt(good).status).toBe('applied');
   for(const field of ['surgeryRequest','surgery','anesthetic'] as const) {

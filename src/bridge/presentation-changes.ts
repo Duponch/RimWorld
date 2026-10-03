@@ -14,6 +14,10 @@ export class PresentationChanges {
       world.wildlife?.animals.map(a=>[a.id,a.state,a.burning?.phase,a.meal?.id,a.flee,a.stagger,a.stun,a.threat,a.strike,a.health?.nextInjuryId,a.exiting?.destination]),world.wildlife?.eatenNutrition,world.wildlife?.exitedAnimals,
       world.fires?.items.map(f=>[f.id,f.attachedPawnId,f.attachedAnimalId]),world.weather?.current,
       world.visitors?.groups.map(g=>[g.id,g.phase,g.hostile,g.reason]),world.trade?.count,
+      world.commercialTrip?('pawnId' in world.commercialTrip
+        ?[world.commercialTrip.phase,world.commercialTrip.pawnId,world.commercialTrip.phase==='loading'?world.commercialTrip.cursor:world.commercialTrip.phase==='unloading'?world.commercialTrip.pendingPileIds:world.commercialTrip.exit]
+        :[world.commercialTrip.phase,world.commercialTrip.pawn.id,world.commercialTrip.consumed,world.commercialTrip.silverPaid,world.commercialTrip.bought]):undefined,
+      world.civilianPost?[world.civilianPost.generation,world.civilianPost.transactions,world.civilianPost.stock.map(p=>[p.id,p.item,p.quantity,p.damage])]:undefined,
       world.projectiles?.map(p=>[p.id,p.emittedAtCore,p.arrival]),
       world.pawns.map(p=>[p.id,p.state,p.burning?.phase,p.firefighting?.phase,p.firefighting?.fireId,p.raid?.exiting,p.mental?.crisis?.kind,p.mental?.crisis?.target,p.jobId,p.faction,p.prisoner?.capturedAt,p.prisoner?.mode,p.prisoner?.lastChatTick,p.prisoner?.escape,p.ward?.kind,p.ward?.patientId,p.ward?.phase,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,p.shooting,p.stagger,!!p.draft,p.draft?.target,p.draft?.queue,p.equipmentTask?.itemId,p.equipmentTask?.action,p.equipmentDropPending,p.rescue,p.tend?.patientId,p.tend?.phase,p.feed?.patientId,p.feed?.phase,p.medicalSleep,p.interruptedCargo,p.need?.phase,p.need?.kind==='sleep'?p.need.bedId:undefined,
         p.surgeryRequest,p.surgery?[p.surgery.patientId,p.surgery.part,p.surgery.bedId,p.surgery.spot,p.surgery.phase,p.surgery.consumedMedicine]:undefined,

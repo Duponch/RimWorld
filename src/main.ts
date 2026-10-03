@@ -1,3 +1,4 @@
+import { createCommercialUI } from './ui/commercial-panel';
 import {appearanceOf} from './sim/pawn-appearance';
 import {humanLimbVisualMask} from './render/human-anatomy-presentation';
 import {portraitDataUrl,portraitExpressionOf} from './ui/pawn-portrait';
@@ -188,6 +189,12 @@ let installationId:number|undefined;
 let currentTool: Tool = 'select';
 let currentPanel: Panel = null;
 const scoutUI=createScoutUI(el('scout-content'),c=>void attempt(()=>client.command(c)));
+const commercialUI=createCommercialUI(el('commercial-content'),async command=>{
+  const result=await client.command(command);
+  if(['commercial-start','commercial-return','commercial-unload'].includes(command.type)&&currentSpeed===0)await client.setSpeed(1);
+  return result;
+});
+let lastCommercialArrivalKey:string|undefined;
 let currentCategory: ArchitectCategory = 'orders';
 let placementOrientation: Orientation = 0;
 let currentSpeed = 1, lastSpeed = 1, stepMs = 0;
@@ -355,6 +362,7 @@ async function switchPanel(panel: Panel, preserveTool = false): Promise<void> {
   setPanel(panel, preserveTool);
 }
 async function replaceColony(action: () => Promise<void>): Promise<void> {
+  lastCommercialArrivalKey=undefined;
   replacingWorld = true; syncStorageButtons();
   try {
     await action(); menuResumeSpeed = undefined;
@@ -405,7 +413,7 @@ function setPanel(panel: Panel, preserveTool = false) {
   syncStorageButtons();
   scheduleUI.cancel();
   for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals', 'world', 'quests'] as const) el(`${name}-panel`).hidden = panel !== name;
-  if(panel==='world'&&snapshot)scoutUI.update(snapshot);
+  if(panel==='world'&&snapshot){scoutUI.update(snapshot);commercialUI.update(snapshot);}
   if(panel==='animals'&&snapshot)updateAnimalsPanel(el('animals-content'),snapshot,id=>selectPawn(id));
   if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) {
@@ -738,7 +746,15 @@ function renderState() {
   if(currentPanel==='animals')updateAnimalsPanel(el('animals-content'),world,id=>selectPawn(id));
   if(currentPanel==='wildlife')renderWildlife(world);
   if(currentPanel==='research')updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)));
-  if(currentPanel==='world')scoutUI.update(world);
+  if(currentPanel==='world'){scoutUI.update(world);commercialUI.update(world);}
+  if(world.commercialTrip?.phase==='at-post'){
+    const t=world.commercialTrip,key=[world.seed,t.pawn.id,t.departedAt,t.arrivedAt].join(':');
+    if(key!==lastCommercialArrivalKey){
+      lastCommercialArrivalKey=key;
+      if(currentSpeed!==0)void client.setSpeed(0);
+      if(currentPanel!=='menu')setPanel('world');
+    }
+  }
   if(currentPanel==='schedule')scheduleUI.update(world);
   if(currentPanel==='assign'){foodPolicyUI.update(world);apparelPolicyUI.update(world);}
   const totals = {blocks:0,medicine:0,silver:0,component:0,cloth:0,steel:0,gold:0,plasteel:0,'advanced-component':0,carried:0,delivered:0};

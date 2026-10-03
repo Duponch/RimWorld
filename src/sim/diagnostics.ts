@@ -56,6 +56,8 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   if(pawn.rescue)return {code:pawn.rescue.capture?'capture':'rescue',reason:`${pawn.rescue.phase==='carry'?'Porte':'Rejoint'} ${world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.name??'un patient'} pour ${pawn.rescue.capture?'le capturer':'le secourir'}.`};
   if(pawn.state==='dead')return {code:'dead',reason:'Décédé ; dépouille conservée sur place. Le transport et les sépultures ne sont pas encore disponibles.'};
   if(pawn.state==='downed')return {code:'downed',reason:'Incapacité médicale : ne peut pas agir. Consultez ses blessures et ses capacités dans Santé.'};
+  const commercial=world.commercialTrip;
+  if(commercial&&'pawnId' in commercial&&commercial.pawnId===pawn.id)return {code:'commercial',reason:commercial.phase==='loading'?`Charge les provisions et l’argent (${commercial.cursor}/${commercial.manifest.length} piles).`:commercial.phase==='leaving'?'Rejoint la bordure pour gagner le comptoir civil.':`Dépose au contact les possessions rapportées (${commercial.pendingPileIds.length} piles restantes).`};
   if(pawn.prisoner&&!pawn.need)return {code:'prisoner',reason:pawn.prisoner.escape?'Cherche à quitter la carte par une ouverture.':'Prisonnier : attend nourriture, repos ou visite du geôlier.'};
   if(pawn.interruptedCargo)return {code:'interrupted-cargo',reason:'Travail interrompu ; cargaison conservée. Libérez une case de sol proche pour permettre son dépôt.'};
   if(pawn.recreation.task) {

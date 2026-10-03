@@ -15,6 +15,8 @@ import { validBereavement } from '../sim/bereavement-save.ts';
 import { validPawnSurgeryShape } from '../sim/surgery-save.ts';
 import { validAnesthetic } from '../sim/anesthetic.ts';
 import { validateScoutRegistry } from '../sim/caravan-save.ts';
+import { validateCommercialRegistry,validateCommercialBindings } from '../sim/commercial-save.ts';
+import { validateCivilianPost } from '../sim/commercial-post.ts';
 import { validateQuests } from '../sim/quest-save.ts';
 import { scoutRegistryView } from '../sim/caravan-trip.ts';
 import { resourceMaxHp } from '../sim/thing-damage-rules.ts';
@@ -352,7 +354,25 @@ export class SnapshotDecoder {
       // In particular an absent sparse collection means it was removed.
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
-    if(next.resources.some(resource=>!validPlantGrowthLight(resource,next.schemaVersion,next.tick)))return resync('Régime lumineux végétal invalide.');
+    if(validateCommercialRegistry(next,next.schemaVersion).length)return resync('Registre commercial invalide.');
+    const postIds=new Set<number>();
+    if(validateCivilianPost(next,next.schemaVersion,postIds).length)return resync('Stock du comptoir invalide.');
+    const commercial=next.commercialTrip,foreignIds=new Set(postIds);
+    if(commercial&&'pawn' in commercial){
+      for(const entity of [commercial.pawn,...commercial.items]){
+        if(foreignIds.has(entity.id))return resync('Identité commerciale hors carte dupliquée.');
+        foreignIds.add(entity.id);
+      }
+    }
+    if(next.resources.some(resource=>foreignIds.has(resource.id)||!validPlantGrowthLight(resource,next.schemaVersion,next.tick)))return resync('Régime lumineux végétal ou identité commerciale invalide.');
+    if(foreignIds.size){
+      const collides=(entities:readonly {id:number}[])=>entities.some(e=>foreignIds.has(e.id));
+      if([next.pawns,next.piles,next.structures,next.jobs,next.stockpiles,next.growingZones,next.wildlife?.animals??[],next.filth?.items??[],next.fires?.items??[],next.fires?.embers??[],next.projectiles??[]].some(collides)
+        ||next.packed.some(p=>foreignIds.has(p.building.id)||collides(p.building.bills??[]))||next.structures.some(s=>collides(s.bills??[])))return resync('Identité commerciale dupliquée sur la carte.');
+      if((next.raids?.departed??[]).some(d=>foreignIds.has(d.pawnId)||collides(d.items))||(next.prisonDepartures??[]).some(d=>foreignIds.has(d.pawnId)||collides(d.items))
+        ||[next.visitors?.departed??[],next.podRescues?.departed??[]].some(records=>records.some(d=>foreignIds.has(d.pawn.id)||collides(d.items)||(d.packed??[]).some(p=>foreignIds.has(p.building.id)||collides(p.building.bills??[])))))return resync('Identité commerciale dupliquée dans une archive.');
+      if(next.scout&&'pawn' in next.scout&&(postIds.has(next.scout.pawn.id)||next.scout.items.some(i=>postIds.has(i.id))))return resync('Stock commercial dupliqué dans la reconnaissance.');
+    }
     if(next.schemaVersion<177&&[...next.structures,...next.jobs,...(next.packed??[]).map(p=>p.building)].some(s=>s.kind==='sun-lamp'))return resync('Lampe horticole future.');
     if(validateScoutRegistry(next,next.schemaVersion).length)return resync('Registre de reconnaissance invalide.');
     if(!validWildlifeExitState(next,next.schemaVersion))return resync('Départ de faune invalide.');
@@ -363,6 +383,12 @@ export class SnapshotDecoder {
       if(!validSurgeryTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
         ||next.scout.items.some(pile=>!validPile(pile,registry)))return resync('Voyageur ou possession hors carte invalide.');
     }
+    if(commercial&&'pawn' in commercial){
+      const registry=scoutRegistryView(next),pawn=commercial.pawn;
+      if(postIds.has(pawn.id)||!validSurgeryTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
+        ||commercial.items.some(pile=>postIds.has(pile.id)||!validPile(pile,registry)))return resync('Voyageur commercial ou possession invalide.');
+    }
+    if(validateCommercialBindings(next,next.schemaVersion).length)return resync('Possessions commerciales incohérentes.');
     for(const departure of next.podRescues?.departed??[])if(!validSurgeryTransport(departure.pawn,{schemaVersion:next.schemaVersion,tick:departure.tick,width:next.width,height:next.height,nextId:next.nextId}))return resync('Dossier chirurgical civil archivé invalide.');
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     const replaced = message.epoch !== this.epoch;

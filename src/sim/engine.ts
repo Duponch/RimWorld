@@ -1,3 +1,6 @@
+import { applyCommercialBuy } from './commercial-post.ts';
+import { applyCommercialPreparation,processCommercialOnMap,reconcileCommercialOnMap } from './commercial-loading.ts';
+import { applyCommercialReturn,advanceCommercialTrip,departCommercial,commercialOnMapId,commercialPawn } from './commercial-trip.ts';
 import { reconcileDomesticWork } from './domestic-reconcile.ts';
 import { advanceAnimalProducts } from './animal-products.ts';
 import { PEN_ANIMALS, invalidateAnimalPens } from './animal-pens.ts';
@@ -328,15 +331,18 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='commercial-start'||command.type==='commercial-cancel'||command.type==='commercial-unload')return applyCommercialPreparation(world,command);
+  if(command.type==='commercial-buy')return applyCommercialBuy(world,command);
+  if(command.type==='commercial-return')return applyCommercialReturn(world);
   if(command.type==='scout-start'||command.type==='scout-cancel'||command.type==='scout-unload')return applyScoutCommand(world,command);
   const actors='pawnIds' in command&&Array.isArray(command.pawnIds)?command.pawnIds:'pawnId' in command&&command.pawnId!==null?[command.pawnId]:[];
-  const scoutId=scoutOnMapId(world);
+  const scoutId=scoutOnMapId(world)??commercialOnMapId(world);
   if(scoutId!==null&&actors.includes(scoutId)&&(typeof command.type==='string'&&command.type.startsWith('order-')||['clear-orders','draft','draft-move','draft-stop','shoot','melee','clean-room'].includes(command.type)))
-    return refusal('invalid-command','Annulez la préparation de reconnaissance avant de donner un autre ordre à ce colon.');
-  const traveler=scoutPawn(world);
+    return refusal('invalid-command','Terminez ou annulez le voyage et son déchargement avant de donner un autre ordre à ce colon.');
+  const traveler=scoutPawn(world)??commercialPawn(world);
   if(traveler&&'policyId' in command&&command.policyId===traveler.foodPolicyId
     &&(command.type==='food-policy-delete'||command.type==='food-policy-update'&&Array.isArray(command.allowed)&&!command.allowed.includes('survival-meal')))
-    return refusal('invalid-command','Ce régime est engagé pour la reconnaissance : conservez les repas de survie jusqu’au retour ou à l’annulation.');
+    return refusal('invalid-command','Ce régime est engagé pour le voyage : conservez les repas de survie jusqu’au retour ou à l’annulation.');
   // Core's Vomit job is not player-interruptible. Reject the entire group
   // before any early command handler can replace a task or mutate a stance.
   if((typeof command.type==='string'&&command.type.startsWith('order-')||['clean-room','draft','draft-move','draft-stop','fire-at-will','clear-orders','shoot','melee','cancel-trade','trade-execute'].includes(command.type))
@@ -604,7 +610,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     advanceTameness(world);reconcileDomesticWork(world);advanceWildlife(world);
     updateDoors(world);
     const structuresBeforeCombat=world.structures;
-    advanceWorldCombat(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);reconcileBurials(world);
+    advanceWorldCombat(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);if(world.tick%20===0)reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     expireStaggers(world);advanceFilth(world,weatherRainRate(world));
     scheduleGrowing(world);
@@ -638,6 +644,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       advanceHeatExposure(world,pawn,()=>new TemperatureView(world,thermal).at(world,pawn));
       const body=updatePawnHealth(world,pawn);
       if(scoutOnMapId(world)===pawn.id&&(pawn.state==='dead'||pawn.state==='downed'))applyScoutCommand(world,{type:'scout-cancel'});
+      if(commercialOnMapId(world)===pawn.id&&(pawn.state==='dead'||pawn.state==='downed'))applyCommercialPreparation(world,{type:'commercial-cancel'});
       if(pawn.equipmentDropPending)dropIncapacitatedEquipment(world,pawn,true);
       if(pawn.state==='dead'){expireMealMemories(world,pawn);updateMentalBreak(world,pawn);continue;}
       if(completedEdge)recordFilthMovement(world,pawn);
@@ -650,13 +657,14 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
       if(hasAdversary&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = scoutOnMapId(world)===pawn.id || pawn.animalHandling || pawn.animalCare || pawn.burial || pawn.cleaning || pawn.visitor || pawn.podRescue || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.surgery || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = scoutOnMapId(world)===pawn.id || commercialOnMapId(world)===pawn.id || pawn.animalHandling || pawn.animalCare || pawn.burial || pawn.cleaning || pawn.visitor || pawn.podRescue || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.surgery || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
         release: () => releaseWork(world, pawn),
         event: (message: string) => event(world, 'need', message),
       };
+      if(processCommercialOnMap(world,pawn,needsContext))continue;
       if(processScoutLoading(world,pawn,needsContext))continue;
       if(processBurning(world,pawn,needsContext))continue;
       if(pawn.prisoner){processPrisoner(world,pawn,needsContext);continue;}
@@ -780,14 +788,16 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     if(world.raids)for(const pawn of [...world.pawns])if(pawn.raid?.exiting&&!pawn.prisoner)exitRaider(world,pawn);
     const scoutId=scoutOnMapId(world);
     if(scoutId!==null){const pawn=world.pawns.find(p=>p.id===scoutId);if(pawn)departScout(world,pawn);}
+    const commercialId=commercialOnMapId(world);
+    if(commercialId!==null){const pawn=world.pawns.find(p=>p.id===commercialId);if(pawn)departCommercial(world,pawn);}
     advanceColonyAdaptation(world);
     advanceRaids(world);
     advanceQuests(world);
     advanceSocial(world);
     if(world.roofing)reconcileRoofJobs(world,roofs);
-    reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);reconcileWildlife(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);
+    reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);reconcileWildlife(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     if(world.hunting)world.hunting.targets=world.hunting.targets.filter(id=>world.wildlife?.animals.some(a=>a.id===id&&a.state!=='dead')||world.pawns.some(p=>p.hunting?.animalId===id));
-    advanceScoutTrip(world);
+    advanceScoutTrip(world);advanceCommercialTrip(world);
     refreshStock(world);
     if(thermalDirty)thermal=reconcileTemperature(world);
     updateFoodTemperatures(world,thermal);

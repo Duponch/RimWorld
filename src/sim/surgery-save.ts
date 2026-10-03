@@ -42,7 +42,7 @@ export function validateSurgeries(w:World,version:number):string[] {
   const errors:string[]=[],patients=new Set<number>(),byId=new Map(w.pawns.map(p=>[p.id,p]));
   const work=new Map<number,Pawn>();
   for(const d of w.pawns)if(d.surgery?.phase==='work')work.set(d.surgery.patientId,d);
-  const offMap=w.scout&&'pawn' in w.scout?w.scout.pawn.id:undefined;
+  const offMap=w.scout&&'pawn' in w.scout?w.scout.pawn.id:w.commercialTrip&&'pawn' in w.commercialTrip?w.commercialTrip.pawn.id:undefined;
   const serviceKey=(cell:{x:number;z:number})=>cell.z*w.width+cell.x;
   for(const p of w.pawns){
     if(!validPawnSurgeryShape(p,version,w)){errors.push('Invalid or future surgery state.');continue;}

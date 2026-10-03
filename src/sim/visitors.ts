@@ -65,10 +65,10 @@ function groupProfiles(random:{rng:number},points:number):string[] {
  * are accepted. A refused opportunity creates neither a person nor a pile. */
 function arrive(w:World,kind:VisitorKind,intro=false,exotic=false):boolean {
   const s=w.visitors!;
-  if(!w.pawns.some(p=>isColonist(p)&&p.state!=='dead')||w.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p))||s.serial>=Number.MAX_SAFE_INTEGER||s.departed.length+w.pawns.length>=w.width*w.height)return false;
+  if(!w.pawns.some(p=>isColonist(p)&&p.state!=='dead')||w.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p))||s.serial>=Number.MAX_SAFE_INTEGER||s.departed.length+w.pawns.length+Number(!!civilianAway(w))>=w.width*w.height)return false;
   const random={rng:exotic?((w.seed^w.tick^s.serial^0xe70c)>>>0)||1:s.rng},profiles=exotic?['Négociant exotique']:groupProfiles(random,intro?40+Math.floor(visitorRandom(random)*60):visitorPoints(random,kind));
   const arrival=visitorArrival(w,Math.floor(visitorRandom(random)*4294967296),profiles.length,kind);
-  if(!profiles.length||!arrival||w.pawns.length+profiles.length>w.width*w.height)return false;
+  if(!profiles.length||!arrival||!civilianAdmissionFits(w,profiles.length))return false;
   const id=s.serial+1,merchant=exotic?0:kind==='visitor'&&visitorRandom(random)<.75?Math.floor(visitorRandom(random)*profiles.length):-1;
   const pawns:Pawn[]=[],piles:MaterialPile[]=[];let nextId=w.nextId;
   for(let i=0;i<profiles.length;i++){
@@ -86,7 +86,7 @@ function arrive(w:World,kind:VisitorKind,intro=false,exotic=false):boolean {
     pawns.push(p);
   }
   const durationCore=kind==='visitor'?8000+Math.floor(visitorRandom(random)*14000):0;
-  if(!Number.isSafeInteger(nextId)||w.piles.length+piles.length>32768)return false;
+  if(!Number.isSafeInteger(nextId)||!civilianAdmissionFits(w,profiles.length,piles.length))return false;
   w.nextId=nextId;w.pawns.push(...pawns);w.piles.push(...piles);if(!exotic)s.rng=random.rng;s.serial=id;
   s.groups.push({id,kind,members:pawns.map(p=>p.id),entry:arrival.entry,spot:arrival.spot,phase:'arriving',startedAt:w.tick,arrivedAt:null,durationCore,hostile:false});
   log(w,kind==='traveler'?`${pawns.length} passant(s) traverse(nt) la région.`:exotic?'Un négociant exotique approche de la colonie avec ses marchandises.':`${pawns.length} visiteur(s) approche(nt) de la colonie${merchant>=0?' ; un marchand porte quelques marchandises':''}.`);
@@ -168,3 +168,4 @@ export function exitVisitor(w:World,p:Pawn):boolean {
   for(const q of w.pawns)if(q.trade?.traderId===p.id){delete q.trade;q.path=[];if(q.state==='moving'&&q.moveCooldown===0)q.state='idle';}
   log(w,`${p.name} quitte la carte avec ses possessions restantes.`);return true;
 }
+import { civilianAdmissionFits,civilianAway } from './civilian-away.ts';
