@@ -36,15 +36,31 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     if(!blocked){blocked=new Uint8Array(width*world.height);for(let i=0;i<world.tiles.length;i++){const t=world.tiles[i]!.terrain;if(t==='water'||t==='rock')blocked[i]=1;}for(const i of solids)blocked[i]=1;}
     return blocked;
   };
-  return {free,step,route(a:Cell,goals:Cell[]):Cell[]|undefined {
-    const cells=goals.filter(free),indices=new Set(cells.map(c=>c.z*world.width+c.x));if(!indices.size)return;
+  function findRoute(a:Cell,goals:Cell[],exitFallback=false):{kind:'food'|'exit';path:Cell[]}|undefined {
+    const cells=goals.filter(free),indices=new Set(cells.map(c=>c.z*world.width+c.x));
+    if(!indices.size&&!exitFallback)return;
+    const edges:Cell[]=[];
+    if(exitFallback){
+      for(let x=0;x<world.width;x++)edges.push({x,z:0},{x,z:world.height-1});
+      for(let z=1;z<world.height-1;z++)edges.push({x:0,z},{x:world.width-1,z});
+    }
+    const exits=edges.filter(free);
+    if(!indices.size&&!exits.length)return;
     const n=navigationCosts(world);
     // Food travel uses the species' pace. Convert common furniture costs from
     // human base-3 units into hare base-1 units; no human movement capacity.
-    const reach=new WeightedSearch(world.width,world.height,a.z*world.width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners).finish(indices);
+    const reach=new WeightedSearch(world.width,world.height,a.z*world.width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners)
+      .finish(indices.size?indices:new Set(exits.map(c=>c.z*world.width+c.x)));
     const target=cells.filter(c=>hasReachableCell(reach,c.z*world.width+c.x)).sort((a,b)=>reach.costs[a.z*world.width+a.x]!-reach.costs[b.z*world.width+b.x]!)[0];
-    return target?routeToCell(world,target,reach)??undefined:undefined;
-  }};
+    if(target){const path=routeToCell(world,target,reach);return path?{kind:'food',path}:undefined;}
+    // An unsuccessful food flood exhausted its frontier. Its complete field
+    // already contains reachable edge cells: do not launch a second flood.
+    const exit=exits.filter(c=>hasReachableCell(reach,c.z*world.width+c.x)).sort((a,b)=>reach.costs[a.z*world.width+a.x]!-reach.costs[b.z*world.width+b.x]!)[0];
+    const path=exit&&routeToCell(world,exit,reach);
+    return path?{kind:'exit',path}:undefined;
+  }
+  return {free,step,route:(a:Cell,goals:Cell[])=>findRoute(a,goals)?.path,
+    foodOrExitRoute:(a:Cell,goals:Cell[])=>findRoute(a,goals,true)};
 }
 export function moveAnimal(world:World,a:WildAnimal,step:(a:Cell,b:Cell)=>boolean,moving=1):boolean {
   const next=a.path[0];if(!next)return false;

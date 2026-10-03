@@ -104,7 +104,9 @@ test('shared food reservations, source removal and sleep have physical, persiste
   // Adult animal life stages allow sleep while starving; do not import the
   // human wake/refusal rule. Food remains absent, without a fictitious refill.
   a.food=0;advance(w,20);expect(a.state).toBe('sleeping');expect(a.food).toBe(0);
-  a.state='idle';a.rest=.1;a.nextDecision=w.tick;advance(w);expect(a.state).toBe('sleeping');
+  // V186 protects sleep already engaged; an awake starving animal instead
+  // chooses a reachable exit before starting new rest, without gaining food.
+  a.state='idle';a.rest=.1;a.nextDecision=w.tick;advance(w);expect(a.exiting).toBeDefined();expect(a.food).toBe(0);
 });
 
 test('strict V75 migration, rejected corrupted identities/tasks/edges and ordinary camp activation',()=>{

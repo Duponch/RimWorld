@@ -21,7 +21,7 @@ export function reconcileAnimalHealth(w:World,a:WildAnimal):void {
   const status=medicalStatus(a.health);
   if(status!=='mobile') {
     const changed=a.state!==status;
-    a.state=status;a.path=[];delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;delete a.strike;delete a.stun;
+    a.state=status;a.path=[];delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;delete a.strike;delete a.stun;delete a.exiting;
     // Keep a captured edge. Presentation finishes its continuous falling path.
     if(changed){w.events.push({tick:w.tick,type:'need',message:`${animalSpecies(a.species).label} ${a.id} ${status==='dead'?'est mort':'est à terre'}.`});if(w.events.length>80)w.events.splice(0,w.events.length-80);}
   } else if(a.state==='downed'){a.state='idle';a.nextDecision=w.tick;}
@@ -41,6 +41,7 @@ export function scareAnimal(w:World,a:WildAnimal,danger:Cell,core:number):void {
   a.sleepUntilCore=Math.max(a.sleepUntilCore??0,core+1000);
   delete a.threat;delete a.retaliation;
   a.flee={danger:{x:danger.x,z:danger.z},until:w.tick+600};
+  delete a.exiting;
   delete a.meal;a.path=[];a.state=a.motion&&a.motion.end>w.tick?'moving':'idle';a.nextDecision=w.tick;
 }
 /** Real projectile producer. Commit localized injuries, death roll and PRNG
@@ -70,5 +71,6 @@ export function delayAnimalImpact(a:WildAnimal,core:number,stun=false):void {
   const at=core/10;
   a.stagger={sinceCore:a.stagger&&a.stagger.untilCore>=core?a.stagger.sinceCore:core,untilCore:Math.max(a.stagger?.untilCore??0,core+95)};
   if(stun&&a.state!=='downed')a.stun={sinceCore:a.stun&&a.stun.untilCore>=core?a.stun.sinceCore:core,untilCore:Math.max(a.stun?.untilCore??0,core+45)};
+  if(stun&&a.exiting){delete a.exiting;a.path=[];}
   if(a.motion&&a.motion.end>at){const m={...a.motion,stagger:mergeSlowIntervals([...(a.motion.stagger??[]),{start:Math.max(a.motion.start,at),end:a.stagger.untilCore/10}])};if(stun&&a.stun)m.stuns=mergeSlowIntervals([...(m.stuns??[]),{start:Math.max(m.start,at),end:a.stun!.untilCore/10}]);m.end=travelEnd(m);a.motion=m;}
 }

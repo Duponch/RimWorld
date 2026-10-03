@@ -1,3 +1,4 @@
+import { TEST_COLONY_COUNT } from '../test-colony-count.ts';
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { bereavementDemoActors } from '../../scripts/generate-bereavement-demo-v181.ts';
@@ -18,7 +19,7 @@ test('V181 catalogue scene plays one true blood-loss death and shows opposite sa
     if (await front.isHidden()) { await panel(page, 'menu'); await page.locator('#browse-saves').click(); }
     else await front.getByRole('button', { name: 'Charger une partie', exact: true }).click();
     await front.getByRole('button', { name: 'Colonies de test' }).click();
-    await expect(front.locator('input[name="test-colony"]')).toHaveCount(36);
+    await expect(front.locator('input[name="test-colony"]')).toHaveCount(TEST_COLONY_COUNT);
     await front.locator('input[name="test-colony"][value="deuil-et-souvenirs-v181"]').check();
     await expect(front).toContainText('Deuil et souvenirs · 3 colons');
     await page.screenshot({ path: testOutputPath('artifacts/bereavement-v181-catalogue.png') });

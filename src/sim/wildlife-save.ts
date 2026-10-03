@@ -5,7 +5,7 @@ import { medicalStatus } from './injury-state.ts';
 import { validStagger } from './stagger.ts';
 import { travelEnd,validSlowIntervals } from './travel-timing.ts';
 import type { World } from './types.ts';
-import { MAX_WILDLIFE } from './wildlife-state.ts';
+import { MAX_WILDLIFE, type WildAnimal } from './wildlife-state.ts';
 import { animalMealTarget } from './wildlife-food.ts';
 import { animalNavigation } from './wildlife-navigation.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
@@ -15,11 +15,32 @@ const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const finite=(v:unknown,min:number,max:number)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
 const keys=(v:object,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
+/** Cheap transport/save check; no route search or mutable World reference. */
+export function validAnimalExit(w:Pick<World,'width'|'height'|'tick'>,version:number,a:WildAnimal):boolean {
+  const exit:unknown=a.exiting;
+  if(exit===undefined)return true;
+  if(version<174||!object(exit)||!keys(exit,['destination','nextFoodCheck'])
+    ||!object(exit.destination)||!keys(exit.destination,['x','z'])
+    ||!int(exit.destination.x,0,w.width-1)||!int(exit.destination.z,0,w.height-1)
+    ||!(exit.destination.x===0||exit.destination.z===0||exit.destination.x===w.width-1||exit.destination.z===w.height-1)
+    ||!int(exit.nextFoodCheck,0,Math.min(Number.MAX_SAFE_INTEGER,w.tick+100))
+    ||a.food>0||a.domestic||a.meal||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun
+    ||!['idle','moving','hungry'].includes(a.state)||!Array.isArray(a.path))return false;
+  const last=a.path.at(-1);
+  return !last||last.x===exit.destination.x&&last.z===exit.destination.z;
+}
+export function validWildlifeExitState(w:Pick<World,'width'|'height'|'tick'|'wildlife'>,version:number):boolean {
+  const s=w.wildlife;
+  return s===undefined||object(s)&&Array.isArray(s.animals)
+    &&(s.exitedAnimals===undefined||version>=174&&int(s.exitedAnimals,1))
+    &&s.animals.every(a=>object(a)&&validAnimalExit(w,version,a));
+}
 export function validateWildlife(w:World,version:number,ids:Set<number>):string[] {
   const s=w.wildlife;if(s===undefined)return [];
   const errors:string[]=[];
+  if(!validWildlifeExitState(w,version))errors.push('Invalid wildlife exit state.');
   if(version<76||!object(s)||!['temperate-hares-v1',...(version>=91?['biome-herbivores-v1']:[])].includes(String(s.profile))
-    ||!keys(s,['profile','rng','animals','eatenPlants','eatenNutrition','eatenItems',...(s.profile==='biome-herbivores-v1'?['population']:[])])
+    ||!keys(s,['profile','rng','animals','eatenPlants','eatenNutrition','eatenItems',...(version>=174?['exitedAnimals']:[]),...(s.profile==='biome-herbivores-v1'?['population']:[])])
     ||!int(s.rng,1,0xffffffff)||!Array.isArray(s.animals)||s.animals.length>MAX_WILDLIFE||!int(s.eatenPlants)||!int(s.eatenItems)||!finite(s.eatenNutrition,0,Number.MAX_SAFE_INTEGER))return ['Invalid wildlife state.'];
   if(s.profile==='biome-herbivores-v1'){
     const p=s.population;if(!object(p)||!keys(p,['biome','fullTargetWeight','targetWeight','nextCheck','checks','arrivals'])||!['temperate-forest','boreal-forest','arid-shrubland','tundra'].includes(String(p.biome)))return ['Invalid wildlife population state.'];
@@ -31,7 +52,7 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
   let navigation:ReturnType<typeof animalNavigation>|undefined,hareNavigation:ReturnType<typeof animalNavigation>|undefined;
   const cell=(c:unknown):c is {x:number;z:number}=>object(c)&&keys(c,['x','z'])&&int(c.x,0,w.width-1)&&int(c.z,0,w.height-1);
   for(const a of s.animals) {
-    if(!object(a)||!keys(a,['id','species','sex','x','z','food','rest','state','path','motion','nextDecision','meal',...(version>=77?['health','flee','stagger','sleepUntilCore']:[]),...(version>=78?['threat','retaliation','strike','stun']:[]),...(version>=79?['corpseRot']:[]),...(version>=87?['burning']:[]),...(version>=106?['domestic','taming']:[]),...(version>=121?['ageTicks','parents','pregnancy','mating']:[])])||!int(a.id,1,w.nextId-1)||!int(a.x,0,w.width-1)||!int(a.z,0,w.height-1)||!isAnimalSpecies(a.species)||(version<91||s.profile==='temperate-hares-v1')&&a.species!=='hare'||s.profile==='biome-herbivores-v1'&&!faunaBiome(s.population!.biome).entries.some(e=>e.species===a.species)&&!(version>=119&&!!a.domestic)||!['female','male'].includes(a.sex)||!finite(a.food,0,animalSpecies(a.species).nutrition)||!finite(a.rest,0,1)||!['idle','moving','eating','sleeping','hungry',...(version>=77?['downed','dead']:[])].includes(a.state)||!int(a.nextDecision,0,w.tick+100)||!Array.isArray(a.path)||a.path.length>w.width*w.height||!a.path.every(cell)){errors.push('Invalid wild animal.');continue;}
+    if(!object(a)||!keys(a,['id','species','sex','x','z','food','rest','state','path','motion','nextDecision','meal',...(version>=77?['health','flee','stagger','sleepUntilCore']:[]),...(version>=78?['threat','retaliation','strike','stun']:[]),...(version>=79?['corpseRot']:[]),...(version>=87?['burning']:[]),...(version>=106?['domestic','taming']:[]),...(version>=121?['ageTicks','parents','pregnancy','mating']:[]),...(version>=174?['exiting']:[])])||!int(a.id,1,w.nextId-1)||!int(a.x,0,w.width-1)||!int(a.z,0,w.height-1)||!isAnimalSpecies(a.species)||(version<91||s.profile==='temperate-hares-v1')&&a.species!=='hare'||s.profile==='biome-herbivores-v1'&&!faunaBiome(s.population!.biome).entries.some(e=>e.species===a.species)&&!(version>=119&&!!a.domestic)||!['female','male'].includes(a.sex)||!finite(a.food,0,animalSpecies(a.species).nutrition)||!finite(a.rest,0,1)||!['idle','moving','eating','sleeping','hungry',...(version>=77?['downed','dead']:[])].includes(a.state)||!int(a.nextDecision,0,w.tick+100)||!Array.isArray(a.path)||a.path.length>w.width*w.height||!a.path.every(cell)){errors.push('Invalid wild animal.');continue;}
     if(version>=121){
       if(!int(a.ageTicks))errors.push('Invalid animal age.');
       const parents:unknown=a.parents;

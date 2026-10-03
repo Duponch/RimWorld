@@ -9,7 +9,7 @@ export class PresentationChanges {
   capture(world:World):boolean {
     const signature=JSON.stringify([
       world.seed,world.width,world.height,world.events.at(-1),
-      world.wildlife?.animals.map(a=>[a.id,a.state,a.burning?.phase,a.meal?.id,a.flee,a.stagger,a.stun,a.threat,a.strike,a.health?.nextInjuryId]),world.wildlife?.eatenNutrition,
+      world.wildlife?.animals.map(a=>[a.id,a.state,a.burning?.phase,a.meal?.id,a.flee,a.stagger,a.stun,a.threat,a.strike,a.health?.nextInjuryId,a.exiting?.destination]),world.wildlife?.eatenNutrition,world.wildlife?.exitedAnimals,
       world.fires?.items.map(f=>[f.id,f.attachedPawnId,f.attachedAnimalId]),world.weather?.current,
       world.visitors?.groups.map(g=>[g.id,g.phase,g.hostile,g.reason]),world.trade?.count,
       world.projectiles?.map(p=>[p.id,p.emittedAtCore,p.arrival]),

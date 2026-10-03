@@ -1,3 +1,4 @@
+import { TEST_COLONY_COUNT } from './test-colony-count.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -22,7 +23,7 @@ afterEach(() => vi.unstubAllGlobals());
 test('the eight prepared weather saves are published in the player test-colony catalogue', async () => {
   const manifest = JSON.parse(readFileSync('public/test-saves/manifest.json', 'utf8'));
   const saves = parseTestColonies(manifest);
-  expect(saves).toHaveLength(36);
+  expect(saves).toHaveLength(TEST_COLONY_COUNT);
   expect(saves.filter(save => save.release === 'v166')).toHaveLength(8);
   vi.stubGlobal('fetch', vi.fn(async (url: string) =>
     new Response(readFileSync(`public${url}`, 'utf8'))));

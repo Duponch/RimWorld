@@ -1,3 +1,4 @@
+import { TEST_COLONY_COUNT } from '../test-colony-count.ts';
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { fireTouch } from '../../src/sim/firefighting.ts';
@@ -16,7 +17,7 @@ test('V184 prepared Flashstorm loads through the public menu, strikes physically
     const front = page.locator('.front-menu');
     await front.getByRole('button', { name: 'Charger une partie', exact: true }).click();
     await front.getByRole('button', { name: 'Colonies de test' }).click();
-    await expect(front.locator('input[name="test-colony"]')).toHaveCount(36);
+    await expect(front.locator('input[name="test-colony"]')).toHaveCount(TEST_COLONY_COUNT);
     await front.locator('input[name="test-colony"][value="orage-sec-et-incendies-v184"]').check();
     await expect(front).toContainText('Orage sec et incendies · 3 colons');
     await front.getByRole('button', { name: 'Charger cette colonie' }).click();

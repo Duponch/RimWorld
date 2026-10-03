@@ -944,6 +944,34 @@
       "prepared": true,
       "provenance": "Départ Atterrissage/Cassandra Core adapté, graine 12456, broussailles arides naturelles 250 × 250, schéma 173. Horloge civile préparée à 26399 ; calendriers météo, feu, raids, maladie, visiteurs, économie, faune, flore, vêtements et pannes réadoptés prospectivement, sans résolution rétroactive. Le premier tirage Misc vaut 1.140378 sur 16,9 et vise le ticket Flashstorm [1 ; 1,4). Les trois colons et les stocks physiques sont ceux du départ ; aucun feu, impact, dommage, stock ou colon supplémentaire n’est précréé. L’incident, les frappes et les réactions physiques exigent les vrais ticks après chargement.",
       "sha256": "e5b8efcf61282546c0b8e8149a6d205dc6095a2c1563a76865f35b63fedf8da4"
+    },
+    {
+      "id": "faune-affamee-v186",
+      "release": "v186",
+      "label": "Faune affamée · 3 colons",
+      "description": "Une réserve fermée, un lièvre sauvage affamé, un sauvage rassasié et un domestique endormi : observer le départ réel ou rouvrir l’accès à la nourriture.",
+      "filename": "faune-affamee.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "Faune",
+        "famine",
+        "sortie physique",
+        "réserve inaccessible",
+        "domestique",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause, ouvrir Faune, puis reprendre à 1× : le lièvre à 12,12 commence un trajet vers le bord, sans disparaître au centre.",
+        "Sauvegarder pendant le trajet, recharger puis reprendre : observer un seul départ au bord et le domestique qui reste sur la carte.",
+        "Pour une autre issue, recharger la scène initiale et déconstruire un mur de la réserve à 22–26,22–26 : la nourriture accessible peut annuler le départ au prochain contrôle."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32 au schéma 174, graine186 : sol plat et réserve murée ajoutés explicitement, aliments existants déplacés derrière les murs, nutrition et propriété des trois lièvres préparées. Aucun départ, chemin, cadavre, consommation ni compteur précréé. Les trois colons conservent leurs identités ; ce scénario ne mesure pas la fréquence naturelle ni la charge 250×250.",
+      "sha256": "d1e6d0b1228d62a16d2d4d0735e9cb3434658740680bd50caba88bea6736a8cf"
     }
   ]
 }

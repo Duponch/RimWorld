@@ -1,3 +1,4 @@
+import { TEST_COLONY_COUNT } from '../test-colony-count.ts';
 import {readFileSync} from 'node:fs';
 import {expect,test} from '@playwright/test';
 import {scoutDemoActors} from '../../scripts/generate-scout-demo-v182.ts';
@@ -17,7 +18,7 @@ test('V182 native menus load a prepared scout, play the physical roundtrip and r
     const front=page.locator('.front-menu');
     await front.getByRole('button',{name:'Charger une partie',exact:true}).click();
     await front.getByRole('button',{name:'Colonies de test'}).click();
-    await expect(front.locator('input[name="test-colony"]')).toHaveCount(36);
+    await expect(front.locator('input[name="test-colony"]')).toHaveCount(TEST_COLONY_COUNT);
     await front.locator('input[name="test-colony"][value="reconnaissance-et-retour-v182"]').check();
     await front.getByRole('button',{name:'Charger cette colonie'}).click();
     await expectWorld(page,expected);

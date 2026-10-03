@@ -1,3 +1,4 @@
+import { TEST_COLONY_COUNT } from './test-colony-count.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -16,7 +17,7 @@ test('V179 catalogue scene harvests its natural root, hauls one physical dose, a
   const entries = parseTestColonies(JSON.parse(readFileSync('public/test-saves/manifest.json', 'utf8')));
   const entry = entries.find(save => save.id === 'racines-et-soins-v179');
   expect(entry).toMatchObject({ release: 'v179', filename: 'racines-et-soins.json', prepared: true, pawns: 3, colonists: 3, width: 250, height: 250 });
-  expect(entries).toHaveLength(36);
+  expect(entries).toHaveLength(TEST_COLONY_COUNT);
   expect(entry!.sha256).toBe(createHash('sha256').update(raw).digest('hex'));
   expect(JSON.parse(raw).schemaVersion).toBe(168); // Immutable V179 bytes.
   vi.stubGlobal('fetch', vi.fn(async () => new Response(raw)));

@@ -59,7 +59,7 @@ export function updateWildlifePanel(root:HTMLElement,world:World,focus:(id:numbe
     const tameCheck=row.tame;
     if(tameCheck){tameCheck.checked=!!a.taming?.designated;tameCheck.disabled=a.state==='dead'||!tame;tameCheck.onchange=()=>tame?.(a.id,tameCheck.checked);}
     const state=a.state==='moving'&&!a.path.length&&!a.meal&&(!a.motion||a.motion.end<=world.tick)?'idle':a.state;
-    row.activity.textContent=`${a.strike?'Riposte':a.threat?'Se défend':a.flee?'Fuit':labels[state]}${a.meal&&state==='moving'?' vers sa nourriture':''}`;
+    row.activity.textContent=`${a.strike?'Riposte':a.threat?'Se défend':a.flee?'Fuit':a.exiting?'Quitte la carte faute de nourriture':labels[state]}${a.meal&&state==='moving'?' vers sa nourriture':''}`;
     row.position.textContent=`${a.x}, ${a.z}`;
   }
   const targetChoice=root.querySelector<HTMLSelectElement>('[data-fauna-target-choice]')!;

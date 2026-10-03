@@ -31,10 +31,12 @@ export interface WildAnimal extends Cell {
   sleepUntilCore?:number;
   path:Cell[]; motion?:TravelSegment; nextDecision:number;
   meal?:{kind:'plant'|'pile';id:number;quantity:number;progress:number};
+  exiting?:{destination:Cell;nextFoodCheck:number};
 }
 export interface WildlifeState {
   profile:'temperate-hares-v1'|'biome-herbivores-v1'; rng:number; animals:WildAnimal[];
   eatenPlants:number; eatenNutrition:number; eatenItems:number;
+  exitedAnimals?:number;
   population?:{biome:FaunaBiomeId;fullTargetWeight:number;targetWeight:number;nextCheck:number;checks:number;arrivals:number};
 }
 /** Compatibility alias: existing V76 callers and snapshots keep exact values. */

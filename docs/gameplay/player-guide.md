@@ -1,5 +1,13 @@
 # Guide joueur
 
+## Observer ou empêcher le départ d’un animal affamé — V186
+
+Un animal **sauvage à 0 % de nourriture** cherche d’abord un aliment compatible et accessible sur toute la carte. S’il n’en trouve aucun, il peut marcher vers un bord atteignable ; **Faune** et son inspection affichent **« Quitte la carte faute de nourriture »**. Il quitte réellement la carte au terme du trajet, sans cadavre ni produit à récupérer. Une désignation de chasse ne l’empêche pas de partir. Une enceinte fermée le retient ; les domestiques ne partent pas par cette règle et leur alimentation reste à votre charge.
+
+Pour conserver le sauvage, rendez une nourriture admise accessible : rouvrez la réserve ou le passage qui l’en séparait. Pendant la sortie, il réexamine les aliments tous les cent ticks locaux et une dernière fois avant le retrait. Ce contrôle peut annuler le départ, puis l’animal doit encore rejoindre et manger l’aliment. Le sommeil déjà commencé, une fuite, un feu ou une incapacité priment sur ce départ ; un animal affamé endormi ne se réveille pas artificiellement pour sortir.
+
+Pour essayer, ouvrez **Charger une partie → Colonies de test → Faune affamée · 3 colons**. La scène préparée 32² contient trois lièvres : un sauvage affamé au centre, un sauvage rassasié et un domestique endormi à nutrition nulle. Les provisions existantes sont dans une réserve murée. Chargez en pause, ouvrez Faune puis reprenez à 1× : sauvegardez pendant la marche, rechargez et observez le départ au bord avec le domestique toujours présent. Pour l’autre issue, rechargez la scène initiale et déconstruisez un mur de la réserve entre 22–26, 22–26. Les colons affectés à Construction doivent le rejoindre réellement avant de rouvrir l’accès. Aucun départ ni chemin n’est précréé ; cette scène ne prouve pas la fréquence naturelle du comportement. [Contrat et adaptations](../development/wildlife-exit-v186.md), [contrôles et limites](../history/validation-wildlife-exit-v186.md).
+
 ## Faire face à l’orage sec localisé — V184
 
 Dans **Atterrissage forcé / Cassandra partielle**, un incident divers peut annoncer un **Orage sec localisé**. Il est distinct de la météo **Orage sec** : la lettre signale une zone de frappes répétées, même si le temps affiché porte un autre nom. Le tirage n’est pas garanti et la condition finit indépendamment des incendies qu’elle a déclenchés.

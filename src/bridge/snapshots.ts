@@ -6,6 +6,7 @@ import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validPlantSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
 import { validFlashstorm } from '../sim/flashstorm-save.ts';
+import { validWildlifeExitState } from '../sim/wildlife-save.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
 import { validateScoutRegistry } from '../sim/caravan-save.ts';
 import { validateQuests } from '../sim/quest-save.ts';
@@ -325,6 +326,7 @@ export class SnapshotDecoder {
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
     if(validateScoutRegistry(next,next.schemaVersion).length)return resync('Registre de reconnaissance invalide.');
+    if(!validWildlifeExitState(next,next.schemaVersion))return resync('Départ de faune invalide.');
     if(validateQuests(next.quests?scoutRegistryView(next):next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
     if(next.scout&&(next.scout.phase==='travelling'||next.scout.phase==='awaiting-entry')){
       const registry=scoutRegistryView(next),pawn=next.scout.pawn;

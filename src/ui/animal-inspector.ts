@@ -57,7 +57,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
   const species = animalSpecies(animal.species), health = animal.health,stage=animalLifeStage(animal);
   const model = animalBodyModel(animal.species), capacities = animalBody(animal).capacities;
   const state = animal.state === 'moving' && !animal.path.length && !animal.meal && (!animal.motion || animal.motion.end <= world.tick) ? 'idle' : animal.state;
-  const currentActivity = animal.strike ? 'Riposte' : animal.threat ? 'Se défend' : animal.flee ? 'Fuit' : activity[state];
+  const currentActivity = animal.strike ? 'Riposte' : animal.threat ? 'Se défend' : animal.flee ? 'Fuit' : animal.exiting ? 'Quitte la carte faute de nourriture' : activity[state];
   const injuries = health?.injuries.map(injury => `${model.byId[injury.part].label} : ${injury.scar?.pain !== undefined ? 'Cicatrice' : INJURY_RULES[injury.kind].label}, −${(injury.severity / HP_UNIT).toFixed(2)} PV${injury.tended !== undefined ? ` (traitée, qualité ${Math.round(injury.tended / 10)} %)` : ''}`) ?? [];
   const missing = health?.missing.map(part => `${model.byId[part.part].label} : partie perdue${part.tended ? ' (plaie traitée)' : ''}`) ?? [];
   const cases = health?.infections?.cases.map(infection => `${model.byId[infection.part].label} : infection ${infectionLabel[infectionStage(infection.severity)]}, ${(infection.severity * 100 / INFECTION_UNIT).toFixed(1)} %`) ?? [];

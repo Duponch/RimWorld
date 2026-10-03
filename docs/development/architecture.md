@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Schéma courant 173. L’[orage sec localisé V184](flashstorm-v184.md) conserve un état optionnel créé au premier incident futur, avec centre, échéances Core et PRNG privé. Il réutilise le feu et la publication météo ; aucune recherche spatiale par image. Le schéma 172 est validé strictement avant migration neutre. La [quête V183](quest-local-v183.md) et la [reconnaissance V182](caravan-scout-v182.md) gardent leurs registres physiques. Les [notes historiques](architecture-pre-v145.md) conservent leurs contrats.
+Schéma courant 174. La [sortie physique de la faune V186](wildlife-exit-v186.md) conserve une intention facultative `exiting` et un compteur `exitedAnimals` créé au premier départ achevé. Une même recherche pondérée essaye l’alimentation mondiale puis choisit un bord atteignable ; les chemins et segments existants portent la marche. Le retrait attend leur fin physique et l’expiration des récupérations de mêlée encore référentes. Le schéma 173 est validé strictement avant migration neutre, sans destination ni compteur rétroactifs. La [quête V183](quest-local-v183.md) et la [reconnaissance V182](caravan-scout-v182.md) gardent leurs registres physiques. Les [notes historiques](architecture-pre-v145.md) conservent leurs contrats.
 
 ## Objectif
 

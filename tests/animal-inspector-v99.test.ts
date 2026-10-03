@@ -41,6 +41,14 @@ test('animal anatomy and medical conditions use the real species record', () => 
   expect(animalInspectorView(world, animal.id)?.canHunt).toBe(false);
 });
 
+test('starvation exit is distinct from ordinary wandering and remains overridden by danger',()=>{
+  const {world,animal}=fixture();animal.food=0;animal.state='moving';
+  animal.exiting={destination:{x:0,z:7},nextFoodCheck:100};
+  expect(animalInspectorView(world,animal.id)?.activity).toBe('Quitte la carte faute de nourriture');
+  animal.flee={danger:{x:5,z:7},until:20};
+  expect(animalInspectorView(world,animal.id)?.activity).toBe('Fuit');
+});
+
 test('applicable tabs have labelled panels; advanced training remains absent', () => {
   const markup = animalInspectorScaffold();
   for (const tab of ['info', 'health']) {

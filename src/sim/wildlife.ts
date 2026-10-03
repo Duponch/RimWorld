@@ -18,6 +18,7 @@ import { animalSpecies,faunaBiome,selectBiomeSpecies,type AnimalSpeciesId,type F
 import { animalHandlingHolding } from './animal-handling.ts';
 import { animalCareInProgress,animalCareTargets } from './animal-care.ts';
 import { adultAgeTicks, advanceAnimalLife, animalFoodPerDay, animalLifeStage, animalNutritionMax } from './animal-life.ts';
+import { atMapEdge,cancelAnimalExit,exitSuppressed,finishAnimalExits,stopExitTargeting,WILDLIFE_EXIT_FOOD_CHECK } from './wildlife-exit.ts';
 const contact=(a:Cell,b:Cell)=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z)<=1;
 const neighbours=(c:Cell):Cell[]=>[{x:c.x,z:c.z},{x:c.x-1,z:c.z},{x:c.x+1,z:c.z},{x:c.x,z:c.z-1},{x:c.x,z:c.z+1}];
 export const ANIMAL_POPULATION_CHECK_TICKS=122; // 1,220 Core ticks; Core checks every 1,213.
@@ -112,6 +113,7 @@ export function reconcileWildlife(world:World,resourcesById?:ReadonlyMap<number,
   const animals=world.wildlife?.animals??[];
   const mates=animals.some(a=>a.mating)?new Map(animals.map(a=>[a.id,a])):undefined;
   for(const a of animals){
+    if(a.exiting&&exitSuppressed(a))cancelAnimalExit(world,a);
     if(a.meal&&!animalMealTarget(world,a,resourcesById,workCells)){delete a.meal;a.path=[];a.state=a.motion&&a.motion.end>world.tick?'moving':'idle';a.nextDecision=world.tick;}
     if(a.mating){
       const female=mates?.get(a.mating.femaleId);
@@ -148,11 +150,13 @@ export function advanceWildlife(world:World):void {
   for(const pawn of world.pawns)if(pawn.animalHandling?.kind==='lead'&&pawn.animalHandling.phase!=='approach')
     for(const id of pawn.animalHandling.ropees??[pawn.animalHandling.animalId])(ledAnimals??=new Set()).add(id);
   const matingFemales=new Set(s.animals.flatMap(a=>a.mating?[a.mating.femaleId]:[]));
+  const departures=new Set<number>();
   // Rotate priority; at most one potentially map-wide search per tick.
   for(let i=0;i<s.animals.length;i++) {
     const a=s.animals[(world.tick+i)%s.animals.length]!;
     const species=animalSpecies(a.species);
     advanceAnimalHealth(world,a);
+    if(a.exiting&&exitSuppressed(a))cancelAnimalExit(world,a);
     if(a.state==='dead')continue;
     if(a.health)bleedFilth(world,a,medicalBleed(a.health),a.state==='downed'||a.state==='sleeping',.4);
     const body=animalBody(a);
@@ -188,7 +192,7 @@ export function advanceWildlife(world:World):void {
     if(!danger&&(ledAnimals?.has(a.id)||matingFemales.has(a.id)))continue;
     const held=!danger&&((!!a.taming?.designated||!!a.domestic)&&animalHandlingHolding(world,a.id)
       ||!!a.domestic&&animalCareInProgress(world,a));
-    if(held&&!(a.state==='eating'&&a.meal))continue;
+    if(held&&!(a.state==='eating'&&a.meal)){cancelAnimalExit(world,a);continue;}
     if(a.state==='sleeping') {
       if(medicalRest&&a.food>=nutrition*.45&&!a.sleepUntilCore&&getNav(a).free(a))continue;
       if(!medicalRest&&a.rest<1&&!a.sleepUntilCore&&getNav(a).free(a))continue;
@@ -212,16 +216,43 @@ export function advanceWildlife(world:World):void {
       }
       if(!a.path.length){delete a.meal;a.state='idle';a.nextDecision=world.tick;}
     }
+    if(a.exiting){
+      const arrived=atMapEdge(world,a)&&!a.path.length;
+      // A committed blow must finish recovery while its identity still exists.
+      if(arrived&&stopExitTargeting(world,a.id))continue;
+      let checked=false;
+      if((arrived||!a.path.length||world.tick>=a.exiting.nextFoodCheck)&&a.nextDecision<=world.tick&&searches<1){
+        searches++;
+        const food=animalFoods(world,a),route=getNav(a).foodOrExitRoute(a,food.flatMap(neighbours));
+        if(route?.kind==='food'){
+          const end=route.path.at(-1)??a,target=food.find(f=>contact(end,f))!;
+          delete a.exiting;a.meal={kind:target.kind,id:target.id,quantity:target.quantity,progress:0};
+          a.path=route.path;a.state='moving';a.nextDecision=world.tick;continue;
+        }
+        if(!route){cancelAnimalExit(world,a);a.path=[];a.state='hungry';a.nextDecision=world.tick+WILDLIFE_EXIT_FOOD_CHECK;continue;}
+        a.path=route.path;a.exiting.destination={...(a.path.at(-1)??a)};
+        a.exiting.nextFoodCheck=world.tick+WILDLIFE_EXIT_FOOD_CHECK;checked=true;
+      }
+      if(arrived&&checked&&!a.path.length){departures.add(a.id);continue;}
+      if(a.path.length)moveAnimal(world,a,getNav(a).step,body.capacities.moving);
+      continue;
+    }
     if(a.path.length){const pen=grazingPen(world,a);if(pen&&!pen.has(a.path[0]!.z*world.width+a.path[0]!.x)){a.path=[];delete a.meal;a.nextDecision=world.tick;}else{moveAnimal(world,a,getNav(a).step,body.capacities.moving);continue;}}
     if(a.mating)continue;
     if(a.nextDecision>world.tick)continue;
     const n=getNav(a);
     if(a.food<nutrition*.45&&searches<1) {
       searches++;
-      const food=animalFoods(world,a),goals=food.flatMap(neighbours),path=n.route(a,goals);
+      const food=animalFoods(world,a),goals=food.flatMap(neighbours);
+      const choice=a.food<=0&&!a.domestic?n.foodOrExitRoute(a,goals):undefined;
+      const path=choice?.kind==='food'?choice.path:a.food<=0&&!a.domestic?undefined:n.route(a,goals);
       if(path) {
         const end=path.at(-1)??a,target=food.find(f=>contact(end,f))!;
         a.meal={kind:target.kind,id:target.id,quantity:target.quantity,progress:0};a.path=path;a.state='moving';a.nextDecision=world.tick;continue;
+      }
+      if(choice?.kind==='exit'){
+        a.path=choice.path;a.exiting={destination:{...(a.path.at(-1)??a)},nextFoodCheck:world.tick+WILDLIFE_EXIT_FOOD_CHECK};
+        a.state='moving';a.nextDecision=world.tick;continue;
       }
       a.nextDecision=world.tick+100;a.state='hungry';
     } else if(a.food<nutrition*.45)continue;
@@ -233,4 +264,5 @@ export function advanceWildlife(world:World):void {
     if(choices.length){a.path=[choices[Math.floor(wildlifeRandom(s)*choices.length)]!];moveAnimal(world,a,n.step,body.capacities.moving);}
     a.nextDecision=Math.max(a.nextDecision,world.tick+12+Math.floor(wildlifeRandom(s)*13));
   }
+  finishAnimalExits(world,departures);
 }

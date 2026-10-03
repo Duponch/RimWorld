@@ -1,6 +1,6 @@
 # Lisière
 
-Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 173**. [V184](docs/development/flashstorm-v184.md) ouvre l’orage sec localisé de Cassandra : frappes physiques, risque d’incendie et extinction au contact. « Orage sec et incendies » permet de l’essayer. L’[inventaire](docs/gameplay/implementation-status.md), la [roadmap](docs/ROADMAP.md) et la [validation](docs/development/validation.md) distinguent contenu, priorités et preuves.
+Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 174**. [V186](docs/development/wildlife-exit-v186.md) permet aux animaux sauvages affamés sans aliment accessible de marcher jusqu’au bord pour quitter la carte. « Faune affamée » permet d’essayer ce départ ou de rouvrir une réserve pour l’éviter ; les animaux domestiques restent sur la carte. L’[inventaire](docs/gameplay/implementation-status.md), la [roadmap](docs/ROADMAP.md) et la [validation](docs/development/validation.md) distinguent contenu, priorités et preuves.
 
 ## Démarrer
 
