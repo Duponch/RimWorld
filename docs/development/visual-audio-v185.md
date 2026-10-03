@@ -1,5 +1,7 @@
 # Corrections visuelles et feuillage sonore — V185
 
+Le [correctif V200](needs-grass-clouds-v200.md) augmente le trou central des nuages de 27 à 31 % du petit côté de l'écran, avec même raccord de 8 points. Les dimensions historiques ci-dessous sont remplacées sur ce seul point.
+
 Le [correctif V196](visual-blood-v196.md) remplace les proxies animaux morts
 par leurs vrais modèles, avec pose de sommeil, pelage et yeux en croix. Il
 ajoute le pigment corporel et l'herbe tachée. Les mentions de silhouette de

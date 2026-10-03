@@ -11,6 +11,7 @@ import { moodTarget,moodThoughts } from '../src/sim/mood';
 import { newApparelState } from '../src/sim/apparel-rules';
 import { newWeaponState } from '../src/sim/equipment-rules';
 import { createMedicalRecord } from '../src/sim/injury-state';
+import { NEED_THRESHOLDS } from '../src/ui/need-gauge';
 
 test('health dossier shows only measured capacities and orders wounds by anatomy',()=>{
   const world=medicalCamp(),pawn=world.pawns[0]!;
@@ -92,4 +93,19 @@ test('mood dossier orders actual thoughts without displaying a fictitious base t
   expect(view.thoughts.some(row=>row.id==='base')).toBe(false);
   expect(view.thoughts.some(row=>row.id==='ravenous'&&row.display==='-12')).toBe(true);
   expect(view.thoughts.some(row=>row.id==='extremely-comfortable'&&row.display==='+8')).toBe(true);
+});
+
+test('visible need markers correspond to actual local thought transitions without changing the world',()=>{
+  const world=medicalCamp(),pawn=world.pawns[0]!;
+  for(const need of Object.keys(NEED_THRESHOLDS) as (keyof typeof NEED_THRESHOLDS)[]){
+    for(const threshold of NEED_THRESHOLDS[need]){
+      if(need==='recreation')pawn.recreation.level=threshold-.1;else pawn[need]=threshold-.1;
+      const before=JSON.stringify(world),lower=moodThoughts(world,pawn).map(thought=>thought.id);
+      expect(JSON.stringify(world)).toBe(before);
+      if(need==='recreation')pawn.recreation.level=threshold+.1;else pawn[need]=threshold+.1;
+      const after=JSON.stringify(world),upper=moodThoughts(world,pawn).map(thought=>thought.id);
+      expect(JSON.stringify(world)).toBe(after);
+      expect(upper,`${need} at ${threshold} %`).not.toEqual(lower);
+    }
+  }
 });

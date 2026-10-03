@@ -1,5 +1,7 @@
 # V199 — dossiers compacts et informations au survol
 
+Le [correctif V200](needs-grass-clouds-v200.md) ajoute les repères manquants des cinq jauges ordinaires. La preuve V199 reste historique et ne valide pas ce correctif.
+
 ## Portée
 
 V199 réorganise la présentation des personnes, des animaux domestiques et de la recherche à partir des quatorze images fournies dans `references_UI/` et du [relevé Core 1.6.4871](../research/colonist-ui-core-v199.md). La hiérarchie des informations, les proportions des dossiers et la séparation entre résumé, languettes, commandes et détails suivent cette référence. La palette pastel/papier de Lisière, sa typographie, ses portraits et son rendu 3D restent conservés. Les captures assemblées ne sont pas traitées comme une preuve de dimensions globales ou de contenu Core sans extensions.

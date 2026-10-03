@@ -27,6 +27,10 @@
 #inspector .pawn-needs-list meter{display:block;appearance:none;box-sizing:border-box;width:100%;height:18px;border:1px solid #768c81;background:#dbd5c1;border-radius:0}
 #inspector .pawn-needs-list meter::-webkit-meter-bar{border:0;border-radius:0;background:#dbd5c1;height:16px}
 #inspector .pawn-needs-list meter::-webkit-meter-optimum-value,#inspector .pawn-needs-list meter::-webkit-meter-suboptimum-value,#inspector .pawn-needs-list meter::-webkit-meter-even-less-good-value{border-radius:0;background:#72aaa8}
+#inspector .pawn-needs-list .need-gauge{position:relative}
+#inspector .pawn-needs-list .need-gauge-markers{position:absolute;inset:1px;pointer-events:none}
+#inspector .pawn-needs-list [data-need-threshold]{position:absolute;top:50%;bottom:0;width:2px;transform:translateX(-1px);background:#768c8180}
+#inspector .pawn-needs-list .need-threshold-passed{background:#263d35e6}
 #inspector .pawn-needs-list .minor-needs{width:73%;padding-top:10px}
 #inspector .pawn-needs-list .minor-needs .pawn-need{min-height:50px;padding-block:4px 10px}
 #inspector .pawn-needs-list .minor-needs label{font-size:12px}

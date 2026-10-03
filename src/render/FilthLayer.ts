@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import { Fn, attribute, cos, sin, positionLocal, texture, uv, vec2, vec3 } from 'three/tsl';
 import type { FilthRecord } from '../sim/filth-rules';
 import { createFilthAtlas, filthDecal, FILTH_ATLAS } from './filth-appearance';
+import { prepareGrassBloodMasks } from './grass-blood-mask';
 import { material } from './primitives';
 
 /** Flat alpha decals: one resident draw for all six species and all thicknesses.
@@ -14,6 +15,7 @@ export class FilthLayer {
   private previous: Pick<FilthRecord, 'id' | 'x' | 'z' | 'kind' | 'thickness'>[] = [];
   constructor(configure?: (m: THREE.MeshStandardNodeMaterial) => void) {
     const pixels = createFilthAtlas();
+    prepareGrassBloodMasks(pixels);
     this.atlas = new THREE.DataTexture(pixels.data, pixels.width, pixels.height, THREE.RGBAFormat);
     this.atlas.colorSpace = THREE.SRGBColorSpace;
     this.atlas.magFilter = THREE.LinearFilter; this.atlas.minFilter = THREE.LinearMipmapLinearFilter;

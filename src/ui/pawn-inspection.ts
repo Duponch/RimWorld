@@ -4,16 +4,17 @@ import { biologicalYears } from '../sim/human-age';
 import { isColonist, isCarePatient } from '../sim/affiliation';
 import { recreationInspection } from './recreation-inspection';
 import { setTooltip } from './tooltip';
+import { needGaugeMarkup, needThresholdRow, updateNeedGauge } from './need-gauge';
 
 export function pawnNeedsMarkup(): string {
-  const need=(id:string,label:string)=>`<div class="pawn-need" data-need="${id}" tabindex="0"><label for="${id}-meter">${label} <span id="selected-${id}"></span></label><meter id="${id}-meter" min="0" max="100" low="25" optimum="100"></meter></div>`;
+  const need=(id:'hunger'|'rest'|'beauty'|'comfort',label:string)=>`<div class="pawn-need" data-need="${id}" tabindex="0"><label for="${id}-meter">${label} <span id="selected-${id}"></span></label>${needGaugeMarkup(id)}</div>`;
   return `<div class="needs">${need('hunger','Nourriture')}${need('rest','Sommeil')}</div>${recreationInspection()}<div class="needs minor-needs">${need('beauty','Beauté')}${need('comfort','Confort')}</div>`;
 }
 const needHelp = {
-  hunger: ['Nourriture', 'La nourriture diminue au fil du temps. Elle remonte quand le repas est réellement consommé. À zéro, la malnutrition progresse.'],
-  rest: ['Sommeil', 'Le repos remonte pendant le sommeil. Un lit permet de récupérer plus efficacement que le sol ; une fatigue extrême peut provoquer un effondrement.'],
-  comfort: ['Confort', 'Le confort dépend du lit ou du siège utilisé. Son niveau influe sur les pensées et redescend hors des meubles confortables.'],
-  beauty: ['Beauté', 'L’exposition récente à la beauté du décor influence ce besoin et les pensées. Les objets, le terrain et la saleté autour de la personne participent à cette exposition.'],
+  hunger: ['Nourriture', 'La réserve diminue au fil du temps et remonte au repas réellement consommé. Sous 24 % : faim ; sous 12 % : très faim. À zéro, la malnutrition progresse.'],
+  rest: ['Sommeil', 'Le repos remonte pendant le sommeil, plus efficacement dans un lit. Sous 28 % : somnolence ; sous 14 % : grande fatigue ; sous 1 % : épuisement. Une fatigue extrême peut provoquer un effondrement.'],
+  comfort: ['Confort', 'Le confort vient du lit ou du siège utilisé et redescend hors des meubles confortables. Sous 10 % : inconfort ; à partir de 60, 70, 80 et 90 % : pensées de confort croissantes.'],
+  beauty: ['Beauté', 'L’exposition récente aux objets, au terrain et à la saleté influence ce besoin. Jusqu’à 1 % : environnement affreux ; sous 15 % : très laid ; sous 35 % : laid. À partir de 65, 85 et 99 % : pensées de beauté croissantes.'],
 } as const;
 
 /** The summary and the medical food selector refer to the inspected identity,
@@ -32,8 +33,8 @@ export function updatePawnInspection(root: HTMLElement, world: World, pawn: Pawn
     if (!row) continue;
     const value = pawn.state === 'dead' ? '—' : `${Math.round(pawn[need])} %`;
     row.querySelector(`#selected-${need}`)!.textContent = value;
-    row.querySelector<HTMLMeterElement>('meter')!.value = pawn.state === 'dead' ? 0 : pawn[need];
-    setTooltip(row, { title: `${needHelp[need][0]} : ${value}`, body: needHelp[need][1] });
+    updateNeedGauge(row, pawn[need], pawn.state === 'dead');
+    setTooltip(row, { title: `${needHelp[need][0]} : ${value}`, body: needHelp[need][1], rows: [needThresholdRow(need)] });
   }
   const host = root.querySelector<HTMLElement>('[data-health="food-policy"]');
   if (host) {

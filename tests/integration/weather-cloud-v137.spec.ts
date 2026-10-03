@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import { observeErrors, pause } from './helpers';
 
-test('V185: native cloud mask preserves colour and depth in both projections',async({playwright})=>{
+test('V200: native cloud mask preserves colour and depth in both projections',async({playwright})=>{
   test.setTimeout(120_000);
   const browser=await playwright.chromium.launch({channel:'chromium',headless:false,args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}});
@@ -81,8 +81,8 @@ ColonyRenderer.prototype.frame=function(now){window.__cloudView=this;return orig
           const radius=Math.hypot(x-a.width/2,y-a.height/2)/short,offset=(y*a.width+x)*4;
           const diff=Math.max(...[0,1,2].map(k=>Math.abs(a.data[offset+k]!-b.data[offset+k]!)));
           const control=Math.max(...[0,1,2].map(k=>Math.abs(c.data[offset+k]!-b.data[offset+k]!)));
-          if(radius<.26){innerMax=Math.max(innerMax,diff);if(control>3)coveredCentre++;}
-          if(radius>.35&&diff>3)outerChanged++;
+          if(radius<.30){innerMax=Math.max(innerMax,diff);if(control>3)coveredCentre++;}
+          if(radius>.39&&diff>3)outerChanged++;
         }
         return {innerMax,outerChanged,coveredCentre};
       },{masked:masked.toString('base64'),hidden:hidden.toString('base64'),unmasked:unmasked.toString('base64')});

@@ -1,5 +1,7 @@
 # Sang, dépouilles et douleur — V196
 
+Le [correctif V200](needs-grass-clouds-v200.md) remplace la teinte par cellule décrite ci-dessous par un masque des racines effectivement sous les taches, et branche les nuances du terrain jusqu'ici différées. Les corps, dépouilles, voix et franchissements V196 restent inchangés ; ses anciennes mesures ne valident pas le nouveau rendu d'herbe.
+
 Chantier utilisateur du 3 octobre 2026, repris à sa relance en mode jour.
 Schéma **182 inchangé** : aucun champ clinique, commande, migration, ressource
 ou mécanique nouvelle. [Recherche et adaptations](../research/visual-blood-core-web-v196.md),

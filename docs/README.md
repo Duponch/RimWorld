@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V200 — jauges et retouches visuelles, schéma 182 inchangé.** Lire le [contrat](development/needs-grass-clouds-v200.md), la [référence Core/API](research/needs-grass-clouds-v200.md) et la [preuve ciblée](history/validation-needs-grass-clouds-v200.md) : 17 repères hors Humeur, pigment terrain partagé et sang des seules racines tachées, rayon central des nuages à 31 %. Les règles de besoins et de sang physique ne changent pas.
+
 **V199 — dossiers compacts et informations au survol, schéma 182 inchangé.** Lire le [contrat UI](development/colonist-ui-v199.md), le [relevé des quatorze captures et du Core](research/colonist-ui-core-v199.md) et la [preuve ciblée](history/validation-colonist-ui-v199.md). Palette pastel conservée ; les informations non simulées restent absentes.
 
 **V198 — continuité et diagnostic CPU, schéma 182 inchangé.** Lire le [contrat](development/movement-continuity-v198.md), la [recherche Core et technique](research/navigation-cpu-gpu-v198.md) et la [preuve](history/validation-movement-v198.md). Distinguer attente normale au refuge, arrêt de contrôleur et coût du solveur ; le laboratoire GPU reste isolé.

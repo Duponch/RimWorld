@@ -1,14 +1,15 @@
 import * as THREE from 'three/webgpu';
 import {
-  Fn, float, hash, instanceIndex, positionLocal, sin, smoothstep,
-  texture, transformNormalToView, uint, uniform, uv, varyingProperty,
+  Fn, If, float, hash, instanceIndex, mix, positionLocal, sin, smoothstep,
+  texture, textureLoad, transformNormalToView, uint, uniform, uv, varyingProperty,
   vec2, vec3,
 } from 'three/tsl';
 import type { Terrain, World } from '../sim/types';
 import { footprintCells } from '../sim/definitions';
 import { noise } from './StaticGeometry';
 import { ARID_GRASS_COLOR, TERRAIN_COLORS } from './TerrainLayer';
-import { GroundBlood, GRASS_BLOOD_COLOR, grassBloodOpacity } from './ground-blood';
+import { GRASS_BLOOD_COLOR } from './ground-blood';
+import { GrassBloodMask, GRASS_BLOOD_SLOTS, GRASS_BLOOD_WORDS } from './grass-blood-mask';
 
 /** AntSystem-inspired GPU blades, indexed by stable world cell and slot.
  * This is scenery: no Resource, job, save or simulation RNG. Four vertices/two
@@ -104,7 +105,7 @@ function diffCover<T>(before: T[] | undefined, after: T[], id: (item: T) => numb
   return true;
 }
 
-function writeGroundCell(data: Uint8Array, world: GroundWorld, i: number, blocked: Uint8Array, blood?: ReadonlyMap<number,number>): boolean {
+function writeGroundCell(data: Uint8Array, world: GroundWorld, i: number, blocked: Uint8Array, blood?: ReadonlySet<number>): boolean {
   const tile = world.tiles[i]!;
   const p = i * 4;
   let hex = 0, alpha = 0;
@@ -114,10 +115,10 @@ function writeGroundCell(data: Uint8Array, world: GroundWorld, i: number, blocke
     const x = i % world.width, z = Math.floor(i / world.width);
     scratchColor.setHex(tile.terrain === 'grass' && world.site?.biome === 'arid-shrubland'
       ? ARID_GRASS_COLOR : TERRAIN_COLORS[tile.terrain]).multiplyScalar(0.94 + noise(x, z, world.seed) * 0.12);
-    const stain = blood?.get(i) ?? 0;
-    if (stain) scratchColor.lerp(bloodColor, grassBloodOpacity(stain));
     hex = scratchColor.getHex();
-    alpha = 255;
+    // Coverage stays binary. The spare value marks cells with individual
+    // stained roots so clean cells never read the pigment field on GPU.
+    alpha = blood?.has(i) ? 254 : 255;
   }
   const r = hex >>> 16, g = hex >>> 8 & 255, b = hex & 255;
   if (data[p] === r && data[p + 1] === g && data[p + 2] === b && data[p + 3] === alpha) return false;
@@ -128,7 +129,7 @@ function writeGroundCell(data: Uint8Array, world: GroundWorld, i: number, blocke
 export function groundGrassPixels(world: GroundWorld): Uint8Array<ArrayBuffer> {
   const data = new Uint8Array(world.width * world.height * 4);
   const { blocked } = coverState(world);
-  const blood = new GroundBlood(); blood.adopt(world.filth?.items ?? [], world.width, world.height);
+  const blood = new GrassBloodMask(); blood.adopt(world.filth?.items ?? [], world.width, world.height);
   for (let i = 0; i < world.width * world.height; i++) {
     writeGroundCell(data, world, i, blocked, blood.cells);
   }
@@ -176,10 +177,15 @@ function nearCellBudget(corners: Float64Array): number {
 }
 
 /** One resident draw. The GPU creates/recycles roots, shapes, wind and colour;
- * the CPU uploads only a 4-byte/cell surface map when soil, cover or blood changes. */
+ * the CPU uploads the surface map and packed root pigment only on adoption. */
 export class GpuGroundGrassLayer {
   readonly mesh: THREE.Mesh<THREE.InstancedBufferGeometry, THREE.MeshStandardNodeMaterial>;
   readonly map = new THREE.DataTexture(new Uint8Array(4), 1, 1, THREE.RGBAFormat);
+  readonly bloodMap = new THREE.DataTexture(new Uint32Array(1), 1, 1, THREE.RedIntegerFormat, THREE.UnsignedIntType);
+  private readonly bloodPresent = uniform(0);
+  private readonly texturesEnabled = uniform(1);
+  private readonly terrainPaint = texture(this.map);
+  private readonly terrainPaintPresent = uniform(0);
   private readonly gridOrigin = uniform(new THREE.Vector2());
   private readonly gridWidth = uniform(1);
   private readonly slotsPerCell = uniform(1);
@@ -210,7 +216,7 @@ export class GpuGroundGrassLayer {
   private coverCounts = new Uint32Array(0);
   private dirtyFlags = new Uint8Array(0);
   private readonly dirtyCells: number[] = [];
-  private readonly blood = new GroundBlood();
+  private readonly blood = new GrassBloodMask();
   private revision = 0;
   private readonly corner = new THREE.Vector3();
   private readonly ray = new THREE.Vector3();
@@ -224,6 +230,9 @@ export class GpuGroundGrassLayer {
     this.map.magFilter = this.map.minFilter = THREE.NearestFilter;
     this.map.generateMipmaps = false;
     this.map.needsUpdate = true;
+    this.bloodMap.magFilter = this.bloodMap.minFilter = THREE.NearestFilter;
+    this.bloodMap.generateMipmaps = false;
+    this.bloodMap.needsUpdate = true;
     const material = new THREE.MeshStandardNodeMaterial({
       color: 0xffffff, roughness: .93, metalness: 0, flatShading: true, side: THREE.DoubleSide,
     });
@@ -260,13 +269,25 @@ export class GpuGroundGrassLayer {
       const root = vec2(bx, bz);
       const sampled = texture(this.map, root.add(.5).div(this.dimensions)).level(float(0));
       groundColour.assign(sampled.rgb);
+      // Share the renderer's painted ground at the existing root coordinates.
+      // Vertex LOD0 keeps the visible grain without another fragment lookup;
+      // its shore/foam alpha never changes grass coverage or blade geometry.
+      If(this.texturesEnabled.greaterThan(0).and(this.terrainPaintPresent.greaterThan(0)).and(sampled.a.greaterThan(0)), () => {
+        groundColour.assign(this.terrainPaint.sample(root.add(.5).div(this.dimensions)).level(float(0)).rgb);
+      });
+      If(this.texturesEnabled.greaterThan(0).and(this.bloodPresent.greaterThan(0)).and(sampled.a.greaterThan(0)).and(sampled.a.lessThan(1)), () => {
+        const rootSlot = uint(slot);
+        const word = uint(textureLoad(this.bloodMap, vec2(cellX.mul(GRASS_BLOOD_WORDS).add(float(rootSlot.div(uint(16)))), cellZ)).r);
+        const pigment = word.shiftRight(rootSlot.mod(uint(16)).mul(uint(2))).bitAnd(uint(3));
+        groundColour.assign(mix(groundColour, vec3(bloodColor.r, bloodColor.g, bloodColor.b), float(pigment).mul(.8 / 3)));
+      });
       // Extra density tapers toward each band's far edge; otherwise the
       // boundary between one and many blades would cut across the landscape.
       const depth = root.sub(this.bandView.xy).dot(this.bandView.zw);
       const nearFade = float(1).sub(smoothstep(this.bandLimits.x.sub(this.bandLimits.y), this.bandLimits.x, depth));
       const foregroundFade = float(1).sub(smoothstep(this.bandLimits.z.sub(this.bandLimits.w), this.bandLimits.z, depth));
       const bandFade = foreground.select(foregroundFade, near.select(nearFade, float(1)));
-      const coverage = sampled.a.mul(this.zoomVisibility).mul(bandFade);
+      const coverage = sampled.a.greaterThan(0).select(float(1), float(0)).mul(this.zoomVisibility).mul(bandFade);
       const yaw = hash(key.add(uint(29))).mul(Math.PI * 2);
       const c = yaw.cos(), s = yaw.sin();
       const height = hash(key.add(uint(43))).mul(.17).add(.21).mul(coverage);
@@ -299,6 +320,19 @@ export class GpuGroundGrassLayer {
     const length=Math.hypot(directionX,directionZ);
     if(length>0&&Number.isFinite(length))this.windDirection.value.set(directionX/length,directionZ/length);
   }
+  setTexturesEnabled(enabled: boolean): void { this.texturesEnabled.value = enabled ? 1 : 0; }
+  /** Bind before the first compile, then retain the renderer-owned texture
+   * across pixel refreshes and texture toggles. Null disables the lookup but
+   * retains its binding: the renderer may release/rebuild its image safely.
+   * An actual texture-identity change needs a fresh binding because Three
+   * shares uniforms by texture UUID; no texture is allocated/disposed here. */
+  setTerrainPaint(paint: THREE.DataTexture | null): void {
+    this.terrainPaintPresent.value = paint && paint.image.width > 1 && paint.image.height > 1 ? 1 : 0;
+    if (paint && this.terrainPaint.value !== paint) {
+      this.terrainPaint.value = paint;
+      this.mesh.material.needsUpdate = true;
+    }
+  }
   presentWind(tick:number):void {this.windTick.value=((tick%7200)+7200)%7200;}
 
   /** Diff spatial cover at source cells; dynamic edits leave the atlas alone.
@@ -307,7 +341,14 @@ export class GpuGroundGrassLayer {
     const widthChanged = this.map.image.width !== world.width || this.map.image.height !== world.height ||
       this.previousPixels.length !== world.width * world.height * 4;
     const biome = world.site?.biome;
-    const bloodChanges = this.blood.adopt(world.filth?.items ?? [], world.width, world.height);
+    const bloodAdoption = this.blood.adopt(world.filth?.items ?? [], world.width, world.height);
+    const bloodChanges = bloodAdoption.cells;
+    this.bloodPresent.value = this.blood.cells.size > 0 ? 1 : 0;
+    if (bloodAdoption.resized) {
+      this.bloodMap.dispose();
+      this.bloodMap.image = { data: this.blood.words, width: world.width * GRASS_BLOOD_WORDS, height: world.height };
+    }
+    if (bloodAdoption.changed) { this.bloodMap.needsUpdate = true; this.revision++; }
     if (!force && !widthChanged && this.previousTiles === world.tiles &&
       this.previousStructures === world.structures && this.previousSeed === world.seed &&
       this.previousResources === world.resources &&
@@ -456,7 +497,7 @@ export class GpuGroundGrassLayer {
     // The footprint shrinks as the player zooms in: invest saved vertex budget
     // in more fixed slots per cell, never in a larger total submission.
     const closeBoost = Math.max(0, Math.min(1, (pixelsPerCell - 75) / 30));
-    const desiredSlots = Math.min(224,
+    const desiredSlots = Math.min(GRASS_BLOOD_SLOTS,
       Math.floor((20 + Math.max(0, pixelsPerCell - 30) * .7 + 110 * closeBoost) * zoomVisibility));
     // A rotation changes the axis-aligned rectangle, but not the edge lengths
     // of its ground parallelogram. Reserve against its yaw-invariant maximum
@@ -589,5 +630,5 @@ export class GpuGroundGrassLayer {
     } };
   }
 
-  dispose(): void { this.mesh.geometry.dispose(); this.mesh.material.dispose(); this.map.dispose(); }
+  dispose(): void { this.mesh.geometry.dispose(); this.mesh.material.dispose(); this.map.dispose(); this.bloodMap.dispose(); }
 }

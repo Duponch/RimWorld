@@ -277,6 +277,7 @@ export class ColonyRenderer {
     this.scene.add(this.areaPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
     if (groundGrassEnabled) {
       this.grass = new GpuGroundGrassLayer(this.environmentLighting.configure);
+      this.grass.setTerrainPaint(this.terrainPaintTexture);
       this.scene.add(this.grass.mesh);
     }
     this.rig = new CameraRig(renderer.domElement);
@@ -533,6 +534,7 @@ export class ColonyRenderer {
     this.wildlife.setTexturesEnabled(enabled);
     this.fires.setTexturesEnabled(enabled);
     this.clouds.setTexturesEnabled(enabled);
+    this.grass?.setTexturesEnabled(enabled);
     this.podRescue.setTexturesEnabled(enabled);
     this.landscape.needsUpdate=true;
   }
@@ -545,6 +547,7 @@ export class ColonyRenderer {
     this.terrainPaintResident=false;
     this.terrainPaintTexture.needsUpdate=true;
     this.terrainPaintDirty=false;
+    this.grass?.setTerrainPaint(this.terrainPaintTexture);
   }
   private uploadTerrainPaintPatch(rect:TerrainPaintPatchRect):void {
     const atlas=this.terrainPaintTexture.image;
@@ -560,6 +563,7 @@ export class ColonyRenderer {
     this.renderer.copyTextureToTexture(this.terrainPaintStaging,this.terrainPaintTexture,this.terrainPaintPatchSource,this.terrainPaintPatchDestination);
   }
   private releaseTerrainPaint():void {
+    this.grass?.setTerrainPaint(null);
     this.terrainPaintResident=false;
     this.terrainPaintTexture.dispose();
     this.terrainPaintTexture.image={data:new Uint8Array([255,255,255,0]),width:1,height:1};
@@ -579,6 +583,8 @@ export class ColonyRenderer {
       return;
     }
     this.grass = new GpuGroundGrassLayer(this.environmentLighting.configure);
+    this.grass.setTexturesEnabled(this.texturesEnabled);
+    this.grass.setTerrainPaint(this.texturesEnabled?this.terrainPaintTexture:null);
     this.scene.add(this.grass.mesh);
     if (this.world) this.grass.update(this.world, true);
   }

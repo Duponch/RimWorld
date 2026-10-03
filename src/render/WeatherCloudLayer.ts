@@ -14,7 +14,7 @@ const EDGE_FADE_FRACTION = .28;
 const MATRIX_STEP = .02;
 const MAX_CONTIGUOUS_TICK_GAP = 600;
 // Radii are fractions of the viewport's shorter dimension, in physical pixels.
-export const CLOUD_CLEAR_RADIUS = .27;
+export const CLOUD_CLEAR_RADIUS = .31;
 export const CLOUD_CLEAR_SOFT_EDGE = .08;
 // Maximum local scale and full signed shift ranges, including optional lobes.
 export const CLOUD_SHAPE = { stretch: [1.60, 1.42, 1.60], shift: [.36, .384, .66] } as const;

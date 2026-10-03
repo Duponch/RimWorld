@@ -10,7 +10,7 @@ Les nouveaux coups confirmés peuvent émettre une prise de douleur : trois masc
 
 Dans **Charger → Colonies de test**, choisissez **« Sang, dépouilles et douleur · 3 colons »**, 46e fiche. Carte préparée 32×32 : les colonnes x4/8/12/16/20/24/28 comparent les sept espèces, vivants à z6, sommeil à z11 et dépouilles à z16. Le lièvre des neiges est seulement en dépouille, conformément au biome. Ada et Noé ont des plaies préparées et des sexes distincts ; Mina est saine. Les instructions de la fiche expliquent repas assis, trajet chargé, transport réel et nouveaux coups pour l’écoute. Ne pas déduire une émission audio des blessures déjà présentes au chargement. [Scène](../../public/test-saves/v196/sang-depouilles-douleur.json), [contrat et limites](../development/visual-blood-v196.md), [preuve ciblée](../history/validation-visual-blood-v196.md).
 
-Les nuances fines de la texture du terrain sur chaque brin ne sont pas ajoutées : cet effet était conditionné à l’absence de coût supplémentaire. Le sang d’herbe est une teinte par cellule, pas le contour exact de chaque goutte.
+**V200 :** les brins reprennent la couleur peinte du sol à leur racine. Seuls ceux enracinés dans une tache reçoivent le rouge du sang ; les espaces propres de la même case restent propres. Désactiver les textures revient à la couleur unie du terrain. Le trou transparent central des nuages est un peu plus large. Dans **Besoins**, les traits des cinq réserves indiquent désormais leurs paliers ; le survol en explique les valeurs. [Retouches et coût borné](../development/needs-grass-clouds-v200.md).
 
 ## Cultiver des plantes médicinales — V195
 

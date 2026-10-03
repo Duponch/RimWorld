@@ -80,8 +80,8 @@ test('nuages V87 : huit états, transition Core et direction de vent visuelle pu
 });
 
 test('nuages : trou central circulaire en pixels, complètement transparent avant le fondu', () => {
-  expect(CLOUD_CLEAR_RADIUS).toBe(.27);
-  expect(CLOUD_CLEAR_RADIUS + CLOUD_CLEAR_SOFT_EDGE).toBeCloseTo(.35);
+  expect(CLOUD_CLEAR_RADIUS).toBe(.31);
+  expect(CLOUD_CLEAR_RADIUS + CLOUD_CLEAR_SOFT_EDGE).toBeCloseTo(.39);
   for (const [width, height] of [[1600, 900], [900, 1600], [900, 900]]) {
     const short = Math.min(width, height), cx = width / 2, cy = height / 2;
     expect(cloudScreenMask(cx, cy, width, height)).toBe(0);
