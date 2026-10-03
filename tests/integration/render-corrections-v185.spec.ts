@@ -65,14 +65,14 @@ ColonyRenderer.prototype.frame=function(now){window.__v185View=this;return origi
         const view=(window as any).__v185View;
         return {actors:view.wildlife.mesh.children.map((m:any)=>({geometry:m.geometry.uuid,material:m.material.uuid})),
           encoded:view.wildlife.mesh.children.filter((m:any)=>m.name.startsWith('Wild ')).map((m:any)=>m.geometry.getAttribute('aAnimal').getZ(0)),
-          flameVertices:view.fires.mesh.geometry.getAttribute('position').count,
+          flameTriangles:view.fires.mesh.geometry.getIndex().count/3,
           smoke:view.structureVfx.smoke.geometry.instanceCount,
           heights:Array.from({length:view.structureVfx.smoke.geometry.instanceCount},(_,i)=>view.structureVfx.smoke.geometry.getAttribute('smokePosition').getY(i))};
       });
       expect(state.actors).toEqual(resident);
       expect(state.encoded.every((n:number)=>n===(posture==='idle'?0:1))).toBe(true);
-      expect(state.flameVertices).toBeLessThan(60);
-      expect(state.smoke).toBe(10);
+      expect(state.flameTriangles).toBe(10);
+      expect(state.smoke).toBe(14);
       expect(Math.max(...state.heights)).toBeGreaterThan(2.8);
       await canvas.screenshot({path:test.info().outputPath(`v185-animals-${posture}-fire.png`)});
     }
@@ -102,7 +102,7 @@ ColonyRenderer.prototype.frame=function(now){window.__v185View=this;return origi
       return {calls:view.stats.drawCalls,triangles:view.stats.triangles};
     });
     expect(afterAttached.calls-beforeAttached.calls).toBe(2);
-    expect(afterAttached.triangles-beforeAttached.triangles).toBe(168);
+    expect(afterAttached.triangles-beforeAttached.triangles).toBe(20);
     await canvas.screenshot({path:test.info().outputPath('v185-first-attached-fire.png')});
     await page.evaluate(()=>{
       const view=(window as any).__v185View,w=structuredClone(view.world);

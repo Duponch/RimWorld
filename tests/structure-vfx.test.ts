@@ -11,30 +11,35 @@ import { ensureFireState } from '../src/sim/fire-rules.ts';
 const structure=(kind:Structure['kind'],id:number,x=8,z=8):Structure=>({id,kind,x,z,orientation:0,footprint:'standard'});
 
 describe('resident structure effects',()=>{
-  it('keeps paper flame faces outward and its cap visible from above with front-face culling',()=>{
+  it('keeps the ten-triangle flame cone closed with outward faces, coherent normals and front-face culling',()=>{
     const fire=new FireLayer();
     try{
       const geometry=fire.mesh.geometry,positions=geometry.getAttribute('position'),indices=geometry.getIndex()!;
       const a=new Vector3(),b=new Vector3(),c=new Vector3(),ab=new Vector3(),ac=new Vector3(),normal=new Vector3(),centre=new Vector3();
       const boundary=new Map<string,number>();
+      expect(indices.count/3).toBe(10);
+      expect(geometry.getAttribute('uv').count).toBe(positions.count);
+      const vertexNormals=geometry.getAttribute('normal');
+      const pointKey=(index:number)=>[positions.getX(index),positions.getY(index),positions.getZ(index)].map(v=>(Math.abs(v)<1e-5?0:v).toFixed(5)).join(':');
       for(let offset=0;offset<indices.count;offset+=3){
         const ids=[indices.getX(offset),indices.getX(offset+1),indices.getX(offset+2)];
         a.fromBufferAttribute(positions,ids[0]!);b.fromBufferAttribute(positions,ids[1]!);c.fromBufferAttribute(positions,ids[2]!);
         normal.crossVectors(ab.subVectors(b,a),ac.subVectors(c,a));
         centre.copy(a).add(b).add(c).multiplyScalar(1/3);
         expect(normal.lengthSq()).toBeGreaterThan(1e-10);
-        // The lower two bands rise monotonically; the upper cut tongues have
-        // folds whose radial normal can point inward despite coherent winding.
-        if(offset<48*3)expect(normal.x*centre.x+normal.z*centre.z).toBeGreaterThan(0);
-        if(offset>=72*3)expect(normal.y).toBeGreaterThan(0);
+        if(Math.abs(a.y-b.y)<1e-6&&Math.abs(a.y-c.y)<1e-6)expect(normal.y).toBeLessThan(0); // bottom cap
+        else expect(normal.x*centre.x+normal.z*centre.z).toBeGreaterThan(0);
+        const averagedNormal=new Vector3();
+        for(const id of ids)averagedNormal.add(new Vector3().fromBufferAttribute(vertexNormals,id));
+        expect(normal.dot(averagedNormal)).toBeGreaterThan(0);
         for(let i=0;i<3;i++){
-          const from=ids[i]!,to=ids[(i+1)%3]!,key=[Math.min(from,to),Math.max(from,to)].join(':');
+          // Cone UV seams duplicate logical vertices. Weld by position to
+          // check the actual closed surface rather than buffer index pairs.
+          const from=pointKey(ids[i]!),to=pointKey(ids[(i+1)%3]!),key=[from,to].sort().join('|');
           boundary.set(key,(boundary.get(key)??0)+(from<to?1:-1));
         }
       }
-      // Only the twelve bottom edges remain open against the ground; all
-      // shared edges have opposite direction, so no fold flips its winding.
-      expect([...boundary.values()].filter(value=>value!==0)).toHaveLength(12);
+      expect([...boundary.values()].filter(value=>value!==0)).toHaveLength(0);
       expect((fire.mesh.material as THREE.Material).side).toBe(0);
     }finally{fire.dispose();}
   });
@@ -49,10 +54,10 @@ describe('resident structure effects',()=>{
     pawn.state='working';pawn.cooking={recipe:'make-revolver',stationId:table.id,phase:'work'} as CookingTask;
     layer.adopt(world);
     expect(layer.glow.activeCount).toBe(3);
-    expect(layer.smoke.geometry.instanceCount).toBe(7);
+    expect(layer.smoke.geometry.instanceCount).toBe(9);
     const sizes=layer.smoke.geometry.getAttribute('smokeShape') as THREE.InstancedBufferAttribute;
-    expect(new Set(Array.from({length:7},(_,i)=>sizes.getX(i).toFixed(3))).size).toBeGreaterThan(2);
-    expect(Array.from({length:7},(_,i)=>sizes.getW(i)).every(aspect=>aspect===1)).toBe(true);
+    expect(new Set(Array.from({length:9},(_,i)=>sizes.getX(i).toFixed(3))).size).toBeGreaterThan(2);
+    expect(Array.from({length:9},(_,i)=>sizes.getW(i)).every(aspect=>aspect===1)).toBe(true);
     const version=(layer.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute).version;
     layer.present(17.5);layer.adopt(world);
     expect((layer.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute).version).toBe(version);
@@ -73,12 +78,12 @@ describe('resident structure effects',()=>{
     pawn.state='working';pawn.cooking={recipe:'make-component',stationId:bench.id,phase:'work'} as CookingTask;
     layer.adopt(world,true);
     expect(layer.glow.activeCount).toBe(4); // bench lamp, two hot pieces, one charge bar
-    expect(layer.smoke.geometry.instanceCount).toBe(7);
+    expect(layer.smoke.geometry.instanceCount).toBe(9);
     pawn.cooking={stationId:stove.id,phase:'work'} as CookingTask;
     layer.adopt(world);
     expect(layer.smoke.geometry.instanceCount).toBe(0); // electric stove is unpowered
     stove.power.on=true;layer.adopt(world);
-    expect(layer.smoke.geometry.instanceCount).toBe(8);
+    expect(layer.smoke.geometry.instanceCount).toBe(10);
     battery.battery!.stored=0;layer.adopt(world);
     expect(layer.glow.activeCount).toBe(3); // stove status, stove heat, bench idle status
     layer.setDistant(true);expect(layer.group.visible).toBe(false);
@@ -111,10 +116,11 @@ describe('resident structure effects',()=>{
       fire.adopt(world,true);vfx.adopt(world,true);vfx.setView(camera,target);
       const flame=fire.mesh.geometry.getAttribute('firePosition') as THREE.InstancedBufferAttribute;
       const vertices=fire.mesh.geometry.getAttribute('position') as THREE.BufferAttribute;
-      const flameHeight=Math.max(...Array.from({length:vertices.count},(_,i)=>vertices.getY(i)));
+      const flameHeight=Math.max(...Array.from({length:vertices.count},(_,i)=>vertices.getY(i)))+.75;
       const position=vfx.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute;
       const shape=vfx.smoke.geometry.getAttribute('smokeShape') as THREE.InstancedBufferAttribute;
-      expect(vfx.smoke.geometry.instanceCount).toBe(2*GROUND_SMOKE_PUFFS);
+      expect(GROUND_SMOKE_PUFFS).toBe(7);
+      expect(vfx.smoke.geometry.instanceCount).toBe(14);
       expect(flame.getW(1)).toBeGreaterThan(flame.getW(0));
       for(const index of [0,1]){
         const visibleTip=flameHeight*flame.getW(index);
@@ -137,13 +143,13 @@ describe('resident structure effects',()=>{
     camera.position.set(52,50,52);camera.lookAt(target);camera.updateProjectionMatrix();camera.updateMatrixWorld();
     const layer=new StructureVfxLayer();layer.adopt(world,true);layer.setView(camera,target);
     let position=layer.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute;
-    expect(layer.smoke.geometry.instanceCount).toBe(7+128*GROUND_SMOKE_PUFFS); // campfire + bounded ground fire
-    for(let i=7;i<layer.smoke.geometry.instanceCount;i++)expect(position.getX(i)).toBeLessThan(32);
+    expect(layer.smoke.geometry.instanceCount).toBe(9+128*GROUND_SMOKE_PUFFS); // campfire + bounded ground fire
+    for(let i=9;i<layer.smoke.geometry.instanceCount;i++)expect(position.getX(i)).toBeLessThan(32);
     const version=position.version;layer.setView(camera,target);expect(position.version).toBe(version);
     target.set(82,0,82);camera.position.set(112,50,112);camera.lookAt(target);camera.updateMatrixWorld();
     layer.setView(camera,target);position=layer.smoke.geometry.getAttribute('smokePosition') as THREE.InstancedBufferAttribute;
-    expect(layer.smoke.geometry.instanceCount).toBe(7+128*GROUND_SMOKE_PUFFS);
-    for(let i=7;i<layer.smoke.geometry.instanceCount;i++)expect(position.getX(i)).toBeGreaterThan(73);
+    expect(layer.smoke.geometry.instanceCount).toBe(9+128*GROUND_SMOKE_PUFFS);
+    for(let i=9;i<layer.smoke.geometry.instanceCount;i++)expect(position.getX(i)).toBeGreaterThan(73);
     layer.dispose();
   });
 });

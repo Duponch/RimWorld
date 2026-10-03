@@ -82,15 +82,20 @@ test('panoramique, orbite et zoom à tick gelé ne modifient pas le volume ni la
 test('la pluie accélérée suit le tick confirmé et boucle sur sa période GPU', () => {
   const layer=new WeatherPrecipitationLayer();
   try {
-    const state=layer as unknown as {rainPhase:{value:number};wind:{value:Vector2}};
+    const state=layer as unknown as {rainPhase:{value:number};snowPhase:{value:number};wind:{value:Vector2}};
     layer.present({...input,tick:100,strength:1.5});
-    expect(state.rainPhase.value).toBe(100);
+    expect(state.rainPhase.value).toBeCloseTo(115);
+    const snowPhase = state.snowPhase.value;
     expect(state.wind.value.x).toBeCloseTo(1.2);
     expect(state.wind.value.y).toBeCloseTo(.9);
     layer.present({...input,tick:101,strength:1.5});
-    expect(state.rainPhase.value).toBe(101);
-    layer.present({...input,tick:292,strength:1.5});
-    expect(state.rainPhase.value).toBe(100);
+    expect(state.rainPhase.value).toBeCloseTo(116.15);
+    layer.present({...input,tick:100+192/1.15,strength:1.5});
+    expect(state.rainPhase.value).toBeCloseTo(115);
+    layer.present({...input,tick:100,strength:1.5});
+    expect(state.snowPhase.value).toBe(snowPhase);
+    layer.present({...input,tick:192/1.15,strength:1.5});
+    expect(state.rainPhase.value).toBeCloseTo(0);
   } finally {layer.dispose();}
 });
 

@@ -59,12 +59,19 @@ test('living rest keeps the complete animal volume on the ground for every speci
   try{
     const meshes=new Map(species.map(kind=>[kind,layer.mesh.children.find(child=>child.name===`Wild ${kind} — GPU rig`) as THREE.Mesh]));
     const geometryBySpecies=new Map(species.map(kind=>[kind,meshes.get(kind)!.geometry]));
+    const surfaces=new Map(species.map(kind=>{
+      const geometry=meshes.get(kind)!.geometry;
+      const uv=geometry.getAttribute('animalPaintUv'),normal=geometry.getAttribute('normal');
+      expect(uv.count).toBe(geometry.getAttribute('position').count);
+      expect(Array.from(uv.array).every(Number.isFinite)).toBe(true);
+      return [kind,{uv,normal,coordinates:Array.from(uv.array),normals:Array.from(normal.array)}] as const;
+    }));
     for(const posture of ['idle','moving','sleeping','downed','dead'] as const){
       for(const animal of world.wildlife!.animals){
         animal.state=posture;
         animal.motion=posture==='moving'?{from:{x:animal.x,z:animal.z},to:{x:animal.x+1,z:animal.z},start:world.tick-1,end:world.tick+1}:undefined;
       }
-      layer.update(world,undefined,true);
+      const before=structuredClone(world);layer.update(world,undefined,true);expect(world).toEqual(before);
       const shown=new Map<number,{height:number;radius:number}>();
       layer.forEachPose((id,_kind,_x,_y,_z,height,radius)=>shown.set(id,{height,radius}));
       for(const animal of world.wildlife!.animals){
@@ -73,6 +80,11 @@ test('living rest keeps the complete animal volume on the ground for every speci
         const bounds=geometry.boundingBox!;
         const result=shown.get(animal.id)!;
         expect(geometry).toBe(geometryBySpecies.get(animal.species));
+        const surface=surfaces.get(animal.species)!;
+        expect(geometry.getAttribute('animalPaintUv')).toBe(surface.uv);
+        expect(geometry.getAttribute('normal')).toBe(surface.normal);
+        expect(Array.from(surface.uv.array)).toEqual(surface.coordinates);
+        expect(Array.from(surface.normal.array)).toEqual(surface.normals);
         expect(encoded.getZ(0)).toBe(posture==='dead'?2:posture==='sleeping'||posture==='downed'?1:0);
         expect(encoded.getX(0)).toBe(posture==='moving'?1:0);
         if(posture==='sleeping'||posture==='downed'){
@@ -85,5 +97,24 @@ test('living rest keeps the complete animal volume on the ground for every speci
         else expect(result.height).toBeCloseTo(bounds.max.y*scale,4);
       }
     }
+    const painted=species.map(kind=>meshes.get(kind)!.material);
+    const coatMaps=new Set<THREE.Texture>();
+    for(const material of painted){
+      let samples=0;
+      (material as THREE.MeshStandardNodeMaterial).colorNode!.traverse(node=>{
+        if('isTextureNode' in node && node.isTextureNode){samples++;coatMaps.add((node as unknown as {value:THREE.Texture}).value);}
+      });
+      expect(samples).toBe(1);
+    }
+    expect(coatMaps.size).toBe(3);
+    layer.setTexturesEnabled(false);
+    for(const mesh of meshes.values()){
+      const material=mesh.material as THREE.MeshStandardNodeMaterial;
+      expect(material.map).toBeNull();
+      let samples=0;material.colorNode!.traverse(node=>{if('isTextureNode' in node && node.isTextureNode)samples++;});
+      expect(samples).toBe(0);
+    }
+    layer.setTexturesEnabled(true);
+    species.forEach((kind,i)=>expect(meshes.get(kind)!.material).toBe(painted[i]));
   }finally{layer.dispose();}
 });

@@ -11,6 +11,11 @@ test('stockpile area stays a faint overlay around stored items and remains selec
   try {
     const page = await browser.newPage({ baseURL: 'http://127.0.0.1:5173', viewport: { width: 1440, height: 1000 } });
     const errors = observeErrors(page);
+    await page.route('**/src/main.ts*',async route=>{
+      const response=await route.fetch();
+      await route.fulfill({response,body:`const originalStorageFrame=ColonyRenderer.prototype.frame;
+ColonyRenderer.prototype.frame=function(now){window.__storageView=this;return originalStorageFrame.call(this,now);};\n`+await response.text()});
+    });
     const prepared = createWorld(138, 32, 32);
     prepared.tick = 2000;
     prepared.tiles = prepared.tiles.map(() => ({ terrain: 'grass' }));
@@ -37,6 +42,12 @@ test('stockpile area stays a faint overlay around stored items and remains selec
     await cell(page, 13, 12);
     await expect(page.locator('#cell-title')).toHaveText('Réserve');
     await expect(page.locator('#cell-storage')).toBeVisible();
+    await expect.poll(()=>page.evaluate(()=>{
+      const view=(window as any).__storageView,cells=view.storageGroup.getObjectByName('storage-cells');
+      const border=view.storageGroup.getObjectByName('storage-borders');
+      return {cells:cells.geometry.instanceCount,opacity:cells.material.opacity,
+        border:border.geometry.instanceCount,selectedContour:view.objectSelection.visible};
+    })).toEqual({cells:30,opacity:.055,border:0,selectedContour:false});
     await cell(page, 12, 12);
     await expect(page.locator('#inspector')).toBeHidden();
     expect(errors).toEqual([]);
