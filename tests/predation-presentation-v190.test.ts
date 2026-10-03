@@ -5,9 +5,8 @@ import { createMedicalRecord } from '../src/sim/injury-state';
 import { ANIMAL_SPECIES_IDS,type AnimalSpeciesId } from '../src/sim/animal-species';
 import { adultAgeTicks } from '../src/sim/animal-life';
 import type { CorpseState } from '../src/sim/corpses';
-import { corpseParts,corpseVisualMask,corpseVisualPartBit } from '../src/render/corpse-presentation';
-import { cargoGeometry } from '../src/render/pawn-geometry';
-import { BIOME_CARGO } from '../src/render/biome-cargo';
+import { corpseVisualMask,corpseVisualPartBit } from '../src/render/corpse-presentation';
+import { hareGeometry } from '../src/render/hare-geometry';
 import { PawnLayer } from '../src/render/PawnLayer';
 
 function body(species:AnimalSpeciesId):CorpseState {
@@ -15,45 +14,49 @@ function body(species:AnimalSpeciesId):CorpseState {
     health:{...createMedicalRecord(10),body:species,death:{tick:10,cause:'blood-loss'}}};
 }
 
-test('ground proxy removes consumed subtrees without changing the frozen ante-mortem record',()=>{
+function visibleParts(corpse:CorpseState):number[] {
+  const geometry=hareGeometry(1,corpse.species),bits=geometry.getAttribute('corpsePartMask'),mask=corpseVisualMask(corpse);
+  const visible=Array.from({length:bits.count},(_,i)=>bits.getX(i)).filter(bit=>Math.floor(mask/Math.max(1,bit))%2===0);geometry.dispose();return visible;
+}
+test('the animal rig removes consumed subtrees without changing the frozen ante-mortem record',()=>{
   for(const species of ANIMAL_SPECIES_IDS){
-    const corpse=body(species),history=structuredClone(corpse.health),whole=corpseParts(3,4,'fresh',0,species,corpse);
+    const corpse=body(species),history=structuredClone(corpse.health),whole=visibleParts(corpse);
     const head=corpseVisualPartBit('head'),jaw=corpseVisualPartBit('jaw'),eye=corpseVisualPartBit('left-eye');
-    expect(whole.some(p=>p.corpsePartMask===head)).toBe(true);
+    expect(whole.includes(head)).toBe(true);
     corpse.consumedParts=[{part:'head',atTick:11}];
-    const rest=corpseParts(3,4,'fresh',0,species,corpse);
+    const rest=visibleParts(corpse);
     expect(rest.length).toBeLessThan(whole.length);
-    expect(rest.some(p=>[head,jaw,eye].includes(p.corpsePartMask))).toBe(false);
-    expect(rest.some(p=>p.corpsePartMask===corpseVisualPartBit('torso'))).toBe(true);
+    expect(rest.some(part=>[head,jaw,eye].includes(part))).toBe(false);
+    expect(rest.includes(corpseVisualPartBit('torso'))).toBe(true);
     expect(corpse.health).toEqual(history);
   }
   const corpse=body('hare');corpse.consumedParts=[{part:'left-front-paw',atTick:11}];
-  const rest=corpseParts(0,0,'fresh',0,'hare',corpse);
-  expect(rest.some(p=>p.corpsePartMask===corpseVisualPartBit('left-front-leg'))).toBe(true);
-  expect(rest.some(p=>p.corpsePartMask===corpseVisualPartBit('left-front-paw'))).toBe(false);
+  const rest=visibleParts(corpse);
+  expect(rest.includes(corpseVisualPartBit('left-front-leg'))).toBe(true);
+  expect(rest.includes(corpseVisualPartBit('left-front-paw'))).toBe(false);
 });
 
-test('carried body uses the same absence bits in one static vertex stream and exact float32 cargo word',()=>{
-  const geometry=cargoGeometry(),kind=geometry.getAttribute('cargoKind'),bit=geometry.getAttribute('corpsePartMask');
-  const normal=geometry.getAttribute('normal'),position=geometry.getAttribute('position');
-  expect(bit.count).toBe(position.count);expect(normal.count).toBe(position.count);
-  expect((bit as InterleavedBufferAttribute).data).toBe((position as InterleavedBufferAttribute).data);
+test('the resident species rig uses exact anatomical bits for carried and ground bodies',()=>{
   for(const species of ANIMAL_SPECIES_IDS){
+    const geometry=hareGeometry(1,species),bit=geometry.getAttribute('corpsePartMask');
+    const normal=geometry.getAttribute('normal'),position=geometry.getAttribute('position');
+    expect(bit.count).toBe(position.count);expect(normal.count).toBe(position.count);
+    expect((bit as InterleavedBufferAttribute).data).toBe((position as InterleavedBufferAttribute).data);
     const corpse=body(species);corpse.consumedParts=[{part:'head',atTick:11},{part:'left-front-leg',atTick:12}];
     const mask=corpseVisualMask(corpse),word=Math.fround(-1-mask);
     expect(-word-1).toBe(mask);
-    const expected=new Set(corpseParts(0,0,'fresh',0,species,corpse).map(p=>p.corpsePartMask));
-    const carried=new Set<number>(),cargo=species==='hare'?27:BIOME_CARGO[`${species}-corpse`];
-    for(let i=0;i<kind.count;i++){
-      if(kind.getX(i)!==cargo)continue;
+    const carried=new Set<number>();
+    for(let i=0;i<bit.count;i++){
       const part=bit.getX(i);
       if(Math.floor((-word-1)/Math.max(part,1))%2===0)carried.add(part);
       expect(Math.hypot(normal.getX(i),normal.getY(i),normal.getZ(i))).toBeCloseTo(1,6);
     }
-    expect(carried).toEqual(expected);
+    expect(carried.has(corpseVisualPartBit('head'))).toBe(false);
+    expect(carried.has(corpseVisualPartBit('left-front-leg'))).toBe(false);
+    expect(carried.has(corpseVisualPartBit('torso'))).toBe(true);
+    geometry.dispose();
   }
   expect(Math.fround(-1-(2**23-1))).toBe(-(2**23));
-  geometry.dispose();
 });
 
 test('same-tick adoption updates the real carried mask while presentation and pawn capacity stay resident',()=>{

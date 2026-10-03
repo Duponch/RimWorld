@@ -17,9 +17,11 @@ test.each(species)('%s has one closed exterior shell without internal section ca
   expect(shellVertices).toBeGreaterThan(100);
   expect(shellVertices%6).toBe(0);
   const parts=animalParts(kind);
-  expect(position.count-shellVertices).toBe(parts.filter(part=>!part.core).length*36);
-  expect(position.count-parts.length*36).toBeGreaterThanOrEqual(12);
-  expect(position.count-parts.length*36).toBeLessThanOrEqual(84);
+  const details=parts.filter(part=>!part.core),extra=details.filter(part=>part.bodyPart?.endsWith('-eye')).length*72
+    +((kind==='hare'||kind==='snow-hare')?details.filter(part=>part.bodyPart?.endsWith('-leg')).length*36:0);
+  expect(position.count-shellVertices).toBe(details.length*36+extra);
+  expect(position.count-parts.length*36-extra).toBeGreaterThanOrEqual(12);
+  expect(position.count-parts.length*36-extra).toBeLessThanOrEqual(84);
   const profile=animalCoreProfile(kind);
   expect(profile.rings.every((ring,index)=>index===0||ring.z>profile.rings[index-1]!.z)).toBe(true);
   expect(profile.rings.every(ring=>ring.halfWidth>0&&ring.top>ring.bottom)).toBe(true);
@@ -44,7 +46,7 @@ test.each(species)('%s has one closed exterior shell without internal section ca
   expect(weights.has('4.00')).toBe(true);
   expect(weights.has('5.00')).toBe(true);
   expect([...weights].some(weight=>Number(weight)>4&&Number(weight)<5)).toBe(true);
-  expect(Object.keys(geometry.attributes).sort()).toEqual(['aAnimal','aFrom','aScale','aTo','aTravel','bindPivot','boneId','color','normal','position'].sort());
+  expect(Object.keys(geometry.attributes).sort()).toEqual(['aAnimal','aFrom','aScale','aTo','aTravel','bindPivot','boneId','color','normal','position','aBiology','aBodyBlood','aAbsent','aCarrier','aCorpseHandoff','aCorpseFrom','aCorpseTo','animalPart','corpsePartMask','bloodRegion','eyeMark'].sort());
   expect(geometry.instanceCount).toBe(0);
   geometry.dispose();
 });
@@ -87,14 +89,13 @@ test('living rest keeps the complete animal volume on the ground for every speci
         expect(Array.from(surface.normal.array)).toEqual(surface.normals);
         expect(encoded.getZ(0)).toBe(posture==='dead'?2:posture==='sleeping'||posture==='downed'?1:0);
         expect(encoded.getX(0)).toBe(posture==='moving'?1:0);
-        if(posture==='sleeping'||posture==='downed'){
+        if(posture==='sleeping'||posture==='downed'||posture==='dead'){
           // A quarter turn transfers the full bind-space width to height and
           // the full upright height to horizontal reach, without squeezing.
           expect(result.height).toBeCloseTo((bounds.max.x-bounds.min.x+.025)*scale,4);
           const bodyCenter=animalParts(animal.species)[0]!.center[1];
           expect(result.radius).toBeCloseTo((Math.max(Math.abs(bodyCenter-bounds.min.y),Math.abs(bodyCenter-bounds.max.y),Math.abs(bounds.min.z),Math.abs(bounds.max.z))+.1)*scale,4);
-        }else if(posture==='dead')expect(result.height).toBeCloseTo(bounds.max.y*.5*scale,4);
-        else expect(result.height).toBeCloseTo(bounds.max.y*scale,4);
+        }else expect(result.height).toBeCloseTo(bounds.max.y*scale,4);
       }
     }
     const painted=species.map(kind=>meshes.get(kind)!.material);

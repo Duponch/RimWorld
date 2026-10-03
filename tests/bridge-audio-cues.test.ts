@@ -229,7 +229,7 @@ test('animal pain and death follow new physical damage without replaying a loade
   expect(cell).toBeDefined();
   const animal: WildAnimal = { id: world.nextId++, x: cell.x, z: cell.z, species: 'deer', sex: 'female',
     ageTicks: 1000, food: 1, rest: 1, state: 'idle', path: [], nextDecision: 0,
-    health: { body: 'deer', tick: world.tick, nextInjuryId: 2, injuries: [], missing: [], bloodLoss: 0 } };
+    health: { body: 'deer', tick: world.tick, nextInjuryId: 1, injuries: [], missing: [], bloodLoss: 0 } };
   world.wildlife = { profile: 'biome-herbivores-v1', rng: 1, animals: [animal],
     eatenPlants: 0, eatenNutrition: 0, eatenItems: 0 };
   const recorder = new AudioCueRecorder();
@@ -237,6 +237,7 @@ test('animal pain and death follow new physical damage without replaying a loade
   expect(recorder.drain()).toEqual([]);
   world.tick++;
   animal.health!.injuries.push({ id: 1, part: 'torso', kind: 'cut', severity: 1000, bornAt: world.tick });
+  animal.health!.nextInjuryId++;
   recorder.capture(world);
   expect(recorder.drain().map(cue => cue.kind)).toEqual(['animal.hurt.deer']);
   world.tick++;

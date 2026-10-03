@@ -65,6 +65,24 @@ test('accepts a published derivative with matching local files and provenance', 
   await assert.doesNotReject(validate());
 });
 
+test('accepts derivatives of independent later takes only with their own exact source provenance', async () => {
+  const secondSource = Buffer.concat([Buffer.from('ID3'), Buffer.alloc(125, 3)]);
+  const validate = await fixture('later-take-derived', ({ generationLog, processingLog, files }) => {
+    files['mining-hit-second-take.mp3'] = secondSource;
+    generationLog.generations.push({ id: 'mining.hit', filename: 'mining-hit-second-take.mp3', sha256: hash(secondSource) });
+    processingLog.derivations[0].sourceFilename = 'mining-hit-second-take.mp3';
+    processingLog.derivations[0].sourceSha256 = hash(secondSource);
+  });
+  await assert.doesNotReject(validate());
+  const wrongCue = await fixture('later-take-wrong-cue', ({ generationLog, processingLog, files }) => {
+    files['mining-hit-second-take.mp3'] = secondSource;
+    generationLog.generations.push({ id: 'woodcutting.hit', filename: 'mining-hit-second-take.mp3', sha256: hash(secondSource) });
+    processingLog.derivations[0].sourceFilename = 'mining-hit-second-take.mp3';
+    processingLog.derivations[0].sourceSha256 = hash(secondSource);
+  });
+  await assert.rejects(wrongCue(), /Derived SFX source differs/);
+});
+
 test('verifies the generation hash for a directly published MP3', async () => {
   const valid = await fixture('direct-valid', ({ manifest }) => {
     manifest.events['mining.hit'].variants[0].src = `/assets/audio/sfx/${sourceFilename}`;

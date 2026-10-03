@@ -685,6 +685,62 @@
       "maxDistance": 20,
       "loop": false,
       "spatial": true
+    },
+    "human.hurt.male": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/human-hurt-male-v196-take-1-soft.mp3",
+          "gain": 1
+        },
+        {
+          "src": "/assets/audio/sfx/human-hurt-male-v196-take-2-soft.mp3",
+          "gain": 1
+        },
+        {
+          "src": "/assets/audio/sfx/human-hurt-male-v196-take-3-soft.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 1,
+      "maxDistance": 18,
+      "loop": false,
+      "spatial": true
+    },
+    "human.hurt.female": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/human-hurt-female-v196-take-1-soft.mp3",
+          "gain": 1
+        },
+        {
+          "src": "/assets/audio/sfx/human-hurt-female-v196-take-2-soft.mp3",
+          "gain": 1
+        },
+        {
+          "src": "/assets/audio/sfx/human-hurt-female-v196-take-3-soft.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 1,
+      "maxDistance": 18,
+      "loop": false,
+      "spatial": true
+    },
+    "animal.hurt.red-fox": {
+      "variants": [
+        {
+          "src": "/assets/audio/sfx/animal-hurt-red-fox-v196-take-1-soft.mp3",
+          "gain": 1
+        },
+        {
+          "src": "/assets/audio/sfx/animal-hurt-red-fox-v196-take-2-soft.mp3",
+          "gain": 1
+        }
+      ],
+      "gain": 1,
+      "maxDistance": 18,
+      "loop": false,
+      "spatial": true
     }
   }
 }

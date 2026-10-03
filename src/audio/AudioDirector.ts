@@ -30,6 +30,7 @@ function clusterGroup(kind: string): string | null {
   // An opening and closing door share one nearby acoustic patch.
   if (kind === 'door.open' || kind === 'door.close' || kind === 'autodoor.open' || kind === 'autodoor.close') return 'door';
   if (kind.startsWith('animal.hurt.') || kind.startsWith('animal.death.')) return 'animal';
+  if (kind.startsWith('human.hurt.')) return 'human-pain';
   return CLUSTERED_KINDS.has(kind) ? kind : null;
 }
 const NO_DECODED_MP3_ERROR = 'Aucun MP3 du manifeste audio n’a pu être décodé.';

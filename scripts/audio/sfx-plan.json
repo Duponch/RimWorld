@@ -470,6 +470,33 @@
       "gain": 1,
       "maxDistance": 20,
       "spatial": true
+    },
+    "human.hurt.male": {
+      "filename": "human-hurt-male-v196-take-1.mp3",
+      "prompt": "One short adult male human pain grunt. Clearly masculine natural voice, soft restrained breathy groan immediately after a minor blow. Warm cozy colony game, dry close vocal foley, quick onset and gentle decay. No words, screams, horror, death rattle, laughter, music, impact, ambience, reverb or pitch-shift effect.",
+      "durationSeconds": 0.8,
+      "promptInfluence": 0.75,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 18
+    },
+    "human.hurt.female": {
+      "filename": "human-hurt-female-v196-take-1.mp3",
+      "prompt": "One short adult female human pain grunt. Clearly feminine natural voice, soft restrained breathy groan immediately after a minor blow. Warm cozy colony game, dry close vocal foley, quick onset and gentle decay. No words, screams, horror, death rattle, laughter, music, impact, ambience, reverb or pitch-shift effect.",
+      "durationSeconds": 0.8,
+      "promptInfluence": 0.75,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 18
+    },
+    "animal.hurt.red-fox": {
+      "filename": "animal-hurt-red-fox-v196-take-1.mp3",
+      "prompt": "One short natural red fox pain yelp after a minor injury, a small restrained canine whimper, clearly an animal not a human. Warm cozy colony game, gentle dry close vocal foley with quick onset. No horror scream, aggression, howl, death sound, impact, footsteps, human voice, music or background.",
+      "durationSeconds": 0.65,
+      "promptInfluence": 0.75,
+      "loop": false,
+      "gain": 1,
+      "maxDistance": 18
     }
   }
 }

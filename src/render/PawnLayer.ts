@@ -39,6 +39,8 @@ import { clearGroup, material } from './primitives';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { pawnSurfaceShade } from './actor-surface';
 import { CargoHandoffs,type CargoAnchor } from './cargo-handoff';
+import { bodyBloodPigment,bodyBloodWord } from './body-blood';
+import type { AnimalCorpseCarrier } from './animal-corpse-carrier';
 type VisualPawn = { from: THREE.Vector4; to: THREE.Vector4 };
 type ApproachTransition = { fromX:number; fromZ:number; toX:number; toZ:number; start:number; baseX:number; baseZ:number };
 type CrouchTransition = { start:number; from:number; to:number };
@@ -166,6 +168,16 @@ export class PawnLayer {
   private readonly shownPoses = new Map<number,number>();
   private readonly gait = new GaitPhaseTracker();
   private readonly handoffs = new CargoHandoffs();
+  /** Wildlife's resident species batch reads these already encoded primitives
+   * at edge/snapshot boundaries; there is no World search or CPU rig pose. */
+  animalCorpseCarrier(id:number):AnimalCorpseCarrier|undefined {
+    const index=this.pawnIndices.get(id),geometry=this.pawnMesh?.geometry;
+    if(index===undefined||!geometry)return;
+    return {index,geometry,handoff:this.handoffs.active.get(id),blend:this.blend.value};
+  }
+  animalCorpseTransferCarrier(pileId:number):number|undefined {
+    for(const item of this.handoffs.active.values())if(item.pile.id===pileId||item.targetPileId===pileId)return item.pawnId;
+  }
   private carryOrigin=0;
   private travelOrigin=0;
   readonly cargoTime=uniform(0);
@@ -213,8 +225,8 @@ export class PawnLayer {
     geometry.setAttribute('aTo', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     geometry.setAttribute('aMotion', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     // One resident appearance stream leaves WebGPU within its eight-buffer limit.
-    const appearance=new THREE.InstancedInterleavedBuffer(new Float32Array(count*17),17).setUsage(THREE.StaticDrawUsage);
-    for(const [name,size,offset] of [['aTint',3,0],['aEquipment',4,3],['aSkin',3,7],['aHair',3,10],['aShape',4,13]] as const)
+    const appearance=new THREE.InstancedInterleavedBuffer(new Float32Array(count*18),18).setUsage(THREE.StaticDrawUsage);
+    for(const [name,size,offset] of [['aTint',3,0],['aEquipment',4,3],['aSkin',3,7],['aHair',3,10],['aHairBlood',4,10],['aShape',4,14],['aBodyBlood',1,13]] as const)
       geometry.setAttribute(name,new THREE.InterleavedBufferAttribute(appearance,size,offset));
     // Z/W carry a short, presentation-only handoff interval. X/Y retain the
     // existing kind and load for HUD probes and the pawn's own geometry.
@@ -309,7 +321,7 @@ export class PawnLayer {
       // switch in aMotion.w. Confirmed strikes add a short accent to the same
       // continuous arm/torso/leg rhythm instead of replacing the whole pose.
       const brawl=motion.z.equal(POSE_FIGHT_READY).or(motion.z.equal(8));
-      const fightPhase=this.time.mul(8).add(attribute('aShape','vec4').x.mod(10).mul(3.7)).add(attribute('aHair','vec3').x.mul(7));
+      const fightPhase=this.time.mul(8).add(attribute('aShape','vec4').x.mod(10).mul(3.7)).add(attribute('aHairBlood','vec4').x.mul(7));
       const strike=motion.z.equal(8).select(
         sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI)),float(0));
       If(brawl.and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
@@ -455,7 +467,7 @@ export class PawnLayer {
       If(attribute('dye','float').equal(-3).or(attribute('dye','float').equal(PARKA_HOOD_DYE)),()=>tint.assign(attribute('aTint','vec3')));
       If(attribute('aEquipment','vec4').y.equal(2).and(attribute('boneId','float').greaterThanEqual(2)).and(attribute('boneId','float').lessThanEqual(3)),()=>tint.assign(attribute('aSkin','vec3')));
       If(attribute('dye','float').equal(2),()=>tint.assign(attribute('aSkin','vec3')));
-      If(attribute('dye','float').greaterThanEqual(100),()=>tint.assign(attribute('aHair','vec3')));
+      If(attribute('dye','float').greaterThanEqual(100),()=>tint.assign(attribute('aHairBlood','vec4').xyz));
       const legs=attribute('boneId','float').greaterThanEqual(4).and(attribute('dye','float').equal(0));
       const cloth=new THREE.Color(0xd8c8a2),leather=new THREE.Color(0xad8a61);
       If(legs.and(attribute('aEquipment','vec4').w.equal(1)),()=>tint.assign(vec3(cloth.r,cloth.g,cloth.b)));
@@ -475,7 +487,10 @@ export class PawnLayer {
           const ribs=sin(positionLocal.y.mul(43)).greaterThan(.25);
           If(attribute('boneId','float').equal(0).and(attribute('dye','float').equal(1)),()=>tint.assign(ribs.select(vec3(bone.r,bone.g,bone.b),vec3(dark.r,dark.g,dark.b))));
         });}
-      return tint;})();
+      // Blood is drawn only on body/clothes, never weapon, hair or eye marks.
+      const dye=attribute('dye','float'),bone=attribute('boneId','float');
+      const region=bone.greaterThanEqual(6).select(bone.sub(2),bone);
+      return bodyBloodPigment(tint,region,1,dye.equal(-3).or(dye.equal(-2)).or(dye.greaterThanEqual(0).and(dye.lessThan(3))).select(float(1),float(0)),attribute('aHairBlood','vec4').w);})();
     mat.colorNode = baseColor;
     const textured = material(0xffffff);
     this.configure?.(textured);
@@ -681,7 +696,7 @@ export class PawnLayer {
     }
     const motion = geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
     const tint = geometry.getAttribute('aTint') as THREE.InterleavedBufferAttribute;
-    const skin=geometry.getAttribute('aSkin'),hair=geometry.getAttribute('aHair'),shape=geometry.getAttribute('aShape');
+    const skin=geometry.getAttribute('aSkin'),hair=geometry.getAttribute('aHair'),shape=geometry.getAttribute('aShape'),blood=geometry.getAttribute('aBodyBlood');
     const cargo = geometry.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
     const handoffFrom=this.cargoMesh!.geometry.getAttribute('aHandoffFrom') as THREE.InstancedBufferAttribute;
     const handoffTo=this.cargoMesh!.geometry.getAttribute('aHandoffTo') as THREE.InstancedBufferAttribute;
@@ -784,6 +799,7 @@ export class PawnLayer {
       const smallMelee=!!pawn.melee?.strike&&(world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
       motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun ? 1 : 0,workActivity(pawn),animationPose(pawn,workPose,smallMelee,seated),pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.shooting?.stance?.phase==='cooldown'?coreTimeSeconds(pawn.shooting.stance.startedAtCore,Math.floor(world.tick/1024)*1024):pawn.id * 1.7);
       const identity=appearanceOf(pawn,world.seed),variant=appearanceShape(identity);
+      blood.setX(index,bodyBloodWord(pawn.health));
       scratchColor.setHex(identity.skinColor);skin.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
       scratchColor.setHex(identity.hairColor);hair.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
       shape.setXYZW(index,packHumanShape(variant[0],humanCorpseVisualStage(world,pawn,body),humanLimbVisualMask(pawn)),variant[1],variant[2],variant[3]);
@@ -847,8 +863,8 @@ export class PawnLayer {
         this.headings.set(pawn.id,heading);
         const a=segment.fromFraction??0,b=segment.toFraction??1,lerp=THREE.MathUtils.lerp;
         const y0=this.travelSurfaces.get(segment.from.z*world.width+segment.from.x)??0,y1=this.travelSurfaces.get(segment.to.z*world.width+segment.to.x)??0;
-        // Preserve full-edge heights: climbing uses distance on the original
-        // edge, not a fresh first/last third for every change of pace.
+        // Preserve the original confirmed edge fractions through a change of
+        // pace; the ground movement helper supplies its height primitives.
         visual.from.set(lerp(segment.from.x,segment.to.x,a),y0,lerp(segment.from.z,segment.to.z,a),heading.from);
         visual.to.set(lerp(segment.from.x,segment.to.x,b),y1,lerp(segment.from.z,segment.to.z,b),heading.to);
         const edgeStart=segment.edgeStart??segment.start;

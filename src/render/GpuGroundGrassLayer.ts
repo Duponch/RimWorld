@@ -8,6 +8,7 @@ import type { Terrain, World } from '../sim/types';
 import { footprintCells } from '../sim/definitions';
 import { noise } from './StaticGeometry';
 import { ARID_GRASS_COLOR, TERRAIN_COLORS } from './TerrainLayer';
+import { GroundBlood, GRASS_BLOOD_COLOR, grassBloodOpacity } from './ground-blood';
 
 /** AntSystem-inspired GPU blades, indexed by stable world cell and slot.
  * This is scenery: no Resource, job, save or simulation RNG. Four vertices/two
@@ -15,8 +16,9 @@ import { ARID_GRASS_COLOR, TERRAIN_COLORS } from './TerrainLayer';
 export const GROUND_GRASS_MAX_BLADES = 120_000;
 const SOIL_TERRAINS = new Set<Terrain>(['grass', 'soil', 'rich-soil']);
 const scratchColor = new THREE.Color();
+const bloodColor = new THREE.Color(GRASS_BLOOD_COLOR);
 
-type GroundWorld = Pick<World, 'width' | 'height' | 'tiles' | 'structures' | 'resources' | 'piles' | 'packed' | 'seed' | 'site'>;
+type GroundWorld = Pick<World, 'width' | 'height' | 'tiles' | 'structures' | 'resources' | 'piles' | 'packed' | 'seed' | 'site' | 'filth'>;
 
 // Each source contributes one occupant. Counts preserve cover when two things
 // overlap and one moves or is removed.
@@ -102,7 +104,7 @@ function diffCover<T>(before: T[] | undefined, after: T[], id: (item: T) => numb
   return true;
 }
 
-function writeGroundCell(data: Uint8Array, world: GroundWorld, i: number, blocked: Uint8Array): boolean {
+function writeGroundCell(data: Uint8Array, world: GroundWorld, i: number, blocked: Uint8Array, blood?: ReadonlyMap<number,number>): boolean {
   const tile = world.tiles[i]!;
   const p = i * 4;
   let hex = 0, alpha = 0;
@@ -110,8 +112,11 @@ function writeGroundCell(data: Uint8Array, world: GroundWorld, i: number, blocke
     // The same palette and per-cell noise as TerrainLayer, encoded in sRGB for
     // DataTexture sampling. A root in a tile thus follows its actual colour.
     const x = i % world.width, z = Math.floor(i / world.width);
-    hex = scratchColor.setHex(tile.terrain === 'grass' && world.site?.biome === 'arid-shrubland'
-      ? ARID_GRASS_COLOR : TERRAIN_COLORS[tile.terrain]).multiplyScalar(0.94 + noise(x, z, world.seed) * 0.12).getHex();
+    scratchColor.setHex(tile.terrain === 'grass' && world.site?.biome === 'arid-shrubland'
+      ? ARID_GRASS_COLOR : TERRAIN_COLORS[tile.terrain]).multiplyScalar(0.94 + noise(x, z, world.seed) * 0.12);
+    const stain = blood?.get(i) ?? 0;
+    if (stain) scratchColor.lerp(bloodColor, grassBloodOpacity(stain));
+    hex = scratchColor.getHex();
     alpha = 255;
   }
   const r = hex >>> 16, g = hex >>> 8 & 255, b = hex & 255;
@@ -123,8 +128,9 @@ function writeGroundCell(data: Uint8Array, world: GroundWorld, i: number, blocke
 export function groundGrassPixels(world: GroundWorld): Uint8Array<ArrayBuffer> {
   const data = new Uint8Array(world.width * world.height * 4);
   const { blocked } = coverState(world);
+  const blood = new GroundBlood(); blood.adopt(world.filth?.items ?? [], world.width, world.height);
   for (let i = 0; i < world.width * world.height; i++) {
-    writeGroundCell(data, world, i, blocked);
+    writeGroundCell(data, world, i, blocked, blood.cells);
   }
   return data;
 }
@@ -170,7 +176,7 @@ function nearCellBudget(corners: Float64Array): number {
 }
 
 /** One resident draw. The GPU creates/recycles roots, shapes, wind and colour;
- * the CPU uploads only a 4-byte/cell surface map when soil or cover changes. */
+ * the CPU uploads only a 4-byte/cell surface map when soil, cover or blood changes. */
 export class GpuGroundGrassLayer {
   readonly mesh: THREE.Mesh<THREE.InstancedBufferGeometry, THREE.MeshStandardNodeMaterial>;
   readonly map = new THREE.DataTexture(new Uint8Array(4), 1, 1, THREE.RGBAFormat);
@@ -204,6 +210,7 @@ export class GpuGroundGrassLayer {
   private coverCounts = new Uint32Array(0);
   private dirtyFlags = new Uint8Array(0);
   private readonly dirtyCells: number[] = [];
+  private readonly blood = new GroundBlood();
   private revision = 0;
   private readonly corner = new THREE.Vector3();
   private readonly ray = new THREE.Vector3();
@@ -300,11 +307,12 @@ export class GpuGroundGrassLayer {
     const widthChanged = this.map.image.width !== world.width || this.map.image.height !== world.height ||
       this.previousPixels.length !== world.width * world.height * 4;
     const biome = world.site?.biome;
+    const bloodChanges = this.blood.adopt(world.filth?.items ?? [], world.width, world.height);
     if (!force && !widthChanged && this.previousTiles === world.tiles &&
       this.previousStructures === world.structures && this.previousSeed === world.seed &&
       this.previousResources === world.resources &&
       this.previousPiles === world.piles && this.previousPacked === world.packed &&
-      this.previousBiome === biome) return;
+      this.previousBiome === biome && !bloodChanges.length) return;
     const oldTiles = this.previousTiles;
     const seedChanged = this.previousSeed !== world.seed || this.previousBiome !== biome;
     let fullRebuild = widthChanged || force;
@@ -312,6 +320,7 @@ export class GpuGroundGrassLayer {
       const touch = (i: number): void => {
         if (!this.dirtyFlags[i]) { this.dirtyFlags[i] = 1; this.dirtyCells.push(i); }
       };
+      for (const i of bloodChanges) touch(i);
       const counts = this.coverCounts;
       let inconsistent = false;
       const adjust = (x: number, z: number, delta: -1 | 1): void => {
@@ -355,26 +364,26 @@ export class GpuGroundGrassLayer {
       if (widthChanged) {
         this.previousPixels = new Uint8Array(world.width * world.height * 4);
         this.dirtyFlags = new Uint8Array(world.width * world.height);
-        for (let i = 0; i < world.tiles.length; i++) writeGroundCell(this.previousPixels, world, i, blocked);
+        for (let i = 0; i < world.tiles.length; i++) writeGroundCell(this.previousPixels, world, i, blocked, this.blood.cells);
         this.map.dispose();
         this.map.image = { data: this.previousPixels, width: world.width, height: world.height };
         this.dimensions.value.set(world.width, world.height);
         this.map.needsUpdate = true; this.revision++;
       } else {
         for (let i = 0; i < world.tiles.length; i++)
-          changed = writeGroundCell(this.previousPixels, world, i, blocked) || changed;
+          changed = writeGroundCell(this.previousPixels, world, i, blocked, this.blood.cells) || changed;
       }
     } else if (seedChanged) {
       for (let i = 0; i < world.tiles.length; i++) {
         const tile = world.tiles[i]!;
         this.previousBlocked[i] = !SOIL_TERRAINS.has(tile.terrain) || tile.floor || this.coverCounts[i] ? 1 : 0;
-        changed = writeGroundCell(this.previousPixels, world, i, this.previousBlocked) || changed;
+        changed = writeGroundCell(this.previousPixels, world, i, this.previousBlocked, this.blood.cells) || changed;
       }
     } else {
       for (const i of this.dirtyCells) {
         const tile = world.tiles[i]!;
         this.previousBlocked[i] = !SOIL_TERRAINS.has(tile.terrain) || tile.floor || this.coverCounts[i] ? 1 : 0;
-        changed = writeGroundCell(this.previousPixels, world, i, this.previousBlocked) || changed;
+        changed = writeGroundCell(this.previousPixels, world, i, this.previousBlocked, this.blood.cells) || changed;
       }
     }
     for (const i of this.dirtyCells) this.dirtyFlags[i] = 0;

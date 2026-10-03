@@ -5,12 +5,13 @@ import { WORK_FRACTIONS } from '../sim/work-progress.ts';
 import { isColonist } from '../sim/affiliation.ts';
 import type { AnimalSpeciesId } from '../sim/animal-species.ts';
 import { actualPowerSwitch, canFlickPower } from '../sim/power-flick.ts';
+import { appearanceOf } from '../sim/pawn-appearance.ts';
+import { anestheticModifiers } from '../sim/anesthetic.ts';
 
-type AnimalVoiceSpecies = Exclude<AnimalSpeciesId, 'snow-hare'|'red-fox'>;
-/** No fox recording is shipped; keep its voice silent rather than borrowing a
- * hare sound. Confirmed melee contacts can use the existing shared cue. */
-const animalVoiceSpecies = (species:AnimalSpeciesId):AnimalVoiceSpecies|undefined =>
-  species==='red-fox'?undefined:species === 'snow-hare' ? 'hare' : species;
+type AnimalVoiceSpecies = Exclude<AnimalSpeciesId, 'snow-hare'>;
+type AnimalDeathVoiceSpecies = Exclude<AnimalVoiceSpecies, 'red-fox'>;
+const animalVoiceSpecies = (species:AnimalSpeciesId):AnimalVoiceSpecies =>
+  species === 'snow-hare' ? 'hare' : species;
 
 export type AudioCueKind = 'mining.hit' | 'woodcutting.hit' | 'construction.hit'
   | 'cooking.work' | 'crafting.work' | 'tailoring.work' | 'butchering.work' | 'research.work'
@@ -20,7 +21,8 @@ export type AudioCueKind = 'mining.hit' | 'woodcutting.hit' | 'construction.hit'
   | 'cleaning.work' | 'medical.tend' | 'maintenance.work' | 'firefighting.beat'
   | 'power.switch-on' | 'power.switch-off' | 'deconstruction.work' | 'building.deconstructed'
   | 'autodoor.open' | 'autodoor.close' | 'weather.thunder'
-  | `animal.hurt.${AnimalVoiceSpecies}` | `animal.death.${AnimalVoiceSpecies}`
+  | `human.hurt.${'male'|'female'}`
+  | `animal.hurt.${AnimalVoiceSpecies}` | `animal.death.${AnimalDeathVoiceSpecies}`
   | 'ui.threat' | 'ui.colonist-death'
   | 'ui.click' | 'ui.reject' | 'ui.panel';
 export interface AudioCue {
@@ -44,6 +46,10 @@ type HaulObservation = { sourcePileId: number; phase: 'pickup' | 'deliver'; carr
   x: number; z: number; whole: boolean };
 type DeconstructionObservation = { structureId: number; progress: number; reservedBy: number | null;
   x: number; z: number };
+/** The medical kernel allocates an injury identity for every committed nonzero
+ * layer, including merged injuries and immediately lost parts. Healing, blood
+ * loss and illness never advance it. Copy the number, never retain World data. */
+type ActorDamageObservation = { state: string; nextInjuryId: number };
 
 function workCueInterval(pawnId: number, key: string, cueCount: number, intervals: readonly number[]): number {
   // This hash belongs to presentation only; it consumes no simulation random state.
@@ -69,8 +75,8 @@ export class AudioCueRecorder {
   private melee = new Map<number, number>();
   private doors = new Map<number, boolean>();
   private hauls = new Map<number, HaulObservation>();
-  private pawnStates = new Map<number, string>();
-  private animalStates = new Map<number, { state: string; injurySeverity: number }>();
+  private pawnStates = new Map<number, ActorDamageObservation>();
+  private animalStates = new Map<number, ActorDamageObservation>();
   private firefighting = new Map<number, { fireId: number; cooldownCore: number }>();
   private fireIds = new Set<number>();
   private switches = new Map<number, boolean>();
@@ -123,8 +129,8 @@ export class AudioCueRecorder {
     const melee = new Map<number, number>();
     const doors = new Map<number, boolean>();
     const hauls = new Map<number, HaulObservation>();
-    const pawnStates = new Map<number, string>();
-    const animalStates = new Map<number, { state: string; injurySeverity: number }>();
+    const pawnStates = new Map<number, ActorDamageObservation>();
+    const animalStates = new Map<number, ActorDamageObservation>();
     const firefighting = new Map<number, { fireId: number; cooldownCore: number }>();
     const fireIds = new Set((world.fires?.items ?? []).map(fire => fire.id));
     const switches = new Map<number, boolean>();
@@ -171,7 +177,17 @@ export class AudioCueRecorder {
     };
 
     for (const pawn of world.pawns) {
-      pawnStates.set(pawn.id, pawn.state);
+      const nextInjuryId = pawn.health?.nextInjuryId ?? 1;
+      pawnStates.set(pawn.id, { state: pawn.state, nextInjuryId });
+      const previousPawnState = this.pawnStates.get(pawn.id);
+      if (this.initialized && previousPawnState && previousPawnState.state !== 'dead'
+        && pawn.state !== 'dead' && !pawn.health?.death
+        && nextInjuryId > previousPawnState.nextInjuryId
+        && anestheticModifiers(pawn.health?.anesthetic).painFactor > 0) {
+        const sex = appearanceOf(pawn, world.seed).sex;
+        this.add({ id: `human.hurt:${pawn.id}:${nextInjuryId}`, tick: world.tick,
+          kind: `human.hurt.${sex}`, x: pawn.x, z: pawn.z });
+      }
       const beat = pawn.firefighting;
       if (beat) {
         firefighting.set(pawn.id, { fireId: beat.fireId, cooldownCore: beat.cooldownCore });
@@ -182,8 +198,7 @@ export class AudioCueRecorder {
           this.add({ id: `firefighting.beat:${world.tick}:${pawn.id}:${beat.fireId}`,
             tick: world.tick, kind: 'firefighting.beat', x: pawn.x, z: pawn.z });
       }
-      const previousPawnState = this.pawnStates.get(pawn.id);
-      if (this.initialized && previousPawnState !== undefined && previousPawnState !== 'dead'
+      if (this.initialized && previousPawnState !== undefined && previousPawnState.state !== 'dead'
         && pawn.state === 'dead' && isColonist(pawn))
         this.add({ id: `ui.colonist-death:${world.tick}:${pawn.id}`, tick: world.tick,
           kind: 'ui.colonist-death', x: pawn.x, z: pawn.z });
@@ -334,17 +349,17 @@ export class AudioCueRecorder {
         if(this.initialized&&previousMelee.get(animal.id)!==animal.strike.atCore)
           this.add({id:`melee:${animal.strike.atCore}:${animal.id}`,tick:world.tick,kind:'weapon.melee',x:animal.x,z:animal.z});
       }
-      const injurySeverity = animal.health?.injuries.reduce((total, injury) => total + injury.severity, 0) ?? 0;
-      animalStates.set(animal.id, { state: animal.state, injurySeverity });
+      const nextInjuryId = animal.health?.nextInjuryId ?? 1;
+      animalStates.set(animal.id, { state: animal.state, nextInjuryId });
       const previous = this.animalStates.get(animal.id);
       if (!this.initialized || !previous) continue;
       const voiceSpecies=animalVoiceSpecies(animal.species);
-      if(!voiceSpecies)continue;
-      if (animal.state === 'dead' && previous.state !== 'dead')
+      if (animal.state === 'dead' && previous.state !== 'dead' && voiceSpecies !== 'red-fox')
         this.add({ id: `animal.death:${world.tick}:${animal.id}`, tick: world.tick,
           kind: `animal.death.${voiceSpecies}`, x: animal.x, z: animal.z });
-      else if (animal.state !== 'dead' && injurySeverity > previous.injurySeverity)
-        this.add({ id: `animal.hurt:${world.tick}:${animal.id}`, tick: world.tick,
+      else if (animal.state !== 'dead' && previous.state !== 'dead' && !animal.health?.death
+        && nextInjuryId > previous.nextInjuryId)
+        this.add({ id: `animal.hurt:${animal.id}:${nextInjuryId}`, tick: world.tick,
           kind: `animal.hurt.${voiceSpecies}`, x: animal.x, z: animal.z });
     }
     // Ordinary deaths become a physical corpse pile before the worker publishes
@@ -357,7 +372,7 @@ export class AudioCueRecorder {
       if (missing.size) for (const pile of world.piles) {
         const corpse = pile.corpse;
         if (!corpse || !missing.has(corpse.animalId) || !corpse.health.death) continue;
-        const voiceSpecies=animalVoiceSpecies(corpse.species);if(!voiceSpecies)continue;
+        const voiceSpecies=animalVoiceSpecies(corpse.species);if(voiceSpecies==='red-fox')continue;
         const owner = pile.owner;
         const position = owner.type === 'ground' ? owner
           : owner.type === 'pawn' ? world.pawns.find(pawn => pawn.id === owner.pawnId) : undefined;

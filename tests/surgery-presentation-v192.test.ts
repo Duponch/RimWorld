@@ -74,7 +74,7 @@ test('same-tick adoption preserves resident objects, growth/reordering, World an
   const grown=layer.feedbackSource!,maskIndex=world.pawns.findIndex(p=>p.id===pawn.id),grownShape=grown.getAttribute('aShape') as THREE.InterleavedBufferAttribute;
   expect(grownShape.getX(maskIndex)).toBe(appearanceShape(appearanceOf(pawn,world.seed))[0]+900);
   expect((layer.group.children[0] as THREE.Mesh).material).toBe(material);expect(layer.group.children.length).toBe(children);
-  const names=['position','normal','color','boneId','bindPivot','dye','aFrom','aTo','aMotion','aTravel','aCargo','aTint','aEquipment','aSkin','aHair','aShape'];
+  const names=['position','normal','color','boneId','bindPivot','dye','aFrom','aTo','aMotion','aTravel','aCargo','aTint','aEquipment','aSkin','aHairBlood','aShape'];
   const buffers=new Set(names.map(name=>{const a=grown.getAttribute(name);return a instanceof THREE.InterleavedBufferAttribute?a.data:a;}));
   expect(buffers.size).toBeLessThanOrEqual(8);expect(names.length).toBe(16);
   const timeline=new MotionTimeline();timeline.adopt(world.tick,0,[],0,true);layer.updateTravel(world,timeline);

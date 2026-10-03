@@ -37,6 +37,246 @@
         "activeWindowDefinition": "10 ms PCM windows with RMS above -50 dBFS"
       },
       "listeningValidation": "pending"
+    },
+    {
+      "id": "human.hurt.male",
+      "sourceFilename": "human-hurt-male-v196-take-1.mp3",
+      "sourceSha256": "1606e630d8d4efec093d0d3a8ed4cacd02667d8b95bac9164c3f217d65b4224c",
+      "filename": "human-hurt-male-v196-take-1-soft.mp3",
+      "sha256": "fa08a3cc24bc518fb3516a8e1a6b966a3893d3e4a711c3261798d12723bf9e4a",
+      "processing": {
+        "tool": "FFmpeg",
+        "version": "7.1 imageio-ffmpeg",
+        "filter": "volume=0.274348203,afade=t=in:st=0:d=0.008,afade=t=out:st=0.788000000:d=0.012",
+        "encoder": "libmp3lame",
+        "bitrateKbps": 128,
+        "sampleRateHz": 44100,
+        "channels": 2,
+        "id3v2Version": 0
+      },
+      "decodedMeasurements": {
+        "source": {
+          "durationSeconds": 0.8,
+          "peakDbfs": 0.391,
+          "rmsDbfs": -14.766
+        },
+        "output": {
+          "durationSeconds": 0.8,
+          "peakDbfs": -11.51,
+          "rmsDbfs": -26.489
+        }
+      },
+      "listeningValidation": "pending"
+    },
+    {
+      "id": "human.hurt.male",
+      "sourceFilename": "human-hurt-male-v196-take-2.mp3",
+      "sourceSha256": "e3f53333bdf50eb5989715bd716e1037ec258e4eb756a02eb38ea979825f585f",
+      "filename": "human-hurt-male-v196-take-2-soft.mp3",
+      "sha256": "a7b274dff55a8f631114f2e46f9c21c0ae3a2d7b8acd756437650b35aedd6c6d",
+      "processing": {
+        "tool": "FFmpeg",
+        "version": "7.1 imageio-ffmpeg",
+        "filter": "volume=0.254310324,afade=t=in:st=0:d=0.008,afade=t=out:st=0.788000000:d=0.012",
+        "encoder": "libmp3lame",
+        "bitrateKbps": 128,
+        "sampleRateHz": 44100,
+        "channels": 2,
+        "id3v2Version": 0
+      },
+      "decodedMeasurements": {
+        "source": {
+          "durationSeconds": 0.8,
+          "peakDbfs": 0.393,
+          "rmsDbfs": -14.107
+        },
+        "output": {
+          "durationSeconds": 0.8,
+          "peakDbfs": -11.721,
+          "rmsDbfs": -26.52
+        }
+      },
+      "listeningValidation": "pending"
+    },
+    {
+      "id": "human.hurt.male",
+      "sourceFilename": "human-hurt-male-v196-take-3.mp3",
+      "sourceSha256": "0fcbb4abcfcd93c8c96fec1e48c4cc25d13471d76d4e4195e5d90889b8b101bd",
+      "filename": "human-hurt-male-v196-take-3-soft.mp3",
+      "sha256": "383012160e64112d3e270882b93fe497a030d9f15b5e04c9db118e6e335ce75f",
+      "processing": {
+        "tool": "FFmpeg",
+        "version": "7.1 imageio-ffmpeg",
+        "filter": "volume=0.214068367,afade=t=in:st=0:d=0.008,afade=t=out:st=0.788000000:d=0.012",
+        "encoder": "libmp3lame",
+        "bitrateKbps": 128,
+        "sampleRateHz": 44100,
+        "channels": 2,
+        "id3v2Version": 0
+      },
+      "decodedMeasurements": {
+        "source": {
+          "durationSeconds": 0.8,
+          "peakDbfs": 0.171,
+          "rmsDbfs": -12.611
+        },
+        "output": {
+          "durationSeconds": 0.8,
+          "peakDbfs": -13.365,
+          "rmsDbfs": -26.436
+        }
+      },
+      "listeningValidation": "pending"
+    },
+    {
+      "id": "human.hurt.female",
+      "sourceFilename": "human-hurt-female-v196-take-1.mp3",
+      "sourceSha256": "dd2f7f89c3a1f19918c8a792d9f80474a98bed2a4049da80d2b30418686c347f",
+      "filename": "human-hurt-female-v196-take-1-soft.mp3",
+      "sha256": "0304f4036fc320f296f4e9a4f8a8f7e2bd15573c56a7b5740e875473f3c997d1",
+      "processing": {
+        "tool": "FFmpeg",
+        "version": "7.1 imageio-ffmpeg",
+        "filter": "volume=0.202923625,afade=t=in:st=0:d=0.008,afade=t=out:st=0.788000000:d=0.012",
+        "encoder": "libmp3lame",
+        "bitrateKbps": 128,
+        "sampleRateHz": 44100,
+        "channels": 2,
+        "id3v2Version": 0
+      },
+      "decodedMeasurements": {
+        "source": {
+          "durationSeconds": 0.8,
+          "peakDbfs": 0.053,
+          "rmsDbfs": -12.147
+        },
+        "output": {
+          "durationSeconds": 0.8,
+          "peakDbfs": -13.534,
+          "rmsDbfs": -26.458
+        }
+      },
+      "listeningValidation": "pending"
+    },
+    {
+      "id": "human.hurt.female",
+      "sourceFilename": "human-hurt-female-v196-take-2.mp3",
+      "sourceSha256": "01d122cbb76724a14c0e6717a5faf5d6a0d0e0f0f4217ef85e3e6e901e1641ee",
+      "filename": "human-hurt-female-v196-take-2-soft.mp3",
+      "sha256": "dc0326e9582786f8157912f213f6bbf2f0c9d87c225a870397ffe464274506ec",
+      "processing": {
+        "tool": "FFmpeg",
+        "version": "7.1 imageio-ffmpeg",
+        "filter": "volume=0.219051988,afade=t=in:st=0:d=0.008,afade=t=out:st=0.788000000:d=0.012",
+        "encoder": "libmp3lame",
+        "bitrateKbps": 128,
+        "sampleRateHz": 44100,
+        "channels": 2,
+        "id3v2Version": 0
+      },
+      "decodedMeasurements": {
+        "source": {
+          "durationSeconds": 0.8,
+          "peakDbfs": -0.021,
+          "rmsDbfs": -12.811
+        },
+        "output": {
+          "durationSeconds": 0.8,
+          "peakDbfs": -13.356,
+          "rmsDbfs": -26.555
+        }
+      },
+      "listeningValidation": "pending"
+    },
+    {
+      "id": "human.hurt.female",
+      "sourceFilename": "human-hurt-female-v196-take-3.mp3",
+      "sourceSha256": "2892af0bae5fbdd2c2a6c17d4d956fe9498b99ec72425b6a751b31150f9cf684",
+      "filename": "human-hurt-female-v196-take-3-soft.mp3",
+      "sha256": "8c2769ba9ec344caa841738c239a6cb04429439f49dfaeddc1676de507f151e9",
+      "processing": {
+        "tool": "FFmpeg",
+        "version": "7.1 imageio-ffmpeg",
+        "filter": "volume=0.232373961,afade=t=in:st=0:d=0.008,afade=t=out:st=0.788000000:d=0.012",
+        "encoder": "libmp3lame",
+        "bitrateKbps": 128,
+        "sampleRateHz": 44100,
+        "channels": 2,
+        "id3v2Version": 0
+      },
+      "decodedMeasurements": {
+        "source": {
+          "durationSeconds": 0.8,
+          "peakDbfs": -0.058,
+          "rmsDbfs": -13.324
+        },
+        "output": {
+          "durationSeconds": 0.8,
+          "peakDbfs": -13.207,
+          "rmsDbfs": -26.604
+        }
+      },
+      "listeningValidation": "pending"
+    },
+    {
+      "id": "animal.hurt.red-fox",
+      "sourceFilename": "animal-hurt-red-fox-v196-take-1.mp3",
+      "sourceSha256": "da9c8927681969e879b1b530cc6b79ddc1c9fb919a2659065860a412c4c8306d",
+      "filename": "animal-hurt-red-fox-v196-take-1-soft.mp3",
+      "sha256": "ae2aa853b452b2ae812c572ab194e3cd5a093a851abde33022aaf83f36f74c66",
+      "processing": {
+        "tool": "FFmpeg",
+        "version": "7.1 imageio-ffmpeg",
+        "filter": "volume=0.364560501,afade=t=in:st=0:d=0.008,afade=t=out:st=0.628000000:d=0.012",
+        "encoder": "libmp3lame",
+        "bitrateKbps": 128,
+        "sampleRateHz": 44100,
+        "channels": 2,
+        "id3v2Version": 0
+      },
+      "decodedMeasurements": {
+        "source": {
+          "durationSeconds": 0.64,
+          "peakDbfs": -0.605,
+          "rmsDbfs": -17.235
+        },
+        "output": {
+          "durationSeconds": 0.64,
+          "peakDbfs": -10.128,
+          "rmsDbfs": -26.461
+        }
+      },
+      "listeningValidation": "pending"
+    },
+    {
+      "id": "animal.hurt.red-fox",
+      "sourceFilename": "animal-hurt-red-fox-v196-take-2.mp3",
+      "sourceSha256": "28899e745f04a3a8e87d2254e073a6c73e5de86105b704409cdc15c43a614182",
+      "filename": "animal-hurt-red-fox-v196-take-2-soft.mp3",
+      "sha256": "db32398a06e5fa3c5a570dcc3275d9ade0905d7a42a3c3142251b621a948912a",
+      "processing": {
+        "tool": "FFmpeg",
+        "version": "7.1 imageio-ffmpeg",
+        "filter": "volume=0.318957598,afade=t=in:st=0:d=0.008,afade=t=out:st=0.628000000:d=0.012",
+        "encoder": "libmp3lame",
+        "bitrateKbps": 128,
+        "sampleRateHz": 44100,
+        "channels": 2,
+        "id3v2Version": 0
+      },
+      "decodedMeasurements": {
+        "source": {
+          "durationSeconds": 0.64,
+          "peakDbfs": -0.409,
+          "rmsDbfs": -16.075
+        },
+        "output": {
+          "durationSeconds": 0.64,
+          "peakDbfs": -10.761,
+          "rmsDbfs": -26.482
+        }
+      },
+      "listeningValidation": "pending"
     }
   ]
 }

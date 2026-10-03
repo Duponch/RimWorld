@@ -31,6 +31,7 @@ function priority(kind: string): number {
   if (kind === 'ui.threat' || kind === 'ui.colonist-death') return -1;
   if (kind === 'weapon.gunshot') return 0;
   if (kind === 'weapon.melee' || kind.startsWith('weapon.impact-')
+    || kind.startsWith('human.hurt.') || kind.startsWith('animal.hurt.')
     || kind === 'weather.thunder' || kind.startsWith('animal.death.')) return 1;
   return 2;
 }

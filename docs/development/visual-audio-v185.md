@@ -1,5 +1,11 @@
 # Corrections visuelles et feuillage sonore — V185
 
+Le [correctif V196](visual-blood-v196.md) remplace les proxies animaux morts
+par leurs vrais modèles, avec pose de sommeil, pelage et yeux en croix. Il
+ajoute le pigment corporel et l'herbe tachée. Les mentions de silhouette de
+cadavre distincte ci-dessous décrivent l'ancien état V185 ; ses mesures restent
+historiques et ne valident pas le coût de V196.
+
 ## Retouches du 3 octobre 2026 — validation manuelle demandée
 
 Les sections V185 ci-dessous décrivent la livraison historique `98b7480`. Les retouches suivantes la remplacent sur les points cités, sans modifier le schéma 173 ni les règles de simulation. À la demande de l'utilisateur, aucun test, build, benchmark ou parcours navigateur automatique n'a été exécuté pour ces retouches ; la preuve historique V185 ne les valide pas.

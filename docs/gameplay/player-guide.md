@@ -1,6 +1,16 @@
 # Guide joueur
 
-**Schéma courant 182 — culture médicinale V195.** Validation stricte de 181 avant migration neutre, sans plante, dose, compétence ou croissance passée offerte. Les contrôles ciblés et le parcours public préparé sont consignés dans la [preuve V195](../history/validation-healroot-domestic-v195.md).
+**Schéma courant 182 — V196 présentation et douleur sonore, sans migration.** [Preuve et limites](../history/validation-visual-blood-v196.md). Les règles de culture médicinale V195 restent inchangées.
+
+## Sang, dépouilles et voix de douleur — V196
+
+Les dépôts de sang teintent l’herbe de leur cellule et les plaies extérieures marquent les corps ; le nettoyage retire la teinte du sol et de l’herbe. Une blessure soignée encore ouverte peut garder une marque, distincte de son débit de saignement. Les animaux morts conservent modèle, pelage et proportions, couchés avec yeux en croix ; les parties consommées restent manquantes. Les colons traversent les meubles franchissables au sol, puis utilisent leurs vrais sièges et lits lors des interactions.
+
+Les nouveaux coups confirmés peuvent émettre une prise de douleur : trois masculines et trois féminines selon le sexe visuel du colon, plus deux pour le renard. Le chargement d’une ancienne plaie reste silencieux. Les réglages de volume et les deux caméras continuent d’atténuer ces voix par la distance ; anesthésie à douleur nulle et décès n’émettent pas de râle humain. Le renard n’a pas encore de voix de mort dédiée.
+
+Dans **Charger → Colonies de test**, choisissez **« Sang, dépouilles et douleur · 3 colons »**, 46e fiche. Carte préparée 32×32 : les colonnes x4/8/12/16/20/24/28 comparent les sept espèces, vivants à z6, sommeil à z11 et dépouilles à z16. Le lièvre des neiges est seulement en dépouille, conformément au biome. Ada et Noé ont des plaies préparées et des sexes distincts ; Mina est saine. Les instructions de la fiche expliquent repas assis, trajet chargé, transport réel et nouveaux coups pour l’écoute. Ne pas déduire une émission audio des blessures déjà présentes au chargement. [Scène](../../public/test-saves/v196/sang-depouilles-douleur.json), [contrat et limites](../development/visual-blood-v196.md), [preuve ciblée](../history/validation-visual-blood-v196.md).
+
+Les nuances fines de la texture du terrain sur chaque brin ne sont pas ajoutées : cet effet était conditionné à l’absence de coût supplémentaire. Le sang d’herbe est une teinte par cellule, pas le contour exact de chaque goutte.
 
 ## Cultiver des plantes médicinales — V195
 

@@ -96,7 +96,9 @@ test('low work bends and straightens through the existing motion stream without 
   const layer=new PawnLayer(),timeline=new MotionTimeline();
   layer.update(world,1,true);timeline.tick=60;layer.updateTravel(world,timeline);
   const geometry=layer.feedbackSource!,motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
-  const attributes=Object.entries(geometry.attributes).filter(([name])=>name!=='aFire');
+  // CPU inspection aliases aHair/aBodyBlood share one packed shader input.
+  const shaderNames=['position','normal','color','boneId','bindPivot','dye','aFrom','aTo','aMotion','aTravel','aCargo','aTint','aEquipment','aSkin','aHairBlood','aShape'];
+  const attributes=shaderNames.map(name=>[name,geometry.getAttribute(name)] as const);
   expect(attributes.length).toBeLessThanOrEqual(16);
   expect(new Set(attributes.map(([,attribute])=>(attribute as THREE.InterleavedBufferAttribute).data??attribute)).size).toBeLessThanOrEqual(7);
   const job:Job={id:990,kind:'sow',x:10,z:11,orientation:0,footprint:'standard',status:'active',reservedBy:pawn.id,progress:0,escrow:{wood:0,food:0}};
@@ -152,7 +154,7 @@ test('a social gathering stays upright while travelling, then sits at its reserv
   const geometry=layer.feedbackSource!,motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
   const to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
   expect(motion.getZ(0)).toBe(0);
-  expect(to.getY(0)).toBeCloseTo(WORLD_SCALE.stoolHeight); // the confirmed edge climbs onto the stool
+  expect(to.getY(0)).toBe(0); // passage stays grounded until the reserved seated pose starts
   pawn.state='recreating';pawn.recreation.task.phase='active';world.tick=102;
   layer.update(world,0,false);timeline.tick=101;layer.updateTravel(world,timeline);
   expect(motion.getZ(0)).toBe(0); // latest state cannot seat the earlier presented edge

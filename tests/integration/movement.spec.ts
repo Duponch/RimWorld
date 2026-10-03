@@ -85,7 +85,7 @@ test('GPU travel preserves speed, corners and work-facing through real worker sn
 });
 
 
-test('loaded furniture crossing shares GPU heights, preserves speed within each edge and resumes through the real worker',async({playwright},testInfo)=>{
+test('loaded furniture crossing shares grounded GPU poses, preserves edge speed and resumes through the real worker',async({playwright},testInfo)=>{
   test.setTimeout(60000);
   const browser=await playwright.chromium.launch({channel:'chromium',args:[]});
   const page=await browser.newPage({baseURL:'http://127.0.0.1:5173',viewport:{width:1440,height:1000}}),errors=observeErrors(page);
@@ -124,11 +124,18 @@ test('loaded furniture crossing shares GPU heights, preserves speed within each 
     }
     const elevated=report.frames.filter((f:any)=>f.load&&f.fromY>.7&&f.toY>.7);
     const climbs=report.frames.filter((f:any)=>f.load&&f.fromY===0&&f.toY>.7);
-    const summary={samples,maxSpeedError,worstSample,epochs:[...epochs],resetSamples,boundarySamples,shared:report.shared,loadedPlateauFrames:elevated.length,loadedClimbFrames:climbs.length,crossingTick:crossing.tick,finalTick:final.tick,errors};
+    // Require loaded passage through the actual table, then reject its old rise
+    // and plateau on every recorded edge. Grounded travel still pays the real
+    // simulation cost and cannot skip either hauling contact or restoration.
+    const crossings=report.frames.filter((f:any)=>f.load&&f.z===8&&f.x>6&&f.x<9);
+    const grounded=crossings.filter((f:any)=>f.fromY===0&&f.toY===0);
+    const summary={samples,maxSpeedError,worstSample,epochs:[...epochs],resetSamples,boundarySamples,shared:report.shared,loadedTableFrames:crossings.length,loadedGroundFrames:grounded.length,loadedPlateauFrames:elevated.length,loadedClimbFrames:climbs.length,crossingTick:crossing.tick,finalTick:final.tick,errors};
     await testInfo.attach('furniture-gpu-contract',{contentType:'application/json',body:JSON.stringify(summary)});
     if(process.env.VALIDATION_VERSION)writeTestFileSync(`artifacts/furniture-crossing-${process.env.VALIDATION_VERSION}.json`,JSON.stringify(summary,null,2)+'\n');
     expect(epochs.size).toBe(2);expect(samples).toBeGreaterThan(100);expect(maxSpeedError).toBeLessThan(.01);expect(report.shared).toBe(true);
-    expect(elevated.length).toBeGreaterThan(5);expect(climbs.length).toBeGreaterThan(5);
+    expect(crossings.length).toBeGreaterThan(5);expect(grounded.length).toBe(crossings.length);
+    expect(report.frames.every((f:any)=>f.fromY===0&&f.toY===0)).toBe(true);
+    expect(elevated.length).toBe(0);expect(climbs.length).toBe(0);
     expect(final.piles.find(p=>p.item==='wood')?.owner).toEqual({type:'ground',x:2,z:8});expect(final.piles.find(p=>p.item==='rice')?.owner).toEqual({type:'ground',x:13,z:8});expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);
   } finally {await browser.close();}
 });

@@ -34,7 +34,7 @@ test('resident appearance survives actor growth, reordering and restored legacy 
   expect(world.pawns.find(p=>p.id===old.id)).toEqual(identities[0]);
   // WebGPU guarantees eight buffer slots and sixteen attributes. Unused fire/selection
   // attributes live on the geometry but are not requested by the human shader.
-  const names=['position','normal','color','boneId','bindPivot','dye','aFrom','aTo','aMotion','aTravel','aCargo','aTint','aEquipment','aSkin','aHair','aShape'];
+  const names=['position','normal','color','boneId','bindPivot','dye','aFrom','aTo','aMotion','aTravel','aCargo','aTint','aEquipment','aSkin','aHairBlood','aShape'];
   const buffers=new Set(names.map(n=>{const a=grown.getAttribute(n);return a instanceof THREE.InterleavedBufferAttribute?a.data:a;}));
   expect(buffers.size).toBeLessThanOrEqual(8);expect(names.length).toBeLessThanOrEqual(16);
 });

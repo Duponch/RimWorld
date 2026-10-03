@@ -1,18 +1,14 @@
-import { isFoodWorkstation } from '../sim/food-workstations';
-import { footprintCells } from '../sim/definitions';
 import type { World } from '../sim/types';
-import { WORLD_SCALE } from '../world/scale';
 
-/** Presentation map rebuilt per snapshot. No simulation height or extra mesh. */
-export function furnitureSurfaces(world:World):ReadonlyMap<number,number> {
-  const result=new Map<number,number>();
-  for(const s of world.structures) {
-    const y=(isFoodWorkstation(s.kind)||s.kind==='machining-table'||s.kind==='hi-tech-research-bench'||s.kind==='fabrication-bench'||s.kind==='multi-analyzer'||s.kind==='stonecutter'||s.kind==='art-bench'||s.kind==='research-bench'||s.kind==='tailor-bench')?WORLD_SCALE.stonecutterHeight:s.kind==='table'?WORLD_SCALE.tableHeight:s.kind==='bed'?WORLD_SCALE.bedSurfaceHeight:s.kind==='stool'?WORLD_SCALE.stoolHeight:0;
-    if(y)for(const c of footprintCells(s))result.set(c.z*world.width+c.x,y);
-  }
-  return result;
+const WALKING_SURFACES:ReadonlyMap<number,number>=new Map();
+
+/** Furniture passage stays at ground level. Seat rigs and reserved bed poses
+ * supply their own interaction height; piles retain their separate surfaces.
+ * Reuse the empty lookup without scanning structures or allocating per snapshot. */
+export function furnitureSurfaces(_world:World):ReadonlyMap<number,number> {
+  return WALKING_SURFACES;
 }
-/** Match GPU rise before entering the footprint, descent after leaving it. */
+/** Match shared GPU vertical interpolation for explicit interaction poses. */
 export function travelHeight(from:number,to:number,alpha:number):number {
   const t=Math.max(0,Math.min(1,from<to?alpha*3:from>to?alpha*3-2:alpha));
   return from+(to-from)*t;

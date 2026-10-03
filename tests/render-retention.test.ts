@@ -140,7 +140,17 @@ test('objets graphiques résidents : retrait/restauration, frontière de chunk, 
   overview.setFoliageVisible(false);expect(treeGeometry.drawRange.count).toBeGreaterThan(0);expect(treeGeometry.drawRange.count).toBeLessThan(treeGeometry.index!.count);
   overview.setFoliageVisible(true);expect(treeGeometry.drawRange.count).toBe(Infinity);
   world.resources=world.resources.map(r=>r.id===1?{...r,kind:'berries' as const}:r);overview.update(world,false);
-  expect((vegetation.children[0] as THREE.InstancedMesh).count).toBe(1);expect((vegetation.children[1] as THREE.InstancedMesh).count).toBe(2);
+  // V195 retains released slots as degenerate matrices. The high-water prefix
+  // can contain a hole: count actual nonzero transforms, not Mesh.count.
+  const visibleInstances=(mesh:THREE.Mesh & {instanceMatrix:THREE.BufferAttribute}):number=>{
+    const count=(mesh.geometry as THREE.InstancedBufferGeometry).instanceCount,matrix=new THREE.Matrix4();
+    let visible=0;for(let i=0;i<count;i++)if(Math.abs(matrix.fromArray(mesh.instanceMatrix.array,i*16).determinant())>1e-8)visible++;
+    return visible;
+  };
+  expect(((vegetation.children[0] as THREE.Mesh).geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(2);
+  expect(visibleInstances(vegetation.children[0] as THREE.InstancedMesh)).toBe(1);
+  expect(visibleInstances(vegetation.children[1] as THREE.InstancedMesh)).toBe(2);
+  expect(((vegetation.children[1] as THREE.Mesh).geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(2);
   overview.dispose();
 
   const boxes=new BoxBatches(), boxGroup=new THREE.Group();

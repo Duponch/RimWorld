@@ -1218,6 +1218,38 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32 au schéma 182, createWorld(42), tick0. Sol grass dégagé ; trois colons adultes libres avec besoins hauts, horaires Travail et travaux initialement désactivés. Profils Plantes 8/7/8 préparés, sans XP. Santé remise saine, puis contusion5PV du bras gauche du troisième colon, plafond herbal. Climat adopté au tick0. Un healroot mûr à (18,16), identité/PV intacts/âge zéro explicitement préparés ; ce stade ne prouve pas sept journées de croissance naturelle. Une case de riz vide (13,16), réserve médicale25 (16,12), six repas de survie réels au sol. Aucune tâche, route, semis, récolte, dose herbal, portage, soin ou progression préalable. Le semis vide et tous les contacts restent à accomplir ; les anciennes colonies ne sont pas régénérées.",
       "sha256": "dd0def3f182ee1b9b535613d97395cb657049a799d9b7558bfb4d791d98c0b12"
+    },
+    {
+      "id": "sang-depouilles-douleur-v196",
+      "release": "v196",
+      "label": "Sang, dépouilles et douleur · 3 colons",
+      "description": "Comparer sang sur herbe et corps, pelages vivants/endormis/morts, vrais sièges et passage du mobilier au sol. Les blessures initiales sont préparées ; les sons exigent de nouveaux coups.",
+      "filename": "sang-depouilles-douleur.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "sang au sol et sur herbe",
+        "blessures anatomiques",
+        "pelage et dépouilles",
+        "douleur humaine et animale",
+        "repas assis",
+        "passage du mobilier",
+        "pause et reprise"
+      ],
+      "steps": [
+        "Charger en pause. Colonnes x4/8/12/16/20/24/28 : lièvre, lièvre des neiges, cerf, muffalo, gazelle, dromadaire, renard. Vivants à z6, sommeil à z11, dépouilles fraîches à z16. Le lièvre des neiges apparaît uniquement en dépouille : son vivant est limité à la toundra par les règles existantes. Comparer modèles, proportions, fourrure, couleurs et yeux avec les textures activées puis désactivées.",
+        "Ada (femme) en (6,23) et Noé (homme) en (10,23) portent chacun une coupure préparée de 4 PV à un bras. Inspecter Santé et les traces, puis les cellules de sang dans la prairie. Le chargement de ces blessures ne doit pas jouer un nouveau râle ; leurs soins et besoins restent réels après reprise.",
+        "Reprendre à 1× : Ada a faim (29) et six repas de survie sont au sol en (5,23). Observer collecte, approche de la table et assise réelle. Aucun repas, trajet ou siège n’est déjà réservé. Les trois types de siège se trouvent autour de la table (6,25) ; le lit (11,25) reste disponible pour un repos médical ordinaire après activation des priorités appropriées.",
+        "Pour le passage, mobiliser Mina en (18,27), puis demander le déplacement vers (28,27). Le couloir est ouvert à l’ouest, bordé d’eau, avec tabouret, chaise, table 1×2 et fauteuil. Observer les pieds au niveau de marche et les délais logiques, puis faire pause, sauvegarder et recharger en cours de trajet.",
+        "Pour les dépouilles portées, demander à un colon le transport réel d’un corps depuis la rangée z16 vers la réserve Corps (3,19). Aucun corps n’est préattribué à un porteur. Observer collecte, pelage porté, dépôt, puis sauvegarde et reprise.",
+        "Pour l’écoute, recharger le témoin, mobiliser Mina et choisir Attaquer au corps à corps dans son inspection, puis cliquer Noé pour la prise masculine ou Ada pour la prise féminine. Reprendre à 1× et arrêter l’ordre après le premier contact. Recharger entre prises. Le même ciblage sur un lièvre sauvage de z6 permet la douleur animale. Ces coups sont à accomplir ; les plaies préparées au chargement ne prouvent ni une émission nouvelle ni une écoute humaine."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32 au schéma182, createWorld(196), tick0. Trois colons libres adultes : Ada femme blessée bras gauche, Noé homme blessé bras droit, Mina femme saine pour le couloir. Profils visuels de sexe cohérents préparés ; besoins hauts sauf faim29 d’Ada ; tous travaux et habillement automatique désactivés. Coupures humaines4PV via injurePawn, aucun champ clinique arbitraire ni maladie. Douze animaux adultes femelles en comparaison debout/sommeil, blessure extérieure1PV via damageAnimalWithBullet : six espèces légales sur carte tempérée, dromadaire domestique explicitement importé, six poses de sommeil et repos0,6 préparés. Sept morts par destruction réelle du cœur au producteur anatomique, propagation extérieure conservée puis advanceCorpses au sol avec identité originale, dossier figé et rot0 ; le lièvre des neiges n’est jamais adopté comme vivant tempéré. Douze dépôts de sang physiques via addFilth, épaisseur3, indépendamment préparés sans revendiquer un saignement naturel. Recherche Mobilier complexe achevée explicitement à tick0 pour les fauteuils ; mobilier/table/lit construits préparés, couloir d’eau, six repas de survie et six médicaments au sol, une réserve Corps. Aucun contact de repas, soin, trajet, coup audible futur, transport ou consommation déjà accompli. Le témoin sert aux comparaisons et contrôles manuels ; il ne démontre ni chronologie de combat jouée, campagne naturelle, parité exhaustive ou coût général.",
+      "sha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6"
     }
   ]
 }

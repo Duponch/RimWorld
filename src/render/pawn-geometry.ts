@@ -1,6 +1,5 @@
 import { HAIR_PARTS,BEARD_PARTS } from './pawn-appearance-shape';
 import { BIOME_CARGO } from './biome-cargo';
-import { corpseParts } from './corpse-presentation';
 import * as THREE from 'three/webgpu';
 import { PAWN_MODEL_SCALE } from '../world/scale';
 import { ITEM_DEFINITIONS } from '../sim/items';
@@ -229,12 +228,10 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   part([.48,.10,.50],[0,0,0],25,0xd8c8a2);part([.12,.08,.12],[.15,.09,-.13],25,0x5d716e);
   BLOCK_ITEMS.forEach((item,i)=>{part([.27,.17,.36],[-.145,0,0],12+i,ITEM_DEFINITIONS[item].color);part([.27,.17,.36],[.145,0,0],12+i,ITEM_DEFINITIONS[item].color);});
   CHUNK_ITEMS.forEach((item,i)=>{part([.52,.34,.42],[0,0,0],5+i,ITEM_DEFINITIONS[item].color);part([.22,.2,.27],[.18,-.05,-.12],5+i,ITEM_DEFINITIONS[item].color);});
-  for(const p of corpseParts(0,0))part([p.sx!,p.sy!,p.sz!],[p.x,p.y-.16,p.z],27,p.color!,p.corpsePartMask);
   part([.52,.07,.35],[0,0,0],28,ITEM_DEFINITIONS['light-leather'].color);
   part([.38,.18,.32],[0,0,0],29,ITEM_DEFINITIONS['hare-meat'].color);
   for(const [item,kind] of Object.entries(BIOME_CARGO)){
-    if(item.endsWith('-corpse'))for(const p of corpseParts(0,0,'fresh',0,item.replace('-corpse','')))part([p.sx!,p.sy!,p.sz!],[p.x,p.y-.16,p.z],kind,p.color!,p.corpsePartMask);
-    else part([.5,.12,.36],[0,0,0],kind,ITEM_DEFINITIONS[item as keyof typeof ITEM_DEFINITIONS].color);
+    if(!item.endsWith('-corpse'))part([.5,.12,.36],[0,0,0],kind,ITEM_DEFINITIONS[item as keyof typeof ITEM_DEFINITIONS].color);
   }
   const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 11);
   const geometry = new THREE.InstancedBufferGeometry();

@@ -1,0 +1,1406 @@
+{
+  "reviewed": "2026-10-03",
+  "scope": "Seven actor modules compared to e548493; current simulation, audio, grass and ColonyRenderer shared. Prepared 32x32 scene in pause. Ordinary CPU/RAF and timestamp GPU runs executed successively; not a full-map or whole-game before/after proof.",
+  "sharedSourceSha256": {
+    "src/render/ColonyRenderer.ts": "a4d25e796f99708a02e9e0e4d3ed1c9c3bc887174ee40531985fdcd753407b58",
+    "src/render/GpuGroundGrassLayer.ts": "75ec22af736a077a7eb2638e425b4a7280f6a0034acd1cd7e2bec4f67ee90063",
+    "src/render/body-blood.ts": "46cb189475ed39fbcedf762e3ad1329fcfe73d121e0537f18cfba0e3a163fff1",
+    "src/render/ground-blood.ts": "0a1a2e101ded0644f7b98764f78d5f9a599b7302f9c1f4ea01aa80f3f4605a8b",
+    "src/render/animal-corpse-carrier.ts": "40267552031c19bb42f9317e33d5e1b0459aeb88dbbeaac68e431972cdb8ad8b",
+    "src/render/furniture-motion.ts": "526aa1a103dfc52ea9177e0f340d25c54a7a384a989294994384e89ac517cc08"
+  },
+  "reports": [
+    {
+      "reportSha256": "a815521e9373d2838977e5e8f03eff6a8c0c0e9daa2e17a013c87f10c6a53e46",
+      "date": "2026-10-03T11:49:59.184Z",
+      "config": {
+        "label": "final-a1",
+        "origin": "http://127.0.0.1:5173/",
+        "savePath": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "output": "E:\\Code\\RimWorld\\tmp\\v196\\perf-final-a1.json",
+        "scenes": [
+          "iso-near",
+          "perspective-low"
+        ],
+        "speeds": [
+          0
+        ],
+        "measuredSeconds": 3,
+        "warmupSeconds": 2,
+        "gpuRequested": false,
+        "shadows": true,
+        "shadowCache": true,
+        "clouds": true,
+        "precip": true,
+        "preparedWeather": null,
+        "labels": true,
+        "textures": true,
+        "grass": true,
+        "wind": true
+      },
+      "fixture": {
+        "path": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "sha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "worldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "loadedWorldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "preparedWeather": null,
+        "schemaVersion": 182,
+        "tick": 0,
+        "width": 32,
+        "height": 32,
+        "pawns": 3,
+        "animals": 12,
+        "resources": 0,
+        "piles": 9
+      },
+      "host": {
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "node": "v24.11.1",
+        "platform": "win32"
+      },
+      "protocol": "Each phase reloads the identical raw save, fixes camera pose and toggles, warms up, then measures for a fixed wall-time window. Native Chromium/WebGPU, 1920x1080, DPR 1. RAF is display paced; frame CPU includes JS and render submission, not GPU execution. Worker stepMs is simulation time per tick reported in snapshots, not total worker cost. GPU timestamps require a separate instrumented run. Three draw/triangle counters can omit retained bundle replay.",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "dpr": 1,
+        "backend": "WebGPU"
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "renderComparison": {
+        "baseline": true,
+        "ref": "e548493",
+        "modules": [
+          "WildlifeLayer",
+          "PawnLayer",
+          "hare-geometry",
+          "pawn-geometry",
+          "animal-shape",
+          "corpse-presentation",
+          "pile-parts"
+        ],
+        "sourceSha256": {
+          "WildlifeLayer": "d93ed662a72f3934f21ee55813c376bd2f86d810f068cfe5d7e4439cdf59df67",
+          "PawnLayer": "3784ffba33ae19728e90ff6b0b23f0b3927b3b1a8dd1083185e5ef04d7ee3ee2",
+          "hare-geometry": "4ee4c50ccef84a82a0aae51dd961b37b456bfd526d0233a357c19a5cac9fad06",
+          "pawn-geometry": "bf719ba3697d661b02e7c654b0a8f1ff09d0a3fcb302389b696e963ce0bd7532",
+          "animal-shape": "f67d223aa96f5d4530cbbf49da9c56e917e1d4d3648753d5dacdb56a7866bbab",
+          "corpse-presentation": "5dc62f24c1a18b2a0b07a246a44384fbe13bbb2e67ad455961c8418d4b101a11",
+          "pile-parts": "64e27a277b8d452430a771354d1a6f651e2363105bde1d8ef127fcd53c2aa64c"
+        },
+        "scope": "Seven actor rendering modules only. Current main/audio/simulation/ColonyRenderer/ground grass and identical prepared World.",
+        "limitation": "Prepared 32-square specimen chart at rest. This is not a full-map or long-campaign performance proof; the baseline has the historical grey/flattened animal proxies. GPU timestamp runs are separate from ordinary RAF/CPU runs."
+      },
+      "gpuTimestampSupported": true,
+      "errors": [],
+      "phases": [
+        {
+          "scene": "iso-near",
+          "speed": 0,
+          "elapsedMs": 3014.300000000745,
+          "rafMs": {
+            "n": 723,
+            "mean": 4.166528354080221,
+            "p50": 4.199999999998909,
+            "p95": 4.299999999999272,
+            "p99": 4.300000000001091,
+            "max": 4.300000000001091
+          },
+          "frameCpuMs": {
+            "n": 724,
+            "mean": 0.937430939192045,
+            "p50": 0.900000000372529,
+            "p95": 1.3999999994412065,
+            "p99": 1.7000000001862645,
+            "max": 2.400000000372529
+          },
+          "gpuMs": null,
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 724,
+            "mean": 22.676795580110497,
+            "p50": 22,
+            "p95": 32,
+            "p99": 32,
+            "max": 32
+          },
+          "encodedTriangles": {
+            "n": 724,
+            "mean": 90536.16574585636,
+            "p50": 89211,
+            "p95": 108791,
+            "p99": 108791,
+            "max": 108791
+          }
+        },
+        {
+          "scene": "perspective-low",
+          "speed": 0,
+          "elapsedMs": 3013.5,
+          "rafMs": {
+            "n": 723,
+            "mean": 4.166666666666667,
+            "p50": 4.200000000000728,
+            "p95": 4.299999999999272,
+            "p99": 4.300000000001091,
+            "max": 4.30000000000291
+          },
+          "frameCpuMs": {
+            "n": 724,
+            "mean": 0.9765193370101428,
+            "p50": 0.900000000372529,
+            "p95": 1.400000000372529,
+            "p99": 1.7000000001862645,
+            "max": 2.099999999627471
+          },
+          "gpuMs": null,
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 724,
+            "mean": 22.676795580110497,
+            "p50": 22,
+            "p95": 32,
+            "p99": 32,
+            "max": 32
+          },
+          "encodedTriangles": {
+            "n": 724,
+            "mean": 199080.16574585636,
+            "p50": 197755,
+            "p95": 217335,
+            "p99": 217335,
+            "max": 217335
+          }
+        }
+      ]
+    },
+    {
+      "reportSha256": "c770c39822994f557c331da4477ed23cc0f0021ddbc7fd4b063b28bfcfe9a122",
+      "date": "2026-10-03T11:50:19.015Z",
+      "config": {
+        "label": "final-b1",
+        "origin": "http://127.0.0.1:5173/",
+        "savePath": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "output": "E:\\Code\\RimWorld\\tmp\\v196\\perf-final-b1.json",
+        "scenes": [
+          "iso-near",
+          "perspective-low"
+        ],
+        "speeds": [
+          0
+        ],
+        "measuredSeconds": 3,
+        "warmupSeconds": 2,
+        "gpuRequested": false,
+        "shadows": true,
+        "shadowCache": true,
+        "clouds": true,
+        "precip": true,
+        "preparedWeather": null,
+        "labels": true,
+        "textures": true,
+        "grass": true,
+        "wind": true
+      },
+      "fixture": {
+        "path": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "sha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "worldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "loadedWorldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "preparedWeather": null,
+        "schemaVersion": 182,
+        "tick": 0,
+        "width": 32,
+        "height": 32,
+        "pawns": 3,
+        "animals": 12,
+        "resources": 0,
+        "piles": 9
+      },
+      "host": {
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "node": "v24.11.1",
+        "platform": "win32"
+      },
+      "protocol": "Each phase reloads the identical raw save, fixes camera pose and toggles, warms up, then measures for a fixed wall-time window. Native Chromium/WebGPU, 1920x1080, DPR 1. RAF is display paced; frame CPU includes JS and render submission, not GPU execution. Worker stepMs is simulation time per tick reported in snapshots, not total worker cost. GPU timestamps require a separate instrumented run. Three draw/triangle counters can omit retained bundle replay.",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "dpr": 1,
+        "backend": "WebGPU"
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "renderComparison": {
+        "baseline": false,
+        "ref": "e548493",
+        "modules": [
+          "WildlifeLayer",
+          "PawnLayer",
+          "hare-geometry",
+          "pawn-geometry",
+          "animal-shape",
+          "corpse-presentation",
+          "pile-parts"
+        ],
+        "sourceSha256": {
+          "WildlifeLayer": "998e37306bd512e34bfc3f1a69f9f04bbc9229bf561548a18f12123bb134238b",
+          "PawnLayer": "df080ca2260907d9460c415ba6d4004f3febbbc353982947dfb27cffba14561b",
+          "hare-geometry": "5376971a53d1119bf5f1946367ebc959e48ce1a91a728046c9afdc3a664db1d0",
+          "pawn-geometry": "60f1b1331acbc6892680a41417df67db11b64235b0c678ae6d0dfe1278de9263",
+          "animal-shape": "4a367bf4a8743cdb8427872a4e5a2602b38baa152645b13cd035f66fc622f03f",
+          "corpse-presentation": "986c3027f1bac43a0c672df2ac6f58c51fd25a222b5ae4905c19f675f61caa8a",
+          "pile-parts": "2a369c3e81b0ea8466da3685166b6c32157142d470d096efc129254548dbd389"
+        },
+        "scope": "Seven actor rendering modules only. Current main/audio/simulation/ColonyRenderer/ground grass and identical prepared World.",
+        "limitation": "Prepared 32-square specimen chart at rest. This is not a full-map or long-campaign performance proof; the baseline has the historical grey/flattened animal proxies. GPU timestamp runs are separate from ordinary RAF/CPU runs."
+      },
+      "gpuTimestampSupported": true,
+      "errors": [],
+      "phases": [
+        {
+          "scene": "iso-near",
+          "speed": 0,
+          "elapsedMs": 3016.5999999996275,
+          "rafMs": {
+            "n": 722,
+            "mean": 4.178116343490305,
+            "p50": 4.199999999998909,
+            "p95": 4.299999999999272,
+            "p99": 4.300000000001091,
+            "max": 8.299999999999272
+          },
+          "frameCpuMs": {
+            "n": 723,
+            "mean": 1.431950207459605,
+            "p50": 1.400000000372529,
+            "p95": 2,
+            "p99": 2.400000000372529,
+            "max": 2.800000000745058
+          },
+          "gpuMs": null,
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 723,
+            "mean": 23.730290456431536,
+            "p50": 23,
+            "p95": 34,
+            "p99": 34,
+            "max": 34
+          },
+          "encodedTriangles": {
+            "n": 723,
+            "mean": 86612.19502074689,
+            "p50": 85555,
+            "p95": 101479,
+            "p99": 101479,
+            "max": 101479
+          }
+        },
+        {
+          "scene": "perspective-low",
+          "speed": 0,
+          "elapsedMs": 3005.2999999998137,
+          "rafMs": {
+            "n": 721,
+            "mean": 4.16657420249653,
+            "p50": 4.200000000000728,
+            "p95": 4.299999999999272,
+            "p99": 4.30000000000291,
+            "max": 4.399999999997817
+          },
+          "frameCpuMs": {
+            "n": 722,
+            "mean": 1.1480609418442498,
+            "p50": 1.099999999627471,
+            "p95": 1.800000000745058,
+            "p99": 2.5,
+            "max": 2.900000000372529
+          },
+          "gpuMs": null,
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 722,
+            "mean": 23.746537396121884,
+            "p50": 23,
+            "p95": 34,
+            "p99": 34,
+            "max": 34
+          },
+          "encodedTriangles": {
+            "n": 722,
+            "mean": 195179.71468144044,
+            "p50": 194099,
+            "p95": 210023,
+            "p99": 210023,
+            "max": 210023
+          }
+        }
+      ]
+    },
+    {
+      "reportSha256": "367c854d3e7c9e1120c032ce05451bd71655f06c443e9be0d179e3ac652032d1",
+      "date": "2026-10-03T11:50:40.454Z",
+      "config": {
+        "label": "final-b2",
+        "origin": "http://127.0.0.1:5173/",
+        "savePath": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "output": "E:\\Code\\RimWorld\\tmp\\v196\\perf-final-b2.json",
+        "scenes": [
+          "iso-near",
+          "perspective-low"
+        ],
+        "speeds": [
+          0
+        ],
+        "measuredSeconds": 3,
+        "warmupSeconds": 2,
+        "gpuRequested": false,
+        "shadows": true,
+        "shadowCache": true,
+        "clouds": true,
+        "precip": true,
+        "preparedWeather": null,
+        "labels": true,
+        "textures": true,
+        "grass": true,
+        "wind": true
+      },
+      "fixture": {
+        "path": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "sha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "worldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "loadedWorldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "preparedWeather": null,
+        "schemaVersion": 182,
+        "tick": 0,
+        "width": 32,
+        "height": 32,
+        "pawns": 3,
+        "animals": 12,
+        "resources": 0,
+        "piles": 9
+      },
+      "host": {
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "node": "v24.11.1",
+        "platform": "win32"
+      },
+      "protocol": "Each phase reloads the identical raw save, fixes camera pose and toggles, warms up, then measures for a fixed wall-time window. Native Chromium/WebGPU, 1920x1080, DPR 1. RAF is display paced; frame CPU includes JS and render submission, not GPU execution. Worker stepMs is simulation time per tick reported in snapshots, not total worker cost. GPU timestamps require a separate instrumented run. Three draw/triangle counters can omit retained bundle replay.",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "dpr": 1,
+        "backend": "WebGPU"
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "renderComparison": {
+        "baseline": false,
+        "ref": "e548493",
+        "modules": [
+          "WildlifeLayer",
+          "PawnLayer",
+          "hare-geometry",
+          "pawn-geometry",
+          "animal-shape",
+          "corpse-presentation",
+          "pile-parts"
+        ],
+        "sourceSha256": {
+          "WildlifeLayer": "998e37306bd512e34bfc3f1a69f9f04bbc9229bf561548a18f12123bb134238b",
+          "PawnLayer": "df080ca2260907d9460c415ba6d4004f3febbbc353982947dfb27cffba14561b",
+          "hare-geometry": "5376971a53d1119bf5f1946367ebc959e48ce1a91a728046c9afdc3a664db1d0",
+          "pawn-geometry": "60f1b1331acbc6892680a41417df67db11b64235b0c678ae6d0dfe1278de9263",
+          "animal-shape": "4a367bf4a8743cdb8427872a4e5a2602b38baa152645b13cd035f66fc622f03f",
+          "corpse-presentation": "986c3027f1bac43a0c672df2ac6f58c51fd25a222b5ae4905c19f675f61caa8a",
+          "pile-parts": "2a369c3e81b0ea8466da3685166b6c32157142d470d096efc129254548dbd389"
+        },
+        "scope": "Seven actor rendering modules only. Current main/audio/simulation/ColonyRenderer/ground grass and identical prepared World.",
+        "limitation": "Prepared 32-square specimen chart at rest. This is not a full-map or long-campaign performance proof; the baseline has the historical grey/flattened animal proxies. GPU timestamp runs are separate from ordinary RAF/CPU runs."
+      },
+      "gpuTimestampSupported": true,
+      "errors": [],
+      "phases": [
+        {
+          "scene": "iso-near",
+          "speed": 0,
+          "elapsedMs": 3014.5,
+          "rafMs": {
+            "n": 723,
+            "mean": 4.166666666666667,
+            "p50": 4.199999999998909,
+            "p95": 4.299999999999272,
+            "p99": 4.300000000001091,
+            "max": 4.5
+          },
+          "frameCpuMs": {
+            "n": 724,
+            "mean": 0.9755524861451382,
+            "p50": 0.900000000372529,
+            "p95": 1.5,
+            "p99": 1.7999999998137355,
+            "max": 2.7000000001862645
+          },
+          "gpuMs": null,
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 724,
+            "mean": 23.744475138121548,
+            "p50": 23,
+            "p95": 34,
+            "p99": 34,
+            "max": 34
+          },
+          "encodedTriangles": {
+            "n": 724,
+            "mean": 86632.72928176796,
+            "p50": 85555,
+            "p95": 101479,
+            "p99": 101479,
+            "max": 101479
+          }
+        },
+        {
+          "scene": "perspective-low",
+          "speed": 0,
+          "elapsedMs": 3008.2000000001863,
+          "rafMs": {
+            "n": 721,
+            "mean": 4.166712898751735,
+            "p50": 4.200000000000728,
+            "p95": 4.299999999999272,
+            "p99": 4.30000000000291,
+            "max": 4.30000000000291
+          },
+          "frameCpuMs": {
+            "n": 722,
+            "mean": 1.0502770083357897,
+            "p50": 1,
+            "p95": 1.5,
+            "p99": 1.7999999998137355,
+            "max": 2.5
+          },
+          "gpuMs": null,
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 722,
+            "mean": 23.746537396121884,
+            "p50": 23,
+            "p95": 34,
+            "p99": 34,
+            "max": 34
+          },
+          "encodedTriangles": {
+            "n": 722,
+            "mean": 195179.71468144044,
+            "p50": 194099,
+            "p95": 210023,
+            "p99": 210023,
+            "max": 210023
+          }
+        }
+      ]
+    },
+    {
+      "reportSha256": "2526cbe738c5bfec2ef3e9a116da876a8446c09f4306ca49640be29582c5ad4e",
+      "date": "2026-10-03T11:51:01.737Z",
+      "config": {
+        "label": "final-a2",
+        "origin": "http://127.0.0.1:5173/",
+        "savePath": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "output": "E:\\Code\\RimWorld\\tmp\\v196\\perf-final-a2.json",
+        "scenes": [
+          "iso-near",
+          "perspective-low"
+        ],
+        "speeds": [
+          0
+        ],
+        "measuredSeconds": 3,
+        "warmupSeconds": 2,
+        "gpuRequested": false,
+        "shadows": true,
+        "shadowCache": true,
+        "clouds": true,
+        "precip": true,
+        "preparedWeather": null,
+        "labels": true,
+        "textures": true,
+        "grass": true,
+        "wind": true
+      },
+      "fixture": {
+        "path": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "sha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "worldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "loadedWorldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "preparedWeather": null,
+        "schemaVersion": 182,
+        "tick": 0,
+        "width": 32,
+        "height": 32,
+        "pawns": 3,
+        "animals": 12,
+        "resources": 0,
+        "piles": 9
+      },
+      "host": {
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "node": "v24.11.1",
+        "platform": "win32"
+      },
+      "protocol": "Each phase reloads the identical raw save, fixes camera pose and toggles, warms up, then measures for a fixed wall-time window. Native Chromium/WebGPU, 1920x1080, DPR 1. RAF is display paced; frame CPU includes JS and render submission, not GPU execution. Worker stepMs is simulation time per tick reported in snapshots, not total worker cost. GPU timestamps require a separate instrumented run. Three draw/triangle counters can omit retained bundle replay.",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "dpr": 1,
+        "backend": "WebGPU"
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "renderComparison": {
+        "baseline": true,
+        "ref": "e548493",
+        "modules": [
+          "WildlifeLayer",
+          "PawnLayer",
+          "hare-geometry",
+          "pawn-geometry",
+          "animal-shape",
+          "corpse-presentation",
+          "pile-parts"
+        ],
+        "sourceSha256": {
+          "WildlifeLayer": "d93ed662a72f3934f21ee55813c376bd2f86d810f068cfe5d7e4439cdf59df67",
+          "PawnLayer": "3784ffba33ae19728e90ff6b0b23f0b3927b3b1a8dd1083185e5ef04d7ee3ee2",
+          "hare-geometry": "4ee4c50ccef84a82a0aae51dd961b37b456bfd526d0233a357c19a5cac9fad06",
+          "pawn-geometry": "bf719ba3697d661b02e7c654b0a8f1ff09d0a3fcb302389b696e963ce0bd7532",
+          "animal-shape": "f67d223aa96f5d4530cbbf49da9c56e917e1d4d3648753d5dacdb56a7866bbab",
+          "corpse-presentation": "5dc62f24c1a18b2a0b07a246a44384fbe13bbb2e67ad455961c8418d4b101a11",
+          "pile-parts": "64e27a277b8d452430a771354d1a6f651e2363105bde1d8ef127fcd53c2aa64c"
+        },
+        "scope": "Seven actor rendering modules only. Current main/audio/simulation/ColonyRenderer/ground grass and identical prepared World.",
+        "limitation": "Prepared 32-square specimen chart at rest. This is not a full-map or long-campaign performance proof; the baseline has the historical grey/flattened animal proxies. GPU timestamp runs are separate from ordinary RAF/CPU runs."
+      },
+      "gpuTimestampSupported": true,
+      "errors": [],
+      "phases": [
+        {
+          "scene": "iso-near",
+          "speed": 0,
+          "elapsedMs": 3014.2000000001863,
+          "rafMs": {
+            "n": 723,
+            "mean": 4.166528354080221,
+            "p50": 4.199999999998909,
+            "p95": 4.300000000001091,
+            "p99": 4.300000000001091,
+            "max": 4.300000000001091
+          },
+          "frameCpuMs": {
+            "n": 724,
+            "mean": 0.9730662983849913,
+            "p50": 0.900000000372529,
+            "p95": 1.400000000372529,
+            "p99": 1.7000000001862645,
+            "max": 2.2000000001862645
+          },
+          "gpuMs": null,
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 724,
+            "mean": 22.69060773480663,
+            "p50": 22,
+            "p95": 32,
+            "p99": 32,
+            "max": 32
+          },
+          "encodedTriangles": {
+            "n": 724,
+            "mean": 90563.20994475138,
+            "p50": 89211,
+            "p95": 108791,
+            "p99": 108791,
+            "max": 108791
+          }
+        },
+        {
+          "scene": "perspective-low",
+          "speed": 0,
+          "elapsedMs": 3006.9000000003725,
+          "rafMs": {
+            "n": 721,
+            "mean": 4.166712898751735,
+            "p50": 4.199999999998909,
+            "p95": 4.299999999999272,
+            "p99": 4.300000000001091,
+            "max": 4.30000000000291
+          },
+          "frameCpuMs": {
+            "n": 722,
+            "mean": 1.155678670370946,
+            "p50": 1.099999999627471,
+            "p95": 1.7999999998137355,
+            "p99": 2.1000000005587935,
+            "max": 2.400000000372529
+          },
+          "gpuMs": null,
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 722,
+            "mean": 22.678670360110804,
+            "p50": 22,
+            "p95": 32,
+            "p99": 32,
+            "max": 32
+          },
+          "encodedTriangles": {
+            "n": 722,
+            "mean": 199083.83656509695,
+            "p50": 197755,
+            "p95": 217335,
+            "p99": 217335,
+            "max": 217335
+          }
+        }
+      ]
+    },
+    {
+      "reportSha256": "80479debb97296ac7fc1e478ddb4fb34520e1e97ad6be52518da45ea0b8caf1e",
+      "date": "2026-10-03T11:51:55.890Z",
+      "config": {
+        "label": "gpu-a1",
+        "origin": "http://127.0.0.1:5173/",
+        "savePath": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "output": "E:\\Code\\RimWorld\\tmp\\v196\\perf-gpu-a1.json",
+        "scenes": [
+          "iso-near",
+          "perspective-low"
+        ],
+        "speeds": [
+          0
+        ],
+        "measuredSeconds": 3,
+        "warmupSeconds": 2,
+        "gpuRequested": true,
+        "shadows": true,
+        "shadowCache": true,
+        "clouds": true,
+        "precip": true,
+        "preparedWeather": null,
+        "labels": true,
+        "textures": true,
+        "grass": true,
+        "wind": true
+      },
+      "fixture": {
+        "path": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "sha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "worldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "loadedWorldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "preparedWeather": null,
+        "schemaVersion": 182,
+        "tick": 0,
+        "width": 32,
+        "height": 32,
+        "pawns": 3,
+        "animals": 12,
+        "resources": 0,
+        "piles": 9
+      },
+      "host": {
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "node": "v24.11.1",
+        "platform": "win32"
+      },
+      "protocol": "Each phase reloads the identical raw save, fixes camera pose and toggles, warms up, then measures for a fixed wall-time window. Native Chromium/WebGPU, 1920x1080, DPR 1. RAF is display paced; frame CPU includes JS and render submission, not GPU execution. Worker stepMs is simulation time per tick reported in snapshots, not total worker cost. GPU timestamps require a separate instrumented run. Three draw/triangle counters can omit retained bundle replay.",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "dpr": 1,
+        "backend": "WebGPU"
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "renderComparison": {
+        "baseline": true,
+        "ref": "e548493",
+        "modules": [
+          "WildlifeLayer",
+          "PawnLayer",
+          "hare-geometry",
+          "pawn-geometry",
+          "animal-shape",
+          "corpse-presentation",
+          "pile-parts"
+        ],
+        "sourceSha256": {
+          "WildlifeLayer": "d93ed662a72f3934f21ee55813c376bd2f86d810f068cfe5d7e4439cdf59df67",
+          "PawnLayer": "3784ffba33ae19728e90ff6b0b23f0b3927b3b1a8dd1083185e5ef04d7ee3ee2",
+          "hare-geometry": "4ee4c50ccef84a82a0aae51dd961b37b456bfd526d0233a357c19a5cac9fad06",
+          "pawn-geometry": "bf719ba3697d661b02e7c654b0a8f1ff09d0a3fcb302389b696e963ce0bd7532",
+          "animal-shape": "f67d223aa96f5d4530cbbf49da9c56e917e1d4d3648753d5dacdb56a7866bbab",
+          "corpse-presentation": "5dc62f24c1a18b2a0b07a246a44384fbe13bbb2e67ad455961c8418d4b101a11",
+          "pile-parts": "64e27a277b8d452430a771354d1a6f651e2363105bde1d8ef127fcd53c2aa64c"
+        },
+        "scope": "Seven actor rendering modules only. Current main/audio/simulation/ColonyRenderer/ground grass and identical prepared World.",
+        "limitation": "Prepared 32-square specimen chart at rest. This is not a full-map or long-campaign performance proof; the baseline has the historical grey/flattened animal proxies. GPU timestamp runs are separate from ordinary RAF/CPU runs."
+      },
+      "gpuTimestampSupported": true,
+      "errors": [],
+      "phases": [
+        {
+          "scene": "iso-near",
+          "speed": 0,
+          "elapsedMs": 3008.7999999998137,
+          "rafMs": {
+            "n": 721,
+            "mean": 4.166712898751735,
+            "p50": 4.199999999998909,
+            "p95": 4.299999999999272,
+            "p99": 4.300000000001091,
+            "max": 4.300000000001091
+          },
+          "frameCpuMs": {
+            "n": 722,
+            "mean": 0.966481994440227,
+            "p50": 0.900000000372529,
+            "p95": 1.5,
+            "p99": 1.7000000001862645,
+            "max": 2.8999999994412065
+          },
+          "gpuMs": {
+            "n": 552,
+            "mean": 1.005478956521745,
+            "p50": 0.9830399999999999,
+            "p95": 1.3762560000000001,
+            "p99": 1.4417920000000002,
+            "max": 1.572864
+          },
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 722,
+            "mean": 22.678670360110804,
+            "p50": 22,
+            "p95": 32,
+            "p99": 32,
+            "max": 32
+          },
+          "encodedTriangles": {
+            "n": 722,
+            "mean": 90539.83656509695,
+            "p50": 89211,
+            "p95": 108791,
+            "p99": 108791,
+            "max": 108791
+          }
+        },
+        {
+          "scene": "perspective-low",
+          "speed": 0,
+          "elapsedMs": 3011.5,
+          "rafMs": {
+            "n": 722,
+            "mean": 4.166620498614957,
+            "p50": 4.200000000000728,
+            "p95": 4.299999999999272,
+            "p99": 4.30000000000291,
+            "max": 4.30000000000291
+          },
+          "frameCpuMs": {
+            "n": 723,
+            "mean": 1.095712309817875,
+            "p50": 1,
+            "p95": 1.699999999254942,
+            "p99": 2,
+            "max": 2.699999999254942
+          },
+          "gpuMs": {
+            "n": 386,
+            "mean": 1.0641959792746138,
+            "p50": 1.048576,
+            "p95": 1.4417920000000002,
+            "p99": 1.5073280000000002,
+            "max": 2.162688
+          },
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 723,
+            "mean": 22.677731673582297,
+            "p50": 22,
+            "p95": 32,
+            "p99": 32,
+            "max": 32
+          },
+          "encodedTriangles": {
+            "n": 723,
+            "mean": 199081.99861687413,
+            "p50": 197755,
+            "p95": 217335,
+            "p99": 217335,
+            "max": 217335
+          }
+        }
+      ]
+    },
+    {
+      "reportSha256": "d691a69ecf18c6d3fc60679fc24996558a957f046755a2f0c454e299bf8440d2",
+      "date": "2026-10-03T11:52:15.504Z",
+      "config": {
+        "label": "gpu-b1",
+        "origin": "http://127.0.0.1:5173/",
+        "savePath": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "output": "E:\\Code\\RimWorld\\tmp\\v196\\perf-gpu-b1.json",
+        "scenes": [
+          "iso-near",
+          "perspective-low"
+        ],
+        "speeds": [
+          0
+        ],
+        "measuredSeconds": 3,
+        "warmupSeconds": 2,
+        "gpuRequested": true,
+        "shadows": true,
+        "shadowCache": true,
+        "clouds": true,
+        "precip": true,
+        "preparedWeather": null,
+        "labels": true,
+        "textures": true,
+        "grass": true,
+        "wind": true
+      },
+      "fixture": {
+        "path": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "sha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "worldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "loadedWorldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "preparedWeather": null,
+        "schemaVersion": 182,
+        "tick": 0,
+        "width": 32,
+        "height": 32,
+        "pawns": 3,
+        "animals": 12,
+        "resources": 0,
+        "piles": 9
+      },
+      "host": {
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "node": "v24.11.1",
+        "platform": "win32"
+      },
+      "protocol": "Each phase reloads the identical raw save, fixes camera pose and toggles, warms up, then measures for a fixed wall-time window. Native Chromium/WebGPU, 1920x1080, DPR 1. RAF is display paced; frame CPU includes JS and render submission, not GPU execution. Worker stepMs is simulation time per tick reported in snapshots, not total worker cost. GPU timestamps require a separate instrumented run. Three draw/triangle counters can omit retained bundle replay.",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "dpr": 1,
+        "backend": "WebGPU"
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "renderComparison": {
+        "baseline": false,
+        "ref": "e548493",
+        "modules": [
+          "WildlifeLayer",
+          "PawnLayer",
+          "hare-geometry",
+          "pawn-geometry",
+          "animal-shape",
+          "corpse-presentation",
+          "pile-parts"
+        ],
+        "sourceSha256": {
+          "WildlifeLayer": "998e37306bd512e34bfc3f1a69f9f04bbc9229bf561548a18f12123bb134238b",
+          "PawnLayer": "df080ca2260907d9460c415ba6d4004f3febbbc353982947dfb27cffba14561b",
+          "hare-geometry": "5376971a53d1119bf5f1946367ebc959e48ce1a91a728046c9afdc3a664db1d0",
+          "pawn-geometry": "60f1b1331acbc6892680a41417df67db11b64235b0c678ae6d0dfe1278de9263",
+          "animal-shape": "4a367bf4a8743cdb8427872a4e5a2602b38baa152645b13cd035f66fc622f03f",
+          "corpse-presentation": "986c3027f1bac43a0c672df2ac6f58c51fd25a222b5ae4905c19f675f61caa8a",
+          "pile-parts": "2a369c3e81b0ea8466da3685166b6c32157142d470d096efc129254548dbd389"
+        },
+        "scope": "Seven actor rendering modules only. Current main/audio/simulation/ColonyRenderer/ground grass and identical prepared World.",
+        "limitation": "Prepared 32-square specimen chart at rest. This is not a full-map or long-campaign performance proof; the baseline has the historical grey/flattened animal proxies. GPU timestamp runs are separate from ordinary RAF/CPU runs."
+      },
+      "gpuTimestampSupported": true,
+      "errors": [],
+      "phases": [
+        {
+          "scene": "iso-near",
+          "speed": 0,
+          "elapsedMs": 3019.699999999255,
+          "rafMs": {
+            "n": 724,
+            "mean": 4.1665745856353595,
+            "p50": 4.199999999998909,
+            "p95": 4.200000000000728,
+            "p99": 4.299999999999272,
+            "max": 4.300000000001091
+          },
+          "frameCpuMs": {
+            "n": 725,
+            "mean": 1.004689655160082,
+            "p50": 0.900000000372529,
+            "p95": 1.6000000005587935,
+            "p99": 2,
+            "max": 2.2999999998137355
+          },
+          "gpuMs": {
+            "n": 529,
+            "mean": 1.0091800680529368,
+            "p50": 0.9830399999999999,
+            "p95": 1.048576,
+            "p99": 1.4417920000000002,
+            "max": 1.5073280000000002
+          },
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 725,
+            "mean": 23.743448275862068,
+            "p50": 23,
+            "p95": 34,
+            "p99": 34,
+            "max": 34
+          },
+          "encodedTriangles": {
+            "n": 725,
+            "mean": 86631.24275862069,
+            "p50": 85555,
+            "p95": 101479,
+            "p99": 101479,
+            "max": 101479
+          }
+        },
+        {
+          "scene": "perspective-low",
+          "speed": 0,
+          "elapsedMs": 3012.7000000001863,
+          "rafMs": {
+            "n": 722,
+            "mean": 4.16675900277008,
+            "p50": 4.199999999998909,
+            "p95": 4.299999999999272,
+            "p99": 4.299999999999272,
+            "max": 4.30000000000291
+          },
+          "frameCpuMs": {
+            "n": 723,
+            "mean": 1.0388658367532768,
+            "p50": 1,
+            "p95": 1.7000000001862645,
+            "p99": 1.900000000372529,
+            "max": 2.199999999254942
+          },
+          "gpuMs": {
+            "n": 393,
+            "mean": 1.0580812213740498,
+            "p50": 1.048576,
+            "p95": 1.4417920000000002,
+            "p99": 1.5073280000000002,
+            "max": 1.5073280000000002
+          },
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 723,
+            "mean": 23.745504840940526,
+            "p50": 23,
+            "p95": 34,
+            "p99": 34,
+            "max": 34
+          },
+          "encodedTriangles": {
+            "n": 723,
+            "mean": 195178.21991701244,
+            "p50": 194099,
+            "p95": 210023,
+            "p99": 210023,
+            "max": 210023
+          }
+        }
+      ]
+    },
+    {
+      "reportSha256": "dea51269e6866bfe2727a921ca443614a2fe4345edac1f7616d66e0719968869",
+      "date": "2026-10-03T11:52:35.948Z",
+      "config": {
+        "label": "gpu-b2",
+        "origin": "http://127.0.0.1:5173/",
+        "savePath": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "output": "E:\\Code\\RimWorld\\tmp\\v196\\perf-gpu-b2.json",
+        "scenes": [
+          "iso-near",
+          "perspective-low"
+        ],
+        "speeds": [
+          0
+        ],
+        "measuredSeconds": 3,
+        "warmupSeconds": 2,
+        "gpuRequested": true,
+        "shadows": true,
+        "shadowCache": true,
+        "clouds": true,
+        "precip": true,
+        "preparedWeather": null,
+        "labels": true,
+        "textures": true,
+        "grass": true,
+        "wind": true
+      },
+      "fixture": {
+        "path": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "sha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "worldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "loadedWorldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "preparedWeather": null,
+        "schemaVersion": 182,
+        "tick": 0,
+        "width": 32,
+        "height": 32,
+        "pawns": 3,
+        "animals": 12,
+        "resources": 0,
+        "piles": 9
+      },
+      "host": {
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "node": "v24.11.1",
+        "platform": "win32"
+      },
+      "protocol": "Each phase reloads the identical raw save, fixes camera pose and toggles, warms up, then measures for a fixed wall-time window. Native Chromium/WebGPU, 1920x1080, DPR 1. RAF is display paced; frame CPU includes JS and render submission, not GPU execution. Worker stepMs is simulation time per tick reported in snapshots, not total worker cost. GPU timestamps require a separate instrumented run. Three draw/triangle counters can omit retained bundle replay.",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "dpr": 1,
+        "backend": "WebGPU"
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "renderComparison": {
+        "baseline": false,
+        "ref": "e548493",
+        "modules": [
+          "WildlifeLayer",
+          "PawnLayer",
+          "hare-geometry",
+          "pawn-geometry",
+          "animal-shape",
+          "corpse-presentation",
+          "pile-parts"
+        ],
+        "sourceSha256": {
+          "WildlifeLayer": "998e37306bd512e34bfc3f1a69f9f04bbc9229bf561548a18f12123bb134238b",
+          "PawnLayer": "df080ca2260907d9460c415ba6d4004f3febbbc353982947dfb27cffba14561b",
+          "hare-geometry": "5376971a53d1119bf5f1946367ebc959e48ce1a91a728046c9afdc3a664db1d0",
+          "pawn-geometry": "60f1b1331acbc6892680a41417df67db11b64235b0c678ae6d0dfe1278de9263",
+          "animal-shape": "4a367bf4a8743cdb8427872a4e5a2602b38baa152645b13cd035f66fc622f03f",
+          "corpse-presentation": "986c3027f1bac43a0c672df2ac6f58c51fd25a222b5ae4905c19f675f61caa8a",
+          "pile-parts": "2a369c3e81b0ea8466da3685166b6c32157142d470d096efc129254548dbd389"
+        },
+        "scope": "Seven actor rendering modules only. Current main/audio/simulation/ColonyRenderer/ground grass and identical prepared World.",
+        "limitation": "Prepared 32-square specimen chart at rest. This is not a full-map or long-campaign performance proof; the baseline has the historical grey/flattened animal proxies. GPU timestamp runs are separate from ordinary RAF/CPU runs."
+      },
+      "gpuTimestampSupported": true,
+      "errors": [],
+      "phases": [
+        {
+          "scene": "iso-near",
+          "speed": 0,
+          "elapsedMs": 3009.7000000001863,
+          "rafMs": {
+            "n": 722,
+            "mean": 4.166481994459835,
+            "p50": 4.199999999998909,
+            "p95": 4.200000000000728,
+            "p99": 4.300000000001091,
+            "max": 4.300000000001091
+          },
+          "frameCpuMs": {
+            "n": 723,
+            "mean": 1.0001383126374557,
+            "p50": 0.900000000372529,
+            "p95": 1.7000000001862645,
+            "p99": 1.8999999994412065,
+            "max": 2.599999999627471
+          },
+          "gpuMs": {
+            "n": 397,
+            "mean": 1.0337189722921936,
+            "p50": 0.9830399999999999,
+            "p95": 1.3762560000000001,
+            "p99": 1.5073280000000002,
+            "max": 1.5073280000000002
+          },
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 723,
+            "mean": 23.745504840940526,
+            "p50": 23,
+            "p95": 34,
+            "p99": 34,
+            "max": 34
+          },
+          "encodedTriangles": {
+            "n": 723,
+            "mean": 86634.21991701245,
+            "p50": 85555,
+            "p95": 101479,
+            "p99": 101479,
+            "max": 101479
+          }
+        },
+        {
+          "scene": "perspective-low",
+          "speed": 0,
+          "elapsedMs": 3008.4000000003725,
+          "rafMs": {
+            "n": 721,
+            "mean": 4.166712898751732,
+            "p50": 4.200000000000728,
+            "p95": 4.200000000000728,
+            "p99": 4.30000000000291,
+            "max": 4.399999999999636
+          },
+          "frameCpuMs": {
+            "n": 722,
+            "mean": 1.0545706371415582,
+            "p50": 1,
+            "p95": 1.7000000001862645,
+            "p99": 2,
+            "max": 2.2999999998137355
+          },
+          "gpuMs": {
+            "n": 389,
+            "mean": 1.0750262622108004,
+            "p50": 1.048576,
+            "p95": 1.4417920000000002,
+            "p99": 1.5073280000000002,
+            "max": 1.572864
+          },
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 722,
+            "mean": 23.746537396121884,
+            "p50": 23,
+            "p95": 34,
+            "p99": 34,
+            "max": 34
+          },
+          "encodedTriangles": {
+            "n": 722,
+            "mean": 195179.71468144044,
+            "p50": 194099,
+            "p95": 210023,
+            "p99": 210023,
+            "max": 210023
+          }
+        }
+      ]
+    },
+    {
+      "reportSha256": "c354598933334738930aea727785c6b49f5ed54d913ec560d3ba56015223bc45",
+      "date": "2026-10-03T11:52:56.358Z",
+      "config": {
+        "label": "gpu-a2",
+        "origin": "http://127.0.0.1:5173/",
+        "savePath": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "output": "E:\\Code\\RimWorld\\tmp\\v196\\perf-gpu-a2.json",
+        "scenes": [
+          "iso-near",
+          "perspective-low"
+        ],
+        "speeds": [
+          0
+        ],
+        "measuredSeconds": 3,
+        "warmupSeconds": 2,
+        "gpuRequested": true,
+        "shadows": true,
+        "shadowCache": true,
+        "clouds": true,
+        "precip": true,
+        "preparedWeather": null,
+        "labels": true,
+        "textures": true,
+        "grass": true,
+        "wind": true
+      },
+      "fixture": {
+        "path": "E:\\Code\\RimWorld\\public\\test-saves\\v196\\sang-depouilles-douleur.json",
+        "sha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "worldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "loadedWorldSha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6",
+        "preparedWeather": null,
+        "schemaVersion": 182,
+        "tick": 0,
+        "width": 32,
+        "height": 32,
+        "pawns": 3,
+        "animals": 12,
+        "resources": 0,
+        "piles": 9
+      },
+      "host": {
+        "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "node": "v24.11.1",
+        "platform": "win32"
+      },
+      "protocol": "Each phase reloads the identical raw save, fixes camera pose and toggles, warms up, then measures for a fixed wall-time window. Native Chromium/WebGPU, 1920x1080, DPR 1. RAF is display paced; frame CPU includes JS and render submission, not GPU execution. Worker stepMs is simulation time per tick reported in snapshots, not total worker cost. GPU timestamps require a separate instrumented run. Three draw/triangle counters can omit retained bundle replay.",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "dpr": 1,
+        "backend": "WebGPU"
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-1",
+        "device": "",
+        "description": ""
+      },
+      "renderComparison": {
+        "baseline": true,
+        "ref": "e548493",
+        "modules": [
+          "WildlifeLayer",
+          "PawnLayer",
+          "hare-geometry",
+          "pawn-geometry",
+          "animal-shape",
+          "corpse-presentation",
+          "pile-parts"
+        ],
+        "sourceSha256": {
+          "WildlifeLayer": "d93ed662a72f3934f21ee55813c376bd2f86d810f068cfe5d7e4439cdf59df67",
+          "PawnLayer": "3784ffba33ae19728e90ff6b0b23f0b3927b3b1a8dd1083185e5ef04d7ee3ee2",
+          "hare-geometry": "4ee4c50ccef84a82a0aae51dd961b37b456bfd526d0233a357c19a5cac9fad06",
+          "pawn-geometry": "bf719ba3697d661b02e7c654b0a8f1ff09d0a3fcb302389b696e963ce0bd7532",
+          "animal-shape": "f67d223aa96f5d4530cbbf49da9c56e917e1d4d3648753d5dacdb56a7866bbab",
+          "corpse-presentation": "5dc62f24c1a18b2a0b07a246a44384fbe13bbb2e67ad455961c8418d4b101a11",
+          "pile-parts": "64e27a277b8d452430a771354d1a6f651e2363105bde1d8ef127fcd53c2aa64c"
+        },
+        "scope": "Seven actor rendering modules only. Current main/audio/simulation/ColonyRenderer/ground grass and identical prepared World.",
+        "limitation": "Prepared 32-square specimen chart at rest. This is not a full-map or long-campaign performance proof; the baseline has the historical grey/flattened animal proxies. GPU timestamp runs are separate from ordinary RAF/CPU runs."
+      },
+      "gpuTimestampSupported": true,
+      "errors": [],
+      "phases": [
+        {
+          "scene": "iso-near",
+          "speed": 0,
+          "elapsedMs": 3010.7999999998137,
+          "rafMs": {
+            "n": 722,
+            "mean": 4.166481994459832,
+            "p50": 4.199999999998909,
+            "p95": 4.299999999999272,
+            "p99": 4.300000000001091,
+            "max": 4.399999999999636
+          },
+          "frameCpuMs": {
+            "n": 723,
+            "mean": 1.154080221287772,
+            "p50": 1,
+            "p95": 2,
+            "p99": 2.5,
+            "max": 3.5
+          },
+          "gpuMs": {
+            "n": 393,
+            "mean": 1.024229292620868,
+            "p50": 0.9830399999999999,
+            "p95": 1.3762560000000001,
+            "p99": 1.507328,
+            "max": 2.162688
+          },
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 723,
+            "mean": 22.677731673582297,
+            "p50": 22,
+            "p95": 32,
+            "p99": 32,
+            "max": 32
+          },
+          "encodedTriangles": {
+            "n": 723,
+            "mean": 90537.99861687413,
+            "p50": 89211,
+            "p95": 108791,
+            "p99": 108791,
+            "max": 108791
+          }
+        },
+        {
+          "scene": "perspective-low",
+          "speed": 0,
+          "elapsedMs": 3012.9000000003725,
+          "rafMs": {
+            "n": 718,
+            "mean": 4.172423398328689,
+            "p50": 4.200000000000728,
+            "p95": 4.299999999999272,
+            "p99": 4.30000000000291,
+            "max": 8.399999999999636
+          },
+          "frameCpuMs": {
+            "n": 719,
+            "mean": 1.4788595271181517,
+            "p50": 1.3999999994412065,
+            "p95": 2.2000000001862645,
+            "p99": 2.7999999998137355,
+            "max": 8.700000000186265
+          },
+          "gpuMs": {
+            "n": 360,
+            "mean": 1.0274588444444486,
+            "p50": 1.048576,
+            "p95": 1.048576,
+            "p99": 1.245184,
+            "max": 1.96608
+          },
+          "gpuError": null,
+          "encodedDrawCalls": {
+            "n": 719,
+            "mean": 22.611961057023645,
+            "p50": 22,
+            "p95": 32,
+            "p99": 32,
+            "max": 32
+          },
+          "encodedTriangles": {
+            "n": 719,
+            "mean": 198953.2197496523,
+            "p50": 197755,
+            "p95": 217335,
+            "p99": 217335,
+            "max": 217335
+          }
+        }
+      ]
+    }
+  ]
+}

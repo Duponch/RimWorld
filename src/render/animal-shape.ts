@@ -6,8 +6,8 @@ export interface AnimalCoreRing {
   headWeight:number; color:number;
 }
 
-/** A single faceted outer profile for the living body's back, neck and head.
- * The old parts still describe the compact box proxy used for carried bodies. */
+/** One shared faceted back, neck and head for living and dead bodies.
+ * Anatomical absence is derived by the resident species rig. */
 export function animalCoreProfile(species:string):{rings:readonly AnimalCoreRing[];headPivot:readonly [number,number,number]} {
   if(species==='red-fox')return {headPivot:[0,.52,.29],rings:[
     {z:-.46,halfWidth:.10,bottom:.34,top:.62,headWeight:0,color:0xc48757},
@@ -52,7 +52,7 @@ export function animalCoreProfile(species:string):{rings:readonly AnimalCoreRing
   ]};
 }
 
-/** Original low-poly silhouettes; carried/ground bodies use their box proxies. */
+/** Original low-poly silhouettes supply the same limbs and details to every owner. */
 export function animalParts(species:string):readonly HarePart[] {
   if(species==='red-fox')return FOX_PARTS;
   if(species==='hare')return HARE_PARTS;

@@ -436,7 +436,7 @@ export class ColonyRenderer {
     this.podRescue.adopt(world);
     this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses);
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
-    this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses);
+    this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses,this.pawns);
     this.ropes.adopt(world,resetPoses);
     this.landscape.refresh(this.backend==='WebGPU'&&this.overview.group.visible);
     if(this.selectedObject?.kind!=='growing'||zoneChanged)this.updateSelectedObject();
@@ -856,7 +856,7 @@ export class ColonyRenderer {
       this.invalidatePausedShadow();this.updatePiles(this.world,false);
     }
     if(this.pawns.feedbackSource)this.actionFeedback.syncTravel(this.pawns.feedbackSource);
-    if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined);
+    if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
     this.ropes.present(this.hasTracks?this.timeline:undefined);
     if (!this.areaDrag && !this.selectionInput.active) { this.moveCamera(dt); this.controls.update(); }
     if (this.world) {

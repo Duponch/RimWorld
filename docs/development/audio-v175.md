@@ -1,5 +1,12 @@
 # Musiques et contacts sonores — V175
 
+Le [lot V196](visual-blood-v196.md) ajoute trois râles masculins et trois féminins,
+choisis par le sexe visuel du colon, ainsi que deux prises de douleur du renard.
+Il détecte les blessures par le compteur médical confirmé, sans voix au
+chargement. Le manifeste courant contient 54 événements/133 prises ; cette
+section V175 conserve son relevé historique. Musiques et autres règles de mix
+restent inchangées.
+
 Le [correctif V185](visual-audio-v185.md) module désormais le bruissement par la canopée locale, sans nouveau MP3, musique ni voix par arbre. Les autres contrats V175 restent applicables.
 
 Ce lot enrichit la présentation sonore sans modifier la simulation, son PRNG, le schéma 166 ou les sauvegardes. Il prolonge le [mix V165](audio-mix-v165.md) et la [couverture V166](audio-coverage-v166.md), à partir des [recherches musicales](../research/audio-music-core-v175.md) et de l'[audit des effets jouables](../research/audio-coverage-core-v175.md). Sa [preuve](../history/validation-audio-v175.md) distingue les contrôles techniques d'une écoute humaine.

@@ -13,17 +13,25 @@ import { furnitureTrafficFixture } from './scenarios/furniture-traffic';
 import { footprintCells,footprintContains,STRUCTURE_DEFINITIONS } from '../src/sim/definitions';
 import { groundOccupancyAllows,storageOccupancyAllows } from '../src/sim/occupancy';
 import type { Orientation,StructureKind } from '../src/sim/types';
+import { V190_ITEM_IDS } from '../src/sim/biome-items';
 
-test('machining table presentation surfaces cover each rotated 3 × 1 footprint',()=>{
+/** Construct only the historical policy under test; never sanitize a rejected
+ * save. V190 predator products were absent from schema 21. */
+function withoutPredatorFood<T extends {foodPolicies:{allowed:string[]}[]}>(world:T):T {
+  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>!V190_ITEM_IDS.includes(item));
+  return world;
+}
+
+test('machining table pile surfaces cover each rotated footprint while walking stays grounded',()=>{
   const w=createWorld(42,16,16);w.structures=[];
   for(const orientation of [0,1,2,3] as const){
     const station={id:1,kind:'machining-table' as const,x:8,z:8,orientation,footprint:'standard' as const};
     w.structures=[station];
     const cells=footprintCells(station),movement=furnitureSurfaces(w),piles=pileSurfaces(w);
-    expect(cells).toHaveLength(3);expect(movement.size).toBe(3);expect(piles.size).toBe(3);
+    expect(cells).toHaveLength(3);expect(movement.size).toBe(0);expect(piles.size).toBe(3);
     for(const cell of cells){
       const key=cell.z*w.width+cell.x;
-      expect(movement.get(key)).toBe(WORLD_SCALE.stonecutterHeight);
+      expect(movement.get(key)??0).toBe(0);
       expect(piles.get(key)).toEqual({x:0,y:WORLD_SCALE.stonecutterHeight,z:0,scale:.65});
     }
   }
@@ -38,7 +46,7 @@ test('point queries keep complete rotated and historical footprints, job targets
   const bench=[[[0,0],[-1,0],[1,0],[0,1],[-1,1],[1,1]],[[0,0],[0,-1],[0,1],[1,0],[1,-1],[1,1]],[[0,0],[-1,0],[1,0],[0,-1],[-1,-1],[1,-1]],[[0,0],[0,-1],[0,1],[-1,0],[-1,-1],[-1,1]]];
   const stands=new Set<StructureKind>(['grave','power-conduit','power-switch','butcher-spot','crafting-spot','door','autodoor','fence','fence-gate','pen-marker','stool','dining-chair','armchair','horseshoes']);
   const rejectsItems=new Set<StructureKind>(['small-sculpture','large-sculpture','grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','dresser','flower-pot','campfire']);
-  const stores=new Set<StructureKind>(['fence','fence-gate','power-conduit','standing-lamp','door','autodoor','stool','dining-chair','armchair','horseshoes']);
+  const stores=new Set<StructureKind>(['fence','fence-gate','power-conduit','standing-lamp','sun-lamp','door','autodoor','stool','dining-chair','armchair','horseshoes']);
   const flickable=new Set<StructureKind>(['machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench','power-switch','wood-generator','standing-lamp','cooler','heater','electric-stove']);
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];
   const points=Array.from({length:121},(_,i)=>({x:4+i%11,z:4+Math.floor(i/11)}));points.push({x:-20,z:8},{x:8,z:-20},{x:100,z:8},{x:8,z:100});
@@ -116,7 +124,7 @@ test('furniture routes agree with an independent directed-cost oracle, repeat ac
   const w=furnitureTrafficFixture();expect(furnitureDelay(w,{x:6,z:8},{x:7,z:8})).toBe(4.2);expect(furnitureDelay(w,{x:7,z:8},{x:8,z:8})).toBe(0);
   w.structures.push({id:w.nextId++,kind:'stool',x:6,z:8,orientation:0,footprint:'standard',quality:'normal'});expect(furnitureDelay(w,{x:6,z:8},{x:7,z:8})).toBe(0);
   expect(furnitureDelay(w,{x:5,z:7},{x:6,z:8})).toBe(3);
-  const heights=furnitureSurfaces(w);expect(heights.get(135)).toBe(.76);expect(travelHeight(0,.76,1/3)).toBe(.76);expect(travelHeight(.76,0,2/3)).toBe(.76);
+  const heights=furnitureSurfaces(w);expect(heights.size).toBe(0);expect(travelHeight(0,0,1/3)).toBe(0);expect(travelHeight(0,0,2/3)).toBe(0);
 });
 
 test('opposite loaded trips cross furniture, cancel in transit without teleport or loss, and migrate old edges strictly',()=>{
@@ -135,9 +143,13 @@ test('opposite loaded trips cross furniture, cancel in transit without teleport 
   }
   expect(onTable.size).toBe(2);expect(interrupted).toBe(true);expect(w.piles.find(p=>p.item==='wood')?.owner).toEqual({type:'ground',x:2,z:8});expect(w.piles.find(p=>p.item==='rice')?.owner).toEqual({type:'ground',x:13,z:8});
   const original=furnitureTrafficFixture(),raw=JSON.parse(serializeWorld(original));((raw.schemaVersion=21,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
-  expect(deserializeWorld(JSON.stringify(raw))).toEqual(withMigratedSkills(original));
+  withoutPredatorFood(raw);
+  expect(deserializeWorld(JSON.stringify(raw))).toEqual(withoutPredatorFood(withMigratedSkills(original)));
   const invalid=JSON.parse(serializeWorld(original));invalid.pawns[0].x=7;invalid.pawns[0].z=8;invalid.pawns[0].path=[];(invalid.schemaVersion=21,withoutPawnSkills(invalid));for(const a of invalid.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete invalid.deconstructed;delete invalid.packed;
+  withoutPredatorFood(invalid);
   expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/version 21/);
+  const futurePolicy=structuredClone(raw);futurePolicy.foodPolicies[0].allowed.push('red-fox-meat');
+  expect(()=>deserializeWorld(JSON.stringify(futurePolicy))).toThrow(/Invalid food policy/);
   const timed=furnitureTrafficFixture(),p=timed.pawns[0]!;p.x=6;p.z=8;p.path=[];p.motion=null;timed.tick=20;startTravel(timed,p,{x:7,z:8});
   expect(deserializeWorld(serializeWorld(timed))).toEqual(timed);
   const bad=JSON.parse(serializeWorld(timed));bad.pawns[0].motion.terrainDelay=1.7;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/duration/);
@@ -153,6 +165,7 @@ test('opposite loaded trips cross furniture, cancel in transit without teleport 
     }else if(service==='ground-sleep'){actor.need={kind:'sleep',phase:'sleep',bedId:null,target:{x:8,z:8}};actor.state='sleeping';}
     else{actor.motion={from:{x:7,z:8},to:{x:8,z:8},start:0,end:3};actor.moveCooldown=3;}
     refreshStock(old);const raw=structuredClone(old) as any;((raw.schemaVersion=21,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
+    withoutPredatorFood(raw);
     const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded.tick).toBe(old.tick);expect(loaded.rng).toBe(old.rng);expect(loaded.piles).toEqual(raw.piles);expect(loaded.pawns[0]!.motion).toEqual(actor.motion);
     if(service==='meal')expect(loaded.pawns[0]!.need).toMatchObject({kind:'eat',phase:'choose-spot',progress:0,dining:null});
     if(service==='ground-sleep')expect(loaded.pawns[0]!.need).toBeNull();

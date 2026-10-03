@@ -97,15 +97,15 @@ export async function assertPublishedSource(cueId, item, variant, log) {
   const matching = processingLog.derivations.filter((entry) => entry.id === cueId && entry.filename === filename);
   if (matching.length !== 1) throw new Error(`Manifest source differs for ${cueId}`);
   const [derivation] = matching;
-  if (derivation.sourceFilename !== item.filename ||
+  if (!/^[a-z0-9-]+\.mp3$/.test(derivation.sourceFilename ?? '') ||
       !/^[a-f0-9]{64}$/.test(derivation.sha256) ||
       !/^[a-f0-9]{64}$/.test(derivation.sourceSha256) ||
       sha256(bytes) !== derivation.sha256) {
     throw new Error(`Invalid derived SFX for ${cueId}`);
   }
   const sourceRecords = log.generations.filter((entry) => entry.id === cueId &&
-    entry.filename === item.filename && entry.sha256 === derivation.sourceSha256);
-  if (sourceRecords.length !== 1 || sha256(await readLocalSfx(item.filename)) !== derivation.sourceSha256) {
+    entry.filename === derivation.sourceFilename && entry.sha256 === derivation.sourceSha256);
+  if (sourceRecords.length !== 1 || sha256(await readLocalSfx(derivation.sourceFilename)) !== derivation.sourceSha256) {
     throw new Error(`Derived SFX source differs for ${cueId}`);
   }
 }

@@ -1,8 +1,6 @@
 # Prochain chantier demandé — sang et présentation des acteurs
 
-Demande utilisateur du **3 octobre 2026**, à reprendre après sa prochaine relance.
-Le travail autonome s'arrête après le commit V195. Ce document conserve le
-périmètre demandé ; aucun de ces correctifs n'est annoncé réalisé ou validé.
+Demande utilisateur du **3 octobre 2026**, reprise à sa relance en mode jour dans [V196](visual-blood-v196.md). Le périmètre original ci-dessous conserve ses conditions ; le contrat et la [preuve](../history/validation-visual-blood-v196.md) distinguent résultat livré et texture fine de l’herbe différée. Aucun chantier autonome suivant n’est autorisé.
 
 ## Résultat attendu
 
@@ -32,8 +30,8 @@ Lire les contrats de [présentation](playability-validation.md), de
 [préparation GPU](shadow-preparation.md), du [son courant](audio-v175.md), de
 [fourrure et fragments](visual-audio-v185.md), ainsi que les sources actuelles
 des acteurs, carcasses, herbe et filth avant de confirmer les causes. Les
-recherches Core et mesures nécessaires ne sont pas encore effectuées pour ce
-périmètre. Préserver la modification utilisateur de l'herbe déjà committée.
+recherches et contrôles du lot sont désormais consignés dans V196 ; leur portée
+reste bornée par sa preuve. Préserver la modification utilisateur de l'herbe déjà committée.
 
 Conserver les lots et matériaux résidents, les changements au tick confirmé,
 les options sans texture et les propriétaires des buffers. Aucun mesh, squelette
