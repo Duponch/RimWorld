@@ -1,10 +1,12 @@
 # Plan de développement
 
+**V198 — consolidation des déplacements, schéma 182 inchangé.** Le [contrat](development/movement-continuity-v198.md) corrige fuite civile, préfixe de prédation et sortie de production encombrée. La [recherche](research/navigation-cpu-gpu-v198.md) et la [preuve](history/validation-movement-v198.md) bornent le diagnostic CPU/GPU. Aucun nouveau jalon G0–G5 clôturé ; mode jour après commit.
+
 **V197 — correction de poursuite, schéma 182 inchangé.** Le [contrat](development/melee-pursuit-v197.md) corrige deux pauses de planification dans le combat existant ; la [recherche Core](research/melee-pursuit-core-v197.md) et la [preuve ciblée](history/validation-melee-pursuit-v197.md) en bornent les conclusions. Aucun nouveau jalon G0–G5 n’est clôturé.
 
 **V196 — correction de présentation et de douleur sonore, schéma 182 inchangé.** Le [contrat](development/visual-blood-v196.md), la [recherche](research/visual-blood-core-web-v196.md) et la [preuve](history/validation-visual-blood-v196.md) bornent le lot demandé : sang, modèles animaux morts, voix sexuées et marche au sol à travers le mobilier. Il ne livre pas une nouvelle mécanique et ne clôt pas un jalon G0–G5. La texture fine du terrain sur les brins reste différée selon la condition de coût.
 
-L'[inventaire](gameplay/implementation-status.md) décrit le jeu ; la [validation courante](development/validation.md) borne les preuves. Les jalons G0–G5 restent ouverts. **Mode jour : la relance autorise le correctif V197 uniquement ; après son commit local, attendre la prochaine demande.** La demande de [sang, herbe, carcasses, douleur et franchissement](development/visual-blood-next.md) conserve sa provenance et renvoie au résultat courant.
+L'[inventaire](gameplay/implementation-status.md) décrit le jeu ; la [validation courante](development/validation.md) borne les preuves. Les jalons G0–G5 restent ouverts. **Mode jour : la relance autorise la consolidation de déplacement V198 uniquement ; après son commit local, attendre la prochaine demande.** La demande de [sang, herbe, carcasses, douleur et franchissement](development/visual-blood-next.md) conserve sa provenance et renvoie au résultat courant.
 
 ## Priorité actuelle
 

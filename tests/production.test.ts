@@ -108,7 +108,9 @@ test('cuisine physique : mélange, interruption, sauvegarde du travail, deux rep
   expect(pawn).toMatchObject({x:8,z:7,state:'working'});
   expect(queryPawnStatus(w,pawn).reason).toContain('28 %');
   const oldWork=JSON.parse(serializeWorld(w));for(const policy of oldWork.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='fine-meal'&&item!=='lavish-meal');(oldWork.schemaVersion=35,withoutPawnSkills(oldWork));withoutV37LightWork(oldWork);
-  for(const structure of oldWork.structures)for(const oldBill of structure.bills??[])delete oldBill.filters.milk;
+  for(const structure of oldWork.structures)for(const oldBill of structure.bills??[]){delete oldBill.filters.milk;delete oldBill.filters['red-fox-meat'];}
+  const futureFilter=structuredClone(oldWork);futureFilter.structures.find((s:{bills?:unknown[]})=>s.bills?.length).bills[0].filters['red-fox-meat']=true;
+  expect(()=>deserializeWorld(JSON.stringify(futureFilter))).toThrow(/version 35/);
   oldWork.pawns[0].cooking.progress=17;
   expect(deserializeWorld(JSON.stringify(oldWork)).pawns[0]!.cooking!.progress).toBe(85000);
   oldWork.pawns[0].cooking.progress=61;expect(()=>deserializeWorld(JSON.stringify(oldWork))).toThrow(/version 35/);

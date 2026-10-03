@@ -67,6 +67,13 @@ export function processFlee(world:World,pawn:Pawn,context:Context,getBlocked:Nav
   // The decision may interrupt a civilian hunt immediately, but its emitted
   // shot still owns recovery before a new physical edge can start.
   if(pawn.shooting?.stance?.phase==='cooldown'){pawn.state='idle';return;}
+  if(flee.until&&!pawn.path.length) {
+    pawn.state='idle';retryInterruptedCargo(world,pawn);
+    // Preserve Core's refuge observation interval, but admit the next escape
+    // in this decision once the observation interrupts cowering.
+    if((world.tick*10+pawn.id)%35<10&&context.nearby(pawn).length){flee.until=0;pawn.planCooldown=0;}
+    else {if(world.tick>=flee.until){delete pawn.flee;pawn.planCooldown=0;pawn.needCooldown=0;}return;}
+  }
   if(!flee.until&&!pawn.path.length) {
     if(!budget.remaining||pawn.planCooldown)return;
     budget.remaining--;const threats=context.hostiles(pawn);
@@ -82,7 +89,4 @@ export function processFlee(world:World,pawn:Pawn,context:Context,getBlocked:Nav
     return;
   }
   pawn.state='idle';retryInterruptedCargo(world,pawn);
-  // 35 Core-tick observation, sampled at the next local tick (at most 9 Core late).
-  if((world.tick*10+pawn.id)%35<10&&context.nearby(pawn).length){flee.until=0;pawn.planCooldown=0;return;}
-  if(world.tick>=flee.until){delete pawn.flee;pawn.planCooldown=0;pawn.needCooldown=0;}
 }

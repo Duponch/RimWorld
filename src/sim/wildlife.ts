@@ -196,10 +196,13 @@ export function advanceWildlife(world:World):void {
       if(contact(a,target)){a.path=[];a.state='idle';continue;}
       const end=a.path.at(-1);
       if(!end||!contact(end,target)||world.tick>=a.nextDecision){
-        if(searches>=1)continue;
-        searches++;const path=getNav(a).route(a,neighbours(target));
-        if(!path){cancelAnimalPredation(world,a);a.nextDecision=world.tick+25;continue;}
-        a.path=path;a.nextDecision=world.tick+25;
+        // A deferred target review does not revoke an existing safe edge.
+        // moveAnimal still validates terrain/corners before consuming it.
+        if(searches<1){
+          searches++;const path=getNav(a).route(a,neighbours(target));
+          if(!path){cancelAnimalPredation(world,a);a.nextDecision=world.tick+25;continue;}
+          a.path=path;a.nextDecision=world.tick+25;
+        }
       }
       if(a.path.length)moveAnimal(world,a,getNav(a).step,body.capacities.moving);
       continue;

@@ -29,7 +29,7 @@ test('old biome population target remains herbivorous and no fox or hunt is retr
   w.schemaVersion=177 as World['schemaVersion'];
   for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(i=>i!=='red-fox-meat');
   for(const policy of w.apparelPolicies??[])Object.assign(policy,{allowedItems:policy.allowedItems.filter(i=>!i.startsWith('foxfur-')),allowedMaterials:policy.allowedMaterials.filter(m=>m!=='foxfur')});
-  const before=structuredClone(w),resumed=deserializeWorld(JSON.stringify(w));expect(resumed).toEqual({...before,schemaVersion:178});
+  const before=structuredClone(w),resumed=deserializeWorld(JSON.stringify(w));expect(resumed).toEqual({...before,schemaVersion:SCHEMA_VERSION});
   const bad=structuredClone(w);bad.wildlife!.animals[0]!.predation={targetId:bad.pawns[0]!.id,startedAtCore:bad.tick*10,firstHit:true};
   expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/177/);
 });

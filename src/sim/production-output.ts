@@ -56,6 +56,9 @@ function processArtOutput(world:World,pawn:Pawn,context:ProductionContext,destin
       }
     }
   }
+  if(pawn.path.length&&furnitureAsideAllowed(world,task.actionCell,pawn.id,pack.building)){
+    context.move(task.actionCell,false);return;
+  }
   if(pawn.planCooldown>0)return;
   const targets=nearbyGround(world,pawn).filter(c=>furnitureAsideAllowed(world,c,pawn.id,pack.building));
   const close=targets.find(c=>near(pawn,c));
@@ -95,6 +98,9 @@ export function processProductionOutput(world:World,pawn:Pawn,context:Production
         pawn.path=path;pawn.state='moving';pawn.planCooldown=0;return;
       }
     }
+  }
+  if(pawn.path.length&&groundCapacity(world,task.actionCell,product.item,pawn.id)>0){
+    context.move(task.actionCell,false);return;
   }
   if(pawn.planCooldown>0)return;
   // Re-evaluate at an action boundary; no remote deposit across the map.
