@@ -1,4 +1,5 @@
 import {appearanceOf} from './sim/pawn-appearance';
+import {humanLimbVisualMask} from './render/human-anatomy-presentation';
 import {portraitDataUrl,portraitExpressionOf} from './ui/pawn-portrait';
 import {updatePawnAppearanceInspection} from './ui/pawn-appearance-inspection';
 import {pawnBaseColor} from './render/pawn-appearance-shape';
@@ -591,7 +592,7 @@ function rebuildInspector() {
     const orders=document.createElement('p');orders.id='selected-orders';panel.append(orders);
     const cancel=document.createElement('button');cancel.id='clear-orders';cancel.textContent='Annuler les ordres directs';
     createEquipmentInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},c=>void attempt(()=>client.command(c)));
-    createSkillsInspection(panel);createHealthInspection(panel,()=>snapshot?.pawns.find(p=>p.id===selectedPawn),c=>void attempt(()=>client.command(c)));
+    createSkillsInspection(panel);createHealthInspection(panel,()=>snapshot?.pawns.find(p=>p.id===selectedPawn),c=>void attempt(()=>client.command(c)),true,{request:(pawnId,part)=>void attempt(()=>client.command({type:'surgery-request',pawnId,part})),cancel:pawnId=>void attempt(()=>client.command({type:'surgery-cancel',pawnId}))});
     cancel.onclick=()=>{if(selectedPawn!==undefined)void attempt(()=>client.command({type:'clear-orders',pawnId:selectedPawn!}));};panel.append(cancel);
   } else if (selectedCell) {
     panel.classList.add('cell-inspector-host');
@@ -674,7 +675,7 @@ function actionLabel(pawn: Pawn, carriedPatients: ReadonlySet<number>) {
   if(pawn.draft)return draftLabel(pawn);
   if(pawn.shooting)return pawn.shooting.stance?.phase==='cooldown'?'Récupération après tir':pawn.shooting.stance?.phase==='aim'?'Riposte · vise':'Riposte · rejoint sa position';
   if(pawn.equipmentTask)return ({equip:'Va équiper son arme',drop:'Dépose son arme',wear:pawn.state==='working'?'Enfile un vêtement':'Va chercher un vêtement',remove:'Retire un vêtement'})[pawn.equipmentTask.action];
-  if(pawn.ward||pawn.prisoner||pawn.feed||pawn.tend||pawn.state==='resting'||pawn.rescue||carriedPatients.has(pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
+  if(pawn.ward||pawn.prisoner||pawn.feed||pawn.tend||pawn.surgery||pawn.state==='resting'||pawn.rescue||carriedPatients.has(pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
   if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
   if(pawn.animalHandling)return ({tame:'Apprivoisement',maintain:'Entretien de la familiarité',lead:'Conduit un animal vers son enclos',milk:'Trait un dromadaire',shear:'Tond un mufalo'})[pawn.animalHandling.kind];
@@ -789,7 +790,7 @@ function renderState() {
     button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
     button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn,carriedPatients)} · ${equipmentDescription(equipment.get(pawn.id),pawn)}`;button.dataset.equipment=equipment.get(pawn.id)?.item??'';
     const rawLook=apparelAppearance(apparel.get(pawn.id)),look={...rawLook,color:rawLook.color??pawnBaseColor(pawn.id)};button.dataset.apparel=look.signature;
-    const portrait=button.querySelector<HTMLElement>('.portrait-head')!,url=portraitDataUrl(appearanceOf(pawn,world.seed),look,equipment.get(pawn.id)?.item,portraitExpressionOf(pawn));
+    const portrait=button.querySelector<HTMLElement>('.portrait-head')!,url=portraitDataUrl(appearanceOf(pawn,world.seed),look,equipment.get(pawn.id)?.item,portraitExpressionOf(pawn),humanLimbVisualMask(pawn));
     if(portrait.dataset.source!==url){portrait.dataset.source=url;portrait.style.setProperty('--pawn-portrait',`url("${url}")`);}button.title+=` · ${look.description}`;
     (button.querySelector('.portrait-body') as HTMLElement).style.background=look.color!==undefined?`#${look.color.toString(16)}`:'';
     (button.querySelector('.portrait-vest') as HTMLElement).hidden=!look.vest;
@@ -824,7 +825,7 @@ function renderState() {
     }
     else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn,carriedPatients);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);if(pawn.podRescue)updatePodRescueInspection(el('inspector'),world,pawn);if(pawn.podRescue)el('enemy-mandate').textContent=isAdmittedGuest(pawn)?'Naufragé civil accueilli · soins et alimentation au lit, puis départ après récupération.':'Naufragé civil · secours direct vers un lit disponible.';}
     else {
-      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.burning||pawn.firefighting||pawn.draft||pawn.equipmentTask||pawn.need||pawn.recreation.task||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='resting'||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn,carriedPatients) : `${actionLabel(pawn,carriedPatients)} · ${queryPawnStatus(world, pawn).reason}`;
+      el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.burning||pawn.firefighting||pawn.draft||pawn.equipmentTask||pawn.need||pawn.recreation.task||pawn.feed||pawn.tend||pawn.surgery||pawn.rescue||pawn.state==='resting'||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn,carriedPatients) : `${actionLabel(pawn,carriedPatients)} · ${queryPawnStatus(world, pawn).reason}`;
       updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn,world);
       updateRecreationInspection(el('inspector'),pawn,world);
       roomInspection.update(el('inspector'), world, pawn);

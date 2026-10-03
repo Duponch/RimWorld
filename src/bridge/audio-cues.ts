@@ -226,6 +226,12 @@ export class AudioCueRecorder {
         const task = pawn.cleaning;
         recordWork(pawn.id, `clean:${task.targets[0] ?? 'none'}`, task.progress, 'cleaning.work',
           pawn.x, pawn.z, task.phase === 'clean' && pawn.state === 'working', STATION_CUE_INTERVAL_TICKS);
+      } else if (pawn.surgery) {
+        const task = pawn.surgery;
+        // Actual contacted time drives cadence; dynamic surgical speed must
+        // not turn a faster progress multiplier into a faster sound loop.
+        recordWork(pawn.id, `surgery:${task.patientId}:${task.part}`, task.workCore, 'medical.tend',
+          pawn.x, pawn.z, task.phase === 'work' && pawn.state === 'working', STATION_CUE_INTERVAL_TICKS);
       } else if (pawn.tend) {
         const task = pawn.tend;
         recordWork(pawn.id, `tend:${task.patientId}`, task.progress, 'medical.tend',

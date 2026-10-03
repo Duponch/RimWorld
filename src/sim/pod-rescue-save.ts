@@ -47,7 +47,7 @@ export function validPodRescueShape(value:unknown,version:number,w:Bounds):boole
 export type ValidatePodRescueDeparture=(departure:PodRescueDeparture,version:number,world:World)=>string[];
 export type PodRescueTransportWorld=Pick<World,'tick'|'width'|'height'|'nextId'|'pawns'|'podRescues'|'schemaVersion'>;
 const colonialWorkFields=['draft','trade','animalHandling','animalCare','research','hunting','burial','cleaning','firefighting','ward',
-  'equipmentTask','priorityWork','rescue','tend','feed'];
+  'equipmentTask','priorityWork','rescue','tend','surgery','surgeryRequest','feed'];
 function uncommandedGuest(p:Pawn):boolean {
   return object(p.orders)&&p.orders.active===null&&Array.isArray(p.orders.queue)&&p.orders.queue.length===0
     &&p.jobId===null&&p.haul===null&&p.cooking===null&&object(p.recreation)&&p.recreation.task===null
@@ -86,7 +86,7 @@ export function validPodRescueTransportBindings(w:PodRescueTransportWorld):boole
   return transportBindings(w,w.schemaVersion);
 }
 const inactiveFields=['animalHandling','animalCare','burial','cleaning','trade','firefighting','burning','raid','ward','hunting','heatRefuge','research',
-  'tactics','flee','melee','stun','shooting','stagger','draft','equipmentTask','equipmentDropPending','feed','tend','rescue','medicalSleep',
+  'tactics','flee','melee','stun','shooting','stagger','draft','equipmentTask','equipmentDropPending','feed','tend','surgery','surgeryRequest','rescue','medicalSleep',
   'interruptedCargo','priorityWork','transitExit','motion'];
 /** Cross references and ownership. The callback validates each frozen human
  * and its items at that departure's clock using the central schema validator,

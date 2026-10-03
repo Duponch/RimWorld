@@ -1,5 +1,6 @@
 import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutShootingSkills,withMigratedShootingSkills } from './scenarios/legacy-skills';
+import { withoutPredatorFoodPolicies } from './scenarios/legacy-save';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { expect,test } from 'vitest';
 import { feedingCamp } from './scenarios/feeding';
@@ -80,7 +81,7 @@ test('shared doctors and sources cannot double reserve; malformed phases and V47
     const bad=structuredClone(w);(bad.pawns[0]!.feed as unknown as Record<string,unknown>).phase=phase;
     expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
   }
-  replay(w,2);const old=feedingCamp();for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal');(old.schemaVersion=47 as World['schemaVersion'],withoutResearch(old));withoutShootingSkills(old);const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(withMigratedShootingSkills({...old,schemaVersion:SCHEMA_VERSION}));
+  replay(w,2);const old=withoutPredatorFoodPolicies(feedingCamp());for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal');(old.schemaVersion=47 as World['schemaVersion'],withoutResearch(old));withoutShootingSkills(old);const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(withMigratedShootingSkills({...old,schemaVersion:SCHEMA_VERSION}));
 });
 
 test('raw food conserves a partial serving; involuntary cancellation can retain undroppable cargo without a stale patient claim',()=>{

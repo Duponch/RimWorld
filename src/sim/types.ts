@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 178 as const;
+export const SCHEMA_VERSION = 179 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -109,6 +109,8 @@ export interface Pawn extends Cell {
   droppedWeaponId?:number;
   feed?: import('./feeding-rules.ts').FeedTask;
   tend?: import('./care-rules.ts').TendTask;
+  surgeryRequest?:import('./surgery-state.ts').SurgeryRequest;
+  surgery?:import('./surgery-state.ts').SurgeryTask;
   careDisabled?:true;
   medicalCare?:import('./medicine-rules.ts').MedicalCare;
   selfTend?:true;
@@ -234,7 +236,7 @@ export type AreaAction = 'lay-floor' | 'remove-floor' | 'home' | 'remove-home' |
 export interface StorageSettings extends StorageConditions { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; floor?: import('./flooring.ts').FloorKind }
 export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }
-export type Command = import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
+export type Command = import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
   | {type:'pen-species';markerId:number;species:import('./animal-species.ts').AnimalSpeciesId;accepted:boolean}
   | {type:'adopt-economy'}
   | {type:'climate-adopt'}

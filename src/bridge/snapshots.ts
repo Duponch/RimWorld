@@ -12,6 +12,8 @@ import { validWildlifeExitState,validWildlifePredationState } from '../sim/wildl
 import { validCorpseConsumption } from '../sim/corpse-anatomy.ts';
 import { V190_ITEM_IDS } from '../sim/biome-items.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
+import { validPawnSurgeryShape } from '../sim/surgery-save.ts';
+import { validAnesthetic } from '../sim/anesthetic.ts';
 import { validateScoutRegistry } from '../sim/caravan-save.ts';
 import { validateQuests } from '../sim/quest-save.ts';
 import { scoutRegistryView } from '../sim/caravan-trip.ts';
@@ -30,7 +32,7 @@ import { validUnfinishedShape } from '../sim/unfinished.ts';
 import { validApparelShape } from '../sim/apparel-save.ts';
 import { validWeaponShape } from '../sim/equipment-save.ts';
 import { pileMaxHp } from '../sim/thing-damage-rules.ts';
-import type { MaterialPile, Resource, Terrain, Tile, World } from '../sim/types.ts';
+import type { MaterialPile, Pawn, Resource, Terrain, Tile, World } from '../sim/types.ts';
 import { TileSnapshotCache } from './tile-snapshot-cache.ts';
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
@@ -43,6 +45,19 @@ export type SnapshotMessage = SnapshotHeader & (
 );
 
 import { validPlantGrowthLight } from '../sim/plant-light-save.ts';
+
+/** Sparse clinical transport guard. Full anatomy, permissions and possession
+ * relations remain save-validator responsibilities. A dead dossier uses its
+ * frozen medical tick; live anesthesia must follow the confirmed World tick. */
+function validSurgeryTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|'tick'|'width'|'height'|'nextId'>):boolean {
+  if(world.schemaVersion<179&&(Object.hasOwn(pawn,'surgery')||Object.hasOwn(pawn,'surgeryRequest')||pawn.health&&Object.hasOwn(pawn.health,'anesthetic')))return false;
+  if(!validPawnSurgeryShape(pawn,world.schemaVersion,world))return false;
+  const record=pawn.health;
+  if(record?.anesthetic===undefined)return true;
+  if(!record||typeof record!=='object'||Array.isArray(record)||record.body!==undefined||record.tick>world.tick||
+    (record.death===undefined?record.tick!==world.tick:!record.death||typeof record.death!=='object'||Array.isArray(record.death)||record.death.tick!==record.tick))return false;
+  return validAnesthetic(record.anesthetic,record.tick,world.schemaVersion>=179,pawn.id%20);
+}
 
 const equalResourceBase = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind && a.species === b.species
   && a.growthLight === b.growthLight && a.x === b.x && a.z === b.z && a.amount === b.amount && a.stone === b.stone && a.damage === b.damage
@@ -231,6 +246,7 @@ export class SnapshotDecoder {
     if (message.epoch < this.epoch || (message.epoch === this.epoch && message.revision <= this.revision)) return { status: 'stale' };
     if(!Array.isArray(message.world.stockpiles)||message.world.stockpiles.some(zone=>!validStorageConditions(zone,message.world.schemaVersion)))return resync('Plages de qualité ou de PV de réserve invalides pour ce snapshot.');
     for(const pawn of message.world.pawns){
+      if(!validSurgeryTransport(pawn,message.world))return resync('État chirurgical ou anesthésique invalide pour ce snapshot.');
       if(!validPawnPodRescue(pawn,message.world.schemaVersion,message.world))return resync('Mandat de secours civil invalide pour ce snapshot.');
       if(!validPlantSkill(pawn.skills?.plants,message.world.schemaVersion))return resync('Compétence Plantes invalide pour ce snapshot.');
       if(pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,message.world.schemaVersion,message.world))return resync('Souvenir de décès invalide pour ce snapshot.');
@@ -344,9 +360,10 @@ export class SnapshotDecoder {
     if(validateQuests(next.quests?scoutRegistryView(next):next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
     if(next.scout&&(next.scout.phase==='travelling'||next.scout.phase==='awaiting-entry')){
       const registry=scoutRegistryView(next),pawn=next.scout.pawn;
-      if(!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
+      if(!validSurgeryTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
         ||next.scout.items.some(pile=>!validPile(pile,registry)))return resync('Voyageur ou possession hors carte invalide.');
     }
+    for(const departure of next.podRescues?.departed??[])if(!validSurgeryTransport(departure.pawn,{schemaVersion:next.schemaVersion,tick:departure.tick,width:next.width,height:next.height,nextId:next.nextId}))return resync('Dossier chirurgical civil archivé invalide.');
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     const replaced = message.epoch !== this.epoch;
     if(reindexResources){this.resourceSlots.clear();for(let i=0;i<next.resources.length;i++)this.resourceSlots.set(next.resources[i]!.id,i);}

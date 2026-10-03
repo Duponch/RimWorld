@@ -2,6 +2,7 @@ import type { apparelAppearance } from '../render/character-apparel';
 import { appearanceOf } from '../sim/pawn-appearance';
 import type { Pawn, World } from '../sim/types';
 import { portraitDataUrl,portraitExpressionOf } from './pawn-portrait';
+import { humanLimbVisualMask } from '../render/human-anatomy-presentation';
 
 type ApparelLook = ReturnType<typeof apparelAppearance>;
 
@@ -11,6 +12,7 @@ export function updatePawnAppearanceInspection(container: HTMLElement, world: Wo
   if(!summary)return;
   const appearance = appearanceOf(pawn, world.seed);
   const expression=portraitExpressionOf(pawn);
+  const limbMask=humanLimbVisualMask(pawn);
   let section = summary.querySelector<HTMLElement>('.appearance-inspection');
   if (!section) {
     section = document.createElement('div');
@@ -23,10 +25,10 @@ export function updatePawnAppearanceInspection(container: HTMLElement, world: Wo
   const key = [pawn.id, pawn.name, pawn.appearance ? 'saved' : 'projection',
     appearance.version, appearance.sex, appearance.bodyType, appearance.headType,
     appearance.hair, appearance.beard, appearance.skinColor, appearance.hairColor,
-    look.signature, look.color ?? '', look.vest, look.helmet, look.reconHelmet, look.silhouette, look.pants, weaponItem ?? '',expression].join('|');
+    look.signature, look.color ?? '', look.vest, look.helmet, look.reconHelmet, look.silhouette, look.pants, weaponItem ?? '',expression,limbMask].join('|');
   if (section.dataset.appearanceKey === key) return;
   section.dataset.appearanceKey = key;
   const image = section.querySelector<HTMLImageElement>('.appearance-inspection-portrait')!;
-  image.src = portraitDataUrl(appearance, look, weaponItem, expression);
+  image.src = portraitDataUrl(appearance, look, weaponItem, expression,limbMask);
   image.alt = `Portrait de ${pawn.name}`;
 }

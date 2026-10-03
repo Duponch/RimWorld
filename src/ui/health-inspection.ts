@@ -11,6 +11,45 @@ import { createFluInspection,updateFluInspection } from './flu-inspection';
 import { foodPoisoningStage,FOOD_POISON_UNIT } from '../sim/food-poisoning';
 import { bodyDescription } from './burial-controls';
 import { isCarePatient } from '../sim/affiliation';
+import { SURGERY_PARTS,surgeryRequestReason } from '../sim/surgery-rules';
+import type { SurgicalLimb } from '../sim/surgery-anatomy';
+import { ANESTHETIC_UNIT,anestheticStage } from '../sim/anesthetic';
+
+export interface SurgeryInspectionActions {
+  request:(pawnId:number,part:SurgicalLimb)=>void;
+  cancel:(pawnId:number)=>void;
+}
+
+/** Request projection only: the clinical command owns admission, cancellation,
+ * reservations and anatomy. The inspector never invents an operation result. */
+export function healthSurgeryView(pawn:Pawn,world?:World) {
+  const request=pawn.surgeryRequest,doctor=world?.pawns.find(p=>p.surgery?.patientId===pawn.id);
+  const phase=doctor?.surgery?.phase;
+  const status=request
+    ?`Amputation demandée : ${BODY_PARTS[request.part].label.toLocaleLowerCase('fr-FR')} · ${phase==='work'?'opération en cours':phase==='pickup'?'collecte du médicament':phase==='approach'?'approche du chevet':'en attente du lit, du médecin et du médicament'}.`
+    :'Aucune amputation demandée.';
+  return {status,canCancel:!!request&&pawn.state!=='dead'&&!pawn.health?.death,
+    choices:SURGERY_PARTS.map(part=>({part,label:BODY_PARTS[part].label,
+      reason:request?'Une opération est déjà demandée pour ce colon.':surgeryRequestReason(pawn,part)}))};
+}
+
+/** Re-read the selected snapshot at click time; stale controls never send a
+ * replacement request or make a missing member. Worker validation still owns
+ * races between this display and the command's actual acknowledgement. */
+export function requestInspectedAmputation(pawn:Pawn|undefined,part:SurgicalLimb,actions:SurgeryInspectionActions):string|undefined {
+  const reason=!pawn?'Aucun colon sélectionné.':pawn.surgeryRequest?'Une opération est déjà demandée pour ce colon.':surgeryRequestReason(pawn,part);
+  if(reason)return reason;
+  actions.request(pawn!.id,part);return undefined;
+}
+export function cancelInspectedAmputation(pawn:Pawn|undefined,actions:SurgeryInspectionActions):boolean {
+  if(!pawn?.surgeryRequest||pawn.state==='dead'||pawn.health?.death)return false;
+  actions.cancel(pawn.id);return true;
+}
+export function healthAnestheticText(pawn:Pawn):string {
+  const state=pawn.health?.anesthetic;if(!state)return '';
+  const stage=anestheticStage(state.severity),label=stage==='sedated'?'sédation':stage==='woozy'?'réveil progressif':'dissipation';
+  return `Anesthésie · ${label} · ${(state.severity/ANESTHETIC_UNIT*100).toFixed(1)} %.${pawn.state==='dead'?' Dossier arrêté au décès.':''}`;
+}
 
 const CAPACITY_LABELS = [
   ['consciousness','Conscience'],['moving','Mouvement'],['manipulation','Manipulation'],
@@ -41,7 +80,7 @@ export function healthInjuryRows(pawn:Pawn):ReadonlyArray<{part:string;descripti
   ].sort((a,b)=>(order.get(a.partId)??Infinity)-(order.get(b.partId)??Infinity)).map(({part,description})=>({part,description}));
 }
 
-export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|undefined,send?:(c:Command)=>void,allowSelfTend=true):void {
+export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|undefined,send?:(c:Command)=>void,allowSelfTend=true,surgery?:SurgeryInspectionActions):void {
   const details=document.createElement('details');details.id='health-inspection';details.open=true;
   const summary=document.createElement('summary');summary.textContent='Santé';details.append(summary);
   const layout=document.createElement('div');layout.className='health-dossier';
@@ -64,10 +103,28 @@ export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|unde
   const conditionsTitle=document.createElement('h4');conditionsTitle.textContent='Affections';conditions.append(conditionsTitle);
   const injuries=document.createElement('div');injuries.dataset.health='injuries';injuries.className='health-injury-list';conditions.append(injuries);
   createInfectionInspection(conditions);createFluInspection(conditions);
-  for(const name of ['food-poisoning','malnutrition','thermal','stagger']){
+  for(const name of ['food-poisoning','malnutrition','thermal','stagger','anesthetic']){
     const p=document.createElement('p');p.dataset.health=name;conditions.append(p);
   }
-  layout.append(overview,conditions);details.append(layout);panel.append(details);
+  layout.append(overview,conditions);details.append(layout);
+  if(selected&&surgery){
+    const operations=document.createElement('section');operations.dataset.health='surgery';operations.className='health-conditions';
+    const title=document.createElement('h4');title.textContent='Amputation thérapeutique';operations.append(title);
+    const warning=document.createElement('p');warning.textContent='Continuer les soins et attendre l’immunité reste possible. Une amputation est définitive ; l’opération peut échouer et causer des lésions.';operations.append(warning);
+    const request=document.createElement('p');request.dataset.health='surgery-request';operations.append(request);
+    for(const part of SURGERY_PARTS){
+      const row=document.createElement('p'),button=document.createElement('button');button.type='button';button.dataset.surgeryPart=part;
+      button.textContent=`Demander : ${BODY_PARTS[part].label.toLocaleLowerCase('fr-FR')}`;button.disabled=true;
+      const reason=document.createElement('small');reason.dataset.surgeryReason=part;
+      button.onclick=()=>{const refusal=requestInspectedAmputation(selected(),part,surgery);if(refusal)request.textContent=refusal;};
+      row.append(button,document.createTextNode(' '),reason);operations.append(row);
+    }
+    const cancel=document.createElement('button');cancel.type='button';cancel.dataset.surgeryCancel='true';cancel.textContent='Annuler la demande';cancel.disabled=true;
+    cancel.onclick=()=>{cancelInspectedAmputation(selected(),surgery);};operations.append(cancel);
+    const hint=document.createElement('p');hint.textContent='La demande prépare un vrai lit, un médecin et un médicament autorisé. Annuler après administration ne rembourse pas la dose et ne retire pas l’anesthésie.';operations.append(hint);
+    details.append(operations);
+  }
+  panel.append(details);
 }
 
 export function healthStatusText(pawn:Pawn,world?:World):string {
@@ -81,6 +138,16 @@ export function healthStatusText(pawn:Pawn,world?:World):string {
 export function updateHealthInspection(panel:HTMLElement,pawn:Pawn,world?:World):void {
   const details=panel.querySelector('#health-inspection');if(!details)return;
   const health=pawn.health;
+  const anesthetic=details.querySelector('[data-health="anesthetic"]');if(anesthetic)anesthetic.textContent=healthAnestheticText(pawn);
+  const surgery=details.querySelector('[data-health="surgery"]');if(surgery){
+    const view=healthSurgeryView(pawn,world);surgery.querySelector('[data-health="surgery-request"]')!.textContent=view.status;
+    for(const choice of view.choices){
+      const button=surgery.querySelector<HTMLButtonElement>(`[data-surgery-part="${choice.part}"]`)!;
+      button.disabled=choice.reason!==undefined;button.title=choice.reason??'Demander cette amputation ; l’anatomie ne change qu’après l’opération réelle.';
+      surgery.querySelector(`[data-surgery-reason="${choice.part}"]`)!.textContent=choice.reason??'Infection présente sur ce membre.';
+    }
+    surgery.querySelector<HTMLButtonElement>('[data-surgery-cancel]')!.disabled=!view.canCancel;
+  }
   updateInfectionInspection(details,health);
   updateFluInspection(details,health);
   const poison=health?.foodPoisoning;

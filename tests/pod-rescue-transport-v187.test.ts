@@ -9,6 +9,7 @@ import type { World } from '../src/sim/types.ts';
 import { SCHEMA_VERSION } from '../src/sim/types.ts';
 import { medicalCamp } from './scenarios/health.ts';
 import { fixtureBuilding } from './scenarios/deconstruction.ts';
+import { withoutPredatorFoodPolicies,withoutPredatorApparelPolicies } from './scenarios/legacy-save.ts';
 
 function valid(w:World):void {expect(validateWorld(w),JSON.stringify({tick:w.tick,errors:validateWorld(w)})).toEqual([]);}
 function until(w:World,done:()=>boolean,max=800):void {
@@ -39,7 +40,7 @@ function departure() {
 }
 
 test('schema 174 is validated before a neutral migration; pod world and pawn fields cannot be smuggled into it',()=>{
-  const old=medicalCamp();old.schemaVersion=174 as World['schemaVersion'];const before=structuredClone(old);
+  const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(medicalCamp()));old.schemaVersion=174 as World['schemaVersion'];const before=structuredClone(old);
   const migrated=deserializeWorld(JSON.stringify(old));
   expect(migrated).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(old).toEqual(before);
   expect(migrated.podRescues).toBeUndefined();expect(migrated.pawns.every(p=>p.podRescue===undefined)).toBe(true);

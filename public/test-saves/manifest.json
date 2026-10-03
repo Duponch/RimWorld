@@ -1094,6 +1094,37 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32 au schéma 178, graine 190, tick local 2000, environnement historique tempéré à 21 °C. Terrain aplani en grass, sans ressource végétale, objet, chantier ou bâtiment. Trois colons ordinaires repositionnés au nord, santé neutre et besoins hauts, habillement automatique et tous travaux désactivés. Renard roux sauvage adulte mâle sain, faim préparée à 0,04 nutrition, repos plein ; lièvre adulte femelle sain, nutrition 0,2, repos plein, propriété domestique préparée sans enclos ni soin. Profil biome-fauna-v2 tempéré : cible écologique complète et part implémentée calculées depuis les définitions courantes, ticket renard 0,07 conservé sans redistribution. Aucun décès, dégât, coup, déplacement, chasse, consommation ou compteur achevé. Scène préparée, pas campagne naturelle ni preuve de charge 250×250.",
       "sha256": "2962647b565042a0fb9d657eadb0dbf4622227a1c7ff6492bead194b9b18a384"
+    },
+    {
+      "id": "chirurgie-therapeutique-v192",
+      "release": "v192",
+      "label": "Chirurgie thérapeutique · 3 colons",
+      "description": "Demander l’amputation du bras infecté de Basile depuis Santé, observer lit, médicament, anesthésie, opération et soins réels. Céleste sert de témoin visuel d’une ancienne jambe perdue.",
+      "filename": "chirurgie-therapeutique.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 3000,
+      "focus": [
+        "infection directe",
+        "demande et annulation",
+        "lit et médecin",
+        "médicament physique",
+        "anesthésie",
+        "amputation",
+        "soins postopératoires",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause. Basile porte une infection directement sur le bras gauche ; son cas préparé est déjà soigné. Santé permet aussi de continuer les soins et attendre l’immunité.",
+        "Dans Santé de Basile, demander le bras gauche. Reprendre pour observer sa marche vers le vrai lit et Ada collecter une dose industrielle puis rejoindre le chevet.",
+        "Sauvegarder pendant la collecte ou l’opération, recharger puis reprendre. La dose doit être consommée une seule fois et l’anesthésie persiste indépendamment de la tâche.",
+        "Après l’issue, observer les soins ordinaires de la plaie fraîche et le portrait. L’opération peut échouer ; aucun résultat clinique n’est préparé. Céleste a déjà une ancienne jambe droite absente, uniquement comme témoin graphique."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32 au schéma 179, issue du helper clinique surgeryCamp, graine 42 et tick 3000. Terrain grass dégagé, trois colons libres adultes avec besoins hauts ; travaux désactivés sauf Médecin 1 pour Ada, Patient 1/Repos au lit 3 pour Basile. Ada et Céleste ont Médecine 8. Basile possède un unique cas d’infection directe left-arm de gravité 0,1, immunité 0 et soin 100 % préparé, échéance 37 500 Core après le départ. Lit médical normal existant en (10,10), trois doses industrielles au sol en (13,3), flux déterministe rng 2 fixé avant simulation. Céleste possède une ancienne racine right-leg manquante et soignée, préparée 1 000 ticks avant le départ, sans tâche clinique associée. Aucune demande, route, admission, dose consommée, anesthésie, opération ou soin postopératoire accordé. Fixture préparée, pas acquisition naturelle, campagne ni preuve de charge 250×250.",
+      "sha256": "80a90c43366e56adc5495fa2f53e47a11efe1d15404288c0cf5830557ed1de9e"
     }
   ]
 }

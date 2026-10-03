@@ -5,11 +5,15 @@ import type { apparelAppearance } from '../render/character-apparel';
 import type { PawnAppearance } from '../sim/pawn-appearance';
 import type { Pawn } from '../sim/types';
 import { weaponVisual } from '../render/weapon-shape';
+import { humanBoneAbsent } from '../render/human-anatomy-presentation';
+import { anestheticStage } from '../sim/anesthetic';
 
 type ApparelLook = ReturnType<typeof apparelAppearance>;
 export type PortraitExpression = 'awake' | 'sleep' | 'dead';
-export function portraitExpressionOf(pawn:Pick<Pawn,'state'|'medicalSleep'>):PortraitExpression {
-  return pawn.state==='dead'?'dead':pawn.state==='sleeping'||pawn.medicalSleep?'sleep':'awake';
+export function portraitExpressionOf(pawn:Pick<Pawn,'state'|'medicalSleep'|'health'>):PortraitExpression {
+  // Reuse the shut-eye geometry for true clinical sedation, without creating
+  // a sleeping task or changing the patient's authoritative life state.
+  return pawn.state==='dead'?'dead':pawn.state==='sleeping'||pawn.medicalSleep||anestheticStage(pawn.health?.anesthetic?.severity??0)==='sedated'?'sleep':'awake';
 }
 type Vertex = readonly [number, number, number];
 type Face = { points: readonly [Vertex, Vertex, Vertex, Vertex]; normal: Vertex; color: number; bone: number; dye: number };
@@ -45,7 +49,8 @@ function faces(): readonly Face[] {
   return result;
 }
 
-function visible(face: Face, variant: readonly [number, number, number, number], look: ApparelLook, weaponDye: number | undefined, expression:PortraitExpression): boolean {
+function visible(face: Face, variant: readonly [number, number, number, number], look: ApparelLook, weaponDye: number | undefined, expression:PortraitExpression,limbMask:number): boolean {
+  if(humanBoneAbsent(limbMask,face.bone))return false;
   const dye = face.dye;
   if (dye === PAWN_EYE_OPEN) return !look.reconHelmet && expression==='awake';
   if (dye === PAWN_EYE_CLOSED) return !look.reconHelmet && expression==='sleep';
@@ -119,13 +124,13 @@ function project(point: Vertex): readonly [number, number, number] {
 const round = (n: number) => Number(n.toFixed(2));
 const hex = (n: number) => `#${n.toString(16).padStart(6, '0')}`;
 
-function makeSvg(appearance: PawnAppearance, look: ApparelLook, weaponItem: string | undefined, expression:PortraitExpression): string {
+function makeSvg(appearance: PawnAppearance, look: ApparelLook, weaponItem: string | undefined, expression:PortraitExpression,limbMask:number): string {
   const variant = appearanceShape(appearance);
   const weaponDye = weaponVisual(weaponItem)?.dye;
   const polygons: { z: number; art: string }[] = [];
   const shaded = new Map<string, string>();
   for (const face of faces()) {
-    if (!visible(face, variant, look, weaponDye, expression)) continue;
+    if (!visible(face, variant, look, weaponDye, expression,limbMask)) continue;
     const placed = face.points.map(p => posedPoint(p, face.bone, variant, face.dye));
     if (placed.every(p => p[1] < .54)) continue;
     const normal = posedNormal(face.normal, face.dye);
@@ -141,21 +146,21 @@ function makeSvg(appearance: PawnAppearance, look: ApparelLook, weaponItem: stri
       art: `<polygon points="${points.map(p => `${round(p[0])},${round(p[1])}`).join(' ')}" fill="${fill}" stroke="${fill}" stroke-width=".2"/>` });
   }
   polygons.sort((a, b) => a.z - b.z);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" data-source="pawn-geometry" data-head="${appearance.headType}" data-hair="${appearance.hair}" data-beard="${appearance.beard}" data-skin="${hex(appearance.skinColor)}" data-hair-color="${hex(appearance.hairColor)}" data-helmet="${look.helmet}" data-recon-helmet="${look.reconHelmet}" data-weapon="${weaponVisual(weaponItem)?.item ?? ''}" data-expression="${expression}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" data-source="pawn-geometry" data-head="${appearance.headType}" data-hair="${appearance.hair}" data-beard="${appearance.beard}" data-skin="${hex(appearance.skinColor)}" data-hair-color="${hex(appearance.hairColor)}" data-helmet="${look.helmet}" data-recon-helmet="${look.reconHelmet}" data-weapon="${weaponVisual(weaponItem)?.item ?? ''}" data-expression="${expression}"${limbMask?` data-limb-mask="${limbMask}"`:''}>
   <defs><linearGradient id="paper" x2="0" y2="1"><stop stop-color="#f4eee0"/><stop offset="1" stop-color="#d9d0b9"/></linearGradient><clipPath id="crop"><rect width="96" height="96" rx="6"/></clipPath></defs>
   <rect width="96" height="96" rx="6" fill="url(#paper)"/>
   <g clip-path="url(#crop)">${polygons.map(p => p.art).join('')}</g>
   </svg>`;
 }
 
-/** Regenerate only for identity, apparel, equipment or discrete life state. */
-export function portraitDataUrl(appearance: PawnAppearance, look: ApparelLook, weaponItem?: string, expression:PortraitExpression='awake'): string {
+/** Regenerate only for identity, apparel, equipment, anatomy or life state. */
+export function portraitDataUrl(appearance: PawnAppearance, look: ApparelLook, weaponItem?: string, expression:PortraitExpression='awake',limbMask=0): string {
   const key = [appearance.version, appearance.sex, appearance.bodyType, appearance.headType,
     appearance.hair, appearance.beard, appearance.skinColor, appearance.hairColor,
-    look.signature, look.color ?? '', look.vest, look.helmet, look.reconHelmet, look.silhouette, look.pants, weaponVisual(weaponItem)?.item ?? '',expression].join('|');
+    look.signature, look.color ?? '', look.vest, look.helmet, look.reconHelmet, look.silhouette, look.pants, weaponVisual(weaponItem)?.item ?? '',expression,limbMask].join('|');
   const cached = cache.get(key);
   if (cached) return cached;
-  const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(makeSvg(appearance, look, weaponItem, expression))}`;
+  const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(makeSvg(appearance, look, weaponItem, expression,limbMask))}`;
   if (cache.size >= CACHE_LIMIT) cache.delete(cache.keys().next().value!);
   cache.set(key, url);
   return url;

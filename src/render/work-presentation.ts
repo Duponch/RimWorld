@@ -33,7 +33,7 @@ export function pawnWorkPose(pawn:Pawn,job:Job|undefined,stationKind?:StructureK
   // height to justify the upright crafting or butchering silhouette.
   if(pawn.cooking?.phase==='work'&&(stationKind==='crafting-spot'||stationKind==='butcher-spot'))return WORK_POSE.ground;
   if(pawn.firefighting?.phase==='beat')return WORK_POSE.build;
-  if(pawn.feed?.phase==='feed'||pawn.tend?.phase==='tend'||pawn.animalCare?.phase==='treat'||pawn.animalHandling?.phase==='interact'||pawn.haul?.serviceProgress!==undefined)return WORK_POSE.craft;
+  if(pawn.feed?.phase==='feed'||pawn.tend?.phase==='tend'||pawn.surgery?.phase==='work'||pawn.animalCare?.phase==='treat'||pawn.animalHandling?.phase==='interact'||pawn.haul?.serviceProgress!==undefined)return WORK_POSE.craft;
   if(pawn.cooking||pawn.research)return WORK_POSE.craft;
   if(job)return WORK_POSE.build;
   return 0;

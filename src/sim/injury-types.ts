@@ -16,6 +16,8 @@ export interface Injury {
 }
 export interface MissingPart {part:BodyPartId;bornAt:number;tended?:true}
 export interface MedicalRecord {
+  /** V192 human anesthesia; absent in historical records and animals. */
+  anesthetic?:import('./anesthetic.ts').AnestheticState;
   ageAilments?:import('./human-age.ts').HumanAgeAilment[];
   foodPoisoning?:import('./food-poisoning.ts').FoodPoisoningState;
   /** A human systemic illness; absent for historical records and animals. */

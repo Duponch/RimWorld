@@ -36,11 +36,11 @@ export function scoutRegistryView(w:World):World {
 
 function acuteCondition(p:Pawn):boolean {
   const h=p.health;
-  return !!h&&(!!h.death||h.injuries.length>0||h.missing.length>0||h.bloodLoss>0||!!h.heatstroke||!!h.hypothermia||!!h.malnutrition||!!h.infections||!!h.flu||!!h.foodPoisoning||medicalStatus(h)!=='mobile');
+  return !!h&&(!!h.death||h.injuries.length>0||h.missing.length>0||h.bloodLoss>0||!!h.heatstroke||!!h.hypothermia||!!h.malnutrition||!!h.infections||!!h.flu||!!h.foodPoisoning||!!h.anesthetic||medicalStatus(h)!=='mobile');
 }
 function activeTask(p:Pawn):boolean {
   return p.jobId!==null||p.haul!==null||p.cooking!==null||p.need!==null||p.orders.active!==null||p.orders.queue.length>0
-    ||!!(p.animalHandling||p.animalCare||p.burial||p.cleaning||p.trade||p.firefighting||p.ward||p.heatRefuge||p.research||p.hunting||p.feed||p.tend||p.rescue||p.equipmentTask||p.recreation.task||p.priorityWork);
+    ||!!(p.animalHandling||p.animalCare||p.burial||p.cleaning||p.trade||p.firefighting||p.ward||p.heatRefuge||p.research||p.hunting||p.feed||p.tend||p.surgery||p.surgeryRequest||p.rescue||p.equipmentTask||p.recreation.task||p.priorityWork);
 }
 function unstable(p:Pawn,w:World):boolean {
   return !!(p.prisoner||p.visitor||p.raid||p.draft||p.mental?.crisis||p.social?.fight||p.burning||p.flee||p.tactics||p.melee||p.shooting?.order||p.shooting?.stance
@@ -89,7 +89,7 @@ export function departureReason(w:World,p:Pawn):string|null {
   if(activeTask(p)||p.state!=='idle'||p.moveCooldown>0||(p.motion?.end??0)>w.tick||p.path.length)return 'Le colon est encore engagé dans une tâche ou une arête.';
   const owned=w.piles.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id);
   if(owned.length>32)return 'Le voyageur porte trop d’objets pour ce premier circuit.';
-  if(w.pawns.some(q=>q!==p&&(q.rescue?.patientId===p.id||q.tend?.patientId===p.id||q.feed?.patientId===p.id||q.ward?.patientId===p.id||q.melee?.order?.targetId===p.id||q.melee?.strike?.targetId===p.id||q.shooting?.order?.targetId===p.id)))return 'Une action encore active vise ce colon.';
+  if(w.pawns.some(q=>q!==p&&(q.rescue?.patientId===p.id||q.tend?.patientId===p.id||q.feed?.patientId===p.id||q.ward?.patientId===p.id||q.surgery?.patientId===p.id||q.melee?.order?.targetId===p.id||q.melee?.strike?.targetId===p.id||q.shooting?.order?.targetId===p.id)))return 'Une action encore active vise ce colon.';
   const inventory=owned.filter(i=>i.owner.type==='inventory');
   if(inventory.length!==1||inventory[0]?.id!==s.foodPileId||inventory[0].item!=='survival-meal'||inventory[0].quantity!==s.quantity||!!inventory[0].foodPoison)return 'Les rations chargées ne correspondent plus au manifeste.';
   if(owned.some(i=>i.owner.type==='pawn'||i.owner.type==='inventory'&&i.id!==s.foodPileId)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'Une cargaison incompatible empêche le départ.';
