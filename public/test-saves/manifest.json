@@ -972,6 +972,36 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32 au schéma 174, graine186 : sol plat et réserve murée ajoutés explicitement, aliments existants déplacés derrière les murs, nutrition et propriété des trois lièvres préparées. Aucun départ, chemin, cadavre, consommation ni compteur précréé. Les trois colons conservent leurs identités ; ce scénario ne mesure pas la fréquence naturelle ni la charge 250×250.",
       "sha256": "d1e6d0b1228d62a16d2d4d0735e9cb3434658740680bd50caba88bea6736a8cf"
+    },
+    {
+      "id": "secours-capsule-v187",
+      "release": "v187",
+      "label": "Capsule civile et secours · 3 colons",
+      "description": "Une capsule arrive, avec un lit médical, un médecin, des repas et des doses proches : décider du secours, observer le portage, les soins et la récupération.",
+      "filename": "secours-capsule.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "capsule civile",
+        "secours direct",
+        "portage",
+        "soins",
+        "alimentation",
+        "repos médical",
+        "départ physique"
+      ],
+      "steps": [
+        "Reprendre à 1× : la capsule tombe en 22,14, puis un civil blessé apparaît après ouverture. Aucun colon ne le secourt automatiquement.",
+        "Sélectionner le premier colon, puis clic droit sur le naufragé : Secourir. Observer la prise et le portage jusqu’au lit médical en 16,16.",
+        "Sélectionner le naufragé pour inspecter Santé. Après dépôt, le médecin peut apporter une dose réelle et traiter les blessures ; le régime et le plafond médical deviennent réglables.",
+        "Sauvegarder pendant le portage ou les soins, recharger puis reprendre. Le civil reste extérieur, se repose même après son relèvement et repart par la bordure une fois rétabli."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32 au schéma 175, graine187 : terrain aplani, lit médical et provisions ajoutés explicitement, priorités et positions des trois colons préparées. Le producteur réel crée uniquement une capsule en attente ; ni civil, blessure, admission, soin ni départ ne sont précréés. Ne mesure pas la fréquence naturelle ni la charge 250×250.",
+      "sha256": "81b01a03ab05aaa01b57ba42fb711dd1cd4b086b5882fdc39d6d2ed7a99470b3"
     }
   ]
 }

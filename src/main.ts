@@ -42,7 +42,7 @@ import { resourceMaxHp } from './sim/thing-damage-rules';
 import { rockMaxHP } from './sim/mining-rules';
 import { createArrivalUI } from './ui/arrivals';
 import { createMoodInspection,updateMoodInspection } from './ui/mood-inspection';
-import { isColonist,activeThreat } from './sim/affiliation';
+import { isColonist,activeThreat,isAdmittedGuest } from './sim/affiliation';
 import { ShootingControls } from './ui/shooting-controls';
 const shootingControls=new ShootingControls();
 import { createDraftControls,updateDraftControls,toggleDraft,draftLabel } from './ui/drafting-controls';
@@ -79,6 +79,7 @@ import { OrderMenu } from './ui/order-menu';
 import type { SelectionGesture } from './render/PawnSelectionInput';
 import { createScheduleControls } from './ui/schedule-controls';
 import { createFoodPolicyControls } from './ui/food-policy-controls';
+import { createPodRescueInspection,updatePodRescueInspection } from './ui/pod-rescue-inspection';
 import { createApparelPolicyControls } from './ui/apparel-policy-controls';
 import { billControls, updateBillControls } from './ui/bill-controls';
 import { growingControls } from './ui/growing-controls';
@@ -574,8 +575,10 @@ function rebuildInspector() {
   } else if(selectedPawn!==undefined&&snapshot?.pawns.some(p=>p.id===selectedPawn&&!isColonist(p))) {
     panel.innerHTML='<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p><p>Personne extérieure à la colonie.</p><p id="enemy-mandate"></p>';
     createEquipmentInspection(panel,()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;},()=>{});
-    el('enemy-mandate').textContent=snapshot.pawns.find(p=>p.id===selectedPawn)?.visitor?'Visiteur neutre · consultez Visiteurs / Commerce à droite.':snapshot.pawns.find(p=>p.id===selectedPawn)?.tactics?'Mandat : approche autonome des cibles visibles.':'Mandat historique : sentinelle fixe.';
-    createHealthInspection(panel);
+    const outside=snapshot.pawns.find(p=>p.id===selectedPawn)!;
+    el('enemy-mandate').textContent=outside.podRescue?'Naufragé civil · secours direct vers un lit disponible.':outside.visitor?'Visiteur neutre · consultez Visiteurs / Commerce à droite.':outside.tactics?'Mandat : approche autonome des cibles visibles.':'Mandat historique : sentinelle fixe.';
+    createHealthInspection(panel,outside.podRescue?()=>snapshot?.pawns.find(p=>p.id===selectedPawn):undefined,outside.podRescue?c=>void attempt(()=>client.command(c)):undefined,false);
+    if(outside.podRescue)createPodRescueInspection(panel,()=>snapshot?.pawns.find(p=>p.id===selectedPawn),c=>void attempt(()=>client.command(c)));
   } else if (selectedPawn !== undefined) {
     panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p>${pawnNeedsMarkup()}<button class="secondary-action" id="manage-work">Gérer le travail</button>`;
     createMoodInspection(panel);
@@ -815,7 +818,7 @@ function renderState() {
         el<HTMLMeterElement>(`${need}-meter`).value=pawn.state==='dead'?0:pawn[need];
       }
     }
-    else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn,carriedPatients);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);}
+    else if(!isColonist(pawn)){el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn,carriedPatients);updateEquipmentInspection(el('inspector'),world,pawn);updateHealthInspection(el('inspector'),pawn,world);if(pawn.podRescue)updatePodRescueInspection(el('inspector'),world,pawn);if(pawn.podRescue)el('enemy-mandate').textContent=isAdmittedGuest(pawn)?'Naufragé civil accueilli · soins et alimentation au lit, puis départ après récupération.':'Naufragé civil · secours direct vers un lit disponible.';}
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = pawn.burning||pawn.firefighting||pawn.draft||pawn.equipmentTask||pawn.need||pawn.recreation.task||pawn.feed||pawn.tend||pawn.rescue||pawn.state==='resting'||pawn.state==='dead'||pawn.state==='downed' ? actionLabel(pawn,carriedPatients) : `${actionLabel(pawn,carriedPatients)} · ${queryPawnStatus(world, pawn).reason}`;
       updateEquipmentInspection(el('inspector'),world,pawn);updateSkillsInspection(el('inspector'),pawn);updateHealthInspection(el('inspector'),pawn,world);

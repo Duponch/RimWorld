@@ -1,5 +1,5 @@
 import { V91_ITEM_IDS } from './biome-items.ts';
-import { isPlayerPatient } from './affiliation.ts';
+import { isCarePatient } from './affiliation.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import type { CommandResult, Pawn, World } from './types.ts';
 
@@ -51,10 +51,10 @@ export function applyFoodPolicyCommand(world: World, command: FoodPolicyCommand)
     if (!pawn) return invalid('Colon introuvable.');
     pawn.foodPolicyId = policy.id; pawn.needCooldown = 0;
   } else {
-    if (world.pawns.some(p => isPlayerPatient(p)&&p.foodPolicyId === policy.id)) return invalid('Ce régime est utilisé : réaffectez ses utilisateurs avant de le supprimer.');
+    if (world.pawns.some(p => isCarePatient(p)&&p.foodPolicyId === policy.id)) return invalid('Ce régime est utilisé : réaffectez ses utilisateurs avant de le supprimer.');
     if (world.foodPolicies.length === 1) return invalid('Conservez au moins un régime.');
     world.foodPolicies.splice(world.foodPolicies.indexOf(policy), 1);
-    for(const p of world.pawns)if(!isPlayerPatient(p)&&p.foodPolicyId===policy.id)p.foodPolicyId=world.foodPolicies[0]!.id;
+    for(const p of world.pawns)if(!isCarePatient(p)&&p.foodPolicyId===policy.id)p.foodPolicyId=world.foodPolicies[0]!.id;
   }
   // An accepted meal remains committed. Filtering applies at the next food choice,
   // independently of hauling, ingredient permissions and preservation.

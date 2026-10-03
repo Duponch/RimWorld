@@ -1,5 +1,6 @@
 import { climateTick,seasonTemperature,siteClimateDefinition } from './site-climate.ts';
 import { eligibleFlashstorm,resolveSelectedFlashstorm } from './flashstorm.ts';
+import { resolveSelectedPodRescue } from './pod-rescue.ts';
 import { TICKS_PER_DAY,type World } from './types.ts';
 
 /** A deliberately fixed local envelope for the Core Misc category. Core
@@ -12,6 +13,7 @@ export const MISC_CATEGORY_CHANCE=MISC_CHECK_INTERVAL/(4.8*TICKS_PER_DAY);
 export const MISC_RAW_WEIGHT=16.9;
 export const MISC_HEAT_WEIGHT=1;
 export const MISC_FLASHSTORM_WEIGHT=.4;
+export const MISC_POD_WEIGHT=1.5;
 export const MISC_HEAT_COOLDOWN=30*TICKS_PER_DAY;
 
 export interface CassandraMiscCalendar {
@@ -72,6 +74,9 @@ function consumeOpportunity(world:World,state:CassandraMiscCalendar):void {
   if(ticket<MISC_HEAT_WEIGHT)resolveSelectedHeatwave(world,state);
   else if(ticket<MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT&&eligibleFlashstorm(world)){
     resolveSelectedFlashstorm(world,Math.floor(random(state)*0x100000000)||1);
+  }
+  else if(ticket>=MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT&&ticket<MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT+MISC_POD_WEIGHT){
+    resolveSelectedPodRescue(world,Math.floor(random(state)*0x100000000)||1);
   }
 }
 

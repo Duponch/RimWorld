@@ -128,9 +128,9 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
       ??(!captureProposal(world,pawn,patient,reachableCells(world,pawn,blockedCells(world),new Set()))?'Aucun lit de prison accessible et disponible.':undefined);
     options.push({jobId:0,capturePatientId:patient.id,label:`Capturer ${patient.name}`,enabled:!reason,...reason?{reason}:{}});
   }
-  for(const patient of world.pawns)if(patient.id!==pawn.id&&patient.x===cell.x&&patient.z===cell.z&&wantsRescue(patient)){
-    const reason=queue?'Le secours direct ne peut pas encore être ajouté à une file.':exhausted(world,pawn)??rescueReason(world,pawn,patient)
-      ??(!rescueProposal(world,pawn,patient,reachableCells(world,pawn,blockedCells(world),new Set()))?'Aucun couchage accessible et disponible.':undefined);
+  for(const patient of world.pawns)if(patient.id!==pawn.id&&patient.x===cell.x&&patient.z===cell.z&&wantsRescue(patient,true)){
+    const reason=queue?'Le secours direct ne peut pas encore être ajouté à une file.':exhausted(world,pawn)??rescueReason(world,pawn,patient,true)
+      ??(!rescueProposal(world,pawn,patient,reachableCells(world,pawn,blockedCells(world),new Set()),true)?'Aucun couchage accessible et disponible.':undefined);
     options.push({jobId:0,rescuePatientId:patient.id,label:`Secourir ${patient.name}`,enabled:!reason,...reason?{reason}:{}});
   }
   for(const patient of world.pawns)if(patient!==pawn&&patient.x===cell.x&&patient.z===cell.z&&lyingPatient(patient)){

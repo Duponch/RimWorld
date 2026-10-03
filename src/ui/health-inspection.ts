@@ -10,6 +10,7 @@ import { createInfectionInspection,updateInfectionInspection } from './infection
 import { createFluInspection,updateFluInspection } from './flu-inspection';
 import { foodPoisoningStage,FOOD_POISON_UNIT } from '../sim/food-poisoning';
 import { bodyDescription } from './burial-controls';
+import { isCarePatient } from '../sim/affiliation';
 
 const CAPACITY_LABELS = [
   ['consciousness','Conscience'],['moving','Mouvement'],['manipulation','Manipulation'],
@@ -88,7 +89,7 @@ export function updateHealthInspection(panel:HTMLElement,pawn:Pawn,world?:World)
   const stage=heatStage(health?.heatstroke),coldStage=heatStage(health?.hypothermia);
   details.querySelector('[data-health="thermal"]')!.textContent=(stage?`Coup de chaleur ${HEAT_LABELS[stage]} · ${(100*health!.heatstroke!/HEAT_UNIT).toFixed(1)} %. `:'')+(coldStage?`Hypothermie ${HEAT_LABELS[coldStage]} · ${(100*health!.hypothermia!/HEAT_UNIT).toFixed(1)} %.`:'');
   details.querySelector('[data-health="stagger"]')!.textContent=pawn.stagger?'Ralenti temporairement par un impact de balle.':'';
-  const policy=details.querySelector<HTMLSelectElement>('#medical-policy');if(policy){policy.value=medicalCare(pawn);policy.disabled=pawn.state==='dead';}
+  const policy=details.querySelector<HTMLSelectElement>('#medical-policy');if(policy){policy.value=medicalCare(pawn);policy.disabled=pawn.state==='dead'||!isCarePatient(pawn);}
   const self=details.querySelector<HTMLInputElement>('#self-tend-policy');if(self){self.checked=!!pawn.selfTend;self.disabled=pawn.state==='dead';}
   const hint=details.querySelector('[data-health="self-tend-hint"]');if(hint)hint.textContent=pawn.selfTend&&pawn.priorities.doctor===0?'Auto-soins autorisés, mais Médecin est désactivé dans Travail.':'';
   details.querySelector('[data-health="status"]')!.textContent=healthStatusText(pawn,world);

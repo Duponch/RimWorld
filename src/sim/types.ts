@@ -1,5 +1,5 @@
 import type { ItemId } from './items.ts';
-export const SCHEMA_VERSION = 174 as const;
+export const SCHEMA_VERSION = 175 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -141,6 +141,8 @@ export interface Pawn extends Cell {
   deniedJoining?:number[];
   /** Physical arrival provenance; not a second owner or a reward transaction. */
   originQuestId?:number;
+  /** Civilian crash provenance and admission, never colonial authority. */
+  podRescue?:import('./pod-rescue-state.ts').PodRescuePawn;
   jobId: number | null;
   haul: HaulTask | null;
   cooking: import('./cooking-types.ts').CookingTask | null;
@@ -187,6 +189,7 @@ export interface World {
   fluIncidents?:import('./flu-incidents.ts').FluIncidentCalendar;
   miscIncidents?:import('./cassandra-misc.ts').CassandraMiscCalendar;
   flashstorm?:import('./flashstorm.ts').FlashstormState;
+  podRescues?:import('./pod-rescue-state.ts').PodRescueState;
   home?:number[];
   destroyed?:import('./barriers.ts').DestructionLedger;
   arrivals?:import('./arrival-state.ts').ArrivalState;

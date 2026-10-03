@@ -1,4 +1,6 @@
-# Bibliothèque de colonies de test — V98 à V179
+# Bibliothèque de colonies de test — V98 à V187
+
+**V187 — « Capsule civile et secours · 3 colons »** est la 38e fiche. Scène préparée 32² au schéma 175, lit médical, doses et repas ajoutés explicitement, médecin configuré. La sauvegarde contient seulement une capsule en attente ; son occupant, sa chemise et ses blessures sont produits à l’ouverture. Ordre direct, portage, dépôt, soins et récupération restent à effectuer. [Générateur](../../scripts/generate-pod-rescue-demo-v187.ts), [contrat](pod-rescue-v187.md), [preuve](../history/validation-pod-rescue-v187.md). Les trente-sept fichiers antérieurs conservent leurs octets et leurs schémas historiques.
 
 **V179 : Racines et soins · 3 colons.** [Nouvelle scène préparée](../../public/test-saves/v179/racines-et-soins.json), forêt boréale 250² graine 42 : Ada Plantes 8 rejoint la racine naturelle mûre (127,143), puis sa dose peut être transportée vers la réserve (127,126) et soigner la contusion préparée de Noé. Le problème de dos naturel d'Ada reste présent : vitesse 90 %, réussite 97 %, récolte vérifiée sur cette graine. Aucun plant ni médicament ajouté ; récolte, transport, XP et soin restent à effectuer. La fiche détaille les priorités à activer étape par étape. [Générateur explicite](../../scripts/generate-healroot-demo-v179.ts), [contrat](plants-skill-v179.md), [preuve](../history/validation-plants-v179.md). Les trente entrées précédentes et leurs octets restent inchangés.
 

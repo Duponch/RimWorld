@@ -6,6 +6,7 @@ import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validPlantSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
 import { validFlashstorm } from '../sim/flashstorm-save.ts';
+import { validPawnPodRescue,validPodRescueTransportBindings } from '../sim/pod-rescue-save.ts';
 import { validWildlifeExitState } from '../sim/wildlife-save.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
 import { validateScoutRegistry } from '../sim/caravan-save.ts';
@@ -222,11 +223,13 @@ export class SnapshotDecoder {
       || !Number.isSafeInteger(message.revision) || message.revision < 1) return resync('Révision de snapshot invalide.');
     if (message.epoch < this.epoch || (message.epoch === this.epoch && message.revision <= this.revision)) return { status: 'stale' };
     for(const pawn of message.world.pawns){
+      if(!validPawnPodRescue(pawn,message.world.schemaVersion,message.world))return resync('Mandat de secours civil invalide pour ce snapshot.');
       if(!validPlantSkill(pawn.skills?.plants,message.world.schemaVersion))return resync('Compétence Plantes invalide pour ce snapshot.');
       if(pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,message.world.schemaVersion,message.world))return resync('Souvenir de décès invalide pour ce snapshot.');
     }
     if(!validMiscIncidents(message.world.miscIncidents,message.world.schemaVersion,message.world))return resync('Calendrier d’incidents divers invalide pour ce snapshot.');
     if(!validFlashstorm(message.world.flashstorm,message.world.schemaVersion,message.world))return resync('Orage sec localisé invalide pour ce snapshot.');
+    if(!validPodRescueTransportBindings(message.world))return resync('Secours civil invalide pour ce snapshot.');
     let next: World;
     let reindexResources = message.kind === 'checkpoint';
     let reindexPiles = message.kind === 'checkpoint';

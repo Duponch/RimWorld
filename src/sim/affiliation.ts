@@ -7,7 +7,9 @@ const RELATIONS:Readonly<Record<FactionId,Readonly<Record<FactionId,'friendly'|'
 };
 export const factionOf=(p:Pick<Pawn,'faction'>):FactionId=>p.faction??'colony';
 export const isColonist=(p:Pick<Pawn,'faction'>):boolean=>factionOf(p)==='colony';
+export const isAdmittedGuest=(p:Pick<Pawn,'faction'|'prisoner'|'podRescue'>):boolean=>p.faction==='outlanders'&&!p.prisoner&&p.podRescue?.admittedAt!==undefined;
 export const isPlayerPatient=(p:Pick<Pawn,'faction'|'prisoner'>):boolean=>isColonist(p)||!!p.prisoner;
+export const isCarePatient=(p:Pick<Pawn,'faction'|'prisoner'|'podRescue'>):boolean=>isPlayerPatient(p)||isAdmittedGuest(p);
 export const hostileTo=(a:Pick<Pawn,'faction'|'prisoner'>,b:Pick<Pawn,'faction'|'prisoner'>):boolean=>!a.prisoner&&!b.prisoner&&RELATIONS[factionOf(a)][factionOf(b)]==='hostile';
 export const assaultTarget=(attacker:Pawn,target:Pawn):boolean=>activeThreat(target)||!!attacker.raid&&!attacker.raid.exiting&&target.state==='sleeping';
 export const activeThreat=(p:Pawn):boolean=>p.state!=='downed'&&p.state!=='dead'&&p.state!=='sleeping';

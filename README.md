@@ -1,6 +1,6 @@
 # Lisière
 
-Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 174**. [V186](docs/development/wildlife-exit-v186.md) permet aux animaux sauvages affamés sans aliment accessible de marcher jusqu’au bord pour quitter la carte. « Faune affamée » permet d’essayer ce départ ou de rouvrir une réserve pour l’éviter ; les animaux domestiques restent sur la carte. L’[inventaire](docs/gameplay/implementation-status.md), la [roadmap](docs/ROADMAP.md) et la [validation](docs/development/validation.md) distinguent contenu, priorités et preuves.
+Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld Core 1.6.4871. Le dépôt utilise le **schéma de sauvegarde 175**. [V187](docs/development/pod-rescue-v187.md) ouvre le secours d’un naufragé civil : arrivée par capsule, ordre direct, portage, soins au lit et départ physique après récupération. La colonie préparée « Capsule civile et secours » permet d’observer ces transitions. La [preuve](docs/history/validation-pod-rescue-v187.md) borne les contrôles ciblés, le parcours natif et les coûts isolés ; recrutement, factions exhaustives et campagnes longues restent ouverts.
 
 ## Démarrer
 

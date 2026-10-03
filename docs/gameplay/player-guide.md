@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Décider du secours d’un naufragé civil — V187
+
+Dans **Charger une partie → Colonies de test → Capsule civile et secours**, reprendre à 1× pour observer la chute et l’ouverture. Sélectionner le premier colon, puis clic droit sur le naufragé : **Secourir**. Un lit médical disponible reçoit la personne après approche et portage réels. Aucun secours automatique n’est accordé à cet étranger avant votre décision.
+
+Le dépôt au lit autorise le personnel à apporter nourriture et médicaments et à traiter les blessures. L’inspection du civil affiche Santé et permet de choisir régime et plafond médical après accueil. Il reste extérieur, sans mobilisation ni travail. Il récupère au lit même après relèvement, puis marche jusqu’au bord lorsqu’il est rétabli ; une sortie fermée le retient. Sauvegarder pendant chute, portage ou soins conserve la continuation. Recrutement et réputation restent absents ; cette scène préparée ne démontre pas une campagne naturelle. [Contrat](../development/pod-rescue-v187.md), [preuve](../history/validation-pod-rescue-v187.md).
+
 ## Observer ou empêcher le départ d’un animal affamé — V186
 
 Un animal **sauvage à 0 % de nourriture** cherche d’abord un aliment compatible et accessible sur toute la carte. S’il n’en trouve aucun, il peut marcher vers un bord atteignable ; **Faune** et son inspection affichent **« Quitte la carte faute de nourriture »**. Il quitte réellement la carte au terme du trajet, sans cadavre ni produit à récupérer. Une désignation de chasse ne l’empêche pas de partir. Une enceinte fermée le retient ; les domestiques ne partent pas par cette règle et leur alimentation reste à votre charge.

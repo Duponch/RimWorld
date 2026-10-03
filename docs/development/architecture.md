@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-Schéma courant 174. La [sortie physique de la faune V186](wildlife-exit-v186.md) conserve une intention facultative `exiting` et un compteur `exitedAnimals` créé au premier départ achevé. Une même recherche pondérée essaye l’alimentation mondiale puis choisit un bord atteignable ; les chemins et segments existants portent la marche. Le retrait attend leur fin physique et l’expiration des récupérations de mêlée encore référentes. Le schéma 173 est validé strictement avant migration neutre, sans destination ni compteur rétroactifs. La [quête V183](quest-local-v183.md) et la [reconnaissance V182](caravan-scout-v182.md) gardent leurs registres physiques. Les [notes historiques](architecture-pre-v145.md) conservent leurs contrats.
+Schéma courant 175. Le [secours civil V187](pod-rescue-v187.md) persiste la capsule, sa provenance, l’admission au dépôt réel et le devenir du patient. Le schéma 174 est validé strictement avant migration neutre. Une éligibilité clinique ciblée réutilise les services physiques sans accorder d’autorité coloniale. Les départs figés sont validés séparément à leur propre horloge par les règles communes, dans une projection neutre sans génération ni tirage. Un unique lot résident de six éléments présente la capsule, avec animation GPU par uniforms. La [preuve](../history/validation-pod-rescue-v187.md) ne vaut pas mesure générale CPU/GPU.
 
 ## Objectif
 

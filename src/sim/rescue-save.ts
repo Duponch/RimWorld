@@ -22,7 +22,7 @@ export function validateRescues(world:World):string[] {
   const errors:string[]=[],patients=new Set<number>(),beds=new Set<number>();
   for(const actor of world.pawns)if(actor.rescue){
     const t=actor.rescue,patient=world.pawns.find(p=>p.id===t.patientId),bed=world.structures.find(b=>b.id===t.bedId);
-    if(!patient||patient===actor||(t.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient))||patient.rescue||patients.has(t.patientId))errors.push('Invalid or duplicate rescue patient.');
+    if(!patient||patient===actor||(t.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||patient.rescue||patients.has(t.patientId))errors.push('Invalid or duplicate rescue patient.');
     if(!bed||!patient||!rescueBedAvailable(world,bed,patient,actor.id,!!t.capture)||beds.has(t.bedId))errors.push('Invalid or duplicate rescue bed.');
     patients.add(t.patientId);beds.add(t.bedId);
     if(!isColonist(actor)||actor.prisoner||medicalWorkRefusal(actor)||(t.capture?actor.orders.active!=='rescue':(patient?.prisoner?actor.priorities.warden:actor.priorities.doctor)===0&&actor.orders.active!=='rescue'))errors.push('Invalid rescue or capture authority.');

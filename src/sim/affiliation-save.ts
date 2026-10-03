@@ -12,8 +12,9 @@ export function validAffiliationShape(p:Record<string,unknown>,version:number,wo
 export function validateAffiliations(world:World):string[] {
   const errors:string[]=[];
   for(const p of world.pawns) {
+    const podGuest=world.schemaVersion>=175&&p.faction==='outlanders'&&!!p.podRescue;
     if(p.lastAttack&&(p.lastAttack.targetId===p.id||p.lastAttack.targetId>=world.nextId))errors.push('Invalid historical attack target.');
-    if(!isColonist(p)&&(p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.recreation.task||!p.prisoner&&(p.bedId!==null||p.need&&!(p.need.kind==='sleep'&&p.need.bedId===null||wantsVisitorMeal(p)))))errors.push('Non-colonist owns a colony activity.');
+    if(!isColonist(p)&&(p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.recreation.task||!p.prisoner&&!podGuest&&(p.bedId!==null||p.need&&!(p.need.kind==='sleep'&&p.need.bedId===null||wantsVisitorMeal(p)))))errors.push('Non-colonist owns a colony activity.');
     const recovering=world.schemaVersion>=79&&p.shooting?.order===null&&p.shooting.stance?.phase==='cooldown';
     if(p.flee&&(!isColonist(p)||p.draft||!['idle','moving','hungry'].includes(p.state)||p.shooting&&!recovering||p.need||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.recreation.task))errors.push('Flee conflicts with another activity.');
     if(p.flee&&p.path.length&&(p.path.at(-1)!.x!==p.flee.target.x||p.path.at(-1)!.z!==p.flee.target.z))errors.push('Flee path misses its target.');

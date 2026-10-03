@@ -33,6 +33,7 @@ import { GrowingZoneLayer } from './GrowingZoneLayer';
 import { buildTerrain, copyTerrainPaintRect, createTerrainPaintTexture, patchTerrainPaintTexture, singleTerrainPaintPatchRect, syncTerrainPaintUvs, TERRAIN_PAINT_PIXELS_PER_CELL, type TerrainPaintPatchRect } from './TerrainLayer';
 import { PaintedWater } from './PaintedWater';
 import { WeatherCloudLayer } from './WeatherCloudLayer';
+import { PodRescueLayer } from './PodRescueLayer';
 import { WeatherPrecipitationLayer } from './WeatherPrecipitationLayer';
 import { weatherRainRate, weatherSnowRate } from '../sim/weather';
 import { visualWindDirection } from './visual-weather';
@@ -110,6 +111,7 @@ export class ColonyRenderer {
   private readonly actionVfx = new ActionVfxLayer(this.pawns);
   private readonly brawlCloud = new BrawlCloudLayer(this.pawns);
   private readonly structureVfx = new StructureVfxLayer();
+  private readonly podRescue = new PodRescueLayer(this.environmentLighting.configure);
   private readonly mapLabels: MapLabelsOverlay;
   readonly backend: string;
   private readonly renderer: THREE.WebGPURenderer;
@@ -286,7 +288,7 @@ export class ColonyRenderer {
     this.hover.renderOrder = 5;
     this.objectSelection = new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:0xfff5d6,side:THREE.DoubleSide,depthTest:false,depthWrite:false}));
     this.objectSelection.visible=false;this.objectSelection.frustumCulled=false;this.objectSelection.renderOrder=20;
-    this.scene.add(this.hover,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group);
+    this.scene.add(this.hover,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group,this.podRescue.group);
     this.selectionInput=new PawnSelectionInput(renderer.domElement,{
       enabled:()=>this.tool==='select'&&!document.querySelector('dialog[open]'),
       pawns:()=>this.screenPawns(),select:gesture=>this.onSelection(gesture),
@@ -426,6 +428,7 @@ export class ColonyRenderer {
     this.actionVfx.update(world,this.pawns.feedbackSource!);
     this.brawlCloud.update(world,this.pawns.feedbackSource!);
     this.structureVfx.adopt(world,newMap);
+    this.podRescue.adopt(world);
     this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses);
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses);
@@ -525,6 +528,7 @@ export class ColonyRenderer {
     this.wildlife.setTexturesEnabled(enabled);
     this.fires.setTexturesEnabled(enabled);
     this.clouds.setTexturesEnabled(enabled);
+    this.podRescue.setTexturesEnabled(enabled);
     this.landscape.needsUpdate=true;
   }
   private refreshTerrainPaint(world:World):void {
@@ -618,6 +622,7 @@ export class ColonyRenderer {
     const restoreDesignations=this.designations.prepareForCompile();
     const restoreFilth=this.hygiene.filth.prepareForCompile();
     const restoreClouds=this.clouds.prepareForCompile();
+    const restorePodRescue=this.podRescue.prepareForCompile();
     const restorePrecipitation=this.precipitation.prepareForCompile();
     const restoreBoxes=this.boxes.prepareEmptyShadows();
     try {
@@ -640,6 +645,7 @@ export class ColonyRenderer {
       for (const [object, value] of culling) object.frustumCulled = value;
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
       restoreBoxes();
+      restorePodRescue();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
       this.invalidatePausedShadow();
@@ -872,7 +878,7 @@ export class ColonyRenderer {
     }
     this.resources.presentChop(skyTick/TICKS_PER_SECOND);
     this.doors.tick.value=skyTick;this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
-    this.actionVfx.present(skyTick);this.brawlCloud.present(skyTick);this.structureVfx.present(skyTick);
+    this.actionVfx.present(skyTick);this.brawlCloud.present(skyTick);this.structureVfx.present(skyTick);this.podRescue.present(skyTick);
     if(this.texturesEnabled)this.paintedWater.present(skyTick/TICKS_PER_SECOND);
     this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
     if(this.world)this.clouds.present({seed:this.world.seed,tick:skyTick,weather:this.world.weather,camera:this.camera,
@@ -1137,6 +1143,7 @@ export class ColonyRenderer {
     this.actionVfx.dispose();
     this.brawlCloud.dispose();
     this.structureVfx.dispose();
+    this.podRescue.dispose();
     this.mapLabels.dispose();
     this.overview.dispose();
     this.rocks.dispose();

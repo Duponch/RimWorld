@@ -37,6 +37,8 @@ import { validateWildlife } from './wildlife-save.ts';
 import { validateHeat } from './heat-save.ts';
 import { validMiscIncidents } from './cassandra-misc-save.ts';
 import { validFlashstorm } from './flashstorm-save.ts';
+import { validPawnPodRescue,validPodRescueShape,validatePodRescues } from './pod-rescue-save.ts';
+import { createPodDepartureValidator } from './pod-rescue-projection.ts';
 import { validateResearch } from './research-save.ts';
 import { validStorageItems } from './storage-filters.ts';
 import { validGunWorkShape,validateGunWorks } from './gun-work.ts';
@@ -139,7 +141,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -156,6 +158,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!validSite(input.site,version,input.scenario as World['scenario']))errors.push('Invalid local site provenance for schema.');
   if(!validSiteClimate(input.climate,version,input as unknown as World))errors.push('Invalid site climate for schema.');
   const size = input.width * input.height;
+  if(!validPodRescueShape(input.podRescues,version,input as unknown as World))errors.push('Invalid or future pod rescue state for schema.');
   const arrays = ['tiles', 'pawns', 'resources', 'structures', 'jobs', 'piles', 'stockpiles', 'events'] as const;
   if (arrays.some(key => !Array.isArray(input[key]))) return [...errors, 'Missing world arrays.'];
   const scoutErrors=validateScoutRegistry(input as unknown as World,version);
@@ -178,6 +181,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
       if (integer(input.nextId, 1) && item.id >= input.nextId) errors.push('nextId must exceed all entity IDs.');
       if(key==='resources'&&!validPlantLife(item as unknown as World['resources'][number],version,input as unknown as World))errors.push('Invalid plant life for schema.');
       if (key === 'pawns') {
+        if(!validPawnPodRescue(item,version,input as unknown as World))errors.push('Invalid or future pod rescue mandate for schema.');
         if(!validHumanAge(item.age,version))errors.push('Invalid or future human age.');
         if(!validRoomExperience(item,version,input.tick as number))errors.push('Invalid or future room experience.');
         if(version>=90?(typeof item.beauty!=='number'||!Number.isFinite(item.beauty)||item.beauty<0||item.beauty>100):item.beauty!==undefined)errors.push('Invalid or future beauty need.');
@@ -411,6 +415,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(version>=61)errors.push(...validateTactics(world));
   if(version>=58)errors.push(...validateAffiliations(world));
   errors.push(...validateFurniture(world,version,ids));
+  if(!errors.length)errors.push(...validatePodRescues(world,version,ids,createPodDepartureValidator(validateWorld)));
   if(!errors.length)errors.push(...validateFires(world,version,ids),...validateThingDamage(world,version));
   if(!errors.length)errors.push(...validateWeather(world,version),...validateWind(world,version),...validateHeaters(world,version));
   if(!errors.length)errors.push(...validatePower(world,version),...validatePowerFlicks(world,version),...validateCoolers(world,version));
@@ -1016,6 +1021,11 @@ export function deserializeWorld(serialized: string): World {
     const errors=validateSchema(input,173);if(errors.length)throw new Error('Invalid version 173 save: '+errors.join(' '));
     // No departed animal, route, ecological history or random draw is invented.
     input.schemaVersion=174;
+  }
+  if(record(input)&&input.schemaVersion===174){
+    const errors=validateSchema(input,174);if(errors.length)throw new Error('Invalid version 174 save: '+errors.join(' '));
+    // No patient, capsule, injuries, items, admission or random draw is invented.
+    input.schemaVersion=175;
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;

@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**Schéma courant 174 ; V186 ouvre la sortie physique de la faune affamée.** Un sauvage à nutrition nulle cherche d’abord un aliment accessible puis marche vers un bord atteignable ; les domestiques restent sur la carte. Le [contrat](../development/wildlife-exit-v186.md) distingue règles Core et retour alimentaire adapté ; la [preuve](../history/validation-wildlife-exit-v186.md) sépare les contrôles locaux et la scène préparée « Faune affamée ». « Livré » ne vaut pas parité exhaustive ; la [validation courante](../development/validation.md) borne les contrôles acquis.
+**Schéma courant 175 ; V187 ouvre le secours civil par capsule.** Un naufragé extérieur réellement blessé peut être porté dans un lit sur ordre direct, traité et nourri après dépôt, se reposer puis partir physiquement. Le [contrat](../development/pod-rescue-v187.md) distingue règles Core et adaptations ; la [preuve](../history/validation-pod-rescue-v187.md) borne ciblés, reprise et parcours natif préparé. Recrutement, diplomatie et hospitalité générale restent absents. « Livré » ne vaut pas parité exhaustive ; la [validation courante](../development/validation.md) borne les contrôles acquis.
 
 | Domaine | Livré dans le périmètre prouvé | Partiel ou absent |
 | --- | --- | --- |
