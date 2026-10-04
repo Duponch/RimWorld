@@ -1,3 +1,4 @@
+import { validPackagedSurvivalState } from './packaged-survival-save.ts';
 import { validHospitalBedState } from './hospital-bed-save.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { validateCivilianPost } from './commercial-post.ts';
@@ -152,7 +153,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -431,6 +432,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   errors.push(...validateCorpses(world,version),...validateHunting(world,version));
   errors.push(...validateResearch(world,version));
   if(!errors.length&&!validHospitalBedState(world,version))errors.push('Invalid hospital bed state.');
+  if(!errors.length&&!validPackagedSurvivalState(world,version))errors.push('Invalid packaged survival state.');
   errors.push(...validateUnfinished(world,version),...validateGunWorks(world,version),...validateFlakWorks(world,version),...validateComponentWorks(world,version),...validateArtWorks(world,version),...validateArtObjects(world,version));
   errors.push(...validateTrade(world,version),...validateVisitors(world,version,ids));
   if(version>=63)errors.push(...validateApparel(world));
@@ -1114,6 +1116,11 @@ export function deserializeWorld(serialized: string): World {
     const errors=validateSchema(input,186);if(errors.length)throw new Error('Invalid version 186 save: '+errors.join(' '));
     // No hospital bed, research, ingredients or clinical history is invented.
     input.schemaVersion=187;
+  }
+  if(record(input)&&input.schemaVersion===187){
+    const errors=validateSchema(input,187);if(errors.length)throw new Error('Invalid version 187 save: '+errors.join(' '));
+    // Existing rations remain unchanged; no project, bill, meal or work is granted.
+    input.schemaVersion=188;
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;

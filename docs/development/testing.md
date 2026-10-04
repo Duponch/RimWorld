@@ -1,5 +1,11 @@
 # Stratégie de validation
 
+## Contrôles ciblés V206 — périmètre ciblé exécuté
+
+La [production unitaire des repas de survie](packaged-survival-v206.md) demande les témoins de recherche physique, Cuisine 7/8, quotas 6+6, viande/lait et plusieurs piles, cuisinières/énergie, fraîcheur, interruptions, sortie saturée, contamination et refus du voyage. Les fichiers ciblés sont `tests/packaged-survival-research-v206.test.ts`, `tests/packaged-survival-production-v206.test.ts`, `tests/packaged-survival-persistence-v206.test.ts` et `tests/packaged-survival-world-v206.test.ts` ; ils doivent distinguer ancien schéma 187 strict, migration neutre vers 188 et refus des futurs projets/factures/tâches, y compris poste emballé et ordres en file.
+
+Le parcours `tests/integration/packaged-survival-v206.spec.ts` utilise les menus, Travail, Recherche, réserve, facture et reconnaissance depuis la scène candidate avant sa publication, sans ration initiale. Il observe cuisson, dépôts, chargement et propriétaire hors carte, avec reprises exactes et présentation WebGPU native. Les besoins préparés à 100 ne prouvent aucune consommation pendant ce court circuit ; le témoin CPU de voyage prépare explicitement son besoin avant le départ pour exercer une ingestion réelle. CPU, navigateur, rendu et publication doivent rester successifs sur sources gelées. Le [suivi des contrôles V206](../history/validation-packaged-survival-v206.md) consigne les résultats et limites ; une fixture préparée ou un test écrit n’est pas un contrôle réussi ni une preuve de campagne naturelle.
+
 ## Commandes courantes et preuves
 
 `npm run test:quick` couvre les frontières V139/V143/V144 et les correctifs V145

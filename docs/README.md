@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V206 — production de repas de survie, schéma 188, livré dans le périmètre ciblé.** [Contrat](development/packaged-survival-v206.md), [recherche Core et adaptation](research/packaged-survival-core-v206.md), [suivi des contrôles V206](history/validation-packaged-survival-v206.md), [guide](gameplay/player-guide.md#produire-des-repas-de-survie--v206). Une facture unitaire produit l’objet existant pour approvisionner les voyages. La 52e scène **« Repas de survie · production et voyage »** est publique et préparée ; ses résultats sont bornés dans la preuve, sans présumer campagne naturelle ni performance générale.
+
 **V205 — lit d’hôpital, schéma 187.** [Contrat](development/hospital-bed-v205.md), [recherche Core et adaptation](research/hospital-bed-core-v205.md), [preuve V205](history/validation-hospital-bed-v205.md), [guide](gameplay/player-guide.md#construire-et-utiliser-un-lit-dhôpital--v205). La 51e scène publique préparée **« Lit d’hôpital · recherche et soins »** contient trois colons ; recherche, construction et traitement restent à accomplir.
 
 **V203 — débouché textile, schéma 185.** [Contrat](development/caravan-sales-v203.md), [recherche Core](research/caravan-sales-core-v203.md), [preuve ciblée](history/validation-commercial-sales-v203.md), [guide](gameplay/player-guide.md#vendre-des-textiles-au-comptoir--v203). Chargement, vente, caisse du poste et retour des invendus réutilisent les propriétaires physiques V193. La 49e scène publique est préparée ; planète, groupes et commerce général restent ouverts.

@@ -1,4 +1,4 @@
-import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, HOSPITAL_BED_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
+import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
 import type { Command, World } from '../sim/types';
 import './world-panels.css';
 import './management-reference-v199.css';
@@ -12,6 +12,7 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'machining',prefix:'machining',title:'Usinage',cost:1000,detail:'Atelier d’usinage électrique, 150 acier + 5 composants. Construction 4.',progress:w=>w.research?.machining,x:624,y:20},
   {id:'gunsmithing',prefix:'gunsmithing',title:'Armurerie',cost:500,detail:'Revolver (Artisanat 3) et fusil à verrou (Artisanat 5).',progress:w=>w.research?.gunsmithing,x:824,y:20},
   {id:'complex-clothing',prefix:'research',title:'Vêtements complexes',cost:600,detail:'Débloque l’établi manuel de tailleur et la chemise en tissu.',progress:w=>w.research,x:224,y:154},
+  {id:'packaged-survival-meals',prefix:'packaged-survival-meals',title:'Repas de survie',cost:PACKAGED_SURVIVAL_MEALS_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque la préparation d’un repas de survie à la cuisinière : 6 protéines (viande ou lait) + 6 végétaux, Cuisine 8. Ces rations ne pourrissent pas et servent aux voyages. Adaptation locale : le préalable Core Pâte nutritive est différé.',progress:w=>w.research?.packagedSurvivalMeals,x:24,y:154},
   {id:'autodoors',prefix:'autodoors',title:'Portes automatiques',cost:600,detail:'Porte à ouverture rapide sous courant : 25 matériaux, 40 acier, 2 composants ; Construction 6 et 50 W. Sans courant, elle fonctionne comme une porte ordinaire.',progress:w=>w.research?.autodoors,x:424,y:154},
   {id:'plate-armor',prefix:'plate-armor',title:'Armure de plaques',cost:600,detail:'Préalable du gilet pare-balles. La fabrication de plaques reste hors périmètre.',progress:w=>w.research?.plateArmor,x:624,y:154},
   {id:'flak-armor',prefix:'flak-armor',title:'Armure pare-balles',cost:1200,detail:'Gilet et casque pare-balles à l’atelier d’usinage, Artisanat 4 et 5.',progress:w=>w.research?.flakArmor,x:824,y:154},

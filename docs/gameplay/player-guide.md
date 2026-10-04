@@ -1,10 +1,24 @@
 # Guide joueur
 
-**Schéma courant 187 — V205 lit d’hôpital.** [Contrat](../development/hospital-bed-v205.md), [recherche Core et adaptation](../research/hospital-bed-core-v205.md), [preuve](../history/validation-hospital-bed-v205.md). Le schéma 186 est validé avant migration neutre : aucun lit, recherche, composant ou soin rétroactif.
+**Schéma courant 188 — V206 production des repas de survie, livré dans le périmètre ciblé.** [Contrat](../development/packaged-survival-v206.md), [recherche Core et adaptation](../research/packaged-survival-core-v206.md), [suivi des contrôles](../history/validation-packaged-survival-v206.md). Le schéma 187 est validé avant migration neutre : aucune recherche, facture, ration ou contamination rétroactive.
+
+**Schéma 187 — V205 lit d’hôpital.** [Contrat](../development/hospital-bed-v205.md), [recherche Core et adaptation](../research/hospital-bed-core-v205.md), [preuve](../history/validation-hospital-bed-v205.md). Le schéma 186 est validé avant migration neutre : aucun lit, recherche, composant ou soin rétroactif.
 
 **Schéma 185 — V203 ventes de textiles au comptoir.** [Contrat](../development/caravan-sales-v203.md), [preuve et limites](../history/validation-commercial-sales-v203.md). Migration neutre : aucune marchandise, monnaie ou vente rétroactive.
 
 **Schéma 184 — V202 éruption solaire.** [Contrat](../development/solar-flare-v202.md), [preuve et limites](../history/validation-solar-flare-v202.md). La migration ne donne aucune condition ou énergie rétroactive.
+
+## Produire des repas de survie — V206
+
+Dans **Recherche**, choisissez **Repas de survie** : **500 points** à accomplir au bureau simple ou au bureau avancé réellement utilisable. Affectez un colon à Recherche dans **Travail**. Le bureau avancé exige son courant ; le multi-analyseur n’est pas requis. Le préalable Core **Pâte nutritive** et son distributeur restent explicitement différés dans cette adaptation.
+
+Inspectez une **cuisinière à bois ou électrique**, puis ajoutez **Cuisiner un repas de survie** dans ses factures. Affectez un colon avec **Cuisine 8**. Chaque préparation exige **six protéines crues, viande et/ou lait, plus six végétaux crus**. Réglez les filtres, le rayon, la quantité et la destination ; douze ingrédients d’un seul groupe ne suffisent pas. La viande provient de la boucherie, le lait de l’élevage et les végétaux des récoltes existantes. Un feu de camp ne prépare pas ces rations.
+
+Le colon rejoint et prend les ingrédients, les place sur le poste, travaille avec le combustible ou le courant réel puis transporte le repas vers le sol ou une réserve admissible. La base est **45 ticks neutres**, modulée par ses capacités, sa compétence et les conditions du poste. Vous pouvez sauvegarder pendant la cuisson et reprendre son progrès exact. La recette par quatre reste absente.
+
+Ces repas apportent **0,9 nutrition**, s’empilent par **dix** et **ne pourrissent pas**. Ils peuvent toutefois être contaminés par la cuisine ; leur emballage ne supprime pas ce risque. Les régimes alimentaires s’appliquent toujours. Pour **Monde → Reconnaissance** ou le comptoir civil, choisissez une pile au sol de **deux ou trois rations saines** : le chargement, la sortie et les besoins suivent les voyages existants. Les rations contaminées sont refusées pour ces départs.
+
+La 52e scène publique **« Repas de survie · production et voyage »** prépare trois colons, un bureau simple, une cuisinière avec combustible, la recherche à **498/500** et **18 viandes + 18 riz**, sans ration ni facture initiales. Achevez la recherche avec Ada, créez une réserve en **(13,12)**, réglez trois préparations sur la cuisinière en **(10,10)** et activez Cuisine pour Noé ; les repas fabriqués peuvent ensuite approvisionner Mina. La [sauvegarde](../../public/test-saves/v206/repas-survie.json) est accessible dans **Charger une partie → Colonies de test** et peut aussi s’importer par le menu de chargement. Besoins initialement hauts : une ingestion pendant les six heures n’est pas garantie. Le [suivi V206](../history/validation-packaged-survival-v206.md) distingue validation exécutée, scène préparée et limites de campagne/performance.
 
 ## Traverser une éruption solaire — V202
 
