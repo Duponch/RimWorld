@@ -1,10 +1,13 @@
 import { furnitureHaulCell, furnitureHaulValid } from './furniture-haul-rules.ts';
 import { releaseWork } from './work-release.ts';
+import { haulingWork } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { adjacent } from './pathfinding.ts';
 import type { Cell, Pawn, World } from './types.ts';
 
 export function processFurnitureHaul(world:World,pawn:Pawn,move:(target:Cell,allowTarget:boolean)=>void,wake:()=>void):void {
   const task=pawn.haul!;
+  if(backgroundWorkRefusal(pawn,haulingWork(task.destination))){releaseWork(world,pawn);return;}
   if(!furnitureHaulValid(world,task,pawn.id)){releaseWork(world,pawn);return;}
   const pack=world.packed.find(p=>p.building.id===task.sourcePileId)!;
   const target=task.phase==='pickup'?pack.owner as Cell:furnitureHaulCell(world,task.destination)!;

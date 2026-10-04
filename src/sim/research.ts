@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import { cookingSpot } from './cooking-bills.ts';
 import { researchFacilityDistance,researchFacilityLinked } from './research-facilities.ts';
 import { CleanlinessCapture } from './filth-room.ts';
@@ -57,7 +58,7 @@ export const researchUnlocked=(w:World,project:ResearchProject):boolean=>project
 export interface ResearchTask {stationId:number;spot:Cell;worked:number;facilityId?:number}
 export const clothingUnlocked=(world:World):boolean=>world.research?.completedAt!==undefined;
 export const intellectualSkill=(pawn:Pawn):SkillRecord=>pawn.skills.intellectual??{level:0,xp:0,dailyXp:0,passion:0};
-export const researchWanted=(world:World,pawn:Pawn):boolean=>!!world.research?.project&&pawn.priorities.research>0;
+export const researchWanted=(world:World,pawn:Pawn):boolean=>!!world.research?.project&&workPriority(pawn,'research')>0;
 export const needsHighTechBench=(project:ResearchProject):boolean=>project==='hospital-bed'||project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor';
 /** The nearest usable analyzer supplies one link per desk, with shared use. */
 export function nearbyResearchFacility(world:World,station:Structure):Structure|undefined {

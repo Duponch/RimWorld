@@ -13,6 +13,7 @@ import {adoptFluIncidents} from '../src/sim/flu-incidents.ts';
 import {createScenarioWorld} from '../src/sim/new-game.ts';
 import {enableQuests,advanceQuests} from '../src/sim/quests.ts';
 import {deserializeWorld,serializeWorld,validateWorld} from '../src/sim/serialization.ts';
+import {startingSkills} from '../src/sim/skills.ts';
 import {SCHEMA_VERSION,type Pawn,type World} from '../src/sim/types.ts';
 import {enableVisitors} from '../src/sim/visitors.ts';
 import {initializeWildFlora} from '../src/sim/wild-flora.ts';
@@ -46,8 +47,12 @@ function prepareClock(world:World,tick:number):void {
   }
 }
 
-export function prepareQuestDemo():World {
+export function prepareQuestDemo(generation:'current'|'pre-v210'='current'):World {
   const world=createScenarioWorld(QUEST_DEMO_SEED,250,'crashlanded',{hilliness:'small-hills',biome:'arid-shrubland'});
+  // Reconstruct the published starters before this scene's own overrides.
+  if(generation==='pre-v210')world.pawns.forEach((pawn,index)=>{
+    delete pawn.background;pawn.skills=startingSkills(index);
+  });
   assert.equal(world.pawns.length,3);
   enableQuests(world);
   const due=world.quests!.nextCheck;
@@ -56,6 +61,8 @@ export function prepareQuestDemo():World {
   assert.equal(world.raids!.active,undefined);
   advanceQuests(world);
   const offer=world.quests!.entries.at(-1);
+  // The original offer did not announce an age or personal background.
+  if(generation==='pre-v210'&&offer){delete offer.background;delete offer.age;}
   assert.equal(offer?.status,'offered','The public scene must contain a real scheduled offer.');
   assert.equal(world.raids!.active,undefined);
   assert.equal(world.pawns.length,3,'The asylum seeker is not pre-generated.');

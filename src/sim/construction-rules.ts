@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import { conduitKeepsPlant } from './power-construction.ts';
 import { furnitureWorkTarget } from './furniture-rules.ts';
 import { clearsGroundItems } from './occupancy.ts';
@@ -11,8 +12,8 @@ export const containsCell = (job: Job, cell: Cell): boolean => footprintCells(jo
 export const jobBlocksTransit = (world: World, job: Job): boolean => world.schemaVersion<16&&(job.kind==='wall'||job.kind==='table');
 export const constructionWorkTarget = (world: World, job: Job): Cell => job.clearance ? world.resources.find(r=>r.id===job.clearance!.resourceId)??job : furnitureWorkTarget(world,job);
 export const constructionHaulId = (destination: HaulDestination): number|undefined => destination.type==='job'?destination.jobId:destination.type==='aside'?destination.constructionId:undefined;
-export const constructionHaulPriority = (pawn: Pawn): number => Math.min(pawn.priorities.build||Infinity,pawn.priorities.haul||Infinity);
-export const asBuilder = (pawn: Pawn): boolean => pawn.priorities.build>0&&pawn.priorities.build<= (pawn.priorities.haul||Infinity);
+export const constructionHaulPriority = (pawn: Pawn): number => Math.min(workPriority(pawn,'build')||Infinity,workPriority(pawn,'haul')||Infinity);
+export const asBuilder = (pawn: Pawn): boolean => workPriority(pawn,'build')>0&&workPriority(pawn,'build')<= (workPriority(pawn,'haul')||Infinity);
 
 export interface ConstructionObstruction { plant?:Resource; pile?:MaterialPile; pack?:import('./furniture-rules.ts').PackedFurniture }
 /** One synchronous planner decision. Keep array ordering for multi-cell sites,

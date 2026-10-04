@@ -13,6 +13,7 @@ import { isRoofed } from './roof-rules.ts';
 import { carrierOf } from './rescue-state.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { startingPawn } from './starting-pawns.ts';
+import { generatePawnBackground } from './background-generation.ts';
 import { visitorAtEdge } from './visitor-navigation.ts';
 import { POD_RESCUE_FALL_TICKS,POD_RESCUE_OPEN_TICKS,POD_RESCUE_LIMIT,type PodRescuePending } from './pod-rescue-state.ts';
 import type { Cell,MaterialPile,Pawn,World } from './types.ts';
@@ -63,6 +64,7 @@ function openPod(w:World,pending:PodRescuePending):boolean {
   p.faction='outlanders';p.foodPolicyId=w.foodPolicies[0]!.id;p.podRescue={incidentId:pending.id};
   delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
   for(const skill of Object.values(p.skills))if(typeof skill==='object'){skill.level=0;skill.passion=0;}
+  if(w.schemaVersion>=191)generatePawnBackground(p,pending.seed);
   for(const key of Object.keys(p.priorities) as (keyof Pawn['priorities'])[])p.priorities[key]=0;
   p.health??=createMedicalRecord(w.tick);
   // Local adult injury profile: real recoverable pain shock, no imposed state

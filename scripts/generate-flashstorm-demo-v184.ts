@@ -12,6 +12,7 @@ import { adoptEnvironment } from '../src/sim/environment-step.ts';
 import { adoptFluIncidents } from '../src/sim/flu-incidents.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization.ts';
+import { startingSkills } from '../src/sim/skills.ts';
 import { SCHEMA_VERSION, type Pawn, type World } from '../src/sim/types.ts';
 import { enableVisitors } from '../src/sim/visitors.ts';
 import { initializeWildFlora } from '../src/sim/wild-flora.ts';
@@ -57,10 +58,14 @@ function prepareClock(world: World): void {
 
 /** The fixture holds the unaltered natural map and starting stock. No flame,
  * damage, lightning timestamp, or additional resource is put in the save. */
-export function prepareFlashstormDemo(): World {
+export function prepareFlashstormDemo(generation: 'current' | 'pre-v210' = 'current'): World {
   const ticket = firstMiscTicket(FLASHSTORM_DEMO_SEED);
   assert.ok(ticket >= 1 && ticket < 1.4, `Flashstorm introductory ticket expected, got ${ticket}.`);
   const world = createScenarioWorld(FLASHSTORM_DEMO_SEED, 250, 'crashlanded', { hilliness: 'small-hills', biome: 'arid-shrubland' });
+  // Reconstruct the published starters before this scene's own overrides.
+  if (generation === 'pre-v210') world.pawns.forEach((pawn, index) => {
+    delete pawn.background; pawn.skills = startingSkills(index);
+  });
   assert.equal(world.pawns.length, 3);
   prepareClock(world);
   assert.equal(world.flashstorm, undefined);

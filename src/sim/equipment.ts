@@ -1,4 +1,5 @@
 import { apparelDuration } from './apparel-rules.ts';
+import { violentWorkRefusal } from './colonist-backgrounds.ts';
 import { apparelReason,processApparel } from './apparel.ts';
 import { equippedWeapon,weaponLabel,type EquipmentAction,type EquipmentCommand } from './equipment-rules.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
@@ -19,6 +20,7 @@ export function equipmentReason(world:World,pawn:Pawn,pile:MaterialPile|undefine
   if(action==='wear'||action==='remove')return apparelReason(world,pawn,pile,action,accepted);
   if(!pile||pile.kind!=='weapon')return 'Arme introuvable.';
   if(action==='drop')return pile.owner.type==='equipment'&&pile.owner.pawnId===pawn.id?undefined:'Cette arme n’est pas équipée par ce colon.';
+  const violence=violentWorkRefusal(pawn);if(violence)return violence;
   if(pile.owner.type!=='ground')return 'Cette arme n’est plus au sol.';
   if(reservedSource(world,pile.id,pawn.id)>0)return 'Cette arme est réservée par un autre travail.';
   if(accepted&&pile.weapon?.forbidden&&!pawn.equipmentTask?.automatic)return 'Cette arme est interdite.';

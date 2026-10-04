@@ -163,6 +163,7 @@ test('declared V154 rejects a new meal in a frozen visitor possession',()=>{
   const departure=world.visitors!.departed.find(d=>d.pawn.id===traderId)!;
   expect(departure).toBeDefined();
   const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));
+  for(const archive of old.visitors!.departed)delete archive.pawn.background;
   for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),154);
   expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedTelevisionRecreation({...old,schemaVersion:SCHEMA_VERSION}));

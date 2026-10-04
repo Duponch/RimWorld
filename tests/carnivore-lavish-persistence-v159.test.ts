@@ -76,6 +76,7 @@ test('V157 trade receipts and frozen visitor cargo reject the new meal',()=>{
   const departure=visitorWorld.visitors!.departed.find(d=>d.pawn.id===traderId)!;
   expect(departure).toBeDefined();
   const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(visitorWorld))));
+  for(const archive of old.visitors!.departed)delete archive.pawn.background;
   for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM);
   (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),157);
   expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedTelevisionRecreation({...old,schemaVersion:SCHEMA_VERSION}));

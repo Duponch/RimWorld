@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import { asBuilder, constructionHaulPriority, containsCell, isConstruction } from './construction-rules.ts';
 import { furnitureAsideAllowed, furnitureSlot } from './furniture-haul-rules.ts';
 import { reservedSource } from './materials.ts';
@@ -30,7 +31,7 @@ export function mayImproveFurnitureStorage(world:World):boolean {
 
 export function planFurnitureTransport(world:World,pawn:Pawn,pack:PackedFurniture,blocked:Uint8Array,reach:Reachability,budget:{pairs:number},parent?:Job,storageAccess=new Map<number,boolean>()):FurnitureHaulCandidate|undefined {
   if(pack.owner.type!=='ground'||reservedSource(world,pack.building.id)>0||world.jobs.some(j=>j.furniture?.structureId===pack.building.id))return;
-  const work=parent?parent.kind==='sow'?pawn.priorities.grow||Infinity:constructionHaulPriority(pawn):pawn.priorities.haul||Infinity;
+  const work=parent?parent.kind==='sow'?workPriority(pawn,'grow')||Infinity:constructionHaulPriority(pawn):workPriority(pawn,'haul')||Infinity;
   if(!Number.isFinite(work)||parent?.reservedBy!==undefined&&parent.reservedBy!==null||!canReach(world,pack.owner,reach,true))return;
   const origin=pack.owner,current=world.stockpiles.find(z=>z.x===origin.x&&z.z===origin.z),priority=parent?0:current?.filters.furniture&&storageConditionAccepts(current,pack.building)?current.priority:0;
   let best:{cell:Cell;id:number;priority:number;cost:number}|undefined;

@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import { FLOOR_DEFINITIONS } from './flooring.ts';
 import { planFurnitureTransport } from './furniture-haul-planner.ts';
 import { constructionSkillRequired,constructionSupplied } from './construction-materials.ts';
@@ -26,7 +27,7 @@ export function constructionCandidates(world:World,pawn:Pawn,blocked:Uint8Array,
     const base={id:job.id,rank:1,distance:Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z)};
     if(plant) {
       const target={x:plant.x,z:plant.z};
-      if((pawn.priorities.build>0||job.kind==='install'&&pawn.priorities.haul>0)&&plant.kind!=='rock'&&canReach(world,target,reach,false))result.push({...base,priority:job.kind==='install'?constructionHaulPriority(pawn):pawn.priorities.build,target,job,clearance:{resourceId:plant.id,progress:0}});
+      if((workPriority(pawn,'build')>0||job.kind==='install'&&workPriority(pawn,'haul')>0)&&plant.kind!=='rock'&&canReach(world,target,reach,false))result.push({...base,priority:job.kind==='install'?constructionHaulPriority(pawn):workPriority(pawn,'build'),target,job,clearance:{resourceId:plant.id,progress:0}});
     } else if(pile?.owner.type==='ground') {
       if(reservedSource(world,pile.id)>0||!canReach(world,pile.owner,reach,true))continue;
       const quantity=Math.min(CARRY_CAPACITY,pile.quantity),destination=findAsideDestination(world,pile.owner,pile,quantity,blocked,budget);
@@ -35,8 +36,8 @@ export function constructionCandidates(world:World,pawn:Pawn,blocked:Uint8Array,
       const candidate=planFurnitureTransport(world,pawn,obstacle.pack,blocked,reach,budget,job);if(candidate)result.push(candidate);
     } else if(job.kind==='install'&&Number.isFinite(constructionHaulPriority(pawn))&&furnitureReady(world,job,pawn)&&canReach(world,job,reach,false)&&canReach(world,furnitureWorkTarget(world,job),reach,false)) {
       result.push({...base,priority:constructionHaulPriority(pawn),target:furnitureWorkTarget(world,job),job});
-    } else if(job.construction==='frame'&&pawn.skills.construction.level>=(job.kind==='lay-floor'&&job.floor?FLOOR_DEFINITIONS[job.floor].skill:constructionSkillRequired(job.kind))&&pawn.priorities.build>0&&constructionSupplied(world,job)&&constructionSiteFree(world,job,pawn.id,obstacle)&&canReach(world,job,reach,false)) {
-      result.push({...base,priority:pawn.priorities.build,target:job,job});
+    } else if(job.construction==='frame'&&pawn.skills.construction.level>=(job.kind==='lay-floor'&&job.floor?FLOOR_DEFINITIONS[job.floor].skill:constructionSkillRequired(job.kind))&&workPriority(pawn,'build')>0&&constructionSupplied(world,job)&&constructionSiteFree(world,job,pawn.id,obstacle)&&canReach(world,job,reach,false)) {
+      result.push({...base,priority:workPriority(pawn,'build'),target:job,job});
     }
   }
   return result;

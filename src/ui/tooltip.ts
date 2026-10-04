@@ -32,6 +32,7 @@ export function installTooltips(host: HTMLElement): () => void {
   let frame = 0, x = 0, y = 0, width = 0, height = 0, keyboard = false;
   const position = () => {
     frame = 0;
+    if (keyboard && owner) { const rect = owner.getBoundingClientRect(); x = rect.left; y = rect.bottom; }
     let left = x + 18, top = y + 18;
     if (left + width > window.innerWidth - 8) left = x - width - 14;
     if (top + height > window.innerHeight - 8) top = y - height - 14;
@@ -71,31 +72,49 @@ export function installTooltips(host: HTMLElement): () => void {
     tip.replaceChildren(...children); tip.hidden = false;
     const ids = new Set((owner.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean)); ids.add(tip.id);
     owner.setAttribute('aria-describedby', [...ids].join(' '));
-    if (keyboard) { const rect = owner.getBoundingClientRect(); x = rect.left; y = rect.bottom; }
     width = tip.offsetWidth; height = tip.offsetHeight; position();
   };
+  const ownsFocus = () => !!owner && (document.activeElement === owner || !!document.activeElement && owner.contains(document.activeElement));
   const enter = (target: EventTarget | null, focused: boolean) => {
     const next = target instanceof Element ? target.closest<HTMLElement>('[data-tooltip],[title]') : null;
     if (!next || !host.contains(next)) { hide(); return; }
-    if (next === owner) return;
+    if (next === owner) {
+      if (focused && !keyboard) { keyboard = true; clearTimeout(timer); timer = setTimeout(paint, 0); }
+      return;
+    }
     hide(); owner = next; keyboard = focused;
     if (next.hasAttribute('title')) { nativeTitle = next.title; next.removeAttribute('title'); }
     timer = setTimeout(paint, focused ? 0 : 450);
   };
-  const over = (event: PointerEvent) => { x = event.clientX; y = event.clientY; enter(event.target, false); };
+  const over = (event: PointerEvent) => {
+    // Focus owns a keyboard explanation until blur, Escape or pointerdown.
+    // Scrolling/reparenting a modal tooltip can move the pointer's hit target.
+    if (keyboard && ownsFocus()) return;
+    x = event.clientX; y = event.clientY; enter(event.target, false);
+  };
   const move = (event: PointerEvent) => {
     x = event.clientX; y = event.clientY;
     if (!tip.hidden && !keyboard && !frame) frame = requestAnimationFrame(position);
   };
   const out = (event: PointerEvent) => {
+    if (keyboard && ownsFocus()) return;
     if (owner && (!(event.relatedTarget instanceof Node) || !owner.contains(event.relatedTarget))) hide();
+  };
+  const scroll = () => {
+    // Native focus may scroll a dialog after focusin and the first paint.
+    // Keep the explanation attached to that focused target at its new place.
+    if (keyboard && ownsFocus()) {
+      if (!tip.hidden && !frame) frame = requestAnimationFrame(position);
+      return;
+    }
+    hide();
   };
   const focus = (event: FocusEvent) => enter(event.target, true);
   const key = (event: KeyboardEvent) => { if (event.key === 'Escape'&&!tip.hidden) { event.preventDefault();event.stopPropagation();hide(); } };
   host.addEventListener('pointerover', over); host.addEventListener('pointermove', move);
   host.addEventListener('pointerout', out); host.addEventListener('focusin', focus);
   host.addEventListener('focusout', hide); host.addEventListener('pointerdown', hide);
-  document.addEventListener('scroll', hide, true); document.addEventListener('keydown', key);
+  document.addEventListener('scroll', scroll, true); document.addEventListener('keydown', key);
   window.addEventListener('resize', hide);
   refreshActive = element => { if (element === owner && !tip.hidden) paint(); };
   dismissActive = hide;
@@ -104,7 +123,7 @@ export function installTooltips(host: HTMLElement): () => void {
     host.removeEventListener('pointerover', over); host.removeEventListener('pointermove', move);
     host.removeEventListener('pointerout', out); host.removeEventListener('focusin', focus);
     host.removeEventListener('focusout', hide); host.removeEventListener('pointerdown', hide);
-    document.removeEventListener('scroll', hide, true); document.removeEventListener('keydown', key);
+    document.removeEventListener('scroll', scroll, true); document.removeEventListener('keydown', key);
     window.removeEventListener('resize', hide);
   };
 }

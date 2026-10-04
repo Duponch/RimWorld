@@ -17,6 +17,7 @@ import { enableBiomeWildlife } from '../src/sim/wildlife.ts';
 import { refreshStock } from '../src/sim/materials.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
 import { serializeWorld, deserializeWorld, validateWorld } from '../src/sim/serialization.ts';
+import { startingSkills } from '../src/sim/skills.ts';
 import { reconcileTemperature, outdoorTemperature } from '../src/sim/temperature.ts';
 import { SCHEMA_VERSION, type Cell, type Structure, type World } from '../src/sim/types.ts';
 import { enableVisitors } from '../src/sim/visitors.ts';
@@ -118,8 +119,12 @@ function prepareRefuge(world: World, refuge: Refuge): void {
 /** The saved state is one tick before a real storyteller transition. The
  * shelter is an explicitly built starting condition, not a claimed played
  * construction. No heatstroke, canicule, retrospective event or extra stock. */
-export function prepareMiscDemo(): World {
+export function prepareMiscDemo(generation: 'current' | 'pre-v210' = 'current'): World {
   const world = createScenarioWorld(MISC_DEMO_SEED, 250, 'crashlanded', { hilliness: 'small-hills', biome: 'arid-shrubland' });
+  // Reconstruct the published starters before this scene's own overrides.
+  if (generation === 'pre-v210') world.pawns.forEach((pawn, index) => {
+    delete pawn.background; pawn.skills = startingSkills(index);
+  });
   assert.equal(world.pawns.length, 3);
   prepareClock(world);
   const refuge = clearRefuge(world);

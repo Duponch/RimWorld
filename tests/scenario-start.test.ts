@@ -1,6 +1,8 @@
 import { expect,test } from 'vitest';
 import { enableArrivals } from '../src/sim/arrivals';
+import { isColonist } from '../src/sim/affiliation';
 import { candidateAccess } from '../src/sim/candidate-access';
+import { initializeCampBackgrounds,previewBackgroundSkills } from '../src/sim/background-generation';
 import { setupEncounter } from '../src/sim/encounter-scenario';
 import { generateWorld } from '../src/sim/generation';
 import { enableHeatwaves } from '../src/sim/heatwave';
@@ -12,7 +14,6 @@ import { AIR_CONDITIONING_COST,CLOTHING_RESEARCH_COST } from '../src/sim/researc
 import { DEFAULT_SCENARIO,type ScenarioId } from '../src/sim/scenario-definitions';
 import { validScenario } from '../src/sim/scenario-save';
 import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serialization';
-import { startingSkills } from '../src/sim/skills';
 import { stepWorld } from '../src/sim/engine';
 import { initializeCampTraits } from '../src/sim/traits';
 import { enableWildlife } from '../src/sim/wildlife';
@@ -25,11 +26,16 @@ function inventory(w:World):Record<string,number> {
   return counts;
 }
 
-test('historical camp and armed encounter preserve their original setup without scenario injection on load',()=>{
+test('camp and armed encounter add prospective backgrounds while loading preserves historical setup',()=>{
   for(const id of ['camp','sentry'] as const) {
     const old=generateWorld(42,64,64);
     if(id==='sentry')setupEncounter(old);
     else {initializeCampTraits(old);enableArrivals(old);enableRaids(old);enableHeatwaves(old);enableWildlife(old);}
+    const historical=structuredClone(old);
+    expect(deserializeWorld(serializeWorld(historical))).toEqual(historical);
+    expect(historical.scenario).toBeUndefined();
+    expect(historical.pawns.filter(isColonist).every(p=>p.background===undefined)).toBe(true);
+    initializeCampBackgrounds(old);
     const made=createScenarioWorld(42,64,id),{scenario,...withoutStamp}=made;
     expect(withoutStamp).toEqual(old);expect(scenario).toEqual({id,revision:1,landing:{x:32,z:32}});
     expect(validateWorld(made)).toEqual([]);expect(deserializeWorld(serializeWorld(made))).toEqual(made);
@@ -60,7 +66,8 @@ test('survivors arrive with exact physical stocks and known technology on unmodi
     for(const [index,p] of w.pawns.entries()) {
       const key=p.z*w.width+p.x;expect(occupied.has(key)).toBe(false);occupied.add(key);
       expect(resources.has(key)).toBe(false);expect(reach.has(key)).toBe(true);
-      expect(p.skills).toEqual(startingSkills(index));expect(p.traits?.length).toBe(2);
+      expect(p.background).toBeDefined();
+      expect(p.skills).toEqual(previewBackgroundSkills(index,p.background!));expect(p.traits?.length).toBe(2);
       expect(w.piles.filter(i=>i.owner.type==='apparel'&&i.owner.pawnId===p.id).map(i=>i.item)).toEqual(['cloth-shirt']);
       expect(w.piles.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id)).toBe(false);
     }
@@ -87,8 +94,9 @@ test('new scenario provenance survives ordinary evolution and deterministic cont
   expect(copy.scenario).toEqual(same.scenario);
   for(let i=0;i<100;i++){stepWorld(w);stepWorld(copy);}
   expect(copy).toEqual(w);expect(validateWorld(w)).toEqual([]);
+  const startingConstruction=same.pawns[0]!.skills.construction.level;
   w.pawns[0]!.traits!.pop();w.pawns[0]!.skills.construction.level=0;
-  expect(same.pawns[0]!.traits).toHaveLength(2);expect(same.pawns[0]!.skills.construction.level).toBe(8);
+  expect(same.pawns[0]!.traits).toHaveLength(2);expect(same.pawns[0]!.skills.construction.level).toBe(startingConstruction);
 });
 
 test('scenario metadata rejects unknown, malformed and pre-V80 provenance but permits changed inventories and landing terrain',()=>{

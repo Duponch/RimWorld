@@ -1,4 +1,5 @@
 import { combatTarget,isAnimalTarget,type LivingTarget } from './combat-target.ts';
+import { violentWorkRefusal } from './colonist-backgrounds.ts';
 import { strikeLivingTarget } from './living-melee.ts';
 import { isBarrier,damageBarrier } from './barriers.ts';
 import { disturbanceEvents } from './disturbance.ts';
@@ -29,7 +30,7 @@ function targetFor(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,
   return p&&!(isAnimalTarget(p)&&p.domestic)&&p.state!=='dead'&&(order!.startedDowned||p.state!=='downed')&&(!isAnimalTarget(p)?!carried(p.id):world.schemaVersion>=78)?p:undefined;
 }
 function canFight(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id)):boolean {
-  return !medicallyStopped(pawn)&&pawn.state!=='sleeping'&&!pawn.need&&!pawn.collapsePending&&!carried(pawn.id);
+  return !violentWorkRefusal(pawn)&&!medicallyStopped(pawn)&&pawn.state!=='sleeping'&&!pawn.need&&!pawn.collapsePending&&!carried(pawn.id);
 }
 export function applyMeleeCommand(world:World,command:MeleeCommand):CommandResult {
   const refuse=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
@@ -41,6 +42,7 @@ export function applyMeleeCommand(world:World,command:MeleeCommand):CommandResul
   const plans:{pawn:Pawn;path:Pawn['path']}[]=[],claimed=new Set<number>(),blocked=blockedCells(world);
   for(const id of [...command.pawnIds].sort((a,b)=>a-b)) {
     const pawn=world.pawns.find(p=>p.id===id);
+    const refusal=pawn?violentWorkRefusal(pawn):undefined;if(refusal)return refuse(refusal);
     if(!pawn||!pawn.draft||!isColonist(pawn)||pawn===target||!canFight(world,pawn)||!meleeTools(world,pawn).length)return refuse('Mobilisez un colon éveillé et capable de combattre.');
     const path=meleeRoute(world,pawn,meleePlaces(world,pawn,target,claimed),blocked);
     if(!path)return refuse('Aucune place de mêlée accessible et libre.');

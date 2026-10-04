@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import { isColonist } from './affiliation.ts';
 import { leadingClaimIds } from './animal-leading.ts';
 import { medicalTendQuality,medicalTendSpeed,treatmentBatch,medicineCount,type RankedTreatment } from './care-rules.ts';
@@ -37,7 +38,7 @@ function patientReady(w:World,a:WildAnimal,doctor?:Pawn):boolean {
 }
 function doctorReady(p:Pawn):boolean {
   return isColonist(p)&&!p.prisoner&&!p.visitor&&!p.draft&&!p.burning&&!p.mental?.crisis&&
-    !p.interruptedCargo&&p.priorities.doctor>0&&!medicalWorkRefusal(p);
+    !p.interruptedCargo&&workPriority(p,'doctor')>0&&!medicalWorkRefusal(p);
 }
 export function animalCareTargets(a:WildAnimal):RankedTreatment[] {
   const h=a.health;if(a.manhunter||!h||h.death||h.body!==a.species||!a.domestic||a.domestic.care==='none')return [];

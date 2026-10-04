@@ -7,12 +7,15 @@ import { releaseWork } from './work-release.ts';
 import { footprintCells } from './definitions.ts';
 import { adjacent } from './pathfinding.ts';
 import { transferPile } from './materials.ts';
+import { haulingWork } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import type { Cell, Job, Pawn, World } from './types.ts';
 const sameCell = (a: Cell, b: Cell) => a.x === b.x && a.z === b.z;
 const nearby = (a: Cell, b: Cell) => sameCell(a, b) || adjacent(a, b);
 
 export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allowTarget: boolean) => void, wake: () => void): void {
   const task = pawn.haul!;
+  if(backgroundWorkRefusal(pawn,haulingWork(task.destination))){releaseWork(world,pawn);return;}
   if(task.whole){processFurnitureHaul(world,pawn,move,wake);return;}
   if (!destinationValid(world, pawn)) { releaseWork(world, pawn); return; }
   if (task.phase === 'pickup') {

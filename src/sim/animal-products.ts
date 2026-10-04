@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import { isColonist } from './affiliation.ts';
 import { leadingClaimIds } from './animal-leading.ts';
 import { animalGrowthFactor, animalLifeStage } from './animal-life.ts';
@@ -42,7 +43,7 @@ export function advanceAnimalProducts(world:World):void {
 const available=(a:WildAnimal):boolean=>productReady(a)&&a.state!=='dead'&&a.state!=='downed'&&a.state!=='sleeping'&&a.state!=='eating'
   &&!a.stun&&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.meal;
 export const productHandlerAvailable=(p:Pawn):boolean=>{
-  if(!isColonist(p)||p.priorities.handle===0||p.draft||p.mental?.crisis||p.flee||p.interruptedCargo||medicalWorkRefusal(p))return false;
+  if(!isColonist(p)||workPriority(p,'handle')===0||p.draft||p.mental?.crisis||p.flee||p.interruptedCargo||medicalWorkRefusal(p))return false;
   const body=pawnBody(p).capacities;return body.moving>0&&body.manipulation>0;
 };
 const claimed=(world:World)=>new Set(world.pawns.flatMap(p=>[

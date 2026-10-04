@@ -19,7 +19,7 @@ test('V181 public scene preserves its prepared provenance, ownership and a livin
   const hash = createHash('sha256').update(raw).digest('hex');
   expect(hash).toBe(EXPECTED_SHA256);
   const world = deserializeWorld(raw);
-  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareBereavementDemo()));
+  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareBereavementDemo('pre-v210')));
   // This arid catalogue had the same species; its published profile predates V190.
   prepared.wildlife!.profile='biome-herbivores-v1';
   expect(world).toEqual(prepared);

@@ -1,3 +1,5 @@
+import { workPriority } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { beginArtWork } from './art-work.ts';
 import { isArtRecipe,artWorkTotal,artisticSkill } from './art-rules.ts';
 import { completeArtProduction } from './art-production.ts';
@@ -43,7 +45,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const task=pawn.cooking!;
   if(task.phase==='interrupted'){context.release();return;}
   const station=world.structures.find(s=>s.id===task.stationId),bill=station?.bills?.find(b=>b.id===task.billId);
-  if(!station||!bill||bill.suspended||task.recipe==='cook-survival-meal'&&!stationAccepts(station,task.recipe)||!productionResearchUnlocked(world,taskRecipe(task))||task.phase!=='output'&&!productionWorkerQualified(pawn,taskRecipe(task))||pawn.priorities[taskWork(task)]===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&(!foodStationUsable(station)||!productionStationUsable(station)))) {context.release();return;}
+  if(backgroundWorkRefusal(pawn,taskWork(task))||!station||!bill||bill.suspended||task.recipe==='cook-survival-meal'&&!stationAccepts(station,task.recipe)||!productionResearchUnlocked(world,taskRecipe(task))||task.phase!=='output'&&!productionWorkerQualified(pawn,taskRecipe(task))||workPriority(pawn,taskWork(task))===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&(!foodStationUsable(station)||!productionStationUsable(station)))) {context.release();return;}
   if(task.phase==='output'){processProductionOutput(world,pawn,context,bill.destination);return;}
   const recipe=PRODUCTION_RECIPES[taskRecipe(task)];
   if((task.recipe==='cook-survival-meal'||task.recipe==='cook-simple-meal-bulk'||task.recipe==='cook-fine-meal-bulk'||task.recipe==='cook-lavish-meal-bulk'||task.recipe==='vegetarian-fine-meal'||task.recipe==='cook-vegetarian-fine-meal-bulk'||task.recipe==='carnivore-fine-meal'||task.recipe==='cook-carnivore-fine-meal-bulk'||task.recipe==='vegetarian-lavish-meal'||task.recipe==='cook-vegetarian-lavish-meal-bulk'||task.recipe==='cook-carnivore-lavish-meal'||task.recipe==='cook-carnivore-lavish-meal-bulk')&&bill.recipe!==task.recipe){context.release();return;}

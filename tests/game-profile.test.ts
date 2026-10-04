@@ -144,6 +144,8 @@ test('Cassandra next opportunity follows its exact anchored window, including ga
 test('V81 migration is strictly neutral and rejects future profile/calendar injection; malformed current choices cannot enter a session',()=>{
   const world=createScenarioWorld(42,32,'survivors');stepWorld(world,35);
   const old=withoutFoodCrops({...structuredClone(world),schemaVersion:81});
+  for(const pawn of old.pawns)delete pawn.background;
+  if(old.arrivals?.pending){delete old.arrivals.pending.background;delete old.arrivals.pending.age;}
   delete old.climate;delete old.weather;delete old.fires;delete old.wind;
   // These prospective calendars were not stored in an authentic V81 payload.
   delete old.rainElectrical;delete old.miscIncidents;delete old.smallIncidents;delete old.worldIncidents;

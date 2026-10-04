@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { backgroundSkillRefusal } from './colonist-backgrounds.ts';
 import { medicalWorkRefusal,pawnBody } from './health-rules.ts';
 import { adjacent,blockedCells,reachableCells,routeToJob } from './pathfinding.ts';
 import { clearQueuedOrders } from './player-orders.ts';
@@ -9,6 +10,7 @@ import type { CommandResult,Pawn,World } from './types.ts';
 
 export function negotiatorRefusal(p:Pawn):string|undefined {
   if(!isColonist(p)||p.prisoner)return 'Choisissez un colon libre.';
+  const background=backgroundSkillRefusal(p,'social');if(background)return background;
   const medical=medicalWorkRefusal(p);if(medical)return medical;
   if(p.draft||p.melee?.strike||p.shooting?.stance||p.mental?.crisis||p.collapsePending||p.interruptedCargo||p.burning)return 'Le négociateur doit être disponible et démobilisé.';
   const c=pawnBody(p).capacities;

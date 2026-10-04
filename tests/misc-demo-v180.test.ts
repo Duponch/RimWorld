@@ -14,7 +14,7 @@ const stock = (world: World, item: string) => world.piles.filter(pile => pile.it
 test('V180 public refuge is sealed, physically supplied, and one real step resolves its introductory Cassandra ticket', () => {
   const raw = readFileSync(fixturePath, 'utf8');
   const world = deserializeWorld(raw);
-  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareMiscDemo()));
+  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareMiscDemo('pre-v210')));
   // Arid species and weights are unchanged; retain the published V169 profile.
   prepared.wildlife!.profile='biome-herbivores-v1';
   expect(world).toEqual(prepared);

@@ -12,6 +12,7 @@ import { freshRot } from './food-preservation.ts';
 import { carrierOf } from './rescue-state.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { startingPawn } from './starting-pawns.ts';
+import { generatePawnBackground } from './background-generation.ts';
 import { generateExoticStock,generateVisitorStock } from './trade-stock.ts';
 import { visitorArrival,visitorAtEdge,visitorExit } from './visitor-navigation.ts';
 import { PLAN_INTERVAL } from './work-planner.ts';
@@ -76,6 +77,7 @@ function arrive(w:World,kind:VisitorKind,intro=false,exotic=false):boolean {
     p.faction='outlanders';p.foodPolicyId=w.foodPolicies[0]!.id;
     delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
     for(const value of Object.values(p.skills))if(typeof value==='object'){value.level=0;value.passion=0;}
+    if(w.schemaVersion>=191)generatePawnBackground(p,w.seed,profiles[i]==='Garde',i===merchant);
     for(const key of Object.keys(p.priorities) as (keyof Pawn['priorities'])[])p.priorities[key]=0;
     p.visitor={group:id,role:kind==='traveler'?'traveler':i===merchant?'trader':'visitor',...exotic&&i===merchant?{merchantKind:'exotic' as const}:{},phase:'arriving',goal:{...arrival.parking[i]!},personalFoodIds:[]};
     piles.push({id:nextId++,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt')});

@@ -1,3 +1,5 @@
+import { workPriority } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { isColonist } from './affiliation.ts';
 import { footprintCells } from './definitions.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
@@ -36,8 +38,8 @@ export function graveAccepts(w:World,grave:Structure,body:Pawn,exceptPawn?:numbe
 export function burialReason(w:World,actor:Pawn,body:Pawn|undefined,continuing=false):string|undefined {
   const pile=body?bodyPile(w,body):undefined;
   return !isColonist(actor)||actor.prisoner||actor.visitor?'Seul un colon peut être chargé de cette inhumation.'
-    :medicalWorkRefusal(actor)??(actor.mental?.crisis||actor.burning||actor.draft?'Ce colon est indisponible pour transporter un corps.'
-    :!continuing&&actor.priorities.haul===0?'Transport est désactivé dans le tableau Travail.'
+    :backgroundWorkRefusal(actor,'haul')??medicalWorkRefusal(actor)??(actor.mental?.crisis||actor.burning||actor.draft?'Ce colon est indisponible pour transporter un corps.'
+    :!continuing&&workPriority(actor,'haul')===0?'Transport est désactivé dans le tableau Travail.'
     :actor.interruptedCargo?'La cargaison doit être déposée avant l’inhumation.'
     :!body||body.state!=='dead'||!body.health?.death||body.body?.lostAt!==undefined?'Cette personne ne possède pas de dépouille disponible.'
     :pile&&pile.owner.type!=='ground'&&!(continuing&&pile.owner.type==='pawn'&&pile.owner.pawnId===actor.id)?'Cette dépouille est déjà transportée ou inhumée.'
@@ -61,7 +63,7 @@ function begin(actor:Pawn,p:BurialProposal,forced:boolean):void {
 }
 /** Called at the ordinary Transport priority, after needs and accepted orders. */
 export function assignBurial(w:World,actor:Pawn,search:()=>Reachability|null):boolean {
-  if(actor.priorities.haul===0||actor.burial||actor.orders.active!==null||actor.orders.queue.length||actor.interruptedCargo||!w.structures.some(s=>s.kind==='grave'&&s.grave?.corpseId===undefined))return false;
+  if(workPriority(actor,'haul')===0||actor.burial||actor.orders.active!==null||actor.orders.queue.length||actor.interruptedCargo||!w.structures.some(s=>s.kind==='grave'&&s.grave?.corpseId===undefined))return false;
   const bodies=w.pawns.filter(p=>!burialReason(w,actor,p)).filter(p=>{
     const pile=bodyPile(w,p);if(pile?.owner.type!=='ground')return true;
     // Important grave priority (3) must not silently pull from equal/better storage.

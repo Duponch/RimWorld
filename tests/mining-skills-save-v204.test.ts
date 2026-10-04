@@ -151,6 +151,8 @@ test.each(['visitor','pod'] as const)('%s departures preserve Mining profiles an
       // Historical preparation only; neither accepted nor rejected packets are
       // sanitized. The generic helper does not cover civil pod archives.
       withoutTelevisionRecreation(withoutMiningSkill(world));delete archivedMiner(world,kind).skills.mining;
+      for(const archive of world.visitors?.departed??[])delete archive.pawn.background;
+      for(const archive of world.podRescues?.departed??[])delete archive.pawn.background;
       Object.assign(world,{schemaVersion:185});
       expect(Object.hasOwn(archivedMiner(world,kind).skills,'mining')).toBe(false);
       const migrated=deserializeWorld(JSON.stringify(world));

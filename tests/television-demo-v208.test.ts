@@ -2,9 +2,10 @@ import { expect,test } from 'vitest';
 import { prepareTelevisionDemo,TELEVISION_CELLS,televisionDemoEntry } from '../scripts/create-television-v208-test-save';
 import { serializeWorld,deserializeWorld,validateWorld } from '../src/sim/serialization';
 import { televisionWatchCells } from '../src/sim/television-recreation';
+import { SCHEMA_VERSION } from '../src/sim/types.ts';
 
 test('V208 scene leaves research, material delivery and television watching prospective',()=>{
-  const w=prepareTelevisionDemo();expect(validateWorld(w)).toEqual([]);expect(w.schemaVersion).toBe(190);
+  const w=prepareTelevisionDemo();expect(validateWorld(w)).toEqual([]);expect(w.schemaVersion).toBe(SCHEMA_VERSION);
   expect(w.pawns).toHaveLength(3);expect(w.jobs).toEqual([]);expect(w.structures.some(s=>s.kind==='tube-television')).toBe(false);
   expect(w.research?.project).toBe(null);expect(w.research?.tubeTelevision).toEqual({points:998_000_000});
   expect(w.piles.filter(p=>p.item==='steel').reduce((sum,p)=>sum+p.quantity,0)).toBe(80);

@@ -61,6 +61,8 @@ import { medicalBleed } from './sim/injury-state';
 import { createHealthInspection,updateHealthInspection } from './ui/health-inspection';
 import { createPrisonerInspection,updatePrisonerInspection } from './ui/prisoner-inspection';
 import { createSkillsInspection, updateSkillsInspection, updateWorkSkills } from './ui/skills-inspection';
+import { BACKGROUND_SKILL_IDS, backgroundSkillRefusal } from './sim/colonist-backgrounds';
+import { BACKGROUND_SKILL_LABELS, backgroundSummary, backgroundRestrictionRows, updateBackgroundWorkControl } from './ui/background-inspection';
 import { updateCoolerControls } from './ui/cooler-controls';
 import { powerInspection } from './ui/power-inspection';
 import { televisionInspection } from './ui/television-inspection';
@@ -611,7 +613,16 @@ function rebuildInspector() {
     const current=()=>{const pawn=snapshot?.pawns.find(p=>p.id===selectedPawn);return snapshot&&pawn?{world:snapshot,pawn}:undefined;};
     const send=(command:Command)=>void attempt(()=>client.command(command));
     panel.innerHTML = `<div class="panel-heading"><h2 id="selected-name"></h2><button id="selected-information" aria-label="Informations sur le personnage">i</button><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><p id="selected-action"></p>${pawnNeedsMarkup()}${managed?'<button class="secondary-action" id="manage-work">Gérer le travail</button>':''}`;
-    el('selected-information').onclick=()=>{const state=current();if(state)openObjectInformation({title:state.pawn.name,description:actionLabel(state.pawn,carriedPatientsOf(state.world)),rows:[...healthCapacityRows(state.pawn).map(row=>({...row,category:'Capacités',description:'Capacité actuelle du personnage. Les détails anatomiques et facteurs actifs se consultent dans Santé.'})),...Object.entries(state.pawn.skills).map(([skill,value])=>({category:'Compétences',label:({construction:'Construction',medicine:'Médecine',plants:'Plantes',animals:'Animaux',cooking:'Cuisine',crafting:'Artisanat',artistic:'Artistique',shooting:'Tir',melee:'Mêlée',social:'Social',intellectual:'Intellectuel'} as Record<string,string>)[skill]??skill,value:`${value.level} / 20`,description:'Niveau actuel. Bio expose l’expérience et les effets sur les travaux.'}))]});};
+    el('selected-information').onclick=()=>{const state=current();if(!state)return;
+      const pawn=state.pawn;
+      openObjectInformation({title:pawn.name,description:actionLabel(pawn,carriedPatientsOf(state.world)),rows:[
+        {category:'Passé',label:'Profil',value:backgroundSummary(pawn),description:'Enfance et activité adulte enregistrées. Bio présente leurs récits et effets initiaux.'},
+        ...backgroundRestrictionRows(pawn).map(row=>({category:'Incapacités',label:row.label,value:'Indisponible',description:row.reason})),
+        ...healthCapacityRows(pawn).map(row=>({...row,category:'Capacités',description:'Capacité actuelle du personnage. Les détails anatomiques et facteurs actifs se consultent dans Santé.'})),
+        ...BACKGROUND_SKILL_IDS.flatMap(skill=>{const value=pawn.skills[skill];if(!value)return [];
+          const refusal=backgroundSkillRefusal(pawn,skill);
+          return [{category:'Compétences',label:BACKGROUND_SKILL_LABELS[skill],value:refusal?`Indisponible (niveau enregistré ${value.level} / 20)`:`${value.level} / 20`,description:refusal??'Niveau actuel. Bio expose l’expérience et les effets sur les travaux.'}];}),
+      ]});};
     setTooltip(el('selected-information'),{title:'Informations',body:'Afficher les statistiques disponibles du personnage.'});
     createMoodInspection(panel);
     createSocialInspection(panel,renderState);
@@ -768,7 +779,10 @@ function updateWorkPanel(world: World, carriedPatients: ReadonlySet<number>): vo
     if (!row) continue;
     updateWorkSkills(row,pawn);
     row.querySelector('.work-activity')!.textContent = actionLabel(pawn, carriedPatients);
-    for (const select of row.querySelectorAll<HTMLSelectElement>('select')) select.value = String(pawn.priorities[select.dataset.work as WorkType]);
+    for (const select of row.querySelectorAll<HTMLSelectElement>('select')) {
+      const work=select.dataset.work as WorkType;select.value=String(pawn.priorities[work]);
+      updateBackgroundWorkControl(select,pawn,work);
+    }
   }
 }
 function renderState() {

@@ -14,7 +14,7 @@ import { resetWork } from './work-progress.ts';
 import { zonesUnderPlan } from './construction-zones.ts';
 import { constructionHaulId } from './construction-rules.ts';
 import type { Cell, Command, MaterialPile, Pawn, World } from './types.ts';
-import { workType } from './work-planner.ts';
+import { workType } from './work-types.ts';
 import { haulingWork } from './haul-aside.ts';
 import { footprintCells } from './definitions.ts';
 import { queryArea } from './designation.ts';

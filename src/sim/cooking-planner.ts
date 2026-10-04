@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import {planArtWork} from './art-work-plan.ts';
 import {isArtRecipe} from './art-rules.ts';
 import { productionResearchUnlocked,productionWorkerQualified,validAdvancedComponentIngredients,validFlakIngredients } from './machining.ts';
@@ -28,14 +29,14 @@ export function hasCookingWork(world:World,pawn:Pawn):boolean {
   return productionPriority(world,pawn)<5;
 }
 export function availableCookingStations(world:World,pawn:Pawn):Structure[] {
-  return world.structures.filter(s=>stationRecipe(s)&&(s.kind!=='electric-stove'||foodStationUsable(s))&&productionStationUsable(s)&&pawn.priorities[stationWork(s)]>0&&s.bills?.some(b=>billWanted(world,b))
+  return world.structures.filter(s=>stationRecipe(s)&&(s.kind!=='electric-stove'||foodStationUsable(s))&&productionStationUsable(s)&&workPriority(pawn,stationWork(s))>0&&s.bills?.some(b=>billWanted(world,b))
     &&!fuelStationReserved(world,s.id,pawn.id));
 }
 /** Select without mutation. The ordinary planner compares this proposal with
  * construction/growing/hauling before committing its reservations. */
 export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:{pairs:number},options?:{stationId:number;forced:boolean}):CookingPlan|null {
   const stations=availableCookingStations(world,pawn).filter(s=>!options||s.id===options.stationId)
-    .sort((a,b)=>pawn.priorities[stationWork(a)]-pawn.priorities[stationWork(b)]||distance(pawn,a)-distance(pawn,b)||a.id-b.id);
+    .sort((a,b)=>workPriority(pawn,stationWork(a))-workPriority(pawn,stationWork(b))||distance(pawn,a)-distance(pawn,b)||a.id-b.id);
   // Proposals below only read the World; reserve claims cannot change until
   // the caller commits a plan. Capture the same service cells at most once.
   let serviceCells:ReadonlySet<number>|undefined;
@@ -56,7 +57,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
           if(budget.pairs--<=0){budget.pairs=0;return null;}
           const path=routeToJob(world,pile.owner as Cell,reachable,true);
           if(!path)continue;
-          return {station,priority:pawn.priorities[stationWork(station)],target:pile.owner as Cell,path,refuel:{sourcePileId:pile.id,quantity:Math.min(10,capacity,pile.quantity-reservedSource(world,pile.id)),phase:'pickup',carryPileId:null,destination:{type:'fuel',structureId:station.id,forCooking:true,...(options?.forced?{forced:true}:{})}}};
+          return {station,priority:workPriority(pawn,stationWork(station)),target:pile.owner as Cell,path,refuel:{sourcePileId:pile.id,quantity:Math.min(10,capacity,pile.quantity-reservedSource(world,pile.id)),phase:'pickup',carryPileId:null,destination:{type:'fuel',structureId:station.id,forCooking:true,...(options?.forced?{forced:true}:{})}}};
         }
         break;
       }
@@ -101,7 +102,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       }
       if(missing||bill.recipe==='cook-survival-meal'&&!validSurvivalMealIngredients(ingredients)||bill.recipe==='fine-meal'&&!validFineMealIngredients(ingredients)||bill.recipe==='cook-fine-meal-bulk'&&!validFineMealBulkIngredients(ingredients)||bill.recipe==='vegetarian-fine-meal'&&!validVegetarianFineMealIngredients(ingredients)||bill.recipe==='cook-vegetarian-fine-meal-bulk'&&!validVegetarianFineMealBulkIngredients(ingredients)||bill.recipe==='carnivore-fine-meal'&&!validCarnivoreFineMealIngredients(ingredients)||bill.recipe==='cook-carnivore-fine-meal-bulk'&&!validCarnivoreFineMealBulkIngredients(ingredients)||bill.recipe==='lavish-meal'&&!validLavishMealIngredients(ingredients)||bill.recipe==='cook-lavish-meal-bulk'&&!validLavishMealBulkIngredients(ingredients)||bill.recipe==='vegetarian-lavish-meal'&&!validVegetarianLavishMealIngredients(ingredients)||bill.recipe==='cook-vegetarian-lavish-meal-bulk'&&!validVegetarianLavishMealBulkIngredients(ingredients)||bill.recipe==='cook-carnivore-lavish-meal'&&!validCarnivoreLavishMealIngredients(ingredients)||bill.recipe==='cook-carnivore-lavish-meal-bulk'&&!validCarnivoreLavishMealBulkIngredients(ingredients)||!validFlakIngredients(bill.recipe,ingredients)||!validAdvancedComponentIngredients(bill.recipe,ingredients))continue; // Try the next bill if its filters admit other ingredients.
       const source=ingredients.find(i=>i.stage==='source'),target=source?world.piles.find(p=>p.id===source.pileId)!.owner as Cell:spot;
-      return {station,priority:pawn.priorities[stationWork(station)],target,path:source?routeToJob(world,target,reachable,true)!:toSpot,task:{...(bill.recipe!=='simple-meal'?{recipe:bill.recipe}:{}),stationId:station.id,billId:bill.id,spot,actionCell:{x:target.x,z:target.z},phase:'gather',ingredients,progress:0,productId:null,storageId:null}};
+      return {station,priority:workPriority(pawn,stationWork(station)),target,path:source?routeToJob(world,target,reachable,true)!:toSpot,task:{...(bill.recipe!=='simple-meal'?{recipe:bill.recipe}:{}),stationId:station.id,billId:bill.id,spot,actionCell:{x:target.x,z:target.z},phase:'gather',ingredients,progress:0,productId:null,storageId:null}};
       }
     }
   }
@@ -110,6 +111,6 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
 
 export function productionPriority(world:World,pawn:Pawn):number {
   let priority=5;
-  for(const s of world.structures)if(stationRecipe(s)&&s.bills?.some(b=>billWanted(world,b))){const p=pawn.priorities[stationWork(s)];if(p>0)priority=Math.min(priority,p);}
+  for(const s of world.structures)if(stationRecipe(s)&&s.bills?.some(b=>billWanted(world,b))){const p=workPriority(pawn,stationWork(s));if(p>0)priority=Math.min(priority,p);}
   return priority;
 }

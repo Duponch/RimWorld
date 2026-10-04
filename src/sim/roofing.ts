@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import { RoomTopologyCache } from './room-topology.ts';
 import { RoofContext, isRoofJob, roofIndex, roofJobWanted } from './roof-rules.ts';
 import { releaseWork } from './work-release.ts';
@@ -45,7 +46,7 @@ export function scheduleRoofs(world: World): void {
     if(roofJobs.length&&roofJobs.every(j=>j.reservedBy===null))world.jobs=world.jobs.filter(j=>!isRoofJob(j));
   }
   const pending = world.jobs.filter(isRoofJob), used = new Set(pending.map(j => roofIndex(world,j)));
-  let capacity = Math.max(0, Math.min(128, world.pawns.filter(p=>p.priorities.build>0).length * 2) - pending.length);
+  let capacity = Math.max(0, Math.min(128, world.pawns.filter(p=>workPriority(p,'build')>0).length * 2) - pending.length);
   const candidates = [...state.remove, ...state.build]; if (!candidates.length) { state.cursor = 0; return; }
   const limit = Math.min(candidates.length, 1024);
   for (let scanned = 0; scanned < limit && capacity > 0; scanned++) {

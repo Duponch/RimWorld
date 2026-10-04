@@ -1,5 +1,6 @@
 import { newTactics } from './tactics-state.ts';
 import { startingPawn } from './starting-pawns.ts';
+import { generatePawnBackground } from './background-generation.ts';
 import { newWeaponState } from './equipment-rules.ts';
 import { blockedCells } from './pathfinding.ts';
 import { candidateAccess } from './candidate-access.ts';
@@ -22,6 +23,7 @@ export function setupEncounter(world:World):void {
   const site=candidates.find(c=>reach.has(c.z*world.width+c.x));
   if(!site)throw new Error('Aucun emplacement accessible pour la sentinelle sur cette graine.');
   const enemy=startingPawn(world.nextId++,'Sentinelle',site.x,site.z,0,55,world.seed,world.tick);enemy.faction='outlaws';enemy.tactics=newTactics();
+  if(world.schemaVersion>=191)generatePawnBackground(enemy,world.seed,true);
   world.pawns.push(enemy);
   world.piles.push({id:world.nextId++,kind:'weapon',item:'revolver',quantity:1,owner:{type:'equipment',pawnId:enemy.id},weapon:newWeaponState()});
   const weapon=world.piles.find(p=>p.item==='revolver'&&p.owner.type==='ground');

@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { offeredBackground,assignOfferedBackground } from './background-generation.ts';
 import { arrivalEntry } from './arrival-entry.ts';
 import { ARRIVAL_NAMES,arrivalRandom } from './arrival-state.ts';
 import { newApparelState } from './apparel-rules.ts';
@@ -50,6 +51,7 @@ function arrive(w:World,q:JoinerQuest):void {
   if(!admission(w))return;
   const entry=arrivalEntry(w,s.rng);if(!entry)return;
   const p=startingPawn(w.nextId,q.name,entry.x,entry.z,q.profile,55,w.seed,w.tick);
+  assignOfferedBackground(p,q,w.seed,w.tick);
   p.hunger=75;p.rest=80;p.foodPolicyId=w.foodPolicies[0]!.id;p.originQuestId=q.id;
   const shirt={id:w.nextId+1,kind:'apparel' as const,item:'cloth-shirt' as const,quantity:1,owner:{type:'apparel' as const,pawnId:p.id},apparel:newApparelState('cloth-shirt')};
   w.nextId+=2;w.pawns.push(p);w.piles.push(shirt);
@@ -87,7 +89,7 @@ export function advanceQuests(w:World):void {
   }
   const random={rng:s.rng},q:JoinerQuest={id:s.serial+1,offeredAt:w.tick,expiresAt:w.tick+QUEST_OFFER_TICKS,
     name:ARRIVAL_NAMES[Math.floor(arrivalRandom(random)*ARRIVAL_NAMES.length)]!,profile:Math.floor(arrivalRandom(random)*3) as 0|1|2,
-    joinDelay:60+Math.floor(arrivalRandom(random)*61),raidDelay:Math.round((1800+Math.floor(arrivalRandom(random)*601))/250)*25,status:'offered'};
+    joinDelay:60+Math.floor(arrivalRandom(random)*61),raidDelay:Math.round((1800+Math.floor(arrivalRandom(random)*601))/250)*25,status:'offered',...w.schemaVersion>=191?offeredBackground(w.seed^0x210a511,s.serial+1):{}};
   if(s.entries.length>=QUEST_HISTORY_LIMIT){
     const pinned=[w.raids?.active?.originQuestId,w.raids?.last?.originQuestId];
     const old=s.entries.findIndex(q=>!pinned.includes(q.id));

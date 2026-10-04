@@ -11,9 +11,9 @@ import { socialImpact } from '../sim/social-state';
 import { biologicalYears,chronologicalYears } from '../sim/human-age.ts';
 import type { Pawn } from '../sim/types.ts';
 import { SKILL_PASSION_LABELS,setCompactSkillPassion,setSkillPassion } from './skill-passion';
-import { setTooltip } from './tooltip';
 import type { World } from '../sim/types';
 import { appearanceOf } from '../sim/pawn-appearance';
+import { createBackgroundInspection, updateBackgroundInspection, updateBackgroundSkillControl } from './background-inspection';
 import './pawn-dossiers-v199.css';
 
 type SkillEntry = {
@@ -50,7 +50,8 @@ function createSkillEntry(entry:SkillEntry):HTMLElement {
   if(entry.progress){const progress=document.createElement('progress');progress.max=1;progress.hidden=true;progress.setAttribute(entry.progress,'');summary.append(progress);}
   const description=document.createElement('p');description.className='skill-entry-details muted';description.dataset.skillDetail=entry.skill;
   if(entry.description)description.setAttribute(entry.description,'');
-  description.hidden=true;details.append(summary,description);return details;
+  const availability=document.createElement('span');availability.className='skill-availability';availability.hidden=true;
+  description.hidden=true;details.append(summary,availability,description);return details;
 }
 
 export function createSkillsInspection(panel:HTMLElement):void {
@@ -60,6 +61,7 @@ export function createSkillsInspection(panel:HTMLElement):void {
   const identity=document.createElement('section');identity.className='bio-identity';
   const name=document.createElement('h3');name.dataset.bioName='';
   const sex=document.createElement('p');sex.dataset.bioSex='';identity.append(name,sex,age);
+  createBackgroundInspection(identity);
   createTraitsInspection(identity);
   const skills=document.createElement('section');skills.className='bio-skills';skills.setAttribute('aria-label','Compétences');
   const heading=document.createElement('h3');heading.textContent='Compétences';skills.append(heading,...SKILL_ENTRIES.map(createSkillEntry));
@@ -68,6 +70,7 @@ export function createSkillsInspection(panel:HTMLElement):void {
 }
 export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn,world?:World):void {
   updateTraitsInspection(panel,pawn);
+  updateBackgroundInspection(panel,pawn);
   const name=panel.querySelector<HTMLElement>('[data-bio-name]');if(name)name.textContent=pawn.name;
   const sex=panel.querySelector<HTMLElement>('[data-bio-sex]');if(sex)sex.textContent=`${(world?appearanceOf(pawn,world.seed):pawn.appearance)?.sex==='female'?'Femme':'Homme'} · ${pawn.prisoner?'Prisonnier':pawn.visitor?'Visiteur':pawn.faction==='outlaws'?'Hors-la-loi':'Colon'}`;
   const age=panel.querySelector<HTMLElement>('[data-pawn-age]');if(age){age.textContent=humanAgeText(pawn);age.hidden=!age.textContent;}
@@ -112,10 +115,10 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn,world?:World)
   panel.querySelector('[data-medicine-description]')!.textContent=`${(m.xp/XP_SCALE).toFixed(1)} / ${xpRequired(m.level)/XP_SCALE} XP · Vitesse ${Math.round(medicalTendSpeed(pawn)*100)} % avant lumière · Qualité de base ${Math.round(medicalTendQuality(pawn)*100)} % avant matériel et variation · Apprentissage ${Math.round(learningFactor(m,pawn)*100)} %.`;
   for(const entry of SKILL_ENTRIES){
     const row=panel.querySelector<HTMLElement>(`[data-skill-entry="${entry.skill}"]`)!;
-    const skill=entry.skill==='mining'?mining:pawn.skills[entry.skill]??{level:0,xp:0,dailyXp:0,passion:0 as const};
+    const skill=entry.skill==='mining'?mining:entry.skill==='plants'?plants:entry.skill==='cooking'?cook:pawn.skills[entry.skill]??{level:0,xp:0,dailyXp:0,passion:0 as const};
     row.querySelector<HTMLElement>('.skill-level-bar')!.style.width=`${Math.max(0,Math.min(100,skill.level/20*100))}%`;
     const label=row.querySelector<HTMLElement>('[data-skill]')!;
-    setTooltip(row,{title:label.getAttribute('aria-label')??'',body:row.querySelector<HTMLElement>('[data-skill-detail]')!.textContent??'',rows:[{label:'Expérience du niveau',value:`${(skill.xp/XP_SCALE).toFixed(1)} / ${xpRequired(skill.level)/XP_SCALE}`},{label:'Apprentissage',value:`${Math.round(learningFactor(skill,pawn)*100)} %`}]});
+    updateBackgroundSkillControl(row,pawn,entry.skill,skill,label.getAttribute('aria-label')??'',row.querySelector<HTMLElement>('[data-skill-detail]')!.textContent??'');
     label.removeAttribute('title');
   }
 }

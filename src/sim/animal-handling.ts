@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import { isColonist } from './affiliation.ts';
 import { animalSpecies } from './animal-species.ts';
 import { animalNutritionMax } from './animal-life.ts';
@@ -47,7 +48,7 @@ function animalAvailable(a:WildAnimal):boolean {
 }
 function handlerAvailable(p:Pawn):boolean {
   const body=pawnBody(p).capacities;
-  return isColonist(p)&&p.priorities.handle>0&&!p.draft&&!p.mental?.crisis&&!p.flee&&!p.interruptedCargo
+  return isColonist(p)&&workPriority(p,'handle')>0&&!p.draft&&!p.mental?.crisis&&!p.flee&&!p.interruptedCargo
     &&!medicalWorkRefusal(p)&&body.talking>0&&body.hearing>0&&body.manipulation>0;
 }
 function trainableAt(w:World,a:WildAnimal):boolean {

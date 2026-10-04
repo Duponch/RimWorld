@@ -1,4 +1,7 @@
 import { urgentTreatment } from './care-rules.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
+import { workPriority } from './work-types.ts';
+import type { WorkType } from './types.ts';
 import { lyingPatient,tendingProposal,startTending } from './tending.ts';
 import { patientProposal,startPatientRest } from './patient-rest.ts';
 import { releaseWork } from './work-release.ts';
@@ -9,8 +12,8 @@ import type { Pawn,World } from './types.ts';
  * Core only promotes emergency providers whose priority reaches the best
  * enabled ordinary work category, even when that category has no ready job. */
 export function urgentWorkEnabled(pawn:Pawn,work:'patient'|'doctor'):boolean {
-  const priority=pawn.priorities[work];
-  return priority>0&&Object.values(pawn.priorities).every(p=>p===0||p>=priority);
+  const priority=workPriority(pawn,work);
+  return priority>0&&Object.entries(pawn.priorities).every(([type,p])=>p===0||backgroundWorkRefusal(pawn,type as WorkType)!==undefined||p>=priority);
 }
 
 /** The 211 Core-tick bed review is represented by alternating 21/22 local

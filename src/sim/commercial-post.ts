@@ -105,7 +105,8 @@ export function quoteCommercial(w:World,lines:CommercialBuyLine[]):CommercialQuo
   const trip=w.commercialTrip,post=w.civilianPost;
   if(!trip||trip.phase!=='at-post'||w.tick>trip.decisionUntil||!post||!validCivilianPostShape(post,w.tick,w.nextId))return reject('Le voyageur doit être arrivé au comptoir civil.');
   const p=trip.pawn;
-  if(!isColonist(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.health?.death||p.age&&biologicalYears(p.age)<18||negotiatorRefusal(p))return reject('Le négociateur doit rester un colon adulte libre et capable.');
+  if(!isColonist(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.health?.death||p.age&&biologicalYears(p.age)<18)return reject('Le négociateur doit rester un colon adulte libre et capable.');
+  const reason=negotiatorRefusal(p);if(reason)return reject(reason);
   const initial=commercialPawnMass(p,trip.items);if(!initial)return reject('Une possession ne possède pas de masse de voyage admissible.');
   if(!Array.isArray(lines)||lines.length>COMMERCIAL_MAX_STOCK||lines.some(l=>!object(l)||!keys(l,['pileId','quantity'])||!integer(l.pileId,1)||!integer(l.quantity,1))
     ||new Set(lines.map(l=>l.pileId)).size!==lines.length)return reject('Panier commercial invalide.');

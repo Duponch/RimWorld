@@ -1,3 +1,5 @@
+import { workPriority } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { surgeryRequestReason,medicalSurgerySpeed,surgerySuccessChance,surgeryBaseXp,SURGERY_WORK } from './surgery-rules.ts';
 import { amputateSurgicalLimb } from './surgery-anatomy.ts';
 import { resolveSurgeryOutcome } from './surgery-outcomes.ts';
@@ -26,8 +28,9 @@ const release=(world:World,doctor:Pawn):void=>{if(!releaseWork(world,doctor))int
 /** Sparse pending requests cost no clinical/topology query on other pawns. */
 export function surgeryReason(world:World,doctor:Pawn,patient:Pawn|undefined,accepted=false):string|undefined {
   const task=accepted?doctor.surgery:undefined;
+  const refusal=backgroundWorkRefusal(doctor,'doctor');if(refusal)return refusal;
   if(medicalWorkRefusal(doctor))return medicalWorkRefusal(doctor);
-  if(doctor.priorities.doctor===0)return 'Médecin est désactivé.';
+  if(workPriority(doctor,'doctor')===0)return 'Médecin est désactivé.';
   if(doctor.interruptedCargo)return 'Déposer la cargaison avant l’opération.';
   if(!patient||patient===doctor||!patient.surgeryRequest)return 'Aucune demande opératoire valide pour ce patient.';
   const part=patient.surgeryRequest.part;
@@ -64,7 +67,7 @@ export function applySurgery(world:World,command:SurgeryCommand):CommandResult {
   const reason=surgeryRequestReason(patient,command.part);if(reason)return fail(reason);
   if(patient.surgeryRequest)return fail('Une opération est déjà demandée ; annulez-la pour changer de membre.');
   patient.surgeryRequest={part:command.part,requestedAt:world.tick};patient.planCooldown=0;
-  for(const doctor of world.pawns)if(doctor.priorities.doctor>0)doctor.planCooldown=0;
+  for(const doctor of world.pawns)if(workPriority(doctor,'doctor')>0)doctor.planCooldown=0;
   return {ok:true};
 }
 export function reconcileSurgery(world:World):void {

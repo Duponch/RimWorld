@@ -9,6 +9,7 @@ import { createMedicalRecord, medicalBleed } from '../src/sim/injury-state.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
 import { addSocialMemory, opinionOf, socialSeed } from '../src/sim/social-state.ts';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization.ts';
+import { startingSkills } from '../src/sim/skills.ts';
 import { SCHEMA_VERSION, type Pawn, type World } from '../src/sim/types.ts';
 
 const fixtureUrl = new URL('../public/test-saves/v181/deuil-et-souvenirs.json', import.meta.url);
@@ -24,8 +25,13 @@ export function bereavementDemoActors(world: World): { patient: Pawn; friend: Pa
 
 /** This is a prepared social/medical starting condition. The friendships and
  * hostility are not claimed as conversations played by this generator. */
-export function prepareBereavementDemo(): World {
+export function prepareBereavementDemo(generation: 'current' | 'pre-v210' = 'current'): World {
   const world = createScenarioWorld(BEREAVEMENT_DEMO_SEED, 250, 'crashlanded', { hilliness: 'small-hills', biome: 'arid-shrubland' });
+  // Reconstruct the published starters before this scene's own overrides.
+  // Birth gains may clamp, so restore the base rather than subtracting them.
+  if (generation === 'pre-v210') world.pawns.forEach((pawn, index) => {
+    delete pawn.background; pawn.skills = startingSkills(index);
+  });
   assert.equal(world.pawns.length, 3);
   const { patient, friend, rival } = bereavementDemoActors(world);
   assert.equal(world.tick, 0);

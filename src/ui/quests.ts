@@ -1,4 +1,7 @@
+import { previewBackgroundSkills } from '../sim/background-generation';
 import { startingSkills } from '../sim/skills';
+import { biologicalYears, chronologicalYears } from '../sim/human-age';
+import { backgroundSkillSummary, createBackgroundInspection, updateBackgroundInspection } from './background-inspection';
 import { TICKS_PER_DAY,type Command,type World } from '../sim/types';
 import type { JoinerQuest } from '../sim/quest-state';
 
@@ -22,6 +25,8 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
   const enable=document.createElement('button');enable.id='enable-quests';enable.type='button';enable.textContent='Recevoir des demandes d’asile';
   const status=document.createElement('p');status.id='quest-status';status.setAttribute('role','status');
   const details=document.createElement('p');details.id='quest-details';
+  const profile=document.createElement('section');profile.dataset.questBackground='';
+  const age=document.createElement('p');profile.append(age);createBackgroundInspection(profile);
   const timing=document.createElement('p');timing.id='quest-timing';
   const accept=document.createElement('button');accept.id='accept-quest';accept.type='button';accept.textContent='Accueillir et accepter la poursuite';
   const refuse=document.createElement('button');refuse.id='refuse-quest';refuse.type='button';refuse.textContent='Refuser sans pénalité';
@@ -29,7 +34,7 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
   const feedback=document.createElement('p');feedback.id='quest-feedback';feedback.setAttribute('role','alert');
   const historyHeading=document.createElement('h3');historyHeading.textContent='Dossiers précédents';
   const history=document.createElement('ol');history.id='quest-history';
-  root.replaceChildren(heading,intro,enable,status,details,timing,response,feedback,historyHeading,history);
+  root.replaceChildren(heading,intro,enable,status,details,profile,timing,response,feedback,historyHeading,history);
   const letter=document.createElement('button');letter.id='quest-letter';letter.className='arrival-letter';letter.type='button';
   letter.onclick=()=>{if(document.getElementById('quests-panel')?.hidden)document.querySelector<HTMLButtonElement>('[data-panel="quests"]')?.click();requestAnimationFrame(()=>heading.focus());};
   let current:World|undefined,busy=false,shownId:number|undefined;
@@ -63,6 +68,11 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
     updateHistory(calendar?.entries??[],world.tick);
     const entry=calendar?latest(calendar.entries):undefined;
     const offer=entry?.status==='offered'?entry:undefined;
+    profile.hidden=!entry||entry.status!=='offered'&&entry.status!=='accepted';
+    if(entry&&!profile.hidden){
+      age.hidden=!entry.age;age.textContent=entry.age?`Âge proposé : ${biologicalYears(entry.age)} ans${chronologicalYears(entry.age)===biologicalYears(entry.age)?'':` (${chronologicalYears(entry.age)} chronologiques)`}`:'';
+      updateBackgroundInspection(profile,entry);
+    }
     shownId=offer?.id;
     enable.hidden=!eligible||!!calendar;enable.disabled=busy;
     response.hidden=!offer;accept.disabled=refuse.disabled=busy||!offer;
@@ -71,9 +81,9 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
     if(!entry){status.textContent='Aucune demande en cours.';details.textContent='Une nouvelle personne pourra demander asile plus tard.';timing.textContent='';letter.remove();return;}
     const name=entry.name;
     if(offer){
-      const skills=startingSkills(offer.profile);
+      const skills=offer.background?previewBackgroundSkills(offer.profile,offer.background):startingSkills(offer.profile);
       status.textContent=`${name} demande asile avant la fin de l’offre.`;
-      details.textContent=`Profil : Construction ${skills.construction.level}, Médecine ${skills.medicine.level}, Tir ${skills.shooting.level}, Mêlée ${skills.melee.level}, Cuisine ${skills.cooking?.level??0}. En l’accueillant, vous recevez ce colon et sa chemise ; un bandit au couteau le poursuit. Aucun butin n’est promis.`;
+      details.textContent=`Profil : ${backgroundSkillSummary(skills,offer)}. En l’accueillant, vous recevez ce colon et sa chemise ; un bandit au couteau le poursuit. Aucun butin n’est promis.`;
       timing.textContent=`Répondez sous ${duration(offer.expiresAt-world.tick)}. Si vous acceptez, arrivée prévue dans ${duration(offer.joinDelay)} et poursuite dans ${duration(offer.raidDelay)} après votre réponse. Une bordure bloquée peut retarder ces entrées. Refuser ou laisser expirer n’a pas de pénalité.`;
     }else if(entry.status==='accepted'){
       if(entry.raidGroupId!==undefined){status.textContent=`${name} a rejoint la colonie ; le bandit est apparu.`;timing.textContent=`La demande sera conclue dans ${duration((entry.raidAt??world.tick)+60-world.tick)}. Le combat peut continuer après sa conclusion, sans victoire déclarée par la quête.`;}

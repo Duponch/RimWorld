@@ -1,3 +1,5 @@
+import { workPriority } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { productionStationUsable } from './production-recipes.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
@@ -23,7 +25,8 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   const label='Produire au poste',no=(reason:string):CookingProposal=>({label,reason});
   const station=world.structures.find(s=>s.id===stationId&&stationRecipe(s)!==null);
   if(!station)return no('Poste de production introuvable.');
-  if(!pawn.priorities[stationWork(station)])return no('Métier désactivé dans le tableau Travail.');
+  const refusal=backgroundWorkRefusal(pawn,stationWork(station));if(refusal)return no(refusal);
+  if(!workPriority(pawn,stationWork(station)))return no('Métier désactivé dans le tableau Travail.');
   if(!station.bills?.some(b=>billWanted(world,b)))return no('Aucune facture active à produire : vérifiez suspension et quantité demandée.');
   if(fuelStationReserved(world,station.id))return no('Poste réservé pour une cuisine ou un ravitaillement.');
   if(station.kind==='electric-stove'&&!foodStationUsable(station))return no('La cuisinière n’est pas alimentée :350 W nécessaires.');
@@ -96,7 +99,8 @@ export function startCookingOrder(pawn:Pawn,order:CookingOrder,path:Cell[]):void
   pawn.cooking=order.cooking;pawn.orders.active='cook';pawn.path=path;pawn.planCooldown=0;pawn.state=path.length||pawn.moveCooldown>0?'moving':'working';
 }
 export function advanceCookingOrder(world:World,pawn:Pawn,order:CookingOrder,getBlocked:NavigationGrid,budget:SearchBudget):boolean {
-  let reason=queuedCookingReason(world,order),path:Cell[]|null=null;
+  const station=world.structures.find(s=>s.id===order.cooking.stationId);
+  let reason=(station?backgroundWorkRefusal(pawn,stationWork(station)):undefined)??queuedCookingReason(world,order),path:Cell[]|null=null;
   if(!reason) {
     const c=order.cooking,sources=c.ingredients.filter(i=>i.stage==='source').map(i=>world.piles.find(p=>p.id===i.pileId)!.owner as Cell);
     const groups=[new Set([cellIndex(world,c.spot.x,c.spot.z)]),...sources.map(s=>interactionGoals(world,[s]))];

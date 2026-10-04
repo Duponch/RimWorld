@@ -12,7 +12,7 @@ import { visitorGroupDanger } from '../src/sim/visitors.ts';
 function until(w:World,done:()=>boolean,limit=700):void {for(let i=0;i<limit&&!done();i++)stepWorld(w);expect(done(),`TV checkpoint missing at ${w.tick}`).toBe(true);expect(validateWorld(w)).toEqual([]);}
 function legacy189(w:World):World {
   const old=structuredClone(w);(old as {schemaVersion:number}).schemaVersion=189;delete old.research?.tubeTelevision;
-  const remove=(p:World['pawns'][number])=>{delete (p.recreation.tolerance as Partial<typeof p.recreation.tolerance>).television;delete (p.recreation.bored as Partial<typeof p.recreation.bored>).television;};
+  const remove=(p:World['pawns'][number])=>{delete p.background;delete (p.recreation.tolerance as Partial<typeof p.recreation.tolerance>).television;delete (p.recreation.bored as Partial<typeof p.recreation.bored>).television;};
   for(const p of old.pawns)remove(p);
   for(const d of old.visitors?.departed??[])remove(d.pawn);
   if(old.scout&&'pawn' in old.scout)remove(old.scout.pawn);if(old.commercialTrip&&'pawn' in old.commercialTrip)remove(old.commercialTrip.pawn);
@@ -23,8 +23,8 @@ function compare(w:World,ticks=5):void {const copy=deserializeWorld(serializeWor
 const packet=(encoder:SnapshotEncoder,w:World,checkpoint=false)=>structuredClone(encoder.encode(w,0,6,checkpoint));
 
 test('strict189 migration changes only schema and television0/false, preserving meters, RNG, research and identities',()=>{
-  const old=legacy189(ordinary()),saved=JSON.stringify(old),expected=structuredClone(old);initializeTelevisionRecreation(expected);
-  expect(SCHEMA_VERSION).toBe(190);const loaded=deserializeWorld(saved);expect(loaded).toEqual(expected);
+  const old=legacy189(ordinary()),saved=JSON.stringify(old),expected=structuredClone(old);initializeTelevisionRecreation(expected);Object.assign(expected,{schemaVersion:SCHEMA_VERSION});
+  const loaded=deserializeWorld(saved);expect(loaded).toEqual(expected);
   expect(loaded.rng).toBe(old.rng);expect(loaded.nextId).toBe(old.nextId);expect(loaded.research!.tubeTelevision).toBeUndefined();expect(JSON.stringify(old)).toBe(saved);compare(loaded);
   const bad=structuredClone(old);bad.pawns[0]!.id=0;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/version 189/);
 });
@@ -73,7 +73,7 @@ test('neutral189 migration reaches original off-map scout and commercial owner w
   expect(applyCommand(commercial,{type:'commercial-start',pawnId,foodPileId:foodId,quantity:2,silver:600}).ok).toBe(true);
   until(commercial,()=>!!commercial.commercialTrip&&'pawn' in commercial.commercialTrip);
   for(const w of [scout,commercial]){
-    const old=legacy189(w),expected=structuredClone(old);initializeTelevisionRecreation(expected);
+    const old=legacy189(w),expected=structuredClone(old);initializeTelevisionRecreation(expected);Object.assign(expected,{schemaVersion:SCHEMA_VERSION});
     const saved=JSON.stringify(old),loaded=deserializeWorld(saved);expect(loaded).toEqual(expected);expect(JSON.stringify(old)).toBe(saved);compare(loaded,3);
     const owner=loaded.scout&&'pawn' in loaded.scout?loaded.scout.pawn:loaded.commercialTrip&&'pawn' in loaded.commercialTrip?loaded.commercialTrip.pawn:null;
     expect(owner!.recreation.tolerance.television).toBe(0);expect(owner!.recreation.bored.television).toBe(false);expect(owner!.recreation.task).toBeNull();

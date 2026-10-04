@@ -10,6 +10,7 @@ import { applyBulletStagger } from './stagger.ts';
 import { applyMeleeStun } from './stun.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { learnSkill,XP_SCALE } from './skills.ts';
+import { effectiveSkillLevel } from './work-types.ts';
 import { advanceAnimalHealth,animalBody,commitAnimalImpact,delayAnimalImpact } from './wildlife-health.ts';
 import type { World } from './types.ts';
 import { cancelAnimalPredation } from './wildlife-predation.ts';
@@ -21,8 +22,8 @@ export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTa
   const immobile=animal?['downed','sleeping'].includes(target.state):isLying(target);
   if(!animalAttacker&&!immobile)learnSkill(attacker.skills.melee,200*(tool.cooldownCore/60)*XP_SCALE,attacker);
   const ac=(animalAttacker?animalBody(attacker):pawnBody(attacker)).capacities,dc=(animal?animalBody(target):pawnBody(target)).capacities;
-  const hit=immobile||options.surprise||random()<meleeHitChance(animalAttacker?4:attacker.skills.melee.level,ac.sight,ac.manipulation);
-  const dodge=hit&&!immobile&&!options.surprise&&(animal||!target.shooting?.stance)&&random()<meleeDodgeChance(animal?0:target.skills.melee.level,dc.moving,dc.sight);
+  const hit=immobile||options.surprise||random()<meleeHitChance(animalAttacker?4:effectiveSkillLevel(attacker,'melee',attacker.skills.melee.level),ac.sight,ac.manipulation);
+  const dodge=hit&&!immobile&&!options.surprise&&(animal||!target.shooting?.stance)&&random()<meleeDodgeChance(animal?0:effectiveSkillLevel(target,'melee',target.skills.melee.level),dc.moving,dc.sight);
   const outcome=!hit?'miss':dodge?'dodge':'hit';
   const strike={targetId:target.id,atCore:core,untilCore:core+tool.cooldownCore,tool:tool.id,outcome} as const;
   if(animalAttacker){attacker.strike=strike;delete attacker.retaliation;}else attacker.melee!.strike=strike;

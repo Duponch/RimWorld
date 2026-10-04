@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import { bedsideAccess } from './care-access.ts';
 import { FEED_TICKS,feedingReason,feedingPlaceValid,feedingWork,type FeedTask } from './feeding-rules.ts';
 import { copyPileCondition } from './pile-condition.ts';
@@ -40,7 +41,7 @@ export function applyFeeding(world:World,command:{pawnId:number;patientId:number
 export function reconcileFeeding(world:World):void {
   for(const d of world.pawns)if(d.feed){
     const t=d.feed,p=world.pawns.find(p=>p.id===t.patientId),food=world.piles.find(p=>p.id===(t.phase==='pickup'?t.sourcePileId:t.carryPileId));
-    if(feedingReason(world,d,p,true)||d.priorities[feedingWork(p)]===0&&d.orders.active!=='feed'||!p||!feedingPlaceValid(world,t,p)||!food||food.kind!=='food'
+    if(feedingReason(world,d,p,true)||workPriority(d,feedingWork(p))===0&&d.orders.active!=='feed'||!p||!feedingPlaceValid(world,t,p)||!food||food.kind!=='food'
       ||(t.phase==='pickup'?food.owner.type!=='ground'||reservedSource(world,food.id)>food.quantity:food.owner.type!=='pawn'||food.owner.pawnId!==d.id||food.quantity!==t.quantity))interruptWork(world,d);
   }
 }

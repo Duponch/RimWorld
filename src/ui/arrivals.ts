@@ -1,17 +1,22 @@
 import type { Command,World } from '../sim/types';
 import { TICKS_PER_DAY } from '../sim/types';
 import { traitSummary } from './traits-inspection';
+import { previewBackgroundSkills } from '../sim/background-generation';
 import { startingSkills } from '../sim/skills';
+import { biologicalYears, chronologicalYears } from '../sim/human-age';
+import { backgroundSkillSummary, createBackgroundInspection, updateBackgroundInspection } from './background-inspection';
 
 /** Existing right-hand alerts host the letter; modal content uses textContent
  * even for names restored from a save. No simulation writes in presentation. */
 export function createArrivalUI(send:(command:Command)=>Promise<unknown>):{update:(world:World)=>void} {
   const dialog=document.createElement('dialog');dialog.id='arrival-dialog';dialog.className='help-dialog';
   const title=document.createElement('h2'),body=document.createElement('p'),remaining=document.createElement('p'),error=document.createElement('p');error.setAttribute('role','alert');
+  const age=document.createElement('p'),profile=document.createElement('section');profile.dataset.arrivalBackground='';
+  createBackgroundInspection(profile);
   const accept=document.createElement('button'),reject=document.createElement('button'),postpone=document.createElement('button');
   accept.id='accept-arrival';reject.id='reject-arrival';postpone.id='postpone-arrival';
   accept.textContent='Accueillir';reject.textContent='Refuser';postpone.textContent='Décider plus tard';
-  dialog.append(title,body,remaining,error,accept,reject,postpone);document.body.append(dialog);
+  dialog.append(title,body,age,profile,remaining,error,accept,reject,postpone);document.body.append(dialog);
   const letter=document.createElement('button');letter.id='arrival-letter';letter.className='arrival-letter';
   const enable=document.getElementById('enable-arrivals') as HTMLButtonElement;
   let current:World|undefined,shown:number|undefined,busy=false,enabling=false;
@@ -28,9 +33,10 @@ export function createArrivalUI(send:(command:Command)=>Promise<unknown>):{updat
     // Keep the interactive node attached across status refreshes (keyboard focus).
     const alerts=document.getElementById('alerts')!;if(letter.parentElement!==alerts)alerts.prepend(letter);
     title.textContent=`${offer.name} souhaite rejoindre la colonie`;
-    const skills=startingSkills(offer.profile),labels={construction:'Construction',medicine:'Médecine',shooting:'Tir',melee:'Mêlée'};
-    const best=(Object.keys(labels) as (keyof typeof labels)[]).sort((a,b)=>skills[b].level-skills[a].level)[0]!;
-    body.textContent=`Ce voyageur cherche un nouveau foyer. Meilleure compétence : ${labels[best]} ${skills[best].level}. Traits : ${traitSummary(offer)}. En l’accueillant, prévoyez sa nourriture, son couchage et son travail. Un refus attristera les colons pendant six jours.`;
+    const skills=offer.background?previewBackgroundSkills(offer.profile,offer.background):startingSkills(offer.profile);
+    body.textContent=`Ce voyageur cherche un nouveau foyer. Profil : ${backgroundSkillSummary(skills,offer)}. Traits : ${traitSummary(offer)}. En l’accueillant, prévoyez sa nourriture, son couchage et son travail. Un refus attristera les colons pendant six jours.`;
+    age.hidden=!offer.age;age.textContent=offer.age?`Âge : ${biologicalYears(offer.age)} ans${chronologicalYears(offer.age)===biologicalYears(offer.age)?'':` (${chronologicalYears(offer.age)} chronologiques)`}`:'';
+    updateBackgroundInspection(profile,offer);
     remaining.textContent=`Temps restant : ${Math.ceil((offer.expiresAt-world.tick)*24/TICKS_PER_DAY)} h. Vous pouvez différer votre réponse ; sans réponse, la demande expire.`;
   }};
 }

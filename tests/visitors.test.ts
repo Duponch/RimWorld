@@ -57,12 +57,13 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   delete legacy.breakdown;
   withoutFutureHelmetPolicy(legacy);
   for(const policy of legacy.apparelPolicies??[])policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-helmet');
-  for(const pawn of [...legacy.pawns,...legacy.visitors.departed.map((entry:any)=>entry.pawn)]){delete pawn.age;if(pawn.health)delete pawn.health.ageAilments;}
+  for(const pawn of [...legacy.pawns,...legacy.visitors.departed.map((entry:any)=>entry.pawn)]){delete pawn.background;delete pawn.age;if(pawn.health)delete pawn.health.ageAilments;}
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.visitors!.departed[0]!.pawn.age).toEqual({biologicalTicks:10_800_000,chronologicalTicks:10_800_000});
   expect(validateWorld(migrated)).toEqual([]);
   const v150=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(structuredClone(w)));
   (v150 as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(v150),150);
+  for(const pawn of [...v150.pawns,...v150.visitors!.departed.map(entry=>entry.pawn)])delete pawn.background;
   withoutPlantsSkill(v150);
   for(const policy of v150.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   expect(deserializeWorld(JSON.stringify(v150))).toEqual(withMigratedTelevisionRecreation({...v150,schemaVersion:SCHEMA_VERSION}));

@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import { isColonist } from './affiliation.ts';
 import { PEN_ANIMALS, penAccessCells, penRegion } from './animal-pens.ts';
 import { readyDoorEntry } from './doors.ts';
@@ -28,7 +29,7 @@ const usable=(world:World,a:WildAnimal,markerId:number)=>{
   return marker?.pen?.accepted.includes(a.species)&&region?.closed&&region.accessible?region:undefined;
 };
 const handler=(p:Pawn)=>{
-  if(!isColonist(p)||p.priorities.handle===0||p.state==='dead'||p.state==='downed'||p.draft||p.mental?.crisis||p.flee||p.interruptedCargo)return false;
+  if(!isColonist(p)||workPriority(p,'handle')===0||p.state==='dead'||p.state==='downed'||p.draft||p.mental?.crisis||p.flee||p.interruptedCargo)return false;
   const body=pawnBody(p).capacities;return body.moving>0&&body.manipulation>0;
 };
 const claimedIds=(world:World)=>new Set(world.pawns.flatMap(p=>[

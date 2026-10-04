@@ -1,0 +1,70 @@
+import { ADULTHOODS, BACKGROUND_ADULT_MIN_TICKS, BACKGROUND_SKILL_IDS, CHILDHOODS, backgroundGains, type ColonistBackground, type ChildhoodId, type AdulthoodId } from './colonist-backgrounds.ts';
+import { initialHumanAge, initialHumanAilments, type HumanAge } from './human-age.ts';
+import { createMedicalRecord } from './injury-state.ts';
+import { startingSkills, type PawnSkills } from './skills.ts';
+export { validOfferedBackground } from './background-save.ts';
+import type { Pawn,World } from './types.ts';
+
+const hash=(seed:number,identity:number,salt:number):number=>{
+  let n=(seed^Math.imul(identity,0x9e3779b1)^salt)>>>0;
+  n=Math.imul(n^(n>>>16),0x7feb352d);n=Math.imul(n^(n>>>15),0x846ca68b);
+  return (n^(n>>>16))>>>0;
+};
+/** Selection is private and bounded. Fighters filter out Violent, including
+ * childhood restrictions, before either choice; no retry can shift combat RNG. */
+export function generateBackground(seed:number,identity:number,age:HumanAge,fighter=false,negotiator=false):ColonistBackground {
+  const children=(Object.keys(CHILDHOODS) as ChildhoodId[]).filter(id=>(!fighter||!CHILDHOODS[id].disables.includes('violent'))&&(!negotiator||!CHILDHOODS[id].disables.includes('social')));
+  const childhood=children[hash(seed,identity,0x210c11d)%children.length]!;
+  const adults=(Object.keys(ADULTHOODS) as AdulthoodId[]).filter(id=>(!fighter||!ADULTHOODS[id].disables.includes('violent'))&&(!negotiator||!ADULTHOODS[id].disables.includes('social'))&&!ADULTHOODS[id].requires.some(tag=>CHILDHOODS[childhood].disables.includes(tag)));
+  return {childhood,...age.biologicalTicks>=BACKGROUND_ADULT_MIN_TICKS?{adulthood:adults[hash(seed,identity,0x210ad17)%adults.length]!}:{}};
+}
+function skillsWithBackground(base:PawnSkills,background:ColonistBackground):PawnSkills {
+  const result={...base};
+  const gains=backgroundGains(background);
+  for(const key of BACKGROUND_SKILL_IDS){
+    const old=base[key];
+    if(old)result[key]={...old,level:Math.min(20,Math.max(0,old.level+(gains[key]??0)))};
+    else if(gains[key]!==undefined)result[key]={level:Math.min(20,Math.max(0,(key==='plants'||key==='mining'?8:0)+gains[key]!)),xp:0,dailyXp:0,passion:0};
+  }
+  return result;
+}
+/** Used before acceptance; this is the same birth calculation, never learning
+ * or a mutation of an offer, Pawn, existing skill record or random stream. */
+export const previewBackgroundSkills=(profile:number,background:ColonistBackground):PawnSkills=>skillsWithBackground(startingSkills(profile),background);
+/** Call only from a prospective birth producer. Historical offer acceptance
+ * intentionally does not call it without a recorded background. */
+export function assignBackground(pawn:Pawn,background:ColonistBackground):void {
+  if(pawn.background!==undefined)return;
+  pawn.background={...background};pawn.skills=skillsWithBackground(pawn.skills,background);
+}
+export function generatePawnBackground(pawn:Pawn,seed:number,fighter=false,negotiator=false):void {
+  if(!pawn.age||pawn.background!==undefined)return;
+  assignBackground(pawn,generateBackground(seed,pawn.id,pawn.age,fighter,negotiator));
+}
+/** The three authored starters cover the physical economy and at least two
+ * defenders. Their established traits/passions remain a scenario adaptation. */
+export function initializeCampBackgrounds(world:World):void {
+  const children:readonly ChildhoodId[]=['workshop-child','field-child','school-child'];
+  const adults:readonly AdulthoodId[]=['builder','farmer','medic'];
+  world.pawns.forEach((pawn,index)=>{
+    if(!pawn.age||pawn.background)return;
+    assignBackground(pawn,{childhood:children[index%3]!,...pawn.age.biologicalTicks>=BACKGROUND_ADULT_MIN_TICKS?{adulthood:adults[index%3]!}:{}});
+  });
+}
+export interface OfferedBackground {age?:HumanAge;background?:ColonistBackground}
+/** Identity belongs to the offer, so subsequent material/actor allocations
+ * cannot change the profile already shown to the player. */
+export function offeredBackground(seed:number,identity:number):Required<OfferedBackground> {
+  const age=initialHumanAge(seed,identity);
+  return {age,background:generateBackground(seed,identity,age)};
+}
+export function assignOfferedBackground(pawn:Pawn,offer:OfferedBackground,seed:number,currentTick:number):void {
+  if(pawn.background!==undefined||!offer.background||!offer.age)return;
+  pawn.age={...offer.age};
+  // startingPawn's allocation-time age is replaced only for this new person.
+  // Recompute its birth ailments against the age actually advertised.
+  if(pawn.health)delete pawn.health.ageAilments;
+  const ailments=initialHumanAilments(seed,pawn.id,pawn.age);
+  if(ailments.length){pawn.health??=createMedicalRecord(currentTick);pawn.health.ageAilments=ailments;}
+  assignBackground(pawn,offer.background);
+}

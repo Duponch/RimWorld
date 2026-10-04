@@ -1,3 +1,5 @@
+import { workPriority } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { planFurnitureHaulOrder } from './player-furniture-hauling.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { asBuilder, constructionHaulPriority, constructionObstruction, isConstruction } from './construction-rules.ts';
@@ -16,7 +18,9 @@ export type ServiceHaulTarget={type:'fuel';structureId:number}|{type:'clear';job
 export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget,access?:import('./pathfinding.ts').Reachability,budget={pairs:32768}):HaulProposal {
   const label=target.type==='fuel'?'Ravitailler en bois':target.type==='clear-sow'?'Dégager avant de semer':'Dégager le chantier';
   const no=(reason:string):HaulProposal=>({label,reason});
-  if(target.type==='fuel'?!pawn.priorities.haul:target.type==='clear-sow'?!pawn.priorities.grow:!Number.isFinite(constructionHaulPriority(pawn)))return no('Ce travail est désactivé dans le tableau Travail.');
+  const work=target.type==='fuel'?'haul':target.type==='clear-sow'?'grow':asBuilder(pawn)?'build':'haul';
+  const refusal=backgroundWorkRefusal(pawn,work);if(refusal)return no(refusal);
+  if(target.type==='fuel'?!workPriority(pawn,'haul'):target.type==='clear-sow'?!workPriority(pawn,'grow'):!Number.isFinite(constructionHaulPriority(pawn)))return no('Ce travail est désactivé dans le tableau Travail.');
   const job=target.type!=='fuel'?world.jobs.find(j=>j.id===target.jobId):undefined;
   const fire=target.type==='fuel'?refuelable(world,target.structureId):undefined;
   if(target.type==='clear'&&(!job||!isConstruction(job)))return no('Chantier introuvable.');

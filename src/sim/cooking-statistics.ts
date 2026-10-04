@@ -26,5 +26,6 @@ export function roundYield(value:number,random:()=>number):number {
 
 /** Completion learning is projected so a blocked product never advances XP. */
 export function completedCookingSkill(pawn:Pawn,workTicks:number):SkillRecord {
-  const skill={...cookingSkill(pawn)};learnSkill(skill,workTicks*1000,pawn);return skill;
+  const skill={...cookingSkill(pawn)},worker={...pawn,skills:{...pawn.skills,cooking:skill}};
+  learnSkill(skill,workTicks*1000,worker);return skill;
 }

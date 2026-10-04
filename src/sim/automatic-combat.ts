@@ -1,4 +1,5 @@
 import { activeThreat,distanceSquared,hostileTo,isColonist } from './affiliation.ts';
+import { violentWorkRefusal } from './colonist-backgrounds.ts';
 import { automaticShotScore,chooseAutomaticTarget } from './automatic-targets.ts';
 import { interruptDraftWork } from './drafting.ts';
 import { equippedWeapon } from './equipment-rules.ts';
@@ -21,6 +22,7 @@ import type { WildAnimal } from './wildlife-state.ts';
 /** Called by the simulation, never by rendering. Existing direct orders win.
  * Idle drafted pawns stay at their post; civilian melee may approach a threat. */
 export function considerAutomaticCombat(world:World,p:Pawn,budget:SearchBudget,animalThreats?:readonly WildAnimal[]):void {
+  if(violentWorkRefusal(p))return;
   // A hunting aim is ordinary civilian work, not a forced combat order.
   // Its replacement is committed only after a valid human threat is found;
   // any post-shot recovery must finish before this new attack can begin.

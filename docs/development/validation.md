@@ -1,4 +1,6 @@
-# Validation courante — consolidation V209
+# Validation courante — passé personnel V210
+
+**V210 — passé personnel et incapacités, schéma 191, livré dans le périmètre ciblé.** [Contrat](colonist-backgrounds-v210.md), [recherche Core](../research/colonist-backgrounds-core-v210.md), [contrôles et limites](../history/validation-colonist-backgrounds-v210.md). Génération prospective, refus, compétences interdites et reprises sont vérifiés ensemble ; la preuve conserve le détail des résultats sans annoncer de campagne ou gain de performances non mesurés.
 
 **V209 — consolidation, schéma 190 inchangé.** [Contrat](consolidation-v209.md), [résultats et limites](../history/validation-consolidation-v209.md). Corrections produit, réparation de fixtures/pilote et mesures sont séparées dans la preuve ; la consolidation ne livre pas une nouvelle boucle fonctionnelle.
 

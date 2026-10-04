@@ -1,6 +1,24 @@
 # Guide joueur
 
-**Schéma courant 190 — V208 loisirs télévisés, livré dans le périmètre ciblé.** [Contrat](../development/television-v208.md), [recherche Core et adaptations](../research/television-core-v208.md), [preuve](../history/validation-television-v208.md). Les anciennes parties gagnent seulement une famille de lassitude neutre, sans appareil, recherche ou plaisir rétroactif.
+**Schéma courant 191 — V210, passé personnel en validation.** Les règles et limites du lot sont dans le [contrat](../development/colonist-backgrounds-v210.md) et sa [preuve](../history/validation-colonist-backgrounds-v210.md).
+
+## Comprendre le passé et les incapacités — V210
+
+Dans **Bio**, examinez l'enfance, l'activité adulte et la liste **Incapable de**. Survolez un titre ou sélectionnez-le au clavier pour lire le récit et ses effets initiaux. Un ancien personnage peut avoir un passé non renseigné : ses compétences et affectations sont conservées.
+
+Une personne créée avant vingt ans peut avoir seulement son enfance ; son anniversaire n'invente pas ensuite une activité adulte. Les gains du passé sont déjà compris dans les niveaux de départ et ne se répètent pas au chargement.
+
+Le tableau **Travail** grise les métiers interdits et en explique la cause. Leur priorité reste mémorisée ; un ordre direct ne permet pas de forcer un métier que la personne refuse. Une compétence signalée **Indisponible** n'apprend pas et n'oublie pas, même si son ancien niveau est conservé. Choisissez un autre colon capable pour ce travail.
+
+Une nouvelle demande d'accueil ou d'asile montre le profil avant votre décision. Vérifiez que la personne complète les métiers de votre groupe et préparez nourriture et couchage. Son passé restera celui annoncé après son arrivée et après rechargement.
+
+Certains portages appartiennent à un autre travail : un bâtisseur peut livrer son chantier, un cuisinier ravitailler sa facture. Secourir ou capturer directement une personne dépend des conditions physiques de cet ordre. Les soins reçus, le repos et le déplacement mobilisé restent disponibles ; une personne pacifiste ne combat pas.
+
+Choisissez une personne avec **Social** disponible pour négocier avec un marchand ou partir au comptoir commercial. Une compétence Social totalement indisponible interdit ce commerce, même si la personne peut encore converser.
+
+[Contrat du lot](../development/colonist-backgrounds-v210.md), [comparaison Core](../research/colonist-backgrounds-core-v210.md), [preuve et limites](../history/validation-colonist-backgrounds-v210.md).
+
+**Schéma historique 190 — V208 loisirs télévisés, livré dans le périmètre ciblé.** [Contrat](../development/television-v208.md), [recherche Core et adaptations](../research/television-core-v208.md), [preuve](../history/validation-television-v208.md). Cette migration ajoutait seulement une famille de lassitude neutre aux anciennes parties, sans appareil, recherche ou plaisir rétroactif.
 
 **Schéma 189 à la livraison V207 — V207 sacs de sable, livré dans le périmètre ciblé.** [Contrat](../development/sandbags-v207.md), [recherche Core et adaptations](../research/defensive-cover-core-v207.md), [preuve bornée](../history/validation-sandbags-v207.md). Migration stricte de 188 puis neutre : aucun sac, tissu ou bilan ancien inventé. La scène est publique ; parcours natif matériel et présentation passent dans leur périmètre préparé.
 

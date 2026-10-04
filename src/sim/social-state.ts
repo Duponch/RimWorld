@@ -1,5 +1,6 @@
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 import { pawnBody } from './health-rules.ts';
+import { effectiveSkillLevel } from './work-types.ts';
 
 export type SocialKind='chitchat'|'deep-talk'|'rapport'|'kind-words'|'slight'|'insult'|'fight-cathartic'|'fight-angering';
 export interface SocialMemory { otherId:number;kind:SocialKind;at:number;offset:number }
@@ -21,7 +22,7 @@ export function socialRandom(state:{rng:number}):number {
 export function socialSeed(seed:number,id:number):number {return (Math.imul(seed^0x6a09e667,1664525)^Math.imul(id,1013904223))>>>0||1;}
 export function socialImpact(pawn:Pawn):number {
   const c=pawnBody(pawn).capacities;
-  return Math.max(.2,(.82+.0275*(pawn.skills.social?.level??0))*(.1+.9*Math.min(1,c.talking/.95))*(.7+.3*Math.min(1,c.hearing/.95)));
+  return Math.max(.2,(.82+.0275*effectiveSkillLevel(pawn,'social',pawn.skills.social?.level??0))*(.1+.9*Math.min(1,c.talking/.95))*(.7+.3*Math.min(1,c.hearing/.95)));
 }
 /** Stable symmetric affinity; adult ages are not yet modeled (age offset 0).
  * Same asymmetric normal family as Core, independent seed/PRNG, not identical pairs. */

@@ -1,6 +1,7 @@
 import { isCarePatient } from './affiliation.ts';
 import { captureReason,completeCapture } from './capture.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { updatePawnHealth } from './health.ts';
 import { rescueBedAvailable,medicalBedPreference } from './medical-beds.ts';
 import { carrierOf,rescueClaim,syncPatient } from './rescue-state.ts';
@@ -12,7 +13,9 @@ import type { Cell,CommandResult,Pawn,World } from './types.ts';
 
 export const wantsRescue=(p:Pawn,forced=false):boolean=>(isCarePatient(p)||forced&&p.faction==='outlanders'&&!!p.podRescue)&&p.state==='downed'&&!(p.need?.kind==='sleep'&&p.need.bedId!==null&&p.need.phase==='sleep');
 export function rescueReason(world:World,actor:Pawn,patient:Pawn|undefined,forced=false):string|undefined {
-  return medicalWorkRefusal(actor)??((patient?.prisoner?actor.priorities.warden:actor.priorities.doctor)===0?`${patient?.prisoner?'Geôlier':'Médecin'} est désactivé dans le tableau Travail.`
+  // Forced Rescue/Capture are Core menu services, not admitted work providers.
+  if(!forced){const refusal=backgroundWorkRefusal(actor,patient?.prisoner?'warden':'doctor');if(refusal)return refusal;}
+  return medicalWorkRefusal(actor)??(!forced&&(patient?.prisoner?actor.priorities.warden:actor.priorities.doctor)===0?`${patient?.prisoner?'Geôlier':'Médecin'} est désactivé dans le tableau Travail.`
     :actor.collapsePending||world.restRules==='legacy'&&actor.rest===0?'Ce colon doit récupérer de son épuisement.'
     :carrierOf(world,actor.id)?'Ce colon est transporté.'
     :actor.interruptedCargo?'La cargaison doit être déposée avant le secours.'
@@ -52,7 +55,7 @@ export function applyRescue(world:World,command:{pawnId:number;patientId:number;
 export function reconcileRescues(world:World):void {
   for(const actor of world.pawns)if(actor.rescue){
     const task=actor.rescue,patient=world.pawns.find(p=>p.id===task.patientId),bed=world.structures.find(s=>s.id===task.bedId);
-    if(!patient||(task.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||!bed||!rescueBedAvailable(world,bed,patient,actor.id,!!task.capture)||medicalWorkRefusal(actor))releaseWork(world,actor);
+    if(!patient||!task.capture&&actor.orders.active!=='rescue'&&backgroundWorkRefusal(actor,patient.prisoner?'warden':'doctor')||(task.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||!bed||!rescueBedAvailable(world,bed,patient,actor.id,!!task.capture)||medicalWorkRefusal(actor))releaseWork(world,actor);
   }
 }
 export function processRescue(world:World,actor:Pawn,context:NeedContext):void {
@@ -61,7 +64,7 @@ export function processRescue(world:World,actor:Pawn,context:NeedContext):void {
   // Finish the previous physiological interval under its previous posture,
   // regardless of which actor was processed first in this tick.
   if(patient&&patient.health&&!patient.health.death&&patient.health.tick<world.tick)updatePawnHealth(world,patient);
-  if(!patient||(task.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||!bed||!rescueBedAvailable(world,bed,patient,actor.id,!!task.capture)){releaseWork(world,actor);return;}
+  if(!patient||!task.capture&&actor.orders.active!=='rescue'&&backgroundWorkRefusal(actor,patient.prisoner?'warden':'doctor')||(task.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||!bed||!rescueBedAvailable(world,bed,patient,actor.id,!!task.capture)){releaseWork(world,actor);return;}
   actor.state='moving';
   if(task.phase==='approach'){
     if(actor.x!==patient.x||actor.z!==patient.z){context.move(patient,true);return;}

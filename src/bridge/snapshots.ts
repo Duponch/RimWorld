@@ -46,6 +46,9 @@ import { validWeaponShape } from '../sim/equipment-save.ts';
 import { pileMaxHp } from '../sim/thing-damage-rules.ts';
 import type { MaterialPile, Pawn, Resource, Terrain, Tile, World } from '../sim/types.ts';
 import { TileSnapshotCache, type TileDelta } from './tile-snapshot-cache.ts';
+import { validBackground } from '../sim/colonist-backgrounds.ts';
+import { validHumanAge, type HumanAge } from '../sim/human-age.ts';
+import { validOfferedBackground } from '../sim/background-save.ts';
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
@@ -53,6 +56,18 @@ interface PileChanges { removed: number[]; upserted: MaterialPile[]; order?: num
 interface SnapshotHeader { motion?:import('./motion-tracks.ts').PawnTrack[]; audioCues?:import('./audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 function validMiningTransport(pawn:Pawn,version:number):boolean {
   return !(version<186&&pawn.skills&&Object.hasOwn(pawn.skills,'mining'))&&validMiningSkill(pawn.skills?.mining,version);
+}
+/** Sparse historical offers keep both fields absent. Active owners use the
+ * same age/profile rules on and off the map; archives are not rewritten. */
+function validBackgroundTransport(value:unknown,version:number,offer=false):boolean {
+  if(!value||typeof value!=='object'||Array.isArray(value))return false;
+  const person=value as {background?:Pawn['background'];age?:HumanAge};
+  if(version<191&&Object.hasOwn(person,'background'))return false;
+  if(offer){
+    if(version<191&&Object.hasOwn(person,'age'))return false;
+    return validOfferedBackground(person,version);
+  }
+  return validHumanAge(person.age,version)&&validBackground(person.background,version,person.age);
 }
 export type SnapshotMessage = SnapshotHeader & (
   | { kind: 'checkpoint'; world: World }
@@ -280,12 +295,18 @@ export class SnapshotDecoder {
     if(!Array.isArray(message.world.growingZones)||message.world.growingZones.some(zone=>!zone||!isCropKindInVersion(zone.plant,message.world.schemaVersion)))return resync('Culture future ou inconnue dans ce snapshot.');
     if(message.world.fires!==undefined&&!validFireResourceLosses(message.world.fires?.ledger?.resources,message.world.schemaVersion))return resync('Pertes végétales du feu invalides pour ce snapshot.');
     for(const pawn of message.world.pawns){
+      if(!validBackgroundTransport(pawn,message.world.schemaVersion))return resync('Âge ou passé personnel invalide pour ce snapshot.');
       if(!validSurgeryTransport(pawn,message.world))return resync('État chirurgical ou anesthésique invalide pour ce snapshot.');
       if(!validPawnPodRescue(pawn,message.world.schemaVersion,message.world))return resync('Mandat de secours civil invalide pour ce snapshot.');
       if(!validMiningTransport(pawn,message.world.schemaVersion))return resync('Compétence Minage invalide pour ce snapshot.');
       if(!validPlantSkill(pawn.skills?.plants,message.world.schemaVersion))return resync('Compétence Plantes invalide pour ce snapshot.');
       if(pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,message.world.schemaVersion,message.world))return resync('Souvenir de décès invalide pour ce snapshot.');
     }
+    for(const owner of [message.world.scout,message.world.commercialTrip]){
+      if(owner&&typeof owner==='object'&&'pawn' in owner&&!validBackgroundTransport(owner.pawn,message.world.schemaVersion))return resync('Âge ou passé personnel hors carte invalide pour ce snapshot.');
+    }
+    if(message.world.arrivals?.pending&&!validBackgroundTransport(message.world.arrivals.pending,message.world.schemaVersion,true))return resync('Profil d’accueil invalide pour ce snapshot.');
+    if(Array.isArray(message.world.quests?.entries)&&message.world.quests.entries.some(quest=>!validBackgroundTransport(quest,message.world.schemaVersion,true)))return resync('Profil d’asile invalide pour ce snapshot.');
     if(!validMiscIncidents(message.world.miscIncidents,message.world.schemaVersion,message.world))return resync('Calendrier d’incidents divers invalide pour ce snapshot.');
     if(!validSmallIncidents(message.world.smallIncidents,message.world.schemaVersion,message.world))return resync('Calendrier de petites menaces invalide pour ce snapshot.');
     if(message.world.schemaVersion<184&&Object.hasOwn(message.world,'worldIncidents')||!validWorldIncidents(message.world.worldIncidents,message.world.schemaVersion,message.world))return resync('Calendrier mondial invalide pour ce snapshot.');

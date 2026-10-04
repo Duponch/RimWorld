@@ -1,6 +1,7 @@
 import type { Cell } from './types.ts';
 
 export interface JoinerQuest {
+  background?:import('./colonist-backgrounds.ts').ColonistBackground; age?:import('./human-age.ts').HumanAge;
   id:number; offeredAt:number; expiresAt:number; name:string; profile:0|1|2;
   joinDelay:number; raidDelay:number;
   status:'offered'|'accepted'|'refused'|'expired'|'concluded';

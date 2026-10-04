@@ -1,3 +1,5 @@
+import { workPriority } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { planFurnitureHaulOrder } from './player-furniture-hauling.ts';
 import { furnitureHaulValid } from './furniture-haul-rules.ts';
 import { validSowingClearance } from './sowing-clearance.ts';
@@ -27,8 +29,10 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
   if(target.type==='fuel'||target.type==='clear'||target.type==='clear-sow')return planServiceHaul(world,pawn,target,access,budget);
   const label=target.type==='pile'?'Transporter vers le stockage':'Livrer les matériaux';
   const no=(reason:string):HaulProposal=>({label,reason});
+  const work=target.type==='pile'?'haul':asBuilder(pawn)?'build':'haul';
+  const refusal=backgroundWorkRefusal(pawn,work);if(refusal)return no(refusal);
   if(target.type!=='pile'&&target.type!=='job')return no('Cible de transport invalide.');
-  if(target.type==='pile'?!pawn.priorities.haul:!Number.isFinite(constructionHaulPriority(pawn)))return no('Ce travail est désactivé dans le tableau Travail.');
+  if(target.type==='pile'?!workPriority(pawn,'haul'):!Number.isFinite(constructionHaulPriority(pawn)))return no('Ce travail est désactivé dans le tableau Travail.');
   const source=target.type==='pile'?world.piles.find(p=>p.id===target.pileId):undefined;
   const job=target.type==='job'?world.jobs.find(j=>j.id===target.jobId):undefined;
   if(target.type==='pile'&&source?.owner.type!=='ground')return no('La pile n’est plus au sol.');

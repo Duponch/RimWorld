@@ -1,3 +1,4 @@
+import { workPriority } from './work-types.ts';
 import { isArtRecipe } from './art-rules.ts';
 import { cookingSpot, ingredientPlaceFree } from './cooking-bills.ts';
 import { groundCapacity } from './ground-placement.ts';
@@ -27,7 +28,7 @@ export function planArtWork(world: World,pawn: Pawn,station: Structure,bill: Coo
       {x:spot.x,z:spot.z-1},{x:spot.x,z:spot.z+1}]
       .find(c => ingredientPlaceFree(world,c,spot,bill.recipe,station) && groundCapacity(world,c,pile.item,pawn.id) >= 1);
     if (!cell) continue;
-    return {handled:true,plan:{station,priority:pawn.priorities.art ?? 0,target:source,path,
+    return {handled:true,plan:{station,priority:workPriority(pawn,'art') ?? 0,target:source,path,
       task:{recipe:bill.recipe,stationId:station.id,billId:bill.id,spot,actionCell:{x:source.x,z:source.z},phase:'gather',
         ingredients:[{pileId:pile.id,item:'unfinished-sculpture',quantity:1,stage:placed?'placed':'source',cell:{x:cell.x,z:cell.z}}],
         progress:0,productId:null,storageId:null}}};

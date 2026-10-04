@@ -26,7 +26,7 @@ test('V179 catalogue scene harvests its natural root, hauls one physical dose, a
   expect(await readTestColony(entry!)).toBe(raw);
   const world = deserializeWorld(raw);
   expect(world.schemaVersion).toBe(SCHEMA_VERSION);
-  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareHealrootDemo()));
+  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareHealrootDemo('pre-v210')));
   // Reconstruct V168's boreal population from its own seed and ecological table.
   // Wildlife preceded these two prepared commands; no published body/ID is copied.
   expect(prepared.jobs).toHaveLength(1);expect(prepared.stockpiles).toHaveLength(1);

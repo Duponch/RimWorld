@@ -21,7 +21,7 @@ function stepUntil(world:World,ready:()=>boolean,limit:number):void {
 test('V183 public scene is a byte-stable 250² colony with a real unanswered offer',()=>{
   const raw=readFileSync(fixtureUrl,'utf8'),sha256=createHash('sha256').update(raw).digest('hex');
   expect(sha256).toBe(EXPECTED_SHA256);
-  const world=deserializeWorld(raw),prepared=withoutPredatorDefaults(withoutMiningSkill(prepareQuestDemo()));
+  const world=deserializeWorld(raw),prepared=withoutPredatorDefaults(withoutMiningSkill(prepareQuestDemo('pre-v210')));
   // Arid species and weights are unchanged; the V172 fixture uses herbivores-v1.
   prepared.wildlife!.profile='biome-herbivores-v1';
   expect(world).toEqual(prepared);

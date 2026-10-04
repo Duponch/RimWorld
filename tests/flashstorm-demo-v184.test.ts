@@ -12,7 +12,7 @@ const fixturePath = new URL('../public/test-saves/v184/orage-sec-et-incendies.js
 test('V184 prepared public scene resolves a real introductory Misc ticket only after resume', () => {
   const raw = readFileSync(fixturePath, 'utf8');
   const world = deserializeWorld(raw);
-  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareFlashstormDemo()));
+  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareFlashstormDemo('pre-v210')));
   // Arid species and weights are unchanged; retain the original V173 profile.
   prepared.wildlife!.profile='biome-herbivores-v1';
   expect(world).toEqual(prepared);

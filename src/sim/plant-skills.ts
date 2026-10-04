@@ -1,6 +1,7 @@
 import { HEALTHY_BODY, type BodyAssessment } from './body-capacities.ts';
 import { pawnBody, physicalWorkFactor } from './health-rules.ts';
 import { learnSkill, type SkillRecord } from './skills.ts';
+import { effectiveSkillLevel } from './work-types.ts';
 import type { Pawn } from './types.ts';
 
 /** Missing on historical pawns until their first actual plant-work tick. */
@@ -17,7 +18,7 @@ export function plantWorkSpeed(pawn:Pawn,body?:BodyAssessment):number {
   const physical=physicalWorkFactor(pawn,'plant',body);
   // An actor unable to manipulate cannot produce real work.
   if(physical<=0)return 0;
-  return Math.max(.1,(.08+.115*plantSkill(pawn).level)*physical);
+  return Math.max(.1,(.08+.115*effectiveSkillLevel(pawn,'plants',plantSkill(pawn).level))*physical);
 }
 
 /** PlantHarvestYield stat before growth, health, and stochastic rounding. */
@@ -25,7 +26,7 @@ export function plantHarvestYield(pawn:Pawn,body?:BodyAssessment):number {
   const capabilities=pawn.health?(body??pawnBody(pawn)).capacities:HEALTHY_BODY.capacities;
   const manipulation=1+.3*(capabilities.manipulation-1);
   const sight=1+.2*(Math.min(1,capabilities.sight)-1);
-  return Math.max(0,Math.min(1.5,HARVEST_YIELD_BY_LEVEL[plantSkill(pawn).level]!*manipulation*sight));
+  return Math.max(0,Math.min(1.5,HARVEST_YIELD_BY_LEVEL[effectiveSkillLevel(pawn,'plants',plantSkill(pawn).level)]!*manipulation*sight));
 }
 
 /** Call only after contact and executable work checks. Core 0.085 XP/tick

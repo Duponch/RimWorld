@@ -1,0 +1,13 @@
+.background-inspection{min-width:0;margin:12px 0 16px}
+.background-inspection h3{margin:12px 0 5px}
+.background-inspection ul{list-style:none;margin:0;padding:0}
+.background-inspection li{margin:0;padding:4px 2px;overflow-wrap:anywhere}
+.background-inspection li:hover,.background-inspection li:focus-visible{background:var(--paper-deep);outline:1px solid var(--accent);outline-offset:1px}
+.background-inspection [data-background-unknown]{margin:4px 0;color:var(--muted-ink)}
+.background-inspection [data-background-restrictions] li{font-size:13px;color:var(--muted-ink)}
+.background-inspection [hidden]{display:none}
+#inspector .bio-skills .skill-unavailable .skill-caption,#inspector .bio-skills .skill-unavailable .skill-rating{text-decoration:line-through;color:var(--muted-ink)}
+#inspector .bio-skills .skill-availability{display:block;padding:0 5px 2px;font-size:11px;line-height:1.25;color:var(--muted-ink)}
+#work-panel .background-work-unavailable{background:var(--paper-deep)}
+#work-panel .background-work-unavailable select{opacity:.65;text-decoration:line-through}
+#work-panel .background-work-unavailable:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}

@@ -8,6 +8,7 @@ import { reconcilePawnHealth } from '../src/sim/health.ts';
 import { addResolvedInjury, createMedicalRecord } from '../src/sim/injury-state.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization.ts';
+import { startingSkills } from '../src/sim/skills.ts';
 import { SCHEMA_VERSION, type World } from '../src/sim/types.ts';
 
 const fixtureUrl = new URL('../public/test-saves/v179/racines-et-soins.json', import.meta.url);
@@ -17,8 +18,12 @@ export const MEDICINE_STORE = { x: 127, z: 126 } as const;
 
 /** The terrain, plant, colonists and Crashlanded supplies come from the normal factory.
  * Only work policies, one reserve, one designation and Noé's bruise are prepared. */
-export function prepareHealrootDemo(): World {
+export function prepareHealrootDemo(generation: 'current' | 'pre-v210' = 'current'): World {
   const world = createScenarioWorld(42, 250, 'crashlanded', { hilliness: 'small-hills', biome: 'boreal-forest' });
+  // Reconstruct the published starters before this scene's own overrides.
+  if (generation === 'pre-v210') world.pawns.forEach((pawn, index) => {
+    delete pawn.background; pawn.skills = startingSkills(index);
+  });
   const plant = world.resources.find(resource => resource.id === 7436 && resource.x === HEALROOT_CELL.x && resource.z === HEALROOT_CELL.z);
   assert.ok(plant && plant.species === 'healroot-wild' && plant.kind === 'wild-plant' && plant.growth === 1,
     'Seed 42 must retain its natural mature wild healroot at (127,143).');

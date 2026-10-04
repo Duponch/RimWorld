@@ -145,7 +145,9 @@ import { burnFuel, refuelable, newBuildingFuel, isFueledBuilding } from './fuel.
 import { processHaul } from './hauling.ts';
 import { scheduleGrowing, cancelGrowingJobs, growingJobValid, finishSowing, jobDuration, growingZoneAt, resourceAt } from './farming.ts';
 import { isPlant, harvestable,choppable,berryYield } from './plants.ts';
-import { search, searchCandidates, destinationValid, planWork, workType, type SearchBudget, type NavigationGrid } from './work-planner.ts';
+import { search, searchCandidates, destinationValid, planWork, type SearchBudget, type NavigationGrid } from './work-planner.ts';
+import { workType } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { releaseAssignments, planCommandDrops, commitDrop, releaseWork, type DropPlan } from './work-release.ts';
 import { validDiningPlace } from './dining.ts';
 import { CIVIL_TRANSIT_BLOCKERS, moveToward } from './travel.ts';
@@ -477,6 +479,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     if (!['handle','art','clean','firefight','warden','basic','hunt','research','patient','bedrest','doctor','mine', 'gather', 'build', 'haul', 'grow', 'cook', 'craft'].includes(command.work) || !Number.isInteger(command.value) || command.value < 0 || command.value > 4) return refusal('invalid-priority', 'La priorité doit être comprise entre 0 et 4.');
     const pawn = world.pawns.find(candidate => candidate.id === command.pawnId);
     if (!pawn) return refusal('missing-target', 'Colon introuvable.');
+    const background=backgroundWorkRefusal(pawn,command.work);if(command.value>0&&background)return refusal('invalid-priority',background);
     pawn.priorities[command.work] = command.value;
     if(command.value===0&&(command.work==='handle'&&pawn.animalHandling||command.work==='doctor'&&pawn.animalCare))releaseWork(world,pawn,drops);
     if(command.work==='hunt'&&command.value===0&&pawn.hunting){cancelHunting(pawn);pawn.path=[];pawn.state='idle';}if(command.work==='research'&&command.value===0&&pawn.research)releaseAssignments(world,pawn);
@@ -740,6 +743,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         release:()=>releaseWork(world,pawn),event:message=>event(world,'job',message),
       });continue;}
       const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) { processRecreation(world,pawn,needsContext,true); continue; }
+      if(backgroundWorkRefusal(pawn,workType(job))){releaseWork(world,pawn);continue;}
        if ((job.growingZoneId !== undefined||job.flowerPotId!==undefined) && !growingJobValid(world, job)) { releaseWork(world, pawn); world.jobs = world.jobs.filter(j => j.id !== job.id); continue; }
       if (job.kind === 'sow' && groundPile(world, job)) { releaseWork(world, pawn); continue; }
       if(isRoofJob(job)) {

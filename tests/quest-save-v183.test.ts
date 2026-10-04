@@ -89,6 +89,8 @@ test('schema 171 migrates without a quest and rejects either future quest field'
   const current = createScenarioWorld(42, 32, 'crashlanded');
   const old = withoutPredatorDefaults(withoutTelevisionRecreation(withoutMiningSkill(structuredClone(current))));
   (old as unknown as Record<string, unknown>).schemaVersion = 171;
+  // The declared historical starters predate recorded personal backgrounds.
+  for(const pawn of old.pawns)delete pawn.background;
   // Prepare the historical ecological profile before any future quest field.
   delete old.wildlife;
   enableBiomeWildlife(old, old.site!.biome);

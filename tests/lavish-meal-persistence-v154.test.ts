@@ -189,6 +189,7 @@ test('declared V152 rejects a lavish memory and possession in a frozen visitor a
   const departure=world.visitors!.departed.find(d=>d.pawn.id===traderId)!;
   expect(departure).toBeDefined();
   const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
+  for(const archive of old.visitors!.departed)delete archive.pawn.background;
   (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),152);
   expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedTelevisionRecreation({...old,schemaVersion:SCHEMA_VERSION}));
   const withMemory=structuredClone(old);

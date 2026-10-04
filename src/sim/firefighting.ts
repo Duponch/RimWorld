@@ -1,10 +1,12 @@
+import { workPriority } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { isColonist,isPlayerPatient } from './affiliation.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { canStopAt,routeToCell,workNeighbours } from './pathfinding.ts';
 import { planCommandDrops,releaseWork } from './work-release.ts';
 import { clearQueuedOrders } from './player-orders.ts';
-import { workType } from './work-planner.ts';
+import { workType } from './work-types.ts';
 import { taskWork } from './production-recipes.ts';
 import { haulingWork } from './haul-aside.ts';
 import type { Reachability } from './pathfinding.ts';
@@ -31,7 +33,7 @@ function allowed(w:World,p:Pawn,f:FireRecord,forced:boolean):boolean {
 export function applyExtinguish(w:World,command:{pawnId:number;fireId:number}):string|null {
   const p=w.pawns.find(p=>p.id===command.pawnId),f=w.fires?.items.find(f=>f.id===command.fireId);
   if(!p||!isColonist(p)||p.prisoner)return 'Seul un colon libre peut recevoir cet ordre.';
-  const refusal=medicalWorkRefusal(p);if(refusal)return refusal;
+  const refusal=backgroundWorkRefusal(p,'firefight')??medicalWorkRefusal(p);if(refusal)return refusal;
   if(p.burning||p.mental?.crisis)return 'Ce colon ne peut pas suivre cet ordre maintenant.';
   if(!f||!allowed(w,p,f,true))return 'Le feu visé ne peut pas être éteint par ce colon.';
   const drops=planCommandDrops(w,{type:'order-extinguish',...command});if(!drops)return 'La cargaison doit être déposée avant cet ordre.';
@@ -39,7 +41,7 @@ export function applyExtinguish(w:World,command:{pawnId:number;fireId:number}):s
   p.firefighting={fireId:f.id,forced:true,phase:'approach',cooldownCore:0,spentCore:0};p.path=[];p.planCooldown=0;return null;
 }
 export function firefightingTargets(w:World,p:Pawn):FireRecord[] {
-  if(!p.priorities.firefight||p.burning||medicalWorkRefusal(p))return [];
+  if(!workPriority(p,'firefight')||p.burning||medicalWorkRefusal(p))return [];
   return (w.fires?.items??[]).filter(f=>allowed(w,p,f,false)&&!(distance(p,firePosition(w,f)!)>15&&w.pawns.some(q=>q!==p&&q.firefighting?.fireId===f.id)))
     .sort((a,b)=>distance(p,firePosition(w,a)!)-distance(p,firePosition(w,b)!)||a.id-b.id);
 }
@@ -70,17 +72,17 @@ export function startFirefighting(p:Pawn,proposal:FirefightingProposal):void {
 function currentPriority(w:World,p:Pawn):number|null {
   const job=w.jobs.find(j=>j.id===p.jobId);
   const work=job?workType(job):p.research?'research':p.cooking?taskWork(p.cooking):p.haul?haulingWork(p.haul.destination):p.ward?'warden':p.tend||p.feed||p.rescue?'doctor':p.hunting?'hunt':p.need?.kind==='sleep'&&p.need.medical==='patient'?'patient':null;
-  return work?p.priorities[work]:null;
+  return work?workPriority(p,work):null;
 }
 /** Emergency interruption compares actual running work; idle work uses the common planner.
  * A forced existing order keeps its authority; explicit extinguish replaces it. */
 export function processFirefighting(w:World,p:Pawn,context:NeedContext):boolean {
   if(!w.fires?.items.length)return false;
-  if(!isColonist(p)||p.prisoner||p.burning||medicalWorkRefusal(p)||p.mental?.crisis||p.interruptedCargo){delete p.firefighting;return false;}
+  if(backgroundWorkRefusal(p,'firefight')||!isColonist(p)||p.prisoner||p.burning||medicalWorkRefusal(p)||p.mental?.crisis||p.interruptedCargo){delete p.firefighting;return false;}
   let task=p.firefighting;
   if(!task){
     if(p.orders.active!==null||p.orders.queue.length||p.flee||p.melee||p.shooting||p.hunger<=0||p.rest<=0)return false;
-    const current=currentPriority(w,p),priority=p.priorities.firefight;
+    const current=currentPriority(w,p),priority=workPriority(p,'firefight');
     // Ordinary idle work is ranked by planWork. This is only a running-task
     // interruption or the separate drafted contact reflex.
     if(!priority||!p.draft&&(current===null||current<priority))return false;
@@ -91,7 +93,7 @@ export function processFirefighting(w:World,p:Pawn,context:NeedContext):boolean 
     startFirefighting(p,proposal);task=p.firefighting!;
   }
   const fire=w.fires.items.find(f=>f.id===task.fireId),target=fire&&firePosition(w,fire);
-  if(!fire||!target||!allowed(w,p,fire,task.forced)||!task.forced&&!p.priorities.firefight||task.spentCore>=36000){delete p.firefighting;p.path=[];p.planCooldown=0;return false;}
+  if(!fire||!target||!allowed(w,p,fire,task.forced)||!task.forced&&!workPriority(p,'firefight')||task.spentCore>=36000){delete p.firefighting;p.path=[];p.planCooldown=0;return false;}
   if(p.moveCooldown>0)return true;
   if(!fireTouch(w,p,target)){
     task.phase='approach';

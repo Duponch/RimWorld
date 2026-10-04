@@ -4,6 +4,7 @@ import { captureStandability } from './furniture-travel.ts';
 import { atMapEdge } from './raid-space.ts';
 import { raidRandom,type RaidComposition,type RaidGroup,type RaidRole } from './raid-state.ts';
 import { startingPawn } from './starting-pawns.ts';
+import { generatePawnBackground } from './background-generation.ts';
 import type { Cell,Pawn,World } from './types.ts';
 
 export const RAID_ROLE_OPTIONS:readonly {role:RaidRole;weight:number;weapon:'plasteel-knife'|'revolver'|'bolt-action-rifle'}[]=[
@@ -42,6 +43,7 @@ export function createRaidGroup(w:World,options:RaidSpawnOptions):RaidGroup|null
   const id=s.serial+1,generated:Pawn[]=[],piles:World['piles']=[];let next=w.nextId;
   for(let i=0;i<count;i++){
     const p=startingPawn(next++,`Assaillant ${id}.${i+1}`,sites[i]!.x,sites[i]!.z,0,55,w.seed,w.tick);p.faction='outlaws';p.raid={group:id,exiting:false,goal:null};p.skills.shooting.level=4;p.skills.melee.level=4;p.foodPolicyId=w.foodPolicies[0]!.id;
+    if(w.schemaVersion>=191)generatePawnBackground(p,w.seed,true);
     generated.push(p);piles.push({id:next++,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt')});
     const weapon=composition?RAID_ROLE_OPTIONS.find(role=>role.role===composition.roster[i])!.weapon:id>1&&i===0?'revolver':undefined;
     if(weapon)piles.push({id:next++,kind:'weapon',item:weapon,quantity:1,owner:{type:'equipment',pawnId:p.id},weapon:newWeaponState(weapon)});

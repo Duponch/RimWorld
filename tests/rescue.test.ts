@@ -79,9 +79,15 @@ test('interruption, recovery, death and no-manipulation release the one carried 
   until(recovering,()=>recovering.pawns[1]!.state!=='downed',300);expect(recovering.pawns[0]!.rescue).toBeUndefined();valid(recovering);
 });
 
+test('automatic rescue remains disabled at doctor priority zero',()=>{
+  const w=rescueCamp(),actor=w.pawns[0]!;actor.priorities.doctor=0;
+  stepWorld(w,10);expect(actor.rescue).toBeUndefined();expect(w.pawns[1]!.state).toBe('downed');valid(w);
+});
+
 test('doctor priority, direct-order persistence and malformed rescue/medical saves are explicit',()=>{
-  const w=rescueCamp(),[a,p]=w.pawns;a!.priorities.doctor=0;expect(order(w).ok).toBe(false);stepWorld(w,10);expect(a!.rescue).toBeUndefined();
-  a!.priorities.doctor=1;expect(applyCommand(w,{type:'order-rescue',pawnId:a!.id,patientId:p!.id,queue:true}).ok).toBe(false);expect(order(w).ok).toBe(true);
+  const w=rescueCamp(),[a,p]=w.pawns;a!.priorities.doctor=0;
+  expect(applyCommand(w,{type:'order-rescue',pawnId:a!.id,patientId:p!.id,queue:true}).ok).toBe(false);expect(order(w).ok).toBe(true);
+  expect(a!.priorities.doctor).toBe(0);
   expect(applyCommand(w,{type:'priority',pawnId:a!.id,work:'doctor',value:0}).ok).toBe(true);expect(a!.rescue).toBeDefined();resume(w,1);until(w,()=>a!.rescue?.phase==='carry');
   const corruptions=[(v:World)=>v.pawns[0]!.rescue!.patientId=v.pawns[0]!.id,(v:World)=>v.pawns[1]!.x++,(v:World)=>v.pawns[0]!.rescue!.bedId=99999,(v:World)=>v.structures[0]!.kind='table',(v:World)=>v.pawns[1]!.bedId=v.structures[0]!.id,(v:World)=>v.pawns[0]!.orders.active=null];
   for(const mutate of corruptions){const bad=structuredClone(w);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}

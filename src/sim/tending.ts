@@ -1,3 +1,5 @@
+import { workPriority } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { isCarePatient } from './affiliation.ts';
 import { lyingPatient,patientClaimed,bedsideAccess } from './care-access.ts';
 export { lyingPatient } from './care-access.ts';
@@ -30,7 +32,7 @@ function releaseTending(world:World,doctor:Pawn):void {
 }
 
 export function tendingReason(world:World,doctor:Pawn,patient:Pawn|undefined,accepted=false):string|undefined {
-  return medicalWorkRefusal(doctor)??(!accepted&&doctor.priorities.doctor===0?'Médecin est désactivé.'
+  return backgroundWorkRefusal(doctor,'doctor')??medicalWorkRefusal(doctor)??(!accepted&&workPriority(doctor,'doctor')===0?'Médecin est désactivé.'
     :doctor.interruptedCargo?'La cargaison doit être déposée avant les soins.'
     :!accepted&&(doctor.collapsePending||world.restRules==='legacy'&&doctor.rest===0)?'Ce colon doit récupérer de son épuisement.'
     :!patient||!isCarePatient(patient)?'Patient pris en charge introuvable.'
@@ -76,7 +78,7 @@ export function applyTending(world:World,command:{pawnId:number;patientId:number
 }
 export function reconcileTending(world:World):void {
   for(const d of world.pawns)if(d.tend){const p=world.pawns.find(p=>p.id===d.tend!.patientId);
-    if(tendingReason(world,d,p,true)||d.priorities.doctor===0&&d.orders.active!=='tend'||!p||!tendingPlaceValid(world,d,p,d.tend)||!medicineTaskValid(world,d,p,d.tend))releaseTending(world,d);
+    if(tendingReason(world,d,p,true)||workPriority(d,'doctor')===0&&d.orders.active!=='tend'||!p||!tendingPlaceValid(world,d,p,d.tend)||!medicineTaskValid(world,d,p,d.tend))releaseTending(world,d);
   }
 }
 export function processTending(world:World,doctor:Pawn,context:NeedContext,light:()=>number,search:()=>Reachability|null=context.search):void {

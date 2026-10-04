@@ -1,3 +1,5 @@
+import { workPriority, workType, haulingWork } from './work-types.ts';
+import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { FLOOR_DEFINITIONS } from './flooring.ts';
 import { isColonist } from './affiliation.ts';
 import { captureReason,captureProposal } from './capture.ts';
@@ -6,7 +8,7 @@ import { feedingProposal } from './feeding.ts';
 import { tendingReason,tendingProposal,lyingPatient } from './tending.ts';
 import { carrierOf } from './rescue-state.ts';
 import { rescueReason,rescueProposal,wantsRescue } from './rescue.ts';
-import { stationRecipe } from './production-recipes.ts';
+import { stationRecipe, stationWork } from './production-recipes.ts';
 import { furnitureReady, furnitureWorkTarget, packedAt } from './furniture-rules.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { rememberPriorityWork, expirePriorityWork } from './priority-work-state.ts';
@@ -20,7 +22,7 @@ import { growingJobValid, sowingJobAllowed } from './farming.ts';
 import { groundPile } from './ground-placement.ts';
 import { harvestable } from './plants.ts';
 import { blockedCells, cellIndex, interactionGoals, reachableCells, routeToJob } from './pathfinding.ts';
-import { search, workType, type NavigationGrid, type SearchBudget } from './work-planner.ts';
+import { search, type NavigationGrid, type SearchBudget } from './work-planner.ts';
 import { planCommandDrops, releaseWork } from './work-release.ts';
 import { haulOrderCell, planHaulOrder, queuedHaulReason, startHaulOrder, type HaulOrderTarget } from './player-hauling.ts';
 import { canReach, destinationCell } from './work-planner.ts';
@@ -43,8 +45,10 @@ const orderLabel=(world:World,job:Job)=>clearingPlant(world,job)?'Couper la plan
 /** This provider orders one executable job, never an entire construction chain.
  * Quantity-based delivery is handled separately by player-hauling. */
 export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=false): string | undefined {
+  const work=job.kind==='install'&&!job.installationWork?(asBuilder(pawn)?'build':'haul'):workType(job);
+  const refusal=backgroundWorkRefusal(pawn,work);if(refusal)return refusal;
   if(job.kind==='lay-floor'&&job.floor&&pawn.skills.construction.level<FLOOR_DEFINITIONS[job.floor].skill)return `Construction ${FLOOR_DEFINITIONS[job.floor].skill} nécessaire pour finir ce sol.`;
-  if (!accepted&&(job.kind==='install'?!Number.isFinite(constructionHaulPriority(pawn)):!pawn.priorities[workType(job)])) return 'Ce travail est désactivé dans le tableau Travail.';
+  if (!accepted&&(job.kind==='install'?!Number.isFinite(constructionHaulPriority(pawn)):!workPriority(pawn,workType(job)))) return 'Ce travail est désactivé dans le tableau Travail.';
   if (job.reservedBy !== null && job.reservedBy !== pawn.id) return 'Travail réservé par un autre colon.';
   if (job.growingZoneId !== undefined && !growingJobValid(world,job)) return 'La culture ne permet plus ce travail.';
   if(!accepted&&!sowingJobAllowed(world,pawn,job))return 'Plantes 8 nécessaire pour semer cette racine médicinale.';
@@ -225,12 +229,14 @@ export function reconcileOrders(world:World):void {
     jobs??=new Map(world.jobs.map(j=>[j.id,j]));
     orders.queue=orders.queue.filter(id=>{
       if(typeof id!=='number') {
-        const reason=isCookingOrder(id)?queuedCookingReason(world,id):queuedHaulReason(world,id);
+        const station=isCookingOrder(id)?world.structures.find(s=>s.id===id.cooking.stationId):undefined;
+        const work=isCookingOrder(id)?station?stationWork(station):undefined:haulingWork(id.destination);
+        const reason=(work?backgroundWorkRefusal(pawn,work):undefined)??(isCookingOrder(id)?queuedCookingReason(world,id):queuedHaulReason(world,id));
         if(reason){world.events.push({tick:world.tick,type:'command',message:`${pawn.name} : livraison abandonnée. ${reason}`});if(world.events.length>80)world.events.shift();}
         return !reason;
       }
       const job=jobs!.get(id);
-      if(job&&job.reservedBy===pawn.id)return true;
+      if(job&&job.reservedBy===pawn.id&&!backgroundWorkRefusal(pawn,workType(job)))return true;
       if(job?.reservedBy===pawn.id){delete job.installationWork;job.reservedBy=null;job.status='pending';}
       return false;
     });
@@ -242,7 +248,7 @@ export function advanceOrders(world:World,pawn:Pawn,getBlocked:NavigationGrid,bu
   const order=pawn.orders.queue[0]!;
   if(isCookingOrder(order))return advanceCookingOrder(world,pawn,order,getBlocked,budget);
   if(typeof order!=='number') {
-    let reason=queuedHaulReason(world,order);const source=haulOrderCell(world,order),target=destinationCell(world,order.destination);
+    let reason=backgroundWorkRefusal(pawn,haulingWork(order.destination))??queuedHaulReason(world,order);const source=haulOrderCell(world,order),target=destinationCell(world,order.destination);
     let path:Cell[]|null=null;
     if(!reason&&source&&target) {
       const targetGoals=interactionGoals(world,'kind' in target?footprintCells(target as Job):[target]);
