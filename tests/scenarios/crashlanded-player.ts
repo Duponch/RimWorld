@@ -14,14 +14,37 @@ import { medicalBleed } from '../../src/sim/injury-state.ts';
 import { medicalWorkRefusal } from '../../src/sim/health-rules.ts';
 import { needsAssistedFeeding } from '../../src/sim/feeding-rules.ts';
 import { wantsRescue } from '../../src/sim/rescue.ts';
+import { shotPlan,shootingQueries } from '../../src/sim/shooting.ts';
 import type { Cell, DesignateCommand } from '../../src/sim/types.ts';
 import { survivorDecisions, survivorPlan, survivorSummary } from './survivor-player.ts';
 
-/** Same ordinary camp policy, with preparation using only the actual weapon
- * and vest. Responds to the raid letter, never to a hidden future deadline. */
+export const crashlandedThreatActive=(w:World):boolean=>!!w.raids?.active||!!w.wildlife?.animals.some(a=>a.manhunter&&a.state!=='dead'&&a.state!=='downed');
+
+/** Same ordinary camp policy, with preparation using actual weapon and vest.
+ * Visible raids and animal-rage letters both suspend ordinary work and care. */
 export function crashlandedDecisions(w:World):Decision[] {
   const people=w.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed'&&!p.mental?.crisis);
   const defender=people.find(p=>w.piles.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id));
+  const angry=w.wildlife?.animals.filter(a=>a.manhunter&&a.state!=='dead'&&a.state!=='downed')??[];
+  if(angry.length){
+    const inactive=people.filter(p=>!p.draft);
+    if(inactive.length)return [{reason:'L’alerte signale un animal en rage : interrompre les travaux et les ordres de soins avant de rejoindre l’abri.',command:{type:'draft',pawnIds:inactive.map(p=>p.id),enabled:true}}];
+    const camp=survivorPlan(w,true),out:Decision[]=[];
+    const inside=(c:Cell)=>c.x>camp.room.from.x&&c.x<camp.room.to.x&&c.z>camp.room.from.z&&c.z<camp.room.to.z;
+    for(const [i,p] of people.filter(p=>p!==defender).entries())if(!inside(p)&&!p.draft?.target){
+      out.push({reason:'Rejoindre physiquement l’intérieur de l’abri et laisser la porte se refermer.',command:{type:'draft-move',pawnIds:[p.id],target:{x:camp.anchor.x+1+i%3,z:camp.anchor.z+3},queue:false}});
+    }
+    if(defender){
+      if(defender.draft?.holdFire)out.push({reason:'Autoriser le défenseur équipé à tirer sur la menace animale réelle.',command:{type:'fire-at-will',pawnIds:[defender.id],enabled:true}});
+      const target=[...angry].sort((a,b)=>(a.x-defender.x)**2+(a.z-defender.z)**2-(b.x-defender.x)**2-(b.z-defender.z)**2||a.id-b.id)[0]!;
+      if(defender.shooting?.order?.targetId!==target.id&&!defender.melee?.order){
+        const plan=shotPlan(w,defender,target.id,shootingQueries(w));
+        if(!('reason' in plan))out.push({reason:'Viser l’animal en rage depuis la position effectivement atteinte.',command:{type:'shoot',pawnIds:[defender.id],targetId:target.id}});
+        else if(!defender.draft?.target&&(defender.x!==camp.pin.x||defender.z!==camp.pin.z))out.push({reason:'Rejoindre le poste de défense devant l’entrée avec l’arme réellement équipée.',command:{type:'draft-move',pawnIds:[defender.id],target:camp.pin,queue:false}});
+      }
+    }
+    return out;
+  }
   if(w.raids?.active) {
     if(defender&&!defender.draft)return [{reason:'La lettre annonce une attaque : mobiliser la personne équipée du revolver.',command:{type:'draft',pawnIds:[defender.id],enabled:true}}];
     if(defender?.draft?.holdFire)return [{reason:'Autoriser le tir contre les assaillants qui approchent.',command:{type:'fire-at-will',pawnIds:[defender.id],enabled:true}}];

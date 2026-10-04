@@ -40,7 +40,7 @@ test('culture par interface : champ, semis GPU, inspection, politiques, maturitÃ
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,saved);
     // Only this boundary fixture advances maturity; the separate human journey never does.
     const ripe=structuredClone(saved);for(const crop of ripe.resources){crop.growth=1;crop.growthTick=ripe.tick;}
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(ripe)});
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(ripe)});
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,ripe);
     await page.screenshot({path:testOutputPath('artifacts/farming-ripe.png')});
     await page.locator('[data-speed="6"]').click();

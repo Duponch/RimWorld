@@ -61,7 +61,7 @@ test('V123 research pauses immediately when facility loses power, retaining exac
   acquired(w,'microelectronics',MICROELECTRONICS_RESEARCH_COST);acquired(w,'smithing',700_000_000);acquired(w,'machining',1000_000_000);acquired(w,'multiAnalyzer',MULTI_ANALYZER_RESEARCH_COST);
   expect(selectResearch(w,'fabrication')).toMatchObject({ok:true});
   const spot=cookingSpot(desk);pawn.x=spot.x;pawn.z=spot.z;pawn.research={stationId:desk.id,facilityId:facility.id,spot,worked:0};
-  processResearch(w,pawn,()=>undefined,()=>1_000_000,()=>undefined);
+  processResearch(w,pawn,()=>undefined,()=>1_100_000,()=>undefined);
   expect(w.research!.fabrication!.points).toBe(1_100_000);
   expect(validateResearch(w,123)).toEqual([]);
   facility.power!.on=false;
@@ -75,7 +75,7 @@ test('V123 analyzer boosts another advanced research but its outage does not blo
   acquired(w,'smithing',700_000_000);acquired(w,'machining',1000_000_000);acquired(w,'microelectronics',MICROELECTRONICS_RESEARCH_COST);acquired(w,'multiAnalyzer',MULTI_ANALYZER_RESEARCH_COST);
   expect(selectResearch(w,'gunsmithing')).toMatchObject({ok:true});
   const spot=cookingSpot(desk);pawn.x=spot.x;pawn.z=spot.z;pawn.research={stationId:desk.id,facilityId:facility.id,spot,worked:0};
-  processResearch(w,pawn,()=>undefined,()=>1_000_000,()=>undefined);
+  processResearch(w,pawn,()=>undefined,()=>1_100_000,()=>undefined);
   expect(w.research!.gunsmithing!.points).toBe(1_100_000);
   facility.power!.on=false;
   processResearch(w,pawn,()=>undefined,()=>1_000_000,()=>undefined);
@@ -83,9 +83,9 @@ test('V123 analyzer boosts another advanced research but its outage does not blo
   expect(pawn.research).toBeDefined();
 });
 
-test('V123 powered advanced bench is faster without changing simple bench rate',()=>{
+test('powered advanced bench uses Core 1.0 versus the simple bench 0.75',()=>{
   const w=fixture(),pawn=w.pawns[0]!,simple=building(w,'research-bench',8,8),advanced=building(w,'hi-tech-research-bench',12,8),environment=new WorkEnvironmentCache().read(w);
-  expect(Math.abs(researchRate(pawn,advanced,environment,20)-researchRate(pawn,simple,environment,20)*2)).toBeLessThanOrEqual(1);
+  expect(Math.abs(researchRate(pawn,advanced,environment,20,w)-researchRate(pawn,simple,environment,20,w)*4/3)).toBeLessThanOrEqual(1);
 });
 
 test('V123 save rejects component bills, workpieces and queued work before Fabrication',()=>{
@@ -100,7 +100,7 @@ test('V123 save rejects component bills, workpieces and queued work before Fabri
   expect(validateResearch(w,123)).toContain('Locked component production.');
 });
 
-test('V123 each analyzer serves one researcher; planning uses a second free analyzer',()=>{
+test('one analyzer supplies several desks while each desk remains exclusively reserved',()=>{
   const w=fixture(2),[first,second]=w.pawns,deskA=building(w,'hi-tech-research-bench',8,8),deskB=building(w,'hi-tech-research-bench',16,8);
   const analyzerA=building(w,'multi-analyzer',12,10),analyzerB=building(w,'multi-analyzer',20,10);
   acquired(w,'smithing',700_000_000);acquired(w,'machining',1000_000_000);acquired(w,'microelectronics',MICROELECTRONICS_RESEARCH_COST);acquired(w,'multiAnalyzer',MULTI_ANALYZER_RESEARCH_COST);
@@ -110,10 +110,10 @@ test('V123 each analyzer serves one researcher; planning uses a second free anal
   second!.x=17;second!.z=7;
   const reach=reachableCells(w,second!,blockedCells(w),new Set());
   const proposal=researchProposal(w,second!,reach);
-  expect(proposal?.task).toMatchObject({stationId:deskB.id,facilityId:analyzerB.id,spot:spotB});
+  expect(proposal?.task).toMatchObject({stationId:deskB.id,facilityId:analyzerA.id,spot:spotB});
   second!.x=spotB.x;second!.z=spotB.z;second!.state='working';second!.path=[];
   second!.research={...proposal!.task,facilityId:analyzerA.id};
-  expect(validateResearch(w,123)).toContain('Invalid research ownership.');
+  expect(validateResearch(w,123)).toEqual([]);
   second!.research=proposal!.task;
   expect(validateResearch(w,123)).toEqual([]);
 });

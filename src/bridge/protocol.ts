@@ -12,4 +12,28 @@ export type Request =
 
 export type Response =
   | SnapshotMessage
-  | { type: 'reply'; id: number; ok: boolean; data?: string; reason?: string };
+  | { type: 'reply'; id: number; ok: boolean; data?: string; reason?: string; outcome?: 'refused' | 'unknown'; checkpoint?: { epoch: number; revision: number } }
+  | SimulationFault;
+
+/** A fatal stop does not promise that the last tick was rolled back. */
+export interface SimulationFault {
+  type: 'fault';
+  reason: string;
+  speed: 0;
+  tick?: number;
+  transport?: true;
+}
+
+export interface SimulationRequestStatus {
+  id: number;
+  type: Request['type'];
+  state: 'waiting' | 'settled';
+  message?: string;
+}
+
+export class SimulationRequestError extends Error {
+  constructor(message: string, readonly outcome: 'refused' | 'unknown', readonly stopped = false) {
+    super(message);
+    this.name = 'SimulationRequestError';
+  }
+}

@@ -179,6 +179,8 @@ function nearCellBudget(corners: Float64Array): number {
 /** One resident draw. The GPU creates/recycles roots, shapes, wind and colour;
  * the CPU uploads the surface map and packed root pigment only on adoption. */
 export class GpuGroundGrassLayer {
+  private supported = true;
+  private unsupportedWarning?: string;
   readonly mesh: THREE.Mesh<THREE.InstancedBufferGeometry, THREE.MeshStandardNodeMaterial>;
   readonly map = new THREE.DataTexture(new Uint8Array(4), 1, 1, THREE.RGBAFormat);
   readonly bloodMap = new THREE.DataTexture(new Uint32Array(1), 1, 1, THREE.RedIntegerFormat, THREE.UnsignedIntType);
@@ -225,7 +227,8 @@ export class GpuGroundGrassLayer {
   private readonly nearFootprint = new Float64Array(8);
   private readonly foregroundFootprint = new Float64Array(8);
 
-  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void) {
+  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void,
+    private readonly maxTextureDimension = Infinity, private readonly onUnsupported: (message: string) => void = () => {}) {
     this.map.colorSpace = THREE.SRGBColorSpace;
     this.map.magFilter = this.map.minFilter = THREE.NearestFilter;
     this.map.generateMipmaps = false;
@@ -338,6 +341,16 @@ export class GpuGroundGrassLayer {
   /** Diff spatial cover at source cells; dynamic edits leave the atlas alone.
    * Only seed/biome, dimensions and explicit force recolour the whole map. */
   update(world: World, force = false, changedTiles?: readonly number[]): void {
+    // Check the configured canvas device before allocating the dense mask.
+    // Decorative grass can be disabled safely without changing the World.
+    this.supported = world.width * GRASS_BLOOD_WORDS <= this.maxTextureDimension && world.height <= this.maxTextureDimension;
+    if (!this.supported) {
+      this.mesh.visible = false; this.mesh.geometry.instanceCount = 0;
+      const message = `Herbe décorative désactivée : le masque ${world.width * GRASS_BLOOD_WORDS} × ${world.height} dépasse la limite de texture ${this.maxTextureDimension} de ce périphérique.`;
+      if (message !== this.unsupportedWarning) { this.unsupportedWarning = message; this.onUnsupported(message); }
+      return;
+    }
+    this.unsupportedWarning = undefined;
     const widthChanged = this.map.image.width !== world.width || this.map.image.height !== world.height ||
       this.previousPixels.length !== world.width * world.height * 4;
     const biome = world.site?.biome;
@@ -439,6 +452,7 @@ export class GpuGroundGrassLayer {
    * mutation. A one-cell margin covers projected blade tips near the screen;
    * fixed world cells keep the roots stable under camera rotation and zoom. */
   present(camera: THREE.Camera, _target: THREE.Vector3, _span: number, pixelsPerCell: number): void {
+    if (!this.supported) { this.mesh.visible = false; this.mesh.geometry.instanceCount = 0; return; }
     // Thin subpixel blades become aliasing and vertex work, not useful detail.
     // Fade their size and density between 20 and 30 pixels/cell, then submit
     // nothing in the overview. The near field retains its original detail.
@@ -623,6 +637,7 @@ export class GpuGroundGrassLayer {
   }
 
   prepareForCompile(): () => void {
+    if (!this.supported) return () => {};
     const revision = this.revision, visible = this.mesh.visible, count = this.mesh.geometry.instanceCount;
     this.mesh.visible = true; this.mesh.geometry.instanceCount = Math.max(1, count);
     return () => { if (revision === this.revision) {

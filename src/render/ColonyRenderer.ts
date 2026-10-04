@@ -63,6 +63,7 @@ import { constructionLineCells, isLineBuildKind, type LineBuildKind } from '../s
 import type { AreaIndex } from '../sim/designation';
 import { WORLD_SCALE } from '../world/scale';
 import { CameraRig, type CameraMode } from './CameraRig';
+import { cameraClipNear } from './camera-clip';
 import { DayNightLayer } from './DayNightLayer';
 import { RecreationHints } from './RecreationHints';
 import { PlantClusterLayer } from './PlantClusterLayer';
@@ -80,6 +81,7 @@ import { storageZonePlacements, storageZoneSignature } from './storage-zone-pres
 import { mapObjectCells,mapObjectsAt,sameMapObject,type MapObjectSelection } from '../ui/map-object-selection';
 
 type VisualChunk = { signature: string; group: THREE.Group };
+type RendererLifetime = { closed: boolean };
 export interface AudioFrameView {
   tick: number;
   paused: boolean;
@@ -142,6 +144,11 @@ export class ColonyRenderer {
   onContext: (cell:Cell,x:number,y:number,queue:boolean,targetId?:number)=>void=()=>{};
   onInteractionCancel: ()=>void=()=>{};
   onAudioFrame?: (view: AudioFrameView) => void;
+  onFatalError: (message: string) => void = () => {};
+  onCompatibilityWarning: (message: string) => void = () => {};
+  fatalError?: string;
+  compatibilityWarning?: string;
+  private textureDimensionLimit = Infinity;
   private readonly areaPreview=new AreaPreviewLayer();
   private areaIndex: AreaIndex | undefined;
   private constructionIndex: ConstructionCellIndex | undefined;
@@ -211,14 +218,33 @@ export class ColonyRenderer {
 
   static async create(host: HTMLElement, onPick: (x: number, z: number) => void, groundGrassEnabled = true): Promise<ColonyRenderer> {
     const renderer = new ReentrantRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
-    await renderer.init();
-    const view = new ColonyRenderer(host, onPick, renderer, groundGrassEnabled);
-    renderer.setAnimationLoop((time) => view.frame(time));
-    return view;
+    const lifetime: RendererLifetime = { closed: false };
+    let view: ColonyRenderer | undefined;
+    try {
+      await renderer.init();
+      view = new ColonyRenderer(host, onPick, renderer, groundGrassEnabled, lifetime);
+      if (view.fatalError) throw new Error(view.fatalError);
+      const ready = view;
+      renderer.setAnimationLoop((time) => {
+        try { ready.frame(time); } catch (error) { ready.reportFailure(error instanceof Error ? error.message : String(error)); }
+      });
+      return view;
+    } catch (error) {
+      try { if (view) view.dispose(); else if (!lifetime.closed) { renderer.setAnimationLoop(null); lifetime.closed = true; await renderer.dispose(); renderer.domElement.remove(); } }
+      catch { /* Preserve the initialization failure even if teardown fails. */ }
+      throw error;
+    }
   }
 
-  private constructor(private readonly host: HTMLElement, private readonly onPick: (x: number, z: number) => void, renderer: THREE.WebGPURenderer, groundGrassEnabled: boolean) {
+  private constructor(private readonly host: HTMLElement, private readonly onPick: (x: number, z: number) => void, renderer: THREE.WebGPURenderer, groundGrassEnabled: boolean, private readonly rendererLifetime: RendererLifetime) {
     this.renderer = renderer;
+    try {
+    const lost = renderer.onDeviceLost.bind(renderer);
+    renderer.onDeviceLost = info => { lost(info); this.reportFailure(`Périphérique graphique perdu : ${info.message}`); };
+    renderer.onError = (info: unknown) => {
+      const detail = typeof info === 'object' && info !== null && 'message' in info ? String(info.message) : String(info);
+      this.reportFailure(`Erreur du périphérique graphique : ${detail}`);
+    };
     this.scene.matrixAutoUpdate = false;
     this.environmentLighting.configure(this.staticMaterial);
     this.environmentLighting.configure(this.terrainPlainMaterial);
@@ -245,6 +271,18 @@ export class ColonyRenderer {
     this.texturedStaticMaterial.userData.rendererOwned = true;
     this.waterMaterial.userData.rendererOwned = true;
     this.backend = renderer.getContext() instanceof WebGL2RenderingContext ? 'WebGL 2' : 'WebGPU';
+    const context = renderer.getContext() as GPUCanvasContext | WebGL2RenderingContext;
+    if ('getConfiguration' in context) {
+      const device = context.getConfiguration()?.device;
+      // Three deliberately ignores reason=destroyed. Watch our configured
+      // device too, so an explicit diagnostic destroy follows the real loss
+      // notification path; normal disposal is already guarded by disposed.
+      void device?.lost.then(info => this.reportFailure(`Périphérique graphique perdu : ${info.message || info.reason}`));
+    }
+    this.textureDimensionLimit = 'getConfiguration' in context
+      ? context.getConfiguration()?.device.limits.maxTextureDimension2D ?? 1
+      : Number(context.getParameter(context.MAX_TEXTURE_SIZE));
+    if (!Number.isSafeInteger(this.textureDimensionLimit) || this.textureDimensionLimit < 1) this.textureDimensionLimit = 1;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -276,7 +314,7 @@ export class ColonyRenderer {
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
     this.scene.add(this.areaPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
     if (groundGrassEnabled) {
-      this.grass = new GpuGroundGrassLayer(this.environmentLighting.configure);
+      this.grass = this.createGrass();
       this.grass.setTerrainPaint(this.terrainPaintTexture);
       this.scene.add(this.grass.mesh);
     }
@@ -327,10 +365,48 @@ export class ColonyRenderer {
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(host);
     this.resize();
+    } catch (error) {
+      try { this.dispose(); } catch { /* Static create also closes the device. */ }
+      throw error;
+    }
+  }
+
+  /** Idempotent failure entry point, also used by controlled native diagnostics.
+   * The main lifecycle pauses the authoritative worker and offers reconstruction. */
+  reportFailure(message: string): void {
+    if (this.disposed || this.fatalError) return;
+    this.fatalError = message;
+    this.renderer.setAnimationLoop(null);
+    this.keys.clear();
+    if (this.selectionInput && this.rig && this.hover) this.cancelDesignation();
+    this.onFatalError(message);
+  }
+
+  /** Only callable in development diagnostics. Targets this canvas's actual
+   * device/context; never requests or destroys a separate/shared adapter. */
+  requestDeviceLossForDiagnostics(): boolean {
+    if (!import.meta.env.DEV || this.disposed || this.fatalError) return false;
+    const context = this.renderer.getContext() as GPUCanvasContext | WebGL2RenderingContext;
+    if ('getConfiguration' in context) {
+      const device = context.getConfiguration()?.device;
+      if (!device) return false;
+      device.destroy(); return true;
+    }
+    const extension = context.getExtension('WEBGL_lose_context');
+    if (!extension) return false;
+    extension.loseContext(); return true;
+  }
+
+  private createGrass(): GpuGroundGrassLayer {
+    return new GpuGroundGrassLayer(this.environmentLighting.configure, this.textureDimensionLimit, message => {
+      this.compatibilityWarning = message;
+      this.onCompatibilityWarning(message);
+    });
   }
 
   setWorld(world: World, resetPresentation = false, speed = 1, tracks?: PawnTrack[], immutableSnapshot = false): void {
-    if(this.disposed)return;
+    if(this.disposed || this.fatalError)return;
+    try {
     this.invalidatePausedShadow();
     const previous=this.received?.world;
     const reset=resetPresentation||!previous||world.tick<previous.tick||world.seed!==previous.seed||world.width!==previous.width||world.height!==previous.height;
@@ -345,6 +421,10 @@ export class ColonyRenderer {
     // Recovery replaces the whole presentation, never only one actor's path.
     if(this.presentation.size>64||world.tick-this.timeline.tick>MOTION_HISTORY_TICKS){this.presentation.clear();this.timeline.adopt(world.tick,speed,tracks,performance.now(),true);this.applyWorld(world,true);return;}
     const due=this.presentation.take(this.timeline.tick,performance.now());if(due)this.applyWorld(due);
+    } catch (error) {
+      this.reportFailure(`Adoption de l’affichage interrompue : ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
   }
 
   private applyWorld(world: World, resetPresentation = false): void {
@@ -582,7 +662,7 @@ export class ColonyRenderer {
       this.grass = null;
       return;
     }
-    this.grass = new GpuGroundGrassLayer(this.environmentLighting.configure);
+    this.grass = this.createGrass();
     this.grass.setTexturesEnabled(this.texturesEnabled);
     this.grass.setTerrainPaint(this.texturesEnabled?this.terrainPaintTexture:null);
     this.scene.add(this.grass.mesh);
@@ -612,6 +692,16 @@ export class ColonyRenderer {
   /** Warm both projections and resident LOD variants under the loading screen.
    * Do not defer the first overview pipeline to the player's first wheel zoom. */
   async preparePresentation(): Promise<void> {
+    if (this.fatalError) throw new Error(this.fatalError);
+    try { await this.preparePresentationResources(); }
+    catch (error) {
+      // Restoration inside the preparation completes before teardown.
+      try { this.dispose(); } catch { /* Preserve the original preparation error. */ }
+      throw error;
+    }
+  }
+
+  private async preparePresentationResources(): Promise<void> {
     this.preparing = true;
     this.invalidatePausedShadow();
     const culling = new Map<THREE.Object3D, boolean>();
@@ -652,6 +742,7 @@ export class ColonyRenderer {
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
       this.landscape.needsUpdate=true;
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
+      if (this.fatalError) throw new Error(this.fatalError);
     } finally {
       // Restore the broad compile override first. Layers prepared above had
       // already disabled culling when that override was captured; their own
@@ -745,7 +836,7 @@ export class ColonyRenderer {
       const distance=segment?THREE.MathUtils.lerp(segment.fromFraction??0,segment.toFraction??1,alpha):alpha;
       position.y=travelHeight(visual.from.y,visual.to.y,distance);
       const center=position.clone().add(new THREE.Vector3(0,.75,0)).project(this.camera);
-      if(center.z < -1||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)continue;
+      if(center.z < cameraClipNear(this.camera)||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)continue;
       const head=position.clone().add(new THREE.Vector3(0,1.75,0)).project(this.camera);
       result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,
         radius:Math.max(5,Math.abs(head.y-center.y)*rect.height/2),depth:center.z,group:actors.get(id)?.state==='dead'?'corpse:human':`human:${actors.get(id)?.faction??'colony'}:${!!actors.get(id)?.prisoner}`,category:actors.get(id)?.state==='dead'?3:(actors.get(id)?.faction??'colony')==='colony'?0:1});
@@ -753,7 +844,7 @@ export class ColonyRenderer {
     const center=new THREE.Vector3(),edge=new THREE.Vector3(),side=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0);
     this.wildlife.forEachPose((id,species,x,y,z,height,radius)=>{
       center.set(x,y+height*.5,z).project(this.camera);
-      if(center.z< -1||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)return;
+      if(center.z< cameraClipNear(this.camera)||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)return;
       edge.set(x,y+height*.5,z).addScaledVector(side,Math.max(height*.5,radius)).project(this.camera);
       result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:`animal:${species}`,category:2});
     });
@@ -851,7 +942,7 @@ export class ColonyRenderer {
   };
 
   private frame(now: number): void {
-    if (this.disposed || this.preparing) return;
+    if (this.disposed || this.fatalError || this.preparing) return;
     if(this.hasTracks){this.timeline.advance(now);const due=this.presentation.take(this.timeline.tick,now);if(due)this.applyWorld(due);}
     const dt = this.lastFrame ? Math.min((now - this.lastFrame) / 1000, 0.05) : 0;
     this.lastFrame = now;
@@ -1115,13 +1206,14 @@ export class ColonyRenderer {
   private onBlur = (): void => { this.keys.clear(); this.cancelDesignation(); };
 
   dispose(): void {
-    this.selectionInput.dispose();
     if (this.disposed) return;
-    this.cancelDesignation(); this.areaPreview.dispose();
+    this.selectionInput?.dispose();
+    if (this.selectionInput && this.rig && this.hover) this.cancelDesignation();
+    this.areaPreview.dispose();
     this.disposed = true;
     this.renderer.setAnimationLoop(null);
-    this.resizeObserver.disconnect();
-    this.rig.dispose();
+    this.resizeObserver?.disconnect();
+    this.rig?.dispose();
     const canvas = this.renderer.domElement;
     canvas.removeEventListener('pointerdown', this.onPointerDown, true);
     canvas.removeEventListener('pointerup', this.onPointerUp);
@@ -1143,7 +1235,7 @@ export class ColonyRenderer {
     this.brawlCloud.dispose();
     this.structureVfx.dispose();
     this.podRescue.dispose();
-    this.mapLabels.dispose();
+    this.mapLabels?.dispose();
     this.overview.dispose();
     this.rocks.dispose();
     this.crops.dispose();
@@ -1163,11 +1255,13 @@ export class ColonyRenderer {
     this.paintedWater.dispose();
     this.clouds.dispose();
     this.precipitation.dispose();
-    this.hover.geometry.dispose(); (this.hover.material as THREE.Material).dispose();
-    this.objectSelection.geometry.dispose();(this.objectSelection.material as THREE.Material).dispose();
-    this.daylight.dispose();
+    this.hover?.geometry.dispose(); (this.hover?.material as THREE.Material | undefined)?.dispose();
+    this.objectSelection?.geometry.dispose();(this.objectSelection?.material as THREE.Material | undefined)?.dispose();
+    this.daylight?.dispose();
     this.environmentLighting.dispose();
-    void this.renderer.dispose();
+    this.renderer.onDeviceLost = () => {};
+    this.renderer.onError = () => {};
+    if (!this.rendererLifetime.closed) { this.rendererLifetime.closed = true; void this.renderer.dispose(); }
     canvas.remove();
   }
 }

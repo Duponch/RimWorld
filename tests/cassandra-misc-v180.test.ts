@@ -1,5 +1,5 @@
 import { expect,test } from 'vitest';
-import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
+import { withoutMiningSkill, withoutTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { createWorld,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
 import { crashlandedProfile } from '../src/sim/game-profile.ts';
@@ -145,7 +145,7 @@ test('saved Cassandra state resumes exactly; a neutral 168 continuation gains no
   const restored=deserializeWorld(serializeWorld(world));
   expect(restored.miscIncidents).toEqual(world.miscIncidents);
   stepWorld(world,100);stepWorld(restored,100);expect(restored).toEqual(world);
-  const legacy=withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(world)))));
+  const legacy=withoutTelevisionRecreation(withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(world))))));
   // Schema 168 already had these recipes and Plants, but no V190 ingredient
   // permissions or V201 calendar. Construct its fixture before lowering schema.
   for(const structure of [...legacy.structures,...(legacy.packed??[]).map((p:{building:World['structures'][number]})=>p.building)])
@@ -160,7 +160,7 @@ test('saved Cassandra state resumes exactly; a neutral 168 continuation gains no
   }
   delete legacy.smallIncidents;
   delete legacy.worldIncidents;
-  legacy.schemaVersion=168;delete legacy.miscIncidents;
+  legacy.schemaVersion=(withoutTelevisionRecreation(legacy),168);delete legacy.miscIncidents;
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.miscIncidents).toBeUndefined();
   adoptMiscIncidents(migrated);

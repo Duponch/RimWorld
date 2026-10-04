@@ -1,4 +1,5 @@
 import { Box3, Frustum, Matrix4, PerspectiveCamera, Vector3, type OrthographicCamera } from 'three/webgpu';
+import { cameraClipNear } from './camera-clip';
 import { QUALITY_LABELS, type WeaponQuality } from '../sim/equipment-rules';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import type { MaterialPile, World } from '../sim/types';
@@ -139,7 +140,7 @@ export class MapLabelsOverlay {
     ctx.lineJoin = 'round'; ctx.lineWidth = 2.5;
     ctx.strokeStyle = 'rgba(24, 29, 27, .85)';
     ctx.fillStyle = '#fff4d9';
-    this.frustum.setFromProjectionMatrix(this.projectionView.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+    this.frustum.setFromProjectionMatrix(this.projectionView.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse), camera.coordinateSystem, camera.reversedDepth);
     const maxDistance = camera instanceof PerspectiveCamera
       ? perspectiveDetailRange(camera, height, PILE_LABEL_MIN_CELL_PIXELS) : Infinity;
     const maxDistanceSquared = maxDistance * maxDistance;
@@ -150,7 +151,7 @@ export class MapLabelsOverlay {
         this.point.set(x, .32, z);
         if (this.point.distanceToSquared(camera.position) > maxDistanceSquared) continue;
         this.point.project(camera);
-        if (this.point.z < -1 || this.point.z > 1 || Math.abs(this.point.x) > 1.08 || Math.abs(this.point.y) > 1.08) continue;
+        if (this.point.z < cameraClipNear(camera) || this.point.z > 1 || Math.abs(this.point.x) > 1.08 || Math.abs(this.point.y) > 1.08) continue;
         const screenX = (this.point.x + 1) * width * .5;
         const screenY = (1 - this.point.y) * height * .5;
         const cell = z * world.width + x, overlap = occupied.get(cell) ?? 0;

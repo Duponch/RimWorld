@@ -22,6 +22,7 @@ import { windIntensity } from './sim/wind-rules';
 import { firePosition } from './sim/fire-rules';
 import { calendarTick } from './sim/calendar';
 import { GameSession, SAVE_KEY, PREVIOUS_KEY } from './ui/game-session';
+import { BrowserSaveRepository } from './ui/save-repository';
 import { fetchTestColonies, readSaveFile, readTestColony } from './ui/test-colonies';
 import { createFrontMenu } from './ui/front-menu';
 import type { PawnTrack } from './bridge/motion-tracks';
@@ -208,6 +209,10 @@ let currentCategory: ArchitectCategory = 'orders';
 let placementOrientation: Orientation = 0;
 let currentSpeed = 1, lastSpeed = 1, stepMs = 0;
 let wallCutaway = false, foliageVisible = true, replacingWorld = false;
+let simulationStopped = false, graphicsFault = false, graphicsRecovering = false;
+let presentationPreparation: Promise<void> | undefined;
+let graphicsMessage = '', incidentPanel: HTMLElement | undefined;
+const waitingRequests = new Map<number, string>();
 let renderer: ColonyRenderer | undefined;
 const TEXTURE_PREFERENCE_KEY = 'lisiere.presentation.textures.v1';
 const GROUND_GRASS_PREFERENCE_KEY = 'lisiere.presentation.ground-grass.v1';
@@ -237,6 +242,7 @@ audio.setMuted(!soundEnabled);
 music.setVolume(musicVolume);
 music.setEnabled(musicEnabled);
 music.setHidden(document.hidden);
+audio.setHidden(document.hidden);
 function unlockAudioFromGesture(): void {
   if (!soundEnabled || !audio.needsUnlock) return;
   void audio.unlock().then(() => { audioUnlockWarningShown = false; }).catch(error => {
@@ -321,7 +327,11 @@ installTooltips(document.body);
 installArchitectIcons(document.querySelector<HTMLElement>('#app')!);
 // Suppress browser chrome without cancelling the game's own order-menu handler.
 document.querySelector('#app')!.addEventListener('contextmenu', event => event.preventDefault());
-const session = new GameSession(client, () => localStorage, prepareWorld);
+const saveRepository = new BrowserSaveRepository(() => localStorage, () => globalThis.indexedDB,
+  status => { if (status.message) notify(status.message, true); });
+const session = new GameSession(client, saveRepository, prepareWorld, () => {
+  simulationStopped = false; menuResumeSpeed = undefined; frontMenu.setHasGame(true); updateIncident(); syncStorageButtons();
+});
 const frontHost = document.createElement('div'); document.querySelector('#app')!.append(frontHost);
 // The measured counter remains visible over both the colony and the menu.
 document.querySelector('#app')!.append(el('fps-counter'));
@@ -346,7 +356,10 @@ const frontMenu = createFrontMenu(frontHost, {
   onLoadTest: async save => replaceColony(() => session.loadExternal(() => readTestColony(save))),
   onImport: async file => replaceColony(() => session.loadExternal(() => readSaveFile(file))),
   onResume: async () => {
-    await prepareWorld(); frontMenu.hide(); syncStorageButtons();
+    if (simulationStopped || waitingRequests.size > 0) throw new Error('Chargez une colonie validée pour reprendre.');
+    await prepareWorld();
+    if (simulationStopped || waitingRequests.size > 0) throw new Error('Chargez une colonie validée pour reprendre.');
+    frontMenu.hide(); syncStorageButtons();
     const speed = menuResumeSpeed ?? 0; menuResumeSpeed = undefined;
     await changeSpeed(speed);
   },
@@ -373,10 +386,12 @@ async function switchPanel(panel: Panel, preserveTool = false): Promise<void> {
   setPanel(panel, preserveTool);
 }
 async function replaceColony(action: () => Promise<void>): Promise<void> {
+  client.restartForReplacement();
   lastCommercialArrivalKey=undefined;
   replacingWorld = true; syncStorageButtons();
   try {
-    await action(); menuResumeSpeed = undefined;
+    await action(); menuResumeSpeed = undefined; updateIncident();
+    if (simulationStopped) throw new Error('La simulation s’est arrêtée pendant la préparation de l’affichage. Chargez une colonie validée pour reprendre.');
     clearSelection(); setPanel(null); frontMenu.hide();
     if (snapshot?.pawns[0]) renderer?.focusPawn(snapshot.pawns[0].id);
   } finally { replacingWorld = false; syncStorageButtons(); }
@@ -1037,12 +1052,13 @@ const tradeUI=createTradeUI(command=>client.command(command),()=>client.setSpeed
 const arrivalUI=createArrivalUI(command=>client.command(command));
 const questUI=createQuestUI(command=>client.command(command));
 function syncStorageButtons() {
-  shell.inert = replacingWorld || frontMenu.isOpen() || !snapshot;
+  shell.inert = replacingWorld || frontMenu.isOpen() || !snapshot || simulationStopped || graphicsFault || waitingRequests.size > 0;
   for(const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]'))button.disabled=replacingWorld||currentPanel==='menu';
   for (const [id, key] of [['load', SAVE_KEY], ['restore-previous', PREVIOUS_KEY]]) {
-    try { el<HTMLButtonElement>(id).disabled = replacingWorld || session.busy || !localStorage.getItem(key!); } catch { el<HTMLButtonElement>(id).disabled = true; }
+    try { el<HTMLButtonElement>(id).disabled = replacingWorld || session.busy || !saveRepository.peekItem(key!); } catch { el<HTMLButtonElement>(id).disabled = true; }
   }
-  el<HTMLButtonElement>('save').disabled=replacingWorld||session.busy||!snapshot;
+  el<HTMLButtonElement>('save').disabled=replacingWorld||session.busy||!snapshot||simulationStopped;
+  updateIncident();
 }
 async function save() {
   if (session.busy || replacingWorld) return;
@@ -1069,7 +1085,7 @@ async function createWorld() {
     el('new-world-error').hidden=false;
   }
 }
-async function changeSpeed(speed: number) { if (currentPanel==='menu') return; if (speed > 0) lastSpeed = speed; await client.setSpeed(speed); }
+async function changeSpeed(speed: number) { if (currentPanel==='menu'||graphicsFault||simulationStopped||waitingRequests.size>0) return; if (speed > 0) lastSpeed = speed; await client.setSpeed(speed); }
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) button.onclick = () => setTool(button.dataset.tool as Tool);
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.onclick = () => { setCategory(button.dataset.category as ArchitectCategory); applyTool('select'); };
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) button.onclick = () => { const panel = button.dataset.panel as Panel; void attempt(() => switchPanel(currentPanel === panel ? null : panel)); };
@@ -1129,7 +1145,7 @@ audioGestureRoot.addEventListener('click', event => {
   const panelButton = button.matches('[data-panel], [data-guide-panel], [data-close-panel], .front-back, .front-next');
   audio.playInterface(panelButton ? 'ui.panel' : 'ui.click');
 }, { capture: true });
-document.addEventListener('visibilitychange', () => music.setHidden(document.hidden));
+document.addEventListener('visibilitychange', () => { music.setHidden(document.hidden); audio.setHidden(document.hidden); });
 el('wall-cutaway').onclick = () => { wallCutaway = !wallCutaway; renderer?.setWallCutaway(wallCutaway); el('wall-cutaway').textContent = wallCutaway ? 'Murs : coupés' : 'Murs : hauts'; el('wall-cutaway').setAttribute('aria-pressed', String(wallCutaway)); };
 el('roof-toggle').onclick=()=>{const button=el('roof-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));button.textContent=visible?'Toits : visibles':'Toits : masqués';renderer?.setRoofsVisible(visible);};
 el('foliage-toggle').onclick = () => { foliageVisible = !foliageVisible; renderer?.setFoliageVisible(foliageVisible); el('foliage-toggle').textContent = foliageVisible ? 'Feuillage' : 'Troncs'; el('foliage-toggle').setAttribute('aria-pressed', String(!foliageVisible)); };
@@ -1155,7 +1171,7 @@ window.addEventListener('keyup',event=>{
 },true);
 window.addEventListener('blur',()=>{altInspectorHeld=false;updateMapCellDetails(true);});
 document.addEventListener('keydown', event => {
-  if(event.defaultPrevented || frontMenu.isOpen() || !snapshot || replacingWorld)return;
+  if(event.defaultPrevented || frontMenu.isOpen() || !snapshot || replacingWorld || graphicsFault || simulationStopped || waitingRequests.size>0)return;
   if (document.querySelector('dialog[open]')) return;
   if (event.target instanceof HTMLElement && (event.target.matches('input, select, textarea') || event.target.isContentEditable)) return;
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void attempt(save); return; }
@@ -1172,6 +1188,18 @@ document.addEventListener('keydown', event => {
   else if (key === 's') { event.preventDefault(); setTool('stockpile'); }
 });
 client.onError = message => notify(message, true);
+client.onRequestStatus = status => {
+  if (status.state === 'waiting') waitingRequests.set(status.id, status.message ?? 'La simulation tarde à répondre.');
+  else waitingRequests.delete(status.id);
+  updateIncident(); syncStorageButtons();
+};
+client.onFault = () => {
+  session.markSimulationStopped(); simulationStopped = true; currentSpeed = 0; menuResumeSpeed = undefined;
+  frontMenu.setHasGame(false);
+  audio.reset();
+  if (snapshot) renderer?.setWorld(snapshot, false, 0, latestMotion, true);
+  updateIncident(); syncStorageButtons();
+};
 client.onSnapshot = (world, cost, speed, replaced, motion) => {
   if (replaced) {audio.reset();lastAudioCamera=undefined;lastAudioSourceFocus={x:Infinity,z:Infinity};lastAudioSourceHeight=NaN;}
   const speedChanged=currentSpeed!==speed;
@@ -1192,12 +1220,69 @@ client.onSnapshot = (world, cost, speed, replaced, motion) => {
 client.onAudioCues = (cues) => {
   if (soundEnabled) audio.ingestCues(cues);
 };
-async function prepareWorld(): Promise<void> {
+function updateIncident(): void {
+  const visible = simulationStopped || graphicsFault || waitingRequests.size > 0;
+  if (!incidentPanel && !visible) return;
+  if (!incidentPanel) {
+    incidentPanel = document.createElement('section');
+    incidentPanel.id = 'game-incident'; incidentPanel.setAttribute('role', 'alert');
+    incidentPanel.style.cssText = 'position:fixed;z-index:10000;top:20px;left:50%;transform:translateX(-50%);max-width:560px;padding:20px;background:#fff8ec;color:#292b31;border:2px solid #cda598;border-radius:12px;box-shadow:0 8px 28px #0005';
+    incidentPanel.innerHTML = '<strong></strong><p></p><button id="retry-display">Recréer l’affichage</button> <button id="incident-colonies">Charger ou créer une colonie</button> <button id="stop-unanswered">Arrêter la simulation</button>';
+    document.querySelector('#app')!.append(incidentPanel);
+    el('retry-display').onclick = () => { void attempt(async () => {
+      if (graphicsRecovering || replacingWorld || session.busy || simulationStopped) return;
+      graphicsRecovering = true; updateIncident(); syncStorageButtons();
+      try { await prepareWorld(); }
+      finally { graphicsRecovering = false; updateIncident(); syncStorageButtons(); }
+    }); };
+    el('incident-colonies').onclick = () => { frontMenu.showHome(session.hasWorld && !simulationStopped); incidentPanel!.hidden = true; syncStorageButtons(); };
+    el('stop-unanswered').onclick = () => client.stop();
+  }
+  incidentPanel.hidden = !visible;
+  incidentPanel.querySelector('strong')!.textContent = simulationStopped ? 'Simulation arrêtée' : graphicsFault ? 'Affichage interrompu' : 'Opération en attente';
+  incidentPanel.querySelector('p')!.textContent = simulationStopped
+    ? 'Le dernier tick peut être incomplet. Vos sauvegardes sont conservées. Chargez une copie validée ou créez une colonie pour reprendre.'
+    : graphicsFault ? `${graphicsMessage} La colonie est conservée et mise en pause avant la reprise de l’affichage.`
+    : 'La simulation tarde à répondre. La commande peut avoir été appliquée ; son résultat et la copie de récupération restent en attente. Vous pouvez attendre ou arrêter la simulation et recharger une copie validée.';
+  el<HTMLButtonElement>('retry-display').hidden = !graphicsFault || simulationStopped;
+  el<HTMLButtonElement>('retry-display').disabled = graphicsRecovering || replacingWorld || session.busy;
+  el<HTMLButtonElement>('incident-colonies').hidden = !simulationStopped && !graphicsFault;
+  el<HTMLButtonElement>('incident-colonies').disabled = graphicsRecovering || replacingWorld || session.busy;
+  el<HTMLButtonElement>('stop-unanswered').hidden = waitingRequests.size === 0;
+}
+
+async function handleGraphicsFailure(message: string): Promise<void> {
+  const alreadyFailed = graphicsFault;
+  graphicsFault = true; graphicsMessage = message;
+  const failed = renderer; renderer = undefined; failed?.dispose(); audio.reset();
+  if (alreadyFailed) { updateIncident(); syncStorageButtons(); return; }
+  graphicsRecovering = true;
+  updateIncident(); syncStorageButtons();
+  try { if (snapshot && !simulationStopped) await client.setSpeed(0); }
+  catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
+  finally { graphicsRecovering = false; updateIncident(); syncStorageButtons(); }
+}
+
+function prepareWorld(): Promise<void> {
+  return presentationPreparation ??= prepareWorldSafely().finally(() => { presentationPreparation = undefined; });
+}
+async function prepareWorldSafely(): Promise<void> {
+  try {
+    await prepareWorldView();
+    graphicsFault = false; graphicsMessage = ''; updateIncident();
+  } catch (error) {
+    await handleGraphicsFailure(error instanceof Error ? error.message : String(error));
+    throw error;
+  }
+}
+async function prepareWorldView(): Promise<void> {
   if (!snapshot) throw new Error('Aucune colonie à afficher.');
   shell.hidden=false;
   await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
   if (!renderer) {
     renderer = await ColonyRenderer.create(el('viewport'), pickCell, groundGrassEnabled);
+    renderer.onFatalError = message => { void handleGraphicsFailure(message); };
+    renderer.onCompatibilityWarning = message => notify(message, true);
     renderer.setTexturesEnabled(texturesEnabled);
     renderer.onAudioFrame = view => {
       lastAudioCamera=view.camera;
@@ -1228,18 +1313,28 @@ async function prepareWorld(): Promise<void> {
     };
   }
   renderer.setWorld(snapshot, true, currentSpeed, latestMotion,true);
+  if (renderer.compatibilityWarning) notify(renderer.compatibilityWarning, true);
   syncAudioSources(snapshot);
   await renderer.preparePresentation();
   el('loading')?.remove(); renderState();
 }
 async function start() {
+  shell.hidden=true; frontMenu.showHome(false);
+  frontMenu.setBusy(true, 'Lecture des sauvegardes…');
+  try { await session.initializeStorage(); }
+  finally { frontMenu.setBusy(false); }
   if (import.meta.env.DEV && params.has('e2e')) Object.defineProperty(window, '__lisiere', { value: {
     get world() { return structuredClone(snapshot); }, get tick() { return snapshot?.tick ?? 0; }, get backend() { return renderer?.backend; },
     get audio() { return { loadedCount: audio.loadedCount, availableSounds: audio.availableSounds, music: music.diagnostics }; },
+    saveRepository,
+    get incident() { return { simulationStopped, graphicsFault, waiting: waitingRequests.size }; },
+    failGraphics: (message = 'Incident graphique de contrôle') => renderer?.reportFailure(message),
+    loseGraphicsDevice: () => renderer?.requestDeviceLossForDiagnostics() ?? false,
+    stopSimulation: () => client.stop('Arrêt de contrôle de la simulation.'),
     projectCell: (x: number,z: number) => renderer!.projectCell(x,z),
     projectPawn: (id:number) => renderer?.screenPawns().find(pawn=>pawn.id===id),
   } });
-  shell.hidden=true; frontMenu.showHome(false); syncStorageButtons();
+  syncStorageButtons();
   if (!diagnosticStart) return;
   frontMenu.setBusy(true, 'Préparation du scénario de diagnostic…');
   try {
@@ -1264,5 +1359,5 @@ const metricsInterval = setInterval(() => {
     el('metrics').textContent = `${renderer.backend} · ${renderer.stats.frameMs.toFixed(1)} ms/image · p95 ${renderer.stats.frameP95.toFixed(1)} ms · simulation ${stepMs.toFixed(2)} ms/tick · son ${soundState}, ${sound.loaded} MP3, ${sound.playedOneShots} effets, dernier ${sound.lastKind ?? '—'} · musique ${song.state}${song.track ? ` (${song.track})` : ''}`;
   }
 }, 1000);
-window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval); client.dispose(); audio.dispose(); music.dispose(); renderer?.dispose(); });
-void start();
+window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval); client.dispose(); audio.dispose(); music.dispose(); renderer?.dispose(); saveRepository.close(); });
+void start().catch(error => { frontMenu.showError(error instanceof Error ? error.message : String(error)); });

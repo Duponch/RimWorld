@@ -24,7 +24,7 @@ test('native barrier UI: direct strike, stop/load, home area and physical repair
     for(const speed of [1,6]){
       const initial=deconstructionCamp(),p=initial.pawns[0]!,s=fixtureBuilding(initial,'wall',p.x+4,p.z);
       applyCommand(initial,{type:'draft',pawnIds:[p.id],enabled:true});
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
       await page.locator(`[data-pawn="${p.id}"]`).click();await revealCells(page,[p,s]);await page.locator('#target-melee').click();await cell(page,s.x,s.z);
       await expect.poll(async()=>(await world(page)).pawns[0]!.melee?.order?.structure).toBe(true);

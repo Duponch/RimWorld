@@ -18,10 +18,20 @@ export function withoutMiningSkill<T>(world:T):T {
 export function withoutTelevisionRecreation<T>(world:T):T {
   const w=world as any;
   for(const p of [...w.pawns??[],...w.visitors?.departed?.map((d:any)=>d.pawn)??[],
+    ...w.podRescues?.departed?.map((d:any)=>d.pawn)??[],...w.raids?.departed?.map((d:any)=>d.pawn)??[],
     ...w.scout?.pawn?[w.scout.pawn]:[],...w.commercialTrip?.pawn?[w.commercialTrip.pawn]:[]]){
     if(p.recreation){delete p.recreation.tolerance.television;delete p.recreation.bored.television;}
   }
   return world;
+}
+/** Independent expected current migration: only active owners gain the neutral
+ * family. Frozen departure archives retain their exact historical records. */
+export function withMigratedTelevisionRecreation<T>(world:T):T {
+  const expected=structuredClone(world),w=expected as any;
+  for(const p of [...w.pawns??[],...w.scout?.pawn?[w.scout.pawn]:[],...w.commercialTrip?.pawn?[w.commercialTrip.pawn]:[]]){
+    if(p.recreation){p.recreation.tolerance.television??=0;p.recreation.bored.television??=false;}
+  }
+  return expected;
 }
 /** Current default permissions/filters did not exist before predator V190.
  * Use only to prepare declared historical fixtures, never on refusal input. */

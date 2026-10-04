@@ -20,7 +20,7 @@ test('real UI shot slows an already moving target without jumps, including save/
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     for(const speed of [1,6]) {
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
       await page.evaluate(()=>{const b=(window as any).__stagger;b.frames=[];b.edges={};b.impacts=0;});
       await perform(page,{reason:'Marcher pendant le tir.',command:{type:'draft-move',pawnIds:[target.id],target:{x:target.x,z:20},queue:false}},{value:0});
       await revealCells(page,[initial.pawns[0],target]);await page.locator(`[data-pawn="${initial.pawns[0].id}"]`).click();await page.locator('#target-shot').click();

@@ -37,7 +37,7 @@ test('personality in real UI: new camp, comparable physical work, thoughts, sche
     const built=await world(page);expect(validateWorld(built)).toEqual([]);expect(built.jobs).toHaveLength(0);expect(built.piles.filter(p=>p.owner.type==='job')).toHaveLength(0);expect(built.pawns[0]!.skills.construction.xp).toBe(built.pawns[1]!.skills.construction.xp*7);
     // Controlled short calendar, but a real offer generated/accepted by the worker.
     enableArrivals(built);built.arrivals!.nextCheck=built.tick+1;
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(built)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,built);await page.keyboard.press('Escape');
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(built)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,built);await page.keyboard.press('Escape');
     await page.locator(`[data-speed="${speed}"]`).click();await expect(page.locator('#arrival-letter')).toBeVisible();await page.locator('[data-speed="0"]').click();const pending=await world(page),offer=pending.arrivals!.pending!;
     await page.locator('#arrival-letter').click();for(const id of offer.traits!)await expect(page.locator('dialog[open]')).toContainText(TRAITS[id].label);await page.locator('#accept-arrival').click();await expect.poll(async()=>(await world(page)).pawns.length).toBe(3);
     const final=await world(page);expect(final.pawns.at(-1)!.traits).toEqual(offer.traits);expect(validateWorld(final)).toEqual([]);

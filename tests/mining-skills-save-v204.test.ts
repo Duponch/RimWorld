@@ -3,7 +3,7 @@ import { createWorld,deserializeWorld,serializeWorld,validateWorld,stepWorld,SCH
 import { SnapshotEncoder,SnapshotDecoder } from '../src/bridge/snapshots.ts';
 import { TileSnapshotCache } from '../src/bridge/tile-snapshot-cache.ts';
 import { miningSkill } from '../src/sim/mining-skills.ts';
-import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
+import { withoutMiningSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { visitorTradeFixture } from './scenarios/visitors.ts';
 import { medicalCamp } from './scenarios/health.ts';
 import { fixtureBuilding } from './scenarios/deconstruction.ts';
@@ -13,11 +13,11 @@ import { visitorAtEdge } from '../src/sim/visitor-navigation.ts';
 import type { Pawn,World } from '../src/sim/types.ts';
 
 test('185 is strictly validated before a neutral migration: damaged ore and captured stroke remain untouched',()=>{
-  const old=withoutMiningSkill(createWorld(42,32,32));
+  const old=withoutTelevisionRecreation(withoutMiningSkill(createWorld(42,32,32)));
   Object.assign(old,{schemaVersion:185});
   old.tiles[0]={terrain:'rock',ore:'steel',miningDamage:1440};
   const encoded=JSON.stringify(old),migrated=deserializeWorld(encoded);
-  expect(migrated).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  expect(migrated).toEqual(withMigratedTelevisionRecreation({...old,schemaVersion:SCHEMA_VERSION}));
   expect(JSON.stringify(old)).toBe(encoded);
   expect(migrated.tiles[0]!.miningYield).toBeUndefined();
   expect(migrated.pawns.every(p=>p.skills.mining===undefined)).toBe(true);
@@ -81,7 +81,7 @@ test('ore yield changes at the same tick are copied, encoded and removed indepen
 });
 
 test('legacy checkpoints and deltas reject future Mining keys, including own undefined, before replacing the base',()=>{
-  const old=withoutMiningSkill(createWorld(42,32,32));Object.assign(old,{schemaVersion:185});
+  const old=withoutTelevisionRecreation(withoutMiningSkill(createWorld(42,32,32)));Object.assign(old,{schemaVersion:185});
   old.tiles[0]={terrain:'rock',ore:'steel',miningDamage:80};
   for(const change of [
     (w:any)=>{w.pawns[0].skills.mining=undefined;},
@@ -150,12 +150,16 @@ test.each(['visitor','pod'] as const)('%s departures preserve Mining profiles an
     if(version===185){
       // Historical preparation only; neither accepted nor rejected packets are
       // sanitized. The generic helper does not cover civil pod archives.
-      withoutMiningSkill(world);delete archivedMiner(world,kind).skills.mining;
+      withoutTelevisionRecreation(withoutMiningSkill(world));delete archivedMiner(world,kind).skills.mining;
       Object.assign(world,{schemaVersion:185});
       expect(Object.hasOwn(archivedMiner(world,kind).skills,'mining')).toBe(false);
       const migrated=deserializeWorld(JSON.stringify(world));
-      expect(migrated).toEqual({...world,schemaVersion:SCHEMA_VERSION});
+      expect(migrated).toEqual(withMigratedTelevisionRecreation({...world,schemaVersion:SCHEMA_VERSION}));
       expect(Object.hasOwn(archivedMiner(migrated,kind).skills,'mining')).toBe(false);
+      const frozen=JSON.stringify(archivedMiner(migrated,kind));
+      expect(JSON.stringify(archivedMiner(deserializeWorld(serializeWorld(migrated)),kind))).toBe(frozen);
+      stepWorld(migrated);
+      expect(JSON.stringify(archivedMiner(migrated,kind))).toBe(frozen);
     }
     // The public validator accepts the current schema only; old packets are
     // checked through the strict deserializer before testing bridge transport.

@@ -26,12 +26,12 @@ test('le tapis d’herbe est un choix local synchronisé entre accueil et partie
   const gameToggle = page.locator('#ground-grass-enabled');
   await expect(gameToggle).not.toBeChecked();
   expect(await layerPresent()).toBe(false);
-  const savedBefore = await page.evaluate(() => localStorage.getItem('lisiere.save.v1'));
+  const savedBefore = await page.evaluate(() => window.__lisiere.saveRepository.peekItem('lisiere.save.v1'));
   await gameToggle.check();
   await expect(gameToggle).toBeChecked();
   expect(await layerPresent()).toBe(true);
   expect(await page.evaluate(key => localStorage.getItem(key), preferenceKey)).toBe('true');
-  expect(await page.evaluate(() => localStorage.getItem('lisiere.save.v1'))).toBe(savedBefore);
+  expect(await page.evaluate(() => window.__lisiere.saveRepository.peekItem('lisiere.save.v1'))).toBe(savedBefore);
   await gameToggle.uncheck();
   expect(await layerPresent()).toBe(false);
   await gameToggle.check();

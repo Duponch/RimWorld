@@ -186,7 +186,7 @@ test('V95 native: stable management panels, upright plants, complete HUD and sem
     writeTestFileSync('tmp/interface-v95-checkpoint.json',JSON.stringify(saved));
     report.performance={frames:timings.length,p95:timings[Math.floor(timings.length*.95)],max:timings.at(-1),speed:(saved.tick-before)/elapsed*1000/6};
     await panel(page,'menu');await page.locator('#save').click();
-    try{await expect(page.locator('#load')).toBeEnabled();}catch(error){report.saveDiagnostics=await page.evaluate(()=>({notice:document.querySelector('#notice')?.textContent,slots:localStorage.length,load:document.querySelector('#load')?.outerHTML,save:document.querySelector('#save')?.outerHTML}));throw error;}
+    try{await expect(page.locator('#load')).toBeEnabled();}catch(error){report.saveDiagnostics=await page.evaluate(()=>({notice:document.querySelector('#notice')?.textContent,slots:['lisiere.save.v1','lisiere.previous.v1'].filter(key=>window.__lisiere.saveRepository.peekItem(key)!==null).length,load:document.querySelector('#load')?.outerHTML,save:document.querySelector('#save')?.outerHTML}));throw error;}
     await page.locator('#load').click();await expectWorld(page,saved);
     await page.reload();await expect(front).toBeVisible();await front.getByRole('button',{name:'Charger une partie',exact:true}).click();await screenshot(page,'saves');
     await front.locator('.front-save input').first().check();await front.getByRole('button',{name:'Charger',exact:true}).click();await expect(front).toBeHidden({timeout:60_000});await expectWorld(page,saved);report.coldRestore=true;

@@ -1,5 +1,5 @@
 import { expect,test } from 'vitest';
-import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
+import { withoutMiningSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { SnapshotDecoder,SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { PresentationChanges } from '../src/bridge/presentation-changes.ts';
 import { applyCommand,stepWorld } from '../src/sim/engine.ts';
@@ -41,9 +41,9 @@ function departure() {
 }
 
 test('schema 174 is validated before a neutral migration; pod world and pawn fields cannot be smuggled into it',()=>{
-  const old=withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(medicalCamp())));old.schemaVersion=174 as World['schemaVersion'];const before=structuredClone(old);
+  const old=withoutTelevisionRecreation(withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(medicalCamp()))));old.schemaVersion=(withoutTelevisionRecreation(old),174) as World['schemaVersion'];const before=structuredClone(old);
   const migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(old).toEqual(before);
+  expect(migrated).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));expect(old).toEqual(before);
   expect(migrated.podRescues).toBeUndefined();expect(migrated.pawns.every(p=>p.podRescue===undefined)).toBe(true);
   const pending=staged().w.podRescues!;
   for(const change of [

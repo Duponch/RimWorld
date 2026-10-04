@@ -21,6 +21,7 @@ test('real encounter, delayed infection, repeated physical care, immunity and co
     observations:ReturnType<typeof infectionSummary>[]=[],care:{tick:number;id:number;quality:number;expiresAtCore:number}[]=[],
     checkpointPaths:Record<string,string>={},ledger={medicine:0,food:0,patientMeals:0,patientBedRest:0,doctorSleep:0};
   const seenTends=new Set<string>();let sawRisk=false,sawRealGunshot=false;
+  expect(initial.food).toBe(60); // Finite starting clinic budget, never replenished.
   expect(w.pawns.every(p=>!p.health)).toBe(true);expect(validateWorld(w)).toEqual([]);
   const checkpoint=(name:string)=>{
     if(checkpointPaths[name])return;

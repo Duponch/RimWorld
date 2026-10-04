@@ -8,7 +8,7 @@ import {validCookingOrder} from '../src/sim/player-cooking-save.ts';
 import {planCookingOrder} from '../src/sim/player-cooking.ts';
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {foodWorkstationCamp,fixtureFoodStation} from './scenarios/food-workstations.ts';
-import {withoutPlantsSkill} from './scenarios/legacy-skills.ts';
+import { withoutPlantsSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import {withoutPredatorFoodPolicies,withoutPredatorApparelPolicies} from './scenarios/legacy-save.ts';
 
 const RECIPE='cook-carnivore-fine-meal-bulk' as const;
@@ -22,7 +22,7 @@ function prepared():World {
 }
 function declared162(world:World):World {
   const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));
-  (old as {schemaVersion:number}).schemaVersion=162;
+  (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),162);
   return old;
 }
 
@@ -31,10 +31,10 @@ test('V162 migrates neutrally and rejects a future bulk bill on active or packed
   addGroundMaterial(base,'food',2,{x:5,z:5},'carnivore-fine-meal');
   const old=declared162(base),before=structuredClone(old);
   const loaded=deserializeWorld(JSON.stringify(old));
-  expect(loaded).toEqual({...before,schemaVersion:SCHEMA_VERSION});
+  expect(loaded).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
   expect(old).toEqual(before);
   expect(loaded.rng).toBe(before.rng);
-  const control={...structuredClone(before),schemaVersion:SCHEMA_VERSION} as World;
+  const control=withMigratedTelevisionRecreation({...structuredClone(before),schemaVersion:SCHEMA_VERSION}) as World;
   stepWorld(loaded,20);stepWorld(control,20);expect(loaded).toEqual(control);
 
   const active=declared162(prepared());

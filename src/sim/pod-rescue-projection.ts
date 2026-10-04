@@ -16,6 +16,13 @@ export function createPodDepartureValidator(validate:(world:unknown)=>string[]):
     base??=emptyLandscape(world.seed,world.width,world.height);
     if(!base.tiles.length)base.tiles=Array.from({length:world.width*world.height},()=>({terrain:'grass'}));
     const pawn={...p};delete pawn.podRescue;
+    // V208 deliberately preserves frozen archives. Like visitor validation,
+    // an archive may omit this later family. Materialize its neutral defaults
+    // only in this temporary view; malformed or future partial keys still go
+    // through the strict validator, and the historical record is untouched.
+    if(version>=190&&pawn.recreation&&pawn.recreation.tolerance&&pawn.recreation.bored
+      &&!Object.hasOwn(pawn.recreation.tolerance,'television')&&!Object.hasOwn(pawn.recreation.bored,'television'))
+      pawn.recreation={...pawn.recreation,tolerance:{...pawn.recreation.tolerance,television:0},bored:{...pawn.recreation.bored,television:false}};
     const view:World={...base,schemaVersion:version as World['schemaVersion'],tick:departure.tick,nextId:world.nextId,
       pawns:[pawn],piles:departure.items,packed:[],nextFoodPolicyId:world.nextFoodPolicyId,
       // A deleted historical policy need not become a live colony policy.

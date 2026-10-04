@@ -21,6 +21,7 @@
     "bench": "node --experimental-strip-types scripts/benchmark.ts",
     "test:presentation": "node scripts/check-presentation.mjs",
     "check:docs": "python scripts/check-docs.py",
+    "validate:logged": "node scripts/run-validation.mjs",
     "check": "npm run test && npm run build && npm run test:integration && npm run test:presentation && npm run check:docs"
   },
   "dependencies": {

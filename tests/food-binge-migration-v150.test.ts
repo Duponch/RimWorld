@@ -4,7 +4,7 @@ import {deserializeWorld,serializeWorld,validateWorld} from '../src/sim/serializ
 import {startSadWander} from '../src/sim/mental-break.ts';
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {medicalCamp} from './scenarios/health.ts';
-import {withoutPlantsSkill} from './scenarios/legacy-skills.ts';
+import { withoutPlantsSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import {withoutPredatorFoodPolicies,withoutPredatorApparelPolicies} from './scenarios/legacy-save.ts';
 
 function declared148(withWander=false):World {
@@ -13,7 +13,7 @@ function declared148(withWander=false):World {
   for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   withoutPlantsSkill(world);
   withoutPredatorFoodPolicies(world);withoutPredatorApparelPolicies(world);
-  (world as {schemaVersion:number}).schemaVersion=148;
+  (world as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(world),148);
   return world;
 }
 
@@ -21,12 +21,12 @@ test('V148 migration is neutral for an ordinary pawn and an existing sad wander'
   for(const old of [declared148(),declared148(true)]) {
     const original=structuredClone(old);
     const resumed=deserializeWorld(JSON.stringify(old));
-    expect(resumed).toEqual({...original,schemaVersion:SCHEMA_VERSION});
+    expect(resumed).toEqual(withMigratedTelevisionRecreation({...original,schemaVersion:SCHEMA_VERSION}));
     expect(resumed.rng).toBe(original.rng);
     expect(resumed.pawns[0]!.mental).toEqual(original.pawns[0]!.mental);
     expect(old).toEqual(original);
     expect(validateWorld(resumed)).toEqual([]);
-    (original as {schemaVersion:number}).schemaVersion=SCHEMA_VERSION;
+    Object.assign(original,withMigratedTelevisionRecreation({...original,schemaVersion:SCHEMA_VERSION}));
     stepWorld(resumed,60);
     stepWorld(original,60);
     expect(resumed).toEqual(original);
@@ -50,7 +50,7 @@ test('a declared V148 save rejects a food binge and future mental fields before 
 
 test('V150 validates the complete persisted food-binge crisis and rejects corrupt state',()=>{
   const world=declared148(true);
-  (world as {schemaVersion:number}).schemaVersion=SCHEMA_VERSION;
+  Object.assign(world,withMigratedTelevisionRecreation({...world,schemaVersion:SCHEMA_VERSION}));
   world.pawns[0]!.mental!.crisis!.kind='food-binge';
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);

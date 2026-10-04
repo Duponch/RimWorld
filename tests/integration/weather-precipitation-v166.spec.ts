@@ -37,7 +37,7 @@ ColonyRenderer.prototype.frame=function(now){window.__weatherView=this;return or
       world.weather.durationCore = kind === 'rainy-thunderstorm' ? 20_000 : 40_000;
       const raw = serializeWorld(world);
       const expected = deserializeWorld(raw);
-      await page.evaluate(({ key, data }) => localStorage.setItem(key, data), { key: saveKey, data: raw });
+      await page.evaluate(({ key, data }) => window.__lisiere.saveRepository.setItem(key, data), { key: saveKey, data: raw });
       await panel(page, 'menu');
       await page.locator('#load').click();
       await expectWorld(page, expected);

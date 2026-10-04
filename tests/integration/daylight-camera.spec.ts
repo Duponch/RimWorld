@@ -60,7 +60,7 @@ test('vue iso/perspective : sélection, rectangle, pause, reprise et ciel restau
     // A previous save at midnight restores lighting immediately, without
     // advancing the world or depending on time elapsed in this browser.
     fixture.tick = 0;
-    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: saveKey, value: serializeWorld(fixture) });
+    await page.evaluate(({ key, value }) => window.__lisiere.saveRepository.setItem(key, value), { key: saveKey, value: serializeWorld(fixture) });
     await panel(page, 'menu'); await page.locator('#load').click();
     await expect.poll(async () => (await probe()).sample.daylight).toBe(0); await expectWorld(page, fixture);
     await expect(page.locator('#fps-counter')).toBeVisible(); expect(errors).toEqual([]);

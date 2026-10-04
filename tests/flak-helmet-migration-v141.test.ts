@@ -1,3 +1,4 @@
+import { withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import {readFileSync} from 'node:fs';
 import {expect,test} from 'vitest';
 import {deserializeWorld,validateWorld} from '../src/sim/index.ts';
@@ -13,7 +14,7 @@ const historical=():World=>JSON.parse(readFileSync('public/test-saves/v139/indus
 
 test('V139 migration keeps its physical state, policies and RNG without granting a helmet',()=>{
   const before=historical(),after=deserializeWorld(JSON.stringify(before));
-  expect(after).toEqual({...before,schemaVersion:SCHEMA_VERSION,breakdown:newBreakdownCalendar(before.seed,before.tick)});
+  expect(after).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION,breakdown:newBreakdownCalendar(before.seed,before.tick)}));
   expect(validateWorld(after)).toEqual([]);
   expect(after.piles.some(p=>p.item==='flak-helmet'||p.item==='unfinished-flak-helmet')).toBe(false);
   expect(after.apparelPolicies?.some(policy=>policy.allowedItems.includes('flak-helmet'))).toBe(false);
@@ -34,10 +35,10 @@ test('a file declared V139 cannot pre-own the V141 helmet, recipe, workpiece or 
   recipe.research!.flakArmor={points:FLAK_ARMOR_RESEARCH_COST,completedAt:2000};
   const bench:Structure={id:recipe.nextId++,kind:'machining-table',x:20,z:8,orientation:0,footprint:'standard',material:'steel',power:newPowerState('machining-table'),bills:[newCookingBill(recipe.nextId++,'make-flak-helmet')]};
   recipe.structures.push(bench);
-  (recipe as {schemaVersion:number}).schemaVersion=SCHEMA_VERSION;
+  Object.assign(recipe,withMigratedTelevisionRecreation({...recipe,schemaVersion:SCHEMA_VERSION}));
   recipe.breakdown=newBreakdownCalendar(recipe.seed,recipe.tick);
   expect(validateWorld(recipe)).toEqual([]);
-  (recipe as {schemaVersion:number}).schemaVersion=139;
+  (recipe as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(recipe),139);
   delete recipe.breakdown;
   expect(()=>deserializeWorld(JSON.stringify(recipe))).toThrow(/Invalid cooking bill/);
 

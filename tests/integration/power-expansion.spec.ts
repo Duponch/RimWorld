@@ -11,7 +11,7 @@ import type { Command, World } from '../../src/sim/types';
 
 async function load(page:Page,state:World):Promise<void> {
   await pause(page);
-  await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(state)});
+  await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(state)});
   await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,state);await page.keyboard.press('Escape');
 }
 async function inspect(page:Page,position:{x:number;z:number},id:number):Promise<void> {

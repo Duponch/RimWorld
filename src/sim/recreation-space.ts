@@ -1,6 +1,6 @@
 import { isBedKind } from './bed-kinds.ts';
 import { deconstructionReserved } from './deconstruction-rules.ts';
-import { canStandAt } from './furniture-travel.ts';
+import { canStandAt, captureStandability } from './furniture-travel.ts';
 import { isRoofed, roofIndex } from './roof-rules.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
 import { isDiningSeat, isDiningTable } from './dining.ts';
@@ -15,14 +15,14 @@ import type { RecreationTask } from './recreation-rules.ts';
 
 /** Decision-local index: never reused after another actor can change the world. */
 export interface RecreationSpace {
-  solids: Set<number>; walls: Set<number>; objects: Set<number>; resources?: Set<number>;
+  standable: (cell:Cell)=>boolean; solids: Set<number>; walls: Set<number>; objects: Set<number>; resources?: Set<number>;
   pins: Map<number, Structure>; games: Map<number, Structure>; seats: Map<number, Structure>;
   gathers: Map<number, Structure>; patients?: Map<number,Pawn>;
   televisions?:Map<number,Structure>; roomTopology:()=>RoomTopology;
 }
 export function recreationSpace(world: World, resourceTargets?: readonly Cell[], includePatients=false,readTopology?:()=>RoomTopology): RecreationSpace {
   let topology:RoomTopology|undefined;
-  const index: RecreationSpace = {solids:new Set(),walls:new Set(),objects:new Set(),pins:new Map(),games:new Map(),seats:new Map(),gathers:new Map(),roomTopology:()=>topology??=(readTopology?.()??captureRoomQuality(world).topology)};
+  const index: RecreationSpace = {standable:captureStandability(world),solids:new Set(),walls:new Set(),objects:new Set(),pins:new Map(),games:new Map(),seats:new Map(),gathers:new Map(),roomTopology:()=>topology??=(readTopology?.()??captureRoomQuality(world).topology)};
   for(const s of world.structures) {
     if(s.kind==='horseshoes')index.pins.set(s.id,s);
     if(s.kind==='chess-table')index.games.set(s.id,s);
@@ -34,10 +34,10 @@ export function recreationSpace(world: World, resourceTargets?: readonly Cell[],
   for(const job of world.jobs)index.objects.add(job.z*world.width+job.x);
   for(const s of [...world.structures,...world.jobs]) {
     if(!('status' in s)&&((s.kind==='wall'||s.kind==='cooler')||isRoomDoor(s.kind)&&!s.door!.open))index.walls.add(s.z*world.width+s.x);
-    if((s.kind==='wall'||s.kind==='cooler')||isDiningTable(s.kind)||s.kind==='chess-table'||world.schemaVersion>=22&&(!('status' in s)&&(s.kind==='tube-television'||s.kind==='passive-cooler'||isBedKind(s.kind)||s.kind==='campfire'||s.kind==='stonecutter'||s.kind==='research-bench'||s.kind==='tailor-bench')||'construction' in s&&s.construction==='frame'))for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
+    // Recreation also retains its historical rejection of wall/table plans.
+    // Every ordinary stopping rule comes from the shared standability capture.
+    if(s.kind==='wall'||s.kind==='table')for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
   }
-  // Match the direct standability check: chunks permit transit, not stopping.
-  if(world.schemaVersion>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground')index.solids.add(p.owner.z*world.width+p.owner.x);
   if(resourceTargets)captureRecreationResources(world,index,resourceTargets);
   if(includePatients){index.patients=new Map();for(const p of world.pawns)if(visitablePatient(world,p,false))index.patients.set(p.id,p);}
   return index;
@@ -89,7 +89,7 @@ export function clearThrow(world: World, pin: Cell, cell: Cell, space?: Recreati
   return true;
 }
 export function standableRecreationCell(world: World, cell: Cell, space?: RecreationSpace): boolean {
-  return (world.schemaVersion<22||space||canStandAt(world,cell))&&inBounds(world,cell.x,cell.z) && !['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
+  return (world.schemaVersion<22||(space?space.standable(cell):canStandAt(world,cell)))&&inBounds(world,cell.x,cell.z) && !['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
     && !(space ? space.solids.has(cell.z*world.width+cell.x) : world.structures.some(s=>['wall','table'].includes(s.kind)&&footprintContains(s,cell))||world.jobs.some(s=>['wall','table'].includes(s.kind)&&footprintContains(s,cell)));
 }
 export function recreationSiteValid(world: World, task: RecreationTask, space?: RecreationSpace,readTopology?:()=>RoomTopology): boolean {

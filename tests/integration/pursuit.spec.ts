@@ -22,7 +22,7 @@ test('native pursuit at 1×/6×: approach on GPU, actual shots, player retreat a
     await page.goto('/?scenario=camp&e2e&size=64');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#save').click();await page.keyboard.press('Escape');
     for(const speed of [1,6]) {
-      const initial=pursuitCamp();await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      const initial=pursuitCamp();await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
       await revealCells(page,[initial.pawns[0],initial.pawns[3]]);await page.locator('#inspect-threat').click();await expect(page.locator('#inspector')).toContainText('approche autonome');
       await page.evaluate(()=>Object.assign((window as any).__pursuit,{active:true,samples:[],shots:0}));

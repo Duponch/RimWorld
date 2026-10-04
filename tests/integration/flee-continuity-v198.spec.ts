@@ -39,7 +39,7 @@ test('V198 native civilian flee remains continuous within routes at 1×/6×, inc
     await panel(page,'menu');await page.locator('#save').click();await page.keyboard.press('Escape');
     for(const speed of [1,6]){
       const {w:initial,target,chaser}=fleeContinuityCamp(speed===6),duration=speed===6?240:140;
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
       // Keep the whole prepared runway in view, rather than only its origin.
       await revealCells(page,[chaser,{x:79,z:48}]);

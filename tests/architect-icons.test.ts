@@ -21,8 +21,9 @@ function pngHeader(asset: string) {
 describe('Architect generated icon atlases', () => {
   it('maps every tool without shifting the original sheets; powered benches share the machine icon', () => {
     const rendered = toolDefinitions.map(tool => tool.id);
-    expect(rendered).toHaveLength(73); // V207 sandbags adds a vector without moving the historical atlas cells.
-    expect(new Set(rendered).size).toBe(73);
+    expect(rendered).toHaveLength(74); // V208 CRT shares the existing machine icon.
+    expect(new Set(rendered).size).toBe(74);
+    expect(rendered).toContain('tube-television');
     expect(rendered).toContain('sandbags');
     expect(rendered).toContain('sun-lamp');
     expect(ARCHITECT_ICON_ORDER).toEqual(rendered);

@@ -67,7 +67,7 @@ test('V197 native unarmed raid pursuit stays visibly continuous before contact a
     for(const speed of [1,6]) {
       currentSpeed=speed;
       const {w:initial,target,chaser}=meleePursuitCamp('raid');
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
       await revealCells(page,[target,chaser]);
       // Change the prepared destination through the real pawn selection and

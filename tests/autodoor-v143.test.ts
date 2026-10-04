@@ -11,7 +11,7 @@ import {AUTODOORS_RESEARCH_COST,selectResearch} from '../src/sim/research.ts';
 import {addGroundMaterial} from '../src/sim/materials.ts';
 import {newBreakdownCalendar} from '../src/sim/breakdowns.ts';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
-import {withoutFutureFineMealPolicy} from './scenarios/legacy-skills.ts';
+import { withoutFutureFineMealPolicy, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import {withoutPredatorApparelPolicies,withoutPredatorFoodPolicies} from './scenarios/legacy-save.ts';
 import {fixturePower} from './scenarios/power.ts';
 import type {ConstructionMaterial} from '../src/sim/building-materials.ts';
@@ -176,11 +176,11 @@ test('strict 141 to current migration grants no research or door, and rejects fu
   // rejection cases below or relax their production validator.
   withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutFutureFineMealPolicy(old)));
   delete old.breakdown;
-  (old as {schemaVersion:number}).schemaVersion=141;
+  (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),141);
   old.apparelPolicies=old.apparelPolicies?.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-helmet')}));
   const before=structuredClone(old),rng=old.rng,nextId=old.nextId;
   const migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated).toEqual({...before,schemaVersion:SCHEMA_VERSION,breakdown:newBreakdownCalendar(old.seed,old.tick)});
+  expect(migrated).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION,breakdown:newBreakdownCalendar(old.seed,old.tick)}));
   expect(migrated.research?.autodoors).toBeUndefined();
   expect(migrated.structures.some(s=>s.kind==='autodoor')).toBe(false);
   expect(migrated.rng).toBe(rng);expect(migrated.nextId).toBe(nextId);

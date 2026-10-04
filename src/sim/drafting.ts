@@ -1,5 +1,5 @@
 import { cancelMelee } from './melee-state.ts';
-import { activeThreat,hostileTo } from './affiliation.ts';
+import { activeCombatThreat,hostileTarget } from './combat-target.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { advanceShooter,shootingQueries } from './shooting.ts';
 import { AUTO_UNDRAFT_TICKS,DRAFT_QUEUE_LIMIT,sameCell,type DraftCommand } from './drafting-rules.ts';
@@ -117,7 +117,9 @@ export function processDraft(world:World,pawn:Pawn,getBlocked:NavigationGrid,bud
   }
   if(leaveTransitCell(world,pawn,getBlocked,budget,getLight)){draft.lastActiveTick=world.tick;return;}
   pawn.state='idle';pawn.path=[];
-  if(world.pawns.some(p=>hostileTo(pawn,p)&&activeThreat(p))){draft.lastActiveTick=world.tick;return;}
-  // A scenario threat prevents automatic demobilization; no raid AI is implied.
+  if(world.pawns.some(p=>hostileTarget(pawn,p)&&activeCombatThreat(p))
+    ||world.wildlife?.animals.some(a=>hostileTarget(pawn,a)&&activeCombatThreat(a))){draft.lastActiveTick=world.tick;return;}
+  // Any active hostile on the map prevents automatic demobilization, including
+  // a manhunter beyond firing range. Peaceful fauna never claims this activity.
   if(world.tick-draft.lastActiveTick>=AUTO_UNDRAFT_TICKS){endDraft(world,pawn);announce(world,pawn,'démobilisation après une longue attente sans menace.');}
 }

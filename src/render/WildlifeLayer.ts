@@ -64,8 +64,8 @@ class SpeciesRig {
       const pose=pawnPresentationPose(this),state=attribute('aAnimal','vec4'),part=attribute('animalPart','vec4'),biology=attribute('aBiology','vec3'),bone=part.x,pivot=attribute('bindPivot','vec3');
       const angle=float(0).toVar();
       const phase=state.w.add(pose.xz.sub(attribute('aFrom','vec4').xz).length().mul(this.gaitRate));
-      If(bone.equal(1),()=>angle.assign(sin(phase).mul(.5).mul(state.x)));
-      If(bone.equal(2),()=>angle.assign(sin(phase.add(Math.PI)).mul(.6).mul(state.x)));
+      If(bone.equal(1),()=>{ angle.assign(sin(phase).mul(.5).mul(state.x)); });
+      If(bone.equal(2),()=>{ angle.assign(sin(phase.add(Math.PI)).mul(.6).mul(state.x)); });
       If(bone.greaterThanEqual(3),()=>{
         const attack=sin(this.travelTime.sub(state.w).mul(10).clamp(0,Math.PI)).mul(.9);
         angle.assign(state.x.greaterThan(.5).select(sin(phase).mul(.06),
@@ -75,7 +75,7 @@ class SpeciesRig {
         });
         // The outer shell bends continuously into the head. Existing detail
         // pieces use bone 3 (full angle); shell vertices encode 4 + weight.
-        If(bone.greaterThanEqual(4),()=>angle.mulAssign(bone.sub(4)));
+        If(bone.greaterThanEqual(4),()=>{ angle.mulAssign(bone.sub(4)); });
       });
       const p=positionLocal.sub(pivot),c=cos(angle),s=sin(angle);
       const q=vec3(p.x,p.y.mul(c).sub(p.z.mul(s)),p.z.mul(c).add(p.y.mul(s))).add(pivot).toVar();
@@ -91,9 +91,9 @@ class SpeciesRig {
         q.y.addAssign(sin(this.time.add(state.w)).mul(.006));
       });
       const bit=part.y,absent=biology.z;
-      If(bit.greaterThan(0).and(absent.div(bit.max(1)).floor().mod(2).greaterThan(.5)),()=>q.assign(vec3(0)));
+      If(bit.greaterThan(0).and(absent.div(bit.max(1)).floor().mod(2).greaterThan(.5)),()=>{ q.assign(vec3(0)); });
       const eye=part.w;
-      If(eye.greaterThanEqual(0).and(eye.notEqual(state.z.greaterThan(1.5).select(float(1),float(0)))),()=>q.assign(vec3(0)));
+      If(eye.greaterThanEqual(0).and(eye.notEqual(state.z.greaterThan(1.5).select(float(1),float(0)))),()=>{ q.assign(vec3(0)); });
       // Cargo uses the same confirmed carrier edge, pose and handoff as the
       // former proxy. Every owner still draws in this species' existing batch.
       const carrier=attribute('aCarrier','vec4'),transfer=attribute('aCorpseHandoff','vec2');
@@ -101,17 +101,17 @@ class SpeciesRig {
       const held=vec3(q.x,q.y.sub(.16),q.z).mul(biology.x).add(vec3(0,0,WORLD_SCALE.carriedForward)).toVar();
       If(carrier.x.greaterThan(.5),()=>{
         const height=float(WORLD_SCALE.carriedHeight).toVar();
-        If(carrier.y.equal(1).or(carrier.y.equal(18)).or(carrier.y.equal(19)),()=>height.assign(.28));
-        If(carrier.y.greaterThan(1.5).and(carrier.y.lessThan(3.5)),()=>height.assign(sin(this.time.mul(4).add(carrier.z)).mul(.08).add(1.32)));
-        If(carrier.y.equal(3),()=>height.addAssign(WORLD_SCALE.stoolHeight-.605*PAWN_MODEL_SCALE));
-        If(carrier.y.equal(6),()=>height.assign(1.3));
+        If(carrier.y.equal(1).or(carrier.y.equal(18)).or(carrier.y.equal(19)),()=>{ height.assign(.28); });
+        If(carrier.y.greaterThan(1.5).and(carrier.y.lessThan(3.5)),()=>{ height.assign(sin(this.time.mul(4).add(carrier.z)).mul(.08).add(1.32)); });
+        If(carrier.y.equal(3),()=>{ height.addAssign(WORLD_SCALE.stoolHeight-.605*PAWN_MODEL_SCALE); });
+        If(carrier.y.equal(6),()=>{ height.assign(1.3); });
         held.y.addAssign(height);
       });
       const cy=cos(pose.w),sy=sin(pose.w);
       normalLocal.assign(vec3(normal.x.mul(cy).add(normal.z.mul(sy)),normal.y,normal.z.mul(cy).sub(normal.x.mul(sy))).normalize());
       const grounded=vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy))).mul(biology.x).add(pose.xyz);
       const result=grounded.toVar();
-      If(carrier.x.greaterThan(.5),()=>result.assign(vec3(held.x.mul(cy).add(held.z.mul(sy)),held.y,held.z.mul(cy).sub(held.x.mul(sy))).add(pose.xyz)));
+      If(carrier.x.greaterThan(.5),()=>{ result.assign(vec3(held.x.mul(cy).add(held.z.mul(sy)),held.y,held.z.mul(cy).sub(held.x.mul(sy))).add(pose.xyz)); });
       If(transfer.y.abs().greaterThan(.0001),()=>{
         const progress=this.travelTime.sub(transfer.x).div(transfer.y.abs().sub(transfer.x).max(.001)).clamp(0,1);
         const smooth=progress.mul(progress).mul(float(3).sub(progress.mul(2)));
@@ -119,7 +119,7 @@ class SpeciesRig {
         const start=vec3(q.x.mul(dc).add(q.z.mul(ds)),q.y,q.z.mul(dc).sub(q.x.mul(ds))).mul(biology.x).add(from.xyz);
         const ec=cos(to.w),es=sin(to.w);
         const end=vec3(q.x.mul(ec).add(q.z.mul(es)),q.y,q.z.mul(ec).sub(q.x.mul(es))).mul(biology.x).add(to.xyz);
-        If(transfer.y.greaterThan(0),()=>result.assign(mix(start,result,smooth))).Else(()=>result.assign(mix(start,end,smooth)));
+        If(transfer.y.greaterThan(0),()=>{ result.assign(mix(start,result,smooth)); }).Else(()=>{ result.assign(mix(start,end,smooth)); });
         const startNormal=vec3(normal.x.mul(dc).add(normal.z.mul(ds)),normal.y,normal.z.mul(dc).sub(normal.x.mul(ds)));
         const endNormal=transfer.y.greaterThan(0).select(vec3(normal.x.mul(cy).add(normal.z.mul(sy)),normal.y,normal.z.mul(cy).sub(normal.x.mul(sy))),vec3(normal.x.mul(ec).add(normal.z.mul(es)),normal.y,normal.z.mul(ec).sub(normal.x.mul(es))));
         normalLocal.assign(mix(startNormal,endNormal,smooth).normalize());

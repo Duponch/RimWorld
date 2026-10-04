@@ -1,4 +1,3 @@
-import { commercialReservedSources } from './commercial-reservations.ts';
 import { surgeryProposal,startSurgery } from './surgery.ts';
 import { handlingWanted,handlingProposal,startHandling } from './animal-handling.ts';
 import { leadingWanted,leadingProposal,startLeading } from './animal-leading.ts';
@@ -40,7 +39,7 @@ import { storageConditionKey } from './storage-condition.ts';
 import { constructionCapacity, constructionRecipe, deliveredMaterial } from './construction-materials.ts';
 import { fixBreakdownWanted } from './breakdowns.ts';
 import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST } from './definitions.ts';
-import { deliveredStock, groundQuantity, reservedDestination, reservedSource } from './materials.ts';
+import { deliveredStock, groundQuantity, reservedDestination, reservedSource, reservedSourcesByPile } from './materials.ts';
 import { cellIndex, workNeighbours, inBounds, canStopAt, hasReachableCell, reachableCells, routeToJob, interactionGoals } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
 import type { Cell, HaulDestination, Job, JobKind, MaterialKind, MaterialPile, Pawn, WorkType, World } from './types.ts';
@@ -160,29 +159,14 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   reachable ??= searchCandidates(world, pawn, blocked, occupied, budget, true); if (!reachable) return;
   pawn.planCooldown = PLAN_INTERVAL;
   const delivered = new Map<string, number>(); const ground = new Map<number, number>();
-  const sourceReserved = new Map<number, number>(); const jobReserved = new Map<string, number>(); const zoneReserved = new Map<number, number>();
+  const sourceReserved = reservedSourcesByPile(world); const jobReserved = new Map<string, number>(); const zoneReserved = new Map<number, number>();
   const outbound = new Map<number, number>(); const pileById = new Map(world.piles.map(pile => [pile.id, pile]));
   for (const pile of world.piles) {
     if (pile.owner.type === 'job') {const key=`${pile.owner.jobId}:${pile.item}`;delivered.set(key, (delivered.get(key) ?? 0) + pile.quantity);}
     if (pile.owner.type === 'ground') { const key = cellIndex(world, pile.owner.x, pile.owner.z); ground.set(key, (ground.get(key) ?? 0) + pile.quantity); }
   }
-  if(world.scout?.phase==='loading')sourceReserved.set(world.scout.sourcePileId,(sourceReserved.get(world.scout.sourcePileId)??0)+world.scout.quantity);
-  for(const [id,quantity] of commercialReservedSources(world))sourceReserved.set(id,(sourceReserved.get(id)??0)+quantity);
-  // Match reservedSource: an animal's active meal claims its pile quantity,
-  // including the whole indivisible corpse. This capture lives only in planWork.
-  for(const animal of world.wildlife?.animals??[])if(animal.meal?.kind==='pile')sourceReserved.set(animal.meal.id,(sourceReserved.get(animal.meal.id)??0)+animal.meal.quantity);
-  for(const worker of world.pawns)if(worker.hunting)sourceReserved.set(worker.hunting.animalId,(sourceReserved.get(worker.hunting.animalId)??0)+1);
-  for (const worker of world.pawns) if (worker.need?.kind === 'eat' && worker.need.phase === 'pickup') sourceReserved.set(worker.need.sourcePileId, (sourceReserved.get(worker.need.sourcePileId) ?? 0) + worker.need.quantity);
-  for(const worker of world.pawns)if(worker.equipmentTask?.action==='equip'||worker.equipmentTask?.action==='wear'){const id=worker.equipmentTask.itemId;sourceReserved.set(id,(sourceReserved.get(id)??0)+1);}
-  for(const worker of world.pawns){const h=worker.animalHandling;if(h?.phase==='pickup')sourceReserved.set(h.sourcePileId,(sourceReserved.get(h.sourcePileId)??0)+h.quantity);const v=worker.animalCare;if(v?.phase==='pickup'&&v.medicine)sourceReserved.set(v.medicine.sourcePileId,(sourceReserved.get(v.medicine.sourcePileId)??0)+v.medicine.quantity);}
-  for(const worker of world.pawns)if(worker.surgery?.phase==='pickup'&&worker.surgery.medicine){const m=worker.surgery.medicine;sourceReserved.set(m.sourcePileId,(sourceReserved.get(m.sourcePileId)??0)+m.quantity);}
-  for(const worker of world.pawns)if(worker.tend?.phase==='pickup'&&worker.tend.medicine){const m=worker.tend.medicine;sourceReserved.set(m.sourcePileId,(sourceReserved.get(m.sourcePileId)??0)+m.quantity);}
-  for(const worker of world.pawns)if(worker.feed?.phase==='pickup')sourceReserved.set(worker.feed.sourcePileId,(sourceReserved.get(worker.feed.sourcePileId)??0)+worker.feed.quantity);
-  for(const worker of world.pawns)if(worker.ward?.kind==='food'&&worker.ward.phase==='pickup')sourceReserved.set(worker.ward.sourcePileId,(sourceReserved.get(worker.ward.sourcePileId)??0)+worker.ward.quantity);
-  for(const worker of world.pawns)for(const i of worker.cooking?.ingredients??[])if(i.stage!=='held')sourceReserved.set(i.pileId,(sourceReserved.get(i.pileId)??0)+i.quantity);
   for (const task of haulReservations(world)) {
     if (task.phase === 'pickup') {
-      sourceReserved.set(task.sourcePileId, (sourceReserved.get(task.sourcePileId) ?? 0) + task.quantity);
       const source = pileById.get(task.sourcePileId);
       if (source?.owner.type === 'ground') { const key = cellIndex(world, source.owner.x, source.owner.z); outbound.set(key, (outbound.get(key) ?? 0) + task.quantity); }
     }

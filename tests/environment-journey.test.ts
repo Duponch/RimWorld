@@ -12,6 +12,7 @@ import { foodAccount,woodAccount } from './scenarios/colony-player.ts';
 import { metalAccount } from './scenarios/energy-player.ts';
 import type { PrisonPlayerState } from './scenarios/prison-player.ts';
 import { environmentDecisions,environmentSummary,newEnvironmentPlayer,observeEnvironment,type EnvironmentPlayerState } from './scenarios/environment-player.ts';
+import { crashlandedThreatActive } from './scenarios/crashlanded-player.ts';
 import type { Command,World } from '../src/sim/types.ts';
 
 // Exact project-owned Lisière continuation after the published V86 recruitment.
@@ -89,7 +90,7 @@ function runEnvironmentJourney():void {
   if(until!==undefined&&(!Number.isSafeInteger(until)||until<=w.tick||until>w.tick+2*6000))throw Error('A bounded environment diagnostic must stop within two days of its actual starting state.');
   const limit=Math.min(player.startTick+65*6000,until??Infinity);
   while(w.tick<limit){
-    if(w.tick===player.startTick||w.tick%250===0||w.raids?.active&&w.tick%20===0){
+    if(w.tick===player.startTick||w.tick%250===0||crashlandedThreatActive(w)&&w.tick%20===0){
       for(const d of environmentDecisions(w,player)){const result=applyCommand(w,d.command);expect(result,JSON.stringify({tick:w.tick,...d,result})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}
       if(w.tick%250===0)observe();
     }

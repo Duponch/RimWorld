@@ -15,6 +15,7 @@ import { prisonBedValid } from '../../src/sim/prison-space.ts';
 import { isPowerActive } from '../../src/sim/power-rules.ts';
 import { energyDecisions,energySummary,type EnergyPlayerState } from './energy-player.ts';
 import { survivorPlan } from './survivor-player.ts';
+import { crashlandedDecisions } from './crashlanded-player.ts';
 import type { Decision } from './colony-player.ts';
 import type { Cell,DesignateCommand,Pawn,World,WorkType } from '../../src/sim/types.ts';
 
@@ -162,6 +163,9 @@ function prisonMedicalDecisions(w:World):Decision[] {
 /** Only current letters, downed people, access queries and visible stocks guide
  * this policy. It never reads the next raid deadline or alters its population. */
 export function prisonDecisions(w:World,s:PrisonPlayerState):Decision[] {
+  // Animal rage is a visible combat letter too. Resolve its physical shelter
+  // and defense before raid demobilisation or any direct bedside order.
+  if(w.wildlife?.animals.some(a=>a.manhunter&&a.state!=='dead'&&a.state!=='downed'))return crashlandedDecisions(w);
   const defense=prisonDefenseDecisions(w,s);if(defense!==undefined)return defense;
   const medical=prisonMedicalDecisions(w);if(medical.length)return medical;
   const arms=prisonArmDecisions(w);

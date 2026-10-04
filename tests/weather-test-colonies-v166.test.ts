@@ -5,6 +5,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { isColonist } from '../src/sim/affiliation.ts';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/index.ts';
 import { SCHEMA_VERSION } from '../src/sim/types.ts';
+import { withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { parseTestColonies, readTestColony, testColonyUrl } from '../src/ui/test-colonies.ts';
 
 const episodes = [
@@ -39,6 +40,6 @@ test('the eight prepared weather saves are published in the player test-colony c
     expect(world.weather?.current).toBe(weather);
     expect(world.pawns.filter(isColonist)).toHaveLength(save.colonists);
     const original = JSON.parse(raw);
-    expect(serializeWorld(world)).toBe(JSON.stringify({ ...original, schemaVersion: SCHEMA_VERSION }));
+    expect(serializeWorld(world)).toBe(JSON.stringify(withMigratedTelevisionRecreation({ ...original, schemaVersion: SCHEMA_VERSION })));
   }
 });

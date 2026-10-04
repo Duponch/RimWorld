@@ -66,9 +66,9 @@ test('V201 real introductory rage, inspection, shelter, contact defense and exac
     const pipelineCount=await page.evaluate(()=> (window as any).__v201Probe.pipelines);
     await panel(page,'menu');await page.locator('#save').click();
     await expect.poll(()=>page.evaluate(key=>{
-      const raw=localStorage.getItem(key);return raw?JSON.parse(raw).tick:null;
+      const raw=window.__lisiere.saveRepository.peekItem(key);return raw?JSON.parse(raw).tick:null;
     },saveKey)).toBe(pursuing.tick);
-    const saved=deserializeWorld((await page.evaluate(key=>localStorage.getItem(key),saveKey))!);
+    const saved=deserializeWorld((await page.evaluate(key=>window.__lisiere.saveRepository.peekItem(key),saveKey))!);
     expect(saved).toEqual(pursuing);
     await page.locator('#load').click();await expectWorld(page,saved);await page.keyboard.press('Escape');
     await page.locator('#inspect-threat').click();

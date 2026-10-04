@@ -1,4 +1,5 @@
 import { isBedKind } from './bed-kinds.ts';
+import { removeIdentity } from './collection-remove.ts';
 import { applyCommercialBuy,applyCommercialSell } from './commercial-post.ts';
 import { applyCommercialPreparation,processCommercialOnMap,reconcileCommercialOnMap } from './commercial-loading.ts';
 import { applyCommercialReturn,advanceCommercialTrip,departCommercial,commercialOnMapId,commercialPawn } from './commercial-trip.ts';
@@ -499,7 +500,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     const existing = world.stockpiles.find(zone => sameCell(zone, command));
     if (!command.enabled) {
       if (!existing) return refusal('missing-target', 'Aucune cellule de stockage ici.');
-      world.stockpiles.splice(world.stockpiles.indexOf(existing), 1);
+      removeIdentity(world.stockpiles,existing);
     } else {
       if (growingZoneAt(world, cellIndex(world, command.x, command.z)) || ['water', 'rock'].includes(world.tiles[cellIndex(world, command.x, command.z)]!.terrain)
         || world.resources.some(item => sameCell(item, command))
@@ -526,7 +527,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     if(existing.kind==='repair'||existing.kind==='fix-breakdown')return refusal('invalid-command','Retirez la zone de foyer pour suspendre cet entretien automatique.');
     if(isRoofJob(existing)){designateRoofArea(world,[cellIndex(world,command.x,command.z)],'ignore-roof');wakePlanners(world);return {ok:true};}
     for (const pawn of world.pawns) if (pawn.jobId === existing.id || (pawn.haul && constructionHaulId(pawn.haul.destination) === existing.id)) releaseWork(world, pawn,drops);
-    world.jobs.splice(world.jobs.indexOf(existing), 1);
+    removeIdentity(world.jobs,existing);
     const delivered = world.piles.filter(pile => pile.owner.type === 'job' && pile.owner.jobId === existing.id);
     for (const pile of delivered) if(!commitDrop(world,pile,existing,drops)) throw new Error('Preflighted cancellation has no drop cell.');
     event(world, 'command', 'Ordre annulé ; les matériaux restent sur place.');
@@ -576,7 +577,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
   } else if (job.kind === 'sow') {
     finishSowing(world, job);
   } else {
-    if(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id)){setWorkUnits(job,Math.max(0,Math.round((jobDuration(world,job)-1)*WORK_FRACTIONS)));releaseWork(world,pawn);return;}
+    if(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id)||!Number.isSafeInteger(world.nextId+1)){setWorkUnits(job,Math.max(0,Math.round((jobDuration(world,job)-1)*WORK_FRACTIONS)));releaseWork(world,pawn);return;}
     world.piles = world.piles.filter(pile => pile.owner.type !== 'job' || pile.owner.jobId !== job.id);
     if(job.kind==='wind-turbine')adoptWind(world);
     const qualityStream={rng:world.rng},quality=isHabitatFurnitureKind(job.kind)&&FURNITURE_DEFINITIONS[job.kind].quality?craftingQuality(pawn.skills.construction.level,()=>healthRandom(qualityStream)):undefined;if(quality)world.rng=qualityStream.rng;
@@ -584,7 +585,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     if(job.kind==='fence'||job.kind==='fence-gate'||job.kind==='pen-marker'||job.kind==='wall'||isRoomDoor(job.kind)||job.kind==='cooler')invalidateAnimalPens(world);
   }
   if(job.kind==='cooler'||job.kind==='wall'||isRoomDoor(job.kind))autoRoofRooms(world,job);
-  const jobIndex=world.jobs.indexOf(job);if(jobIndex>=0)world.jobs.splice(jobIndex,1); pawn.jobId = null; pawn.path = []; if(!medicallyStopped(pawn))pawn.state = 'idle'; pawn.planCooldown = 0;
+  removeIdentity(world.jobs,job); pawn.jobId = null; pawn.path = []; if(!medicallyStopped(pawn))pawn.state = 'idle'; pawn.planCooldown = 0;
   event(world, 'job', `${pawn.name} a terminé le travail : ${JOB_LABEL[job.kind]}.`); wakePlanners(world);
 }
 const workEnvironments=new WeakMap<World,WorkEnvironmentCache>();
@@ -724,7 +725,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.hunting){processHunting(world,pawn,{...needsContext,candidates:()=>searchCandidates(world,pawn,getBlocked(),occupied,budget),blocked:getBlocked});continue;}
       if(pawn.burial){processBurial(world,pawn,needsContext);continue;}
       if(processCleaning(world,pawn,needsContext))continue;
-      if(pawn.research){processResearch(world,pawn,needsContext.move,s=>researchRate(pawn,s,getEnvironment(),new TemperatureView(world,thermal).at(world,s)),message=>event(world,'job',message));continue;}
+      if(pawn.research){processResearch(world,pawn,needsContext.move,s=>researchRate(pawn,s,getEnvironment(),new TemperatureView(world,thermal).at(world,s),world),message=>event(world,'job',message));continue;}
       if(pawn.ward){processWarden(world,pawn,needsContext);continue;}
       if(pawn.feed){processFeeding(world,pawn,needsContext);continue;}
       if(pawn.surgery){processSurgery(world,pawn,needsContext,()=>getLight().lightAt(pawn),cell=>getLight().lightAt(cell));continue;}
@@ -786,7 +787,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(isConstruction(job)&&(pawn.skills.construction.level<(job.kind==='lay-floor'&&job.floor?FLOOR_DEFINITIONS[job.floor].skill:constructionSkillRequired(job.kind))||!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id))){releaseWork(world,pawn);continue;}
       if(job.kind==='mine') {
         if(Math.max(Math.abs(pawn.x-job.x),Math.abs(pawn.z-job.z))===1) {
-          if(advanceMining(world,pawn,job,()=>getLight().speedAt(pawn),body)) {world.jobs.splice(world.jobs.indexOf(job),1);pawn.jobId=null;pawn.state='idle';pawn.planCooldown=0;reconcileRoofSupport(world,false,job);reconcilePawnHealth(world,pawn);blocked=undefined;roofs=undefined;invalidateEnvironment();wakePlanners(world);event(world,'job',`${pawn.name} a terminé le minage.`);}
+          if(advanceMining(world,pawn,job,()=>getLight().speedAt(pawn),body)) {removeIdentity(world.jobs,job);pawn.jobId=null;pawn.state='idle';pawn.planCooldown=0;reconcileRoofSupport(world,false,job);reconcilePawnHealth(world,pawn);blocked=undefined;roofs=undefined;invalidateEnvironment();wakePlanners(world);event(world,'job',`${pawn.name} a terminé le minage.`);}
         } else moveToward(world,pawn,job,false,getBlocked,budget,false,getLight);
         continue;
       }

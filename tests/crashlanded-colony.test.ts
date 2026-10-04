@@ -1,6 +1,6 @@
 import { writeTestFileSync } from './test-output.ts';
 import { isColonist } from '../src/sim/affiliation';
-import { crashlandedDecisions, crashlandedSummary } from './scenarios/crashlanded-player';
+import { crashlandedDecisions, crashlandedSummary,crashlandedThreatActive } from './scenarios/crashlanded-player';
 import { readFileSync } from 'node:fs';
 import { expect, onTestFailed, test, vi } from 'vitest';
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
@@ -189,7 +189,7 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
     return s;
   };
   while(w.tick<144000) {
-    if(w.tick%250===0 || w.raids?.active && w.tick%20===0) {
+    if(w.tick%250===0 || crashlandedThreatActive(w) && w.tick%20===0) {
       for(const d of crashlandedDecisions(w)){expect(applyCommand(w,d.command),JSON.stringify({seed,tick:w.tick,decision:d})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}
       observe();
     }

@@ -141,7 +141,7 @@ test('conservation dans le worker : migration V10, inspection de fraîcheur, exp
     expect(await world(page)).toEqual(deserializeWorld(JSON.stringify(old)));await page.keyboard.press('Escape');await cell(page,17,16);
     await expect(page.locator('#cell-materials')).toContainText('pourrit dans 14.0 j');
     const aged=structuredClone(initial);aged.piles[0]!.rot={progress:ROT_DAYS.berries*TICKS_PER_DAY-120,atTick:0};
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(aged)});
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(aged)});
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,aged);
     await page.keyboard.press('Escape');await cell(page,17,16);await expect(page.locator('#cell-materials')).toContainText('pourrit dans 0.5 h');
     await page.locator('[data-speed="6"]').click();
@@ -150,8 +150,8 @@ test('conservation dans le worker : migration V10, inspection de fraîcheur, exp
     const expired=await world(page);expect(expired.stock.food).toBe(0);expect(expired.piles).toEqual([]);expect(validateWorld(expired)).toEqual([]);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,expired);
     const invalid=structuredClone(aged);invalid.piles[0]!.rot!.progress=-1;
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(invalid)});
-    await panel(page,'menu');await page.locator('#load').click();await expect(page.getByRole('status')).toHaveClass(/error/);await expectWorld(page,expired);
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:JSON.stringify(invalid)});
+    await panel(page,'menu');await page.locator('#load').click();await expect(page.locator('#notice')).toHaveClass(/error/);await expectWorld(page,expired);
     expect(errors).toEqual([]);await testInfo.attach('preservation-state',{contentType:'application/json',body:JSON.stringify({tick:expired.tick,spoiled:expired.spoiled,migration:10,schema:expired.schemaVersion,errors})});
   } finally {await browser.close();}
 });

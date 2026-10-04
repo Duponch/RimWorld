@@ -32,7 +32,7 @@ test('civil crossing in the real worker: shared cell, save/reload, three exclusi
     expect(new Set(crossing.pawns.map(p=>p.z*crossing.width+p.x)).size).toBeLessThan(3);
     expect(crossing.pawns[2]).toMatchObject({x:8,z:8,state:'sleeping'});
     await panel(page,'menu');await page.locator('#save').click();
-    await expect.poll(async()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)!).tick,saveKey)).toBe(crossing.tick);
+    await expect.poll(async()=>page.evaluate(key=>JSON.parse(window.__lisiere.saveRepository.peekItem(key)!).tick,saveKey)).toBe(crossing.tick);
     await page.locator('#load').click();await expectWorld(page,crossing);
     await page.keyboard.press('Escape');await page.screenshot({path:testOutputPath('artifacts/civil-crossing-paused.png')});
     await page.locator('[data-speed="6"]').click();
@@ -107,7 +107,7 @@ test('loaded furniture crossing shares grounded GPU poses, preserves edge speed 
     await expect(page.locator('#pause-banner')).toBeVisible();const crossing=await world(page);expect(validateWorld(crossing)).toEqual([]);
     expect(crossing.pawns.some(p=>p.haul?.phase==='deliver'&&[7,8].includes(p.x))).toBe(true);
     await page.screenshot({path:testOutputPath(`artifacts/furniture-crossing-${process.env.VALIDATION_VERSION??'paused'}.png`)});
-    await panel(page,'menu');await page.locator('#save').click();await expect.poll(async()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)!).tick,saveKey)).toBe(crossing.tick);
+    await panel(page,'menu');await page.locator('#save').click();await expect.poll(async()=>page.evaluate(key=>JSON.parse(window.__lisiere.saveRepository.peekItem(key)!).tick,saveKey)).toBe(crossing.tick);
     await page.locator('#load').click();await expectWorld(page,crossing);await page.keyboard.press('Escape');
     await page.locator('[data-speed="1"]').click();
     await page.waitForFunction(()=>window.__lisiere.world.pawns.every(p=>!p.haul),undefined,{timeout:14000});

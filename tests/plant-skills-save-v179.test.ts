@@ -3,17 +3,17 @@ import { SnapshotDecoder, SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { createWorld } from '../src/sim/index.ts';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization.ts';
 import { plantWorkRate } from '../src/sim/plant-skills.ts';
-import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
+import { withoutMiningSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { SCHEMA_VERSION } from '../src/sim/types.ts';
 import { withoutPredatorFoodPolicies, withoutPredatorApparelPolicies } from './scenarios/legacy-save.ts';
 
 test('V167 validates strictly before neutral V168 migration with no past Plants practice or RNG draw', () => {
   const current=createWorld(42),legacy=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(current))));
-  withoutMiningSkill(legacy);
+  withoutTelevisionRecreation(withoutMiningSkill(legacy));
   for(const pawn of legacy.pawns)delete pawn.skills.plants;
-  legacy.schemaVersion=167;
+  legacy.schemaVersion=(withoutTelevisionRecreation(legacy),167);
   const before=JSON.stringify(legacy),migrated=deserializeWorld(before);
-  expect(migrated).toEqual({...legacy,schemaVersion:SCHEMA_VERSION});
+  expect(migrated).toEqual(withMigratedTelevisionRecreation({...legacy,schemaVersion:SCHEMA_VERSION}));
   expect(JSON.stringify(legacy)).toBe(before);
   expect(migrated.pawns.every(pawn=>pawn.skills.plants===undefined)).toBe(true);
   expect(migrated.rng).toBe(legacy.rng);
@@ -53,7 +53,7 @@ test('V168 rejects corrupt Plants records and resumes the first learning tick ex
 
 test('bridge refuses a future Plants profile in V167 and can accept a corrected packet at the same revision', () => {
   const world=createWorld(42),encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();
-  withoutMiningSkill(world);
+  withoutTelevisionRecreation(withoutMiningSkill(world));
   for(const pawn of world.pawns)delete pawn.skills.plants;
   const oldWorld={...world,schemaVersion:167} as unknown as typeof world;
   expect(decoder.adopt(structuredClone(encoder.encode(oldWorld,0,1))).status).toBe('applied');

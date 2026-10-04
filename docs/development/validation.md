@@ -1,4 +1,6 @@
-# Validation courante — sacs de sable V207
+# Validation courante — consolidation V209
+
+**V209 — consolidation, schéma 190 inchangé.** [Contrat](consolidation-v209.md), [résultats et limites](../history/validation-consolidation-v209.md). Corrections produit, réparation de fixtures/pilote et mesures sont séparées dans la preuve ; la consolidation ne livre pas une nouvelle boucle fonctionnelle.
 
 **V208 — télévision cathodique, schéma 190, livré dans le périmètre ciblé.** Le [suivi borné](../history/validation-television-v208.md) distingue 149 ciblés uniques/30 fichiers par reprises, 54 payloads/hash/reprises, Chromium matériel préparé 1/1, présentation 250² et build/typage 707 modules. Coût CPU de capture/requêtes isolé, topologie déjà acquise ; aucun coût GPU nul, campagne naturelle ou performance générale déduits. Défaut de préférence de siège corrigé ; oracles historiques et pilote UI réparés séparément.
 

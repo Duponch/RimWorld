@@ -7,6 +7,7 @@ import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld } 
 import { isColonist } from '../src/sim/affiliation.ts';
 import { foodAccount,woodAccount } from './scenarios/colony-player.ts';
 import { energyDecisions,energySummary,newEnergyPlayer,observeEnergy,metalAccount,type EnergyPlayerState } from './scenarios/energy-player.ts';
+import { crashlandedThreatActive } from './scenarios/crashlanded-player.ts';
 import type { Command,World } from '../src/sim/types.ts';
 
 const fixtureBytes=gunzipSync(readFileSync('tests/fixtures/colony-v84.json.gz')),fixtureHash=createHash('sha256').update(fixtureBytes).digest('hex');
@@ -28,10 +29,11 @@ test('Énergie : préflight des commandes de continuation, fichier V84 et rechar
   expect(serializeWorld(copy)).toBe(serializeWorld(w));expect(validateWorld(w)).toEqual([]);
 });
 
-test('Énergie : recherches et réseau construits depuis J24, froid, nuit, coupure physique et raccord',()=>{
+function runEnergyJourney(stopTick?:number):void {
   const checkpointFile=process.env.ENERGY_CHECKPOINT,resumed:Checkpoint|undefined=checkpointFile?JSON.parse(readFileSync(checkpointFile,'utf8')):undefined;
   if(resumed&&(resumed.protocol!=='energy-v85'||resumed.fixtureHash!==fixtureHash))throw Error('The energy checkpoint must descend from the committed V84 colony fixture.');
   let w:World=resumed?deserializeWorld(resumed.world):loadFixture();const player=resumed?.player??newEnergyPlayer(w),started=performance.now(),diagnostic=process.env.ENERGY_DIAGNOSTIC==='1';
+  if(stopTick!==undefined&&(!resumed||!Number.isSafeInteger(stopTick)||stopTick<=w.tick||stopTick>w.tick+2*6000))throw Error('Energy defence diagnostic requires an authentic checkpoint and a limit within two days.');
   const ledger:Ledger=resumed?.ledger??{consumed:0,harvested:0,cooked:0,steelMined:0,componentsMined:0,meals:Object.fromEntries(w.pawns.filter(isColonist).map(p=>[p.id,0]))};
   const initial=resumed?.initial??{wood:woodAccount(w),food:foodAccount(w),animalEaten:w.wildlife?.eatenItems??0},journal:Checkpoint['journal']=resumed?.journal??[],observations:Checkpoint['observations']=resumed?.observations??[];
   const checkpoint=():Checkpoint=>({protocol:'energy-v85',fixtureHash,world:serializeWorld(w),player,ledger,initial,journal,observations});
@@ -46,9 +48,9 @@ test('Énergie : recherches et réseau construits depuis J24, froid, nuit, coupu
   };
   // A horizon is a diagnostic bound, not a promised research/event date. Stop
   // once the observed loop holds for 600 ticks after the rebuilt cable.
-  while(w.tick<player.startTick+24*6000){
+  while(w.tick<Math.min(player.startTick+24*6000,stopTick??Infinity)){
     if(diagnostic&&w.tick%250===0){writeTestFileSync('tmp/energy-diagnostic-latest-v85.json',JSON.stringify(checkpoint()));console.info(`Energy diagnostic tick ${w.tick}, ${(performance.now()-started).toFixed(0)}ms, ${w.jobs.length} jobs, ${w.structures.length} structures.`);}
-    if(w.tick%250===0||w.raids?.active&&w.tick%20===0){for(const d of energyDecisions(w,player)){const result=applyCommand(w,d.command);expect(result,JSON.stringify({tick:w.tick,...d,result})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}observe();}
+    if(w.tick%250===0||crashlandedThreatActive(w)&&w.tick%20===0){for(const d of energyDecisions(w,player)){const result=applyCommand(w,d.command);expect(result,JSON.stringify({tick:w.tick,...d,result})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}observe();}
     const stations=new Map(w.pawns.flatMap(p=>{const station=w.structures.find(s=>s.id===p.cooking?.stationId);return station?[[p.name,station.kind] as const]:[];}));
     const mines=w.jobs.filter(j=>j.kind==='mine').flatMap(j=>{const t=w.tiles[j.z*w.width+j.x]!;return t.ore?[{cell:j.z*w.width+j.x,ore:t.ore}]:[];});
     const stepStarted=diagnostic?performance.now():0;stepWorld(w);
@@ -72,6 +74,10 @@ test('Énergie : recherches et réseau construits depuis J24, froid, nuit, coupu
     if(player.stage==='done'&&w.tick-player.stageTick>=600&&player.milestones.frozenFood&&ledger.steelMined>0&&ledger.componentsMined>0)break;
   }
   observe();const final=energySummary(w,player),report={protocol:'energy-v85',fixtureHash,resumed:!!resumed,runtimeMs:performance.now()-started,initial,ledger,player,journal,observations,final};
+  if(stopTick!==undefined){
+    const saved=serializeWorld(w),copy=deserializeWorld(saved);stepWorld(w,120);stepWorld(copy,120);expect(serializeWorld(copy)).toBe(serializeWorld(w));w=deserializeWorld(saved);
+    writeTestFileSync('tmp/energy-defence-diagnostic-v209.json',JSON.stringify({checkpoint:checkpoint(),report}));return;
+  }
   writeTestFileSync('artifacts/energy-colony-v85.json',JSON.stringify(report));writeTestFileSync('tmp/energy-final-v85.json',serializeWorld(w));
   expect(player.stage,context()).toBe('done');expect(player.electricMeals,context()).toBeGreaterThan(0);expect(player.nightDrainTicks,context()).toBeGreaterThanOrEqual(120);
   for(const key of ['batteriesResearch','solarResearch','charged500Wd','nightSupply','frozenFood','switchCut','switchRestored','cableCut','cableRestored'])expect(player.milestones[key],context()).toBeGreaterThan(player.startTick);
@@ -81,4 +87,6 @@ test('Énergie : recherches et réseau construits depuis J24, froid, nuit, coupu
   expect(electricBill,context()).toBeDefined();
   expect(Object.entries(electricBill!.filters).filter(([,allowed])=>allowed).map(([item])=>item).sort(),context())
     .toEqual(['berries','corn','hare-meat','potato','rice']);
-},1_200_000);
+}
+test('Énergie : recherches et réseau construits depuis J24, froid, nuit, coupure physique et raccord',()=>runEnergyJourney(),1_200_000);
+test.skipIf(!process.env.ENERGY_COMBAT_UNTIL)('Énergie : diagnostic de défense depuis un checkpoint réel et conservation après le raid',()=>runEnergyJourney(Number(process.env.ENERGY_COMBAT_UNTIL)),300_000);

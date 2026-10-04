@@ -1,5 +1,7 @@
 # Industrie avancée — relevé Core 1.6.4871 pour V123
 
+**Statut historique.** Les adaptations de recherche V123 ci-dessous sont conservées comme relevé daté. Pour les facteurs, le partage et la sélection des analyseurs actuels, lire le [contrat V209](../development/consolidation-v209.md) et sa [preuve](../history/validation-consolidation-v209.md). La ligne de vue locale ne revendique pas une équivalence exhaustive avec `GenSight.LineOfSight` Core.
+
 Ce relevé distingue les définitions XML de RimWorld Core des choix de Lisière. Les nombres Core ci-dessous viennent de l'installation locale `E:/Steam/steamapps/common/RimWorld/Data/Core/Defs` ; les règles de Lisière sont vérifiables dans les sources liées. Il ne constitue pas une revendication de parité avec tout le système industriel de Core.
 
 ## Minerais et ressources

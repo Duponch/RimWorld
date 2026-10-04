@@ -1,5 +1,13 @@
 # Stratégie de validation
 
+## Consolidation V209 et contrôle proportionnel
+
+La [consolidation](consolidation-v209.md) regroupe les tests `consolidation-*` des frontières corrigées : transitions/arêtes, réservations, standabilité, identités, mobilisation, worker, corrélation, dépôt de sauvegardes, clipping, limites et lifecycle graphique, recherche et archives. La régression répare les fixtures historiques sans détendre les schémas. Le [suivi](../history/validation-consolidation-v209.md) nomme exactement suites, campagnes, preuves natives et limites.
+
+Utiliser `npm run validate:logged -- --label <phase> -- node <script> <arguments>` pour les nouvelles exécutions : durée murale et statut dans `tmp/validation-runs/ledger.jsonl`, sortie complète dans le journal du run, synthèse bornée. Sous Windows, invoquer les scripts npm via leur entrée Node si le lanceur sans shell ne résout pas les fichiers `.cmd`. Une sortie JSON est lue par synthèse ciblée, pas déversée intégralement dans la conversation. Ce chronométrage ne mesure pas les tokens/seconde de l’agent.
+
+Un lot cohérent partage la migration et le parcours UI de ses règles/contenus. Après une correction, rejouer les garanties touchées ; réserver la régression aux frontières globales et les campagnes aux évolutions motivées ou périodiques. Le navigateur prépare des préconditions réelles puis exerce la transition ; aucun changement de règles/cadence du jeu pour faire passer un test plus vite. La CI exécute successivement régression, build et documentation ; elle ne prouve ni GPU matériel ni campagne naturelle.
+
 ## Contrôles ciblés V208 — télévision et places réelles
 
 Les [loisirs télévisés](television-v208.md) exigent recherche au contact, verrou Mobilier complexe, acier/composants livrés, Construction 7, courant réel et sièges dans le rectangle orienté. Les sept suites `tests/television-*-v208.test.ts` distinguent géométrie, visibilité/pièce/vision, préférence de siège, réservation partagée et plafond huit, gain après arrivée, interruptions, dégâts/réparation, paquet/repose et migration stricte 189 vers 190. Les archives historiques gardent leurs familles ; les propriétaires actifs hors carte reçoivent uniquement la nouvelle lassitude neutre.
@@ -55,7 +63,7 @@ Adoptée après V76 pour réduire les reprises et les relances, sans réduire le
 2. **Développer la boucle et ses contrôles courts ensemble.** Faire tourner les scénarios ciblés aux changements de contrat et checkpoints internes ; ne pas attendre un gros lot entier pour détecter une migration ou une conservation cassée. Avant un parcours long, exercer chaque nouvelle commande de sa politique via le **même pilote UI**, depuis un état court pertinent. Le fonctionnement isolé du widget ne prouve pas la capacité du pilote à le manipuler.
 3. **Regrouper la validation finale.** Choisir la matrice selon les contrats réellement touchés : scénarios métier profonds, sauvegarde/continuation, worker/présentation, parcours de colonie et audit lorsque requis. Jouer ensemble les scénarios concernés ; garder une passe élargie aux intégrations transversales. Un résultat reste réutilisable après une retouche sans rapport, en précisant sa portée. Un changement de contrat relance les contrôles qui en dépendent.
 4. **Paralléliser uniquement ce qui est indépendant.** Recherches bornées et lectures peuvent être groupées ; revue et documentation peuvent avancer pendant un test si elles ne modifient pas ses entrées. Le serveur Vite actuel recharge les sources : geler tout code servi pendant l'UI native. Les mesures CPU/GPU et les longs pilotes restent successifs, avec environnement stable. Tester un futur build figé nécessitera un mode de diagnostic adapté : ce mécanisme n'est pas encore livré.
-5. **Diagnostiquer avant de rejouer.** Checkpoint réel, état attendu/obtenu, graine et commande en échec. Reprendre la section concernée, puis élargir seulement si la correction affecte l'amont. Préserver toutes les assertions métier ; ne pas annoncer une reprise comme une nouvelle passe complète. Ne jamais faire varier les sources au milieu d'une mesure native.
+5. **Diagnostiquer avant de rejouer.** Checkpoint réel, état attendu/obtenu, graine et commande en échec. Reprendre la section concernée, puis élargir seulement si la correction affecte l'amont. Préserver toutes les assertions métier ; ne pas annoncer une reprise comme une nouvelle passe complète. Ne jamais faire varier les sources au milieu d'une mesure native. Borner séparément chaque geste UI et le parcours complet : un sélecteur périmé doit produire rapidement son contexte/trace, sans attendre tout le budget de la campagne. Le pilote Frontières utilise quinze secondes par action et cent vingt pour son ensemble de gestes ; ce délai ne change pas les règles du jeu.
 6. **Publier une fois la boucle cohérente.** Mettre à jour contrats, guide, inventaire, catalogue si nécessaire et preuves ; les index/ROADMAP résument et renvoient aux contrats au lieu de recopier leurs détails. Commit local explicatif, sans push automatique, puis bilan utilisateur. Noter les durées approximatives recherche, implémentation et validation, ainsi que les reprises évitables ; réévaluer la méthode après deux lots. Aucune réduction chiffrée de temps ou de tokens promise sans mesure.
 
 ## Principes
@@ -92,6 +100,12 @@ La [matrice](../gameplay/systems-matrix.md) conserve cinq familles : F1 conserva
 Les scénarios de `tests/scenarios` ne modifient pas directement le monde pour réussir : ils envoient des commandes, observent accès, matières, repas, sommeil et construction, puis gardent des checkpoints. La préparation explicite d’une fixture reste distincte d’une partie naturelle. Un obstacle réel se dégage par une commande physique ; une date d’incident rare ne se force pas pour satisfaire un horizon.
 
 Conserver les bilans de matière, combustible et alimentation (dix ingrédients deviennent un repas) et distinguer pertes réellement prévues, consommations et destruction. Ne pas rebaptiser toute différence inexpliquée « perte » : une transformation doit être identifiée et contrôlée. Au chargement, attendre l’acquittement du nouveau monde plutôt que lire l’ancien snapshot. Une reprise depuis checkpoint valide sa continuation, pas toute la préparation antérieure.
+
+### Reprise bornée d’une campagne
+
+Le diagnostic Énergie peut partir d’un vrai fichier de checkpoint avec `ENERGY_CHECKPOINT` et un tick final `ENERGY_COMBAT_UNTIL`, strictement après son départ et au plus deux jours plus tard. Le test séparé « diagnostic de défense » observe conservation, survie et continuation ; le parcours complet garde son horizon et ses objectifs. Le mode Environnement existant utilise `ENVIRONMENT_JOURNEY=1` et `ENVIRONMENT_UNTIL`. Choisir le tick final à partir du checkpoint, pas d’une date approximative.
+
+Ces modes servent à reproduire et vérifier une transition en échec avant un replay long. Ils ne remplacent pas la campagne complète et n’accélèrent pas le temps du produit. Conserver le checkpoint antérieur et le rapport rouge, puis indiquer explicitement la borne atteinte dans la preuve.
 
 ## Diagnostics et mesures
 

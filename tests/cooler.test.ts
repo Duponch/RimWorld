@@ -6,7 +6,7 @@ import { applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld,cr
 import { coolerFaces,coolerFaceBlocked,newCoolerState,advanceCoolers } from '../src/sim/cooler';
 import { AIR_CONDITIONING_COST,CLOTHING_RESEARCH_COST } from '../src/sim/research';
 import { TemperatureView,reconcileTemperature } from '../src/sim/temperature';
-import { powerDemand } from '../src/sim/power-rules';
+import { isPowerActive,powerDemand } from '../src/sim/power-rules';
 import { constructionRecipe } from '../src/sim/construction-materials';
 import { rotAge } from '../src/sim/food-preservation';
 import { deconstructionCamp } from './scenarios/deconstruction';
@@ -69,25 +69,39 @@ test('a cooler breaches physically and conserves destruction salvage, with deter
 });
 
 test('player builds and researches a cold store, freezes real provisions, loses power and observes spoilage',()=>{
-  const w=coldStoreCamp();let frozenAt=0,outageAt=0,frozenAge=0,measured=false,prepared=false;const actions:{tick:number;reason:string}[]=[];
+  // The player researches inside the physically built store and dedicates it
+  // to these perishable meals. Passing through its door can briefly thaw them;
+  // require 1,000 consecutive frozen, powered ticks before stopping refuelling.
+  // Only the observation restarts after a thaw, never the real food age.
+  const w=coldStoreCamp();let frozenAt=0,outageAt=0,frozenAge=0,stableAt=0,stableAge=0,measuredAt=0,measured=false,prepared=false,wasFrozen=false;
+  const actions:{tick:number;reason:string}[]=[],thermalTransitions:{tick:number;frozen:boolean;age:number;fuel:number;doorOpen:boolean}[]=[];
   for(let i=0;i<65000;i++){
     if(w.tick%50===0)for(const d of coldStoreDecisions(w)){command(w,d.command);actions.push({tick:w.tick,reason:d.reason});}
     stepWorld(w);if(!prepared&&(w.research?.airConditioning?.points??0)>480000000){writeTestFileSync(`artifacts/cold-store-preparation-v${w.schemaVersion}.json`,serializeWorld(w));prepared=true;}const meals=w.piles.filter(p=>p.item==='simple-meal'),c=w.structures.find(s=>s.kind==='cooler'),g=w.structures.find(s=>s.kind==='wood-generator');
-    if(!frozenAt&&c&&meals.reduce((n,p)=>n+p.quantity,0)===20&&meals.every(p=>p.owner.type==='ground'&&p.rot?.rate===0)){
-      frozenAt=w.tick;frozenAge=meals.reduce((n,p)=>n+rotAge(p,w.tick)*p.quantity,0);
+    const age=meals.reduce((n,p)=>n+rotAge(p,w.tick)*p.quantity,0),allFrozen=!!c&&meals.reduce((n,p)=>n+p.quantity,0)===20&&meals.every(p=>p.owner.type==='ground'&&p.rot?.rate===0);
+    if(allFrozen!==wasFrozen){thermalTransitions.push({tick:w.tick,frozen:allFrozen,age,fuel:g?.fuel?.ticks??0,doorOpen:w.structures.find(s=>s.kind==='door')?.door?.open??false});wasFrozen=allFrozen;}
+    if(!frozenAt&&allFrozen){
+      frozenAt=w.tick;frozenAge=age;
       writeTestFileSync(`artifacts/cold-store-checkpoint-v${w.schemaVersion}.json`,serializeWorld(w));
-      command(w,{type:'refuel-policy',structureId:g!.id,enabled:false});
     }
-    if(frozenAt&&!measured&&w.tick>=frozenAt+1000){expect(meals.reduce((n,p)=>n+rotAge(p,w.tick)*p.quantity,0)).toBe(frozenAge);measured=true;}
+    if(!measured){
+      if(allFrozen&&c&&g&&isPowerActive(c)&&isPowerActive(g)){
+        if(!stableAt){stableAt=w.tick;stableAge=age;}
+        else{
+          expect(age,`continuous frozen interval ${stableAt}..${w.tick}`).toBe(stableAge);
+          if(w.tick>=stableAt+1000){measured=true;measuredAt=w.tick;command(w,{type:'refuel-policy',structureId:g.id,enabled:false});}
+        }
+      }else stableAt=0;
+    }
     if(frozenAt&&!outageAt&&g?.fuel?.ticks===0)outageAt=w.tick;
     if(w.tick%1000===0)expect(validateWorld(w),`tick ${w.tick}`).toEqual([]);
     if(outageAt&&(w.spoiled['simple-meal']??0)===20)break;
   }
   if(!frozenAt)writeTestFileSync('tmp/cold-store-failure.json',serializeWorld(w));
-  expect(frozenAt).toBeGreaterThan(0);expect(measured).toBe(true);expect(outageAt).toBeGreaterThan(frozenAt);expect(w.spoiled['simple-meal']).toBe(20);expect(w.pawns.every(p=>p.state!=='dead'&&p.state!=='downed')).toBe(true);
+  expect(frozenAt).toBeGreaterThan(0);expect(measured).toBe(true);expect(measuredAt-stableAt).toBe(1000);expect(outageAt).toBeGreaterThan(measuredAt);expect(w.spoiled['simple-meal']).toBe(20);expect(w.pawns.every(p=>p.state!=='dead'&&p.state!=='downed')).toBe(true);
   expect(w.piles.filter(p=>p.item==='component').reduce((n,p)=>n+p.quantity,0)).toBe(0);
   expect(w.piles.filter(p=>p.item==='steel').reduce((n,p)=>n+p.quantity,0)).toBe(10);expect(validateWorld(w)).toEqual([]);
-  writeTestFileSync(`artifacts/cold-store-player-v${w.schemaVersion}.json`,JSON.stringify({tick:w.tick,frozenAt,outageAt,frozenAge,spoiled:w.spoiled,structures:w.structures.map(s=>s.kind),research:w.research,actions},null,2));
+  writeTestFileSync(`artifacts/cold-store-player-v${w.schemaVersion}.json`,JSON.stringify({tick:w.tick,frozenAt,stableAt,measuredAt,outageAt,frozenAge,stableAge,thermalTransitions,spoiled:w.spoiled,structures:w.structures.map(s=>s.kind),research:w.research,actions},null,2));
 },120000);
 
 

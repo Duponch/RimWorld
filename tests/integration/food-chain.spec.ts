@@ -13,7 +13,7 @@ import { observeErrors,panel,pawnTab,pause,saveKey,world,expectWorld } from './h
 import { perform } from './player-actions';
 import type { Command,World } from '../../src/sim/types';
 
-async function load(page:Page,w:World){await pause(page);await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(w)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,w);await page.keyboard.press('Escape');}
+async function load(page:Page,w:World){await pause(page);await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(w)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,w);await page.keyboard.press('Escape');}
 function feedingFixture():World {
   const w=medicalCamp(2),d=w.pawns[0]!,p=w.pawns[1]!;d.priorities.doctor=0;p.hunger=0;
   p.health={...createMedicalRecord(w.tick),malnutrition:810000000};reconcilePawnHealth(w,p);

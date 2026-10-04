@@ -614,12 +614,13 @@ describe('continuous voice lifecycle', () => {
         activeDecodes--;
         return {};
       }
+      createBufferSource() { return Object.assign(new Node(), { buffer: null, playbackRate: { value: 1 }, onended: null, start(): void {}, stop(): void {} }); }
     }
     vi.stubGlobal('AudioContext', FakeContext);
     vi.stubGlobal('fetch', vi.fn(async (url: string) => {
       if (url.endsWith('manifest.json')) {
         const events = Object.fromEntries(Array.from({ length: 13 }, (_, i) => [
-          `event:${i}`, { variants: [{ src: `/assets/audio/sfx/${i}.mp3` }] },
+          i === 0 ? 'mining.hit' : `event:${i}`, { variants: [{ src: `/assets/audio/sfx/${i}.mp3` }] },
         ]));
         return new Response(JSON.stringify({ version: 1, events }));
       }
@@ -631,7 +632,8 @@ describe('continuous voice lifecycle', () => {
     }));
     const audio = new AudioDirector();
     await audio.unlock();
-    expect(audio.loadedCount).toBe(13);
+    await audio.playPreview(); // Recovery overlaps initial loading, sharing its budget.
+    await vi.waitFor(() => expect(audio.loadedCount).toBe(13));
     expect(peakFetches).toBeLessThanOrEqual(3);
     expect(peakDecodes).toBeLessThanOrEqual(3);
     audio.dispose();
@@ -687,6 +689,109 @@ describe('explicit sound preview and failed asset recovery', () => {
   const manifest = { version: 1, events: {
     'mining.hit': { gain: 2, variants: [{ src: '/assets/audio/sfx/mining.mp3' }] },
   } };
+
+  it('plays ready sounds and the preview while an unrelated MP3 is stalled, then aborts its deadline', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('AudioContext', FakeContext);
+    let stalledSignal: AbortSignal | undefined;
+    vi.stubGlobal('fetch', vi.fn(async (url: string, options?: RequestInit) => {
+      if (url.endsWith('manifest.json')) return new Response(JSON.stringify({ version: 1, events: {
+        ...manifest.events, 'cooking.work': { variants: [{ src: '/assets/audio/sfx/stalled.mp3' }] },
+      } }));
+      if (url.endsWith('stalled.mp3')) {
+        stalledSignal = options?.signal as AbortSignal;
+        return new Promise<Response>(() => {}); // Includes servers that ignore abort.
+      }
+      return new Response(new Uint8Array([1]));
+    }));
+    const audio = new AudioDirector();
+    try {
+      await audio.unlock();
+      expect(audio.loadedCount).toBe(1);
+      await audio.playPreview();
+      expect(FakeContext.latest.sources.some(source => source.starts === 1)).toBe(true);
+      expect(stalledSignal?.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(8_001);
+      expect(stalledSignal?.aborted).toBe(true);
+      expect(audio.loadedCount).toBe(1);
+    } finally { audio.dispose(); vi.useRealTimers(); }
+  });
+
+  it('silences world and interface output directly on visibility without another animation frame', async () => {
+    vi.stubGlobal('AudioContext', FakeContext);
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => url.endsWith('manifest.json')
+      ? new Response(JSON.stringify({ version: 1, events: { ...manifest.events,
+        'ui.click': { spatial: false, variants: [{ src: '/assets/audio/sfx/click.mp3' }] },
+      } })) : new Response(new Uint8Array([1]))));
+    const audio = new AudioDirector();
+    await audio.unlock();
+    audio.update({ presentedTick: 1, paused: false, hidden: false });
+    audio.playInterface('ui.click');
+    const context = FakeContext.latest;
+    const count = context.sources.length;
+    audio.setHidden(true);
+    expect(context.gains[0]!.gain.value).toBe(0);
+    expect(context.gains[1]!.gain.value).toBe(0);
+    audio.setVolume(0.8); audio.setMuted(false); audio.playInterface('ui.click');
+    expect(context.gains[1]!.gain.value).toBe(0);
+    expect(context.sources).toHaveLength(count);
+    audio.setHidden(false);
+    expect(context.gains[0]!.gain.value).toBeGreaterThan(0);
+    audio.dispose();
+  });
+
+  it('bounds stalled response bodies and decoding, and aborts pending asset work on disposal', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('AudioContext', FakeContext);
+    const signals: AbortSignal[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: string, options?: RequestInit) => {
+      if (url.endsWith('manifest.json')) return new Response(JSON.stringify(manifest));
+      signals.push(options?.signal as AbortSignal);
+      return { ok: true, arrayBuffer: () => new Promise<ArrayBuffer>(() => {}) };
+    }));
+    const audio = new AudioDirector();
+    const first = expect(audio.unlock()).rejects.toThrow('Aucun MP3');
+    await vi.advanceTimersByTimeAsync(8_001); await first;
+    expect(signals[0]!.aborted).toBe(true);
+    const retry = expect(audio.playPreview()).rejects.toThrow();
+    await vi.advanceTimersByTimeAsync(0);
+    audio.dispose();
+    await retry;
+    expect(signals.at(-1)!.aborted).toBe(true);
+    class StalledDecoder extends FakeContext {
+      override decodeAudioData(): Promise<object> { return new Promise(() => {}); }
+    }
+    vi.stubGlobal('AudioContext', StalledDecoder);
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => url.endsWith('manifest.json')
+      ? new Response(JSON.stringify(manifest)) : new Response(new Uint8Array([1]))));
+    const decoding = new AudioDirector();
+    const decoded = expect(decoding.unlock()).rejects.toThrow('Aucun MP3');
+    await vi.advanceTimersByTimeAsync(8_001); await decoded;
+    expect(decoding.loadedCount).toBe(0);
+    decoding.dispose();
+    vi.useRealTimers();
+  });
+
+  it('cancels a preview whose decode finishes after the page becomes hidden', async () => {
+    vi.stubGlobal('AudioContext', FakeContext);
+    let complete: ((response: Response) => void) | undefined;
+    let manifests = 0;
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.endsWith('manifest.json')) return new Response(JSON.stringify({ version: 1, events: {
+        'cooking.work': { variants: [{ src: '/assets/audio/sfx/cooking.mp3' }] },
+        ...(manifests++ ? manifest.events : {}),
+      } }));
+      if (url.endsWith('mining.mp3')) return new Promise<Response>(resolve => { complete = resolve; });
+      return new Response(new Uint8Array([1]));
+    }));
+    const audio = new AudioDirector(); await audio.unlock();
+    const preview = expect(audio.playPreview()).rejects.toThrow('annulé');
+    await vi.waitFor(() => expect(complete).toBeDefined());
+    audio.setHidden(true); complete!(new Response(new Uint8Array([1])));
+    await preview;
+    expect(FakeContext.latest.sources).toHaveLength(0);
+    audio.dispose();
+  });
 
   it('plays decoded interface cues during pause through the common SFX mix without another unlock', async () => {
     vi.stubGlobal('AudioContext', FakeContext);
@@ -877,7 +982,7 @@ describe('explicit sound preview and failed asset recovery', () => {
     await audio.unlock();
     expect(audio.loadedCount).toBe(1);
     await audio.playPreview();
-    expect(audio.loadedCount).toBe(2);
+    await vi.waitFor(() => expect(audio.loadedCount).toBe(2));
     expect(attempts.get('/assets/audio/sfx/cooking.mp3')).toBe(2);
     expect(attempts.get('/assets/audio/sfx/mining.mp3')).toBe(1);
     await audio.playPreview();

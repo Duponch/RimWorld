@@ -7,7 +7,7 @@ import {validCookingOrder} from '../src/sim/player-cooking-save.ts';
 import {planCookingOrder} from '../src/sim/player-cooking.ts';
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {foodWorkstationCamp,fixtureFoodStation} from './scenarios/food-workstations.ts';
-import {withoutPlantsSkill} from './scenarios/legacy-skills.ts';
+import { withoutPlantsSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import {withoutPredatorFoodPolicies,withoutPredatorApparelPolicies} from './scenarios/legacy-save.ts';
 
 const RECIPE='cook-fine-meal-bulk' as const;
@@ -21,17 +21,17 @@ function prepared():World {
 }
 function declared160(world:World):World {
   const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));
-  (old as {schemaVersion:number}).schemaVersion=160;
+  (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),160);
   return old;
 }
 
 test('V160 migrates neutrally, but rejects the future fine bulk bill on active and packed stoves',()=>{
   const old=declared160(foodWorkstationCamp()),before=structuredClone(old);
   const loaded=deserializeWorld(JSON.stringify(old));
-  expect(loaded).toEqual({...before,schemaVersion:SCHEMA_VERSION});
+  expect(loaded).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
   expect(old).toEqual(before);
   expect(loaded.rng).toBe(before.rng);
-  const control={...structuredClone(before),schemaVersion:SCHEMA_VERSION} as World;
+  const control=withMigratedTelevisionRecreation({...structuredClone(before),schemaVersion:SCHEMA_VERSION}) as World;
   stepWorld(loaded,20);stepWorld(control,20);expect(loaded).toEqual(control);
 
   const active=declared160(prepared());

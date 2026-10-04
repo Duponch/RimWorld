@@ -1,7 +1,7 @@
 /** Local worker-path profile on one migrated, mixed 250x250 save.
  *
  * Run with: node --experimental-strip-types scripts/profile-worker-v146.ts
- * Optional: --warmup=20 --ticks=60
+ * Optional: --warmup=20 --ticks=60 --output=tmp/profile-worker-v146.json
  * This deliberately publishes one snapshot per tick. It is not the native
  * worker's event/clock-driven publication frequency or a browser benchmark.
  */
@@ -11,6 +11,7 @@ import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { performance } from 'node:perf_hooks';
 import { gunzipSync } from 'node:zlib';
+import { dirname, resolve, sep } from 'node:path';
 import { MotionRecorder } from '../src/bridge/motion-tracks.ts';
 import { AudioCueRecorder } from '../src/bridge/audio-cues.ts';
 import { PresentationChanges } from '../src/bridge/presentation-changes.ts';
@@ -18,7 +19,11 @@ import { SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { deserializeWorld, stepWorld } from '../src/sim/index.ts';
 
 const SAVE_PATH = 'public/test-saves/v98/mixed-100.json';
-const OUTPUT_PATH = 'tmp/profile-worker-v146.json';
+const outputArguments = process.argv.slice(2).filter(arg => arg.startsWith('--output='));
+if (outputArguments.length > 1) throw new Error('--output may be supplied only once.');
+const OUTPUT_PATH = outputArguments[0]?.slice('--output='.length) ?? 'tmp/profile-worker-v146.json';
+if (!resolve(OUTPUT_PATH).startsWith(`${resolve('tmp')}${sep}`) || !OUTPUT_PATH.endsWith('.json'))
+  throw new Error('--output must identify a JSON file inside tmp/.');
 const STAGES = [
   'stepWorld', 'motionCapture', 'audioCapture', 'presentationChangesCapture',
   'snapshotEncode', 'motionSnapshot', 'structuredCloneProxy', 'total',
@@ -39,7 +44,7 @@ function integerOption(name: string, fallback: number, minimum: number, maximum:
   return value;
 }
 for (const arg of process.argv.slice(2)) {
-  if (!/^--(?:warmup|ticks)=/.test(arg)) throw new Error(`Unknown option: ${arg}`);
+  if (!/^--(?:warmup|ticks|output)=/.test(arg)) throw new Error(`Unknown option: ${arg}`);
 }
 const warmup = integerOption('warmup', 20, 0, 500);
 const ticks = integerOption('ticks', 60, 1, 500);
@@ -128,7 +133,7 @@ const report = {
     deltas: measured.filter(row => row.kind === 'delta').length },
   millisecondsPerTick: Object.fromEntries(STAGES.map(stage => [stage, summarize(measured.map(row => row[stage]))])),
 };
-mkdirSync('tmp', { recursive: true });
+mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
 writeFileSync(OUTPUT_PATH, `${JSON.stringify(report, null, 2)}\n`);
 console.log(JSON.stringify({ output: OUTPUT_PATH, measuredRange: report.measuredRange,
   millisecondsPerTick: report.millisecondsPerTick }, null, 2));

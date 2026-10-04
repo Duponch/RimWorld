@@ -29,17 +29,20 @@ describe('stable management panel layouts',()=>{
 
   test('research graph contains only playable projects and physical prerequisite links',()=>{
     const ids=researchProjects.map(project=>project.id);
-    expect(ids).toHaveLength(17);
+    expect(ids).toHaveLength(20);
+    expect(ids).toContain('hospital-bed');expect(ids).toContain('packaged-survival-meals');expect(ids).toContain('tube-television');
     expect(ids).toContain('autodoors');
     expect(ids).toContain('recon-armor');
     expect(new Set(ids).size).toBe(ids.length);
     expect(researchLinks).toEqual([
+      ['complex-furniture','tube-television'],
       ['smithing','machining'],['machining','gunsmithing'],
       ['smithing','plate-armor'],['complex-clothing','plate-armor'],
       ['machining','flak-armor'],['plate-armor','flak-armor'],
       ['microelectronics','multi-analyzer'],['machining','multi-analyzer'],['multi-analyzer','fabrication'],
       ['fabrication','advanced-fabrication'],['fabrication','recon-armor'],
       ['complex-clothing','recon-armor'], // Existing physical prerequisite shown since V199.
+      ['microelectronics','hospital-bed'],['complex-furniture','hospital-bed'],
     ]);
     for(const [from,to] of researchLinks){expect(ids).toContain(from);expect(ids).toContain(to);}
     expect(worldStyles).toContain('#research-panel .research-graph');

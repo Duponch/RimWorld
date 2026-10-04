@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
+import { withoutMiningSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { createScenarioWorld } from '../src/sim/new-game';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization';
 import { SnapshotDecoder, SnapshotEncoder } from '../src/bridge/snapshots';
@@ -10,10 +10,10 @@ import { withoutPredatorFoodPolicies, withoutPredatorApparelPolicies } from './s
 
 function historicalAridWorld():World {
   const current=createScenarioWorld(42,32,'crashlanded',{biome:'arid-shrubland',hilliness:'small-hills'});
-  const legacy=withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(current)) as World)));
+  const legacy=withoutTelevisionRecreation(withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(current)) as World))));
   delete legacy.miscIncidents;
   for(const pawn of legacy.pawns)delete pawn.skills.plants;
-  legacy.schemaVersion=166 as World['schemaVersion'];
+  legacy.schemaVersion=(withoutTelevisionRecreation(legacy),166) as World['schemaVersion'];
   // Construct the pre-predator ecological profile under its own version. Do
   // not relabel an already generated v2 population or remove individual foxes.
   delete legacy.wildlife;
@@ -27,7 +27,7 @@ test('V166 is validated before a neutral V167 migration with no retrospective ac
   const legacy = historicalAridWorld();
   const before = JSON.stringify(legacy);
   const migrated = deserializeWorld(before);
-  expect(migrated).toEqual({ ...legacy, schemaVersion: SCHEMA_VERSION });
+  expect(migrated).toEqual(withMigratedTelevisionRecreation({ ...legacy, schemaVersion: SCHEMA_VERSION }));
   expect(validateWorld(migrated)).toEqual([]);
   expect(JSON.stringify(legacy)).toBe(before);
   const invalid = { ...legacy, rng: 0 };

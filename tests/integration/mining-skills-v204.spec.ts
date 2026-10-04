@@ -79,8 +79,8 @@ test('Minage V204 : profil, XP au contact, coup rapide repris et métal physique
     await expect(page.locator('#game-tooltip')).toBeVisible();await expect(page.locator('#game-tooltip')).toContainText(`${(working.skills.mining!.xp/1000).toFixed(1)} /`);
     await page.screenshot({path:testOutputPath('artifacts/mining-v204-contact-xp.png')});
     await panel(page,'menu');await page.locator('#save').click();
-    await expect.poll(()=>page.evaluate(key=>{const raw=localStorage.getItem(key);return raw?JSON.parse(raw).tick:null;},saveKey)).toBe(checkpoint.tick);
-    const saved=deserializeWorld((await page.evaluate(key=>localStorage.getItem(key),saveKey))!);expect(saved).toEqual(checkpoint);
+    await expect.poll(()=>page.evaluate(key=>{const raw=window.__lisiere.saveRepository.peekItem(key);return raw?JSON.parse(raw).tick:null;},saveKey)).toBe(checkpoint.tick);
+    const saved=deserializeWorld((await page.evaluate(key=>window.__lisiere.saveRepository.peekItem(key),saveKey))!);expect(saved).toEqual(checkpoint);
     await page.locator('#load').click();await expectWorld(page,saved);await page.keyboard.press('Escape');
     await page.locator('[data-speed="6"]').click();await page.waitForFunction(index=>window.__lisiere.world.tiles[index]!.terrain==='rough-stone',index);
     await page.waitForFunction(store=>{

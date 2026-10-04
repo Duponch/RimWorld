@@ -101,7 +101,7 @@ test('V199 native prepared UI: real policies, independent filters, anatomical/it
     await expect(page.locator('[data-research-selection-prerequisites]')).toContainText('Vêtements complexes');
     await page.screenshot({path:testOutputPath('artifacts/ui-v199-research.png')});
     const domestic=domesticColony();expect(validateWorld(domestic)).toEqual([]);
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(domestic)});
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(domestic)});
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,domestic);await page.keyboard.press('Escape');
     await page.locator('[data-panel="animals"]').click();await expect(page.locator('[data-domestic-list] thead th')).toHaveCount(8);
     await expect(page.locator('[data-domestic-animal]')).toHaveCount(1);await page.screenshot({path:testOutputPath('artifacts/ui-v199-animals.png')});
@@ -131,7 +131,7 @@ test('V199 native prepared human inspection keeps captive/hostile permissions an
     await page.locator(`[data-pawn="${prepared.actorId}"]`).click();await expect(page.locator('[data-colonist-tab="bio"]')).toHaveAttribute('aria-selected','true');
     await expect(page.locator('[data-colonist-tab="prisoner"]')).toHaveCount(0);
     const hostile=prisonerUiFixture();expect(validateWorld(hostile.world)).toEqual([]);
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(hostile.world)});
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(hostile.world)});
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,hostile.world);await page.keyboard.press('Escape');
     await inspectPerson(page,hostile.patientId,'health');
     await expect(page.locator('[data-colonist-tab]')).toHaveCount(6);

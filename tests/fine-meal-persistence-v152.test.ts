@@ -10,7 +10,7 @@ import { stepWorld } from '../src/sim/engine.ts';
 import { SCHEMA_VERSION, type World } from '../src/sim/types.ts';
 import { medicalCamp } from './scenarios/health.ts';
 import { fixtureFoodStation } from './scenarios/food-workstations.ts';
-import { withoutPlantsSkill } from './scenarios/legacy-skills.ts';
+import { withoutPlantsSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import {withoutPredatorFoodPolicies,withoutPredatorApparelPolicies} from './scenarios/legacy-save.ts';
 
 function declared150():World {
@@ -18,7 +18,7 @@ function declared150():World {
   for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   withoutPlantsSkill(world);
   withoutPredatorFoodPolicies(world);withoutPredatorApparelPolicies(world);
-  (world as {schemaVersion:number}).schemaVersion=150;
+  (world as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(world),150);
   return world;
 }
 function rejected(change:(world:World)=>void):void {
@@ -29,13 +29,13 @@ function rejected(change:(world:World)=>void):void {
 test('V150 to V152 is neutral for policies, spoilage, memories, tasks and PRNG',()=>{
   const old=declared150(),before=structuredClone(old);
   const loaded=deserializeWorld(JSON.stringify(old));
-  expect(loaded).toEqual({...before,schemaVersion:SCHEMA_VERSION});
+  expect(loaded).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
   expect(old).toEqual(before);
   expect(loaded.foodPolicies).toEqual(before.foodPolicies);
   expect(loaded.spoiled).toEqual(before.spoiled);
   expect(loaded.rng).toBe(before.rng);
   expect(validateWorld(loaded)).toEqual([]);
-  (before as {schemaVersion:number}).schemaVersion=SCHEMA_VERSION;
+  Object.assign(before,withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
   stepWorld(loaded,60);stepWorld(before,60);
   expect(loaded).toEqual(before);
 });

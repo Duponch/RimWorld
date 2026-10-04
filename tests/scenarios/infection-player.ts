@@ -5,6 +5,7 @@ import { defaultSchedule } from '../../src/sim/schedule.ts';
 import { newDoorState } from '../../src/sim/door-rules.ts';
 import { activeThreat, isColonist } from '../../src/sim/affiliation.ts';
 import { queryOrderOptions } from '../../src/sim/player-orders.ts';
+import { addGroundMaterial } from '../../src/sim/materials.ts';
 import type { World } from '../../src/sim/types.ts';
 import type { Decision } from './colony-player.ts';
 
@@ -27,6 +28,11 @@ export function infectionCamp(seed=11):World {
   }
   w.roofing={constructed:[],build:[],remove:[],cursor:0};
   for(let z=23;z<=29;z++)for(let x=2;x<=13;x++)w.roofing.constructed.push(z*w.width+x);
+  // The observed patient's food binge consumed 26 of the original 30 rations,
+  // leaving the doctor hungry during convalescence. Prepare a finite clinic
+  // reserve at departure, on free floor after placing the beds and walls;
+  // crises, ingestion and the food ledger remain real, without later refill.
+  addGroundMaterial(w,'food',30,{x:10,z:27},'survival-meal');
   return w;
 }
 

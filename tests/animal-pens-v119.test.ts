@@ -7,7 +7,7 @@ import {refreshStock} from '../src/sim/materials.ts';
 import {damageStructure} from '../src/sim/thing-damage.ts';
 import {structureMaxHp} from '../src/sim/thing-damage-rules.ts';
 import {legacyHumanAge} from '../src/sim/human-age.ts';
-import {withoutFutureFineMealPolicy} from './scenarios/legacy-skills.ts';
+import { withoutFutureFineMealPolicy, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import type {Structure,World} from '../src/sim/types.ts';
 
 function fencedWorld(){
@@ -61,7 +61,7 @@ test('marker species choice is atomic, persisted, and old saves migrate without 
   expect(serializeWorld(world)).toBe(after);
   const historical=JSON.parse(before) as World;
   withoutFutureFineMealPolicy(historical);
-  historical.structures=[];historical.schemaVersion=109 as never;
+  historical.structures=[];historical.schemaVersion=(withoutTelevisionRecreation(historical),109) as never;
   delete historical.breakdown;
   for(const pawn of historical.pawns){
     delete pawn.age;
@@ -76,9 +76,9 @@ test('marker species choice is atomic, persisted, and old saves migrate without 
     allowedItems:policy.allowedItems.filter(item=>!item.startsWith('muffalo-wool-')&&item!=='flak-helmet'&&item!=='recon-helmet'),
     allowedMaterials:policy.allowedMaterials.filter(material=>material!=='muffalo-wool')}));
   const migrated=deserializeWorld(JSON.stringify(historical));
-  expect(migrated).toEqual({...historical,schemaVersion:world.schemaVersion,breakdown:world.breakdown,pawns:historical.pawns.map(pawn=>({...pawn,age:legacyHumanAge(),recreation:{
+  expect(migrated).toEqual(withMigratedTelevisionRecreation({...historical,schemaVersion:world.schemaVersion,breakdown:world.breakdown,pawns:historical.pawns.map(pawn=>({...pawn,age:legacyHumanAge(),recreation:{
     ...pawn.recreation,tolerance:{...pawn.recreation.tolerance,cerebral:0,social:0},bored:{...pawn.recreation.bored,cerebral:false,social:false}
-  }}))});
+  }}))}));
   expect(migrated.structures).toEqual([]);
 });
 

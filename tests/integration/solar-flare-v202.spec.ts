@@ -48,8 +48,8 @@ test('V202 public flare letter, power inspection, exact active save and physical
     await expect(page.locator(`[data-power-id="${batteryId}"]`)).toContainText('réserve conservée');
     await page.screenshot({path:testOutputPath('artifacts/solar-flare-v202-off-iso.png')});
     await panel(page,'menu');await page.locator('#save').click();
-    await expect.poll(()=>page.evaluate(key=>{const raw=localStorage.getItem(key);return raw?JSON.parse(raw).tick:null;},saveKey)).toBe(off.tick);
-    const saved=deserializeWorld((await page.evaluate(key=>localStorage.getItem(key),saveKey))!);expect(saved).toEqual(off);
+    await expect.poll(()=>page.evaluate(key=>{const raw=window.__lisiere.saveRepository.peekItem(key);return raw?JSON.parse(raw).tick:null;},saveKey)).toBe(off.tick);
+    const saved=deserializeWorld((await page.evaluate(key=>window.__lisiere.saveRepository.peekItem(key),saveKey))!);expect(saved).toEqual(off);
     await page.locator('#load').click();await expectWorld(page,saved);await page.keyboard.press('Escape');
     await expect(page.locator('#solar-flare-letter')).toContainText('Éruption solaire');
     await page.locator('[data-speed="6"]').click();await page.waitForFunction(()=>!window.__lisiere.world.worldIncidents?.active);

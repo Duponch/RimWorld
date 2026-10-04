@@ -39,11 +39,11 @@ test('Planning : peindre, annuler, clavier, copier, reprendre et réveiller phys
     await expect.poll(async()=>(await world(page)).pawns[0]!.state).not.toBe('sleeping');await page.keyboard.press('Space');
     const awake=await world(page);expect([awake.pawns[0]!.x,awake.pawns[0]!.z]).toEqual([13,13]);expect(validateWorld(awake)).toEqual([]);
     const old=withoutPostV11Fields(JSON.parse(serializeWorld(awake)));(old.schemaVersion=11,withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;delete a.motion;a.moveCooldown=0;}delete old.deconstructed;delete old.packed;
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(old)});
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:JSON.stringify(old)});
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,deserializeWorld(JSON.stringify(old)));
     await panel(page,'schedule');await expect(page.locator('#schedule-profile')).toContainText('Sauvegarde historique');
     const legacy=await world(page),bad=structuredClone(legacy);bad.pawns[0]!.schedule[0]='joy' as never;
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:JSON.stringify(bad)});await panel(page,'menu');await page.locator('#load').click();
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:JSON.stringify(bad)});await panel(page,'menu');await page.locator('#load').click();
     await expect(page.locator('#notice')).toHaveClass(/error/);await expectWorld(page,legacy);await expect(page.locator('#fps-counter')).toBeVisible();
     expect(errors).toEqual([]);await testInfo.attach('schedule-result',{contentType:'application/json',body:JSON.stringify({tick:awake.tick,configured:configured.pawns.map(p=>p.schedule),sleepObserved:true,workWake:true,migration:11,errors})});
   } finally {await browser.close();}

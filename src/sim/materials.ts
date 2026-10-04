@@ -1,4 +1,5 @@
 import { commercialReservedQuantity,commercialReservedSources } from './commercial-reservations.ts';
+import { removeIdentity } from './collection-remove.ts';
 import { pawnContentsLocation } from './human-corpses.ts';
 import { mergePileContamination } from './pile-condition.ts';
 import { isColonist } from './affiliation.ts';
@@ -92,11 +93,12 @@ export function addGroundMaterial(world: World, kind: MaterialKind, quantity: nu
 }
 /** Move the existing stack, merging only when possible. No allocation or identity budget needed. */
 export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):boolean {
+  if(!world.piles.includes(pile))return false;
   if(pile.kind==='corpse'&&owner.type!=='ground'&&owner.type!=='pawn')return false;
   const carrier=pile.owner.type==='pawn'?pile.owner.pawnId:undefined;
   if(owner.type==='ground'&&groundCapacity(world,owner,pile.item,carrier)<pile.quantity)return false;
   const target=world.piles.find(p=>p!==pile&&p.item===pile.item&&sameOwner(p.owner,owner)&&p.quantity+pile.quantity<=ITEM_DEFINITIONS[pile.item].stackLimit);
-  if(target){mergePileContamination(target,pile.quantity,pile.foodPoison);mergeThingDamage(target,pile.quantity,pile.damage);mergeRot(target,pile.quantity,rotAge(pile,world.tick),world.tick);target.quantity+=pile.quantity;world.piles.splice(world.piles.indexOf(pile),1);}else pile.owner={...owner};
+  if(target){mergePileContamination(target,pile.quantity,pile.foodPoison);mergeThingDamage(target,pile.quantity,pile.damage);mergeRot(target,pile.quantity,rotAge(pile,world.tick),world.tick);target.quantity+=pile.quantity;removeIdentity(world.piles,pile);}else pile.owner={...owner};
   refreshStock(world);return true;
 }
 export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {

@@ -1,5 +1,6 @@
 import { cookingSpot } from './cooking-bills.ts';
-import { footprintCells } from './definitions.ts';
+import { researchFacilityDistance,researchFacilityLinked } from './research-facilities.ts';
+import { CleanlinessCapture } from './filth-room.ts';
 import { isPowerActive } from './power-rules.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { deconstructionReserved } from './deconstruction-rules.ts';
@@ -58,21 +59,19 @@ export const clothingUnlocked=(world:World):boolean=>world.research?.completedAt
 export const intellectualSkill=(pawn:Pawn):SkillRecord=>pawn.skills.intellectual??{level:0,xp:0,dailyXp:0,passion:0};
 export const researchWanted=(world:World,pawn:Pawn):boolean=>!!world.research?.project&&pawn.priorities.research>0;
 export const needsHighTechBench=(project:ResearchProject):boolean=>project==='hospital-bed'||project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor';
-/** A facility may serve a desk at most nine cells away, measured between
- * occupied cells. Only decisions and assigned work call this bounded query. */
-export function nearbyResearchFacility(world:World,station:Structure,reserved?:ReadonlySet<number>):Structure|undefined {
-  const cells=footprintCells(station);
-  return world.structures.find(s=>s.kind==='multi-analyzer'&&!reserved?.has(s.id)&&isPowerActive(s)&&footprintCells(s).some(a=>cells.some(b=>{const dx=a.x-b.x,dz=a.z-b.z;return dx*dx+dz*dz<=81;})));
+/** The nearest usable analyzer supplies one link per desk, with shared use. */
+export function nearbyResearchFacility(world:World,station:Structure):Structure|undefined {
+  const linked=world.structures.filter(s=>s.kind==='multi-analyzer'&&researchFacilityLinked(world,station,s))
+    .sort((a,b)=>researchFacilityDistance(station,a)-researchFacilityDistance(station,b)||a.x-b.x||a.z-b.z||a.id-b.id)[0];
+  return linked&&isPowerActive(linked)?linked:undefined;
 }
 export function researchStationUsable(world:World,station:Structure,project:ResearchProject,facilityId?:number):boolean {
   if(station.kind!=='research-bench'&&station.kind!=='hi-tech-research-bench')return false;
   if(needsHighTechBench(project)&&(station.kind!=='hi-tech-research-bench'||!isPowerActive(station)))return false;
   if(station.kind==='hi-tech-research-bench'&&!isPowerActive(station))return false;
   if(project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor'){
-    const facility=facilityId===undefined?nearbyResearchFacility(world,station):world.structures.find(s=>s.id===facilityId);
-    if(!facility||facility.kind!=='multi-analyzer'||!isPowerActive(facility))return false;
-    const desk=footprintCells(station),analyzer=footprintCells(facility);
-    if(!analyzer.some(a=>desk.some(b=>{const dx=a.x-b.x,dz=a.z-b.z;return dx*dx+dz*dz<=81;})))return false;
+    const facility=nearbyResearchFacility(world,station);
+    if(!facility||facilityId!==undefined&&facility.id!==facilityId)return false;
   }
   return true;
 }
@@ -92,32 +91,51 @@ export function researchProposal(world:World,pawn:Pawn,reach:Reachability):{task
   if(!researchWanted(world,pawn))return null;
   const project=world.research!.project!;
   const reserved=reservedServiceCells(world,pawn.id);
-  const reservedFacilities=new Set(world.pawns.filter(p=>p!==pawn&&p.research?.facilityId!==undefined).map(p=>p.research!.facilityId!));
   const stations=world.structures.filter(s=>(s.kind==='research-bench'||s.kind==='hi-tech-research-bench')&&researchStationUsable(world,s,project)&&!deconstructionReserved(world,s.id,pawn.id)&&!world.pawns.some(p=>p!==pawn&&p.research?.stationId===s.id))
     .sort((a,b)=>Math.abs(a.x-pawn.x)+Math.abs(a.z-pawn.z)-Math.abs(b.x-pawn.x)-Math.abs(b.z-pawn.z)||a.id-b.id);
   for(const s of stations){const spot=cookingSpot(s);if(reserved.has(spot.z*world.width+spot.x)||!canStandAt(world,spot))continue;
-    const facility=s.kind==='hi-tech-research-bench'?nearbyResearchFacility(world,s,reservedFacilities):undefined;
+    const facility=s.kind==='hi-tech-research-bench'?nearbyResearchFacility(world,s):undefined;
     if((project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor')&&!facility)continue;
     const path=routeToJob(world,spot,reach,true);if(path)return {task:{stationId:s.id,spot,worked:0,...(facility?{facilityId:facility.id}:{})},path};
   }return null;
 }
-/** Integer micro-points persist the work done. Absent filth/floors use the
- * documented neutral indoor cleanliness; outdoors retains its own penalty. */
-export function researchRate(pawn:Pawn,station:Structure,environment:WorkEnvironment,temperature:number):number {
+interface ResearchCleanlinessRead {capture:CleanlinessCapture;items:NonNullable<World['filth']>['items']|undefined;count:number}
+const cleanlinessCaptures=new WeakMap<WorkEnvironment,ResearchCleanlinessRead>();
+function researchCleanliness(world:World,station:Structure,environment:WorkEnvironment):number|null {
+  const items=world.filth?.items,count=items?.length??0;
+  let read=cleanlinessCaptures.get(environment);
+  // Actual deposits append traces and removals replace the array. Their
+  // identity/count is an O(1) revision; thickness does not alter this score.
+  // Topology/light remain immutable decision inputs, while filth is live.
+  if(!read||read.items!==items||read.count!==count){read={capture:new CleanlinessCapture(world,environment.topology),items,count};cleanlinessCaptures.set(environment,read);}
+  return read.capture.room(station)?.cleanliness??null;
+}
+export function researchCleanlinessFactor(cleanliness:number|null):number {
+  if(cleanliness===null)return .75;
+  if(cleanliness<=-5)return .75;if(cleanliness>=1)return 1.15;
+  if(cleanliness<-2.5)return .75+(cleanliness+5)*.04;
+  if(cleanliness<0)return .85+(cleanliness+2.5)*.06;
+  return 1+cleanliness*.15;
+}
+/** Integer micro-points persist work. Room stats reuse the current environment
+ * topology and one lazily computed cleanliness result per requested room. */
+export function researchRate(pawn:Pawn,station:Structure,environment:WorkEnvironment,temperature:number,world:World):number {
   const c=pawnBody(pawn).capacities,skill=intellectualSkill(pawn);
   const personal=Math.max(.1,(.08+.115*skill.level)*(.5+.5*Math.min(1.1,c.manipulation))*(.5+.5*Math.min(1.1,c.sight))*environment.speedAt(pawn));
   const room=environment.room(station),outdoor=room?.psychologicallyOutdoors??true;
-  const bench=Math.max(.25,(station.kind==='hi-tech-research-bench'?1.5:.75)*(outdoor?.9:1)*(outdoor?.75:1)*(room&&!outdoor&&room.role!=='laboratory'?.8:1)*tailoringTemperatureFactor(temperature));
+  let cleanliness:number|null=outdoor?null:0;
+  if(!outdoor)cleanliness=researchCleanliness(world,station,environment);
+  const facilityOffset=nearbyResearchFacility(world,station)?.kind==='multi-analyzer'?.1:0;
+  const bench=Math.max(.25,((station.kind==='hi-tech-research-bench'?1:.75)+facilityOffset)*(outdoor?.75:1)*researchCleanlinessFactor(cleanliness)*(room&&!outdoor&&room.role!=='laboratory'?.8:1)*tailoringTemperatureFactor(temperature));
   return Math.round(.0825*personal*bench*RESEARCH_SCALE);
 }
 export function processResearch(world:World,pawn:Pawn,move:(target:Cell,exact:boolean)=>unknown,rate:(s:Structure)=>number,event:(text:string)=>void):void {
   const task=pawn.research!,station=world.structures.find(s=>s.id===task.stationId);
-  if(medicalWorkRefusal(pawn)||!station||!researchWanted(world,pawn)||(world.research!.project==='fabrication'||world.research!.project==='advanced-fabrication'||world.research!.project==='recon-armor')&&task.facilityId===undefined||task.facilityId!==undefined&&world.pawns.some(p=>p!==pawn&&p.research?.facilityId===task.facilityId)||!researchStationUsable(world,station,world.research!.project!,task.facilityId)||deconstructionReserved(world,station.id,pawn.id)||!canStandAt(world,task.spot)){releaseAssignments(world,pawn);return;}
+  if(medicalWorkRefusal(pawn)||!station||!researchWanted(world,pawn)||(world.research!.project==='fabrication'||world.research!.project==='advanced-fabrication'||world.research!.project==='recon-armor')&&task.facilityId===undefined||!researchStationUsable(world,station,world.research!.project!,task.facilityId)||deconstructionReserved(world,station.id,pawn.id)||!canStandAt(world,task.spot)){releaseAssignments(world,pawn);return;}
   if(pawn.x!==task.spot.x||pawn.z!==task.spot.z){move(task.spot,true);return;}
   pawn.path=[];pawn.state='working';
   const state=world.research!,project=state.project!,progress=projectProgress(state,project),cost=researchCost(project);
-  const analyzerBonus=task.facilityId!==undefined&&(project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor'||researchStationUsable(world,station,'fabrication',task.facilityId))?1.1:1;
-  progress.points=Math.min(cost,progress.points+Math.round(rate(station)*analyzerBonus));
+  progress.points=Math.min(cost,progress.points+rate(station));
   pawn.skills.intellectual??={...intellectualSkill(pawn)};learnSkill(pawn.skills.intellectual,1000,pawn);task.worked++;
   if(progress.points===cost){state.project=null;progress.completedAt=world.tick;
     for(const p of world.pawns)if(p.research)releaseAssignments(world,p);

@@ -29,7 +29,7 @@ test('native ordinary-camp raid: letter, rally, visible combat, saved continuati
     await page.goto('/?scenario=camp&e2e&size=250');await expect(page.locator('[data-speed="0"]')).toBeVisible({timeout:15000});await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#save').click();await page.keyboard.press('Escape');
     for(const speed of [1,6]){
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
       await expect(page.locator('#raid-letter')).toContainText('Raid');await page.locator('#raid-letter').click();await expect(page.locator('#raid-dialog')).toContainText('Mobilisez');await page.locator('#locate-raid').click();
       for(const p of initial.pawns.filter(isColonist)){await page.locator(`[data-pawn="${p.id}"]`).click();await page.locator('#toggle-draft').click();}

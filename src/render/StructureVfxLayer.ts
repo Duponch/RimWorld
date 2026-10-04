@@ -288,7 +288,7 @@ export class StructureVfxLayer {
     this.projection.copy(camera.projectionMatrix);
     this.projection.elements[0]!*=.78;this.projection.elements[5]!*=.78;
     this.viewProjection.multiplyMatrices(this.projection,camera.matrixWorldInverse);
-    this.frustum.setFromProjectionMatrix(this.viewProjection);
+    this.frustum.setFromProjectionMatrix(this.viewProjection, camera.coordinateSystem, camera.reversedDepth);
     const nearest:FireCandidate[]=[];
     for(const chunk of this.fireChunks){
       this.chunkSphere.center.set(chunk.x+7.5,4,chunk.z+7.5);

@@ -1,4 +1,6 @@
-import { isColonist } from '../../src/sim/affiliation.ts';
+import { activeThreat,hostileTo,isColonist } from '../../src/sim/affiliation.ts';
+import { equippedWeapon } from '../../src/sim/equipment-rules.ts';
+import { isRoomDoor } from '../../src/sim/door-rules.ts';
 import { canDesignate } from '../../src/sim/engine.ts';
 import { footprintCells } from '../../src/sim/definitions.ts';
 import { requiredMaterial } from '../../src/sim/construction-materials.ts';
@@ -62,12 +64,35 @@ export function energyDecisions(w:World,s:EnergyPlayerState):Decision[] {
   const base=crashlandedDecisions(w);
   if(w.raids?.active){
     const people=w.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed'&&!p.mental?.crisis);
-    if(people.some(p=>!p.draft)){
-      const a=survivorPlan(w,true).anchor,civilians=people.filter(p=>!w.piles.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id)),posts=[{x:a.x+1,z:a.z+3},{x:a.x+3,z:a.z+3}];
-      return [{reason:'La lettre annonce une attaque : mobiliser toutes les personnes présentes afin qu’aucune ne poursuive son travail dans la ligne de tir.',command:{type:'draft',pawnIds:people.map(p=>p.id),enabled:true}},
-        ...civilians.map((p,i)=>({reason:'Rassembler les habitants non armés dans la chambre construite, sans déplacer la personne qui couvre leur retraite.',command:{type:'draft-move' as const,pawnIds:[p.id],target:posts[i]!,queue:false}}))];
+    if(people.some(p=>!p.draft))return [{reason:'La lettre annonce une attaque : mobiliser toutes les personnes présentes afin qu’aucune ne poursuive son travail dans la ligne de tir.',command:{type:'draft',pawnIds:people.map(p=>p.id),enabled:true}}];
+    // The shared animal policy already selects its physical retreat and target.
+    if(w.wildlife?.animals.some(a=>a.manhunter&&a.state!=='dead'&&a.state!=='downed'))return base;
+    const camp=survivorPlan(w,true),out=[...base],armed=people.filter(p=>equippedWeapon(w,p)),civilians=people.filter(p=>!equippedWeapon(w,p));
+    const hostile=w.pawns.filter(p=>people.some(actor=>hostileTo(actor,p))&&activeThreat(p));
+    const inside=(c:Cell,a:Cell)=>c.x>a.x&&c.x<a.x+4&&c.z>a.z&&c.z<a.z+4;
+    const buildings=new Map(w.structures.map(q=>[q.z*w.width+q.x,q]));
+    const enclosed=(a:Cell)=>{
+      if(a.x<0||a.z<0||a.x+4>=w.width||a.z+4>=w.height||hostile.some(p=>inside(p,a)))return false;
+      for(let z=0;z<5;z++)for(let x=0;x<5;x++)if(x===0||z===0||x===4||z===4){
+        const cell=at(a,x,z),building=buildings.get(cell.z*w.width+cell.x);
+        if(w.tiles[cell.z*w.width+cell.x]!.terrain==='rock')continue;
+        if(building?.kind==='wall'||building?.kind==='cooler')continue;
+        if(building&&isRoomDoor(building.kind)&&!building.door?.holdOpen&&!building.door?.forbidden)continue;
+        return false;
+      }
+      return true;
+    };
+    // Recheck the actual sixteen boundary cells, including a fresh breach. The
+    // other two candidates are existing energy rooms, never an instant refuge.
+    const refuge=[camp.anchor,...(s?.origin?[s.origin,at(s.origin,0,7)]:[])].find(enclosed);
+    if(refuge)for(const [i,p] of civilians.entries()){
+      const target=at(refuge,1+i%3,3);
+      if(!p.draft?.target||p.draft.target.x!==target.x||p.draft.target.z!==target.z)
+        out.push({reason:'Rejoindre physiquement une pièce encore fermée et sans assaillant; quitter un abri percé au lieu d’y attendre au contact.',command:{type:'draft-move',pawnIds:[p.id],target,queue:false}});
     }
-    return base;
+    for(const p of armed)if(!p.shooting?.order&&!p.melee?.order&&(p.x!==camp.pin.x||p.z!==camp.pin.z)&&(!p.draft?.target||p.draft.target.x!==camp.pin.x||p.draft.target.z!==camp.pin.z))
+      out.push({reason:'Rejoindre le poste réel devant le dortoir afin de couvrir la retraite avec l’arme équipée.',command:{type:'draft-move',pawnIds:[p.id],target:camp.pin,queue:false}});
+    return out;
   }
   if(w.pawns.some(p=>p.draft)||base.some(d=>d.command.type.startsWith('order-tend')||d.command.type==='order-feed'||d.command.type==='order-rescue'))return base;
   const out=base.filter(d=>d.command.type!=='priority'),p=energyPlan(s),colonists=w.pawns.filter(isColonist),builder=colonists.reduce((a,b)=>a.skills.construction.level>=b.skills.construction.level?a:b),cook=colonists.reduce((a,b)=>(a.skills.cooking?.level??0)>=(b.skills.cooking?.level??0)?a:b),grower=colonists.find(q=>q!==builder&&q!==cook)!;

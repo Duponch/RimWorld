@@ -1,5 +1,5 @@
 import { expect,test } from 'vitest';
-import { withoutMiningSkill,withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
+import { withoutMiningSkill, withoutPredatorDefaults, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { applyCommand,stepWorld } from '../src/sim/engine.ts';
 import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serialization.ts';
 import { SnapshotDecoder,SnapshotEncoder } from '../src/bridge/snapshots.ts';
@@ -27,9 +27,9 @@ function prepared() {
 }
 
 test('strict schema 175 rejects future quality and PV fields before a neutral 176 migration',()=>{
-  const old=withoutPredatorDefaults(withoutMiningSkill(camp()));command(old,{type:'stockpile',enabled:true,x:15,z:10,filters:{wood:true,food:true},priority:2});
-  old.schemaVersion=175 as World['schemaVersion'];const before=structuredClone(old);
-  const resumed=deserializeWorld(JSON.stringify(old));expect(resumed).toEqual({...before,schemaVersion:SCHEMA_VERSION});
+  const old=withoutPredatorDefaults(withoutTelevisionRecreation(withoutMiningSkill(camp())));command(old,{type:'stockpile',enabled:true,x:15,z:10,filters:{wood:true,food:true},priority:2});
+  old.schemaVersion=(withoutTelevisionRecreation(old),175) as World['schemaVersion'];const before=structuredClone(old);
+  const resumed=deserializeWorld(JSON.stringify(old));expect(resumed).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
   expect(old).toEqual(before);expect(resumed.stockpiles[0]!.quality).toBeUndefined();expect(resumed.stockpiles[0]!.hitPoints).toBeUndefined();
   for(const change of [
     (w:World)=>{w.stockpiles[0]!.quality={min:'awful',max:'legendary'};},

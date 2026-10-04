@@ -19,7 +19,7 @@ test('native night attack at 1×/6×: real impact, sleeping GPU pose, physical w
     await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     await panel(page,'menu');await page.locator('#save').click();await page.keyboard.press('Escape');
     for(const speed of [1,6]){
-      const initial=nightEncounter();await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      const initial=nightEncounter();await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');await revealCells(page,[initial.pawns[0],initial.pawns[3]]);
       await page.evaluate(()=>Object.assign((window as any).__wake,{active:true,samples:[]}));
       await expect.poll(()=>page.evaluate(()=>(window as any).__wake.samples.filter((s:any)=>s.pose===1&&s.state==='sleeping').length)).toBeGreaterThan(3);

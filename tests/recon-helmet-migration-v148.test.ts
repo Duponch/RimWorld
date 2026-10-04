@@ -1,3 +1,4 @@
+import { withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import {readFileSync} from 'node:fs';
 import {expect,test} from 'vitest';
 import {deserializeWorld,validateWorld} from '../src/sim/index.ts';
@@ -10,7 +11,7 @@ import type {World} from '../src/sim/types.ts';
 const historical=()=>JSON.parse(readFileSync('public/test-saves/v139/industrie-avancee.json','utf8')) as World;
 const declared144=():World=>{
   const old=deserializeWorld(JSON.stringify(historical()));
-  (old as {schemaVersion:number}).schemaVersion=144;
+  (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),144);
   return old;
 };
 
@@ -23,7 +24,7 @@ test('V139 and valid V144 migration preserve ownership, policies, research, work
   expect(migrated.piles.some(p=>p.item==='recon-helmet'||p.item==='unfinished-recon-helmet')).toBe(false);
   expect(migrated.apparelPolicies?.every(p=>!p.allowedItems.includes('recon-helmet'))).toBe(true);
   const old=declared144(),resumed=deserializeWorld(JSON.stringify(old));
-  expect(resumed).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  expect(resumed).toEqual(withMigratedTelevisionRecreation({...old,schemaVersion:SCHEMA_VERSION}));
 });
 
 test('a V144 file rejects future research, item, policy, bill and unfinished work before migrating',()=>{

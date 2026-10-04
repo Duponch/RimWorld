@@ -16,7 +16,7 @@ import { SCHEMA_VERSION, type World } from '../src/sim/types.ts';
 import { medicalCamp } from './scenarios/health.ts';
 import { foodWorkstationCamp, fixtureFoodStation } from './scenarios/food-workstations.ts';
 import { visitorTradeFixture } from './scenarios/visitors.ts';
-import { withoutPlantsSkill } from './scenarios/legacy-skills.ts';
+import { withoutPlantsSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import {withoutPredatorFoodPolicies,withoutPredatorApparelPolicies} from './scenarios/legacy-save.ts';
 
 function declared152(count=1): World {
@@ -24,7 +24,7 @@ function declared152(count=1): World {
   for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   withoutPlantsSkill(world);
   withoutPredatorFoodPolicies(world);withoutPredatorApparelPolicies(world);
-  (world as {schemaVersion:number}).schemaVersion=152;
+  (world as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(world),152);
   return world;
 }
 function rejectedV152(change:(world:World)=>void):void {
@@ -35,13 +35,13 @@ function rejectedV152(change:(world:World)=>void):void {
 test('V152 to V154 changes only schema version and preserves deterministic continuation',()=>{
   const old=declared152(),before=structuredClone(old);
   const loaded=deserializeWorld(JSON.stringify(old));
-  expect(loaded).toEqual({...before,schemaVersion:SCHEMA_VERSION});
+  expect(loaded).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
   expect(old).toEqual(before);
   expect(loaded.foodPolicies).toEqual(before.foodPolicies);
   expect(loaded.spoiled).toEqual(before.spoiled);
   expect(loaded.rng).toBe(before.rng);
   expect(validateWorld(loaded)).toEqual([]);
-  (before as {schemaVersion:number}).schemaVersion=SCHEMA_VERSION;
+  Object.assign(before,withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
   stepWorld(loaded,60);stepWorld(before,60);
   expect(loaded).toEqual(before);
 });
@@ -179,7 +179,7 @@ test('a queued physical lavish order survives save and V152 rejects its future r
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
   const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
-  (old as {schemaVersion:number}).schemaVersion=152;
+  (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),152);
   expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/Invalid version 152 save/);
 });
 
@@ -189,15 +189,15 @@ test('declared V152 rejects a lavish memory and possession in a frozen visitor a
   const departure=world.visitors!.departed.find(d=>d.pawn.id===traderId)!;
   expect(departure).toBeDefined();
   const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
-  (old as {schemaVersion:number}).schemaVersion=152;
-  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),152);
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedTelevisionRecreation({...old,schemaVersion:SCHEMA_VERSION}));
   const withMemory=structuredClone(old);
   withMemory.visitors!.departed[0]!.pawn.memories.push({kind:'ate-lavish-meal',expiresAt:departure.tick+100});
-  expect(validateWorld({...withMemory,schemaVersion:SCHEMA_VERSION})).toEqual([]);
+  expect(validateWorld(withMigratedTelevisionRecreation({...withMemory,schemaVersion:SCHEMA_VERSION}))).toEqual([]);
   expect(()=>deserializeWorld(JSON.stringify(withMemory))).toThrow(/Invalid version 152 save/);
   const withFood=structuredClone(old),food=withFood.visitors!.departed[0]!.items.find(item=>item.kind==='food')!;
   expect(food).toBeDefined();food.item='lavish-meal';food.quantity=1;food.rot={progress:0,atTick:departure.tick};
-  expect(validateWorld({...withFood,schemaVersion:SCHEMA_VERSION})).toEqual([]);
+  expect(validateWorld(withMigratedTelevisionRecreation({...withFood,schemaVersion:SCHEMA_VERSION}))).toEqual([]);
   expect(()=>deserializeWorld(JSON.stringify(withFood))).toThrow(/Invalid version 152 save/);
 });
 
@@ -215,7 +215,7 @@ test('a physically reserved lavish task is continuable and forbidden in a declar
   const continued=deserializeWorld(serializeWorld(world));
   stepWorld(world,30);stepWorld(continued,30);expect(continued).toEqual(world);
   const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
-  (old as {schemaVersion:number}).schemaVersion=152;
+  (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),152);
   expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/Invalid version 152 save/);
   for(let i=0;i<800&&pawn.cooking?.phase!=='output';i++)stepWorld(world);
   expect(pawn.cooking?.phase).toBe('output');

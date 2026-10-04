@@ -51,7 +51,7 @@ test('passive cooling: visible construction, temperature, manual refill and exac
     // Independent boundary episode: initial empty reservoir, no auto refuel.
     const empty=structuredClone(cooled),cooler=empty.structures.find(s=>s.kind==='passive-cooler')!;
     empty.tick+=cooler.fuel!.ticks;cooler.fuel!.burned+=cooler.fuel!.ticks;cooler.fuel!.ticks=0;cooler.fuel!.autoRefuel=false;
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(empty)});
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(empty)});
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,empty);
     const refillPipelineStart=await page.evaluate(()=>(window as any).coolingProbe.pipelines as number);
     await tool(page,'select');await cell(page,16,16);await expect(page.locator('#fire-fuel')).toContainText('Vide');

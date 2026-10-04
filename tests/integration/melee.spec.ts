@@ -21,7 +21,7 @@ test('native UI: choose melee, approach, GPU strike, wounds and exact save/load 
     await panel(page,'menu');await page.locator('#save').click();await page.keyboard.press('Escape');
     for(const speed of [1,6]){
       const initial=meleeCamp(),actor=initial.pawns[0],target=initial.pawns[3];
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
       await page.locator(`[data-pawn="${actor.id}"]`).click();await revealCells(page,[actor,target]);await page.locator('#target-melee').click();
       const point=await page.evaluate(id=>(window as any).__melee.screen.find((p:any)=>p.id===id),target.id);expect(point).toBeDefined();await page.mouse.click(point.x,point.y);

@@ -17,7 +17,7 @@ const previousKey = 'lisiere.previous.v1';
 const viewport = { width: 1440, height: 1000 };
 const front = (page: Page) => page.locator('.front-menu');
 const menuButton = (page: Page, name: string) => front(page).getByRole('button', { name, exact: true });
-const storedWorldJson = async (page: Page, key: string) => decodeStoredSave(await page.evaluate(key => localStorage.getItem(key), key) ?? 'null');
+const storedWorldJson = async (page: Page, key: string) => decodeStoredSave(await page.evaluate(key => window.__lisiere.saveRepository.peekItem(key), key) ?? 'null');
 
 async function coldHome(page: Page): Promise<void> {
   // e2e only exposes the observation bridge; it must not create a diagnostic camp.
@@ -123,7 +123,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     await coldHome(page);
     for (const name of ['Tutoriel', 'Options', 'Mods', 'Crédits']) await expect(front(page).getByRole('button', { name: new RegExp(`^${name}`) })).toBeDisabled();
     await expect(menuButton(page, 'Reprendre la colonie')).toHaveCount(0);
-    expect(await page.evaluate(key => localStorage.getItem(key), manualKey)).toBeNull();
+    expect(await page.evaluate(key => window.__lisiere.saveRepository.peekItem(key), manualKey)).toBeNull();
     await page.screenshot({ path:testOutputPath('artifacts/scenario-home-v83.png') });
 
     await menuButton(page, 'Nouvelle partie').click();
@@ -201,7 +201,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     await menuButton(page, 'Démarrer').click();
     await expect(front(page).getByRole('alert')).toContainText('4 294 967 295');
     expect(await page.evaluate(() => window.__lisiere.world)).toBeUndefined();
-    expect(await page.evaluate(key => localStorage.getItem(key), previousKey)).toBe(historicalData);
+    expect(await page.evaluate(key => window.__lisiere.saveRepository.peekItem(key), previousKey)).toBe(historicalData);
     await page.locator('#front-seed').fill('42');
     await page.setViewportSize(viewport);
     const creationStarted = Date.now();
@@ -224,7 +224,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     await expect(page.locator('#clock')).toHaveText('06:00');
     await expect(page.locator('[data-speed="0"]')).toHaveAttribute('aria-pressed', 'true');
     // A second successful init would overwrite this slot with the first world.
-    expect(await page.evaluate(key => localStorage.getItem(key), previousKey)).toBe(historicalData);
+    expect(await page.evaluate(key => window.__lisiere.saveRepository.peekItem(key), previousKey)).toBe(historicalData);
     await panel(page, 'research');
     await expect(page.locator('[data-air-status]')).toContainText('Acquise au départ');
     await expect(page.locator('[data-research-status]')).toContainText('Acquise au départ');
@@ -320,18 +320,18 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
       ['future', JSON.stringify({ ...finalWorld, schemaVersion: 999 })],
     ]) {
       const active = await world(page);
-      const previous = await page.evaluate(key => localStorage.getItem(key), previousKey);
-      await page.evaluate(({ key, data }) => localStorage.setItem(key, data), { key: manualKey, data: data! });
+      const previous = await page.evaluate(key => window.__lisiere.saveRepository.peekItem(key), previousKey);
+      await page.evaluate(({ key, data }) => window.__lisiere.saveRepository.setItem(key, data), { key: manualKey, data: data! });
       await chooseSave(page, manualKey);
       await expect(front(page).getByRole('alert')).toContainText('illisible ou incompatible');
       await expect(menuButton(page, 'Charger')).toBeEnabled();
       expect(await world(page)).toEqual(active);
-      expect(await page.evaluate(key => localStorage.getItem(key), manualKey)).toBe(data);
-      expect(await page.evaluate(key => localStorage.getItem(key), previousKey)).toBe(previous);
+      expect(await page.evaluate(key => window.__lisiere.saveRepository.peekItem(key), manualKey)).toBe(data);
+      expect(await page.evaluate(key => window.__lisiere.saveRepository.peekItem(key), previousKey)).toBe(previous);
       checkpoints[kind!] = { rejected: true, tickPreserved: active.tick, message: await front(page).getByRole('alert').textContent() };
       await menuButton(page, 'Retour').click();
     }
-    await page.evaluate(({ key, data }) => localStorage.setItem(key, data), { key: manualKey, data: serializeWorld(finalWorld) });
+    await page.evaluate(({ key, data }) => window.__lisiere.saveRepository.setItem(key, data), { key: manualKey, data: serializeWorld(finalWorld) });
 
     // Reuse this renderer with the same seed/size/scenario, changing only site.
     // First pan away through real controls so a missing reset cannot pass by
@@ -387,7 +387,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     // A real V82 generated landscape must retain its river, geology and agenda.
     page = await context.newPage(); errors = observeErrors(page);
     await coldHome(page);
-    await page.evaluate(({ key, data }) => localStorage.setItem(key, data), { key: previousKey, data: previousLandscapeData });
+    await page.evaluate(({ key, data }) => window.__lisiere.saveRepository.setItem(key, data), { key: previousKey, data: previousLandscapeData });
     await chooseSave(page, previousKey);
     await expect(front(page)).toBeHidden({ timeout: 45000 });
     await expectWorld(page, previousLandscapeExpected);
@@ -399,7 +399,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     expect(previousLandscape.gameProfile).toEqual(previousLandscapeInput.gameProfile);
     expect(previousLandscape.tick).toBe(previousLandscapeInput.tick);
     for (const id of ['enable-arrivals', 'enable-raids', 'enable-heatwaves']) await expect(page.locator(`#${id}`)).toBeHidden();
-    expect(await page.evaluate(key => localStorage.getItem(key), previousKey)).toBe(previousLandscapeData);
+    expect(await page.evaluate(key => window.__lisiere.saveRepository.peekItem(key), previousKey)).toBe(previousLandscapeData);
     expect(await storedWorldJson(page, manualKey)).toBe(serializeWorld(finalWorld));
     checkpoints.coldPreviousLandscape = { source: 'tests/fixtures/scenario-v82.json.gz', sourceVersion: 82, sourceSha256: previousLandscapeSha256, loadedVersion: previousLandscape.schemaVersion, tick: previousLandscape.tick, site: null };
     await page.screenshot({ path:testOutputPath('artifacts/scenario-historical-v82-landscape-v83.png') });
@@ -409,7 +409,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     // Actual published V81 checkpoint: a controlled historical climate camp.
     page = await context.newPage(); errors = observeErrors(page);
     await coldHome(page);
-    await page.evaluate(({ key, data }) => localStorage.setItem(key, data), { key: previousKey, data: historicalData });
+    await page.evaluate(({ key, data }) => window.__lisiere.saveRepository.setItem(key, data), { key: previousKey, data: historicalData });
     await chooseSave(page, previousKey);
     await expect(front(page)).toBeHidden({ timeout: 45000 });
     await expectWorld(page, historicalExpected);
@@ -425,7 +425,7 @@ test('native V90: chosen site, fertile land, first physical decisions and unchan
     await expect(page.locator('#enable-arrivals')).toBeVisible();
     await expect(page.locator('#enable-raids')).toBeVisible();
     await expect(page.locator('#enable-heatwaves')).toBeHidden();
-    expect(await page.evaluate(key => localStorage.getItem(key), previousKey)).toBe(historicalData);
+    expect(await page.evaluate(key => window.__lisiere.saveRepository.peekItem(key), previousKey)).toBe(historicalData);
     expect(await storedWorldJson(page, manualKey)).toBe(serializeWorld(finalWorld));
     await page.screenshot({ path:testOutputPath('artifacts/scenario-historical-v83.png') });
     checkpoints.coldHistorical = { source: 'artifacts/heatwave-checkpoint-v81.json', sourceVersion: 81, loadedVersion: oldWorld.schemaVersion, tick: oldWorld.tick, width: oldWorld.width };

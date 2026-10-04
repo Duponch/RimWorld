@@ -11,7 +11,7 @@ import { ticksUntilRot } from '../src/sim/food-preservation.ts';
 import { footprintContains } from '../src/sim/definitions.ts';
 import { SCHEMA_VERSION, TICKS_PER_DAY } from '../src/sim/types.ts';
 import type { Cell, Command, DesignateCommand, StructureKind, World } from '../src/sim/types.ts';
-import { crashlandedDecisions } from './scenarios/crashlanded-player.ts';
+import { crashlandedDecisions,crashlandedThreatActive } from './scenarios/crashlanded-player.ts';
 import { energyDecisions } from './scenarios/energy-player.ts';
 
 /**
@@ -279,9 +279,12 @@ test('V90 natural colony continuation: furniture, flower pot and leather apparel
         journal.push({ tick: world.tick, command: decision.command });
       }
     } else {
-      // Outside combat, retain only the established demobilisation, rescue and
-      // bedside-care decisions. Construction remains owned by this campaign.
+      // Without a raid, animal rage still needs the inherited physical combat
+      // orders before demobilisation and care. Construction stays with this campaign.
       const support = crashlandedDecisions(world).filter(decision => decision.command.type === 'draft'
+        || decision.command.type === 'draft-move'
+        || decision.command.type === 'shoot'
+        || decision.command.type === 'fire-at-will'
         || decision.command.type === 'order-rescue'
         || decision.command.type === 'order-tend'
         || decision.command.type === 'order-feed'
@@ -361,7 +364,7 @@ test('V90 natural colony continuation: furniture, flower pot and leather apparel
         if (result.ok) { equipmentOrdered = true; journal.push({ tick: world.tick, command: { type: 'order-equipment', pawnId: wearer.id, itemId: product.id, action: 'wear', queue: false } }); }
       }
     }
-    const step = Math.min(world.raids?.active ? 20 : 50, Math.max(1, nextObservation - world.tick), Math.max(1, nextDailyCheckpoint - world.tick));
+    const step = Math.min(crashlandedThreatActive(world) ? 20 : 50, Math.max(1, nextObservation - world.tick), Math.max(1, nextDailyCheckpoint - world.tick));
     stepWorld(world, step);
     checkpointRaid();
     assertSurvival('after simulation');

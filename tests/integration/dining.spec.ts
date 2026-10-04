@@ -15,7 +15,7 @@ test('table et tabouret : construction UI, portion transportée, repas assis, co
     fixture.pawns = fixture.pawns.slice(0, 1);
     Object.assign(fixture.pawns[0]!, { x: 13, z: 16, hunger: 100, rest: 100, comfort: 10 });
     addGroundMaterial(fixture, 'wood', 60, { x: 14, z: 16 }); refreshStock(fixture);
-    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: saveKey, value: serializeWorld(fixture) });
+    await page.evaluate(({ key, value }) => window.__lisiere.saveRepository.setItem(key, value), { key: saveKey, value: serializeWorld(fixture) });
     await startPaused(page); await panel(page, 'menu'); await page.locator('#load').click();
     await expect(page.locator('#fps-counter')).toBeVisible();
     await expect(page.locator('#fps-counter')).toHaveText(/^[1-9]\d* FPS$/);
@@ -30,7 +30,7 @@ test('table et tabouret : construction UI, portion transportée, repas assis, co
     // Author a new test starting pose; no old travel edge belongs to this relocation.
     Object.assign(built.pawns[0]!, { x: 13, z: 16, hunger: 20, comfort: 10, path: [], motion:null, moveCooldown:0 });
     addGroundMaterial(built, 'food', 1, { x: 14, z: 16 }); refreshStock(built);
-    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: saveKey, value: serializeWorld(built) });
+    await page.evaluate(({ key, value }) => window.__lisiere.saveRepository.setItem(key, value), { key: saveKey, value: serializeWorld(built) });
     await panel(page, 'menu'); await page.locator('#load').click();
     await page.getByRole('button', { name: 'Vitesse normale', exact: true }).click();
     await page.waitForFunction(() => {

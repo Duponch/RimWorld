@@ -1,5 +1,7 @@
 # Recherche et tailleur — vérification du 19 septembre 2026
 
+**Statut historique.** Les facteurs et reports ci-dessous décrivent le relevé de septembre. Le [contrat V209](../development/consolidation-v209.md) et sa [preuve](../history/validation-consolidation-v209.md) remplacent les règles de recherche devenues obsolètes. La liaison utilise une ligne de vue locale ; son équivalence exhaustive avec `GenSight.LineOfSight` Core n’est pas démontrée.
+
 Corpus relu : chapitre 11, **SYS/TEST-062..066** (production) et **SYS/TEST-068** (recherche collective). Adopter projet commun, travail au poste, prérequis et persistance ; adapter horloge/présentation ; différer **067** (détérioration), **069** (livres), autres projets et infrastructures avancées. Les originaux restent inchangés.
 
 Sources confrontées :

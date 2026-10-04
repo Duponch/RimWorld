@@ -27,7 +27,7 @@ async function reload(page:Page,expected:World):Promise<void> {
 }
 async function loadPrepared(page:Page,prepared:World):Promise<void> {
   expect(validateWorld(prepared)).toEqual([]);
-  await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(prepared)});
+  await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(prepared)});
   await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,prepared);await page.keyboard.press('Escape');
 }
 

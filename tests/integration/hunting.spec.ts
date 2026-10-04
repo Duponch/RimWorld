@@ -40,7 +40,7 @@ test('native hunting chain: live prey, physical corpse and save, butchery, usefu
       const initial=huntingCamp(),hunter=initial.pawns[0]!,cook=initial.pawns[1]!,animal=initial.wildlife!.animals[0]!;
       initial.stockpiles=[];cook.hunger=22;
       expect(validateWorld(initial)).toEqual([]);
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
       const rotation={value:0},act=(command:Command,reason:string)=>perform(page,{reason,command},rotation);
       await act({type:'food-policy-assign',pawnId:cook.id,policyId:2},'Conserver les ingrédients et manger le repas cuisiné.');

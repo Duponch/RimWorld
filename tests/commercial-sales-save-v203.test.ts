@@ -1,5 +1,5 @@
 import { expect,test } from 'vitest';
-import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
+import { withoutMiningSkill, withoutTelevisionRecreation,withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { applyCommand,stepWorld,deserializeWorld,serializeWorld,validateWorld,SCHEMA_VERSION } from '../src/sim/index.ts';
 import { quoteCommercial,quoteCommercialSell } from '../src/sim/commercial-post.ts';
 import { SnapshotDecoder,SnapshotEncoder } from '../src/bridge/snapshots.ts';
@@ -31,8 +31,8 @@ test('184 validates before neutral migration and rejects sales fields including 
   const {world:w,pawnId,foodId}=commercialCamp();
   expect(applyCommand(w,{type:'commercial-start',pawnId,foodPileId:foodId,quantity:2,silver:600}).ok).toBe(true);
   until(w,'at-post');delete w.worldIncidents;
-  const old=withoutMiningSkill(structuredClone(w));Object.assign(old,{schemaVersion:184});
-  const migrated=deserializeWorld(JSON.stringify(old));expect({...migrated,schemaVersion:184}).toEqual(old);
+  const old=withoutTelevisionRecreation(withoutMiningSkill(structuredClone(w)));Object.assign(old,{schemaVersion:184});
+  const migrated=deserializeWorld(JSON.stringify(old));expect({...migrated,schemaVersion:184}).toEqual(withMigratedTelevisionRecreation(old));
   expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   const future=start();Object.assign(future,{schemaVersion:184});
   expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/Invalid version 184/);

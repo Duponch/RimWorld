@@ -1,3 +1,4 @@
+import { withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { readFileSync } from 'node:fs';
 import { expect,test } from 'vitest';
 import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serialization.ts';
@@ -21,11 +22,11 @@ const legacy=()=>JSON.parse(readFileSync('public/test-saves/v195/champ-medicinal
 test('182 is strictly validated before a neutral183 migration, without rage, calendar or draws',()=>{
   const old=legacy(),before=structuredClone(old);
   expect(old.schemaVersion).toBe(182);
-  expect(deserializeWorld(JSON.stringify(old))).toEqual({...before,schemaVersion:SCHEMA_VERSION});
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
   expect(old).toEqual(before);
   const bad=legacy();bad.smallIncidents={} as NonNullable<World['smallIncidents']>;
   expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/182/);
-  const future=predationCamp().w;future.schemaVersion=182 as World['schemaVersion'];const a=future.wildlife!.animals[0]!;
+  const future=predationCamp().w;future.schemaVersion=(withoutTelevisionRecreation(future),182) as World['schemaVersion'];const a=future.wildlife!.animals[0]!;
   a.manhunter={startedAtCore:future.tick*10,rng:1,zeroRestTicks:0};
   expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/182/);
 });

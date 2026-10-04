@@ -1,3 +1,4 @@
+import { withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
@@ -38,7 +39,7 @@ test('V182 public scene is a byte-stable prepared 250² colony, not an already d
   const world = deserializeWorld(raw);
   // The published V182 colony is historical: later generators may add content.
   // Its migrations preserve every possession, permission and clock verbatim.
-  expect(world).toEqual({ ...historical, schemaVersion: SCHEMA_VERSION });
+  expect(world).toEqual(withMigratedTelevisionRecreation({ ...historical, schemaVersion: SCHEMA_VERSION }));
   expect(world.schemaVersion).toBe(SCHEMA_VERSION);
   expect(world.width).toBe(250);
   expect(world.height).toBe(250);

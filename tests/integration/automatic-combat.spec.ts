@@ -16,7 +16,7 @@ test('native UI: hold/allow fire, civilian Attack from Assign/inspector, actual 
     for(const speed of [1,6]) {
       const initial=automaticCamp(),p=initial.pawns[0];
       if(speed===6)applyCommand(initial,{type:'draft',pawnIds:[p.id],enabled:false});
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');await page.locator(`[data-pawn="${p.id}"]`).click();
       if(speed===1){
         await expect(page.locator('#fire-at-will')).toHaveAttribute('aria-pressed','false');await page.locator('#fire-at-will').click();await expect(page.locator('#fire-at-will')).toHaveAttribute('aria-pressed','true');

@@ -206,7 +206,7 @@ test('V112: physical rifle stays visible at rest, in a real shot, and in the cac
     const ordered = structuredClone(initial);
     expect(applyCommand(ordered, { type: 'shoot', pawnIds: [shooter.id], targetId: target.id }).ok).toBe(true);
     expect(validateWorld(ordered)).toEqual([]);
-    await page.evaluate(({ key, data }) => localStorage.setItem(key, data), { key: saveKey, data: serializeWorld(ordered) });
+    await page.evaluate(({ key, data }) => window.__lisiere.saveRepository.setItem(key, data), { key: saveKey, data: serializeWorld(ordered) });
     await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, ordered);
     await page.keyboard.press('Escape');
     await page.locator('[data-speed="1"]').click();

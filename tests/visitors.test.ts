@@ -8,7 +8,7 @@ import { rotAge } from '../src/sim/food-preservation.ts';
 import { visitorTradeFixture } from './scenarios/visitors.ts';
 import { deconstructionCamp,fixtureBuilding } from './scenarios/deconstruction.ts';
 import { SCHEMA_VERSION, type World } from '../src/sim/types.ts';
-import { withoutFutureHelmetPolicy,withoutPlantsSkill } from './scenarios/legacy-skills.ts';
+import { withoutFutureHelmetPolicy, withoutPlantsSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { withoutPredatorFoodPolicies,withoutPredatorApparelPolicies } from './scenarios/legacy-save.ts';
 
 function replay(w:World,ticks:number):void {
@@ -52,7 +52,7 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   const frozen=JSON.stringify(d);replay(w,30);expect(JSON.stringify(w.visitors!.departed[0])).toBe(frozen);
   expect(d.pawn.appearance).toEqual(p.appearance);expect(d.pawn.appearance).toBeDefined();
   const legacy=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(structuredClone(w))) as any;
-  legacy.schemaVersion=135;
+  legacy.schemaVersion=(withoutTelevisionRecreation(legacy),135);
   for(const policy of legacy.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   delete legacy.breakdown;
   withoutFutureHelmetPolicy(legacy);
@@ -62,10 +62,10 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   expect(migrated.visitors!.departed[0]!.pawn.age).toEqual({biologicalTicks:10_800_000,chronologicalTicks:10_800_000});
   expect(validateWorld(migrated)).toEqual([]);
   const v150=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(structuredClone(w)));
-  (v150 as {schemaVersion:number}).schemaVersion=150;
+  (v150 as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(v150),150);
   withoutPlantsSkill(v150);
   for(const policy of v150.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
-  expect(deserializeWorld(JSON.stringify(v150))).toEqual({...v150,schemaVersion:SCHEMA_VERSION});
+  expect(deserializeWorld(JSON.stringify(v150))).toEqual(withMigratedTelevisionRecreation({...v150,schemaVersion:SCHEMA_VERSION}));
   const futureMemory=structuredClone(v150);
   futureMemory.visitors!.departed[0]!.pawn.memories.push({kind:'ate-fine-meal',expiresAt:d.tick+100});
   expect(()=>deserializeWorld(JSON.stringify(futureMemory))).toThrow(/Invalid version 150 save/);

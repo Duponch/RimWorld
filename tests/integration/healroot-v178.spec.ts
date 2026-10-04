@@ -167,7 +167,7 @@ test('natural healroot becomes one hauled dose, survives an in-progress save and
     expect(herbalTotal(injured)).toBe(1);
     expect(injured.piles.find(pile => pile.id === storedDose!.id)).toEqual(storedDose);
     expect(validateWorld(injured)).toEqual([]);
-    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: saveKey, value: serializeWorld(injured) });
+    await page.evaluate(({ key, value }) => window.__lisiere.saveRepository.setItem(key, value), { key: saveKey, value: serializeWorld(injured) });
     await panel(page, 'menu');
     await page.locator('#load').click();
     await expectWorld(page, injured);

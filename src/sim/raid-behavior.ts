@@ -20,7 +20,11 @@ export function processRaider(w:World,p:Pawn,getBlocked:NavigationGrid,budget:Se
   if(!r.exiting){
     // Probe at bounded intervals without throwing away an unseen strategic route.
     if(p.tactics||!p.planCooldown&&budget.remaining){
-      const route=p.tactics?[]:p.path;p.tactics??=newTactics();processTactics(w,p,getBlocked,budget,getLight);searched=true;
+      const route=p.tactics?[]:p.path;
+      // A strategic route has no firing post. Detach it while acquiring a new
+      // mandate; a failed probe restores it without touching the captured edge.
+      if(!p.tactics){p.path=[];p.tactics=newTactics();}
+      processTactics(w,p,getBlocked,budget,getLight);searched=true;
       if(p.tactics.targetId!==null){r.goal=null;return;}
       delete p.tactics;p.path=route;
     }

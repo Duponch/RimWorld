@@ -24,7 +24,7 @@ test('native UI: explicit target, cancel, saved aim, visible GPU flight/pose and
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await page.locator('[data-speed="0"]').click();
     for(const speed of [1,6]) {
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
       await revealCells(page,[initial.pawns[0],initial.pawns[1]]);
       await page.locator(`[data-pawn="${initial.pawns[0].id}"]`).click();await page.locator('#target-shot').click();await page.keyboard.press('Escape');

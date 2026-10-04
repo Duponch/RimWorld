@@ -47,8 +47,8 @@ test('bench geometry, material costs and researched gating apply to every orient
 
 test('research rate respects intellect, capacities, light and thermal thresholds without changing existing points',()=>{
   const w=fixture(1),p=w.pawns[0]!,s=bench(w),env=new WorkEnvironmentCache().read(w);p.x=8;p.z=7;
-  const normal=researchRate(p,s,env,20);expect(normal).toBeGreaterThan(0);expect(researchRate(p,s,env,8.99)).toBeCloseTo(normal*.7,0);expect(researchRate(p,s,env,9)).toBe(normal);expect(researchRate(p,s,env,35)).toBe(normal);
-  p.skills.intellectual!.level=0;expect(researchRate(p,s,env,20)).toBeLessThan(normal);p.skills.intellectual!.level=20;expect(researchRate(p,s,env,20)).toBeGreaterThan(normal);
+  const normal=researchRate(p,s,env,20,w);expect(normal).toBeGreaterThan(0);expect(Math.abs(researchRate(p,s,env,8.99,w)-normal*.7)).toBeLessThanOrEqual(1);expect(researchRate(p,s,env,9,w)).toBe(normal);expect(researchRate(p,s,env,35,w)).toBe(normal);
+  p.skills.intellectual!.level=0;expect(researchRate(p,s,env,20,w)).toBeLessThan(normal);p.skills.intellectual!.level=20;expect(researchRate(p,s,env,20,w)).toBeGreaterThan(normal);
 });
 
 test('cotton colony mines and builds its research chain, researches from zero, makes and wears the unlocked shirt',()=>{
@@ -67,7 +67,11 @@ test('cotton colony mines and builds its research chain, researches from zero, m
   command(w,{type:'area',action:'stockpile',from:{x:1,z:9},to:{x:2,z:10}});
   command(w,{type:'designate',kind:'campfire',material:'wood',x:1,z:6});until(w,()=>w.structures.some(s=>s.kind==='campfire'),10000);
   const fire=w.structures.find(s=>s.kind==='campfire')!;command(w,{type:'bill-add',structureId:fire.id});command(w,{type:'bill-update',structureId:fire.id,billId:fire.bills![0]!.id,settings:{...fire.bills![0]!,mode:'until',target:3}});
-  let slept=false,ate=false;until(w,()=>{slept ||= p.state==='sleeping';ate ||= p.state==='eating';return (w.research?.points??0)>=598*RESEARCH_SCALE;},120000);
+  // The physically built desk remains outdoors. Replacing provisional .9 by
+  // Core .75 reduces its stat by 1/6, so preserve the former finite work budget
+  // with exactly the inverse factor; no progress, skill or need is supplied.
+  const outdoorResearchBudget=Math.ceil(120000*.9/.75);
+  let slept=false,ate=false;until(w,()=>{slept ||= p.state==='sleeping';ate ||= p.state==='eating';return (w.research?.points??0)>=598*RESEARCH_SCALE;},outdoorResearchBudget);
   writeTestFileSync(`artifacts/research-checkpoint-v${w.schemaVersion}.json`,serializeWorld(w));
   until(w,()=>w.research?.completedAt!==undefined);const done=w.research!.completedAt!;expect(w.events.filter(e=>e.message.startsWith('Recherche achevée'))).toHaveLength(1);
   command(w,{type:'designate',kind:'tailor-bench',material:'wood',x:8,z:12});until(w,()=>w.structures.some(s=>s.kind==='tailor-bench'),30000);

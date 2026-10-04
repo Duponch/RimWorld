@@ -30,7 +30,7 @@ test('roof accident and prone cargo remain synchronized; loaded Gunshot wounds r
     const frames=await page.evaluate(()=> (window as unknown as {__medicalFrames:{tick:number;play:number;roof:number;pawns:{state:string;health:boolean;work:number;pose:number}[]}[]}).__medicalFrames);
     const transition=frames.find(f=>f.pawns.length===2&&f.pawns.every(p=>p.health));expect(transition).toBeDefined();expect(transition!.roof).toBe(0);expect(transition!.tick).toBeLessThanOrEqual(transition!.play);
     const carrier=medicalCarrier(),p=carrier.pawns[0]!;controlledInjury(carrier,p,'left-leg',30000);controlledInjury(carrier,p,'right-leg',30000);expect(validateWorld(carrier)).toEqual([]);
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(carrier)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,carrier);await page.keyboard.press('Escape');
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(carrier)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,carrier);await page.keyboard.press('Escape');
     await page.locator(`[data-pawn="${p.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('#alerts')).toContainText('à terre');await expect(page.locator('#health-inspection')).toContainText('À terre');
     await page.locator('[data-speed="1"]').click();await expect.poll(async()=>(await world(page)).tick).toBeGreaterThan(carrier.tick+10);await page.locator('[data-speed="0"]').click();const stopped=await world(page);
     await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,stopped);await page.keyboard.press('Escape');await page.locator(`[data-pawn="${p.id}"]`).click();await expect(page.locator('#fps-counter')).toHaveText(/\d+ FPS/);await page.screenshot({path:testOutputPath(`artifacts/health-downed-${proofVersion}.png`)});
@@ -40,7 +40,7 @@ test('roof accident and prone cargo remain synchronized; loaded Gunshot wounds r
     // new medical type in the actual worker, inspection and existing care loop.
     const clinic=careCamp(),patient=clinic.pawns[1]!;delete patient.health;
     damageUnarmoredPawnWithBullet(clinic,patient,{part:'left-lung',damage:4});
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(clinic)});
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(clinic)});
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,clinic);await page.keyboard.press('Escape');
     await page.locator(`[data-pawn="${patient.id}"]`).click();await pawnTab(page,'health');await expect(page.locator('[data-health="injuries"]')).toContainText('Blessure par balle');
     await page.locator('[data-speed="6"]').click();

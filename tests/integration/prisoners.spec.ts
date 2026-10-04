@@ -12,7 +12,7 @@ import type { Command,World } from '../../src/sim/types';
 
 async function load(page:Page,state:World,raw=serializeWorld(state)):Promise<void> {
   await pause(page);
-  await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:raw});
+  await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:raw});
   await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,state);await page.keyboard.press('Escape');
 }
 async function roundTrip(page:Page):Promise<World> {
@@ -102,9 +102,9 @@ test('native captivity: physical capture, care, policies, conversations and recr
     report.historical={source:historicalPath,sha256:createHash('sha256').update(historicalText).digest('hex'),from:85,to:migrated.schemaVersion,tick:migrated.tick};
     await panel(page,'menu');
     const invalid=JSON.stringify({...migrated,schemaVersion:migrated.schemaVersion+1});
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:invalid});await page.locator('#load').click();
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:invalid});await page.locator('#load').click();
     await expect(page.locator('#notice')).toContainText(/version|schéma|incompatible|invalide|valide/i);await expectWorld(page,migrated);
-    expect(await page.evaluate(key=>localStorage.getItem(key),saveKey)).toBe(invalid);
+    expect(await page.evaluate(key=>window.__lisiere.saveRepository.peekItem(key),saveKey)).toBe(invalid);
     expect(errors).toEqual([]);report.errors=errors;writeTestFileSync('artifacts/prison-native-v86.json',JSON.stringify(report,null,2));
   } catch(error) {
     const tag=`prison-native-failed-v86-${Date.now()}`;await page.screenshot({path:testOutputPath(`artifacts/${tag}.png`)}).catch(()=>{});

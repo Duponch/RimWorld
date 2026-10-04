@@ -15,7 +15,7 @@ import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {medicalCamp} from './scenarios/health.ts';
 import {foodWorkstationCamp,fixtureFoodStation} from './scenarios/food-workstations.ts';
 import {visitorTradeFixture} from './scenarios/visitors.ts';
-import {withoutPlantsSkill} from './scenarios/legacy-skills.ts';
+import { withoutPlantsSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import {withoutPredatorFoodPolicies,withoutPredatorApparelPolicies} from './scenarios/legacy-save.ts';
 
 const ITEM='vegetarian-lavish-meal' as const;
@@ -25,7 +25,7 @@ function declared156():World {
   for(const policy of world.foodPolicies)policy.allowed=withoutFutureMeals(policy.allowed);
   withoutPlantsSkill(world);
   withoutPredatorFoodPolicies(world);withoutPredatorApparelPolicies(world);
-  (world as {schemaVersion:number}).schemaVersion=156;
+  (world as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(world),156);
   return world;
 }
 function rejected156(change:(world:World)=>void):void {
@@ -36,12 +36,12 @@ function rejected156(change:(world:World)=>void):void {
 test('V156 to V157 validates first and changes only the version',()=>{
   const old=declared156(),before=structuredClone(old);
   const loaded=deserializeWorld(JSON.stringify(old));
-  expect(loaded).toEqual({...before,schemaVersion:SCHEMA_VERSION});
+  expect(loaded).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
   expect(old).toEqual(before);
   expect(loaded.foodPolicies).toEqual(before.foodPolicies);
   expect(loaded.rng).toBe(before.rng);
   expect(validateWorld(loaded)).toEqual([]);
-  (before as {schemaVersion:number}).schemaVersion=SCHEMA_VERSION;
+  Object.assign(before,withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
   stepWorld(loaded,30);stepWorld(before,30);
   expect(loaded).toEqual(before);
 });
@@ -77,8 +77,8 @@ test('V156 trade receipts and frozen visitor cargo reject the new meal',()=>{
   expect(departure).toBeDefined();
   const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(visitorWorld))));
   for(const policy of old.foodPolicies)policy.allowed=withoutFutureMeals(policy.allowed);
-  (old as {schemaVersion:number}).schemaVersion=156;
-  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),156);
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedTelevisionRecreation({...old,schemaVersion:SCHEMA_VERSION}));
   const withFood=structuredClone(old),food=withFood.visitors!.departed[0]!.items.find(item=>item.kind==='food')!;
   expect(food).toBeDefined();food.item=ITEM;food.quantity=1;food.rot={progress:0,atTick:departure.tick};
   expect(()=>deserializeWorld(JSON.stringify(withFood))).toThrow(/Invalid version 156 save/);
@@ -98,7 +98,7 @@ test('V157 queued and active tasks preserve physical reservations and reject V15
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
   const oldQueue=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));for(const policy of oldQueue.foodPolicies)policy.allowed=withoutFutureMeals(policy.allowed);
-  (oldQueue as {schemaVersion:number}).schemaVersion=156;
+  (oldQueue as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(oldQueue),156);
   expect(()=>deserializeWorld(JSON.stringify(oldQueue))).toThrow(/Invalid version 156 save/);
   pawn.orders.queue=[];stove.bills![0]!.destination='drop';
   for(let i=0;i<800&&!(pawn.cooking?.phase==='work'&&pawn.cooking.progress>0);i++)stepWorld(world);
@@ -107,6 +107,6 @@ test('V157 queued and active tasks preserve physical reservations and reject V15
   const resumed=deserializeWorld(serializeWorld(world));
   stepWorld(world,30);stepWorld(resumed,30);expect(resumed).toEqual(world);
   const oldActive=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));for(const policy of oldActive.foodPolicies)policy.allowed=withoutFutureMeals(policy.allowed);
-  (oldActive as {schemaVersion:number}).schemaVersion=156;
+  (oldActive as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(oldActive),156);
   expect(()=>deserializeWorld(JSON.stringify(oldActive))).toThrow(/Invalid version 156 save/);
 });

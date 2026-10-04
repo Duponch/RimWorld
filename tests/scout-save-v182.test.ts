@@ -1,5 +1,5 @@
 import { beforeAll, expect, test } from 'vitest';
-import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
+import { withoutMiningSkill, withoutTelevisionRecreation,withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { addMaterial } from '../src/sim/materials.ts';
 import { injurePawn } from '../src/sim/health.ts';
 import { applyCommand, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
@@ -48,12 +48,12 @@ beforeAll(() => {
 });
 
 test('schema 170 migrates neutrally and rejects a future scout field before migration', () => {
-  const old = withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(medicalCamp(2))))));
-  old.schemaVersion = 170;
+  const old = withoutTelevisionRecreation(withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(medicalCamp(2)))))));
+  old.schemaVersion = (withoutTelevisionRecreation(old),170);
   const migrated = deserializeWorld(JSON.stringify(old));
   expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   expect(migrated.scout).toBeUndefined();
-  expect({ ...migrated, schemaVersion: 170 }).toEqual(old);
+  expect({ ...migrated, schemaVersion: 170 }).toEqual(withMigratedTelevisionRecreation(old));
   old.scout = { phase: 'travelling' };
   expect(() => deserializeWorld(JSON.stringify(old))).toThrow(/Invalid version 170 save.*Future scout state/);
 });

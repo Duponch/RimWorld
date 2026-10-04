@@ -24,7 +24,7 @@ if(p.tend?.medicine?.carryPileId!=null&&this.world.piles.some(q=>q.id===p.tend.m
 if(p.tend?.phase==='tend'){const patient=this.world.pawns.find(q=>q.id===p.tend.patientId);if(m.getY(i)===1)b.working++;if(patient&&Math.cos(to.getW(i)-Math.atan2(patient.x-p.x,patient.z-p.z))<.999)b.wrongFacing++;}});return r;};`;
 
 async function load(page:Page,w:World) {
-  await pause(page);await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(w)});
+  await pause(page);await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(w)});
   await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,w);await page.keyboard.press('Escape');
 }
 async function inspect(page:Page,id:number) {

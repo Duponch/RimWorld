@@ -8,6 +8,7 @@ import { isColonist } from '../src/sim/affiliation.ts';
 import { foodAccount,woodAccount } from './scenarios/colony-player.ts';
 import { metalAccount,type EnergyPlayerState } from './scenarios/energy-player.ts';
 import { newPrisonPlayer,observePrison,prisonDecisions,prisonPlan,prisonSummary,prisonWoodDecisions,type PrisonPlayerState } from './scenarios/prison-player.ts';
+import { crashlandedThreatActive } from './scenarios/crashlanded-player.ts';
 import { survivorPlan } from './scenarios/survivor-player.ts';
 import { blockedCells,reachableCells,routeToJob } from '../src/sim/pathfinding.ts';
 import type { Command,World } from '../src/sim/types.ts';
@@ -108,7 +109,7 @@ function runPrisonJourney(stopTick?:number):void {
   // This runner limit changes no game rule. Decisions never read the next raid
   // deadline; daily/milestone checkpoints retain the actual elapsed journey.
   while(w.tick<Math.min(player.startTick+60*6000,stopTick??Infinity)){
-    if(w.tick%250===0||w.raids?.active&&w.tick%20===0||player.targetId!==undefined&&w.tick%50===0){
+    if(w.tick%250===0||crashlandedThreatActive(w)&&w.tick%20===0||player.targetId!==undefined&&w.tick%50===0){
       for(const d of prisonDecisions(w,player)){const result=applyCommand(w,d.command);expect(result,JSON.stringify({tick:w.tick,...d,result})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}
       if(w.tick%250===0)observe();
       if(diagnostic&&w.tick%250===0)writeTestFileSync('tmp/prison-diagnostic-latest-v86.json',JSON.stringify(checkpoint()));

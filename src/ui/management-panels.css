@@ -608,8 +608,17 @@
   #wildlife-panel .fauna-intro { grid-template-columns: 1fr; }
 }
 
-/* Editing a colony-wide matrix may cover the HUD; give each control room. */
-#work-panel,#schedule-panel,#assign-panel{width:min(1480px,calc(100vw - 32px));max-width:calc(100vw - 32px);z-index:12}
+/* Keep the wide matrices above the measured clock and camera controls.
+   Their rows scroll within the space below the colonist portraits. */
+#work-panel,
+#schedule-panel,
+#assign-panel {
+  width: min(1480px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  bottom: calc(104px + var(--time-panel-height, 255px));
+  max-height: calc(100dvh - var(--time-panel-height, 255px) - 226px);
+  z-index: 12;
+}
 #work-panel thead th{font-size:12px;line-height:1.25}
 #work-panel th:first-child{width:104px}
 #work-panel th:last-child,#work-panel .work-activity{width:142px}

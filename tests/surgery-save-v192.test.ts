@@ -1,5 +1,5 @@
 import { expect,test } from 'vitest';
-import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
+import { withoutMiningSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { medicalCamp } from './scenarios/health.ts';
 import { fixtureBuilding } from './scenarios/deconstruction.ts';
 import { createMedicalRecord } from '../src/sim/injury-state.ts';
@@ -97,8 +97,8 @@ test('exclusive service and quantitative source reservations include surgery wit
 });
 test('178 is validated before a version-only migration and every future surgery field is refused',()=>{
   const base=medicalCamp(2);for(const p of base.pawns)p.health=createMedicalRecord(base.tick);
-  const old=withoutMiningSkill(structuredClone(base));(old as {schemaVersion:number}).schemaVersion=178;
-  const loaded=deserializeWorld(JSON.stringify(old));expect(loaded).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  const old=withoutTelevisionRecreation(withoutMiningSkill(structuredClone(base)));(old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),178);
+  const loaded=deserializeWorld(JSON.stringify(old));expect(loaded).toEqual(withMigratedTelevisionRecreation({...old,schemaVersion:SCHEMA_VERSION}));
   for(const field of ['surgeryRequest','surgery','anesthetic'] as const){
     const bad=structuredClone(old),valid=snapshot('work');
     if(field==='anesthetic')bad.pawns[0]!.health!.anesthetic=valid.pawns[1]!.health!.anesthetic;

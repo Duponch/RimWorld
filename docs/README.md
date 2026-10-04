@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V209 — consolidation, schéma 190 inchangé.** [Contrat](development/consolidation-v209.md), [preuves et limites](history/validation-consolidation-v209.md), [rapport externe et nouvelle méthode](history/analysis-external-agent-2026-10-04.md). Continuité des raids/remplacements, stockage asynchrone, reprise graphique, garanties communes et recherche Core. Aucun nouveau catalogue ou jalon clôturé.
+
 **V208 — loisirs télévisés, schéma 190, livré dans le périmètre ciblé.** [Contrat](development/television-v208.md), [recherche Core](research/television-core-v208.md), [preuve](history/validation-television-v208.md), [guide](gameplay/player-guide.md#regarder-la-télévision--v208). Construction matérielle, sièges frontaux réservés, courant et lassitude distincte ; visionnage au lit différé.
 
 **V207 — couvert bas construit, schéma 189.** [Contrat](development/sandbags-v207.md), [recherche Core et adaptations](research/defensive-cover-core-v207.md), [preuve bornée](history/validation-sandbags-v207.md), [guide](gameplay/player-guide.md#construire-et-utiliser-un-couvert-bas--v207). Cinq tissus, chantier physique, couvert directionnel, dégâts et entretien ; la 53e scène **« Sacs de sable · construction et couvert »** est préparée. Tissu seul, positions tactiques adaptées ; barricades et SandbagRubble différés. Les contrôles ciblés passent ; parcours natif matériel et présentation passent, scène publiée, sans conclusion CPU/GPU générale. Après commit local, attendre la relance en mode jour.

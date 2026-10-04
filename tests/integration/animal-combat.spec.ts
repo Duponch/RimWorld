@@ -21,7 +21,7 @@ test('native fauna targeting, real injury/flight, continuous GPU travel and save
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await pause(page);
     for(const speed of [1,6]){
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
       const a=initial.wildlife!.animals[0]!,p=initial.pawns[0]!;
       await perform(page,{reason:'Tir dirigé sur un lièvre par la liste Faune.',command:{type:'shoot',pawnIds:[p.id],targetId:a.id}},{value:0});
@@ -66,7 +66,7 @@ test('native animal melee command, visible retaliation, colonist injury and stri
     await page.addInitScript(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
     await page.goto('/?scenario=camp&e2e&size=32');await expect(page.locator('#loading')).toHaveCount(0);await pause(page);
     for(const speed of [1,6]){
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);
       const a=initial.wildlife!.animals[0]!,p=initial.pawns[0]!;
       await perform(page,{reason:'Le joueur engage un lièvre au contact.',command:{type:'melee',pawnIds:[p.id],targetId:a.id}},{value:0});

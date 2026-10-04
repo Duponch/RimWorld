@@ -1,3 +1,4 @@
+import { withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { readFileSync } from 'node:fs';
 import { expect,test } from 'vitest';
 import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serialization.ts';
@@ -10,7 +11,7 @@ import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
 const legacy=()=>JSON.parse(readFileSync('public/test-saves/v201/animal-en-rage.json','utf8')) as World;
 test('183 is strictly validated then neutrally migrated without World history, energy or rolls',()=>{
   const old=legacy(),before=structuredClone(old);expect(old.schemaVersion).toBe(183);
-  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual({...before,schemaVersion:SCHEMA_VERSION});
+  const migrated=deserializeWorld(JSON.stringify(old));expect(migrated).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
   expect(old).toEqual(before);stepWorld(migrated,0);expect(migrated.worldIncidents).toBeUndefined();
   for(const future of [{},undefined]){
     const bad=legacy();Object.assign(bad,{worldIncidents:future});

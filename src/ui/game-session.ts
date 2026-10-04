@@ -2,15 +2,14 @@ import { SCENARIOS, isScenarioId, type ScenarioId } from '../sim/scenario-defini
 import { TICKS_PER_DAY } from '../sim/types';
 import { type SiteOptions } from '../sim/site';
 import { decodeStoredSave,encodeStoredSave,storedSaveMetadata } from './save-storage-codec';
+import { LocalSaveRepository, SAVE_KEY, PREVIOUS_KEY, type SaveRepository, type SessionStorage } from './save-repository';
+export { SAVE_KEY, PREVIOUS_KEY } from './save-repository';
 
-export const SAVE_KEY = 'lisiere.save.v1';
-export const PREVIOUS_KEY = 'lisiere.previous.v1';
 interface SessionClient {
   init(seed: number, size: number, scenario: ScenarioId, paused?: boolean,site?:SiteOptions): Promise<unknown>;
   load(data: string): Promise<unknown>;
   save(): Promise<string | undefined>;
 }
-type SessionStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 export interface SavedColony { key: string; label: string; detail: string }
 
 /** One operation at a time. An accepted world and its recovery copy survive a
@@ -18,15 +17,25 @@ export interface SavedColony { key: string; label: string; detail: string }
 export class GameSession {
   busy = false;
   hasWorld = false;
+  private simulationStopped = false;
+  readonly repository: SaveRepository;
   constructor(private readonly client: SessionClient,
-    private readonly storage: () => SessionStorage,
-    private readonly prepare: () => Promise<void>) {}
+    storage: SaveRepository | (() => SessionStorage),
+    private readonly prepare: () => Promise<void>,
+    private readonly onReplacementAccepted: () => void = () => {}) {
+    this.repository = typeof storage === 'function' ? new LocalSaveRepository(storage) : storage;
+  }
+
+  initializeStorage(): Promise<void> { return this.repository.initialize(); }
+
+  /** After a fatal stop the current World may be partial. Keep the existing
+   * recovery and permit only a fresh validated replacement, never saving it. */
+  markSimulationStopped(): void { this.simulationStopped = true; }
 
   saves(): SavedColony[] {
-    const storage = this.storage();
     const result: SavedColony[] = [];
     for (const [key, label] of [[SAVE_KEY, 'Sauvegarde manuelle'], [PREVIOUS_KEY, 'Colonie précédente']]) {
-      const data = storage.getItem(key!);
+      const data = this.repository.peekItem(key!);
       if (data === null) continue;
       let detail = 'Données illisibles — le chargement vérifiera ce fichier.';
       const value = storedSaveMetadata(data);
@@ -43,36 +52,44 @@ export class GameSession {
   private async exclusive(action: () => Promise<void>): Promise<void> {
     if (this.busy) throw new Error('Une opération de partie est déjà en cours.');
     this.busy = true;
-    try { await action(); } finally { this.busy = false; }
+    let undecided = false;
+    try { await action(); }
+    catch (error) {
+      const status = error as { outcome?: unknown; stopped?: unknown };
+      undecided = status?.outcome === 'unknown' && status.stopped !== true;
+      throw error;
+    } finally { if (!undecided) this.busy = false; }
   }
 
   async save(): Promise<void> {
     return this.exclusive(async () => {
       if (!this.hasWorld) throw new Error('Aucune colonie à sauvegarder.');
+      if (this.simulationStopped) throw new Error('Le dernier tick peut être incomplet. Chargez une colonie validée pour reprendre.');
       const data = await this.client.save();
       if (!data) throw new Error('La simulation a retourné une sauvegarde vide.');
       const stored = await encodeStoredSave(data);
-      this.storage().setItem(SAVE_KEY, stored);
+      await this.repository.setItem(SAVE_KEY, stored);
     });
   }
 
   private async replace(replaceWorld: () => Promise<unknown>): Promise<void> {
-    const storage = this.storage();
+    const storage = this.repository;
     let preserved = false;
-    const olderBackup = storage.getItem(PREVIOUS_KEY);
-    if (this.hasWorld) {
+    const olderBackup = await storage.getItem(PREVIOUS_KEY);
+    if (this.hasWorld && !this.simulationStopped) {
       const previous = await this.client.save();
       if (!previous) throw new Error('Impossible de préserver la colonie actuelle.');
       const stored = await encodeStoredSave(previous);
-      storage.setItem(PREVIOUS_KEY, stored);
+      await storage.setItem(PREVIOUS_KEY, stored);
       preserved = true;
     }
     try { await replaceWorld(); }
     catch (error) {
+      if ((error as { outcome?: unknown })?.outcome === 'unknown') throw error;
       if (preserved) {
         try {
-          if (olderBackup === null) storage.removeItem(PREVIOUS_KEY);
-          else storage.setItem(PREVIOUS_KEY, olderBackup);
+          if (olderBackup === null) await storage.removeItem(PREVIOUS_KEY);
+          else await storage.setItem(PREVIOUS_KEY, olderBackup);
         } catch {
           throw new Error('Opération refusée. La colonie active est conservée ; sa copie de récupération remplace la précédente.');
         }
@@ -80,6 +97,10 @@ export class GameSession {
       throw error;
     }
     this.hasWorld = true;
+    this.simulationStopped = false;
+    // The validated checkpoint and acknowledgement establish the new World.
+    // Graphics preparation may still fail without undoing that acceptance.
+    this.onReplacementAccepted();
     await this.prepare();
   }
 
@@ -101,7 +122,7 @@ export class GameSession {
       if (key !== SAVE_KEY && key !== PREVIOUS_KEY) throw new Error('Emplacement de sauvegarde inconnu.');
       // Read before preserving the active colony: loading the recovery slot may
       // itself replace that slot, but must restore the originally selected data.
-      const data = this.storage().getItem(key);
+      const data = await this.repository.getItem(key);
       if (data === null) throw new Error('Cette sauvegarde n’est plus disponible.');
       const decoded = await decodeStoredSave(data);
       await this.replace(() => this.client.load(decoded));

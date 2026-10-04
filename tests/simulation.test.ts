@@ -1,9 +1,20 @@
 import { SCHEMA_VERSION } from '../src/sim/types';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test,vi } from 'vitest';
+import { HarvestPotentialLedger } from './scenarios/harvest-potential-ledger.ts';
 import { addGroundMaterial, applyCommand, createWorld, deserializeWorld, hashWorld, refreshStock, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
 import type { Command, ResourceKind, World } from '../src/sim/index.ts';
 import legacyFixture from './fixtures/schema-1-active-construction.json';
 import materialFixture from './fixtures/schema-2-needs-haul.json';
+
+const berryHarvestProbe=vi.hoisted(()=>({active:false,records:[] as {world:unknown;id:number;quantity:number|null}[]}));
+vi.mock('../src/sim/gathering.ts',async importOriginal=>{
+  const actual=await importOriginal<typeof import('../src/sim/gathering.ts')>();
+  return {...actual,gatherResource:(...args:Parameters<typeof actual.gatherResource>)=>{
+    const id=args[1].id,kind=args[1].kind,quantity=actual.gatherResource(...args);
+    if(berryHarvestProbe.active&&kind==='berries')berryHarvestProbe.records.push({world:args[0],id,quantity});
+    return quantity;
+  }};
+});
 
 function fixture(pawnCount = 3): World {
   const world = createWorld(42, 16, 16);
@@ -391,7 +402,7 @@ describe('deterministic colony simulation', () => {
   test('five seeded two-day colonies conserve matter each tick through command churn and real outcomes', () => {
     for (const seed of [1, 7, 42, 271, 65535]) {
       const world = createWorld(seed, 24, 24); world.foodRules = 'legacy'; for (const pile of world.piles) if (pile.kind === 'food') pile.item = 'legacy-portion'; const initialResources = world.resources.length;
-      const initialWood = woodMass(world); const initialFood = foodMass(world); let meals = 0;
+      const initialWood = woodMass(world); const initialFood = foodMass(world); const harvestLedger=new HarvestPotentialLedger(world.resources);let meals = 0;
       for (const item of world.resources) if (item.kind !== 'rock') command(world, { type: 'designate', kind: item.kind === 'tree' ? 'chop' : 'harvest', x: item.x, z: item.z });
       for (const [x, z] of [[10, 14], [11, 14], [12, 14], [13, 14]]) order(world, 'bed', x!, z!);
       zone(world, 9, 11); zone(world, 14, 11, 75, false, true);
@@ -402,10 +413,14 @@ describe('deterministic colony simulation', () => {
           const job = gathering[(tick / 550 + seed) % Math.max(1, gathering.length)];
           if (job) { command(world, { type: 'cancel', x: job.x, z: job.z }); applyCommand(world, { type: 'designate', kind: job.kind, x: job.x, z: job.z, orientation: job.orientation }); }
         }
-        const hunger = world.pawns.map(pawn => pawn.hunger); stepWorld(world); audit(world, initialWood);
+        const hunger = world.pawns.map(pawn => pawn.hunger);
+        berryHarvestProbe.records.length=0;berryHarvestProbe.active=true;
+        try{stepWorld(world);}finally{berryHarvestProbe.active=false;}
+        for(const record of berryHarvestProbe.records)if(record.world===world)harvestLedger.record(record.id,record.quantity);
+        audit(world, initialWood);
         // Observe completed ingestions independently of physical inventory and reservations.
         meals += world.pawns.filter((pawn, index) => pawn.hunger > hunger[index]!).length;
-        expect(foodMass(world) + meals, `food seed=${seed} tick=${world.tick}`).toBe(initialFood);
+        expect(foodMass(world) + meals + harvestLedger.lost, `food seed=${seed} tick=${world.tick}`).toBe(initialFood);
         if (tick === 450 || tick === 6550) {
           const resumed = deserializeWorld(serializeWorld(world)); const copy = deserializeWorld(serializeWorld(world));
           stepWorld(resumed, 73); for (let step = 0; step < 73; step++) stepWorld(copy); expect(hashWorld(resumed)).toBe(hashWorld(copy));

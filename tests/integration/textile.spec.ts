@@ -28,7 +28,7 @@ test('cotton UI 1×/6×: crop choice, sowing, cloth filter, physical harvest/car
     const saved=await world(page);await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,saved);
     // Maturity is a presentation boundary fixture. The core scenario grows for 18+ real simulated days.
     const mature=structuredClone(saved);for(const r of mature.resources){r.growth=1;r.growthTick=mature.tick;}
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(mature)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,mature);await page.keyboard.press('Escape');
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(mature)});await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,mature);await page.keyboard.press('Escape');
     await cell(page,18,16);await expect(page.locator('#cell-description')).toContainText('10 tissu');await page.screenshot({path:testOutputPath(`artifacts/cotton-v71-${speed}x.png`)});
     await page.locator(`[data-speed="${speed}"]`).click();
     await page.waitForFunction(()=>{if(!window.__lisiere.world.piles.some(p=>p.item==='cloth'&&p.owner.type==='pawn'))return false;document.querySelector<HTMLButtonElement>('[data-speed="0"]')!.click();return true;},undefined,{timeout:15000});

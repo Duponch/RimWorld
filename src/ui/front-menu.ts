@@ -147,6 +147,8 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   let difficultyChosen = false;
   let reloadChosen = false;
   let selectedSave: string | undefined;
+  let homeResume: HTMLButtonElement | undefined;
+  let homeStart: HTMLButtonElement | undefined;
 
   function clearError(): void {
     error.hidden = true;
@@ -224,13 +226,21 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     content.scrollTop = 0;
   }
 
+  function resumeAction(): HTMLButtonElement {
+    return action('Reprendre la colonie', () => {
+      if (hasGame) void run(options.onResume, 'Reprise de la colonie…');
+    }, 'front-primary');
+  }
+
   function renderHome(): void {
     const intro = element('div', 'front-home-intro');
     intro.append(element('p', '', 'Trois vies. Un nouveau foyer.'), element('p', 'front-home-subtitle', 'À vous d’écrire la suite.'));
     const nav = element('nav', 'front-home-actions');
     nav.setAttribute('aria-label', 'Menu principal');
-    if (hasGame) nav.append(action('Reprendre la colonie', () => { void run(options.onResume, 'Reprise de la colonie…'); }, 'front-primary'));
-    nav.append(action('Nouvelle partie', showCreation, hasGame ? '' : 'front-primary'), action('Charger une partie', showLoad));
+    homeResume = hasGame ? resumeAction() : undefined;
+    if (homeResume) nav.append(homeResume);
+    homeStart = action('Nouvelle partie', showCreation, hasGame ? '' : 'front-primary');
+    nav.append(homeStart, action('Charger une partie', showLoad));
     const later = element('div', 'front-later');
     later.append(unavailable('Tutoriel'), action('Options', () => navigate('options')), unavailable('Mods'), unavailable('Crédits'));
     nav.append(later);
@@ -540,8 +550,24 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   }
 
   function setHasGame(next: boolean): void {
+    const changed = hasGame !== next;
     hasGame = next;
     pauseNote.textContent = hasGame ? 'COLONIE EN PAUSE' : '';
+    if (!changed || page !== 'home') return;
+    const nav = content.querySelector('.front-home-actions');
+    if (!nav) return;
+    const restoreFocus = homeResume === document.activeElement;
+    homeResume?.remove();
+    homeResume = hasGame ? resumeAction() : undefined;
+    if (homeResume) {
+      nav.prepend(homeResume);
+      if (busy || operationPending) {
+        homeResume.disabled = true;
+        enabledBeforeBusy.push(homeResume);
+      }
+    }
+    homeStart?.classList.toggle('front-primary', !hasGame);
+    if (restoreFocus && !root.hidden) title.focus({ preventScroll: true });
   }
 
   function showCreation(): void {

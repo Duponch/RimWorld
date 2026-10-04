@@ -306,8 +306,8 @@ export class PawnLayer {
       If(bone.equal(1).and(walking.greaterThan(.5)),()=>{
         angle.assign(sin(gaitPhase).mul(.045));
       });
-      If(idle.and(bone.equal(0)),()=>angle.assign(breath.mul(.018)));
-      If(idle.and(bone.equal(1)),()=>angle.assign(breath.mul(.026)));
+      If(idle.and(bone.equal(0)),()=>{ angle.assign(breath.mul(.018)); });
+      If(idle.and(bone.equal(1)),()=>{ angle.assign(breath.mul(.026)); });
       If(idle.and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
         angle.assign(breath.mul(bone.equal(3).select(float(-.025),float(.025))).add(.035));
       });
@@ -400,11 +400,11 @@ export class PawnLayer {
         if(weapon.item==='bolt-action-rifle') {
           // High diagonal sling at rest: the long gun remains legible above
           // the torso. During aim its authored barrel (+Y) points forward.
-          If(isWeapon,()=>animated.assign(vec3(along.mul(.30).add(across).add(.13),along.mul(.78).add(depth.mul(.12)).add(.84),depth.mul(.8).add(.25))));
-          If(shooting.and(isWeapon),()=>animated.assign(vec3(across.add(.10),depth.add(1.02).add(recoil.mul(.035)),along.add(.45).sub(recoil.mul(.12)))));
+          If(isWeapon,()=>{ animated.assign(vec3(along.mul(.30).add(across).add(.13),along.mul(.78).add(depth.mul(.12)).add(.84),depth.mul(.8).add(.25))); });
+          If(shooting.and(isWeapon),()=>{ animated.assign(vec3(across.add(.10),depth.add(1.02).add(recoil.mul(.035)),along.add(.45).sub(recoil.mul(.12)))); });
         } else {
-          If(isWeapon,()=>animated.assign(vec3(across.add(.27),along.mul(.82).add(.65),depth.add(.13))));
-          If(shooting.and(isWeapon),()=>animated.assign(vec3(across.add(.19),depth.add(.99).add(recoil.mul(.035)),along.add(.44).sub(recoil.mul(.09)))));
+          If(isWeapon,()=>{ animated.assign(vec3(across.add(.27),along.mul(.82).add(.65),depth.add(.13))); });
+          If(shooting.and(isWeapon),()=>{ animated.assign(vec3(across.add(.19),depth.add(.99).add(recoil.mul(.035)),along.add(.44).sub(recoil.mul(.09)))); });
           if(weapon.item==='plasteel-knife')If(motion.z.equal(8).or(motion.z.equal(WORK_POSE.groundMelee)).and(isWeapon),()=>{
             const reach=sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI));
             animated.assign(vec3(across.add(.23),depth.add(.83),along.add(.38).add(reach.mul(.2))));
@@ -420,7 +420,7 @@ export class PawnLayer {
         animated.y.assign(animated.z.add(.19));
         animated.z.assign(float(.65).sub(y));
       });
-      If(motion.z.equal(POSE_DEAD),()=>animated.z.assign(animated.z.mul(.78)));
+      If(motion.z.equal(POSE_DEAD),()=>{ animated.z.assign(animated.z.mul(.78)); });
       If(motion.z.equal(6),()=>{
         const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();
         animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));
@@ -440,52 +440,52 @@ export class PawnLayer {
       // frequency is integral and cannot jump at that wrap boundary.
       const blink=sin(this.time.add(motion.w.mul(1.97))).greaterThan(.994);
       const face=dead.select(float(PAWN_EYE_CROSS),asleep.or(blink).select(float(PAWN_EYE_CLOSED),float(PAWN_EYE_OPEN)));
-      If(dye.greaterThanEqual(PAWN_EYE_OPEN).and(dye.lessThanEqual(PAWN_EYE_CROSS)).and(dye.notEqual(face)),()=>animated.assign(vec3(0)));
-      If(recon.and(dye.greaterThanEqual(PAWN_EYE_OPEN)).and(dye.lessThanEqual(PAWN_EYE_CROSS)),()=>animated.assign(vec3(0)));
-      If(hiddenAppearancePart(),()=>animated.assign(vec3(0)));
+      If(dye.greaterThanEqual(PAWN_EYE_OPEN).and(dye.lessThanEqual(PAWN_EYE_CROSS)).and(dye.notEqual(face)),()=>{ animated.assign(vec3(0)); });
+      If(recon.and(dye.greaterThanEqual(PAWN_EYE_OPEN)).and(dye.lessThanEqual(PAWN_EYE_CROSS)),()=>{ animated.assign(vec3(0)); });
+      If(hiddenAppearancePart(),()=>{ animated.assign(vec3(0)); });
       // Four anatomical bits share aShape.x. Degenerate each absent limb at
       // the common body origin after pose/portage transforms; colour and shadow
       // passes use this same node, without another mesh or actor attribute.
       const limbMask=attribute('aShape','vec4').x.div(100).floor();
       for(const limb of HUMAN_LIMB_VISUALS){
         const limbBone=limb.bones.reduce((matches,id)=>matches.or(bone.equal(id)),bone.equal(-1));
-        If(limbBone.and(limbMask.div(limb.bit).floor().mod(2).greaterThan(.5)),()=>animated.assign(vec3(0)));
+        If(limbBone.and(limbMask.div(limb.bit).floor().mod(2).greaterThan(.5)),()=>{ animated.assign(vec3(0)); });
       }
-      If(helmet.and(dye.greaterThanEqual(100)).and(dye.lessThan(200)),()=>animated.assign(vec3(0)));
-      If(recon.and(dye.greaterThanEqual(200)),()=>animated.assign(vec3(0)));
+      If(helmet.and(dye.greaterThanEqual(100)).and(dye.lessThan(200)),()=>{ animated.assign(vec3(0)); });
+      If(recon.and(dye.greaterThanEqual(200)),()=>{ animated.assign(vec3(0)); });
       const rotStage=attribute('aShape','vec4').x.div(10).floor().mod(10);
       // A dried body loses the garment/hair silhouette and narrows in the
       // same resident rig. The palette below reveals a pale skeletal form.
       If(rotStage.greaterThan(1.5),()=>{
-        If(dye.lessThan(0).or(dye.greaterThanEqual(100)),()=>animated.assign(vec3(0)));
+        If(dye.lessThan(0).or(dye.greaterThanEqual(100)),()=>{ animated.assign(vec3(0)); });
         animated.x.assign(animated.x.mul(.78));
       });
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
     })();
     const baseColor = Fn(()=>{const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),attribute('dye','float').equal(1).select(float(1),float(0))).toVar();
-      If(attribute('dye','float').equal(-3).or(attribute('dye','float').equal(PARKA_HOOD_DYE)),()=>tint.assign(attribute('aTint','vec3')));
-      If(attribute('aEquipment','vec4').y.equal(2).and(attribute('boneId','float').greaterThanEqual(2)).and(attribute('boneId','float').lessThanEqual(3)),()=>tint.assign(attribute('aSkin','vec3')));
-      If(attribute('dye','float').equal(2),()=>tint.assign(attribute('aSkin','vec3')));
-      If(attribute('dye','float').greaterThanEqual(100),()=>tint.assign(attribute('aHairBlood','vec4').xyz));
+      If(attribute('dye','float').equal(-3).or(attribute('dye','float').equal(PARKA_HOOD_DYE)),()=>{ tint.assign(attribute('aTint','vec3')); });
+      If(attribute('aEquipment','vec4').y.equal(2).and(attribute('boneId','float').greaterThanEqual(2)).and(attribute('boneId','float').lessThanEqual(3)),()=>{ tint.assign(attribute('aSkin','vec3')); });
+      If(attribute('dye','float').equal(2),()=>{ tint.assign(attribute('aSkin','vec3')); });
+      If(attribute('dye','float').greaterThanEqual(100),()=>{ tint.assign(attribute('aHairBlood','vec4').xyz); });
       const legs=attribute('boneId','float').greaterThanEqual(4).and(attribute('dye','float').equal(0));
       const cloth=new THREE.Color(0xd8c8a2),leather=new THREE.Color(0xad8a61);
-      If(legs.and(attribute('aEquipment','vec4').w.equal(1)),()=>tint.assign(vec3(cloth.r,cloth.g,cloth.b)));
-      If(legs.and(attribute('aEquipment','vec4').w.equal(2)),()=>tint.assign(vec3(leather.r,leather.g,leather.b)));
-      {const color=new THREE.Color(0xa88b63);If(legs.and(attribute('aEquipment','vec4').w.equal(3)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
-      {const color=new THREE.Color(0x839ac5);If(legs.and(attribute('aEquipment','vec4').w.equal(4)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
-      {const color=new THREE.Color(0xc3a375);If(legs.and(attribute('aEquipment','vec4').w.equal(5)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
-      {const color=new THREE.Color(0xb3c0ba);If(legs.and(attribute('aEquipment','vec4').w.equal(6)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
-      {const color=new THREE.Color(0xb26422);If(legs.and(attribute('aEquipment','vec4').w.equal(7)),()=>tint.assign(vec3(color.r,color.g,color.b)));}
+      If(legs.and(attribute('aEquipment','vec4').w.equal(1)),()=>{ tint.assign(vec3(cloth.r,cloth.g,cloth.b)); });
+      If(legs.and(attribute('aEquipment','vec4').w.equal(2)),()=>{ tint.assign(vec3(leather.r,leather.g,leather.b)); });
+      {const color=new THREE.Color(0xa88b63);If(legs.and(attribute('aEquipment','vec4').w.equal(3)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
+      {const color=new THREE.Color(0x839ac5);If(legs.and(attribute('aEquipment','vec4').w.equal(4)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
+      {const color=new THREE.Color(0xc3a375);If(legs.and(attribute('aEquipment','vec4').w.equal(5)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
+      {const color=new THREE.Color(0xb3c0ba);If(legs.and(attribute('aEquipment','vec4').w.equal(6)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
+      {const color=new THREE.Color(0xb26422);If(legs.and(attribute('aEquipment','vec4').w.equal(7)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
       const stage=attribute('aShape','vec4').x.div(10).floor().mod(10);
-      {const red=new THREE.Color(0x965f58);If(stage.equal(1),()=>tint.assign(mix(tint,vec3(red.r,red.g,red.b),.7)));}
+      {const red=new THREE.Color(0x965f58);If(stage.equal(1),()=>{ tint.assign(mix(tint,vec3(red.r,red.g,red.b),.7)); });}
       {const bone=new THREE.Color(0xc9bd9b),dark=new THREE.Color(0x554e43);
         const eyes=attribute('dye','float').greaterThanEqual(PAWN_EYE_OPEN).and(attribute('dye','float').lessThanEqual(PAWN_EYE_CROSS));
         If(stage.greaterThan(1.5),()=>{
           tint.assign(eyes.select(vec3(dark.r,dark.g,dark.b),vec3(bone.r,bone.g,bone.b)));
           // Sparse dark gaps read as ribs in the existing torso geometry.
           const ribs=sin(positionLocal.y.mul(43)).greaterThan(.25);
-          If(attribute('boneId','float').equal(0).and(attribute('dye','float').equal(1)),()=>tint.assign(ribs.select(vec3(bone.r,bone.g,bone.b),vec3(dark.r,dark.g,dark.b))));
+          If(attribute('boneId','float').equal(0).and(attribute('dye','float').equal(1)),()=>{ tint.assign(ribs.select(vec3(bone.r,bone.g,bone.b),vec3(dark.r,dark.g,dark.b))); });
         });}
       // Blood is drawn only on body/clothes, never weapon, hair or eye marks.
       const dye=attribute('dye','float'),bone=attribute('boneId','float');
@@ -523,7 +523,7 @@ export class PawnLayer {
       If(attribute('cargoKind', 'float').equal(load.x), () => {
         scale.assign(load.y.lessThan(0).select(float(1),load.y).mul(0.25).add(0.75));
         const bit=attribute('corpsePartMask','float');
-        If(bit.greaterThan(0).and(load.y.lessThan(0)).and(load.y.negate().sub(1).div(bit.max(1)).floor().mod(2).greaterThan(.5)),()=>scale.assign(0));
+        If(bit.greaterThan(0).and(load.y.lessThan(0)).and(load.y.negate().sub(1).div(bit.max(1)).floor().mod(2).greaterThan(.5)),()=>{ scale.assign(0); });
       });
       const height = float(WORLD_SCALE.carriedHeight).toVar();
       If(attribute('aMotion','vec4').z.equal(1).or(attribute('aMotion','vec4').z.equal(POSE_SLEEP)).or(attribute('aMotion','vec4').z.equal(POSE_DEAD)),()=>{height.assign(.28);});

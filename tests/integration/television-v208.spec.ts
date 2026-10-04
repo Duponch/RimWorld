@@ -29,8 +29,8 @@ async function frame(page:Page,tick:number){
 }
 async function saveResume(page:Page,state:World){
   await panel(page,'menu');await page.locator('#save').click();
-  await expect.poll(()=>page.evaluate(key=>{const raw=localStorage.getItem(key);return raw?JSON.parse(raw).tick:null;},saveKey)).toBe(state.tick);
-  expect(deserializeWorld((await page.evaluate(key=>localStorage.getItem(key),saveKey))!)).toEqual(state);
+  await expect.poll(()=>page.evaluate(key=>{const raw=window.__lisiere.saveRepository.peekItem(key);return raw?JSON.parse(raw).tick:null;},saveKey)).toBe(state.tick);
+  expect(deserializeWorld((await page.evaluate(key=>window.__lisiere.saveRepository.peekItem(key),saveKey))!)).toEqual(state);
   await page.locator('#load').click();await expectWorld(page,state);await page.keyboard.press('Escape');
 }
 

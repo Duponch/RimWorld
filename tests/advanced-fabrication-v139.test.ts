@@ -1,3 +1,4 @@
+import { withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {expect,test} from 'vitest';
@@ -179,9 +180,9 @@ test('four partial input stacks leave no adjacent cell; the new workpiece rests 
 test('V138 migration is neutral and rejects V139 research, bill, task and typed work before upgrading',()=>{
   const old=deserializeWorld(readFileSync('public/test-saves/v123/industrie.json','utf8'));
   delete old.breakdown;
-  (old as {schemaVersion:number}).schemaVersion=138;
+  (old as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(old),138);
   const before=structuredClone(old),migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated).toEqual({...before,schemaVersion:SCHEMA_VERSION,breakdown:newBreakdownCalendar(old.seed,old.tick)});
+  expect(migrated).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION,breakdown:newBreakdownCalendar(old.seed,old.tick)}));
   const futureResearch=structuredClone(old);futureResearch.research!.advancedFabrication={points:ADVANCED_FABRICATION_RESEARCH_COST,completedAt:futureResearch.tick};
   expect(()=>deserializeWorld(JSON.stringify(futureResearch))).toThrow('Invalid version 138 save');
   const futureBill=structuredClone(old);futureBill.structures.find(s=>s.kind==='fabrication-bench')!.bills!.push({...futureBill.structures.find(s=>s.kind==='fabrication-bench')!.bills![0]!,id:futureBill.nextId++,recipe:'make-advanced-component',filters:{component:true,steel:true,plasteel:true,gold:true}});
@@ -202,16 +203,16 @@ test('active and queued advanced reservations require the four exact material to
   const short:unknown=structuredClone(order);
   (short as {cooking:{ingredients:{item:string;quantity:number}[]}}).cooking.ingredients.find(i=>i.item==='gold')!.quantity=2;
   expect(validCookingOrder(short,w)).toBe(false);
-  (w as {schemaVersion:number}).schemaVersion=138;
+  (w as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(w),138);
   expect(validCookingOrder(order,w)).toBe(false);
   expect(validateCooking(w,138,new Set())).toContain('Invalid cooking bill.');
-  (w as {schemaVersion:number}).schemaVersion=139;
+  (w as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(w),139);
   const pawn=w.pawns[0]!;pawn.x=spot.x;pawn.z=spot.z;pawn.state='working';pawn.cooking={...order.cooking,phase:'work',ingredients:ingredients.map(i=>({...i,stage:'placed'}))};
   // Reservation shape and total checks precede ownership/cell checks.
   expect(validateCooking(w,139,new Set()).some(e=>e==='Invalid recipe quantity or phase.')).toBe(false);
   pawn.cooking.ingredients.find(i=>i.item==='gold')!.quantity=2;
   expect(validateCooking(w,139,new Set())).toContain('Invalid recipe quantity or phase.');
-  (w as {schemaVersion:number}).schemaVersion=138;
+  (w as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(w),138);
   expect(validateCooking(w,138,new Set())).toContain('Invalid or future production recipe.');
 });
 

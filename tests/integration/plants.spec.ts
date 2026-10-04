@@ -12,7 +12,7 @@ test('buisson persistant : inspection, récolte, sauvegarde et coupe par la vrai
     const fixture=createWorld(42,32,32);fixture.tiles=fixture.tiles.map(()=>({terrain:'grass'}));fixture.piles=[];fixture.stock={wood:0,food:0};
     fixture.pawns=fixture.pawns.slice(0,1);Object.assign(fixture.pawns[0]!,{x:16,z:16,hunger:100,rest:100});
     const id=fixture.nextId++;fixture.resources=[{id,kind:'berries',x:18,z:14,amount:10}];
-    await page.evaluate(({key,value})=>localStorage.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
+    await page.evaluate(({key,value})=>window.__lisiere.saveRepository.setItem(key,value),{key:saveKey,value:serializeWorld(fixture)});
     await startPaused(page);await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fixture);
     await tool(page,'select');await cell(page,18,14);
     await expect(page.locator('#cell-description .cell-facts p').filter({hasText:'Croissance :'})).toContainText('100 %');

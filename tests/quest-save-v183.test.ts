@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { withoutMiningSkill, withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
+import { withoutMiningSkill, withoutPredatorDefaults, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { enableQuests } from '../src/sim/quests.ts';
 import { validateQuests } from '../src/sim/quest-save.ts';
 import { validateRaids } from '../src/sim/raid-save.ts';
@@ -87,12 +87,12 @@ function pursued(): World {
 
 test('schema 171 migrates without a quest and rejects either future quest field', () => {
   const current = createScenarioWorld(42, 32, 'crashlanded');
-  const old = withoutPredatorDefaults(withoutMiningSkill(structuredClone(current)));
+  const old = withoutPredatorDefaults(withoutTelevisionRecreation(withoutMiningSkill(structuredClone(current))));
   (old as unknown as Record<string, unknown>).schemaVersion = 171;
   // Prepare the historical ecological profile before any future quest field.
   delete old.wildlife;
   enableBiomeWildlife(old, old.site!.biome);
-  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedTelevisionRecreation({...old,schemaVersion:SCHEMA_VERSION}));
 
   const injected = structuredClone(old);
   injected.quests = offered().quests;
@@ -110,8 +110,8 @@ test('schema 171 migrates without a quest and rejects either future quest field'
   const group = createRaidGroup(oldRaid, { count: 1, sites, random: { rng: 1 } })!;
   // The current actor factory adds Mining; this declared historical actor did
   // not have that profile. Validate the neutral base before injecting origin.
-  withoutMiningSkill(oldRaid);
-  expect(deserializeWorld(JSON.stringify(oldRaid))).toEqual({...oldRaid,schemaVersion:SCHEMA_VERSION});
+  withoutTelevisionRecreation(withoutMiningSkill(oldRaid));
+  expect(deserializeWorld(JSON.stringify(oldRaid))).toEqual(withMigratedTelevisionRecreation({...oldRaid,schemaVersion:SCHEMA_VERSION}));
   group.originQuestId = 1;
   expect(() => deserializeWorld(JSON.stringify(oldRaid))).toThrow(/version 171/);
 });

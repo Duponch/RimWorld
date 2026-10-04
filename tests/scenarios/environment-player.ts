@@ -16,6 +16,7 @@ import { captureStandability } from '../../src/sim/furniture-travel.ts';
 import { queryArea } from '../../src/sim/designation.ts';
 import { prisonDecisions,prisonWoodDecisions,type PrisonPlayerState } from './prison-player.ts';
 import { energyPlan } from './energy-player.ts';
+import { crashlandedThreatActive } from './crashlanded-player.ts';
 import type { Decision } from './colony-player.ts';
 import type { Cell,DesignateCommand,StructureKind,World } from '../../src/sim/types.ts';
 
@@ -118,9 +119,9 @@ function miningDecisions(w:World,s:EnvironmentPlayerState,planned:Decision[]):De
 /** Current stocks, weather, people and power only. No future weather or raid
  * deadline is consulted, and no temperature/growth/resistance is changed. */
 export function environmentDecisions(w:World,s:EnvironmentPlayerState):Decision[] {
-  if(!w.climate)return [{reason:'Activer explicitement le climat annuel sur la colonie V86 conservée, sans inventer son passé.',command:{type:'climate-adopt'}}];
+  if(!w.climate&&!crashlandedThreatActive(w))return [{reason:'Activer explicitement le climat annuel sur la colonie V86 conservée, sans inventer son passé.',command:{type:'climate-adopt'}}];
   const original=prisonDecisions(w,s.prison);
-  if(w.raids?.active||w.pawns.some(p=>p.draft)||original.some(d=>['order-rescue','order-tend','order-feed'].includes(d.command.type)))return original;
+  if(crashlandedThreatActive(w)||w.pawns.some(p=>p.draft)||original.some(d=>['order-rescue','order-tend','order-feed'].includes(d.command.type)))return original;
   // A resumed notebook may contain the first route through an inaccessible bed
   // foot. Replan only its cable intent, never buildings or materials in World.
   const obsoleteWire:Cell[]=[];

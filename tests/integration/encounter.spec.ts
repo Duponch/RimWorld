@@ -40,7 +40,7 @@ test('native encounter UI: opt-in creation, ownership, reaction policy, hostile 
     await panel(page,'menu');await page.locator('#save').click();await page.keyboard.press('Escape');
     for(const speed of [1,6]) {
       const initial=rescueEncounter();initial.pawns[2].priorities.doctor=0;Object.assign(fixtureBuilding(initial,'bed',5,25),{medical:true});Object.assign(fixtureBuilding(initial,'bed',8,25),{medical:true});
-      await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
+      await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(initial)});
       await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
       await page.locator(`[data-pawn="${initial.pawns[0].id}"]`).click();
       await page.locator(`[data-speed="${speed}"]`).click();
@@ -52,7 +52,7 @@ test('native encounter UI: opt-in creation, ownership, reaction policy, hostile 
       const target=await page.evaluate(id=>(window as any).__encounter.screen.find((p:any)=>p.id===id),enemy.id);expect(target).toBeDefined();await page.mouse.click(target.x,target.y);
       await expect.poll(async()=>(await world(page)).pawns[1].shooting?.order?.targetId).toBe(enemy.id);
       await page.locator('[data-speed="6"]').click();await expect.poll(async()=>['downed','dead'].includes((await world(page)).pawns[3].state),{timeout:25000}).toBe(true);await page.locator('[data-speed="0"]').click();
-      await page.locator(`[data-pawn="${defender.id}"]`).click();await page.locator('#toggle-draft').click();await panel(page,'work');await page.getByLabel(`Priorité médecin ${initial.pawns[2].name}`,{exact:true}).selectOption('1');await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
+      await page.locator(`[data-pawn="${defender.id}"]`).click();await page.locator('#toggle-draft').click();await panel(page,'work');await page.getByLabel(`Priorité Médecin ${initial.pawns[2].name}`,{exact:true}).selectOption('1');await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
       await expect.poll(async()=>(await world(page)).pawns[2].rescue?.phase,{timeout:15000,intervals:[50,100]}).toBe('carry');await page.locator('[data-speed="0"]').click();const carried=await world(page);
       await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,carried);await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
       await expect.poll(async()=>(await world(page)).pawns[0].health!.injuries.some(i=>i.tended!==undefined),{timeout:25000}).toBe(true);await page.locator('[data-speed="0"]').click();
@@ -61,7 +61,7 @@ test('native encounter UI: opt-in creation, ownership, reaction policy, hostile 
     }
     const fleeing=medicalCarrier(),civil=fleeing.pawns[0],hostile=startingPawn(fleeing.nextId++,'Menace',civil.x+6,civil.z,0,100);hostile.faction='outlaws';fleeing.pawns.push(hostile);
     clearQueuedOrders(fleeing,civil);civil.orders.active=null;delete civil.priorityWork;expect(startTravel(fleeing,civil,{x:civil.x,z:civil.z+1})).toBe(true);
-    await page.evaluate(({key,data})=>localStorage.setItem(key,data),{key:saveKey,data:serializeWorld(fleeing)});
+    await page.evaluate(({key,data})=>window.__lisiere.saveRepository.setItem(key,data),{key:saveKey,data:serializeWorld(fleeing)});
     await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,fleeing);await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
     await expect.poll(()=>page.evaluate(()=>(window as any).__encounter.cargoFleeFrames),{timeout:12000}).toBeGreaterThan(20);
     await expect.poll(async()=>!(await world(page)).pawns[0].flee,{timeout:12000}).toBe(true);await page.locator('[data-speed="0"]').click();expect(validateWorld(await world(page))).toEqual([]);

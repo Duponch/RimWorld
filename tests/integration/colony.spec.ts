@@ -24,7 +24,7 @@ test('besoins physiques : repas en main, sommeil dans deux lits orientés, attri
     const ids = [fixture.nextId++, fixture.nextId++];
     fixture.structures = [{ id: ids[0], kind: 'bed', x: 17, z: 18, orientation: 1, footprint: 'standard', quality: 'normal' }, { id: ids[1], kind: 'bed', x: 19, z: 18, orientation: 2, footprint: 'standard', quality: 'normal' }];
     addGroundMaterial(fixture, 'food', 1, { x: 16, z: 14 }); refreshStock(fixture);
-    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: saveKey, value: serializeWorld(fixture) });
+    await page.evaluate(({ key, value }) => window.__lisiere.saveRepository.setItem(key, value), { key: saveKey, value: serializeWorld(fixture) });
     await startPaused(page); // Reopen so the normal save-slot discovery sees this fixture.
     await panel(page, 'menu'); await page.locator('#load').click(); await expectWorld(page, fixture);
     await page.getByRole('button', { name: 'Vitesse normale', exact: true }).click();
@@ -42,7 +42,7 @@ test('besoins physiques : repas en main, sommeil dans deux lits orientés, attri
       expect({ x: pawn.x, z: pawn.z }).toEqual({ x: bed.x, z: bed.z });
     }
     await panel(page, 'menu'); await page.locator('#save').click();
-    await expect.poll(() => page.evaluate(key => localStorage.getItem(key), saveKey)).toBe(JSON.stringify(eating));
+    await expect.poll(() => page.evaluate(key => window.__lisiere.saveRepository.peekItem(key), saveKey)).toBe(JSON.stringify(eating));
     await page.locator('#menu-panel [data-close-panel]').click();
     await page.locator(`[data-pawn="${eating.pawns[0].id}"]`).click();
     await expect(page.locator('#selected-action')).toContainText('Mange la portion tenue en main');
@@ -82,9 +82,9 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await expect(page.locator('#alerts [data-alert="beds"]')).toBeVisible();
 
   await panel(page, 'work');
-  await page.getByLabel('Priorité collecte Ada', { exact: true }).selectOption('1');
-  await page.getByLabel('Priorité construction Ada', { exact: true }).selectOption('3');
-  await page.getByLabel('Priorité transport Ada', { exact: true }).selectOption('2');
+  await page.getByLabel('Priorité Foresterie Ada', { exact: true }).selectOption('1');
+  await page.getByLabel('Priorité Construction Ada', { exact: true }).selectOption('3');
+  await page.getByLabel('Priorité Transport Ada', { exact: true }).selectOption('2');
   await expect.poll(async () => (await world(page)).pawns[0].priorities).toEqual({ clean: 3, firefight: 1, warden: 3, basic: 3, hunt: 2, research: 3, patient: 1, bedrest: 3, doctor: 1, craft: 2, mine: 2, gather: 1, build: 3, haul: 2, grow: 2, cook: 2 });
   await tool(page, 'stockpile');
   await page.locator('#stockpile-food').uncheck();
@@ -114,8 +114,8 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   await expect(page.locator('#material-status')).not.toHaveText(/^0 portées/);
   await panel(page, 'menu');
   await page.locator('#save').click();
-  await expect(page.getByRole('status')).toContainText('sauvegardée');
-  const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!) as World, saveKey);
+  await expect(page.locator('#notice')).toContainText('sauvegardée');
+  const saved = await page.evaluate(key => JSON.parse(window.__lisiere.saveRepository.peekItem(key)!) as World, saveKey);
   expect(saved.schemaVersion).toBe(SCHEMA_VERSION);
   expect(saved.pawns.some(pawn => pawn.haul?.phase === 'deliver')).toBe(true);
   expect(JSON.stringify(saved)).toBe(JSON.stringify(duringHaul));
@@ -173,16 +173,33 @@ test('colonie matérielle : réserve filtrée, transport visible, trois couchage
   } finally { await browser.close(); }
 });
 
-test('frontières : commandes répétées, sauvegarde invalide atomique, aide et organisation compacte', async ({ page },testInfo) => {
+test('frontières : commandes répétées, sauvegarde invalide atomique, aide et organisation compacte', async ({ playwright },testInfo) => {
+  test.setTimeout(120_000);
+  const browser = await playwright.chromium.launch({ channel: 'chromium', args: [] });
+  const page = await browser.newPage({ baseURL: 'http://127.0.0.1:5173', viewport: { width: 1440, height: 1000 } });
+  page.setDefaultTimeout(15_000); // Bound a stale UI action independently of this multi-step journey.
+  try {
   const errors = observeErrors(page);
+  const expectSpeedControlsReachable = async () => {
+    const controls = page.locator('.time-controls [data-speed]');
+    await expect(controls).toHaveCount(4);
+    await expect.poll(() => controls.evaluateAll(buttons => buttons.map(button => {
+      const box = button.getBoundingClientRect();
+      const x = box.x + box.width / 2, y = box.y + box.height / 2;
+      const target = document.elementFromPoint(x, y);
+      return box.width > 0 && box.height > 0 && x >= 0 && x < innerWidth && y >= 0 && y < innerHeight
+        && target !== null && button.contains(target);
+    }))).toEqual([true, true, true, true]);
+  };
   await startPaused(page);
   await panel(page, 'work');
+  await expectSpeedControlsReachable();
   await page.getByRole('button', { name: 'Vitesse normale', exact: true }).click();
   const spamStart = (await world(page)).tick;
   // Ordinary UI changes must not reset the worker's wall-clock epoch.
   await page.evaluate(async () => {
     for (let i = 0; i < 40; i++) {
-      const select = document.querySelector<HTMLSelectElement>('[aria-label="Priorité collecte Ada"]')!;
+      const select = document.querySelector<HTMLSelectElement>('[aria-label="Priorité Foresterie Ada"]')!;
       select.value = String(i % 2 + 1);
       select.dispatchEvent(new Event('change', { bubbles: true }));
       await new Promise(resolve => setTimeout(resolve, 25));
@@ -195,16 +212,16 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   const before = await world(page);
   await panel(page, 'menu');
   await page.locator('#save').click();
-  await expect(page.getByRole('status')).toContainText('sauvegardée');
-  await page.evaluate(key => localStorage.setItem(key, '{"schemaVersion":999}'), saveKey);
+  await expect(page.locator('#notice')).toContainText('sauvegardée');
+  await page.evaluate(key => window.__lisiere.saveRepository.setItem(key, '{"schemaVersion":999}'), saveKey);
   await page.locator('#load').click();
-  await expect(page.getByRole('status')).toHaveClass(/error/);
+  await expect(page.locator('#notice')).toHaveClass(/error/);
   expect(await world(page)).toEqual(before);
   await tool(page, 'wall'); await revealCells(page, [{ x: 16, z: 16 }]); await cell(page, 16, 16);
   await expect.poll(async()=>(await world(page)).jobs.length).toBe(1);
   expect((await world(page)).pawns.map(p=>({id:p.id,x:p.x,z:p.z,motion:p.motion}))).toEqual(before.pawns.map(p=>({id:p.id,x:p.x,z:p.z,motion:p.motion})));
   await revealCells(page, [{ x: 16, z: 16 }]); await cell(page, 16, 16); // Duplicate plan still refuses atomically.
-  await expect(page.getByRole('status')).toHaveClass(/error/);
+  await expect(page.locator('#notice')).toHaveClass(/error/);
   expect((await world(page)).jobs).toHaveLength(1);
   await tool(page,'cancel');await revealCells(page,[{x:16,z:16}]);await cell(page,16,16);
   await expect.poll(async()=>(await world(page)).jobs.length).toBe(0);
@@ -219,7 +236,7 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
   await expect(page.locator('#help')).toBeVisible();
   await page.getByRole('button', { name: 'Fermer l’aide', exact: true }).click();
   await expect(page.locator('#help')).not.toBeVisible();
-  await page.locator('#architect-panel [data-close-panel]').click();
+  await expect(page.locator('#architect-panel')).toBeHidden();
 
   for (const viewport of [{ width: 1280, height: 720 }, { width: 768, height: 900 }]) {
     await page.setViewportSize(viewport);
@@ -235,25 +252,27 @@ test('frontières : commandes répétées, sauvegarde invalide atomique, aide et
     expect(time!.y + time!.height).toBeLessThanOrEqual(navigation!.y + 1);
     expect(navigation!.y).toBeGreaterThan(viewport.height * 0.8);
     await panel(page, 'work');
-    await expect(page.getByLabel('Priorité construction Ada', { exact: true })).toBeVisible();
+    await expect(page.getByLabel('Priorité Construction Ada', { exact: true })).toBeVisible();
     const work = await page.locator('#work-panel').boundingBox();
-    expect(work!.y + work!.height).toBeLessThanOrEqual(navigation!.y + 1);
+    expect(work!.y + work!.height).toBeLessThanOrEqual(time!.y + 1);
+    await expectSpeedControlsReachable();
     await tool(page, 'bed');
     await expect(page.locator('[data-tool="bed"]')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.locator('#architect-panel [data-close-panel]').click();
   }
   await page.screenshot({ path:testOutputPath('artifacts/colony-compact.png') });
-  // Real legacy data crosses localStorage → client → worker migration, not a patched snapshot.
-  await page.evaluate(({ key, data }) => localStorage.setItem(key, data), { key: saveKey, data: JSON.stringify(legacySave) });
+  // Real legacy bytes cross the repository → client → worker migration, not a patched snapshot.
+  await page.evaluate(({ key, data }) => window.__lisiere.saveRepository.setItem(key, data), { key: saveKey, data: JSON.stringify(legacySave) });
   await panel(page, 'menu'); await page.locator('#load').click();
   await expectWorld(page, deserializeWorld(JSON.stringify(legacySave)));
   expect((await world(page)).structures.find(structure => structure.kind === 'bed')?.footprint).toBe('legacy-single');
   await panel(page, 'menu'); await page.locator('#save').click();
-  await expect(page.getByRole('status')).toContainText('sauvegardée');
-  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).schemaVersion, saveKey)).toBe(SCHEMA_VERSION);
+  await expect(page.locator('#notice')).toContainText('sauvegardée');
+  expect(await page.evaluate(key => JSON.parse(window.__lisiere.saveRepository.peekItem(key)!).schemaVersion, saveKey)).toBe(SCHEMA_VERSION);
   await testInfo.attach('render-backend',{body:JSON.stringify({backend:await page.evaluate(()=>window.__lisiere.backend)}),contentType:'application/json'});
   expect(errors).toEqual([]);
+  } finally { await browser.close(); }
 });
 
 test('rectangles 250² : aperçu, interruptions, rotation, politiques préservées et récolte réelle', async ({ playwright }) => {
@@ -363,7 +382,7 @@ test('nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une
     await expect(page.locator('#map-size')).toHaveText('250 × 250');
     await startPaused(page);
     await panel(page, 'work');
-    await page.getByLabel('Priorité construction Ada', { exact: true }).selectOption('0');
+    await page.getByLabel('Priorité Construction Ada', { exact: true }).selectOption('0');
     await tool(page, 'chop'); await revealCells(page, [{ x: 14, z: 14 }]); await cell(page, 14, 14);
     await expect.poll(async () => (await world(page)).jobs.length).toBe(1);
     const previous = await world(page);
@@ -381,7 +400,7 @@ test('nouvelle colonie : défaut 250, tailles 128/200/250 et retour exact à une
       if (size === 250) {
         // A full-size save must survive storage and reloading, not only generation.
         await panel(page, 'menu'); await page.locator('#save').click();
-        await expect(page.getByRole('status')).toContainText('sauvegardée');
+        await expect(page.locator('#notice')).toContainText('sauvegardée');
       }
       await panel(page, 'menu');
       await expect(page.locator('#restore-previous')).toBeEnabled();

@@ -153,12 +153,13 @@ export function storedSaveMetadata(stored: string): StoredSaveMetadata | null {
 
 /** Small and historical strings remain byte-for-byte raw. Large worlds use gzip. */
 export async function encodeStoredSave(raw: string): Promise<string> {
+  if (raw.length > MAX_DECOMPRESSED_SAVE_BYTES) throw new Error('Sauvegarde trop volumineuse pour le stockage local.');
   const bytes = encoder.encode(raw);
+  if (bytes.byteLength > MAX_DECOMPRESSED_SAVE_BYTES) throw new Error('Sauvegarde trop volumineuse pour le stockage local.');
   if (bytes.byteLength <= SAVE_COMPRESSION_THRESHOLD) return raw;
   const parsed = parseStoredValue(raw);
   const metadata = metadataFromValue(parsed);
   if (!metadata || metadata.schemaVersion === undefined) throw new Error('Métadonnées de la sauvegarde volumineuse invalides.');
-  if (bytes.byteLength > MAX_DECOMPRESSED_SAVE_BYTES) throw new Error('Sauvegarde trop volumineuse pour le stockage local.');
   const compressed = await compress(bytes);
   if (!compressed.byteLength || compressed.byteLength > MAX_COMPRESSED_SAVE_BYTES) throw new Error('Sauvegarde compressée trop volumineuse pour le stockage local.');
   const envelope: StoredSaveEnvelope = {
@@ -175,8 +176,13 @@ export async function encodeStoredSave(raw: string): Promise<string> {
 
 /** Returns raw JSON for the simulation; legacy unwrapped values pass through. */
 export async function decodeStoredSave(stored: string): Promise<string> {
+  // Raw historical imports must obey the same bound as inflated envelopes.
+  if (stored.length > MAX_DECOMPRESSED_SAVE_BYTES) throw new Error('Sauvegarde trop volumineuse.');
   const envelope = parseEnvelope(stored);
-  if (!envelope) return stored;
+  if (!envelope) {
+    if (encoder.encode(stored).byteLength > MAX_DECOMPRESSED_SAVE_BYTES) throw new Error('Sauvegarde trop volumineuse.');
+    return stored;
+  }
   const compressed = base64ToBytes(envelope.payload, envelope.compressedBytes);
   if (compressed.byteLength !== envelope.compressedBytes) throw new Error('Taille compressée inattendue.');
   const raw = decoder.decode(await decompress(compressed, envelope.uncompressedBytes));

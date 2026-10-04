@@ -1,0 +1,49 @@
+name: Validation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      FORCE_COLOR: '0'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install locked dependencies
+        run: node scripts/run-validation.mjs --label install -- npm ci
+      - name: Regression without long campaigns
+        run: npm run validate:logged -- --label regression -- node scripts/test-regression.mjs --maxWorkers=1
+      - name: Build
+        run: npm run validate:logged -- --label build -- npm run build
+      - name: Documentation contracts
+        run: npm run validate:logged -- --label docs -- npm run check:docs
+      - name: Preserve validation logs and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: validation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            tmp/validation-runs/
+            tmp/test-runs/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,67 @@
+# Rapport externe : appréciation critique et changement de méthode
+
+Analyse du rapport communiqué le 4 octobre, confrontée au code courant, aux contrats et à l’[audit vérifié](audit-code-core-2026-10-04.md). Les affirmations ci-dessous concernent Core ; elles ne supposent pas une parité avec les extensions. La [consolidation V209](../development/consolidation-v209.md) applique les corrections autorisées. Ses [résultats de validation](validation-consolidation-v209.md) sont distincts de ces recommandations.
+
+## Le diagnostic de priorité est juste
+
+Le catalogue et la précision de certaines interactions ont progressé plus vite que les systèmes qui créent des histoires durables. Biographies et incapacités de travail, famille/romance adultes, variété des crises, diversité des menaces, vraie planète et caravanes de groupe restent des écarts majeurs. Une nouvelle variante de repas ou de mobilier apporte souvent moins de choix qu’un système qui change les compétences, engagements et risques des personnes. Les numéros de versions et la quantité de documentation ne mesurent pas cette maturité.
+
+Il faut donc changer le choix des lots, leur taille et leur validation. La précision physique reste utile pour le transport, la consommation, les blessures, les réservations et la reprise ; sa valeur dépend de la boucle qu’elle sert. Une recherche de parité de chaque petit détail, systématiquement accompagnée d’une nouvelle scène et d’un dossier complet, devient un mauvais arbitrage tant que ces piliers sont incomplets. Regrouper le contenu qui partage un pipeline réduit le travail répété sans abandonner les propriétaires réels ou les invariants de sauvegarde.
+
+La [présentation officielle de RimWorld](https://rimworldgame.com/) place personnages, histoires, relations et survie au centre du jeu. La planète et les caravanes sont un pilier ancien du jeu de base, comme l’explique l’[annonce Alpha 16](https://ludeon.com/blog/2016/12/rimworld-alpha-16-wanderlust-released/). Leur absence est une lacune structurelle, pas un simple manque de finition. Elle ne permet cependant pas de calculer un pourcentage d’avancement sans catalogue de référence, pondération et critères d’acceptation.
+
+## Ce que le rapport confond ou ne démontre pas
+
+| Affirmation ou proposition | Évaluation |
+| --- | --- |
+| Aucune relation sociale | Faux au sens large : opinions dirigées, interactions, conflits, loisirs sociaux et deuil existent. Famille/romance adultes restent absentes ; c’est cette profondeur qu’il faut compléter. |
+| Aucune économie ou monde | Une économie physique textile avec achats/ventes et argent fini, reconnaissance individuelle et comptoir existent. Elles ne constituent pas une planète, des factions/destinations et caravanes de groupe. « Troc » ne décrit pas le paiement actuel. |
+| Aucune chute de capsule | Le secours civil par capsule V187 existe. Les raids ennemis par capsule et leurs stratégies manquent ; distinguer les deux. |
+| Crises graves rabattues sur quelques issues | Critique fondée : la diversité effective repose surtout sur errance triste et frénésie alimentaire. Le classement de gravité ne remplace pas des conséquences distinctes. C’est une adaptation de gameplay déclarée, pas une corruption démontrée. |
+| Cassandra reproduite exactement | Trop large : des coefficients/calendriers sont vérifiés, mais richesse des humains/animaux, sélection conditionnelle et catalogue d’incidents sont partiels. Des tickets silencieux évitent une redistribution trompeuse sans fournir le narrateur complet. |
+| Des dizaines de versions sur l’angle de la TV | Exagéré : la TV est le lot V208 et son rectangle frontal avec sièges a une source Core vérifiée. Les variantes de repas ont effectivement été trop fragmentées. Sang/herbe comprennent aussi des corrections visuelles demandées par l’utilisateur. Ce contexte n’annule pas le besoin de rééquilibrage. |
+| Ingrédients « abstraits dans un rayon » suffiraient | La formulation ne démontre pas une règle Core générale. Supprimer collecte et staging modifierait réservations, annulation, stockage et retours. Simplifier le pipeline et ses données est pertinent ; escamoter les transferts physiques pour aller vite casserait des garanties déjà utiles. |
+| Les 55 rouges prouvent des migrations produit cassées | La majorité était liée aux fixtures/promotions et attentes TV obsolètes. Leur remise en état a révélé un vrai défaut d’archive de secours, désormais couvert. Un échec ne doit être ni ignoré ni automatiquement attribué au produit. |
+| `splice(indexOf(...), 1)` corrompt naturellement les collections | Risque JavaScript réel si l’identité manque, mais aucun scénario naturel n’a été établi sur les 29 sites. Les retraits synchrones suivent généralement une recherche dans la même collection. Les protections V209 sont locales et défensives, notamment aux API recevant une référence externe. |
+| Une exception du worker peut laisser la simulation reprendre | Lacune de résilience fondée, corrigée avec un état d’arrêt fatal. Il faut annoncer le tick potentiellement partiel, pas promettre une restauration qui n’existe pas. |
+| localStorage peut empêcher une grosse sauvegarde | Risque fondé. IndexedDB réduit la contrainte et le travail synchrone, mais reste soumis aux quotas, refus et éviction du navigateur. La transaction et l’affichage d’échec comptent autant que le changement de backend. |
+| Supprimer la validation des snapshots pour gagner du CPU | Prescription trop risquée sans preuve d’équivalence. La mesure initiale attribue au décodeur environ 2,8–3,4 ms au p95 dans la scène native chargée ; il faut cibler le coût réel tout en préservant refus des champs futurs, références et immuabilité. |
+| Masque `blockedCells` et cache topologique | Piste valable à profiler. Un cache global dans le World persisté n’est pas nécessaire ; invalidations, portes, plans, mutations au même tick et tableaux empruntés rendent une optimisation improvisée dangereuse. Allocation et capacité ne donnent pas, seules, le coût limitant. |
+| Quantité de brins d’herbe = goulet GPU certain | Non démontré. Instanciation, vue, couverture écran et ombres comptent. Des réglages d’herbe et de textures existent déjà. Le champ de sang a une contrainte réelle de dimension ; le garde-fou V209 est une compatibilité explicite, pas une preuve de gain GPU. |
+| Tout réécrire en `JobDriver` ou union de jobs | Bonne direction pour une responsabilité cohérente et des transitions explicites, mauvais premier traitement de tous les risques. Une réécriture simultanée de dizaines de contrôleurs aurait un coût et une surface de régression considérables. Captures communes et extraction d’installations de recherche réduisent ici des divergences concrètes. |
+| Chiffres de 10 %, 25 %, 70 % de parité | Aucun dénominateur/poids/protocole ne les justifie. Utiliser les jalons G0–G5 et des campagnes avec choix/réprises mesurés. |
+
+Le rapport est donc utile comme alerte sur les priorités et certains risques. Ses généralisations, pourcentages et causalités de performance ne constituent pas une preuve. Il ne faut ni le rejeter parce qu’il est imprécis, ni exécuter chaque suggestion comme un correctif établi.
+
+Le détail du texte demande également quelques corrections : le champ frontal de télévision est un rectangle de quinze cellules, pas un cône. Le checkout consolidé compte 508 fichiers unitaires et 190 spécifications d’intégration, soit 698, plutôt que « plus de 800 » ; le volume ne prouve pas leur qualité. Des coefficients de menace identiques ne rendent pas toute Cassandra identique lorsque richesse et incidents sont partiels. Les divergences de recherche corrigées en V209 illustrent pourquoi une source Core consultée et une formule recopiée ne suffisent pas à établir la fidélité du système entier. Enfin, IndexedDB n’offre aucune garantie de sauvegardes « sans risque de saturation » : il faut toujours gérer quotas, refus et export.
+
+## Pourquoi un petit lot prend autant de temps
+
+Les journaux de la conversation de production ont été lus en accès direct, sans demander à un autre agent de reconstituer une durée. Le relevé local est `tmp/consolidation-production-timing.json` ; il ne contient pas une mesure de la vitesse des serveurs du modèle.
+
+| Lot observé | Durée des tours actifs | Commandes du parent | Somme des durées enregistrées de ces commandes |
+| --- | ---: | ---: | ---: |
+| Télévision V208, implémentation + continuation | 72 min 39 s, environ 73 min écoulées | 131 | 22 min 38 s |
+| Sacs de sable V207 | 50 min 09 s | 72 | 8 min 14 s |
+
+Sur la télévision, quatre tentatives navigateur représentent 8 min 53 s ; une présentation coûte 2 min 04 s. Deux cohortes unitaires identifiées totalisent environ 62 secondes. Une commande de lecture/affichage de JSON et de diff porte une durée enregistrée anormale de 8 min 01 s, pour un rapport JSON de seulement 11 190 octets ; le journal ne prouve pas que ce temps était du calcul PowerShell. Il faut traiter cette attribution comme une anomalie de mesure à investiguer, pas dire que lire ce JSON exige huit minutes.
+
+Ces sommes ne forment pas une décomposition exclusive de la durée : appels asynchrones, outils des sous-agents, réseau et coordination peuvent se chevaucher ou manquer dans les commandes du parent. Le reste ne permet pas de déduire des tokens/seconde. Il comprend travail de conception/écriture, messages, lectures, corrections, résultats d’outils et transitions entre appels ; le journal n’en donne pas une ventilation fiable.
+
+Le coût observable à réduire est surtout la répétition : lots très étroits avec leur recherche, migration, fixtures, interfaces, scène publique, preuve et reprises navigateur ; nombreux appels et sorties trop longues ; historiques de tests devenus obsolètes qui provoquent de faux diagnostics ; préparations UI qui attendent longtemps avant d’exercer l’étape intéressante. La qualité des tests ne se mesure pas à leur nombre. Un oracle indépendant de conservation et une reprise à une phase critique valent davantage que des assertions nombreuses qui recopient l’implémentation.
+
+La [documentation OpenAI sur la latence](https://developers.openai.com/api/docs/guides/latency-optimization) identifie notamment génération, volume de sortie, nombre d’appels et parallélisation. Elle ne donne pas les débits réels des modèles Sol de cette conversation. Une méthode plus compacte peut réduire le coût ; on ne peut pas chiffrer son accélération avant plusieurs lots comparables.
+
+## Méthode désormais retenue
+
+1. Définir le choix nouveau du joueur et son parcours complet. Regrouper les règles/contenus compatibles dans un lot cohérent plutôt que publier chaque variante séparément. Ne pas mélanger des systèmes sans dépendance pour augmenter artificiellement le nombre de fonctionnalités.
+2. Réutiliser une référence Core et un pipeline déjà vérifiés ; rechercher les inconnues et frontières du lot. Les adaptations restent nommées avec leur effet sur le jeu, pas dissimulées dans une promesse de clone exhaustif.
+3. Répartir les fichiers et décisions entre agents, puis intégrer une seule fois. Les travaux indépendants sont parallèles ; mesures, campagnes et navigateur sur la machine restent successifs pour ne pas fausser leur coût.
+4. Grouper les tests courts utiles. Réexécuter après une correction uniquement les garanties concernées, puis une régression lorsqu’une frontière globale est touchée. Campagnes longues périodiques ou motivées, sans les imposer à une couleur/UI cosmétique.
+5. Préparer des états UI cohérents proches de la transition à observer ; exercer alors les vrais gestes, contacts, transferts et interruptions. Les tests de simulation prouvent les durées/coûts complets. Ne pas accélérer les règles du produit ni confondre préparation et validation.
+6. Garder un contrat et une preuve compacts, mettre à jour les index sans répéter l’historique. Résumer les rapports JSON par un script, limiter les sorties et diagnostiquer un échec à partir de son checkpoint avant un replay long.
+7. Journaliser durée, exit/status et sortie de chaque commande avec `npm run validate:logged -- --label <phase> -- node <script>`. La CI contrôle régression, build et liens ; elle ne remplace pas une preuve de GPU matériel.
+
+Pour une cible de 90 minutes, le découpage indicatif est 10 minutes de cadrage/référence, 45 d’implémentation en parallèle, 25 de vérification/intégration et 10 de preuve/livraison. C’est un budget à calibrer, pas un engagement de résultat pour tout chantier. Une boucle nécessite parfois un socle plus long ; une famille de définitions déjà outillée devrait pouvoir livrer plusieurs éléments en une seule passe.
+
+La priorité de reprise fonctionnelle est désormais : identité/biographies et incapacités, crises aux conséquences distinctes, diversité de menace et progression, puis groupe/destination pour le monde selon les socles disponibles. La consolidation et les risques de continuité passent d’abord. Ni une nouvelle TV ni toutes ces fondations ne sont lancées automatiquement par ce rapport.

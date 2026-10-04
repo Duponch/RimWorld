@@ -22,12 +22,12 @@ test('les textures 3D restent synchronisées entre accueil, jeu et rechargement'
   await panel(page, 'menu');
   const gameToggle = page.locator('#textures-enabled');
   await expect(gameToggle).not.toBeChecked();
-  const savedBefore = await page.evaluate(() => localStorage.getItem('lisiere.save.v1'));
+  const savedBefore = await page.evaluate(() => window.__lisiere.saveRepository.peekItem('lisiere.save.v1'));
   await gameToggle.focus();
   await page.keyboard.press('Space');
   await expect(gameToggle).toBeChecked();
   expect(await page.evaluate(key => localStorage.getItem(key), preferenceKey)).toBe('true');
-  expect(await page.evaluate(() => localStorage.getItem('lisiere.save.v1'))).toBe(savedBefore);
+  expect(await page.evaluate(() => window.__lisiere.saveRepository.peekItem('lisiere.save.v1'))).toBe(savedBefore);
 
   await page.locator('#browse-saves').click();
   await page.keyboard.press('Escape');
