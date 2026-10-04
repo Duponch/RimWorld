@@ -9,6 +9,7 @@ import { validFireResourceLosses } from '../sim/fire-save.ts';
 import { validPlantSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
 import { validSmallIncidents } from '../sim/cassandra-small-save.ts';
+import { validWorldIncidents } from '../sim/cassandra-world-save.ts';
 import { validWildlifeManhunterState } from '../sim/animal-manhunter-save.ts';
 import { validFlashstorm } from '../sim/flashstorm-save.ts';
 import { validRainElectrical } from '../sim/rain-electric-save.ts';
@@ -279,6 +280,7 @@ export class SnapshotDecoder {
     }
     if(!validMiscIncidents(message.world.miscIncidents,message.world.schemaVersion,message.world))return resync('Calendrier d’incidents divers invalide pour ce snapshot.');
     if(!validSmallIncidents(message.world.smallIncidents,message.world.schemaVersion,message.world))return resync('Calendrier de petites menaces invalide pour ce snapshot.');
+    if(message.world.schemaVersion<184&&Object.hasOwn(message.world,'worldIncidents')||!validWorldIncidents(message.world.worldIncidents,message.world.schemaVersion,message.world))return resync('Calendrier mondial invalide pour ce snapshot.');
     if(!validFlashstorm(message.world.flashstorm,message.world.schemaVersion,message.world))return resync('Orage sec localisé invalide pour ce snapshot.');
     if((message.world.schemaVersion<181&&Object.hasOwn(message.world,'rainElectrical'))
       ||!validRainElectrical(message.world.rainElectrical,message.world.schemaVersion,message.world))return resync('Exposition électrique aux précipitations invalide pour ce snapshot.');

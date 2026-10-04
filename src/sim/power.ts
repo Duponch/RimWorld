@@ -2,6 +2,7 @@ import { PowerTopologyCache, bestPowerParent, validPowerParent, connectedPowerGr
 import { powerWatts,powerPotential,isPowerTrader } from './power-rules.ts';
 import { isPowerConnector } from './power-grid.ts';
 import { sunLampScheduled } from './sun-lamp.ts';
+import { electricityDisabledAtCore } from './cassandra-world.ts';
 import { BATTERY_START_RESERVE,BATTERY_START_THRESHOLD,batteryQuanta,leakBattery,chargeBatteries,dischargeBatteries,type BatteryOwner } from './power-battery.ts';
 import type { World, Structure } from './types.ts';
 
@@ -28,6 +29,10 @@ function randomPart(world:World,parts:Structure[]):Structure {
   return parts[Math.floor(world.rng/0x100000000*parts.length)]!;
 }
 function roundEven(n:number):number {const f=Math.floor(n);return n-f===.5?f+f%2:Math.round(n);}
+function shedPower(world:World,parts:Structure[]):void {
+  const active=parts.filter(s=>powerWatts(s,world)<0);
+  for(let n=0;n<Math.max(1,roundEven(active.length*.05))&&active.length;n++)randomPart(world,active).power!.on=false;
+}
 const wantsPower=(s:Structure,world:World):boolean=>isPowerTrader(s.kind)&&!s.breakdown&&s.power!.switchOn!==false&&(s.kind!=='wood-generator'||!!s.fuel?.ticks)&&(s.kind!=='sun-lamp'||sunLampScheduled(world));
 /** Core's gradual randomized startup/shedding. Ten small
  * reference-time boundaries avoid aliased modulo periods (e.g. 200/6 = 33).
@@ -36,16 +41,25 @@ export function advancePower(world:World):void {
   reconcilePower(world);
   const batteries=[...world.structures,...world.packed.map(p=>p.building)].filter((s):s is Structure&BatteryOwner=>!!s.battery&&!s.breakdown);
   if(!world.structures.some(s=>s.power)&&!batteries.length)return;
+  const condition=world.worldIncidents?.active;
+  const disabledDuringTick=!!condition&&condition.start*10<world.tick*10&&condition.endCore>(world.tick-1)*10;
   // No actor/fuel mutation occurs inside this call. Balanced fully active
-  // networks cannot change on a reference boundary: skip their ten temporary
-  // candidate scans while preserving the order of RNG draws for every other net.
+  // networks skip their ten candidate scans unless a solar condition overlaps
+  // this step: surplus and absent storage cannot protect consumers from shedding.
   const groups=connectedPowerGroups(world,cache(world).read(world)).filter(parts=>
-    parts.some(s=>s.battery||!s.power!.on&&wantsPower(s,world))||parts.reduce((n,s)=>n+powerWatts(s,world),0)<0)
+    parts.some(s=>s.battery||!s.power!.on&&wantsPower(s,world))||parts.reduce((n,s)=>n+powerWatts(s,world),0)<0
+      ||disabledDuringTick&&parts.some(s=>powerWatts(s,world)<0))
     .map(parts=>({parts:parts.filter(s=>isPowerTrader(s.kind)),storage:parts.filter((s):s is Structure&BatteryOwner=>!!s.battery&&!s.breakdown)}));
   for(let sub=0;sub<10;sub++) {
     const coreTick=(world.tick-1)*10+sub+1;
+    const disabled=disabledDuringTick&&electricityDisabledAtCore(world,coreTick);
+    // CompPowerBattery's self-discharge remains independent of network transfer.
     for(const battery of batteries)leakBattery(battery.battery);
     for(const {parts,storage} of groups) {
+      if(disabled){
+        if(coreTick%20===0)shedPower(world,parts);
+        continue;
+      }
       let balance=parts.reduce((n,s)=>n+powerWatts(s,world),0);
       const stored=storage.reduce((n,s)=>n+batteryQuanta(s.battery),0);
       if(stored+balance*2>=0) {
@@ -58,8 +72,7 @@ export function advancePower(world:World):void {
         if(balance>0)chargeBatteries(storage,balance,coreTick);
         else if(balance<0)dischargeBatteries(storage,-balance*2,coreTick);
       } else if(coreTick%20===0) {
-        const active=parts.filter(s=>powerWatts(s,world)<0);
-        for(let n=0;n<Math.max(1,roundEven(active.length*.05))&&active.length;n++)randomPart(world,active).power!.on=false;
+        shedPower(world,parts);
       }
     }
   }

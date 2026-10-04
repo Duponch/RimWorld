@@ -1,5 +1,5 @@
 import { PowerTopologyCache, connectedPowerGroups } from '../sim/power-topology';
-import { isElectrical, isPowerActive, powerWatts, powerDemand } from '../sim/power-rules';
+import { isElectrical, isPowerActive, isPowerTrader, powerWatts, powerDemand } from '../sim/power-rules';
 import { batteryWattDays } from '../sim/power-battery';
 import { solarUnroofedCells } from '../sim/solar-rules';
 import { annualNaturalLight } from '../sim/environment';
@@ -12,6 +12,16 @@ import type { Structure, World } from '../sim/types';
 
 const cache = new PowerTopologyCache();
 const watts = (n: number) => `${n.toLocaleString('fr-FR', {maximumFractionDigits: 1})} W`;
+
+/** The condition does not override the confirmed trader or its physical switch. */
+export function solarFlareInspection(world:World,structure:Structure):string {
+  if(!world.worldIncidents?.active||!isElectrical(structure.kind))return '';
+  if(structure.kind==='battery')return 'Éruption solaire : charge et décharge du réseau suspendues · réserve conservée · autodécharge normale de 5 W·j/jour';
+  if(['wood-generator','solar-generator','wind-turbine'].includes(structure.kind))return `Éruption solaire : source ${isPowerActive(structure)?'toujours active':'actuellement arrêtée'} · potentiel de production conservé${structure.kind==='wood-generator'&&isPowerActive(structure)?' · le bois continue de brûler':''} · stockage du surplus suspendu`;
+  if(!isPowerTrader(structure.kind))return 'Éruption solaire : connexions et interrupteurs physiques conservés';
+  const cause=structure.breakdown?'panne mécanique distincte':structure.power?.switchOn===false?'arrêt manuel distinct':structure.power?.parentId===null?'absence de raccordement distincte':isPowerActive(structure)?'encore alimenté avant son délestage':'actuellement sans alimentation · redémarrage suspendu';
+  return `Éruption solaire : ${cause} · arrêt progressif des consommateurs${structure.kind==='electric-tailor-bench'&&!isPowerActive(structure)?' · couture manuelle possible à vitesse réduite (50 %)':''}`;
+}
 
 /** Snapshot projection only: requesting a switch or roof does not protect it. */
 export function rainElectricalInspection(world: World, structure: Structure): string {
@@ -27,7 +37,7 @@ export function rainElectricalInspection(world: World, structure: Structure): st
 
 export function powerInspection(world: World, structure: Structure, compact=false): string {
   if (!isElectrical(structure.kind) || !structure.power) return '';
-  if (compact && structure.breakdown) return ` · Panne mécanique${rainElectricalInspection(world, structure) ? ` · ${rainElectricalInspection(world, structure)}` : ''}.`;
+  if (compact && structure.breakdown) return ` · Panne mécanique${solarFlareInspection(world,structure)?` · ${solarFlareInspection(world,structure)}`:''}${rainElectricalInspection(world, structure) ? ` · ${rainElectricalInspection(world, structure)}` : ''}.`;
   const topology = cache.read(world);
   const group = connectedPowerGroups(world, topology).find(g => g.some(s => s.id === structure.id));
   const supply = group?.reduce((n, s) => n + Math.max(0, powerWatts(s, world)), 0) ?? 0;
@@ -75,6 +85,7 @@ export function powerInspection(world: World, structure: Structure, compact=fals
   }
   if (group) detail += ` · Réseau : ${watts(supply)} produits, ${watts(used)} utilisés (${watts(required)} demandés) · ${batteries.length ? `${stored.toFixed(2)} / ${batteries.length * 600} W·j stockés` : 'aucune batterie raccordée'}`;
   if(structure.breakdown)detail=`Panne mécanique : composant à remplacer par un colon en Construction (1 composant ordinaire, zone de foyer requise) · ${detail}`;
+  const solar=solarFlareInspection(world,structure);if(solar)detail+=` · ${solar}`;
   const rain = rainElectricalInspection(world, structure);
   if (rain) detail += ` · ${rain}`;
   return ` · ${detail}.`;

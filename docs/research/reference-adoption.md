@@ -361,3 +361,7 @@ V181 — chapitre 14, **SYS/TEST-081/086/087/088** et chapitre 15 **SYS/TEST-096
 ## Adoption du premier voyage
 
 V182 adapte les entrées SYS/TEST-011..015, 136..144, UI-029..031 et CAT-052 à une première reconnaissance individuelle au même foyer. Adopter : collecte au contact, propriétaire unique hors carte, faim/repos, consommation d’une portion existante, reprise et retour des identités. Adapter : circuit abstrait de six heures, deux ou trois rations, exclusion du dernier colon et conservation des besoins lors d’une attente d’entrée bloquée. Différer : planète, groupe, animaux, rencontres, camp, division/fusion, secours, commerce et récompense. [Contrat](../development/caravan-scout-v182.md), [relevé Core versionné](caravan-core-v182.md), [preuve](../history/validation-scout-v182.md). Les scènes et identifiants du corpus original restent des cibles plus larges, pas une validation locale exhaustive.
+
+## Adoption V202 — condition mondiale électrique
+
+Chapitres 22/23/24, SYS/TEST-127/128/126/131/132..135, CAT-047, CONST-001/002 : adopter cible World, échéances Core, délestage, fuite et flux physiques ; adapter l’agenda privé et l’enveloppe fixe 4 avec 2,7 tickets absents, sans modifier Misc de carte 16,9. Couture manuelle, matières, froid et croissance restent leurs contrats. [Recherche primaire](solar-flare-core-v202.md), [contrat](../development/solar-flare-v202.md), [preuve bornée](../history/validation-solar-flare-v202.md). Eclipse/Aurora, DLC et autres cartes différés ; IDs et originaux conservés, pas de clôture globale du corpus.

@@ -30,6 +30,7 @@ import { updateAnimalsPanel } from './ui/animals-panel';
 import { updateWildlifePanel } from './ui/wildlife-panel';
 import { createHeatwaveUI } from './ui/heatwave';
 import { createFlashstormUI } from './ui/flashstorm';
+import { createSolarFlareUI } from './ui/solar-flare';
 import { updateResearchPanel } from './ui/research-panel';
 import { createScoutUI } from './ui/scout-panel';
 import { createQuestUI } from './ui/quests';
@@ -1019,10 +1020,11 @@ function renderState() {
     lastStatusAlertsSignature=alertSignature;
     el('status-alerts').replaceChildren(...alertRows.map(row=>{const item=document.createElement('p');item.textContent=row.text;if(row.kind)item.dataset.alert=row.kind;return item;}));
   }
-  economyUI.update(world);arrivalUI.update(world);questUI.update(world);raidUI.update(world);heatwaveUI.update(world);flashstormUI.update(world);tradeUI.update(world);
+  economyUI.update(world);arrivalUI.update(world);questUI.update(world);raidUI.update(world);heatwaveUI.update(world);flashstormUI.update(world);solarFlareUI.update(world);tradeUI.update(world);
 }
 const heatwaveUI=createHeatwaveUI(command=>client.command(command));
 const flashstormUI=createFlashstormUI();
+const solarFlareUI=createSolarFlareUI();
 const economyUI=createColonyEconomyUI(el('colony-economy'),command=>client.command(command));
 const raidUI=createRaidUI(command=>client.command(command),id=>renderer?.focusPawn(id));
 const tradeUI=createTradeUI(command=>client.command(command),()=>client.setSpeed(0),id=>renderer?.focusPawn(id),async()=>{if(currentSpeed===0)await client.setSpeed(1);});

@@ -15,7 +15,7 @@ vi.mock('../src/sim/animal-manhunter.ts',()=>({startAnimalManhunter:vi.fn(()=>tr
 beforeEach(()=>vi.mocked(startAnimalManhunter).mockReset().mockReturnValue(true));
 
 function colony(tick=0,seed=42):World {
-  const world=createWorld(seed,16,16);world.schemaVersion=183;world.gameProfile=crashlandedProfile();world.tick=tick;
+  const world=createWorld(seed,16,16);world.gameProfile=crashlandedProfile();world.tick=tick;
   adoptSmallIncidents(world);return world;
 }
 function animal(id:number,species:WildAnimal['species']='hare',state:WildAnimal['state']='idle'):WildAnimal {

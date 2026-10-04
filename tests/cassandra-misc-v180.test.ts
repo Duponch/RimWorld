@@ -158,6 +158,7 @@ test('saved Cassandra state resumes exactly; a neutral 168 continuation gains no
     population.targetWeight=population.fullTargetWeight*biome.entries.reduce((sum,entry)=>sum+entry.commonality,0)/biome.totalCommonality;
   }
   delete legacy.smallIncidents;
+  delete legacy.worldIncidents;
   legacy.schemaVersion=168;delete legacy.miscIncidents;
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.miscIncidents).toBeUndefined();

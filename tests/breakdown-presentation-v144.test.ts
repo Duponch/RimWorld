@@ -17,11 +17,13 @@ test('a breakdown reads as a mechanical fault and switches off resident work eff
   const layer=new StructureVfxLayer();
   layer.adopt(world,true);
   expect(layer.glow.activeCount).toBe(1);
-  expect(layer.smoke.geometry.instanceCount).toBe(8);
+  expect(layer.smoke.geometry.instanceCount).toBe(10); // Current structural generator profile, distinct from ground-fire puffs.
+  const smokeGeometry=layer.smoke.geometry,smokeMaterial=layer.smoke.material;
   generator.breakdown={brokenAt:world.tick}; // Even a stale on bit may not illuminate a failed appliance.
   layer.adopt(world);
   expect(layer.glow.activeCount).toBe(2);
   expect(layer.smoke.geometry.instanceCount).toBe(0);
+  expect(layer.smoke.geometry).toBe(smokeGeometry);expect(layer.smoke.material).toBe(smokeMaterial);
   expect(layer.group.children).toHaveLength(2); // Shared status and smoke draws only.
   expect(powerInspection(world,generator)).toContain('Panne mécanique');
   expect(powerInspection(world,generator)).toContain('1 composant ordinaire');
@@ -32,6 +34,10 @@ test('a breakdown reads as a mechanical fault and switches off resident work eff
   expect(layer.glow.instanceMatrix.version).toBe(version);
   delete generator.breakdown;generator.power!.on=false;layer.adopt(world);
   expect(layer.glow.activeCount).toBe(0);
+  expect(layer.smoke.geometry.instanceCount).toBe(0);
+  generator.power!.on=true;layer.adopt(world);
+  expect(layer.glow.activeCount).toBe(1);expect(layer.smoke.geometry.instanceCount).toBe(10);
+  expect(layer.smoke.geometry).toBe(smokeGeometry);expect(layer.smoke.material).toBe(smokeMaterial);
   layer.dispose();
 });
 

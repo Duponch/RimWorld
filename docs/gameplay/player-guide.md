@@ -1,5 +1,15 @@
 # Guide joueur
 
+**Schéma courant 184 — V202 éruption solaire.** [Contrat](../development/solar-flare-v202.md), [preuve et limites](../history/validation-solar-flare-v202.md). La migration ne donne aucune condition ou énergie rétroactive.
+
+## Traverser une éruption solaire — V202
+
+Dans **Charger une partie → Colonies de test**, choisissez **Éruption solaire · réserves et secours**. Reprenez : une occasion mondiale future déclenche la condition, puis les appareils s’arrêtent progressivement. Cliquez sur la lettre et inspectez une lampe, la batterie ou le générateur pour distinguer leurs états.
+
+Les batteries conservent leur réserve mais ne peuvent ni alimenter ni recharger le réseau ; leur autodécharge continue. Le générateur brûle encore son bois : son arrêt exige le travail d’un colon. Un toit ne protège pas de l’éruption. Surveillez les pièces froides et les cultures sous toit ; la lumière du jour, les postes au bois et la couture manuelle réduite restent utilisables. Le refroidisseur passif n’est pas un congélateur.
+
+À la fin, les appareils redémarrent suivant leur courant, leurs interrupteurs et leurs cadences ordinaires. Ni conservation ni croissance perdues ne sont rattrapées. Les pannes et la pluie restent des dangers distincts, y compris pour une batterie exposée encore chargée. La scène prépare le matériel et l’occasion ; elle ne démontre pas une fréquence naturelle.
+
 **Schéma courant 183 — V201 animal sauvage en rage temporaire.** [Contrat](../development/manhunter-v201.md), [preuve et limites](../history/validation-manhunter-v201.md). Les anciennes sauvegardes sont validées avant migration neutre, sans animal ni incident rétroactifs.
 
 ## Faire face à un animal en rage — V201

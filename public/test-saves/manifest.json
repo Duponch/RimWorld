@@ -1279,6 +1279,37 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32 au schéma183, createWorld(201), horloge explicitement placée à20400−1 sans campagne simulée. Trois colons libres sains, besoins hauts, Mêlée10, travaux et habillement automatique désactivés, réponse Ignorer. Couteau de plasteel réellement équipé par Ada, six repas et trois médicaments au sol. Abri en bois construit, porte initialement fermée via newDoorState, deux lits normaux et toit soutenu. Un lièvre sauvage adulte sain déjà présent, profil tempéré et horloge de population cohérents ; aucune rage ou blessure préparée. Profil Cassandra partiel et agenda ThreatSmall adoptés prospectivement avant l’introduction, compteur nul. Le premier tick repris doit sélectionner cet animal réel via le producteur d’incident et startAnimalManhunter. Aucune poursuite, attaque, ouverture, récupération mentale ou défense déjà jouée ; aucun pirate, Scaria ou meute. Ce témoin ne prouve ni fréquence naturelle, campagne longue ou charge générale.",
       "sha256": "4a6e9a8eceb5e0bba13c4242b18abcd61a58074e359276e0fbb6f09c4c46f5cc"
+    },
+    {
+      "id": "eruption-solaire-v202",
+      "release": "v202",
+      "label": "Éruption solaire · réserves et secours",
+      "description": "Une occasion mondiale préparée coupe progressivement les consommateurs. Observer batteries sans transfert, sources au bois, froid, lumière, serre et reprise ordinaire.",
+      "filename": "eruption-solaire.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 90099,
+      "focus": [
+        "éruption solaire",
+        "délestage progressif",
+        "batteries",
+        "combustible réel",
+        "froid et conservation",
+        "lumière et serre",
+        "secours au bois",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause au tick 90099, juste avant un contrôle mondial préparé. La lampe horticole (13,14), la lampe ordinaire (9,8) et le climatiseur (10,6) sont alimentés après quarante ticks réels de démarrage. La serre et la réserve ont un toit physique ; trois générateurs à droite brûlent leur bois.",
+        "Reprendre à 1× : le prochain tick déclenche la vraie occasion mondiale. Ouvrir la lettre puis inspecter les appareils et la batterie (19,16). Les consommateurs s’arrêtent progressivement ; la batterie conserve sa réserve sans charge ni décharge du réseau, avec autodécharge normale. Un toit ne protège pas de l’éruption.",
+        "Surveiller le riz sous toit et les aliments dans la réserve : lumière, croissance et froid suivent l’alimentation réelle. Le feu de camp (5,16), le refroidisseur passif (9,14), la cuisinière à bois (3,22), le tailleur manuel (9,24) et le bureau simple (14,24) sont des secours existants. Le passif ne congèle pas. Les travaux sont désactivés : les recettes et les gestes restent à commander physiquement.",
+        "Sauvegarder et recharger pendant la condition puis reprendre. Après sa vraie expiration, observer le retour ordinaire des appareils, sans rattrapage de croissance ni énergie offerte. Pour économiser le bois avant la fin, demander l’arrêt d’un générateur et activer Tâches élémentaires dans Travail : un colon doit rejoindre son interrupteur."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32 au schéma 184, createWorld(202), horloge explicitement placée à 90059 sans campagne préalable. Trois colons sains, besoins hauts, travaux et habillement automatique désactivés. Deux pièces en bois réellement couvertes, portes fermées, climatiseur cible −5 °C, trois générateurs avec chacun 75 bois préparés, douze conduits et batterie initialement chargée de 400 W·j. Lampe horticole, lampe ordinaire, trois riz à 30 %, dix riz alimentaires, six repas de survie, quarante bois et trente tissus au sol. Recherches Batteries, Climatisation et Vêtements complexes explicitement achevées avant préparation ; aucun travail de recherche revendiqué. Site tempéré plat, calendrier de flore vide initialisé et profil Atterrissage/Cassandra partiel avec ses agendas distincts. Feu de camp, refroidisseur passif et cuisinière au bois alimentés, établi manuel, bureau simple et couture électrique existants sans facture. Quarante vrais ticks stepWorld produisent les démarrages, la combustion, le froid et le régime de croissance antérieurs au contrôle : retour au tick 90099. Agenda mondial adopté prospectivement, prochain contrôle 90100, checks/opportunities/flares nuls ; seul son PRNG futur est préparé à 2472303839, permettant une sélection solaire puis une durée Core de 9000. Aucune éruption active, extinction solaire, issue de travail ou reprise déjà préparée. Cette scène ne prouve ni fréquence naturelle, campagne longue ni charge générale 250×250.",
+      "sha256": "6d0598e0a5ce131ab4a4c8404b49ed485e45dfbfc267473f3963e70e20587b55"
     }
   ]
 }
