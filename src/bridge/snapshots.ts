@@ -1,3 +1,4 @@
+import { validTelevisionState } from '../sim/television-save.ts';
 import { validSandbagsState } from '../sim/sandbags-save.ts';
 import { validPackagedSurvivalState } from '../sim/packaged-survival-save.ts';
 import { validHospitalBedState } from '../sim/hospital-bed-save.ts';
@@ -412,6 +413,7 @@ export class SnapshotDecoder {
       if(next.scout&&'pawn' in next.scout&&(postIds.has(next.scout.pawn.id)||next.scout.items.some(i=>postIds.has(i.id))))return resync('Stock commercial dupliqué dans la reconnaissance.');
     }
     if(!validSandbagsState(next,next.schemaVersion))return resync('Sacs de sable ou bilan textile invalides ou futurs.');
+    if(!validTelevisionState(next,next.schemaVersion))return resync('Télévision ou loisir télévisé invalide ou futur.');
     if(!validHospitalBedState(next,next.schemaVersion))return resync('Lit d’hôpital invalide ou futur.');
     if(!validPackagedSurvivalState(next,next.schemaVersion))return resync('Production de repas de survie invalide ou future.');
     if(next.schemaVersion<177&&[...next.structures,...next.jobs,...(next.packed??[]).map(p=>p.building)].some(s=>s.kind==='sun-lamp'))return resync('Lampe horticole future.');

@@ -82,9 +82,9 @@ test('covered and inactive candidates still count, without reroll after selectin
   expect(world.rainElectrical!.discharges).toBe(0);expect(world.fires).toBeUndefined();
 });
 
-test('the nine catalogue properties, real activity, battery threshold and anchor roof remain distinct',()=>{
+test('the ten catalogue properties, real activity, battery threshold and anchor roof remain distinct',()=>{
   const world=rainElectricCamp();
-  expect(RAIN_ELECTRICAL_KINDS).toHaveLength(9);
+  expect(RAIN_ELECTRICAL_KINDS).toHaveLength(10);
   for(const kind of RAIN_ELECTRICAL_KINDS){const b=rainElectricBuilding(world,kind);expect(rainElectricalEligible(world,b)).toBe(true);}
   for(const kind of ['standing-lamp','cooler','autodoor','wood-generator','solar-generator','wind-turbine','power-conduit','power-switch'] as const){
     const b=rainElectricBuilding(world,kind);expect(isRainElectricalKind(kind)).toBe(false);expect(rainElectricalEligible(world,b)).toBe(false);

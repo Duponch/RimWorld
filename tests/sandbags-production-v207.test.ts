@@ -44,7 +44,9 @@ test('deconstruction halves the actual textile recipe, records only prospective 
   until(w,()=>j.progress>0);replay(w,1);until(w,()=>!w.structures.length);
   expect([2,3]).toContain(textiles(w));expect(textiles(w)+(w.deconstructed.lostTextiles?.cloth??0)).toBe(5);expect(w.deconstructed.count).toBe(1);
   replay(w,20);
-  const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=188;expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow();
+  const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=188;
+  for(const pawn of raw.pawns){delete pawn.recreation.tolerance.television;delete pawn.recreation.bored.television;}
+  expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow();
   delete raw.deconstructed.lostTextiles;const old=deserializeWorld(JSON.stringify(raw));expect(old.deconstructed.lostTextiles).toBeUndefined();
   for(const lostTextiles of [{cloth:0},{cloth:-1},{cloth:.5},{wood:2},{}]){const bad=JSON.parse(serializeWorld(w));bad.deconstructed.lostTextiles=lostTextiles;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
 });

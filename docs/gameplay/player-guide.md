@@ -1,6 +1,8 @@
 # Guide joueur
 
-**Schéma courant 189 — V207 sacs de sable, livré dans le périmètre ciblé.** [Contrat](../development/sandbags-v207.md), [recherche Core et adaptations](../research/defensive-cover-core-v207.md), [preuve bornée](../history/validation-sandbags-v207.md). Migration stricte de 188 puis neutre : aucun sac, tissu ou bilan ancien inventé. La scène est publique ; parcours natif matériel et présentation passent dans leur périmètre préparé.
+**Schéma courant 190 — V208 loisirs télévisés, livré dans le périmètre ciblé.** [Contrat](../development/television-v208.md), [recherche Core et adaptations](../research/television-core-v208.md), [preuve](../history/validation-television-v208.md). Les anciennes parties gagnent seulement une famille de lassitude neutre, sans appareil, recherche ou plaisir rétroactif.
+
+**Schéma 189 à la livraison V207 — V207 sacs de sable, livré dans le périmètre ciblé.** [Contrat](../development/sandbags-v207.md), [recherche Core et adaptations](../research/defensive-cover-core-v207.md), [preuve bornée](../history/validation-sandbags-v207.md). Migration stricte de 188 puis neutre : aucun sac, tissu ou bilan ancien inventé. La scène est publique ; parcours natif matériel et présentation passent dans leur périmètre préparé.
 
 **Schéma 188 — V206 production des repas de survie, livré dans le périmètre ciblé.** [Contrat](../development/packaged-survival-v206.md), [recherche Core et adaptation](../research/packaged-survival-core-v206.md), [suivi des contrôles](../history/validation-packaged-survival-v206.md). Le schéma 187 est validé avant migration neutre : aucune recherche, facture, ration ou contamination rétroactive.
 
@@ -9,6 +11,16 @@
 **Schéma 185 — V203 ventes de textiles au comptoir.** [Contrat](../development/caravan-sales-v203.md), [preuve et limites](../history/validation-commercial-sales-v203.md). Migration neutre : aucune marchandise, monnaie ou vente rétroactive.
 
 **Schéma 184 — V202 éruption solaire.** [Contrat](../development/solar-flare-v202.md), [preuve et limites](../history/validation-solar-flare-v202.md). La migration ne donne aucune condition ou énergie rétroactive.
+
+## Regarder la télévision — V208
+
+Recherchez **Mobilier complexe**, puis **Télévision cathodique** (1 000 points sur un bureau utilisable). Dans **Architecte → Loisirs**, choisissez la télévision et orientez son écran avec les commandes de rotation. **80 aciers + quatre composants**, Construction **7** et **1 000 ticks neutres** sont nécessaires ; le travail et les livraisons restent réels.
+
+Raccordez l'appareil au réseau : **200 W**, même sans spectateur. Placez des tabourets, chaises ou fauteuils **deux à quatre cases devant l'écran**, dans une bande de **cinq cases de largeur**, avec vue dégagée et dans la même pièce. Les sièges tournés vers lui sont préférés. Au plus huit spectateurs sur des sièges distincts, sans partager les places réservées par d'autres services. Une pièce sombre n'interdit pas le visionnage.
+
+Un colon libre capable de voir choisit ce loisir selon ses horaires et sa lassitude ; la marche ne donne aucun plaisir. Le visionnage assis apporte **1,2×** le gain ordinaire, sans XP, dans la famille **Télévision** indépendante des échecs. Une coupure de courant, une perte de siège ou une urgence interrompt le visionnage. Emballez et réinstallez l'appareil avec les commandes de meuble ordinaires : identité et PV sont conservés ; un paquet n'est pas alimenté.
+
+La **54e scène « Télévision · recherche et loisirs »** prépare trois colons, un bureau simple, la recherche à 998/1 000, les ingrédients au sol et trois sièges frontaux, sans télévision ou chantier accomplis. Achevez la recherche avec Ada, placez la CRT en **(12,12)** orientation zéro (écran vers +z), activez Construction, puis assignez des plages de loisirs à Ada et Mina ; gardez Noé en Travail pour actionner l’interrupteur. Testez l'interrupteur depuis l'inspection et sauvegardez pendant un trajet ou un visionnage. [Scène préparée](../../public/test-saves/v208/television.json), [générateur](../../scripts/create-television-v208-test-save.ts), [preuve](../history/validation-television-v208.md). La télévision depuis un lit et les écrans avancés restent absents.
 
 ## Construire et utiliser un couvert bas — V207
 

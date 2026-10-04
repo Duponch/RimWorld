@@ -1065,6 +1065,8 @@ export class ColonyRenderer {
     if (this.areaDrag) { this.updateAreaPreview(); return; }
     const cell = this.hoverCell;
     this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined);
+    const television=this.tool==='select'?this.world?.structures.find(s=>s.kind==='tube-television'&&s.x===cell?.x&&s.z===cell?.z):undefined;
+    if(this.world&&cell&&(this.tool==='tube-television'||television||this.tool==='install'&&this.furniturePlacement?.kind==='tube-television'))this.recreationHints.television(this.world,{...cell,orientation:television?.orientation??this.placementRotation});
     const turbine=this.tool==='wind-turbine'&&cell?{...cell,orientation:this.placementRotation}:this.tool==='select'?this.world?.structures.find(s=>s.kind==='wind-turbine'&&cell&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z)):undefined;
     if(this.world&&turbine)this.recreationHints.wind(this.world,turbine);
     const cooler=this.tool==='select'?this.world?.structures.find(s=>s.kind==='cooler'&&s.x===cell?.x&&s.z===cell?.z):undefined;

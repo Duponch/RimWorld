@@ -9,7 +9,7 @@ import { planCookingOrder } from '../src/sim/player-cooking.ts';
 import { productionWorkTotal } from '../src/sim/production-recipes.ts';
 import { MICROELECTRONICS_RESEARCH_COST,PACKAGED_SURVIVAL_MEALS_RESEARCH_COST,packagedSurvivalMealsUnlocked,processResearch,researchCost,researchPrerequisite,researchStationUsable } from '../src/sim/research.ts';
 import { validateResearch } from '../src/sim/research-save.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
 import { preparePackagedSurvivalDemo } from '../scripts/create-packaged-survival-v206-test-save.ts';
 import { packagedSurvivalCamp } from './scenarios/packaged-survival-v206.ts';
 
@@ -81,8 +81,9 @@ test('strict 187 migration preserves existing acquired rations and rejects every
   const w=preparePackagedSurvivalDemo();delete w.research!.packagedSurvivalMeals;
   addGroundMaterial(w,'food',2,{x:21,z:21},'survival-meal');refreshStock(w);
   const old=JSON.parse(serializeWorld(w));old.schemaVersion=187;
+  for(const pawn of old.pawns){delete pawn.recreation.tolerance.television;delete pawn.recreation.bored.television;}
   const serialized=JSON.stringify(old),loaded=deserializeWorld(serialized);
-  expect(loaded).toEqual({...old,schemaVersion:188});expect(loaded.research!.packagedSurvivalMeals).toBeUndefined();
+  expect(loaded).toEqual({...old,schemaVersion:SCHEMA_VERSION,pawns:old.pawns.map((pawn:World['pawns'][number])=>({...pawn,recreation:{...pawn.recreation,tolerance:{...pawn.recreation.tolerance,television:0},bored:{...pawn.recreation.bored,television:false}}}))});expect(loaded.research!.packagedSurvivalMeals).toBeUndefined();
   expect(loaded.piles.filter(p=>p.item==='survival-meal').map(p=>p.quantity)).toEqual([2]);
   expect(JSON.stringify(old)).toBe(serialized);
   for(const change of [
@@ -148,7 +149,7 @@ test('research checkpoints and same-tick deltas reject corruption atomically whi
   const frozen=structuredClone(first.world);start(w);
   const delta=packet(encoder,w);expect(delta.kind).toBe('delta');
   const mutations:Array<(m:SnapshotMessage)=>void>=[
-    m=>{m.world.schemaVersion=187 as typeof m.world.schemaVersion;},
+    m=>{m.world.schemaVersion=187 as typeof m.world.schemaVersion;for(const pawn of m.world.pawns){delete (pawn.recreation.tolerance as Partial<typeof pawn.recreation.tolerance>).television;delete (pawn.recreation.bored as Partial<typeof pawn.recreation.bored>).television;}},
     m=>{m.world.research!.packagedSurvivalMeals=undefined;},
     m=>{delete m.world.research!.packagedSurvivalMeals;m.world.research!.project='packaged-survival-meals';},
     m=>{m.world.research!.packagedSurvivalMeals={points:500_000_000};},

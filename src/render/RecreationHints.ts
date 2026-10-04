@@ -8,6 +8,7 @@ import type { BoxBatches } from './BoxBatches';
 import { LocalLightCache } from '../sim/local-light';
 import { RoomTopologyCache } from '../sim/room-topology';
 import { SUN_LAMP_RADIUS,SUN_LAMP_OVERLIGHT_RADIUS } from '../sim/sun-lamp';
+import { televisionWatchCells } from '../sim/television-recreation';
 
 /** Presentation only: shows geometric throwing places, not an access guarantee. */
 export class RecreationHints {
@@ -15,6 +16,13 @@ export class RecreationHints {
   private readonly topology = new RoomTopologyCache();
   private readonly horticultural = new LocalLightCache();
   constructor(private readonly batches: BoxBatches) {}
+  /** Same prepared overlay; geometry alone promises neither seat nor access. */
+  television(world:World,tv:Cell&{orientation:Orientation}):void {
+    this.group.visible=true;
+    this.batches.set(this.group,'recreation-places',televisionWatchCells(tv)
+      .filter(c=>c.x>=0&&c.z>=0&&c.x<world.width&&c.z<world.height)
+      .map(c=>({...c,y:.045,sx:.8,sy:.02,sz:.8,color:0x9cbfba})),'overlay',false);
+  }
   /** Potential powered coverage, with the same obstacles and flood as gameplay.
    * A preview never grants power, soil, crops or a growing-zone designation. */
   sunLamp(world:World,cell:Cell):void {

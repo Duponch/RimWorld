@@ -14,6 +14,15 @@ export function withoutMiningSkill<T>(world:T):T {
     if(pawn.skills)delete pawn.skills.mining;
   return world;
 }
+/** Explicit pre-190 fixture preparation, never production sanitization. */
+export function withoutTelevisionRecreation<T>(world:T):T {
+  const w=world as any;
+  for(const p of [...w.pawns??[],...w.visitors?.departed?.map((d:any)=>d.pawn)??[],
+    ...w.scout?.pawn?[w.scout.pawn]:[],...w.commercialTrip?.pawn?[w.commercialTrip.pawn]:[]]){
+    if(p.recreation){delete p.recreation.tolerance.television;delete p.recreation.bored.television;}
+  }
+  return world;
+}
 /** Current default permissions/filters did not exist before predator V190.
  * Use only to prepare declared historical fixtures, never on refusal input. */
 export function withoutPredatorDefaults<T>(world:T):T {
@@ -31,6 +40,7 @@ export function withoutPredatorDefaults<T>(world:T):T {
 }
 /** Historical fixture construction only: V167 and earlier had no Plants skill. */
 export function withoutPlantsSkill<T>(world:T):T {
+  withoutTelevisionRecreation(world);
   withoutMiningSkill(world);
   const w=world as {pawns?:{skills?:{plants?:unknown}}[];visitors?:{departed?:{pawn:{skills?:{plants?:unknown}}}[]}};
   for(const pawn of w.pawns??[])if(pawn.skills)delete pawn.skills.plants;
@@ -181,7 +191,7 @@ export function withMigratedV90<T>(world:T):T {
   for(const departure of w.raids?.departed??[])for(const pile of departure.items??[])if(pile.apparel&&['cloth-shirt','cloth-tribalwear'].includes(pile.item))pile.apparel.material??='cloth';
   if(w.tailoring)w.tailoring.lostLeather??=0;
   w.apparelWear??=createApparelWearCalendar(w.tick,(w.seed^w.tick^0x0a77e1)>>>0);w.apparelPolicies??=registry.apparelPolicies;w.nextApparelPolicyId??=registry.nextApparelPolicyId;
-  for(const pawn of w.pawns??[]){pawn.age??={biologicalTicks:10800000,chronologicalTicks:10800000};pawn.beauty??=40;pawn.priorities.art??=0;pawn.priorities.handle??=0;if(pawn.recreation){pawn.recreation.tolerance.cerebral??=0;pawn.recreation.bored.cerebral??=false;pawn.recreation.tolerance.social??=0;pawn.recreation.bored.social??=false;}if((pawn.faction??'colony')==='colony'&&!pawn.visitor&&!pawn.prisoner&&pawn.state!=='dead'){pawn.apparelPolicyId??=1;pawn.apparelAutomation??=false;pawn.nextApparelCheckAt??=w.tick+600+pawn.id%301;}}
+  for(const pawn of w.pawns??[]){pawn.age??={biologicalTicks:10800000,chronologicalTicks:10800000};pawn.beauty??=40;pawn.priorities.art??=0;pawn.priorities.handle??=0;if(pawn.recreation){pawn.recreation.tolerance.cerebral??=0;pawn.recreation.bored.cerebral??=false;pawn.recreation.tolerance.social??=0;pawn.recreation.bored.social??=false;pawn.recreation.tolerance.television??=0;pawn.recreation.bored.television??=false;}if((pawn.faction??'colony')==='colony'&&!pawn.visitor&&!pawn.prisoner&&pawn.state!=='dead'){pawn.apparelPolicyId??=1;pawn.apparelAutomation??=false;pawn.nextApparelCheckAt??=w.tick+600+pawn.id%301;}}
   for(const departure of w.visitors?.departed??[])departure.pawn.age??={biologicalTicks:10800000,chronologicalTicks:10800000};
   return expected;
 }

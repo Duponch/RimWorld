@@ -5,6 +5,7 @@ import type { World } from './types.ts';
 export function validateConstructionMaterials(world:World,version:number):string[] {
   const errors:string[]=[];
   for(const entity of [...world.jobs,...world.structures,...(world.packed??[]).map(p=>p.building)]) {
+    if(entity.kind==='tube-television'&&(version<190||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Tube television requires V190 and steel.');
     if(entity.kind==='sandbags'&&(version<189||entity.material!=='cloth'||entity.orientation!==0||entity.footprint!=='standard'))errors.push('Sandbags require V189, cloth and fixed orientation.');
     if(['grave','lay-floor','remove-floor'].includes(entity.kind)&&(version<89||entity.material!==undefined))errors.push('Terrain work requires V89 without a building material.');
     if(['fueled-stove','electric-stove','butcher-table'].includes(entity.kind)&&(version<84||entity.material!==(entity.kind==='butcher-table'?'wood':'steel')||entity.footprint!=='standard'))errors.push('Food workstation requires V84 and its fixed material.');

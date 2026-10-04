@@ -64,7 +64,7 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
     const task=pawn.recreation.task, patient=task.activity==='visit-sick'?world.pawns.find(other=>other.id===task.patientId):undefined;
     if(task.activity==='visit-sick')return {code:'recreation',reason:task.phase==='travel'?`Se rend au chevet de ${patient?.name??'un patient'}.`:`Rend visite à ${patient?.name??'un patient'} (${Math.round(pawn.recreation.level)} % de loisirs).`};
     if(task.activity==='social-relax')return {code:'recreation',reason:task.phase==='travel'?'Rejoint un point de rencontre.':`Se détend au point de rencontre (${Math.round(pawn.recreation.level)} % de loisirs).`};
-    const activity=task.activity==='horseshoes'?'jouer aux fers à cheval':task.activity==='chess'?'jouer aux échecs':'observer le ciel';
+    const activity=task.activity==='horseshoes'?'jouer aux fers à cheval':task.activity==='chess'?'jouer aux échecs':task.activity==='watch-television'?'regarder la télévision':'observer le ciel';
     return {code:'recreation',reason:task.phase==='travel'?`Rejoint une place pour ${activity}.`:`Prend le temps de ${activity} (${Math.round(pawn.recreation.level)} %).`};
   }
   if(pawn.heatRefuge)return {code:'thermal-refuge',reason:pawn.state==='moving'?'Rejoint un refuge à température confortable.':'Attend dans un refuge thermique pour récupérer.'};

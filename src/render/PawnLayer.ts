@@ -56,7 +56,7 @@ function seatedOnFurniture(pawn:Pawn):boolean {
   if(pawn.state==='eating')return pawn.need?.kind==='eat'&&typeof pawn.need.dining?.seatId==='number';
   if(pawn.state!=='recreating')return false;
   const task=pawn.recreation.task;
-  return !!task&&(task.activity==='chess'||task.activity==='social-relax'||task.activity==='visit-sick')&&typeof task.seatId==='number';
+  return !!task&&(task.activity==='watch-television'||task.activity==='chess'||task.activity==='social-relax'||task.activity==='visit-sick')&&typeof task.seatId==='number';
 }
 function crouchAt(transition:CrouchTransition,tick:number):number {
   const fraction=THREE.MathUtils.clamp((tick-transition.start)/CROUCH_TICKS,0,1);
@@ -85,7 +85,7 @@ function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boole
     const activity=pawn.recreation.task?.activity;
     if(activity==='horseshoes')return 4;
     if(activity==='skygaze')return 5;
-    if(activity==='chess'||activity==='social-relax'||activity==='visit-sick')return seated?3:0;
+    if(activity==='watch-television'||activity==='chess'||activity==='social-relax'||activity==='visit-sick')return seated?3:0;
   }
   if(pawn.state==='resting'||medicallyStopped(pawn))return 1;
   if(pawn.state==='eating')return seated?3:2;

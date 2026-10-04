@@ -4,7 +4,7 @@ import type { Pawn,World } from '../sim/types';
 import { setTooltip } from './tooltip';
 import { needGaugeMarkup, needThresholdRow, updateNeedGauge } from './need-gauge';
 
-const recreationLabels = {solitary:'Détente solitaire',dexterity:'Dextérité',cerebral:'Jeux cérébraux',social:'Loisirs sociaux'};
+const recreationLabels = {solitary:'Détente solitaire',dexterity:'Dextérité',cerebral:'Jeux cérébraux',social:'Loisirs sociaux',television:'Télévision'};
 
 export const recreationInspection = (): string => `<div class="needs"><div class="pawn-need" data-need="recreation" tabindex="0"><label for="recreation-meter">Plaisir <span id="selected-recreation"></span></label>${needGaugeMarkup('recreation')}</div></div><p id="recreation-tolerance" class="muted" hidden></p>`;
 export function updateRecreationInspection(root: HTMLElement, pawn: Pawn, world:World): void {

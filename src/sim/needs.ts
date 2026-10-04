@@ -28,6 +28,8 @@ export { INGEST_TICKS } from './eating.ts';
 const NEED_INTERVAL = 20;
 
 export interface NeedContext {
+  /** Tick-local topology owned and invalidated by the engine; optional for isolated callers. */
+  recreationTopology?():import('./room-topology.ts').RoomTopology;
   search(goals?: ReadonlySet<number>): Reachability | null;
   move(target: Cell, exact: boolean): void;
   release(): boolean;

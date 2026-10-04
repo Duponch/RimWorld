@@ -1,4 +1,4 @@
-import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
+import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
 import type { Command, World } from '../sim/types';
 import './world-panels.css';
 import './management-reference-v199.css';
@@ -7,6 +7,7 @@ import {setTooltip} from './tooltip';
 type ProjectNode = { id: ResearchProject; prefix: string; title: string; cost: number; detail: string; progress: (w: World) => ResearchProgress | undefined; x: number; y: number };
 export const researchProjects: readonly ProjectNode[] = [
   {id:'complex-furniture',prefix:'furniture',title:'Mobilier complexe',cost:300,detail:'Débloque chaise, fauteuil, table de chevet et commode.',progress:w=>w.research?.complexFurniture,x:24,y:20},
+  {id:'tube-television',prefix:'tube-television',title:'Télévision cathodique',cost:TUBE_TELEVISION_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque un loisir électrique : 80 acier + 4 composants, Construction 7, 200 W. Chaque spectateur rejoint une place visible devant l’écran ; le trajet et les coupures ne procurent aucun plaisir.',progress:w=>w.research?.tubeTelevision,x:24,y:432},
   {id:'stonecutting',prefix:'stonecutting',title:'Taille de pierre',cost:300,detail:'Débloque les dallages en pierre. Quatre blocs par case ; Construction 3.',progress:w=>w.research?.stonecutting,x:224,y:20},
   {id:'smithing',prefix:'smithing',title:'Forge',cost:700,detail:'Débloque le dallage en acier. Sept aciers par case ; Construction 3.',progress:w=>w.research?.smithing,x:424,y:20},
   {id:'machining',prefix:'machining',title:'Usinage',cost:1000,detail:'Atelier d’usinage électrique, 150 acier + 5 composants. Construction 4.',progress:w=>w.research?.machining,x:624,y:20},
@@ -27,6 +28,7 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'hospital-bed',prefix:'hospital-bed',title:'Lit d’hôpital',cost:HOSPITAL_BED_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque un lit spécialisé : 120 acier + 5 composants, Construction 8. Améliore les soins, l’immunité, la guérison et la chirurgie pendant son utilisation réelle. Recherche au bureau avancé alimenté. Adaptation locale : le préalable Core Matériaux stériles et ses sols sont différés.',progress:w=>w.research?.hospitalBed,x:424,y:566},
 ];
 export const researchLinks: readonly (readonly [ResearchProject, ResearchProject])[] = [
+  ['complex-furniture','tube-television'],
   ['smithing','machining'],['machining','gunsmithing'],
   ['smithing','plate-armor'],['complex-clothing','plate-armor'],
   ['machining','flak-armor'],['plate-armor','flak-armor'],
@@ -40,6 +42,7 @@ const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=430;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['tube-television',['Mobilier complexe','Électricité (acquise au départ)']],
   ['machining',['Forge']],['gunsmithing',['Usinage']],['plate-armor',['Forge','Vêtements complexes']],['flak-armor',['Usinage','Armure de plaques']],
   ['autodoors',['Électricité (acquise au départ)']],['microelectronics',['Électricité (acquise au départ)']],['multi-analyzer',['Microélectronique','Usinage']],['fabrication',['Multi-analyseur']],['advanced-fabrication',['Fabrication']],['recon-armor',['Fabrication','Vêtements complexes']],
   ['hospital-bed',['Microélectronique','Mobilier complexe']],
@@ -83,7 +86,10 @@ export function updateResearchPanel(root: HTMLElement, world: World, send: (comm
     for(const [fromId,toId] of researchLinks){
       const from=nodePosition(projectById.get(fromId)!),to=nodePosition(projectById.get(toId)!);
       const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-      if(from.x===to.x){
+      if(toId==='tube-television'){
+        const x1=from.x,y1=from.y+NODE_HEIGHT/2,y2=to.y+NODE_HEIGHT/2;
+        path.setAttribute('d',`M${x1} ${y1} L6 ${y1} L6 ${y2} L${to.x} ${y2}`);
+      } else if(from.x===to.x){
         const x=from.x+NODE_WIDTH/2,y1=from.y+NODE_HEIGHT,y2=to.y;
         path.setAttribute('d',`M${x} ${y1} L${x} ${y2}`);
       } else if(to.y>from.y&&to.x<from.x){

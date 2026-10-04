@@ -59,6 +59,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id:'flower-pot',title:'Pot de fleurs',hint:'1 × 1 · 20 matériaux · l’hémérocalle doit être semée et entretenue',key:'',category:'furniture'},
   { id: 'horseshoes', title: 'Fers à cheval', hint: '3 joueurs maximum · places de lancer à 5 cases avec vue dégagée', key: '', category: 'recreation' },
   { id: 'chess-table', title: 'Table d’échecs', hint: '1 × 1 · 70 bois, métal ou pierre · Mobilier complexe · 2 joueurs maximum avec sièges adjacents', key: '', category: 'recreation' },
+  { id:'tube-television',title:'Télévision cathodique',hint:'1 × 1 orientable · 80 acier + 4 composants · recherche Télévision cathodique · Construction 7 · 1 000 ticks neutres · 100 PV · 200 W · places visibles à 2–4 cases devant l’écran, siège réel requis · survol : zone géométrique, accès et sièges à vérifier · plaisir seulement sur place et sous courant',key:'',category:'recreation' },
   {id:'heater',title:'Radiateur',hint:'50 acier, 1 composant · Construction 5 · 175 W · thermostat',key:'',category:'temperature'},
   {id:'wind-turbine',title:'Éolienne',hint:'7 × 2 · 100 acier, 2 composants · Construction 4 · couloir de vent dégagé · Q / E pour tourner',key:'',category:'power'},
   {id:'cooler',title:'Climatiseur',hint:'Faces bleue froide / rouge chaude · Construction 5 · Climatisation requise · Q/E : tourner',key:'',category:'temperature'},

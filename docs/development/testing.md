@@ -1,5 +1,11 @@
 # Stratégie de validation
 
+## Contrôles ciblés V208 — télévision et places réelles
+
+Les [loisirs télévisés](television-v208.md) exigent recherche au contact, verrou Mobilier complexe, acier/composants livrés, Construction 7, courant réel et sièges dans le rectangle orienté. Les sept suites `tests/television-*-v208.test.ts` distinguent géométrie, visibilité/pièce/vision, préférence de siège, réservation partagée et plafond huit, gain après arrivée, interruptions, dégâts/réparation, paquet/repose et migration stricte 189 vers 190. Les archives historiques gardent leurs familles ; les propriétaires actifs hors carte reçoivent uniquement la nouvelle lassitude neutre.
+
+Le parcours `tests/integration/television-v208.spec.ts` charge la 54e scène publique préparée, puis utilise Recherche, Architecte, Horaires et l'interrupteur physique. Les lectures du World observent recherche, livraisons, construction, trajet, pose assise et sauvegardes ; elles ne produisent pas ces transitions. Le microbanc `scripts/benchmark-television-v208.ts` compare seulement capture et requêtes de sites historiques sur 250², puis une capture télévisée absolue avec topologie déjà acquise. Il exclut routage, reconstruction de pièce, tick, worker, rendu et GPU. Mesures, navigateur matériel et présentation successifs sur sources gelées ; résultats et limites dans la [preuve V208](../history/validation-television-v208.md).
+
 ## Contrôles ciblés V207 — couvert construit
 
 Les [sacs de sable](sandbags-v207.md) demandent acquisition/livraison réelle du tissu, Construction sans seuil inventé, annulation portée, entrée 4,2 et répétition entre objets distincts, reprise des arêtes, ligne de vue/couvert/impact séparés, dégâts/réparation au contact, restitution quart/demi et refus atomiques. Les six fichiers `tests/sandbags-*-v207.test.ts` contrôlent aussi migration stricte 188→189, bilans textiles prospectifs, refus des propriétés/familles futures, adoption même tick et immuabilité des anciens Worlds. Ils ne remplacent pas les validateurs ordinaires de références et capacités.

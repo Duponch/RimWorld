@@ -22,12 +22,13 @@ const SECOND_ATLAS = [
   'ignore-roof', 'remove-growing', 'stockpile', 'home', 'remove-home', 'remove-stockpile',
 ] as const;
 
-export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed']:id==='horseshoes'?[id,'chess-table']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='tailor-bench'?[id,'art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
+export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='tailor-bench'?[id,'art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
 
 // Small original vector additions share the existing Architecte icon installer.
 // They do not change the historical two-atlas coordinates.
 const vectorIcon=(body:string):string=>`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><g fill="none" stroke="#365647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`)}")`;
 const CUSTOM_ICONS:Readonly<Record<string,string>>=Object.freeze({
+  'tube-television':vectorIcon('<rect x="5" y="10" width="30" height="22" rx="4" fill="#b9aa8e"/><rect x="9" y="14" width="19" height="14" rx="3" fill="#a9cec6"/><circle cx="31" cy="17" r="1"/><circle cx="31" cy="24" r="1"/><path d="M11 33v3M29 33v3M15 5l5 5 6-6"/>'),
   sandbags:vectorIcon('<rect x="5" y="24" width="15" height="9" rx="3" fill="#d7cba5"/><rect x="20" y="24" width="15" height="9" rx="3" fill="#cec19b"/><rect x="10" y="15" width="20" height="9" rx="3" fill="#e0d4b3"/><path d="M8 29h9M23 29h9M14 20h12" stroke="#a99e7e" stroke-width="1"/>'),
   'hospital-bed':vectorIcon('<path d="M6 18v16M34 18v16M6 27h28M10 18h20v9H10zM6 20h4M30 20h4M12 17v-4h7v4"/><path d="M26 5v10M21 10h10" stroke="#6d9f99"/><path d="M9 31h22"/>'),
   'sun-lamp':vectorIcon('<path d="M8 9h24l3 6H5zM20 15v19M13 35h14M10 20l-2 5M30 20l2 5M15 20v4M25 20v4"/><path d="M24 32c0-5 4-6 8-5-1 4-4 6-8 5M24 32l5-3" fill="#b8cc9e"/>'),

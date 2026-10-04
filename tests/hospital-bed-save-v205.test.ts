@@ -20,19 +20,25 @@ function until(w:World,done:()=>boolean,limit=1500):void {
   expect(validateWorld(w)).toEqual([]);
 }
 const packet=(encoder:SnapshotEncoder,w:World,checkpoint=false)=>structuredClone(encoder.encode(w,0,6,checkpoint));
+function old186(w:World) {
+  const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=186;
+  for(const pawn of raw.pawns){delete pawn.recreation.tolerance.television;delete pawn.recreation.bored.television;}
+  return raw;
+}
+const migratedCurrent=(old:World)=>({...old,schemaVersion:SCHEMA_VERSION,pawns:old.pawns.map(pawn=>({...pawn,recreation:{...pawn.recreation,tolerance:{...pawn.recreation.tolerance,television:0},bored:{...pawn.recreation.bored,television:false}}}))});
 
-test('strict 186 migration changes only schema and preserves ordinary medical beds, research, possessions and RNG',()=>{
-  const w=camp(),raw=JSON.parse(serializeWorld(w));raw.schemaVersion=186;
+test('strict186 migration preserves medical beds, research, possessions and RNG with only current schema and neutral television family',()=>{
+  const raw=old186(camp());
   const before=JSON.stringify(raw),loaded=deserializeWorld(before);
-  expect(SCHEMA_VERSION).toBe(187);expect(loaded).toEqual({...raw,schemaVersion:187});
+  expect(loaded.schemaVersion).toBe(SCHEMA_VERSION);expect(loaded).toEqual(migratedCurrent(raw));
   expect(loaded.research!.hospitalBed).toBeUndefined();expect(loaded.structures[0]!.kind).toBe('bed');expect(loaded.rng).toBe(raw.rng);
   expect(JSON.stringify(raw)).toBe(before);
-  const fresh=deconstructionCamp(),old=JSON.parse(serializeWorld(fresh));old.schemaVersion=186;
-  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:187});
+  const old=old186(deconstructionCamp());
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(migratedCurrent(old));
 });
 
 test('186 rejects hospital structures, blueprints, packed objects, transfer/removal payloads and future research before migration',()=>{
-  const old=(w:World)=>{const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=186;return raw;};
+  const old=old186;
   const cases:Array<{label:string;raw:any}>=[];
   const base=old(camp());const structure=structuredClone(base);structure.structures[0].kind='hospital-bed';cases.push({label:'structure',raw:structure});
   const blueprint=camp();expect(applyCommand(blueprint,{type:'designate',kind:'bed',material:'steel',x:22,z:20}).ok).toBe(true);
@@ -97,7 +103,7 @@ test('bridge rejects raw hospital corruption and future 186 checkpoint/delta ato
     if(first.status!=='applied')throw Error('valid hospital frame');const frozen=structuredClone(first.world),delta=packet(encoder,w);
     const bed=(message:SnapshotMessage):Structure=>packed?message.world.packed[0]!.building:message.world.structures[0]!;
     const changes:Array<(message:SnapshotMessage)=>void>=[
-      m=>m.world.schemaVersion=186 as typeof m.world.schemaVersion,m=>bed(m).material='wood',m=>bed(m).quality='unknown' as never,
+      m=>{m.world.schemaVersion=186 as typeof m.world.schemaVersion;for(const pawn of m.world.pawns){delete (pawn.recreation.tolerance as Partial<typeof pawn.recreation.tolerance>).television;delete (pawn.recreation.bored as Partial<typeof pawn.recreation.bored>).television;}},m=>bed(m).material='wood',m=>bed(m).quality='unknown' as never,
       m=>bed(m).damage=150,m=>delete m.world.research!.hospitalBed,m=>m.world.research!.hospitalBed!.points--,
     ];
     for(const original of [checkpoint,delta])for(const [i,change] of changes.entries()){

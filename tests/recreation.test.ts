@@ -103,19 +103,19 @@ test('skygazing requires arrival; unavailable or boring activities give no joy; 
   expect(p.recreation.task).toMatchObject({activity:'skygaze',phase:'active',buildingId:null});expect(travel).not.toBe('');
   expect(recreationSiteValid(w,p.recreation.task!)).toBe(true);const saved=deserializeWorld(travel);stepWorld(saved,w.tick-saved.tick);expect(saved).toEqual(w);
   const invalid=JSON.parse(serializeWorld(w));invalid.pawns[0].recreation.tolerance.solitary=Infinity;expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/recreation/i);
-  p.recreation.task=null;p.path=[];p.state='idle';p.schedule.fill('anything');p.recreation.level=10;p.recreation.bored={solitary:true,dexterity:true,cerebral:true,social:true};p.recreation.tolerance={solitary:80,dexterity:80,cerebral:80,social:80};
+  p.recreation.task=null;p.path=[];p.state='idle';p.schedule.fill('anything');p.recreation.level=10;p.recreation.bored={solitary:true,dexterity:true,cerebral:true,social:true,television:true};p.recreation.tolerance={solitary:80,dexterity:80,cerebral:80,social:80,television:80};
   const level=p.recreation.level;stepWorld(w,100);expect(p.recreation.task).toBeNull();expect(p.recreation.level).toBeLessThan(level);
   const old=fixture();old.pawns.forEach(p=>p.schedule.fill('anything'));
   const raw=JSON.parse(serializeWorld(old));raw.schemaVersion=123;
   delete raw.breakdown;delete raw.fluIncidents;
   withoutFutureHelmetPolicy(raw);
   for(const policy of raw.apparelPolicies??[])policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-helmet');
-  for(const pawn of raw.pawns){delete pawn.age;delete pawn.recreation.tolerance.social;delete pawn.recreation.bored.social;}
+  for(const pawn of raw.pawns){delete pawn.age;delete pawn.recreation.tolerance.television;delete pawn.recreation.bored.television;delete pawn.recreation.tolerance.social;delete pawn.recreation.bored.social;}
   for(const departure of raw.visitors?.departed??[])delete departure.pawn.age;
   const migrated=deserializeWorld(JSON.stringify(raw));
   const expected=withoutFutureHelmetPolicy(structuredClone(old));
   expected.apparelPolicies=expected.apparelPolicies?.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-helmet')}));
-  for(const pawn of expected.pawns)pawn.age=legacyHumanAge();
+  for(const pawn of expected.pawns){pawn.age=legacyHumanAge();pawn.recreation.tolerance.television=0;pawn.recreation.bored.television=false;}
   expect(migrated).toEqual(expected);
   const corruptOld=structuredClone(raw);corruptOld.pawns[0].recreation.tolerance.social=12;
   expect(()=>deserializeWorld(JSON.stringify(corruptOld))).toThrow(/version 123|recreation/i);

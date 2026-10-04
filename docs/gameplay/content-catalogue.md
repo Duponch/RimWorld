@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V208 — télévision cathodique, schéma 190, livré dans le périmètre ciblé.** Nouvel appareil `tube-television`, projet du même nom, acquisition par livraison/construction, usage électrique et transfert physique. [Contrat](../development/television-v208.md), [recherche Core](../research/television-core-v208.md), [preuve](../history/validation-television-v208.md), [scène préparée](../../public/test-saves/v208/television.json). Aucun nouvel ingrédient ni type de siège.
+
 **V207 — sacs de sable, schéma courant 189, livré dans le périmètre ciblé.** Le bâtiment `sandbags` donne un usage défensif au tissu existant par livraison, construction, tir et entretien physiques. [Contrat](../development/sandbags-v207.md), [recherche Core et adaptations](../research/defensive-cover-core-v207.md), [preuve bornée](../history/validation-sandbags-v207.md). La 53e fiche préparée **« Sacs de sable · construction et couvert »** contient cinq tissus au sol, trois adultes et deux revolvers équipés, sans ouvrage ni action défensive accomplis : [scène préparée](../../public/test-saves/v207/sacs-sable.json), [générateur](../../scripts/create-sandbags-v207-test-save.ts), [guide](player-guide.md#construire-et-utiliser-un-couvert-bas--v207). Scène publiée, parcours natif matériel et présentation passés ; cette préparation ne prouve aucune campagne ou performance générale.
 
 **V206 — fabrication des repas de survie existants, schéma 188 à sa livraison, livré dans le périmètre ciblé.** Le projet `packaged-survival-meals` et la facture unitaire `cook-survival-meal` ajoutent une acquisition renouvelable du produit `survival-meal`, avec ingrédients, recherche, Cuisine 8, énergie et transport réels. La 52e fiche **« Repas de survie · production et voyage »** est publique et préparée ; aucun résultat n’est déduit de sa préparation. [Contrat](../development/packaged-survival-v206.md), [recherche Core et adaptation](../research/packaged-survival-core-v206.md), [suivi des contrôles](../history/validation-packaged-survival-v206.md), [scène publique](../../public/test-saves/v206/repas-survie.json), [générateur](../../scripts/create-packaged-survival-v206-test-save.ts).
@@ -497,3 +499,11 @@ Aucun objet ajouté : la pile ou le meuble déjà porté garde son identité qua
 ## Première boucle hors carte
 
 **Reconnaissance individuelle — partielle.** Le panneau Monde prépare un circuit de six heures avec deux ou trois `survival-meal` déjà existants. Chargement au contact, propriétaire unique hors carte, alimentation puis retour des mêmes identités sont jouables. Les restes sont déposés au bord ; une annulation chargée permet le déchargement sur la case actuelle libre. Il n’y a ni récompense, objet supplémentaire, planète, commerce extérieur, animal porteur ni groupe. [Contrat V182](../development/caravan-scout-v182.md), [recherche Core](../research/caravan-core-v182.md), [preuve](../history/validation-scout-v182.md).
+
+### Ajouts V208 — loisirs télévisés
+
+| Contenu | Acquisition et interactions | Limites |
+|---|---|---|
+| Télévision cathodique | Projet 1 000 points après Mobilier complexe, 80 aciers + quatre composants, Construction 7, travail neutre 1 000 ticks, PV100, 200 W. Visionnage assis autonome, réparation, désinstallation/transport/réinstallation et stockage du paquet. | Une case orientable ; aucun choix de matière, qualité, panne matérielle aléatoire ou écran avancé. Pluie électrique et incendies restent réels. |
+| Famille Télévision | Gain ×1,2 seulement au siège devant un appareil alimenté, lassitude/hystérésis indépendantes, cap huit places distinctes. | Adultes libres avec vision positive ; pas d'XP, de visionnage au sol/au lit ni d'ordre direct. |
+| Recherche `tube-television` | Bureau simple utilisable ; progression et reprise existantes. | Parent Core Électricité adapté au socle électrique livré, sans faux nœud de recherche. |

@@ -1465,6 +1465,36 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32, createWorld(207), schéma 189, tick 3000 sans campagne simulée. Trois adultes libres sains, besoins à 100, travaux désactivés ; Construction 8 pour Ada, Tir 8 pour Noé et Mina, deux revolvers existants équipés. Cinq tissus au sol et aucun sac, plan, livraison, tir, dégât, foyer ou réparation fournis. Incidents exclus. Couvert local tissu seul ; autres textiles, barricades et défenses exhaustives différés. Tirs et interceptions probabilistes réels, sans flux PRNG choisi pour garantir une première réussite. Scène préparée distincte d’une campagne naturelle ou d’un coût CPU/GPU général sur 250².",
       "sha256": "82bdf69c0e95e3a81ec3b2b72ef4acac65db1a68b8a7ac1794bdb6b1ad7ad7a6"
+    },
+    {
+      "id": "television-v208",
+      "release": "v208",
+      "label": "Télévision · recherche et loisirs",
+      "description": "Achever la recherche au bureau, livrer acier et composants, construire une télévision, rejoindre un vrai siège puis constater une coupure et la reprise.",
+      "filename": "television.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 3000,
+      "focus": [
+        "recherche physique",
+        "acier et composants livrés",
+        "électricité",
+        "sièges et visibilité",
+        "plaisir au contact",
+        "coupure",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause. Recherche → Télévision cathodique : lancer les deux derniers points. Ada rejoint le bureau en (6,6) et achève réellement le projet ; Mobilier complexe est préparé.",
+        "Architecte → Loisirs → Télévision cathodique : poser en (12,12), écran vers les sièges au sud (orientation initiale). Reprendre : Noé prend les 80 aciers et quatre composants au sol puis construit l’appareil. Le générateur au bois déjà alimenté fournit le courant.",
+        "Dans Planning, peindre Loisir sur les heures courantes d’Ada et Mina. Noé reste en Travail, avec Construction et Manutention activées pour les commutations. Les spectatrices rejoignent des sièges à deux, trois ou quatre cases devant l’écran ; aucun plaisir pendant le trajet. Besoins affiche la nouvelle lassitude Télévision. Sauvegarder et recharger pendant un visionnage réel.",
+        "Sélectionner la télévision, demander son arrêt électrique et reprendre : Noé actionne le commutateur au contact. L’écran s’éteint et le visionnage cesse sans plaisir supplémentaire. Sauvegarder cet arrêt puis demander la remise en marche et reprendre."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32, createWorld(208), schéma 190, tick 3000 sans campagne simulée. Trois adultes sains, besoins faim/repos à 100 et plaisir à 20, horaires Travail. Recherche Intellect 8 et Construction 8, priorités utiles préparées. Mobilier complexe achevé, projet TV à 998/1000 sans sélection ni travail engagé. Bureau simple, trois tabourets réels et générateur rempli de 75 bois préparés ; 80 acier, 4 composants et neuf rations au sol. Aucun téléviseur, plan, livraison, plaisir télévisuel, panne ou commutation préinjectés. Incidents exclus. Écran fixe original dans le lot résident, sans image ou vidéo propriétaire. Cette préparation ne prouve ni campagne naturelle ni performance générale sur 250².",
+      "sha256": "24670d2ab83f675a4d56c3feccb74f2c21cf1f424786f879ead1a40b1a8b6a33"
     }
   ]
 }

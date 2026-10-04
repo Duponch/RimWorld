@@ -25,11 +25,12 @@ function until(w:World,done:()=>boolean):void {
   expect(done()).toBe(true);expect(validateWorld(w)).toEqual([]);
 }
 const raw=(w:World)=>JSON.parse(serializeWorld(w));
+function as188(v:ReturnType<typeof raw>){v.schemaVersion=188;for(const p of v.pawns){delete p.recreation.tolerance.television;delete p.recreation.bored.television;}return v;}
 
 test('strict 188 migration preserves the entire legacy world and does not invent textile losses',()=>{
-  const source=raw(armchair());source.schemaVersion=188;
+  const original=armchair(),source=as188(raw(original));
   const retained=JSON.stringify(source),loaded=deserializeWorld(retained);
-  expect(SCHEMA_VERSION).toBe(189);expect(loaded).toEqual({...source,schemaVersion:189});
+  expect(loaded.schemaVersion).toBe(SCHEMA_VERSION);expect(loaded).toEqual(original);
   expect(loaded.deconstructed.lostTextiles).toBeUndefined();
   expect(Object.hasOwn(loaded.deconstructed,'lostTextiles')).toBe(false);
   expect(loaded.rng).toBe(source.rng);expect(loaded.nextId).toBe(source.nextId);
@@ -59,7 +60,7 @@ test('188 refuses future sandbag structures, plans, removal targets, packages an
   const damagedLegacy=raw(armchair());damagedLegacy.pawns[0].id=0;
   cases.push({label:'invalid preexisting 188 pawn',value:damagedLegacy});
   for(const {label,value} of cases){
-    value.schemaVersion=188;const retained=JSON.stringify(value);
+    as188(value);const retained=JSON.stringify(value);
     expect(()=>deserializeWorld(retained),label).toThrow(/version 188/);
     expect(JSON.stringify(value),label).toBe(retained);
   }
@@ -103,7 +104,7 @@ test('sandbag plans and removal payloads reject incompatible orientation/materia
 });
 
 test('only prospective physical deconstruction of migrated upholstery adds known cloth losses, with deterministic saved continuation',()=>{
-  const legacy=raw(armchair());legacy.schemaVersion=188;
+  const legacy=as188(raw(armchair()));
   const w=deserializeWorld(JSON.stringify(legacy)),historical=structuredClone(w.deconstructed);
   expect(applyCommand(w,{type:'designate',kind:'deconstruct',x:17,z:16}).ok).toBe(true);
   expect(w.deconstructed).toEqual(historical);expect(w.piles).toEqual([]);

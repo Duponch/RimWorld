@@ -1,8 +1,9 @@
 import { assignmentAt } from './schedule.ts';
-import { gainRecreation, RECREATION_DURATION, VISIT_SICK_DURATION, recreationKind, recreationRandom, type RecreationActivity, type RecreationTask } from './recreation-rules.ts';
-import { adjacentToTable, availableChessTables, availablePins, chessCells, horseshoeCells, isGatherSpot, nearVisitPatient, recreationSiteValid, recreationSpace, visitablePatient, visitPatient } from './recreation-space.ts';
+import { gainRecreation, RECREATION_GAIN, RECREATION_DURATION, VISIT_SICK_DURATION, recreationKind, recreationRandom, type RecreationActivity, type RecreationTask } from './recreation-rules.ts';
+import { adjacentToTable, availableChessTables, availablePins, availableTelevisions, captureRecreationResources, chessCells, horseshoeCells, isGatherSpot, nearVisitPatient, recreationSiteValid, recreationSpace, visitablePatient, visitPatient,type RecreationSpace } from './recreation-space.ts';
 import { reservedServiceCells } from './service-reservations.ts';
-import { isDiningSeat } from './dining.ts';
+import { isColonist } from './affiliation.ts';
+import { televisionWatchCells,TELEVISION_GAIN_FACTOR,TELEVISION_WEIGHT } from './television-recreation.ts';
 import { footprintCells } from './definitions.ts';
 import { rememberRoomUse } from './room-experience.ts';
 import { canSocialize, visitSocialExchange } from './social.ts';
@@ -15,7 +16,7 @@ import { cellIndex, routeToCell } from './pathfinding.ts';
 import type { NeedContext } from './needs.ts';
 import type { Pawn, World } from './types.ts';
 
-const labels: Record<RecreationActivity,string> = {horseshoes: 'jouer aux fers à cheval', skygaze: 'observer le ciel', chess:'jouer aux échecs','social-relax':'se détendre ensemble','visit-sick':'rendre visite à un malade'};
+const labels: Record<RecreationActivity,string> = {horseshoes: 'jouer aux fers à cheval', skygaze: 'observer le ciel', chess:'jouer aux échecs','social-relax':'se détendre ensemble','visit-sick':'rendre visite à un malade','watch-television':'regarder la télévision'};
 const urgentDoctorCall=(world:World,pawn:Pawn):boolean=>urgentWorkEnabled(pawn,'doctor')&&world.pawns.some(p=>p!==pawn&&lyingPatient(p)&&urgentTreatment(p));
 /** Search shares the existing bounded navigation budget. No gain in transit,
  * no worker/cargo preemption just because the timetable recommends recreation. */
@@ -25,15 +26,16 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
     if (assignment==='work' || urgentMedicalTask(pawn) || urgentDoctorCall(world,pawn)
       || joy.task.activity==='visit-sick'&&world.pawns.some(p=>p.id===joy.task!.patientId&&urgentTreatment(p))
       || joy.task.activity==='chess'&&pawnBody(pawn).capacities.manipulation<=0
+      || joy.task.activity==='watch-television'&&(world.schemaVersion<190||!isColonist(pawn)||!!pawn.prisoner||!!pawn.visitor||pawnBody(pawn).capacities.sight<=0)
       || (joy.task.activity==='social-relax'||joy.task.activity==='visit-sick')&&!canSocialize(world,pawn,true)
-      || !recreationSiteValid(world,joy.task)) { context.release(); return false; }
+      || !recreationSiteValid(world,joy.task,undefined,context.recreationTopology)) { context.release(); return false; }
     const task=joy.task;
     if (task.phase==='travel') {
       if(pawn.x!==task.target.x||pawn.z!==task.target.z) {context.move(task.target,true);return true;}
       task.phase='active';pawn.path=[];pawn.state='recreating';
       context.event(`${pawn.name} commence à ${labels[task.activity]}.`);
     }
-    pawn.state='recreating';gainRecreation(joy,recreationKind(task.activity));
+    pawn.state='recreating';gainRecreation(joy,recreationKind(task.activity),RECREATION_GAIN*(task.activity==='watch-television'?TELEVISION_GAIN_FACTOR:1));
     if(task.activity==='visit-sick') {
       const patient=visitPatient(world,task.patientId!,false);
       if(!patient){context.release();return false;}
@@ -57,18 +59,22 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
     || assignment==='work' || assignment==='sleep'&&!afterWork || joy.level >= (assignment==='anything'?35:95) || urgentMedicalTask(pawn) || urgentDoctorCall(world,pawn)) return false;
   const choices: {activity: RecreationActivity; weight: number}[] = [];
   let pins:ReturnType<typeof availablePins>|undefined,chessTables:ReturnType<typeof availableChessTables>|undefined;
+  const televisions=world.schemaVersion>=190&&isColonist(pawn)&&!pawn.prisoner&&!pawn.visitor&&pawnBody(pawn).capacities.sight>0?availableTelevisions(world,pawn.id):[];
   const socialCapable=canSocialize(world,pawn,true);
   const gathers=socialCapable?world.structures.filter(s=>isGatherSpot(s)&&s.gatherSpot!==false&& (s.kind!=='campfire'||!!s.fuel?.ticks&&s.power?.switchOn!==false)):[];
   const claimedPatients=new Set(world.pawns.flatMap(p=>p.recreation.task?.activity==='visit-sick'&&p.id!==pawn.id?[p.recreation.task.patientId!]:[]));
   const patients=socialCapable?world.pawns.filter(p=>p.id!==pawn.id&&!claimedPatients.has(p.id)&&visitablePatient(world,p)):[];
-  for(const activity of ['skygaze','horseshoes','chess','social-relax','visit-sick'] as const) {
+  for(const activity of ['skygaze','horseshoes','chess','social-relax','visit-sick','watch-television'] as const) {
+    if(activity==='watch-television'&&!televisions.length)continue;
     const kind=recreationKind(activity);
     if(!joy.bored[kind]&&(activity!=='horseshoes'||(pins??=availablePins(world,pawn.id)).length)&&(activity!=='chess'||(chessTables??=availableChessTables(world,pawn.id)).length&&pawnBody(pawn).capacities.manipulation>0)
       &&(activity!=='social-relax'||gathers.length)&&(activity!=='visit-sick'||patients.length))
-      choices.push({activity,weight:(activity==='horseshoes'?2.5:activity==='chess'?2:activity==='social-relax'?4:activity==='visit-sick'?3:1)*Math.max(.001,(1-joy.tolerance[kind]/100)**5)});
+      choices.push({activity,weight:(activity==='horseshoes'?2.5:activity==='chess'?2:activity==='social-relax'?4:activity==='visit-sick'?3:activity==='watch-television'?TELEVISION_WEIGHT:1)*Math.max(.001,(1-joy.tolerance[kind]/100)**5)});
   }
   if(!choices.length){pawn.needCooldown=20;return false;}
   const reserved=reservedServiceCells(world,pawn.id);
+  let space:RecreationSpace|undefined;
+  const readSpace=()=>space??=recreationSpace(world,undefined,choices.some(c=>c.activity==='visit-sick'),context.recreationTopology);
   while(choices.length) {
     let draw=recreationRandom(world)*choices.reduce((sum,c)=>sum+c.weight,0), index=0;
     for(;index<choices.length-1;index++){draw-=choices[index]!.weight;if(draw<0)break;}
@@ -78,13 +84,19 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
       for(const pin of pins??=availablePins(world,pawn.id))for(const target of horseshoeCells(pin))
         if(!reserved.has(cellIndex(world,target.x,target.z)))candidates.push({activity,buildingId:pin.id,target,phase:'travel',elapsed:0});
     } else if(activity==='chess') {
-      const seats=new Map(world.structures.filter(s=>s.kind==='stool'||s.kind==='dining-chair'||s.kind==='armchair').map(s=>[cellIndex(world,s.x,s.z),s]));
+      const seats=readSpace().seats;
       for(const table of chessTables??=availableChessTables(world,pawn.id))for(const target of chessCells(table)) {
         const seat=seats.get(cellIndex(world,target.x,target.z));
         if(seat&&!reserved.has(cellIndex(world,target.x,target.z)))candidates.push({activity,buildingId:table.id,seatId:seat.id,target,phase:'travel',elapsed:0});
       }
+    } else if(activity==='watch-television') {
+      const seats=readSpace().seats;
+      for(const tv of televisions)for(const target of televisionWatchCells(tv)) {
+        const key=cellIndex(world,target.x,target.z),seat=seats.get(key);
+        if(seat&&!reserved.has(key))candidates.push({activity,buildingId:tv.id,seatId:seat.id,target,phase:'travel',elapsed:0});
+      }
     } else if(activity==='social-relax'||activity==='visit-sick') {
-      const seats=new Map(world.structures.filter(s=>isDiningSeat(s.kind)).map(s=>[cellIndex(world,s.x,s.z),s]));
+      const seats=readSpace().seats;
       if(activity==='social-relax')for(const spot of gathers) {
         if(spot.kind!=='campfire') {
           const around=new Set<number>();
@@ -105,16 +117,30 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
       for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]])for(const distance of [2,4,6])
         candidates.push({activity,buildingId:null,target:{x:pawn.x+dx!*distance,z:pawn.z+dz!*distance},phase:'travel',elapsed:0});
     }
-    const space=recreationSpace(world,activity==='skygaze'?candidates.map(c=>c.target):undefined,activity==='visit-sick');
-    const valid=candidates.filter(c=>!reserved.has(cellIndex(world,c.target.x,c.target.z))&&recreationSiteValid(world,c,space));
+    const decisionSpace=readSpace();
+    if(activity==='skygaze'&&!decisionSpace.resources)captureRecreationResources(world,decisionSpace,candidates.map(c=>c.target));
+    const valid=candidates.filter(c=>!reserved.has(cellIndex(world,c.target.x,c.target.z))&&recreationSiteValid(world,c,decisionSpace));
     if(!valid.length)continue;
     // Search all usable destinations as one nearest-goal request; never assume
     // geometrically near means reachable. An inaccessible pin gives no benefit.
-    const reach=context.search(new Set(valid.map(c=>cellIndex(world,c.target.x,c.target.z))));
+    // A nearest-goal search stops before more distant chairs are settled.
+    // Prefer facing chairs in the goal set itself, before requesting routes.
+    // If every facing goal is unreachable, the completed component also
+    // contains the fallback chairs, so this still uses one search request.
+    const facing=activity==='watch-television'?valid.filter(task=>{
+      const tv=decisionSpace.televisions?.get(task.buildingId!),seat=decisionSpace.seats.get(cellIndex(world,task.target.x,task.target.z));
+      return !!tv&&seat?.orientation===(tv.orientation+2)%4;
+    }):[];
+    const goals=facing.length?facing:valid;
+    const reach=context.search(new Set(goals.map(c=>cellIndex(world,c.target.x,c.target.z))));
     if(!reach)return true;
     const reachable=valid.flatMap(task=>{const path=routeToCell(world,task.target,reach);return path?[{task,path}]:[];});
     if(!reachable.length)continue;
-    const preferred=(activity==='social-relax'||activity==='visit-sick')&&reachable.some(r=>r.task.seatId!==undefined)?reachable.filter(r=>r.task.seatId!==undefined):reachable;
+    let preferred=(activity==='social-relax'||activity==='visit-sick')&&reachable.some(r=>r.task.seatId!==undefined)?reachable.filter(r=>r.task.seatId!==undefined):reachable;
+    if(activity==='watch-television') {
+      const facingReachable=reachable.filter(r=>facing.includes(r.task));
+      if(facingReachable.length)preferred=facingReachable;
+    }
     const selected=preferred[Math.floor(recreationRandom(world)*preferred.length)]!;
     joy.task=selected.task;pawn.path=selected.path;pawn.state='moving';pawn.planCooldown=0;return true;
   }

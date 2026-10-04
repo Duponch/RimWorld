@@ -11,7 +11,7 @@ import { createMedicalRecord } from '../src/sim/injury-state.ts';
 import { urgentTreatment } from '../src/sim/care-rules.ts';
 import { controlledInjury } from './scenarios/health.ts';
 import { refreshStock } from '../src/sim/materials.ts';
-import type { Pawn, World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type Pawn,type World } from '../src/sim/types.ts';
 
 function scene():{world:World; visitor:Pawn; patient:Pawn} {
   const world=createWorld(124,32,32);
@@ -46,7 +46,7 @@ test('sick visit reserves a physical place and gives both people joy only after 
   visitor.x=task.target.x;visitor.z=task.target.z;visitor.path=[];visitor.moveCooldown=0;
   expect(processRecreation(world,visitor,context(world,visitor))).toBe(true);
   expect(task.phase).toBe('active');expect(visitor.recreation.level).toBeGreaterThan(beforeVisitor);expect(patient.recreation.level).toBeGreaterThan(beforePatient);
-  expect(validateRecreation(world,124)).toEqual([]);
+  expect(validateRecreation(world,SCHEMA_VERSION)).toEqual([]);
   expect(validateWorld(world)).toEqual([]);
   const resumed=deserializeWorld(serializeWorld(world));
   for(let i=0;i<35;i++){stepWorld(world);stepWorld(resumed);}
@@ -70,7 +70,7 @@ test('one table seat arbitrates social relaxation against a meal and disabling t
   patient.need=null;visitor.needCooldown=0;
   expect(processRecreation(world,visitor,context(world,visitor))).toBe(true);
   expect(visitor.recreation.task).toMatchObject({activity:'social-relax',buildingId:table.id,seatId:seat.id,target:{x:seat.x,z:seat.z}});
-  expect(validateRecreation(world,124)).toEqual([]);
+  expect(validateRecreation(world,SCHEMA_VERSION)).toEqual([]);
   table.gatherSpot=false;
   expect(validateWorld(world)).toEqual([]);
   const before=visitor.recreation.level;

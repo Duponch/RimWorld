@@ -2,6 +2,7 @@ import type { World } from '../sim/types';
 import { buildingMaterialColor } from './building-material-color';
 import type { Placement } from './primitives';
 import { WORLD_SCALE } from '../world/scale';
+import { tvActive } from '../sim/television-recreation';
 
 const BOARD_STEP=.078;
 const BOARD_TOP=WORLD_SCALE.tableHeight+.025;
@@ -10,9 +11,28 @@ const DARK_SQUARES=Array.from({length:8},(_,row)=>Array.from({length:8},(_,colum
 const CHESS_PIECES=Array.from({length:8},(_,column)=>({column,row:column%3===0?1:0,light:true}))
   .concat(Array.from({length:8},(_,column)=>({column,row:column%3===0?6:7,light:false})));
 
+/** Fixed coloured boxes share the prepared furniture material and geometry.
+ * Orientation zero shows the screen towards +z. No image, light or video feed. */
+export function televisionParts(world:World):Placement[] {
+  const parts:Placement[]=[];
+  for(const tv of world.structures)if(tv.kind==='tube-television'){
+    const ry=tv.orientation*Math.PI/2,c=Math.cos(ry),s=Math.sin(ry);
+    const part=(x:number,z:number,y:number,sx:number,sy:number,sz:number,color:number)=>
+      parts.push({key:tv.id,x:tv.x+x*c+z*s,z:tv.z+z*c-x*s,y,sx,sy,sz,ry,color});
+    part(0,0,.18,.62,.36,.48,0x8e8372);
+    part(0,0,.58,.84,.46,.66,0xa8a08f);
+    part(-.065,.337,.59,.61,.34,.025,0x444c4a);
+    part(-.065,.354,.59,.53,.26,.013,tvActive(tv)?0xa8cec5:0x555f60);
+    part(.325,.345,.65,.045,.055,.035,0xd4c7aa);
+    part(.325,.345,.52,.045,.055,.035,0xd4c7aa);
+    for(const x of [-.23,.23])part(x,0,.025,.07,.05,.34,0x635e53);
+  }
+  return parts;
+}
+
 /** All details join the resident furniture batch when structure content changes. */
 export function recreationParts(world: World): Placement[] {
-  const parts: Placement[]=[];
+  const parts: Placement[]=televisionParts(world);
   for(const pin of world.structures)if(pin.kind==='chess-table') {
     const {x,z}=pin,color=buildingMaterialColor(pin.material,0xa98559);
     parts.push({x,z,y:WORLD_SCALE.tableHeight-.035,sx:.84,sy:.07,sz:.84,color},
