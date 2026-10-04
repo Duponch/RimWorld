@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest';
+import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
 import { stepWorld } from '../src/sim/engine.ts';
 import { ensureFireState } from '../src/sim/fire-rules.ts';
 import { applyPlantFrost } from '../src/sim/plant-life.ts';
@@ -8,7 +9,7 @@ import { SCHEMA_VERSION,type Resource,type World } from '../src/sim/types.ts';
 import { climaticHealrootCamp,cultivatedHealroot,healrootCamp } from './helpers/healroot-domestic-v195.ts';
 
 test('strict181 migrates by number alone without inventing a plant, dose, profile, exposure or draw',()=>{
-  const old=healrootCamp();ensureFireState(old);
+  const old=withoutMiningSkill(healrootCamp());ensureFireState(old);
   (old as {schemaVersion:number}).schemaVersion=181;
   const before=structuredClone(old),encoded=JSON.stringify(old);
   expect(deserializeWorld(encoded)).toEqual({...before,schemaVersion:SCHEMA_VERSION});
@@ -18,7 +19,7 @@ test('strict181 migrates by number alone without inventing a plant, dose, profil
 });
 
 test('181 refuses cultivated identities in resources, zones and historical fire losses before migration',()=>{
-  const old=healrootCamp();ensureFireState(old);(old as {schemaVersion:number}).schemaVersion=181;
+  const old=withoutMiningSkill(healrootCamp());ensureFireState(old);(old as {schemaVersion:number}).schemaVersion=181;
   const mutations:Array<(w:World)=>void>=[
     w=>{cultivatedHealroot(w,.3);},
     w=>{const p=cultivatedHealroot(w);delete p.growth;delete p.growthTick;},

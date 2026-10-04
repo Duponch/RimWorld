@@ -1,3 +1,4 @@
+import { withoutMiningSkill, withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
@@ -13,7 +14,10 @@ const stock = (world: World, item: string) => world.piles.filter(pile => pile.it
 test('V180 public refuge is sealed, physically supplied, and one real step resolves its introductory Cassandra ticket', () => {
   const raw = readFileSync(fixturePath, 'utf8');
   const world = deserializeWorld(raw);
-  expect(world).toEqual(prepareMiscDemo());
+  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareMiscDemo()));
+  // Arid species and weights are unchanged; retain the published V169 profile.
+  prepared.wildlife!.profile='biome-herbivores-v1';
+  expect(world).toEqual(prepared);
   expect(world.tick).toBe(MISC_DEMO_TICK);
   expect(world.width).toBe(250);
   expect(world.site?.biome).toBe('arid-shrubland');

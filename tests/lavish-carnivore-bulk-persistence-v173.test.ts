@@ -8,6 +8,7 @@ import {planCookingOrder} from '../src/sim/player-cooking.ts';
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {foodWorkstationCamp,fixtureFoodStation} from './scenarios/food-workstations.ts';
 import {withoutPlantsSkill} from './scenarios/legacy-skills.ts';
+import {withoutPredatorFoodPolicies,withoutPredatorApparelPolicies} from './scenarios/legacy-save.ts';
 
 const RECIPE='cook-carnivore-lavish-meal-bulk' as const;
 function prepared():World {
@@ -19,7 +20,7 @@ function prepared():World {
   return world;
 }
 function declared165(world:World):World {
-  const old=withoutPlantsSkill(structuredClone(world));
+  const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));
   (old as {schemaVersion:number}).schemaVersion=165;
   return old;
 }
@@ -29,6 +30,8 @@ function legacyScene():World {
   addGroundMaterial(world,'food',12,{x:6,z:6},'hare-meat');
   addGroundMaterial(world,'food',13,{x:7,z:6},'deer-meat');refreshStock(world);
   expect(applyCommand(world,{type:'bill-add',structureId:stove.id,recipe:'cook-carnivore-lavish-meal'}).ok).toBe(true);
+  // Construct the pre-178 ingredient filter before the legacy job starts.
+  delete stove.bills![0]!.filters['red-fox-meat'];
   return world;
 }
 

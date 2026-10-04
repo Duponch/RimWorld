@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V204 — Minage et douze compétences reliées, schéma 186.** [Contrat](development/mining-skills-v204.md), [recherche Core](research/mining-skills-core-v204.md), [preuve bornée](history/validation-mining-skills-v204.md), [guide de minage](gameplay/player-guide.md#miner-et-ranger-les-fragments). La 50e scène publique **« Minage et compétences · 3 colons »** prépare trois profils ; extraction, apprentissage et transport restent à accomplir.
+
 **V203 — débouché textile, schéma 185.** [Contrat](development/caravan-sales-v203.md), [recherche Core](research/caravan-sales-core-v203.md), [preuve ciblée](history/validation-commercial-sales-v203.md), [guide](gameplay/player-guide.md#vendre-des-textiles-au-comptoir--v203). Chargement, vente, caisse du poste et retour des invendus réutilisent les propriétaires physiques V193. La 49e scène publique est préparée ; planète, groupes et commerce général restent ouverts.
 
 **V202 — éruption solaire, schéma 184.** [Contrat électrique](development/solar-flare-v202.md), [référence Core](research/solar-flare-core-v202.md), [preuve bornée](history/validation-solar-flare-v202.md), [réserves et secours](gameplay/player-guide.md#traverser-une-éruption-solaire--v202). La 48e scène publique prépare une occasion mondiale future ; début, délestage et reprise restent physiques.

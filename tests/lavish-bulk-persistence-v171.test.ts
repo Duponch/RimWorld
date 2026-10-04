@@ -8,6 +8,7 @@ import {planCookingOrder} from '../src/sim/player-cooking.ts';
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {foodWorkstationCamp,fixtureFoodStation} from './scenarios/food-workstations.ts';
 import {withoutPlantsSkill} from './scenarios/legacy-skills.ts';
+import {withoutPredatorFoodPolicies,withoutPredatorApparelPolicies} from './scenarios/legacy-save.ts';
 
 const RECIPE='cook-lavish-meal-bulk' as const;
 function prepared():World {
@@ -19,7 +20,7 @@ function prepared():World {
   return world;
 }
 function declared163(world:World):World {
-  const old=withoutPlantsSkill(structuredClone(world));
+  const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));
   (old as {schemaVersion:number}).schemaVersion=163;
   return old;
 }
@@ -123,6 +124,9 @@ test('V163 rejects a future recipe hidden in an otherwise valid active cooking t
   addGroundMaterial(world,'food',10,{x:6,z:6},'hare-meat');
   addGroundMaterial(world,'food',10,{x:7,z:6},'rice');refreshStock(world);
   expect(applyCommand(world,{type:'bill-add',structureId:stove.id,recipe:'lavish-meal'}).ok).toBe(true);
+  // Build the old bill before executing its real ingredient/work transitions.
+  // Fox meat was not an ingredient permission in schema 163.
+  delete stove.bills![0]!.filters['red-fox-meat'];
   for(let i=0;i<1200&&!(pawn.cooking?.phase==='work'&&pawn.cooking.progress>0);i++)stepWorld(world);
   expect(pawn.cooking?.phase).toBe('work');
   const old=declared163(world);

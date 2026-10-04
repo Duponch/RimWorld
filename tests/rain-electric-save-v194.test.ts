@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest';
+import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
 import { createWorld,stepWorld } from '../src/sim/engine.ts';
 import { adoptWeather,newWeatherState } from '../src/sim/weather.ts';
 import { adoptRainElectrical } from '../src/sim/rain-electric.ts';
@@ -9,7 +10,7 @@ import { newPowerState } from '../src/sim/power-rules.ts';
 import { CLOTHING_RESEARCH_COST } from '../src/sim/research.ts';
 import { medicalCamp } from './scenarios/health.ts';
 import { fixturePower } from './scenarios/power.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
 
 function historicalContacts():World {
   const world=createWorld(194,32,32);world.tick=20;
@@ -53,9 +54,9 @@ test('rain state depends on real contemporaneous weather basics and safe Core cl
 
 test('strict 180 migration stays neutral until actual resume, and forbids future rain state',()=>{
   const world=createWorld(194,32,32);adoptWeather(world);
-  const legacy=JSON.parse(serializeWorld(world)) as Record<string,unknown>;legacy.schemaVersion=180;
+  const legacy=withoutMiningSkill(JSON.parse(serializeWorld(world))) as Record<string,unknown>;legacy.schemaVersion=180;
   const migrated=deserializeWorld(JSON.stringify(legacy));
-  expect(migrated.schemaVersion).toBe(181);expect(migrated.rainElectrical).toBeUndefined();
+  expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect(migrated.rainElectrical).toBeUndefined();
   expect({...JSON.parse(serializeWorld(migrated)),schemaVersion:180}).toEqual(legacy);
   const paused=serializeWorld(migrated);stepWorld(migrated,0);expect(serializeWorld(migrated)).toBe(paused);
   stepWorld(migrated,1);expect(migrated.rainElectrical!.adoptedAt).toBe(0);expect(migrated.rainElectrical!.lastCoreTick).toBe(10);
@@ -78,8 +79,8 @@ function historicalElectricBench():{world:World;benchId:number;generatorId:numbe
 }
 
 test('schema 180 refuses a future tailoring switch or flick job independently of rain state',()=>{
-  const {world,benchId}=historicalElectricBench();
-  const source=JSON.parse(serializeWorld(world)) as World;
+  const {world,benchId}=historicalElectricBench();withoutMiningSkill(world);
+  const source=withoutMiningSkill(JSON.parse(serializeWorld(world))) as World;
   (source as unknown as {schemaVersion:number}).schemaVersion=180;
   expect(Object.hasOwn(source,'rainElectrical')).toBe(false);
   // Prove that the same historical object is otherwise valid before adding
@@ -99,7 +100,7 @@ test('schema 180 refuses a future tailoring switch or flick job independently of
 
 test('an old disconnected tailoring bench migrates neutrally and starts only after a real resumed tick',()=>{
   const {world,benchId,generatorId}=historicalElectricBench();
-  const source=JSON.parse(serializeWorld(world)) as Record<string,unknown>;source.schemaVersion=180;
+  const source=withoutMiningSkill(JSON.parse(serializeWorld(world))) as Record<string,unknown>;source.schemaVersion=180;
   const migrated=deserializeWorld(JSON.stringify(source)),bench=migrated.structures.find(s=>s.id===benchId)!;
   expect({...JSON.parse(serializeWorld(migrated)),schemaVersion:180}).toEqual(source);
   expect(bench.power).toEqual({on:false,parentId:null});expect(migrated.rainElectrical).toBeUndefined();

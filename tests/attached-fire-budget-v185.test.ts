@@ -95,10 +95,11 @@ test('wildlife fire prefixes keep per-species actor slots and restore all empty 
   const layer = new WildlifeLayer();
   const bodies = layer.mesh.children.filter(child => child.name.startsWith('Wild ')) as THREE.Mesh<THREE.InstancedBufferGeometry>[];
   const flames = layer.flames.children as THREE.Mesh<THREE.InstancedBufferGeometry>[];
+  expect(bodies).toHaveLength(7);expect(flames).toHaveLength(7); // V190 includes the empty resident red-fox rig.
   const geometries = flames.map(f => f.geometry), capacities = bodies.map(b => b.geometry.getAttribute('aFrom').count);
   try {
     layer.update(world, undefined, true);
-    expect(flames.map(f => f.geometry.instanceCount)).toEqual([0, 0, 0, 0, 0, 0]);
+    expect(flames.map(f => f.geometry.instanceCount)).toEqual([0, 0, 0, 0, 0, 0, 0]);
     const bodyCounts = bodies.map(b => b.geometry.instanceCount);
     const restore = layer.prepare();
     try {
@@ -111,21 +112,21 @@ test('wildlife fire prefixes keep per-species actor slots and restore all empty 
       }
     } finally { restore(); }
     expect(bodies.map(b => b.geometry.instanceCount)).toEqual(bodyCounts);
-    expect(flames.map(f => f.geometry.instanceCount)).toEqual([0, 0, 0, 0, 0, 0]);
+    expect(flames.map(f => f.geometry.instanceCount)).toEqual([0, 0, 0, 0, 0, 0, 0]);
 
     world = structuredClone(world); attachedFires(world, 'animal', [world.wildlife!.animals[2]!.id, world.wildlife!.animals[1]!.id]);
     const ids = world.wildlife!.animals.map(a => a.id), before = structuredClone(world);
     layer.update(world, undefined);
     expect(world).toEqual(before);
-    expect(flames.map(f => f.geometry.instanceCount)).toEqual([2, 0, 1, 0, 0, 0]);
+    expect(flames.map(f => f.geometry.instanceCount)).toEqual([2, 0, 1, 0, 0, 0, 0]);
     expect(flames[0]!.geometry.getAttribute('aFire').getX(0)).toBe(0);
     expect(flames[0]!.geometry.getAttribute('aFire').getX(1)).toBe(.5);
     expect(flames[2]!.geometry.getAttribute('aFire').getX(0)).toBe(.5);
     const restoreBurning = layer.prepare(); restoreBurning();
-    expect(flames.map(f => f.geometry.instanceCount)).toEqual([2, 0, 1, 0, 0, 0]);
+    expect(flames.map(f => f.geometry.instanceCount)).toEqual([2, 0, 1, 0, 0, 0, 0]);
 
     world = structuredClone(world); attachedFires(world, 'animal', []); layer.update(world, undefined);
-    expect(flames.map(f => f.geometry.instanceCount)).toEqual([0, 0, 0, 0, 0, 0]);
+    expect(flames.map(f => f.geometry.instanceCount)).toEqual([0, 0, 0, 0, 0, 0, 0]);
     world = structuredClone(world);
     world.wildlife!.animals.push({ ...structuredClone(base), id: world.nextId++, species: 'hare', x: 25, z: 8, state: 'idle', motion: undefined, path: [] });
     attachedFires(world, 'animal', [world.wildlife!.animals[6]!.id]); layer.update(world, undefined);

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect,test } from 'vitest';
+import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
 import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serialization';
 import { SCHEMA_VERSION,type World } from '../src/sim/types';
 import { SnapshotEncoder,SnapshotDecoder } from '../src/bridge/snapshots';
@@ -23,7 +24,7 @@ test('strict177 neutral178 migration keeps the published greenhouse and every hi
 });
 
 test('old biome population target remains herbivorous and no fox or hunt is retroactively generated',()=>{
-  const w=predationCamp().w;w.wildlife!.animals=w.wildlife!.animals.filter(a=>a.species!=='red-fox');
+  const w=withoutMiningSkill(predationCamp().w);w.wildlife!.animals=w.wildlife!.animals.filter(a=>a.species!=='red-fox');
   w.wildlife!.profile='biome-herbivores-v1';
   const p=w.wildlife!.population!;p.targetWeight=p.fullTargetWeight*2.3/12.27;
   w.schemaVersion=177 as World['schemaVersion'];

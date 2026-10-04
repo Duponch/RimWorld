@@ -1,4 +1,6 @@
-# Validation courante — ventes de textiles V203
+# Validation courante — compétence Minage V204
+
+**V204 — compétence Minage, schéma 186.** [Contrat](mining-skills-v204.md), [recherche Core et adaptations](../research/mining-skills-core-v204.md), [preuve](../history/validation-mining-skills-v204.md). Les contrôles du lot et la consolidation périodique des préparations historiques sont consignés séparément dans la preuve. La régression par reprises ne vaut pas une suite complète ; les mesures du cache terrain ne prouvent pas le coût général CPU/GPU.
 
 **V203 — ventes au comptoir, schéma 185.** [Contrat](caravan-sales-v203.md), [recherche Core et adaptations](../research/caravan-sales-core-v203.md), [preuve ciblée](../history/validation-commercial-sales-v203.md). Les contrôles et mesures sont détaillés dans la preuve ; ils ne valent ni régression exhaustive, ni campagne économique naturelle, ni gain CPU/GPU général.
 

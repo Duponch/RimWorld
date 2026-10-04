@@ -1,5 +1,7 @@
 # Guide joueur
 
+**Schéma courant 186 — V204 compétence Minage.** [Contrat](../development/mining-skills-v204.md), [recherche Core](../research/mining-skills-core-v204.md), [preuve bornée](../history/validation-mining-skills-v204.md). Les anciennes sauvegardes ne reçoivent ni profil, XP, contribution ou minerai rétroactifs.
+
 **Schéma courant 185 — V203 ventes de textiles au comptoir.** [Contrat](../development/caravan-sales-v203.md), [preuve et limites](../history/validation-commercial-sales-v203.md). Migration neutre : aucune marchandise, monnaie ou vente rétroactive.
 
 **Schéma courant 184 — V202 éruption solaire.** [Contrat](../development/solar-flare-v202.md), [preuve et limites](../history/validation-solar-flare-v202.md). La migration ne donne aucune condition ou énergie rétroactive.
@@ -584,7 +586,7 @@ Revolver et fusil permettent le tir dirigé et la chasse ; le couteau sert la m�
 
 Si l’alerte **« cargaison à déposer »** apparaît après un effondrement de fatigue, le colon se repose et conserve son objet. Faites transporter une pile voisine par un autre colon vers une réserve libre : dès qu’une case proche se libère, la cargaison peut être déposée. Ce n’est pas un inventaire personnel supplémentaire. [Détails](../development/interrupted-cargo.md).
 
-Sélectionnez un colon puis **Biographie · compétences** dans son inspection pour consulter Construction et Médecine, leurs passions et XP. Le tableau **Travail** affiche niveau et flammes sous Construction et Médecin ; le choix des priorités reste ici. Bâtir et déconstruire enseignent la compétence au contact ; voyager, livrer, poser un toit ou désinstaller un meuble ne donnent pas d’XP. La passion accélère l’apprentissage, pas directement le travail. Les autres compétences et la personnalité restent à développer. [Détails et limites](../development/skills.md).
+Sélectionnez un colon puis **Bio** dans son inspection pour consulter les douze compétences reliées, leurs passions et XP, avec les effets disponibles au survol ou au focus. Le tableau **Travail** présente notamment niveau et flammes sous Construction, Médecin et Minage ; le choix des priorités reste ici. Bâtir et déconstruire enseignent Construction au contact ; voyager, livrer, poser un toit ou désinstaller un meuble ne donnent pas d'XP Construction. La passion accélère l’apprentissage, pas directement le travail. Biographies et couverture exhaustive des compétences Core restent ouvertes. [Détails et limites](../development/skills.md), [Minage](../development/mining-skills-v204.md).
 
 **Première électricité** : dans **Architecte → Énergie**, placez un générateur à bois (2×2, 100 acier + 2 composants). Après construction, laissez Transport apporter le bois : il produit 1 000 W et consomme 22 bois/jour lorsqu’il est allumé, même avec peu d’appareils. Sa réserve contient au plus 75 bois. Une lampe sur pied, disponible dans **Meubles**, coûte 20 acier et demande 30 W. Climatiseur et cuisinière électrique rejoignent le même réseau. Le démarrage et le délestage sont progressifs ; l’inspection distingue courant reçu, puissance disponible et combustible.
 
@@ -891,15 +893,19 @@ Les fragments d’une même roche présentent de petites variations de proportio
 
 Dans **Architecte → Ordres**, choisir **Miner** (M), puis cliquer ou tracer sur les massifs. Activer **Minage** dans Travail. Le colon rejoint la roche, lui fait face et frappe ; ses PV sont inspectables et les dégâts restent acquis après annulation. Un massif extrait découvre un sol rocheux non fertile. Il laisse un fragment de la même roche dans 25 % des cas, sans donner directement des blocs de construction.
 
+Dans **Bio**, Minage se trouve entre Construction et Cuisine. Son niveau, ses flammes de passion et sa jauge de niveau sont visibles ; survolez la ligne ou donnez-lui le focus pour consulter XP, apprentissage, vitesse avant lumière et rendement minéral. **Travail** présente le niveau et les passions sous la priorité Minage ; son infobulle rappelle vitesse et rendement. Capacités et lumière affectent les coups réellement travaillés, dont la cadence reste capturée jusqu'à l'impact. La passion accélère l'apprentissage, pas directement le geste. Seul le travail au contact donne les 700 milli-XP de base par tick local ; marche et attente n'enseignent rien, tandis que l'oubli ordinaire peut continuer.
+
+Une compétence absente dans une sauvegarde historique se lit comme Minage 8, sans passion ni XP antérieure ; le profil apparaît lors de la première pratique. Pour comparer, chargez **Minage et compétences · 3 colons**, la 50e scène préparée : Ada niveau 0, Noé niveau 8 et Mina niveau 20. Aucun gisement n'est désigné au départ. Activez le mineur choisi, désignez un gisement, observez trajet, coups et transport vers les réserves, puis sauvegardez pendant un coup et rechargez. Plusieurs mineurs successifs contribuent au rendement en proportion des dégâts de leurs coups ; le rendement affiché d'un seul colon n'est donc pas forcément celui du produit final. [Règles et adaptations V204](../development/mining-skills-v204.md).
+
 Créer une réserve avec **Fragments de roche** autorisés, puis désigner les fragments via **Transporter les fragments** dans Ordres. Un fragment occupe une case entière et se porte individuellement ; les types ne fusionnent pas. Le clic droit du colon peut aussi imposer son rangement. Une interruption après prise conserve le fragment mais peut nécessiter une nouvelle désignation. L’atelier de taille peut être construit en V31 ; ses recettes de blocs sont livrées en V32 ; les autres minerais que l’acier et les machines compactées et les toits naturels restent absents.
 
 ## Extraire une réserve d’acier
 
-Les **nouvelles colonies** peuvent présenter de l’**acier compacté**, reconnaissable à ses teintes brunes et son inspection. Architecte → Ordres → **Miner** le désigne comme un massif ; le métier Minage doit être actif. Le colon rejoint le gisement, frappe et produit 40 unités d’acier dans la case libérée. Les dégâts restent après annulation et sauvegarde.
+Les **nouvelles colonies** peuvent présenter de l’**acier compacté**, reconnaissable à ses teintes brunes et son inspection. Architecte → Ordres → **Miner** le désigne comme un massif ; le métier Minage doit être actif. Le colon rejoint le gisement et frappe ; sa base de 40 unités d'acier est modulée par le rendement pondéré des coups, puis arrondie à l'extraction. Les dégâts et contributions restent après annulation et sauvegarde.
 
 Créer une réserve autorisant **Acier** : les transporteurs le rangent automatiquement, sans outil « Transporter les fragments ». Une pile contient au plus 75 unités ; le total apparaît à gauche. Les anciennes réserves refusent ce nouveau matériau jusqu’à modification de leur filtre. Les anciennes cartes conservent leur géologie, sans apparition rétroactive de gisements.
 
-L’acier est extractible, stockable et utilisable pour les constructions à matériau sélectionnable dans Architecte, dont la table de taille V31. Le rendement est encore neutre, les compétences n’étant pas simulées.
+L’acier est extractible, stockable et utilisable pour les constructions à matériau sélectionnable dans Architecte, dont la table de taille V31. [Minage V204](../development/mining-skills-v204.md) relie désormais sa compétence au rendement de l'extraction ; les fragments naturels conservent leur règle distincte.
 
 ## Préparer un atelier de taille
 

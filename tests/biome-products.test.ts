@@ -48,11 +48,15 @@ test('all five families accept the new leathers, with distinct useful insulation
   const ids=new Set<string>();for(const material of APPAREL_MATERIALS)for(const family of APPAREL_FAMILIES){
     const item=apparelItemFor(family,material);ids.add(item);
     const pile={kind:'apparel',item,quantity:1,owner:{type:'ground',x:1,z:1},apparel:newApparelState(item)};
-    expect(validApparelShape(pile,material==='muffalo-wool'?120:91)).toBe(true);
-    if(material==='muffalo-wool')expect(validApparelShape(pile,119)).toBe(false);
+    const introduced=material==='foxfur'?178:material==='muffalo-wool'?120:91;
+    expect(validApparelShape(pile,introduced)).toBe(true);
+    if(material==='foxfur')expect(validApparelShape(pile,177)).toBe(false);
+    else if(material==='muffalo-wool')expect(validApparelShape(pile,119)).toBe(false);
     else if(!['cloth','light-leather'].includes(material))expect(validApparelShape(pile,90)).toBe(false);
   }
-  expect(ids.size).toBe(30);
+  expect(APPAREL_MATERIALS).toEqual(['cloth','light-leather','plainleather','bluefur','camelhide','muffalo-wool','foxfur']);
+  expect(APPAREL_FAMILIES).toEqual(['tribalwear','shirt','pants','duster','parka']);
+  expect(ids.size).toBe(35); // Seven materials, five physical apparel families.
   expect(APPAREL['bluefur-parka'].coldInsulation).toBe(40);
   expect(APPAREL['plainleather-parka'].coldInsulation).toBe(32);
   expect(APPAREL['camelhide-duster'].heatInsulation).toBeCloseTo(20.4);
@@ -70,7 +74,7 @@ test('until-target bills count every new material in storage and task cargo, exc
       {id:w.nextId++,kind:'apparel' as const,item:apparelItemFor(family,material),quantity:1,owner:{type:'ground' as const,x:i?2:1,z:1},apparel:newApparelState(apparelItemFor(family,material))},
       {id:w.nextId++,kind:'apparel' as const,item:apparelItemFor(family,material),quantity:1,owner:{type:'pawn' as const,pawnId:w.pawns[0]!.id},apparel:newApparelState(apparelItemFor(family,material))},
     ]);
-    expect(countedProducts(w,newCookingBill(1,family))).toBe(7);
+    expect(countedProducts(w,newCookingBill(1,family))).toBe(8); // Seven carried + the one stored garment.
   }
   w.piles=[{id:w.nextId++,kind:'food',item:'dromedary-meat',quantity:40,owner:{type:'ground',x:1,z:1}},
     {id:w.nextId++,kind:'textile',item:'camelhide',quantity:30,owner:{type:'ground',x:1,z:1}}];

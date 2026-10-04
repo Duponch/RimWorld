@@ -1,5 +1,7 @@
 # Cache de comparaison des tuiles de snapshot V177
 
+V204 prolonge le cache avec les [contributions minières](mining-skills-v204.md) : registre clairsemé de primitives, comparaison au même tick et reset complet. Les cinq champs communs restent compacts ; les résultats V177 ci-dessous restent historiques.
+
 V177 est une retouche interne de l’encodage des snapshots. Elle n’ajoute aucune mécanique, ne change ni `World` ni son schéma courant 166, et ne modifie ni la cadence de publication, ni les commandes, ni le protocole des messages, ni leur décodage. Sa [preuve](../history/validation-snapshot-cache-v177.md) borne les contrôles et distingue la réduction du reset terrain de la performance générale.
 
 Lire le [contrat de synchronisation](presentation-timing.md), la [méthode de mesure](performance-measurement.md), la [recherche Web V177](../research/snapshot-cache-web-v177.md), le [profil V146](../history/validation-performance-v146.md) et l’[audit V169](../history/validation-performance-v169.md). La règle historique de l’encodeur V52 est dans [l’archive des instructions](../history/agent-instructions-through-v144.txt) : comparer **tous** les champs à **chaque** publication, même au même tick, sans référence mutable du monde comme témoin.

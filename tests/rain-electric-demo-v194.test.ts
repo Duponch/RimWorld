@@ -1,3 +1,4 @@
+import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
@@ -47,5 +48,5 @@ test('the published forty-fourth scene matches its strict generated initial stat
   const entry = manifest.saves.find((s: { id: string }) => s.id === RAIN_ELECTRIC_DEMO_ID);
   expect(entry).toMatchObject({ release: 'v194', prepared: true, pawns: 3, colonists: 3, width: 32, height: 32, tick: 0 });
   expect(entry.sha256).toBe(createHash('sha256').update(raw).digest('hex'));
-  expect(deserializeWorld(raw)).toEqual(prepareRainElectricDemo());
+  expect(deserializeWorld(raw)).toEqual(withoutMiningSkill(prepareRainElectricDemo()));
 });

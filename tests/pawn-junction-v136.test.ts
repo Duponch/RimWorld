@@ -83,11 +83,25 @@ test('the joined pawn remains in the existing WebGPU vertex-stream budget', () =
   try {
     layer.update(createWorld(42, 32, 32), 1, true);
     const geometry = layer.feedbackSource!;
-    const active = Object.entries(geometry.attributes).filter(([name]) => name !== 'aFire');
+    // V196 exposes eighteen CPU views. Hair RGB and the blood word stay as
+    // aliases for adoption, while one aHairBlood vec4 feeds the shader; neither
+    // alias is a separate shader location or buffer. Keep the sixteen-location
+    // GPU budget rather than raising it to match the CPU attribute inventory.
+    const hair=geometry.getAttribute('aHair') as THREE.InterleavedBufferAttribute;
+    const hairBlood=geometry.getAttribute('aHairBlood') as THREE.InterleavedBufferAttribute;
+    const blood=geometry.getAttribute('aBodyBlood') as THREE.InterleavedBufferAttribute;
+    expect([hair.itemSize,hairBlood.itemSize,blood.itemSize]).toEqual([3,4,1]);
+    expect(hair.data).toBe(hairBlood.data);expect(blood.data).toBe(hairBlood.data);
+    expect([hair.offset,hairBlood.offset,blood.offset,hairBlood.data.stride]).toEqual([10,10,13,18]);
+    const aliases=new Set(['aFire','aHair','aBodyBlood']);
+    const active = Object.entries(geometry.attributes).filter(([name]) => !aliases.has(name));
+    expect(active.map(([name])=>name).sort()).toEqual(['position','normal','color','boneId','bindPivot','dye',
+      'aFrom','aTo','aMotion','aTravel','aCargo','aTint','aEquipment','aSkin','aShape','aHairBlood'].sort());
     const streams = new Set(active.map(([, attribute]) => attribute instanceof THREE.InterleavedBufferAttribute
       ? attribute.data : attribute));
     expect(active.length).toBeLessThanOrEqual(16);
     expect(streams.size).toBeLessThanOrEqual(7);
+    expect(streams.size).toBe(7); // One model, one appearance, five motion/cargo streams.
   } finally {
     layer.dispose();
   }

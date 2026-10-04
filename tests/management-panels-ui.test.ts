@@ -39,6 +39,7 @@ describe('stable management panel layouts',()=>{
       ['machining','flak-armor'],['plate-armor','flak-armor'],
       ['microelectronics','multi-analyzer'],['machining','multi-analyzer'],['multi-analyzer','fabrication'],
       ['fabrication','advanced-fabrication'],['fabrication','recon-armor'],
+      ['complex-clothing','recon-armor'], // Existing physical prerequisite shown since V199.
     ]);
     for(const [from,to] of researchLinks){expect(ids).toContain(from);expect(ids).toContain(to);}
     expect(worldStyles).toContain('#research-panel .research-graph');

@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest';
+import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
 import { SnapshotDecoder,SnapshotEncoder,type SnapshotMessage } from '../src/bridge/snapshots.ts';
 import { surgeryCamp } from './helpers/surgery-v192.ts';
 import { administerAnesthetic,advanceAnesthetic } from '../src/sim/anesthetic.ts';
@@ -71,7 +72,7 @@ test('invalid surgery and anesthetic shapes reject a checkpoint and a same-tick 
 });
 
 test('178 transport refuses all future surgical fields while its neutral historical frame remains acceptable',()=>{
-  const w=surgeryCamp().world;delete w.pawns[1]!.health!.infections;
+  const w=withoutMiningSkill(surgeryCamp().world);delete w.pawns[1]!.health!.infections;
   (w as {schemaVersion:number}).schemaVersion=178;expect(validateWorld({...w,schemaVersion:SCHEMA_VERSION})).toEqual([]);
   const good=structuredClone(new SnapshotEncoder().encode(w,0,1)),future=frame('work');
   expect(new SnapshotDecoder().adopt(good).status).toBe('applied');

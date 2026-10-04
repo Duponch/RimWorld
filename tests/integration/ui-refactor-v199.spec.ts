@@ -39,7 +39,7 @@ test('V199 native prepared UI: real policies, independent filters, anatomical/it
     await pause(page);await panel(page,'menu');await page.locator('#load').click();await expectWorld(page,initial);await page.keyboard.press('Escape');
     evidence.backend=await page.evaluate(()=>window.__lisiere.backend);expect(evidence.backend).toBe('WebGPU');
     await page.locator(`[data-pawn="${pawn.id}"]`).click();await pawnTab(page,'bio');
-    await expect(page.locator('.bio-columns')).toBeVisible();await expect(page.locator('[data-skill-entry]')).toHaveCount(11);
+    await expect(page.locator('.bio-columns')).toBeVisible();await expect(page.locator('[data-skill-entry]')).toHaveCount(12);
     await hoverTip(page,'[data-skill-entry="construction"]','Expérience du niveau');
     await page.screenshot({path:testOutputPath('artifacts/ui-v199-bio-tooltip.png')});
     await page.keyboard.press('Escape');await expect(page.locator('#game-tooltip')).toBeHidden();

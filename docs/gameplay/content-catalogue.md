@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V204 — extraction avec compétence Minage, schéma courant 186.** Aucun nouvel objet ou recette : le profil minier agit sur la cadence et le rendement pondéré des minerais existants ; les fragments naturels gardent leur chance distincte. La 50e fiche **« Minage et compétences · 3 colons »** prépare les niveaux 0/8/20, leurs gisements et leurs réserves, avec extraction et transport à réaliser. [Contrat](../development/mining-skills-v204.md), [recherche Core](../research/mining-skills-core-v204.md), [preuve bornée](../history/validation-mining-skills-v204.md), [scène](../../public/test-saves/v204/minage-competences.json), [générateur](../../scripts/create-mining-skills-v204-test-save.ts).
+
 **V203 — débouché pour les textiles existants, schéma courant 185.** Aucun nouvel objet ni recette : le tissu (`cloth`) provenant du coton et la laine (`muffalo-wool`) provenant de la tonte peuvent rejoindre un manifeste physique, être vendus contre la caisse finie du poste et financer ses médicaments/composants existants. Les matières non vendues reviennent puis rejoignent les réserves et productions ordinaires. [Contrat](../development/caravan-sales-v203.md), [recherche Core](../research/caravan-sales-core-v203.md), [preuve](../history/validation-commercial-sales-v203.md). La **49e fiche « Ventes de textiles · 3 colons »** prépare 75 tissus, 60 laines et quatre rations sans argent initial : [scène](../../public/test-saves/v203/ventes-textiles.json), [générateur](../../scripts/create-test-save-commercial-sales-v203.ts). Leur production naturelle n’est pas prouvée par cette scène ; rachat textile, autres exports et nouveau stock textile généré restent différés.
 
 **V202 — condition SolarFlare, schéma courant 184.** Aucun nouvel objet ou recette : l’incident mondial suspend les transferts électriques et déleste progressivement les consommateurs existants ; les producteurs, combustibles et possessions restent physiques. La couture électrique peut continuer manuellement, les autres ateliers suivent leurs règles. Eclipse/Aurora et autres couches sont différés. [Contrat](../development/solar-flare-v202.md), [référence Core](../research/solar-flare-core-v202.md), [preuve](../history/validation-solar-flare-v202.md).
@@ -391,7 +393,7 @@ V22 ne crée aucun objet : elle renseigne transit, arrêt, coûts d’entrée et
 | sandstone | Grès | Massif et pierre décorative typés |
 | slate | Ardoise | Massif et pierre décorative typés |
 
-Distribution régionale, persistance et apparence sont livrées. V28 ajoute les PV et produits ci-dessous, sans blocs utilisables. L’acier compacté et son produit sont livrés en V29 ; autres minerais hors machines compactées et compétences de minage restent absents ; taille livrée V32, construction en pierre V33 ; [contrat du minage](../development/mining.md).
+Distribution régionale, persistance et apparence sont livrées. V28 ajoute les PV et produits ci-dessous, sans blocs utilisables. L’acier compacté et son produit sont livrés en V29 ; taille livrée V32, construction en pierre V33 et minerais industriels V123 restent distincts. [Minage V204](../development/mining-skills-v204.md) applique désormais compétence et contributions pondérées à leur extraction, sans augmenter les fragments naturels ; [socle physique](../development/mining.md).
 
 ## Produits et sols V28 — CAT-059/060
 
@@ -409,7 +411,7 @@ Distribution régionale, persistance et apparence sont livrées. V28 ajoute les 
 
 | Identifiant | Livré | Limites |
 |---|---|---|
-| `Tile.ore='steel'` | Acier compacté, 1 500 PV, gisements connectés de 30–40 cases ; minage et sol encaissant conservé. | Profil de site local ; aucune injection sur anciennes cartes, compétences/rendements variables, dégâts externes et toits naturels absents. |
+| `Tile.ore='steel'` | Acier compacté, 1 500 PV, gisements connectés de 30–40 cases ; minage et sol encaissant conservé. | Profil de site local ; aucune injection sur anciennes cartes. Rendement variable relié à Minage V204 ; dégâts externes et toits naturels absents. |
 | Objet `steel` | 40 unités par gisement au profil neutre ; piles de 75, portage, rangement filtré, compteur et barres procédurales ; matériau de construction V30. | Atelier et recette constructive mixte livrés en V31 ; fabrication de blocs livrée V32 ; capacité générale de portage provisoire de dix unités. |
 
 [Sources et décisions](../research/steel-reference.md). Or, plastacier comme ressource, uranium, jade et leurs filières restent absents ; V88 ajoute l’argent monétaire, sans filière d’extraction ; V41 ajoute les composants industriels extractibles. Ni ces deux entrées, ni les cinq roches ne constituent un inventaire exhaustif.

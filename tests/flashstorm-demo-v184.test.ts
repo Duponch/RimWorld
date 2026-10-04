@@ -1,3 +1,4 @@
+import { withoutMiningSkill, withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
@@ -11,7 +12,10 @@ const fixturePath = new URL('../public/test-saves/v184/orage-sec-et-incendies.js
 test('V184 prepared public scene resolves a real introductory Misc ticket only after resume', () => {
   const raw = readFileSync(fixturePath, 'utf8');
   const world = deserializeWorld(raw);
-  expect(world).toEqual(prepareFlashstormDemo());
+  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareFlashstormDemo()));
+  // Arid species and weights are unchanged; retain the original V173 profile.
+  prepared.wildlife!.profile='biome-herbivores-v1';
+  expect(world).toEqual(prepared);
   expect(world.tick).toBe(FLASHSTORM_DEMO_TICK);
   expect([world.width, world.height, world.pawns.length]).toEqual([250, 250, 3]);
   expect(world.flashstorm).toBeUndefined();

@@ -1,10 +1,12 @@
 import { expect, test } from 'vitest';
+import { withoutMiningSkill, withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
 import { enableQuests } from '../src/sim/quests.ts';
 import { validateQuests } from '../src/sim/quest-save.ts';
 import { validateRaids } from '../src/sim/raid-save.ts';
 import { raidEntries } from '../src/sim/raid-space.ts';
 import { createRaidGroup } from '../src/sim/raid-spawn.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
+import { enableBiomeWildlife } from '../src/sim/wildlife.ts';
 import { crashlandedProfile } from '../src/sim/game-profile.ts';
 import { enableCassandraRaids } from '../src/sim/cassandra-raids.ts';
 import { adoptFluIncidents } from '../src/sim/flu-incidents.ts';
@@ -14,7 +16,7 @@ import { newApparelState } from '../src/sim/apparel-rules.ts';
 import { injurePawn } from '../src/sim/health.ts';
 import { advanceRaids } from '../src/sim/raids.ts';
 import type { JoinerQuest } from '../src/sim/quest-state.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
 import { deconstructionCamp } from './scenarios/deconstruction.ts';
 
 test('malformed JSON dates are rejected without coercing objects or throwing from validation',()=>{
@@ -85,9 +87,12 @@ function pursued(): World {
 
 test('schema 171 migrates without a quest and rejects either future quest field', () => {
   const current = createScenarioWorld(42, 32, 'crashlanded');
-  const old = structuredClone(current);
+  const old = withoutPredatorDefaults(withoutMiningSkill(structuredClone(current)));
   (old as unknown as Record<string, unknown>).schemaVersion = 171;
-  expect(deserializeWorld(JSON.stringify(old))).toEqual(current);
+  // Prepare the historical ecological profile before any future quest field.
+  delete old.wildlife;
+  enableBiomeWildlife(old, old.site!.biome);
+  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
 
   const injected = structuredClone(old);
   injected.quests = offered().quests;
@@ -100,11 +105,14 @@ test('schema 171 migrates without a quest and rejects either future quest field'
   expect(validateRaids(linked, 172, new Set())).toEqual([]);
   expect(validateRaids(linked, 171, new Set())).toContain('Invalid active raid group.');
 
-  const oldRaid = createScenarioWorld(42, 32, 'crashlanded');
+  const oldRaid = structuredClone(old);
   const sites = raidEntries(oldRaid, 1, 1)!;
   const group = createRaidGroup(oldRaid, { count: 1, sites, random: { rng: 1 } })!;
+  // The current actor factory adds Mining; this declared historical actor did
+  // not have that profile. Validate the neutral base before injecting origin.
+  withoutMiningSkill(oldRaid);
+  expect(deserializeWorld(JSON.stringify(oldRaid))).toEqual({...oldRaid,schemaVersion:SCHEMA_VERSION});
   group.originQuestId = 1;
-  (oldRaid as unknown as Record<string, unknown>).schemaVersion = 171;
   expect(() => deserializeWorld(JSON.stringify(oldRaid))).toThrow(/version 171/);
 });
 

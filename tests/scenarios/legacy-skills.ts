@@ -6,8 +6,32 @@ import { newBreakdownCalendar } from '../../src/sim/breakdowns.ts';
 import { PRODUCTION_RECIPES } from '../../src/sim/production-recipes.ts';
 import { adultAgeTicks } from '../../src/sim/animal-life.ts';
 import { newVisitorAgenda } from '../../src/sim/visitor-state.ts';
+/** Fixture preparation only; never a production migration or validator. */
+export function withoutMiningSkill<T>(world:T):T {
+  const w=world as any;
+  for(const pawn of [...w.pawns??[],...w.visitors?.departed?.map((d:any)=>d.pawn)??[],
+    ...w.scout?.pawn?[w.scout.pawn]:[],...w.commercialTrip?.pawn?[w.commercialTrip.pawn]:[]])
+    if(pawn.skills)delete pawn.skills.mining;
+  return world;
+}
+/** Current default permissions/filters did not exist before predator V190.
+ * Use only to prepare declared historical fixtures, never on refusal input. */
+export function withoutPredatorDefaults<T>(world:T):T {
+  const w=world as any;
+  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((item:string)=>item!=='red-fox-meat');
+  for(const policy of w.apparelPolicies??[]){
+    policy.allowedItems=policy.allowedItems.filter((item:string)=>!item.startsWith('foxfur-'));
+    policy.allowedMaterials=policy.allowedMaterials.filter((material:string)=>material!=='foxfur');
+  }
+  for(const structure of [...w.structures??[],...w.packed?.map((p:any)=>p.building)??[]])
+    for(const bill of structure.bills??[])for(const item of Object.keys(bill.filters??{}))
+      if(item==='red-fox-meat'||item==='red-fox-corpse'||item==='foxfur'||item.startsWith('foxfur-'))delete bill.filters[item];
+  if(w.spoiled)delete w.spoiled['red-fox-meat'];
+  return world;
+}
 /** Historical fixture construction only: V167 and earlier had no Plants skill. */
 export function withoutPlantsSkill<T>(world:T):T {
+  withoutMiningSkill(world);
   const w=world as {pawns?:{skills?:{plants?:unknown}}[];visitors?:{departed?:{pawn:{skills?:{plants?:unknown}}}[]}};
   for(const pawn of w.pawns??[])if(pawn.skills)delete pawn.skills.plants;
   for(const departure of w.visitors?.departed??[])if(departure.pawn.skills)delete departure.pawn.skills.plants;
@@ -16,6 +40,7 @@ export function withoutPlantsSkill<T>(world:T):T {
 /** Current default meals cannot be declared as an older save. */
 export function withoutFutureFineMealPolicy<T>(world:T):T {
   withoutPlantsSkill(world);
+  withoutPredatorDefaults(world);
   for(const policy of (world as {foodPolicies?:{allowed:string[]}[]}).foodPolicies??[])
     policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   return world;

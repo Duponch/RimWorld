@@ -1341,6 +1341,37 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32, graine42/tick3000, schéma185. Trois adultes libres sains, tâches ordinaires désactivées et quatre rations réelles au sol. Ada en (4,12), faim35 ; tissu75 en (8,12), laine60 en (9,12), aucun argent initial. Les textiles sont préparés pour isoler le circuit commercial, leur production naturelle n’est pas prouvée par cette scène. Aucun chargement, voyage, comptoir, vente, achat ou retour accordé ; incidents naturels exclus. Durées de voyage et paniers successifs adaptés, pas planète ni groupe ni campagne naturelle ni charge 250².",
       "sha256": "a19b4c2c11210d496ff051ca7d6a8816c1ce8229ac0d48dd6976944ecc6d1090"
+    },
+    {
+      "id": "minage-competences-v204",
+      "release": "v204",
+      "label": "Minage et compétences · 3 colons",
+      "description": "Comparer Minage 0, 8 et 20 sur des gisements physiques. Observer approche, coups, apprentissage, rendement, transport et usage des métaux, puis sauvegarder pendant un coup.",
+      "filename": "minage-competences.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 3000,
+      "focus": [
+        "compétence Minage",
+        "vitesse et capacités",
+        "rendement pondéré",
+        "apprentissage au contact",
+        "acier et composants",
+        "transport physique",
+        "construction existante",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause. Dans Bio, consulter Ada Minage 0 sans passion, Noé Minage 8 avec passion et Mina Minage 20 avec passion brûlante ; survoler leurs lignes pour la vitesse, le rendement et l’XP. Dans Travail, activer Minage pour le colon choisi : aucun gisement n’est encore désigné.",
+        "Avec Architecte → Ordres → Miner, désigner l’acier en (15,10), (15,14) ou (15,18), puis reprendre. Observer le trajet avant les vrais coups : ni la désignation ni la marche n’accordent d’XP. Désactiver les autres mineurs pour comparer les profils séparément ; des mineurs successifs contribuent au rendement pondéré d’un même gisement.",
+        "La machinerie compactée se trouve en (19,14), la roche naturelle en (17,22). Les composants et l’acier produits doivent être pris au contact puis déposés dans leurs réserves (22,14) et (22,10). Un fragment de roche demande un ordre Transporter les fragments et une réserve qui l’accepte.",
+        "Activer Construction et construire un ouvrage en acier ou un générateur au bois avec les métaux réellement extraits ; le bois50 en (6,20) peut alimenter le générateur. Sauvegarder et recharger pendant un coup rapide puis après les dépôts : progression, profils, contributions et ressources doivent continuer sans duplication."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32, createWorld(204), schéma186, horloge placée à3000 sans campagne simulée. Trois colons sains en (8,10)/(8,14)/(8,18), besoins hauts, profils Minage0/8/20 et passions0/1/2 choisis explicitement, XP nulle ; aucune biographie Core revendiquée. Sol herbe dégagé, trois gisements d’acier intacts, une machinerie intacte et une roche de granite intacte ajoutés pour comparer les travaux. Deux réserves filtrées, neuf repas et cinquante bois physiques au sol ; aucun acier ou composant offert. Seul Transport2 est actif, autres travaux à commander, habillement automatique et incidents naturels exclus. Aucune désignation, réserve de travail, approche, préparation de coup, contribution, extraction, apprentissage ou fabrication déjà réalisée. Cette scène ne prouve ni distribution naturelle des profils/gisements, campagne longue ni charge générale250².",
+      "sha256": "bf77662013e5d0e18577ccdfb9a911f7177bc192211f2e7039f8a6b5ae40007f"
     }
   ]
 }

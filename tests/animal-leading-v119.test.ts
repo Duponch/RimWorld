@@ -23,7 +23,7 @@ function penCamp(){
   for(const work of Object.keys(pawn.priorities) as (keyof typeof pawn.priorities)[])pawn.priorities[work]=0;
   pawn.priorities.handle=1;
   animal.species='deer';animal.x=3;animal.z=7;animal.path=[];animal.motion=undefined;animal.food=1.2;animal.rest=1;animal.state='idle';animal.nextDecision=world.tick+100;
-  const biome=faunaBiome('temperate-forest'),full=world.width*world.height*biome.animalDensity/10000;
+  const biome=faunaBiome('temperate-forest',false),full=world.width*world.height*biome.animalDensity/10000;
   world.wildlife!.profile='biome-herbivores-v1';
   world.wildlife!.population={biome:'temperate-forest',fullTargetWeight:full,targetWeight:full*biome.entries.reduce((n,e)=>n+e.commonality,0)/biome.totalCommonality,nextCheck:world.tick+122,checks:0,arrivals:0};
   animal.domestic={since:world.tick,care:'herbal',tameness:5,nextDecay:world.tick+45000,lastTraining:world.tick};

@@ -8,6 +8,7 @@ import {planCookingOrder} from '../src/sim/player-cooking.ts';
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {foodWorkstationCamp,fixtureFoodStation} from './scenarios/food-workstations.ts';
 import {withoutPlantsSkill} from './scenarios/legacy-skills.ts';
+import {withoutPredatorFoodPolicies,withoutPredatorApparelPolicies} from './scenarios/legacy-save.ts';
 
 const RECIPE='cook-fine-meal-bulk' as const;
 function prepared():World {
@@ -19,7 +20,7 @@ function prepared():World {
   return world;
 }
 function declared160(world:World):World {
-  const old=withoutPlantsSkill(structuredClone(world));
+  const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));
   (old as {schemaVersion:number}).schemaVersion=160;
   return old;
 }

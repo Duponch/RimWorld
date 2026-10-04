@@ -6,7 +6,7 @@ import { isFloorKind } from '../sim/flooring.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { isCropKindInVersion } from '../sim/crops.ts';
 import { validFireResourceLosses } from '../sim/fire-save.ts';
-import { validPlantSkill } from '../sim/skills-save.ts';
+import { validPlantSkill, validMiningSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
 import { validSmallIncidents } from '../sim/cassandra-small-save.ts';
 import { validWorldIncidents } from '../sim/cassandra-world-save.ts';
@@ -41,15 +41,18 @@ import { validApparelShape } from '../sim/apparel-save.ts';
 import { validWeaponShape } from '../sim/equipment-save.ts';
 import { pileMaxHp } from '../sim/thing-damage-rules.ts';
 import type { MaterialPile, Pawn, Resource, Terrain, Tile, World } from '../sim/types.ts';
-import { TileSnapshotCache } from './tile-snapshot-cache.ts';
+import { TileSnapshotCache, type TileDelta } from './tile-snapshot-cache.ts';
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
 interface PileChanges { removed: number[]; upserted: MaterialPile[]; order?: number[] }
 interface SnapshotHeader { motion?:import('./motion-tracks.ts').PawnTrack[]; audioCues?:import('./audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
+function validMiningTransport(pawn:Pawn,version:number):boolean {
+  return !(version<186&&pawn.skills&&Object.hasOwn(pawn.skills,'mining'))&&validMiningSkill(pawn.skills?.mining,version);
+}
 export type SnapshotMessage = SnapshotHeader & (
   | { kind: 'checkpoint'; world: World }
-  | { kind: 'delta'; baseRevision: number; world: DynamicWorld; tiles?: Array<[number, Terrain, Tile['stone']?, Tile['miningDamage']?, Tile['ore']?, Tile['floor']?]>; resources?: ResourceChanges; piles?: PileChanges }
+  | { kind: 'delta'; baseRevision: number; world: DynamicWorld; tiles?: TileDelta[]; resources?: ResourceChanges; piles?: PileChanges }
 );
 
 import { validPlantGrowthLight } from '../sim/plant-light-save.ts';
@@ -275,6 +278,7 @@ export class SnapshotDecoder {
     for(const pawn of message.world.pawns){
       if(!validSurgeryTransport(pawn,message.world))return resync('État chirurgical ou anesthésique invalide pour ce snapshot.');
       if(!validPawnPodRescue(pawn,message.world.schemaVersion,message.world))return resync('Mandat de secours civil invalide pour ce snapshot.');
+      if(!validMiningTransport(pawn,message.world.schemaVersion))return resync('Compétence Minage invalide pour ce snapshot.');
       if(!validPlantSkill(pawn.skills?.plants,message.world.schemaVersion))return resync('Compétence Plantes invalide pour ce snapshot.');
       if(pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,message.world.schemaVersion,message.world))return resync('Souvenir de décès invalide pour ce snapshot.');
     }
@@ -285,6 +289,7 @@ export class SnapshotDecoder {
     if((message.world.schemaVersion<181&&Object.hasOwn(message.world,'rainElectrical'))
       ||!validRainElectrical(message.world.rainElectrical,message.world.schemaVersion,message.world))return resync('Exposition électrique aux précipitations invalide pour ce snapshot.');
     if(!validPodRescueTransportBindings(message.world))return resync('Secours civil invalide pour ce snapshot.');
+    if(message.kind==='checkpoint'&&(!Array.isArray(message.world.tiles)||message.world.tiles.some(tile=>!tile||!validMiningDamage(tile,message.world.schemaVersion))))return resync('Rendement ou dégâts miniers invalides pour ce snapshot.');
     let next: World;
     let reindexResources = message.kind === 'checkpoint';
     let reindexPiles = message.kind === 'checkpoint';
@@ -300,13 +305,14 @@ export class SnapshotDecoder {
       let tiles = previous.tiles;
       if (message.tiles?.length) {
         const touched = new Set<number>();
-        for (const [index, terrain, stone, miningDamage, ore, floor] of message.tiles) {
+        if(message.world.schemaVersion<186&&message.tiles.some(tile=>tile.length>6))return resync('Rendement minier futur dans ce delta.');
+        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield] of message.tiles) {
           if (!Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
-            || !['grass', 'soil', 'water', 'rock', ...(message.world.schemaVersion>=28?['rough-stone']:[]), ...(message.world.schemaVersion>=83?['rich-soil','gravel']:[])].includes(terrain) || floor!==undefined&&(message.world.schemaVersion<89||!isFloorKind(floor)||terrain==='water'||terrain==='rock') || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage({terrain,stone,miningDamage,ore},message.world.schemaVersion) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
+            || !['grass', 'soil', 'water', 'rock', ...(message.world.schemaVersion>=28?['rough-stone']:[]), ...(message.world.schemaVersion>=83?['rich-soil','gravel']:[])].includes(terrain) || floor!==undefined&&(message.world.schemaVersion<89||!isFloorKind(floor)||terrain==='water'||terrain==='rock') || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage({terrain,stone,miningDamage,ore,...miningYield===undefined?{}:{miningYield}},message.world.schemaVersion) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
           touched.add(index);
         }
         tiles = tiles.slice();
-        for (const [index, terrain, stone, miningDamage, ore, floor] of message.tiles) tiles[index] = {terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore},...floor===undefined?{}:{floor}};
+        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield] of message.tiles) tiles[index] = {terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore},...floor===undefined?{}:{floor},...miningYield===undefined?{}:{miningYield}};
       }
       let resources = previous.resources;
       if (message.resources) {
@@ -410,15 +416,17 @@ export class SnapshotDecoder {
     if(validateQuests(next.quests?scoutRegistryView(next):next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
     if(next.scout&&(next.scout.phase==='travelling'||next.scout.phase==='awaiting-entry')){
       const registry=scoutRegistryView(next),pawn=next.scout.pawn;
-      if(!validSurgeryTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
+      if(!validSurgeryTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||!validMiningTransport(pawn,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
         ||next.scout.items.some(pile=>!validPile(pile,registry)))return resync('Voyageur ou possession hors carte invalide.');
     }
     if(commercial&&'pawn' in commercial){
       const registry=scoutRegistryView(next),pawn=commercial.pawn;
-      if(postIds.has(pawn.id)||!validSurgeryTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
+      if(postIds.has(pawn.id)||!validSurgeryTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||!validMiningTransport(pawn,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
         ||commercial.items.some(pile=>postIds.has(pile.id)||!validPile(pile,registry)))return resync('Voyageur commercial ou possession invalide.');
     }
     if(validateCommercialBindings(next,next.schemaVersion).length)return resync('Possessions commerciales incohérentes.');
+    for(const records of [next.visitors?.departed??[],next.podRescues?.departed??[]])
+      for(const departure of records)if(!validMiningTransport(departure.pawn,next.schemaVersion))return resync('Profil de minage archivé invalide.');
     for(const departure of next.podRescues?.departed??[])if(!validSurgeryTransport(departure.pawn,{schemaVersion:next.schemaVersion,tick:departure.tick,width:next.width,height:next.height,nextId:next.nextId}))return resync('Dossier chirurgical civil archivé invalide.');
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     const replaced = message.epoch !== this.epoch;

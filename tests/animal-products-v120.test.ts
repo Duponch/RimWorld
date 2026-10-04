@@ -16,7 +16,7 @@ import {huntingCamp} from './scenarios/hunting.ts';
 function camp(species:'muffalo'|'dromedary'='dromedary',sex:'female'|'male'='female') {
   const world=huntingCamp(),pawn=world.pawns[0]!,animal=world.wildlife!.animals[0]!;
   world.pawns=[pawn];world.resources=[];world.piles=[];world.jobs=[];world.structures=[];
-  const biome=faunaBiome(species==='dromedary'?'arid-shrubland':'temperate-forest');
+  const biome=faunaBiome(species==='dromedary'?'arid-shrubland':'temperate-forest',false);
   const full=world.width*world.height*biome.animalDensity/10000;
   world.wildlife!.profile='biome-herbivores-v1';
   world.wildlife!.population={biome:biome.id,fullTargetWeight:full,targetWeight:full*biome.entries.reduce((n,e)=>n+e.commonality,0)/biome.totalCommonality,nextCheck:world.tick+100,checks:0,arrivals:0};

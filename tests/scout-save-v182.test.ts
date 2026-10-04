@@ -1,4 +1,5 @@
 import { beforeAll, expect, test } from 'vitest';
+import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
 import { addMaterial } from '../src/sim/materials.ts';
 import { injurePawn } from '../src/sim/health.ts';
 import { applyCommand, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
@@ -47,7 +48,7 @@ beforeAll(() => {
 });
 
 test('schema 170 migrates neutrally and rejects a future scout field before migration', () => {
-  const old = withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(medicalCamp(2)))));
+  const old = withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(medicalCamp(2))))));
   old.schemaVersion = 170;
   const migrated = deserializeWorld(JSON.stringify(old));
   expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);

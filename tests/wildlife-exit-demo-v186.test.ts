@@ -1,3 +1,4 @@
+import { withoutMiningSkill, withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
 import { expect,test } from 'vitest';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -9,7 +10,7 @@ import { parseTestColonies } from '../src/ui/test-colonies';
 
 test('public prepared scene has exact bytes and plays a real exit while the owned animal remains',()=>{
   const raw=readFileSync('public/test-saves/v186/faune-affamee.json','utf8'),w=deserializeWorld(raw);
-  expect(w).toEqual(prepareWildlifeExitDemo());expect(validateWorld(w)).toEqual([]);
+  expect(w).toEqual(withoutPredatorDefaults(withoutMiningSkill(prepareWildlifeExitDemo())));expect(validateWorld(w)).toEqual([]);
   const entries=parseTestColonies(JSON.parse(readFileSync('public/test-saves/manifest.json','utf8')));
   const entry=entries.find(e=>e.id==='faune-affamee-v186')!;
   expect(entry.sha256).toBe(createHash('sha256').update(raw).digest('hex'));expect(entry.prepared).toBe(true);

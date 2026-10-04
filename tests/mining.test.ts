@@ -37,7 +37,7 @@ test('steel veins preserve topology, extraction commits 40 units, transport spli
   until(w,()=>!!w.tiles[i]!.miningDamage);
   const damage=w.tiles[i]!.miningDamage!,copy=deserializeWorld(serializeWorld(w));
   expect(damage).toBe(80);expect(copy).toEqual(w);
-  const delta=structuredClone(encoder.encode(w,0,1));expect(delta.kind==='delta'&&delta.tiles).toEqual([[i,'rock','granite',80,'steel']]);
+  const delta=structuredClone(encoder.encode(w,0,1));expect(delta.kind==='delta'&&delta.tiles).toEqual([[i,'rock','granite',80,'steel',undefined,expect.closeTo(80/1500,12)]]);
   expect(decoder.adopt(delta).status).toBe('applied');
   expect(applyCommand(w,{type:'cancel',x:11,z:11}).ok).toBe(true);expect(w.tiles[i]!.miningDamage).toBe(damage);
   expect(applyCommand(w,{type:'designate',kind:'mine',x:11,z:11}).ok).toBe(true);
@@ -111,6 +111,8 @@ test('physical mining conserves wall damage across cancellation, diagonal contac
 test('excavation yields use one committed roll, expose the interior and chunks require hauling designation, typed reservations and real travel',()=>{
   const saturated=miningCamp();saturated.tiles[10*32+11]={terrain:'rock',stone:'sandstone',miningDamage:320};
   expect(applyCommand(saturated,{type:'designate',kind:'mine',x:11,z:10}).ok).toBe(true);
+  // This prepared final-impact case still requires the miner's real contact.
+  saturated.pawns[0]!.x=10;saturated.pawns[0]!.z=10;
   const finalJob=saturated.jobs[0]!,nextId=saturated.nextId;saturated.nextId=Number.MAX_SAFE_INTEGER;saturated.rng=1;finalJob.progress=PICK_TICKS-1;
   expect(advanceMining(saturated,saturated.pawns[0]!,finalJob)).toBe(false);
   const invalidPreparation=structuredClone(saturated);invalidPreparation.nextId=nextId;invalidPreparation.jobs[0]!.progress=PICK_TICKS;

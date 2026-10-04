@@ -1,5 +1,7 @@
 # Lisière
 
+**V204 — compétence Minage, schéma 186.** La dernière des douze compétences rejoint les travaux physiques et le rendement des minerais ; la 50e scène préparée **« Minage et compétences · 3 colons »** permet de les comparer ([contrat](docs/development/mining-skills-v204.md), [recherche Core](docs/research/mining-skills-core-v204.md), [preuve bornée](docs/history/validation-mining-skills-v204.md)).
+
 **V203 — ventes de textiles, schéma 185.** Tissu et laine peuvent être chargés au contact, vendus contre la monnaie réelle du comptoir, puis financer les fournitures. Les invendus rentrent et sont déposés physiquement. La 49e scène publique **« Ventes de textiles · 3 colons »** prépare ce circuit sans argent initial. [Contrat](docs/development/caravan-sales-v203.md), [règles Core et adaptations](docs/research/caravan-sales-core-v203.md), [preuve ciblée](docs/history/validation-commercial-sales-v203.md).
 
 **V202 — éruption solaire, schéma 184.** Les appareils électriques s’arrêtent progressivement, les batteries cessent leurs échanges et les solutions au bois/manuelles restent disponibles. La 48e scène préparée **« Éruption solaire · réserves et secours »** permet d’observer début et reprise. [Contrat](docs/development/solar-flare-v202.md), [règles Core et adaptations](docs/research/solar-flare-core-v202.md), [preuves et limites](docs/history/validation-solar-flare-v202.md). Calendrier mondial distinct, sans éclipse ni nouveau traitement graphique.

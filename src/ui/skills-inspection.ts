@@ -3,6 +3,7 @@ import { intellectualSkill } from '../sim/research';
 import { craftingSkill } from '../sim/crafting-quality';
 import { artisticSkill } from '../sim/art-rules';
 import { plantSkill,plantWorkSpeed,plantHarvestYield } from '../sim/plant-skills';
+import { miningSkill,miningWorkSpeed,miningYield } from '../sim/mining-skills';
 import { cookingSkill,cookingSpeed,butcherySpeed,butcheryEfficiency } from '../sim/cooking-statistics';
 import { constructionSpeed, learningFactor, XP_SCALE, xpRequired } from '../sim/skills.ts';
 import { medicalTendSpeed,medicalTendQuality } from '../sim/care-rules.ts';
@@ -16,7 +17,7 @@ import { appearanceOf } from '../sim/pawn-appearance';
 import './pawn-dossiers-v199.css';
 
 type SkillEntry = {
-  skill: 'animals'|'plants'|'construction'|'medicine'|'intellectual'|'crafting'|'artistic'|'cooking'|'shooting'|'melee'|'social';
+  skill: 'animals'|'plants'|'mining'|'construction'|'medicine'|'intellectual'|'crafting'|'artistic'|'cooking'|'shooting'|'melee'|'social';
   progress?: string;
   description?: string;
 };
@@ -24,6 +25,7 @@ const SKILL_ENTRIES: readonly SkillEntry[] = [
   {skill:'shooting',progress:'data-shooting-xp'},
   {skill:'melee',progress:'data-melee-xp'},
   {skill:'construction',progress:'data-skill-xp',description:'data-skill-description'},
+  {skill:'mining',progress:'data-mining-xp'},
   {skill:'cooking',progress:'data-cooking-xp',description:'data-cooking-description'},
   {skill:'plants',progress:'data-plants-xp'},
   {skill:'animals',progress:'data-animals-xp'},
@@ -74,6 +76,10 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn,world?:World)
   const progress=panel.querySelector<HTMLProgressElement>('[data-skill-xp]')!;
   progress.value=Math.max(0,s.xp/xpRequired(s.level));progress.setAttribute('aria-label','Expérience de construction');
   panel.querySelector('[data-skill-description]')!.textContent=`${(s.xp/XP_SCALE).toFixed(1)} / ${xpRequired(s.level)/XP_SCALE} XP · Vitesse ${Math.round(constructionSpeed(pawn)*100)} % · Apprentissage ${Math.round(learningFactor(s,pawn)*100)} %${s.dailyXp>4000*XP_SCALE?' (saturation quotidienne)':''}. La lumière s’applique séparément.`;
+  const mining=miningSkill(pawn);
+  setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="mining"]')!,`Minage ${mining.level}/20`,mining.passion);
+  const miningProgress=panel.querySelector<HTMLProgressElement>('[data-mining-xp]')!;miningProgress.value=Math.max(0,mining.xp/xpRequired(mining.level));miningProgress.setAttribute('aria-label','Expérience de minage');
+  panel.querySelector<HTMLElement>('[data-skill-detail="mining"]')!.textContent=`${(mining.xp/XP_SCALE).toFixed(1)} / ${xpRequired(mining.level)/XP_SCALE} XP · Vitesse ${Math.round(miningWorkSpeed(pawn)*100)} % avant lumière · Rendement minéral ${Math.round(miningYield(pawn)*100)} % · Apprentissage ${Math.round(learningFactor(mining,pawn)*100)} %${mining.dailyXp>4000*XP_SCALE?' (saturation quotidienne)':''}. Le produit du gisement dépend de la moyenne des rendements pondérée par les dégâts de chaque coup ; plusieurs mineurs peuvent y contribuer. La chance de fragment de roche reste distincte.${pawn.skills.mining?'':' Profil historique neutre, sans pratique antérieure.'}`;
   const intellect=intellectualSkill(pawn);setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="intellectual"]')!,`Intellectuel ${intellect.level}/20`,intellect.passion);panel.querySelector<HTMLElement>('[data-skill-detail="intellectual"]')!.textContent=`${(intellect.xp/XP_SCALE).toFixed(1)} XP · vitesse de recherche.`;
   const craft=craftingSkill(pawn);setSkillPassion(panel.querySelector<HTMLElement>('[data-skill="crafting"]')!,`Artisanat ${craft.level}/20`,craft.passion);panel.querySelector<HTMLElement>('[data-skill-detail="crafting"]')!.textContent=`${(craft.xp/XP_SCALE).toFixed(1)} XP · influe sur la qualité de confection, sans accélérer la taille de pierre.`;
   const craftProgress=panel.querySelector<HTMLProgressElement>('[data-crafting-xp]')!;craftProgress.value=Math.max(0,craft.xp/xpRequired(craft.level));craftProgress.setAttribute('aria-label','Expérience d’artisanat');
@@ -106,7 +112,7 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn,world?:World)
   panel.querySelector('[data-medicine-description]')!.textContent=`${(m.xp/XP_SCALE).toFixed(1)} / ${xpRequired(m.level)/XP_SCALE} XP · Vitesse ${Math.round(medicalTendSpeed(pawn)*100)} % avant lumière · Qualité de base ${Math.round(medicalTendQuality(pawn)*100)} % avant matériel et variation · Apprentissage ${Math.round(learningFactor(m,pawn)*100)} %.`;
   for(const entry of SKILL_ENTRIES){
     const row=panel.querySelector<HTMLElement>(`[data-skill-entry="${entry.skill}"]`)!;
-    const skill=pawn.skills[entry.skill]??{level:0,xp:0,dailyXp:0,passion:0 as const};
+    const skill=entry.skill==='mining'?mining:pawn.skills[entry.skill]??{level:0,xp:0,dailyXp:0,passion:0 as const};
     row.querySelector<HTMLElement>('.skill-level-bar')!.style.width=`${Math.max(0,Math.min(100,skill.level/20*100))}%`;
     const label=row.querySelector<HTMLElement>('[data-skill]')!;
     setTooltip(row,{title:label.getAttribute('aria-label')??'',body:row.querySelector<HTMLElement>('[data-skill-detail]')!.textContent??'',rows:[{label:'Expérience du niveau',value:`${(skill.xp/XP_SCALE).toFixed(1)} / ${xpRequired(skill.level)/XP_SCALE}`},{label:'Apprentissage',value:`${Math.round(learningFactor(skill,pawn)*100)} %`}]});
@@ -115,6 +121,8 @@ export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn,world?:World)
 }
 export function updateWorkSkills(row:HTMLElement,pawn:Pawn):void {
   row.title=traitSummary(pawn);
+  const mine=row.querySelector<HTMLSelectElement>('[data-work="mine"]');
+  if(mine){let label=mine.parentElement!.querySelector<HTMLElement>('.work-mining');if(!label){label=document.createElement('small');label.className='work-mining';mine.parentElement!.append(label);}const skill=miningSkill(pawn);setCompactSkillPassion(label,skill.level,skill.passion,'Minage');mine.title=`Minage ${skill.level}/20 · ${SKILL_PASSION_LABELS[skill.passion]} · vitesse ${Math.round(miningWorkSpeed(pawn)*100)} % avant lumière · rendement minéral ${Math.round(miningYield(pawn)*100)} % ; moyenne pondérée par les dégâts des coups sur le gisement` ;}
   for(const work of ['grow','gather'] as const){
     const select=row.querySelector<HTMLSelectElement>(`[data-work="${work}"]`);if(!select)continue;
     let label=select.parentElement!.querySelector<HTMLElement>('.work-plants');if(!label){label=document.createElement('small');label.className='work-plants';select.parentElement!.append(label);}

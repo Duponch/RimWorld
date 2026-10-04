@@ -21,8 +21,9 @@ function pngHeader(asset: string) {
 describe('Architect generated icon atlases', () => {
   it('maps every tool without shifting the original sheets; powered benches share the machine icon', () => {
     const rendered = toolDefinitions.map(tool => tool.id);
-    expect(rendered).toHaveLength(70);
-    expect(new Set(rendered).size).toBe(70);
+    expect(rendered).toHaveLength(71); // V189 sun-lamp uses an original vector addition.
+    expect(new Set(rendered).size).toBe(71);
+    expect(rendered).toContain('sun-lamp');
     expect(ARCHITECT_ICON_ORDER).toEqual(rendered);
     expect(Object.keys(ARCHITECT_ICON_MAPPING)).toEqual(rendered);
     expect(new Set(Object.values(ARCHITECT_ICON_MAPPING).map(cell => `${cell.atlas}:${cell.column}:${cell.row}`)).size).toBe(60);

@@ -1,3 +1,4 @@
+import { withoutMiningSkill, withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
 import { TEST_COLONY_COUNT } from './test-colony-count.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -6,6 +7,7 @@ import { applyCommand, deserializeWorld, serializeWorld, stepWorld, validateWorl
 import { SCHEMA_VERSION, type World } from '../src/sim/types.ts';
 import { parseTestColonies, readTestColony } from '../src/ui/test-colonies.ts';
 import { HEALROOT_CELL, MEDICINE_STORE, prepareHealrootDemo } from '../scripts/generate-healroot-demo-v179.ts';
+import { enableBiomeWildlife } from '../src/sim/wildlife.ts';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -24,7 +26,20 @@ test('V179 catalogue scene harvests its natural root, hauls one physical dose, a
   expect(await readTestColony(entry!)).toBe(raw);
   const world = deserializeWorld(raw);
   expect(world.schemaVersion).toBe(SCHEMA_VERSION);
-  const prepared=prepareHealrootDemo();
+  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareHealrootDemo()));
+  // Reconstruct V168's boreal population from its own seed and ecological table.
+  // Wildlife preceded these two prepared commands; no published body/ID is copied.
+  expect(prepared.jobs).toHaveLength(1);expect(prepared.stockpiles).toHaveLength(1);
+  expect(prepared.events).toEqual([{tick:0,type:'command',message:'Nouvel ordre : récolte (127, 143).'}]);
+  prepared.nextId=prepared.wildlife!.animals[0]!.id;
+  delete prepared.wildlife;prepared.jobs=[];prepared.stockpiles=[];prepared.events=[];
+  prepared.schemaVersion=168 as World['schemaVersion'];
+  enableBiomeWildlife(prepared,'boreal-forest');
+  prepared.schemaVersion=SCHEMA_VERSION;
+  for(const command of [
+    {type:'stockpile',...MEDICINE_STORE,enabled:true,filters:{wood:false,food:false,medicine:true},priority:2,capacity:75},
+    {type:'designate',kind:'harvest',...HEALROOT_CELL},
+  ] as const)expect(applyCommand(prepared,command).ok).toBe(true);
   // The old fixture gains no Misc calendar merely by being loaded.
   delete prepared.miscIncidents;
   expect(world).toEqual(prepared);

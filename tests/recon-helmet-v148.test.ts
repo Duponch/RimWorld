@@ -134,7 +134,8 @@ test('recon cargo and portrait keep their own silhouette and item identity',()=>
   const w=prepared(),pawn=w.pawns[0]!;
   const recon:MaterialPile={id:w.nextId++,item:'recon-helmet',kind:'apparel',quantity:1,owner:{type:'apparel',pawnId:pawn.id},apparel:newApparelState('recon-helmet')};
   const flak:MaterialPile={...recon,id:w.nextId++,item:'flak-helmet',apparel:newApparelState('flak-helmet')};
-  expect(Object.keys(APPAREL_CARGO)).toHaveLength(33);
+  expect(Object.keys(APPAREL_CARGO)).toHaveLength(38); // V190 adds all five foxfur garments.
+  expect(Object.keys(APPAREL_CARGO).filter(item=>item.startsWith('foxfur-'))).toHaveLength(5);
   expect(APPAREL_CARGO['recon-helmet']).not.toBe(APPAREL_CARGO['flak-helmet']);
   expect(foldedApparel('recon-helmet')).toHaveLength(3); // coque, rebord et visière fermée
   expect(apparelAppearance([recon])).toMatchObject({helmet:true,reconHelmet:true});

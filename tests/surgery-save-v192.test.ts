@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest';
+import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
 import { medicalCamp } from './scenarios/health.ts';
 import { fixtureBuilding } from './scenarios/deconstruction.ts';
 import { createMedicalRecord } from '../src/sim/injury-state.ts';
@@ -8,7 +9,7 @@ import { reconcilePawnHealth } from '../src/sim/health.ts';
 import { applyCommand } from '../src/sim/engine.ts';
 import { validateWorld,serializeWorld,deserializeWorld } from '../src/sim/serialization.ts';
 import { validSurgeryRequestShape,validSurgeryTaskShape,validateSurgeries } from '../src/sim/surgery-save.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
 
 /** Prepared operation snapshots. End-to-end routes/admin belong to root's chain. */
 function snapshot(phase:'pickup'|'approach'|'work'='pickup'):World {
@@ -96,8 +97,8 @@ test('exclusive service and quantitative source reservations include surgery wit
 });
 test('178 is validated before a version-only migration and every future surgery field is refused',()=>{
   const base=medicalCamp(2);for(const p of base.pawns)p.health=createMedicalRecord(base.tick);
-  const old=structuredClone(base);(old as {schemaVersion:number}).schemaVersion=178;
-  const loaded=deserializeWorld(JSON.stringify(old));expect(loaded).toEqual({...old,schemaVersion:179});
+  const old=withoutMiningSkill(structuredClone(base));(old as {schemaVersion:number}).schemaVersion=178;
+  const loaded=deserializeWorld(JSON.stringify(old));expect(loaded).toEqual({...old,schemaVersion:SCHEMA_VERSION});
   for(const field of ['surgeryRequest','surgery','anesthetic'] as const){
     const bad=structuredClone(old),valid=snapshot('work');
     if(field==='anesthetic')bad.pawns[0]!.health!.anesthetic=valid.pawns[1]!.health!.anesthetic;

@@ -1,6 +1,8 @@
 /** Construct a historical fixture from a current generated world. Production
  * validation must still reject these fields when they occur in an old save. */
+import { withoutMiningSkill,withoutPredatorDefaults } from './legacy-skills.ts';
 export function stripV120<T>(world:T):T {
+  withoutMiningSkill(world);withoutPredatorDefaults(world);
   const w=world as {
     foodPolicies?:Array<{allowed:string[]}>;
     apparelPolicies?:Array<{allowedItems:string[];allowedMaterials:string[]}>;

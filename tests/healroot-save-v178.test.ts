@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
 import { createScenarioWorld } from '../src/sim/new-game';
 import { deserializeWorld, serializeWorld, validateWorld } from '../src/sim/serialization';
 import { SnapshotDecoder, SnapshotEncoder } from '../src/bridge/snapshots';
@@ -9,7 +10,7 @@ import { withoutPredatorFoodPolicies, withoutPredatorApparelPolicies } from './s
 
 function historicalAridWorld():World {
   const current=createScenarioWorld(42,32,'crashlanded',{biome:'arid-shrubland',hilliness:'small-hills'});
-  const legacy=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(current)) as World));
+  const legacy=withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(current)) as World)));
   delete legacy.miscIncidents;
   for(const pawn of legacy.pawns)delete pawn.skills.plants;
   legacy.schemaVersion=166 as World['schemaVersion'];

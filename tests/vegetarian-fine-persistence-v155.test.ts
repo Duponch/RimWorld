@@ -17,6 +17,7 @@ import { medicalCamp } from './scenarios/health.ts';
 import { foodWorkstationCamp, fixtureFoodStation } from './scenarios/food-workstations.ts';
 import { visitorTradeFixture } from './scenarios/visitors.ts';
 import { withoutPlantsSkill } from './scenarios/legacy-skills.ts';
+import {withoutPredatorFoodPolicies,withoutPredatorApparelPolicies} from './scenarios/legacy-save.ts';
 
 const ITEM = 'vegetarian-fine-meal' as const;
 
@@ -24,6 +25,7 @@ function declared154(count=1): World {
   const world=medicalCamp(count);
   for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   withoutPlantsSkill(world);
+  withoutPredatorFoodPolicies(world);withoutPredatorApparelPolicies(world);
   (world as {schemaVersion:number}).schemaVersion=154;
   return world;
 }
@@ -137,7 +139,7 @@ test('queued and active physical vegetarian tasks survive V155 and cannot appear
   pawn.orders.queue.push(proposal.order);
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
-  const oldQueue=withoutPlantsSkill(structuredClone(world));
+  const oldQueue=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));
   for(const policy of oldQueue.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   (oldQueue as {schemaVersion:number}).schemaVersion=154;
   expect(()=>deserializeWorld(JSON.stringify(oldQueue))).toThrow(/Invalid version 154 save/);
@@ -149,7 +151,7 @@ test('queued and active physical vegetarian tasks survive V155 and cannot appear
   expect(validateWorld(world)).toEqual([]);
   const continued=deserializeWorld(serializeWorld(world));
   stepWorld(world,30);stepWorld(continued,30);expect(continued).toEqual(world);
-  const oldActive=withoutPlantsSkill(structuredClone(world));
+  const oldActive=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));
   for(const policy of oldActive.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   (oldActive as {schemaVersion:number}).schemaVersion=154;
   expect(()=>deserializeWorld(JSON.stringify(oldActive))).toThrow(/Invalid version 154 save/);
@@ -160,7 +162,7 @@ test('declared V154 rejects a new meal in a frozen visitor possession',()=>{
   for(let i=0;i<3500&&!world.visitors?.departed.some(d=>d.pawn.id===traderId);i++)stepWorld(world);
   const departure=world.visitors!.departed.find(d=>d.pawn.id===traderId)!;
   expect(departure).toBeDefined();
-  const old=withoutPlantsSkill(structuredClone(world));
+  const old=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(withoutPlantsSkill(structuredClone(world))));
   for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!==ITEM&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   (old as {schemaVersion:number}).schemaVersion=154;
   expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});

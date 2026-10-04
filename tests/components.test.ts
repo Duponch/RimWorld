@@ -51,7 +51,7 @@ test('25 physical strikes, delayed final commit, snapshots and two haulers conse
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();decoder.adopt(structuredClone(encoder.encode(w,0,1)));
   expect(applyCommand(w,{type:'designate',kind:'mine',...target}).ok).toBe(true);
   until(w,()=>w.tiles[i]!.miningDamage===80);expect(w.piles).toHaveLength(0);
-  const delta=structuredClone(encoder.encode(w,0,1));expect(delta.kind==='delta'&&delta.tiles).toEqual([[i,'rock','slate',80,'machinery']]);expect(decoder.adopt(delta).status).toBe('applied');
+  const delta=structuredClone(encoder.encode(w,0,1));expect(delta.kind==='delta'&&delta.tiles).toEqual([[i,'rock','slate',80,'machinery',undefined,.04]]);expect(decoder.adopt(delta).status).toBe('applied');
   const copy=deserializeWorld(serializeWorld(w));stepWorld(w,12);stepWorld(copy,12);expect(copy).toEqual(w);
   const damage=w.tiles[i]!.miningDamage;expect(applyCommand(w,{type:'cancel',...target}).ok).toBe(true);expect(w.tiles[i]!.miningDamage).toBe(damage);
   expect(applyCommand(w,{type:'designate',kind:'mine',...target}).ok).toBe(true);

@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest';
+import { withoutMiningSkill } from './scenarios/legacy-skills.ts';
 import { SnapshotDecoder,SnapshotEncoder,type SnapshotMessage } from '../src/bridge/snapshots.ts';
 import { stepWorld } from '../src/sim/engine.ts';
 import { ensureFireState } from '../src/sim/fire-rules.ts';
@@ -14,7 +15,7 @@ function patchPlant(message:SnapshotMessage,source:Resource,mutate:(p:Resource)=
 }
 
 test('181 rejects future resource, growing policy and zero-count loss on checkpoints and same-tick deltas without adopting a revision',()=>{
-  const w=healrootCamp();ensureFireState(w);(w as {schemaVersion:number}).schemaVersion=181;
+  const w=withoutMiningSkill(healrootCamp());ensureFireState(w);(w as {schemaVersion:number}).schemaVersion=181;
   const rice:Resource={id:w.nextId++,kind:'rice',amount:6,x:5,z:4,growth:.3,growthTick:w.tick};w.resources=[rice];
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),checkpoint=packet(encoder,w),first=decoder.adopt(checkpoint);
   if(first.status!=='applied')throw Error('Historical neutral checkpoint');

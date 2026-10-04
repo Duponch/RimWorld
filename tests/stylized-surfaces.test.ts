@@ -122,7 +122,7 @@ test('small rocks vary their existing vertex colours by facet without changing t
 test('stone fragments and cut blocks have several pastel tones in one existing pile batch', () => {
   const fragments=chunkParts(8,9,'granite-chunk');
   const blocks=blockParts(8,9,'granite-blocks',75);
-  expect(fragments).toHaveLength(2);
+  expect(fragments).toHaveLength(2); // At (8,9), assembly .5968 gives one boulder and one satellite.
   expect(blocks).toHaveLength(5);
   expect(new Set(fragments.map(part=>part.color)).size).toBe(2);
   expect(new Set(blocks.map(part=>part.color)).size).toBeGreaterThan(3);
@@ -130,10 +130,40 @@ test('stone fragments and cut blocks have several pastel tones in one existing p
   const group=new THREE.Group(),boxes=new BoxBatches();
   try {
     boxes.set(group,'stone-pile',[...fragments,...blocks]);
-    expect(group.children).toHaveLength(2);
+    expect(group.children).toHaveLength(3); // Boxes and the two resident large/small rock shapes.
     expect((group.children[0] as BoxMesh).activeCount).toBe(5);
-    expect((group.children[1] as BoxMesh).activeCount).toBe(2);
-    expect((group.children[1] as BoxMesh).colorBuffer.count).toBeGreaterThanOrEqual(2);
+    expect((group.children[1] as BoxMesh).activeCount).toBe(1);
+    expect((group.children[2] as BoxMesh).activeCount).toBe(1);
+    expect((group.children[1] as BoxMesh).material).toBe((group.children[2] as BoxMesh).material);
+    // Dodecahedron: twelve pentagons triangulated into 36 faces. The trimmed
+    // satellite uses sixteen triangles; both keep flat, unindexed normals.
+    expect((group.children[1] as BoxMesh).geometry.index).toBeNull();
+    expect((group.children[1] as BoxMesh).geometry.getAttribute('position').count).toBe(108);
+    expect((group.children[1] as BoxMesh).geometry.getAttribute('normal').count).toBe(108);
+    expect((group.children[2] as BoxMesh).geometry.index).toBeNull();
+    expect((group.children[2] as BoxMesh).geometry.getAttribute('position').count).toBe(48);
+    expect((group.children[2] as BoxMesh).geometry.getAttribute('normal').count).toBe((group.children[2] as BoxMesh).geometry.getAttribute('position').count);
+    expect((group.children[2] as BoxMesh).colorBuffer.count).toBeGreaterThanOrEqual(2);
+    const resident=group.children.map(child=>{
+      const mesh=child as BoxMesh;
+      return {mesh,geometry:mesh.geometry,matrix:mesh.instanceMatrix,color:mesh.colorBuffer,contour:mesh.geometry.getAttribute('chunkContour')};
+    });
+    // At (8,17), assembly .8170 selects three fragments using the same two rock shapes.
+    const threeFragments=chunkParts(8,17,'granite-chunk');
+    expect(threeFragments).toHaveLength(3);
+    expect(new Set(threeFragments.map(part=>part.color)).size).toBe(3);
+    boxes.set(group,'stone-pile',[...threeFragments,...blocks]);
+    expect(group.children).toHaveLength(3);
+    expect(group.children.map(child=>(child as BoxMesh).activeCount)).toEqual([5,1,2]);
+    for(const [i,state] of resident.entries()){
+      const mesh=group.children[i] as BoxMesh;
+      expect(mesh).toBe(state.mesh);expect(mesh.geometry).toBe(state.geometry);
+      expect(mesh.instanceMatrix).toBe(state.matrix);expect(mesh.colorBuffer).toBe(state.color);
+      expect(mesh.geometry.getAttribute('chunkContour')).toBe(state.contour);
+    }
+    boxes.set(group,'stone-pile',[...fragments,...blocks]);
+    expect(group.children.map(child=>(child as BoxMesh).activeCount)).toEqual([5,1,1]);
+    expect(group.children).toHaveLength(3);
   } finally {boxes.dispose();}
 });
 

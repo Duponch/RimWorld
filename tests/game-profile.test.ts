@@ -145,6 +145,8 @@ test('V81 migration is strictly neutral and rejects future profile/calendar inje
   const world=createScenarioWorld(42,32,'survivors');stepWorld(world,35);
   const old=withoutFoodCrops({...structuredClone(world),schemaVersion:81});
   delete old.climate;delete old.weather;delete old.fires;delete old.wind;
+  // These prospective calendars were not stored in an authentic V81 payload.
+  delete old.rainElectrical;delete old.miscIncidents;delete old.smallIncidents;delete old.worldIncidents;
   for(const plant of old.resources)delete plant.plantLife;
   for(const animal of old.wildlife?.animals??[])delete (animal as Partial<typeof animal>).ageTicks;
   const restored=deserializeWorld(JSON.stringify(old));

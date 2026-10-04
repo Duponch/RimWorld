@@ -75,7 +75,8 @@ test('worn, portrait and carried presentation distinguish all textile families a
   expect(apparelAppearance([piece('light-leather-tribalwear')])).toMatchObject({tribal:true,silhouette:2,color:0xad8a61});
   expect(apparelAppearance([piece('cloth-shirt'),piece('light-leather-duster'),piece('flak-vest')])).toMatchObject({silhouette:3,color:0xad8a61,vest:false});
   expect(apparelAppearance([piece('cloth-parka')])).toMatchObject({silhouette:4,color:0xd8c8a2});
-  expect(Object.keys(APPAREL_CARGO)).toHaveLength(33); // V148 adds recon after the V141 helmet.
+  expect(Object.keys(APPAREL_CARGO)).toHaveLength(38); // Seven textiles × five families + vest and two helmets.
+  expect(Object.keys(APPAREL_CARGO).filter(item=>item.startsWith('foxfur-')).sort()).toEqual(['foxfur-duster','foxfur-pants','foxfur-parka','foxfur-shirt','foxfur-tribalwear']);
   expect(new Set(Object.values(APPAREL_CARGO)).size).toBe(Object.keys(APPAREL_CARGO).length);
   expect(foldedApparel('light-leather-parka')[0]?.color).toBe(0xad8a61);
 });

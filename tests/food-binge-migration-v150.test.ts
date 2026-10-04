@@ -5,12 +5,14 @@ import {startSadWander} from '../src/sim/mental-break.ts';
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {medicalCamp} from './scenarios/health.ts';
 import {withoutPlantsSkill} from './scenarios/legacy-skills.ts';
+import {withoutPredatorFoodPolicies,withoutPredatorApparelPolicies} from './scenarios/legacy-save.ts';
 
 function declared148(withWander=false):World {
   const world=medicalCamp();
   if(withWander)expect(startSadWander(world,world.pawns[0]!)).toBe(true);
   for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   withoutPlantsSkill(world);
+  withoutPredatorFoodPolicies(world);withoutPredatorApparelPolicies(world);
   (world as {schemaVersion:number}).schemaVersion=148;
   return world;
 }

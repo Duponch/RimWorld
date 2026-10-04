@@ -1,3 +1,4 @@
+import { withoutMiningSkill, withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect,test } from 'vitest';
@@ -7,7 +8,7 @@ import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serial
 
 test('published capsule scene matches its explicit generator and manifest checksum, with no patient fabricated',()=>{
   const raw=readFileSync('public/test-saves/v187/secours-capsule.json','utf8'),published=deserializeWorld(raw);
-  expect(published).toEqual(preparePodRescueDemo());expect(validateWorld(published)).toEqual([]);
+  expect(published).toEqual(withoutPredatorDefaults(withoutMiningSkill(preparePodRescueDemo())));expect(validateWorld(published)).toEqual([]);
   const manifest=JSON.parse(readFileSync('public/test-saves/manifest.json','utf8'));
   const entry=manifest.saves.find((s:{id:string})=>s.id==='secours-capsule-v187');
   expect(entry).toMatchObject({prepared:true,width:32,height:32,pawns:3,tick:0,release:'v187'});

@@ -1,3 +1,4 @@
+import { withoutMiningSkill, withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {expect,test} from 'vitest';
@@ -20,7 +21,9 @@ function stepUntil(world:World,ready:()=>boolean,limit:number):void {
 test('V183 public scene is a byte-stable 250² colony with a real unanswered offer',()=>{
   const raw=readFileSync(fixtureUrl,'utf8'),sha256=createHash('sha256').update(raw).digest('hex');
   expect(sha256).toBe(EXPECTED_SHA256);
-  const world=deserializeWorld(raw),prepared=prepareQuestDemo();
+  const world=deserializeWorld(raw),prepared=withoutPredatorDefaults(withoutMiningSkill(prepareQuestDemo()));
+  // Arid species and weights are unchanged; the V172 fixture uses herbivores-v1.
+  prepared.wildlife!.profile='biome-herbivores-v1';
   expect(world).toEqual(prepared);
   expect(world.schemaVersion).toBe(SCHEMA_VERSION);
   expect(world.width).toBe(250);expect(world.height).toBe(250);

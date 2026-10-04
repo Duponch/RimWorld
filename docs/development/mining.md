@@ -1,5 +1,7 @@
 # Minage physique — V28
 
+V204 relie la [compétence Minage](mining-skills-v204.md) à la cadence, à l’apprentissage au contact et au rendement pondéré des minerais. Les fragments naturels conservent leurs règles de produit et de chance ; les descriptions V28/V37 ci-dessous sont historiques.
+
 V37 complète la [cadence selon la lumière au mineur](light-work.md) : durée du coup capturée, reliquat conservé et migration des coups déjà entamés. Dégâts, produits et transactions restent ceux du présent contrat.
 
 [Vérification de référence](../research/mining-reference.md), [géologie](geology.md), [logistique](material-logistics.md), [mouvement](spatial-motion-storage.md).
@@ -30,6 +32,6 @@ Le delta de terrain transporte aussi les dégâts, y compris leur suppression ap
 
 Quatre scénarios profonds de minage vérifient cinq roches, contact diagonal, annulation, dommages persistants, reprise au coup près, snapshots, ouverture progressive, produit typé, transport demandé, réservations, sol non cultivable et mouvement pondéré. Le pilote de colonie ouvre quatre cases après installation du camp et range les fragments obtenus ; les bilans bois/nourriture restent indépendants. Le parcours UI utilise les vrais outils, priorités, réserve et sauvegarde. Mesures CPU/snapshots et rendu avec 3/30/100 mineurs : voir [validation](validation.md).
 
-Restent : conversion des pierres décoratives historiques, taille des fragments, blocs et matériaux de construction, autres minerais que l’acier V29, compétences/capacités/XP, dégâts externes, lissage, sous-sols variés, toits, effondrements et couverture de combat. La mécanique livrée ne ferme pas la famille « roches » ni G2.
+Restent : conversion des pierres décoratives historiques, taille des fragments, blocs et matériaux de construction, catalogue minéral exhaustif, dégâts externes, lissage, sous-sols variés, toits, effondrements et couverture de combat. La mécanique livrée ne ferme pas la famille « roches » ni G2.
 
 V29 étend le même job à [l’acier compacté](steel.md) : le produit et les PV dépendent du gisement. Les règles de fragments ci-dessus concernent les murs de pierre sans minerai ; un gisement produit uniquement son acier.

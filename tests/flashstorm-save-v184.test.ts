@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest';
+import { withoutMiningSkill,withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
 import { createWorld } from '../src/sim/engine.ts';
 import { crashlandedProfile } from '../src/sim/game-profile.ts';
 import { adoptMiscIncidents,MISC_INTRO_TICK } from '../src/sim/cassandra-misc.ts';
@@ -7,6 +8,7 @@ import { advanceFlashstorm,resolveSelectedFlashstorm } from '../src/sim/flashsto
 import { validFlashstorm } from '../src/sim/flashstorm-save.ts';
 import { deserializeWorld,serializeWorld } from '../src/sim/serialization.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
+import { enableBiomeWildlife } from '../src/sim/wildlife.ts';
 import { SnapshotDecoder,SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import type { World } from '../src/sim/types.ts';
 
@@ -96,8 +98,12 @@ test('schema 172 and corrupted shapes cannot acquire an incident or future histo
 
 test('a valid version 172 save migrates neutrally and a forged same-tick bridge delta is rejected atomically',()=>{
   const old=createScenarioWorld(184,32,'crashlanded');
-  const legacy=JSON.parse(serializeWorld(old)) as Record<string,unknown>;
+  const legacy=withoutPredatorDefaults(withoutMiningSkill(JSON.parse(serializeWorld(old)))) as Record<string,unknown>;
   legacy.schemaVersion=172;
+  // Build the ecological profile under its own historical schema. A current
+  // v2 population must not masquerade as the old herbivore-only population.
+  const historical=legacy as unknown as World;
+  delete historical.wildlife;enableBiomeWildlife(historical,historical.site!.biome);
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.flashstorm).toBeUndefined();
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();

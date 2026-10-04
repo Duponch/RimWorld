@@ -1,3 +1,4 @@
+import { withoutMiningSkill, withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect,test } from 'vitest';
@@ -14,7 +15,7 @@ const sorted=(w:World)=>objects(w).length===6&&objects(w).every(p=>p.owner.type=
 
 test('published storage scene matches the generator and checksum with six ground objects and no completed task',()=>{
   const raw=readFileSync('public/test-saves/v188/tri-reserves.json','utf8'),w=deserializeWorld(raw);
-  expect(w).toEqual(prepareStorageConditionDemo());expect(validateWorld(w)).toEqual([]);
+  expect(w).toEqual(withoutPredatorDefaults(withoutMiningSkill(prepareStorageConditionDemo())));expect(validateWorld(w)).toEqual([]);
   const entry=JSON.parse(readFileSync('public/test-saves/manifest.json','utf8')).saves.find((s:{id:string})=>s.id==='tri-reserves-v188');
   expect(entry).toMatchObject({prepared:true,width:32,height:32,pawns:3,colonists:3,tick:0,release:'v188',label:'Tri des réserves · 3 colons'});
   expect(entry.sha256).toBe(createHash('sha256').update(raw).digest('hex'));

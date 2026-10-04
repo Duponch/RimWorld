@@ -1,3 +1,4 @@
+import { withoutMiningSkill, withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
@@ -18,7 +19,10 @@ test('V181 public scene preserves its prepared provenance, ownership and a livin
   const hash = createHash('sha256').update(raw).digest('hex');
   expect(hash).toBe(EXPECTED_SHA256);
   const world = deserializeWorld(raw);
-  expect(world).toEqual(prepareBereavementDemo());
+  const prepared=withoutPredatorDefaults(withoutMiningSkill(prepareBereavementDemo()));
+  // This arid catalogue had the same species; its published profile predates V190.
+  prepared.wildlife!.profile='biome-herbivores-v1';
+  expect(world).toEqual(prepared);
   expect(JSON.parse(raw).schemaVersion).toBe(170);
   expect(world.schemaVersion).toBe(SCHEMA_VERSION);
   expect(world.width).toBe(250);
