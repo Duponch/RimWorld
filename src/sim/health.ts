@@ -15,6 +15,7 @@ import type { Pawn,World } from './types.ts';
 import { malnutritionRate } from './malnutrition.ts';
 import { humanAgeImmunityFactor } from './human-age.ts';
 import { notifyPawnDeath } from './bereavement.ts';
+import { currentMedicalBed,bedHealPerDay,bedImmunityFactor } from './hospital-medical-stats.ts';
 
 export function healthRandom(world:Pick<World,'rng'>):number {let n=world.rng;n^=n<<13;n^=n>>>17;n^=n<<5;world.rng=n>>>0;return world.rng/0x100000000;}
 function announce(world:World,message:string):void {world.events.push({tick:world.tick,type:'need',message});if(world.events.length>80)world.events.splice(0,world.events.length-80);}
@@ -54,14 +55,15 @@ export function updatePawnHealth(world:World,pawn:Pawn):BodyAssessment|undefined
   const record=pawn.health;if(!record)return;
   if(record.death){if(!carrierOf(world,pawn.id)&&pawn.moveCooldown===0)retryInterruptedCargo(world,pawn);return;}
   if(!record.death) {
-    const resting=!carrierOf(world,pawn.id)&&pawn.moveCooldown===0&&(pawn.state==='sleeping'||pawn.state==='resting'||pawn.state==='downed');
-    const need=pawn.need;
-    const bed=resting&&need?.kind==='sleep'&&need.phase==='sleep'&&need.bedId!==null&&world.structures.some(s=>s.id===need.bedId&&s.kind==='bed');
+    const restingCandidate=pawn.moveCooldown===0&&(pawn.state==='sleeping'||pawn.state==='resting'||pawn.state==='downed');
+    const carried=restingCandidate&&!!carrierOf(world,pawn.id);
+    const resting=restingCandidate&&!carried;
+    const bed=resting?currentMedicalBed(world,pawn,carried):undefined;
     const nextInfection=record.infections?.nextId??1;
     const sky=pawn.moveCooldown===0&&pawn.state==='recreating'&&pawn.recreation.task?.activity==='skygaze'&&pawn.recreation.task.phase==='active';
     advanceMedical(record,world.tick-record.tick,{phase:pawn.id%60,posture:bed?'bed':resting?'ground':'standing',starving:pawn.hunger<=0,malnutritionRate:world.schemaVersion>=84?malnutritionRate(pawn.id):undefined,infectionChanceFactor:playerInfectionFactor(world,pawn),
       hunger:pawn.hunger,rest:pawn.rest,restingBonus:!!bed||resting&&pawn.state!=='downed'||sky,infectionSeed:(world.seed^Math.imul(pawn.id,0x9e3779b1))>>>0,
-      ageImmunityFactor:humanAgeImmunityFactor(pawn.age)},()=>healthRandom(world));
+      ageImmunityFactor:humanAgeImmunityFactor(pawn.age),...(bed?{bedHealPerDay:bedHealPerDay(bed),bedImmunityFactor:bedImmunityFactor(bed)}:{})},()=>healthRandom(world));
     for(const infection of record.infections?.cases??[])if(infection.id>=nextInfection)announce(world,`${pawn.name} souffre d’une infection : consultez Santé et organisez des soins réguliers.`);
   }
   const body=pawnBody(pawn);reconcilePawnHealth(world,pawn,body);

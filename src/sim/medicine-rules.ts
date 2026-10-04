@@ -16,8 +16,11 @@ export function medicineAllowed(pawn:Pawn,item:MedicineItem):boolean {
   const care=medicalCare(pawn);
   return care==='best'||care==='industrial'&&MEDICINES[item].potency<=1||care==='herbal'&&MEDICINES[item].potency<=.6;
 }
-export function tendQuality(stat:number,random:number,self=false,item?:MedicineItem):number {
+export function tendQuality(stat:number,random:number,self=false,item?:MedicineItem,bedOffset=0):number {
   const rule=item?MEDICINES[item]:{potency:.3,maxQuality:.7};
+  // Historical dry/animal callers retain their exact rounding and order. A
+  // hospital service adds its offset before self reduction and the final cap.
+  if(bedOffset!==0)return Math.round(Math.max(0,Math.min(rule.maxQuality,(stat*rule.potency+random*.5-.25+bedOffset)*(self?.7:1)))*1000);
   return Math.round(Math.max(0,Math.min(rule.maxQuality,Math.min(rule.maxQuality,stat*rule.potency*(self ? .7 : 1))+random*.5-.25))*1000);
 }
 export const tendXp=(item?:MedicineItem):number=>Math.round(500000*Math.max(.5,Math.min(1,(item?MEDICINES[item].potency:.3)*.7)));

@@ -45,7 +45,7 @@ test('point queries keep complete rotated and historical footprints, job targets
   const pair=[[[0,0],[0,1]],[[0,0],[1,0]],[[0,0],[0,-1]],[[0,0],[-1,0]]];
   const bench=[[[0,0],[-1,0],[1,0],[0,1],[-1,1],[1,1]],[[0,0],[0,-1],[0,1],[1,0],[1,-1],[1,1]],[[0,0],[-1,0],[1,0],[0,-1],[-1,-1],[1,-1]],[[0,0],[0,-1],[0,1],[-1,0],[-1,-1],[-1,1]]];
   const stands=new Set<StructureKind>(['grave','power-conduit','power-switch','butcher-spot','crafting-spot','door','autodoor','fence','fence-gate','pen-marker','stool','dining-chair','armchair','horseshoes']);
-  const rejectsItems=new Set<StructureKind>(['small-sculpture','large-sculpture','grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','dresser','flower-pot','campfire']);
+  const rejectsItems=new Set<StructureKind>(['small-sculpture','large-sculpture','grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','hospital-bed','dresser','flower-pot','campfire']);
   const stores=new Set<StructureKind>(['fence','fence-gate','power-conduit','standing-lamp','sun-lamp','door','autodoor','stool','dining-chair','armchair','horseshoes']);
   const flickable=new Set<StructureKind>(['machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench','power-switch','wood-generator','standing-lamp','cooler','heater','electric-stove']);
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];
@@ -61,7 +61,7 @@ test('point queries keep complete rotated and historical footprints, job targets
       :kind==='table-square'||kind==='multi-analyzer'?[0,1].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='table-long'?[0,1,2,3].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='dresser'?pair[orientation]!
-      :footprint!=='legacy-single'&&['bed','table','battery','grave'].includes(kind)?pair[orientation]!:[[0,0]];
+      :footprint!=='legacy-single'&&['bed','hospital-bed','table','battery','grave'].includes(kind)?pair[orientation]!:[[0,0]];
     const cells=offsets.map(([x,z])=>({x:8+x!,z:8+z!})),keys=new Set(cells.map(c=>`${c.x},${c.z}`)),expected=points.map(c=>keys.has(`${c.x},${c.z}`));
     const shape={x:8,z:8,orientation,footprint},structure={...shape,id:1,kind};
     const targets:Parameters<typeof footprintContains>[0][]=[structure,{...shape,kind:'install',furniture:{kind}},{...shape,kind:'deconstruct',deconstruction:{kind}}];

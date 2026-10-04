@@ -1,7 +1,8 @@
+import { isBedKind } from './bed-kinds.ts';
 import { WEAPON_QUALITIES,type WeaponQuality } from './equipment-rules.ts';
 
 /** Core 1.6.4871 names adapted to the stable ids proposed for V90. */
-export const HABITAT_FURNITURE_KINDS=['bed','table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot','chess-table'] as const;
+export const HABITAT_FURNITURE_KINDS=['bed','hospital-bed','table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot','chess-table'] as const;
 export type HabitatFurnitureKind=typeof HABITAT_FURNITURE_KINDS[number];
 export type FurnitureQuality=WeaponQuality;
 export const FURNITURE_QUALITIES=WEAPON_QUALITIES;
@@ -16,8 +17,8 @@ export interface FurnitureDefinition {
   readonly categories:readonly FurnitureStuffCategory[];
   readonly coreWork:number;
   readonly constructionSkill:number;
-  readonly research:'complex-furniture'|null;
-  readonly coreResearch?:'complex-furniture'|null;
+  readonly research:'complex-furniture'|'hospital-bed'|null;
+  readonly coreResearch?:'complex-furniture'|'hospital-bed'|null;
   readonly maxHitPoints:number;
   readonly beauty:number;
   readonly comfort?:number;
@@ -34,6 +35,7 @@ export const FURNITURE_DEFINITIONS:Readonly<Record<HabitatFurnitureKind,Furnitur
   // Core gates the bed behind Complex furniture. Lisière already shipped it;
   // V90 keeps it unlocked while retaining the reference prerequisite here.
   bed:definition({label:'Lit',width:1,depth:2,stuff:45,categories:hard,coreWork:800,constructionSkill:0,research:null,coreResearch:'complex-furniture',maxHitPoints:140,beauty:1,comfort:.75,restEffectiveness:1,quality:true}),
+  'hospital-bed':definition({label:'Lit d’hôpital',width:1,depth:2,stuff:40,categories:['metallic'],coreWork:2800,constructionSkill:8,research:'hospital-bed',coreResearch:'hospital-bed',maxHitPoints:150,beauty:2,comfort:.8,restEffectiveness:1,quality:true}),
   table:definition({label:'Table 1×2',width:1,depth:2,stuff:28,categories:hard,coreWork:750,constructionSkill:0,research:null,maxHitPoints:75,beauty:.5,seats:6,quality:true}),
   stool:definition({label:'Tabouret',width:1,depth:1,stuff:25,categories:hard,coreWork:450,constructionSkill:0,research:null,maxHitPoints:75,beauty:0,comfort:.5,seats:1,quality:true}),
   'dining-chair':definition({label:'Chaise de salle à manger',width:1,depth:1,stuff:45,categories:['woody','metallic'],coreWork:8000,constructionSkill:4,research:'complex-furniture',maxHitPoints:100,beauty:8,comfort:.7,seats:1,quality:true}),
@@ -152,13 +154,13 @@ export function seatComfort(value:FurnitureLike):number {
 export interface BedFacilities {endTable?:boolean;dresser?:boolean}
 export const bedFacilityOffset=(facilities:BedFacilities={}):number=>(facilities.endTable?.05:0)+(facilities.dresser?.05:0);
 export function bedComfort(value:FurnitureLike,facilities:BedFacilities={}):number {
-  if(value.kind!=='bed')return 0;return (.75+bedFacilityOffset(facilities))*QUALITY_COMFORT[furnitureQuality(value.quality)];
+  if(!isBedKind(value.kind))return 0;return ((FURNITURE_DEFINITIONS[value.kind].comfort??0)+bedFacilityOffset(facilities))*QUALITY_COMFORT[furnitureQuality(value.quality)];
 }
 export const comfortNeedCeiling=(comfort:number):number=>Math.max(0,Math.min(1,comfort));
 export function bedRestEffectiveness(value:FurnitureLike):number {
-  if(value.kind!=='bed')return 0;
+  if(!isBedKind(value.kind))return 0;
   const materialFactor=isFurnitureMaterial(value.material)?FURNITURE_MATERIALS[value.material].restFactor:1;
-  return materialFactor*QUALITY_REST[furnitureQuality(value.quality)];
+  return (FURNITURE_DEFINITIONS[value.kind].restEffectiveness??1)*materialFactor*QUALITY_REST[furnitureQuality(value.quality)];
 }
 
 export const cardinalToBedHead=(head:FurnitureCell,table:FurnitureCell):boolean=>Math.abs(head.x-table.x)+Math.abs(head.z-table.z)===1;
@@ -179,7 +181,7 @@ const DIRECTIONS=[[0,1],[1,0],[0,-1],[-1,0]] as const;
 const direction=(orientation=0):readonly [number,number]=>DIRECTIONS[orientation%4]??DIRECTIONS[0];
 function localCells(structure:FurnitureStructureLike):readonly FurnitureCell[] {
   if(structure.cells)return structure.cells;
-  if(structure.kind==='bed'&&structure.footprint!=='legacy-single'){const [dx,dz]=direction(structure.orientation);return [structure,{x:structure.x+dx,z:structure.z+dz}];}
+  if(isBedKind(structure.kind)&&(structure.kind==='hospital-bed'||structure.footprint!=='legacy-single')){const [dx,dz]=direction(structure.orientation);return [structure,{x:structure.x+dx,z:structure.z+dz}];}
   if(structure.kind==='dresser'){const [dx,dz]=direction(((structure.orientation??0)+1)%4);return [structure,{x:structure.x+dx,z:structure.z+dz}];}
   return [structure];
 }
@@ -187,7 +189,7 @@ function localCells(structure:FurnitureStructureLike):readonly FurnitureCell[] {
  * The optional cellsOf callback lets the central footprint owner override the
  * local V90 fallback without importing engine types here. */
 export function comfortForStructure(world:FurnitureWorldLike,structure:FurnitureStructureLike):number {
-  if(structure.kind!=='bed')return seatComfort(structure);
+  if(!isBedKind(structure.kind))return seatComfort(structure);
   const cellsOf=world.cellsOf??localCells,bedCells=cellsOf(structure),head=bedCells[0]??structure;
   const visible=(facilityCells:readonly FurnitureCell[])=>!world.lineOfSight||bedCells.some(b=>facilityCells.some(f=>world.lineOfSight!(b,f)));
   const endTable=world.structures.some(candidate=>{if(candidate.kind!=='end-table')return false;const cells=cellsOf(candidate);return cardinalToBedHead(head,cells[0]??candidate)&&visible(cells);});

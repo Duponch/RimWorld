@@ -1,4 +1,6 @@
-# Validation courante — compétence Minage V204
+# Validation courante — lit d’hôpital V205
+
+**V205 — lit d’hôpital, schéma 187.** [Contrat](hospital-bed-v205.md), [recherche Core et adaptation](../research/hospital-bed-core-v205.md), [preuve ciblée](../history/validation-hospital-bed-v205.md). Recherche, construction et soins physiques ; 159 ciblés uniques/29 fichiers par reprises, dont les 28 nouveaux cas rejoués sur les sources finales. Chromium matériel préparé 1/1 et présentation 250² passent. Le microbanc médical mesure un surcoût isolé pour les acteurs couchés ; ni coût GPU nul ni performance générale annoncés. Moniteur vital, sols stériles et campagne hospitalière naturelle restent différés.
 
 **V204 — compétence Minage, schéma 186.** [Contrat](mining-skills-v204.md), [recherche Core et adaptations](../research/mining-skills-core-v204.md), [preuve](../history/validation-mining-skills-v204.md). Les contrôles du lot et la consolidation périodique des préparations historiques sont consignés séparément dans la preuve. La régression par reprises ne vaut pas une suite complète ; les mesures du cache terrain ne prouvent pas le coût général CPU/GPU.
 

@@ -1,10 +1,10 @@
 # Guide joueur
 
-**Schéma courant 186 — V204 compétence Minage.** [Contrat](../development/mining-skills-v204.md), [recherche Core](../research/mining-skills-core-v204.md), [preuve bornée](../history/validation-mining-skills-v204.md). Les anciennes sauvegardes ne reçoivent ni profil, XP, contribution ou minerai rétroactifs.
+**Schéma courant 187 — V205 lit d’hôpital.** [Contrat](../development/hospital-bed-v205.md), [recherche Core et adaptation](../research/hospital-bed-core-v205.md), [preuve](../history/validation-hospital-bed-v205.md). Le schéma 186 est validé avant migration neutre : aucun lit, recherche, composant ou soin rétroactif.
 
-**Schéma courant 185 — V203 ventes de textiles au comptoir.** [Contrat](../development/caravan-sales-v203.md), [preuve et limites](../history/validation-commercial-sales-v203.md). Migration neutre : aucune marchandise, monnaie ou vente rétroactive.
+**Schéma 185 — V203 ventes de textiles au comptoir.** [Contrat](../development/caravan-sales-v203.md), [preuve et limites](../history/validation-commercial-sales-v203.md). Migration neutre : aucune marchandise, monnaie ou vente rétroactive.
 
-**Schéma courant 184 — V202 éruption solaire.** [Contrat](../development/solar-flare-v202.md), [preuve et limites](../history/validation-solar-flare-v202.md). La migration ne donne aucune condition ou énergie rétroactive.
+**Schéma 184 — V202 éruption solaire.** [Contrat](../development/solar-flare-v202.md), [preuve et limites](../history/validation-solar-flare-v202.md). La migration ne donne aucune condition ou énergie rétroactive.
 
 ## Traverser une éruption solaire — V202
 
@@ -14,7 +14,7 @@ Les batteries conservent leur réserve mais ne peuvent ni alimenter ni recharger
 
 À la fin, les appareils redémarrent suivant leur courant, leurs interrupteurs et leurs cadences ordinaires. Ni conservation ni croissance perdues ne sont rattrapées. Les pannes et la pluie restent des dangers distincts, y compris pour une batterie exposée encore chargée. La scène prépare le matériel et l’occasion ; elle ne démontre pas une fréquence naturelle.
 
-**Schéma courant 183 — V201 animal sauvage en rage temporaire.** [Contrat](../development/manhunter-v201.md), [preuve et limites](../history/validation-manhunter-v201.md). Les anciennes sauvegardes sont validées avant migration neutre, sans animal ni incident rétroactifs.
+**Schéma 183 — V201 animal sauvage en rage temporaire.** [Contrat](../development/manhunter-v201.md), [preuve et limites](../history/validation-manhunter-v201.md). Les anciennes sauvegardes sont validées avant migration neutre, sans animal ni incident rétroactifs.
 
 ## Faire face à un animal en rage — V201
 
@@ -973,6 +973,20 @@ La lumière agit aussi sur l’abattage, les récoltes, les semis, les construct
 
 Les mineurs préparent leurs coups plus lentement dans le noir. Les colons marchent aussi plus lentement, y compris pour porter un objet, manger ou rejoindre leur lit. Un coup ou un passage déjà engagé conserve sa cadence ; le suivant prend le nouvel éclairage. Les besoins et quantités produites ne sont pas eux-mêmes réduits de 20 %.
 
+
+## Construire et utiliser un lit d’hôpital — V205
+
+Terminez **Microélectronique** et **Mobilier complexe**, puis sélectionnez la recherche **Lit d’hôpital** : 1 200 points sur un bureau de recherche avancé réellement alimenté. Le projet Core Matériaux stériles et ses sols restent différés dans cette adaptation ; le multi-analyseur n’est pas requis.
+
+Dans **Architecte → Mobilier**, choisissez le lit d’hôpital en acier et son orientation 1×2. Prévoyez **120 acier et 5 composants**, ainsi qu’un bâtisseur avec **Construction 8**. Livraison et travail se font au chantier ; la qualité est produite une seule fois à la finition. Le lit n’a pas besoin d’électricité.
+
+Le nouveau lit est **médical** par défaut. Utilisez les priorités **Patient**, **Repos au lit** et **Médecin**, les politiques de médicament et, pour une personne incapable, l’ordre de secours existant. Accès au chevet, réservations, dose réellement prise et contact restent nécessaires. Un lit hospitalier médical accessible est préféré à un lit médical ordinaire ; un patient conserve toutefois son lit déjà occupé et valide. Un nouveau lit ne provoque pas de transfert automatique.
+
+Depuis ce lit réellement utilisé, le confort de base vaut 0,80 et le repos 1. Le lit ajoute 0,10 à la qualité des soins, multiplie la vitesse d’immunité par 1,11 et le facteur du lit en chirurgie par 1,1. Sa contribution à la guérison naturelle vaut dix points par jour Core contre quatre pour le lit ordinaire, en plus de la base et du repos existants. Ces effets ne garantissent pas la guérison ni le succès d’une opération. Qualité et matière modulent confort, repos et chirurgie ; voyager, être porté ou rester au sol n’accorde aucun bonus hospitalier.
+
+Les commandes **Médical**, **Prison** et d’assignation suivent les lits ordinaires. Les rôles médical et prison restent indépendants ; retirer le rôle médical permet l’usage de couchage ordinaire. Désinstaller, transporter puis réinstaller conserve rôle, propriétaire, qualité, PV et matière, sans réactiver automatiquement le rôle médical.
+
+La 51e scène préparée **« Lit d’hôpital · recherche et soins »** contient trois colons, les prérequis connus, une recherche presque terminée, les fournitures, un lit médical ordinaire et une contusion non soignée. Reprenez la recherche alimentée, construisez le lit, puis faites rejoindre et traiter le patient. Sauvegardez pendant le chantier ou les soins pour observer leur reprise. Cette préparation ne constitue pas une preuve de campagne naturelle ; les contrôles sont suivis dans la [preuve V205](../history/validation-hospital-bed-v205.md).
 
 ## Blessures et incapacité
 

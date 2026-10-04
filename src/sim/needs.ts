@@ -1,3 +1,4 @@
+import { isBedKind } from './bed-kinds.ts';
 import { colonyExpectation } from './colony-economy.ts';
 import { malnutritionModifiers } from './malnutrition.ts';
 import { advanceRoomRest } from './room-experience.ts';
@@ -38,7 +39,7 @@ export interface NeedContext {
  */
 export function processNeeds(world: World, pawn: Pawn, context: NeedContext): boolean {
   const canPlan = pawn.needCooldown === 0;
-  if (pawn.bedId !== null && !world.structures.some(bed => bed.id === pawn.bedId && bed.kind === 'bed')&&!world.packed?.some(pack=>pack.building.id===pawn.bedId&&pack.building.kind==='bed')) pawn.bedId = null;
+  if (pawn.bedId !== null && !world.structures.some(bed => bed.id === pawn.bedId && isBedKind(bed.kind))&&!world.packed?.some(pack=>pack.building.id===pawn.bedId&&isBedKind(pack.building.kind))) pawn.bedId = null;
 
   collapseFromExhaustion(world,pawn,context);
 

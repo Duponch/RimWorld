@@ -1,3 +1,4 @@
+import { validHospitalBedState } from '../sim/hospital-bed-save.ts';
 import { validArtWorkShape } from '../sim/art-work.ts';
 import { validStorageConditions } from '../sim/storage-condition.ts';
 import { validFlakWorkShape } from '../sim/flak-work.ts';
@@ -408,6 +409,7 @@ export class SnapshotDecoder {
         ||[next.visitors?.departed??[],next.podRescues?.departed??[]].some(records=>records.some(d=>foreignIds.has(d.pawn.id)||collides(d.items)||(d.packed??[]).some(p=>foreignIds.has(p.building.id)||collides(p.building.bills??[])))))return resync('Identité commerciale dupliquée dans une archive.');
       if(next.scout&&'pawn' in next.scout&&(postIds.has(next.scout.pawn.id)||next.scout.items.some(i=>postIds.has(i.id))))return resync('Stock commercial dupliqué dans la reconnaissance.');
     }
+    if(!validHospitalBedState(next,next.schemaVersion))return resync('Lit d’hôpital invalide ou futur.');
     if(next.schemaVersion<177&&[...next.structures,...next.jobs,...(next.packed??[]).map(p=>p.building)].some(s=>s.kind==='sun-lamp'))return resync('Lampe horticole future.');
     if(validateScoutRegistry(next,next.schemaVersion).length)return resync('Registre de reconnaissance invalide.');
     if(!validWildlifeExitState(next,next.schemaVersion))return resync('Départ de faune invalide.');

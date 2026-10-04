@@ -12,6 +12,7 @@ import { recreationParts } from './recreation-parts';
 import { campfireParts } from './campfire-parts';
 import { researchTailorParts } from './research-tailor-parts';
 import { industryParts } from './industry-parts';
+import { hospitalBedParts } from './hospital-bed-parts';
 import { craftingSpotParts } from './crafting-spot-parts';
 import { stonecutterParts } from './stonecutter-parts';
 import { footprintCells } from '../sim/definitions';
@@ -67,7 +68,7 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
     }
     batches.set(group, 'furniture', [
       ...graveParts(world), ...foodWorkstationParts(world), ...electricalParts(world,cutaway), ...passiveCoolerParts(world), ...doorParts(world,cutaway), ...penParts(world), ...campfireParts(world), ...recreationParts(world), ...stonecutterParts(world), ...craftingSpotParts(world), ...researchTailorParts(world), ...industryParts(world), ...habitatParts(world), ...artParts(world),
-      ...parcels,
+      ...hospitalBedParts(world), ...parcels,
       ...woodParts.map(p => ({ ...p, color: p.color ?? 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 0.96, sy: wallHeight - 0.09, sz: 0.96, color: p.color ?? 0xa6916e })),
       ...wallCaps.map(p => ({ ...p, sx: 1.01, sy: 0.09, sz: 1.01, color: p.color ?? 0xc3af86 })),

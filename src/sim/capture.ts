@@ -1,6 +1,6 @@
 import { factionOf,isColonist } from './affiliation.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
-import { rescueBedAvailable } from './medical-beds.ts';
+import { rescueBedAvailable,medicalBedPreference } from './medical-beds.ts';
 import { carrierOf,rescueClaim } from './rescue-state.ts';
 import { startRescue } from './rescue.ts';
 import { blockedCells,reachableCells,routeToCell,type Reachability } from './pathfinding.ts';
@@ -24,7 +24,7 @@ export function captureProposal(world:World,actor:Pawn,patient:Pawn,reach:Reacha
   if(captureReason(world,actor,patient))return;
   const path=routeToCell(world,patient,reach);if(!path)return;
   const beds=world.structures.filter(b=>rescueBedAvailable(world,b,patient,actor.id,true)).sort((a,b)=>
-    Number(!!b.medical)-Number(!!a.medical)||(a.x-patient.x)**2+(a.z-patient.z)**2-(b.x-patient.x)**2-(b.z-patient.z)**2||a.id-b.id);
+    medicalBedPreference(a)-medicalBedPreference(b)||(a.x-patient.x)**2+(a.z-patient.z)**2-(b.x-patient.x)**2-(b.z-patient.z)**2||a.id-b.id);
   for(const bed of beds)if(routeToCell(world,bed,reach))return {patientId:patient.id,bedId:bed.id,path};
 }
 export function applyCapture(world:World,command:{pawnId:number;patientId:number;queue:boolean}):CommandResult {

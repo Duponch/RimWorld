@@ -1,9 +1,10 @@
+import { isBedKind } from './bed-kinds.ts';
 import { lyingBlocked } from './disturbance-state.ts';
 import { isAdmittedGuest } from './affiliation.ts';
 import { advanceRoomRest } from './room-experience.ts';
 import { treatmentTarget,medicalRestNeeded,urgentTreatment } from './care-rules.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
-import { rescueBedAvailable } from './medical-beds.ts';
+import { rescueBedAvailable,medicalBedPreference } from './medical-beds.ts';
 import { routeToCell,type Reachability } from './pathfinding.ts';
 import { updatePawnHealth } from './health.ts';
 import { releaseWork } from './work-release.ts';
@@ -22,7 +23,13 @@ export function patientProposal(world:World,pawn:Pawn,reach:Reachability):{work:
     if(!pawn.prisoner&&!isAdmittedGuest(pawn)&&pawn.priorities.bedrest===0)return;work='bedrest';
   }
   const beds=world.structures.filter(b=>rescueBedAvailable(world,b,pawn,pawn.id)).sort((a,b)=>
-    Number(!a.medical)-Number(!b.medical)||Number(a.id!==pawn.bedId)-Number(b.id!==pawn.bedId)||(a.x-pawn.x)**2+(a.z-pawn.z)**2-(b.x-pawn.x)**2-(b.z-pawn.z)**2||a.id-b.id);
+    medicalBedPreference(a)-medicalBedPreference(b)||Number(a.id!==pawn.bedId)-Number(b.id!==pawn.bedId)||(a.x-pawn.x)**2+(a.z-pawn.z)**2-(b.x-pawn.x)**2-(b.z-pawn.z)**2||a.id-b.id);
+  // An actual occupied bed remains the service until it becomes invalid.
+  const current=pawn.need;
+  if(current?.kind==='sleep'&&current.phase==='sleep'&&pawn.moveCooldown===0){
+    const occupied=beds.find(b=>b.id===current.bedId&&pawn.x===b.x&&pawn.z===b.z);
+    if(occupied)return {work,bedId:occupied.id,path:[]};
+  }
   for(const bed of beds){const path=routeToCell(world,bed,reach);if(path)return {work,bedId:bed.id,path};}
 }
 export function startPatientRest(world:World,pawn:Pawn,proposal:{work:'patient'|'bedrest';bedId:number;path:Cell[]}):void {
@@ -42,7 +49,7 @@ function continueRecuperation(pawn:Pawn):void {
 export function processPatientRest(world:World,pawn:Pawn,context:NeedContext):boolean {
   const task=pawn.need;if(task?.kind!=='sleep'||!task.medical)return false;
   continueRecuperation(pawn);
-  const bed=world.structures.find(b=>b.id===task.bedId&&b.kind==='bed');
+  const bed=world.structures.find(b=>b.id===task.bedId&&isBedKind(b.kind));
   const wanted=!!pawn.surgeryRequest||treatmentTarget(pawn)||(task.medical==='bedrest'&&medicalRestNeeded(pawn));
   if(!bed||!rescueBedAvailable(world,bed,pawn,pawn.id)||!wanted||!pawn.prisoner&&!isAdmittedGuest(pawn)&&pawn.priorities[task.medical]===0){context.release();return true;}
   if(pawn.x!==task.target.x||pawn.z!==task.target.z){context.move(task.target,true);return true;}

@@ -2,7 +2,7 @@ import { isCarePatient } from './affiliation.ts';
 import { captureReason,completeCapture } from './capture.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { updatePawnHealth } from './health.ts';
-import { rescueBedAvailable } from './medical-beds.ts';
+import { rescueBedAvailable,medicalBedPreference } from './medical-beds.ts';
 import { carrierOf,rescueClaim,syncPatient } from './rescue-state.ts';
 import { blockedCells,reachableCells,routeToCell,type Reachability } from './pathfinding.ts';
 import { clearQueuedOrders } from './player-orders.ts';
@@ -22,9 +22,9 @@ export function rescueReason(world:World,actor:Pawn,patient:Pawn|undefined,force
 export function rescueProposal(world:World,actor:Pawn,patient:Pawn,reach:Reachability,forced=false):{patientId:number;bedId:number;path:Cell[]}|undefined {
   if(rescueReason(world,actor,patient,forced))return;
   const path=routeToCell(world,patient,reach);if(!path)return;
-  const rank=(id:number,medical?:true)=>medical?0:patient.bedId===id?1:2;
+  const rank=(bed:import('./types.ts').Structure)=>bed.medical?medicalBedPreference(bed):patient.bedId===bed.id?2:3;
   const beds=world.structures.filter(b=>rescueBedAvailable(world,b,patient,actor.id)).sort((a,b)=>
-    rank(a.id,a.medical)-rank(b.id,b.medical)||(a.x-patient.x)**2+(a.z-patient.z)**2-(b.x-patient.x)**2-(b.z-patient.z)**2||a.id-b.id);
+    rank(a)-rank(b)||(a.x-patient.x)**2+(a.z-patient.z)**2-(b.x-patient.x)**2-(b.z-patient.z)**2||a.id-b.id);
   for(const bed of beds)if(routeToCell(world,bed,reach))return {patientId:patient.id,bedId:bed.id,path};
 }
 export function startRescue(world:World,actor:Pawn,proposal:{patientId:number;bedId:number;path:Cell[]},forced=false,capture=false):void {

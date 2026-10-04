@@ -1,3 +1,4 @@
+import { isBedKind } from './bed-kinds.ts';
 import { isAdmittedGuest } from './affiliation.ts';
 import { treatmentTarget,medicalRestNeeded } from './care-rules.ts';
 import { processNeeds,processDraftSleep,type NeedContext } from './needs.ts';
@@ -14,7 +15,7 @@ export function processPodRescuePatient(w:World,p:Pawn,ctx:NeedContext):boolean 
     if(medical&&p.need?.kind==='sleep'&&p.need.phase==='sleep'&&p.need.bedId!==null&&!p.need.medical)
       p.need.medical=treatmentTarget(p)?'patient':'bedrest';
     if(medical&&!p.need&&p.planCooldown===0){
-      const goals=new Set(w.structures.filter(b=>b.kind==='bed'&&!b.prisoner).map(b=>b.z*w.width+b.x));
+      const goals=new Set(w.structures.filter(b=>isBedKind(b.kind)&&!b.prisoner).map(b=>b.z*w.width+b.x));
       if(goals.size){
         const reach=ctx.search(goals);if(!reach)return true;
         const proposal=patientProposal(w,p,reach);if(proposal)startPatientRest(w,p,proposal);

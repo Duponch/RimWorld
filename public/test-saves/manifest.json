@@ -1372,6 +1372,37 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32, createWorld(204), schéma186, horloge placée à3000 sans campagne simulée. Trois colons sains en (8,10)/(8,14)/(8,18), besoins hauts, profils Minage0/8/20 et passions0/1/2 choisis explicitement, XP nulle ; aucune biographie Core revendiquée. Sol herbe dégagé, trois gisements d’acier intacts, une machinerie intacte et une roche de granite intacte ajoutés pour comparer les travaux. Deux réserves filtrées, neuf repas et cinquante bois physiques au sol ; aucun acier ou composant offert. Seul Transport2 est actif, autres travaux à commander, habillement automatique et incidents naturels exclus. Aucune désignation, réserve de travail, approche, préparation de coup, contribution, extraction, apprentissage ou fabrication déjà réalisée. Cette scène ne prouve ni distribution naturelle des profils/gisements, campagne longue ni charge générale250².",
       "sha256": "bf77662013e5d0e18577ccdfb9a911f7177bc192211f2e7039f8a6b5ae40007f"
+    },
+    {
+      "id": "hopital-v205",
+      "release": "v205",
+      "label": "Lit d’hôpital · recherche et soins",
+      "description": "Achever les deux derniers points de recherche au vrai bureau, construire un lit depuis les fournitures au sol, puis installer et soigner Mina. Le lit normal médical sert de témoin.",
+      "filename": "hopital.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 3000,
+      "focus": [
+        "recherche au contact",
+        "construction et composants",
+        "lit spécialisé",
+        "rôle médical",
+        "patient et chevet",
+        "médicament physique",
+        "guérison",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause. Recherche → Lit d’hôpital montre 1 198/1 200 points préparés ; Microélectronique et Mobilier complexe sont déjà connus. Lancer le projet et activer Recherche pour Ada dans Travail. Reprendre jusqu’à son travail au bureau avancé en (7,5), raccordé au générateur au bois.",
+        "Après la recherche, Architecte → Mobilier → Lit d’hôpital : choisir la case (14,12), avec l’orientation initiale. Noé a Construction 8 et Transport actifs. Les 120 aciers en (8,14)/(9,14) et cinq composants en (10,14) doivent être livrés puis construits physiquement. Sauvegarder pendant le cadre puis recharger.",
+        "Inspecter le nouveau lit : il est médical par défaut. Le rôle peut être désactivé puis réactivé ; son identité hospitalière demeure. Dans Travail, activer Patient 1 et Repos au lit 3 pour Mina, puis Médecin 1 pour Ada. Mina porte une contusion préparée, sans soin déjà fait.",
+        "Observer Mina rejoindre le lit, Ada prendre un médicament en (11,14) et soigner au chevet. Sauvegarder pendant le traitement et recharger avant de reprendre. Le repos, les soins et la guérison utilisent le vrai lit ; le lit médical ordinaire en (10,10) reste un témoin sans bonus hospitalier."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32, createWorld(205), schéma187, tick3000 sans campagne simulée. Trois adultes libres avec besoins hauts ; Ada Médecine8/Intellectuel8, Noé Construction8/Transport2, Mina contusion thorax18PV sans traitement. Autres travaux désactivés et Patient/Repos/Médecin à activer après construction. Microélectronique et Mobilier complexe achevés explicitement ; recherche hospitalière à1198/1200 points, projet non sélectionné, aucun travail actif. Bureau avancé et générateur existants avec75bois de combustible, connexions préparées mais alimentation du consommateur à démarrer normalement. Lit normal médical en(10,10), 120acier/cinqcomposants/deuxmédicaments/neufrepas au sol. Aucun lit hospitalier, chantier, livraison, réservation, admission, dose consommée, soin ou guérison hospitalière accordé. Incidents naturels exclus. Acier seul et omission explicite du préalable Core Matériaux stériles ; moniteur/sols stériles absents. Cette clinique préparée ne prouve ni campagne naturelle, acquisition complète des parents, ni performance générale250².",
+      "sha256": "87bf287d7250930887f2f3ed0ac4a9d7673f7acaeddd13524593331c838b4853"
     }
   ]
 }

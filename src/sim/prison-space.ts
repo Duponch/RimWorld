@@ -1,3 +1,4 @@
+import { isBedKind } from './bed-kinds.ts';
 import { footprintCells } from './definitions.ts';
 import { isColonist } from './affiliation.ts';
 import { doorOpenness,isRoomDoor } from './door-rules.ts';
@@ -48,7 +49,7 @@ export function prisonDoorPassable(world:World,door:Structure):boolean {
 function markedRoom(world:World,cell:Cell,topology:RoomTopology):RoomSpace|undefined {
   const room=topology.at(cell.x,cell.z);
   if(room?.kind!=='space'||room.touchesMapEdge)return;
-  return world.structures.some(s=>s.kind==='bed'&&s.prisoner&&topology.at(s.x,s.z)===room)?room:undefined;
+  return world.structures.some(s=>isBedKind(s.kind)&&s.prisoner&&topology.at(s.x,s.z)===room)?room:undefined;
 }
 /** No roof requirement. Core's huge-region classification is not replaced by
  * an invented cell-count limit in our different room representation. */
@@ -56,7 +57,7 @@ export function prisonRoom(world:World,cell:Cell,topology?:RoomTopology):RoomSpa
   return markedRoom(world,cell,topology??capturePrisonTopology(world));
 }
 export function prisonBedValid(world:World,bed:Structure,topology?:RoomTopology):boolean {
-  const present=world.structures.find(s=>s.id===bed.id&&s.kind==='bed'&&s.prisoner);
+  const present=world.structures.find(s=>s.id===bed.id&&isBedKind(s.kind)&&s.prisoner);
   if(!present)return false;
   const map=topology??capturePrisonTopology(world),room=markedRoom(world,present,map);
   return !!room&&footprintCells(present).every(c=>map.at(c.x,c.z)===room);

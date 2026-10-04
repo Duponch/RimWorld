@@ -77,6 +77,7 @@ const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.free
   'pen-marker': def(30,600,'standable'),
   wall: def(5, 135, 'impassable'),
   bed: def(45, 800, 'pass-through', {}, true),
+  'hospital-bed': def(40, 2800, 'pass-through', {steel:80,component:5}, true),
   table: def(28, 750, 'pass-through', {}, true),
   'table-square': def(50, 1500, 'pass-through', {}, true),
   'table-long': def(95, 3000, 'pass-through', {}, true),

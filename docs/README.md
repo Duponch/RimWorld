@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-**V204 — Minage et douze compétences reliées, schéma 186.** [Contrat](development/mining-skills-v204.md), [recherche Core](research/mining-skills-core-v204.md), [preuve bornée](history/validation-mining-skills-v204.md), [guide de minage](gameplay/player-guide.md#miner-et-ranger-les-fragments). La 50e scène publique **« Minage et compétences · 3 colons »** prépare trois profils ; extraction, apprentissage et transport restent à accomplir.
+**V205 — lit d’hôpital, schéma 187.** [Contrat](development/hospital-bed-v205.md), [recherche Core et adaptation](research/hospital-bed-core-v205.md), [preuve V205](history/validation-hospital-bed-v205.md), [guide](gameplay/player-guide.md#construire-et-utiliser-un-lit-dhôpital--v205). La 51e scène publique préparée **« Lit d’hôpital · recherche et soins »** contient trois colons ; recherche, construction et traitement restent à accomplir.
 
 **V203 — débouché textile, schéma 185.** [Contrat](development/caravan-sales-v203.md), [recherche Core](research/caravan-sales-core-v203.md), [preuve ciblée](history/validation-commercial-sales-v203.md), [guide](gameplay/player-guide.md#vendre-des-textiles-au-comptoir--v203). Chargement, vente, caisse du poste et retour des invendus réutilisent les propriétaires physiques V193. La 49e scène publique est préparée ; planète, groupes et commerce général restent ouverts.
 

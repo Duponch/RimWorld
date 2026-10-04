@@ -1,4 +1,4 @@
-import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
+import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, HOSPITAL_BED_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
 import type { Command, World } from '../sim/types';
 import './world-panels.css';
 import './management-reference-v199.css';
@@ -23,6 +23,7 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'fabrication',prefix:'fabrication',title:'Fabrication',cost:4000,detail:'Débloque l’établi de fabrication. Exige un bureau avancé alimenté et un multi-analyseur alimenté à proximité.',progress:w=>w.research?.fabrication,x:824,y:432},
   {id:'advanced-fabrication',prefix:'advanced-fabrication',title:'Fabrication avancée',cost:4000,detail:'Débloque la fabrication du composant avancé à l’établi alimenté : 1 composant, 20 acier, 10 plastacier et 3 or ; Artisanat 8.',progress:w=>w.research?.advancedFabrication,x:824,y:566},
   {id:'recon-armor',prefix:'recon-armor',title:'Armure de reconnaissance',cost:6000,detail:'Casque de reconnaissance à l’établi de fabrication alimenté : 30 plastaciers, 1 composant avancé ; Artisanat 6.',progress:w=>w.research?.reconArmor,x:624,y:566},
+  {id:'hospital-bed',prefix:'hospital-bed',title:'Lit d’hôpital',cost:HOSPITAL_BED_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque un lit spécialisé : 120 acier + 5 composants, Construction 8. Améliore les soins, l’immunité, la guérison et la chirurgie pendant son utilisation réelle. Recherche au bureau avancé alimenté. Adaptation locale : le préalable Core Matériaux stériles et ses sols sont différés.',progress:w=>w.research?.hospitalBed,x:424,y:566},
 ];
 export const researchLinks: readonly (readonly [ResearchProject, ResearchProject])[] = [
   ['smithing','machining'],['machining','gunsmithing'],
@@ -32,6 +33,7 @@ export const researchLinks: readonly (readonly [ResearchProject, ResearchProject
   ['fabrication','advanced-fabrication'],
   ['fabrication','recon-armor'],
   ['complex-clothing','recon-armor'],
+  ['microelectronics','hospital-bed'],['complex-furniture','hospital-bed'],
 ];
 const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=430;
@@ -39,9 +41,11 @@ const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(projec
 const prerequisites=new Map<ResearchProject,string[]>([
   ['machining',['Forge']],['gunsmithing',['Usinage']],['plate-armor',['Forge','Vêtements complexes']],['flak-armor',['Usinage','Armure de plaques']],
   ['autodoors',['Électricité (acquise au départ)']],['microelectronics',['Électricité (acquise au départ)']],['multi-analyzer',['Microélectronique','Usinage']],['fabrication',['Multi-analyseur']],['advanced-fabrication',['Fabrication']],['recon-armor',['Fabrication','Vêtements complexes']],
+  ['hospital-bed',['Microélectronique','Mobilier complexe']],
 ]);
 function stationIssue(world:World,project:ResearchProject):string|undefined {
   if(world.structures.some(s=>researchStationUsable(world,s,project)))return undefined;
+  if(project==='hospital-bed')return 'Bureau de recherche avancé alimenté requis';
   if(project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor')return project==='multi-analyzer'?'Bureau de recherche avancé alimenté requis':'Bureau avancé et multi-analyseur alimentés à proximité requis';
   return 'Bureau de recherche disponible requis';
 }

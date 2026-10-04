@@ -1,3 +1,4 @@
+import { isBedKind } from './bed-kinds.ts';
 import { visitorAtEdge } from './visitor-navigation.ts';
 import { POD_RESCUE_FALL_TICKS,POD_RESCUE_OPEN_TICKS,POD_RESCUE_LIMIT,type PodRescueDeparture } from './pod-rescue-state.ts';
 import type { Pawn,World } from './types.ts';
@@ -100,7 +101,7 @@ export function validatePodRescues(w:World,version:number,ids:Set<number>,valida
   for(const p of w.pawns)if(p.podRescue){
     const i=s.incidents.find(i=>i.id===p.podRescue!.incidentId&&i.pawnId===p.id);
     if(!i?.result&&p.podRescue.admittedAt===undefined&&(p.need?.kind==='sleep'&&p.need.bedId!==null
-      ||p.bedId!==null&&(!w.structures.some(b=>b.id===p.bedId&&b.kind==='bed')||!w.pawns.some(q=>q.rescue?.patientId===p.id&&q.rescue.bedId===p.bedId&&q.orders.active==='rescue'))))
+      ||p.bedId!==null&&(!w.structures.some(b=>b.id===p.bedId&&isBedKind(b.kind)&&(version>=187||b.kind==='bed'))||!w.pawns.some(q=>q.rescue?.patientId===p.id&&q.rescue.bedId===p.bedId&&q.orders.active==='rescue'))))
       errors.push('Unadmitted pod rescue patient retains an unreserved colonial bed.');
   }
   const archived=new Set<number>();

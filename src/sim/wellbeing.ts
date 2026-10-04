@@ -1,3 +1,4 @@
+import { isBedKind } from './bed-kinds.ts';
 import { updateMood,expireMealMemories } from './mood.ts';
 import { rememberRoomUse } from './room-experience.ts';
 export { comfortMood } from './mood.ts';
@@ -21,7 +22,13 @@ export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment,re
   let fallback:ShotGrid|undefined;
   const sight=()=>readSight?.()??(fallback??={width:world.width,height:world.height,coverAt:()=>undefined,blocksSight:(x,z)=>world.tiles[z*world.width+x]?.terrain==='rock'||world.structures.some(s=>STRUCTURE_SHOT_FILL[s.kind]>.99&&!(isRoomDoor(s.kind)&&s.door?.open)&&footprintContains(s,{x,z}))});
   const furnitureWorld:FurnitureWorldLike={structures:world.structures,cellsOf:structure=>footprintCells(structure as unknown as Structure),lineOfSight:(from,to)=>clearShotSegment(sight(),from,to)};
-  if (pawn.state === 'sleeping' && need?.kind === 'sleep' && need.bedId !== null) {const bed=world.structures.find(item => item.id === need.bedId && item.kind === 'bed' && item.x === pawn.x && item.z === pawn.z);if(bed)ceiling=comfortForStructure(furnitureWorld,bed)*100;}
+  if (need?.kind === 'sleep' && need.bedId !== null && (pawn.state === 'sleeping'||need.phase==='sleep'&&pawn.moveCooldown===0&&(pawn.state==='resting'||pawn.state==='downed'))) {
+    const bed=world.structures.find(item=>item.id===need.bedId&&isBedKind(item.kind)&&item.x===pawn.x&&item.z===pawn.z&&(item.kind!=='hospital-bed'||need.phase==='sleep'&&pawn.moveCooldown===0&&need.target.x===item.x&&need.target.z===item.z));
+    if(bed&&(pawn.state==='sleeping'||bed.kind==='hospital-bed')) {
+      const comfort=comfortForStructure(furnitureWorld,bed)*100;
+      ceiling=bed.kind==='hospital-bed'?Math.min(100,comfort):comfort;
+    }
+  }
   if (pawn.state === 'eating' && need?.kind === 'eat' && need.dining?.seatId !== null && need.dining) {const seat=world.structures.find(item => item.id === need.dining!.seatId && isDiningSeat(item.kind) && item.x === pawn.x && item.z === pawn.z);if(seat)ceiling=comfortForStructure(furnitureWorld,seat)*100;}
   if(pawn.research && pawn.state==='working' && pawn.x===pawn.research.spot.x && pawn.z===pawn.research.spot.z){const seat=world.structures.find(s=>isDiningSeat(s.kind)&&s.x===pawn.x&&s.z===pawn.z);if(seat)ceiling=comfortForStructure(furnitureWorld,seat)*100;}
   if(pawn.state==='recreating'&&pawn.recreation.task?.activity==='chess'&&pawn.recreation.task.phase==='active'){

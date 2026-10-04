@@ -1,3 +1,4 @@
+import { isBedKind } from './bed-kinds.ts';
 import { isColonist,distanceSquared } from './affiliation.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { captureStandability } from './furniture-travel.ts';
@@ -13,7 +14,7 @@ const EMPTY:ReadonlySet<number>=new Set();
 export function visitorArrival(w:World,salt:number,count:number,kind:VisitorKind):{entry:Cell;sites:Cell[];spot:Cell;parking:Cell[]}|null {
   const colonists=w.pawns.filter(p=>isColonist(p)&&p.state!=='dead');if(!colonists.length)return null;
   const blocked=blockedCells(w),stand=captureStandability(w),occupied=new Set(w.pawns.flatMap(p=>[p.z*w.width+p.x,...p.motion&&p.motion.end>w.tick?[p.motion.from.z*w.width+p.motion.from.x]:[]]));
-  const centers=w.structures.filter(s=>s.kind==='bed'&&!s.prisoner);
+  const centers=w.structures.filter(s=>isBedKind(s.kind)&&!s.prisoner);
   const center=centers.length?{x:centers.reduce((n,c)=>n+c.x,0)/centers.length,z:centers.reduce((n,c)=>n+c.z,0)/centers.length}:colonists[0]!;
   const candidates:Cell[]=[],edges:Cell[]=[];
   for(let z=0;z<w.height;z++)for(let x=0;x<w.width;x++){

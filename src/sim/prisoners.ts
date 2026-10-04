@@ -1,3 +1,4 @@
+import { isBedKind } from './bed-kinds.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { medicalRestNeeded,treatmentTarget } from './care-rules.ts';
 import { interruptWork } from './interrupted-cargo.ts';
@@ -29,11 +30,11 @@ function planBedInterruptions(world:World,actors:readonly Pawn[]):DropPlan|null 
   return result;
 }
 export function applyPrisonBed(world:World,command:{bedId:number;enabled:boolean}):CommandResult {
-  const bed=world.structures.find(s=>s.kind==='bed'&&s.id===command.bedId);
+  const bed=world.structures.find(s=>isBedKind(s.kind)&&s.id===command.bedId);
   if(!bed||typeof command.enabled!=='boolean')return fail('Lit ou rôle de prison invalide.');
   const map=topology(world),room=map.at(bed.x,bed.z);
   if(command.enabled&&(room?.kind!=='space'||room.touchesMapEdge))return fail('Un lit de prison exige une pièce fermée ne touchant pas le bord de carte.');
-  const beds=room?.kind==='space'&&!room.touchesMapEdge?world.structures.filter(s=>s.kind==='bed'&&map.at(s.x,s.z)===room):[bed];
+  const beds=room?.kind==='space'&&!room.touchesMapEdge?world.structures.filter(s=>isBedKind(s.kind)&&map.at(s.x,s.z)===room):[bed];
   const changed=beds.filter(b=>!!b.prisoner!==command.enabled);if(!changed.length)return {ok:true};
   const actors=affectedByBeds(world,changed),drops=planBedInterruptions(world,actors);if(!drops)return fail('Pas de place pour conserver les cargaisons interrompues par le changement de prison.');
   for(const b of changed)if(command.enabled)b.prisoner=true;else delete b.prisoner;
@@ -53,11 +54,11 @@ export function applyPrisonerMode(world:World,command:{patientId:number;mode:Pri
 /** Joining air spaces propagates the role to every bed, as a physical room
  * property. No new role is ever introduced when no prisoner bed exists. */
 export function reconcilePrisoners(world:World):void {
-  const marked=world.structures.filter(s=>s.kind==='bed'&&s.prisoner);
+  const marked=world.structures.filter(s=>isBedKind(s.kind)&&s.prisoner);
   let captured:RoomTopology|undefined;
   if(marked.length){const map=topology(world);captured=map;const prisons=new Set<number>();
     for(const bed of marked){const room=map.at(bed.x,bed.z);if(room?.kind==='space'&&!room.touchesMapEdge)prisons.add(room.id);}
-    const added=world.structures.filter(s=>{const room=map.at(s.x,s.z);return s.kind==='bed'&&!s.prisoner&&room?.kind==='space'&&prisons.has(room.id);});
+    const added=world.structures.filter(s=>{const room=map.at(s.x,s.z);return isBedKind(s.kind)&&!s.prisoner&&room?.kind==='space'&&prisons.has(room.id);});
     for(const b of added)b.prisoner=true;
     for(const p of affectedByBeds(world,added)){p.bedId=null;interruptWork(world,p);p.needCooldown=0;}
   }
@@ -109,7 +110,7 @@ export function processPrisoner(world:World,p:Pawn,context:NeedContext):boolean 
   }
   if(p.prisoner.escape){p.state='idle';return true;}
   if(p.planCooldown===0&&!p.need&&(medicalRestNeeded(p)||treatmentTarget(p))){
-    const goals=new Set(world.structures.filter(b=>b.kind==='bed'&&b.prisoner&&prisonerAllowedCell(world,p,b,enclosure())).map(b=>b.z*world.width+b.x));
+    const goals=new Set(world.structures.filter(b=>isBedKind(b.kind)&&b.prisoner&&prisonerAllowedCell(world,p,b,enclosure())).map(b=>b.z*world.width+b.x));
     if(goals.size){const reach=context.search(goals);if(!reach)return true;const proposal=patientProposal(world,p,reach);if(proposal)startPatientRest(world,p,proposal);}
   }
   if(processNeeds(world,p,context))return true;

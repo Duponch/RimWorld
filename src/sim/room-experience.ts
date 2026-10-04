@@ -1,3 +1,4 @@
+import { isBedKind } from './bed-kinds.ts';
 import { captureRoomQuality } from './room-quality.ts';
 import { IMPRESSION_LABELS,ROOM_MEMORY_DURATION,ROOM_MEMORY_OFFSETS } from './room-impressiveness.ts';
 import { healthRandom } from './health.ts';
@@ -24,7 +25,7 @@ function applyBedroomMemory(w:World,p:Pawn):void {
   p.roomMemories=p.roomMemories?.filter(m=>m.kind!=='bedroom'&&m.kind!=='barracks');
   if(!p.roomMemories?.length)delete p.roomMemories;
   const task=p.need;if(task?.kind!=='sleep'||task.phase!=='sleep'||task.bedId===null||task.bedId!==p.bedId)return;
-  const bed=w.structures.find(s=>s.id===task.bedId&&s.kind==='bed');
+  const bed=w.structures.find(s=>s.id===task.bedId&&isBedKind(s.kind));
   if(!bed||bed.medical||bed.prisoner||p.x!==bed.x||p.z!==bed.z)return;
   const room=captureRoomQuality(w).room(p);if(room?.beds)remember(w,p,room.beds===1?'bedroom':'barracks',room.stage);
 }

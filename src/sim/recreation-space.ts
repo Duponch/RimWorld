@@ -1,3 +1,4 @@
+import { isBedKind } from './bed-kinds.ts';
 import { deconstructionReserved } from './deconstruction-rules.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { isRoofed, roofIndex } from './roof-rules.ts';
@@ -27,7 +28,7 @@ export function recreationSpace(world: World, resourceTargets?: readonly Cell[],
   for(const job of world.jobs)index.objects.add(job.z*world.width+job.x);
   for(const s of [...world.structures,...world.jobs]) {
     if(!('status' in s)&&((s.kind==='wall'||s.kind==='cooler')||isRoomDoor(s.kind)&&!s.door!.open))index.walls.add(s.z*world.width+s.x);
-    if((s.kind==='wall'||s.kind==='cooler')||isDiningTable(s.kind)||s.kind==='chess-table'||world.schemaVersion>=22&&(!('status' in s)&&(s.kind==='passive-cooler'||s.kind==='bed'||s.kind==='campfire'||s.kind==='stonecutter'||s.kind==='research-bench'||s.kind==='tailor-bench')||'construction' in s&&s.construction==='frame'))for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
+    if((s.kind==='wall'||s.kind==='cooler')||isDiningTable(s.kind)||s.kind==='chess-table'||world.schemaVersion>=22&&(!('status' in s)&&(s.kind==='passive-cooler'||isBedKind(s.kind)||s.kind==='campfire'||s.kind==='stonecutter'||s.kind==='research-bench'||s.kind==='tailor-bench')||'construction' in s&&s.construction==='frame'))for(const c of footprintCells(s))index.solids.add(c.z*world.width+c.x);
   }
   // Match the direct standability check: chunks permit transit, not stopping.
   if(world.schemaVersion>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground')index.solids.add(p.owner.z*world.width+p.owner.x);
@@ -61,7 +62,7 @@ export const adjacentToTable = (table:Structure,cell:Cell):boolean => footprintC
 export const visitablePatient = (world:World,p:Pawn,requireLowJoy=true):boolean => {
   const need=p.need;
   return need?.kind==='sleep'&&!!need.medical&&need.phase==='sleep'&&need.bedId!==null
-    &&p.x===need.target.x&&p.z===need.target.z&&world.structures.some(s=>s.id===need.bedId&&s.kind==='bed'&&s.medical===true&&s.x===p.x&&s.z===p.z)
+    &&p.x===need.target.x&&p.z===need.target.z&&world.structures.some(s=>s.id===need.bedId&&isBedKind(s.kind)&&s.medical===true&&s.x===p.x&&s.z===p.z)
     &&p.state==='resting'&&(!requireLowJoy||p.recreation.level<=35)&&p.hunger>0&&p.rest>=33&&canSocialize(world,p,false);
 };
 export const visitPatient = (world:World,id:number,requireLowJoy=true):Pawn|undefined => world.pawns.find(p=>p.id===id&&visitablePatient(world,p,requireLowJoy));

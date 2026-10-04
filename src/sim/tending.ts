@@ -17,6 +17,7 @@ import { blockedCells,reachableCells,routeToCell,workNeighbours,type Reachabilit
 import { reservedServiceCells } from './service-reservations.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { carrierOf } from './rescue-state.ts';
+import { currentMedicalBed,bedTendOffset } from './hospital-medical-stats.ts';
 import { clearQueuedOrders } from './player-orders.ts';
 import { planCommandDrops,releaseWork } from './work-release.ts';
 import type { NeedContext } from './needs.ts';
@@ -34,7 +35,7 @@ export function tendingReason(world:World,doctor:Pawn,patient:Pawn|undefined,acc
     :!accepted&&(doctor.collapsePending||world.restRules==='legacy'&&doctor.rest===0)?'Ce colon doit récupérer de son épuisement.'
     :!patient||!isCarePatient(patient)?'Patient pris en charge introuvable.'
     :patient===doctor&&(world.schemaVersion<49||!doctor.selfTend)?'Les auto-soins sont désactivés dans Santé.'
-    :patient!==doctor&&!lyingPatient(patient)||carrierOf(world,patient.id)?'Le patient doit être installé dans un lit.'
+    :patient!==doctor&&(!lyingPatient(patient)||!currentMedicalBed(world,patient))||carrierOf(world,patient.id)?'Le patient doit être installé dans un lit.'
     :!treatmentTarget(patient)?'Aucune blessure ou maladie autorisée ne nécessite actuellement un traitement.'
     :patientClaimed(world,patient.id,doctor)?'Ce patient est déjà réservé par un médecin.':undefined);
 }
@@ -95,16 +96,17 @@ export function processTending(world:World,doctor:Pawn,context:NeedContext,light
   // XP is awarded at a completed treatment before its quality stat is queried.
   learnSkill(doctor.skills.medicine,tendXp(item),doctor);
   const quality=medicalTendQuality(doctor);
+  const bedOffset=bedTendOffset(currentMedicalBed(world,patient));
   let roomFactor:number|undefined;
   for(const target of batch) {
     if(target.injuryId!==undefined) {
-      tendInjury(patient.health!,target.injuryId,tendQuality(quality,healthRandom(world),doctor===patient,item));
+      tendInjury(patient.health!,target.injuryId,tendQuality(quality,healthRandom(world),doctor===patient,item,bedOffset));
       if(patient.health!.injuries.some(i=>i.id===target.injuryId&&i.infection)) {
         roomFactor??=infectionRoomFactor(world,patient);
         captureInfectionTendRoom(patient.health!,target.injuryId,roomFactor);
       }
-    } else if(target.infectionId!==undefined)tendInfection(patient.health!,target.infectionId,tendQuality(quality,healthRandom(world),doctor===patient,item));
-    else if(target.flu)tendFlu(patient.health!,tendQuality(quality,healthRandom(world),doctor===patient,item));
+    } else if(target.infectionId!==undefined)tendInfection(patient.health!,target.infectionId,tendQuality(quality,healthRandom(world),doctor===patient,item,bedOffset));
+    else if(target.flu)tendFlu(patient.health!,tendQuality(quality,healthRandom(world),doctor===patient,item,bedOffset));
     else tendMissingPart(patient.health!,target.part);
   }
   consumeMedicine(world,task);

@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { isBedKind } from './bed-kinds.ts';
 import { lyingPatient } from './care-access.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
@@ -52,7 +53,7 @@ export function validateSurgeries(w:World,version:number):string[] {
         ||anesthetic&&(!active||anesthetic.bornAt<p.surgeryRequest.requestedAt))errors.push('Invalid surgical patient request.');
     }
     const t=p.surgery;if(!t)continue;
-    const patient=byId.get(t.patientId),bed=w.structures.find(b=>b.id===t.bedId&&b.kind==='bed');
+    const patient=byId.get(t.patientId),bed=w.structures.find(b=>b.id===t.bedId&&isBedKind(b.kind));
     if(!isColonist(p)||p.prisoner||p.visitor||p.podRescue||p.id===offMap||medicalWorkRefusal(p)||p.priorities.doctor===0||p.orders.active!==null
       ||p.draft||p.mental?.crisis||p.melee?.order||p.shooting?.order)errors.push('Invalid surgical doctor.');
     if(!patient||patient===p||patient.id===offMap||!patient.surgeryRequest||patient.surgeryRequest.part!==t.part

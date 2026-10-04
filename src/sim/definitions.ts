@@ -1,3 +1,4 @@
+import { isBedKind } from './bed-kinds.ts';
 import type { Cell, Footprint, JobKind, Orientation, StructureKind } from './types.ts';
 
 /** Immutable historical catalogue. Typed V30 construction recipes live in
@@ -11,8 +12,8 @@ export const MATERIAL_DEFINITIONS = Object.freeze({
   wood: Object.freeze({ id: 'wood', label: 'Bois', unit: 'unit', stackLimit: MAX_STACK }),
   food: Object.freeze({ id: 'food', label: 'Nourriture', unit: 'portion', stackLimit: MAX_STACK, chairSearchRadius: 32, tableDesired: true }),
 });
-export const JOB_DURATION: Readonly<Record<JobKind, number>> = Object.freeze({ 'fix-breakdown':100, fence:7,'fence-gate':50,'pen-marker':60, 'art-bench':250,'small-sculpture':0,'large-sculpture':0,'machining-table':300,'fabrication-bench':500,'hi-tech-research-bench':500,'multi-analyzer':1000, grave:80, 'lay-floor':1, 'remove-floor':1, heater:100, 'wind-turbine':330, flick:15, 'power-conduit':3.5, 'power-switch':20, battery:80, 'solar-generator':250, 'fueled-stove':200, 'electric-stove':200, 'butcher-table':200, 'butcher-spot':0, cooler:160, 'research-bench':280,'tailor-bench':200,'electric-tailor-bench':250,'crafting-spot':0, repair:80, 'wood-generator':250, 'standing-lamp':30, 'sun-lamp':33, 'passive-cooler':20, 'build-roof':4, 'remove-roof':4, door:60, autodoor:110, stonecutter:200, mine:10, uninstall:12, install:1, deconstruct:1, chop:100, harvest:60, cut:60, sow:17, horseshoes:7, 'chess-table':800, campfire:20, wall:70, bed:120, table:53,'table-square':150,'table-long':300,stool:32,'dining-chair':800,armchair:1400,'end-table':100,dresser:200,'flower-pot':25 });
-export const JOB_WOOD_COST: Readonly<Record<JobKind, number>> = Object.freeze({ 'fix-breakdown':0, fence:1,'fence-gate':25,'pen-marker':30, 'art-bench':0,'small-sculpture':0,'large-sculpture':0,'machining-table':0,'fabrication-bench':0,'hi-tech-research-bench':0,'multi-analyzer':0, grave:0, 'lay-floor':0, 'remove-floor':0, heater:0, 'wind-turbine':0, flick:0, 'power-conduit':0, 'power-switch':0, battery:0, 'solar-generator':0, 'fueled-stove':0, 'electric-stove':0, 'butcher-table':95, 'butcher-spot':0, cooler:0, 'research-bench':0,'tailor-bench':0,'electric-tailor-bench':0,'crafting-spot':0, repair:0, 'wood-generator':0, 'standing-lamp':0, 'sun-lamp':0, 'passive-cooler':50, 'build-roof':0, 'remove-roof':0, door:25, autodoor:0, stonecutter:0, mine:0, uninstall:0, install:0, deconstruct:0, chop:0, harvest:0, cut:0, sow:0, horseshoes:10, 'chess-table':70, campfire:20, wall:5, bed:8, table:28,'table-square':50,'table-long':95,stool:25,'dining-chair':45,armchair:0,'end-table':30,dresser:50,'flower-pot':20 });
+export const JOB_DURATION: Readonly<Record<JobKind, number>> = Object.freeze({ 'fix-breakdown':100, fence:7,'fence-gate':50,'pen-marker':60, 'art-bench':250,'small-sculpture':0,'large-sculpture':0,'machining-table':300,'fabrication-bench':500,'hi-tech-research-bench':500,'multi-analyzer':1000, grave:80, 'lay-floor':1, 'remove-floor':1, heater:100, 'wind-turbine':330, flick:15, 'power-conduit':3.5, 'power-switch':20, battery:80, 'solar-generator':250, 'fueled-stove':200, 'electric-stove':200, 'butcher-table':200, 'butcher-spot':0, cooler:160, 'research-bench':280,'tailor-bench':200,'electric-tailor-bench':250,'crafting-spot':0, repair:80, 'wood-generator':250, 'standing-lamp':30, 'sun-lamp':33, 'passive-cooler':20, 'build-roof':4, 'remove-roof':4, door:60, autodoor:110, stonecutter:200, mine:10, uninstall:12, install:1, deconstruct:1, chop:100, harvest:60, cut:60, sow:17, horseshoes:7, 'chess-table':800, campfire:20, wall:70, bed:120, 'hospital-bed':280, table:53,'table-square':150,'table-long':300,stool:32,'dining-chair':800,armchair:1400,'end-table':100,dresser:200,'flower-pot':25 });
+export const JOB_WOOD_COST: Readonly<Record<JobKind, number>> = Object.freeze({ 'fix-breakdown':0, fence:1,'fence-gate':25,'pen-marker':30, 'art-bench':0,'small-sculpture':0,'large-sculpture':0,'machining-table':0,'fabrication-bench':0,'hi-tech-research-bench':0,'multi-analyzer':0, grave:0, 'lay-floor':0, 'remove-floor':0, heater:0, 'wind-turbine':0, flick:0, 'power-conduit':0, 'power-switch':0, battery:0, 'solar-generator':0, 'fueled-stove':0, 'electric-stove':0, 'butcher-table':95, 'butcher-spot':0, cooler:0, 'research-bench':0,'tailor-bench':0,'electric-tailor-bench':0,'crafting-spot':0, repair:0, 'wood-generator':0, 'standing-lamp':0, 'sun-lamp':0, 'passive-cooler':50, 'build-roof':0, 'remove-roof':0, door:25, autodoor:0, stonecutter:0, mine:0, uninstall:0, install:0, deconstruct:0, chop:0, harvest:0, cut:0, sow:0, horseshoes:10, 'chess-table':70, campfire:20, wall:5, bed:8, 'hospital-bed':0, table:28,'table-square':50,'table-long':95,stool:25,'dining-chair':45,armchair:0,'end-table':30,dresser:50,'flower-pot':20 });
 export const STRUCTURE_DEFINITIONS = Object.freeze({
   fence:Object.freeze({id:'fence',width:1,depth:1,blocksMovement:false}),
   'fence-gate':Object.freeze({id:'fence-gate',width:1,depth:1,blocksMovement:false}),
@@ -60,6 +61,7 @@ export const STRUCTURE_DEFINITIONS = Object.freeze({
   'end-table':Object.freeze({id:'end-table',width:1,depth:1,blocksMovement:false}),
   dresser:Object.freeze({id:'dresser',width:2,depth:1,blocksMovement:false}),
   'flower-pot':Object.freeze({id:'flower-pot',width:1,depth:1,blocksMovement:false}),
+  'hospital-bed':Object.freeze({id:'hospital-bed',width:1,depth:2,blocksMovement:false}),
   bed: Object.freeze({ id: 'bed', width: 1, depth: 2, blocksMovement: false }),
 });
 type FootprintEntity = Cell & { kind: JobKind | StructureKind; deconstruction?: { kind: StructureKind }; flick?:{kind:StructureKind}; fixBreakdown?:{kind:StructureKind}; furniture?: { kind: StructureKind }; orientation?: Orientation; footprint?: Footprint };
@@ -96,7 +98,7 @@ export function footprintContains(entity: FootprintEntity, cell: Cell): boolean 
     const d=FOOTPRINT_DIRECTIONS[((entity.orientation??0)+1)%4]!;
     return dx===d[0]&&dz===d[1]||dx===-d[0]&&dz===-d[1];
   }
-  if((kind!=='bed'&&kind!=='table'&&kind!=='battery'&&kind!=='grave')||entity.footprint==='legacy-single')return false;
+  if((!isBedKind(kind)&&kind!=='table'&&kind!=='battery'&&kind!=='grave')||entity.footprint==='legacy-single')return false;
   const direction=FOOTPRINT_DIRECTIONS[entity.orientation??0]!;
   return dx===direction[0]&&dz===direction[1];
 }
@@ -122,7 +124,7 @@ export function footprintCells(entity: FootprintEntity): Cell[] {
     const d=FOOTPRINT_DIRECTIONS[((entity.orientation??0)+1)%4]!;
     return [...cells,{x:entity.x-d[0],z:entity.z-d[1]},{x:entity.x+d[0],z:entity.z+d[1]}];
   }
-  if ((kind !== 'bed' && kind !== 'table' && kind !== 'battery' && kind !== 'grave') || entity.footprint === 'legacy-single') return cells;
+  if ((!isBedKind(kind) && kind !== 'table' && kind !== 'battery' && kind !== 'grave') || entity.footprint === 'legacy-single') return cells;
   const direction = FOOTPRINT_DIRECTIONS[entity.orientation ?? 0]!;
   cells.push({ x: entity.x + direction[0]!, z: entity.z + direction[1]! });
   return cells;

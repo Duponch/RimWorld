@@ -6,6 +6,7 @@ import { medicalWorkRefusal } from './health-rules.ts';
 import { lyingPatient,patientClaimed,bedsideAccess } from './care-access.ts';
 import { rescueBedAvailable } from './medical-beds.ts';
 import { carrierOf } from './rescue-state.ts';
+import { currentMedicalBed,bedSurgeryFactor } from './hospital-medical-stats.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { medicineTaskValid,reserveMedicalMedicine,pickupMedicalMedicine,consumeMedicine } from './medicine-logistics.ts';
@@ -34,7 +35,7 @@ export function surgeryReason(world:World,doctor:Pawn,patient:Pawn|undefined,acc
   if(task&&task.part!==part)return 'Le membre demandé a changé.';
   if(task?.consumedMedicine&&!medicineAllowed(patient,task.consumedMedicine))return 'Le plafond médical du patient interdit ce médicament.';
   if(!lyingPatient(patient)||carrierOf(world,patient.id))return 'Le patient doit être installé dans un lit.';
-  const bed=world.structures.find(s=>s.id===(patient.need?.kind==='sleep'?patient.need.bedId:null));
+  const bed=currentMedicalBed(world,patient,false);
   if(!bed||!rescueBedAvailable(world,bed,patient,doctor.id)||patient.x!==bed.x||patient.z!==bed.z||task&&task.bedId!==bed.id)return 'Le lit du patient n’est plus disponible.';
   if(patientClaimed(world,patient.id,doctor))return 'Le patient est déjà pris en charge.';
   if(task&&(Math.abs(task.spot.x-bed.x)+Math.abs(task.spot.z-bed.z)!==1||!canStandAt(world,task.spot)||reservedServiceCells(world,doctor.id).has(task.spot.z*world.width+task.spot.x)))return 'Le chevet n’est plus disponible.';
@@ -102,7 +103,7 @@ export function processSurgery(world:World,doctor:Pawn,context:NeedContext,docto
   learnSkill(doctor.skills.medicine,surgeryBaseXp(task.workCore),doctor);
   const bed=world.structures.find(s=>s.id===task.bedId)!;
   const capture=captureCleanliness(world),room=capture.room(bed);
-  const chance=surgerySuccessChance({doctor,medicine:task.consumedMedicine!,bedQuality:bed.quality,patientGlow:patientGlow(bed),roomCleanliness:room?.cleanliness??null,outdoors:surgeryOutdoors(world,bed,capture)});
+  const chance=surgerySuccessChance({doctor,medicine:task.consumedMedicine!,bedQuality:bed.quality,bedSurgeryFactor:bedSurgeryFactor(bed),patientGlow:patientGlow(bed),roomCleanliness:room?.cleanliness??null,outdoors:surgeryOutdoors(world,bed,capture)});
   const outcome=resolveSurgeryOutcome(patient.health!,task.part,chance,()=>healthRandom(world));
   patient.health=outcome.record;
   if(outcome.kind==='success')amputateSurgicalLimb(patient.health,task.part);

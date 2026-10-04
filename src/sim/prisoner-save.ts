@@ -1,3 +1,4 @@
+import { isBedKind } from './bed-kinds.ts';
 import { validApparelShape,validateApparel } from './apparel-save.ts';
 import { isColonist } from './affiliation.ts';
 import { patientClaimed } from './care-access.ts';
@@ -74,7 +75,7 @@ export function validatePrisoners(w:World,version:number,ids:Set<number>):string
     }
     if(p.recruitment&&(!isColonist(p)||p.prisoner||p.raid||p.recruitment.raidGroup!==undefined&&(!w.raids||p.recruitment.raidGroup>w.raids.serial)))errors.push('Invalid recruitment provenance.');
     const beds=[p.bedId,...p.need?.kind==='sleep'?[p.need.bedId]:[]];
-    for(const bedId of beds)if(bedId!==null){const bed=[...w.structures,...w.packed.map(p=>p.building)].find(b=>b.id===bedId&&b.kind==='bed');if(bed&&!!bed.prisoner!==!!p.prisoner)errors.push('Bed role disagrees with its occupant.');}
+    for(const bedId of beds)if(bedId!==null){const bed=[...w.structures,...w.packed.map(p=>p.building)].find(b=>b.id===bedId&&isBedKind(b.kind)&&(version>=187||b.kind==='bed'));if(bed&&!!bed.prisoner!==!!p.prisoner)errors.push('Bed role disagrees with its occupant.');}
     const t=p.ward;if(!t)continue;const patient=w.pawns.find(q=>q.id===t.patientId);
     if(!isColonist(p)||p.prisoner||p.priorities.warden===0||medicalWorkRefusal(p)||p.mental?.crisis||p.draft||p.interruptedCargo||p.orders.active!==null||p.jobId!==null||p.need||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.recreation.task||p.equipmentTask||p.research||p.hunting)errors.push('Warden task conflicts with actor activity.');
     if(!patient||patient===p||patient.state==='dead'||patientClaimed(w,t.patientId,p)||w.pawns.some(a=>a.rescue?.patientId===t.patientId)

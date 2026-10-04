@@ -40,11 +40,13 @@ const BED_QUALITY:Readonly<Record<WeaponQuality,number>>={awful:.9,poor:.95,norm
 export interface SurgeryChanceInput {
   doctor:Pawn;medicine:MedicineItem;bedQuality?:WeaponQuality;
   patientGlow:number;roomCleanliness:number|null;outdoors:boolean;
+  /** Definition of the physically used bed, before quality and environment. */
+  bedSurgeryFactor?:number;
 }
 /** Caller supplies the physically used bed and current captures. No topology
  * search, ownership mutation, chance draw or XP in this statistic. */
 export function surgerySuccessChance(input:SurgeryChanceInput):number {
-  const bed=BED_QUALITY[input.bedQuality??'normal']*curve(input.patientGlow,[[0,.75],[.5,1]])*(input.outdoors?.85:1);
+  const bed=(input.bedSurgeryFactor??1)*BED_QUALITY[input.bedQuality??'normal']*curve(input.patientGlow,[[0,.75],[.5,1]])*(input.outdoors?.85:1);
   const room=input.roomCleanliness===null?.6:curve(input.roomCleanliness,[[-5,.6],[0,1],[1,1.1],[5,1.15]]);
   const medicine=curve(MEDICINES[input.medicine].potency,[[0,.7],[1,1],[2,1.3]]);
   return Math.max(0,Math.min(.98,medicalSurgeryDoctorChance(input.doctor)*bed*room*medicine*1.2));

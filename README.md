@@ -1,6 +1,6 @@
 # Lisière
 
-**V204 — compétence Minage, schéma 186.** La dernière des douze compétences rejoint les travaux physiques et le rendement des minerais ; la 50e scène préparée **« Minage et compétences · 3 colons »** permet de les comparer ([contrat](docs/development/mining-skills-v204.md), [recherche Core](docs/research/mining-skills-core-v204.md), [preuve bornée](docs/history/validation-mining-skills-v204.md)).
+**V205 — lit d’hôpital, schéma 187.** Un couchage spécialisé relie recherche, construction et soins depuis le lit réellement occupé. La 51e scène préparée **« Lit d’hôpital · recherche et soins »** permet de réaliser cette chaîne avec trois colons. [Contrat](docs/development/hospital-bed-v205.md), [recherche Core et adaptation](docs/research/hospital-bed-core-v205.md), [preuve V205](docs/history/validation-hospital-bed-v205.md). Les validations et performances générales ne sont pas déduites de cette préparation.
 
 **V203 — ventes de textiles, schéma 185.** Tissu et laine peuvent être chargés au contact, vendus contre la monnaie réelle du comptoir, puis financer les fournitures. Les invendus rentrent et sont déposés physiquement. La 49e scène publique **« Ventes de textiles · 3 colons »** prépare ce circuit sans argent initial. [Contrat](docs/development/caravan-sales-v203.md), [règles Core et adaptations](docs/research/caravan-sales-core-v203.md), [preuve ciblée](docs/history/validation-commercial-sales-v203.md).
 

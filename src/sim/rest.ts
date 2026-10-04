@@ -1,7 +1,9 @@
+import { isBedKind } from './bed-kinds.ts';
 import { fallingAsleepBlocked } from './disturbance-state.ts';
 import { carrierOf } from './rescue-state.ts';
 import { TICKS_PER_DAY, type Pawn, type World } from './types.ts';
 import { BUILDING_MATERIALS } from './building-materials.ts';
+import { bedRestEffectiveness } from './furniture-stats.ts';
 
 export const REST_PER_TICK = 95 / TICKS_PER_DAY;
 export const LEGACY_REST_PER_TICK = 0.008;
@@ -30,8 +32,8 @@ export function updateRest(world: World, pawn: Pawn): void {
     if(pawn.moveCooldown>0){delete pawn.medicalSleep;return;}
     if(pawn.medicalSleep&&pawn.rest>=100)delete pawn.medicalSleep;
     else if(!pawn.medicalSleep&&pawn.rest<75&&pawn.hunger>0&&!fallingAsleepBlocked(world,pawn))pawn.medicalSleep=true;
-    const need=pawn.need,bed=pawn.moveCooldown===0&&need?.kind==='sleep'&&need.phase==='sleep'&&need.bedId!==null?world.structures.find(s=>s.id===need.bedId&&s.kind==='bed'):undefined;
-    if(pawn.medicalSleep)pawn.rest=Math.min(100,pawn.rest+(bed?BED_REST_PER_TICK*(bed.material?BUILDING_MATERIALS[bed.material].restFactor:1):GROUND_REST_PER_TICK));
+    const need=pawn.need,bed=pawn.moveCooldown===0&&need?.kind==='sleep'&&need.phase==='sleep'&&need.bedId!==null?world.structures.find(s=>s.id===need.bedId&&isBedKind(s.kind)&&(s.kind!=='hospital-bed'||s.x===pawn.x&&s.z===pawn.z&&need.target.x===s.x&&need.target.z===s.z)):undefined;
+    if(pawn.medicalSleep)pawn.rest=Math.min(100,pawn.rest+(bed?BED_REST_PER_TICK*(bed.kind==='hospital-bed'?bedRestEffectiveness(bed):(bed.material?BUILDING_MATERIALS[bed.material].restFactor:1)):GROUND_REST_PER_TICK));
     else pawn.rest=Math.max(0,pawn.rest-(world.restRules==='legacy'?LEGACY_REST_PER_TICK:REST_PER_TICK*restFallFactor(pawn.rest)));
     return;
   }
