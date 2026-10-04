@@ -28,7 +28,7 @@ const strings = (value: unknown): value is string[] => Array.isArray(value) && v
 export function parseTestColonies(value: unknown): TestColony[] {
   if (!object(value) || (value.version !== 1 && value.version !== 2)
     || (value.version === 1 && value.release !== 'v98')
-    || !Array.isArray(value.saves) || !value.saves.length || value.saves.length > 48) throw Error('Catalogue de colonies de test invalide.');
+    || !Array.isArray(value.saves) || !value.saves.length || value.saves.length > 64) throw Error('Catalogue de colonies de test invalide.');
   const ids = new Set<string>(), paths = new Set<string>();
   const saves = value.saves.map(save => value.version === 1 && object(save) ? {...save,release:'v98'} : save);
   for (const save of saves) {

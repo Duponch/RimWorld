@@ -1310,6 +1310,37 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32 au schéma 184, createWorld(202), horloge explicitement placée à 90059 sans campagne préalable. Trois colons sains, besoins hauts, travaux et habillement automatique désactivés. Deux pièces en bois réellement couvertes, portes fermées, climatiseur cible −5 °C, trois générateurs avec chacun 75 bois préparés, douze conduits et batterie initialement chargée de 400 W·j. Lampe horticole, lampe ordinaire, trois riz à 30 %, dix riz alimentaires, six repas de survie, quarante bois et trente tissus au sol. Recherches Batteries, Climatisation et Vêtements complexes explicitement achevées avant préparation ; aucun travail de recherche revendiqué. Site tempéré plat, calendrier de flore vide initialisé et profil Atterrissage/Cassandra partiel avec ses agendas distincts. Feu de camp, refroidisseur passif et cuisinière au bois alimentés, établi manuel, bureau simple et couture électrique existants sans facture. Quarante vrais ticks stepWorld produisent les démarrages, la combustion, le froid et le régime de croissance antérieurs au contrôle : retour au tick 90099. Agenda mondial adopté prospectivement, prochain contrôle 90100, checks/opportunities/flares nuls ; seul son PRNG futur est préparé à 2472303839, permettant une sélection solaire puis une durée Core de 9000. Aucune éruption active, extinction solaire, issue de travail ou reprise déjà préparée. Cette scène ne prouve ni fréquence naturelle, campagne longue ni charge générale 250×250.",
       "sha256": "6d0598e0a5ce131ab4a4c8404b49ed485e45dfbfc267473f3963e70e20587b55"
+    },
+    {
+      "id": "ventes-textiles-v203",
+      "release": "v203",
+      "label": "Ventes de textiles · 3 colons",
+      "description": "Embarquer tissu et laine sans argent, les vendre contre la monnaie réelle du comptoir, acheter des fournitures et ramener les invendus.",
+      "filename": "ventes-textiles.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 3000,
+      "focus": [
+        "vente de textiles",
+        "chargement physique",
+        "fonds du comptoir",
+        "argent réel",
+        "charge",
+        "invendus",
+        "achats",
+        "reprise"
+      ],
+      "steps": [
+        "Charger en pause, ouvrir Monde · commerce. Choisir Ada, trois rations, zéro argent, 75 tissus et 60 laines de muffalo. Les marchandises sont encore au sol.",
+        "Reprendre : attendre les prises au contact et la sortie réelle. Sauvegarder pendant le chargement puis reprendre ; aucun stock du foyer ne peut être vendu à distance.",
+        "Au comptoir, vendre 60 tissus et 40 laines. Vérifier la caisse du poste et le devis. Puis acheter un médicament et un composant avec l’argent réellement reçu.",
+        "Demander le retour et observer Ada rentrer, puis déposer ses invendus, l’argent restant, les rations et les fournitures. Sauvegarder à chaque phase ; aucune monnaie ou marchandise ne doit se dupliquer."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32, graine42/tick3000, schéma185. Trois adultes libres sains, tâches ordinaires désactivées et quatre rations réelles au sol. Ada en (4,12), faim35 ; tissu75 en (8,12), laine60 en (9,12), aucun argent initial. Les textiles sont préparés pour isoler le circuit commercial, leur production naturelle n’est pas prouvée par cette scène. Aucun chargement, voyage, comptoir, vente, achat ou retour accordé ; incidents naturels exclus. Durées de voyage et paniers successifs adaptés, pas planète ni groupe ni campagne naturelle ni charge 250².",
+      "sha256": "a19b4c2c11210d496ff051ca7d6a8816c1ce8229ac0d48dd6976944ecc6d1090"
     }
   ]
 }

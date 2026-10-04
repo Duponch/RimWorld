@@ -1,4 +1,4 @@
-import { applyCommercialBuy } from './commercial-post.ts';
+import { applyCommercialBuy,applyCommercialSell } from './commercial-post.ts';
 import { applyCommercialPreparation,processCommercialOnMap,reconcileCommercialOnMap } from './commercial-loading.ts';
 import { applyCommercialReturn,advanceCommercialTrip,departCommercial,commercialOnMapId,commercialPawn } from './commercial-trip.ts';
 import { reconcileDomesticWork } from './domestic-reconcile.ts';
@@ -336,6 +336,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
   if(command.type==='commercial-start'||command.type==='commercial-cancel'||command.type==='commercial-unload')return applyCommercialPreparation(world,command);
   if(command.type==='commercial-buy')return applyCommercialBuy(world,command);
+  if(command.type==='commercial-sell')return applyCommercialSell(world,command);
   if(command.type==='commercial-return')return applyCommercialReturn(world);
   if(command.type==='scout-start'||command.type==='scout-cancel'||command.type==='scout-unload')return applyScoutCommand(world,command);
   const actors='pawnIds' in command&&Array.isArray(command.pawnIds)?command.pawnIds:'pawnId' in command&&command.pawnId!==null?[command.pawnId]:[];

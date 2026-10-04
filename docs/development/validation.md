@@ -1,4 +1,6 @@
-# Validation courante — menace animale locale V201
+# Validation courante — ventes de textiles V203
+
+**V203 — ventes au comptoir, schéma 185.** [Contrat](caravan-sales-v203.md), [recherche Core et adaptations](../research/caravan-sales-core-v203.md), [preuve ciblée](../history/validation-commercial-sales-v203.md). Les contrôles et mesures sont détaillés dans la preuve ; ils ne valent ni régression exhaustive, ni campagne économique naturelle, ni gain CPU/GPU général.
 
 **V202 — éruption solaire, schéma 184.** Les contrôles ciblés, le parcours préparé et les mesures successives sont détaillés dans [la preuve V202](../history/validation-solar-flare-v202.md). [Contrat](solar-flare-v202.md), [arbitre Core et adaptations](../research/solar-flare-core-v202.md). Ce lot ne revendique ni régression exhaustive, ni campagne naturelle longue, ni gain CPU/GPU général.
 

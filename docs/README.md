@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V203 — débouché textile, schéma 185.** [Contrat](development/caravan-sales-v203.md), [recherche Core](research/caravan-sales-core-v203.md), [preuve ciblée](history/validation-commercial-sales-v203.md), [guide](gameplay/player-guide.md#vendre-des-textiles-au-comptoir--v203). Chargement, vente, caisse du poste et retour des invendus réutilisent les propriétaires physiques V193. La 49e scène publique est préparée ; planète, groupes et commerce général restent ouverts.
+
 **V202 — éruption solaire, schéma 184.** [Contrat électrique](development/solar-flare-v202.md), [référence Core](research/solar-flare-core-v202.md), [preuve bornée](history/validation-solar-flare-v202.md), [réserves et secours](gameplay/player-guide.md#traverser-une-éruption-solaire--v202). La 48e scène publique prépare une occasion mondiale future ; début, délestage et reprise restent physiques.
 
 **V201 livré — animal sauvage en rage, schéma 183.** [Contrat](development/manhunter-v201.md), [recherche Core et adaptations](research/manhunter-core-v201.md), [preuve bornée](history/validation-manhunter-v201.md), [fuite, abri et défense](gameplay/player-guide.md#faire-face-à-un-animal-en-rage--v201). La 47e scène **« Animal en rage · abri et défense »** prépare le vrai démarrage après reprise. ThreatSmall, riposte et prédation restent distincts ; aucune Scaria, meute ou clôture de G3/G4.

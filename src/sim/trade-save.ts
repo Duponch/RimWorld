@@ -23,7 +23,7 @@ export function validateTrade(w:World,version:number):string[] {
   for(const pile of w.piles)if(pile.owner.type==='inventory'){
     const p=w.pawns.find(p=>p.id===('pawnId' in pile.owner?pile.owner.pawnId:-1));
     const scoutRation=version>=171&&!!p&&isColonist(p)&&!p.prisoner&&pile.item==='survival-meal'&&pile.quantity<=3&&pile.foodPoison===undefined;
-    const commercialInventory=version>=180&&!!p&&isColonist(p)&&!p.prisoner&&['silver','medicine','component'].includes(pile.item);
+    const commercialInventory=version>=180&&!!p&&isColonist(p)&&!p.prisoner&&(['silver','medicine','component'].includes(pile.item)||version>=185&&['cloth','muffalo-wool'].includes(pile.item));
     if(!p?.visitor&&!scoutRation&&!commercialInventory||pile.kind==='corpse'||pile.kind==='unfinished')errors.push('Invalid inventory ownership.');
   }
   const ledger:unknown=w.trade;if(ledger===undefined)return errors;

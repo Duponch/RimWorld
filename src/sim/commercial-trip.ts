@@ -1,6 +1,7 @@
 import { scoutActiveTask,scoutPreparationReason,scoutUnstable } from './caravan-trip.ts';
 import { findCivilianReturnEntry } from './civilian-return.ts';
 import { commercialMass } from './commercial-mass.ts';
+import { commercialCargoIntact,emptyCommercialTextiles,isCommercialTextile,type CommercialBuyLine } from './commercial-state.ts';
 import { ensureCommercialPost } from './commercial-post.ts';
 import { COMMERCIAL_DECISION_TICKS,COMMERCIAL_LEG_TICKS,type CommercialTrip } from './commercial-state.ts';
 import { foodAllowed } from './food-policy.ts';
@@ -34,12 +35,20 @@ export function commercialPreparationReason(w:World,p:Pawn):string|null {
   if(p.age&&biologicalYears(p.age)<18)return 'Le voyageur doit être adulte.';
   return negotiatorRefusal(p)??null;
 }
-export function previewCommercialLoading(w:World,p:Pawn,foodQuantity:number,silver:number):ReturnType<typeof commercialMass> {
-  if((foodQuantity!==2&&foodQuantity!==3)||!Number.isSafeInteger(silver)||silver<=0)return null;
+export function previewCommercialLoading(w:World,p:Pawn,foodQuantity:number,silver:number,cargo?:CommercialBuyLine[]):ReturnType<typeof commercialMass> {
+  if((foodQuantity!==2&&foodQuantity!==3)||!Number.isSafeInteger(silver)||silver<0||silver===0&&!cargo?.length
+    ||cargo!==undefined&&(!Array.isArray(cargo)||!cargo.length||cargo.length>31||new Set(cargo.map(l=>l?.pileId)).size!==cargo.length))return null;
   const owner={type:'inventory' as const,pawnId:p.id};
   const existing=w.piles.filter(i=>i.owner.type==='equipment'||i.owner.type==='apparel');
+  const freight=[];
+  for(const line of cargo??[]){
+    if(!line||Object.keys(line).some(k=>!['pileId','quantity'].includes(k))||!Number.isSafeInteger(line.pileId)||!Number.isSafeInteger(line.quantity)||line.quantity<1)return null;
+    const source=w.piles.find(i=>i.id===line.pileId);
+    if(!source||!isCommercialTextile(source.item)||source.owner.type!=='ground'||line.quantity>source.quantity)return null;
+    freight.push({...source,quantity:line.quantity,owner});
+  }
   return commercialMass(w,p,[...existing,{id:-1,kind:'food',item:'survival-meal',quantity:foodQuantity,owner},
-    {id:-2,kind:'silver',item:'silver',quantity:silver,owner}]);
+    ...silver?[{id:-2,kind:'silver' as const,item:'silver' as const,quantity:silver,owner}]:[],...freight]);
 }
 export function commercialDepartureReason(w:World,p:Pawn):string|null {
   const s=w.commercialTrip;
@@ -49,7 +58,8 @@ export function commercialDepartureReason(w:World,p:Pawn):string|null {
   const owned=w.piles.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id),inventory=owned.filter(i=>i.owner.type==='inventory');
   const food=inventory.find(i=>i.id===s.foodPileId);
   if(!food||food.item!=='survival-meal'||food.quantity!==s.foodQuantity||food.foodPoison
-    ||inventory.some(i=>i!==food&&i.item!=='silver')||inventory.filter(i=>i.item==='silver').reduce((n,i)=>n+i.quantity,0)!==s.silverQuantity)
+    ||inventory.some(i=>i!==food&&i.item!=='silver'&&!isCommercialTextile(i.item))||inventory.filter(i=>i.item==='silver').reduce((n,i)=>n+i.quantity,0)!==s.silverQuantity
+    ||!commercialCargoIntact(inventory,p.id,s.cargo))
     return 'Le manifeste chargé a changé.';
   if(owned.some(i=>i.owner.type==='pawn')||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'Une cargaison incompatible empêche le départ.';
   if(w.pawns.some(q=>q!==p&&(q.rescue?.patientId===p.id||q.tend?.patientId===p.id||q.feed?.patientId===p.id||q.ward?.patientId===p.id||q.surgery?.patientId===p.id
@@ -65,7 +75,8 @@ export function departCommercial(w:World,p:Pawn):boolean {
   p.bedId=null;p.path=[];p.state='idle';p.planCooldown=0;p.moveCooldown=0;
   delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;
   w.commercialTrip={phase:'outbound',pawn:p,items,foodPileId:s.foodPileId,foodQuantity:s.foodQuantity,silverQuantity:s.silverQuantity,
-    startedAt:s.startedAt,departedAt:w.tick,arrivesAt:w.tick+COMMERCIAL_LEG_TICKS,entry,consumed:0,silverPaid:0,bought:{medicine:0,component:0}};
+    startedAt:s.startedAt,departedAt:w.tick,arrivesAt:w.tick+COMMERCIAL_LEG_TICKS,entry,consumed:0,silverPaid:0,bought:{medicine:0,component:0},
+    ...s.cargo?{cargo:{...s.cargo},sold:emptyCommercialTextiles(),silverEarned:0}:{}};
   w.pawns=w.pawns.filter(q=>q!==p);w.piles=w.piles.filter(i=>!ids.has(i.id));refreshStock(w);
   logCommercial(w,`${p.name} quitte la carte pour le comptoir civil.`);return true;
 }

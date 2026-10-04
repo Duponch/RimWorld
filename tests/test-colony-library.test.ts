@@ -19,8 +19,8 @@ test('test catalogue rejects invalid paths, duplicate identities and inconsisten
   expect(()=>parseTestColonies({...manifest,saves:[save,{...save,id:'other'}]})).toThrow('invalide');
   expect(()=>parseTestColonies({...manifest,saves:[]})).toThrow('invalide');
   const many=(count:number)=>Array.from({length:count},(_,i)=>({...save,id:`colony-${i}`,filename:`colony-${i}.json`}));
-  expect(parseTestColonies({...manifest,saves:many(48)})).toHaveLength(48);
-  expect(()=>parseTestColonies({...manifest,saves:many(49)})).toThrow('invalide');
+  expect(parseTestColonies({...manifest,saves:many(64)})).toHaveLength(64);
+  expect(()=>parseTestColonies({...manifest,saves:many(65)})).toThrow('invalide');
   expect(()=>testColonyUrl({...save,release:'../v103'})).toThrow('inconnu');
   expect(()=>testColonyUrl({...save,filename:'../salles.json'})).toThrow('inconnu');
   const legacy={version:1,release:'v98',saves:[Object.fromEntries(Object.entries(save).filter(([key])=>key!=='release'))]};

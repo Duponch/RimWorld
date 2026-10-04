@@ -1,5 +1,7 @@
 # Guide joueur
 
+**Schéma courant 185 — V203 ventes de textiles au comptoir.** [Contrat](../development/caravan-sales-v203.md), [preuve et limites](../history/validation-commercial-sales-v203.md). Migration neutre : aucune marchandise, monnaie ou vente rétroactive.
+
 **Schéma courant 184 — V202 éruption solaire.** [Contrat](../development/solar-flare-v202.md), [preuve et limites](../history/validation-solar-flare-v202.md). La migration ne donne aucune condition ou énergie rétroactive.
 
 ## Traverser une éruption solaire — V202
@@ -992,6 +994,19 @@ Pour observer le fonctionnement : Charger une partie → Colonies de test → **
 
 Dans **Monde**, choisissez un colon sain, libre, nourri et reposé ainsi qu’une pile au sol de repas de survie. Un autre colon capable doit rester au foyer. Choisissez deux ou trois rations puis préparez la reconnaissance : le colon les prend au contact et marche jusqu’à une bordure. La colonie continue pendant ses six heures de voyage abstrait ; le panneau affiche besoins, provisions et temps restant. Il revient avec les mêmes possessions et dépose les restes sur sa case d’entrée. Aucun butin n’est créé.
 
-Vous pouvez annuler avant la sortie : les rations chargées restent dans son inventaire. Le bouton **Décharger les rations** les dépose sur sa case actuelle libre ; déplacez le colon si cette case est occupée. Une bordure entièrement fermée empêche le retour, avec le voyageur conservé hors carte : cette première tranche conserve ses besoins après les six heures, tout en faisant avancer âge et expiration des souvenirs. Le globe, les groupes, les porteurs, camps, rencontres et destinations commerciales ne sont pas disponibles.
+Vous pouvez annuler avant la sortie : les rations chargées restent dans son inventaire. Le bouton **Décharger les rations** les dépose sur sa case actuelle libre ; déplacez le colon si cette case est occupée. Une bordure entièrement fermée empêche le retour, avec le voyageur conservé hors carte : cette première tranche conserve ses besoins après les six heures, tout en faisant avancer âge et expiration des souvenirs. Le globe, les groupes, les porteurs, camps et rencontres restent absents ; le comptoir civil individuel est distinct de cette reconnaissance.
 
 Pour essayer : **Charger une partie → Colonies de test → Reconnaissance et retour · 3 colons**. La scène est préparée ; elle n’a encore chargé ni consommé aucune ration. [Contrat et limites](../development/caravan-scout-v182.md).
+
+
+## Vendre des textiles au comptoir — V203
+
+Ouvrez **Monde → Monde · commerce**, choisissez un adulte sain et libre et une pile accessible de deux ou trois repas de survie. Un autre colon capable doit rester au foyer. Dans **Textiles à embarquer**, indiquez les quantités de tissu et de laine de muffalo depuis leurs piles au sol : les colonnes distinguent quantité, réservations et disponibilité. L’argent initial peut être **zéro** avec un fret positif. Le poids prévu inclut rations, matières, argent, vêtements et équipement ; la limite reste 35 kg.
+
+**Préparer l’expédition** réserve les sources. Reprenez le temps : le colon les rejoint, les prend au contact puis sort de la carte. Annuler avant la sortie laisse les objets déjà pris dans son inventaire ; **Décharger l’inventaire** les dépose physiquement. Les marchandises restées au foyer ne sont jamais proposées au comptoir.
+
+À l’arrivée, le jeu se met en pause. Dans **Ventes de l’inventaire porté**, choisissez les quantités et lisez le montant reçu, les fonds du poste et la charge après vente. **Confirmer les ventes** transfère les matières au poste et sa monnaie au voyageur. Une vente trop chère pour sa caisse est refusée entièrement. Vous pouvez ensuite acheter médicaments/composants avec cet argent ; les deux confirmations sont séparées. Les textiles vendus ne peuvent pas être rachetés dans cette première tranche.
+
+Demandez le retour ou laissez passer la visite bornée d’une heure : le voyageur rentre avec argent, achats et invendus, puis les dépose sur des cellules réellement admissibles. Les besoins et rations suivent le trajet. Une entrée bloquée ou un dépôt saturé conserve les possessions ; sauvegarder/recharger ne crée ni vente ni retour supplémentaire.
+
+Pour essayer : **Charger une partie → Colonies de test → Ventes de textiles · 3 colons**. Ada peut prendre trois rations, 75 tissus et 60 laines sans argent ; vendre 60 tissus et 40 laines, acheter un médicament et un composant, puis rentrer avec 15 tissus/20 laines invendus. Ces quantités et la production initiale sont préparées ; les prix dépendent du négociateur. [Contrat et adaptations](../development/caravan-sales-v203.md), [preuves et limites](../history/validation-commercial-sales-v203.md).

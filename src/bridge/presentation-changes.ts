@@ -17,7 +17,7 @@ export class PresentationChanges {
       world.visitors?.groups.map(g=>[g.id,g.phase,g.hostile,g.reason]),world.trade?.count,
       world.commercialTrip?('pawnId' in world.commercialTrip
         ?[world.commercialTrip.phase,world.commercialTrip.pawnId,world.commercialTrip.phase==='loading'?world.commercialTrip.cursor:world.commercialTrip.phase==='unloading'?world.commercialTrip.pendingPileIds:world.commercialTrip.exit]
-        :[world.commercialTrip.phase,world.commercialTrip.pawn.id,world.commercialTrip.consumed,world.commercialTrip.silverPaid,world.commercialTrip.bought]):undefined,
+        :[world.commercialTrip.phase,world.commercialTrip.pawn.id,world.commercialTrip.consumed,world.commercialTrip.silverPaid,world.commercialTrip.bought,world.commercialTrip.silverEarned,world.commercialTrip.sold]):undefined,
       world.civilianPost?[world.civilianPost.generation,world.civilianPost.transactions,world.civilianPost.stock.map(p=>[p.id,p.item,p.quantity,p.damage])]:undefined,
       world.projectiles?.map(p=>[p.id,p.emittedAtCore,p.arrival]),
       world.pawns.map(p=>[p.id,p.state,p.burning?.phase,p.firefighting?.phase,p.firefighting?.fireId,p.raid?.exiting,p.mental?.crisis?.kind,p.mental?.crisis?.target,p.jobId,p.faction,p.prisoner?.capturedAt,p.prisoner?.mode,p.prisoner?.lastChatTick,p.prisoner?.escape,p.ward?.kind,p.ward?.patientId,p.ward?.phase,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,p.shooting,p.stagger,!!p.draft,p.draft?.target,p.draft?.queue,p.equipmentTask?.itemId,p.equipmentTask?.action,p.equipmentDropPending,p.rescue,p.tend?.patientId,p.tend?.phase,p.feed?.patientId,p.feed?.phase,p.medicalSleep,p.interruptedCargo,p.need?.phase,p.need?.kind==='sleep'?p.need.bedId:undefined,
