@@ -37,6 +37,7 @@ export function filthBeauty(filth:Pick<BeautyFilth,'kind'>,outdoors=false):numbe
 }
 export function groundObjectBeauty(object:BeautyObject):number {return object.visible===false?0:object.beauty??-4;}
 export function structureBeauty(structure:BeautyStructure):number {
+  if(structure.kind==='sandbags')return -10;
   if(isHabitatFurnitureKind(structure.kind))return furnitureBeauty(structure);
   if(isSculptureKind(structure.kind))return sculptureBeauty(structure);
   const material=isFurnitureMaterial(structure.material)?FURNITURE_MATERIALS[structure.material]:undefined;

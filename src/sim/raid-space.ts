@@ -1,4 +1,4 @@
-import { isBarrier } from './barriers.ts';
+import { isBreachableBarrier } from './barriers.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { captureStandability } from './furniture-travel.ts';
 import { captureMeleePlaces } from './melee-space.ts';
@@ -12,7 +12,7 @@ export const atMapEdge=edge;
 /** Cardinal strategic connectivity only. A removable wall/door may be crossed
  * in this hypothetical graph; the resulting cells are NEVER movement orders. */
 function strategic(world:World,start:Cell,goals:ReadonlySet<number>):Cell[]|null {
-  const hypothetical={...world,structures:world.structures.filter(s=>!isBarrier(s))},blocked=blockedCells(hypothetical),w=world.width,n=blocked.length;
+  const hypothetical={...world,structures:world.structures.filter(s=>!isBreachableBarrier(s))},blocked=blockedCells(hypothetical),w=world.width,n=blocked.length;
   const parents=new Int32Array(n);parents.fill(-2);const queue=new Int32Array(n),origin=start.z*w+start.x;let head=0,tail=1;queue[0]=origin;parents[origin]=-1;
   while(head<tail){const i=queue[head++]!;
     if(goals.has(i)){const path:Cell[]=[];for(let j=i;j!==origin;j=parents[j]!)path.push({x:j%w,z:Math.floor(j/w)});return path.reverse();}
@@ -22,9 +22,9 @@ function strategic(world:World,start:Cell,goals:ReadonlySet<number>):Cell[]|null
 }
 export function raidEntries(world:World,salt:number,count:number,preferred?:Cell):Cell[]|null {
   const centers=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed');if(!centers.length)return null;
-  const hypothetical={...world,structures:world.structures.filter(s=>!isBarrier(s))},blocked=blockedCells(hypothetical),stands=captureStandability(world);
+  const hypothetical={...world,structures:world.structures.filter(s=>!isBreachableBarrier(s))},blocked=blockedCells(hypothetical),stands=captureStandability(world);
   const occupied=new Set(world.pawns.flatMap(p=>[p.z*world.width+p.x,...(p.motion&&p.motion.end>world.tick?[p.motion.from.z*world.width+p.motion.from.x]:[])]));
-  const barriers=new Set(world.structures.filter(isBarrier).map(s=>s.z*world.width+s.x));
+  const barriers=new Set(world.structures.filter(isBreachableBarrier).map(s=>s.z*world.width+s.x));
   // Multi-source admission: an isolated first settler must not hide another
   // reachable colony component. This is connectivity only, never a route.
   const reached=new Uint8Array(blocked.length),queue=new Int32Array(blocked.length);let head=0,tail=0;
@@ -43,7 +43,7 @@ export interface RaidRoute { path:Cell[]; goal:Cell; barrier?:Structure }
 export function raidRoute(world:World,pawn:Pawn,exiting:boolean,blocked:Uint8Array):RaidRoute|null {
   const targets=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed').sort((a,b)=>distanceSquared(pawn,a)-distanceSquared(pawn,b)||a.id-b.id);
   const stands=captureStandability(world),goals:Cell[]=[],exitGoals:Cell[]=[];
-  if(exiting){const afterBreach=captureStandability({...world,structures:world.structures.filter(s=>!isBarrier(s))});for(let z=0;z<world.height;z++)for(let x=0;x<world.width;x++)if(edge(world,{x,z})){if(stands({x,z}))goals.push({x,z});if(afterBreach({x,z}))exitGoals.push({x,z});}goals.sort((a,b)=>distanceSquared(pawn,a)-distanceSquared(pawn,b)||a.z-b.z||a.x-b.x);}
+  if(exiting){const afterBreach=captureStandability({...world,structures:world.structures.filter(s=>!isBreachableBarrier(s))});for(let z=0;z<world.height;z++)for(let x=0;x<world.width;x++)if(edge(world,{x,z})){if(stands({x,z}))goals.push({x,z});if(afterBreach({x,z}))exitGoals.push({x,z});}goals.sort((a,b)=>distanceSquared(pawn,a)-distanceSquared(pawn,b)||a.z-b.z||a.x-b.x);}
   const places=captureMeleePlaces(world,pawn);
   const access=candidateAccess(world,pawn,blocked,EMPTY);
   function reachable(candidates:Cell[]):RaidRoute|null {for(const c of candidates)if(access.has(c.z*world.width+c.x)){const path=routeToCell(world,c,access);if(path)return {path,goal:c};}return null;}
@@ -51,7 +51,7 @@ export function raidRoute(world:World,pawn:Pawn,exiting:boolean,blocked:Uint8Arr
   else for(const target of targets){const route=reachable(places(target));if(route)return route;}
   const strategicGoals=new Set((exiting?exitGoals:targets).map(c=>c.z*world.width+c.x));
   const plan=strategic(world,pawn,strategicGoals);if(!plan)return null;
-  for(const c of plan){const barrier=world.structures.find(s=>isBarrier(s)&&s.x===c.x&&s.z===c.z&&(s.kind==='wall'||!s.door?.open));if(!barrier)continue;
+  for(const c of plan){const barrier=world.structures.find(s=>isBreachableBarrier(s)&&s.x===c.x&&s.z===c.z&&(s.kind==='wall'||!s.door?.open));if(!barrier)continue;
     for(const place of places(barrier))if(access.has(place.z*world.width+place.x)){const path=routeToCell(world,place,access);if(path)return {path,goal:place,barrier};}
     return null;
   }return null;

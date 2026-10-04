@@ -6,7 +6,7 @@ import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
-  fence:[100,1,false],'fence-gate':[120,1,false],'pen-marker':[80,1,false],wall:[300,1,false],door:[160,1,false],autodoor:[160,1,false],bed:[140,1,true],'hospital-bed':[150,1,true],table:[75,1,true],stool:[75,1,true],horseshoes:[75,1,true],'chess-table':[100,1,true],
+  sandbags:[300,0,true],fence:[100,1,false],'fence-gate':[120,1,false],'pen-marker':[80,1,false],wall:[300,1,false],door:[160,1,false],autodoor:[160,1,false],bed:[140,1,true],'hospital-bed':[150,1,true],table:[75,1,true],stool:[75,1,true],horseshoes:[75,1,true],'chess-table':[100,1,true],
   campfire:[80,0,false],'passive-cooler':[80,1,false],stonecutter:[180,1,true],'butcher-table':[180,1,true],
   'fueled-stove':[180,1,true],'electric-stove':[180,1,true],'tailor-bench':[180,1,true],'research-bench':[250,1,true],
   'machining-table':[180,1,true],

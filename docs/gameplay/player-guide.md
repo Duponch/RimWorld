@@ -1,12 +1,24 @@
 # Guide joueur
 
-**Schéma courant 188 — V206 production des repas de survie, livré dans le périmètre ciblé.** [Contrat](../development/packaged-survival-v206.md), [recherche Core et adaptation](../research/packaged-survival-core-v206.md), [suivi des contrôles](../history/validation-packaged-survival-v206.md). Le schéma 187 est validé avant migration neutre : aucune recherche, facture, ration ou contamination rétroactive.
+**Schéma courant 189 — V207 sacs de sable, livré dans le périmètre ciblé.** [Contrat](../development/sandbags-v207.md), [recherche Core et adaptations](../research/defensive-cover-core-v207.md), [preuve bornée](../history/validation-sandbags-v207.md). Migration stricte de 188 puis neutre : aucun sac, tissu ou bilan ancien inventé. La scène est publique ; parcours natif matériel et présentation passent dans leur périmètre préparé.
+
+**Schéma 188 — V206 production des repas de survie, livré dans le périmètre ciblé.** [Contrat](../development/packaged-survival-v206.md), [recherche Core et adaptation](../research/packaged-survival-core-v206.md), [suivi des contrôles](../history/validation-packaged-survival-v206.md). Le schéma 187 est validé avant migration neutre : aucune recherche, facture, ration ou contamination rétroactive.
 
 **Schéma 187 — V205 lit d’hôpital.** [Contrat](../development/hospital-bed-v205.md), [recherche Core et adaptation](../research/hospital-bed-core-v205.md), [preuve](../history/validation-hospital-bed-v205.md). Le schéma 186 est validé avant migration neutre : aucun lit, recherche, composant ou soin rétroactif.
 
 **Schéma 185 — V203 ventes de textiles au comptoir.** [Contrat](../development/caravan-sales-v203.md), [preuve et limites](../history/validation-commercial-sales-v203.md). Migration neutre : aucune marchandise, monnaie ou vente rétroactive.
 
 **Schéma 184 — V202 éruption solaire.** [Contrat](../development/solar-flare-v202.md), [preuve et limites](../history/validation-solar-flare-v202.md). La migration ne donne aucune condition ou énergie rétroactive.
+
+## Construire et utiliser un couvert bas — V207
+
+Dans **Architecte → Structure → Sacs de sable**, posez un plan près de la position à défendre et affectez un colon à **Construction** dans **Travail**. Chaque case demande **cinq tissus**, obtenus par le coton existant. Le colon les prend et les livre avant **18 ticks neutres** de travail, modulés par compétence, capacités et lumière. Aucune recherche ni compétence minimale ; cuir et autres textiles ne remplacent pas le tissu. L'ouvrage a **300 PV**, une seule orientation et aucune qualité ; il ne peut pas être désinstallé en paquet.
+
+Placez le défenseur derrière le sac du côté opposé au tireur. Le couvert dépend de la direction et des cellules voisines ; **55 % est son remplissage**, pas une garantie de protection ni une réduction constante des dégâts. Les tirs peuvent passer au-dessus ou être interceptés. Le sac laisse passer la ligne de vue et les personnes, ralentit l'entrée de **4,2 ticks** sans répéter ce supplément entre ouvrages qualifiés, mais ne ferme pas une pièce et ne porte pas un toit. Les déplacements ordinaires ne s'arrêtent pas dessus ; l'exception Core des positions de tir sur PassThroughOnly est adaptée dans cette version. Il ne protège pas des coups de mêlée.
+
+Après un impact, arrêtez les tirs, puis ajoutez sa case à **Architecte → Zones → Zone de foyer** pour autoriser la réparation au contact par Construction, sans tissu supplémentaire. Vous pouvez sauvegarder les dégâts ou la réparation en cours. **Déconstruire** rend deux ou trois tissus ; une destruction en rend un ou deux, avec placement réel et pertes distinctes. Le bilan textile n'est pas une réserve et ne reconstitue pas les pertes des sauvegardes anciennes. Barricades et gravats spécifiques restent absents.
+
+La 53e scène préparée **« Sacs de sable · construction et couvert »** fournit cinq tissus en **(10,14)** et trois adultes, sans sac, plan, tir, dégât ou foyer initial. Posez un sac en **(12,12)** et activez Construction 1 pour Ada. Mobilisez Noé et Mina, désactivez leur tir à volonté, puis placez-les en **(13,12)** et **(6,12)**. Mina peut recevoir **Tirer sur une cible → Noé** pour observer l'interception venant de l'ouest ; arrêtez le tir après un impact et incluez le sac dans le foyer pour le réparer. **Ces alliés peuvent réellement se blesser** ; le premier projectile ne touchera pas forcément le sac. La [sauvegarde préparée](../../public/test-saves/v207/sacs-sable.json) se trouve dans Charger une partie → Colonies de test ; publication et contrôles natifs sont consignés dans la [preuve V207](../history/validation-sandbags-v207.md).
 
 ## Produire des repas de survie — V206
 

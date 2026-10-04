@@ -1435,6 +1435,36 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32, createWorld(206), schéma 188, tick 3000 sans campagne simulée. Trois adultes libres sains avec besoins à 100, travaux désactivés ; Ada Intellectuel 8, Noé Cuisine 8, Mina disponible pour reconnaissance. Recherche Repas de survie à 498/500 non sélectionnée, bureau simple et cuisinière à bois existants avec 10 bois de combustible. 18 viandes de lièvre et 18 riz frais au sol ; aucune ration, facture, réserve, réservation, production, sortie ou consommation fournie. Flux PRNG 0x12345678 explicitement préparé pour la démonstration saine ; tirages de contamination réels à la finition, risque d’hygiène extérieur conservé. Incidents exclus. Préalable Core Pâte nutritive explicitement différé ; facture ×4 et détérioration extérieure des repas absentes. La scène ne prouve ni campagne naturelle, acquisition complète de la recherche, ni coût général sur 250².",
       "sha256": "52d1d9f86933e94b25458afba76e3866079f62a057378ed7266c80d099c0d377"
+    },
+    {
+      "id": "sacs-sable-v207",
+      "release": "v207",
+      "label": "Sacs de sable · construction et couvert",
+      "description": "Livrer cinq tissus, construire le couvert bas, observer de vrais tirs dirigés puis réparer ses impacts dans le foyer.",
+      "filename": "sacs-sable.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 3000,
+      "focus": [
+        "livraison physique",
+        "couvert directionnel",
+        "tir réel",
+        "dégâts",
+        "passage lent",
+        "réparation",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause. Architecte → Structure → Sacs de sable : poser une case en (12,12). Dans Travail, activer Construction 1 pour Ada. Reprendre : les cinq tissus en (10,14) sont pris et livrés avant les 18 ticks neutres de construction.",
+        "Mobiliser Noé et Mina, désactiver leur tir à volonté et les placer respectivement en (13,12) et (6,12). Noé peut tirer vers Mina depuis derrière son sac ; arrêter ensuite son ordre. Attention : ce sont deux alliés, leurs tirs peuvent réellement les blesser.",
+        "Sélectionner Mina → Tirer sur une cible → Noé. Le sac immédiatement devant Noé peut intercepter les projectiles venant de l’ouest. Reprendre jusqu’à un impact sur le sac puis mettre en pause et arrêter le tir. Aucun premier impact ni protection intégrale n’est garanti.",
+        "Sauvegarder le couvert endommagé et recharger. Architecte → Zones → Zone de foyer : inclure (12,12). Ada répare réellement au contact sans tissu supplémentaire ; sauvegarder pendant la réparation puis à sa finition."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32, createWorld(207), schéma 189, tick 3000 sans campagne simulée. Trois adultes libres sains, besoins à 100, travaux désactivés ; Construction 8 pour Ada, Tir 8 pour Noé et Mina, deux revolvers existants équipés. Cinq tissus au sol et aucun sac, plan, livraison, tir, dégât, foyer ou réparation fournis. Incidents exclus. Couvert local tissu seul ; autres textiles, barricades et défenses exhaustives différés. Tirs et interceptions probabilistes réels, sans flux PRNG choisi pour garantir une première réussite. Scène préparée distincte d’une campagne naturelle ou d’un coût CPU/GPU général sur 250².",
+      "sha256": "82bdf69c0e95e3a81ec3b2b72ef4acac65db1a68b8a7ac1794bdb6b1ad7ad7a6"
     }
   ]
 }

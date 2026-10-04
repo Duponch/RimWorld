@@ -4,7 +4,7 @@ import { addMaterial } from './materials.ts';
 import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
 import type { Structure,World } from './types.ts';
 
-/** Preview destruction's quarter yield on a private material ledger. Failed
+/** Shared recipe-quarter salvage for cooler, furniture and sandbags. Failed
  * placement consumes neither the building nor random state nor existing piles. */
 export function coolerSalvage(w:World,s:Structure,rng:number){
   const view={...w,structures:w.structures.filter(b=>b!==s),piles:w.piles.map(p=>({...p,owner:{...p.owner}})),jobs:w.jobs.map(j=>({...j,escrow:{...j.escrow}}))};

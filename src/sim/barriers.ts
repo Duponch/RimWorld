@@ -10,20 +10,21 @@ import { invalidateAnimalPens } from './animal-pens.ts';
 import { isRoomDoor } from './door-rules.ts';
 import type { Structure, World } from './types.ts';
 
-/** Installed barriers: walls, doors and the solid cooler. */
-export const isBarrier=(s:Pick<Structure,'kind'>):boolean=>s.kind==='wall'||isRoomDoor(s.kind)||s.kind==='cooler';
+/** Damageable defense structures; low cover is traversable, unlike a breach. */
+export const isBarrier=(s:Pick<Structure,'kind'>):boolean=>s.kind==='wall'||isRoomDoor(s.kind)||s.kind==='cooler'||s.kind==='sandbags';
+export const isBreachableBarrier=(s:Pick<Structure,'kind'>):boolean=>s.kind==='wall'||isRoomDoor(s.kind)||s.kind==='cooler';
 const FACTORS:Record<ConstructionMaterial,number>={wood:.65,steel:1,'granite-blocks':1.7,'limestone-blocks':1.55,'marble-blocks':1.2,'sandstone-blocks':1.4,'slate-blocks':1.3,cloth:1,'light-leather':1};
 export const barrierMaxHp=(s:Pick<Structure,'kind'|'material'>):number=>s.kind==='cooler'?100:Math.round((isRoomDoor(s.kind)?160:300)*FACTORS[s.material??'wood']);
 export const barrierHp=(s:Structure):number=>barrierMaxHp(s)-(s.damage??0);
 export interface DestructionLedger { count:number; lost:Partial<Record<ConstructionMaterial|'component',number>> }
 
-/** Walls/doors drop nothing; the cooler salvages one quarter of its recipe.
+/** Walls/doors drop nothing; cooler and sandbags salvage a recipe quarter.
  * Record only destroyed material, independently of deconstruction losses. */
 export function damageBarrier(world:World,s:Structure,amount:number,rng=world.rng):boolean {
   if(!isBarrier(s)||!world.structures.includes(s)||!Number.isSafeInteger(amount)||amount<1)return false;
   const damage=(s.damage??0)+amount;
   if(damage<barrierMaxHp(s)){s.damage=damage;world.rng=rng;return true;}
-  const salvage=s.kind==='cooler'?coolerSalvage(world,s,rng):undefined;if(salvage===null)return false;
+  const salvage=s.kind==='cooler'||s.kind==='sandbags'?coolerSalvage(world,s,rng):undefined;if(salvage===null)return false;
   const ledger=world.destroyed??{count:0,lost:{}};
   const lost={...ledger.lost};
   for(const c of constructionRecipe(s).ingredients){const id=c.item as ConstructionMaterial;lost[id]=(lost[id]??0)+c.quantity-(salvage?.returned.get(c.item)??0);}

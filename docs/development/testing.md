@@ -1,5 +1,11 @@
 # Stratégie de validation
 
+## Contrôles ciblés V207 — couvert construit
+
+Les [sacs de sable](sandbags-v207.md) demandent acquisition/livraison réelle du tissu, Construction sans seuil inventé, annulation portée, entrée 4,2 et répétition entre objets distincts, reprise des arêtes, ligne de vue/couvert/impact séparés, dégâts/réparation au contact, restitution quart/demi et refus atomiques. Les six fichiers `tests/sandbags-*-v207.test.ts` contrôlent aussi migration stricte 188→189, bilans textiles prospectifs, refus des propriétés/familles futures, adoption même tick et immuabilité des anciens Worlds. Ils ne remplacent pas les validateurs ordinaires de références et capacités.
+
+Le parcours `tests/integration/sandbags-v207.spec.ts` importe la candidate préparée avant publication : menus, plan, Travail, livraisons, vraie balle, réparation et reprises exactes. Le pilote vérifie le corps projeté après ouverture d'un inspecteur, pas seulement la case au sol : le déplacement de caméra reste un geste utilisateur. La préparation et les tirs volontaires entre alliés ne prouvent pas une campagne de défense naturelle. Le microbanc `scripts/benchmark-sandbags-v207.ts` compare une capture tactique historique 250² et des requêtes exactes au commit V206 ; la garde courante est chronométrée séparément en absolu, sans nouvelle défense active. Contrôles lourds successifs et sources gelées ; résultats et limites dans la [preuve V207](../history/validation-sandbags-v207.md), pas dans les sorties historiques.
+
 ## Contrôles ciblés V206 — périmètre ciblé exécuté
 
 La [production unitaire des repas de survie](packaged-survival-v206.md) demande les témoins de recherche physique, Cuisine 7/8, quotas 6+6, viande/lait et plusieurs piles, cuisinières/énergie, fraîcheur, interruptions, sortie saturée, contamination et refus du voyage. Les fichiers ciblés sont `tests/packaged-survival-research-v206.test.ts`, `tests/packaged-survival-production-v206.test.ts`, `tests/packaged-survival-persistence-v206.test.ts` et `tests/packaged-survival-world-v206.test.ts` ; ils doivent distinguer ancien schéma 187 strict, migration neutre vers 188 et refus des futurs projets/factures/tâches, y compris poste emballé et ordres en file.

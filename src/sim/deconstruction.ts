@@ -1,5 +1,5 @@
 import { constructionRecipe } from './construction-materials.ts';
-import { isBlockMaterial, type ConstructionMaterial, type BlockMaterial } from './building-materials.ts';
+import { isBlockMaterial, isUpholsteryMaterial, type ConstructionMaterial, type BlockMaterial, type UpholsteryMaterial } from './building-materials.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { deconstructionAvailable, deconstructionTarget } from './deconstruction-rules.ts';
 import { groundPile, groundCapacity, planGroundPlacement } from './ground-placement.ts';
@@ -25,6 +25,8 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   const refunds: { item: ItemId; quantity: number; cell: { x:number; z:number } }[] = [];
   let rng = world.rng, lostWood = 0, lostSteel = 0, lostComponents=0;
   const lostBlocks:Partial<Record<BlockMaterial,number>>={...world.deconstructed.lostBlocks};
+  // Prospective accounting only: older textile losses remain unknown.
+  const lostTextiles:Partial<Record<UpholsteryMaterial,number>>={...world.deconstructed.lostTextiles};
   for (const cost of structure.kind === 'campfire' || structure.kind === 'passive-cooler' ? [] : constructionRecipe(structure).ingredients) {
     let quantity = structure.kind==='power-conduit'?0:Math.floor(cost.quantity / 2);
     if (structure.kind!=='power-conduit'&&cost.quantity % 2) {
@@ -44,10 +46,11 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
     else if(cost.item==='steel')lostSteel += cost.quantity - quantity;
     else if(cost.item==='component')lostComponents+=cost.quantity-quantity;
     else if(isBlockMaterial(cost.item))lostBlocks[cost.item]=(lostBlocks[cost.item]??0)+cost.quantity-quantity;
+    else if(world.schemaVersion>=189&&isUpholsteryMaterial(cost.item))lostTextiles[cost.item]=(lostTextiles[cost.item]??0)+cost.quantity-quantity;
   }
   const fuelTicks = structure.fuel ? structure.fuel.ticks + structure.fuel.burned : 0;
   const ledger = world.deconstructed;
-  if (![(ledger.lostComponents??0)+lostComponents, ledger.count + 1, ledger.lostWood + lostWood, (ledger.lostSteel ?? 0) + lostSteel, ledger.fuelTicks + fuelTicks,...Object.values(lostBlocks)].every(Number.isSafeInteger)) return false;
+  if (![(ledger.lostComponents??0)+lostComponents, ledger.count + 1, ledger.lostWood + lostWood, (ledger.lostSteel ?? 0) + lostSteel, ledger.fuelTicks + fuelTicks,...Object.values(lostBlocks),...Object.values(lostTextiles)].every(Number.isSafeInteger)) return false;
   if(!commitGraveRelease(world,structure,graveRelease))return false;
   world.structures = structures; world.jobs = jobs; world.rng = rng;
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===structure.id)delete a.manhunter.door;
@@ -56,6 +59,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   if(lostComponents)ledger.lostComponents=(ledger.lostComponents??0)+lostComponents;
   if (lostSteel) ledger.lostSteel = (ledger.lostSteel ?? 0) + lostSteel;
   if(Object.keys(lostBlocks).length)ledger.lostBlocks=lostBlocks;
+  if(Object.keys(lostTextiles).length)ledger.lostTextiles=lostTextiles;
   for (const p of world.pawns) {
     if (p.bedId === structure.id) p.bedId = null;
     // A table is not exclusively reserved by its eaters. Keep their actual meal

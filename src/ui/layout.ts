@@ -43,6 +43,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id:'door',title:'Porte',hint:'orientation automatique · ouverture au passage · choisir le matériau',key:'',category:'structure' },
   { id:'autodoor',title:'Porte automatique',hint:'Construction 6 · recherche Portes automatiques · 50 W · passage rapide sous courant, porte ordinaire sans courant',key:'',category:'structure' },
   { id: 'wall', title: 'Mur', hint: 'cliquer ou tracer une ligne droite · mur de 2,80 m · Échap annule le tracé', key: 'B', category: 'structure' },
+  { id:'sandbags',title:'Sacs de sable',hint:'1 × 1 · 5 tissu · 18 ticks de construction neutres · couvert bas 55 % selon la direction du tir · 300 PV · ininflammable · traversée lente, sans arrêt sur la case · sans rotation',key:'',category:'structure' },
   { id: 'fence', title: 'Clôture', hint: 'cliquer ou tracer une ligne droite · 1 matériau par case · limite physique pour les herbivores errants', key: '', category: 'structure' },
   { id: 'fence-gate', title: 'Portillon', hint: '25 matériaux · accès nécessaire pour conduire les animaux dans un enclos', key: '', category: 'structure' },
   { id: 'pen-marker', title: 'Marqueur d’enclos', hint: '30 matériaux · désigne un enclos pour les herbivores errants', key: '', category: 'structure' },
@@ -91,7 +92,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id:'ignore-roof',title:'Ignorer le toit',hint:'Effacer la zone de toiture sans changer la couverture déjà posée.',key:'',category:'zones' },
   { id: 'remove-growing', title: 'Retirer une culture', hint: 'Retirer la zone conserve les plantes déjà semées.', key: '', category: 'zones' },
   { id: 'stockpile', title: 'Réserve', hint: 'Tracer un rectangle de stockage. Les cases occupées et les réserves existantes sont ignorées.', key: 'S', category: 'zones' },
-  { id:'home',title:'Zone de foyer',hint:'Tracer les cases où les bâtisseurs doivent entretenir les murs et portes endommagés.',key:'',category:'zones' },
+  { id:'home',title:'Zone de foyer',hint:'Tracer les cases où les bâtisseurs doivent entretenir les ouvrages endommagés.',key:'',category:'zones' },
   { id:'remove-home',title:'Retirer le foyer',hint:'Retire la permission de réparation sans démolir les ouvrages.',key:'',category:'zones' },
   { id: 'remove-stockpile', title: 'Retirer', hint: 'Cliquer ou tracer un rectangle pour retirer des cases de réserve ; les objets restent au sol.', key: '', category: 'zones' },
 ];
