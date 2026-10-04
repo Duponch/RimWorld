@@ -8,6 +8,8 @@ import { isCropKindInVersion } from '../sim/crops.ts';
 import { validFireResourceLosses } from '../sim/fire-save.ts';
 import { validPlantSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
+import { validSmallIncidents } from '../sim/cassandra-small-save.ts';
+import { validWildlifeManhunterState } from '../sim/animal-manhunter-save.ts';
 import { validFlashstorm } from '../sim/flashstorm-save.ts';
 import { validRainElectrical } from '../sim/rain-electric-save.ts';
 import { validPawnPodRescue,validPodRescueTransportBindings } from '../sim/pod-rescue-save.ts';
@@ -276,6 +278,7 @@ export class SnapshotDecoder {
       if(pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,message.world.schemaVersion,message.world))return resync('Souvenir de décès invalide pour ce snapshot.');
     }
     if(!validMiscIncidents(message.world.miscIncidents,message.world.schemaVersion,message.world))return resync('Calendrier d’incidents divers invalide pour ce snapshot.');
+    if(!validSmallIncidents(message.world.smallIncidents,message.world.schemaVersion,message.world))return resync('Calendrier de petites menaces invalide pour ce snapshot.');
     if(!validFlashstorm(message.world.flashstorm,message.world.schemaVersion,message.world))return resync('Orage sec localisé invalide pour ce snapshot.');
     if((message.world.schemaVersion<181&&Object.hasOwn(message.world,'rainElectrical'))
       ||!validRainElectrical(message.world.rainElectrical,message.world.schemaVersion,message.world))return resync('Exposition électrique aux précipitations invalide pour ce snapshot.');
@@ -401,6 +404,7 @@ export class SnapshotDecoder {
     if(validateScoutRegistry(next,next.schemaVersion).length)return resync('Registre de reconnaissance invalide.');
     if(!validWildlifeExitState(next,next.schemaVersion))return resync('Départ de faune invalide.');
     if(!validWildlifePredationState(next,next.schemaVersion))return resync('Prédation de faune invalide.');
+    if(!validWildlifeManhunterState(next,next.schemaVersion))return resync('Rage de faune invalide.');
     if(validateQuests(next.quests?scoutRegistryView(next):next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
     if(next.scout&&(next.scout.phase==='travelling'||next.scout.phase==='awaiting-entry')){
       const registry=scoutRegistryView(next),pawn=next.scout.pawn;

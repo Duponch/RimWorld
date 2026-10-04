@@ -12,13 +12,15 @@ import { rangedWeaponProfile } from './ranged-statistics.ts';
 import { carrierOf } from './rescue-state.ts';
 import { clearShotSegment } from './combat-space.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
+import { hostileCandidates,type LivingTarget,isAnimalTarget } from './combat-target.ts';
 import { shootingQueries,shotPlan,advanceShooter } from './shooting.ts';
 import type { SearchBudget } from './work-planner.ts';
 import type { Pawn,World } from './types.ts';
+import type { WildAnimal } from './wildlife-state.ts';
 
 /** Called by the simulation, never by rendering. Existing direct orders win.
  * Idle drafted pawns stay at their post; civilian melee may approach a threat. */
-export function considerAutomaticCombat(world:World,p:Pawn,budget:SearchBudget):void {
+export function considerAutomaticCombat(world:World,p:Pawn,budget:SearchBudget,animalThreats?:readonly WildAnimal[]):void {
   // A hunting aim is ordinary civilian work, not a forced combat order.
   // Its replacement is committed only after a valid human threat is found;
   // any post-shot recovery must finish before this new attack can begin.
@@ -29,13 +31,13 @@ export function considerAutomaticCombat(world:World,p:Pawn,budget:SearchBudget):
   } else if(p.hostilityResponse!=='attack'||p.flee||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.equipmentTask)return;
   const weapon=equippedWeapon(world,p),profile=weapon?.weapon?rangedWeaponProfile(weapon.item,weapon.weapon.quality):undefined,range=profile?.range??8;
   const radius=kind==='draft'?range:profile?Math.min(20,Math.max(2,range*.66)):8;
-  const candidates=world.pawns.filter(t=>hostileTo(p,t)&&activeThreat(t)&&distanceSquared(p,t)<=radius*radius&&!carrierOf(world,t.id)).sort((a,b)=>distanceSquared(p,a)-distanceSquared(p,b)||a.id-b.id);
+  const candidates=hostileCandidates(world,p,animalThreats).filter(t=>distanceSquared(p,t)<=radius*radius&&(isAnimalTarget(t)||!carrierOf(world,t.id))).sort((a,b)=>distanceSquared(p,a)-distanceSquared(p,b)||a.id-b.id);
   if(!candidates.length)return;
   // Target range plus three cells covers lean origins, cover neighbours and
   // the 1.5-cell cone. Captures never survive an interruption/mutation.
   const margin=Math.ceil(radius)+3,bounds={minX:p.x-margin,minZ:p.z-margin,maxX:p.x+margin,maxZ:p.z+margin};
   const readGrid=()=>captureWorldShotGrid(world,bounds),queries=shootingQueries(world,readGrid);
-  let physical:Uint8Array|undefined;const contact=(t:Pawn)=>Math.abs(p.x-t.x)<=1&&Math.abs(p.z-t.z)<=1&&meleeContact(world,p,t,physical??=blockedCells(world,true));
+  let physical:Uint8Array|undefined;const contact=(t:LivingTarget)=>Math.abs(p.x-t.x)<=1&&Math.abs(p.z-t.z)<=1&&meleeContact(world,p,t,physical??=blockedCells(world,true));
   const adjacent=candidates.find(contact);
   if(adjacent||!profile) {
     if(kind==='draft'&&!adjacent||!meleeTools(world,p).length)return;

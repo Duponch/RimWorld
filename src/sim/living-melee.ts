@@ -31,7 +31,7 @@ export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTa
   if(animal&&target.state!=='downed'){
     // A hunted animal can retaliate against its real animal attacker. A hunter
     // struck by its own prey keeps pursuing; a different melee threat supplants it.
-    if(target.predation?.targetId!==attacker.id){
+    if(!target.manhunter&&target.predation?.targetId!==attacker.id){
       cancelAnimalPredation(w,target);target.threat={targetId:attacker.id,harmedAtCore:core};
     }
     delete target.exiting;

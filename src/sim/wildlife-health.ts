@@ -11,6 +11,7 @@ import { animalNutritionMax } from './animal-life.ts';
 import type { Cell,World } from './types.ts';
 import { malnutritionRate } from './malnutrition.ts';
 import { cancelAnimalPredation } from './wildlife-predation.ts';
+import { recoverAnimalManhunter } from './animal-manhunter.ts';
 
 const HEALTHY_ANIMALS=new Map<WildAnimal['species'],ReturnType<typeof assessBody>>();
 export const animalBody=(a:WildAnimal)=>{
@@ -21,8 +22,9 @@ export function reconcileAnimalHealth(w:World,a:WildAnimal):void {
   if(!a.health)return;
   const status=medicalStatus(a.health);
   if(status!=='mobile') {
+    recoverAnimalManhunter(w,a);
     const changed=a.state!==status;
-    a.state=status;a.path=[];delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;delete a.strike;delete a.stun;delete a.exiting;delete a.predation;
+    a.state=status;a.path=[];delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;delete a.strike;delete a.stun;delete a.exiting;delete a.predation;delete a.manhunter;
     // Keep a captured edge. Presentation finishes its continuous falling path.
     if(changed){w.events.push({tick:w.tick,type:'need',message:`${animalSpecies(a.species).label} ${a.id} ${status==='dead'?'est mort':'est à terre'}.`});if(w.events.length>80)w.events.splice(0,w.events.length-80);}
   } else if(a.state==='downed'){a.state='idle';a.nextDecision=w.tick;}
@@ -38,7 +40,7 @@ export function advanceAnimalHealth(w:World,a:WildAnimal):void {
   reconcileAnimalHealth(w,a);
 }
 export function scareAnimal(w:World,a:WildAnimal,danger:Cell,core:number):void {
-  if(a.state==='dead'||a.state==='downed')return;
+  if(a.state==='dead'||a.state==='downed'||a.manhunter)return;
   cancelAnimalPredation(w,a);
   a.sleepUntilCore=Math.max(a.sleepUntilCore??0,core+1000);
   delete a.threat;delete a.retaliation;

@@ -7,6 +7,7 @@ import { captureStandability,navigationCosts,furnitureDelay } from './furniture-
 import { doorCorners,doorOpenness,isPassageDoor } from './door-rules.ts';
 import { WeightedSearch } from './weighted-search.ts';
 import { scaleNavigationCosts } from './navigation-costs.ts';
+import { meleeContact } from './melee-space.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { animalSpecies } from './animal-species.ts';
 import type { Cell,World } from './types.ts';
@@ -60,6 +61,27 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     return path?{kind:'exit',path}:undefined;
   }
   return {free,step,route:(a:Cell,goals:Cell[])=>findRoute(a,goals)?.path,
+    humanPursuitRoute(a:Cell,targets:readonly (Cell&{id:number})[],physical:Uint8Array,retainFirst=false):{path:Cell[];targetId:number}|undefined {
+      const groups=targets.map(target=>{
+        const contacts:Cell[]=[];
+        for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)if(dx||dz){
+          const c={x:target.x+dx,z:target.z+dz};if(free(c)&&meleeContact(world,c,target,physical))contacts.push(c);
+        }
+        return {target,contacts};
+      });
+      if(!groups.some(g=>g.contacts.length))return;
+      const n=navigationCosts(world),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+      const pick=(list:typeof groups)=>{
+        const goals=new Set(list.flatMap(g=>g.contacts.map(c=>c.z*width+c.x))),reach=search.advance(goals);
+        const found=list.flatMap(g=>g.contacts.filter(c=>hasReachableCell(reach,c.z*width+c.x)).map(c=>({target:g.target,cell:c,cost:reach.costs[c.z*width+c.x]!})))
+          .sort((a,b)=>a.cost-b.cost||a.target.id-b.target.id||a.cell.z*width+a.cell.x-(b.cell.z*width+b.cell.x))[0];
+        if(!found)return;
+        const path=routeToCell(world,found.cell,search.finish(goals));
+        return path?{path,targetId:found.target.id}:undefined;
+      };
+      if(retainFirst&&groups[0]!.contacts.length){const first=pick(groups.slice(0,1));if(first)return first;}
+      return pick(groups);
+    },
     foodOrExitRoute:(a:Cell,goals:Cell[])=>findRoute(a,goals,true),
     foodPreyOrExitRoute(a:Cell,goals:Cell[],prey:readonly (Cell&{id:number})[],exitFallback=false):{kind:'food'|'prey'|'exit';path:Cell[];targetId?:number}|undefined {
       const cells=goals.filter(free),indices=new Set(cells.map(c=>c.z*width+c.x));
@@ -91,7 +113,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
 export function moveAnimal(world:World,a:WildAnimal,step:(a:Cell,b:Cell)=>boolean,moving=1):boolean {
   const next=a.path[0];if(!next)return false;
   if(!step(a,next)){a.path=[];delete a.meal;a.state='idle';a.nextDecision=world.tick+10;return false;}
-  const species=animalSpecies(a.species),pace=(a.meal||a.flee||a.retaliation||a.predation||a.burning?species.moveTicks:species.walkTicks)/(moving*weatherMoveFactor(world,a)),delay=furnitureDelay(world,a,next),start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
+  const species=animalSpecies(a.species),pace=(a.meal||a.flee||a.retaliation||a.predation||a.manhunter||a.burning?species.moveTicks:species.walkTicks)/(moving*weatherMoveFactor(world,a)),delay=furnitureDelay(world,a,next),start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
   a.motion={from:{x:a.x,z:a.z},to:{...next},start,end:start+Math.hypot(next.x-a.x,next.z-a.z)*pace+delay,speedFactor:3/pace,terrainDelay:delay};
   if(a.stagger&&a.stagger.untilCore/10>start){a.motion.stagger=mergeSlowIntervals([{start:Math.max(start,a.stagger.sinceCore/10),end:a.stagger.untilCore/10}]);a.motion.end=travelEnd(a.motion);}
   a.x=next.x;a.z=next.z;a.path.shift();a.state='moving';return true;

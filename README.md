@@ -1,5 +1,7 @@
 # Lisière
 
+**V201 — animal sauvage en rage temporaire, schéma 183.** Un animal déjà présent devient une menace pour les humains : fuir, rejoindre un abri fermé ou combattre exige des déplacements et contacts réels. La 47e scène **« Animal en rage · abri et défense »** prépare une introduction Cassandra à reprendre, sans pirate ni blessure initiale. [Contrat](docs/development/manhunter-v201.md), [référence Core et adaptations](docs/research/manhunter-core-v201.md), [preuve et limites](docs/history/validation-manhunter-v201.md). Scaria, meutes et narrateur exhaustif restent absents ; G3/G4 restent ouverts.
+
 **V200 — repères et corrections visuelles, schéma 182 inchangé.** Les cinq besoins ont leurs seuils visibles ; les brins suivent la peinture du sol et seuls ceux enracinés dans les taches de sang sont rouges. Le trou central des nuages est légèrement élargi. [Contrat](docs/development/needs-grass-clouds-v200.md), [référence](docs/research/needs-grass-clouds-v200.md), [preuve et coût borné](docs/history/validation-needs-grass-clouds-v200.md). Pas de nouvelle mécanique.
 
 **V199 — refonte des dossiers et infobulles, schéma 182 inchangé.** Les fiches humaines, Animaux et Recherche reprennent la hiérarchie Core en conservant la palette pastel. [Contrat](docs/development/colonist-ui-v199.md), [référence et écarts](docs/research/colonist-ui-core-v199.md), [validation ciblée](docs/history/validation-colonist-ui-v199.md). Présentation des données existantes, sans nouvelle mécanique.

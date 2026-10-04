@@ -49,7 +49,7 @@ export function attachPawnFire(w:World,pawnId:number,size=.1):boolean {
 export function attachAnimalFire(w:World,animalId:number,size=.1):boolean {
   const a=w.wildlife?.animals.find(a=>a.id===animalId);if(!a||a.state==='dead'||w.fires?.items.some(f=>f.attachedAnimalId===animalId))return false;
   if(!createFire(w,a,size,w.tick*10,{animalId}))return false;
-  delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;delete a.strike;a.path=[];
+  delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;if(w.schemaVersion<183)delete a.strike;a.path=[];
   a.burning={phase:'panic',remainingCore:0};return true;
 }
 export function extinguishFire(w:World,id:number,amount=32):boolean {

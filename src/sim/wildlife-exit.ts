@@ -17,7 +17,7 @@ export function cancelAnimalExit(w:World,a:WildAnimal):void {
   if(a.state==='moving'&&!a.path.length&&(a.motion?.end??0)<=w.tick)a.state='idle';
   a.nextDecision=Math.min(a.nextDecision,w.tick);
 }
-export const exitSuppressed=(a:WildAnimal)=>!!(a.domestic||a.meal||a.predation||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun)
+export const exitSuppressed=(a:WildAnimal)=>!!(a.domestic||a.meal||a.predation||a.manhunter||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun)
   ||a.food>0||['downed','dead','sleeping','eating'].includes(a.state);
 
 /** Stop targeting without deleting an already committed recovery. */

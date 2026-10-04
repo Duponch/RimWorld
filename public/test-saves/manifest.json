@@ -1250,6 +1250,35 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32 au schéma182, createWorld(196), tick0. Trois colons libres adultes : Ada femme blessée bras gauche, Noé homme blessé bras droit, Mina femme saine pour le couloir. Profils visuels de sexe cohérents préparés ; besoins hauts sauf faim29 d’Ada ; tous travaux et habillement automatique désactivés. Coupures humaines4PV via injurePawn, aucun champ clinique arbitraire ni maladie. Douze animaux adultes femelles en comparaison debout/sommeil, blessure extérieure1PV via damageAnimalWithBullet : six espèces légales sur carte tempérée, dromadaire domestique explicitement importé, six poses de sommeil et repos0,6 préparés. Sept morts par destruction réelle du cœur au producteur anatomique, propagation extérieure conservée puis advanceCorpses au sol avec identité originale, dossier figé et rot0 ; le lièvre des neiges n’est jamais adopté comme vivant tempéré. Douze dépôts de sang physiques via addFilth, épaisseur3, indépendamment préparés sans revendiquer un saignement naturel. Recherche Mobilier complexe achevée explicitement à tick0 pour les fauteuils ; mobilier/table/lit construits préparés, couloir d’eau, six repas de survie et six médicaments au sol, une réserve Corps. Aucun contact de repas, soin, trajet, coup audible futur, transport ou consommation déjà accompli. Le témoin sert aux comparaisons et contrôles manuels ; il ne démontre ni chronologie de combat jouée, campagne naturelle, parité exhaustive ou coût général.",
       "sha256": "05f89ecf414665d62400e07821d97a617aeb82893821d2084731db03f57693d6"
+    },
+    {
+      "id": "animal-en-rage-v201",
+      "release": "v201",
+      "label": "Animal en rage · abri et défense",
+      "description": "Une introduction Cassandra préparée transforme un lièvre déjà présent après reprise. Observer poursuite, protection initiale de la porte et défense au contact, sans pirate.",
+      "filename": "animal-en-rage.json",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 20399,
+      "focus": [
+        "animal en rage",
+        "poursuite physique",
+        "porte et abri",
+        "défense réelle",
+        "alerte et musique",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause, juste avant J3,4. Ada est dehors en (14,16), équipée d’un couteau ; Noé et Mina sont dans l’abri (8–12,13–19), avec une porte fermée en (12,16). Le lièvre en (19,16) est sain et encore calme. Aucun pirate n’est présent.",
+        "Reprendre à 1× : le prochain tick exerce la vraie introduction Cassandra. Le lièvre devient en rage, l’alerte permet son inspection et la musique passe en danger. Sauvegarder puis recharger pendant la poursuite : le chargement ne doit pas rejouer une nouvelle alerte sonore.",
+        "Les trois réponses initiales sont Ignorer afin de laisser le choix au joueur. Dans l’inspection d’Ada, choisir Fuir ou demander un déplacement mobilisé vers l’intérieur (10,16) : observer les déplacements, l’ouverture physique et la fermeture réelle de la porte. Une porte fermée protège initialement les occupants ; rentrer pendant une poursuite peut provoquer quelques frappes de porte.",
+        "Pour défendre Ada, choisir Attaquer dans sa réponse aux menaces, ou la mobiliser et demander Attaquer au corps à corps sur le lièvre. Observer approche, coups, récupération et dossiers Santé. Les blessures et la fin de rage doivent provenir des transitions réelles ; aucune victoire n’est préparée."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32 au schéma183, createWorld(201), horloge explicitement placée à20400−1 sans campagne simulée. Trois colons libres sains, besoins hauts, Mêlée10, travaux et habillement automatique désactivés, réponse Ignorer. Couteau de plasteel réellement équipé par Ada, six repas et trois médicaments au sol. Abri en bois construit, porte initialement fermée via newDoorState, deux lits normaux et toit soutenu. Un lièvre sauvage adulte sain déjà présent, profil tempéré et horloge de population cohérents ; aucune rage ou blessure préparée. Profil Cassandra partiel et agenda ThreatSmall adoptés prospectivement avant l’introduction, compteur nul. Le premier tick repris doit sélectionner cet animal réel via le producteur d’incident et startAnimalManhunter. Aucune poursuite, attaque, ouverture, récupération mentale ou défense déjà jouée ; aucun pirate, Scaria ou meute. Ce témoin ne prouve ni fréquence naturelle, campagne longue ou charge générale.",
+      "sha256": "4a6e9a8eceb5e0bba13c4242b18abcd61a58074e359276e0fbb6f09c4c46f5cc"
     }
   ]
 }

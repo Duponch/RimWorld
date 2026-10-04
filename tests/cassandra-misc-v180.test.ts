@@ -9,6 +9,9 @@ import { validMiscIncidents } from '../src/sim/cassandra-misc-save.ts';
 import { heatwaveOffset } from '../src/sim/heatwave.ts';
 import { outdoorTemperature } from '../src/sim/temperature.ts';
 import { SnapshotDecoder,SnapshotEncoder } from '../src/bridge/snapshots.ts';
+import { V190_ITEM_IDS } from '../src/sim/biome-items.ts';
+import { faunaBiome } from '../src/sim/animal-species.ts';
+import { withoutPredatorApparelPolicies,withoutPredatorFoodPolicies } from './scenarios/legacy-save.ts';
 import type { World } from '../src/sim/types.ts';
 
 function cassandra(tick=0,seed=42):World {
@@ -141,7 +144,20 @@ test('saved Cassandra state resumes exactly; a neutral 168 continuation gains no
   const restored=deserializeWorld(serializeWorld(world));
   expect(restored.miscIncidents).toEqual(world.miscIncidents);
   stepWorld(world,100);stepWorld(restored,100);expect(restored).toEqual(world);
-  const legacy=JSON.parse(serializeWorld(world));
+  const legacy=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(world))));
+  // Schema 168 already had these recipes and Plants, but no V190 ingredient
+  // permissions or V201 calendar. Construct its fixture before lowering schema.
+  for(const structure of [...legacy.structures,...(legacy.packed??[]).map((p:{building:World['structures'][number]})=>p.building)])
+    for(const bill of structure.bills??[])
+      for(const item of V190_ITEM_IDS)delete bill.filters[item];
+  delete legacy.rainElectrical;
+  if(legacy.wildlife?.profile==='biome-fauna-v2'){
+    legacy.wildlife.profile='biome-herbivores-v1';
+    legacy.wildlife.animals=legacy.wildlife.animals.filter((a:{species:string})=>a.species!=='red-fox');
+    const population=legacy.wildlife.population,biome=faunaBiome(population.biome,false);
+    population.targetWeight=population.fullTargetWeight*biome.entries.reduce((sum,entry)=>sum+entry.commonality,0)/biome.totalCommonality;
+  }
+  delete legacy.smallIncidents;
   legacy.schemaVersion=168;delete legacy.miscIncidents;
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.miscIncidents).toBeUndefined();

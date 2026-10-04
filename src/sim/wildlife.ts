@@ -1,4 +1,5 @@
 import { processBurningAnimal } from './firefighting-animals.ts';
+import { advanceAnimalManhunter,processAnimalManhunter } from './animal-manhunter.ts';
 import { malnutritionModifiers } from './malnutrition.ts';
 import { processAnimalVomiting } from './food-hygiene.ts';
 import { bleedFilth } from './filth.ts';
@@ -158,6 +159,9 @@ export function advanceWildlife(world:World):void {
     const a=s.animals[(world.tick+i)%s.animals.length]!;
     const species=animalSpecies(a.species);
     advanceAnimalHealth(world,a);
+    // Burning prevents all new attacks; its reaction can begin at the first
+    // local boundary after recovery. Other blows expire in the Core substep.
+    if(a.burning&&a.strike&&a.strike.untilCore<=world.tick*10)delete a.strike;
     if(a.exiting&&exitSuppressed(a))cancelAnimalExit(world,a);
     if(a.state==='dead')continue;
     if(a.health)bleedFilth(world,a,medicalBleed(a.health),a.state==='downed'||a.state==='sleeping',.4);
@@ -171,11 +175,16 @@ export function advanceWildlife(world:World):void {
     const wantFood=species.predator?.3:.45,urgent=species.predator?.12:.18,hungry=species.predator?.24:.36;
     a.food=Math.max(0,a.food-animalFoodPerDay(a)/6000*malnutritionModifiers(a.health?.malnutrition).hungerFactor*(a.food<nutrition*urgent?.25:a.food<nutrition*hungry?.5:1));
     a.rest=Math.max(0,Math.min(1,a.rest+(a.state==='sleeping'?.0003809524*.8:-.00015833333*(a.rest<.01?.6:a.rest<.14?.3:a.rest<.28?.7:1))));
+    advanceAnimalManhunter(world,a);
     if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
     if(processAnimalVomiting(world,a))continue;
     if(a.state==='downed'||a.motion&&a.motion.end>world.tick)continue;
+    // New panic travel waits only for the already committed physical recovery.
+    // Fire damage keeps advancing in the shared fire clock during this wait.
+    if(a.strike){a.path=[];if(a.state!=='sleeping')a.state='idle';continue;}
     if(a.predation&&(a.burning||a.flee))cancelAnimalPredation(world,a);
     if(a.burning&&processBurningAnimal(world,a,{free:c=>getNav(a).free(c),route:goals=>{if(searches>=1)return null;searches++;return getNav(a).route(a,goals);},move:()=>{moveAnimal(world,a,getNav(a).step,body.capacities.moving);}}))continue;
+    if(a.manhunter&&processAnimalManhunter(world,a,getNav(a),getPhysical(),()=>{if(searches>=1)return false;searches++;return true;}))continue;
     if(moveAnimalMelee(world,a,()=>getNav(a),getPhysical,getShot))continue;
     if(a.stun)continue;
     if(a.predation){
@@ -219,7 +228,7 @@ export function advanceWildlife(world:World):void {
     }
     // A handler or veterinarian holds the animal only at real adjacent
     // interaction. Their approach reserves work but never freezes wildlife.
-    const danger=!!(a.burning||a.flee||a.threat||a.retaliation||a.strike);
+    const danger=!!(a.burning||a.flee||a.threat||a.retaliation||a.strike||a.manhunter);
     // The handler advances both bodies on confirmed ticks. Ordinary wildlife
     // decisions must not replace its route while the rope is held.
     if(!danger&&(ledAnimals?.has(a.id)||matingFemales.has(a.id)))continue;

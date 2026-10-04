@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V201 livré — animal sauvage en rage, schéma 183.** [Contrat](development/manhunter-v201.md), [recherche Core et adaptations](research/manhunter-core-v201.md), [preuve bornée](history/validation-manhunter-v201.md), [fuite, abri et défense](gameplay/player-guide.md#faire-face-à-un-animal-en-rage--v201). La 47e scène **« Animal en rage · abri et défense »** prépare le vrai démarrage après reprise. ThreatSmall, riposte et prédation restent distincts ; aucune Scaria, meute ou clôture de G3/G4.
+
 **V200 — jauges et retouches visuelles, schéma 182 inchangé.** Lire le [contrat](development/needs-grass-clouds-v200.md), la [référence Core/API](research/needs-grass-clouds-v200.md) et la [preuve ciblée](history/validation-needs-grass-clouds-v200.md) : 17 repères hors Humeur, pigment terrain partagé et sang des seules racines tachées, rayon central des nuages à 31 %. Les règles de besoins et de sang physique ne changent pas.
 
 **V199 — dossiers compacts et informations au survol, schéma 182 inchangé.** Lire le [contrat UI](development/colonist-ui-v199.md), le [relevé des quatorze captures et du Core](research/colonist-ui-core-v199.md) et la [preuve ciblée](history/validation-colonist-ui-v199.md). Palette pastel conservée ; les informations non simulées restent absentes.

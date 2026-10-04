@@ -43,7 +43,7 @@ export function handlingStepDuration(task:Pick<AnimalHandlingTask,'kind'|'step'>
 
 function animalAvailable(a:WildAnimal):boolean {
   return canTameSpecies(a.species)&&!['dead','downed','sleeping','eating'].includes(a.state)
-    &&!a.stun&&!a.burning&&!a.flee&&!a.health?.foodPoisoning?.vomit;
+    &&!a.manhunter&&!a.stun&&!a.burning&&!a.flee&&!a.health?.foodPoisoning?.vomit;
 }
 function handlerAvailable(p:Pawn):boolean {
   const body=pawnBody(p).capacities;
@@ -101,6 +101,7 @@ export function startHandling(p:Pawn,proposal:HandlingProposal):void {
 }
 export function tameRefusal(_w:World,a:WildAnimal|undefined):string|undefined {
   return !a||a.state==='dead'?'Animal vivant introuvable.'
+    :a.manhunter?'Cet animal est en rage.'
     :!canTameSpecies(a.species)?'Cette espèce n’est pas apprivoisable ici.'
     :a.domestic?'Cet animal appartient déjà à la colonie.':undefined;
 }
@@ -162,6 +163,7 @@ function finish(w:World,p:Pawn,a:WildAnimal,task:AnimalHandlingTask,ctx:NeedCont
 interface HandlingContext extends NeedContext { candidates():Reachability|null; blocked():Uint8Array }
 export function processHandling(w:World,p:Pawn,ctx:HandlingContext):void {
   const task=p.animalHandling;if(!task)return;
+  if(w.wildlife?.animals.some(a=>a.manhunter&&leadingClaimIds(task).includes(a.id))){interruptWork(w,p);return;}
   if(task.kind==='lead'){if(task.markerId===undefined){interruptWork(w,p);return;}processLeading(w,p,task as LeadingTask,ctx);return;}
   if(task.kind==='milk'||task.kind==='shear'){processProduct(w,p,task as ProductTask,ctx);return;}
   const a=w.wildlife?.animals.find(a=>a.id===task.animalId);

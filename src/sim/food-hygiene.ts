@@ -49,7 +49,7 @@ export function processAnimalVomiting(w:World,a:WildAnimal):boolean {
   const result=processFoodPoisoningVomit(state,w.tick,a.id%60,{
     awake:!['sleeping','downed'].includes(a.state)&&!a.stun,position:a,foodLevel:a.food,foodMax:animalSpecies(a.species).nutrition,
     random:()=>healthRandom(w),canStand:c=>canStandAt(w,c),deposit:c=>addFilth(w,c,'vomit'),
-    start:()=>{if(a.motion&&a.motion.end>w.tick)return false;a.path=[];delete a.meal;delete a.strike;delete a.retaliation;a.state='idle';return true;},
+    start:()=>{if(a.motion&&a.motion.end>w.tick||a.strike&&a.strike.untilCore>w.tick*10)return false;a.path=[];delete a.meal;delete a.strike;delete a.retaliation;a.state='idle';return true;},
   });
   a.food=result.foodLevel;if(result.active)a.nextDecision=w.tick+1;return result.active;
 }

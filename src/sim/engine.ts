@@ -41,6 +41,7 @@ import { advanceCorpses } from './corpses.ts';
 import { advanceWildlife,enableWildlife,reconcileWildlife } from './wildlife.ts';
 import { enableHeatwaves,advanceHeatwaves } from './heatwave.ts';
 import { adoptMiscIncidents,advanceMiscIncidents } from './cassandra-misc.ts';
+import { adoptSmallIncidents,advanceSmallIncidents } from './cassandra-small.ts';
 import { advanceHeatExposure } from './heat-exposure.ts';
 import { processHeatRefuge } from './heat-refuge.ts';
 import { newHeaterState,adjustHeaterTarget } from './heater.ts';
@@ -591,6 +592,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   // Old profiles start this new stream prospectively, when play resumes.
   // Loading or pausing never invents a past opportunity or heat exposure.
   adoptMiscIncidents(world);
+  adoptSmallIncidents(world);
   adoptRainElectrical(world);
   let thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
@@ -600,7 +602,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     const getLight=()=>{if(!light){light=readPlantLight(world);lightKey=plantLightSourcesKey(world);}return light;};
     advanceHumanAges(world);
     sampleColonyEconomy(world);
-    advanceArrivals(world);advanceHeatwaves(world);advanceMiscIncidents(world);advanceVisitors(world);advancePodRescues(world);advanceFluIncidents(world);
+    advanceArrivals(world);advanceHeatwaves(world);advanceMiscIncidents(world);advanceSmallIncidents(world);advanceVisitors(world);advancePodRescues(world);advanceFluIncidents(world);
     const beforeWeather=world.structures;
     advanceSurfaceWeather(world,cell=>{const c={type:'designate' as const,kind:'chop' as const,...cell};if(canDesignate(world,c).ok)applyCommand(world,c);});
     if(beforeWeather!==world.structures)thermal=reconcileTemperature(world);
@@ -632,10 +634,13 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     if(structuresBeforeCombat!==world.structures)light=undefined;
     const getEnvironment=()=>environment??=getEnvironmentCache().read(world,getLight());
     const getFurnitureSight=()=>furnitureSight??=captureWorldShotGrid(world);
-    const getThreats=()=>threatQueries(world);
+    // Sparse live references for this decision phase. Each consumer still
+    // rechecks hostility/state; ordinary fauna is not scanned per colonist.
+    const animalThreats=world.wildlife?.animals.filter(a=>a.manhunter&&!['dead','downed'].includes(a.state))??[];
+    const getThreats=()=>threatQueries(world,animalThreats);
     advanceBeautyNeeds(world,getLight().topology);
     advanceFlowerPots(world,getLight(),new TemperatureView(world,thermal));
-    const hasAdversary=world.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner);
+    const hasAdversary=world.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner)||animalThreats.length>0;
     let thermalDirty=structuresBeforeCombat!==world.structures;
     const invalidateEnvironment=()=>{environment=undefined;light=undefined;furnitureSight=undefined;thermalDirty=true;};
     const getRoofs = () => roofs ??= new RoofContext(world);
@@ -660,7 +665,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(processPawnVomiting(world,pawn))continue;
       if(pawn.stun&&pawn.stun.untilCore<=world.tick*10)delete pawn.stun;
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
-      if(hasAdversary&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget);considerFlee(world,pawn,getThreats());}
+      if(hasAdversary&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget,animalThreats);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
       if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = scoutOnMapId(world)===pawn.id || commercialOnMapId(world)===pawn.id || pawn.animalHandling || pawn.animalCare || pawn.burial || pawn.cleaning || pawn.visitor || pawn.podRescue || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.surgery || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {

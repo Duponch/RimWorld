@@ -8,6 +8,22 @@ import { deconstructionCamp, fixtureBuilding } from './scenarios/deconstruction.
 import { fireCamp, woodFire } from './scenarios/fire.ts';
 import { powerFixture, fixturePower } from './scenarios/power.ts';
 import type { Cell, World } from '../src/sim/types.ts';
+import { animalCombatCamp } from './scenarios/animal-combat.ts';
+import { startAnimalManhunter } from '../src/sim/animal-manhunter.ts';
+
+test('a real manhunter start sounds once even at the same tick, while reload remains silent',()=>{
+  const world=animalCombatCamp(),animal=world.wildlife!.animals[0]!,recorder=new AudioCueRecorder();
+  recorder.capture(world);expect(recorder.drain()).toEqual([]);
+  expect(startAnimalManhunter(world,animal)).toBe(true);
+  recorder.capture(world);
+  const cues=recorder.drain().filter(cue=>cue.kind==='ui.threat');
+  expect(cues).toHaveLength(1);expect(cues[0]!.id).toContain(`manhunter:${animal.id}:`);
+  recorder.capture(world);expect(recorder.drain()).toEqual([]);
+  const resumed=deserializeWorld(serializeWorld(world));
+  recorder.reset();recorder.capture(resumed);expect(recorder.drain()).toEqual([]);
+  stepWorld(resumed);recorder.capture(resumed);
+  expect(recorder.drain().filter(cue=>cue.kind==='ui.threat')).toEqual([]);
+});
 
 function captureTicks(world: World, recorder: AudioCueRecorder, done: () => boolean, limit = 250) {
   const heard: string[] = [];

@@ -15,6 +15,8 @@ import { retryInterruptedCargo } from './interrupted-cargo.ts';
 import type { LightReader } from './light-environment.ts';
 import type { NavigationGrid,SearchBudget } from './work-planner.ts';
 import type { Cell,Pawn,World } from './types.ts';
+import { hostileCandidates,isAnimalTarget,type LivingTarget } from './combat-target.ts';
+import type { WildAnimal } from './wildlife-state.ts';
 
 export interface FleeState { target:Cell; /** Zero while travelling, otherwise end of cowering. */ until:number }
 const EMPTY:ReadonlySet<number>=new Set();
@@ -22,10 +24,10 @@ const EMPTY:ReadonlySet<number>=new Set();
 // a tick/array identity and never keeps World alive.
 const roomCaches=new WeakMap<World,RoomTopologyCache>();
 /** One synchronous decision owner. Do not reuse after an actor changes the world. */
-export function threatQueries(world:World) {
+export function threatQueries(world:World,animalThreats?:readonly WildAnimal[]) {
   const queries=shootingQueries(world);
-  return {queries,hostiles:(p:Pawn)=>world.pawns.filter(t=>hostileTo(p,t)&&activeThreat(t)),
-    nearby:(p:Pawn)=>world.pawns.filter(t=>hostileTo(p,t)&&activeThreat(t)&&distanceSquared(p,t)<64&&clearShotSegment(queries.grid(),p,t))};
+  return {queries,hostiles:(p:Pawn)=>hostileCandidates(world,p,animalThreats),
+    nearby:(p:Pawn)=>hostileCandidates(world,p,animalThreats).filter(t=>distanceSquared(p,t)<64&&clearShotSegment(queries.grid(),p,t))};
 }
 type Context=ReturnType<typeof threatQueries>;
 /** Forced civilian jobs and drafted control take precedence over default flee. */
@@ -42,9 +44,9 @@ export function processSentry(world:World,pawn:Pawn,context:Context):void {
   const weapon=equippedWeapon(world,pawn),profile=weapon?.weapon?rangedWeaponProfile(weapon.item,weapon.weapon.quality):undefined;if(!profile)return;
   const range=profile.range;
   const targets=context.hostiles(pawn).filter(t=>distanceSquared(pawn,t)<=range**2).sort((a,b)=>distanceSquared(pawn,a)-distanceSquared(pawn,b)||a.id-b.id);
-  for(const target of targets)if(startAutonomousShot(world,pawn,target,context.queries))break;
+  for(const target of targets)if(!isAnimalTarget(target)&&startAutonomousShot(world,pawn,target,context.queries))break;
 }
-function planEscape(world:World,pawn:Pawn,hostiles:Pawn[],blocked:Uint8Array):Cell[]|undefined {
+function planEscape(world:World,pawn:Pawn,hostiles:LivingTarget[],blocked:Uint8Array):Cell[]|undefined {
   const reach=candidateAccess(world,pawn,blocked,EMPTY),candidates:{cell:Cell;score:number;distance:number}[]=[];
   let roomCache=roomCaches.get(world);if(!roomCache){roomCache=new RoomTopologyCache();roomCaches.set(world,roomCache);}
   const stands=captureStandability(world),rooms=roomCache.read(world),reserved=reservedServiceCells(world,pawn.id);

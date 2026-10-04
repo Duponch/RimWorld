@@ -30,7 +30,7 @@ export type AnimalCareContext=NeedContext&{candidates:()=>Reachability|null;bloc
 /** The ordinary patient must belong to the colony and stay physically down.
  * The anatomy comes from the animal record, never a surrogate human Pawn. */
 function patientReady(w:World,a:WildAnimal,doctor?:Pawn):boolean {
-  return a.species==='hare'&&!!a.domestic&&a.domestic.care!=='none'&&
+  return !a.manhunter&&a.species==='hare'&&!!a.domestic&&a.domestic.care!=='none'&&
     (a.state==='downed'||a.state==='sleeping')&&(!a.motion||a.motion.end<=w.tick)&&
     !!a.health&&!a.health.death&&animalCareTargets(a).length>0&&
     !w.pawns.some(p=>p!==doctor&&(p.animalCare?.animalId===a.id||p.animalHandling&&leadingClaimIds(p.animalHandling).includes(a.id)));
@@ -40,7 +40,7 @@ function doctorReady(p:Pawn):boolean {
     !p.interruptedCargo&&p.priorities.doctor>0&&!medicalWorkRefusal(p);
 }
 export function animalCareTargets(a:WildAnimal):RankedTreatment[] {
-  const h=a.health;if(!h||h.death||h.body!==a.species||!a.domestic||a.domestic.care==='none')return [];
+  const h=a.health;if(a.manhunter||!h||h.death||h.body!==a.species||!a.domestic||a.domestic.care==='none')return [];
   const model=animalBodyModel(a.species),rules=injuryPartRules(model),list:RankedTreatment[]=[];
   for(const i of h.injuries)if(i.tended===undefined&&i.scar?.pain===undefined&&modelHasPart(model,i.part))
     list.push({injuryId:i.id,priority:injuryBleed(h,i)*1.5,severity:i.severity});
@@ -93,7 +93,7 @@ export function startAnimalCare(doctor:Pawn,proposal:AnimalCareProposal):void {
   doctor.animalCare=proposal.task;doctor.path=proposal.path;doctor.state='moving';doctor.planCooldown=0;
 }
 export function animalCareInProgress(w:World,a:WildAnimal):boolean {
-  if(a.species!=='hare'||!a.domestic||a.state!=='downed'&&a.state!=='sleeping'||a.burning||a.flee||a.threat||a.retaliation)return false;
+  if(a.manhunter||a.species!=='hare'||!a.domestic||a.state!=='downed'&&a.state!=='sleeping'||a.burning||a.flee||a.threat||a.retaliation)return false;
   return w.pawns.some(p=>p.animalCare?.animalId===a.id&&p.animalCare.phase==='treat'&&doctorReady(p)&&
     p.moveCooldown===0&&(!p.motion||p.motion.end<=w.tick)&&!p.path.length&&
     p.x===p.animalCare.spot.x&&p.z===p.animalCare.spot.z&&adjacent(p,a));

@@ -15,6 +15,9 @@ import type { Cell,World } from './types.ts';
 import { animalSpecies } from './animal-species.ts';
 import { combatTarget,isAnimalTarget } from './combat-target.ts';
 import { animalPredationTarget,cancelAnimalPredation,reconcileAnimalPredation } from './wildlife-predation.ts';
+import { animalManhunterTarget } from './animal-manhunter.ts';
+import { isRoomDoor } from './door-rules.ts';
+import { damageBarrier } from './barriers.ts';
 
 export function animalMeleeTools(a:WildAnimal):MeleeTool[]{
   const tools:MeleeTool[]=[];
@@ -58,7 +61,7 @@ export function moveAnimalMelee(w:World,a:WildAnimal,nav:()=>ReturnType<typeof a
   if(!a.threat&&!a.retaliation&&!a.strike)return false;
   const target=a.threat?animalMeleeTarget(w,a,w.tick*10,grid()):undefined;
   if(!target){delete a.threat;delete a.retaliation;a.path=[];}
-  if(a.strike||a.stun){a.path=[];a.state='idle';return true;}
+  if(a.strike||a.stun){a.path=[];if(a.state!=='sleeping')a.state='idle';return true;}
   if(!target)return false;
   if(!a.retaliation||a.retaliation.untilCore<=w.tick*10)a.retaliation={targetId:target.id,untilCore:w.tick*10+200};
   if(meleeContact(w,a,target,blocked())){a.path=[];a.state='idle';return true;}
@@ -70,18 +73,34 @@ export function advanceAnimalMelee(w:World,a:WildAnimal,core:number,blocked:()=>
   if(a.stun&&core>=a.stun.untilCore)delete a.stun;
   if(a.state==='dead'||a.state==='downed')return false;
   if(a.strike&&core>=a.strike.untilCore)delete a.strike;
+  if(a.burning||a.health?.foodPoisoning?.vomit)return false;
+  const m=a.manhunter;
+  if(m?.exhausted)return false;
+  if(m?.door){
+    const bash=m.door;
+    const door=w.structures.find(s=>s.id===m.door!.targetId&&isRoomDoor(s.kind)&&s.door);
+    if(!door||core>=m.door.untilCore||m.door.remaining<=0){delete m.door;return false;}
+    if(a.strike||a.stun||(a.motion?.end??0)>core/10||!meleeContact(w,a,door,blocked()))return false;
+    const state={rng:w.rng},tool=chooseMeleeTool(animalMeleeTools(a),()=>healthRandom(state));if(!tool)return false;
+    const raw=Math.max(1,tool.damage*(.8+healthRandom(state)*.4)),damage=Math.floor(raw)+Number(healthRandom(state)<raw%1);
+    a.strike={targetId:door.id,structure:{x:door.x,z:door.z},atCore:core,untilCore:core+tool.cooldownCore,tool:tool.id,outcome:'hit'};
+    if(!damageBarrier(w,door,damage,state.rng)){delete a.strike;return false;}
+    a.path=[];a.state='idle';bash.remaining--;
+    if(!w.structures.includes(door)||bash.remaining===0)delete m.door;
+    return true;
+  }
   reconcileAnimalPredation(w,a,core);
   // The job may expire mid-edge. Release its intent without discarding the
   // captured physical movement; a later decision may start a fresh response.
   if(a.retaliation&&core>=a.retaliation.untilCore){delete a.retaliation;a.path=[];}
-  const hunt=a.predation,target=hunt?animalPredationTarget(w,a,core):a.threat?animalMeleeTarget(w,a,core,grid()):undefined;
+  const hunt=a.predation,target=m?animalManhunterTarget(w,a):hunt?animalPredationTarget(w,a,core):a.threat?animalMeleeTarget(w,a,core,grid()):undefined;
   if(!target){
     if(!hunt){if(a.threat||a.retaliation)a.path=[];delete a.threat;delete a.retaliation;}
     return false;
   }
   if(a.strike||a.stun&&a.stun.untilCore>core||(a.motion?.end??0)>core/10)return false;
-  if(hunt&&(target.motion?.end??0)>core/10)return false;
-  if(!hunt&&(!a.retaliation||core>=a.retaliation.untilCore))a.retaliation={targetId:target.id,untilCore:core+200};
+  if((hunt||m)&&(target.motion?.end??0)>core/10)return false;
+  if(!hunt&&!m&&(!a.retaliation||core>=a.retaliation.untilCore))a.retaliation={targetId:target.id,untilCore:core+200};
   if(!meleeContact(w,a,target,blocked()))return false;
   const state={rng:w.rng},tool=chooseMeleeTool(animalMeleeTools(a),()=>healthRandom(state));
   if(!tool){if(hunt)cancelAnimalPredation(w,a);return false;}

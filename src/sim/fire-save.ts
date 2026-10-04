@@ -52,6 +52,7 @@ export function validateFires(w:World,version:number,ids?:Set<number>):string[] 
     const t=p.firefighting;if(t===undefined)continue;
     if(!object(t)||!keys(t,['fireId','forced','phase','cooldownCore','spentCore'])||!s.items.some(f=>f.id===t.fireId)||typeof t.forced!=='boolean'||!['approach','beat'].includes(t.phase)||!int(t.cooldownCore,0,now+66)||!int(t.spentCore,0,36000)||t.spentCore%10||!isColonist(p)||p.prisoner||medicalWorkRefusal(p)||p.burning||p.jobId!==null||p.research||p.hunting||p.equipmentTask||p.ward||p.feed||p.tend||p.rescue||p.haul||p.need||p.cooking||p.orders.active!==null||p.orders.queue.length||p.recreation.task||p.interruptedCargo)errors.push('Invalid firefighting task.');
   }
-  for(const a of w.wildlife?.animals??[])if(a.burning!==undefined&&(!animals.has(a.id)||a.meal||a.flee||a.threat||a.retaliation||a.strike))errors.push('Invalid animal burning activity.');
+  for(const a of w.wildlife?.animals??[])if(a.burning!==undefined&&(!animals.has(a.id)||a.meal||a.flee||a.threat||a.retaliation
+    ||a.strike&&(version<183||a.path.length||(a.motion?.end??0)>w.tick||!['idle','sleeping'].includes(a.state))))errors.push('Invalid animal burning activity.');
   return errors;
 }

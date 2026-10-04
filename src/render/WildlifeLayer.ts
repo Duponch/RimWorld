@@ -27,7 +27,7 @@ import { growPawnBuffers } from './pawn-buffers';
 import { pileSurfaces,type PileSurface } from './pile-surfaces';
 import { PAWN_MODEL_SCALE,WORLD_SCALE } from '../world/scale';
 
-type VisualAnimal=Pick<WildAnimal,'id'|'species'|'state'|'x'|'z'|'sex'|'ageTicks'|'motion'|'meal'|'strike'|'stun'|'threat'|'predation'|'health'>&{corpsePile?:MaterialPile;carrierId?:number};
+type VisualAnimal=Pick<WildAnimal,'id'|'species'|'state'|'x'|'z'|'sex'|'ageTicks'|'motion'|'meal'|'strike'|'stun'|'threat'|'predation'|'manhunter'|'health'>&{corpsePile?:MaterialPile;carrierId?:number};
 
 /** Resident capacity and node graph. CPU supplies edges/phases at snapshots
  * and segment boundaries; continuous translation and the rig run on the GPU. */
@@ -223,7 +223,7 @@ class SpeciesRig {
       const edge=timeline?.segment(a.id)??a.motion,active=!!edge&&tick>=edge.start&&tick<edge.end;
       const growth=bodySizeAtAge(a.species,a.ageTicks)/animalSpecies(a.species).bodySize;
       const fromFraction=edge&&'fromFraction' in edge?edge.fromFraction:undefined,toFraction=edge&&'toFraction' in edge?edge.toFraction:undefined;
-      const key=`${i}:${origin}:${edge?.start}:${edge?.end}:${fromFraction}:${toFraction}:${active}:${a.state}:${a.meal?.id}:${a.strike?.atCore}:${a.stun?.untilCore}:${a.threat?.targetId}:${a.predation?.targetId}:${growth}`;if(this.keys.get(a.id)===key)return;this.keys.set(a.id,key);dirty=true;
+      const key=`${i}:${origin}:${edge?.start}:${edge?.end}:${fromFraction}:${toFraction}:${active}:${a.state}:${a.meal?.id}:${a.strike?.atCore}:${a.stun?.untilCore}:${a.threat?.targetId}:${a.predation?.targetId}:${a.manhunter?.targetId}:${a.manhunter?.door?.targetId}:${growth}`;if(this.keys.get(a.id)===key)return;this.keys.set(a.id,key);dirty=true;
       carrierState.setXYZW(i,0,0,0,0);transfer.setXY(i,0,0);
       blood.setX(i,bodyBloodWord(a.health));
       absent.setX(i,a.health?corpseVisualMask({animalId:a.id,species:a.species,sex:a.sex,ageTicks:a.ageTicks,health:a.health}):0);
@@ -232,8 +232,8 @@ class SpeciesRig {
       const f=traveling?edge.from:a,t=traveling?edge.to:a;
       let yaw=edge?Math.atan2(edge.to.x-edge.from.x,edge.to.z-edge.from.z):0;
       if(!traveling&&a.meal){const m=a.meal,target=m.kind==='plant'?world.resources.find(r=>r.id===m.id):world.piles.find(p=>p.id===m.id)?.owner;if(target&&'x' in target&&(target.x!==a.x||target.z!==a.z))yaw=Math.atan2(target.x-a.x,target.z-a.z);}
-      if(!traveling&&(a.strike||a.threat||a.predation)){const targetId=a.strike?.targetId??a.threat?.targetId??a.predation?.targetId;
-        const target=world.pawns.find(p=>p.id===targetId)??world.wildlife?.animals.find(p=>p.id===targetId);
+      if(!traveling&&(a.strike||a.threat||a.predation||a.manhunter?.targetId)){const targetId=a.strike?.targetId??a.threat?.targetId??a.predation?.targetId??a.manhunter?.door?.targetId??a.manhunter?.targetId;
+        const target=a.strike?.structure??world.pawns.find(p=>p.id===targetId)??world.wildlife?.animals.find(p=>p.id===targetId)??world.structures.find(s=>s.id===a.manhunter?.door?.targetId);
         if(target&&(target.x!==a.x||target.z!==a.z))yaw=Math.atan2(target.x-a.x,target.z-a.z);}
       const previous=this.headings.get(a.id);
       let heading=turnToward(previous,yaw,traveling?edge.start:tick);

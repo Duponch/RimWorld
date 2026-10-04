@@ -124,6 +124,7 @@ export function damageStructure(world:World,s:Structure,amount:number):boolean {
   if(delivered.length)world.piles=world.piles.filter(p=>!delivered.includes(p));
   if(salvage){state.rng=salvage.rng;for(const drop of salvage.drops)addMaterial(world,ITEM_DEFINITIONS[drop.item].kind,drop.quantity,{type:'ground',...drop.cell},drop.item);}
   for(const p of actors)interruptWork(world,p);
+  for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===s.id)delete a.manhunter.door;
   removeJobs(world,ids);
   for(const p of world.pawns){
     if(p.bedId===s.id)p.bedId=null;

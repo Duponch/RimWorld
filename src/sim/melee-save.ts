@@ -32,7 +32,7 @@ export function validateMelee(world:World):string[] {
         &&p.social?.fight?.opponentId===target.id&&target.social?.fight?.opponentId===p.id
         :order.auto==='draft'||order.auto==='response'?automaticOwnership(world,p,order.targetId,order.auto):!isColonist(p)||!!p.draft;
       if((!target||target.id===p.id||!social&&!isColonist(p)&&!hostileTo(p,target))
-        &&!(world.schemaVersion>=78&&isColonist(p)&&!order.auto&&world.wildlife?.animals.some(a=>a.id===order.targetId))
+        &&!(world.schemaVersion>=78&&isColonist(p)&&(!order.auto||world.schemaVersion>=183&&(order.auto==='draft'||order.auto==='response')&&automaticOwnership(world,p,order.targetId,order.auto))&&world.wildlife?.animals.some(a=>a.id===order.targetId))
         ||!owned||p.shooting?.order||(!order.auto&&p.draft?.target)||order.auto==='draft'&&!automaticPost(p)||p.draft?.queue.length)
         errors.push('Invalid melee order ownership.');
     }

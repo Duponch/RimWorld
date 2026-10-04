@@ -4,6 +4,7 @@ import { createWorld } from '../src/sim/index';
 import { createMedicalRecord } from '../src/sim/injury-state';
 import { adultAgeTicks } from '../src/sim/animal-life';
 import type { WildAnimal } from '../src/sim/wildlife-state';
+import { startAnimalManhunter } from '../src/sim/animal-manhunter';
 
 function fixture() {
   const world = createWorld(901, 16, 16);
@@ -60,4 +61,17 @@ test('applicable tabs have labelled panels; advanced training remains absent', (
   expect(markup).toContain('data-animal-care');
   expect(markup).not.toContain('animal-tab-needs');
   expect(markup).not.toMatch(/dressage|training/i);
+});
+
+test('temporary rage names the real human target safely and stays distinct from medical disease',()=>{
+  const {world,animal}=fixture();
+  expect(startAnimalManhunter(world,animal)).toBe(true);
+  world.pawns[0]!.name='<img src=x onerror=alert(1)>';
+  animal.manhunter!.targetId=world.pawns[0]!.id;
+  const view=animalInspectorView(world,animal.id)!;
+  expect(view.activity).toBe(`En rage · poursuit ${world.pawns[0]!.name}`);
+  expect(view.species).toContain('État : rage temporaire · attaque les humains');
+  expect(view.health.join(' ')).not.toMatch(/Scaria|rage/i);
+  animal.manhunter!.door={targetId:world.nextId++,remaining:2,untilCore:1000};
+  expect(animalInspectorView(world,animal.id)!.activity).toBe('En rage · frappe une porte');
 });

@@ -1,6 +1,7 @@
 import { automaticPermission } from './automatic-combat-state.ts';
 import { hostileTo,isColonist } from './affiliation.ts';
 import type { Pawn,World } from './types.ts';
+import { combatTarget,hostileTarget } from './combat-target.ts';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 export function validAutomaticAttack(v:unknown,version:number,tick:number):boolean {
@@ -14,5 +15,5 @@ export function automaticPost(p:Pawn):boolean {
   return !!p.draft&&!p.draft.queue.length&&(!p.draft.target||p.draft.target.x===p.x&&p.draft.target.z===p.z)&&!p.path.length;
 }
 export function automaticOwnership(w:World,p:Pawn,targetId:number,kind:'draft'|'response'):boolean {
-  return isColonist(p)&&automaticPermission(p,kind)&&w.pawns.some(t=>t.id===targetId&&hostileTo(p,t));
+  const target=combatTarget(w,targetId);return isColonist(p)&&automaticPermission(p,kind)&&!!target&&hostileTarget(p,target);
 }

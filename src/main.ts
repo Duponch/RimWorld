@@ -275,7 +275,8 @@ function setMusicVolume(volume: number): boolean {
   catch { return false; }
 }
 function musicMood(world: World): MusicMood {
-  if (world.pawns.some(pawn => pawn.faction === 'outlaws' && !pawn.prisoner && activeThreat(pawn))) return 'tension';
+  if (world.pawns.some(pawn => pawn.faction === 'outlaws' && !pawn.prisoner && activeThreat(pawn))
+    || world.wildlife?.animals.some(animal=>animal.manhunter&&animal.state!=='dead'&&animal.state!=='downed')) return 'tension';
   const hour = 24 * (calendarTick(world) % TICKS_PER_DAY) / TICKS_PER_DAY;
   return hour >= 6 && hour < 20 ? 'day' : 'night';
 }
@@ -974,8 +975,10 @@ function renderState() {
   if(sadWanderers)alerts.push(`${sadWanderers} colon(s) en errance triste`);
   if(foodBingers)alerts.push(`${foodBingers} colon(s) en frénésie alimentaire`);
   const enemy=world.pawns.find(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p));
+  const enraged=world.wildlife?.animals.filter(animal=>animal.manhunter&&animal.state!=='dead'&&animal.state!=='downed')??[];
+  if(enraged.length)alerts.push(`${enraged.length} ${enraged.length>1?'animaux':'animal'} en rage`);
   const fires=world.fires?.items??[],fireAlert=el<HTMLButtonElement>('inspect-fire');fireAlert.hidden=!fires.length;fireAlert.textContent=`Incendie · ${fires.length} foyer${fires.length>1?'s':''} · voir`;fireAlert.onclick=()=>{const cell=firePosition(world,fires[0]!);if(cell){applyTool('select');pickCell(cell.x,cell.z);renderer?.focusCell(cell);}};
-  const threatButton=el<HTMLButtonElement>('inspect-threat');threatButton.hidden=!enemy;if(enemy){threatButton.textContent='Menace armée · voir';threatButton.onclick=()=>selectPawn(enemy.id);}
+  const threatButton=el<HTMLButtonElement>('inspect-threat'),threat=enemy??enraged[0];threatButton.hidden=!threat;if(threat){threatButton.textContent=enemy?'Menace armée · voir':'Animal en rage · voir';threatButton.onclick=()=>selectPawn(threat.id);}
   const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=colonists.length-living.length;
   const starving=living.filter(p=>(p.health?.malnutrition??0)>0).length;if(starving)alerts.push(`${starving} colon(s) en malnutrition`);
   const chilled=living.filter(p=>(p.health?.hypothermia??0)>=40000000).length;if(chilled)alerts.push(`${chilled} colon(s) en hypothermie`);

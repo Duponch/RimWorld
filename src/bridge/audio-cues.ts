@@ -77,6 +77,7 @@ export class AudioCueRecorder {
   private hauls = new Map<number, HaulObservation>();
   private pawnStates = new Map<number, ActorDamageObservation>();
   private animalStates = new Map<number, ActorDamageObservation>();
+  private manhunters = new Map<number, number>();
   private firefighting = new Map<number, { fireId: number; cooldownCore: number }>();
   private fireIds = new Set<number>();
   private switches = new Map<number, boolean>();
@@ -101,6 +102,7 @@ export class AudioCueRecorder {
     this.hauls.clear();
     this.pawnStates.clear();
     this.animalStates.clear();
+    this.manhunters.clear();
     this.firefighting.clear();
     this.fireIds.clear();
     this.switches.clear();
@@ -131,6 +133,7 @@ export class AudioCueRecorder {
     const hauls = new Map<number, HaulObservation>();
     const pawnStates = new Map<number, ActorDamageObservation>();
     const animalStates = new Map<number, ActorDamageObservation>();
+    const manhunters = new Map<number, number>();
     const firefighting = new Map<number, { fireId: number; cooldownCore: number }>();
     const fireIds = new Set((world.fires?.items ?? []).map(fire => fire.id));
     const switches = new Map<number, boolean>();
@@ -344,6 +347,12 @@ export class AudioCueRecorder {
             tick: world.tick, kind: 'building.deconstructed', x: previous.x, z: previous.z });
     }
     for (const animal of world.wildlife?.animals ?? []) {
+      if(animal.manhunter&&animal.state!=='dead'&&animal.state!=='downed'){
+        const startedAtCore=animal.manhunter.startedAtCore;
+        manhunters.set(animal.id,startedAtCore);
+        if(this.initialized&&this.manhunters.get(animal.id)!==startedAtCore)
+          this.add({id:`ui.threat:manhunter:${animal.id}:${startedAtCore}`,tick:world.tick,kind:'ui.threat',x:0,z:0});
+      }
       if(animal.strike){
         melee.set(animal.id,animal.strike.atCore);
         if(this.initialized&&previousMelee.get(animal.id)!==animal.strike.atCore)
@@ -399,6 +408,7 @@ export class AudioCueRecorder {
     this.hauls = hauls;
     this.pawnStates = pawnStates;
     this.animalStates = animalStates;
+    this.manhunters = manhunters;
     this.firefighting = firefighting;
     this.fireIds = fireIds;
     this.switches = switches;

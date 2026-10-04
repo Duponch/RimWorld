@@ -99,6 +99,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
     dead:animal.state==='dead',
     species: [
       `Espèce : ${species.label}`,
+      ...(animal.manhunter?['État : rage temporaire · attaque les humains','Récupération : durée variable ; le sommeil ordinaire ne met pas fin à la rage']:[]),
       `Régime : ${species.predator?'carnivore · viande, repas et dépouilles fraîches':'herbivore'}`,
       `Stade de vie : ${stageLabel[stage]}`,
       `Âge : ${(animal.ageTicks/6000).toLocaleString('fr-FR',{maximumFractionDigits:1})} jour(s)`,

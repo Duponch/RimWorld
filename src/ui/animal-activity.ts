@@ -8,6 +8,11 @@ export function animalActivity(world:World,animal:WildAnimal):string {
   if(animal.state==='dead'||animal.state==='downed')return labels[animal.state];
   if(animal.flee)return 'Fuit';
   if(animal.stun)return 'Étourdi';
+  if(animal.manhunter){
+    if(animal.manhunter.door)return 'En rage · frappe une porte';
+    const target=world.pawns.find(pawn=>pawn.id===animal.manhunter!.targetId);
+    return target?`En rage · ${animal.strike?'attaque':'poursuit'} ${target.name}`:'En rage · cherche un humain';
+  }
   if(animal.meal?.kind==='pile'&&world.piles.some(p=>p.id===animal.meal!.id&&p.corpse))return animal.state==='eating'?'Mange une dépouille':'Rejoint une dépouille';
   if(animal.predation){
     const prey=world.wildlife?.animals.find(a=>a.id===animal.predation!.targetId);

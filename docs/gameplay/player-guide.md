@@ -1,6 +1,18 @@
 # Guide joueur
 
-**Schéma courant 182 — V196 présentation et douleur sonore, sans migration.** [Preuve et limites](../history/validation-visual-blood-v196.md). Les règles de culture médicinale V195 restent inchangées.
+**Schéma courant 183 — V201 animal sauvage en rage temporaire.** [Contrat](../development/manhunter-v201.md), [preuve et limites](../history/validation-manhunter-v201.md). Les anciennes sauvegardes sont validées avant migration neutre, sans animal ni incident rétroactifs.
+
+## Faire face à un animal en rage — V201
+
+Un animal sauvage déjà présent peut devenir **en rage** après une occasion Cassandra. Il poursuit les humains, y compris les visiteurs, sans chercher à les manger. L'alerte **Animal en rage · voir** ouvre son inspection ; l'activité indique sa cible ou ses coups contre une porte. La musique passe au contexte de danger et le début confirmé utilise le son d'alerte existant. Recharger une rage active ne rejoue pas ce signal.
+
+Dans l'inspection du colon, choisissez sa réponse **Fuir**, **Attaquer** ou **Ignorer**. Fuir cherche un refuge accessible ; Attaquer engage la défense avec les moyens réels du colon ; Ignorer le laisse exposé pendant ses activités. Vous pouvez aussi mobiliser un colon pour lui imposer un déplacement ou un ordre de combat. Ces ordres gardent leur priorité ; les attaques exigent approche, contact et récupération.
+
+Une **porte réellement fermée** protège initialement les personnes à l'intérieur. Rentrez par un passage accessible et attendez la fermeture : maintien ouvert, personne ou objet au seuil peuvent la retarder. Si une poursuite déjà engagée perd son accès devant une porte proche, l'animal peut la frapper quelques fois au contact. L'abri n'accorde donc pas une invulnérabilité après des sorties répétées ; surveillez la porte et ses dégâts.
+
+La rage dure un temps variable : la récupération naturelle peut commencer après environ quatre heures de jeu, sans date de fin garantie. Chute médicale et effondrement d'épuisement peuvent l'arrêter ; **le coucher ordinaire ne la termine pas**. Les besoins continuent d'évoluer. Cet incident ne crée ni Scaria ni meute.
+
+Pour essayer, choisissez **Charger une partie → Colonies de test → Animal en rage · abri et défense**, la **47e scène**. Elle s'ouvre en pause un tick avant l'introduction J3,4 : Ada est dehors en (14,16), équipée d'un couteau, Noé et Mina sont dans l'abri, et le lièvre sain attend en (19,16). Les réponses initiales sont Ignorer pour laisser votre choix. Reprenez à 1× pour le vrai démarrage, inspectez, choisissez fuite/abri ou défense et sauvegardez pendant la poursuite. Aucun pirate, blessure ou combat terminé n'est préparé. Cette scène n'établit ni fréquence naturelle, campagne longue ou performance générale. [Scène](../../public/test-saves/v201/animal-en-rage.json), [générateur](../../scripts/create-test-save-manhunter-v201.ts), [règles Core et adaptations](../research/manhunter-core-v201.md).
 
 ## Sang, dépouilles et voix de douleur — V196
 

@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 182 as const;
+export const SCHEMA_VERSION = 183 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -194,6 +194,7 @@ export interface World {
   raids?:import('./raid-state.ts').RaidCalendar;
   fluIncidents?:import('./flu-incidents.ts').FluIncidentCalendar;
   miscIncidents?:import('./cassandra-misc.ts').CassandraMiscCalendar;
+  smallIncidents?:import('./cassandra-small.ts').CassandraSmallCalendar;
   flashstorm?:import('./flashstorm.ts').FlashstormState;
   podRescues?:import('./pod-rescue-state.ts').PodRescueState;
   home?:number[];

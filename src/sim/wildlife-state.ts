@@ -30,6 +30,8 @@ export interface WildAnimal extends Cell {
   strike?:NonNullable<import('./melee-state.ts').MeleeState['strike']>;
   /** Physical predator hunt; never a reservation of the living prey. */
   predation?:{targetId:number;startedAtCore:number;firstHit:boolean};
+  /** Temporary mental hostility, distinct from retaliation and predation. */
+  manhunter?:{startedAtCore:number;rng:number;zeroRestTicks:number;exhausted?:true;targetId?:number;door?:{targetId:number;remaining:number;untilCore:number}};
   sleepUntilCore?:number;
   path:Cell[]; motion?:TravelSegment; nextDecision:number;
   meal?:{kind:'plant'|'pile';id:number;quantity:number;progress:number};

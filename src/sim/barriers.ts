@@ -42,6 +42,9 @@ export function damageBarrier(world:World,s:Structure,amount:number,rng=world.rn
   world.jobs=world.jobs.filter(j=>!removed.has(j.id));
   if(delivered.length)world.piles=world.piles.filter(p=>!delivered.includes(p));
   world.structures=world.structures.filter(b=>b!==s);
+  // A door job loses ownership immediately; its committed strike keeps the
+  // contact cell until recovery ends even when another actor destroys it.
+  for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===s.id)delete a.manhunter.door;
   invalidateAnimalPens(world);
   world.destroyed={count:ledger.count+1,lost};
   if(salvage)for(const d of salvage.drops)addMaterial(world,ITEM_DEFINITIONS[d.item].kind,d.quantity,{type:'ground',...d.cell},d.item);
