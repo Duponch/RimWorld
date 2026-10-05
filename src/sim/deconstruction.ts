@@ -1,4 +1,5 @@
 import { constructionRecipe } from './construction-materials.ts';
+import { releaseStructureMelee } from './melee-state.ts';
 import { isBlockMaterial, isUpholsteryMaterial, type ConstructionMaterial, type BlockMaterial, type UpholsteryMaterial } from './building-materials.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { deconstructionAvailable, deconstructionTarget } from './deconstruction-rules.ts';
@@ -53,6 +54,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   if (![(ledger.lostComponents??0)+lostComponents, ledger.count + 1, ledger.lostWood + lostWood, (ledger.lostSteel ?? 0) + lostSteel, ledger.fuelTicks + fuelTicks,...Object.values(lostBlocks),...Object.values(lostTextiles)].every(Number.isSafeInteger)) return false;
   if(!commitGraveRelease(world,structure,graveRelease))return false;
   world.structures = structures; world.jobs = jobs; world.rng = rng;
+  releaseStructureMelee(world,structure.id);
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===structure.id)delete a.manhunter.door;
   for (const d of refunds) addMaterial(world, ITEM_DEFINITIONS[d.item].kind, d.quantity, { type: 'ground', ...d.cell }, d.item);
   ledger.count++; ledger.lostWood += lostWood; ledger.fuelTicks += fuelTicks;

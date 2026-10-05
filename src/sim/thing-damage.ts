@@ -1,4 +1,5 @@
 import {detachMissingFlakBills} from './flak-work.ts';
+import { releaseStructureMelee } from './melee-state.ts';
 import {invalidateAnimalPens} from './animal-pens.ts';
 import {detachMissingGunBills} from './gun-work.ts';
 import {detachMissingComponentBills} from './component-work.ts';
@@ -151,8 +152,8 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   for(const p of world.pawns){
     if(p.bedId===s.id)p.bedId=null;
     if(p.need?.kind==='eat'&&p.need.dining?.tableId===s.id)p.need.dining.tableId=null;
-    if(p.melee?.order?.structure&&p.melee.order.targetId===s.id){p.melee.order=null;p.path=[];if(!p.melee.strike)delete p.melee;}
   }
+  releaseStructureMelee(world,s.id);
   world.destroyed={...destruction,count:destruction.count+1,lost};
   if(state){state.ledger.structures++;state.ledger.batteryEnergyLost+=energy;state.ledger.fuelTicksLost+=fuelLost;state.ledger.fuelTicksBurned+=fuelBurned;
     if(serviceLoss)state.ledger.items.component=(state.ledger.items.component??0)+serviceLoss;

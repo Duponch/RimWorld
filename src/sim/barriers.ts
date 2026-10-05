@@ -1,4 +1,5 @@
 import { coolerSalvage } from './cooler-salvage.ts';
+import { releaseStructureMelee } from './melee-state.ts';
 import { addMaterial } from './materials.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { constructionRecipe } from './construction-materials.ts';
@@ -40,11 +41,11 @@ export function damageBarrier(world:World,s:Structure,amount:number,rng=world.rn
     if(p.haul?.destination.type==='job'&&removed.has(p.haul.destination.jobId))interruptWork(world,p);
     if(p.jobId!==null&&removed.has(p.jobId))releaseAssignments(world,p);
     p.orders.queue=p.orders.queue.filter(o=>typeof o!=='number'||!removed.has(o));
-    if(p.melee?.order?.structure&&p.melee.order.targetId===s.id){p.melee.order=null;p.path=[];if(!p.melee.strike)delete p.melee;}
   }
   world.jobs=world.jobs.filter(j=>!removed.has(j.id));
   if(delivered.length)world.piles=world.piles.filter(p=>!delivered.includes(p));
   world.structures=world.structures.filter(b=>b!==s);
+  releaseStructureMelee(world,s.id);
   // A door job loses ownership immediately; its committed strike keeps the
   // contact cell until recovery ends even when another actor destroys it.
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===s.id)delete a.manhunter.door;

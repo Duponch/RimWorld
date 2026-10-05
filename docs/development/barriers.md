@@ -8,6 +8,8 @@
 
 La commande de mêlée existante porte `structure:true` pour une cible d'ouvrage. Approche, outil naturel/arme équipée, cadence, arrêt et récupération restent communs. L'ordre est annulé quand la cible disparaît ; la frappe conserve sa case pour finir l'animation orientée même après destruction. Pas d'XP Mêlée sur une cible immobile. Une balle réellement interceptée applique les dégâts de son arme, avec effet `barrier` sauvegardé pendant son dernier tick.
 
+Le [correctif du5octobre après V220](../history/validation-mechanical-breach-2026-10-05.md) applique ce retrait d'intention collectivement aux humains et mécanoïdes, dans les deux frontières de dégâts et la déconstruction. Les frappes et arêtes capturées survivent ; aucune cible disparue ne reste propriétaire d'un ordre en attendant le prochain passage du robot.
+
 `barriers.ts` retire un ouvrage détruit après prévalidation du bilan `World.destroyed` (compteur et pertes par matériau). Aucun remboursement de mur/porte ; le climatiseur restitue 25 % de sa recette après prévalidation par `cooler-salvage.ts`, avec pertes nettes et PRNG atomiques. Le bilan de déconstruction reste séparé. Libérer réparateurs, jobs de retrait et entrées de file avant suppression, puis recontrôler le toit. Un effondrement peut blesser/arrêter le frappeur : ne pas recréer sa mêlée après la réconciliation médicale, ni écraser le RNG consommé par la chute.
 
 Les captures tactiques/obstacles/projectiles expirent lors du retrait, y compris entre deux impacts du même tick Core. Les pièces, lumière et température sont réconciliées. Aucun mur graphique ne reste comme obstacle logique ou inversement. Les autres catégories d'objet restent explicitement non endommagées.

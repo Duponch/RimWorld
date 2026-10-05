@@ -4,6 +4,8 @@
 
 Un seul lot pour les deux races : arrivée et composition, corps mécanique réel, visée et balle, défense au contact, mort et carcasse, récupération physique, persistance et présentation. Scyther et acteurs humains/animaux conservent leurs branches historiques. Aucun Pawn, niveau de compétence, besoin biologique, canon inventoriable ou arme récupérable factice.
 
+Le [correctif du retour utilisateur du5octobre](../history/validation-mechanical-breach-2026-10-05.md), après V220 au schéma198 inchangé, ferme la destruction d'un obstacle partagé : chaque intention mécanique sur l'ID retiré disparaît immédiatement, même pendant une récupération ou une arête. Les conséquences physiques déjà engagées sont conservées. Le parcours V219 historique n'avait pas laissé les deux robots aller jusqu'à cette brèche.
+
 ## Corps et profils
 
 Kinds `scyther/lancer/pikeman`, modèles distincts32/30/20parties, même noyau clinique solide. HealthScale1,32/0,72/0,85 ; mouvements4,7/4,7/2,5. Dossier sparse sain interprété selon le kind original ; aucun repli biologique ni changement d’identité au premier impact. Mort externe hostile certaine sans tirage supplémentaire, même transaction clinique/RNG et mêmes arêtes/frappes capturées. Trauma198/108/127,5 sans tronquer le dernier seuil.

@@ -1,5 +1,7 @@
 # Déconstruction — contrat V24
 
+Le [correctif du5octobre après V220](../history/validation-mechanical-breach-2026-10-05.md), schéma198 inchangé, annule les intentions de mêlée humaines et mécaniques sur le bâtiment effectivement retiré. Récupérations et arêtes déjà engagées restent physiques ; un refus de restitution ou de bilan ne libère aucune intention.
+
 V43 applique désormais la [compétence Construction](skills.md) aux phases concernées : vitesse relative, apprentissage seulement lors de la finition d’un cadre approvisionné et de la déconstruction à coût. Les durées du catalogue restent des unités de travail neutre.
 
 V42 étend la restitution aux appareils électriques : générateur 50 acier + 1 composant, lampe 10 acier ; pertes `lostComponents` distinctes et prévalidées, réservoir retiré dans le bilan de combustible. [Contrat](power.md).
