@@ -1,4 +1,6 @@
-# Validation courante — V226
+# Validation courante — V227
+
+**V227 — présentation végétale, schéma 198 inchangé, livré dans le périmètre contrôlé.** [Contrat](plant-presentation-events-v227.md), [preuve et limites](../history/validation-plant-presentation-events-v227.md). 17 fichiers/92 réussites/un ignoré par reprises, replays exacts, typage/build, catalogue et sauvegarde/reprise matérielle passent ; 62 payloads et métadonnées restent identiques. Comparaison finale A/B/B/A : 93,33 → 98,10 RAF/s (+5,11 % local), p95 amélioré mais maxima CPU frame défavorables et coût froid accru. Aucun 240 FPS, vrai 6×, campagne longue ou gain général certifié. Autonomie continue pour refondre les coûts de décodage et de scène ; les résultats intermédiaires et rouges restent dans la preuve.
 
 **V226 — diagnostic et expérience de croissance retirée, schéma 198 inchangé.** [Contrat de l’essai](plant-growth-read-v226.md), [preuve](../history/validation-plant-growth-read-v226.md). Oracles exacts,20fichiers/84réussites/un ignoré,62sauvegardes et reprise authentique passent sur le candidat ; le cycle matériel ne montre aucun gain FPS significatif et il est retiré. Moteur/rendu restent V225. Les pointes243ms ne sont pas reproduites par la trace ; l’application de scène domine les longues frames observées. Cible240FPS/6× et performance générale ouvertes ; refontes mesurées et autonomie réautorisées par l’utilisateur.
 

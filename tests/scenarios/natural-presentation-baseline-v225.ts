@@ -1,12 +1,17 @@
-import { floraSize,isResidentCrop } from './flora-presentation';
-import { plantLeafless } from '../sim/plant-life';
-import { harvestable } from '../sim/plants';
-import type { Resource,World } from '../sim/types';
-import {readSnapshotChanges} from '../bridge/snapshot-changes';
-import {NaturalPresentationEvents} from './natural-presentation-events';
+import { plantGrowth,harvestable } from '../../src/sim/plants';
+import type { Resource,World } from '../../src/sim/types';
+import {readSnapshotChanges} from '../../src/bridge/snapshot-changes';
+
+// Independent original V225 presentation body captured from c45f06a7.
+// The independent benchmark manifest records the provenance of business primitives.
+// Projection helpers are copied here so the candidate event scheduler is never consulted.
+const isResidentCrop=(r:Pick<Resource,'kind'>):boolean=>['rice','potato','corn','cotton'].includes(r.kind);
+const isMedicinalPlant=(r:Pick<Resource,'kind'|'species'>):boolean=>r.kind==='healroot'||r.species==='healroot-wild';
+const floraSize=(world:World,r:Resource):number=>!r.species&&!isMedicinalPlant(r)?1:(r.growth??1)===1?1:.3+.7*Math.ceil(plantGrowth(world,r)*4)/4;
+const plantLeafless=(world:World,plant:Resource):boolean=>plant.plantLife?.leaflessAt!==undefined&&world.tick-plant.plantLife.leaflessAt<6000;
 
 type Shape=Pick<Resource,'id'|'kind'|'x'|'z'|'stone'|'species'>&{ripe:boolean;leafless:boolean;size:number};
-export type NaturalPresentationChange = { resource: Resource | undefined; size: number };
+export type NaturalPresentationChangeV225 = { resource: Resource | undefined; size: number };
 function mergeSources(changed:readonly number[],timed:readonly (readonly [number,number])[]):number[]{
   const result:number[]=[];let a=0,b=0;
   while(a<changed.length||b<timed.length){
@@ -18,7 +23,7 @@ function mergeSources(changed:readonly number[],timed:readonly (readonly [number
 }
 /** Geometry follows visible shape, not the anchors of a growth integral.
  * Own scalar captures also detect edits in place and checkpoint restoration. */
-export class NaturalResourcePresentation {
+export class NaturalResourcePresentationV225 {
   private shapes:Shape[]=[];
   private snapshotResources:readonly Resource[]|undefined;
   private snapshotTimeInvariant=false;
@@ -27,39 +32,24 @@ export class NaturalResourcePresentation {
   private sourceShapes:number[]=[];
   private naturalResources:Resource[]=[];
   private readonly timedSources=new Set<number>();
-  private readonly events=new NaturalPresentationEvents();
-  readonly changes=new Map<number,NaturalPresentationChange>();
-  private initializeEvents(world:World,immutableSnapshot:boolean):void {
-    // Legacy trees have a constant size and their few berry curves are cheap
-    // in the original timed traversal. Do not rebuild an agenda for those maps.
-    if(this.timedSlots.some(([source])=>world.resources[source]!.species!==undefined||world.resources[source]!.kind==='healroot'))
-      this.events.initialize(world,this.sourceShapes,immutableSnapshot);
-    else this.events.clear();
-  }
+  readonly changes=new Map<number,NaturalPresentationChangeV225>();
   /** SnapshotDecoder replaces edited resources instead of mutating them. Only
    * callers with that guarantee may enable the reference shortcut. */
   read(world:World,reset=false,immutableSnapshot=false):World|undefined {
     this.changes.clear();
-    if(reset||!immutableSnapshot)this.events.clear();
     const priorWorld=immutableSnapshot&&!reset?this.snapshotWorld:undefined;
     this.snapshotWorld=immutableSnapshot?world:undefined;
     const previous=immutableSnapshot&&!reset?this.snapshotResources:undefined;
-    const eventRead=priorWorld?this.events.read(priorWorld,world):undefined;
-    // Without an event witness the historical traversal below remains intact.
-    // Its later initialize recaptures all current inputs before reusing any
-    // primitive forecast; no saved forecast can replace that traversal.
-    if(!eventRead&&previous===world.resources&&this.snapshotTimeInvariant){
-      this.initializeEvents(world,immutableSnapshot);return;
-    }
+    if(previous===world.resources&&this.snapshotTimeInvariant)return;
     this.snapshotResources=immutableSnapshot?world.resources:undefined;
     // Only the same immutable array can retain this partition. A new array
     // or mutable caller still captures every slot and its original order.
-    const timed=!eventRead&&previous===world.resources?this.timedSlots:undefined;
-    const journal=eventRead?.changes??(!timed&&priorWorld?readSnapshotChanges(priorWorld,world):undefined);
+    const timed=previous===world.resources?this.timedSlots:undefined;
+    const journal=!timed&&priorWorld?readSnapshotChanges(priorWorld,world):undefined;
     // A crop/natural classification edit changes our source-to-shape partition.
     // Retain the complete original traversal for that case.
-    const partial=eventRead?.indices??(journal&&this.sourceShapes.length===world.resources.length&&journal.resourceIndices.every(i=>(this.sourceShapes[i]!==-1)===!isResidentCrop(world.resources[i]!))
-      ?mergeSources(journal.resourceIndices,this.timedSlots):undefined);
+    const partial=journal&&this.sourceShapes.length===world.resources.length&&journal.resourceIndices.every(i=>(this.sourceShapes[i]!==-1)===!isResidentCrop(world.resources[i]!))
+      ?mergeSources(journal.resourceIndices,this.timedSlots):undefined;
     if(!timed&&!partial){this.timedSlots=[];this.timedSources.clear();this.sourceShapes=[];}
     const nextNatural=!timed&&!partial?[] as Resource[]:undefined;
     if(partial)for(const sourceIndex of journal!.resourceIndices){
@@ -99,15 +89,10 @@ export class NaturalResourcePresentation {
       timeInvariant=this.timedSources.size===0;
     }
     this.snapshotTimeInvariant=immutableSnapshot&&timeInvariant;
-    if(!changed&&index===this.shapes.length){
-      if(!eventRead)this.initializeEvents(world,immutableSnapshot);return;
-    }
+    if(!changed&&index===this.shapes.length)return;
     // The private partition contains current Resource references even after a
     // silent patch. Never expose its mutable array to a previously drawn view.
-    if(partial||timed){
-      if(!eventRead)this.initializeEvents(world,immutableSnapshot);
-      return {...world,resources:this.naturalResources.slice()};
-    }
+    if(partial||timed)return {...world,resources:this.naturalResources.slice()};
     const natural=this.naturalResources;
     const present=new Set(natural.map(r=>r.id));
     for(const old of this.shapes)if(!present.has(old.id))this.changes.set(old.id,{resource:undefined,size:0});
@@ -116,7 +101,6 @@ export class NaturalResourcePresentation {
       if(old?.id===r.id&&!this.changes.has(r.id))return old;
       return {size:this.changes.get(r.id)?.size??floraSize(world,r),species:r.species,id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,leafless:plantLeafless(world,r),ripe:r.kind==='berries'&&harvestable(world,r)};
     });
-    if(!eventRead)this.initializeEvents(world,immutableSnapshot);
     return {...world,resources:natural.slice()};
   }
 }

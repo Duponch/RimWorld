@@ -1,5 +1,7 @@
 # Plan de développement
 
+**Priorité V227, schéma 198 inchangé :** l’[agenda végétal exact](development/plant-presentation-events-v227.md) livre un [gain matériel local modeste](history/validation-plant-presentation-events-v227.md). Les pointes, le coût froid et la cible proche de 240 FPS à 6× restent ouverts. Poursuivre les coûts complets du namespace du décodeur et des parcours de scène, avec refonte utile, oracles et comparaison matérielle. Aucun jalon G0–G5 n’est fermé par ce lot ; 62 références préservées, autonomie continue et commits locaux sans push.
+
 Schéma courant 198 ; les versions mentionnées plus bas sont des repères historiques.
 
 **Priorité V226 :** la [capture de croissance essayée](development/plant-growth-read-v226.md) est retirée après une [comparaison matérielle sans gain FPS significatif](history/validation-plant-growth-read-v226.md). Le6octobre, l’utilisateur renouvelle l’autonomie et autorise les refontes profondes pour des gains importants sur Les Aulnes. Prioriser les coûts complets du décodage, des transferts et des applications de scène, avec attribution causale, oracles exacts et comparaisons matérielles ; ne pas enchaîner des micro-caches sans effet établi. Moteur/rendu V225,62payloads et schéma198 conservés ;240FPS au vrai6× etG0–G5 ouverts. Commits locaux sans push, nouvelle pause utilisateur prime.

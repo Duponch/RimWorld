@@ -4,6 +4,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { plantGrowth } from '../sim/plants';
 import { RESIDENT_CROP_KINDS, type ResidentCropKind } from './flora-presentation';
 import type { Resource, World } from '../sim/types';
+import { CropPresentationPartition } from './crop-presentation-partition';
 
 /** Dedicated resident instancing: sowing never rebuilds forest/rock geometry. */
 function cropGeometry(kind:ResidentCropKind):THREE.BufferGeometry {
@@ -104,15 +105,12 @@ class CropBatch {
 export class CropLayer {
   readonly group=new THREE.Group();
   private readonly batches:CropBatch[];
+  private readonly partition=new CropPresentationPartition();
   constructor(private readonly plainMaterial:THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial){this.batches=RESIDENT_CROP_KINDS.map(kind=>new CropBatch(this.group,kind,texturedMaterial));}
   setTexturesEnabled(enabled:boolean):void {for(const batch of this.batches)batch.setMaterial(enabled?this.texturedMaterial:this.plainMaterial);}
   prepareForCompile():()=>void {const restore=this.batches.map(b=>b.prepareForCompile());return()=>restore.forEach(f=>f());}
-  update(world:World,reset:boolean):void {
-    const crops:Record<ResidentCropKind,Resource[]>={rice:[],potato:[],corn:[],cotton:[]};
-    // One ordered partition replaces four complete scans of the forest.
-    for(const resource of world.resources){
-      if(resource.kind==='rice'||resource.kind==='potato'||resource.kind==='corn'||resource.kind==='cotton')crops[resource.kind].push(resource);
-    }
+  update(world:World,reset:boolean,immutableSnapshot=false):void {
+    const crops=this.partition.read(world,reset,immutableSnapshot);
     for(let index=0;index<this.batches.length;index++)this.batches[index]!.update(world,reset,crops[RESIDENT_CROP_KINDS[index]!]);
   }
   dispose():void {for(const batch of this.batches)batch.dispose();}

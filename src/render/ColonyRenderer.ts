@@ -511,7 +511,7 @@ export class ColonyRenderer {
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
     const storageKey = `${world.home?.join(',')??''};`+storageZoneSignature(world.stockpiles);
     if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
-    if (newMap || previousWorld?.resources !== world.resources || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap);
+    if (newMap || previousWorld?.resources !== world.resources || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap, this.immutableWorlds.has(world));
     const zoneChanged=this.updateGrowingZones(newMap);
     this.pawns.adoptCargo(previousWorld??undefined,world,this.hasTracks?this.timeline.tick:world.tick,
       !resetPoses&&this.hasTracks&&(this.received?.speed??0)>0);
