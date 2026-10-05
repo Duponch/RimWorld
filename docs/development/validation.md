@@ -1,4 +1,6 @@
-# Validation courante — V225
+# Validation courante — V226
+
+**V226 — diagnostic et expérience de croissance retirée, schéma 198 inchangé.** [Contrat de l’essai](plant-growth-read-v226.md), [preuve](../history/validation-plant-growth-read-v226.md). Oracles exacts,20fichiers/84réussites/un ignoré,62sauvegardes et reprise authentique passent sur le candidat ; le cycle matériel ne montre aucun gain FPS significatif et il est retiré. Moteur/rendu restent V225. Les pointes243ms ne sont pas reproduites par la trace ; l’application de scène domine les longues frames observées. Cible240FPS/6× et performance générale ouvertes ; refontes mesurées et autonomie réautorisées par l’utilisateur.
 
 **V225 — changements confirmés et présentation naturelle, schéma198 inchangé.** [Contrat](snapshot-presentation-v225.md), [preuves et limites](../history/validation-snapshot-presentation-v225.md). Journal privé composé depuis la dernière vue, repli complet si sa provenance manque ; vraie omission du lecteur de franchissements de clôture/plancher brûlé corrigée aux versions119/89. Deux cycles isolés A/B/B/A exacts et28fichiers/142cas aux frontières passent. Un cycle matériel passe de64,4 à70,9RAF/s en moyenne, gain local modeste ; les pointes persistent,240FPS et le vrai6× restent ouverts. Typage/build et Chromium matériel avec sauvegarde/reprise passent. Les62payloads publics sont préservés ; aucune campagne longue ou performance générale recertifiée. Priorité : coût et pointes des applications de scène avant nouvelle mécanique.
 
