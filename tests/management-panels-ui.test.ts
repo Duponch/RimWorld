@@ -29,12 +29,14 @@ describe('stable management panel layouts',()=>{
 
   test('research graph contains only playable projects and physical prerequisite links',()=>{
     const ids=researchProjects.map(project=>project.id);
-    expect(ids).toHaveLength(20);
+    expect(ids).toHaveLength(21);
+    expect(ids).toContain('gun-turrets');
     expect(ids).toContain('hospital-bed');expect(ids).toContain('packaged-survival-meals');expect(ids).toContain('tube-television');
     expect(ids).toContain('autodoors');
     expect(ids).toContain('recon-armor');
     expect(new Set(ids).size).toBe(ids.length);
     expect(researchLinks).toEqual([
+      ['gunsmithing','gun-turrets'],
       ['complex-furniture','tube-television'],
       ['smithing','machining'],['machining','gunsmithing'],
       ['smithing','plate-armor'],['complex-clothing','plate-armor'],

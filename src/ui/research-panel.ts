@@ -6,6 +6,7 @@ import {setTooltip} from './tooltip';
 
 type ProjectNode = { id: ResearchProject; prefix: string; title: string; cost: number; detail: string; progress: (w: World) => ResearchProgress | undefined; x: number; y: number };
 export const researchProjects: readonly ProjectNode[] = [
+  {id:'gun-turrets',prefix:'gun-turrets',title:'Tourelles automatiques',cost:500,detail:'Mini-tourelle acier : 100 acier + 3 composants, Construction 5, 80 W. Canon 60 coups, réarmement physique en acier. Adaptation locale : Armurerie est le préalable ; le projet Core Blowback et ses armes sont différés.',progress:w=>w.research?.gunTurrets,x:824,y:298},
   {id:'complex-furniture',prefix:'furniture',title:'Mobilier complexe',cost:300,detail:'Débloque chaise, fauteuil, table de chevet et commode.',progress:w=>w.research?.complexFurniture,x:24,y:20},
   {id:'tube-television',prefix:'tube-television',title:'Télévision cathodique',cost:TUBE_TELEVISION_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque un loisir électrique : 80 acier + 4 composants, Construction 7, 200 W. Chaque spectateur rejoint une place visible devant l’écran ; le trajet et les coupures ne procurent aucun plaisir.',progress:w=>w.research?.tubeTelevision,x:24,y:432},
   {id:'stonecutting',prefix:'stonecutting',title:'Taille de pierre',cost:300,detail:'Débloque les dallages en pierre. Quatre blocs par case ; Construction 3.',progress:w=>w.research?.stonecutting,x:224,y:20},
@@ -28,6 +29,7 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'hospital-bed',prefix:'hospital-bed',title:'Lit d’hôpital',cost:HOSPITAL_BED_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque un lit spécialisé : 120 acier + 5 composants, Construction 8. Améliore les soins, l’immunité, la guérison et la chirurgie pendant son utilisation réelle. Recherche au bureau avancé alimenté. Adaptation locale : le préalable Core Matériaux stériles et ses sols sont différés.',progress:w=>w.research?.hospitalBed,x:424,y:566},
 ];
 export const researchLinks: readonly (readonly [ResearchProject, ResearchProject])[] = [
+  ['gunsmithing','gun-turrets'],
   ['complex-furniture','tube-television'],
   ['smithing','machining'],['machining','gunsmithing'],
   ['smithing','plate-armor'],['complex-clothing','plate-armor'],
@@ -42,6 +44,7 @@ const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=430;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['gun-turrets',['Armurerie']],
   ['tube-television',['Mobilier complexe','Électricité (acquise au départ)']],
   ['machining',['Forge']],['gunsmithing',['Usinage']],['plate-armor',['Forge','Vêtements complexes']],['flak-armor',['Usinage','Armure de plaques']],
   ['autodoors',['Électricité (acquise au départ)']],['microelectronics',['Électricité (acquise au départ)']],['multi-analyzer',['Microélectronique','Usinage']],['fabrication',['Multi-analyseur']],['advanced-fabrication',['Fabrication']],['recon-armor',['Fabrication','Vêtements complexes']],

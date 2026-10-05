@@ -77,6 +77,10 @@ export function actionFxForPawn(
   if (pawn.state === 'eating' && pawn.need?.kind === 'eat' && pawn.need.phase === 'ingest')
     return { kind: ACTION_FX.eat, x: pawn.x, z: pawn.z };
   if (pawn.state !== 'working' || pawn.stun) return NONE;
+  if(pawn.haul?.destination.type==='turret'&&pawn.haul.serviceProgress!==undefined){
+    const station=structuresById.get(pawn.haul.destination.structureId),contact=nearestStationCell(pawn,station);
+    if(contact)return {kind:ACTION_FX.craft,...nearFace(pawn,contact,.48)};
+  }
 
   if (pawn.firefighting?.phase === 'beat') {
     const fire = firesById?.get(pawn.firefighting.fireId) ??

@@ -112,7 +112,7 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
     if(!tool){cancelMelee(pawn);return false;}
     const raw=Math.max(1,tool.damage*(.8+random()*.4)),floor=Math.floor(raw),damage=floor+(random()<raw-floor?1:0);
     const order=m.order;
-    if(!(isBarrier(target)?damageBarrier(world,target,damage,state.rng):damageStructure(world,target,damage,'melee',state.rng)))return false;
+    if(!(world.schemaVersion<193&&isBarrier(target)?damageBarrier(world,target,damage,state.rng):damageStructure(world,target,damage,'melee',state.rng,{core,rawAmount:damage,instigatorKey:`pawn:${pawn.id}`})))return false;
     if(medicallyStopped(pawn))return true;
     pawn.melee={order:world.structures.includes(target)?order:null,strike:{targetId:target.id,structure:{...cell},atCore:core,untilCore:core+tool.cooldownCore,tool:tool.id,outcome:'hit'}};
     // Destruction may already have cancelled the order; notify from its real

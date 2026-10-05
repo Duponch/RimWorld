@@ -4,6 +4,7 @@ import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { constructionCandidates } from './construction-planner.ts';
 import { constructionObstruction, containsCell, isConstruction } from './construction-rules.ts';
 import { footprintCells } from './definitions.ts';
+import { turretReloadCapacity } from './mini-turret-reload.ts';
 import { wantsFuel } from './fuel.ts';
 import { isCookingOrder } from './order-types.ts';
 import { routeToJob } from './pathfinding.ts';
@@ -23,8 +24,8 @@ export function advancePriorityWork(world:World,pawn:Pawn,getBlocked:NavigationG
   if(!intent||pawn.animalHandling||pawn.animalCare||pawn.hunting||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.need||pawn.recreation.task||pawn.orders.queue.length)return false;
   if(pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0)return false;
   const job=world.jobs.find(j=>(isConstruction(j)||intent.work==='build'&&j.kind==='deconstruct')&&containsCell(j,intent.cell));
-  const station=world.structures.find(s=>(stationRecipe(s)!==null||s.kind==='passive-cooler')&&footprintCells(s).some(c=>c.x===intent.cell.x&&c.z===intent.cell.z));
-  if((intent.work==='cook'||intent.work==='craft'||intent.work==='art')?!station:!job&&!(intent.work==='haul'&&station&&wantsFuel(world,station))) {
+  const station=world.structures.find(s=>(stationRecipe(s)!==null||s.kind==='passive-cooler'||s.kind==='mini-turret')&&footprintCells(s).some(c=>c.x===intent.cell.x&&c.z===intent.cell.z));
+  if((intent.work==='cook'||intent.work==='craft'||intent.work==='art')?!station:!job&&!(intent.work==='haul'&&station&&(wantsFuel(world,station)||station.kind==='mini-turret'&&turretReloadCapacity(world,station.id,pawn.id,true)>0))) {
     delete pawn.priorityWork;return false;
   }
   if(!budget.remaining||!budget.pairs)return true;
@@ -56,8 +57,8 @@ export function advancePriorityWork(world:World,pawn:Pawn,getBlocked:NavigationG
     }
     const p=planHaulOrder(world,actor,{type:'job',jobId:job.id},reach,budget);
     if(p.task&&p.path){startHaulOrder(pawn,p.task,p.path);return false;}
-  } else if(station&&wantsFuel(world,station)) {
-    const p=planHaulOrder(world,actor,{type:'fuel',structureId:station.id},reach,budget);
+  } else if(station&&(wantsFuel(world,station)||station.kind==='mini-turret'&&turretReloadCapacity(world,station.id,pawn.id,true)>0)) {
+    const p=planHaulOrder(world,actor,{type:station.kind==='mini-turret'?'turret':'fuel',structureId:station.id},reach,budget);
     if(p.task&&p.path){startHaulOrder(pawn,p.task,p.path);return false;}
   }
   if(!budget.pairs)return true; // Defer, never mistake budget exhaustion for no job.

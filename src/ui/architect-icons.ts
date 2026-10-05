@@ -22,7 +22,7 @@ const SECOND_ATLAS = [
   'ignore-roof', 'remove-growing', 'stockpile', 'home', 'remove-home', 'remove-stockpile',
 ] as const;
 
-export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='tailor-bench'?[id,'art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
+export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='tailor-bench'?[id,'art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
 
 // Small original vector additions share the existing Architecte icon installer.
 // They do not change the historical two-atlas coordinates.
@@ -62,7 +62,7 @@ const originalCells:Readonly<Record<string,ArchitectIconCell>>=Object.fromEntrie
   ...atlasCells(SECOND_ATLAS, 1),
 ]);
 // New workbenches reuse existing pictured cells; adding tools never shifts the atlas.
-export const ARCHITECT_ICON_MAPPING:Readonly<Record<string,ArchitectIconCell>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,id==='machining-table'?originalCells['electric-tailor-bench']!:id==='art-bench'?originalCells.stonecutter!:CUSTOM_ICONS[id]?originalCells.wall!:originalCells[id]!])));
+export const ARCHITECT_ICON_MAPPING:Readonly<Record<string,ArchitectIconCell>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,id==='mini-turret'?originalCells['standing-lamp']!:id==='machining-table'?originalCells['electric-tailor-bench']!:id==='art-bench'?originalCells.stonecutter!:CUSTOM_ICONS[id]?originalCells.wall!:originalCells[id]!])));
 
 export interface ArchitectIconInstallReport {
   readonly installed: readonly string[];

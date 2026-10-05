@@ -30,7 +30,7 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   const ids=new Set<number>();let total=0;
   for(const i of value.injuries) {
     if(!object(i)||!keys(i,['id','part','kind','severity','bornAt','scar','tended',...(allowInfection?['infection']:[])])||!integer(i.id,1,value.nextInjuryId-1)||ids.has(i.id)||
-      !bodyPartExists(i.part)||BODY_PARTS[i.part].conceptual||typeof i.kind!=='string'||!Object.hasOwn(INJURY_RULES,i.kind)||!allowGunshot&&i.kind==='gunshot'||!allowBite&&i.kind==='bite'||!allowBurn&&i.kind==='burn'||!allowStab&&i.kind==='stab'||i.kind==='execution-cut'&&(!animal||!allowExecution||Number(i.severity)>1000||i.scar!==undefined)||!integer(i.severity,1)||!integer(i.bornAt,0,value.tick)||
+      !bodyPartExists(i.part)||BODY_PARTS[i.part].conceptual||typeof i.kind!=='string'||!Object.hasOwn(INJURY_RULES,i.kind)||version<193&&i.kind==='shredded'||!allowGunshot&&i.kind==='gunshot'||!allowBite&&i.kind==='bite'||!allowBurn&&i.kind==='burn'||!allowStab&&i.kind==='stab'||i.kind==='execution-cut'&&(!animal||!allowExecution||Number(i.severity)>1000||i.scar!==undefined)||!integer(i.severity,1)||!integer(i.bornAt,0,value.tick)||
       i.tended!==undefined&&!integer(i.tended,0,1300))return fail;
     ids.add(i.id);total+=i.severity;if(!Number.isSafeInteger(total*100))return fail;
     if(i.scar!==undefined&&(!object(i.scar)||!keys(i.scar,['threshold','pain'])||i.kind==='bruise'||PART_INJURY_RULES[i.part].scarFactor===0||!integer(i.scar.threshold,1,i.severity)||

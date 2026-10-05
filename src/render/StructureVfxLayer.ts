@@ -155,6 +155,11 @@ export class StructureVfxLayer {
     let doorAxes:ReadonlyMap<number,0|1>|undefined;
     for(const s of world.structures){
       const on=isPowerActive(s),work=working.has(s.id);
+      if(s.kind==='mini-turret'&&s.turret?.wick){
+        tokens.push(`${s.id}:turret-wick:${s.turret.wick.startedAtCore}`);
+        glow.push({x:s.x,y:1.43,z:s.z-.09,sx:.12,sy:.045,sz:.25,ry:0,color:0xf0a176},
+          {x:s.x,y:1.43,z:s.z+.15,sx:.12,sy:.045,sz:.08,ry:0,color:0xffd19a});
+      }
       if(s.kind==='autodoor'){
         doorAxes??=doorOrientations(world);
         const axis=doorAxes.get(s.z*world.width+s.x)??0;
@@ -219,6 +224,15 @@ export class StructureVfxLayer {
         glow.push({x,y,z:z-.09,sx:.115,sy:.045,sz:.255,ry:0,color:0xffac62});
         glow.push({x,y,z:z+.16,sx:.115,sy:.045,sz:.085,ry:0,color:0xffac62});
       }
+    }
+    // Confirmed emissions/departures use the existing status draw. No fake
+    // Pawn pose, light or fire is created; a flash lasts the adopted birth tick.
+    for(const p of world.projectiles??[])if(p.weaponItem==='mini-turret-gun'&&Math.ceil(p.emittedAtCore/10)===world.tick){
+      const from=p.flight.origin,to=p.flight.destination,ry=Math.atan2(to.x-from.x,to.z-from.z);
+      tokens.push(`turret-shot:${p.id}`);glow.push({x:from.x+Math.sin(ry)*.7,y:1.12,z:from.z+Math.cos(ry)*.7,sx:.16,sy:.17,sz:.22,ry,color:0xffd599});
+    }
+    for(const wave of world.bombWaves??[])if(Math.ceil(wave.startedAtCore/10)===world.tick){
+      tokens.push(`bomb-flash:${wave.id}`);glow.push({x:wave.center.x,y:.68,z:wave.center.z,sx:.95,sy:1.1,sz:.95,ry:0,color:0xffe7b4});
     }
     for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined){
       tokens.push(`${fire.id}:ground-fire:${fire.x}:${fire.z}:${fire.size}`);

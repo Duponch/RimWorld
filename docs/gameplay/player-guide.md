@@ -1,6 +1,6 @@
 # Guide joueur
 
-**Schéma courant 192 — V211, crises mentales livrées dans le périmètre contrôlé.** Les règles et limites du lot sont dans le [contrat](../development/mental-crises-v211.md) et sa [preuve](../history/validation-mental-crises-v211.md). Le passé personnel V210 est livré.
+**Schéma courant 193 — V212, défense automatisée livrée dans le périmètre contrôlé.** La mini-tourelle relie recherche, chantier, énergie, tirs, entretien et refuge physique. [Contrat](../development/mini-turret-v212.md), [preuve](../history/validation-mini-turret-v212.md). Le passé V210 et les crises V211 précèdent ce lot.
 
 ## Faire face aux crises mentales — V211
 
@@ -1100,3 +1100,12 @@ Ouvrez **Monde → Monde · commerce**, choisissez un adulte sain et libre et un
 Demandez le retour ou laissez passer la visite bornée d’une heure : le voyageur rentre avec argent, achats et invendus, puis les dépose sur des cellules réellement admissibles. Les besoins et rations suivent le trajet. Une entrée bloquée ou un dépôt saturé conserve les possessions ; sauvegarder/recharger ne crée ni vente ni retour supplémentaire.
 
 Pour essayer : **Charger une partie → Colonies de test → Ventes de textiles · 3 colons**. Ada peut prendre trois rations, 75 tissus et 60 laines sans argent ; vendre 60 tissus et 40 laines, acheter un médicament et un composant, puis rentrer avec 15 tissus/20 laines invendus. Ces quantités et la production initiale sont préparées ; les prix dépendent du négociateur. [Contrat et adaptations](../development/caravan-sales-v203.md), [preuves et limites](../history/validation-commercial-sales-v203.md).
+
+
+## Construire et réarmer une mini-tourelle — V212
+
+Rechercher Tourelles automatiques après Armurerie, puis désigner une mini-tourelle dans le menu Architecte. Cent aciers et trois composants doivent être livrés ; un bâtisseur de niveau 5 termine le chantier. Raccorder le canon au réseau de 80 W et autoriser le tir. Il vise les ennemis réellement présents à portée, sans compétence de tir coloniale.
+
+Le canon neuf possède soixante coups. Le transport automatique apporte l’acier au seuil de moitié ; chaque unité restaure trois quarts de coup après un service au contact. Le bouton de réarmement donne une priorité personnelle à un colon capable de transporter, y compris mobilisé ou pacifiste. Le tir retenu et le réarmement automatique ont des commandes distinctes ; une coupure arrête les tirs.
+
+Une tourelle gravement touchée peut amorcer une mèche. Les colons cherchent alors un refuge physique ; la détonation peut toucher personnes, animaux, bâtiments et objets proches. Éloigner les machines et maintenir les accès libres. La sauvegarde conserve canon, balles et danger en cours. [Contrat et limites](../development/mini-turret-v212.md), [preuve du lot](../history/validation-mini-turret-v212.md).

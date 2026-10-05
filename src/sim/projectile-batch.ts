@@ -6,8 +6,8 @@ import { animalBodySize } from './animal-life.ts';
 
 /** Local to a synchronous projectile batch ONLY. Medical reconciliation can
  * mutate people, piles and packages. The caller discards this entire capture
- * when barrier destruction replaces structures; otherwise refresh the movable
- * overlay after each impact. Terrain/plants/frames cannot change in this batch. */
+ * when destruction replaces structures/resources; otherwise refresh the movable
+ * overlay after each impact. Natural tiles and non-HP frames remain inert. */
 export function captureProjectileBatch(world:World) {
   const fixed=captureWorldProjectileTargets({...world,pawns:[],piles:[],packed:[],wildlife:undefined});
   const {width,height}=world;

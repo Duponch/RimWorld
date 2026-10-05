@@ -9,6 +9,7 @@ import { reservedDestination } from './materials.ts';
 import { workType } from './work-types.ts';
 import { COOK_TICKS, INGREDIENT_UNITS } from './cooking-bills.ts';
 import { REFUEL_WORK_TICKS } from './fuel.ts';
+import { TURRET_RELOAD_WORK_TICKS } from './mini-turret-reload.ts';
 import { allowedFood, type FoodItemId } from './food-policy.ts';
 import { mentalCrisisStatus } from './mental-presentation.ts';
 import type { Job, JobDiagnostic, Pawn, World } from './types.ts';
@@ -36,6 +37,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
 }
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
+  if(pawn.bombRefuge)return {code:'bomb-refuge',reason:`${pawn.melee?.strike?'Termine sa récupération physique avant de fuir':pawn.motion&&pawn.motion.end>world.tick?'Rejoint son refuge':'Attend hors du rayon'} contre l’explosion de la mini-tourelle ${pawn.bombRefuge.sourceId} · refuge (${pawn.bombRefuge.target.x}, ${pawn.bombRefuge.target.z}).`};
   if(pawn.surgery){const t=pawn.surgery,name=world.pawns.find(p=>p.id===t.patientId)?.name??'un patient';return {code:'surgery',reason:`${t.phase==='pickup'?'Collecte une dose pour':t.phase==='approach'?'Rejoint le chevet de':'Opère'} ${name}.`};}
   if(pawn.state!=='dead'&&pawn.health?.anesthetic)return {code:'anesthetic',reason:pawn.state==='downed'?'Sous anesthésie.':'L’anesthésie se dissipe.'};
   if(pawn.mental?.crisis)return {code:'mental-break',reason:mentalCrisisStatus(world,pawn)};
@@ -70,7 +72,7 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
     return {code:'recreation',reason:task.phase==='travel'?`Rejoint une place pour ${activity}.`:`Prend le temps de ${activity} (${Math.round(pawn.recreation.level)} %).`};
   }
   if(pawn.heatRefuge)return {code:'thermal-refuge',reason:pawn.state==='moving'?'Rejoint un refuge à température confortable.':'Attend dans un refuge thermique pour récupérer.'};
-  if(pawn.research)return {code:'research',reason:pawn.state==='working'?`Recherche ${world.research?.project==='air-conditioning'?'Climatisation':'Vêtements complexes'} au bureau.`:'Rejoint son bureau de recherche.'};
+  if(pawn.research)return {code:'research',reason:pawn.state==='working'?`Recherche ${world.research?.project==='gun-turrets'?'Tourelles automatiques':world.research?.project==='air-conditioning'?'Climatisation':'Vêtements complexes'} au bureau.`:'Rejoint son bureau de recherche.'};
   if(pawn.cooking) {
     const task=pawn.cooking,recipe=PRODUCTION_RECIPES[taskRecipe(task)];
     if(task.phase==='interrupted')return {code:'cooking-interrupted',reason:'Ingrédient perdu ; attend une case libre pour déposer la cargaison restante.'};
@@ -83,6 +85,10 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   if(pawn.haul?.destination.type==='fuel') {
     const task=pawn.haul;
     return {code:'refueling',reason:task.phase==='pickup'?`Va prélever ${task.quantity} bois pour le combustible.`:task.serviceProgress?`Ravitaille le bâtiment (${Math.floor(task.serviceProgress/REFUEL_WORK_TICKS*100)} %).`:`Porte ${task.quantity} bois vers le bâtiment.`};
+  }
+  if(pawn.haul?.destination.type==='turret') {
+    const task=pawn.haul;
+    return {code:'turret-reload',reason:task.phase==='pickup'?`Prélève ${task.quantity} acier pour le canon.`:task.serviceProgress!==undefined?`Réarme le canon au contact (${Math.floor(task.serviceProgress/TURRET_RELOAD_WORK_TICKS*100)} %).`:`Porte ${task.quantity} acier vers la mini-tourelle.`};
   }
   if (pawn.need?.kind === 'eat') return { code: pawn.need.phase, reason: pawn.need.phase === 'pickup' ? 'Va chercher une portion réservée.' : pawn.need.phase === 'choose-spot' ? 'Cherche une place pour manger sa portion.' : pawn.need.phase === 'travel' ? 'Porte sa portion vers sa place réservée.' : `Mange la portion tenue en main (${Math.floor(pawn.need.progress / 50 * 100)} %).` };
   if (pawn.need?.kind === 'sleep') return { code: pawn.need.phase, reason: pawn.need.phase === 'travel' ? pawn.need.bedId === null ? 'Libère le lit et cherche une place au sol.' : 'Se rend à son lit réservé.' : pawn.need.bedId === null ? 'Dort au sol ; aucun lit utilisable ou épuisement.' : 'Dort dans son lit.' };

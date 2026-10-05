@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V212 — défense automatisée, schéma 193, livré dans le périmètre contrôlé.** [Contrat](development/mini-turret-v212.md), [recherche Core](research/mini-turret-core-v212.md), [contrôles et limites](history/validation-mini-turret-v212.md). Recherche, chantier, énergie, tirs, entretien et danger sont reliés ; [suivi autonome](history/autonomous-progress-2026-10-05.md). Les campagnes longues et la parité complète restent ouvertes.
+
 **V211 — crises mentales, schéma 192, livré dans le périmètre contrôlé.** [Contrat](development/mental-crises-v211.md), [règles Core et adaptations](research/mental-crises-core-v211.md), [preuve](history/validation-mental-crises-v211.md). Les trois nouveaux états ont des cibles et conséquences physiques distinctes ; catalogue complet, arrestation et abandon restent ouverts.
 
 **V209 — consolidation, schéma 190 inchangé.** [Contrat](development/consolidation-v209.md), [preuves et limites](history/validation-consolidation-v209.md), [rapport externe et nouvelle méthode](history/analysis-external-agent-2026-10-04.md). Continuité des raids/remplacements, stockage asynchrone, reprise graphique, garanties communes et recherche Core. Aucun nouveau catalogue ou jalon clôturé.

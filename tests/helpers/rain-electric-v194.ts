@@ -3,6 +3,7 @@ import { adoptWeather } from '../../src/sim/weather.ts';
 import { adoptRainElectrical } from '../../src/sim/rain-electric.ts';
 import { BATTERY_ENERGY_SCALE } from '../../src/sim/power-battery.ts';
 import { newPowerState } from '../../src/sim/power-rules.ts';
+import { newMiniTurretState } from '../../src/sim/mini-turret-state.ts';
 import type { Orientation,Structure,StructureKind,World } from '../../src/sim/types.ts';
 
 /** Prepared precipitation, no electrical contact or fire already exists. The
@@ -17,6 +18,7 @@ export function rainElectricBuilding(world:World,kind:StructureKind,x=10,z=10,or
   const building:Structure={id:world.nextId++,kind,x,z,orientation,footprint:'standard',material:'steel',power:newPowerState(kind)};
   building.power!.on=true;
   if(kind==='battery')building.battery={stored:101*BATTERY_ENERGY_SCALE};
+  if(kind==='mini-turret')building.turret=newMiniTurretState();
   world.structures.push(building);return building;
 }
 /** Unit domain clock only: weather is already sampled, no weather RNG draws. */

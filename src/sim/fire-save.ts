@@ -20,7 +20,7 @@ export function validBurningReaction(w:World,v:unknown,version:number):v is Burn
 export function validateThingDamage(w:World,version:number):string[] {
   const errors:string[]=[];
   for(const r of w.resources)if(r.damage!==undefined&&(version<87||!int(r.damage,1,resourceMaxHp(r)-1)))errors.push('Invalid resource damage.');
-  for(const p of w.piles)if(p.damage!==undefined&&(version<87||p.apparel||p.weapon||!int(p.damage,1,pileMaxHp(p)-1)))errors.push('Invalid item damage.');
+  for(const p of w.piles)if(p.damage!==undefined&&(version<87||p.apparel||p.weapon||!int(p.damage,1,pileMaxHp(p,version)-1)))errors.push('Invalid item damage.');
   return errors;
 }
 /** Call after ordinary world/actor shapes, using the global identity registry. */

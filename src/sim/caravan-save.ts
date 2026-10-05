@@ -33,7 +33,7 @@ export function validateScoutRegistry(w:World,version:number):string[] {
   if(!integer(p.id,1,w.nextId-1)||w.pawns.some(q=>q?.id===p.id)||!isColonist(p as unknown as World['pawns'][number])||p.prisoner||p.visitor
     ||p.x!==(s.entry as Record<string,unknown>).x||p.z!==(s.entry as Record<string,unknown>).z||p.state!=='idle'||p.bedId!==null||p.jobId!==null||p.haul!==null||p.cooking!==null||p.need!==null
     ||!Array.isArray(p.path)||p.path.length||p.moveCooldown!==0||p.motion!==undefined||!object(p.orders)||p.orders.active!==null||!Array.isArray(p.orders.queue)||p.orders.queue.length
-    ||['draft','shooting','melee','flee','tactics','stun','stagger','rescue','tend','surgery','surgeryRequest','feed','ward','trade','firefighting','priorityWork','research','hunting','burial','cleaning','burning','animalHandling','animalCare','equipmentTask','interruptedCargo','transitExit','heatRefuge'].some(k=>p[k]!==undefined)
+    ||['draft','shooting','melee','flee','tactics','stun','stagger','rescue','tend','surgery','surgeryRequest','feed','ward','trade','firefighting','priorityWork','research','hunting','burial','cleaning','burning','animalHandling','animalCare','equipmentTask','interruptedCargo','transitExit','heatRefuge','bombRefuge'].some(k=>p[k]!==undefined)
     ||object(p.social)&&p.social.fight!==undefined||object(p.mental)&&p.mental.crisis!==undefined)return ['Off-map scout retains a map task or duplicate owner.'];
   let food=0;
   const ids=new Set<number>();

@@ -31,6 +31,7 @@ import { haulReservations } from './haul-reservations.ts';
 import { asBuilder, constructionHaulPriority, constructionObstructions, constructionSiteFree, isConstruction } from './construction-rules.ts';
 import { productionPriority, planCooking, type CookingPlan } from './cooking-planner.ts';
 import { candidateAccess } from './candidate-access.ts';
+import { turretReloadCapacity,wantsTurretReload,turretReloadPawnReason } from './mini-turret-reload.ts';
 import { fuelCapacity, wantsFuel } from './fuel.ts';
 import { mayImproveStorage } from './idle-logistics.ts';
 import { asideCapacity, findAsideDestination } from './haul-aside.ts';
@@ -68,11 +69,12 @@ export function searchCandidates(world:World,pawn:Pawn,blocked:Uint8Array,occupi
 }
 export function destinationCell(world: World, destination: HaulDestination): (Cell & { kind?: JobKind }) | null {
   if (destination.type === 'aside') return destination;
-  if (destination.type === 'fuel') return world.structures.find(s=>s.id===destination.structureId) ?? null;
+  if (destination.type === 'fuel'||destination.type==='turret') return world.structures.find(s=>s.id===destination.structureId) ?? null;
   return destination.type === 'job' ? world.jobs.find(job => job.id === destination.jobId) ?? null : world.stockpiles.find(zone => zone.id === destination.stockpileId) ?? null;
 }
 export function destinationCapacity(world: World, destination: HaulDestination, kind: MaterialKind, exceptPawn?: number, subject: ItemId|MaterialPile = legacyItem(kind)): number {
   const item=typeof subject==='string'?subject:subject.item;
+  if(destination.type==='turret')return item==='steel'?turretReloadCapacity(world,destination.structureId,exceptPawn,destination.forced):0;
   if (destination.type === 'fuel') return kind==='wood' ? fuelCapacity(world,destination.structureId,exceptPawn,destination.forced) : 0;
   if (destination.type === 'aside'&&!validSowingClearance(world,destination))return 0;
   if (destination.type === 'aside') return asideCapacity(world, destination, subject, exceptPawn);
@@ -119,7 +121,8 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   const selfTreatment=pawn.selfTend&&workPriority(pawn,'doctor')>0&&treatmentTarget(pawn);
   const feedable=world.pawns.filter(p=>p!==pawn&&workPriority(pawn,feedingWork(p))>0&&(p.prisoner?p.hunger<FEED_HUNGER:p.hunger<=FEED_HUNGER)&&needsAssistedFeeding(p));
   const patients=world.pawns.filter(p=>workPriority(pawn,p.prisoner?'warden':'doctor')>0&&wantsRescue(p));
-  const fires=world.structures.filter(s=>wantsFuel(world,s));
+  let canReload:boolean|undefined;
+  const fires=world.structures.filter(s=>s.kind==='mini-turret'?(canReload??=!turretReloadPawnReason(pawn))&&wantsTurretReload(world,s):wantsFuel(world,s));
   if (!handling && !leading && !gathering && !vet && !cleaning && !burying && !fightingFire && !warding && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && !patients.length && !researching && !hunting && !cooking && !fires.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length && !world.packed.length || workPriority(pawn,'haul') === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
   if (!handling && !leading && !gathering && !vet && !cleaning && !burying && !fightingFire && !warding && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && !patients.length && !researching && !hunting && !cooking && !fires.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
   const blocked = getBlocked();
@@ -171,7 +174,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       const source = pileById.get(task.sourcePileId);
       if (source?.owner.type === 'ground') { const key = cellIndex(world, source.owner.x, source.owner.z); outbound.set(key, (outbound.get(key) ?? 0) + task.quantity); }
     }
-    if (task.destination.type === 'aside' || task.destination.type === 'fuel') continue;
+    if (task.destination.type === 'aside' || task.destination.type === 'fuel'||task.destination.type==='turret') continue;
     if(task.destination.type==='job') {
       const pile=pileById.get(task.phase==='pickup'?task.sourcePileId:task.carryPileId!);
       if(pile){const key=`${task.destination.jobId}:${pile.item}`;jobReserved.set(key,(jobReserved.get(key)??0)+task.quantity);}
@@ -246,7 +249,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       for(const cost of constructionRecipe(job).ingredients){const key=`${job.id}:${cost.item}`,capacity=cost.quantity-(delivered.get(key)??0)-(jobReserved.get(key)??0);if(capacity>0)items.set(cost.item,capacity);}
       if (items.size && (job.kind==='fix-breakdown'?fixBreakdownWanted(world,job):constructionSiteFree(world,job,pawn.id,constructionObstacles.get(job.id)))) destinations.push({ destination: { type: 'job', jobId: job.id, forConstruction:asBuilder(pawn) }, target: job, priority: 5, workPriority:constructionHaulPriority(pawn), wood: 0, food: 0,items });
     }
-    if(workPriority(pawn,'haul')>0)for (const fire of fires) destinations.push({destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:workPriority(pawn,'haul'),wood:fuelCapacity(world,fire.id),food:0});
+    if(workPriority(pawn,'haul')>0)for (const fire of fires) destinations.push(fire.kind==='mini-turret'?{destination:{type:'turret',structureId:fire.id},target:fire,priority:5,workPriority:workPriority(pawn,'haul'),wood:0,food:0,steel:turretReloadCapacity(world,fire.id)}:{destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:workPriority(pawn,'haul'),wood:fuelCapacity(world,fire.id),food:0});
     if(workPriority(pawn,'haul')>0)for (const zone of world.stockpiles) {
       const capacity = zone.capacity - (ground.get(cellIndex(world, zone.x, zone.z)) ?? 0) - (zoneReserved.get(zone.id) ?? 0);
       if (capacity > 0 && (zone.filters.silver || zone.filters.corpse || zone.filters.unfinished || zone.filters.textile || zone.filters.apparel || zone.filters.weapon || zone.filters.medicine || zone.filters.wood || zone.filters.food || zone.filters.chunk || zone.filters.component || zone.filters['advanced-component'] || zone.filters.steel || zone.filters.gold || zone.filters.plasteel || zone.filters.blocks)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:workPriority(pawn,'haul'), silver:zone.filters.silver?capacity:0, corpse:zone.filters.corpse?1:0, unfinished:zone.filters.unfinished?1:0,textile:zone.filters.textile?capacity:0, apparel:zone.filters.apparel?1:0, weapon:zone.filters.weapon?1:0, medicine:zone.filters.medicine?capacity:0, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, chunk: zone.filters.chunk ? 1 : 0, component: zone.filters.component ? capacity : 0, 'advanced-component':zone.filters['advanced-component']?capacity:0, steel: zone.filters.steel ? capacity : 0, gold:zone.filters.gold?capacity:0, plasteel:zone.filters.plasteel?capacity:0, blocks:zone.filters.blocks ? capacity : 0 });

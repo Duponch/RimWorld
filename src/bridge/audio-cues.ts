@@ -16,7 +16,7 @@ const animalVoiceSpecies = (species:AnimalSpeciesId):AnimalVoiceSpecies =>
 export type AudioCueKind = 'mining.hit' | 'woodcutting.hit' | 'construction.hit'
   | 'cooking.work' | 'crafting.work' | 'tailoring.work' | 'butchering.work' | 'research.work'
   | 'weapon.gunshot' | 'weapon.melee' | 'weapon.impact-ground' | 'weapon.impact-barrier'
-  | 'weapon.impact-flesh' | 'door.open' | 'door.close'
+  | 'weapon.impact-flesh' | 'weapon.explosion' | 'door.open' | 'door.close'
   | 'haul.pickup' | 'haul.drop' | 'farming.sow' | 'farming.harvest' | 'eating.work'
   | 'cleaning.work' | 'medical.tend' | 'maintenance.work' | 'firefighting.beat'
   | 'power.switch-on' | 'power.switch-off' | 'deconstruction.work' | 'building.deconstructed'
@@ -71,6 +71,7 @@ export class AudioCueRecorder {
   private work = new Map<number, WorkObservation>();
   private projectiles = new Set<number>();
   private projectileArrivals = new Set<number>();
+  private bombWaves=new Set<number>();
   private shooting = new Map<number, number>();
   private melee = new Map<number, number>();
   private doors = new Map<number, boolean>();
@@ -96,6 +97,7 @@ export class AudioCueRecorder {
     this.work.clear();
     this.projectiles.clear();
     this.projectileArrivals.clear();
+    this.bombWaves.clear();
     this.shooting.clear();
     this.melee.clear();
     this.doors.clear();
@@ -228,6 +230,11 @@ export class AudioCueRecorder {
           tick: world.tick, kind: 'haul.drop', x: pawn.x, z: pawn.z });
       }
       const job = pawn.jobId === null ? undefined : jobs.get(pawn.jobId);
+      if(pawn.haul?.destination.type==='turret'&&pawn.haul.serviceProgress!==undefined){
+        const station=stationFor(pawn.haul.destination.structureId);
+        if(station)recordWork(pawn.id,`turret-service:${station.id}:${pawn.haul.sourcePileId}`,pawn.haul.serviceProgress,
+          'maintenance.work',station.x,station.z,pawn.state==='working',STATION_CUE_INTERVAL_TICKS);
+      }
       if (job && (job.kind === 'mine' || job.kind === 'chop' || job.kind === 'sow'
         || job.kind === 'harvest' || job.kind === 'cut' || job.kind === 'repair'
         || job.kind === 'deconstruct'
@@ -297,7 +304,7 @@ export class AudioCueRecorder {
         projectileArrivals.add(projectile.id);
         const kind: AudioCueKind | undefined = arrival.kind !== 'impact' ? undefined
           : arrival.effect === 'ground' ? 'weapon.impact-ground'
-            : arrival.effect === 'barrier' ? 'weapon.impact-barrier'
+            : ['barrier','structure','pile','resource','packed'].includes(arrival.effect) ? 'weapon.impact-barrier'
               : arrival.effect === 'pawn' || arrival.effect === 'animal' ? 'weapon.impact-flesh' : undefined;
         if (this.initialized && kind && !previousProjectileArrivals.has(projectile.id))
           this.add({ id: `${kind}:${projectile.id}`, tick: world.tick, kind,
@@ -309,6 +316,10 @@ export class AudioCueRecorder {
         this.add({ id: `shot:${projectile.id}`, tick: world.tick, kind: 'weapon.gunshot',
           x: projectile.flight.origin.x, z: projectile.flight.origin.z });
     }
+    const bombWaves=new Set<number>();
+    for(const wave of world.bombWaves??[]){bombWaves.add(wave.id);if(this.initialized&&!this.bombWaves.has(wave.id))
+      this.add({id:`bomb:${wave.id}`,tick:world.tick,kind:'weapon.explosion',x:wave.center.x,z:wave.center.z});}
+    this.bombWaves=bombWaves;
     for (const structure of world.structures) {
       if (watchedTargets.size && watchedTargets.has(structure.id)) structures.add(structure.id);
       if (watchedSwitches.size && watchedSwitches.has(structure.id) && canFlickPower(structure)) {

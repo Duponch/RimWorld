@@ -757,7 +757,7 @@ export class PawnLayer {
       const dressing=garment?.owner.type==='ground'?garment.owner:undefined;
       const fighting=pawn.firefighting?world.fires?.items.find(f=>f.id===pawn.firefighting!.fireId):undefined;
       const fireTarget=fighting?firePosition(world,fighting):undefined;
-      const fuelDestination=pawn.haul?.destination.type==='fuel'?pawn.haul.destination:undefined;
+      const fuelDestination=pawn.haul?.destination.type==='fuel'||pawn.haul?.destination.type==='turret'?pawn.haul.destination:undefined;
       const station=pawn.state==='working'||arriving ? pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking?.phase==='work' ? world.structures.find(s=>s.id===pawn.cooking!.stationId) : pawn.haul?.serviceProgress!==undefined&&fuelDestination ? world.structures.find(s=>s.id===fuelDestination.structureId) : undefined : undefined;
       const workPose=pawnWorkPose(pawn,job,station?.kind);
       const stationCell=station ? footprintCells(station).reduce((best,cell)=>Math.hypot(cell.x-pawn.x,cell.z-pawn.z)<Math.hypot(best.x-pawn.x,best.z-pawn.z)?cell:best) : undefined;

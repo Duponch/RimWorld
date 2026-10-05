@@ -5,6 +5,7 @@ import { footprintCells } from '../src/sim/definitions.ts';
 import { BATTERY_ENERGY_SCALE,batteryWattDays } from '../src/sim/power-battery.ts';
 import { structureMaxHp } from '../src/sim/thing-damage-rules.ts';
 import { triggerBreakdown } from '../src/sim/breakdowns.ts';
+import { newMiniTurretState } from '../src/sim/mini-turret-state.ts';
 import { fixturePower } from './scenarios/power.ts';
 import { adoptRainElectrical,advanceRainElectrical,isRainElectricalKind,rainElectricalEligible,RAIN_ELECTRICAL_KINDS } from '../src/sim/rain-electric.ts';
 import { validRainElectrical } from '../src/sim/rain-electric-save.ts';
@@ -82,13 +83,18 @@ test('covered and inactive candidates still count, without reroll after selectin
   expect(world.rainElectrical!.discharges).toBe(0);expect(world.fires).toBeUndefined();
 });
 
-test('the ten catalogue properties, real activity, battery threshold and anchor roof remain distinct',()=>{
+test('the installed catalogue properties, real activity, battery threshold and anchor roof remain distinct',()=>{
   const world=rainElectricCamp();
-  expect(RAIN_ELECTRICAL_KINDS).toHaveLength(10);
+  expect(RAIN_ELECTRICAL_KINDS).toEqual(['mini-turret','battery','heater','electric-stove','electric-tailor-bench','machining-table','fabrication-bench','hi-tech-research-bench','multi-analyzer','sun-lamp','tube-television']);
   for(const kind of RAIN_ELECTRICAL_KINDS){const b=rainElectricBuilding(world,kind);expect(rainElectricalEligible(world,b)).toBe(true);}
   for(const kind of ['standing-lamp','cooler','autodoor','wood-generator','solar-generator','wind-turbine','power-conduit','power-switch'] as const){
     const b=rainElectricBuilding(world,kind);expect(isRainElectricalKind(kind)).toBe(false);expect(rainElectricalEligible(world,b)).toBe(false);
   }
+  const turret=world.structures.find(b=>b.kind==='mini-turret')!;
+  expect(turret.turret).toEqual(newMiniTurretState());
+  turret.turret!.ammoQ=0;turret.turret!.holdFire=true;
+  expect(rainElectricalEligible(world,turret)).toBe(true);
+  turret.power!.on=false;expect(rainElectricalEligible(world,turret)).toBe(false);turret.power!.on=true;
   const battery=world.structures.find(b=>b.kind==='battery')!;
   battery.battery!.stored=100*BATTERY_ENERGY_SCALE;expect(rainElectricalEligible(world,battery)).toBe(false);
   battery.battery!.half=true;expect(rainElectricalEligible(world,battery)).toBe(true);

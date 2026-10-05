@@ -28,7 +28,7 @@ export function validRainElectrical(value:unknown,version:number,
   return object(last)&&keys(last,['coreTick','structureId','kind','x','z'])&&
     integer(last.coreTick,adoptedCore+1,now)&&last.coreTick%RAIN_ELECTRICAL_INTERVAL_CORE===0&&
     value.discharges<=opportunities(last.coreTick)-opportunities(adoptedCore)&&
-    integer(last.structureId,1,w.nextId-1)&&isRainElectricalKind(last.kind)&&(version>=190||last.kind!=='tube-television')&&
+    integer(last.structureId,1,w.nextId-1)&&isRainElectricalKind(last.kind)&&(version>=193||last.kind!=='mini-turret')&&(version>=190||last.kind!=='tube-television')&&
     integer(last.x,0,w.width-1)&&integer(last.z,0,w.height-1);
 }
 export function validateRainElectrical(w:World,version=w.schemaVersion):string[] {

@@ -74,6 +74,8 @@ import { ActionFeedbackLayer } from './ActionFeedbackLayer';
 import { ActionVfxLayer } from './ActionVfxLayer';
 import { BrawlCloudLayer } from './BrawlCloudLayer';
 import { StructureVfxLayer } from './StructureVfxLayer';
+import { MiniTurretLayer } from './MiniTurretLayer';
+import { miniTurretRadiusCells, MINI_TURRET_DISPLAY_RANGE, MINI_TURRET_DISPLAY_BOMB_RADIUS } from '../sim/mini-turret-presentation';
 import { MapLabelsOverlay } from './MapLabelsOverlay';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { GpuGroundGrassLayer } from './GpuGroundGrassLayer';
@@ -114,6 +116,9 @@ export class ColonyRenderer {
   private readonly actionVfx = new ActionVfxLayer(this.pawns);
   private readonly brawlCloud = new BrawlCloudLayer(this.pawns);
   private readonly structureVfx = new StructureVfxLayer();
+  private readonly turretTops=new MiniTurretLayer();
+  private turretPreviewSignature='';
+  private turretPreviewVisible=false;
   private readonly podRescue = new PodRescueLayer(this.environmentLighting.configure);
   private readonly mapLabels: MapLabelsOverlay;
   readonly backend: string;
@@ -493,6 +498,7 @@ export class ColonyRenderer {
     const doorAxes=doorOrientations(world);
     const structureKey = [...doorAxes].join(':') + packageKey + world.structures.map((s) => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.medical}:${s.grave?.corpseId}:${s.flower?.plant?`${s.flower.plant.hitPoints>0}:${Math.floor(s.flower.plant.growth*4)}`:''}:${s.power?.on}:${s.power?.parentId}:${s.power?.switchOn}:${s.breakdown?.brokenAt??''}:${s.fuel?s.fuel.ticks>0:''}`).join('|');
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
+    this.turretTops.update(world,this.structureGroup,this.boxes,newMap);
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
     const jobKey = world.jobs.filter(j=>j.kind!=='fix-breakdown').map((j) => `${j.id}:${j.kind}:${j.floor}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' || j.kind==='repair' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
@@ -562,6 +568,7 @@ export class ColonyRenderer {
     this.controls.enabled = true;
     if (drag && this.renderer.domElement.hasPointerCapture(drag.pointerId)) this.renderer.domElement.releasePointerCapture(drag.pointerId);
     this.areaPreview.hide();
+      this.turretPreviewVisible=false;this.turretPreviewSignature='';
     this.hover.visible = false;
     (this.hover.material as THREE.MeshBasicNodeMaterial).opacity = 0.55;
     this.onAreaPreview(null);
@@ -784,7 +791,17 @@ export class ColonyRenderer {
   }
 
   setSelectedPawns(ids:ReadonlySet<number>):void {this.selectedPawns=new Set(ids);this.pawns.setSelected(ids);this.wildlife.setSelected(ids);if(this.world&&this.pawns.feedbackSource)this.actionFeedback.update(this.world,this.selectedPawns,this.pawns.feedbackSource);}
-  setSelectedObject(selected:MapObjectSelection|undefined):void {this.selectedObject=selected;this.updateSelectedObject();this.updateGrowingZones(false);}
+  setSelectedObject(selected:MapObjectSelection|undefined):void {this.selectedObject=selected;this.updateSelectedObject();this.updateGrowingZones(false);this.updateTurretPreview();}
+  private updateTurretPreview():void {
+    const world=this.world,selected=this.selectedObject;
+    const structure=this.tool==='select'&&selected?.kind==='structure'?world?.structures.find(s=>s.id===selected.id&&s.kind==='mini-turret'):undefined;
+    if(this.areaDrag||!world||!structure){if(this.turretPreviewVisible&&!this.areaDrag)this.areaPreview.hide();this.turretPreviewVisible=false;this.turretPreviewSignature='';return;}
+    const danger=!!structure.turret?.wick,radius=danger?MINI_TURRET_DISPLAY_BOMB_RADIUS:MINI_TURRET_DISPLAY_RANGE;
+    const signature=`${structure.id}:${structure.x}:${structure.z}:${world.width}:${world.height}:${danger}`;
+    if(signature===this.turretPreviewSignature)return;
+    this.turretPreviewSignature=signature;this.turretPreviewVisible=true;
+    this.areaPreview.update(world.width,world.width*world.height,miniTurretRadiusCells(world,structure,radius),danger?0xe79c7c:0x9bbeb0);
+  }
   private updateGrowingZones(reset:boolean):boolean {
     return this.world?this.growing.update(this.world,reset,this.tool==='growing'||this.tool==='remove-growing',this.selectedObject?.kind==='growing'?this.selectedObject.id:undefined):false;
   }
@@ -1154,6 +1171,7 @@ export class ColonyRenderer {
   private updateHover(): void {
     if(this.preparing)return;
     if (this.areaDrag) { this.updateAreaPreview(); return; }
+    this.updateTurretPreview();
     const cell = this.hoverCell;
     this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined);
     const television=this.tool==='select'?this.world?.structures.find(s=>s.kind==='tube-television'&&s.x===cell?.x&&s.z===cell?.z):undefined;
@@ -1174,7 +1192,7 @@ export class ColonyRenderer {
     this.hover.position.set((minX+maxX)/2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (minZ+maxZ)/2);
     const placeable=this.tool in STRUCTURE_DEFINITIONS||['mine','uninstall','deconstruct','chop','harvest','cut'].includes(this.tool);
     const validity = this.tool==='lay-floor'||this.tool==='remove-floor'?canDesignate(this.world,{type:'designate',kind:this.tool,...cell,...this.tool==='lay-floor'?{floor:this.selectedFloor}:{}}):this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(this.furniturePlacement.kind)?0:this.placementRotation},true):placeable
-      ? canDesignate(this.world, { type:'designate',kind:this.tool as JobKind,...cell,...(this.constructionMaterial?{material:this.constructionMaterial}:{}),orientation:this.tool==='sandbags'||this.tool==='solar-generator'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='wood-generator'||this.tool==='sun-lamp'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='autodoor'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
+      ? canDesignate(this.world, { type:'designate',kind:this.tool as JobKind,...cell,...(this.constructionMaterial?{material:this.constructionMaterial}:{}),orientation:this.tool==='mini-turret'||this.tool==='sandbags'||this.tool==='solar-generator'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='wood-generator'||this.tool==='sun-lamp'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='autodoor'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
     const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
     this.renderer.domElement.title = validity?.reason ?? '';

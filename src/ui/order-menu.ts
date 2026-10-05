@@ -92,6 +92,12 @@ export class OrderMenu {
   /** A ground click can move immediately. A pawn or animal click always opens
    * explicit attack choices and never becomes a movement order. */
   async openTactical(world:World,ids:ReadonlySet<number>,cell:Cell,x:number,y:number,queue:boolean,targetId?:number):Promise<void> {
+    // A turret service is a personal haul order, including while mobilized.
+    // Ask the worker for its real eligibility instead of treating the building
+    // as a ground movement or a living attack target.
+    if(targetId===undefined&&world.structures.some(s=>s.kind==='mini-turret'&&s.x===cell.x&&s.z===cell.z)){
+      await this.open(world,ids,cell,x,y,queue);return;
+    }
     this.close();
     if(targetId===undefined) {
       const pawns=tacticalPawns(world,ids);

@@ -1,6 +1,8 @@
 # Ce qui est jouable et ce qui manque
 
-**État courant V211, schéma 192 — crises mentales livrées dans le périmètre contrôlé.** Le [lot](../development/mental-crises-v211.md) relie destruction, hostilité temporaire, victime stable, riposte et récupération. Le [passé V210](../development/colonist-backgrounds-v210.md) est livré. Famille/romance, autres crises, menaces mécanoïdes et monde de groupe restent ouverts ; aucun jalon G0–G5 clos. [Preuve](../history/validation-mental-crises-v211.md).
+**V212 livré dans le périmètre contrôlé, schéma 193.** Mini-tourelle reliée au chantier, au courant, aux projectiles, au transport d’acier, aux dégâts, à l’explosion et au refuge physique. [Contrat](../development/mini-turret-v212.md), [règles Core et adaptations](../research/mini-turret-core-v212.md), [preuve](../history/validation-mini-turret-v212.md). Monde, famille/romance et mécanoïdes restent absents ; les ouvertures V210–V212 ne rendent pas leurs catalogues exhaustifs.
+
+**Repère V211, schéma 192 — crises mentales livrées dans le périmètre contrôlé.** Le [lot](../development/mental-crises-v211.md) relie destruction, hostilité temporaire, victime stable, riposte et récupération. Le [passé V210](../development/colonist-backgrounds-v210.md) est livré. Famille/romance, autres crises, menaces mécanoïdes et monde de groupe restent ouverts ; aucun jalon G0–G5 clos. [Preuve](../history/validation-mental-crises-v211.md).
 
 **État historique V209, schéma 190 — consolidation.** Les règles de recherche, continuité des intentions, sauvegardes et reprise graphique ont été consolidées dans le [contrat](../development/consolidation-v209.md), avec [preuves/limites](../history/validation-consolidation-v209.md). À cette date, le catalogue V208 était le dernier ajout fonctionnel ; biographies/famille, crises diverses, menaces mécanoïdes et planète/caravanes de groupe restaient partiels ou absents. Aucun jalon G0–G5 clos.
 

@@ -1,6 +1,8 @@
 # Architecture et décisions
 
-**Schéma courant 192 — V211, crises mentales livrées dans le périmètre contrôlé.** [Contrat](mental-crises-v211.md), [preuve](../history/validation-mental-crises-v211.md). Union de crises, catalogue partagé, admission spatiale bornée, autorité de mêlée privée, menace réelle et dégâts à cause explicite réutilisent le moteur existant. Migration stricte191 puis neutre ; aucune cible ni menace rétroactive.
+**V212 livré dans le périmètre contrôlé, schéma 193.** État privé sur le bâtiment installé, profil intrinsèque distinct des armes d’inventaire, événements Bullet/Bomb triés par ID à chaque sous-tick Core, captures partagées et service réutilisant le transport. Le trajet refuge reste une autorité explicite pendant une crise. [Contrat](mini-turret-v212.md), [recherche](../research/mini-turret-core-v212.md), [preuve](../history/validation-mini-turret-v212.md). Les gros points d’entrée et limites générales CPU/GPU restent ouverts.
+
+**Repère V211, schéma 192, crises mentales livrées dans le périmètre contrôlé.** [Contrat](mental-crises-v211.md), [preuve](../history/validation-mental-crises-v211.md). Union de crises, catalogue partagé, admission spatiale bornée, autorité de mêlée privée, menace réelle et dégâts à cause explicite réutilisent le moteur existant. Migration stricte191 puis neutre ; aucune cible ni menace rétroactive.
 
 **V208 historique, schéma 190, livré dans le périmètre ciblé.** [Contrat TV](television-v208.md), [recherche](../research/television-core-v208.md), [preuve](../history/validation-television-v208.md). Validation stricte 189 avant famille `television:0/false` pour propriétaires actifs, sans projet ni plaisir rétroactif. Les archives conservent leurs champs historiques. Places frontales et topologie tick-locale partagent les services existants ; modèle dans le lot mobilier résident.
 

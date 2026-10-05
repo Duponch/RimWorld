@@ -70,6 +70,10 @@ export function parseAudioManifest(input: unknown): AudioManifest {
       spatial: event.spatial !== false,
     };
   }
+  // Original assets are reused explicitly for this first Bomb presentation.
+  // The cue remains an explosion identity; no new download or generation.
+  if(!events['weapon.explosion']&&events['weapon.impact-barrier'])
+    events['weapon.explosion']={...events['weapon.impact-barrier'],gain:events['weapon.impact-barrier'].gain*.9,maxDistance:30,loop:false};
   return { version: 1, events };
 }
 

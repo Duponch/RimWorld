@@ -4,11 +4,12 @@ import type { World } from './types.ts';
 
 /** Owned ONLY by one synchronous advanceWorldCombat transaction. Medical
  * impacts can move/drop piles; barrier destruction replaces structures and
- * invalidates the fixed layer. Terrain, plants and frames cannot change here.
+ * invalidates the fixed layer. Bomb/Bullet plants can also retire in this batch.
  * A weapon drop has no cover; a dropped/carried chunk must refresh the grid. */
 export function combatShotBatch(world:World) {
   let grid:ReturnType<typeof captureWorldShotGrid>|undefined;
   let signature:number[]=[];let structures=world.structures;
+  let resources=world.resources;
   const groundCover=()=>{
     const values:number[]=[];
     for(const p of world.piles)if(p.owner.type==='ground') {
@@ -19,7 +20,7 @@ export function combatShotBatch(world:World) {
   };
   return {
     read:()=>{
-      if(structures!==world.structures){grid=undefined;structures=world.structures;}
+      if(structures!==world.structures||resources!==world.resources){grid=undefined;structures=world.structures;resources=world.resources;}
       if(!grid){grid=captureWorldShotGrid(world);signature=groundCover();}
       return grid;
     },

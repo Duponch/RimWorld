@@ -1495,6 +1495,36 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32, createWorld(208), schéma 190, tick 3000 sans campagne simulée. Trois adultes sains, besoins faim/repos à 100 et plaisir à 20, horaires Travail. Recherche Intellect 8 et Construction 8, priorités utiles préparées. Mobilier complexe achevé, projet TV à 998/1000 sans sélection ni travail engagé. Bureau simple, trois tabourets réels et générateur rempli de 75 bois préparés ; 80 acier, 4 composants et neuf rations au sol. Aucun téléviseur, plan, livraison, plaisir télévisuel, panne ou commutation préinjectés. Incidents exclus. Écran fixe original dans le lot résident, sans image ou vidéo propriétaire. Cette préparation ne prouve ni campagne naturelle ni performance générale sur 250².",
       "sha256": "24670d2ab83f675a4d56c3feccb74f2c21cf1f424786f879ead1a40b1a8b6a33"
+    },
+    {
+      "id": "mini-turret-v212",
+      "release": "v212",
+      "label": "Mini-tourelle · chantier et entretien",
+      "filename": "mini-turret.json",
+      "description": "Achever la recherche, livrer les matériaux puis construire et régler une défense électrique fixe. Les tirs et l’entretien restent des résultats à produire.",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 3000,
+      "focus": [
+        "recherche physique",
+        "acier et composants livrés",
+        "canon et réseau",
+        "politiques confirmées",
+        "réarmement physique",
+        "panne et PV",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause. Recherche → Tourelles automatiques : lancer les deux derniers points. Ada rejoint le bureau en (6,6) ; Armurerie et ses préalables sont préparés.",
+        "Architecte → Structure → Mini-tourelle automatique : poser en (16,16). Reprendre : Noé livre 100 aciers et trois composants puis accomplit le chantier. Le générateur au bois préparé fournit le courant ; le canon neuf possède 60 coups.",
+        "Sélectionner la tourelle : inspecter le canon, le réseau, la cible et les politiques. Retenir le feu puis reprendre le feu par les boutons ; aucune cible ennemie ou émission n’est fournie par la scène. Le rayon 28,9 indique une portée géométrique, pas une garantie de tir.",
+        "Après une future consommation réelle du canon, choisir Mina et demander Réarmer avec ce colon. L’acier en (14,18) doit être pris, porté puis consommé au contact pendant le service. Un canon déjà plein refuse cette demande. Sauvegarder et recharger pendant un vrai service ou une coupure électrique."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32, createWorld(212), schéma 193, tick 3000 sans campagne simulée. Trois personnes saines aux profils de création réels, besoins à 100, horaires Travail et priorités ciblées. Intellect et Construction 8 préparés ; Forge, Usinage et Armurerie achevés, projet Tourelles à 498/500 sans travail engagé. Bureau, générateur rempli, 110 aciers, trois composants et neuf rations au sol. Aucun canon, plan, livraison, réarmement, ennemi, tir, dégât, mèche ou vague préjoué. Incidents exclus. Combat et danger exercés par des expositions privées distinctes ; aucune fréquence naturelle, validation native ni performance générale déduite de cette préparation.",
+      "sha256": "ad2c900bd3f37ed811b1a7b605b930554d4c728716e7bd3d927dcf91f642d49f"
     }
   ]
 }

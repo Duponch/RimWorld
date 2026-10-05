@@ -6,7 +6,7 @@ import type { WeaponQuality } from './equipment-rules.ts';
 export interface ProjectileRelations { friendlyPawnIds:number[]; friendlyFireFactor:number }
 export interface WorldProjectile {
   /** Absent is the historical revolver. Independent of the current equipment. */
-  weaponItem?:'bolt-action-rifle';
+  weaponItem?:'bolt-action-rifle'|'mini-turret-gun';
   id:number;
   quality:WeaponQuality;
   emittedAtCore:number;
@@ -15,5 +15,5 @@ export interface WorldProjectile {
   relations:ProjectileRelations;
   /** Kept through the impact's local tick for snapshots/save continuation.
    * The record is inert after arrival, including unsupported object impacts. */
-  arrival:(BulletArrival & {effect:'animal'|'barrier'|'pawn'|'ground'|'exit'|'unsupported-object'})|null;
+  arrival:(BulletArrival & {effect:'animal'|'barrier'|'pawn'|'structure'|'pile'|'resource'|'packed'|'ground'|'exit'|'unsupported-object'})|null;
 }

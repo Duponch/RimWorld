@@ -28,7 +28,6 @@ function neutralMigration(source:World):void {
 }
 
 test('strict191 migration changes only the number, preserving old episodes, biography data, off-map owners and frozen archives',()=>{
-  expect(SCHEMA_VERSION).toBe(192);
   const ordinary=camp();makeCrisisPacifist(ordinary.pawns[0]!);neutralMigration(ordinary);
   for(const start of [startSadWander,startFoodBinge]){
     const world=camp();expect(start(world,world.pawns[0]!)).toBe(true);stepWorld(world,2);neutralMigration(world);

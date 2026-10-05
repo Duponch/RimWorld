@@ -115,7 +115,7 @@ export function exitPodRescue(w:World,p:Pawn):boolean {
   if(!s||!incident||incident.result||!w.pawns.includes(p)||p.faction!=='outlanders'||p.prisoner||
     !visitorAtEdge(w,p)||p.path.length||p.need||p.moveCooldown>0||(p.motion?.end??0)>w.tick||
     !['idle','moving','hungry'].includes(p.state)||p.burning||p.mental?.crisis||p.flee||carrierOf(w,p.id)||
-    (p.stun?.untilCore??0)>w.tick*10||p.interruptedCargo||p.equipmentDropPending||p.shooting?.stance||p.melee?.strike||
+    (p.stun?.untilCore??0)>w.tick*10||p.bombRefuge||p.interruptedCargo||p.equipmentDropPending||p.shooting?.stance||p.melee?.strike||
     p.jobId!==null||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.ward||p.recreation.task||
     p.podRescue?.admittedAt!==undefined&&(treatmentTarget(p)||medicalRestNeeded(p))||s.departed.length>=POD_RESCUE_LIMIT)return false;
   const items=w.piles.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id),packed=w.packed.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id);

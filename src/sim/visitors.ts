@@ -159,7 +159,7 @@ export function exitVisitor(w:World,p:Pawn):boolean {
   const v=p.visitor;
   // The shared ingestion/spoilage pass may remove food after calendar upkeep.
   if(v)v.personalFoodIds=v.personalFoodIds.filter(id=>w.piles.some(i=>i.id===id&&'pawnId' in i.owner&&i.owner.pawnId===p.id));
-  if(!v||v.phase!=='leaving'||!visitorAtEdge(w,p)||p.need||p.moveCooldown>0||(p.motion?.end??0)>w.tick||p.state==='dead'||p.state==='downed'||p.state==='sleeping'||p.burning||carrierOf(w,p.id)||(p.stun?.untilCore??0)>w.tick*10||p.interruptedCargo||p.equipmentDropPending||p.shooting?.stance||p.melee?.strike)return false;
+  if(!v||v.phase!=='leaving'||!visitorAtEdge(w,p)||p.need||p.moveCooldown>0||(p.motion?.end??0)>w.tick||p.state==='dead'||p.state==='downed'||p.state==='sleeping'||p.burning||carrierOf(w,p.id)||(p.stun?.untilCore??0)>w.tick*10||p.bombRefuge||p.interruptedCargo||p.equipmentDropPending||p.shooting?.stance||p.melee?.strike)return false;
   const items=w.piles.filter(i=>('pawnId' in i.owner)&&i.owner.pawnId===p.id);
   if(items.some(i=>i.owner.type==='pawn')||w.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))return false;
   const packed=w.packed.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===p.id);

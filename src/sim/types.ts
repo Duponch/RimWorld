@@ -1,13 +1,13 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 192 as const;
+export const SCHEMA_VERSION = 193 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone' | 'rich-soil' | 'gravel';
 export type ResourceKind = 'wild-plant' | 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton' | 'healroot';
 export type MaterialKind = 'silver' | 'corpse' | 'wood' | 'food' | 'chunk' | 'steel' | 'gold' | 'plasteel' | 'advanced-component' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
-export type StructureKind = 'tube-television' | 'sandbags' | 'art-bench' | 'small-sculpture' | 'large-sculpture' | 'machining-table' | 'fabrication-bench' | 'hi-tech-research-bench' | 'multi-analyzer' | 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'sun-lamp' | 'standing-lamp' | 'passive-cooler' | 'door' | 'autodoor' | 'wall' | 'fence' | 'fence-gate' | 'pen-marker' | 'bed' | 'hospital-bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'chess-table' | 'stonecutter';
+export type StructureKind = 'mini-turret' | 'tube-television' | 'sandbags' | 'art-bench' | 'small-sculpture' | 'large-sculpture' | 'machining-table' | 'fabrication-bench' | 'hi-tech-research-bench' | 'multi-analyzer' | 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'sun-lamp' | 'standing-lamp' | 'passive-cooler' | 'door' | 'autodoor' | 'wall' | 'fence' | 'fence-gate' | 'pen-marker' | 'bed' | 'hospital-bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'chess-table' | 'stonecutter';
 export type JobKind = 'lay-floor' | 'remove-floor' | 'flick' | 'repair' | 'fix-breakdown' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
 export type WorkType = 'handle' | 'art' | 'clean' | 'firefight' | 'warden' | 'basic' | 'hunt' | 'research' | 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
 export type Orientation = 0 | 1 | 2 | 3;
@@ -16,14 +16,14 @@ export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 
 export interface Cell { x: number; z: number }
 export interface Tile { floor?:import('./flooring.ts').FloorKind; ore?: 'steel' | 'machinery' | 'gold' | 'plasteel'; miningDamage?: number; /** Prospective yield weighted by the fraction of ore HP actually mined. */ miningYield?: number; terrain: Terrain; stone?: import('./geology.ts').StoneKind }
 export interface Resource extends Cell { species?:import('./biome-flora.ts').PlantSpecies; plantLife?:import('./plant-life.ts').PlantLife; damage?:number; id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; growthThermalFactor?:number; growthLight?:'dark'|'artificial-full'; stone?: import('./geology.ts').StoneKind }
-export interface Structure extends Cell { breakdown?:import('./breakdowns.ts').BreakdownState; gatherSpot?:boolean; pen?:{accepted:import('./animal-species.ts').AnimalSpeciesId[]}; art?:{authorId:number;createdAt:number}; flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
+export interface Structure extends Cell { turret?:import('./mini-turret-state.ts').MiniTurretState; breakdown?:import('./breakdowns.ts').BreakdownState; gatherSpot?:boolean; pen?:{accepted:import('./animal-species.ts').AnimalSpeciesId[]}; art?:{authorId:number;createdAt:number}; flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = {type:'grave';graveId:number} | ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'inventory';pawnId:number} | {type:'equipment';pawnId:number} | {type:'apparel';pawnId:number} | { type: 'job'; jobId: number };
 export interface MaterialPile { componentWork?:import('./component-work.ts').ComponentWork; flakWork?:import('./flak-work.ts').FlakWork; artWork?:import('./art-work.ts').ArtWork; gunWork?:import('./gun-work.ts').GunWork; humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
 export type StorageFilters = { silver?:boolean; corpse?:boolean; wood:boolean; food:boolean; unfinished?:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; gold?:boolean; plasteel?:boolean; component?:boolean; 'advanced-component'?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
 export interface StockpileCell extends Cell, StorageConditions { items?:Partial<Record<ItemId,boolean>>; id: number; filters: StorageFilters; priority: number; capacity: number }
 export interface GrowingZone { id: number; cells: number[]; plant: 'rice' | 'cotton' | 'potato' | 'corn' | 'healroot'; allowSow: boolean; allowCut: boolean }
-export type HaulDestination = { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number; forHunting?: true } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
+export type HaulDestination = { type:'turret';structureId:number;forced?:true } | { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number; forHunting?: true } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
 export interface HaulTask {
   /** A whole furniture identity, never a divisible material pile. */
   whole?: true;
@@ -102,6 +102,7 @@ export interface Pawn extends Cell {
   disturbance?:import('./disturbance-state.ts').DisturbanceState;
   tactics?:import('./tactics-state.ts').TacticsState;
   flee?:import('./threats.ts').FleeState;
+  bombRefuge?:import('./mini-turret-state.ts').BombRefuge;
   melee?:import('./melee-state.ts').MeleeState;
   stun?:import('./stun.ts').StunState;
   shooting?:import('./shooting-state.ts').ShootingState;
@@ -205,6 +206,7 @@ export interface World {
   destroyed?:import('./barriers.ts').DestructionLedger;
   arrivals?:import('./arrival-state.ts').ArrivalState;
   projectiles?:import('./projectile-state.ts').WorldProjectile[];
+  bombWaves?:import('./bomb-state.ts').MiniTurretBombWave[];
   roofing?: import('./roof-rules.ts').RoofingState;
   thermal?: import('./temperature.ts').ThermalState;
   packed: import('./furniture-rules.ts').PackedFurniture[];
@@ -245,6 +247,7 @@ export interface StorageSettings extends StorageConditions { items?:Partial<Reco
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; floor?: import('./flooring.ts').FloorKind }
 export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }
 export type Command = import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
+  | import('./mini-turret-state.ts').TurretCommand
   | {type:'pen-species';markerId:number;species:import('./animal-species.ts').AnimalSpeciesId;accepted:boolean}
   | {type:'adopt-economy'}
   | {type:'climate-adopt'}

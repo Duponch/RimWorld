@@ -1,6 +1,8 @@
 # Plan de développement
 
-**État courant V211, schéma 192 — crises mentales livrées dans le périmètre contrôlé.** [Contrat](development/mental-crises-v211.md), [preuve](history/validation-mental-crises-v211.md). V210 a livré le passé prospectif et ses incapacités ; V211 relie trois conduites et leurs conséquences réelles. Les jalons G0–G5 restent ouverts. La consigne d’autonomie jusqu’au retour annoncé ou à une pause demeure, avec commits locaux sans push.
+**V212 — défense automatisée livrée dans le périmètre contrôlé, schéma 193.** [Contrat](development/mini-turret-v212.md), [recherche](research/mini-turret-core-v212.md), [preuve](history/validation-mini-turret-v212.md). La boucle regroupe recherche, construction, énergie, tir, entretien et danger. G0–G5 restent ouverts ; poursuivre une menace mécanique avec corps, combat, mort et récupération physiques selon les références disponibles.
+
+**Repère V211, schéma 192 — crises mentales livrées dans le périmètre contrôlé.** [Contrat](development/mental-crises-v211.md), [preuve](history/validation-mental-crises-v211.md). V210 a livré le passé prospectif et ses incapacités ; V211 relie trois conduites et leurs conséquences réelles. Les jalons G0–G5 restent ouverts. La consigne d’autonomie jusqu’au retour annoncé ou à une pause demeure, avec commits locaux sans push.
 
 **Repère historique V209 — consolidation demandée, schéma 190 inchangé.** La [phase de continuité](development/consolidation-v209.md) traite les défauts de l’[audit](history/audit-code-core-2026-10-04.md). [Preuves/limites](history/validation-consolidation-v209.md), [diagnostic des priorités et du rythme](history/analysis-external-agent-2026-10-04.md). La méthode retenue regroupe une boucle et ses règles/contenus ; les variantes de recettes/mobilier ne sont pas des suites automatiques. G0–G5 restent ouverts ; aucune performance ×6 ni parité exhaustive présumée.
 

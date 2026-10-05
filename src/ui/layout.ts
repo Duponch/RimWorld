@@ -43,6 +43,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id:'door',title:'Porte',hint:'orientation automatique · ouverture au passage · choisir le matériau',key:'',category:'structure' },
   { id:'autodoor',title:'Porte automatique',hint:'Construction 6 · recherche Portes automatiques · 50 W · passage rapide sous courant, porte ordinaire sans courant',key:'',category:'structure' },
   { id: 'wall', title: 'Mur', hint: 'cliquer ou tracer une ligne droite · mur de 2,80 m · Échap annule le tracé', key: 'B', category: 'structure' },
+  {id:'mini-turret',title:'Mini-tourelle automatique',hint:'1 × 1 fixe · 100 acier + 3 composants · Construction 5 · recherche Tourelles automatiques · 180 ticks neutres · 100 PV · 80 W · canon 60 coups · acier livré pour réarmer · portée géométrique 28,9 · danger explosif 3,9 · désinstallation indisponible',key:'',category:'structure'},
   { id:'sandbags',title:'Sacs de sable',hint:'1 × 1 · 5 tissu · 18 ticks de construction neutres · couvert bas 55 % selon la direction du tir · 300 PV · ininflammable · traversée lente, sans arrêt sur la case · sans rotation',key:'',category:'structure' },
   { id: 'fence', title: 'Clôture', hint: 'cliquer ou tracer une ligne droite · 1 matériau par case · limite physique pour les herbivores errants', key: '', category: 'structure' },
   { id: 'fence-gate', title: 'Portillon', hint: '25 matériaux · accès nécessaire pour conduire les animaux dans un enclos', key: '', category: 'structure' },

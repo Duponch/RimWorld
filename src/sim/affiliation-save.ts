@@ -1,4 +1,5 @@
 import { hostileTo,isColonist } from './affiliation.ts';
+import { bombRefugeRouteTarget } from './bomb-refuge-route.ts';
 import type { World } from './types.ts';
 
 export function validAffiliationShape(p:Record<string,unknown>,version:number,world:World):boolean {
@@ -17,7 +18,8 @@ export function validateAffiliations(world:World):string[] {
     if(!isColonist(p)&&(p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.recreation.task||!p.prisoner&&!podGuest&&(p.bedId!==null||p.need&&!(p.need.kind==='sleep'&&p.need.bedId===null||wantsVisitorMeal(p)))))errors.push('Non-colonist owns a colony activity.');
     const recovering=world.schemaVersion>=79&&p.shooting?.order===null&&p.shooting.stance?.phase==='cooldown';
     if(p.flee&&(!isColonist(p)||p.draft||!['idle','moving','hungry'].includes(p.state)||p.shooting&&!recovering||p.need||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.recreation.task))errors.push('Flee conflicts with another activity.');
-    if(p.flee&&p.path.length&&(p.path.at(-1)!.x!==p.flee.target.x||p.path.at(-1)!.z!==p.flee.target.z))errors.push('Flee path misses its target.');
+    const fleeTarget=bombRefugeRouteTarget(p,p.flee?.target,world.schemaVersion);
+    if(p.flee&&p.path.length&&(!fleeTarget||p.path.at(-1)!.x!==fleeTarget.x||p.path.at(-1)!.z!==fleeTarget.z))errors.push('Flee path misses its target.');
     // Collision is a permission at edge commitment, not a universal overlap
     // invariant: a downed hostile can recover beneath a passer-by. Preserve the
     // accepted edge rather than rejecting an otherwise legitimate continuation.

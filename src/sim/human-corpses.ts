@@ -5,6 +5,7 @@ import { groundCapacity } from './ground-placement.ts';
 import { adjacent } from './pathfinding.ts';
 import { TemperatureView } from './temperature.ts';
 import { ensureFireState } from './fire-rules.ts';
+import { neutralLossPlan } from './destruction-losses.ts';
 import { addFilth } from './filth.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
 import { TICKS_PER_DAY,type Cell,type MaterialOwner,type MaterialPile,type Pawn,type World } from './types.ts';
@@ -97,18 +98,21 @@ export function advanceHumanCorpses(w:World,layout?:ThermalLayout):void {
 }
 /** All still attached possessions are destroyed together; a dropped weapon is
  * deliberately absent. Preflight the whole ledger before changing any owner. */
-export function destroyHumanCorpse(w:World,pile:MaterialPile):boolean {
+export function destroyHumanCorpse(w:World,pile:MaterialPile,cause:'fire'|'bullet'|'bomb'='fire'):boolean {
   const person=corpsePawn(w,pile);if(!person||!w.piles.includes(pile))return false;
   const contents=w.piles.filter(p=>p===pile||['equipment','apparel','inventory'].includes(p.owner.type)&&'pawnId' in p.owner&&p.owner.pawnId===person.id);
   const packed=w.packed.filter(p=>p.owner.type==='inventory'&&p.owner.pawnId===person.id);
   const lost={...w.destroyed?.lost};
   for(const pack of packed)for(const ingredient of constructionRecipe(pack.building).ingredients){const item=ingredient.item as ConstructionMaterial|'component';lost[item]=(lost[item]??0)+ingredient.quantity;}
-  if(packed.length&&(!Number.isSafeInteger((w.destroyed?.count??0)+packed.length)||!Number.isSafeInteger((w.fires?.ledger.structures??0)+packed.length)||Object.values(lost).some(n=>!Number.isSafeInteger(n))))return false;
+  if(packed.length&&(!Number.isSafeInteger((w.destroyed?.count??0)+packed.length)||cause==='fire'&&!Number.isSafeInteger((w.fires?.ledger.structures??0)+packed.length)||Object.values(lost).some(n=>!Number.isSafeInteger(n))))return false;
   const changes=new Map<MaterialPile['item'],number>();for(const p of contents)changes.set(p.item,(changes.get(p.item)??0)+p.quantity);
-  for(const [item,quantity] of changes)if(!Number.isSafeInteger((w.fires?.ledger.items[item]??0)+quantity))return false;
-  const ledger=ensureFireState(w).ledger;for(const [item,quantity] of changes)ledger.items[item]=(ledger.items[item]??0)+quantity;
+  const neutral=cause==='fire'?undefined:neutralLossPlan(w,{items:Object.fromEntries(changes)});if(neutral===null)return false;
+  if(cause==='fire')for(const [item,quantity] of changes)if(!Number.isSafeInteger((w.fires?.ledger.items[item]??0)+quantity))return false;
+  const ledger=cause==='fire'?ensureFireState(w).ledger:undefined;
+  if(ledger)for(const [item,quantity] of changes)ledger.items[item]=(ledger.items[item]??0)+quantity;
+  if(neutral)w.destroyed=neutral;
   const ids=new Set(contents.map(p=>p.id));w.piles=w.piles.filter(p=>!ids.has(p.id));
-  if(packed.length){const packedIds=new Set(packed.map(p=>p.building.id));w.packed=w.packed.filter(p=>!packedIds.has(p.building.id));w.destroyed={...w.destroyed,count:(w.destroyed?.count??0)+packed.length,lost};ledger.structures+=packed.length;}
+  if(packed.length){const packedIds=new Set(packed.map(p=>p.building.id));w.packed=w.packed.filter(p=>!packedIds.has(p.building.id));w.destroyed={...w.destroyed,count:(w.destroyed?.count??0)+packed.length,lost};if(ledger)ledger.structures+=packed.length;}
   person.body!.lostAt=w.tick;delete person.equipmentDropPending;
   if(person.visitor)person.visitor.personalFoodIds=[];
   for(const grave of w.structures){if(grave.grave?.corpseId===pile.id)delete grave.grave.corpseId;

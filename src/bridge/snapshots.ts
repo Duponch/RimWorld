@@ -1,4 +1,8 @@
 import { validTelevisionState } from '../sim/television-save.ts';
+import { validMiniTurretShape,validateMiniTurrets } from '../sim/mini-turret-save.ts';
+import { validBombWaveShape,validateBombWaves } from '../sim/bomb-state.ts';
+import { validBombRefugeShape,validateBombRefuges } from '../sim/bomb-danger.ts';
+import { validateProjectiles } from '../sim/projectile-save.ts';
 import { validSandbagsState } from '../sim/sandbags-save.ts';
 import { validPackagedSurvivalState } from '../sim/packaged-survival-save.ts';
 import { validHospitalBedState } from '../sim/hospital-bed-save.ts';
@@ -305,7 +309,12 @@ export class SnapshotDecoder {
     if(!Array.isArray(message.world.stockpiles)||message.world.stockpiles.some(zone=>!validStorageConditions(zone,message.world.schemaVersion)))return resync('Plages de qualité ou de PV de réserve invalides pour ce snapshot.');
     if(!Array.isArray(message.world.growingZones)||message.world.growingZones.some(zone=>!zone||!isCropKindInVersion(zone.plant,message.world.schemaVersion)))return resync('Culture future ou inconnue dans ce snapshot.');
     if(message.world.fires!==undefined&&!validFireResourceLosses(message.world.fires?.ledger?.resources,message.world.schemaVersion))return resync('Pertes végétales du feu invalides pour ce snapshot.');
+    if(message.world.schemaVersion<193&&(Object.hasOwn(message.world,'bombWaves')||Object.hasOwn(message.world.research??{},'gunTurrets')
+      ||[...message.world.structures,...message.world.jobs,...message.world.packed.map(p=>p.building)].some(s=>s.kind==='mini-turret'||Object.hasOwn(s,'turret'))))return resync('Tourelle, recherche ou vague future.');
+    for(const s of message.world.structures)if(Object.hasOwn(s,'turret')&&!validMiniTurretShape(s.turret,message.world.schemaVersion,message.world.tick*10,message.world.nextId))return resync('Canon intrinsèque invalide.');
+    if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion))))return resync('Forme de vague Bomb invalide.');
     for(const pawn of message.world.pawns){
+      if(Object.hasOwn(pawn,'bombRefuge')&&!validBombRefugeShape(pawn.bombRefuge,message.world.schemaVersion))return resync('Refuge Bomb futur ou invalide.');
       if(!validMentalTransport(pawn,message.world))return resync('Crise mentale, menace ou autorité de mêlée invalide pour ce snapshot.');
       if(!validBackgroundTransport(pawn,message.world.schemaVersion))return resync('Âge ou passé personnel invalide pour ce snapshot.');
       if(!validSurgeryTransport(pawn,message.world))return resync('État chirurgical ou anesthésique invalide pour ce snapshot.');
@@ -317,6 +326,7 @@ export class SnapshotDecoder {
     for(const owner of [message.world.scout,message.world.commercialTrip]){
       if(owner&&typeof owner==='object'&&'pawn' in owner&&!validBackgroundTransport(owner.pawn,message.world.schemaVersion))return resync('Âge ou passé personnel hors carte invalide pour ce snapshot.');
       if(owner&&typeof owner==='object'&&'pawn' in owner&&(owner.pawn.mental?.crisis
+        ||Object.hasOwn(owner.pawn,'bombRefuge')
         ||owner.pawn.melee?.order?.auto==='mental'||owner.pawn.melee?.order?.auto==='retaliation'
         ||!validArchivedMeleeThreat(owner.pawn,message.world,message.world.tick)))return resync('Crise mentale ou menace hors carte invalide.');
     }
@@ -430,6 +440,7 @@ export class SnapshotDecoder {
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
     if(validateMental(next,next.schemaVersion).length||next.schemaVersion>=192&&validateMelee(next).length)return resync('Cible de crise mentale ou autorité de mêlée incohérente.');
+    if(validateMiniTurrets(next).length)return resync('Propriétaire ou cible de mini-tourelle invalide.');
     if(validateCommercialRegistry(next,next.schemaVersion).length)return resync('Registre commercial invalide.');
     const postIds=new Set<number>();
     if(validateCivilianPost(next,next.schemaVersion,postIds).length)return resync('Stock du comptoir invalide.');
@@ -443,7 +454,7 @@ export class SnapshotDecoder {
     if(next.resources.some(resource=>foreignIds.has(resource.id)||!validDomesticHealroot(resource,next)||!validPlantGrowthLight(resource,next.schemaVersion,next.tick)))return resync('État végétal ou identité commerciale invalide.');
     if(foreignIds.size){
       const collides=(entities:readonly {id:number}[])=>entities.some(e=>foreignIds.has(e.id));
-      if([next.pawns,next.piles,next.structures,next.jobs,next.stockpiles,next.growingZones,next.wildlife?.animals??[],next.filth?.items??[],next.fires?.items??[],next.fires?.embers??[],next.projectiles??[]].some(collides)
+      if([next.pawns,next.piles,next.structures,next.jobs,next.stockpiles,next.growingZones,next.wildlife?.animals??[],next.filth?.items??[],next.fires?.items??[],next.fires?.embers??[],next.projectiles??[],next.bombWaves??[]].some(collides)
         ||next.packed.some(p=>foreignIds.has(p.building.id)||collides(p.building.bills??[]))||next.structures.some(s=>collides(s.bills??[])))return resync('Identité commerciale dupliquée sur la carte.');
       if((next.raids?.departed??[]).some(d=>foreignIds.has(d.pawnId)||collides(d.items))||(next.prisonDepartures??[]).some(d=>foreignIds.has(d.pawnId)||collides(d.items))
         ||[next.visitors?.departed??[],next.podRescues?.departed??[]].some(records=>records.some(d=>foreignIds.has(d.pawn.id)||collides(d.items)||(d.packed??[]).some(p=>foreignIds.has(p.building.id)||collides(p.building.bills??[])))))return resync('Identité commerciale dupliquée dans une archive.');
@@ -474,8 +485,33 @@ export class SnapshotDecoder {
       for(const departure of records){
         if(!validMiningTransport(departure.pawn,next.schemaVersion))return resync('Profil de minage archivé invalide.');
         if(!validArchivedMeleeThreat(departure.pawn,next,departure.tick))return resync('Menace de mêlée archivée invalide.');
+        if(Object.hasOwn(departure.pawn,'bombRefuge'))return resync('Refuge Bomb archivé hors carte.');
       }
     for(const departure of next.podRescues?.departed??[])if(!validSurgeryTransport(departure.pawn,{schemaVersion:next.schemaVersion,tick:departure.tick,width:next.width,height:next.height,nextId:next.nextId}))return resync('Dossier chirurgical civil archivé invalide.');
+    // Only the retained ballistic/Bomb owners need this additional identity
+    // capture. Foreign registries above are already validated; their historical
+    // owners reserve the same namespace as the map and cannot become a wave.
+    if(Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge'))){
+      const ids=new Set([
+        ...next.pawns,...next.structures,...next.jobs,...next.resources,...next.piles,...next.stockpiles,...next.growingZones,
+        ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
+        ...next.packed.map(p=>p.building),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
+      ].map(v=>v.id));
+      const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId)return false;ids.add(Number(id));return true;};
+      const addItems=(items:unknown):boolean=>Array.isArray(items)&&items.every(item=>item&&typeof item==='object'&&addId(item.id));
+      for(const id of foreignIds)ids.add(id);
+      for(const owner of [next.scout,next.commercialTrip])if(owner&&'pawn' in owner){if(!addId(owner.pawn.id)||!addItems(owner.items))return resync('Identité hors carte invalide pour les projectiles.');}
+      for(const pawn of next.pawns)if(pawn.body?.lostAt!==undefined&&!addId(pawn.body.pileId))return resync('Identité de dépouille perdue invalide.');
+      for(const records of [next.raids?.departed??[],next.prisonDepartures??[]])for(const d of records)
+        if(!addId(d.pawnId)||!addItems(d.items))return resync('Identité de départ historique invalide.');
+      for(const records of [next.visitors?.departed??[],next.podRescues?.departed??[]])for(const d of records){
+        if(!addId(d.pawn.id)||!addItems(d.items))return resync('Identité de dossier archivé invalide.');
+        for(const pack of d.packed??[])if(!addId(pack.building.id)||!addItems(pack.building.bills??[]))return resync('Identité de mobilier archivé invalide.');
+      }
+      if(validateProjectiles(next,next.schemaVersion,ids).length)return resync('Balle ou canon lanceur invalide.');
+      const bombErrors:string[]=[];validateBombWaves(next,bombErrors,ids);if(bombErrors.length)return resync('Vague Bomb ou identité invalide.');
+      if(validateBombRefuges(next,[],ids).length)return resync('Refuge ou danger Bomb incohérent.');
+    }
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     const replaced = message.epoch !== this.epoch;
     if(reindexResources){this.resourceSlots.clear();for(let i=0;i<next.resources.length;i++)this.resourceSlots.set(next.resources[i]!.id,i);}

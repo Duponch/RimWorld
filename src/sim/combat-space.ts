@@ -73,15 +73,16 @@ function seesTarget(grid:ShotGrid,from:Cell,to:Cell,full:boolean):boolean {
 }
 
 /** Range is measured BEFORE leaning, to the closest occupied target cell.
+ * Fixed Structure launchers disable shooterLeans; human defaults are unchanged.
  * A blocked line has no probability of shooting through a full wall. */
-export function findShotLine(grid:ShotGrid,from:Cell,target:ShotTarget,range:number,minRange=0):ShotLine {
+export function findShotLine(grid:ShotGrid,from:Cell,target:ShotTarget,range:number,minRange=0,shooterLeans=true):ShotLine {
   if(!Number.isFinite(range)||!Number.isFinite(minRange)||minRange<0||range<minRange)throw new RangeError('Invalid shot range');
   const occupied=target.cells??[target.cell];
   if(!shotInBounds(grid,from)||!shotInBounds(grid,target.cell)||!occupied.length||occupied.some(c=>!shotInBounds(grid,c)))return {ok:false,reason:'bounds'};
   let closest=occupied[0],squared=Infinity;
   for(const c of occupied){const d=(c.x-from.x)**2+(c.z-from.z)**2;if(d<squared){closest=c;squared=d;}}
   if(squared>range*range||squared<minRange*minRange)return {ok:false,reason:'range'};
-  const origins=[{x:from.x,z:from.z},...leaningCells(grid,from,closest)];
+  const origins=[{x:from.x,z:from.z},...(shooterLeans?leaningCells(grid,from,closest):[])];
   for(const origin of origins) {
     const destinations=target.leans?leaningCells(grid,target.cell,origin):occupied;
     for(const destination of destinations)if(seesTarget(grid,origin,destination,!!target.full))return {ok:true,from:{...origin},to:{...destination},distance:Math.hypot(target.cell.x-from.x,target.cell.z-from.z)};

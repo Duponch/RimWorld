@@ -26,6 +26,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
   if(!pawn.health)return;
   const status=medicalStatus(pawn.health,body);
   if(status!=='mobile') {
+    delete pawn.bombRefuge;
     finishMentalBreak(world,pawn,status!=='dead');
     delete pawn.draft;delete pawn.shooting;delete pawn.flee;delete pawn.melee;resetTactics(pawn);if(pawn.raid)pawn.raid.goal=null;delete pawn.stun;
     if(pawn.state!==status) {

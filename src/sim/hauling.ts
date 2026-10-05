@@ -2,6 +2,7 @@ import { processFurnitureHaul } from './furniture-hauling.ts';
 import { constructionSiteFree } from './construction-rules.ts';
 import { copyPileCondition } from './pile-condition.ts';
 import { refuelable, WOOD_BURN_TICKS, REFUEL_WORK_TICKS } from './fuel.ts';
+import { reloadableTurret,turretReloadPawnReason,TURRET_RELOAD_WORK_TICKS } from './mini-turret-reload.ts';
 import { destinationCell, destinationValid } from './work-planner.ts';
 import { releaseWork } from './work-release.ts';
 import { footprintCells } from './definitions.ts';
@@ -16,6 +17,7 @@ const nearby = (a: Cell, b: Cell) => sameCell(a, b) || adjacent(a, b);
 export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allowTarget: boolean) => void, wake: () => void): void {
   const task = pawn.haul!;
   if(backgroundWorkRefusal(pawn,haulingWork(task.destination))){releaseWork(world,pawn);return;}
+  if(task.destination.type==='turret'&&turretReloadPawnReason(pawn)){releaseWork(world,pawn);return;}
   if(task.whole){processFurnitureHaul(world,pawn,move,wake);return;}
   if (!destinationValid(world, pawn)) { releaseWork(world, pawn); return; }
   if (task.phase === 'pickup') {
@@ -39,7 +41,13 @@ export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allow
   const atTarget = task.destination.type === 'job' ? footprintCells(target as Job).some(cell => adjacent(pawn, cell)) && !footprintCells(target as Job).some(cell => sameCell(pawn, cell)) : task.destination.type==='fuel'?footprintCells(target as Job).some(cell=>nearby(pawn,cell)):nearby(pawn, target);
   if (!atTarget) { move(target, task.destination.type !== 'job'); return; }
   if(task.destination.type==='job'&&!constructionSiteFree(world,target as Job,pawn.id)){releaseWork(world,pawn);return;}
-  if (task.destination.type==='fuel') {
+  if (task.destination.type==='turret') {
+    pawn.state='working';pawn.path=[];task.serviceProgress=(task.serviceProgress??0)+1;
+    if(task.serviceProgress<TURRET_RELOAD_WORK_TICKS)return;
+    const turret=reloadableTurret(world,task.destination.structureId)!;
+    turret.turret!.ammoQ=Math.min(240,turret.turret!.ammoQ+carry.quantity*3);
+    world.piles.splice(world.piles.indexOf(carry),1);
+  } else if (task.destination.type==='fuel') {
     pawn.state='working';pawn.path=[];task.serviceProgress=(task.serviceProgress??0)+1;
     if(task.serviceProgress<REFUEL_WORK_TICKS)return;
     const fire=refuelable(world,task.destination.structureId)!;

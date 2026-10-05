@@ -9,6 +9,7 @@ export function createPodDepartureValidator(validate:(world:unknown)=>string[]):
   let base:World|undefined;
   return (departure,version,world)=>{
     const p=departure.pawn;
+    if(Object.hasOwn(p,'bombRefuge'))return ['Archived pod rescue retains an active bomb refuge.'];
     if(!Number.isSafeInteger(p.foodPolicyId)||p.foodPolicyId<1||p.foodPolicyId>=world.nextFoodPolicyId)
       return ['Invalid historical pod rescue food policy identity.'];
     // Civilians cannot acquire packed furniture through the delivered loop.

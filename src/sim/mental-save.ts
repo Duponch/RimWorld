@@ -40,8 +40,8 @@ export function validateMental(world:World,version:number):string[] {
       if(c.kind==='murderous-rage'&&world.wildlife?.animals.some(t=>t.id===c.targetId))errors.push('Murderous rage requires a human victim.');
     }
     if(!(version>=87&&p.burning)&&!p.need&&p.path.length&&!(aggressive&&p.melee?.order?.auto==='mental')) {
-      const end=p.path.at(-1)!;
-      if(!c.target||end.x!==c.target.x||end.z!==c.target.z)errors.push('Mental route has no matching destination.');
+      const end=p.path.at(-1)!,target=version>=193&&p.bombRefuge?p.bombRefuge.target:c.target;
+      if(!target||end.x!==target.x||end.z!==target.z)errors.push('Mental route has no matching destination.');
     }
     const meleeAllowed=version>=192&&p.melee&&(!p.melee.order||aggressive&&p.melee.order.auto==='mental');
     const shootingAllowed=version>=192&&p.shooting&&!p.shooting.order&&p.shooting.stance?.phase==='cooldown';

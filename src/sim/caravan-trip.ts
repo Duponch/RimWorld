@@ -43,7 +43,7 @@ function activeTask(p:Pawn):boolean {
 }
 function unstable(p:Pawn,w:World):boolean {
   return !!(p.prisoner||p.visitor||p.raid||p.draft||p.mental?.crisis||p.social?.fight||p.burning||p.flee||p.tactics||p.melee||p.shooting?.order||p.shooting?.stance
-    ||p.interruptedCargo||p.equipmentDropPending||p.transitExit||p.stagger&&p.stagger.untilCore>w.tick*10||p.stun&&p.stun.untilCore>w.tick*10);
+    ||p.bombRefuge||p.interruptedCargo||p.equipmentDropPending||p.transitExit||p.stagger&&p.stagger.untilCore>w.tick*10||p.stun&&p.stun.untilCore>w.tick*10);
 }
 
 /** Beginning a trip cannot silently interrupt work or export another cargo. */

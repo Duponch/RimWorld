@@ -6,6 +6,7 @@ import { asBuilder, constructionHaulPriority, constructionObstruction, isConstru
 import { growingJobValid } from './farming.ts';
 import { CARRY_CAPACITY } from './definitions.ts';
 import { refuelable, fuelCapacity, fuelStationReserved } from './fuel.ts';
+import { planTurretReload } from './mini-turret-reload.ts';
 import { findAsideDestination } from './haul-aside.ts';
 import { reservedSource } from './materials.ts';
 import { blockedCells, routeToJob } from './pathfinding.ts';
@@ -13,9 +14,10 @@ import { canReach } from './work-planner.ts';
 import type { HaulProposal } from './player-hauling.ts';
 import type { Cell, HaulDestination, Pawn, World } from './types.ts';
 
-export type ServiceHaulTarget={type:'fuel';structureId:number}|{type:'clear';jobId:number}|{type:'clear-sow';jobId:number};
+export type ServiceHaulTarget={type:'turret';structureId:number}|{type:'fuel';structureId:number}|{type:'clear';jobId:number}|{type:'clear-sow';jobId:number};
 /** Contextual sub-jobs reuse the ordinary physical transport executor. */
 export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget,access?:import('./pathfinding.ts').Reachability,budget={pairs:32768}):HaulProposal {
+  if(target.type==='turret')return planTurretReload(world,pawn,target.structureId,access,budget);
   const label=target.type==='fuel'?'Ravitailler en bois':target.type==='clear-sow'?'Dégager avant de semer':'Dégager le chantier';
   const no=(reason:string):HaulProposal=>({label,reason});
   const work=target.type==='fuel'?'haul':target.type==='clear-sow'?'grow':asBuilder(pawn)?'build':'haul';

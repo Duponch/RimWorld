@@ -26,7 +26,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
  * logistics cursor or per-frame query. A delivery is one trip, not a build chain. */
 export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,access?:import('./pathfinding.ts').Reachability,budget={pairs:32768}):HaulProposal {
   if(target.type==='furniture')return planFurnitureHaulOrder(world,pawn,target.structureId,access,budget);
-  if(target.type==='fuel'||target.type==='clear'||target.type==='clear-sow')return planServiceHaul(world,pawn,target,access,budget);
+  if(target.type==='turret'||target.type==='fuel'||target.type==='clear'||target.type==='clear-sow')return planServiceHaul(world,pawn,target,access,budget);
   const label=target.type==='pile'?'Transporter vers le stockage':'Livrer les matériaux';
   const no=(reason:string):HaulProposal=>({label,reason});
   const work=target.type==='pile'?'haul':asBuilder(pawn)?'build':'haul';
@@ -81,7 +81,7 @@ export function queuedHaulReason(world:World,task:HaulTask):string|undefined {
   if(!validSowingClearance(world,destination))return 'Culture supprimée ou semis désactivés.';
   if(destination.type==='aside'&&destination.constructionId!==undefined&&!world.jobs.some(j=>j.id===destination.constructionId&&isConstruction(j)))return 'Chantier annulé.';
   const target=destinationCell(world,task.destination);
-  if(!target||destination.type!=='fuel'&&same(target,pile.owner))return 'La destination a disparu ou coïncide avec la source.';
+  if(!target||destination.type!=='fuel'&&destination.type!=='turret'&&same(target,pile.owner))return 'La destination a disparu ou coïncide avec la source.';
 }
 
 export function haulOrderCell(world:World,task:HaulTask):Cell|undefined {

@@ -41,7 +41,6 @@ function expectNeutralMigration(source:World):World {
 }
 
 test('strict190 migration changes only the schema through offers, original off-map owners, RNG streams and frozen departures',()=>{
-  expect(SCHEMA_VERSION).toBe(192);
   const arrival=backgroundArrivalWorld(),quest=backgroundQuestWorld();
   expectNeutralMigration(arrival);expectNeutralMigration(quest);
   const scout=medicalCamp(2),p=scout.pawns[0]!;

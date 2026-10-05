@@ -1,0 +1,5 @@
+.turret-controls { display:grid; gap:.35rem; max-width:100%; }
+.turret-controls p { margin:.15rem 0; overflow-wrap:anywhere; }
+.turret-controls label { display:grid; gap:.25rem; }
+.turret-controls select { min-width:0; width:100%; }
+.turret-controls button[aria-disabled="true"] { opacity:.55; cursor:default; }

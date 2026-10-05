@@ -5,6 +5,8 @@ export type FactionId='colony'|'outlaws'|'outlanders';
 const RELATIONS:Readonly<Record<FactionId,Readonly<Record<FactionId,'friendly'|'neutral'|'hostile'>>>>={
   colony:{colony:'friendly',outlaws:'hostile',outlanders:'neutral'},outlaws:{colony:'hostile',outlaws:'friendly',outlanders:'hostile'},outlanders:{colony:'neutral',outlaws:'hostile',outlanders:'friendly'},
 };
+/** Faction-only relation, independent of prisoners and involuntary hostility. */
+export const factionRelation=(a:FactionId,b:FactionId):'friendly'|'neutral'|'hostile'=>RELATIONS[a][b];
 export const factionOf=(p:Pick<Pawn,'faction'>):FactionId=>p.faction??'colony';
 export const isColonist=(p:Pick<Pawn,'faction'>):boolean=>factionOf(p)==='colony';
 export const isAdmittedGuest=(p:Pick<Pawn,'faction'|'prisoner'|'podRescue'>):boolean=>p.faction==='outlanders'&&!p.prisoner&&p.podRescue?.admittedAt!==undefined;

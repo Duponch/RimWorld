@@ -17,7 +17,7 @@ export function rememberPriorityWork(world:World,pawn:Pawn,command:OrderCommand,
     const station=world.structures.find(s=>s.id===command.structureId);cell=station;work=station?stationWork(station):'cook';
   } else if(command.type==='order-haul'&&order&&typeof order!=='number'&&!isCookingOrder(order)) {
     const d=order.destination;
-    if(d.type==='fuel'){cell=world.structures.find(s=>s.id===d.structureId);work='haul';}
+    if(d.type==='fuel'||d.type==='turret'){cell=world.structures.find(s=>s.id===d.structureId);work='haul';}
     else if(d.type==='job'||d.type==='aside'&&d.constructionId!==undefined) {
       cell=world.jobs.find(j=>j.id===(d.type==='job'?d.jobId:d.constructionId));work=d.forConstruction?'build':'haul';
     }

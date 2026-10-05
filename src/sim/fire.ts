@@ -56,6 +56,10 @@ export function extinguishFire(w:World,id:number,amount=32):boolean {
   const state=w.fires,fire=state?.items.find(f=>f.id===id);if(!state||!fire||!Number.isFinite(amount)||amount<=0)return false;
   fire.size-=amount*.01;if(fire.size<FIRE_MIN_SIZE)removeFire(w,fire,true);return true;
 }
+/** Bomb destroys the Fire Thing; this is neither firefighting nor ignition. */
+export function destroyFireFromBomb(w:World,id:number):boolean {
+  const fire=w.fires?.items.find(f=>f.id===id);if(!fire)return false;removeFire(w,fire);return true;
+}
 function removeFire(w:World,fire:FireRecord,extinguished=false):void {
   const state=w.fires!;state.items=state.items.filter(f=>f!==fire);
   if(extinguished)state.ledger.extinguished++;
@@ -84,7 +88,7 @@ function applyDamage(w:World,target:FireTarget,amount:number,core:number):void {
   if(target.kind==='resource')damageResource(w,target.value,amount);
   else if(target.kind==='pile')damagePile(w,target.value,amount);
   else {
-    const s=target.value,state=ensureFireState(w);damageStructure(w,s,fireRound(amount*Math.max(.05,structureFlammability(s)),()=>fireRandom(state)));
+    const s=target.value,state=ensureFireState(w);damageStructure(w,s,fireRound(amount*Math.max(.05,structureFlammability(s)),()=>fireRandom(state)),'fire',w.rng,{core,rawAmount:amount});
     if(s.kind==='battery'&&w.structures.includes(s)&&!state.batteryWicks.some(w=>w.structureId===s.id)&&fireRandom(state)<.05&&!!s.battery&&batteryWattDays(s.battery)>500)state.batteryWicks.push({structureId:s.id,endCore:core+70+Math.floor(fireRandom(state)*80)});
   }
   const destroyed=target.kind==='resource'?!w.resources.includes(target.value):target.kind==='pile'?!w.piles.includes(target.value):!w.structures.includes(target.value)&&!w.packed.some(p=>p.building===target.value);

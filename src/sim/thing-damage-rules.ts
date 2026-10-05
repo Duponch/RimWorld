@@ -6,6 +6,7 @@ import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
+  'mini-turret':[100,.7,true],
   'tube-television':[100,1,true],sandbags:[300,0,true],fence:[100,1,false],'fence-gate':[120,1,false],'pen-marker':[80,1,false],wall:[300,1,false],door:[160,1,false],autodoor:[160,1,false],bed:[140,1,true],'hospital-bed':[150,1,true],table:[75,1,true],stool:[75,1,true],horseshoes:[75,1,true],'chess-table':[100,1,true],
   campfire:[80,0,false],'passive-cooler':[80,1,false],stonecutter:[180,1,true],'butcher-table':[180,1,true],
   'fueled-stove':[180,1,true],'electric-stove':[180,1,true],'tailor-bench':[180,1,true],'research-bench':[250,1,true],
@@ -23,11 +24,12 @@ export const structureFlammability=(s:Pick<Structure,'kind'|'material'>)=>(BUILD
 export const structureLeavesResources=(s:Pick<Structure,'kind'>)=>BUILDINGS[s.kind]?.[2]??false;
 export const resourceMaxHp=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.hitPoints??(r.kind==='healroot'?60:r.kind==='tree'?200:r.kind==='berries'?120:r.kind==='corn'?150:r.kind==='rock'?0:85);
 export const resourceFlammability=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.flammability??(r.kind==='rock'?0:r.kind==='tree'?.8:1);
-export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>):number {
+export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=193):number {
   if(p.kind==='apparel')return APPAREL[p.item as keyof typeof APPAREL]?.hitPoints??0;
   if(p.kind==='weapon')return weaponMaxHitPoints(p.item);if(p.kind==='corpse')return 100;
   if(p.kind==='food')return ['simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','legacy-portion'].includes(p.item)?50:60;
   if(p.kind==='medicine')return 60;if(p.kind==='unfinished')return 50;
+  if(version>=193){if(p.kind==='chunk')return 300;if(p.item==='muffalo-wool')return 90;if(p.item==='advanced-component')return 70;if(['plainleather','bluefur','camelhide','foxfur'].includes(p.item))return 60;}
   return p.item==='wood'?150:p.item==='cloth'?80:p.item==='light-leather'?60:p.item==='component'?70:0;
 }
 export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {

@@ -1,6 +1,10 @@
 import type { AccuracyCurve } from './combat-report.ts';
 import { WEAPON_QUALITIES,isRangedWeaponItem,type WeaponQuality } from './equipment-rules.ts';
 import { TICKS_PER_DAY } from './types.ts';
+import { MINI_TURRET_PROFILE } from './mini-turret-profile.ts';
+
+/** Projectile identity is broader than inventory/equipment ItemId. */
+export type ProjectileProfileId='revolver'|'bolt-action-rifle'|'mini-turret-gun';
 
 /** Data/units shared by the persistent shooting skill and attack producer. See the explicit
  * current/historical source decisions in research/ranged-statistics-reference. */
@@ -51,6 +55,9 @@ export function rangedWeaponProfile(item:unknown,quality:WeaponQuality):Revolver
   if(!isRangedWeaponItem(item))return undefined;
   if(!WEAPON_QUALITIES.includes(quality))throw new RangeError('Invalid weapon quality');
   return item==='revolver'?profiles[quality]:rifleProfiles[quality];
+}
+export function projectileProfile(item:unknown,quality:WeaponQuality):RevolverProfile|undefined {
+  return item==='mini-turret-gun'?(quality==='normal'?MINI_TURRET_PROFILE:undefined):rangedWeaponProfile(item,quality);
 }
 
 /** Preserve the existing game-day conversion. A displayed Core second is not a

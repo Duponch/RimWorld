@@ -16,6 +16,7 @@ export function terrainTravelDelay(world:World,index:number):number {
 /** Current Core wiki path costs, converted by the local day/tick ratio (10).
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
 export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:number;stand:boolean;repeat:boolean}>>>=Object.freeze({
+  'mini-turret':{delay:5,stand:false,repeat:true},
   'tube-television':{delay:4.2,stand:false,repeat:true},
   sandbags:{delay:4.2,stand:false,repeat:true},
   'art-bench':{delay:5,stand:false,repeat:true},
