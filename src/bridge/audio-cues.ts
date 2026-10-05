@@ -304,7 +304,7 @@ export class AudioCueRecorder {
         projectileArrivals.add(projectile.id);
         const kind: AudioCueKind | undefined = arrival.kind !== 'impact' ? undefined
           : arrival.effect === 'ground' ? 'weapon.impact-ground'
-            : ['barrier','structure','pile','resource','packed'].includes(arrival.effect) ? 'weapon.impact-barrier'
+            : ['barrier','structure','pile','resource','packed','mech'].includes(arrival.effect) ? 'weapon.impact-barrier'
               : arrival.effect === 'pawn' || arrival.effect === 'animal' ? 'weapon.impact-flesh' : undefined;
         if (this.initialized && kind && !previousProjectileArrivals.has(projectile.id))
           this.add({ id: `${kind}:${projectile.id}`, tick: world.tick, kind,
@@ -320,6 +320,13 @@ export class AudioCueRecorder {
     for(const wave of world.bombWaves??[]){bombWaves.add(wave.id);if(this.initialized&&!this.bombWaves.has(wave.id))
       this.add({id:`bomb:${wave.id}`,tick:world.tick,kind:'weapon.explosion',x:wave.center.x,z:wave.center.z});}
     this.bombWaves=bombWaves;
+    for(const actor of world.mechanoids??[]){
+      const strike=actor.melee?.strike;
+      if(!strike)continue;
+      melee.set(actor.id,strike.atCore);
+      if(this.initialized&&previousMelee.get(actor.id)!==strike.atCore)
+        this.add({id:`melee:${actor.id}:${strike.atCore}`,tick:world.tick,kind:'weapon.melee',x:actor.x+.5,z:actor.z+.5});
+    }
     for (const structure of world.structures) {
       if (watchedTargets.size && watchedTargets.has(structure.id)) structures.add(structure.id);
       if (watchedSwitches.size && watchedSwitches.has(structure.id) && canFlickPower(structure)) {
@@ -406,7 +413,7 @@ export class AudioCueRecorder {
     if (this.initialized && lightningCount > this.lightningCount && lightning)
       this.add({ id: `weather.thunder:${lightning.coreTick}`, tick: world.tick,
         kind: 'weather.thunder', x: lightning.x, z: lightning.z });
-    const raidId = world.raids?.active?.phase === 'assault' ? world.raids.active.id : null;
+    const raidId = world.raids?.active?.phase === 'assault' ? world.raids.active.id : world.raids?.mechActive?.id??null;
     if (this.initialized && raidId !== null && raidId !== this.raidId)
       this.add({ id: `ui.threat:${world.tick}:${raidId}`, tick: world.tick,
         kind: 'ui.threat', x: 0, z: 0 });

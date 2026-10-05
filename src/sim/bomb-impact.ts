@@ -23,7 +23,7 @@ export function resolveBombImpact(record:MedicalRecord,hit:UnarmoredBullet,rando
     if(!damage)continue;
     const kind=(id:BodyPartId)=>guarded?.converted?rules[id].solid?'crack' as const:rules[id].skin?'bruise' as const:'crush' as const:rules[id].solid?'crack' as const:'shredded' as const;
     const definition=model.byId[part],hp=remainingPartHealth(next,part);let severity=Math.round(damage*HP_UNIT);
-    if(definition.depth==='outside'&&part!=='torso'&&severity>=hp){
+    if(definition.depth==='outside'&&definition.parent!==null&&severity>=hp){
       const chance=Math.min(1,(severity-hp)/(definition.hp*HP_UNIT*.7));
       if(draw()>=chance){severity=Math.max(0,hp-HP_UNIT);result.preserved=true;}
     }

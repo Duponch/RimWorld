@@ -23,6 +23,8 @@ function until(w:World,done:()=>boolean,limit=700):void {
 /** A former version owns no invented biographies or offered age pair. */
 function legacy190(source:World):World {
   const old=structuredClone(source);(old as {schemaVersion:number}).schemaVersion=190;
+  // Current Cassandra creation opts in; the declared historical save did not.
+  if(old.raids)delete old.raids.mechanoid;
   const remove=(p:Pawn)=>{delete p.background;};
   old.pawns.forEach(remove);
   if(old.scout&&'pawn' in old.scout)remove(old.scout.pawn);

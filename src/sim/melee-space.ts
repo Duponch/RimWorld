@@ -19,17 +19,21 @@ export function structureMeleeCell(world:World,from:Cell,target:Structure,blocke
 export const meleeTargetContact=(world:World,from:Cell,target:Cell|Structure,blocked=blockedCells(world,true)):boolean=>
   'kind' in target?!!structureMeleeCell(world,from,target,blocked):meleeContact(world,from,target,blocked);
 
-export function meleePlaces(world:World,pawn:Pawn,target:Cell|Structure,claimed:ReadonlySet<number>=new Set()):Cell[] {
+export function meleePlaces(world:World,pawn:Cell&{id:number},target:Cell|Structure,claimed:ReadonlySet<number>=new Set()):Cell[] {
   return captureMeleePlaces(world,pawn,claimed)(target);
 }
 /** One synchronous decision only: invalid after any world/actor mutation. */
-export function captureMeleePlaces(world:World,pawn:Pawn,claimed:ReadonlySet<number>=new Set()):(target:Cell|Structure)=>Cell[] {
+export function captureMeleePlaces(world:World,pawn:Cell&{id:number},claimed:ReadonlySet<number>=new Set()):(target:Cell|Structure)=>Cell[] {
   const stands=captureStandability(world),reserved=reservedServiceCells(world,pawn.id),physical=blockedCells(world,true);
   const occupied=new Set<number>();
   for(const p of world.pawns)if(p!==pawn&&p.state!=='dead'&&p.state!=='downed'){
     occupied.add(p.z*world.width+p.x);if(p.motion&&p.motion.end>world.tick)occupied.add(p.motion.from.z*world.width+p.motion.from.x);
     if(p.tactics?.post)occupied.add(p.tactics.post.z*world.width+p.tactics.post.x);
     if(p.melee?.order&&p.path.length){const c=p.path.at(-1)!;occupied.add(c.z*world.width+c.x);}
+  }
+  for(const m of world.mechanoids??[])if(m!==pawn&&m.state!=='dead'&&m.state!=='downed'){
+    occupied.add(m.z*world.width+m.x);if(m.motion&&m.motion.end>world.tick)occupied.add(m.motion.from.z*world.width+m.motion.from.x);
+    const end=m.melee?.order&&m.path.at(-1);if(end)occupied.add(end.z*world.width+end.x);
   }
   return target=>{const cells:Cell[]=[],seen=new Set<number>(),footprint='kind' in target?footprintCells(target):[target];
   const inside=new Set(footprint.map(c=>c.z*world.width+c.x));
@@ -39,7 +43,7 @@ export function captureMeleePlaces(world:World,pawn:Pawn,claimed:ReadonlySet<num
   }
   return cells;};
 }
-export function meleeRoute(world:World,pawn:Pawn,places:Cell[],blocked:Uint8Array):Cell[]|null {
+export function meleeRoute(world:World,pawn:Cell&{id:number},places:Cell[],blocked:Uint8Array):Cell[]|null {
   if(!places.length)return null;
   const goals=new Set(places.map(c=>c.z*world.width+c.x));
   const reach=reachableCells(world,pawn,blocked,new Set(),goals);

@@ -2,11 +2,11 @@ import { expect,test } from 'vitest';
 import { createWorld } from '../src/sim/index.ts';
 import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serialization.ts';
 import { campTurret,miniTurretCamp } from './scenarios/mini-turret-v212.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
 
 test('strict192 migration advances only version, preserves all owners and refuses future state before migration',()=>{
   const old=createWorld(73,32,32);Object.assign(old,{schemaVersion:192});const bytes=JSON.stringify(old);
-  expect(deserializeWorld(bytes)).toEqual({...old,schemaVersion:193});expect(JSON.stringify(old)).toBe(bytes);
+  expect(deserializeWorld(bytes)).toEqual({...old,schemaVersion:SCHEMA_VERSION});expect(JSON.stringify(old)).toBe(bytes);
   const changes:Array<(w:World)=>void>=[
     w=>{w.pawns[0]!.bombRefuge={sourceId:1,target:{x:1,z:1},endCore:240};},
     w=>{w.research={project:null,points:0,gunTurrets:{points:0}};},

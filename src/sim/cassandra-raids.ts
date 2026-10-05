@@ -1,3 +1,4 @@
+import { enableMechanoidRaids } from './mechanoid-raids.ts';
 import { raidRandom,type RaidCalendar } from './raid-state.ts';
 import { TICKS_PER_DAY,type World } from './types.ts';
 
@@ -27,6 +28,7 @@ export function enableCassandraRaids(world:World):void {
   if(world.raids)throw new Error('Cannot replace an existing raid calendar.');
   world.raids={profile:'cassandra-raids-v1',rng:((world.seed^0x7a1d068)>>>0)||1,nextCheck:INTRO_RAID_TICK,serial:0,completed:0,departed:[],
     cassandra:{rng:((world.seed^0xc455a82)>>>0)||1,cycle:-1,pending:[INTRO_RAID_TICK]}};
+  if(world.schemaVersion>=194)enableMechanoidRaids(world);
 }
 /** A failed or occupied opportunity is consumed, never postponed into an
  * artificial guaranteed raid. Advancing a group cannot move the next cycle. */
@@ -38,7 +40,7 @@ export function consumeCassandraOpportunity(world:World,state:RaidCalendar):bool
     agenda.pending.shift();
     if(!agenda.pending.length){agenda.cycle++;prepareCycle(agenda);}
   }
-  if(!state.active)state.nextCheck=agenda.pending[0]!;
+  if(!state.active&&!state.mechActive)state.nextCheck=agenda.pending[0]!;
   return due;
 }
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;

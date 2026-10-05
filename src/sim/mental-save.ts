@@ -25,7 +25,7 @@ export function validMeleeThreatShape(value:unknown,version:number,tick:number):
 export function validateMental(world:World,version:number):string[] {
   const errors:string[]=[];
   for(const p of world.pawns) {
-    if(p.meleeThreat&&(p.meleeThreat.attackerId===p.id||p.meleeThreat.attackerId>=world.nextId||[world.structures,world.resources,world.jobs].some(items=>items.some(item=>item.id===p.meleeThreat!.attackerId))||world.piles.some(item=>item.id===p.meleeThreat!.attackerId&&item.corpse?.animalId!==item.id)||world.packed.some(item=>item.building.id===p.meleeThreat!.attackerId)))errors.push('Invalid melee threat identity.');
+    if(p.meleeThreat&&(p.meleeThreat.attackerId===p.id||p.meleeThreat.attackerId>=world.nextId||[world.structures,world.resources,world.jobs].some(items=>items.some(item=>item.id===p.meleeThreat!.attackerId))||world.piles.some(item=>item.id===p.meleeThreat!.attackerId&&item.corpse?.animalId!==item.id&&!(version>=194&&item.mechCorpse))||world.packed.some(item=>item.building.id===p.meleeThreat!.attackerId)))errors.push('Invalid melee threat identity.');
     const m=p.mental;if(m===undefined)continue;
     if(!isColonist(p)||!validMentalShape(m,version,world.tick,world.width,world.height)){errors.push('Invalid mental state.');continue;}
     const c=m.crisis;if(!c)continue;
@@ -34,10 +34,10 @@ export function validateMental(world:World,version:number):string[] {
     if('targetId' in c&&c.targetId!==null) {
       if(c.targetId>=world.nextId||c.targetId===p.id)errors.push('Invalid mental target identity.');
       const structure=world.structures.find(s=>s.id===c.targetId),human=world.pawns.find(t=>t.id===c.targetId);
-      const other=world.piles.some(t=>t.id===c.targetId&&!(c.kind==='berserk'&&t.corpse?.animalId===t.id))||world.resources.some(t=>t.id===c.targetId)||world.jobs.some(t=>t.id===c.targetId)||world.packed.some(t=>t.building.id===c.targetId);
-      if(c.kind==='tantrum'&&(human||other||world.wildlife?.animals.some(t=>t.id===c.targetId)||structure&&structureMaxHp(structure)<=0))errors.push('Invalid destruction crisis target.');
+      const other=world.piles.some(t=>t.id===c.targetId&&!(c.kind==='berserk'&&(t.corpse?.animalId===t.id||version>=194&&t.mechCorpse)))||world.resources.some(t=>t.id===c.targetId)||world.jobs.some(t=>t.id===c.targetId)||world.packed.some(t=>t.building.id===c.targetId);
+      if(c.kind==='tantrum'&&(human||other||world.wildlife?.animals.some(t=>t.id===c.targetId)||world.mechanoids?.some(t=>t.id===c.targetId)||structure&&structureMaxHp(structure)<=0))errors.push('Invalid destruction crisis target.');
       if(c.kind!=='tantrum'&&(structure||other))errors.push('Invalid violent crisis target.');
-      if(c.kind==='murderous-rage'&&world.wildlife?.animals.some(t=>t.id===c.targetId))errors.push('Murderous rage requires a human victim.');
+      if(c.kind==='murderous-rage'&&(world.wildlife?.animals.some(t=>t.id===c.targetId)||world.mechanoids?.some(t=>t.id===c.targetId)))errors.push('Murderous rage requires a human victim.');
     }
     if(!(version>=87&&p.burning)&&!p.need&&p.path.length&&!(aggressive&&p.melee?.order?.auto==='mental')) {
       const end=p.path.at(-1)!,target=version>=193&&p.bombRefuge?p.bombRefuge.target:c.target;

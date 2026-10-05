@@ -9,6 +9,7 @@ import { disturbanceEvents,isLying } from './disturbance.ts';
 import type { Cell,Pawn,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 const validAmount=(amount:number)=>Number.isFinite(amount)&&amount>=0&&amount<=1000000&&Number.isSafeInteger(amount*1000);
+export { damageMechanoidWithBomb } from './mechanoid-impact.ts';
 
 export function damagePawnWithBomb(w:World,p:Pawn,core:number,amount=BOMB_AMOUNT):BombImpactResult|null {
   if(!validAmount(amount))throw new RangeError('Invalid Bomb damage amount');

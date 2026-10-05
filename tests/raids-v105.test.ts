@@ -17,6 +17,13 @@ function fixture():World {
   world.gameProfile=crashlandedProfile();enableCassandraRaids(world);adoptColonyEconomy(world);adoptFluIncidents(world);
   return world;
 }
+/** Focused historical raid context only. Other World systems retain their
+ * current shape; this does not sanitize a payload for the global validator. */
+function raidContext105(source:World):World {
+  const historical=structuredClone(source);
+  if(historical.raids)delete historical.raids.mechanoid;
+  return historical;
+}
 // These focused raid tests skip days without advancing other systems. Move the
 // independent, still-unused disease check into the future at each clock jump.
 function raidClock(world:World,tick:number):void {
@@ -31,7 +38,7 @@ function afterIntro(world:World):void {
   injurePawn(world,first,'brain','crush',99000);advanceRaids(world);
   expect(world.raids!.active).toBeUndefined();
   const forged=structuredClone(world);forged.raids!.last!.composition={budget:40,roster:['drifter']};
-  expect(validateRaids(forged,105,new Set())).toContain('Invalid raid outcome.');
+  expect(validateRaids(raidContext105(forged),105,new Set())).toContain('Invalid raid outcome.');
 }
 
 test('projected pirate roster spends its budget with Core kind costs and individual limit',()=>{
@@ -70,7 +77,7 @@ test('a failed introductory opportunity does not make the first ordinary raid fi
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
   const missing=structuredClone(world);delete missing.raids!.active!.composition;
-  expect(validateRaids(missing,105,new Set())).toContain('Invalid active raid group.');
+  expect(validateRaids(raidContext105(missing),105,new Set())).toContain('Invalid active raid group.');
   for(const id of active.members)injurePawn(world,world.pawns.find(p=>p.id===id)!,'brain','crush',99000);
   advanceRaids(world);
   expect(world.raids!.last!.id).toBe(1);
@@ -92,7 +99,7 @@ test('intro is fixed; an adopted Cassandra occasion has priced physical raiders 
   expect(composition.budget).toBeGreaterThan(100);
   expect(composition.roster.length).toBeGreaterThan(2);
   expect(active.members).toHaveLength(composition.roster.length);
-  expect(validateRaids(world,105,new Set())).toEqual([]);
+  expect(validateRaids(raidContext105(world),105,new Set())).toEqual([]);
   expect(validateWorld(world)).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
   for(const [index,id] of active.members.entries()){
@@ -104,24 +111,24 @@ test('intro is fixed; an adopted Cassandra occasion has priced physical raiders 
       scavenger:'revolver',pirate:'bolt-action-rifle'} as const)[composition.roster[index]!]);
   }
   const invalid=structuredClone(world);invalid.raids!.active!.composition!.budget=0;
-  expect(validateRaids(invalid,105,new Set())).toContain('Invalid active raid group.');
+  expect(validateRaids(raidContext105(invalid),105,new Set())).toContain('Invalid active raid group.');
   const missing=structuredClone(world);delete missing.raids!.active!.composition;
-  expect(validateRaids(missing,105,new Set())).toContain('Invalid active raid group.');
+  expect(validateRaids(raidContext105(missing),105,new Set())).toContain('Invalid active raid group.');
   const tooExpensive=structuredClone(world),n=composition.roster.length;
   const lowBudget=65+(n-1)*35;
   expect(pirateMaxPawnCost(lowBudget)).toBeLessThan(65);
   tooExpensive.raids!.active!.composition={budget:lowBudget,roster:['pirate',...Array.from({length:n-1},()=> 'drifter' as const)]};
-  expect(validateRaids(tooExpensive,105,new Set())).toContain('Invalid active raid group.');
+  expect(validateRaids(raidContext105(tooExpensive),105,new Set())).toContain('Invalid active raid group.');
   const predatesAdoption=structuredClone(world);predatesAdoption.economy!.adoptedAt=active.startedAt+1;
-  expect(validateRaids(predatesAdoption,105,new Set())).toContain('Invalid active raid group.');
+  expect(validateRaids(raidContext105(predatesAdoption),105,new Set())).toContain('Invalid active raid group.');
   for(const id of active.members)injurePawn(world,world.pawns.find(p=>p.id===id)!,'brain','crush',99000);
   advanceRaids(world);
   expect(world.raids!.last!.composition).toEqual(composition);
   expect(world.raids!.last!.killed).toBe(composition.roster.length);
-  expect(validateRaids(world,105,new Set())).toEqual([]);
+  expect(validateRaids(raidContext105(world),105,new Set())).toEqual([]);
   expect(deserializeWorld(serializeWorld(world))).toEqual(world);
   const forgedOutcome=structuredClone(world);forgedOutcome.economy!.adoptedAt=world.raids!.last!.tick+1;
-  expect(validateRaids(forgedOutcome,105,new Set())).toContain('Invalid raid outcome.');
+  expect(validateRaids(raidContext105(forgedOutcome),105,new Set())).toContain('Invalid raid outcome.');
 });
 
 test('blocked adopted occasion consumes calendar without identities or raid RNG',()=>{

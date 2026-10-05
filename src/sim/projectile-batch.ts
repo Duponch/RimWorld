@@ -9,7 +9,7 @@ import { animalBodySize } from './animal-life.ts';
  * when destruction replaces structures/resources; otherwise refresh the movable
  * overlay after each impact. Natural tiles and non-HP frames remain inert. */
 export function captureProjectileBatch(world:World) {
-  const fixed=captureWorldProjectileTargets({...world,pawns:[],piles:[],packed:[],wildlife:undefined});
+  const fixed=captureWorldProjectileTargets({...world,pawns:[],piles:[],packed:[],wildlife:undefined,mechanoids:undefined});
   const {width,height}=world;
   const neutral=fixed.scene(new Set(),1),inside=(c:Cell)=>Number.isInteger(c.x)&&Number.isInteger(c.z)&&c.x>=0&&c.z>=0&&c.x<width&&c.z<height;
   return {
@@ -28,7 +28,8 @@ export function captureProjectileBatch(world:World) {
       const carried=new Set(current.pawns.filter(p=>p.rescue?.phase==='carry').map(p=>p.rescue!.patientId));
       for(const p of current.pawns)if(p.state!=='dead'&&!p.health?.death&&!carried.has(p.id))add({key:`pawn:${p.id}`,cell:{x:p.x,z:p.z},kind:'pawn',fill:0,covered:false,openDoor:false,standing:!['sleeping','resting','downed'].includes(p.state),bodySize:1,friendly:false},SHOT_LAYER.pawn);
       if(current.schemaVersion>=77)for(const a of current.wildlife?.animals??[])if(a.state!=='dead')add({key:`animal:${a.id}`,cell:a,kind:'pawn',fill:0,covered:false,openDoor:false,standing:!['sleeping','downed'].includes(a.state),bodySize:animalBodySize(a),friendly:false},SHOT_LAYER.pawn);
-      const rank=(key:string)=>key.startsWith('pile:')?0:key.startsWith('packed:')?1:key.startsWith('pawn:')?2:3;
+      if(current.schemaVersion>=194)for(const m of current.mechanoids??[])if(m.state!=='dead'&&!m.health?.death)add({key:`mech:${m.id}`,cell:m,kind:'pawn',fill:0,covered:false,openDoor:false,standing:m.state!=='downed',bodySize:1,friendly:false},SHOT_LAYER.pawn);
+      const rank=(key:string)=>key.startsWith('pile:')?0:key.startsWith('packed:')?1:key.startsWith('pawn:')?2:key.startsWith('animal:')?3:4;
       for(const list of cells.values())list.sort((a,b)=>rank(a.key)-rank(b.key)||Number(a.key.slice(a.key.indexOf(':')+1))-Number(b.key.slice(b.key.indexOf(':')+1)));
       return (friends,factor)=>{
         if(!Number.isFinite(factor)||factor<0||factor>1)throw new RangeError('Invalid friendly fire factor');

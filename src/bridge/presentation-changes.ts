@@ -21,6 +21,8 @@ export class PresentationChanges {
       world.civilianPost?[world.civilianPost.generation,world.civilianPost.transactions,world.civilianPost.stock.map(p=>[p.id,p.item,p.quantity,p.damage])]:undefined,
       world.projectiles?.map(p=>[p.id,p.emittedAtCore,p.arrival]),
       world.bombWaves?.map(w=>[w.id,w.sourceId,w.startedAtCore]),
+      world.raids?.mechActive,
+      world.mechanoids?.map(m=>[m.id,m.state,m.melee,m.stun,m.raid?.goal,m.health?.nextInjuryId,m.health?.missing]),
       world.pawns.map(p=>[p.id,p.state,p.burning?.phase,p.firefighting?.phase,p.firefighting?.fireId,p.raid?.exiting,p.mental?.crisis?.kind,p.mental?.crisis?.target,
         p.mental?.crisis&&'targetId' in p.mental.crisis?p.mental.crisis.targetId:undefined,
         p.mental?.crisis?.kind==='tantrum'?p.mental.crisis.attempted:undefined,

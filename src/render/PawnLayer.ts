@@ -98,6 +98,9 @@ function approachAt(transition:ApproachTransition,tick:number):{x:number;z:numbe
 const scratchColor = new THREE.Color();
 function cargoAppearance(load:MaterialPile|undefined):readonly [number,number] {
   if(!load)return [0,0];
+  // The dedicated mechanical rig follows this owner's existing cargo handoff.
+  // No generic food/material proxy may duplicate the entire carcass.
+  if(load.mechCorpse)return [0,0];
   const kind=BIOME_CARGO[load.item]??(load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:isAnimalMeat(load.item)?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2);
   // Corpse loads are indivisible. Negative y encodes their exact anatomical
   // mask in the existing actor stream; no extra per-actor GPU attribute.

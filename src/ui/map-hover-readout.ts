@@ -54,5 +54,6 @@ export function mapHoverLines(world:World,cell:Cell,lightLevel=lightCache.read(w
       case 'stockpile':return ['Réserve'];
     }
   });
+  for(const mech of world.mechanoids??[])if(mech.x===cell.x&&mech.z===cell.z)objects.push(`Scyther ${mech.id} · ${mech.state==='dead'?'neutralisé':mech.state==='downed'?'incapacité mécanique':'hostile'}`);
   return [ground,`Lumière : ${light} %`,...objects,...(world.roofing?.constructed.includes(index)?['Toit']:[])];
 }

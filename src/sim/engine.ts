@@ -1,3 +1,7 @@
+import { processMechanoidCombat,mechanoidCombatBatch } from './mechanoid-combat.ts';
+import {isMechSalvageRecipe} from './mechanoid-salvage.ts';
+import {advanceMechanoidCorpses} from './mechanoid-corpse.ts';
+import {enableMechanoidRaids} from './mechanoid-raids.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { removeIdentity } from './collection-remove.ts';
 import { applyCommercialBuy,applyCommercialSell } from './commercial-post.ts';
@@ -389,6 +393,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='enable-wildlife'){enableWildlife(world);return {ok:true};}
   if(command.type==='enable-heatwaves'){if(world.gameProfile)return {ok:false,code:'invalid-command',reason:'Le calendrier de canicule historique n’est pas disponible avec ce narrateur.'};enableHeatwaves(world);return {ok:true};}
   if(command.type==='enable-visitors'||command.type==='order-trade'||command.type==='cancel-trade'||command.type==='trade-execute')return applyTrade(world,command);
+  if(command.type==='enable-mech-raids')return enableMechanoidRaids(world)?{ok:true}:{ok:false,code:'invalid-command',reason:'Le calendrier Cassandra est requis pour les menaces mécaniques.'};
   if(command.type==='enable-raids'){enableRaids(world);return {ok:true};}
   if(command.type==='enable-arrivals'||command.type==='answer-arrival')return applyArrival(world,command);
   if(command.type==='enable-quests'||command.type==='answer-quest')return applyQuestCommand(world,command);
@@ -651,7 +656,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     advanceTameness(world);reconcileDomesticWork(world);advanceWildlife(world);
     updateDoors(world);
     const structuresBeforeCombat=world.structures;
-    advanceWorldCombat(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
+    advanceWorldCombat(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);if(world.tick%20===0)reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     expireStaggers(world);advanceFilth(world,weatherRainRate(world));
     scheduleGrowing(world);
@@ -675,13 +680,22 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     const getThreats=()=>threatQueries(world,animalThreats);
     advanceBeautyNeeds(world,getLight().topology);
     advanceFlowerPots(world,getLight(),new TemperatureView(world,thermal));
-    const hasAdversary=world.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner||p.mental?.crisis?.kind==='berserk')||animalThreats.length>0;
+    const hasAdversary=world.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner||p.mental?.crisis?.kind==='berserk')||animalThreats.length>0||(world.mechanoids??[]).some(m=>!['dead','downed'].includes(m.state));
     let thermalDirty=structuresBeforeCombat!==world.structures;
     const invalidateEnvironment=()=>{environment=undefined;light=undefined;furnitureSight=undefined;thermalDirty=true;};
     const getRoofs = () => roofs ??= new RoofContext(world);
     const getBlocked: NavigationGrid = () => blocked ??= blockedCells(world);
     const occupied = CIVIL_TRANSIT_BLOCKERS;
     const budget: SearchBudget = { remaining: PATH_SEARCHES_PER_TICK, pairs: 32768,stats:diagnostics };
+    const processMechanicalDecisions=()=>{
+      const actors=world.mechanoids;if(!actors?.length)return;
+      const batch=mechanoidCombatBatch(world,getBlocked);
+      for(let offset=0;offset<actors.length;offset++)processMechanoidCombat(world,actors[(world.tick-1+offset)%actors.length]!,getBlocked,budget,getLight,batch);
+    };
+    // Both populations share the unchanged global search/pair cap. Alternate
+    // first admission and rotate owners so a continuously busy colony cannot
+    // starve the mechanical tail. Historical worlds take the same human path.
+    if(world.tick%2)processMechanicalDecisions();
     for (let offset = 0; offset < world.pawns.length; offset++) {
       const pawn = world.pawns[((world.tick - 1) + offset) % world.pawns.length]!;
       const completedEdge=pawn.moveCooldown>0&&(pawn.motion?.end??0)<=world.tick;
@@ -776,7 +790,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.rescue){processRescue(world,pawn,needsContext);continue;}
       if (pawn.haul) { const refueling=pawn.haul.destination.type==='fuel';processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget,false,getLight), () => {wakePlanners(world);if(refueling)invalidateEnvironment();});continue; }
       if(pawn.cooking) {processCooking(world,pawn,{
-        workRate:(station,worker)=>getEnvironment().production(station,worker).total*((isFoodWorkstation(station.kind)||station.kind==='butcher-spot'||station.kind==='crafting-spot'||station.kind==='tailor-bench'||station.kind==='electric-tailor-bench'||station.kind==='machining-table'||station.kind==='art-bench')?tailoringTemperatureFactor(new TemperatureView(world,thermal).at(world,station)):1)*(taskWork(pawn.cooking!)==='cook'?1:physicalWorkFactor(pawn,'craft',body)),
+        workRate:(station,worker)=>getEnvironment().production(station,worker).total*((isFoodWorkstation(station.kind)||station.kind==='butcher-spot'||station.kind==='crafting-spot'||station.kind==='tailor-bench'||station.kind==='electric-tailor-bench'||station.kind==='machining-table'||station.kind==='art-bench')?tailoringTemperatureFactor(new TemperatureView(world,thermal).at(world,station)):1)*(taskWork(pawn.cooking!)==='cook'||isMechSalvageRecipe(pawn.cooking!.recipe)?1:physicalWorkFactor(pawn,'craft',body)),
         candidates:()=>searchCandidates(world,pawn,getBlocked(),occupied,budget),
         search:goals=>search(world,pawn,getBlocked(),occupied,budget,goals),
         move:(target,exact)=>moveToward(world,pawn,target,true,getBlocked,budget,exact,getLight),
@@ -845,6 +859,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         if (workProgress(job) >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
       } else moveToward(world, pawn, job, false, getBlocked, budget,false,getLight);
     }
+    if(!(world.tick%2))processMechanicalDecisions();
     for(const pawn of [...world.pawns])if(pawn.visitor)exitVisitor(world,pawn);
     reconcilePodRescueResults(world);
     for(const pawn of [...world.pawns])if(pawn.podRescue)exitPodRescue(world,pawn);
@@ -860,7 +875,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     advanceQuests(world);
     advanceSocial(world);
     if(world.roofing)reconcileRoofJobs(world,roofs);
-    reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);reconcileWildlife(world);advanceCorpses(world,thermal);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
+    reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);reconcileWildlife(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     if(world.hunting)world.hunting.targets=world.hunting.targets.filter(id=>world.wildlife?.animals.some(a=>a.id===id&&a.state!=='dead')||world.pawns.some(p=>p.hunting?.animalId===id));
     advanceScoutTrip(world);advanceCommercialTrip(world);
     refreshStock(world);

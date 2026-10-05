@@ -55,6 +55,8 @@ export function prepareHealrootDemo(generation: 'current' | 'pre-v210' = 'curren
     assert.equal(result.ok, true, result.reason);
   }
   assert.equal(world.jobs.filter(job => job.kind === 'harvest' && job.x === HEALROOT_CELL.x && job.z === HEALROOT_CELL.z).length, 1);
+  // Explicit historical preparation predates prospective mechanical raids.
+  if (generation === 'pre-v210' && world.raids) delete world.raids.mechanoid;
   assert.deepEqual(validateWorld(world), []);
   return world;
 }

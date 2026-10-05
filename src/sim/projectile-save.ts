@@ -6,7 +6,7 @@ import type { World } from './types.ts';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const keys=(v:Record<string,unknown>,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
-const identity=(v:unknown,version=67)=>v===null||typeof v==='string'&&(version>=77||!v.startsWith('animal:'))&&(/^(pawn|animal|structure|frame|resource|pile|packed):[1-9]\d*$/.test(v)&&integer(Number(v.slice(v.indexOf(':')+1)),1)||/^rock:(0|[1-9]\d*)$/.test(v)&&integer(Number(v.slice(5)),0));
+const identity=(v:unknown,version=67)=>v===null||typeof v==='string'&&(version>=77||!v.startsWith('animal:'))&&(version>=194||!v.startsWith('mech:'))&&(/^(pawn|animal|mech|structure|frame|resource|pile|packed):[1-9]\d*$/.test(v)&&integer(Number(v.slice(v.indexOf(':')+1)),1)||/^rock:(0|[1-9]\d*)$/.test(v)&&integer(Number(v.slice(5)),0));
 const samePoint=(a:{x:number;z:number},b:unknown)=>record(b)&&keys(b,['x','z'])&&b.x===a.x&&b.z===a.z;
 
 /** Unknown JSON is rejected before touching references or calling the resolver. */
@@ -31,7 +31,7 @@ export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'hei
     const a=value.arrival;if(!record(a)||!keys(a,['kind','targetKey','point','coreTick','effect'])||!integer(a.coreTick,1,total)||a.coreTick!==elapsed||!identity(a.targetKey,version)||!samePoint(bulletPosition(p.flight),a.point)||p.advancedAtCore<=(world.tick-1)*CORE_TICKS_PER_LOCAL)return false;
     if(a.kind==='exit')return a.effect==='exit'&&a.targetKey===null&&p.flight.remainingCoreTicks===total-elapsed+1;
     if(a.kind!=='impact'||p.flight.remainingCoreTicks!==total-elapsed)return false;
-    return a.targetKey===null?a.effect==='ground':String(a.targetKey).startsWith('pawn:')?a.effect==='pawn':String(a.targetKey).startsWith('animal:')?version>=77&&a.effect==='animal':a.effect==='unsupported-object'
+    return a.targetKey===null?a.effect==='ground':String(a.targetKey).startsWith('pawn:')?a.effect==='pawn':String(a.targetKey).startsWith('animal:')?version>=77&&a.effect==='animal':String(a.targetKey).startsWith('mech:')?version>=194&&a.effect==='mech':a.effect==='unsupported-object'
       ||version>=67&&String(a.targetKey).startsWith('structure:')&&a.effect==='barrier'
       ||version>=193&&(['structure','pile','resource','packed'] as const).some(kind=>String(a.targetKey).startsWith(`${kind}:`)&&a.effect===kind);
   } catch {return false;}
@@ -46,7 +46,7 @@ export function validateProjectiles(world:World,version:number,ids:Set<number>):
     if(ids.has(p.id)||p.id<=previous||p.id>=world.nextId)errors.push('Invalid projectile identity/order.');
     if(version>=193&&p.weaponItem==='mini-turret-gun'){
       const sourceId=Number(p.flight.launcherKey.slice(10)),source=world.structures.find(s=>s.id===sourceId);
-      const occupied=ids.has(sourceId)||[...world.pawns,...world.jobs,...world.resources,...world.piles,...world.packed.map(p=>p.building),...(world.wildlife?.animals??[]),...(world.projectiles??[]),...(world.bombWaves??[]),...(world.fires?.items??[])].some(t=>t.id===sourceId);
+      const occupied=ids.has(sourceId)||[...world.pawns,...world.jobs,...world.resources,...world.piles,...world.packed.map(p=>p.building),...(world.wildlife?.animals??[]),...(world.mechanoids??[]),...(world.projectiles??[]),...(world.bombWaves??[]),...(world.fires?.items??[])].some(t=>t.id===sourceId);
       if(sourceId>=p.id||sourceId>=world.nextId||(source?source.kind!=='mini-turret'||!source.turret||p.flight.origin.x!==source.x+.5||p.flight.origin.z!==source.z+.5:occupied))errors.push('Invalid intrinsic projectile launcher.');
     }
     ids.add(p.id);previous=p.id;

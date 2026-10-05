@@ -101,6 +101,7 @@ test('a valid version 172 save migrates neutrally and a forged same-tick bridge 
   const legacy=withoutPredatorDefaults(withoutTelevisionRecreation(withoutMiningSkill(JSON.parse(serializeWorld(old))))) as Record<string,unknown>;
   // The current scenario's prospective biographies are not a V172 field.
   for(const pawn of (legacy as unknown as World).pawns)delete pawn.background;
+  if((legacy as unknown as World).raids)delete (legacy as unknown as World).raids!.mechanoid;
   legacy.schemaVersion=(withoutTelevisionRecreation(legacy),172);
   // Build the ecological profile under its own historical schema. A current
   // v2 population must not masquerade as the old herbivore-only population.

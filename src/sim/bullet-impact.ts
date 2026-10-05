@@ -62,7 +62,7 @@ export function resolveUnarmoredBullet(record:MedicalRecord,hit:UnarmoredBullet,
   const kind=(id:BodyPartId)=>!guarded?.converted?'gunshot' as const:PART_INJURY_RULES[id].solid?'crack' as const:PART_INJURY_RULES[id].skin?'bruise' as const:'crush' as const;
   let severity=damage*HP_UNIT;
   const definition=BODY_PARTS[part],hp=remainingPartHealth(next,part);
-  if(definition.depth==='outside'&&part!=='torso'&&severity>=hp) {
+  if(definition.depth==='outside'&&definition.parent!==null&&severity>=hp) {
     const destructionChance=Math.min(1,(severity-hp)/(definition.hp*HP_UNIT*.7));
     if(draw(random)>=destructionChance){severity=Math.max(0,hp-HP_UNIT);result.preserved=true;}
   }

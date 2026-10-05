@@ -9,6 +9,7 @@ import { pileParts,type PileBundle } from './pile-parts';
 import { corpseStage } from '../sim/corpses';
 import { corpseVisualMask } from './corpse-presentation';
 import { WildlifeLayer } from './WildlifeLayer';
+import { MechanoidLayer } from './MechanoidLayer';
 import { RopeLayer } from './RopeLayer';
 import { NaturalResourcePresentation } from './NaturalResourcePresentation';
 import { ProjectileLayer } from './ProjectileLayer';
@@ -110,6 +111,7 @@ export class ColonyRenderer {
   private readonly wind = new WindLayer(this.environmentLighting.configure);
   private readonly projectiles = new ProjectileLayer();
   private readonly wildlife = new WildlifeLayer(this.environmentLighting.configure);
+  private readonly mechanoids = new MechanoidLayer(this.environmentLighting.configure);
   private readonly ropes = new RopeLayer();
   private readonly pawns = new PawnLayer(this.environmentLighting.configure);
   private readonly actionFeedback = new ActionFeedbackLayer(this.pawns);
@@ -317,6 +319,7 @@ export class ColonyRenderer {
     this.daylight = new DayNightLayer(this.scene);
     this.invalidatePausedShadow();
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
+    this.scene.add(this.mechanoids.group);
     this.scene.add(this.areaPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
     if (groundGrassEnabled) {
       this.grass = this.createGrass();
@@ -444,6 +447,7 @@ export class ColonyRenderer {
     const newMap = !previousWorld||previousWorld.seed!==world.seed||previousWorld.width!==world.width||previousWorld.height!==world.height||previousWorld.scenario?.id!==world.scenario?.id||previousWorld.scenario?.revision!==world.scenario?.revision||
       previousWorld.site?.hilliness!==world.site?.hilliness||previousWorld.site?.revision!==world.site?.revision||previousWorld.site?.biome!==world.site?.biome;
     const changedTiles=terrainTileChanges(previousWorld,world);
+    if(newMap)this.mechanoids.reset();
     const terrainChanges=terrainSurfaceChanges(previousWorld,world,changedTiles);
     // External setWorld callers may mutate tile collections in place. Only
     // decoder snapshots promise identity-stable unchanged tiles.
@@ -524,6 +528,7 @@ export class ColonyRenderer {
     this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses);
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses,this.pawns);
+    this.mechanoids.update(world,this.hasTracks?this.timeline:undefined,resetPoses,this.pawns);
     this.ropes.adopt(world,resetPoses);
     this.landscape.refresh(this.backend==='WebGPU'&&this.overview.group.visible);
     if(this.selectedObject?.kind!=='growing'||zoneChanged)this.updateSelectedObject();
@@ -715,6 +720,7 @@ export class ColonyRenderer {
     const distant = this.overview.group.visible;
     const restorePawnFires=this.pawns.prepareFiresForCompile();
     const restoreWildlife=this.wildlife.prepare();
+    const restoreMechanoids=this.mechanoids.prepare();
     const restoreRopes=this.ropes.prepareForCompile();
     const restoreFeedback=this.actionFeedback.prepareForCompile();
     const restoreActionVfx=this.actionVfx.prepareForCompile();
@@ -755,6 +761,7 @@ export class ColonyRenderer {
       // already disabled culling when that override was captured; their own
       // restorers must therefore run last to recover their real runtime flag.
       for (const [object, value] of culling) object.frustumCulled = value;
+      restoreMechanoids();
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
       restoreBoxes();restoreArea();
       restoreOverview();
@@ -780,7 +787,7 @@ export class ColonyRenderer {
     const offset=this.camera.position.clone().sub(this.controls.target);this.controls.target.set(cell.x,0,cell.z);this.camera.position.copy(this.controls.target).add(offset);this.controls.update();
   }
   focusPawn(id: number): void {
-    const pawn = this.world?.pawns.find((item) => item.id === id)??this.world?.wildlife?.animals.find(a=>a.id===id);
+    const pawn = this.world?.pawns.find((item) => item.id === id)??this.world?.wildlife?.animals.find(a=>a.id===id)??this.world?.mechanoids?.find(m=>m.id===id);
     if (!pawn) return;
     this.invalidatePausedShadow();
     const offset = this.camera.position.clone().sub(this.controls.target);
@@ -790,7 +797,7 @@ export class ColonyRenderer {
     this.controls.update();
   }
 
-  setSelectedPawns(ids:ReadonlySet<number>):void {this.selectedPawns=new Set(ids);this.pawns.setSelected(ids);this.wildlife.setSelected(ids);if(this.world&&this.pawns.feedbackSource)this.actionFeedback.update(this.world,this.selectedPawns,this.pawns.feedbackSource);}
+  setSelectedPawns(ids:ReadonlySet<number>):void {this.selectedPawns=new Set(ids);this.pawns.setSelected(ids);this.wildlife.setSelected(ids);this.mechanoids.setSelected(ids);if(this.world&&this.pawns.feedbackSource)this.actionFeedback.update(this.world,this.selectedPawns,this.pawns.feedbackSource);}
   setSelectedObject(selected:MapObjectSelection|undefined):void {this.selectedObject=selected;this.updateSelectedObject();this.updateGrowingZones(false);this.updateTurretPreview();}
   private updateTurretPreview():void {
     const world=this.world,selected=this.selectedObject;
@@ -865,6 +872,12 @@ export class ColonyRenderer {
       edge.set(x,y+height*.5,z).addScaledVector(side,Math.max(height*.5,radius)).project(this.camera);
       result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:`animal:${species}`,category:2});
     });
+    this.mechanoids.forEachPose((id,x,y,z,height,radius,dead)=>{
+      center.set(x,y+height*.5,z).project(this.camera);
+      if(center.z<cameraClipNear(this.camera)||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)return;
+      edge.set(x,y+height*.5,z).addScaledVector(side,Math.max(height*.5,radius)).project(this.camera);
+      result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:dead?'corpse:mech':'mech:scyther',category:dead?3:1});
+    });
     return result;
   }
 
@@ -920,7 +933,7 @@ export class ColonyRenderer {
     const jobById = new Map(world.jobs.map(job => [job.id, job]));
     const cells = new Map<string, PileBundle>();
     for (const pile of world.piles) {
-      if(pile.humanCorpse||pile.owner.type==='grave')continue;
+      if(pile.humanCorpse||pile.mechCorpse||pile.owner.type==='grave')continue;
       if (pile.owner.type === 'pawn'||pile.owner.type==='equipment'||pile.owner.type==='apparel'||pile.owner.type==='inventory') continue;
       const quantity=pile.quantity-(hidden.get(pile.id)??0);
       if(quantity<=0)continue;
@@ -971,6 +984,7 @@ export class ColonyRenderer {
     }
     if(this.pawns.feedbackSource)this.actionFeedback.syncTravel(this.pawns.feedbackSource);
     if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
+    if(this.world)this.mechanoids.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
     this.ropes.present(this.hasTracks?this.timeline:undefined);
     if (!this.areaDrag && !this.selectionInput.active) { this.moveCamera(dt); this.controls.update(); }
     if (this.world) {
@@ -1261,7 +1275,7 @@ export class ColonyRenderer {
     if(this.grass){this.grass.mesh.removeFromParent();this.grass.dispose();this.grass=null;}
     this.resources.dispose();
     this.pawns.dispose();
-    this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.ropes.dispose();this.designations.dispose();
+    this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.mechanoids.dispose();this.ropes.dispose();this.designations.dispose();
 
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup]) clearGroup(group);
     this.pileChunks.clear();

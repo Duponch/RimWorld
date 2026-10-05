@@ -148,6 +148,7 @@ test('saved Cassandra state resumes exactly; a neutral 168 continuation gains no
   const legacy=withoutTelevisionRecreation(withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(world))))));
   // V210 biographies did not exist in the declared schema 168 fixture.
   for(const pawn of legacy.pawns)delete pawn.background;
+  if(legacy.raids)delete legacy.raids.mechanoid;
   // Schema 168 already had these recipes and Plants, but no V190 ingredient
   // permissions or V201 calendar. Construct its fixture before lowering schema.
   for(const structure of [...legacy.structures,...(legacy.packed??[]).map((p:{building:World['structures'][number]})=>p.building)])

@@ -5,7 +5,7 @@ import { partMissing } from './injury-state.ts';
 import type { Pawn,World } from './types.ts';
 
 export type MeleeDamage='blunt'|'poke'|'bite'|'scratch'|'cut'|'stab';
-export type MeleeToolId='left-fist'|'right-fist'|'left-claw'|'right-claw'|'head'|'teeth'|'grip'|'barrel'|'barrel-poke'|'knife-handle'|'knife-blade'|'knife-point';
+export type MeleeToolId='left-fist'|'right-fist'|'left-claw'|'right-claw'|'head'|'teeth'|'grip'|'barrel'|'barrel-poke'|'knife-handle'|'knife-blade'|'knife-point'|'left-blade-cut'|'left-blade-stab'|'right-blade-cut'|'right-blade-stab';
 export interface MeleeTool { id:MeleeToolId; damage:number; penetration:number; kind:MeleeDamage; cooldownCore:number; weight:number }
 export const meleeRecoveryCore=(id:MeleeToolId):number=>id==='knife-blade'?72:id==='knife-point'||id==='knife-handle'?96:120;
 export function curve(x:number,points:readonly (readonly [number,number])[]):number {
@@ -19,6 +19,8 @@ export function meleeHitChance(level:number,sight=1,manipulation=1):number {
 export function meleeDodgeChance(level:number,moving=1,sight=1):number {
   return curve(level+18*(moving-1)+8*(Math.min(sight,1.4)-1),[[5,0],[20,.3],[60,.5]]);
 }
+/** Skillless Core mechanical baseline .62; capacities shift the stat itself. */
+export const mechaMeleeHitChance=(sight=1,manipulation=1):number=>curve(12*(Math.min(sight,1.5)-1)+12*(Math.min(manipulation,1.5)-1),[[-24,.05],[-14,.1],[-4,.5],[6,.8],[16,.9],[36,.96],[56,.98]]);
 /** Natural adult and the delivered held weapons. Qualities affect melee damage;
  * capacities affect hit/dodge, not a fictitious fist damage multiplier. */
 export function meleeTools(world:World,pawn:Pawn,body=()=>pawnBody(pawn)):MeleeTool[] {

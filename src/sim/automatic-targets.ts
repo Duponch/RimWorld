@@ -4,7 +4,7 @@ import { interceptionDistanceFactor } from './combat-report.ts';
 import { carrierOf } from './rescue-state.ts';
 import type { ShotGrid } from './combat-space.ts';
 import type { Cell,Pawn,World } from './types.ts';
-import { isAnimalTarget,type LivingTarget } from './combat-target.ts';
+import { isAnimalTarget,isPawnTarget,combatTargetKey,type LivingTarget } from './combat-target.ts';
 
 /** Nine integer rays cover the current revolver's 1.5-cell miss neighbourhood.
  * Grid rasterisation is our explicit 3D adaptation, not an immunity corridor. */
@@ -18,8 +18,8 @@ function coneCells(grid:ShotGrid,from:Cell,to:Cell):Set<number> {
   return cells;
 }
 export function automaticShotScore(world:World,p:Pawn,target:LivingTarget,grid:ShotGrid,from:Cell=p,to:Cell=target,carried:(id:number)=>boolean=id=>!!carrierOf(world,id)):number {
-  let score=60-Math.min(40,Math.sqrt(distanceSquared(p,target)))-10*shotCover(grid,p,target,`${isAnimalTarget(target)?'animal':'pawn'}:${target.id}`).blockChance;
-  if(isAnimalTarget(target)?target.manhunter?.targetId===p.id:target.shooting?.order?.targetId===p.id||target.melee?.order?.targetId===p.id)score+=10;
+  let score=60-Math.min(40,Math.sqrt(distanceSquared(p,target)))-10*shotCover(grid,p,target,combatTargetKey(target)).blockChance;
+  if(isAnimalTarget(target)?target.manhunter?.targetId===p.id:isPawnTarget(target)&&target.shooting?.order?.targetId===p.id||!isAnimalTarget(target)&&target.melee?.order?.targetId===p.id)score+=10;
   if(p.lastAttack?.targetId===target.id&&world.tick*10-p.lastAttack.atCore<=300)score+=40;
   const cone=coneCells(grid,from,to);
   for(const other of world.pawns)if(other!==target&&other.state!=='dead'&&cone.has(other.z*grid.width+other.x)&&!carried(other.id)) {

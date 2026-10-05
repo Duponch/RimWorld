@@ -18,7 +18,7 @@ import { shotPlan,shootingQueries } from '../../src/sim/shooting.ts';
 import type { Cell, DesignateCommand } from '../../src/sim/types.ts';
 import { survivorDecisions, survivorPlan, survivorSummary } from './survivor-player.ts';
 
-export const crashlandedThreatActive=(w:World):boolean=>!!w.raids?.active||!!w.wildlife?.animals.some(a=>a.manhunter&&a.state!=='dead'&&a.state!=='downed');
+export const crashlandedThreatActive=(w:World):boolean=>!!w.raids?.active||!!w.raids?.mechActive||!!w.wildlife?.animals.some(a=>a.manhunter&&a.state!=='dead'&&a.state!=='downed');
 
 /** Same ordinary camp policy, with preparation using actual weapon and vest.
  * Visible raids and animal-rage letters both suspend ordinary work and care. */
@@ -45,7 +45,7 @@ export function crashlandedDecisions(w:World):Decision[] {
     }
     return out;
   }
-  if(w.raids?.active) {
+  if(w.raids?.active||w.raids?.mechActive) {
     if(defender&&!defender.draft)return [{reason:'La lettre annonce une attaque : mobiliser la personne équipée du revolver.',command:{type:'draft',pawnIds:[defender.id],enabled:true}}];
     if(defender?.draft?.holdFire)return [{reason:'Autoriser le tir contre les assaillants qui approchent.',command:{type:'fire-at-will',pawnIds:[defender.id],enabled:true}}];
     return [];

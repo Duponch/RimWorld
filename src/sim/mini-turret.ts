@@ -1,5 +1,5 @@
 import { distanceSquared,factionOf,factionRelation } from './affiliation.ts';
-import { isAnimalTarget,type LivingTarget } from './combat-target.ts';
+import { isAnimalTarget,isPawnTarget,isMechanoidTarget,combatTargetKey,type LivingTarget } from './combat-target.ts';
 import { animalBodySize } from './animal-life.ts';
 import { findShotLine,type ShotGrid,type ShotLine } from './combat-space.ts';
 import { shotAim,shotCover } from './combat-report.ts';
@@ -27,7 +27,7 @@ export const turretOperational=(world:World,s:Structure):boolean=>s.kind==='mini
 /** Equivalent to (Core+ID)%15 without overflowing a safe persistent ID. */
 export const turretHashDue=(s:Pick<Structure,'id'>,core:number):boolean=>(core%15+s.id%15)%15===0;
 
-const keyOf=(t:LivingTarget):TurretLivingKey=>`${isAnimalTarget(t)?'animal':'pawn'}:${t.id}`;
+const keyOf=(t:LivingTarget):TurretLivingKey=>combatTargetKey(t);
 const leans=(t:LivingTarget):boolean=>!isAnimalTarget(t)&&!['downed','resting','sleeping'].includes(t.state);
 export interface TurretTargetIndex {
   target(key:TurretLivingKey):LivingTarget|undefined;
@@ -39,8 +39,8 @@ export interface TurretTargetIndex {
 export function captureTurretTargets(w:World):TurretTargetIndex {
   const owners=new Map<TurretLivingKey,LivingTarget>(),cells=new Map<string,LivingTarget>();
   const carried=new Set(w.pawns.filter(p=>p.rescue?.phase==='carry').map(p=>p.rescue!.patientId));
-  for(const list of [w.pawns,w.wildlife?.animals??[]])for(const t of list) {
-    if(t.state==='dead'||t.health?.death||!isAnimalTarget(t)&&carried.has(t.id))continue;
+  for(const list of [w.pawns,w.wildlife?.animals??[],w.mechanoids??[]])for(const t of list) {
+    if(t.state==='dead'||t.health?.death||isPawnTarget(t)&&carried.has(t.id))continue;
     owners.set(keyOf(t),t);
     if(!turretTargetAllowed(t))continue;
     const key=`${t.x}:${t.z}:${leans(t)?1:0}`,prior=cells.get(key);
@@ -61,13 +61,13 @@ export function captureTurretTargets(w:World):TurretTargetIndex {
 }
 function presentTarget(key:TurretLivingKey,queries:TurretQueries):LivingTarget|undefined {
   const target=queries.turretTargets().target(key);
-  return target&&target.state!=='dead'&&!target.health?.death&&(isAnimalTarget(target)||!queries.carried(target.id))?target:undefined;
+  return target&&target.state!=='dead'&&!target.health?.death&&(!isPawnTarget(target)||!queries.carried(target.id))?target:undefined;
 }
 /** Admission is intentionally narrower than mental hostility. Sleeping human
  * targets are not excluded by the machine/faction rule. */
 export function turretTargetAllowed(t:LivingTarget):boolean {
   if(t.state==='dead'||t.state==='downed'||t.health?.death)return false;
-  return isAnimalTarget(t)?!t.domestic&&!!t.manhunter:!t.prisoner&&factionRelation('colony',factionOf(t))==='hostile';
+  return isAnimalTarget(t)?!t.domestic&&!!t.manhunter:isMechanoidTarget(t)?true:!t.prisoner&&factionRelation('colony',factionOf(t))==='hostile';
 }
 export interface TurretShotPlan { target:LivingTarget;line:Extract<ShotLine,{ok:true}>;key:TurretLivingKey }
 export function turretShotPlan(_w:World,s:Structure,key:TurretLivingKey,queries:TurretQueries):TurretShotPlan|{reason:'target'|'bounds'|'range'|'blocked'} {

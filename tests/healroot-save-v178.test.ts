@@ -12,6 +12,7 @@ function historicalAridWorld():World {
   const current=createScenarioWorld(42,32,'crashlanded',{biome:'arid-shrubland',hilliness:'small-hills'});
   const legacy=withoutTelevisionRecreation(withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(current)) as World))));
   delete legacy.miscIncidents;
+  if(legacy.raids)delete legacy.raids.mechanoid;
   for(const pawn of legacy.pawns){delete pawn.skills.plants;delete pawn.background;}
   legacy.schemaVersion=(withoutTelevisionRecreation(legacy),166) as World['schemaVersion'];
   // Construct the pre-predator ecological profile under its own version. Do
@@ -34,6 +35,7 @@ test('V166 is validated before a neutral V167 migration with no retrospective ac
   expect(() => deserializeWorld(JSON.stringify(invalid))).toThrow(/Invalid version 166 save/);
   const future = createScenarioWorld(42, 64, 'crashlanded', { biome: 'boreal-forest', hilliness: 'small-hills' });
   for(const pawn of future.pawns)delete pawn.background;
+  if(future.raids)delete future.raids.mechanoid;
   expect(future.resources.some(resource => resource.species === 'healroot-wild')).toBe(true);
   expect(() => deserializeWorld(JSON.stringify({ ...future, schemaVersion: 166 }))).toThrow(/Invalid version 166 save/);
 });

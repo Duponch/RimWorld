@@ -33,7 +33,7 @@ export function resolveUnarmoredMelee(record:MedicalRecord,hit:MeleeImpact,rando
   };
   const preserve=(id:BodyPartId,damage:number,min:number,max:number)=>{
     const hp=remainingPartHealth(next,id)/HP_UNIT;
-    if(id==='torso'||BODY_PARTS[id].depth==='inside'||damage<hp)return damage;
+    if(BODY_PARTS[id].parent===null||BODY_PARTS[id].depth==='inside'||damage<hp)return damage;
     const chance=Math.max(0,Math.min(1,((damage-hp)/BODY_PARTS[id].hp-min)/(max-min)));
     return draw()<chance?damage:Math.max(0,hp-1);
   };
@@ -70,8 +70,8 @@ export function resolveUnarmoredMelee(record:MedicalRecord,hit:MeleeImpact,rando
       if(bone)add(bone,amount*(converted+.2+draw()*.15));
     }
     if(!next.death) {
-      const head=isWithinPart(part,'neck',model);
-      if(part==='torso'||head)result.stun=draw()<curve(amount/BODY_PARTS.torso.hp,head?[[.04,.2],[.5,1]]:[[.4,0],[.9,.15]]);
+      const root=HUMAN_BODY.find(p=>p.parent===null)!,head=isWithinPart(part,record.body==='scyther'?'scyther-neck':'neck',model);
+      if(part===root.id||head)result.stun=draw()<curve(amount/root.hp,head?[[.04,.2],[.5,1]]:[[.4,0],[.9,.15]]);
     }
   } else {
     const damage=preserve(part,amount,hit.kind==='bite'?0:.4,hit.kind==='bite'?.1:1);

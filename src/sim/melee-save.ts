@@ -39,6 +39,7 @@ export function validateMelee(world:World):string[] {
         :order.auto==='mental'?mental:order.auto==='retaliation'?retaliation:order.auto==='draft'||order.auto==='response'?automaticOwnership(world,p,order.targetId,order.auto):!isColonist(p)||!!p.draft;
       if((!target||target.id===p.id||!social&&!isColonist(p)&&!hostileTo(p,target))
         &&!(world.schemaVersion>=78&&isColonist(p)&&(!order.auto||mental||retaliation||world.schemaVersion>=183&&(order.auto==='draft'||order.auto==='response')&&automaticOwnership(world,p,order.targetId,order.auto))&&world.wildlife?.animals.some(a=>a.id===order.targetId))
+        &&!(world.schemaVersion>=194&&world.mechanoids?.some(t=>t.id===order.targetId)&&(!isColonist(p)||!order.auto||mental||retaliation||automaticOwnership(world,p,order.targetId,order.auto as 'draft'|'response')))
         ||!owned||p.shooting?.order||(!order.auto&&p.draft?.target)||order.auto==='draft'&&!automaticPost(p)||p.draft?.queue.length)
         errors.push('Invalid melee order ownership.');
     }
@@ -49,9 +50,9 @@ export function validateMelee(world:World):string[] {
     if(m.strike?.structure&&(m.strike.structure.x>=world.width||m.strike.structure.z>=world.height||m.strike.targetId>=world.nextId))errors.push('Invalid barrier recovery position.');
     if(m.strike?.structure){
       const s=world.structures.find(s=>s.id===m.strike!.targetId),c=m.strike.structure;
-      if(s&&(world.schemaVersion>=192?structureMaxHp(s)<=0||!footprintCells(s).some(cell=>cell.x===c.x&&cell.z===c.z):!isBarrier(s)||s.x!==c.x||s.z!==c.z)||[world.pawns,world.jobs,world.piles,world.resources].some(items=>items.some(item=>item.id===m.strike!.targetId))||world.packed.some(p=>p.building.id===m.strike!.targetId))errors.push('Barrier recovery conflicts with a live entity.');
+      if(s&&(world.schemaVersion>=192?structureMaxHp(s)<=0||!footprintCells(s).some(cell=>cell.x===c.x&&cell.z===c.z):!isBarrier(s)||s.x!==c.x||s.z!==c.z)||[world.pawns,world.jobs,world.piles,world.resources,world.mechanoids??[]].some(items=>items.some(item=>item.id===m.strike!.targetId))||world.packed.some(p=>p.building.id===m.strike!.targetId))errors.push('Barrier recovery conflicts with a live entity.');
     }
-    if(m.strike&&(!m.strike.structure&&!world.pawns.some(t=>t.id===m.strike!.targetId&&t.id!==p.id)&&!world.raids?.departed.some(d=>d.pawnId===m.strike!.targetId)&&!(world.schemaVersion>=78&&world.wildlife?.animals.some(a=>a.id===m.strike!.targetId))&&!(world.schemaVersion>=79&&world.piles.some(p=>p.corpse?.animalId===m.strike!.targetId))||(p.motion?.end??0)>world.tick||p.shooting?.stance?.phase==='aim'))errors.push('Invalid melee recovery.');
+    if(m.strike&&(!m.strike.structure&&!world.pawns.some(t=>t.id===m.strike!.targetId&&t.id!==p.id)&&!world.raids?.departed.some(d=>d.pawnId===m.strike!.targetId)&&!(world.schemaVersion>=78&&world.wildlife?.animals.some(a=>a.id===m.strike!.targetId))&&!(world.schemaVersion>=79&&world.piles.some(p=>p.corpse?.animalId===m.strike!.targetId))&&!(world.schemaVersion>=194&&(world.mechanoids?.some(t=>t.id===m.strike!.targetId)||world.piles.some(p=>p.id===m.strike!.targetId&&p.mechCorpse)))||(p.motion?.end??0)>world.tick||p.shooting?.stance?.phase==='aim'))errors.push('Invalid melee recovery.');
   }
   return errors;
 }

@@ -56,6 +56,9 @@ import { validOfferedBackground } from '../sim/background-save.ts';
 import { validMentalShape, validMeleeThreatShape, validateMental } from '../sim/mental-save.ts';
 import { validMeleeShape, validateMelee } from '../sim/melee-save.ts';
 import { validArchivedMeleeThreat } from '../sim/visitor-save.ts';
+import { validMechanoidShape,validateMechanoids } from '../sim/mechanoid-save.ts';
+import { validMechCorpseShape,validMechSalvageLedger } from '../sim/mechanoid-corpse-save.ts';
+import { validateMechanoidRaids } from '../sim/mechanoid-raid-save.ts';
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
@@ -115,6 +118,7 @@ function validSurgeryTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|'tick'
   if(world.schemaVersion<179&&(Object.hasOwn(pawn,'surgery')||Object.hasOwn(pawn,'surgeryRequest')||pawn.health&&Object.hasOwn(pawn.health,'anesthetic')))return false;
   if(!validPawnSurgeryShape(pawn,world.schemaVersion,world))return false;
   const record=pawn.health;
+  if(record?.body==='scyther')return false;
   if(record?.anesthetic===undefined)return true;
   if(!record||typeof record!=='object'||Array.isArray(record)||record.body!==undefined||record.tick>world.tick||
     (record.death===undefined?record.tick!==world.tick:!record.death||typeof record.death!=='object'||Array.isArray(record.death)||record.death.tick!==record.tick))return false;
@@ -158,7 +162,8 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
     if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&s.kind==='grave')
       ||Object.keys(owner).some(key=>!['type','graveId'].includes(key)))return false;
   }else return false;
-  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','apparel','weapon','haulRequested'].includes(key)))return false;
+  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','apparel','weapon','haulRequested'].includes(key)))return false;
+  if(world.schemaVersion<194&&Object.hasOwn(pile,'mechCorpse'))return false;
   if(pile.haulRequested!==undefined&&(world.schemaVersion<28||pile.kind!=='chunk'||pile.haulRequested!==true))return false;
   if(pile.damage!==undefined&&(world.schemaVersion<87||!Number.isSafeInteger(pile.damage)||pile.damage<1||pile.damage>=pileMaxHp(pile)))return false;
   const rot=pile.rot;
@@ -167,6 +172,7 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
     ||rot.rate!==undefined&&(!Number.isFinite(rot.rate)||rot.rate<0||rot.rate>1)))return false;
   const record=pile as unknown as Record<string,unknown>;
   return validFoodContamination(pile.foodPoison,pile.item,world.schemaVersion>=89)
+    &&validMechCorpseShape(pile,world.schemaVersion,world.tick)
     &&(pile.item==='human-corpse'?validHumanCorpseShape(pile.humanCorpse,world.schemaVersion,world.tick):pile.humanCorpse===undefined)
     &&(pile.item==='human-corpse'||validCorpseShape(record,world.schemaVersion))
     &&(!pile.corpse||validCorpseConsumption(pile.corpse,world.tick))
@@ -306,7 +312,14 @@ export class SnapshotDecoder {
     if (!Number.isSafeInteger(message.epoch) || message.epoch < 1
       || !Number.isSafeInteger(message.revision) || message.revision < 1) return resync('Révision de snapshot invalide.');
     if (message.epoch < this.epoch || (message.epoch === this.epoch && message.revision <= this.revision)) return { status: 'stale' };
+    if(message.world.schemaVersion<194&&(Object.hasOwn(message.world,'mechanoids')||Object.hasOwn(message.world,'mechSalvage')
+      ||['mechanoid','mechActive'].some(k=>Object.hasOwn(message.world.raids??{},k))
+      ||['mechanoid','mechComposition'].some(k=>Object.hasOwn(message.world.raids?.last??{},k))))return resync('Propriétaire ou calendrier mécanique futur.');
+    if(Object.hasOwn(message.world,'mechanoids')&&(!Array.isArray(message.world.mechanoids)||message.world.mechanoids.some(m=>!validMechanoidShape(m,message.world.schemaVersion,message.world.tick))))return resync('Forme mécanique invalide.');
+    if(message.world.wildlife?.animals.some(a=>a.health?.body==='scyther'))return resync('Dossier mécanique attribué à un animal.');
+    if(message.world.schemaVersion<194&&[...message.world.structures,...message.world.packed.map(p=>p.building)].some(s=>s.bills?.some(b=>['smash-mechanoid','shred-mechanoid'].includes(b.recipe))))return resync('Facture mécanique future.');
     if(!Array.isArray(message.world.stockpiles)||message.world.stockpiles.some(zone=>!validStorageConditions(zone,message.world.schemaVersion)))return resync('Plages de qualité ou de PV de réserve invalides pour ce snapshot.');
+    for(const zone of message.world.stockpiles)if(message.world.schemaVersion<194&&(Object.hasOwn(zone.filters??{},'mech-corpse')||Object.hasOwn(zone.items??{},'scyther-corpse')))return resync('Filtre mécanique futur.');
     if(!Array.isArray(message.world.growingZones)||message.world.growingZones.some(zone=>!zone||!isCropKindInVersion(zone.plant,message.world.schemaVersion)))return resync('Culture future ou inconnue dans ce snapshot.');
     if(message.world.fires!==undefined&&!validFireResourceLosses(message.world.fires?.ledger?.resources,message.world.schemaVersion))return resync('Pertes végétales du feu invalides pour ce snapshot.');
     if(message.world.schemaVersion<193&&(Object.hasOwn(message.world,'bombWaves')||Object.hasOwn(message.world.research??{},'gunTurrets')
@@ -440,6 +453,9 @@ export class SnapshotDecoder {
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
     if(validateMental(next,next.schemaVersion).length||next.schemaVersion>=192&&validateMelee(next).length)return resync('Cible de crise mentale ou autorité de mêlée incohérente.');
+    if(!validMechSalvageLedger(next,next.schemaVersion)||validateMechanoidRaids(next,next.schemaVersion).length)return resync('Récupération ou mandat mécanique invalide.');
+    const mechanicalCorpseIds=new Set<number>();
+    for(const pile of next.piles)if(pile.item==='scyther-corpse'||Object.hasOwn(pile,'mechCorpse')){if(mechanicalCorpseIds.has(pile.id)||!validPile(pile,next))return resync('Carcasse mécanique invalide.');mechanicalCorpseIds.add(pile.id);}
     if(validateMiniTurrets(next).length)return resync('Propriétaire ou cible de mini-tourelle invalide.');
     if(validateCommercialRegistry(next,next.schemaVersion).length)return resync('Registre commercial invalide.');
     const postIds=new Set<number>();
@@ -454,7 +470,7 @@ export class SnapshotDecoder {
     if(next.resources.some(resource=>foreignIds.has(resource.id)||!validDomesticHealroot(resource,next)||!validPlantGrowthLight(resource,next.schemaVersion,next.tick)))return resync('État végétal ou identité commerciale invalide.');
     if(foreignIds.size){
       const collides=(entities:readonly {id:number}[])=>entities.some(e=>foreignIds.has(e.id));
-      if([next.pawns,next.piles,next.structures,next.jobs,next.stockpiles,next.growingZones,next.wildlife?.animals??[],next.filth?.items??[],next.fires?.items??[],next.fires?.embers??[],next.projectiles??[],next.bombWaves??[]].some(collides)
+      if([next.pawns,next.piles,next.structures,next.jobs,next.stockpiles,next.growingZones,next.wildlife?.animals??[],next.mechanoids??[],next.filth?.items??[],next.fires?.items??[],next.fires?.embers??[],next.projectiles??[],next.bombWaves??[]].some(collides)
         ||next.packed.some(p=>foreignIds.has(p.building.id)||collides(p.building.bills??[]))||next.structures.some(s=>collides(s.bills??[])))return resync('Identité commerciale dupliquée sur la carte.');
       if((next.raids?.departed??[]).some(d=>foreignIds.has(d.pawnId)||collides(d.items))||(next.prisonDepartures??[]).some(d=>foreignIds.has(d.pawnId)||collides(d.items))
         ||[next.visitors?.departed??[],next.podRescues?.departed??[]].some(records=>records.some(d=>foreignIds.has(d.pawn.id)||collides(d.items)||(d.packed??[]).some(p=>foreignIds.has(p.building.id)||collides(p.building.bills??[])))))return resync('Identité commerciale dupliquée dans une archive.');
@@ -481,8 +497,11 @@ export class SnapshotDecoder {
         ||commercial.items.some(pile=>postIds.has(pile.id)||!validPile(pile,registry)))return resync('Voyageur commercial ou possession invalide.');
     }
     if(validateCommercialBindings(next,next.schemaVersion).length)return resync('Possessions commerciales incohérentes.');
+    for(const records of [next.raids?.departed??[],next.prisonDepartures??[]])for(const departure of records)
+      if(departure.items.some(p=>!validMechCorpseShape(p,next.schemaVersion,departure.tick)||next.schemaVersion<194&&Object.hasOwn(p,'mechCorpse')))return resync('Dossier mécanique de départ historique invalide.');
     for(const records of [next.visitors?.departed??[],next.podRescues?.departed??[]])
       for(const departure of records){
+        if(departure.pawn.health?.body==='scyther'||departure.items.some(p=>!validMechCorpseShape(p,next.schemaVersion,departure.tick)||next.schemaVersion<194&&Object.hasOwn(p,'mechCorpse')))return resync('Dossier mécanique archivé invalide.');
         if(!validMiningTransport(departure.pawn,next.schemaVersion))return resync('Profil de minage archivé invalide.');
         if(!validArchivedMeleeThreat(departure.pawn,next,departure.tick))return resync('Menace de mêlée archivée invalide.');
         if(Object.hasOwn(departure.pawn,'bombRefuge'))return resync('Refuge Bomb archivé hors carte.');
@@ -491,13 +510,15 @@ export class SnapshotDecoder {
     // Only the retained ballistic/Bomb owners need this additional identity
     // capture. Foreign registries above are already validated; their historical
     // owners reserve the same namespace as the map and cannot become a wave.
-    if(Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge'))){
-      const ids=new Set([
+    if(Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge'))){
+      const owners=[
         ...next.pawns,...next.structures,...next.jobs,...next.resources,...next.piles,...next.stockpiles,...next.growingZones,
         ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
         ...next.packed.map(p=>p.building),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
-      ].map(v=>v.id));
-      const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId)return false;ids.add(Number(id));return true;};
+      ];
+      const ids=new Set<number>();
+      for(const owner of owners){if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
+      const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&mechanicalCorpseIds.has(Number(id)))return false;ids.add(Number(id));return true;};
       const addItems=(items:unknown):boolean=>Array.isArray(items)&&items.every(item=>item&&typeof item==='object'&&addId(item.id));
       for(const id of foreignIds)ids.add(id);
       for(const owner of [next.scout,next.commercialTrip])if(owner&&'pawn' in owner){if(!addId(owner.pawn.id)||!addItems(owner.items))return resync('Identité hors carte invalide pour les projectiles.');}
@@ -508,6 +529,8 @@ export class SnapshotDecoder {
         if(!addId(d.pawn.id)||!addItems(d.items))return resync('Identité de dossier archivé invalide.');
         for(const pack of d.packed??[])if(!addId(pack.building.id)||!addItems(pack.building.bills??[]))return resync('Identité de mobilier archivé invalide.');
       }
+      if(validateMechanoids(next,next.schemaVersion,ids).length)return resync('Identité, cible ou déplacement mécanique invalide.');
+      if(validateMechanoidRaids(next,next.schemaVersion,ids).length)return resync('Identité mécanique historique réutilisée dans un autre propriétaire.');
       if(validateProjectiles(next,next.schemaVersion,ids).length)return resync('Balle ou canon lanceur invalide.');
       const bombErrors:string[]=[];validateBombWaves(next,bombErrors,ids);if(bombErrors.length)return resync('Vague Bomb ou identité invalide.');
       if(validateBombRefuges(next,[],ids).length)return resync('Refuge ou danger Bomb incohérent.');

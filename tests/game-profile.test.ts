@@ -136,7 +136,7 @@ test('Cassandra next opportunity follows its exact anchored window, including ga
     (w:World)=>w.raids!.completed++,
   ]){const bad=structuredClone(world);mutate(bad);expect(validateRaids(bad,bad.schemaVersion,new Set()).length).toBeGreaterThan(0);}
   // The historical camp retains its own bounded delay, with no Cassandra rule.
-  const legacy=structuredClone(world);delete legacy.raids!.cassandra;legacy.raids!.profile='camp-raids-v1';
+  const legacy=structuredClone(world);delete legacy.raids!.cassandra;delete legacy.raids!.mechanoid;legacy.raids!.profile='camp-raids-v1';
   legacy.raids!.nextCheck=legacy.tick+8*6000;expect(validateRaids(legacy,legacy.schemaVersion,new Set())).toEqual([]);
   legacy.raids!.nextCheck++;expect(validateRaids(legacy,legacy.schemaVersion,new Set())).toContain('Invalid raid schedule or count.');
 });

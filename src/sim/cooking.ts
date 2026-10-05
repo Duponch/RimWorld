@@ -1,3 +1,4 @@
+import {isMechSalvageRecipe,mechSalvageSpeed,finishMechSalvage} from './mechanoid-salvage.ts';
 import { workPriority } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { beginArtWork } from './art-work.ts';
@@ -94,10 +95,10 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const art=isArtRecipe(task.recipe)?beginArtWork(world,pawn):null;
   if(isArtRecipe(task.recipe)&&!art){context.release();return;}
   if(art){total=artWorkTotal(art.artWork!.recipe,art.artWork!.material);task.progress=art.artWork!.progress;pawn.skills.artistic??={...artisticSkill(pawn)};if(task.progress<total)learnSkill(pawn.skills.artistic,1000,pawn);}
-  const culinary=taskWork(task)==='cook';
+  const culinary=taskWork(task)==='cook',mechanical=isMechSalvageRecipe(task.recipe);
   if(task.progress<total){
-    if(culinary){if(!Number.isSafeInteger((task.workTicks??0)+1)||((task.workTicks??0)+1)>Math.floor(Number.MAX_SAFE_INTEGER/1000))return;task.workTicks=(task.workTicks??0)+1;}
-    const speed=task.recipe==='butcher-creature'?butcherySpeed(pawn):culinary?cookingSpeed(pawn):1;
+    if(culinary||mechanical){if(!Number.isSafeInteger((task.workTicks??0)+1)||((task.workTicks??0)+1)>Math.floor(Number.MAX_SAFE_INTEGER/1000))return;task.workTicks=(task.workTicks??0)+1;}
+    const speed=mechanical?mechSalvageSpeed(pawn):task.recipe==='butcher-creature'?butcherySpeed(pawn):culinary?cookingSpeed(pawn):1;
     const fraction=consumeCookingFuel(station);applyCookingHeat(world,station,fraction);
     task.progress=Math.min(total,task.progress+Math.round(context.workRate(station,pawn)*speed*PRODUCTION_WORK_SCALE*fraction));
   }
@@ -108,6 +109,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(art)art.artWork!.progress=task.progress;
   if(task.progress<total)return;
   if(art){completeArtProduction(world,pawn,task,context);return;}
+  if(mechanical){finishMechSalvage(world,pawn,bill,context);return;}
   if(task.recipe==='butcher-creature'){finishButchery(world,pawn,bill,context);return;}
   const used=new Map<number,number>();for(const i of task.ingredients)used.set(i.pileId,(used.get(i.pileId)??0)+i.quantity);
   const freed=[...used].filter(([id,n])=>world.piles.find(p=>p.id===id)?.quantity===n).length;

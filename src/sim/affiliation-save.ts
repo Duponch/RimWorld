@@ -1,5 +1,6 @@
 import { hostileTo,isColonist } from './affiliation.ts';
 import { bombRefugeRouteTarget } from './bomb-refuge-route.ts';
+import { combatTarget,hostileTarget,isMechanoidTarget } from './combat-target.ts';
 import type { World } from './types.ts';
 
 export function validAffiliationShape(p:Record<string,unknown>,version:number,world:World):boolean {
@@ -23,7 +24,11 @@ export function validateAffiliations(world:World):string[] {
     // Collision is a permission at edge commitment, not a universal overlap
     // invariant: a downed hostile can recover beneath a passer-by. Preserve the
     // accepted edge rather than rejecting an otherwise legitimate continuation.
-    if(p.shooting?.order&&!isColonist(p)&&!world.pawns.some(t=>t.id===p.shooting!.order!.targetId&&hostileTo(p,t)))errors.push('Sentry targets a non-hostile.');
+    if(p.shooting?.order&&!isColonist(p)){
+      const target=combatTarget(world,p.shooting.order.targetId);
+      const hostile=target&&isMechanoidTarget(target)?hostileTarget(p,target):world.pawns.some(t=>t.id===p.shooting!.order!.targetId&&hostileTo(p,t));
+      if(!hostile)errors.push('Sentry targets a non-hostile.');
+    }
   }
   return errors;
 }

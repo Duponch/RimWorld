@@ -10,6 +10,7 @@ import type { AggressiveCrisis,AggressiveCrisisKind } from './mental-state.ts';
 import type { SearchBudget } from './work-planner.ts';
 import type { Pawn,Structure,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
+import type { Mechanoid } from './mechanoid-state.ts';
 
 export interface AggressiveCrisisAdmission { targetIds:number[];population:number }
 export const freePresentColonist=(w:World,p:Pawn):boolean=>w.pawns.includes(p)&&isColonist(p)&&!p.prisoner&&!p.visitor&&!p.podRescue&&!p.raid&&p.state!=='dead';
@@ -25,11 +26,12 @@ export function murderVictim(w:World,p:Pawn,t:Pawn):boolean {
 /** One read-only spatial decision. Null defers it without any RNG draw; empty
  * means no physically admitted target. Region rules are adapted to this map. */
 export function aggressiveCrisisCandidates(w:World,p:Pawn,kind:AggressiveCrisisKind,budget?:SearchBudget,bashDoors=false):number[]|null {
-  const candidates:(Pawn|Structure|WildAnimal)[]=kind==='tantrum'
+  const candidates:(Pawn|Structure|WildAnimal|Mechanoid)[]=kind==='tantrum'
     ?w.structures.filter(s=>structureMaxHp(s)>0&&distanceSquared(p,s)<=40**2)
     :kind==='murderous-rage'?w.pawns.filter(t=>murderVictim(w,p,t)):[
       ...w.pawns.filter(t=>t!==p&&t.state!=='dead'&&t.state!=='downed'&&!carrierOf(w,t.id)&&distanceSquared(p,t)<=40**2),
       ...(w.wildlife?.animals??[]).filter(t=>t.state!=='dead'&&t.state!=='downed'&&distanceSquared(p,t)<=40**2),
+      ...(w.mechanoids??[]).filter(t=>t.state!=='dead'&&t.state!=='downed'&&!t.health?.death&&distanceSquared(p,t)<=40**2),
     ];
   if(!candidates.length)return [];
   if(budget&&!budget.remaining)return null;

@@ -1,8 +1,8 @@
 import { firePosition } from '../sim/fire-rules';
 import type { SimulationClient } from '../bridge/SimulationClient';
 import type { Cell, Pawn, World } from '../sim/types';
-import { hostileTo, isColonist } from '../sim/affiliation';
-import { combatTarget, isAnimalTarget } from '../sim/combat-target';
+import { isColonist } from '../sim/affiliation';
+import { combatTarget, isAnimalTarget,isMechanoidTarget,hostileTarget } from '../sim/combat-target';
 import { animalSpecies } from '../sim/animal-species';
 import { shotPlan, shootingQueries } from '../sim/shooting';
 import { meleeTools } from '../sim/melee-statistics';
@@ -34,13 +34,13 @@ export function tacticalPawns(world: World, ids: ReadonlySet<number>): Pawn[] {
 
 export function tacticalAttackPolicy(world: World, ids: ReadonlySet<number>, targetId: number, queue: boolean): TacticalAttackPolicy {
   const pawns = tacticalPawns(world, ids), target = combatTarget(world, targetId);
-  const base = { selected: ids.size, drafted: pawns.length, target: target ? isAnimalTarget(target) ? `${animalSpecies(target.species).label} ${target.id}` : target.name : `cible ${targetId}` };
+  const base = { selected: ids.size, drafted: pawns.length, target: target ? isAnimalTarget(target) ? `${animalSpecies(target.species).label} ${target.id}` : isMechanoidTarget(target)?`Scyther ${target.id}`:target.name : `cible ${targetId}` };
   if(target&&isAnimalTarget(target)&&target.domestic)return {...base,reason:'Cet animal appartient à la colonie.',options:[]};
   if (!pawns.length) return { ...base, reason: 'Mobilisez un colon libre et capable de combattre.', options: [] };
   if (!target || target.state === 'dead') return { ...base, reason: 'Cible vivante indisponible.', options: [] };
   // The ordinary context action must not turn a selected friend or neutral human
   // into a target. Explicit attack targeting elsewhere has its own controls.
-  if (!isAnimalTarget(target) && !pawns.some(pawn => hostileTo(pawn, target))) return { ...base, reason: 'Aucune attaque contextuelle sur un allié ou une personne neutre.', options: [] };
+  if (!isAnimalTarget(target) && !pawns.some(pawn => hostileTarget(pawn, target))) return { ...base, reason: 'Aucune attaque contextuelle sur un allié ou une personne neutre.', options: [] };
   if (queue) return { ...base, options: (['shoot', 'melee'] as const).map(kind => ({
     kind, label: `${kind === 'shoot' ? 'Tirer sur' : 'Attaquer au contact'} ${base.target}`,
     pawnIds: [], enabled: false, reason: 'La file d’attaques n’est pas disponible ; relâchez Maj.',

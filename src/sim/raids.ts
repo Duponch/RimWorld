@@ -1,3 +1,4 @@
+import { chooseMechanoidOpportunity,createMechanoidRaid,advanceMechanoidRaid } from './mechanoid-raids.ts';
 import { isColonist } from './affiliation.ts';
 import { carrierOf } from './rescue-state.ts';
 import { consumeCassandraOpportunity,INTRO_RAID_TICK } from './cassandra-raids.ts';
@@ -33,6 +34,7 @@ export function stopRaidEngagement(p:Pawn):void {cancelShooting(p);cancelMelee(p
 export function advanceRaids(w:World):void {
   const s=w.raids;if(!s)return;
   const cassandra=s.profile==='cassandra-raids-v1',opportunity=cassandra&&consumeCassandraOpportunity(w,s);
+  if(s.mechActive){advanceMechanoidRaid(w);return;}
   const a=s.active;
   if(a){
     const members=w.pawns.filter(p=>a.members.includes(p.id));
@@ -55,19 +57,26 @@ export function advanceRaids(w:World):void {
   const budgeted=cassandra&&w.tick!==INTRO_RAID_TICK&&!!w.economy;
   const random={rng:s.rng};
   const freeColonists=budgeted?w.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&!p.prisoner&&!p.visitor):[];
-  const composition=budgeted?chooseRaidComposition(computeThreatPoints({
+  const points=budgeted?computeThreatPoints({
     knownWealth:w.economy!.wealth.knownStorytellerWealth,
     freeColonists:freeColonists.length,
     colonistHealthSum:freeColonists.reduce((sum,p)=>sum+(p.health?summaryHealthPercent(p.health):1),0),
     elapsedDays:w.tick/TICKS_PER_DAY,
     adaptationDays:w.economy!.adaptationDays,
     seedBucket:Math.floor(w.tick/250),
-  }).points,random):undefined;
+  }).points:undefined;
+  const mechRandom=s.mechanoid?{rng:s.mechanoid.rng}:undefined;
+  const mech=points!==undefined&&mechRandom?chooseMechanoidOpportunity(w,points,mechRandom):undefined;
+  if(mech!==undefined){
+    if(mech===null){s.mechanoid!.rng=mechRandom!.rng;return;}
+    createMechanoidRaid(w,mech,mechRandom!);return;
+  }
+  const composition=points!==undefined?chooseRaidComposition(points,random):undefined;
   const count=composition?.roster.length??(s.serial===0?1:2),sites=raidEntries(w,s.rng,count);
   if(!sites||!createRaidGroup(w,{count,sites,random,...(composition?{composition}:{})})){
     if(!cassandra)s.nextCheck=w.tick+TICKS_PER_DAY/4;
     return;
-  }
+  }else if(mechRandom){s.mechanoid!.rng=mechRandom.rng;s.mechanoid!.lastFaction='outlaws';}
 }
 /** Remove only an actor physically at the boundary, after travel/recovery.
  * Export carried equipment with identity/quality/HP; ground loot stays here. */

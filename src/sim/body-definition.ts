@@ -1,12 +1,14 @@
 /** Natural adult human body. Rules/provenance: docs/research/body-reference.md.
  * These IDs describe anatomy, not GPU bones, item IDs or mesh names. */
 type Side = 'left' | 'right';
+export type ScytherPartId = 'scyther-thorax'|'scyther-neck'|'scyther-head'|'scyther-brain'|'scyther-smell-sensor'|'scyther-reactor'
+  | `scyther-${Side}-${'sight-sensor'|'hearing-sensor'|'shoulder'|'arm'|'blade'|'hand'|'pinky'|'middle-finger'|'index-finger'|'thumb'|'leg'|'foot'|'fluid-reprocessor'}`;
 type PairedPart = 'eye' | 'ear' | 'lung' | 'kidney' | 'shoulder' | 'clavicle' | 'arm' | 'humerus' | 'radius' | 'hand'
   | 'pinky' | 'ring-finger' | 'middle-finger' | 'index-finger' | 'thumb'
   | 'leg' | 'femur' | 'tibia' | 'foot' | 'little-toe' | 'fourth-toe' | 'middle-toe' | 'second-toe' | 'big-toe';
 export type BodyPartId = 'torso' | 'ribcage' | 'sternum' | 'pelvis' | 'spine' | 'stomach' | 'heart' | 'liver'
   | 'neck' | 'head' | 'skull' | 'brain' | 'nose' | 'jaw' | 'tongue' | 'waist' | 'hump' | `${Side}-${PairedPart}`
-  | 'tail' | `${Side}-${'front'|'rear'}-${'leg'|'paw'|'hoof'}`;
+  | 'tail' | `${Side}-${'front'|'rear'}-${'leg'|'paw'|'hoof'}` | ScytherPartId;
 export type BodyGroup = 'torso' | 'neck' | 'upper-head' | 'full-head' | 'eyes' | 'mouth' | 'teeth'
   | 'shoulders' | 'arms' | 'hands' | 'left-hand' | 'right-hand' | 'waist' | 'legs' | 'feet';
 export interface BodyPart {

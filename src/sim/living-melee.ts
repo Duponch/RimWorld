@@ -1,11 +1,11 @@
-import { isAnimalTarget,type LivingTarget } from './combat-target.ts';
+import { isAnimalTarget,isMechanoidTarget,isPawnTarget,type LivingTarget } from './combat-target.ts';
 import { apparelProtection } from './apparel-protection.ts';
 import { disturbanceEvents,isLying } from './disturbance.ts';
 import { healthRandom,reconcilePawnHealth,updatePawnHealth } from './health.ts';
 import { pawnBody } from './health-rules.ts';
 import { createMedicalRecord } from './injury-state.ts';
 import { resolveUnarmoredMelee } from './melee-impact.ts';
-import { meleeHitChance,meleeDodgeChance,type MeleeTool } from './melee-statistics.ts';
+import { meleeHitChance,mechaMeleeHitChance,meleeDodgeChance,type MeleeTool } from './melee-statistics.ts';
 import { applyBulletStagger } from './stagger.ts';
 import { applyMeleeStun } from './stun.ts';
 import { cancelShooting } from './shooting-state.ts';
@@ -14,17 +14,21 @@ import { effectiveSkillLevel } from './work-types.ts';
 import { advanceAnimalHealth,animalBody,commitAnimalImpact,delayAnimalImpact } from './wildlife-health.ts';
 import type { World } from './types.ts';
 import { cancelAnimalPredation } from './wildlife-predation.ts';
+import { mechaAssessment,commitMechanoidImpact } from './mechanoid-health.ts';
+import { delayMechanoidImpact,mechanoidProtection } from './mechanoid-impact.ts';
 
 /** The same anatomical transaction serves both directions of interspecies
  * combat. Recovery is installed before injury can interrupt either actor. */
 export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTarget,tool:MeleeTool,core:number,randomState:{rng:number},disturbance=disturbanceEvents(w),options:{surprise?:boolean;surpriseStun?:number}={}):void {
   const animal=isAnimalTarget(target),animalAttacker=isAnimalTarget(attacker),random=()=>healthRandom(randomState);
-  if(w.schemaVersion>=192&&!animal&&(animalAttacker||attacker.melee?.order?.auto!=='social'))target.meleeThreat={attackerId:attacker.id,atCore:core};
-  const immobile=animal?['downed','sleeping'].includes(target.state):isLying(target);
-  if(!animalAttacker&&!immobile)learnSkill(attacker.skills.melee,200*(tool.cooldownCore/60)*XP_SCALE,attacker);
-  const ac=(animalAttacker?animalBody(attacker):pawnBody(attacker)).capacities,dc=(animal?animalBody(target):pawnBody(target)).capacities;
-  const hit=immobile||options.surprise||random()<meleeHitChance(animalAttacker?4:effectiveSkillLevel(attacker,'melee',attacker.skills.melee.level),ac.sight,ac.manipulation);
-  const dodge=hit&&!immobile&&!options.surprise&&(animal||!target.shooting?.stance)&&random()<meleeDodgeChance(animal?0:effectiveSkillLevel(target,'melee',target.skills.melee.level),dc.moving,dc.sight);
+  if(w.schemaVersion>=192&&isPawnTarget(target)&&(!isPawnTarget(attacker)||attacker.melee?.order?.auto!=='social'))target.meleeThreat={attackerId:attacker.id,atCore:core};
+  const immobile=isPawnTarget(target)?isLying(target):['downed','sleeping'].includes(target.state);
+  if(isPawnTarget(attacker)&&!immobile)learnSkill(attacker.skills.melee,200*(tool.cooldownCore/60)*XP_SCALE,attacker);
+  const body=(actor:LivingTarget)=>isAnimalTarget(actor)?animalBody(actor):isMechanoidTarget(actor)?mechaAssessment(actor):pawnBody(actor);
+  const ac=body(attacker).capacities,dc=body(target).capacities;
+  const accuracy=isMechanoidTarget(attacker)?mechaMeleeHitChance(ac.sight,ac.manipulation):meleeHitChance(isAnimalTarget(attacker)?4:effectiveSkillLevel(attacker,'melee',attacker.skills.melee.level),ac.sight,ac.manipulation);
+  const hit=immobile||options.surprise||random()<accuracy;
+  const dodge=hit&&!immobile&&!options.surprise&&(!isPawnTarget(target)||!target.shooting?.stance)&&random()<meleeDodgeChance(isPawnTarget(target)?effectiveSkillLevel(target,'melee',target.skills.melee.level):0,dc.moving,dc.sight);
   const outcome=!hit?'miss':dodge?'dodge':'hit';
   const strike={targetId:target.id,atCore:core,untilCore:core+tool.cooldownCore,tool:tool.id,outcome} as const;
   if(animalAttacker){attacker.strike=strike;delete attacker.retaliation;}else attacker.melee!.strike=strike;
@@ -44,21 +48,26 @@ export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTa
   if(outcome==='hit'){
     const damage=Math.max(1,tool.damage*(.8+random()*.4));
     w.rng=randomState.rng;
-    if(animal)advanceAnimalHealth(w,target);else if(!target.health||target.health.tick<w.tick)updatePawnHealth(w,target);
+    if(isAnimalTarget(target))advanceAnimalHealth(w,target);else if(isPawnTarget(target)&&(!target.health||target.health.tick<w.tick))updatePawnHealth(w,target);
     randomState.rng=w.rng;
-    const protection=animal?undefined:apparelProtection(w,target,['bite','cut','stab','scratch'].includes(tool.kind)?'sharp':'blunt',tool.penetration,random);
-    const record=target.health??{...createMedicalRecord(w.tick),...(animal?{body:target.species}:{})};
-    const impact=resolveUnarmoredMelee(record,{damage,kind:tool.kind},random,protection?.protect);
+    const category=['bite','cut','stab','scratch'].includes(tool.kind)?'sharp':'blunt';
+    const protection=isPawnTarget(target)?apparelProtection(w,target,category,tool.penetration,random):undefined;
+    const record=target.health??{...createMedicalRecord(w.tick),...(isAnimalTarget(target)?{body:target.species}:isMechanoidTarget(target)?{body:'scyther' as const}:{})};
+    const input=isMechanoidTarget(target)?{...structuredClone(record),tick:w.tick}:record;
+    const impact=resolveUnarmoredMelee(input,{damage,kind:tool.kind},random,isMechanoidTarget(target)?mechanoidProtection(category,tool.penetration,random):protection?.protect);
     protection?.commit();injured=impact.layers.length>0;stun=impact.stun;
-    if(animal)commitAnimalImpact(w,target,impact.record,randomState);else target.health=impact.record;
+    if(isAnimalTarget(target))commitAnimalImpact(w,target,impact.record,randomState);
+    else if(isMechanoidTarget(target)){if(!commitMechanoidImpact(w,target,impact.record,randomState,core))throw new Error('Mechanical melee transaction refused');}
+    else target.health=impact.record;
   }
   w.rng=randomState.rng;
-  if(animal)delayAnimalImpact(target,core,stun||!!(options.surprise&&options.surpriseStun),
+  if(isAnimalTarget(target))delayAnimalImpact(target,core,stun||!!(options.surprise&&options.surpriseStun),
     options.surprise&&options.surpriseStun?Math.max(45,Math.round(options.surpriseStun*30)):45);
+  else if(isMechanoidTarget(target))delayMechanoidImpact(w,target,core,stun);
   else {
     if(outcome==='hit'){reconcilePawnHealth(w,target,undefined,true);if(injured)disturbance.damage(target,core,immobile);}
     applyBulletStagger(w,target,core,1);if(stun)applyMeleeStun(w,target,core);
     if(target.shooting?.stance?.phase==='aim')cancelShooting(target);
   }
-  if(!animalAttacker)attacker.lastAttack={targetId:target.id,atCore:core};
+  if(isPawnTarget(attacker))attacker.lastAttack={targetId:target.id,atCore:core};
 }

@@ -2,7 +2,7 @@ import { huntingPermission } from './hunting-state.ts';
 import { violentWorkRefusal } from './colonist-backgrounds.ts';
 import { weatherShotFactor } from './weather-exposure.ts';
 import { friendlyFireFactor } from './game-profile.ts';
-import { combatTarget,combatTargetKey,combatTargetSize,hostileTarget,isAnimalTarget } from './combat-target.ts';
+import { combatTarget,combatTargetKey,combatTargetSize,hostileTarget,isAnimalTarget,isPawnTarget,type LivingTarget } from './combat-target.ts';
 import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
 import { cancelMelee } from './melee-state.ts';
 import { isStunned } from './stun.ts';
@@ -80,7 +80,7 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
   if(shot.order){const a=shot.order.auto;if(shot.order.hunt?!huntingPermission(world,pawn,shot.order.targetId):a?(!automaticPermission(pawn,a.kind)||!automaticTarget(world,pawn,shot.order.targetId)||a.kind==='draft'&&pawn.draft?.holdFire||a.kind==='response'&&world.tick>=a.until):!pawn.draft&&isColonist(pawn))cancelShooting(pawn);}
   if(shot.order) {
     const target=combatTarget(world,shot.order!.targetId);
-    if(!target||target.state==='dead'||!shot.order.startedDowned&&target.state==='downed'||!isColonist(pawn)&&(!hostileTarget(pawn,target)||isAnimalTarget(target)||!assaultTarget(pawn,target)))cancelShooting(pawn);
+    if(!target||target.state==='dead'||!shot.order.startedDowned&&target.state==='downed'||!isColonist(pawn)&&(!hostileTarget(pawn,target)||isAnimalTarget(target)||isPawnTarget(target)&&!assaultTarget(pawn,target)))cancelShooting(pawn);
     if(!pawn.shooting)return;
   }
   if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
@@ -108,8 +108,8 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
   shot.stance={phase:'cooldown',startedAtCore:core,endsAtCore:core+profile.cooldownCoreTicks,...weapon.item==='bolt-action-rifle'?{weaponItem:'bolt-action-rifle' as const}:{}};
 }
 
-export function startAutonomousShot(world:World,pawn:Pawn,target:Pawn,queries:Queries):boolean {
-  if(isColonist(pawn)||!hostileTarget(pawn,target)||!assaultTarget(pawn,target)||pawn.shooting)return false;
+export function startAutonomousShot(world:World,pawn:Pawn,target:LivingTarget,queries:Queries):boolean {
+  if(isColonist(pawn)||!hostileTarget(pawn,target)||isAnimalTarget(target)||isPawnTarget(target)&&!assaultTarget(pawn,target)||pawn.shooting)return false;
   const plan=shotPlan(world,pawn,target.id,queries);if('reason' in plan)return false;
   pawn.path=[];pawn.shooting={order:{targetId:target.id,weaponId:plan.weapon.id,startedDowned:false},stance:null};
   startAim(world,pawn,world.tick*CORE_TICKS_PER_LOCAL,queries);return !!pawn.shooting;

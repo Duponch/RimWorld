@@ -1,3 +1,4 @@
+import { validateMechanoidRaids } from './mechanoid-raid-save.ts';
 import { validApparelShape,validateApparel } from './apparel-save.ts';
 import { bombRefugeRouteTarget } from './bomb-refuge-route.ts';
 import { CASSANDRA_CYCLE_START,validCassandraAgenda } from './cassandra-raids.ts';
@@ -29,18 +30,20 @@ export function validateRaids(w:World,version:number,ids:Set<number>):string[] {
   const cell=(v:unknown):boolean=>object(v)&&Object.keys(v).length===2&&integer(v.x,0,w.width-1)&&integer(v.z,0,w.height-1);
   if(version<68)return state!==undefined||w.pawns.some(p=>p.raid!==undefined)?['Legacy save contains raid state.']:[];
   if(state===undefined)return w.pawns.some(p=>p.raid!==undefined)?['Raider without calendar.']:[];
-  if(!object(state)||!keys(state,['profile','rng','nextCheck','serial','completed','active','last','departed','cassandra'])||!['camp-raids-v1','cassandra-raids-v1'].includes(String(state.profile))||!integer(state.rng,1,4294967295)||!integer(state.serial,0)||!integer(state.completed,0,state.serial)||!Array.isArray(state.departed)||state.departed.length>w.width*w.height)return ['Invalid raid calendar.'];
+  if(!object(state)||!keys(state,['profile','rng','nextCheck','serial','completed','active','last','departed','cassandra',...(version>=194?['mechanoid','mechActive']:[])])||!['camp-raids-v1','cassandra-raids-v1'].includes(String(state.profile))||!integer(state.rng,1,4294967295)||!integer(state.serial,0)||!integer(state.completed,0,state.serial)||!Array.isArray(state.departed)||state.departed.length>w.width*w.height)return ['Invalid raid calendar.'];
   const cassandra=state.profile==='cassandra-raids-v1';
   if(cassandra?version<82||!w.gameProfile||!validCassandraAgenda(state.cassandra,w.tick):state.cassandra!==undefined)return ['Invalid Cassandra raid agenda.'];
   const s=w.raids!,a:unknown=s.active,last:unknown=s.last;
   // Cassandra's already-validated agenda fixes its exact future window. The
   // gap from an early opportunity to the next cycle's late opportunity can
   // exceed one cycle; a rolling cycle-length bound would reject that save.
-  const validNext=a===undefined?(cassandra?s.nextCheck===s.cassandra!.pending[0]:integer(s.nextCheck,w.tick+1,w.tick+8*TICKS_PER_DAY)):s.nextCheck===null;
-  if(s.completed!==s.serial-(a===undefined?0:1)||!validNext)errors.push('Invalid raid schedule or count.');
-  const lastCount=object(last)&&object(last.composition)&&Array.isArray(last.composition.roster)?last.composition.roster.length:s.completed===1?1:2;
+  errors.push(...validateMechanoidRaids(w,version,ids));
+  const ongoing=a!==undefined||s.mechActive!==undefined;
+  const validNext=!ongoing?(cassandra?s.nextCheck===s.cassandra!.pending[0]:integer(s.nextCheck,w.tick+1,w.tick+8*TICKS_PER_DAY)):s.nextCheck===null;
+  if(s.completed!==s.serial-(ongoing?1:0)||!validNext)errors.push('Invalid raid schedule or count.');
+  const lastCount=object(last)&&object(last.mechComposition)&&Array.isArray(last.mechComposition.roster)?last.mechComposition.roster.length:object(last)&&object(last.composition)&&Array.isArray(last.composition.roster)?last.composition.roster.length:s.completed===1?1:2;
   const questLast=object(last)&&last.originQuestId!==undefined;
-  if(s.completed===0?last!==undefined:!object(last)||!keys(last,['id','tick','reason','killed','downed','escaped',...(version>=86?['captured']:[]),...(version>=105?['composition']:[]),...(version>=172?['originQuestId']:[])])||last.id!==s.completed||!integer(last.tick,0,w.tick)||!['defended','withdrawn','colony-down'].includes(String(last.reason))||!['killed','downed','escaped'].every(k=>integer(last[k],0,lastCount))||last.captured!==undefined&&(version<86||!integer(last.captured,1,lastCount))||questLast&&(!integer(last.originQuestId,1,w.quests?.serial??0)||!validQuestComposition(last.composition))||last.composition!==undefined&&(questLast?!validQuestComposition(last.composition):last.tick<CASSANDRA_CYCLE_START||!w.economy||last.tick<w.economy.adoptedAt||!validComposition(last.composition,lastCount,version,cassandra,true))||Number(last.killed)+Number(last.downed)+Number(last.escaped)+Number(last.captured??0)!==lastCount)errors.push('Invalid raid outcome.');
+  if(s.completed===0?last!==undefined:!object(last)||!keys(last,['id','tick','reason','killed','downed','escaped',...(version>=86?['captured']:[]),...(version>=105?['composition']:[]),...(version>=172?['originQuestId']:[]),...(version>=194?['mechanoid','mechComposition']:[])])||last.id!==s.completed||!integer(last.tick,0,w.tick)||!['defended','withdrawn','colony-down'].includes(String(last.reason))||!['killed','downed','escaped'].every(k=>integer(last[k],0,lastCount))||last.captured!==undefined&&(version<86||!integer(last.captured,1,lastCount))||questLast&&(!integer(last.originQuestId,1,w.quests?.serial??0)||!validQuestComposition(last.composition))||last.composition!==undefined&&(questLast?!validQuestComposition(last.composition):last.tick<CASSANDRA_CYCLE_START||!w.economy||last.tick<w.economy.adoptedAt||!validComposition(last.composition,lastCount,version,cassandra,true))||Number(last.killed)+Number(last.downed)+Number(last.escaped)+Number(last.captured??0)!==lastCount)errors.push('Invalid raid outcome.');
   for(const d of s.departed){
     if(!object(d)||!keys(d,['group','pawnId','name','cell','tick','items'])||!integer(d.group,1,s.serial)||!integer(d.pawnId,1,w.nextId-1)||ids.has(d.pawnId)||typeof d.name!=='string'||!d.name.trim()||d.name.length>48||!integer(d.tick,0,w.tick)||!cell(d.cell)||!(d.cell.x===0||d.cell.z===0||d.cell.x===w.width-1||d.cell.z===w.height-1)||!Array.isArray(d.items)||d.items.length>3){errors.push('Invalid raid departure.');continue;}
     ids.add(d.pawnId);

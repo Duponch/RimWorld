@@ -17,6 +17,7 @@ import { advanceBombWave,applyStructureExternalDamage } from './bomb-system.ts';
 import { damageResource,damagePile } from './thing-damage.ts';
 import { pileMaxHp,resourceMaxHp,structureMaxHp } from './thing-damage-rules.ts';
 import type { BombInstigatorKey } from './mini-turret-state.ts';
+import { damageMechanoidWithBullet,delayMechanoidImpact } from './mechanoid-impact.ts';
 
 /** Commit a producer's validated emission and its private PRNG together.
  * Internal boundary, not a player command or a replacement for aiming/cadence. */
@@ -65,12 +66,13 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
     const profile=projectileProfile(p.weaponItem??'revolver',p.quality)!;
     const pawn=a.targetKey?.startsWith('pawn:')?world.pawns.find(pawn=>`pawn:${pawn.id}`===a.targetKey):undefined;
     const animal=a.targetKey?.startsWith('animal:')?world.wildlife?.animals.find(a=>`animal:${a.id}`===next.arrival?.targetKey):undefined;
+    const mech=world.schemaVersion>=194&&a.targetKey?.startsWith('mech:')?world.mechanoids?.find(m=>`mech:${m.id}`===a.targetKey):undefined;
     const barrier=a.targetKey?.startsWith('structure:')?world.structures.find(s=>`structure:${s.id}`===a.targetKey&&isBarrier(s)):undefined;
     const structure=world.schemaVersion>=193&&a.targetKey?.startsWith('structure:')?world.structures.find(s=>`structure:${s.id}`===a.targetKey&&structureMaxHp(s)>0):undefined;
     const packed=world.schemaVersion>=193&&a.targetKey?.startsWith('packed:')?world.packed.find(pack=>`packed:${pack.building.id}`===a.targetKey&&pack.owner.type==='ground'&&structureMaxHp(pack.building)>0):undefined;
     const pile=world.schemaVersion>=193&&a.targetKey?.startsWith('pile:')?world.piles.find(pile=>`pile:${pile.id}`===a.targetKey&&pile.owner.type==='ground'&&pileMaxHp(pile,world.schemaVersion)>0):undefined;
     const resource=world.schemaVersion>=193&&a.targetKey?.startsWith('resource:')?world.resources.find(r=>`resource:${r.id}`===a.targetKey&&r.kind!=='rock'&&resourceMaxHp(r)>0):undefined;
-    p.arrival={...a,effect:a.kind==='exit'?'exit':pawn?'pawn':animal?'animal':barrier?'barrier':structure?'structure':packed?'packed':pile?'pile':resource?'resource':a.targetKey?'unsupported-object':'ground'};
+    p.arrival={...a,effect:a.kind==='exit'?'exit':pawn?'pawn':animal?'animal':mech?'mech':barrier?'barrier':structure?'structure':packed?'packed':pile?'pile':resource?'resource':a.targetKey?'unsupported-object':'ground'};
     const wasLying=!!pawn&&isLying(pawn);
     if(a.kind!=='exit'&&disturbance.impact({x:Math.floor(a.point.x),z:Math.floor(a.point.z)},core))impact();
     if(a.kind!=='exit'&&animalImpactNoise(world,{x:Math.floor(a.point.x),z:Math.floor(a.point.z)},p.flight.launcherKey,core))impact();
@@ -79,6 +81,7 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
       damageAnimalWithBullet(world,animal,{damage:profile.damage},core,launcher,launcher?.id);
       impact();
     }
+    if(mech){damageMechanoidWithBullet(world,mech,{damage:profile.damage},core,profile.armorPenetration);delayMechanoidImpact(world,mech,core,false,profile.stoppingPower);impact();}
     if(structure||packed){
       if(!applyStructureExternalDamage(world,(structure??packed?.building)!,profile.damage,profile.damage,'bullet',world.rng,core,p.flight.launcherKey as BombInstigatorKey))throw new RangeError('Cannot commit Bullet structure impact');impact();
     }else if(barrier){

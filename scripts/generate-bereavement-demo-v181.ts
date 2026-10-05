@@ -60,6 +60,8 @@ export function prepareBereavementDemo(generation: 'current' | 'pre-v210' = 'cur
   assert.equal(patient.state, 'downed');
   assert.equal(patient.health.death, undefined);
   assert.ok(medicalBleed(patient.health) > 0);
+  // Explicit historical preparation predates prospective mechanical raids.
+  if (generation === 'pre-v210' && world.raids) delete world.raids.mechanoid;
   assert.deepEqual(validateWorld(world), []);
   return world;
 }

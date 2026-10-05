@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V213 livré dans le périmètre contrôlé, schéma 194.** Première menace mécanique : arrivée, préparation, combat, carcasse entière et récupération au poste. [Contrat](development/scyther-v213.md), [recherche](research/scyther-core-v213.md), [preuve et limites](history/validation-scyther-v213.md). Régression hors campagnes longues : 532 fichiers, 2 411 réussis et un ignoré par reprises ; 41 nouveaux cas, trois parcours natifs, build et présentation. Autres mécanoïdes, famille/romance, planète et performance générale restent ouverts.
+
 **V212 — défense automatisée, schéma 193, livré dans le périmètre contrôlé.** [Contrat](development/mini-turret-v212.md), [recherche Core](research/mini-turret-core-v212.md), [contrôles et limites](history/validation-mini-turret-v212.md). Recherche, chantier, énergie, tirs, entretien et danger sont reliés ; [suivi autonome](history/autonomous-progress-2026-10-05.md). Les campagnes longues et la parité complète restent ouvertes.
 
 **V211 — crises mentales, schéma 192, livré dans le périmètre contrôlé.** [Contrat](development/mental-crises-v211.md), [règles Core et adaptations](research/mental-crises-core-v211.md), [preuve](history/validation-mental-crises-v211.md). Les trois nouveaux états ont des cibles et conséquences physiques distinctes ; catalogue complet, arrestation et abandon restent ouverts.

@@ -1,6 +1,6 @@
 # Guide joueur
 
-**Schéma courant 193 — V212, défense automatisée livrée dans le périmètre contrôlé.** La mini-tourelle relie recherche, chantier, énergie, tirs, entretien et refuge physique. [Contrat](../development/mini-turret-v212.md), [preuve](../history/validation-mini-turret-v212.md). Le passé V210 et les crises V211 précèdent ce lot.
+**Schéma courant 194 — V213 livré dans le périmètre contrôlé.** La menace mécanique relie arrivée, défense, carcasse entière et récupération au poste. [Contrat](../development/scyther-v213.md), [preuve et limites](../history/validation-scyther-v213.md). Le passé V210, les crises V211 et la défense automatisée V212 précèdent ce lot.
 
 ## Faire face aux crises mentales — V211
 
@@ -1109,3 +1109,13 @@ Rechercher Tourelles automatiques après Armurerie, puis désigner une mini-tour
 Le canon neuf possède soixante coups. Le transport automatique apporte l’acier au seuil de moitié ; chaque unité restaure trois quarts de coup après un service au contact. Le bouton de réarmement donne une priorité personnelle à un colon capable de transporter, y compris mobilisé ou pacifiste. Le tir retenu et le réarmement automatique ont des commandes distinctes ; une coupure arrête les tirs.
 
 Une tourelle gravement touchée peut amorcer une mèche. Les colons cherchent alors un refuge physique ; la détonation peut toucher personnes, animaux, bâtiments et objets proches. Éloigner les machines et maintenir les accès libres. La sauvegarde conserve canon, balles et danger en cours. [Contrat et limites](../development/mini-turret-v212.md), [preuve du lot](../history/validation-mini-turret-v212.md).
+
+## Défendre contre les Scythers et récupérer leurs carcasses — V213
+
+Les nouveaux départs Atterrissage permettent cette menace après le jour45 et avec une menace suffisante. Dans une ancienne partie compatible avec Cassandra, l'activation prospective se trouve dans les paramètres du scénario du menu. Elle n'ajoute aucun ennemi immédiatement. Les autres compositions mécaniques restent absentes ; une occasion préparée ne garantit pas leur fréquence en campagne.
+
+Un Scyther est une machine hostile : il se regroupe puis attaque, sans retraite liée aux pertes humaines. Sélectionner son corps pour consulter ses32parties, ses capacités et sa cible réelle. Ses deux lames et ses jambes peuvent être endommagées ; il ne saigne pas, ne mange pas et ne reçoit ni soins biologiques ni ordres coloniaux. Les tirs des colons et des tourelles utilisent les cibles présentes et les trajectoires habituelles.
+
+Après neutralisation et fin du mouvement ou de la récupération du coup, une carcasse entière garde son identité et son anatomie. Elle ne se mange pas et ne pourrit pas. Les réserves peuvent autoriser la catégorie Carcasses mécaniques ; le transport ne la découpe pas en piles partielles. Ajouter Concasser un mécanoïde à un emplacement d'artisanat ou Broyer un mécanoïde à un atelier d'usinage alimenté. Un artisan apte prend la carcasse, la dépose au poste, travaille puis porte l'acier produit. L'efficacité Fabrication et les capacités influencent le rendement ; aucune récompense n'est créée au décès.
+
+Pour essayer : **Charger une partie → Colonies de test → Scyther · défense et récupération**. Reprendre dix ticks jusqu'à l'arrivée, inspecter une machine, puis lever Retenir le feu sur les deux tourelles. Après la défense réelle, ajouter une facture de broyage et prioriser le poste avec un artisan. Sauvegarder pendant le tir, le portage ou le travail, puis reprendre. La scène prépare seulement l'occasion, les défenses et les fournitures ; elle ne fournit aucune victoire ni récupération. [Contrat et adaptations](../development/scyther-v213.md), [contrôles et limites](../history/validation-scyther-v213.md).

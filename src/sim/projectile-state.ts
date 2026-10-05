@@ -15,5 +15,5 @@ export interface WorldProjectile {
   relations:ProjectileRelations;
   /** Kept through the impact's local tick for snapshots/save continuation.
    * The record is inert after arrival, including unsupported object impacts. */
-  arrival:(BulletArrival & {effect:'animal'|'barrier'|'pawn'|'structure'|'pile'|'resource'|'packed'|'ground'|'exit'|'unsupported-object'})|null;
+  arrival:(BulletArrival & {effect:'animal'|'mech'|'barrier'|'pawn'|'structure'|'pile'|'resource'|'packed'|'ground'|'exit'|'unsupported-object'})|null;
 }

@@ -31,7 +31,7 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
     context.ageImmunityFactor!==undefined&&(!Number.isFinite(context.ageImmunityFactor)||context.ageImmunityFactor<.5||context.ageImmunityFactor>1)||
     context.bedHealPerDay!==undefined&&context.bedHealPerDay!==4&&context.bedHealPerDay!==10||
     context.bedImmunityFactor!==undefined&&context.bedImmunityFactor!==1.07&&context.bedImmunityFactor!==1.11)throw new Error('Invalid medical interval');
-  if(record.death)return;
+  if(record.death||record.body==='scyther')return;
   const pending=record.injuries.filter(i=>i.infection&&i.infection.dueCore<=(record.tick+ticks)*10).length;
   if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');
   if((record.infections?.cases.length||pending)&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Infection clock exhausted');

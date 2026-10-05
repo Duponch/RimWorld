@@ -27,6 +27,7 @@ export const INJURY_RULES=Object.freeze({
 });
 const bone=(id:BodyPartId)=>['ribcage','sternum','pelvis','spine','skull','nose','jaw'].includes(id)||/-(clavicle|humerus|radius|femur|tibia)$/.test(id);
 function partRules(model:BodyModel){return Object.freeze(Object.fromEntries(model.parts.map(part=>{
+  if(model.kind==='scyther')return [part.id,Object.freeze({solid:true,skin:false,bleed:0,delicate:false,scarFactor:0})];
   const solid=bone(part.id),eye=part.id.endsWith('-eye');
   const skin=part.depth==='outside'&&!eye&&!['jaw','tongue','waist'].includes(part.id);
   return [part.id,Object.freeze({solid,skin,bleed:solid?0:part.id==='heart'?5:part.id==='neck'?4:part.id==='head'?2:1,

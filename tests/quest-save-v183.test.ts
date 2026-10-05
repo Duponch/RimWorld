@@ -91,6 +91,7 @@ test('schema 171 migrates without a quest and rejects either future quest field'
   (old as unknown as Record<string, unknown>).schemaVersion = 171;
   // The declared historical starters predate recorded personal backgrounds.
   for(const pawn of old.pawns)delete pawn.background;
+  if(old.raids)delete old.raids.mechanoid;
   // Prepare the historical ecological profile before any future quest field.
   delete old.wildlife;
   enableBiomeWildlife(old, old.site!.biome);
@@ -104,6 +105,8 @@ test('schema 171 migrates without a quest and rejects either future quest field'
   expect(() => deserializeWorld(JSON.stringify(futurePawn))).toThrow(/version 171/);
 
   const linked = pursued();
+  // Only the quest-era raid context is examined by these versioned guards.
+  delete linked.raids!.mechanoid;
   expect(validateRaids(linked, 172, new Set())).toEqual([]);
   expect(validateRaids(linked, 171, new Set())).toContain('Invalid active raid group.');
 

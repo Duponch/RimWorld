@@ -1525,6 +1525,37 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32, createWorld(212), schéma 193, tick 3000 sans campagne simulée. Trois personnes saines aux profils de création réels, besoins à 100, horaires Travail et priorités ciblées. Intellect et Construction 8 préparés ; Forge, Usinage et Armurerie achevés, projet Tourelles à 498/500 sans travail engagé. Bureau, générateur rempli, 110 aciers, trois composants et neuf rations au sol. Aucun canon, plan, livraison, réarmement, ennemi, tir, dégât, mèche ou vague préjoué. Incidents exclus. Combat et danger exercés par des expositions privées distinctes ; aucune fréquence naturelle, validation native ni performance générale déduite de cette préparation.",
       "sha256": "ad2c900bd3f37ed811b1a7b605b930554d4c728716e7bd3d927dcf91f642d49f"
+    },
+    {
+      "id": "scyther-v213",
+      "release": "v213",
+      "label": "Scyther · défense et récupération",
+      "filename": "scyther.json",
+      "description": "Observer une occasion Cassandra future, inspecter les machines hostiles puis défendre et récupérer leurs carcasses par les ateliers réels.",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 270090,
+      "focus": [
+        "adoption prospective",
+        "regroupement puis assaut",
+        "anatomie mécanique réelle",
+        "défense électrique",
+        "carcasse entière",
+        "concassage et broyage",
+        "reprise physique"
+      ],
+      "steps": [
+        "Charger en pause, dix ticks avant une occasion Cassandra préparée au jour 45. Les richesses et le ticket privé sont déclarés ; aucun Scyther n’est déjà arrivé. Reprendre à vitesse 1, puis mettre en pause après la lettre du raid mécanique.",
+        "Sélectionner un Scyther et ouvrir son dossier mécanique : cible réelle, regroupement, capacités et 32 parties. Il ne reçoit aucune commande coloniale. Examiner aussi en vue isométrique ; les deux tourelles intactes retiennent encore leur feu.",
+        "Sélectionner les tourelles en (15,16) et (17,16), lever Retenir le feu puis reprendre. Le circuit alimenté, les vrais tirs et les dégâts doivent produire la défense ; aucun succès n’est fourni par la préparation.",
+        "Après neutralisation réelle et fin de récupération, inspecter une carcasse et sa masse restante. Atelier d’usinage en (20,21) : ajouter Broyer un mécanoïde, puis choisir un artisan apte et Prioriser au poste. Collecte, portage, staging et sortie d’acier restent physiques. L’emplacement en (11,21) offre aussi le concassage, plus lent.",
+        "Réserves : autoriser Carcasses mécaniques seulement si souhaité. Sauvegarder pendant un vrai déplacement, coup, portage ou travail, puis recharger et poursuivre exactement le même monde."
+      ],
+      "prepared": true,
+      "provenance": "Scène préparée 32×32, createScenarioWorld(213,32,'crashlanded', site tempéré plat) et biographies de création actuelles, schéma 194, tick 270090, sans campagne simulée. Clairière entière préparée ; flore réadoptée sans capacité de repeuplement, climat et incidents facultatifs exclus. Calendrier de grippe obligatoire et horloge de panne des appareils neufs réadoptés prospectivement au tick préparé, sans contrôle, maladie ou panne antérieurs. Occasion Cassandra future 270100, cycle 3, adoption mécanique au tick de préparation et RNG privé 50. Les 10 000 ors physiques rendent la menace connue strictement supérieure à 300 ; aucune perte historique ajoutée. Deux canons intacts à 60 coups, feu retenu, générateur au bois, ateliers et fournitures au sol. Aucun acteur mécanique, groupe actif, balle, blessure, carcasse, livraison ou acier de récupération préjoué. La préparation ne prouve ni fréquence naturelle, validation native ni performance générale.",
+      "sha256": "ac32a154928cb4f5d655d5a93e21cef267f0d1a888f1c1dd8a68a7c6425a81a4"
     }
   ]
 }

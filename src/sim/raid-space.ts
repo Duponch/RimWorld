@@ -4,7 +4,8 @@ import { captureStandability } from './furniture-travel.ts';
 import { captureMeleePlaces } from './melee-space.ts';
 import { blockedCells,routeToCell } from './pathfinding.ts';
 import { isColonist,distanceSquared } from './affiliation.ts';
-import type { Cell,Pawn,Structure,World } from './types.ts';
+import type { Cell,Structure,World } from './types.ts';
+import type { CandidateAccess } from './navigation-types.ts';
 
 const EMPTY:ReadonlySet<number>=new Set();
 const edge=(w:World,c:Cell)=>c.x===0||c.z===0||c.x===w.width-1||c.z===w.height-1;
@@ -40,12 +41,12 @@ export function raidEntries(world:World,salt:number,count:number,preferred?:Cell
 }
 export interface RaidRoute { path:Cell[]; goal:Cell; barrier?:Structure }
 /** Prefer an actually accessible target before considering any destruction. */
-export function raidRoute(world:World,pawn:Pawn,exiting:boolean,blocked:Uint8Array):RaidRoute|null {
+export function raidRoute(world:World,pawn:Cell&{id:number},exiting:boolean,blocked:Uint8Array,preparedAccess?:CandidateAccess):RaidRoute|null {
   const targets=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed').sort((a,b)=>distanceSquared(pawn,a)-distanceSquared(pawn,b)||a.id-b.id);
   const stands=captureStandability(world),goals:Cell[]=[],exitGoals:Cell[]=[];
   if(exiting){const afterBreach=captureStandability({...world,structures:world.structures.filter(s=>!isBreachableBarrier(s))});for(let z=0;z<world.height;z++)for(let x=0;x<world.width;x++)if(edge(world,{x,z})){if(stands({x,z}))goals.push({x,z});if(afterBreach({x,z}))exitGoals.push({x,z});}goals.sort((a,b)=>distanceSquared(pawn,a)-distanceSquared(pawn,b)||a.z-b.z||a.x-b.x);}
   const places=captureMeleePlaces(world,pawn);
-  const access=candidateAccess(world,pawn,blocked,EMPTY);
+  const access=preparedAccess??candidateAccess(world,pawn,blocked,EMPTY);
   function reachable(candidates:Cell[]):RaidRoute|null {for(const c of candidates)if(access.has(c.z*world.width+c.x)){const path=routeToCell(world,c,access);if(path)return {path,goal:c};}return null;}
   if(exiting){const route=reachable(goals);if(route)return route;}
   else for(const target of targets){const route=reachable(places(target));if(route)return route;}

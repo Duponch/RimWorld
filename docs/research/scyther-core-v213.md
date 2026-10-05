@@ -1,0 +1,25 @@
+# Scyther Core — référence V213
+
+Relevé frais du5octobre2026, complétant la [préparation historique](mechanoid-core-next.md) et le [contrat](../development/scyther-v213.md). RimWorld Core1.6.4871rev590 installé, Assembly-CSharp SHA256`5cf1b5be399d5b1c9c56ca72c9d35b4ecf307feacf5859d04ac5a1aa5926356a`, vérifié avant/après. XML/ILSpy8.2.0.7535, extractions privées et provenance sous `tmp/mech-v213-next/` : core-plan, core-primitives et staging-plan. Aucun code/asset commercial recopié dans le produit.
+
+## Règles déterminantes
+
+BodyDef/RaceProps/PawnKind/BodyPartDef : Scyther32parties, HealthScale1,32/BodySize1, solides non vivantes/non saignantes, HPparpartieceil(base×1,32). Thorax53/tête40/cerveau interne14/lames27/réacteur27/filtres20. Couvertures relatives et résidus compilés une fois. PawnCapacityUtility/Workers : efficacité externe nonracine avec rampe au-delà de10%HP, interne/racine directe ; capacités arrondies au centième. Tags absents neutres1 ; respiration mécanique masquée garde l'effet réel du cou. Formules détaillées attestées par les primitives fraîches, sans cœur/reins humains synthétiques. Mort vitale/trauma198 avant incapacité ; conscience≥0,3 pour éveil, moving strictement>0,15 pour capacité.
+
+`Rand.Chance(1)` retourne vrai sans lire le RNG : mort hostile sur incapacité externe n'ajoute aucun tirage. `GenMath.RoundRandom` lit inconditionnellement Rand.Value, même pour une entrée entière : récupération métallique exige deux tirages. Cette distinction a été vérifiée dans les méthodes exactes, sans déduire un flux du seul résultat arrondi.
+
+Mass/StatPart_NaturalNotMissingBodyPartsCoverage/PawnOrCorpseStatUtility :60kg×couverture naturelle restante, même Pawn interne vivant ou mort. Lame gauche seule manquante→57,399kg, épaule gauche avec sous-arbre→49,8kg, déductions arithmétiques. Steel15 de ButcherProducts n'utilise pas cette couverture : base×efficacité, premier arrondi puis facteur de difficulté et second arrondi. Crafting-spot facteur0,5,450work ; Machining300work,350Wduposte. Vitesse `.4+.06niveau`, efficacité `.75+.025niveau`, capacités séparées et cap1,5. Le facteur du concassage n'est pas étendu rétroactivement aux autres recettes.
+
+Faction Mechanoid : hostile permanente, autoFlee=false, earliestRaidDays45 ; commonality(300,0)/(700,1)/(1400,1.8)/(2800,2.2)/(4000,2.6). Groups100/80/70/30/1, minima110/110/150/400/110, enveloppe admissible251 pourB150..<400,281au-delà. MaxPawnCost=max(min(curve(B),B),132),curve(400,200)/(900,300)/(100000,10000), minPawns1. StageThenAttack poids1 ; ImmediateAttack poids0 spécifique mech. Le budget150 suffit à composer un Scyther, sans autoriser un raid naturel de150points.
+
+LordJob_StageThenAttack/LordToil_Stage/Trigger_TicksPassed/Trigger_PawnLost : durée5000..14999Core, déclenchementstrict> à partirde l'activité du staging, pertes violentes≥30%, groupevide retiré en premier. Duty Defend/rayon28 concerne recherche de poste de tir ; JobGiver_AIDefendPoint conserve l'acquisition65 et maintien72, sans locus/rayon de mêlée bornés au point. AttackMelee expiry360..480Core. Les conditions de staging ne se réduisent ni à immobilité ni au premier dégât. Lisière adapte le choix du point et sa navigation mono-carte, pas les seuils temporels ou pertes.
+
+La [présentation officielle Ludeon des mécanoïdes](https://ludeon.com/blog/2022/10/biotech-preview-2-combat-mechanoids-pollution-and-super-mechanoid-bosses/) identifie Scyther/lancier/centipède comme types classiques et explique la diversité tactique des corps mécaniques. Son contexte Biotech ne prouve aucune valeur Core actuelle ni n'autorise son contenu : contrôle joueur/gestation/bosses restent hors du lot. Les XML/méthodes installés possèdent les coefficients ; le Web apporte seulement le contexte de conception.
+
+## Adaptations et portée
+
+PRNGxorshift et temps Core/local du socle, flotteurs quantifiés, classement/navigation/budgets locaux, une menace active, population de factions réduite, point d'entrée/staging et transport calibré restent adaptations déclarées. Une politique prospective séparée conserve les flux et agendas historiques non adoptés. Tickets absents non redistribués ; aucune parité mondiale ou composition exhaustive annoncée. Les essais futurs doivent contrôler ces raccords et ne déduisent ni débit CPU/GPU ni fréquence naturelle d'une scène préparée.
+
+### Apprentissage et carcasse : relevé complémentaire
+
+`Toils_Recipe.DoRecipeWork` compte les ticks de travail ; sans unfinishedThingDef, `FinishRecipeAndStartStoringProduct` apprend ticks×0,1×workSkillLearnFactor (défaut1) avant GenRecipe.MakeRecipeProducts. Concassage et broyage apprennent donc à la finition, puis le rendement lit le niveau obtenu ; Lisière compte les vrais ticks locaux et engage XP/rendement/RNG ensemble après prévalidation des sorties. Pas de progression fictive à la collecte. `ThingDefGenerator_Corpses` laisse fillPercent au défaut ThingDef0 : carcasse mécanique sans couvert ajouté. Extraction et empreintes inchangées : `tmp/mech-v213-next/recipe-corpse-provenance.json`, Core1.6.4871rev590.

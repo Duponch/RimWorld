@@ -70,6 +70,8 @@ export function prepareFlashstormDemo(generation: 'current' | 'pre-v210' = 'curr
   prepareClock(world);
   assert.equal(world.flashstorm, undefined);
   assert.equal(world.fires?.items.length ?? 0, 0);
+  // prepareClock recreates the calendar; strip only this historical adoption.
+  if (generation === 'pre-v210' && world.raids) delete world.raids.mechanoid;
   assert.deepEqual(validateWorld(world), []);
   return world;
 }

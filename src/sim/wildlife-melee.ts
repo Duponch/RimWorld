@@ -13,7 +13,7 @@ import type { disturbanceEvents } from './disturbance.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import type { Cell,World } from './types.ts';
 import { animalSpecies } from './animal-species.ts';
-import { combatTarget,isAnimalTarget } from './combat-target.ts';
+import { combatTarget,isAnimalTarget,isPawnTarget } from './combat-target.ts';
 import { animalPredationTarget,cancelAnimalPredation,reconcileAnimalPredation } from './wildlife-predation.ts';
 import { animalManhunterTarget } from './animal-manhunter.ts';
 import { isRoomDoor } from './door-rules.ts';
@@ -30,7 +30,7 @@ export function animalMeleeTools(a:WildAnimal):MeleeTool[]{
 export function animalMeleeTarget(w:World,a:WildAnimal,core:number,grid?:ShotGrid){
   const threat=a.threat;if(!threat||core>threat.harmedAtCore+400)return;
   const p=combatTarget(w,threat.targetId);
-  if(!p||p.id===a.id||['dead','downed','sleeping'].includes(p.state)||!isAnimalTarget(p)&&(p.medicalSleep||carrierOf(w,p.id))||(p.x-a.x)**2+(p.z-a.z)**2>9)return;
+  if(!p||p.id===a.id||['dead','downed','sleeping'].includes(p.state)||isPawnTarget(p)&&(p.medicalSleep||carrierOf(w,p.id))||(p.x-a.x)**2+(p.z-a.z)**2>9)return;
   return clearShotSegment(grid??captureWorldShotGrid(w),a,p)?p:undefined;
 }
 /** Bounded Dijkstra in the threat's 3-cell neighbourhood. It uses the same

@@ -70,6 +70,7 @@ export function bodyEfficiencies(input:BodyAssessmentInput,model=HUMAN_MODEL):Fl
 
 function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
   const efficiency=bodyEfficiencies(input,model),part=(id:BodyPartId)=>efficiency[model.index[id]]!;
+  if(model.kind==='scyther')return calculateScyther(part);
   const human=model.kind==='human';
   const pair=(a:BodyPartId,b:BodyPartId)=>(part(a)+part(b))/2;
   const bestPair=(a:BodyPartId,b:BodyPartId)=>.75*Math.max(part(a),part(b))+.25*Math.min(part(a),part(b));
@@ -105,6 +106,30 @@ function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
     breathing,bloodPumping,bloodFiltration,digestion});
   return Object.freeze({capacities,canBeAwake,movingCapable:moving>.15,painShock:input.pain>=.8,
     vitalFailure:part('torso')<=.0001||[consciousness,breathing,bloodPumping,bloodFiltration,digestion].some(value=>value<=0)});
+}
+/** Mechanical tags still feed the common capacity workers. The hidden neck
+ * breathing capacity participates in consciousness and movement, but is not a
+ * lethal biological dependency for this race. */
+function calculateScyther(part:(id:BodyPartId)=>number):BodyAssessment {
+  const round=capacityRounded;
+  const bloodPumping=round(part('scyther-reactor'));
+  const bloodFiltration=round((part('scyther-left-fluid-reprocessor')+part('scyther-right-fluid-reprocessor'))/2);
+  const breathing=round(part('scyther-neck'));
+  const consciousness=round(part('scyther-brain')*(.8+.2*Math.min(bloodPumping,1))*(.8+.2*Math.min(breathing,1))*(.9+.1*Math.min(bloodFiltration,1)));
+  const canBeAwake=consciousness>=.3;
+  let arms=0,legs=0,functionalLegs=0;
+  for(const side of ['left','right'] as const){
+    const fingers=(['pinky','middle-finger','index-finger','thumb'] as const).reduce((sum,id)=>sum+part(`scyther-${side}-${id}`),0)/4;
+    arms+=part(`scyther-${side}-shoulder`)*part(`scyther-${side}-arm`)*part(`scyther-${side}-hand`)*(.2+.8*fingers);
+    const leg=part(`scyther-${side}-leg`)*part(`scyther-${side}-foot`);legs+=leg;if(leg>0)functionalLegs++;
+  }
+  const moving=canBeAwake&&functionalLegs>=1?round(legs/2*(.8+.2*breathing)*(.8+.2*bloodPumping)*Math.min(consciousness,1)):0;
+  const bestPair=(a:BodyPartId,b:BodyPartId)=>round(.75*Math.max(part(a),part(b))+.25*Math.min(part(a),part(b)));
+  const capacities=Object.freeze({consciousness,moving,manipulation:canBeAwake?round(arms/2*consciousness):0,
+    sight:bestPair('scyther-left-sight-sensor','scyther-right-sight-sensor'),hearing:bestPair('scyther-left-hearing-sensor','scyther-right-hearing-sensor'),
+    talking:0,eating:0,breathing,bloodPumping,bloodFiltration,digestion:1});
+  return Object.freeze({capacities,canBeAwake,movingCapable:moving>.15,painShock:false,
+    vitalFailure:part('scyther-thorax')<=.0001||[consciousness,bloodPumping,bloodFiltration].some(value=>value<=0)});
 }
 export const HEALTHY_BODY:BodyAssessment=calculate(HEALTHY_BODY_INPUT);
 /** Caller supplies a current health projection. No cache keyed solely by pawn ID

@@ -66,6 +66,8 @@ export function prepareQuestDemo(generation:'current'|'pre-v210'='current'):Worl
   assert.equal(offer?.status,'offered','The public scene must contain a real scheduled offer.');
   assert.equal(world.raids!.active,undefined);
   assert.equal(world.pawns.length,3,'The asylum seeker is not pre-generated.');
+  // prepareClock recreates the calendar; strip only this historical adoption.
+  if(generation==='pre-v210'&&world.raids)delete world.raids.mechanoid;
   assert.deepEqual(validateWorld(world),[]);
   return world;
 }

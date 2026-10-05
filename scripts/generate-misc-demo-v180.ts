@@ -130,6 +130,8 @@ export function prepareMiscDemo(generation: 'current' | 'pre-v210' = 'current'):
   const refuge = clearRefuge(world);
   prepareRefuge(world, refuge);
   assert.ok(outdoorTemperature(world) > 15);
+  // prepareClock recreates the calendar; strip only this historical adoption.
+  if (generation === 'pre-v210' && world.raids) delete world.raids.mechanoid;
   assert.deepEqual(validateWorld(world), []);
   return world;
 }

@@ -84,6 +84,8 @@ import { furnitureObject, furnitureIntentAt } from './sim/furniture-rules';
 import { fireControls, updateFireControls } from './ui/fire-controls';
 import { PawnSelection } from './ui/pawn-selection';
 import { createAnimalInspector, updateAnimalInspector } from './ui/animal-inspector';
+import { createMechanoidInspector, updateMechanoidInspector } from './ui/mechanoid-inspection';
+import { mechanoidView } from './sim/mechanoid-presentation';
 import './ui/animal-inspector.css';
 import { animalSpecies } from './sim/animal-species';
 import { OrderMenu } from './ui/order-menu';
@@ -531,7 +533,7 @@ function updateMapCellDetails(force=false):void {
 function selectPawns(gesture:SelectionGesture,focus=false) {
   if(!snapshot||replacingWorld||frontMenu.isOpen())return;
   shootingControls.cancel();
-  selection.apply(gesture,new Set([...snapshot.pawns.map(p=>p.id),...(snapshot.wildlife?.animals??[]).map(a=>a.id)]));
+  selection.apply(gesture,new Set([...snapshot.pawns.map(p=>p.id),...(snapshot.wildlife?.animals??[]).map(a=>a.id),...(snapshot.mechanoids??[]).map(m=>m.id)]));
   selectedPawn=selection.single;selectedCell=undefined;
   selectedObject=undefined;renderer?.setSelectedObject(undefined);
   renderer?.setSelectedPawns(selection.ids);
@@ -585,7 +587,7 @@ function readStorageSettings(prefix: string) {
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > ITEM_DEFINITIONS.silver.stackLimit) throw new Error(`La capacité doit être un entier entre 1 et ${ITEM_DEFINITIONS.silver.stackLimit}.`);
   const conditions=readStorageConditionControls(el(`${prefix}-items`));
   return {
-    filters: { silver:el<HTMLInputElement>(`${prefix}-silver`).checked, corpse:el<HTMLInputElement>(`${prefix}-corpse`).checked, unfinished:el<HTMLInputElement>(`${prefix}-unfinished`).checked, textile:el<HTMLInputElement>(`${prefix}-textile`).checked, apparel:el<HTMLInputElement>(`${prefix}-apparel`).checked, weapon:el<HTMLInputElement>(`${prefix}-weapon`).checked, medicine:el<HTMLInputElement>(`${prefix}-medicine`).checked, component: el<HTMLInputElement>(`${prefix}-component`).checked, 'advanced-component':el<HTMLInputElement>(`${prefix}-advanced-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, gold:el<HTMLInputElement>(`${prefix}-gold`).checked, plasteel:el<HTMLInputElement>(`${prefix}-plasteel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
+    filters: { 'mech-corpse':el<HTMLInputElement>(`${prefix}-mech-corpse`).checked, silver:el<HTMLInputElement>(`${prefix}-silver`).checked, corpse:el<HTMLInputElement>(`${prefix}-corpse`).checked, unfinished:el<HTMLInputElement>(`${prefix}-unfinished`).checked, textile:el<HTMLInputElement>(`${prefix}-textile`).checked, apparel:el<HTMLInputElement>(`${prefix}-apparel`).checked, weapon:el<HTMLInputElement>(`${prefix}-weapon`).checked, medicine:el<HTMLInputElement>(`${prefix}-medicine`).checked, component: el<HTMLInputElement>(`${prefix}-component`).checked, 'advanced-component':el<HTMLInputElement>(`${prefix}-advanced-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, gold:el<HTMLInputElement>(`${prefix}-gold`).checked, plasteel:el<HTMLInputElement>(`${prefix}-plasteel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
     items:readStorageItemControls(el(`${prefix}-items`)),
     quality:conditions.quality,hitPoints:conditions.hitPoints,
     priority: Number(el<HTMLSelectElement>(`${prefix}-priority`).value), capacity,
@@ -600,16 +602,20 @@ function rebuildInspector() {
   dismissTooltip();
   const panel = el('inspector');
   panel.hidden = currentPanel !== null || (!selection.ids.size && !selectedCell);
-  panel.classList.remove('colonist-inspector-host','animal-inspector-host','cell-inspector-host');
+  panel.classList.remove('colonist-inspector-host','animal-inspector-host','mechanoid-inspector-host','cell-inspector-host');
   delete panel.dataset.colonistInspectorPawn;
   delete panel.dataset.colonistInspectorTab;
+  delete panel.dataset.mechanoidId;
   if(selection.ids.size>1) {
-    panel.innerHTML='<div class="panel-heading"><h2 id="group-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="group-members"></div><p class="muted">Choisissez une personne ou un animal pour consulter son dossier.</p>';
+    panel.innerHTML='<div class="panel-heading"><h2 id="group-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="group-members"></div><p class="muted">Choisissez un individu pour consulter son dossier.</p>';
     for(const id of selection.ids) {
       const button=document.createElement('button');button.dataset.groupPawn=String(id);button.onclick=()=>selectPawn(id);el('group-members').append(button);
     }
   } else if(selectedPawn!==undefined&&snapshot?.wildlife?.animals.some(a=>a.id===selectedPawn)) {
     createAnimalInspector(panel,{onTame:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId,enabled});renderState();}),onCarePolicy:(animalId,care)=>void attempt(async()=>{await client.command({type:'animal-care-policy',animalId,care});renderState();}),onHunt:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId,enabled});renderState();}),onClose:clearSelection});
+  } else if(selectedPawn!==undefined&&snapshot?.mechanoids?.some(m=>m.id===selectedPawn)) {
+    const current=()=>{const actor=snapshot?.mechanoids?.find(m=>m.id===selectedPawn);return snapshot&&actor?{world:snapshot,actor}:undefined;};
+    createMechanoidInspector(panel,current,clearSelection);
   } else if (selectedPawn !== undefined && snapshot?.pawns.some(p=>p.id===selectedPawn)) {
     const inspected=snapshot.pawns.find(p=>p.id===selectedPawn)!;
     const managed=isColonist(inspected)&&!inspected.prisoner;
@@ -651,6 +657,7 @@ function rebuildInspector() {
     if (storage) {
       el<HTMLInputElement>('selected-stockpile-silver').checked=storage.filters.silver??false;
       el<HTMLInputElement>('selected-stockpile-corpse').checked=storage.filters.corpse??false;
+      el<HTMLInputElement>('selected-stockpile-mech-corpse').checked=storage.filters['mech-corpse']??false;
       el<HTMLInputElement>('selected-stockpile-unfinished').checked=storage.filters.unfinished??false;
       el<HTMLInputElement>('selected-stockpile-textile').checked = storage.filters.textile??false;
       el<HTMLInputElement>('selected-stockpile-wood').checked = storage.filters.wood;
@@ -879,12 +886,13 @@ function renderState() {
     for(const button of el('group-members').querySelectorAll<HTMLButtonElement>('button')) {
       const pawn=world.pawns.find(p=>p.id===Number(button.dataset.groupPawn));
       const animal=world.wildlife?.animals.find(a=>a.id===Number(button.dataset.groupPawn));
-      button.textContent=pawn?`${pawn.name} · ${actionLabel(pawn,carriedPatients)}`:animal?`${animalSpecies(animal.species).label} ${animal.id}`:'Individu absent';
+      const mech=world.mechanoids?.find(m=>m.id===Number(button.dataset.groupPawn));
+      button.textContent=pawn?`${pawn.name} · ${actionLabel(pawn,carriedPatients)}`:animal?`${animalSpecies(animal.species).label} ${animal.id}`:mech?`Scyther ${mech.id} · ${mechanoidView(world,mech).action}`:'Individu absent';
     }
   } else if (selectedPawn !== undefined) {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
     if(pawn){const look=apparelAppearance(apparel.get(pawn.id));updatePawnAppearanceInspection(el('inspector'),world,pawn,{...look,color:look.color??pawnBaseColor(pawn.id)},equipment.get(pawn.id)?.item);}
-    if (!pawn) {if(!updateAnimalInspector(el('inspector'),world,selectedPawn))clearSelection();}
+    if (!pawn) {const actor=world.mechanoids?.find(m=>m.id===selectedPawn);if(actor)updateMechanoidInspector(el('inspector'),{world,actor});else if(!updateAnimalInspector(el('inspector'),world,selectedPawn))clearSelection();}
     else if(pawn.prisoner){
       el('selected-name').textContent=pawn.name;el('selected-action').textContent=actionLabel(pawn,carriedPatients);
       updatePrisonerInspection(el('inspector'),world,pawn);
@@ -1028,13 +1036,15 @@ function renderState() {
     alerts.push(`${pawn.name} · ${crisis.label}${crisis.target?` · cible : ${crisis.target.label}${crisis.target.type==='structure'?` (${crisis.target.cell.x}, ${crisis.target.cell.z})`:''}`:''}`);
   }
   const enemy=world.pawns.find(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p));
+  const mechanicalThreats=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed')??[];
+  if(mechanicalThreats.length)alerts.push(`${mechanicalThreats.length} Scyther(s) hostiles${world.raids?.mechActive?.phase==='staging'?' · regroupement avant assaut':world.raids?.mechActive?.phase==='assault'?' · assaut mécanique':''}`);
   for(const structure of world.structures)if(structure.turret?.wick){
     const view=miniTurretView(world,structure)!;alerts.push(`Mini-tourelle (${structure.x}, ${structure.z}) · mèche engagée · danger 3,9 · ${turretSeconds(view.wick!.remainingCore)}`);
   }
   const enraged=world.wildlife?.animals.filter(animal=>animal.manhunter&&animal.state!=='dead'&&animal.state!=='downed')??[];
   if(enraged.length)alerts.push(`${enraged.length} ${enraged.length>1?'animaux':'animal'} en rage`);
   const fires=world.fires?.items??[],fireAlert=el<HTMLButtonElement>('inspect-fire');fireAlert.hidden=!fires.length;fireAlert.textContent=`Incendie · ${fires.length} foyer${fires.length>1?'s':''} · voir`;fireAlert.onclick=()=>{const cell=firePosition(world,fires[0]!);if(cell){applyTool('select');pickCell(cell.x,cell.z);renderer?.focusCell(cell);}};
-  const threatButton=el<HTMLButtonElement>('inspect-threat'),mentalThreat=aggressiveCrises[0],threat=enemy??mentalThreat??enraged[0];threatButton.hidden=!threat;if(threat){threatButton.textContent=enemy?'Menace armée · voir':mentalThreat?`${mentalCrisisView(world,mentalThreat)!.label} · voir`:'Animal en rage · voir';threatButton.onclick=()=>selectPawn(threat.id);}
+  const threatButton=el<HTMLButtonElement>('inspect-threat'),mentalThreat=aggressiveCrises[0],threat=enemy??mechanicalThreats[0]??mentalThreat??enraged[0];threatButton.hidden=!threat;if(threat){threatButton.textContent=enemy?'Menace armée · voir':mechanicalThreats.length?'Menace mécanique · voir':mentalThreat?`${mentalCrisisView(world,mentalThreat)!.label} · voir`:'Animal en rage · voir';threatButton.onclick=()=>selectPawn(threat.id);}
   const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=colonists.length-living.length;
   const starving=living.filter(p=>(p.health?.malnutrition??0)>0).length;if(starving)alerts.push(`${starving} colon(s) en malnutrition`);
   const chilled=living.filter(p=>(p.health?.hypothermia??0)>=40000000).length;if(chilled)alerts.push(`${chilled} colon(s) en hypothermie`);
@@ -1242,7 +1252,7 @@ client.onSnapshot = (world, cost, speed, replaced, motion) => {
   snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
   if(soundEnabled)foliageAmbience.adopt(world);
   music.setMood(musicMood(world));
-  const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id)&&!world.wildlife?.animals.some(a=>a.id===id))||!!selectedObject&&!mapObjectExists(world,selectedObject);
+  const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id)&&!world.wildlife?.animals.some(a=>a.id===id)&&!world.mechanoids?.some(m=>m.id===id))||!!selectedObject&&!mapObjectExists(world,selectedObject);
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;renderer?.setSelectedObject(undefined);orderMenu.close();rebuildInspector();}
   else if(roleChanged){orderMenu.close();rebuildInspector();}
   renderer?.setWorld(world,replaced,speed,motion,true);

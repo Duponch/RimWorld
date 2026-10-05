@@ -1,5 +1,7 @@
+import { advanceMechanoidCombat } from './mechanoid-combat.ts';
+import { advanceMechanoidRaid } from './mechanoid-raids.ts';
 import { advanceAnimalMelee } from './wildlife-melee.ts';
-import { isAnimalTarget } from './combat-target.ts';
+import { isAnimalTarget,isMechanoidTarget,isPawnTarget } from './combat-target.ts';
 import { disturbanceEvents } from './disturbance.ts';
 import { advanceMelee } from './melee.ts';
 import { blockedCells } from './pathfinding.ts';
@@ -17,9 +19,9 @@ export function advanceWorldCombat(world:World):void {
   const disturbance=disturbanceEvents(world);
   const people=world.pawns.filter(p=>p.shooting||p.melee),targets=new Set(people.map(p=>p.melee?.order?.targetId));
   const animalTargets=new Set(world.wildlife?.animals.flatMap(a=>a.predation?[a.predation.targetId]:[])??[]);
-  const shooters=[...people,...(world.wildlife?.animals.filter(a=>a.predation||a.manhunter||a.threat||a.strike||a.retaliation||a.stun||targets.has(a.id)||animalTargets.has(a.id))??[])].sort((a,b)=>a.id-b.id);
+  const shooters=[...people,...(world.mechanoids?.filter(m=>m.melee||m.stun||m.stagger)??[]),...(world.wildlife?.animals.filter(a=>a.predation||a.manhunter||a.threat||a.strike||a.retaliation||a.stun||targets.has(a.id)||animalTargets.has(a.id))??[])].sort((a,b)=>a.id-b.id);
   const turrets=world.structures.filter(s=>s.kind==='mini-turret'&&s.turret);
-  if(!shooters.length&&!turrets.length){advanceWorldProjectiles(world,undefined,undefined,disturbance);return;}
+  if(!shooters.length&&!turrets.length){advanceWorldProjectiles(world,world.raids?.mechActive?core=>{advanceMechanoidRaid(world,core);return false;}:undefined,undefined,disturbance);return;}
   const owners=[...shooters.map(pawn=>({id:pawn.id,pawn})),...turrets.map(structure=>({id:structure.id,structure}))].sort((a,b)=>a.id-b.id);
   const batch=combatShotBatch(world);
   const capture=()=>{let index:ReturnType<typeof captureTurretTargets>|undefined;return {...shootingQueries(world,batch.read),turretTargets:()=>index??=captureTurretTargets(world)};};
@@ -27,6 +29,7 @@ export function advanceWorldCombat(world:World):void {
   let physical:Uint8Array|undefined;const contactGrid=()=>physical??=blockedCells(world,true);
   const invalidated=()=>{physical=undefined;batch.afterImpact();queries=capture();};
   advanceWorldProjectiles(world,core=>{
+    advanceMechanoidRaid(world,core);
     const due=turrets.filter(s=>{const t=s.turret!;return turretOperational(world,s)&&!t.holdFire&&!t.warmup&&!t.burst&&t.cooldownCore<=1&&t.ammoQ>=4&&turretHashDue(s,core);}).sort((a,b)=>a.id-b.id);
     // Clip the rotating window at the final ID. With a depleted pair budget,
     // every owner eventually becomes the first admitted consultation, including
@@ -40,7 +43,7 @@ export function advanceWorldCombat(world:World):void {
       advanceTurretOwner(world,s,core,queries,admitted.has(s.id)?budget:{remaining:0,pairs:0});continue;
     }
     const pawn=owner.pawn;
-    if(isAnimalTarget(pawn)?advanceAnimalMelee(world,pawn,core,contactGrid,queries.grid,disturbance):advanceMelee(world,pawn,core,contactGrid,queries,disturbance)){changed=true;invalidated();}
-    if(!isAnimalTarget(pawn))advanceShooter(world,pawn,core,queries);
+    if(isMechanoidTarget(pawn)?advanceMechanoidCombat(world,pawn,core,{blocked:contactGrid,grid:queries.grid}):isAnimalTarget(pawn)?advanceAnimalMelee(world,pawn,core,contactGrid,queries.grid,disturbance):advanceMelee(world,pawn,core,contactGrid,queries,disturbance)){changed=true;invalidated();}
+    if(isPawnTarget(pawn))advanceShooter(world,pawn,core,queries);
   }return changed;},invalidated,disturbance);
 }

@@ -1,7 +1,7 @@
 import type { Cell } from './types.ts';
 
 /** Intrinsic gun state belongs to the installed Structure, never to a Pawn or item. */
-export type TurretLivingKey = `pawn:${number}` | `animal:${number}`;
+export type TurretLivingKey = `pawn:${number}` | `animal:${number}` | `mech:${number}`;
 export type BombInstigatorKey = TurretLivingKey | `structure:${number}`;
 export interface TurretWick { startedAtCore:number; endCore:number; instigatorKey?:BombInstigatorKey }
 export interface MiniTurretState {

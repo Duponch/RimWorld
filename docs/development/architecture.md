@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V213 livré dans le périmètre contrôlé, schéma 194.** Première menace mécanique : arrivée, préparation, combat, carcasse entière et récupération au poste. [Contrat](scyther-v213.md), [recherche](../research/scyther-core-v213.md), [preuve et limites](../history/validation-scyther-v213.md). Régression hors campagnes longues : 532 fichiers, 2 411 réussis et un ignoré par reprises ; 41 nouveaux cas, trois parcours natifs, build et présentation. Autres mécanoïdes, famille/romance, planète et performance générale restent ouverts.
+
 **V212 livré dans le périmètre contrôlé, schéma 193.** État privé sur le bâtiment installé, profil intrinsèque distinct des armes d’inventaire, événements Bullet/Bomb triés par ID à chaque sous-tick Core, captures partagées et service réutilisant le transport. Le trajet refuge reste une autorité explicite pendant une crise. [Contrat](mini-turret-v212.md), [recherche](../research/mini-turret-core-v212.md), [preuve](../history/validation-mini-turret-v212.md). Les gros points d’entrée et limites générales CPU/GPU restent ouverts.
 
 **Repère V211, schéma 192, crises mentales livrées dans le périmètre contrôlé.** [Contrat](mental-crises-v211.md), [preuve](../history/validation-mental-crises-v211.md). Union de crises, catalogue partagé, admission spatiale bornée, autorité de mêlée privée, menace réelle et dégâts à cause explicite réutilisent le moteur existant. Migration stricte191 puis neutre ; aucune cible ni menace rétroactive.

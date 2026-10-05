@@ -5,6 +5,10 @@ import { commercialItemMassGrams } from '../sim/commercial-mass';
 import type { MaterialPile } from '../sim/types';
 import type { ObjectInformationInput, ObjectInformationRow } from './object-information';
 import { BODY_PARTS } from '../sim/body-definition';
+import { mechCorpseMass } from '../sim/mechanoid-corpse';
+import { SCYTHER_MODEL } from '../sim/mechanoid-anatomy';
+import { partMissing } from '../sim/injury-state';
+import { pileMaxHp,pileDamage } from '../sim/thing-damage-rules';
 
 /** Only delivered properties, evaluated on explicit inspection of one item. */
 export function itemInformation(pile:MaterialPile):ObjectInformationInput {
@@ -12,8 +16,15 @@ export function itemInformation(pile:MaterialPile):ObjectInformationInput {
   const add=(category:string,label:string,value:string,description:string)=>rows.push({category,label,value,description});
   add('Général','Quantité',String(pile.quantity),'Quantité réellement présente dans cette pile.');
   add('Général','Limite de pile',String(definition.stackLimit),'Quantité maximale d’une pile de cet objet.');
+  if(pile.mechCorpse){
+    add('Général','Masse restante',`${mechCorpseMass(pile).toFixed(3).replace('.',',')} kg`,'Masse de la carcasse entière, issue de la couverture naturelle des parties restantes. Les blessures seules ne retirent pas de matière.');
+    add('Général','Points de vie',`${pileMaxHp(pile)-pileDamage(pile)} / ${pileMaxHp(pile)}`,'État physique de l’objet transporté, distinct du dossier mécanique figé au décès.');
+    const missing=SCYTHER_MODEL.parts.filter(p=>partMissing(pile.mechCorpse!.health,p.id));
+    add('Dossier mécanique','Parties absentes',missing.length?missing.map(p=>p.label).join(', '):'Aucune','Absences réelles conservées à la neutralisation. La carcasse ne guérit pas et ne pourrit pas.');
+    add('Récupération','Usage','Concassage ou broyage','Une facture d’Artisanat consomme une carcasse entière au poste réel et produit de l’acier selon l’efficacité de l’artisan. Ce corps n’est pas un aliment ni une dépouille de boucherie.');
+  }
   const mass=commercialItemMassGrams(pile.item);
-  if(mass!==undefined)add('Général','Masse unitaire',`${mass/1000} kg`,'Masse utilisée par le chargement des expéditions commerciales ; elle ne limite pas le transport ordinaire sur la carte.');
+  if(mass!==undefined&&!pile.mechCorpse)add('Général','Masse unitaire',`${mass/1000} kg`,'Masse utilisée par le chargement des expéditions commerciales ; elle ne limite pas le transport ordinaire sur la carte.');
   if(definition.nutrition)add('Alimentation','Nutrition',String(definition.nutrition/100),'Nutrition par unité consommée. La jauge de nourriture de 100 points représente une unité de nutrition.');
   const quality=pile.weapon?.quality??pile.apparel?.quality;
   if(quality)add('Général','Qualité',QUALITY_LABELS[quality],'Qualité propre à cette instance, conservée pendant les déplacements et l’équipement.');
