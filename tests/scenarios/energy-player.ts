@@ -21,6 +21,22 @@ export type EnergyStage='construct'|'night'|'open'|'close'|'remove'|'rebuild'|'d
 export interface EnergyPlayerState {startTick:number;origin:Cell;stage:EnergyStage;stageTick:number;initialSteel:number;initialComponents:number;milestones:Record<string,number>;nightDrainTicks:number;previousBattery:number;electricMeals:number}
 const at=(a:Cell,x:number,z:number):Cell=>({x:a.x+x,z:a.z+z});
 export const energyPlan=(s:Pick<EnergyPlayerState,'origin'>)=>({origin:s.origin,cooler:at(s.origin,2,0),door:at(s.origin,4,2),bench:at(s.origin,2,9),labDoor:at(s.origin,4,9),stove:at(s.origin,7,2),generator:at(s.origin,14,1),solar:at(s.origin,14,5),battery:at(s.origin,14,9),switch:at(s.origin,10,5),cut:at(s.origin,11,5),coldCell:at(s.origin,2,2)});
+/** Maintain only actual installed devices at the notebook's observed sites.
+ * Blueprint cells and missing assets never create Home or a repair intention. */
+export function energyHomeDecisions(w:World,s:Pick<EnergyPlayerState,'origin'>):Decision[] {
+  const p=energyPlan(s),home=new Set(w.home),out:Decision[]=[];
+  const assets:[StructureKind,Cell][]=[['electric-stove',p.stove],['wood-generator',p.generator],['battery',p.battery],['solar-generator',p.solar],['power-switch',p.switch],['cooler',p.cooler]];
+  for(const [kind,cell] of assets){
+    const installed=w.structures.find(q=>q.kind===kind&&q.x===cell.x&&q.z===cell.z);
+    if(!installed)continue;
+    const cells=footprintCells(installed);
+    if(cells.every(c=>home.has(c.z*w.width+c.x)))continue;
+    out.push({reason:'Étendre le Foyer à cet appareil réellement installé pour permettre son entretien physique.',command:{type:'area',action:'home',
+      from:{x:Math.min(...cells.map(c=>c.x)),z:Math.min(...cells.map(c=>c.z))},
+      to:{x:Math.max(...cells.map(c=>c.x)),z:Math.max(...cells.map(c=>c.z))}}});
+  }
+  return out;
+}
 export function metalAccount(w:World,item:'steel'|'component'):number {
   return w.piles.reduce((n,p)=>n+(p.item===item?p.quantity:0),0)+w.structures.reduce((n,s)=>n+requiredMaterial(s,item),0)+w.packed.reduce((n,p)=>n+requiredMaterial(p.building,item),0)+(w.destroyed?.lost[item]??0)+(item==='steel'?w.deconstructed.lostSteel??0:w.deconstructed.lostComponents??0);
 }
@@ -95,6 +111,7 @@ export function energyDecisions(w:World,s:EnergyPlayerState):Decision[] {
     return out;
   }
   if(w.pawns.some(p=>p.draft)||base.some(d=>d.command.type.startsWith('order-tend')||d.command.type==='order-feed'||d.command.type==='order-rescue'))return base;
+  const maintenance=energyHomeDecisions(w,s);if(maintenance.length)return maintenance;
   const out=base.filter(d=>d.command.type!=='priority'),p=energyPlan(s),colonists=w.pawns.filter(isColonist),builder=colonists.reduce((a,b)=>a.skills.construction.level>=b.skills.construction.level?a:b),cook=colonists.reduce((a,b)=>(a.skills.cooking?.level??0)>=(b.skills.cooking?.level??0)?a:b),grower=colonists.find(q=>q!==builder&&q!==cook)!;
   const priority=(id:number,work:WorkType,value:number)=>{if(w.pawns.find(p=>p.id===id)!.priorities[work]!==value)out.push({reason:'Conserver cuisine, potager et soins ; faire la recherche entre les repas et extraire les matériaux nécessaires.',command:{type:'priority',pawnId:id,work,value}});};
   for(const pawn of colonists)for(const [work,value] of Object.entries({build:pawn===builder?1:3,cook:pawn===cook?1:3,grow:pawn===grower?1:3,haul:2,gather:2,mine:pawn===builder?1:3,basic:1,research:pawn===cook?1:0}) as [WorkType,number][])priority(pawn.id,work,value);

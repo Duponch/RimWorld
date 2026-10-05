@@ -1,3 +1,8 @@
+import { violentWorkRefusal } from '../../src/sim/colonist-backgrounds.ts';
+import { meleeContact,meleePlaces } from '../../src/sim/melee-space.ts';
+import { meleeTools } from '../../src/sim/melee-statistics.ts';
+import { medicallyStopped } from '../../src/sim/health-rules.ts';
+import { carrierOf } from '../../src/sim/rescue-state.ts';
 import { equippedWeapon } from '../../src/sim/equipment-rules.ts';
 import { isColonist } from '../../src/sim/affiliation.ts';
 import { queryOrderOptions } from '../../src/sim/player-orders.ts';
@@ -24,7 +29,7 @@ export const crashlandedThreatActive=(w:World):boolean=>!!w.raids?.active||!!w.r
  * Visible raids and animal-rage letters both suspend ordinary work and care. */
 export function crashlandedDecisions(w:World):Decision[] {
   const people=w.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed'&&!p.mental?.crisis);
-  const defender=people.find(p=>w.piles.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id));
+  const defender=people.find(p=>!violentWorkRefusal(p)&&!!equippedWeapon(w,p));
   const angry=w.wildlife?.animals.filter(a=>a.manhunter&&a.state!=='dead'&&a.state!=='downed')??[];
   if(angry.length){
     const inactive=people.filter(p=>!p.draft);
@@ -38,6 +43,15 @@ export function crashlandedDecisions(w:World):Decision[] {
       if(defender.draft?.holdFire)out.push({reason:'Autoriser le défenseur équipé à tirer sur la menace animale réelle.',command:{type:'fire-at-will',pawnIds:[defender.id],enabled:true}});
       const target=[...angry].sort((a,b)=>(a.x-defender.x)**2+(a.z-defender.z)**2-(b.x-defender.x)**2-(b.z-defender.z)**2||a.id-b.id)[0]!;
       if(defender.shooting?.order?.targetId!==target.id&&!defender.melee?.order){
+        const physical=blockedCells(w,true);
+        const atContact=meleeContact(w,defender,target,physical);
+        const meleeHere=atContact&&!violentWorkRefusal(defender)&&!medicallyStopped(defender)&&defender.state!=='sleeping'
+          &&!defender.need&&!defender.collapsePending&&!carrierOf(w,defender.id)&&meleeTools(w,defender).length>0
+          &&meleePlaces(w,defender,target).some(c=>c.x===defender.x&&c.z===defender.z);
+        if(meleeHere) {
+          out.push({reason:'L’animal hostile est au contact : combattre depuis la place effectivement atteinte, sans tir interdit ni poursuite anticipée.',command:{type:'melee',pawnIds:[defender.id],targetId:target.id}});
+          return out;
+        }
         const plan=shotPlan(w,defender,target.id,shootingQueries(w));
         if(!('reason' in plan))out.push({reason:'Viser l’animal en rage depuis la position effectivement atteinte.',command:{type:'shoot',pawnIds:[defender.id],targetId:target.id}});
         else if(!defender.draft?.target&&(defender.x!==camp.pin.x||defender.z!==camp.pin.z))out.push({reason:'Rejoindre le poste de défense devant l’entrée avec l’arme réellement équipée.',command:{type:'draft-move',pawnIds:[defender.id],target:camp.pin,queue:false}});

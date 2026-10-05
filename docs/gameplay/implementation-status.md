@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V215 — consolidation au schéma195 inchangé.** Défense au contact, noms historiques, entretien du Foyer et bilans physiques des campagnes corrigés. [Contrat](../development/campaign-consolidation-v215.md), [contrôles et limites](../history/validation-campaign-consolidation-v215.md). Régression hors campagnes longues :542fichiers,2457réussis/un ignoré ; la cohorte longue initiale reste distincte et ses cinq parcours en échec seront rejoués sur une copie figée. Planète/groupes restent en préparation.
+
 **V214 livré dans le périmètre contrôlé, schéma 195.** Proches annoncés, couples adultes, opinions dirigées, logement par deux lits possédés et deuil familial au décès réel. [Contrat](../development/family-v214.md), [recherche](../research/family-core-v214.md), [preuve et limites](../history/validation-family-v214.md). 537 fichiers/2 442 réussis/un ignoré, 31 nouveaux cas, build et parcours natif composé ; mariage, lit double, enfants, planète et performance générale restent ouverts.
 
 **V212 livré dans le périmètre contrôlé, schéma 193.** Mini-tourelle reliée au chantier, au courant, aux projectiles, au transport d’acier, aux dégâts, à l’explosion et au refuge physique. [Contrat](../development/mini-turret-v212.md), [règles Core et adaptations](../research/mini-turret-core-v212.md), [preuve](../history/validation-mini-turret-v212.md). Monde et famille/romance restent absents ; V213 livre le premier Scyther, sans catalogue mécanique exhaustif.

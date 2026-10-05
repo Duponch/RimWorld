@@ -1,3 +1,5 @@
+import { createWoodLedger,readWoodLedger,trackWoodStep,conservedWood,type WoodLedger } from './scenarios/wood-conservation.ts';
+import {createRepairLedger,readRepairLedger,trackMaintenanceStep,type RepairLedger} from './scenarios/repair-conservation.ts';
 import { writeTestFileSync } from './test-output.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -8,7 +10,7 @@ import { isColonist } from '../src/sim/affiliation.ts';
 import { climateTick } from '../src/sim/site-climate.ts';
 import { isPlant,plantGrowth } from '../src/sim/plants.ts';
 import { ITEM_DEFINITIONS,type ItemId } from '../src/sim/items.ts';
-import { foodAccount,woodAccount } from './scenarios/colony-player.ts';
+import { foodAccount } from './scenarios/colony-player.ts';
 import { metalAccount } from './scenarios/energy-player.ts';
 import type { PrisonPlayerState } from './scenarios/prison-player.ts';
 import { environmentDecisions,environmentSummary,newEnvironmentPlayer,observeEnvironment,type EnvironmentPlayerState } from './scenarios/environment-player.ts';
@@ -23,14 +25,13 @@ const expectedFixtureHash='8425c61539267e77315d43c91d5c036de5ea8a9b675d5ec48db86
 const prisonReport=JSON.parse(readFileSync('artifacts/prison-colony-v86.json','utf8')) as {player:PrisonPlayerState};
 const loadFixture=()=>deserializeWorld(fixtureBytes.toString('utf8'));
 interface Ledger {consumed:number;harvested:number;cooked:number;steelMined:number;componentsMined:number}
-interface Checkpoint {
+interface Checkpoint { woodLedger:WoodLedger;repairLedger:RepairLedger;
   protocol:'environment-v87';fixtureHash:string;world:string;player:EnvironmentPlayerState;ledger:Ledger;
   initial:{wood:number;food:number;animalEaten:number;steel:number;component:number};
   journal:{tick:number;reason:string;command:Command}[];observations:ReturnType<typeof environmentSummary>[];
 }
 const fireItem=(w:World,item:ItemId)=>w.fires?.ledger.items[item]??0;
 const fireFood=(w:World)=>Object.entries(w.fires?.ledger.items??{}).reduce((n,[item,quantity])=>n+(ITEM_DEFINITIONS[item as ItemId].kind==='food'?quantity:0),0);
-const woodWithFire=(w:World)=>woodAccount(w)+fireItem(w,'wood')+(w.fires?.ledger.woodPotentialLost??0)+((w.fires?.ledger.fuelTicksLost??0)+(w.fires?.ledger.fuelTicksBurned??0))/600;
 
 test('Environnement : préflight du vrai J76, adoption explicite, placements ordinaires et continuation',()=>{
   expect(fixtureHash).toBe(expectedFixtureHash);expect(JSON.parse(fixtureBytes.toString('utf8')).schemaVersion).toBe(86);
@@ -59,22 +60,24 @@ function runEnvironmentJourney():void {
   const input=process.env.ENVIRONMENT_CHECKPOINT,resumed:Checkpoint|undefined=input?JSON.parse(readFileSync(input,'utf8')):undefined;
   if(resumed&&(resumed.protocol!=='environment-v87'||resumed.fixtureHash!==fixtureHash))throw Error('Environment checkpoint must descend from the committed V86 colony.');
   let w:World=resumed?deserializeWorld(resumed.world):loadFixture();
+  const woodLedger=resumed?readWoodLedger(resumed.woodLedger):createWoodLedger();
+  const repairLedger=resumed?readRepairLedger(resumed.repairLedger):createRepairLedger();
   const player=resumed?.player??newEnvironmentPlayer(w,prisonReport.player),started=performance.now();
   const ledger:Ledger=resumed?.ledger??{consumed:0,harvested:0,cooked:0,steelMined:0,componentsMined:0};
-  const initial=resumed?.initial??{wood:woodWithFire(w),food:foodAccount(w)+fireFood(w),animalEaten:w.wildlife?.eatenItems??0,steel:metalAccount(w,'steel')+fireItem(w,'steel'),component:metalAccount(w,'component')+fireItem(w,'component')};
+  const initial=resumed?.initial??{wood:conservedWood(w,woodLedger),food:foodAccount(w)+fireFood(w),animalEaten:w.wildlife?.eatenItems??0,steel:metalAccount(w,'steel')+fireItem(w,'steel'),component:metalAccount(w,'component')+fireItem(w,'component')};
   const journal:Checkpoint['journal']=resumed?.journal??[],observations:Checkpoint['observations']=resumed?.observations??[];
-  const checkpoint=():Checkpoint=>({protocol:'environment-v87',fixtureHash,world:serializeWorld(w),player,ledger,initial,journal,observations});
+  const checkpoint=():Checkpoint=>({protocol:'environment-v87',fixtureHash,world:serializeWorld(w),player,ledger,woodLedger,repairLedger,initial,journal,observations});
   // A failed validator is itself evidence: preserve raw authoritative state
   // instead of asking the strict serializer to accept that invalid world.
-  const failureFile='tmp/environment-failed-v87.json';onTestFailed(()=>writeTestFileSync(failureFile,JSON.stringify({protocol:'environment-v87',fixtureHash,world:JSON.stringify(w),player,ledger,initial,journal,observations,validation:validateWorld(w)})));
+  const failureFile='tmp/environment-failed-v87.json';onTestFailed(()=>writeTestFileSync(failureFile,JSON.stringify({protocol:'environment-v87',fixtureHash,world:JSON.stringify(w),player,ledger,woodLedger,repairLedger,initial,journal,observations,validation:validateWorld(w)})));
   const context=()=>JSON.stringify({tick:w.tick,ledger,latest:observations.at(-1),checkpoint:failureFile});
   const observe=()=>{
     observations.push(structuredClone(environmentSummary(w,player)));const c=context();
     expect(validateWorld(w),c).toEqual([]);
     expect(player.initialPeople.every(id=>w.pawns.some(p=>p.id===id&&isColonist(p)&&p.state!=='dead')),c).toBe(true);
-    expect(woodWithFire(w),c).toBeCloseTo(initial.wood,7);
+    expect(conservedWood(w,woodLedger),c).toBeCloseTo(initial.wood,7);
     expect(metalAccount(w,'steel')+fireItem(w,'steel'),c).toBe(initial.steel+ledger.steelMined);
-    expect(metalAccount(w,'component')+fireItem(w,'component'),c).toBe(initial.component+ledger.componentsMined);
+    expect(metalAccount(w,'component')+fireItem(w,'component')+repairLedger.spent,c).toBe(initial.component+ledger.componentsMined);
     expect(foodAccount(w)+fireFood(w)+ledger.consumed+9*ledger.cooked+(w.wildlife?.eatenItems??0)-initial.animalEaten,c).toBe(initial.food+ledger.harvested);
   };
   const continuation=()=>{
@@ -96,7 +99,7 @@ function runEnvironmentJourney():void {
     }
     const beforeMilestones=Object.keys(player.milestones).join(',');
     const mines=w.jobs.filter(j=>j.kind==='mine').flatMap(j=>{const tile=w.tiles[j.z*w.width+j.x]!;return tile.ore?[{cell:j.z*w.width+j.x,ore:tile.ore}]:[];});
-    stepWorld(w);
+    trackMaintenanceStep(w,repairLedger,()=>trackWoodStep(w,woodLedger,()=>stepWorld(w)));
     for(const target of mines)if(w.tiles[target.cell]!.terrain!=='rock'){if(target.ore==='steel')ledger.steelMined+=40;else if(target.ore==='machinery')ledger.componentsMined+=2;}
     for(const e of w.events.filter(e=>e.tick===w.tick)){
       const eaten=e.message.match(/a mangé une portion \((\d+) ×/);
@@ -110,7 +113,7 @@ function runEnvironmentJourney():void {
     if(w.tick%6000===0){observe();continuation();const data=JSON.stringify(checkpoint());writeTestFileSync('tmp/environment-latest-v87.json',data);writeTestFileSync(`tmp/environment-day${w.tick/6000}-v87.json`,data);console.info(`Environnement J${w.tick/6000} : ${observations.at(-1)!.date.season}, ${observations.at(-1)!.outside.toFixed(1)} °C, ${ledger.cooked} repas produits, ${player.winterMeals} ingestions en hiver, ${player.springHarvested} récoltés depuis le printemps.`);}
     if(player.milestones.springReturn!==undefined&&player.springHarvested>0&&['heatedHome','winterHeating','windSupply','nightBattery','winterGrowthSlowed'].every(k=>player.milestones[k]!==undefined)&&player.winterMeals>0)break;
   }
-  observe();continuation();const final=environmentSummary(w,player),report={protocol:'environment-v87',fixtureHash,resumed:!!resumed,fromTick:resumed?JSON.parse(resumed.world).tick:player.startTick,runtimeMs:performance.now()-started,initial,ledger,player,journal,observations,final};
+  observe();continuation();const final=environmentSummary(w,player),report={protocol:'environment-v87',fixtureHash,resumed:!!resumed,fromTick:resumed?JSON.parse(resumed.world).tick:player.startTick,runtimeMs:performance.now()-started,initial,woodLedger,repairLedger,ledger,player,journal,observations,final};
   if(until!==undefined){writeTestFileSync('artifacts/environment-diagnostic-v87.json',JSON.stringify(report));writeTestFileSync('tmp/environment-diagnostic-v87.json',JSON.stringify(checkpoint()));return;}
   writeTestFileSync('artifacts/environment-colony-v87.json',JSON.stringify(report));writeTestFileSync('tmp/environment-final-v87.json',serializeWorld(w));writeTestFileSync('tmp/environment-final-checkpoint-v87.json',JSON.stringify(checkpoint()));
   for(const name of ['winter','winterGrowthSlowed','heatedHome','winterHeating','windSupply','nightBattery','springReturn'])expect(player.milestones[name],context()).toBeGreaterThanOrEqual(player.startTick);

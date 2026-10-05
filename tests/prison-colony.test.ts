@@ -1,3 +1,5 @@
+import { createWoodLedger,readWoodLedger,trackWoodStep,conservedWood,type WoodLedger } from './scenarios/wood-conservation.ts';
+import {createRepairLedger,readRepairLedger,trackMaintenanceStep,type RepairLedger} from './scenarios/repair-conservation.ts';
 import { writeTestFileSync } from './test-output.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -21,7 +23,7 @@ const expectedFixtureHash='514086e50ea7a571dbdc8e5540e5c9cdcaa8113cc3dba51a7e06d
 const energyReport=JSON.parse(readFileSync('artifacts/energy-colony-v85.json','utf8')) as {player:EnergyPlayerState};
 const loadFixture=()=>deserializeWorld(fixtureBytes.toString('utf8'));
 interface Ledger {consumed:number;harvested:number;cooked:number;steelMined:number;componentsMined:number;medicineConsumed:number;meals:Record<number,number>;mealsByStation:Record<string,number>}
-interface Checkpoint {
+interface Checkpoint { woodLedger:WoodLedger;repairLedger:RepairLedger;
   protocol:'prison-v86';fixtureHash:string;world:string;player:PrisonPlayerState;ledger:Ledger;
   initial:{wood:number;food:number;animalEaten:number;steel:number;component:number;medicine:number};
   journal:{tick:number;reason:string;command:Command}[];observations:ReturnType<typeof prisonSummary>[];
@@ -82,19 +84,21 @@ function runPrisonJourney(stopTick?:number):void {
   const input=process.env.PRISON_CHECKPOINT,resumed:Checkpoint|undefined=input?JSON.parse(readFileSync(input,'utf8')):undefined;
   if(resumed&&(resumed.protocol!=='prison-v86'||resumed.fixtureHash!==fixtureHash))throw Error('Prison checkpoint must descend from the committed V85 colony.');
   let w:World=resumed?deserializeWorld(resumed.world):loadFixture();
+  const woodLedger=resumed?readWoodLedger(resumed.woodLedger):createWoodLedger();
+  const repairLedger=resumed?readRepairLedger(resumed.repairLedger):createRepairLedger();
   if(stopTick!==undefined&&(!resumed||!Number.isSafeInteger(stopTick)||stopTick<=w.tick||stopTick>w.tick+2*6000))throw Error('Combat diagnostic requires an actual checkpoint and a limit within two days.');
   const player=resumed?.player??newPrisonPlayer(w,energyReport.player),started=performance.now(),diagnostic=process.env.PRISON_DIAGNOSTIC==='1';
   const ledger:Ledger=resumed?.ledger??{consumed:0,harvested:0,cooked:0,steelMined:0,componentsMined:0,medicineConsumed:0,meals:{},mealsByStation:{}};
-  const initial=resumed?.initial??{wood:woodAccount(w),food:foodAccount(w),animalEaten:w.wildlife?.eatenItems??0,steel:metalAccount(w,'steel'),component:metalAccount(w,'component'),medicine:medicines(w)};
+  const initial=resumed?.initial??{wood:conservedWood(w,woodLedger),food:foodAccount(w),animalEaten:w.wildlife?.eatenItems??0,steel:metalAccount(w,'steel'),component:metalAccount(w,'component'),medicine:medicines(w)};
   const journal:Checkpoint['journal']=resumed?.journal??[],observations:Checkpoint['observations']=resumed?.observations??[];
-  const checkpoint=():Checkpoint=>({protocol:'prison-v86',fixtureHash,world:serializeWorld(w),player,ledger,initial,journal,observations});
-  const failureFile=stopTick===undefined?'tmp/prison-failed-v86.json':'tmp/prison-combat-diagnostic-failed-v86.json';onTestFailed(()=>writeTestFileSync(failureFile,JSON.stringify(checkpoint())));
+  const checkpoint=(world=serializeWorld(w)):Checkpoint=>({protocol:'prison-v86',fixtureHash,world,player,ledger,woodLedger,repairLedger,initial,journal,observations});
+  const failureFile=stopTick===undefined?'tmp/prison-failed-v86.json':'tmp/prison-combat-diagnostic-failed-v86.json';onTestFailed(()=>writeTestFileSync(failureFile,JSON.stringify({...checkpoint(JSON.stringify(w)),validation:validateWorld(w)})));
   const context=()=>JSON.stringify({tick:w.tick,player,ledger,latest:observations.at(-1),checkpoint:failureFile});
   const observe=()=>{
     observations.push(structuredClone(prisonSummary(w,player)));const c=context();
     expect(validateWorld(w),c).toEqual([]);expect(survivorPlan(w,true).anchor,c).toEqual(player.campAnchor);
-    expect(woodAccount(w),c).toBeCloseTo(initial.wood,7);
-    expect(metalAccount(w,'steel'),c).toBe(initial.steel+ledger.steelMined);expect(metalAccount(w,'component'),c).toBe(initial.component+ledger.componentsMined);
+    expect(conservedWood(w,woodLedger),c).toBeCloseTo(initial.wood,7);
+    expect(metalAccount(w,'steel'),c).toBe(initial.steel+ledger.steelMined);expect(metalAccount(w,'component')+repairLedger.spent,c).toBe(initial.component+ledger.componentsMined);
     expect(foodAccount(w)+captiveMealInTransit(w)+ledger.consumed+9*ledger.cooked+(w.wildlife?.eatenItems??0)-initial.animalEaten,c).toBe(initial.food+ledger.harvested);
     expect(player.initialColonists.every(id=>w.pawns.some(p=>p.id===id&&isColonist(p)&&p.state!=='dead')),c).toBe(true);
   };
@@ -117,7 +121,7 @@ function runPrisonJourney(stopTick?:number):void {
     const beforeMilestones=Object.keys(player.milestones).join(','),stations=new Map(w.pawns.flatMap(p=>{const station=w.structures.find(s=>s.id===p.cooking?.stationId);return station?[[p.name,station.kind] as const]:[];}));
     const names=new Map(w.pawns.map(p=>[p.name,p.id])),tenders=new Map(w.pawns.filter(p=>p.tend).map(p=>[p.name,p.tend!.patientId]));
     const mines=w.jobs.filter(j=>j.kind==='mine').flatMap(j=>{const tile=w.tiles[j.z*w.width+j.x]!;return tile.ore?[{cell:j.z*w.width+j.x,ore:tile.ore}]:[];});
-    const medicineBefore=medicines(w);stepWorld(w);
+    const medicineBefore=medicines(w);trackMaintenanceStep(w,repairLedger,()=>trackWoodStep(w,woodLedger,()=>stepWorld(w)));
     ledger.medicineConsumed+=Math.max(0,medicineBefore-medicines(w));
     for(const target of mines)if(w.tiles[target.cell]!.terrain!=='rock'){if(target.ore==='steel')ledger.steelMined+=40;else if(target.ore==='machinery')ledger.componentsMined+=2;}
     for(const e of w.events.filter(e=>e.tick===w.tick)){
@@ -137,7 +141,7 @@ function runPrisonJourney(stopTick?:number):void {
     }else if(diagnostic&&w.tick%1000===0)console.info(`Prison tick ${w.tick}, ${(performance.now()-started).toFixed(0)} ms, cible ${player.targetId??'aucune'}, ${w.jobs.length} travaux.`);
     if(player.milestones.recruited&&player.milestones.colonistBed&&w.tick-player.milestones.recruited>=2*6000&&player.recruitMeals>=3&&player.recruitWorkTicks>0&&player.recruitSleepTicks>0)break;
   }
-  observe();continuation();const final=prisonSummary(w,player),report={protocol:'prison-v86',fixtureHash,resumed:!!resumed,fromTick:resumed?JSON.parse(resumed.world).tick:player.startTick,runtimeMs:performance.now()-started,initial,ledger,player,journal,observations,final};
+  observe();continuation();const final=prisonSummary(w,player),report={protocol:'prison-v86',fixtureHash,resumed:!!resumed,fromTick:resumed?JSON.parse(resumed.world).tick:player.startTick,runtimeMs:performance.now()-started,initial,woodLedger,repairLedger,ledger,player,journal,observations,final};
   if(stopTick!==undefined){
     writeTestFileSync('artifacts/prison-combat-diagnostic-v86.json',JSON.stringify(report));writeTestFileSync('tmp/prison-combat-diagnostic-v86.json',JSON.stringify(checkpoint()));
     expect(player.initialColonists.every(id=>w.pawns.some(p=>p.id===id&&isColonist(p)&&p.state!=='dead')),context()).toBe(true);

@@ -7,7 +7,7 @@ export function captureRelationshipPeople(world: World): RelationshipPeople {
   const people = new Map<number, RelationshipPerson>();
   const add = (person: RelationshipPerson): void => {
     if (!Number.isSafeInteger(person.id) || person.id < 1 || person.id >= world.nextId
-      || typeof person.name !== 'string' || !person.name.trim() || person.name.length > 48)
+      || typeof person.name !== 'string' || person.name.length < 1 || person.name.length > 80)
       throw new Error('Invalid human relationship identity.');
     if (people.has(person.id)) throw new Error('Duplicate human relationship owner.');
     people.set(person.id, person);

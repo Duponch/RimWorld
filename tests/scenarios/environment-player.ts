@@ -161,7 +161,20 @@ export function environmentDecisions(w:World,s:EnvironmentPlayerState):Decision[
   for(const c of s.wire)if(!plannedDevices.some(p=>same(p,c))&&!w.structures.some(q=>isPowerTransmitter(q.kind)&&footprintCells(q).some(p=>same(p,c))))designate('power-conduit',c);
   const turbine=existing(w,'wind-turbine',s.turbine);if(turbine&&!turbine.wind?.autoCut)out.push({reason:'Entretenir le passage du vent par de vrais travaux de coupe.',command:{type:'wind-auto-cut',structureId:turbine.id,enabled:true}});
   const homeCells=[...s.heaters,...s.wire,...footprintCells({...s.turbine,kind:'wind-turbine'})];
-  const home=new Set(w.home);for(const cell of homeCells)if(!home.has(cell.z*w.width+cell.x)){home.add(cell.z*w.width+cell.x);out.push({reason:'Inclure les nouveaux appareils et câbles dans le foyer à réparer et protéger du feu.',command:{type:'area',action:'home',from:cell,to:cell}});}
+  const home=new Set(w.home);
+  // Earlier policies can already paint an installed device. Simulate only the
+  // queued Home coverage so this same batch never repeats a now-empty command.
+  for(let i=0;i<out.length;i++){
+    const command=out[i]!.command;
+    if(command.type!=='area'||command.action!=='home')continue;
+    let added=false;
+    for(let z=Math.min(command.from.z,command.to.z);z<=Math.max(command.from.z,command.to.z);z++)
+      for(let x=Math.min(command.from.x,command.to.x);x<=Math.max(command.from.x,command.to.x);x++){
+        const cell=z*w.width+x;if(!home.has(cell)){home.add(cell);added=true;}
+      }
+    if(!added)out.splice(i--,1);
+  }
+  for(const cell of homeCells)if(!home.has(cell.z*w.width+cell.x)){home.add(cell.z*w.width+cell.x);out.push({reason:'Inclure les nouveaux appareils et câbles dans le foyer à réparer et protéger du feu.',command:{type:'area',action:'home',from:cell,to:cell}});}
   const field=s.field;
   for(const tree of w.resources.filter(r=>r.kind==='tree'&&r.x>=field.from.x&&r.x<=field.to.x&&r.z>=field.from.z&&r.z<=field.to.z))designate('chop',tree);
   const grow={type:'area' as const,action:'growing' as const,...field},query=queryArea(w,grow);if(query.ok&&query.cells.length)out.push({reason:'Augmenter les semis de riz pour préparer les réserves des quatre habitants.',command:grow});

@@ -1,4 +1,6 @@
-# Validation courante — défense automatisée V212
+# Validation courante — consolidation V215
+
+**V215 — consolidation au schéma195 inchangé.** Défense au contact, noms historiques, entretien du Foyer et bilans physiques des campagnes corrigés. [Contrat](campaign-consolidation-v215.md), [contrôles et limites](../history/validation-campaign-consolidation-v215.md). Régression hors campagnes longues :542fichiers,2457réussis/un ignoré ; la cohorte longue initiale reste distincte et ses cinq parcours en échec seront rejoués sur une copie figée. Planète/groupes restent en préparation.
 
 **V214 livré dans le périmètre contrôlé, schéma 195.** Proches annoncés, couples adultes, opinions dirigées, logement par deux lits possédés et deuil familial au décès réel. [Contrat](family-v214.md), [recherche](../research/family-core-v214.md), [preuve et limites](../history/validation-family-v214.md). 537 fichiers/2 442 réussis/un ignoré, 31 nouveaux cas, build et parcours natif composé ; mariage, lit double, enfants, planète et performance générale restent ouverts.
 

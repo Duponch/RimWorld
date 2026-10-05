@@ -45,7 +45,7 @@ export function considerAutomaticCombat(world:World,p:Pawn,budget:SearchBudget,a
   if(adjacent||!profile) {
     if(kind==='draft'&&!adjacent||!meleeTools(world,p).length)return;
     for(const t of adjacent?[adjacent]:candidates) {
-      if(!clearShotSegment(queries.grid(),p,t))continue;
+      if(!contact(t)&&!clearShotSegment(queries.grid(),p,t))continue;
       let path:Pawn['path']=[];
       if(!contact(t)) {
         if(!budget.remaining||p.planCooldown)return;budget.remaining--;

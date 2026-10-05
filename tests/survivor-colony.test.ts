@@ -1,9 +1,11 @@
+import { createWoodLedger,readWoodLedger,trackWoodStep,conservedWood,type WoodLedger } from './scenarios/wood-conservation.ts';
+import {createRepairLedger,readRepairLedger,trackMaintenanceStep,type RepairLedger} from './scenarios/repair-conservation.ts';
 import { writeTestFileSync } from './test-output.ts';
 import { readFileSync } from 'node:fs';
 import { expect, onTestFailed, test } from 'vitest';
 import { applyCommand, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
-import { foodAccount, woodAccount } from './scenarios/colony-player.ts';
+import { foodAccount } from './scenarios/colony-player.ts';
 import { survivorDecisions, survivorInitialAreas, survivorPlan, survivorSummary } from './scenarios/survivor-player.ts';
 import type { Command, World } from '../src/sim/types.ts';
 
@@ -64,7 +66,7 @@ test('Survivants : ancre spatiale conservée pendant livraison, achèvement part
 
 type Summary=ReturnType<typeof survivorSummary>;
 interface Ledger {consumed:number;harvested:number;cooked:number;meals:Record<number,number>;sleep:Record<number,number>}
-interface Checkpoint {
+interface Checkpoint { woodLedger:WoodLedger;repairLedger:RepairLedger;
   seed:number;world:string;initial:{wood:number;food:number;steel:number;component:number};ledger:Ledger;
   milestones:Record<string,number>;journal:{tick:number;reason:string;command:Command}[];observations:Summary[];
 }
@@ -74,19 +76,21 @@ const resumed:Checkpoint|undefined=checkpointFile?JSON.parse(readFileSync(checkp
 test.each(resumed?[resumed.seed]:[42,93,2048])('Survivants : trois jours dans la colonie naturelle, graine %i',seed=>{
   const version=process.env.VALIDATION_VERSION??'v80';
   let w:World=resumed?deserializeWorld(resumed.world):createScenarioWorld(seed,250,'survivors');
-  const initial=resumed?.initial??{wood:woodAccount(w),food:foodAccount(w),steel:450,component:30};
+  const woodLedger=resumed?readWoodLedger(resumed.woodLedger):createWoodLedger();
+  const repairLedger=resumed?readRepairLedger(resumed.repairLedger):createRepairLedger();
+  const initial=resumed?.initial??{wood:conservedWood(w,woodLedger),food:foodAccount(w),steel:450,component:30};
   const ledger:Ledger=resumed?.ledger??{consumed:0,harvested:0,cooked:0,meals:Object.fromEntries(w.pawns.map(p=>[p.id,0])),sleep:Object.fromEntries(w.pawns.map(p=>[p.id,0]))};
   const milestones:Record<string,number>=resumed?.milestones??{},journal:Checkpoint['journal']=resumed?.journal??[],observations:Summary[]=resumed?.observations??[];
-  const checkpoint=():Checkpoint=>({seed,world:serializeWorld(w),initial,ledger,milestones,journal,observations});
+  const checkpoint=(world=serializeWorld(w)):Checkpoint=>({seed,world,initial,woodLedger,repairLedger,ledger,milestones,journal,observations});
   const failureFile=`tmp/survivor-failed-${version}-${seed}.json`;
-  onTestFailed(()=>writeTestFileSync(failureFile,JSON.stringify(checkpoint())));
+  onTestFailed(()=>writeTestFileSync(failureFile,JSON.stringify({...checkpoint(JSON.stringify(w)),validation:validateWorld(w)})));
   const record=(name:string,yes:boolean)=>{if(yes&&milestones[name]===undefined)milestones[name]=w.tick;};
   const observe=()=>{
     const s=survivorSummary(w);observations.push(s);
     const context=`seed ${seed}, tick ${w.tick}; checkpoint ${failureFile}`;
     expect(validateWorld(w),context).toEqual([]);
-    expect(woodAccount(w),context).toBeCloseTo(initial.wood,7);
-    expect(s.materials,context).toEqual({steel:initial.steel,component:initial.component});
+    expect(conservedWood(w,woodLedger),context).toBeCloseTo(initial.wood,7);
+    expect({...s.materials,component:s.materials.component+repairLedger.spent},context).toEqual({steel:initial.steel,component:initial.component});
     expect(foodAccount(w)+ledger.consumed+9*ledger.cooked+(w.wildlife?.eatenItems??0),context).toBe(initial.food+ledger.harvested);
     expect(w.pawns.every(p=>p.state!=='dead'&&p.state!=='downed'&&p.hunger>0&&p.rest>0),context).toBe(true);
     record('threeBeds',s.beds===3);record('shelter',s.shelteredBeds===3&&s.walls===15&&s.doors===1);
@@ -100,7 +104,7 @@ test.each(resumed?[resumed.seed]:[42,93,2048])('Survivants : trois jours dans la
       for(const d of survivorDecisions(w)){expect(applyCommand(w,d.command),JSON.stringify({seed,tick:w.tick,decision:d})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}
       observe();
     }
-    stepWorld(w);
+    trackMaintenanceStep(w,repairLedger,()=>trackWoodStep(w,woodLedger,()=>stepWorld(w)));
     for(const e of w.events)if(e.tick===w.tick) {
       const eaten=e.message.match(/a mangé une portion \((\d+) ×/);
       if(eaten){ledger.consumed+=Number(eaten[1]);const pawn=w.pawns.find(p=>e.message.startsWith(`${p.name} a mangé`));if(pawn)ledger.meals[pawn.id]=(ledger.meals[pawn.id]??0)+1;}
@@ -115,7 +119,7 @@ test.each(resumed?[resumed.seed]:[42,93,2048])('Survivants : trois jours dans la
       console.info(`Survivants ${seed}: day ${w.tick/6000}, ${w.structures.length} structures, ${w.jobs.length} jobs`);
     }
   }
-  const final=observe(),report={seed,initial,ledger,milestones,journal,observations,final};
+  const final=observe(),report={seed,initial,woodLedger,repairLedger,ledger,milestones,journal,observations,final};
   writeTestFileSync(`tmp/survivor-final-${version}-${seed}.json`,serializeWorld(w));writeTestFileSync(`artifacts/survivor-colony-${version}-${seed}.json`,JSON.stringify(report,null,2));
   const context=JSON.stringify({seed,milestones,ledger,final});
   expect(w.pawns,context).toHaveLength(3);expect(final.beds,context).toBe(3);expect(final.shelteredBeds,context).toBe(3);
