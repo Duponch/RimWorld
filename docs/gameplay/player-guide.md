@@ -1,6 +1,20 @@
 # Guide joueur
 
-**Schéma courant 191 — V210, passé personnel en validation.** Les règles et limites du lot sont dans le [contrat](../development/colonist-backgrounds-v210.md) et sa [preuve](../history/validation-colonist-backgrounds-v210.md).
+**Schéma courant 192 — V211, crises mentales livrées dans le périmètre contrôlé.** Les règles et limites du lot sont dans le [contrat](../development/mental-crises-v211.md) et sa [preuve](../history/validation-mental-crises-v211.md). Le passé personnel V210 est livré.
+
+## Faire face aux crises mentales — V211
+
+Une humeur durablement basse peut provoquer un épisode mineur, majeur ou extrême. Le seuil est individuel et l’exposition ne garantit pas un déclenchement immédiat. L’errance triste et la frénésie alimentaire restent disponibles ; les nouveaux états ont des conséquences différentes.
+
+| Crise | Conséquence observable | Réponse possible |
+| --- | --- | --- |
+| Crise de destruction | Le colon refuse le travail et frappe des bâtiments accessibles. | Surveiller leurs PV et réparer après les dégâts ; les matériaux et carburants perdus restent comptés. |
+| Fureur violente | Le colon devient temporairement hostile et attaque des humains ou animaux. Il cesse de poursuivre une victime à terre. | Régler les autres colons sur Fuir, Attaquer ou Ignorer et utiliser les moyens de défense existants. |
+| Colère meurtrière | Le colon poursuit une victime précise et continue après sa chute. | Protéger la victime ; une personne secourue et portée cesse d’être une cible admissible. Les témoins ne deviennent pas automatiquement ennemis. |
+
+Le dossier Besoins et les alertes montrent le nom réel de la crise et sa cible quand elle existe. Le journal « Crises » conserve le début et sa cause observée. Les ordres sont refusés pendant l’épisode ; un passé non violent ne garantit pas l’absence de violence involontaire.
+
+Déplacements, coups, blessures et destructions se produisent dans la simulation. La récupération naturelle, le sommeil ou la chute de l’agresseur vivant mettent fin à la crise et donnent une catharsis temporaire, avec délai avant un nouvel épisode. Les anciennes tâches interrompues ne reprennent pas leurs réservations abandonnées. Arrestation et abandon de colonie restent différés ; le catalogue Core n’est pas complet.
 
 ## Comprendre le passé et les incapacités — V210
 

@@ -15,7 +15,7 @@ import { retryInterruptedCargo } from './interrupted-cargo.ts';
 import type { LightReader } from './light-environment.ts';
 import type { NavigationGrid,SearchBudget } from './work-planner.ts';
 import type { Cell,Pawn,World } from './types.ts';
-import { hostileCandidates,isAnimalTarget,type LivingTarget } from './combat-target.ts';
+import { hostileCandidates,isAnimalTarget,meleeThreatTarget,type LivingTarget } from './combat-target.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 
 export interface FleeState { target:Cell; /** Zero while travelling, otherwise end of cowering. */ until:number }
@@ -26,8 +26,13 @@ const roomCaches=new WeakMap<World,RoomTopologyCache>();
 /** One synchronous decision owner. Do not reuse after an actor changes the world. */
 export function threatQueries(world:World,animalThreats?:readonly WildAnimal[]) {
   const queries=shootingQueries(world);
-  return {queries,hostiles:(p:Pawn)=>hostileCandidates(world,p,animalThreats),
-    nearby:(p:Pawn)=>hostileCandidates(world,p,animalThreats).filter(t=>distanceSquared(p,t)<64&&clearShotSegment(queries.grid(),p,t))};
+  const hostiles=(p:Pawn)=>{
+    const targets=hostileCandidates(world,p,animalThreats),threat=meleeThreatTarget(world,p,world.tick*10,queries.grid());
+    if(threat&&!targets.some(t=>t.id===threat.id))targets.push(threat);
+    return targets;
+  };
+  return {queries,hostiles,
+    nearby:(p:Pawn)=>hostiles(p).filter(t=>distanceSquared(p,t)<64&&clearShotSegment(queries.grid(),p,t))};
 }
 type Context=ReturnType<typeof threatQueries>;
 /** Forced civilian jobs and drafted control take precedence over default flee. */

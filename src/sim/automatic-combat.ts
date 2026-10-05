@@ -13,7 +13,7 @@ import { rangedWeaponProfile } from './ranged-statistics.ts';
 import { carrierOf } from './rescue-state.ts';
 import { clearShotSegment } from './combat-space.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
-import { hostileCandidates,type LivingTarget,isAnimalTarget } from './combat-target.ts';
+import { hostileCandidates,type LivingTarget,isAnimalTarget,meleeThreatTarget,retaliationPermission } from './combat-target.ts';
 import { shootingQueries,shotPlan,advanceShooter } from './shooting.ts';
 import type { SearchBudget } from './work-planner.ts';
 import type { Pawn,World } from './types.ts';
@@ -22,6 +22,7 @@ import type { WildAnimal } from './wildlife-state.ts';
 /** Called by the simulation, never by rendering. Existing direct orders win.
  * Idle drafted pawns stay at their post; civilian melee may approach a threat. */
 export function considerAutomaticCombat(world:World,p:Pawn,budget:SearchBudget,animalThreats?:readonly WildAnimal[]):void {
+  if(considerMeleeRetaliation(world,p,budget))return;
   if(violentWorkRefusal(p))return;
   // A hunting aim is ordinary civilian work, not a forced combat order.
   // Its replacement is committed only after a valid human threat is found;
@@ -66,4 +67,18 @@ export function considerAutomaticCombat(world:World,p:Pawn,budget:SearchBudget,a
   p.shooting={order:{targetId:target.id,weaponId:weapon!.id,startedDowned:false,auto:kind==='draft'?{kind}:{kind,remaining:2,until:world.tick+200}},stance:null};p.path=[];p.state=p.moveCooldown?'moving':'idle';
   advanceShooter(world,p,world.tick*10,shootingQueries(world,readGrid));
   // Captured travel postpones the aim until the shared Core substep can begin it.
+}
+
+export function considerMeleeRetaliation(world:World,p:Pawn,budget:SearchBudget):boolean {
+  if(!retaliationPermission(p)||medicallyStopped(p)||p.collapsePending||p.need?.kind==='sleep'||p.state==='sleeping'||p.stun||carrierOf(world,p.id)||p.melee
+    ||p.shooting?.stance?.phase==='cooldown'||!meleeTools(world,p).length)return false;
+  const target=meleeThreatTarget(world,p);if(!target||p.hunting?.animalId===target.id)return false;
+  let path:Pawn['path']=[];
+  if(!meleeContact(world,p,target,blockedCells(world,true))){
+    if(!budget.remaining||p.planCooldown)return false;budget.remaining--;
+    const route=meleeRoute(world,p,meleePlaces(world,p,target),blockedCells(world));if(!route)return false;path=route;
+  }
+  interruptDraftWork(world,p);cancelShooting(p);delete p.flee;
+  p.melee={order:{targetId:target.id,startedDowned:false,auto:'retaliation',untilCore:world.tick*10+200},strike:null};
+  p.path=path;p.planCooldown=0;p.state=path.length||p.moveCooldown?'moving':'idle';return true;
 }

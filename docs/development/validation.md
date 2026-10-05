@@ -1,6 +1,6 @@
-# Validation courante — passé personnel V210
+# Validation courante — crises mentales V211
 
-**V210 — passé personnel et incapacités, schéma 191, livré dans le périmètre ciblé.** [Contrat](colonist-backgrounds-v210.md), [recherche Core](../research/colonist-backgrounds-core-v210.md), [contrôles et limites](../history/validation-colonist-backgrounds-v210.md). Génération prospective, refus, compétences interdites et reprises sont vérifiés ensemble ; la preuve conserve le détail des résultats sans annoncer de campagne ou gain de performances non mesurés.
+**V211 — crises mentales, schéma 192, livré dans le périmètre contrôlé.** [Contrat](mental-crises-v211.md), [recherche Core](../research/mental-crises-core-v211.md), [contrôles et limites](../history/validation-mental-crises-v211.md). Régression hors campagnes longues : **508 fichiers, 2315 réussis et un ignoré** ; **44 nouveaux cas**, cinq parcours natifs réussis par reprises, présentation et build finaux. Les treize campagnes longues et la performance générale ne sont pas établies.
 
 **V209 — consolidation, schéma 190 inchangé.** [Contrat](consolidation-v209.md), [résultats et limites](../history/validation-consolidation-v209.md). Corrections produit, réparation de fixtures/pilote et mesures sont séparées dans la preuve ; la consolidation ne livre pas une nouvelle boucle fonctionnelle.
 

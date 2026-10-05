@@ -120,6 +120,9 @@ export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capaci
 }
 
 export function collapseFromExhaustion(world:World,pawn:Pawn,context:NeedContext):void {
+  // A completed attack still owns its recovery. Exhaustion starts its real
+  // sleep task when that recovery expires, without discarding the strike.
+  if(world.schemaVersion>=192&&pawn.melee?.strike)return;
   // Collapse is an emergency interruption, including travel with a meal in hand.
   if ((world.restRules === 'legacy' ? pawn.rest === 0 : pawn.collapsePending) && pawn.need?.kind !== 'sleep') {
     // Involuntary collapse is a hard interruption, unlike a player cancelling

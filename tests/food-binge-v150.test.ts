@@ -9,7 +9,7 @@ import {mentalCamp} from './scenarios/mental-break.ts';
 import {recruitmentUiFixture} from './scenarios/prison-camp.ts';
 
 test('confirmed low-mood entry can select either minor crisis and preserves its draw on replay',()=>{
-  for(const [seed,kind] of [[1,'food-binge'],[40,'sad-wander']] as const){
+  for(const [seed,kind] of [[1,'food-binge'],[106858330,'sad-wander']] as const){
     const world=mentalCamp(seed),replay=deserializeWorld(serializeWorld(world));
     for(let i=0;i<20&&!world.pawns[0]!.mental?.crisis;i++){stepWorld(world);stepWorld(replay);}
     expect(world.pawns[0]!.mental?.crisis?.kind).toBe(kind);

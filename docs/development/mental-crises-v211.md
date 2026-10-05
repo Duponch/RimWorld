@@ -1,0 +1,17 @@
+# V211 — Crises mentales majeures et extrêmes
+
+Lire la [recherche Core](../research/mental-crises-core-v211.md) et la [preuve](../history/validation-mental-crises-v211.md) avec les contrats historiques d'humeur, mêlée, interruption et combat automatique. Référence : Core 1.6.4871. Schéma 192 après validation stricte de 191 ; migration neutre, sans nouvelle crise, cible, menace ni tirage rétroactif.
+
+Le catalogue local ajoute trois conduites aux deux mineures existantes. Le tirage prend le degré demandé le plus élevé dont le catalogue admissible existe ; il ne descend que si ce catalogue est vide. Un budget de recherche épuisé reporte la décision sans tirage ni interruption. Cette sélection conserve les seuils, expositions et MTB Core ; elle ne reproduit pas les fréquences d'un catalogue Core complet.
+
+La crise de destruction, majeure, exige au moins deux bâtiments proches, accessibles et réellement dotés de PV. La sélection suit la pondération de distance Core ; coups au contact, changement de cible après tentative/cadence et récupération 8 000–12 000 ticks Core. La cadence locale persistée de contrôle de 500 Core est adaptée au choix précédent ; elle ne reproduit pas le hash Thing exact, ni un délai Core obligatoire depuis chaque frappe. Les piles sans socle de dommage adéquat sont différées. Les dégâts portent une cause explicite : aucun faux incendie ni perte de carburant comptée comme feu.
+
+La fureur violente, extrême, porte une hostilité temporaire envers les acteurs, sans réécrire leur faction. Ses jobs alternent attente et poursuite bornée, frappent une fois puis recherchent une nouvelle cible, sans achever une personne à terre. La colère meurtrière, extrême, choisit une personne de même faction ou un prisonnier admissible et la poursuit, même après sa chute ; mort de la victime ou disparition sans remplaçant admissible termine la crise. Son poids lit la courbe de population Core, avec population mono-carte explicitement adaptée.
+
+Les agresseurs nouveaux sont les colons libres vivants physiquement présents. Les prisonniers peuvent être victimes ; agresseurs prisonniers/NPC, hors carte et invisibilité psychologique restent différés. Le passé non violent bloque toujours les ordres volontaires, mais pas cette violence involontaire : niveau effectif et absence d'XP interdite restent ceux de V210.
+
+Une tentative de mêlée réelle contre un humain enregistre sa menace, y compris après miss/dodge, sauf duel social. La victime capable de violence et réglée sur Attaquer peut riposter à cette menace proche récente sans changer de faction. Fuir et Ignorer conservent leurs choix. L'autorité privée des ordres de crise/riposte et leurs échéances sont vérifiées séparément des commandes ordinaires.
+
+Arête engagée, récupération de frappe, charges physiques, réservations et dégâts médicaux conservent leurs frontières. Les besoins ordinaires ne détournent pas chaque tentative agressive ; sommeil/effondrement et dangers réels demeurent. Récupération vivante donne catharsis et cooldown ; mort ne donne aucune catharsis. Arrestation, abandon avec sortie physique, autres crises et distribution exhaustive Core sont différés.
+
+Présentation : nom exact, cible réelle et activité observée, cause initiale dans le journal, refus explicites des ordres et impacts existants. Aucun lot GPU supplémentaire. Les scènes de contrôle préparent les occasions ; elles n'accomplissent pas les coups, blessures ou destructions.

@@ -2,7 +2,8 @@ import { blockedCells,inBounds,reachableCells,routeToCell,routeCost } from './pa
 import { isRoomDoor } from './door-rules.ts';
 import { captureStandability } from './furniture-travel.ts';
 import { reservedServiceCells } from './service-reservations.ts';
-import type { Cell,Pawn,World } from './types.ts';
+import { footprintCells } from './definitions.ts';
+import type { Cell,Pawn,Structure,World } from './types.ts';
 
 /** Contact differs from walking: one free flank permits a diagonal strike;
  * diagonal travel still needs BOTH flanks. A door never permits corner reach. */
@@ -12,11 +13,17 @@ export function meleeContact(world:World,a:Cell,b:Cell,blocked=blockedCells(worl
   const free=(x:number,z:number)=>!blocked[z*world.width+x]&&!world.structures.some(s=>isRoomDoor(s.kind)&&s.x===x&&s.z===z);
   return free(a.x,b.z)||free(b.x,a.z);
 }
-export function meleePlaces(world:World,pawn:Pawn,target:Cell,claimed:ReadonlySet<number>=new Set()):Cell[] {
+export function structureMeleeCell(world:World,from:Cell,target:Structure,blocked=blockedCells(world,true)):Cell|undefined {
+  return footprintCells(target).find(cell=>meleeContact(world,from,cell,blocked));
+}
+export const meleeTargetContact=(world:World,from:Cell,target:Cell|Structure,blocked=blockedCells(world,true)):boolean=>
+  'kind' in target?!!structureMeleeCell(world,from,target,blocked):meleeContact(world,from,target,blocked);
+
+export function meleePlaces(world:World,pawn:Pawn,target:Cell|Structure,claimed:ReadonlySet<number>=new Set()):Cell[] {
   return captureMeleePlaces(world,pawn,claimed)(target);
 }
 /** One synchronous decision only: invalid after any world/actor mutation. */
-export function captureMeleePlaces(world:World,pawn:Pawn,claimed:ReadonlySet<number>=new Set()):(target:Cell)=>Cell[] {
+export function captureMeleePlaces(world:World,pawn:Pawn,claimed:ReadonlySet<number>=new Set()):(target:Cell|Structure)=>Cell[] {
   const stands=captureStandability(world),reserved=reservedServiceCells(world,pawn.id),physical=blockedCells(world,true);
   const occupied=new Set<number>();
   for(const p of world.pawns)if(p!==pawn&&p.state!=='dead'&&p.state!=='downed'){
@@ -24,10 +31,11 @@ export function captureMeleePlaces(world:World,pawn:Pawn,claimed:ReadonlySet<num
     if(p.tactics?.post)occupied.add(p.tactics.post.z*world.width+p.tactics.post.x);
     if(p.melee?.order&&p.path.length){const c=p.path.at(-1)!;occupied.add(c.z*world.width+c.x);}
   }
-  return target=>{const cells:Cell[]=[];
-  for(let z=target.z-1;z<=target.z+1;z++)for(let x=target.x-1;x<=target.x+1;x++) {
+  return target=>{const cells:Cell[]=[],seen=new Set<number>(),footprint='kind' in target?footprintCells(target):[target];
+  const inside=new Set(footprint.map(c=>c.z*world.width+c.x));
+  for(const face of footprint)for(let z=face.z-1;z<=face.z+1;z++)for(let x=face.x-1;x<=face.x+1;x++) {
     const c={x,z},i=z*world.width+x;
-    if((x!==target.x||z!==target.z)&&inBounds(world,x,z)&&stands(c)&&!occupied.has(i)&&!reserved.has(i)&&!claimed.has(i)&&meleeContact(world,c,target,physical))cells.push(c);
+    if(!seen.has(i)&&!inside.has(i)&&inBounds(world,x,z)&&stands(c)&&!occupied.has(i)&&!reserved.has(i)&&!claimed.has(i)&&meleeContact(world,c,face,physical)){seen.add(i);cells.push(c);}
   }
   return cells;};
 }

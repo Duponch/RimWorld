@@ -19,6 +19,7 @@ import { cancelAnimalPredation } from './wildlife-predation.ts';
  * combat. Recovery is installed before injury can interrupt either actor. */
 export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTarget,tool:MeleeTool,core:number,randomState:{rng:number},disturbance=disturbanceEvents(w),options:{surprise?:boolean;surpriseStun?:number}={}):void {
   const animal=isAnimalTarget(target),animalAttacker=isAnimalTarget(attacker),random=()=>healthRandom(randomState);
+  if(w.schemaVersion>=192&&!animal&&(animalAttacker||attacker.melee?.order?.auto!=='social'))target.meleeThreat={attackerId:attacker.id,atCore:core};
   const immobile=animal?['downed','sleeping'].includes(target.state):isLying(target);
   if(!animalAttacker&&!immobile)learnSkill(attacker.skills.melee,200*(tool.cooldownCore/60)*XP_SCALE,attacker);
   const ac=(animalAttacker?animalBody(attacker):pawnBody(attacker)).capacities,dc=(animal?animalBody(target):pawnBody(target)).capacities;

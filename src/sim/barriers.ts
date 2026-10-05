@@ -16,7 +16,7 @@ export const isBreachableBarrier=(s:Pick<Structure,'kind'>):boolean=>s.kind==='w
 const FACTORS:Record<ConstructionMaterial,number>={wood:.65,steel:1,'granite-blocks':1.7,'limestone-blocks':1.55,'marble-blocks':1.2,'sandstone-blocks':1.4,'slate-blocks':1.3,cloth:1,'light-leather':1};
 export const barrierMaxHp=(s:Pick<Structure,'kind'|'material'>):number=>s.kind==='cooler'?100:Math.round((isRoomDoor(s.kind)?160:300)*FACTORS[s.material??'wood']);
 export const barrierHp=(s:Structure):number=>barrierMaxHp(s)-(s.damage??0);
-export interface DestructionLedger { count:number; lost:Partial<Record<ConstructionMaterial|'component',number>> }
+export interface DestructionLedger { count:number; lost:Partial<Record<ConstructionMaterial|'component',number>>;fuelTicksLost?:number;fuelTicksBurned?:number;batteryEnergyLost?:number }
 
 /** Walls/doors drop nothing; cooler and sandbags salvage a recipe quarter.
  * Record only destroyed material, independently of deconstruction losses. */
@@ -47,7 +47,7 @@ export function damageBarrier(world:World,s:Structure,amount:number,rng=world.rn
   // contact cell until recovery ends even when another actor destroys it.
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===s.id)delete a.manhunter.door;
   invalidateAnimalPens(world);
-  world.destroyed={count:ledger.count+1,lost};
+  world.destroyed={...ledger,count:ledger.count+1,lost};
   if(salvage)for(const d of salvage.drops)addMaterial(world,ITEM_DEFINITIONS[d.item].kind,d.quantity,{type:'ground',...d.cell},d.item);
   world.rng=salvage?.rng??rng;reconcileRoofSupport(world,false,s);
   return true;

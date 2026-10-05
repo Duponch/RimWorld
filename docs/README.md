@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-**V210 — passé personnel, schéma 191, livré dans le périmètre ciblé.** [Contrat](development/colonist-backgrounds-v210.md), [règles Core et adaptations](research/colonist-backgrounds-core-v210.md), [preuve](history/validation-colonist-backgrounds-v210.md), [guide](gameplay/player-guide.md#comprendre-le-passé-et-les-incapacités--v210). Profils prospectifs, compétences et métiers interdits relient consultation, affectation, ordres et accueil ; personnes historiques conservées.
+**V211 — crises mentales, schéma 192, livré dans le périmètre contrôlé.** [Contrat](development/mental-crises-v211.md), [règles Core et adaptations](research/mental-crises-core-v211.md), [preuve](history/validation-mental-crises-v211.md). Les trois nouveaux états ont des cibles et conséquences physiques distinctes ; catalogue complet, arrestation et abandon restent ouverts.
 
 **V209 — consolidation, schéma 190 inchangé.** [Contrat](development/consolidation-v209.md), [preuves et limites](history/validation-consolidation-v209.md), [rapport externe et nouvelle méthode](history/analysis-external-agent-2026-10-04.md). Continuité des raids/remplacements, stockage asynchrone, reprise graphique, garanties communes et recherche Core. Aucun nouveau catalogue ou jalon clôturé.
 

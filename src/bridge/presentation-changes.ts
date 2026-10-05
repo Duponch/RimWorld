@@ -20,7 +20,11 @@ export class PresentationChanges {
         :[world.commercialTrip.phase,world.commercialTrip.pawn.id,world.commercialTrip.consumed,world.commercialTrip.silverPaid,world.commercialTrip.bought,world.commercialTrip.silverEarned,world.commercialTrip.sold]):undefined,
       world.civilianPost?[world.civilianPost.generation,world.civilianPost.transactions,world.civilianPost.stock.map(p=>[p.id,p.item,p.quantity,p.damage])]:undefined,
       world.projectiles?.map(p=>[p.id,p.emittedAtCore,p.arrival]),
-      world.pawns.map(p=>[p.id,p.state,p.burning?.phase,p.firefighting?.phase,p.firefighting?.fireId,p.raid?.exiting,p.mental?.crisis?.kind,p.mental?.crisis?.target,p.jobId,p.faction,p.prisoner?.capturedAt,p.prisoner?.mode,p.prisoner?.lastChatTick,p.prisoner?.escape,p.ward?.kind,p.ward?.patientId,p.ward?.phase,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,p.shooting,p.stagger,!!p.draft,p.draft?.target,p.draft?.queue,p.equipmentTask?.itemId,p.equipmentTask?.action,p.equipmentDropPending,p.rescue,p.tend?.patientId,p.tend?.phase,p.feed?.patientId,p.feed?.phase,p.medicalSleep,p.interruptedCargo,p.need?.phase,p.need?.kind==='sleep'?p.need.bedId:undefined,
+      world.pawns.map(p=>[p.id,p.state,p.burning?.phase,p.firefighting?.phase,p.firefighting?.fireId,p.raid?.exiting,p.mental?.crisis?.kind,p.mental?.crisis?.target,
+        p.mental?.crisis&&'targetId' in p.mental.crisis?p.mental.crisis.targetId:undefined,
+        p.mental?.crisis?.kind==='tantrum'?p.mental.crisis.attempted:undefined,
+        p.meleeThreat,
+        p.jobId,p.faction,p.prisoner?.capturedAt,p.prisoner?.mode,p.prisoner?.lastChatTick,p.prisoner?.escape,p.ward?.kind,p.ward?.patientId,p.ward?.phase,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,p.shooting,p.stagger,!!p.draft,p.draft?.target,p.draft?.queue,p.equipmentTask?.itemId,p.equipmentTask?.action,p.equipmentDropPending,p.rescue,p.tend?.patientId,p.tend?.phase,p.feed?.patientId,p.feed?.phase,p.medicalSleep,p.interruptedCargo,p.need?.phase,p.need?.kind==='sleep'?p.need.bedId:undefined,
         p.surgeryRequest,p.surgery?[p.surgery.patientId,p.surgery.part,p.surgery.bedId,p.surgery.spot,p.surgery.phase,p.surgery.consumedMedicine]:undefined,
         // Medical topology/results and anesthetic stage boundaries are
         // discrete. Severity decay and surgical work keep periodic snapshots.

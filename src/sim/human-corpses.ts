@@ -108,7 +108,7 @@ export function destroyHumanCorpse(w:World,pile:MaterialPile):boolean {
   for(const [item,quantity] of changes)if(!Number.isSafeInteger((w.fires?.ledger.items[item]??0)+quantity))return false;
   const ledger=ensureFireState(w).ledger;for(const [item,quantity] of changes)ledger.items[item]=(ledger.items[item]??0)+quantity;
   const ids=new Set(contents.map(p=>p.id));w.piles=w.piles.filter(p=>!ids.has(p.id));
-  if(packed.length){const packedIds=new Set(packed.map(p=>p.building.id));w.packed=w.packed.filter(p=>!packedIds.has(p.building.id));w.destroyed={count:(w.destroyed?.count??0)+packed.length,lost};ledger.structures+=packed.length;}
+  if(packed.length){const packedIds=new Set(packed.map(p=>p.building.id));w.packed=w.packed.filter(p=>!packedIds.has(p.building.id));w.destroyed={...w.destroyed,count:(w.destroyed?.count??0)+packed.length,lost};ledger.structures+=packed.length;}
   person.body!.lostAt=w.tick;delete person.equipmentDropPending;
   if(person.visitor)person.visitor.personalFoodIds=[];
   for(const grave of w.structures){if(grave.grave?.corpseId===pile.id)delete grave.grave.corpseId;

@@ -10,6 +10,7 @@ import { workType } from './work-types.ts';
 import { COOK_TICKS, INGREDIENT_UNITS } from './cooking-bills.ts';
 import { REFUEL_WORK_TICKS } from './fuel.ts';
 import { allowedFood, type FoodItemId } from './food-policy.ts';
+import { mentalCrisisStatus } from './mental-presentation.ts';
 import type { Job, JobDiagnostic, Pawn, World } from './types.ts';
 
 // Pure presentation queries. No navigation flood or world mutation.
@@ -37,7 +38,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
   if(pawn.surgery){const t=pawn.surgery,name=world.pawns.find(p=>p.id===t.patientId)?.name??'un patient';return {code:'surgery',reason:`${t.phase==='pickup'?'Collecte une dose pour':t.phase==='approach'?'Rejoint le chevet de':'Opère'} ${name}.`};}
   if(pawn.state!=='dead'&&pawn.health?.anesthetic)return {code:'anesthetic',reason:pawn.state==='downed'?'Sous anesthésie.':'L’anesthésie se dissipe.'};
-  if(pawn.mental?.crisis)return {code:'mental-break',reason:pawn.mental.crisis.kind==='food-binge'?'Frénésie alimentaire : cherche à manger même rassasié, sans suivre son régime ; les repas restent physiques.':'Errance triste : ne travaille plus et refuse les ordres. Cherche encore nourriture et sommeil en cas de besoin extrême.'};
+  if(pawn.mental?.crisis)return {code:'mental-break',reason:mentalCrisisStatus(world,pawn)};
   if(pawn.shooting)return {code:'shooting',reason:pawn.shooting.stance?.phase==='cooldown'?'Récupère après son tir.':pawn.shooting.order?.auto?.kind==='response'?'Riposte civile à une menace proche.':'Vise une cible depuis sa position.'};
   if(pawn.melee)return {code:'melee',reason:pawn.melee.strike?'Récupère après sa frappe.':'Rejoint ou frappe sa cible au contact.'};
   if(pawn.equipmentTask)return {code:'equipment',reason:({equip:'Rejoint son arme avant de l’équiper.',drop:'Dépose son arme au sol.',wear:pawn.state==='working'?'Enfile son vêtement.':'Rejoint le vêtement au sol.',remove:'Retire son vêtement avant de le déposer.'})[pawn.equipmentTask.action]};

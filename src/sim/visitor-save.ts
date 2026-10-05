@@ -19,6 +19,7 @@ import { pileMaxHp } from './thing-damage-rules.ts';
 import { INTRO_VISITOR_TICK,VISITOR_FLOWS,VISITOR_INTERVAL,VISITOR_YEAR,type VisitorAgendaKind } from './visitor-state.ts';
 import { TICKS_PER_DAY,type Cell,type MaterialPile,type World } from './types.ts';
 import { APPAREL_POLICY_INTERVAL } from './apparel-renewal.ts';
+import { validMeleeThreatShape } from './mental-save.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
@@ -27,6 +28,14 @@ const keys=(v:Record<string,unknown>,allowed:readonly string[])=>Object.keys(v).
 const cell=(v:unknown,w:World):v is Cell=>object(v)&&Object.keys(v).length===2&&integer(v.x,0,w.width-1)&&integer(v.z,0,w.height-1);
 const edge=(v:Cell,w:World)=>v.x===0||v.z===0||v.x===w.width-1||v.z===w.height-1;
 const phases=['arriving','staying','leaving'];
+
+/** A departure freezes the real threat record, including an already expired
+ * one. Its date follows that departure rather than today's World clock. */
+export function validArchivedMeleeThreat(value:unknown,w:Pick<World,'schemaVersion'|'nextId'>,tick:number):boolean {
+  if(!object(value)||w.schemaVersion<192&&Object.hasOwn(value,'meleeThreat')||!validMeleeThreatShape(value.meleeThreat,w.schemaVersion,tick))return false;
+  const threat=value.meleeThreat;
+  return threat===undefined||object(threat)&&threat.attackerId!==value.id&&integer(threat.attackerId,1,w.nextId-1);
+}
 
 export function validVisitorShape(p:Record<string,unknown>,version:number,w:World):boolean {
   const v=p.visitor;if(version<88)return v===undefined;
@@ -45,7 +54,7 @@ function validAgenda(value:unknown,kind:VisitorAgendaKind,w:World):boolean {
 function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
   if(object(value)&&value.filthFeet!==undefined){if(w.schemaVersion<89||!validFilthFeet(value.filthFeet))return false;const copy={...value};delete copy.filthFeet;value=copy;}
   if(object(value)&&value.appearance!==undefined&&(w.schemaVersion<109||validatePawnAppearance(value.appearance).length))return false;
-  if(!object(value)||!keys(value,[...(w.schemaVersion>=109?['appearance']:[]),...(w.schemaVersion>=138?['age']:[]),...(w.schemaVersion>=191?['background']:[]),'id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance'])||!validHumanAge(value.age,w.schemaVersion)||!validBackground(value.background,w.schemaVersion,value.age as import('./human-age.ts').HumanAge|undefined))return false;
+  if(!object(value)||!keys(value,[...(w.schemaVersion>=109?['appearance']:[]),...(w.schemaVersion>=138?['age']:[]),...(w.schemaVersion>=191?['background']:[]),...(w.schemaVersion>=192?['meleeThreat']:[]),'id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance'])||!validHumanAge(value.age,w.schemaVersion)||!validBackground(value.background,w.schemaVersion,value.age as import('./human-age.ts').HumanAge|undefined)||!validArchivedMeleeThreat(value,w,tick))return false;
   if(!integer(value.id,1,w.nextId-1)||typeof value.name!=='string'||!value.name.trim()||value.name.length>48||!integer(value.x,0,w.width-1)||!integer(value.z,0,w.height-1)||!edge(value as unknown as Cell,w)
     ||value.faction!=='outlanders'||value.medicalCare!=='industrial'||value.state!=='idle'||!validVisitorShape(value,w.schemaVersion,w)||!object(value.visitor)||value.visitor.phase!=='leaving'||value.visitor.goal!==null
     ||!['hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty']:[])].every(k=>range(value[k],0,100))||value.collapsePending!==false||!integer(value.restZeroTicks,0)||!validSkills(value.skills,tick,w.schemaVersion)||!integer(value.foodPolicyId,1)

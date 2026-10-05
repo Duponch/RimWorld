@@ -35,13 +35,13 @@ function legacy190(source:World):World {
 }
 function expectNeutralMigration(source:World):World {
   const old=legacy190(source),saved=JSON.stringify(old),expected=structuredClone(old);
-  (expected as {schemaVersion:number}).schemaVersion=191;
+  (expected as {schemaVersion:number}).schemaVersion=SCHEMA_VERSION;
   const restored=deserializeWorld(saved);expect(restored).toEqual(expected);expect(JSON.stringify(old)).toBe(saved);
   expect(validateWorld(restored)).toEqual([]);return restored;
 }
 
 test('strict190 migration changes only the schema through offers, original off-map owners, RNG streams and frozen departures',()=>{
-  expect(SCHEMA_VERSION).toBe(191);
+  expect(SCHEMA_VERSION).toBe(192);
   const arrival=backgroundArrivalWorld(),quest=backgroundQuestWorld();
   expectNeutralMigration(arrival);expectNeutralMigration(quest);
   const scout=medicalCamp(2),p=scout.pawns[0]!;

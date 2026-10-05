@@ -2,17 +2,19 @@ import { medicalCamp } from './health.ts';
 import { fixtureBuilding } from './deconstruction.ts';
 import { startSadWander } from '../../src/sim/mental-break.ts';
 import { mentalState } from '../../src/sim/mental-state.ts';
+import { breakThresholds } from '../../src/sim/traits.ts';
 import { applyCommand } from '../../src/sim/engine.ts';
 import { isColonist } from '../../src/sim/affiliation.ts';
 import type { World } from '../../src/sim/types.ts';
 
 /** Explicit pre-existing low mood exposure, not a claim about a natural camp.
  * Entry/recovery and every subsequent action are performed by the real worker. */
-export function mentalCamp(seed=40):World {
-  const w=medicalCamp(),p=w.pawns[0]!;w.rng=seed; // 40 selects sad wander for the legacy UI journey; 1 selects food binge.
+export function mentalCamp(seed=106858330):World {
+  const w=medicalCamp(),p=w.pawns[0]!;w.rng=seed; // Explicit stream: 106858330 selects sad wander; 1 selects food binge.
   w.tick+=(14-(w.tick+p.id)%15+15)%15; // Eligible check on the first worker tick, before ordinary sleep.
-  Object.assign(p,{mood:0,hunger:95,rest:16.5,comfort:50});p.recreation.level=50;p.schedule.fill('anything');p.priorities.gather=1;
-  mentalState(p).below=[2100,2100,2100];
+  const thresholds=breakThresholds(p);
+  Object.assign(p,{mood:(thresholds[0]+thresholds[1])/2,hunger:95,rest:16.5,comfort:50});p.recreation.level=50;p.schedule.fill('anything');p.priorities.gather=1;
+  mentalState(p).below=[2100,0,0];
   const bed=fixtureBuilding(w,'bed',p.x,p.z+1);p.bedId=bed.id;
   const tree={id:w.nextId++,kind:'tree' as const,x:p.x+5,z:p.z,amount:10};w.resources.push(tree);
   applyCommand(w,{type:'area',action:'chop',from:tree,to:tree});return w;

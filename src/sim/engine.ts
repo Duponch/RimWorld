@@ -70,6 +70,8 @@ import { advanceArrivals,applyArrival } from './arrivals.ts';
 import { advanceQuests,applyQuestCommand } from './quests.ts';
 import { advanceFluIncidents } from './flu-incidents.ts';
 import { updateMentalBreak,processMentalBreak } from './mental-break.ts';
+import { mentalCrisisLabel } from './mental-catalog.ts';
+import { isAggressiveCrisis,processAggressiveCrisis } from './aggressive-crisis.ts';
 import { expireMealMemories } from './mood.ts';
 import { considerAutomaticCombat } from './automatic-combat.ts';
 import { cancelAutomaticCombat } from './automatic-combat-state.ts';
@@ -388,7 +390,10 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='prison-bed')return applyPrisonBed(world,command);
   if(command.type==='prisoner-mode')return applyPrisonerMode(world,command);
   if(actors.some(id=>{const p=world.pawns.find(p=>p.id===id);return p&&!isColonist(p)&&!((p.prisoner||isAdmittedGuest(p))&&['medical-care','medical-policy','food-policy-assign'].includes(command.type));}))return refusal('invalid-command','Cette personne ne fait pas partie de la colonie.');
-  if((typeof command.type==='string'&&command.type.startsWith('order-')||['draft','draft-move','draft-stop','fire-at-will','clear-orders','shoot','melee'].includes(command.type))&&actors.some(id=>world.pawns.find(p=>p.id===id)?.mental?.crisis))return refusal('invalid-command','Ce colon traverse une crise mentale et ne peut pas obéir.');
+  if(typeof command.type==='string'&&command.type.startsWith('order-')||['draft','draft-move','draft-stop','fire-at-will','clear-orders','shoot','melee'].includes(command.type)){
+    const affected=actors.map(id=>world.pawns.find(p=>p.id===id)).find(p=>p?.mental?.crisis);
+    if(affected?.mental?.crisis)return refusal('invalid-command',`${mentalCrisisLabel(affected.mental.crisis.kind)} : ce colon ne peut pas obéir pendant sa crise.`);
+  }
   if(command.type==='hostility-response'){const p=world.pawns.find(p=>p.id===command.pawnId);if(!p||!['flee','ignore','attack'].includes(command.response))return refusal('invalid-command','Réaction invalide.');if(command.response==='flee')delete p.hostilityResponse;else p.hostilityResponse=command.response;cancelAutomaticCombat(p);if(p.flee&&command.response!=='flee'){delete p.flee;p.path=[];p.state='idle';}return {ok:true};}
   if(typeof command.type==='string'&&command.type.startsWith('order-')&&'pawnId' in command&&world.pawns.find(p=>p.id===command.pawnId)?.melee?.strike)return refusal('invalid-command','Le colon récupère après sa frappe.');
   if(command.type==='melee'||command.type==='shoot'){const result=command.type==='melee'?applyMeleeCommand(world,command):applyShootingCommand(world,command);if(result.ok){const target=world.pawns.find(p=>p.id===command.targetId);if(target?.visitor)visitorGroupDanger(world,target,'hostile');}return result;}
@@ -653,7 +658,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     const getThreats=()=>threatQueries(world,animalThreats);
     advanceBeautyNeeds(world,getLight().topology);
     advanceFlowerPots(world,getLight(),new TemperatureView(world,thermal));
-    const hasAdversary=world.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner)||animalThreats.length>0;
+    const hasAdversary=world.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner||p.mental?.crisis?.kind==='berserk')||animalThreats.length>0;
     let thermalDirty=structuresBeforeCombat!==world.structures;
     const invalidateEnvironment=()=>{environment=undefined;light=undefined;furnitureSight=undefined;thermalDirty=true;};
     const getRoofs = () => roofs ??= new RoofContext(world);
@@ -674,11 +679,15 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.health)bleedFilth(world,pawn,medicalBleed(pawn.health),pawn.state==='downed'||pawn.state==='sleeping');
       tickSkills(world,pawn);
       updateNeeds(world, pawn,body,getFurnitureSight);
-      updateMentalBreak(world,pawn);
+      updateMentalBreak(world,pawn,budget);
+      if(pawn.mental?.crisis){
+        if(scoutOnMapId(world)===pawn.id)applyScoutCommand(world,{type:'scout-cancel'});
+        if(commercialOnMapId(world)===pawn.id)applyCommercialPreparation(world,{type:'commercial-cancel'});
+      }
       if(processPawnVomiting(world,pawn))continue;
       if(pawn.stun&&pawn.stun.untilCore<=world.tick*10)delete pawn.stun;
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
-      if(hasAdversary&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget,animalThreats);considerFlee(world,pawn,getThreats());}
+      if((hasAdversary||pawn.meleeThreat&&world.tick*10-pawn.meleeThreat.atCore<=400)&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget,animalThreats);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
       if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = scoutOnMapId(world)===pawn.id || commercialOnMapId(world)===pawn.id || pawn.animalHandling || pawn.animalCare || pawn.burial || pawn.cleaning || pawn.visitor || pawn.podRescue || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.surgery || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
@@ -692,7 +701,11 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(processScoutLoading(world,pawn,needsContext))continue;
       if(processBurning(world,pawn,needsContext))continue;
       if(pawn.prisoner){processPrisoner(world,pawn,needsContext);continue;}
-      if(pawn.mental?.crisis){processMentalBreak(world,pawn,needsContext,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));continue;}
+      if(pawn.mental?.crisis){
+        if(isAggressiveCrisis(pawn.mental))processAggressiveCrisis(world,pawn,getBlocked,budget,getLight,needsContext);
+        else processMentalBreak(world,pawn,needsContext,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));
+        continue;
+      }
       if(pawn.visitor){processVisitor(world,pawn,needsContext);continue;}
       if(pawn.raid){if(!processDraftSleep(world,pawn,needsContext))processRaider(world,pawn,getBlocked,budget,getLight);continue;}
       if(pawn.tactics){if(!processDraftSleep(world,pawn,needsContext))processTactics(world,pawn,getBlocked,budget,getLight);continue;}

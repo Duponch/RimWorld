@@ -1,5 +1,6 @@
 import { isBedKind } from './sim/bed-kinds';
 import { bedRestEffectiveness } from './sim/furniture-stats';
+import { mentalCrisisView } from './sim/mental-presentation';
 import { bedHealPerDay,bedImmunityFactor,bedTendOffset,bedSurgeryFactor } from './sim/hospital-medical-stats';
 import { createCommercialUI } from './ui/commercial-panel';
 import {appearanceOf} from './sim/pawn-appearance';
@@ -45,7 +46,7 @@ import { createSocialInspection,updateSocialInspection } from './ui/social-inspe
 import { createJournalInspection,updateJournalInspection } from './ui/journal-inspection';
 import { createRaidUI } from './ui/raids';
 import { barrierHp,barrierMaxHp,isBarrier } from './sim/barriers';
-import { resourceMaxHp } from './sim/thing-damage-rules';
+import { resourceMaxHp, structureMaxHp } from './sim/thing-damage-rules';
 import { rockMaxHP } from './sim/mining-rules';
 import { createArrivalUI } from './ui/arrivals';
 import { createMoodInspection,updateMoodInspection } from './ui/mood-inspection';
@@ -861,7 +862,10 @@ function renderState() {
     (button.querySelector('.portrait-body') as HTMLElement).style.background=look.color!==undefined?`#${look.color.toString(16)}`:'';
     (button.querySelector('.portrait-vest') as HTMLElement).hidden=!look.vest;
     const symbol=button.querySelector<HTMLElement>('.pawn-symbol')!;
-    symbol.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':pawn.mental?.crisis?'↝':pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
+    const crisis=mentalCrisisView(world,pawn,s=>buildingLabels[s.kind]);
+    symbol.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':crisis?crisis.symbol:pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
+    symbol.setAttribute('aria-label',crisis?`${crisis.label}${crisis.target?` · cible : ${crisis.target.label}`:''}`:'');
+    button.dataset.mentalCrisis=crisis?.kind??'';
     symbol.dataset.state = pawn.state==='dead'?'dead':pawn.state==='sleeping'?'sleep':'';
     (button.querySelector('i') as HTMLElement).style.width = `${pawn.state==='dead'?0:pawn.mood}%`;
   }
@@ -917,6 +921,11 @@ function renderState() {
       el('cell-title').textContent = packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : pile ? ITEM_DEFINITIONS[pile.item].label : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]}` : zone ? 'Zone de culture' : storage ? 'Réserve' : 'Massif rocheux';
       let cellDescription = resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Capacité : ${storage.capacity}` : '';
       let cellHealth:CellHealth|undefined;
+      const inspectedBuilding=packed?.building??structure;
+      if(inspectedBuilding){
+        const maximum=structureMaxHp(inspectedBuilding),current=maximum-(inspectedBuilding.damage??0);
+        if(maximum>0)cellHealth={current,maximum,label:'Résistance',valueText:`${current}/${maximum} PV`};
+      }
       if(resource&&(isPlant(resource)||resource.kind==='tree')){
         const maximum=resourceMaxHp(resource);
         cellHealth={current:maximum-(resource.damage??0),maximum,label:'État'};
@@ -1010,11 +1019,16 @@ function renderState() {
   for(const pawn of living){if(pawn.mental?.crisis?.kind==='sad-wander')sadWanderers++;else if(pawn.mental?.crisis?.kind==='food-binge')foodBingers++;}
   if(sadWanderers)alerts.push(`${sadWanderers} colon(s) en errance triste`);
   if(foodBingers)alerts.push(`${foodBingers} colon(s) en frénésie alimentaire`);
+  const aggressiveCrises=living.filter(p=>p.mental?.crisis&&['tantrum','berserk','murderous-rage'].includes(p.mental.crisis.kind));
+  for(const pawn of aggressiveCrises){
+    const crisis=mentalCrisisView(world,pawn,s=>buildingLabels[s.kind])!;
+    alerts.push(`${pawn.name} · ${crisis.label}${crisis.target?` · cible : ${crisis.target.label}${crisis.target.type==='structure'?` (${crisis.target.cell.x}, ${crisis.target.cell.z})`:''}`:''}`);
+  }
   const enemy=world.pawns.find(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p));
   const enraged=world.wildlife?.animals.filter(animal=>animal.manhunter&&animal.state!=='dead'&&animal.state!=='downed')??[];
   if(enraged.length)alerts.push(`${enraged.length} ${enraged.length>1?'animaux':'animal'} en rage`);
   const fires=world.fires?.items??[],fireAlert=el<HTMLButtonElement>('inspect-fire');fireAlert.hidden=!fires.length;fireAlert.textContent=`Incendie · ${fires.length} foyer${fires.length>1?'s':''} · voir`;fireAlert.onclick=()=>{const cell=firePosition(world,fires[0]!);if(cell){applyTool('select');pickCell(cell.x,cell.z);renderer?.focusCell(cell);}};
-  const threatButton=el<HTMLButtonElement>('inspect-threat'),threat=enemy??enraged[0];threatButton.hidden=!threat;if(threat){threatButton.textContent=enemy?'Menace armée · voir':'Animal en rage · voir';threatButton.onclick=()=>selectPawn(threat.id);}
+  const threatButton=el<HTMLButtonElement>('inspect-threat'),mentalThreat=aggressiveCrises[0],threat=enemy??mentalThreat??enraged[0];threatButton.hidden=!threat;if(threat){threatButton.textContent=enemy?'Menace armée · voir':mentalThreat?`${mentalCrisisView(world,mentalThreat)!.label} · voir`:'Animal en rage · voir';threatButton.onclick=()=>selectPawn(threat.id);}
   const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=colonists.length-living.length;
   const starving=living.filter(p=>(p.health?.malnutrition??0)>0).length;if(starving)alerts.push(`${starving} colon(s) en malnutrition`);
   const chilled=living.filter(p=>(p.health?.hypothermia??0)>=40000000).length;if(chilled)alerts.push(`${chilled} colon(s) en hypothermie`);

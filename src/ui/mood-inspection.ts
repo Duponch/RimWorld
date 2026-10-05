@@ -1,6 +1,8 @@
 import { breakThresholds } from '../sim/traits';
 import { moodTarget,moodThoughts } from '../sim/mood';
 import { TICKS_PER_DAY,type Pawn,type World } from '../sim/types';
+import { mentalCrisisView } from '../sim/mental-presentation';
+import { buildingLabels } from './building-labels';
 import { setTooltip } from './tooltip';
 
 export interface MoodInspectionView {
@@ -35,15 +37,24 @@ export function createMoodInspection(panel:HTMLElement):void {
   for(let i=0;i<3;i++){const marker=document.createElement('span');marker.className='mood-gauge-marker';marker.dataset.moodThreshold=String(i);gauge.append(marker);}
   const target=document.createElement('p');target.id='mood-target';
   const risks=document.createElement('p');risks.id='mood-break-thresholds';
+  const crisis=document.createElement('p');crisis.id='mood-crisis';crisis.hidden=true;crisis.tabIndex=0;
   const list=document.createElement('ul');list.id='mood-thoughts';
-  gauge.tabIndex=0;details.append(heading,caption,gauge,target,risks,list);const anchor=panel.querySelector('#manage-work');if(anchor)anchor.before(details);else panel.append(details);
+  gauge.tabIndex=0;details.append(heading,caption,gauge,target,risks,crisis,list);const anchor=panel.querySelector('#manage-work');if(anchor)anchor.before(details);else panel.append(details);
 }
 
 export function updateMoodInspection(panel:HTMLElement,world:World,pawn:Pawn):void {
   const text=panel.querySelector<HTMLElement>('#mood-target'),list=panel.querySelector<HTMLElement>('#mood-thoughts');if(!text||!list)return;
   const view=moodInspectionView(world,pawn),dead=pawn.state==='dead';
-  const crisis=pawn.mental?.crisis?.kind==='food-binge'?'Frénésie alimentaire':pawn.mental?.crisis?'Errance triste':'';
-  text.textContent=dead?'Décédé':`${crisis?`${crisis} · `:''}Humeur ${view.current.toFixed(1)} % · cible ${Number(view.target.toFixed(1))} %`;
+  const crisis=mentalCrisisView(world,pawn,s=>buildingLabels[s.kind]);
+  text.textContent=dead?'Décédé':`${crisis?`${crisis.label} · `:''}Humeur ${view.current.toFixed(1)} % · cible ${Number(view.target.toFixed(1))} %`;
+  const crisisText=panel.querySelector<HTMLElement>('#mood-crisis')!;
+  crisisText.hidden=dead||!crisis;
+  if(crisis){
+    const target=crisis.target?`${crisis.target.label} (${crisis.target.cell.x}, ${crisis.target.cell.z})`:undefined;
+    crisisText.dataset.mentalCrisis=crisis.kind;
+    crisisText.textContent=`${crisis.description}${target?` Cible : ${target}.`:''}${crisis.activity?` ${crisis.activity}`:''} Les événements confirmés sont conservés dans le journal.`;
+    setTooltip(crisisText,{title:crisis.label,body:crisis.description,rows:[...target?[{label:'Cible actuelle',value:target}]:[],...crisis.activity?[{label:'Activité observée',value:crisis.activity}]:[]]});
+  }else{delete crisisText.dataset.mentalCrisis;crisisText.textContent='';}
   panel.querySelector('[data-mood-current]')!.textContent=dead?'—':`${Math.round(view.current)} %`;
   const gauge=panel.querySelector<HTMLElement>('#mood-gauge')!,level=panel.querySelector<HTMLElement>('#mood-gauge-fill')!;
   gauge.hidden=dead;gauge.setAttribute('aria-valuenow',String(view.current));

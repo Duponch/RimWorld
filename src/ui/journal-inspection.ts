@@ -3,8 +3,8 @@ import { SOCIAL_LABELS } from '../sim/social-state';
 import { TICKS_PER_DAY } from '../sim/types';
 import { setTooltip } from './tooltip';
 
-export type JournalFilter = 'all' | 'social' | 'combat';
-export interface JournalRow { tick: number; kind: 'social' | 'combat'; text: string }
+export type JournalFilter = 'all' | 'social' | 'combat' | 'mental';
+export interface JournalRow { tick: number; kind: 'social' | 'combat' | 'mental'; text: string }
 
 const socialLabels = Object.values(SOCIAL_LABELS);
 
@@ -17,7 +17,8 @@ export function pawnJournalRows(world: World, pawn: Pawn): JournalRow[] {
     const text = event.message;
     if (!named.test(text)) return [];
     const lower = text.toLocaleLowerCase('fr-FR');
-    const kind: JournalRow['kind'] | undefined = socialLabels.some(label => text.startsWith(`${label} entre `)) || ['a vexé', 'a insulté', 'bagarre'].some(word => lower.includes(word))
+    const mental=event.type==='need'&&['errance triste','frénésie alimentaire','crise de destruction','fureur violente','colère meurtrière'].some(label=>lower.includes(label));
+    const kind: JournalRow['kind'] | undefined = mental?'mental':socialLabels.some(label => text.startsWith(`${label} entre `)) || ['a vexé', 'a insulté', 'bagarre'].some(word => lower.includes(word))
       ? 'social' : ['tir', 'touché', 'blessé', 'attaque', 'frappé', 'combat'].some(word => lower.includes(word)) ? 'combat' : undefined;
     return kind ? [{ tick: event.tick, kind, text }] : [];
   }).reverse();
@@ -32,14 +33,14 @@ export function createJournalInspection(panel: HTMLElement): void {
   filters.className = 'pawn-journal-filters';
   filters.setAttribute('role', 'group');
   filters.setAttribute('aria-label', 'Filtrer le journal');
-  for (const [id, label] of [['all', 'Voir tout'], ['social', 'Voir social'], ['combat', 'Voir combat']] as const) {
+  for (const [id, label] of [['all', 'Voir tout'], ['social', 'Voir social'], ['combat', 'Voir combat'], ['mental', 'Voir crises']] as const) {
     const button = document.createElement('button');
     button.type = 'button';
     button.dataset.journalFilter = id;
     button.textContent = label;
     button.setAttribute('role','checkbox');button.setAttribute('aria-checked',String(id!=='all'));
     button.setAttribute('aria-pressed', String(id!=='all'));
-    setTooltip(button,{title:label,body:id==='all'?'Afficher toutes les entrées conservées, quels que soient les deux filtres.':`Afficher ou masquer les entrées ${id==='social'?'sociales':'de combat'}. Ce réglage est indépendant de l’autre filtre.`});
+    setTooltip(button,{title:label,body:id==='all'?'Afficher toutes les entrées conservées, quels que soient les filtres.':`Afficher ou masquer les entrées ${id==='social'?'sociales':id==='combat'?'de combat':'de crises mentales'}. Ce réglage est indépendant des autres filtres.`});
     button.addEventListener('click', () => {
       details.dataset[id]=String(details.dataset[id]!=='true');
       button.setAttribute('aria-checked',details.dataset[id]!);button.setAttribute('aria-pressed',details.dataset[id]!);
@@ -56,7 +57,7 @@ export function createJournalInspection(panel: HTMLElement): void {
   limit.className = 'pawn-journal-limit';
   limit.textContent = 'Historique des événements';limit.tabIndex=0;
   setTooltip(limit,{title:'Journal',body:'Les entrées proviennent des événements conservés dans cette partie. Un événement ancien qui n’a pas été consigné ne peut pas être reconstitué.'});
-  details.dataset.all='false';details.dataset.social='true';details.dataset.combat='true';
+  details.dataset.all='false';details.dataset.social='true';details.dataset.combat='true';details.dataset.mental='true';
   details.append(summary, filters, list, empty, limit);
   panel.append(details);
 }
@@ -91,6 +92,6 @@ export function updateJournalInspection(panel: HTMLElement, world: World, pawn: 
     entry.append(icon, text);
     return entry;
   }));}
-  rows.forEach((row,index)=>setTooltip(list.children[index] as HTMLElement,{title:row.kind==='social'?'Interaction sociale':'Combat',body:`Il y a ${((world.tick-row.tick)/(TICKS_PER_DAY/24)).toFixed(1)} h.\n${row.text}`}));
+  rows.forEach((row,index)=>setTooltip(list.children[index] as HTMLElement,{title:row.kind==='social'?'Interaction sociale':row.kind==='combat'?'Combat':'Crise mentale',body:`Il y a ${((world.tick-row.tick)/(TICKS_PER_DAY/24)).toFixed(1)} h.\n${row.text}`}));
   refreshJournalFilter(details);
 }

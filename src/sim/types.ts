@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 191 as const;
+export const SCHEMA_VERSION = 192 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -97,6 +97,8 @@ export interface Pawn extends Cell {
   faction?:import('./affiliation.ts').FactionId;
   hostilityResponse?:'ignore'|'attack';
   lastAttack?:import('./automatic-combat-state.ts').AttackMemory;
+  /** Last real close melee attempt, including a miss; independent of faction. */
+  meleeThreat?:{attackerId:number;atCore:number};
   disturbance?:import('./disturbance-state.ts').DisturbanceState;
   tactics?:import('./tactics-state.ts').TacticsState;
   flee?:import('./threats.ts').FleeState;

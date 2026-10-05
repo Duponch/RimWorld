@@ -4,6 +4,7 @@ import { applyCommand,stepWorld } from '../src/sim/engine';
 import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serialization';
 import { startSadWander,updateMentalBreak,processSadWander } from '../src/sim/mental-break';
 import { finishMentalBreak,mentalState } from '../src/sim/mental-state';
+import { mentalCrisisLabel } from '../src/sim/mental-catalog';
 import { moodThoughts } from '../src/sim/mood';
 import { addMaterial,refreshStock } from '../src/sim/materials';
 import { medicalCamp,medicalCarrier,controlledInjury } from './scenarios/health';
@@ -26,7 +27,7 @@ test('exposure is sampled and random, strict thresholds reset independently, sle
   p.state='idle';const replay=structuredClone(w);
   for(let i=0;i<120000&&!p.mental?.crisis;i++){w.tick++;replay.tick++;updateMentalBreak(w,p);updateMentalBreak(replay,replay.pawns[0]!);}
   expect(p.mental?.crisis).toBeDefined();expect(replay).toEqual(w);
-  expect(w.events.at(-1)?.message).toContain(p.mental?.crisis?.kind==='food-binge'?'frénésie alimentaire':'errance triste');
+  expect(w.events.at(-1)?.message).toContain(mentalCrisisLabel(p.mental!.crisis!.kind).toLowerCase());
 });
 
 test('break interrupts real work and active travel, releases orders, preserves the edge and rejects direct control atomically',()=>{

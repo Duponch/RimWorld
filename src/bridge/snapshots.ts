@@ -49,6 +49,9 @@ import { TileSnapshotCache, type TileDelta } from './tile-snapshot-cache.ts';
 import { validBackground } from '../sim/colonist-backgrounds.ts';
 import { validHumanAge, type HumanAge } from '../sim/human-age.ts';
 import { validOfferedBackground } from '../sim/background-save.ts';
+import { validMentalShape, validMeleeThreatShape, validateMental } from '../sim/mental-save.ts';
+import { validMeleeShape, validateMelee } from '../sim/melee-save.ts';
+import { validArchivedMeleeThreat } from '../sim/visitor-save.ts';
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
@@ -56,6 +59,14 @@ interface PileChanges { removed: number[]; upserted: MaterialPile[]; order?: num
 interface SnapshotHeader { motion?:import('./motion-tracks.ts').PawnTrack[]; audioCues?:import('./audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 function validMiningTransport(pawn:Pawn,version:number):boolean {
   return !(version<186&&pawn.skills&&Object.hasOwn(pawn.skills,'mining'))&&validMiningSkill(pawn.skills?.mining,version);
+}
+/** Private crisis/retaliation ownership follows the same shape contract as a
+ * save. Target relations are checked after the complete delta is reconstructed. */
+function validMentalTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|'tick'|'width'|'height'>):boolean {
+  return !(world.schemaVersion<192&&Object.hasOwn(pawn,'meleeThreat'))
+    &&validMentalShape(pawn.mental,world.schemaVersion,world.tick,world.width,world.height)
+    &&validMeleeThreatShape(pawn.meleeThreat,world.schemaVersion,world.tick)
+    &&validMeleeShape(pawn.melee,world.schemaVersion,world.tick);
 }
 /** Sparse historical offers keep both fields absent. Active owners use the
  * same age/profile rules on and off the map; archives are not rewritten. */
@@ -295,6 +306,7 @@ export class SnapshotDecoder {
     if(!Array.isArray(message.world.growingZones)||message.world.growingZones.some(zone=>!zone||!isCropKindInVersion(zone.plant,message.world.schemaVersion)))return resync('Culture future ou inconnue dans ce snapshot.');
     if(message.world.fires!==undefined&&!validFireResourceLosses(message.world.fires?.ledger?.resources,message.world.schemaVersion))return resync('Pertes végétales du feu invalides pour ce snapshot.');
     for(const pawn of message.world.pawns){
+      if(!validMentalTransport(pawn,message.world))return resync('Crise mentale, menace ou autorité de mêlée invalide pour ce snapshot.');
       if(!validBackgroundTransport(pawn,message.world.schemaVersion))return resync('Âge ou passé personnel invalide pour ce snapshot.');
       if(!validSurgeryTransport(pawn,message.world))return resync('État chirurgical ou anesthésique invalide pour ce snapshot.');
       if(!validPawnPodRescue(pawn,message.world.schemaVersion,message.world))return resync('Mandat de secours civil invalide pour ce snapshot.');
@@ -304,6 +316,9 @@ export class SnapshotDecoder {
     }
     for(const owner of [message.world.scout,message.world.commercialTrip]){
       if(owner&&typeof owner==='object'&&'pawn' in owner&&!validBackgroundTransport(owner.pawn,message.world.schemaVersion))return resync('Âge ou passé personnel hors carte invalide pour ce snapshot.');
+      if(owner&&typeof owner==='object'&&'pawn' in owner&&(owner.pawn.mental?.crisis
+        ||owner.pawn.melee?.order?.auto==='mental'||owner.pawn.melee?.order?.auto==='retaliation'
+        ||!validArchivedMeleeThreat(owner.pawn,message.world,message.world.tick)))return resync('Crise mentale ou menace hors carte invalide.');
     }
     if(message.world.arrivals?.pending&&!validBackgroundTransport(message.world.arrivals.pending,message.world.schemaVersion,true))return resync('Profil d’accueil invalide pour ce snapshot.');
     if(Array.isArray(message.world.quests?.entries)&&message.world.quests.entries.some(quest=>!validBackgroundTransport(quest,message.world.schemaVersion,true)))return resync('Profil d’asile invalide pour ce snapshot.');
@@ -414,6 +429,7 @@ export class SnapshotDecoder {
       // In particular an absent sparse collection means it was removed.
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
+    if(validateMental(next,next.schemaVersion).length||next.schemaVersion>=192&&validateMelee(next).length)return resync('Cible de crise mentale ou autorité de mêlée incohérente.');
     if(validateCommercialRegistry(next,next.schemaVersion).length)return resync('Registre commercial invalide.');
     const postIds=new Set<number>();
     if(validateCivilianPost(next,next.schemaVersion,postIds).length)return resync('Stock du comptoir invalide.');
@@ -455,7 +471,10 @@ export class SnapshotDecoder {
     }
     if(validateCommercialBindings(next,next.schemaVersion).length)return resync('Possessions commerciales incohérentes.');
     for(const records of [next.visitors?.departed??[],next.podRescues?.departed??[]])
-      for(const departure of records)if(!validMiningTransport(departure.pawn,next.schemaVersion))return resync('Profil de minage archivé invalide.');
+      for(const departure of records){
+        if(!validMiningTransport(departure.pawn,next.schemaVersion))return resync('Profil de minage archivé invalide.');
+        if(!validArchivedMeleeThreat(departure.pawn,next,departure.tick))return resync('Menace de mêlée archivée invalide.');
+      }
     for(const departure of next.podRescues?.departed??[])if(!validSurgeryTransport(departure.pawn,{schemaVersion:next.schemaVersion,tick:departure.tick,width:next.width,height:next.height,nextId:next.nextId}))return resync('Dossier chirurgical civil archivé invalide.');
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     const replaced = message.epoch !== this.epoch;

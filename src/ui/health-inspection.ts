@@ -276,7 +276,7 @@ export function updateHealthInspection(panel:HTMLElement,pawn:Pawn,world?:World)
   details.querySelector('[data-health="malnutrition"]')!.textContent=health?.malnutrition?`Malnutrition ${MALNUTRITION_LABELS[malnutritionStage(health.malnutrition)]} · ${(health.malnutrition/MALNUTRITION_UNIT*100).toFixed(1)} %`:'';
   const stage=heatStage(health?.heatstroke),coldStage=heatStage(health?.hypothermia);
   details.querySelector('[data-health="thermal"]')!.textContent=(stage?`Coup de chaleur ${HEAT_LABELS[stage]} · ${(100*health!.heatstroke!/HEAT_UNIT).toFixed(1)} %. `:'')+(coldStage?`Hypothermie ${HEAT_LABELS[coldStage]} · ${(100*health!.hypothermia!/HEAT_UNIT).toFixed(1)} %.`:'');
-  details.querySelector('[data-health="stagger"]')!.textContent=pawn.stagger?'Ralenti temporairement par un impact de balle.':'';
+  details.querySelector('[data-health="stagger"]')!.textContent=pawn.stagger?'Ralenti temporairement par un impact.':'';
   const policy=details.querySelector<HTMLSelectElement>('#medical-policy');if(policy){policy.value=medicalCare(pawn);policy.disabled=pawn.state==='dead'||!isCarePatient(pawn);setTooltip(policy,{title:'Médecine',body:'Détermine les soins autorisés et la meilleure catégorie de médicament que les médecins peuvent utiliser. Les doses sont consommées pendant les soins.',rows:[{label:'Soins autorisés',value:MEDICAL_CARE[medicalCare(pawn)]}]});}
   const self=details.querySelector<HTMLInputElement>('#self-tend-policy');if(self){self.checked=!!pawn.selfTend;self.disabled=pawn.state==='dead';}
   const hint=details.querySelector('[data-health="self-tend-hint"]');if(hint)hint.textContent=pawn.selfTend&&pawn.priorities.doctor===0?'Auto-soins autorisés, mais Médecin est désactivé dans Travail.':'';

@@ -1,7 +1,10 @@
-import { combatTarget,isAnimalTarget,type LivingTarget } from './combat-target.ts';
+import { combatTarget,isAnimalTarget,meleeThreatTarget,retaliationPermission,type LivingTarget } from './combat-target.ts';
 import { violentWorkRefusal } from './colonist-backgrounds.ts';
 import { strikeLivingTarget } from './living-melee.ts';
 import { isBarrier,damageBarrier } from './barriers.ts';
+import { damageStructure,structureMaxHp } from './thing-damage.ts';
+import { mentalMeleeOwnership } from './aggressive-crisis-order.ts';
+import { isRoomDoor } from './door-rules.ts';
 import { disturbanceEvents } from './disturbance.ts';
 import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
 import type { shootingQueries } from './shooting.ts';
@@ -13,7 +16,7 @@ import { carrierOf } from './rescue-state.ts';
 import { medicallyStopped } from './health-rules.ts';
 import { healthRandom } from './health.ts';
 import { chooseMeleeTool,meleeTools } from './melee-statistics.ts';
-import { meleeContact,meleePlaces,meleeRoute } from './melee-space.ts';
+import { meleeContact,meleeTargetContact,structureMeleeCell,meleePlaces,meleeRoute } from './melee-space.ts';
 import { activeSocialFight,finishSocialFight,socialFightRecoveryDue } from './social-fight.ts';
 import { isStunned } from './stun.ts';
 import { blockedCells,canStep } from './pathfinding.ts';
@@ -24,13 +27,26 @@ import type { CommandResult,Pawn,World } from './types.ts';
 
 const EMPTY:ReadonlySet<number>=new Set();
 
-function targetFor(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id)):LivingTarget|undefined {
+function targetFor(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id),readThreat=()=>meleeThreatTarget(world,pawn)):LivingTarget|undefined {
   const order=pawn.melee?.order;
   const p=order?combatTarget(world,order.targetId):undefined;
-  return p&&!(isAnimalTarget(p)&&p.domestic)&&p.state!=='dead'&&(order!.startedDowned||p.state!=='downed')&&(!isAnimalTarget(p)?!carried(p.id):world.schemaVersion>=78)?p:undefined;
+  const mental=order?.auto==='mental'&&mentalMeleeOwnership(world,pawn,order);
+  const domesticRefusal=p&&isAnimalTarget(p)&&p.domestic&&!(mental&&pawn.mental?.crisis?.kind==='berserk')
+    &&!(order?.auto==='retaliation'&&retaliationPermission(pawn)&&readThreat()?.id===p.id);
+  return p&&!domesticRefusal&&p.state!=='dead'&&(order!.startedDowned||mental&&pawn.mental?.crisis?.kind==='murderous-rage'||p.state!=='downed')&&(!isAnimalTarget(p)?!carried(p.id):world.schemaVersion>=78)?p:undefined;
 }
 function canFight(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id)):boolean {
-  return !violentWorkRefusal(pawn)&&!medicallyStopped(pawn)&&pawn.state!=='sleeping'&&!pawn.need&&!pawn.collapsePending&&!carried(pawn.id);
+  const order=pawn.melee?.order;
+  return (!violentWorkRefusal(pawn)||!!order&&mentalMeleeOwnership(world,pawn,order))&&!medicallyStopped(pawn)&&pawn.state!=='sleeping'&&!pawn.need&&!pawn.collapsePending&&!carried(pawn.id);
+}
+function structureTarget(world:World,pawn:Pawn){
+  const order=pawn.melee?.order;
+  return order?.structure?world.structures.find(s=>s.id===order.targetId&&(order.auto==='mental'?mentalMeleeOwnership(world,pawn,order)&&structureMaxHp(s)>0:isBarrier(s))):undefined;
+}
+function mentalAttempt(pawn:Pawn):void {
+  const c=pawn.mental?.crisis;if(!c||pawn.melee?.order?.auto!=='mental')return;
+  if(c.kind==='tantrum'){c.attempted=true;cancelMelee(pawn);}
+  else if(c.kind==='berserk'&&!pawn.melee.order.structure){c.targetId=null;c.jobUntilCore=null;cancelMelee(pawn);}
 }
 export function applyMeleeCommand(world:World,command:MeleeCommand):CommandResult {
   const refuse=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
@@ -74,28 +90,39 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   if(m.strike&&core>=m.strike.untilCore)m.strike=null;
   if(m.order?.auto==='social'&&!activeSocialFight(world,pawn,m.order.targetId)){finishSocialFight(world,pawn);return false;}
   if(!canFight(world,pawn,queries.carried)){
-    if(m.order?.auto==='social')finishSocialFight(world,pawn);else cancelMelee(pawn);
+    if(m.order?.auto==='social')finishSocialFight(world,pawn);else {
+      if(m.order?.auto==='mental'||m.order?.auto==='retaliation')pawn.path=[];
+      cancelMelee(pawn);
+    }
     return false;
   }
   if(m.order?.auto==='social'&&socialFightRecoveryDue(pawn,core)){finishSocialFight(world,pawn);return false;}
   const auto=m.order?.auto;
   if(auto==='draft'||auto==='response'){
     if(!automaticPermission(pawn,auto)||!automaticTarget(world,pawn,m.order!.targetId))cancelMelee(pawn);
-  }else if(!auto&&isColonist(pawn)&&!pawn.draft)cancelMelee(pawn);
+  }else if(auto==='mental'&&(!mentalMeleeOwnership(world,pawn,m.order!)||m.order!.untilCore!==undefined&&core>=m.order!.untilCore)
+    ||auto==='retaliation'&&(!retaliationPermission(pawn)||meleeThreatTarget(world,pawn,core,queries.grid())?.id!==m.order!.targetId||core>=m.order!.untilCore!))cancelMelee(pawn);
+  else if(!auto&&isColonist(pawn)&&!pawn.draft)cancelMelee(pawn);
   if(m.order?.structure){
-    const target=world.structures.find(s=>s.id===m.order!.targetId&&isBarrier(s));
+    const target=structureTarget(world,pawn);
     if(!target){cancelMelee(pawn);pawn.path=[];return false;}
-    if(m.strike||isStunned(pawn,core)||pawn.shooting?.stance?.phase==='cooldown'||(pawn.motion?.end??0)>core/10||!meleeContact(world,pawn,target,contactGrid()))return false;
+    const cell=structureMeleeCell(world,pawn,target,contactGrid());
+    if(m.strike||isStunned(pawn,core)||pawn.shooting?.stance?.phase==='cooldown'||(pawn.motion?.end??0)>core/10||!cell)return false;
     const state={rng:world.rng},random=()=>healthRandom(state),tool=chooseMeleeTool(meleeTools(world,pawn,()=>queries.body(pawn)),random);
     if(!tool){cancelMelee(pawn);return false;}
     const raw=Math.max(1,tool.damage*(.8+random()*.4)),floor=Math.floor(raw),damage=floor+(random()<raw-floor?1:0);
-    if(!damageBarrier(world,target,damage,state.rng))return false;
+    const order=m.order;
+    if(!(isBarrier(target)?damageBarrier(world,target,damage,state.rng):damageStructure(world,target,damage,'melee',state.rng)))return false;
     if(medicallyStopped(pawn))return true;
-    pawn.melee={order:world.structures.includes(target)?m.order:null,strike:{targetId:target.id,structure:{x:target.x,z:target.z},atCore:core,untilCore:core+tool.cooldownCore,tool:tool.id,outcome:'hit'}};
+    pawn.melee={order:world.structures.includes(target)?order:null,strike:{targetId:target.id,structure:{...cell},atCore:core,untilCore:core+tool.cooldownCore,tool:tool.id,outcome:'hit'}};
+    // Destruction may already have cancelled the order; notify from its real
+    // attempt without recreating an engagement after a medical interruption.
+    if(order?.auto==='mental'&&pawn.mental?.crisis?.kind==='tantrum'){pawn.mental.crisis.attempted=true;cancelMelee(pawn);}
     pawn.path=[];if(!medicallyStopped(pawn))pawn.state='idle';
     return true;
   }
-  const target=targetFor(world,pawn,queries.carried);
+  const readThreat=()=>meleeThreatTarget(world,pawn,core,queries.grid());
+  const target=targetFor(world,pawn,queries.carried,readThreat);
   if(m.order&&!target){if(m.order.auto==='social')finishSocialFight(world,pawn);else {cancelMelee(pawn);pawn.path=[];}}
   if(!pawn.melee)return false;
   if(!m.order&&!m.strike){delete pawn.melee;return false;}
@@ -106,21 +133,22 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   const randomState={rng:world.rng},random=()=>healthRandom(randomState);
   const tool=chooseMeleeTool(meleeTools(world,pawn,()=>queries.body(pawn)),random);if(!tool){if(m.order?.auto==='social')finishSocialFight(world,pawn);else cancelMelee(pawn);return false;}
   strikeLivingTarget(world,pawn,target,tool,core,randomState,disturbance);
+  mentalAttempt(pawn);
   if(m.order?.auto==='social'){
     if(!activeSocialFight(world,pawn,target.id))finishSocialFight(world,pawn);
-  }else if(m.order?.auto==='draft'||!targetFor(world,pawn))cancelMelee(pawn);
+  }else if(m.order?.auto==='draft'||m.order?.auto==='retaliation'||!targetFor(world,pawn,queries.carried,readThreat))cancelMelee(pawn);
   return true;
 }
 export function processMelee(world:World,pawn:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader):void {
-  const m=pawn.melee!,target=m.order?.structure?world.structures.find(s=>s.id===m.order!.targetId&&isBarrier(s)):targetFor(world,pawn);if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
+  const m=pawn.melee!,target=m.order?.structure?structureTarget(world,pawn):targetFor(world,pawn);if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
   if(m.order?.auto==='social'&&(!activeSocialFight(world,pawn,m.order.targetId)||!target||!canFight(world,pawn))){finishSocialFight(world,pawn);return;}
   if(!target||!canFight(world,pawn)){cancelMelee(pawn);pawn.path=[];return;}
   if(m.strike||pawn.shooting?.stance?.phase==='cooldown'||isStunned(pawn,world.tick*10)){pawn.path=[];pawn.state='idle';return;}
-  if(meleeContact(world,pawn,target,getBlocked())){pawn.path=[];pawn.state='idle';return;}
+  if(meleeTargetContact(world,pawn,target,getBlocked())){pawn.path=[];pawn.state='idle';return;}
   if(!isColonist(pawn)&&!pawn.tactics&&!pawn.raid||m.order?.auto==='draft'){cancelMelee(pawn);return;}
   const blocked=getBlocked(),end=pawn.path.at(-1),next=pawn.path[0];
   const traversable=!!next&&canStep(world,pawn,next,blocked,EMPTY);
-  if(!traversable||!end||!meleeContact(world,end,target,blocked)) {
+  if(!traversable||!end||!meleeTargetContact(world,end,target,blocked)) {
     if(!budget.remaining||pawn.planCooldown) {
       // A moving target makes the goal stale, not the safe route prefix.
       // Throttling a new search must not throttle physical pursuit as well.
@@ -131,7 +159,12 @@ export function processMelee(world:World,pawn:Pawn,getBlocked:NavigationGrid,bud
       if(!path){if(m.order?.auto==='social')finishSocialFight(world,pawn);else {cancelMelee(pawn);pawn.path=[];pawn.state='idle';}return;}pawn.path=path;
     }
   }
-  const step=pawn.path[0];if(step){pawn.state='moving';if(startTravel(world,pawn,step,getLight)){
+  const step=pawn.path[0];
+  if(step&&m.order?.auto==='mental'&&!m.order.structure&&pawn.mental?.crisis?.kind!=='tantrum'){
+    const door=world.structures.find(s=>isRoomDoor(s.kind)&&s.x===step.x&&s.z===step.z&&!s.door?.open);
+    if(door){m.order={...m.order,targetId:door.id,startedDowned:false,structure:true};pawn.path=[];pawn.state='idle';pawn.planCooldown=0;return;}
+  }
+  if(step){pawn.state='moving';if(startTravel(world,pawn,step,getLight)){
     pawn.path.shift();
     // An exhausted successful route may need another goal when this edge
     // finishes. Failed searches retain their backoff; they commit no step.
