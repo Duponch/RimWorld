@@ -1,4 +1,6 @@
-# Validation courante — V222
+# Validation courante — V223
+
+**V223 — Les Aulnes 250² et plafond de confort, schéma 198 inchangé.** [Contrat](advanced-colony-v223.md), [preuve complète](../history/validation-advanced-colony-v223.md). Deux dépassements reproduits sur fixtures valides puis corrigés ; 16 fichiers/87 cas ciblés, 6000 ticks ordinaires avec humains/domestiques sans chute, 61e entrée du catalogue et 60 anciens payloads exacts, typage/build et parcours matériel à 1×/6× avec sauvegarde compressée/reprise exacte passent. La dotation est préparée ; pas de campagne annuelle, parité exhaustive ni performance générale recertifiée. Les échecs du sampler et des fixtures/natif restent séparés des réussites finales dans la preuve.
 
 **V222 — mesure et oracles, schéma198 et moteur inchangés.** [Contrat](wildlife-reconciliation-v222.md), [preuves et limites](../history/validation-wildlife-reconciliation-v222.md). Deux charges/160ticks A/B exacts, deux cycles A/B/B/A,37fichiers/198cas puis15oracles sur le moteur restauré, typage/build passent. Essai d'indexation retiré faute de gain stable ; aucun nouveau résultat natif ou de campagne. La correction utilisateur250²/colonie plus avancée est la priorité suivante.
 

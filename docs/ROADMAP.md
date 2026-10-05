@@ -1,6 +1,6 @@
 # Plan de développement
 
-**Priorité utilisateur après V221 :** remplacer l'exemple trop modeste par une nouvelle colonie plus avancée sur la carte standard250², avec les principales activités existantes. Les [mesures V222](history/validation-wildlife-reconciliation-v222.md) sont terminées ; essai d'indexation retiré faute de gain stable, moteur inchangé. Cette correction de la colonie de test précède le choix d'une nouvelle boucle humaine.
+**Correction utilisateur V223 :** [Les Aulnes250²](development/advanced-colony-v223.md) expose une colonie plus avancée et les principaux systèmes existants, après6000ticks ordinaires et correction d'un dépassement du confort. [Preuve](history/validation-advanced-colony-v223.md). Les [mesures V222](history/validation-wildlife-reconciliation-v222.md) conservent l'essai retiré faute de gain stable. Prochaine priorité : incidents de cette colonie et mesures sur sa charge, puis une boucle humaine complète utile ; aucun jalonG0–G5 n'est clôturé par cette scène.
 
 La reprise du5octobre commence par [V221 : Les Aulnes](development/established-colony-v221.md), une colonie intégrée préparée puis réellement poursuivie, plutôt qu'une nouvelle variante isolée. [Preuve](history/validation-established-colony-v221.md). Priorité suivante : incidents concrets de jeu et mesures du débit avant optimisation, puis boucles humaines complètes. Ce lot de test ne clôture aucun jalonG0–G5 ; les repères suivants sont historiques.
 

@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V223 — Les Aulnes sur 250×250, schéma 198.** Une colonie plus avancée rassemble 14 habitants, un détenu, industrie, agriculture/serre, élevage, hôpital, loisirs et quatre tourelles. Dotation déclarée suivie d'une journée ordinaire ; [accès joueur](gameplay/advanced-colony-v223.md), [contrat](development/advanced-colony-v223.md), [preuves et limites](history/validation-advanced-colony-v223.md). La 61e scène conserve les 60 références précédentes. Le dépassement du besoin de confort détecté pendant la maturation est corrigé.
+
 **V222 — outils de mesure, schéma198 inchangé.** [Contrat](development/wildlife-reconciliation-v222.md), [preuves](history/validation-wildlife-reconciliation-v222.md). Essai d'indexation retiré faute de gain stable ; moteur et60sauvegardes publics conservés. La correction utilisateur demande maintenant une colonie plus avancée sur la carte standard250² ; Les Aulnes64² demeure une preuve historique de portée limitée.
 
 **Colonie intégrée V221 : Les Aulnes.** Une colonie à reprendre avec sept habitants et les systèmes actuels réunis, préparée puis réellement poursuivie pendant trois jours et demi. [Accès et contrat](development/established-colony-v221.md), [contrôles et limites](history/validation-established-colony-v221.md). Schéma198 inchangé ; reprise du travail autorisée, commits locaux sans push. Les repères suivants conservent leurs résultats et consignes historiques.

@@ -26,8 +26,7 @@ export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment,re
   if (need?.kind === 'sleep' && need.bedId !== null && (pawn.state === 'sleeping'||need.phase==='sleep'&&pawn.moveCooldown===0&&(pawn.state==='resting'||pawn.state==='downed'))) {
     const bed=world.structures.find(item=>item.id===need.bedId&&isBedKind(item.kind)&&item.x===pawn.x&&item.z===pawn.z&&(item.kind!=='hospital-bed'||need.phase==='sleep'&&pawn.moveCooldown===0&&need.target.x===item.x&&need.target.z===item.z));
     if(bed&&(pawn.state==='sleeping'||bed.kind==='hospital-bed')) {
-      const comfort=comfortForStructure(furnitureWorld,bed)*100;
-      ceiling=bed.kind==='hospital-bed'?Math.min(100,comfort):comfort;
+      ceiling=comfortForStructure(furnitureWorld,bed)*100;
     }
   }
   if (pawn.state === 'eating' && need?.kind === 'eat' && need.dining?.seatId !== null && need.dining) {const seat=world.structures.find(item => item.id === need.dining!.seatId && isDiningSeat(item.kind) && item.x === pawn.x && item.z === pawn.z);if(seat)ceiling=comfortForStructure(furnitureWorld,seat)*100;}
@@ -36,6 +35,9 @@ export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment,re
     const seat=world.structures.find(s=>s.id===pawn.recreation.task!.seatId&&isDiningSeat(s.kind)&&s.x===pawn.x&&s.z===pawn.z);
     if(seat)ceiling=comfortForStructure(furnitureWorld,seat)*100;
   }
+  // Furniture can exceed 100%; the occupied need remains normalized for every
+  // source. Keep lower ceilings unchanged, including their exact arithmetic.
+  ceiling=Math.max(0,Math.min(100,ceiling));
   const perHour = pawn.comfort < ceiling ? 60 : -4;
   pawn.comfort = pawn.comfort < ceiling ? Math.min(ceiling, pawn.comfort + perHour * 24 / TICKS_PER_DAY)
     : Math.max(ceiling, pawn.comfort + perHour * 24 / TICKS_PER_DAY);
