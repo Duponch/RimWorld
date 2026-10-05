@@ -51,6 +51,6 @@ export function advanceWorldCombat(world:World):void {
     }
     const pawn=owner.pawn;
     if(isMechanoidTarget(pawn)?advanceMechanoidCombat(world,pawn,core,{blocked:contactGrid,grid:queries.grid,ranged:queries.mechanoid}):isAnimalTarget(pawn)?advanceAnimalMelee(world,pawn,core,contactGrid,queries.grid,disturbance):advanceMelee(world,pawn,core,contactGrid,queries,disturbance)){changed=true;invalidated();}
-    if(isPawnTarget(pawn))advanceShooter(world,pawn,core,queries);
+    if(isPawnTarget(pawn))advanceShooter(world,pawn,core,queries,'core');
   }return changed;},invalidated,disturbance);
 }

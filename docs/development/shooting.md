@@ -1,5 +1,7 @@
 # Tir commandé — socle V56, armes V88
 
+V220 consolide la [suspension sous vrai étourdissement](shooting-stun-v220.md), schéma198 après validation stricte197 et migration du numéro seul. Préparation et récupération conservent leurs Core restants ; origine, profils, XP et projectiles restent réels. [Règle primaire](../research/shooting-stun-core-v220.md), [preuve et limites](../history/validation-shooting-stun-v220.md). Les passages de commande ne font pas avancer l'horloge de combat.
+
 **V88 validée dans son périmètre :** fusil à verrou avec portée 36,9, préparation 102 Core, récupération 90 Core et projectile 0,7 case/Core, en plus du revolver. La chasse et les contrôleurs de combat consultent le profil de la principale ; le couteau n’est pas une arme à distance. Les postures et projectiles du fusil portent un identifiant intrinsèque, validé à partir de V88 ; les anciennes formes désignent toujours le revolver. [Coefficients et limites](../research/weapons-v88.md), [preuves V88](../history/validation-trade-v88.md).
 
 Historique du socle,18 septembre 2026. [Sources et décisions](../research/shooting-reference.md), [guide joueur](../gameplay/player-guide.md), [preuves](validation.md). Premier ordre de tir utilisable avec le revolver équipé. Ce lot n'ajoute ni ennemi ni raid ; tous les personnages actuels appartiennent à la colonie.

@@ -58,7 +58,13 @@ test('native UI: explicit target, cancel, saved aim, visible GPU flight/pose and
         await page.keyboard.press('Escape');await page.locator('[data-speed="6"]').click();
         await expect.poll(async()=>(await world(page)).pawns[1].health!.injuries.some(i=>i.tended!==undefined),{timeout:25000}).toBe(true);
         await page.locator('[data-speed="0"]').click();const cared=await world(page);expect(validateWorld(cared)).toEqual([]);expect(cared.pawns[2].skills.medicine.xp).toBeGreaterThan(0);
-        await page.locator(`[data-pawn="${initial.pawns[1].id}"]`).click();await pawnTab(page,'health');await expect(page.locator('#health-inspection')).toContainText('qualité');
+        await page.locator(`[data-pawn="${initial.pawns[1].id}"]`).click();await pawnTab(page,'health');
+        // V199 keeps the wound visible and puts its treatment facts in the
+        // shared explanation. Exercise the actual keyboard target for those facts.
+        const injuryInfo=page.locator('#health-inspection .health-injury-row .health-condition-info').first();
+        await expect(injuryInfo).toBeVisible();await injuryInfo.focus();await expect(injuryInfo).toBeFocused();
+        const tooltip=page.locator('#game-tooltip');await expect(tooltip).toHaveCount(1);await expect(tooltip).toBeVisible();
+        await expect(tooltip).toContainText('Soignée · qualité');
         await page.screenshot({path:testOutputPath(`artifacts/shooting-care-${proofVersion}.png`)});
         await panel(page,'menu');await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,cared);
       }

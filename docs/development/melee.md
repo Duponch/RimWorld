@@ -1,5 +1,7 @@
 # Combat rapproché — socle V59, extension V88
 
+V220 conserve la [stance humaine de tir réellement étourdie](shooting-stun-v220.md), sans modifier la durée locale de stun45, les coups, les récupérations de mêlée ni le trajet. Une interruption clinique dure reste prioritaire ; les interruptions historiques sans stun restent distinctes. [Référence](../research/shooting-stun-core-v220.md), [preuve](../history/validation-shooting-stun-v220.md).
+
 V197 corrige la [continuité de poursuite](melee-pursuit-v197.md), sans nouvelle mécanique ni migration au schéma 182 : le délai de recherche ne bloque plus un début de route encore sûr, et la révision tactique conserve l'engagement vers la même cible. Contact, arêtes, blocages et récupération restent physiques ; la [recherche Core actuelle](../research/melee-pursuit-core-v197.md) distingue récupération d'un coup et attente de navigation.
 
 **V88 validée dans son périmètre :** le couteau en plastacier ajoute manche contondant, lame coupante et pointe perforante, avec récupérations respectives 96/72/96 ticks Core ; le fusil emploie les gestes de mêlée des armes à feu existantes. La [référence V88](../research/weapons-v88.md) distingue les coefficients vérifiés et le classement des gestes hérité, encore adapté. Les [preuves V88](../history/validation-trade-v88.md) ne certifient pas un DPS moyen identique à Core.

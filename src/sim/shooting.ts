@@ -9,7 +9,7 @@ import { isStunned } from './stun.ts';
 import { assaultTarget,hostileTo,isColonist,distanceSquared } from './affiliation.ts';
 import type { CommandResult,Pawn,World } from './types.ts';
 import type { ShootingCommand } from './shooting-state.ts';
-import { cancelShooting } from './shooting-state.ts';
+import { advanceShootingClock,cancelShooting,shootingOrderAuthority } from './shooting-state.ts';
 import { equippedWeapon,isRangedWeaponItem } from './equipment-rules.ts';
 import { pawnBody,medicallyStopped } from './health-rules.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
@@ -51,7 +51,8 @@ function startAim(world:World,pawn:Pawn,core:number,queries:Queries):void {
   if(isStunned(pawn,core)||pawn.melee?.strike||(pawn.motion?.end??0)*CORE_TICKS_PER_LOCAL>core)return;
   const plan=shotPlan(world,pawn,order.targetId,queries);
   if('reason' in plan||plan.weapon.id!==order.weaponId){cancelShooting(pawn);return;}
-  pawn.shooting!.stance={phase:'aim',startedAtCore:core,endsAtCore:core+plan.profile.warmupCoreTicks,targetStartedDowned:plan.target.state==='downed',...plan.weapon.item==='bolt-action-rifle'?{weaponItem:'bolt-action-rifle' as const}:{}};
+  pawn.shooting!.stance={phase:'aim',startedAtCore:core,endsAtCore:core+plan.profile.warmupCoreTicks,targetStartedDowned:plan.target.state==='downed',...plan.weapon.item==='bolt-action-rifle'?{weaponItem:'bolt-action-rifle' as const}:{},
+    ...world.schemaVersion>=198?{clock:{lastAdvancedAtCore:core,pausedCore:0}}:{}};
   pawn.state='idle';
 }
 export function applyShootingCommand(world:World,command:ShootingCommand):CommandResult {
@@ -73,17 +74,46 @@ export function applyShootingCommand(world:World,command:ShootingCommand):Comman
   return {ok:true};
 }
 
-/** Core clock is shared with flight. Caller invalidates queries after an impact. */
-export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries):void {
+export type ShootingPass='core'|'revalidate';
+/** Core clock is shared with flight. Caller invalidates queries after an impact.
+ * Commands may revalidate/start a stance, but cannot advance its busy clock. */
+export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries,pass:ShootingPass='revalidate'):void {
   const shot=pawn.shooting;if(!shot)return;
   if(violentWorkRefusal(pawn)||medicallyStopped(pawn)||queries.body(pawn).capacities.manipulation===0){delete pawn.shooting;return;}
-  if(shot.order){const a=shot.order.auto;if(shot.order.hunt?!huntingPermission(world,pawn,shot.order.targetId):a?(!automaticPermission(pawn,a.kind)||!automaticTarget(world,pawn,shot.order.targetId)||a.kind==='draft'&&pawn.draft?.holdFire||a.kind==='response'&&world.tick>=a.until):!pawn.draft&&isColonist(pawn))cancelShooting(pawn);}
+  const suspendedClock=world.schemaVersion>=198,stunned=isStunned(pawn,core);
+  if(suspendedClock){
+    if(!shootingOrderAuthority(world,pawn))cancelShooting(pawn);
+    if(!pawn.shooting)return;
+    if(shot.order){const weapon=equippedWeapon(world,pawn);
+      if(!weapon?.weapon||!isRangedWeaponItem(weapon.item)||weapon.id!==shot.order.weaponId||pawn.equipmentDropPending
+        ||shot.stance?.phase==='aim'&&(shot.stance.weaponItem??'revolver')!==weapon.item
+        ||pawn.state==='sleeping'||pawn.need&&shot.order.auto?.kind!=='response'||pawn.collapsePending||queries.carried(pawn.id))cancelShooting(pawn);
+    }
+    if(!pawn.shooting)return;
+    if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
+    if(shot.stance&&pass==='core'){
+      // Adoption is prospective at the previous publication; no past stun is repaid.
+      shot.stance.clock??={lastAdvancedAtCore:core-1,pausedCore:0};
+      if(advanceShootingClock(shot.stance,core,stunned)==='duplicate')return;
+    }
+    if(stunned&&shot.stance?.phase==='aim')return;
+    if(shot.order&&(shot.order.hunt?!huntingPermission(world,pawn,shot.order.targetId)
+      :shot.order.auto&&!automaticTarget(world,pawn,shot.order.targetId)))cancelShooting(pawn);
+  }else if(shot.order){const a=shot.order.auto;if(shot.order.hunt?!huntingPermission(world,pawn,shot.order.targetId):a?(!automaticPermission(pawn,a.kind)||!automaticTarget(world,pawn,shot.order.targetId)||a.kind==='draft'&&pawn.draft?.holdFire||a.kind==='response'&&world.tick>=a.until):!pawn.draft&&isColonist(pawn))cancelShooting(pawn);}
+  if(!pawn.shooting)return;
   if(shot.order) {
     const target=combatTarget(world,shot.order!.targetId);
     if(!target||target.state==='dead'||!shot.order.startedDowned&&target.state==='downed'||!isColonist(pawn)&&(!hostileTarget(pawn,target)||isAnimalTarget(target)||isPawnTarget(target)&&!assaultTarget(pawn,target)))cancelShooting(pawn);
     if(!pawn.shooting)return;
   }
   if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
+  if(suspendedClock&&stunned)return;
+  if(suspendedClock&&pass==='revalidate'&&shot.stance){
+    if(shot.stance.phase==='aim'&&shot.order){const plan=shotPlan(world,pawn,shot.order.targetId,queries);
+      if('reason' in plan||plan.weapon.id!==shot.order.weaponId||!shot.stance.targetStartedDowned&&plan.target.state==='downed')cancelShooting(pawn);
+    }
+    return;
+  }
   if(shot.stance?.phase==='cooldown') {
     if(core<shot.stance.endsAtCore)return;
     shot.stance=null;if(shot.order?.auto?.kind==='response'&&shot.order.auto.remaining===0)shot.order=null;if(!shot.order){delete pawn.shooting;return;}
@@ -105,7 +135,8 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
   pawn.lastAttack={targetId:target.id,atCore:core};
   if(shot.order.auto?.kind==='response')shot.order.auto.remaining--;
   if(shot.order.auto?.kind==='draft')shot.order=null;
-  shot.stance={phase:'cooldown',startedAtCore:core,endsAtCore:core+profile.cooldownCoreTicks,...weapon.item==='bolt-action-rifle'?{weaponItem:'bolt-action-rifle' as const}:{}};
+  shot.stance={phase:'cooldown',startedAtCore:core,endsAtCore:core+profile.cooldownCoreTicks,...weapon.item==='bolt-action-rifle'?{weaponItem:'bolt-action-rifle' as const}:{},
+    ...suspendedClock?{clock:{lastAdvancedAtCore:core,pausedCore:0}}:{}};
 }
 
 export function startAutonomousShot(world:World,pawn:Pawn,target:LivingTarget,queries:Queries):boolean {

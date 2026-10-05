@@ -8,7 +8,7 @@ export function applyMeleeStun(world:World,pawn:Pawn,core:number):void {
   if(pawn.state==='dead')return;
   const previous=pawn.stun;
   pawn.stun={sinceCore:previous&&previous.untilCore>=core?previous.sinceCore:core,untilCore:Math.max(previous?.untilCore??0,core+45)};
-  if(pawn.shooting?.stance?.phase==='aim')pawn.shooting.stance=null;
+  if(world.schemaVersion<198&&pawn.shooting?.stance?.phase==='aim')pawn.shooting.stance=null;
   const m=pawn.motion;
   if(m&&m.end>core/10){pawn.motion={...m,stuns:mergeSlowIntervals([...(m.stuns??[]),{start:Math.max(m.start,core/10),end:pawn.stun.untilCore/10}])};pawn.motion.end=travelEnd(pawn.motion);pawn.moveCooldown=Math.max(0,pawn.motion.end-world.tick);syncPatient(world,pawn);}
 }

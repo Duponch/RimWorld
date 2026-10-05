@@ -91,7 +91,14 @@ test('schemas190 and193 without mechanical owners preserve candidates, captures,
     let arrived=false,emitted=false;
     for(let i=0;i<6;i++){
       current.tick++;old.tick++;advanceWorldCombat(current);advanceWorldCombat(old);
-      expect({...old,schemaVersion:current.schemaVersion}).toEqual(current);
+      for(const p of current.pawns)if(p.shooting?.stance)expect(p.shooting.stance.clock).toEqual({lastAdvancedAtCore:current.tick*10,pausedCore:0});
+      for(const p of old.pawns)if(p.shooting?.stance)expect(Object.hasOwn(p.shooting.stance,'clock')).toBe(false);
+      // V220 adds prospective clock metadata without changing this uninterrupted
+      // cadence. Project only that declared field from a clone, preserving the
+      // full equality of RNG, phases, emissions, impacts and every other field.
+      const projected=structuredClone(current);
+      for(const p of projected.pawns)if(p.shooting?.stance)delete p.shooting.stance.clock;
+      expect({...old,schemaVersion:current.schemaVersion}).toEqual(projected);
       emitted||=!!current.projectiles?.length;arrived||=!!current.projectiles?.some(p=>p.arrival!==null);
     }
     expect(emitted).toBe(true);expect(arrived).toBe(true);

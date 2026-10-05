@@ -96,3 +96,9 @@ Suite V218 commitée à15:22:38Paris, 3d55f6bb649f4d0d16b564e149f504ec2d2a8a10, 
 
 
 V219 prêt pour commit local : deux races dans un lot commun, schéma197 neutre,43cas ciblés,570fichiers/2592PASS/1SKIP par reprises, typage/build et présentation119,406s. Natif matériel71,973s : sortie/repli, visée270121/vol270132, neutralisation270748, portage270780 puis13aciers270850 avec reprises exactes. La première boucle échouait par mort du travailleur exposé ; abri initial hors tirs et vraie mobilisation protègent ensuite les artisans, sans dégâts ou bilan falsifiés. Catalogue59/59 en36,170s,58historiques exacts. Acquisition intentionnelle de bâtiments reste ouverte. Le prochain chantier corrige le tir humain sous stun confirmé, puis reprend les boucles sociales selon le plan privé ; aucune attente de relance ni push.
+
+
+V219 committé localement à17:12:47Paris, `82b79777db08bc6294bfe6f6d586d46ad1fd290f`,90fichiers, sans push. V220 reproduit par vrais producteurs les défauts aim/cooldown : deux graines initiales certifiées12/26, puis2/2échecs attendus avant toute mutation produit. Pendant ce lot, l’utilisateur demande de terminer, committer et arrêter pour ses tests. La relance automatique existante a été mise PAUSED et vérifiée ; aucun lot social ne sera commencé après V220.
+
+
+V220 validé avant commit local : schéma198, deux défauts temporels reproduits par vrais coups puis corrigés,17nouveaux cas et103ciblés uniques/10fichiers. Régression572fichiers/2609réussites/un ignoré par reprise d’un seul oracle historique devenu sensible à la clock. Catalogue59strict/hash/reprise, typage/build et natif humain1×/6× passent ; source produit gelée. L’ancien oracle qualité UI a été adapté par focus réel et infobulle, sorties échouées préservées. Relance automatique PAUSED ; arrêt après commit pour les tests utilisateur, aucun lot suivant ni push.

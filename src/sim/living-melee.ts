@@ -7,7 +7,7 @@ import { createMedicalRecord } from './injury-state.ts';
 import { resolveUnarmoredMelee } from './melee-impact.ts';
 import { meleeHitChance,mechaMeleeHitChance,meleeDodgeChance,type MeleeTool } from './melee-statistics.ts';
 import { applyBulletStagger } from './stagger.ts';
-import { applyMeleeStun } from './stun.ts';
+import { applyMeleeStun,isStunned } from './stun.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { learnSkill,XP_SCALE } from './skills.ts';
 import { effectiveSkillLevel } from './work-types.ts';
@@ -69,7 +69,7 @@ export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTa
   else {
     if(outcome==='hit'){reconcilePawnHealth(w,target,undefined,true);if(injured)disturbance.damage(target,core,immobile);}
     applyBulletStagger(w,target,core,1);if(stun)applyMeleeStun(w,target,core);
-    if(target.shooting?.stance?.phase==='aim')cancelShooting(target);
+    if(target.shooting?.stance?.phase==='aim'&&(w.schemaVersion<198||!isStunned(target,core)))cancelShooting(target);
   }
   if(isPawnTarget(attacker))attacker.lastAttack={targetId:target.id,atCore:core};
 }

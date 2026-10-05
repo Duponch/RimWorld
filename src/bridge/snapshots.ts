@@ -61,7 +61,8 @@ import { validBackground } from '../sim/colonist-backgrounds.ts';
 import { validHumanAge, type HumanAge } from '../sim/human-age.ts';
 import { validOfferedBackground } from '../sim/background-save.ts';
 import { validMentalShape, validMeleeThreatShape, validateMental } from '../sim/mental-save.ts';
-import { validMeleeShape, validateMelee } from '../sim/melee-save.ts';
+import { validMeleeShape, validStunShape, validateMelee } from '../sim/melee-save.ts';
+import { validShootingShape,validateShooting } from '../sim/shooting-save.ts';
 import { validArchivedMeleeThreat } from '../sim/visitor-save.ts';
 import { validMechanoidShape,validateMechanoids } from '../sim/mechanoid-save.ts';
 import { validMechCorpseShape,validMechSalvageLedger } from '../sim/mechanoid-corpse-save.ts';
@@ -347,6 +348,8 @@ export class SnapshotDecoder {
       if(!pawn||typeof pawn!=='object'||Array.isArray(pawn))return resync('Personne locale invalide pour ce snapshot.');
       if(Object.hasOwn(pawn,'bombRefuge')&&!validBombRefugeShape(pawn.bombRefuge,message.world.schemaVersion))return resync('Refuge Bomb futur ou invalide.');
       if(!validMentalTransport(pawn,message.world))return resync('Crise mentale, menace ou autorité de mêlée invalide pour ce snapshot.');
+      if(!validShootingShape(pawn.shooting,message.world.schemaVersion,message.world.tick)
+        ||pawn.shooting!==undefined&&!validStunShape(pawn.stun,message.world.schemaVersion,message.world.tick))return resync('Phase de tir humaine invalide pour ce snapshot.');
       if(!validBackgroundTransport(pawn,message.world.schemaVersion))return resync('Âge ou passé personnel invalide pour ce snapshot.');
       if(!validSurgeryTransport(pawn,message.world))return resync('État chirurgical ou anesthésique invalide pour ce snapshot.');
       if(!validPawnPodRescue(pawn,message.world.schemaVersion,message.world))return resync('Mandat de secours civil invalide pour ce snapshot.');
@@ -536,7 +539,7 @@ export class SnapshotDecoder {
     // Retained ballistic/Bomb and relationship owners need this additional identity
     // capture. Foreign registries above are already validated; their historical
     // owners reserve the same namespace as the map and cannot become a wave.
-    if(relationships||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge'))){
+    if(relationships||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
       const owners=[
         ...next.pawns,...next.structures,...next.jobs,...next.resources,...next.piles,...next.stockpiles,...next.growingZones,
         ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
@@ -560,6 +563,7 @@ export class SnapshotDecoder {
       planetCheck=this.planetValidation.prepare(next,next.schemaVersion,message.epoch);
       if(!planetCheck.ok||validateGroupStateWithPlanet(next,next.schemaVersion,planetCheck.context).length)return resync('Planète, groupe ou pertes incohérents.');
       if(registerGroupThingIds(next,ids).length)return resync('Une identité du groupe possède plusieurs propriétaires.');
+      if(validateShooting(next,next.schemaVersion,ids).length)return resync('Référence ou autorité de tir humaine invalide.');
       if(validateMechanoidRaids(next,next.schemaVersion,ids).length)return resync('Identité mécanique historique réutilisée dans un autre propriétaire.');
       for(const actor of next.mechanoids??[])if(validateMechanoidRanged(next,actor,next.schemaVersion,ids).length)return resync('Référence ou phase de tir mécanique invalide.');
       if(validateProjectiles(next,next.schemaVersion,ids).length)return resync('Balle ou canon lanceur invalide.');
