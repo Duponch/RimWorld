@@ -22,7 +22,7 @@ import { medicalBleed,medicalPain } from '../../src/sim/injury-state.ts';
 import { BLOOD_UNIT } from '../../src/sim/injury-rules.ts';
 import { FEED_HUNGER,needsAssistedFeeding } from '../../src/sim/feeding-rules.ts';
 import { wantsRescue } from '../../src/sim/rescue.ts';
-import { medicalWorkRefusal } from '../../src/sim/health-rules.ts';
+import { medicalWorkRefusal,pawnBody } from '../../src/sim/health-rules.ts';
 import { crashlandedDecisions,crashlandedThreatActive } from './crashlanded-player.ts';
 import { survivorPlan } from './survivor-player.ts';
 import type { Decision } from './colony-player.ts';
@@ -89,13 +89,15 @@ export function observeEnergy(w:World,s:EnergyPlayerState):void {
   else if(s.stage==='rebuild'&&w.structures.some(q=>q.kind==='power-conduit'&&q.x===p.cut.x&&q.z===p.cut.z)&&cooler&&isPowerActive(cooler)&&stove&&isPowerActive(stove)){record('cableRestored',true);next('done');}
 }
 const recoveryPatient=(p:World['pawns'][number])=>urgentTreatment(p)||wantsRescue(p)||needsAssistedFeeding(p)&&p.hunger<=FEED_HUNGER;
-/** V217 player policy, not a Core combat/clinical threshold: stop exposing a
- * mobile defender at 50% blood/day, 25% pain or 15% accumulated blood loss.
+/** Player policy, not a Core combat/clinical threshold: stop exposing a mobile
+ * defender below 75% actual consciousness, at 50% blood/day, 25% pain or 15%
+ * accumulated blood loss. Reduced consciousness also shelters an already sick
+ * defender before any impact; the pain threshold alone misses initial poisoning.
  * In particular, a fresh 11.6 HP leg gunshot qualifies before blood-loss fall;
  * a small isolated injury does not remove every armed defender from the line. */
 export function energyRetreatNeeded(p:World['pawns'][number]):boolean {
   return p.state!=='dead'&&p.state!=='downed'&&!!p.health
-    &&(medicalBleed(p.health)>=.5||medicalPain(p.health)>=.25||p.health.bloodLoss>=.15*BLOOD_UNIT);
+    &&(pawnBody(p).capacities.consciousness<.75||medicalBleed(p.health)>=.5||medicalPain(p.health)>=.25||p.health.bloodLoss>=.15*BLOOD_UNIT);
 }
 /** Do not leave mobilization or a real emergency on the ordinary 250-tick
  * construction cadence. This observation does not query navigation or mutate
@@ -262,10 +264,21 @@ export function energyDecisions(w:World,s:EnergyPlayerState):Decision[] {
             .some(i=>i>=0&&i<blocked.length&&reach.has(i));
         };
         let target:Cell|undefined;
-        for(const r of captures){
+        // Keep the already admitted retreat across all still-safe rooms before
+        // ranking any newly available room. Otherwise a primary room becoming
+        // free again reverses the physical trip to the secondary refuge.
+        const accepted=p.draft?.target;
+        if(accepted){
+          const retained=captures.find(r=>{
+            if(!inside(accepted,r.a)||!connected(r))return false;
+            const reach=p.melee?.order?r.fighting!:r.reach!;
+            return free(accepted)&&reach.has(accepted.z*w.width+accepted.x);
+          });
+          if(retained)target=accepted;
+        }
+        if(!target)for(const r of captures){
           if(!connected(r))continue;
           const reach=p.melee?.order?r.fighting!:r.reach!,available=(c:Cell)=>free(c)&&reach.has(c.z*w.width+c.x);
-          if(p.draft?.target&&inside(p.draft.target,r.a)&&available(p.draft.target)){target=p.draft.target;break;}
           if(inside(p,r.a)&&available(p)&&!p.motion&&!p.shooting?.order&&!p.melee?.order&&(!p.draft?.target||p.x===p.draft.target.x&&p.z===p.draft.target.z)){target={x:p.x,z:p.z};break;}
           target=r.cells.filter(available).sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.z-b.z||a.x-b.x)[0];
           if(target)break;

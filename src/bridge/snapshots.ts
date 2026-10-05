@@ -551,10 +551,10 @@ export class SnapshotDecoder {
         for(const pack of d.packed??[])if(!addId(pack.building.id)||!addItems(pack.building.bills??[]))return resync('Identité de mobilier archivé invalide.');
       }
       if(validateMechanoids(next,next.schemaVersion,ids).length)return resync('Identité, cible ou déplacement mécanique invalide.');
-      if(validateMechanoidRaids(next,next.schemaVersion,ids).length)return resync('Identité mécanique historique réutilisée dans un autre propriétaire.');
       planetCheck=this.planetValidation.prepare(next,next.schemaVersion,message.epoch);
       if(!planetCheck.ok||validateGroupStateWithPlanet(next,next.schemaVersion,planetCheck.context).length)return resync('Planète, groupe ou pertes incohérents.');
       if(registerGroupThingIds(next,ids).length)return resync('Une identité du groupe possède plusieurs propriétaires.');
+      if(validateMechanoidRaids(next,next.schemaVersion,ids).length)return resync('Identité mécanique historique réutilisée dans un autre propriétaire.');
       if(validateProjectiles(next,next.schemaVersion,ids).length)return resync('Balle ou canon lanceur invalide.');
       const bombErrors:string[]=[];validateBombWaves(next,bombErrors,ids);if(bombErrors.length)return resync('Vague Bomb ou identité invalide.');
       if(validateBombRefuges(next,[],ids).length)return resync('Refuge ou danger Bomb incohérent.');

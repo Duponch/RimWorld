@@ -346,8 +346,8 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   errors.push(...validateFurniture(world,version,ids));
   if(!errors.length)errors.push(...validatePodRescues(world,version,ids,createPodDepartureValidator(projection=>validateSchema(projection,version,false))));
   if(!errors.length)errors.push(...validateFires(world,version,ids),...validateThingDamage(world,version));
-  if(!errors.length&&world.raids?.mechActive)errors.push(...validateMechanoidRaids(world,version,ids));
   if(!errors.length)errors.push(...registerGroupThingIds(commercialWorld,ids));
+  if(!errors.length&&world.raids?.mechActive)errors.push(...validateMechanoidRaids(world,version,ids));
   if(!errors.length&&relationshipContext)errors.push(...validateRelationshipWorld(commercialWorld,version));
   if(!errors.length)errors.push(...validateProjectiles(world,version,ids));
   if(!errors.length){validateBombWaves(world,errors,ids);validateMiniTurrets(world,errors);validateBombRefuges(world,errors,ids);}

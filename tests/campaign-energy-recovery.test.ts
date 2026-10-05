@@ -17,6 +17,8 @@ import {createRaidGroup} from '../src/sim/raid-spawn.ts';
 import {newDoorState} from '../src/sim/door-rules.ts';
 import {damageUnarmoredPawnWithBullet} from '../src/sim/bullet-damage.ts';
 import {medicalBleed,medicalPain} from '../src/sim/injury-state.ts';
+import {pawnBody} from '../src/sim/health-rules.ts';
+import {selfAllowedFood,selfFoodAccessible} from '../src/sim/prison-food.ts';
 import {energyDecisionDue,energyDecisions,energyRecoveryDecisions,energyRetreatNeeded,type EnergyPlayerState} from './scenarios/energy-player.ts';
 import type {Command,World} from '../src/sim/types.ts';
 
@@ -132,19 +134,47 @@ test('Énergie attend un refus clinique réel sans forcer un ordre, une priorit�
 /** Prepared geometry/equipment only. The actual raid producer owns the enemy
  * and its equipment namespace; there is no injury, projectile or outcome here.
  * The legacy crashlanded revision is explicit, as in campaign-defense.test.ts. */
-function energyRaidCamp(armedEnemy=false,cornerEntry=false) {
+function energyRaidCamp(armedEnemy=false,cornerEntry=false,illDefender=false) {
   const w=equipmentCamp(3),[ada,noe,mina]=w.pawns;
-  w.resources=[];w.jobs=[];w.structures=[];w.piles=[];w.rng=81733;
+  w.resources=[];w.jobs=[];w.structures=[];w.piles=[];
+  // Authored exposure branch starts at seed42 before any tick or contact:
+  // its first risk roll is below Adventure's .75. No post-ingestion remapping
+  // or population-frequency claim; every existing combat case keeps81733.
+  w.rng=illDefender?42:81733;
   w.scenario={id:'crashlanded',revision:1,landing:{x:16,z:16}};
   w.gameProfile=crashlandedProfile();enableCassandraRaids(w);adoptFluIncidents(w);
   fixtureBuilding(w,'bed',cornerEntry?28:8,cornerEntry?5:6,2);const camp=survivorPlan(w,true);
   for(let dz=0;dz<5;dz++)for(let dx=0;dx<5;dx++)if(!dx||!dz||dx===4||dz===4){
-    const door=dx===(cornerEntry?4:2)&&dz===4,building=fixtureBuilding(w,door?'door':'wall',camp.anchor.x+dx,camp.anchor.z+dz);
+    // The corner border door admits the authored raid, but its two cardinal
+    // neighbours are walls. A second real bottom door connects the interior
+    // to the ordinary outside component when that border endpoint clears.
+    const door=dz===4&&(dx===2||cornerEntry&&dx===4),building=fixtureBuilding(w,door?'door':'wall',camp.anchor.x+dx,camp.anchor.z+dz);
     if(door)Object.assign(building,{material:'wood',door:newDoorState(w.tick)});
   }
   Object.assign(ada!,{name:'Ada',x:4,z:10});Object.assign(noe!,{name:'Noé',x:cornerEntry?25:14,z:cornerEntry?7:10});
   Object.assign(mina!,{name:'Mina',x:camp.anchor.x+2,z:camp.anchor.z+3});
   for(const p of [ada!,noe!])addMaterial(w,'weapon',1,{type:'equipment',pawnId:p.id},'revolver');
+  if(illDefender){
+    // Announced contaminated food is the only prepared exposure. The real
+    // need/ingestion pipeline consumes it and creates the clinical condition
+    // before the actual raid/person/combat order is produced. The prepared
+    // profile/calendars and their real difficulty factor remain unchanged.
+    noe!.hunger=25;
+    addMaterial(w,'food',1,{type:'ground',x:noe!.x,z:noe!.z},'simple-meal');
+    const food=w.piles.find(p=>p.item==='simple-meal')!;
+    food.foodPoison={fraction:1,cause:'filthy-kitchen'};refreshStock(w);valid(w);
+    const exposure=()=>JSON.stringify({tick:w.tick,rng:w.rng,hunger:noe!.hunger,state:noe!.state,need:noe!.need,
+      orders:noe!.orders,allowed:selfAllowedFood(w,noe!),food:w.piles.find(p=>p.id===food.id)??null});
+    expect(selfAllowedFood(w,noe!).includes('simple-meal'),exposure()).toBe(true);
+    expect(selfFoodAccessible(w,noe!,food),exposure()).toBe(true);expect(noe!.orders.active,exposure()).toBeNull();
+    // Observe the completed meal instead of blindly waiting for disease: a
+    // refused source, uncompleted ingestion and a genuine missed risk differ.
+    for(let n=0;n<100&&w.piles.some(p=>p.id===food.id);n++){stepWorld(w);valid(w);}
+    expect(w.piles.some(p=>p.id===food.id),exposure()).toBe(false);
+    expect(noe!.health?.foodPoisoning,exposure()).toBeDefined();
+    expect(noe!.health!.injuries).toEqual([]);expect(noe!.hunger).toBeGreaterThan(25);
+    stepWorld(w);valid(w);
+  }
   apply(w,{type:'draft',pawnIds:[ada!.id,noe!.id,mina!.id],enabled:true});
   apply(w,{type:'fire-at-will',pawnIds:[ada!.id,noe!.id,mina!.id],enabled:false});
   const raid=createRaidGroup(w,{count:1,sites:[{x:w.width-1,z:cornerEntry?camp.anchor.z+4:0}],random:{rng:w.raids!.rng}});
@@ -157,6 +187,24 @@ function moveFor(w:World,s:EnergyPlayerState,id:number) {
   for(const {command} of energyDecisions(w,s))if(command.type==='draft-move'&&command.pawnIds.includes(id))return command;
 }
 const interior=(cell:{x:number;z:number},anchor:{x:number;z:number})=>cell.x>anchor.x&&cell.x<anchor.x+4&&cell.z>anchor.z&&cell.z<anchor.z+4;
+
+test('Énergie abrite le défenseur réellement intoxiqué avant le raid sans attendre une première blessure',()=>{
+  const {w,ada,noe,camp,s}=energyRaidCamp(false,false,true);
+  expect(noe.health!.foodPoisoning!.bornAt).toBeLessThan(w.raids!.active!.startedAt);
+  expect(noe.health!.injuries).toEqual([]);expect(noe.health!.bloodLoss).toBe(0);
+  expect(medicalBleed(noe.health!)).toBe(0);expect(medicalPain(noe.health!)).toBeCloseTo(.2);
+  expect(pawnBody(noe).capacities.consciousness).toBeLessThan(.75);
+  expect(noe.state).not.toBe('downed');expect(energyRetreatNeeded(noe)).toBe(true);
+  expect(energyRetreatNeeded(ada)).toBe(false);
+  const before=serializeWorld(w),rng=w.rng,nextId=w.nextId,retreat=moveFor(w,s,noe.id);
+  expect(serializeWorld(w)).toBe(before);expect(w.rng).toBe(rng);expect(w.nextId).toBe(nextId);
+  expect(retreat).toBeDefined();expect(interior(retreat!.target,camp.anchor)).toBe(true);
+  expect(moveFor(w,s,ada.id)?.target).toEqual(camp.pin);
+  apply(w,retreat!);expect(noe.draft!.target).toEqual(retreat!.target);
+  const copy=deserializeWorld(serializeWorld(w));stepWorld(w,4);stepWorld(copy,4);
+  valid(w);expect(serializeWorld(copy)).toBe(serializeWorld(w));
+  expect(noe.health!.injuries).toEqual([]);expect(noe.state).not.toBe('downed');
+});
 
 test('Énergie replie Noé encore mobile après un impact du moteur, conserve un défenseur sain et atteint le vrai abri sans relancer son arête',()=>{
   const {w,ada,noe,enemy,camp,s}=energyRaidCamp(true);
@@ -238,7 +286,7 @@ test('Énergie ne transforme ni une pièce percée ni un abri d’un autre compo
   }
 });
 
-test('Énergie refuse le refuge occupé à sa porte puis à son ancien endpoint engagé et admet un autre abri réel',()=>{
+test('Énergie refuse la porte et son ancien endpoint puis conserve le trajet admis quand le premier abri redevient libre',()=>{
   // The authored room reaches the map border. createRaidGroup admits its real
   // raider at that border door; no actor is teleported after admission and no
   // segment, tactical mandate, wound or outcome is injected into the raider.
@@ -268,4 +316,34 @@ test('Énergie refuse le refuge occupé à sa porte puis à son ancien endpoint 
     expect(noe.state).not.toBe('downed');expect(noe.state).not.toBe('dead');
   }
   expect(heldTicks).toBeGreaterThan(0);expect(w.tick).toBeGreaterThanOrEqual(edge.end);
+  expect(interior(noe,s.origin)).toBe(false);expect(noe.draft!.target).toEqual(retreat!.target);
+  // The same physical first room is admissible again after the raider's old
+  // endpoint has cleared. A real stop on a separate fork removes only that
+  // accepted retreat; the pilot then proposes and admits the first refuge.
+  const stopped=deserializeWorld(serializeWorld(w));
+  apply(stopped,{type:'draft-stop',pawnIds:[noe.id]});
+  const firstAgain=moveFor(stopped,s,noe.id);
+  const reopened=JSON.stringify({tick:w.tick,camp:camp.anchor,firstAgain,
+    enemy:{x:enemy.x,z:enemy.z,state:enemy.state,motion:enemy.motion},
+    actor:{x:noe.x,z:noe.z,draft:noe.draft,motion:noe.motion},
+    doors:w.structures.filter(p=>p.kind==='door').map(p=>({x:p.x,z:p.z,door:p.door}))});
+  expect(firstAgain,reopened).toBeDefined();expect(interior(firstAgain!.target,camp.anchor),reopened).toBe(true);
+  apply(stopped,firstAgain!);expect(stopped.pawns.find(p=>p.id===noe.id)!.draft!.target).toEqual(firstAgain!.target);
+  // Retain the actual accepted destination globally, even though the primary
+  // room is earlier in the room list. Preview cannot renew its edge/path or
+  // recovery. Both unchanged live branches advance only through stepWorld.
+  let travelling=false;
+  for(let n=0;n<6;n++){
+    before=serializeWorld(w);
+    const motion=noe.motion,path=noe.path,lastActiveTick=noe.draft!.lastActiveTick,
+      shotRecovery=noe.shooting?.stance,strikeRecovery=noe.melee?.strike;
+    expect(moveFor(w,s,noe.id)).toBeUndefined();expect(serializeWorld(w)).toBe(before);
+    expect(noe.motion).toBe(motion);expect(noe.path).toBe(path);expect(noe.draft!.lastActiveTick).toBe(lastActiveTick);
+    expect(noe.shooting?.stance).toBe(shotRecovery);expect(noe.melee?.strike).toBe(strikeRecovery);
+    expect(noe.draft!.target).toEqual(retreat!.target);
+    travelling ||= !!noe.motion&&noe.motion.end>w.tick;
+    stepWorld(w);stepWorld(copy);valid(w);expect(serializeWorld(copy)).toBe(serializeWorld(w));
+    expect(noe.state).not.toBe('downed');expect(noe.state).not.toBe('dead');
+  }
+  expect(travelling).toBe(true);expect(noe.draft!.target).toEqual(retreat!.target);
 });
