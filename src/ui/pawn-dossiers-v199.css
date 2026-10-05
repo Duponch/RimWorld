@@ -51,6 +51,11 @@
 #inspector #social-inspection #social-opinions th,#inspector #social-inspection #social-opinions td{padding:4px 6px;border:0}
 #inspector #social-inspection #social-opinions tbody tr:nth-child(odd){background:transparent}
 #inspector #social-inspection #social-opinions tr:hover{background:var(--paper-deep)}
+#inspector #social-inspection #social-opinions{width:100%;table-layout:fixed}
+#inspector #social-inspection #social-opinions th:first-child{width:55%;overflow-wrap:anywhere}
+#inspector .relationship-inspection ul{list-style:none;padding:0;margin:6px 0 14px}
+#inspector .relationship-inspection li{padding:5px 0;overflow-wrap:anywhere;font-size:13px}
+#inspector .relationship-inspection li:hover{background:var(--paper-deep)}
 #inspector #social-inspection #social-history{list-style:none;padding:0;margin:8px 0 0;border-top:1px solid var(--line)}
 #inspector #social-inspection #social-history li{margin:0;padding:5px 4px;font-size:12px;border-bottom:1px solid #d8c7a644}
 @media(max-width:540px){#inspector .bio-columns{gap:12px;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}#inspector .pawn-needs-columns{gap:10px;grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr)}}

@@ -66,6 +66,7 @@ export function prepareFlashstormDemo(generation: 'current' | 'pre-v210' = 'curr
   if (generation === 'pre-v210') world.pawns.forEach((pawn, index) => {
     delete pawn.background; pawn.skills = startingSkills(index);
   });
+  delete world.relationships; // This historical scene predates family generation.
   assert.equal(world.pawns.length, 3);
   prepareClock(world);
   assert.equal(world.flashstorm, undefined);

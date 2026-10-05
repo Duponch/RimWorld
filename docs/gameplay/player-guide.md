@@ -1,6 +1,18 @@
 # Guide joueur
 
-**Schéma courant 194 — V213 livré dans le périmètre contrôlé.** La menace mécanique relie arrivée, défense, carcasse entière et récupération au poste. [Contrat](../development/scyther-v213.md), [preuve et limites](../history/validation-scyther-v213.md). Le passé V210, les crises V211 et la défense automatisée V212 précèdent ce lot.
+**Schéma courant 195 — V214 livré dans le périmètre contrôlé.** Proches annoncés, couples adultes, opinions, logement et deuil rejoignent le passé V210, les crises V211, la défense V212 et le Scyther V213. [Contrat](../development/family-v214.md), [contrôles et limites](../history/validation-family-v214.md).
+
+## Accueillir un proche et loger un couple — V214
+
+Une nouvelle demande d’accueil ou d’asile peut annoncer un parent, un enfant adulte ou un membre de la fratrie déjà connu. Lisez son nom et son statut avant de répondre. Le lien prend effet à l’entrée réelle ; une entrée bloquée conserve l’annonce. Les anciennes offres et les anciennes biographies restent telles quelles.
+
+Les dossiers **Social** et **Bio** montrent les liens connus. Social distingue l’avis de la personne sélectionnée et celui de son interlocuteur, avec les causes. Une personne absente ou décédée n’affiche pas un faux avis actuel. Les liens parent/enfant suivent leur sens ; ils ne viennent pas d’un nom commun ou d’une opinion positive.
+
+Un nouveau départ peut contenir un couple préexistant. Les rencontres ordinaires entre adultes libres peuvent former ou défaire un couple, selon leurs avis et la parenté connue. Un refus ou une séparation peut laisser des souvenirs d’opinion et d’humeur de durées différentes, consultables dans les dossiers et le journal.
+
+Pour résoudre **Dormir près de…**, attribuez un lit civil individuel à chaque partenaire dans la même pièce intérieure. La pensée dépend de leurs lits et de la pièce, sans exiger qu’ils soient déjà couchés. Un décès réel laisse un deuil familial nommé qui peut s’ajouter au deuil d’un ami ou rival.
+
+Mariage joué, lit double, relations sexuelles, enfants, naissances et famille étendue restent à développer. Les liens conjugaux sont neutres : le sexe graphique n’est pas utilisé comme une orientation ou un sexe biologique.
 
 ## Faire face aux crises mentales — V211
 
@@ -511,7 +523,7 @@ Une fois terminé, construisez un **Établi de tailleur** (3×1, 75 bois ou acie
 
 Les colons éveillés peuvent bavarder ou avoir une discussion approfondie en travaillant ou en se croisant à six cases au plus, avec vue dégagée. Rapprocher les postes favorise les rencontres ; dormir, être à terre ou combattre empêche ces échanges ordinaires. Sélectionnez un colon puis **Social · opinions** : dernier échange, opinion de chaque personne dans les deux sens, causes et vieillissement des souvenirs. Les deux personnes peuvent réagir différemment ; la compétence Social progresse chez celle qui engage l’échange.
 
-Le bavardage s’accumule jusqu’à +10 d’opinion affichée puis décroît ; une discussion laisse un souvenir de vingt jours, atténué à la fin. Aucun bonus direct d’humeur pour ces deux échanges. Les insultes et bagarres V125, les dispositions V134 et le deuil ami/rival V181 complètent ces échanges ; couples, famille, témoins et pensée générale de décès colonial restent absents. [Règles détaillées](../development/social.md).
+Le bavardage s’accumule jusqu’à +10 d’opinion affichée puis décroît ; une discussion laisse un souvenir de vingt jours, atténué à la fin. Aucun bonus direct d’humeur pour ces deux échanges. Les insultes et bagarres V125, les dispositions V134 et le deuil ami/rival V181 complètent ces échanges. V214 ajoute les [proches, couples et conséquences de logement/deuil](../development/family-v214.md) ; témoins et pensée générale de décès colonial restent à développer. [Règles détaillées des échanges](../development/social.md).
 
 ## Personnalité des colons
 

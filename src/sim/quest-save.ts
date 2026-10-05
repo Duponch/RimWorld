@@ -1,5 +1,6 @@
 import { isColonist } from './affiliation.ts';
 import { validOfferedBackground } from './background-save.ts';
+import { validAnnouncedRelationshipShape } from './relationship-save.ts';
 import { QUEST_HISTORY_LIMIT, QUEST_OFFER_TICKS } from './quest-state.ts';
 import { TICKS_PER_DAY, type World } from './types.ts';
 
@@ -55,9 +56,9 @@ export function validateQuests(world: World, version: number): string[] {
     const terminal = raw.status === 'refused' || raw.status === 'expired' || raw.status === 'concluded';
     const hasArrival = raw.arrivedAt !== undefined || raw.pawnId !== undefined || raw.entry !== undefined;
     const hasRaid = raw.raidAt !== undefined || raw.raidGroupId !== undefined;
-    const fields = [...base, ...(version>=191&&raw.background!==undefined?['background','age']:[]), ...(accepted ? ['acceptedAt'] : []), ...(hasArrival ? ['arrivedAt', 'pawnId', 'entry'] : []),
+    const fields = [...base, ...(version>=191&&raw.background!==undefined?['background','age']:[]), ...(version>=195&&raw.relationship!==undefined?['relationship']:[]), ...(accepted ? ['acceptedAt'] : []), ...(hasArrival ? ['arrivedAt', 'pawnId', 'entry'] : []),
       ...(hasRaid ? ['raidAt', 'raidGroupId'] : []), ...(terminal ? ['endedAt'] : [])];
-    if (!exact(raw, fields) || !validOfferedBackground(raw,version) || !integer(raw.offeredAt, state.adoptedAt, world.tick)
+    if (!exact(raw, fields) || !validOfferedBackground(raw,version) || !validAnnouncedRelationshipShape(raw,world,version) || !integer(raw.offeredAt, state.adoptedAt, world.tick)
       || raw.expiresAt !== Number(raw.offeredAt) + QUEST_OFFER_TICKS || !integer(raw.expiresAt, 0)
       || typeof raw.name !== 'string' || !raw.name.trim() || raw.name.length > 48
       || !integer(raw.profile, 0, 2) || !integer(raw.joinDelay, 60, 120)

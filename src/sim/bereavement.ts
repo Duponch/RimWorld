@@ -2,6 +2,7 @@ import { isColonist } from './affiliation.ts';
 import { opinionOf } from './social-state.ts';
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 import type { MoodThought } from './mood.ts';
+import { notifyFamilyDeath } from './family-bereavement.ts';
 
 export type DeathMemoryKind='friend-died'|'rival-died';
 export interface DeathMemory {otherId:number;kind:DeathMemoryKind;at:number;opinion:number}
@@ -16,11 +17,12 @@ export const deathMemoryDuration=(kind:DeathMemoryKind):number=>kind==='friend-d
  * opinion is captured here, so later conversation/decay cannot rewrite grief. */
 export function notifyPawnDeath(world:World,deceased:Pawn):void {
   if(!world.pawns.includes(deceased)||deceased.state!=='dead'||!deceased.health?.death)return;
+  notifyFamilyDeath(world,deceased);
   for(const observer of world.pawns){
     if(observer===deceased||!isColonist(observer)||observer.prisoner||observer.state==='dead')continue;
     expireBereavement(observer,world.tick);
     if(observer.bereavement?.some(memory=>memory.otherId===deceased.id))continue;
-    const opinion=opinionOf(observer,deceased.id,world.tick);
+    const opinion=opinionOf(observer,deceased.id,world.tick,world);
     const kind:DeathMemoryKind|undefined=opinion>=20?'friend-died':opinion<=-20?'rival-died':undefined;
     if(!kind)continue;
     const memories=observer.bereavement??=[];

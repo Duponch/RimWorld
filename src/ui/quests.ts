@@ -4,6 +4,7 @@ import { biologicalYears, chronologicalYears } from '../sim/human-age';
 import { backgroundSkillSummary, createBackgroundInspection, updateBackgroundInspection } from './background-inspection';
 import { TICKS_PER_DAY,type Command,type World } from '../sim/types';
 import type { JoinerQuest } from '../sim/quest-state';
+import { offeredRelationshipText,updateOfferedRelationship } from './relationship-inspection';
 
 const duration=(ticks:number,elapsed=false):string=>{
   const exact=Math.max(0,ticks)*1440/TICKS_PER_DAY;
@@ -26,7 +27,7 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
   const status=document.createElement('p');status.id='quest-status';status.setAttribute('role','status');
   const details=document.createElement('p');details.id='quest-details';
   const profile=document.createElement('section');profile.dataset.questBackground='';
-  const age=document.createElement('p');profile.append(age);createBackgroundInspection(profile);
+  const age=document.createElement('p'),relationship=document.createElement('p');relationship.dataset.questRelationship='';relationship.tabIndex=0;profile.append(age,relationship);createBackgroundInspection(profile);
   const timing=document.createElement('p');timing.id='quest-timing';
   const accept=document.createElement('button');accept.id='accept-quest';accept.type='button';accept.textContent='Accueillir et accepter la poursuite';
   const refuse=document.createElement('button');refuse.id='refuse-quest';refuse.type='button';refuse.textContent='Refuser sans pénalité';
@@ -41,13 +42,13 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
   const historyNodes=new Map<number,HTMLLIElement>();let historySignature='__initial__';
   const updateHistory=(entries:readonly JoinerQuest[],tick:number):void=>{
     const terminal=entries.filter(q=>q.status==='refused'||q.status==='expired'||q.status==='concluded');
-    const signature=terminal.map(q=>`${q.id}:${q.name}:${q.status}:${ago(tick-(q.endedAt??q.offeredAt))}`).join('|');
+    const signature=terminal.map(q=>`${q.id}:${q.name}:${q.status}:${ago(tick-(q.endedAt??q.offeredAt))}:${current?offeredRelationshipText(current,q.relationship):''}`).join('|');
     if(signature===historySignature)return;
     historySignature=signature;historyHeading.hidden=history.hidden=!terminal.length;
     const ids=new Set(terminal.map(q=>q.id));for(const id of historyNodes.keys())if(!ids.has(id))historyNodes.delete(id);
     const rows=terminal.map(q=>{let row=historyNodes.get(q.id);if(!row){row=document.createElement('li');historyNodes.set(q.id,row);}
       const outcome=q.status==='concluded'?'conclue (issue neutre)':q.status==='refused'?'refusée sans pénalité':'expirée sans pénalité';
-      row.textContent=`${q.name} · ${outcome} ${ago(tick-(q.endedAt??q.offeredAt))}`;return row;
+      row.textContent=`${q.name} · ${outcome} ${ago(tick-(q.endedAt??q.offeredAt))}${q.relationship&&current?` · ${offeredRelationshipText(current,q.relationship)}`:''}`;return row;
     });
     history.replaceChildren(...rows);
   };
@@ -72,6 +73,7 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
     if(entry&&!profile.hidden){
       age.hidden=!entry.age;age.textContent=entry.age?`Âge proposé : ${biologicalYears(entry.age)} ans${chronologicalYears(entry.age)===biologicalYears(entry.age)?'':` (${chronologicalYears(entry.age)} chronologiques)`}`:'';
       updateBackgroundInspection(profile,entry);
+      updateOfferedRelationship(relationship,world,entry.relationship,entry.name,entry.arrivedAt!==undefined);
     }
     shownId=offer?.id;
     enable.hidden=!eligible||!!calendar;enable.disabled=busy;

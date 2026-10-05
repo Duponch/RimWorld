@@ -30,6 +30,7 @@ export const SCYTHER_CELLS={generator:{x:16,z:20},leftGun:{x:15,z:16},rightGun:{
  * No mechanical actor, emission, injury, corpse, delivery or salvage is played. */
 export function prepareScytherDemo(seed=213):World {
   const w=createScenarioWorld(seed,32,'crashlanded',{hilliness:'flat',biome:'temperate-forest'});w.tick=SCYTHER_OPPORTUNITY_TICK-10;
+  delete w.relationships; // The immutable V213 preparation has no family graph.
   w.breakdown=newBreakdownCalendar(w.seed,w.tick);
   w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.structures=[];w.jobs=[];w.packed=[];w.stockpiles=[];w.growingZones=[];w.growingCursor=0;w.events=[];
   delete w.wildlife;delete w.worldIncidents;delete w.smallIncidents;delete w.miscIncidents;delete w.heatwaves;delete w.visitors;

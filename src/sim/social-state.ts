@@ -1,17 +1,21 @@
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 import { pawnBody } from './health-rules.ts';
 import { effectiveSkillLevel } from './work-types.ts';
+import { relationshipIndex } from './relationship-runtime.ts';
+import { RELATIONSHIP_OPINION,type RelationshipViewKind } from './relationship-state.ts';
+import { expireRomanceMemories,romanceOpinionCauses,type RomanceOpinionKind } from './romance-memories.ts';
 
 export type SocialKind='chitchat'|'deep-talk'|'rapport'|'kind-words'|'slight'|'insult'|'fight-cathartic'|'fight-angering';
+export type SocialInteractionKind=SocialKind|'romance-attempt'|'breakup';
 export interface SocialMemory { otherId:number;kind:SocialKind;at:number;offset:number }
 export interface SocialState {
   rng:number; wants?:true;
-  last?:{otherId:number;kind:SocialKind;tick:number;initiated:boolean};
+  last?:{otherId:number;kind:SocialInteractionKind;tick:number;initiated:boolean};
   /** Reciprocal marker for an actual physical social fight, not an interaction roll. */
   fight?:{opponentId:number;startedAt:number};
   memories:SocialMemory[];
 }
-export const SOCIAL_LABELS:Readonly<Record<SocialKind,string>>=Object.freeze({'chitchat':'Bavardage','deep-talk':'Discussion approfondie',rapport:'Rapprochement','kind-words':'Mots gentils',slight:'Vexation',insult:'Insulte','fight-cathartic':'Bagarre cathartique','fight-angering':'Bagarre rageante'});
+export const SOCIAL_LABELS:Readonly<Record<SocialInteractionKind,string>>=Object.freeze({'chitchat':'Bavardage','deep-talk':'Discussion approfondie',rapport:'Rapprochement','kind-words':'Mots gentils',slight:'Vexation',insult:'Insulte','fight-cathartic':'Bagarre cathartique','fight-angering':'Bagarre rageante','romance-attempt':'Tentative amoureuse',breakup:'Rupture'});
 export const DEEP_TALK_DURATION=20*TICKS_PER_DAY;
 export const INSULT_MOOD_DURATION=2*TICKS_PER_DAY;
 
@@ -44,16 +48,24 @@ export function memoryOffset(memory:SocialMemory,tick:number):number {
 }
 function roundPositiveOpinion(n:number):number {const lo=Math.floor(n);return n<=0?0:Math.max(1,n-lo===.5?lo+lo%2:Math.round(n));}
 function roundOpinion(n:number):number {return n<0?-roundPositiveOpinion(-n):roundPositiveOpinion(n);}
-export function opinionCauses(pawn:Pawn,otherId:number,tick:number):{kind:SocialKind;count:number;value:number;nextChange:number}[] {
+export type OpinionCauseKind=SocialKind|`relation-${RelationshipViewKind}`|`romance-${RomanceOpinionKind}`;
+export interface OpinionCause {kind:OpinionCauseKind;count:number;value:number;nextChange:number;label:string;description:string}
+const relationLabels:Readonly<Record<RelationshipViewKind,string>>={parent:'Parent',child:'Enfant',sibling:'Fratrie',lover:'Partenaire',spouse:'Conjoint','ex-lover':'Ancien partenaire','ex-spouse':'Ancien conjoint'};
+export function opinionCauses(pawn:Pawn,otherId:number,tick:number,world?:World):OpinionCause[] {
   const memories=pawn.social?.memories.filter(m=>m.otherId===otherId&&memoryOffset(m,tick)!==0)??[];
-  return (['chitchat','deep-talk','rapport','kind-words','slight','insult','fight-cathartic','fight-angering'] as const).flatMap(kind=>{
+  const causes:OpinionCause[]=(['chitchat','deep-talk','rapport','kind-words','slight','insult','fight-cathartic','fight-angering'] as const).flatMap(kind=>{
     const group=memories.filter(m=>m.kind===kind).sort((a,b)=>b.at-a.at);if(!group.length)return [];
     const value=roundOpinion(group.reduce((s,m,i)=>s+memoryOffset(m,tick)*((kind==='deep-talk'||kind==='kind-words'||kind==='slight'||kind==='insult'||kind==='fight-cathartic'||kind==='fight-angering') ? .9**i : 1),0));
     const nextChange=kind==='chitchat'?group[0]!.at+(Math.floor((tick-group[0]!.at)/TICKS_PER_DAY)+1)*TICKS_PER_DAY:Math.min(...group.map(m=>m.at+DEEP_TALK_DURATION));
-    return [{kind,count:group.length,value,nextChange}];
+    return [{kind,count:group.length,value,nextChange,label:SOCIAL_LABELS[kind],description:'Souvenir dirigé d’un échange social réel.'}];
   });
+  if(world&&world.schemaVersion>=195&&world.relationships?.links.length)for(const kind of relationshipIndex(world).kinds(pawn.id,otherId)){
+    causes.push({kind:`relation-${kind}`,count:1,value:RELATIONSHIP_OPINION[kind],nextChange:Infinity,label:relationLabels[kind],description:'Lien personnel connu ; son effet n’est pas une conversation expirante.'});
+  }
+  for(const cause of romanceOpinionCauses(pawn,otherId,tick))causes.push({...cause,kind:`romance-${cause.kind}`,value:roundOpinion(cause.value)});
+  return causes;
 }
-export const opinionOf=(pawn:Pawn,otherId:number,tick:number):number=>Math.max(-100,Math.min(100,opinionCauses(pawn,otherId,tick).reduce((s,c)=>s+c.value,0)));
+export const opinionOf=(pawn:Pawn,otherId:number,tick:number,world?:World):number=>pawn.state==='dead'?0:Math.max(-100,Math.min(100,opinionCauses(pawn,otherId,tick,world).reduce((s,c)=>s+c.value,0)));
 
 /** InsultedMood is a separate two-day thought in Core, with fixed -5 per
  * occurrence before stacking, independent of the speaker's SocialImpact. */
@@ -72,6 +84,7 @@ export const kindWordsMoodMemories=(pawn:Pawn,tick:number)=>socialMoodMemories(p
 
 /** Cleanup runs on retained dead actors too. Merging chitchat never refreshes its clock. */
 export function expireSocialMemories(pawn:Pawn,tick:number):void {
+  if(pawn.romanceMemories)expireRomanceMemories(pawn,tick);
   const s=pawn.social;if(!s)return;
   for(const m of s.memories)if(m.kind==='chitchat'){
     const days=Math.floor((tick-m.at)/TICKS_PER_DAY);if(days>0){m.offset=Math.max(0,m.offset-days);m.at+=days*TICKS_PER_DAY;}

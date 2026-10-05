@@ -1,0 +1,316 @@
+{
+  "date": "2026-10-05T03:47:55.9030998Z",
+  "purpose": "Read-only family/romance candidate after V213; no product test/build/browser/server/benchmark",
+  "version": "1.6.4871 rev590",
+  "assembly": {
+    "path": "E:\\Steam\\steamapps\\common\\RimWorld\\RimWorldWin64_Data\\Managed\\Assembly-CSharp.dll",
+    "bytes": 15777280,
+    "sha256": "5cf1b5be399d5b1c9c56ca72c9d35b4ecf307feacf5859d04ac5a1aa5926356a"
+  },
+  "assemblySha256Before": "5cf1b5be399d5b1c9c56ca72c9d35b4ecf307feacf5859d04ac5a1aa5926356a",
+  "assemblySha256After": "5cf1b5be399d5b1c9c56ca72c9d35b4ecf307feacf5859d04ac5a1aa5926356a",
+  "decompiler": {
+    "version": "8.2.0.7535",
+    "binary": {
+      "path": "E:\\Code\\RimWorld\\tmp\\reference-tools\\ilspycmd-8.2\\ilspycmd.dll",
+      "bytes": 30720,
+      "sha256": "c1635be8deba8b374b43863fe843950460f9860989decff3e522afab35d30904"
+    }
+  },
+  "invocation": [
+    "C:/Program Files/dotnet/dotnet.exe",
+    "--roll-forward",
+    "Major",
+    "E:/Code/RimWorld/tmp/reference-tools/ilspycmd-8.2/ilspycmd.dll",
+    "-t",
+    "<Namespace.Type>",
+    "E:/Steam/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/Assembly-CSharp.dll"
+  ],
+  "freshClasses": [
+    {
+      "type": "RimWorld.BedUtility",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.BedUtility.cs",
+        "bytes": 3047,
+        "sha256": "76ac5dd2e2024e76fb04dad815f0e285b131a0c77f60be2203fd62ecd50c0871"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.ChildRelationUtility",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.ChildRelationUtility.cs",
+        "bytes": 6240,
+        "sha256": "a82088a082872a6f59573d9305fc1ca34b4ec83ff38a9b02d4631fb38354bfb0"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.InteractionWorker_Breakup",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.InteractionWorker_Breakup.cs",
+        "bytes": 4469,
+        "sha256": "3c4ac3467eb35d146334440e1eb7801f88d5f8b2ccd4c132295d38a0b6c3d2be"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.InteractionWorker_RomanceAttempt",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.InteractionWorker_RomanceAttempt.cs",
+        "bytes": 16378,
+        "sha256": "a4bf6b43068dd93411feef57710b1b785283abd0db6e5e3e6b54bc3ac3173379"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.LovePartnerRelationUtility",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.LovePartnerRelationUtility.cs",
+        "bytes": 16215,
+        "sha256": "8badd5c65c05ba151ba6f5f975c20b1907a2bf24dc85378db267efc2decaa673"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.PawnRelationUtility",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationUtility.cs",
+        "bytes": 7280,
+        "sha256": "910587483aa48e93cc815106d3f51eee8e948eaa6fe0f02624e5c3d314402e67"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.PawnRelationWorker_Lover",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationWorker_Lover.cs",
+        "bytes": 673,
+        "sha256": "5f0edaa5d084fea9c580baea3cfb937d24fbcf7b314b2506387c7c851a4a35ad"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.PawnRelationWorker_Parent",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationWorker_Parent.cs",
+        "bytes": 2305,
+        "sha256": "73354fd47e6cc0e22553bf0037770da4e7e8bde50031f6d7d03254d390da8e14"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.PawnRelationWorker_Sibling",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationWorker_Sibling.cs",
+        "bytes": 7983,
+        "sha256": "6bd71359f9f8aac7bf88969bc9b688b818f932a524342e4578addaa2fbee454e"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.PawnRelationWorker_Spouse",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationWorker_Spouse.cs",
+        "bytes": 755,
+        "sha256": "5be4d64c15ce939e3d66b67aab3a6570e54c185182c18a1d02d2c786d030922a"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.PawnRelationWorker",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationWorker.cs",
+        "bytes": 2348,
+        "sha256": "fa532858c9313bc2551ec9fad9d204524de98e70734aec4657358c05d53cecf0"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.ThoughtWorker_WantToSleepWithSpouseOrLover",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.ThoughtWorker_WantToSleepWithSpouseOrLover.cs",
+        "bytes": 1292,
+        "sha256": "d1ca763388d384653858a7dfef74e3c5492d63069f757b031f265c33b7aa0554"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "Verse.PawnGenerator",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\Verse.PawnGenerator.cs",
+        "bytes": 70815,
+        "sha256": "ecc073f8618cfb9214d8ecbac2bdd198aacf11f58a9d6f8b627ccd5f531a2188"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "file": {
+        "bytes": 2652,
+        "sha256": "ce6e0f9f6b10231054234401dffab74c07fc596e2766e4d71b337c4cd2819cfa",
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationDef.cs"
+      },
+      "stderrBytes": 0,
+      "extraction": "fresh",
+      "type": "RimWorld.PawnRelationDef"
+    },
+    {
+      "type": "RimWorld.PawnRelationWorker_Kin",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationWorker_Kin.cs",
+        "bytes": 520,
+        "sha256": "35b21e311a5f2ada311cfb2664c803fd3958e5e0199154754f61b16d9303cd3c"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.PawnRelationWorker_HalfSibling",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationWorker_HalfSibling.cs",
+        "bytes": 416,
+        "sha256": "7fe7114fbb13c9f1d16498ecf378e42d9057eae2c0c1fb7078ece22d3c87463c"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.PawnRelationWorker_UncleOrAunt",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationWorker_UncleOrAunt.cs",
+        "bytes": 622,
+        "sha256": "e8865fab88c180ff290172cf3d4c40b54a372b5f74dd4b08e36735a448a39be6"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.PawnRelationWorker_Cousin",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationWorker_Cousin.cs",
+        "bytes": 485,
+        "sha256": "5c48bd5463fe7c53c5191a6e47324af5527476bc07e856aa70c03f7cea523c36"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.PawnRelationWorker_Grandparent",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationWorker_Grandparent.cs",
+        "bytes": 291,
+        "sha256": "2651d4334d8e112bbf55a84d9c6154b9962ab0e20a647b90ea119f7de40e15d4"
+      },
+      "stderrBytes": 0
+    },
+    {
+      "type": "RimWorld.PawnRelationWorker_Grandchild",
+      "extraction": "fresh",
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\family-next\\core\\RimWorld.PawnRelationWorker_Grandchild.cs",
+        "bytes": 483,
+        "sha256": "c1a0dcd6e8c1954abea43ef1eba4b8c1f59d19867d1ea0dba93ec8c457c66a05"
+      },
+      "stderrBytes": 0
+    }
+  ],
+  "xml": [
+    {
+      "path": "E:\\Steam\\steamapps\\common\\RimWorld\\Data\\Core\\Defs\\PawnRelationDefs\\PawnRelations_FamilyByBlood.xml",
+      "bytes": 11736,
+      "sha256": "fa3ce60c5bff0d9f2210f1b048eee68768b44a2c7f6449b5dfe8b4e99d3c4396"
+    },
+    {
+      "path": "E:\\Steam\\steamapps\\common\\RimWorld\\Data\\Core\\Defs\\PawnRelationDefs\\PawnRelations_FamilyByChoice.xml",
+      "bytes": 4304,
+      "sha256": "5e7dd0dc24562d73c3c88a3d3046a8faf816b64cbee6684b2d003361fa207997"
+    },
+    {
+      "path": "E:\\Steam\\steamapps\\common\\RimWorld\\Data\\Core\\Defs\\PawnRelationDefs\\PawnRelations_Misc.xml",
+      "bytes": 672,
+      "sha256": "060e8b168e509cedabf698cc7f8083be5f4cb164b469ec7ed1ff6137aa7388fe"
+    },
+    {
+      "path": "E:\\Steam\\steamapps\\common\\RimWorld\\Data\\Core\\Defs\\InteractionDefs\\Interactions_Romance.xml",
+      "bytes": 6738,
+      "sha256": "bec46e6d2f5feb486b04f0339ec0bf8d646b87257bc3d1be36e7f39402988681"
+    },
+    {
+      "path": "E:\\Steam\\steamapps\\common\\RimWorld\\Data\\Core\\Defs\\ThoughtDefs\\Thoughts_Memory_Death.xml",
+      "bytes": 13551,
+      "sha256": "67662e6c77f92b92cac6970faaab25c3183bbfe0d5a9ff1ed6f2f919cc143564"
+    },
+    {
+      "path": "E:\\Steam\\steamapps\\common\\RimWorld\\Data\\Core\\Defs\\ThoughtDefs\\Thoughts_Memory_Social.xml",
+      "bytes": 27053,
+      "sha256": "1be09e7a15669f8f62aa0651e8112c6db701261bfa33f14edd41232c7a8b824e"
+    },
+    {
+      "path": "E:\\Steam\\steamapps\\common\\RimWorld\\Data\\Core\\Defs\\ThoughtDefs\\Thoughts_Situation_Social.xml",
+      "bytes": 14426,
+      "sha256": "fea3a499656ed99afb730b772de744e18ec7321217ab087db2d1ec75d333fd2f"
+    },
+    {
+      "path": "E:\\Steam\\steamapps\\common\\RimWorld\\Data\\Core\\Defs\\ThingDefs_Buildings\\Buildings_Furniture.xml",
+      "bytes": 66940,
+      "sha256": "cea362ca9451f0762f8a104b2344bd540b5f6e8663dd9a4e75f3c39b46607c55"
+    }
+  ],
+  "reusedCertifiedSources": [
+    {
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\bereavement-reference-v181\\PawnDiedOrDownedThoughtsUtility.cs",
+        "bytes": 18582,
+        "sha256": "626ad526379885df13ce418d19181dd4adfcacb9e246ad7c57a113d51edd7e71"
+      },
+      "certification": "docs/research/bereavement-core-v181.md; same Assembly SHA256; relu pour nouvelle question, non fraîchement décompilé"
+    },
+    {
+      "file": {
+        "path": "E:\\Code\\RimWorld\\tmp\\bereavement-reference-v181\\RimWorld.Pawn_RelationsTracker.decompiled.cs",
+        "bytes": 35525,
+        "sha256": "df4b1beaa41eba454a3347e73379df53e65adaa37fa2027f63643f856fcd2266"
+      },
+      "certification": "docs/research/bereavement-core-v181.md; same Assembly SHA256; relu pour nouvelle question, non fraîchement décompilé"
+    },
+    {
+      "certification": "docs/research/bereavement-core-v181.md; same Assembly SHA256; relu pour nouvelle question, non fraîchement décompilé",
+      "file": {
+        "bytes": 8565,
+        "sha256": "f69a22b1cc239c916c6cf2dee387ab8f9d665b92d803b29763ce2907289cc030",
+        "path": "E:\\Code\\RimWorld\\tmp\\bereavement-reference-v181\\RimWorld.MemoryThoughtHandler.decompiled.cs"
+      }
+    },
+    {
+      "file": {
+        "path": "E:/Code/RimWorld/tmp/mech-v213-next/core/Verse.GenMath.cs",
+        "bytes": 18805,
+        "sha256": "270594de9665997d1c163abbc05515dacdcdd4927060124d8440da254ba9ae5b"
+      },
+      "certification": "tmp/mech-v213-next/primitives-provenance.json; same Assembly SHA256; relu GetFactorInInterval et FlatHill, non fraîchement décompilé pour famille"
+    }
+  ],
+  "noProductControlExecuted": true,
+  "canonicalSourceOrDocsModifiedForFamily": false,
+  "candidateOnly": true,
+  "contextualOfficialWeb": {
+    "url": "https://rimworldgame.com/",
+    "checkedBy": "root",
+    "checkedOn": "2026-10-05",
+    "purpose": "Contexte famille/amants/conjoints/opinions/biographies et enfants Biotech seulement; aucune constante 1.6.4871"
+  }
+}

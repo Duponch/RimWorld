@@ -20,6 +20,7 @@ import { AIR_CONDITIONING_COST,CLOTHING_RESEARCH_COST,COMPLEX_FURNITURE_RESEARCH
 import { DEFAULT_SCENARIO,isScenarioId,SCENARIOS,SCENARIO_REVISION,type ScenarioId } from './scenario-definitions.ts';
 import { startingPawn } from './starting-pawns.ts';
 import { initializeCampBackgrounds } from './background-generation.ts';
+import { initializeCampRelationships } from './relationship-generation.ts';
 import { crashlandedHumanAge } from './human-age.ts';
 import { initializeCampTraits } from './traits.ts';
 import { adoptEnvironment } from './environment-step.ts';
@@ -112,5 +113,6 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
   world.scenario={id,revision:id==='crashlanded'?SCENARIOS.crashlanded.revision:SCENARIO_REVISION,landing};
   if(natural)adoptEnvironment(world);
   if(id==='crashlanded'){enableVisitors(world,true);adoptColonyEconomy(world);}
+  initializeCampRelationships(world);
   return world;
 }

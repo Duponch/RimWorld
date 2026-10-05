@@ -18,6 +18,7 @@ const manifestUrl=new URL('../public/test-saves/manifest.json',import.meta.url);
  * expressly for inspection; no claim that Cassandra chose it on landing. */
 export function prepareFluDemo():World {
   const world=createScenarioWorld(4871,64,'crashlanded',{hilliness:'small-hills',biome:'temperate-forest'});
+  delete world.relationships; // This historical scene predates family generation.
   const [minor,major,doctor]=world.pawns;
   assert.ok(minor&&major&&doctor);
   const blocked=blockedCells(world),occupied=new Set(world.pawns.map(p=>p.z*world.width+p.x));

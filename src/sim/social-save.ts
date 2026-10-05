@@ -3,6 +3,7 @@ import { TICKS_PER_DAY,type World } from './types.ts';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,lo:number,hi=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=lo&&v<=hi;
 const interactionKind=(v:unknown,version:number)=>v==='chitchat'||v==='deep-talk'||version>=86&&v==='rapport'||version>=125&&(v==='slight'||v==='insult')||version>=134&&v==='kind-words';
+const lastKind=(v:unknown,version:number)=>interactionKind(v,version)||version>=195&&(v==='romance-attempt'||v==='breakup');
 const memoryKind=(v:unknown,version:number)=>interactionKind(v,version)||version>=125&&(v==='fight-cathartic'||v==='fight-angering');
 const validOffset=(kind:unknown,offset:unknown):boolean=>typeof offset==='number'&&Number.isFinite(offset)&&(
   kind==='slight'?offset<0&&offset>=-6.850000001:
@@ -16,7 +17,7 @@ export function validateSocial(world:World,version:number):string[] {
     const s:unknown=p.social;if(s===undefined)continue;
     if(version<70||!object(s)||Object.keys(s).some(k=>!['rng','wants','last','memories',...(version>=125?['fight']:[])].includes(k))||!integer(s.rng,1,0xffffffff)||s.wants!==undefined&&s.wants!==true||!Array.isArray(s.memories)||s.memories.length>(version>=134?2400:version>=125?2100:version>=86?900:600)){errors.push('Invalid social state.');continue;}
     const other=(id:unknown)=>integer(id,1)&&id!==p.id&&ids.has(id);
-    const l=s.last;if(l!==undefined&&(!object(l)||Object.keys(l).some(k=>!['otherId','kind','tick','initiated'].includes(k))||!other(l.otherId)||!interactionKind(l.kind,version)||!integer(l.tick,0,world.tick)||typeof l.initiated!=='boolean'))errors.push('Invalid last interaction.');
+    const l=s.last;if(l!==undefined&&(!object(l)||Object.keys(l).some(k=>!['otherId','kind','tick','initiated'].includes(k))||!other(l.otherId)||!lastKind(l.kind,version)||!integer(l.tick,0,world.tick)||typeof l.initiated!=='boolean'))errors.push('Invalid last interaction.');
     const fight=s.fight;
     if(fight!==undefined){
       if(version<125||!object(fight)||Object.keys(fight).some(k=>!['opponentId','startedAt'].includes(k))||!other(fight.opponentId)||!integer(fight.startedAt,0,world.tick))errors.push('Invalid social fight.');

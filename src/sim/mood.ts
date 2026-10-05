@@ -9,6 +9,9 @@ import { pawnBody } from './health-rules.ts';
 import { medicalPain } from './injury-state.ts';
 import { insultMoodMemories,kindWordsMoodMemories } from './social-state.ts';
 import { bereavementThoughts,expireBereavement } from './bereavement.ts';
+import { expireFamilyBereavement,familyBereavementThoughts } from './family-bereavement.ts';
+import { expireRomanceMemories,romanceMoodThoughts } from './romance-memories.ts';
+import { relationshipHousingThought,type RelationshipTopology } from './relationship-housing.ts';
 import type { BodyAssessment } from './body-capacities.ts';
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 
@@ -44,11 +47,14 @@ export const comfortMood=(value:number):number=>comforts[comfortStage(value)]?.o
 /** Situation facts are derived, never saved as permanent memories. The same
  * evaluator supplies simulation and inspection, outside render frames. Current
  * content permits one stage per family and one memory per meal kind. */
-export function moodThoughts(world:World,pawn:Pawn):readonly MoodThought[] {
+export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopology):readonly MoodThought[] {
   if(pawn.state==='dead')return [];
   const expectation=colonyExpectation(world,pawn);
   const thoughts:MoodThought[]=[expectation?expectationThoughts.get(expectation.id)!:camp,...roomMoodThoughts(world,pawn)];
   if(pawn.bereavement)thoughts.push(...bereavementThoughts(world,pawn));
+  if(pawn.familyBereavement)thoughts.push(...familyBereavementThoughts(world,pawn));
+  if(pawn.romanceMemories)thoughts.push(...romanceMoodThoughts(world,pawn));
+  const housing=relationshipHousingThought(world,pawn,topology);if(housing)thoughts.push(housing);
   const difficultyMood=colonistMoodOffset(world,pawn);
   if(difficultyMood)thoughts.push(situation('difficulty-mood','Récit d’aventure',difficultyMood,'Bonus d’humeur du niveau d’aventure choisi.'));
   for(const id of pawn.traits??[]){const trait=TRAITS[id];if(trait.mood)thoughts.push({id:`trait-${id}`,label:trait.label,offset:trait.mood,kind:'situation',description:trait.description});}
@@ -80,13 +86,15 @@ export function moodTarget(thoughts:readonly MoodThought[]):number {
 export function moodFrozen(pawn:Pawn,body?:BodyAssessment):boolean {
   return pawn.state==='dead'||pawn.state==='sleeping'||!!pawn.medicalSleep||!(body??pawnBody(pawn)).canBeAwake;
 }
-export function updateMood(world:World,pawn:Pawn,body?:BodyAssessment):void {
+export function updateMood(world:World,pawn:Pawn,body?:BodyAssessment,topology?:RelationshipTopology):void {
   if(moodFrozen(pawn,body))return;
-  const target=moodTarget(moodThoughts(world,pawn));
+  const target=moodTarget(moodThoughts(world,pawn,topology));
   const amount=(target>pawn.mood?MOOD_RISE_PER_HOUR:MOOD_FALL_PER_HOUR)*24/TICKS_PER_DAY;
   pawn.mood=target>pawn.mood?Math.min(target,pawn.mood+amount):Math.max(target,pawn.mood-amount);
 }
 export function expireMealMemories(world:World,pawn:Pawn):void {
+  if(pawn.familyBereavement)expireFamilyBereavement(pawn,world.tick);
+  if(pawn.romanceMemories)expireRomanceMemories(pawn,world.tick);
   if(pawn.bereavement)expireBereavement(pawn,world.tick);
   expireRoomMemories(world,pawn);
   if(pawn.deniedJoining?.some(t=>t<=world.tick)){pawn.deniedJoining=pawn.deniedJoining.filter(t=>t>world.tick);if(!pawn.deniedJoining.length)delete pawn.deniedJoining;}

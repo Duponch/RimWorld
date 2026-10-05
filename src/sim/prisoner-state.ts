@@ -40,6 +40,6 @@ export function prisonerNegotiation(pawn:Pawn):number {
 export function prisonerResistanceReduction(world:World,warden:Pawn,patient:Pawn):number {
   const mood=moodTarget(moodThoughts(world,patient))/100;
   const moodFactor=mood<=.5?.2+1.6*mood:.5+mood;
-  const opinionFactor=1+Math.max(-100,Math.min(100,opinionOf(patient,warden.id,world.tick)))/200;
+  const opinionFactor=1+Math.max(-100,Math.min(100,opinionOf(patient,warden.id,world.tick,world)))/200;
   return prisonerNegotiation(warden)*moodFactor*opinionFactor;
 }

@@ -1,6 +1,6 @@
 # Validation courante — défense automatisée V212
 
-**V213 livré dans le périmètre contrôlé, schéma 194.** Première menace mécanique : arrivée, préparation, combat, carcasse entière et récupération au poste. [Contrat](scyther-v213.md), [recherche](../research/scyther-core-v213.md), [preuve et limites](../history/validation-scyther-v213.md). Régression hors campagnes longues : 532 fichiers, 2 411 réussis et un ignoré par reprises ; 41 nouveaux cas, trois parcours natifs, build et présentation. Autres mécanoïdes, famille/romance, planète et performance générale restent ouverts.
+**V214 livré dans le périmètre contrôlé, schéma 195.** Proches annoncés, couples adultes, opinions dirigées, logement par deux lits possédés et deuil familial au décès réel. [Contrat](family-v214.md), [recherche](../research/family-core-v214.md), [preuve et limites](../history/validation-family-v214.md). 537 fichiers/2 442 réussis/un ignoré, 31 nouveaux cas, build et parcours natif composé ; mariage, lit double, enfants, planète et performance générale restent ouverts.
 
 **V212 livré dans le périmètre contrôlé, schéma 193.** [Contrat](mini-turret-v212.md), [recherche Core](../research/mini-turret-core-v212.md), [contrôles et limites](../history/validation-mini-turret-v212.md). Régression hors campagnes longues : 520 fichiers, 2370 réussis et un ignoré par reprises ; 55 nouveaux cas, trois parcours natifs réussis par reprises, build final et présentation. Ni les treize campagnes longues ni une performance générale nouvelle ne sont acquises.
 

@@ -53,16 +53,19 @@ export function prepareQuestDemo(generation:'current'|'pre-v210'='current'):Worl
   if(generation==='pre-v210')world.pawns.forEach((pawn,index)=>{
     delete pawn.background;pawn.skills=startingSkills(index);
   });
+  delete world.relationships; // This historical scene predates family generation.
   assert.equal(world.pawns.length,3);
   enableQuests(world);
   const due=world.quests!.nextCheck;
   prepareClock(world,due);
   assert.equal(world.quests!.entries.length,0);
   assert.equal(world.raids!.active,undefined);
-  advanceQuests(world);
+  // Historical offers precede the family producer and its private draws.
+  const version=world.schemaVersion;world.schemaVersion=194 as World['schemaVersion'];
+  try{advanceQuests(world);}finally{world.schemaVersion=version;}
   const offer=world.quests!.entries.at(-1);
   // The original offer did not announce an age or personal background.
-  if(generation==='pre-v210'&&offer){delete offer.background;delete offer.age;}
+  if(generation==='pre-v210'&&offer){delete offer.background;delete offer.age;delete offer.relationship;}
   assert.equal(offer?.status,'offered','The public scene must contain a real scheduled offer.');
   assert.equal(world.raids!.active,undefined);
   assert.equal(world.pawns.length,3,'The asylum seeker is not pre-generated.');

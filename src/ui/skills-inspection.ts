@@ -14,6 +14,7 @@ import { SKILL_PASSION_LABELS,setCompactSkillPassion,setSkillPassion } from './s
 import type { World } from '../sim/types';
 import { appearanceOf } from '../sim/pawn-appearance';
 import { createBackgroundInspection, updateBackgroundInspection, updateBackgroundSkillControl } from './background-inspection';
+import { createRelationshipInspection,updateRelationshipInspection } from './relationship-inspection';
 import './pawn-dossiers-v199.css';
 
 type SkillEntry = {
@@ -62,6 +63,7 @@ export function createSkillsInspection(panel:HTMLElement):void {
   const name=document.createElement('h3');name.dataset.bioName='';
   const sex=document.createElement('p');sex.dataset.bioSex='';identity.append(name,sex,age);
   createBackgroundInspection(identity);
+  createRelationshipInspection(identity);
   createTraitsInspection(identity);
   const skills=document.createElement('section');skills.className='bio-skills';skills.setAttribute('aria-label','Compétences');
   const heading=document.createElement('h3');heading.textContent='Compétences';skills.append(heading,...SKILL_ENTRIES.map(createSkillEntry));
@@ -71,6 +73,7 @@ export function createSkillsInspection(panel:HTMLElement):void {
 export function updateSkillsInspection(panel:HTMLElement,pawn:Pawn,world?:World):void {
   updateTraitsInspection(panel,pawn);
   updateBackgroundInspection(panel,pawn);
+  if(world)updateRelationshipInspection(panel,world,pawn);
   const name=panel.querySelector<HTMLElement>('[data-bio-name]');if(name)name.textContent=pawn.name;
   const sex=panel.querySelector<HTMLElement>('[data-bio-sex]');if(sex)sex.textContent=`${(world?appearanceOf(pawn,world.seed):pawn.appearance)?.sex==='female'?'Femme':'Homme'} · ${pawn.prisoner?'Prisonnier':pawn.visitor?'Visiteur':pawn.faction==='outlaws'?'Hors-la-loi':'Colon'}`;
   const age=panel.querySelector<HTMLElement>('[data-pawn-age]');if(age){age.textContent=humanAgeText(pawn);age.hidden=!age.textContent;}

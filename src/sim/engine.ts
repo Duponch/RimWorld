@@ -709,7 +709,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(completedEdge)recordFilthMovement(world,pawn);
       if(pawn.health)bleedFilth(world,pawn,medicalBleed(pawn.health),pawn.state==='downed'||pawn.state==='sleeping');
       tickSkills(world,pawn);
-      updateNeeds(world, pawn,body,getFurnitureSight);
+      updateNeeds(world, pawn,body,getFurnitureSight,()=>getLight().topology);
       updateMentalBreak(world,pawn,budget);
       if(pawn.mental?.crisis){
         if(scoutOnMapId(world)===pawn.id)applyScoutCommand(world,{type:'scout-cancel'});

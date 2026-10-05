@@ -1,3 +1,7 @@
+import { validateRelationshipWorld } from './relationship-world-save.ts';
+import { validRelationshipState } from './relationship-save.ts';
+import { validFamilyBereavementShape } from './family-bereavement-save.ts';
+import { validRomanceMemoryShape } from './romance-memories.ts';
 import { validMechCorpseShape,validMechSalvageLedger } from './mechanoid-corpse-save.ts';
 import { validMechanoidShape,validateMechanoids } from './mechanoid-save.ts';
 import { validateMechanoidRaids } from './mechanoid-raid-save.ts';
@@ -163,7 +167,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195, relationshipContext = true): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -183,6 +187,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!validPodRescueShape(input.podRescues,version,input as unknown as World))errors.push('Invalid or future pod rescue state for schema.');
   if(input.mechanoids!==undefined&&(version<194||!Array.isArray(input.mechanoids)||input.mechanoids.length>size||input.mechanoids.some(m=>!validMechanoidShape(m,version,input.tick as number))))errors.push('Invalid or future mechanoid population.');
   if(!validMechSalvageLedger(input as unknown as World,version))errors.push('Invalid or future mechanoid salvage ledger.');
+  if(version<195&&Object.hasOwn(input,'relationships')||!validRelationshipState(input.relationships,version,input.tick as number))errors.push('Invalid or future relationship graph.');
   const arrays = ['tiles', 'pawns', 'resources', 'structures', 'jobs', 'piles', 'stockpiles', 'events'] as const;
   if (arrays.some(key => !Array.isArray(input[key]))) return [...errors, 'Missing world arrays.'];
   if(version<180&&(input.commercialTrip!==undefined||input.civilianPost!==undefined))return [...errors,'Future commercial state in legacy save.'];
@@ -213,6 +218,8 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
       if (key === 'pawns') {
         if(!validPawnPodRescue(item,version,input as unknown as World))errors.push('Invalid or future pod rescue mandate for schema.');
         if(!validHumanAge(item.age,version))errors.push('Invalid or future human age.');
+        if(version<195&&(Object.hasOwn(item,'familyBereavement')||Object.hasOwn(item,'romanceMemories'))
+          ||!validFamilyBereavementShape(item.familyBereavement,version,input.tick as number)||!validRomanceMemoryShape(item.romanceMemories,version,input.tick as number))errors.push('Invalid or future family/romance memory shape.');
         if(!validBackground(item.background,version,item.age as import('./human-age.ts').HumanAge|undefined))errors.push('Invalid or future colonist background.');
         if(!validRoomExperience(item,version,input.tick as number))errors.push('Invalid or future room experience.');
         if(version>=90?(typeof item.beauty!=='number'||!Number.isFinite(item.beauty)||item.beauty<0||item.beauty>100):item.beauty!==undefined)errors.push('Invalid or future beauty need.');
@@ -465,9 +472,10 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(version>=61)errors.push(...validateTactics(world));
   if(version>=58)errors.push(...validateAffiliations(world));
   errors.push(...validateFurniture(world,version,ids));
-  if(!errors.length)errors.push(...validatePodRescues(world,version,ids,createPodDepartureValidator(projection=>validateSchema(projection,version))));
+  if(!errors.length)errors.push(...validatePodRescues(world,version,ids,createPodDepartureValidator(projection=>validateSchema(projection,version,false))));
   if(!errors.length)errors.push(...validateFires(world,version,ids),...validateThingDamage(world,version));
   if(!errors.length&&world.raids?.mechActive)errors.push(...validateMechanoidRaids(world,version,ids));
+  if(!errors.length&&relationshipContext)errors.push(...validateRelationshipWorld(commercialWorld,version));
   if(!errors.length)errors.push(...validateProjectiles(world,version,ids));
   if(!errors.length){validateBombWaves(world,errors,ids);validateMiniTurrets(world,errors);validateBombRefuges(world,errors,ids);}
   if(!errors.length)errors.push(...validateWeather(world,version),...validateWind(world,version),...validateHeaters(world,version));
@@ -1176,6 +1184,11 @@ export function deserializeWorld(serialized: string): World {
     const errors=validateSchema(input,193);if(errors.length)throw new Error('Invalid version 193 save: '+errors.join(' '));
     // No actor, carcass, raid permission, salvage count or draw is added to old owners.
     input.schemaVersion=194;
+  }
+  if(record(input)&&input.schemaVersion===194){
+    const errors=validateSchema(input,194);if(errors.length)throw new Error('Invalid version 194 save: '+errors.join(' '));
+    // No relationship, partner, offer, memory, archive or draw is invented.
+    input.schemaVersion=195;
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;

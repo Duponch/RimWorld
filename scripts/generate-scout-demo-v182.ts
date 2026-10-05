@@ -58,6 +58,7 @@ function borderPreparation(world: World, pawn: Pawn): { pawnCell: Cell; pileCell
  * loading, reaches the pile/edge, travels, eats and returns in real steps. */
 export function prepareScoutDemo(): World {
   const world = createScenarioWorld(SCOUT_DEMO_SEED, 250, 'crashlanded', { hilliness: 'small-hills', biome: 'arid-shrubland' });
+  delete world.relationships; // This historical scene predates family generation.
   assert.equal(world.pawns.length, 3);
   assert.equal(world.tick, 0);
   delete world.miscIncidents; delete world.heatwaves;

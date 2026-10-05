@@ -1556,6 +1556,36 @@
       "prepared": true,
       "provenance": "Scène préparée 32×32, createScenarioWorld(213,32,'crashlanded', site tempéré plat) et biographies de création actuelles, schéma 194, tick 270090, sans campagne simulée. Clairière entière préparée ; flore réadoptée sans capacité de repeuplement, climat et incidents facultatifs exclus. Calendrier de grippe obligatoire et horloge de panne des appareils neufs réadoptés prospectivement au tick préparé, sans contrôle, maladie ou panne antérieurs. Occasion Cassandra future 270100, cycle 3, adoption mécanique au tick de préparation et RNG privé 50. Les 10 000 ors physiques rendent la menace connue strictement supérieure à 300 ; aucune perte historique ajoutée. Deux canons intacts à 60 coups, feu retenu, générateur au bois, ateliers et fournitures au sol. Aucun acteur mécanique, groupe actif, balle, blessure, carcasse, livraison ou acier de récupération préjoué. La préparation ne prouve ni fréquence naturelle, validation native ni performance générale.",
       "sha256": "ac32a154928cb4f5d655d5a93e21cef267f0d1a888f1c1dd8a68a7c6425a81a4"
+    },
+    {
+      "id": "family-v214",
+      "release": "v214",
+      "label": "Proches · accueil et chambre commune",
+      "filename": "proches-et-chambre.json",
+      "description": "Accueillir un proche annoncé par une occasion future, consulter les liens et les deux avis réels, puis attribuer deux lits dans une chambre commune.",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "offre apparentée future",
+        "entrée réelle",
+        "liens neutres",
+        "opinions dirigées",
+        "logement du couple",
+        "clavier",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause au tick 0. Aucun voyageur n’est annoncé ou admis. Reprendre à vitesse 1 jusqu’à la demande d’accueil préparée, puis mettre en pause.",
+        "Ouvrir la lettre au clavier : lire le proche et son statut avant de répondre. Accueillir la personne puis ouvrir Social des deux proches ; le lien suit son sens réel et les deux avis restent distincts.",
+        "Consulter Besoins de Ada : le couple préexistant n’a pas encore de lits attribués. Sélectionner les lits en (12,12) et (15,12), attribuer un lit à chaque partenaire puis vérifier la pensée de logement. La chambre n’est pas un lit double.",
+        "Lire aussi les liens dans Bio, en perspective et en isométrique. Sauvegarder puis recharger : conserver personnes, annonce, liens, propriétaires des lits et état réel du monde."
+      ],
+      "prepared": true,
+      "provenance": "Création Survivants actuelle createScenarioWorld(34914326,32,'survivors'), schéma 195, tick 0. Graine de création préparée pour le flux familial indépendant initial 1 ; couple préexistant issu de initializeCampRelationships, aucune romance jouée. Clairière 32×32, réserves de départ déplacées au sol libre et vêtements conservés, chambre close avec toiture et deux lits civils non attribués préparés. Autres menaces/faune facultatives exclues ; aucune horloge clinique décalée. Calendrier d’accueil prospectif existant : prochaine occasion tick 10, RNG privé 1 préparé ; aucune offre, personne entrante ni lien de l’offre engagé initialement. Aucun sommeil commun, blessure, mort, rupture, souvenir amoureux ou familial préjoué. La préparation ne certifie ni fréquence naturelle, parcours natif ni coût général.",
+      "sha256": "332c2455eae00247585688e7bb6a261e0d0a8e1bd53cc771b89299f010ef2b60"
     }
   ]
 }

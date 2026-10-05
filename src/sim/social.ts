@@ -7,7 +7,10 @@ import { footprintCells } from './definitions.ts';
 import { isRoomDoor } from './door-rules.ts';
 import { learnSkill } from './skills.ts';
 import { canStartSocialFight,finishSocialFight,startSocialFight } from './social-fight.ts';
-import { addSocialMemory,deepTalkWeight,expireSocialMemories,opinionOf,SOCIAL_LABELS,socialCompatibility,socialImpact,socialRandom,socialSeed,type SocialKind,type SocialState } from './social-state.ts';
+import { addSocialMemory,deepTalkWeight,expireSocialMemories,opinionOf,SOCIAL_LABELS,socialCompatibility,socialImpact,socialRandom,socialSeed,type SocialInteractionKind,type SocialState } from './social-state.ts';
+import { breakupSelectionWeight,performRomanceExchange,romanceSelectionWeight } from './romance.ts';
+import { captureRelationshipPeople } from './relationship-namespace.ts';
+import type { RelationshipPeople } from './relationship-state.ts';
 import type { Pawn,World } from './types.ts';
 
 const stateFor=(w:World,p:Pawn):SocialState=>p.social??={rng:socialSeed(w.seed,p.id),memories:[]};
@@ -39,28 +42,36 @@ function curve(value:number,points:readonly (readonly [number,number])[]):number
  * this human social slice. */
 export function negativeInteractionFactor(world:World,initiator:Pawn,recipient:Pawn,compatibility=socialCompatibility(world.seed,initiator.id,recipient.id)):number {
   if(initiator.traits?.includes('kind'))return 0;
-  return curve(opinionOf(initiator,recipient.id,world.tick),opinionWeight)
+  return curve(opinionOf(initiator,recipient.id,world.tick,world),opinionWeight)
     *curve(compatibility,compatibilityWeight)
     *(initiator.traits?.includes('abrasive')?2.3:1);
 }
-export function passiveSocialWeights(world:World,initiator:Pawn,recipient:Pawn):{chitchat:number;'deep-talk':number;'kind-words':number;slight:number;insult:number} {
+export function passiveSocialWeights(world:World,initiator:Pawn,recipient:Pawn,people?:RelationshipPeople):{chitchat:number;'deep-talk':number;'kind-words':number;slight:number;insult:number;'romance-attempt':number;breakup:number} {
   const compatibility=socialCompatibility(world.seed,initiator.id,recipient.id);
   const negative=negativeInteractionFactor(world,initiator,recipient,compatibility);
-  return {chitchat:1,'deep-talk':deepTalkWeight(compatibility),'kind-words':initiator.traits?.includes('kind') ? .01 : 0,slight:.02*negative,insult:.007*negative};
+  return {chitchat:1,'deep-talk':deepTalkWeight(compatibility),'kind-words':initiator.traits?.includes('kind') ? .01 : 0,slight:.02*negative,insult:.007*negative,
+    'romance-attempt':romanceSelectionWeight(world,initiator,recipient,people),breakup:breakupSelectionWeight(world,initiator,recipient)};
 }
 /** The opinion factor reads the recipient after its new directed memory. */
 export function socialFightChance(world:World,recipient:Pawn,initiator:Pawn,kind:'slight'|'insult'):number {
   const capacities=pawnBody(recipient).capacities;
   const usable=(value:number)=>Math.max(0,Math.min(1,(value-.3)/.7));
   return Math.min(1,(kind==='slight' ? .005 : .04)*usable(capacities.manipulation)*usable(capacities.moving)
-    *curve(opinionOf(recipient,initiator.id,world.tick),fightOpinionWeight)*(recipient.traits?.includes('bloodlust')?4:1));
+    *curve(opinionOf(recipient,initiator.id,world.tick,world),fightOpinionWeight)*(recipient.traits?.includes('bloodlust')?4:1));
 }
 /** Passive exchanges do not acquire reservations, cancel work or retime an edge. */
-export function exchangeSocial(world:World,a:Pawn,b:Pawn,kind:SocialKind,grid?:ShotGrid):boolean {
+export function exchangeSocial(world:World,a:Pawn,b:Pawn,kind:SocialInteractionKind,grid?:ShotGrid):boolean {
   if(kind==='fight-cathartic'||kind==='fight-angering')return false;
   if((kind==='kind-words'&&!a.traits?.includes('kind'))
     ||(a.traits?.includes('kind')&&(kind==='slight'||kind==='insult')))return false;
   if(!world.pawns.includes(a)||!world.pawns.includes(b)||!canSocialize(world,a,true)||!canSocialize(world,b,false)||world.tick-(a.social?.last?.tick??-1000)<12||!goodSocialPosition(world,a,b,grid))return false;
+  if(kind==='romance-attempt'||kind==='breakup'){
+    const outcome=performRomanceExchange(world,a,b,kind);if(!outcome)return false;
+    const sa=stateFor(world,a),sb=stateFor(world,b);
+    sa.last={otherId:b.id,kind,tick:world.tick,initiated:true};sb.last={otherId:a.id,kind,tick:world.tick,initiated:false};delete sa.wants;
+    world.events.push({tick:world.tick,type:'need',message:outcome==='formed'?`${a.name} et ${b.name} deviennent partenaires.`:outcome==='rebuffed'?`${b.name} repousse l’avance de ${a.name}.`:`${a.name} se sépare de ${b.name}.`});
+    if(world.events.length>80)world.events.splice(0,world.events.length-80);return true;
+  }
   const sa=stateFor(world,a),sb=stateFor(world,b),impactA=socialImpact(a),impactB=socialImpact(b);
   expireSocialMemories(a,world.tick);expireSocialMemories(b,world.tick);
   if(kind==='slight'||kind==='insult'){
@@ -88,6 +99,7 @@ export function visitSocialExchange(world:World,visitor:Pawn,patient:Pawn):boole
  * Recipients are sampled uniformly among eligible nearby colonists. */
 export function advanceSocial(world:World):void {
   let grid:ShotGrid|undefined;
+  let people:RelationshipPeople|undefined;
   for(const p of world.pawns)if(p.social?.fight){
     const other=world.pawns.find(q=>q.id===p.social!.fight!.opponentId);
     if(!other||other.social?.fight?.opponentId!==p.id||p.melee?.order?.auto!=='social'||other.melee?.order?.auto!=='social')finishSocialFight(world,p);
@@ -106,9 +118,11 @@ export function advanceSocial(world:World):void {
     if(world.tick-last<12)continue;
     const candidates=world.pawns.filter(q=>q!==p&&distanceSquared(p,q)<=36&&canSocialize(world,q,false,carried));
     if(candidates.length){grid??=socialSight(world);const eligible=candidates.filter(q=>goodSocialPosition(world,p,q,grid));
-      if(eligible.length){const other=eligible[Math.floor(socialRandom(s)*eligible.length)]!,weights=passiveSocialWeights(world,p,other),total=weights.chitchat+weights['deep-talk']+weights['kind-words']+weights.slight+weights.insult;
+      if(eligible.length){const other=eligible[Math.floor(socialRandom(s)*eligible.length)]!;
+        if(world.schemaVersion>=195)people??=captureRelationshipPeople(world);
+        const weights=passiveSocialWeights(world,p,other,people),total=weights.chitchat+weights['deep-talk']+weights['kind-words']+weights.slight+weights.insult+weights['romance-attempt']+weights.breakup;
         const roll=socialRandom(s)*total;
-        const kind=roll<weights.chitchat?'chitchat':roll<weights.chitchat+weights['deep-talk']?'deep-talk':roll<weights.chitchat+weights['deep-talk']+weights['kind-words']?'kind-words':roll<weights.chitchat+weights['deep-talk']+weights['kind-words']+weights.slight?'slight':'insult';
+        const kind=roll<weights.chitchat?'chitchat':roll<weights.chitchat+weights['deep-talk']?'deep-talk':roll<weights.chitchat+weights['deep-talk']+weights['kind-words']?'kind-words':roll<weights.chitchat+weights['deep-talk']+weights['kind-words']+weights.slight?'slight':roll<weights.chitchat+weights['deep-talk']+weights['kind-words']+weights.slight+weights.insult?'insult':roll<total-weights.breakup?'romance-attempt':'breakup';
         if(exchangeSocial(world,p,other,kind,grid))continue;
       }
     }

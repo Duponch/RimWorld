@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 194 as const;
+export const SCHEMA_VERSION = 195 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -90,6 +90,8 @@ export interface Pawn extends Cell {
   research?:import('./research.ts').ResearchTask;
   social?:import('./social-state.ts').SocialState;
   bereavement?:import('./bereavement.ts').DeathMemory[];
+  familyBereavement?:import('./family-bereavement.ts').FamilyDeathMemory[];
+  romanceMemories?:import('./romance-memories.ts').RomanceMemory[];
   raid?:import('./raid-state.ts').RaiderState;
   traits?: import('./traits.ts').TraitId[];
   background?: import('./colonist-backgrounds.ts').ColonistBackground;
@@ -168,6 +170,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  relationships?:import('./relationship-state.ts').RelationshipState;
   mechSalvage?:{completed:number;steel:number};
   mechanoids?:import('./mechanoid-state.ts').Mechanoid[];
   rainElectrical?:import('./rain-electric.ts').RainElectricalState;

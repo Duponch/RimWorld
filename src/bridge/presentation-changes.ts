@@ -7,9 +7,18 @@ import { anestheticStage } from '../sim/anesthetic.ts';
  * transport observer never changes the simulation or enters a save. */
 export class PresentationChanges {
   private signature:string|undefined;
+  private relationshipLinks:NonNullable<World['relationships']>['links']|undefined;
+  private relationshipSignature:string|undefined;
   capture(world:World):boolean {
+    // Canonical producers replace the links array. Serialize a new graph once,
+    // while retaining value equality for a cloned immutable World.
+    if(world.relationships?.links!==this.relationshipLinks){
+      this.relationshipLinks=world.relationships?.links;
+      this.relationshipSignature=JSON.stringify(world.relationships?.links);
+    }
     const signature=JSON.stringify([
       world.seed,world.width,world.height,world.events.at(-1),
+      this.relationshipSignature,
       world.worldIncidents?.active,
       world.podRescues?.pending,world.podRescues?.incidents,world.pawns.map(p=>p.podRescue),
       world.wildlife?.animals.map(a=>[a.id,a.state,a.burning?.phase,a.meal?.id,a.flee,a.stagger,a.stun,a.threat,a.strike,a.health?.nextInjuryId,a.exiting?.destination,a.manhunter?[a.manhunter.startedAtCore,a.manhunter.targetId,a.manhunter.door]:undefined]),world.wildlife?.eatenNutrition,world.wildlife?.exitedAnimals,
@@ -26,7 +35,7 @@ export class PresentationChanges {
       world.pawns.map(p=>[p.id,p.state,p.burning?.phase,p.firefighting?.phase,p.firefighting?.fireId,p.raid?.exiting,p.mental?.crisis?.kind,p.mental?.crisis?.target,
         p.mental?.crisis&&'targetId' in p.mental.crisis?p.mental.crisis.targetId:undefined,
         p.mental?.crisis?.kind==='tantrum'?p.mental.crisis.attempted:undefined,
-        p.meleeThreat,p.bombRefuge,
+        p.meleeThreat,p.bombRefuge,p.bedId,p.social?.last,p.romanceMemories,p.familyBereavement,
         p.jobId,p.faction,p.prisoner?.capturedAt,p.prisoner?.mode,p.prisoner?.lastChatTick,p.prisoner?.escape,p.ward?.kind,p.ward?.patientId,p.ward?.phase,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,p.shooting,p.stagger,!!p.draft,p.draft?.target,p.draft?.queue,p.equipmentTask?.itemId,p.equipmentTask?.action,p.equipmentDropPending,p.rescue,p.tend?.patientId,p.tend?.phase,p.feed?.patientId,p.feed?.phase,p.medicalSleep,p.interruptedCargo,p.need?.phase,p.need?.kind==='sleep'?p.need.bedId:undefined,
         p.surgeryRequest,p.surgery?[p.surgery.patientId,p.surgery.part,p.surgery.bedId,p.surgery.spot,p.surgery.phase,p.surgery.consumedMedicine]:undefined,
         // Medical topology/results and anesthetic stage boundaries are

@@ -24,6 +24,7 @@ export function prepareHealrootDemo(generation: 'current' | 'pre-v210' = 'curren
   if (generation === 'pre-v210') world.pawns.forEach((pawn, index) => {
     delete pawn.background; pawn.skills = startingSkills(index);
   });
+  delete world.relationships; // This historical scene predates family generation.
   const plant = world.resources.find(resource => resource.id === 7436 && resource.x === HEALROOT_CELL.x && resource.z === HEALROOT_CELL.z);
   assert.ok(plant && plant.species === 'healroot-wild' && plant.kind === 'wild-plant' && plant.growth === 1,
     'Seed 42 must retain its natural mature wild healroot at (127,143).');

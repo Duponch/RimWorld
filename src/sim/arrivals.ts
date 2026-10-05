@@ -1,5 +1,6 @@
 import { arrivalTraits } from './traits.ts';
 import { offeredBackground,assignOfferedBackground } from './background-generation.ts';
+import { relationshipOfferCandidates,chooseOfferedRelationship,prepareRelationshipAdmission } from './relationship-generation.ts';
 import { ARRIVAL_NAMES,arrivalRandom,type ArrivalCommand } from './arrival-state.ts';
 import { arrivalEntry } from './arrival-entry.ts';
 import { isColonist } from './affiliation.ts';
@@ -20,12 +21,18 @@ export function advanceArrivals(world:World):void {
   if(world.tick<s.nextCheck)return;
   // Explicit provisional pacing. Complete population intent, difficulty and
   // competing incidents belong to the future storyteller, not this profile.
-  s.nextCheck=world.tick+Math.floor(TICKS_PER_DAY*(4+arrivalRandom(s)*4));
-  if(s.pending||world.pawns.filter(p=>isColonist(p)&&p.state!=='dead').length>=12||!arrivalEntry(world,s.rng))return;
-  const profile=Math.floor(arrivalRandom(s)*3) as 0|1|2;
-  const name=ARRIVAL_NAMES[Math.floor(arrivalRandom(s)*ARRIVAL_NAMES.length)]!;
-  const id=++s.serial;
-  s.pending={id,openedAt:world.tick,expiresAt:world.tick+TICKS_PER_DAY,name,profile,traits:arrivalTraits(profile,id),...world.schemaVersion>=191?offeredBackground(world.seed^0x210a771,id):{}};
+  const random={rng:s.rng},nextCheck=world.tick+Math.floor(TICKS_PER_DAY*(4+arrivalRandom(random)*4));
+  if(s.pending||world.pawns.filter(p=>isColonist(p)&&p.state!=='dead').length>=12||!arrivalEntry(world,random.rng)
+    ||!Number.isSafeInteger(s.serial+1)||!Number.isSafeInteger(world.tick+TICKS_PER_DAY)){
+    s.nextCheck=nextCheck;s.rng=random.rng;return;
+  }
+  const id=s.serial+1,background=world.schemaVersion>=191?offeredBackground(world.seed^0x210a771,id):undefined;
+  const plans=background?relationshipOfferCandidates(world,background.age):[];
+  const profile=Math.floor(arrivalRandom(random)*3) as 0|1|2;
+  const name=ARRIVAL_NAMES[Math.floor(arrivalRandom(random)*ARRIVAL_NAMES.length)]!;
+  const relationship=chooseOfferedRelationship(plans,random);
+  s.pending={id,openedAt:world.tick,expiresAt:world.tick+TICKS_PER_DAY,name,profile,traits:arrivalTraits(profile,id),...background,...relationship?{relationship}:{}};
+  s.serial=id;s.nextCheck=nextCheck;s.rng=random.rng;
   log(world,`${name} demande à rejoindre la colonie. Répondez dans la journée.`);
 }
 export function applyArrival(world:World,command:ArrivalCommand):CommandResult {
@@ -50,7 +57,10 @@ export function applyArrival(world:World,command:ArrivalCommand):CommandResult {
   // Clothing crosses the map boundary with its owner; it is an external input,
   // not a withdrawal from colony stock or a textile-production recipe.
   const shirt={id:world.nextId+1,kind:'apparel' as const,item:'cloth-shirt' as const,quantity:1,owner:{type:'apparel' as const,pawnId:pawn.id},apparel:newApparelState('cloth-shirt')};
+  const relationships=prepareRelationshipAdmission(world,pawn,o.relationship);
+  if(relationships===null)return refuse('Le lien familial annoncé ne peut plus être engagé. La demande reste ouverte.');
   world.nextId+=2;world.pawns.push(pawn);world.piles.push(shirt);
+  if(relationships!==undefined)world.relationships=relationships;
   s!.accepted++;delete s!.pending;
   log(world,`${pawn.name} rejoint la colonie par le bord de la carte avec sa chemise. Prévoyez un couchage et ses affectations.`);
   return {ok:true};

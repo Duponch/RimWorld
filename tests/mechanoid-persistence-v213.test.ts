@@ -11,6 +11,7 @@ import { serializeWorld,deserializeWorld,validateWorld } from '../src/sim/serial
 import { validMechCorpseShape } from '../src/sim/mechanoid-corpse-save.ts';
 import type { Mechanoid } from '../src/sim/mechanoid-state.ts';
 import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION } from '../src/sim/types.ts';
 
 const noDraw=()=>{throw new Error('No mechanical biological draw');};
 function raidCamp(count=2){
@@ -66,7 +67,7 @@ test('death during a captured edge retains the real actor until its physical end
 
 test('strict193 migration changes only the version and rejects future mechanical owners and metadata',()=>{
   const base=medicalCamp(),historical={...structuredClone(base),schemaVersion:193},before=structuredClone(historical);
-  const migrated=deserializeWorld(JSON.stringify(historical));expect(migrated).toEqual({...before,schemaVersion:194});
+  const migrated=deserializeWorld(JSON.stringify(historical));expect(migrated).toEqual({...before,schemaVersion:SCHEMA_VERSION});
   expect(migrated.mechanoids).toBeUndefined();expect(migrated.mechSalvage).toBeUndefined();expect(migrated.raids).toBeUndefined();
   for(const extra of [{mechanoids:[]},{mechSalvage:{completed:1,steel:15}}])
     expect(()=>deserializeWorld(JSON.stringify({...historical,...extra}))).toThrow(/Invalid version 193 save/);

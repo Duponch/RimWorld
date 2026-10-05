@@ -26,6 +26,7 @@ import { validWildlifeExitState,validWildlifePredationState } from '../sim/wildl
 import { validCorpseConsumption } from '../sim/corpse-anatomy.ts';
 import { V190_ITEM_IDS } from '../sim/biome-items.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
+import { validateRelationshipWorld } from '../sim/relationship-world-save.ts';
 import { validPawnSurgeryShape } from '../sim/surgery-save.ts';
 import { validAnesthetic } from '../sim/anesthetic.ts';
 import { validateScoutRegistry } from '../sim/caravan-save.ts';
@@ -507,20 +508,26 @@ export class SnapshotDecoder {
         if(Object.hasOwn(departure.pawn,'bombRefuge'))return resync('Refuge Bomb archivé hors carte.');
       }
     for(const departure of next.podRescues?.departed??[])if(!validSurgeryTransport(departure.pawn,{schemaVersion:next.schemaVersion,tick:departure.tick,width:next.width,height:next.height,nextId:next.nextId}))return resync('Dossier chirurgical civil archivé invalide.');
-    // Only the retained ballistic/Bomb owners need this additional identity
+    const relationMemories=(p:Pawn):boolean=>Object.hasOwn(p,'romanceMemories')||Object.hasOwn(p,'familyBereavement');
+    const relationships=Object.hasOwn(next,'relationships')||next.pawns.some(relationMemories)
+      ||[next.scout,next.commercialTrip].some(owner=>owner&&'pawn' in owner&&relationMemories(owner.pawn))
+      ||[next.visitors?.departed??[],next.podRescues?.departed??[]].some(records=>records.some(record=>relationMemories(record.pawn)))
+      ||Object.hasOwn(next.arrivals?.pending??{},'relationship')||(next.quests?.entries??[]).some(q=>Object.hasOwn(q,'relationship'));
+    // Retained ballistic/Bomb and relationship owners need this additional identity
     // capture. Foreign registries above are already validated; their historical
     // owners reserve the same namespace as the map and cannot become a wave.
-    if(Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge'))){
+    if(relationships||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge'))){
       const owners=[
         ...next.pawns,...next.structures,...next.jobs,...next.resources,...next.piles,...next.stockpiles,...next.growingZones,
         ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
         ...next.packed.map(p=>p.building),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
       ];
       const ids=new Set<number>();
-      for(const owner of owners){if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
-      const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&mechanicalCorpseIds.has(Number(id)))return false;ids.add(Number(id));return true;};
+      for(const owner of owners){if(relationships&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
+      const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&(relationships||mechanicalCorpseIds.has(Number(id))))return false;ids.add(Number(id));return true;};
       const addItems=(items:unknown):boolean=>Array.isArray(items)&&items.every(item=>item&&typeof item==='object'&&addId(item.id));
-      for(const id of foreignIds)ids.add(id);
+      if(relationships){for(const id of postIds)if(!addId(id))return resync('Identité du comptoir dupliquée dans le registre relationnel.');}
+      else for(const id of foreignIds)ids.add(id);
       for(const owner of [next.scout,next.commercialTrip])if(owner&&'pawn' in owner){if(!addId(owner.pawn.id)||!addItems(owner.items))return resync('Identité hors carte invalide pour les projectiles.');}
       for(const pawn of next.pawns)if(pawn.body?.lostAt!==undefined&&!addId(pawn.body.pileId))return resync('Identité de dépouille perdue invalide.');
       for(const records of [next.raids?.departed??[],next.prisonDepartures??[]])for(const d of records)
@@ -535,6 +542,7 @@ export class SnapshotDecoder {
       const bombErrors:string[]=[];validateBombWaves(next,bombErrors,ids);if(bombErrors.length)return resync('Vague Bomb ou identité invalide.');
       if(validateBombRefuges(next,[],ids).length)return resync('Refuge ou danger Bomb incohérent.');
     }
+    if(validateRelationshipWorld(next,next.schemaVersion).length)return resync('Liens, annonce ou souvenirs relationnels incohérents.');
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     const replaced = message.epoch !== this.epoch;
     if(reindexResources){this.resourceSlots.clear();for(let i=0;i<next.resources.length;i++)this.resourceSlots.set(next.resources[i]!.id,i);}
