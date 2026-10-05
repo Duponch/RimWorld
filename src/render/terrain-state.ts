@@ -1,12 +1,15 @@
 import type { World, Tile } from '../sim/types';
+import {readSnapshotChanges} from '../bridge/snapshot-changes';
 
 const rocky=(t:Tile)=>t.terrain==='rock'||t.terrain==='rough-stone';
 const NO_CHANGES:readonly number[]=[];
 /** A delta keeps all unchanged Tile objects by identity. Collect its changed
  * slots once so terrain paint and the rock surface do not each scan the map. */
-export function terrainTileChanges(a:World|null|undefined,b:World):readonly number[]|null {
+export function terrainTileChanges(a:World|null|undefined,b:World,immutableSnapshots=false):readonly number[]|null {
   if(!a||a.seed!==b.seed||a.width!==b.width||a.height!==b.height||a.site?.biome!==b.site?.biome||!!a.flora!==!!b.flora)return null;
   if(a.tiles===b.tiles)return NO_CHANGES;
+  const confirmed=immutableSnapshots?readSnapshotChanges(a,b):undefined;
+  if(confirmed)return confirmed.tileIndices;
   let changed:number[]|undefined;
   for(let i=0;i<b.tiles.length;i++)if(a.tiles[i]!==b.tiles[i])(changed??=[]).push(i);
   return changed??NO_CHANGES;

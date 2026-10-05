@@ -448,7 +448,7 @@ export class ColonyRenderer {
     // collection is inspected once; ordinary pawn snapshots do not scan the map.
     const newMap = !previousWorld||previousWorld.seed!==world.seed||previousWorld.width!==world.width||previousWorld.height!==world.height||previousWorld.scenario?.id!==world.scenario?.id||previousWorld.scenario?.revision!==world.scenario?.revision||
       previousWorld.site?.hilliness!==world.site?.hilliness||previousWorld.site?.revision!==world.site?.revision||previousWorld.site?.biome!==world.site?.biome;
-    const changedTiles=terrainTileChanges(previousWorld,world);
+    const changedTiles=terrainTileChanges(previousWorld,world,!!previousWorld&&this.immutableWorlds.has(previousWorld)&&this.immutableWorlds.has(world));
     if(newMap)this.mechanoids.reset();
     const terrainChanges=terrainSurfaceChanges(previousWorld,world,changedTiles);
     // External setWorld callers may mutate tile collections in place. Only

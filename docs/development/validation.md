@@ -1,4 +1,6 @@
-# Validation courante — V224
+# Validation courante — V225
+
+**V225 — changements confirmés et présentation naturelle, schéma198 inchangé.** [Contrat](snapshot-presentation-v225.md), [preuves et limites](../history/validation-snapshot-presentation-v225.md). Journal privé composé depuis la dernière vue, repli complet si sa provenance manque ; vraie omission du lecteur de franchissements de clôture/plancher brûlé corrigée aux versions119/89. Deux cycles isolés A/B/B/A exacts et28fichiers/142cas aux frontières passent. Un cycle matériel passe de64,4 à70,9RAF/s en moyenne, gain local modeste ; les pointes persistent,240FPS et le vrai6× restent ouverts. Typage/build et Chromium matériel avec sauvegarde/reprise passent. Les62payloads publics sont préservés ; aucune campagne longue ou performance générale recertifiée. Priorité : coût et pointes des applications de scène avant nouvelle mécanique.
 
 **V224 — orientations et première consolidation de la charge, schéma 198 inchangé.** [Contrat](aulnes-performance-v224.md), [preuves et contreparties](../history/validation-aulnes-performance-v224.md). États/RNG exacts sur les comparaisons, transport et rendu contrôlés ; le débit6× réel progresse dans les passes, mais le gain FPS n'est pas stable et240FPS restent ouverts. [Référence corrigée](../gameplay/aulnes-seating-v224.md) issue de huit remontages ordinaires,62e scène ;61anciennes références exactes. Aucune campagne longue ou performance générale recertifiée. Priorité de continuation : adoption/publication/main avant nouvelle mécanique.
 

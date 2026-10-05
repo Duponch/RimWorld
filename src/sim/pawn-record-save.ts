@@ -21,6 +21,7 @@ import { validAttackMemory } from './automatic-combat-save.ts';
 import { validAffiliationShape,validateAffiliations } from './affiliation-save.ts';
 import { validStagger } from './stagger.ts';
 import { travelEnd,validSlowIntervals,validStunIntervals,type TravelSegment } from './travel-timing.ts';
+import { validCapturedTravelDelay } from './captured-travel-delay.ts';
 import { validMeleeShape,validStunShape,validateMelee } from './melee-save.ts';
 import { validShootingShape,validateShooting } from './shooting-save.ts';
 import { validDraftShape,validateDrafting } from './drafting-save.ts';
@@ -115,7 +116,7 @@ export function validatePawnRecordShape(item:Record<string,unknown>, world:World
   if(version>=6 && item.motion!=null) {
     const m=item.motion;
     if(!record(m)||!record(m.from)||!record(m.to)||!coord(m.from)||!coord(m.to)||typeof m.start!=='number'||typeof m.end!=='number'||!Number.isFinite(m.start)||!Number.isFinite(m.end)||m.start<0||m.start>validationTick||m.to.x!==item.x||m.to.z!==item.z||Math.max(Math.abs((m.to.x as number)-(m.from.x as number)),Math.abs((m.to.z as number)-(m.from.z as number)))!==1) errors.push('Invalid travel segment.');
-    else if(!validStunIntervals(m.stuns,version,m.start as number,validationTick)||!validSlowIntervals(m.stagger,version,m.start as number,validationTick)||(m.speedFactor!==undefined&&(version<37||typeof m.speedFactor!=='number'||!Number.isFinite(m.speedFactor)||m.speedFactor<(version>=87?MIN_PAWN_SPEED_V87:version>=86?MIN_PAWN_SPEED_V86:version>=65?.128*((4.6-.12)/4.6)/2:version>=63?.128*((4.6-.12)/4.6):version>=45?.128:.8)||m.speedFactor>1))||(m.terrainDelay!==undefined&&(version<16||(version<22?m.terrainDelay!==1.4:!(version>=31?[.2,1.4,3,4.2,5]:version>=28?[.2,1.4,3,4.2]:[1.4,3,4.2]).includes(m.terrainDelay as number))))||Math.abs(m.end-travelEnd(m as unknown as TravelSegment))>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-validationTick))>1e-7) errors.push('Inconsistent travel duration.');
+    else if(!validStunIntervals(m.stuns,version,m.start as number,validationTick)||!validSlowIntervals(m.stagger,version,m.start as number,validationTick)||(m.speedFactor!==undefined&&(version<37||typeof m.speedFactor!=='number'||!Number.isFinite(m.speedFactor)||m.speedFactor<(version>=87?MIN_PAWN_SPEED_V87:version>=86?MIN_PAWN_SPEED_V86:version>=65?.128*((4.6-.12)/4.6)/2:version>=63?.128*((4.6-.12)/4.6):version>=45?.128:.8)||m.speedFactor>1))||!validCapturedTravelDelay(m.terrainDelay,version)||Math.abs(m.end-travelEnd(m as unknown as TravelSegment))>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-validationTick))>1e-7) errors.push('Inconsistent travel duration.');
   }
   const haul = item.haul;
   if(record(haul)&&haul.whole!==undefined&&(version<26||haul.whole!==true||haul.quantity!==1||!record(haul.destination)||!['stockpile','aside'].includes(String(haul.destination.type))))errors.push('Invalid whole furniture haul shape.');

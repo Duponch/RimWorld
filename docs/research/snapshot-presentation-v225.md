@@ -1,0 +1,11 @@
+# V225 — lecture de changements et coût de scène
+
+Les [références primaires V224](aulnes-performance-v224.md) restent applicables : compilation TypeScript/V8, clone structuré et profiler Chrome. Cette consolidation ne change ni langage ni règle Core. [Contrat](../development/snapshot-presentation-v225.md).
+
+Le profil main V224 final sur le checkpoint corrigé au tick 6934 distingue les coûts propres échantillonnés de NaturalResourcePresentation, updateResources, SnapshotDecoder et applyWorld. Un second passage compte réellement les appels : une publication peut rester dans la queue ou être présentée plus tard, et son décodage ne prouve pas une application complète de scène. Les temps inclusifs imbriqués ne sont pas additionnés ; le temps « hors descendants instrumentés » inclut encore les descendants non instrumentés et le surcoût des sondes.
+
+Le journal est une connaissance issue des paquets validés, réservée à la présentation. Sa lecture ne valide aucun paquet. Les indices possédés sont composés depuis la dernière lecture naturelle, car celle-ci peut ne pas coïncider avec le dernier World appliqué. Une génération distincte empêche de traverser un checkpoint au même epoch/tick. Un registre de Worlds en clés faibles et des records sans parents forts évitent une chaîne conservant toute l'histoire ; 64 records bornent leur nombre, pas leur volume total d'indices.
+
+La capture naturelle conserve une partition de sources et ses références courantes, y compris après un patch sans changement visuel. Son tableau privé ne devient jamais celui d'une ancienne vue. La fusion de deux suites triées évite un Set et deux tris sur les 8 765 plantes temporisées des Aulnes ; la partition est retriée seulement lors d'une entrée/sortie réelle. Les sources temporisées sont toujours examinées à leur cadence existante. Repli complet pour appel mutable, ordre/appartenance inconnus, changement culture/nature ou préfixe perdu. Aucune qualité, dimension, horloge, phase ou cadence n'est abaissée.
+
+Les comparaisons exactes des Worlds, vues, ordre des changements et captures historiques sont les oracles de comportement. Les empreintes de sources/paquets servent à la provenance, jamais de permission ou substitut à l'égalité. Les mesures Node isolées et sondes instrumentées ne prouvent pas les FPS ; les passages matériels ordinaires sont évalués séparément.

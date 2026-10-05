@@ -71,6 +71,79 @@ import { validateMechanoidRaids } from '../sim/mechanoid-raid-save.ts';
 import { validateMechanoidRanged } from '../sim/mechanoid-ranged-save.ts';
 import { isMechanoidKind } from '../sim/mechanoid-definition.ts';
 
+export interface SnapshotChanges {
+  readonly resourceIndices: readonly number[];
+  readonly tileIndices: readonly number[];
+}
+interface SnapshotChangeStamp { journal: SnapshotChangeJournal; generation: number; epoch: number; revision: number }
+interface SnapshotChangeRecord {
+  readonly parentRevision: number;
+  // Absent means membership/order was not proved stable across this edge.
+  readonly resourceIndices: readonly number[] | undefined;
+  readonly tileIndices: readonly number[];
+}
+const snapshotChangeStamps = new WeakMap<World, SnapshotChangeStamp>();
+const emptyChangeIndices: readonly number[] = Object.freeze([]);
+const emptySnapshotChanges: SnapshotChanges = Object.freeze({ resourceIndices: emptyChangeIndices, tileIndices: emptyChangeIndices });
+const orderedChangeCopy = (indices: readonly number[]): readonly number[] => Object.freeze([...new Set(indices)].sort((a, b) => a - b));
+
+/** Decoder-private publication capability. Records never retain a World,
+ * packet, resource or parent object; accepted Worlds are weak keys. */
+class SnapshotChangeJournal {
+  private generation = 0;
+  private epoch = 0;
+  private revision = 0;
+  private readonly records = new Map<number, SnapshotChangeRecord>();
+
+  reset(world: World, epoch: number, revision: number): void {
+    this.records.clear(); this.generation++; this.epoch = epoch; this.revision = revision;
+    snapshotChangeStamps.set(world, { journal: this, generation: this.generation, epoch, revision });
+  }
+
+  append(parent: World, world: World, epoch: number, revision: number,
+    resourceIndices: readonly number[] | undefined, tileIndices: readonly number[]): void {
+    const previous = snapshotChangeStamps.get(parent);
+    if (!previous || previous.journal !== this || previous.generation !== this.generation
+      || previous.epoch !== epoch || epoch !== this.epoch || previous.revision !== this.revision
+      || revision <= previous.revision) {
+      // A lost witness may only remove the optimization, never invent a suffix.
+      this.reset(world, epoch, revision); return;
+    }
+    this.records.set(revision, Object.freeze({ parentRevision: previous.revision,
+      resourceIndices: resourceIndices === undefined ? undefined : orderedChangeCopy(resourceIndices),
+      tileIndices: orderedChangeCopy(tileIndices) }));
+    if (this.records.size > 64) this.records.delete(this.records.keys().next().value!);
+    this.revision = revision;
+    snapshotChangeStamps.set(world, { journal: this, generation: this.generation, epoch, revision });
+  }
+
+  read(from: SnapshotChangeStamp, to: SnapshotChangeStamp): SnapshotChanges | undefined {
+    if (from.generation !== this.generation || to.generation !== this.generation
+      || from.epoch !== this.epoch || to.epoch !== this.epoch || from.revision > to.revision) return undefined;
+    if (from.revision === to.revision) return emptySnapshotChanges;
+    const resources = new Set<number>(), tiles = new Set<number>();
+    let revision = to.revision;
+    while (revision > from.revision) {
+      const record = this.records.get(revision);
+      if (!record || record.resourceIndices === undefined || record.parentRevision < from.revision
+        || record.parentRevision >= revision) return undefined;
+      for (const index of record.resourceIndices) resources.add(index);
+      for (const index of record.tileIndices) tiles.add(index);
+      revision = record.parentRevision;
+    }
+    if (revision !== from.revision) return undefined;
+    return Object.freeze({ resourceIndices: orderedChangeCopy([...resources]), tileIndices: orderedChangeCopy([...tiles]) });
+  }
+}
+
+/** Only decoder-confirmed identities confer a witness. Unknown/mutable copies,
+ * checkpoints, lost records or structural resource edges require a full read. */
+export function readSnapshotChanges(from: World, to: World): SnapshotChanges | undefined {
+  const before = snapshotChangeStamps.get(from), after = snapshotChangeStamps.get(to);
+  if (!before || !after || before.journal !== after.journal) return undefined;
+  return before.journal.read(before, after);
+}
+
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
 type StructurelessDynamicWorld = Omit<DynamicWorld, 'structures'> & { readonly structures?: never };
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
@@ -425,6 +498,7 @@ export class SnapshotDecoder {
   private revision = 0;
   private current: World | undefined;
   private readonly planetValidation = new PlanetValidationCache();
+  readonly #snapshotChanges = new SnapshotChangeJournal();
   // The decoder owns immutable snapshots. Membership changes rebuild this
   // index; ordinary growth/metadata packets only copy the array of references.
   private resourceSlots = new Map<number, number>();
@@ -509,6 +583,8 @@ export class SnapshotDecoder {
     let planetCheck: PlanetPreparation | undefined;
     let reindexResources = message.kind === 'checkpoint';
     let reindexPiles = message.kind === 'checkpoint';
+    let changedResourceIds: number[] | undefined = [];
+    let changedTileIndices: number[] = [];
     if (message.kind === 'checkpoint') {
       if (message.world.tiles.length !== message.world.width * message.world.height) return resync('Dimensions du checkpoint invalides.');
       if(!Array.isArray(message.world.piles)||message.world.piles.some(pile=>!validPile(pile,message.world)))return resync('Pile de checkpoint invalide.');
@@ -530,6 +606,7 @@ export class SnapshotDecoder {
         }
         tiles = tiles.slice();
         for (const [index, terrain, stone, miningDamage, ore, floor, miningYield] of message.tiles) tiles[index] = {terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore},...floor===undefined?{}:{floor},...miningYield===undefined?{}:{miningYield}};
+        changedTileIndices = [...touched];
       }
       let resources = previous.resources;
       if (message.resources) {
@@ -573,6 +650,7 @@ export class SnapshotDecoder {
           for(const [id,resource] of patches)resources[this.resourceSlots.get(id)!]=resource;
         }
         reindexResources = !sparse;
+        changedResourceIds = sparse ? [...touched] : undefined;
       }
       let piles=previous.piles;
       if(message.piles){
@@ -717,7 +795,20 @@ export class SnapshotDecoder {
     const replaced = message.epoch !== this.epoch;
     if(reindexResources){this.resourceSlots.clear();for(let i=0;i<next.resources.length;i++)this.resourceSlots.set(next.resources[i]!.id,i);}
     if(reindexPiles){this.pileSlots.clear();for(let i=0;i<next.piles.length;i++)this.pileSlots.set(next.piles[i]!.id,i);}
+    let resourceIndices: number[] | undefined;
+    if (changedResourceIds) {
+      resourceIndices = [];
+      for (const id of changedResourceIds) {
+        const index = this.resourceSlots.get(id);
+        if (index === undefined) { resourceIndices = undefined; break; }
+        resourceIndices.push(index);
+      }
+    }
+    const previous = this.current;
     this.current = next; this.epoch = message.epoch; this.revision = message.revision;
+    // Publish only at the confirmed boundary, after every guard and planet commit.
+    if (message.kind === 'checkpoint' || !previous) this.#snapshotChanges.reset(next, message.epoch, message.revision);
+    else this.#snapshotChanges.append(previous, next, message.epoch, message.revision, resourceIndices, changedTileIndices);
     return { status: 'applied', world: next, replaced };
   }
 }
