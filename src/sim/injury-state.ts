@@ -3,7 +3,7 @@ import { anestheticModifiers } from './anesthetic.ts';
 import { foodPoisoningModifiers } from './food-poisoning.ts';
 import { FLU_UNIT,fluModifiers } from './flu-rules.ts';
 import { coldModifiers } from './cold-rules.ts';
-import { HEAT_UNIT,heatModifiers } from './heat-rules.ts';
+import { HEAT_UNIT,heatModifiers } from './heat-severity.ts';
 import { assessBody,type BodyAssessment } from './body-capacities.ts';
 import { projectedMedicalBody } from './medical-assessment-cache.ts';
 import type { BodyPartId } from './body-definition.ts';

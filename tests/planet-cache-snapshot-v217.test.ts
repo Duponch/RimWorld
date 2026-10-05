@@ -23,6 +23,7 @@ vi.mock('../src/sim/planet-save.ts', async importOriginal => {
 
 const DOMAIN_REFUSAL = 'Planète, groupe ou pertes incohérents.';
 const GEOGRAPHY_REFUSAL = 'La géographie confirmée a changé sans remplacement.';
+const SCHEMA_REFUSAL = 'Version de schéma du snapshot invalide.';
 function preparedPlanet(): World {
   const { world } = commercialCamp();
   stepWorld(world); // Bring the older camp's real incident clocks current.
@@ -221,24 +222,27 @@ test('geography refusal stays after group/projectile guards and before relations
   expect(adopt(decoder, good)).toEqual(world); expect(before).toEqual(frozen);
 });
 
-test.each([false, true])('historical absence keeps fractional-schema adoption but ballistic owners keep their strict guard (checkpoint=%s)', checkpoint => {
+test.each([false, true])('V218 deliberately refuses fractional schemas before planet preparation with or without ballistic owners (checkpoint=%s)', checkpoint => {
   const world = createWorld(42, 16, 16), encoder = new SnapshotEncoder(), decoder = new SnapshotDecoder();
   for (const key of ['planet', 'group', 'groupLosses', 'relationships', 'mechanoids', 'projectiles', 'bombWaves'])
     expect(Object.hasOwn(world, key)).toBe(false);
   expect(world.pawns.some(p => Object.hasOwn(p, 'romanceMemories') || Object.hasOwn(p, 'familyBereavement'))).toBe(false);
-  // V216 already accepts this raw transport edge while no protected owner is
-  // present. An optimization must not normalize or introduce a general guard.
-  raw(world).schemaVersion = 196.5;
-  fullValidation.calls = 0;
+  // The frozen V216/V217 comparison intentionally preserved acceptance of
+  // 196.5 without protected owners. V218 hardens that separate boundary;
+  // its historical benchmark/report remain unchanged evidence of V217.
   const before = adopt(decoder, packet(encoder, world)), frozen = structuredClone(before);
-  expect(before.schemaVersion).toBe(196.5); expect(fullValidation.calls).toBe(0);
-  const retry = packet(encoder, world, checkpoint), ballistic = structuredClone(retry);
+  const retry = packet(encoder, world, checkpoint), fractional = structuredClone(retry);
+  raw(fractional.world).schemaVersion = 196.5;
+  const ballistic = structuredClone(fractional);
   ballistic.world.projectiles = [];
-  refuse(decoder, ballistic, DOMAIN_REFUSAL);
-  expect(before).toEqual(frozen);
   fullValidation.calls = 0;
+  refuse(decoder, fractional, SCHEMA_REFUSAL);
+  refuse(decoder, ballistic, SCHEMA_REFUSAL);
+  expect(fullValidation.calls).toBe(0);
+  expect(before).toEqual(frozen);
+  expect(raw(fractional.world).schemaVersion).toBe(196.5);
   expect(adopt(decoder, retry)).toEqual(world); expect(fullValidation.calls).toBe(0);
-  expect(before).toEqual(frozen); expect(world.schemaVersion).toBe(196.5);
+  expect(before).toEqual(frozen); expect(world.schemaVersion).toBe(196);
 });
 
 test.each([false, true])('replacement, true absence, fresh adoption and historical own keys preserve authority (checkpoint=%s)', checkpoint => {

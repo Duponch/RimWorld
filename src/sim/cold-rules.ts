@@ -1,4 +1,4 @@
-import { HEAT_UNIT,heatModifiers,heatStage } from './heat-rules.ts';
+import { HEAT_UNIT,heatModifiers,heatStage } from './heat-severity.ts';
 
 /** Human hypothermia, not insect hypothermic slowdown. Same stage boundaries
  * as heatstroke, with a separate manipulation penalty and linear exposure. */

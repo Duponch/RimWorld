@@ -132,22 +132,22 @@ test('Énergie attend un refus clinique réel sans forcer un ordre, une priorit�
 /** Prepared geometry/equipment only. The actual raid producer owns the enemy
  * and its equipment namespace; there is no injury, projectile or outcome here.
  * The legacy crashlanded revision is explicit, as in campaign-defense.test.ts. */
-function energyRaidCamp(armedEnemy=false) {
+function energyRaidCamp(armedEnemy=false,cornerEntry=false) {
   const w=equipmentCamp(3),[ada,noe,mina]=w.pawns;
   w.resources=[];w.jobs=[];w.structures=[];w.piles=[];w.rng=81733;
   w.scenario={id:'crashlanded',revision:1,landing:{x:16,z:16}};
   w.gameProfile=crashlandedProfile();enableCassandraRaids(w);adoptFluIncidents(w);
-  fixtureBuilding(w,'bed',8,6,2);const camp=survivorPlan(w,true);
+  fixtureBuilding(w,'bed',cornerEntry?28:8,cornerEntry?5:6,2);const camp=survivorPlan(w,true);
   for(let dz=0;dz<5;dz++)for(let dx=0;dx<5;dx++)if(!dx||!dz||dx===4||dz===4){
-    const door=dx===2&&dz===4,building=fixtureBuilding(w,door?'door':'wall',camp.anchor.x+dx,camp.anchor.z+dz);
+    const door=dx===(cornerEntry?4:2)&&dz===4,building=fixtureBuilding(w,door?'door':'wall',camp.anchor.x+dx,camp.anchor.z+dz);
     if(door)Object.assign(building,{material:'wood',door:newDoorState(w.tick)});
   }
-  Object.assign(ada!,{name:'Ada',x:4,z:10});Object.assign(noe!,{name:'Noé',x:14,z:10});
+  Object.assign(ada!,{name:'Ada',x:4,z:10});Object.assign(noe!,{name:'Noé',x:cornerEntry?25:14,z:cornerEntry?7:10});
   Object.assign(mina!,{name:'Mina',x:camp.anchor.x+2,z:camp.anchor.z+3});
   for(const p of [ada!,noe!])addMaterial(w,'weapon',1,{type:'equipment',pawnId:p.id},'revolver');
   apply(w,{type:'draft',pawnIds:[ada!.id,noe!.id,mina!.id],enabled:true});
   apply(w,{type:'fire-at-will',pawnIds:[ada!.id,noe!.id,mina!.id],enabled:false});
-  const raid=createRaidGroup(w,{count:1,sites:[{x:w.width-1,z:0}],random:{rng:w.raids!.rng}});
+  const raid=createRaidGroup(w,{count:1,sites:[{x:w.width-1,z:cornerEntry?camp.anchor.z+4:0}],random:{rng:w.raids!.rng}});
   expect(raid).not.toBeNull();const enemy=w.pawns.find(p=>p.id===raid!.members[0])!;
   if(armedEnemy)addMaterial(w,'weapon',1,{type:'equipment',pawnId:enemy.id},'revolver');refreshStock(w);
   const s={...notebook(w),origin:{x:18,z:18}};valid(w);
@@ -236,4 +236,36 @@ test('Énergie ne transforme ni une pièce percée ni un abri d’un autre compo
     expect(energyRetreatNeeded(noe)).toBe(true);expect(moveFor(w,s,noe.id),obstruction).toBeUndefined();
     expect(serializeWorld(w)).toBe(before);expect(noe.draft!.target).toBeNull();expect(noe.state).not.toBe('downed');
   }
+});
+
+test('Énergie refuse le refuge occupé à sa porte puis à son ancien endpoint engagé et admet un autre abri réel',()=>{
+  // The authored room reaches the map border. createRaidGroup admits its real
+  // raider at that border door; no actor is teleported after admission and no
+  // segment, tactical mandate, wound or outcome is injected into the raider.
+  const {w,noe,enemy,camp,s}=energyRaidCamp(false,true),door={x:camp.anchor.x+4,z:camp.anchor.z+4};
+  for(let dz=0;dz<5;dz++)for(let dx=0;dx<5;dx++)if(!dx||!dz||dx===4||dz===4){
+    const passage=dx===4&&dz===2,building=fixtureBuilding(w,passage?'door':'wall',s.origin.x+dx,s.origin.z+dz);
+    if(passage)Object.assign(building,{material:'wood',door:newDoorState(w.tick)});
+  }
+  damageUnarmoredPawnWithBullet(w,noe,{damage:11.6,part:'left-leg'});valid(w);
+  expect({x:enemy.x,z:enemy.z}).toEqual(door);expect(energyRetreatNeeded(noe)).toBe(true);
+  let before=serializeWorld(w),retreat=moveFor(w,s,noe.id);
+  expect(serializeWorld(w)).toBe(before);expect(retreat).toBeDefined();expect(interior(retreat!.target,s.origin)).toBe(true);
+  // The actual raid driver leaves the border door along a physical edge. Its
+  // destination is already outside, but its old endpoint still owns the door.
+  stepWorld(w);valid(w);const edge=enemy.motion!;
+  expect(edge.from).toEqual(door);expect(edge.end).toBeGreaterThan(w.tick);
+  expect(enemy.x<camp.anchor.x||enemy.x>camp.anchor.x+4||enemy.z<camp.anchor.z||enemy.z>camp.anchor.z+4).toBe(true);
+  before=serializeWorld(w);retreat=moveFor(w,s,noe.id);
+  expect(serializeWorld(w)).toBe(before);expect(retreat).toBeDefined();expect(interior(retreat!.target,s.origin)).toBe(true);
+  apply(w,retreat!);expect(enemy.motion).toBe(edge);expect(noe.draft!.target).toEqual(retreat!.target);
+  const copy=deserializeWorld(serializeWorld(w));let heldTicks=0;
+  for(let n=0;n<20&&w.tick<edge.end;n++){
+    before=serializeWorld(w);const motion=noe.motion,lastActiveTick=noe.draft!.lastActiveTick;
+    expect(moveFor(w,s,noe.id)).toBeUndefined();expect(serializeWorld(w)).toBe(before);
+    expect(noe.motion).toBe(motion);expect(noe.draft!.lastActiveTick).toBe(lastActiveTick);
+    stepWorld(w);stepWorld(copy);valid(w);expect(serializeWorld(copy)).toBe(serializeWorld(w));heldTicks++;
+    expect(noe.state).not.toBe('downed');expect(noe.state).not.toBe('dead');
+  }
+  expect(heldTicks).toBeGreaterThan(0);expect(w.tick).toBeGreaterThanOrEqual(edge.end);
 });

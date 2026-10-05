@@ -54,7 +54,7 @@ import { validApparelShape } from '../sim/apparel-save.ts';
 import { validPrisonerPawnShape } from '../sim/prisoner-save.ts';
 import { validWeaponShape } from '../sim/equipment-save.ts';
 import { pileMaxHp } from '../sim/thing-damage-rules.ts';
-import type { MaterialPile, Pawn, Resource, Terrain, Tile, World } from '../sim/types.ts';
+import { SCHEMA_VERSION, type MaterialPile, type Pawn, type Resource, type Terrain, type Tile, type World } from '../sim/types.ts';
 import { TileSnapshotCache, type TileDelta } from './tile-snapshot-cache.ts';
 import { PlanetValidationCache, type PlanetPreparation } from './planet-validation-cache.ts';
 import { validBackground } from '../sim/colonist-backgrounds.ts';
@@ -320,6 +320,8 @@ export class SnapshotDecoder {
     if (!Number.isSafeInteger(message.epoch) || message.epoch < 1
       || !Number.isSafeInteger(message.revision) || message.revision < 1) return resync('Révision de snapshot invalide.');
     if (message.epoch < this.epoch || (message.epoch === this.epoch && message.revision <= this.revision)) return { status: 'stale' };
+    if (!Number.isSafeInteger(message.world.schemaVersion) || message.world.schemaVersion < 1
+      || message.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     if(message.world.schemaVersion<=195&&['planet','group','groupLosses'].some(key=>Object.hasOwn(message.world,key)))return resync('Planète ou propriétaire de groupe futur.');
     if(message.world.schemaVersion<194&&(Object.hasOwn(message.world,'mechanoids')||Object.hasOwn(message.world,'mechSalvage')
       ||['mechanoid','mechActive'].some(k=>Object.hasOwn(message.world.raids??{},k))

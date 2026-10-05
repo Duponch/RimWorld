@@ -208,10 +208,14 @@ export function energyDecisions(w:World,s:EnergyPlayerState):Decision[] {
     const sheltered=people.filter(p=>!equippedWeapon(w,p)||energyRetreatNeeded(p));
     const hostile=w.pawns.filter(p=>people.some(actor=>hostileTo(actor,p))&&p.state!=='dead'&&p.state!=='downed');
     const enemies=[...hostile,...(w.mechanoids??[]).filter(m=>m.state!=='dead'&&m.state!=='downed')];
+    const enemyCells=enemies.flatMap(p=>[p,...p.motion&&p.motion.end>w.tick?[p.motion.from]:[]]);
     const inside=(c:Cell,a:Cell)=>c.x>a.x&&c.x<a.x+4&&c.z>a.z&&c.z<a.z+4;
     const buildings=new Map(w.structures.map(q=>[q.z*w.width+q.x,q]));
     const enclosed=(a:Cell)=>{
-      if(a.x<0||a.z<0||a.x+4>=w.width||a.z+4>=w.height||enemies.some(p=>inside(p,a)))return false;
+      // A hostile on the door can strike the interior. Its committed departure
+      // also occupies the old endpoint until the edge really finishes.
+      if(a.x<0||a.z<0||a.x+4>=w.width||a.z+4>=w.height
+        ||enemyCells.some(c=>c.x>=a.x&&c.x<=a.x+4&&c.z>=a.z&&c.z<=a.z+4))return false;
       for(let z=0;z<5;z++)for(let x=0;x<5;x++)if(x===0||z===0||x===4||z===4){
         const cell=at(a,x,z),building=buildings.get(cell.z*w.width+cell.x);
         if(w.tiles[cell.z*w.width+cell.x]!.terrain==='rock')continue;
@@ -229,7 +233,7 @@ export function energyDecisions(w:World,s:EnergyPlayerState):Decision[] {
       // route per person. Colonists share doors and faction obstacles; fighting
       // actors additionally cannot cross other actors' current melee cells.
       const blocked=blockedCells(w),combatBlocked=blocked.slice(),stands=captureStandability(w),services=reservedServiceCells(w);
-      for(const p of enemies)for(const c of [p,...p.motion&&p.motion.end>w.tick?[p.motion.from]:[]])blocked[c.z*w.width+c.x]=1;
+      for(const c of enemyCells)blocked[c.z*w.width+c.x]=1;
       combatBlocked.set(blocked);
       for(const p of w.pawns)if(p.melee?.order&&p.state!=='dead'&&p.state!=='downed')
         for(const c of [p,...p.motion&&p.motion.end>w.tick?[p.motion.from]:[]])combatBlocked[c.z*w.width+c.x]=1;
