@@ -2,7 +2,7 @@ import {ART_MATERIALS,isArtRecipe,artWorkTotal,type ArtMaterial,type ArtRecipe} 
 import { ANIMAL_MEAT_ITEMS, ANIMAL_CORPSE_ITEMS, ANIMAL_LEATHER_ITEMS, isAnimalMeat } from './biome-items.ts';
 import { APPAREL_MATERIALS,isApparelMaterial,apparelItemFor, type ApparelItem, type ApparelMaterial } from './apparel-rules.ts';
 import { isStove, isButcherStation } from './food-workstations.ts';
-import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
+import { ITEM_DEFINITIONS,MECH_CORPSE_ITEMS,type MechCorpseItem,type ItemId } from './items.ts';
 import type { CookingBill, CookingTask } from './cooking-types.ts';
 import type { Structure, WorkType, World } from './types.ts';
 
@@ -12,7 +12,7 @@ export const TAILORING_RECIPES = ['tribalwear','shirt','pants','duster','parka']
 export type TailoringRecipe = typeof TAILORING_RECIPES[number];
 export type TailoringMaterial = ApparelMaterial;
 export type UnfinishedApparelItem = 'unfinished-tribalwear'|'unfinished-shirt'|'unfinished-pants'|'unfinished-duster'|'unfinished-parka';
-export type ProductionIngredient = 'scyther-corpse'| ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'advanced-component'|'plasteel'|'gold'|'unfinished-gun'|'unfinished-flak-vest'|'unfinished-flak-helmet'|'unfinished-recon-helmet'|'unfinished-component'|'rice'|'berries'|'milk'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
+export type ProductionIngredient = MechCorpseItem| ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'advanced-component'|'plasteel'|'gold'|'unfinished-gun'|'unfinished-flak-vest'|'unfinished-flak-helmet'|'unfinished-recon-helmet'|'unfinished-component'|'rice'|'berries'|'milk'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
 export type FlakRecipe='make-flak-vest'|'make-flak-helmet'|'make-recon-helmet';
 export const isFlakRecipe=(v:unknown):v is FlakRecipe=>v==='make-flak-vest'||v==='make-flak-helmet'||v==='make-recon-helmet';
 export const FLAK_REQUIREMENTS={cloth:30,steel:60,component:1,skill:4} as const;
@@ -123,8 +123,8 @@ export const PRODUCTION_RECIPES = Object.freeze({
   'make-recon-helmet':Object.freeze({label:'Casque de reconnaissance',station:'fabrication-bench',work:'craft',inputs:['plasteel','advanced-component'] as readonly ProductionIngredient[],units:31,workTicks:1575,outputUnits:1}),
   'make-component':Object.freeze({label:'Composant',station:'fabrication-bench',work:'craft',inputs:['steel'] as readonly ProductionIngredient[],units:12,workTicks:500,outputUnits:1}),
   'make-advanced-component':Object.freeze({label:'Composant avancé',station:'fabrication-bench',work:'craft',inputs:['component','steel','plasteel','gold'] as readonly ProductionIngredient[],units:34,workTicks:1000,outputUnits:1}),
-  'smash-mechanoid':Object.freeze({label:'Concasser une carcasse mécanique',station:'crafting-spot',work:'craft',inputs:['scyther-corpse'] as readonly ProductionIngredient[],units:1,workTicks:45,outputUnits:23}),
-  'shred-mechanoid':Object.freeze({label:'Broyer une carcasse mécanique',station:'machining-table',work:'craft',inputs:['scyther-corpse'] as readonly ProductionIngredient[],units:1,workTicks:30,outputUnits:23}),
+  'smash-mechanoid':Object.freeze({label:'Concasser une carcasse mécanique',station:'crafting-spot',work:'craft',inputs:MECH_CORPSE_ITEMS as readonly ProductionIngredient[],units:1,workTicks:45,outputUnits:23}),
+  'shred-mechanoid':Object.freeze({label:'Broyer une carcasse mécanique',station:'machining-table',work:'craft',inputs:MECH_CORPSE_ITEMS as readonly ProductionIngredient[],units:1,workTicks:30,outputUnits:23}),
   'butcher-creature':Object.freeze({label:'Dépecer une créature',station:'butcher-spot',work:'cook',inputs:ANIMAL_CORPSE_ITEMS as readonly ProductionIngredient[],units:1,workTicks:45,outputUnits:50}),
   shirt:Object.freeze({label:'Chemise',station:'tailor-bench',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:45,workTicks:270,outputUnits:1}),
   tribalwear:Object.freeze({label:'Tenue tribale',station:'crafting-spot',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:60,workTicks:180,outputUnits:1}),

@@ -1,4 +1,6 @@
-import { validateScytherMedicalRecord } from './injury-validation.ts';
+import { validateMechanoidMedicalRecord } from './injury-validation.ts';
+import { isMechanoidKind,mechanoidDefinition,type MechanoidKind } from './mechanoid-definition.ts';
+import { validMechanoidRangedShape,validateMechanoidRanged } from './mechanoid-ranged-save.ts';
 import { medicalStatus } from './injury-state.ts';
 import { travelEnd,validSlowIntervals,validStunIntervals } from './travel-timing.ts';
 import { validStagger } from './stagger.ts';
@@ -14,31 +16,33 @@ const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.
 const finite=(v:unknown,min=0,max=Number.MAX_VALUE):v is number=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
 const keys=(v:Record<string,unknown>,allowed:readonly string[])=>Object.keys(v).every(k=>allowed.includes(k));
 const cell=(v:unknown)=>object(v)&&keys(v,['x','z'])&&integer(v.x)&&integer(v.z);
-const TOOLS=['left-blade-cut','left-blade-stab','right-blade-cut','right-blade-stab','head'];
+const tools=(kind:MechanoidKind)=>kind==='scyther'?['left-blade-cut','left-blade-stab','right-blade-cut','right-blade-stab','head']:['left-fist','right-fist','head','barrel','barrel-poke'];
 
 /** Sparse clock: mechanical records advance only on a real impact. A carcass
  * freezes that last clock, not the current World clock. Human owners never call
  * this guard and still reject the mechanical body in their ordinary validator. */
-export function validMechaMedicalRecord(value:unknown,worldTick:number,dead:boolean):value is MedicalRecord {
-  if(!integer(worldTick)||validateScytherMedicalRecord(value,194))return false;
+export function validMechaMedicalRecord(value:unknown,worldTick:number,dead:boolean,kind:MechanoidKind='scyther',version=194):value is MedicalRecord {
+  if(!integer(worldTick)||validateMechanoidMedicalRecord(value,version,kind))return false;
   const record=value as MedicalRecord;
   return record.tick<=worldTick&&!!record.death===dead;
 }
 export function validMechanoidShape(value:unknown,version:number,tick:number):value is Mechanoid {
-  if(version<194||!integer(tick)||!object(value)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun'])
-    ||!integer(value.id,1)||value.mechKind!=='scyther'||!integer(value.x)||!integer(value.z)
-    ||!['idle','moving','working','downed','dead'].includes(String(value.state))||!finite(value.heading,-Math.PI*2,Math.PI*2)
+  if(version<194||!integer(tick)||!object(value)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[])])
+    ||!integer(value.id,1)||!isMechanoidKind(value.mechKind)||version<197&&value.mechKind!=='scyther'||!integer(value.x)||!integer(value.z)
+    ||typeof value.state!=='string'||!['idle','moving','working','downed','dead'].includes(value.state)||!finite(value.heading,-Math.PI*2,Math.PI*2)
     ||!finite(value.moveCooldown,0,1000)||!integer(value.planCooldown,0,1000)||!Array.isArray(value.path)||!value.path.every(cell)
     ||!validStagger(value.stagger,version,tick)||!validStunShape(value.stun,version,tick))return false;
   const m=value as unknown as Mechanoid;
-  if(m.health!==undefined&&!validMechaMedicalRecord(m.health,tick,m.state==='dead'))return false;
+  if(m.health!==undefined&&!validMechaMedicalRecord(m.health,tick,m.state==='dead',m.mechKind,version))return false;
   if(!m.health&&(m.state==='downed'||m.state==='dead'))return false;
+  if(m.ranged!==undefined&&!validMechanoidRangedShape(m.ranged,m.mechKind,version,tick))return false;
+  if(m.meleeThreat!==undefined&&(!object(m.meleeThreat)||!keys(m.meleeThreat,['attackerId','atCore'])||!integer(m.meleeThreat.attackerId,1)||!integer(m.meleeThreat.atCore,0,tick*10)))return false;
   if(m.raid!==undefined&&(!object(m.raid)||!keys(m.raid,['group','goal'])||!integer(m.raid.group,1)||m.raid.goal!==null&&!cell(m.raid.goal)))return false;
   if(m.motion!==undefined){
     const motion=m.motion;
     if(!object(motion)||!keys(motion,['from','to','start','end','speedFactor','terrainDelay','stagger','stuns'])||!cell(motion.from)||!cell(motion.to)
       ||!finite(motion.start,0,tick)||!finite(motion.end,0,tick+1000)||motion.end<=motion.start
-      ||motion.speedFactor!==undefined&&!finite(motion.speedFactor,.001,4.7/4.6)||motion.terrainDelay!==undefined&&!finite(motion.terrainDelay,0,50)
+      ||motion.speedFactor!==undefined&&!finite(motion.speedFactor,.001,mechanoidDefinition(m.mechKind).moveSpeed/4.6)||motion.terrainDelay!==undefined&&!finite(motion.terrainDelay,0,50)
       ||!validSlowIntervals(motion.stagger,version,motion.start,tick)||!validStunIntervals(motion.stuns,version,motion.start,tick)
       ||Math.max(Math.abs(motion.from.x-motion.to.x),Math.abs(motion.from.z-motion.to.z))!==1
       ||motion.to.x!==m.x||motion.to.z!==m.z||Math.abs(motion.end-travelEnd(motion))>1e-7
@@ -51,8 +55,8 @@ export function validMechanoidShape(value:unknown,version:number,tick:number):va
     if(o!==null&&(!object(o)||!keys(o,['structure','targetId','startedDowned','jobUntilCore'])||!integer(o.targetId,1)||o.startedDowned!==false
       ||o.structure!==undefined&&o.structure!==true||(o.structure?o.jobUntilCore!==undefined:!integer(o.jobUntilCore,tick*10+1,tick*10+480))))return false;
     if(s!==null&&(!object(s)||!keys(s,['structure','targetId','atCore','untilCore','tool','outcome'])||!integer(s.targetId,1)
-      ||!integer(s.atCore,0,tick*10)||!integer(s.untilCore,tick*10+1)||s.untilCore-s.atCore!==120||!TOOLS.includes(String(s.tool))
-      ||!['hit','miss','dodge'].includes(String(s.outcome))||s.structure!==undefined&&(!cell(s.structure)||s.outcome!=='hit')))return false;
+      ||!integer(s.atCore,0,tick*10)||!integer(s.untilCore,tick*10+1)||s.untilCore-s.atCore!==(m.mechKind==='pikeman'&&(s.tool==='barrel'||s.tool==='barrel-poke')?156:120)||typeof s.tool!=='string'||!tools(m.mechKind).includes(s.tool)
+      ||typeof s.outcome!=='string'||!['hit','miss','dodge'].includes(s.outcome)||s.structure!==undefined&&(!cell(s.structure)||s.outcome!=='hit')))return false;
   }
   return true;
 }
@@ -67,6 +71,8 @@ export function validateMechanoids(w:World,version:number=w.schemaVersion,ids=ne
   for(const m of w.mechanoids){
     if(!validMechanoidShape(m,version,w.tick)){errors.push('Invalid mechanoid shape.');continue;}
     if(m.id>=w.nextId||ids.has(m.id))errors.push('Invalid mechanoid identity.');ids.add(m.id);
+    if(m.meleeThreat&&(m.meleeThreat.attackerId>=w.nextId||m.meleeThreat.attackerId===m.id))errors.push('Invalid mechanical melee threat identity.');
+    errors.push(...validateMechanoidRanged(w,m,version));
     if(!inBounds(m)||m.path.length>w.width*w.height||m.path.some(c=>!inBounds(c))||m.motion&&(!inBounds(m.motion.from)||!inBounds(m.motion.to))||m.raid?.goal&&!inBounds(m.raid.goal))errors.push('Mechanoid position is outside the map.');
     let previous={x:m.x,z:m.z};for(const c of m.path){if(Math.max(Math.abs(c.x-previous.x),Math.abs(c.z-previous.z))!==1)errors.push('Disconnected mechanoid route.');previous=c;}
     const status=m.health?medicalStatus(m.health):'mobile',stopped=status!=='mobile';

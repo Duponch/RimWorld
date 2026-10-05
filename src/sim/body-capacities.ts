@@ -1,5 +1,6 @@
 import type { BodyPartId } from './body-definition.ts';
 import { HUMAN_MODEL,type BodyModel } from './body-model.ts';
+import { isMechanoidKind,type MechanoidKind } from './mechanoid-definition.ts';
 
 /** Input projected from health conditions, not a saved global health bar.
  * Pain is supplied by injury/disease rules; this module never invents its cause. */
@@ -70,7 +71,7 @@ export function bodyEfficiencies(input:BodyAssessmentInput,model=HUMAN_MODEL):Fl
 
 function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
   const efficiency=bodyEfficiencies(input,model),part=(id:BodyPartId)=>efficiency[model.index[id]]!;
-  if(model.kind==='scyther')return calculateScyther(part);
+  if(isMechanoidKind(model.kind))return calculateMechanical(part,model.kind);
   const human=model.kind==='human';
   const pair=(a:BodyPartId,b:BodyPartId)=>(part(a)+part(b))/2;
   const bestPair=(a:BodyPartId,b:BodyPartId)=>.75*Math.max(part(a),part(b))+.25*Math.min(part(a),part(b));
@@ -110,26 +111,32 @@ function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
 /** Mechanical tags still feed the common capacity workers. The hidden neck
  * breathing capacity participates in consciousness and movement, but is not a
  * lethal biological dependency for this race. */
-function calculateScyther(part:(id:BodyPartId)=>number):BodyAssessment {
+function calculateMechanical(readPart:(id:BodyPartId)=>number,kind:MechanoidKind):BodyAssessment {
+  const part=(suffix:string)=>readPart(`${kind}-${suffix}` as BodyPartId);
   const round=capacityRounded;
-  const bloodPumping=round(part('scyther-reactor'));
-  const bloodFiltration=round((part('scyther-left-fluid-reprocessor')+part('scyther-right-fluid-reprocessor'))/2);
-  const breathing=round(part('scyther-neck'));
-  const consciousness=round(part('scyther-brain')*(.8+.2*Math.min(bloodPumping,1))*(.8+.2*Math.min(breathing,1))*(.9+.1*Math.min(bloodFiltration,1)));
+  const bloodPumping=round(part('reactor'));
+  const bloodFiltration=round((part('left-fluid-reprocessor')+part('right-fluid-reprocessor'))/2);
+  const breathing=round(part('neck'));
+  const consciousness=round(part('brain')*(.8+.2*Math.min(bloodPumping,1))*(.8+.2*Math.min(breathing,1))*(.9+.1*Math.min(bloodFiltration,1)));
   const canBeAwake=consciousness>=.3;
   let arms=0,legs=0,functionalLegs=0;
-  for(const side of ['left','right'] as const){
-    const fingers=(['pinky','middle-finger','index-finger','thumb'] as const).reduce((sum,id)=>sum+part(`scyther-${side}-${id}`),0)/4;
-    arms+=part(`scyther-${side}-shoulder`)*part(`scyther-${side}-arm`)*part(`scyther-${side}-hand`)*(.2+.8*fingers);
-    const leg=part(`scyther-${side}-leg`)*part(`scyther-${side}-foot`);legs+=leg;if(leg>0)functionalLegs++;
+  if(kind==='pikeman'){
+    arms=2*part('thorax');
+    for(const side of ['left','right'] as const)for(const end of ['front','rear'] as const){
+      const leg=part(`${side}-${end}-leg`)*part(`${side}-${end}-foot`);legs+=leg;if(leg>0)functionalLegs++;
+    }
+  }else for(const side of ['left','right'] as const){
+    const fingers=(['pinky','middle-finger','index-finger','thumb'] as const).reduce((sum,id)=>sum+part(`${side}-${id}`),0)/4;
+    arms+=part(`${side}-shoulder`)*part(`${side}-arm`)*part(`${side}-hand`)*(.2+.8*fingers);
+    const leg=part(`${side}-leg`)*part(`${side}-foot`);legs+=leg;if(leg>0)functionalLegs++;
   }
-  const moving=canBeAwake&&functionalLegs>=1?round(legs/2*(.8+.2*breathing)*(.8+.2*bloodPumping)*Math.min(consciousness,1)):0;
-  const bestPair=(a:BodyPartId,b:BodyPartId)=>round(.75*Math.max(part(a),part(b))+.25*Math.min(part(a),part(b)));
+  const moving=canBeAwake&&functionalLegs>=(kind==='pikeman'?2:1)?round(legs/(kind==='pikeman'?4:2)*(.8+.2*breathing)*(.8+.2*bloodPumping)*Math.min(consciousness,1)):0;
+  const bestPair=(a:string,b:string)=>round(.75*Math.max(part(a),part(b))+.25*Math.min(part(a),part(b)));
   const capacities=Object.freeze({consciousness,moving,manipulation:canBeAwake?round(arms/2*consciousness):0,
-    sight:bestPair('scyther-left-sight-sensor','scyther-right-sight-sensor'),hearing:bestPair('scyther-left-hearing-sensor','scyther-right-hearing-sensor'),
+    sight:bestPair('left-sight-sensor','right-sight-sensor'),hearing:bestPair('left-hearing-sensor','right-hearing-sensor'),
     talking:0,eating:0,breathing,bloodPumping,bloodFiltration,digestion:1});
   return Object.freeze({capacities,canBeAwake,movingCapable:moving>.15,painShock:false,
-    vitalFailure:part('scyther-thorax')<=.0001||[consciousness,bloodPumping,bloodFiltration].some(value=>value<=0)});
+    vitalFailure:part('thorax')<=.0001||[consciousness,bloodPumping,bloodFiltration].some(value=>value<=0)});
 }
 export const HEALTHY_BODY:BodyAssessment=calculate(HEALTHY_BODY_INPUT);
 /** Caller supplies a current health projection. No cache keyed solely by pawn ID

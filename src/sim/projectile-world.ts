@@ -4,6 +4,7 @@ import { footprintCells } from './definitions.ts';
 import type { Cell,StructureKind,World } from './types.ts';
 import type { ProjectileScene,ProjectileTarget } from './projectile-rules.ts';
 import { animalBodySize } from './animal-life.ts';
+import type { LivingTargetKey } from './combat-target.ts';
 
 export interface WorldProjectileTargets {
   readonly width:number;readonly height:number;readonly capturedAt:number;
@@ -12,7 +13,7 @@ export interface WorldProjectileTargets {
   covers(cell:Cell,layer:number):boolean;
   /** Explicit relation snapshot for THIS launcher. Membership means both have
    * factions and are non-hostile; no inference from being in world.pawns. */
-  scene(friendlyPawnIds:ReadonlySet<number>,friendlyFireFactor:number):ProjectileScene;
+  scene(friendlyPawnIds:ReadonlySet<number>,friendlyFireFactor:number,friendlyTargetKeys?:ReadonlySet<LivingTargetKey>):ProjectileScene;
 }
 const PREFIX=['','structure','frame','resource','pile','packed','pawn','animal','mech'] as const;
 const EMPTY:readonly ProjectileTarget[]=Object.freeze([]);
@@ -97,11 +98,11 @@ export function captureWorldProjectileTargets(world:World):WorldProjectileTarget
       if(rocks[i]&&SHOT_LAYER.building>=layer)return true;
       for(let entry=heads[i];entry;entry=next[entry]){const s=links[entry];if(fills[s]>.99&&layers[s]>=layer)return true;}return false;
     },
-    scene(friendlyPawnIds:ReadonlySet<number>,friendlyFireFactor:number):ProjectileScene {
+    scene(friendlyPawnIds:ReadonlySet<number>,friendlyFireFactor:number,friendlyTargetKeys:ReadonlySet<LivingTargetKey>=new Set()):ProjectileScene {
       if(!Number.isFinite(friendlyFireFactor)||friendlyFireFactor<0||friendlyFireFactor>1)throw new RangeError('Invalid friendly fire factor');
-      const friendly=new Set(friendlyPawnIds),view=new Map<string,ProjectileTarget>(),cells=new Map<number,readonly ProjectileTarget[]>();
+      const friendly=new Set(friendlyPawnIds),typed=new Set(friendlyTargetKeys),view=new Map<string,ProjectileTarget>(),cells=new Map<number,readonly ProjectileTarget[]>();
       const relate=(target:ProjectileTarget):ProjectileTarget=>{
-        if(target.kind!=='pawn'||!target.key.startsWith('pawn:')||!friendly.has(Number(target.key.slice(5))))return target;
+        if(target.kind!=='pawn'||!(target.key.startsWith('pawn:')&&friendly.has(Number(target.key.slice(5))))&&!typed.has(target.key as LivingTargetKey))return target;
         let record=view.get(target.key);if(!record){record=Object.freeze({...target,friendly:true});view.set(target.key,record);}return record;
       };
       return Object.freeze({width,height,friendlyFireFactor,

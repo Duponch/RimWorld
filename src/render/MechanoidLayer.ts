@@ -2,7 +2,8 @@ import * as THREE from 'three/webgpu';
 import { attribute,cos,float,Fn,If,mix,normalLocal,positionLocal,sin,uniform,vec3 } from 'three/tsl';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import type { Mechanoid } from '../sim/mechanoid-state';
-import { mechanoidVisualMask,scytherPartIndex } from '../sim/mechanoid-presentation';
+import { mechanoidVisualMask,mechanoidPartIndex } from '../sim/mechanoid-presentation';
+import type { MechanoidKind } from '../sim/mechanoid-definition';
 import type { MaterialPile,World } from '../sim/types';
 import { TICKS_PER_SECOND } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
@@ -16,6 +17,7 @@ import type { MotionTimeline } from './MotionTimeline';
 import { pileSurfaces,type PileSurface } from './pile-surfaces';
 import { material } from './primitives';
 import { scytherGeometry } from './scyther-geometry';
+import { rangedMechGeometry } from './ranged-mech-geometry';
 import { headingAt,turnToward,TURN_TICKS,type TurnHeading } from './turn-presentation';
 
 type VisualMech=Mechanoid&{pile?:MaterialPile;carrierId?:number};
@@ -24,20 +26,23 @@ const GAIT_RATE=2*Math.PI/1.12;
 /** Original mechanical body and carcasses share one conditional resident rig.
  * A second mesh supplies selection only; no texture, flame, light or skeleton
  * is allocated per actor. Stable frames update clocks, not joint matrices. */
-export class MechanoidLayer {
-  readonly group=new THREE.Group();readonly travelTime=uniform(0);readonly blend=uniform(1);
+class MechanicalRaceBatch {
+  readonly travelTime=uniform(0);readonly blend=uniform(1);
   private body?:THREE.Mesh;private selection?:THREE.Mesh;
   private selected:ReadonlySet<number>=new Set();private source?:World;
   private records:VisualMech[]=[];private readonly keys=new Map<number,string>();
-  private pileSource?:readonly MaterialPile[];private corpsePiles:MaterialPile[]=[];
   private readonly headings=new Map<number,TurnHeading>();private readonly gait=new GaitPhaseTracker();
   private surfaces:ReadonlyMap<number,number>=new Map();private pileSurface:ReadonlyMap<number,PileSurface>=new Map();
-  constructor(private readonly configure?:(material:THREE.MeshStandardNodeMaterial)=>void){this.group.name='Mechanical bodies — conditional global rig';}
+  constructor(private readonly kind:MechanoidKind,readonly group:THREE.Group,private readonly configure?:(material:THREE.MeshStandardNodeMaterial)=>void){}
 
   private allocate():void {
     if(this.body)return;
-    const geometry=scytherGeometry(8,scytherPartIndex),mat=material(0xffffff,{metalness:.24,roughness:.74});this.configure?.(mat);
+    const index=(id:string)=>mechanoidPartIndex(this.kind,id),geometry=this.kind==='scyther'?scytherGeometry(8,index):rangedMechGeometry(this.kind,8,index);
+    const mat=material(0xffffff,{metalness:.24,roughness:.74});this.configure?.(mat);
     mat.colorNode=attribute('color','vec3');
+    // A preparation tint belongs only to the confirmed warmup. Cooldown does
+    // not imply an emitted projectile or manufacture recoil/flash.
+    if(this.kind!=='scyther')mat.colorNode=mat.colorNode.mul(attribute('aGait','vec2').y.equal(10).select(float(1.13),float(1)));
     mat.positionNode=Fn(()=>{
       const pose=pawnPresentationPose(this),part=attribute('mechPart','vec4'),pivot=attribute('bindPivot','vec3');
       const rig=attribute('aRig','vec4'),gait=attribute('aGait','vec2'),mask=attribute('aMask','vec2');
@@ -48,8 +53,11 @@ export class MechanoidLayer {
         angle.assign(sin(phase.add(part.x.equal(2).select(float(Math.PI),float(0)))).mul(.14).mul(rig.x));
         If(gait.y.equal(part.x).and(rig.z.greaterThan(0)),()=>{angle.addAssign(attack.mul(-1.1));});
       });
-      If(part.x.equal(3).or(part.x.equal(4)),()=>{angle.assign(sin(phase.add(part.x.equal(4).select(float(Math.PI),float(0)))).mul(.48).mul(rig.x));});
-      If(part.x.equal(5).and(gait.y.equal(3)).and(rig.z.greaterThan(0)),()=>{angle.assign(attack.mul(.45));});
+      If(part.x.equal(3).or(part.x.equal(4)).or(part.x.equal(6)).or(part.x.equal(7)),()=>{
+        angle.assign(sin(phase.add(part.x.equal(4).or(part.x.equal(6)).select(float(Math.PI),float(0)))).mul(.48).mul(rig.x));
+        If(gait.y.equal(part.x).and(rig.z.greaterThan(0)),()=>{angle.addAssign(attack.mul(-.8));});
+      });
+      If(part.x.equal(5).and(gait.y.equal(9)).and(rig.z.greaterThan(0)),()=>{angle.assign(attack.mul(.45));});
       const p=positionLocal.sub(pivot),c=cos(angle),s=sin(angle);
       const q=vec3(p.x,p.y.mul(c).sub(p.z.mul(s)),p.z.mul(c).add(p.y.mul(s))).add(pivot).toVar();
       const n=normalLocal.toVar(),normal=vec3(n.x,n.y.mul(c).sub(n.z.mul(s)),n.z.mul(c).add(n.y.mul(s))).toVar();
@@ -76,7 +84,8 @@ export class MechanoidLayer {
       If(absent,()=>{result.assign(pose.xyz);});
       return result;
     })();
-    const body=new THREE.Mesh(geometry,mat);body.name='Scythers and mechanical carcasses — original GPU rig';body.frustumCulled=false;body.castShadow=true;body.receiveShadow=true;
+    const body=new THREE.Mesh(geometry,mat);body.name=`${this.kind} bodies and carcasses — original GPU rig`;body.frustumCulled=false;body.castShadow=true;body.receiveShadow=true;
+    body.userData.mechKind=this.kind;
     const selection=pawnSelectionMesh(geometry,this);selection.name='Selected mechanical owners — shared trajectories';selection.visible=false;
     this.body=body;this.selection=selection;this.group.add(body,selection);
   }
@@ -88,17 +97,12 @@ export class MechanoidLayer {
     this.records.forEach((actor,i)=>{const value=!actor.pile&&ids.has(actor.id)?1:0;if(flags.getX(i)!==value){flags.setX(i,value);dirty=true;}any||=value!==0;});
     if(dirty)flags.needsUpdate=true;this.selection.visible=any;
   }
-  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void {
-    const changed=this.source!==world;
+  update(world:World,timeline:MotionTimeline|undefined,records:VisualMech[],reset=false,pawns?:PawnLayer):void {
+    const changed=this.source!==world||reset;
     if(reset){this.headings.clear();this.keys.clear();this.gait.clear();}
     if(changed){
       this.source=world;this.keys.clear();
-      if(this.pileSource!==world.piles){this.pileSource=world.piles;this.corpsePiles=world.piles.filter(p=>!!p.mechCorpse&&(p.owner.type==='ground'||p.owner.type==='pawn'));}
-      this.records=[...(world.mechanoids??[]),...this.corpsePiles.map(p=>({
-        id:p.id,mechKind:p.mechCorpse!.mechKind,state:'dead' as const,health:p.mechCorpse!.health,
-        x:p.owner.type==='ground'?p.owner.x:0,z:p.owner.type==='ground'?p.owner.z:0,heading:p.mechCorpse!.heading??0,path:[],moveCooldown:0,planCooldown:0,
-        pile:p,carrierId:p.owner.type==='pawn'?p.owner.pawnId:pawns?.animalCorpseTransferCarrier(p.id),
-      }))];
+      this.records=records;
       if(this.records.length){this.allocate();this.surfaces=furnitureSurfaces(world);this.pileSurface=pileSurfaces(world);}if(!this.body)return;
       if(this.records.length>this.body.geometry.getAttribute('aFrom').count)growPawnBuffers([this.body,this.selection!],this.records.length);
       this.setSelected(this.selected);const present=new Set(this.records.map(m=>m.id));
@@ -131,7 +135,8 @@ export class MechanoidLayer {
       }
       const edge=timeline?.segment(actor.id)??actor.motion,active=!!edge&&tick>=edge.start&&tick<edge.end,fallen=actor.state==='dead'||actor.state==='downed';
       const fa=edge&&'fromFraction' in edge?Number(edge.fromFraction??0):0,fb=edge&&'toFraction' in edge?Number(edge.toFraction??1):1;
-      const key=JSON.stringify([i,origin,edge?.start,edge?.end,fa,fb,active,actor.state,actor.heading,actor.melee?.strike,actor.melee?.order,actor.stun?.untilCore]);
+      const visualMask=mechanoidVisualMask(actor);
+      const key=JSON.stringify([i,origin,edge?.start,edge?.end,fa,fb,active,actor.state,actor.heading,actor.melee?.strike,actor.melee?.order,actor.stun?.untilCore,actor.ranged?.stance?.phase,...visualMask]);
       if(this.keys.get(actor.id)===key)return;this.keys.set(actor.id,key);dirty=true;
       const traveling=!!edge&&(active||actor.state==='moving'&&world.tick<edge.end),f=traveling?edge.from:actor,t=traveling?edge.to:actor;
       const yaw=traveling?Math.atan2(edge.to.x-edge.from.x,edge.to.z-edge.from.z):actor.heading,previous=this.headings.get(actor.id);
@@ -145,8 +150,9 @@ export class MechanoidLayer {
       if(!stepping)this.gait.halt(actor.id,tick,GAIT_RATE);
       const strike=!fallen&&!traveling&&!actor.stun?actor.melee?.strike:undefined,tool=strike?.tool??'';
       rig.setXYZW(i,stepping?1:0,strike?coreTimeSeconds(strike.atCore,origin):0,strike?(strike.untilCore-strike.atCore)/60:0,fallen?1:0);
-      gait.setXY(i,phase??0,tool.startsWith('left-')?1:tool.startsWith('right-')?2:tool==='head'?3:0);
-      mask.setXY(i,...mechanoidVisualMask(actor));carrierState.setXYZW(i,0,0,0,0);transfer.setXY(i,0,0);
+      const attackBone=tool==='head'?9:tool.includes('left')?(this.kind==='pikeman'?3:1):tool.includes('right')?(this.kind==='pikeman'?4:2):0;
+      gait.setXY(i,phase??0,strike?attackBone:actor.ranged?.stance?.phase==='warmup'?10:0);
+      mask.setXY(i,...visualMask);carrierState.setXYZW(i,0,0,0,0);transfer.setXY(i,0,0);
     });
     if(dirty)(from as THREE.InterleavedBufferAttribute).data.needsUpdate=true;
   }
@@ -154,9 +160,40 @@ export class MechanoidLayer {
   forEachPose(visit:(id:number,x:number,y:number,z:number,height:number,radius:number,dead:boolean)=>void):void {
     if(!this.body)return;const g=this.body.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),times=g.getAttribute('aTravel'),rig=g.getAttribute('aRig');
     this.records.forEach((actor,i)=>{if(actor.pile)return;const start=times.getX(i),end=times.getY(i),alpha=end>start?THREE.MathUtils.clamp((this.travelTime.value-start)/(end-start),0,1):this.blend.value;
-      const fallen=rig.getW(i)>.5;visit(actor.id,THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),Math.min(1,times.getW(i)),alpha)),THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),fallen?1.30:1.81,fallen?1.0:.69,actor.state==='dead');});
+      const fallen=rig.getW(i)>.5;visit(actor.id,THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),Math.min(1,times.getW(i)),alpha)),THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),fallen?1.30:this.kind==='pikeman'?1.36:this.kind==='lancer'?1.90:1.81,fallen?1.0:this.kind==='pikeman'?.88:.69,actor.state==='dead');});
   }
   prepare():()=>void {if(!this.body)return()=>{};const g=this.body.geometry as THREE.InstancedBufferGeometry,count=g.instanceCount;g.instanceCount=Math.max(1,count);return()=>{g.instanceCount=count;};}
-  reset():void {this.dispose();this.source=undefined;this.pileSource=undefined;this.corpsePiles=[];this.records=[];this.keys.clear();this.headings.clear();this.gait.clear();}
-  dispose():void {if(this.body){this.body.geometry.dispose();(this.body.material as THREE.Material).dispose();}if(this.selection){this.selection.geometry.dispose();(this.selection.material as THREE.Material).dispose();}this.group.clear();this.body=undefined;this.selection=undefined;}
+  reset():void {this.dispose();this.source=undefined;this.records=[];this.keys.clear();this.headings.clear();this.gait.clear();}
+  dispose():void {if(this.body){this.group.remove(this.body);this.body.geometry.dispose();(this.body.material as THREE.Material).dispose();}if(this.selection){this.group.remove(this.selection);this.selection.geometry.dispose();(this.selection.material as THREE.Material).dispose();}this.body=undefined;this.selection=undefined;}
+}
+
+/** At most three conditional race batches, each one body and one selection
+ * mesh. Empty/historical scenes allocate none of the new races. */
+export class MechanoidLayer {
+  readonly group=new THREE.Group();
+  private readonly batches=new Map<MechanoidKind,MechanicalRaceBatch>();
+  private selected:ReadonlySet<number>=new Set();
+  private source?:World;private pileSource?:readonly MaterialPile[];private corpsePiles:MaterialPile[]=[];
+  private records=new Map<MechanoidKind,VisualMech[]>();
+  constructor(private readonly configure?:(material:THREE.MeshStandardNodeMaterial)=>void){this.group.name='Mechanical bodies — conditional race batches';}
+  setSelected(ids:ReadonlySet<number>):void {this.selected=ids;for(const batch of this.batches.values())batch.setSelected(ids);}
+  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void {
+    if(this.source!==world||reset){
+      this.source=world;this.records=new Map();
+      const add=(actor:VisualMech)=>{let list=this.records.get(actor.mechKind);if(!list){list=[];this.records.set(actor.mechKind,list);}list.push(actor);};
+      for(const actor of world.mechanoids??[])add(actor);
+      if(this.pileSource!==world.piles||reset){this.pileSource=world.piles;this.corpsePiles=world.piles.filter(p=>!!p.mechCorpse&&(p.owner.type==='ground'||p.owner.type==='pawn'));}
+      for(const pile of this.corpsePiles)add({id:pile.id,mechKind:pile.mechCorpse!.mechKind,state:'dead',health:pile.mechCorpse!.health,
+        x:pile.owner.type==='ground'?pile.owner.x:0,z:pile.owner.type==='ground'?pile.owner.z:0,heading:pile.mechCorpse!.heading??0,path:[],moveCooldown:0,planCooldown:0,
+        pile,carrierId:pile.owner.type==='pawn'?pile.owner.pawnId:pawns?.animalCorpseTransferCarrier(pile.id)});
+      for(const kind of this.records.keys())if(!this.batches.has(kind))this.batches.set(kind,new MechanicalRaceBatch(kind,this.group,this.configure));
+    }
+    for(const [kind,batch] of this.batches){batch.update(world,timeline,this.records.get(kind)??[],reset,pawns);batch.setSelected(this.selected);}
+  }
+  forEachPose(visit:(id:number,x:number,y:number,z:number,height:number,radius:number,dead:boolean,kind:MechanoidKind)=>void):void {
+    for(const [kind,batch] of this.batches)batch.forEachPose((id,x,y,z,height,radius,dead)=>visit(id,x,y,z,height,radius,dead,kind));
+  }
+  prepare():()=>void {const restores=[...this.batches.values()].map(batch=>batch.prepare());return()=>{for(const restore of restores)restore();};}
+  reset():void {for(const batch of this.batches.values())batch.reset();this.batches.clear();this.source=undefined;this.pileSource=undefined;this.corpsePiles=[];this.records.clear();}
+  dispose():void {this.reset();}
 }

@@ -44,7 +44,7 @@ import { isPlant } from '../sim/plants.ts';
 import { validOre } from '../sim/ore.ts';
 import { validMiningDamage } from '../sim/mining-rules.ts';
 import { validStoneIdentity } from '../sim/geology.ts';
-import { ITEM_DEFINITIONS } from '../sim/items.ts';
+import { ITEM_DEFINITIONS,V219_ITEM_IDS } from '../sim/items.ts';
 import { validFoodContamination } from '../sim/food-poisoning-save.ts';
 import { validHumanCorpseShape } from '../sim/burial-save.ts';
 import { validCorpseShape } from '../sim/corpse-save.ts';
@@ -66,6 +66,8 @@ import { validArchivedMeleeThreat } from '../sim/visitor-save.ts';
 import { validMechanoidShape,validateMechanoids } from '../sim/mechanoid-save.ts';
 import { validMechCorpseShape,validMechSalvageLedger } from '../sim/mechanoid-corpse-save.ts';
 import { validateMechanoidRaids } from '../sim/mechanoid-raid-save.ts';
+import { validateMechanoidRanged } from '../sim/mechanoid-ranged-save.ts';
+import { isMechanoidKind } from '../sim/mechanoid-definition.ts';
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
@@ -125,7 +127,7 @@ function validSurgeryTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|'tick'
   if(world.schemaVersion<179&&(Object.hasOwn(pawn,'surgery')||Object.hasOwn(pawn,'surgeryRequest')||pawn.health&&Object.hasOwn(pawn.health,'anesthetic')))return false;
   if(!validPawnSurgeryShape(pawn,world.schemaVersion,world))return false;
   const record=pawn.health;
-  if(record?.body==='scyther')return false;
+  if(isMechanoidKind(record?.body))return false;
   if(record?.anesthetic===undefined)return true;
   if(!record||typeof record!=='object'||Array.isArray(record)||record.body!==undefined||record.tick>world.tick||
     (record.death===undefined?record.tick!==world.tick:!record.death||typeof record.death!=='object'||Array.isArray(record.death)||record.death.tick!==record.tick))return false;
@@ -327,10 +329,14 @@ export class SnapshotDecoder {
       ||['mechanoid','mechActive'].some(k=>Object.hasOwn(message.world.raids??{},k))
       ||['mechanoid','mechComposition'].some(k=>Object.hasOwn(message.world.raids?.last??{},k))))return resync('Propriétaire ou calendrier mécanique futur.');
     if(Object.hasOwn(message.world,'mechanoids')&&(!Array.isArray(message.world.mechanoids)||message.world.mechanoids.some(m=>!validMechanoidShape(m,message.world.schemaVersion,message.world.tick))))return resync('Forme mécanique invalide.');
-    if(message.world.wildlife?.animals.some(a=>a.health?.body==='scyther'))return resync('Dossier mécanique attribué à un animal.');
+    if(message.world.wildlife?.animals.some(a=>isMechanoidKind(a.health?.body)))return resync('Dossier mécanique attribué à un animal.');
     if(message.world.schemaVersion<194&&[...message.world.structures,...message.world.packed.map(p=>p.building)].some(s=>s.bills?.some(b=>['smash-mechanoid','shred-mechanoid'].includes(b.recipe))))return resync('Facture mécanique future.');
+    if(message.world.schemaVersion<197&&[...message.world.structures,...message.world.packed.map(p=>p.building)].some(s=>s.bills?.some(b=>V219_ITEM_IDS.some(item=>Object.hasOwn(b.filters??{},item)))))return resync('Filtre de facture mécanique futur.');
     if(!Array.isArray(message.world.stockpiles)||message.world.stockpiles.some(zone=>!validStorageConditions(zone,message.world.schemaVersion)))return resync('Plages de qualité ou de PV de réserve invalides pour ce snapshot.');
-    for(const zone of message.world.stockpiles)if(message.world.schemaVersion<194&&(Object.hasOwn(zone.filters??{},'mech-corpse')||Object.hasOwn(zone.items??{},'scyther-corpse')))return resync('Filtre mécanique futur.');
+    for(const zone of message.world.stockpiles){
+      if(message.world.schemaVersion<194&&(Object.hasOwn(zone.filters??{},'mech-corpse')||Object.hasOwn(zone.items??{},'scyther-corpse')))return resync('Filtre mécanique futur.');
+      if(message.world.schemaVersion<197&&(Object.hasOwn(zone.items??{},'lancer-corpse')||Object.hasOwn(zone.items??{},'pikeman-corpse')))return resync('Filtre mécanique futur.');
+    }
     if(!Array.isArray(message.world.growingZones)||message.world.growingZones.some(zone=>!zone||!isCropKindInVersion(zone.plant,message.world.schemaVersion)))return resync('Culture future ou inconnue dans ce snapshot.');
     if(message.world.fires!==undefined&&!validFireResourceLosses(message.world.fires?.ledger?.resources,message.world.schemaVersion))return resync('Pertes végétales du feu invalides pour ce snapshot.');
     if(message.world.schemaVersion<193&&(Object.hasOwn(message.world,'bombWaves')||Object.hasOwn(message.world.research??{},'gunTurrets')
@@ -470,7 +476,7 @@ export class SnapshotDecoder {
     if(validateMental(next,next.schemaVersion).length||next.schemaVersion>=192&&validateMelee(next).length)return resync('Cible de crise mentale ou autorité de mêlée incohérente.');
     if(!validMechSalvageLedger(next,next.schemaVersion)||validateMechanoidRaids(next,next.schemaVersion).length)return resync('Récupération ou mandat mécanique invalide.');
     const mechanicalCorpseIds=new Set<number>();
-    for(const pile of next.piles)if(pile.item==='scyther-corpse'||Object.hasOwn(pile,'mechCorpse')){if(mechanicalCorpseIds.has(pile.id)||!validPile(pile,next))return resync('Carcasse mécanique invalide.');mechanicalCorpseIds.add(pile.id);}
+    for(const pile of next.piles)if(pile.kind==='mech-corpse'||Object.hasOwn(pile,'mechCorpse')){if(mechanicalCorpseIds.has(pile.id)||!validPile(pile,next))return resync('Carcasse mécanique invalide.');mechanicalCorpseIds.add(pile.id);}
     if(validateMiniTurrets(next).length)return resync('Propriétaire ou cible de mini-tourelle invalide.');
     if(validateCommercialRegistry(next,next.schemaVersion).length)return resync('Registre commercial invalide.');
     const postIds=new Set<number>();
@@ -516,7 +522,7 @@ export class SnapshotDecoder {
       if(departure.items.some(p=>!validMechCorpseShape(p,next.schemaVersion,departure.tick)||next.schemaVersion<194&&Object.hasOwn(p,'mechCorpse')))return resync('Dossier mécanique de départ historique invalide.');
     for(const records of [next.visitors?.departed??[],next.podRescues?.departed??[]])
       for(const departure of records){
-        if(departure.pawn.health?.body==='scyther'||departure.items.some(p=>!validMechCorpseShape(p,next.schemaVersion,departure.tick)||next.schemaVersion<194&&Object.hasOwn(p,'mechCorpse')))return resync('Dossier mécanique archivé invalide.');
+        if(isMechanoidKind(departure.pawn.health?.body)||departure.items.some(p=>!validMechCorpseShape(p,next.schemaVersion,departure.tick)||next.schemaVersion<194&&Object.hasOwn(p,'mechCorpse')))return resync('Dossier mécanique archivé invalide.');
         if(!validMiningTransport(departure.pawn,next.schemaVersion))return resync('Profil de minage archivé invalide.');
         if(!validArchivedMeleeThreat(departure.pawn,next,departure.tick))return resync('Menace de mêlée archivée invalide.');
         if(Object.hasOwn(departure.pawn,'bombRefuge'))return resync('Refuge Bomb archivé hors carte.');
@@ -555,6 +561,7 @@ export class SnapshotDecoder {
       if(!planetCheck.ok||validateGroupStateWithPlanet(next,next.schemaVersion,planetCheck.context).length)return resync('Planète, groupe ou pertes incohérents.');
       if(registerGroupThingIds(next,ids).length)return resync('Une identité du groupe possède plusieurs propriétaires.');
       if(validateMechanoidRaids(next,next.schemaVersion,ids).length)return resync('Identité mécanique historique réutilisée dans un autre propriétaire.');
+      for(const actor of next.mechanoids??[])if(validateMechanoidRanged(next,actor,next.schemaVersion,ids).length)return resync('Référence ou phase de tir mécanique invalide.');
       if(validateProjectiles(next,next.schemaVersion,ids).length)return resync('Balle ou canon lanceur invalide.');
       const bombErrors:string[]=[];validateBombWaves(next,bombErrors,ids);if(bombErrors.length)return resync('Vague Bomb ou identité invalide.');
       if(validateBombRefuges(next,[],ids).length)return resync('Refuge ou danger Bomb incohérent.');

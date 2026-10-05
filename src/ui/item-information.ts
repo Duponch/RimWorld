@@ -6,7 +6,7 @@ import type { MaterialPile } from '../sim/types';
 import type { ObjectInformationInput, ObjectInformationRow } from './object-information';
 import { BODY_PARTS } from '../sim/body-definition';
 import { mechCorpseMass } from '../sim/mechanoid-corpse';
-import { SCYTHER_MODEL } from '../sim/mechanoid-anatomy';
+import { mechanoidBodyModel } from '../sim/mechanoid-anatomy';
 import { partMissing } from '../sim/injury-state';
 import { pileMaxHp,pileDamage } from '../sim/thing-damage-rules';
 
@@ -19,7 +19,7 @@ export function itemInformation(pile:MaterialPile):ObjectInformationInput {
   if(pile.mechCorpse){
     add('Général','Masse restante',`${mechCorpseMass(pile).toFixed(3).replace('.',',')} kg`,'Masse de la carcasse entière, issue de la couverture naturelle des parties restantes. Les blessures seules ne retirent pas de matière.');
     add('Général','Points de vie',`${pileMaxHp(pile)-pileDamage(pile)} / ${pileMaxHp(pile)}`,'État physique de l’objet transporté, distinct du dossier mécanique figé au décès.');
-    const missing=SCYTHER_MODEL.parts.filter(p=>partMissing(pile.mechCorpse!.health,p.id));
+    const missing=mechanoidBodyModel(pile.mechCorpse.mechKind).parts.filter(p=>partMissing(pile.mechCorpse!.health,p.id));
     add('Dossier mécanique','Parties absentes',missing.length?missing.map(p=>p.label).join(', '):'Aucune','Absences réelles conservées à la neutralisation. La carcasse ne guérit pas et ne pourrit pas.');
     add('Récupération','Usage','Concassage ou broyage','Une facture d’Artisanat consomme une carcasse entière au poste réel et produit de l’acier selon l’efficacité de l’artisan. Ce corps n’est pas un aliment ni une dépouille de boucherie.');
   }

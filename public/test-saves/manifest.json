@@ -1617,6 +1617,38 @@
       "prepared": true,
       "provenance": "Préparation originale V216, createScenarioWorld(216,32,Survivants), schéma 196 au tick 0 sans campagne simulée. Trois adultes libres aux âges, apparences, traits et passés de création, santé explicitement saine et besoins à 100 ; Ada Social 8 préparé sans apprentissage. Chemises originales conservées, éventuels liens de création conservés. Clairière 32×32, foyer de bois clos, toit, table, tabourets et trois lits individuels attribués préparés. Stocks finis réellement au sol : 24 repas de survie en piles de 10/10/4, 500 argent, 60 tissus et six médicaments industriels. Aucune planète, groupe, perte, comptoir généré, manifeste, réservation, prise, départ, route, segment, ingestion, soin, paiement, vente, achat, retour ou dépôt accompli. Calendriers d’accueil, raids, canicule et faune exclus ; calendrier et climat existants non adoptés ou déplacés. La préparation ne certifie ni parcours natif, fréquence naturelle, équilibre de campagne, parité Core ni performance générale.",
       "sha256": "88ba444949ccf2e56c565b5028986a2541ad0069fab8febdbf085af58952748b"
+    },
+    {
+      "id": "ranged-mech-v219",
+      "release": "v219",
+      "label": "Lancier et Piquier · tirs et récupération",
+      "filename": "ranged-mech.json",
+      "description": "Protéger trois colons dans un abri préparé, observer une sortie exposée face aux machines, défendre avec les tourelles puis récupérer les carcasses par les ateliers physiques.",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 270090,
+      "focus": [
+        "adoption prospective",
+        "abri et sortie exposée",
+        "deux corps mécaniques",
+        "visée et récupération Core",
+        "projectiles réels",
+        "défense électrique",
+        "carcasses et acier",
+        "sauvegarde en cours"
+      ],
+      "steps": [
+        "Charger en pause, dix ticks avant une occasion Cassandra préparée au jour45. Mobiliser les trois colons en(24,19),(26,19),(25,20), dans l’abri est déjà construit, porte fermée en(23,20). La richesse et le ticket privé sont déclarés ; aucun Lancier ou Piquier n’est encore arrivé. Reprendre à vitesse1, puis mettre en pause après l’annonce mécanique.",
+        "Après l’arrivée réelle, déplacer Ada seule vers(22,20), par la porte ouest, pour observer une vraie visée et une balle en vol, puis ordonner son retour en(24,19). Les deux artisans restent abrités. Sélectionner chaque race : corps de30 ou20 parties, vraie portée, cible et phase de tir. Examiner les silhouettes en vue isométrique et rapprochée. Les tourelles retiennent encore leur feu.",
+        "Lever Retenir le feu sur les tourelles en(15,16) et(17,16), puis reprendre. Les tirs, les interceptions, les blessures et la neutralisation restent à produire. Les armes intrinsèques ne créent aucun canon transportable.",
+        "Après une neutralisation réelle et la récupération engagée, inspecter la carcasse. Démobiliser un artisan apte, ajouter Broyer un mécanoïde à l’atelier d’usinage en(20,21), puis Prioriser. Collecte, passage de porte, portage, travail et sortie d’acier restent physiques. Concassage est aussi disponible en(11,21).",
+        "Sauvegarder pendant une vraie préparation, récupération, balle en vol ou collecte ; recharger et poursuivre ce monde. Les anciennes factures conservent leurs filtres : autoriser explicitement les nouvelles carcasses si nécessaire."
+      ],
+      "prepared": true,
+      "provenance": "Nouvelle scène préparée32×32, createScenarioWorld(219,32,'crashlanded', site tempéré plat), schéma197, tick270090. Clairière, appareils et fournitures réutilisent la fonction de préparation V213 ; aucun payload historique réécrit. Cette seule préparation V219 ajoute une enceinte est non couverte déjà construite x23..29,z16..21 :21murs enbois et1porte manuelle intacte fermée en(23,20). Ses positions initiales propres sont(24,19),(26,19),(25,20), différentes de V213, sans téléportation runtime. Générateur, ateliers, tourelles et stocks gardent leurs empreintes et quantités horsabri. Sortie exposée proposée(22,20), retour(24,19), sans déplacement préjoué. Biographies actuelles, graphes familiaux exclus de cette exposition mécanique ; calendriers obligatoires de grippe/panne réadoptés au tick préparé. Occasion future270100, politique mécanique et permission ranged adoptées à270090, ticket privé déclaré27 ; aucun tirage de combat préjoué. Richesse10000ors physiques et enceinte réellement recensée au tick préparé, menace324.30608180255075points ; deux tourelles intactes à60coups au feu retenu, générateur75bois, ateliers vides,75aciers et18rations au sol ; aucun stock ajouté ou consommé pour cette géométrie initiale. Aucun acteur, projectile, blessure, carcasse, livraison ou acier de récupération préjoué. La préparation ne prouve ni fréquence naturelle, victoire, validation native ou coût CPU/GPU général.",
+      "sha256": "917d4374964a8894131c602f28ea10353976f3aaa896786ab5b944c5abc0e7b6"
     }
   ]
 }

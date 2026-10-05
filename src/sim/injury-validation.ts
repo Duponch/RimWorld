@@ -4,7 +4,8 @@ import { validFlu } from './flu-save.ts';
 import { validAnesthetic } from './anesthetic.ts';
 import { HUMAN_MODEL,animalBodyModel,modelHasPart } from './body-model.ts';
 import { isAnimalSpecies,type AnimalSpeciesId } from './animal-species.ts';
-import { SCYTHER_MODEL } from './mechanoid-anatomy.ts';
+import { mechanoidBodyModel } from './mechanoid-anatomy.ts';
+import { isMechanoidKind,type MechanoidKind } from './mechanoid-definition.ts';
 import { BLOOD_UNIT,INJURY_RULES,injuryPartRules,isWithinPart } from './injury-rules.ts';
 import { createMedicalRecord,reconcileMedicalDeath,remainingPartHealth,medicalStatus } from './injury-state.ts';
 import type { MedicalRecord } from './injury-types.ts';
@@ -14,14 +15,15 @@ const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.
 const keys=(v:Record<string,unknown>,allowed:readonly string[])=>Object.keys(v).every(k=>allowed.includes(k));
 /** Strict isolated record validator. World ownership/migration is not implemented
  * by this function and must precede accepting a medical Pawn field. */
-export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=true,allowHeat=true,allowCold=true,animal=false,allowExecution=false,allowInfection=true,allowMalnutrition=true,allowBurn=true,allowStab=true,allowFoodPoison=true,version=91,allowFlu=false,mechanical=false):string|null {
+export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=true,allowHeat=true,allowCold=true,animal=false,allowExecution=false,allowInfection=true,allowMalnutrition=true,allowBurn=true,allowStab=true,allowFoodPoison=true,version=91,allowFlu=false,mechanical:boolean|MechanoidKind=false):string|null {
+  const mechanicalKind=mechanical===true?'scyther':isMechanoidKind(mechanical)?mechanical:undefined;
   if(mechanical){allowHeat=false;allowCold=false;allowInfection=false;allowMalnutrition=false;allowFoodPoison=false;allowFlu=false;}
   const species=object(value)&&isAnimalSpecies(value.body)?value.body:undefined;
-  const model=mechanical?SCYTHER_MODEL:animal&&species?animalBodyModel(species):HUMAN_MODEL,BODY_PARTS=model.byId,PART_INJURY_RULES=injuryPartRules(model);
+  const model=mechanicalKind?mechanoidBodyModel(mechanicalKind):animal&&species?animalBodyModel(species):HUMAN_MODEL,BODY_PARTS=model.byId,PART_INJURY_RULES=injuryPartRules(model);
   const bodyPartExists=(id:unknown)=>modelHasPart(model,id);
   const fail='Invalid medical record';
   if(!object(value)||!keys(value,[...(animal||mechanical?['body']:[]),'tick','nextInjuryId','injuries','missing','bloodLoss','death',...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infections']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFoodPoison?['foodPoisoning']:[]),...(allowFlu&&!animal&&!mechanical?['flu']:[]),...(version>=138&&!animal&&!mechanical?['ageAilments']:[]),...(version>=179&&!animal&&!mechanical?['anesthetic']:[])])||!integer(value.tick)||!integer(value.nextInjuryId,1)||!integer(value.bloodLoss,0,mechanical?0:BLOOD_UNIT)||!Array.isArray(value.injuries)||!Array.isArray(value.missing))return fail;
-  if(mechanical&&(version<194||value.body!=='scyther'||animal))return fail;
+  if(mechanical&&(!mechanicalKind||version<(mechanicalKind==='scyther'?194:197)||value.body!==mechanicalKind||animal))return fail;
   if(animal&&(!species||version<91&&species!=='hare'||version<178&&species==='red-fox'))return fail;
   if(value.heatstroke!==undefined&&(!allowHeat||!integer(value.heatstroke,1,1_000_000_000)))return fail;
   if(value.hypothermia!==undefined&&(!allowCold||!integer(value.hypothermia,1,1_000_000_000)))return fail;
@@ -51,7 +53,7 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   if(!validInfections(record,model,allowInfection,allowBurn))return fail;
   for(const i of record.injuries)if(BODY_PARTS[i.part].parent!==null&&remainingPartHealth(record,i.part)===0)return fail;
   if(value.death!==undefined&&(!object(value.death)||!keys(value.death,['tick','cause'])||value.death.tick!==record.tick||!(mechanical?['vital-failure','trauma','downed']:['blood-loss','vital-failure','trauma',...(animal?['downed',...(allowExecution?['execution']:[])]:[]),...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infection']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFlu&&!animal?['flu']:[])]).includes(value.death.cause as string)))return fail;
-  const living:MedicalRecord={...createMedicalRecord(record.tick),...(mechanical?{body:'scyther' as const}:animal?{body:species as AnimalSpeciesId}:{}),injuries:record.injuries,missing:record.missing,bloodLoss:record.bloodLoss,...record.heatstroke?{heatstroke:record.heatstroke}:{},...record.hypothermia?{hypothermia:record.hypothermia}:{},...record.infections?{infections:record.infections}:{},...record.malnutrition?{malnutrition:record.malnutrition}:{},...record.foodPoisoning?{foodPoisoning:record.foodPoisoning}:{},...record.flu?{flu:record.flu}:{},...record.ageAilments?{ageAilments:record.ageAilments}:{},...record.anesthetic?{anesthetic:record.anesthetic}:{}};
+  const living:MedicalRecord={...createMedicalRecord(record.tick),...(mechanicalKind?{body:mechanicalKind}:animal?{body:species as AnimalSpeciesId}:{}),injuries:record.injuries,missing:record.missing,bloodLoss:record.bloodLoss,...record.heatstroke?{heatstroke:record.heatstroke}:{},...record.hypothermia?{hypothermia:record.hypothermia}:{},...record.infections?{infections:record.infections}:{},...record.malnutrition?{malnutrition:record.malnutrition}:{},...record.foodPoisoning?{foodPoisoning:record.foodPoisoning}:{},...record.flu?{flu:record.flu}:{},...record.ageAilments?{ageAilments:record.ageAilments}:{},...record.anesthetic?{anesthetic:record.anesthetic}:{}};
   reconcileMedicalDeath(living);
   if(record.death?.cause==='execution')return animal&&allowExecution&&medicalStatus(living)==='downed'?null:fail;
   if(record.death?.cause==='downed')return !living.death&&medicalStatus(living)==='downed'?null:fail;
@@ -60,3 +62,5 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
 }
 export const validateScytherMedicalRecord=(value:unknown,version=194):string|null=>
   validateMedicalRecord(value,true,true,false,false,false,false,false,false,true,true,false,version,false,true);
+export const validateMechanoidMedicalRecord=(value:unknown,version:number,kind:MechanoidKind):string|null=>
+  !isMechanoidKind(kind)?'Invalid mechanical body':validateMedicalRecord(value,true,true,false,false,false,false,false,false,true,true,false,version,false,kind);

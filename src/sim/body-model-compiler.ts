@@ -1,9 +1,10 @@
 import type { BodyPart,BodyPartId } from './body-definition.ts';
 import type { AnimalSpeciesId } from './animal-species.ts';
+import type { MechanoidKind } from './mechanoid-definition.ts';
 
 /** Immutable anatomical indexes; this compiler knows no actor storage. */
 export interface BodyModel {
-  readonly kind:'human'|AnimalSpeciesId|'scyther';readonly healthScale:number;
+  readonly kind:'human'|AnimalSpeciesId|MechanoidKind;readonly healthScale:number;
   readonly parts:readonly BodyPart[];
   readonly byId:Readonly<Record<BodyPartId,BodyPart>>;
   readonly index:Readonly<Record<BodyPartId,number>>;

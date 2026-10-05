@@ -2,9 +2,10 @@ import type { AccuracyCurve } from './combat-report.ts';
 import { WEAPON_QUALITIES,isRangedWeaponItem,type WeaponQuality } from './equipment-rules.ts';
 import { TICKS_PER_DAY } from './types.ts';
 import { MINI_TURRET_PROFILE } from './mini-turret-profile.ts';
+import { LANCER_GUN_PROFILE,PIKEMAN_GUN_PROFILE } from './mechanoid-ranged-profile.ts';
 
 /** Projectile identity is broader than inventory/equipment ItemId. */
-export type ProjectileProfileId='revolver'|'bolt-action-rifle'|'mini-turret-gun';
+export type ProjectileProfileId='revolver'|'bolt-action-rifle'|'mini-turret-gun'|'lancer-gun'|'pikeman-gun';
 
 /** Data/units shared by the persistent shooting skill and attack producer. See the explicit
  * current/historical source decisions in research/ranged-statistics-reference. */
@@ -57,7 +58,9 @@ export function rangedWeaponProfile(item:unknown,quality:WeaponQuality):Revolver
   return item==='revolver'?profiles[quality]:rifleProfiles[quality];
 }
 export function projectileProfile(item:unknown,quality:WeaponQuality):RevolverProfile|undefined {
-  return item==='mini-turret-gun'?(quality==='normal'?MINI_TURRET_PROFILE:undefined):rangedWeaponProfile(item,quality);
+  if(item==='mini-turret-gun'||item==='lancer-gun'||item==='pikeman-gun')return quality==='normal'?
+    item==='mini-turret-gun'?MINI_TURRET_PROFILE:item==='lancer-gun'?LANCER_GUN_PROFILE:PIKEMAN_GUN_PROFILE:undefined;
+  return rangedWeaponProfile(item,quality);
 }
 
 /** Preserve the existing game-day conversion. A displayed Core second is not a

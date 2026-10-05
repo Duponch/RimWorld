@@ -1,6 +1,8 @@
 #inspector.mechanoid-inspector-host {width:min(600px,calc(100vw - 290px));max-height:calc(100vh - 230px);overflow:auto;}
 .mechanoid-facts {display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;}
 .mechanoid-facts p,.mechanoid-capacities p {margin:3px 0;}
+.mechanoid-ranged {padding:6px 0;border-top:1px solid #c6cec0;overflow-wrap:anywhere;}
+.mechanoid-ranged p {margin:3px 0;}
 .mechanoid-capacities {display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;padding:10px 0;border-top:1px solid #c6cec0;}
 .mechanoid-capacities p {display:flex;justify-content:space-between;gap:10px;}
 .mechanoid-anatomy-scroll {max-height:min(300px,calc(100vh - 480px));overflow:auto;}

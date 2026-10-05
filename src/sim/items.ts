@@ -2,6 +2,11 @@ import type { MaterialKind, MaterialPile, Pawn, World } from './types.ts';
 import { BIOME_ITEM_DEFINITIONS,isAnimalMeat } from './biome-items.ts';
 import { ANIMAL_PRODUCT_ITEM_DEFINITIONS } from './animal-product-items.ts';
 
+/** Prospective V219 carcasses; historical bills and filters do not adopt them. */
+export const V219_ITEM_IDS=['lancer-corpse','pikeman-corpse'] as const;
+export const MECH_CORPSE_ITEMS=['scyther-corpse',...V219_ITEM_IDS] as const;
+export type MechCorpseItem=typeof MECH_CORPSE_ITEMS[number];
+
 /** Runtime content, not an exhaustive reference catalogue. Values and unresolved
  * rules are tracked in docs/development/food-items.md. Nutrition uses integer
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
@@ -9,6 +14,8 @@ export const ITEM_DEFINITIONS = Object.freeze({
   ...BIOME_ITEM_DEFINITIONS,
   ...ANIMAL_PRODUCT_ITEM_DEFINITIONS,
   'scyther-corpse':Object.freeze({label:'Carcasse de Scyther',kind:'mech-corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x93a4a5}),
+  'lancer-corpse':Object.freeze({label:'Carcasse de Lancier',kind:'mech-corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0xa49d88}),
+  'pikeman-corpse':Object.freeze({label:'Carcasse de Piquier',kind:'mech-corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x8d9f9c}),
   'human-corpse':Object.freeze({label:'Dépouille humaine',kind:'corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x8f8775}),
   'hare-corpse':Object.freeze({label:'Dépouille de lièvre',kind:'corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x9b9981}),
   'hare-meat':Object.freeze({label:'Viande de lièvre',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xba6259}),

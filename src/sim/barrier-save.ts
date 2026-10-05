@@ -2,7 +2,7 @@ import { isRepairableStructure,structureMaxHp } from './thing-damage-rules.ts';
 import { barrierMaxHp,isBarrier } from './barriers.ts';
 import { CONSTRUCTION_MATERIALS } from './building-materials.ts';
 import { repairWanted } from './repairs.ts';
-import { ITEM_DEFINITIONS } from './items.ts';
+import { ITEM_DEFINITIONS,V219_ITEM_IDS } from './items.ts';
 import { validFireResourceLosses } from './fire-save.ts';
 import type { World } from './types.ts';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -18,7 +18,7 @@ export function validateBarriers(world:World,version:number):string[] {
       ||Object.entries(ledger.lost).some(([k,v])=>!(CONSTRUCTION_MATERIALS.includes(k as never)||version>=75&&k==='component'||version>=193&&k==='advanced-component')||!integer(v,1))
       ||['fuelTicksLost','fuelTicksBurned'].some(k=>ledger[k]!==undefined&&!integer(ledger[k],1))
       ||ledger.batteryEnergyLost!==undefined&&(typeof ledger.batteryEnergyLost!=='number'||!Number.isFinite(ledger.batteryEnergyLost)||ledger.batteryEnergyLost<=0||!Number.isSafeInteger(ledger.batteryEnergyLost*2))
-      ||ledger.items!==undefined&&(!object(ledger.items)||!Object.keys(ledger.items).length||Object.entries(ledger.items).some(([k,v])=>!Object.hasOwn(ITEM_DEFINITIONS,k)||version<194&&k==='scyther-corpse'||!integer(v,1)))
+      ||ledger.items!==undefined&&(!object(ledger.items)||!Object.keys(ledger.items).length||Object.entries(ledger.items).some(([k,v])=>!Object.hasOwn(ITEM_DEFINITIONS,k)||version<194&&k==='scyther-corpse'||version<197&&V219_ITEM_IDS.some(item=>item===k)||!integer(v,1)))
       ||ledger.resources!==undefined&&(!validFireResourceLosses(ledger.resources,version)||!Object.keys(ledger.resources as object).length)
       ||ledger.woodPotentialLost!==undefined&&(!integer(ledger.woodPotentialLost,1)||!object(ledger.resources)||!integer(ledger.resources.tree,1)))errors.push('Invalid destroyed building ledger.');
   }

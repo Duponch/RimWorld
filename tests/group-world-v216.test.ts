@@ -3,7 +3,7 @@ import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld } 
 import { addMaterial,refreshStock } from '../src/sim/materials.ts';
 import { previewGroupFormation,groupTradeQuote } from '../src/sim/group-authority.ts';
 import { commercialCamp } from './helpers/commercial-v193.ts';
-import type { Command,World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type Command,type World } from '../src/sim/types.ts';
 
 /** Prepared sources and healthy adults only. Commands and ordinary ticks own
  * all pickup, movement, departure, physiology, trade and unloading below. */
@@ -100,10 +100,10 @@ test('cancellation during a captured movement edge preserves that edge and its e
   expect(serializeWorld(fork)).toBe(serializeWorld(w));expect(w.group).toBeUndefined();
 });
 
-test('195 validates before the neutral 196 migration and refuses future JSON owners without adoption',()=>{
+test('195 validates before the neutral migration chain and refuses future JSON owners without adoption',()=>{
   const {w}=camp();(w as unknown as {schemaVersion:number}).schemaVersion=195;
   const before=JSON.stringify(w),migrated=deserializeWorld(before);
-  expect(migrated.schemaVersion).toBe(196);expect({...migrated,schemaVersion:195}).toEqual(w);
+  expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect({...migrated,schemaVersion:195}).toEqual(w);
   for(const key of ['planet','group','groupLosses']){
     const bad=structuredClone(w) as World&Record<string,unknown>;bad[key]=key==='groupLosses'?[]:null;
     expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/Historical schema contains future world\/group fields/);

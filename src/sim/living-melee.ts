@@ -21,14 +21,16 @@ import { delayMechanoidImpact,mechanoidProtection } from './mechanoid-impact.ts'
  * combat. Recovery is installed before injury can interrupt either actor. */
 export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTarget,tool:MeleeTool,core:number,randomState:{rng:number},disturbance=disturbanceEvents(w),options:{surprise?:boolean;surpriseStun?:number}={}):void {
   const animal=isAnimalTarget(target),animalAttacker=isAnimalTarget(attacker),random=()=>healthRandom(randomState);
-  if(w.schemaVersion>=192&&isPawnTarget(target)&&(!isPawnTarget(attacker)||attacker.melee?.order?.auto!=='social'))target.meleeThreat={attackerId:attacker.id,atCore:core};
+  if((w.schemaVersion>=192&&isPawnTarget(target)||w.schemaVersion>=197&&isMechanoidTarget(target))
+    &&(!isPawnTarget(attacker)||attacker.melee?.order?.auto!=='social'))target.meleeThreat={attackerId:attacker.id,atCore:core};
   const immobile=isPawnTarget(target)?isLying(target):['downed','sleeping'].includes(target.state);
   if(isPawnTarget(attacker)&&!immobile)learnSkill(attacker.skills.melee,200*(tool.cooldownCore/60)*XP_SCALE,attacker);
   const body=(actor:LivingTarget)=>isAnimalTarget(actor)?animalBody(actor):isMechanoidTarget(actor)?mechaAssessment(actor):pawnBody(actor);
   const ac=body(attacker).capacities,dc=body(target).capacities;
   const accuracy=isMechanoidTarget(attacker)?mechaMeleeHitChance(ac.sight,ac.manipulation):meleeHitChance(isAnimalTarget(attacker)?4:effectiveSkillLevel(attacker,'melee',attacker.skills.melee.level),ac.sight,ac.manipulation);
   const hit=immobile||options.surprise||random()<accuracy;
-  const dodge=hit&&!immobile&&!options.surprise&&(!isPawnTarget(target)||!target.shooting?.stance)&&random()<meleeDodgeChance(isPawnTarget(target)?effectiveSkillLevel(target,'melee',target.skills.melee.level):0,dc.moving,dc.sight);
+  const dodge=hit&&!immobile&&!options.surprise&&(!isPawnTarget(target)||!target.shooting?.stance)
+    &&(!isMechanoidTarget(target)||!target.ranged?.stance)&&random()<meleeDodgeChance(isPawnTarget(target)?effectiveSkillLevel(target,'melee',target.skills.melee.level):0,dc.moving,dc.sight);
   const outcome=!hit?'miss':dodge?'dodge':'hit';
   const strike={targetId:target.id,atCore:core,untilCore:core+tool.cooldownCore,tool:tool.id,outcome} as const;
   if(animalAttacker){attacker.strike=strike;delete attacker.retaliation;}else attacker.melee!.strike=strike;
@@ -52,9 +54,9 @@ export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTa
     randomState.rng=w.rng;
     const category=['bite','cut','stab','scratch'].includes(tool.kind)?'sharp':'blunt';
     const protection=isPawnTarget(target)?apparelProtection(w,target,category,tool.penetration,random):undefined;
-    const record=target.health??{...createMedicalRecord(w.tick),...(isAnimalTarget(target)?{body:target.species}:isMechanoidTarget(target)?{body:'scyther' as const}:{})};
+    const record=target.health??{...createMedicalRecord(w.tick),...(isAnimalTarget(target)?{body:target.species}:isMechanoidTarget(target)?{body:target.mechKind}:{})};
     const input=isMechanoidTarget(target)?{...structuredClone(record),tick:w.tick}:record;
-    const impact=resolveUnarmoredMelee(input,{damage,kind:tool.kind},random,isMechanoidTarget(target)?mechanoidProtection(category,tool.penetration,random):protection?.protect);
+    const impact=resolveUnarmoredMelee(input,{damage,kind:tool.kind},random,isMechanoidTarget(target)?mechanoidProtection(category,tool.penetration,random,target.mechKind):protection?.protect);
     protection?.commit();injured=impact.layers.length>0;stun=impact.stun;
     if(isAnimalTarget(target))commitAnimalImpact(w,target,impact.record,randomState);
     else if(isMechanoidTarget(target)){if(!commitMechanoidImpact(w,target,impact.record,randomState,core))throw new Error('Mechanical melee transaction refused');}

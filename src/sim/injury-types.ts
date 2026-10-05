@@ -23,7 +23,7 @@ export interface MedicalRecord {
   /** A human systemic illness; absent for historical records and animals. */
   flu?:import('./flu-types.ts').FluState;
   /** Absent is the historical human profile. Animal ownership is validated. */
-  body?:import('./animal-species.ts').AnimalSpeciesId|'scyther';
+  body?:import('./animal-species.ts').AnimalSpeciesId|import('./mechanoid-definition.ts').MechanoidKind;
   tick:number; nextInjuryId:number;
   injuries:Injury[]; missing:MissingPart[];
   /** BLOOD_UNIT = all blood lost; integral, not a percent. */

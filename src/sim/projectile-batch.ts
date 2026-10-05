@@ -3,6 +3,7 @@ import { SHOT_LAYER,itemShotFill } from './combat-content.ts';
 import type { ProjectileScene,ProjectileTarget } from './projectile-rules.ts';
 import type { World,Cell } from './types.ts';
 import { animalBodySize } from './animal-life.ts';
+import type { LivingTargetKey } from './combat-target.ts';
 
 /** Local to a synchronous projectile batch ONLY. Medical reconciliation can
  * mutate people, piles and packages. The caller discards this entire capture
@@ -13,7 +14,7 @@ export function captureProjectileBatch(world:World) {
   const {width,height}=world;
   const neutral=fixed.scene(new Set(),1),inside=(c:Cell)=>Number.isInteger(c.x)&&Number.isInteger(c.z)&&c.x>=0&&c.z>=0&&c.x<width&&c.z<height;
   return {
-    refresh(current:World):(friends:ReadonlySet<number>,factor:number)=>ProjectileScene {
+    refresh(current:World):(friends:ReadonlySet<number>,factor:number,keys?:ReadonlySet<LivingTargetKey>)=>ProjectileScene {
       if(current.width!==width||current.height!==height)throw new Error('Projectile batch belongs to another map');
       const targets=new Map<string,ProjectileTarget>(),cells=new Map<number,ProjectileTarget[]>();
       const add=(target:ProjectileTarget,layer:number)=>{
@@ -31,10 +32,10 @@ export function captureProjectileBatch(world:World) {
       if(current.schemaVersion>=194)for(const m of current.mechanoids??[])if(m.state!=='dead'&&!m.health?.death)add({key:`mech:${m.id}`,cell:m,kind:'pawn',fill:0,covered:false,openDoor:false,standing:m.state!=='downed',bodySize:1,friendly:false},SHOT_LAYER.pawn);
       const rank=(key:string)=>key.startsWith('pile:')?0:key.startsWith('packed:')?1:key.startsWith('pawn:')?2:key.startsWith('animal:')?3:4;
       for(const list of cells.values())list.sort((a,b)=>rank(a.key)-rank(b.key)||Number(a.key.slice(a.key.indexOf(':')+1))-Number(b.key.slice(b.key.indexOf(':')+1)));
-      return (friends,factor)=>{
+      return (friends,factor,keys=new Set())=>{
         if(!Number.isFinite(factor)||factor<0||factor>1)throw new RangeError('Invalid friendly fire factor');
-        const relation=new Set(friends),related=new Map<string,ProjectileTarget>(),cachedCells=new Map<number,readonly ProjectileTarget[]>();
-        const relate=(p:ProjectileTarget)=>{if(p.kind!=='pawn'||!p.key.startsWith('pawn:')||!relation.has(Number(p.key.slice(5))))return p;let copy=related.get(p.key);if(!copy){copy=Object.freeze({...p,friendly:true});related.set(p.key,copy);}return copy;};
+        const relation=new Set(friends),typed=new Set(keys),related=new Map<string,ProjectileTarget>(),cachedCells=new Map<number,readonly ProjectileTarget[]>();
+        const relate=(p:ProjectileTarget)=>{if(p.kind!=='pawn'||!(p.key.startsWith('pawn:')&&relation.has(Number(p.key.slice(5))))&&!typed.has(p.key as LivingTargetKey))return p;let copy=related.get(p.key);if(!copy){copy=Object.freeze({...p,friendly:true});related.set(p.key,copy);}return copy;};
         return Object.freeze({width,height,friendlyFireFactor:factor,
           target(key:string){const p=targets.get(key);return p?relate(p):neutral.target(key);},
           at(cell:Cell){if(!inside(cell))return [];const index=cell.z*width+cell.x;let list=cachedCells.get(index);if(!list){list=Object.freeze([...neutral.at(cell),...(cells.get(index)??[]).map(relate)]);cachedCells.set(index,list);}return list;},

@@ -4,6 +4,8 @@ import { craftingSkill } from './crafting-quality.ts';
 import { roundYield } from './cooking-statistics.ts';
 import { healthRandom } from './health.ts';
 import { refreshStock } from './materials.ts';
+import { MECH_CORPSE_ITEMS } from './items.ts';
+import { mechanoidDefinition } from './mechanoid-definition.ts';
 import type { CookingBill } from './cooking-types.ts';
 import type { ProductionContext } from './production-output.ts';
 import type { Pawn,World } from './types.ts';
@@ -28,7 +30,8 @@ export function mechSalvageYield(p:Pawn,random:()=>number):number {
 export function finishMechSalvage(w:World,p:Pawn,bill:CookingBill,context:ProductionContext):boolean {
   const task=p.cooking;if(!task||!isMechSalvageRecipe(task.recipe)||task.ingredients.length!==1)return false;
   const corpse=w.piles.find(pile=>pile.id===task.ingredients[0]!.pileId);
-  if(!corpse?.mechCorpse||corpse.item!=='scyther-corpse'||corpse.quantity!==1||corpse.owner.type!=='ground')return false;
+  if(!corpse?.mechCorpse||!MECH_CORPSE_ITEMS.some(item=>item===corpse.item)||corpse.item!==`${corpse.mechCorpse.mechKind}-corpse`
+    ||corpse.quantity!==1||corpse.owner.type!=='ground')return false;
   const skill=completedMechSalvageSkill(p,task.workTicks??0),worker={...p,skills:{...p.skills,crafting:skill}};
   const random={rng:w.rng},quantity=mechSalvageYield(worker,()=>healthRandom(random));
   const ledger=w.mechSalvage??{completed:0,steel:0};
@@ -43,6 +46,6 @@ export function finishMechSalvage(w:World,p:Pawn,bill:CookingBill,context:Produc
     delete task.workTicks;delete task.storageQuantity;
   }else {p.cooking=null;if(p.orders.active==='cook')p.orders.active=null;p.state='idle';}
   p.path=[];p.planCooldown=0;if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
-  refreshStock(w);context.event(`${p.name} a récupéré ${quantity} acier dans une carcasse de Scyther.`);
+  refreshStock(w);context.event(`${p.name} a récupéré ${quantity} acier dans une carcasse de ${mechanoidDefinition(corpse.mechCorpse.mechKind).label}.`);
   return true;
 }

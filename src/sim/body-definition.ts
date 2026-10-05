@@ -3,14 +3,19 @@
 type Side = 'left' | 'right';
 export type ScytherPartId = 'scyther-thorax'|'scyther-neck'|'scyther-head'|'scyther-brain'|'scyther-smell-sensor'|'scyther-reactor'
   | `scyther-${Side}-${'sight-sensor'|'hearing-sensor'|'shoulder'|'arm'|'blade'|'hand'|'pinky'|'middle-finger'|'index-finger'|'thumb'|'leg'|'foot'|'fluid-reprocessor'}`;
+export type LancerPartId='lancer-thorax'|'lancer-neck'|'lancer-head'|'lancer-brain'|'lancer-smell-sensor'|'lancer-reactor'
+  | `lancer-${Side}-${'sight-sensor'|'hearing-sensor'|'shoulder'|'arm'|'hand'|'pinky'|'middle-finger'|'index-finger'|'thumb'|'leg'|'foot'|'fluid-reprocessor'}`;
+export type PikemanPartId='pikeman-thorax'|'pikeman-neck'|'pikeman-head'|'pikeman-brain'|'pikeman-smell-sensor'|'pikeman-reactor'
+  | `pikeman-${Side}-${'sight-sensor'|'hearing-sensor'|'fluid-reprocessor'}`
+  | `pikeman-${Side}-${'front'|'rear'}-${'leg'|'foot'}`;
 type PairedPart = 'eye' | 'ear' | 'lung' | 'kidney' | 'shoulder' | 'clavicle' | 'arm' | 'humerus' | 'radius' | 'hand'
   | 'pinky' | 'ring-finger' | 'middle-finger' | 'index-finger' | 'thumb'
   | 'leg' | 'femur' | 'tibia' | 'foot' | 'little-toe' | 'fourth-toe' | 'middle-toe' | 'second-toe' | 'big-toe';
 export type BodyPartId = 'torso' | 'ribcage' | 'sternum' | 'pelvis' | 'spine' | 'stomach' | 'heart' | 'liver'
   | 'neck' | 'head' | 'skull' | 'brain' | 'nose' | 'jaw' | 'tongue' | 'waist' | 'hump' | `${Side}-${PairedPart}`
-  | 'tail' | `${Side}-${'front'|'rear'}-${'leg'|'paw'|'hoof'}` | ScytherPartId;
+  | 'tail' | `${Side}-${'front'|'rear'}-${'leg'|'paw'|'hoof'}` | ScytherPartId | LancerPartId | PikemanPartId;
 export type BodyGroup = 'torso' | 'neck' | 'upper-head' | 'full-head' | 'eyes' | 'mouth' | 'teeth'
-  | 'shoulders' | 'arms' | 'hands' | 'left-hand' | 'right-hand' | 'waist' | 'legs' | 'feet';
+  | 'shoulders' | 'arms' | 'hands' | 'left-hand' | 'right-hand' | 'waist' | 'legs' | 'feet' | 'front-left-leg' | 'front-right-leg';
 export interface BodyPart {
   readonly id:BodyPartId;
   readonly label:string;

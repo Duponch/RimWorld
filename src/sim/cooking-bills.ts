@@ -1,6 +1,6 @@
 import {isArtRecipe} from './art-rules.ts';
 import { V91_ITEM_IDS,V190_ITEM_IDS, isAnimalMeat } from './biome-items.ts';
-import { ITEM_DEFINITIONS } from './items.ts';
+import { ITEM_DEFINITIONS,V219_ITEM_IDS } from './items.ts';
 import { isFoodWorkstation } from './food-workstations.ts';
 import { groundOccupancyAllows } from './occupancy.ts';
 import { PRODUCTION_RECIPES, isFlakRecipe,isRecipeProduct, type ProductionRecipe } from './production-recipes.ts';
@@ -9,21 +9,24 @@ import { footprintCells, footprintContains } from './definitions.ts';
 import { isCookingOrder } from './order-types.ts';
 import { storageAccepts } from './storage-filters.ts';
 import type { CookingBill, BillSettings } from './cooking-types.ts';
-import type { Cell, Structure, World } from './types.ts';
+import { SCHEMA_VERSION,type Cell,type Structure,type World } from './types.ts';
 
 export const COOK_TICKS=60; // 300 reference work / 10 local ticks Ã— campfire factor 2.
 export const INGREDIENT_UNITS=10; // 0.5 nutrition for the supported raw ingredients.
-export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal'):CookingBill {
-  return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(PRODUCTION_RECIPES[recipe].inputs.map(i=>[i,true])),radius:999,destination:'stockpile'};
+export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):CookingBill {
+  const inputs=PRODUCTION_RECIPES[recipe].inputs.filter(i=>version>=197||!V219_ITEM_IDS.some(future=>future===i));
+  return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,true])),radius:999,destination:'stockpile'};
 }
-export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version=120):value is BillSettings {
+export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   const v=value as BillSettings;
   return Object.keys(v).every(k=>['id','recipe','mode','target','suspended','filters','radius','destination'].includes(k))
     &&['times','until','forever'].includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
     &&typeof v.suspended==='boolean'&&!!v.filters&&typeof v.filters==='object'&&!Array.isArray(v.filters)
-    &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i))
-    &&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS,...V190_ITEM_IDS].includes(i))&&v.filters[i]===undefined)
+    &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i)&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)))
+    // Old carcass filters stay absent after migration and therefore reject new
+    // sources. Only a new bill or explicit settings can opt into those inputs.
+    &&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(V219_ITEM_IDS.some(future=>future===i)||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS,...V190_ITEM_IDS].includes(i)))&&v.filters[i]===undefined)
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&['stockpile','drop'].includes(v.destination);
 }
 /** Reference resource counter includes stored items and current task cargo.

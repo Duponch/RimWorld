@@ -1,12 +1,13 @@
 import type { BulletArrival,BulletFlight } from './bullet-flight.ts';
 import type { WeaponQuality } from './equipment-rules.ts';
+import type { LivingTargetKey } from './combat-target.ts';
 
 /** Launch-time relation roster, until a real faction system supplies live
  * relations. IDs may outlive their actors; they are not ownership references. */
-export interface ProjectileRelations { friendlyPawnIds:number[]; friendlyFireFactor:number }
+export interface ProjectileRelations { friendlyPawnIds:number[]; friendlyFireFactor:number;friendlyTargetKeys?:LivingTargetKey[] }
 export interface WorldProjectile {
   /** Absent is the historical revolver. Independent of the current equipment. */
-  weaponItem?:'bolt-action-rifle'|'mini-turret-gun';
+  weaponItem?:'bolt-action-rifle'|'mini-turret-gun'|'lancer-gun'|'pikeman-gun';
   id:number;
   quality:WeaponQuality;
   emittedAtCore:number;

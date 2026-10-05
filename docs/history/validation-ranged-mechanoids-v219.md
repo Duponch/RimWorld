@@ -1,0 +1,37 @@
+# Validation V219 — combat mécanique à distance
+
+**Livré dans le périmètre contrôlé, schéma 197 après validation stricte196 puis migration du numéro seul.** [Contrat](../development/ranged-mechanoids-v219.md), [référence primaire](../research/ranged-mechanoids-core-v219.md).
+
+Les huit lectures Core actuelles sont certifiées dans leurs manifests privés. Aucun code commercial n’entre dans le produit. La recherche seule ne prouve ni combat jouable ni performance.
+
+## Sources, frontières et régression
+
+Huit fichiers/43cas passent en11,548s : corps, clinique, phases/stun/contact, balistique, composition, adoption, migration, présentation et frontières save/snapshot. [trace](../../tmp/validation-runs/v219-cohort-boundaries-final-2026-10-05T14-31-27.877Z-23040/output.log). Deux défauts réels ont été reproduits avant correction : archive civile acceptant une possession mécanique invalide ; snapshot196 acceptant des clés futures de facture installée/emballée. Quatre rouges valides en4,961s, puis mêmes tests verts, avec propriétés propres true/false/undefined, refus atomique et reprise. [trace](../../tmp/validation-runs/v219-archive-boundaries-before-prepared-2026-10-05T14-29-32.491Z-4600/output.log). Le premier essai de facture n’avait pas préparé Usinage ; ce rouge antérieur ne constitue pas une preuve du défaut.
+
+La régression générale joue570fichiers en463,117s :2588PASS,4FAIL,1SKIP. Les quatre rouges concernent uniquement les attentes historiques du numéro courant196 et de l’adoption ranged dans une factory actuelle comparée au payload V213 immuable. Reprise des trois fichiers :22PASS en12,394s ; bilan unique570fichiers/2592PASS/1SKIP. [trace](../../tmp/validation-runs/v219-regression-final-2026-10-05T14-45-47.944Z-22932/output.log), [trace](../../tmp/validation-runs/v219-regression-historical-reprise-2026-10-05T14-54-42.709Z-14780/output.log). Refus des propriétaires futurs, neutralité des migrations, corpus et payloads historiques sont conservés. Aucune source produit modifiée pour obtenir cette reprise.
+
+Typage final5,000s et bundle2,769s passent. [trace](../../tmp/validation-runs/v219-type-shelter-reprise-2026-10-05T14-58-26.237Z-21548/output.log), [trace](../../tmp/validation-runs/v219-build-final-2026-10-05T15-01-15.429Z-13588/output.log). Le bundle garde son avertissement de chunks>500kB ; pas de gain de chargement annoncé. Deux anciennes fixtures de mort mécanique omettaient le vrai producteur de fin d’agenda ; leur correction appelle celui-ci, sans forcer une phase ni affaiblir la clinique.
+
+## Parcours réellement joué
+
+Chromium WebGPU matériel AMD/rdna-1, fallback=false ;71,973s, aucune erreur console ou incident de simulation/graphique. [trace](../../tmp/validation-runs/v219-native-shelter-loop-2026-10-05T14-58-57.245Z-17448/output.log). [Preuve native](../../tmp/validation-artifacts/v219-native-final/proof.json), [hashes archivés](../../tmp/validation-artifacts/v219-native-final/archive-manifest.json).
+
+Mobilisation des trois humains au tick270090, adoption via la commande existante sans tirage/réinitialisation, arrivée270100 (Lancier393/Piquier394, budget324,30608180255075), vraie sortie par la porte, visée270121 et balle encore en vol270132. Repli par commande physique ; Ada était mobile et sans blessure au checkpoint de vol. Neutralisation270748, deux carcasses avec identité/type originaux, portage du Piquier270780, broyage achevé270850 :13aciers ajoutés, conservation vérifiée. Sauvegardes/rechargements exacts en visée, vol, après combat, pendant portage et après sortie. Dossiers30/20parties, vraie phase/portée, tooltip au clavier et deux modes caméra passent ; leurs captures ont été examinées, silhouettes et inspection visibles. Pas une validation de toutes les absences anatomiques en natif.
+
+Les essais précédents restent conservés. Préparation UI : Menu fermé après chargement, puis clics de corps chevauchants masqués par le premier inspecteur ; le test conserve la sélection et déplace réellement la caméra. Une première boucle atteint visée/vol/défense/portage mais l’artisan exposé meurt de pertes de sang avant broyage. [Archive exacte](../../tmp/validation-artifacts/v219-native-exposed-worker/archive-manifest.json). La nouvelle géométrie préparée protège les artisans hors des tirs et compte sa richesse réelle. Collision initiale d’une pile d’or et faux narrowing TypeScript sont refusés avant combat, puis corrigés sans déplacement des provisions, changement de graine, dommage ou guérison fabriqués.
+
+## Présentation et publication
+
+Contrôle standard119,406s : mine10810frames et coupe10729frames, p95=4,3ms dans ces deux scènes ; aucun saut, excès de trajet continu ou occupation solide. [trace](../../tmp/validation-runs/v219-presentation-final-2026-10-05T15-01-29.268Z-8912/output.log). Cette mesure ne prouve pas un gain général, le coût des deux nouvelles races dans une campagne, ni un coût GPU nul.
+
+Scène59 [préparée](../../public/test-saves/v219/ranged-mech.json), SHA256 `917d4374964a8894131c602f28ea10353976f3aaa896786ab5b944c5abc0e7b6`, avant arrivée/tir/blessure/carcasse/sortie. Abri non couvert x23..29,z16..21,21murs/porte23,20, positions24,19/26,19/25,20 ; sortie22,20 et retour24,19. Stocks10000ors/75aciers/18rations et RNG27 conservés. Les58anciennes fiches et fichiers restent exacts. Catalogue59/59 : hash décodé, codec/migration stricte, validation, roundtrip et deux continuations d’un tick identiques,36,170s. [trace](../../tmp/validation-runs/v219-catalogue-final-2026-10-05T15-05-25.597Z-8356/output.log), [résultat](../../tmp/validation-artifacts/v219-public-catalogue.json). Aucune scène préparée assimilée à une fréquence naturelle ou59parcours natifs.
+
+## Limites et temps
+
+L’acquisition locale à distance choisit des humains/animaux, jamais directement un bâtiment. Les balles peuvent intercepter des structures ; les brèches du devoir d’assaut restent au contact. Centipèdes, EMP, clusters, butin supplémentaire, contrôle Biotech et parité exhaustive sont ouverts. Une dérive préexistante du tir humain sous stun est identifiée statiquement : récupération absolue avançant pendant le stun et préparation recommencée ; son correctif appartient au prochain chantier, pas à cette preuve mécanique.
+
+29commandes V219 terminées avant contrôle documentaire totalisent1013.139s d’enveloppe, dont292.751s de natif. Registre complet conservé. Ce cumul n’attribue pas exclusivement la durée de développement au CPU/tests ou au modèle ; les tokens/s ne sont pas mesurés. Les reprises de préparation et la mise au point des gestes/positions expliquent une part du travail visible.
+
+Le suffixe Énergie V218 passe séparément sur les4293fichiers exacts du commit `3d55f6bb649f4d0d16b564e149f504ec2d2a8a10`, jusqu’à287560 avec600ticks finaux,804,765s. [Preuve V218](validation-architecture-consolidation-v218.md#suffixe-authentique-j32-sur-le-commit-3d55f6bb). Ce n’est pas une campagne V219 fraîche ; les rouges historiques restent conservés.
+
+Contrôle documentaire :745documents/7432liens, six en-têtes197 et trois sources originales exactes,7,680s. Après publication, le test du menu du catalogue passe en7,543s ; le bundle est reconstruit en2,363s pour copier les59entrées et le payloadV219 exact dans dist. [Menu](../../tmp/validation-runs/v219-catalogue-menu-final-2026-10-05T15-10-14.603Z-15900/output.log), [bundle publié](../../tmp/validation-runs/v219-build-publication-final-2026-10-05T15-10-25.981Z-11044/output.log).

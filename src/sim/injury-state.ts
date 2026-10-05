@@ -12,6 +12,7 @@ import { BLOOD_UNIT,HP_UNIT,PAIN_UNIT,FRESH_MISSING_TICKS,INJURY_RULES,injuryPar
 import type { Injury,MedicalRandom,MedicalRecord } from './injury-types.ts';
 import { INFECTION_DELAY_MAX_CORE,INFECTION_UNIT,infectionModifiers,injuryInfectionChance } from './infection-rules.ts';
 import { initializeInfectionRisk,removeInfectionsWithin } from './infection-state.ts';
+import { isMechanoidKind } from './mechanoid-definition.ts';
 
 export function createMedicalRecord(tick=0):MedicalRecord {
   if(!Number.isSafeInteger(tick)||tick<0)throw new Error('Invalid medical tick');
@@ -35,7 +36,7 @@ function injuryBleedUnits(record:MedicalRecord,injury:Injury):number {
   return injury.severity*INJURY_RULES[injury.kind].bleedUnits*injuryPartRules(medicalModel(record))[injury.part].bleed;
 }
 export function medicalPain(record:MedicalRecord):number {
-  if(record.death||record.body==='scyther')return 0;
+  if(record.death||isMechanoidKind(record.body))return 0;
   let pain=(heatModifiers(record.heatstroke).pain+coldModifiers(record.hypothermia).pain)*PAIN_UNIT;
   for(const i of record.injuries)pain+=i.severity*(i.scar?.pain!==undefined?5*i.scar.pain:INJURY_RULES[i.kind].painUnits);
   for(const m of record.missing)if(freshMissing(record,m))pain+=medicalModel(record).byId[m.part].hp*10000;
@@ -46,7 +47,7 @@ export function medicalBleed(record:MedicalRecord):number {
 }
 /** Blood units gained per reference 60-tick interval; exact integer threshold. */
 export function medicalBleedUnits(record:MedicalRecord):number {
-  if(record.death||record.body==='scyther')return 0;
+  if(record.death||isMechanoidKind(record.body))return 0;
   let rate=record.injuries.reduce((n,i)=>n+injuryBleedUnits(record,i),0);
   for(const m of record.missing)if(freshMissing(record,m))rate+=medicalModel(record).byId[m.part].hp*HP_UNIT*36*injuryPartRules(medicalModel(record))[m.part].bleed;
   return Math.round(rate/medicalModel(record).healthScale);
@@ -60,7 +61,7 @@ const chronicOnly=(record:MedicalRecord):boolean=>!!record.ageAilments?.length&&
   !record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.heatstroke&&!record.hypothermia&&
   !record.malnutrition&&!record.infections&&!record.flu&&!record.foodPoisoning&&!record.anesthetic;
 export function assessMedical(record:MedicalRecord):BodyAssessment {
-  if(record.body==='scyther')return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:0},medicalModel(record));
+  if(isMechanoidKind(record.body))return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:0},medicalModel(record));
   if(chronicOnly(record))return CHRONIC_BODIES[(record.ageAilments!.includes('bad-back')?1:0)+(record.ageAilments!.includes('frail')?2:0)];
   const heat=heatModifiers(record.heatstroke),cold=coldModifiers(record.hypothermia),blood=bloodConsciousness(record.bloodLoss),infection=infectionModifiers(record),flu=fluModifiers(record.flu),malnutrition=malnutritionModifiers(record.malnutrition),anesthetic=anestheticModifiers(record.anesthetic);
   const badBack=record.ageAilments?.includes('bad-back')??false,frail=record.ageAilments?.includes('frail')??false;
@@ -72,7 +73,7 @@ export function medicalStatus(record:MedicalRecord,body=assessMedical(record)):'
 }
 export function reconcileMedicalDeath(record:MedicalRecord):void {
   if(record.death)return;
-  if(record.body==='scyther'){
+  if(isMechanoidKind(record.body)){
     const cause=assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT*medicalModel(record).healthScale?'trauma':null;
     if(cause)record.death={tick:record.tick,cause};return;
   }
@@ -134,13 +135,13 @@ function applyResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:InjuryKin
 /** Physiological result only, not a remote-care player command. */
 export function tendInjury(record:MedicalRecord,id:number,quality:number):boolean {
   if(!Number.isSafeInteger(quality)||quality<0||quality>1300)throw new Error('Invalid tending quality');
-  if(record.death||record.body==='scyther')return false;
+  if(record.death||isMechanoidKind(record.body))return false;
   const injury=record.injuries.find(i=>i.id===id);
   if(!injury||injury.tended!==undefined||injury.scar?.pain!==undefined)return false;
   injury.tended=quality;return true;
 }
 export function tendMissingPart(record:MedicalRecord,part:BodyPartId):boolean {
   const missing=record.missing.find(m=>m.part===part);
-  if(record.death||record.body==='scyther'||!missing||!freshMissing(record,missing))return false;
+  if(record.death||isMechanoidKind(record.body)||!missing||!freshMissing(record,missing))return false;
   missing.tended=true;return true;
 }

@@ -1,4 +1,5 @@
 import { animalSpecies } from './animal-species.ts';
+import { mechanoidDefinition } from './mechanoid-definition.ts';
 import { pawnBodyLocation } from './human-corpses.ts';
 import { isPowerActive } from './power-rules.ts';
 import type { TurretLivingKey } from './mini-turret-state.ts';
@@ -14,10 +15,10 @@ export function miniTurretTargets(world:World):ReadonlyMap<TurretLivingKey,MiniT
   const targets=new Map<TurretLivingKey,MiniTurretTarget>();
   for(const pawn of world.pawns){const key=`pawn:${pawn.id}` as const,body=pawnBodyLocation(world,pawn);targets.set(key,{key,label:pawn.name,cell:body?{x:body.x,z:body.z}:null});}
   for(const animal of world.wildlife?.animals??[]){const key=`animal:${animal.id}` as const;targets.set(key,{key,label:`${animalSpecies(animal.species).label} ${animal.id}`,cell:{x:animal.x,z:animal.z}});}
-  for(const mech of world.mechanoids??[]){const key=`mech:${mech.id}` as const;targets.set(key,{key,label:`Scyther ${mech.id}`,cell:{x:mech.x,z:mech.z}});}
+  for(const mech of world.mechanoids??[]){const key=`mech:${mech.id}` as const;targets.set(key,{key,label:`${mechanoidDefinition(mech.mechKind).label} ${mech.id}`,cell:{x:mech.x,z:mech.z}});}
   return targets;
 }
-const missing=(key:TurretLivingKey):MiniTurretTarget=>({key,label:`${key.startsWith('pawn:')?'Personne':key.startsWith('mech:')?'Scyther':'Animal'} ${key.slice(key.indexOf(':')+1)} indisponible`,cell:null});
+const missing=(key:TurretLivingKey):MiniTurretTarget=>({key,label:`${key.startsWith('pawn:')?'Personne':key.startsWith('mech:')?'Machine':'Animal'} ${key.slice(key.indexOf(':')+1)} indisponible`,cell:null});
 export const turretSeconds=(core:number):string=>`${(core/60).toFixed(2).replace(/0$/,'').replace('.',',')} s`;
 export function miniTurretView(world:World,structure:Structure,targets=miniTurretTargets(world)) {
   const state=structure.kind==='mini-turret'?structure.turret:undefined;if(!state)return null;

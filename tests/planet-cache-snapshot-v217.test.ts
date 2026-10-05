@@ -8,7 +8,7 @@ import { createBulletFlight } from '../src/sim/bullet-flight.ts';
 import { validWorldProjectile } from '../src/sim/projectile-save.ts';
 import { projectileProfile } from '../src/sim/ranged-statistics.ts';
 import type { PlanetState, PlanetTile } from '../src/sim/planet-state.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
 
 // Observe the actual full guard, without replacing any verdict. The frozen
 // V216 comparison belongs to the external A/B runner, not a tmp import in CI.
@@ -242,7 +242,7 @@ test.each([false, true])('V218 deliberately refuses fractional schemas before pl
   expect(before).toEqual(frozen);
   expect(raw(fractional.world).schemaVersion).toBe(196.5);
   expect(adopt(decoder, retry)).toEqual(world); expect(fullValidation.calls).toBe(0);
-  expect(before).toEqual(frozen); expect(world.schemaVersion).toBe(196);
+  expect(before).toEqual(frozen); expect(world.schemaVersion).toBe(SCHEMA_VERSION);
 });
 
 test.each([false, true])('replacement, true absence, fresh adoption and historical own keys preserve authority (checkpoint=%s)', checkpoint => {

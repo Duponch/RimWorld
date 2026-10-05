@@ -872,11 +872,11 @@ export class ColonyRenderer {
       edge.set(x,y+height*.5,z).addScaledVector(side,Math.max(height*.5,radius)).project(this.camera);
       result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:`animal:${species}`,category:2});
     });
-    this.mechanoids.forEachPose((id,x,y,z,height,radius,dead)=>{
+    this.mechanoids.forEachPose((id,x,y,z,height,radius,dead,kind)=>{
       center.set(x,y+height*.5,z).project(this.camera);
       if(center.z<cameraClipNear(this.camera)||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)return;
       edge.set(x,y+height*.5,z).addScaledVector(side,Math.max(height*.5,radius)).project(this.camera);
-      result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:dead?'corpse:mech':'mech:scyther',category:dead?3:1});
+      result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:dead?'corpse:mech':`mech:${kind}`,category:dead?3:1});
     });
     return result;
   }

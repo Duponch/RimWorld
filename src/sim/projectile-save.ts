@@ -11,14 +11,18 @@ const samePoint=(a:{x:number;z:number},b:unknown)=>record(b)&&keys(b,['x','z'])&
 
 /** Unknown JSON is rejected before touching references or calling the resolver. */
 export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'height'|'tick'>,version=88):value is WorldProjectile {
-  if(!record(value)||!keys(value,['id','quality','emittedAtCore','advancedAtCore','flight','relations','arrival',...(version>=88?['weaponItem']:[])])||value.weaponItem!==undefined&&value.weaponItem!=='bolt-action-rifle'&&!(version>=193&&value.weaponItem==='mini-turret-gun'))return false;
+  if(!record(value)||!keys(value,['id','quality','emittedAtCore','advancedAtCore','flight','relations','arrival',...(version>=88?['weaponItem']:[])])||value.weaponItem!==undefined&&value.weaponItem!=='bolt-action-rifle'&&!(version>=193&&value.weaponItem==='mini-turret-gun')&&!(version>=197&&(value.weaponItem==='lancer-gun'||value.weaponItem==='pikeman-gun')))return false;
   const end=world.tick*CORE_TICKS_PER_LOCAL;
   if(!Number.isSafeInteger(end)||!integer(value.id,1)||!integer(value.emittedAtCore,0,end)||!integer(value.advancedAtCore,value.emittedAtCore,end))return false;
   const f=value.flight,r=value.relations;
   if(!record(f)||!keys(f,['launcherKey','intendedKey','usedKey','flags','preventFriendlyFire','equipmentKey','origin','destination','speedPerCoreTick','remainingCoreTicks','completed'])||!record(f.origin)||!keys(f.origin,['x','z'])||!record(f.destination)||!keys(f.destination,['x','z']))return false;
   const mini=value.weaponItem==='mini-turret-gun';
-  if(typeof f.launcherKey!=='string'||!(mini?/^structure:[1-9]\d*$/:/^pawn:[1-9]\d*$/).test(f.launcherKey)||!identity(f.launcherKey,version)||!identity(f.intendedKey,version)||!identity(f.usedKey,version)||mini&&(f.equipmentKey!==null||value.quality!=='normal')||f.equipmentKey!==null&&(typeof f.equipmentKey!=='string'||!/^pile:[1-9]\d*$/.test(f.equipmentKey)||!identity(f.equipmentKey,version)))return false;
-  if(!record(r)||!keys(r,['friendlyPawnIds','friendlyFireFactor'])||!Array.isArray(r.friendlyPawnIds)||r.friendlyPawnIds.length>world.width*world.height||r.friendlyPawnIds.some((id,i,a)=>!integer(id,1)||i>0&&Number(a[i-1])>=id)||typeof r.friendlyFireFactor!=='number'||!Number.isFinite(r.friendlyFireFactor)||r.friendlyFireFactor<0||r.friendlyFireFactor>1)return false;
+  const mech=value.weaponItem==='lancer-gun'||value.weaponItem==='pikeman-gun';
+  if(typeof f.launcherKey!=='string'||!(mini?/^structure:[1-9]\d*$/:mech?/^mech:[1-9]\d*$/:/^pawn:[1-9]\d*$/).test(f.launcherKey)||!identity(f.launcherKey,version)||!identity(f.intendedKey,version)||!identity(f.usedKey,version)||(mini||mech)&&(f.equipmentKey!==null||value.quality!=='normal')||f.equipmentKey!==null&&(typeof f.equipmentKey!=='string'||!/^pile:[1-9]\d*$/.test(f.equipmentKey)||!identity(f.equipmentKey,version)))return false;
+  if(!record(r)||!keys(r,['friendlyPawnIds','friendlyFireFactor',...(version>=197?['friendlyTargetKeys']:[])])||!Array.isArray(r.friendlyPawnIds)||r.friendlyPawnIds.length>world.width*world.height||r.friendlyPawnIds.some((id,i,a)=>!integer(id,1)||i>0&&Number(a[i-1])>=id)||typeof r.friendlyFireFactor!=='number'||!Number.isFinite(r.friendlyFireFactor)||r.friendlyFireFactor<0||r.friendlyFireFactor>1)return false;
+  if(r.friendlyTargetKeys!==undefined&&(!Array.isArray(r.friendlyTargetKeys)||r.friendlyTargetKeys.length>world.width*world.height
+    ||Object.keys(r.friendlyTargetKeys).length!==r.friendlyTargetKeys.length||r.friendlyTargetKeys.some((key,i,a)=>typeof key!=='string'
+      ||!/^(pawn|animal|mech):[1-9]\d*$/.test(key)||!identity(key,version)||i>0&&String(a[i-1])>=key)))return false;
   try {
     const p=value as unknown as WorldProjectile,profile=projectileProfile(p.weaponItem??'revolver',p.quality)!;validateBulletFlight(p.flight);
     if(f.speedPerCoreTick!==profile.projectileTilesPerCoreTick||p.flight.origin.x<0||p.flight.origin.z<0||p.flight.origin.x>=world.width||p.flight.origin.z>=world.height)return false;
@@ -49,6 +53,13 @@ export function validateProjectiles(world:World,version:number,ids:Set<number>):
       const occupied=ids.has(sourceId)||[...world.pawns,...world.jobs,...world.resources,...world.piles,...world.packed.map(p=>p.building),...(world.wildlife?.animals??[]),...(world.mechanoids??[]),...(world.projectiles??[]),...(world.bombWaves??[]),...(world.fires?.items??[])].some(t=>t.id===sourceId);
       if(sourceId>=p.id||sourceId>=world.nextId||(source?source.kind!=='mini-turret'||!source.turret||p.flight.origin.x!==source.x+.5||p.flight.origin.z!==source.z+.5:occupied))errors.push('Invalid intrinsic projectile launcher.');
     }
+    if(p.weaponItem==='lancer-gun'||p.weaponItem==='pikeman-gun'){
+      const sourceId=Number(p.flight.launcherKey.slice(5)),kind=p.weaponItem==='lancer-gun'?'lancer':'pikeman';
+      const source=world.mechanoids?.find(m=>m.id===sourceId),corpse=world.piles.find(i=>i.id===sourceId&&i.mechCorpse);
+      const occupied=ids.has(sourceId)||[world.pawns,world.jobs,world.resources,world.structures,world.piles,world.wildlife?.animals??[],world.projectiles??[],world.bombWaves??[],world.fires?.items??[]].some(owners=>owners.some(o=>o.id===sourceId))||world.packed.some(p=>p.building.id===sourceId);
+      if(sourceId>=p.id||sourceId>=world.nextId||(source?source.mechKind!==kind:corpse?corpse.mechCorpse!.mechKind!==kind:occupied))errors.push('Invalid intrinsic mechanical projectile launcher.');
+    }
+    if(p.relations.friendlyTargetKeys?.some(key=>Number(key.slice(key.indexOf(':')+1))>=p.id))errors.push('Invalid prospective projectile relation identity.');
     ids.add(p.id);previous=p.id;
   }
   return errors;

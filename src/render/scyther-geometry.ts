@@ -30,9 +30,14 @@ export const SCYTHER_MAX_VISUAL_BOXES=20;
 /** Anatomical indices are provided by the immutable clinical model. Two exact
  * 16-bit portions avoid storing an unsigned 32-bit mask in a float. */
 export function scytherGeometry(capacity:number,partIndex:(id:string)=>number):THREE.InstancedBufferGeometry {
-  if(SCYTHER_VISUAL_PARTS.length>SCYTHER_MAX_VISUAL_BOXES)throw Error('Scyther geometry exceeds its resident shape budget.');
+  return mechanicalGeometry(SCYTHER_VISUAL_PARTS,capacity,partIndex);
+}
+
+/** Shared format, authored silhouette and clinical indices supplied per race. */
+export function mechanicalGeometry(parts:readonly ScytherVisualPart[],capacity:number,partIndex:(id:string)=>number):THREE.InstancedBufferGeometry {
+  if(parts.length>SCYTHER_MAX_VISUAL_BOXES)throw Error('Mechanical geometry exceeds its resident shape budget.');
   const vertices:number[]=[];
-  for(const part of SCYTHER_VISUAL_PARTS){
+  for(const part of parts){
     const index=partIndex(part.part);if(!Number.isInteger(index)||index<0||index>=32)throw Error(`Missing mechanical visual part ${part.part}.`);
     const box=new THREE.BoxGeometry(...part.size).toNonIndexed();if(part.roll)box.rotateX(part.roll);
     const positions=box.getAttribute('position'),normals=box.getAttribute('normal'),color=new THREE.Color(part.color);

@@ -927,7 +927,8 @@ function renderState() {
       const pawn=world.pawns.find(p=>p.id===Number(button.dataset.groupPawn));
       const animal=world.wildlife?.animals.find(a=>a.id===Number(button.dataset.groupPawn));
       const mech=world.mechanoids?.find(m=>m.id===Number(button.dataset.groupPawn));
-      button.textContent=pawn?`${pawn.name} · ${actionLabel(pawn,carriedPatients)}`:animal?`${animalSpecies(animal.species).label} ${animal.id}`:mech?`Scyther ${mech.id} · ${mechanoidView(world,mech).action}`:'Individu absent';
+      const mechView=mech?mechanoidView(world,mech):undefined;
+      button.textContent=pawn?`${pawn.name} · ${actionLabel(pawn,carriedPatients)}`:animal?`${animalSpecies(animal.species).label} ${animal.id}`:mechView?`${mechView.label} · ${mechView.action}`:'Individu absent';
     }
   } else if (selectedPawn !== undefined) {
     const pawn = world.pawns.find(item => item.id === selectedPawn);
@@ -1077,7 +1078,7 @@ function renderState() {
   }
   const enemy=world.pawns.find(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p));
   const mechanicalThreats=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed')??[];
-  if(mechanicalThreats.length)alerts.push(`${mechanicalThreats.length} Scyther(s) hostiles${world.raids?.mechActive?.phase==='staging'?' · regroupement avant assaut':world.raids?.mechActive?.phase==='assault'?' · assaut mécanique':''}`);
+  if(mechanicalThreats.length)alerts.push(`${mechanicalThreats.length} machine(s) hostiles${world.raids?.mechActive?.phase==='staging'?' · regroupement avant assaut':world.raids?.mechActive?.phase==='assault'?' · assaut mécanique':''}`);
   for(const structure of world.structures)if(structure.turret?.wick){
     const view=miniTurretView(world,structure)!;alerts.push(`Mini-tourelle (${structure.x}, ${structure.z}) · mèche engagée · danger 3,9 · ${turretSeconds(view.wick!.remainingCore)}`);
   }

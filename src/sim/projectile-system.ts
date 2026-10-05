@@ -25,7 +25,11 @@ export function registerWorldProjectile(world:World,flight:BulletFlight,quality:
   if(world.schemaVersion<55||!Number.isSafeInteger(world.nextId+1)||!Number.isSafeInteger(rng)||rng<1||rng>0xffffffff||world.projectiles&&world.projectiles.length>=world.width*world.height)throw new RangeError('Cannot register projectile');
   if(!Number.isSafeInteger(at)||at<Math.max(0,(world.tick-1)*CORE_TICKS_PER_LOCAL)||at>world.tick*CORE_TICKS_PER_LOCAL)throw new RangeError('Invalid emission time');
   if(weaponItem==='mini-turret-gun'&&!world.structures.some(s=>s.kind==='mini-turret'&&s.turret&&flight.launcherKey===`structure:${s.id}`&&s.id<world.nextId))throw new RangeError('Invalid intrinsic emission owner');
-  const projectile:WorldProjectile={id:world.nextId,quality,...weaponItem!=='revolver'?{weaponItem}:{},emittedAtCore:at,advancedAtCore:at,flight:{...flight,origin:{...flight.origin},destination:{...flight.destination}},relations:{friendlyPawnIds:[...new Set(relations.friendlyPawnIds)].sort((a,b)=>a-b),friendlyFireFactor:relations.friendlyFireFactor},arrival:null};
+  if((weaponItem==='lancer-gun'||weaponItem==='pikeman-gun')&&(world.schemaVersion<197||quality!=='normal'||flight.equipmentKey!==null
+    ||!world.mechanoids?.some(m=>m.mechKind===(weaponItem==='lancer-gun'?'lancer':'pikeman')&&m.state!=='dead'&&!m.health?.death
+      &&flight.launcherKey===`mech:${m.id}`&&m.id<world.nextId)))throw new RangeError('Invalid mechanical emission owner');
+  const projectile:WorldProjectile={id:world.nextId,quality,...weaponItem!=='revolver'?{weaponItem}:{},emittedAtCore:at,advancedAtCore:at,flight:{...flight,origin:{...flight.origin},destination:{...flight.destination}},relations:{friendlyPawnIds:[...new Set(relations.friendlyPawnIds)].sort((a,b)=>a-b),friendlyFireFactor:relations.friendlyFireFactor,
+    ...relations.friendlyTargetKeys!==undefined?{friendlyTargetKeys:[...new Set(relations.friendlyTargetKeys)].sort()}:{}},arrival:null};
   if(projectile.flight.completed||!validWorldProjectile(projectile,{...world,tick:at/CORE_TICKS_PER_LOCAL},world.schemaVersion))throw new RangeError('Invalid projectile emission');
   world.nextId++;world.rng=rng;(world.projectiles??=[]).push(projectile);return projectile;
 }
@@ -50,7 +54,7 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
   let fixedStructures=world.structures,fixedResources=world.resources;
   const neutralScene=()=>{batch??=captureProjectileBatch(world);targets??=batch.refresh(world);return neutral??=targets(new Set(),1);};
   const scene=(p:WorldProjectile)=>{
-    let s=scenes.get(p);if(!s){batch??=captureProjectileBatch(world);targets??=batch.refresh(world);s=targets(new Set(p.relations.friendlyPawnIds),p.relations.friendlyFireFactor);scenes.set(p,s);}return s;
+    let s=scenes.get(p);if(!s){batch??=captureProjectileBatch(world);targets??=batch.refresh(world);s=targets(new Set(p.relations.friendlyPawnIds),p.relations.friendlyFireFactor,new Set(p.relations.friendlyTargetKeys??[]));scenes.set(p,s);}return s;
   };
   for(let core=start+1;core<=end;core++) {
     if(beforeCore?.(core)){if(fixedStructures!==world.structures||fixedResources!==world.resources)batch=undefined;fixedStructures=world.structures;fixedResources=world.resources;refresh();}

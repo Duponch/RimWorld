@@ -57,13 +57,13 @@ test('mechanical capacities use actual chains, masked neck breathing and indepen
 
 test('mass follows missing subtrees while injury summary follows surviving injuries',()=>{
   const r=createMechaMedicalRecord(20),draw=()=>{throw new Error('Solid damage has no scar or infection draw');};
-  expect(mechaMass({})).toBe(60);addResolvedInjury(r,'scyther-thorax','gunshot',5000,draw);
-  expect(mechaMass({health:r})).toBe(60);expect(mechaHealthScore({health:r})).toBeCloseTo(1-5/99,12);
+  expect(mechaMass({mechKind:'scyther'})).toBe(60);addResolvedInjury(r,'scyther-thorax','gunshot',5000,draw);
+  expect(mechaMass({mechKind:'scyther',health:r})).toBe(60);expect(mechaHealthScore({mechKind:'scyther',health:r})).toBeCloseTo(1-5/99,12);
   const blade=createMechaMedicalRecord(20);addResolvedInjury(blade,'scyther-left-blade','cut',27000,draw);
-  expect(mechaMass({health:blade})).toBeCloseTo(57.399,12);expect(mechaAssessment({health:blade}).capacities.manipulation).toBe(1);
+  expect(mechaMass({mechKind:'scyther',health:blade})).toBeCloseTo(57.399,12);expect(mechaAssessment({mechKind:'scyther',health:blade}).capacities.manipulation).toBe(1);
   const shoulder=createMechaMedicalRecord(20);addResolvedInjury(shoulder,'scyther-left-shoulder','crack',33000,draw);
   expect(partMissing(shoulder,'scyther-left-thumb')).toBe(true);expect(partMissing(shoulder,'scyther-right-thumb')).toBe(false);
-  expect(mechaRemainingCoverage({health:shoulder})).toBeCloseTo(.83,12);expect(mechaMass({health:shoulder})).toBeCloseTo(49.8,12);
+  expect(mechaRemainingCoverage({mechKind:'scyther',health:shoulder})).toBeCloseTo(.83,12);expect(mechaMass({mechKind:'scyther',health:shoulder})).toBeCloseTo(49.8,12);
   const corpse=structuredClone(shoulder);addResolvedInjury(corpse,'scyther-reactor','crack',27000,draw);
-  expect(corpse.death?.cause).toBe('vital-failure');expect(mechaHealthScore({health:corpse})).toBe(0);
+  expect(corpse.death?.cause).toBe('vital-failure');expect(mechaHealthScore({mechKind:'scyther',health:corpse})).toBe(0);
 });

@@ -4,6 +4,7 @@ import type { Cell, Pawn, World } from '../sim/types';
 import { isColonist } from '../sim/affiliation';
 import { combatTarget, isAnimalTarget,isMechanoidTarget,hostileTarget } from '../sim/combat-target';
 import { animalSpecies } from '../sim/animal-species';
+import { mechanoidDefinition } from '../sim/mechanoid-definition';
 import { shotPlan, shootingQueries } from '../sim/shooting';
 import { meleeTools } from '../sim/melee-statistics';
 import { meleePlaces, meleeRoute } from '../sim/melee-space';
@@ -34,7 +35,7 @@ export function tacticalPawns(world: World, ids: ReadonlySet<number>): Pawn[] {
 
 export function tacticalAttackPolicy(world: World, ids: ReadonlySet<number>, targetId: number, queue: boolean): TacticalAttackPolicy {
   const pawns = tacticalPawns(world, ids), target = combatTarget(world, targetId);
-  const base = { selected: ids.size, drafted: pawns.length, target: target ? isAnimalTarget(target) ? `${animalSpecies(target.species).label} ${target.id}` : isMechanoidTarget(target)?`Scyther ${target.id}`:target.name : `cible ${targetId}` };
+  const base = { selected: ids.size, drafted: pawns.length, target: target ? isAnimalTarget(target) ? `${animalSpecies(target.species).label} ${target.id}` : isMechanoidTarget(target)?`${mechanoidDefinition(target.mechKind).label} ${target.id}`:target.name : `cible ${targetId}` };
   if(target&&isAnimalTarget(target)&&target.domestic)return {...base,reason:'Cet animal appartient à la colonie.',options:[]};
   if (!pawns.length) return { ...base, reason: 'Mobilisez un colon libre et capable de combattre.', options: [] };
   if (!target || target.state === 'dead') return { ...base, reason: 'Cible vivante indisponible.', options: [] };

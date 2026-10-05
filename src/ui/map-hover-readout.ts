@@ -11,6 +11,7 @@ import { floraDefinition } from '../sim/biome-flora';
 import { rockInspection } from './geology-inspection';
 import { PLANT_DEFINITIONS } from '../sim/plants';
 import type { CropKind } from '../sim/crops';
+import { mechanoidDefinition } from '../sim/mechanoid-definition';
 
 const lightCache=new LightEnvironmentCache();
 
@@ -54,6 +55,6 @@ export function mapHoverLines(world:World,cell:Cell,lightLevel=lightCache.read(w
       case 'stockpile':return ['Réserve'];
     }
   });
-  for(const mech of world.mechanoids??[])if(mech.x===cell.x&&mech.z===cell.z)objects.push(`Scyther ${mech.id} · ${mech.state==='dead'?'neutralisé':mech.state==='downed'?'incapacité mécanique':'hostile'}`);
+  for(const mech of world.mechanoids??[])if(mech.x===cell.x&&mech.z===cell.z)objects.push(`${mechanoidDefinition(mech.mechKind).label} ${mech.id} · ${mech.state==='dead'?'neutralisé':mech.state==='downed'?'incapacité mécanique':'hostile'}`);
   return [ground,`Lumière : ${light} %`,...objects,...(world.roofing?.constructed.includes(index)?['Toit']:[])];
 }

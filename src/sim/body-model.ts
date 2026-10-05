@@ -1,7 +1,8 @@
 import { HUMAN_BODY,type BodyPart,type BodyPartId } from './body-definition.ts';
 import { ANIMAL_SPECIES,isAnimalSpecies,type AnimalSpeciesId } from './animal-species.ts';
 import { compileBodyModel as model,type BodyModel } from './body-model-compiler.ts';
-import { SCYTHER_MODEL } from './mechanoid-anatomy.ts';
+import { mechanoidBodyModel } from './mechanoid-anatomy.ts';
+import { isMechanoidKind,type MechanoidKind } from './mechanoid-definition.ts';
 export { compileBodyModel } from './body-model-compiler.ts';
 export type { BodyModel } from './body-model-compiler.ts';
 
@@ -44,5 +45,5 @@ export const HARE_MODEL=ANIMAL_BODY_MODELS.hare;
 export const animalBodyModel=(species:AnimalSpeciesId):BodyModel=>ANIMAL_BODY_MODELS[species];
 /** Raw Core definition HP before the species multiplier and ceiling. */
 export const animalPartBaseHp=(species:AnimalSpeciesId,part:BodyPartId):number=>animalBaseHp[species]?.[part]??0;
-export const medicalModel=(record:{body?:AnimalSpeciesId|'scyther'}):BodyModel=>record.body==='scyther'?SCYTHER_MODEL:isAnimalSpecies(record.body)?animalBodyModel(record.body):HUMAN_MODEL;
+export const medicalModel=(record:{body?:AnimalSpeciesId|MechanoidKind}):BodyModel=>isMechanoidKind(record.body)?mechanoidBodyModel(record.body):isAnimalSpecies(record.body)?animalBodyModel(record.body):HUMAN_MODEL;
 export const modelHasPart=(model:BodyModel,id:unknown):id is BodyPartId=>typeof id==='string'&&Object.hasOwn(model.byId,id);
