@@ -1713,6 +1713,38 @@
       "prepared": true,
       "provenance": "Nouvelle colonie originale V223 préparée avec prepareAdvancedColonyScenario(), schéma 198, 250×250, tick initial 0, quatorze colons et un prisonnier initiaux. Village, bâtiments, sols, toits, réserves finies, technologies connues, équipements, politiques, cultures, animaux domestiques et état clinique initial sont une dotation déclarée, pas les gains d'une campagne naturelle. Les adultes et biographies proviennent des producteurs actuels de création ; les relations préparées ne sont pas une romance reconstruite. Après cette préparation, 6000 appels ordinaires à stepWorld, soit 1.000 jour(s) local(aux) réellement écoulé(s), sans commande, saut d'horloge, injection de stock, réparation d'état, retrait d'incident ou attribution rétroactive. Une intégration éventuelle du prisonnier doit être produite par les règles ordinaires, jamais par le générateur. Checkpoint final au tick 6000, validé et repris exactement ; consommations, mouvements, travaux, besoins et événements du suffixe restent réels. Aucun groupe ni voyage n'est fabriqué pour ce catalogue. L'ancienne scène V221 et tous les payloads historiques restent inchangés. Cette continuation bornée ne certifie ni une partie entièrement développée depuis zéro, une campagne longue, la performance générale ou une parité Core exhaustive.",
       "sha256": "13d93da228c2ad46794592368d19f1e3e41709575807072ba4d99bd12ed7366f"
+    },
+    {
+      "id": "aulnes-seating-v224",
+      "release": "v224",
+      "label": "Les Aulnes · sièges corrigés 250×250",
+      "filename": "les-aulnes-sieges.json",
+      "description": "La grande colonie V223 poursuivie avec huit déplacements ordinaires pour orienter les fauteuils vers la télévision et les chaises extérieures vers leur table.",
+      "pawns": 15,
+      "colonists": 14,
+      "width": 250,
+      "height": 250,
+      "tick": 6934,
+      "focus": [
+        "quotidien de colonie",
+        "biographies et relations",
+        "nourriture et chambre froide",
+        "cultures et élevage",
+        "ateliers et recherche",
+        "soins et prison",
+        "énergie et défense",
+        "globe et sauvegarde"
+      ],
+      "steps": [
+        "Charger en pause, puis reprendre à vitesse 1 pour découvrir la colonie. Les horaires, priorités, besoins et factures sont déjà réglés ; les stocks sont finis et les colons poursuivent leurs activités ordinaires.",
+        "Visiter les chambres et la salle commune. Dans les dossiers Bio, Social et Besoins, consulter les vrais passés, liens, aptitudes et conditions de vie des habitants.",
+        "Suivre les aliments entre champs, cuisine, réserve froide et table ; consulter aussi les factures des ateliers et le projet de recherche. Les bâtiments et stocks initiaux sont préparés, tandis que les travaux de la journée écoulée proviennent du moteur.",
+        "Inspecter le troupeau, les soins et la prison. Dorian reste détenu en réduction de résistance ; choisir ensuite le recrutement si souhaité. Ouvrir Monde et préparer un voyage avec les provisions disponibles.",
+        "Les tourelles sont autorisées à tirer et à se réarmer. Observer leur alimentation et leur champ de tir ; sauvegarder, recharger et reprendre les activités ou développer la colonie."
+      ],
+      "prepared": true,
+      "provenance": "Nouvelle colonie originale V223 préparée avec prepareAdvancedColonyScenario(), schéma 198, 250×250, tick initial 0, quatorze colons et un prisonnier initiaux. Village, bâtiments, sols, toits, réserves finies, technologies connues, équipements, politiques, cultures, animaux domestiques et état clinique initial sont une dotation déclarée, pas les gains d'une campagne naturelle. Les adultes et biographies proviennent des producteurs actuels de création ; les relations préparées ne sont pas une romance reconstruite. Après cette préparation, 6000 appels ordinaires à stepWorld, soit 1.000 jour(s) local(aux) réellement écoulé(s), sans commande, saut d'horloge, injection de stock, réparation d'état, retrait d'incident ou attribution rétroactive. Une intégration éventuelle du prisonnier doit être produite par les règles ordinaires, jamais par le générateur. Checkpoint final au tick 6000, validé et repris exactement ; consommations, mouvements, travaux, besoins et événements du suffixe restent réels. Aucun groupe ni voyage n'est fabriqué pour ce catalogue. L'ancienne scène V221 et tous les payloads historiques restent inchangés. Cette continuation bornée ne certifie ni une partie entièrement développée depuis zéro, une campagne longue, la performance générale ou une parité Core exhaustive. Dérivé V224 de son checkpoint exact au tick 6000 : six commandes install sur les fauteuils 124–126 × 116–117, aux mêmes cellules, orientation 2 ; deux commandes sur les chaises extérieures 124/127 × 157, orientations 1/3. 934 ticks ordinaires réellement joués jusqu’au dernier remontage, sans modification directe de meuble, stock, personne, besoin ou horloge. Identités, matériaux et qualités des huit originaux conservés ; reprise du tick suivant exacte. V223 et les 61 anciennes scènes restent inchangées.",
+      "sha256": "be2d275cb61a7b89f644267bb47d247dfc1f70e66190596f7083d60b2cdfe33d"
     }
   ]
 }

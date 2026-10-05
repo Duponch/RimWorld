@@ -19,7 +19,7 @@ let lastPublishedTick=-1;
 let stepMs = 0;
 let fault: SimulationFault | undefined;
 const send = (message: Response) => scope.postMessage(message);
-const snapshots = new SnapshotEncoder();
+const snapshots = new SnapshotEncoder({structureDelta:true,minimumStructures:1000});
 const motion = new MotionRecorder();
 const presentationChanges=new PresentationChanges();
 const audioCues=new AudioCueRecorder();

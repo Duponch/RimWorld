@@ -103,6 +103,7 @@ export class ColonyRenderer {
   private readonly presentation = new PresentationQueue();
   private received:{world:World;speed:number;tracks?:PawnTrack[];immutableSnapshot:boolean}|undefined;
   private immutableSnapshot=false;
+  private readonly immutableWorlds=new WeakSet<World>();
   private hasTracks = false;
   private readonly hygiene = new HygieneLayer(this.environmentLighting.configure);
   private selectedFloor:BuildableFloorKind|undefined;
@@ -420,6 +421,7 @@ export class ColonyRenderer {
     const reset=resetPresentation||!previous||world.tick<previous.tick||world.seed!==previous.seed||world.width!==previous.width||world.height!==previous.height;
     this.received={world,speed,tracks,immutableSnapshot};
     this.immutableSnapshot=immutableSnapshot;
+    if(immutableSnapshot)this.immutableWorlds.add(world);else this.immutableWorlds.delete(world);
     this.projectiles.adopt(world,reset);
     if(document.hidden)return;
     if(tracks){this.timeline.adopt(world.tick,speed,tracks,performance.now(),reset||!this.hasTracks);this.hasTracks=true;}
@@ -897,7 +899,7 @@ export class ColonyRenderer {
   }
 
   private updateResources(world: World, newMap: boolean): void {
-    const view=this.naturalPresentation.read(world,newMap,this.immutableSnapshot);if(!view)return;
+    const view=this.naturalPresentation.read(world,newMap,this.immutableWorlds.has(world));if(!view)return;
     this.plants.update(view,newMap,this.naturalPresentation.changes);
     const visible={...view,resources:view.resources.filter(resource=>!isClusterPlantSpecies(resource.species))};
     this.resources.update(visible, newMap,this.naturalPresentation.changes); this.overview.update(visible,newMap,this.naturalPresentation.changes);

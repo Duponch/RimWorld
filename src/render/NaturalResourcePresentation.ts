@@ -11,6 +11,7 @@ export class NaturalResourcePresentation {
   private shapes:Shape[]=[];
   private snapshotResources:readonly Resource[]|undefined;
   private snapshotTimeInvariant=false;
+  private timedSlots:Array<readonly [sourceIndex:number,shapeIndex:number]>=[];
   readonly changes=new Map<number,NaturalPresentationChange>();
   /** SnapshotDecoder replaces edited resources instead of mutating them. Only
    * callers with that guarantee may enable the reference shortcut. */
@@ -19,13 +20,22 @@ export class NaturalResourcePresentation {
     const previous=immutableSnapshot&&!reset?this.snapshotResources:undefined;
     if(previous===world.resources&&this.snapshotTimeInvariant)return;
     this.snapshotResources=immutableSnapshot?world.resources:undefined;
-    let index=0,changed=reset,timeInvariant=true;
-    for(let sourceIndex=0;sourceIndex<world.resources.length;sourceIndex++){
+    // Only the same immutable array can retain this partition. A new array
+    // or mutable caller still captures every slot and its original order.
+    const timed=previous===world.resources?this.timedSlots:undefined;
+    if(!timed)this.timedSlots=[];
+    let index=timed?this.shapes.length:0,changed=reset,timeInvariant=true;
+    for(let entry=0;entry<(timed?.length??world.resources.length);entry++){
+      const sourceIndex=timed?timed[entry]![0]:entry;
       const r=world.resources[sourceIndex]!;
-      if(isResidentCrop(r))continue;
+      if(!timed&&isResidentCrop(r))continue;
+      const shapeIndex=timed?timed[entry]![1]:index++;
       const stable=(r.growth??1)===1&&r.plantLife?.leaflessAt===undefined;
-      if(!stable)timeInvariant=false;
-      const old=this.shapes[index++];
+      if(!stable){
+        timeInvariant=false;
+        if(!timed&&immutableSnapshot)this.timedSlots.push([sourceIndex,shapeIndex]);
+      }
+      const old=this.shapes[shapeIndex];
       // Immature growth and temporary leaf loss can change with world.tick
       // even while the decoder keeps the same Resource object.
       if(previous?.[sourceIndex]===r&&old?.id===r.id&&stable)continue;

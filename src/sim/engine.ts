@@ -90,7 +90,7 @@ import { considerFlee,processFlee,processSentry,threatQueries } from './threats.
 import { retryInterruptedCargo } from './interrupted-cargo.ts';
 import { applyDraftCommand,processDraft } from './drafting.ts';
 import { advanceWorldCombat } from './combat-system.ts';
-import { captureWorldShotGrid } from './combat-world.ts';
+import { captureFurnitureSight } from './furniture-sight.ts';
 import { applyShootingCommand } from './shooting.ts';
 import { expireStaggers } from './stagger.ts';
 import { collapseFromExhaustion,processDraftSleep } from './needs.ts';
@@ -671,13 +671,13 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     let blocked: Uint8Array | undefined;
     let roofs: RoofContext | undefined;
     let environment:WorkEnvironment|undefined;
-    let furnitureSight:ReturnType<typeof captureWorldShotGrid>|undefined;
+    let furnitureSight:ReturnType<typeof captureFurnitureSight>|undefined;
     const getEnvironmentCache=()=>{
       return environmentCache(world);
     };
     if(structuresBeforeCombat!==world.structures)light=undefined;
     const getEnvironment=()=>environment??=getEnvironmentCache().read(world,getLight());
-    const getFurnitureSight=()=>furnitureSight??=captureWorldShotGrid(world);
+    const getFurnitureSight=()=>furnitureSight??=captureFurnitureSight(world);
     // Sparse live references for this decision phase. Each consumer still
     // rechecks hostility/state; ordinary fauna is not scanned per colonist.
     const bombSources=captureBombDangerSources(world);

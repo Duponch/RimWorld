@@ -11,7 +11,7 @@ export type Request =
   | { id: number; type: 'load'; data: string };
 
 export type Response =
-  | SnapshotMessage
+  | SnapshotMessage<true>
   | { type: 'reply'; id: number; ok: boolean; data?: string; reason?: string; outcome?: 'refused' | 'unknown'; checkpoint?: { epoch: number; revision: number } }
   | SimulationFault;
 

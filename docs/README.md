@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V224 :** [orientations et consolidation de la charge](development/aulnes-performance-v224.md), [mesures/limites](history/validation-aulnes-performance-v224.md), [référence corrigée](gameplay/aulnes-seating-v224.md). Schéma 198 inchangé ; le débit progresse, les FPS à6× restent ouverts. Les repères suivants sont historiques.
+
 **V223 — Les Aulnes sur 250×250, schéma 198.** Une colonie plus avancée rassemble 14 habitants, un détenu, industrie, agriculture/serre, élevage, hôpital, loisirs et quatre tourelles. Dotation déclarée suivie d'une journée ordinaire ; [accès joueur](gameplay/advanced-colony-v223.md), [contrat](development/advanced-colony-v223.md), [preuves et limites](history/validation-advanced-colony-v223.md). La 61e scène conserve les 60 références précédentes. Le dépassement du besoin de confort détecté pendant la maturation est corrigé.
 
 **V222 — outils de mesure, schéma198 inchangé.** [Contrat](development/wildlife-reconciliation-v222.md), [preuves](history/validation-wildlife-reconciliation-v222.md). Essai d'indexation retiré faute de gain stable ; moteur et60sauvegardes publics conservés. La correction utilisateur demande maintenant une colonie plus avancée sur la carte standard250² ; Les Aulnes64² demeure une preuve historique de portée limitée.

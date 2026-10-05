@@ -1,9 +1,9 @@
-import { plantLeafless } from '../sim/plant-life';
+import { plantLeafless } from '../../src/sim/plant-life';
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { plantGrowth } from '../sim/plants';
-import { RESIDENT_CROP_KINDS, type ResidentCropKind } from './flora-presentation';
-import type { Resource, World } from '../sim/types';
+import { plantGrowth } from '../../src/sim/plants';
+import { RESIDENT_CROP_KINDS, type ResidentCropKind } from '../../src/render/flora-presentation';
+import type { World } from '../../src/sim/types';
 
 /** Dedicated resident instancing: sowing never rebuilds forest/rock geometry. */
 function cropGeometry(kind:ResidentCropKind):THREE.BufferGeometry {
@@ -60,10 +60,10 @@ class CropBatch {
     const mesh=this.mesh,count=mesh.count,version=this.version;mesh.count=Math.max(1,count);
     return () => { if(this.mesh===mesh&&this.version===version)mesh.count=count; };
   }
-  update(world: World, reset: boolean, crops: readonly Resource[]): void {
+  update(world: World, reset: boolean): void {
     this.version++;
     if (reset) { this.slots.clear(); this.free.length = 0; this.used = 0; this.mesh.count = 0; }
-    const alive = new Set(crops.map(r => r.id));
+    const crops = world.resources.filter(r => r.kind === this.kind), alive = new Set(crops.map(r => r.id));
     for (const [id, slot] of this.slots) if (!alive.has(id)) {
       this.transform.scale.setScalar(0); this.transform.updateMatrix(); this.mesh.setMatrixAt(slot, this.transform.matrix);
       this.slots.delete(id); this.free.push(slot);
@@ -107,13 +107,6 @@ export class CropLayer {
   constructor(private readonly plainMaterial:THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial){this.batches=RESIDENT_CROP_KINDS.map(kind=>new CropBatch(this.group,kind,texturedMaterial));}
   setTexturesEnabled(enabled:boolean):void {for(const batch of this.batches)batch.setMaterial(enabled?this.texturedMaterial:this.plainMaterial);}
   prepareForCompile():()=>void {const restore=this.batches.map(b=>b.prepareForCompile());return()=>restore.forEach(f=>f());}
-  update(world:World,reset:boolean):void {
-    const crops:Record<ResidentCropKind,Resource[]>={rice:[],potato:[],corn:[],cotton:[]};
-    // One ordered partition replaces four complete scans of the forest.
-    for(const resource of world.resources){
-      if(resource.kind==='rice'||resource.kind==='potato'||resource.kind==='corn'||resource.kind==='cotton')crops[resource.kind].push(resource);
-    }
-    for(let index=0;index<this.batches.length;index++)this.batches[index]!.update(world,reset,crops[RESIDENT_CROP_KINDS[index]!]);
-  }
+  update(world:World,reset:boolean):void {for(const batch of this.batches)batch.update(world,reset);}
   dispose():void {for(const batch of this.batches)batch.dispose();}
 }

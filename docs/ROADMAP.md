@@ -1,5 +1,9 @@
 # Plan de développement
 
+Schéma courant 198 ; les versions mentionnées plus bas sont des repères historiques.
+
+**Priorité V224 :** les [orientations et premiers coûts de la référence](development/aulnes-performance-v224.md) sont consolidés. Les [mesures alternées](history/validation-aulnes-performance-v224.md) confirment un meilleur débit, **pas un gain FPS stable ni la cible240FPS à6×**. Poursuivre CPU de publication/adoption/main sur Les Aulnes avant nouvelle boucle humaine ; aucun jalonG0–G5 n'est clos. Le [checkpoint corrigé](gameplay/aulnes-seating-v224.md) conserve les61références antérieures.
+
 **Correction utilisateur V223 :** [Les Aulnes250²](development/advanced-colony-v223.md) expose une colonie plus avancée et les principaux systèmes existants, après6000ticks ordinaires et correction d'un dépassement du confort. [Preuve](history/validation-advanced-colony-v223.md). Les [mesures V222](history/validation-wildlife-reconciliation-v222.md) conservent l'essai retiré faute de gain stable. Prochaine priorité : incidents de cette colonie et mesures sur sa charge, puis une boucle humaine complète utile ; aucun jalonG0–G5 n'est clôturé par cette scène.
 
 La reprise du5octobre commence par [V221 : Les Aulnes](development/established-colony-v221.md), une colonie intégrée préparée puis réellement poursuivie, plutôt qu'une nouvelle variante isolée. [Preuve](history/validation-established-colony-v221.md). Priorité suivante : incidents concrets de jeu et mesures du débit avant optimisation, puis boucles humaines complètes. Ce lot de test ne clôture aucun jalonG0–G5 ; les repères suivants sont historiques.

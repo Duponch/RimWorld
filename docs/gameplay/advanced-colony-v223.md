@@ -1,5 +1,7 @@
 # Reprendre Les Aulnes sur la grande carte
 
+Pour les modèles corrigés et les huit sièges réellement réorientés, choisissez le [dérivé V224](aulnes-seating-v224.md). Cette référence V223 au tick6000 demeure historique et inchangée.
+
 Ouvrez **Charger une partie → Colonies de test → Les Aulnes · grande colonie 250×250**, puis **Charger cette colonie**. Vous pouvez également importer [la sauvegarde](../../public/test-saves/v223/les-aulnes-250.json) depuis le menu de chargement.
 
 La colonie occupe le centre d'une carte normale 250×250, avec quatorze habitants et un détenu. Elle s'ouvre en pause, au matin : plusieurs colons rejoignent leurs repas. Passez à 1× et commencez par les priorités, horaires et dossiers Bio/Social : chaque colon a un passé, des aptitudes et des tâches réglées. Dézoomez à la molette pour voir les différents quartiers ; le bouton de la maison recentre sur Ada.

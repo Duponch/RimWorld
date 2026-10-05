@@ -1,4 +1,6 @@
-# Validation courante — V223
+# Validation courante — V224
+
+**V224 — orientations et première consolidation de la charge, schéma 198 inchangé.** [Contrat](aulnes-performance-v224.md), [preuves et contreparties](../history/validation-aulnes-performance-v224.md). États/RNG exacts sur les comparaisons, transport et rendu contrôlés ; le débit6× réel progresse dans les passes, mais le gain FPS n'est pas stable et240FPS restent ouverts. [Référence corrigée](../gameplay/aulnes-seating-v224.md) issue de huit remontages ordinaires,62e scène ;61anciennes références exactes. Aucune campagne longue ou performance générale recertifiée. Priorité de continuation : adoption/publication/main avant nouvelle mécanique.
 
 **V223 — Les Aulnes 250² et plafond de confort, schéma 198 inchangé.** [Contrat](advanced-colony-v223.md), [preuve complète](../history/validation-advanced-colony-v223.md). Deux dépassements reproduits sur fixtures valides puis corrigés ; 16 fichiers/87 cas ciblés, 6000 ticks ordinaires avec humains/domestiques sans chute, 61e entrée du catalogue et 60 anciens payloads exacts, typage/build et parcours matériel à 1×/6× avec sauvegarde compressée/reprise exacte passent. La dotation est préparée ; pas de campagne annuelle, parité exhaustive ni performance générale recertifiée. Les échecs du sampler et des fixtures/natif restent séparés des réussites finales dans la preuve.
 

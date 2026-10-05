@@ -38,8 +38,8 @@ test('habitat furniture produces distinct, oriented, material-coloured placement
 
   const forwardBack = grouped(101).find(part => part.sy === 0.42)!;
   const rotatedBack = grouped(102).find(part => part.sy === 0.42)!;
-  expect(forwardBack).toMatchObject({ x: 4, z: 5.25 });
-  expect(rotatedBack).toMatchObject({ x: 8.25, z: 5 });
+  expect(forwardBack).toMatchObject({ x: 4, z: 4.75 });
+  expect(rotatedBack).toMatchObject({ x: 7.75, z: 5 });
   expect(grouped(108).map(part => part.color)).toEqual([0xa38559, 0x3b3023]);
   const pot=world.structures.find(s=>s.id===108)!;
   pot.flower={allowSow:true,plant:sowDaylily(world.tick)};

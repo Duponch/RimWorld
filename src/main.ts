@@ -299,7 +299,7 @@ function setSoundEnabled(enabled: boolean): boolean {
   el<HTMLInputElement>('sound-enabled').checked = enabled;
   audio.setMuted(!enabled);
   if (enabled) {
-    if (snapshot) { foliageAmbience.adopt(snapshot); syncAudioSources(snapshot); }
+    if (snapshot) { foliageAmbience.adopt(snapshot,true); syncAudioSources(snapshot); }
     unlockAudioFromGesture();
   }
   else audio.reset();
@@ -1299,7 +1299,7 @@ client.onSnapshot = (world, cost, speed, replaced, motion) => {
   const role=(p:Pawn|undefined)=>p?p.prisoner?'prisoner':isColonist(p)?'colonist':'other':'absent';
   const roleChanged=selectedPawn!==undefined&&role(snapshot?.pawns.find(p=>p.id===selectedPawn))!==role(world.pawns.find(p=>p.id===selectedPawn));
   snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
-  if(soundEnabled)foliageAmbience.adopt(world);
+  if(soundEnabled)foliageAmbience.adopt(world,true);
   music.setMood(musicMood(world));
   const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id)&&!world.wildlife?.animals.some(a=>a.id===id)&&!world.mechanoids?.some(m=>m.id===id))||!!selectedObject&&!mapObjectExists(world,selectedObject);
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;renderer?.setSelectedObject(undefined);orderMenu.close();rebuildInspector();}

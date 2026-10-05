@@ -1,7 +1,7 @@
-import { listenerPose, type AudioCamera } from './spatial.ts';
-import type { Resource, World } from '../sim/types.ts';
-import { plantGrowth } from '../sim/plants.ts';
-import { plantLeafless } from '../sim/plant-life.ts';
+import { listenerPose, type AudioCamera } from '../../src/audio/spatial.ts';
+import type { World } from '../../src/sim/types.ts';
+import { plantGrowth } from '../../src/sim/plants.ts';
+import { plantLeafless } from '../../src/sim/plant-life.ts';
 
 /** Global weather follows the map camera but softens as the listener rises. */
 export function ambientCameraGain(camera: AudioCamera): number {
@@ -11,7 +11,6 @@ export function ambientCameraGain(camera: AudioCamera): number {
 
 const FOLIAGE_CELL = 8;
 const FOLIAGE_RADIUS = 28;
-type CanopyDeposit={cell:number;right:number;lower:number;lowerRight:number;a:number;b:number;c:number;d:number};
 
 /** Snapshot-only canopy census. Bilinear deposition keeps the listening field
  * continuous across cells; camera queries visit a bounded neighbourhood, never
@@ -20,50 +19,14 @@ export class FoliageAmbience {
   private density = new Float32Array(0);
   private columns = 0;
   private rows = 0;
-  private snapshotResources:readonly Resource[]|undefined;
-  private snapshotTimeInvariant=false;
-  private stableDeposits:WeakMap<Resource,CanopyDeposit>|undefined;
 
-  /** Opt-in is reserved for immutable decoder snapshots; direct callers retain
-   * the original census and same-tick mutation semantics. */
-  adopt(world: World,immutableSnapshot=false): void {
+  adopt(world: World): void {
     const columns = Math.ceil(world.width / FOLIAGE_CELL) + 1;
     const rows = Math.ceil(world.height / FOLIAGE_CELL) + 1;
-    const resized=columns!==this.columns||rows!==this.rows;
-    if(immutableSnapshot&&!resized&&this.snapshotResources===world.resources&&this.snapshotTimeInvariant)return;
     if (columns !== this.columns || rows !== this.rows) {
       this.columns = columns; this.rows = rows;
       this.density = new Float32Array(columns * rows);
     } else this.density.fill(0);
-    if(immutableSnapshot){
-      if(resized||!this.stableDeposits)this.stableDeposits=new WeakMap();
-      const deposits=this.stableDeposits;
-      let timeInvariant=true;
-      for(const plant of world.resources){
-        if(plant.kind!=='tree'&&plant.kind!=='berries'||plant.species==='saguaro')continue;
-        const stable=(plant.growth??1)===1&&plant.plantLife?.leaflessAt===undefined;
-        if(!stable)timeInvariant=false;
-        const deposit=deposits.get(plant);
-        if(!deposit){
-          if(plantLeafless(world,plant))continue;
-          const growth=plantGrowth(world,plant),weight=(plant.kind==='tree'?1:.15)*growth*growth;
-          const gx=plant.x/FOLIAGE_CELL,gz=plant.z/FOLIAGE_CELL;
-          const x=Math.floor(gx),z=Math.floor(gz),fx=gx-x,fz=gz-z;
-          const cell=z*columns+x,right=z*columns+x+1,lower=(z+1)*columns+x,lowerRight=(z+1)*columns+x+1;
-          const a=weight*(1-fx)*(1-fz),b=weight*fx*(1-fz),c=weight*(1-fx)*fz,d=weight*fx*fz;
-          this.density[cell]!+=a;this.density[right]!+=b;this.density[lower]!+=c;this.density[lowerRight]!+=d;
-          if(stable)deposits.set(plant,{cell,right,lower,lowerRight,a,b,c,d});
-          continue;
-        }
-        // Keep unrounded JS contributions and the original per-resource order.
-        this.density[deposit.cell]!+=deposit.a;this.density[deposit.right]!+=deposit.b;
-        this.density[deposit.lower]!+=deposit.c;this.density[deposit.lowerRight]!+=deposit.d;
-      }
-      this.snapshotResources=world.resources;this.snapshotTimeInvariant=timeInvariant;
-      return;
-    }
-    // A mutable read revokes every cached Resource witness, even if unchanged.
-    this.snapshotResources=undefined;this.snapshotTimeInvariant=false;this.stableDeposits=undefined;
     for (const plant of world.resources) {
       if (plant.kind !== 'tree' && plant.kind !== 'berries') continue;
       if (plant.species === 'saguaro' || plantLeafless(world, plant)) continue;

@@ -36,7 +36,8 @@ export function industryParts(world:World):Placement[]{
         add(x,h+.42,-.1,.18,.04,.18,0xd4a665);
       }else{
         add(x,h+.19,.28,.71,.40,.12,0x455761);
-        add(x,h+.20,.35,.55,.28,.035,0x6caaa9);
+        // The research service and keyboard are on local -z, before the desk.
+        add(x,h+.20,.205,.55,.28,.035,0x6caaa9);
         add(x,h+.025,-.27,.66,.04,.43,0xd9d2b2);
       }
     }

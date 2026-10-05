@@ -37,15 +37,16 @@ export function habitatParts(world: World): Placement[] {
         const seat = WORLD_SCALE.stoolHeight + 0.03;
         add(0, seat, 0, 0.62, 0.10, 0.62);
         for (const dx of [-0.23, 0.23]) for (const dz of [-0.23, 0.23]) add(dx, seat / 2, dz, 0.08, seat, 0.08, trim);
-        add(0, 0.66, 0.25, 0.58, 0.42, 0.08, trim);
+        // Orientation zero faces +z; the backrest belongs behind that face.
+        add(0, 0.66, -0.25, 0.58, 0.42, 0.08, trim);
         break;
       }
       case 'armchair': {
         const seat = 0.37;
-        add(0, seat, -0.03, 0.78, 0.14, 0.78, trim);
-        for (const dx of [-0.31, 0.31]) add(dx, 0.53, -0.04, 0.15, 0.36, 0.72);
+        add(0, seat, 0.03, 0.78, 0.14, 0.78, trim);
+        for (const dx of [-0.31, 0.31]) add(dx, 0.53, 0.04, 0.15, 0.36, 0.72);
         for (const dx of [-0.29, 0.29]) for (const dz of [-0.28, 0.28]) add(dx, seat / 2, dz, 0.10, seat, 0.10, trim);
-        add(0, 0.69, 0.31, 0.76, 0.50, 0.12, trim);
+        add(0, 0.69, -0.31, 0.76, 0.50, 0.12, trim);
         break;
       }
       case 'end-table': {

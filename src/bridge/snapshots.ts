@@ -54,7 +54,8 @@ import { validApparelShape } from '../sim/apparel-save.ts';
 import { validPrisonerPawnShape } from '../sim/prisoner-save.ts';
 import { validWeaponShape } from '../sim/equipment-save.ts';
 import { pileMaxHp } from '../sim/thing-damage-rules.ts';
-import { SCHEMA_VERSION, type MaterialPile, type Pawn, type Resource, type Terrain, type Tile, type World } from '../sim/types.ts';
+import { SCHEMA_VERSION, type MaterialPile, type Pawn, type Resource, type Structure, type Terrain, type Tile, type World } from '../sim/types.ts';
+import { STRUCTURE_DEFINITIONS } from '../sim/definitions.ts';
 import { TileSnapshotCache, type TileDelta } from './tile-snapshot-cache.ts';
 import { PlanetValidationCache, type PlanetPreparation } from './planet-validation-cache.ts';
 import { validBackground } from '../sim/colonist-backgrounds.ts';
@@ -71,8 +72,10 @@ import { validateMechanoidRanged } from '../sim/mechanoid-ranged-save.ts';
 import { isMechanoidKind } from '../sim/mechanoid-definition.ts';
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
+type StructurelessDynamicWorld = Omit<DynamicWorld, 'structures'> & { readonly structures?: never };
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
 interface PileChanges { removed: number[]; upserted: MaterialPile[]; order?: number[] }
+export interface StructureChanges { removed: number[]; upserted: Structure[]; order?: number[] }
 interface SnapshotHeader { motion?:import('./motion-tracks.ts').PawnTrack[]; audioCues?:import('./audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 function validMiningTransport(pawn:Pawn,version:number):boolean {
   return !(version<186&&pawn.skills&&Object.hasOwn(pawn.skills,'mining'))&&validMiningSkill(pawn.skills?.mining,version);
@@ -97,9 +100,14 @@ function validBackgroundTransport(value:unknown,version:number,offer=false):bool
   }
   return validHumanAge(person.age,version)&&validBackground(person.background,version,person.age);
 }
-export type SnapshotMessage = SnapshotHeader & (
-  | { kind: 'checkpoint'; world: World }
-  | { kind: 'delta'; baseRevision: number; world: DynamicWorld; tiles?: TileDelta[]; resources?: ResourceChanges; piles?: PileChanges }
+/** The default type remains the complete historical protocol. Structure deltas
+ * are an explicit opt-in transport form, never a partial World-field patch. */
+export type SnapshotMessage<SparseStructures extends boolean = false> = SnapshotHeader & (
+  | { kind: 'checkpoint'; world: World; structures?: never }
+  | ({ kind: 'delta'; baseRevision: number; tiles?: TileDelta[]; resources?: ResourceChanges; piles?: PileChanges } & (
+      | { world: DynamicWorld; structures?: never }
+      | (SparseStructures extends true ? { world: StructurelessDynamicWorld; structures: StructureChanges } : never)
+    ))
 );
 
 import { validPlantGrowthLight } from '../sim/plant-light-save.ts';
@@ -152,6 +160,54 @@ function equalPileValue(a:unknown,b:unknown):boolean {
 }
 const copyPile=(pile:MaterialPile):MaterialPile=>structuredClone(pile);
 
+/** A transport array has no holes or enumerable side properties. */
+function denseArray(value:unknown):value is unknown[] {
+  return Array.isArray(value)&&Object.keys(value).length===value.length
+    &&Object.keys(value).every((key,index)=>key===String(index));
+}
+function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width'|'height'>):value is Structure {
+  if(!value||typeof value!=='object'||Array.isArray(value))return false;
+  const s=value as Structure;
+  return Number.isSafeInteger(s.id)&&s.id>=1&&s.id<world.nextId
+    &&typeof s.kind==='string'&&Object.hasOwn(STRUCTURE_DEFINITIONS,s.kind)
+    &&Number.isSafeInteger(s.x)&&s.x>=0&&s.x<world.width
+    &&Number.isSafeInteger(s.z)&&s.z>=0&&s.z<world.height
+    &&Number.isSafeInteger(s.orientation)&&s.orientation>=0&&s.orientation<=3
+    &&['standard','legacy-single'].includes(s.footprint)
+    &&(s.bills===undefined||denseArray(s.bills));
+}
+/** Only reconstructs a private candidate. All ordinary business/namespace
+ * guards still run below, including for unchanged retained structures. */
+function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width'|'height'>,value:unknown):Structure[]|undefined {
+  if(!value||typeof value!=='object'||Array.isArray(value))return;
+  const patch=value as StructureChanges;
+  if(Object.keys(value).some(key=>!['removed','upserted','order'].includes(key))
+    ||!Object.hasOwn(value,'removed')||!Object.hasOwn(value,'upserted')
+    ||!denseArray(patch.removed)||!denseArray(patch.upserted)
+    ||Object.hasOwn(value,'order')&&!denseArray(patch.order))return;
+  const byId=new Map<number,Structure>();
+  for(const structure of previous.structures){
+    if(!Number.isSafeInteger(structure.id)||structure.id<1||structure.id>=world.nextId||byId.has(structure.id))return;
+    byId.set(structure.id,structure);
+  }
+  const touched=new Set<number>();
+  for(const id of patch.removed){
+    if(!Number.isSafeInteger(id)||id<1||id>=world.nextId||touched.has(id)||!byId.delete(id))return;
+    touched.add(id);
+  }
+  for(const structure of patch.upserted){
+    if(!validStructurePatchEntry(structure,world)||touched.has(structure.id))return;
+    touched.add(structure.id);byId.set(structure.id,structure);
+  }
+  if(patch.order!==undefined){
+    if(patch.order.length!==byId.size||new Set(patch.order).size!==patch.order.length
+      ||patch.order.some(id=>!Number.isSafeInteger(id)||!byId.has(id)))return;
+    return patch.order.map(id=>byId.get(id)!);
+  }
+  // Existing IDs retain their slots; additions append in upsert order.
+  return touched.size?[...byId.values()]:previous.structures;
+}
+
 /** Check a transported pile using the same item and optional-state contracts as saves. */
 function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
   if(!pile||typeof pile!=='object'||Array.isArray(pile)||!Number.isSafeInteger(pile.id)||pile.id<1||pile.id>=world.nextId
@@ -194,7 +250,7 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
 }
 
 /** Transport cache only: never mutates the simulation or contributes to a saved game. */
-export class SnapshotEncoder {
+export class SnapshotEncoder<SparseStructures extends boolean = false> {
   private source: World | undefined;
   private epoch = 0;
   private revision = 0;
@@ -205,21 +261,41 @@ export class SnapshotEncoder {
   private orderedResources: Resource[] = [];
   private piles = new Map<number, MaterialPile>();
   private orderedPiles: MaterialPile[] = [];
+  private structures = new Map<number,Structure>();
+  private orderedStructures: Structure[] = [];
+
+  private readonly structureDeltaRequested:boolean;
+  private readonly minimumStructures:number;
+  private structureDelta=false;
+  constructor(options:{structureDelta?:SparseStructures;minimumStructures?:number} = {}) {
+    const minimum=options.minimumStructures??0;
+    if(!Number.isSafeInteger(minimum)||minimum<0)throw new RangeError('minimumStructures must be a nonnegative safe integer.');
+    this.structureDeltaRequested=options.structureDelta===true;
+    this.minimumStructures=minimum;
+  }
 
   /** postMessage must follow synchronously: it owns cloning the returned dynamic state. */
-  encode(world: World, stepMs: number, speed: number, checkpoint = false): SnapshotMessage {
+  encode(world: World, stepMs: number, speed: number, checkpoint = false): SnapshotMessage<SparseStructures> {
     const replacement = world !== this.source || world.width !== this.width || world.height !== this.height;
     if (replacement) { this.epoch++; this.revision = 0; }
     const baseRevision = this.revision++;
     const header: SnapshotHeader = { type: 'snapshot', epoch: this.epoch, revision: this.revision, stepMs, speed };
     if (replacement || checkpoint) {
+      // Keep the protocol mode stable until an explicit full checkpoint.
+      this.structureDelta=this.structureDeltaRequested&&world.structures.length>=this.minimumStructures;
       this.source = world; this.width = world.width; this.height = world.height;
       this.tiles.reset(world.tiles);
       this.orderedResources = world.resources.map(copyResource);
       this.resources = new Map(this.orderedResources.map(resource => [resource.id, resource]));
       this.orderedPiles = world.piles.map(copyPile);
       this.piles = new Map(this.orderedPiles.map(pile => [pile.id, pile]));
-      return { ...header, kind: 'checkpoint', world };
+      if(this.structureDelta){
+        this.orderedStructures=world.structures.map(s=>structuredClone(s));
+        this.structures=new Map(this.orderedStructures.map(s=>[s.id,s]));
+      }else if(this.orderedStructures.length){
+        this.orderedStructures=[];this.structures.clear();
+      }
+      return { ...header, kind: 'checkpoint', world } as SnapshotMessage<SparseStructures>;
     }
 
     const tiles = this.tiles.diff(world.tiles);
@@ -300,8 +376,44 @@ export class SnapshotEncoder {
       if(nextPileOrder)this.orderedPiles=nextPileOrder;
     }
     const { tiles: _tiles, resources: _resources, piles: _piles, ...dynamic } = world;
+    if(this.structureDelta){
+      const upserted:Structure[]=[],cacheUpdates:Structure[]=[];
+      let nextOrder:Structure[]|undefined=world.structures.length!==this.orderedStructures.length?[]:undefined;
+      for(let index=0;index<world.structures.length;index++){
+        const structure=world.structures[index]!,ordered=this.orderedStructures[index],sameSlot=ordered?.id===structure.id;
+        if(!sameSlot&&!nextOrder)nextOrder=this.orderedStructures.slice(0,index);
+        const previous=sameSlot?ordered:this.structures.get(structure.id);
+        let cached=previous;
+        // Never use mutable World identity or tick as a value witness. This
+        // walks all nested own fields, exact doubles and property presence.
+        if(!previous||!equalPileValue(previous,structure)){
+          cached=structuredClone(structure);
+          cacheUpdates.push(cached);
+          // Outgoing records also cannot expose the private comparison cache.
+          upserted.push(structuredClone(cached));
+          if(sameSlot)this.orderedStructures[index]=cached;
+        }
+        nextOrder?.push(cached!);
+      }
+      const structureChanges:StructureChanges={removed:[],upserted};
+      if(nextOrder){
+        const currentIds=new Set(world.structures.map(s=>s.id)),implicitOrder:number[]=[];
+        for(const structure of this.orderedStructures){
+          if(currentIds.has(structure.id))implicitOrder.push(structure.id);
+          else structureChanges.removed.push(structure.id);
+        }
+        for(const structure of upserted)if(!this.structures.has(structure.id))implicitOrder.push(structure.id);
+        if(implicitOrder.some((id,index)=>id!==world.structures[index]?.id))structureChanges.order=world.structures.map(s=>s.id);
+      }
+      for(const id of structureChanges.removed)this.structures.delete(id);
+      for(const structure of cacheUpdates)this.structures.set(structure.id,structure);
+      if(nextOrder)this.orderedStructures=nextOrder;
+      const {structures:_structures,...sparseWorld}=dynamic;
+      return {...header,kind:'delta',baseRevision,world:sparseWorld,structures:structureChanges,
+        ...(tiles.length?{tiles}:{}),...(changes?{resources:changes}:{}),...(pileChanges?{piles:pileChanges}:{})} as SnapshotMessage<SparseStructures>;
+    }
     return { ...header, kind: 'delta', baseRevision, world: dynamic,
-      ...(tiles.length ? { tiles } : {}), ...(changes ? { resources: changes } : {}), ...(pileChanges ? { piles: pileChanges } : {}) };
+      ...(tiles.length ? { tiles } : {}), ...(changes ? { resources: changes } : {}), ...(pileChanges ? { piles: pileChanges } : {}) } as SnapshotMessage<SparseStructures>;
   }
 }
 
@@ -318,13 +430,32 @@ export class SnapshotDecoder {
   private resourceSlots = new Map<number, number>();
   private pileSlots = new Map<number, number>();
 
-  adopt(message: SnapshotMessage): SnapshotAdoption {
+  adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
     const resync = (reason: string): SnapshotAdoption => ({ status: 'resync', reason });
-    if (!Number.isSafeInteger(message.epoch) || message.epoch < 1
-      || !Number.isSafeInteger(message.revision) || message.revision < 1) return resync('Révision de snapshot invalide.');
-    if (message.epoch < this.epoch || (message.epoch === this.epoch && message.revision <= this.revision)) return { status: 'stale' };
-    if (!Number.isSafeInteger(message.world.schemaVersion) || message.world.schemaVersion < 1
-      || message.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    if (!Number.isSafeInteger(packet.epoch) || packet.epoch < 1
+      || !Number.isSafeInteger(packet.revision) || packet.revision < 1) return resync('Révision de snapshot invalide.');
+    if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
+    if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
+      || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    let message:SnapshotMessage;
+    if(packet.kind==='delta'&&Object.hasOwn(packet,'structures')){
+      // No ambiguous omission or mixed complete/patch form. Reconstruct before
+      // the earliest structure guard, using only the confirmed predecessor.
+      if(Object.hasOwn(packet.world,'structures'))return resync('Forme de transport des structures ambiguë.');
+      const previous=this.current;
+      if(!previous||packet.epoch!==this.epoch||!Number.isSafeInteger(packet.baseRevision)
+        ||packet.baseRevision!==this.revision||packet.revision!==packet.baseRevision+1)return resync('Snapshot intermédiaire manquant.');
+      if(packet.world.width!==previous.width||packet.world.height!==previous.height
+        ||packet.world.schemaVersion!==previous.schemaVersion)return resync('Le delta appartient à une autre carte.');
+      const structures=prepareStructureChanges(previous,packet.world,packet.structures);
+      if(!structures)return resync('Delta de structures invalide.');
+      const {structures:_patch,...normalized}=packet;
+      message={...normalized,world:{...packet.world,structures}} as SnapshotMessage;
+    }else{
+      if(Object.hasOwn(packet,'structures')||!Object.hasOwn(packet.world,'structures')
+        ||!Array.isArray(packet.world.structures))return resync('Forme de transport des structures ambiguë.');
+      message=packet as SnapshotMessage;
+    }
     if(message.world.schemaVersion<=195&&['planet','group','groupLosses'].some(key=>Object.hasOwn(message.world,key)))return resync('Planète ou propriétaire de groupe futur.');
     if(message.world.schemaVersion<194&&(Object.hasOwn(message.world,'mechanoids')||Object.hasOwn(message.world,'mechSalvage')
       ||['mechanoid','mechActive'].some(k=>Object.hasOwn(message.world.raids??{},k))
