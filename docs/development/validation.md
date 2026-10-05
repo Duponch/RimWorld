@@ -1,4 +1,6 @@
-# Validation courante — V221
+# Validation courante — V222
+
+**V222 — mesure et oracles, schéma198 et moteur inchangés.** [Contrat](wildlife-reconciliation-v222.md), [preuves et limites](../history/validation-wildlife-reconciliation-v222.md). Deux charges/160ticks A/B exacts, deux cycles A/B/B/A,37fichiers/198cas puis15oracles sur le moteur restauré, typage/build passent. Essai d'indexation retiré faute de gain stable ; aucun nouveau résultat natif ou de campagne. La correction utilisateur250²/colonie plus avancée est la priorité suivante.
 
 **V221 — colonie intégrée Les Aulnes, schéma198 inchangé.** Préparation explicite puis21 000ticks ordinaires réellement joués ; sept habitants, production, habitat, besoins et défenses partagent le même quotidien. [Contrat](established-colony-v221.md), [résultats et limites](../history/validation-established-colony-v221.md). La60e scène est accessible dans le catalogue ; les59 références précédentes sont conservées. La reprise est autorisée après les tests utilisateur, avec commits locaux sans push.
 

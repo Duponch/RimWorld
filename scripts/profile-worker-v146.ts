@@ -1,29 +1,55 @@
-/** Local worker-path profile on one migrated, mixed 250x250 save.
+/** Local worker-path profile on one migrated save (mixed 250x250 by default).
  *
  * Run with: node --experimental-strip-types scripts/profile-worker-v146.ts
- * Optional: --warmup=20 --ticks=60 --output=tmp/profile-worker-v146.json
+ * Optional: --save=public/test-saves/v221/les-aulnes.json
+ * --warmup=20 --ticks=60 --output=tmp/profile-worker-v146.json
  * This deliberately publishes one snapshot per tick. It is not the native
  * worker's event/clock-driven publication frequency or a browser benchmark.
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, mkdirSync, writeFileSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { performance } from 'node:perf_hooks';
 import { gunzipSync } from 'node:zlib';
-import { dirname, resolve, sep } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { MotionRecorder } from '../src/bridge/motion-tracks.ts';
 import { AudioCueRecorder } from '../src/bridge/audio-cues.ts';
 import { PresentationChanges } from '../src/bridge/presentation-changes.ts';
 import { SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { deserializeWorld, stepWorld } from '../src/sim/index.ts';
 
-const SAVE_PATH = 'public/test-saves/v98/mixed-100.json';
-const outputArguments = process.argv.slice(2).filter(arg => arg.startsWith('--output='));
-if (outputArguments.length > 1) throw new Error('--output may be supplied only once.');
-const OUTPUT_PATH = outputArguments[0]?.slice('--output='.length) ?? 'tmp/profile-worker-v146.json';
-if (!resolve(OUTPUT_PATH).startsWith(`${resolve('tmp')}${sep}`) || !OUTPUT_PATH.endsWith('.json'))
+function pathOption(name:string,fallback:string):string {
+  const matches=process.argv.slice(2).filter(arg=>arg.startsWith(`--${name}=`));
+  if(matches.length>1)throw new Error(`--${name} may be supplied only once.`);
+  const value=matches[0]?.slice(name.length+3)??fallback;
+  if(!value.length||value.includes('\0'))throw new Error(`--${name} requires a path.`);
+  return value;
+}
+const SAVE_PATH = pathOption('save','public/test-saves/v98/mixed-100.json');
+const OUTPUT_PATH = pathOption('output','tmp/profile-worker-v146.json');
+const inside=(path:string,root:string):boolean=>(process.platform==='win32'?path.toLowerCase():path)
+  .startsWith(`${process.platform==='win32'?root.toLowerCase():root}${sep}`);
+const absoluteOutput=resolve(OUTPUT_PATH);
+if(!inside(absoluteOutput,resolve('tmp'))||!OUTPUT_PATH.endsWith('.json'))
   throw new Error('--output must identify a JSON file inside tmp/.');
+let outputAncestor=absoluteOutput;
+while(!existsSync(outputAncestor))outputAncestor=dirname(outputAncestor);
+if(!inside(resolve(realpathSync(outputAncestor),relative(outputAncestor,absoluteOutput)),resolve(realpathSync(process.cwd()),'tmp')))
+  throw new Error('--output must remain inside tmp/ after resolving filesystem links.');
+if(resolve(SAVE_PATH)===absoluteOutput)throw new Error('--output must not replace the input save.');
+const sha256=(value:string|Buffer)=>createHash('sha256').update(value).digest('hex');
+function sourceManifest():Record<string,string> {
+  const paths=['scripts/profile-consolidation-v209.ts','scripts/profile-worker-v146.ts','package.json','package-lock.json',SAVE_PATH];
+  const visit=(directory:string):void=>{
+    for(const entry of readdirSync(directory,{withFileTypes:true})){
+      const path=join(directory,entry.name);if(entry.isDirectory())visit(path);else paths.push(path);
+    }
+  };
+  visit('src');
+  return Object.fromEntries(paths.map(path=>relative(process.cwd(),resolve(path)).replaceAll('\\','/')).sort()
+    .map(path=>[path,sha256(readFileSync(path))]));
+}
 const STAGES = [
   'stepWorld', 'motionCapture', 'audioCapture', 'presentationChangesCapture',
   'snapshotEncode', 'motionSnapshot', 'structuredCloneProxy', 'total',
@@ -44,10 +70,11 @@ function integerOption(name: string, fallback: number, minimum: number, maximum:
   return value;
 }
 for (const arg of process.argv.slice(2)) {
-  if (!/^--(?:warmup|ticks|output)=/.test(arg)) throw new Error(`Unknown option: ${arg}`);
+  if (!/^--(?:warmup|ticks|output|save)=/.test(arg)) throw new Error(`Unknown option: ${arg}`);
 }
 const warmup = integerOption('warmup', 20, 0, 500);
 const ticks = integerOption('ticks', 60, 1, 500);
+const sourcesBefore=sourceManifest(),sourceFingerprint=sha256(JSON.stringify(sourcesBefore));
 
 const stored = readFileSync(SAVE_PATH, 'utf8');
 const envelope = JSON.parse(stored);
@@ -104,6 +131,7 @@ function sample(): Row {
 
 for (let index = 0; index < warmup; index++) sample();
 const measured = Array.from({ length: ticks }, () => sample());
+if(JSON.stringify(sourceManifest())!==JSON.stringify(sourcesBefore))throw new Error('Sources changed during profiling; timings are invalid.');
 
 function summarize(values: number[]) {
   const sorted = [...values].sort((a, b) => a - b);
@@ -115,10 +143,10 @@ let commit: string | null = null;
 try { commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); }
 catch { /* The file hash still identifies the input when Git is unavailable. */ }
 const report = {
-  timestamp: new Date().toISOString(), commit,
+  timestamp: new Date().toISOString(), commit, sourceFingerprint, sourcesUnchanged:true,
   runtime: process.version, platform: process.platform, arch: process.arch,
   cpuModel: cpus()[0]?.model ?? 'unknown',
-  fixture: { path: SAVE_PATH, sha256: createHash('sha256').update(stored).digest('hex'),
+  fixture: { path: SAVE_PATH, sha256: sha256(stored), decodedSha256:sha256(rawWorld),
     originalSchema, migratedSchema: world.schemaVersion, initialTick,
     width: world.width, height: world.height, pawns: world.pawns.length,
     animals: world.wildlife?.animals.length ?? 0 },

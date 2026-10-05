@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V222 — outils de mesure, schéma198 inchangé.** [Contrat](development/wildlife-reconciliation-v222.md), [preuves](history/validation-wildlife-reconciliation-v222.md). Essai d'indexation retiré faute de gain stable ; moteur et60sauvegardes publics conservés. La correction utilisateur demande maintenant une colonie plus avancée sur la carte standard250² ; Les Aulnes64² demeure une preuve historique de portée limitée.
+
 **Colonie intégrée V221 : Les Aulnes.** Une colonie à reprendre avec sept habitants et les systèmes actuels réunis, préparée puis réellement poursuivie pendant trois jours et demi. [Accès et contrat](development/established-colony-v221.md), [contrôles et limites](history/validation-established-colony-v221.md). Schéma198 inchangé ; reprise du travail autorisée, commits locaux sans push. Les repères suivants conservent leurs résultats et consignes historiques.
 
 **V220 livré dans le périmètre contrôlé, schéma 198.** Conservation de la préparation et de la récupération du tir humain sous vrai étourdissement. [Contrat](development/shooting-stun-v220.md), [référence primaire](research/shooting-stun-core-v220.md), [preuves et limites](history/validation-shooting-stun-v220.md). Deux défauts reproduits puis corrigés ;17nouveaux cas, régression par reprise572fichiers/2609réussites/un ignoré, typage/build, natif ciblé et59sauvegardes passent. Consigne utilisateur : commit local de ce lot, puis arrêt pour ses tests et attente de son signal ; relance automatique en pause, aucun push.

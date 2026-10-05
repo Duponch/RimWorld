@@ -2,6 +2,7 @@
  *
  * node --experimental-strip-types scripts/profile-consolidation-v209.ts
  * Optional: --warmup=20 --ticks=60 --sampling-us=1000
+ * --save=public/test-saves/v221/les-aulnes.json --output-directory=tmp/profile-les-aulnes
  *
  * First runs the existing worker-stage profiler sequentially (unchanged stage
  * cadence), then samples only a separate stepWorld 20+60 continuation through
@@ -10,19 +11,36 @@
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { Session, type Protocol } from 'node:inspector';
 import { cpus } from 'node:os';
-import { join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { gunzipSync } from 'node:zlib';
 
-const SAVE_PATH = 'public/test-saves/v98/mixed-100.json';
-const OUTPUT_DIRECTORY = 'tmp/consolidation-v209';
+function pathOption(name:string,fallback:string):string {
+  const matches=process.argv.slice(2).filter(arg=>arg.startsWith(`--${name}=`));
+  if(matches.length>1)throw new Error(`Duplicate option --${name}.`);
+  const value=matches[0]?.slice(name.length+3)??fallback;
+  if(!value.length||value.includes('\0'))throw new Error(`--${name} requires a path.`);
+  return value;
+}
+const SAVE_PATH = pathOption('save','public/test-saves/v98/mixed-100.json');
+const OUTPUT_DIRECTORY = pathOption('output-directory','tmp/consolidation-v209');
+const inside=(path:string,root:string):boolean=>(process.platform==='win32'?path.toLowerCase():path)
+  .startsWith(`${process.platform==='win32'?root.toLowerCase():root}${sep}`);
+const absoluteOutput=resolve(OUTPUT_DIRECTORY);
+if(!inside(absoluteOutput,resolve('tmp')))throw new Error('--output-directory must identify a directory inside tmp/.');
+let outputAncestor=absoluteOutput;
+while(!existsSync(outputAncestor))outputAncestor=dirname(outputAncestor);
+if(!inside(resolve(realpathSync(outputAncestor),relative(outputAncestor,absoluteOutput)),resolve(realpathSync(process.cwd()),'tmp')))
+  throw new Error('--output-directory must remain inside tmp/ after resolving filesystem links.');
 const REPORT_PATH = `${OUTPUT_DIRECTORY}/profile.json`;
 const STAGES_PATH = `${OUTPUT_DIRECTORY}/worker-stages.json`;
 const CPU_PROFILE_PATH = `${OUTPUT_DIRECTORY}/stepWorld.cpuprofile`;
 const SOURCE_MANIFEST_PATH = `${OUTPUT_DIRECTORY}/profile-sources.json`;
+if([REPORT_PATH,STAGES_PATH,CPU_PROFILE_PATH,SOURCE_MANIFEST_PATH].some(path=>resolve(path)===resolve(SAVE_PATH)))
+  throw new Error('--output-directory must not replace the input save.');
 const SOURCE_PROTOCOL_PATH = 'scripts/profile-consolidation-v209.ts';
 const WORKER_PROTOCOL_PATH = 'scripts/profile-worker-v146.ts';
 const sha256 = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
@@ -37,7 +55,7 @@ function integerOption(name: string, fallback: number, minimum: number, maximum:
   if (!Number.isSafeInteger(number) || number < minimum || number > maximum) throw new Error(`--${name} must be ${minimum}..${maximum}.`);
   return number;
 }
-for (const argument of process.argv.slice(2)) if (!/^--(?:warmup|ticks|sampling-us)=/.test(argument)) throw new Error(`Unknown option ${argument}.`);
+for (const argument of process.argv.slice(2)) if (!/^--(?:warmup|ticks|sampling-us|save|output-directory)=/.test(argument)) throw new Error(`Unknown option ${argument}.`);
 const warmup = integerOption('warmup', 20, 0, 500);
 const ticks = integerOption('ticks', 60, 1, 500);
 const samplingUs = integerOption('sampling-us', 1000, 100, 10_000);
@@ -68,10 +86,11 @@ assertFrozenSources();
 // timings belong to a separate sequential process and must not be mixed with
 // inspector overhead or mistaken for actual event-driven worker publications.
 execFileSync(process.execPath, ['--experimental-strip-types', WORKER_PROTOCOL_PATH,
-  `--warmup=${warmup}`, `--ticks=${ticks}`, `--output=${STAGES_PATH}`], { stdio: 'inherit' });
+  `--warmup=${warmup}`, `--ticks=${ticks}`, `--save=${SAVE_PATH}`, `--output=${STAGES_PATH}`], { stdio: 'inherit' });
 assertFrozenSources();
 const stages = JSON.parse(readFileSync(STAGES_PATH, 'utf8')) as {
-  fixture: { sha256: string; migratedSchema: number; initialTick: number };
+  sourceFingerprint:string;sourcesUnchanged:boolean;
+  fixture: { path:string;sha256: string;decodedSha256:string; migratedSchema: number; initialTick: number };
   measuredRange: { firstTick: number; lastTick: number };
   millisecondsPerTick: Record<string, { n: number; mean: number; p50: number; p95: number; max: number }>;
   protocol: unknown;
@@ -81,8 +100,12 @@ const stored = readFileSync(SAVE_PATH, 'utf8'), envelope = JSON.parse(stored);
 const raw = envelope?.format === 'lisiere-save' && envelope.codec === 'gzip-base64'
   ? gunzipSync(Buffer.from(envelope.payload, 'base64')).toString('utf8') : stored;
 const world = deserializeWorld(raw), initialTick = world.tick;
-if (stages.fixture.sha256 !== sha256(stored) || stages.fixture.migratedSchema !== world.schemaVersion)
-  throw new Error('Worker-stage profile and inspector profile differ in fixture/schema.');
+if(stages.sourceFingerprint!==sourceFingerprint||!stages.sourcesUnchanged)
+  throw new Error('Worker-stage profile and inspector profile differ in frozen sources.');
+if(stages.fixture.path!==SAVE_PATH||stages.fixture.sha256!==sha256(stored)||stages.fixture.decodedSha256!==sha256(raw)
+  ||stages.fixture.migratedSchema!==world.schemaVersion||stages.fixture.initialTick!==initialTick
+  ||stages.measuredRange.firstTick!==initialTick+warmup+1||stages.measuredRange.lastTick!==initialTick+warmup+ticks)
+  throw new Error('Worker-stage profile and inspector profile differ in fixture/schema/tick range.');
 const initialErrors = validateWorld(world);
 if (initialErrors.length) throw new Error(`Invalid migrated input: ${initialErrors.join(' ')}`);
 for (let index = 0; index < warmup; index++) stepWorld(world);
@@ -183,8 +206,8 @@ let commit: string | null = null;
 try { commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch {}
 const report = {
   timestamp: new Date().toISOString(), commit, runtime: process.version, platform: process.platform, arch: process.arch,
-  cpuModel: cpus()[0]?.model ?? 'unknown', sourceFingerprint,
-  fixture: { path: SAVE_PATH, sha256: sha256(stored), originalSchema: JSON.parse(raw).schemaVersion,
+  cpuModel: cpus()[0]?.model ?? 'unknown', sourceFingerprint,sourcesUnchanged:true,
+  fixture: { path: SAVE_PATH, sha256: sha256(stored), decodedSha256:sha256(raw), originalSchema: JSON.parse(raw).schemaVersion,
     migratedSchema: world.schemaVersion, initialTick, width: world.width, height: world.height,
     pawns: world.pawns.length, animals: world.wildlife?.animals.length ?? 0 },
   protocol: { warmupTicks: warmup, measuredTicks: ticks, samplingIntervalMicroseconds: samplingUs,
