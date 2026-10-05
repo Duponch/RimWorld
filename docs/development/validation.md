@@ -1,4 +1,6 @@
-# Validation courante — V220
+# Validation courante — V221
+
+**V221 — colonie intégrée Les Aulnes, schéma198 inchangé.** Préparation explicite puis21 000ticks ordinaires réellement joués ; sept habitants, production, habitat, besoins et défenses partagent le même quotidien. [Contrat](established-colony-v221.md), [résultats et limites](../history/validation-established-colony-v221.md). La60e scène est accessible dans le catalogue ; les59 références précédentes sont conservées. La reprise est autorisée après les tests utilisateur, avec commits locaux sans push.
 
 **V220 livré dans le périmètre contrôlé, schéma 198.** Conservation de la préparation et de la récupération du tir humain sous vrai étourdissement. [Contrat](shooting-stun-v220.md), [référence primaire](../research/shooting-stun-core-v220.md), [preuves et limites](../history/validation-shooting-stun-v220.md). Deux défauts reproduits puis corrigés ;17nouveaux cas, régression par reprise572fichiers/2609réussites/un ignoré, typage/build, natif ciblé et59sauvegardes passent. Consigne utilisateur : commit local de ce lot, puis arrêt pour ses tests et attente de son signal ; relance automatique en pause, aucun push.
 

@@ -1649,6 +1649,38 @@
       "prepared": true,
       "provenance": "Nouvelle scène préparée32×32, createScenarioWorld(219,32,'crashlanded', site tempéré plat), schéma197, tick270090. Clairière, appareils et fournitures réutilisent la fonction de préparation V213 ; aucun payload historique réécrit. Cette seule préparation V219 ajoute une enceinte est non couverte déjà construite x23..29,z16..21 :21murs enbois et1porte manuelle intacte fermée en(23,20). Ses positions initiales propres sont(24,19),(26,19),(25,20), différentes de V213, sans téléportation runtime. Générateur, ateliers, tourelles et stocks gardent leurs empreintes et quantités horsabri. Sortie exposée proposée(22,20), retour(24,19), sans déplacement préjoué. Biographies actuelles, graphes familiaux exclus de cette exposition mécanique ; calendriers obligatoires de grippe/panne réadoptés au tick préparé. Occasion future270100, politique mécanique et permission ranged adoptées à270090, ticket privé déclaré27 ; aucun tirage de combat préjoué. Richesse10000ors physiques et enceinte réellement recensée au tick préparé, menace324.30608180255075points ; deux tourelles intactes à60coups au feu retenu, générateur75bois, ateliers vides,75aciers et18rations au sol ; aucun stock ajouté ou consommé pour cette géométrie initiale. Aucun acteur, projectile, blessure, carcasse, livraison ou acier de récupération préjoué. La préparation ne prouve ni fréquence naturelle, victoire, validation native ou coût CPU/GPU général.",
       "sha256": "917d4374964a8894131c602f28ea10353976f3aaa896786ab5b944c5abc0e7b6"
+    },
+    {
+      "id": "established-colony-v221",
+      "release": "v221",
+      "label": "Les Aulnes · colonie en activité",
+      "filename": "les-aulnes.json",
+      "description": "Une colonie aménagée de 7 habitants, puis réellement poursuivie pendant 21000 ticks : logements, repas, cultures, élevage, ateliers, soins, recherche et défense partagent le même quotidien.",
+      "pawns": 7,
+      "colonists": 7,
+      "width": 64,
+      "height": 64,
+      "tick": 21000,
+      "focus": [
+        "quotidien de colonie",
+        "biographies et relations",
+        "nourriture et chambre froide",
+        "cultures et élevage",
+        "ateliers et recherche",
+        "soins et prison",
+        "énergie et défense",
+        "globe et sauvegarde"
+      ],
+      "steps": [
+        "Charger en pause, puis reprendre à vitesse 1 pour découvrir la colonie. Les horaires, priorités, besoins et factures sont déjà réglés ; les stocks sont finis et les colons poursuivent leurs activités ordinaires.",
+        "Visiter les chambres et la salle commune. Dans les dossiers Bio, Social et Besoins, consulter les vrais passés, liens, aptitudes et conditions de vie des habitants.",
+        "Suivre les aliments entre champs, cuisine, réserve froide et table ; consulter aussi les factures des ateliers et le projet de recherche. Les bâtiments et stocks initiaux sont préparés, tandis que les travaux de la journée écoulée proviennent du moteur.",
+        "Inspecter le troupeau, les soins et la prison, puis ouvrir Monde pour voir le globe et préparer un voyage avec les provisions réellement disponibles. Aucun départ ni échange n’est fourni par la préparation.",
+        "Les deux tourelles sont autorisées à tirer et à se réarmer. Observer leur alimentation et leur champ de tir ; sauvegarder, recharger et reprendre les activités ou développer la colonie."
+      ],
+      "prepared": true,
+      "provenance": "Colonie originale V221 préparée avec prepareEstablishedColonyScenario(), schéma 198, 64×64, tick initial 0. Village, bâtiments, sols, toits, réserves, technologies connues, équipements, politiques, cultures, animaux domestiques et état clinique initial sont une dotation déclarée, pas les gains d'une campagne naturelle. Les adultes et biographies proviennent des producteurs actuels de création ; les relations préparées ne sont pas une romance reconstruite. Après cette préparation, 21000 appels ordinaires à stepWorld, soit 3.500 jour(s) local(aux) réellement écoulé(s), sans commande, saut d'horloge, injection de stock, réparation d'état, retrait d'incident ou attribution rétroactive. Checkpoint final au tick 21000, validé et repris exactement ; consommations, mouvements, travaux, besoins et événements du suffixe restent réels. Aucun groupe ni voyage n'est fabriqué pour ce catalogue. Cette continuation bornée ne certifie ni une partie entièrement développée depuis zéro, une campagne longue, la performance générale ou une parité Core exhaustive.",
+      "sha256": "81b08a46e2250650c2ed08b100abeb17de3d0fa4082fa5d627865d4a0b0baca2"
     }
   ]
 }

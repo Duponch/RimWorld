@@ -1,6 +1,6 @@
 # Développement autonome — 5 octobre 2026
 
-Suivi de la consigne utilisateur : terminer les corrections vérifiées de l’audit, puis enchaîner des boucles prioritaires et des commits locaux jusqu’au retour annoncé ou à une pause. Cette autonomie s’est arrêtée après le commit V220, selon la dernière demande de tests utilisateur ; la relance automatique reste en pause. Aucun push. Ce suivi complète l’[appréciation du rapport externe](analysis-external-agent-2026-10-04.md) ; il ne transforme pas les jalons G0–G5 en pourcentages de parité.
+Suivi de la consigne utilisateur : terminer les corrections vérifiées de l’audit, puis enchaîner des boucles prioritaires et des commits locaux jusqu’au retour annoncé ou à une pause. Cette autonomie s’est arrêtée après le commit V220 pour ses tests. Après confirmation du correctif mécanique et discussion des tourelles, il autorise explicitement la reprise et demande une colonie intégrée crédible : [V221, Les Aulnes](../development/established-colony-v221.md), avec [preuves séparées](validation-established-colony-v221.md). Aucun push. Ce suivi complète l’[appréciation du rapport externe](analysis-external-agent-2026-10-04.md) ; il ne transforme pas les jalonsG0–G5 en pourcentages de parité.
 
 ## Travail livré
 
