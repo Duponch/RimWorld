@@ -7,7 +7,17 @@ import * as orders from '../src/sim/player-orders.ts';
 import {careCamp} from './scenarios/care.ts';
 import {rescueCamp} from './scenarios/rescue.ts';
 import {controlledInjury} from './scenarios/health.ts';
-import {energyDecisionDue,energyDecisions,energyRecoveryDecisions,type EnergyPlayerState} from './scenarios/energy-player.ts';
+import {equipmentCamp} from './scenarios/equipment.ts';
+import {fixtureBuilding} from './scenarios/deconstruction.ts';
+import {survivorPlan} from './scenarios/survivor-player.ts';
+import {crashlandedProfile} from '../src/sim/game-profile.ts';
+import {enableCassandraRaids} from '../src/sim/cassandra-raids.ts';
+import {adoptFluIncidents} from '../src/sim/flu-incidents.ts';
+import {createRaidGroup} from '../src/sim/raid-spawn.ts';
+import {newDoorState} from '../src/sim/door-rules.ts';
+import {damageUnarmoredPawnWithBullet} from '../src/sim/bullet-damage.ts';
+import {medicalBleed,medicalPain} from '../src/sim/injury-state.ts';
+import {energyDecisionDue,energyDecisions,energyRecoveryDecisions,energyRetreatNeeded,type EnergyPlayerState} from './scenarios/energy-player.ts';
 import type {Command,World} from '../src/sim/types.ts';
 
 const notebook=(w:World):EnergyPlayerState=>({startTick:w.tick,origin:{x:5,z:5},stage:'construct',stageTick:w.tick,
@@ -117,4 +127,113 @@ test('Énergie attend un refus clinique réel sans forcer un ordre, une priorit�
   const allowed=energyRecoveryDecisions(w);expect(allowed).toHaveLength(1);
   apply(w,allowed![0]!.command);expect(doctor.tend?.patientId).toBe(patient.id);
   expect(medicine(w)).toBe(quantity);expect(patient.health!.injuries.every(i=>i.tended===undefined)).toBe(true);
+});
+
+/** Prepared geometry/equipment only. The actual raid producer owns the enemy
+ * and its equipment namespace; there is no injury, projectile or outcome here.
+ * The legacy crashlanded revision is explicit, as in campaign-defense.test.ts. */
+function energyRaidCamp(armedEnemy=false) {
+  const w=equipmentCamp(3),[ada,noe,mina]=w.pawns;
+  w.resources=[];w.jobs=[];w.structures=[];w.piles=[];w.rng=81733;
+  w.scenario={id:'crashlanded',revision:1,landing:{x:16,z:16}};
+  w.gameProfile=crashlandedProfile();enableCassandraRaids(w);adoptFluIncidents(w);
+  fixtureBuilding(w,'bed',8,6,2);const camp=survivorPlan(w,true);
+  for(let dz=0;dz<5;dz++)for(let dx=0;dx<5;dx++)if(!dx||!dz||dx===4||dz===4){
+    const door=dx===2&&dz===4,building=fixtureBuilding(w,door?'door':'wall',camp.anchor.x+dx,camp.anchor.z+dz);
+    if(door)Object.assign(building,{material:'wood',door:newDoorState(w.tick)});
+  }
+  Object.assign(ada!,{name:'Ada',x:4,z:10});Object.assign(noe!,{name:'Noé',x:14,z:10});
+  Object.assign(mina!,{name:'Mina',x:camp.anchor.x+2,z:camp.anchor.z+3});
+  for(const p of [ada!,noe!])addMaterial(w,'weapon',1,{type:'equipment',pawnId:p.id},'revolver');
+  apply(w,{type:'draft',pawnIds:[ada!.id,noe!.id,mina!.id],enabled:true});
+  apply(w,{type:'fire-at-will',pawnIds:[ada!.id,noe!.id,mina!.id],enabled:false});
+  const raid=createRaidGroup(w,{count:1,sites:[{x:w.width-1,z:0}],random:{rng:w.raids!.rng}});
+  expect(raid).not.toBeNull();const enemy=w.pawns.find(p=>p.id===raid!.members[0])!;
+  if(armedEnemy)addMaterial(w,'weapon',1,{type:'equipment',pawnId:enemy.id},'revolver');refreshStock(w);
+  const s={...notebook(w),origin:{x:18,z:18}};valid(w);
+  return {w,ada:ada!,noe:noe!,mina:mina!,enemy,camp,s};
+}
+function moveFor(w:World,s:EnergyPlayerState,id:number) {
+  for(const {command} of energyDecisions(w,s))if(command.type==='draft-move'&&command.pawnIds.includes(id))return command;
+}
+const interior=(cell:{x:number;z:number},anchor:{x:number;z:number})=>cell.x>anchor.x&&cell.x<anchor.x+4&&cell.z>anchor.z&&cell.z<anchor.z+4;
+
+test('Énergie replie Noé encore mobile après un impact du moteur, conserve un défenseur sain et atteint le vrai abri sans relancer son arête',()=>{
+  const {w,ada,noe,enemy,camp,s}=energyRaidCamp(true);
+  expect(noe.health?.injuries??[]).toEqual([]);
+  // The raid driver must acquire its actual target and establish the firing
+  // post before starting a shot. No tactical mandate, aim or impact is injected.
+  expect(enemy.shooting).toBeUndefined();expect(enemy.tactics).toBeUndefined();valid(w);
+  let emitted=false,impacted=false;
+  for(let n=0;n<80&&!energyRetreatNeeded(noe);n++){
+    stepWorld(w);valid(w);
+    emitted ||= (w.projectiles??[]).some(p=>p.flight.launcherKey===`pawn:${enemy.id}`);
+    impacted ||= (w.projectiles??[]).some(p=>p.arrival?.targetKey===`pawn:${noe.id}`&&p.arrival.effect==='pawn');
+    expect(w.pawns.filter(p=>p===ada||p===noe).every(p=>p.state!=='dead'&&p.state!=='downed')).toBe(true);
+  }
+  expect(emitted).toBe(true);expect(impacted).toBe(true);
+  expect(noe.health!.injuries.some(i=>i.kind==='gunshot')).toBe(true);
+  expect(energyRetreatNeeded(noe)).toBe(true);expect(energyRetreatNeeded(ada)).toBe(false);
+  const injuredAt=w.tick;
+  while(!energyDecisionDue(w)){
+    stepWorld(w);valid(w);
+    expect(noe.state).not.toBe('downed');expect(noe.state).not.toBe('dead');
+  }
+  expect(w.tick-injuredAt).toBeLessThan(20);
+  const before=serializeWorld(w),rng=w.rng,nextId=w.nextId,retreat=moveFor(w,s,noe.id),defence=moveFor(w,s,ada.id);
+  expect(serializeWorld(w)).toBe(before);expect(w.rng).toBe(rng);expect(w.nextId).toBe(nextId);
+  expect(retreat).toBeDefined();expect(interior(retreat!.target,camp.anchor)).toBe(true);
+  expect(retreat!.target).not.toEqual(camp.pin);expect(defence?.target).toEqual(camp.pin);
+  expect(energyRecoveryDecisions(w)).toBeUndefined(); // Doctors still wait for the real end of the raid.
+  apply(w,retreat!);expect(noe.draft!.target).toEqual(retreat!.target);
+  const copy=deserializeWorld(serializeWorld(w));let travelled=false;
+  for(let n=0;n<100&&(noe.x!==retreat!.target.x||noe.z!==retreat!.target.z||(noe.motion?.end??0)>w.tick);n++){
+    const confirmed=serializeWorld(w),motion=noe.motion,lastActiveTick=noe.draft!.lastActiveTick;
+    expect(moveFor(w,s,noe.id)).toBeUndefined();expect(serializeWorld(w)).toBe(confirmed);
+    expect(noe.motion).toBe(motion);expect(noe.draft!.lastActiveTick).toBe(lastActiveTick);
+    stepWorld(w);stepWorld(copy);valid(w);expect(serializeWorld(copy)).toBe(serializeWorld(w));
+    travelled ||= !!noe.motion;
+    expect(noe.state).not.toBe('downed');expect(noe.state).not.toBe('dead');
+  }
+  expect(travelled).toBe(true);expect({x:noe.x,z:noe.z}).toEqual(retreat!.target);
+  expect(w.pawns.find(p=>p.id===noe.id)).toBe(noe);
+  expect((noe.motion?.end??0)<=w.tick).toBe(true);expect(noe.draft).toBeDefined();
+  expect(w.raids!.active).toBeDefined();expect(noe.tend).toBeUndefined();
+});
+
+test('Énergie ne replie pas une petite plaie mais interrompt un vrai tir blessé sans effacer sa récupération ou son projectile',()=>{
+  const {w,noe,enemy,camp,s}=energyRaidCamp();
+  damageUnarmoredPawnWithBullet(w,noe,{damage:1,part:'left-little-toe'});valid(w);
+  expect(medicalBleed(noe.health!)).toBeCloseTo(.06);expect(medicalPain(noe.health!)).toBeLessThan(.25);
+  expect(energyRetreatNeeded(noe)).toBe(false);expect(moveFor(w,s,noe.id)?.target).toEqual(camp.pin);
+  apply(w,{type:'shoot',pawnIds:[noe.id],targetId:enemy.id});stepWorld(w,2);valid(w);
+  expect(noe.shooting!.stance!.phase).toBe('cooldown');
+  const recovery=structuredClone(noe.shooting!.stance),bullet=w.projectiles!.find(p=>p.flight.launcherKey===`pawn:${noe.id}`)!.id;
+  // Localized damage through the real transaction/clinical clock, not a raw
+  // health object. This second case isolates the pending recovery boundary.
+  damageUnarmoredPawnWithBullet(w,noe,{damage:11.6,part:'left-leg'});valid(w);
+  expect(noe.state).not.toBe('downed');expect(energyRetreatNeeded(noe)).toBe(true);
+  const retreat=moveFor(w,s,noe.id)!;expect(interior(retreat.target,camp.anchor)).toBe(true);apply(w,retreat);
+  expect(noe.shooting!.order).toBeNull();expect(noe.shooting!.stance).toEqual(recovery);
+  expect(w.projectiles!.some(p=>p.id===bullet)).toBe(true);
+  const copy=deserializeWorld(serializeWorld(w));
+  while(w.tick*10<recovery!.endsAtCore){
+    const confirmed=serializeWorld(w);expect(moveFor(w,s,noe.id)).toBeUndefined();expect(serializeWorld(w)).toBe(confirmed);
+    expect(noe.shooting!.stance!.endsAtCore).toBe(recovery!.endsAtCore);
+    stepWorld(w);stepWorld(copy);valid(w);expect(serializeWorld(copy)).toBe(serializeWorld(w));
+  }
+  expect(noe.shooting).toBeUndefined();expect(noe.draft!.target).toEqual(retreat.target);
+  expect(noe.state).not.toBe('downed');
+});
+
+test('Énergie ne transforme ni une pièce percée ni un abri d’un autre composant en destination de repli admissible',()=>{
+  for(const obstruction of ['breach','disconnected'] as const){
+    const {w,noe,camp,s}=energyRaidCamp();
+    damageUnarmoredPawnWithBullet(w,noe,{damage:11.6,part:'left-leg'});
+    if(obstruction==='breach')w.structures=w.structures.filter(q=>!(q.kind==='wall'&&q.x===camp.anchor.x+4&&q.z===camp.anchor.z+2));
+    else for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)if(dx||dz)w.tiles[(noe.z+dz)*w.width+noe.x+dx]={terrain:'rock'};
+    valid(w);const before=serializeWorld(w);
+    expect(energyRetreatNeeded(noe)).toBe(true);expect(moveFor(w,s,noe.id),obstruction).toBeUndefined();
+    expect(serializeWorld(w)).toBe(before);expect(noe.draft!.target).toBeNull();expect(noe.state).not.toBe('downed');
+  }
 });

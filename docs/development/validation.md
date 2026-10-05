@@ -1,4 +1,6 @@
-# Validation courante — V216
+# Validation courante — V217
+
+**V217 livré dans le périmètre contrôlé, schéma 196 inchangé.** [Contrat](snapshot-consolidation-v217.md), [recherche](../research/planet-cache-v217.md), [preuves](../history/validation-snapshot-consolidation-v217.md). Régression par reprises :560fichiers/2542réussis/unignoré ;30ciblés uniques. Typage/build, présentation et oracle différentiel Node puis navigateur A/B/B/A passent. Le gain d’adoption a des contreparties ; FPS/tick/GPU généraux non établis. Trois suffixes V216 passent, Énergie reste rouge ; son pilote corrigé passe le court, la reprise longue attend le commit figé.
 
 **V216 livré dans le périmètre contrôlé, schéma 196.** [Contrat](planet-group-v216.md), [recherche primaire](../research/planet-group-core-v216.md), [preuves et limites](../history/validation-planet-group-v216.md). Globe de 162 cases, groupe original, chargement, voyage, besoins, commerce et retour physiques. Régression par reprises : 557 fichiers, 2 515 réussites et un ignoré ; ciblés, typage/build, présentation et navigateur matériel composé passent. La 58e scène est préparée ; quatre campagnes V215 restent rouges, leurs reprises prospectives sont distinctes. G0–G5 et la performance générale restent ouverts.
 

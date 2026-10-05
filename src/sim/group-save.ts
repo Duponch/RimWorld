@@ -15,7 +15,9 @@ import { medicalStatus } from './injury-state.ts';
 import { pawnBody } from './health-rules.ts';
 import { isColonist } from './affiliation.ts';
 import { validPlanetRoute } from './planet-navigation.ts';
+import type { PlanetState } from './planet-state.ts';
 import { validatePlanet } from './planet-save.ts';
+import { validatedPlanetFor,type PlanetValidationContext } from './planet-validation-context.ts';
 import { validSchedule } from './schedule.ts';
 import { APPAREL_POLICY_INTERVAL } from './apparel-renewal.ts';
 import { validFilthFeet } from './filth-save.ts';
@@ -60,13 +62,27 @@ function baseline(v:unknown):boolean {
 const total=(values:readonly number[]):number|undefined=>{let n=0;for(const value of values){n+=value;if(!Number.isSafeInteger(n))return undefined;}return n;};
 
 export function validateGroupState(world:World,version:number):string[] {
+  const raw=world as unknown as Record<string,unknown>;
+  if(version<=195)return ['group','groupLosses'].some(k=>Object.hasOwn(raw,k))?['Future group owner in historical schema.']:[];
+  if(raw.group===undefined&&raw.groupLosses===undefined)return [];
+  if(!int(world.tick)||!int(world.nextId,1)||validatePlanet(raw.planet,world,version).length||raw.planet===undefined)return ['Invalid group planet authority.'];
+  return validateGroupOwners(world,version,world.planet!);
+}
+/** Composition uses a real validated context, checked again by raw values.
+ * No bool can bypass geography; the standalone wrapper remains complete. */
+export function validateGroupStateWithPlanet(world:World,version:number,context:PlanetValidationContext):string[] {
+  const raw=world as unknown as Record<string,unknown>;
+  if(version<=195)return ['group','groupLosses'].some(k=>Object.hasOwn(raw,k))?['Future group owner in historical schema.']:[];
+  if(raw.group===undefined&&raw.groupLosses===undefined)return [];
+  if(!int(world.tick)||!int(world.nextId,1))return ['Invalid group planet authority.'];
+  const planet=validatedPlanetFor(context,world,version);
+  if(!planet)return ['Invalid group planet authority.'];
+  return validateGroupOwners(world,version,planet);
+}
+function validateGroupOwners(world:World,version:number,planet:PlanetState):string[] {
   const raw=world as unknown as Record<string,unknown>,errors:string[]=[];
   const fail=(message:string)=>errors.push(message);
-  if(version<=195)return ['group','groupLosses'].some(k=>Object.hasOwn(raw,k))?['Future group owner in historical schema.']:[];
   const group=raw.group,losses=raw.groupLosses;
-  if(group===undefined&&losses===undefined)return [];
-  if(!int(world.tick)||!int(world.nextId,1)||validatePlanet(raw.planet,world,version).length||raw.planet===undefined)return ['Invalid group planet authority.'];
-  const planet=world.planet!;
   const point=(v:unknown)=>object(v)&&keys(v,['x','z'])&&int(v.x,0,world.width-1)&&int(v.z,0,world.height-1);
   const place=(v:unknown)=>int(v,0,planet.tiles.length-1)&&planet.tiles[v]!.biome!=='ocean';
   const thing=(v:unknown)=>int(v,1,world.nextId-1);

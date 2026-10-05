@@ -53,7 +53,7 @@ function runEnergyJourney(stopTick?:number):void {
   // once the observed loop holds for 600 ticks after the rebuilt cable.
   while(w.tick<Math.min(player.startTick+24*6000,stopTick??Infinity)){
     if(diagnostic&&w.tick%250===0){writeTestFileSync('tmp/energy-diagnostic-latest-v85.json',JSON.stringify(checkpoint()));console.info(`Energy diagnostic tick ${w.tick}, ${(performance.now()-started).toFixed(0)}ms, ${w.jobs.length} jobs, ${w.structures.length} structures.`);}
-    if(energyDecisionDue(w)){for(const d of energyDecisions(w,player)){const result=applyCommand(w,d.command);expect(result,JSON.stringify({tick:w.tick,...d,result})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}observe();}
+    if(energyDecisionDue(w,player)){for(const d of energyDecisions(w,player)){const result=applyCommand(w,d.command);expect(result,JSON.stringify({tick:w.tick,...d,result})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}observe();}
     const stations=new Map(w.pawns.flatMap(p=>{const station=w.structures.find(s=>s.id===p.cooking?.stationId);return station?[[p.name,station.kind] as const]:[];}));
     const mines=w.jobs.filter(j=>j.kind==='mine').flatMap(j=>{const t=w.tiles[j.z*w.width+j.x]!;return t.ore?[{cell:j.z*w.width+j.x,ore:t.ore}]:[];});
     const stepStarted=diagnostic?performance.now():0;trackMaintenanceStep(w,repairLedger,()=>trackWoodStep(w,woodLedger,()=>stepWorld(w)));
@@ -82,7 +82,8 @@ function runEnergyJourney(stopTick?:number):void {
     writeTestFileSync('tmp/energy-defence-diagnostic-v209.json',JSON.stringify({checkpoint:checkpoint(),report}));return;
   }
   writeTestFileSync('artifacts/energy-colony-v85.json',JSON.stringify(report));writeTestFileSync('tmp/energy-final-v85.json',serializeWorld(w));
-  expect(player.stage,context()).toBe('done');expect(player.electricMeals,context()).toBeGreaterThan(0);expect(player.nightDrainTicks,context()).toBeGreaterThanOrEqual(120);
+  expect(player.stage,context()).toBe('done');expect(w.tick-player.stageTick,context()).toBeGreaterThanOrEqual(600);
+  expect(player.electricMeals,context()).toBeGreaterThan(0);expect(player.nightDrainTicks,context()).toBeGreaterThanOrEqual(120);
   for(const key of ['batteriesResearch','solarResearch','charged500Wd','nightSupply','frozenFood','switchCut','switchRestored','cableCut','cableRestored'])expect(player.milestones[key],context()).toBeGreaterThan(player.startTick);
   expect(ledger.steelMined,context()).toBeGreaterThan(0);expect(ledger.componentsMined,context()).toBeGreaterThan(0);expect(Object.values(ledger.meals).every(n=>n>0),context()).toBe(true);
   expect(final.stovePowered&&final.coolerPowered,context()).toBe(true);expect(final.coldFood.some(p=>p.rot?.rate===0),context()).toBe(true);

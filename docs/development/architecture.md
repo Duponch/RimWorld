@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V217 — consolidation du transport, schéma 196 inchangé.** [Contrat](snapshot-consolidation-v217.md), [recherche](../research/planet-cache-v217.md), [preuve](../history/validation-snapshot-consolidation-v217.md). Le décodeur possède une copie des primitives géographiques validées ; les contexts restent opaques, comparés par valeurs et engagés après tous les gardes. Les grands cycles de simulation restent une dette distincte.
+
 **V216 livré dans le périmètre contrôlé, schéma 196.** [Globe et groupe](planet-group-v216.md) : géographie privée bornée, captures et routes séparées, propriétaires humains exclusifs et horloges cliniques explicites. Les noyaux de besoins, soins et commerce sont partagés avec les domaines locaux ; la présentation SVG lit le snapshot confirmé. [Recherche primaire](../research/planet-group-core-v216.md), [contrôles et limites](../history/validation-planet-group-v216.md). Les gros orchestrateurs historiques et le coût général de simulation/publication restent à consolider.
 
 **V214 livré dans le périmètre contrôlé, schéma 195.** Proches annoncés, couples adultes, opinions dirigées, logement par deux lits possédés et deuil familial au décès réel. [Contrat](family-v214.md), [recherche](../research/family-core-v214.md), [preuve et limites](../history/validation-family-v214.md). 537 fichiers/2 442 réussis/un ignoré, 31 nouveaux cas, build et parcours natif composé ; mariage, lit double, enfants, planète et performance générale restent ouverts.

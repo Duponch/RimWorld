@@ -27,8 +27,7 @@ import { validCorpseConsumption } from '../sim/corpse-anatomy.ts';
 import { V190_ITEM_IDS } from '../sim/biome-items.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
 import { validateRelationshipWorld } from '../sim/relationship-world-save.ts';
-import { validatePlanet } from '../sim/planet-save.ts';
-import { validateGroupState } from '../sim/group-save.ts';
+import { validateGroupStateWithPlanet } from '../sim/group-save.ts';
 import { registerGroupThingIds } from '../sim/group-namespace-save.ts';
 import { captureHumanOwners } from '../sim/human-owners.ts';
 import { validateSocial } from '../sim/social-save.ts';
@@ -57,6 +56,7 @@ import { validWeaponShape } from '../sim/equipment-save.ts';
 import { pileMaxHp } from '../sim/thing-damage-rules.ts';
 import type { MaterialPile, Pawn, Resource, Terrain, Tile, World } from '../sim/types.ts';
 import { TileSnapshotCache, type TileDelta } from './tile-snapshot-cache.ts';
+import { PlanetValidationCache, type PlanetPreparation } from './planet-validation-cache.ts';
 import { validBackground } from '../sim/colonist-backgrounds.ts';
 import { validHumanAge, type HumanAge } from '../sim/human-age.ts';
 import { validOfferedBackground } from '../sim/background-save.ts';
@@ -309,6 +309,7 @@ export class SnapshotDecoder {
   private epoch = 0;
   private revision = 0;
   private current: World | undefined;
+  private readonly planetValidation = new PlanetValidationCache();
   // The decoder owns immutable snapshots. Membership changes rebuild this
   // index; ordinary growth/metadata packets only copy the array of references.
   private resourceSlots = new Map<number, number>();
@@ -363,6 +364,7 @@ export class SnapshotDecoder {
     if(!validPodRescueTransportBindings(message.world))return resync('Secours civil invalide pour ce snapshot.');
     if(message.kind==='checkpoint'&&(!Array.isArray(message.world.tiles)||message.world.tiles.some(tile=>!tile||!validMiningDamage(tile,message.world.schemaVersion))))return resync('Rendement ou dégâts miniers invalides pour ce snapshot.');
     let next: World;
+    let planetCheck: PlanetPreparation | undefined;
     let reindexResources = message.kind === 'checkpoint';
     let reindexPiles = message.kind === 'checkpoint';
     if (message.kind === 'checkpoint') {
@@ -548,17 +550,18 @@ export class SnapshotDecoder {
       }
       if(validateMechanoids(next,next.schemaVersion,ids).length)return resync('Identité, cible ou déplacement mécanique invalide.');
       if(validateMechanoidRaids(next,next.schemaVersion,ids).length)return resync('Identité mécanique historique réutilisée dans un autre propriétaire.');
-      if(validatePlanet(next.planet,next,next.schemaVersion).length||validateGroupState(next,next.schemaVersion).length)return resync('Planète, groupe ou pertes incohérents.');
+      planetCheck=this.planetValidation.prepare(next,next.schemaVersion,message.epoch);
+      if(!planetCheck.ok||validateGroupStateWithPlanet(next,next.schemaVersion,planetCheck.context).length)return resync('Planète, groupe ou pertes incohérents.');
       if(registerGroupThingIds(next,ids).length)return resync('Une identité du groupe possède plusieurs propriétaires.');
       if(validateProjectiles(next,next.schemaVersion,ids).length)return resync('Balle ou canon lanceur invalide.');
       const bombErrors:string[]=[];validateBombWaves(next,bombErrors,ids);if(bombErrors.length)return resync('Vague Bomb ou identité invalide.');
       if(validateBombRefuges(next,[],ids).length)return resync('Refuge ou danger Bomb incohérent.');
     }
-    if(this.current&&message.epoch===this.epoch&&this.current.planet){
-      const before=this.current.planet,after=next.planet;
-      if(!after||before.revision!==after.revision||before.adoptedAt!==after.adoptedAt||before.generationSeed!==after.generationSeed||before.homeTile!==after.homeTile||before.civilianTile!==after.civilianTile||after.nextGroupId<before.nextGroupId
-        ||before.tiles.some((tile,i)=>{const n=after.tiles[i];return !n||tile.id!==n.id||tile.biome!==n.biome||tile.hilliness!==n.hilliness||tile.meanTemperature!==n.meanTemperature||tile.rainfall!==n.rainfall||tile.center.some((v,j)=>v!==n.center[j])||tile.neighbours.length!==n.neighbours.length||tile.neighbours.some((v,j)=>v!==n.neighbours[j]);}))return resync('La géographie confirmée a changé sans remplacement.');
-    }
+    // An absent planet also belongs to the accepted epoch. A replacement
+    // without planetary owners must clear the previous witness atomically.
+    planetCheck??=this.planetValidation.prepareAbsence(message.epoch);
+    if(!planetCheck.ok)return resync('Planète, groupe ou pertes incohérents.');
+    if(planetCheck.geographyChanged)return resync('La géographie confirmée a changé sans remplacement.');
     if(Object.hasOwn(next,'group')||Object.hasOwn(next,'groupLosses')){
       try {const people=captureHumanOwners(next).people;
         if(validateSocial(next,next.schemaVersion,new Set(people.keys())).length||next.pawns.some(p=>!validBereavement(p.bereavement,p.id,next.schemaVersion,next,people)))return resync('Souvenirs de personnes hors carte incohérents.');
@@ -566,6 +569,7 @@ export class SnapshotDecoder {
     }
     if(validateRelationshipWorld(next,next.schemaVersion).length)return resync('Liens, annonce ou souvenirs relationnels incohérents.');
     // Commit only after every patch is checked. A refusal preserves both state and revision.
+    if(!this.planetValidation.commit(planetCheck))return resync('Planète, groupe ou pertes incohérents.');
     const replaced = message.epoch !== this.epoch;
     if(reindexResources){this.resourceSlots.clear();for(let i=0;i<next.resources.length;i++)this.resourceSlots.set(next.resources[i]!.id,i);}
     if(reindexPiles){this.pileSlots.clear();for(let i=0;i<next.piles.length;i++)this.pileSlots.set(next.piles[i]!.id,i);}

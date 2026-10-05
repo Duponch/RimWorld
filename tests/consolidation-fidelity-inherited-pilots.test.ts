@@ -105,19 +105,37 @@ test('energy raid policy rechecks real enclosures after a breach and retains ord
   const before=serializeWorld(w),intact=energyDecisions(w,s);
   expect(serializeWorld(w)).toBe(before);
   const targets=(decisions:ReturnType<typeof energyDecisions>,ids:number[])=>decisions.flatMap(d=>d.command.type==='draft-move'&&d.command.pawnIds.some(id=>ids.includes(id))?[d.command.target]:[]);
-  expect(targets(intact,civilians.map(p=>p.id))).toEqual([{x:13,z:13},{x:14,z:13}]);
+  // The former cell-rank oracle moved already safe civilians toward occupied
+  // cells. V217 retains their real positions, then selects free reachable cells
+  // only when this shelter ceases to be admissible.
+  expect(targets(intact,civilians.map(p=>p.id))).toEqual([]);
+  expect(civilians.map(p=>({x:p.x,z:p.z}))).toEqual([{x:14,z:13},{x:15,z:13}]);
   expect(targets(intact,[defender.id])).toEqual([{x:17,z:16}]);
   for(const d of intact)expect(applyCommand(w,d.command).ok,JSON.stringify(d)).toBe(true);
+  expect(civilians.every(p=>p.draft?.target===null)).toBe(true);
+  expect(defender.draft!.target).toEqual({x:17,z:16});
+  const admissibleRefuges=(decisions:ReturnType<typeof energyDecisions>,anchor:{x:number;z:number})=>{
+    const cells=targets(decisions,civilians.map(p=>p.id));expect(cells).toHaveLength(2);
+    expect(new Set(cells.map(c=>c.z*w.width+c.x)).size).toBe(2);
+    for(const cell of cells){
+      expect(cell.x>anchor.x&&cell.x<anchor.x+4&&cell.z>anchor.z&&cell.z<anchor.z+4).toBe(true);
+      expect(w.pawns.some(p=>p.state!=='dead'&&p.x===cell.x&&p.z===cell.z)).toBe(false);
+    }
+    return cells;
+  };
   const wall=w.structures.find(q=>q.kind==='wall'&&q.x===12&&q.z===13)!;
   expect(damageBarrier(w,wall,barrierMaxHp(wall))).toBe(true);
   const reached=serializeWorld(w),evacuate=energyDecisions(w,s);
   expect(serializeWorld(w)).toBe(reached);
-  expect(targets(evacuate,civilians.map(p=>p.id))).toEqual([{x:3,z:5},{x:4,z:5}]);
+  const first=admissibleRefuges(evacuate,s.origin);
   for(const d of evacuate)expect(applyCommand(w,d.command).ok,JSON.stringify(d)).toBe(true);
+  expect(civilians.map(p=>p.draft!.target)).toEqual(first);expect(validateWorld(w)).toEqual([]);
   const door=w.structures.find(q=>q.kind==='door'&&q.x===6&&q.z===4)!;
   expect(applyCommand(w,{type:'door-policy',structureId:door.id,setting:'holdOpen',value:true}).ok).toBe(true);
-  const reconsider=energyDecisions(w,s);
-  expect(targets(reconsider,civilians.map(p=>p.id))).toEqual([{x:3,z:12},{x:4,z:12}]);
+  const opened=serializeWorld(w),reconsider=energyDecisions(w,s);
+  expect(serializeWorld(w)).toBe(opened);
+  const second=admissibleRefuges(reconsider,{x:s.origin.x,z:s.origin.z+7});
   for(const d of reconsider)expect(applyCommand(w,d.command).ok,JSON.stringify(d)).toBe(true);
+  expect(civilians.map(p=>p.draft!.target)).toEqual(second);
   expect(validateWorld(w)).toEqual([]);
 });

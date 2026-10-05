@@ -20,6 +20,7 @@ Start a Vite server for the revision under test, then set:
   PERF_SECONDS      Measured seconds per phase (default 8)
   PERF_WARMUP       Warmup seconds per phase (default 5)
   PERF_GPU          1 enables a separate timestamp-instrumented run
+  PERF_RAW          1 retains individual phase observations in the report
   PERF_SHADOWS      on/off (default on)
   PERF_SHADOW_CACHE on/off (default on; V140 paused-map optimization)
   PERF_CLOUDS       on/off (default on)
@@ -78,6 +79,7 @@ const config = {
   measuredSeconds: numberSetting('PERF_SECONDS', 8, 0.1, 120),
   warmupSeconds: numberSetting('PERF_WARMUP', 5, 0, 120),
   gpuRequested: toggle('PERF_GPU', false),
+  rawSamples: toggle('PERF_RAW', false),
   shadows: toggle('PERF_SHADOWS'),
   shadowCache: toggle('PERF_SHADOW_CACHE'),
   clouds: toggle('PERF_CLOUDS'),
@@ -353,7 +355,9 @@ try {
       snapshotCallbackMs:summarize(ended.snapshotMs),decodeMs:summarize(ended.decodeMs),
       gpuMs:config.gpuRequested ? summarize(ended.gpuMs) : null,gpuError:ended.gpuError,
       encodedDrawCalls:summarize(ended.frames.map(frame => frame.drawCalls)),
-      encodedTriangles:summarize(ended.frames.map(frame => frame.triangles))};
+      encodedTriangles:summarize(ended.frames.map(frame => frame.triangles)),
+      ...(config.rawSamples ? {raw:{frames:ended.frames,workerMs:ended.workerMs,
+        decodeMs:ended.decodeMs,snapshotMs:ended.snapshotMs,gpuMs:ended.gpuMs}} : {})};
     report.phases.push(phase);
     console.log(JSON.stringify({label,scene,speed,rafP95:phase.rafMs?.p95,frameCpuP95:phase.frameCpuMs?.p95,
       gpuP95:phase.gpuMs?.p95,workerStepP95:phase.workerStepMs?.p95,achievedSpeed:phase.achievedSpeed}));

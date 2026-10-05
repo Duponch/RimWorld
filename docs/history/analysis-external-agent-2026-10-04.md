@@ -1,6 +1,6 @@
 # Rapport externe : appréciation critique et changement de méthode
 
-Analyse du rapport communiqué le 4 octobre, confrontée au code courant, aux contrats et à l’[audit vérifié](audit-code-core-2026-10-04.md). Les affirmations ci-dessous concernent Core ; elles ne supposent pas une parité avec les extensions. La [consolidation V209](../development/consolidation-v209.md) applique les corrections autorisées. Ses [résultats de validation](validation-consolidation-v209.md) sont distincts de ces recommandations.
+Analyse du rapport communiqué le 4 octobre, confrontée au code courant, aux contrats et à l’[audit vérifié](audit-code-core-2026-10-04.md). Les affirmations ci-dessous concernent Core ; elles ne supposent pas une parité avec les extensions. Le verdict porte sur l’état audité V208/V209. Les piliers ont depuis avancé dans les périmètres documentés V210–V216 : passé, crises, défense, première menace mécanique, proches/couples et voyage collectif. Lire l’[inventaire fonctionnel actuel](../gameplay/implementation-status.md) pour leur couverture et la [validation courante](../development/validation.md) pour les preuves ; ces livraisons bornées ne rendent pas le diagnostic initial faux ni le Core complet. La [consolidation V209](../development/consolidation-v209.md) applique les corrections autorisées. Ses [résultats de validation](validation-consolidation-v209.md) sont distincts de ces recommandations.
 
 ## Le diagnostic de priorité est juste
 
