@@ -1,5 +1,5 @@
 import { expect,vi } from 'vitest';
-import { woodAccount } from './colony-player.ts';
+import { woodAccount } from './wood-account.ts';
 import type { World } from '../../src/sim/types.ts';
 
 export interface WoodGatherCapture {

@@ -8,8 +8,7 @@ import { expect,onTestFailed,test } from 'vitest';
 import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index.ts';
 import { isColonist } from '../src/sim/affiliation.ts';
 import { foodAccount } from './scenarios/colony-player.ts';
-import { energyDecisions,energySummary,newEnergyPlayer,observeEnergy,metalAccount,type EnergyPlayerState } from './scenarios/energy-player.ts';
-import { crashlandedThreatActive } from './scenarios/crashlanded-player.ts';
+import { energyDecisionDue,energyDecisions,energySummary,newEnergyPlayer,observeEnergy,metalAccount,type EnergyPlayerState } from './scenarios/energy-player.ts';
 import type { Command,World } from '../src/sim/types.ts';
 
 const fixtureBytes=gunzipSync(readFileSync('tests/fixtures/colony-v84.json.gz')),fixtureHash=createHash('sha256').update(fixtureBytes).digest('hex');
@@ -54,7 +53,7 @@ function runEnergyJourney(stopTick?:number):void {
   // once the observed loop holds for 600 ticks after the rebuilt cable.
   while(w.tick<Math.min(player.startTick+24*6000,stopTick??Infinity)){
     if(diagnostic&&w.tick%250===0){writeTestFileSync('tmp/energy-diagnostic-latest-v85.json',JSON.stringify(checkpoint()));console.info(`Energy diagnostic tick ${w.tick}, ${(performance.now()-started).toFixed(0)}ms, ${w.jobs.length} jobs, ${w.structures.length} structures.`);}
-    if(w.tick%250===0||crashlandedThreatActive(w)&&w.tick%20===0){for(const d of energyDecisions(w,player)){const result=applyCommand(w,d.command);expect(result,JSON.stringify({tick:w.tick,...d,result})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}observe();}
+    if(energyDecisionDue(w)){for(const d of energyDecisions(w,player)){const result=applyCommand(w,d.command);expect(result,JSON.stringify({tick:w.tick,...d,result})).toMatchObject({ok:true});journal.push({tick:w.tick,...d});}observe();}
     const stations=new Map(w.pawns.flatMap(p=>{const station=w.structures.find(s=>s.id===p.cooking?.stationId);return station?[[p.name,station.kind] as const]:[];}));
     const mines=w.jobs.filter(j=>j.kind==='mine').flatMap(j=>{const t=w.tiles[j.z*w.width+j.x]!;return t.ore?[{cell:j.z*w.width+j.x,ore:t.ore}]:[];});
     const stepStarted=diagnostic?performance.now():0;trackMaintenanceStep(w,repairLedger,()=>trackWoodStep(w,woodLedger,()=>stepWorld(w)));

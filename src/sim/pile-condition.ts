@@ -3,7 +3,7 @@ import { mergedFoodPoison } from './food-poisoning.ts';
 import type { MaterialPile } from './types.ts';
 
 /** A split keeps the condition of the whole stack; it creates no fresh goods. */
-export function copyPileCondition(pile:MaterialPile):Pick<MaterialPile,'rot'|'damage'|'foodPoison'> {
+export function copyPileCondition(pile:Pick<MaterialPile,'rot'|'damage'|'foodPoison'>):Pick<MaterialPile,'rot'|'damage'|'foodPoison'> {
   return {...copyRot(pile),...(pile.damage?{damage:pile.damage}:{}),...(pile.foodPoison?{foodPoison:{...pile.foodPoison}}:{})};
 }
 /** Capture both quantities before the material transfer, including fresh food. */

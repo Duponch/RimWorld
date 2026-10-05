@@ -22,7 +22,7 @@ export function ticksUntilRot(pile: MaterialPile, tick: number): number {
 export function freshRot(item: ItemId, tick: number): { rot?: RotState } {
   return isPerishable(item) ? { rot: { progress: 0, atTick: tick } } : {};
 }
-export function copyRot(pile: MaterialPile): { rot?: RotState } {
+export function copyRot(pile: Pick<MaterialPile,'rot'>): { rot?: RotState } {
   return pile.rot ? { rot: { ...pile.rot } } : {};
 }
 /** Call before increasing target.quantity; incomingAge=0 means newly produced food. */

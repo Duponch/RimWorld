@@ -1,3 +1,4 @@
+import { groupReservedQuantities,groupReservedQuantity } from './group-reservations.ts';
 import { commercialReservedQuantity,commercialReservedSources } from './commercial-reservations.ts';
 import { removeIdentity } from './collection-remove.ts';
 import { pawnContentsLocation } from './human-corpses.ts';
@@ -102,7 +103,7 @@ export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):
   refreshStock(world);return true;
 }
 export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {
-  let quantity = commercialReservedQuantity(world,pileId,exceptPawn);
+  let quantity = commercialReservedQuantity(world,pileId,exceptPawn)+groupReservedQuantity(world,pileId);
   if(world.scout?.phase==='loading'&&world.scout.pawnId!==exceptPawn&&world.scout.sourcePileId===pileId)quantity+=world.scout.quantity;
   for(const a of world.wildlife?.animals??[])if(a.id!==exceptPawn&&a.meal?.kind==='pile'&&a.meal.id===pileId)quantity+=a.meal.quantity;
   for (const pawn of world.pawns) {
@@ -138,6 +139,7 @@ export function reservedSourcesByPile(world: World, exceptPawn?: number): Readon
   };
   if(world.scout?.phase==='loading'&&world.scout.pawnId!==exceptPawn)add(world.scout.sourcePileId,world.scout.quantity);
   for(const [id,quantity] of commercialReservedSources(world,exceptPawn))add(id,quantity);
+  for(const [id,quantity] of groupReservedQuantities(world))add(id,quantity);
   for (const animal of world.wildlife?.animals ?? [])
     if (animal.id !== exceptPawn && animal.meal?.kind === 'pile') add(animal.meal.id, animal.meal.quantity);
   for (const pawn of world.pawns) {

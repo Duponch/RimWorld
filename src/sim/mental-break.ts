@@ -1,3 +1,4 @@
+import { expireMentalCatharsisAt } from './mental-state.ts';
 import { BREAK_MTB_DAYS,finishMentalBreak,mentalState } from './mental-state.ts';
 import { breakThresholds,minorBreakThreshold } from './traits.ts';
 import { moodFrozen,moodThoughts } from './mood.ts';
@@ -54,7 +55,7 @@ export const startMurderousRage=(world:World,pawn:Pawn):boolean=>startAggressive
  * No random calls on healthy ordinary actors. */
 export function updateMentalBreak(world:World,pawn:Pawn,budget?:SearchBudget):void {
   let m=pawn.mental;
-  if(m)m.catharsis=m.catharsis.filter(t=>t>world.tick);
+  expireMentalCatharsisAt(pawn,world.tick);
   if(pawn.state==='dead'){if(m?.crisis)finishMentalBreak(world,pawn,false);return;}
   if(!isColonist(pawn))return;
   if(m?.cooldown&&!moodFrozen(pawn))m.cooldown--;

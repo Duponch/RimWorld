@@ -44,11 +44,12 @@ export function learnSkill(skill:SkillRecord,baseUnits:number,pawn?:Pick<Pawn,'t
   }
 }
 /** Staggered cadence derived from saved tick/id; no clock/cache per actor. */
-export function tickSkills(world:World,pawn:Pawn):void {
-  if((world.tick%20+pawn.id%20)%20!==0)return;
+export function tickSkills(world:World,pawn:Pawn):void {tickSkillsAt(pawn,world.tick);}
+export function tickSkillsAt(pawn:Pawn,tick:number):void {
+  if((tick%20+pawn.id%20)%20!==0)return;
   const skills=pawn.skills;
-  if(world.tick%TICKS_PER_DAY<TICKS_PER_DAY/24&&(skills.lastResetTick<0||world.tick-skills.lastResetTick>=TICKS_PER_DAY/2)) {
-    skills.lastResetTick=world.tick;skills.construction.dailyXp=0;skills.medicine.dailyXp=0;skills.shooting.dailyXp=0;skills.melee.dailyXp=0;if(skills.mining)skills.mining.dailyXp=0;if(skills.plants)skills.plants.dailyXp=0;if(skills.animals)skills.animals.dailyXp=0;if(skills.artistic)skills.artistic.dailyXp=0;if(skills.social)skills.social.dailyXp=0;if(skills.crafting)skills.crafting.dailyXp=0;if(skills.intellectual)skills.intellectual.dailyXp=0;if(skills.cooking)skills.cooking.dailyXp=0;
+  if(tick%TICKS_PER_DAY<TICKS_PER_DAY/24&&(skills.lastResetTick<0||tick-skills.lastResetTick>=TICKS_PER_DAY/2)) {
+    skills.lastResetTick=tick;skills.construction.dailyXp=0;skills.medicine.dailyXp=0;skills.shooting.dailyXp=0;skills.melee.dailyXp=0;if(skills.mining)skills.mining.dailyXp=0;if(skills.plants)skills.plants.dailyXp=0;if(skills.animals)skills.animals.dailyXp=0;if(skills.artistic)skills.artistic.dailyXp=0;if(skills.social)skills.social.dailyXp=0;if(skills.crafting)skills.crafting.dailyXp=0;if(skills.intellectual)skills.intellectual.dailyXp=0;if(skills.cooking)skills.cooking.dailyXp=0;
   }
   for(const skill of [skills.construction,skills.medicine,skills.shooting,skills.melee,...skills.mining?[skills.mining]:[],...skills.plants?[skills.plants]:[],...skills.animals?[skills.animals]:[],...skills.artistic?[skills.artistic]:[],...skills.social?[skills.social]:[],...skills.crafting?[skills.crafting]:[],...skills.intellectual?[skills.intellectual]:[],...skills.cooking?[skills.cooking]:[]]){const loss=decay[skill.level-10];if(loss)learnSkill(skill,-loss,pawn);}
 }

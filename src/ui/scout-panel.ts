@@ -23,7 +23,7 @@ function replaceOptions(select: HTMLSelectElement, entries: readonly (readonly [
 /** Keeps the selectors stable while snapshots refresh the text each tick. */
 export function createScoutUI(root: HTMLElement, send: (command: Command) => void): { update: (world: World) => void } {
   const heading = document.createElement('h2'); heading.textContent = 'Monde · reconnaissance';
-  const intro = document.createElement('p'); intro.textContent = 'Un colon part six heures, puis revient au même foyer. Le trajet est abstrait : aucune destination ni planète n’est encore jouable.';
+  const intro = document.createElement('p'); intro.textContent = 'Un colon part six heures, puis revient au même foyer. Ce circuit individuel reste abstrait et ne suit pas une route du globe.';
   const form = document.createElement('div'); form.className = 'scout-form';
   const pawnLabel = document.createElement('label'); pawnLabel.textContent = 'Colon ';
   const pawnSelect = document.createElement('select'); pawnSelect.id = 'scout-pawn'; pawnSelect.setAttribute('aria-label', 'Colon pour la reconnaissance'); pawnLabel.append(pawnSelect);

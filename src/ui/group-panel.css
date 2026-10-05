@@ -1,0 +1,57 @@
+/* Scope keeps the cream/forest identity and leaves
+   the existing speed/menu column available; no extra fixed overlay/context. */
+#world-panel.world-group-active{
+  width:min(1180px,calc(100vw - 282px));max-width:calc(100vw - 282px);
+  max-height:calc(100dvh - 132px);overflow:auto;box-sizing:border-box;
+}
+.world-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.world-tabs button{padding:7px 12px;border:1px solid var(--line);border-radius:7px;background:#fff9ed;color:var(--ink);font:inherit}
+.world-tabs button[aria-selected=true]{background:#dce5d4;border-color:#78927b;font-weight:700}
+.world-tabs button:focus-visible{outline:3px solid #6c8a7b;outline-offset:2px}
+.group-panel{padding:4px 8px 12px;color:var(--ink);min-width:0;font-variant-numeric:tabular-nums}
+.group-panel h2{margin:6px 0 10px;font:600 22px/1.25 'Lisiere Serif',Georgia,serif}
+.group-panel h3{margin:0 0 9px;font-size:15px}
+.group-panel p{line-height:1.45;overflow-wrap:anywhere}
+.group-grid{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(0,1.15fr);gap:14px;align-items:start}
+.group-details{min-width:0}
+.group-details>section{margin:14px 0;padding:12px;border:1px solid var(--line);border-radius:9px;background:#fff9ec;min-width:0}
+.group-phase,.group-stop{font-weight:700}
+.group-stop,.group-refusal{color:#735a37}
+.group-error{padding:10px;border:1px solid #be866c;border-radius:7px;background:#f4e5d8;color:#763e2b}
+.group-request{padding:10px;border:1px solid #c9ac70;border-radius:7px;background:#f5e9c6;color:#654f2e}
+.group-actions,.group-pages{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.group-panel button{min-height:33px;max-width:100%;padding:5px 10px;font:inherit;border:1px solid #bd9b60;border-radius:7px;background:#fff9ed;color:var(--ink);cursor:pointer}
+.group-panel button[aria-disabled=true]{opacity:.64;cursor:default}
+.group-panel button:focus-visible,.group-panel input:focus-visible,.group-panel select:focus-visible,.planet-view svg:focus-visible{outline:3px solid #6c8a7b;outline-offset:2px}
+.group-table-wrap{max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+.group-panel table{border-collapse:collapse;table-layout:fixed;width:100%;min-width:390px;font-size:12px}
+.group-panel th,.group-panel td{padding:7px 5px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle;overflow-wrap:anywhere}
+.group-panel th{background:#ecebd8;color:var(--forest);font-weight:700}
+.group-panel tr:last-child td{border-bottom:0}
+.group-panel input[type=checkbox]{width:18px;height:18px;accent-color:var(--forest)}
+.group-panel input[type=number]{width:66px;min-height:32px;max-width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid #bd9b60;border-radius:6px;background:#fff9ed;color:var(--ink);font:inherit}
+.group-panel input[readonly]{background:#eee8d8}
+.group-pages{justify-content:end;margin-top:8px;font-size:12px}
+.group-pages span{margin-right:auto}
+.planet-view{padding:12px;border:1px solid var(--line);border-radius:10px;background:#f6efde;min-width:0}
+.planet-view svg{display:block;width:100%;height:auto;max-height:460px;touch-action:none;user-select:none;cursor:grab;border-radius:9px}
+.planet-view svg:active{cursor:grabbing}
+.planet-view label{display:flex;flex-direction:column;gap:6px;font-weight:700}
+.planet-view select{min-height:37px;width:100%;padding:6px 8px;border:1px solid #bd9b60;border-radius:8px;background:#fff9ed;color:var(--ink);font:inherit}
+.planet-disc{fill:#d6e5e5;stroke:#668080;stroke-width:1.5}
+.planet-tile{fill:#b4c99e;stroke:#7d9075;stroke-width:.75;vector-effect:non-scaling-stroke}
+.planet-tile[data-biome=ocean]{fill:#b5d2dc;stroke:#85abb8}
+.planet-tile[data-biome=boreal-forest]{fill:#9bb4a4}
+.planet-tile[data-biome=arid-shrubland]{fill:#d8c697}
+.planet-tile[data-hilliness=mountainous]{fill:#b9b3a1}
+.planet-tile:hover{stroke:#455b4e;stroke-width:2}
+.planet-route{fill:none;stroke:#5d4131;stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke;pointer-events:none}
+.planet-route-preview{stroke:#a1844f;stroke-dasharray:5 5;stroke-width:2}
+.planet-marker{stroke:#fff8ea;stroke-width:2;fill:#697f6b;pointer-events:none}
+.planet-marker-civilian{fill:#a57b44}
+.planet-marker-group{fill:#8b5962}
+.planet-marker-selection{fill:none;stroke:#493c2d;stroke-width:2.5}
+.planet-selection{min-height:2.9em;font-weight:700}
+.group-panel [hidden]{display:none!important}
+@media(max-width:1050px){.group-grid{grid-template-columns:minmax(0,1fr)}.planet-view svg{max-height:300px}.group-panel table{min-width:360px}}
+@media(max-width:700px){#world-panel.world-group-active{width:calc(100vw - 24px);max-width:calc(100vw - 24px);max-height:calc(100dvh - 316px)}.group-panel{padding:4px}.group-details>section{padding:8px}.group-panel table{font-size:11px}}

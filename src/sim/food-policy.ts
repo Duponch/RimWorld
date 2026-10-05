@@ -28,7 +28,8 @@ export const validAllowedFood = (v: unknown): v is FoodItemId[] => Array.isArray
 export function foodAllowed(world: World, pawn: Pawn, item: ItemId): boolean {
   return allowedFood(world, pawn).includes(item as FoodItemId);
 }
-export const allowedFood = (world: World, pawn: Pawn): readonly FoodItemId[] => pawn.mental?.crisis ? FOOD_ITEMS : world.foodPolicies.find(policy => policy.id === pawn.foodPolicyId)?.allowed ?? [];
+export const allowedFood = (world: World, pawn: Pawn): readonly FoodItemId[] => allowedFoodFromPolicies(world.foodPolicies,pawn);
+export const allowedFoodFromPolicies=(policies:readonly FoodPolicy[],pawn:Pawn):readonly FoodItemId[]=>pawn.mental?.crisis?FOOD_ITEMS:policies.find(policy=>policy.id===pawn.foodPolicyId)?.allowed??[];
 
 /** Policy IDs have their own namespace: migrations never renumber entities. */
 export function applyFoodPolicyCommand(world: World, command: FoodPolicyCommand): CommandResult {
@@ -45,13 +46,15 @@ export function applyFoodPolicyCommand(world: World, command: FoodPolicyCommand)
   if (command.type === 'food-policy-update') {
     if (!validPolicyName(command.name) || !validAllowedFood(command.allowed)) return invalid('Nom ou liste des aliments invalide.');
     policy.name = command.name.trim(); policy.allowed = FOOD_ITEMS.filter(id => command.allowed.includes(id));
-    for (const pawn of world.pawns) if (pawn.foodPolicyId === policy.id) pawn.needCooldown = 0;
+    const users=world.group&&'members' in world.group?[...world.pawns,...world.group.members]:world.pawns;
+    for (const pawn of users) if (pawn.foodPolicyId === policy.id) pawn.needCooldown = 0;
   } else if (command.type === 'food-policy-assign') {
     const pawn = world.pawns.find(p => p.id === command.pawnId);
     if (!pawn) return invalid('Colon introuvable.');
     pawn.foodPolicyId = policy.id; pawn.needCooldown = 0;
   } else {
-    if (world.pawns.some(p => isCarePatient(p)&&p.foodPolicyId === policy.id)) return invalid('Ce régime est utilisé : réaffectez ses utilisateurs avant de le supprimer.');
+    const users=world.group&&'members' in world.group?[...world.pawns,...world.group.members]:world.pawns;
+    if (users.some(p => isCarePatient(p)&&p.foodPolicyId === policy.id)) return invalid('Ce régime est utilisé : réaffectez ses utilisateurs avant de le supprimer.');
     if (world.foodPolicies.length === 1) return invalid('Conservez au moins un régime.');
     world.foodPolicies.splice(world.foodPolicies.indexOf(policy), 1);
     for(const p of world.pawns)if(!isCarePatient(p)&&p.foodPolicyId===policy.id)p.foodPolicyId=world.foodPolicies[0]!.id;

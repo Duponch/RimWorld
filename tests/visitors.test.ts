@@ -79,7 +79,9 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   for(const missing of [null,{group:d.group,tick:d.tick,pawn:null,items:[]}] as unknown[]){
     const bad=structuredClone(w) as unknown as {visitors:{departed:unknown[]}};
     bad.visitors.departed[0]=missing;
-    expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow('Invalid frozen visitor departure');
+    // A malformed owner can be rejected by the shared human namespace before
+    // the visitor-specific archive guard. Both must refuse the whole save.
+    expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/Invalid.*(?:frozen visitor departure|quest human ownership)/);
   }
   for(const mutate of [(v:World)=>v.visitors!.departed[0]!.pawn.id=v.pawns[0]!.id,(v:World)=>v.visitors!.departed[0]!.items[0]!.id=v.pawns[0]!.id,(v:World)=>v.visitors!.departed[0]!.pawn.hunger=Infinity,(v:World)=>v.visitors!.departed[0]!.pawn.need={kind:'sleep',phase:'sleep',bedId:null,target:{x:1,z:1}},(v:World)=>v.visitors!.departed[0]!.items[0]!.owner={type:'inventory',pawnId:v.pawns[0]!.id}]){const bad=structuredClone(w);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
 });

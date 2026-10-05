@@ -8,7 +8,7 @@ import { commercialDepartureReason,commercialPreparationReason,commercialUnloadR
 import { groundCapacity,nearbyGround } from './ground-placement.ts';
 import { refreshStock,reservedSource,transferPile } from './materials.ts';
 import { adjacent,blockedCells,routeToCell,routeToJob } from './pathfinding.ts';
-import { copyPileCondition } from './pile-condition.ts';
+import { planInventoryPickup,commitInventoryPickup } from './inventory-pickup.ts';
 import { visitorAtEdge,visitorExit } from './visitor-navigation.ts';
 import type { NeedContext } from './needs.ts';
 import type { Cell,CommandResult,MaterialPile,Pawn,World } from './types.ts';
@@ -61,7 +61,7 @@ export function applyCommercialPreparation(w:World,c:PreparationCommand):Command
   }
   const p=w.pawns.find(p=>p.id===c.pawnId);if(!p)return fail('Colon introuvable.');
   if(c.type==='commercial-unload'){
-    if(w.commercialTrip)return fail('Une expédition ou décharge est déjà engagée.');
+    if(w.commercialTrip||w.group)return fail('Une expédition ou décharge est déjà engagée.');
     if(!isColonist(p)||p.prisoner||p.visitor||p.state==='dead'||p.state==='downed')return fail('Choisissez un colon libre et présent.');
     const reason=commercialUnloadReason(w,p);if(reason)return fail(reason);
     const held=inventory(w,p);
@@ -77,7 +77,7 @@ export function applyCommercialPreparation(w:World,c:PreparationCommand):Command
       ||c.cargo.some(l=>!l||typeof l!=='object'||Object.keys(l).some(k=>!['pileId','quantity'].includes(k))||!Number.isSafeInteger(l.pileId)||l.pileId<1||!Number.isSafeInteger(l.quantity)||l.quantity<1)
       ||new Set(c.cargo.map(l=>l.pileId)).size!==c.cargo.length)||c.silver===0&&!c.cargo?.length)
     return fail('Choisissez deux ou trois rations, de l’argent ou un fret textile positif.');
-  if(w.commercialTrip||w.scout)return fail('Un voyage est déjà engagé.');
+  if(w.commercialTrip||w.scout||w.group)return fail('Un voyage ou groupe est déjà engagé.');
   const reason=scoutEligible(w,p)??commercialPreparationReason(w,p);if(reason)return fail(reason);
   if(!Number.isSafeInteger(w.tick+2*COMMERCIAL_LEG_TICKS+COMMERCIAL_DECISION_TICKS))return fail('Échéance de voyage hors limites.');
   const food=w.piles.find(i=>i.id===c.foodPileId);
@@ -150,9 +150,9 @@ export function processCommercialOnMap(w:World,p:Pawn,ctx:NeedContext):boolean {
       if(!p.path.length){const path=routeToJob(w,source.owner,candidateAccess(w,p,blockedCells(w),new Set()),true);if(path===null){cancel(w,p);return false;}p.path=path;}
       ctx.move(source.owner,false);return true;
     }
-    if(source.quantity>line.quantity&&(w.piles.length>=32768||!Number.isSafeInteger(w.nextId+1))){cancel(w,p);return false;}
-    if(source.quantity===line.quantity){source.owner={type:'inventory',pawnId:p.id};line.carriedPileId=source.id;}
-    else {source.quantity-=line.quantity;const part={...source,id:w.nextId++,quantity:line.quantity,owner:{type:'inventory' as const,pawnId:p.id},...copyPileCondition(source)};w.piles.push(part);line.carriedPileId=part.id;}
+    const pickup=planInventoryPickup(w,source,p.id,line.quantity);
+    if(!pickup||!commitInventoryPickup(w,pickup)){cancel(w,p);return false;}
+    line.carriedPileId=pickup.carried.id;
     refreshStock(w);s.cursor++;p.path=[];p.planCooldown=0;
     if(s.cursor===s.manifest.length){
       w.commercialTrip={phase:'leaving',pawnId:p.id,foodPileId:s.manifest[0]!.carriedPileId!,foodQuantity:s.foodQuantity,silverQuantity:s.silverQuantity,startedAt:s.startedAt,exit:null,...s.cargo?{cargo:{...s.cargo}}:{}};p.state='moving';

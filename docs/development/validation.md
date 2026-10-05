@@ -1,4 +1,6 @@
-# Validation courante — consolidation V215
+# Validation courante — V216
+
+**V216 livré dans le périmètre contrôlé, schéma 196.** [Contrat](planet-group-v216.md), [recherche primaire](../research/planet-group-core-v216.md), [preuves et limites](../history/validation-planet-group-v216.md). Globe de 162 cases, groupe original, chargement, voyage, besoins, commerce et retour physiques. Régression par reprises : 557 fichiers, 2 515 réussites et un ignoré ; ciblés, typage/build, présentation et navigateur matériel composé passent. La 58e scène est préparée ; quatre campagnes V215 restent rouges, leurs reprises prospectives sont distinctes. G0–G5 et la performance générale restent ouverts.
 
 **V215 — consolidation au schéma195 inchangé.** Défense au contact, noms historiques, entretien du Foyer et bilans physiques des campagnes corrigés. [Contrat](campaign-consolidation-v215.md), [contrôles et limites](../history/validation-campaign-consolidation-v215.md). Régression hors campagnes longues :542fichiers,2457réussis/un ignoré ; la cohorte longue initiale reste distincte et ses cinq parcours en échec seront rejoués sur une copie figée. Planète/groupes restent en préparation.
 

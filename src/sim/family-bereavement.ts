@@ -1,3 +1,4 @@
+import { captureHumanOwners } from './human-owners.ts';
 import { isColonist } from './affiliation.ts';
 import { captureRelationshipPeople } from './relationship-namespace.ts';
 import { relationshipIndex } from './relationship-runtime.ts';
@@ -20,10 +21,12 @@ export function expireFamilyBereavement(pawn:Pawn,tick:number):void {
 /** Only the real clinical death transition calls this producer. No load,
  * admission, grave or destruction can replay an old death. */
 export function notifyFamilyDeath(world:World,deceased:Pawn):void {
-  if(world.schemaVersion<195||!world.relationships?.links.length||!world.pawns.includes(deceased)||deceased.state!=='dead'||!deceased.health?.death)return;
+  if(world.schemaVersion<195||!world.relationships?.links.length||deceased.state!=='dead'||!deceased.health?.death)return;
+  const owners=captureHumanOwners(world);if(owners.byId.get(deceased.id)?.pawn!==deceased)return;
   const deathAt=deceased.health.death.tick,links=world.relationships.links;
   const index=links.some(link=>link.recordedAt>deathAt)?captureRelationshipIndex({links:links.filter(link=>link.recordedAt<=deathAt)}):relationshipIndex(world);
-  for(const p of world.pawns){
+  for(const slot of [...owners.local,...owners.away]){
+    const p=slot.pawn!;
     if(p===deceased||!isColonist(p)||p.prisoner||p.visitor||p.state==='dead')continue;
     expireFamilyBereavement(p,world.tick);
     if(p.familyBereavement?.some(m=>m.otherId===deceased.id))continue;
@@ -35,11 +38,12 @@ export function notifyFamilyDeath(world:World,deceased:Pawn):void {
     memories.push({otherId:deceased.id,kind,at:world.tick});
   }
 }
-export function familyBereavementThoughts(world:World,pawn:Pawn):MoodThought[] {
+export function familyBereavementThoughts(world:World,pawn:Pawn):MoodThought[] {return familyBereavementThoughtsAt(pawn,world.tick,captureRelationshipPeople(world));}
+export function familyBereavementThoughtsAt(pawn:Pawn,tick:number,people:Pick<ReadonlyMap<number,{readonly name:string}>,'get'>):MoodThought[] {
   if(!pawn.familyBereavement)return [];
-  const people=captureRelationshipPeople(world),groups=new Map<string,FamilyDeathMemory[]>();
+  const groups=new Map<string,FamilyDeathMemory[]>();
   for(const m of pawn.familyBereavement){
-    if(m.at+FAMILY_DEATH_DURATION<=world.tick)continue;
+    if(m.at+FAMILY_DEATH_DURATION<=tick)continue;
     const key=`${m.kind}:${people.get(m.otherId)?.name??'cette personne'}`,group=groups.get(key)??[];group.push(m);groups.set(key,group);
   }
   return [...groups.values()].map<MoodThought>(group=>{

@@ -1,13 +1,13 @@
 import { isBedKind } from './bed-kinds.ts';
 import { colonyExpectation } from './colony-economy.ts';
-import { malnutritionModifiers } from './malnutrition.ts';
+import { depletedHumanHunger } from './human-need-rates.ts';
 import { advanceRoomRest } from './room-experience.ts';
 import { resetTactics } from './tactics-state.ts';
 import type { Reachability } from './pathfinding.ts';
 import { interruptWork,retryInterruptedCargo } from './interrupted-cargo.ts';
 import { urgentMedicalTask } from './urgent-care.ts';
 import { reservedSource } from './materials.ts';
-import { mealQuantity, adultHungerFactor } from './items.ts';
+import { mealQuantity } from './items.ts';
 import { TICKS_PER_DAY } from './types.ts';
 import { processEating } from './eating.ts';
 import { pileFoodScore, foodSearchGoals, selectFood } from './food-selection.ts';
@@ -21,7 +21,7 @@ import { capturePrisonTopology } from './prison-space.ts';
 import type { Cell, Pawn, World } from './types.ts';
 
 // Baseline adult: 1.6 nutrition/day; 100 meter points = one nutrition.
-export const HUNGER_PER_TICK = 160 / TICKS_PER_DAY;
+export { HUNGER_PER_TICK } from './human-need-rates.ts';
 export { REST_PER_TICK, BED_REST_PER_TICK, GROUND_REST_PER_TICK } from './rest.ts';
 export { PORTION_NUTRITION } from './eating.ts';
 export { INGEST_TICKS } from './eating.ts';
@@ -111,7 +111,7 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
 }
 
 export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment,readFurnitureSight?:FurnitureSight,topology?:import('./room-topology.ts').RoomTopology|(()=>import('./room-topology.ts').RoomTopology)): void {
-  pawn.hunger = Math.max(0, pawn.hunger - (world.foodRules === 'legacy' ? 0.015 : HUNGER_PER_TICK * adultHungerFactor(pawn.hunger)) * malnutritionModifiers(pawn.health?.malnutrition).hungerFactor);
+  pawn.hunger=depletedHumanHunger(pawn,world.foodRules==='legacy');
   updateRest(world, pawn);
   advanceRoomRest(world,pawn);
   if(!pawn.prisoner)updateRecreation(pawn,body,(colonyExpectation(world,pawn)?.joyToleranceDropPerDay??.18)*100/TICKS_PER_DAY);

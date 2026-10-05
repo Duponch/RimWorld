@@ -66,7 +66,7 @@ function groupProfiles(random:{rng:number},points:number):string[] {
  * are accepted. A refused opportunity creates neither a person nor a pile. */
 function arrive(w:World,kind:VisitorKind,intro=false,exotic=false):boolean {
   const s=w.visitors!;
-  if(!w.pawns.some(p=>isColonist(p)&&p.state!=='dead')||w.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p))||s.serial>=Number.MAX_SAFE_INTEGER||s.departed.length+w.pawns.length+Number(!!civilianAway(w))>=w.width*w.height)return false;
+  if(!w.pawns.some(p=>isColonist(p)&&p.state!=='dead')||w.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p))||s.serial>=Number.MAX_SAFE_INTEGER||s.departed.length+w.pawns.length+civilianAwayCounts(w).people>=w.width*w.height)return false;
   const random={rng:exotic?((w.seed^w.tick^s.serial^0xe70c)>>>0)||1:s.rng},profiles=exotic?['Négociant exotique']:groupProfiles(random,intro?40+Math.floor(visitorRandom(random)*60):visitorPoints(random,kind));
   const arrival=visitorArrival(w,Math.floor(visitorRandom(random)*4294967296),profiles.length,kind);
   if(!profiles.length||!arrival||!civilianAdmissionFits(w,profiles.length))return false;
@@ -170,4 +170,4 @@ export function exitVisitor(w:World,p:Pawn):boolean {
   for(const q of w.pawns)if(q.trade?.traderId===p.id){delete q.trade;q.path=[];if(q.state==='moving'&&q.moveCooldown===0)q.state='idle';}
   log(w,`${p.name} quitte la carte avec ses possessions restantes.`);return true;
 }
-import { civilianAdmissionFits,civilianAway } from './civilian-away.ts';
+import { civilianAdmissionFits,civilianAwayCounts } from './civilian-away.ts';

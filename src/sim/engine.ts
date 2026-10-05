@@ -1,3 +1,6 @@
+import { validGroupCommand } from './group-command-shape.ts';
+import { applyGroupCommand,groupOnMapMember,cancelGroupPreparation } from './group-authority.ts';
+import { processGroupOnMap,tryGroupDeparture,advanceGroup,reconcileGroupPreparation } from './group-driver.ts';
 import { processMechanoidCombat,mechanoidCombatBatch } from './mechanoid-combat.ts';
 import {isMechSalvageRecipe} from './mechanoid-salvage.ts';
 import {advanceMechanoidCorpses} from './mechanoid-corpse.ts';
@@ -353,12 +356,14 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='planet-adopt'||command.type==='group-start'||command.type==='group-cancel'||command.type==='group-pause'||command.type==='group-route'||command.type==='group-buy'||command.type==='group-sell'||command.type==='group-unload')return validGroupCommand(command)?applyGroupCommand(world,command):refusal('invalid-command','Commande de groupe invalide.');
   if(command.type==='commercial-start'||command.type==='commercial-cancel'||command.type==='commercial-unload')return applyCommercialPreparation(world,command);
   if(command.type==='commercial-buy')return applyCommercialBuy(world,command);
   if(command.type==='commercial-sell')return applyCommercialSell(world,command);
   if(command.type==='commercial-return')return applyCommercialReturn(world);
   if(command.type==='scout-start'||command.type==='scout-cancel'||command.type==='scout-unload')return applyScoutCommand(world,command);
   const actors='pawnIds' in command&&Array.isArray(command.pawnIds)?command.pawnIds:'pawnId' in command&&command.pawnId!==null?[command.pawnId]:[];
+  if(actors.some(id=>groupOnMapMember(world,id))&&(typeof command.type==='string'&&command.type.startsWith('order-')||['clear-orders','draft','draft-move','draft-stop','shoot','melee','clean-room'].includes(command.type)))return refusal('invalid-command','Terminez ou annulez la préparation du groupe avant de donner un autre ordre.');
   const scoutId=scoutOnMapId(world)??commercialOnMapId(world);
   if(scoutId!==null&&actors.includes(scoutId)&&(typeof command.type==='string'&&command.type.startsWith('order-')||['clear-orders','draft','draft-move','draft-stop','shoot','melee','clean-room'].includes(command.type)))
     return refusal('invalid-command','Terminez ou annulez le voyage et son déchargement avant de donner un autre ordre à ce colon.');
@@ -704,6 +709,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       const body=updatePawnHealth(world,pawn);
       if(scoutOnMapId(world)===pawn.id&&(pawn.state==='dead'||pawn.state==='downed'))applyScoutCommand(world,{type:'scout-cancel'});
       if(commercialOnMapId(world)===pawn.id&&(pawn.state==='dead'||pawn.state==='downed'))applyCommercialPreparation(world,{type:'commercial-cancel'});
+      if(groupOnMapMember(world,pawn.id)&&(pawn.state==='dead'||pawn.state==='downed'||pawn.mental?.crisis))cancelGroupPreparation(world);
       if(pawn.equipmentDropPending)dropIncapacitatedEquipment(world,pawn,true);
       if(pawn.state==='dead'){expireMealMemories(world,pawn);updateMentalBreak(world,pawn);continue;}
       if(completedEdge)recordFilthMovement(world,pawn);
@@ -720,7 +726,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
       if((hasAdversary||pawn.meleeThreat&&world.tick*10-pawn.meleeThreat.atCore<=400)&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget,animalThreats);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
-      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = scoutOnMapId(world)===pawn.id || commercialOnMapId(world)===pawn.id || pawn.animalHandling || pawn.animalCare || pawn.burial || pawn.cleaning || pawn.visitor || pawn.podRescue || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.bombRefuge || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.surgery || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = groupOnMapMember(world,pawn.id) || scoutOnMapId(world)===pawn.id || commercialOnMapId(world)===pawn.id || pawn.animalHandling || pawn.animalCare || pawn.burial || pawn.cleaning || pawn.visitor || pawn.podRescue || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.bombRefuge || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.surgery || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         recreationTopology:()=>getLight().topology,
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
@@ -730,6 +736,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       };
       if(processBurning(world,pawn,needsContext))continue;
       if(bombDanger(world,pawn,getBlocked,budget,getLight,bombSources))continue;
+      if(processGroupOnMap(world,pawn,needsContext))continue;
       if(processCommercialOnMap(world,pawn,needsContext))continue;
       if(processScoutLoading(world,pawn,needsContext))continue;
       if(pawn.prisoner){processPrisoner(world,pawn,needsContext);continue;}
@@ -870,6 +877,8 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     if(scoutId!==null){const pawn=world.pawns.find(p=>p.id===scoutId);if(pawn)departScout(world,pawn);}
     const commercialId=commercialOnMapId(world);
     if(commercialId!==null){const pawn=world.pawns.find(p=>p.id===commercialId);if(pawn)departCommercial(world,pawn);}
+    reconcileGroupPreparation(world);
+    tryGroupDeparture(world);
     advanceColonyAdaptation(world);
     advanceRaids(world);
     advanceQuests(world);
@@ -877,7 +886,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     if(world.roofing)reconcileRoofJobs(world,roofs);
     reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);reconcileWildlife(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     if(world.hunting)world.hunting.targets=world.hunting.targets.filter(id=>world.wildlife?.animals.some(a=>a.id===id&&a.state!=='dead')||world.pawns.some(p=>p.hunting?.animalId===id));
-    advanceScoutTrip(world);advanceCommercialTrip(world);
+    advanceScoutTrip(world);advanceCommercialTrip(world);advanceGroup(world);
     refreshStock(world);
     if(thermalDirty)thermal=reconcileTemperature(world);
     updateFoodTemperatures(world,thermal);

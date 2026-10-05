@@ -1,8 +1,9 @@
 import { isColonist } from './affiliation.ts';
+import { captureHumanOwners } from './human-owners.ts';
 import { validOfferedBackground } from './background-save.ts';
 import { validAnnouncedRelationshipShape } from './relationship-save.ts';
 import { QUEST_HISTORY_LIMIT, QUEST_OFFER_TICKS } from './quest-state.ts';
-import { TICKS_PER_DAY, type World } from './types.ts';
+import { TICKS_PER_DAY, type Pawn, type World } from './types.ts';
 
 const object = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -14,9 +15,12 @@ const edge = (value: unknown, world: World): boolean => object(value) && exact(v
   && integer(value.x, 0, world.width - 1) && integer(value.z, 0, world.height - 1)
   && (value.x === 0 || value.z === 0 || value.x === world.width - 1 || value.z === world.height - 1);
 
-/** Validate references against the caller's union of map and scout registries.
- * This never interprets a historical raid result as a second live group. */
+/** Validate provenance against actual human owners, including a joiner away
+ * with the group or retained after a real death. No projected map roster. */
 export function validateQuests(world: World, version: number): string[] {
+  let pawns:Pawn[];
+  try { pawns=captureHumanOwners(world).pawnOwners.map(owner=>owner.pawn!); }
+  catch { return ['Invalid quest human ownership.']; }
   const state: unknown = (world as World & { quests?: unknown }).quests;
   if (state === undefined) {
     const active = world.raids?.active as Record<string, unknown> | undefined;
@@ -24,7 +28,7 @@ export function validateQuests(world: World, version: number): string[] {
     const errors: string[] = [];
     if (active?.originQuestId !== undefined || last?.originQuestId !== undefined)
       errors.push('Quest raid lacks its quest calendar.');
-    if (Array.isArray(world.pawns) && world.pawns.some(pawn => pawn?.originQuestId !== undefined))
+    if (pawns.some(pawn => pawn?.originQuestId !== undefined))
       errors.push(version < 172 ? 'Future quest pawn provenance in legacy save.' : 'Quest pawn lacks its quest calendar.');
     return errors;
   }
@@ -87,7 +91,7 @@ export function validateQuests(world: World, version: number): string[] {
       if (!integer(raw.arrivedAt, Number(raw.acceptedAt) + Number(raw.joinDelay), world.tick)
         || !integer(raw.pawnId, 1, world.nextId - 1) || !edge(raw.entry, world)
         || pawnIds.has(raw.pawnId as number)
-        || !world.pawns.some(pawn => pawn?.id === raw.pawnId && isColonist(pawn)
+        || !pawns.some(pawn => pawn?.id === raw.pawnId && isColonist(pawn)
           && pawn.originQuestId === raw.id)) errors.push('Invalid quest joiner identity or entry.');
       else pawnIds.add(raw.pawnId as number);
     }
@@ -106,7 +110,7 @@ export function validateQuests(world: World, version: number): string[] {
   }
   if (entries.length && previous !== state.serial) errors.push('Quest serial differs from latest retained record.');
   if (open > 1) errors.push('More than one open quest.');
-  for (const pawn of world.pawns) {
+  for (const pawn of pawns) {
     if (pawn?.originQuestId === undefined) continue;
     const id = pawn.originQuestId;
     const retained = indexed.get(id);

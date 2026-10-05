@@ -38,6 +38,8 @@ import { createFlashstormUI } from './ui/flashstorm';
 import { createSolarFlareUI } from './ui/solar-flare';
 import { updateResearchPanel } from './ui/research-panel';
 import { createScoutUI } from './ui/scout-panel';
+import { createGroupPanel } from './ui/group-panel';
+import { createGroupAdapters, readGroupPanelSnapshot } from './ui/group-adapter';
 import { createQuestUI } from './ui/quests';
 import { mountStorageItemControls,readStorageItemControls,mountStorageConditionControls,readStorageConditionControls } from './ui/storage-item-controls';
 import './ui/storage-item-controls.css';
@@ -211,6 +213,39 @@ const commercialUI=createCommercialUI(el('commercial-content'),async command=>{
   if(['commercial-start','commercial-return','commercial-unload'].includes(command.type)&&currentSpeed===0)await client.setSpeed(1);
   return result;
 });
+type WorldTab='group'|'individual';
+let worldTab:WorldTab='individual';
+const groupUI=createGroupPanel(el('group-content'),createGroupAdapters({
+  blocked:groupCommandsBlocked,
+  send:async command=>{const result=await client.command(command);renderState();return result;},
+  inspectPresentPawn:id=>{if(snapshot?.pawns.some(p=>p.id===id))selectPawn(id);},
+}));
+function groupCommandsBlocked():string|undefined {
+  if(simulationStopped)return 'La simulation est arrêtée. Chargez ou créez une colonie pour reprendre.';
+  if(graphicsFault||graphicsRecovering)return 'Recréez l’affichage avant de commander le groupe.';
+  if(replacingWorld||session.busy)return 'Une opération de partie est en cours.';
+  if(!snapshot||frontMenu.isOpen())return 'Ouvrez la colonie avant de commander le groupe.';
+  if(waitingRequests.size)return [...waitingRequests.values()].join(' ');
+  return undefined;
+}
+function refreshWorldPanels(world:World):void {
+  const group=worldTab==='group';
+  el('group-content').hidden=!group;el('individual-world-content').hidden=group;
+  el('world-panel').classList.toggle('world-group-active',group);
+  groupUI.setVisible(currentPanel==='world'&&group);
+  for(const button of document.querySelectorAll<HTMLButtonElement>('[data-world-tab]')){
+    const active=button.dataset.worldTab===worldTab;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;
+  }
+  if(group)groupUI.update(readGroupPanelSnapshot(world));else{scoutUI.update(world);commercialUI.update(world);}
+}
+for(const button of document.querySelectorAll<HTMLButtonElement>('[data-world-tab]')){
+  button.addEventListener('click',()=>{worldTab=button.dataset.worldTab as WorldTab;if(snapshot)refreshWorldPanels(snapshot);});
+  button.addEventListener('keydown',event=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    event.preventDefault();worldTab=event.key==='Home'?'group':event.key==='End'?'individual':worldTab==='group'?'individual':'group';
+    if(snapshot)refreshWorldPanels(snapshot);el<HTMLButtonElement>(`world-tab-${worldTab}`).focus();
+  });
+}
 let lastCommercialArrivalKey:string|undefined;
 let currentCategory: ArchitectCategory = 'orders';
 let placementOrientation: Orientation = 0;
@@ -337,7 +372,10 @@ document.querySelector('#app')!.addEventListener('contextmenu', event => event.p
 const saveRepository = new BrowserSaveRepository(() => localStorage, () => globalThis.indexedDB,
   status => { if (status.message) notify(status.message, true); });
 const session = new GameSession(client, saveRepository, prepareWorld, () => {
-  simulationStopped = false; menuResumeSpeed = undefined; frontMenu.setHasGame(true); updateIncident(); syncStorageButtons();
+  simulationStopped = false; menuResumeSpeed = undefined; frontMenu.setHasGame(true);
+  groupUI.resetForReplacement();
+  if(snapshot){worldTab=snapshot.scout||snapshot.commercialTrip?'individual':snapshot.planet||snapshot.group?'group':'individual';refreshWorldPanels(snapshot);}
+  updateIncident(); syncStorageButtons();
 });
 const frontHost = document.createElement('div'); document.querySelector('#app')!.append(frontHost);
 // The measured counter remains visible over both the colony and the menu.
@@ -447,7 +485,8 @@ function setPanel(panel: Panel, preserveTool = false) {
   syncStorageButtons();
   scheduleUI.cancel();
   for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals', 'world', 'quests'] as const) el(`${name}-panel`).hidden = panel !== name;
-  if(panel==='world'&&snapshot){scoutUI.update(snapshot);commercialUI.update(snapshot);}
+  groupUI.setVisible(panel==='world'&&worldTab==='group');
+  if(panel==='world'&&snapshot)refreshWorldPanels(snapshot);
   if(panel==='animals'&&snapshot)updateAnimalsPanel(el('animals-content'),snapshot,id=>selectPawn(id));
   if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) {
@@ -806,11 +845,12 @@ function renderState() {
   if(currentPanel==='animals')updateAnimalsPanel(el('animals-content'),world,id=>selectPawn(id));
   if(currentPanel==='wildlife')renderWildlife(world);
   if(currentPanel==='research')updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)));
-  if(currentPanel==='world'){scoutUI.update(world);commercialUI.update(world);}
+  if(currentPanel==='world')refreshWorldPanels(world);
   if(world.commercialTrip?.phase==='at-post'){
     const t=world.commercialTrip,key=[world.seed,t.pawn.id,t.departedAt,t.arrivedAt].join(':');
     if(key!==lastCommercialArrivalKey){
       lastCommercialArrivalKey=key;
+      worldTab='individual';
       if(currentSpeed!==0)void client.setSpeed(0);
       if(currentPanel!=='menu')setPanel('world');
     }
@@ -1096,6 +1136,7 @@ const tradeUI=createTradeUI(command=>client.command(command),()=>client.setSpeed
 const arrivalUI=createArrivalUI(command=>client.command(command));
 const questUI=createQuestUI(command=>client.command(command));
 function syncStorageButtons() {
+  groupUI.setHostBlocked(groupCommandsBlocked());
   shell.inert = replacingWorld || frontMenu.isOpen() || !snapshot || simulationStopped || graphicsFault || waitingRequests.size > 0;
   for(const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]'))button.disabled=replacingWorld||currentPanel==='menu';
   for (const [id, key] of [['load', SAVE_KEY], ['restore-previous', PREVIOUS_KEY]]) {
@@ -1208,6 +1249,7 @@ window.addEventListener('pointermove',event=>{
 },{passive:true});
 window.addEventListener('keydown',event=>{
   if(event.key!=='Alt'||frontMenu.isOpen()||!snapshot||replacingWorld)return;
+  if(event.target instanceof Element&&event.target.closest('#world-panel'))return;
   altInspectorHeld=true;event.preventDefault();updateMapCellDetails(true);
 },true);
 window.addEventListener('keyup',event=>{
@@ -1217,6 +1259,10 @@ window.addEventListener('blur',()=>{altInspectorHeld=false;updateMapCellDetails(
 document.addEventListener('keydown', event => {
   if(event.defaultPrevented || frontMenu.isOpen() || !snapshot || replacingWorld || graphicsFault || simulationStopped || waitingRequests.size>0)return;
   if (document.querySelector('dialog[open]')) return;
+  const worldControl=event.target instanceof Element&&!!event.target.closest('#world-panel');
+  if(worldControl&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();void attempt(save);return;}
+  if(worldControl&&event.key==='Escape'){event.preventDefault();void attempt(()=>switchPanel(null));return;}
+  if(worldControl)return;
   if (event.target instanceof HTMLElement && (event.target.matches('input, select, textarea') || event.target.isContentEditable)) return;
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void attempt(save); return; }
   if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -1235,9 +1281,11 @@ client.onError = message => notify(message, true);
 client.onRequestStatus = status => {
   if (status.state === 'waiting') waitingRequests.set(status.id, status.message ?? 'La simulation tarde à répondre.');
   else waitingRequests.delete(status.id);
+  groupUI.setRequestStatus(status);
   updateIncident(); syncStorageButtons();
 };
 client.onFault = () => {
+  groupUI.setSimulationStopped('La simulation est arrêtée. Les derniers états confirmés restent consultables.');
   session.markSimulationStopped(); simulationStopped = true; currentSpeed = 0; menuResumeSpeed = undefined;
   frontMenu.setHasGame(false);
   audio.reset();

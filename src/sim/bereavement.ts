@@ -1,3 +1,4 @@
+import { captureHumanOwners } from './human-owners.ts';
 import { isColonist } from './affiliation.ts';
 import { opinionOf } from './social-state.ts';
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
@@ -16,9 +17,11 @@ export const deathMemoryDuration=(kind:DeathMemoryKind):number=>kind==='friend-d
 /** A death is observed once at the medical state transition. The directed
  * opinion is captured here, so later conversation/decay cannot rewrite grief. */
 export function notifyPawnDeath(world:World,deceased:Pawn):void {
-  if(!world.pawns.includes(deceased)||deceased.state!=='dead'||!deceased.health?.death)return;
+  const owners=captureHumanOwners(world),known=owners.byId.get(deceased.id);
+  if(known?.pawn!==deceased||deceased.state!=='dead'||!deceased.health?.death)return;
   notifyFamilyDeath(world,deceased);
-  for(const observer of world.pawns){
+  for(const slot of [...owners.local,...owners.away]){
+    const observer=slot.pawn!;
     if(observer===deceased||!isColonist(observer)||observer.prisoner||observer.state==='dead')continue;
     expireBereavement(observer,world.tick);
     if(observer.bereavement?.some(memory=>memory.otherId===deceased.id))continue;
@@ -43,13 +46,14 @@ export function expireBereavement(pawn:Pawn,tick:number):void {
 }
 
 /** Only HUD/tick callers evaluate thoughts; there is no render-frame scan. */
-export function bereavementThoughts(world:World,pawn:Pawn):MoodThought[] {
+export function bereavementThoughts(world:World,pawn:Pawn):MoodThought[] {return bereavementThoughtsAt(pawn,world.tick,{get:id=>world.pawns.find(p=>p.id===id)});}
+export function bereavementThoughtsAt(pawn:Pawn,tick:number,people:Pick<ReadonlyMap<number,{readonly name:string}>,'get'>):MoodThought[] {
   if(pawn.state==='dead')return [];
   const thoughts:MoodThought[]=[];
   for(const memory of pawn.bereavement??[]){
     const expiresAt=memory.at+deathMemoryDuration(memory.kind);
-    if(expiresAt<=world.tick)continue;
-    const person=world.pawns.find(other=>other.id===memory.otherId);
+    if(expiresAt<=tick)continue;
+    const person=people.get(memory.otherId);
     const friend=memory.kind==='friend-died';
     thoughts.push({id:`${memory.kind}-${memory.otherId}`,label:`Mort de ${person?.name??'cette personne'} (${friend?'ami':'rival'})`,
       offset:(friend?-10:10)*deathMemoryIntensity(memory.opinion),kind:'memory',expiresAt,

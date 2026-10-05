@@ -51,11 +51,12 @@ export function romanceOpinionCauses(pawn:Pawn,otherId:number,tick:number):Roman
       description:'Souvenir dirigé d’un échange amoureux réel ; son opinion décroît pendant les derniers 30 % de sa durée.'}];
   });
 }
-export function romanceMoodThoughts(world:World,pawn:Pawn):MoodThought[] {
+export function romanceMoodThoughts(world:World,pawn:Pawn):MoodThought[] {return romanceMoodThoughtsAt(pawn,world.tick,captureRelationshipPeople(world));}
+export function romanceMoodThoughtsAt(pawn:Pawn,tick:number,people:Pick<ReadonlyMap<number,{readonly name:string}>,'get'>):MoodThought[] {
   if(!pawn.romanceMemories)return [];
-  const people=captureRelationshipPeople(world),groups=new Map<string,RomanceMemory[]>();
+  const groups=new Map<string,RomanceMemory[]>();
   for(const m of pawn.romanceMemories){
-    if(!moodKinds.includes(m.kind)||m.at+romanceMemoryDuration(m.kind)<=world.tick)continue;
+    if(!moodKinds.includes(m.kind)||m.at+romanceMemoryDuration(m.kind)<=tick)continue;
     const label=`${ROMANCE_MEMORY_DEFINITIONS[m.kind].label} ${people.get(m.otherId)?.name??'cette personne'}`,key=`${m.kind}:${label}`;
     const group=groups.get(key)??[];group.push(m);groups.set(key,group);
   }

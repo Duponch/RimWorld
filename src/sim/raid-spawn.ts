@@ -1,3 +1,4 @@
+import { civilianAdmissionFits } from './civilian-away.ts';
 import { newApparelState } from './apparel-rules.ts';
 import { newWeaponState } from './equipment-rules.ts';
 import { captureStandability } from './furniture-travel.ts';
@@ -29,7 +30,7 @@ export function createRaidGroup(w:World,options:RaidSpawnOptions):RaidGroup|null
   const scout=w.scout?.phase==='travelling'||w.scout?.phase==='awaiting-entry'?w.scout:w.commercialTrip&&'pawn' in w.commercialTrip?w.commercialTrip:undefined;
   if(!s||s.active||s.mechActive||!Number.isSafeInteger(count)||count<1||sites.length!==count
     ||s.serial>=Number.MAX_SAFE_INTEGER||w.nextId>Number.MAX_SAFE_INTEGER-count*3
-    ||w.pawns.length+Number(!!scout)+count>w.width*w.height||w.piles.length+(scout?.items.length??0)+count*2>32768
+    ||!civilianAdmissionFits(w,count,count*2)
     ||s.departed.length+count>w.width*w.height||!w.foodPolicies[0]
     ||!Number.isSafeInteger(options.random.rng)||options.random.rng<0||options.random.rng>0xffffffff
     ||composition&&(composition.roster.length!==count||composition.roster.some(role=>!RAID_ROLE_OPTIONS.some(option=>option.role===role))))return null;

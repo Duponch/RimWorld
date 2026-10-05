@@ -27,6 +27,11 @@ import { validCorpseConsumption } from '../sim/corpse-anatomy.ts';
 import { V190_ITEM_IDS } from '../sim/biome-items.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
 import { validateRelationshipWorld } from '../sim/relationship-world-save.ts';
+import { validatePlanet } from '../sim/planet-save.ts';
+import { validateGroupState } from '../sim/group-save.ts';
+import { registerGroupThingIds } from '../sim/group-namespace-save.ts';
+import { captureHumanOwners } from '../sim/human-owners.ts';
+import { validateSocial } from '../sim/social-save.ts';
 import { validPawnSurgeryShape } from '../sim/surgery-save.ts';
 import { validAnesthetic } from '../sim/anesthetic.ts';
 import { validateScoutRegistry } from '../sim/caravan-save.ts';
@@ -47,6 +52,7 @@ import { validCorpseShape } from '../sim/corpse-save.ts';
 import { validGunWorkShape } from '../sim/gun-work.ts';
 import { validUnfinishedShape } from '../sim/unfinished.ts';
 import { validApparelShape } from '../sim/apparel-save.ts';
+import { validPrisonerPawnShape } from '../sim/prisoner-save.ts';
 import { validWeaponShape } from '../sim/equipment-save.ts';
 import { pileMaxHp } from '../sim/thing-damage-rules.ts';
 import type { MaterialPile, Pawn, Resource, Terrain, Tile, World } from '../sim/types.ts';
@@ -313,6 +319,7 @@ export class SnapshotDecoder {
     if (!Number.isSafeInteger(message.epoch) || message.epoch < 1
       || !Number.isSafeInteger(message.revision) || message.revision < 1) return resync('Révision de snapshot invalide.');
     if (message.epoch < this.epoch || (message.epoch === this.epoch && message.revision <= this.revision)) return { status: 'stale' };
+    if(message.world.schemaVersion<=195&&['planet','group','groupLosses'].some(key=>Object.hasOwn(message.world,key)))return resync('Planète ou propriétaire de groupe futur.');
     if(message.world.schemaVersion<194&&(Object.hasOwn(message.world,'mechanoids')||Object.hasOwn(message.world,'mechSalvage')
       ||['mechanoid','mechActive'].some(k=>Object.hasOwn(message.world.raids??{},k))
       ||['mechanoid','mechComposition'].some(k=>Object.hasOwn(message.world.raids?.last??{},k))))return resync('Propriétaire ou calendrier mécanique futur.');
@@ -328,6 +335,7 @@ export class SnapshotDecoder {
     for(const s of message.world.structures)if(Object.hasOwn(s,'turret')&&!validMiniTurretShape(s.turret,message.world.schemaVersion,message.world.tick*10,message.world.nextId))return resync('Canon intrinsèque invalide.');
     if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion))))return resync('Forme de vague Bomb invalide.');
     for(const pawn of message.world.pawns){
+      if(!pawn||typeof pawn!=='object'||Array.isArray(pawn))return resync('Personne locale invalide pour ce snapshot.');
       if(Object.hasOwn(pawn,'bombRefuge')&&!validBombRefugeShape(pawn.bombRefuge,message.world.schemaVersion))return resync('Refuge Bomb futur ou invalide.');
       if(!validMentalTransport(pawn,message.world))return resync('Crise mentale, menace ou autorité de mêlée invalide pour ce snapshot.');
       if(!validBackgroundTransport(pawn,message.world.schemaVersion))return resync('Âge ou passé personnel invalide pour ce snapshot.');
@@ -335,7 +343,7 @@ export class SnapshotDecoder {
       if(!validPawnPodRescue(pawn,message.world.schemaVersion,message.world))return resync('Mandat de secours civil invalide pour ce snapshot.');
       if(!validMiningTransport(pawn,message.world.schemaVersion))return resync('Compétence Minage invalide pour ce snapshot.');
       if(!validPlantSkill(pawn.skills?.plants,message.world.schemaVersion))return resync('Compétence Plantes invalide pour ce snapshot.');
-      if(pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,message.world.schemaVersion,message.world))return resync('Souvenir de décès invalide pour ce snapshot.');
+      if(pawn.bereavement!==undefined&&!Object.hasOwn(message.world,'group')&&!Object.hasOwn(message.world,'groupLosses')&&!validBereavement(pawn.bereavement,pawn.id,message.world.schemaVersion,message.world))return resync('Souvenir de décès invalide pour ce snapshot.');
     }
     for(const owner of [message.world.scout,message.world.commercialTrip]){
       if(owner&&typeof owner==='object'&&'pawn' in owner&&!validBackgroundTransport(owner.pawn,message.world.schemaVersion))return resync('Âge ou passé personnel hors carte invalide pour ce snapshot.');
@@ -359,6 +367,7 @@ export class SnapshotDecoder {
     let reindexPiles = message.kind === 'checkpoint';
     if (message.kind === 'checkpoint') {
       if (message.world.tiles.length !== message.world.width * message.world.height) return resync('Dimensions du checkpoint invalides.');
+      if(!Array.isArray(message.world.piles)||message.world.piles.some(pile=>!validPile(pile,message.world)))return resync('Pile de checkpoint invalide.');
       next = message.world;
     } else {
       const previous = this.current;
@@ -453,6 +462,7 @@ export class SnapshotDecoder {
       // In particular an absent sparse collection means it was removed.
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
+    for(const pawn of next.pawns)if(!validPrisonerPawnShape(pawn as unknown as Record<string,unknown>,next.schemaVersion,next))return resync('Prisonnier, geôlier ou provenance de recrutement invalide.');
     if(validateMental(next,next.schemaVersion).length||next.schemaVersion>=192&&validateMelee(next).length)return resync('Cible de crise mentale ou autorité de mêlée incohérente.');
     if(!validMechSalvageLedger(next,next.schemaVersion)||validateMechanoidRaids(next,next.schemaVersion).length)return resync('Récupération ou mandat mécanique invalide.');
     const mechanicalCorpseIds=new Set<number>();
@@ -486,7 +496,7 @@ export class SnapshotDecoder {
     if(!validWildlifeExitState(next,next.schemaVersion))return resync('Départ de faune invalide.');
     if(!validWildlifePredationState(next,next.schemaVersion))return resync('Prédation de faune invalide.');
     if(!validWildlifeManhunterState(next,next.schemaVersion))return resync('Rage de faune invalide.');
-    if(validateQuests(next.quests?scoutRegistryView(next):next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
+    if(validateQuests(next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
     if(next.scout&&(next.scout.phase==='travelling'||next.scout.phase==='awaiting-entry')){
       const registry=scoutRegistryView(next),pawn=next.scout.pawn;
       if(!validSurgeryTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||!validMiningTransport(pawn,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
@@ -509,7 +519,7 @@ export class SnapshotDecoder {
       }
     for(const departure of next.podRescues?.departed??[])if(!validSurgeryTransport(departure.pawn,{schemaVersion:next.schemaVersion,tick:departure.tick,width:next.width,height:next.height,nextId:next.nextId}))return resync('Dossier chirurgical civil archivé invalide.');
     const relationMemories=(p:Pawn):boolean=>Object.hasOwn(p,'romanceMemories')||Object.hasOwn(p,'familyBereavement');
-    const relationships=Object.hasOwn(next,'relationships')||next.pawns.some(relationMemories)
+    const relationships=Object.hasOwn(next,'planet')||Object.hasOwn(next,'group')||Object.hasOwn(next,'groupLosses')||Object.hasOwn(next,'relationships')||next.pawns.some(relationMemories)
       ||[next.scout,next.commercialTrip].some(owner=>owner&&'pawn' in owner&&relationMemories(owner.pawn))
       ||[next.visitors?.departed??[],next.podRescues?.departed??[]].some(records=>records.some(record=>relationMemories(record.pawn)))
       ||Object.hasOwn(next.arrivals?.pending??{},'relationship')||(next.quests?.entries??[]).some(q=>Object.hasOwn(q,'relationship'));
@@ -538,9 +548,21 @@ export class SnapshotDecoder {
       }
       if(validateMechanoids(next,next.schemaVersion,ids).length)return resync('Identité, cible ou déplacement mécanique invalide.');
       if(validateMechanoidRaids(next,next.schemaVersion,ids).length)return resync('Identité mécanique historique réutilisée dans un autre propriétaire.');
+      if(validatePlanet(next.planet,next,next.schemaVersion).length||validateGroupState(next,next.schemaVersion).length)return resync('Planète, groupe ou pertes incohérents.');
+      if(registerGroupThingIds(next,ids).length)return resync('Une identité du groupe possède plusieurs propriétaires.');
       if(validateProjectiles(next,next.schemaVersion,ids).length)return resync('Balle ou canon lanceur invalide.');
       const bombErrors:string[]=[];validateBombWaves(next,bombErrors,ids);if(bombErrors.length)return resync('Vague Bomb ou identité invalide.');
       if(validateBombRefuges(next,[],ids).length)return resync('Refuge ou danger Bomb incohérent.');
+    }
+    if(this.current&&message.epoch===this.epoch&&this.current.planet){
+      const before=this.current.planet,after=next.planet;
+      if(!after||before.revision!==after.revision||before.adoptedAt!==after.adoptedAt||before.generationSeed!==after.generationSeed||before.homeTile!==after.homeTile||before.civilianTile!==after.civilianTile||after.nextGroupId<before.nextGroupId
+        ||before.tiles.some((tile,i)=>{const n=after.tiles[i];return !n||tile.id!==n.id||tile.biome!==n.biome||tile.hilliness!==n.hilliness||tile.meanTemperature!==n.meanTemperature||tile.rainfall!==n.rainfall||tile.center.some((v,j)=>v!==n.center[j])||tile.neighbours.length!==n.neighbours.length||tile.neighbours.some((v,j)=>v!==n.neighbours[j]);}))return resync('La géographie confirmée a changé sans remplacement.');
+    }
+    if(Object.hasOwn(next,'group')||Object.hasOwn(next,'groupLosses')){
+      try {const people=captureHumanOwners(next).people;
+        if(validateSocial(next,next.schemaVersion,new Set(people.keys())).length||next.pawns.some(p=>!validBereavement(p.bereavement,p.id,next.schemaVersion,next,people)))return resync('Souvenirs de personnes hors carte incohérents.');
+      }catch{return resync('Propriétaire humain hors carte incohérent.');}
     }
     if(validateRelationshipWorld(next,next.schemaVersion).length)return resync('Liens, annonce ou souvenirs relationnels incohérents.');
     // Commit only after every patch is checked. A refusal preserves both state and revision.

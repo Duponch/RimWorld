@@ -76,18 +76,18 @@ export function initialHumanAilments(seed:number,id:number,age:HumanAge):HumanAg
   return found;
 }
 
-function birthday(world:World,pawn:Pawn,years:number):void {
+export interface HumanAgeContext {tick:number;schemaVersion:number;random():number;notice(message:string):void}
+function birthdayAt(pawn:Pawn,years:number,c:HumanAgeContext):void {
   const fraction=years/HUMAN_LIFE_EXPECTANCY;
   const ailments=pawn.health?.ageAilments??[];
   for(const [kind,points] of AILMENT_CHANCES){
     if(ailments.includes(kind))continue;
     const chance=interpolated(fraction,points);
-    if(chance<=0||ageRandom(world)>=chance)continue;
-    const health=pawn.health??=createMedicalRecord(world.tick);
+    if(chance<=0||c.random()>=chance)continue;
+    const health=pawn.health??=createMedicalRecord(c.tick);
     (health.ageAilments??=[]).push(kind);
     const label=kind==='bad-back'?'un mal de dos chronique':'une fragilité générale';
-    world.events.push({tick:world.tick,type:'need',message:`${pawn.name} développe ${label} à ${years} ans.`});
-    if(world.events.length>80)world.events.splice(0,world.events.length-80);
+    c.notice(`${pawn.name} développe ${label} à ${years} ans.`);
   }
 }
 
@@ -99,12 +99,17 @@ export function advanceHumanAges(world:World):void {
 }
 /** The same confirmed-clock rule also serves a retained off-map person. */
 export function advanceHumanAge(world:World,pawn:Pawn):void {
-  if(world.schemaVersion<138)return;
+  advanceHumanAgeAt(pawn,{tick:world.tick,schemaVersion:world.schemaVersion,random:()=>ageRandom(world),notice:message=>{
+    world.events.push({tick:world.tick,type:'need',message});if(world.events.length>80)world.events.splice(0,world.events.length-80);
+  }});
+}
+export function advanceHumanAgeAt(pawn:Pawn,c:HumanAgeContext):void {
+  if(c.schemaVersion<138)return;
     const age=pawn.age;if(!age)return;
     if(age.chronologicalTicks<Number.MAX_SAFE_INTEGER)age.chronologicalTicks++;
     if(pawn.state==='dead'||age.biologicalTicks>=Number.MAX_SAFE_INTEGER)return;
     age.biologicalTicks++;
-    if(age.biologicalTicks%HUMAN_YEAR_TICKS===0)birthday(world,pawn,biologicalYears(age));
+    if(age.biologicalTicks%HUMAN_YEAR_TICKS===0)birthdayAt(pawn,biologicalYears(age),c);
 }
 
 export function validHumanAge(value:unknown,version:number):boolean {

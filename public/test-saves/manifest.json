@@ -1586,6 +1586,37 @@
       "prepared": true,
       "provenance": "Création Survivants actuelle createScenarioWorld(34914326,32,'survivors'), schéma 195, tick 0. Graine de création préparée pour le flux familial indépendant initial 1 ; couple préexistant issu de initializeCampRelationships, aucune romance jouée. Clairière 32×32, réserves de départ déplacées au sol libre et vêtements conservés, chambre close avec toiture et deux lits civils non attribués préparés. Autres menaces/faune facultatives exclues ; aucune horloge clinique décalée. Calendrier d’accueil prospectif existant : prochaine occasion tick 10, RNG privé 1 préparé ; aucune offre, personne entrante ni lien de l’offre engagé initialement. Aucun sommeil commun, blessure, mort, rupture, souvenir amoureux ou familial préjoué. La préparation ne certifie ni fréquence naturelle, parcours natif ni coût général.",
       "sha256": "332c2455eae00247585688e7bb6a261e0d0a8e1bd53cc771b89299f010ef2b60"
+    },
+    {
+      "id": "globe-voyage-v216",
+      "release": "v216",
+      "label": "Globe · voyage collectif et commerce",
+      "filename": "globe-voyage.json",
+      "description": "Adopter le globe, préparer un groupe et ses provisions, marcher jusqu’au comptoir, échanger puis rentrer avec les mêmes personnes et biens.",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 32,
+      "height": 32,
+      "tick": 0,
+      "focus": [
+        "adoption explicite du globe",
+        "rassemblement et prises réels",
+        "voyage collectif",
+        "masse et besoins",
+        "commerce au comptoir",
+        "retour et dépôts physiques",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Charger en pause au tick 0. Le foyer est préparé, mais aucune planète, préparation de groupe, provision chargée ou progression de voyage n’existe. Ouvrir Monde puis adopter le globe.",
+        "Dans Globe et groupe, choisir Ada et Noé, laisser Mina au foyer, sélectionner le comptoir civil et prévisualiser la formation. Charger par exemple 12 rations, quatre dans chacune des trois piles, 500 argent et 60 tissus au sol ; les six médicaments restent disponibles au foyer. Confirmer puis reprendre pour voir rassemblement, prises et sortie collective.",
+        "Suivre la route et les vrais besoins. La nuit, la pause, une surcharge ou un membre incapable peuvent arrêter la marche ; la santé et les besoins continuent. Le groupe emporte ses vêtements réels. Sauvegarder puis recharger pendant un segment engagé.",
+        "Au comptoir, prévisualiser la vente d’une partie du tissu puis confirmer. Prévisualiser un achat de médicaments ou composants avec l’argent réellement détenu, puis confirmer. Les fonds sont finis ; aucune transaction n’a été jouée dans la préparation.",
+        "Choisir le foyer comme destination et confirmer la route de retour. Après l’entrée des personnes originales sur des cellules distinctes, reprendre le déchargement réel ; comparer les biens et le journal avant et après sauvegarde/reprise. Une arrivée sur le globe n’est pas une téléportation sur la carte."
+      ],
+      "prepared": true,
+      "provenance": "Préparation originale V216, createScenarioWorld(216,32,Survivants), schéma 196 au tick 0 sans campagne simulée. Trois adultes libres aux âges, apparences, traits et passés de création, santé explicitement saine et besoins à 100 ; Ada Social 8 préparé sans apprentissage. Chemises originales conservées, éventuels liens de création conservés. Clairière 32×32, foyer de bois clos, toit, table, tabourets et trois lits individuels attribués préparés. Stocks finis réellement au sol : 24 repas de survie en piles de 10/10/4, 500 argent, 60 tissus et six médicaments industriels. Aucune planète, groupe, perte, comptoir généré, manifeste, réservation, prise, départ, route, segment, ingestion, soin, paiement, vente, achat, retour ou dépôt accompli. Calendriers d’accueil, raids, canicule et faune exclus ; calendrier et climat existants non adoptés ou déplacés. La préparation ne certifie ni parcours natif, fréquence naturelle, équilibre de campagne, parité Core ni performance générale.",
+      "sha256": "88ba444949ccf2e56c565b5028986a2541ad0069fab8febdbf085af58952748b"
     }
   ]
 }

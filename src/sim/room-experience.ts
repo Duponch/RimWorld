@@ -45,13 +45,15 @@ export function finishRoomRest(w:World,p:Pawn):void {
   if(!admitted(w,p)||p.need?.kind!=='sleep'||!p.need.roomRest?.applied)return;
   applyBedroomMemory(w,p);
 }
-export function expireRoomMemories(w:World,p:Pawn):void {
-  if(p.roomMemories?.some(m=>m.expiresAt<=w.tick)){
-    p.roomMemories=p.roomMemories.filter(m=>m.expiresAt>w.tick);if(!p.roomMemories.length)delete p.roomMemories;
+export function expireRoomMemories(w:World,p:Pawn):void {expireRoomMemoriesAt(p,w.tick);}
+export function expireRoomMemoriesAt(p:Pawn,tick:number):void {
+  if(p.roomMemories?.some(m=>m.expiresAt<=tick)){
+    p.roomMemories=p.roomMemories.filter(m=>m.expiresAt>tick);if(!p.roomMemories.length)delete p.roomMemories;
   }
 }
-export function roomMoodThoughts(w:World,p:Pawn):MoodThought[]{
-  return (p.roomMemories??[]).filter(m=>m.expiresAt>w.tick).map(m=>({id:`room-${m.kind}`,label:`${labels[m.kind]} · ${IMPRESSION_LABELS[m.stage]}`,offset:ROOM_MEMORY_OFFSETS[m.kind][m.stage]!,kind:'memory',expiresAt:m.expiresAt,description:'Souvenir d’un usage réel de cette pièce, durant un jour. La pièce actuelle ne remplace pas le lieu de ce souvenir.'}));
+export function roomMoodThoughts(w:World,p:Pawn):MoodThought[]{return roomMoodThoughtsAt(p,w.tick);}
+export function roomMoodThoughtsAt(p:Pawn,tick:number):MoodThought[]{
+  return (p.roomMemories??[]).filter(m=>m.expiresAt>tick).map(m=>({id:`room-${m.kind}`,label:`${labels[m.kind]} · ${IMPRESSION_LABELS[m.stage]}`,offset:ROOM_MEMORY_OFFSETS[m.kind][m.stage]!,kind:'memory',expiresAt:m.expiresAt,description:'Souvenir d’un usage réel de cette pièce, durant un jour. La pièce actuelle ne remplace pas le lieu de ce souvenir.'}));
 }
 
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);

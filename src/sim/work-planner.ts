@@ -106,6 +106,7 @@ export function canReach(world: World, target: Cell & { kind?: JobKind }, reacha
 }
 export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, occupied: ReadonlySet<number>, budget: SearchBudget): void {
   const trip=world.commercialTrip;
+  if(world.group&&'memberIds' in world.group&&world.group.memberIds.includes(pawn.id)){pawn.planCooldown=20;return;}
   if(world.scout&&(world.scout.phase==='loading'||world.scout.phase==='leaving')&&world.scout.pawnId===pawn.id
     ||trip&&(trip.phase==='loading'||trip.phase==='leaving'||trip.phase==='unloading')&&trip.pawnId===pawn.id){pawn.planCooldown=20;return;}
   if(medicalWorkRefusal(pawn)){pawn.planCooldown=20;return;}

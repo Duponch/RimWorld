@@ -21,6 +21,8 @@ export interface MentalState {
 export const BREAK_MTB_DAYS=[4,.8,.5] as const;
 export const CATHARSIS_DURATION=18000;
 export const hasMentalBreak=(pawn:Pawn):boolean=>!!pawn.mental?.crisis;
+/** Passive expiry only; no crisis decision or RNG. */
+export function expireMentalCatharsisAt(pawn:Pawn,tick:number):void {if(pawn.mental)pawn.mental.catharsis=pawn.mental.catharsis.filter(t=>t>tick);}
 export function mentalState(pawn:Pawn):MentalState {
   return pawn.mental??={below:[0,0,0],cooldown:0,catharsis:[]};
 }

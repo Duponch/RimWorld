@@ -11,7 +11,13 @@ import { solarPowerOutput } from '../../src/sim/solar-rules.ts';
 import { TemperatureView } from '../../src/sim/temperature.ts';
 import { blockedCells } from '../../src/sim/pathfinding.ts';
 import { queryArea } from '../../src/sim/designation.ts';
-import { crashlandedDecisions } from './crashlanded-player.ts';
+import { queryOrderOptions } from '../../src/sim/player-orders.ts';
+import { urgentTreatment,treatmentTarget } from '../../src/sim/care-rules.ts';
+import { medicalBleed } from '../../src/sim/injury-state.ts';
+import { FEED_HUNGER,needsAssistedFeeding } from '../../src/sim/feeding-rules.ts';
+import { wantsRescue } from '../../src/sim/rescue.ts';
+import { medicalWorkRefusal } from '../../src/sim/health-rules.ts';
+import { crashlandedDecisions,crashlandedThreatActive } from './crashlanded-player.ts';
 import { survivorPlan } from './survivor-player.ts';
 import type { Decision } from './colony-player.ts';
 import type { Cell, DesignateCommand, StructureKind, World, WorkType } from '../../src/sim/types.ts';
@@ -76,7 +82,48 @@ export function observeEnergy(w:World,s:EnergyPlayerState):void {
   else if(s.stage==='remove'&&!w.structures.some(q=>q.kind==='power-conduit'&&q.x===p.cut.x&&q.z===p.cut.z)&&cooler&&!isPowerActive(cooler)&&stove&&!isPowerActive(stove)){record('cableCut',true);if(w.tick-s.milestones.cableCut!>=120)next('rebuild');}
   else if(s.stage==='rebuild'&&w.structures.some(q=>q.kind==='power-conduit'&&q.x===p.cut.x&&q.z===p.cut.z)&&cooler&&isPowerActive(cooler)&&stove&&isPowerActive(stove)){record('cableRestored',true);next('done');}
 }
+const recoveryPatient=(p:World['pawns'][number])=>urgentTreatment(p)||wantsRescue(p)||needsAssistedFeeding(p)&&p.hunger<=FEED_HUNGER;
+/** Do not leave mobilization or a real emergency on the ordinary 250-tick
+ * construction cadence. This observation does not query navigation or mutate
+ * any actor, reservation, resource, clock or player notebook. */
+export function energyDecisionDue(w:World):boolean {
+  return w.tick%250===0||w.tick%20===0&&(crashlandedThreatActive(w)
+    ||w.pawns.some(p=>isColonist(p)&&p.state!=='dead'&&(!!p.draft||recoveryPatient(p))));
+}
+/** undefined releases the ordinary pilot; [] keeps an unresolved emergency or
+ * accepted physical care from running ordinary construction scans. Issue at
+ * most one admitted service, and never restart an existing care task. Hunger
+ * and rest thresholds belong to the contextual provider, not a private veto. */
+export function energyRecoveryDecisions(w:World):Decision[]|undefined {
+  if(crashlandedThreatActive(w))return;
+  const people=w.pawns.filter(p=>isColonist(p)&&p.state!=='dead');
+  const drafted=people.filter(p=>p.draft&&p.state!=='downed'&&!p.mental?.crisis);
+  if(drafted.length)return [{reason:'La menace est terminée : démobiliser au prochain contrôle pour rendre possibles le secours et les soins civils.',
+    command:{type:'draft',pawnIds:drafted.map(p=>p.id),enabled:false}}];
+  const bleeding=(p:typeof people[number])=>p.health?medicalBleed(p.health):0;
+  const patients=people.filter(recoveryPatient)
+    .sort((a,b)=>Number(urgentTreatment(b))-Number(urgentTreatment(a))||bleeding(b)-bleeding(a)||a.hunger-b.hunger||a.id-b.id);
+  if(!patients.length)return people.some(p=>p.tend||p.rescue||p.feed)?[]:undefined;
+  const doctors=people.filter(p=>!p.draft&&!p.mental?.crisis&&!medicalWorkRefusal(p)&&!p.interruptedCargo&&!p.collapsePending
+    &&!p.tend&&!p.rescue&&!p.feed&&!urgentTreatment(p))
+    .sort((a,b)=>Number(!!treatmentTarget(a))-Number(!!treatmentTarget(b))||bleeding(a)-bleeding(b)||b.skills.medicine.level-a.skills.medicine.level||a.id-b.id);
+  for(const patient of patients){
+    if(people.some(p=>p.tend?.patientId===patient.id||p.rescue?.patientId===patient.id||p.feed?.patientId===patient.id))continue;
+    for(const doctor of doctors){
+      if(doctor===patient)continue;
+      const options=queryOrderOptions(w,doctor.id,patient);
+      if(options.some(o=>o.enabled&&o.rescuePatientId===patient.id))return [{reason:'Porter le blessé vers un couchage réellement accessible dès la fin de la menace.',
+        command:{type:'order-rescue',pawnId:doctor.id,patientId:patient.id,queue:false}}];
+      if(options.some(o=>o.enabled&&o.tendPatientId===patient.id))return [{reason:'Faire traiter immédiatement le patient urgent par le meilleur médecin dont l’ordre est réellement admissible.',
+        command:{type:'order-tend',pawnId:doctor.id,patientId:patient.id,queue:false}}];
+      if(options.some(o=>o.enabled&&o.feedPatientId===patient.id))return [{reason:'Apporter physiquement un aliment admissible au patient dépendant.',
+        command:{type:'order-feed',pawnId:doctor.id,patientId:patient.id,queue:false}}];
+    }
+  }
+  return [];
+}
 export function energyDecisions(w:World,s:EnergyPlayerState):Decision[] {
+  const recovery=energyRecoveryDecisions(w);if(recovery!==undefined)return recovery;
   const base=crashlandedDecisions(w);
   if(w.raids?.active){
     const people=w.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed'&&!p.mental?.crisis);

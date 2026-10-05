@@ -1,3 +1,9 @@
+import { validatePlanet } from './planet-save.ts';
+import { validateGroupState } from './group-save.ts';
+import { registerGroupThingIds } from './group-namespace-save.ts';
+import { captureHumanOwners } from './human-owners.ts';
+import { validatePawnRecordShape } from './pawn-record-save.ts';
+import { validatePileRecordShape } from './material-record-save.ts';
 import { validateRelationshipWorld } from './relationship-world-save.ts';
 import { validRelationshipState } from './relationship-save.ts';
 import { validFamilyBereavementShape } from './family-bereavement-save.ts';
@@ -73,6 +79,7 @@ import { turretReloadCapacity,turretReloadPawnReason } from './mini-turret-reloa
 import { validateRaids } from './raid-save.ts';
 import { validateArrivals } from './arrival-save.ts';
 import { validateQuests } from './quest-save.ts';
+import { groupOnMapMember } from './group-state.ts';
 import { validTraits } from './traits.ts';
 import { validBackground } from './colonist-backgrounds.ts';
 import { validateMental,validMeleeThreatShape } from './mental-save.ts';
@@ -167,10 +174,11 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195, relationshipContext = true): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196, relationshipContext = true): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
+  if(version<=195&&['planet','group','groupLosses'].some(k=>Object.hasOwn(raw,k)))return ['Historical schema contains future world/group fields.'];
   let input=raw;
   if (version >= 5 && !oneOf(input.foodRules, ['legacy', 'adult'])) errors.push('Invalid food rules profile.');
   if (version < 5 && input.foodRules !== undefined) errors.push('Legacy save contains version 5 fields.');
@@ -216,109 +224,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
       if (integer(input.nextId, 1) && item.id >= input.nextId) errors.push('nextId must exceed all entity IDs.');
       if(key==='resources'&&!validPlantLife(item as unknown as World['resources'][number],version,input as unknown as World))errors.push('Invalid plant life for schema.');
       if (key === 'pawns') {
-        if(!validPawnPodRescue(item,version,input as unknown as World))errors.push('Invalid or future pod rescue mandate for schema.');
-        if(!validHumanAge(item.age,version))errors.push('Invalid or future human age.');
-        if(version<195&&(Object.hasOwn(item,'familyBereavement')||Object.hasOwn(item,'romanceMemories'))
-          ||!validFamilyBereavementShape(item.familyBereavement,version,input.tick as number)||!validRomanceMemoryShape(item.romanceMemories,version,input.tick as number))errors.push('Invalid or future family/romance memory shape.');
-        if(!validBackground(item.background,version,item.age as import('./human-age.ts').HumanAge|undefined))errors.push('Invalid or future colonist background.');
-        if(!validRoomExperience(item,version,input.tick as number))errors.push('Invalid or future room experience.');
-        if(version>=90?(typeof item.beauty!=='number'||!Number.isFinite(item.beauty)||item.beauty<0||item.beauty>100):item.beauty!==undefined)errors.push('Invalid or future beauty need.');
-        for(const field of ['apparelPolicyId','apparelAutomation','nextApparelCheckAt'])if(version<90&&item[field]!==undefined)errors.push('Legacy pawn contains apparel policy state.');
-        if(!validPrisonerPawnShape(item,version,input as unknown as World))errors.push('Invalid prisoner, warden or recruitment shape for schema.');
-        if(!validHumanBodyShape(item.body,version,input.tick as number)||!validBurialTaskShape(item.burial,version))errors.push('Invalid body or burial shape.');
-        const art=(item.priorities as Record<string,unknown>)?.art;if(version>=104?!integer(art,0,4):art!==undefined)errors.push('Invalid art priority for schema.');
-        const clean=(item.priorities as Record<string,unknown>)?.clean;if(version>=89?!integer(clean,0,4):clean!==undefined)errors.push('Invalid cleaning priority for schema.');
-        const firefight=(item.priorities as Record<string,unknown>)?.firefight;
-        if(version>=87?!integer(firefight,0,4):firefight!==undefined)errors.push('Invalid firefighting priority for schema.');
-        const warden=(item.priorities as Record<string,unknown>)?.warden;
-        if(version>=86?!integer(warden,0,4):warden!==undefined)errors.push('Invalid warden work priority for schema.');
-        const basic=(item.priorities as Record<string,unknown>)?.basic;
-        if(version>=85?!integer(basic,0,4):basic!==undefined)errors.push('Invalid basic work priority for schema.');
-        if(!validDisturbance(item.disturbance,version,input.tick as number))errors.push('Invalid disturbance for schema.');
-        if(!validTradeShape(item,version,input as unknown as World))errors.push('Invalid trade task for schema.');
-        if(item.appearance!==undefined){if(version<109)errors.push('Future pawn appearance in older save.');else errors.push(...validatePawnAppearance(item.appearance));}
-        if(!validVisitorShape(item,version,input as unknown as World))errors.push('Invalid visitor for schema.');
-        if(!validHuntingTask(item.hunting,version,input.tick as number))errors.push('Invalid hunting task for schema.');
-        if(!validTacticsShape(item.tactics,version,input as unknown as World))errors.push('Invalid tactics shape for schema.');
-        if(!validAffiliationShape(item,version,input as unknown as World))errors.push('Invalid affiliation or flee shape for schema.');
-        if(version>=46?!integer((item.priorities as Record<string,unknown>)?.doctor,0,4):(item.priorities as Record<string,unknown>)?.doctor!==undefined)errors.push('Invalid medical work priority for schema.');
-        for(const key of ['patient','bedrest'])if(version>=47?!integer((item.priorities as Record<string,unknown>)?.[key],0,4):(item.priorities as Record<string,unknown>)?.[key]!==undefined)errors.push('Invalid patient priority for schema.');
-        if(!validAttackMemory(item.lastAttack,version,input.tick as number))errors.push('Invalid attack memory for schema.');
-        if(Object.hasOwn(item,'bombRefuge')&&!validBombRefugeShape(item.bombRefuge,version))errors.push('Invalid bomb refuge for schema.');
-        if(version<192&&Object.hasOwn(item,'meleeThreat')||!validMeleeThreatShape(item.meleeThreat,version,input.tick as number))errors.push('Invalid melee threat for schema.');
-        if(!validStagger(item.stagger,version,input.tick as number))errors.push('Invalid stagger state for schema.');
-        if(!validMeleeShape(item.melee,version,input.tick as number)||!validStunShape(item.stun,version,input.tick as number))errors.push('Invalid melee or stun shape for schema.');
-        if(!validShootingShape(item.shooting,version,input.tick as number))errors.push('Invalid shooting state for schema.');
-        if(!validDraftShape(item.draft,version,input as unknown as World))errors.push('Invalid draft state for schema.');
-        if(!validEquipmentShape(item,version))errors.push('Invalid equipment state for schema.');
-        if(item.feed!==undefined&&!validFeedShape(item.feed,version,input as unknown as World))errors.push('Invalid feeding task shape.');
-        if(item.tend!==undefined&&!validTendShape(item.tend,version,input as unknown as World))errors.push('Invalid tending shape for schema.');
-        if(!validPawnSurgeryShape(item,version,input as unknown as World))errors.push('Invalid or future surgery shape for schema.');
-        if(item.selfTend!==undefined&&(version<49||item.selfTend!==true))errors.push('Invalid self-tend policy for schema.');
-        if(item.medicalCare!==undefined&&(version<51||!oneOf(item.medicalCare,['none','dry','herbal','industrial','best'])||item.careDisabled!==undefined))errors.push('Invalid medical care ceiling for schema.');
-        if(item.careDisabled!==undefined&&(version<47||item.careDisabled!==true))errors.push('Invalid medical policy for schema.');
-        if(record(item.need)&&item.need.medical!==undefined&&(version<47||item.need.kind!=='sleep'||!oneOf(item.need.medical,['patient','bedrest'])))errors.push('Invalid medical rest purpose for schema.');
-        if(item.rescue!==undefined&&!validRescueShape(item.rescue,version))errors.push('Invalid rescue shape for schema.');
-        if(item.medicalSleep!==undefined&&(version<45||item.medicalSleep!==true))errors.push('Invalid medical sleep marker for schema.');
-        if(item.health!==undefined&&(version<45||validateMedicalRecord(item.health,version>=54,version>=59,version>=74,version>=75,false,false,version>=81,version>=84,version>=87,version>=88,version>=89,version,version>=127)))errors.push('Invalid medical record for schema.');
-        if(!validTraits(item.traits,version))errors.push('Invalid pawn traits for schema.');
-        if(version>=43 ? !validSkills(item.skills,input.tick as number,version) : item.skills!==undefined) errors.push('Invalid pawn skills for schema.');
-        if(item.interruptedCargo!==undefined&&(version<44||item.interruptedCargo!==true))errors.push('Invalid interrupted cargo marker for schema.');
-        if (typeof item.name !== 'string' || item.name.length === 0 || item.name.length > 80 || !bounded(item.hunger) || !bounded(item.rest) || !bounded(item.mood)
-          || !oneOf(item.state, legacyV2 ? ['idle', 'moving', 'working', 'sleeping', 'hungry'] : ['idle', 'moving', 'working', 'sleeping', 'hungry', 'eating', ...(version>=15?['recreating']:[]),...(version>=45?['downed','dead']:[]),...(version>=47?['resting']:[])]) || !(item.jobId === null || integer(item.jobId, 1))
-          || !record(item.priorities) || !integer(item.priorities.gather, 0, 4) || !integer(item.priorities.build, 0, 4) || !integer(item.priorities.haul, 0, 4) || (version >= 8 && !integer(item.priorities.grow, 0, 4))
-          || !(version < 6 ? integer(item.moveCooldown, 0, 3) : typeof item.moveCooldown === 'number' && Number.isFinite(item.moveCooldown) && item.moveCooldown >= 0 && item.moveCooldown <= (version>=87?MAX_PAWN_DELAY_V87:version>=86?MAX_PAWN_DELAY_V86:version>=65?78:version>=59?49.5:version>=57?45:version>=45?38.146:version>=37?10.304:version>=22?8.443:version>=16?5.643:4.243)) || !integer(item.planCooldown, 0, 20)) errors.push('Invalid pawn state.');
-        if (!Array.isArray(item.path) || item.path.length > size) errors.push('Invalid pawn path.');
-        else {
-          let previous = item;
-          for (const cell of item.path) {
-            if (!record(cell) || !coord(cell)) { errors.push('Invalid pawn path cell.'); break; }
-            if ((version<6 ? Math.abs((cell.x as number)-(previous.x as number))+Math.abs((cell.z as number)-(previous.z as number)) : Math.max(Math.abs((cell.x as number)-(previous.x as number)),Math.abs((cell.z as number)-(previous.z as number)))) !== 1) { errors.push('Non-contiguous pawn path.'); break; }
-            previous = cell;
-          }
-        }
-        if(version<6 && item.motion!==undefined) errors.push('Legacy save contains spatial fields.');
-        if(item.transitExit!==undefined&&(version<22||item.transitExit!==true)) errors.push('Invalid furniture exit intent.');
-        if(version>=6 && item.motion==null && item.moveCooldown!==0) errors.push('Missing travel segment for movement delay.');
-        if(version>=6 && item.motion!=null) {
-          const m=item.motion;
-          if(!record(m)||!record(m.from)||!record(m.to)||!coord(m.from)||!coord(m.to)||typeof m.start!=='number'||typeof m.end!=='number'||!Number.isFinite(m.start)||!Number.isFinite(m.end)||m.start<0||m.start>(input.tick as number)||m.to.x!==item.x||m.to.z!==item.z||Math.max(Math.abs((m.to.x as number)-(m.from.x as number)),Math.abs((m.to.z as number)-(m.from.z as number)))!==1) errors.push('Invalid travel segment.');
-          else if(!validStunIntervals(m.stuns,version,m.start as number,input.tick as number)||!validSlowIntervals(m.stagger,version,m.start as number,input.tick as number)||(m.speedFactor!==undefined&&(version<37||typeof m.speedFactor!=='number'||!Number.isFinite(m.speedFactor)||m.speedFactor<(version>=87?MIN_PAWN_SPEED_V87:version>=86?MIN_PAWN_SPEED_V86:version>=65?.128*((4.6-.12)/4.6)/2:version>=63?.128*((4.6-.12)/4.6):version>=45?.128:.8)||m.speedFactor>1))||(m.terrainDelay!==undefined&&(version<16||(version<22?m.terrainDelay!==1.4:!(version>=31?[.2,1.4,3,4.2,5]:version>=28?[.2,1.4,3,4.2]:[1.4,3,4.2]).includes(m.terrainDelay as number))))||Math.abs(m.end-travelEnd(m as unknown as TravelSegment))>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-(input.tick as number)))>1e-7) errors.push('Inconsistent travel duration.');
-        }
-        const haul = item.haul;
-        if(record(haul)&&haul.whole!==undefined&&(version<26||haul.whole!==true||haul.quantity!==1||!record(haul.destination)||!['stockpile','aside'].includes(String(haul.destination.type))))errors.push('Invalid whole furniture haul shape.');
-        if(record(haul)&&record(haul.destination)&&('growingZoneId' in haul.destination||'sowCell' in haul.destination)&&(version<20||!validSowingDestination(haul.destination,input as unknown as World)))errors.push('Invalid sowing clearance shape.');
-        if(record(haul)&&haul.serviceProgress!==undefined&&(version<10||!record(haul.destination)||!(haul.destination.type==='fuel'||version>=193&&haul.destination.type==='turret')||haul.phase!=='deliver'||!integer(haul.serviceProgress,1,23)))errors.push('Invalid refuel interaction progress.');
-        if(record(haul)&&record(haul.destination)&&haul.destination.forced!==undefined&&(version<19||!(haul.destination.type==='fuel'||version>=193&&haul.destination.type==='turret')||haul.destination.forced!==true))errors.push('Invalid forced refuel flag.');
-        if(record(haul)&&record(haul.destination)&&haul.destination.forCooking!==undefined&&(haul.destination.type!=='fuel'||typeof haul.destination.forCooking!=='boolean'))errors.push('Invalid cooking refuel purpose.');
-        if(record(haul)&&record(haul.destination)&&haul.destination.type==='turret'&&(version<193||Object.keys(haul.destination).some(k=>!['type','structureId','forced'].includes(k))))errors.push('Invalid turret service destination.');
-        if (!legacyV2) {
-          if (!(item.bedId === null || integer(item.bedId, 1)) || !integer(item.needCooldown, 0, 20)) errors.push('Invalid need cadence or bed ownership.');
-          const need = item.need;
-          if (need !== null && (!record(need) || (need.kind === 'eat'
-            ? !oneOf(need.phase, version < 4 ? ['pickup', 'ingest'] : ['pickup', 'choose-spot', 'travel', 'ingest']) || !integer(need.sourcePileId, 1) || !(need.carryPileId === null || integer(need.carryPileId, 1)) || !integer(need.progress, 0, INGEST_TICKS - 1)
-            : need.kind === 'sleep' ? !oneOf(need.phase, ['travel', 'sleep']) || !(need.bedId === null || integer(need.bedId, 1)) || !record(need.target) || !coord(need.target)
-              : true))) errors.push('Invalid need task.');
-        } else if (item.need !== undefined || item.bedId !== undefined || item.needCooldown !== undefined) errors.push('Version 2 cannot contain version 3 task fields.');
-        if (record(item.need) && item.need.kind === 'eat') {
-          if (version >= 5 ? !integer(item.need.quantity, 1, MAX_STACK) : item.need.quantity !== undefined) errors.push('Invalid meal quantity.');
-        }
-        if (version >= 4) {
-          if (!bounded(item.comfort) || !Array.isArray(item.memories) || item.memories.length > (version >= 152 ? 3 : version >= 8 ? 2 : 1) || item.memories.some(memory => !record(memory) || !oneOf(memory.kind, version >= 154 ? ['ate-without-table', 'ate-raw-food', 'ate-fine-meal', 'ate-lavish-meal'] : version >= 152 ? ['ate-without-table', 'ate-raw-food', 'ate-fine-meal'] : version >= 8 ? ['ate-without-table', 'ate-raw-food'] : ['ate-without-table']) || !integer(memory.expiresAt, (input.tick as number) + 1, (input.tick as number) + TICKS_PER_DAY))) errors.push('Invalid comfort or meal memory.');
-          else if (new Set(item.memories.map(memory => (memory as {kind:string}).kind)).size !== item.memories.length) errors.push('Duplicate meal memory.');
-          else if (item.memories.some(memory => (memory as {kind:string}).kind === 'ate-fine-meal') && item.memories.some(memory => (memory as {kind:string}).kind === 'ate-lavish-meal')) errors.push('Conflicting meal memories.');
-          if (record(item.need) && item.need.kind === 'eat') {
-            const dining = item.need.dining;
-            if (dining !== null && (!record(dining) || !record(dining.target) || !coord(dining.target) || !(dining.seatId === null || integer(dining.seatId, 1)) || !(dining.tableId === null || integer(dining.tableId, 1)))) errors.push('Invalid dining place.');
-          }
-        } else if (item.comfort !== undefined || item.memories !== undefined || (record(item.need) && item.need.dining !== undefined)) errors.push('Legacy save contains version 4 fields.');
-        if (haul !== null) {
-          if(record(haul)&&record(haul.destination)&&haul.destination.forHunting!==undefined&&!(version>=79&&haul.destination.type==='stockpile'&&haul.destination.forHunting===true))errors.push('Invalid hunting haul provenance.');
-          if (record(haul) && haul.pickupCell!==undefined && (version<6 || haul.phase!=='deliver' || !record(haul.pickupCell) || !coord(haul.pickupCell))) errors.push('Invalid pickup facing cell.');
-          if (!record(haul) || !integer(haul.sourcePileId, 1) || !integer(haul.quantity, 1, CARRY_CAPACITY) || !oneOf(haul.phase, ['pickup', 'deliver'])
-            || !(haul.carryPileId === null || integer(haul.carryPileId, 1)) || !record(haul.destination)
-            || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : (haul.destination.type === 'fuel' && version>=10 ||haul.destination.type==='turret'&&version>=193) ? integer(haul.destination.structureId,1) : haul.destination.type === 'stockpile' ? integer(haul.destination.stockpileId, 1) : version >= 9 && haul.destination.type === 'aside' && coord(haul.destination))) errors.push('Invalid haul task.');
-        }
+        errors.push(...validatePawnRecordShape(item, input as unknown as World, version));
       } else if (key === 'resources') {
         if (!validPlantThermalFactor(item,version)) errors.push('Invalid plant thermal factor.');
         if (!validStoneIdentity(item.stone, item.kind, version)) errors.push('Invalid resource stone identity.');
@@ -352,46 +258,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
         } else if(item.fuel!==undefined)errors.push('Unexpected fuel state.');
         if (key === 'jobs' && (!oneOf(item.status, ['pending', 'active']) || !(item.reservedBy === null || integer(item.reservedBy, 1)) || !stock(item.escrow) || !integer(item.progress, 0, version>=31?Number.MAX_SAFE_INTEGER:119))) errors.push('Invalid job.');
       } else if (key === 'piles') {
-        if(!validMechCorpseShape(item,version,input.tick as number))errors.push('Invalid or future mechanoid carcass.');
-        if(!validFoodContamination(item.foodPoison,item.item as keyof typeof ITEM_DEFINITIONS,version>=89))errors.push('Invalid food contamination.');
-        if(item.item==='human-corpse'?!validHumanCorpseShape(item.humanCorpse,version,input.tick as number):item.humanCorpse!==undefined)errors.push('Invalid human corpse metadata.');
-        if(item.item!=='human-corpse'&&!validCorpseShape(item,version))errors.push('Invalid corpse metadata for schema.');
-        if(!validArtWorkShape(item,version))errors.push('Invalid or future art work.');
-        if(version<109&&(item.item==='unfinished-flak-vest'||item.flakWork!==undefined))errors.push('Future flak work in older save.');
-        if(version<141&&(item.item==='flak-helmet'||item.item==='unfinished-flak-helmet'))errors.push('Future flak helmet in older save.');
-        if(version<148&&(item.item==='recon-helmet'||item.item==='unfinished-recon-helmet'))errors.push('Future recon helmet in older save.');
-        if(version<152&&item.item==='fine-meal')errors.push('Future fine meal in older save.');
-        if(version<154&&item.item==='lavish-meal')errors.push('Future lavish meal in older save.');
-        if(version<155&&item.item==='vegetarian-fine-meal')errors.push('Future vegetarian fine meal in older save.');
-        if(version<156&&item.item==='carnivore-fine-meal')errors.push('Future carnivore fine meal in older save.');
-        if(version<157&&item.item==='vegetarian-lavish-meal')errors.push('Future vegetarian lavish meal in older save.');
-        if(version<159&&item.item==='carnivore-lavish-meal')errors.push('Future carnivore lavish meal in older save.');
-        if(version<101&&(item.item==='unfinished-gun'||item.gunWork!==undefined))errors.push('Future machining work in older save.');
-        if(version<178&&(V190_ITEM_IDS.includes(String(item.item))))errors.push('Future predator product in older save.');
-        if(version<91&&V91_ITEM_IDS.includes(String(item.item)))errors.push('Future biome product in older save.');
-        if(version<120&&V120_ANIMAL_PRODUCT_ITEMS.includes(String(item.item)))errors.push('Future livestock product in older save.');
-        if(version<123&&['gold','plasteel','advanced-component','unfinished-component'].includes(String(item.item)))errors.push('Future industrial product in older save.');
-        if(version<79&&['hare-corpse','hare-meat','light-leather'].includes(String(item.item)))errors.push('Future animal product in older save.');
-        if(!validUnfinishedShape(item,version)||!validGunWorkShape(item,version)||!validFlakWorkShape(item,version)||!validComponentWorkShape(item,version))errors.push('Invalid unfinished item.');
-        if(!validApparelShape(item,version))errors.push('Invalid apparel state for schema.');
-        if(!validWeaponShape(item,version))errors.push('Invalid weapon state for schema.');
-        if (!oneOf(item.kind, ['wood', 'food', ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]),...(version>=123?['gold','plasteel','advanced-component']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=194?['mech-corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=120&&item.item==='muffalo-wool'?100:version>=88&&item.item==='silver'||version>=123&&item.item==='gold'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
-        else {
-          if (version >= 5) {
-            if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');
-            else {
-              if(version<84&&(item.item==='potato'||item.item==='corn'))errors.push('Legacy save contains a V84 crop product.');
-              if(version<88&&['silver','bolt-action-rifle','plasteel-knife'].includes(item.item as string))errors.push('Legacy save contains V88 goods.');
-              if(version<10&&item.item==='simple-meal')errors.push('Legacy save contains cooked meal.');
-              const definition = ITEM_DEFINITIONS[item.item as keyof typeof ITEM_DEFINITIONS];
-              if (definition.kind !== item.kind || (item.quantity as number) > definition.stackLimit) errors.push('Invalid item category or stack limit.');
-            }
-          } else if (item.item !== undefined) errors.push('Legacy save contains version 5 item.');
-          const owner = item.owner;
-          if (owner.type === 'ground' ? !coord(owner) || Object.keys(owner).some(key => !['type', 'x', 'z'].includes(key))
-            : (owner.type === 'pawn'||version>=52&&owner.type==='equipment'||version>=63&&owner.type==='apparel'||version>=88&&owner.type==='inventory') ? !integer(owner.pawnId, 1) || Object.keys(owner).some(key => !['type', 'pawnId'].includes(key))
-              : version>=89&&owner.type==='grave' ? !integer(owner.graveId,1)||Object.keys(owner).some(key=>!['type','graveId'].includes(key)) : owner.type === 'job' ? !integer(owner.jobId, 1) || Object.keys(owner).some(key => !['type', 'jobId'].includes(key)) : true) errors.push('Invalid material owner.');
-        }
+        errors.push(...validatePileRecordShape(item, input as unknown as World, version));
       } else if (item.items!==undefined&&(version<194&&Object.hasOwn(item.items as object,'scyther-corpse')||version<101||version<178&&Object.keys(item.items as object).some(i=>V190_ITEM_IDS.includes(i))||!validStorageItems(item.items)||version<104&&Object.hasOwn(item.items as object,'unfinished-sculpture')||version<120&&Object.keys(item.items as object).some(i=>V120_ANIMAL_PRODUCT_ITEMS.includes(i))||version<123&&Object.keys(item.items as object).some(i=>['gold','plasteel','advanced-component'].includes(i))||version<141&&Object.keys(item.items as object).some(i=>i==='flak-helmet'||i==='unfinished-flak-helmet')||version<148&&Object.keys(item.items as object).some(i=>i==='recon-helmet'||i==='unfinished-recon-helmet')||version<152&&Object.hasOwn(item.items as object,'fine-meal')||version<154&&Object.hasOwn(item.items as object,'lavish-meal')||version<155&&Object.hasOwn(item.items as object,'vegetarian-fine-meal')||version<156&&Object.hasOwn(item.items as object,'carnivore-fine-meal')||version<157&&Object.hasOwn(item.items as object,'vegetarian-lavish-meal')||version<159&&Object.hasOwn(item.items as object,'carnivore-lavish-meal'))||!record(item.filters) || typeof item.filters.wood !== 'boolean' || typeof item.filters.food !== 'boolean' || item.filters['mech-corpse']!==undefined&&(version<194||typeof item.filters['mech-corpse']!=='boolean') || item.filters.silver!==undefined&&(version<88||typeof item.filters.silver!=='boolean') || item.filters.corpse!==undefined&&(version<79||typeof item.filters.corpse!=='boolean') || item.filters.unfinished!==undefined&&(version<72||typeof item.filters.unfinished!=='boolean') || item.filters.textile!==undefined&&(version<71||typeof item.filters.textile!=='boolean') || item.filters.apparel!==undefined&&(version<63||typeof item.filters.apparel!=='boolean') || item.filters.weapon!==undefined&&(version<52||typeof item.filters.weapon!=='boolean') || item.filters.medicine!==undefined&&(version<51||typeof item.filters.medicine!=='boolean') || item.filters.component!==undefined&&(version<41||typeof item.filters.component!=='boolean') || item.filters.blocks!==undefined&&(version<32||typeof item.filters.blocks!=='boolean') || item.filters.gold!==undefined&&(version<123||typeof item.filters.gold!=='boolean') || item.filters.plasteel!==undefined&&(version<123||typeof item.filters.plasteel!=='boolean') || item.filters['advanced-component']!==undefined&&(version<123||typeof item.filters['advanced-component']!=='boolean') || item.filters.steel!==undefined&&(version<29||typeof item.filters.steel!=='boolean') || item.filters.chunk!==undefined&&(version<28||typeof item.filters.chunk!=='boolean') || item.filters.furniture!==undefined&&(version<26||typeof item.filters.furniture!=='boolean')
         || !validStorageConditions(item,version) || !integer(item.priority, 1, 4) || !integer(item.capacity, 1, version>=88?ITEM_DEFINITIONS.silver.stackLimit:MAX_STACK)) errors.push('Invalid storage policy.');
     }
@@ -423,6 +290,11 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!errors.length&&!validateWildFlora(input as unknown as World,version))errors.push('Invalid wild flora.');
   if(!errors.length)errors.push(...validateV90Persistence(input as unknown as World,version));
   if (errors.length) return errors;
+  const groupErrors=validateGroupState(commercialWorld,version);
+  if(groupErrors.length)return groupErrors;
+  const planetErrors=validatePlanet(commercialWorld.planet,commercialWorld,version);
+  if(planetErrors.length)return planetErrors;
+  const knownPeople=(commercialWorld.group||commercialWorld.groupLosses?.length)?captureHumanOwners(commercialWorld).people:undefined;
   const world = input as unknown as World;
   errors.push(...validateFlooring(world,version),...validateFilth(world,version,ids),...validateBurials(world,version,ids));
   if(errors.length)return errors;
@@ -434,10 +306,10 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!errors.length)errors.push(...validatePrisoners(world,version,ids));
   if(errors.length)return errors;
   errors.push(...validateArrivals(world,version));
-  errors.push(...validateQuests(world,version));
+  errors.push(...validateQuests(commercialWorld,version));
   errors.push(...validateMental(world,version));
-  errors.push(...validateSocial(world,version));
-  for(const pawn of world.pawns)if(!validBereavement(pawn.bereavement,pawn.id,version,world))errors.push('Invalid bereavement memory.');
+  errors.push(...validateSocial(world,version,knownPeople?new Set(knownPeople.keys()):undefined));
+  for(const pawn of world.pawns)if(!validBereavement(pawn.bereavement,pawn.id,version,world,knownPeople))errors.push('Invalid bereavement memory.');
   if(version>=44)errors.push(...validateInterruptedCargo(world));
   if(version>=45)errors.push(...validatePawnHealth(world));
   if(version>=46)errors.push(...validateRescues(world));
@@ -475,6 +347,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!errors.length)errors.push(...validatePodRescues(world,version,ids,createPodDepartureValidator(projection=>validateSchema(projection,version,false))));
   if(!errors.length)errors.push(...validateFires(world,version,ids),...validateThingDamage(world,version));
   if(!errors.length&&world.raids?.mechActive)errors.push(...validateMechanoidRaids(world,version,ids));
+  if(!errors.length)errors.push(...registerGroupThingIds(commercialWorld,ids));
   if(!errors.length&&relationshipContext)errors.push(...validateRelationshipWorld(commercialWorld,version));
   if(!errors.length)errors.push(...validateProjectiles(world,version,ids));
   if(!errors.length){validateBombWaves(world,errors,ids);validateMiniTurrets(world,errors);validateBombRefuges(world,errors,ids);}
@@ -532,7 +405,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
     if (owned.length > 1 || (owned.length === 1 && !(version>=179&&pawn.surgery?.medicine&&pawn.surgery.phase==='approach') && !(version>=106&&pawn.animalHandling&&pawn.animalHandling.phase!=='pickup') && !(version>=106&&pawn.animalCare?.medicine&&pawn.animalCare.phase!=='pickup') && !(version>=89&&pawn.burial&&pawn.burial.phase!=='pickup') && !(version>=86&&pawn.ward?.kind==='food'&&pawn.ward.phase==='deliver') && !(version>=51&&pawn.tend?.medicine&&pawn.tend.phase!=='pickup') && !(version>=48&&pawn.feed&&pawn.feed.phase!=='pickup') && !(version>=44&&pawn.interruptedCargo) && !(version >= 10 && pawn.cooking) && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
     if (version>=179&&pawn.surgery || version>=86&&pawn.ward || version>=73&&pawn.research || pawn.jobId !== null || pawn.haul !== null || version>=52&&pawn.equipmentTask || version>=48&&pawn.feed || version>=47&&pawn.tend || version>=46&&pawn.rescue || version >= 10 && pawn.cooking) { if (!['moving', 'working'].includes(pawn.state)) errors.push('Assigned pawn has incompatible state.'); }
-    else if (!(version>=193&&pawn.bombRefuge)&&!(version>=171&&scoutOnMapId(world)===pawn.id||version>=180&&commercialOnMapId(world)===pawn.id)&&!(version>=106&&(pawn.animalHandling||pawn.animalCare))&&!(version>=89&&(pawn.burial||pawn.cleaning))&&!(version>=88&&(pawn.visitor||pawn.trade))&&!(version>=87&&(pawn.burning||pawn.firefighting))&&!(version>=86&&pawn.prisoner)&&!(version>=79&&pawn.hunting)&&!(version>=74&&pawn.heatRefuge)&&!(version>=68&&pawn.raid)&&!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
+    else if (!(version>=196&&groupOnMapMember(world,pawn.id))&&!(version>=193&&pawn.bombRefuge)&&!(version>=171&&scoutOnMapId(world)===pawn.id||version>=180&&commercialOnMapId(world)===pawn.id)&&!(version>=106&&(pawn.animalHandling||pawn.animalCare))&&!(version>=89&&(pawn.burial||pawn.cleaning))&&!(version>=88&&(pawn.visitor||pawn.trade))&&!(version>=87&&(pawn.burning||pawn.firefighting))&&!(version>=86&&pawn.prisoner)&&!(version>=79&&pawn.hunting)&&!(version>=74&&pawn.heatRefuge)&&!(version>=68&&pawn.raid)&&!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
     if (!legacyV2) {
       if (pawn.bedId !== null) {
         if (![...world.structures,...(world.packed??[]).map(p=>p.building)].some(bed => isBedKind(bed.kind) && !bed.medical && bed.id === pawn.bedId) || bedOwners.has(pawn.bedId)) errors.push('Invalid or duplicate bed ownership.');
@@ -1189,6 +1062,11 @@ export function deserializeWorld(serialized: string): World {
     const errors=validateSchema(input,194);if(errors.length)throw new Error('Invalid version 194 save: '+errors.join(' '));
     // No relationship, partner, offer, memory, archive or draw is invented.
     input.schemaVersion=195;
+  }
+  if(record(input)&&input.schemaVersion===195){
+    const errors=validateSchema(input,195);if(errors.length)throw new Error('Invalid version 195 save: '+errors.join(' '));
+    // Existing owners remain unchanged; planet and groups are prospective commands.
+    input.schemaVersion=196;
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;

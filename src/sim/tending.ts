@@ -1,20 +1,16 @@
+import { resolveHumanTendBatch } from './care-resolution.ts';
 import { workPriority } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { isCarePatient } from './affiliation.ts';
 import { lyingPatient,patientClaimed,bedsideAccess } from './care-access.ts';
 export { lyingPatient } from './care-access.ts';
-import { medicalTendQuality,medicalTendSpeed,treatmentTarget,treatmentTargets,treatmentBatch,urgentTreatment,type TendTask } from './care-rules.ts';
-import { tendQuality,tendXp } from './medicine-rules.ts';
+import { medicalTendSpeed,treatmentTarget,treatmentTargets,treatmentBatch,urgentTreatment,type TendTask } from './care-rules.ts';
 import { reserveMedicine,medicineTaskValid,pickupMedicine,consumeMedicine } from './medicine-logistics.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { healthRandom,updatePawnHealth,reconcilePawnHealth } from './health.ts';
-import { tendInjury,tendMissingPart } from './injury-state.ts';
-import { tendInfection,captureInfectionTendRoom } from './infection-state.ts';
-import { tendFlu } from './flu-state.ts';
 import { infectionRoomFactor } from './infection-room.ts';
-import { learnSkill } from './skills.ts';
 import { blockedCells,reachableCells,routeToCell,workNeighbours,type Reachability } from './pathfinding.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { canStandAt } from './furniture-travel.ts';
@@ -95,22 +91,8 @@ export function processTending(world:World,doctor:Pawn,context:NeedContext,light
   task.phase='tend';doctor.state='working';doctor.path=[];task.progress+=10;
   if(task.progress<task.duration)return;
   const item=task.medicine?.item,batch=treatmentBatch(treatmentTargets(patient),!!item);if(!batch.length){releaseTending(world,doctor);return;}
-  // XP is awarded at a completed treatment before its quality stat is queried.
-  learnSkill(doctor.skills.medicine,tendXp(item),doctor);
-  const quality=medicalTendQuality(doctor);
-  const bedOffset=bedTendOffset(currentMedicalBed(world,patient));
-  let roomFactor:number|undefined;
-  for(const target of batch) {
-    if(target.injuryId!==undefined) {
-      tendInjury(patient.health!,target.injuryId,tendQuality(quality,healthRandom(world),doctor===patient,item,bedOffset));
-      if(patient.health!.injuries.some(i=>i.id===target.injuryId&&i.infection)) {
-        roomFactor??=infectionRoomFactor(world,patient);
-        captureInfectionTendRoom(patient.health!,target.injuryId,roomFactor);
-      }
-    } else if(target.infectionId!==undefined)tendInfection(patient.health!,target.infectionId,tendQuality(quality,healthRandom(world),doctor===patient,item,bedOffset));
-    else if(target.flu)tendFlu(patient.health!,tendQuality(quality,healthRandom(world),doctor===patient,item,bedOffset));
-    else tendMissingPart(patient.health!,target.part);
-  }
+  resolveHumanTendBatch(patient,doctor,batch,{random:()=>healthRandom(world),awardJobXp:true,medicine:item,
+    bedOffset:bedTendOffset(currentMedicalBed(world,patient)),infectionRoomFactor:()=>infectionRoomFactor(world,patient)});
   consumeMedicine(world,task);
   reconcilePawnHealth(world,patient);
   context.event(`${doctor.name} a traité ${batch[0]!.infectionId!==undefined?'une infection':batch[0]!.flu?'la grippe':`${batch.length} plaie(s)`} ${doctor===patient?'sur soi':`de ${patient.name}`} ${item?`avec ${ITEM_DEFINITIONS[item].label}`:'sans médicament'}.`);

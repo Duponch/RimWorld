@@ -26,7 +26,7 @@ export function validPrisonerPawnShape(p:Record<string,unknown>,version:number,w
   const s=p.prisoner;
   if(s!==undefined&&(!object(s)||!keys(s,['capturedAt','initialResistance','resistance','mode','lastChatTick','chatDay','chatCount','rng','escape'])
     ||!integer(s.capturedAt,0,w.tick)||!integer(s.initialResistance,7,12)||typeof s.resistance!=='number'||!Number.isFinite(s.resistance)||s.resistance<0||s.resistance>s.initialResistance
-    ||!['maintain','reduce','recruit'].includes(String(s.mode))||!integer(s.rng,1,0xffffffff)||!integer(s.chatDay,0,prisonDay(w))||s.chatDay!==prisonDay(w)||!integer(s.chatCount,0,2)
+    ||typeof s.mode!=='string'||!['maintain','reduce','recruit'].includes(s.mode)||!integer(s.rng,1,0xffffffff)||!integer(s.chatDay,0,prisonDay(w))||s.chatDay!==prisonDay(w)||!integer(s.chatCount,0,2)
     ||s.lastChatTick!==undefined&&!integer(s.lastChatTick,s.capturedAt,w.tick)||s.chatCount>0&&s.lastChatTick===undefined
     ||s.escape!==undefined&&(!cell(s.escape,w)||!edge(s.escape,w))))return false;
   const r=p.recruitment;
@@ -35,7 +35,7 @@ export function validPrisonerPawnShape(p:Record<string,unknown>,version:number,w
   if(!object(t)||!integer(t.patientId,1,w.nextId-1)||!cell(t.spot,w))return false;
   if(t.kind==='food')return keys(t,['kind','patientId','sourcePileId','carryPileId','quantity','spot','phase'])&&integer(t.sourcePileId,1,w.nextId-1)&&integer(t.quantity,1,75)
     &&(t.phase==='pickup'?t.carryPileId===null:t.phase==='deliver'&&integer(t.carryPileId,1,w.nextId-1));
-  return t.kind==='chat'&&keys(t,['kind','patientId','spot','phase','progress','rapports'])&&['approach','rapport','closing'].includes(String(t.phase))&&integer(t.progress,0,PRISON_RAPPORT_TICKS-1)
+  return t.kind==='chat'&&keys(t,['kind','patientId','spot','phase','progress','rapports'])&&typeof t.phase==='string'&&['approach','rapport','closing'].includes(t.phase)&&integer(t.progress,0,PRISON_RAPPORT_TICKS-1)
     &&integer(t.rapports,0,PRISON_RAPPORTS)&&(t.phase!=='closing'||t.rapports===PRISON_RAPPORTS);
 }
 

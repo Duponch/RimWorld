@@ -1,9 +1,11 @@
+import {createIngestionLedger,readIngestionLedger,promoteLegacyIngestionLedger,trackIngestionStep,observeIngestion,ordinaryRationBoundary,RATION_DEADLINE,type IngestionLedger,type IngestionRecord} from './scenarios/ingestion-conservation.ts';
 import { createWoodLedger,readWoodLedger,trackWoodStep,conservedWood,gatherProbe,grazingProbe,type WoodLedger } from './scenarios/wood-conservation.ts';
 import {createRepairLedger,readRepairLedger,trackMaintenanceStep,type RepairLedger} from './scenarios/repair-conservation.ts';
 import { writeTestFileSync } from './test-output.ts';
 import { isColonist } from '../src/sim/affiliation';
 import { crashlandedDecisions, crashlandedSummary,crashlandedThreatActive } from './scenarios/crashlanded-player';
 import { readFileSync } from 'node:fs';
+import {createHash} from 'node:crypto';
 import { expect, onTestFailed, test } from 'vitest';
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld, validateWorld } from '../src/sim/index.ts';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
@@ -25,7 +27,7 @@ interface Ledger {
   meals:Record<number,number>;sleep:Record<number,number>;
 }
 interface Checkpoint { woodLedger:WoodLedger;repairLedger:RepairLedger;
-  protocol:'food-chain-v84';instrumentation:3;seed:number;world:string;initial:{wood:number;food:number;steel:number;component:number};ledger:Ledger;
+  protocol:'food-chain-v84';instrumentation:3|4;ingestionLedger?:IngestionLedger;seed:number;world:string;initial:{wood:number;food:number;steel:number;component:number};ledger:Ledger;
   milestones:Record<string,number>;journal:{tick:number;reason:string;command:Command}[];observations:Summary[];
 }
 const woodConserved=(w:World)=>woodAccount(w)+(w.fires?.ledger.items.wood??0)+(w.fires?.ledger.woodPotentialLost??0)+((w.fires?.ledger.fuelTicksLost??0)+(w.fires?.ledger.fuelTicksBurned??0))/600;
@@ -90,9 +92,10 @@ test('confirmed chopping and grazing balance physical tree wood, while an unrela
   expect(woodConserved(regrown)-born[0]!.amount).toBe(initialRegrow);
 });
 const checkpointFile=process.env.CRASHLANDED_CHECKPOINT;
-const resumed:Checkpoint|undefined=checkpointFile?JSON.parse(readFileSync(checkpointFile,'utf8')):undefined;
+const checkpointRaw=checkpointFile?readFileSync(checkpointFile,'utf8'):undefined;
+const resumed:Checkpoint|undefined=checkpointRaw?JSON.parse(checkpointRaw):undefined;
 if(resumed&&resumed.protocol!=='food-chain-v84')throw Error('Use a V84 food-chain checkpoint; a V83 20-cell camp has a different player protocol.');
-if(resumed&&resumed.instrumentation!==3)throw Error('Use a V84 instrumentation-3 checkpoint with confirmed wood accounting; historical yield bonuses cannot be reconstructed safely.');
+if(resumed&&resumed.instrumentation!==3&&resumed.instrumentation!==4)throw Error('Use a food-chain checkpoint with confirmed wood/repair instrumentation and prospective ingestion observations.');
 
 /** Completion retains the removed job object and its final reserver. Read that
  * object after the tick so a newly assigned, partially completed harvest is
@@ -126,15 +129,17 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
   const repairLedger=resumed?readRepairLedger(resumed.repairLedger):createRepairLedger();
   const initial=resumed?.initial??{wood:conservedWood(w,woodLedger),food:foodAccount(w),steel:450,component:30};
   const ledger:Ledger=resumed?.ledger??{consumed:0,harvested:0,cooked:0,riceHarvested:0,riceCooked:0,riceMeals:0,potatoHarvested:0,cornHarvested:0,potatoCooked:0,cornCooked:0,riceHarvestsByCell:{},mealsByStation:{},consumedByItem:{},lastSurvivalMealTick:0,nonRationIngestionsLastWeek:Object.fromEntries(w.pawns.map(p=>[p.id,0])),meals:Object.fromEntries(w.pawns.map(p=>[p.id,0])),sleep:Object.fromEntries(w.pawns.map(p=>[p.id,0]))};
+  const ingestionLedger=resumed?resumed.instrumentation===4?readIngestionLedger(resumed.ingestionLedger,w.tick,w.nextId)
+    :promoteLegacyIngestionLedger(w.tick,ledger.lastSurvivalMealTick,createHash('sha256').update(checkpointRaw!).digest('hex')):createIngestionLedger(w.tick);
   if(resumed)expect(conservedWood(w,woodLedger)).toBeCloseTo(initial.wood,7);
   const milestones:Record<string,number>=resumed?.milestones??{},journal:Checkpoint['journal']=resumed?.journal??[],observations:Summary[]=resumed?.observations??[];
   const primary=survivorPlan(w,true).field,initialRiceCells=new Set<number>();
   for(let z=primary.from.z;z<=primary.to.z;z++)for(let x=primary.from.x;x<=primary.to.x;x++)initialRiceCells.add(z*w.width+x);
-  const checkpoint=():Checkpoint=>({protocol:'food-chain-v84',instrumentation:3,seed,world:serializeWorld(w),initial,woodLedger,repairLedger,ledger,milestones,journal,observations});
+  const checkpoint=():Checkpoint=>({protocol:'food-chain-v84',instrumentation:4,seed,world:serializeWorld(w),initial,woodLedger,repairLedger,ingestionLedger,ledger,milestones,journal,observations});
   const failureFile=`tmp/crashlanded-failed-${version}-${seed}.json`;
   onTestFailed(()=>{
     try{writeTestFileSync(failureFile,JSON.stringify(checkpoint()));}
-    catch{writeTestFileSync(`tmp/crashlanded-invalid-world-${version}-${seed}.json`,JSON.stringify({protocol:'food-chain-v84',instrumentation:3,seed,world:JSON.stringify(w),initial,woodLedger,repairLedger,ledger,milestones,journal,observations,validation:validateWorld(w)}));}
+    catch{writeTestFileSync(`tmp/crashlanded-invalid-world-${version}-${seed}.json`,JSON.stringify({protocol:'food-chain-v84',instrumentation:4,seed,world:JSON.stringify(w),initial,woodLedger,repairLedger,ingestionLedger,ledger,milestones,journal,observations,validation:validateWorld(w)}));}
   });
   const record=(name:string,yes:boolean)=>{if(yes&&milestones[name]===undefined)milestones[name]=w.tick;};
   const observe=()=>{
@@ -144,6 +149,7 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
     expect(conservedWood(w,woodLedger),context).toBeCloseTo(initial.wood,7);
     expect({...s.materials,component:s.materials.component+repairLedger.spent},context).toEqual({steel:initial.steel,component:initial.component});
     expect(foodAccount(w)+ledger.consumed+9*ledger.cooked+(w.wildlife?.eatenItems??0),context).toBe(initial.food+ledger.harvested);
+    readIngestionLedger(ingestionLedger,w.tick,w.nextId);
     // Food poisoning can drive hunger to zero between the physical pickup and
     // ingestion. A colonist actively eating is already resolving that state;
     // death, exhaustion or starvation without an engaged meal remain hard
@@ -176,13 +182,14 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
     const harvestJobs=w.jobs.filter(j=>j.kind==='harvest'),resourcesBefore=w.resources;
     const stations=new Map(w.pawns.flatMap(p=>{const station=w.structures.find(s=>s.id===p.cooking?.stationId);return station?[[p.name,station.kind] as const]:[];}));
     const eating=new Map(w.pawns.flatMap(p=>{const need=p.need,pile=need?.kind==='eat'?w.piles.find(q=>q.id===need.carryPileId):undefined;return pile?[[p.name,pile.item] as const]:[];}));
+    const assisted=new Map<number,IngestionRecord>();
     // Assisted feeding reports ingestion under the patient's name, while its
     // physical food is carried by the doctor until the actual completion.
     for(const doctor of w.pawns)if(doctor.feed){
       const patient=w.pawns.find(p=>p.id===doctor.feed!.patientId),pile=w.piles.find(p=>p.id===doctor.feed!.carryPileId);
-      if(patient&&pile)eating.set(patient.name,pile.item);
+      if(patient&&pile){eating.set(patient.name,pile.item);assisted.set(patient.id,{tick:w.tick+1,pawnId:patient.id,portionId:pile.id,item:pile.item,quantity:pile.quantity,source:'assisted',mentalKind:patient.mental?.crisis?.kind??null});}
     }
-    trackMaintenanceStep(w,repairLedger,()=>trackWoodStep(w,woodLedger,()=>stepWorld(w)));
+    const ingestions=trackIngestionStep(w,()=>trackMaintenanceStep(w,repairLedger,()=>trackWoodStep(w,woodLedger,()=>stepWorld(w))));
     const currentEvents=w.events.filter(e=>e.tick===w.tick);
     for(const e of currentEvents) {
       const eaten=e.message.match(/a mangé une portion \((\d+) ×/);
@@ -191,6 +198,12 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
         const pawn=w.pawns.find(p=>e.message.startsWith(`${p.name} a mangé`)),item=pawn?eating.get(pawn.name):undefined;
         expect(item,`Consumed physical item missing at tick ${w.tick}: ${e.message}`).toBeDefined();
         if(!pawn||!isColonist(pawn))continue;
+        const physical=ingestions.filter(r=>r.pawnId===pawn.id&&r.item===item&&r.quantity===quantity);
+        if(physical.length)expect(physical).toHaveLength(1);
+        const observed=physical[0]??assisted.get(pawn.id);
+        expect(observed,`Actual ingestion producer missing at tick${w.tick}: ${e.message}`).toBeDefined();
+        expect(observed!.item).toBe(item);expect(observed!.quantity).toBe(quantity);expect(observed!.tick).toBe(w.tick);
+        observeIngestion(ingestionLedger,observed!);
         ledger.consumed+=quantity;
         ledger.consumedByItem[item!]=(ledger.consumedByItem[item!]??0)+quantity;
         if(item==='survival-meal')ledger.lastSurvivalMealTick=w.tick;
@@ -226,9 +239,9 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
       console.info(`Atterrissage ${seed}: J${w.tick/6000}, ${ledger.riceHarvested} riz récoltés, ${ledger.riceMeals} repas au riz, ${Object.values(ledger.riceHarvestsByCell).filter(n=>n>=2).length}/80 cases récoltées deux fois, ${w.jobs.length} travaux`);
     }
   }
-  const final=observe(),runtimeMs=performance.now()-started,report={protocol:'food-chain-v84',instrumentation:3,seed,resumed:!!resumed,runtimeMs,initial,woodLedger,repairLedger,ledger,milestones,journal,observations,final};
+  const final=observe(),runtimeMs=performance.now()-started,report={protocol:'food-chain-v84',instrumentation:4,seed,resumed:!!resumed,runtimeMs,initial,woodLedger,repairLedger,ingestionLedger,ledger,milestones,journal,observations,final};
   writeTestFileSync(`tmp/crashlanded-final-${version}-${seed}.json`,serializeWorld(w));writeTestFileSync(`artifacts/crashlanded-colony-${version}-${seed}.json`,JSON.stringify(report));
-  const context=JSON.stringify({seed,milestones,ledger,final});
+  const context=JSON.stringify({seed,milestones,ledger,ingestionLedger,final});
   const survivors=w.pawns.filter(isColonist);expect(survivors,context).toHaveLength(3);
   expect(survivors.every(p=>p.state!=='dead'&&p.state!=='downed'&&p.hunger>0&&p.rest>0),context).toBe(true);
   expect(final.beds,context).toBe(3);expect(final.shelteredBeds,context).toBe(3);
@@ -242,7 +255,7 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
   expect(final.stored.component,context).toBe(30);expect(final.stored.steel,context).toBe(370);
   expect(final.food.nutrition,context).toBeGreaterThan(0);expect(milestones.stockMoved,context).toBeGreaterThan(0);
   expect(milestones.shelter,context).toBeGreaterThan(0);
-  expect(ledger.lastSurvivalMealTick,context).toBeLessThanOrEqual(17*6000);
+  expect(ordinaryRationBoundary(ingestionLedger),context).toBeLessThanOrEqual(RATION_DEADLINE);
   // Includes raw berries/crops as well as cooked meals. Crop cooking and rice
   // cycles have their own assertions; this only proves ingestion without rations.
   expect(Object.values(ledger.nonRationIngestionsLastWeek).every(n=>n>=6),context).toBe(true);
@@ -256,8 +269,10 @@ test.each(resumed?[resumed.seed]:[42])('Atterrissage : 24 jours, deux récoltes 
   expect(w.pawns.filter(isColonist).every(p=>!p.draft),context).toBe(true);
   // Corn sown after the first rice harvest can legitimately remain immature at
   // J24. Presence, maturity, harvest and cooking are reported separately. No
-  // Reserve rations may remain stored: the last seven days must be supplied
-  // without eating them, not by confiscating the emergency stock. No
+  // Reserve rations may remain stored: ordinary meals in the last seven days
+  // must be supplied without them. Confirmed impulsive consumption is reported
+  // separately and remains in every physical food total and raw last-ingestion
+  // timestamp; no reserve is confiscated or historical crisis reconstructed. No
   // growth/need/deadline is changed to make all food appear in this one run.
   // Watchdog includes doubled simulated duration and a larger real farm. This
   // is a hang limit, not a simulation performance acceptance threshold.

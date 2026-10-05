@@ -1,5 +1,5 @@
-import { pawnBody } from './health-rules.ts';
-import { effectiveSkillLevel } from './work-types.ts';
+import { tradeImprovement } from './trade-negotiator.ts';
+export { tradeImprovement } from './trade-negotiator.ts';
 import { reservedSource } from './materials.ts';
 import { adjacent,blockedCells,reachableCells,routeToJob } from './pathfinding.ts';
 import { sculptureTradeUnitPrice,tradeRefusal,tradeUnitPrice } from './trade-prices.ts';
@@ -12,10 +12,7 @@ import type { TradeLine } from './trade-state.ts';
 
 export interface TradeGood { pile:MaterialPile; side:'buy'|'sell'; available:number; unitPrice:number; refusal?:string }
 export interface PackedTradeGood { packed:PackedFurniture; side:'buy'|'sell'; available:1; unitPrice:number }
-export function tradeImprovement(p:Pawn):number {
-  const c=pawnBody(p).capacities;
-  return Math.min(.395,Math.max(0,.015*effectiveSkillLevel(p,'social',p.skills.social?.level??0)*(.1+.9*Math.min(1,c.talking/.95))*(.1+.9*Math.min(1,c.hearing/.8))));
-}
+
 export function tradeGoods(w:World,p:Pawn,t:Pawn):{goods:TradeGood[];artGoods:PackedTradeGood[];silver:MaterialPile[];merchantSilver:MaterialPile[]} {
   const improvement=tradeImprovement(p),goods:TradeGood[]=[],artGoods:PackedTradeGood[]=[],silver:MaterialPile[]=[],merchantSilver:MaterialPile[]=[];
   const home=new Set(w.home??[]),zones=new Set(w.stockpiles.map(z=>z.z*w.width+z.x));

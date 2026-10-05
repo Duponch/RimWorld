@@ -48,7 +48,7 @@ function unstable(p:Pawn,w:World):boolean {
 
 /** Beginning a trip cannot silently interrupt work or export another cargo. */
 export function scoutEligible(w:World,p:Pawn):string|null {
-  if(w.scout||w.commercialTrip)return 'Un voyage est déjà en cours.';
+  if(w.scout||w.commercialTrip||w.group)return 'Un voyage ou groupe est déjà en cours.';
   const preparation=scoutPreparationReason(w,p);if(preparation)return preparation;
   if(activeTask(p)||p.state!=='idle'||p.path.length||p.moveCooldown>0||(p.motion?.end??0)>w.tick)return 'Le colon doit être libre de tout travail ou déplacement.';
   if(w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'Déposez d’abord la cargaison de travail ou le meuble porté.';

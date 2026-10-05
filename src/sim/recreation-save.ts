@@ -19,21 +19,33 @@ export function initializeRecreation(world: World): void {
     delete (pawn.recreation.bored as Partial<typeof pawn.recreation.bored>).television;
   }
 }
+function recreationNeedErrors(joy:unknown,version:number):string[] {
+  const kinds=version>=190?RECREATION_KINDS:version>=124?RECREATION_KINDS.slice(0,4):version>=122?RECREATION_KINDS.slice(0,3):RECREATION_KINDS.slice(0,2);
+  if(!record(joy)||!meter(joy.level)||!record(joy.tolerance)||!record(joy.bored)
+    ||Object.keys(joy.tolerance).length!==kinds.length||Object.keys(joy.bored).length!==kinds.length
+    ||kinds.some(k=>!meter((joy.tolerance as Record<string,unknown>)[k])||typeof (joy.bored as Record<string,unknown>)[k]!=='boolean'))return ['Invalid recreation need.'];
+  const errors:string[]=[];
+  for(const kind of kinds){const value=joy.tolerance[kind] as number,bored=joy.bored[kind];if(value>50&&!bored||value<30&&bored)errors.push('Inconsistent recreation boredom.');}
+  return errors;
+}
+/** Passive original owner: no spatial recreation task can be carried off-map.
+ * Numeric need rules are the same ones used by the local site validator. */
+export function validateRecreationRecordShape(pawn:Record<string,unknown>,version:number,clock:number):string[] {
+  if(!Number.isSafeInteger(clock)||clock<0)return ['Invalid recreation clock.'];
+  if(version<15)return [];
+  const errors=recreationNeedErrors(pawn.recreation,version);
+  if(record(pawn.recreation)&&(pawn.recreation.task!==null||pawn.state==='recreating'))errors.push('Off-map recreation cannot own a spatial activity.');
+  return errors;
+}
 /** Called after basic pawn/coordinates validation; dynamic site availability is
  * rechecked before the next action, so an obstructed route is not a corrupt save. */
 export function validateRecreation(world: World, version: number): string[] {
   if(version<15)return [];
   const errors:string[]=[], users=new Map<number,number>(), claimedChessSeats=new Set<number>(),claimedServiceCells=new Set<number>(),claimedPatients=new Set<number>();
-  const kinds=version>=190?RECREATION_KINDS:version>=124?RECREATION_KINDS.slice(0,4):version>=122?RECREATION_KINDS.slice(0,3):RECREATION_KINDS.slice(0,2);
   for(const pawn of world.pawns) {
     const joy:unknown=pawn.recreation;
-    if(!record(joy)||!meter(joy.level)||!record(joy.tolerance)||!record(joy.bored)
-      ||Object.keys(joy.tolerance).length!==kinds.length||Object.keys(joy.bored).length!==kinds.length
-      ||kinds.some(k=>!meter((joy.tolerance as Record<string,unknown>)[k])||typeof (joy.bored as Record<string,unknown>)[k]!=='boolean')) {errors.push('Invalid recreation need.');continue;}
-    for(const kind of kinds) {
-      const value=joy.tolerance[kind] as number, bored=joy.bored[kind];
-      if(value>50&&!bored||value<30&&bored)errors.push('Inconsistent recreation boredom.');
-    }
+    const needErrors=recreationNeedErrors(joy,version);errors.push(...needErrors);
+    if(!record(joy)||needErrors.includes('Invalid recreation need.'))continue;
     const task=joy.task;
     if(task===null){if(pawn.state==='recreating')errors.push('Recreation state has no activity.');continue;}
     if(!record(task)||Object.keys(task).some(k=>!['activity','target','buildingId','seatId','patientId','phase','elapsed'].includes(k))

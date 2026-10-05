@@ -1,3 +1,4 @@
+import { civilianAdmissionFits,civilianAwayCounts } from './civilian-away.ts';
 import { isColonist } from './affiliation.ts';
 import { offeredBackground,assignOfferedBackground } from './background-generation.ts';
 import { relationshipOfferCandidates,chooseOfferedRelationship,prepareRelationshipAdmission } from './relationship-generation.ts';
@@ -13,13 +14,11 @@ import { TICKS_PER_DAY,type CommandResult,type World } from './types.ts';
 export const questsSupported=(w:World):boolean=>!!w.gameProfile&&w.raids?.profile==='cassandra-raids-v1';
 const offMap=(w:World)=>w.scout&&(w.scout.phase==='travelling'||w.scout.phase==='awaiting-entry')?w.scout:w.commercialTrip&&'pawn' in w.commercialTrip?w.commercialTrip:undefined;
 function admission(w:World):boolean {
-  const exported=offMap(w);
-  return w.pawns.length+(exported?1:0)+1<=w.width*w.height
-    &&w.piles.length+(exported?.items.length??0)+1<=32768
+  return civilianAdmissionFits(w,1,1)
     &&w.nextId<=Number.MAX_SAFE_INTEGER-2&&!!w.foodPolicies[0];
 }
 function liveCount(w:World):number {
-  return w.pawns.reduce((n,p)=>n+Number(isColonist(p)&&p.state!=='dead'),0)+Number(!!offMap(w));
+  return w.pawns.reduce((n,p)=>n+Number(isColonist(p)&&p.state!=='dead'),0)+civilianAwayCounts(w).people;
 }
 function log(w:World,message:string):void {
   w.events.push({tick:w.tick,type:'command',message});

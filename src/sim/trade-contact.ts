@@ -1,6 +1,5 @@
-import { isColonist } from './affiliation.ts';
-import { backgroundSkillRefusal } from './colonist-backgrounds.ts';
-import { medicalWorkRefusal,pawnBody } from './health-rules.ts';
+import { negotiatorRefusal } from './trade-negotiator.ts';
+export { negotiatorRefusal } from './trade-negotiator.ts';
 import { adjacent,blockedCells,reachableCells,routeToJob } from './pathfinding.ts';
 import { clearQueuedOrders } from './player-orders.ts';
 import { planCommandDrops,releaseWork } from './work-release.ts';
@@ -8,14 +7,7 @@ import { visitorMayTrade } from './visitors.ts';
 import type { NeedContext } from './needs.ts';
 import type { CommandResult,Pawn,World } from './types.ts';
 
-export function negotiatorRefusal(p:Pawn):string|undefined {
-  if(!isColonist(p)||p.prisoner)return 'Choisissez un colon libre.';
-  const background=backgroundSkillRefusal(p,'social');if(background)return background;
-  const medical=medicalWorkRefusal(p);if(medical)return medical;
-  if(p.draft||p.melee?.strike||p.shooting?.stance||p.mental?.crisis||p.collapsePending||p.interruptedCargo||p.burning)return 'Le négociateur doit être disponible et démobilisé.';
-  const c=pawnBody(p).capacities;
-  if(c.talking<=0||c.hearing<=0)return 'Le négociateur doit pouvoir parler et entendre.';
-}
+
 export function tradingAtContact(w:World,p:Pawn,t:Pawn):boolean {
   return p.trade?.traderId===t.id&&p.trade.phase==='ready'&&!negotiatorRefusal(p)&&visitorMayTrade(w,t)
     &&p.moveCooldown===0&&t.moveCooldown===0&&adjacent(p,t);

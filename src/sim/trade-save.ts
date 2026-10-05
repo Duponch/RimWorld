@@ -24,7 +24,11 @@ export function validateTrade(w:World,version:number):string[] {
     const p=w.pawns.find(p=>p.id===('pawnId' in pile.owner?pile.owner.pawnId:-1));
     const scoutRation=version>=171&&!!p&&isColonist(p)&&!p.prisoner&&pile.item==='survival-meal'&&pile.quantity<=3&&pile.foodPoison===undefined;
     const commercialInventory=version>=180&&!!p&&isColonist(p)&&!p.prisoner&&(['silver','medicine','component'].includes(pile.item)||version>=185&&['cloth','muffalo-wool'].includes(pile.item));
-    if(!p?.visitor&&!scoutRation&&!commercialInventory||pile.kind==='corpse'||pile.kind==='mech-corpse'||pile.kind==='unfinished')errors.push('Invalid inventory ownership.');
+    // A cancelled or returned group keeps its real possessions on the local
+    // human owner, even after death or a later change of affiliation.
+    const groupInventory=version>=196&&!!p&&!Object.hasOwn(p,'mechKind')&&p.health?.body===undefined
+      &&['survival-meal','silver','medicine','component','cloth','muffalo-wool'].includes(pile.item);
+    if(!p?.visitor&&!scoutRation&&!commercialInventory&&!groupInventory||pile.kind==='corpse'||pile.kind==='mech-corpse'||pile.kind==='unfinished')errors.push('Invalid inventory ownership.');
   }
   const ledger:unknown=w.trade;if(ledger===undefined)return errors;
   if(!object(ledger)||!keys(ledger,version>=105?['count','silverPaid','silverReceived','forgone','bought','sold','artBought','artSold','recent']:['count','silverPaid','silverReceived','forgone','bought','sold','recent'])||!int(ledger.count,1)||!int(ledger.silverPaid)||!int(ledger.silverReceived)||!int(ledger.forgone)||!object(ledger.bought)||!object(ledger.sold)||!Array.isArray(ledger.recent)||!ledger.recent.length||ledger.recent.length>80||ledger.recent.length!==Math.min(80,ledger.count))return [...errors,'Invalid trade ledger.'];

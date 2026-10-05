@@ -5,13 +5,10 @@ import { TICKS_PER_DAY, type Pawn, type World } from './types.ts';
 import { BUILDING_MATERIALS } from './building-materials.ts';
 import { bedRestEffectiveness } from './furniture-stats.ts';
 
-export const REST_PER_TICK = 95 / TICKS_PER_DAY;
-export const LEGACY_REST_PER_TICK = 0.008;
-export const BED_REST_PER_TICK = 100 / (TICKS_PER_DAY * 10.5 / 24);
-export const GROUND_REST_PER_TICK = BED_REST_PER_TICK * 0.8;
+import { BED_REST_PER_TICK,GROUND_REST_PER_TICK,depletedHumanRest } from './human-need-rates.ts';
+export { REST_PER_TICK,LEGACY_REST_PER_TICK,BED_REST_PER_TICK,GROUND_REST_PER_TICK,restFallFactor } from './human-need-rates.ts';
 const COLLAPSE_INTERVAL = TICKS_PER_DAY / 400;
 
-export const restFallFactor = (rest: number): number => rest >= 28 ? 1 : rest >= 14 ? 0.7 : rest >= 1 ? 0.3 : 0.6;
 
 /** Reference MTB is in game days; our tick/day is one tenth of RimWorld's. */
 export function collapseProbability(zeroTicks: number): number {
@@ -24,7 +21,7 @@ export function updateRest(world: World, pawn: Pawn): void {
   if(pawn.state==='dead')return;
   if(carrierOf(world,pawn.id)){
     delete pawn.medicalSleep;
-    pawn.rest=Math.max(0,pawn.rest-(world.restRules==='legacy'?LEGACY_REST_PER_TICK:REST_PER_TICK*restFallFactor(pawn.rest)));
+    pawn.rest=depletedHumanRest(pawn.rest,world.restRules==='legacy');
     return;
   }
   if(pawn.state==='downed'||pawn.state==='resting') {
@@ -34,10 +31,10 @@ export function updateRest(world: World, pawn: Pawn): void {
     else if(!pawn.medicalSleep&&pawn.rest<75&&pawn.hunger>0&&!fallingAsleepBlocked(world,pawn))pawn.medicalSleep=true;
     const need=pawn.need,bed=pawn.moveCooldown===0&&need?.kind==='sleep'&&need.phase==='sleep'&&need.bedId!==null?world.structures.find(s=>s.id===need.bedId&&isBedKind(s.kind)&&(s.kind!=='hospital-bed'||s.x===pawn.x&&s.z===pawn.z&&need.target.x===s.x&&need.target.z===s.z)):undefined;
     if(pawn.medicalSleep)pawn.rest=Math.min(100,pawn.rest+(bed?BED_REST_PER_TICK*(bed.kind==='hospital-bed'?bedRestEffectiveness(bed):(bed.material?BUILDING_MATERIALS[bed.material].restFactor:1)):GROUND_REST_PER_TICK));
-    else pawn.rest=Math.max(0,pawn.rest-(world.restRules==='legacy'?LEGACY_REST_PER_TICK:REST_PER_TICK*restFallFactor(pawn.rest)));
+    else pawn.rest=depletedHumanRest(pawn.rest,world.restRules==='legacy');
     return;
   }
-  if (pawn.state !== 'sleeping') pawn.rest = Math.max(0, pawn.rest - (world.restRules === 'legacy' ? LEGACY_REST_PER_TICK : REST_PER_TICK * restFallFactor(pawn.rest)));
+  if (pawn.state !== 'sleeping') pawn.rest = depletedHumanRest(pawn.rest,world.restRules==='legacy');
   if (world.restRules === 'legacy') { pawn.restZeroTicks = 0; pawn.collapsePending = false; return; }
   pawn.restZeroTicks = pawn.rest < 0.01 && pawn.state !== 'sleeping' ? Math.min(4500, pawn.restZeroTicks + 1) : 0;
   if (pawn.rest >= 0.01 || pawn.hunger <= 0 || pawn.need?.kind === 'sleep') { pawn.collapsePending = false; return; }

@@ -30,7 +30,7 @@ export function validApparelShape(p:Record<string,unknown>,version:number):boole
     &&typeof a.hitPoints==='number'&&Number.isInteger(a.hitPoints)&&a.hitPoints>0&&a.hitPoints<=definition.hitPoints
     &&(version<90?a.material===undefined:definition.material===undefined?a.material===undefined:a.material===definition.material)
     &&(a.forbidden===undefined||a.forbidden===true)&&(a.forced===undefined||a.forced===true)
-    &&!(a.forbidden===true&&a.forced===true)&&p.quantity===1&&record(p.owner)&&['ground','pawn','apparel'].includes(String(p.owner.type))
+    &&!(a.forbidden===true&&a.forced===true)&&p.quantity===1&&record(p.owner)&&typeof p.owner.type==='string'&&['ground','pawn','apparel'].includes(p.owner.type)
     &&(a.forced===undefined||p.owner.type==='apparel');
 }
 export function validateApparel(world:World,version:number=world.schemaVersion):string[] {

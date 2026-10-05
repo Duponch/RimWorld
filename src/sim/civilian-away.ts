@@ -7,7 +7,13 @@ export function civilianAway(w:World) {
     w.commercialTrip&&'pawn' in w.commercialTrip?w.commercialTrip:undefined;
 }
 export function civilianAdmissionFits(w:World,pawns=0,piles=0):boolean {
-  const away=civilianAway(w);
-  return w.pawns.length+Number(!!away)+pawns<=w.width*w.height
-    &&w.piles.length+(away?.items.length??0)+piles<=32768;
+  const away=civilianAwayCounts(w);
+  return w.pawns.length+away.people+pawns<=w.width*w.height
+    &&w.piles.length+away.piles+piles<=32768;
+}
+
+/** Active originals only; frozen terminal/archive owners do not reserve a map population slot. */
+export function civilianAwayCounts(w:World):{people:number;piles:number} {
+ const legacy=civilianAway(w),group=w.group&&'members' in w.group?w.group:undefined;
+ return {people:Number(!!legacy)+(group?.members.length??0),piles:(legacy?.items.length??0)+(group?.items.length??0)};
 }

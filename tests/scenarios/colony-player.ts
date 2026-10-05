@@ -259,9 +259,7 @@ export function colonySummary(world: World) {
     structures: Object.fromEntries(['wood-generator','standing-lamp','passive-cooler','bed','table','stool','wall','campfire','horseshoes','stonecutter','door'].map(kind => [kind,world.structures.filter(s=>s.kind===kind).length])), preparedMeals:world.piles.filter(p=>p.item==='simple-meal').reduce((n,p)=>n+p.quantity,0), stock: { ...world.stock }, pending: world.jobs.length, minimumFood: Math.min(...world.pawns.map(p=>p.hunger)), minimumRest: Math.min(...world.pawns.map(p=>p.rest)) };
 }
 
-export function woodAccount(world: World): number {
-  return (world.packed??[]).reduce((n,p)=>n+requiredMaterial(p.building,'wood'),0) + world.deconstructed.lostWood + (world.destroyed?.lost.wood??0) + world.deconstructed.fuelTicks/600 + world.piles.filter(p=>p.kind==='wood').reduce((n,p)=>n+p.quantity,0) + world.resources.filter(r=>r.kind==='tree').reduce((n,r)=>n+r.amount,0) + world.structures.reduce((n,s)=>n+(s.fuel ? ((s.fuel?.ticks??0)+(s.fuel?.burned??0))/600 : requiredMaterial(s,'wood')),0);
-}
+export {woodAccount} from './wood-account.ts';
 export function foodAccount(world: World): number {
   // Produced units remain accounted for even after spoilage; this is a ledger,
   // not the edible stock used by the player's decisions. Subtract the separate
