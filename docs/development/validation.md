@@ -1,4 +1,6 @@
-# Validation courante — V229
+# Validation courante — V230
+
+**V230 — séparation locale du rendu, schéma198 inchangé.** [Contrat](scene-render-core-v230.md), [preuves et limites](../history/validation-scene-render-core-v230.md). Oracles de scène complets,12 fichiers/48 réussites/un ignoré, typage/build/présentation et parcours natif avec sauvegarde/reprise et vraie perte GPU passent.62 payloads/métadonnées exacts. Un seul cycle ABBA local favorable se chevauche ; aucun gain FPS stable ni240FPS certifié. Les expériences défavorables restent privées ; le vrai Core Offscreen32² est qualifié séparément, sans mesure des Aulnes ou intégration complète du jeu.
 
 **V229 — végétation et signatures, schéma 198 inchangé.** [Contrat](scene-reconciliation-v229.md), [preuves et limites](../history/validation-scene-reconciliation-v229.md).12 fichiers/84 réussites/un ignoré par reprises, oracles exacts des vrais pipelines et typage/build/sauvegarde-reprise matérielle passent. Deux cycles RAF locaux+6,88/+7,07 %, CPU moyen−9,11/8,74 % ; sous-pipeline Nature Aulnes−8,44 % et signatures isolées−51,22 %. Contrepartie mixed et froid défavorables conservés ; aucun240FPS, vrai6× stable, campagne longue ou gain général certifié. Les62 scènes restent immuables ; copies/adoption hors main continuent d'être qualifiées.
 

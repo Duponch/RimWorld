@@ -1,3 +1,4 @@
+import type {SceneTextureLoader} from './scene-render-ports';
 import * as THREE from 'three/webgpu';
 import { attribute, cameraPosition, cameraViewMatrix, texture, uniform, uv, vec2, vec4 } from 'three/tsl';
 import type { Job, World } from '../sim/types';
@@ -70,7 +71,7 @@ export class DesignationIconLayer {
   private key = '';
   private disposed = false;
 
-  constructor() {
+  constructor(loadTexture:SceneTextureLoader=(url,onLoad,onProgress,onError)=>new THREE.TextureLoader().load(url,onLoad,onProgress,onError)) {
     const geometry = new THREE.InstancedBufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute([-.5, -.5, 0, .5, -.5, 0, -.5, .5, 0, .5, .5, 0], 3));
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 0, 1, 1, 1], 2));
@@ -94,7 +95,7 @@ export class DesignationIconLayer {
     this.mesh.name = 'designation-icon-billboards';
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 5;
-    new THREE.TextureLoader().load('/assets/ui/lisiere/icons.png', loaded => {
+    loadTexture('/assets/ui/lisiere/icons.png', loaded => {
       if (this.disposed) { loaded.dispose(); return; }
       loaded.colorSpace = THREE.SRGBColorSpace;
       loaded.minFilter = loaded.magFilter = THREE.LinearFilter;

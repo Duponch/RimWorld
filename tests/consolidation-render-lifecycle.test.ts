@@ -21,8 +21,10 @@ test('constructor failure after device initialization closes the renderer too', 
 
 test('fatal entry stops frames and reports once; later bursts and disposed views cannot report again', () => {
   const view = Object.create(ColonyRenderer.prototype) as ColonyRenderer;
-  const state = view as unknown as { renderer: typeof renderer; keys: Set<string>; disposed: boolean; frame(time: number): void };
+  const state = view as unknown as { renderer: typeof renderer; keys: Set<string>; disposed: boolean; hostPort: { selectionReady(): boolean }; frame(time: number): void };
   state.renderer = renderer; state.keys = new Set(['w']); state.disposed = false;
+  // The incomplete constructor has not attached its input owner yet.
+  state.hostPort = { selectionReady: () => false };
   const report = vi.fn(); view.onFatalError = report;
   view.reportFailure('device lost'); view.reportFailure('validation burst');
   expect(report).toHaveBeenCalledExactlyOnceWith('device lost'); expect(state.keys.size).toBe(0);
