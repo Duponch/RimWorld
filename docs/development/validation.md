@@ -1,4 +1,6 @@
-# Validation courante — V235
+# Validation courante — V236
+
+**V236 — diagnostic privé, schéma198 inchangé.** [Contrat](render-room-terrain-v236.md), [recherche](../research/render-room-terrain-v236.md), [preuve](../history/validation-render-room-terrain-v236.md). Reprise du banc typée et oracles natifs exacts ; deux cycles CPU complets favorables sur Aulnes/mixed. GAME ordinaire sans gain FPS utile, candidat écarté. Produit V233/62 références conservés ; cible240FPS/6× et résultat Nature compact restent à qualifier.
 
 **V235 — diagnostic privé, schéma 198 inchangé.** [Contrat](direct-render-distribution-v235.md), [preuve](../history/validation-direct-render-distribution-v235.md). Un ABBA Core matériel : images soumises −7,48 %, simulation proche de6×, parcours stricts et sauvegarde/reprise exacts dans le périmètre déclaré. Piste écartée, aucun nouveau code produit ; V233 reste la référence. Refus NaN précoce, pas de refus tardif ou GPU reset certifié. Les 62 références restent exactes ; prochaine expérience sur le coût topologique de l'éclairage, sans gain acquis ni 240 FPS atteints.
 

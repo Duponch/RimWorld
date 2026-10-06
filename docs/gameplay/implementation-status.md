@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**Diagnostic V236, schéma198 inchangé.** L'expérience de [terrain des pièces](../development/render-room-terrain-v236.md) est exacte sur ses contrôles mais [n'améliore pas les FPS du jeu de façon utile](../history/validation-render-room-terrain-v236.md). Elle reste privée ; V233 et les62 scènes sont conservés. Aucun contenu ou gain FPS ajouté. La suite cible les matérialisations naturelles complètes, avec parité des sorties et coût complet à qualifier.
+
 **Diagnostic V235, schéma 198 inchangé.** Le [trajet graphique direct](../development/direct-render-distribution-v235.md) produit [moins d'images sur la référence](../history/validation-direct-render-distribution-v235.md) et reste privé. Jeu V233 et 62 scènes conservés ; aucun gain FPS ajouté. Les refontes sur Les Aulnes restent prioritaires, notamment le travail local d'application, avec qualité et règles inchangées.
 
 **Diagnostic V234, schéma 198 inchangé.** Le [prototype de réception native](../development/native-resource-ownership-v234.md) est exact sur ses contrôles mais [plus coûteux](../history/validation-native-resource-ownership-v234.md) ; il reste privé. Le jeu conserve V233 et les 62 scènes, sans nouveau contenu ou gain FPS dans ce lot. Les refontes de performance sur Les Aulnes restent prioritaires, avec mesure du vrai rendu et de la vitesse source.
