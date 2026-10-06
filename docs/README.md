@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V240, diagnostic, schéma 198 inchangé :** l'[attribution de scène](development/scene-causal-phases-v240.md) et ses [preuves](history/validation-scene-causal-phases-v240.md) établissent les reconstructions globales déclenchées par trois pots de fleurs. La reprise autorisée vise maintenant le mobilier résident et les coûts continus mesurés ; produit V233 conservé, aucun gain FPS livré par ce diagnostic.
+
 **V239, diagnostic, schéma 198 inchangé :** [certificats végétaux prolongés](development/natural-certificates-v239.md), [preuves et rejet](history/validation-natural-certificates-v239.md). Le prototype est exact mais son coût complet ne gagne pas utilement ; il reste privé. Produit V233 conservé, aucun FPS supplémentaire. La suite attribue les parcours réellement coûteux de Nature dans le jeu actuel.
 
 **V237, diagnostic, schéma 198 inchangé :** [résultat naturel compact](development/natural-compact-v237.md), [recherche](research/natural-compact-v237.md), [preuves et rejet](history/validation-natural-compact-v237.md). Sorties exactes mais aucun gain utile de coût complet sur Les Aulnes ; aucun GAME supplémentaire ou gain FPS ajouté. Produit V233 conservé. La suite attribue les captures et forecasts restants avant une nouvelle refonte.

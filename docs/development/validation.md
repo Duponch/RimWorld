@@ -1,4 +1,6 @@
-# Validation courante — V239
+# Validation courante — V240
+
+**V240 — diagnostic causal, schéma 198 inchangé.** [Contrat](scene-causal-phases-v240.md), [preuves](../history/validation-scene-causal-phases-v240.md). Typage, quatre fichiers/treize cas et un vrai GAME matériel avec sauvegarde/reprise passent ; sources et62références exactes. Trois pots distincts expliquent les reconstructions de mobilier ; Nature est toujours admise par ID dans cette fenêtre. Aucun gain FPS livré, produit V233 conservé ; refonte résidentielle en préparation.
 
 **V239 — prototype privé écarté, schéma 198 inchangé.** [Contrat](natural-certificates-v239.md), [preuves](../history/validation-natural-certificates-v239.md). Neuf cas numériques/admission et oracles du pipeline natif passent ; le coût complet ne démontre pas un gain utile. Aucun flux long ou GAME candidat supplémentaire, aucun FPS ajouté. Produit V233 et62références exacts ; prochaine attribution des phases et replis de Nature sur le vrai jeu, cadence et qualité conservées.
 
