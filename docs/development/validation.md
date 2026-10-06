@@ -1,4 +1,6 @@
-# Validation courante — V242
+# Validation courante — V243
+
+**V243 — attribution privée, produit V242 et schéma198 conservés.** [Contrat](frame-uniform-attribution-v243.md), [preuves](../history/validation-frame-uniform-attribution-v243.md). Typage, douze cas et un vrai GAME matériel avec sauvegarde/reprise passent. Matrices0,136ms/frame, rendu principal2,695ms inclusif ; pas de gainFPS livré. Sources/62références exacts. Prochaine ablation : éclairage global partagé, sans changer cadence ou qualité ;240FPS/6× restent ouverts.
 
 **V242 — présentation naturelle, schéma198 inchangé.** [Contrat](natural-scene-v242.md), [preuves et limites](../history/validation-natural-scene-v242.md).14oracles privés, pipeline natif exact,98réussites/un ignoré dans15fichiers par reprise d'un timeout, typage/build et vrai parcours matériel avec perteGPU/sauvegarde/reprise passent. Deux GAME locaux positifs ; doses et froid défavorables explicités, aucune garantie240FPS/6× ou toutesparties.62références conservées ; suite sur les coûts réels par frame.
 

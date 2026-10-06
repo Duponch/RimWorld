@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V243 attribue le [coût par image et les bindings](development/frame-uniform-attribution-v243.md) du produitV242 ; [preuves](history/validation-frame-uniform-attribution-v243.md). Les matrices sont peu coûteuses ; une ablation d'éclairage partagé est la prochaine piste. Aucun nouveau gainFPS livré par ce diagnostic.
+
 **V242, schéma198 inchangé :** la [présentation naturelle](development/natural-scene-v242.md) retire une liste complète devenue inutile sur la voie native confirmée. [Preuves et limites](history/validation-natural-scene-v242.md) : deux comparaisons GAME locales positives, avec dose et vitesse réelle explicitées ; aucune promesse240FPS/toutesparties.62références conservées, aucun contenu ajouté.
 
 **V241, schéma 198 inchangé :** le [mobilier résident](development/furniture-resident-v241.md) réduit les saccades lors des changements de fleurs ; [contrôles et limites](history/validation-furniture-resident-v241.md). Aucun gain FPS moyen annoncé. Les 62 références restent exactes ; la suite vise les coûts continus de la projection naturelle.
