@@ -18,7 +18,9 @@ import { miniTurretBaseParts } from './mini-turret-parts';
 import { craftingSpotParts } from './crafting-spot-parts';
 import { stonecutterParts } from './stonecutter-parts';
 import { footprintCells } from '../sim/definitions';
-import { habitatParts } from './habitat-parts';
+import { habitatParts, habitatPartsForStructure } from './habitat-parts';
+import { sunLampActive } from '../sim/sun-lamp';
+import { ColorManagement } from 'three/webgpu';
 import { artParts } from './art-parts';
 import { penParts } from './pen-parts';
 import { WORLD_SCALE } from '../world/scale';
@@ -77,4 +79,96 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
       ...bedFrames.map(p => ({ ...p, color: p.color ?? 0x795d41 })), ...bedding.map(p => ({ ...p, color: p.color??0xc7a977 })),
       ...pillows.map(p => ({ ...p, color: 0xe5d8b7 })), ...headboards.map(p => ({ ...p, color: p.color ?? 0x795d41 })),
     ]);
+}
+
+
+
+type FurnitureBatches=Pick<BoxBatches,'set'|'furnitureStamp'|'patchFurniture'|'patchFurnitureBatch'>;
+type FurnitureSpan={start:number;count:number};
+type SunLampCapture={ordinal:number;id:number;active:boolean};
+type FurnitureState={group:THREE.Group;batches:FurnitureBatches;cutaway:boolean;width:number;height:number;
+  colorManagementEnabled:boolean;workingColorSpace:string;
+  stamp:object;items:Placement[];spans:Map<number,FurnitureSpan>;sunLamps:SunLampCapture[]};
+
+/** Native-only sink captures the canonically authored array after the real set
+ * succeeds. It changes no producer expression, read order or GPU operation. */
+function buildFurnitureOwned(world:World,group:THREE.Group,cutaway:boolean,batches:FurnitureBatches):Placement[]|undefined {
+  let owned:Placement[]|undefined;
+  const sink:Pick<BoxBatches,'set'>={
+    set(...args:Parameters<BoxBatches['set']>):void {
+      batches.set(...args);
+      if(args[0]===group&&args[1]==='furniture')owned=args[2];
+    },
+  };
+  // The unchanged public body uses only set. This local nominal cast supplies
+  // that explicit port; it certifies no source World, Mesh or private capacity.
+  buildFurniture(world,group,cutaway,sink as BoxBatches);
+  return owned;
+}
+
+/** Renderer-owned list and spans, never a retained World or source structure. */
+export class FurniturePresentation {
+  private state:FurnitureState|undefined;
+
+  clear():void {this.state=undefined;}
+
+  update(world:World,group:THREE.Group,cutaway:boolean,batches:FurnitureBatches,
+    flowerChanges?:readonly number[],readonlyNative=false):void {
+    if(!readonlyNative){this.clear();buildFurniture(world,group,cutaway,batches as BoxBatches);return;}
+    const state=this.state;
+    // Keep only a local predecessor until every read/patch/capture succeeds.
+    // A thrown producer or resident patch cannot leave that cache authorized.
+    this.clear();
+    if(state&&state.group===group&&state.batches===batches&&state.cutaway===cutaway&&
+      state.width===world.width&&state.height===world.height&&flowerChanges!==undefined&&flowerChanges.length>0&&
+      state.colorManagementEnabled===ColorManagement.enabled&&state.workingColorSpace===ColorManagement.workingColorSpace){
+      const patches:{start:number;items:Placement[]}[]=[];
+      let possible=true,last=-1;
+      for(const ordinal of flowerChanges){
+        if(!Number.isSafeInteger(ordinal)||ordinal<=last){possible=false;break;}last=ordinal;
+        const structure=world.structures[ordinal];
+        if(!structure||structure.kind!=='flower-pot'){possible=false;break;}
+        const span=state.spans.get(structure.id);
+        if(!span||span.count!==6){possible=false;break;}
+        const items=habitatPartsForStructure(structure);
+        if(items.length!==6){possible=false;break;}
+        patches.push({start:span.start,items});
+      }
+      // A flower-triggered historical full build also recomputes civil lamp
+      // colors. Preserve that visible dependency rather than silently freezing it.
+      if(possible)for(const lamp of state.sunLamps){
+        const structure=world.structures[lamp.ordinal];
+        if(!structure||structure.id!==lamp.id||structure.kind!=='sun-lamp'||sunLampActive(world,structure)!==lamp.active){possible=false;break;}
+      }
+      if(possible){
+        if(batches.patchFurnitureBatch(group,'furniture',patches,state.items.length,state.stamp)){
+          for(const patch of patches)for(let i=0;i<patch.items.length;i++)state.items[patch.start+i]=patch.items[i]!;
+          this.state=state;
+          return;
+        }
+      }
+    }
+    // Clear first: exceptions and a refused resident patch cannot keep a cache
+    // authorized against a partially modified or replaced batch.
+    this.clear();
+    const items=buildFurnitureOwned(world,group,cutaway,batches);if(items===undefined)return;
+    const stamp=batches.furnitureStamp();if(stamp===undefined)return;
+    const potIds=new Set<number>(),sunLamps:SunLampCapture[]=[];
+    for(let ordinal=0;ordinal<world.structures.length;ordinal++){
+      const structure=world.structures[ordinal]!;
+      if(structure.kind==='flower-pot')potIds.add(structure.id);
+      else if(structure.kind==='sun-lamp')sunLamps.push({ordinal,id:structure.id,active:sunLampActive(world,structure)});
+    }
+    const spans=new Map<number,FurnitureSpan>();
+    for(let i=0;i<items.length;){
+      const id=items[i]!.key;
+      if(id===undefined||!potIds.has(id)){i++;continue;}
+      if(!Number.isSafeInteger(id)||spans.has(id))return;
+      let next=i+1;while(next<items.length&&items[next]!.key===id)next++;
+      spans.set(id,{start:i,count:next-i});i=next;
+    }
+    this.state={group,batches,cutaway,width:world.width,height:world.height,
+      colorManagementEnabled:ColorManagement.enabled,workingColorSpace:ColorManagement.workingColorSpace,
+      stamp,items,spans,sunLamps};
+  }
 }

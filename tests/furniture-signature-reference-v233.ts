@@ -1,4 +1,4 @@
-import type { StockpileCell, Structure } from '../sim/types';
+import type { StockpileCell, Structure } from '../src/sim/types';
 
 // This owns primitive captures, never a World, source array, building or policy.
 type Scalar = string | number | boolean | bigint | null | undefined;
@@ -29,11 +29,8 @@ export class StructurePresentationSignature {
   private packageKey: string | undefined;
   private signature = '';
   private valid = false;
-  private flowerPlanValid = false;
-  private readonly pendingFlowers = new Set<number>();
 
   clear(): void {
-    this.pendingFlowers.clear();this.flowerPlanValid=false;
     this.slots.length = this.scratch.length = 0;
     this.doorAxesKey = this.packageKey = undefined;
     this.signature = '';
@@ -42,11 +39,7 @@ export class StructurePresentationSignature {
 
   read(structures: readonly Structure[], doorAxesKey: string, packageKey: string, reset = false): string {
     if (reset) this.clear();
-    const previousFlowerPlanValid=this.flowerPlanValid;
-    // Poison before even the historical length/guard reads can throw.
-    this.flowerPlanValid = false;
     let changed = !this.valid || this.slots.length !== structures.length || this.doorAxesKey !== doorAxesKey || this.packageKey !== packageKey;
-    let flowerOnly = !changed && previousFlowerPlanValid;
     this.valid = false;
     const v = this.scratch;
     for (let i = 0; i < structures.length; i++) {
@@ -69,11 +62,6 @@ export class StructurePresentationSignature {
       }
       const old = this.slots[i];
       if (!old || !equal(old.values, v)) {
-        if(flowerOnly){
-          if(!old || old.values[1]!=='flower-pot' || v[1]!=='flower-pot' || old.values[9]!==true || v[9]!==true)flowerOnly=false;
-          else for(let field=0;field<v.length;field++)if(field!==10&&field!==11&&!Object.is(old.values[field],v[field])){flowerOnly=false;break;}
-          if(flowerOnly)this.pendingFlowers.add(i);
-        }
         const flower = v[9] ? `${v[10]}:${v[11]}` : '';
         this.slots[i] = { values: v.slice(), text: `${v[0]}:${v[1]}:${v[2]}:${v[3]}:${v[4]}:${v[5]}:${v[6]}:${v[7]}:${v[8]}:${flower}:${v[12]}:${v[13]}:${v[14]}:${v[15]}:${v[16]}` };
         changed = true;
@@ -82,19 +70,8 @@ export class StructurePresentationSignature {
     this.slots.length = structures.length;
     if (changed) this.signature = doorAxesKey + packageKey + this.slots.map(slot => slot.text).join('|');
     this.doorAxesKey = doorAxesKey; this.packageKey = packageKey;
-    this.valid = true;this.flowerPlanValid=flowerOnly;
+    this.valid = true;
     return this.signature;
-  }
-
-  /** Cumulative since the last successful furniture build ACK. A colliding
-   * non-floral raw change remains a full barrier even if its text is equal. */
-  flowerChanges(): readonly number[] | undefined {
-    return this.valid&&this.flowerPlanValid?[...this.pendingFlowers].sort((a,b)=>a-b):undefined;
-  }
-
-  /** Caller ACKs only after a full or partial build succeeds, never on throw. */
-  ackFurnitureBuild(): void {
-    this.pendingFlowers.clear();this.flowerPlanValid=this.valid;
   }
 }
 

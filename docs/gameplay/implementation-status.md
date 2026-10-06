@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**Rendu V241, schéma 198 inchangé.** Le [mobilier résident](../development/furniture-resident-v241.md) conserve les modèles et remplace les pièces des pots qui changent de stade. [Preuves](../history/validation-furniture-resident-v241.md) : moins de saccades sur Les Aulnes, aucun gain FPS moyen certifié. Aucun contenu ajouté,62scènes conservées ; objectif240FPS/6× toujours ouvert.
+
 **Diagnostic V240, schéma 198 inchangé.** [Parcours réels et mobilier](../development/scene-causal-phases-v240.md), [preuves](../history/validation-scene-causal-phases-v240.md). Aucun contenu ou FPS ajouté ; les mises à jour ponctuelles de fleurs déclenchent encore un lot global coûteux. La reprise autorisée prépare une refonte mesurée, avec V233 et62scènes conservés.
 
 **Diagnostic V239, schéma 198 inchangé.** Les [certificats végétaux prolongés](../development/natural-certificates-v239.md) sont [exacts mais écartés faute de gain complet utile](../history/validation-natural-certificates-v239.md). Aucun contenu, FPS ou code produit ajouté. V233 et62scènes conservés ; poursuivre l'attribution des coûts de scène avant nouvelle mécanique.

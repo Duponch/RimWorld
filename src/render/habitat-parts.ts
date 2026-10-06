@@ -124,3 +124,83 @@ function shade(color: number, factor: number): number {
   const blue = Math.round((color & 0xff) * factor);
   return (red << 16) | (green << 8) | blue;
 }
+
+
+/** Same authored iteration and FP order; no World or resident state. */
+export function habitatPartsForStructure(structure: Structure): Placement[] {
+  const parts: Placement[] = [];
+  const kind = structure.kind as string;
+  if (!HABITAT_KINDS.has(kind)) return parts;
+  const { x, z } = footprintCenter(structure);
+  const ry = structure.orientation * Math.PI / 2;
+  const cos = Math.cos(ry), sin = Math.sin(ry);
+  const body = buildingMaterialColor(structure.material, 0xa38559) ?? 0xa38559;
+  const trim = structure.material === 'steel' ? 0x64747a : shade(body, 0.72);
+  const add = (localX: number, y: number, localZ: number, sx: number, sy: number, sz: number, color = body): void => {
+    parts.push({
+      key: structure.id,
+      x: x + localX * cos + localZ * sin,
+      y,
+      z: z + localZ * cos - localX * sin,
+      sx,
+      sy,
+      sz,
+      ry,
+      color,
+    });
+  };
+  switch (kind) {
+    case 'dining-chair': {
+      const seat = WORLD_SCALE.stoolHeight + 0.03;
+      add(0, seat, 0, 0.62, 0.10, 0.62);
+      for (const dx of [-0.23, 0.23]) for (const dz of [-0.23, 0.23]) add(dx, seat / 2, dz, 0.08, seat, 0.08, trim);
+      // Orientation zero faces +z; the backrest belongs behind that face.
+      add(0, 0.66, -0.25, 0.58, 0.42, 0.08, trim);
+      break;
+    }
+    case 'armchair': {
+      const seat = 0.37;
+      add(0, seat, 0.03, 0.78, 0.14, 0.78, trim);
+      for (const dx of [-0.31, 0.31]) add(dx, 0.53, 0.04, 0.15, 0.36, 0.72);
+      for (const dx of [-0.29, 0.29]) for (const dz of [-0.28, 0.28]) add(dx, seat / 2, dz, 0.10, seat, 0.10, trim);
+      add(0, 0.69, -0.31, 0.76, 0.50, 0.12, trim);
+      break;
+    }
+    case 'end-table': {
+      const height = WORLD_SCALE.tableHeight - 0.05;
+      add(0, height, 0, 0.76, 0.10, 0.76);
+      for (const dx of [-0.29, 0.29]) for (const dz of [-0.29, 0.29]) add(dx, height / 2, dz, 0.09, height, 0.09, trim);
+      add(0, height * 0.53, 0.29, 0.49, 0.13, 0.05, trim);
+      break;
+    }
+    case 'dresser': {
+      const width = 1, depth = 2;
+      const cabinetWidth = Math.max(0.80, width - 0.13);
+      const cabinetDepth = Math.max(0.54, depth - 0.17);
+      add(0, 0.46, 0, cabinetWidth, 0.92, cabinetDepth, trim);
+      add(0, 0.95, 0, cabinetWidth + 0.07, 0.09, cabinetDepth + 0.07);
+      for (const y of [0.27, 0.52, 0.76]) add(0, y, cabinetDepth / 2 + 0.004, cabinetWidth - 0.12, 0.025, 0.04, body);
+      for (const y of [0.27, 0.52, 0.76]) for (const dx of [-0.12, 0.12]) add(dx, y, cabinetDepth / 2 + 0.035, 0.045, 0.045, 0.045, 0xc4b794);
+      break;
+    }
+    case 'table-square': {
+      table(parts, structure, x, z, ry, 1.70, 1.70, body, trim);
+      break;
+    }
+    case 'table-long': {
+      table(parts, structure, x, z, ry, 1.92, 3.92, body, trim);
+      break;
+    }
+    case 'flower-pot': {
+      add(0, 0.20, 0, 0.48, 0.40, 0.48, body);
+      add(0, 0.43, 0, 0.42, 0.10, 0.42, 0x3b3023);
+      const plant=structure.flower?.plant;
+      if(plant){
+        const height=.16+.24*Math.floor(plant.growth*4)/4;
+        for (const [dx, dz] of [[0, 0], [-0.16, 0.08], [0.16, 0.08], [0, -0.16]]) add(dx, .43+height/2, dz, .17, height, .17, plant.hitPoints>0?0x54733d:0x796641);
+      }
+      break;
+    }
+  }
+  return parts;
+}

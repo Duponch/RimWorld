@@ -1,4 +1,6 @@
-# Validation courante — V240
+# Validation courante — V241
+
+**V241 — mobilier résident, schéma 198 inchangé.** [Contrat](furniture-resident-v241.md), [preuves et limites](../history/validation-furniture-resident-v241.md). Oracles privés, contrepartie full distincte,17fichiers/79réussites/un ignoré, typage/build et vrai parcours WebGPU avec perte/reconstruction du périphérique et sauvegarde/reprise passent. Buffers/bornes exacts,62références préservées. Réduction ciblée des saccades, aucun gain FPS moyen ; prochaines qualifications sur les coûts continus naturels, cible240FPS/6× ouverte.
 
 **V240 — diagnostic causal, schéma 198 inchangé.** [Contrat](scene-causal-phases-v240.md), [preuves](../history/validation-scene-causal-phases-v240.md). Typage, quatre fichiers/treize cas et un vrai GAME matériel avec sauvegarde/reprise passent ; sources et62références exactes. Trois pots distincts expliquent les reconstructions de mobilier ; Nature est toujours admise par ID dans cette fenêtre. Aucun gain FPS livré, produit V233 conservé ; refonte résidentielle en préparation.
 

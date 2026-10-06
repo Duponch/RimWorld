@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V241, schéma 198 inchangé :** le [mobilier résident](development/furniture-resident-v241.md) réduit les saccades lors des changements de fleurs ; [contrôles et limites](history/validation-furniture-resident-v241.md). Aucun gain FPS moyen annoncé. Les 62 références restent exactes ; la suite vise les coûts continus de la projection naturelle.
+
 **V240, diagnostic, schéma 198 inchangé :** l'[attribution de scène](development/scene-causal-phases-v240.md) et ses [preuves](history/validation-scene-causal-phases-v240.md) établissent les reconstructions globales déclenchées par trois pots de fleurs. La reprise autorisée vise maintenant le mobilier résident et les coûts continus mesurés ; produit V233 conservé, aucun gain FPS livré par ce diagnostic.
 
 **V239, diagnostic, schéma 198 inchangé :** [certificats végétaux prolongés](development/natural-certificates-v239.md), [preuves et rejet](history/validation-natural-certificates-v239.md). Le prototype est exact mais son coût complet ne gagne pas utilement ; il reste privé. Produit V233 conservé, aucun FPS supplémentaire. La suite attribue les parcours réellement coûteux de Nature dans le jeu actuel.

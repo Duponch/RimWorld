@@ -46,7 +46,7 @@ import { MotionTimeline } from './MotionTimeline';
 import type { PawnTrack } from '../bridge/motion-tracks';
 import { OverviewLayer } from './OverviewLayer';
 import * as THREE from 'three/webgpu';
-import { buildFurniture } from './FurnitureLayer';
+import { FurniturePresentation } from './FurnitureLayer';
 import { PawnLayer } from './PawnLayer';
 import { FrameMetrics } from './FrameMetrics';
 import { BoxBatches } from './BoxBatches';
@@ -209,6 +209,7 @@ export class SceneRenderCore {
   protected structureKey = '';
   protected jobKey = '';
   protected storageKey = '';
+  protected readonly furniturePresentation = new FurniturePresentation();
   protected readonly structureSignature = new StructurePresentationSignature();
   protected readonly storageSignature = new StoragePresentationSignature();
   protected readonly homeSignature = new HomePresentationSignature();
@@ -853,7 +854,7 @@ export class SceneRenderCore {
     this.resources.update(visible, newMap,this.naturalPresentation.changes); this.overview.update(visible,newMap,this.naturalPresentation.changes);
   }
 
-  protected buildStructures(world: World): void { this.doors.update(world,this.wallCutaway);this.timber.update(world,this.wallCutaway);buildFurniture(world, this.structureGroup, this.wallCutaway, this.boxes); }
+  protected buildStructures(world: World): void { this.doors.update(world,this.wallCutaway);this.timber.update(world,this.wallCutaway);this.furniturePresentation.update(world,this.structureGroup,this.wallCutaway,this.boxes,this.structureSignature.flowerChanges(),this.immutableWorlds.has(world));this.structureSignature.ackFurnitureBuild(); }
 
   protected buildJobs(world: World): void { buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes);this.designations.update(world); }
 
@@ -1132,7 +1133,7 @@ export class SceneRenderCore {
     if(this.grass){this.grass.mesh.removeFromParent();this.grass.dispose();this.grass=null;}
     this.resources.dispose();
     this.sceneResources.clear();
-    this.structureSignature.clear();this.storageSignature.clear();this.homeSignature.clear();
+    this.furniturePresentation.clear();this.structureSignature.clear();this.storageSignature.clear();this.homeSignature.clear();
     this.pawns.dispose();
     this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.mechanoids.dispose();this.ropes.dispose();this.designations.dispose();
 

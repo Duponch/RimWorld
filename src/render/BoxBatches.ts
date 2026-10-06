@@ -35,6 +35,8 @@ export class BoxBatches {
     wire: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.65, depthWrite: false }),
   };
   private readonly batches = new Map<string, BoxMesh>();
+  private furnitureRevision: object | undefined;
+  furnitureStamp(): object | undefined { return this.furnitureRevision; }
   private texturesEnabled = true;
   private roundedRockWarm = false;
 
@@ -92,7 +94,35 @@ export class BoxBatches {
     this.setGeometry(group,key,items,this.geometry,style,shadows);
   }
 
+  /** Replace an already-owned, constant-length furniture contribution in the
+   * existing batch. Full uploads and the historical ordered sphere fold are
+   * retained; only unchanged instance transforms avoid recomputation. */
+  patchFurniture(group: THREE.Group, key: string, start: number, items: Placement[], totalCount: number, stamp: object): boolean {
+    return this.patchFurnitureBatch(group,key,[{start,items}],totalCount,stamp);
+  }
+
+  patchFurnitureBatch(group: THREE.Group, key: string, patches: readonly {start:number;items:Placement[]}[], totalCount: number, stamp: object): boolean {
+    const mesh=this.batches.get(key);
+    if(key!=='furniture'||stamp!==this.furnitureRevision||!mesh||mesh.parent!==group||mesh.activeCount!==totalCount
+      ||patches.length===0||mesh.geometry.hasAttribute('chunkContour'))return false;
+    let last=0;
+    for(const patch of patches){
+      if(!Number.isSafeInteger(patch.start)||patch.start<last||patch.start+patch.items.length>totalCount)return false;
+      last=patch.start+patch.items.length;
+    }
+    for(const patch of patches)for(let offset=0;offset<patch.items.length;offset++){
+      const item=patch.items[offset]!,i=patch.start+offset;
+      object.position.set(item.x,item.y,item.z);object.rotation.set(0,item.ry??0,0);
+      object.scale.set(item.sx??1,item.sy??1,item.sz??1);object.updateMatrix();
+      mesh.setMatrixAt(i,object.matrix);mesh.setColorAt(i,color.setHex(item.color??0xffffff));
+    }
+    mesh.instanceMatrix.needsUpdate=true;mesh.colorBuffer.needsUpdate=true;
+    mesh.computeBoundingSphere();
+    return true;
+  }
+
   private setGeometry(group: THREE.Group, key: string, items: Placement[], geometry: THREE.BufferGeometry, style: Style, shadows: boolean): void {
+    if(key==='furniture')this.furnitureRevision={};
     let mesh = this.batches.get(key);
     const rock=geometry===this.roundedRockGeometry||geometry===this.smallRockGeometry;
     const chosen = style === 'solid' && rock
@@ -131,6 +161,7 @@ export class BoxBatches {
   clear(): void {
     for (const mesh of this.batches.values()) { mesh.removeFromParent(); mesh.dispose(); }
     this.batches.clear();
+    this.furnitureRevision=undefined;
     this.roundedRockWarm = false;
   }
 
