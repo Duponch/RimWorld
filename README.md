@@ -1,6 +1,6 @@
 # Lisière
 
-**V247 — prototype de réception écarté, produit V242 et schéma 198 conservés.** Le [circuit de validation isolée](docs/development/validated-sparse-worker-v247.md) passe ses oracles natifs et sauvegardes contrôlées, mais son [coût complet est défavorable](docs/history/validation-validated-sparse-worker-v247.md). Aucun FPS ajouté ; 62 références exactes, cible proche240FPS à6× ouverte. Les refontes autonomes continuent avec commits locaux sans push. Les repères suivants sont historiques.
+**V248 — fermeture native spécialisée écartée, produit V242 et schéma 198 conservés.** Le [propriétaire du clone privé](docs/development/native-clone-owner-v248.md) passe les contrôles natifs et les sauvegardes, mais son [coût complet demeure défavorable](docs/history/validation-native-clone-owner-v248.md). Aucun FPS ajouté ; 62 références exactes, cible proche de 240 FPS à 6× ouverte. La suite attribue les coûts du vrai worker de simulation avant une nouvelle refonte. Commits locaux sans push ; les repères suivants sont historiques.
 
 **V231 — diagnostic matériel, schéma 198 inchangé.** L'[attribution des coûts](docs/development/render-throughput-attribution-v231.md) cible les longues applications de scène ; les montages hors thread essayés n'apportent pas de gain et sont écartés. Produit V230 et 62 références conservés, cible proche de 240 FPS à 6× ouverte ; [preuves et limites](docs/history/validation-render-throughput-attribution-v231.md). Les refontes autonomes continuent, avec commits locaux sans push.
 
