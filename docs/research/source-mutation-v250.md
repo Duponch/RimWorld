@@ -1,0 +1,13 @@
+# V250 — retirer du travail source ne garantit pas des FPS
+
+Expérience privée du produit V242, schéma 198, [contrat](../development/source-mutation-v250.md) et [preuves](../history/validation-source-mutation-v250.md). Aucun avantage de langage ni nouveau gain FPS n'est démontré.
+
+Le [standard HTML, workers modules](https://html.spec.whatwg.org/multipage/workers.html#using-a-javascript-module-as-a-worker) décrit les imports et la portée des déclarations de module. La [sérialisation structurée](https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializeinternal) définit la copie du graphe transmis. Ces références primaires, consultées le7 octobre2026, motivent une frontière de propriété locale et un vrai postMessage ; elles ne promettent aucun gain de débit. Une classe exportée recevant un World et un journal ne posséderait pas, par cette seule signature, son entrée mutable.
+
+V250 place donc l'encodeur spécialisé à côté du World lexical du Worker réel. Les APIs publiques restent complètes. Les notifications des writers servent à sélectionner les comparaisons ; elles ne remplacent ni leurs comparateurs ni le vrai propriétaire. Le journal est borné, les mutations se déclarent après engagement et les reçus s'acquittent après envoi. Les premiers snapshots, changements d'appartenance, overflow et inconnus conservent les replis full.
+
+L'expérience distingue trois questions : sorties identiques, coût complet plus faible, amélioration du jeu. Les 39 composants et quatre cohortes natives répondent à la première dans leur périmètre ; les huit cohortes sérielles répondent positivement à la deuxième, avec froid Aulnes défavorable. Elles ne modélisent ni l'ordonnancement naturel, ni la concurrence CPU entre threads, ni le rendu.
+
+Le GAME répond à la troisième :118,625→117,8125 RAF/s, plages chevauchées et CPU/p95 neutres. On ne soustrait pas les6,364 ms économisées du parent source à chaque frame MAIN, et on ne convertit pas les−22,92 % source en+22,92 % FPS. Les publications, applications de scène, décodage et dessin continuent à payer leurs propres coûts. Le résultat ne prouve pas une limite générale de JavaScript ou l'inutilité de tout journal source ; il écarte ce candidat pour l'objectif mesuré.
+
+La suite doit retirer du travail de réception/affichage sans recréer deux clones et deux lecteurs complets. Une architecture où la scène possède le seul World reçu et MAIN consomme des projections UI/audio est une étude distincte : cohérence des générations, choix utilisateur, refus, sauvegarde, redémarrage et récupération GPU devront être définis avant mesure. Ce design n'est pas une optimisation livrée. Aucun nouveau contrôle lourd du candidat V250 inchangé n'est justifié.

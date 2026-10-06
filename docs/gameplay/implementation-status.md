@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+V250 teste une [refonte des snapshots source](../development/source-mutation-v250.md), [exacte mais écartée faute de gain FPS complet](../history/validation-source-mutation-v250.md). Produit V242, schéma 198 et62sauvegardes conservés ; aucun contenu ou FPS ajouté. La suite étudie une réduction structurelle du travail de réception/affichage, avec mêmes règles, qualité et cadence ; cible240FPS/6× ouverte.
+
 V249 mesure les coûts de préparation et publication du vrai Worker : [preuves](../history/validation-source-attribution-v249.md). Les parcours des ressources et du terrain sont prioritaires pour la prochaine refonte. Aucun contenu ou FPS ajouté par ce diagnostic ; produit V242, schéma 198 et 62 sauvegardes conservés. La cible proche de240FPS à6× reste ouverte, avec règles, qualité et cadence inchangées.
 
 V246 écarte un prototype de registre après un défaut de propriété démontré : [preuves](../history/validation-native-namespace-v246.md). Aucun contenu ou FPS ajouté. Le jeu reste V242, schéma198 et 62 sauvegardes exactes ; le chantier continue sur la propriété des snapshots et les parcours répétés, objectif240FPS/6× ouvert.

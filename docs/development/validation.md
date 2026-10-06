@@ -1,4 +1,6 @@
-# Validation courante — V249
+# Validation courante — V250
+
+**V250 — source exacte moins chère, aucun gain GAME utile.** [Contrat](source-mutation-v250.md), [preuves](../history/validation-source-mutation-v250.md). Produit V242/schéma 198 conservés. Typage,39cas, quatre oracles natifs, huit cohortes coût et quatre GAME matériels avec sauvegarde/reprise passent. Aulnes circuit−18,92 %, froid+5,96 %, GAME118,625→117,8125RAF/s (−0,68 %), plages chevauchées et p95 neutre. Candidat écarté, aucun FPS ajouté, aucun second banc inchangé. Sources/62références/65fichiers publics exacts, workers et origines5260–5263 fermés. Suite : étude d'un lecteur scène unique et des projections MAIN, sans adoption présumée.
 
 **V249 — attribution du vrai Worker source, produit V242/schéma 198 conservés.** [Contrat](source-attribution-v249.md), [preuves](../history/validation-source-attribution-v249.md). Typage, 14 cas et unique GAME matériel avec sauvegarde/reprise passent. 243 encodes de8,853 ms, dont ressources4,638 et terrain2,636 ; partition exacte, agrégats complets et taxes explicites. Aucun gain FPS déduit de la cohorte instrumentée. Sources/62 références exactes, origine5258 fermée ; prochaine refonte source sous propriété et mutations prouvées.
 
