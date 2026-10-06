@@ -1,4 +1,6 @@
-# Validation courante — V231
+# Validation courante — V232
+
+**V232 — pistes mesurées non intégrées, schéma 198 inchangé.** [Contrat et décision](resource-census-v232.md), [preuves et limites](../history/validation-resource-census-v232.md). Réconciliation naturelle et tri du décodeur exacts sans gain stable ; coût sonore moyen réduit de56…61%, mais pointes accrues et RAF variables. Produit V230 et62références conservés, aucun gain FPS livré. Priorité privée suivante : journal structurel confirmé et consommateurs ID, qualification complète avant intégration ;240FPS restent ouverts.
 
 **V231 — attribution matérielle, schéma 198 inchangé.** [Contrat](render-throughput-attribution-v231.md), [preuves et limites](../history/validation-render-throughput-attribution-v231.md). GPU frais, vrai GAME avec audio/HUD, sauvegarde/reprise et oracles agricoles passent par reprises distinctes. Offscreen naturel −13,36 % et worker agricole −1,69 % : aucune promotion ni gain FPS livré, produit V230 conservé. Les 62 références restent exactes ; longues applications de scène, adoption main et budget 240 FPS restent ouverts.
 
