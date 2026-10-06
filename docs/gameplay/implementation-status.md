@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+V244 teste puis écarte un partage des données d'éclairage faute de gain utile : [preuves](../history/validation-environment-uniforms-v244.md). Le jeu conserve V242 et ses 62 sauvegardes, sans nouveau contenu ou FPS ajouté. Le travail autorisé se poursuit sur la réception et l'application des snapshots ; 240 FPS au vrai 6× restent à atteindre.
+
 V243 mesure le coût du rendu des Aulnes sans nouvelle modification du jeu : [preuves](../history/validation-frame-uniform-attribution-v243.md). ProduitV242 et62sauvegardes conservés, aucunFPS ajouté. La suite porte sur les données d'éclairage communes ; l'objectif proche240FPS à6× reste à atteindre.
 
 **Rendu V242, schéma198 inchangé.** La [présentation naturelle](../development/natural-scene-v242.md) utilise les changements ciblés sans recréer une grande liste intermédiaire. [Preuves](../history/validation-natural-scene-v242.md) : amélioration locale des images/s sur Les Aulnes, avec vitesse réelle et limites de comparaison. Les contrôles de sauvegarde et reconstruction GPU passent ; aucun contenu ajouté,62scènes conservées, objectif240FPS/6× ouvert.

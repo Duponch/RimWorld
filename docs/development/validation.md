@@ -1,4 +1,6 @@
-# Validation courante — V243
+# Validation courante — V244
+
+**V244 — prototype d'éclairage écarté, produit V242 et schéma 198 conservés.** [Contrat](environment-uniforms-v244.md), [preuves](../history/validation-environment-uniforms-v244.md). Typages, huit cas CPU, reprise physique de dix paires et quatre GAME avec sauvegarde/reprise passent. Le rouge HTTP initial demeure distinct. Images/s −1,19 %, autres coûts presque neutres : aucun gain livré ni second banc inchangé. Sources et 62 références exactes, origines possédées fermées ; suite sur les coûts de réception et d'application, règles/cadence/qualité conservées.
 
 **V243 — attribution privée, produit V242 et schéma198 conservés.** [Contrat](frame-uniform-attribution-v243.md), [preuves](../history/validation-frame-uniform-attribution-v243.md). Typage, douze cas et un vrai GAME matériel avec sauvegarde/reprise passent. Matrices0,136ms/frame, rendu principal2,695ms inclusif ; pas de gainFPS livré. Sources/62références exacts. Prochaine ablation : éclairage global partagé, sans changer cadence ou qualité ;240FPS/6× restent ouverts.
 
