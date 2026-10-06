@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+Le [point nocturne du 6 octobre](history/autonomous-performance-2026-10-06.md) distingue modifications intégrées et essais rejetés. Une comparaison directe V225→V233 trouve 107,8→143,6 images RAF/s sur la même vue des Aulnes (+33,2 % local), avec qualité conservée ; cible 240 FPS et performance de toutes les parties restent ouvertes.
+
 **V235, diagnostic, schéma 198 inchangé :** [distribution directe au rendu](development/direct-render-distribution-v235.md), [recherche](research/direct-render-distribution-v235.md), [preuves et rejet](history/validation-direct-render-distribution-v235.md). Moins d'images soumises avec le second lecteur natif ; produit V233 conservé. Réduire ensuite le travail d'application locale, avec oracles et coût complet. Aucun gain FPS ajouté ni cible 240 FPS certifiée.
 
 **V234, diagnostic, schéma 198 inchangé :** [réception native propriétaire](development/native-resource-ownership-v234.md), [recherche](research/native-resource-ownership-v234.md), [preuves et rejet](history/validation-native-resource-ownership-v234.md). Les oracles passent mais le coût complet augmente ; produit V233 conservé. La prochaine expérience vise le trajet direct simulation→rendu sur Les Aulnes. Aucun nouveau gain FPS ni cible 240 FPS certifiés.
