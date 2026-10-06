@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V235, diagnostic, schéma 198 inchangé :** [distribution directe au rendu](development/direct-render-distribution-v235.md), [recherche](research/direct-render-distribution-v235.md), [preuves et rejet](history/validation-direct-render-distribution-v235.md). Moins d'images soumises avec le second lecteur natif ; produit V233 conservé. Réduire ensuite le travail d'application locale, avec oracles et coût complet. Aucun gain FPS ajouté ni cible 240 FPS certifiée.
+
 **V234, diagnostic, schéma 198 inchangé :** [réception native propriétaire](development/native-resource-ownership-v234.md), [recherche](research/native-resource-ownership-v234.md), [preuves et rejet](history/validation-native-resource-ownership-v234.md). Les oracles passent mais le coût complet augmente ; produit V233 conservé. La prochaine expérience vise le trajet direct simulation→rendu sur Les Aulnes. Aucun nouveau gain FPS ni cible 240 FPS certifiés.
 
 **V233, schéma 198 inchangé :** [transitions des ressources et présentation](development/resource-structural-presentation-v233.md), [recherche](research/resource-structural-presentation-v233.md), [preuves et limites](history/validation-resource-structural-presentation-v233.md). Gain matériel local modeste sur Les Aulnes ; cible proche de 240 FPS à 6× toujours ouverte, 62 références conservées.

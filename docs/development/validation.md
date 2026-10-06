@@ -1,4 +1,6 @@
-# Validation courante — V234
+# Validation courante — V235
+
+**V235 — diagnostic privé, schéma 198 inchangé.** [Contrat](direct-render-distribution-v235.md), [preuve](../history/validation-direct-render-distribution-v235.md). Un ABBA Core matériel : images soumises −7,48 %, simulation proche de6×, parcours stricts et sauvegarde/reprise exacts dans le périmètre déclaré. Piste écartée, aucun nouveau code produit ; V233 reste la référence. Refus NaN précoce, pas de refus tardif ou GPU reset certifié. Les 62 références restent exactes ; prochaine expérience sur le coût topologique de l'éclairage, sans gain acquis ni 240 FPS atteints.
 
 **V234 — diagnostic privé, schéma 198 inchangé.** [Contrat](native-resource-ownership-v234.md), [preuves et décision](../history/validation-native-resource-ownership-v234.md). Coûts natifs complets défavorables sur deux cycles ; oracles natifs et standalone passent après reprises distinctes. Aucun code produit modifié : V233 et ses contrôles demeurent la référence. Les 62 sauvegardes restent exactes. Prochaine expérience : trajet direct simulation→rendu avec lecteurs stricts locaux, accord main et images effectivement soumises. Aucun nouveau gain FPS ni 240 FPS certifiés.
 
