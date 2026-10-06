@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**Diagnostic V238, schéma 198 inchangé.** Le [comptage végétal](../development/natural-diagnostics-v238.md) révèle de nombreux renouvellements privés sur Inputs identiques ; [preuves et limites](../history/validation-natural-diagnostics-v238.md). Aucun contenu, FPS ou code produit ajouté. V233 et62 scènes conservés ; poursuivre les performances avant nouvelle mécanique.
+**Diagnostic V239, schéma 198 inchangé.** Les [certificats végétaux prolongés](../development/natural-certificates-v239.md) sont [exacts mais écartés faute de gain complet utile](../history/validation-natural-certificates-v239.md). Aucun contenu, FPS ou code produit ajouté. V233 et62scènes conservés ; poursuivre l'attribution des coûts de scène avant nouvelle mécanique.
 
 **Diagnostic V237, schéma 198 inchangé.** Le [résultat naturel compact](../development/natural-compact-v237.md) conserve les sorties contrôlées mais [n'améliore pas utilement le coût complet sur Les Aulnes](../history/validation-natural-compact-v237.md). Il reste privé ; jeu V233 et 62 scènes conservés. Aucun nouveau contenu ou gain FPS. La suite attribue le travail encore effectué par la présentation des plantes, avant une nouvelle refonte mesurée.
 

@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-**V238, diagnostic, schéma 198 inchangé :** [comptages végétaux](development/natural-diagnostics-v238.md), [preuves et limites](history/validation-natural-diagnostics-v238.md). Les renouvellements de certificats privés, sans changement d'Inputs, deviennent la prochaine cause à traiter. Produit V233 conservé ; aucun FPS supplémentaire livré par ces comptages.
+**V239, diagnostic, schéma 198 inchangé :** [certificats végétaux prolongés](development/natural-certificates-v239.md), [preuves et rejet](history/validation-natural-certificates-v239.md). Le prototype est exact mais son coût complet ne gagne pas utilement ; il reste privé. Produit V233 conservé, aucun FPS supplémentaire. La suite attribue les parcours réellement coûteux de Nature dans le jeu actuel.
 
 **V237, diagnostic, schéma 198 inchangé :** [résultat naturel compact](development/natural-compact-v237.md), [recherche](research/natural-compact-v237.md), [preuves et rejet](history/validation-natural-compact-v237.md). Sorties exactes mais aucun gain utile de coût complet sur Les Aulnes ; aucun GAME supplémentaire ou gain FPS ajouté. Produit V233 conservé. La suite attribue les captures et forecasts restants avant une nouvelle refonte.
 
