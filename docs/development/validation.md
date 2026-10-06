@@ -1,6 +1,6 @@
-# Validation courante — V248
+# Validation courante — V249
 
-**V248 — fermeture native privée écartée, produit V242/schéma 198 conservés.** [Contrat](native-clone-owner-v248.md), [preuves](../history/validation-native-clone-owner-v248.md). Typages, quatre corpus natifs, client réel avec sauvegarde/reprise et cinq frontières de graphes passent. Le coût complet Aulnes augmente de 151,95 %, adoption MAIN de 3,70 à 9,40 ms : aucun GAME, promotion ou FPS ajouté. Sources et 62 références exactes. Ne pas rejouer cette piste inchangée ; attribuer maintenant le vrai worker source.
+**V249 — attribution du vrai Worker source, produit V242/schéma 198 conservés.** [Contrat](source-attribution-v249.md), [preuves](../history/validation-source-attribution-v249.md). Typage, 14 cas et unique GAME matériel avec sauvegarde/reprise passent. 243 encodes de8,853 ms, dont ressources4,638 et terrain2,636 ; partition exacte, agrégats complets et taxes explicites. Aucun gain FPS déduit de la cohorte instrumentée. Sources/62 références exactes, origine5258 fermée ; prochaine refonte source sous propriété et mutations prouvées.
 
 **V246 — arrêt statique, produit V242/schéma 198 conservés.** [Contrat](native-namespace-v246.md), [preuves](../history/validation-native-namespace-v246.md). Typage et deux cas directs passent : propriétaire partiel et lecture historique divergent après une substitution de survivant via un vrai guard. Aucun candidat Snapshot/namespace, coût/GAME ou FPS ajouté. Sources et 62 références exactes ; prochaine qualification du graphe natif entier et de ses dépendances.
 

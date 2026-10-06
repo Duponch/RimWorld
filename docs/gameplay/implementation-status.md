@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-V248 teste puis écarte la fermeture spécialisée des snapshots natifs : [preuves](../history/validation-native-clone-owner-v248.md). Les graphes, replis et sauvegardes contrôlés restent exacts, mais le circuit est plus coûteux que le jeu actuel. Aucun contenu ou FPS ajouté ; produit V242, schéma 198 et 62 références conservés. La cible proche de 240 FPS à 6× reste ouverte ; la suite mesure la préparation et la publication des états dans la simulation.
+V249 mesure les coûts de préparation et publication du vrai Worker : [preuves](../history/validation-source-attribution-v249.md). Les parcours des ressources et du terrain sont prioritaires pour la prochaine refonte. Aucun contenu ou FPS ajouté par ce diagnostic ; produit V242, schéma 198 et 62 sauvegardes conservés. La cible proche de240FPS à6× reste ouverte, avec règles, qualité et cadence inchangées.
 
 V246 écarte un prototype de registre après un défaut de propriété démontré : [preuves](../history/validation-native-namespace-v246.md). Aucun contenu ou FPS ajouté. Le jeu reste V242, schéma198 et 62 sauvegardes exactes ; le chantier continue sur la propriété des snapshots et les parcours répétés, objectif240FPS/6× ouvert.
 
