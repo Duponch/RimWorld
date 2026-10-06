@@ -1,4 +1,6 @@
-# Validation courante — V237
+# Validation courante — V238
+
+**V238 — diagnostic privé, schéma 198 inchangé.** [Contrat](natural-diagnostics-v238.md), [preuves](../history/validation-natural-diagnostics-v238.md). Timeout initial conservé, checkpoint froid exact, puis quatre replays natifs avec références indépendantes et compteurs muets côté référence. 8 810 renouvellements dueInputSame sur53 applications de suffixe Aulnes, K82 ; aucune durée/FPS déduite. Produit V233 et62 références exacts ; prochain candidat de certification numérique ID à qualifier, sans changer les cadences du jeu.
 
 **V237 — diagnostic privé, schéma 198 inchangé.** [Contrat](natural-compact-v237.md), [recherche](../research/natural-compact-v237.md), [preuve](../history/validation-natural-compact-v237.md). Rouge initial de l'observateur localisé à une queue Crop inactive, reprise distincte avec 16 cas ciblés et oracles natifs exacts. Deux cycles CPU ne montrent pas de gain complet utile sur Les Aulnes ; piste écartée sans GAME ou intégration. Produit V233 et 62 références exacts, aucun gain FPS ajouté ; cible 240 FPS à 6× ouverte. Prochain comptage causal préparé mais non exécuté.
 
