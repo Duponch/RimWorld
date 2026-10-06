@@ -1,4 +1,6 @@
-# Validation courante — V233
+# Validation courante — V234
+
+**V234 — diagnostic privé, schéma 198 inchangé.** [Contrat](native-resource-ownership-v234.md), [preuves et décision](../history/validation-native-resource-ownership-v234.md). Coûts natifs complets défavorables sur deux cycles ; oracles natifs et standalone passent après reprises distinctes. Aucun code produit modifié : V233 et ses contrôles demeurent la référence. Les 62 sauvegardes restent exactes. Prochaine expérience : trajet direct simulation→rendu avec lecteurs stricts locaux, accord main et images effectivement soumises. Aucun nouveau gain FPS ni 240 FPS certifiés.
 
 **V233 — réconciliation structurelle, schéma 198 inchangé.** [Contrat](resource-structural-presentation-v233.md), [preuves et limites](../history/validation-resource-structural-presentation-v233.md). Journal confirmé et consommateurs par ID ; sorties de scène et reprises exactes, dirtiness redondante retirée. Deux cycles matériels trouvent +5,52/+1,71 % RAF locaux ; froid et décodeur parfois défavorables. Les 62 références restent exactes. Cible proche de 240 FPS à 6× ouverte ; poursuivre les coûts d’adoption et de scène sans modifier règles, cadence ou qualité.
 

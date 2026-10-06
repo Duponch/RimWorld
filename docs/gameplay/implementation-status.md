@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**Diagnostic V234, schéma 198 inchangé.** Le [prototype de réception native](../development/native-resource-ownership-v234.md) est exact sur ses contrôles mais [plus coûteux](../history/validation-native-resource-ownership-v234.md) ; il reste privé. Le jeu conserve V233 et les 62 scènes, sans nouveau contenu ou gain FPS dans ce lot. Les refontes de performance sur Les Aulnes restent prioritaires, avec mesure du vrai rendu et de la vitesse source.
+
 **Performance V233, schéma 198 inchangé.** La [réconciliation des ressources](../development/resource-structural-presentation-v233.md) conserve les systèmes et l’apparence des 62 scènes. Les [comparaisons](../history/validation-resource-structural-presentation-v233.md) trouvent un progrès local modeste ; les 240 FPS à 6×, les pointes et le coût de chargement restent ouverts. Aucun nouveau contenu ; les refontes de performance restent prioritaires.
 
 **Diagnostic V231, schéma 198 inchangé.** Le produit conserve V230 et les 62 scènes après [attribution des coûts](../development/render-throughput-attribution-v231.md) et rejet des variantes mesurées sans gain. Aucun contenu ou amélioration FPS n'est annoncé ; cible proche de 240 FPS à 6× et refontes autonomes restent prioritaires. [Preuves et limites](../history/validation-render-throughput-attribution-v231.md).

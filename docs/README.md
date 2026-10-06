@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V234, diagnostic, schéma 198 inchangé :** [réception native propriétaire](development/native-resource-ownership-v234.md), [recherche](research/native-resource-ownership-v234.md), [preuves et rejet](history/validation-native-resource-ownership-v234.md). Les oracles passent mais le coût complet augmente ; produit V233 conservé. La prochaine expérience vise le trajet direct simulation→rendu sur Les Aulnes. Aucun nouveau gain FPS ni cible 240 FPS certifiés.
+
 **V233, schéma 198 inchangé :** [transitions des ressources et présentation](development/resource-structural-presentation-v233.md), [recherche](research/resource-structural-presentation-v233.md), [preuves et limites](history/validation-resource-structural-presentation-v233.md). Gain matériel local modeste sur Les Aulnes ; cible proche de 240 FPS à 6× toujours ouverte, 62 références conservées.
 
 **V232, schéma198 inchangé :** [recaptures et décision de performance](development/resource-census-v232.md), [preuves des trois pistes non intégrées](history/validation-resource-census-v232.md). Produit V230 conservé ; refonte structurelle privée en cours, aucun gain FPS stable ajouté.
