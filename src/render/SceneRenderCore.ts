@@ -69,7 +69,7 @@ import { cameraClipNear } from './camera-clip';
 import { DayNightLayer } from './DayNightLayer';
 import { RecreationHints } from './RecreationHints';
 import { PlantClusterLayer } from './PlantClusterLayer';
-import { isClusterPlantSpecies } from './flora-presentation';
+import { isClusterPlantSpecies,isResidentCrop } from './flora-presentation';
 import { DesignationIconLayer } from './DesignationIconLayer';
 import { LandscapeBatch } from './LandscapeBatch';
 import { ActionFeedbackLayer } from './ActionFeedbackLayer';
@@ -94,6 +94,10 @@ export interface AudioFrameView {
   camera: { x: number; y: number; z: number; targetX: number; targetZ: number; span: number; mode: CameraMode };
 }
 
+
+function isNaturalSceneWorld(value:World|{changed:boolean}):value is World {
+  return Object.hasOwn(value,'resources');
+}
 
 export class SceneRenderCore {
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
@@ -842,7 +846,14 @@ export class SceneRenderCore {
   }
 
   protected updateResources(world: World, newMap: boolean,frame?:SceneResourceFrame): void {
-    const view=this.naturalPresentation.read(world,newMap,this.immutableWorlds.has(world));if(!view)return;
+    const immutable=this.immutableWorlds.has(world);
+    const scene=immutable&&readSceneResourceFrame(frame,world)
+      ?this.naturalPresentation.readScene(world,newMap,true)
+      :this.naturalPresentation.read(world,newMap,immutable);
+    if(!scene)return;
+    const compact=!isNaturalSceneWorld(scene);
+    if(compact&&!scene.changed)return;
+    const view=compact?world:scene;
     this.plants.update(view,newMap,this.naturalPresentation.changes);
     if(readSceneResourceFrame(frame,world)){
       this.resources.update(world,newMap,this.naturalPresentation.changes,frame);
@@ -850,7 +861,9 @@ export class SceneRenderCore {
       // the complete current World without a second global filtered array.
       this.overview.update(world,newMap,this.naturalPresentation.changes);return;
     }
-    const visible={...view,resources:view.resources.filter(resource=>!isClusterPlantSpecies(resource.species))};
+    const visible=compact
+      ?{...world,resources:world.resources.filter(resource=>!isResidentCrop(resource)&&!isClusterPlantSpecies(resource.species))}
+      :{...view,resources:view.resources.filter(resource=>!isClusterPlantSpecies(resource.species))};
     this.resources.update(visible, newMap,this.naturalPresentation.changes); this.overview.update(visible,newMap,this.naturalPresentation.changes);
   }
 

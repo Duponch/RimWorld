@@ -1,4 +1,6 @@
-# Validation courante — V241
+# Validation courante — V242
+
+**V242 — présentation naturelle, schéma198 inchangé.** [Contrat](natural-scene-v242.md), [preuves et limites](../history/validation-natural-scene-v242.md).14oracles privés, pipeline natif exact,98réussites/un ignoré dans15fichiers par reprise d'un timeout, typage/build et vrai parcours matériel avec perteGPU/sauvegarde/reprise passent. Deux GAME locaux positifs ; doses et froid défavorables explicités, aucune garantie240FPS/6× ou toutesparties.62références conservées ; suite sur les coûts réels par frame.
 
 **V241 — mobilier résident, schéma 198 inchangé.** [Contrat](furniture-resident-v241.md), [preuves et limites](../history/validation-furniture-resident-v241.md). Oracles privés, contrepartie full distincte,17fichiers/79réussites/un ignoré, typage/build et vrai parcours WebGPU avec perte/reconstruction du périphérique et sauvegarde/reprise passent. Buffers/bornes exacts,62références préservées. Réduction ciblée des saccades, aucun gain FPS moyen ; prochaines qualifications sur les coûts continus naturels, cible240FPS/6× ouverte.
 

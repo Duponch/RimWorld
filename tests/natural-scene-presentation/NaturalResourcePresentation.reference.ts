@@ -1,9 +1,9 @@
-import { floraSize,isResidentCrop } from './flora-presentation';
-import { plantLeafless } from '../sim/plant-life';
-import { harvestable } from '../sim/plants';
-import type { Resource,World } from '../sim/types';
-import {readSnapshotChanges} from '../bridge/snapshot-changes';
-import {NaturalPresentationEvents,NaturalIdPresentationEvents,composeFinalResourceStructure,type NaturalObservation,type NaturalIdSource} from './natural-presentation-events';
+import { floraSize,isResidentCrop } from '../../src/render/flora-presentation';
+import { plantLeafless } from '../../src/sim/plant-life';
+import { harvestable } from '../../src/sim/plants';
+import type { Resource,World } from '../../src/sim/types';
+import {readSnapshotChanges} from '../../src/bridge/snapshot-changes';
+import {NaturalPresentationEvents,NaturalIdPresentationEvents,composeFinalResourceStructure,type NaturalObservation,type NaturalIdSource} from '../../src/render/natural-presentation-events';
 
 type Shape=Pick<Resource,'id'|'kind'|'x'|'z'|'stone'|'species'>&{ripe:boolean;leafless:boolean;size:number};
 export type NaturalPresentationChange = { resource: Resource | undefined; size: number };
@@ -79,9 +79,7 @@ export class NaturalResourcePresentation {
   }
   /** This changes only redundant dirtiness: final shapes, source order, slots,
    * buffers, bounds and necessary uploads remain the comparison contract. */
-  private readIds(world:World):{view:World|undefined}|undefined;
-  private readIds(world:World,materialize:false):{changed:boolean}|undefined;
-  private readIds(world:World,materialize=true):{view:World|undefined}|{changed:boolean}|undefined {
+  private readIds(world:World):{view:World|undefined}|undefined {
     const from=this.idWorld;if(!from||from===world)return;
     const structure=composeFinalResourceStructure(from,world);
     if(!structure||structure.beforeCount!==this.idSources.size||this.nextOrder>Number.MAX_SAFE_INTEGER-structure.added.size)return;
@@ -131,7 +129,6 @@ export class NaturalResourcePresentation {
       const absent=[...undo].filter(([id,old])=>old?.natural&&!this.idSources.get(id)?.natural).sort((a,b)=>a[1]!.order-b[1]!.order);
       for(const [id]of absent){changed=true;changes.set(id,{resource:undefined,size:0});}
       this.idWorld=world;this.idAgenda=agenda;this.changes.clear();for(const [id,value]of changes)this.changes.set(id,value);
-      if(!materialize)return {changed};
       if(!changed)return {view:undefined};
       // Successful ledger updates keep survivor Map insertion order and append
       // births in final ordinal order. Only the rollback fallback needs a sort.
@@ -144,18 +141,6 @@ export class NaturalResourcePresentation {
   read(world:World,reset=false,immutableSnapshot=false):World|undefined {
     if(this.idWorld){
       if(immutableSnapshot&&!reset){const result=this.readIds(world);if(result)return result.view;}
-      this.restoreOrdinalCapture();this.clearIds();
-    }
-    const view=this.readHistorical(world,reset,immutableSnapshot);
-    if(immutableSnapshot)this.seedIds(world);return view;
-  }
-  /** Internal Core entry under its existing native mandate and exact index
-   * frame. The success record owns one boolean only; it borrows no new Map,
-   * World facade, Shape cell or Resource list. Public read remains literal.
-   * Historical/reset/unknown results keep their original World views. */
-  readScene(world:World,reset=false,immutableSnapshot=false):{changed:boolean}|World|undefined {
-    if(this.idWorld){
-      if(immutableSnapshot&&!reset){const result=this.readIds(world,false);if(result)return result;}
       this.restoreOrdinalCapture();this.clearIds();
     }
     const view=this.readHistorical(world,reset,immutableSnapshot);

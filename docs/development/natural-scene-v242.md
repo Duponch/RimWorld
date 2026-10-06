@@ -1,0 +1,13 @@
+# Présentation naturelle sans liste intermédiaire — V242
+
+Sur les grandes cartes, la présentation naturelle reconstruisait une liste complète et un `World` superficiel après chaque changement visible. Le Core utilisait ensuite les changements par ID pour les plantes en grappes, puis le World courant et son index pour les autres ressources. Cette liste intermédiaire n'était donc pas nécessaire sur cette voie.
+
+`NaturalResourcePresentation.readScene` avance le même registre, le même agenda et les mêmes formes. Un succès natif retourne seulement une valeur possédée `changed`. Le Core transmet les changements existants aux consommateurs existants ; il ne crée ni façade, ni copie des K changements, ni nouvel agenda. L'entrée publique `read` garde ses vues complètes et son corps historique. Cette différence distingue V242 de la [sortie compacte V237 écartée](natural-compact-v237.md).
+
+Le Core demande cette entrée uniquement sous son mandat natif existant et avec un vrai `SceneResourceFrame`. Le second contrôle du frame, après la mise à jour des grappes, reste présent. S'il est invalidé entre les deux contrôles, le Core matérialise directement la liste visible de C ; il ne relit pas Nature après avoir avancé son curseur. L'exclusion des cultures et grappes, l'ordre des ressources et les changements finaux restent ceux du parcours original.
+
+Le discriminant utilise une propriété propre `resources`, afin qu'un World avec une extra `changed` ou une propriété héritée ne devienne pas un résultat compact. Hors domaine, la restauration ordinale puis le parcours historique sont conservés : mutable, copie, même World, reset, checkpoint, epoch, suffixe absent, éviction, ordre inconnu et échec de l'agenda. La composition va de la dernière vue A effectivement présentée à C, même si D est déjà décodé ; B invisible n'est pas joué.
+
+Les calculs de croissance, échéances, lumière, feuilles, seuils, références, matrices F32, ordre, bounds, picking, uploads nécessaires et reconstruction graphique restent dans les mêmes consommateurs. Aucun format de transport ou de sauvegarde, propriétaire, réservation, commande, règle, PRNG, cadence ou réglage de qualité n'est modifié. Le schéma reste 198 et les 62 références restent immuables.
+
+L'optimisation est générale sur la voie native avec index confirmé. Son effet dépend du nombre de ressources et des changements de forme ; les vues publiques, les replis et le chargement initial ne bénéficient pas de la suppression de cette liste. Les [preuves et limites](../history/validation-natural-scene-v242.md) distinguent baisse de coût, FPS locaux et vitesse réelle. L'objectif proche de 240 FPS à 6× demeure ouvert.

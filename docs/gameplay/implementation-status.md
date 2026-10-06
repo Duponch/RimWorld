@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**Rendu V242, schéma198 inchangé.** La [présentation naturelle](../development/natural-scene-v242.md) utilise les changements ciblés sans recréer une grande liste intermédiaire. [Preuves](../history/validation-natural-scene-v242.md) : amélioration locale des images/s sur Les Aulnes, avec vitesse réelle et limites de comparaison. Les contrôles de sauvegarde et reconstruction GPU passent ; aucun contenu ajouté,62scènes conservées, objectif240FPS/6× ouvert.
+
 **Rendu V241, schéma 198 inchangé.** Le [mobilier résident](../development/furniture-resident-v241.md) conserve les modèles et remplace les pièces des pots qui changent de stade. [Preuves](../history/validation-furniture-resident-v241.md) : moins de saccades sur Les Aulnes, aucun gain FPS moyen certifié. Aucun contenu ajouté,62scènes conservées ; objectif240FPS/6× toujours ouvert.
 
 **Diagnostic V240, schéma 198 inchangé.** [Parcours réels et mobilier](../development/scene-causal-phases-v240.md), [preuves](../history/validation-scene-causal-phases-v240.md). Aucun contenu ou FPS ajouté ; les mises à jour ponctuelles de fleurs déclenchent encore un lot global coûteux. La reprise autorisée prépare une refonte mesurée, avec V233 et62scènes conservés.
