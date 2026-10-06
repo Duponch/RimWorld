@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V228, schéma 198 inchangé :** [décodage et réconciliation de scène](development/scene-decoding-performance-v228.md), [recherche](research/scene-decoding-performance-v228.md), [preuves et limites](history/validation-scene-decoding-performance-v228.md). Gains locaux sur Aulnes, 62 références exactes, sauvegarde/reprise contrôlée ; coût froid, pointes et 240 FPS restent ouverts. La scène et l'adoption hors main sont les prochaines qualifications, sans nouvelle mécanique ni cadence réduite.
+
 **V227, schéma 198 inchangé :** [agenda végétal et cultures](development/plant-presentation-events-v227.md), [recherche](research/plant-presentation-events-v227.md), [preuves et limites](history/validation-plant-presentation-events-v227.md). Gain matériel final local de 5,11 %, avec pointes et coût froid persistants ; 62 références exactes. Décodage et applications de scène restent prioritaires ; 240 FPS à 6× sont toujours ouverts. Autonomie continue et refontes mesurées autorisées, sans push.
 
 **V226, diagnostic au schéma198 inchangé :** [coût de croissance et expérience retirée](development/plant-growth-read-v226.md), [mesures et limites](history/validation-plant-growth-read-v226.md). La comparaison matérielle ne confirme aucun gain FPS significatif ; le candidat est retiré et le produit conserve V225. Les62scènes restent exactes. L’utilisateur autorise l’autonomie et les refontes profondes pour des gains mesurés sur Les Aulnes ; décodage et applications de scène restent prioritaires,240FPS/6× ouverts.

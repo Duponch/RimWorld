@@ -12,6 +12,7 @@ import { WildlifeLayer } from './WildlifeLayer';
 import { MechanoidLayer } from './MechanoidLayer';
 import { RopeLayer } from './RopeLayer';
 import { NaturalResourcePresentation } from './NaturalResourcePresentation';
+import { SceneResourceIndex, readSceneResourceFrame, type SceneResourceFrame } from './scene-resource-index';
 import { ProjectileLayer } from './ProjectileLayer';
 import { EnvironmentLighting } from './EnvironmentLighting';
 import { PresentationQueue } from './PresentationQueue';
@@ -194,6 +195,7 @@ export class ColonyRenderer {
   private readonly recreationHints = new RecreationHints(this.boxes);
   private readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial,this.texturedStaticMaterial);
   private readonly naturalPresentation = new NaturalResourcePresentation();
+  private readonly sceneResources = new SceneResourceIndex();
   private readonly crops = new CropLayer(this.staticMaterial,this.texturedStaticMaterial);
   private readonly growing = new GrowingZoneLayer(this.boxes);
   private readonly rocks = new RockLayer(this.staticMaterial,this.environmentLighting.configure);
@@ -459,8 +461,13 @@ export class ColonyRenderer {
     // The worker epoch distinguishes a checkpoint from an ordinary delta even
     // if terrain content and simulation tick match a previous session.
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
+    // Advance memberships only for the World actually applied to the scene.
+    // The journal/full capture establishes the context; a public flag alone
+    // cannot certify a sparse traversal or cross a missing publication.
+    const resourceFrame = this.immutableWorlds.has(world) ? this.sceneResources.adopt(world,resetPoses) : undefined;
+    if(!resourceFrame)this.sceneResources.clear();
     this.world = world;
-    this.grass?.update(world,newMap,immutableTileChanges);
+    this.grass?.update(world,newMap,immutableTileChanges,resourceFrame);
     this.fires.adopt(world,newMap);this.wind.adopt(world,newMap);
     this.environmentLighting.update(world);
     if(groundChanged) {
@@ -497,7 +504,7 @@ export class ColonyRenderer {
       this.resize();
     }
     this.hygiene.update(world,this.boxes,newMap);
-    if (previousWorld?.resources !== world.resources || newMap || Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.updateResources(world, newMap);
+    if (previousWorld?.resources !== world.resources || newMap || Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.updateResources(world, newMap,resourceFrame);
     const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.building.material}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
     this.roofs.update(world,this.boxes,this.wallCutaway,newMap);
     this.doors.update(world,this.wallCutaway,resetPoses);
@@ -527,7 +534,7 @@ export class ColonyRenderer {
     this.brawlCloud.update(world,this.pawns.feedbackSource!);
     this.structureVfx.adopt(world,newMap);
     this.podRescue.adopt(world);
-    this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses);
+    this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses,resourceFrame);
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses,this.pawns);
     this.mechanoids.update(world,this.hasTracks?this.timeline:undefined,resetPoses,this.pawns);
@@ -898,9 +905,15 @@ export class ColonyRenderer {
     return { x: (projected.x + 1) * this.viewportWidth / 2, y: (1 - projected.y) * this.viewportHeight / 2 };
   }
 
-  private updateResources(world: World, newMap: boolean): void {
+  private updateResources(world: World, newMap: boolean,frame?:SceneResourceFrame): void {
     const view=this.naturalPresentation.read(world,newMap,this.immutableWorlds.has(world));if(!view)return;
     this.plants.update(view,newMap,this.naturalPresentation.changes);
+    if(readSceneResourceFrame(frame,world)){
+      this.resources.update(world,newMap,this.naturalPresentation.changes,frame);
+      // Overview owns the same crop/cluster exclusion already; it can receive
+      // the complete current World without a second global filtered array.
+      this.overview.update(world,newMap,this.naturalPresentation.changes);return;
+    }
     const visible={...view,resources:view.resources.filter(resource=>!isClusterPlantSpecies(resource.species))};
     this.resources.update(visible, newMap,this.naturalPresentation.changes); this.overview.update(visible,newMap,this.naturalPresentation.changes);
   }
@@ -1276,6 +1289,7 @@ export class ColonyRenderer {
     this.plants.dispose();
     if(this.grass){this.grass.mesh.removeFromParent();this.grass.dispose();this.grass=null;}
     this.resources.dispose();
+    this.sceneResources.clear();
     this.pawns.dispose();
     this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.mechanoids.dispose();this.ropes.dispose();this.designations.dispose();
 

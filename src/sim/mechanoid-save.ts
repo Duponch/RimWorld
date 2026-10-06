@@ -10,6 +10,7 @@ import { footprintCells } from './definitions.ts';
 import type { MedicalRecord } from './injury-types.ts';
 import type { Mechanoid } from './mechanoid-state.ts';
 import type { World } from './types.ts';
+import type { NumericMembershipWriter } from './numeric-membership.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
@@ -63,7 +64,7 @@ export function validMechanoidShape(value:unknown,version:number,tick:number):va
 
 /** Context after owner shapes and the prior global namespace have been read.
  * This adopts only mechanical identities into the supplied common set. */
-export function validateMechanoids(w:World,version:number=w.schemaVersion,ids=new Set<number>()):string[] {
+export function validateMechanoids(w:World,version:number=w.schemaVersion,ids:NumericMembershipWriter=new Set<number>()):string[] {
   const errors:string[]=[];
   if(w.mechanoids===undefined)return errors;
   if(version<194||!Array.isArray(w.mechanoids)){errors.push('Invalid mechanoid population.');return errors;}

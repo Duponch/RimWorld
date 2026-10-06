@@ -38,7 +38,7 @@ function harness() {
 }
 
 test('read-only exports cannot manufacture an accepted World witness', () => {
-  expect(Object.keys(facade)).toEqual(['readSnapshotChanges']);
+  expect(Object.keys(facade)).toEqual(['readSnapshotChanges', 'sameSnapshotChangeDomain']);
   expect('SnapshotChangeJournal' in snapshots).toBe(false);
   const { world, decoder, send } = harness(), initial = send();
   expect('snapshotChanges' in decoder).toBe(false); // The capability is a runtime private field.
@@ -46,8 +46,13 @@ test('read-only exports cannot manufacture an accepted World witness', () => {
   expect(readSnapshotChanges(world, initial)).toBeUndefined();
   expect(readSnapshotChanges(initial, structuredClone(initial))).toBeUndefined();
   expect(readSnapshotChanges(structuredClone(initial), structuredClone(initial))).toBeUndefined();
+  expect(facade.sameSnapshotChangeDomain(initial, initial)).toBe(true);
+  expect(facade.sameSnapshotChangeDomain(world, initial)).toBe(false);
+  expect(facade.sameSnapshotChangeDomain(initial, structuredClone(initial))).toBe(false);
+  expect(readSnapshotChanges(world, world)).toBeUndefined(); // Neither reader creates a witness.
   const foreign = adopt(new SnapshotDecoder(), structuredClone(new SnapshotEncoder().encode(world, 0, 6)));
   expect(readSnapshotChanges(initial, foreign)).toBeUndefined();
+  expect(facade.sameSnapshotChangeDomain(initial, foreign)).toBe(false);
 });
 
 test('packed growth and source upserts expose sorted private slots and preserve old frames', () => {

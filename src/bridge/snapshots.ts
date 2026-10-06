@@ -70,6 +70,7 @@ import { validMechCorpseShape,validMechSalvageLedger } from '../sim/mechanoid-co
 import { validateMechanoidRaids } from '../sim/mechanoid-raid-save.ts';
 import { validateMechanoidRanged } from '../sim/mechanoid-ranged-save.ts';
 import { isMechanoidKind } from '../sim/mechanoid-definition.ts';
+import { NumericMembership } from '../sim/numeric-membership.ts';
 
 export interface SnapshotChanges {
   readonly resourceIndices: readonly number[];
@@ -142,6 +143,17 @@ export function readSnapshotChanges(from: World, to: World): SnapshotChanges | u
   const before = snapshotChangeStamps.get(from), after = snapshotChangeStamps.get(to);
   if (!before || !after || before.journal !== after.journal) return undefined;
   return before.journal.read(before, after);
+}
+
+/** Domain gate only. It proves neither resource membership nor a sparse suffix;
+ * consumers still own and compare all primitives needed for a full projection. */
+export function sameSnapshotChangeDomain(from: World, to: World): boolean {
+  const before = snapshotChangeStamps.get(from), after = snapshotChangeStamps.get(to);
+  return !!before && !!after && before.journal === after.journal
+    && before.generation === after.generation && before.epoch === after.epoch
+    && before.revision <= after.revision
+    && before.journal.read(before, before) !== undefined
+    && before.journal.read(after, after) !== undefined;
 }
 
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
@@ -754,7 +766,7 @@ export class SnapshotDecoder {
         ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
         ...next.packed.map(p=>p.building),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
       ];
-      const ids=new Set<number>();
+      const ids=new NumericMembership();
       for(const owner of owners){if(relationships&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
       const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&(relationships||mechanicalCorpseIds.has(Number(id))))return false;ids.add(Number(id));return true;};
       const addItems=(items:unknown):boolean=>Array.isArray(items)&&items.every(item=>item&&typeof item==='object'&&addId(item.id));

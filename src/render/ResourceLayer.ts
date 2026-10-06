@@ -11,6 +11,7 @@ import { clearGroup } from './primitives';
 import type { Placement } from './primitives';
 import { mergedInstances,noise,type ResourceRange,type ResourceRangeData } from './StaticGeometry';
 import type { NaturalPresentationChange } from './NaturalResourcePresentation';
+import {readSceneResourceFrame,type SceneResourceFrame} from './scene-resource-index';
 
 const resourceIdentity=(resource:World['resources'][number]):string=>
   `${resource.kind}:${resource.x}:${resource.z}:${resource.stone??''}:${resource.species??''}`;
@@ -87,6 +88,7 @@ export class ResourceLayer {
   private readonly treeParts=new Map<number,TreePart[]>();
   private readonly treeHits=new Map<number,TreeHit>();
   private readonly treeCells=new Map<number,number>();
+  private treeCellsPending:World|undefined;
   private foliageVisible = true;
   private texturesEnabled = true;
   private readonly windTick=uniform(0);
@@ -135,14 +137,21 @@ export class ResourceLayer {
     this.foliageVisible = visible;
     this.group.traverse(object => { if (object.name === 'tree-canopy') object.visible = visible; });
   }
-  clear(): void { clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); this.treeCells.clear(); }
+  clear(): void { clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); this.treeCells.clear();this.treeCellsPending=undefined; }
   dispose():void {this.clear();this.windPlain.dispose();this.windTextured.dispose();}
 
   /** Only a confirmed increase in a reserved chopping job can produce a hit.
    * The contact phase is the forward reach of the existing 11 rad/s arm pose. */
-  adoptChopWork(previous:World|undefined,world:World,reset=false):void {
+  adoptChopWork(previous:World|undefined,world:World,reset=false,frame?:SceneResourceFrame):void {
     if(reset||!previous||world.tick<previous.tick){this.clearChopRecoil();return;}
     if(!world.jobs.some(job=>job.kind==='chop'&&job.status==='active')){if(this.treeHits.size)this.clearChopRecoil();return;}
+    const indexed=readSceneResourceFrame(frame,world);
+    if(!indexed&&this.treeCellsPending){
+      const pending=this.treeCellsPending;this.treeCells.clear();
+      for(const resource of pending.resources)if(resource.kind==='tree'&&!isResidentCrop(resource)&&!isClusterPlantSpecies(resource.species))
+        this.treeCells.set(resource.z*pending.width+resource.x,resource.id);
+      this.treeCellsPending=undefined;
+    }
     const previousJobs=new Map(previous.jobs.map(job=>[job.id,job]));
     const previousPawns=new Map(previous.pawns.map(pawn=>[pawn.id,pawn]));
     const workingTrees=new Set<number>();
@@ -150,7 +159,7 @@ export class ResourceLayer {
       if(job.kind!=='chop'||job.reservedBy===null||job.status!=='active')continue;
       const pawn=world.pawns.find(candidate=>candidate.id===job.reservedBy);
       const oldPawn=previousPawns.get(job.reservedBy),oldJob=previousJobs.get(job.id);
-      const treeId=this.treeCells.get(job.z*world.width+job.x);
+      const cell=job.z*world.width+job.x,treeId=indexed?indexed.treeAt(cell):this.treeCells.get(cell);
       if(treeId===undefined||!pawn||pawn.jobId!==job.id||pawn.state!=='working'||pawn.stun)continue;
       workingTrees.add(treeId);
       if(!oldJob||oldJob.kind!=='chop'||oldJob.reservedBy!==pawn.id||!oldPawn||oldPawn.jobId!==job.id||oldPawn.state!=='working'||workProgress(job)<=workProgress(oldJob))continue;
@@ -222,7 +231,7 @@ export class ResourceLayer {
       part.positions=positions;
     }
   }
-  update(world: World, newMap: boolean, changes?: ReadonlyMap<number,NaturalPresentationChange>): void {
+  update(world: World, newMap: boolean, changes?: ReadonlyMap<number,NaturalPresentationChange>,frame?:SceneResourceFrame): void {
     // ColonyRenderer configures the shared materials after constructing this
     // layer. Copy its lighting node before the first tree shader is compiled.
     const plainOutput=(this.staticMaterial as THREE.MeshStandardNodeMaterial).outputNode;
@@ -230,9 +239,13 @@ export class ResourceLayer {
     if(this.windPlain.outputNode!==plainOutput)this.windPlain.outputNode=plainOutput;
     if(this.windTextured.outputNode!==texturedOutput)this.windTextured.outputNode=texturedOutput;
     if (newMap) { clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); }
-    this.treeCells.clear();
-    for(const resource of world.resources)if(resource.kind==='tree')this.treeCells.set(resource.z*world.width+resource.x,resource.id);
-    const chunks = new Map<string, World['resources']>();
+    const indexed=readSceneResourceFrame(frame,world);
+    if(indexed)this.treeCellsPending=world;
+    else{
+      this.treeCellsPending=undefined;this.treeCells.clear();
+      for(const resource of world.resources)if(resource.kind==='tree')this.treeCells.set(resource.z*world.width+resource.x,resource.id);
+    }
+    let chunks:ReadonlyMap<string,readonly World['resources'][number][]>;
     const partial=!!changes&&!newMap;
     const affected=new Set<string>(),nextKeys=new Map<number,string|undefined>();
     if (partial) {
@@ -252,18 +265,33 @@ export class ResourceLayer {
       this.growing.clear();
       this.resourceChunks.clear();
     }
-    // Visit the world in its original order so ranges inside a changed chunk
-    // remain identical to a complete update, even after deletion or movement.
-    for (const resource of world.resources) {
-      if(!partial&&(isResidentCrop(resource)||isClusterPlantSpecies(resource.species)))continue;
-      const key=partial
-        ?nextKeys.has(resource.id)?nextKeys.get(resource.id):this.resourceChunks.get(resource.id)
-        :`${Math.floor(resource.x/WORLD_SCALE.chunkSize)}:${Math.floor(resource.z/WORLD_SCALE.chunkSize)}`;
-      if(!key||partial&&!affected.has(key))continue;
-      if(!partial)this.resourceChunks.set(resource.id,key);
-      const chunk=chunks.get(key);
-      if(chunk)chunk.push(resource);else chunks.set(key,[resource]);
-      if(!partial&&resource.kind==='berries'&&!harvestable(world,resource))this.growing.set(resource.id,resource);
+    const indexedChunks=indexed?.chunksFor(partial?changes:undefined,partial?affected:undefined);
+    if(indexedChunks){
+      const collected=new Map<string,readonly World['resources'][number][]>();
+      for(const chunk of indexedChunks.changedChunks){
+        collected.set(chunk.key,chunk.resources);
+        if(!partial)for(const resource of chunk.resources){
+          this.resourceChunks.set(resource.id,chunk.key);
+          if(resource.kind==='berries'&&!harvestable(world,resource))this.growing.set(resource.id,resource);
+        }
+      }
+      chunks=collected;
+    }else{
+      const collected=new Map<string,World['resources']>();
+      // Visit the world in its original order so ranges inside a changed chunk
+      // remain identical to a complete update, even after deletion or movement.
+      for (const resource of world.resources) {
+        if(!partial&&(isResidentCrop(resource)||isClusterPlantSpecies(resource.species)))continue;
+        const key=partial
+          ?nextKeys.has(resource.id)?nextKeys.get(resource.id):this.resourceChunks.get(resource.id)
+          :`${Math.floor(resource.x/WORLD_SCALE.chunkSize)}:${Math.floor(resource.z/WORLD_SCALE.chunkSize)}`;
+        if(!key||partial&&!affected.has(key))continue;
+        if(!partial)this.resourceChunks.set(resource.id,key);
+        const chunk=collected.get(key);
+        if(chunk)chunk.push(resource);else collected.set(key,[resource]);
+        if(!partial&&resource.kind==='berries'&&!harvestable(world,resource))this.growing.set(resource.id,resource);
+      }
+      chunks=collected;
     }
     if(partial)for(const [id,key] of nextKeys) {
       if(key)this.resourceChunks.set(id,key);else this.resourceChunks.delete(id);

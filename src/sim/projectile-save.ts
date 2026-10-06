@@ -2,6 +2,7 @@ import { bulletPosition,validateBulletFlight } from './bullet-flight.ts';
 import { CORE_TICKS_PER_LOCAL,projectileProfile } from './ranged-statistics.ts';
 import type { WorldProjectile } from './projectile-state.ts';
 import type { World } from './types.ts';
+import type { NumericMembershipWriter } from './numeric-membership.ts';
 
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
@@ -41,7 +42,7 @@ export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'hei
   } catch {return false;}
 }
 
-export function validateProjectiles(world:World,version:number,ids:Set<number>):string[] {
+export function validateProjectiles(world:World,version:number,ids:NumericMembershipWriter):string[] {
   const value=world.projectiles;if(value===undefined)return [];
   if(version<55||!Array.isArray(value)||!value.length||value.length>world.width*world.height)return ['Invalid projectile collection for schema.'];
   const errors:string[]=[];let previous=0;

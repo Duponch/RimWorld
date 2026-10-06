@@ -10,6 +10,7 @@ import { noise } from './StaticGeometry';
 import { ARID_GRASS_COLOR, TERRAIN_COLORS } from './TerrainLayer';
 import { GRASS_BLOOD_COLOR } from './ground-blood';
 import { GrassBloodMask, GRASS_BLOOD_SLOTS, GRASS_BLOOD_WORDS } from './grass-blood-mask';
+import { readSceneResourceFrame, type SceneResourceFrame } from './scene-resource-index';
 
 /** AntSystem-inspired GPU blades, indexed by stable world cell and slot.
  * This is scenery: no Resource, job, save or simulation RNG. Four vertices/two
@@ -209,6 +210,7 @@ export class GpuGroundGrassLayer {
   private previousTiles: World['tiles'] | undefined;
   private previousStructures: World['structures'] | undefined;
   private previousResources: World['resources'] | undefined;
+  private previousWorld: World | undefined;
   private previousPiles: World['piles'] | undefined;
   private previousPacked: World['packed'] | undefined;
   private previousSeed = Number.NaN;
@@ -340,7 +342,7 @@ export class GpuGroundGrassLayer {
 
   /** Diff spatial cover at source cells; dynamic edits leave the atlas alone.
    * Only seed/biome, dimensions and explicit force recolour the whole map. */
-  update(world: World, force = false, changedTiles?: readonly number[]): void {
+  update(world: World, force = false, changedTiles?: readonly number[], sceneFrame?: SceneResourceFrame): void {
     // Check the configured canvas device before allocating the dense mask.
     // Decorative grass can be disabled safely without changing the World.
     this.supported = world.width * GRASS_BLOOD_WORDS <= this.maxTextureDimension && world.height <= this.maxTextureDimension;
@@ -353,6 +355,13 @@ export class GpuGroundGrassLayer {
     this.unsupportedWarning = undefined;
     const widthChanged = this.map.image.width !== world.width || this.map.image.height !== world.height ||
       this.previousPixels.length !== world.width * world.height * 4;
+    // A contribution delta belongs to the exact preceding application of this
+    // layer, which need not be the index's preceding application. A supplied
+    // but unproved frame must rebuild cover; public calls without one retain
+    // the historical source diff below.
+    const resourceEdits = !force && !widthChanged && this.previousWorld && sceneFrame !== undefined
+      ? readSceneResourceFrame(sceneFrame, world, this.previousWorld)?.rockCoverEdits : undefined;
+    const unknownResourceFrame = sceneFrame !== undefined && resourceEdits === undefined;
     const biome = world.site?.biome;
     const bloodAdoption = this.blood.adopt(world.filth?.items ?? [], world.width, world.height);
     const bloodChanges = bloodAdoption.cells;
@@ -362,14 +371,14 @@ export class GpuGroundGrassLayer {
       this.bloodMap.image = { data: this.blood.words, width: world.width * GRASS_BLOOD_WORDS, height: world.height };
     }
     if (bloodAdoption.changed) { this.bloodMap.needsUpdate = true; this.revision++; }
-    if (!force && !widthChanged && this.previousTiles === world.tiles &&
+    if (!force && !widthChanged && !unknownResourceFrame && this.previousTiles === world.tiles &&
       this.previousStructures === world.structures && this.previousSeed === world.seed &&
       this.previousResources === world.resources &&
       this.previousPiles === world.piles && this.previousPacked === world.packed &&
-      this.previousBiome === biome && !bloodChanges.length) return;
+      this.previousBiome === biome && !bloodChanges.length) { this.previousWorld = world; return; }
     const oldTiles = this.previousTiles;
     const seedChanged = this.previousSeed !== world.seed || this.previousBiome !== biome;
-    let fullRebuild = widthChanged || force;
+    let fullRebuild = widthChanged || force || unknownResourceFrame;
     if (!fullRebuild) {
       const touch = (i: number): void => {
         if (!this.dirtyFlags[i]) { this.dirtyFlags[i] = 1; this.dirtyCells.push(i); }
@@ -398,8 +407,16 @@ export class GpuGroundGrassLayer {
         sameStructureCover, (s, delta) => {
           for (const { x, z } of footprintCells(s)) adjust(x, z, delta);
         });
-      const resourcesOkay = structuresOkay && diffCover(this.previousResources, world.resources, r => r.id,
-        sameRockCover, (r, delta) => { if (r.kind === 'rock') adjust(r.x, r.z, delta); });
+      let resourcesOkay = structuresOkay;
+      if (resourcesOkay) {
+        if (resourceEdits !== undefined) {
+          for (const { before, after } of resourceEdits) {
+            if (before !== undefined) adjust(before % world.width, Math.floor(before / world.width), -1);
+            if (after !== undefined) adjust(after % world.width, Math.floor(after / world.width), 1);
+          }
+        } else resourcesOkay = diffCover(this.previousResources, world.resources, r => r.id,
+          sameRockCover, (r, delta) => { if (r.kind === 'rock') adjust(r.x, r.z, delta); });
+      }
       const pilesOkay = resourcesOkay && diffCover(this.previousPiles, world.piles, p => p.id,
         sameGroundCover, (p, delta) => {
           if (p.owner.type === 'ground') adjust(p.owner.x, p.owner.z, delta);
@@ -446,6 +463,7 @@ export class GpuGroundGrassLayer {
     this.previousTiles = world.tiles; this.previousStructures = world.structures;
     this.previousResources = world.resources; this.previousPiles = world.piles;
     this.previousPacked = world.packed; this.previousSeed = world.seed; this.previousBiome = biome;
+    this.previousWorld = world;
   }
 
   /** Constant CPU work per image; no map walk, position buffer or simulation

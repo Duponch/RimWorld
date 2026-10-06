@@ -1,4 +1,6 @@
-# Validation courante — V227
+# Validation courante — V228
+
+**V228 — registre et réconciliation de scène, schéma 198 inchangé.** [Contrat](scene-decoding-performance-v228.md), [preuves et limites](../history/validation-scene-decoding-performance-v228.md). 20 fichiers/141 réussites par reprises, oracles des 62 sauvegardes, typage/build et sauvegarde/reprise matérielle passent dans les périmètres précisés. Sous-pipeline Aulnes réduit de 25,51 % ; cycles RAF locaux +4,14/+7,24 %, et +11,25 % sur une autre caméra dense. Coût froid, pointes et première contrepartie de débit défavorables conservés ; aucun 240 FPS, vrai 6× stable, campagne longue ou gain général certifié. La qualification de scène/adoption hors main continue en autonomie.
 
 **V227 — présentation végétale, schéma 198 inchangé, livré dans le périmètre contrôlé.** [Contrat](plant-presentation-events-v227.md), [preuve et limites](../history/validation-plant-presentation-events-v227.md). 17 fichiers/92 réussites/un ignoré par reprises, replays exacts, typage/build, catalogue et sauvegarde/reprise matérielle passent ; 62 payloads et métadonnées restent identiques. Comparaison finale A/B/B/A : 93,33 → 98,10 RAF/s (+5,11 % local), p95 amélioré mais maxima CPU frame défavorables et coût froid accru. Aucun 240 FPS, vrai 6×, campagne longue ou gain général certifié. Autonomie continue pour refondre les coûts de décodage et de scène ; les résultats intermédiaires et rouges restent dans la preuve.
 

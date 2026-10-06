@@ -1,5 +1,6 @@
 import type { BombInstigatorKey } from './mini-turret-state.ts';
 import type { Cell,World } from './types.ts';
+import type { NumericMembershipWriter } from './numeric-membership.ts';
 import { miniTurretExplosive } from './bomb-eligibility.ts';
 
 export const BOMB_RADIUS=3.9;
@@ -27,7 +28,7 @@ export function validBombWaveShape(value:unknown,version=193):value is MiniTurre
 }
 /** Captured LOS is historical. Validate geometry/cursor, never recompute it from
  * today's opened walls. Completed waves stay inert through their arrival tick. */
-export function validateBombWaves(w:World,errors:string[],ids?:Set<number>):void {
+export function validateBombWaves(w:World,errors:string[],ids?:NumericMembershipWriter):void {
   if(!Object.hasOwn(w,'bombWaves'))return;
   const waves=w.bombWaves,end=w.tick*10;
   if(w.schemaVersion<193||!Array.isArray(waves)||!waves.length||waves.length>w.width*w.height){errors.push('Invalid bomb wave collection.');return;}
