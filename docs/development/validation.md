@@ -1,4 +1,6 @@
-# Validation courante — V245
+# Validation courante — V246
+
+**V246 — arrêt statique, produit V242/schéma 198 conservés.** [Contrat](native-namespace-v246.md), [preuves](../history/validation-native-namespace-v246.md). Typage et deux cas directs passent : propriétaire partiel et lecture historique divergent après une substitution de survivant via un vrai guard. Aucun candidat Snapshot/namespace, coût/GAME ou FPS ajouté. Sources et 62 références exactes ; prochaine qualification du graphe natif entier et de ses dépendances.
 
 **V245 — attribution privée, produit V242/schéma 198 conservés.** [Contrat](adoption-phases-v245.md), [preuves](../history/validation-adoption-phases-v245.md). Rouge de typage distinct, reprise limitée aux chemins de types, treize cas et unique GAME matériel avec sauvegarde/reprise passent. 170 scopes complets sans anomalie : parent5,491ms, namespace1,848ms, contrôle végétal1,248ms ; timings instrumentés, aucun gain livré ou percentile exhaustif de phase. 62 références et sources exactes, origine5249 fermée. Suite : refonte native combinée, propriété et coût complet avant adoption.
 

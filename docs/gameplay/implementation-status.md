@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+V246 écarte un prototype de registre après un défaut de propriété démontré : [preuves](../history/validation-native-namespace-v246.md). Aucun contenu ou FPS ajouté. Le jeu reste V242, schéma198 et 62 sauvegardes exactes ; le chantier continue sur la propriété des snapshots et les parcours répétés, objectif240FPS/6× ouvert.
+
 V245 localise les coûts de réception des snapshots des Aulnes : [preuves](../history/validation-adoption-phases-v245.md). Le registre d'identités et le contrôle végétal sont prioritaires pour la prochaine refonte ; aucun contenu ou FPS ajouté par la mesure. Produit V242, schéma 198 et 62 sauvegardes conservés ; objectif proche240FPS au vrai6× ouvert.
 
 V244 teste puis écarte un partage des données d'éclairage faute de gain utile : [preuves](../history/validation-environment-uniforms-v244.md). Le jeu conserve V242 et ses 62 sauvegardes, sans nouveau contenu ou FPS ajouté. Le travail autorisé se poursuit sur la réception et l'application des snapshots ; 240 FPS au vrai 6× restent à atteindre.
