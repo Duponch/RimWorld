@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V245, schéma 198 inchangé, attribue les [phases de réception stricte](development/adoption-phases-v245.md) dans Les Aulnes ; [preuves](history/validation-adoption-phases-v245.md). Registre d'identités et contrôle végétal expliquent une part importante du coût, sans nouveau gain livré. Suite sur une refonte combinée préservant propriété, ordre et gardes ; produit V242 conservé.
+
 V244 écarte l'[éclairage partagé par image](development/environment-uniforms-v244.md) après [contrôles exacts et comparaison sans gain utile](history/validation-environment-uniforms-v244.md). Produit V242 conservé ; aucun FPS ajouté. La suite vise les parcours répétés de réception et d'application des snapshots.
 
 V243 attribue le [coût par image et les bindings](development/frame-uniform-attribution-v243.md) du produitV242 ; [preuves](history/validation-frame-uniform-attribution-v243.md). Les matrices sont peu coûteuses ; une ablation d'éclairage partagé est la prochaine piste. Aucun nouveau gainFPS livré par ce diagnostic.

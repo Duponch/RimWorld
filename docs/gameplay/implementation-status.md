@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+V245 localise les coûts de réception des snapshots des Aulnes : [preuves](../history/validation-adoption-phases-v245.md). Le registre d'identités et le contrôle végétal sont prioritaires pour la prochaine refonte ; aucun contenu ou FPS ajouté par la mesure. Produit V242, schéma 198 et 62 sauvegardes conservés ; objectif proche240FPS au vrai6× ouvert.
+
 V244 teste puis écarte un partage des données d'éclairage faute de gain utile : [preuves](../history/validation-environment-uniforms-v244.md). Le jeu conserve V242 et ses 62 sauvegardes, sans nouveau contenu ou FPS ajouté. Le travail autorisé se poursuit sur la réception et l'application des snapshots ; 240 FPS au vrai 6× restent à atteindre.
 
 V243 mesure le coût du rendu des Aulnes sans nouvelle modification du jeu : [preuves](../history/validation-frame-uniform-attribution-v243.md). ProduitV242 et62sauvegardes conservés, aucunFPS ajouté. La suite porte sur les données d'éclairage communes ; l'objectif proche240FPS à6× reste à atteindre.

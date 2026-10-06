@@ -1,4 +1,6 @@
-# Validation courante — V244
+# Validation courante — V245
+
+**V245 — attribution privée, produit V242/schéma 198 conservés.** [Contrat](adoption-phases-v245.md), [preuves](../history/validation-adoption-phases-v245.md). Rouge de typage distinct, reprise limitée aux chemins de types, treize cas et unique GAME matériel avec sauvegarde/reprise passent. 170 scopes complets sans anomalie : parent5,491ms, namespace1,848ms, contrôle végétal1,248ms ; timings instrumentés, aucun gain livré ou percentile exhaustif de phase. 62 références et sources exactes, origine5249 fermée. Suite : refonte native combinée, propriété et coût complet avant adoption.
 
 **V244 — prototype d'éclairage écarté, produit V242 et schéma 198 conservés.** [Contrat](environment-uniforms-v244.md), [preuves](../history/validation-environment-uniforms-v244.md). Typages, huit cas CPU, reprise physique de dix paires et quatre GAME avec sauvegarde/reprise passent. Le rouge HTTP initial demeure distinct. Images/s −1,19 %, autres coûts presque neutres : aucun gain livré ni second banc inchangé. Sources et 62 références exactes, origines possédées fermées ; suite sur les coûts de réception et d'application, règles/cadence/qualité conservées.
 
