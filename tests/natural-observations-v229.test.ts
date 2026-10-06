@@ -1,4 +1,5 @@
 import {expect,test} from 'vitest';
+import {NaturalDirtyContractOracle} from './scenarios/natural-dirty-contract-v233';
 import {SnapshotDecoder,SnapshotEncoder,type SnapshotMessage} from '../src/bridge/snapshots';
 import {readSnapshotChanges} from '../src/bridge/snapshot-changes';
 import {NaturalResourcePresentation} from '../src/render/NaturalResourcePresentation';
@@ -40,6 +41,7 @@ function neighbor(value:number,direction:1|-1):number {
 function harness(world:World){
   const encoder=new SnapshotEncoder({structureDelta:true}),decoder=new SnapshotDecoder();
   const candidate=new NaturalResourcePresentation(),reference=new Reference();
+  const dirtyContract=new NaturalDirtyContractOracle();
   const history:Array<{world:World;before:World;view:World|undefined;viewBefore:World|undefined}>=[];
   const packet=(checkpoint=false)=>structuredClone(encoder.encode(world,0,6,checkpoint));
   const accept=(input:SnapshotMessage<true>)=>{
@@ -51,7 +53,7 @@ function harness(world:World){
   const send=(checkpoint=false)=>accept(packet(checkpoint));
   const read=(next:World,reset=false,immutable=true)=>{
     const before=structuredClone(next),expected=reference.read(next,reset,immutable),actual=candidate.read(next,reset,immutable);
-    expect(actual).toStrictEqual(expected);expect([...candidate.changes]).toStrictEqual([...reference.changes]);
+    expect(actual).toStrictEqual(expected);dirtyContract.assert(next,reset,immutable,candidate.changes,reference.changes);
     if(actual){expect(actual.resources).not.toBe(next.resources);
       actual.resources.forEach((r,i)=>{expect(r).toBe(expected!.resources[i]);expect(next.resources).toContain(r);});}
     for(const [id,change]of candidate.changes){expect(change.resource).toBe(reference.changes.get(id)!.resource);

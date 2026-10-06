@@ -1,4 +1,5 @@
 import {readSnapshotChanges,sameSnapshotChangeDomain,type SnapshotChanges} from '../bridge/snapshot-changes';
+import {readSnapshotResourceStructure} from '../bridge/snapshot-changes';
 import {FLORA_DEFINITIONS} from '../sim/biome-flora';
 import {plantLeafless} from '../sim/plant-life';
 import {harvestable,isPlant,plantFertility,PLANT_DEFINITIONS} from '../sim/plants';
@@ -295,6 +296,15 @@ export class NaturalPresentationEvents {
       return observations;
     }catch{this.clear();}
   }
+  /** Numerical seed only. A new ID capture must still compare every input.
+   * No World/reference or admission authority is lent by this copied Map. */
+  copyIdForecasts(world:World):ReadonlyMap<number,Forecast>|undefined {
+    const clock=captureClock(world),prior=this.forecastClock;
+    if(!clock||!prior||clock.tick!==prior.tick||clock.civil!==prior.civil||!sameContext(clock,prior)
+      ||!readSnapshotChanges(world,world))return;
+    return new Map([...this.forecasts].map(([id,forecast]):[number,Forecast]=>[id,Object.freeze({
+      input:Object.freeze({...forecast.input}),plannedAt:forecast.plannedAt,deadline:forecast.deadline,observation:forecast.observation})]));
+  }
   read(from:World,world:World):NaturalEventRead|undefined {
     const previous=this.clock;if(!previous)return;
     const changes=readSnapshotChanges(from,world),clock=captureClock(world),roofs=roofCells(world);
@@ -343,6 +353,117 @@ export class NaturalPresentationEvents {
       }
       this.clock=clock;this.forecastClock=clock;
       return {indices,changes,observations};
+    }catch{this.clear();return;}
+  }
+}
+
+/** Metadata only. Ordinals describe the FINAL C, even if the decoder has D.
+ * Removed IDs include a remove/rebirth so its private order is renewed. */
+export interface FinalResourceStructure {
+  readonly removed:ReadonlySet<number>;
+  readonly present:ReadonlyMap<number,number>;
+  readonly added:ReadonlySet<number>;
+  readonly tileIndices:readonly number[];
+  readonly beforeCount:number;
+  readonly afterCount:number;
+}
+export function composeFinalResourceStructure(from:World,to:World):FinalResourceStructure|undefined {
+  const result=readSnapshotResourceStructure(from,to);if(!result)return;
+  let count=from.resources.length;
+  const removed=new Set<number>(),present=new Map<number,number>(),added=new Set<number>();
+  for(const edge of result.edges){
+    if(edge.beforeCount!==count||edge.afterCount!==count-edge.removed.length+edge.added.length)return;
+    const ordinals=edge.removed.map(edit=>edit.beforeOrdinal).sort((a,b)=>a-b);
+    for(let i=0;i<ordinals.length;i++)if(!Number.isSafeInteger(ordinals[i])||ordinals[i]!<0||ordinals[i]!>=count||i&&ordinals[i]===ordinals[i-1])return;
+    const lower=(ordinal:number):number=>{let a=0,b=ordinals.length;while(a<b){const m=(a+b)>>>1;if(ordinals[m]!<ordinal)a=m+1;else b=m;}return a;};
+    for(const edit of edge.removed){removed.add(edit.id);present.delete(edit.id);added.delete(edit.id);}
+    if(ordinals.length)for(const [id,ordinal]of present)present.set(id,ordinal-lower(ordinal));
+    for(const edit of edge.added){added.add(edit.id);present.set(edit.id,edit.afterOrdinal);}
+    for(const edit of edge.updated)present.set(edit.id,edit.afterOrdinal);
+    count=edge.afterCount;
+  }
+  if(count!==to.resources.length)return;
+  for(const [id,ordinal]of present){if(!Number.isSafeInteger(id)||id<=0||!Number.isSafeInteger(ordinal)||ordinal<0||ordinal>=count||to.resources[ordinal]?.id!==id)return;}
+  return {removed,present,added,tileIndices:result.tileIndices,beforeCount:from.resources.length,afterCount:count};
+}
+
+export interface NaturalIdSource {readonly resource:Resource;readonly order:number;readonly natural:boolean}
+export interface NaturalIdEventRead {readonly affected:ReadonlySet<number>;readonly observations:ReadonlyMap<number,NaturalObservation>}
+type IdForecast=Forecast&{order:number};
+
+/** New private lane. The mathematical functions above are shared verbatim.
+ * Forecast/cell/heap ownership is by ID; source order is an append rank, never
+ * the numerical ID. No tombstones, Resources, Worlds or transport arrays are
+ * retained by this agenda. The caller owns the current-ref ledger. */
+export class NaturalIdPresentationEvents {
+  private clock:Clock|undefined;
+  private roofs:number[]=[];
+  private readonly forecasts=new Map<number,IdForecast>();
+  private readonly cells=new Map<number,Set<number>>();
+  private heap:number[]=[];
+  private readonly positions=new Map<number,number>();
+  clear():void {this.clock=undefined;this.roofs=[];this.forecasts.clear();this.cells.clear();this.heap=[];this.positions.clear();}
+  private before(a:number,b:number):boolean {
+    const left=this.forecasts.get(a)!,right=this.forecasts.get(b)!;
+    return left.deadline!<right.deadline!||left.deadline===right.deadline&&left.order<right.order;
+  }
+  private swap(a:number,b:number):void {const left=this.heap[a]!,right=this.heap[b]!;this.heap[a]=right;this.heap[b]=left;this.positions.set(left,b);this.positions.set(right,a);}
+  private up(at:number):number {while(at>0){const parent=Math.floor((at-1)/2);if(!this.before(this.heap[at]!,this.heap[parent]!))break;this.swap(at,parent);at=parent;}return at;}
+  private down(at:number):void {for(;;){let best=at;const a=at*2+1,b=a+1;if(a<this.heap.length&&this.before(this.heap[a]!,this.heap[best]!))best=a;if(b<this.heap.length&&this.before(this.heap[b]!,this.heap[best]!))best=b;if(best===at)return;this.swap(at,best);at=best;}}
+  private removeHeap(id:number):void {const at=this.positions.get(id);if(at===undefined)return;const last=this.heap.pop()!;this.positions.delete(id);if(at<this.heap.length){this.heap[at]=last;this.positions.set(last,at);this.down(this.up(at));}}
+  private drop(id:number):void {
+    const old=this.forecasts.get(id);this.removeHeap(id);this.forecasts.delete(id);if(!old||!this.clock)return;
+    const cell=old.input.z*this.clock.width+old.input.x,occupants=this.cells.get(cell);occupants?.delete(id);if(!occupants?.size)this.cells.delete(cell);
+  }
+  private put(id:number,forecast:IdForecast):void {
+    this.drop(id);this.forecasts.set(id,forecast);
+    const cell=forecast.input.z*this.clock!.width+forecast.input.x;let occupants=this.cells.get(cell);if(!occupants){occupants=new Set();this.cells.set(cell,occupants);}occupants.add(id);
+    if(forecast.deadline!==undefined){this.positions.set(id,this.heap.length);this.heap.push(id);this.up(this.heap.length-1);}
+  }
+  initialize(world:World,sources:ReadonlyMap<number,NaturalIdSource>,seed?:NaturalPresentationEvents):ReadonlyMap<number,NaturalObservation>|undefined {
+    this.clear();if(!readSnapshotChanges(world,world))return;
+    const clock=captureClock(world),roofs=roofCells(world);if(!clock||!roofs)return;
+    this.clock=clock;this.roofs=[...roofs];const observations=new Map<number,NaturalObservation>(),probe={...world},prior=seed?.copyIdForecasts(world);
+    try {
+      for(const [id,source]of sources){
+        const r=source.resource;if(!source.natural||!tracked(r))continue;
+        const input=captureInputs(world,r);if(!input||input.id!==id)throw new Error('Unproved ID inputs.');
+        const old=prior?.get(id),retained=old&&old.plannedAt<=clock.tick&&(old.deadline===undefined||clock.tick<old.deadline)&&sameInputs(old.input,input)?old:undefined;
+        const observation=retained?.observation??observe(world,r),deadline=retained?retained.deadline:nextDeadline(world,probe,r,input,clock,observation);
+        const forecast={input,plannedAt:clock.tick,deadline,observation,order:source.order};
+        this.forecasts.set(id,forecast);
+        const cell=input.z*clock.width+input.x;let occupants=this.cells.get(cell);if(!occupants){occupants=new Set();this.cells.set(cell,occupants);}occupants.add(id);
+        if(deadline!==undefined){this.positions.set(id,this.heap.length);this.heap.push(id);}
+        observations.set(id,observation);
+      }
+      for(let position=Math.floor(this.heap.length/2)-1;position>=0;position--)this.down(position);
+      return observations;
+    }catch{this.clear();return;}
+  }
+  read(from:World,world:World,sources:ReadonlyMap<number,NaturalIdSource>,structure:FinalResourceStructure):NaturalIdEventRead|undefined {
+    const previous=this.clock,clock=captureClock(world),roofs=roofCells(world);
+    // The publication chain is read afresh; the passed metadata is no public
+    // authority. This method is a numerical query, not an adoption capability.
+    if(!previous||!readSnapshotResourceStructure(from,world)||!clock||!roofs||clock.tick<previous.tick||!sameContext(previous,clock)||clock.civil!==previous.civil+(clock.tick-previous.tick)){this.clear();return;}
+    const affected=new Set(structure.present.keys()),due=new Set<number>();
+    const atCell=(cell:number):void=>{for(const id of this.cells.get(cell)??[])affected.add(id);};
+    for(const id of structure.removed)this.drop(id);
+    for(const cell of structure.tileIndices)atCell(cell);
+    let a=0,b=0,changedRoof=false;
+    while(a<this.roofs.length||b<roofs.length){const old=this.roofs[a]??Infinity,next=roofs[b]??Infinity;if(old===next){a++;b++;}else if(old<next){atCell(old);a++;changedRoof=true;}else{atCell(next);b++;changedRoof=true;}}
+    if(changedRoof)this.roofs=[...roofs];
+    while(this.heap.length&&this.forecasts.get(this.heap[0]!)!.deadline!<=world.tick){const id=this.heap[0]!;this.removeHeap(id);affected.add(id);due.add(id);}
+    const ids=[...affected].filter(id=>sources.has(id)).sort((a,b)=>sources.get(a)!.order-sources.get(b)!.order),probe={...world},observations=new Map<number,NaturalObservation>();
+    try {
+      for(const id of ids){
+        const source=sources.get(id)!,r=source.resource,old=this.forecasts.get(id);
+        if(!source.natural||!tracked(r)){this.drop(id);continue;}
+        const input=captureInputs(world,r);if(!input||input.id!==id)throw new Error('Unproved ID inputs.');
+        if(old&&sameInputs(old.input,input)&&old.order===source.order&&!due.has(id)&&old.plannedAt<=clock.tick&&(old.deadline===undefined||clock.tick<old.deadline)){observations.set(id,old.observation);continue;}
+        const observation=observe(world,r),deadline=nextDeadline(world,probe,r,input,clock,observation);
+        this.put(id,{input,plannedAt:clock.tick,deadline,observation,order:source.order});observations.set(id,observation);
+      }
+      this.clock=clock;return {affected,observations};
     }catch{this.clear();return;}
   }
 }

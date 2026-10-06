@@ -1,4 +1,5 @@
 import {expect,test} from 'vitest';
+import {NaturalDirtyContractOracle} from './scenarios/natural-dirty-contract-v233';
 import * as THREE from 'three/webgpu';
 import {SnapshotDecoder,SnapshotEncoder} from '../src/bridge/snapshots';
 import {createWorld} from '../src/sim/index';
@@ -148,12 +149,13 @@ function instances(group:THREE.Group){
 
 test('indexed complete Worlds match historical geometry/ranges/uploads and Overview/cluster routing over edits and restoration',()=>{
   const w=camp(),{send}=transport(w),index=new SceneResourceIndex(),natural=new NaturalResourcePresentation(),reference=new NaturalReference();
+  const dirtyContract=new NaturalDirtyContractOracle();
   const material=new THREE.MeshStandardNodeMaterial();material.userData.rendererOwned=true;
   const a=new ResourceLayer(new THREE.Group(),material),b=new ResourceLayer(new THREE.Group(),material);
   const overviewA=new OverviewLayer(),overviewB=new OverviewLayer(),clusterA=new PlantClusterLayer(material),clusterB=new PlantClusterLayer(material);
   const check=(reset=false)=>{
     const world=send(reset),before=structuredClone(world),frame=index.adopt(world,reset),old=reference.read(world,reset,true),view=natural.read(world,reset,true);
-    expect(view===undefined).toBe(old===undefined);expect([...natural.changes]).toStrictEqual([...reference.changes]);
+    expect(view===undefined).toBe(old===undefined);dirtyContract.assert(world,reset,true,natural.changes,reference.changes);
     if(view&&old){
       const visible={...old,resources:old.resources.filter(built)};
       a.update(visible,reset,reference.changes);b.update(world,reset,natural.changes,frame);

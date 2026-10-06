@@ -1,5 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {expect,test} from 'vitest';
+import {NaturalDirtyContractOracle} from './scenarios/natural-dirty-contract-v233';
 import {SnapshotDecoder,SnapshotEncoder,type SnapshotMessage} from '../src/bridge/snapshots';
 import {readSnapshotChanges} from '../src/bridge/snapshot-changes';
 import {NaturalResourcePresentation} from '../src/render/NaturalResourcePresentation';
@@ -43,6 +44,7 @@ function neighbor(value:number,direction:1|-1):number {
 function harness(world:World,checkHistoryEachRead=true){
   const encoder=new SnapshotEncoder({structureDelta:true}),decoder=new SnapshotDecoder();
   const reference=new Reference(),candidate=new NaturalResourcePresentation();
+  const dirtyContract=new NaturalDirtyContractOracle();
   const history:Array<{world:World;before:World;actual:World|undefined;expected:World|undefined;actualBefore:World|undefined;expectedBefore:World|undefined}>=[];
   const verifyHistory=()=>{
     for(const old of history){expect(old.world).toStrictEqual(old.before);expect(old.actual).toStrictEqual(old.actualBefore);expect(old.expected).toStrictEqual(old.expectedBefore);}
@@ -57,7 +59,7 @@ function harness(world:World,checkHistoryEachRead=true){
   const read=(next:World,reset=false,immutable=true)=>{
     const before=structuredClone(next),expected=reference.read(next,reset,immutable),actual=candidate.read(next,reset,immutable);
     expect(actual).toStrictEqual(expected); // Includes undefined presence and full returned World.
-    expect([...candidate.changes]).toStrictEqual([...reference.changes]); // Includes insertion order/removals.
+    dirtyContract.assert(next,reset,immutable,candidate.changes,reference.changes); // Exact issued subsequence plus every necessary shape/removal.
     if(actual){
       expect(actual.resources).not.toBe(next.resources);
       actual.resources.forEach((r,i)=>{expect(r).toBe(expected!.resources[i]);expect(r).toBe(next.resources.find(source=>source.id===r.id));});

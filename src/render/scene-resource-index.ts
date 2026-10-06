@@ -1,5 +1,5 @@
 import type {Resource,World} from '../sim/types';
-import {readSnapshotChanges,sameSnapshotChangeDomain} from '../bridge/snapshot-changes';
+import {readSnapshotChanges,readSnapshotResourceStructure,sameSnapshotChangeDomain,type SnapshotResourceStructure} from '../bridge/snapshot-changes';
 import {WORLD_SCALE} from '../world/scale';
 import {isClusterPlantSpecies,isResidentCrop} from './flora-presentation';
 import type {NaturalPresentationChange} from './NaturalResourcePresentation';
@@ -41,6 +41,67 @@ function remove<K>(buckets:Map<K,number[]>,key:K|undefined,source:number):void {
 function add<K>(buckets:Map<K,number[]>,key:K|undefined,source:number):void {
   if(key===undefined)return;let bucket=buckets.get(key);if(!bucket){bucket=[];buckets.set(key,bucket);}insert(bucket,source);
 }
+type StructuralPlan={removed:readonly Capture[];survivors:Capture[]|undefined;remap:readonly (number|undefined)[]|undefined;
+  updates:readonly (readonly [number,Capture,Capture])[];added:readonly Capture[]};
+/** Compose only certified metadata. Intermediate Worlds are never presented,
+ * and their edge-local ordinals never index the final target. */
+function structuralPlan(world:World,captures:readonly Capture[],byId:ReadonlyMap<number,number>,proof:SnapshotResourceStructure,
+  validResource:(resource:Resource)=>boolean):StructuralPlan|undefined {
+  const removed=new Set<number>(),added=new Map<number,true>(),updated=new Set<number>();
+  let count=captures.length;
+  for(const edge of proof.edges){
+    if(edge.beforeCount!==count)return;
+    for(const {id}of edge.removed){
+      if(!added.delete(id)){
+        if(!byId.has(id)||removed.has(id))return;removed.add(id);
+      }
+      updated.delete(id);
+    }
+    for(const {id}of edge.added){
+      if(added.has(id)||byId.has(id)&&!removed.has(id))return;added.set(id,true);
+    }
+    for(const {id}of edge.updated){
+      if(!added.has(id)){
+        if(!byId.has(id)||removed.has(id))return;updated.add(id);
+      }
+    }
+    count=count-edge.removed.length+edge.added.length;
+    if(edge.afterCount!==count)return;
+  }
+  if(count!==world.resources.length||count!==captures.length-removed.size+added.size)return;
+  const oldRemoved:Capture[]=[],survivors=removed.size?[] as Capture[]:undefined;
+  const remap=removed.size?new Array<number|undefined>(captures.length):undefined;
+  if(survivors&&remap)for(let source=0;source<captures.length;source++){
+    const old=captures[source]!;
+    if(removed.has(old.id)){oldRemoved.push(old);continue;}
+    remap[source]=survivors.length;survivors.push(old);
+  }
+  const updates:Array<readonly [number,Capture,Capture]>=[];
+  for(const id of updated){
+    const oldSource=byId.get(id),old=oldSource===undefined?undefined:captures[oldSource];
+    const source=oldSource===undefined?undefined:remap?remap[oldSource]:oldSource;
+    const resource=source===undefined?undefined:world.resources[source];
+    if(!old||old.id!==id||!resource||resource.id!==id||!validResource(resource))return;
+    if(!same(old,resource))updates.push([source!,old,capture(world,resource)]);
+  }
+  updates.sort((a,b)=>a[0]-b[0]);
+  const additions:Capture[]=[],base=captures.length-removed.size;
+  for(const [id]of added){
+    const resource=world.resources[base+additions.length];
+    if(!resource||resource.id!==id||!validResource(resource))return;
+    additions.push(capture(world,resource));
+  }
+  return {removed:oldRemoved,survivors,remap,updates,added:additions};
+}
+/** One numerical pass only when survivors shifted. Stable captures and bucket
+ * arrays are retained; no source primitive/classification is reread here. */
+function remapBuckets<K>(buckets:Map<K,number[]>,remap:readonly (number|undefined)[]):void {
+  for(const [key,bucket]of buckets){
+    let length=0;
+    for(const source of bucket){const next=remap[source];if(next!==undefined)bucket[length++]=next;}
+    bucket.length=length;if(!length)buckets.delete(key);
+  }
+}
 
 /** Renderer-owned structural projection. Resource values/curves remain in the
  * exact applied World; only private primitive memberships persist here. */
@@ -65,18 +126,47 @@ export class SceneResourceIndex {
       const old=this.#captures[source],next=world.resources[source];
       if(!old||!next||old.id!==next.id||(old.key!==undefined)!==(!isResidentCrop(next)&&!isClusterPlantSpecies(next.species))){sparse=false;break;}
     }
+    const validResource=(r:Resource)=>Number.isSafeInteger(r.id)&&r.id>0&&Number.isSafeInteger(r.x)&&Number.isSafeInteger(r.z)
+      &&r.x>=0&&r.z>=0&&r.x<world.width&&r.z<world.height;
+    const structure=!sparse&&!reset&&from&&from!==world&&sameMap?readSnapshotResourceStructure(from,world):undefined;
+    const structural=structure?structuralPlan(world,this.#captures,this.#byId,structure,validResource):undefined;
     // This full diff owns both complete primitive sets; it does not manufacture
     // a sparse journal. Self reads and the common active domain gate restrict
     // which consumer may use the balance; neither replaces exhaustive reads.
-    const fullCover=!sparse&&!reset&&from&&from!==world&&sameMap
+    const fullCover=!sparse&&!structural&&!reset&&from&&from!==world&&sameMap
       &&readSnapshotChanges(from,from)!==undefined&&readSnapshotChanges(world,world)!==undefined
       &&sameSnapshotChangeDomain(from,world);
-    const balance=fullCover?new Map<number,number>():undefined;
+    const balance=structural||fullCover?new Map<number,number>():undefined;
     const oldKeys=new Map<number,string>(),edits:RockCoverEdit[]=[];
     let valid=Number.isSafeInteger(world.width)&&world.width>0&&Number.isSafeInteger(world.height)&&world.height>0;
-    const validResource=(r:Resource)=>Number.isSafeInteger(r.id)&&r.id>0&&Number.isSafeInteger(r.x)&&Number.isSafeInteger(r.z)
-      &&r.x>=0&&r.z>=0&&r.x<world.width&&r.z<world.height;
-    if(sparse){
+    if(structural){
+      for(const old of structural.removed){
+        if(old.key!==undefined)oldKeys.set(old.id,old.key);
+        this.#byId.delete(old.id);
+        if(old.rock!==undefined)balance!.set(old.rock,(balance!.get(old.rock)??0)-1);
+      }
+      if(structural.survivors&&structural.remap){
+        this.#captures=structural.survivors;
+        remapBuckets(this.#chunks,structural.remap);remapBuckets(this.#trees,structural.remap);
+        for(let source=0;source<this.#captures.length;source++){
+          const id=this.#captures[source]!.id;if(this.#byId.get(id)!==source)this.#byId.set(id,source);
+        }
+      }
+      for(const [source,old,next]of structural.updates){
+        if(old.key!==undefined)oldKeys.set(old.id,old.key);
+        remove(this.#chunks,old.key,source);remove(this.#trees,old.tree,source);
+        add(this.#chunks,next.key,source);add(this.#trees,next.tree,source);this.#captures[source]=next;
+        if(old.rock!==next.rock){
+          if(old.rock!==undefined)balance!.set(old.rock,(balance!.get(old.rock)??0)-1);
+          if(next.rock!==undefined)balance!.set(next.rock,(balance!.get(next.rock)??0)+1);
+        }
+      }
+      for(const next of structural.added){
+        const source=this.#captures.length;this.#captures.push(next);this.#byId.set(next.id,source);
+        add(this.#chunks,next.key,source);add(this.#trees,next.tree,source);
+        if(next.rock!==undefined)balance!.set(next.rock,(balance!.get(next.rock)??0)+1);
+      }
+    }else if(sparse){
       for(const source of journal!.resourceIndices){
         const r=world.resources[source]!,old=this.#captures[source]!;
         if(!validResource(r)){valid=false;break;}

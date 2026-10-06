@@ -1,5 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {expect,test} from 'vitest';
+import {NaturalDirtyContractOracle} from './scenarios/natural-dirty-contract-v233';
 import {SnapshotDecoder,SnapshotEncoder} from '../src/bridge/snapshots';
 import {readSnapshotChanges} from '../src/bridge/snapshot-changes';
 import {NaturalResourcePresentation} from '../src/render/NaturalResourcePresentation';
@@ -15,6 +16,7 @@ import type {World} from '../src/sim/types';
 function harness(world:World){
   const encoder=new SnapshotEncoder({structureDelta:true}),decoder=new SnapshotDecoder();
   const reference=new Reference(),candidate=new NaturalResourcePresentation();
+  const dirtyContract=new NaturalDirtyContractOracle();
   const views:{last?:World}={};
   const send=(replacement=false)=>{
     const result=decoder.adopt(structuredClone(encoder.encode(world,0,6,replacement)));
@@ -26,7 +28,7 @@ function harness(world:World){
     const before=JSON.stringify(next),expected=reference.read(next,reset,immutable),actual=candidate.read(next,reset,immutable);
     expect(actual===undefined).toBe(expected===undefined);
     expect(actual?.resources).toStrictEqual(expected?.resources);
-    expect([...candidate.changes]).toStrictEqual([...reference.changes]);
+    dirtyContract.assert(next,reset,immutable,candidate.changes,reference.changes);
     if(actual)views.last=actual;
     expect(JSON.stringify(next)).toBe(before);return candidate.changes.size;
   };

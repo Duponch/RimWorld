@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V233, schéma 198 inchangé :** [transitions des ressources et présentation](development/resource-structural-presentation-v233.md), [recherche](research/resource-structural-presentation-v233.md), [preuves et limites](history/validation-resource-structural-presentation-v233.md). Gain matériel local modeste sur Les Aulnes ; cible proche de 240 FPS à 6× toujours ouverte, 62 références conservées.
+
 **V232, schéma198 inchangé :** [recaptures et décision de performance](development/resource-census-v232.md), [preuves des trois pistes non intégrées](history/validation-resource-census-v232.md). Produit V230 conservé ; refonte structurelle privée en cours, aucun gain FPS stable ajouté.
 
 **V231, schéma 198 inchangé :** [attribution CPU/GPU](development/render-throughput-attribution-v231.md), [recherche](research/render-throughput-attribution-v231.md), [preuves et limites](history/validation-render-throughput-attribution-v231.md). Produit V230 conservé après rejet des montages mesurés sans gain ; les longues applications de scène et l'adoption main restent prioritaires. Cible proche de 240 FPS à 6× ouverte.

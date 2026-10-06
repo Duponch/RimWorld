@@ -1,4 +1,6 @@
-# Validation courante — V232
+# Validation courante — V233
+
+**V233 — réconciliation structurelle, schéma 198 inchangé.** [Contrat](resource-structural-presentation-v233.md), [preuves et limites](../history/validation-resource-structural-presentation-v233.md). Journal confirmé et consommateurs par ID ; sorties de scène et reprises exactes, dirtiness redondante retirée. Deux cycles matériels trouvent +5,52/+1,71 % RAF locaux ; froid et décodeur parfois défavorables. Les 62 références restent exactes. Cible proche de 240 FPS à 6× ouverte ; poursuivre les coûts d’adoption et de scène sans modifier règles, cadence ou qualité.
 
 **V232 — pistes mesurées non intégrées, schéma 198 inchangé.** [Contrat et décision](resource-census-v232.md), [preuves et limites](../history/validation-resource-census-v232.md). Réconciliation naturelle et tri du décodeur exacts sans gain stable ; coût sonore moyen réduit de56…61%, mais pointes accrues et RAF variables. Produit V230 et62références conservés, aucun gain FPS livré. Priorité privée suivante : journal structurel confirmé et consommateurs ID, qualification complète avant intégration ;240FPS restent ouverts.
 

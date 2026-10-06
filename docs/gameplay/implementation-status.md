@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**Performance V233, schéma 198 inchangé.** La [réconciliation des ressources](../development/resource-structural-presentation-v233.md) conserve les systèmes et l’apparence des 62 scènes. Les [comparaisons](../history/validation-resource-structural-presentation-v233.md) trouvent un progrès local modeste ; les 240 FPS à 6×, les pointes et le coût de chargement restent ouverts. Aucun nouveau contenu ; les refontes de performance restent prioritaires.
+
 **Diagnostic V231, schéma 198 inchangé.** Le produit conserve V230 et les 62 scènes après [attribution des coûts](../development/render-throughput-attribution-v231.md) et rejet des variantes mesurées sans gain. Aucun contenu ou amélioration FPS n'est annoncé ; cible proche de 240 FPS à 6× et refontes autonomes restent prioritaires. [Preuves et limites](../history/validation-render-throughput-attribution-v231.md).
 
 **Refonte V230, schéma198 inchangé.** Le [rendu local](../development/scene-render-core-v230.md) conserve apparence, interactions et reprise graphique des62 scènes. Les [contrôles](../history/validation-scene-render-core-v230.md) passent, mais cette séparation de code ne démontre aucun gain FPS stable. L'objectif proche240FPS à6× sur Les Aulnes reste prioritaire ; aucun nouveau contenu n'est ajouté et le rendu dans un worker demeure une expérience privée.

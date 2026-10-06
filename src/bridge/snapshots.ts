@@ -56,8 +56,8 @@ import { validWeaponShape } from '../sim/equipment-save.ts';
 import { pileMaxHp } from '../sim/thing-damage-rules.ts';
 import { SCHEMA_VERSION, type MaterialPile, type Pawn, type Resource, type Structure, type Terrain, type Tile, type World } from '../sim/types.ts';
 import { STRUCTURE_DEFINITIONS } from '../sim/definitions.ts';
-import { TileSnapshotCache, type TileDelta } from './tile-snapshot-cache.ts';
-import { PlanetValidationCache, type PlanetPreparation } from './planet-validation-cache.ts';
+import { TileSnapshotCache, type TileDelta } from '../bridge/tile-snapshot-cache.ts';
+import { PlanetValidationCache, type PlanetPreparation } from '../bridge/planet-validation-cache.ts';
 import { validBackground } from '../sim/colonist-backgrounds.ts';
 import { validHumanAge, type HumanAge } from '../sim/human-age.ts';
 import { validOfferedBackground } from '../sim/background-save.ts';
@@ -156,12 +156,125 @@ export function sameSnapshotChangeDomain(from: World, to: World): boolean {
     && before.journal.read(after, after) !== undefined;
 }
 
+export interface SnapshotResourceRemoval { readonly id: number; readonly beforeOrdinal: number }
+export interface SnapshotResourcePlacement { readonly id: number; readonly afterOrdinal: number }
+/** Primitive edits of one confirmed edge. Survivors preserve their relative
+ * order; additions append. These ordinals belong to this edge, not a later
+ * target or the decoder's current World. */
+export interface SnapshotResourceStructureEdge {
+  readonly parentRevision: number;
+  readonly revision: number;
+  readonly beforeCount: number;
+  readonly afterCount: number;
+  readonly removed: readonly SnapshotResourceRemoval[];
+  readonly added: readonly SnapshotResourcePlacement[];
+  readonly updated: readonly SnapshotResourcePlacement[];
+}
+export interface SnapshotResourceStructure {
+  readonly edges: readonly SnapshotResourceStructureEdge[];
+  readonly tileIndices: readonly number[];
+}
+type ResourceStructureCandidate = Omit<SnapshotResourceStructureEdge, 'parentRevision' | 'revision'>;
+interface ResourceStructureStamp { journal: ResourceStructureJournal; generation: number; epoch: number; revision: number }
+interface ResourceStructureRecord {
+  readonly parentRevision: number;
+  readonly edge: SnapshotResourceStructureEdge | undefined;
+  readonly tileIndices: readonly number[];
+  readonly values: number;
+}
+const resourceStructureStamps = new WeakMap<World, ResourceStructureStamp>();
+const emptyResourceStructure: SnapshotResourceStructure = Object.freeze({ edges: Object.freeze([]), tileIndices: emptyChangeIndices });
+/** Separate capability: the historical ordinal journal/read is unchanged.
+ * Neither a record nor its witness retains a packet, Resource or World. */
+class ResourceStructureJournal {
+  private generation = 0;
+  private epoch = 0;
+  private revision = 0;
+  private budget = 1024;
+  private values = 0;
+  private readonly records = new Map<number, ResourceStructureRecord>();
+
+  reset(world: World, epoch: number, revision: number, count: number): void {
+    this.records.clear(); this.values = 0; this.generation++;
+    this.epoch = epoch; this.revision = revision;
+    // Four primitive edits per source, with an absolute memory bound. Overflow
+    // removes only this optimization; it never changes presentation cadence.
+    this.budget = Number.isSafeInteger(count) && count >= 0
+      ? Math.min(131072, Math.max(1024, count * 4)) : 1024;
+    resourceStructureStamps.set(world, { journal: this, generation: this.generation, epoch, revision });
+  }
+
+  append(parent: World, world: World, epoch: number, revision: number,
+    candidate: ResourceStructureCandidate | undefined, tileIndices: readonly number[], count: number): void {
+    const previous = resourceStructureStamps.get(parent);
+    if (!previous || previous.journal !== this || previous.generation !== this.generation
+      || previous.epoch !== epoch || epoch !== this.epoch || previous.revision !== this.revision
+      || revision <= previous.revision) {
+      this.reset(world, epoch, revision, count); return;
+    }
+    const cost = candidate === undefined ? 0 : 4 + tileIndices.length
+      + 2 * (candidate.removed.length + candidate.added.length + candidate.updated.length);
+    let edge: SnapshotResourceStructureEdge | undefined;
+    let tiles: readonly number[] = emptyChangeIndices;
+    if (candidate !== undefined && cost <= this.budget) {
+      const removals = Object.freeze(candidate.removed.map(edit => Object.freeze({ id: edit.id, beforeOrdinal: edit.beforeOrdinal }))
+        .sort((a, b) => a.beforeOrdinal - b.beforeOrdinal));
+      const placements = (edits: readonly SnapshotResourcePlacement[]): readonly SnapshotResourcePlacement[] =>
+        Object.freeze(edits.map(edit => Object.freeze({ id: edit.id, afterOrdinal: edit.afterOrdinal }))
+          .sort((a, b) => a.afterOrdinal - b.afterOrdinal));
+      edge = Object.freeze({ parentRevision: previous.revision, revision,
+        beforeCount: candidate.beforeCount, afterCount: candidate.afterCount,
+        removed: removals, added: placements(candidate.added), updated: placements(candidate.updated) });
+      tiles = orderedChangeCopy(tileIndices);
+    }
+    const values = edge === undefined ? 0 : cost;
+    this.records.set(revision, Object.freeze({ parentRevision: previous.revision, edge, tileIndices: tiles, values }));
+    this.values += values;
+    while (this.records.size > 64 || this.values > this.budget) {
+      const key = this.records.keys().next().value!;
+      this.values -= this.records.get(key)!.values; this.records.delete(key);
+    }
+    this.revision = revision;
+    resourceStructureStamps.set(world, { journal: this, generation: this.generation, epoch, revision });
+  }
+
+  read(from: ResourceStructureStamp, to: ResourceStructureStamp): SnapshotResourceStructure | undefined {
+    if (from.generation !== this.generation || to.generation !== this.generation
+      || from.epoch !== this.epoch || to.epoch !== this.epoch || from.revision > to.revision) return undefined;
+    if (from.revision === to.revision) return emptyResourceStructure;
+    const edges: SnapshotResourceStructureEdge[] = [], tiles = new Set<number>();
+    let revision = to.revision;
+    while (revision > from.revision) {
+      const record = this.records.get(revision);
+      if (!record || record.edge === undefined || record.parentRevision < from.revision
+        || record.parentRevision >= revision) return undefined;
+      edges.push(record.edge);
+      for (const index of record.tileIndices) tiles.add(index);
+      revision = record.parentRevision;
+    }
+    if (revision !== from.revision) return undefined;
+    return Object.freeze({ edges: Object.freeze(edges.reverse()), tileIndices: orderedChangeCopy([...tiles]) });
+  }
+}
+
+/** A structural witness only. Consumers compose chronological metadata to
+ * `to`, then read that target's current records under their immutable-read
+ * mandate. Never present skipped intermediate Worlds or resolve via slots of
+ * a newer decoder World. Unknown order/mutable reads require the full path. */
+export function readSnapshotResourceStructure(from: World, to: World): SnapshotResourceStructure | undefined {
+  const before = resourceStructureStamps.get(from), after = resourceStructureStamps.get(to);
+  if (!before || !after || before.journal !== after.journal) return undefined;
+  return before.journal.read(before, after);
+}
+
+const validCapturedResourceId = (id: number): boolean => Number.isSafeInteger(id) && id > 0;
+
 type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
 type StructurelessDynamicWorld = Omit<DynamicWorld, 'structures'> & { readonly structures?: never };
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
 interface PileChanges { removed: number[]; upserted: MaterialPile[]; order?: number[] }
 export interface StructureChanges { removed: number[]; upserted: Structure[]; order?: number[] }
-interface SnapshotHeader { motion?:import('./motion-tracks.ts').PawnTrack[]; audioCues?:import('./audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
+interface SnapshotHeader { motion?:import('../bridge/motion-tracks.ts').PawnTrack[]; audioCues?:import('../bridge/audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 function validMiningTransport(pawn:Pawn,version:number):boolean {
   return !(version<186&&pawn.skills&&Object.hasOwn(pawn.skills,'mining'))&&validMiningSkill(pawn.skills?.mining,version);
 }
@@ -511,6 +624,9 @@ export class SnapshotDecoder {
   private current: World | undefined;
   private readonly planetValidation = new PlanetValidationCache();
   readonly #snapshotChanges = new SnapshotChangeJournal();
+  readonly #resourceStructure = new ResourceStructureJournal();
+  #resourceStructureReady = false;
+  #resourceStructureCount = 0;
   // The decoder owns immutable snapshots. Membership changes rebuild this
   // index; ordinary growth/metadata packets only copy the array of references.
   private resourceSlots = new Map<number, number>();
@@ -597,6 +713,10 @@ export class SnapshotDecoder {
     let reindexPiles = message.kind === 'checkpoint';
     let changedResourceIds: number[] | undefined = [];
     let changedTileIndices: number[] = [];
+    let resourceStructureCandidate: ResourceStructureCandidate | undefined;
+    let resourceStructureTouched: Set<number> | undefined;
+    let resourceStructureRemoved: SnapshotResourceRemoval[] = [];
+    let resourceStructureAllowed = this.#resourceStructureReady;
     if (message.kind === 'checkpoint') {
       if (message.world.tiles.length !== message.world.width * message.world.height) return resync('Dimensions du checkpoint invalides.');
       if(!Array.isArray(message.world.piles)||message.world.piles.some(pile=>!validPile(pile,message.world)))return resync('Pile de checkpoint invalide.');
@@ -621,18 +741,43 @@ export class SnapshotDecoder {
         changedTileIndices = [...touched];
       }
       let resources = previous.resources;
+      const beforeCount = this.#resourceStructureCount;
+      resourceStructureAllowed &&= beforeCount === this.resourceSlots.size;
+      resourceStructureCandidate = resourceStructureAllowed ? {
+        beforeCount, afterCount: beforeCount, removed: [], added: [], updated: [],
+      } : undefined;
       if (message.resources) {
         const { removed, upserted, order, growth } = message.resources;
         const sparse = !removed.length && !order && upserted.every(resource => this.resourceSlots.has(resource.id));
-        const byId = sparse ? undefined : new Map(resources.map(resource => [resource.id, resource]));
+        let capturedBeforeCount = 0;
+        const byId = sparse ? undefined : new Map<number, Resource>(resources.map((resource, ordinal): [number, Resource] => {
+          // The same historical id read constructs the Map and checks the old
+          // slot certificate. Never use cached records as reconstruction truth.
+          const id = resource.id;
+          capturedBeforeCount++;
+          if (resourceStructureAllowed && (this.resourceSlots.get(id) !== ordinal
+            || !validCapturedResourceId(id))) resourceStructureAllowed = false;
+          return [id, resource];
+        }));
+        if (byId && capturedBeforeCount !== beforeCount) resourceStructureAllowed = false;
+        if (order) resourceStructureAllowed = false;
         // Candidate mutations stay private until the complete packet validates.
         const patches = new Map<number, Resource>();
         const read = (id:number):Resource|undefined => byId ? byId.get(id) : resources[this.resourceSlots.get(id) ?? -1];
-        const write = (resource:Resource):void => { if(byId)byId.set(resource.id,resource);else patches.set(resource.id,resource); };
+        const write = (resource:Resource):void => {
+          const id = resource.id;
+          if (resourceStructureAllowed && !validCapturedResourceId(id)) resourceStructureAllowed = false;
+          if(byId)byId.set(id,resource);else patches.set(id,resource);
+        };
         const touched = new Set<number>();
         for (const id of removed) {
           if (!byId!.delete(id) || touched.has(id)) return resync('Suppression de ressource invalide.');
           touched.add(id);
+          if (resourceStructureAllowed) {
+            const beforeOrdinal = this.resourceSlots.get(id);
+            if (beforeOrdinal === undefined) resourceStructureAllowed = false;
+            else resourceStructureRemoved.push({ id, beforeOrdinal });
+          }
         }
         for (const resource of upserted) {
           if(!validDomesticHealroot(resource,message.world)||!validPlantGrowthLight(resource,message.world.schemaVersion,message.world.tick)||!validPlantLife(resource,message.world.schemaVersion,message.world)||resource.damage!==undefined&&(message.world.schemaVersion<87||!Number.isSafeInteger(resource.damage)||resource.damage<1||resource.damage>=resourceMaxHp(resource)))return resync('État végétal invalide.');
@@ -663,6 +808,20 @@ export class SnapshotDecoder {
         }
         reindexResources = !sparse;
         changedResourceIds = sparse ? [...touched] : undefined;
+        resourceStructureTouched = touched;
+        if (resourceStructureAllowed && sparse) {
+          const updated: SnapshotResourcePlacement[] = [];
+          for (const id of touched) {
+            const afterOrdinal = this.resourceSlots.get(id);
+            // Getter changes between touched/write are not a structural proof.
+            if (afterOrdinal === undefined || !patches.has(id)) { resourceStructureAllowed = false; break; }
+            updated.push({ id, afterOrdinal });
+          }
+          if (patches.size !== touched.size) resourceStructureAllowed = false;
+          resourceStructureCandidate = resourceStructureAllowed ? {
+            beforeCount, afterCount: beforeCount, removed: [], added: [], updated,
+          } : undefined;
+        } else resourceStructureCandidate = undefined;
       }
       let piles=previous.piles;
       if(message.piles){
@@ -805,7 +964,42 @@ export class SnapshotDecoder {
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     if(!this.planetValidation.commit(planetCheck))return resync('Planète, groupe ou pertes incohérents.');
     const replaced = message.epoch !== this.epoch;
-    if(reindexResources){this.resourceSlots.clear();for(let i=0;i<next.resources.length;i++)this.resourceSlots.set(next.resources[i]!.id,i);}
+    if(reindexResources){
+      // Reuse the historical reindex traversal, keeping the old private slots
+      // local until the candidate is certified. No second source-array scan.
+      const oldSlots = this.resourceSlots, nextSlots = new Map<number, number>();
+      const removed = new Set(resourceStructureRemoved.map(edit => edit.id));
+      const added: SnapshotResourcePlacement[] = [], updated: SnapshotResourcePlacement[] = [];
+      let lastSurvivor = -1, appended = false, nextReady = true, afterCount = 0;
+      for(let i=0;i<(afterCount=next.resources.length);i++){
+        const resource = next.resources[i]!, id = resource.id;
+        if (nextSlots.has(id) || !validCapturedResourceId(id)) nextReady = false;
+        nextSlots.set(id,i);
+        if (resourceStructureAllowed && message.kind !== 'checkpoint') {
+          const beforeOrdinal = oldSlots.get(id);
+          if (beforeOrdinal === undefined) {
+            if (!resourceStructureTouched?.has(id)) resourceStructureAllowed = false;
+            appended = true; added.push({ id, afterOrdinal: i });
+          } else {
+            if (appended || beforeOrdinal <= lastSurvivor || removed.has(id)) resourceStructureAllowed = false;
+            lastSurvivor = beforeOrdinal;
+            if (resourceStructureTouched?.has(id)) updated.push({ id, afterOrdinal: i });
+          }
+        }
+      }
+      this.resourceSlots = nextSlots;
+      nextReady &&= Number.isSafeInteger(afterCount) && afterCount >= 0;
+      this.#resourceStructureReady = nextReady;
+      this.#resourceStructureCount = afterCount;
+      if (message.kind !== 'checkpoint' && resourceStructureAllowed && nextReady
+        && oldSlots.size - resourceStructureRemoved.length + added.length === afterCount
+        && resourceStructureRemoved.length + added.length + updated.length === resourceStructureTouched?.size) {
+        resourceStructureCandidate = { beforeCount: oldSlots.size, afterCount: afterCount,
+          removed: resourceStructureRemoved, added, updated };
+      } else resourceStructureCandidate = undefined;
+    } else if (!resourceStructureAllowed) {
+      resourceStructureCandidate = undefined; this.#resourceStructureReady = false;
+    }
     if(reindexPiles){this.pileSlots.clear();for(let i=0;i<next.piles.length;i++)this.pileSlots.set(next.piles[i]!.id,i);}
     let resourceIndices: number[] | undefined;
     if (changedResourceIds) {
@@ -821,6 +1015,8 @@ export class SnapshotDecoder {
     // Publish only at the confirmed boundary, after every guard and planet commit.
     if (message.kind === 'checkpoint' || !previous) this.#snapshotChanges.reset(next, message.epoch, message.revision);
     else this.#snapshotChanges.append(previous, next, message.epoch, message.revision, resourceIndices, changedTileIndices);
+    if (message.kind === 'checkpoint' || !previous) this.#resourceStructure.reset(next, message.epoch, message.revision, this.#resourceStructureCount);
+    else this.#resourceStructure.append(previous, next, message.epoch, message.revision, resourceStructureCandidate, changedTileIndices, this.#resourceStructureCount);
     return { status: 'applied', world: next, replaced };
   }
 }
