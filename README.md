@@ -1,5 +1,7 @@
 # Lisière
 
+**V247 — prototype de réception écarté, produit V242 et schéma 198 conservés.** Le [circuit de validation isolée](docs/development/validated-sparse-worker-v247.md) passe ses oracles natifs et sauvegardes contrôlées, mais son [coût complet est défavorable](docs/history/validation-validated-sparse-worker-v247.md). Aucun FPS ajouté ; 62 références exactes, cible proche240FPS à6× ouverte. Les refontes autonomes continuent avec commits locaux sans push. Les repères suivants sont historiques.
+
 **V231 — diagnostic matériel, schéma 198 inchangé.** L'[attribution des coûts](docs/development/render-throughput-attribution-v231.md) cible les longues applications de scène ; les montages hors thread essayés n'apportent pas de gain et sont écartés. Produit V230 et 62 références conservés, cible proche de 240 FPS à 6× ouverte ; [preuves et limites](docs/history/validation-render-throughput-attribution-v231.md). Les refontes autonomes continuent, avec commits locaux sans push.
 
 **V230 — refonte locale du rendu, schéma198 inchangé.** Le [cœur de scène](docs/development/scene-render-core-v230.md) est séparé des interactions DOM, avec rendu, sauvegarde et récupération GPU contrôlés. Les62 références restent exactes. Les [preuves](docs/history/validation-scene-render-core-v230.md) ne démontrent aucun gain FPS stable ; le travail autonome continue sur le débit du vrai rendu dans un worker, encore privé, pour rapprocher Les Aulnes de240FPS à6×.

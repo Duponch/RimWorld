@@ -1,0 +1,30 @@
+# V247 — lecteur strict isolé et paquet sparse original
+
+Refonte privée de réception, sans règle RimWorld nouvelle. Le coût complet la rejette : produit V242, schéma 198 et références publiques conservés, aucun GAME/build/promotion ni FPS supplémentaire.
+
+Les sources primaires HTML déjà consultées définissent la [sérialisation structurée](https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializeinternal), les [Workers dédiés](https://html.spec.whatwg.org/multipage/workers.html#dedicatedworker) et les [MessagePorts](https://html.spec.whatwg.org/multipage/web-messaging.html#message-ports). La mémoire du clone conserve cycles et alias internes ; elle ne conserve pas les identités entre realms, n'établit pas une propriété readonly et n'élimine pas le coût d'un second hop. SharedArrayBuffer conserve un backing store partagé.
+
+La factory MAIN possède deux handles fixes, Source et Validator, et transfère les endpoints d'un MessageChannel privé. Le Validator exécute le SnapshotDecoder RAW entier puis renvoie le **paquet original et son verdict**, jamais son World reconstruit N. Tous les Response, y compris replies/faults/order-options, suivent la même FIFO ; deux ports indépendants n'offriraient pas cet ordre global. L'ACK APPLIED suit le codec et les callbacks MAIN, avec télémétrie primitive constante sans attente, drop ni seuil de débit. Le [terminate](https://html.spec.whatwg.org/multipage/workers.html#dom-worker-terminate) vise le handle concerné ; aucune cascade synchrone de terminaison d'enfant n'est présumée, MAIN tente explicitement les deux arrêts.
+
+Le codec MAIN reconstruit les mêmes collections, valeurs, ordre de propriétés et alias, ferme le graphe natif plain puis publie ses journaux locaux. [Object.freeze](https://tc39.es/ecma262/multipage/fundamental-objects.html#sec-object.freeze) et [SetIntegrityLevel](https://tc39.es/ecma262/multipage/ordinary-and-exotic-objects-behaviours.html#sec-setintegritylevel) ferment les propriétés propres/extensibilité, sans fermer récursivement les descendants ni les slots internes Map/Set/buffers. Le propriétaire parcourt donc les nouvelles branches ; les receipts des copies issues d'arrays fermées évitent une seconde lecture des survivants, mais les vrais slice/freeze N restent payés.
+
+Map/Set/Date/buffers/vues accessibles depuis le World publié sont hors domaine plain : repli RAW monotone après préflight sans gel partiel. Le buffer Float64 de growth transitoire est consommé séparément ; sa contrepartie Shared déclenche le repli MAIN. Les closures et constructeurs capturés ne confèrent aucun droit à un raw flag/getter/Proxy ; le mandat vient uniquement du canal fixe. Les journaux natifs ont des stores/callees capturés distincts du RAW, pour qu'une fuite antérieure via WeakMap.get RAW ne puisse fabriquer un witness natif. Leurs readers composent la vue présentée A→C, même avec D déjà adopté.
+
+Le nouveau contrat change explicitement deux droits : World natif présenté readonly, règles canoniques du realm isolé faisant autorité. Les mutations arbitraires des catalogues/caches MAIN ne sont pas supportées par cette factory ; elles ne modifient déjà pas le producteur Worker. Le standalone SnapshotDecoder reste RAW complet et mutable. La gate de primordials MAIN protège la reconstruction, pas une parité avec tous les catalogues MAIN altérés. Une mismatch observée reste désactivée sur le canal jusqu'au vrai restart ; un checkpoint ne réhabilite pas une provenance perdue.
+
+Source primaire locale : `node_modules/vite/dist/node/chunks/node.js:25591` refuse explicitement `Circular worker imports detected`. Un Worker important le canonical Snapshot contenant sa propre factory ramènerait les URLs Worker dans son graph. La reprise utilise donc un Snapshot RAW entier sans factory dans les deux realms Worker ; MAIN garde l'unique module canonique contenant codec/journaux. Inverses entiers et typage ne sont pas un build produit réussi ; aucun build de promotion n'a été exécuté après le rejet.
+
+La cause étudiée diffère des essais antérieurs : [V229](scene-reconciliation-v229.md) matérialisait un miroir générique plus cher que le lecteur ; [V234](native-resource-ownership-v234.md) ajoutait la propriété Resource en conservant gardes/namespace MAIN ; [V235](direct-render-distribution-v235.md) distribuait à deux lecteurs stricts et rendait hors thread. V247 conserve un seul strict reader isolé et aucun World N relayé, mais ajoute reconstruction/fermeture MAIN et second clone sparse. Ces différences justifiaient une mesure nouvelle, sans invalider les rejets précédents ni présumer un avantage de langage/thread.
+
+Le banc natif séparé des oracles, un cycle ABBA par corpus, chauffe8/mesure56, donne :
+
+| Charge | Adoption MAIN moyenne | Request→fin callback | Checkpoint froid |
+|---|---:|---:|---:|
+| Aulnes | 3,825→10,878 ms | 9,154→23,682 ms (+158,71 %) | 203,657→511,738 ms |
+| mixed | 1,767→17,819 ms | 8,886→32,666 ms (+267,59 %) | 79,475→312,830 ms |
+
+Le callback comprend Index/Nature V242 partiels, pas le rendu GPU/Resource/Overview complet ni UI/audio GAME. Le chrono request→reply séparé inclut l'envoi ACK MAIN sans attendre son retour ; il est également défavorable. Les corpus sont préparés et livrés sériellement : leur latence n'est ni un FPS ni une vraie vitesse6×. Les oracles indépendants sont absents du coût.
+
+Le rapport PASS du 7 octobre reste une mesure fortement défavorable, sources/public exacts, erreurs vides et Workers fermés. Il ne localise pas à lui seul la taxe entre gates, propriétaire, clones et files ; aucun composant ne reçoit une attribution causale inventée. Refus/stale forgés de snapshots n'ont pas été qualifiés par le corpus valide ou par le refus d'un mauvais load source ; leur petit oracle proposé demeure non exécuté et inutile pour promouvoir une piste déjà rejetée. Aucune panne GPU ni horizon long n'est certifié.
+
+La variante NativeFastMain reste une étude conditionnelle, sans code/campagne engagés ni gain acquis. Le rejet V247 interdit de rejouer ce montage inchangé ou de déduire des FPS d'un simple déplacement du garde hors MAIN.
