@@ -3,7 +3,7 @@ import { plantLeafless } from '../sim/plant-life';
 import { harvestable } from '../sim/plants';
 import type { Resource,World } from '../sim/types';
 import {readSnapshotChanges} from '../bridge/snapshot-changes';
-import {NaturalPresentationEvents} from './natural-presentation-events';
+import {NaturalPresentationEvents,type NaturalObservation} from './natural-presentation-events';
 
 type Shape=Pick<Resource,'id'|'kind'|'x'|'z'|'stone'|'species'>&{ripe:boolean;leafless:boolean;size:number};
 export type NaturalPresentationChange = { resource: Resource | undefined; size: number };
@@ -62,6 +62,20 @@ export class NaturalResourcePresentation {
       ?mergeSources(journal.resourceIndices,this.timedSlots):undefined);
     if(!timed&&!partial){this.timedSlots=[];this.timedSources.clear();this.sourceShapes=[];}
     const nextNatural=!timed&&!partial?[] as Resource[]:undefined;
+    let fullEventsInitialized=false,fullObservations:ReadonlyMap<number,NaturalObservation>|undefined;
+    if(nextNatural&&immutableSnapshot){
+      // Capture the current partition before forecasting; the complete shape
+      // traversal below still compares each original ordinal and current ref.
+      let shape=0,eligible=false;
+      this.sourceShapes=world.resources.map(r=>{
+        if(isResidentCrop(r))return -1;
+        if(((r.growth??1)!==1||r.plantLife?.leaflessAt!==undefined)&&(r.species!==undefined||r.kind==='healroot'))eligible=true;
+        return shape++;
+      });
+      if(eligible)fullObservations=this.events.initialize(world,this.sourceShapes,true);
+      else this.events.clear();
+      fullEventsInitialized=true;
+    }
     if(partial)for(const sourceIndex of journal!.resourceIndices){
       const shapeIndex=this.sourceShapes[sourceIndex]!;
       if(shapeIndex>=0)this.naturalResources[shapeIndex]=world.resources[sourceIndex]!;
@@ -86,8 +100,9 @@ export class NaturalResourcePresentation {
       // Immature growth and temporary leaf loss can change with world.tick
       // even while the decoder keeps the same Resource object.
       if(previous?.[sourceIndex]===r&&old?.id===r.id&&stable)continue;
-      const size=floraSize(world,r);
-      const ripe=r.kind==='berries'&&harvestable(world,r),leafless=plantLeafless(world,r);
+      const observation=eventRead?.observations.get(r.id)??fullObservations?.get(r.id);
+      const size=observation?.size??floraSize(world,r);
+      const ripe=observation?.ripe??(r.kind==='berries'&&harvestable(world,r)),leafless=observation?.leafless??plantLeafless(world,r);
       if(reset||!old||old.size!==size||old.species!==r.species||old.id!==r.id||old.kind!==r.kind||old.x!==r.x||old.z!==r.z||old.stone!==r.stone||old.ripe!==ripe||old.leafless!==leafless){
         changed=true;this.changes.set(r.id,{resource:r,size});
         if(partial||timed)this.shapes[shapeIndex]={size,species:r.species,id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,leafless,ripe};
@@ -100,12 +115,12 @@ export class NaturalResourcePresentation {
     }
     this.snapshotTimeInvariant=immutableSnapshot&&timeInvariant;
     if(!changed&&index===this.shapes.length){
-      if(!eventRead)this.initializeEvents(world,immutableSnapshot);return;
+      if(!eventRead&&!fullEventsInitialized)this.initializeEvents(world,immutableSnapshot);return;
     }
     // The private partition contains current Resource references even after a
     // silent patch. Never expose its mutable array to a previously drawn view.
     if(partial||timed){
-      if(!eventRead)this.initializeEvents(world,immutableSnapshot);
+      if(!eventRead&&!fullEventsInitialized)this.initializeEvents(world,immutableSnapshot);
       return {...world,resources:this.naturalResources.slice()};
     }
     const natural=this.naturalResources;
@@ -114,9 +129,10 @@ export class NaturalResourcePresentation {
     this.shapes=natural.map((r,i)=>{
       const old=this.shapes[i];
       if(old?.id===r.id&&!this.changes.has(r.id))return old;
-      return {size:this.changes.get(r.id)?.size??floraSize(world,r),species:r.species,id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,leafless:plantLeafless(world,r),ripe:r.kind==='berries'&&harvestable(world,r)};
+      const observation=fullObservations?.get(r.id);
+      return {size:this.changes.get(r.id)?.size??observation?.size??floraSize(world,r),species:r.species,id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,leafless:observation?.leafless??plantLeafless(world,r),ripe:observation?.ripe??(r.kind==='berries'&&harvestable(world,r))};
     });
-    if(!eventRead)this.initializeEvents(world,immutableSnapshot);
+    if(!eventRead&&!fullEventsInitialized)this.initializeEvents(world,immutableSnapshot);
     return {...world,resources:natural.slice()};
   }
 }

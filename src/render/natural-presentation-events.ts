@@ -1,4 +1,4 @@
-import {readSnapshotChanges,type SnapshotChanges} from '../bridge/snapshot-changes';
+import {readSnapshotChanges,sameSnapshotChangeDomain,type SnapshotChanges} from '../bridge/snapshot-changes';
 import {FLORA_DEFINITIONS} from '../sim/biome-flora';
 import {plantLeafless} from '../sim/plant-life';
 import {harvestable,isPlant,plantFertility,PLANT_DEFINITIONS} from '../sim/plants';
@@ -17,8 +17,9 @@ type Clock={tick:number;civil:number;width:number;height:number;schema:number;
   adoptedAt:number|undefined;calendarOrigin:number|undefined;naturalBoundary:number;artificialBoundary:number};
 type Inputs=Pick<Resource,'id'|'kind'|'species'|'x'|'z'|'growth'|'growthTick'|'growthLight'|'growthThermalFactor'>
   &{leaflessAt:number|undefined;fertility:number;roofed:boolean};
-type Forecast={input:Inputs;plannedAt:number;deadline:number|undefined};
-export type NaturalEventRead={readonly indices:readonly number[];readonly changes:SnapshotChanges};
+export type NaturalObservation=Readonly<{size:number;ripe:boolean;leafless:boolean}>;
+type Forecast={input:Inputs;plannedAt:number;deadline:number|undefined;observation:NaturalObservation};
+export type NaturalEventRead={readonly indices:readonly number[];readonly changes:SnapshotChanges;readonly observations:ReadonlyMap<number,NaturalObservation>};
 
 function captureClock(world:World):Clock|undefined {
   const {tick,width,height,schemaVersion:schema,gameProfile,climate}=world;
@@ -82,10 +83,12 @@ function sameInputs(a:Inputs,b:Inputs):boolean {
     &&Object.is(a.fertility,b.fertility)&&a.roofed===b.roofed;
 }
 const tracked=(r:Resource):boolean=>r.plantLife?.leaflessAt!==undefined||isPlant(r)&&(r.growth??1)!==1;
+const observe=(world:World,r:Resource):NaturalObservation=>Object.freeze({
+  size:floraSize(world,r),ripe:r.kind==='berries'&&harvestable(world,r),leafless:plantLeafless(world,r)});
 
 /** Only the future tick in this local shadow is changed. No shadow, Resource,
  * tile, roof array or callback survives this synchronous planning read. */
-function nextDeadline(world:World,probe:World,r:Resource,input:Inputs,clock:Clock):number|undefined {
+function nextDeadline(world:World,probe:World,r:Resource,input:Inputs,clock:Clock,observation:NaturalObservation):number|undefined {
   let next:number|undefined;
   if(plantLeafless(world,r)){
     const leaflessAt=input.leaflessAt!,expiry=leaflessAt+TICKS_PER_DAY;
@@ -111,7 +114,7 @@ function nextDeadline(world:World,probe:World,r:Resource,input:Inputs,clock:Cloc
   // The endpoint remains at most63 ticks away, inside the same exact bracket.
   const refresh=world.tick+CERTIFICATION_TICKS+input.id%CERTIFICATION_TICKS;
   next=next===undefined?Math.min(boundary,refresh):Math.min(next,boundary,refresh);
-  const size=floraSize(world,r),ripe=r.kind==='berries'&&harvestable(world,r);
+  const {size,ripe}=observation;
   if(!Number.isFinite(size))throw new Error('Unproved current shape.');
   const changedAt=(tick:number):boolean=>{
     probe.tick=tick;
@@ -140,6 +143,10 @@ export class NaturalPresentationEvents {
   private forecastClock:Clock|undefined;
   private forecasts=new Map<number,Forecast>();
   private rebuildForecasts=false;
+  // A single pending synchronous edge, never an adoption history. Direct
+  // initialization of a third publication cannot borrow another edge's gate.
+  private reconcileEdge:{from:WeakRef<World>;to:WeakRef<World>}|undefined;
+  private identities:number[]=[];
   private natural:boolean[]=[];
   private inputs:Array<Inputs|undefined>=[];
   private roofs:number[]=[];
@@ -149,10 +156,10 @@ export class NaturalPresentationEvents {
   private deadlines=new Float64Array(0);
 
   clear():void {
-    if(!this.clock&&!this.forecastClock&&!this.inputs.length&&!this.heap.length)return;
+    if(!this.clock&&!this.forecastClock&&!this.inputs.length&&!this.heap.length&&!this.identities.length)return;
     this.clock=undefined;this.natural=[];this.inputs=[];this.roofs=[];this.cells.clear();
     this.heap=[];this.positions=new Int32Array(0);this.deadlines=new Float64Array(0);
-    this.forecastClock=undefined;this.forecasts.clear();this.rebuildForecasts=false;
+    this.forecastClock=undefined;this.forecasts.clear();this.rebuildForecasts=false;this.reconcileEdge=undefined;this.identities=[];
   }
   private before(a:number,b:number):boolean {
     return this.deadlines[a]!<this.deadlines[b]!||this.deadlines[a]===this.deadlines[b]&&a<b;
@@ -190,7 +197,48 @@ export class NaturalPresentationEvents {
     const cell=input.z*this.clock!.width+input.x;
     let occupants=this.cells.get(cell);if(!occupants){occupants=new Set();this.cells.set(cell,occupants);}occupants.add(source);
   }
-  initialize(world:World,sourceShapes:readonly number[],immutableSnapshot:boolean):void {
+  private growCapacity(count:number):void {
+    if(this.positions.length>=count)return;
+    // A full rebuild owns exactly N slots. Prefix+append never shrinks N, so
+    // growth here owns at most 2N slots, independent of nextId or map dimensions.
+    const capacity=Math.max(count,this.positions.length*2),positions=new Int32Array(capacity);
+    positions.fill(-1);positions.set(this.positions);
+    const deadlines=new Float64Array(capacity);deadlines.set(this.deadlines);
+    this.positions=positions;this.deadlines=deadlines;
+  }
+  private reconcileFullPrefix(world:World,sourceShapes:readonly number[],clock:Clock,
+    roofs:readonly number[],identities:number[]):ReadonlyMap<number,NaturalObservation>|undefined {
+    this.clock=clock;this.roofs=[...roofs];
+    this.natural.length=world.resources.length;this.inputs.length=world.resources.length;
+    this.growCapacity(world.resources.length);
+    const observations=new Map<number,NaturalObservation>(),probe={...world};
+    try {
+      for(let source=0;source<world.resources.length;source++){
+        const r=world.resources[source]!,old=this.inputs[source],natural=sourceShapes[source]!>=0;
+        this.natural[source]=natural;
+        if(!natural||!tracked(r)){
+          this.unlink(source,old);this.inputs[source]=undefined;this.schedule(source,undefined);this.forecasts.delete(r.id);continue;
+        }
+        // IDs/classes are captured for every source. Only natural tracked
+        // sources can borrow a forecast/heap/cell entry, and each rereads all
+        // its current growth, civil, roof, fertility and leaf dependencies.
+        const input=captureInputs(world,r);if(!input)throw new Error('Unproved plant inputs.');
+        const forecast=this.forecasts.get(input.id);
+        const retained=old&&forecast&&forecast.plannedAt<=clock.tick
+          &&(forecast.deadline===undefined||clock.tick<forecast.deadline)
+          &&sameInputs(old,input)&&sameInputs(forecast.input,input)?forecast:undefined;
+        if(retained){
+          this.inputs[source]=retained.input;observations.set(input.id,retained.observation);continue;
+        }
+        this.unlink(source,old);this.inputs[source]=input;this.link(source,input);
+        const observation=observe(world,r),deadline=nextDeadline(world,probe,r,input,clock,observation);
+        this.schedule(source,deadline);this.forecasts.set(input.id,{input,plannedAt:clock.tick,deadline,observation});
+        observations.set(input.id,observation);
+      }
+      this.identities=identities;this.forecastClock=clock;return observations;
+    }catch{this.clear();return;}
+  }
+  initialize(world:World,sourceShapes:readonly number[],immutableSnapshot:boolean):ReadonlyMap<number,NaturalObservation>|undefined {
     if(!immutableSnapshot||!readSnapshotChanges(world,world)){this.clear();return;}
     const clock=captureClock(world),roofs=roofCells(world);
     if(!clock||!roofs||sourceShapes.length!==world.resources.length){this.clear();return;}
@@ -199,8 +247,21 @@ export class NaturalPresentationEvents {
     // Direct initialization/checkpoint restoration cannot renew that witness.
     const reusable=this.rebuildForecasts&&previous&&sameContext(previous,clock)&&clock.tick>=previous.tick
       &&clock.civil===previous.civil+(clock.tick-previous.tick)?this.forecasts:undefined;
-    this.rebuildForecasts=false;
-    const forecasts=new Map<number,Forecast>(),ids=new Set<number>();
+    // Full ownership/order evidence: every current ID is scanned; a prefix is
+    // retained only when all old ordinals and crop/natural classes match.
+    const identities:number[]=[],ids=new Set<number>();
+    const edge=this.reconcileEdge,from=edge?.from.deref();
+    let prefix=edge?.to.deref()===world&&!!from&&sameSnapshotChangeDomain(from,world)
+      &&!!reusable&&this.identities.length<=world.resources.length;
+    this.reconcileEdge=undefined;this.rebuildForecasts=false;
+    for(let source=0;source<world.resources.length;source++){
+      const id=world.resources[source]!.id;
+      if(!Number.isSafeInteger(id)||id<=0||ids.has(id)){this.clear();return;}
+      ids.add(id);identities.push(id);
+      if(prefix&&source<this.identities.length&&(id!==this.identities[source]||this.natural[source]!== (sourceShapes[source]!>=0)))prefix=false;
+    }
+    if(prefix)return this.reconcileFullPrefix(world,sourceShapes,clock,roofs,identities);
+    const forecasts=new Map<number,Forecast>(),observations=new Map<number,NaturalObservation>();
     this.clock=clock;this.natural=sourceShapes.map(shape=>shape>=0);this.roofs=[...roofs];
     this.cells.clear();this.heap=[];
     this.inputs=new Array(world.resources.length);this.positions=new Int32Array(world.resources.length);this.positions.fill(-1);
@@ -209,8 +270,7 @@ export class NaturalPresentationEvents {
     try {
       for(let source=0;source<world.resources.length;source++){
         const r=world.resources[source]!;
-        if(!Number.isSafeInteger(r.id)||r.id<=0||ids.has(r.id))throw new Error('Ambiguous forecast identity.');
-        ids.add(r.id);
+
         if(!this.natural[source]||!tracked(r))continue;
         const input=captureInputs(world,r);if(!input)throw new Error('Unproved plant inputs.');
         // This is a new complete capture, even after a lost journal or source
@@ -219,9 +279,11 @@ export class NaturalPresentationEvents {
         const old=reusable?.get(input.id);
         const retained=old&&old.plannedAt<=clock.tick&&(old.deadline===undefined||clock.tick<old.deadline)
           &&sameInputs(old.input,input)?old:undefined;
-        const deadline=retained?retained.deadline:nextDeadline(world,probe,r,input,clock);
-        forecasts.set(input.id,{input,plannedAt:retained?retained.plannedAt:clock.tick,deadline});
-        this.inputs[source]=input;this.link(source,input);
+        const observation=retained?.observation??observe(world,r);
+        const deadline=retained?retained.deadline:nextDeadline(world,probe,r,input,clock,observation);
+        const forecast=retained??{input,plannedAt:clock.tick,deadline,observation};
+        forecasts.set(input.id,forecast);observations.set(input.id,observation);
+        this.inputs[source]=forecast.input;this.link(source,forecast.input);
         if(deadline!==undefined){
           this.deadlines[source]=deadline;this.positions[source]=this.heap.length;this.heap.push(source);
         }
@@ -229,7 +291,8 @@ export class NaturalPresentationEvents {
       // Current source order owns every handle. Linear heap construction avoids
       // N independent insertion walks when membership requires a full reindex.
       for(let position=Math.floor(this.heap.length/2)-1;position>=0;position--)this.down(position);
-      this.forecasts=forecasts;this.forecastClock=clock;
+      this.forecasts=forecasts;this.forecastClock=clock;this.identities=identities;
+      return observations;
     }catch{this.clear();}
   }
   read(from:World,world:World):NaturalEventRead|undefined {
@@ -243,6 +306,7 @@ export class NaturalPresentationEvents {
       // checkpoint revokes the old generation and consequently clears them.
       if(readSnapshotChanges(from,from)&&readSnapshotChanges(world,world)){
         this.clock=undefined;this.rebuildForecasts=true;
+        this.reconcileEdge=from!==world&&sameSnapshotChangeDomain(from,world)?{from:new WeakRef(from),to:new WeakRef(world)}:undefined;
       }
       else this.clear();
       return;
@@ -259,20 +323,26 @@ export class NaturalPresentationEvents {
     while(this.heap.length&&this.deadlines[this.heap[0]!]!<=world.tick){
       const source=this.heap[0]!;this.remove(source);affected.add(source);due.add(source);
     }
-    const indices=[...affected].sort((left,right)=>left-right),probe={...world};
+    const indices=[...affected].sort((left,right)=>left-right),probe={...world},observations=new Map<number,NaturalObservation>();
     try {
       for(const source of indices){
         if(!this.natural[source])continue;
         const r=world.resources[source]!,old=this.inputs[source];
         if(!tracked(r)){this.unlink(source,old);this.inputs[source]=undefined;this.schedule(source,undefined);this.forecasts.delete(r.id);continue;}
         const input=captureInputs(world,r);if(!input)throw new Error('Unproved plant inputs.');
-        if(old&&sameInputs(old,input)&&!due.has(source))continue;
+        if(old&&sameInputs(old,input)&&!due.has(source)){
+          const forecast=this.forecasts.get(r.id);
+          if(forecast&&forecast.plannedAt<=clock.tick&&(forecast.deadline===undefined||clock.tick<forecast.deadline))
+            observations.set(r.id,forecast.observation);
+          continue;
+        }
         this.unlink(source,old);this.inputs[source]=input;this.link(source,input);
-        const deadline=nextDeadline(world,probe,r,input,clock);
-        this.schedule(source,deadline);this.forecasts.set(input.id,{input,plannedAt:clock.tick,deadline});
+        const observation=observe(world,r);
+        const deadline=nextDeadline(world,probe,r,input,clock,observation);
+        this.schedule(source,deadline);this.forecasts.set(input.id,{input,plannedAt:clock.tick,deadline,observation});observations.set(input.id,observation);
       }
       this.clock=clock;this.forecastClock=clock;
-      return {indices,changes};
+      return {indices,changes,observations};
     }catch{this.clear();return;}
   }
 }
