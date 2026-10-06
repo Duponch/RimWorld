@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V231, schéma 198 inchangé :** [attribution CPU/GPU](development/render-throughput-attribution-v231.md), [recherche](research/render-throughput-attribution-v231.md), [preuves et limites](history/validation-render-throughput-attribution-v231.md). Produit V230 conservé après rejet des montages mesurés sans gain ; les longues applications de scène et l'adoption main restent prioritaires. Cible proche de 240 FPS à 6× ouverte.
+
 **V230, schéma198 inchangé :** [cœur de scène et hôte](development/scene-render-core-v230.md), [recherche](research/scene-render-core-v230.md), [preuves et limites](history/validation-scene-render-core-v230.md). Extraction locale contrôlée,62 références préservées, aucun gain FPS stable annoncé. Le vrai Core dans OffscreenCanvas est qualifié en privé sur32² ; le débit des Aulnes et l'intégration complète restent les prochaines étapes.
 
 **V229, schéma 198 inchangé :** [réconciliation végétale et signatures](development/scene-reconciliation-v229.md), [recherche](research/scene-reconciliation-v229.md), [preuves et limites](history/validation-scene-reconciliation-v229.md). Gain matériel local d'environ7 %,62 scènes préservées, sauvegarde/reprise contrôlée ; coût froid, pointes et240FPS restent ouverts. La suite qualifie copies et adoption hors main, sans nouvelle mécanique ni cadence réduite.

@@ -1,4 +1,6 @@
-# Validation courante — V230
+# Validation courante — V231
+
+**V231 — attribution matérielle, schéma 198 inchangé.** [Contrat](render-throughput-attribution-v231.md), [preuves et limites](../history/validation-render-throughput-attribution-v231.md). GPU frais, vrai GAME avec audio/HUD, sauvegarde/reprise et oracles agricoles passent par reprises distinctes. Offscreen naturel −13,36 % et worker agricole −1,69 % : aucune promotion ni gain FPS livré, produit V230 conservé. Les 62 références restent exactes ; longues applications de scène, adoption main et budget 240 FPS restent ouverts.
 
 **V230 — séparation locale du rendu, schéma198 inchangé.** [Contrat](scene-render-core-v230.md), [preuves et limites](../history/validation-scene-render-core-v230.md). Oracles de scène complets,12 fichiers/48 réussites/un ignoré, typage/build/présentation et parcours natif avec sauvegarde/reprise et vraie perte GPU passent.62 payloads/métadonnées exacts. Un seul cycle ABBA local favorable se chevauche ; aucun gain FPS stable ni240FPS certifié. Les expériences défavorables restent privées ; le vrai Core Offscreen32² est qualifié séparément, sans mesure des Aulnes ou intégration complète du jeu.
 

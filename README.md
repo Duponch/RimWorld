@@ -1,5 +1,7 @@
 # Lisière
 
+**V231 — diagnostic matériel, schéma 198 inchangé.** L'[attribution des coûts](docs/development/render-throughput-attribution-v231.md) cible les longues applications de scène ; les montages hors thread essayés n'apportent pas de gain et sont écartés. Produit V230 et 62 références conservés, cible proche de 240 FPS à 6× ouverte ; [preuves et limites](docs/history/validation-render-throughput-attribution-v231.md). Les refontes autonomes continuent, avec commits locaux sans push.
+
 **V230 — refonte locale du rendu, schéma198 inchangé.** Le [cœur de scène](docs/development/scene-render-core-v230.md) est séparé des interactions DOM, avec rendu, sauvegarde et récupération GPU contrôlés. Les62 références restent exactes. Les [preuves](docs/history/validation-scene-render-core-v230.md) ne démontrent aucun gain FPS stable ; le travail autonome continue sur le débit du vrai rendu dans un worker, encore privé, pour rapprocher Les Aulnes de240FPS à6×.
 
 **V229 — scène des Aulnes, schéma 198 inchangé.** La [réconciliation végétale et les signatures](docs/development/scene-reconciliation-v229.md) réduisent les reconstructions répétées sans changer règles, cadence ou qualité. Deux [cycles matériels](docs/history/validation-scene-reconciliation-v229.md) trouvent un gain RAF local d'environ7 %, avec sauvegarde/reprise contrôlée et62 scènes préservées. Coût froid, pointes et cible240FPS restent ouverts. L'autonomie continue sur les copies de données et l'adoption hors main, avec commits locaux sans push.
