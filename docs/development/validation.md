@@ -1,4 +1,6 @@
-# Validation courante — V236
+# Validation courante — V237
+
+**V237 — diagnostic privé, schéma 198 inchangé.** [Contrat](natural-compact-v237.md), [recherche](../research/natural-compact-v237.md), [preuve](../history/validation-natural-compact-v237.md). Rouge initial de l'observateur localisé à une queue Crop inactive, reprise distincte avec 16 cas ciblés et oracles natifs exacts. Deux cycles CPU ne montrent pas de gain complet utile sur Les Aulnes ; piste écartée sans GAME ou intégration. Produit V233 et 62 références exacts, aucun gain FPS ajouté ; cible 240 FPS à 6× ouverte. Prochain comptage causal préparé mais non exécuté.
 
 **V236 — diagnostic privé, schéma198 inchangé.** [Contrat](render-room-terrain-v236.md), [recherche](../research/render-room-terrain-v236.md), [preuve](../history/validation-render-room-terrain-v236.md). Reprise du banc typée et oracles natifs exacts ; deux cycles CPU complets favorables sur Aulnes/mixed. GAME ordinaire sans gain FPS utile, candidat écarté. Produit V233/62 références conservés ; cible240FPS/6× et résultat Nature compact restent à qualifier.
 

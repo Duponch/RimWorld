@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**Diagnostic V237, schéma 198 inchangé.** Le [résultat naturel compact](../development/natural-compact-v237.md) conserve les sorties contrôlées mais [n'améliore pas utilement le coût complet sur Les Aulnes](../history/validation-natural-compact-v237.md). Il reste privé ; jeu V233 et 62 scènes conservés. Aucun nouveau contenu ou gain FPS. La suite attribue le travail encore effectué par la présentation des plantes, avant une nouvelle refonte mesurée.
+
 **Diagnostic V236, schéma198 inchangé.** L'expérience de [terrain des pièces](../development/render-room-terrain-v236.md) est exacte sur ses contrôles mais [n'améliore pas les FPS du jeu de façon utile](../history/validation-render-room-terrain-v236.md). Elle reste privée ; V233 et les62 scènes sont conservés. Aucun contenu ou gain FPS ajouté. La suite cible les matérialisations naturelles complètes, avec parité des sorties et coût complet à qualifier.
 
 **Diagnostic V235, schéma 198 inchangé.** Le [trajet graphique direct](../development/direct-render-distribution-v235.md) produit [moins d'images sur la référence](../history/validation-direct-render-distribution-v235.md) et reste privé. Jeu V233 et 62 scènes conservés ; aucun gain FPS ajouté. Les refontes sur Les Aulnes restent prioritaires, notamment le travail local d'application, avec qualité et règles inchangées.

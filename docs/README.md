@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V237, diagnostic, schéma 198 inchangé :** [résultat naturel compact](development/natural-compact-v237.md), [recherche](research/natural-compact-v237.md), [preuves et rejet](history/validation-natural-compact-v237.md). Sorties exactes mais aucun gain utile de coût complet sur Les Aulnes ; aucun GAME supplémentaire ou gain FPS ajouté. Produit V233 conservé. La suite attribue les captures et forecasts restants avant une nouvelle refonte.
+
 **V236, diagnostic, schéma198 inchangé :** [terrain des pièces](development/render-room-terrain-v236.md), [recherche](research/render-room-terrain-v236.md), [preuves et rejet](history/validation-render-room-terrain-v236.md). Oracles et coût CPU favorables, mais aucun gain FPS utile en GAME. Produit V233 conservé ; la prochaine refonte vise le résultat naturel compact, avec coûts complets et replis exacts avant promotion.
 
 Le [point nocturne du 6 octobre](history/autonomous-performance-2026-10-06.md) distingue modifications intégrées et essais rejetés. Une comparaison directe V225→V233 trouve 107,8→143,6 images RAF/s sur la même vue des Aulnes (+33,2 % local), avec qualité conservée ; cible 240 FPS et performance de toutes les parties restent ouvertes.
