@@ -1,4 +1,6 @@
-# Validation courante — V250
+# Validation courante — V251
+
+**V251 — lecteur scène unique qualifié puis écarté.** [Contrat](single-reader-scene-v251.md), [preuves](../history/validation-single-reader-scene-v251.md). Produit V242/schéma 198 conservés.17cas, reprises natives et audit de contexte passent après reprises distinctes ; les rouges de type, réseau et métadonnées restent conservés. Core seul A/B/B/A :146,75→131,1875images soumises/s(−10,60%), vitesse4,8972→4,5698× ; aucun FPS livré, port GAME ou second banc inchangé. Sources/62références/65fichiers exacts, workers et origines5264/5265 fermés. Suite : attribuer les phases actuelles de scène avant refonte des données, sans gain présumé.
 
 **V250 — source exacte moins chère, aucun gain GAME utile.** [Contrat](source-mutation-v250.md), [preuves](../history/validation-source-mutation-v250.md). Produit V242/schéma 198 conservés. Typage,39cas, quatre oracles natifs, huit cohortes coût et quatre GAME matériels avec sauvegarde/reprise passent. Aulnes circuit−18,92 %, froid+5,96 %, GAME118,625→117,8125RAF/s (−0,68 %), plages chevauchées et p95 neutre. Candidat écarté, aucun FPS ajouté, aucun second banc inchangé. Sources/62références/65fichiers publics exacts, workers et origines5260–5263 fermés. Suite : étude d'un lecteur scène unique et des projections MAIN, sans adoption présumée.
 
