@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+V255, produit V242 et schéma 198 conservés : [captures Room source](development/source-room-capture-v255.md), [recherche](research/source-room-capture-v255.md), [preuves et rejet du candidat seul](history/validation-source-room-capture-v255.md). La simulation progresse plus vite, mais les FPS régressent ; aucun gain livré. Priorité à une refonte réduisant aussi les applications MAIN, sans second banc inchangé. Les 62 références restent exactes ; objectif 240 FPS ouvert, relance automatique en pause et aucun push.
+
 V246, schéma 198 inchangé, écarte le [prototype de registre Resource](development/native-namespace-v246.md) après deux [oracles négatifs](history/validation-native-namespace-v246.md). La propriété partielle ne suffit pas ; la suite étudie celle du graphe natif entier et ses dépendances. Produit V242 conservé, aucun FPS ajouté.
 
 V245, schéma 198 inchangé, attribue les [phases de réception stricte](development/adoption-phases-v245.md) dans Les Aulnes ; [preuves](history/validation-adoption-phases-v245.md). Registre d'identités et contrôle végétal expliquent une part importante du coût, sans nouveau gain livré. Suite sur une refonte combinée préservant propriété, ordre et gardes ; produit V242 conservé.
