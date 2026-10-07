@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-V256, produit V242 et schéma 198 conservés : [projection végétale source/affichage](development/source-vegetal-projection-v256.md), [recherche](research/source-vegetal-projection-v256.md), [preuves et rejet](history/validation-source-vegetal-projection-v256.md). Coût complet Aulnes neutre, aucun FPS ajouté ; l'oracle Aulnes passe hors ligne, mixed demeure incomplet. Suite sur les réinitialisations structurelles ordinaires, sans rejouer ce candidat inchangé. Les 62 références restent exactes ; objectif 240 FPS ouvert, relance automatique en pause et aucun push.
+V257, produit V242 et schéma 198 conservés : [projection structurelle source/affichage](development/source-structural-projection-v257.md), [recherche](research/source-structural-projection-v257.md), [preuves et rejet](history/validation-source-structural-projection-v257.md). Dix composants et coût complet passent ; callback Aulnes −11,46 %, circuit −1,99 %, seuil préalable non atteint et aucun FPS ajouté. Suite par profil V8 du thread principal en jeu réel, sans rejouer ce candidat inchangé. Les 62 références restent exactes ; objectif 240 FPS ouvert, relance automatique en pause et aucun push.
 
 V246, schéma 198 inchangé, écarte le [prototype de registre Resource](development/native-namespace-v246.md) après deux [oracles négatifs](history/validation-native-namespace-v246.md). La propriété partielle ne suffit pas ; la suite étudie celle du graphe natif entier et ses dépendances. Produit V242 conservé, aucun FPS ajouté.
 
