@@ -1,0 +1,22 @@
+# V258 — lire les piles MAIN avant une nouvelle refonte
+
+Un profil réel et ses analyses offline passent ; aucun changement produit ou gain FPS. Produit V242/schéma 198 conservés. [Contrat](../development/main-v8-attribution-v258.md), [preuves](../history/validation-main-v8-attribution-v258.md).
+
+La question est devenue concrète après les coûts sériels neutres ou insuffisants : où le MAIN dépense-t-il effectivement son temps pendant Les Aulnes à 6×, sans ajouter de timers par fonction ou entité ? V258 utilise le profiler V8 de la Page possédée, avec Source/Decoder/Core/Three historiques et UI/audio/music actifs. Le profil Source V254 et ce nouveau profil MAIN ont des taxes et doses différentes ; leurs durées ne forment pas un budget commun.
+
+Les références primaires réutilisées sont :
+
+- Le [protocole CDP JavaScript](https://github.com/ChromeDevTools/devtools-protocol/blob/master/pdl/js_protocol.pdl) définit samples comme feuilles de pile, timeDeltas en microsecondes, CallFrame line/column à partir de 0 et PositionTicks line à partir de 1. Ces domaines restent distincts ; aucune durée par ligne ne provient de PositionTicks.
+- L’[implémentation V8 du profiler](https://github.com/v8/v8/blob/main/src/inspector/v8-profiler-agent-impl.cc) décrit le profil échantillonné. Les poids d’intervalles sont approximatifs ; le brut et ses bords restent la source primaire, pas une moyenne présentée comme temps CPU exact.
+- Les [horloges HR-Time3](https://www.w3.org/TR/hr-time-3/#time-origin) distinguent les origines des contextes. Les témoins V258 contrôlent l’horloge Page et des plages d’offset compatibles ; ils ne démontrent pas une origine commune avec les timestamps V8.
+- Les sources les plus précises pour Three sont les builds **effectivement capturés et égaux aux fichiers gelés locaux**, avec maps, AST et ancres conservés. Les homonymes dans les fichiers src, le nom `update` seul ou un regex de chemin ne suffisent pas à attribuer une classe.
+
+Le premier résumé classait 3 955,510 ms en Three-other parce que les maps résolvent vers `build/three.webgpu.js`. Ce résidu inclut des opérations Three pendant applyWorld ; il n’établit ni bindings nuls ni un budget renderer de 3 955 ms. Le raffinement distingue d’abord les racines métier puis les classes. Une correction d’observateur empêche ensuite l’héritage à travers du JS local jusqu’à Animation.start ; elle conserve phases, poids et profil original.
+
+Le poste large vérifié est la préparation par objet/passe : `_renderObjectDirect` appelle géométries, nodes, bindings et pipeline avant draw. `Bindings._update` visite storage/UBO/textures/samplers ; `UniformsGroup.update` relit ses valeurs et ne publie que les changements. `WebGPUBindingUtils.updateBinding` atteint queue.writeBuffer et fusionne déjà les ranges contigus. Un cache ajouté après FULL paierait encore ces parcours.
+
+La remontée des 245 samples natifs writeBuffer distingue 285,335 ms sous updateBinding et 108,726 ms sous attributs/storage. Ces poids sont inclus dans d’autres parents ; ils ne donnent ni octets, appels, cause de copie native ou durée GPU. Les ombres consomment également ces chemins. Le profil ne révèle pas l’identité des familles/meshes responsables ou la raison numérique de chaque changement.
+
+Le handler SimulationClient conserve aussi un résidu important. [MessageEvent::data de Chromium](https://raw.githubusercontent.com/chromium/chromium/main/third_party/blink/renderer/core/events/message_event.cc) montre un mécanisme possible de désérialisation à la lecture, mais cette source courante ne vérifie pas le commit exact de Chrome 153 capturé. Les samples à l’entrée/destructuration et au callsite adopt ne prouvent pas que ce résidu est intégralement du clone natif ou de la destructuration. Déplacer cette ligne ne serait pas une optimisation causale démontrée.
+
+La suite proposée vise des records de rendu résidents, préparés selon leurs dépendances réelles, avec les mêmes calculs CPU et conversions F32 par objet/caméra/passe. Elle doit retirer une part large du travail avant les loops génériques et préserver draws/culling/ordre/callbacks/qualité. L’observer natif seul, un partage arbitraire de buffers, un wrapper BundleGroup ou les deux uniformes FRAME V244 ne répondent pas à cette exigence. La contribution réelle d’une famille doit décider du périmètre ; aucun 240 FPS, gain de langage ou rendement toutes parties n’est établi.
