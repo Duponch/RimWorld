@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+V252 [mesure les phases de scène du jeu actuel](../development/scene-apply-current-v252.md), avec [sauvegarde et reprise contrôlées](../history/validation-apply-current-v252.md). Aucun contenu ou FPS ajouté par ce diagnostic ; produit V242, schéma 198 et 62 sauvegardes conservés. La prochaine optimisation doit retirer du travail végétal ou structurel réellement payé, avec les mêmes règles, cadence et qualité. La cible proche de 240 FPS à 6× reste ouverte.
+
 V251 teste un [lecteur de scène unique dans un worker](../development/single-reader-scene-v251.md), puis [l'écarte après un débit inférieur](../history/validation-single-reader-scene-v251.md). Produit V242, schéma 198 et62sauvegardes conservés ; aucun contenu ou FPS ajouté. Le banc ne porte pas sur les menus et interactions du jeu complet. La suite cible le travail réellement effectué par l'application de scène, avec mêmes règles, qualité et cadence ; cible240FPS/6× ouverte.
 
 V250 teste une [refonte des snapshots source](../development/source-mutation-v250.md), [exacte mais écartée faute de gain FPS complet](../history/validation-source-mutation-v250.md). Produit V242, schéma 198 et62sauvegardes conservés ; aucun contenu ou FPS ajouté. La suite étudie une réduction structurelle du travail de réception/affichage, avec mêmes règles, qualité et cadence ; cible240FPS/6× ouverte.

@@ -1,4 +1,6 @@
-# Validation courante — V251
+# Validation courante — V252
+
+**V252 — attribution actuelle, aucun gain FPS livré.** [Contrat](scene-apply-current-v252.md), [preuves](../history/validation-apply-current-v252.md). Typage, quatre cas d'instrumentation et une cohorte GAME matérielle avec vraie sauvegarde/reprise passent. Les 178 applications coûtent 10,72 ms en moyenne ; les durées imbriquées restent instrumentées et non additionnables. Sources, 62 références et 65 fichiers publics exacts ; navigateur et origine privée 5266 fermés. Produit V242 et schéma 198 conservés, suite sur une réduction démontrée des parcours de données.
 
 **V251 — lecteur scène unique qualifié puis écarté.** [Contrat](single-reader-scene-v251.md), [preuves](../history/validation-single-reader-scene-v251.md). Produit V242/schéma 198 conservés.17cas, reprises natives et audit de contexte passent après reprises distinctes ; les rouges de type, réseau et métadonnées restent conservés. Core seul A/B/B/A :146,75→131,1875images soumises/s(−10,60%), vitesse4,8972→4,5698× ; aucun FPS livré, port GAME ou second banc inchangé. Sources/62références/65fichiers exacts, workers et origines5264/5265 fermés. Suite : attribuer les phases actuelles de scène avant refonte des données, sans gain présumé.
 
