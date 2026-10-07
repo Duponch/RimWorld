@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-V255, produit V242 et schéma 198 conservés : [captures Room source](development/source-room-capture-v255.md), [recherche](research/source-room-capture-v255.md), [preuves et rejet du candidat seul](history/validation-source-room-capture-v255.md). La simulation progresse plus vite, mais les FPS régressent ; aucun gain livré. Priorité à une refonte réduisant aussi les applications MAIN, sans second banc inchangé. Les 62 références restent exactes ; objectif 240 FPS ouvert, relance automatique en pause et aucun push.
+V256, produit V242 et schéma 198 conservés : [projection végétale source/affichage](development/source-vegetal-projection-v256.md), [recherche](research/source-vegetal-projection-v256.md), [preuves et rejet](history/validation-source-vegetal-projection-v256.md). Coût complet Aulnes neutre, aucun FPS ajouté ; l'oracle Aulnes passe hors ligne, mixed demeure incomplet. Suite sur les réinitialisations structurelles ordinaires, sans rejouer ce candidat inchangé. Les 62 références restent exactes ; objectif 240 FPS ouvert, relance automatique en pause et aucun push.
 
 V246, schéma 198 inchangé, écarte le [prototype de registre Resource](development/native-namespace-v246.md) après deux [oracles négatifs](history/validation-native-namespace-v246.md). La propriété partielle ne suffit pas ; la suite étudie celle du graphe natif entier et ses dépendances. Produit V242 conservé, aucun FPS ajouté.
 
