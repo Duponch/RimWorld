@@ -1,4 +1,6 @@
-# Validation courante — V252
+# Validation courante — V253
+
+**V253, produit V242 et schéma 198 conservés.** [Attribution des vrais ticks](source-step-attribution-v253.md), [preuves](../history/validation-source-step-attribution-v253.md) : typage 3,932 s et six cas 10,146 s PASS ; GAME initial 24,276 s rouge avant fenêtre conservé, reprise syntaxe 1,607 s/GAME 39,938 s PASS. Step 22,808 ms, actors 10,098/prison 2,050 ms ; temps inclusifs taxés, aucun gain FPS. Save/reload 7446, 3 266 270 checks, anciennes vues/62 payloads/65 fichiers exacts ; erreurs nulles, ACK propre, origine 5268 fermée. Suite acteurs/navigation et capture prison sans nouvelle autorité ou règle allégée ; ROOT seul contrôles gelés séquentiels, autonomie autorisée, relance automatique en pause, aucun push.
 
 **V252 — attribution actuelle, aucun gain FPS livré.** [Contrat](scene-apply-current-v252.md), [preuves](../history/validation-apply-current-v252.md). Typage, quatre cas d'instrumentation et une cohorte GAME matérielle avec vraie sauvegarde/reprise passent. Les 178 applications coûtent 10,72 ms en moyenne ; les durées imbriquées restent instrumentées et non additionnables. Sources, 62 références et 65 fichiers publics exacts ; navigateur et origine privée 5266 fermés. Produit V242 et schéma 198 conservés, suite sur une réduction démontrée des parcours de données.
 
