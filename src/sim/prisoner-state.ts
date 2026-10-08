@@ -3,11 +3,12 @@ import { pawnBody } from './health-rules.ts';
 import { moodTarget,moodThoughts } from './mood.ts';
 import { opinionOf,socialRandom } from './social-state.ts';
 import { TICKS_PER_DAY,type Cell,type Pawn,type World } from './types.ts';
+import type { PrisonBreakState } from './prison-break-state.ts';
 
 export type PrisonerMode='maintain'|'reduce'|'recruit'|'release';
 export interface PrisonerState {
   capturedAt:number;initialResistance:number;resistance:number;mode:PrisonerMode;
-  lastChatTick?:number;chatDay:number;chatCount:number;rng:number;escape?:Cell;releasedAt?:number;
+  lastChatTick?:number;chatDay:number;chatCount:number;rng:number;escape?:Cell;releasedAt?:number;breakout?:PrisonBreakState;
 }
 export interface WardFoodTask {kind:'food';patientId:number;sourcePileId:number;carryPileId:number|null;quantity:number;spot:Cell;phase:'pickup'|'deliver'}
 export interface WardChatTask {kind:'chat';patientId:number;spot:Cell;phase:'approach'|'rapport'|'closing';progress:number;rapports:number}
@@ -24,7 +25,7 @@ export function createPrisonerState(world:World,pawn:Pawn):PrisonerState {
   return {capturedAt:world.tick,initialResistance,resistance:initialResistance,mode:'maintain',chatDay:prisonDay(world),chatCount:0,rng:state.rng};
 }
 export function prisonerChatReady(world:World,pawn:Pawn):boolean {
-  const p=pawn.prisoner;if(!p||p.escape||p.mode==='maintain'||p.mode==='release'||p.mode==='reduce'&&p.resistance<=0)return false;
+  const p=pawn.prisoner;if(!p||p.breakout?.active||p.escape||p.mode==='maintain'||p.mode==='release'||p.mode==='reduce'&&p.resistance<=0)return false;
   return (p.lastChatTick===undefined||world.tick-p.lastChatTick>PRISON_CHAT_INTERVAL)&&(p.chatDay!==prisonDay(world)||p.chatCount<2);
 }
 export function recordPrisonerChat(world:World,pawn:Pawn):void {

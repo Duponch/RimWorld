@@ -1,5 +1,6 @@
 import { isColonist } from './affiliation.ts';
 import { prisonDoorPassable } from './prison-space.ts';
+import { prisonBreakActive } from './prison-break-state.ts';
 import { DOOR_CLOSE_DELAY, doorAt, doorOpenness, doorOpenTicks, doorMotionTicks, isPassageDoor } from './door-rules.ts';
 import { invalidateAnimalPens } from './animal-pens.ts';
 import { isBlockMaterial } from './building-materials.ts';
@@ -14,8 +15,8 @@ function openDoor(world:World,s:Structure):void {
 /** Called before committing an edge. Waiting consumes no path or travel distance. */
 export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
   const s=doorAt(world,next);if(!s)return true;
-  const d=s.door!;if(pawn.prisoner&&pawn.prisoner.releasedAt===undefined)return prisonDoorPassable(world,s);if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined)return d.open&&doorOpenness(s,world.tick)>=1-1e-9;
-  if(d.forbidden)return false;
+  const d=s.door!,breaking=prisonBreakActive(pawn);if(pawn.prisoner&&pawn.prisoner.releasedAt===undefined&&!breaking)return prisonDoorPassable(world,s);if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined&&!breaking)return d.open&&doorOpenness(s,world.tick)>=1-1e-9;
+  if(d.forbidden&&!breaking)return false;
   d.lastTouch=world.tick;
   if(!d.open)openDoor(world,s);
   if(doorOpenness(s,world.tick)<1-1e-9)return false;
@@ -25,10 +26,10 @@ export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
  * edge. The normal threshold check remains authoritative if the path or power
  * changes before arrival. Stone autodoors still open at the threshold. */
 export function approachAutodoor(world:World,pawn:Pawn,next:Cell):void {
-  if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined||pawn.path[0]?.x!==next.x||pawn.path[0]?.z!==next.z)return;
+  if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined&&!prisonBreakActive(pawn)||pawn.path[0]?.x!==next.x||pawn.path[0]?.z!==next.z)return;
   const upcoming=pawn.path[1];if(!upcoming||Math.max(Math.abs(upcoming.x-next.x),Math.abs(upcoming.z-next.z))!==1)return;
   const s=doorAt(world,upcoming);
-  if(s?.kind!=='autodoor'||!s.power?.on||s.breakdown||isBlockMaterial(s.material)||s.door?.forbidden)return;
+  if(s?.kind!=='autodoor'||!s.power?.on||s.breakdown||isBlockMaterial(s.material)||s.door?.forbidden&&!prisonBreakActive(pawn))return;
   s.door!.lastTouch=world.tick;openDoor(world,s);
 }
 /** Index bodies/edges/items once, rather than scanning every actor for each door.

@@ -130,7 +130,11 @@ export function collapseFromExhaustion(world:World,pawn:Pawn,context:NeedContext
     delete pawn.shooting;delete pawn.flee;delete pawn.melee;resetTactics(pawn);
     interruptWork(world,pawn);
     if(pawn.draft){pawn.draft.target=null;pawn.draft.queue=[];}
-    pawn.need = { kind: 'sleep', phase: 'sleep', bedId: null, target: { x: pawn.x, z: pawn.z } };
+    // An actor woken on its own bed can collapse there before leaving it.
+    // The physical bed is real; declaring this cell a floor is an invalid save.
+    const bed=world.structures.find(b=>b.id===pawn.bedId&&isBedKind(b.kind)&&b.x===pawn.x&&b.z===pawn.z&&!!b.prisoner===!!pawn.prisoner
+      &&!world.pawns.some(p=>p!==pawn&&(p.need?.kind==='sleep'&&p.need.bedId===b.id||p.rescue?.bedId===b.id)));
+    pawn.need = { kind: 'sleep', phase: 'sleep', bedId: bed?.id??null, target: { x: pawn.x, z: pawn.z } };
     pawn.state = 'sleeping'; pawn.collapsePending = false; pawn.restZeroTicks = 0;
     context.event(`${pawn.name} s’effondre de fatigue au sol.`);
   }

@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { prisonBreakActive } from './prison-break-state.ts';
 import { patientClaimed } from './care-access.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
@@ -26,7 +27,7 @@ export function releaseReady(world:World,actor:Pawn,patient:Pawn):boolean {
     ||actor.collapsePending||world.restRules==='legacy'&&actor.rest===0||actor.interruptedCargo||actor.orders.active!==null||medicalWorkRefusal(actor)
     ||!workPriority(actor,'warden')&&!workPriority(actor,'basic')||carrierOf(world,actor.id))return false;
   const prisoner=patient.prisoner,carrier=carrierOf(world,patient.id);
-  return patient!==actor&&!!prisoner&&prisoner.mode==='release'&&prisoner.releasedAt===undefined&&!prisoner.escape
+  return patient!==actor&&!!prisoner&&!prisonBreakActive(patient)&&prisoner.mode==='release'&&prisoner.releasedAt===undefined&&!prisoner.escape
     &&patient.state!=='dead'&&patient.state!=='downed'&&!patient.health?.death&&!patient.mental?.crisis
     &&(!carrier||carrier===actor)&&!rescueClaim(world,patient.id,actor.id)&&!patientClaimed(world,patient.id,actor);
 }

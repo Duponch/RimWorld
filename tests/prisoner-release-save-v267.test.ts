@@ -8,10 +8,11 @@ import { serializeWorld,deserializeWorld,validateWorld } from '../src/sim/serial
 import { SnapshotEncoder,SnapshotDecoder } from '../src/bridge/snapshots.ts';
 import { recruitmentUiFixture } from './scenarios/prison-camp.ts';
 import type { Pawn,World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION } from '../src/sim/types.ts';
 
 function fixture(){
   const {world:w,actorId,patientId}=recruitmentUiFixture();
-  w.schemaVersion=202 as World['schemaVersion'];
+  w.schemaVersion=SCHEMA_VERSION;
   const actor=w.pawns.find(p=>p.id===actorId)!,patient=w.pawns.find(p=>p.id===patientId)!;
   patient.prisoner!.mode='release';actor.priorities.basic=1;actor.priorities.warden=0;
   return {w,actor,patient};

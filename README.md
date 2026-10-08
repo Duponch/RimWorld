@@ -1,5 +1,8 @@
 # Lisière
 
+**V269 — révoltes de prisonniers ; schéma 204.**
+Les [évasions collectives](docs/gameplay/prison-break-v269.md) relient risque individuel, portes ouvertes physiquement, combat, défense et tourelles, brèche faute de route, puis mise à terre et soins ou sortie avec possessions. Adoption prospective et inspection du risque ; limites Core et résultats de validation dans la note du lot. Autonomie et push après chaque commit maintenus, aucun FPS annoncé. Les états suivants sont historiques.
+
 **V268 — hydroponie ; schéma 203.**
 Les [bacs hydroponiques](docs/gameplay/hydroponics-v268.md) relient recherche, construction, courant, cultures sous toit, récolte et récupération après panne. Riz, pommes de terre, coton et racine médicinale utilisent le travail agricole ordinaire ; 280 % de fertilité, 70 W par bac et dépérissement progressif sans courant. Autonomie et push après chaque commit maintenus. Les états suivants sont historiques.
 

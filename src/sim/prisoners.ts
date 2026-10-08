@@ -1,4 +1,5 @@
 import { isBedKind } from './bed-kinds.ts';
+import { prisonBreakActive } from './prison-break-state.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { medicalRestNeeded,treatmentTarget } from './care-rules.ts';
 import { interruptWork } from './interrupted-cargo.ts';
@@ -46,6 +47,7 @@ export function applyPrisonerMode(world:World,command:{patientId:number;mode:Pri
   const p=world.pawns.find(p=>p.id===command.patientId);
   if(!p?.prisoner||p.state==='dead'||!['maintain','reduce','recruit',...world.schemaVersion>=202?['release']:[]].includes(command.mode))return fail('Prisonnier ou mode de conversation invalide.');
   if(p.prisoner.mode===command.mode)return {ok:true};
+  if(prisonBreakActive(p))return fail('Il faut réprimer la révolte avant de changer cette consigne.');
   if(p.prisoner.releasedAt!==undefined)return fail('Cette personne a déjà été libérée et quitte la carte.');
   p.prisoner.mode=command.mode;
   // Already completed interaction effects/closing time are kept; no rollback.

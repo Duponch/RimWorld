@@ -4,6 +4,7 @@ import { strikeLivingTarget } from './living-melee.ts';
 import { isBarrier,damageBarrier } from './barriers.ts';
 import { damageStructure,structureMaxHp } from './thing-damage.ts';
 import { mentalMeleeOwnership } from './aggressive-crisis-order.ts';
+import { prisonBreakMeleeOwned } from './prison-break-state.ts';
 import { isRoomDoor } from './door-rules.ts';
 import { disturbanceEvents } from './disturbance.ts';
 import { automaticPermission,automaticTarget } from './automatic-combat-state.ts';
@@ -30,6 +31,7 @@ const EMPTY:ReadonlySet<number>=new Set();
 function targetFor(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id),readThreat=()=>meleeThreatTarget(world,pawn)):LivingTarget|undefined {
   const order=pawn.melee?.order;
   const p=order?combatTarget(world,order.targetId):undefined;
+  if(order?.auto==='prison-break'&&(!prisonBreakMeleeOwned(world,pawn,order)||!p||!world.pawns.includes(p as Pawn)||!hostileTo(pawn,p as Pawn)||!!(p as Pawn).prisoner))return;
   const mental=order?.auto==='mental'&&mentalMeleeOwnership(world,pawn,order);
   const domesticRefusal=p&&isAnimalTarget(p)&&p.domestic&&!(mental&&pawn.mental?.crisis?.kind==='berserk')
     &&!(order?.auto==='retaliation'&&retaliationPermission(pawn)&&readThreat()?.id===p.id);
@@ -41,7 +43,7 @@ function canFight(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,i
 }
 function structureTarget(world:World,pawn:Pawn){
   const order=pawn.melee?.order;
-  return order?.structure?world.structures.find(s=>s.id===order.targetId&&(order.auto==='mental'?mentalMeleeOwnership(world,pawn,order)&&structureMaxHp(s)>0:isBarrier(s))):undefined;
+  return order?.structure?world.structures.find(s=>s.id===order.targetId&&(order.auto==='mental'?mentalMeleeOwnership(world,pawn,order)&&structureMaxHp(s)>0:order.auto==='prison-break'?prisonBreakMeleeOwned(world,pawn,order)&&isBarrier(s):isBarrier(s))):undefined;
 }
 function mentalAttempt(pawn:Pawn):void {
   const c=pawn.mental?.crisis;if(!c||pawn.melee?.order?.auto!=='mental')return;
@@ -91,7 +93,7 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   if(m.order?.auto==='social'&&!activeSocialFight(world,pawn,m.order.targetId)){finishSocialFight(world,pawn);return false;}
   if(!canFight(world,pawn,queries.carried)){
     if(m.order?.auto==='social')finishSocialFight(world,pawn);else {
-      if(m.order?.auto==='mental'||m.order?.auto==='retaliation')pawn.path=[];
+      if(m.order?.auto==='mental'||m.order?.auto==='retaliation'||m.order?.auto==='prison-break')pawn.path=[];
       cancelMelee(pawn);
     }
     return false;
@@ -100,7 +102,8 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   const auto=m.order?.auto;
   if(auto==='draft'||auto==='response'){
     if(!automaticPermission(pawn,auto)||!automaticTarget(world,pawn,m.order!.targetId))cancelMelee(pawn);
-  }else if(auto==='mental'&&(!mentalMeleeOwnership(world,pawn,m.order!)||m.order!.untilCore!==undefined&&core>=m.order!.untilCore)
+  }else if(auto==='prison-break'&&!prisonBreakMeleeOwned(world,pawn,m.order!)) {cancelMelee(pawn);pawn.path=[];}
+  else if(auto==='mental'&&(!mentalMeleeOwnership(world,pawn,m.order!)||m.order!.untilCore!==undefined&&core>=m.order!.untilCore)
     ||auto==='retaliation'&&(!retaliationPermission(pawn)||meleeThreatTarget(world,pawn,core,queries.grid())?.id!==m.order!.targetId||core>=m.order!.untilCore!))cancelMelee(pawn);
   else if(!auto&&isColonist(pawn)&&!pawn.draft)cancelMelee(pawn);
   if(m.order?.structure){
@@ -140,12 +143,13 @@ export function advanceMelee(world:World,pawn:Pawn,core:number,contactGrid:()=>U
   return true;
 }
 export function processMelee(world:World,pawn:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader):void {
+  if(pawn.melee?.order?.auto==='prison-break'&&!prisonBreakMeleeOwned(world,pawn,pawn.melee.order)){cancelMelee(pawn);pawn.path=[];return;}
   const m=pawn.melee!,target=m.order?.structure?structureTarget(world,pawn):targetFor(world,pawn);if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
   if(m.order?.auto==='social'&&(!activeSocialFight(world,pawn,m.order.targetId)||!target||!canFight(world,pawn))){finishSocialFight(world,pawn);return;}
   if(!target||!canFight(world,pawn)){cancelMelee(pawn);pawn.path=[];return;}
   if(m.strike||pawn.shooting?.stance?.phase==='cooldown'||isStunned(pawn,world.tick*10)){pawn.path=[];pawn.state='idle';return;}
   if(meleeTargetContact(world,pawn,target,getBlocked())){pawn.path=[];pawn.state='idle';return;}
-  if(!isColonist(pawn)&&!pawn.tactics&&!pawn.raid||m.order?.auto==='draft'){cancelMelee(pawn);return;}
+  if(!isColonist(pawn)&&!pawn.tactics&&!pawn.raid&&!(m.order&&prisonBreakMeleeOwned(world,pawn,m.order))||m.order?.auto==='draft'){cancelMelee(pawn);return;}
   const blocked=getBlocked(),end=pawn.path.at(-1),next=pawn.path[0];
   const traversable=!!next&&canStep(world,pawn,next,blocked,EMPTY);
   if(!traversable||!end||!meleeTargetContact(world,end,target,blocked)) {

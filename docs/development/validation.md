@@ -1,4 +1,6 @@
-# Validation courante — V268
+# Validation courante — V269
+
+**V269, schéma 204 : [révoltes et évasions collectives](../gameplay/prison-break-v269.md#validation).** 155 cas uniques dans 25 fichiers passent par reprises ciblées, dont 40 nouveaux cas et les 62 sauvegardes publiques. Risque, propriétaires, portes/brèche, combat/tourelles, chute/soins, archives, lecteurs stricts et reprise sont couverts. Build avec typage final et parcours WebGPU avec inspection, sauvegarde/rechargement et sortie réelle passent ; rouges et limites conservés dans la note du lot. Autonomie et push après chaque commit maintenus, aucun gain FPS annoncé. Les validations suivantes sont historiques.
 
 **V268, schéma 203 : [hydroponie](../gameplay/hydroponics-v268.md#validation).** 94 cas uniques dans 20 fichiers passent par reprises ciblées, dont 41 nouveaux cas et les 62 sauvegardes publiques : construction/livraison, semis/récolte, fertilité, panne et reprise, destructions et lecteurs communs. Typage/build et parcours WebGPU avec vraie récolte, quatre semis et sauvegarde/rechargement exacts passent ; aucun fichier public modifié ni gain FPS annoncé. Premiers rouges conservés. Autonomie et push après chaque commit maintenus ; les validations suivantes sont historiques.
 

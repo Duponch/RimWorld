@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import { prisonBreakActive } from './prison-break-state.ts';
 import { carrierOf } from './rescue-state.ts';
 import { PRODUCTION_RECIPES, productionTaskTotal, taskRecipe } from './production-recipes.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
@@ -62,7 +63,7 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   if(pawn.state==='downed')return {code:'downed',reason:'Incapacité médicale : ne peut pas agir. Consultez ses blessures et ses capacités dans Santé.'};
   const commercial=world.commercialTrip;
   if(commercial&&'pawnId' in commercial&&commercial.pawnId===pawn.id)return {code:'commercial',reason:commercial.phase==='loading'?`Charge les provisions et l’argent (${commercial.cursor}/${commercial.manifest.length} piles).`:commercial.phase==='leaving'?'Rejoint la bordure pour gagner le comptoir civil.':`Dépose au contact les possessions rapportées (${commercial.pendingPileIds.length} piles restantes).`};
-  if(pawn.prisoner&&!pawn.need)return {code:'prisoner',reason:pawn.prisoner.escape?'Cherche à quitter la carte par une ouverture.':'Prisonnier : attend nourriture, repos ou visite du geôlier.'};
+  if(pawn.prisoner&&!pawn.need)return {code:'prisoner',reason:prisonBreakActive(pawn)?'Révolte de prison : force le passage et cherche à quitter la carte.':pawn.prisoner.escape?'Cherche à quitter la carte par une ouverture.':'Prisonnier : attend nourriture, repos ou visite du geôlier.'};
   if(pawn.interruptedCargo)return {code:'interrupted-cargo',reason:'Travail interrompu ; cargaison conservée. Libérez une case de sol proche pour permettre son dépôt.'};
   if(pawn.recreation.task) {
     const task=pawn.recreation.task, patient=task.activity==='visit-sick'?world.pawns.find(other=>other.id===task.patientId):undefined;

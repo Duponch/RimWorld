@@ -1,4 +1,5 @@
 import { resolveHumanTendBatch } from './care-resolution.ts';
+import { prisonBreakActive } from './prison-break-state.ts';
 import { workPriority } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { isCarePatient } from './affiliation.ts';
@@ -32,6 +33,7 @@ export function tendingReason(world:World,doctor:Pawn,patient:Pawn|undefined,acc
     :doctor.interruptedCargo?'La cargaison doit être déposée avant les soins.'
     :!accepted&&(doctor.collapsePending||world.restRules==='legacy'&&doctor.rest===0)?'Ce colon doit récupérer de son épuisement.'
     :!patient||!isCarePatient(patient)?'Patient pris en charge introuvable.'
+    :prisonBreakActive(patient)?'Il faut réprimer la révolte avant de soigner ce prisonnier.'
     :patient===doctor&&(world.schemaVersion<49||!doctor.selfTend)?'Les auto-soins sont désactivés dans Santé.'
     :patient!==doctor&&(!lyingPatient(patient)||!currentMedicalBed(world,patient))||carrierOf(world,patient.id)?'Le patient doit être installé dans un lit.'
     :!treatmentTarget(patient)?'Aucune blessure ou maladie autorisée ne nécessite actuellement un traitement.'

@@ -7,6 +7,7 @@ import { serializeWorld,deserializeWorld,validateWorld } from '../src/sim/serial
 import { SnapshotEncoder,SnapshotDecoder } from '../src/bridge/snapshots.ts';
 import { deconstructionCamp } from './scenarios/deconstruction.ts';
 import type { GrowingZone,Job,Orientation,Structure,World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION } from '../src/sim/types.ts';
 
 function fixture(orientation:Orientation=0){
   const w=deconstructionCamp(0,24);w.stockpiles=[];w.growingZones=[];
@@ -43,7 +44,7 @@ test('schema 202 refuses future basin, linked-zone and research records before n
   expect(validateHydroponics(old,202)).toContain('Future hydroponics content.');
   const plain=deconstructionCamp(0,24);plain.schemaVersion=202 as World['schemaVersion'];
   const before=structuredClone(plain),upgraded=deserializeWorld(JSON.stringify(plain));
-  expect(upgraded).toEqual({...before,schemaVersion:203});
+  expect(upgraded).toEqual({...before,schemaVersion:SCHEMA_VERSION});
   expect(upgraded.research?.hydroponics).toBeUndefined();
 });
 

@@ -55,6 +55,7 @@ import { rockMaxHP } from './sim/mining-rules';
 import { createArrivalUI } from './ui/arrivals';
 import { createMoodInspection,updateMoodInspection } from './ui/mood-inspection';
 import { isColonist,activeThreat } from './sim/affiliation';
+import { prisonBreakActive } from './sim/prison-break-state';
 import { ShootingControls } from './ui/shooting-controls';
 const shootingControls=new ShootingControls();
 import { createDraftControls,updateDraftControls,toggleDraft,draftLabel } from './ui/drafting-controls';
@@ -330,7 +331,7 @@ function setMusicVolume(volume: number): boolean {
   catch { return false; }
 }
 function musicMood(world: World): MusicMood {
-  if (world.pawns.some(pawn => pawn.faction === 'outlaws' && !pawn.prisoner && activeThreat(pawn))
+  if (world.pawns.some(pawn => (pawn.faction === 'outlaws' && !pawn.prisoner || prisonBreakActive(pawn)) && activeThreat(pawn))
     || world.wildlife?.animals.some(animal=>animal.manhunter&&animal.state!=='dead'&&animal.state!=='downed')) return 'tension';
   const hour = 24 * (calendarTick(world) % TICKS_PER_DAY) / TICKS_PER_DAY;
   return hour >= 6 && hour < 20 ? 'day' : 'night';
@@ -771,6 +772,7 @@ function actionLabel(pawn: Pawn, carriedPatients: ReadonlySet<number>) {
   if(pawn.burial)return pawn.burial.phase==='bury'?'Inhume une dépouille':pawn.burial.phase==='carry'?'Transporte une dépouille vers une tombe':'Va chercher une dépouille';
   if(pawn.burning)return pawn.burning.phase==='panic'?'En feu · panique':'Éteint les flammes sur lui';
   if(pawn.firefighting)return pawn.firefighting.phase==='approach'?'Rejoint un incendie':'Éteint un incendie';
+  if(prisonBreakActive(pawn))return pawn.melee?.strike?'Révolte · récupération après attaque':pawn.melee?'Révolte · force le passage':'Révolte · cherche à s’échapper';
   if(pawn.bombRefuge||pawn.prisoner)return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.mental?.crisis)return queryPawnStatus(snapshot!,pawn).reason;
   if(pawn.flee)return pawn.path.length||pawn.moveCooldown>0?'Fuit une menace':'Reste à couvert après la fuite';
@@ -1079,6 +1081,8 @@ function renderState() {
     alerts.push(`${pawn.name} · ${crisis.label}${crisis.target?` · cible : ${crisis.target.label}${crisis.target.type==='structure'?` (${crisis.target.cell.x}, ${crisis.target.cell.z})`:''}`:''}`);
   }
   const enemy=world.pawns.find(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p));
+  const rebels=world.pawns.filter(p=>prisonBreakActive(p)&&activeThreat(p));
+  if(rebels.length)alerts.push(`Révolte de prison · ${rebels.length} détenu${rebels.length>1?'s':''} en fuite`);
   const mechanicalThreats=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed')??[];
   if(mechanicalThreats.length)alerts.push(`${mechanicalThreats.length} machine(s) hostiles${world.raids?.mechActive?.phase==='staging'?' · regroupement avant assaut':world.raids?.mechActive?.phase==='assault'?' · assaut mécanique':''}`);
   for(const structure of world.structures)if(structure.turret?.wick){
@@ -1087,7 +1091,7 @@ function renderState() {
   const enraged=world.wildlife?.animals.filter(animal=>animal.manhunter&&animal.state!=='dead'&&animal.state!=='downed')??[];
   if(enraged.length)alerts.push(`${enraged.length} ${enraged.length>1?'animaux':'animal'} en rage`);
   const fires=world.fires?.items??[],fireAlert=el<HTMLButtonElement>('inspect-fire');fireAlert.hidden=!fires.length;fireAlert.textContent=`Incendie · ${fires.length} foyer${fires.length>1?'s':''} · voir`;fireAlert.onclick=()=>{const cell=firePosition(world,fires[0]!);if(cell){applyTool('select');pickCell(cell.x,cell.z);renderer?.focusCell(cell);}};
-  const threatButton=el<HTMLButtonElement>('inspect-threat'),mentalThreat=aggressiveCrises[0],threat=enemy??mechanicalThreats[0]??mentalThreat??enraged[0];threatButton.hidden=!threat;if(threat){threatButton.textContent=enemy?'Menace armée · voir':mechanicalThreats.length?'Menace mécanique · voir':mentalThreat?`${mentalCrisisView(world,mentalThreat)!.label} · voir`:'Animal en rage · voir';threatButton.onclick=()=>selectPawn(threat.id);}
+  const threatButton=el<HTMLButtonElement>('inspect-threat'),mentalThreat=aggressiveCrises[0],threat=enemy??rebels[0]??mechanicalThreats[0]??mentalThreat??enraged[0];threatButton.hidden=!threat;if(threat){threatButton.textContent=enemy?'Menace armée · voir':rebels.length?'Révolte de prison · voir':mechanicalThreats.length?'Menace mécanique · voir':mentalThreat?`${mentalCrisisView(world,mentalThreat)!.label} · voir`:'Animal en rage · voir';threatButton.onclick=()=>selectPawn(threat.id);}
   const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=colonists.length-living.length;
   const starving=living.filter(p=>(p.health?.malnutrition??0)>0).length;if(starving)alerts.push(`${starving} colon(s) en malnutrition`);
   const chilled=living.filter(p=>(p.health?.hypothermia??0)>=40000000).length;if(chilled)alerts.push(`${chilled} colon(s) en hypothermie`);

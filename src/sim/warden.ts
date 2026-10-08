@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import { prisonBreakActive } from './prison-break-state.ts';
 import { isColonist } from './affiliation.ts';
 import { bedsideAccess,patientClaimed } from './care-access.ts';
 import { needsAssistedFeeding,FEED_HUNGER } from './feeding-rules.ts';
@@ -23,7 +24,7 @@ import type { Cell,Pawn,World } from './types.ts';
 
 export interface WardenProposal {task:WardTask;path:Cell[]}
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
-const secure=(p:Pawn)=>!!p.prisoner&&!p.prisoner.escape&&p.prisoner.releasedAt===undefined&&p.state!=='dead'&&!p.mental?.crisis;
+const secure=(p:Pawn)=>!!p.prisoner&&!prisonBreakActive(p)&&!p.prisoner.escape&&p.prisoner.releasedAt===undefined&&p.state!=='dead'&&!p.mental?.crisis;
 const actorReady=(p:Pawn)=>isColonist(p)&&!p.prisoner&&workPriority(p,'warden')>0&&p.state!=='downed'&&p.state!=='dead'&&!p.draft&&!p.mental?.crisis&&!p.interruptedCargo;
 function chatEligible(world:World,actor:Pawn,p:Pawn):boolean {
   return secure(p)&&prisonerChatReady(world,p)&&pawnBody(actor).capacities.talking>0&&pawnBody(p).canBeAwake

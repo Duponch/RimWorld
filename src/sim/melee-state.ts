@@ -1,7 +1,7 @@
 import type { MeleeToolId } from './melee-statistics.ts';
 import type { World } from './types.ts';
 export interface MeleeState {
-  order:{structure?:true;targetId:number;startedDowned:boolean;auto?:'draft'|'response'|'social'|'mental'|'retaliation';untilCore?:number;jobUntilCore?:number}|null;
+  order:{structure?:true;targetId:number;startedDowned:boolean;auto?:'draft'|'response'|'social'|'mental'|'retaliation'|'prison-break';untilCore?:number;jobUntilCore?:number}|null;
   /** Recovery is independent of the order and survives stop/move/undraft. */
   strike:{structure?:import('./types.ts').Cell;targetId:number;atCore:number;untilCore:number;tool:MeleeToolId;outcome:'hit'|'miss'|'dodge'}|null;
 }

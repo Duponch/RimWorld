@@ -52,7 +52,7 @@ import { validCorpseShape } from '../sim/corpse-save.ts';
 import { validGunWorkShape } from '../sim/gun-work.ts';
 import { validUnfinishedShape } from '../sim/unfinished.ts';
 import { validApparelShape } from '../sim/apparel-save.ts';
-import { validPrisonerPawnShape } from '../sim/prisoner-save.ts';
+import { validPrisonerPawnShape,validPrisonBreakBindings } from '../sim/prisoner-save.ts';
 import { validWeaponShape } from '../sim/equipment-save.ts';
 import { pileMaxHp } from '../sim/thing-damage-rules.ts';
 import { SCHEMA_VERSION, type MaterialPile, type Pawn, type Resource, type Structure, type Terrain, type Tile, type World } from '../sim/types.ts';
@@ -858,6 +858,7 @@ export class SnapshotDecoder {
     }
     if(validateHydroponics(next,next.schemaVersion).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
     for(const pawn of next.pawns)if(!validPrisonerPawnShape(pawn as unknown as Record<string,unknown>,next.schemaVersion,next))return resync('Prisonnier, geôlier ou provenance de recrutement invalide.');
+    if(!validPrisonBreakBindings(next,next.schemaVersion))return resync('Révolte de prisonniers et service médical simultanés.');
     if(validateMental(next,next.schemaVersion).length||next.schemaVersion>=192&&validateMelee(next).length)return resync('Cible de crise mentale ou autorité de mêlée incohérente.');
     if(!validMechSalvageLedger(next,next.schemaVersion)||validateMechanoidRaids(next,next.schemaVersion).length)return resync('Récupération ou mandat mécanique invalide.');
     const mechanicalCorpseIds=new Set<number>();

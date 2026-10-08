@@ -39,6 +39,9 @@ import { adoptEnvironment,advanceSurfaceWeather,advanceSurfaceTemperature } from
 import { applyExtinguish,processFirefighting,processBurning } from './firefighting.ts';
 import { reconcileFires } from './fire.ts';
 import { applyPrisonerMode,applyPrisonBed,reconcilePrisoners,processPrisoner } from './prisoners.ts';
+import { advancePrisonBreaks,endPrisonBreak } from './prison-break.ts';
+import { prisonBreakActive } from './prison-break-state.ts';
+import { processPrisonBreak } from './prison-break-behavior.ts';
 import { processWarden,reconcileWarden } from './warden.ts';
 import { sharesConstructionLayer } from './power-grid.ts';
 import { batteriesUnlocked,solarPowerUnlocked,complexFurnitureUnlocked } from './research.ts';
@@ -669,6 +672,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     burnFuel(world);
     advanceTameness(world);reconcileDomesticWork(world);advanceWildlife(world);
     updateDoors(world);
+    advancePrisonBreaks(world);
     const structuresBeforeCombat=world.structures;
     advanceWorldCombat(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);if(world.tick%20===0)reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
@@ -694,7 +698,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     const getThreats=()=>threatQueries(world,animalThreats);
     advanceBeautyNeeds(world,getLight().topology);
     advanceFlowerPots(world,getLight(),new TemperatureView(world,thermal));
-    const hasAdversary=world.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner||p.mental?.crisis?.kind==='berserk')||animalThreats.length>0||(world.mechanoids??[]).some(m=>!['dead','downed'].includes(m.state));
+    const hasAdversary=world.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner||prisonBreakActive(p)||p.mental?.crisis?.kind==='berserk')||animalThreats.length>0||(world.mechanoids??[]).some(m=>!['dead','downed'].includes(m.state));
     let thermalDirty=structuresBeforeCombat!==world.structures;
     const invalidateEnvironment=()=>{environment=undefined;light=undefined;furnitureSight=undefined;thermalDirty=true;};
     const getRoofs = () => roofs ??= new RoofContext(world);
@@ -716,6 +720,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
       advanceHeatExposure(world,pawn,()=>new TemperatureView(world,thermal).at(world,pawn));
       const body=updatePawnHealth(world,pawn);
+      if(prisonBreakActive(pawn)&&(pawn.state==='downed'||pawn.state==='dead'))endPrisonBreak(world,pawn);
       if(scoutOnMapId(world)===pawn.id&&(pawn.state==='dead'||pawn.state==='downed'))applyScoutCommand(world,{type:'scout-cancel'});
       if(commercialOnMapId(world)===pawn.id&&(pawn.state==='dead'||pawn.state==='downed'))applyCommercialPreparation(world,{type:'commercial-cancel'});
       if(groupOnMapMember(world,pawn.id)&&(pawn.state==='dead'||pawn.state==='downed'||pawn.mental?.crisis))cancelGroupPreparation(world);
@@ -726,11 +731,12 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       tickSkills(world,pawn);
       updateNeeds(world, pawn,body,getFurnitureSight,()=>getLight().topology);
       updateMentalBreak(world,pawn,budget);
+      if(prisonBreakActive(pawn)&&(pawn.mental?.crisis||pawn.state==='downed'||pawn.need))endPrisonBreak(world,pawn);
       if(pawn.mental?.crisis){
         if(scoutOnMapId(world)===pawn.id)applyScoutCommand(world,{type:'scout-cancel'});
         if(commercialOnMapId(world)===pawn.id)applyCommercialPreparation(world,{type:'commercial-cancel'});
       }
-      if(processPawnVomiting(world,pawn))continue;
+      if(processPawnVomiting(world,pawn)){if(prisonBreakActive(pawn))endPrisonBreak(world,pawn);continue;}
       if(pawn.stun&&pawn.stun.untilCore<=world.tick*10)delete pawn.stun;
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
       if((hasAdversary||pawn.meleeThreat&&world.tick*10-pawn.meleeThreat.atCore<=400)&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget,animalThreats);considerFlee(world,pawn,getThreats());}
@@ -748,6 +754,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(processGroupOnMap(world,pawn,needsContext))continue;
       if(processCommercialOnMap(world,pawn,needsContext))continue;
       if(processScoutLoading(world,pawn,needsContext))continue;
+      if(processPrisonBreak(world,pawn,getBlocked,budget,getLight,needsContext))continue;
       if(pawn.prisoner){processPrisoner(world,pawn,needsContext);continue;}
       if(pawn.mental?.crisis){
         if(isAggressiveCrisis(pawn.mental))processAggressiveCrisis(world,pawn,getBlocked,budget,getLight,needsContext);

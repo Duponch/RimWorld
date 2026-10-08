@@ -1,4 +1,6 @@
 import type { Command,Pawn,World } from '../sim/types';
+import { prisonBreakActive } from '../sim/prison-break-state.ts';
+import { prisonBreakMtbDays } from '../sim/prison-break.ts';
 
 const MODES={maintain:'Soins et nourriture',reduce:'Réduire la résistance',recruit:'Recruter',release:'Libérer'} as const;
 
@@ -27,11 +29,12 @@ export function prisonerReleaseInspection(world:{pawns:readonly ReleaseWarden[]}
 export function createPrisonerInspection(panel:HTMLElement,current:()=>{world:World;pawn:Pawn}|undefined,send:(command:Command)=>void):void {
   const box=document.createElement('section');box.id='prisoner-inspection';box.setAttribute('aria-label','Prisonnier');
   const status=document.createElement('p');status.id='prisoner-status';
+  const risk=document.createElement('p');risk.id='prisoner-break-risk';risk.className='muted';
   const resistance=document.createElement('p');resistance.id='prisoner-resistance';
   const progress=document.createElement('progress');progress.id='prisoner-resistance-progress';progress.setAttribute('aria-label','Résistance restante');
   const modeLabel=document.createElement('label'),mode=document.createElement('select');mode.id='prisoner-mode';mode.setAttribute('aria-label','Interaction avec le prisonnier');
   for(const [id,label] of Object.entries(MODES))mode.append(new Option(label,id));
-  mode.onchange=()=>{const s=current();if(s?.pawn.prisoner&&s.pawn.state!=='dead'&&s.pawn.prisoner.releasedAt===undefined)send({type:'prisoner-mode',patientId:s.pawn.id,mode:mode.value as keyof typeof MODES});};
+  mode.onchange=()=>{const s=current();if(s?.pawn.prisoner&&!prisonBreakActive(s.pawn)&&s.pawn.state!=='dead'&&s.pawn.prisoner.releasedAt===undefined)send({type:'prisoner-mode',patientId:s.pawn.id,mode:mode.value as keyof typeof MODES});};
   modeLabel.append('Interaction ',mode);
   const hint=document.createElement('p');hint.id='prisoner-mode-hint';hint.className='muted';
   const needs=document.createElement('p');needs.id='prisoner-needs';
@@ -39,7 +42,7 @@ export function createPrisonerInspection(panel:HTMLElement,current:()=>{world:Wo
   food.onchange=()=>{const s=current();if(s?.pawn.prisoner)send({type:'food-policy-assign',pawnId:s.pawn.id,policyId:Number(food.value)});};
   foodLabel.append('Régime alimentaire ',food);
   const care=document.createElement('p');care.className='muted';care.textContent='Geôlier apporte la nourriture et mène les conversations. Médecin assure les soins. Les régimes partagés se modifient dans Assignations.';
-  box.append(status,resistance,progress,modeLabel,hint,needs,foodLabel,care);panel.append(box);
+  box.append(status,risk,resistance,progress,modeLabel,hint,needs,foodLabel,care);panel.append(box);
 }
 
 export function updatePrisonerInspection(panel:HTMLElement,world:World,pawn:Pawn):void {
@@ -48,11 +51,13 @@ export function updatePrisonerInspection(panel:HTMLElement,world:World,pawn:Pawn
   const bedId=pawn.need?.kind==='sleep'&&pawn.need.bedId!==null?pawn.need.bedId:pawn.bedId;
   const bed=world.structures.find(s=>s.id===bedId&&s.prisoner);
   const release=prisonerReleaseInspection(world,pawn);
-  box.querySelector('#prisoner-status')!.textContent=pawn.state==='dead'?'Prisonnier décédé':release?.status??(p.escape?'Évasion : cherche à quitter la carte par une ouverture.':`Prisonnier de la colonie · ${bed?`lit${bed.medical?' médical':''} en ${bed.x}, ${bed.z}`:'aucun lit de prison attribué'}`);
+  const rebelling=prisonBreakActive(pawn),mtb=prisonBreakMtbDays(world,pawn,true);
+  box.querySelector('#prisoner-status')!.textContent=pawn.state==='dead'?'Prisonnier décédé':rebelling?'Révolte : force le passage et cherche à quitter la carte.':release?.status??(p.escape?'Évasion : cherche à quitter la carte par une ouverture.':`Prisonnier de la colonie · ${bed?`lit${bed.medical?' médical':''} en ${bed.x}, ${bed.z}`:'aucun lit de prison attribué'}`);
+  box.querySelector('#prisoner-break-risk')!.textContent=rebelling?'Les révoltés peuvent ouvrir les portes et combattent les défenseurs proches. La mise à terre met fin à leur participation.':mtb>0?`Révolte : intervalle moyen individuel ${mtb.toFixed(1)} jours. Le sommeil suspend le déclenchement ; une participation récente réduit le risque.`:'Aucun déclenchement de révolte possible dans cet état ou hors cellule fermée.';
   box.querySelector('#prisoner-resistance')!.textContent=`Résistance : ${p.resistance.toFixed(1)} / ${p.initialResistance.toFixed(1)}`;
   const progress=box.querySelector<HTMLProgressElement>('#prisoner-resistance-progress')!;progress.max=Math.max(1,p.initialResistance);progress.value=p.resistance;
-  const mode=box.querySelector<HTMLSelectElement>('#prisoner-mode')!;mode.value=p.mode;mode.disabled=pawn.state==='dead'||p.releasedAt!==undefined;
-  box.querySelector('#prisoner-mode-hint')!.textContent=release?.hint??(p.mode==='maintain'?'Le geôlier assure la nourriture, sans chercher à recruter.':p.resistance>0?'Les conversations réduisent progressivement la résistance. Aucun délai de recrutement n’est garanti.':p.mode==='recruit'?'Résistance épuisée : une prochaine conversation de recrutement peut faire rejoindre la colonie.':'Résistance épuisée. Choisissez Recruter pour demander son adhésion lors d’une prochaine conversation.');
+  const mode=box.querySelector<HTMLSelectElement>('#prisoner-mode')!;mode.value=p.mode;mode.disabled=pawn.state==='dead'||p.releasedAt!==undefined||rebelling;
+  box.querySelector('#prisoner-mode-hint')!.textContent=rebelling?'La consigne reste mémorisée et reprendra après la répression et les soins nécessaires.':release?.hint??(p.mode==='maintain'?'Le geôlier assure la nourriture, sans chercher à recruter.':p.resistance>0?'Les conversations réduisent progressivement la résistance. Aucun délai de recrutement n’est garanti.':p.mode==='recruit'?'Résistance épuisée : une prochaine conversation de recrutement peut faire rejoindre la colonie.':'Résistance épuisée. Choisissez Recruter pour demander son adhésion lors d’une prochaine conversation.');
   box.querySelector('#prisoner-needs')!.textContent=pawn.state==='dead'?'':`Nourriture ${Math.round(pawn.hunger)} % · Repos ${Math.round(pawn.rest)} % · Humeur ${Math.round(pawn.mood)} %`;
   const food=box.querySelector<HTMLSelectElement>('#prisoner-food-policy')!,signature=JSON.stringify(world.foodPolicies.map(f=>[f.id,f.name]));
   if(food.dataset.signature!==signature){food.dataset.signature=signature;food.replaceChildren(...world.foodPolicies.map(f=>new Option(f.name,String(f.id))));}

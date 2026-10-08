@@ -1,4 +1,5 @@
 import { distanceSquared,factionOf,factionRelation } from './affiliation.ts';
+import { prisonBreakActive } from './prison-break-state.ts';
 import { isAnimalTarget,isPawnTarget,isMechanoidTarget,combatTargetKey,type LivingTarget } from './combat-target.ts';
 import { animalBodySize } from './animal-life.ts';
 import { findShotLine,type ShotGrid,type ShotLine } from './combat-space.ts';
@@ -67,7 +68,7 @@ function presentTarget(key:TurretLivingKey,queries:TurretQueries):LivingTarget|u
  * targets are not excluded by the machine/faction rule. */
 export function turretTargetAllowed(t:LivingTarget):boolean {
   if(t.state==='dead'||t.state==='downed'||t.health?.death)return false;
-  return isAnimalTarget(t)?!t.domestic&&!!t.manhunter:isMechanoidTarget(t)?true:!t.prisoner&&factionRelation('colony',factionOf(t))==='hostile';
+  return isAnimalTarget(t)?!t.domestic&&!!t.manhunter:isMechanoidTarget(t)?true:prisonBreakActive(t)||!t.prisoner&&factionRelation('colony',factionOf(t))==='hostile';
 }
 export interface TurretShotPlan { target:LivingTarget;line:Extract<ShotLine,{ok:true}>;key:TurretLivingKey }
 export function turretShotPlan(_w:World,s:Structure,key:TurretLivingKey,queries:TurretQueries):TurretShotPlan|{reason:'target'|'bounds'|'range'|'blocked'} {

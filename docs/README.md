@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V269, schéma 204 : [révoltes et évasions collectives de prisonniers](gameplay/prison-break-v269.md).** Risque individuel adapté du Core, sélection collective locale, portes ouvrables avec attente physique, combat et défense, répression puis soins ou sortie réelle avec possessions. Adoption prospective, inspection et lecteurs communs ; 155 cas uniques, anciennes sauvegardes, build et parcours WebGPU avec reprise passent. Autonomie et push après chaque commit maintenus, aucun FPS annoncé ; les états suivants sont historiques.
+
 **V268, schéma 203 : [hydroponie](gameplay/hydroponics-v268.md).** Bacs orientables, quatre cultures, fertilité de 280 %, pompes électriques et dégâts progressifs en cas de panne ; serre, semis, récolte et possessions utilisent les systèmes communs. Résultats dans la note du lot. Autonomie et push après chaque commit maintenus ; les états suivants sont historiques.
 
 **V267, schéma 202 : [libérer un prisonnier](gameplay/prisoner-release-v267.md).** Consigne, prise en charge physique, portage puis sortie autonome et conservation des possessions ; motifs de départ distincts dans les archives de prison et de raid. Basique ou Geôlier peut assurer la libération, sans diplomatie inventée. Résultats dans la note du lot ; autonomie et push après chaque commit maintenus. Les états suivants sont historiques.
