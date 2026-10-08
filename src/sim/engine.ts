@@ -19,6 +19,7 @@ import {cancelFlakWork,detachMissingFlakBills} from './flak-work.ts';
 import {cancelArtWork,detachMissingArtBills} from './art-work.ts';
 import { drugProductionUnlocked, machiningUnlocked,microelectronicsUnlocked,multiAnalyzerUnlocked,fabricationUnlocked,autodoorsUnlocked,hospitalBedUnlocked,tubeTelevisionUnlocked,gunTurretsUnlocked,hydroponicsUnlocked } from './research.ts';
 import { advanceHumanCorpses } from './human-corpses.ts';
+import { advanceDeathThoughts } from './death-thoughts-perception.ts';
 import { applyBurial,processBurial,reconcileBurials,initialGrave } from './burial.ts';
 import { applyCleanRoom,processCleaning } from './cleaning.ts';
 import { advanceFilth,recordFilthMovement,bleedFilth } from './filth.ts';
@@ -686,7 +687,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     updateDoors(world);
     advancePrisonBreaks(world);
     const structuresBeforeCombat=world.structures;
-    advanceWorldCombat(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
+    advanceWorldCombat(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);advanceDeathThoughts(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);if(world.tick%20===0)reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     expireStaggers(world);advanceFilth(world,weatherRainRate(world));
     scheduleGrowing(world);

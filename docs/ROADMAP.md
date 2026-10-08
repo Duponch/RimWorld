@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V274 — réactions aux morts et sépultures ; schéma 209.**
+La [boucle humaine](gameplay/death-thoughts-v274.md) complète les pertes : perception réelle, souvenirs, humeur, transport et inhumation. Les décès appris restent distincts des témoins et des deuils amicaux/familiaux ; cérémonies et idéologies restent ouvertes. Autonomie, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **Avancement fonctionnel V273 — réponse EMP aux machines ; schéma 208.**
 Le [lanceur EMP](gameplay/emp-launcher-v273.md) réutilise industrie, équipement, visée, projectiles et propagation d’explosion pour ouvrir une fenêtre tactique sans dégâts physiques. Mécanoïdes et appareils livrés ont des réponses distinctes ; les autres armes, boucliers et implants restent ouverts. Autonomie, lots cohérents, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
 

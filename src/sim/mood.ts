@@ -9,6 +9,8 @@ import { pawnBody } from './health-rules.ts';
 import { medicalPain } from './injury-state.ts';
 import { insultMoodMemories,kindWordsMoodMemories } from './social-state.ts';
 import { bereavementThoughtsAt,expireBereavement } from './bereavement.ts';
+import { deathThoughtsAt,expireDeathThoughts } from './death-thoughts.ts';
+import { colonistUnburiedThought } from './death-thoughts-perception.ts';
 import { expireFamilyBereavement,familyBereavementThoughtsAt } from './family-bereavement.ts';
 import { expireRomanceMemories,romanceMoodThoughtsAt } from './romance-memories.ts';
 import { relationshipHousingThought,type RelationshipTopology } from './relationship-housing.ts';
@@ -56,19 +58,22 @@ export interface PersonalMoodContext {
   items:readonly MaterialPile[];expectation?:ColonyExpectation;difficultyMood:number;
   /** Absent off-map: never reuse the former map room, comfort or beauty. */
   environment?:{comfort:number;beauty:number};housing?:MoodThought;
+  deathSituation?:MoodThought;
 }
 export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopology):readonly MoodThought[] {
   if(pawn.state==='dead')return [];
   return personalMoodThoughts(pawn,{tick:world.tick,people:{get:id=>world.pawns.find(p=>p.id===id)},
     ...(pawn.familyBereavement||pawn.romanceMemories?{relationPeople:captureRelationshipPeople(world)}:{}),
     items:world.piles,expectation:colonyExpectation(world,pawn),difficultyMood:colonistMoodOffset(world,pawn),
-    environment:{comfort:pawn.comfort,beauty:pawn.beauty},housing:relationshipHousingThought(world,pawn,topology)});
+    environment:{comfort:pawn.comfort,beauty:pawn.beauty},housing:relationshipHousingThought(world,pawn,topology),deathSituation:colonistUnburiedThought(world,pawn)});
 }
 export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly MoodThought[] {
   if(pawn.state==='dead')return [];
   const expectation=c.expectation;
   const thoughts:MoodThought[]=[expectation?expectationThoughts.get(expectation.id)!:camp,...roomMoodThoughtsAt(pawn,c.tick)];
   if(pawn.bereavement)thoughts.push(...bereavementThoughtsAt(pawn,c.tick,c.people));
+  if(pawn.deathThoughts)thoughts.push(...deathThoughtsAt(pawn,c.tick,c.people));
+  if(c.deathSituation)thoughts.push(c.deathSituation);
   if(pawn.familyBereavement)thoughts.push(...familyBereavementThoughtsAt(pawn,c.tick,c.relationPeople??c.people));
   if(pawn.romanceMemories)thoughts.push(...romanceMoodThoughtsAt(pawn,c.tick,c.relationPeople??c.people));
   const housing=c.housing;if(housing)thoughts.push(housing);
@@ -118,6 +123,7 @@ export function expireMealMemoriesAt(pawn:Pawn,tick:number):void {
   if(pawn.familyBereavement)expireFamilyBereavement(pawn,tick);
   if(pawn.romanceMemories)expireRomanceMemories(pawn,tick);
   if(pawn.bereavement)expireBereavement(pawn,tick);
+  if(pawn.deathThoughts)expireDeathThoughts(pawn,tick);
   expireRoomMemoriesAt(pawn,tick);
   if(pawn.deniedJoining?.some(t=>t<=tick)){pawn.deniedJoining=pawn.deniedJoining.filter(t=>t>tick);if(!pawn.deniedJoining.length)delete pawn.deniedJoining;}
   if(pawn.memories.some(m=>m.expiresAt<=tick))pawn.memories=pawn.memories.filter(m=>m.expiresAt>tick);

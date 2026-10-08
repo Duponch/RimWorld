@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V274, schéma 209 : [perception des morts](../gameplay/death-thoughts-v274.md).** Sept familles de souvenirs bornés portent uniquement kind, identité et date. Le décès médical produit les pensées une fois ; la perception phasée observe les vrais corps au sol. La situation sans sépulture est dérivée. Fichiers et Decoder partagent les gardes, avec horloges des propriétaires hors carte ; migration neutre, deuils historiques indépendants. Les états suivants sont historiques.
+
 **V273, schéma 208 : [EMP](../gameplay/emp-launcher-v273.md).** Le producteur de tir réutilise le vol et les interceptions, puis une variante explicite de l’onde persistée porte qualité et provenance du projectile. Aucun dégât Bullet préalable. Les horloges EMP sont distinctes du stun historique de 45 Core ; la pause mécanique conserve arête, préparation et récupération. Les gardes fichiers/Decoder partagent le contenu prospectif, les durées et les propriétaires ; migration neutre. Les états suivants sont historiques.
 
 **V272, schéma 207 : [paludisme et peste](../gameplay/immune-diseases-v272.md).** Noyau numérique commun à deux définitions explicites, sans remplacer la grippe historique. Les mandats de soin conservent patient/phase et recalculent leurs cibles ; gardes médicales communes fichiers/Decoder et copies natives profondes. Extension prospective du calendrier DiseaseHuman avec RNG de victimes séparé ; aucun pipeline clinique parallèle. Les états suivants sont historiques.

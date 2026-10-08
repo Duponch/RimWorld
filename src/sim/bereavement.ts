@@ -4,6 +4,7 @@ import { opinionOf } from './social-state.ts';
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 import type { MoodThought } from './mood.ts';
 import { notifyFamilyDeath } from './family-bereavement.ts';
+import { notifyDeathThoughts } from './death-thoughts.ts';
 
 export type DeathMemoryKind='friend-died'|'rival-died';
 export interface DeathMemory {otherId:number;kind:DeathMemoryKind;at:number;opinion:number}
@@ -19,6 +20,7 @@ export const deathMemoryDuration=(kind:DeathMemoryKind):number=>kind==='friend-d
 export function notifyPawnDeath(world:World,deceased:Pawn):void {
   const owners=captureHumanOwners(world),known=owners.byId.get(deceased.id);
   if(known?.pawn!==deceased||deceased.state!=='dead'||!deceased.health?.death)return;
+  notifyDeathThoughts(world,deceased,owners);
   notifyFamilyDeath(world,deceased);
   for(const slot of [...owners.local,...owners.away]){
     const observer=slot.pawn!;

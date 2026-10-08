@@ -1,5 +1,8 @@
 # Lisière
 
+**V274 — morts, cadavres et sépultures ; schéma 209.**
+Les décès vécus et les dépouilles vues affectent maintenant l’humeur ; laisser un colon sans sépulture crée un malus distinct. Transport et inhumation arrêtent les nouvelles observations, les souvenirs restent temporaires et les deuils familiaux sont conservés. [Règles et validation](docs/gameplay/death-thoughts-v274.md). Les états suivants sont historiques.
+
 **V273 — lanceur EMP ; schéma 208.**
 Fabriquer, équiper et tirer une impulsion de zone permet de neutraliser temporairement les machines, puis d’exploiter cette fenêtre avec la défense existante. Adaptation des mécanoïdes, effets électriques, inspections et reprises sauvegardées : [règles et validation](docs/gameplay/emp-launcher-v273.md). Les états suivants sont historiques.
 

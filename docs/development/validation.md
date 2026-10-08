@@ -1,4 +1,6 @@
-# Validation courante — V273
+# Validation courante — V274
+
+**V274, schéma 209 : [morts et cadavres](../gameplay/death-thoughts-v274.md#validation).** 102 cas uniques/18 fichiers dont28nouveaux passent par reprises ciblées, avec62sauvegardes publiques. Typage/build et WebGPU passent : pensées affichées, transport puis inhumation physiques, sauvegardes/reprises exactes3011/3087, erreurs vides. Deux attentes de fixture et l’import initial du banc restent rouges conservés ; aucun FPS ou campagne longue déduit. Les validations suivantes sont historiques.
 
 **V273, schéma 208 : [lanceur EMP](../gameplay/emp-launcher-v273.md#validation).** 179 cas uniques/25 fichiers dont 42 nouveaux passent par reprises ciblées ; anciennes armes, réseaux, lecteurs et 62 sauvegardes publiques couverts. Build/typage et Chromium WebGPU avec tir réel, deux sauvegardes/reprises et expiration d’adaptation passent. Rouges de fixtures et de sélection du banc conservés ; aucun FPS ou campagne longue annoncé. Les validations suivantes sont historiques.
 

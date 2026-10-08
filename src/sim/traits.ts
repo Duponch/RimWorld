@@ -11,7 +11,7 @@ export const TRAITS = Object.freeze({
   'slow-learner':Object.freeze({label:'Apprentissage lent',group:'learning',mood:0,learning:-.75,breakOffset:0,description:'Apprentissage général : 25 %. Aucun ralentissement direct du travail ; oubli inchangé.'}),
   kind:Object.freeze({label:'Aimable',group:'social-tone',mood:0,learning:0,breakOffset:0,description:'N’initie pas de vexation ni d’insulte et peut offrir des mots gentils : opinion +15 et humeur +5 pour la cible.'}),
   abrasive:Object.freeze({label:'Incisif',group:'social-tone',mood:0,learning:0,breakOffset:0,description:'Vexations et insultes 2,3 fois plus probables parmi les échanges admissibles.'}),
-  bloodlust:Object.freeze({label:'Sanguinaire',group:'social-violence',mood:0,learning:0,breakOffset:0,description:'Quatre fois plus susceptible de déclencher une bagarre après une vexation ou une insulte.'}),
+  bloodlust:Object.freeze({label:'Sanguinaire',group:'social-violence',mood:0,learning:0,breakOffset:0,description:'Quatre fois plus susceptible de déclencher une bagarre après une vexation ou une insulte. Savoure les morts humaines vues et ne souffre pas des souvenirs de cadavres observés. Un colon laissé sans sépulture affecte toujours son humeur.'}),
 });
 export type TraitId=keyof typeof TRAITS;
 export type TraitBearer=Pick<Pawn,'traits'>;

@@ -38,7 +38,7 @@ export class PresentationChanges {
       world.pawns.map(p=>[p.id,p.state,p.burning?.phase,p.firefighting?.phase,p.firefighting?.fireId,p.raid?.exiting,p.mental?.crisis?.kind,p.mental?.crisis?.target,
         p.mental?.crisis&&'targetId' in p.mental.crisis?p.mental.crisis.targetId:undefined,
         p.mental?.crisis?.kind==='tantrum'?p.mental.crisis.attempted:undefined,
-        p.meleeThreat,p.bombRefuge,p.bedId,p.social?.last,p.romanceMemories,p.familyBereavement,
+        p.meleeThreat,p.bombRefuge,p.bedId,p.social?.last,p.romanceMemories,p.familyBereavement,p.deathThoughts,
         p.jobId,p.faction,p.prisoner?.capturedAt,p.prisoner?.mode,p.prisoner?.lastChatTick,p.prisoner?.escape,p.ward?.kind,p.ward?.patientId,p.ward?.phase,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,
         // Human Busy clocks pay every Core. Publish real orders/phases and
         // stun boundaries, leaving continuous watermarks to periodic snapshots.

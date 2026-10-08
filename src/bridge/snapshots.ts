@@ -39,6 +39,7 @@ import { validWildlifeExitState,validWildlifePredationState } from '../sim/wildl
 import { validCorpseConsumption } from '../sim/corpse-anatomy.ts';
 import { V190_ITEM_IDS } from '../sim/biome-items.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
+import { validDeathThoughtsPawnShape,validDeathThoughtsTransport } from '../sim/death-thoughts-save.ts';
 import { validateRelationshipWorld } from '../sim/relationship-world-save.ts';
 import { validateGroupStateWithPlanet } from '../sim/group-save.ts';
 import { registerGroupThingIds } from '../sim/group-namespace-save.ts';
@@ -766,6 +767,7 @@ export class SnapshotDecoder {
     for(const pawn of message.world.pawns){
       if(!pawn||typeof pawn!=='object'||Array.isArray(pawn))return resync('Personne locale invalide pour ce snapshot.');
       if(Object.hasOwn(pawn,'emp'))return resync('Un effet EMP mécanique ne peut pas appartenir à une personne.');
+      if(!validDeathThoughtsPawnShape(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,message.world.tick))return resync('Souvenir de décès perçu invalide ou futur.');
       if(Object.hasOwn(pawn,'bombRefuge')&&!validBombRefugeShape(pawn.bombRefuge,message.world.schemaVersion))return resync('Refuge Bomb futur ou invalide.');
       if(!validMentalTransport(pawn,message.world))return resync('Crise mentale, menace ou autorité de mêlée invalide pour ce snapshot.');
       if(!validShootingShape(pawn.shooting,message.world.schemaVersion,message.world.tick)
@@ -1062,6 +1064,7 @@ export class SnapshotDecoder {
       }catch{return resync('Propriétaire humain hors carte incohérent.');}
     }
     if(validateRelationshipWorld(next,next.schemaVersion).length)return resync('Liens, annonce ou souvenirs relationnels incohérents.');
+    if(!validDeathThoughtsTransport(next,next.schemaVersion))return resync('Souvenirs de décès perçus ou propriétaires incohérents.');
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     if(!this.planetValidation.commit(planetCheck))return resync('Planète, groupe ou pertes incohérents.');
     const replaced = message.epoch !== this.epoch;

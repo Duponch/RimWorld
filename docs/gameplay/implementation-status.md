@@ -1,5 +1,8 @@
 # Ce qui est jouable et ce qui manque
 
+**V274 — réactions aux morts et cadavres ; schéma 209.**
+La [perception des pertes](death-thoughts-v274.md) complète les souvenirs d’ami/rival et de famille : témoin, décès colonial appris, dépouilles vues et colon sans sépulture. Éveil, vue, portée et obstacles conditionnent la perception ; inhumation et souvenirs ont des effets distincts. Les états suivants sont historiques.
+
 **V273 — lanceur EMP ; schéma 208.**
 La [boucle EMP](emp-launcher-v273.md) relie recherche, usinage, équipement, dispersion et vol physique à la suspension réelle de la marche et des attaques mécaniques. Les mécanoïdes s’adaptent aux impacts rapprochés ; tourelles, générateurs et batteries livrés sont neutralisables sans perte directe de PV ou de charge. Les états suivants sont historiques.
 
@@ -169,4 +172,4 @@ Les [contrats](../README.md), le [guide joueur](player-guide.md) et le [catalogu
 
 ### Frontière sociale V181
 
-[Deuil dirigé](../development/bereavement-v181.md) : pensées d’ami/rival réellement acquises au décès médical, opinion figée, durée/empilement Core, identités et reprise persistées. V214 relie le deuil familial aux liens connus, dans le périmètre contrôlé. Le témoin, la pensée générale de décès colonial et les sentiments hors carte restent à développer. La sauvegarde préparée « Deuil et souvenirs » ne constitue pas une campagne naturelle.
+[Deuil dirigé](../development/bereavement-v181.md) : pensées d’ami/rival réellement acquises au décès médical, opinion figée, durée/empilement Core, identités et reprise persistées. V214 relie le deuil familial aux liens connus. [V274](death-thoughts-v274.md) ajoute témoins, décès colonial appris, observation des cadavres et colon sans sépulture ; les voyageurs reçoivent les décès appris sans perception de carte. Psychopathie, cannibalisme, idéologies et cérémonies restent absents. La sauvegarde préparée « Deuil et souvenirs » ne constitue pas une campagne naturelle.

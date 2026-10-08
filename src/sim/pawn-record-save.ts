@@ -2,6 +2,7 @@
 // Identity/Thing registration stays with the owner coordinator. No World clone,
 // extra map Pawn, clock catch-up, or mutable gameplay is created here.
 import { validFamilyBereavementShape } from './family-bereavement-save.ts';
+import { validDeathThoughtsPawnShape } from './death-thoughts-save.ts';
 import { validRomanceMemoryShape } from './romance-memories.ts';
 import {validatePawnAppearance} from './pawn-appearance.ts';
 import { legacyHumanAge, validHumanAge } from './human-age.ts';
@@ -51,6 +52,7 @@ export function validatePawnRecordShape(item:Record<string,unknown>, world:World
   const coord=(value:Record<string,unknown>)=>integer(value.x,0,world.width-1)&&integer(value.z,0,world.height-1);
   if(!validPawnPodRescue(item,version,input as unknown as World))errors.push('Invalid or future pod rescue mandate for schema.');
   if(!validHumanAge(item.age,version))errors.push('Invalid or future human age.');
+  if(!validDeathThoughtsPawnShape(item,version,validationTick))errors.push('Invalid or future perceived death memory.');
   if(version<195&&(Object.hasOwn(item,'familyBereavement')||Object.hasOwn(item,'romanceMemories'))
     ||!validFamilyBereavementShape(item.familyBereavement,version,validationTick)||!validRomanceMemoryShape(item.romanceMemories,version,validationTick))errors.push('Invalid or future family/romance memory shape.');
   if(!validBackground(item.background,version,item.age as import('./human-age.ts').HumanAge|undefined))errors.push('Invalid or future colonist background.');

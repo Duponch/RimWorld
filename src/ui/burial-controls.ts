@@ -3,6 +3,10 @@ import { corpseStage } from '../sim/corpses';
 import { footprintCells } from '../sim/definitions';
 import type { Cell,Command,Pawn,World } from '../sim/types';
 
+export function burialMoodGuidance(world:Pick<World,'schemaVersion'>):string {
+  return world.schemaVersion>=209?'Une dépouille en tombe ne renouvelle plus les pensées de corps vu et ne compte plus parmi les colons non inhumés. Les souvenirs d’un décès ou d’un corps déjà vu persistent jusqu’à leur propre expiration.':'';
+}
+
 export function bodyDescription(world:World,pawn:Pawn):string {
   if(pawn.body?.lostAt!==undefined)return 'Décédé · dépouille détruite';
   const pile=world.piles.find(p=>p.id===pawn.body?.pileId);
@@ -27,6 +31,7 @@ export function updateBurialControls(panel:HTMLElement,world:World,selection:Cel
     root.dataset.key=key;root.replaceChildren();
     const title=document.createElement('h3');title.textContent=grave?'Sépulture':'Dépouille humaine';root.append(title);
     const status=document.createElement('p');status.dataset.burialStatus='';root.append(status);
+    const guidance=document.createElement('p');guidance.dataset.burialMood='';root.append(guidance);
     if(grave){
       for(const [kind,label] of [['colonists','Colons'],['strangers','Étrangers']] as const){const field=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.dataset.graveFilter=kind;field.append(input,` ${label}`);root.append(field);}
       const label=document.createElement('label');label.textContent='Attribuer la tombe ';const choice=document.createElement('select');choice.id='grave-assignment';
@@ -64,4 +69,6 @@ export function updateBurialControls(panel:HTMLElement,world:World,selection:Cel
     button.disabled=!choice.value||body.body?.lostAt!==undefined||actual?.owner.type==='grave'||actual?.owner.type==='pawn';
     button.onclick=()=>{const target=root!.querySelector<HTMLSelectElement>('#burial-target')!.value;send({type:'order-bury',pawnId:Number(choice.value),bodyPawnId:body.id,...target?{graveId:Number(target)}:{}});};
   }
+  const guidance=root.querySelector<HTMLElement>('[data-burial-mood]')!;
+  guidance.textContent=burialMoodGuidance(world);guidance.hidden=!guidance.textContent;
 }
