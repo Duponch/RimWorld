@@ -1,5 +1,10 @@
 # Ce qui est jouable et ce qui manque
 
+**V262 — admission Core privée positive, produit V242 et schéma 198 conservés.**
+Le [prototype](../development/core-compiled-camera-v262.md) retrouve sa résidence après une vraie perte GPU ; vingt cas composants et sauvegarde/reload passent dans les [contrôles](../history/validation-core-compiled-camera-v262.md).
+Aucun changement jouable ou FPS ajouté ; coût Core, oracle graphique complet, GAME de performance et adoption restent ouverts, avec 62 références et 65 fichiers publics exacts.
+V263 doit qualifier le Core A/B complet dans les fragments privés avant promotion ; relance automatique en pause, commits locaux sans push. Les repères suivants sont historiques.
+
 **V261 — diagnostic du raccord Core, produit V242 et schéma 198 conservés.** Le [prototype privé](../development/core-resident-admission-v261.md) atteint le vrai jeu mais son audit se replie à froid ; les [preuves](../history/validation-core-resident-admission-v261.md) identifient un callback caméra des sprites encore hors parcours. Aucun changement jouable, sauvegarde ou FPS ajouté. Suite par identité des sorties compilées, puis qualité/coût et reprise GPU avant adoption ; 62 références exactes, relance automatique en pause, commits locaux sans push.
 
 **V260 — prototype privé utile, produit V242 et schéma198 conservés.** La [préparation graphique fermée](../development/owned-render-preparation-v260.md) passe les images matérielles et son [premier critère de coût](../history/validation-owned-render-preparation-v260.md), avec dispersion et démarrage défavorable. Aucun contenu, sauvegarde ou FPS ajouté au jeu ; les62références restent exactes. Suite par qualification du vrai Core/MAIN et de sa reprise GPU, puis mesure GAME avant promotion. Objectif240FPS/vrai6× ouvert, relance automatique en pause et commits locaux sans push.

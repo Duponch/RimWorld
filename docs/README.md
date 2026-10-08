@@ -1,5 +1,10 @@
 # Documentation de Lisière
 
+**V262, produit V242 et schéma 198 conservés : [admission Core privée](development/core-compiled-camera-v262.md), [recherche](research/core-compiled-camera-v262.md), [preuves et reprises](history/validation-core-compiled-camera-v262.md).**
+Résidence native, sauvegarde/reload et vraie reprise après perte GPU passent, avec vingt cas composants.
+Aucun FPS, coût Core, oracle graphique complet, GAME de performance ou adoption acquis ; 62 références et 65 fichiers publics exacts.
+Suite V263 : Core A/B complet dans les fragments privés avant promotion ; relance automatique en pause, aucun push. Les repères suivants sont historiques.
+
 V261, produit V242 et schéma198 conservés : [premier raccord Core privé](development/core-resident-admission-v261.md), [recherche des caches caméra](research/core-resident-admission-v261.md), [diagnostics et reprises](history/validation-core-resident-admission-v261.md). Refus à froid observé dans les sprites, aucun coût ou FPS déduit. Suite sur les seules sorties caméra canoniques déjà compilées ; 62 références exactes, relance automatique en pause et aucun push.
 
 V246, schéma 198 inchangé, écarte le [prototype de registre Resource](development/native-namespace-v246.md) après deux [oracles négatifs](history/validation-native-namespace-v246.md). La propriété partielle ne suffit pas ; la suite étudie celle du graphe natif entier et ses dépendances. Produit V242 conservé, aucun FPS ajouté.

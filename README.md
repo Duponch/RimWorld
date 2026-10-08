@@ -1,5 +1,10 @@
 # Lisière
 
+**V262 — admission Core privée et reprise GPU positives, produit V242 et schéma 198 conservés.**
+Les [résultats caméra compilés](docs/development/core-compiled-camera-v262.md) et l'audit passif des ombres permettent une résidence native ; vingt cas composants, sauvegarde/reload et vraie perte du device suivie de continuation passent dans les [contrôles](docs/history/validation-core-compiled-camera-v262.md).
+Aucun FPS, coût Core, oracle graphique complet, GAME de performance ou adoption acquis ; les 62 références et 65 fichiers publics restent exacts.
+V263 doit qualifier le Core A/B complet dans les fragments privés avant promotion ; relance automatique en pause, commits locaux sans push. Les repères suivants sont historiques.
+
 **V261 — premier raccord au vrai Core, produit V242 et schéma 198 conservés.** La [préparation résidente privée](docs/development/core-resident-admission-v261.md) atteint Les Aulnes, mais son audit refuse à froid un callback caméra des sprites ; les [diagnostics et reprises](docs/history/validation-core-resident-admission-v261.md) sont conservés sans gain FPS annoncé. Suite sur l'identité des sorties caméra déjà compilées, puis qualification graphique et coût du jeu avant adoption. Les 62 références restent exactes ; objectif240FPS/6× ouvert, relance automatique en pause, commits locaux sans push. Les repères suivants sont historiques.
 
 **V254 — fonctions du Worker source identifiées, produit V242 et schéma 198 conservés.** Le [profil CPU](docs/development/source-v8-attribution-v254.md) situe des coûts répétés dans les pièces, les requêtes de meubles et les préparations spatiales. Les [preuves](docs/history/validation-source-v8-attribution-v254.md) conservent un refus final du banc après profil et sauvegarde/reprise ; aucun FPS ajouté par ce diagnostic. La suite vise une refonte des données réellement relues, avec mêmes règles, qualité et cadence. Les 62 références restent exactes, cible 240 FPS/6× ouverte ; relance automatique en pause et commits locaux sans push.

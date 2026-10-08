@@ -1,4 +1,9 @@
-# Validation courante — V261
+# Validation courante — V262
+
+**V262, produit V242 et schéma 198 conservés.** [Admission Core privée](core-compiled-camera-v262.md), [preuves et reprises](../history/validation-core-compiled-camera-v262.md).
+Reprise native PASS 46,119 s : résidence froide, sauvegarde/reload exacts et vraie perte GPU suivie de continuation ; composants PASS un fichier/vingt cas en 3,319 s, typage PASS 1,710 s.
+Premier natif rouge et échec distinct de génération conservés ; cleanup sans erreur, deux owners fermés, sources/62 références/65 fichiers publics exacts.
+Aucun oracle graphique Core, coût, FPS, GAME de performance ou adoption acquis ; V263 doit qualifier le Core A/B complet privé avant promotion. Relance automatique en pause, aucun push. Les repères suivants sont historiques.
 
 **V261, produit V242 et schéma 198 conservés.** [Raccord Core privé](core-resident-admission-v261.md), [preuves et reprises](../history/validation-core-resident-admission-v261.md). Syntaxe/types initiaux PASS, diagnostic natif FAIL25,424s/0SHARED. Reprise DTO seule et correction type effacée : typesPASS4,772s, diagnosticFAIL19,332s, uniforme nommé cameraPosition/render dans SpriteNodeMaterial, identité canonique encore à établir. Rouges conservés, pas de coût/Core pixels/GAME/recovery/adoption/FPS. Deux cleanups sans erreur, sources/62payloads/65fichiers exacts, navigateurs/workers et5286–87 fermés. ERR_ABORTED musical conservé ; chronologie owned-cleanup prouvée dans la seconde reprise seulement. Suite sortie once caméra compilée sans relaxation générique ; relance automatique en pause, aucun push.
 
