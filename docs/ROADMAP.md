@@ -1,5 +1,9 @@
 # Plan de développement
 
+**Après V263 : arrêt demandé pour le bilan, produit V242 et schéma 198 conservés.**
+La [qualification du Core privé](development/core-physical-qualification-v263.md) est close au stade partiel : treize paires graphiques exactes et une différence de pixels après resize ; [preuves](history/validation-core-physical-qualification-v263.md), aucun coût complet ou FPS ajouté, aucune adoption. Les 62 références et 65 fichiers publics restent exacts.
+Le [bilan du 8 octobre](history/performance-bilan-2026-10-08.md) est le point de discussion avant toute nouvelle priorité. Aucun V264, nouveau banc ou reprise autonome autorisé après ce commit sans nouveau signal humain ; relance automatique en pause, aucun push. Les repères suivants sont historiques.
+
 **Après V262, schéma 198 conservé : qualifier le Core A/B complet dans les fragments privés avant promotion.**
 L'[admission native](development/core-compiled-camera-v262.md), vingt cas composants et la [vraie reprise GPU](history/validation-core-compiled-camera-v262.md) passent ; produit V242, 62 références et 65 fichiers publics exacts.
 V263 doit vérifier méthodes/writers, champs consommés, compilation intercalée, pixels, froid et coût complet avant tout GAME de performance ou adoption.

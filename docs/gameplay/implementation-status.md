@@ -1,5 +1,9 @@
 # Ce qui est jouable et ce qui manque
 
+**V263 — prototype Core non adopté, produit V242 et schéma 198 conservés.**
+La [qualification graphique partielle](../development/core-physical-qualification-v263.md) conserve treize étapes exactes, avec une différence de pixels après redimensionnement encore non attribuée ; [preuves](../history/validation-core-physical-qualification-v263.md). Aucun changement jouable, sauvegarde ou FPS ajouté, 62 références et 65 fichiers publics exacts.
+Le [bilan CPU/GPU/FPS du 8 octobre](../history/performance-bilan-2026-10-08.md) prépare la discussion demandée. Arrêt après ce commit ; aucun nouveau travail autonome avant un signal humain, relance automatique en pause et aucun push. Les repères suivants sont historiques.
+
 **V262 — admission Core privée positive, produit V242 et schéma 198 conservés.**
 Le [prototype](../development/core-compiled-camera-v262.md) retrouve sa résidence après une vraie perte GPU ; vingt cas composants et sauvegarde/reload passent dans les [contrôles](../history/validation-core-compiled-camera-v262.md).
 Aucun changement jouable ou FPS ajouté ; coût Core, oracle graphique complet, GAME de performance et adoption restent ouverts, avec 62 références et 65 fichiers publics exacts.

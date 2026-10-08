@@ -1,5 +1,8 @@
 # Documentation de Lisière
 
+**V263, produit V242 et schéma 198 conservés : [qualification Core partielle](development/core-physical-qualification-v263.md), [recherche](research/core-physical-qualification-v263.md), [preuves](history/validation-core-physical-qualification-v263.md).**
+Treize comparaisons graphiques exactes ; différence de pixels au retour à la taille initiale, prototype non adopté et aucun FPS ajouté. Le [bilan CPU/GPU/FPS du 8 octobre](history/performance-bilan-2026-10-08.md) distingue les gains livrés des pistes privées.62références/65fichiers publics exacts. Arrêt après le commit à la demande de l'utilisateur ; aucun nouveau lot avant son signal, relance automatique en pause, aucun push. Les repères suivants sont historiques.
+
 **V262, produit V242 et schéma 198 conservés : [admission Core privée](development/core-compiled-camera-v262.md), [recherche](research/core-compiled-camera-v262.md), [preuves et reprises](history/validation-core-compiled-camera-v262.md).**
 Résidence native, sauvegarde/reload et vraie reprise après perte GPU passent, avec vingt cas composants.
 Aucun FPS, coût Core, oracle graphique complet, GAME de performance ou adoption acquis ; 62 références et 65 fichiers publics exacts.

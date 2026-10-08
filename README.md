@@ -1,5 +1,9 @@
 # Lisière
 
+**V263 — qualification privée partielle, produit V242 et schéma 198 conservés.**
+Le [contrôle graphique du vrai Core](docs/development/core-physical-qualification-v263.md) conserve treize comparaisons exactes ; une différence de pixels après redimensionnement empêche la qualification complète et l'adoption. Les [preuves](docs/history/validation-core-physical-qualification-v263.md) ne donnent aucun nouveau gain FPS.
+Le [bilan du 8 octobre](docs/history/performance-bilan-2026-10-08.md) sépare gains CPU livrés, mesures GPU et essais écartés. Les 62 références et 65 fichiers publics restent exacts. **Arrêt demandé après ce commit ; aucune reprise autonome avant un nouveau signal humain.** Relance automatique en pause, aucun push. Les repères suivants sont historiques.
+
 **V262 — admission Core privée et reprise GPU positives, produit V242 et schéma 198 conservés.**
 Les [résultats caméra compilés](docs/development/core-compiled-camera-v262.md) et l'audit passif des ombres permettent une résidence native ; vingt cas composants, sauvegarde/reload et vraie perte du device suivie de continuation passent dans les [contrôles](docs/history/validation-core-compiled-camera-v262.md).
 Aucun FPS, coût Core, oracle graphique complet, GAME de performance ou adoption acquis ; les 62 références et 65 fichiers publics restent exacts.

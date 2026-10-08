@@ -1,4 +1,6 @@
-# Validation courante — V262
+# Validation courante — V263
+
+**V263 : qualification privée partielle, produit V242 et schéma 198 conservés.** [Contrat](core-physical-qualification-v263.md), [preuves et rouges conservés](../history/validation-core-physical-qualification-v263.md). Typage A/B et syntaxe passent ; natif FAIL sur un mauvais chemin de diagnostic après14capturesA+14B. Audit offline distinct :13paires exactes, dernier resize-original différent en pixels, finalWorld exact. Aucun coût Core/GAME/build/adoption ou FPS ajouté ; aucun Mixed ou frontière graphique non exécuté certifié.62références/65fichiers publics exacts. [Bilan du 8 octobre](../history/performance-bilan-2026-10-08.md). Arrêt demandé après commit, aucune reprise autonome avant un nouveau signal humain, relance automatique en pause et aucun push. Les validations suivantes sont historiques.
 
 **V262, produit V242 et schéma 198 conservés.** [Admission Core privée](core-compiled-camera-v262.md), [preuves et reprises](../history/validation-core-compiled-camera-v262.md).
 Reprise native PASS 46,119 s : résidence froide, sauvegarde/reload exacts et vraie perte GPU suivie de continuation ; composants PASS un fichier/vingt cas en 3,319 s, typage PASS 1,710 s.
