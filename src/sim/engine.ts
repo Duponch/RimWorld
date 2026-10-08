@@ -160,7 +160,7 @@ import { processHaul } from './hauling.ts';
 import { scheduleGrowing, cancelGrowingJobs, growingJobValid, finishSowing, jobDuration, growingZoneAt, resourceAt } from './farming.ts';
 import { isPlant, harvestable,choppable,berryYield } from './plants.ts';
 import { search, searchCandidates, destinationValid, planWork, type SearchBudget, type NavigationGrid } from './work-planner.ts';
-import { workType } from './work-types.ts';
+import { workPriority,workType } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { releaseAssignments, planCommandDrops, commitDrop, releaseWork, type DropPlan } from './work-release.ts';
 import { validDiningPlace } from './dining.ts';
@@ -521,7 +521,9 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     if(command.work==='haul'&&command.value===0&&pawn.burial&&pawn.orders.active!=='bury')releaseWork(world,pawn,drops);
     if(command.work==='firefight'&&command.value===0&&pawn.firefighting&&!pawn.firefighting.forced)releaseWork(world,pawn,drops);
     if(command.work==='warden'&&command.value===0&&pawn.ward)releaseWork(world,pawn,drops);
-    if(command.value===0&&pawn.rescue&&command.work===(world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.prisoner?'warden':'doctor')&&pawn.orders.active!=='rescue')releaseWork(world,pawn,drops);
+    if(command.value===0&&pawn.rescue&&pawn.orders.active!=='rescue'&&(pawn.rescue.release?
+      (command.work==='basic'||command.work==='warden')&&!workPriority(pawn,'basic')&&!workPriority(pawn,'warden'):
+      command.work===(world.pawns.find(p=>p.id===pawn.rescue!.patientId)?.prisoner?'warden':'doctor')))releaseWork(world,pawn,drops);
     const job = world.jobs.find(candidate => candidate.id === pawn.jobId);
     if (command.value === 0 && ((job && workType(job) === command.work && pawn.orders.active===null) || (pawn.haul && pawn.orders.active!=='haul' && command.work === haulingWork(pawn.haul.destination)) || (pawn.cooking && pawn.orders.active!=='cook' && command.work === taskWork(pawn.cooking)))) releaseWork(world, pawn,drops);
     pawn.planCooldown = 0; refreshStock(world); return { ok: true };

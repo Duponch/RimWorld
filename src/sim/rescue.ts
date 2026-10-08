@@ -7,6 +7,7 @@ import { rescueBedAvailable,medicalBedPreference } from './medical-beds.ts';
 import { carrierOf,rescueClaim,syncPatient } from './rescue-state.ts';
 import { blockedCells,reachableCells,routeToCell,type Reachability } from './pathfinding.ts';
 import { clearQueuedOrders } from './player-orders.ts';
+import { processPrisonerRelease,reconcileRelease } from './prisoner-release.ts';
 import { planCommandDrops,releaseWork } from './work-release.ts';
 import type { NeedContext } from './needs.ts';
 import type { Cell,CommandResult,Pawn,World } from './types.ts';
@@ -54,12 +55,14 @@ export function applyRescue(world:World,command:{pawnId:number;patientId:number;
 /** Cheap relationship checks; navigation is revalidated by the ordinary mover. */
 export function reconcileRescues(world:World):void {
   for(const actor of world.pawns)if(actor.rescue){
+    if(actor.rescue.release){reconcileRelease(world,actor);continue;}
     const task=actor.rescue,patient=world.pawns.find(p=>p.id===task.patientId),bed=world.structures.find(s=>s.id===task.bedId);
     if(!patient||!task.capture&&actor.orders.active!=='rescue'&&backgroundWorkRefusal(actor,patient.prisoner?'warden':'doctor')||(task.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||!bed||!rescueBedAvailable(world,bed,patient,actor.id,!!task.capture)||medicalWorkRefusal(actor))releaseWork(world,actor);
   }
 }
 export function processRescue(world:World,actor:Pawn,context:NeedContext):void {
   const task=actor.rescue;if(!task)return;
+  if(task.release){processPrisonerRelease(world,actor,context);return;}
   const patient=world.pawns.find(p=>p.id===task.patientId),bed=world.structures.find(s=>s.id===task.bedId);
   // Finish the previous physiological interval under its previous posture,
   // regardless of which actor was processed first in this tick.

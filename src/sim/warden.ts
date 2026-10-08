@@ -23,7 +23,7 @@ import type { Cell,Pawn,World } from './types.ts';
 
 export interface WardenProposal {task:WardTask;path:Cell[]}
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
-const secure=(p:Pawn)=>!!p.prisoner&&!p.prisoner.escape&&p.state!=='dead'&&!p.mental?.crisis;
+const secure=(p:Pawn)=>!!p.prisoner&&!p.prisoner.escape&&p.prisoner.releasedAt===undefined&&p.state!=='dead'&&!p.mental?.crisis;
 const actorReady=(p:Pawn)=>isColonist(p)&&!p.prisoner&&workPriority(p,'warden')>0&&p.state!=='downed'&&p.state!=='dead'&&!p.draft&&!p.mental?.crisis&&!p.interruptedCargo;
 function chatEligible(world:World,actor:Pawn,p:Pawn):boolean {
   return secure(p)&&prisonerChatReady(world,p)&&pawnBody(actor).capacities.talking>0&&pawnBody(p).canBeAwake
@@ -42,7 +42,7 @@ function roomHasFood(world:World,patient:Pawn,map:RoomTopology):boolean {
   return nutrition+50>=wanted;
 }
 function foodEligible(world:World,p:Pawn,enclosure:()=>RoomTopology):boolean {
-  return secure(p)&&p.state!=='downed'&&p.hunger<FEED_HUNGER&&!needsAssistedFeeding(p)&&!carrierOf(world,p.id)&&!!prisonRoom(world,p,enclosure())&&!roomHasFood(world,p,enclosure());
+  return secure(p)&&p.prisoner!.mode!=='release'&&p.state!=='downed'&&p.hunger<FEED_HUNGER&&!needsAssistedFeeding(p)&&!carrierOf(world,p.id)&&!!prisonRoom(world,p,enclosure())&&!roomHasFood(world,p,enclosure());
 }
 export function wardenWanted(world:World,actor:Pawn):boolean {
   let map:RoomTopology|undefined;const enclosure=()=>map??=capturePrisonTopology(world);

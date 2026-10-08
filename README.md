@@ -1,5 +1,8 @@
 # Lisière
 
+**V267 — libération des prisonniers ; schéma 202.**
+La [libération volontaire](docs/gameplay/prisoner-release-v267.md) relie consigne d’inspection, portage physique par un colon affecté à Basique ou Geôlier, puis sortie autonome avec les possessions conservées. Les archives de prison et de raid distinguent ce départ de l’évasion ; aucun bonus diplomatique ajouté. Autonomie, validations regroupées et push après chaque commit restent autorisés ; les états suivants sont historiques.
+
 **V266 — Zzztt… court-circuit du réseau ; schéma 201.**
 Le [court-circuit](docs/gameplay/short-circuit-v266.md) relie conduits alimentés, réserves du seul réseau touché, incendies, dégâts et reprise physique : éteindre, soigner, réparer et recharger. La lettre décrit les conséquences réelles ; les anciennes parties adoptent ce calendrier prospectivement. Développement autonome, validations regroupées et push après chaque commit autorisés ; les états V265 et antérieurs ci-dessous sont historiques.
 

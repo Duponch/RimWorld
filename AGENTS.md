@@ -1,5 +1,7 @@
 # Travail sur Lisière
 
+- État courant V267 : [libération des prisonniers](docs/gameplay/prisoner-release-v267.md), schéma 202. Basique ou Geôlier prend en charge le portage physique, puis le prisonnier libéré sort seul ; `releasedAt` rend la décision définitive après dépôt. Archives prison et raid distinguent `released` de l’évasion et conservent les possessions ; aucun bonus diplomatique ajouté. Résultats dans la note du lot, complétés par ROOT après les contrôles regroupés. Développement fonctionnel autonome et push après chaque commit toujours autorisés ; les états suivants sont historiques.
+
 - État courant V266 : [Zzztt… court-circuit du réseau](docs/gameplay/short-circuit-v266.md), schéma 201 prospectif. Conduits alimentés, réserve du seul réseau touché, ondes ou tentative de petit feu, puis extinction, soins, réparation et recharge physiques ; lettre et conséquences sauvegardées. Développement fonctionnel autonome, validations regroupées et push après chaque commit autorisés ; ROOT seul exécute les contrôles de cette intégration. Résultats dans la note du lot et le registre de validation. V265 et les consignes antérieures ci-dessous restent historiques.
 
 - Consignes les plus récentes du 8 octobre au soir : poursuivre le développement en autonomie pendant l’absence de l’utilisateur, sans attendre ses relances, et faire un **push après chaque commit**. Elles remplacent les anciennes attentes et interdictions de push ; relance existante réactivée avec ce périmètre fonctionnel. Pas de force push ni déploiement. Nouvelle pause humaine prioritaire.

@@ -44,11 +44,16 @@ export function applyPrisonBed(world:World,command:{bedId:number;enabled:boolean
 }
 export function applyPrisonerMode(world:World,command:{patientId:number;mode:PrisonerMode}):CommandResult {
   const p=world.pawns.find(p=>p.id===command.patientId);
-  if(!p?.prisoner||p.state==='dead'||!['maintain','reduce','recruit'].includes(command.mode))return fail('Prisonnier ou mode de conversation invalide.');
+  if(!p?.prisoner||p.state==='dead'||!['maintain','reduce','recruit',...world.schemaVersion>=202?['release']:[]].includes(command.mode))return fail('Prisonnier ou mode de conversation invalide.');
   if(p.prisoner.mode===command.mode)return {ok:true};
+  if(p.prisoner.releasedAt!==undefined)return fail('Cette personne a déjà été libérée et quitte la carte.');
   p.prisoner.mode=command.mode;
   // Already completed interaction effects/closing time are kept; no rollback.
-  for(const actor of world.pawns){if(actor.ward?.kind==='chat'&&actor.ward.patientId===p.id&&actor.ward.phase!=='closing')interruptWork(world,actor);actor.planCooldown=0;}
+  for(const actor of world.pawns){
+    if(actor.ward?.patientId===p.id&&(command.mode==='release'||actor.ward.kind==='chat'&&actor.ward.phase!=='closing')
+      ||actor.rescue?.release&&actor.rescue.patientId===p.id)interruptWork(world,actor);
+    actor.planCooldown=0;
+  }
   return {ok:true};
 }
 /** Joining air spaces propagates the role to every bed, as a physical room
@@ -85,6 +90,23 @@ function chooseWander(world:World,p:Pawn,context:NeedContext,map:RoomTopology):v
 export function processPrisoner(world:World,p:Pawn,context:NeedContext):boolean {
   if(!p.prisoner)return false;
   if(p.state==='dead'||p.state==='downed')return true;
+  if(p.prisoner.releasedAt!==undefined){
+    // A later incapacity may need care. After recovery, the same released
+    // person resumes the departure instead of becoming detained again.
+    if(p.need&&!context.release()){
+      processNeeds(world,p,context);
+      return true;
+    }
+    if(!p.path.length||p.planCooldown===0){
+      const route=prisonerEscapeRoute(world,p,goals=>context.search(goals));
+      if(route===null)return true;
+      if(route!==undefined){const goal=route.at(-1)??p;p.prisoner.escape={x:goal.x,z:goal.z};p.path=route;}
+      else {p.path=[];p.planCooldown=20;}
+    }
+    const target=p.path.at(-1);
+    if(target){p.state='moving';context.move(target,true);}else p.state='idle';
+    return true;
+  }
   if(p.prisoner.escape&&p.path.length){p.state='moving';context.move(p.prisoner.escape,true);return true;}
   if(p.prisoner.escape&&p.x===p.prisoner.escape.x&&p.z===p.prisoner.escape.z){p.state='idle';return true;}
   let map:RoomTopology|undefined;const enclosure=()=>map??=capturePrisonTopology(world);

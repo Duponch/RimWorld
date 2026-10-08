@@ -12,6 +12,7 @@ import { firefightingTargets,firefightingProposal,startFirefighting } from './fi
 import { prisonFoodChecker } from './prison-food.ts';
 import { huntingWanted,huntingProposal } from './hunting.ts';
 import { wardenWanted,wardenProposal,startWarden } from './warden.ts';
+import {releaseReady,releaseProposal,startPrisonerRelease} from './prisoner-release.ts';
 import { researchWanted,researchProposal } from './research.ts';
 import { feedingProposal,startFeeding } from './feeding.ts';
 import { FEED_HUNGER,needsAssistedFeeding,feedingWork } from './feeding-rules.ts';
@@ -95,6 +96,7 @@ export function destinationValid(world: World, pawn: Pawn): boolean {
 }
 interface Candidate { surgery?:NonNullable<ReturnType<typeof surgeryProposal>>; animalHandling?:NonNullable<ReturnType<typeof handlingProposal>>; animalCare?:NonNullable<ReturnType<typeof animalCareProposal>>; firefighting?:NonNullable<ReturnType<typeof firefightingProposal>>; ward?:NonNullable<ReturnType<typeof wardenProposal>>; hunting?:NonNullable<ReturnType<typeof huntingProposal>>; research?:NonNullable<ReturnType<typeof researchProposal>>; feed?:NonNullable<ReturnType<typeof feedingProposal>>; patientRest?:NonNullable<ReturnType<typeof patientProposal>>; tend?:NonNullable<ReturnType<typeof tendingProposal>>; rescue?:{patientId:number;bedId:number;path:Cell[]}; whole?:true; clearance?:{resourceId:number;progress:number}; cooking?: CookingPlan; priority: number; rank: number; distance: number; id: number; job?: Job; sourceId?: number; quantity?: number; destination?: HaulDestination; target: Cell }
 interface Candidate {animalLeading?:NonNullable<ReturnType<typeof leadingProposal>>;animalProduct?:NonNullable<ReturnType<typeof productProposal>>}
+interface Candidate {prisonerRelease?:NonNullable<ReturnType<typeof releaseProposal>>}
 function compareCandidate(a: Candidate, b: Candidate): number { return a.priority - b.priority || a.rank - b.rank || a.distance - b.distance || a.id - b.id; }
 export function canReach(world: World, target: Cell & { kind?: JobKind }, reachable: Reachability, allowTarget: boolean): boolean {
   const cells = target.kind ? footprintCells(target as Job) : [target];
@@ -116,6 +118,8 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   const cleaning=cleaningWanted(world,pawn),burying=workPriority(pawn,'haul')>0&&world.structures.some(s=>s.kind==='grave'&&s.grave?.corpseId===undefined)&&world.pawns.some(p=>!burialReason(world,pawn,p));
   const fightingFire=firefightingTargets(world,pawn).length>0;
   const researching=researchWanted(world,pawn),hunting=huntingWanted(world,pawn),warding=wardenWanted(world,pawn);
+  const releasePatients=world.pawns.filter(p=>releaseReady(world,pawn,p));
+  const releasePriority=Math.min(...[workPriority(pawn,'basic'),workPriority(pawn,'warden')].filter(p=>p>0),5);
   const productionRank=productionPriority(world,pawn),cooking=productionRank<5;
   const selfCare=patientWork(pawn),tendable=workPriority(pawn,'doctor')>0?world.pawns.filter(p=>p!==pawn&&lyingPatient(p)&&treatmentTarget(p)):[];
   const operations=workPriority(pawn,'doctor')>0?world.pawns.filter(p=>p!==pawn&&p.surgeryRequest&&lyingPatient(p)):[];
@@ -124,8 +128,8 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   const patients=world.pawns.filter(p=>workPriority(pawn,p.prisoner?'warden':'doctor')>0&&wantsRescue(p));
   let canReload:boolean|undefined;
   const fires=world.structures.filter(s=>s.kind==='mini-turret'?(canReload??=!turretReloadPawnReason(pawn))&&wantsTurretReload(world,s):wantsFuel(world,s));
-  if (!handling && !leading && !gathering && !vet && !cleaning && !burying && !fightingFire && !warding && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && !patients.length && !researching && !hunting && !cooking && !fires.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length && !world.packed.length || workPriority(pawn,'haul') === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
-  if (!handling && !leading && !gathering && !vet && !cleaning && !burying && !fightingFire && !warding && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && !patients.length && !researching && !hunting && !cooking && !fires.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
+  if (!handling && !leading && !gathering && !vet && !cleaning && !burying && !fightingFire && !warding && !releasePatients.length && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && !patients.length && !researching && !hunting && !cooking && !fires.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length && !world.packed.length || workPriority(pawn,'haul') === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
+  if (!handling && !leading && !gathering && !vet && !cleaning && !burying && !fightingFire && !warding && !releasePatients.length && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && !patients.length && !researching && !hunting && !cooking && !fires.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
   const blocked = getBlocked();
   const clearingCells=new Set(world.jobs.filter(j=>j.clearance).map(j=>cellIndex(world,j.x,j.z)));
   // Rankings do not depend on flood order. Try the top ready job directly;
@@ -138,7 +142,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     .sort(compareCandidate);
   let reachable: Reachability | null = null;
   const first = ready[0];
-  if (first && (!handling||first.priority<workPriority(pawn,'handle')) && (!leading||first.priority<workPriority(pawn,'handle')) && (!gathering||first.priority<workPriority(pawn,'handle')) && (!vet||first.priority<workPriority(pawn,'doctor')) && (!cleaning||first.priority<workPriority(pawn,'clean')) && (!burying||first.priority<workPriority(pawn,'haul')) && (!fightingFire||first.priority<workPriority(pawn,'firefight')) && (!warding||first.priority<workPriority(pawn,'warden')) && (!hunting||first.priority<workPriority(pawn,'hunt')) && (!researching||first.priority<=workPriority(pawn,'research')) && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && (!patients.length||patients.every(p=>workPriority(pawn,p.prisoner?'warden':'doctor')>first.priority)) && (!cooking || productionRank>first.priority) && (workPriority(pawn,'haul') === 0 || first.priority <= workPriority(pawn,'haul'))
+  if (first && (!handling||first.priority<workPriority(pawn,'handle')) && (!leading||first.priority<workPriority(pawn,'handle')) && (!gathering||first.priority<workPriority(pawn,'handle')) && (!vet||first.priority<workPriority(pawn,'doctor')) && (!cleaning||first.priority<workPriority(pawn,'clean')) && (!burying||first.priority<workPriority(pawn,'haul')) && (!fightingFire||first.priority<workPriority(pawn,'firefight')) && (!warding||first.priority<workPriority(pawn,'warden')) && (!releasePatients.length||first.priority<releasePriority) && (!hunting||first.priority<workPriority(pawn,'hunt')) && (!researching||first.priority<=workPriority(pawn,'research')) && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && (!patients.length||patients.every(p=>workPriority(pawn,p.prisoner?'warden':'doctor')>first.priority)) && (!cooking || productionRank>first.priority) && (workPriority(pawn,'haul') === 0 || first.priority <= workPriority(pawn,'haul'))
     && (first.priority<constructionHaulPriority(pawn)||!world.jobs.some(isConstruction))) {
     const source = first.job.kind === 'sow' ? world.piles.find(p => p.owner.type === 'ground' && sameCell(p.owner, first.job)) : undefined;
     if (!source || reservedSource(world, source.id) === 0) {
@@ -182,7 +186,12 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     } else zoneReserved.set(task.destination.stockpileId,(zoneReserved.get(task.destination.stockpileId)??0)+task.quantity);
   }
   let best: Candidate | null = null;
-  if(warding){const proposal=wardenProposal(world,pawn,reachable);if(proposal)best={ward:proposal,priority:workPriority(pawn,'warden'),rank:-2,distance:Math.abs(pawn.x-proposal.task.spot.x)+Math.abs(pawn.z-proposal.task.spot.z),id:proposal.task.patientId,target:proposal.task.spot};}
+  for(const patient of releasePatients){
+    const proposal=releaseProposal(world,pawn,patient,reachable);if(!proposal)continue;
+    const candidate:Candidate={prisonerRelease:proposal,priority:releasePriority,rank:-2,distance:Math.abs(pawn.x-patient.x)+Math.abs(pawn.z-patient.z),id:patient.id,target:patient};
+    if(!best||compareCandidate(candidate,best)<0)best=candidate;
+  }
+  if(warding){const proposal=wardenProposal(world,pawn,reachable);if(proposal){const candidate:Candidate={ward:proposal,priority:workPriority(pawn,'warden'),rank:-2,distance:Math.abs(pawn.x-proposal.task.spot.x)+Math.abs(pawn.z-proposal.task.spot.z),id:proposal.task.patientId,target:proposal.task.spot};if(!best||compareCandidate(candidate,best)<0)best=candidate;}}
   if(fightingFire){const proposal=firefightingProposal(world,pawn,reachable);if(proposal){const candidate:Candidate={firefighting:proposal,priority:workPriority(pawn,'firefight'),rank:-7,distance:Math.abs(pawn.x-proposal.target.x)+Math.abs(pawn.z-proposal.target.z),id:proposal.fireId,target:proposal.target};if(!best||compareCandidate(candidate,best)<0)best=candidate;}}
   if(selfCare){const proposal=patientProposal(world,pawn,reachable);if(proposal){const candidate:Candidate={patientRest:proposal,priority:workPriority(pawn,proposal.work),rank:proposal.work==='patient'?-6:-2,distance:0,id:pawn.id,target:pawn};if(!best||compareCandidate(candidate,best)<0)best=candidate;}}
   if(selfTreatment){
@@ -322,6 +331,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if(best?.hunting){pawn.hunting=best.hunting.task;pawn.path=best.hunting.path;pawn.state=pawn.path.length?'moving':'idle';pawn.planCooldown=0;return;}
   if(best?.research){pawn.research=best.research.task;pawn.path=best.research.path;pawn.state=pawn.path.length?'moving':'working';return;}
   if(best?.patientRest){startPatientRest(world,pawn,best.patientRest);return;}
+  if(best?.prisonerRelease){startPrisonerRelease(pawn,best.prisonerRelease);return;}
   if(best?.ward){startWarden(pawn,best.ward);return;}
   if(best?.feed){startFeeding(pawn,best.feed);return;}
   if(best?.surgery){startSurgery(pawn,best.surgery);return;}

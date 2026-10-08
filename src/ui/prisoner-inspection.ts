@@ -1,6 +1,27 @@
 import type { Command,Pawn,World } from '../sim/types';
 
-const MODES={maintain:'Soins et nourriture',reduce:'Réduire la résistance',recruit:'Recruter'} as const;
+const MODES={maintain:'Soins et nourriture',reduce:'Réduire la résistance',recruit:'Recruter',release:'Libérer'} as const;
+
+type ReleasePatient=Pick<Pawn,'id'|'state'|'prisoner'>;
+type ReleaseWarden=Pick<Pawn,'id'|'name'|'rescue'>;
+
+/** Describe the physical release without promising recovery or a departure date. */
+export function prisonerReleaseInspection(world:{pawns:readonly ReleaseWarden[]},pawn:ReleasePatient):{status:string;hint:string;modeDisabled:boolean}|undefined {
+  const p=pawn.prisoner;if(!p||pawn.state==='dead'||p.mode!=='release')return;
+  if(p.releasedAt!==undefined)return {
+    status:pawn.state==='downed'?'Prisonnier libéré · À terre, ne peut pas encore quitter la carte.':'Prisonnier libéré · Quitte la carte par ses propres moyens.',
+    hint:'La libération est effective et ne peut plus être annulée. Les blessures et besoins restent réels ; le départ attend un trajet praticable.',modeDisabled:true,
+  };
+  const actor=world.pawns.find(a=>a.rescue?.release&&a.rescue.patientId===pawn.id);
+  if(actor)return {
+    status:actor.rescue!.phase==='carry'?`Libération · ${actor.name} porte le prisonnier vers la sortie.`:`Libération · Prise en charge par ${actor.name}, geôlier en route.`,
+    hint:'Le geôlier porte la personne jusqu’à une zone reliée au bord, puis elle repart seule. Les blessures ne sont pas guéries par la libération.',modeDisabled:false,
+  };
+  return {
+    status:pawn.state==='downed'?'Libération demandée · Attend de pouvoir se relever.':'Libération demandée · Attend la prise en charge par un geôlier.',
+    hint:'Un geôlier disponible doit pouvoir atteindre le prisonnier et une sortie. Les soins et la nourriture restent nécessaires ; vous pouvez encore changer la consigne avant la libération effective.',modeDisabled:false,
+  };
+}
 
 /** A captive is inspectable and receives care policies, never colonist orders. */
 export function createPrisonerInspection(panel:HTMLElement,current:()=>{world:World;pawn:Pawn}|undefined,send:(command:Command)=>void):void {
@@ -10,7 +31,7 @@ export function createPrisonerInspection(panel:HTMLElement,current:()=>{world:Wo
   const progress=document.createElement('progress');progress.id='prisoner-resistance-progress';progress.setAttribute('aria-label','Résistance restante');
   const modeLabel=document.createElement('label'),mode=document.createElement('select');mode.id='prisoner-mode';mode.setAttribute('aria-label','Interaction avec le prisonnier');
   for(const [id,label] of Object.entries(MODES))mode.append(new Option(label,id));
-  mode.onchange=()=>{const s=current();if(s?.pawn.prisoner)send({type:'prisoner-mode',patientId:s.pawn.id,mode:mode.value as keyof typeof MODES});};
+  mode.onchange=()=>{const s=current();if(s?.pawn.prisoner&&s.pawn.state!=='dead'&&s.pawn.prisoner.releasedAt===undefined)send({type:'prisoner-mode',patientId:s.pawn.id,mode:mode.value as keyof typeof MODES});};
   modeLabel.append('Interaction ',mode);
   const hint=document.createElement('p');hint.id='prisoner-mode-hint';hint.className='muted';
   const needs=document.createElement('p');needs.id='prisoner-needs';
@@ -26,11 +47,12 @@ export function updatePrisonerInspection(panel:HTMLElement,world:World,pawn:Pawn
   box.dataset.prisonerId=String(pawn.id);
   const bedId=pawn.need?.kind==='sleep'&&pawn.need.bedId!==null?pawn.need.bedId:pawn.bedId;
   const bed=world.structures.find(s=>s.id===bedId&&s.prisoner);
-  box.querySelector('#prisoner-status')!.textContent=pawn.state==='dead'?'Prisonnier décédé':p.escape?'Évasion : cherche à quitter la carte par une ouverture.':`Prisonnier de la colonie · ${bed?`lit${bed.medical?' médical':''} en ${bed.x}, ${bed.z}`:'aucun lit de prison attribué'}`;
+  const release=prisonerReleaseInspection(world,pawn);
+  box.querySelector('#prisoner-status')!.textContent=pawn.state==='dead'?'Prisonnier décédé':release?.status??(p.escape?'Évasion : cherche à quitter la carte par une ouverture.':`Prisonnier de la colonie · ${bed?`lit${bed.medical?' médical':''} en ${bed.x}, ${bed.z}`:'aucun lit de prison attribué'}`);
   box.querySelector('#prisoner-resistance')!.textContent=`Résistance : ${p.resistance.toFixed(1)} / ${p.initialResistance.toFixed(1)}`;
   const progress=box.querySelector<HTMLProgressElement>('#prisoner-resistance-progress')!;progress.max=Math.max(1,p.initialResistance);progress.value=p.resistance;
-  const mode=box.querySelector<HTMLSelectElement>('#prisoner-mode')!;mode.value=p.mode;mode.disabled=pawn.state==='dead';
-  box.querySelector('#prisoner-mode-hint')!.textContent=p.mode==='maintain'?'Le geôlier assure la nourriture, sans chercher à recruter.':p.resistance>0?'Les conversations réduisent progressivement la résistance. Aucun délai de recrutement n’est garanti.':p.mode==='recruit'?'Résistance épuisée : une prochaine conversation de recrutement peut faire rejoindre la colonie.':'Résistance épuisée. Choisissez Recruter pour demander son adhésion lors d’une prochaine conversation.';
+  const mode=box.querySelector<HTMLSelectElement>('#prisoner-mode')!;mode.value=p.mode;mode.disabled=pawn.state==='dead'||p.releasedAt!==undefined;
+  box.querySelector('#prisoner-mode-hint')!.textContent=release?.hint??(p.mode==='maintain'?'Le geôlier assure la nourriture, sans chercher à recruter.':p.resistance>0?'Les conversations réduisent progressivement la résistance. Aucun délai de recrutement n’est garanti.':p.mode==='recruit'?'Résistance épuisée : une prochaine conversation de recrutement peut faire rejoindre la colonie.':'Résistance épuisée. Choisissez Recruter pour demander son adhésion lors d’une prochaine conversation.');
   box.querySelector('#prisoner-needs')!.textContent=pawn.state==='dead'?'':`Nourriture ${Math.round(pawn.hunger)} % · Repos ${Math.round(pawn.rest)} % · Humeur ${Math.round(pawn.mood)} %`;
   const food=box.querySelector<HTMLSelectElement>('#prisoner-food-policy')!,signature=JSON.stringify(world.foodPolicies.map(f=>[f.id,f.name]));
   if(food.dataset.signature!==signature){food.dataset.signature=signature;food.replaceChildren(...world.foodPolicies.map(f=>new Option(f.name,String(f.id))));}

@@ -24,11 +24,12 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 export function validPrisonerPawnShape(p:Record<string,unknown>,version:number,w:World):boolean {
   if(version<86)return p.prisoner===undefined&&p.ward===undefined&&p.recruitment===undefined;
   const s=p.prisoner;
-  if(s!==undefined&&(!object(s)||!keys(s,['capturedAt','initialResistance','resistance','mode','lastChatTick','chatDay','chatCount','rng','escape'])
+  if(s!==undefined&&(!object(s)||!keys(s,['capturedAt','initialResistance','resistance','mode','lastChatTick','chatDay','chatCount','rng','escape',...(version>=202?['releasedAt']:[])])
     ||!integer(s.capturedAt,0,w.tick)||!integer(s.initialResistance,7,12)||typeof s.resistance!=='number'||!Number.isFinite(s.resistance)||s.resistance<0||s.resistance>s.initialResistance
-    ||typeof s.mode!=='string'||!['maintain','reduce','recruit'].includes(s.mode)||!integer(s.rng,1,0xffffffff)||!integer(s.chatDay,0,prisonDay(w))||s.chatDay!==prisonDay(w)||!integer(s.chatCount,0,2)
+    ||typeof s.mode!=='string'||!['maintain','reduce','recruit',...(version>=202?['release']:[])].includes(s.mode)||!integer(s.rng,1,0xffffffff)||!integer(s.chatDay,0,prisonDay(w))||s.chatDay!==prisonDay(w)||!integer(s.chatCount,0,2)
     ||s.lastChatTick!==undefined&&!integer(s.lastChatTick,s.capturedAt,w.tick)||s.chatCount>0&&s.lastChatTick===undefined
-    ||s.escape!==undefined&&(!cell(s.escape,w)||!edge(s.escape,w))))return false;
+    ||s.escape!==undefined&&(!cell(s.escape,w)||!edge(s.escape,w))
+    ||s.releasedAt!==undefined&&(!integer(s.releasedAt,s.capturedAt,w.tick)||s.mode!=='release'||s.lastChatTick!==undefined&&Number(s.lastChatTick)>s.releasedAt)))return false;
   const r=p.recruitment;
   if(r!==undefined&&(!object(r)||!keys(r,['capturedAt','recruitedAt','fromFaction','raidGroup'])||!integer(r.capturedAt,0,w.tick)||!integer(r.recruitedAt,r.capturedAt,w.tick)||r.fromFaction!=='outlaws'||r.raidGroup!==undefined&&!integer(r.raidGroup,1)))return false;
   const t=p.ward;if(t===undefined)return true;
@@ -45,8 +46,9 @@ function validateDepartures(w:World,version:number,ids:Set<number>):string[] {
   if(!Array.isArray(departures)||departures.length>w.width*w.height)return ['Invalid prisoner departures.'];
   const errors:string[]=[];
   for(const d of departures){
-    if(!object(d)||!keys(d,['pawnId','name','capturedAt','tick','cell','items'])||!integer(d.pawnId,1,w.nextId-1)||ids.has(d.pawnId)||typeof d.name!=='string'||!d.name.trim()||d.name.length>80
-      ||!integer(d.capturedAt,0,w.tick)||!integer(d.tick,d.capturedAt,w.tick)||!cell(d.cell,w)||!edge(d.cell,w)||!Array.isArray(d.items)||d.items.length>32768){errors.push('Invalid prisoner departure.');continue;}
+    if(!object(d)||!keys(d,['pawnId','name','capturedAt','tick','cell','items',...(version>=202?['reason','releasedAt']:[])])||!integer(d.pawnId,1,w.nextId-1)||ids.has(d.pawnId)||typeof d.name!=='string'||!d.name.trim()||d.name.length>80
+      ||!integer(d.capturedAt,0,w.tick)||!integer(d.tick,d.capturedAt,w.tick)||!cell(d.cell,w)||!edge(d.cell,w)||!Array.isArray(d.items)||d.items.length>32768
+      ||(d.reason===undefined?d.releasedAt!==undefined:d.reason!=='released'||!integer(d.releasedAt,d.capturedAt,d.tick))){errors.push('Invalid prisoner departure.');continue;}
     ids.add(d.pawnId);let valid=true;
     for(const item of d.items){
       if(!object(item)||!keys(item,['id','kind','item','quantity','owner','apparel','weapon'])||!integer(item.id,1,w.nextId-1)||ids.has(item.id)||!object(item.owner)||!keys(item.owner,['type','pawnId'])||item.owner.pawnId!==d.pawnId
@@ -72,7 +74,10 @@ export function validatePrisoners(w:World,version:number,ids:Set<number>):string
       if(isColonist(p)||p.state==='working'&&!(version>=87&&p.burning)||p.recruitment||p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.ward||p.equipmentTask||p.recreation.task||p.research||p.hunting
         ||p.shooting?.order||p.melee?.order||p.tactics)errors.push('Prisoner retains a colony or combat mandate.');
       const escape=bombRefugeRouteTarget(p,p.prisoner.escape,version);
-      if(p.prisoner.escape&&(p.state==='dead'||p.need||!(version>=87&&p.burning)&&p.path.length&&(!escape||!same(p.path.at(-1)!,escape))))errors.push('Invalid prisoner escape intent or route.');
+      // A later collapse does not revoke an actual release. Ordinary rescue
+      // and medical-rest validators still own the bed and the physical route.
+      const releasedCare=version>=202&&p.prisoner.releasedAt!==undefined&&!!p.need;
+      if(p.prisoner.escape&&(p.state==='dead'||p.need&&!releasedCare||!releasedCare&&!(version>=87&&p.burning)&&p.path.length&&(!escape||!same(p.path.at(-1)!,escape))))errors.push('Invalid prisoner escape intent or route.');
       if(w.piles.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id))errors.push('Captured prisoner retains a weapon.');
     }
     if(p.recruitment&&(!isColonist(p)||p.prisoner||p.raid||p.recruitment.raidGroup!==undefined&&(!w.raids||p.recruitment.raidGroup>w.raids.serial)))errors.push('Invalid recruitment provenance.');
@@ -80,7 +85,7 @@ export function validatePrisoners(w:World,version:number,ids:Set<number>):string
     for(const bedId of beds)if(bedId!==null){const bed=[...w.structures,...w.packed.map(p=>p.building)].find(b=>b.id===bedId&&isBedKind(b.kind)&&(version>=187||b.kind==='bed'));if(bed&&!!bed.prisoner!==!!p.prisoner)errors.push('Bed role disagrees with its occupant.');}
     const t=p.ward;if(!t)continue;const patient=w.pawns.find(q=>q.id===t.patientId);
     if(!isColonist(p)||p.prisoner||p.priorities.warden===0||medicalWorkRefusal(p)||p.mental?.crisis||p.draft||p.interruptedCargo||p.orders.active!==null||p.jobId!==null||p.need||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.recreation.task||p.equipmentTask||p.research||p.hunting)errors.push('Warden task conflicts with actor activity.');
-    if(!patient||patient===p||patient.state==='dead'||patientClaimed(w,t.patientId,p)||w.pawns.some(a=>a.rescue?.patientId===t.patientId)
+    if(!patient||patient===p||patient.state==='dead'||patientClaimed(w,t.patientId,p)||w.pawns.some(a=>a.rescue?.patientId===t.patientId)||t.kind==='chat'&&patient.prisoner?.mode==='release'
       ||(t.kind==='chat'&&t.phase==='closing'?!(patient.prisoner||patient.recruitment):!patient.prisoner||!!patient.prisoner.escape))errors.push('Invalid or duplicate warden patient.');
     if(t.kind==='food'){
       const food=w.piles.find(i=>i.id===(t.phase==='pickup'?t.sourcePileId:t.carryPileId));

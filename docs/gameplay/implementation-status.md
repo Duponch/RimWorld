@@ -1,5 +1,8 @@
 # Ce qui est jouable et ce qui manque
 
+**V267 — libérer un prisonnier ; schéma 202.**
+L’[inspection](prisoner-release-v267.md) permet de demander la libération ; un colon affecté à Basique ou Geôlier porte la personne mobile vers une zone reliée au bord, puis elle repart seule avec ses possessions conservées. Après dépôt, la libération est définitive ; les archives de prison et de raid enregistrent `released` sans confondre évasion et départ volontaire. Soins et besoins restent physiques, sans bonus diplomatique. Autonomie et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **V266 — Zzztt… court-circuit du réseau ; schéma 201.**
 Le [court-circuit](short-circuit-v266.md) peut vider les batteries du seul réseau touché et produire des ondes physiques, ou tenter un petit feu sans vidange. Protection par isolation réelle, extinction, soins, réparation et recharge forment la reprise ; la lettre conserve le dernier incident sans promettre la fin des conséquences. Autonomie et push après chaque commit autorisés, validations regroupées ; les états V265 et antérieurs ci-dessous sont historiques.
 

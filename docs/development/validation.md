@@ -1,4 +1,6 @@
-# Validation courante — V266
+# Validation courante — V267
+
+**V267, schéma 202 : [libération des prisonniers](../gameplay/prisoner-release-v267.md#validation).** Résultats et limites à compléter par ROOT dans la note du lot après les contrôles regroupés ; aucun résultat futur annoncé ici. Le périmètre relie consigne, portage Basique ou Geôlier, départ autonome, possessions et motif `released` des archives prison/raid. Autonomie et push après chaque commit restent autorisés. Les validations suivantes sont historiques.
 
 **V266, schéma 201 : [courts-circuits](../gameplay/short-circuit-v266.md).** 100 cas uniques dans 14 fichiers passent par reprises ciblées, dont sélection, réseau isolé, énergie en demi-quanta, ondes persistées, dégâts et sauvegarde/reprise exacte ; les 62 sauvegardes publiques restent valides et inchangées. Typage/build et parcours WebGPU préparé au tick 30100 avec sauvegarde/rechargement puis continuation à 30114 passent, sans erreur navigateur. Les premiers rouges sont conservés ; aucune nouvelle mesure FPS ou fréquence naturelle revendiquée. Autonomie et push après chaque commit autorisés. Les validations suivantes sont historiques.
 

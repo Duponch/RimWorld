@@ -1,7 +1,7 @@
 import type { Cell,MaterialPile } from './types.ts';
 
 export interface RaiderState { group:number; exiting:boolean; goal:Cell|null }
-export interface RaidDeparture { group:number; pawnId:number; name:string; cell:Cell; tick:number; items:MaterialPile[] }
+export interface RaidDeparture { group:number; pawnId:number; name:string; cell:Cell; tick:number; items:MaterialPile[];reason?:'released';capturedAt?:number;releasedAt?:number }
 /** Available pirate projections only; these are Core pawn-kind combatPower
  * costs, not the market prices of their limited local equipment. */
 export const RAID_ROLE_COST=Object.freeze({drifter:35,thrasher:50,scavenger:50,pirate:65} as const);

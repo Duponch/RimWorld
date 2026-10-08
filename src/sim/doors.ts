@@ -14,7 +14,7 @@ function openDoor(world:World,s:Structure):void {
 /** Called before committing an edge. Waiting consumes no path or travel distance. */
 export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
   const s=doorAt(world,next);if(!s)return true;
-  const d=s.door!;if(pawn.prisoner)return prisonDoorPassable(world,s);if(!isColonist(pawn)&&!pawn.visitor)return d.open&&doorOpenness(s,world.tick)>=1-1e-9;
+  const d=s.door!;if(pawn.prisoner&&pawn.prisoner.releasedAt===undefined)return prisonDoorPassable(world,s);if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined)return d.open&&doorOpenness(s,world.tick)>=1-1e-9;
   if(d.forbidden)return false;
   d.lastTouch=world.tick;
   if(!d.open)openDoor(world,s);
@@ -25,7 +25,7 @@ export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
  * edge. The normal threshold check remains authoritative if the path or power
  * changes before arrival. Stone autodoors still open at the threshold. */
 export function approachAutodoor(world:World,pawn:Pawn,next:Cell):void {
-  if(!isColonist(pawn)&&!pawn.visitor||pawn.path[0]?.x!==next.x||pawn.path[0]?.z!==next.z)return;
+  if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined||pawn.path[0]?.x!==next.x||pawn.path[0]?.z!==next.z)return;
   const upcoming=pawn.path[1];if(!upcoming||Math.max(Math.abs(upcoming.x-next.x),Math.abs(upcoming.z-next.z))!==1)return;
   const s=doorAt(world,upcoming);
   if(s?.kind!=='autodoor'||!s.power?.on||s.breakdown||isBlockMaterial(s.material)||s.door?.forbidden)return;
@@ -37,7 +37,7 @@ export function updateDoors(world:World):void {
   const doors=world.structures.filter(s=>isPassageDoor(s.kind));if(!doors.length)return;
   const bodies=new Set<number>(),friendly=new Set<number>(),objects=new Set<number>();
   const add=(c:Cell)=>bodies.add(c.z*world.width+c.x);
-  for(const p of world.pawns){if(p.state==='dead'&&(p.body?.pileId!==undefined||p.body?.lostAt!==undefined))continue;add(p);if(p.motion&&p.motion.end>world.tick)add(p.motion.from);if(isColonist(p)||p.visitor){friendly.add(p.z*world.width+p.x);if(p.motion&&p.motion.end>world.tick)friendly.add(p.motion.from.z*world.width+p.motion.from.x);}}
+  for(const p of world.pawns){if(p.state==='dead'&&(p.body?.pileId!==undefined||p.body?.lostAt!==undefined))continue;add(p);if(p.motion&&p.motion.end>world.tick)add(p.motion.from);if(isColonist(p)||p.visitor||p.prisoner?.releasedAt!==undefined){friendly.add(p.z*world.width+p.x);if(p.motion&&p.motion.end>world.tick)friendly.add(p.motion.from.z*world.width+p.motion.from.x);}}
   for(const a of world.wildlife?.animals??[]){add(a);if(a.motion&&a.motion.end>world.tick)add(a.motion.from);}
   for(const p of world.piles)if(p.owner.type==='ground')objects.add(p.owner.z*world.width+p.owner.x);
   for(const p of world.packed)if(p.owner.type==='ground')objects.add(p.owner.z*world.width+p.owner.x);

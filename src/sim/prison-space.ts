@@ -40,7 +40,7 @@ export function prisonDoorPassable(world:World,door:Structure):boolean {
   // door, even when BlockedOpenMomentary is true. Normal warden passage must
   // not authorize a following captive; both active edge ends represent the
   // same physical body here. Only the immediate cardinal approach counts.
-  if(!door.door.forbidden&&world.pawns.some(p=>isColonist(p)&&!p.prisoner&&p.state!=='dead'&&p.state!=='downed'
+  if(!door.door.forbidden&&world.pawns.some(p=>(isColonist(p)&&!p.prisoner||p.prisoner?.releasedAt!==undefined)&&p.state!=='dead'&&p.state!=='downed'
     &&(blocks(p)||p.state==='moving'&&Math.abs(p.x-door.x)+Math.abs(p.z-door.z)===1&&!!p.path[0]&&same(p.path[0],door))))return false;
   return world.pawns.some(blocks)||(world.wildlife?.animals.some(blocks)??false)
     ||world.piles.some(p=>p.owner.type==='ground'&&same(p.owner,door))
@@ -69,6 +69,7 @@ export function prisonerAllowedCell(world:World,pawn:Pawn,cell:Cell,topology?:Ro
   if(!pawn.prisoner)return true;
   if(!inside(world,cell)||['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain))return false;
   const map=topology??capturePrisonTopology(world),target=map.at(cell.x,cell.z);
+  if(pawn.prisoner.releasedAt!==undefined)return target?.kind==='space'||target?.kind==='doorway'&&world.structures.some(s=>isRoomDoor(s.kind)&&same(s,cell)&&!s.door?.forbidden);
   if(pawn.prisoner.escape){
     if(target?.kind==='doorway')return world.structures.some(s=>isRoomDoor(s.kind)&&same(s,cell)&&prisonDoorPassable(world,s));
     return target?.kind==='space';
@@ -79,7 +80,7 @@ export function prisonerAllowedCell(world:World,pawn:Pawn,cell:Cell,topology?:Ro
 
 function escapeGoals(world:World,pawn:Pawn,topology:RoomTopology):ReadonlySet<number>|undefined {
   const cache=cacheFor(world);
-  const doors=world.structures.filter(s=>isRoomDoor(s.kind)&&prisonDoorPassable(world,s)).map(s=>s.z*world.width+s.x).sort((a,b)=>a-b),doorKey=doors.join(',');
+  const doors=world.structures.filter(s=>isRoomDoor(s.kind)&&(pawn.prisoner?.releasedAt!==undefined?!s.door?.forbidden:prisonDoorPassable(world,s))).map(s=>s.z*world.width+s.x).sort((a,b)=>a-b),doorKey=doors.join(',');
   const passable=new Set(doors);
   const nodeAt=(x:number,z:number):number|undefined=>{
     const cell=topology.at(x,z);return cell?.kind==='space'?cell.id:cell?.kind==='doorway'&&passable.has(z*world.width+x)?-(z*world.width+x)-1:undefined;
