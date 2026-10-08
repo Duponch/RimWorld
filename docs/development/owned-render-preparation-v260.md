@@ -1,0 +1,23 @@
+# V260 — préparation graphique sous construction privée
+
+**Prototype privé qualifié dans sa fixture ; produit V242 et schéma 198 conservés, aucun FPS ajouté.** Le premier coût complet franchit le critère permettant d'étudier un raccord au vrai Core, avec une forte dispersion entre passes et un démarrage défavorable. [Recherche](../research/owned-render-preparation-v260.md), [preuves](../history/validation-owned-render-preparation-v260.md). Ce résultat ne qualifie ni Les Aulnes, ni MAIN, ni une reprise GPU du jeu.
+
+V259 conservait native.equals, capture des dépendances et recapture au commit ; son coût CPU était défavorable. V260 remplace ces parcours chauds dans un domaine construit et fermé : renderer, objets Three et graphes restent privés, leurs writers signalent les mutations avant écriture. Aucun créateur public acceptant un renderer arbitraire, bool propriétaire ou type readonly ne donne cette autorité. Les chemins publics/custom restent historiques.
+
+## Construction et tickets
+
+Le corps privé `465CE7E7` est colocalisé deux fois dans la fixture, dans deux IIFE distinctes contenant chacune le const du renderer réellement initialisé. Aucun graph, créateur ou policy ne sort par les drivers ; les observations retournées sont des données copiées. Les trois copies historiques EnvironmentLighting/ResourceLayer/PlantClusterLayer raccordent seulement les groupes déjà étudiés. Core, MAIN, moteur, Decoder et Three restent canoniques et ne sont pas instanciés comme candidats dans ce circuit.
+
+Chaque RenderObject possède un ticket génération/révision. Premier passage ou dirty ⇒ FULL ; rendu externe réussi dans la même génération ⇒ ACK ; ticket encore courant ⇒ SHARED. Aucun NONE. Le commit ne relit plus les graphes. Reset/abort/overflow invalident ; begin réentrant invalide avant throw. Les bornes de pending et de lecture compilée sont conservées. L'audit de tous les builders et les préflights avant callbacks restent actifs ; un callback inconnu révoque globalement avant invocation, y compris s'il appartient à un matériau non configuré.
+
+Les notifications précèdent les writes de C, buffers/instances/couleurs, matrices, textures/sampler/disposal à version publique égale, visibilité, clones/compilation et capacité. Les contributions caméra/soleil/vent réellement compilées en groupes RENDER gardent leur dispatch natif, y compris deux changements au même frameId. Les dérivations Instance.beforeFrame, les draws, ombres, valeurs F32, ordre et qualité demeurent natifs. Graphes arbitraires, exotiques, Fn de build hostiles et prototypes interposés restent hors de ce domaine explicite. Un changement de layout doit être reconstruit et qualifié à froid ; reset seul ne requalifie pas un ancien spec.
+
+## Fondation de façade séparée
+
+Une copie privée du raccord MAIN ne retourne qu'une façade : commandes, petits DTO copiés, callbacks sans receiver Core et erreurs sortantes normalisées sans cause. World/tracks sont transmis une seule fois avec leurs identités historiques ; aucun nouveau mandat readonly n'en découle. Le create public reste historique. Douze cas sur port simulé et le typage intégré passent ; les cinq annotations Core changées s'effacent en JavaScript exactement égal. Cette fondation n'a pas été exercée dans le circuit physique et ne prouve pas encore la fermeture native du vrai Core.
+
+## Résultat et suite conditionnelle
+
+Vingt paires matérielles conservent exactement RGBA8 et champs CPU réellement consommés, ordre/ranges, ombres, attributs/storage/textures, callbacks/refus et throw sans ACK. Le coût ABBA sans observateur détaillé trouve CPU moyen 1,536→1,038 ms (−32,42 %) et circuit inclusif avec queue GPU 4,970→4,263 ms (−14,22 %). Les A valent toutefois 1,940 et 1,133 ms, les B 0,986 et 1,090 ms : ce seul banc n'établit pas un gain stable. CPU froid 21–22→103–110 ms et compilation 640→714 ms sont défavorables. Aucun FPS n'est déduit ni gain V259/V260 additionné.
+
+Le critère préalable CPU≤0,85× et circuit≤1,05× passe ; il autorise **seulement une qualification du vrai Core**, pas une promotion. Ne pas rejouer ce banc inchangé. La suite doit fermer la vraie factory MAIN, conserver les APIs publiques/custom, qualifier ACES/exposure et les graphes compilés réels, puis suivre les writers locaux : presentChop, cargo, poses et VFX ne doivent pas invalider tous les objets à chaque RAF. Compilation entre C, assets post-await, exceptions/réentrance, interactions et vraie perte GPU restent à qualifier, puis coût Core et GAME avant adoption. Les 62 références/65 fichiers publics restent exacts ; relance automatique en pause, commits locaux sans push.

@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-V259, produit V242 et schéma 198 conservés : [préparation résidente du rendu](development/resident-render-preparation-v259.md), [recherche](research/resident-render-preparation-v259.md), [preuves et rejet](history/validation-resident-render-preparation-v259.md). Vingt paires matérielles exactes, mais coût CPU complet +22,03 % ; aucun raccord Core/GAME ou FPS ajouté. Suite par étude de propriété fermée et writers des graphes graphiques, sans rejouer ce banc inchangé. Les 62 références restent exactes ; objectif 240 FPS ouvert, relance automatique en pause et aucun push.
+V260, produit V242 et schéma198 conservés : [préparation graphique sous construction privée](development/owned-render-preparation-v260.md), [recherche](research/owned-render-preparation-v260.md), [preuves et limites](history/validation-owned-render-preparation-v260.md). Vingt paires matérielles exactes ; premier coût isolé moyen CPU−32,42 %, avec forte dispersion et froid défavorable. Nouveau raccord Core autorisé sous qualification, aucun FPS ajouté ni promotion ; 62 références exactes, relance automatique en pause et aucun push.
 
 V246, schéma 198 inchangé, écarte le [prototype de registre Resource](development/native-namespace-v246.md) après deux [oracles négatifs](history/validation-native-namespace-v246.md). La propriété partielle ne suffit pas ; la suite étudie celle du graphe natif entier et ses dépendances. Produit V242 conservé, aucun FPS ajouté.
 
