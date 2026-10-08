@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-V258, produit V242 et schéma 198 conservés : [attribution V8 du thread principal](development/main-v8-attribution-v258.md), [recherche](research/main-v8-attribution-v258.md), [preuves et limites](history/validation-main-v8-attribution-v258.md). Un unique GAME matériel avec sauvegarde/reprise et les analyses offline passent ; réception, application et rendu sont séparés sans addition de parents inclusifs. Aucun FPS ajouté. Suite par refonte de la préparation des données de rendu, sans rejouer les prototypes écartés. Les 62 références restent exactes ; objectif 240 FPS ouvert, relance automatique en pause et aucun push.
+V259, produit V242 et schéma 198 conservés : [préparation résidente du rendu](development/resident-render-preparation-v259.md), [recherche](research/resident-render-preparation-v259.md), [preuves et rejet](history/validation-resident-render-preparation-v259.md). Vingt paires matérielles exactes, mais coût CPU complet +22,03 % ; aucun raccord Core/GAME ou FPS ajouté. Suite par étude de propriété fermée et writers des graphes graphiques, sans rejouer ce banc inchangé. Les 62 références restent exactes ; objectif 240 FPS ouvert, relance automatique en pause et aucun push.
 
 V246, schéma 198 inchangé, écarte le [prototype de registre Resource](development/native-namespace-v246.md) après deux [oracles négatifs](history/validation-native-namespace-v246.md). La propriété partielle ne suffit pas ; la suite étudie celle du graphe natif entier et ses dépendances. Produit V242 conservé, aucun FPS ajouté.
 
