@@ -1,4 +1,4 @@
-import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
+import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, HYDROPONICS_RESEARCH_COST, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
 import type { Command, World } from '../sim/types';
 import './world-panels.css';
 import './management-reference-v199.css';
@@ -6,6 +6,7 @@ import {setTooltip} from './tooltip';
 
 type ProjectNode = { id: ResearchProject; prefix: string; title: string; cost: number; detail: string; progress: (w: World) => ResearchProgress | undefined; x: number; y: number };
 export const researchProjects: readonly ProjectNode[] = [
+  {id:'hydroponics',prefix:'hydroponics',title:'Hydroponie',cost:HYDROPONICS_RESEARCH_COST/RESEARCH_SCALE,detail:'Bac 1 × 4 : 100 acier + 1 composant, Construction 4, 70 W continus. Fertilité 280 % sur terrain porteur ; lumière et température restent nécessaires. Sans courant, nouveaux semis suspendus et plantes endommagées progressivement. Maïs exclu.',progress:w=>w.research?.hydroponics,x:24,y:566},
   {id:'gun-turrets',prefix:'gun-turrets',title:'Tourelles automatiques',cost:500,detail:'Mini-tourelle acier : 100 acier + 3 composants, Construction 5, 80 W. Canon 60 coups, réarmement physique en acier. Adaptation locale : Armurerie est le préalable ; le projet Core Blowback et ses armes sont différés.',progress:w=>w.research?.gunTurrets,x:824,y:298},
   {id:'complex-furniture',prefix:'furniture',title:'Mobilier complexe',cost:300,detail:'Débloque chaise, fauteuil, table de chevet et commode.',progress:w=>w.research?.complexFurniture,x:24,y:20},
   {id:'tube-television',prefix:'tube-television',title:'Télévision cathodique',cost:TUBE_TELEVISION_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque un loisir électrique : 80 acier + 4 composants, Construction 7, 200 W. Chaque spectateur rejoint une place visible devant l’écran ; le trajet et les coupures ne procurent aucun plaisir.',progress:w=>w.research?.tubeTelevision,x:24,y:432},
@@ -44,6 +45,7 @@ const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=430;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['hydroponics',['Électricité (acquise au départ)']],
   ['gun-turrets',['Armurerie']],
   ['tube-television',['Mobilier complexe','Électricité (acquise au départ)']],
   ['machining',['Forge']],['gunsmithing',['Usinage']],['plate-armor',['Forge','Vêtements complexes']],['flak-armor',['Usinage','Armure de plaques']],

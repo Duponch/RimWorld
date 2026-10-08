@@ -73,6 +73,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   {id:'sun-lamp',title:'Lampe horticole',hint:'2 900 W · cultures sous toit dans la zone éclairée · arrêt automatique la nuit · Survol : couverture prévue si alimentée',key:'',category:'furniture'},
   { id: 'passive-cooler', title: 'Refroidisseur passif', hint: 'combustible initial inclus · seuil de 17 °C · 10 bois/jour', key: '', category: 'temperature' },
   { id: 'campfire', title: 'Feu de camp', hint: 'combustible initial inclus · brûle 10 bois par jour', key: '', category: 'temperature' },
+  {id:'hydroponics-basin',title:'Bac hydroponique',hint:'1 × 4 · 100 acier + 1 composant · Construction 4 · recherche Hydroponie · 70 W continus · fertilité 280 % · riz, pommes de terre, coton ou racine médicinale · lumière et température nécessaires · sans courant, les plantes dépérissent · Q / E pour tourner',key:'',category:'production'},
   {id:'research-bench',title:'Bureau de recherche simple',hint:'3 × 2 · 75 matériaux + 25 acier · Q / E pour tourner',key:'',category:'production'},
   {id:'tailor-bench',title:'Établi de tailleur',hint:'3 × 1 · 75 matériaux · nécessite Vêtements complexes',key:'',category:'production'},
   {id:'art-bench',title:'Atelier de sculpture',hint:'3 × 1 · 75 bois ou acier + 50 acier · manuel · petites et grandes sculptures · Q / E pour tourner',key:'',category:'production'},

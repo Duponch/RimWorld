@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V268 — hydroponie ; schéma 203.**
+La [culture hors sol](gameplay/hydroponics-v268.md) complète la serre : recherche, acier/composant livrés, bacs alimentés, choix de quatre cultures, semis et récolte physiques, dépérissement après coupure et reprise sauvegardée. Les plantes et le travail restent communs à l'agriculture existante. Boucles cohérentes, contrôles regroupés, autonomie et push après chaque commit restent la méthode courante ; les états suivants sont historiques.
+
 **Avancement fonctionnel V267 — libération des prisonniers ; schéma 202.**
 La [libération](gameplay/prisoner-release-v267.md) complète la prison : ordre réversible avant dépôt, portage par Basique ou Geôlier, puis départ autonome et possessions archivées avec la raison `released`, distincte de l’évasion. Les blessures et besoins restent réels, sans gain diplomatique ajouté. Boucles cohérentes, validations regroupées, autonomie et push après chaque commit restent la méthode courante ; les états suivants sont historiques.
 

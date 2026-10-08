@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V268, schéma 203 : [hydroponie](gameplay/hydroponics-v268.md).** Bacs orientables, quatre cultures, fertilité de 280 %, pompes électriques et dégâts progressifs en cas de panne ; serre, semis, récolte et possessions utilisent les systèmes communs. Résultats dans la note du lot. Autonomie et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **V267, schéma 202 : [libérer un prisonnier](gameplay/prisoner-release-v267.md).** Consigne, prise en charge physique, portage puis sortie autonome et conservation des possessions ; motifs de départ distincts dans les archives de prison et de raid. Basique ou Geôlier peut assurer la libération, sans diplomatie inventée. Résultats dans la note du lot ; autonomie et push après chaque commit maintenus. Les états suivants sont historiques.
 
 **V266, schéma 201 : [Zzztt… court-circuit du réseau](gameplay/short-circuit-v266.md).** Conduits, batteries, incendies et dégâts composent une boucle de protection et de récupération physique, avec lettre du dernier incident et sauvegarde des conséquences. Développement autonome, contrôles regroupés et push après chaque commit autorisés. Les états V265 et antérieurs ci-dessous sont historiques.

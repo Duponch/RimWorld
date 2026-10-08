@@ -1,5 +1,8 @@
 # Ce qui est jouable et ce qui manque
 
+**V268 — hydroponie ; schéma 203.**
+Les [bacs](hydroponics-v268.md) permettent de cultiver riz, pommes de terre, coton et racine médicinale sur quatre cases à 280 % de fertilité, y compris sur sol pavé. Recherche, Construction 4, 100 acier, un composant et 70 W par bac sont requis ; lampe et température restent nécessaires sous toit. Coupure : semis suspendus et dégâts progressifs ; retrait : plantes détruites sans récolte. Autonomie et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **V267 — libérer un prisonnier ; schéma 202.**
 L’[inspection](prisoner-release-v267.md) permet de demander la libération ; un colon affecté à Basique ou Geôlier porte la personne mobile vers une zone reliée au bord, puis elle repart seule avec ses possessions conservées. Après dépôt, la libération est définitive ; les archives de prison et de raid enregistrent `released` sans confondre évasion et départ volontaire. Soins et besoins restent physiques, sans bonus diplomatique. Autonomie et push après chaque commit maintenus ; les états suivants sont historiques.
 

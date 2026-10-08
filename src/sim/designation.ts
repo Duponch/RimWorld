@@ -43,7 +43,7 @@ export function buildAreaIndex(world: World): AreaIndex {
     if(pawn.cooking){flags[index(pawn.cooking.spot)]!|=BLOCKED;for(const i of pawn.cooking.ingredients)if(i.stage!=='placed')flags[index(i.cell)]!|=BLOCKED;}
     for(const order of pawn.orders?.queue??[])if(isCookingOrder(order)){flags[index(order.cooking.spot)]!|=BLOCKED;for(const i of order.cooking.ingredients)if(i.stage!=='placed')flags[index(i.cell)]!|=BLOCKED;}
   }
-  for (const zone of world.growingZones) for (const cell of zone.cells) flags[cell]! |= GROWING;
+  for (const zone of world.growingZones) for (const cell of zone.cells) if(zone.basinId===undefined)flags[cell]! |= GROWING;
   return { flags };
 }
 

@@ -11,18 +11,25 @@ const CULTURE_HELP:Record<CropKind,string>={
 };
 
 export const growingCultureHelp=(kind:CropKind):string=>CULTURE_HELP[kind];
+export const growingCultureChoices=(zone:Pick<GrowingZone,'basinId'>):readonly CropKind[]=>
+  zone.basinId===undefined?CROP_KINDS:CROP_KINDS.filter(kind=>kind!=='corn');
 
 export function growingControls(zone: GrowingZone, send: (command: Command) => void): HTMLElement {
   const panel = document.createElement('div'); panel.className = 'storage-settings';
-  const heading = document.createElement('p'); heading.textContent = `Zone de culture · ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases`;
+  const heading = document.createElement('p'); heading.textContent = `${zone.basinId===undefined?'Zone de culture':'Bac hydroponique'} · ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases`;
   panel.append(heading);
   const choice=document.createElement('label'),plant=document.createElement('select');plant.id='growing-plant';
-  for(const kind of CROP_KINDS){const option=document.createElement('option');option.value=kind;option.textContent=PLANT_DEFINITIONS[kind].label;plant.append(option);}
+  for(const kind of growingCultureChoices(zone)){const option=document.createElement('option');option.value=kind;option.textContent=PLANT_DEFINITIONS[kind].label;plant.append(option);}
   plant.value=zone.plant;choice.append('Culture ',plant);panel.append(choice);
   const help=document.createElement('p');help.className='muted';
   const updateHelp=()=>{help.textContent=growingCultureHelp(plant.value as CropKind);};
   updateHelp();plant.addEventListener('change',updateHelp);
   panel.append(help);
+  if(zone.basinId!==undefined) {
+    const care=document.createElement('p');care.className='muted';
+    care.textContent='Fertilité 280 % · 70 W en continu, même la nuit. Sans alimentation : nouveaux semis suspendus et plantes qui dépérissent. Prévoir une lumière horticole sous toit et une température adaptée. Retirer le bac détruit ses plantes.';
+    panel.append(care);
+  }
   const controls = new Map<string, HTMLInputElement>();
   for (const [field, title] of [['allowSow', 'Autoriser les semis'], ['allowCut', 'Couper les plantes indésirables']] as const) {
     const label = document.createElement('label'), checkbox = document.createElement('input');

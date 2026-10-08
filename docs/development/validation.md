@@ -1,4 +1,6 @@
-# Validation courante — V267
+# Validation courante — V268
+
+**V268, schéma 203 : [hydroponie](../gameplay/hydroponics-v268.md#validation).** 94 cas uniques dans 20 fichiers passent par reprises ciblées, dont 41 nouveaux cas et les 62 sauvegardes publiques : construction/livraison, semis/récolte, fertilité, panne et reprise, destructions et lecteurs communs. Typage/build et parcours WebGPU avec vraie récolte, quatre semis et sauvegarde/rechargement exacts passent ; aucun fichier public modifié ni gain FPS annoncé. Premiers rouges conservés. Autonomie et push après chaque commit maintenus ; les validations suivantes sont historiques.
 
 **V267, schéma 202 : [libération des prisonniers](../gameplay/prisoner-release-v267.md#validation).** Résultats et limites à compléter par ROOT dans la note du lot après les contrôles regroupés ; aucun résultat futur annoncé ici. Le périmètre relie consigne, portage Basique ou Geôlier, départ autonome, possessions et motif `released` des archives prison/raid. Autonomie et push après chaque commit restent autorisés. Les validations suivantes sont historiques.
 

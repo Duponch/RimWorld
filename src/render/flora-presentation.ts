@@ -2,6 +2,8 @@ import { plantGrowth } from '../sim/plants';
 import { plantLeafless } from '../sim/plant-life';
 import type { Resource,World } from '../sim/types';
 import type { Placement } from './primitives';
+import { hydroponicBasinAt } from '../sim/hydroponics';
+import { HYDROPONIC_SUPPORT_HEIGHT } from './hydroponics-parts';
 
 /** Dedicated crop geometry is deliberately closed: new domain crops do not
  * allocate another map-sized instance array. Medicinal plants use shrub chunks. */
@@ -15,17 +17,21 @@ const FLORA_COLORS={pine:0x47684c,birch:0x8fa467,oak:0x57754d,poplar:0x849752,dr
 export const floraColor=(r:Resource):number=>FLORA_COLORS[isMedicinalPlant(r)?'healroot-wild':r.species??'berry-bush'];
 export const isClusterPlantSpecies=(species:Resource['species']):boolean=>species==='grass'||species==='tall-grass';
 export const floraTreeHeight=(r:Resource):number=>r.species==='saguaro'?2.2:r.species==='drago'?3.25:r.species==='pine'?4.6:r.species==='poplar'?4.3:3.8;
-export const floraIdentity=(world:World,r:Resource):string=>`${r.kind}:${r.x}:${r.z}:${r.stone??''}:${r.species??''}:${floraSize(world,r)}:${isMedicinalPlant(r)&&plantLeafless(world,r)}`;
+export const hydroponicFloraHeight=(world:World,r:Resource):number=>r.kind==='healroot'&&hydroponicBasinAt(world,r)?HYDROPONIC_SUPPORT_HEIGHT:0;
+export const floraIdentity=(world:World,r:Resource):string=>{
+  const support=hydroponicFloraHeight(world,r);
+  return `${r.kind}:${r.x}:${r.z}:${r.stone??''}:${r.species??''}:${floraSize(world,r)}:${isMedicinalPlant(r)&&plantLeafless(world,r)}${support?`:support=${support}`:''}`;
+};
 
 export interface FloraParts {trunks:Placement[];crowns:Placement[];cones:Placement[];bushes:Placement[];blades:Placement[];cacti:Placement[];fruit:Placement[]}
 /** Compact 3D meshes for trees, shrubs and agave. Grass species use their one
  * resident cluster batch rather than duplicating geometry in every chunk. */
 export function appendFlora(parts:FloraParts,world:World,r:Resource,turn:number):void {
   if(isClusterPlantSpecies(r.species))return;
-  const {x,z}=r,s=floraSize(world,r),color=floraColor(r),leaves=-r.id*2,fruit=-r.id*2-1;
+  const {x,z}=r,s=floraSize(world,r),color=floraColor(r),leaves=-r.id*2,fruit=-r.id*2-1,support=hydroponicFloraHeight(world,r);
   const add=(items:Placement[],p:Omit<Placement,'x'|'z'> & {dx?:number;dz?:number})=>{
     const {dx=0,dz=0,...shape}=p;
-    items.push({...shape,x:x+dx*s,z:z+dz*s,y:p.y*s,sx:(p.sx??1)*s,sy:(p.sy??1)*s,sz:(p.sz??1)*s,color:p.color??color,key:p.key??leaves});
+    items.push({...shape,x:x+dx*s,z:z+dz*s,y:support?p.y*s+support:p.y*s,sx:(p.sx??1)*s,sy:(p.sy??1)*s,sz:(p.sz??1)*s,color:p.color??color,key:p.key??leaves});
   };
   if(r.kind==='tree') {
     const height=floraTreeHeight(r);

@@ -6,6 +6,7 @@ import { climateTick,type ClimateWorld } from './site-climate.ts';
 import { soilFertility } from './soil.ts';
 import { isCropKind, type CropKind } from './crops.ts';
 import { FLORA_DEFINITIONS } from './biome-flora.ts';
+import { hydroponicFertility } from './hydroponics.ts';
 
 export const PLANT_DEFINITIONS = Object.freeze({
   healroot: { label: 'Racine médicinale', growDays: 7, minFertility: .7, sensitivity: 1, afterHarvest: 0, yield: 1 },
@@ -39,6 +40,7 @@ export function plantGrowthRate(light: number, temperature: number, fertility: n
   return clamp((light - .51) / .49) * heat * (.5 + fertility * .5);
 }
 export const plantFertility = (world: World, plant: Resource): number => {
+  if(isCrop(plant)) {const fertility=hydroponicFertility(world,plant);if(fertility!==undefined)return fertility;}
   const tile = world.tiles[plant.z * world.width + plant.x]!;
   return tile.floor?0:soilFertility(tile.terrain);
 };

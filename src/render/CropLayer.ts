@@ -5,6 +5,8 @@ import { plantGrowth } from '../sim/plants';
 import { RESIDENT_CROP_KINDS, type ResidentCropKind } from './flora-presentation';
 import type { Resource, World } from '../sim/types';
 import { CropPresentationPartition } from './crop-presentation-partition';
+import { readHydroponicCells } from '../sim/hydroponics';
+import { HYDROPONIC_SUPPORT_HEIGHT } from './hydroponics-parts';
 
 /** Dedicated resident instancing: sowing never rebuilds forest/rock geometry. */
 function cropGeometry(kind:ResidentCropKind):THREE.BufferGeometry {
@@ -61,7 +63,7 @@ class CropBatch {
     const mesh=this.mesh,count=mesh.count,version=this.version;mesh.count=Math.max(1,count);
     return () => { if(this.mesh===mesh&&this.version===version)mesh.count=count; };
   }
-  update(world: World, reset: boolean, crops: readonly Resource[]): void {
+  update(world: World, reset: boolean, crops: readonly Resource[],hydroponicCells:ReadonlyMap<number,number>): void {
     this.version++;
     if (reset) { this.slots.clear(); this.free.length = 0; this.used = 0; this.mesh.count = 0; }
     const alive = new Set(crops.map(r => r.id));
@@ -83,7 +85,7 @@ class CropBatch {
       if (slot === undefined) { slot = this.free.pop() ?? this.used++; this.slots.set(crop.id, slot); }
       visibleCount = Math.max(visibleCount, slot + 1);
       const growth = plantGrowth(world, crop), scale = .14 + .86 * Math.sqrt(growth);
-      this.transform.position.set(crop.x, .025, crop.z);
+      this.transform.position.set(crop.x, .025+(hydroponicCells.has(crop.z*world.width+crop.x)?HYDROPONIC_SUPPORT_HEIGHT:0), crop.z);
       this.transform.rotation.y = (crop.id % 7) * .9;
       this.transform.scale.set(scale, plantLeafless(world,crop)?scale*.4:scale, scale); this.transform.updateMatrix();
       this.mesh.setMatrixAt(slot, this.transform.matrix);
@@ -111,7 +113,8 @@ export class CropLayer {
   prepareForCompile():()=>void {const restore=this.batches.map(b=>b.prepareForCompile());return()=>restore.forEach(f=>f());}
   update(world:World,reset:boolean,immutableSnapshot=false):void {
     const crops=this.partition.read(world,reset,immutableSnapshot);
-    for(let index=0;index<this.batches.length;index++)this.batches[index]!.update(world,reset,crops[RESIDENT_CROP_KINDS[index]!]);
+    const hydroponicCells=readHydroponicCells(world);
+    for(let index=0;index<this.batches.length;index++)this.batches[index]!.update(world,reset,crops[RESIDENT_CROP_KINDS[index]!],hydroponicCells);
   }
   dispose():void {for(const batch of this.batches)batch.dispose();}
 }

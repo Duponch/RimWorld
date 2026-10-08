@@ -1,4 +1,4 @@
-import { appendFlora,floraSize,isClusterPlantSpecies,isMedicinalPlant,isResidentCrop } from './flora-presentation';
+import { appendFlora,floraSize,hydroponicFloraHeight,isClusterPlantSpecies,isMedicinalPlant,isResidentCrop } from './flora-presentation';
 import { plantLeafless } from '../sim/plant-life';
 import { stoneColor } from './stone-palette';
 import { harvestable } from '../sim/plants';
@@ -13,8 +13,10 @@ import { mergedInstances,noise,type ResourceRange,type ResourceRangeData } from 
 import type { NaturalPresentationChange } from './NaturalResourcePresentation';
 import {readSceneResourceFrame,type SceneResourceFrame} from './scene-resource-index';
 
-const resourceIdentity=(resource:World['resources'][number]):string=>
-  `${resource.kind}:${resource.x}:${resource.z}:${resource.stone??''}:${resource.species??''}`;
+const resourceIdentity=(world:World,resource:World['resources'][number]):string=>{
+  const support=hydroponicFloraHeight(world,resource);
+  return `${resource.kind}:${resource.x}:${resource.z}:${resource.stone??''}:${resource.species??''}${support?`:support=${support}`:''}`;
+};
 const rangeResourceId=(id:number):number=>id<0?Math.floor(-id/2):id;
 const CHOP_RECOIL_SECONDS = .55;
 type TreePart = { mesh:THREE.Mesh; range:ResourceRange; positions:Float32Array; normals:Float32Array; upload:{start:number;count:number} };
@@ -47,7 +49,7 @@ function retainResources(group: THREE.Group, alive: Set<number>): void {
 
 /** Reapply a resource's visible size from the immutable merged positions.
  * This avoids cumulative float drift and keeps index-mask ranges stable. */
-function resizeResources(group:THREE.Group,resources:Map<number,World['resources'][number]>,originalSizes:Map<number,number>,currentSizes:Map<number,number>,nextSizes:Map<number,number>):void {
+function resizeResources(world:World,group:THREE.Group,resources:Map<number,World['resources'][number]>,originalSizes:Map<number,number>,currentSizes:Map<number,number>,nextSizes:Map<number,number>):void {
   const changed=new Set<number>();
   for(const [id,size] of nextSizes)if(currentSizes.get(id)!==size&&originalSizes.has(id))changed.add(id);
   if(!changed.size)return;
@@ -58,11 +60,11 @@ function resizeResources(group:THREE.Group,resources:Map<number,World['resources
     for(const range of data.ranges) {
       const id=rangeResourceId(range.id);if(!changed.has(id))continue;
       const resource=resources.get(id),initial=originalSizes.get(id),target=nextSizes.get(id);if(!resource||initial===undefined||target===undefined)continue;
-      const ratio=target/initial;
+      const ratio=target/initial,support=hydroponicFloraHeight(world,resource);
       for(let vertex=range.vertexStart;vertex<range.vertexStart+range.vertexCount;vertex++){
         const offset=vertex*3;
         position.array[offset]=resource.x+(data.originalPositions[offset]!-resource.x)*ratio;
-        position.array[offset+1]=data.originalPositions[offset+1]!*ratio;
+        position.array[offset+1]=support?support+(data.originalPositions[offset+1]!-support)*ratio:data.originalPositions[offset+1]!*ratio;
         position.array[offset+2]=resource.z+(data.originalPositions[offset+2]!-resource.z)*ratio;
       }
       position.addUpdateRange(range.vertexStart*3,range.vertexCount*3);
@@ -302,14 +304,14 @@ export class ResourceLayer {
       previous.treeIds=[];
     }
     for (const [key, chunk] of chunks) {
-      const signature=chunk.map(resource=>`${resource.id}:${resourceIdentity(resource)}:${floraSize(world,resource)}:${resource.kind==='berries'&&harvestable(world,resource)?1:0}:${plantLeafless(world,resource)}`).join('|');
+      const signature=chunk.map(resource=>`${resource.id}:${resourceIdentity(world,resource)}:${floraSize(world,resource)}:${resource.kind==='berries'&&harvestable(world,resource)?1:0}:${plantLeafless(world,resource)}`).join('|');
       const previous = this.chunks.get(key);
       if (previous?.signature === signature) continue;
       const sizes=new Map(chunk.map(resource=>[resource.id,floraSize(world,resource)]));
-      if (previous && chunk.every(r => previous.identities.get(r.id) === resourceIdentity(r))) {
+      if (previous && chunk.every(r => previous.identities.get(r.id) === resourceIdentity(world,r))) {
         const treeSizeChanged=previous.treeIds.some(id=>previous.currentSizes.get(id)!==sizes.get(id));
         if(treeSizeChanged)this.clearChopRecoil();
-        resizeResources(previous.group,new Map(chunk.map(resource=>[resource.id,resource])),previous.originalSizes,previous.currentSizes,sizes);
+        resizeResources(world,previous.group,new Map(chunk.map(resource=>[resource.id,resource])),previous.originalSizes,previous.currentSizes,sizes);
         if(treeSizeChanged)this.refreshTreeBases(previous.treeIds);
         retainResources(previous.group, new Set(chunk.flatMap(r => visibleResourceKeys(world,r)))); previous.signature = signature; continue;
       }
@@ -387,7 +389,7 @@ export class ResourceLayer {
         mesh.material=this.texturesEnabled?this.windTextured:this.windPlain;
       }
       for(const id of treeIds){const hit=this.treeHits.get(id);if(hit)hit.angle=NaN;}
-      this.chunks.set(key,{signature,group,identities:new Map(chunk.map(r=>[r.id,resourceIdentity(r)])),originalSizes:new Map(sizes),currentSizes:new Map(sizes),treeIds});
+      this.chunks.set(key,{signature,group,identities:new Map(chunk.map(r=>[r.id,resourceIdentity(world,r)])),originalSizes:new Map(sizes),currentSizes:new Map(sizes),treeIds});
     }
   }
 

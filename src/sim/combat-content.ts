@@ -5,7 +5,7 @@ import type { Resource,ResourceKind,StructureKind } from './types.ts';
 
 /** Logical fill, not model height, navigation or the final cover probability.
  * Sources, version limits and decorative-stone decision: combat-world-reference. */
-export const STRUCTURE_SHOT_FILL:Readonly<Record<StructureKind,number>>=Object.freeze({'mini-turret':.4,'tube-television':.4,sandbags:.55,fence:.15,'fence-gate':.15,'pen-marker':.1,'art-bench':.5,'fabrication-bench':.5,'hi-tech-research-bench':.5,'multi-analyzer':.5,'small-sculpture':.35,'large-sculpture':.5,grave:0,heater:.4,'wind-turbine':.5,
+export const STRUCTURE_SHOT_FILL:Readonly<Record<StructureKind,number>>=Object.freeze({'hydroponics-basin':.3,'mini-turret':.4,'tube-television':.4,sandbags:.55,fence:.15,'fence-gate':.15,'pen-marker':.1,'art-bench':.5,'fabrication-bench':.5,'hi-tech-research-bench':.5,'multi-analyzer':.5,'small-sculpture':.35,'large-sculpture':.5,grave:0,heater:.4,'wind-turbine':.5,
   'power-conduit':0,'power-switch':0,battery:.4,'solar-generator':.5,
   'fueled-stove':.5,'electric-stove':.5,'butcher-table':.5,
   'butcher-spot':0,
@@ -29,4 +29,4 @@ export const itemShotFill=(item:ItemId):number=>ITEM_DEFINITIONS[item].kind==='c
 /** Relative definition layers for ThingCovered, NOT physical/render heights.
  * A logical OPEN door retains its full fill and definition layer in that test. */
 export const SHOT_LAYER=Object.freeze({heater:.4,'wind-turbine':.5,lowPlant:11,door:14,building:15,item:18,pawn:23});
-export const structureShotLayer=(kind:StructureKind):number=>isRoomDoor(kind)?SHOT_LAYER.door:SHOT_LAYER.building;
+export const structureShotLayer=(kind:StructureKind):number=>kind==='hydroponics-basin'?SHOT_LAYER.lowPlant:isRoomDoor(kind)?SHOT_LAYER.door:SHOT_LAYER.building;

@@ -1,3 +1,4 @@
+import { removeHydroponicPlants } from './hydroponics.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { releaseStructureMelee } from './melee-state.ts';
 import { isBlockMaterial, isUpholsteryMaterial, type ConstructionMaterial, type BlockMaterial, type UpholsteryMaterial } from './building-materials.ts';
@@ -72,5 +73,6 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
     // and position, remove the vanished surface before ingestion can benefit.
     if (p.need?.kind === 'eat' && p.need.dining?.tableId === structure.id) p.need.dining.tableId = null;
   }
+  if(structure.kind==='hydroponics-basin')removeHydroponicPlants(world,structure);
   return true;
 }

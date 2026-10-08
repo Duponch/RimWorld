@@ -3,18 +3,19 @@ import { isPowerConnector,isPowerTransmitter } from './power-grid.ts';
 import { BATTERY_CAPACITY } from './power-battery.ts';
 import { PowerTopologyCache, validPowerParent } from './power-topology.ts';
 import { isBlockMaterial } from './building-materials.ts';
-import type { World } from './types.ts';
+import type { StructureKind,World } from './types.ts';
 
-export function validatePower(world:World,version:number):string[] {
+export function validatePower(world:World,version:number,onlyKind?:StructureKind):string[] {
   const errors:string[]=[],topology=new PowerTopologyCache().read(world);
   for(const s of [...world.structures,...(world.packed??[]).map(p=>p.building)]) {
+    if(onlyKind!==undefined&&s.kind!==onlyKind)continue;
     const p=s.power,packed=!world.structures.includes(s);
     const battery=s.battery;
     if(s.kind==='battery'){
       if(version<85||!battery||typeof battery!=='object'||Array.isArray(battery)||Object.keys(battery).some(k=>k!=='stored'&&(k!=='half'||version<87))||!Number.isSafeInteger(battery.stored)||battery.stored<0||battery.stored>BATTERY_CAPACITY||battery.half!==undefined&&(battery.half!==true||battery.stored===BATTERY_CAPACITY))errors.push('Invalid battery energy.');
     }else if(battery!==undefined)errors.push('Unexpected battery energy.');
     if(!isElectrical(s.kind)){if(p!==undefined)errors.push('Unexpected power state.');continue;}
-    if(s.kind==='mini-turret'&&version<193||s.kind==='tube-television'&&version<190||s.kind==='sun-lamp'&&version<177||s.kind==='machining-table'&&version<101||['hi-tech-research-bench','multi-analyzer','fabrication-bench'].includes(s.kind)&&version<123||s.kind==='autodoor'&&version<143||version<42||s.kind==='electric-stove'&&version<84||s.kind==='electric-tailor-bench'&&version<90||['battery','solar-generator','power-conduit','power-switch'].includes(s.kind)&&version<85||['heater','wind-turbine'].includes(s.kind)&&version<87||!p||typeof p!=='object'||Array.isArray(p)||typeof p.on!=='boolean'||s.kind!=='tube-television'&&s.kind!=='cooler'&&s.kind!=='electric-stove'&&s.kind!=='electric-tailor-bench'&&s.kind!=='machining-table'&&s.kind!=='hi-tech-research-bench'&&s.kind!=='fabrication-bench'&&s.kind!=='battery'&&s.kind!=='wind-turbine'&&s.orientation!==0
+    if(s.kind==='hydroponics-basin'&&version<203||s.kind==='mini-turret'&&version<193||s.kind==='tube-television'&&version<190||s.kind==='sun-lamp'&&version<177||s.kind==='machining-table'&&version<101||['hi-tech-research-bench','multi-analyzer','fabrication-bench'].includes(s.kind)&&version<123||s.kind==='autodoor'&&version<143||version<42||s.kind==='electric-stove'&&version<84||s.kind==='electric-tailor-bench'&&version<90||['battery','solar-generator','power-conduit','power-switch'].includes(s.kind)&&version<85||['heater','wind-turbine'].includes(s.kind)&&version<87||!p||typeof p!=='object'||Array.isArray(p)||typeof p.on!=='boolean'||s.kind!=='hydroponics-basin'&&s.kind!=='tube-television'&&s.kind!=='cooler'&&s.kind!=='electric-stove'&&s.kind!=='electric-tailor-bench'&&s.kind!=='machining-table'&&s.kind!=='hi-tech-research-bench'&&s.kind!=='fabrication-bench'&&s.kind!=='battery'&&s.kind!=='wind-turbine'&&s.orientation!==0
       ||s.footprint!=='standard'||(s.kind==='autodoor'?!(s.material==='wood'||s.material==='steel'||isBlockMaterial(s.material)):s.kind==='electric-tailor-bench'?!['wood','steel'].includes(s.material??''):s.material!=='steel')||Object.keys(p).some(k=>!['on','parentId',...(version>=85&&isFlickable(s.kind)&&(s.kind!=='electric-tailor-bench'||version>=181)?['switchOn']:[])].includes(k))
       ||p.switchOn!==undefined&&typeof p.switchOn!=='boolean'||p.switchOn===false&&p.on
       ||!(p.parentId===null||Number.isSafeInteger(p.parentId)&&p.parentId>0)) {errors.push('Invalid electrical state.');continue;}

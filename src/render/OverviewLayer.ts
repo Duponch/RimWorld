@@ -1,4 +1,4 @@
-import { floraSize,floraColor,floraIdentity,isClusterPlantSpecies,isMedicinalPlant,isResidentCrop } from './flora-presentation';
+import { floraSize,floraColor,floraIdentity,hydroponicFloraHeight,isClusterPlantSpecies,isMedicinalPlant,isResidentCrop } from './flora-presentation';
 import { plantLeafless } from '../sim/plant-life';
 import { stoneColor } from './stone-palette';
 import * as THREE from 'three/webgpu';
@@ -126,7 +126,8 @@ export class OverviewLayer {
       const mesh=this.batches.get(kind)!,n=noise(r.x,r.z,77),medicinal=isMedicinalPlant(r);
       const height=r.kind==='tree'?WORLD_SCALE.treeMinHeight+n*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight):r.kind==='rock'?0.7:medicinal?(plantLeafless(world,r)?.12:.38):0.75;
       const width=r.kind==='tree'?0.8+n*0.32:medicinal?.3:0.45,size=floraSize(world,r);
-      this.transform.position.set(r.x,height*size/2,r.z);this.transform.rotation.set(0,n*Math.PI*2,0);this.transform.scale.set(width*size,height*size,width*size);this.transform.updateMatrix();
+      const support=hydroponicFloraHeight(world,r);
+      this.transform.position.set(r.x,support?height*size/2+support:height*size/2,r.z);this.transform.rotation.set(0,n*Math.PI*2,0);this.transform.scale.set(width*size,height*size,width*size);this.transform.updateMatrix();
       mesh.setMatrixAt(slot,this.transform.matrix);this.tint.setHex((r.species||medicinal)&&r.kind!=='tree'?floraColor(r):r.kind==='tree'?0xffffff:r.kind==='rock'?(r.stone?stoneColor(r.stone):0x92998d):0x697b55);mesh.setColorAt(slot,this.tint);
       this.slots.set(r.id,{kind,slot,signature});
     }

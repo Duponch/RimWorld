@@ -14,6 +14,12 @@ import type { Structure, World } from '../sim/types';
 const cache = new PowerTopologyCache();
 const watts = (n: number) => `${n.toLocaleString('fr-FR', {maximumFractionDigits: 1})} W`;
 
+export function hydroponicsPowerInspection(structure:Structure):string {
+  if(structure.kind!=='hydroponics-basin')return '';
+  const state=structure.breakdown?'Pompe en panne':structure.power?.switchOn===false?'Pompe arrêtée manuellement':isPowerActive(structure)?'Pompe alimentée':'Pompe sans alimentation';
+  return `${state} · 70 W continus, même la nuit · Fertilité 280 %${isPowerActive(structure)?' · semis autorisés selon température et accès · lumière nécessaire à la croissance':' · nouveaux semis suspendus · plantes endommagées progressivement, sans mort instantanée'} · Rétablir le courant ne répare pas les dégâts déjà subis`;
+}
+
 /** The condition does not override the confirmed trader or its physical switch. */
 export function solarFlareInspection(world:World,structure:Structure):string {
   if(!world.worldIncidents?.active||!isElectrical(structure.kind))return '';
@@ -38,7 +44,7 @@ export function rainElectricalInspection(world: World, structure: Structure): st
 
 export function powerInspection(world: World, structure: Structure, compact=false): string {
   if (!isElectrical(structure.kind) || !structure.power) return '';
-  if (compact && structure.breakdown) return ` · Panne mécanique${solarFlareInspection(world,structure)?` · ${solarFlareInspection(world,structure)}`:''}${rainElectricalInspection(world, structure) ? ` · ${rainElectricalInspection(world, structure)}` : ''}.`;
+  if (compact && structure.breakdown) return ` · Panne mécanique${hydroponicsPowerInspection(structure)?` · ${hydroponicsPowerInspection(structure)}`:''}${solarFlareInspection(world,structure)?` · ${solarFlareInspection(world,structure)}`:''}${rainElectricalInspection(world, structure) ? ` · ${rainElectricalInspection(world, structure)}` : ''}.`;
   const topology = cache.read(world);
   const group = connectedPowerGroups(world, topology).find(g => g.some(s => s.id === structure.id));
   const supply = group?.reduce((n, s) => n + Math.max(0, powerWatts(s, world)), 0) ?? 0;
@@ -47,7 +53,9 @@ export function powerInspection(world: World, structure: Structure, compact=fals
   const batteries = group?.filter(s => s.battery) ?? [];
   const stored = batteries.reduce((n, s) => n + batteryWattDays(s.battery!), 0);
   let detail: string;
-  if (structure.kind === 'solar-generator') {
+  if (structure.kind === 'hydroponics-basin') {
+    detail=hydroponicsPowerInspection(structure);
+  } else if (structure.kind === 'solar-generator') {
     const open = solarUnroofedCells(world, structure);
     const light = annualNaturalLight(world);
     detail = `Production ${watts(Math.max(0, powerWatts(structure, world)))} / 1 700 W · ${open}/16 cases sans toit · lumière naturelle ${Math.round(light * 100)} %`;

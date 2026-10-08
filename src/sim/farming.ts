@@ -9,6 +9,7 @@ import { isGrowingTerrain } from './soil.ts';
 import { createPlantLife } from './plant-life.ts';
 import { sowDaylily } from './flower-pot.ts';
 import { plantSkill } from './plant-skills.ts';
+import { hydroponicBasinAt,hydroponicCropAllowed,hydroponicSowingAllowed } from './hydroponics.ts';
 import type { GrowingZone, Job, JobKind, Pawn, Resource, World } from './types.ts';
 
 export const FARM_SCAN_INTERVAL = 10;
@@ -42,7 +43,9 @@ export const growingZoneAt = (world: World, cell: number): GrowingZone | undefin
 /** Admission only: accepted work keeps its captured reservation even if the
  * worker later loses a level. Clearing and harvesting have no sowing minimum. */
 export function sowingJobAllowed(world:World,pawn:Pawn,job:Pick<Job,'kind'|'growingZoneId'>):boolean {
-  return job.kind!=='sow'||job.growingZoneId===undefined||zoneCells(world).byId.get(job.growingZoneId)?.plant!=='healroot'||plantSkill(pawn).level>=8;
+  if(job.kind!=='sow'||job.growingZoneId===undefined)return true;
+  const zone=zoneCells(world).byId.get(job.growingZoneId);
+  return (!zone||hydroponicSowingAllowed(world,zone))&&(zone?.plant!=='healroot'||plantSkill(pawn).level>=8);
 }
 /** Presentation may supply the already captured target; omission keeps the
  * simulation's existing spatial cache. null means the target is absent. */
@@ -62,21 +65,28 @@ export function jobDuration(world: World, job: Job, capturedResource?:Resource|n
   }
   return JOB_DURATION[job.kind];
 }
-interface Context { resources: Map<number, Resource>; fixed: Set<number>; temperatures:TemperatureView }
+interface Context { resources: Map<number, Resource>; fixed: Set<number>; hydroBlocked?:Set<number>; temperatures:TemperatureView }
 function context(world: World, queriedCells?:readonly number[]): Context {
-  const objects=[...world.structures.filter(s=>s.kind!=='power-conduit'), ...world.jobs.filter(j => j.kind==='install'||j.kind!=='power-conduit'&&j.kind in STRUCTURE_DEFINITIONS)];
+  const placed=world.structures.filter(s=>s.kind!=='power-conduit'),planned=world.jobs.filter(j => j.kind==='install'||j.kind!=='power-conduit'&&j.kind in STRUCTURE_DEFINITIONS);
+  const objects=[...placed,...planned];
   // Validation asks about at most five cells. Avoid expanding every building
   // footprint for that point query; discovery still captures the full field.
   const fixed=queriedCells?new Set(queriedCells.filter(i=>objects.some(s=>footprintContains(s,{x:i%world.width,z:Math.floor(i/world.width)}))))
     :new Set(objects.flatMap(s=>footprintCells(s).map(c=>index(world,c))));
+  const other=world.growingZones.some(z=>z.basinId!==undefined)?[...placed.filter(s=>s.kind!=='hydroponics-basin'),...planned]:undefined;
+  const hydroBlocked=other&&(queriedCells?new Set(queriedCells.filter(i=>other.some(s=>footprintContains(s,{x:i%world.width,z:Math.floor(i/world.width)}))))
+    :new Set(other.flatMap(s=>footprintCells(s).map(c=>index(world,c)))));
   let temperatures:TemperatureView|undefined;
   return {
     resources: resourceCells(world),
-    get temperatures(){return temperatures??=new TemperatureView(world);},fixed,
+    get temperatures(){return temperatures??=new TemperatureView(world);},fixed,hydroBlocked,
   };
 }
 function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, committed=false): { kind: JobKind; cell: number } | null {
-  if (ctx.fixed.has(cell)||world.tiles[cell]!.floor) return null;
+  const position={x:cell%world.width,z:Math.floor(cell/world.width)};
+  const basin=zone.basinId===undefined?undefined:hydroponicBasinAt(world,position);
+  if(zone.basinId!==undefined&&(!basin||basin.id!==zone.basinId||!hydroponicCropAllowed(zone.plant)))return null;
+  if (ctx.fixed.has(cell)&&(!basin||ctx.hydroBlocked?.has(cell))||!basin&&world.tiles[cell]!.floor) return null;
   const plant = ctx.resources.get(cell);
   if (plant?.kind === zone.plant || (!zone.allowSow && zone.allowCut && plant && isPlant(plant))) {
     return plantGrowth(world, plant) >= 1 ? { kind: 'harvest', cell } : null;
@@ -86,7 +96,7 @@ function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, 
   if(!committed&&!sowingTemperatureAllowed(ctx.temperatures.at(world,{x:cell%world.width,z:Math.floor(cell/world.width)})))return null;
   if (plant) return zone.allowCut && plant.kind !== 'rock' ? { kind: plant.kind === 'tree' ? 'chop' : 'cut', cell } : null;
   // A sowing intention stays pending while its floor items are hauled aside.
-  if (!isGrowingTerrain(world.tiles[cell]!.terrain)) return null;
+  if (!basin&&!isGrowingTerrain(world.tiles[cell]!.terrain)||basin&&!hydroponicSowingAllowed(world,zone)) return null;
   const x = cell % world.width, z = Math.floor(cell / world.width);
   for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
     const nx = x + dx!, nz = z + dz!;
@@ -126,7 +136,7 @@ export function growingJobValid(world: World, job: Job, shared?:Context): boolea
 export function scheduleGrowing(world: World): void {
   // Discard stale sowing/preparation intents before a planner can accept one.
   // Accepted work keeps its own interruption contract, including queued orders.
-  if((!sowingTemperatureAllowed(outdoorTemperature(world))||world.thermal?.regions.some(r=>!sowingTemperatureAllowed(r.temperature)))
+  if((!sowingTemperatureAllowed(outdoorTemperature(world))||world.thermal?.regions.some(r=>!sowingTemperatureAllowed(r.temperature))||world.growingZones.some(z=>z.basinId!==undefined&&!hydroponicSowingAllowed(world,z)))
     &&world.jobs.some(j=>j.growingZoneId!==undefined&&j.reservedBy===null)) {
     const ctx=context(world);
     const allowed=(j:Job)=>j.growingZoneId===undefined||j.reservedBy!==null||growingJobValid(world,j,ctx);
@@ -158,7 +168,9 @@ export function scheduleGrowing(world: World): void {
 }
 export function finishSowing(world: World, job: Job): void {
   if(job.flowerPotId!==undefined){const pot=world.structures.find(s=>s.id===job.flowerPotId&&s.kind==='flower-pot');if(pot?.flower&&!pot.flower.plant)pot.flower={...pot.flower,plant:sowDaylily(world.tick)};return;}
-  const kind=world.growingZones.find(z=>z.id===job.growingZoneId)!.plant;
+  const zone=world.growingZones.find(z=>z.id===job.growingZoneId);
+  if(!zone||zone.basinId!==undefined&&(!hydroponicSowingAllowed(world,zone)||!zone.cells.includes(index(world,job))))return;
+  const kind=zone.plant;
   const plant:Resource={ id: world.nextId++, kind, x: job.x, z: job.z, amount: PLANT_DEFINITIONS[kind].yield, growth: .0001, growthTick: world.tick };
   if(world.climate)plant.plantLife=createPlantLife(world,plant,true);
   world.resources = [...world.resources,plant];

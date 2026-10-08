@@ -1,3 +1,4 @@
+import {removeHydroponicPlants} from './hydroponics.ts';
 import {detachMissingFlakBills} from './flak-work.ts';
 import { releaseStructureMelee } from './melee-state.ts';
 import {invalidateAnimalPens} from './animal-pens.ts';
@@ -33,7 +34,7 @@ function removeJobs(world:World,ids:Set<number>):void {
   world.jobs=world.jobs.filter(j=>!ids.has(j.id));
 }
 /** Shared destructive plant boundary; the cause never creates a harvest. */
-export function damageResource(world:World,r:Resource,amount:number,reason:'fire'|'frost'|'darkness'|'age'|'bullet'|'bomb'='fire'):boolean {
+export function damageResource(world:World,r:Resource,amount:number,reason:'fire'|'frost'|'darkness'|'age'|'bullet'|'bomb'|'rotting'='fire'):boolean {
   const max=resourceMaxHp(r);if(!max||!positive(amount)||!world.resources.includes(r))return false;
   const damage=(r.damage??0)+amount;if(damage<max){r.damage=damage;return true;}
   const ledger=reason==='fire'?ensureFireState(world).ledger:undefined;
@@ -120,7 +121,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(detonates&&!Number.isSafeInteger(world.nextId+1+(plan.salvage?.drops.length??0)))return false;
   const {salvage,drops}=plan;
   const destruction=world.destroyed??{count:0,lost:{}},lost={...destruction.lost};
-  for(const cost of constructionRecipe(s).ingredients){const key=cost.item as keyof typeof lost;lost[key]=(lost[key]??0)+cost.quantity-(salvage?.returned.get(cost.item)??0);}
+  for(const cost of constructionRecipe(s).ingredients){const key=cost.item as keyof typeof lost,quantity=cost.quantity-(salvage?.returned.get(cost.item)??0);if(quantity)lost[key]=(lost[key]??0)+quantity;}
   if(serviceLoss)lost.component=(lost.component??0)+serviceLoss;
   const fuelLost=s.fuel?.ticks??0,fuelBurned=s.fuel?.burned??0;
   const energy=s.battery?(s.battery.stored+(s.battery.half?.5:0)):0;
@@ -163,6 +164,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
     if(energy)world.destroyed.batteryEnergyLost=(destruction.batteryEnergyLost??0)+energy;
   }
   if(world.fires)world.fires.batteryWicks=world.fires.batteryWicks.filter(w=>w.structureId!==s.id);
+  if(s.kind==='hydroponics-basin')removeHydroponicPlants(world,s);
   detachMissingBills(world);detachMissingFlakBills(world);detachMissingGunBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);reconcilePower(world);if(installed)reconcileRoofSupport(world,false,s);refreshStock(world);
   if(waveId!==undefined)registerBombWave(world,s,waveId,core,external?.instigatorKey??s.turret?.wick?.instigatorKey);return true;
 }

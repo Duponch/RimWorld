@@ -1,5 +1,8 @@
 # Lisière
 
+**V268 — hydroponie ; schéma 203.**
+Les [bacs hydroponiques](docs/gameplay/hydroponics-v268.md) relient recherche, construction, courant, cultures sous toit, récolte et récupération après panne. Riz, pommes de terre, coton et racine médicinale utilisent le travail agricole ordinaire ; 280 % de fertilité, 70 W par bac et dépérissement progressif sans courant. Autonomie et push après chaque commit maintenus. Les états suivants sont historiques.
+
 **V267 — libération des prisonniers ; schéma 202.**
 La [libération volontaire](docs/gameplay/prisoner-release-v267.md) relie consigne d’inspection, portage physique par un colon affecté à Basique ou Geôlier, puis sortie autonome avec les possessions conservées. Les archives de prison et de raid distinguent ce départ de l’évasion ; aucun bonus diplomatique ajouté. Autonomie, validations regroupées et push après chaque commit restent autorisés ; les états suivants sont historiques.
 

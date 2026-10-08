@@ -13,10 +13,14 @@ function plantLight(world:World,plant:Resource):number {
 import { harvestProductLabel, plantGrowth, harvestable, berryYield, plantResting, plantTemperatureFactorFor,choppable, sowingTemperatureAllowed, isPlant, plantFertility, PLANT_DEFINITIONS } from '../sim/plants';
 import { TemperatureView } from '../sim/temperature';
 import type { Cell, Resource, World } from '../sim/types';
+import { hydroponicBasinAt } from '../sim/hydroponics';
+import { isPowerActive } from '../sim/power-rules';
 
 export function plantInspection(world:World,plant:Resource):string {
   const temperature=new TemperatureView(world).at(world,plant),factor=plantTemperatureFactorFor(plant,temperature);
   const constraints:string[]=[];let soil='';
+  const basin=hydroponicBasinAt(world,plant);
+  if(basin)constraints.push(isPowerActive(basin)?'Culture hydroponique · pompe alimentée':'Culture hydroponique · sans alimentation : dépérissement progressif, nouveaux semis suspendus');
   if(plantLeafless(world,plant))constraints.push(plant.kind==='healroot'?'Sans feuilles · broutage suspendu · récolte possible si croissance suffisante':'Sans feuilles · broutage suspendu');
   if(plant.damage)constraints.push(`État ${resourceMaxHp(plant)-plant.damage}/${resourceMaxHp(plant)}`);
   if(plantResting(calendarTick(world)))constraints.push('Repos nocturne');
