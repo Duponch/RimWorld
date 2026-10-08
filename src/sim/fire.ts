@@ -3,9 +3,9 @@ import { isRoofed } from './roof-rules.ts';
 import { isRoomDoor } from './door-rules.ts';
 import { reconcileTemperature } from './temperature.ts';
 import { FireContent,targetFlammability,type FireTarget } from './fire-content.ts';
-import { burnPawn,burnAnimal } from './fire-damage.ts';
+import { burnPawn,burnAnimal,burnMechanoid } from './fire-damage.ts';
 import { damagePile,damageResource,damageStructure } from './thing-damage.ts';
-import { structureFlammability } from './thing-damage-rules.ts';
+import { structureFlammability,structureMaxHp,resourceMaxHp,pileMaxHp } from './thing-damage-rules.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { batteryWattDays,drainBatteryWattDays } from './power-battery.ts';
 import { attachFireChance,ensureFireState,fireRandom,fireRound,fireDamage,fireSpreadInterval,firePosition,groundFire,FIRE_COMPLEX_CORE,FIRE_MIN_SIZE,FIRE_MAX_SIZE,FIRE_PULSE_CORE,type FireRecord } from './fire-rules.ts';
@@ -40,15 +40,15 @@ export function startFire(w:World,c:Cell,size=.1):boolean {
   if(!new FireContent(w).chance(c))return false;
   const fire=createFire(w,c,size,w.tick*10);if(fire&&w.home?.includes(c.z*w.width+c.x))announce(w,'Incendie dans le foyer.');return !!fire;
 }
-export function attachPawnFire(w:World,pawnId:number,size=.1):boolean {
+export function attachPawnFire(w:World,pawnId:number,size=.1,core=w.tick*10):boolean {
   const p=w.pawns.find(p=>p.id===pawnId);if(!p||p.state==='dead'||w.fires?.items.some(f=>f.attachedPawnId===pawnId))return false;
-  const fire=createFire(w,p,size,w.tick*10,{pawnId});if(!fire)return false;
+  const fire=createFire(w,p,size,core,{pawnId});if(!fire)return false;
   interruptWork(w,p);delete p.draft;delete p.shooting;delete p.melee;delete p.tactics;delete p.flee;
   p.burning={phase:'panic',remainingCore:0};announce(w,`${p.name} est en feu !`);return true;
 }
-export function attachAnimalFire(w:World,animalId:number,size=.1):boolean {
+export function attachAnimalFire(w:World,animalId:number,size=.1,core=w.tick*10):boolean {
   const a=w.wildlife?.animals.find(a=>a.id===animalId);if(!a||a.state==='dead'||w.fires?.items.some(f=>f.attachedAnimalId===animalId))return false;
-  if(!createFire(w,a,size,w.tick*10,{animalId}))return false;
+  if(!createFire(w,a,size,core,{animalId}))return false;
   delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;if(w.schemaVersion<183)delete a.strike;a.path=[];
   a.burning={phase:'panic',remainingCore:0};return true;
 }
@@ -112,6 +112,38 @@ export function flameBurst(w:World,center:Cell,radius:number,coreTick=w.tick*10)
   }return true;
 }
 export const igniteLightning=(w:World,c:Cell,coreTick=w.tick*10):boolean=>flameBurst(w,c,1.9,coreTick);
+
+/** One already-captured cell of the V201 persisted Flame wave. The caller's
+ * shielded snapshot fixes targets before damage; generated salvage is absent.
+ * Unlike flameBurst, this has no radius cap or independent LOS recapture. */
+export function applyFlameWaveCell(w:World,c:Cell,core:number,affected:Set<string>,allowed:ReadonlySet<string>):boolean {
+  const state=ensureFireState(w),content=new FireContent(w);let changed=false;
+  const alive=(entity:{state:string})=>entity.state!=='dead';
+  for(const target of content.allTargets(c)) {
+    const key=`${target.kind}:${target.value.id}`;
+    if(!allowed.has(key)||affected.has(key))continue;
+    if((target.kind==='structure'?structureMaxHp(target.value):target.kind==='resource'?resourceMaxHp(target.value):pileMaxHp(target.value,w.schemaVersion))<=0)continue;
+    affected.add(key);const corpse=target.kind==='pile'&&(target.value.kind==='corpse'||target.value.kind==='mech-corpse');
+    applyDamage(w,target,corpse?5:10,core);changed=true;
+  }
+  for(const pawn of [...w.pawns])if(same(pawn,c)&&pawn.state!=='dead'&&allowed.has(`pawn:${pawn.id}`)&&!affected.has(`pawn:${pawn.id}`)) {
+    affected.add(`pawn:${pawn.id}`);const penetrated=burnPawn(w,pawn,10);changed=true;
+    const chance=attachFireChance(.7,60);
+    if(penetrated&&alive(pawn)&&(chance>=1||chance>0&&fireRandom(state)<chance))attachPawnFire(w,pawn.id,.15+fireRandom(state)*.1,core);
+  }
+  for(const animal of [...w.wildlife?.animals??[]])if(same(animal,c)&&animal.state!=='dead'&&allowed.has(`animal:${animal.id}`)&&!affected.has(`animal:${animal.id}`)) {
+    affected.add(`animal:${animal.id}`);burnAnimal(w,animal,10);changed=true;
+    const chance=attachFireChance(.7,60);
+    if(alive(animal)&&(chance>=1||chance>0&&fireRandom(state)<chance))attachAnimalFire(w,animal.id,.15+fireRandom(state)*.1,core);
+  }
+  for(const mech of [...w.mechanoids??[]])if(same(mech,c)&&mech.state!=='dead'&&allowed.has(`mech:${mech.id}`)&&!affected.has(`mech:${mech.id}`)) {
+    affected.add(`mech:${mech.id}`);burnMechanoid(w,mech,10,core);changed=true;
+  }
+  const after=new FireContent(w);
+  const chance=after.chance(c);
+  if((chance>=1||chance>0&&fireRandom(state)<chance)&&createFire(w,c,.2+fireRandom(state)*.4,core))changed=true;
+  return changed;
+}
 
 /** Called once before actors, after the climate/room update. */
 export function advanceFires(w:World,weather:{rainRate:number},initialLayout:ThermalLayout):void {

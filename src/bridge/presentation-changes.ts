@@ -29,7 +29,7 @@ export class PresentationChanges {
         :[world.commercialTrip.phase,world.commercialTrip.pawn.id,world.commercialTrip.consumed,world.commercialTrip.silverPaid,world.commercialTrip.bought,world.commercialTrip.silverEarned,world.commercialTrip.sold]):undefined,
       world.civilianPost?[world.civilianPost.generation,world.civilianPost.transactions,world.civilianPost.stock.map(p=>[p.id,p.item,p.quantity,p.damage])]:undefined,
       world.projectiles?.map(p=>[p.id,p.emittedAtCore,p.arrival]),
-      world.bombWaves?.map(w=>[w.id,w.sourceId,w.startedAtCore]),
+      world.bombWaves?.map(w=>w.shortCircuit?[w.id,w.sourceId,w.startedAtCore,w.shortCircuit]:[w.id,w.sourceId,w.startedAtCore]),
       world.raids?.mechActive,
       world.mechanoids?.map(m=>[m.id,m.mechKind,m.state,m.melee,m.stun,m.raid?.goal,m.health?.nextInjuryId,m.health?.missing,
         // Busy clocks decrease continuously; only real admissions, phase/focus

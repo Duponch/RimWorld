@@ -232,7 +232,9 @@ export class StructureVfxLayer {
       tokens.push(`turret-shot:${p.id}`);glow.push({x:from.x+Math.sin(ry)*.7,y:1.12,z:from.z+Math.cos(ry)*.7,sx:.16,sy:.17,sz:.22,ry,color:0xffd599});
     }
     for(const wave of world.bombWaves??[])if(Math.ceil(wave.startedAtCore/10)===world.tick){
-      tokens.push(`bomb-flash:${wave.id}`);glow.push({x:wave.center.x,y:.68,z:wave.center.z,sx:.95,sy:1.1,sz:.95,ry:0,color:0xffe7b4});
+      const radius=wave.shortCircuit?.radius,scale=radius===undefined?1:Math.max(.5,Math.min(3,radius/3.9));
+      const flame=wave.shortCircuit?.damage==='flame';
+      tokens.push(radius===undefined?`bomb-flash:${wave.id}`:`bomb-flash:${wave.id}:${radius}:${flame}`);glow.push({x:wave.center.x,y:.68,z:wave.center.z,sx:.95*scale,sy:1.1*scale,sz:.95*scale,ry:0,color:flame?0xffb35b:0xffe7b4});
     }
     for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined){
       tokens.push(`${fire.id}:ground-fire:${fire.x}:${fire.z}:${fire.size}`);

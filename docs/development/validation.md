@@ -1,4 +1,6 @@
-# Validation courante — V265
+# Validation courante — V266
+
+**V266, schéma 201 : [courts-circuits](../gameplay/short-circuit-v266.md).** 100 cas uniques dans 14 fichiers passent par reprises ciblées, dont sélection, réseau isolé, énergie en demi-quanta, ondes persistées, dégâts et sauvegarde/reprise exacte ; les 62 sauvegardes publiques restent valides et inchangées. Typage/build et parcours WebGPU préparé au tick 30100 avec sauvegarde/rechargement puis continuation à 30114 passent, sans erreur navigateur. Les premiers rouges sont conservés ; aucune nouvelle mesure FPS ou fréquence naturelle revendiquée. Autonomie et push après chaque commit autorisés. Les validations suivantes sont historiques.
 
 **V265, schéma 200 : [vague de froid et éclipse](../gameplay/climate-incidents-v265.md).** 96 cas uniques dans 15 fichiers passent par reprises ciblées : thermique, croissance et lumière, solaire, agenda végétal, sélection d’incident, migration prospective et refus atomiques. Les 62 sauvegardes publiques restent valides et inchangées. Typage/build et parcours WebGPU avec sauvegarde/rechargement passent ; scènes préparées, aucune fréquence naturelle ou mesure FPS déduite. Autonomie et push après chaque commit autorisés par les derniers messages humains. Les validations suivantes sont historiques.
 

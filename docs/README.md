@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V266, schéma 201 : [Zzztt… court-circuit du réseau](gameplay/short-circuit-v266.md).** Conduits, batteries, incendies et dégâts composent une boucle de protection et de récupération physique, avec lettre du dernier incident et sauvegarde des conséquences. Développement autonome, contrôles regroupés et push après chaque commit autorisés. Les états V265 et antérieurs ci-dessous sont historiques.
+
 **V265, schéma 200 : [vague de froid et éclipse](gameplay/climate-incidents-v265.md).** Deux incidents jouables utilisent les systèmes thermiques, agricoles et électriques existants, avec alertes, ciel assombri et reprise sauvegardée. Les 62 références publiques restent immuables. Méthode par lots cohérents et contrôles regroupés ; autonomie et push de chaque lot autorisés, relance réactivée. Les repères suivants sont historiques.
 
 **V264, schéma 199 : [secours, récupération et intégration du naufragé](gameplay/pod-rescue-joining-v264.md).**

@@ -10,6 +10,9 @@ import { damagePile } from './thing-damage.ts';
 import type { MedicalRecord } from './injury-types.ts';
 import type { Pawn,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
+import { createMechaMedicalRecord,commitMechanoidImpact } from './mechanoid-health.ts';
+import { mechanoidProtection } from './mechanoid-impact.ts';
+import type { Mechanoid } from './mechanoid-state.ts';
 
 function localizedBurn(record:MedicalRecord,amount:number,random:()=>number,protect?:ImpactProtection):boolean {
   const part=selectBulletPart(record,random,undefined,'outside');if(!part)return false;
@@ -47,4 +50,16 @@ export function burnAnimal(world:World,animal:WildAnimal,amount:number):void {
   localizedBurn(record,amount,random);
   if(animal.state!=='downed'&&medicalStatus(record)==='downed'&&random()<.5)record.death={tick:world.tick,cause:'downed'};
   animal.health=record;reconcileAnimalHealth(world,animal);
+}
+
+/** Mechanical Heat armor uses the same outside-part burn and fire stream.
+ * The medical commit receives the unchanged weapon RNG, never the fire RNG. */
+export function burnMechanoid(world:World,mech:Mechanoid,amount:number,core:number):boolean {
+  if(world.schemaVersion<201||!world.mechanoids?.includes(mech)||mech.state==='dead'||mech.health?.death
+    ||!Number.isSafeInteger(amount)||amount<1)return false;
+  const state=ensureFireState(world),random={rng:state.rng},draw=()=>fireRandom(random);
+  const record={...structuredClone(mech.health??createMechaMedicalRecord(world.tick,mech.mechKind)),tick:world.tick};
+  const penetrated=localizedBurn(record,amount,draw,mechanoidProtection('heat',0,draw,mech.mechKind));
+  if(!commitMechanoidImpact(world,mech,record,{rng:world.rng},core))throw new RangeError('Cannot commit mechanical Flame impact');
+  state.rng=random.rng;return penetrated;
 }

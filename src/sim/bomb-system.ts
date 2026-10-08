@@ -1,16 +1,45 @@
-import { BOMB_AMOUNT,BOMB_RADIUS,bombCellCore,type MiniTurretBombWave } from './bomb-state.ts';
+import { BOMB_AMOUNT,BOMB_RADIUS,bombCellCore,validBombWaveShape,type MiniTurretBombWave } from './bomb-state.ts';
 import { SHOT_LAYER,structureShotLayer } from './combat-content.ts';
 import { STRUCTURE_DEFINITIONS } from './definitions.ts';
 import { isRoomDoor } from './door-rules.ts';
 import { damageStructure,damageResource,damagePile,type StructureDamageCause } from './thing-damage.ts';
 import { structureMaxHp,resourceMaxHp,pileMaxHp } from './thing-damage-rules.ts';
 import { damagePawnWithBomb,damageAnimalWithBomb,damageMechanoidWithBomb } from './bomb-medical.ts';
-import { destroyFireFromBomb } from './fire.ts';
+import { destroyFireFromBomb,applyFlameWaveCell } from './fire.ts';
+import { captureBombCells } from './bomb-cells.ts';
+import { reconcileTemperature } from './temperature.ts';
 import { firePosition } from './fire-rules.ts';
 import { captureWorldProjectileTargets } from './projectile-world.ts';
 import type { ProjectileScene } from './projectile-rules.ts';
 import type { BombInstigatorKey } from './mini-turret-state.ts';
 import type { Structure,World } from './types.ts';
+
+/** Prepare both geometries and the thermal result before reserving any ID.
+ * The caller commits its battery drain/report only after this returns true.
+ * Emission owns no fire/combat draw; seed records the incident's private draw. */
+export function startShortCircuitDischarge(w:World,conduit:Structure,flameRadius:number,bombRadius:number|undefined,seed:number):boolean {
+  const count=bombRadius===undefined?1:2,core=w.tick*10;
+  if(w.schemaVersion<201||conduit.kind!=='power-conduit'||!w.structures.includes(conduit)
+    ||!Number.isSafeInteger(conduit.id)||conduit.id<1||conduit.id>=w.nextId
+    ||!Number.isSafeInteger(conduit.x)||!Number.isSafeInteger(conduit.z)||conduit.x<0||conduit.z<0||conduit.x>=w.width||conduit.z>=w.height
+    ||!Number.isFinite(flameRadius)||flameRadius<1.5||flameRadius>14.9
+    ||(flameRadius>3.5?bombRadius!==flameRadius*.3:bombRadius!==undefined)
+    ||!Number.isSafeInteger(seed)||seed<1||seed>0xffffffff||!Number.isSafeInteger(w.nextId+count)
+    ||!Number.isSafeInteger(core)||core<0||!Number.isSafeInteger(core+22)
+    ||(w.bombWaves?.length??0)+count>w.width*w.height)return false;
+  const center={x:conduit.x,z:conduit.z};
+  const prepare=(damage:'flame'|'bomb',radius:number,id:number):MiniTurretBombWave=>({id,sourceId:conduit.id,center:{...center},
+    startedAtCore:core,advancedAtCore:core,cells:captureBombCells(w,center,radius,true),nextCell:0,damagedThingKeys:[],shortCircuit:{damage,radius,seed}});
+  const waves=[prepare('flame',flameRadius,w.nextId)];
+  if(bombRadius!==undefined)waves.push(prepare('bomb',bombRadius,w.nextId+1));
+  if(waves.some(wave=>!validBombWaveShape(wave,w.schemaVersion)))return false;
+  const draft={...w,...w.thermal?{thermal:structuredClone(w.thermal)}:{}},layout=reconcileTemperature(draft);
+  const region=draft.thermal?.regions[layout.indices[center.z*w.width+center.x]!];
+  if(region)for(const wave of waves){region.temperature=Math.min(1000,region.temperature+(wave.shortCircuit!.damage==='flame'?15:5)*wave.cells.length/region.cells.length);if(!Number.isFinite(region.temperature))return false;}
+  w.nextId+=count;w.bombWaves=[...(w.bombWaves??[]),...waves].sort((a,b)=>a.id-b.id);
+  if(draft.thermal)w.thermal=draft.thermal;else delete w.thermal;
+  return true;
+}
 
 export function applyStructureExternalDamage(w:World,s:Structure,rawAmount:number,appliedAmount:number,cause:StructureDamageCause,rng=w.rng,core=w.tick*10,instigatorKey?:BombInstigatorKey):boolean {
   if(!Number.isFinite(rawAmount)||rawAmount<0||!Number.isSafeInteger(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)return false;
@@ -26,10 +55,10 @@ export function advanceBombWicks(w:World,core:number):boolean {
   let changed=false;for(const s of [...w.structures].sort((a,b)=>a.id-b.id))if(advanceBombWick(w,s,core))changed=true;return changed;
 }
 const idOf=(key:string)=>Number(key.slice(key.indexOf(':')+1));
-function layer(w:World,key:string):number {
+function layer(w:World,key:string,shortCircuit=false):number {
   if(key.startsWith('pawn:')||key.startsWith('animal:')||key.startsWith('mech:'))return SHOT_LAYER.pawn;
   if(key.startsWith('pile:')||key.startsWith('packed:'))return SHOT_LAYER.item;
-  if(key.startsWith('structure:')){const s=w.structures.find(s=>s.id===idOf(key));return s?structureShotLayer(s.kind):SHOT_LAYER.building;}
+  if(key.startsWith('structure:')){const s=w.structures.find(s=>s.id===idOf(key));return shortCircuit&&s?.kind==='power-conduit'?5:s?structureShotLayer(s.kind):SHOT_LAYER.building;}
   if(key.startsWith('resource:'))return w.resources.find(r=>r.id===idOf(key))?.kind==='tree'?SHOT_LAYER.building:SHOT_LAYER.lowPlant;
   return SHOT_LAYER.building;
 }
@@ -45,11 +74,17 @@ export function advanceBombWave(w:World,wave:MiniTurretBombWave,core:number,read
   const invalidate=()=>{changed=true;local=undefined;afterImpact?.();};
   while(wave.nextCell<wave.cells.length&&bombCellCore(w,wave,wave.cells[wave.nextCell]!)<=core){
     const index=wave.cells[wave.nextCell]!,cell={x:index%w.width,z:Math.floor(index/w.width)},snapshot=[...scene().at(cell)];
-    const full=snapshot.reduce((max,t)=>t.fill>.99?Math.max(max,layer(w,t.key)):max,-Infinity);
+    const altitude=(key:string)=>layer(w,key,!!wave.shortCircuit);
+    const full=snapshot.reduce((max,t)=>t.fill>.99?Math.max(max,altitude(t.key)):max,-Infinity);
+    if(wave.shortCircuit?.damage==='flame') {
+      const allowed=new Set(snapshot.filter(t=>altitude(t.key)>=full).map(t=>t.key.startsWith('packed:')?`structure:${idOf(t.key)}`:t.key));
+      if(applyFlameWaveCell(w,cell,core,affected,allowed))invalidate();
+      wave.nextCell++;continue;
+    }
     const fireIds=(w.fires?.items??[]).filter(f=>{const p=firePosition(w,f);return p?.x===cell.x&&p.z===cell.z;}).map(f=>f.id);
     for(const t of snapshot){
       const key=t.key.startsWith('packed:')?`structure:${idOf(t.key)}`:t.key;
-      if(affected.has(key)||layer(w,t.key)<full)continue;
+      if(affected.has(key)||altitude(t.key)<full)continue;
       const id=idOf(t.key);let attempted=false;
       if(t.key.startsWith('pawn:')){const p=w.pawns.find(p=>p.id===id);if(p&&p.state!=='dead'){damagePawnWithBomb(w,p,core);attempted=true;}}
       else if(t.key.startsWith('animal:')){const a=w.wildlife?.animals.find(a=>a.id===id);if(a&&a.state!=='dead'){damageAnimalWithBomb(w,a,core,wave.center);attempted=true;}}

@@ -1,5 +1,8 @@
 # Lisière
 
+**V266 — Zzztt… court-circuit du réseau ; schéma 201.**
+Le [court-circuit](docs/gameplay/short-circuit-v266.md) relie conduits alimentés, réserves du seul réseau touché, incendies, dégâts et reprise physique : éteindre, soigner, réparer et recharger. La lettre décrit les conséquences réelles ; les anciennes parties adoptent ce calendrier prospectivement. Développement autonome, validations regroupées et push après chaque commit autorisés ; les états V265 et antérieurs ci-dessous sont historiques.
+
 **V265 — vague de froid et éclipse ; schéma 200.**
 Deux [crises climatiques](docs/gameplay/climate-incidents-v265.md) relient protection des habitants et cultures, chauffage, lumière naturelle, panneaux solaires et réserves d’énergie. Alertes et ciel suivent les conditions réellement simulées ; sauvegardes anciennes adoptées prospectivement. Développement autonome, validations regroupées, commit et push de chaque lot selon la dernière consigne ; les repères suivants sont historiques.
 
