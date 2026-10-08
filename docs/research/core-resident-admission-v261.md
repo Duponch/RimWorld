@@ -1,0 +1,13 @@
+# V261 — distinguer un callback inconnu d'une arête de cache manquante
+
+Le [raccord Core privé](../development/core-resident-admission-v261.md) est arrêté par son audit à froid ; [preuves](../history/validation-core-resident-admission-v261.md). Le refus protège aussi les objets résidents contre un callback d'un objet exclu. Le contourner parce que l'objet est un effet visuel rendrait ce contrat incorrect.
+
+Les sources primaires sont les fichiers locaux épinglés Three 0.186.0 : Camera.js, TSLCore.js, NodeBuilder.js, IsolateNode.js et SpriteNodeMaterial.js. Les [principes de NodeMaterialObserver](https://threejs.org/docs/pages/NodeMaterialObserver.html) et des [UniformNode](https://threejs.org/docs/pages/UniformNode.html) consultés dans V260 restent applicables. Les métadonnées de callback n'établissent ni sa pureté, ni la fréquence de publication de son UBO.
+
+Le diagnostic observe un UniformNode nommé cameraPosition, callback RENDER et groupe partagé RENDER, dans le matériau des sprites Action VFX. La recherche dans src/render ne trouve aucun onObjectUpdate/onRenderUpdate/onFrameUpdate applicatif : les uniforms possédés sont alimentés par les méthodes CPU. Le nom observé est cohérent avec la base caméra native, mais ne suffit pas à l'autoriser.
+
+Camera.js crée la base cameraPosition dans une Fn once. TSLCore conserve le résultat once dans les propriétés du ShaderNode global et une Stack de sortie dans les propriétés du ShaderCall. Le parcours V261 exclut shaderNode et ne visite que les caches principaux et leurs parents. IsolateNode peut construire le call dans un cache enfant, puis restaurer le parent ; ce parent ne permet pas de découvrir l'enfant. Le résultat global sous le ShaderNode canonique peut alors être présent sans être atteint par ce parcours. Cette omission est établie dans le code ; son lien d'identité avec l'uniforme refusé reste à qualifier par V262.
+
+La correction doit consulter uniquement les données déjà compilées sous les objets ShaderNode des exports caméra exacts. Elle ne doit ni exécuter leur fonction pour découvrir une sortie, ni faire confiance à un nom, une classe ou un updateType générique. Sortie absente ou ambiguë : refus. Callback natif et mises à jour de caméra continuent dans leur ordre historique ; une lecture supplémentaire à froid n'est pas un gain de performance acquis.
+
+Une seconde observation situe l'annulation d'un chargement musical pendant le cleanup possédé. Le rapport initial n'avait pas cette chronologie : on ne lui attribue pas rétroactivement la même cause. Les prochains contrôles doivent conserver les événements bruts et distinguer cette annulation attendue des erreurs du parcours, sans filtrage général des échecs HTTP.

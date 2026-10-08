@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-V260, produit V242 et schéma198 conservés : [préparation graphique sous construction privée](development/owned-render-preparation-v260.md), [recherche](research/owned-render-preparation-v260.md), [preuves et limites](history/validation-owned-render-preparation-v260.md). Vingt paires matérielles exactes ; premier coût isolé moyen CPU−32,42 %, avec forte dispersion et froid défavorable. Nouveau raccord Core autorisé sous qualification, aucun FPS ajouté ni promotion ; 62 références exactes, relance automatique en pause et aucun push.
+V261, produit V242 et schéma198 conservés : [premier raccord Core privé](development/core-resident-admission-v261.md), [recherche des caches caméra](research/core-resident-admission-v261.md), [diagnostics et reprises](history/validation-core-resident-admission-v261.md). Refus à froid observé dans les sprites, aucun coût ou FPS déduit. Suite sur les seules sorties caméra canoniques déjà compilées ; 62 références exactes, relance automatique en pause et aucun push.
 
 V246, schéma 198 inchangé, écarte le [prototype de registre Resource](development/native-namespace-v246.md) après deux [oracles négatifs](history/validation-native-namespace-v246.md). La propriété partielle ne suffit pas ; la suite étudie celle du graphe natif entier et ses dépendances. Produit V242 conservé, aucun FPS ajouté.
 
