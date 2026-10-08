@@ -16,6 +16,9 @@ export function validatePawnHealth(world:World):string[] {
     if(vomit&&(vomit.cell.x>=world.width||vomit.cell.z>=world.height))errors.push('Vomiting target is outside the map.');
     const fluVomit=h.flu?.vomit;
     if(fluVomit&&(fluVomit.cell.x>=world.width||fluVomit.cell.z>=world.height))errors.push('Flu vomiting target is outside the map.');
+    const malariaVomit=h.immuneDiseases?.malaria?.vomit;
+    if(malariaVomit&&(malariaVomit.cell.x>=world.width||malariaVomit.cell.z>=world.height))errors.push('Malaria vomiting target is outside the map.');
+    if(malariaVomit&&(vomit||fluVomit))errors.push('Malaria vomiting conflicts with another episode owner.');
     const status=medicalStatus(h),stopped=status!=='mobile';
     if(stopped?p.state!==status:p.state==='downed'||p.state==='dead')errors.push('Inconsistent medical state.');
     if((stopped||pawnBody(p).capacities.manipulation===0)&&(p.firefighting||p.hunting||p.research||p.equipmentTask||p.jobId!==null||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.haul||p.cooking||p.orders.active!==null||p.orders.queue.length||p.priorityWork))errors.push('Incapacitated pawn still owns work.');

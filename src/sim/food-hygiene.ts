@@ -1,6 +1,7 @@
 import { exposeFoodPoisoning,ingestionFoodPoison } from './food-poisoning.ts';
 import { processFoodPoisoningVomit,processVomit,type FoodPoisonVomitContext } from './food-poisoning-runtime.ts';
 import { fluVomitChance } from './flu-rules.ts';
+import { immuneDiseaseVomitChance } from './immune-diseases-rules.ts';
 import { createMedicalRecord } from './injury-state.ts';
 import { healthRandom,reconcilePawnHealth } from './health.ts';
 import { reconcileAnimalHealth } from './wildlife-health.ts';
@@ -26,19 +27,31 @@ export function ingestFoodRisk(w:World,p:Pawn|WildAnimal,food:Pick<MaterialPile,
 /** Captured movement finishes before a vomiting episode interrupts the job.
  * Carried material is released through the ordinary conservative mechanism. */
 export function processPawnVomiting(w:World,p:Pawn):boolean {
-  const state=p.health?.foodPoisoning,flu=p.health?.flu;
-  if((!state&&!flu)||p.state==='dead')return false;
+  const state=p.health?.foodPoisoning,flu=p.health?.flu,malaria=p.health?.immuneDiseases?.malaria;
+  if((!state&&!flu&&!malaria)||p.state==='dead')return false;
   const context:FoodPoisonVomitContext={
     awake:!['sleeping','downed'].includes(p.state)&&!p.stun,position:p,foodLevel:p.hunger,foodMax:100,
     random:()=>healthRandom(w),canStand:c=>canStandAt(w,c),deposit:c=>addFilth(w,c,'vomit'),
     start:()=>{if(p.moveCooldown>0)return false;interruptWork(w,p);p.path=[];p.state='idle';return true;},
   };
-  // Keep an active physical episode on its original condition. With two
-  // simultaneous illnesses, food poisoning gets the first chance to start.
-  const result=state?.vomit?processFoodPoisoningVomit(state,w.tick,p.id%60,context):
-    flu?.vomit?processVomit(flu,w.tick,p.id%60,context,fluVomitChance(flu)):
-    state?processFoodPoisoningVomit(state,w.tick,p.id%60,context):undefined;
-  const chosen=result?.active||!flu?result:processVomit(flu,w.tick,p.id%60,context,fluVomitChance(flu));
+  // An active malaria episode keeps its owner; otherwise the historical
+  // food poisoning/Flu order runs first, followed by malaria only if idle.
+  const activeMalaria=!!malaria?.vomit;
+  let chosen:ReturnType<typeof processVomit>|undefined;
+  if(activeMalaria)chosen=processVomit(malaria!,w.tick,p.id%60,context,immuneDiseaseVomitChance(malaria));
+  else{
+    const result=state?.vomit?processFoodPoisoningVomit(state,w.tick,p.id%60,context):
+      flu?.vomit?processVomit(flu,w.tick,p.id%60,context,fluVomitChance(flu)):
+      state?processFoodPoisoningVomit(state,w.tick,p.id%60,context):undefined;
+    chosen=result?.active||!flu?result:processVomit(flu,w.tick,p.id%60,context,fluVomitChance(flu));
+    if(!chosen?.active&&malaria)chosen=processVomit(malaria,w.tick,p.id%60,context,immuneDiseaseVomitChance(malaria));
+  }
+  // Evolution retains residual malaria while its physical episode is active.
+  // Completing that episode can exhaust the final reason to keep the record.
+  const diseases=p.health?.immuneDiseases;
+  if(malaria&&diseases?.malaria===malaria&&!malaria.severity&&!malaria.immunity&&!malaria.vomit){
+    delete diseases.malaria;if(!diseases.plague)delete p.health!.immuneDiseases;
+  }
   if(!chosen)return false;
   p.hunger=chosen.foodLevel;
   if(chosen.active){p.path=[];if(!['dead','downed','sleeping'].includes(p.state))p.state='idle';p.planCooldown=0;}

@@ -22,6 +22,8 @@ export interface MedicalRecord {
   foodPoisoning?:import('./food-poisoning.ts').FoodPoisoningState;
   /** A human systemic illness; absent for historical records and animals. */
   flu?:import('./flu-types.ts').FluState;
+  /** V207 human malaria/plague; independent immunity and residual episodes. */
+  immuneDiseases?:Partial<Record<import('./immune-diseases-types.ts').ImmuneDiseaseKind,import('./immune-diseases-types.ts').ImmuneDiseaseState>>;
   /** Absent is the historical human profile. Animal ownership is validated. */
   body?:import('./animal-species.ts').AnimalSpeciesId|import('./mechanoid-definition.ts').MechanoidKind;
   tick:number; nextInjuryId:number;
@@ -34,7 +36,7 @@ export interface MedicalRecord {
   /** V84: hunger damage independent of wounds, billionths of severity. */
   malnutrition?:number;
   infections?:InfectionState;
-  death?:{tick:number;cause:'execution'|'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'|'infection'|'malnutrition'|'flu'};
+  death?:{tick:number;cause:'execution'|'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'|'infection'|'malnutrition'|'flu'|'malaria'|'plague'};
 }
 export interface MedicalContext {
   /** Stable phase in [0,59], supplied by the owning actor. */

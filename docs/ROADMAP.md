@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V272 — paludisme et peste ; schéma 207.**
+La [boucle clinique](gameplay/immune-diseases-v272.md) relie catégorie de maladies existante, soins, repos et course vers l’immunité. Elle exploite les médicaments fabriqués V271 ; les autres maladies, implants et opérations restent ouverts. Autonomie, lots cohérents, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **Avancement fonctionnel V271 — production de médicaments ; schéma 206.**
 La [chaîne pharmaceutique](gameplay/medicine-production-v271.md) réutilise les recherches, ateliers, factures, transports, marchands et soins : aucun pipeline parallèle. Recette unitaire ; autres drogues, commerce orbital et détérioration générale restent ouverts. Les états suivants sont historiques.
 

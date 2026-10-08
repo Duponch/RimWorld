@@ -118,7 +118,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
     // Passive owners have no spatial vomiting driver. A healthy departure
     // cannot export an episode, and ordinary disease remains a clinical record.
     if(p.health&&(!validAnesthetic(p.health.anesthetic,clock,true,p.id%20)
-      ||p.health.foodPoisoning?.vomit!==undefined||p.health.flu?.vomit!==undefined))return false;
+      ||p.health.foodPoisoning?.vomit!==undefined||p.health.flu?.vomit!==undefined||p.health.immuneDiseases?.malaria?.vomit!==undefined))return false;
     if(p.lastAttack&&(!thing(p.lastAttack.targetId)||p.lastAttack.targetId===p.id)
       ||p.meleeThreat&&(!thing(p.meleeThreat.attackerId)||p.meleeThreat.attackerId===p.id)
       ||p.droppedWeaponId!==undefined&&!thing(p.droppedWeaponId))return false;

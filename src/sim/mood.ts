@@ -76,7 +76,7 @@ export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly M
   if(difficultyMood)thoughts.push(situation('difficulty-mood','Récit d’aventure',difficultyMood,'Bonus d’humeur du niveau d’aventure choisi.'));
   for(const id of pawn.traits??[]){const trait=TRAITS[id];if(trait.mood)thoughts.push({id:`trait-${id}`,label:trait.label,offset:trait.mood,kind:'situation',description:trait.description});}
   for(const t of [pawn.hunger<=0?starvation[Math.max(0,malnutritionStage(pawn.health?.malnutrition)-1)]:hunger[hungerStage(pawn.hunger)],fatigue[restStage(pawn.rest)],c.environment?comforts[comfortStage(c.environment.comfort)]:undefined,c.environment?beauty[beautyStage(c.environment.beauty)]:undefined,pawn.prisoner?undefined:leisure[joyStage(pawn.recreation.level)],pains[painStage(pawn.health?medicalPain(pawn.health):0)]])if(t)thoughts.push(t);
-  if((pawn.health?.flu?.severity??0)>0)thoughts.push(sick);
+  if((pawn.health?.flu?.severity??0)>0||(pawn.health?.immuneDiseases?.malaria?.severity??0)>0||(pawn.health?.immuneDiseases?.plague?.severity??0)>0)thoughts.push(sick);
   let condition=1;
   for(const pile of c.items)if(pile.owner.type==='apparel'&&pile.owner.pawnId===pawn.id)condition=Math.min(condition,pile.apparel!.hitPoints/APPAREL[pile.item as keyof typeof APPAREL].hitPoints);
   if(condition<.5)thoughts.push(apparel[condition<.2?1:0]!);

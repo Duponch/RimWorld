@@ -14,6 +14,9 @@ import { isFloorKind } from '../sim/flooring.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validCropBlight } from '../sim/plant-blight-save.ts';
 import { validMedicineResearchTransport } from '../sim/research-save.ts';
+import { validFluIncidents } from '../sim/flu-incidents-save.ts';
+import { validateMedicalRecord } from '../sim/injury-validation.ts';
+import { medicalStatus } from '../sim/injury-state.ts';
 import { productionWorkTotal,validMedicineIngredients } from '../sim/production-recipes.ts';
 import { productionWorkerQualified } from '../sim/machining.ts';
 import { cookingSpot,validBillSettings } from '../sim/cooking-bills.ts';
@@ -348,6 +351,19 @@ function validSurgeryTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|'tick'
   if(!record||typeof record!=='object'||Array.isArray(record)||record.body!==undefined||record.tick>world.tick||
     (record.death===undefined?record.tick!==world.tick:!record.death||typeof record.death!=='object'||Array.isArray(record.death)||record.death.tick!==record.tick))return false;
   return validAnesthetic(record.anesthetic,record.tick,world.schemaVersion>=179,pawn.id%20);
+}
+
+/** New disease payloads use the same isolated record guard as save files.
+ * Legacy dossiers do not acquire an additional anatomical census. */
+function validImmuneDiseaseTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|'tick'|'width'|'height'>,archived=false):boolean {
+  const record=pawn.health;
+  if(!record||!Object.hasOwn(record,'immuneDiseases')&&!['malaria','plague'].includes(record.death?.cause??''))return true;
+  if(validateMedicalRecord(record,true,true,true,true,false,false,true,true,true,true,true,world.schemaVersion,world.schemaVersion>=127)!==null
+    ||record.tick>world.tick||!archived&&!record.death&&record.tick!==world.tick)return false;
+  const vomit=record.immuneDiseases?.malaria?.vomit;
+  if(vomit&&(vomit.cell.x>=world.width||vomit.cell.z>=world.height||record.foodPoisoning?.vomit||record.flu?.vomit))return false;
+  const status=medicalStatus(record);
+  return status==='mobile'?pawn.state!=='dead'&&pawn.state!=='downed':pawn.state===status;
 }
 
 const equalResourceBase = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind && a.species === b.species
@@ -754,6 +770,7 @@ export class SnapshotDecoder {
         ||pawn.shooting!==undefined&&!validStunShape(pawn.stun,message.world.schemaVersion,message.world.tick))return resync('Phase de tir humaine invalide pour ce snapshot.');
       if(!validBackgroundTransport(pawn,message.world.schemaVersion))return resync('Âge ou passé personnel invalide pour ce snapshot.');
       if(!validSurgeryTransport(pawn,message.world))return resync('État chirurgical ou anesthésique invalide pour ce snapshot.');
+      if(!validImmuneDiseaseTransport(pawn,message.world))return resync('Maladie immunitaire invalide pour ce snapshot.');
       if(!validPawnPodRescue(pawn,message.world.schemaVersion,message.world))return resync('Mandat de secours civil invalide pour ce snapshot.');
       if(!validMiningTransport(pawn,message.world.schemaVersion))return resync('Compétence Minage invalide pour ce snapshot.');
       if(!validPlantSkill(pawn.skills?.plants,message.world.schemaVersion))return resync('Compétence Plantes invalide pour ce snapshot.');
@@ -770,6 +787,7 @@ export class SnapshotDecoder {
     if(Array.isArray(message.world.quests?.entries)&&message.world.quests.entries.some(quest=>!validBackgroundTransport(quest,message.world.schemaVersion,true)))return resync('Profil d’asile invalide pour ce snapshot.');
     if(!validMiscIncidents(message.world.miscIncidents,message.world.schemaVersion,message.world))return resync('Calendrier d’incidents divers invalide pour ce snapshot.');
     if(!validSmallIncidents(message.world.smallIncidents,message.world.schemaVersion,message.world))return resync('Calendrier de petites menaces invalide pour ce snapshot.');
+    if(message.world.fluIncidents&&Object.hasOwn(message.world.fluIncidents,'immuneDiseases')&&!validFluIncidents(message.world as World,message.world.schemaVersion))return resync('Calendrier de maladies immunitaires invalide pour ce snapshot.');
     if(message.world.schemaVersion<184&&Object.hasOwn(message.world,'worldIncidents')||!validWorldIncidents(message.world.worldIncidents,message.world.schemaVersion,message.world))return resync('Calendrier mondial invalide pour ce snapshot.');
     if(!validFlashstorm(message.world.flashstorm,message.world.schemaVersion,message.world))return resync('Orage sec localisé invalide pour ce snapshot.');
     if((message.world.schemaVersion<181&&Object.hasOwn(message.world,'rainElectrical'))
@@ -967,12 +985,12 @@ export class SnapshotDecoder {
     if(validateQuests(next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
     if(next.scout&&(next.scout.phase==='travelling'||next.scout.phase==='awaiting-entry')){
       const registry=scoutRegistryView(next),pawn=next.scout.pawn;
-      if(!validSurgeryTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||!validMiningTransport(pawn,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
+      if(!validSurgeryTransport(pawn,next)||!validImmuneDiseaseTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||!validMiningTransport(pawn,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
         ||next.scout.items.some(pile=>!validPile(pile,registry)))return resync('Voyageur ou possession hors carte invalide.');
     }
     if(commercial&&'pawn' in commercial){
       const registry=scoutRegistryView(next),pawn=commercial.pawn;
-      if(postIds.has(pawn.id)||!validSurgeryTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||!validMiningTransport(pawn,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
+      if(postIds.has(pawn.id)||!validSurgeryTransport(pawn,next)||!validImmuneDiseaseTransport(pawn,next)||!validPlantSkill(pawn.skills?.plants,next.schemaVersion)||!validMiningTransport(pawn,next.schemaVersion)||pawn.bereavement!==undefined&&!validBereavement(pawn.bereavement,pawn.id,next.schemaVersion,registry)
         ||commercial.items.some(pile=>postIds.has(pile.id)||!validPile(pile,registry)))return resync('Voyageur commercial ou possession invalide.');
     }
     if(validateCommercialBindings(next,next.schemaVersion).length)return resync('Possessions commerciales incohérentes.');
@@ -984,6 +1002,7 @@ export class SnapshotDecoder {
         if(next.schemaVersion<206&&(departure.packed??[]).some(p=>p.building.kind==='drug-lab'||p.building.bills?.some(b=>b.recipe==='make-medicine')))return resync('Laboratoire pharmaceutique archivé futur.');
         if(isMechanoidKind(departure.pawn.health?.body)||departure.items.some(p=>!validMechCorpseShape(p,next.schemaVersion,departure.tick)||next.schemaVersion<194&&Object.hasOwn(p,'mechCorpse')))return resync('Dossier mécanique archivé invalide.');
         if(!validMiningTransport(departure.pawn,next.schemaVersion))return resync('Profil de minage archivé invalide.');
+        if(!validImmuneDiseaseTransport(departure.pawn,{...next,tick:departure.tick},true))return resync('Maladie immunitaire archivée invalide.');
         if(!validArchivedMeleeThreat(departure.pawn,next,departure.tick))return resync('Menace de mêlée archivée invalide.');
         if(Object.hasOwn(departure.pawn,'bombRefuge'))return resync('Refuge Bomb archivé hors carte.');
       }

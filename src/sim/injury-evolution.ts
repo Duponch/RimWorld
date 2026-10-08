@@ -6,6 +6,7 @@ import { advanceInfections,advanceInfectionImmunity } from './infection-evolutio
 import { advanceMalnutrition } from './malnutrition.ts';
 import { advanceFoodPoisoning } from './food-poisoning.ts';
 import { advanceFlu } from './flu-evolution.ts';
+import { advanceImmuneDiseases } from './immune-diseases-evolution.ts';
 import { advanceAnesthetic } from './anesthetic.ts';
 import { isMechanoidKind } from './mechanoid-definition.ts';
 
@@ -36,7 +37,8 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
   const pending=record.injuries.filter(i=>i.infection&&i.infection.dueCore<=(record.tick+ticks)*10).length;
   if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');
   if((record.infections?.cases.length||pending)&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Infection clock exhausted');
-  if(!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.flu&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;return;}
+  if(record.immuneDiseases&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Immune disease clock exhausted');
+  if(!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.flu&&!record.immuneDiseases&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;return;}
   const end=record.tick+ticks;
   while(record.tick<end) {
     record.tick++;
@@ -61,6 +63,8 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
       if(record.death)return;
     }
     advanceInfections(record,context,random);
+    if(record.death)return;
+    advanceImmuneDiseases(record,context);
     if(record.death)return;
     advanceFlu(record,context);
     if(record.death)return;

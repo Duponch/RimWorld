@@ -18,6 +18,7 @@ export interface BodyAssessmentInput {
   readonly sightOffset?:number;
   readonly talkingOffset?:number;
   readonly digestionOffset?:number;
+  readonly bloodFiltrationOffset?:number;
   /** Applied after each capacity's offsets and before its maximum/rounding.
    * Dependent capacities read that result, rather than an unmodified parent. */
   readonly consciousnessFactor?:number;
@@ -77,7 +78,7 @@ function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
   const bestPair=(a:BodyPartId,b:BodyPartId)=>.75*Math.max(part(a),part(b))+.25*Math.min(part(a),part(b));
   const round=capacityRounded;
   const bloodPumping=round(part('heart'));
-  const bloodFiltration=round(pair('left-kidney','right-kidney')*part('liver')*(input.bloodFiltrationFactor??1));
+  const bloodFiltration=round((pair('left-kidney','right-kidney')*part('liver')+(input.bloodFiltrationOffset??0))*(input.bloodFiltrationFactor??1));
   const breathing=round(pair('left-lung','right-lung')*part('neck')*(human?pair('ribcage','sternum'):1)+(input.breathingOffset??0));
   const digestion=round(pair('stomach','liver')+(input.digestionOffset??0));
   const painOffset=Math.min(.4,Math.max(0,(input.pain-.1)*(.4/.9)));
@@ -142,5 +143,5 @@ export const HEALTHY_BODY:BodyAssessment=calculate(HEALTHY_BODY_INPUT);
 /** Caller supplies a current health projection. No cache keyed solely by pawn ID
  * or tick: in-place injury changes must be visible within the same tick. */
 export function assessBody(input:BodyAssessmentInput=HEALTHY_BODY_INPUT,model:BodyModel=HUMAN_MODEL):BodyAssessment {
-  return model.kind==='human'&&input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.manipulationOffset&&!input.movingOffset&&!input.breathingOffset&&!input.sightOffset&&!input.talkingOffset&&!input.digestionOffset&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1&&(input.consciousnessFactor??1)===1&&(input.movingFactor??1)===1&&(input.manipulationFactor??1)===1&&(input.bloodFiltrationFactor??1)===1&&(input.eatingFactor??1)===1&&(input.talkingFactor??1)===1?HEALTHY_BODY:calculate(input,model);
+  return model.kind==='human'&&input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.manipulationOffset&&!input.movingOffset&&!input.breathingOffset&&!input.sightOffset&&!input.talkingOffset&&!input.digestionOffset&&!input.bloodFiltrationOffset&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1&&(input.consciousnessFactor??1)===1&&(input.movingFactor??1)===1&&(input.manipulationFactor??1)===1&&(input.bloodFiltrationFactor??1)===1&&(input.eatingFactor??1)===1&&(input.talkingFactor??1)===1?HEALTHY_BODY:calculate(input,model);
 }

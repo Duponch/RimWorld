@@ -1,5 +1,8 @@
 # Lisière
 
+**V272 — paludisme et peste ; schéma 207.**
+Deux crises médicales relient incidents, symptômes, soins avec médicaments physiques, repos, immunité et convalescence. Le paludisme affecte la filtration et peut provoquer des vomissements ; la peste progresse plus vite. [Règles, adaptations et validation](docs/gameplay/immune-diseases-v272.md). Les états suivants sont historiques.
+
 **V271 — production de médicaments ; schéma 206.**
 Deux recherches ouvrent un laboratoire manuel, puis la fabrication à partir de plantes médicinales, neutroamine achetée et tissu. Collecte, travail et dépôt physiques alimentent les soins existants. [Règles et validation](docs/gameplay/medicine-production-v271.md).
 

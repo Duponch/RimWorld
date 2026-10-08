@@ -390,7 +390,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   // Core's Vomit job is not player-interruptible. Reject the entire group
   // before any early command handler can replace a task or mutate a stance.
   if((typeof command.type==='string'&&command.type.startsWith('order-')||['clean-room','draft','draft-move','draft-stop','fire-at-will','clear-orders','shoot','melee','cancel-trade','trade-execute'].includes(command.type))
-    &&actors.some(id=>world.pawns.find(p=>p.id===id)?.health?.foodPoisoning?.vomit))return refusal('invalid-command','Ce colon vomit et ne peut pas interrompre cet épisode.');
+    &&actors.some(id=>{const h=world.pawns.find(p=>p.id===id)?.health;return h?.foodPoisoning?.vomit||h?.flu?.vomit||h?.immuneDiseases?.malaria?.vomit;}))return refusal('invalid-command','Ce colon vomit et ne peut pas interrompre cet épisode.');
   if(command?.type==='order-bury'||command?.type==='grave-policy'||command?.type==='assign-grave')return applyBurial(world,command);
   if(command?.type==='apparel-policy-assign')return applyApparelPolicyAssignment(world,command);
   if(command?.type==='clean-room'){const reason=applyCleanRoom(world,command);return reason?refusal('invalid-command',reason):{ok:true};}

@@ -35,7 +35,7 @@ function validBreakout(value:unknown,version:number,capturedAt:number,w:World):b
 function validActiveBreakoutPawn(p:Pawn):boolean {
   return !isColonist(p)&&!['dead','downed','sleeping','eating','resting','recreating'].includes(p.state)
     &&(p.state!=='working'||!!p.burning)&&!p.health?.death&&p.prisoner?.releasedAt===undefined
-    &&!p.mental?.crisis&&!p.health?.flu?.vomit&&!p.health?.foodPoisoning?.vomit&&!p.interruptedCargo
+    &&!p.mental?.crisis&&!p.health?.flu?.vomit&&!p.health?.foodPoisoning?.vomit&&!p.health?.immuneDiseases?.malaria?.vomit&&!p.interruptedCargo
     &&!p.need&&!p.medicalSleep&&!p.recruitment&&!p.draft&&!p.flee&&!p.hostilityResponse&&p.jobId===null
     &&p.orders?.active===null&&Array.isArray(p.orders.queue)&&!p.orders.queue.length&&!p.priorityWork&&!p.haul&&!p.cooking
     &&!p.rescue&&!p.tend&&!p.feed&&!p.ward&&!p.surgery&&!p.surgeryRequest&&!p.equipmentTask&&!p.recreation?.task&&!p.research&&!p.hunting

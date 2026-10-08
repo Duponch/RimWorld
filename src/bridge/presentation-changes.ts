@@ -48,7 +48,7 @@ export class PresentationChanges {
         // Medical topology/results and anesthetic stage boundaries are
         // discrete. Severity decay and surgical work keep periodic snapshots.
         p.health?.nextInjuryId,p.health?.missing,p.health?.anesthetic?[p.health.anesthetic.bornAt,p.health.anesthetic.expiresAtCore,anestheticStage(p.health.anesthetic.severity)]:undefined,
-        p.burial?.phase,p.burial?.corpseId,p.cleaning?.phase,p.cleaning?.targets[0],p.health?.foodPoisoning?.vomit?.remainingCore!==undefined,p.body?.pileId,p.body?.lostAt,p.hunting?.animalId,p.hunting?.phase,p.research?.stationId,p.haul?.phase,p.haul?.carryPileId,p.cooking?.phase,p.cooking?.productId,
+        p.burial?.phase,p.burial?.corpseId,p.cleaning?.phase,p.cleaning?.targets[0],p.health?.foodPoisoning?.vomit?.remainingCore!==undefined,p.health?.flu?.vomit?.remainingCore!==undefined,p.health?.immuneDiseases?.malaria?.vomit?.remainingCore!==undefined,p.body?.pileId,p.body?.lostAt,p.hunting?.animalId,p.hunting?.phase,p.research?.stationId,p.haul?.phase,p.haul?.carryPileId,p.cooking?.phase,p.cooking?.productId,
         p.recreation.task?.activity,p.recreation.task?.buildingId,p.visitor?.group,p.visitor?.role,p.visitor?.phase,p.trade?.traderId,p.trade?.phase]),
       world.piles.map(p=>[p.id,p.item,p.quantity,p.owner]),
       world.structures.map(s=>[s.id,s.x,s.z,s.medical,s.prisoner,s.fuel? s.fuel.ticks>0:undefined,s.door?.changedAt,s.door?.open,s.power?.on,s.power?.parentId,s.power?.switchOn,

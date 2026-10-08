@@ -4,6 +4,7 @@ import { tendQuality,tendXp,type MedicineItem } from './medicine-rules.ts';
 import { tendInjury,tendMissingPart } from './injury-state.ts';
 import { tendInfection,captureInfectionTendRoom } from './infection-state.ts';
 import { tendFlu } from './flu-state.ts';
+import { tendImmuneDisease } from './immune-diseases-state.ts';
 import type { Pawn } from './types.ts';
 
 export interface HumanTendContext {
@@ -16,7 +17,7 @@ export interface HumanTendContext {
   infectionRoomFactor():number;
 }
 const key=(t:RankedTreatment)=>t.injuryId!==undefined?`injury:${t.injuryId}`:
-  t.infectionId!==undefined?`infection:${t.infectionId}`:t.flu?'flu':`missing:${t.part}`;
+  t.infectionId!==undefined?`infection:${t.infectionId}`:t.flu?'flu':t.disease?`disease:${t.disease}`:`missing:${t.part}`;
 
 /** Shared finished-treatment kernel. Caller owns the actual patient, dose,
  * RNG and notices; local Toil XP and abstract caravan care remain distinct. */
@@ -37,6 +38,7 @@ export function resolveHumanTendBatch(patient:Pawn,doctor:Pawn,batch:readonly Ra
       }
     }else if(target.infectionId!==undefined)applied=tendInfection(patient.health,target.infectionId,tendQuality(quality,c.random(),doctor===patient,c.medicine,c.bedOffset));
     else if(target.flu)applied=tendFlu(patient.health,tendQuality(quality,c.random(),doctor===patient,c.medicine,c.bedOffset));
+    else if(target.disease)applied=tendImmuneDisease(patient.health,target.disease,tendQuality(quality,c.random(),doctor===patient,c.medicine,c.bedOffset));
     else applied=tendMissingPart(patient.health,target.part);
     if(!applied)throw Error('Treatment producer refused a prevalidated target');
   }

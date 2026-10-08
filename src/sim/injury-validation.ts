@@ -1,6 +1,7 @@
 import { validInfections } from './infection-save.ts';
 import { validFoodPoisoning } from './food-poisoning-save.ts';
 import { validFlu } from './flu-save.ts';
+import { validImmuneDiseases } from './immune-diseases-save.ts';
 import { validAnesthetic } from './anesthetic.ts';
 import { HUMAN_MODEL,animalBodyModel,modelHasPart } from './body-model.ts';
 import { isAnimalSpecies,type AnimalSpeciesId } from './animal-species.ts';
@@ -22,14 +23,14 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   const model=mechanicalKind?mechanoidBodyModel(mechanicalKind):animal&&species?animalBodyModel(species):HUMAN_MODEL,BODY_PARTS=model.byId,PART_INJURY_RULES=injuryPartRules(model);
   const bodyPartExists=(id:unknown)=>modelHasPart(model,id);
   const fail='Invalid medical record';
-  if(!object(value)||!keys(value,[...(animal||mechanical?['body']:[]),'tick','nextInjuryId','injuries','missing','bloodLoss','death',...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infections']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFoodPoison?['foodPoisoning']:[]),...(allowFlu&&!animal&&!mechanical?['flu']:[]),...(version>=138&&!animal&&!mechanical?['ageAilments']:[]),...(version>=179&&!animal&&!mechanical?['anesthetic']:[])])||!integer(value.tick)||!integer(value.nextInjuryId,1)||!integer(value.bloodLoss,0,mechanical?0:BLOOD_UNIT)||!Array.isArray(value.injuries)||!Array.isArray(value.missing))return fail;
+  if(!object(value)||!keys(value,[...(animal||mechanical?['body']:[]),'tick','nextInjuryId','injuries','missing','bloodLoss','death',...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infections']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFoodPoison?['foodPoisoning']:[]),...(allowFlu&&!animal&&!mechanical?['flu']:[]),...(version>=207&&!animal&&!mechanical?['immuneDiseases']:[]),...(version>=138&&!animal&&!mechanical?['ageAilments']:[]),...(version>=179&&!animal&&!mechanical?['anesthetic']:[])])||!integer(value.tick)||!integer(value.nextInjuryId,1)||!integer(value.bloodLoss,0,mechanical?0:BLOOD_UNIT)||!Array.isArray(value.injuries)||!Array.isArray(value.missing))return fail;
   if(mechanical&&(!mechanicalKind||version<(mechanicalKind==='scyther'?194:197)||value.body!==mechanicalKind||animal))return fail;
   if(animal&&(!species||version<91&&species!=='hare'||version<178&&species==='red-fox'))return fail;
   if(value.heatstroke!==undefined&&(!allowHeat||!integer(value.heatstroke,1,1_000_000_000)))return fail;
   if(value.hypothermia!==undefined&&(!allowCold||!integer(value.hypothermia,1,1_000_000_000)))return fail;
   if(value.malnutrition!==undefined&&(!allowMalnutrition||!integer(value.malnutrition,1,1_000_000_000)))return fail;
   if(!validFoodPoisoning(value.foodPoisoning,value.tick,allowFoodPoison,version)||animal&&object(value.foodPoisoning)&&value.foodPoisoning.cause==='dangerous-food')return fail;
-  if(!validFlu(value as unknown as MedicalRecord,allowFlu&&!animal))return fail;
+  if(!validFlu(value as unknown as MedicalRecord,allowFlu&&!animal)||!validImmuneDiseases(value.immuneDiseases,value as unknown as MedicalRecord,version))return fail;
   if(!validAnesthetic(value.anesthetic,value.tick,version>=179&&!animal&&!mechanical))return fail;
   if(value.ageAilments!==undefined&&(!Array.isArray(value.ageAilments)||value.ageAilments.length<1||value.ageAilments.length>2||new Set(value.ageAilments).size!==value.ageAilments.length||value.ageAilments.some(a=>a!=='bad-back'&&a!=='frail')))return fail;
   const ids=new Set<number>();let total=0;
@@ -52,8 +53,8 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   }
   if(!validInfections(record,model,allowInfection,allowBurn))return fail;
   for(const i of record.injuries)if(BODY_PARTS[i.part].parent!==null&&remainingPartHealth(record,i.part)===0)return fail;
-  if(value.death!==undefined&&(!object(value.death)||!keys(value.death,['tick','cause'])||value.death.tick!==record.tick||!(mechanical?['vital-failure','trauma','downed']:['blood-loss','vital-failure','trauma',...(animal?['downed',...(allowExecution?['execution']:[])]:[]),...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infection']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFlu&&!animal?['flu']:[])]).includes(value.death.cause as string)))return fail;
-  const living:MedicalRecord={...createMedicalRecord(record.tick),...(mechanicalKind?{body:mechanicalKind}:animal?{body:species as AnimalSpeciesId}:{}),injuries:record.injuries,missing:record.missing,bloodLoss:record.bloodLoss,...record.heatstroke?{heatstroke:record.heatstroke}:{},...record.hypothermia?{hypothermia:record.hypothermia}:{},...record.infections?{infections:record.infections}:{},...record.malnutrition?{malnutrition:record.malnutrition}:{},...record.foodPoisoning?{foodPoisoning:record.foodPoisoning}:{},...record.flu?{flu:record.flu}:{},...record.ageAilments?{ageAilments:record.ageAilments}:{},...record.anesthetic?{anesthetic:record.anesthetic}:{}};
+  if(value.death!==undefined&&(!object(value.death)||!keys(value.death,['tick','cause'])||value.death.tick!==record.tick||!(mechanical?['vital-failure','trauma','downed']:['blood-loss','vital-failure','trauma',...(animal?['downed',...(allowExecution?['execution']:[])]:[]),...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infection']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFlu&&!animal?['flu']:[]),...(version>=207&&!animal?['malaria','plague']:[])]).includes(value.death.cause as string)))return fail;
+  const living:MedicalRecord={...createMedicalRecord(record.tick),...(mechanicalKind?{body:mechanicalKind}:animal?{body:species as AnimalSpeciesId}:{}),injuries:record.injuries,missing:record.missing,bloodLoss:record.bloodLoss,...record.heatstroke?{heatstroke:record.heatstroke}:{},...record.hypothermia?{hypothermia:record.hypothermia}:{},...record.infections?{infections:record.infections}:{},...record.malnutrition?{malnutrition:record.malnutrition}:{},...record.foodPoisoning?{foodPoisoning:record.foodPoisoning}:{},...record.flu?{flu:record.flu}:{},...record.immuneDiseases?{immuneDiseases:record.immuneDiseases}:{},...record.ageAilments?{ageAilments:record.ageAilments}:{},...record.anesthetic?{anesthetic:record.anesthetic}:{}};
   reconcileMedicalDeath(living);
   if(record.death?.cause==='execution')return animal&&allowExecution&&medicalStatus(living)==='downed'?null:fail;
   if(record.death?.cause==='downed')return !living.death&&medicalStatus(living)==='downed'?null:fail;

@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V272, schéma 207 : [paludisme et peste](gameplay/immune-diseases-v272.md).** Incidents prospectifs, clinique commune et immunités indépendantes ; aucun nouvel état rétroactif au chargement. Les états suivants sont historiques.
+
 **V271, schéma 206 : [production de médicaments](gameplay/medicine-production-v271.md).** Recherche, laboratoire manuel, achat de neutroamine, synthèse physique et médicament clinique existant ; règles et adaptations Core dans la note du lot. Les états suivants sont historiques.
 
 **V270, schéma 205 : [fléau des cultures](gameplay/crop-blight-v270.md).** Incident, propagation entre cultures, croissance et récolte bloquées, dégâts quotidiens, alerte/inspection et coupe physique collective puis ressemis. Les bacs hydroponiques restent vulnérables. Référence Core, adaptations et résultats dans la note du lot ; autonomie et push après chaque commit maintenus. Les états suivants sont historiques.

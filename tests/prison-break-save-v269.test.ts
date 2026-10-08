@@ -4,7 +4,7 @@ import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serial
 import { SnapshotDecoder,SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { meleeRecoveryCore } from '../src/sim/melee-statistics.ts';
 import { recruitmentUiFixture } from './scenarios/prison-camp.ts';
-import type { Pawn,World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type Pawn,type World } from '../src/sim/types.ts';
 
 function fixture(active=true){
   const {world:w,actorId,patientId}=recruitmentUiFixture();
@@ -22,7 +22,7 @@ test('breakout is prospective schema 204 and old saves migrate without adopting 
   expect(()=>deserializeWorld(JSON.stringify(future))).toThrow();
   delete patient.prisoner!.breakout;w.schemaVersion=203 as World['schemaVersion'];
   const before=structuredClone(w),restored=deserializeWorld(JSON.stringify(w));
-  expect(restored).toEqual({...before,schemaVersion:204});
+  expect(restored).toEqual({...before,schemaVersion:SCHEMA_VERSION});
   expect(restored.pawns.find(p=>p.id===patient.id)!.prisoner!.breakout).toBeUndefined();
 });
 

@@ -7,6 +7,8 @@ import { deconstructionCamp } from './scenarios/deconstruction.ts';
 
 function colony(count=1){
   const world=deconstructionCamp(count);
+  // Preserve this pre-V272 calendar contract; the new extension is tested separately.
+  world.schemaVersion=206 as typeof world.schemaVersion;
   world.gameProfile=crashlandedProfile();
   adoptFluIncidents(world);
   return world;

@@ -1,4 +1,6 @@
-# Validation courante — V271
+# Validation courante — V272
+
+**V272, schéma 207 : [paludisme et peste](../gameplay/immune-diseases-v272.md#validation).** 140 cas uniques/23 fichiers dont42nouveaux passent par reprise ciblée, avec62sauvegardes publiques. Build/typage et WebGPU avec deux soins physiques et sauvegarde/rechargement exact pendant le soin passent. Rouges historiques et limites dans la note ; aucun gain FPS annoncé, les validations suivantes sont historiques.
 
 **V271, schéma 206 : [production de médicaments](../gameplay/medicine-production-v271.md#validation).** 107 cas uniques passent dans 20 fichiers, dont 35 nouveaux, par reprises ciblées ; 62 sauvegardes publiques, build/typage et Chromium WebGPU avec synthèse réelle et reprise exacte passent. Rouges et limites conservés dans la note ; aucun gain FPS annoncé, les validations suivantes sont historiques.
 

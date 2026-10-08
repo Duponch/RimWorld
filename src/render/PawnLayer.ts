@@ -75,7 +75,7 @@ function workActivity(pawn:Pawn):number {
 function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boolean):number {
   if(pawn.state==='dead')return POSE_DEAD;
   if(pawn.state==='sleeping'||pawn.medicalSleep||anestheticStage(pawn.health?.anesthetic?.severity??0)==='sedated')return POSE_SLEEP;
-  if(pawn.health?.foodPoisoning?.vomit)return 10;
+  if(pawn.health?.foodPoisoning?.vomit||pawn.health?.flu?.vomit||pawn.health?.immuneDiseases?.malaria?.vomit)return 10;
   if(pawn.stun&&!medicallyStopped(pawn))return 9;
   if(pawn.melee?.strike)return smallMelee?WORK_POSE.groundMelee:8;
   if(pawn.shooting?.stance?.phase==='cooldown')return 15;

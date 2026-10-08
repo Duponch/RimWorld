@@ -39,10 +39,10 @@ export interface GroupCareContext {
 /** Delta=10 Core. Local stable ID phase adapts Core's hash offset, without a
  * persisted cadence or tick+ID overflow. One consultation per crossing. */
 export const groupDoctorTendDue=(person:Pawn,tick:number):boolean=>((tick%125)*10+person.id%1250)%1250<10;
-/** Delivered infection/Flu definitions have lethalSeverity=1. The historical
+/** Delivered infection/Flu/immune-disease definitions have lethalSeverity=1. The historical
  * Hediff.IsLethal getter is definition-based, not the extreme-stage threshold;
  * all their currently tendable cases therefore take the lethal priority. */
-const deliveredLethalTendable=(person:Pawn):boolean=>treatmentTargets(person).some(t=>t.infectionId!==undefined||t.flu);
+const deliveredLethalTendable=(person:Pawn):boolean=>treatmentTargets(person).some(t=>t.infectionId!==undefined||t.flu||t.disease!==undefined);
 export function groupDoctorAllowed(group:ActiveGroup,doctor:Pawn,patient?:Pawn):boolean {
   return group.members.includes(doctor)&&doctor.state!=='dead'&&doctor.state!=='downed'&&
     (!doctor.health||medicalStatus(doctor.health)==='mobile')&&!hasMentalBreak(doctor)&&

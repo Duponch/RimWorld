@@ -30,6 +30,8 @@ import type { PawnTrack } from './bridge/motion-tracks';
 import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
 import { INFECTION_UNIT,infectionStage } from './sim/infection-rules';
 import { FLU_UNIT,fluStage } from './sim/flu-rules';
+import { IMMUNE_DISEASE_UNIT,immuneDiseaseStage } from './sim/immune-diseases-rules';
+import { IMMUNE_DISEASE_KINDS } from './sim/immune-diseases-types';
 import { corpseStage } from './sim/corpses';
 import { updateAnimalsPanel } from './ui/animals-panel';
 import { updateWildlifePanel } from './ui/wildlife-panel';
@@ -1104,6 +1106,7 @@ function renderState() {
   const starving=living.filter(p=>(p.health?.malnutrition??0)>0).length;if(starving)alerts.push(`${starving} colon(s) en malnutrition`);
   const chilled=living.filter(p=>(p.health?.hypothermia??0)>=40000000).length;if(chilled)alerts.push(`${chilled} colon(s) en hypothermie`);
   let infected=0,critical=0,gripped=0,extremeFlu=0;
+  const immuneCases={malaria:0,plague:0},immuneCritical={malaria:0,plague:0};
   for(const pawn of living){
     const health=pawn.health;
     if(health?.infections?.cases.length){
@@ -1112,11 +1115,13 @@ function renderState() {
     }
     const flu=health?.flu;
     if(flu?.severity){gripped++;if(flu.immunity<FLU_UNIT&&fluStage(flu.severity)==='extreme')extremeFlu++;}
+    for(const kind of IMMUNE_DISEASE_KINDS){const disease=health?.immuneDiseases?.[kind];if(disease?.severity){immuneCases[kind]++;if(disease.immunity<IMMUNE_DISEASE_UNIT&&['extreme','critical'].includes(immuneDiseaseStage(kind,disease.severity)))immuneCritical[kind]++;}}
   }
   if(critical)alerts.push(`Urgence médicale : ${critical} colon(s) avec une infection grave`);
   if(infected)alerts.push(`${infected} colon(s) avec une infection · consulter Santé`);
   if(extremeFlu)alerts.push(`Urgence médicale : ${extremeFlu} colon(s) avec une grippe extrême`);
   if(gripped)alerts.push(`${gripped} colon(s) grippé(s) · consulter Santé`);
+  for(const kind of IMMUNE_DISEASE_KINDS){const label=kind==='malaria'?'paludisme':'peste';if(immuneCritical[kind])alerts.push(`Urgence médicale : ${immuneCritical[kind]} colon(s) avec ${label} grave`);if(immuneCases[kind])alerts.push(`${immuneCases[kind]} colon(s) avec ${label} · consulter Santé`);}
   if(downed)alerts.push(`${downed} colon(s) à terre`);
   if(bleeding)alerts.push(`${bleeding} colon(s) saignent`);
   if(deaths)alerts.push(`${deaths} colon(s) décédé(s)`);

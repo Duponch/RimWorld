@@ -10,8 +10,19 @@ const integer=(value:unknown,min:number,max=Number.MAX_SAFE_INTEGER):value is nu
 export function validFluIncidents(world:World,version:number):boolean {
   const raw:unknown=world.fluIncidents;
   if(version<127||!world.gameProfile)return raw===undefined;
-  if(!object(raw)||Object.keys(raw).length!==7||!Object.keys(raw).every(key=>
-    ['profile','rng','nextCheck','checks','fluDraws','episodes','cases'].includes(key)))return false;
+  if(!object(raw)||Object.keys(raw).length!==(Object.hasOwn(raw,'immuneDiseases')?8:7)||!Object.keys(raw).every(key=>
+    ['profile','rng','nextCheck','checks','fluDraws','episodes','cases',...(version>=207?['immuneDiseases']:[])].includes(key)))return false;
+  if(Object.hasOwn(raw,'immuneDiseases')){
+    const extension=raw.immuneDiseases;
+    if(version<207||!object(extension)||Object.keys(extension).length!==5||!Object.keys(extension).every(key=>
+      ['adoptedAt','rng','draws','episodes','cases'].includes(key))||!integer(extension.adoptedAt,1,world.tick)
+      ||!integer(extension.rng,1,0xffffffff))return false;
+    const opportunities=Math.max(0,Math.floor((world.tick-Math.max(FLU_FIRST_CHECK,
+      Math.ceil(extension.adoptedAt/FLU_CHECK_INTERVAL)*FLU_CHECK_INTERVAL))/FLU_CHECK_INTERVAL)+1);
+    if(!integer(extension.draws,0,Math.min(Number(raw.checks),opportunities))
+      ||!integer(extension.episodes,0,extension.draws)||!integer(extension.cases,extension.episodes)
+      ||extension.episodes===0&&extension.cases!==0)return false;
+  }
   const next=Math.max(FLU_FIRST_CHECK,(Math.floor(world.tick/FLU_CHECK_INTERVAL)+1)*FLU_CHECK_INTERVAL);
   return raw.profile==='cassandra-flu-v1'&&integer(raw.rng,1,0xffffffff)
     &&integer(raw.nextCheck,next,next)&&integer(raw.checks,0,Math.max(0,Math.floor((world.tick-FLU_FIRST_CHECK)/FLU_CHECK_INTERVAL)+1))

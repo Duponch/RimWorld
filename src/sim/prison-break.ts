@@ -16,7 +16,7 @@ const safeClock=(w:World)=>Number.isSafeInteger(w.tick)&&w.tick>=0&&Number.isSaf
 function participantReady(world:World,p:Pawn,ignoreAsleep:boolean):boolean {
   return world.pawns.includes(p)&&!!p.prisoner&&p.prisoner.releasedAt===undefined&&!prisonBreakActive(p)
     &&p.state!=='dead'&&p.state!=='downed'&&!p.health?.death&&!p.mental?.crisis&&!p.interruptedCargo
-    &&!p.health?.flu?.vomit&&!p.health?.foodPoisoning?.vomit&&!carrierOf(world,p.id)
+    &&!p.health?.flu?.vomit&&!p.health?.foodPoisoning?.vomit&&!p.health?.immuneDiseases?.malaria?.vomit&&!carrierOf(world,p.id)
     &&pawnBody(p).canBeAwake&&pawnBody(p).capacities.moving>0
     &&(ignoreAsleep||p.state!=='sleeping'&&!p.medicalSleep);
 }
@@ -67,7 +67,7 @@ export function reconcilePrisonBreaks(world:World):void {
   if(world.schemaVersion<204)return;
   for(const p of world.pawns)if(prisonBreakActive(p)) {
     if(p.state==='dead'||p.state==='downed'||p.health?.death||p.prisoner!.releasedAt!==undefined||carrierOf(world,p.id)
-      ||p.mental?.crisis||p.interruptedCargo||p.need||p.health?.flu?.vomit||p.health?.foodPoisoning?.vomit)endPrisonBreak(world,p);
+      ||p.mental?.crisis||p.interruptedCargo||p.need||p.health?.flu?.vomit||p.health?.foodPoisoning?.vomit||p.health?.immuneDiseases?.malaria?.vomit)endPrisonBreak(world,p);
   }else if(p.melee?.order?.auto==='prison-break')endPrisonBreak(world,p);
 }
 

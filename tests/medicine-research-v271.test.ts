@@ -7,7 +7,7 @@ import { validateResearch,validMedicineResearchTransport } from '../src/sim/rese
 import type { Structure,World } from '../src/sim/types.ts';
 
 function fixture():World {
-  const w=createWorld(271,20,20);w.schemaVersion=206;w.tick=2000;w.resources=[];w.structures=[];w.jobs=[];w.packed=[];
+  const w=createWorld(271,20,20);w.schemaVersion=206 as World['schemaVersion'];w.tick=2000;w.resources=[];w.structures=[];w.jobs=[];w.packed=[];
   w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.research={project:null,points:0};w.pawns=w.pawns.slice(0,1);
   const p=w.pawns[0]!;p.priorities.research=1;p.orders={active:null,queue:[]};p.path=[];p.state='idle';p.jobId=null;
   delete p.background;delete p.health;
