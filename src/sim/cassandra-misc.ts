@@ -1,6 +1,8 @@
 import { climateTick,seasonTemperature,siteClimateDefinition } from './site-climate.ts';
 import { eligibleFlashstorm,resolveSelectedFlashstorm } from './flashstorm.ts';
 import { resolveSelectedPodRescue } from './pod-rescue.ts';
+import { eligibleColdSnap } from './cold-snap.ts';
+import { checkpointEclipseGrowth } from './eclipse.ts';
 import { TICKS_PER_DAY,type World } from './types.ts';
 
 /** A deliberately fixed local envelope for the Core Misc category. Core
@@ -14,7 +16,17 @@ export const MISC_RAW_WEIGHT=16.9;
 export const MISC_HEAT_WEIGHT=1;
 export const MISC_FLASHSTORM_WEIGHT=.4;
 export const MISC_POD_WEIGHT=1.5;
+export const MISC_COLD_WEIGHT=1;
+export const MISC_ECLIPSE_WEIGHT=1.5;
 export const MISC_HEAT_COOLDOWN=30*TICKS_PER_DAY;
+export const MISC_COLD_COOLDOWN=30*TICKS_PER_DAY;
+export const MISC_ECLIPSE_COOLDOWN=15*TICKS_PER_DAY;
+
+export interface WeatherIncidentState {
+  adoptedAt:number;coldSnaps:number;eclipses:number;
+  lastColdSnapStart?:number;lastEclipseStart?:number;
+  coldSnap?:{start:number;end:number};eclipse?:{start:number;end:number};
+}
 
 export interface CassandraMiscCalendar {
   profile:'cassandra-misc-v1';
@@ -27,6 +39,7 @@ export interface CassandraMiscCalendar {
   heatwaves:number;
   lastHeatwaveStart?:number;
   active?:{start:number;end:number};
+  weather?:WeatherIncidentState;
 }
 
 function random(state:CassandraMiscCalendar):number {
@@ -49,9 +62,15 @@ export function adoptMiscIncidents(world:World):void {
     introDone:world.tick>=MISC_INTRO_TICK,checks:0,opportunities:0,heatwaves:0};
 }
 
+/** New rules begin on the first played step, never during save migration. */
+export function adoptWeatherIncidents(world:World):void {
+  if(world.schemaVersion<200||!world.gameProfile||!world.miscIncidents||world.miscIncidents.weather)return;
+  world.miscIncidents.weather={adoptedAt:world.tick,coldSnaps:0,eclipses:0};
+}
+
 /** The daily temperature swing is not a seasonal eligibility signal. */
 export function eligibleMiscHeatwave(world:World,state:CassandraMiscCalendar=world.miscIncidents!):boolean {
-  if(!world.gameProfile||!world.climate||!state||state.active||world.heatwaves?.active||
+  if(!world.gameProfile||!world.climate||!state||state.active||state.weather?.coldSnap||world.heatwaves?.active||
     state.lastHeatwaveStart!==undefined&&world.tick-state.lastHeatwaveStart<MISC_HEAT_COOLDOWN)return false;
   const site=siteClimateDefinition(world);
   return seasonTemperature(site.latitude,site.meanTemperature,climateTick(world))>=20;
@@ -68,6 +87,29 @@ export function resolveSelectedHeatwave(world:World,state:CassandraMiscCalendar=
   return true;
 }
 
+export function resolveSelectedColdSnap(world:World,state:CassandraMiscCalendar=world.miscIncidents!):boolean {
+  const weather=state?.weather;if(!weather||!eligibleColdSnap(world)||!Number.isSafeInteger(world.tick+3.5*TICKS_PER_DAY))return false;
+  const start=world.tick,end=start+Math.floor((1.5+2*random(state))*TICKS_PER_DAY);
+  if(!Number.isSafeInteger(end))return false;
+  weather.coldSnap={start,end};weather.lastColdSnapStart=start;weather.coldSnaps++;
+  emit(world,'Vague de froid : protégez les cultures, chauffez les pièces et équipez les habitants de vêtements isolants.');return true;
+}
+
+export function eligibleEclipse(world:World,state:CassandraMiscCalendar=world.miscIncidents!):boolean {
+  const weather=state?.weather;
+  return world.schemaVersion>=200&&!!world.gameProfile&&!!weather&&!weather.eclipse&&
+    (weather.lastEclipseStart===undefined||world.tick-weather.lastEclipseStart>=MISC_ECLIPSE_COOLDOWN);
+}
+
+export function resolveSelectedEclipse(world:World,state:CassandraMiscCalendar=world.miscIncidents!):boolean {
+  if(!eligibleEclipse(world,state)||!Number.isSafeInteger(world.tick+1.25*TICKS_PER_DAY))return false;
+  const weather=state.weather!,start=world.tick,end=start+Math.floor((.75+.5*random(state))*TICKS_PER_DAY);
+  if(!Number.isSafeInteger(end))return false;
+  checkpointEclipseGrowth(world);
+  weather.eclipse={start,end};weather.lastEclipseStart=start;weather.eclipses++;
+  emit(world,'Éclipse : la lumière naturelle et la production solaire diminuent. Préservez vos réserves et l’éclairage des cultures.');return true;
+}
+
 function consumeOpportunity(world:World,state:CassandraMiscCalendar):void {
   state.opportunities++;
   const ticket=random(state)*MISC_RAW_WEIGHT;
@@ -77,6 +119,12 @@ function consumeOpportunity(world:World,state:CassandraMiscCalendar):void {
   }
   else if(ticket>=MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT&&ticket<MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT+MISC_POD_WEIGHT){
     resolveSelectedPodRescue(world,Math.floor(random(state)*0x100000000)||1);
+  }
+  else if(state.weather&&ticket>=MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT+MISC_POD_WEIGHT&&ticket<MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT+MISC_POD_WEIGHT+MISC_COLD_WEIGHT){
+    resolveSelectedColdSnap(world,state);
+  }
+  else if(state.weather&&ticket>=MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT+MISC_POD_WEIGHT+MISC_COLD_WEIGHT&&ticket<MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT+MISC_POD_WEIGHT+MISC_COLD_WEIGHT+MISC_ECLIPSE_WEIGHT){
+    resolveSelectedEclipse(world,state);
   }
 }
 
@@ -88,6 +136,14 @@ export function advanceMiscIncidents(world:World):void {
   if(state.active&&world.tick>=state.active.end){
     delete state.active;
     emit(world,'La canicule se termine. Les pièces retrouvent progressivement leur température habituelle.');
+  }
+  const weather=state.weather;
+  if(weather?.coldSnap&&world.tick>=weather.coldSnap.end){
+    delete weather.coldSnap;emit(world,'La vague de froid se termine. Les pièces retrouvent progressivement leur température habituelle.');
+  }
+  if(weather?.eclipse&&world.tick>=weather.eclipse.end){
+    checkpointEclipseGrowth(world);delete weather.eclipse;
+    emit(world,'L’éclipse se termine. La lumière naturelle et les générateurs solaires retrouvent leur fonctionnement habituel.');
   }
   if(!state.introDone&&world.tick>=MISC_INTRO_TICK){
     state.introDone=true;

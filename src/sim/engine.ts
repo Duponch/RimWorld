@@ -49,7 +49,7 @@ import { cancelHunting } from './hunting-state.ts';
 import { advanceCorpses } from './corpses.ts';
 import { advanceWildlife,enableWildlife,reconcileWildlife } from './wildlife.ts';
 import { enableHeatwaves,advanceHeatwaves } from './heatwave.ts';
-import { adoptMiscIncidents,advanceMiscIncidents } from './cassandra-misc.ts';
+import { adoptMiscIncidents,adoptWeatherIncidents,advanceMiscIncidents } from './cassandra-misc.ts';
 import { adoptWorldIncidents,advanceWorldIncidents } from './cassandra-world.ts';
 import { adoptSmallIncidents,advanceSmallIncidents } from './cassandra-small.ts';
 import { advanceHeatExposure } from './heat-exposure.ts';
@@ -634,6 +634,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   // Old profiles start this new stream prospectively, when play resumes.
   // Loading or pausing never invents a past opportunity or heat exposure.
   adoptMiscIncidents(world);
+  adoptWeatherIncidents(world);
   adoptWorldIncidents(world);
   adoptSmallIncidents(world);
   adoptRainElectrical(world);

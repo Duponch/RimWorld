@@ -1,4 +1,6 @@
-# Validation courante — V264
+# Validation courante — V265
+
+**V265, schéma 200 : [vague de froid et éclipse](../gameplay/climate-incidents-v265.md).** 96 cas uniques dans 15 fichiers passent par reprises ciblées : thermique, croissance et lumière, solaire, agenda végétal, sélection d’incident, migration prospective et refus atomiques. Les 62 sauvegardes publiques restent valides et inchangées. Typage/build et parcours WebGPU avec sauvegarde/rechargement passent ; scènes préparées, aucune fréquence naturelle ou mesure FPS déduite. Autonomie et push après chaque commit autorisés par les derniers messages humains. Les validations suivantes sont historiques.
 
 **V264, schéma 199 : [secours, récupération et intégration](../gameplay/pod-rescue-joining-v264.md).** 74 cas uniques dans 13 fichiers passent après reprises ciblées, dont 62 sauvegardes publiques décompressées/migrées/validées. Reprise exacte après adhésion sur 48 ticks ordinaires, commandes coloniales, refus atomiques du Decoder, portage et soins conservés. Typage final et build passent ; présentation native minage/coupe avec changements de vitesse PASS120,908s, sans saut/excès continu/occupation solide observé. Premiers rouges de fixture, typage et lancement restreint conservés dans les journaux V264. Aucun fichier public modifié, aucun gain FPS ou campagne longue nouvelle revendiqué. [Méthode regroupée](consolidation-v209.md#consigne-de-méthode-du-8-octobre-2026), relance automatique en pause, commits locaux sans push. Les validations suivantes sont historiques.
 

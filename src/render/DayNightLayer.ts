@@ -1,6 +1,8 @@
 import { Color, DirectionalLight, Frustum, HemisphereLight, Matrix4, Vector3, type Camera, type Scene } from 'three/webgpu';
 import { dot, mix, normalWorldGeometry, smoothstep, uniform } from 'three/tsl';
 import { sampleDaylight, sampleSeasonalDaylight, type DaylightSample } from './daylight';
+import { calendarTick } from '../sim/calendar';
+import { eclipseLightFactor } from '../sim/eclipse';
 import type { World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 
@@ -12,6 +14,16 @@ const moonColor = new Color(0xa3beff), sunColor = new Color(0xffe1b2), sunsetCol
 const SHADOW_CASTER_HEIGHT = WORLD_SCALE.treeMaxHeight + 2;
 const SHADOW_PADDING = SHADOW_CASTER_HEIGHT + 2;
 const SHADOW_DEPTH_PADDING = 2;
+
+type DaylightWorld = Pick<World, 'climate' | 'gameProfile' | 'miscIncidents'>;
+/** Presentation receives civil time; incident intervals use elapsed ticks.
+ * The absent-condition branch leaves every historical sample value intact. */
+export function applyEclipseDaylight(civilTick: number, world: DaylightWorld | undefined, sample: DaylightSample): number {
+  const elapsedTick = world ? civilTick - calendarTick({ ...world, tick: 0 }) : civilTick;
+  const factor = world ? eclipseLightFactor({ tick: elapsedTick, miscIncidents: world.miscIncidents }) : 1;
+  if (factor !== 1) { sample.daylight *= factor; sample.warmth *= factor; sample.sunlight *= factor; }
+  return factor;
+}
 
 /** Intersect a horizontal map rectangle with one camera frustum plane. The
  * resulting polygon also works when a perspective view looks past the map. */
@@ -125,13 +137,15 @@ export class DayNightLayer {
     camera.updateProjectionMatrix();
   }
 
-  update(tick: number, target: Vector3, world?:Pick<World,'climate'>): void {
+  update(tick: number, target: Vector3, world?:DaylightWorld): void {
     const s = world?.climate?sampleSeasonalDaylight(tick,this.sample):sampleDaylight(tick, this.sample);
+    const moonStrength = 1 - s.daylight;
+    const eclipse = applyEclipseDaylight(tick, world, s);
     this.sunDirection.value.set(s.x, s.y, s.z);
     this.zenith.value.copy(nightTop).lerp(dayTop, s.daylight);
     this.horizon.value.copy(nightHorizon).lerp(dayHorizon, s.daylight).lerp(duskHorizon, s.warmth * 0.7);
-    this.discColor.value.copy(sunColor).lerp(sunsetColor, s.warmth).multiplyScalar(3 * Math.max(0, Math.min(1, (s.y + 0.025) / 0.025)));
-    this.moonStrength.value = 1 - s.daylight;
+    this.discColor.value.copy(sunColor).lerp(sunsetColor, s.warmth).multiplyScalar(3 * Math.max(0, Math.min(1, (s.y + 0.025) / 0.025)) * eclipse);
+    this.moonStrength.value = moonStrength;
     this.ambient.color.copy(nightAmbient).lerp(dayAmbient, s.daylight).lerp(duskAmbient, s.warmth * 0.25);
     this.ambient.groundColor.copy(nightGround).lerp(dayGround, s.daylight);
     this.ambient.intensity = 1.05 + 1.05 * s.daylight;

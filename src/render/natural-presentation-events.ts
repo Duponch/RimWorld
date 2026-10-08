@@ -15,7 +15,8 @@ const CLOCK_LIMIT=2**40;
 const CERTIFICATION_TICKS=32;
 type Clock={tick:number;civil:number;width:number;height:number;schema:number;
   gameProfilePresent:boolean;profile:ClimateProfile|undefined;
-  adoptedAt:number|undefined;calendarOrigin:number|undefined;naturalBoundary:number;artificialBoundary:number};
+  adoptedAt:number|undefined;calendarOrigin:number|undefined;naturalBoundary:number;artificialBoundary:number;
+  eclipseStart:number|undefined;eclipseEnd:number|undefined};
 type Inputs=Pick<Resource,'id'|'kind'|'species'|'x'|'z'|'growth'|'growthTick'|'growthLight'|'growthThermalFactor'>
   &{leaflessAt:number|undefined;fertility:number;roofed:boolean};
 export type NaturalObservation=Readonly<{size:number;ripe:boolean;leafless:boolean}>;
@@ -37,16 +38,27 @@ function captureClock(world:World):Clock|undefined {
       ||at!==civil+(next-tick)||at%period!==0||climateTick(world,next-1)!==at-1)return;
     return next;
   };
-  const naturalBoundary=boundary(climate?TICKS_PER_YEAR:TICKS_PER_DAY),artificialBoundary=boundary(TICKS_PER_DAY);
+  let naturalBoundary=boundary(climate?TICKS_PER_YEAR:TICKS_PER_DAY);
+  const artificialBoundary=boundary(TICKS_PER_DAY),eclipse=world.miscIncidents?.weather?.eclipse;
   if(naturalBoundary===undefined||artificialBoundary===undefined)return;
+  // A future probe retains this publication's raw interval. Never certify its
+  // curve past the producer's end checkpoint/removal, or retain an old curve
+  // when an interval starts, ends or is replaced without a Resource edit.
+  if(eclipse){
+    if(!Number.isSafeInteger(eclipse.start)||!Number.isSafeInteger(eclipse.end)
+      ||eclipse.start<0||eclipse.start>tick||eclipse.end<=tick||eclipse.end>CLOCK_LIMIT)return;
+    naturalBoundary=Math.min(naturalBoundary,eclipse.end);
+  }
   // climateTick observes only the truthiness of GameProfile. Its cloned object
   // is never retained and a fresh packet object cannot invalidate this clock.
   return {tick,civil,width,height,schema,gameProfilePresent:!!gameProfile,profile:climate?.profile,
-    adoptedAt:climate?.adoptedAt,calendarOrigin:climate?.calendarOrigin,naturalBoundary,artificialBoundary};
+    adoptedAt:climate?.adoptedAt,calendarOrigin:climate?.calendarOrigin,naturalBoundary,artificialBoundary,
+    eclipseStart:eclipse?.start,eclipseEnd:eclipse?.end};
 }
 function sameContext(a:Clock,b:Clock):boolean {
   return a.width===b.width&&a.height===b.height&&a.schema===b.schema&&a.gameProfilePresent===b.gameProfilePresent
-    &&a.profile===b.profile&&a.adoptedAt===b.adoptedAt&&a.calendarOrigin===b.calendarOrigin;
+    &&a.profile===b.profile&&a.adoptedAt===b.adoptedAt&&a.calendarOrigin===b.calendarOrigin
+    &&a.eclipseStart===b.eclipseStart&&a.eclipseEnd===b.eclipseEnd;
 }
 function roofCells(world:World):readonly number[]|undefined {
   const cells=world.roofing?.constructed;

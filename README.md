@@ -1,5 +1,8 @@
 # Lisière
 
+**V265 — vague de froid et éclipse ; schéma 200.**
+Deux [crises climatiques](docs/gameplay/climate-incidents-v265.md) relient protection des habitants et cultures, chauffage, lumière naturelle, panneaux solaires et réserves d’énergie. Alertes et ciel suivent les conditions réellement simulées ; sauvegardes anciennes adoptées prospectivement. Développement autonome, validations regroupées, commit et push de chaque lot selon la dernière consigne ; les repères suivants sont historiques.
+
 **V264 — secours, récupération et intégration ; schéma 199.**
 Les nouveaux [naufragés indépendants](docs/gameplay/pod-rescue-joining-v264.md) réellement secourus peuvent rejoindre la colonie au relèvement, avec leurs blessures, compétences et possessions. Les autres finissent leur convalescence puis repartent. Statut visible dans l'inspection, décision unique sauvegardée et anciennes capsules inchangées ; 74 contrôles ciblés, les 62 sauvegardes publiques, build et présentation native passent.
 La reprise fonctionnelle suit la [méthode du 8 octobre](docs/development/consolidation-v209.md#consigne-de-méthode-du-8-octobre-2026) : lots plus larges, cadrage réduit et validations regroupées. Le [bilan CPU/GPU](docs/history/performance-bilan-2026-10-08.md) conserve les gains et limites antérieurs, sans nouveau FPS annoncé. Relance automatique en pause, commits locaux sans push. Les repères suivants sont historiques.

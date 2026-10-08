@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V265 — crises climatiques ; schéma 200.**
+La [vague de froid et l’éclipse](gameplay/climate-incidents-v265.md) mettent à l’épreuve chauffage, vêtements, cultures, solaire et stockage d’énergie. La suite reste centrée sur des boucles jouables complètes, avec validations communes en fin de lot selon la méthode du 8 octobre. Migration technique et nouvelles investigations de performance restent écartées sans demande. Autonomie pendant l’absence et push après chaque commit autorisés, relance réactivée ; les repères suivants sont historiques.
+
 **Reprise fonctionnelle V264 — secours, récupération et intégration ; schéma 199.**
 La [boucle du naufragé](gameplay/pod-rescue-joining-v264.md) permet aux nouveaux indépendants réellement secourus de devenir colons au relèvement, ou de finir leur convalescence puis repartir. Les personnes et possessions restent les mêmes, les anciennes capsules restent inchangées. La [méthode du 8 octobre](development/consolidation-v209.md#consigne-de-méthode-du-8-octobre-2026) regroupe les sous-lots et les validations.
 La migration technique est écartée à la demande de l'utilisateur ; le [bilan de performance](history/performance-bilan-2026-10-08.md) conserve les gains et limites acquis, sans nouveau FPS annoncé. Relance automatique en pause, aucun push. Les repères suivants sont historiques.

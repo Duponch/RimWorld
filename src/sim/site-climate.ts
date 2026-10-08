@@ -14,7 +14,7 @@ export interface SiteClimate {
 
 export type ClimateProfile='temperate-reference'|'boreal-reference'|'arid-reference';
 export interface ClimateDefinition {meanTemperature:number;amplitude:number;rainfall:number;latitude:number;longitude:number}
-export type ClimateWorld=Pick<World,'tick'|'gameProfile'|'climate'>;
+export type ClimateWorld=Pick<World,'tick'|'gameProfile'|'climate'|'miscIncidents'>;
 export const TICKS_PER_YEAR=60*TICKS_PER_DAY;
 /** Historical colony B: climate read from its saved tile, location reported
  * by the user. This is an observed reference, not an average world tile. */

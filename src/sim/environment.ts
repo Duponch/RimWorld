@@ -1,5 +1,6 @@
 import { TICKS_PER_DAY } from './types.ts';
 import { climateTick,siteClimateDefinition,TICKS_PER_YEAR,type ClimateWorld } from './site-climate.ts';
+import { eclipseLightFactor,ECLIPSE_MAX_DURATION,type EclipseWorld } from './eclipse.ts';
 
 /** Fixed site: 45°N at equinox. Outdoor temperature/weather are still a preset.
  * Celestial glow follows the reference's horizon correction, independently of
@@ -41,7 +42,8 @@ export function seasonalNaturalLight(latitude:number,civilTick:number):number {
 
 export function annualNaturalLight(world:ClimateWorld,tick=world.tick):number {
   const civil=climateTick(world,tick);
-  return world.climate?seasonalNaturalLight(siteClimateDefinition(world).latitude,civil):naturalLight(civil);
+  const base=world.climate?seasonalNaturalLight(siteClimateDefinition(world).latitude,civil):naturalLight(civil);
+  return base*eclipseLightFactor(world,tick);
 }
 
 // Shared immutable annual table: one profile, ~2.9MB, O(1) interval queries.
@@ -60,7 +62,41 @@ function annualPrefix(latitude:number):Float64Array {
 
 export function annualGrowingLightIntegral(world:ClimateWorld,tick=world.tick):number {
   const civil=climateTick(world,tick);
-  if(!world.climate)return growingLightIntegral(civil);
-  const values=annualPrefix(siteClimateDefinition(world).latitude),years=Math.floor(civil/TICKS_PER_YEAR),remainder=civil-years*TICKS_PER_YEAR;
-  return years*values[TICKS_PER_YEAR]!+values[remainder]!;
+  let base:number;
+  if(!world.climate)base=growingLightIntegral(civil);
+  else {
+    const values=annualPrefix(siteClimateDefinition(world).latitude),years=Math.floor(civil/TICKS_PER_YEAR),remainder=civil-years*TICKS_PER_YEAR;
+    base=years*values[TICKS_PER_YEAR]!+values[remainder]!;
+  }
+  return base-eclipseGrowingLightLoss(world,tick);
+}
+
+interface EclipseLoss {start:number;end:number;civilStart:number;latitude:number|undefined;values:Float64Array}
+// One derived table per live World, at most 7501 doubles (~60KB). Building it
+// visits ticks of this single bounded event, never plants or elapsed history.
+// All subsequent growth queries and interval clips are O(1); JSON saves omit it.
+const eclipseLosses=new WeakMap<object,EclipseLoss>();
+function eclipseGrowingLightLoss(world:ClimateWorld&EclipseWorld,tick:number):number {
+  const interval=world.miscIncidents?.weather?.eclipse;
+  if(!interval)return 0;
+  if(tick<=interval.start)return 0;
+  const {start,end}=interval,duration=end-start;
+  if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||duration<=0||duration>ECLIPSE_MAX_DURATION)
+    throw new Error('Invalid bounded eclipse interval');
+  const civilStart=climateTick(world,start),latitude=world.climate?siteClimateDefinition(world).latitude:undefined;
+  let cached=eclipseLosses.get(world);
+  if(!cached||cached.start!==start||cached.end!==end||cached.civilStart!==civilStart||cached.latitude!==latitude) {
+    const values=new Float64Array(duration+1);
+    for(let offset=1;offset<=duration;offset++) {
+      const civil=civilStart+offset,phase=((civil%TICKS_PER_DAY)+TICKS_PER_DAY)%TICKS_PER_DAY/TICKS_PER_DAY;
+      let loss=0;
+      if(phase>=.25&&phase<=.8) {
+        const base=latitude===undefined?naturalLight(civil):seasonalNaturalLight(latitude,civil);
+        loss=Math.max(0,(base-.51)/.49)-Math.max(0,(base*eclipseLightFactor(world,start+offset)-.51)/.49);
+      }
+      values[offset]=values[offset-1]!+loss;
+    }
+    cached={start,end,civilStart,latitude,values};eclipseLosses.set(world,cached);
+  }
+  return cached.values[Math.min(duration,tick-start)]!;
 }

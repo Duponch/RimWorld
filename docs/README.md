@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V265, schéma 200 : [vague de froid et éclipse](gameplay/climate-incidents-v265.md).** Deux incidents jouables utilisent les systèmes thermiques, agricoles et électriques existants, avec alertes, ciel assombri et reprise sauvegardée. Les 62 références publiques restent immuables. Méthode par lots cohérents et contrôles regroupés ; autonomie et push de chaque lot autorisés, relance réactivée. Les repères suivants sont historiques.
+
 **V264, schéma 199 : [secours, récupération et intégration du naufragé](gameplay/pod-rescue-joining-v264.md).**
 Reprise fonctionnelle avec [lots et validations regroupés](development/consolidation-v209.md#consigne-de-méthode-du-8-octobre-2026). Adhésion prospective des indépendants réellement secourus, personnes et possessions conservées ; anciennes capsules inchangées, 62 sauvegardes publiques validées et immuables. Le chantier de migration est écarté, aucun FPS supplémentaire annoncé ; relance automatique en pause, commits locaux sans push. Les repères suivants sont historiques.
 

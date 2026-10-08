@@ -6,6 +6,7 @@ import { annualNaturalLight } from '../sim/environment';
 import { windIntensity, windObstructions } from '../sim/wind-rules';
 import { TemperatureView } from '../sim/temperature';
 import { sunLampActive, sunLampScheduled } from '../sim/sun-lamp';
+import { activeEclipse } from '../sim/eclipse';
 import { isRainElectricalKind, rainElectricalEligible } from '../sim/rain-electric';
 import { isRoofed } from '../sim/roof-rules';
 import type { Structure, World } from '../sim/types';
@@ -51,6 +52,7 @@ export function powerInspection(world: World, structure: Structure, compact=fals
     const light = annualNaturalLight(world);
     detail = `Production ${watts(Math.max(0, powerWatts(structure, world)))} / 1 700 W · ${open}/16 cases sans toit · lumière naturelle ${Math.round(light * 100)} %`;
     if (!open) detail += ' · Entièrement sous toit';
+    else if (activeEclipse(world)) detail += ' · Éclipse : lumière solaire réduite';
     else if (light === 0) detail += ' · Nuit';
     else if (!structure.breakdown && !isPowerActive(structure)) detail += ' · Démarrage en attente';
   } else if (structure.kind === 'wind-turbine') {

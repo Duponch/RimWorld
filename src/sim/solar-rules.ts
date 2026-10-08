@@ -18,7 +18,7 @@ export function solarUnroofedCells(world: World, structure: Structure): number {
 }
 
 /** Potential output in watts. Power dispatch separately applies the plant's
- * active state. No weather or latitude beyond the current fixed-site profile. */
+ * active state. The shared natural-light reader includes site and eclipse. */
 export function solarPowerOutput(world: World, structure: Structure): number {
   return SOLAR_MAX_OUTPUT * annualNaturalLight(world) * solarUnroofedCells(world, structure) / 16;
 }
