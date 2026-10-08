@@ -4,6 +4,7 @@ import { resolveSelectedPodRescue } from './pod-rescue.ts';
 import { eligibleColdSnap } from './cold-snap.ts';
 import { checkpointEclipseGrowth } from './eclipse.ts';
 import { eligibleShortCircuit,resolveSelectedShortCircuit,type ShortCircuitCalendar } from './short-circuit.ts';
+import { eligibleCropBlight,resolveSelectedCropBlight,type CropBlightCalendar } from './crop-blight-incident.ts';
 import { TICKS_PER_DAY,type World } from './types.ts';
 
 /** A deliberately fixed local envelope for the Core Misc category. Core
@@ -20,6 +21,7 @@ export const MISC_POD_WEIGHT=1.5;
 export const MISC_COLD_WEIGHT=1;
 export const MISC_ECLIPSE_WEIGHT=1.5;
 export const MISC_SHORT_CIRCUIT_WEIGHT=1;
+export const MISC_CROP_BLIGHT_WEIGHT=.3;
 export const MISC_HEAT_COOLDOWN=30*TICKS_PER_DAY;
 export const MISC_COLD_COOLDOWN=30*TICKS_PER_DAY;
 export const MISC_ECLIPSE_COOLDOWN=15*TICKS_PER_DAY;
@@ -43,6 +45,7 @@ export interface CassandraMiscCalendar {
   active?:{start:number;end:number};
   weather?:WeatherIncidentState;
   shortCircuits?:ShortCircuitCalendar;
+  cropBlights?:CropBlightCalendar;
 }
 
 function random(state:CassandraMiscCalendar):number {
@@ -131,6 +134,9 @@ function consumeOpportunity(world:World,state:CassandraMiscCalendar):void {
   }
   else if(ticket>=MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT+MISC_POD_WEIGHT+MISC_COLD_WEIGHT+MISC_ECLIPSE_WEIGHT&&ticket<MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT+MISC_POD_WEIGHT+MISC_COLD_WEIGHT+MISC_ECLIPSE_WEIGHT+MISC_SHORT_CIRCUIT_WEIGHT&&eligibleShortCircuit(world)){
     resolveSelectedShortCircuit(world,Math.floor(random(state)*0x100000000)||1);
+  }
+  else if(ticket>=MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT+MISC_POD_WEIGHT+MISC_COLD_WEIGHT+MISC_ECLIPSE_WEIGHT+MISC_SHORT_CIRCUIT_WEIGHT&&ticket<MISC_HEAT_WEIGHT+MISC_FLASHSTORM_WEIGHT+MISC_POD_WEIGHT+MISC_COLD_WEIGHT+MISC_ECLIPSE_WEIGHT+MISC_SHORT_CIRCUIT_WEIGHT+MISC_CROP_BLIGHT_WEIGHT&&eligibleCropBlight(world)){
+    resolveSelectedCropBlight(world,Math.floor(random(state)*0x100000000)||1);
   }
 }
 

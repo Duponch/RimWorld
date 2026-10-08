@@ -19,6 +19,7 @@ import { isPowerActive } from '../sim/power-rules';
 export function plantInspection(world:World,plant:Resource):string {
   const temperature=new TemperatureView(world).at(world,plant),factor=plantTemperatureFactorFor(plant,temperature);
   const constraints:string[]=[];let soil='';
+  if(plant.blight)constraints.push(`Fléau des cultures · gravité ${Math.round(plant.blight.severity*100)} % · croissance arrêtée · contagieux à partir de 28 % · couper sans récolte pour contenir la propagation`);
   const basin=hydroponicBasinAt(world,plant);
   if(basin)constraints.push(isPowerActive(basin)?'Culture hydroponique · pompe alimentée':'Culture hydroponique · sans alimentation : dépérissement progressif, nouveaux semis suspendus');
   if(plantLeafless(world,plant))constraints.push(plant.kind==='healroot'?'Sans feuilles · broutage suspendu · récolte possible si croissance suffisante':'Sans feuilles · broutage suspendu');
@@ -32,7 +33,7 @@ export function plantInspection(world:World,plant:Resource):string {
     soil=` · Fertilité ${Math.round(fertility*100)} % · Effet sur cette plante ${Math.round(growthFactor*100)} %`;
   }
   const medicine=plant.kind==='healroot'?' · Racine médicinale cultivée · Plantes 8 pour commencer le semis seulement, sans minimum à la récolte · Travail de base : semis 80 ticks, récolte 40 ticks · Produit : médicament à base de plantes · Coupe sans dose':'';
-  return ` · Croissance ${Math.floor(plantGrowth(world,plant)*100)} % · ${harvestable(world,plant)?`Récolte : environ ${Math.round(berryYield(world,plant))} ${harvestProductLabel(plant)}`:plant.kind==='tree'?(choppable(world,plant)?'Bois disponible par coupe':'Arbre trop jeune pour la coupe'):plant.species&&!floraDefinition(plant)?.product?'Végétation de pâturage':'Pas encore récoltable'} · ${constraints.length?constraints.join(' · '):'Croissance diurne'}${soil}${medicine}`;
+  return ` · Croissance ${Math.floor(plantGrowth(world,plant)*100)} % · ${plant.blight?'Récolte impossible':harvestable(world,plant)?`Récolte : environ ${Math.round(berryYield(world,plant))} ${harvestProductLabel(plant)}`:plant.kind==='tree'?(choppable(world,plant)?'Bois disponible par coupe':'Arbre trop jeune pour la coupe'):plant.species&&!floraDefinition(plant)?.product?'Végétation de pâturage':'Pas encore récoltable'} · ${constraints.length?constraints.join(' · '):'Croissance diurne'}${soil}${medicine}`;
 }
 
 export function growingTemperatureInspection(world:World,cell:Cell):string {

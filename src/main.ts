@@ -1008,7 +1008,11 @@ function renderState() {
       const plantOrder=(kind:'chop'|'harvest'|'cut')=>{if(resource)void attempt(()=>client.command({type:'designate',kind,x:resource.x,z:resource.z}));};
       const chop=el<HTMLButtonElement>('cell-chop'),harvest=el<HTMLButtonElement>('cell-harvest'),cut=el<HTMLButtonElement>('cell-cut');
       chop.hidden=!resource||!choppable(world,resource);harvest.hidden=!resource||!harvestable(world,resource);cut.hidden=!resource||!isPlant(resource);
-      cut.textContent=resource?.kind==='tree'?'Déraciner':'Couper les plantes';
+      cut.textContent=resource?.blight?'Couper ce plant malade':resource?.kind==='tree'?'Déraciner':'Couper les plantes';
+      let cutBlight=el('inspector').querySelector<HTMLButtonElement>('#cell-cut-blighted');
+      if(!cutBlight){cutBlight=document.createElement('button');cutBlight.id='cell-cut-blighted';cutBlight.className='secondary-action';cutBlight.textContent='Couper tous les plants malades';cut.after(cutBlight);}
+      cutBlight.hidden=!resource?.blight;
+      cutBlight.onclick=()=>void attempt(()=>client.command({type:'cut-blighted-crops'}));
       chop.onclick=()=>plantOrder('chop');harvest.onclick=()=>plantOrder('harvest');cut.onclick=()=>plantOrder('cut');
       el('cell-materials').textContent = '';
       updateUnfinishedInspection(el('inspector'),world,pile?.unfinished||pile?.gunWork||pile?.artWork||pile?.flakWork||pile?.componentWork?pile:undefined,c=>void attempt(()=>client.command(c)));
@@ -1091,6 +1095,9 @@ function renderState() {
   const enraged=world.wildlife?.animals.filter(animal=>animal.manhunter&&animal.state!=='dead'&&animal.state!=='downed')??[];
   if(enraged.length)alerts.push(`${enraged.length} ${enraged.length>1?'animaux':'animal'} en rage`);
   const fires=world.fires?.items??[],fireAlert=el<HTMLButtonElement>('inspect-fire');fireAlert.hidden=!fires.length;fireAlert.textContent=`Incendie · ${fires.length} foyer${fires.length>1?'s':''} · voir`;fireAlert.onclick=()=>{const cell=firePosition(world,fires[0]!);if(cell){applyTool('select');pickCell(cell.x,cell.z);renderer?.focusCell(cell);}};
+  const blighted=world.resources.filter(p=>!!p.blight),blightAlert=el<HTMLButtonElement>('inspect-blight');
+  blightAlert.hidden=!blighted.length;blightAlert.textContent=`Fléau des cultures · ${blighted.length} plant(s) · voir`;
+  blightAlert.onclick=()=>{const plant=blighted[0];if(plant){applyTool('select');pickCell(plant.x,plant.z);renderer?.focusCell(plant);}};
   const threatButton=el<HTMLButtonElement>('inspect-threat'),mentalThreat=aggressiveCrises[0],threat=enemy??rebels[0]??mechanicalThreats[0]??mentalThreat??enraged[0];threatButton.hidden=!threat;if(threat){threatButton.textContent=enemy?'Menace armée · voir':rebels.length?'Révolte de prison · voir':mechanicalThreats.length?'Menace mécanique · voir':mentalThreat?`${mentalCrisisView(world,mentalThreat)!.label} · voir`:'Animal en rage · voir';threatButton.onclick=()=>selectPawn(threat.id);}
   const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=colonists.length-living.length;
   const starving=living.filter(p=>(p.health?.malnutrition??0)>0).length;if(starving)alerts.push(`${starving} colon(s) en malnutrition`);

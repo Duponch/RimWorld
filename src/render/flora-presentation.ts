@@ -14,13 +14,14 @@ export const isMedicinalPlant=(r:Pick<Resource,'kind'|'species'>):boolean=>r.kin
 /** Four visible growth steps keep the forest resident between shape changes. */
 export const floraSize=(world:World,r:Resource):number=>!r.species&&!isMedicinalPlant(r)?1:(r.growth??1)===1?1:.3+.7*Math.ceil(plantGrowth(world,r)*4)/4;
 const FLORA_COLORS={pine:0x47684c,birch:0x8fa467,oak:0x57754d,poplar:0x849752,drago:0x728966,saguaro:0x698661,agave:0x839c89,moss:0x718356,grass:0x929357,'tall-grass':0x7d8a4f,brambles:0x556648,'berry-bush':0x677b55,'healroot-wild':0x829b74};
-export const floraColor=(r:Resource):number=>FLORA_COLORS[isMedicinalPlant(r)?'healroot-wild':r.species??'berry-bush'];
+export const BLIGHT_COLOR=0xa26b32;
+export const floraColor=(r:Resource):number=>r.blight?BLIGHT_COLOR:FLORA_COLORS[isMedicinalPlant(r)?'healroot-wild':r.species??'berry-bush'];
 export const isClusterPlantSpecies=(species:Resource['species']):boolean=>species==='grass'||species==='tall-grass';
 export const floraTreeHeight=(r:Resource):number=>r.species==='saguaro'?2.2:r.species==='drago'?3.25:r.species==='pine'?4.6:r.species==='poplar'?4.3:3.8;
 export const hydroponicFloraHeight=(world:World,r:Resource):number=>r.kind==='healroot'&&hydroponicBasinAt(world,r)?HYDROPONIC_SUPPORT_HEIGHT:0;
 export const floraIdentity=(world:World,r:Resource):string=>{
   const support=hydroponicFloraHeight(world,r);
-  return `${r.kind}:${r.x}:${r.z}:${r.stone??''}:${r.species??''}:${floraSize(world,r)}:${isMedicinalPlant(r)&&plantLeafless(world,r)}${support?`:support=${support}`:''}`;
+  return `${r.kind}:${r.x}:${r.z}:${r.stone??''}:${r.species??''}:${floraSize(world,r)}:${isMedicinalPlant(r)&&plantLeafless(world,r)}${r.blight?':blight':''}${support?`:support=${support}`:''}`;
 };
 
 export interface FloraParts {trunks:Placement[];crowns:Placement[];cones:Placement[];bushes:Placement[];blades:Placement[];cacti:Placement[];fruit:Placement[]}
@@ -57,9 +58,9 @@ export function appendFlora(parts:FloraParts,world:World,r:Resource,turn:number)
     for(let i=0;i<3;i++) {
       const angle=turn+i*2*Math.PI/3;
       add(parts.bushes,{dx:Math.sin(angle)*.20,dz:Math.cos(angle)*.20,y:.22,
-        sx:.12,sy:.20,sz:.23,ry:angle,color:0xa6b896});
+        sx:.12,sy:.20,sz:.23,ry:angle,color:r.blight?BLIGHT_COLOR:0xa6b896});
     }
-    add(parts.bushes,{y:.37,sx:.10,sy:.10,sz:.10,color:0xb7a5b9});
+    add(parts.bushes,{y:.37,sx:.10,sy:.10,sz:.10,color:r.blight?0x68513a:0xb7a5b9});
   } else if(r.species==='agave') {
     const h=.4;
     for(let i=0;i<6;i++) {const angle=turn+i*Math.PI/3;add(parts.blades,{dx:Math.sin(angle)*.13,dz:Math.cos(angle)*.13,y:h*.5,sx:.15,sy:h,sz:.65,ry:angle});}

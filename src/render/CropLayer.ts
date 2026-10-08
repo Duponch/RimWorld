@@ -2,7 +2,7 @@ import { plantLeafless } from '../sim/plant-life';
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { plantGrowth } from '../sim/plants';
-import { RESIDENT_CROP_KINDS, type ResidentCropKind } from './flora-presentation';
+import { BLIGHT_COLOR, RESIDENT_CROP_KINDS, type ResidentCropKind } from './flora-presentation';
 import type { Resource, World } from '../sim/types';
 import { CropPresentationPartition } from './crop-presentation-partition';
 import { readHydroponicCells } from '../sim/hydroponics';
@@ -89,7 +89,7 @@ class CropBatch {
       this.transform.rotation.y = (crop.id % 7) * .9;
       this.transform.scale.set(scale, plantLeafless(world,crop)?scale*.4:scale, scale); this.transform.updateMatrix();
       this.mesh.setMatrixAt(slot, this.transform.matrix);
-      this.color.copy(this.green).lerp(this.ripe, Math.max(0, (growth - .65) / .35)); if(plantLeafless(world,crop))this.color.setHex(0x8f7b58);this.mesh.setColorAt(slot, this.color);
+      this.color.copy(this.green).lerp(this.ripe, Math.max(0, (growth - .65) / .35)); if(plantLeafless(world,crop))this.color.setHex(0x8f7b58);if(crop.blight)this.color.setHex(BLIGHT_COLOR);this.mesh.setColorAt(slot, this.color);
     }
     this.mesh.count = visibleCount;
     if (visibleCount) {

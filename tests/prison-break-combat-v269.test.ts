@@ -16,7 +16,7 @@ import type {Pawn,World} from '../src/sim/types.ts';
 
 function fixture(){
   const {world:w,patientId,actorId}=recruitmentUiFixture(),p=w.pawns.find(p=>p.id===patientId)!,a=w.pawns.find(p=>p.id===actorId)!;
-  w.schemaVersion=204;p.prisoner!.breakout={rng:123,lastAt:w.tick,active:{startedAt:w.tick,initiatorId:p.id}};
+  p.prisoner!.breakout={rng:123,lastAt:w.tick,active:{startedAt:w.tick,initiatorId:p.id}};
   p.planCooldown=0;
   return {w,p,a};
 }
@@ -72,7 +72,7 @@ test('an openable closed door is never converted into a breach target by a block
 });
 
 test('nonraid departure cancels incoming orders while retaining their committed recovery archive',()=>{
-  const w=medicalCamp(2),[a,p]=w.pawns as [Pawn,Pawn];w.schemaVersion=204;
+  const w=medicalCamp(2),[a,p]=w.pawns as [Pawn,Pawn];
   p.faction='outlaws';p.x=0;p.z=10;p.prisoner={...fixture().p.prisoner!,capturedAt:w.tick};
   p.prisoner.breakout={rng:123,active:{startedAt:w.tick,initiatorId:p.id}};p.prisoner.escape={x:0,z:10};
   a.melee={order:{targetId:p.id,startedDowned:false},strike:{targetId:p.id,atCore:w.tick*10,untilCore:w.tick*10+meleeRecoveryCore('left-fist'),tool:'left-fist',outcome:'hit'}};

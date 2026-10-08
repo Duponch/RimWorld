@@ -75,6 +75,7 @@ export function fullGrowingLightIntegral(world:ClimateWorld,tick=world.tick):num
 export function plantGrowth(world: World, plant: Resource): number {
   if (!isPlant(plant)) return 1;
   const base = plant.growth ?? 1;
+  if(plant.blight)return base;
   if(plant.growthLight==='dark'||plant.growthLight!=='artificial-full'&&isRoofed(world,roofIndex(world,plant)))return base;
   if (base >= 1) return 1;
   const def = plant.species?FLORA_DEFINITIONS[plant.species]:PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS], fertility = plantFertility(world, plant);
@@ -85,9 +86,10 @@ export function plantGrowth(world: World, plant: Resource): number {
   return clamp(base + lightTime * factor / (def.growDays * TICKS_PER_DAY));
 }
 export const choppable=(world:World,plant:Resource):boolean=>plant.kind==='tree'&&(!plant.species||plantGrowth(world,plant)>=FLORA_DEFINITIONS[plant.species].harvestMinGrowth);
-export const harvestable = (world: World, plant: Resource): boolean => isPlant(plant)&&plant.kind!=='tree'&&
+export const harvestable = (world: World, plant: Resource): boolean => !plant.blight&&isPlant(plant)&&plant.kind!=='tree'&&
   (!plant.species||FLORA_DEFINITIONS[plant.species].product!==null)&&plantGrowth(world, plant) > (plant.species?FLORA_DEFINITIONS[plant.species].harvestMinGrowth:HARVEST_MIN_GROWTH);
 export function berryYield(world: World, plant: Resource): number {
+  if(plant.blight)return 0;
   const growth = plantGrowth(world, plant);
   const minimum=plant.species?FLORA_DEFINITIONS[plant.species].harvestMinGrowth:HARVEST_MIN_GROWTH;
   if(growth<=minimum)return 0;
@@ -98,6 +100,7 @@ export function berryYield(world: World, plant: Resource): number {
 }
 /** Preview stochastic rounding without consuming RNG until placement succeeds. */
 export function harvestRoll(world: World, plant: Resource, worker?:Pawn): { quantity: number; rng: number } {
+  if(plant.blight)return {quantity:0,rng:world.rng};
   // Real human work uses Core's failure -> base RoundRandom -> surplus
   // RoundRandom order. Preview in a private stream: refused placement must
   // neither destroy a plant nor advance the authoritative RNG.

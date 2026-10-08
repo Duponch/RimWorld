@@ -1,4 +1,6 @@
-# Validation courante — V269
+# Validation courante — V270
+
+**V270, schéma 205 : [fléau des cultures](../gameplay/crop-blight-v270.md#validation).** 127 cas passent dans 22 fichiers, un benchmark ignoré, dont 41 nouveaux cas ; 62 sauvegardes publiques conservées. Simulation, agriculture, incident, lecteurs stricts et présentation, build/typage final et parcours WebGPU matériel avec coupe collective, sauvegarde/rechargement et ressemis passent. Rouges de fixtures et limites conservés dans la note du lot ; aucune campagne ou performance générale déduite. Les validations suivantes sont historiques.
 
 **V269, schéma 204 : [révoltes et évasions collectives](../gameplay/prison-break-v269.md#validation).** 155 cas uniques dans 25 fichiers passent par reprises ciblées, dont 40 nouveaux cas et les 62 sauvegardes publiques. Risque, propriétaires, portes/brèche, combat/tourelles, chute/soins, archives, lecteurs stricts et reprise sont couverts. Build avec typage final et parcours WebGPU avec inspection, sauvegarde/rechargement et sortie réelle passent ; rouges et limites conservés dans la note du lot. Autonomie et push après chaque commit maintenus, aucun gain FPS annoncé. Les validations suivantes sont historiques.
 

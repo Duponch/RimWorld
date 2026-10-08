@@ -5,17 +5,17 @@ import type { Resource,World } from '../sim/types';
 import {readSnapshotChanges} from '../bridge/snapshot-changes';
 import {NaturalPresentationEvents,NaturalIdPresentationEvents,composeFinalResourceStructure,type NaturalObservation,type NaturalIdSource} from './natural-presentation-events';
 
-type Shape=Pick<Resource,'id'|'kind'|'x'|'z'|'stone'|'species'>&{ripe:boolean;leafless:boolean;size:number};
+type Shape=Pick<Resource,'id'|'kind'|'x'|'z'|'stone'|'species'>&{ripe:boolean;leafless:boolean;size:number;blighted:boolean};
 export type NaturalPresentationChange = { resource: Resource | undefined; size: number };
 type IdSource=NaturalIdSource&{readonly shape:Shape|undefined;readonly timed:boolean;readonly eligible:boolean};
 const timeDependent=(r:Resource):boolean=>(r.growth??1)!==1||r.plantLife?.leaflessAt!==undefined;
 function shapeAt(world:World,r:Resource,observation?:NaturalObservation):Shape {
   return {id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,species:r.species,
-    size:observation?.size??floraSize(world,r),ripe:observation?.ripe??(r.kind==='berries'&&harvestable(world,r)),leafless:observation?.leafless??plantLeafless(world,r)};
+    size:observation?.size??floraSize(world,r),ripe:observation?.ripe??(r.kind==='berries'&&harvestable(world,r)),leafless:observation?.leafless??plantLeafless(world,r),blighted:!!r.blight};
 }
 function equalShape(a:Shape|undefined,b:Shape):boolean {
   return !!a&&a.id===b.id&&a.kind===b.kind&&a.x===b.x&&a.z===b.z&&a.stone===b.stone&&a.species===b.species
-    &&a.size===b.size&&a.ripe===b.ripe&&a.leafless===b.leafless;
+    &&a.size===b.size&&a.ripe===b.ripe&&a.leafless===b.leafless&&a.blighted===b.blighted;
 }
 function mergeSources(changed:readonly number[],timed:readonly (readonly [number,number])[]):number[]{
   const result:number[]=[];let a=0,b=0;
@@ -235,9 +235,9 @@ export class NaturalResourcePresentation {
       const observation=eventRead?.observations.get(r.id)??fullObservations?.get(r.id);
       const size=observation?.size??floraSize(world,r);
       const ripe=observation?.ripe??(r.kind==='berries'&&harvestable(world,r)),leafless=observation?.leafless??plantLeafless(world,r);
-      if(reset||!old||old.size!==size||old.species!==r.species||old.id!==r.id||old.kind!==r.kind||old.x!==r.x||old.z!==r.z||old.stone!==r.stone||old.ripe!==ripe||old.leafless!==leafless){
+      if(reset||!old||old.size!==size||old.species!==r.species||old.id!==r.id||old.kind!==r.kind||old.x!==r.x||old.z!==r.z||old.stone!==r.stone||old.ripe!==ripe||old.leafless!==leafless||old.blighted!==!!r.blight){
         changed=true;this.changes.set(r.id,{resource:r,size});
-        if(partial||timed)this.shapes[shapeIndex]={size,species:r.species,id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,leafless,ripe};
+        if(partial||timed)this.shapes[shapeIndex]={size,species:r.species,id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,leafless,ripe,blighted:!!r.blight};
       }
     }
     if(nextNatural)this.naturalResources=nextNatural;
@@ -262,7 +262,7 @@ export class NaturalResourcePresentation {
       const old=this.shapes[i];
       if(old?.id===r.id&&!this.changes.has(r.id))return old;
       const observation=fullObservations?.get(r.id);
-      return {size:this.changes.get(r.id)?.size??observation?.size??floraSize(world,r),species:r.species,id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,leafless:observation?.leafless??plantLeafless(world,r),ripe:observation?.ripe??(r.kind==='berries'&&harvestable(world,r))};
+      return {size:this.changes.get(r.id)?.size??observation?.size??floraSize(world,r),species:r.species,id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,leafless:observation?.leafless??plantLeafless(world,r),ripe:observation?.ripe??(r.kind==='berries'&&harvestable(world,r)),blighted:!!r.blight};
     });
     if(!eventRead&&!fullEventsInitialized)this.initializeEvents(world,immutableSnapshot);
     return {...world,resources:natural.slice()};

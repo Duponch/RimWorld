@@ -6,6 +6,7 @@ import { FLORA_DEFINITIONS } from './biome-flora.ts';
 import { isCrop, AFTER_HARVEST_GROWTH, choppable, harvestable, harvestRoll } from './plants.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { releaseWork } from './work-release.ts';
+import { designateBlightedCrops } from './crop-blight-orders.ts';
 import type { Pawn, Resource, World } from './types.ts';
 
 /** Harvest and construction clearing share one conservative producer. null
@@ -14,7 +15,7 @@ export function gatherResource(world: World, resource: Resource, kind:'chop'|'ha
   if(kind==='harvest'&&!harvestable(world,resource)||kind==='chop'&&!choppable(world,resource))return null;
   // Medicinal roots and V91 species clear without product. Historical bushes
   // and other crops keep their established cut yield.
-  const roll=kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&(resource.species||resource.kind==='healroot')?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
+  const roll=kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&(resource.blight||resource.species||resource.kind==='healroot')?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
   if(roll.quantity>0) {
     const item=resource.species?FLORA_DEFINITIONS[resource.species].product:
       kind==='chop'?'wood':isCrop(resource)?cropProduct(resource.kind):world.foodRules==='legacy'?'legacy-portion':'berries';
@@ -23,6 +24,7 @@ export function gatherResource(world: World, resource: Resource, kind:'chop'|'ha
     if(!placements||world.piles.length+placements.length>32768||!Number.isSafeInteger(world.nextId+placements.length))return null;
     addGroundMaterial(world,ITEM_DEFINITIONS[item].kind,roll.quantity,resource,item);
   }
+  if(kind==='cut'&&resource.blight)designateBlightedCrops(world,resource);
   world.rng=roll.rng;
   const removed=!(kind==='harvest'&&(resource.species?FLORA_DEFINITIONS[resource.species].persistent:resource.kind==='berries'));
   if(!removed){resource.growth=AFTER_HARVEST_GROWTH;resource.growthTick=world.tick;}
@@ -44,6 +46,7 @@ export function gatherResource(world: World, resource: Resource, kind:'chop'|'ha
       }
       delete job.clearance;delete job.installationWork;job.reservedBy=null;job.status='pending';
     }
+    for(const animal of world.wildlife?.animals??[])if(animal.meal?.kind==='plant'&&animal.meal.id===resource.id){delete animal.meal;animal.path=[];animal.nextDecision=world.tick;}
   }
   return roll.quantity;
 }

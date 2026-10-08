@@ -1,5 +1,8 @@
 # Lisière
 
+**V270 — fléau des cultures ; schéma 205.**
+Le [fléau agricole](docs/gameplay/crop-blight-v270.md) relie incident, contamination de proximité, croissance bloquée, dégâts et coupe sans récolte. Alerte et plants brunis permettent de repérer les foyers ; la commande collective crée du travail physique, puis les zones libérées sont ressemées. Hydroponie concernée, sauvegarde prospective et lecteurs communs. Autonomie et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **V269 — révoltes de prisonniers ; schéma 204.**
 Les [évasions collectives](docs/gameplay/prison-break-v269.md) relient risque individuel, portes ouvertes physiquement, combat, défense et tourelles, brèche faute de route, puis mise à terre et soins ou sortie avec possessions. Adoption prospective et inspection du risque ; limites Core et résultats de validation dans la note du lot. Autonomie et push après chaque commit maintenus, aucun FPS annoncé. Les états suivants sont historiques.
 

@@ -18,7 +18,7 @@ type Clock={tick:number;civil:number;width:number;height:number;schema:number;
   adoptedAt:number|undefined;calendarOrigin:number|undefined;naturalBoundary:number;artificialBoundary:number;
   eclipseStart:number|undefined;eclipseEnd:number|undefined};
 type Inputs=Pick<Resource,'id'|'kind'|'species'|'x'|'z'|'growth'|'growthTick'|'growthLight'|'growthThermalFactor'>
-  &{leaflessAt:number|undefined;fertility:number;roofed:boolean};
+  &{leaflessAt:number|undefined;fertility:number;roofed:boolean;blighted:boolean};
 export type NaturalObservation=Readonly<{size:number;ripe:boolean;leafless:boolean}>;
 type Forecast={input:Inputs;plannedAt:number;deadline:number|undefined;observation:NaturalObservation};
 export type NaturalEventRead={readonly indices:readonly number[];readonly changes:SnapshotChanges;readonly observations:ReadonlyMap<number,NaturalObservation>};
@@ -87,13 +87,13 @@ function captureInputs(world:World,r:Resource):Inputs|undefined {
   const fertility=plant?plantFertility(world,r):0;
   if(!Number.isFinite(fertility)||fertility<0)return;
   return {id:r.id,kind:r.kind,species:r.species,x:r.x,z:r.z,growth:r.growth,growthTick:anchor,
-    growthLight:r.growthLight,growthThermalFactor:factor,leaflessAt,fertility,roofed:isRoofed(world,roofIndex(world,r))};
+    growthLight:r.growthLight,growthThermalFactor:factor,leaflessAt,fertility,roofed:isRoofed(world,roofIndex(world,r)),blighted:!!r.blight};
 }
 function sameInputs(a:Inputs,b:Inputs):boolean {
   return a.id===b.id&&a.kind===b.kind&&a.species===b.species&&a.x===b.x&&a.z===b.z
     &&Object.is(a.growth,b.growth)&&Object.is(a.growthTick,b.growthTick)&&a.growthLight===b.growthLight
     &&Object.is(a.growthThermalFactor,b.growthThermalFactor)&&Object.is(a.leaflessAt,b.leaflessAt)
-    &&Object.is(a.fertility,b.fertility)&&a.roofed===b.roofed;
+    &&Object.is(a.fertility,b.fertility)&&a.roofed===b.roofed&&a.blighted===b.blighted;
 }
 const tracked=(r:Resource):boolean=>r.plantLife?.leaflessAt!==undefined||isPlant(r)&&(r.growth??1)!==1;
 const observe=(world:World,r:Resource):NaturalObservation=>Object.freeze({
@@ -112,7 +112,7 @@ function nextDeadline(world:World,probe:World,r:Resource,input:Inputs,clock:Cloc
   const def=r.species?FLORA_DEFINITIONS[r.species]:PLANT_DEFINITIONS[r.kind as keyof typeof PLANT_DEFINITIONS];
   // These are constant-query proofs, not a second growth equation. In
   // particular a missing anchor follows the queried tick: I(t)-I(t) stays zero.
-  const grows=isPlant(r)&&(input.growth??1)<1&&input.growthTick!==undefined
+  const grows=!input.blighted&&isPlant(r)&&(input.growth??1)<1&&input.growthTick!==undefined
     &&input.growthLight!=='dark'&&(input.growthLight==='artificial-full'||!input.roofed)
     &&input.fertility>=def!.minFertility&&(input.growthThermalFactor??1)>0;
   if(!grows)return next;

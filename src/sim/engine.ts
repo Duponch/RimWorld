@@ -54,6 +54,9 @@ import { advanceWildlife,enableWildlife,reconcileWildlife } from './wildlife.ts'
 import { enableHeatwaves,advanceHeatwaves } from './heatwave.ts';
 import { adoptMiscIncidents,adoptWeatherIncidents,advanceMiscIncidents } from './cassandra-misc.ts';
 import { adoptShortCircuits } from './short-circuit.ts';
+import { adoptCropBlights } from './crop-blight-incident.ts';
+import { advanceCropBlight } from './plant-blight.ts';
+import { designateBlightedCrops } from './crop-blight-orders.ts';
 import { adoptWorldIncidents,advanceWorldIncidents } from './cassandra-world.ts';
 import { adoptSmallIncidents,advanceSmallIncidents } from './cassandra-small.ts';
 import { advanceHeatExposure } from './heat-exposure.ts';
@@ -362,6 +365,12 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='cut-blighted-crops'){
+    if(Object.keys(command).length!==1)return refusal('invalid-command','Commande de coupe invalide.');
+    const result=designateBlightedCrops(world);
+    if(result.ok){wakePlanners(world);event(world,'command',`${result.affected} plant(s) malade(s) désigné(s) pour coupe, sans récolte.`);}
+    return result;
+  }
   if(command.type==='planet-adopt'||command.type==='group-start'||command.type==='group-cancel'||command.type==='group-pause'||command.type==='group-route'||command.type==='group-buy'||command.type==='group-sell'||command.type==='group-unload')return validGroupCommand(command)?applyGroupCommand(world,command):refusal('invalid-command','Commande de groupe invalide.');
   if(command.type==='commercial-start'||command.type==='commercial-cancel'||command.type==='commercial-unload')return applyCommercialPreparation(world,command);
   if(command.type==='commercial-buy')return applyCommercialBuy(world,command);
@@ -646,6 +655,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   adoptMiscIncidents(world);
   adoptWeatherIncidents(world);
   adoptShortCircuits(world);
+  adoptCropBlights(world);
   adoptWorldIncidents(world);
   adoptSmallIncidents(world);
   adoptRainElectrical(world);
@@ -662,6 +672,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     advanceSurfaceWeather(world,cell=>{const c={type:'designate' as const,kind:'chop' as const,...cell};if(canDesignate(world,c).ok)applyCommand(world,c);});
     if(beforeWeather!==world.structures)thermal=reconcileTemperature(world);
     advancePower(world);advanceHydroponics(world);
+    advanceCropBlight(world);
     advanceWorldIncidents(world);
     const beforeElectricalRain=world.structures;
     advanceRainElectrical(world);

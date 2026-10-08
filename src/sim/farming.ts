@@ -60,6 +60,7 @@ export function jobDuration(world: World, job: Job, capturedResource?:Resource|n
   if(job.material!==undefined)return constructionRecipe(job).work;
   if(job.kind==='harvest'||job.kind==='cut'){
     const resource=capturedResource===undefined?resourceCells(world).get(index(world,job)):capturedResource;
+    if(job.kind==='cut'&&resource?.blight)return (resource.kind==='healroot'?40:20)/(3.3-2.3*plantGrowth(world,resource));
     if(job.kind==='harvest'&&(resource?.species==='healroot-wild'||resource?.kind==='healroot'))return 40;
     if(isCrop(resource??{kind:'rock'}))return 20;
   }
@@ -88,6 +89,7 @@ function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, 
   if(zone.basinId!==undefined&&(!basin||basin.id!==zone.basinId||!hydroponicCropAllowed(zone.plant)))return null;
   if (ctx.fixed.has(cell)&&(!basin||ctx.hydroBlocked?.has(cell))||!basin&&world.tiles[cell]!.floor) return null;
   const plant = ctx.resources.get(cell);
+  if(plant?.blight)return zone.allowCut?{kind:'cut',cell}:null;
   if (plant?.kind === zone.plant || (!zone.allowSow && zone.allowCut && plant && isPlant(plant))) {
     return plantGrowth(world, plant) >= 1 ? { kind: 'harvest', cell } : null;
   }

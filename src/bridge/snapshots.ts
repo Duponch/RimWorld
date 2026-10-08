@@ -12,6 +12,7 @@ import { validFlakWorkShape } from '../sim/flak-work.ts';
 import { validComponentWorkShape } from '../sim/component-work.ts';
 import { isFloorKind } from '../sim/flooring.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
+import { validCropBlight } from '../sim/plant-blight-save.ts';
 import { isCropKindInVersion } from '../sim/crops.ts';
 import { validateHydroponics } from '../sim/farming-save.ts';
 import { validFireResourceLosses } from '../sim/fire-save.ts';
@@ -346,8 +347,10 @@ const equalResourceBase = (a: Resource, b: Resource): boolean => a.id === b.id &
   && a.growthLight === b.growthLight && a.x === b.x && a.z === b.z && a.amount === b.amount && a.stone === b.stone && a.damage === b.damage
   && a.plantLife?.since === b.plantLife?.since && a.plantLife?.bornAt === b.plantLife?.bornAt
   && a.plantLife?.age === b.plantLife?.age && a.plantLife?.darkTicks === b.plantLife?.darkTicks
-  && a.plantLife?.leaflessAt === b.plantLife?.leaflessAt && a.plantLife?.nextCheck === b.plantLife?.nextCheck;
-const copyResource=(r:Resource):Resource=>({...r,...r.plantLife?{plantLife:{...r.plantLife}}:{}});
+  && a.plantLife?.leaflessAt === b.plantLife?.leaflessAt && a.plantLife?.nextCheck === b.plantLife?.nextCheck
+  && a.blight?.since === b.blight?.since && a.blight?.severity === b.blight?.severity && a.blight?.lastHarmTick === b.blight?.lastHarmTick
+  && a.blight?.nextCheck === b.blight?.nextCheck && a.blight?.rng === b.blight?.rng;
+const copyResource=(r:Resource):Resource=>({...r,...r.plantLife?{plantLife:{...r.plantLife}}:{},...r.blight?{blight:{...r.blight}}:{}});
 
 /** Preserve own-property presence, nested values and exact floating-point bits. */
 function equalPileValue(a:unknown,b:unknown):boolean {
@@ -781,7 +784,7 @@ export class SnapshotDecoder {
           }
         }
         for (const resource of upserted) {
-          if(!validDomesticHealroot(resource,message.world)||!validPlantGrowthLight(resource,message.world.schemaVersion,message.world.tick)||!validPlantLife(resource,message.world.schemaVersion,message.world)||resource.damage!==undefined&&(message.world.schemaVersion<87||!Number.isSafeInteger(resource.damage)||resource.damage<1||resource.damage>=resourceMaxHp(resource)))return resync('État végétal invalide.');
+          if(!validDomesticHealroot(resource,message.world)||!validPlantGrowthLight(resource,message.world.schemaVersion,message.world.tick)||!validPlantLife(resource,message.world.schemaVersion,message.world)||!validCropBlight(resource,message.world.schemaVersion,message.world)||resource.damage!==undefined&&(message.world.schemaVersion<87||!Number.isSafeInteger(resource.damage)||resource.damage<1||resource.damage>=resourceMaxHp(resource)))return resync('État végétal invalide.');
           if (!validPlantThermalFactor(resource,message.world.schemaVersion)) return resync('Facteur thermique végétal invalide.');
           if (!validStoneIdentity(resource.stone, resource.kind, message.world.schemaVersion)) return resync('Identité géologique invalide.');
           if (touched.has(resource.id)) return resync('Ressource modifiée plusieurs fois.');
@@ -794,7 +797,7 @@ export class SnapshotDecoder {
             if(!old||!isPlant(old)||touched.has(id)||!Number.isSafeInteger(id)||!Number.isFinite(value)||value<0||value>1||!Number.isSafeInteger(tick)||tick<0||tick>message.world.tick||!Number.isNaN(factor)&&(!Number.isFinite(factor)||factor<0||factor>1))return resync('Delta de croissance invalide.');
             const updated={...old,growth:value,growthTick:tick};
             if(Number.isNaN(factor))delete updated.growthThermalFactor;else updated.growthThermalFactor=factor;
-            if(!validPlantLife(updated,message.world.schemaVersion,message.world)||!validPlantThermalFactor(updated,message.world.schemaVersion))return resync('Delta de croissance invalide.');
+            if(!validPlantLife(updated,message.world.schemaVersion,message.world)||!validPlantThermalFactor(updated,message.world.schemaVersion)||!validCropBlight(updated,message.world.schemaVersion,message.world))return resync('Delta de croissance invalide.');
             touched.add(id);write(updated);
           }
         }
@@ -874,7 +877,7 @@ export class SnapshotDecoder {
         foreignIds.add(entity.id);
       }
     }
-    if(next.resources.some(resource=>foreignIds.has(resource.id)||!validDomesticHealroot(resource,next)||!validPlantGrowthLight(resource,next.schemaVersion,next.tick)))return resync('État végétal ou identité commerciale invalide.');
+    if(next.resources.some(resource=>foreignIds.has(resource.id)||!validDomesticHealroot(resource,next)||!validPlantGrowthLight(resource,next.schemaVersion,next.tick)||!validCropBlight(resource,next.schemaVersion,next)))return resync('État végétal ou identité commerciale invalide.');
     if(foreignIds.size){
       const collides=(entities:readonly {id:number}[])=>entities.some(e=>foreignIds.has(e.id));
       if([next.pawns,next.piles,next.structures,next.jobs,next.stockpiles,next.growingZones,next.wildlife?.animals??[],next.mechanoids??[],next.filth?.items??[],next.fires?.items??[],next.fires?.embers??[],next.projectiles??[],next.bombWaves??[]].some(collides)

@@ -8,7 +8,7 @@ import {startTravel} from '../src/sim/movement.ts';
 
 function fixture(){
   const {world:w,patientId}=recruitmentUiFixture(),p=w.pawns.find(p=>p.id===patientId)!,door=w.structures.find(s=>s.kind==='door')!;
-  w.schemaVersion=204;for(const a of w.pawns)if(a!==p){a.x=22;a.z=20+a.id;}
+  for(const a of w.pawns)if(a!==p){a.x=22;a.z=20+a.id;}
   p.prisoner!.breakout={rng:123,lastAt:w.tick,active:{startedAt:w.tick,initiatorId:p.id}};
   return {w,p,door};
 }

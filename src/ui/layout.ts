@@ -144,7 +144,7 @@ export function gameLayout(): string {
         <details><summary>Recherche</summary><p>Choisissez un projet ; un colon affecté à la recherche pourra progresser à un bureau construit et utilisable.</p><button data-guide-panel="research" type="button">Ouvrir Recherche</button></details>
       </div>
     </details>
-    <aside id="alerts" class="alerts" aria-label="Alertes de la colonie"><div id="status-alerts"></div><div class="alert-jumps"><button id="inspect-threat" hidden>Menace armée · voir</button><button id="inspect-fire" hidden>Incendie · voir</button></div></aside>
+    <aside id="alerts" class="alerts" aria-label="Alertes de la colonie"><div id="status-alerts"></div><div class="alert-jumps"><button id="inspect-threat" hidden>Menace armée · voir</button><button id="inspect-fire" hidden>Incendie · voir</button><button id="inspect-blight" hidden>Fléau des cultures · voir</button></div></aside>
     <div id="pause-banner" hidden>EN PAUSE</div>
     <div id="notice" role="status" aria-live="polite" hidden></div>
     <div id="area-feedback" role="status" aria-live="polite" hidden></div>

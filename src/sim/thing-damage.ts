@@ -33,8 +33,13 @@ function removeJobs(world:World,ids:Set<number>):void {
   for(const p of world.pawns)p.orders.queue=p.orders.queue.filter(o=>typeof o!=='number'||!ids.has(o));
   world.jobs=world.jobs.filter(j=>!ids.has(j.id));
 }
+/** Infection invalidates an earlier harvest, including a manual designation.
+ * Cut work and construction clearance keep their existing owners. */
+export function cancelResourceHarvests(world:World,resource:Resource):void {
+  removeJobs(world,new Set(world.jobs.filter(job=>job.kind==='harvest'&&at(job,resource)).map(job=>job.id)));
+}
 /** Shared destructive plant boundary; the cause never creates a harvest. */
-export function damageResource(world:World,r:Resource,amount:number,reason:'fire'|'frost'|'darkness'|'age'|'bullet'|'bomb'|'rotting'='fire'):boolean {
+export function damageResource(world:World,r:Resource,amount:number,reason:'fire'|'frost'|'darkness'|'age'|'bullet'|'bomb'|'rotting'|'blight'='fire'):boolean {
   const max=resourceMaxHp(r);if(!max||!positive(amount)||!world.resources.includes(r))return false;
   const damage=(r.damage??0)+amount;if(damage<max){r.damage=damage;return true;}
   const ledger=reason==='fire'?ensureFireState(world).ledger:undefined;
