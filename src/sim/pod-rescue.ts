@@ -14,6 +14,7 @@ import { carrierOf } from './rescue-state.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { startingPawn } from './starting-pawns.ts';
 import { generatePawnBackground } from './background-generation.ts';
+import { reconcilePodRescueJoining,selectPodRescueOrigin } from './pod-rescue-joining.ts';
 import { visitorAtEdge } from './visitor-navigation.ts';
 import { POD_RESCUE_FALL_TICKS,POD_RESCUE_OPEN_TICKS,POD_RESCUE_LIMIT,type PodRescuePending } from './pod-rescue-state.ts';
 import type { Cell,MaterialPile,Pawn,World } from './types.ts';
@@ -55,7 +56,8 @@ export function resolveSelectedPodRescue(w:World,seed:number):boolean {
   const cell=landingCell(w,seed);if(!cell)return false;
   const s=w.podRescues??={profile:'civilian-pod-rescue-v1',serial:0,incidents:[],departed:[]};
   const id=++s.serial;
-  s.pending={id,start:w.tick,landAt:w.tick+POD_RESCUE_FALL_TICKS,openAt:w.tick+POD_RESCUE_FALL_TICKS+POD_RESCUE_OPEN_TICKS,cell:{...cell},seed};
+  s.pending={id,start:w.tick,landAt:w.tick+POD_RESCUE_FALL_TICKS,openAt:w.tick+POD_RESCUE_FALL_TICKS+POD_RESCUE_OPEN_TICKS,cell:{...cell},seed,
+    ...(w.schemaVersion>=199?{origin:selectPodRescueOrigin(seed)}:{})};
   emit(w,'Une capsule civile descend : une personne blessée pourra être secourue après son ouverture.');return true;
 }
 function openPod(w:World,pending:PodRescuePending):boolean {
@@ -63,7 +65,9 @@ function openPod(w:World,pending:PodRescuePending):boolean {
   const rng={rng:pending.seed},p=startingPawn(w.nextId,`Naufragé ${pending.id}`,pending.cell.x,pending.cell.z,0,55,pending.seed,w.tick);
   p.faction='outlanders';p.foodPolicyId=w.foodPolicies[0]!.id;p.podRescue={incidentId:pending.id};
   delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
-  for(const skill of Object.values(p.skills))if(typeof skill==='object'){skill.level=0;skill.passion=0;}
+  // Historical capsules keep their exact generation; new people retain their
+  // starting skills and the ordinary background gains, whichever their origin.
+  if(pending.origin===undefined)for(const skill of Object.values(p.skills))if(typeof skill==='object'){skill.level=0;skill.passion=0;}
   if(w.schemaVersion>=191)generatePawnBackground(p,pending.seed);
   for(const key of Object.keys(p.priorities) as (keyof Pawn['priorities'])[])p.priorities[key]=0;
   p.health??=createMedicalRecord(w.tick);
@@ -77,7 +81,8 @@ function openPod(w:World,pending:PodRescuePending):boolean {
   const shirt:MaterialPile={id:w.nextId+1,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt')};
   const s=w.podRescues!;
   w.nextId+=2;w.pawns.push(p);w.piles.push(shirt);
-  s.incidents.push({id:pending.id,start:pending.start,openedAt:w.tick,pawnId:p.id});delete s.pending;
+  s.incidents.push({id:pending.id,start:pending.start,openedAt:w.tick,pawnId:p.id,
+    ...(pending.origin===undefined?{}:{origin:pending.origin})});delete s.pending;
   emit(w,`${p.name} est à terre après l’ouverture de sa capsule. Un secours direct peut le conduire vers un lit.`);return true;
 }
 /** Production and observation only. Medical intentions belong to the patient
@@ -98,6 +103,8 @@ export function reconcilePodRescueResults(w:World):void {
     if(p.state==='dead'||p.health?.death){incident.result='dead';incident.resolvedAt=p.health?.death?.tick??w.tick;}
     else if(p.prisoner){incident.result='captured';incident.resolvedAt=w.tick;}
   }
+  // Death and capture close the incident before any recovery decision.
+  reconcilePodRescueJoining(w);
 }
 function stopTargeting(w:World,p:Pawn):boolean {
   let recovering=false;

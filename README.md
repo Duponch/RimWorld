@@ -1,8 +1,8 @@
 # Lisière
 
-**V263 — qualification privée partielle, produit V242 et schéma 198 conservés.**
-Le [contrôle graphique du vrai Core](docs/development/core-physical-qualification-v263.md) conserve treize comparaisons exactes ; une différence de pixels après redimensionnement empêche la qualification complète et l'adoption. Les [preuves](docs/history/validation-core-physical-qualification-v263.md) ne donnent aucun nouveau gain FPS.
-Le [bilan du 8 octobre](docs/history/performance-bilan-2026-10-08.md) sépare gains CPU livrés, mesures GPU et essais écartés. Les 62 références et 65 fichiers publics restent exacts. **Arrêt demandé après ce commit ; aucune reprise autonome avant un nouveau signal humain.** Relance automatique en pause, aucun push. Les repères suivants sont historiques.
+**V264 — secours, récupération et intégration ; schéma 199.**
+Les nouveaux [naufragés indépendants](docs/gameplay/pod-rescue-joining-v264.md) réellement secourus peuvent rejoindre la colonie au relèvement, avec leurs blessures, compétences et possessions. Les autres finissent leur convalescence puis repartent. Statut visible dans l'inspection, décision unique sauvegardée et anciennes capsules inchangées ; 74 contrôles ciblés, les 62 sauvegardes publiques, build et présentation native passent.
+La reprise fonctionnelle suit la [méthode du 8 octobre](docs/development/consolidation-v209.md#consigne-de-méthode-du-8-octobre-2026) : lots plus larges, cadrage réduit et validations regroupées. Le [bilan CPU/GPU](docs/history/performance-bilan-2026-10-08.md) conserve les gains et limites antérieurs, sans nouveau FPS annoncé. Relance automatique en pause, commits locaux sans push. Les repères suivants sont historiques.
 
 **V262 — admission Core privée et reprise GPU positives, produit V242 et schéma 198 conservés.**
 Les [résultats caméra compilés](docs/development/core-compiled-camera-v262.md) et l'audit passif des ombres permettent une résidence native ; vingt cas composants, sauvegarde/reload et vraie perte du device suivie de continuation passent dans les [contrôles](docs/history/validation-core-compiled-camera-v262.md).

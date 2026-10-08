@@ -20,6 +20,8 @@ export function preparePodRescueDemo():World {
   addGroundMaterial(w,'food',12,{x:18,z:17},'simple-meal');
   addGroundMaterial(w,'medicine',12,{x:18,z:18},'herbal-medicine');
   refreshStock(w);assert.ok(resolveSelectedPodRescue(w,4871));
+  // This generator reproduces the immutable V187 scene, before independent rescuees.
+  delete w.podRescues!.pending!.origin;
   assert.equal(w.podRescues!.incidents.length,0);assert.deepEqual(validateWorld(w),[]);return w;
 }
 export function podRescueDemoEntry(w:World,sha256:string){const c=w.podRescues!.pending!.cell;return {

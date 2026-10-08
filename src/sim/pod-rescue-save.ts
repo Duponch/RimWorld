@@ -19,16 +19,22 @@ export function validPodRescueShape(value:unknown,version:number,w:Bounds):boole
   if(version<175||!object(value)||!keys(value,['profile','serial','incidents','departed'],['pending'])||value.profile!=='civilian-pod-rescue-v1'
     ||!int(value.serial,1,POD_RESCUE_LIMIT)||!Array.isArray(value.incidents)||!Array.isArray(value.departed)||value.incidents.length>POD_RESCUE_LIMIT||value.departed.length>POD_RESCUE_LIMIT)return false;
   const p=value.pending;
-  if(p!==undefined&&(!object(p)||!keys(p,['id','start','landAt','openAt','cell','seed'])||!int(p.id,1,value.serial)||p.id!==value.serial
+  if(p!==undefined&&(!object(p)||!keys(p,['id','start','landAt','openAt','cell','seed'],version>=199?['origin']:[])||p.origin!==undefined&&(typeof p.origin!=='string'||!['independent','outlander'].includes(p.origin))||!int(p.id,1,value.serial)||p.id!==value.serial
     ||!int(p.start,0,w.tick)||!int(p.landAt)||p.landAt!==p.start+POD_RESCUE_FALL_TICKS||!int(p.openAt)||p.openAt!==p.landAt+POD_RESCUE_OPEN_TICKS
     ||!int(p.seed,1,0xffffffff)||!cell(p.cell,w)||!object(p.cell)||!int(p.cell.x,1,w.width-2)||!int(p.cell.z,1,w.height-2)))return false;
   const ids=new Set<number>();
   for(const i of value.incidents){
-    if(!object(i)||!keys(i,['id','start','openedAt','pawnId'],['tendedAt','result','resolvedAt'])||!int(i.id,1,value.serial)||ids.has(i.id)||object(p)&&i.id===p.id
+    if(!object(i)||!keys(i,['id','start','openedAt','pawnId'],['tendedAt','result','resolvedAt',...version>=199?['origin','decision']:[]])||i.origin!==undefined&&(typeof i.origin!=='string'||!['independent','outlander'].includes(i.origin))||!int(i.id,1,value.serial)||ids.has(i.id)||object(p)&&i.id===p.id
       ||!int(i.start,0,w.tick)||!int(i.openedAt,i.start+POD_RESCUE_FALL_TICKS+POD_RESCUE_OPEN_TICKS,w.tick)||!int(i.pawnId,1)
       ||i.tendedAt!==undefined&&!int(i.tendedAt,i.openedAt,w.tick)
-      ||(i.result===undefined?i.resolvedAt!==undefined:typeof i.result!=='string'||!['dead','captured','departed'].includes(i.result)||!int(i.resolvedAt,i.openedAt,w.tick))
+      ||(i.result===undefined?i.resolvedAt!==undefined:typeof i.result!=='string'||!['dead','captured','departed',...version>=199?['joined']:[]].includes(i.result)||!int(i.resolvedAt,i.openedAt,w.tick))
       ||i.tendedAt!==undefined&&i.resolvedAt!==undefined&&Number(i.tendedAt)>Number(i.resolvedAt))return false;
+    const decision=i.decision;
+    if(decision!==undefined&&(!object(decision)||!keys(decision,['at','outcome','admittedAt'])||i.origin!=='independent'
+      ||!int(decision.admittedAt,i.openedAt,w.tick)||!int(decision.at,decision.admittedAt,i.resolvedAt===undefined?w.tick:Number(i.resolvedAt))
+      ||typeof decision.outcome!=='string'||!['joined','left'].includes(decision.outcome)
+      ||(decision.outcome==='joined'?(i.result!=='joined'||i.resolvedAt!==decision.at):i.result==='joined'))
+      ||i.result==='joined'&&(!object(decision)||decision.outcome!=='joined'))return false;
     ids.add(i.id);
   }
   if(ids.size+(p===undefined?0:1)!==value.serial)return false;
@@ -64,8 +70,9 @@ function transportBindings(w:PodRescueTransportWorld,version:number):boolean {
     byId.set(p.id,p);
     if(p.podRescue===undefined)continue;
     const i=s.incidents.find(i=>i.id===p.podRescue?.incidentId&&i.pawnId===p.id);
-    if(!validPawnPodRescue(p,version,w)||!int(p.id,1,w.nextId-1)||!i||marked.has(p.id)||p.visitor||p.raid||i.result==='departed'
+    if(!validPawnPodRescue(p,version,w)||!int(p.id,1,w.nextId-1)||!i||marked.has(p.id)||p.visitor||p.raid||i.result==='departed'||i.result==='joined'
       ||p.podRescue.admittedAt!==undefined&&p.podRescue.admittedAt<i.openedAt
+      ||i.decision!==undefined&&i.decision.admittedAt!==p.podRescue.admittedAt
       ||!(p.faction==='outlanders'||p.faction==='colony'&&i.result==='captured')
       ||p.faction==='outlanders'&&!uncommandedGuest(p))return false;
     marked.add(p.id);
@@ -74,7 +81,8 @@ function transportBindings(w:PodRescueTransportWorld,version:number):boolean {
   for(const i of s.incidents){
     const p=byId.get(i.pawnId),d=s.departed.find(d=>d.incidentId===i.id);
     if(!int(i.pawnId,1,w.nextId-1)||people.has(i.pawnId)||(i.result==='departed'?!d||!!p:!!d)
-      ||p&&p.podRescue?.incidentId!==i.id
+      ||p&&i.result!=='joined'&&p.podRescue?.incidentId!==i.id
+      ||i.result==='joined'&&p?.podRescue!==undefined
       ||!i.result&&(!p||p.faction!=='outlanders'||p.prisoner)
       ||i.result==='dead'&&(!p||p.state!=='dead'||p.health?.death?.tick!==i.resolvedAt))return false;
     people.add(i.pawnId);
@@ -108,7 +116,7 @@ export function validatePodRescues(w:World,version:number,ids:Set<number>,valida
   for(const d of s.departed){
     const p=d.pawn,i=s.incidents.find(i=>i.id===d.incidentId);
     if(!i||i.result!=='departed'||i.resolvedAt!==d.tick||i.pawnId!==p.id||p.podRescue?.incidentId!==d.incidentId
-      ||!validPawnPodRescue(p,version,{...w,tick:d.tick})||p.faction!=='outlanders'||p.prisoner||!cell({x:p.x,z:p.z},w)||!visitorAtEdge(w,p)
+      ||!validPawnPodRescue(p,version,{...w,tick:d.tick})||i?.decision!==undefined&&i.decision.admittedAt!==p.podRescue?.admittedAt||p.faction!=='outlanders'||p.prisoner||!cell({x:p.x,z:p.z},w)||!visitorAtEdge(w,p)
       ||p.state!=='idle'||p.moveCooldown!==0||!Array.isArray(p.path)||p.path.length||p.bedId!==null||p.need!==null||p.jobId!==null||p.haul!==null||p.cooking!==null
       ||!object(p.orders)||p.orders.active!==null||!Array.isArray(p.orders.queue)||p.orders.queue.length||!object(p.recreation)||p.recreation.task!==null
       ||inactiveFields.some(k=>((p as unknown as Record<string,unknown>)[k]??null)!==null)||p.mental?.crisis||p.body

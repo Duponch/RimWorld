@@ -22,6 +22,7 @@ function replay(w:World,n=3):void {
 }
 function staged() {
   const w=medicalCamp(),d=w.pawns[0]!;expect(resolveSelectedPodRescue(w,187)).toBe(true);
+  delete w.podRescues!.pending!.origin;
   const cell=w.podRescues!.pending!.cell;
   d.x=cell.x-4;d.z=cell.z;d.priorities.doctor=1;
   const bed=fixtureBuilding(w,'bed',cell.x+7,cell.z);Object.assign(bed,{medical:true});valid(w);return {w,d,bed};

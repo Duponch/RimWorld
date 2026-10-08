@@ -46,7 +46,7 @@ test('pod staging opens exactly once, preserving world RNG, identities and check
   expect(w.piles.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id)).toMatchObject([{id:nextId+1,item:'cloth-shirt',owner:{type:'apparel',pawnId:nextId}}]);
   expect(w.nextId).toBe(nextId+2);expect(w.rng).toBe(rng);expect(w.podRescues!.pending).toBeUndefined();
   at(w,w.tick+1);expect(w.podRescues!.incidents).toHaveLength(1);expect(w.pawns).toHaveLength(pawns+1);
-  expect(validatePodRescues(w,175,mapIds(w))).toEqual([]);
+  expect(validatePodRescues(w,w.schemaVersion,mapIds(w))).toEqual([]);
 });
 
 test('refused seed, occupied pending and unavailable landing are atomic',()=>{
@@ -76,7 +76,7 @@ test('completed treatment is observed separately from death and the physical cor
   const i=w.podRescues!.incidents[0]!;expect(i).toMatchObject({result:'dead',resolvedAt:w.tick,tendedAt});
   expect(w.pawns.find(q=>q.id===p.id)).toBe(p);expect(p.podRescue).toEqual({incidentId:i.id});
   expect(w.piles.find(x=>x.humanCorpse?.pawnId===p.id)).toBeDefined();expect(w.podRescues!.departed).toHaveLength(0);
-  expect(validatePodRescues(w,175,mapIds(w))).toEqual([]);
+  expect(validatePodRescues(w,w.schemaVersion,mapIds(w))).toEqual([]);
 });
 
 test('border departure waits for real captured edge, exports owners once and survives replay',()=>{
@@ -88,9 +88,9 @@ test('border departure waits for real captured edge, exports owners once and sur
   const d=w.podRescues!.departed[0]!;expect(d.items).toContainEqual(shirt);expect(d.pawn.id).toBe(p.id);expect(d.pawn.podRescue).toEqual(p.podRescue);
   expect(exitPodRescue(w,p)).toBe(false);expect(w.podRescues!.departed).toHaveLength(1);
   const clocks:number[]=[];
-  expect(validatePodRescues(w,175,mapIds(w),departure=>{clocks.push(departure.tick);return [];})).toEqual([]);expect(clocks).toEqual([d.tick]);
+  expect(validatePodRescues(w,w.schemaVersion,mapIds(w),departure=>{clocks.push(departure.tick);return [];})).toEqual([]);expect(clocks).toEqual([d.tick]);
   const corrupted=structuredClone(w);corrupted.podRescues!.departed[0]!.items[0]!.owner={type:'inventory',pawnId:corrupted.pawns[0]!.id};
-  expect(validatePodRescues(corrupted,175,mapIds(corrupted),()=>[]).length).toBeGreaterThan(0);
+  expect(validatePodRescues(corrupted,corrupted.schemaVersion,mapIds(corrupted),()=>[]).length).toBeGreaterThan(0);
 });
 
 test('medical work, carried objects and committed melee recovery cannot disappear at the border',()=>{
@@ -106,14 +106,14 @@ test('medical work, carried objects and committed melee recovery cannot disappea
 });
 
 test('strict metadata rejects future fields, wrong clocks, malformed results and duplicate histories',()=>{
-  const {w,p}=opened();expect(validPodRescueShape(w.podRescues,175,w)).toBe(true);
+  const {w,p}=opened();expect(validPodRescueShape(w.podRescues,w.schemaVersion,w)).toBe(true);
   expect(validPodRescueShape(w.podRescues,174,w)).toBe(false);expect(validPawnPodRescue(p,174,w)).toBe(false);
   for(const change of [
     (c:World)=>Object.assign(c.podRescues!,{invented:true}),
     (c:World)=>{c.podRescues!.incidents[0]!.openedAt=0;},
     (c:World)=>{c.podRescues!.incidents.push(structuredClone(c.podRescues!.incidents[0]!));},
     (c:World)=>{Object.assign(c.podRescues!.incidents[0]!,{result:{toString:'bad'},resolvedAt:c.tick});},
-  ]){const copy=structuredClone(w);change(copy);expect(validPodRescueShape(copy.podRescues,175,copy)).toBe(false);}
+  ]){const copy=structuredClone(w);change(copy);expect(validPodRescueShape(copy.podRescues,copy.schemaVersion,copy)).toBe(false);}
   p.podRescue!.admittedAt=w.tick+1;expect(validPawnPodRescue(p,175,w)).toBe(false);
 });
 
@@ -130,15 +130,15 @@ test('capture observation keeps the same person and provenance without retrying 
   expect(w.nextId).toBe(nextId);expect(w.podRescues!.pending).toEqual(pending);
   expect(w.podRescues!.incidents[0]).toMatchObject({result:'captured',resolvedAt:w.tick,pawnId:p.id});
   expect(p.podRescue).toEqual({incidentId:1});expect(w.pawns).toContain(p);expect(exitPodRescue(w,p)).toBe(false);
-  expect(validatePodRescues(w,175,mapIds(w))).toEqual([]);
+  expect(validatePodRescues(w,w.schemaVersion,mapIds(w))).toEqual([]);
 });
 
 test('an ordinary bed assigned before admission requires the held forced rescue relationship',()=>{
   const {w,p}=opened(),doctor=w.pawns[0]!,bed=fixtureBuilding(w,'bed',p.x+1,p.z);
-  p.bedId=bed.id;expect(validatePodRescues(w,175,mapIds(w)).length).toBeGreaterThan(0);
+  p.bedId=bed.id;expect(validatePodRescues(w,w.schemaVersion,mapIds(w)).length).toBeGreaterThan(0);
   doctor.orders.active='rescue';doctor.rescue={patientId:p.id,bedId:bed.id,phase:'approach'};
-  expect(validatePodRescues(w,175,mapIds(w))).toEqual([]);
-  doctor.orders.active=null;expect(validatePodRescues(w,175,mapIds(w)).length).toBeGreaterThan(0);
+  expect(validatePodRescues(w,w.schemaVersion,mapIds(w))).toEqual([]);
+  doctor.orders.active=null;expect(validatePodRescues(w,w.schemaVersion,mapIds(w)).length).toBeGreaterThan(0);
 });
 
 test('a nonadmitted person who recovers can leave with untended wounds but an admitted one cannot',()=>{

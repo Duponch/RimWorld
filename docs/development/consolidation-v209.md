@@ -1,5 +1,14 @@
 # V209 — Continuité, validation et cadence de développement
 
+## Consigne de méthode du 8 octobre 2026
+
+La reprise fonctionnelle privilégie des lots larges réunissant une boucle jouable cohérente et ses dépendances.
+Réutiliser les recherches locales ; compléter seulement les règles encore inconnues.
+Implémenter le code avant de constituer le dossier de clôture ; garder les documents courts et utiles.
+Vérifier les frontières sensibles par des tests ciblés, puis regrouper la régression commune après plusieurs sous-lots.
+Réserver les campagnes lourdes aux jalons périodiques ou aux risques transversaux identifiés.
+Cette méthode vise un meilleur rendement, sans promesse d’accélération de développement par dix.
+
 Consolidation demandée le 4 octobre après l’[audit du code et de Core](../history/audit-code-core-2026-10-04.md). Schéma 190 conservé, aucune nouvelle mécanique. La [preuve V209](../history/validation-consolidation-v209.md) distingue corrections produit, réparation des oracles, mesures et contrôles encore ouverts. La [réponse au rapport externe](../history/analysis-external-agent-2026-10-04.md) motive la nouvelle méthode.
 
 ## Garanties de continuité

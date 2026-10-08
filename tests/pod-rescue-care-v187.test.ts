@@ -29,6 +29,8 @@ function replay(w:World,ticks=3):void {
 function clinic(doctors=1) {
   const w=medicalCamp(doctors),d=w.pawns[0]!;
   expect(resolveSelectedPodRescue(w,187)).toBe(true);
+  // Keep the historical affiliated-patient care/departure contract.
+  delete w.podRescues!.pending!.origin;
   const landing=w.podRescues!.pending!.cell;
   for(const [index,q] of w.pawns.entries()) {
     q.x=landing.x-4;q.z=landing.z+index*2;

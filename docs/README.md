@@ -1,5 +1,8 @@
 # Documentation de Lisière
 
+**V264, schéma 199 : [secours, récupération et intégration du naufragé](gameplay/pod-rescue-joining-v264.md).**
+Reprise fonctionnelle avec [lots et validations regroupés](development/consolidation-v209.md#consigne-de-méthode-du-8-octobre-2026). Adhésion prospective des indépendants réellement secourus, personnes et possessions conservées ; anciennes capsules inchangées, 62 sauvegardes publiques validées et immuables. Le chantier de migration est écarté, aucun FPS supplémentaire annoncé ; relance automatique en pause, commits locaux sans push. Les repères suivants sont historiques.
+
 **V263, produit V242 et schéma 198 conservés : [qualification Core partielle](development/core-physical-qualification-v263.md), [recherche](research/core-physical-qualification-v263.md), [preuves](history/validation-core-physical-qualification-v263.md).**
 Treize comparaisons graphiques exactes ; différence de pixels au retour à la taille initiale, prototype non adopté et aucun FPS ajouté. Le [bilan CPU/GPU/FPS du 8 octobre](history/performance-bilan-2026-10-08.md) distingue les gains livrés des pistes privées.62références/65fichiers publics exacts. Arrêt après le commit à la demande de l'utilisateur ; aucun nouveau lot avant son signal, relance automatique en pause, aucun push. Les repères suivants sont historiques.
 
