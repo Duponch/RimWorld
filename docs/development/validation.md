@@ -1,4 +1,6 @@
-# Validation courante — V270
+# Validation courante — V271
+
+**V271, schéma 206 : [production de médicaments](../gameplay/medicine-production-v271.md#validation).** 107 cas uniques passent dans 20 fichiers, dont 35 nouveaux, par reprises ciblées ; 62 sauvegardes publiques, build/typage et Chromium WebGPU avec synthèse réelle et reprise exacte passent. Rouges et limites conservés dans la note ; aucun gain FPS annoncé, les validations suivantes sont historiques.
 
 **V270, schéma 205 : [fléau des cultures](../gameplay/crop-blight-v270.md#validation).** 127 cas passent dans 22 fichiers, un benchmark ignoré, dont 41 nouveaux cas ; 62 sauvegardes publiques conservées. Simulation, agriculture, incident, lecteurs stricts et présentation, build/typage final et parcours WebGPU matériel avec coupe collective, sauvegarde/rechargement et ressemis passent. Rouges de fixtures et limites conservés dans la note du lot ; aucune campagne ou performance générale déduite. Les validations suivantes sont historiques.
 

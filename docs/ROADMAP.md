@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V271 — production de médicaments ; schéma 206.**
+La [chaîne pharmaceutique](gameplay/medicine-production-v271.md) réutilise les recherches, ateliers, factures, transports, marchands et soins : aucun pipeline parallèle. Recette unitaire ; autres drogues, commerce orbital et détérioration générale restent ouverts. Les états suivants sont historiques.
+
 **Avancement fonctionnel V270 — fléau des cultures ; schéma 205.**
 La [crise agricole](gameplay/crop-blight-v270.md) demande de repérer et couper les plantes contaminées avant leur propagation, en sacrifiant la récolte puis en resemant. Cultures au sol et hydroponiques partagent règles, travail et sauvegarde. La suite reste centrée sur des boucles jouables utiles ; autonomie, contrôles regroupés et push après chaque commit maintenus. Les états suivants sont historiques.
 

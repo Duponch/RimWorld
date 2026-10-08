@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V271, schéma 206 : [production de médicaments](gameplay/medicine-production-v271.md).** Recherche, laboratoire manuel, achat de neutroamine, synthèse physique et médicament clinique existant ; règles et adaptations Core dans la note du lot. Les états suivants sont historiques.
+
 **V270, schéma 205 : [fléau des cultures](gameplay/crop-blight-v270.md).** Incident, propagation entre cultures, croissance et récolte bloquées, dégâts quotidiens, alerte/inspection et coupe physique collective puis ressemis. Les bacs hydroponiques restent vulnérables. Référence Core, adaptations et résultats dans la note du lot ; autonomie et push après chaque commit maintenus. Les états suivants sont historiques.
 
 **V269, schéma 204 : [révoltes et évasions collectives de prisonniers](gameplay/prison-break-v269.md).** Risque individuel adapté du Core, sélection collective locale, portes ouvrables avec attente physique, combat et défense, répression puis soins ou sortie réelle avec possessions. Adoption prospective, inspection et lecteurs communs ; 155 cas uniques, anciennes sauvegardes, build et parcours WebGPU avec reprise passent. Autonomie et push après chaque commit maintenus, aucun FPS annoncé ; les états suivants sont historiques.

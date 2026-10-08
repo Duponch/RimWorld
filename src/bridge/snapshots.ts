@@ -13,6 +13,13 @@ import { validComponentWorkShape } from '../sim/component-work.ts';
 import { isFloorKind } from '../sim/flooring.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validCropBlight } from '../sim/plant-blight-save.ts';
+import { validMedicineResearchTransport } from '../sim/research-save.ts';
+import { productionWorkTotal,validMedicineIngredients } from '../sim/production-recipes.ts';
+import { productionWorkerQualified } from '../sim/machining.ts';
+import { cookingSpot,validBillSettings } from '../sim/cooking-bills.ts';
+import { validCookingOrder } from '../sim/player-cooking-save.ts';
+import { reservedSource } from '../sim/materials.ts';
+import { validatePileRecordShape } from '../sim/material-record-save.ts';
 import { isCropKindInVersion } from '../sim/crops.ts';
 import { validateHydroponics } from '../sim/farming-save.ts';
 import { validFireResourceLosses } from '../sim/fire-save.ts';
@@ -414,6 +421,7 @@ function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width
 function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
   if(!pile||typeof pile!=='object'||Array.isArray(pile)||!Number.isSafeInteger(pile.id)||pile.id<1||pile.id>=world.nextId
     ||typeof pile.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,pile.item))return false;
+  if(pile.item==='neutroamine'&&(world.schemaVersion<206||pile.rot!==undefined))return false;
   const definition=ITEM_DEFINITIONS[pile.item],owner=pile.owner;
   if(pile.kind!==definition.kind||!Number.isSafeInteger(pile.quantity)||pile.quantity<1||pile.quantity>definition.stackLimit
     ||!owner||typeof owner!=='object'||Array.isArray(owner))return false;
@@ -449,6 +457,61 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
     &&validArtWorkShape(record,world.schemaVersion)&&validFlakWorkShape(record,world.schemaVersion)&&validComponentWorkShape(record,world.schemaVersion)
     &&validApparelShape(record,world.schemaVersion)
     &&validWeaponShape(record,world.schemaVersion);
+}
+
+/** Only the new pharmaceutical envelope is added to the historical decoder.
+ * Ingredient quotas and bill settings share the simulation's pure validators. */
+function validMedicineTransport(world:World):boolean {
+  const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
+  const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
+  const cell=(v:unknown)=>record(v)&&Object.keys(v).every(k=>k==='x'||k==='z')&&int(v.x,0,world.width-1)&&int(v.z,0,world.height-1);
+  for(const station of [...world.structures,...world.packed.map(p=>p.building)])for(const bill of station.bills??[]){
+    if(station.kind==='drug-lab'&&bill.recipe!=='make-medicine')return false;
+    if(bill.recipe==='make-medicine'&&(world.schemaVersion<206||station.kind!=='drug-lab'||!int(bill.id,1,world.nextId-1)||!validBillSettings(bill,'make-medicine',world.schemaVersion)))return false;
+  }
+  const taskValid=(value:unknown,pawn:Pawn,queued:boolean):boolean=>{
+    if(!record(value)||value.recipe!=='make-medicine')return true;
+    if(world.schemaVersion<206||Object.keys(value).some(k=>!['recipe','stationId','billId','spot','actionCell','phase','ingredients','progress','workTicks','productId','storageId','storageQuantity'].includes(k))
+      ||!int(value.stationId,1,world.nextId-1)||!int(value.billId,1,world.nextId-1)||!cell(value.spot)||!cell(value.actionCell)
+      ||typeof value.phase!=='string'||!['gather','work','output'].includes(value.phase)||queued&&value.phase!=='gather'
+      ||!int(value.progress,0,productionWorkTotal('make-medicine'))||!Array.isArray(value.ingredients)||value.ingredients.length>5
+      ||value.workTicks!==undefined&&(value.phase!=='work'||!int(value.workTicks,1,Math.floor(Number.MAX_SAFE_INTEGER/1000)))
+      ||value.phase==='work'&&value.workTicks===undefined
+      ||value.storageQuantity!==undefined||!productionWorkerQualified(pawn,'make-medicine'))return false;
+    const station=world.structures.find(s=>s.id===value.stationId&&s.kind==='drug-lab'),bill=station?.bills?.find(b=>b.id===value.billId&&b.recipe==='make-medicine');
+    if(!station||!bill||bill.suspended)return false;
+    const spot=cookingSpot(station);
+    if((value.spot as {x:number;z:number}).x!==spot.x||(value.spot as {x:number;z:number}).z!==spot.z)return false;
+    if(!queued&&(pawn.jobId!==null||pawn.haul!==null||pawn.need!==null||pawn.priorities.craft===0&&pawn.orders.active!=='cook'))return false;
+    if(!queued&&value.phase==='work'&&(pawn.state!=='working'||pawn.x!==spot.x||pawn.z!==spot.z||pawn.path.length))return false;
+    if(value.phase==='output'){
+      const held=world.piles.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
+      return value.ingredients.length===0&&value.progress===0&&int(value.productId,1,world.nextId-1)
+        &&held.length===1&&held[0]!.id===value.productId&&held[0]!.item==='medicine'&&held[0]!.quantity===1
+        &&(value.storageId===null||int(value.storageId,1,world.nextId-1)&&world.stockpiles.some(s=>s.id===value.storageId));
+    }
+    if(value.productId!==null||value.storageId!==null||value.phase==='gather'&&value.progress!==0)return false;
+    for(const part of value.ingredients)if(!record(part)||Object.keys(part).some(k=>!['pileId','item','quantity','stage','cell'].includes(k))
+      ||!int(part.pileId,1,world.nextId-1)||typeof part.item!=='string'||!int(part.quantity,1,3)||!cell(part.cell)
+      ||typeof part.stage!=='string'||!['source','held','placed'].includes(part.stage)||queued&&part.stage==='held')return false;
+    for(const part of value.ingredients){
+      const pile=world.piles.find(p=>p.id===part.pileId);
+      if(!pile||pile.item!==part.item||pile.quantity<part.quantity||!bill.filters[part.item as keyof typeof bill.filters])return false;
+      if(part.stage==='held'){
+        if(pile.owner.type!=='pawn'||pile.owner.pawnId!==pawn.id||pile.quantity!==part.quantity)return false;
+      }else if(pile.owner.type!=='ground'||reservedSource(world,pile.id)>pile.quantity
+        ||part.stage==='placed'&&(pile.owner.x!==part.cell.x||pile.owner.z!==part.cell.z))return false;
+    }
+    if(value.ingredients.filter(part=>part.stage==='held').length>1)return false;
+    if(value.phase==='work'&&value.ingredients.some(part=>part.stage!=='placed'))return false;
+    return validMedicineIngredients('make-medicine',value.ingredients as {item:string;quantity:number}[]);
+  };
+  for(const pawn of world.pawns){
+    if(!taskValid(pawn.cooking,pawn,false))return false;
+    for(const order of pawn.orders.queue)if(typeof order==='object'&&order!==null&&'cooking' in order&&order.cooking.recipe==='make-medicine'
+      &&(!validCookingOrder(order,world)||!taskValid(order.cooking,pawn,true)))return false;
+  }
+  return true;
 }
 
 /** Transport cache only: never mutates the simulation or contributes to a saved game. */
@@ -672,6 +735,8 @@ export class SnapshotDecoder {
     if(message.world.schemaVersion<197&&[...message.world.structures,...message.world.packed.map(p=>p.building)].some(s=>s.bills?.some(b=>V219_ITEM_IDS.some(item=>Object.hasOwn(b.filters??{},item)))))return resync('Filtre de facture mécanique futur.');
     if(!Array.isArray(message.world.stockpiles)||message.world.stockpiles.some(zone=>!validStorageConditions(zone,message.world.schemaVersion)))return resync('Plages de qualité ou de PV de réserve invalides pour ce snapshot.');
     for(const zone of message.world.stockpiles){
+      if(Object.hasOwn(zone.filters??{},'neutroamine')&&(message.world.schemaVersion<206||typeof zone.filters.neutroamine!=='boolean')
+        ||Object.hasOwn(zone.items??{},'neutroamine')&&(message.world.schemaVersion<206||typeof zone.items!.neutroamine!=='boolean'))return resync('Filtre de neutroamine invalide ou futur.');
       if(message.world.schemaVersion<194&&(Object.hasOwn(zone.filters??{},'mech-corpse')||Object.hasOwn(zone.items??{},'scyther-corpse')))return resync('Filtre mécanique futur.');
       if(message.world.schemaVersion<197&&(Object.hasOwn(zone.items??{},'lancer-corpse')||Object.hasOwn(zone.items??{},'pikeman-corpse')))return resync('Filtre mécanique futur.');
     }
@@ -865,6 +930,10 @@ export class SnapshotDecoder {
     if(validateMental(next,next.schemaVersion).length||next.schemaVersion>=192&&validateMelee(next).length)return resync('Cible de crise mentale ou autorité de mêlée incohérente.');
     if(!validMechSalvageLedger(next,next.schemaVersion)||validateMechanoidRaids(next,next.schemaVersion).length)return resync('Récupération ou mandat mécanique invalide.');
     const mechanicalCorpseIds=new Set<number>();
+    if(!validMedicineResearchTransport(next,next.schemaVersion))return resync('Recherche ou laboratoire pharmaceutique invalide.');
+    if(!validMedicineTransport(next))return resync('Production pharmaceutique invalide.');
+    if(next.schemaVersion<206&&[next.trade?.bought,next.trade?.sold,next.fires?.ledger?.items,next.destroyed?.items].some(items=>items&&Object.hasOwn(items,'neutroamine'))
+      ||next.schemaVersion<206&&Array.isArray(next.trade?.recent)&&next.trade.recent.some(receipt=>receipt&&Array.isArray(receipt.lines)&&receipt.lines.some(line=>line&&typeof line==='object'&&'item' in line&&line.item==='neutroamine')))return resync('Historique de neutroamine futur.');
     for(const pile of next.piles)if(pile.kind==='mech-corpse'||Object.hasOwn(pile,'mechCorpse')){if(mechanicalCorpseIds.has(pile.id)||!validPile(pile,next))return resync('Carcasse mécanique invalide.');mechanicalCorpseIds.add(pile.id);}
     if(validateMiniTurrets(next).length)return resync('Propriétaire ou cible de mini-tourelle invalide.');
     if(validateCommercialRegistry(next,next.schemaVersion).length)return resync('Registre commercial invalide.');
@@ -911,6 +980,8 @@ export class SnapshotDecoder {
       if(departure.items.some(p=>!validMechCorpseShape(p,next.schemaVersion,departure.tick)||next.schemaVersion<194&&Object.hasOwn(p,'mechCorpse')))return resync('Dossier mécanique de départ historique invalide.');
     for(const records of [next.visitors?.departed??[],next.podRescues?.departed??[]])
       for(const departure of records){
+        if(departure.items.some(p=>(p.item==='neutroamine'||p.kind==='neutroamine')&&validatePileRecordShape(p as unknown as Record<string,unknown>,next,next.schemaVersion,departure.tick).length))return resync('Neutroamine archivée invalide.');
+        if(next.schemaVersion<206&&(departure.packed??[]).some(p=>p.building.kind==='drug-lab'||p.building.bills?.some(b=>b.recipe==='make-medicine')))return resync('Laboratoire pharmaceutique archivé futur.');
         if(isMechanoidKind(departure.pawn.health?.body)||departure.items.some(p=>!validMechCorpseShape(p,next.schemaVersion,departure.tick)||next.schemaVersion<194&&Object.hasOwn(p,'mechCorpse')))return resync('Dossier mécanique archivé invalide.');
         if(!validMiningTransport(departure.pawn,next.schemaVersion))return resync('Profil de minage archivé invalide.');
         if(!validArchivedMeleeThreat(departure.pawn,next,departure.tick))return resync('Menace de mêlée archivée invalide.');

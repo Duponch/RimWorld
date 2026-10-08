@@ -17,8 +17,8 @@ const BREAKDOWN_RECIPE:ConstructionRecipe=Object.freeze({ingredients:Object.free
 type ConstructionObject={kind:JobKind;material?:ConstructionMaterial;floor?:FloorKind};
 // Core base work before the stuff factor, in Core ticks. Absence of material
 // deliberately keeps the V1–V29 historical recipe on existing objects.
-const costs:Record<StructureKind,number>={'hydroponics-basin':100,'mini-turret':100,'tube-television':80,sandbags:5,fence:1,'fence-gate':25,'pen-marker':30,'art-bench':75,'small-sculpture':50,'large-sculpture':100,'machining-table':150,'fabrication-bench':200,'hi-tech-research-bench':250,'multi-analyzer':40,grave:0,heater:50,'wind-turbine':100,'power-conduit':1,'power-switch':15,battery:70,'solar-generator':100,'fueled-stove':80,'electric-stove':80,'butcher-table':95,'butcher-spot':0,cooler:90,'research-bench':75,'tailor-bench':75,'electric-tailor-bench':75,'crafting-spot':0,'wood-generator':100,'standing-lamp':20,'sun-lamp':40,'passive-cooler':50,door:25,autodoor:25,stonecutter:75,wall:5,bed:45,'hospital-bed':40,table:28,'table-square':50,'table-long':95,stool:25,'dining-chair':45,armchair:110,'end-table':30,dresser:50,'flower-pot':20,campfire:20,horseshoes:10,'chess-table':70};
-const work:Record<StructureKind,number>={'hydroponics-basin':2800,'mini-turret':1800,'tube-television':10000,sandbags:180,fence:70,'fence-gate':500,'pen-marker':600,'art-bench':2500,'small-sculpture':0,'large-sculpture':0,'machining-table':3000,'fabrication-bench':5000,'hi-tech-research-bench':5000,'multi-analyzer':10000,grave:800,heater:1000,'wind-turbine':3300,'power-conduit':35,'power-switch':200,battery:800,'solar-generator':2500,'fueled-stove':2000,'electric-stove':2000,'butcher-table':2000,'butcher-spot':0,cooler:1600,'research-bench':2800,'tailor-bench':2000,'electric-tailor-bench':2500,'crafting-spot':0,'wood-generator':2500,'standing-lamp':300,'sun-lamp':330,'passive-cooler':200,door:850,autodoor:1100,stonecutter:2000,wall:135,bed:800,'hospital-bed':2800,table:750,'table-square':1500,'table-long':3000,stool:450,'dining-chair':8000,armchair:14000,'end-table':1000,dresser:2000,'flower-pot':250,campfire:200,horseshoes:100,'chess-table':8000};
+const costs:Record<StructureKind,number>={'drug-lab':50,'hydroponics-basin':100,'mini-turret':100,'tube-television':80,sandbags:5,fence:1,'fence-gate':25,'pen-marker':30,'art-bench':75,'small-sculpture':50,'large-sculpture':100,'machining-table':150,'fabrication-bench':200,'hi-tech-research-bench':250,'multi-analyzer':40,grave:0,heater:50,'wind-turbine':100,'power-conduit':1,'power-switch':15,battery:70,'solar-generator':100,'fueled-stove':80,'electric-stove':80,'butcher-table':95,'butcher-spot':0,cooler:90,'research-bench':75,'tailor-bench':75,'electric-tailor-bench':75,'crafting-spot':0,'wood-generator':100,'standing-lamp':20,'sun-lamp':40,'passive-cooler':50,door:25,autodoor:25,stonecutter:75,wall:5,bed:45,'hospital-bed':40,table:28,'table-square':50,'table-long':95,stool:25,'dining-chair':45,armchair:110,'end-table':30,dresser:50,'flower-pot':20,campfire:20,horseshoes:10,'chess-table':70};
+const work:Record<StructureKind,number>={'drug-lab':3500,'hydroponics-basin':2800,'mini-turret':1800,'tube-television':10000,sandbags:180,fence:70,'fence-gate':500,'pen-marker':600,'art-bench':2500,'small-sculpture':0,'large-sculpture':0,'machining-table':3000,'fabrication-bench':5000,'hi-tech-research-bench':5000,'multi-analyzer':10000,grave:800,heater:1000,'wind-turbine':3300,'power-conduit':35,'power-switch':200,battery:800,'solar-generator':2500,'fueled-stove':2000,'electric-stove':2000,'butcher-table':2000,'butcher-spot':0,cooler:1600,'research-bench':2800,'tailor-bench':2000,'electric-tailor-bench':2500,'crafting-spot':0,'wood-generator':2500,'standing-lamp':300,'sun-lamp':330,'passive-cooler':200,door:850,autodoor:1100,stonecutter:2000,wall:135,bed:800,'hospital-bed':2800,table:750,'table-square':1500,'table-long':3000,stool:450,'dining-chair':8000,armchair:14000,'end-table':1000,dresser:2000,'flower-pot':250,campfire:200,horseshoes:100,'chess-table':8000};
 const recipes=new Map<string,ConstructionRecipe>();
 // Physical ingredient provenance for salvage and damage. A sculpture has no
 // construction job: designation and save validation reject those jobs.
@@ -39,6 +39,15 @@ for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
   if(kind==='lay-floor'||kind==='remove-floor')continue;
   // Sculptures are finished furniture delivered by an art bill, never plans.
   if(kind==='small-sculpture'||kind==='large-sculpture')continue;
+  if(kind==='drug-lab'){
+    for(const material of ['wood','steel'] as const){
+      const stats=BUILDING_MATERIALS[material],coreWork=Math.round(work[kind]*stats.workFactor+stats.workOffset);
+      const ingredients:ConstructionCost[]=material==='steel'?[{item:'steel',quantity:125},{item:'component',quantity:6}]
+        :[{item:material,quantity:50},{item:'steel',quantity:75},{item:'component',quantity:6}];
+      recipes.set(`${kind}:${material}`,Object.freeze({ingredients:Object.freeze(ingredients.map(c=>Object.freeze(c))),work:Math.ceil(coreWork/10),coreWork}));
+    }
+    continue;
+  }
   if(kind==='art-bench'){
     for(const material of ['wood','steel'] as const){
       const amounts=new Map<ConstructionMaterial,number>([[material,75],['steel',50]]);
@@ -100,6 +109,7 @@ export function validConstructionMaterial(kind:unknown,material:unknown,version:
   if(kind==='chess-table')return version>=122&&typeof material==='string'&&(CONSTRUCTION_MATERIALS as readonly string[]).includes(material)&&recipes.has(`${kind}:${material}`);
   if(kind==='autodoor')return version>=143&&typeof material==='string'&&recipes.has(`${kind}:${material}`);
   if(kind==='fence'||kind==='fence-gate'||kind==='pen-marker')return version>=119&&typeof material==='string'&&recipes.has(`${kind}:${material}`);
+  if(kind==='drug-lab')return version>=206&&(material==='wood'||material==='steel');
   if(kind==='art-bench')return version>=104&&(material==='wood'||material==='steel');
   if(kind==='small-sculpture'||kind==='large-sculpture')return version>=104&&isSculptureMaterial(material);
   if(kind==='fabrication-bench'||kind==='hi-tech-research-bench'||kind==='multi-analyzer')return version>=123&&material==='steel';
@@ -117,7 +127,7 @@ export function validConstructionMaterial(kind:unknown,material:unknown,version:
   return material===undefined||typeof kind==='string'&&typeof material==='string'&&(CONSTRUCTION_MATERIALS as readonly string[]).includes(material)&&(version>=33||!isBlockMaterial(material))&&recipes.has(`${kind}:${material}`);
 }
 export const constructionMaterials=(kind:string):readonly ConstructionMaterial[]=>CONSTRUCTION_MATERIALS.filter(material=>validConstructionMaterial(kind,material));
-export const constructionSkillRequired=(kind:unknown):number=>kind==='mini-turret'?5:kind==='tube-television'?7:kind==='autodoor'?6:kind==='cooler'?5:kind==='electric-stove'||kind==='electric-tailor-bench'||kind==='machining-table'?4:kind==='fabrication-bench'||kind==='hi-tech-research-bench'?6:kind==='multi-analyzer'?8:isHabitatFurnitureKind(kind)?FURNITURE_DEFINITIONS[kind].constructionSkill:powerConstructionSkill(kind as JobKind);
+export const constructionSkillRequired=(kind:unknown):number=>kind==='drug-lab'?4:kind==='mini-turret'?5:kind==='tube-television'?7:kind==='autodoor'?6:kind==='cooler'?5:kind==='electric-stove'||kind==='electric-tailor-bench'||kind==='machining-table'?4:kind==='fabrication-bench'||kind==='hi-tech-research-bench'?6:kind==='multi-analyzer'?8:isHabitatFurnitureKind(kind)?FURNITURE_DEFINITIONS[kind].constructionSkill:powerConstructionSkill(kind as JobKind);
 export function constructionRecipe(entity:ConstructionObject):ConstructionRecipe {
   if(entity.kind==='fix-breakdown')return BREAKDOWN_RECIPE;
   if(entity.kind==='lay-floor'||entity.kind==='remove-floor')return flooringRecipe(entity.floor,entity.kind==='remove-floor');

@@ -1,6 +1,6 @@
 import { workPriority } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
-import { productionStationUsable } from './production-recipes.ts';
+import { validMedicineIngredients,productionStationUsable } from './production-recipes.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel, isButcherStation } from './food-workstations.ts';
@@ -28,6 +28,8 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   const refusal=backgroundWorkRefusal(pawn,stationWork(station));if(refusal)return no(refusal);
   if(!workPriority(pawn,stationWork(station)))return no('Métier désactivé dans le tableau Travail.');
   if(!station.bills?.some(b=>billWanted(world,b)))return no('Aucune facture active à produire : vérifiez suspension et quantité demandée.');
+  if(station.kind==='drug-lab'&&!productionResearchUnlocked(world,'make-medicine'))return no('La recherche Production de médicaments est nécessaire.');
+  if(station.kind==='drug-lab'&&!productionWorkerQualified(pawn,'make-medicine'))return no('Artisanat 4 et Intellectuel 4 nécessaires.');
   if(fuelStationReserved(world,station.id))return no('Poste réservé pour une cuisine ou un ravitaillement.');
   if(station.kind==='electric-stove'&&!foodStationUsable(station))return no('La cuisinière n’est pas alimentée :350 W nécessaires.');
   if(!productionStationUsable(station))return no(station.kind==='fabrication-bench'?'Établi de fabrication sans courant : 250 W nécessaires.':'Atelier d’usinage sans courant : 350 W nécessaires.');
@@ -37,6 +39,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(!routeToCell(world,spot,reach))return no('Aucun accès à la place de cuisine.');
   const plan=planCooking(world,pawn,reach,budget,{stationId,forced});
   if(!plan)return no(!usesCookingFuel(station.kind)||station.fuel?.ticks?'Aucune recette réalisable : ingrédients autorisés dans le rayon, accès ou dépôt insuffisants.':'Aucun bois disponible et accessible pour rallumer le feu.');
+  if(station.kind==='drug-lab')return {label:'Fabriquer un médicament',order:{cooking:plan.task!},path:plan.path};
   return {label:plan.refuel?'Ravitailler avant de cuisiner':isButcherStation(station.kind)?'Dépecer une créature':station.kind==='tailor-bench'?'Confectionner un vêtement':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='art-bench'?'Sculpter une œuvre':station.kind==='fabrication-bench'?(plan.task?.recipe==='make-recon-helmet'?'Fabriquer un casque de reconnaissance':'Fabriquer un composant'):station.kind==='machining-table'?(plan.task?.recipe==='make-flak-helmet'?'Fabriquer un casque pare-balles':plan.task&&isFlakRecipe(plan.task.recipe)?'Fabriquer un gilet pare-balles':'Fabriquer une arme'):station.kind==='stonecutter'?'Tailler des blocs de pierre':plan.task?.recipe==='cook-survival-meal'?'Cuisiner un repas de survie emballé':plan.task?.recipe==='cook-simple-meal-bulk'?'Cuisiner quatre repas simples':plan.task?.recipe==='fine-meal'?'Cuisiner un plat raffiné':plan.task?.recipe==='cook-fine-meal-bulk'?'Cuisiner quatre plats raffinés':plan.task?.recipe==='vegetarian-fine-meal'?'Cuisiner un plat raffiné végétarien':plan.task?.recipe==='cook-vegetarian-fine-meal-bulk'?'Cuisiner quatre plats raffinés végétariens':plan.task?.recipe==='carnivore-fine-meal'?'Cuisiner un plat raffiné carnivore':plan.task?.recipe==='cook-carnivore-fine-meal-bulk'?'Cuisiner quatre plats raffinés carnivores':plan.task?.recipe==='lavish-meal'?'Cuisiner un plat gastronomique':plan.task?.recipe==='cook-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques':plan.task?.recipe==='vegetarian-lavish-meal'?'Cuisiner un plat gastronomique végétarien':plan.task?.recipe==='cook-vegetarian-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques végétariens':plan.task?.recipe==='cook-carnivore-lavish-meal'?'Cuisiner un plat gastronomique carnivore':plan.task?.recipe==='cook-carnivore-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques carnivores':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
 }
 
@@ -50,7 +53,9 @@ export function queuedCookingReason(world:World,order:CookingOrder):string|undef
   if(spot.x!==c.spot.x||spot.z!==c.spot.z||!cookingPlaceFree(view,spot)||fuelStationReserved(view,station.id)||reservedServiceCells(view).has(cellIndex(view,spot.x,spot.z)))return 'Poste ou place de cuisine indisponible.';
   const incoming=new Map<number,{item:ProductionIngredient;quantity:number}>(),sources=new Map<number,number>();
   const author=world.pawns.find(p=>p.orders.queue.includes(order));
+  if(author&&bill.recipe==='make-medicine'&&!productionWorkerQualified(author,bill.recipe))return 'Artisanat 4 et Intellectuel 4 nécessaires.';
   if(author&&!productionWorkerQualified(author,bill.recipe))return bill.recipe==='fine-meal'||bill.recipe==='cook-fine-meal-bulk'||bill.recipe==='vegetarian-fine-meal'||bill.recipe==='cook-vegetarian-fine-meal-bulk'||bill.recipe==='carnivore-fine-meal'||bill.recipe==='cook-carnivore-fine-meal-bulk'?'Cuisine 6 nécessaire.':bill.recipe==='cook-survival-meal'||bill.recipe==='lavish-meal'||bill.recipe==='cook-lavish-meal-bulk'||bill.recipe==='vegetarian-lavish-meal'||bill.recipe==='cook-vegetarian-lavish-meal-bulk'||bill.recipe==='cook-carnivore-lavish-meal'||bill.recipe==='cook-carnivore-lavish-meal-bulk'?'Cuisine 8 nécessaire.':'Compétence Artisanat insuffisante.';
+  if(!validMedicineIngredients(bill.recipe,c.ingredients))return 'Le médicament exige une plante médicinale, une neutroamine et trois tissus.';
   if(bill.recipe==='cook-survival-meal'&&!validSurvivalMealIngredients(c.ingredients))return 'Le repas de survie exige six protéines (viande ou lait) et six végétaux.';
   if(bill.recipe==='fine-meal'&&!validFineMealIngredients(c.ingredients))return 'Le plat raffiné exige cinq protéines (viande ou lait) et cinq végétaux.';
   if(bill.recipe==='cook-fine-meal-bulk'&&!validFineMealBulkIngredients(c.ingredients))return 'Les quatre plats raffinés exigent vingt protéines (viande ou lait) et vingt végétaux.';

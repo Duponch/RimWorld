@@ -10,7 +10,7 @@ import {computeThreatPoints} from '../src/sim/threat-points.ts';
 import {TICKS_PER_DAY,type Resource,type Structure,type World} from '../src/sim/types.ts';
 
 function camp():World {
-  const w=createWorld(270,32,32);w.schemaVersion=205;
+  const w=createWorld(270,32,32);w.schemaVersion=205 as World['schemaVersion'];
   w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.structures=[];w.jobs=[];w.piles=[];w.packed=[];w.growingZones=[];w.stockpiles=[];w.events=[];
   w.gameProfile=crashlandedProfile();w.tick=MISC_FIRST_CHECK;adoptMiscIncidents(w);adoptCropBlights(w);
   return w;
@@ -31,7 +31,7 @@ test('adoption is prospective, idempotent, and absent for historical schema/prof
   const w=camp(),before=structuredClone(w);adoptCropBlights(w);expect(w).toEqual(before);
   expect(w.miscIncidents!.cropBlights).toEqual({adoptedAt:w.tick,count:0});
   delete w.miscIncidents!.cropBlights;w.schemaVersion=204 as World['schemaVersion'];adoptCropBlights(w);expect(w.miscIncidents!.cropBlights).toBeUndefined();
-  w.schemaVersion=205;delete w.gameProfile;adoptCropBlights(w);expect(w.miscIncidents!.cropBlights).toBeUndefined();
+  w.schemaVersion=205 as World['schemaVersion'];delete w.gameProfile;adoptCropBlights(w);expect(w.miscIncidents!.cropBlights).toBeUndefined();
   w.gameProfile=crashlandedProfile();delete w.miscIncidents;adoptCropBlights(w);expect(w.miscIncidents).toBeUndefined();
 });
 

@@ -1,9 +1,9 @@
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { storageConditionAccepts,type StorageConditions } from './storage-condition.ts';
-import type { MaterialPile,StockpileCell } from './types.ts';
+import { SCHEMA_VERSION,type MaterialPile,type StockpileCell } from './types.ts';
 
-export function validStorageItems(items:unknown):boolean {
-  return items===undefined||!!items&&typeof items==='object'&&!Array.isArray(items)&&Object.entries(items).every(([key,value])=>Object.hasOwn(ITEM_DEFINITIONS,key)&&typeof value==='boolean');
+export function validStorageItems(items:unknown,version:number=SCHEMA_VERSION):boolean {
+  return items===undefined||!!items&&typeof items==='object'&&!Array.isArray(items)&&Object.entries(items).every(([key,value])=>Object.hasOwn(ITEM_DEFINITIONS,key)&&(version>=206||key!=='neutroamine')&&typeof value==='boolean');
 }
 
 /** A missing item list is the historical category-only rule. Once present,

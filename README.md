@@ -1,5 +1,8 @@
 # Lisière
 
+**V271 — production de médicaments ; schéma 206.**
+Deux recherches ouvrent un laboratoire manuel, puis la fabrication à partir de plantes médicinales, neutroamine achetée et tissu. Collecte, travail et dépôt physiques alimentent les soins existants. [Règles et validation](docs/gameplay/medicine-production-v271.md).
+
 **V270 — fléau des cultures ; schéma 205.**
 Le [fléau agricole](docs/gameplay/crop-blight-v270.md) relie incident, contamination de proximité, croissance bloquée, dégâts et coupe sans récolte. Alerte et plants brunis permettent de repérer les foyers ; la commande collective crée du travail physique, puis les zones libérées sont ressemées. Hydroponie concernée, sauvegarde prospective et lecteurs communs. Autonomie et push après chaque commit maintenus ; les états suivants sont historiques.
 

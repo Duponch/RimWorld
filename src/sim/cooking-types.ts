@@ -23,7 +23,7 @@ export interface CookingIngredient {
 }
 /** Historical serialized envelope shared by meal and material production. */
 export interface CookingTask {
-  recipe?:'smash-mechanoid'|'shred-mechanoid'|'cook-survival-meal'|'small-sculpture'|'large-sculpture'|'make-revolver'|'make-bolt-action-rifle'|'make-flak-vest'|'make-flak-helmet'|'make-recon-helmet'|'make-component'|'make-advanced-component'|'stone-blocks'|'tribalwear'|'shirt'|'pants'|'duster'|'parka'|'butcher-creature'|'fine-meal'|'cook-fine-meal-bulk'|'vegetarian-fine-meal'|'cook-vegetarian-fine-meal-bulk'|'carnivore-fine-meal'|'cook-carnivore-fine-meal-bulk'|'lavish-meal'|'cook-lavish-meal-bulk'|'vegetarian-lavish-meal'|'cook-vegetarian-lavish-meal-bulk'|'cook-carnivore-lavish-meal'|'cook-carnivore-lavish-meal-bulk'|'cook-simple-meal-bulk';
+  recipe?:'make-medicine'|'smash-mechanoid'|'shred-mechanoid'|'cook-survival-meal'|'small-sculpture'|'large-sculpture'|'make-revolver'|'make-bolt-action-rifle'|'make-flak-vest'|'make-flak-helmet'|'make-recon-helmet'|'make-component'|'make-advanced-component'|'stone-blocks'|'tribalwear'|'shirt'|'pants'|'duster'|'parka'|'butcher-creature'|'fine-meal'|'cook-fine-meal-bulk'|'vegetarian-fine-meal'|'cook-vegetarian-fine-meal-bulk'|'carnivore-fine-meal'|'cook-carnivore-fine-meal-bulk'|'lavish-meal'|'cook-lavish-meal-bulk'|'vegetarian-lavish-meal'|'cook-vegetarian-lavish-meal-bulk'|'cook-carnivore-lavish-meal'|'cook-carnivore-lavish-meal-bulk'|'cook-simple-meal-bulk';
   stationId:number;
   billId:number;
   spot:Cell;
@@ -32,7 +32,7 @@ export interface CookingTask {
   ingredients:CookingIngredient[];
   /** V36: integer neutral work units (10 000 per local work tick). */
   progress:number;
-  /** V79: actual local work ticks, for completion-time Cooking learning. */
+  /** V79: actual local work ticks; V206 medicine learns Intellectual at completion. */
   workTicks?:number;
   productId:number|null;
   storageId:number|null;

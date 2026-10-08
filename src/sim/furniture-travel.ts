@@ -20,6 +20,7 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
   'mini-turret':{delay:5,stand:false,repeat:true},
   'tube-television':{delay:4.2,stand:false,repeat:true},
   sandbags:{delay:4.2,stand:false,repeat:true},
+  'drug-lab':{delay:5,stand:false,repeat:true},
   'art-bench':{delay:5,stand:false,repeat:true},
   'fabrication-bench':{delay:5,stand:false,repeat:true},
   'hi-tech-research-bench':{delay:5,stand:false,repeat:true},

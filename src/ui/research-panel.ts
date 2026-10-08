@@ -1,4 +1,4 @@
-import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, HYDROPONICS_RESEARCH_COST, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
+import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, DRUG_PRODUCTION_RESEARCH_COST, MEDICINE_PRODUCTION_RESEARCH_COST, HYDROPONICS_RESEARCH_COST, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
 import type { Command, World } from '../sim/types';
 import './world-panels.css';
 import './management-reference-v199.css';
@@ -6,6 +6,8 @@ import {setTooltip} from './tooltip';
 
 type ProjectNode = { id: ResearchProject; prefix: string; title: string; cost: number; detail: string; progress: (w: World) => ResearchProgress | undefined; x: number; y: number };
 export const researchProjects: readonly ProjectNode[] = [
+  {id:'drug-production',prefix:'drug-production',title:'Production de drogues',cost:DRUG_PRODUCTION_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque le laboratoire de chimie manuel : 50 bois ou acier, 75 acier et 6 composants ; Construction 4. Aucune alimentation électrique requise.',progress:w=>w.research?.drugProduction,x:24,y:700},
+  {id:'medicine-production',prefix:'medicine-production',title:'Production de médicaments',cost:MEDICINE_PRODUCTION_RESEARCH_COST/RESEARCH_SCALE,detail:'1 plante médicinale + 1 neutroamine achetée + 3 tissus → 1 médicament industriel. Artisanat 4 et Intellectuel 4 ; travail Artisanat, apprentissage Intellectuel à la fin. Recherche au bureau avancé alimenté.',progress:w=>w.research?.medicineProduction,x:224,y:700},
   {id:'hydroponics',prefix:'hydroponics',title:'Hydroponie',cost:HYDROPONICS_RESEARCH_COST/RESEARCH_SCALE,detail:'Bac 1 × 4 : 100 acier + 1 composant, Construction 4, 70 W continus. Fertilité 280 % sur terrain porteur ; lumière et température restent nécessaires. Sans courant, nouveaux semis suspendus et plantes endommagées progressivement. Maïs exclu.',progress:w=>w.research?.hydroponics,x:24,y:566},
   {id:'gun-turrets',prefix:'gun-turrets',title:'Tourelles automatiques',cost:500,detail:'Mini-tourelle acier : 100 acier + 3 composants, Construction 5, 80 W. Canon 60 coups, réarmement physique en acier. Adaptation locale : Armurerie est le préalable ; le projet Core Blowback et ses armes sont différés.',progress:w=>w.research?.gunTurrets,x:824,y:298},
   {id:'complex-furniture',prefix:'furniture',title:'Mobilier complexe',cost:300,detail:'Débloque chaise, fauteuil, table de chevet et commode.',progress:w=>w.research?.complexFurniture,x:24,y:20},
@@ -30,6 +32,7 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'hospital-bed',prefix:'hospital-bed',title:'Lit d’hôpital',cost:HOSPITAL_BED_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque un lit spécialisé : 120 acier + 5 composants, Construction 8. Améliore les soins, l’immunité, la guérison et la chirurgie pendant son utilisation réelle. Recherche au bureau avancé alimenté. Adaptation locale : le préalable Core Matériaux stériles et ses sols sont différés.',progress:w=>w.research?.hospitalBed,x:424,y:566},
 ];
 export const researchLinks: readonly (readonly [ResearchProject, ResearchProject])[] = [
+  ['drug-production','medicine-production'],['microelectronics','medicine-production'],
   ['gunsmithing','gun-turrets'],
   ['complex-furniture','tube-television'],
   ['smithing','machining'],['machining','gunsmithing'],
@@ -42,9 +45,10 @@ export const researchLinks: readonly (readonly [ResearchProject, ResearchProject
   ['microelectronics','hospital-bed'],['complex-furniture','hospital-bed'],
 ];
 const projectById=new Map(researchProjects.map(project=>[project.id,project]));
-const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=430;
+const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=550;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['drug-production',[]],['medicine-production',['Production de drogues','Microélectronique']],
   ['hydroponics',['Électricité (acquise au départ)']],
   ['gun-turrets',['Armurerie']],
   ['tube-television',['Mobilier complexe','Électricité (acquise au départ)']],
@@ -54,7 +58,7 @@ const prerequisites=new Map<ResearchProject,string[]>([
 ]);
 function stationIssue(world:World,project:ResearchProject):string|undefined {
   if(world.structures.some(s=>researchStationUsable(world,s,project)))return undefined;
-  if(project==='hospital-bed')return 'Bureau de recherche avancé alimenté requis';
+  if(project==='hospital-bed'||project==='medicine-production')return 'Bureau de recherche avancé alimenté requis';
   if(project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor')return project==='multi-analyzer'?'Bureau de recherche avancé alimenté requis':'Bureau avancé et multi-analyseur alimentés à proximité requis';
   return 'Bureau de recherche disponible requis';
 }

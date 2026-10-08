@@ -47,6 +47,7 @@ const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.free
   'mini-turret': def(0, 1800, 'pass-through', {steel:100,component:3}),
   'tube-television': def(0, 10000, 'pass-through', {steel:80,component:4}),
   sandbags: def(5, 180, 'pass-through'),
+  'drug-lab': def(50, 3500, 'pass-through', {steel:75,component:6}),
   'art-bench': def(75, 2500, 'pass-through', {steel:50}),
   'small-sculpture': def(50, 18000, 'pass-through', {}, true),
   'large-sculpture': def(100, 30000, 'pass-through', {}, true),

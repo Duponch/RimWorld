@@ -25,7 +25,7 @@ export class WorkEnvironment extends LightEnvironment {
   production(station:Structure,worker:Cell):ProductionFactors {
     const room=this.room(station),light=this.lightAt(worker),lighting=lightWorkFactor(light);
     const outdoors=room?.psychologicallyOutdoors ? .8 : 1;
-    const requiredRole=isStove(station.kind)?'kitchen':station.kind==='machining-table'||station.kind==='fabrication-bench'||station.kind==='art-bench'||station.kind==='stonecutter'||station.kind==='tailor-bench'||station.kind==='electric-tailor-bench'?'workshop':undefined;
+    const requiredRole=station.kind==='drug-lab'?'laboratory':isStove(station.kind)?'kitchen':station.kind==='machining-table'||station.kind==='fabrication-bench'||station.kind==='art-bench'||station.kind==='stonecutter'||station.kind==='tailor-bench'||station.kind==='electric-tailor-bench'?'workshop':undefined;
     const roomRole=requiredRole&&room&&!room.psychologicallyOutdoors&&room.role!==requiredRole ? .8 : 1;
     const base=station.kind==='campfire'||station.kind==='crafting-spot'||station.kind==='tailor-bench'||station.kind==='electric-tailor-bench'&&!station.power?.on ? .5 : 1;
     return {light,lighting,outdoors,roomRole,station:base,total:lighting*outdoors*roomRole*base};
@@ -44,10 +44,10 @@ export class WorkEnvironmentCache {
     const covered=new Map<number,number>(),scores=new Map<number,{beds:number;laboratory:number;workshop:number;kitchen:number;dining:number;recreation:number}>();
     for(const index of roofs){const room=topology.at(index%world.width,Math.floor(index/world.width));if(room?.kind==='space')covered.set(room.id,(covered.get(room.id)??0)+1);}
     for(const s of world.structures) {
-      if(!['machining-table','fabrication-bench','art-bench','research-bench','hi-tech-research-bench','multi-analyzer','tailor-bench','electric-tailor-bench','bed','hospital-bed','stonecutter','table','table-square','table-long','horseshoes','chess-table','tube-television','fueled-stove','electric-stove'].includes(s.kind))continue;
+      if(!['drug-lab','machining-table','fabrication-bench','art-bench','research-bench','hi-tech-research-bench','multi-analyzer','tailor-bench','electric-tailor-bench','bed','hospital-bed','stonecutter','table','table-square','table-long','horseshoes','chess-table','tube-television','fueled-stove','electric-stove'].includes(s.kind))continue;
       const ids=new Set<number>();for(const cell of footprintCells(s)){const r=topology.at(cell.x,cell.z);if(r?.kind==='space')ids.add(r.id);}
       for(const id of ids){let v=scores.get(id);if(!v){v={beds:0,laboratory:0,workshop:0,kitchen:0,dining:0,recreation:0};scores.set(id,v);}
-        if(isBedKind(s.kind))v.beds++;else if(s.kind==='research-bench'||s.kind==='hi-tech-research-bench'||s.kind==='multi-analyzer')v.laboratory+=54;else if(s.kind==='machining-table'||s.kind==='fabrication-bench'||s.kind==='art-bench'||s.kind==='stonecutter'||s.kind==='tailor-bench'||s.kind==='electric-tailor-bench')v.workshop+=27;else if(isStove(s.kind))v.kitchen+=28;else if(s.kind==='table'||s.kind==='table-square'||s.kind==='table-long')v.dining+=12;else v.recreation+=7;}
+        if(isBedKind(s.kind))v.beds++;else if(s.kind==='drug-lab'||s.kind==='research-bench'||s.kind==='hi-tech-research-bench'||s.kind==='multi-analyzer')v.laboratory+=54;else if(s.kind==='machining-table'||s.kind==='fabrication-bench'||s.kind==='art-bench'||s.kind==='stonecutter'||s.kind==='tailor-bench'||s.kind==='electric-tailor-bench')v.workshop+=27;else if(isStove(s.kind))v.kitchen+=28;else if(s.kind==='table'||s.kind==='table-square'||s.kind==='table-long')v.dining+=12;else v.recreation+=7;}
     }
     const rooms=new Map<number,WorkRoom>();
     for(const space of topology.allSpaces()) {

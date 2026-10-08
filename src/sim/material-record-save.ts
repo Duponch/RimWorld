@@ -28,6 +28,7 @@ if(!validFoodContamination(item.foodPoison,item.item as keyof typeof ITEM_DEFINI
 if(item.item==='human-corpse'?!validHumanCorpseShape(item.humanCorpse,version,input.tick as number):item.humanCorpse!==undefined)errors.push('Invalid human corpse metadata.');
 if(item.item!=='human-corpse'&&!validCorpseShape(item,version))errors.push('Invalid corpse metadata for schema.');
 if(!validArtWorkShape(item,version))errors.push('Invalid or future art work.');
+if(version<206&&(item.item==='neutroamine'||item.kind==='neutroamine'))errors.push('Future neutroamine in older save.');
 if(version<109&&(item.item==='unfinished-flak-vest'||item.flakWork!==undefined))errors.push('Future flak work in older save.');
 if(version<141&&(item.item==='flak-helmet'||item.item==='unfinished-flak-helmet'))errors.push('Future flak helmet in older save.');
 if(version<148&&(item.item==='recon-helmet'||item.item==='unfinished-recon-helmet'))errors.push('Future recon helmet in older save.');
@@ -46,7 +47,7 @@ if(version<79&&['hare-corpse','hare-meat','light-leather'].includes(String(item.
 if(!validUnfinishedShape(item,version)||!validGunWorkShape(item,version)||!validFlakWorkShape(item,version)||!validComponentWorkShape(item,version))errors.push('Invalid unfinished item.');
 if(!validApparelShape(item,version))errors.push('Invalid apparel state for schema.');
 if(!validWeaponShape(item,version))errors.push('Invalid weapon state for schema.');
-if (!oneOf(item.kind, ['wood', 'food', ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]),...(version>=123?['gold','plasteel','advanced-component']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=194?['mech-corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=120&&item.item==='muffalo-wool'?100:version>=88&&item.item==='silver'||version>=123&&item.item==='gold'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
+if (!oneOf(item.kind, ['wood', 'food', ...(version>=206?['neutroamine']:[]), ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]),...(version>=123?['gold','plasteel','advanced-component']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=194?['mech-corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=206&&item.item==='neutroamine'?150:version>=120&&item.item==='muffalo-wool'?100:version>=88&&item.item==='silver'||version>=123&&item.item==='gold'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
 else {
   if (version >= 5) {
     if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');

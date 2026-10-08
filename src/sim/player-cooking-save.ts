@@ -3,7 +3,8 @@ import { packagedSurvivalMealsUnlocked } from './research.ts';
 import {isArtRecipe,isArtMaterial} from './art-rules.ts';
 import { V91_ITEM_IDS } from './biome-items.ts';
 import { isComponentRecipe,isFlakRecipe,flakWorkpiece,isGunRecipe, isTailoring, unfinishedItem, PRODUCTION_RECIPES, validSurvivalMealIngredients, validFineMealIngredients, validFineMealBulkIngredients, validLavishMealIngredients, validLavishMealBulkIngredients, validVegetarianFineMealIngredients, validVegetarianFineMealBulkIngredients, validCarnivoreFineMealIngredients, validCarnivoreFineMealBulkIngredients, validVegetarianLavishMealIngredients, validVegetarianLavishMealBulkIngredients, validCarnivoreLavishMealIngredients, validCarnivoreLavishMealBulkIngredients, type ProductionIngredient, type ProductionRecipe } from './production-recipes.ts';
-import { validAdvancedComponentIngredients,validFlakIngredients,validGunIngredients } from './machining.ts';
+import { productionResearchUnlocked,validAdvancedComponentIngredients,validFlakIngredients,validGunIngredients } from './machining.ts';
+import { validMedicineIngredients } from './production-recipes.ts';
 import type { World } from './types.ts';
 
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -12,6 +13,14 @@ const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeI
 export function validCookingOrder(value:unknown,world:World):boolean {
   if(!record(value)||Object.keys(value).length!==1||!record(value.cooking))return false;
   const c=value.cooking,cell=(x:unknown)=>record(x)&&Object.keys(x).every(key=>key==='x'||key==='z')&&integer(x.x,0,world.width-1)&&integer(x.z,0,world.height-1);
+  if(c.recipe==='make-medicine')return world.schemaVersion>=206&&productionResearchUnlocked(world,c.recipe)
+    &&Object.keys(c).every(k=>['recipe','stationId','billId','spot','actionCell','phase','ingredients','progress','productId','storageId'].includes(k))
+    &&integer(c.stationId,1)&&integer(c.billId,1)&&cell(c.spot)&&cell(c.actionCell)&&c.phase==='gather'&&c.progress===0&&c.productId===null&&c.storageId===null
+    &&Array.isArray(c.ingredients)&&c.ingredients.length>=3&&c.ingredients.length<=5
+    &&c.ingredients.every(i=>record(i)&&Object.keys(i).every(k=>['pileId','item','quantity','stage','cell'].includes(k))&&integer(i.pileId,1)&&integer(i.quantity,1,3)
+      &&['source','placed'].includes(String(i.stage))&&cell(i.cell))
+    &&new Set(c.ingredients.map(i=>i.pileId)).size===c.ingredients.length
+    &&validMedicineIngredients(c.recipe,c.ingredients as {item:string;quantity:number}[]);
   if(c.recipe!==undefined&&!((world.schemaVersion>=194&&isMechSalvageRecipe(c.recipe))||(world.schemaVersion>=188&&c.recipe==='cook-survival-meal'&&packagedSurvivalMealsUnlocked(world))||(world.schemaVersion>=32&&c.recipe==='stone-blocks')||(world.schemaVersion>=72&&c.recipe==='tribalwear')||(world.schemaVersion>=73&&c.recipe==='shirt')||(world.schemaVersion>=79&&c.recipe==='butcher-creature')||(world.schemaVersion>=90&&['pants','duster','parka'].includes(String(c.recipe)))||(world.schemaVersion>=101&&isGunRecipe(c.recipe))||(world.schemaVersion>=104&&isArtRecipe(c.recipe))||(world.schemaVersion>=109&&c.recipe==='make-flak-vest')||(world.schemaVersion>=141&&c.recipe==='make-flak-helmet')||(world.schemaVersion>=148&&c.recipe==='make-recon-helmet')||(world.schemaVersion>=123&&c.recipe==='make-component')||(world.schemaVersion>=139&&c.recipe==='make-advanced-component')||(world.schemaVersion>=152&&c.recipe==='fine-meal')||(world.schemaVersion>=154&&c.recipe==='lavish-meal')||(world.schemaVersion>=155&&c.recipe==='vegetarian-fine-meal')||(world.schemaVersion>=156&&c.recipe==='carnivore-fine-meal')||(world.schemaVersion>=157&&c.recipe==='vegetarian-lavish-meal')||(world.schemaVersion>=159&&c.recipe==='cook-carnivore-lavish-meal')||(world.schemaVersion>=160&&c.recipe==='cook-simple-meal-bulk')||(world.schemaVersion>=161&&c.recipe==='cook-fine-meal-bulk')||(world.schemaVersion>=162&&c.recipe==='cook-vegetarian-fine-meal-bulk')||(world.schemaVersion>=163&&c.recipe==='cook-carnivore-fine-meal-bulk')||(world.schemaVersion>=164&&c.recipe==='cook-lavish-meal-bulk')||(world.schemaVersion>=165&&c.recipe==='cook-vegetarian-lavish-meal-bulk')||(world.schemaVersion>=166&&c.recipe==='cook-carnivore-lavish-meal-bulk')))return false;
   const recipeId=(c.recipe??'simple-meal') as ProductionRecipe,recipe=PRODUCTION_RECIPES[recipeId];
   if(Object.keys(c).some(k=>!['recipe','stationId','billId','spot','actionCell','phase','ingredients','progress','productId','storageId'].includes(k))

@@ -6,6 +6,7 @@ import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
+  'drug-lab':[120,1,true],
   'hydroponics-basin':[180,.5,true],
   'mini-turret':[100,.7,true],
   'tube-television':[100,1,true],sandbags:[300,0,true],fence:[100,1,false],'fence-gate':[120,1,false],'pen-marker':[80,1,false],wall:[300,1,false],door:[160,1,false],autodoor:[160,1,false],bed:[140,1,true],'hospital-bed':[150,1,true],table:[75,1,true],stool:[75,1,true],horseshoes:[75,1,true],'chess-table':[100,1,true],
@@ -19,7 +20,7 @@ const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
   'power-conduit':[80,.7,false],'power-switch':[120,.5,false],'solar-generator':[300,.7,true],heater:[100,.5,true],'wind-turbine':[150,.5,true],
 };
 const STUFF_HP:Readonly<Record<string,number>>={wood:.65,steel:1,'granite-blocks':1.7,'limestone-blocks':1.55,'marble-blocks':1.2,'sandstone-blocks':1.4,'slate-blocks':1.3};
-const STUFF_BUILDINGS=new Set(['fence','fence-gate','pen-marker','wall','door','autodoor','bed','hospital-bed','table','table-square','table-long','stool','dining-chair','end-table','dresser','flower-pot','horseshoes','chess-table','stonecutter','butcher-table','fueled-stove','electric-stove','tailor-bench','electric-tailor-bench','research-bench','art-bench','small-sculpture','large-sculpture']);
+const STUFF_BUILDINGS=new Set(['drug-lab','fence','fence-gate','pen-marker','wall','door','autodoor','bed','hospital-bed','table','table-square','table-long','stool','dining-chair','end-table','dresser','flower-pot','horseshoes','chess-table','stonecutter','butcher-table','fueled-stove','electric-stove','tailor-bench','electric-tailor-bench','research-bench','art-bench','small-sculpture','large-sculpture']);
 export const structureMaxHp=(s:Pick<Structure,'kind'|'material'>)=>Math.round((BUILDINGS[s.kind]?.[0]??0)*(STUFF_BUILDINGS.has(s.kind)?STUFF_HP[s.material??'wood']??1:1));
 export const structureFlammability=(s:Pick<Structure,'kind'|'material'>)=>(BUILDINGS[s.kind]?.[1]??0)*(STUFF_BUILDINGS.has(s.kind)?s.material?.endsWith('-blocks')?0:s.material==='steel'?.4:1:1);
 export const structureLeavesResources=(s:Pick<Structure,'kind'>)=>BUILDINGS[s.kind]?.[2]??false;
@@ -29,7 +30,7 @@ export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=193):number
   if(p.kind==='apparel')return APPAREL[p.item as keyof typeof APPAREL]?.hitPoints??0;
   if(p.kind==='weapon')return weaponMaxHitPoints(p.item);if(p.kind==='corpse'||p.kind==='mech-corpse')return 100;
   if(p.kind==='food')return ['simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','legacy-portion'].includes(p.item)?50:60;
-  if(p.kind==='medicine')return 60;if(p.kind==='unfinished')return 50;
+  if(p.kind==='medicine')return 60;if(p.kind==='neutroamine')return 50;if(p.kind==='unfinished')return 50;
   if(version>=193){if(p.kind==='chunk')return 300;if(p.item==='muffalo-wool')return 90;if(p.item==='advanced-component')return 70;if(['plainleather','bluefur','camelhide','foxfur'].includes(p.item))return 60;}
   return p.item==='wood'?150:p.item==='cloth'?80:p.item==='light-leather'?60:p.item==='component'?70:0;
 }
@@ -38,6 +39,7 @@ export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
   if(p.kind==='mech-corpse')return 0;
   if(p.kind==='weapon')return p.item==='plasteel-knife'?0:.5;if(p.kind==='corpse')return .7;if(p.kind==='food')return 1;
   if(p.kind==='medicine')return p.item==='herbal-medicine'?1.3:.7;
+  if(p.kind==='neutroamine')return .7;
   // Unfinished apparel inherits the default zero stat; its embedded cloth is not a second ground pile.
   return p.item==='wood'?1:p.item==='cloth'?1.2:p.item==='light-leather'?1:p.item==='component'?.6:0;
 }

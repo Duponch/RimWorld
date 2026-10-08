@@ -32,8 +32,8 @@
 #research-panel.research-reference .research-map-section{min-width:0;display:flex;flex-direction:column}
 #research-panel.research-reference .research-map-title{font-size:13px;font-weight:500;margin:0;align-self:flex-start;padding:6px 18px;border:1px solid var(--line);border-bottom:0;background:var(--paper-deep);border-radius:12px 12px 0 0}
 #research-panel.research-reference .research-map-section .research-viewport{flex:1;margin:0;overflow:auto;max-height:calc(100vh - 260px);min-height:430px;border-radius:0;background:var(--paper-deep)}
-#research-panel.research-reference .research-graph{width:850px;height:430px}
-#research-panel.research-reference .research-links{width:850px;height:430px}
+#research-panel.research-reference .research-graph{width:850px;height:550px}
+#research-panel.research-reference .research-links{width:850px;height:550px}
 #research-panel.research-reference .research-links path{stroke:var(--forest);stroke-width:1.5;opacity:.5}
 #research-panel.research-reference .research-node{width:142px;height:66px;padding:0;border:1px solid var(--line);border-radius:0;background:var(--paper);box-shadow:none}
 #research-panel.research-reference .research-node[data-state=done]{background:color-mix(in srgb,var(--forest) 16%,var(--paper));border-color:var(--forest)}

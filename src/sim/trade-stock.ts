@@ -2,7 +2,7 @@ import { freshRot } from './food-preservation.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { WEAPON_QUALITIES, type WeaponQuality } from './equipment-rules.ts';
 import { tradeCatalogueEntry } from './trade-catalogue.ts';
-import type { MaterialPile } from './types.ts';
+import { SCHEMA_VERSION,type MaterialPile } from './types.ts';
 
 interface StockCandidate {readonly value:number;readonly item?:ItemId}
 /** All 25 Core-only WeaponRanged candidates participate. Unsupported selections
@@ -77,7 +77,7 @@ export function generateVisitorStock(seed:number,pawnId:number,nextId:number,tic
 
 /** A separate physical exotic inventory. The ranges are per visit, and large
  * amounts are split into real stacks before the arrival is committed. */
-export function generateExoticStock(seed:number,pawnId:number,nextId:number,tick:number):VisitorStockPlan {
+export function generateExoticStock(seed:number,pawnId:number,nextId:number,tick:number,version:number=SCHEMA_VERSION):VisitorStockPlan {
   if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Number.isSafeInteger(pawnId)||pawnId<=0||!Number.isSafeInteger(nextId)||nextId<=0||!Number.isSafeInteger(tick)||tick<0)throw new RangeError('Invalid exotic stock planning input.');
   const state={rng:seed||1},piles:MaterialPile[]=[];
   const add=(item:ItemId,quantity:number)=>{
@@ -93,5 +93,8 @@ export function generateExoticStock(seed:number,pawnId:number,nextId:number,tick
   add('advanced-component',integer(state,1,4));
   add('plasteel',integer(state,50,150));
   add('gold',integer(state,40,80));
+  // Core Orbital_Exotic range adapted to the existing physical local trader.
+  // Append after the historical draws; older schemas never draw this stock.
+  if(version>=206)add('neutroamine',integer(state,100,500));
   return {piles,nextId,rng:state.rng};
 }

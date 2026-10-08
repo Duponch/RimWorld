@@ -88,6 +88,7 @@ export function actionFxForPawn(
     if (fire) return { kind: ACTION_FX.extinguish, x: fire.x, z: fire.z };
   }
   if (pawn.cooking?.phase === 'work') {
+    if(pawn.cooking.recipe==='make-medicine')return NONE;
     const station = structuresById.get(pawn.cooking.stationId);
     const contact = nearestStationCell(pawn, station) ?? pawn.cooking.actionCell;
     const kind=station?.kind==='machining-table'||station?.kind==='fabrication-bench'?ACTION_FX.smith
