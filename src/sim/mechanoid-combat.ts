@@ -9,6 +9,7 @@ import { cancelMelee } from './melee-state.ts';
 import { combatTarget,combatTargetByKey,mechanoidEnemy,type LivingTarget } from './combat-target.ts';
 export { mechanoidEnemy } from './combat-target.ts';
 import { cancelMechanoidRanged } from './mechanoid-ranged-state.ts';
+import { empMechanoidActive } from './emp-state.ts';
 import { advanceMechanoidRanged,admitMechanoidRangedOrder,mechanoidGunAvailable,mechanoidRangedQueries,planMechanoidRangedPost,type MechanoidRangedQueries } from './mechanoid-ranged.ts';
 import { meleeContact,meleeTargetContact,meleePlaces,structureMeleeCell,captureMeleePlaces } from './melee-space.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
@@ -102,6 +103,7 @@ function travel(w:World,m:Mechanoid,next:Cell,getLight:LightReader,blocked:Uint8
 /** Physical decisions share the caller's terrain/light and acquisition capture. */
 export function processMechanoidCombat(w:World,m:Mechanoid,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader,batch=mechanoidCombatBatch(w,getBlocked)):void {
   m.moveCooldown=Math.max(0,(m.motion?.end??w.tick)-w.tick);m.planCooldown=Math.max(0,m.planCooldown-1);
+  if(empMechanoidActive(m,w.tick*10))return;
   if(m.melee?.order&&!m.melee.order.structure&&w.tick*10>=m.melee.order.jobUntilCore!){cancelMelee(m);m.path=[];}
   if(m.ranged?.order&&w.tick*10>=m.ranged.order.jobUntilCore){cancelMechanoidRanged(m);m.path=[];if(m.raid)m.raid.goal=null;}
   if(m.moveCooldown)return;
@@ -163,13 +165,19 @@ export function processMechanoidCombat(w:World,m:Mechanoid,getBlocked:Navigation
 /** Called exactly once/Core by the common owner scheduler; no second clock. */
 export function advanceMechanoidCombat(w:World,m:Mechanoid,core:number,batch=mechanoidCombatBatch(w)):boolean {
   if(m.stun&&core>=m.stun.untilCore)delete m.stun;if(m.stagger&&core>=m.stagger.untilCore)delete m.stagger;
+  const recovery=m.melee?.strike,pause=recovery?.empPause;
+  if(recovery&&pause&&core>pause.lastAtCore){
+    if(core!==pause.lastAtCore+1)throw new Error('Stale EMP mechanical recovery clock');
+    pause.lastAtCore=core;
+    if(empMechanoidActive(m,core)){recovery.untilCore++;pause.ticks++;}
+  }
   if(m.melee?.strike&&core>=m.melee.strike.untilCore)m.melee.strike=null;
   if(m.melee?.order&&!m.melee.order.structure&&core>=m.melee.order.jobUntilCore!){cancelMelee(m);m.path=[];}
   advanceMechanoidRanged(w,m,core,batch.ranged??mechanoidRangedQueries(w,batch.grid,batch.blocked));
   if(m.ranged?.stance)return false;
   const melee=m.melee;if(!melee)return false;
   if(!melee.order&&!melee.strike){delete m.melee;return false;}
-  if(m.state==='dead'||m.state==='downed'||m.stun&&core<m.stun.untilCore||melee.strike||(m.motion?.end??0)>core/10)return false;
+  if(m.state==='dead'||m.state==='downed'||m.stun&&core<m.stun.untilCore||empMechanoidActive(m,core)||melee.strike||(m.motion?.end??0)>core/10)return false;
   const group=readMechRaid(w,m);if(!group){cancelMelee(m);m.path=[];return false;}
   if(melee.order?.structure){
     const target=w.structures.find(s=>s.id===melee.order!.targetId&&isBarrier(s));

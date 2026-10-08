@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+**État courant V273, schéma 208.** Industrie, équipement, combat et énergie relient le [lanceur EMP](emp-launcher-v273.md) à une neutralisation temporaire avec adaptation mécanique et reprise exacte. Ce périmètre ne clôt pas le catalogue d’armes ou les critères de réalisation ; les états suivants sont historiques.
+
 **État courant V272, schéma 207.** S13 relie [paludisme et peste](immune-diseases-v272.md) aux incidents, capacités, soins physiques, médicaments et repos existants. Les critères de réalisation restent ouverts ; les états datés ci-dessous sont historiques.
 
 **État courant V208, schéma 190 — livré dans le périmètre ciblé.** Recherche, construction, énergie, besoins et réservations se rejoignent dans le loisir télévisé physique. [Contrat](../development/television-v208.md), [recherche](../research/television-core-v208.md), [preuve](../history/validation-television-v208.md). Les 25 domaines, F1–F5 et G0–G5 restent ouverts ; le repos médical et la télévision au lit ne sont pas fusionnés.

@@ -160,6 +160,7 @@ import { scoutRegistryView,scoutOnMapId } from './caravan-trip.ts';
 import { adultAgeTicks } from './animal-life.ts';
 import { adoptFluIncidents } from './flu-incidents.ts';
 import { validFluIncidents } from './flu-incidents-save.ts';
+import { validEmpStructureTransport,validEmpProductionTransport } from './emp-save.ts';
 import { adoptExoticMerchantSchedule } from './visitors.ts';
 import { isFurnitureQuality } from './furniture-stats.ts';
 import { validateFlowerPotState } from './flower-pot.ts';
@@ -176,7 +177,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207, relationshipContext = true): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208, relationshipContext = true): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -326,6 +327,8 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!validFlashstorm(world.flashstorm,version,world))errors.push('Invalid or future Flashstorm incident for schema.');
   if(!validRainElectrical(world.rainElectrical,version,world))errors.push('Invalid or future electrical rain state for schema.');
   if(!validFluIncidents(world,version))errors.push('Invalid or missing flu incident calendar for schema.');
+  if(!validEmpStructureTransport(world,version))errors.push('Invalid or future EMP device state.');
+  if(!validEmpProductionTransport(world,version))errors.push('Locked or future EMP production.');
   errors.push(...validateWildlife(world,version,ids));
   if(!errors.length)errors.push(...validateDomesticAnimals(world,version));
   if(errors.length)return errors;
@@ -1125,6 +1128,11 @@ export function deserializeWorld(serialized: string): World {
     const errors=validateSchema(input,206);if(errors.length)throw new Error('Invalid version 206 save: '+errors.join(' '));
     // Immune diseases and their incident stream are adopted only by future play.
     input.schemaVersion=207;
+  }
+  if(record(input)&&input.schemaVersion===207){
+    const errors=validateSchema(input,207);if(errors.length)throw new Error('Invalid version 207 save: '+errors.join(' '));
+    // EMP weapons and their retained effects are prospective, with no invented history.
+    input.schemaVersion=208;
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;

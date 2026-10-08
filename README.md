@@ -1,5 +1,8 @@
 # Lisière
 
+**V273 — lanceur EMP ; schéma 208.**
+Fabriquer, équiper et tirer une impulsion de zone permet de neutraliser temporairement les machines, puis d’exploiter cette fenêtre avec la défense existante. Adaptation des mécanoïdes, effets électriques, inspections et reprises sauvegardées : [règles et validation](docs/gameplay/emp-launcher-v273.md). Les états suivants sont historiques.
+
 **V272 — paludisme et peste ; schéma 207.**
 Deux crises médicales relient incidents, symptômes, soins avec médicaments physiques, repos, immunité et convalescence. Le paludisme affecte la filtration et peut provoquer des vomissements ; la peste progresse plus vite. [Règles, adaptations et validation](docs/gameplay/immune-diseases-v272.md). Les états suivants sont historiques.
 

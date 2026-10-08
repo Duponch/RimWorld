@@ -163,7 +163,7 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
   // revolver/knife point down at the hip, grip up against the belt.
   for(const variant of WEAPON_VISUALS)for(const part of variant.parts)addPart(
     [part.size[2],part.size[0],part.size[1]].map(n=>n/PAWN_MODEL_SCALE),
-    [.205+part.center[2]/PAWN_MODEL_SCALE,.68+(variant.item==='bolt-action-rifle'?1:-1)*part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,variant.dye);
+    [.205+part.center[2]/PAWN_MODEL_SCALE,.68+(variant.item==='bolt-action-rifle'||variant.item==='emp-launcher'?1:-1)*part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,variant.dye);
   const geometry = new THREE.InstancedBufferGeometry();
   // WebGPU guarantees only eight vertex-buffer slots. Keeping authored attributes
   // interleaved leaves room for the seven independent per-instance attributes.

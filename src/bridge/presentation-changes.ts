@@ -29,9 +29,9 @@ export class PresentationChanges {
         :[world.commercialTrip.phase,world.commercialTrip.pawn.id,world.commercialTrip.consumed,world.commercialTrip.silverPaid,world.commercialTrip.bought,world.commercialTrip.silverEarned,world.commercialTrip.sold]):undefined,
       world.civilianPost?[world.civilianPost.generation,world.civilianPost.transactions,world.civilianPost.stock.map(p=>[p.id,p.item,p.quantity,p.damage])]:undefined,
       world.projectiles?.map(p=>[p.id,p.emittedAtCore,p.arrival]),
-      world.bombWaves?.map(w=>w.shortCircuit?[w.id,w.sourceId,w.startedAtCore,w.shortCircuit]:[w.id,w.sourceId,w.startedAtCore]),
+      world.bombWaves?.map(w=>w.emp?[w.id,w.sourceId,w.startedAtCore,w.emp]:w.shortCircuit?[w.id,w.sourceId,w.startedAtCore,w.shortCircuit]:[w.id,w.sourceId,w.startedAtCore]),
       world.raids?.mechActive,
-      world.mechanoids?.map(m=>[m.id,m.mechKind,m.state,m.melee,m.stun,m.raid?.goal,m.health?.nextInjuryId,m.health?.missing,
+      world.mechanoids?.map(m=>[m.id,m.mechKind,m.state,m.melee,m.stun,m.emp,m.raid?.goal,m.health?.nextInjuryId,m.health?.missing,
         // Busy clocks decrease continuously; only real admissions, phase/focus
         // changes and suspension boundaries request an immediate publication.
         m.ranged?.order,m.ranged?.stance?[m.ranged.stance.phase,m.ranged.stance.targetKey,m.ranged.stance.startedAtCore]:undefined]),
@@ -51,7 +51,7 @@ export class PresentationChanges {
         p.burial?.phase,p.burial?.corpseId,p.cleaning?.phase,p.cleaning?.targets[0],p.health?.foodPoisoning?.vomit?.remainingCore!==undefined,p.health?.flu?.vomit?.remainingCore!==undefined,p.health?.immuneDiseases?.malaria?.vomit?.remainingCore!==undefined,p.body?.pileId,p.body?.lostAt,p.hunting?.animalId,p.hunting?.phase,p.research?.stationId,p.haul?.phase,p.haul?.carryPileId,p.cooking?.phase,p.cooking?.productId,
         p.recreation.task?.activity,p.recreation.task?.buildingId,p.visitor?.group,p.visitor?.role,p.visitor?.phase,p.trade?.traderId,p.trade?.phase]),
       world.piles.map(p=>[p.id,p.item,p.quantity,p.owner]),
-      world.structures.map(s=>[s.id,s.x,s.z,s.medical,s.prisoner,s.fuel? s.fuel.ticks>0:undefined,s.door?.changedAt,s.door?.open,s.power?.on,s.power?.parentId,s.power?.switchOn,
+      world.structures.map(s=>[s.id,s.x,s.z,s.medical,s.prisoner,s.emp,s.fuel? s.fuel.ticks>0:undefined,s.door?.changedAt,s.door?.open,s.power?.on,s.power?.parentId,s.power?.switchOn,
         s.turret?[s.turret.ammoQ,s.turret.autoReload,s.turret.holdFire,s.turret.targetKey,!!s.turret.warmup,
           s.turret.burst?.targetKey,!!s.turret.burst,s.turret.cooldownCore>0,s.turret.wick]:undefined]),
       (world.packed??[]).map(p=>[p.building.id,p.owner]),

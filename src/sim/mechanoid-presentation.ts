@@ -10,6 +10,7 @@ import type { Mechanoid } from './mechanoid-state.ts';
 import type { Cell,World } from './types.ts';
 import { ANIMAL_SPECIES } from './animal-species.ts';
 import { pawnBodyLocation } from './human-corpses.ts';
+import { empMechanoidActive } from './emp-state.ts';
 
 /** The authored rig names its pieces independently of the medical namespace. */
 export function mechanoidPartIndex(kind:MechanoidKind,visualId:string):number {
@@ -42,7 +43,7 @@ export function mechanoidRangedView(world:World,actor:Mechanoid) {
   const stance=actor.ranged?.stance,order=actor.ranged?.order;
   return {profileId,range:profile.range,phase:stance?.phase??null,
     remainingCore:stance?.remainingCore??null,totalCore:stance?stance.phase==='warmup'?profile.warmupCoreTicks:profile.cooldownCoreTicks:null,
-    suspended:!!stance&&!!actor.stun,targetKey:stance?.targetKey??null,
+    suspended:!!stance&&(!!actor.stun||empMechanoidActive(actor,world.tick*10)),targetKey:stance?.targetKey??null,
     target:stance?rangedTargetView(world,stance.targetKey):null,
     orderTarget:order?rangedTargetView(world,order.targetKey):null};
 }
@@ -51,7 +52,7 @@ export function mechanoidView(world:World,actor:Mechanoid) {
   const ranged=mechanoidRangedView(world,actor);
   const target=targetId===undefined?ranged?.orderTarget??ranged?.target??null:mechanoidTargetView(world,targetId);
   const active=world.raids?.mechActive,group=active&&actor.raid?.group===active.id?active:undefined;
-  const action=actor.state==='dead'?'Neutralisé':actor.state==='downed'?'Incapacité mécanique':actor.stun?'Immobilisé':
+  const action=actor.state==='dead'?'Neutralisé':actor.state==='downed'?'Incapacité mécanique':empMechanoidActive(actor,world.tick*10)?'Neutralisé temporairement par EMP':actor.stun?'Immobilisé':
     actor.melee?.strike?'Récupère après son coup':actor.melee?.order?actor.state==='working'?'Frappe au contact':'Approche sa cible':
     ranged?.phase==='warmup'?'Prépare son tir':ranged?.phase==='cooldown'?'Récupère après son essai de tir':
     actor.state==='moving'?group?.phase==='staging'?'Rejoint le point de regroupement':'Avance vers la colonie':group?.phase==='staging'?'Se regroupe avant l’assaut':'Cherche une cible';

@@ -19,6 +19,7 @@ export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',v
 }
 export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
   if(recipe==='make-medicine'&&version<206)return false;
+  if(recipe==='make-emp-launcher'&&version<208)return false;
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   const v=value as BillSettings;
   return Object.keys(v).every(k=>['id','recipe','mode','target','suspended','filters','radius','destination'].includes(k))

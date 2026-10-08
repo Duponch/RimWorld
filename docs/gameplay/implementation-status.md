@@ -1,5 +1,8 @@
 # Ce qui est jouable et ce qui manque
 
+**V273 — lanceur EMP ; schéma 208.**
+La [boucle EMP](emp-launcher-v273.md) relie recherche, usinage, équipement, dispersion et vol physique à la suspension réelle de la marche et des attaques mécaniques. Les mécanoïdes s’adaptent aux impacts rapprochés ; tourelles, générateurs et batteries livrés sont neutralisables sans perte directe de PV ou de charge. Les états suivants sont historiques.
+
 **V272 — paludisme et peste ; schéma 207.**
 Les [maladies immunisantes](immune-diseases-v272.md) ajoutent deux évolutions indépendantes avec symptômes, soins physiques, repos, convalescence et protection résiduelle. Paludisme dans le biome tempéré local ; peste dans les trois biomes. La grippe et ses durées historiques sont conservées. Les états suivants sont historiques.
 

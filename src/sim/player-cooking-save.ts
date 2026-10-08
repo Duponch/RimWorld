@@ -13,6 +13,7 @@ const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeI
 export function validCookingOrder(value:unknown,world:World):boolean {
   if(!record(value)||Object.keys(value).length!==1||!record(value.cooking))return false;
   const c=value.cooking,cell=(x:unknown)=>record(x)&&Object.keys(x).every(key=>key==='x'||key==='z')&&integer(x.x,0,world.width-1)&&integer(x.z,0,world.height-1);
+  if(c.recipe==='make-emp-launcher'&&(world.schemaVersion<208||!productionResearchUnlocked(world,c.recipe)))return false;
   if(c.recipe==='make-medicine')return world.schemaVersion>=206&&productionResearchUnlocked(world,c.recipe)
     &&Object.keys(c).every(k=>['recipe','stationId','billId','spot','actionCell','phase','ingredients','progress','productId','storageId'].includes(k))
     &&integer(c.stationId,1)&&integer(c.billId,1)&&cell(c.spot)&&cell(c.actionCell)&&c.phase==='gather'&&c.progress===0&&c.productId===null&&c.storageId===null

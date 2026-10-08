@@ -302,7 +302,7 @@ export class AudioCueRecorder {
       const arrival = projectile.arrival;
       if (arrival) {
         projectileArrivals.add(projectile.id);
-        const kind: AudioCueKind | undefined = arrival.kind !== 'impact' ? undefined
+        const kind: AudioCueKind | undefined = arrival.kind !== 'impact'||projectile.weaponItem==='emp-launcher' ? undefined
           : arrival.effect === 'ground' ? 'weapon.impact-ground'
             : ['barrier','structure','pile','resource','packed','mech'].includes(arrival.effect) ? 'weapon.impact-barrier'
               : arrival.effect === 'pawn' || arrival.effect === 'animal' ? 'weapon.impact-flesh' : undefined;

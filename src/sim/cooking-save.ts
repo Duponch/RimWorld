@@ -41,6 +41,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>):st
     if(!int(p.priorities.cook,0,4))errors.push('Invalid cooking priority.');
     if(p.cooking===null)continue;
     const c=p.cooking;
+    if(c?.recipe==='make-emp-launcher'&&(version<208||!productionResearchUnlocked(w,c.recipe))){errors.push('Invalid or future EMP production.');continue;}
     const medicine=c?.recipe==='make-medicine';
     if(medicine&&(version<206||!record(c)||Object.keys(c).some(key=>!taskKeys.has(key))||c.phase==='interrupted')){errors.push('Invalid or future medicine production.');continue;}
     if((isMechSalvageRecipe(c?.recipe)||c?.recipe==='cook-survival-meal'||c?.recipe==='fine-meal'||c?.recipe==='lavish-meal'||c?.recipe==='vegetarian-fine-meal'||c?.recipe==='carnivore-fine-meal'||c?.recipe==='vegetarian-lavish-meal'||c?.recipe==='cook-carnivore-lavish-meal'||c?.recipe==='cook-simple-meal-bulk'||c?.recipe==='cook-fine-meal-bulk'||c?.recipe==='cook-vegetarian-fine-meal-bulk'||c?.recipe==='cook-carnivore-fine-meal-bulk'||c?.recipe==='cook-lavish-meal-bulk'||c?.recipe==='cook-vegetarian-lavish-meal-bulk'||c?.recipe==='cook-carnivore-lavish-meal-bulk')&&c.phase==='interrupted'){errors.push('Meal has no resumable interrupted work.');continue;}

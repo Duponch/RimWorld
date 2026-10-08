@@ -224,6 +224,10 @@ export class StructureVfxLayer {
         glow.push({x,y,z:z-.09,sx:.115,sy:.045,sz:.255,ry:0,color:0xffac62});
         glow.push({x,y,z:z+.16,sx:.115,sy:.045,sz:.085,ry:0,color:0xffac62});
       }
+      if(s.emp&&s.emp.untilCore>world.tick*10){
+        tokens.push(`${s.id}:emp:${s.emp.untilCore}`);
+        glow.push({x:s.x,y:1.3,z:s.z,sx:.11,sy:.36,sz:.11,ry:Math.PI/4,color:0x8cefff});
+      }
     }
     // Confirmed emissions/departures use the existing status draw. No fake
     // Pawn pose, light or fire is created; a flash lasts the adopted birth tick.
@@ -232,6 +236,7 @@ export class StructureVfxLayer {
       tokens.push(`turret-shot:${p.id}`);glow.push({x:from.x+Math.sin(ry)*.7,y:1.12,z:from.z+Math.cos(ry)*.7,sx:.16,sy:.17,sz:.22,ry,color:0xffd599});
     }
     for(const wave of world.bombWaves??[])if(Math.ceil(wave.startedAtCore/10)===world.tick){
+      if(wave.emp){tokens.push(`emp-flash:${wave.id}`);glow.push({x:wave.center.x,y:.68,z:wave.center.z,sx:1.5,sy:.45,sz:1.5,ry:0,color:0x8cefff});continue;}
       const radius=wave.shortCircuit?.radius,scale=radius===undefined?1:Math.max(.5,Math.min(3,radius/3.9));
       const flame=wave.shortCircuit?.damage==='flame';
       tokens.push(radius===undefined?`bomb-flash:${wave.id}`:`bomb-flash:${wave.id}:${radius}:${flame}`);glow.push({x:wave.center.x,y:.68,z:wave.center.z,sx:.95*scale,sy:1.1*scale,sz:.95*scale,ry:0,color:flame?0xffb35b:0xffe7b4});

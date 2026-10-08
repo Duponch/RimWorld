@@ -1,5 +1,6 @@
 import { solarPowerOutput } from './solar-rules.ts';
 import { SUN_LAMP_DEMAND,sunLampScheduled } from './sun-lamp.ts';
+import { empStructureActive } from './emp-state.ts';
 import type { Structure,World } from './types.ts';
 
 export const POWER_OUTPUT=1000;
@@ -15,4 +16,5 @@ export const newPowerState=(kind:unknown):PowerState=>({on:kind==='wood-generato
 export const isPowerActive=(s:Structure):boolean=>!s.breakdown&&!!s.power?.on&&s.power.switchOn!==false&&(s.kind!=='wood-generator'||!!s.fuel?.ticks);
 export const powerDemand=(s:Structure):number=>s.kind==='hydroponics-basin'?70:s.kind==='mini-turret'?80:s.kind==='tube-television'?200:s.kind==='electric-stove'||s.kind==='machining-table'?350:s.kind==='hi-tech-research-bench'||s.kind==='fabrication-bench'?250:s.kind==='multi-analyzer'?200:s.kind==='electric-tailor-bench'?120:s.kind==='autodoor'?50:s.kind==='cooler'?(s.cooler?.high?200:20):s.kind==='heater'?(s.heater?.high?175:17.5):s.kind==='standing-lamp'?LAMP_DEMAND:s.kind==='sun-lamp'?SUN_LAMP_DEMAND:0;
 export const powerPotential=(s:Structure,world?:World):number=>s.kind==='wood-generator'?POWER_OUTPUT:s.kind==='solar-generator'?(world?Math.round(solarPowerOutput(world,s)):0):s.kind==='wind-turbine'?(s.wind?.cachedWatts??0):-powerDemand(s);
-export const powerWatts=(s:Structure,world?:World):number=>isPowerActive(s)&&(s.kind!=='sun-lamp'||!!world&&sunLampScheduled(world))?powerPotential(s,world):0;
+export const powerWatts=(s:Structure,world?:World,core=world?.tick===undefined?undefined:world.tick*10):number=>
+  (core===undefined?!s.emp:!empStructureActive(s,core))&&isPowerActive(s)&&(s.kind!=='sun-lamp'||!!world&&sunLampScheduled(world))?powerPotential(s,world):0;

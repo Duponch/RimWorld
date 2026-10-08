@@ -87,8 +87,10 @@ export function validateResearch(world:World,version:number):string[]{
   if(version>=187&&!hospitalBedUnlocked(world)&&electricalContent.some(s=>s.kind==='hospital-bed'||'furniture' in s&&(s.furniture as {kind?:string}|undefined)?.kind==='hospital-bed'||'deconstruction' in s&&(s.deconstruction as {kind?:string}|undefined)?.kind==='hospital-bed'))errors.push('Locked hospital bed.');
   if(version>=188&&!packagedSurvivalMealsUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='cook-survival-meal'))||world.pawns.some(p=>p.cooking?.recipe==='cook-survival-meal'||p.orders.queue.some(o=>typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='cook-survival-meal'))))errors.push('Locked packaged survival production.');
   // Obtained weapons need no research; only the local fabrication chain does.
-  if(version>=101&&!gunsmithingUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>isGunRecipe(b.recipe)))
-    ||world.piles.some(p=>p.gunWork)||world.pawns.some(p=>p.cooking&&isGunRecipe(p.cooking.recipe))))errors.push('Locked gunsmithing production.');
+  if(version>=101&&!gunsmithingUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>isGunRecipe(b.recipe)&&b.recipe!=='make-emp-launcher'))
+    ||world.piles.some(p=>p.gunWork&&p.gunWork.recipe!=='make-emp-launcher')||world.pawns.some(p=>p.cooking&&isGunRecipe(p.cooking.recipe)&&p.cooking.recipe!=='make-emp-launcher')))errors.push('Locked gunsmithing production.');
+  if((version<208||!microelectronicsUnlocked(world))&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-emp-launcher'))
+    ||world.piles.some(p=>p.gunWork?.recipe==='make-emp-launcher')||world.pawns.some(p=>p.cooking?.recipe==='make-emp-launcher'||p.orders.queue.some(o=>typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='make-emp-launcher'))))errors.push('Locked or future EMP production.');
   if(version>=109&&!flakArmorUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-flak-vest'||b.recipe==='make-flak-helmet'))
     ||world.piles.some(p=>p.flakWork?.recipe==='make-flak-vest'||p.flakWork?.recipe==='make-flak-helmet')||world.pawns.some(p=>p.cooking&&(p.cooking.recipe==='make-flak-vest'||p.cooking.recipe==='make-flak-helmet'))))errors.push('Locked flak armor production.');
   if(version>=148&&!reconArmorUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-recon-helmet'))

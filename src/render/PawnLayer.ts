@@ -400,7 +400,7 @@ export class PawnLayer {
       for(const weapon of WEAPON_VISUALS) {
         const isWeapon=attribute('dye','float').equal(weapon.dye);
         const along=positionLocal.y.sub(.68),across=positionLocal.x.sub(.205),depth=positionLocal.z;
-        if(weapon.item==='bolt-action-rifle') {
+        if(weapon.item==='bolt-action-rifle'||weapon.item==='emp-launcher') {
           // High diagonal sling at rest: the long gun remains legible above
           // the torso. During aim its authored barrel (+Y) points forward.
           If(isWeapon,()=>{ animated.assign(vec3(along.mul(.30).add(across).add(.13),along.mul(.78).add(depth.mul(.12)).add(.84),depth.mul(.8).add(.25))); });

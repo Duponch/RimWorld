@@ -4,6 +4,7 @@ import { startFire } from './fire.ts';
 import { ensureFireState } from './fire-rules.ts';
 import { BATTERY_ENERGY_SCALE,batteryQuanta,batteryWattDays,drainBatteryWattDays } from './power-battery.ts';
 import { powerWatts } from './power-rules.ts';
+import { empStructureActive } from './emp-state.ts';
 import { connectedPowerGroups,PowerTopologyCache } from './power-topology.ts';
 import { TICKS_PER_DAY,type Cell,type Structure,type World } from './types.ts';
 
@@ -22,7 +23,7 @@ interface Candidate {conduit:Structure;parts:Structure[]}
 function candidates(world:World):Candidate[] {
   const topology=new PowerTopologyCache().read(world),active=new Map<number,Structure[]>();
   for(const parts of connectedPowerGroups(world,topology))if(parts.some(s=>
-    s.battery?batteryQuanta(s.battery)>0:powerWatts(s,world)>0)) {
+    s.battery?batteryQuanta(s.battery)>0&&!empStructureActive(s,world.tick*10):powerWatts(s,world)>0)) {
     const net=topology.netOf.get(parts[0]!.id);if(net!==undefined)active.set(net,parts);
   }
   return world.structures.flatMap(conduit=>{

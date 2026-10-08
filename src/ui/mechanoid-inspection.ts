@@ -49,6 +49,13 @@ export function updateMechanoidInspector(root:HTMLElement,state:{world:World;act
   setTooltip(group,{title:'Mandat réel',body:view.goal?`Objectif physique : case ${view.goal.x}, ${view.goal.z}. Le regroupement n’empêche pas une défense au contact.`:'Aucun objectif de déplacement enregistré.'});
   const mass=root.querySelector<HTMLElement>('[data-mech-mass]')!;mass.textContent=`Masse restante : ${view.mass.toFixed(3).replace('.',',')} kg`;
   setTooltip(mass,{title:'Masse mécanique',body:'Masse calculée depuis la couverture naturelle des parties encore présentes. Le dossier est distinct des PV d’une future carcasse.'});
+  let emp=root.querySelector<HTMLElement>('[data-mech-emp]');
+  if(!emp){emp=document.createElement('p');emp.dataset.mechEmp='';emp.tabIndex=0;root.querySelector('.mechanoid-facts')!.append(emp);}
+  const effect=state.actor.emp,core=state.world.tick*10;emp.hidden=!effect;
+  if(effect){const stun=Math.max(0,effect.stunUntilCore-core),adaptation=Math.max(0,effect.adaptedUntilCore-core);
+    emp.textContent=`EMP : ${stun?`neutralisé encore ${(stun/60).toFixed(1).replace('.',',')} s`:'mobilité et attaques rétablies'}${adaptation?` · adapté encore ${(adaptation/60).toFixed(1).replace('.',',')} s`:''}`;
+    setTooltip(emp,{title:'Neutralisation et adaptation EMP',body:'L’EMP suspend déplacement et attaques sans blesser. Pendant l’adaptation, un nouvel impact ne prolonge ni l’arrêt ni cette protection.'});
+  }
   for(const [id,label] of CAPACITIES){const row=root.querySelector<HTMLElement>(`[data-mech-capacity="${id}"]`)!;row.querySelector('strong')!.textContent=percent(view.capacities[id]);setTooltip(row,{title:label,body:'Valeur actuelle du dossier mécanique ; aucune capacité biologique ou compétence humaine n’est inventée.'});}
   const body=root.querySelector('[data-mech-parts]')!;
   const ids=new Set<string>(view.parts.map(p=>p.id));

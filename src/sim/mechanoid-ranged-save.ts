@@ -3,6 +3,7 @@ import { mechanoidEnemy } from './combat-target.ts';
 import type { Mechanoid } from './mechanoid-state.ts';
 import type { MechanoidRangedState } from './mechanoid-ranged-state.ts';
 import type { World } from './types.ts';
+import { empMechanoidActive } from './emp-state.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
@@ -42,7 +43,7 @@ function historicalTarget(w:World,key:string,id:number):boolean {
 export function validateMechanoidRanged(w:World,m:Mechanoid,version:number=w.schemaVersion,ids?:ReadonlySet<number>):string[] {
   const r=m.ranged;if(r===undefined)return [];
   if(!validMechanoidRangedShape(r,m.mechKind,version,w.tick))return ['Invalid mechanical ranged phase.'];
-  const errors:string[]=[],o=r.order,s=r.stance,suspended=!!m.stun&&w.tick*10<m.stun.untilCore;
+  const errors:string[]=[],o=r.order,s=r.stance,suspended=!!m.stun&&w.tick*10<m.stun.untilCore||empMechanoidActive(m,w.tick*10);
   if(o||s?.phase==='warmup'){
     if(m.state==='dead'||m.state==='downed'||m.melee?.order||m.melee?.strike)errors.push('Incapacitated or melee mechanoid retains a ranged intention.');
   }

@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V273, schéma 208 : [lanceur EMP](gameplay/emp-launcher-v273.md).** Fabrication à l’usinage sous Microélectronique, équipement, tir physique, neutralisation mécanique et adaptation ; les réseaux électriques conservent leurs connexions et réserves. Les états suivants sont historiques.
+
 **V272, schéma 207 : [paludisme et peste](gameplay/immune-diseases-v272.md).** Incidents prospectifs, clinique commune et immunités indépendantes ; aucun nouvel état rétroactif au chargement. Les états suivants sont historiques.
 
 **V271, schéma 206 : [production de médicaments](gameplay/medicine-production-v271.md).** Recherche, laboratoire manuel, achat de neutroamine, synthèse physique et médicament clinique existant ; règles et adaptations Core dans la note du lot. Les états suivants sont historiques.

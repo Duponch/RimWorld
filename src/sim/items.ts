@@ -47,6 +47,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'recon-helmet':Object.freeze({label:'Casque de reconnaissance',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0x879da4}),
   silver:Object.freeze({label:'Argent',kind:'silver',stackLimit:500,nutrition:0,maxIngest:0,color:0xc7c9cc}),
   'bolt-action-rifle':Object.freeze({label:'Fusil à verrou',kind:'weapon',stackLimit:1,nutrition:0,maxIngest:0,color:0x695342}),
+  'emp-launcher':Object.freeze({label:'Lanceur EMP',kind:'weapon',stackLimit:1,nutrition:0,maxIngest:0,color:0x749da6}),
   'plasteel-knife':Object.freeze({label:'Couteau en plastacier',kind:'weapon',stackLimit:1,nutrition:0,maxIngest:0,color:0xa0b2b5}),
   revolver:Object.freeze({label:'Revolver',kind:'weapon',stackLimit:1,nutrition:0,maxIngest:0,color:0x606b72}),
   'herbal-medicine':Object.freeze({label:'Plantes médicinales',kind:'medicine',stackLimit:25,nutrition:0,maxIngest:0,color:0x7d985c}),

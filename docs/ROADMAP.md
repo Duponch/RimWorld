@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V273 — réponse EMP aux machines ; schéma 208.**
+Le [lanceur EMP](gameplay/emp-launcher-v273.md) réutilise industrie, équipement, visée, projectiles et propagation d’explosion pour ouvrir une fenêtre tactique sans dégâts physiques. Mécanoïdes et appareils livrés ont des réponses distinctes ; les autres armes, boucliers et implants restent ouverts. Autonomie, lots cohérents, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **Avancement fonctionnel V272 — paludisme et peste ; schéma 207.**
 La [boucle clinique](gameplay/immune-diseases-v272.md) relie catégorie de maladies existante, soins, repos et course vers l’immunité. Elle exploite les médicaments fabriqués V271 ; les autres maladies, implants et opérations restent ouverts. Autonomie, lots cohérents, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
 

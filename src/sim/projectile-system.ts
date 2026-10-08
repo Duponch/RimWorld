@@ -13,7 +13,7 @@ import type { ProjectileRelations,WorldProjectile } from './projectile-state.ts'
 import type { WeaponQuality } from './equipment-rules.ts';
 import type { World } from './types.ts';
 import { applyBulletStagger } from './stagger.ts';
-import { advanceBombWave,applyStructureExternalDamage } from './bomb-system.ts';
+import { advanceBombWave,applyStructureExternalDamage,startEmpExplosion } from './bomb-system.ts';
 import { damageResource,damagePile } from './thing-damage.ts';
 import { pileMaxHp,resourceMaxHp,structureMaxHp } from './thing-damage-rules.ts';
 import type { BombInstigatorKey } from './mini-turret-state.ts';
@@ -80,6 +80,10 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
     const wasLying=!!pawn&&isLying(pawn);
     if(a.kind!=='exit'&&disturbance.impact({x:Math.floor(a.point.x),z:Math.floor(a.point.z)},core))impact();
     if(a.kind!=='exit'&&animalImpactNoise(world,{x:Math.floor(a.point.x),z:Math.floor(a.point.z)},p.flight.launcherKey,core))impact();
+    if(p.weaponItem==='emp-launcher'){
+      if(a.kind!=='exit'){if(!startEmpExplosion(world,p,core))throw new RangeError('Cannot commit EMP impact');impact();}
+      continue;
+    }
     if(animal){
       const launcher=world.pawns.find(pawn=>`pawn:${pawn.id}`===p.flight.launcherKey);
       damageAnimalWithBullet(world,animal,{damage:profile.damage},core,launcher,launcher?.id);

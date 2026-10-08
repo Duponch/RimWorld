@@ -29,6 +29,11 @@ export function itemInformation(pile:MaterialPile):ObjectInformationInput {
   const quality=pile.weapon?.quality??pile.apparel?.quality;
   if(quality)add('Général','Qualité',QUALITY_LABELS[quality],'Qualité propre à cette instance, conservée pendant les déplacements et l’équipement.');
   if(isWeaponItem(pile.item)&&pile.weapon)add('Général','Points de vie',`${pile.weapon.hitPoints} / ${weaponMaxHitPoints(pile.item)}`,'État réel de l’arme sélectionnée.');
+  if(pile.item==='emp-launcher'){
+    add('Arme','Effet','Impulsion EMP','Interrompt temporairement les mécanoïdes et les équipements électriques sensibles. Ne blesse pas directement les personnes et ne vide pas les batteries.');
+    add('Arme','Rayon de l’impulsion','1,1 case','L’impulsion se déclenche au point d’impact réel du projectile. La dispersion et les obstacles peuvent déplacer cet impact.');
+    add('Arme','Adaptation mécanique','Temporaire','Après une impulsion, les mécanoïdes résistent temporairement aux suivantes ; un tir répété ne garantit pas un nouvel étourdissement.');
+  }
   if(isApparelItem(pile.item)&&pile.apparel){
     const apparel=apparelDefinition(pile),armor=armorPiece(pile).ratings,insulation=apparelInsulation(pile);
     add('Général','Points de vie',`${pile.apparel.hitPoints} / ${apparel.hitPoints}`,'État réel du vêtement. Les vêtements abîmés peuvent affecter l’humeur.');

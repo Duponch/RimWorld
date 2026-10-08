@@ -4,7 +4,7 @@ import type { Pawn,World } from './types.ts';
 
 export interface ShootingClock {lastAdvancedAtCore:number;pausedCore:number}
 export type ShootingStance=({phase:'aim';startedAtCore:number;endsAtCore:number;targetStartedDowned:boolean}
-  |{phase:'cooldown';startedAtCore:number;endsAtCore:number})&{weaponItem?:'bolt-action-rifle';clock?:ShootingClock};
+  |{phase:'cooldown';startedAtCore:number;endsAtCore:number})&{weaponItem?:'bolt-action-rifle'|'emp-launcher';clock?:ShootingClock};
 export type ShootingClockStep='duplicate'|'paused'|'active';
 
 /** The order can be cancelled/replaced without erasing post-shot recovery. */

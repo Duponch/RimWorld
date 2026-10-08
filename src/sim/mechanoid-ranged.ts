@@ -9,6 +9,7 @@ import { mechaAssessment,type MechanicalBody } from './mechanoid-health.ts';
 import { mechanoidGunId,mechanoidRangedProfile } from './mechanoid-ranged-profile.ts';
 import { cancelMechanoidRanged } from './mechanoid-ranged-state.ts';
 import { cancelMelee } from './melee-state.ts';
+import { empMechanoidActive } from './emp-state.ts';
 import { shootingAccuracy } from './ranged-statistics.ts';
 import { shotAim,shotCover } from './combat-report.ts';
 import { weatherShotFactor } from './weather-exposure.ts';
@@ -103,7 +104,7 @@ export function planMechanoidRangedPost(w:World,m:Mechanoid,budget:SearchBudget,
 /** Intent may contain a route; no aim or random result is preplayed. */
 export function admitMechanoidRangedOrder(w:World,m:Mechanoid,plan:MechanoidRangedPost,core:number,q:MechanoidRangedQueries):boolean {
   if(core!==w.tick*10||!Number.isSafeInteger(core+550)||m.ranged||m.melee?.strike||(m.motion?.end??0)>w.tick
-    ||m.stun&&core<m.stun.untilCore
+    ||m.stun&&core<m.stun.untilCore||empMechanoidActive(m,core)
     ||!mechanoidGunAvailable(w,m,core,q)||m.raid?.group!==w.raids?.mechActive?.id||!w.raids?.mechActive?.members.includes(m.id))return false;
   const target=combatTargetByKey(w,plan.targetKey),profile=mechanoidRangedProfile(m.mechKind)!;
   const group=w.raids!.mechActive!;
@@ -121,7 +122,7 @@ export function admitMechanoidRangedOrder(w:World,m:Mechanoid,plan:MechanoidRang
 function beginWarmup(w:World,m:Mechanoid,core:number,q:MechanoidRangedQueries):void {
   const state=m.ranged,order=state?.order;
   if(!state||!order||core<order.admittedAtCore||m.melee?.strike||(m.motion?.end??0)>core/10||m.path.length
-    ||m.stun&&core<m.stun.untilCore)return;
+    ||m.stun&&core<m.stun.untilCore||empMechanoidActive(m,core))return;
   const plan=planMechanoidShot(w,m,order.targetKey,q,'admission',core);
   if('reason' in plan){cancelMechanoidRanged(m);return;}
   state.stance={phase:'warmup',targetKey:order.targetKey,targetStartedDowned:plan.target.state==='downed',
@@ -131,7 +132,7 @@ function beginWarmup(w:World,m:Mechanoid,core:number,q:MechanoidRangedQueries):v
 /** Reconciliation after an impact never advances a stance. It closes the
  * final-substep publication boundary while keeping Core's stunned checks paused. */
 export function reconcileMechanoidRanged(w:World,m:Mechanoid,core:number,q:MechanoidRangedQueries):void {
-  const state=m.ranged;if(!state?.order||core<state.order.admittedAtCore||m.stun&&core<m.stun.untilCore)return;
+  const state=m.ranged;if(!state?.order||core<state.order.admittedAtCore||m.stun&&core<m.stun.untilCore||empMechanoidActive(m,core))return;
   const target=combatTargetByKey(w,state.order.targetKey);
   const invalid=!target||!mechanoidEnemy(w,m,target)||distanceSquared(m,target)>72**2;
   const lostAim=state.stance?.phase==='warmup'&&('reason' in planMechanoidShot(w,m,state.stance.targetKey,q,'warmup',core));
@@ -150,7 +151,7 @@ export function advanceMechanoidRanged(w:World,m:Mechanoid,core:number,q:Mechano
   if(core<=stance.lastAdvancedAtCore)return;
   if(core!==stance.lastAdvancedAtCore+1)throw new Error('Stale mechanical stance clock');
   stance.lastAdvancedAtCore=core;
-  if(m.stun&&core<m.stun.untilCore)return;
+  if(m.stun&&core<m.stun.untilCore||empMechanoidActive(m,core))return;
   if(stance.phase==='cooldown'){
     if(--stance.remainingCore>0)return;
     state.stance=null;if(!state.order){delete m.ranged;return;}beginWarmup(w,m,core,q);return;

@@ -6,6 +6,7 @@ import type { StaggerState } from './stagger.ts';
 import type { StunState } from './stun.ts';
 import type { MechanoidKind } from './mechanoid-definition.ts';
 import type { MechanoidRangedState } from './mechanoid-ranged-state.ts';
+import type { EmpAdaptationState } from './emp-state.ts';
 
 /** Mechanical map owner. No human or animal needs, skills or inventory. */
 export interface Mechanoid extends Cell {
@@ -17,6 +18,7 @@ export interface Mechanoid extends Cell {
   raid?:{group:number;goal:Cell|null};
   melee?:MeleeState;
   stagger?:StaggerState;stun?:StunState;
+  emp?:EmpAdaptationState;
   ranged?:MechanoidRangedState;
   meleeThreat?:{attackerId:number;atCore:number};
 }

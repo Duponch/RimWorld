@@ -95,6 +95,7 @@ export function powerInspection(world: World, structure: Structure, compact=fals
   }
   if (group) detail += ` · Réseau : ${watts(supply)} produits, ${watts(used)} utilisés (${watts(required)} demandés) · ${batteries.length ? `${stored.toFixed(2)} / ${batteries.length * 600} W·j stockés` : 'aucune batterie raccordée'}`;
   if(structure.breakdown)detail=`Panne mécanique : composant à remplacer par un colon en Construction (1 composant ordinaire, zone de foyer requise) · ${detail}`;
+  if(structure.emp&&structure.emp.untilCore>world.tick*10)detail=`EMP : neutralisé encore ${((structure.emp.untilCore-world.tick*10)/60).toFixed(1).replace('.',',')} s${structure.kind==='battery'?' · réserve conservée, charge suspendue et réserve indisponible pour alimenter le réseau':''} · ${detail}`;
   const solar=solarFlareInspection(world,structure);if(solar)detail+=` · ${solar}`;
   const rain = rainElectricalInspection(world, structure);
   if (rain) detail += ` · ${rain}`;

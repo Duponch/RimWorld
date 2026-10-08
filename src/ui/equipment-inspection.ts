@@ -37,7 +37,7 @@ export function equipmentInspectionView(world:World,pawn:Pawn):EquipmentInspecti
   if(pawn.rescue?.phase==='carry')inventory.push(pawn.rescue.capture?'Personne capturée transportée':'Personne secourue transportée');
   return {
     comfort:`Plage de températures confortables : ${range.min.toFixed(1)} °C à ${range.max.toFixed(1)} °C`,
-    primary:equipmentDescription(primary,pawn),apparel,inventory,
+    primary:equipmentDescription(primary,pawn)+(primary?.item==='emp-launcher'?' · Impulsion EMP : interruption mécanique temporaire, sans blessure directe':''),apparel,inventory,
     memory:pawn.droppedWeaponId!==undefined?'Arme perdue : récupération prévue lorsque le colon pourra la reprendre.':'',
   };
 }

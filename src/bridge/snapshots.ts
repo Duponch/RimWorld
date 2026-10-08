@@ -14,6 +14,7 @@ import { isFloorKind } from '../sim/flooring.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validCropBlight } from '../sim/plant-blight-save.ts';
 import { validMedicineResearchTransport } from '../sim/research-save.ts';
+import { validEmpStructureTransport,validEmpProductionTransport } from '../sim/emp-save.ts';
 import { validFluIncidents } from '../sim/flu-incidents-save.ts';
 import { validateMedicalRecord } from '../sim/injury-validation.ts';
 import { medicalStatus } from '../sim/injury-state.ts';
@@ -764,6 +765,7 @@ export class SnapshotDecoder {
     if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion))))return resync('Forme de vague Bomb invalide.');
     for(const pawn of message.world.pawns){
       if(!pawn||typeof pawn!=='object'||Array.isArray(pawn))return resync('Personne locale invalide pour ce snapshot.');
+      if(Object.hasOwn(pawn,'emp'))return resync('Un effet EMP mécanique ne peut pas appartenir à une personne.');
       if(Object.hasOwn(pawn,'bombRefuge')&&!validBombRefugeShape(pawn.bombRefuge,message.world.schemaVersion))return resync('Refuge Bomb futur ou invalide.');
       if(!validMentalTransport(pawn,message.world))return resync('Crise mentale, menace ou autorité de mêlée invalide pour ce snapshot.');
       if(!validShootingShape(pawn.shooting,message.world.schemaVersion,message.world.tick)
@@ -777,6 +779,7 @@ export class SnapshotDecoder {
       if(pawn.bereavement!==undefined&&!Object.hasOwn(message.world,'group')&&!Object.hasOwn(message.world,'groupLosses')&&!validBereavement(pawn.bereavement,pawn.id,message.world.schemaVersion,message.world))return resync('Souvenir de décès invalide pour ce snapshot.');
     }
     for(const owner of [message.world.scout,message.world.commercialTrip]){
+      if(owner&&typeof owner==='object'&&'pawn' in owner&&Object.hasOwn(owner.pawn,'emp'))return resync('Effet EMP détenu par un voyageur humain.');
       if(owner&&typeof owner==='object'&&'pawn' in owner&&!validBackgroundTransport(owner.pawn,message.world.schemaVersion))return resync('Âge ou passé personnel hors carte invalide pour ce snapshot.');
       if(owner&&typeof owner==='object'&&'pawn' in owner&&(owner.pawn.mental?.crisis
         ||Object.hasOwn(owner.pawn,'bombRefuge')
@@ -943,6 +946,7 @@ export class SnapshotDecoder {
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
     if(validateHydroponics(next,next.schemaVersion).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
+    if(!validEmpStructureTransport(next,next.schemaVersion)||!validEmpProductionTransport(next,next.schemaVersion))return resync('État EMP ou production future invalide.');
     for(const pawn of next.pawns)if(!validPrisonerPawnShape(pawn as unknown as Record<string,unknown>,next.schemaVersion,next))return resync('Prisonnier, geôlier ou provenance de recrutement invalide.');
     if(!validPrisonBreakBindings(next,next.schemaVersion))return resync('Révolte de prisonniers et service médical simultanés.');
     if(validateMental(next,next.schemaVersion).length||next.schemaVersion>=192&&validateMelee(next).length)return resync('Cible de crise mentale ou autorité de mêlée incohérente.');
@@ -998,6 +1002,7 @@ export class SnapshotDecoder {
       if(departure.items.some(p=>!validMechCorpseShape(p,next.schemaVersion,departure.tick)||next.schemaVersion<194&&Object.hasOwn(p,'mechCorpse')))return resync('Dossier mécanique de départ historique invalide.');
     for(const records of [next.visitors?.departed??[],next.podRescues?.departed??[]])
       for(const departure of records){
+        if(Object.hasOwn(departure.pawn,'emp'))return resync('Effet EMP mécanique archivé sur une personne.');
         if(departure.items.some(p=>(p.item==='neutroamine'||p.kind==='neutroamine')&&validatePileRecordShape(p as unknown as Record<string,unknown>,next,next.schemaVersion,departure.tick).length))return resync('Neutroamine archivée invalide.');
         if(next.schemaVersion<206&&(departure.packed??[]).some(p=>p.building.kind==='drug-lab'||p.building.bills?.some(b=>b.recipe==='make-medicine')))return resync('Laboratoire pharmaceutique archivé futur.');
         if(isMechanoidKind(departure.pawn.health?.body)||departure.items.some(p=>!validMechCorpseShape(p,next.schemaVersion,departure.tick)||next.schemaVersion<194&&Object.hasOwn(p,'mechCorpse')))return resync('Dossier mécanique archivé invalide.');

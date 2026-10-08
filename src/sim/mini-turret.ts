@@ -9,6 +9,7 @@ import { registerWorldProjectile } from './projectile-system.ts';
 import { friendlyFireFactor } from './game-profile.ts';
 import { healthRandom } from './health.ts';
 import { isPowerActive } from './power-rules.ts';
+import { empStructureActive } from './emp-state.ts';
 import { weatherShotFactor } from './weather-exposure.ts';
 import { MINI_TURRET_ACCURACY,MINI_TURRET_BURST_INTERVAL,MINI_TURRET_COOLDOWN,MINI_TURRET_PROFILE } from './mini-turret-profile.ts';
 import type { TurretLivingKey } from './mini-turret-state.ts';
@@ -24,7 +25,7 @@ export interface TurretQueries {
   turretTargets():TurretTargetIndex;
 }
 export interface TurretAdvance { changed:boolean;emittedId?:number;deferred?:true }
-export const turretOperational=(world:World,s:Structure):boolean=>s.kind==='mini-turret'&&!!s.turret&&world.structures.includes(s)&&isPowerActive(s);
+export const turretOperational=(world:World,s:Structure,core=world.tick*10):boolean=>s.kind==='mini-turret'&&!!s.turret&&world.structures.includes(s)&&isPowerActive(s)&&!empStructureActive(s,core);
 /** Equivalent to (Core+ID)%15 without overflowing a safe persistent ID. */
 export const turretHashDue=(s:Pick<Structure,'id'>,core:number):boolean=>(core%15+s.id%15)%15===0;
 
@@ -115,7 +116,7 @@ function emit(w:World,s:Structure,core:number,plan:TurretShotPlan,queries:Turret
  * fake actor. Canonical phases are adopted only after a successful emission. */
 export function advanceTurretOwner(w:World,s:Structure,core:number,queries:TurretQueries,budget?:TurretAcquisitionBudget):TurretAdvance {
   const t=s.turret;if(s.kind!=='mini-turret'||!t||!w.structures.includes(s))return {changed:false};
-  if(!turretOperational(w,s)) {
+  if(!turretOperational(w,s,core)) {
     const changed=t.targetKey!==null||t.warmup!==null;t.targetKey=null;t.warmup=null;return {changed};
   }
   let emittedId:number|undefined,changed=false;

@@ -35,7 +35,7 @@ export function designateHunt(w:World,c:HuntingCommand):CommandResult {
 }
 export function huntingWanted(w:World,p:Pawn):boolean {
   return isColonist(p)&&workPriority(p,'hunt')>0&&!p.draft&&!medicallyStopped(p)&&pawnBody(p).capacities.manipulation>0
-    &&isRangedWeaponItem(equippedWeapon(w,p)?.item)&&!!w.hunting?.targets.some(id=>w.wildlife?.animals.some(a=>a.id===id&&!a.domestic&&a.state!=='dead')&&!w.pawns.some(o=>o!==p&&o.hunting?.animalId===id));
+    &&equippedWeapon(w,p)?.item!=='emp-launcher'&&isRangedWeaponItem(equippedWeapon(w,p)?.item)&&!!w.hunting?.targets.some(id=>w.wildlife?.animals.some(a=>a.id===id&&!a.domestic&&a.state!=='dead')&&!w.pawns.some(o=>o!==p&&o.hunting?.animalId===id));
 }
 /** Hunting seeks an unobstructed shot within 95% of weapon range, without
  * tactical cover scoring. All candidates share one bounded decision capture. */
@@ -101,7 +101,7 @@ function collect(w:World,p:Pawn,ctx:HuntContext):void {
 }
 export function processHunting(w:World,p:Pawn,ctx:HuntContext):void {
   const task=p.hunting!;
-  if(p.draft||workPriority(p,'hunt')===0||!equippedWeapon(w,p)||medicallyStopped(p)||pawnBody(p).capacities.manipulation===0){stop(p);return;}
+  if(p.draft||workPriority(p,'hunt')===0||!equippedWeapon(w,p)||equippedWeapon(w,p)?.item==='emp-launcher'||medicallyStopped(p)||pawnBody(p).capacities.manipulation===0){stop(p);return;}
   const a=w.wildlife?.animals.find(a=>a.id===task.animalId),corpse=w.piles.some(i=>i.id===task.animalId&&i.kind==='corpse');
   if(a?.domestic){stop(p);return;}
   if(task.phase!=='collect'&&(a?.state==='dead'||corpse)){

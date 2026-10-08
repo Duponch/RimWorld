@@ -13,6 +13,24 @@ import { captureWorldProjectileTargets } from './projectile-world.ts';
 import type { ProjectileScene } from './projectile-rules.ts';
 import type { BombInstigatorKey } from './mini-turret-state.ts';
 import type { Structure,World } from './types.ts';
+import type { WorldProjectile } from './projectile-state.ts';
+import { projectileProfile } from './ranged-statistics.ts';
+import { applyEmpEffect } from './emp-effects.ts';
+
+/** Arrival owns the centre; the normal event queue advances this new wave on
+ * the next Core substep. No thermal, flame or physical damage is emitted. */
+export function startEmpExplosion(w:World,p:WorldProjectile,core:number):boolean {
+  if(w.schemaVersion<208||p.weaponItem!=='emp-launcher'||!w.projectiles?.includes(p)||p.arrival?.kind!=='impact'
+    ||p.advancedAtCore!==core||!Number.isSafeInteger(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10
+    ||!Number.isSafeInteger(w.nextId+1)||(w.bombWaves?.length??0)>=w.width*w.height
+    ||w.bombWaves?.some(wave=>wave.emp&&wave.sourceId===p.id))return false;
+  const center={x:Math.floor(p.arrival.point.x),z:Math.floor(p.arrival.point.z)};
+  if(center.x<0||center.z<0||center.x>=w.width||center.z>=w.height)return false;
+  const wave:MiniTurretBombWave={id:w.nextId,sourceId:p.id,instigatorKey:p.flight.launcherKey as BombInstigatorKey,center,
+    startedAtCore:core,advancedAtCore:core,cells:captureBombCells(w,center,1.1,true),nextCell:0,damagedThingKeys:[],emp:{quality:p.quality}};
+  if(!validBombWaveShape(wave,w.schemaVersion))return false;
+  w.nextId++;(w.bombWaves??=[]).push(wave);return true;
+}
 
 /** Prepare both geometries and the thermal result before reserving any ID.
  * The caller commits its battery drain/report only after this returns true.
@@ -76,6 +94,16 @@ export function advanceBombWave(w:World,wave:MiniTurretBombWave,core:number,read
     const index=wave.cells[wave.nextCell]!,cell={x:index%w.width,z:Math.floor(index/w.width)},snapshot=[...scene().at(cell)];
     const altitude=(key:string)=>layer(w,key,!!wave.shortCircuit);
     const full=snapshot.reduce((max,t)=>t.fill>.99?Math.max(max,altitude(t.key)):max,-Infinity);
+    if(wave.emp){
+      const amount=projectileProfile('emp-launcher',wave.emp.quality)!.damage;
+      for(const t of snapshot){
+        if(affected.has(t.key)||altitude(t.key)<full)continue;
+        const id=idOf(t.key),target=t.key.startsWith('mech:')?w.mechanoids?.find(m=>m.id===id)
+          :t.key.startsWith('structure:')?w.structures.find(s=>s.id===id):undefined;
+        if(target&&applyEmpEffect(w,target,amount,core)){affected.add(t.key);invalidate();}
+      }
+      wave.nextCell++;continue;
+    }
     if(wave.shortCircuit?.damage==='flame') {
       const allowed=new Set(snapshot.filter(t=>altitude(t.key)>=full).map(t=>t.key.startsWith('packed:')?`structure:${idOf(t.key)}`:t.key));
       if(applyFlameWaveCell(w,cell,core,affected,allowed))invalidate();

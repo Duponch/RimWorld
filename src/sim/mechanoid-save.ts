@@ -5,6 +5,7 @@ import { medicalStatus } from './injury-state.ts';
 import { travelEnd,validSlowIntervals,validStunIntervals } from './travel-timing.ts';
 import { validStagger } from './stagger.ts';
 import { validStunShape } from './melee-save.ts';
+import { validMechanoidEmpState,validMechanoidEmpIntervals } from './emp-save.ts';
 import { isBarrier } from './barriers.ts';
 import { footprintCells } from './definitions.ts';
 import type { MedicalRecord } from './injury-types.ts';
@@ -28,11 +29,12 @@ export function validMechaMedicalRecord(value:unknown,worldTick:number,dead:bool
   return record.tick<=worldTick&&!!record.death===dead;
 }
 export function validMechanoidShape(value:unknown,version:number,tick:number):value is Mechanoid {
-  if(version<194||!integer(tick)||!object(value)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[])])
+  if(version<194||!integer(tick)||!object(value)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[]),...(version>=208?['emp']:[])])
     ||!integer(value.id,1)||!isMechanoidKind(value.mechKind)||version<197&&value.mechKind!=='scyther'||!integer(value.x)||!integer(value.z)
     ||typeof value.state!=='string'||!['idle','moving','working','downed','dead'].includes(value.state)||!finite(value.heading,-Math.PI*2,Math.PI*2)
     ||!finite(value.moveCooldown,0,1000)||!integer(value.planCooldown,0,1000)||!Array.isArray(value.path)||!value.path.every(cell)
-    ||!validStagger(value.stagger,version,tick)||!validStunShape(value.stun,version,tick))return false;
+    ||!validStagger(value.stagger,version,tick)||!validStunShape(value.stun,version,tick)
+    ||Object.hasOwn(value,'emp')&&(value.emp===undefined||!validMechanoidEmpState(value.emp,version,tick,value.state==='dead'||value.state==='downed')))return false;
   const m=value as unknown as Mechanoid;
   if(m.health!==undefined&&!validMechaMedicalRecord(m.health,tick,m.state==='dead',m.mechKind,version))return false;
   if(!m.health&&(m.state==='downed'||m.state==='dead'))return false;
@@ -44,7 +46,8 @@ export function validMechanoidShape(value:unknown,version:number,tick:number):va
     if(!object(motion)||!keys(motion,['from','to','start','end','speedFactor','terrainDelay','stagger','stuns'])||!cell(motion.from)||!cell(motion.to)
       ||!finite(motion.start,0,tick)||!finite(motion.end,0,tick+1000)||motion.end<=motion.start
       ||motion.speedFactor!==undefined&&!finite(motion.speedFactor,.001,mechanoidDefinition(m.mechKind).moveSpeed/4.6)||motion.terrainDelay!==undefined&&!finite(motion.terrainDelay,0,50)
-      ||!validSlowIntervals(motion.stagger,version,motion.start,tick)||!validStunIntervals(motion.stuns,version,motion.start,tick)
+      ||!validSlowIntervals(motion.stagger,version,motion.start,tick)
+      ||!validStunIntervals(motion.stuns,version,motion.start,tick)&&!validMechanoidEmpIntervals(motion.stuns,version,motion.start,tick,m.emp)
       ||Math.max(Math.abs(motion.from.x-motion.to.x),Math.abs(motion.from.z-motion.to.z))!==1
       ||motion.to.x!==m.x||motion.to.z!==m.z||Math.abs(motion.end-travelEnd(motion))>1e-7
       ||Math.abs(m.moveCooldown-Math.max(0,motion.end-tick))>1e-7)return false;
@@ -55,8 +58,13 @@ export function validMechanoidShape(value:unknown,version:number,tick:number):va
     const o=melee.order,s=melee.strike;
     if(o!==null&&(!object(o)||!keys(o,['structure','targetId','startedDowned','jobUntilCore'])||!integer(o.targetId,1)||o.startedDowned!==false
       ||o.structure!==undefined&&o.structure!==true||(o.structure?o.jobUntilCore!==undefined:!integer(o.jobUntilCore,tick*10+1,tick*10+480))))return false;
-    if(s!==null&&(!object(s)||!keys(s,['structure','targetId','atCore','untilCore','tool','outcome'])||!integer(s.targetId,1)
-      ||!integer(s.atCore,0,tick*10)||!integer(s.untilCore,tick*10+1)||s.untilCore-s.atCore!==(m.mechKind==='pikeman'&&(s.tool==='barrel'||s.tool==='barrel-poke')?156:120)||typeof s.tool!=='string'||!tools(m.mechKind).includes(s.tool)
+    const pause=object(s)?s.empPause:undefined;
+    const validPause=version>=208&&object(s)&&object(pause)&&keys(pause,['ticks','lastAtCore'])
+      &&pause.lastAtCore===tick*10&&integer(pause.lastAtCore,Number(s.atCore))&&integer(pause.ticks,0,pause.lastAtCore-Number(s.atCore));
+    const pausedTicks=validPause&&object(pause)?Number(pause.ticks):0;
+    if(s!==null&&(!object(s)||!keys(s,['structure','targetId','atCore','untilCore','tool','outcome',...(version>=208?['empPause']:[])])||!integer(s.targetId,1)
+      ||Object.hasOwn(s,'empPause')&&!validPause||!integer(s.atCore,0,tick*10)||!integer(s.untilCore,tick*10+1)
+      ||s.untilCore-s.atCore!==(m.mechKind==='pikeman'&&(s.tool==='barrel'||s.tool==='barrel-poke')?156:120)+pausedTicks||typeof s.tool!=='string'||!tools(m.mechKind).includes(s.tool)
       ||typeof s.outcome!=='string'||!['hit','miss','dodge'].includes(s.outcome)||s.structure!==undefined&&(!cell(s.structure)||s.outcome!=='hit')))return false;
   }
   return true;

@@ -5,7 +5,7 @@ import { MINI_TURRET_PROFILE } from './mini-turret-profile.ts';
 import { LANCER_GUN_PROFILE,PIKEMAN_GUN_PROFILE } from './mechanoid-ranged-profile.ts';
 
 /** Projectile identity is broader than inventory/equipment ItemId. */
-export type ProjectileProfileId='revolver'|'bolt-action-rifle'|'mini-turret-gun'|'lancer-gun'|'pikeman-gun';
+export type ProjectileProfileId='revolver'|'bolt-action-rifle'|'emp-launcher'|'mini-turret-gun'|'lancer-gun'|'pikeman-gun';
 
 /** Data/units shared by the persistent shooting skill and attack producer. See the explicit
  * current/historical source decisions in research/ranged-statistics-reference. */
@@ -52,10 +52,15 @@ const rifleProfiles=Object.freeze(Object.fromEntries(WEAPON_QUALITIES.map((quali
   accuracy:Object.freeze([.65,.8,.9,.8].map(a=>Math.min(1,a*accuracyFactors[i]))) as AccuracyCurve,
   range:36.9,warmupCoreTicks:102,cooldownCoreTicks:90,projectileTilesPerCoreTick:70/100,stoppingPower:1.5,
 })])) as Record<WeaponQuality,RevolverProfile>);
+const empProfiles=Object.freeze(Object.fromEntries(WEAPON_QUALITIES.map((quality,i)=>[quality,Object.freeze({
+  quality,damage:rangedRound(50*damageFactors[i]),armorPenetration:0,
+  accuracy:Object.freeze([1,1,1,1].map(a=>Math.min(1,a*accuracyFactors[i]))) as AccuracyCurve,
+  range:23.9,warmupCoreTicks:210,cooldownCoreTicks:210,projectileTilesPerCoreTick:.4,stoppingPower:0,
+})])) as Record<WeaponQuality,RevolverProfile>);
 export function rangedWeaponProfile(item:unknown,quality:WeaponQuality):RevolverProfile|undefined {
   if(!isRangedWeaponItem(item))return undefined;
   if(!WEAPON_QUALITIES.includes(quality))throw new RangeError('Invalid weapon quality');
-  return item==='revolver'?profiles[quality]:rifleProfiles[quality];
+  return item==='revolver'?profiles[quality]:item==='emp-launcher'?empProfiles[quality]:rifleProfiles[quality];
 }
 export function projectileProfile(item:unknown,quality:WeaponQuality):RevolverProfile|undefined {
   if(item==='mini-turret-gun'||item==='lancer-gun'||item==='pikeman-gun')return quality==='normal'?

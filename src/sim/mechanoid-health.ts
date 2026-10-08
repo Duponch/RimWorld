@@ -6,6 +6,7 @@ import { assessMedical,createMedicalRecord,medicalStatus,partMissing,reconcileMe
 import { validateMechanoidMedicalRecord } from './injury-validation.ts';
 import { cancelMelee } from './melee-state.ts';
 import { cancelMechanoidRanged } from './mechanoid-ranged-state.ts';
+import { stopMechanoidEmpStun } from './emp-effects.ts';
 import type { MedicalRecord } from './injury-types.ts';
 import type { Mechanoid } from './mechanoid-state.ts';
 import type { World } from './types.ts';
@@ -65,7 +66,7 @@ export function commitMechanoidImpact(w:World,m:Mechanoid,record:MedicalRecord,r
   const status=medicalStatus(adopted),changed=m.state!==status;
   w.rng=random.rng;m.health=adopted;
   if(status!=='mobile'){
-    m.state=status;m.path=[];if(m.raid)m.raid.goal=null;cancelMelee(m);cancelMechanoidRanged(m);delete m.stun;
+    m.state=status;m.path=[];if(m.raid)m.raid.goal=null;cancelMelee(m);cancelMechanoidRanged(m);stopMechanoidEmpStun(m,atCore,w.tick);delete m.stun;
     const group=w.raids?.mechActive;
     if(status==='dead'&&group?.members.includes(m.id)&&!group.lost.includes(m.id)){group.lost.push(m.id);group.lost.sort((a,b)=>a-b);}
     if(changed){w.events.push({tick:w.tick,type:'command',message:`${mechanoidDefinition(m.mechKind).label} ${m.id} ${status==='dead'?'est neutralisé':'est immobilisé'}.`});if(w.events.length>80)w.events.splice(0,w.events.length-80);}
