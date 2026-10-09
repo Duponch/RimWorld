@@ -1,7 +1,7 @@
 # Lisière
 
-**V279 — nourriture physique pour les animaux immobilisés ; schéma 214.**
-Un médecin apporte une portion compatible aux cinq espèces possédées affamées à terre ou au repos médical : collecte, transport et ingestion au contact, sans médicament ni XP médicale. [Règles et validation](docs/gameplay/animal-feeding-v279.md). L’[arrestation et libération d’un colon V278](docs/gameplay/colonist-arrest-v278.md) reste disponible ; les états suivants sont historiques.
+**V280 — scanner de sol et forage profond ; schéma 215.**
+Deux recherches et deux machines relient découverte souterraine, travail au contact et piles physiques d’acier, d’or, d’argent ou de plastacier. [Règles, adaptations et validation](docs/gameplay/deep-drilling-v280.md) : contrôles ciblés, anciennes sauvegardes et parcours WebGPU avec extraction, repositionnement et sept reprises exactes passent. L’[alimentation assistée V279](docs/gameplay/animal-feeding-v279.md) et l’[arrestation/libération V278](docs/gameplay/colonist-arrest-v278.md) restent disponibles ; les états suivants sont historiques.
 
 **V277 — soins vétérinaires des troupeaux ; schéma 212.**
 Cerfs, gazelles, mufalos et dromadaires possédés reçoivent les soins physiques déjà disponibles pour les lièvres : médecin, médicaments portés, pansements et repos de récupération. [Règles et validation](docs/gameplay/veterinary-care-v277.md). L’alimentation assistée animale reste ouverte ; les états suivants sont historiques.

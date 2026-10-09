@@ -43,6 +43,8 @@ const def = (stuff: number, work: number, passability: Passability,
  * inheriting a fictitious value. Historical untyped furniture keeps Core's
  * abstract-stuff estimate rather than receiving a fabricated material. */
 const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.freeze({
+  'deep-drill': def(0, 10000, 'pass-through', {steel:100,component:2}),
+  'ground-scanner': def(0, 12000, 'pass-through', {steel:150,component:4,'advanced-component':1}),
   'vitals-monitor': def(0, 6000, 'pass-through', {steel:50,component:3}),
   'hydroponics-basin': def(0, 2800, 'pass-through', {steel:100,component:1}),
   'mini-turret': def(0, 1800, 'pass-through', {steel:100,component:3}),

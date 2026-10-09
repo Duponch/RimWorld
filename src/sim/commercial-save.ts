@@ -85,7 +85,7 @@ export function validateCommercialRegistry(w:World,version:number):string[] {
   if(!int(p.id,1,w.nextId-1)||w.pawns.some(q=>q?.id===p.id)||!isColonist(p as unknown as Pawn)||p.prisoner||p.visitor||p.raid||p.podRescue
     ||p.x!==(s.entry as Record<string,unknown>).x||p.z!==(s.entry as Record<string,unknown>).z||p.state!=='idle'||p.bedId!==null||p.jobId!==null||p.haul!==null||p.cooking!==null||p.need!==null
     ||!Array.isArray(p.path)||p.path.length||p.moveCooldown!==0||p.motion!==undefined||!object(p.orders)||p.orders.active!==null||!Array.isArray(p.orders.queue)||p.orders.queue.length
-    ||['draft','shooting','melee','flee','tactics','stun','stagger','rescue','tend','surgery','surgeryRequest','feed','ward','trade','firefighting','priorityWork','research','hunting','burial','cleaning','burning','animalHandling','animalCare','animalFeed','equipmentTask','interruptedCargo','transitExit','heatRefuge','bombRefuge'].some(k=>p[k]!==undefined)
+    ||['draft','shooting','melee','flee','tactics','stun','stagger','rescue','tend','surgery','surgeryRequest','feed','ward','trade','firefighting','priorityWork','research','hunting','burial','cleaning','burning','animalHandling','animalCare','animalFeed','deepWork','equipmentTask','interruptedCargo','transitExit','heatRefuge','bombRefuge'].some(k=>p[k]!==undefined)
     ||object(p.social)&&p.social.fight!==undefined||object(p.mental)&&p.mental.crisis!==undefined)return ['Off-map commercial owner retains a map task or duplicate.'];
   const ids=new Set<number>();let inventories=0;
   for(const pile of s.items){

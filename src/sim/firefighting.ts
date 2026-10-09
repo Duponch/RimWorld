@@ -71,7 +71,7 @@ export function startFirefighting(p:Pawn,proposal:FirefightingProposal):void {
 }
 function currentPriority(w:World,p:Pawn):number|null {
   const job=w.jobs.find(j=>j.id===p.jobId);
-  const work=job?workType(job):p.research?'research':p.cooking?taskWork(p.cooking):p.haul?haulingWork(p.haul.destination):p.ward?'warden':p.tend||p.feed||p.rescue?'doctor':p.hunting?'hunt':p.need?.kind==='sleep'&&p.need.medical==='patient'?'patient':null;
+  const work=job?workType(job):p.deepWork?(p.deepWork.kind==='drill'?'mine':'research'):p.research?'research':p.cooking?taskWork(p.cooking):p.haul?haulingWork(p.haul.destination):p.ward?'warden':p.tend||p.feed||p.rescue?'doctor':p.hunting?'hunt':p.need?.kind==='sleep'&&p.need.medical==='patient'?'patient':null;
   return work?workPriority(p,work):null;
 }
 /** Emergency interruption compares actual running work; idle work uses the common planner.

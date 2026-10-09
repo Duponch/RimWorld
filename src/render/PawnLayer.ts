@@ -70,7 +70,7 @@ function motionX(walking:boolean,transition:CrouchTransition|undefined,origin:nu
 }
 function workActivity(pawn:Pawn):number {
   if(pawn.state!=='working'||pawn.stun)return 0;
-  return pawn.cooking?2:pawn.research?3:1;
+  return pawn.cooking?2:pawn.research||pawn.deepWork?3:1;
 }
 function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boolean):number {
   if(pawn.state==='dead')return POSE_DEAD;
@@ -761,7 +761,7 @@ export class PawnLayer {
       const fighting=pawn.firefighting?world.fires?.items.find(f=>f.id===pawn.firefighting!.fireId):undefined;
       const fireTarget=fighting?firePosition(world,fighting):undefined;
       const fuelDestination=pawn.haul?.destination.type==='fuel'||pawn.haul?.destination.type==='turret'?pawn.haul.destination:undefined;
-      const station=pawn.state==='working'||arriving ? pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking?.phase==='work' ? world.structures.find(s=>s.id===pawn.cooking!.stationId) : pawn.haul?.serviceProgress!==undefined&&fuelDestination ? world.structures.find(s=>s.id===fuelDestination.structureId) : undefined : undefined;
+      const station=pawn.state==='working'||arriving ? pawn.deepWork ? world.structures.find(s=>s.id===pawn.deepWork!.structureId) : pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking?.phase==='work' ? world.structures.find(s=>s.id===pawn.cooking!.stationId) : pawn.haul?.serviceProgress!==undefined&&fuelDestination ? world.structures.find(s=>s.id===fuelDestination.structureId) : undefined : undefined;
       const workPose=pawnWorkPose(pawn,job,station?.kind);
       const stationCell=station ? footprintCells(station).reduce((best,cell)=>Math.hypot(cell.x-pawn.x,cell.z-pawn.z)<Math.hypot(best.x-pawn.x,best.z-pawn.z)?cell:best) : undefined;
       const patient=pawn.feed?.phase==='feed'?pawnsById.get(pawn.feed.patientId):pawn.tend?.phase==='tend'?pawnsById.get(pawn.tend.patientId):pawn.surgery?.phase==='work'?pawnsById.get(pawn.surgery.patientId):undefined;
@@ -771,7 +771,7 @@ export class PawnLayer {
       const work = pawn.state==='working'||arriving ? fireTarget ?? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.hunting?.phase==='finish' ? world.wildlife?.animals.find(a=>a.id===pawn.hunting!.animalId) : patient ?? handledAnimal ?? stationCell ?? pawn.cooking?.actionCell ?? pawn.haul?.pickupCell) : undefined;
       if(work&&pawn.state==='working') yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);
       const contactPose=arriving?pawnWorkPose({...pawn,state:'working'},job,station?.kind):workPose;
-      const atBench=station?.kind==='drug-lab'||station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
+      const atBench=station?.kind==='deep-drill'||station?.kind==='ground-scanner'||station?.kind==='drug-lab'||station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
       const clearance=job?.kind==='mine' ? .9 : atBench ? .88 : .82;
       const pair=pawn.social?.fight?pawnsById.get(pawn.social.fight.opponentId):undefined;
       const socialOpponent=pair?.social?.fight?.opponentId===pawn.id&&!medicallyStopped(pair)?pair:undefined;

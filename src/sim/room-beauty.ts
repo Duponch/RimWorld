@@ -37,6 +37,8 @@ export function filthBeauty(filth:Pick<BeautyFilth,'kind'>,outdoors=false):numbe
 }
 export function groundObjectBeauty(object:BeautyObject):number {return object.visible===false?0:object.beauty??-4;}
 export function structureBeauty(structure:BeautyStructure):number {
+  if(structure.kind==='deep-drill')return -25;
+  if(structure.kind==='ground-scanner')return -8;
   // Fixed electronics are not stuffed furniture; steel is ingredient provenance.
   if(structure.kind==='mini-turret')return -20;
   if(structure.kind==='tube-television')return 0;

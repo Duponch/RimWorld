@@ -1,4 +1,4 @@
-import { STERILE_MATERIALS_RESEARCH_COST,VITALS_MONITOR_RESEARCH_COST,sterileMaterialsUnlocked,vitalsMonitorUnlocked,DRUG_PRODUCTION_RESEARCH_COST,MEDICINE_PRODUCTION_RESEARCH_COST,drugProductionUnlocked,medicineProductionUnlocked,HYDROPONICS_RESEARCH_COST,hydroponicsUnlocked,GUN_TURRETS_RESEARCH_COST,gunTurretsUnlocked,TUBE_TELEVISION_RESEARCH_COST,tubeTelevisionUnlocked,PACKAGED_SURVIVAL_MEALS_RESEARCH_COST,packagedSurvivalMealsUnlocked,HOSPITAL_BED_RESEARCH_COST,hospitalBedUnlocked,MACHINING_RESEARCH_COST,GUNSMITHING_RESEARCH_COST,PLATE_ARMOR_RESEARCH_COST,FLAK_ARMOR_RESEARCH_COST,RECON_ARMOR_RESEARCH_COST,MICROELECTRONICS_RESEARCH_COST,MULTI_ANALYZER_RESEARCH_COST,FABRICATION_RESEARCH_COST,ADVANCED_FABRICATION_RESEARCH_COST,AUTODOORS_RESEARCH_COST,microelectronicsUnlocked,multiAnalyzerUnlocked,fabricationUnlocked,advancedFabricationUnlocked,reconArmorUnlocked,autodoorsUnlocked,machiningUnlocked,researchPrerequisite,STONECUTTING_RESEARCH_COST,SMITHING_RESEARCH_COST,COMPLEX_FURNITURE_RESEARCH_COST,CLOTHING_RESEARCH_COST,AIR_CONDITIONING_COST,BATTERIES_RESEARCH_COST,SOLAR_POWER_RESEARCH_COST,airConditioningUnlocked,clothingUnlocked,batteriesUnlocked,solarPowerUnlocked,complexFurnitureUnlocked,flakArmorUnlocked } from './research.ts';
+import { DEEP_DRILLING_RESEARCH_COST,GROUND_SCANNER_RESEARCH_COST,deepDrillingUnlocked,groundScannerUnlocked,STERILE_MATERIALS_RESEARCH_COST,VITALS_MONITOR_RESEARCH_COST,sterileMaterialsUnlocked,vitalsMonitorUnlocked,DRUG_PRODUCTION_RESEARCH_COST,MEDICINE_PRODUCTION_RESEARCH_COST,drugProductionUnlocked,medicineProductionUnlocked,HYDROPONICS_RESEARCH_COST,hydroponicsUnlocked,GUN_TURRETS_RESEARCH_COST,gunTurretsUnlocked,TUBE_TELEVISION_RESEARCH_COST,tubeTelevisionUnlocked,PACKAGED_SURVIVAL_MEALS_RESEARCH_COST,packagedSurvivalMealsUnlocked,HOSPITAL_BED_RESEARCH_COST,hospitalBedUnlocked,MACHINING_RESEARCH_COST,GUNSMITHING_RESEARCH_COST,PLATE_ARMOR_RESEARCH_COST,FLAK_ARMOR_RESEARCH_COST,RECON_ARMOR_RESEARCH_COST,MICROELECTRONICS_RESEARCH_COST,MULTI_ANALYZER_RESEARCH_COST,FABRICATION_RESEARCH_COST,ADVANCED_FABRICATION_RESEARCH_COST,AUTODOORS_RESEARCH_COST,microelectronicsUnlocked,multiAnalyzerUnlocked,fabricationUnlocked,advancedFabricationUnlocked,reconArmorUnlocked,autodoorsUnlocked,machiningUnlocked,researchPrerequisite,STONECUTTING_RESEARCH_COST,SMITHING_RESEARCH_COST,COMPLEX_FURNITURE_RESEARCH_COST,CLOTHING_RESEARCH_COST,AIR_CONDITIONING_COST,BATTERIES_RESEARCH_COST,SOLAR_POWER_RESEARCH_COST,airConditioningUnlocked,clothingUnlocked,batteriesUnlocked,solarPowerUnlocked,complexFurnitureUnlocked,flakArmorUnlocked } from './research.ts';
 import { cookingSpot } from './cooking-bills.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { validatePower } from './power-save.ts';
@@ -9,6 +9,32 @@ import { gunsmithingUnlocked } from './research.ts';
 import { isGunRecipe,isFlakRecipe } from './production-recipes.ts';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
+/** New research/content only; reconstructed snapshots reuse this guard without
+ * another historical research, world or terrain validation. */
+export function validDeepResearchTransport(world:World,version:number):boolean {
+  try {
+    const state=world.research,project=state?.project;
+    const progress=(p:unknown,cost:number,active:boolean)=>record(p)&&Object.keys(p).every(k=>k==='points'||k==='completedAt')&&int(p.points,0,cost)
+      &&(p.completedAt===undefined?p.points<cost:int(p.completedAt,0,world.tick)&&p.points===cost&&!active);
+    if(state)for(const [key,id,cost] of [['deepDrilling','deep-drilling',DEEP_DRILLING_RESEARCH_COST],['groundScanner','ground-scanner',GROUND_SCANNER_RESEARCH_COST]] as const){
+      if(Object.hasOwn(state,key)&&(version<215||!progress(state[key],cost,project===id)||!!researchPrerequisite(world,id)))return false;
+      if(project===id&&(version<215||!state[key]))return false;
+    }
+    const allowed=(s:unknown):boolean=>{
+      if(!record(s))return false;
+      const kinds=[s.kind,record(s.furniture)?s.furniture.kind:undefined,record(s.deconstruction)?s.deconstruction.kind:undefined];
+      return (!kinds.includes('deep-drill')||version>=215&&deepDrillingUnlocked(world))
+        &&(!kinds.includes('ground-scanner')||version>=215&&groundScannerUnlocked(world));
+    };
+    for(const s of world.structures)if(!allowed(s))return false;
+    for(const j of world.jobs)if(!allowed(j))return false;
+    for(const p of world.packed??[])if(!allowed(p.building)||p.building.kind==='ground-scanner')return false;
+    for(const departed of [world.visitors?.departed??[],world.podRescues?.departed??[]])for(const d of departed)for(const p of d.packed??[])
+      if(!allowed(p.building)||p.building.kind==='ground-scanner')return false;
+    if((project==='deep-drilling'||project==='ground-scanner')&&world.pawns.some(p=>p.research&&!world.structures.some(s=>s.id===p.research!.stationId&&s.kind==='hi-tech-research-bench')))return false;
+    return true;
+  }catch{return false;}
+}
 /** Sparse V211 guard, shared by files and reconstructed snapshots. Terrain is
  * checked in the existing floor/checkpoint/delta traversal, not scanned here. */
 export function validHospitalSupportTransport(world:World,version:number):boolean {
@@ -70,15 +96,15 @@ export function validMedicineResearchTransport(world:World,version:number):boole
   const content=[...world.structures,...world.jobs,...(world.packed??[]).map(p=>p.building)];
   if(project==='medicine-production'&&world.pawns.some(p=>p.research&&!world.structures.some(s=>s.id===p.research!.stationId&&s.kind==='hi-tech-research-bench')))return false;
   if(!drugProductionUnlocked(world)&&content.some(s=>s.kind==='drug-lab'||'deconstruction' in s&&(s.deconstruction as {kind?:string}|undefined)?.kind==='drug-lab'))return false;
-  if(!medicineProductionUnlocked(world)&&(content.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-medicine'))||world.pawns.some(p=>p.cooking?.recipe==='make-medicine'||p.orders.queue.some(o=>typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='make-medicine'))))return false;
+  if(!medicineProductionUnlocked(world)&&(content.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-medicine'))||world.pawns.some(p=>p.cooking?.recipe==='make-medicine'||(p.orders?.queue??[]).some(o=>typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='make-medicine'))))return false;
   return true;
 }
 export function validateResearch(world:World,version:number):string[]{
   const errors:string[]=[],state=world.research;
   if(state!==undefined){
-    const progress=(p:unknown,cost:number,active:boolean,root=false)=>record(p)&&Object.keys(p).every(k=>['points','completedAt',...(root?['project',...(version>=75?['airConditioning']:[]),...(version>=85?['batteries','solarPower']:[]),...(version>=89?['stonecutting','smithing']:[]),...(version>=90?['complexFurniture']:[]),...(version>=101?['machining','gunsmithing']:[]),...(version>=109?['plateArmor','flakArmor']:[]),...(version>=123?['microelectronics','multiAnalyzer','fabrication']:[]),...(version>=139?['advancedFabrication']:[]),...(version>=143?['autodoors']:[]),...(version>=148?['reconArmor']:[]),...(version>=187?['hospitalBed']:[]),...(version>=188?['packagedSurvivalMeals']:[]),...(version>=190?['tubeTelevision']:[]),...(version>=193?['gunTurrets']:[]),...(version>=203?['hydroponics']:[]),...(version>=206?['drugProduction','medicineProduction']:[]),...(version>=211?['sterileMaterials','vitalsMonitor']:[])]:[])].includes(k))&&int(p.points,0,cost)
+    const progress=(p:unknown,cost:number,active:boolean,root=false)=>record(p)&&Object.keys(p).every(k=>['points','completedAt',...(root?['project',...(version>=75?['airConditioning']:[]),...(version>=85?['batteries','solarPower']:[]),...(version>=89?['stonecutting','smithing']:[]),...(version>=90?['complexFurniture']:[]),...(version>=101?['machining','gunsmithing']:[]),...(version>=109?['plateArmor','flakArmor']:[]),...(version>=123?['microelectronics','multiAnalyzer','fabrication']:[]),...(version>=139?['advancedFabrication']:[]),...(version>=143?['autodoors']:[]),...(version>=148?['reconArmor']:[]),...(version>=187?['hospitalBed']:[]),...(version>=188?['packagedSurvivalMeals']:[]),...(version>=190?['tubeTelevision']:[]),...(version>=193?['gunTurrets']:[]),...(version>=203?['hydroponics']:[]),...(version>=206?['drugProduction','medicineProduction']:[]),...(version>=211?['sterileMaterials','vitalsMonitor']:[]),...(version>=215?['deepDrilling','groundScanner']:[])]:[])].includes(k))&&int(p.points,0,cost)
       &&(p.completedAt===undefined?p.points<cost:int(p.completedAt,0,world.tick)&&p.points===cost&&!active);
-    if(version<73||!record(state)||state.project!==null&&state.project!=='complex-clothing'&&(version<75||state.project!=='air-conditioning')&&(version<85||state.project!=='batteries'&&state.project!=='solar-power')&&(version<89||state.project!=='stonecutting'&&state.project!=='smithing')&&(version<90||state.project!=='complex-furniture')&&(version<101||state.project!=='machining'&&state.project!=='gunsmithing')&&(version<109||state.project!=='plate-armor'&&state.project!=='flak-armor')&&(version<123||state.project!=='microelectronics'&&state.project!=='multi-analyzer'&&state.project!=='fabrication')&&(version<139||state.project!=='advanced-fabrication')&&(version<143||state.project!=='autodoors')&&(version<148||state.project!=='recon-armor')&&(version<187||state.project!=='hospital-bed')&&(version<188||state.project!=='packaged-survival-meals')&&(version<190||state.project!=='tube-television')&&(version<193||state.project!=='gun-turrets')&&(version<203||state.project!=='hydroponics')&&(version<206||state.project!=='drug-production'&&state.project!=='medicine-production')&&(version<211||state.project!=='sterile-materials'&&state.project!=='vitals-monitor')
+    if(version<73||!record(state)||state.project!==null&&state.project!=='complex-clothing'&&(version<75||state.project!=='air-conditioning')&&(version<85||state.project!=='batteries'&&state.project!=='solar-power')&&(version<89||state.project!=='stonecutting'&&state.project!=='smithing')&&(version<90||state.project!=='complex-furniture')&&(version<101||state.project!=='machining'&&state.project!=='gunsmithing')&&(version<109||state.project!=='plate-armor'&&state.project!=='flak-armor')&&(version<123||state.project!=='microelectronics'&&state.project!=='multi-analyzer'&&state.project!=='fabrication')&&(version<139||state.project!=='advanced-fabrication')&&(version<143||state.project!=='autodoors')&&(version<148||state.project!=='recon-armor')&&(version<187||state.project!=='hospital-bed')&&(version<188||state.project!=='packaged-survival-meals')&&(version<190||state.project!=='tube-television')&&(version<193||state.project!=='gun-turrets')&&(version<203||state.project!=='hydroponics')&&(version<206||state.project!=='drug-production'&&state.project!=='medicine-production')&&(version<211||state.project!=='sterile-materials'&&state.project!=='vitals-monitor')&&(version<215||state.project!=='deep-drilling'&&state.project!=='ground-scanner')
       ||!progress(state,CLOTHING_RESEARCH_COST,state.project==='complex-clothing'||version<75&&state.project!==null,true)
       ||state.airConditioning!==undefined&&(version<75||!progress(state.airConditioning,AIR_CONDITIONING_COST,state.project==='air-conditioning'))
       ||state.project==='air-conditioning'&&!state.airConditioning
@@ -102,6 +128,10 @@ export function validateResearch(world:World,version:number):string[]{
       ||state.project==='packaged-survival-meals'&&!state.packagedSurvivalMeals
       ||state.sterileMaterials!==undefined&&(version<211||!progress(state.sterileMaterials,STERILE_MATERIALS_RESEARCH_COST,state.project==='sterile-materials'))
       ||state.project==='sterile-materials'&&!state.sterileMaterials
+      ||state.deepDrilling!==undefined&&(version<215||!progress(state.deepDrilling,DEEP_DRILLING_RESEARCH_COST,state.project==='deep-drilling')||!!researchPrerequisite(world,'deep-drilling'))
+      ||state.project==='deep-drilling'&&!state.deepDrilling
+      ||state.groundScanner!==undefined&&(version<215||!progress(state.groundScanner,GROUND_SCANNER_RESEARCH_COST,state.project==='ground-scanner')||!!researchPrerequisite(world,'ground-scanner'))
+      ||state.project==='ground-scanner'&&!state.groundScanner
       ||state.vitalsMonitor!==undefined&&(version<211||!progress(state.vitalsMonitor,VITALS_MONITOR_RESEARCH_COST,state.project==='vitals-monitor')||!!researchPrerequisite(world,'vitals-monitor'))
       ||state.project==='vitals-monitor'&&!state.vitalsMonitor
       ||state.drugProduction!==undefined&&(version<206||!progress(state.drugProduction,DRUG_PRODUCTION_RESEARCH_COST,state.project==='drug-production'))
@@ -123,10 +153,11 @@ export function validateResearch(world:World,version:number):string[]{
       ||state.project==='batteries'&&!state.batteries||state.project==='solar-power'&&!state.solarPower)errors.push('Invalid research project.');
   }
   if(!validHospitalSupportTransport(world,version))errors.push('Invalid or future hospital support research or content.');
+  if(!validDeepResearchTransport(world,version))errors.push('Invalid or future deep drilling research or content.');
   if(!airConditioningUnlocked(world)&&[...world.structures,...world.jobs].some(s=>s.kind==='cooler'))errors.push('Locked cooler.');
   const electricalContent=[...world.structures,...world.jobs,...(world.packed??[]).map(p=>p.building)];
   if(!drugProductionUnlocked(world)&&electricalContent.some(s=>s.kind==='drug-lab'||'deconstruction' in s&&(s.deconstruction as {kind?:string}|undefined)?.kind==='drug-lab'))errors.push('Locked drug lab.');
-  if(!medicineProductionUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-medicine'))||world.pawns.some(p=>p.cooking?.recipe==='make-medicine'||p.orders.queue.some(o=>typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='make-medicine'))))errors.push('Locked medicine production.');
+  if(!medicineProductionUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-medicine'))||world.pawns.some(p=>p.cooking?.recipe==='make-medicine'||(p.orders?.queue??[]).some(o=>typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='make-medicine'))))errors.push('Locked medicine production.');
   if(!hydroponicsUnlocked(world)&&electricalContent.some(s=>s.kind==='hydroponics-basin'||'deconstruction' in s&&(s.deconstruction as {kind?:string}|undefined)?.kind==='hydroponics-basin'))errors.push('Locked hydroponics basin.');
   if(!batteriesUnlocked(world)&&electricalContent.some(s=>s.kind==='battery'))errors.push('Locked battery.');
   if(!solarPowerUnlocked(world)&&electricalContent.some(s=>s.kind==='solar-generator'))errors.push('Locked solar generator.');
@@ -139,23 +170,23 @@ export function validateResearch(world:World,version:number):string[]{
   if(version>=193&&!gunTurretsUnlocked(world)&&electricalContent.some(s=>s.kind==='mini-turret'||'deconstruction' in s&&(s.deconstruction as {kind?:string}|undefined)?.kind==='mini-turret'))errors.push('Locked gun turrets.');
   if(version>=190&&!tubeTelevisionUnlocked(world)&&electricalContent.some(s=>s.kind==='tube-television'||'furniture' in s&&(s.furniture as {kind?:string}|undefined)?.kind==='tube-television'||'deconstruction' in s&&(s.deconstruction as {kind?:string}|undefined)?.kind==='tube-television'))errors.push('Locked television.');
   if(version>=187&&!hospitalBedUnlocked(world)&&electricalContent.some(s=>s.kind==='hospital-bed'||'furniture' in s&&(s.furniture as {kind?:string}|undefined)?.kind==='hospital-bed'||'deconstruction' in s&&(s.deconstruction as {kind?:string}|undefined)?.kind==='hospital-bed'))errors.push('Locked hospital bed.');
-  if(version>=188&&!packagedSurvivalMealsUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='cook-survival-meal'))||world.pawns.some(p=>p.cooking?.recipe==='cook-survival-meal'||p.orders.queue.some(o=>typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='cook-survival-meal'))))errors.push('Locked packaged survival production.');
+  if(version>=188&&!packagedSurvivalMealsUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='cook-survival-meal'))||world.pawns.some(p=>p.cooking?.recipe==='cook-survival-meal'||(p.orders?.queue??[]).some(o=>typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='cook-survival-meal'))))errors.push('Locked packaged survival production.');
   // Obtained weapons need no research; only the local fabrication chain does.
   if(version>=101&&!gunsmithingUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>isGunRecipe(b.recipe)&&b.recipe!=='make-emp-launcher'))
     ||world.piles.some(p=>p.gunWork&&p.gunWork.recipe!=='make-emp-launcher')||world.pawns.some(p=>p.cooking&&isGunRecipe(p.cooking.recipe)&&p.cooking.recipe!=='make-emp-launcher')))errors.push('Locked gunsmithing production.');
   if((version<208||!microelectronicsUnlocked(world))&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-emp-launcher'))
-    ||world.piles.some(p=>p.gunWork?.recipe==='make-emp-launcher')||world.pawns.some(p=>p.cooking?.recipe==='make-emp-launcher'||p.orders.queue.some(o=>typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='make-emp-launcher'))))errors.push('Locked or future EMP production.');
+    ||world.piles.some(p=>p.gunWork?.recipe==='make-emp-launcher')||world.pawns.some(p=>p.cooking?.recipe==='make-emp-launcher'||(p.orders?.queue??[]).some(o=>typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='make-emp-launcher'))))errors.push('Locked or future EMP production.');
   if(version>=109&&!flakArmorUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-flak-vest'||b.recipe==='make-flak-helmet'))
     ||world.piles.some(p=>p.flakWork?.recipe==='make-flak-vest'||p.flakWork?.recipe==='make-flak-helmet')||world.pawns.some(p=>p.cooking&&(p.cooking.recipe==='make-flak-vest'||p.cooking.recipe==='make-flak-helmet'))))errors.push('Locked flak armor production.');
   if(version>=148&&!reconArmorUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-recon-helmet'))
-    ||world.piles.some(p=>p.flakWork?.recipe==='make-recon-helmet')||world.pawns.some(p=>p.cooking?.recipe==='make-recon-helmet'||p.orders.queue.some(o=>typeof o!=='number'&&typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='make-recon-helmet'))))errors.push('Locked recon helmet production.');
+    ||world.piles.some(p=>p.flakWork?.recipe==='make-recon-helmet')||world.pawns.some(p=>p.cooking?.recipe==='make-recon-helmet'||(p.orders?.queue??[]).some(o=>typeof o!=='number'&&typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='make-recon-helmet'))))errors.push('Locked recon helmet production.');
   if(version<141&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-flak-helmet'))
     ||world.piles.some(p=>p.item==='unfinished-flak-helmet'||p.flakWork?.recipe==='make-flak-helmet')
     ||world.pawns.some(p=>p.cooking?.recipe==='make-flak-helmet'||p.orders?.queue?.some(o=>typeof o!=='number'&&typeof o==='object'&&o!==null&&'cooking' in o&&o.cooking.recipe==='make-flak-helmet'))))errors.push('Future flak helmet production.');
   if(version>=123&&!fabricationUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-component'))
-    ||world.piles.some(p=>p.componentWork)||world.pawns.some(p=>p.cooking?.recipe==='make-component'||p.orders.queue.some(order=>typeof order!=='number'&&'cooking' in order&&order.cooking.recipe==='make-component'))))errors.push('Locked component production.');
+    ||world.piles.some(p=>p.componentWork)||world.pawns.some(p=>p.cooking?.recipe==='make-component'||(p.orders?.queue??[]).some(order=>typeof order!=='number'&&'cooking' in order&&order.cooking.recipe==='make-component'))))errors.push('Locked component production.');
   if(version>=139&&!advancedFabricationUnlocked(world)&&(electricalContent.some(s=>'bills' in s&&s.bills?.some(b=>b.recipe==='make-advanced-component'))
-    ||world.piles.some(p=>p.componentWork?.recipe==='make-advanced-component')||world.pawns.some(p=>p.cooking?.recipe==='make-advanced-component'||p.orders.queue.some(order=>typeof order!=='number'&&'cooking' in order&&order.cooking.recipe==='make-advanced-component'))))errors.push('Locked advanced component production.');
+    ||world.piles.some(p=>p.componentWork?.recipe==='make-advanced-component')||world.pawns.some(p=>p.cooking?.recipe==='make-advanced-component'||(p.orders?.queue??[]).some(order=>typeof order!=='number'&&'cooking' in order&&order.cooking.recipe==='make-advanced-component'))))errors.push('Locked advanced component production.');
   const stations=new Set<number>();
   for(const pawn of world.pawns){
     if(version<73?pawn.priorities.research!==undefined:!int(pawn.priorities.research,0,4))errors.push('Invalid or future research priority.');
@@ -167,7 +198,7 @@ export function validateResearch(world:World,version:number):string[]{
     // that interrupted checkpoint; runtime eligibility is checked at work.
     const facilityNear=!!station&&!!facility;
     if(!station||!spot||spot.x!==task.spot.x||spot.z!==task.spot.z||!canStandAt(world,task.spot)||stations.has(task.stationId)||!state?.project||pawn.priorities.research===0
-      ||(project==='vitals-monitor'||project==='medicine-production'||project==='hospital-bed'||project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor')&&station.kind!=='hi-tech-research-bench'||(project==='vitals-monitor'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor')&&!facilityNear||task.facilityId!==undefined&&(station.kind!=='hi-tech-research-bench'||!facilityNear)
+      ||(project==='deep-drilling'||project==='ground-scanner'||project==='vitals-monitor'||project==='medicine-production'||project==='hospital-bed'||project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor')&&station.kind!=='hi-tech-research-bench'||(project==='vitals-monitor'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor')&&!facilityNear||task.facilityId!==undefined&&(station.kind!=='hi-tech-research-bench'||!facilityNear)
       ||pawn.heatRefuge||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.need||pawn.recreation.task||pawn.tend||pawn.ward||pawn.feed||pawn.rescue||pawn.equipmentTask||pawn.draft||pawn.shooting||pawn.flee||pawn.tactics||pawn.melee||pawn.raid||pawn.mental?.crisis||!['moving','working'].includes(pawn.state)||pawn.orders.active!==null)errors.push('Invalid research ownership.');
     if(pawn.state==='working'&&(pawn.x!==task.spot.x||pawn.z!==task.spot.z||pawn.path.length))errors.push('Research working away from its station.');
     stations.add(task.stationId);

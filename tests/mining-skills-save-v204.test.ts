@@ -151,6 +151,10 @@ test.each(['visitor','pod'] as const)('%s departures preserve Mining profiles an
       // Historical preparation only; neither accepted nor rejected packets are
       // sanitized. The generic helper does not cover civil pod archives.
       withoutTelevisionRecreation(withoutMiningSkill(world));delete archivedMiner(world,kind).skills.mining;
+      // Current producers adopt V280 reserves and V264 pod origins. Neither
+      // field existed in the deliberate schema185 archive fixture.
+      delete world.deepResources;
+      for(const incident of world.podRescues?.incidents??[]){delete incident.origin;delete incident.decision;}
       for(const archive of world.visitors?.departed??[])delete archive.pawn.background;
       for(const archive of world.podRescues?.departed??[])delete archive.pawn.background;
       Object.assign(world,{schemaVersion:185});

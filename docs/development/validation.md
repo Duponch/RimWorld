@@ -1,4 +1,6 @@
-# Validation courante — V279
+# Validation courante — V280
+
+**V280, schéma 215 : [scanner et forage profond](../gameplay/deep-drilling-v280.md#validation).** 159cas/26fichiers dont41nouveaux passent par reprises ciblées ;62sauvegardes publiques et65fichiers conservés. Build/typage et WebGPU passent avec construction, découverte, extraction/épuisement, repositionnement du même appareil puis roche ; sept sauvegardes/reprises exactes3041/3221/3657/4066/4137/4181/4620. Gardes services/tir consolidés, lecteurs pré17 corrigés, rouges de fixtures et pilote conservés. Scène préparée puis jouée ; aucune campagne de six jours ou mesure FPS déduite. Les validations suivantes sont historiques.
 
 **V279, schéma 214 : [alimentation assistée animale](../gameplay/animal-feeding-v279.md#validation).**170cas/24fichiers dont28nouveaux passent par reprise ciblée ;62sauvegardes publiques et65fichiers conservés. Build/typage et WebGPU avec trois sauvegardes/reprises exactes3010/3077/3151 passent : vraie portion portée puis34riz ingérés par le même mufalo à terre, sans XP médicale ajoutée. Rouges de fixture et d’oracle d’oubli passif conservés ; aucun FPS, guérison finale ou campagne naturelle déduit. Les validations suivantes sont historiques.
 

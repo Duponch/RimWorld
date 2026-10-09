@@ -1,4 +1,4 @@
-import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, STERILE_MATERIALS_RESEARCH_COST,VITALS_MONITOR_RESEARCH_COST, DRUG_PRODUCTION_RESEARCH_COST, MEDICINE_PRODUCTION_RESEARCH_COST, HYDROPONICS_RESEARCH_COST, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
+import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, DEEP_DRILLING_RESEARCH_COST,GROUND_SCANNER_RESEARCH_COST,STERILE_MATERIALS_RESEARCH_COST,VITALS_MONITOR_RESEARCH_COST, DRUG_PRODUCTION_RESEARCH_COST, MEDICINE_PRODUCTION_RESEARCH_COST, HYDROPONICS_RESEARCH_COST, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
 import type { Command, World } from '../sim/types';
 import './world-panels.css';
 import './management-reference-v199.css';
@@ -6,6 +6,8 @@ import {setTooltip} from './tooltip';
 
 type ProjectNode = { id: ResearchProject; prefix: string; title: string; cost: number; detail: string; progress: (w: World) => ResearchProgress | undefined; x: number; y: number };
 export const researchProjects: readonly ProjectNode[] = [
+  {id:'deep-drilling',prefix:'deep-drilling',title:'Forage profond',cost:DEEP_DRILLING_RESEARCH_COST/RESEARCH_SCALE,detail:'Foreuse 1 × 1 : 100 acier + 2 composants, Construction 4, 200 W. Travail Minage à la machine ; les gisements souterrains sont finis. Un scanner de sol est nécessaire pour découvrir et afficher ces réserves. Recherche au bureau avancé alimenté, après Microélectronique.',progress:w=>w.research?.deepDrilling,x:224,y:834},
+  {id:'ground-scanner',prefix:'ground-scanner',title:'Scanner de sol',cost:GROUND_SCANNER_RESEARCH_COST/RESEARCH_SCALE,detail:'Scanner 3 × 3 : 150 acier + 4 composants + 1 composant avancé, Construction 8, 700 W, sans toit. Un chercheur travaille sur place pour découvrir des réserves ; six jours de travail à vitesse normale garantissent une découverte. Le temps sans opérateur ne progresse pas. Recherche au bureau avancé alimenté, après Forage profond.',progress:w=>w.research?.groundScanner,x:424,y:834},
   {id:'sterile-materials',prefix:'sterile-materials',title:'Matériaux stériles',cost:STERILE_MATERIALS_RESEARCH_COST/RESEARCH_SCALE,detail:'Sol stérile : 3 acier + 12 argent par case, Construction 6. Propreté +0,6 et temps de nettoyage ×0,6 ; sans bonus direct de moniteur. L’électricité est connue au départ.',progress:w=>w.research?.sterileMaterials,x:424,y:700},
   {id:'vitals-monitor',prefix:'vitals-monitor',title:'Moniteur vital',cost:VITALS_MONITOR_RESEARCH_COST/RESEARCH_SCALE,detail:'50 acier + 3 composants, Construction 8, 80 W. Adjacence à un lit d’hôpital : soins +7 points, immunité +2 points et facteur chirurgie +0,05 pendant son utilisation. Un seul moniteur par lit ; le plus proche est lié avant de vérifier son courant. Recherche au bureau avancé et multi-analyseur alimentés.',progress:w=>w.research?.vitalsMonitor,x:624,y:700},
   {id:'drug-production',prefix:'drug-production',title:'Production de drogues',cost:DRUG_PRODUCTION_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque le laboratoire de chimie manuel : 50 bois ou acier, 75 acier et 6 composants ; Construction 4. Aucune alimentation électrique requise.',progress:w=>w.research?.drugProduction,x:24,y:700},
@@ -34,6 +36,7 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'hospital-bed',prefix:'hospital-bed',title:'Lit d’hôpital',cost:HOSPITAL_BED_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque un lit spécialisé : 120 acier + 5 composants, Construction 8. Améliore les soins, l’immunité, la guérison et la chirurgie pendant son utilisation réelle. Recherche au bureau avancé alimenté. Adaptation locale conservée : Matériaux stériles n’est pas imposé à cette recherche historique.',progress:w=>w.research?.hospitalBed,x:424,y:566},
 ];
 export const researchLinks: readonly (readonly [ResearchProject, ResearchProject])[] = [
+  ['microelectronics','deep-drilling'],['deep-drilling','ground-scanner'],
   ['hospital-bed','vitals-monitor'],['multi-analyzer','vitals-monitor'],
   ['drug-production','medicine-production'],['microelectronics','medicine-production'],
   ['gunsmithing','gun-turrets'],
@@ -48,9 +51,10 @@ export const researchLinks: readonly (readonly [ResearchProject, ResearchProject
   ['microelectronics','hospital-bed'],['complex-furniture','hospital-bed'],
 ];
 const projectById=new Map(researchProjects.map(project=>[project.id,project]));
-const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=550;
+const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=650;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['deep-drilling',['Microélectronique']],['ground-scanner',['Forage profond']],
   ['sterile-materials',['Électricité (acquise au départ)']],['vitals-monitor',['Lit d’hôpital','Multi-analyseur']],
   ['drug-production',[]],['medicine-production',['Production de drogues','Microélectronique']],
   ['hydroponics',['Électricité (acquise au départ)']],
@@ -62,7 +66,7 @@ const prerequisites=new Map<ResearchProject,string[]>([
 ]);
 function stationIssue(world:World,project:ResearchProject):string|undefined {
   if(world.structures.some(s=>researchStationUsable(world,s,project)))return undefined;
-  if(project==='hospital-bed'||project==='medicine-production')return 'Bureau de recherche avancé alimenté requis';
+  if(project==='deep-drilling'||project==='ground-scanner'||project==='hospital-bed'||project==='medicine-production')return 'Bureau de recherche avancé alimenté requis';
   if(project==='vitals-monitor'||project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor')return project==='multi-analyzer'?'Bureau de recherche avancé alimenté requis':'Bureau avancé et multi-analyseur alimentés à proximité requis';
   return 'Bureau de recherche disponible requis';
 }
@@ -94,8 +98,9 @@ export function updateResearchPanel(root: HTMLElement, world: World, send: (comm
   if(!root.querySelector('[data-research-map]')){
     const viewport=document.createElement('div');viewport.className='research-viewport';viewport.dataset.researchMap='';
     viewport.setAttribute('role','group');viewport.setAttribute('aria-label','Projets de recherche et prérequis');
-    const graph=document.createElement('div');graph.className='research-graph';
+    const graph=document.createElement('div');graph.className='research-graph';graph.style.height=`${GRAPH_HEIGHT}px`;
     const lines=document.createElementNS('http://www.w3.org/2000/svg','svg');lines.setAttribute('class','research-links');lines.setAttribute('viewBox',`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`);lines.setAttribute('aria-hidden','true');
+    lines.style.height=`${GRAPH_HEIGHT}px`;
     for(const [fromId,toId] of researchLinks){
       const from=nodePosition(projectById.get(fromId)!),to=nodePosition(projectById.get(toId)!);
       const path=document.createElementNS('http://www.w3.org/2000/svg','path');

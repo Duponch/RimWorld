@@ -45,19 +45,21 @@ test('point queries keep complete rotated and historical footprints, job targets
   const pair=[[[0,0],[0,1]],[[0,0],[1,0]],[[0,0],[0,-1]],[[0,0],[-1,0]]];
   const bench=[[[0,0],[-1,0],[1,0],[0,1],[-1,1],[1,1]],[[0,0],[0,-1],[0,1],[1,0],[1,-1],[1,1]],[[0,0],[-1,0],[1,0],[0,-1],[-1,-1],[1,-1]],[[0,0],[0,-1],[0,1],[-1,0],[-1,-1],[-1,1]]];
   const stands=new Set<StructureKind>(['grave','power-conduit','power-switch','butcher-spot','crafting-spot','door','autodoor','fence','fence-gate','pen-marker','stool','dining-chair','armchair','horseshoes']);
-  const rejectsItems=new Set<StructureKind>(['sandbags','small-sculpture','large-sculpture','grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','hospital-bed','dresser','flower-pot','campfire']);
+  const rejectsItems=new Set<StructureKind>(['hydroponics-basin','sandbags','small-sculpture','large-sculpture','grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','hospital-bed','dresser','flower-pot','campfire']);
   const stores=new Set<StructureKind>(['fence','fence-gate','power-conduit','standing-lamp','sun-lamp','door','autodoor','stool','dining-chair','armchair','horseshoes']);
   const flickable=new Set<StructureKind>(['machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench','power-switch','wood-generator','standing-lamp','cooler','heater','electric-stove']);
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];
   const points=Array.from({length:121},(_,i)=>({x:4+i%11,z:4+Math.floor(i/11)}));points.push({x:-20,z:8},{x:8,z:-20},{x:100,z:8},{x:8,z:100});
   for(const kind of Object.keys(STRUCTURE_DEFINITIONS) as StructureKind[])for(const orientation of [0,1,2,3] as const)for(const footprint of ['standard','legacy-single'] as const){
     const direction=[[0,1],[1,0],[0,-1],[-1,0]][orientation]!,side=[[1,0],[0,-1],[-1,0],[0,1]][orientation]!;
-    const offsets=kind==='wind-turbine'?[0,1].flatMap(a=>[-3,-2,-1,0,1,2,3].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
+    const offsets=kind==='ground-scanner'?[[-1,-1],[0,-1],[1,-1],[-1,0],[0,0],[1,0],[-1,1],[0,1],[1,1]]
+      :kind==='hydroponics-basin'?[0,1,2,3].map(a=>[direction[0]!*a,direction[1]!*a])
+      :kind==='wind-turbine'?[0,1].flatMap(a=>[-3,-2,-1,0,1,2,3].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='solar-generator'?Array.from({length:16},(_,i)=>[i%4,Math.floor(i/4)])
       :kind==='wood-generator'?[[0,0],[1,0],[0,1],[1,1]]
       :kind==='research-bench'?bench[orientation]!
       :['hi-tech-research-bench','fabrication-bench'].includes(kind)?[0,1].flatMap(a=>[-2,-1,0,1,2].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
-      :['machining-table','art-bench','stonecutter','tailor-bench','electric-tailor-bench','fueled-stove','electric-stove','butcher-table'].includes(kind)?line[orientation]!
+      :['drug-lab','machining-table','art-bench','stonecutter','tailor-bench','electric-tailor-bench','fueled-stove','electric-stove','butcher-table'].includes(kind)?line[orientation]!
       :kind==='table-square'||kind==='multi-analyzer'?[0,1].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='table-long'?[0,1,2,3].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='dresser'?pair[orientation]!

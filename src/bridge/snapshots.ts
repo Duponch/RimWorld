@@ -1,3 +1,4 @@
+import { validDeepDrillingTransport } from '../sim/deep-drilling-save.ts';
 import { validTelevisionState } from '../sim/television-save.ts';
 import { validMiniTurretShape,validateMiniTurrets } from '../sim/mini-turret-save.ts';
 import { validBombWaveShape,validateBombWaves } from '../sim/bomb-state.ts';
@@ -14,7 +15,7 @@ import { isFloorKind } from '../sim/flooring.ts';
 import { sterileMaterialsUnlocked } from '../sim/research.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validCropBlight } from '../sim/plant-blight-save.ts';
-import { validHospitalSupportTransport,validateResearch,validMedicineResearchTransport } from '../sim/research-save.ts';
+import { validDeepResearchTransport,validHospitalSupportTransport,validateResearch,validMedicineResearchTransport } from '../sim/research-save.ts';
 import { validEmpStructureTransport,validEmpProductionTransport } from '../sim/emp-save.ts';
 import { validFluIncidents } from '../sim/flu-incidents-save.ts';
 import { validateMedicalRecord } from '../sim/injury-validation.ts';
@@ -952,6 +953,7 @@ export class SnapshotDecoder {
       // In particular an absent sparse collection means it was removed.
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
+    if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');
     if(validateHydroponics(next,next.schemaVersion).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
     if(!validDomesticTasksTransport(next,next.schemaVersion))return resync('Soin ou alimentation vétérinaire, patient ou cargaison incohérents.');
     if(!validArrestRescueTransport(next))return resync('Mandat d’arrestation, portage ou libération locale incohérent.');

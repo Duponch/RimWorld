@@ -66,7 +66,7 @@ export function validPrisonerPawnShape(p:Record<string,unknown>,version:number,w
   const colony=object(s)&&isColonist(p as unknown as Pawn);
   if(colony&&(version<213||!['maintain','release'].includes(String(s.mode))||['escape','releasedAt','breakout'].some(k=>Object.hasOwn(s,k))
     ||p.raid||p.visitor||p.podRescue||p.state==='working'&&!p.burning||p.draft||p.flee||p.hostilityResponse||p.jobId!==null
-    ||!object(p.orders)||p.orders.active!==null||!Array.isArray(p.orders.queue)||p.orders.queue.length||p.priorityWork||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.ward||p.surgery||p.equipmentTask||p.recreation&&object(p.recreation)&&p.recreation.task||p.research||p.hunting||p.animalCare||p.animalHandling||p.burial||p.cleaning||p.firefighting
+    ||!object(p.orders)||p.orders.active!==null||!Array.isArray(p.orders.queue)||p.orders.queue.length||p.priorityWork||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.ward||p.surgery||p.equipmentTask||p.recreation&&object(p.recreation)&&p.recreation.task||p.deepWork||p.research||p.hunting||p.animalCare||p.animalHandling||p.burial||p.cleaning||p.firefighting
     ||object(p.shooting)&&p.shooting.order||object(p.melee)&&p.melee.order||p.tactics||p.trade))return false;
   if(colony&&w.piles.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id))return false;
   if(active&&!validActiveBreakoutPawn(p as unknown as Pawn))return false;
@@ -118,7 +118,7 @@ export function validatePrisoners(w:World,version:number,ids:Set<number>):string
       if(active&&!validActiveBreakoutPawn(p))errors.push('Invalid active prison break ownership.');
       const colony=version>=213&&isColonist(p);
       if(colony&&!validPrisonerPawnShape(p as unknown as Record<string,unknown>,version,w))errors.push('Invalid local colony detention.');
-      if(isColonist(p)&&!colony||p.state==='working'&&!(version>=87&&p.burning)||p.recruitment&&!colony||p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.ward||p.equipmentTask||p.recreation.task||p.research||p.hunting
+      if(isColonist(p)&&!colony||p.state==='working'&&!(version>=87&&p.burning)||p.recruitment&&!colony||p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.ward||p.equipmentTask||p.recreation.task||p.deepWork||p.research||p.hunting
         ||p.shooting?.order||p.melee?.order&&!(active&&p.melee.order.auto==='prison-break')||p.tactics)errors.push('Prisoner retains a colony or combat mandate.');
       const escape=bombRefugeRouteTarget(p,p.prisoner.escape,version);
       // A later collapse does not revoke an actual release. Ordinary rescue
@@ -131,7 +131,7 @@ export function validatePrisoners(w:World,version:number,ids:Set<number>):string
     const beds=[p.bedId,...p.need?.kind==='sleep'?[p.need.bedId]:[]];
     for(const bedId of beds)if(bedId!==null){const bed=[...w.structures,...w.packed.map(p=>p.building)].find(b=>b.id===bedId&&isBedKind(b.kind)&&(version>=187||b.kind==='bed'));if(bed&&!!bed.prisoner!==!!p.prisoner)errors.push('Bed role disagrees with its occupant.');}
     const t=p.ward;if(!t)continue;const patient=w.pawns.find(q=>q.id===t.patientId);
-    if(!isColonist(p)||p.prisoner||p.priorities.warden===0||medicalWorkRefusal(p)||p.mental?.crisis||p.draft||p.interruptedCargo||p.orders.active!==null||p.jobId!==null||p.need||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.recreation.task||p.equipmentTask||p.research||p.hunting)errors.push('Warden task conflicts with actor activity.');
+    if(!isColonist(p)||p.prisoner||p.priorities.warden===0||medicalWorkRefusal(p)||p.mental?.crisis||p.draft||p.interruptedCargo||p.orders.active!==null||p.jobId!==null||p.need||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.recreation.task||p.equipmentTask||p.deepWork||p.research||p.hunting)errors.push('Warden task conflicts with actor activity.');
     if(!patient||patient===p||patient.state==='dead'||patientClaimed(w,t.patientId,p)||w.pawns.some(a=>a.rescue?.patientId===t.patientId)||t.kind==='chat'&&patient.prisoner?.mode==='release'
       ||(t.kind==='chat'&&t.phase==='closing'?!(patient.prisoner||patient.recruitment):!patient.prisoner||!!patient.prisoner.escape))errors.push('Invalid or duplicate warden patient.');
     if(t.kind==='food'){

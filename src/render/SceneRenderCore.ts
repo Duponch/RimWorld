@@ -1,3 +1,4 @@
+import { DeepResourceLayer } from './DeepResourceLayer';
 import { AreaPreviewLayer } from './AreaPreviewLayer';
 import { HygieneLayer } from './HygieneLayer';
 
@@ -112,6 +113,7 @@ export class SceneRenderCore {
   protected immutableSnapshot=false;
   protected readonly immutableWorlds=new WeakSet<World>();
   protected hasTracks = false;
+  protected readonly deepResources = new DeepResourceLayer();
   protected readonly hygiene = new HygieneLayer(this.environmentLighting.configure);
   protected selectedFloor:BuildableFloorKind|undefined;
   protected constructionMaterial:ConstructionMaterial|undefined;
@@ -219,7 +221,7 @@ export class SceneRenderCore {
   protected readonly homeSignature = new HomePresentationSignature();
   protected tool = 'select';
   protected furniturePlacement:Structure|undefined;
-  setFurniturePlacement(object:Structure|undefined):void {this.furniturePlacement=object;}
+  setFurniturePlacement(object:Structure|undefined):void {this.furniturePlacement=object;this.updateDeepResources();}
   protected placementRotation: Orientation = 0;
   protected hoverCell: { x: number; z: number } | null = null;
   protected wallCutaway = false;
@@ -294,7 +296,7 @@ export class SceneRenderCore {
     this.invalidatePausedShadow();
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
     this.scene.add(this.mechanoids.group);
-    this.scene.add(this.areaPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
+    this.scene.add(this.deepResources.mesh,this.areaPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
     if (groundGrassEnabled) {
       this.grass = this.createGrass();
       this.grass.setTerrainPaint(this.terrainPaintTexture);
@@ -406,6 +408,7 @@ export class SceneRenderCore {
     const resourceFrame = this.immutableWorlds.has(world) ? this.sceneResources.adopt(world,resetPoses) : undefined;
     if(!resourceFrame)this.sceneResources.clear();
     this.world = world;
+    this.updateDeepResources();
     this.grass?.update(world,newMap,immutableTileChanges,resourceFrame);
     this.fires.adopt(world,newMap);this.wind.adopt(world,newMap);
     this.environmentLighting.update(world);
@@ -496,6 +499,7 @@ export class SceneRenderCore {
     if (tool !== this.tool) this.cancelDesignation();
     const homeBefore=this.tool==='home'||this.tool==='remove-home';
     this.tool = tool;
+    this.updateDeepResources();
     this.updateGrowingZones(false);
     if(this.world&&(homeBefore||tool==='home'||tool==='remove-home'))this.buildStorage(this.world);
     if (tool in STRUCTURE_DEFINITIONS) this.keys.delete('q');
@@ -690,6 +694,7 @@ export class SceneRenderCore {
     const restorePrecipitation=this.precipitation.prepareForCompile();
     const restoreBoxes=this.boxes.prepareEmptyShadows();
     const restoreArea=this.areaPreview.prepareForCompile();
+    const restoreDeep=this.deepResources.prepareForCompile();
     try {
       // The double-sided cursor otherwise compiles both face variants on the
       // first map interaction. Include it behind the loading overlay.
@@ -712,7 +717,7 @@ export class SceneRenderCore {
       for (const [object, value] of culling) object.frustumCulled = value;
       restoreMechanoids();
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
-      restoreBoxes();restoreArea();
+      restoreBoxes();restoreArea();restoreDeep();
       restoreOverview();
       restorePodRescue();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
@@ -747,7 +752,10 @@ export class SceneRenderCore {
   }
 
   setSelectedPawns(ids:ReadonlySet<number>):void {this.selectedPawns=new Set(ids);this.pawns.setSelected(ids);this.wildlife.setSelected(ids);this.mechanoids.setSelected(ids);if(this.world&&this.pawns.feedbackSource)this.actionFeedback.update(this.world,this.selectedPawns,this.pawns.feedbackSource);}
-  setSelectedObject(selected:MapObjectSelection|undefined):void {this.selectedObject=selected;this.updateSelectedObject();this.updateGrowingZones(false);this.updateTurretPreview();}
+  setSelectedObject(selected:MapObjectSelection|undefined):void {this.selectedObject=selected;this.updateSelectedObject();this.updateGrowingZones(false);this.updateTurretPreview();this.updateDeepResources();}
+  protected updateDeepResources():void {
+    if(this.world&&this.deepResources.update(this.world,{selectedId:this.tool==='select'&&this.selectedObject?.kind==='structure'?this.selectedObject.id:undefined,placement:this.tool==='install'?this.furniturePlacement?.kind:this.tool}))this.invalidatePausedShadow();
+  }
   protected updateTurretPreview():void {
     const world=this.world,selected=this.selectedObject;
     const structure=this.tool==='select'&&selected?.kind==='structure'?world?.structures.find(s=>s.id===selected.id&&s.kind==='mini-turret'):undefined;
@@ -1140,6 +1148,7 @@ export class SceneRenderCore {
     this.podRescue.dispose();
     this.hostPort.disposeLabels();
     this.overview.dispose();
+    this.deepResources.dispose();
     this.rocks.dispose();
     this.crops.dispose();
     this.plants.dispose();

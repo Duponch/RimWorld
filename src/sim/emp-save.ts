@@ -64,7 +64,7 @@ export function validEmpProductionTransport(w:World,version:number=w.schemaVersi
   for(const pile of w.piles)if(pile.gunWork?.recipe==='make-emp-launcher'&&!allowed)return false;
   for(const p of w.pawns){
     if(p.cooking?.recipe==='make-emp-launcher'&&!allowed)return false;
-    for(const order of p.orders.queue)if(object(order)&&object(order.cooking)&&order.cooking.recipe==='make-emp-launcher'
+    for(const order of p.orders?.queue??[])if(object(order)&&object(order.cooking)&&order.cooking.recipe==='make-emp-launcher'
       &&(!allowed||!validCookingOrder(order,w)))return false;
   }
   return true;
