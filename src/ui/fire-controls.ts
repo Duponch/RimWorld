@@ -1,5 +1,5 @@
 import type { Command, Structure } from '../sim/types';
-import { WOOD_BURN_TICKS, fuelLimit } from '../sim/fuel';
+import { FUEL_UNIT_TICKS, WOOD_BURN_TICKS, fuelItem, fuelLimit } from '../sim/fuel';
 
 export function fireControls(fire: Structure, send: (command: Command) => void): HTMLElement {
   const section=document.createElement('div');section.className='storage-settings';
@@ -12,6 +12,10 @@ export function fireControls(fire: Structure, send: (command: Command) => void):
 }
 export function updateFireControls(root: ParentNode, fire: Structure): void {
   const label=root.querySelector('#fire-fuel');
+  if(label&&fire.fuel&&fuelItem(fire.kind)==='chemfuel'){
+    label.textContent=`${fire.fuel.ticks?'Réservoir alimenté':'Réservoir vide'} · ${(fire.fuel.ticks/FUEL_UNIT_TICKS).toLocaleString('fr-FR',{maximumFractionDigits:2})} / ${fuelLimit(fire.kind)/FUEL_UNIT_TICKS} biocarburants · 4,5 unités/jour · débit arrêté par le commutateur ou une panne · livraison physique de biocarburant`;
+    return;
+  }
   if(label&&fire.fuel&&fire.kind==='fueled-stove'){
     label.textContent=`${fire.fuel.ticks?'Alimentée':'Vide'} · ${(fire.fuel.ticks/WOOD_BURN_TICKS).toFixed(1)} / ${fuelLimit(fire.kind)/WOOD_BURN_TICKS} bois · 160 bois/jour de préparation · aucune consommation au repos`;
     return;

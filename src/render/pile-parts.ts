@@ -48,6 +48,14 @@ export function pileParts(bundles:readonly PileBundle[]):Placement[] {
         food.push({x:bundle.x,z,y:.055+row*.075,sx:.48,sy:.075,sz:.36,color:ITEM_DEFINITIONS[bundle.item].color},
           {x:bundle.x-.08,z,y:.095+row*.075,sx:.055,sy:.007,sz:.3,color:0xe1c5ab});
       }
+    } else if(bundle.item==='chemfuel'){
+      const cans=Math.max(1,Math.min(3,Math.ceil(bundle.quantity/50)));
+      for(let i=0;i<cans;i++){
+        const dx=(i-(cans-1)/2)*.22;
+        food.push({x:bundle.x+dx,z,y:.17,sx:.19,sy:.30,sz:.34,color:ITEM_DEFINITIONS.chemfuel.color},
+          {x:bundle.x+dx,z:z-.09,y:.35,sx:.12,sy:.06,sz:.14,color:0x526b5e},
+          {x:bundle.x+dx,z:z+.07,y:.20,sx:.20,sy:.045,sz:.12,color:0x6b8266});
+      }
     } else if(bundle.item==='nutrient-paste-meal'){
       const trays=Math.max(1,Math.min(3,Math.ceil(bundle.quantity/4)));
       for(let row=0;row<trays;row++)food.push(

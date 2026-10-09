@@ -12,10 +12,22 @@ import { isRoofed } from '../sim/roof-rules';
 import { deepDrillingInspection } from './deep-drilling-inspection';
 import { orbitalInspection } from './orbital-inspection';
 import { nutrientPasteInspection } from './nutrient-paste-inspection';
+import { FUEL_UNIT_TICKS, fuelLimit } from '../sim/fuel';
 import type { Structure, World } from '../sim/types';
 
 const cache = new PowerTopologyCache();
 const watts = (n: number) => `${n.toLocaleString('fr-FR', {maximumFractionDigits: 1})} W`;
+
+export function biofuelPowerInspection(world:World,structure:Structure):string {
+  if(structure.kind==='biofuel-refinery'){
+    const state=structure.breakdown?'En panne':structure.power?.switchOn===false?'Arrêt manuel':isPowerActive(structure)?'Alimentée':'Sans alimentation';
+    return `${state} · 170 W · Factures : 70 bois ou 3,5 nutrition d’aliments crus → 35 biocarburants · travail Artisanat sur place · filtre organique initial végétal, viandes et lait au choix`;
+  }
+  if(structure.kind!=='chemfuel-generator')return '';
+  const state=structure.breakdown?'En panne':structure.power?.switchOn===false?'Arrêt manuel':!structure.fuel?.ticks?'Réservoir vide':isPowerActive(structure)?'En marche':'Démarrage en attente';
+  const reserve=(structure.fuel?.ticks??0)/FUEL_UNIT_TICKS;
+  return `${state} · Production ${watts(Math.max(0,powerWatts(structure,world)))} / 1 000 W · Réservoir ${reserve.toLocaleString('fr-FR',{maximumFractionDigits:2})} / ${fuelLimit(structure.kind)/FUEL_UNIT_TICKS} biocarburants · 4,5 unités/jour · débit arrêté par le commutateur ou une panne · EMP : production suspendue, combustible consommé · ravitaillement avec le biocarburant réellement porté · chaleur et faible lumière locale en marche`;
+}
 
 export function hydroponicsPowerInspection(structure:Structure):string {
   if(structure.kind!=='hydroponics-basin')return '';
@@ -27,7 +39,7 @@ export function hydroponicsPowerInspection(structure:Structure):string {
 export function solarFlareInspection(world:World,structure:Structure):string {
   if(!world.worldIncidents?.active||!isElectrical(structure.kind))return '';
   if(structure.kind==='battery')return 'Éruption solaire : charge et décharge du réseau suspendues · réserve conservée · autodécharge normale de 5 W·j/jour';
-  if(['wood-generator','solar-generator','wind-turbine'].includes(structure.kind))return `Éruption solaire : source ${isPowerActive(structure)?'toujours active':'actuellement arrêtée'} · potentiel de production conservé${structure.kind==='wood-generator'&&isPowerActive(structure)?' · le bois continue de brûler':''} · stockage du surplus suspendu`;
+  if(['wood-generator','chemfuel-generator','solar-generator','wind-turbine'].includes(structure.kind))return `Éruption solaire : source ${isPowerActive(structure)?'toujours active':'actuellement arrêtée'} · potentiel de production conservé${(structure.kind==='wood-generator'||structure.kind==='chemfuel-generator')&&isPowerActive(structure)?` · le ${structure.kind==='wood-generator'?'bois':'biocarburant'} continue de brûler`:''} · stockage du surplus suspendu`;
   if(!isPowerTrader(structure.kind))return 'Éruption solaire : connexions et interrupteurs physiques conservés';
   const cause=structure.breakdown?'panne mécanique distincte':structure.power?.switchOn===false?'arrêt manuel distinct':structure.power?.parentId===null?'absence de raccordement distincte':isPowerActive(structure)?'encore alimenté avant son délestage':'actuellement sans alimentation · redémarrage suspendu';
   return `Éruption solaire : ${cause} · arrêt progressif des consommateurs${structure.kind==='electric-tailor-bench'&&!isPowerActive(structure)?' · couture manuelle possible à vitesse réduite (50 %)':''}`;
@@ -47,7 +59,7 @@ export function rainElectricalInspection(world: World, structure: Structure): st
 
 export function powerInspection(world: World, structure: Structure, compact=false): string {
   if (!isElectrical(structure.kind) || !structure.power) return '';
-  if (compact && structure.breakdown) return ` · Panne mécanique${nutrientPasteInspection(world,structure)?` · ${nutrientPasteInspection(world,structure)}`:''}${orbitalInspection(world,structure)?` · ${orbitalInspection(world,structure)}`:''}${deepDrillingInspection(world,structure)?` · ${deepDrillingInspection(world,structure)}`:''}${hydroponicsPowerInspection(structure)?` · ${hydroponicsPowerInspection(structure)}`:''}${solarFlareInspection(world,structure)?` · ${solarFlareInspection(world,structure)}`:''}${rainElectricalInspection(world, structure) ? ` · ${rainElectricalInspection(world, structure)}` : ''}.`;
+  if (compact && structure.breakdown) return ` · Panne mécanique${biofuelPowerInspection(world,structure)?` · ${biofuelPowerInspection(world,structure)}`:''}${nutrientPasteInspection(world,structure)?` · ${nutrientPasteInspection(world,structure)}`:''}${orbitalInspection(world,structure)?` · ${orbitalInspection(world,structure)}`:''}${deepDrillingInspection(world,structure)?` · ${deepDrillingInspection(world,structure)}`:''}${hydroponicsPowerInspection(structure)?` · ${hydroponicsPowerInspection(structure)}`:''}${solarFlareInspection(world,structure)?` · ${solarFlareInspection(world,structure)}`:''}${rainElectricalInspection(world, structure) ? ` · ${rainElectricalInspection(world, structure)}` : ''}.`;
   const topology = cache.read(world);
   const group = connectedPowerGroups(world, topology).find(g => g.some(s => s.id === structure.id));
   const supply = group?.reduce((n, s) => n + Math.max(0, powerWatts(s, world)), 0) ?? 0;
@@ -56,7 +68,9 @@ export function powerInspection(world: World, structure: Structure, compact=fals
   const batteries = group?.filter(s => s.battery) ?? [];
   const stored = batteries.reduce((n, s) => n + batteryWattDays(s.battery!), 0);
   let detail: string;
-  if(structure.kind==='nutrient-paste-dispenser'){
+  if(structure.kind==='biofuel-refinery'||structure.kind==='chemfuel-generator'){
+    detail=biofuelPowerInspection(world,structure);
+  } else if(structure.kind==='nutrient-paste-dispenser'){
     detail=nutrientPasteInspection(world,structure);
   } else if(structure.kind==='orbital-beacon'||structure.kind==='comms-console'){
     detail=orbitalInspection(world,structure);

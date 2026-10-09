@@ -16,7 +16,7 @@ function collected(){const w=medicalCamp(),p=w.pawns[0]!,id=w.nextId++;p.jobId=n
  p.need={kind:'eat',phase:'collect',sourcePileId:null,carryPileId:id,quantity:1,progress:0,dining:null,paste:{dispenserId:w.nextId++,spot:{x:p.x,z:p.z},producedAt:w.tick}};refreshStock(w);return {w,p,id};}
 function refused(w:World){expect(validNutrientPasteTransport(w,w.schemaVersion)).toBe(false);expect(checkpoint(w).status).toBe('resync');expect(()=>deserializeWorld(JSON.stringify(w))).toThrow();}
 test('216 adoption changes only the three exact original profiles',()=>{
- const w=medicalCamp();w.schemaVersion=216 as World['schemaVersion'];w.foodPolicies=initialFoodPolicies(true,true,true,true,true,false);const before=structuredClone(w),expected=structuredClone(w);expected.schemaVersion=217;adoptPasteFoodPolicies(expected);
+ const w=medicalCamp();w.schemaVersion=216 as World['schemaVersion'];w.foodPolicies=initialFoodPolicies(true,true,true,true,true,false);const before=structuredClone(w),expected=structuredClone(w);expected.schemaVersion=218;adoptPasteFoodPolicies(expected);
  expect(deserializeWorld(JSON.stringify(w))).toEqual(expected);expect(w).toEqual(before);expect(expected.foodPolicies.slice(0,3).every(p=>p.allowed.includes('nutrient-paste-meal'))).toBe(true);expect(expected.foodPolicies[3]!.allowed).toEqual([]);
 });
 test('custom labels, IDs, omissions and ordering keep their exact diets',()=>{

@@ -11,6 +11,7 @@ export function lightSources(world:World):LightSource[] {
     const cell=s.z*world.width+s.x;
     if(s.kind==='campfire'&&s.fuel?.ticks)return [{cell,radius:10,red:252,green:187,blue:113}];
     if(s.kind==='wood-generator'&&isPowerActive(s))return [{cell,radius:6,red:217,green:112,blue:33}];
+    if(s.kind==='chemfuel-generator'&&isPowerActive(s))return [{cell,radius:6,red:80,green:112,blue:180}];
     if(s.kind==='standing-lamp'&&isPowerActive(s))return [{cell,radius:12,red:214,green:148,blue:94}];
     if(s.kind==='sun-lamp'&&sunLampActive(world,s))return [{cell,radius:SUN_LAMP_RADIUS,red:370,green:370,blue:370,overlightRadius:SUN_LAMP_OVERLIGHT_RADIUS}];
     if(s.kind==='machining-table'&&isPowerActive(s))return [{cell,radius:5,red:73,green:123,blue:138}];

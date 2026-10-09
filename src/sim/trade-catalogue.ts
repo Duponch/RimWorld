@@ -21,7 +21,7 @@ function gear(baseMarketValue:number,maxHitPoints:number,visitorHandles:boolean,
 export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>>>=Object.freeze({
   silver:value(1,true),wood:value(1.2),steel:value(1.9),gold:value(10),plasteel:value(9),cloth:value(1.5,true),'light-leather':value(1.9),'muffalo-wool':value(2.7),component:value(32,true),'advanced-component':value(200),
   'herbal-medicine':value(10),medicine:value(18,true),'glitterworld-medicine':value(50),
-  neutroamine:value(6),
+  chemfuel:value(2.3,false,{playerCanBuy:false,playerCanSell:false}),neutroamine:value(6),
   berries:value(1.2),rice:value(1.1),potato:value(1.1),corn:value(1.1),'hare-meat':value(2),'red-fox-meat':value(2),foxfur:value(3.5),
   'nutrient-paste-meal':value(10,false,{playerCanSell:false}),
   'simple-meal':value(15,false,{playerCanSell:false}),'fine-meal':value(20,false,{playerCanSell:false}),'vegetarian-fine-meal':value(20,false,{playerCanSell:false}),'carnivore-fine-meal':value(20,false,{playerCanSell:false}),'lavish-meal':value(40,false,{playerCanSell:false}),'vegetarian-lavish-meal':value(40,false,{playerCanSell:false}),'carnivore-lavish-meal':value(40,false,{playerCanSell:false}),'survival-meal':value(24,true),

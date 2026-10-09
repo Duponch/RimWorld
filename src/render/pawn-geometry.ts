@@ -1,5 +1,6 @@
 import { HAIR_PARTS,BEARD_PARTS } from './pawn-appearance-shape';
 import { BIOME_CARGO } from './biome-cargo';
+import { CHEMFUEL_CARGO } from './biofuel-parts';
 import * as THREE from 'three/webgpu';
 import { PAWN_MODEL_SCALE } from '../world/scale';
 import { ITEM_DEFINITIONS } from '../sim/items';
@@ -220,6 +221,9 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   part([.07,.24,.34],[0,0,0],24,0x8a846a);
   part([.55,.2,.3],[0,0,0],11,ITEM_DEFINITIONS.steel.color);
   part([.48,.26,.4],[0,0,0],17,ITEM_DEFINITIONS.component.color);
+  part([.38,.30,.34],[0,0,0],CHEMFUEL_CARGO,ITEM_DEFINITIONS.chemfuel.color);
+  part([.18,.065,.16],[0,.18,-.07],CHEMFUEL_CARGO,0x526b5e);
+  part([.39,.045,.12],[0,.02,.07],CHEMFUEL_CARGO,0x6b8266);
   part([.2,.07,.26],[0,.16,0],17,0x637d77);
   (['herbal-medicine','medicine','glitterworld-medicine'] as const).forEach((item,i)=>{part([.38,.25,.3],[0,0,0],18+i,ITEM_DEFINITIONS[item].color);part([.2,.03,.065],[0,.14,0],18+i,0xf0eee0);part([.065,.03,.2],[0,.14,0],18+i,0xf0eee0);});
   for(const variant of WEAPON_VISUALS)for(const p of variant.parts)part([...p.size],[...p.center],variant.cargo,p.color);

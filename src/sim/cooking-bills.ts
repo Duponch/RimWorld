@@ -3,7 +3,7 @@ import { V91_ITEM_IDS,V190_ITEM_IDS, isAnimalMeat } from './biome-items.ts';
 import { ITEM_DEFINITIONS,V219_ITEM_IDS } from './items.ts';
 import { isFoodWorkstation } from './food-workstations.ts';
 import { groundOccupancyAllows } from './occupancy.ts';
-import { PRODUCTION_RECIPES, isFlakRecipe,isRecipeProduct, type ProductionRecipe } from './production-recipes.ts';
+import { BIOFUEL_INITIAL_ORGANICS,PRODUCTION_RECIPES,isBiofuelRecipe,isFlakRecipe,isRecipeProduct, type ProductionRecipe } from './production-recipes.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
 import { isCookingOrder } from './order-types.ts';
@@ -15,9 +15,10 @@ export const COOK_TICKS=60; // 300 reference work / 10 local ticks Ã— campfir
 export const INGREDIENT_UNITS=10; // 0.5 nutrition for the supported raw ingredients.
 export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):CookingBill {
   const inputs=PRODUCTION_RECIPES[recipe].inputs.filter(i=>version>=197||!V219_ITEM_IDS.some(future=>future===i));
-  return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,true])),radius:999,destination:'stockpile'};
+  return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,recipe!=='chemfuel-from-organics'||(BIOFUEL_INITIAL_ORGANICS as readonly string[]).includes(i)])),radius:999,destination:'stockpile'};
 }
 export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
+  if(isBiofuelRecipe(recipe)&&version<218)return false;
   if(recipe==='make-medicine'&&version<206)return false;
   if(recipe==='make-emp-launcher'&&version<208)return false;
   if(!value||typeof value!=='object'||Array.isArray(value))return false;

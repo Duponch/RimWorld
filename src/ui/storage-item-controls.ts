@@ -2,7 +2,7 @@ import { ITEM_DEFINITIONS, type ItemId } from '../sim/items';
 import { QUALITY_LABELS,WEAPON_QUALITIES,type WeaponQuality } from '../sim/equipment-rules';
 
 export type StorageItemSelection = Partial<Record<ItemId, boolean>>;
-const GROUP_LABELS:Readonly<Record<string,string>>={neutroamine:'Neutroamine',silver:'Argent',corpse:'Dépouilles','mech-corpse':'Carcasses mécaniques',wood:'Bois',food:'Nourriture',unfinished:'Ouvrages inachevés',textile:'Textiles',chunk:'Fragments',steel:'Acier',gold:'Or',plasteel:'Plastacier',component:'Composants','advanced-component':'Composants avancés',medicine:'Médicaments',weapon:'Armes',apparel:'Vêtements',blocks:'Blocs de pierre'};
+const GROUP_LABELS:Readonly<Record<string,string>>={chemfuel:'Biocarburant',neutroamine:'Neutroamine',silver:'Argent',corpse:'Dépouilles','mech-corpse':'Carcasses mécaniques',wood:'Bois',food:'Nourriture',unfinished:'Ouvrages inachevés',textile:'Textiles',chunk:'Fragments',steel:'Acier',gold:'Or',plasteel:'Plastacier',component:'Composants','advanced-component':'Composants avancés',medicine:'Médicaments',weapon:'Armes',apparel:'Vêtements',blocks:'Blocs de pierre'};
 
 /** Mount beside the existing category controls. A historical zone without an
  * item list displays every item as selected, matching its category-only rule. */

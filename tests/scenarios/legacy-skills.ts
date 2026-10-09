@@ -134,8 +134,9 @@ export function withoutResearch<T>(world:T):T {
   withoutFutureFineMealPolicy(world);
   withoutHunting(world);
   withoutArt(world);
-  const w=world as {research?:unknown;pawns:{research?:unknown;priorities:{research?:number};skills?:{intellectual?:unknown}}[]};
-  delete w.research;for(const p of w.pawns){delete p.research;delete p.priorities.research;if(p.skills)delete p.skills.intellectual;}return world;
+  const w=world as {orbital?:unknown;deepResources?:unknown;research?:unknown;pawns:{research?:unknown;priorities:{research?:number};skills?:{intellectual?:unknown}}[]};
+  // These prospective agendas did not exist in the claimed pre73 fixture.
+  delete w.orbital;delete w.deepResources;delete w.research;for(const p of w.pawns){delete p.research;delete p.priorities.research;if(p.skills)delete p.skills.intellectual;}return world;
 }
 /** Independent neutral additive migration expectation. */
 export function withMigratedResearch<T>(world:T):T {

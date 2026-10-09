@@ -1,5 +1,8 @@
 # Lisière
 
+**V283 — biocarburant et générateur ; schéma 218.**
+Recherche, factures, ingrédients physiques et transport relient le raffinage du bois ou des surplus alimentaires à une réserve de carburant puis au réseau électrique. [Règles, adaptations et validation](docs/gameplay/biofuel-v283.md). Les états suivants sont historiques.
+
 **V282 — pâte nutritive et trémies ; schéma 217.**
 Recherche, construction, énergie et transport alimentent un distributeur qui consomme six ingrédients crus au contact pour produire un vrai repas. Ingestion à table et alimentation médicale réutilisent les pipelines communs. [Règles, adaptations et validation](docs/gameplay/nutrient-paste-v282.md). Les anciennes sauvegardes restent disponibles ; les états suivants sont historiques.
 

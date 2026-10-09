@@ -34,7 +34,7 @@ function shedPower(world:World,parts:Structure[],core=world.tick*10):void {
   const active=parts.filter(s=>powerWatts(s,world,core)<0);
   for(let n=0;n<Math.max(1,roundEven(active.length*.05))&&active.length;n++)randomPart(world,active).power!.on=false;
 }
-const wantsPower=(s:Structure,world:World):boolean=>isPowerTrader(s.kind)&&!s.breakdown&&s.power!.switchOn!==false&&(s.kind!=='wood-generator'||!!s.fuel?.ticks)&&(s.kind!=='sun-lamp'||sunLampScheduled(world));
+const wantsPower=(s:Structure,world:World):boolean=>isPowerTrader(s.kind)&&!s.breakdown&&s.power!.switchOn!==false&&(s.kind!=='wood-generator'&&s.kind!=='chemfuel-generator'||!!s.fuel?.ticks)&&(s.kind!=='sun-lamp'||sunLampScheduled(world));
 /** Core's gradual randomized startup/shedding. Ten small
  * reference-time boundaries avoid aliased modulo periods (e.g. 200/6 = 33).
  * Our random stream and integer W are independent of Unity's implementation. */

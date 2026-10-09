@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V283 — biocarburant et générateur ; schéma 218.**
+La [chaîne industrielle](gameplay/biofuel-v283.md) apporte un arbitrage entre provisions, bois, travail et énergie stockable. Les recettes et le générateur partagent production, possessions, réservations et réseau ; explosions chimiques explicitement hors lot. Autonomie fonctionnelle, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **Avancement fonctionnel V282 — pâte nutritive et trémies ; schéma 217.**
 La [chaîne alimentaire](gameplay/nutrient-paste-v282.md) relie recherche400, constructions, énergie et Transport à un repas physique disponible pour le colon ou le patient médical. Profils fixes des trémies et recherche de départ adaptée explicitement ; rations historiques conservées. Autonomie fonctionnelle, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
 

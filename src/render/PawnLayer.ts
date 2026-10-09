@@ -7,6 +7,7 @@ import { anestheticStage } from '../sim/anesthetic';
 import { appearanceShape,pawnBaseColor } from './pawn-appearance-shape';
 import { pawnMorph,hiddenAppearancePart } from './pawn-appearance-nodes';
 import { BIOME_CARGO } from './biome-cargo';
+import { CHEMFUEL_CARGO } from './biofuel-parts';
 import { isAnimalMeat } from '../sim/biome-items';
 import type { ApparelItem } from '../sim/apparel-rules';
 import { firePosition } from '../sim/fire-rules';
@@ -102,7 +103,7 @@ function cargoAppearance(load:MaterialPile|undefined):readonly [number,number] {
   // The dedicated mechanical rig follows this owner's existing cargo handoff.
   // No generic food/material proxy may duplicate the entire carcass.
   if(load.mechCorpse)return [0,0];
-  const kind=BIOME_CARGO[load.item]??(load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:isAnimalMeat(load.item)?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2);
+  const kind=load.item==='chemfuel'?CHEMFUEL_CARGO:BIOME_CARGO[load.item]??(load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:isAnimalMeat(load.item)?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2);
   // Corpse loads are indivisible. Negative y encodes their exact anatomical
   // mask in the existing actor stream; no extra per-actor GPU attribute.
   const size=load.corpse?-1-corpseVisualMask(load.corpse):load.kind==='corpse'||load.kind==='unfinished'||load.kind==='weapon'||load.kind==='apparel'?1:Math.min(1,load.quantity/CARRY_CAPACITY);
@@ -776,7 +777,7 @@ export class PawnLayer {
       if(orbitalReady&&stationCell)yaw=Math.atan2(stationCell.x-pawn.x,stationCell.z-pawn.z);
       if(pasteCollect&&stationCell)yaw=Math.atan2(stationCell.x-pawn.x,stationCell.z-pawn.z);
       const contactPose=arriving?pawnWorkPose({...pawn,state:'working'},job,station?.kind):workPose;
-      const atBench=station?.kind==='deep-drill'||station?.kind==='ground-scanner'||station?.kind==='drug-lab'||station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
+      const atBench=station?.kind==='biofuel-refinery'||station?.kind==='deep-drill'||station?.kind==='ground-scanner'||station?.kind==='drug-lab'||station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
       const clearance=job?.kind==='mine' ? .9 : atBench ? .88 : .82;
       const pair=pawn.social?.fight?pawnsById.get(pawn.social.fight.opponentId):undefined;
       const socialOpponent=pair?.social?.fight?.opponentId===pawn.id&&!medicallyStopped(pair)?pair:undefined;

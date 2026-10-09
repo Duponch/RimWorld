@@ -3,13 +3,15 @@ import { isCookingOrder } from './order-types.ts';
 import { reservedDestination } from './materials.ts';
 import type { Structure, World } from './types.ts';
 
-/** 600 integer reserve units per wood. Burn rates depend on the appliance. */
-export const WOOD_BURN_TICKS = 600;
+/** Integer reserve units per physical fuel item; appliance rates remain distinct. */
+export const FUEL_UNIT_TICKS = 600;
+export const WOOD_BURN_TICKS = FUEL_UNIT_TICKS;
+export const fuelItem = (kind:unknown):'wood'|'chemfuel' => kind==='chemfuel-generator'?'chemfuel':'wood';
 export const CAMPFIRE_CAPACITY = 20 * WOOD_BURN_TICKS;
 export const PASSIVE_COOLER_CAPACITY = 50 * WOOD_BURN_TICKS;
-export const isFueledBuilding = (kind:unknown):boolean => kind==='campfire'||kind==='passive-cooler'||kind==='wood-generator'||kind==='fueled-stove';
-export const fuelLimit = (kind:unknown):number => kind==='wood-generator'?75*WOOD_BURN_TICKS:kind==='fueled-stove'||kind==='passive-cooler'?PASSIVE_COOLER_CAPACITY:kind==='campfire'?CAMPFIRE_CAPACITY:0;
-export const newBuildingFuel = (kind:Structure['kind']):FuelState => ({ticks:kind==='wood-generator'||kind==='fueled-stove'?0:fuelLimit(kind),burned:0,autoRefuel:true,...kind==='wood-generator'?{burnRemainder:0}:{}});
+export const isFueledBuilding = (kind:unknown):boolean => kind==='campfire'||kind==='passive-cooler'||kind==='wood-generator'||kind==='chemfuel-generator'||kind==='fueled-stove';
+export const fuelLimit = (kind:unknown):number => kind==='chemfuel-generator'?30*FUEL_UNIT_TICKS:kind==='wood-generator'?75*WOOD_BURN_TICKS:kind==='fueled-stove'||kind==='passive-cooler'?PASSIVE_COOLER_CAPACITY:kind==='campfire'?CAMPFIRE_CAPACITY:0;
+export const newBuildingFuel = (kind:Structure['kind']):FuelState => ({ticks:kind==='wood-generator'||kind==='chemfuel-generator'||kind==='fueled-stove'?0:fuelLimit(kind),burned:0,autoRefuel:true,...kind==='wood-generator'||kind==='chemfuel-generator'?{burnRemainder:0}:{}});
 export function refuelable(world:World,id:number):Structure|undefined {return world.structures.find(s=>s.id===id&&isFueledBuilding(s.kind));}
 export const AUTO_REFUEL_THRESHOLD = .3;
 export const REFUEL_WORK_TICKS = 24;
@@ -18,7 +20,7 @@ export function newCampfireFuel(): FuelState { return {ticks:CAMPFIRE_CAPACITY,b
 export function campfire(world: World, id: number): Structure | undefined {
   return world.structures.find(s => s.id === id && s.kind === 'campfire');
 }
-/** Waiting refuels reserve the workstation as well as their wood. */
+/** Waiting refuels reserve the workstation as well as their fuel. */
 export function fuelStationReserved(world: World, id: number, exceptPawn?: number): boolean {
   if(deconstructionReserved(world,id,exceptPawn))return true;
   for(const p of world.pawns) {
@@ -30,8 +32,8 @@ export function fuelStationReserved(world: World, id: number, exceptPawn?: numbe
 export function fuelCapacity(world: World, id: number, exceptPawn?: number, forced=false): number {
   const fire=refuelable(world,id);
   if (!fire?.fuel || !forced&&(fire.power?.switchOn===false||world.jobs.some(j=>j.flick?.structureId===id)) || !forced&&!fire.fuel.autoRefuel || fuelStationReserved(world,id,exceptPawn)) return 0;
-  // Whole wood units only: never silently discard a fractional refill overflow.
-  return Math.max(0,Math.floor((fuelLimit(fire.kind)-fire.fuel.ticks)/WOOD_BURN_TICKS)-reservedDestination(world,{type:'fuel',structureId:id},exceptPawn));
+  // Whole physical fuel items only: never silently discard a fractional refill overflow.
+  return Math.max(0,Math.floor((fuelLimit(fire.kind)-fire.fuel.ticks)/FUEL_UNIT_TICKS)-reservedDestination(world,{type:'fuel',structureId:id},exceptPawn));
 }
 export function wantsFuel(world: World, fire: Structure): boolean {
   return isFueledBuilding(fire.kind) && !!fire.fuel?.autoRefuel && fire.fuel.ticks <= fuelLimit(fire.kind)*AUTO_REFUEL_THRESHOLD && fuelCapacity(world,fire.id)>0;
@@ -40,8 +42,9 @@ export function burnFuel(world: World): void {
   for (const fire of world.structures) if (isFueledBuilding(fire.kind) && fire.kind!=='fueled-stove' && fire.fuel && fire.fuel.ticks>0 && fire.power?.switchOn!==false&&!fire.breakdown) {
     const f=fire.fuel;let amount=1;
     if(fire.kind==='wood-generator'){const total=(f.burnRemainder??0)+11;amount=Math.floor(total/5);f.burnRemainder=total%5;}
+    else if(fire.kind==='chemfuel-generator'){const total=(f.burnRemainder??0)+9;amount=Math.floor(total/20);f.burnRemainder=total%20;}
     amount=Math.min(amount,f.ticks);f.ticks-=amount;f.burned+=amount;
-    if(fire.kind==='wood-generator'&&!f.ticks){f.burnRemainder=0;if(fire.power)fire.power.on=false;}
+    if((fire.kind==='wood-generator'||fire.kind==='chemfuel-generator')&&!f.ticks){f.burnRemainder=0;if(fire.power)fire.power.on=false;}
   }
 }
 /** 160 wood per 6000 local work ticks =16 reserve units per work tick.

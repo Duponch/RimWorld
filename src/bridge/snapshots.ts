@@ -1,3 +1,4 @@
+import { validBiofuelTransport } from '../sim/biofuel-save.ts';
 import { validNutrientPasteTransport } from '../sim/nutrient-paste-save.ts';
 import { validOrbitalTransport,registerOrbitalThingIds } from '../sim/orbital-save.ts';
 import { validDeepDrillingTransport } from '../sim/deep-drilling-save.ts';
@@ -448,6 +449,7 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
   if(!pile||typeof pile!=='object'||Array.isArray(pile)||!Number.isSafeInteger(pile.id)||pile.id<1||pile.id>=world.nextId
     ||typeof pile.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,pile.item))return false;
   if(pile.item==='nutrient-paste-meal'&&world.schemaVersion<217)return false;
+  if(pile.item==='chemfuel'&&(world.schemaVersion<218||pile.rot!==undefined))return false;
   if(pile.item==='neutroamine'&&(world.schemaVersion<206||pile.rot!==undefined))return false;
   const definition=ITEM_DEFINITIONS[pile.item],owner=pile.owner;
   if(pile.kind!==definition.kind||!Number.isSafeInteger(pile.quantity)||pile.quantity<1||pile.quantity>definition.stackLimit
@@ -960,6 +962,7 @@ export class SnapshotDecoder {
       // In particular an absent sparse collection means it was removed.
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
+    if(!validBiofuelTransport(next,next.schemaVersion))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
     if(!validNutrientPasteTransport(next,next.schemaVersion))return resync('Pâte nutritive, source ou transport invalide.');
     if(!validOrbitalTransport(next,next.schemaVersion))return resync('État orbital, propriétaire ou contact invalide.');
     if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');

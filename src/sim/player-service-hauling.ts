@@ -5,7 +5,7 @@ import { candidateAccess } from './candidate-access.ts';
 import { asBuilder, constructionHaulPriority, constructionObstruction, isConstruction } from './construction-rules.ts';
 import { growingJobValid } from './farming.ts';
 import { CARRY_CAPACITY } from './definitions.ts';
-import { refuelable, fuelCapacity, fuelStationReserved } from './fuel.ts';
+import { refuelable, fuelCapacity, fuelStationReserved, fuelItem } from './fuel.ts';
 import { planTurretReload } from './mini-turret-reload.ts';
 import { findAsideDestination } from './haul-aside.ts';
 import { reservedSource } from './materials.ts';
@@ -18,13 +18,14 @@ export type ServiceHaulTarget={type:'turret';structureId:number}|{type:'fuel';st
 /** Contextual sub-jobs reuse the ordinary physical transport executor. */
 export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget,access?:import('./pathfinding.ts').Reachability,budget={pairs:32768}):HaulProposal {
   if(target.type==='turret')return planTurretReload(world,pawn,target.structureId,access,budget);
-  const label=target.type==='fuel'?'Ravitailler en bois':target.type==='clear-sow'?'Dégager avant de semer':'Dégager le chantier';
+  const fire=target.type==='fuel'?refuelable(world,target.structureId):undefined;
+  const input=fire?fuelItem(fire.kind):'wood',inputLabel=input==='chemfuel'?'biocarburant':'bois';
+  const label=target.type==='fuel'?`Ravitailler en ${inputLabel}`:target.type==='clear-sow'?'Dégager avant de semer':'Dégager le chantier';
   const no=(reason:string):HaulProposal=>({label,reason});
   const work=target.type==='fuel'?'haul':target.type==='clear-sow'?'grow':asBuilder(pawn)?'build':'haul';
   const refusal=backgroundWorkRefusal(pawn,work);if(refusal)return no(refusal);
   if(target.type==='fuel'?!workPriority(pawn,'haul'):target.type==='clear-sow'?!workPriority(pawn,'grow'):!Number.isFinite(constructionHaulPriority(pawn)))return no('Ce travail est désactivé dans le tableau Travail.');
   const job=target.type!=='fuel'?world.jobs.find(j=>j.id===target.jobId):undefined;
-  const fire=target.type==='fuel'?refuelable(world,target.structureId):undefined;
   if(target.type==='clear'&&(!job||!isConstruction(job)))return no('Chantier introuvable.');
   if(target.type==='clear-sow'&&(!job||job.kind!=='sow'||!growingJobValid(world,job)))return no('Le semis n’est plus autorisé sur cette cellule.');
   if(job?.reservedBy!==undefined&&job.reservedBy!==null)return no('Chantier déjà réservé.');
@@ -35,10 +36,10 @@ export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget,a
   if(target.type==='fuel'&&!fire?.fuel)return no('Bâtiment introuvable.');
   if(fire&&fuelStationReserved(world,fire.id))return no('Bâtiment déjà réservé.');
   const capacity=fire?fuelCapacity(world,fire.id,undefined,true):CARRY_CAPACITY;
-  if(!capacity)return no('Le réservoir ne peut pas encore recevoir une unité entière de bois.');
+  if(!capacity)return no(`Le réservoir ne peut pas encore recevoir une unité entière de ${inputLabel}.`);
   const blocked=blockedCells(world),reach=access??candidateAccess(world,pawn,blocked,new Set());
   if(fire&&!canReach(world,fire,reach,true))return no('Aucun accès praticable au bâtiment.');
-  const sources=obstacle?.pile?[obstacle.pile]:world.piles.filter(p=>p.item==='wood'&&p.owner.type==='ground');
+  const sources=obstacle?.pile?[obstacle.pile]:world.piles.filter(p=>p.item===input&&p.owner.type==='ground');
   let best:{source:Cell;id:number;quantity:number;distance:number;destination:HaulDestination}|undefined;
   for(const pile of sources) {
     if(budget.pairs--<=0){budget.pairs=0;return no('Décision reportée : budget de recherche atteint.');}
@@ -54,7 +55,7 @@ export function planServiceHaul(world:World,pawn:Pawn,target:ServiceHaulTarget,a
     const distance=Math.abs(pawn.x-pile.owner.x)+Math.abs(pawn.z-pile.owner.z);
     if(!best||distance<best.distance||distance===best.distance&&pile.id<best.id)best={source:pile.owner,id:pile.id,quantity,distance,destination};
   }
-  if(!best)return no(job?'La pile est déjà réservée ou inaccessible.':'Aucun bois disponible et accessible.');
+  if(!best)return no(job?'La pile est déjà réservée ou inaccessible.':`Aucun ${inputLabel} disponible et accessible.`);
   const path=routeToJob(world,best.source,reach,true);if(!path)return no('Aucun accès praticable à la pile.');
   return {label:`${label} (${best.quantity} unités)`,path,task:{sourcePileId:best.id,quantity:best.quantity,phase:'pickup',carryPileId:null,destination:best.destination}};
 }

@@ -19,8 +19,11 @@ function laboratory():World {
 
 test('pharmaceutical state roundtrips exactly with neutral schema205 migration',()=>{
   const w=laboratory();expect(validateWorld(w)).toEqual([]);expect(deserializeWorld(serializeWorld(w))).toEqual(w);
-  const old=deconstructionCamp(0,24);old.schemaVersion=205 as World['schemaVersion'];
-  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  const old=deconstructionCamp(0,24),expected=structuredClone(old);old.schemaVersion=205 as World['schemaVersion'];
+  for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');
+  // The exact historical starter profiles append paste at their later217 adoption.
+  for(const policy of expected.foodPolicies)if(policy.allowed.includes('nutrient-paste-meal'))policy.allowed=[...policy.allowed.filter(item=>item!=='nutrient-paste-meal'),'nutrient-paste-meal'];
+  expect(deserializeWorld(JSON.stringify(old))).toEqual({...expected,schemaVersion:SCHEMA_VERSION});
   const future=laboratory();future.schemaVersion=205 as World['schemaVersion'];
   expect(()=>deserializeWorld(JSON.stringify(future))).toThrow('Invalid version 205 save');
 });

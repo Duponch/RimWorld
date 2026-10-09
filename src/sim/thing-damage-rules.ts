@@ -6,6 +6,8 @@ import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
+  'biofuel-refinery':[200,1,true],
+  'chemfuel-generator':[300,1,true],
   'nutrient-paste-dispenser':[350,.5,true],
   hopper:[100,.5,true],
   'orbital-beacon':[75,.5,false],
@@ -37,7 +39,7 @@ export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=193):number
   if(p.kind==='apparel')return APPAREL[p.item as keyof typeof APPAREL]?.hitPoints??0;
   if(p.kind==='weapon')return weaponMaxHitPoints(p.item);if(p.kind==='corpse'||p.kind==='mech-corpse')return 100;
   if(p.kind==='food')return ['nutrient-paste-meal','simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','legacy-portion'].includes(p.item)?50:60;
-  if(p.kind==='medicine')return 60;if(p.kind==='neutroamine')return 50;if(p.kind==='unfinished')return 50;
+  if(p.kind==='chemfuel')return 50;if(p.kind==='medicine')return 60;if(p.kind==='neutroamine')return 50;if(p.kind==='unfinished')return 50;
   if(version>=193){if(p.kind==='chunk')return 300;if(p.item==='muffalo-wool')return 90;if(p.item==='advanced-component')return 70;if(['plainleather','bluefur','camelhide','foxfur'].includes(p.item))return 60;}
   return p.item==='wood'?150:p.item==='cloth'?80:p.item==='light-leather'?60:p.item==='component'?70:0;
 }
@@ -46,7 +48,7 @@ export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
   if(p.kind==='mech-corpse')return 0;
   if(p.kind==='weapon')return p.item==='plasteel-knife'?0:.5;if(p.kind==='corpse')return .7;if(p.kind==='food')return 1;
   if(p.kind==='medicine')return p.item==='herbal-medicine'?1.3:.7;
-  if(p.kind==='neutroamine')return .7;
+  if(p.kind==='chemfuel')return 2;if(p.kind==='neutroamine')return .7;
   // Unfinished apparel inherits the default zero stat; its embedded cloth is not a second ground pile.
   return p.item==='wood'?1:p.item==='cloth'?1.2:p.item==='light-leather'?1:p.item==='component'?.6:0;
 }

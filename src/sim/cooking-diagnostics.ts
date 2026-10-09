@@ -2,7 +2,7 @@ import { workPriority } from './work-types.ts';
 import {artWorkTotal,isArtRecipe} from './art-rules.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
-import { MEDICINE_REQUIREMENTS,validMedicineIngredients,ADVANCED_COMPONENT_REQUIREMENTS,isComponentRecipe,isFlakRecipe,isGunRecipe,flakRequirements,FLAK_HELMET_REQUIREMENTS,RECON_HELMET_REQUIREMENTS,FLAK_REQUIREMENTS,GUN_REQUIREMENTS } from './production-recipes.ts';
+import { isBiofuelRecipe,BIOFUEL_ORGANIC_NUTRITION,biofuelNutrition,MEDICINE_REQUIREMENTS,validMedicineIngredients,ADVANCED_COMPONENT_REQUIREMENTS,isComponentRecipe,isFlakRecipe,isGunRecipe,flakRequirements,FLAK_HELMET_REQUIREMENTS,RECON_HELMET_REQUIREMENTS,FLAK_REQUIREMENTS,GUN_REQUIREMENTS } from './production-recipes.ts';
 import { foodStationUsable, usesCookingFuel } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
 import { ticksUntilRot } from './food-preservation.ts';
@@ -24,6 +24,7 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   const queued=world.pawns.find(p=>p.orders.queue.some(o=>isCookingOrder(o)&&o.cooking.stationId===station.id&&o.cooking.billId===bill.id));
   if(queued)return {code:'queued',reason:`Production en file pour ${queued.name} ; ingrédients et poste réservés.`};
   if(bill.suspended)return {code:'suspended',reason:'Facture suspendue.'};
+  if(isBiofuelRecipe(bill.recipe)&&!productionResearchUnlocked(world,bill.recipe))return {code:'research-required',reason:'Recherchez Raffinage du biocarburant après Électricité.'};
   if(!productionResearchUnlocked(world,bill.recipe))return {code:'research-required',reason:bill.recipe==='make-emp-launcher'?'Recherchez Microélectronique pour fabriquer un lanceur EMP.':bill.recipe==='make-medicine'?'Recherchez Production de médicaments après Production de drogues et Microélectronique.':bill.recipe==='cook-survival-meal'?'Recherchez Repas de survie pour préparer des rations.':bill.recipe==='make-component'?'Recherchez Fabrication pour produire des composants.':bill.recipe==='make-advanced-component'?'Recherchez Fabrication avancée pour produire des composants avancés.':bill.recipe==='make-recon-helmet'?'Recherchez Armure de reconnaissance après Fabrication et Vêtements complexes.':isFlakRecipe(bill.recipe)?'Recherchez Armure pare-balles après Usinage et Armure de plaques.':'Recherchez Armurerie pour fabriquer cette arme.'};
   if(!billWanted(world,bill))return {code:'target-met',reason:bill.mode==='times'?'Quantité demandée terminée.':bill.recipe==='butcher-creature'?'Seuil de viande stockée atteint.':'Seuil de produits stockés ou portés atteint.'};
   const serving=world.pawns.find(p=>p.cooking?.stationId===station.id||p.haul?.destination.type==='fuel'&&p.haul.destination.structureId===station.id);
@@ -35,6 +36,7 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   if(station.kind==='electric-stove'&&!foodStationUsable(station))return {code:'no-power',reason:'Cuisinière sans alimentation électrique :350 W nécessaires.'};
   if(station.kind==='machining-table'&&!station.power?.on)return {code:'no-power',reason:'Atelier sans alimentation électrique : 350 W nécessaires.'};
   if(station.kind==='fabrication-bench'&&!station.power?.on)return {code:'no-power',reason:'Établi de fabrication sans alimentation électrique : 250 W nécessaires.'};
+  if(station.kind==='biofuel-refinery'&&!station.power?.on)return {code:'no-power',reason:'Raffinerie sans alimentation électrique : 170 W nécessaires.'};
   if(usesCookingFuel(station.kind)&&!station.fuel?.ticks) {
     if(!station.fuel?.autoRefuel)return {code:'refuel-disabled',reason:'Poste sans combustible ; ravitaillement automatique désactivé.'};
     const wood=world.piles.some(p=>p.item==='wood'&&p.owner.type==='ground'&&p.quantity>reservedSource(world,p.id));
@@ -42,11 +44,15 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   }
   const u=world.piles.find(p=>p.artWork?.billId===bill.id||p.unfinished?.billId===bill.id||p.gunWork?.billId===bill.id||p.flakWork?.billId===bill.id||p.componentWork?.billId===bill.id),work=u?.artWork??u?.gunWork??u?.flakWork??u?.componentWork??u?.unfinished;if(work)return {code:'unfinished',reason:`Ouvrage commencé : attend ${world.pawns.find(p=>p.id===work.authorId)?.name??'son auteur'} ; ${Math.floor(work.progress/(u?.artWork?artWorkTotal(u.artWork.recipe,u.artWork.material):productionWorkTotal(work.recipe))*100)} % conservés.`};
   let available=0;const byMaterial=new Map<string,number>();const metals={cloth:0,steel:0,component:0,plasteel:0,gold:0,'advanced-component':0};const fine={protein:0,vegetable:0};
-  for(const pile of world.piles)if(admittedIngredient(bill,pile.item)&&(!isAnimalCorpseItem(pile.item)||corpseFresh(pile,world.tick))&&((bill.recipe!=='cook-survival-meal'&&bill.recipe!=='cook-simple-meal-bulk'&&bill.recipe!=='cook-fine-meal-bulk'&&bill.recipe!=='cook-lavish-meal-bulk'&&bill.recipe!=='vegetarian-fine-meal'&&bill.recipe!=='cook-vegetarian-fine-meal-bulk'&&bill.recipe!=='carnivore-fine-meal'&&bill.recipe!=='cook-carnivore-fine-meal-bulk'&&bill.recipe!=='vegetarian-lavish-meal'&&bill.recipe!=='cook-vegetarian-lavish-meal-bulk'&&bill.recipe!=='cook-carnivore-lavish-meal'&&bill.recipe!=='cook-carnivore-lavish-meal-bulk')||ticksUntilRot(pile,world.tick)>0)&&pile.owner.type==='ground'
+  for(const pile of world.piles)if(admittedIngredient(bill,pile.item)&&(!isAnimalCorpseItem(pile.item)||corpseFresh(pile,world.tick))&&((bill.recipe!=='chemfuel-from-organics'&&bill.recipe!=='cook-survival-meal'&&bill.recipe!=='cook-simple-meal-bulk'&&bill.recipe!=='cook-fine-meal-bulk'&&bill.recipe!=='cook-lavish-meal-bulk'&&bill.recipe!=='vegetarian-fine-meal'&&bill.recipe!=='cook-vegetarian-fine-meal-bulk'&&bill.recipe!=='carnivore-fine-meal'&&bill.recipe!=='cook-carnivore-fine-meal-bulk'&&bill.recipe!=='vegetarian-lavish-meal'&&bill.recipe!=='cook-vegetarian-lavish-meal-bulk'&&bill.recipe!=='cook-carnivore-lavish-meal'&&bill.recipe!=='cook-carnivore-lavish-meal-bulk')||ticksUntilRot(pile,world.tick)>0)&&pile.owner.type==='ground'
     &&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2<=bill.radius**2){const units=Math.max(0,pile.quantity-reservedSource(world,pile.id));available+=units;byMaterial.set(pile.item,(byMaterial.get(pile.item)??0)+units);if(pile.item==='cloth'||pile.item==='steel'||pile.item==='component'||pile.item==='plasteel'||pile.item==='gold'||pile.item==='advanced-component')metals[pile.item]+=units;if(mixedMealGroupUnits(bill.recipe)){const group=fineMealIngredientGroup(pile.item);if(group)fine[group]+=units;}}
   if(bill.recipe==='make-medicine'){
     const quota=(Object.keys(MEDICINE_REQUIREMENTS) as (keyof typeof MEDICINE_REQUIREMENTS)[]).map(item=>({item,quantity:Math.min(byMaterial.get(item)??0,MEDICINE_REQUIREMENTS[item])}));
     if(!validMedicineIngredients(bill.recipe,quota))return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${byMaterial.get('herbal-medicine')??0}/${MEDICINE_REQUIREMENTS['herbal-medicine']} plante médicinale · ${byMaterial.get('neutroamine')??0}/${MEDICINE_REQUIREMENTS.neutroamine} neutroamine · ${byMaterial.get('cloth')??0}/${MEDICINE_REQUIREMENTS.cloth} tissus non réservés.`};
+  }
+  if(bill.recipe==='chemfuel-from-organics'){
+    const nutrition=biofuelNutrition([...byMaterial].map(([item,quantity])=>({item,quantity})));
+    if(nutrition<BIOFUEL_ORGANIC_NUTRITION)return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${nutrition/100}/3,5 nutrition de matières premières fraîches non réservées.`};
   }
   const mealQuota=mixedMealGroupUnits(bill.recipe);
   if(mealQuota&&(fine.protein<mealQuota||fine.vegetable<mealQuota))return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${fine.protein}/${mealQuota} protéines (viande ou lait) · ${fine.vegetable}/${mealQuota} végétaux.`};

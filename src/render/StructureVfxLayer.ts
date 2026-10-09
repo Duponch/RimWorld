@@ -204,6 +204,18 @@ export class StructureVfxLayer {
           const ry=s.orientation*Math.PI/2,dx=(i-1.5)*.15,cs=Math.cos(ry),sn=Math.sin(ry);
           glow.push({x:x+dx*cs,y:1.012,z:z-dx*sn,sx:.105,sy:.026,sz:.24,ry,color:i===3?0x87dcc7:i===2?0xa7d792:0xe4af67});
         }
+      }else if(s.kind==='biofuel-refinery'){
+        tokens.push(`${s.id}:biofuel-refinery:${s.x}:${s.z}:${s.orientation}:${on}`);
+        if(on){
+          const ry=s.orientation*Math.PI/2,c=Math.cos(ry),n=Math.sin(ry);
+          glow.push({x:s.x+.64*c-.38*n,y:.74,z:s.z-.38*c-.64*n,sx:.15,sy:.10,sz:.05,ry,color:0xb7dca0});
+        }
+      }else if(s.kind==='chemfuel-generator'){
+        tokens.push(`${s.id}:chemfuel-generator:${s.x}:${s.z}:${on}`);
+        if(on){
+          glow.push({x:s.x+.15,y:.66,z:s.z+1.28,sx:.47,sy:.055,sz:.025,ry:0,color:0xb5d992});
+          puff(s.x+.15,1.76,s.z-.02,s.id,.56,.68,1.12,10);
+        }
       }else if(s.kind==='wood-generator'){
         tokens.push(`${s.id}:wood-generator:${s.x}:${s.z}:${on}`);
         if(on){glow.push({x:s.x+.13,y:.58,z:s.z+1.23,sx:.42,sy:.07,sz:.025,ry:0,color:0xffa456});puff(s.x+.13,WORLD_SCALE.generatorHeight+.73,s.z-.04,s.id,.68,.9,1.32,10);}
@@ -218,7 +230,7 @@ export class StructureVfxLayer {
         const x=cells.reduce((sum,cell)=>sum+cell.x,0)/cells.length;
         const z=cells.reduce((sum,cell)=>sum+cell.z,0)/cells.length;
         const y=s.kind==='wind-turbine'?4.42:s.kind==='autodoor'||s.kind==='cooler'?WORLD_SCALE.wallHeight+.08:
-          s.kind==='wood-generator'?WORLD_SCALE.generatorHeight+.35:s.kind==='battery'?1.21:
+          s.kind==='biofuel-refinery'?1.90:s.kind==='chemfuel-generator'?1.90:s.kind==='wood-generator'?WORLD_SCALE.generatorHeight+.35:s.kind==='battery'?1.21:
           s.kind==='solar-generator'?.67:WORLD_SCALE.stonecutterHeight+.4;
         tokens.push(`${s.id}:breakdown:${s.breakdown.brokenAt}:${x}:${z}`);
         glow.push({x,y,z:z-.09,sx:.115,sy:.045,sz:.255,ry:0,color:0xffac62});

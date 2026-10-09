@@ -1,6 +1,6 @@
 import { workPriority } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
-import { validMedicineIngredients,productionStationUsable } from './production-recipes.ts';
+import { validBiofuelIngredients,validMedicineIngredients,productionStationUsable } from './production-recipes.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel, isButcherStation } from './food-workstations.ts';
@@ -29,9 +29,11 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(!workPriority(pawn,stationWork(station)))return no('Métier désactivé dans le tableau Travail.');
   if(!station.bills?.some(b=>billWanted(world,b)))return no('Aucune facture active à produire : vérifiez suspension et quantité demandée.');
   if(station.kind==='drug-lab'&&!productionResearchUnlocked(world,'make-medicine'))return no('La recherche Production de médicaments est nécessaire.');
+  if(station.kind==='biofuel-refinery'&&!productionResearchUnlocked(world,'chemfuel-from-wood'))return no('La recherche Raffinage du biocarburant est nécessaire.');
   if(station.kind==='drug-lab'&&!productionWorkerQualified(pawn,'make-medicine'))return no('Artisanat 4 et Intellectuel 4 nécessaires.');
   if(fuelStationReserved(world,station.id))return no('Poste réservé pour une cuisine ou un ravitaillement.');
   if(station.kind==='electric-stove'&&!foodStationUsable(station))return no('La cuisinière n’est pas alimentée :350 W nécessaires.');
+  if(station.kind==='biofuel-refinery'&&!productionStationUsable(station))return no('Raffinerie sans courant : 170 W nécessaires.');
   if(!productionStationUsable(station))return no(station.kind==='fabrication-bench'?'Établi de fabrication sans courant : 250 W nécessaires.':'Atelier d’usinage sans courant : 350 W nécessaires.');
   const spot=cookingSpot(station);
   if(!cookingPlaceFree(world,spot)||reservedServiceCells(world).has(cellIndex(world,spot.x,spot.z)))return no('Place de cuisine obstruée ou réservée.');
@@ -40,6 +42,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   const plan=planCooking(world,pawn,reach,budget,{stationId,forced});
   if(!plan)return no(!usesCookingFuel(station.kind)||station.fuel?.ticks?'Aucune recette réalisable : ingrédients autorisés dans le rayon, accès ou dépôt insuffisants.':'Aucun bois disponible et accessible pour rallumer le feu.');
   if(station.kind==='drug-lab')return {label:'Fabriquer un médicament',order:{cooking:plan.task!},path:plan.path};
+  if(station.kind==='biofuel-refinery')return {label:'Raffiner du biocarburant',order:{cooking:plan.task!},path:plan.path};
   return {label:plan.refuel?'Ravitailler avant de cuisiner':isButcherStation(station.kind)?'Dépecer une créature':station.kind==='tailor-bench'?'Confectionner un vêtement':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='art-bench'?'Sculpter une œuvre':station.kind==='fabrication-bench'?(plan.task?.recipe==='make-recon-helmet'?'Fabriquer un casque de reconnaissance':'Fabriquer un composant'):station.kind==='machining-table'?(plan.task?.recipe==='make-flak-helmet'?'Fabriquer un casque pare-balles':plan.task&&isFlakRecipe(plan.task.recipe)?'Fabriquer un gilet pare-balles':'Fabriquer une arme'):station.kind==='stonecutter'?'Tailler des blocs de pierre':plan.task?.recipe==='cook-survival-meal'?'Cuisiner un repas de survie emballé':plan.task?.recipe==='cook-simple-meal-bulk'?'Cuisiner quatre repas simples':plan.task?.recipe==='fine-meal'?'Cuisiner un plat raffiné':plan.task?.recipe==='cook-fine-meal-bulk'?'Cuisiner quatre plats raffinés':plan.task?.recipe==='vegetarian-fine-meal'?'Cuisiner un plat raffiné végétarien':plan.task?.recipe==='cook-vegetarian-fine-meal-bulk'?'Cuisiner quatre plats raffinés végétariens':plan.task?.recipe==='carnivore-fine-meal'?'Cuisiner un plat raffiné carnivore':plan.task?.recipe==='cook-carnivore-fine-meal-bulk'?'Cuisiner quatre plats raffinés carnivores':plan.task?.recipe==='lavish-meal'?'Cuisiner un plat gastronomique':plan.task?.recipe==='cook-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques':plan.task?.recipe==='vegetarian-lavish-meal'?'Cuisiner un plat gastronomique végétarien':plan.task?.recipe==='cook-vegetarian-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques végétariens':plan.task?.recipe==='cook-carnivore-lavish-meal'?'Cuisiner un plat gastronomique carnivore':plan.task?.recipe==='cook-carnivore-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques carnivores':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
 }
 
@@ -56,6 +59,7 @@ export function queuedCookingReason(world:World,order:CookingOrder):string|undef
   if(author&&bill.recipe==='make-medicine'&&!productionWorkerQualified(author,bill.recipe))return 'Artisanat 4 et Intellectuel 4 nécessaires.';
   if(author&&!productionWorkerQualified(author,bill.recipe))return bill.recipe==='fine-meal'||bill.recipe==='cook-fine-meal-bulk'||bill.recipe==='vegetarian-fine-meal'||bill.recipe==='cook-vegetarian-fine-meal-bulk'||bill.recipe==='carnivore-fine-meal'||bill.recipe==='cook-carnivore-fine-meal-bulk'?'Cuisine 6 nécessaire.':bill.recipe==='cook-survival-meal'||bill.recipe==='lavish-meal'||bill.recipe==='cook-lavish-meal-bulk'||bill.recipe==='vegetarian-lavish-meal'||bill.recipe==='cook-vegetarian-lavish-meal-bulk'||bill.recipe==='cook-carnivore-lavish-meal'||bill.recipe==='cook-carnivore-lavish-meal-bulk'?'Cuisine 8 nécessaire.':'Compétence Artisanat insuffisante.';
   if(!validMedicineIngredients(bill.recipe,c.ingredients))return 'Le médicament exige une plante médicinale, une neutroamine et trois tissus.';
+  if(!validBiofuelIngredients(bill.recipe,c.ingredients))return bill.recipe==='chemfuel-from-wood'?'Le raffinage exige soixante-dix unités de bois.':'Le raffinage exige 3,5 nutrition de matières premières autorisées.';
   if(bill.recipe==='cook-survival-meal'&&!validSurvivalMealIngredients(c.ingredients))return 'Le repas de survie exige six protéines (viande ou lait) et six végétaux.';
   if(bill.recipe==='fine-meal'&&!validFineMealIngredients(c.ingredients))return 'Le plat raffiné exige cinq protéines (viande ou lait) et cinq végétaux.';
   if(bill.recipe==='cook-fine-meal-bulk'&&!validFineMealBulkIngredients(c.ingredients))return 'Les quatre plats raffinés exigent vingt protéines (viande ou lait) et vingt végétaux.';
@@ -75,6 +79,7 @@ export function queuedCookingReason(world:World,order:CookingOrder):string|undef
     const required=(sources.get(i.pileId)??0)+i.quantity;sources.set(i.pileId,required);
     if(pile&&isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick))return 'Dépouille pourrie, impropre à la boucherie.';
     if(pile&&bill.recipe==='cook-survival-meal'&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre au repas de survie.';
+    if(pile&&bill.recipe==='chemfuel-from-organics'&&ticksUntilRot(pile,world.tick)<=0)return 'Matière organique périmée, impropre au raffinage.';
     if(pile&&bill.recipe==='cook-simple-meal-bulk'&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre aux quatre repas simples.';
     if(pile&&bill.recipe==='cook-fine-meal-bulk'&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre aux quatre plats raffinés.';
     if(pile&&bill.recipe==='cook-lavish-meal-bulk'&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre aux quatre plats gastronomiques.';

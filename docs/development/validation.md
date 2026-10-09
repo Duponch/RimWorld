@@ -1,4 +1,6 @@
-# Validation courante — V282
+# Validation courante — V283
+
+**V283, schéma 218 : [biocarburant et générateur](../gameplay/biofuel-v283.md#validation).** 119 cas uniques/18 fichiers dont53nouveaux passent par reprises ciblées ; typage/build,62sauvegardes publiques et présentation commune passent. Le parcours WebGPU joue construction, deux raffinages, transport, ravitaillement et commutation avec dix sauvegardes/recharges exactes. Preuves, scènes préparées et rouges conservés dans la note unique ; aucun FPS ou campagne naturelle annoncé. Les validations suivantes sont historiques.
 
 **V282, schéma 217 : [pâte nutritive et trémies](../gameplay/nutrient-paste-v282.md#validation).** 126cas uniques/19fichiers dont42nouveaux passent par reprises ciblées ; 62sauvegardes/65fichiers publics conservés, typage/build final passe. WebGPU joue construction, remplissage, repas à table, patient au chevet et commutation physique avec neuf reprises exactes. Présentation commune passe, documentation finale dans la note unique ; rouges et limites y restent explicites. Les validations suivantes sont historiques.
 

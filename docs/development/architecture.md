@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V283, schéma 218 : [biocarburant et générateur](../gameplay/biofuel-v283.md).** Les factures consomment des ingrédients possédés et produisent une vraie pile ; le combustible exigé est dérivé du bâtiment dans le transport partagé. Un reste entier sauvegardé conserve le débit du générateur. Gardes fichiers/Decoder communes et migration neutre, sans modification des foyers historiques ; les états suivants sont historiques.
+
 **V282, schéma 217 : [pâte nutritive et trémies](../gameplay/nutrient-paste-v282.md).** Les trémies restent des piles au sol avec réservations entrantes et priorité dédiée. Une demande de six ingrédients devient au contact un repas porté, puis conserve son identité après interruption ou disparition du distributeur. Source et chevet sont réservés ensemble ; gardes fichiers/Decoder partagées, migration des seuls profils initiaux exacts et rendu depuis les possessions confirmées. Les états suivants sont historiques.
 
 **V281, schéma 216 : [commerce orbital](../gameplay/orbital-trade-v281.md).** Les piles portent leurs propriétaires `orbital-ship` ou `orbital-cargo`, distincts des visiteurs et des biens au sol. Calendrier privé prospectif, mandat de console, devis revalidé et brouillon atomique précèdent le dépôt physique ; gardes fichiers/Decoder et registre global d’identités restent communs. Le rendu des capsules utilise le temps confirmé sans transfert de possessions. Les états suivants sont historiques.

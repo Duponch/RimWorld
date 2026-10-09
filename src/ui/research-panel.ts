@@ -1,4 +1,4 @@
-import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, NUTRIENT_PASTE_RESEARCH_COST, DEEP_DRILLING_RESEARCH_COST,GROUND_SCANNER_RESEARCH_COST,STERILE_MATERIALS_RESEARCH_COST,VITALS_MONITOR_RESEARCH_COST, DRUG_PRODUCTION_RESEARCH_COST, MEDICINE_PRODUCTION_RESEARCH_COST, HYDROPONICS_RESEARCH_COST, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
+import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, BIOFUEL_RESEARCH_COST, NUTRIENT_PASTE_RESEARCH_COST, DEEP_DRILLING_RESEARCH_COST,GROUND_SCANNER_RESEARCH_COST,STERILE_MATERIALS_RESEARCH_COST,VITALS_MONITOR_RESEARCH_COST, DRUG_PRODUCTION_RESEARCH_COST, MEDICINE_PRODUCTION_RESEARCH_COST, HYDROPONICS_RESEARCH_COST, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
 import type { Command, World } from '../sim/types';
 import './world-panels.css';
 import './management-reference-v199.css';
@@ -6,6 +6,7 @@ import {setTooltip} from './tooltip';
 
 type ProjectNode = { id: ResearchProject; prefix: string; title: string; cost: number; detail: string; progress: (w: World) => ResearchProgress | undefined; x: number; y: number };
 export const researchProjects: readonly ProjectNode[] = [
+  {id:'biofuel-refining',prefix:'biofuel-refining',title:'Raffinage de biocarburant',cost:BIOFUEL_RESEARCH_COST/RESEARCH_SCALE,detail:'Raffinerie 3 × 2 : 150 acier + 3 composants, Construction 4, 170 W. Factures : 70 bois ou 3,5 nutrition d’aliments crus donnent 35 biocarburants. Filtre organique végétal au départ ; viandes et lait au choix. Le générateur à biocarburant, connu avec l’électricité initiale, produit 1 000 W avec un réservoir de 30 unités et consomme 4,5 unités par jour avec le commutateur fermé et sans panne.',progress:w=>w.research?.biofuelRefining,x:624,y:834},
   {id:'nutrient-paste',prefix:'nutrient-paste',title:'Pâte nutritive',cost:NUTRIENT_PASTE_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque le distributeur électrique : 125 acier + 3 composants, Construction 5, 200 W. Les trémies adjacentes reçoivent des aliments crus par Transport ; six unités donnent un repas récupéré sur place. Électricité connue au départ. Les repas de survie conservent leur recherche et leurs recettes.',progress:w=>w.research?.nutrientPaste,x:24,y:834},
   {id:'deep-drilling',prefix:'deep-drilling',title:'Forage profond',cost:DEEP_DRILLING_RESEARCH_COST/RESEARCH_SCALE,detail:'Foreuse 1 × 1 : 100 acier + 2 composants, Construction 4, 200 W. Travail Minage à la machine ; les gisements souterrains sont finis. Un scanner de sol est nécessaire pour découvrir et afficher ces réserves. Recherche au bureau avancé alimenté, après Microélectronique.',progress:w=>w.research?.deepDrilling,x:224,y:834},
   {id:'ground-scanner',prefix:'ground-scanner',title:'Scanner de sol',cost:GROUND_SCANNER_RESEARCH_COST/RESEARCH_SCALE,detail:'Scanner 3 × 3 : 150 acier + 4 composants + 1 composant avancé, Construction 8, 700 W, sans toit. Un chercheur travaille sur place pour découvrir des réserves ; six jours de travail à vitesse normale garantissent une découverte. Le temps sans opérateur ne progresse pas. Recherche au bureau avancé alimenté, après Forage profond.',progress:w=>w.research?.groundScanner,x:424,y:834},
@@ -55,6 +56,7 @@ const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=650;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['biofuel-refining',['Électricité (acquise au départ)']],
   ['nutrient-paste',['Électricité (acquise au départ)']],
   ['deep-drilling',['Microélectronique']],['ground-scanner',['Forage profond']],
   ['sterile-materials',['Électricité (acquise au départ)']],['vitals-monitor',['Lit d’hôpital','Multi-analyseur']],

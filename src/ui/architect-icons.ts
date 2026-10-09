@@ -22,12 +22,14 @@ const SECOND_ATLAS = [
   'ignore-roof', 'remove-growing', 'stockpile', 'home', 'remove-home', 'remove-stockpile',
 ] as const;
 
-export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed','vitals-monitor']:id==='steel-tile'?[id,'sterile-tile']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'nutrient-paste-dispenser','hopper','orbital-beacon','comms-console','deep-drill','ground-scanner','drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
+export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed','vitals-monitor']:id==='steel-tile'?[id,'sterile-tile']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'biofuel-refinery','chemfuel-generator','nutrient-paste-dispenser','hopper','orbital-beacon','comms-console','deep-drill','ground-scanner','drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
 
 // Small original vector additions share the existing Architecte icon installer.
 // They do not change the historical two-atlas coordinates.
 const vectorIcon=(body:string):string=>`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><g fill="none" stroke="#365647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`)}")`;
 const CUSTOM_ICONS:Readonly<Record<string,string>>=Object.freeze({
+  'biofuel-refinery':vectorIcon('<path d="M5 32h30M8 32V13h9v19M23 32V13h9v19M8 13l2-6h5l2 6M23 13l2-6h5l2 6M17 18h6M17 25h6M11 17h3M26 17h3" fill="#c3c3a1"/><path d="M17 31v-7h6v7" fill="#a3baaa"/>'),
+  'chemfuel-generator':vectorIcon('<path d="M4 33h32M7 33V13h18v20M11 18h10M11 23h10M11 28h10M28 33V14h6v19M28 14v-4h6v4M8 13V8h5v5" fill="#aec0aa"/><path d="m17 16-4 7h4l-2 7 7-10h-4l2-4" stroke="#987b4e"/>'),
   'nutrient-paste-dispenser':vectorIcon('<path d="M6 4h28v31H6zM10 8h7v12h-7zM23 8h7v12h-7zM15 24h10v8H15zM12 34h16" fill="#b8c6b0"/><path d="M19 27h2" stroke="#47766b"/>'),
   hopper:vectorIcon('<path d="M5 11h30l-6 20H11zM5 11l7-5h16l7 5M11 31v5M29 31v5M10 14h20" fill="#c7c9aa"/><path d="M15 19h10M18 24h4" stroke="#7a9869"/>'),
   'orbital-beacon':vectorIcon('<path d="M7 31h26M12 24h16M20 24v10M8 16l12 8 12-8M20 16V6M13 6l7 5 7-5"/><circle cx="20" cy="4" r="2" fill="#b8cc9e"/>'),
