@@ -8,6 +8,7 @@ import { SnapshotEncoder,SnapshotDecoder } from '../src/bridge/snapshots.ts';
 import { deconstructionCamp } from './scenarios/deconstruction.ts';
 import type { GrowingZone,Job,Orientation,Structure,World } from '../src/sim/types.ts';
 import { SCHEMA_VERSION } from '../src/sim/types.ts';
+import { initialFoodPolicies } from '../src/sim/food-policy.ts';
 
 function fixture(orientation:Orientation=0){
   const w=deconstructionCamp(0,24);w.stockpiles=[];w.growingZones=[];
@@ -42,8 +43,11 @@ test('schema 202 refuses future basin, linked-zone and research records before n
   const {w}=fixture();const old=structuredClone(w);old.schemaVersion=202 as World['schemaVersion'];
   expect(()=>deserializeWorld(JSON.stringify(old))).toThrow();
   expect(validateHydroponics(old,202)).toContain('Future hydroponics content.');
-  const plain=deconstructionCamp(0,24);plain.schemaVersion=202 as World['schemaVersion'];
-  const before=structuredClone(plain),upgraded=deserializeWorld(JSON.stringify(plain));
+  const plain=deconstructionCamp(0,24),before=structuredClone(plain);plain.schemaVersion=202 as World['schemaVersion'];
+  plain.foodPolicies=initialFoodPolicies(true,true,true,true,true,false);
+  before.foodPolicies=structuredClone(plain.foodPolicies);
+  for(const policy of before.foodPolicies.slice(0,3))policy.allowed.push('nutrient-paste-meal');
+  const upgraded=deserializeWorld(JSON.stringify(plain));
   expect(upgraded).toEqual({...before,schemaVersion:SCHEMA_VERSION});
   expect(upgraded.research?.hydroponics).toBeUndefined();
 });

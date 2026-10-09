@@ -1,5 +1,7 @@
 # Les Aulnes, référence intégrée
 
+Les [corrections CPU V286](../development/aulnes-performance-v286.md) réduisent le coût des validations répétées de cette colonie ; mesures Chrome1440p/dev et limites dans la note. Le checkpoint reste identique.
+
 Les [corrections visuelles V285](construction-presentation-v285.md) s’appliquent aussi à ce checkpoint : raccords des constructions, traces sur planchers et aperçus fantômes avant placement. Son fichier et son identité restent inchangés.
 
 Ouvrez **Charger une partie → Colonies de test → Les Aulnes · référence intégrée 250×250**. Cette première entrée du catalogue ouvre une nouvelle copie en pause. Le [fichier publié](../../public/test-saves/v284/les-aulnes-integrees.json) peut aussi être importé. L’ancienne [référence V224](aulnes-seating-v224.md) demeure accessible avec ses sièges corrigés et son état original.

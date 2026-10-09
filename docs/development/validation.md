@@ -1,4 +1,6 @@
-# Validation courante — V285
+# Validation courante — V286
+
+**V286 : [performances des Aulnes](aulnes-performance-v286.md#validation), schéma 218 conservé.** 117 cas/15 fichiers par reprises, typage/build, lecteurs des 63 sauvegardes et parcours Chrome matériel passent. Coût CPU des validations réduit ; ×6 à 56–63 RAF/s contre 7,10 sur la référence intégrée, débit effectif proche de ×6. Preuves, répétition, contrepartie, rouges et limites dans la note unique ; 240 FPS non atteints.
 
 **V285 : [raccords, traces et aperçus](../gameplay/construction-presentation-v285.md#validation).** 65cas/12fichiers par reprises ciblées, build et WebGPU matériel dans Les Aulnes passent ; deux sauvegardes/recharges exactes et six espèces de traces observées sur planchers. Catalogue et sauvegardes inchangés ; preuves, rouges et limites dans la note unique.
 

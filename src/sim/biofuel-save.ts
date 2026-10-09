@@ -1,3 +1,4 @@
+import type { PowerParentReader } from './power-parent-validation.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { footprintCells } from './definitions.ts';
 import { fuelItem,fuelLimit,FUEL_UNIT_TICKS,REFUEL_WORK_TICKS } from './fuel.ts';
@@ -36,7 +37,7 @@ function validChemfuelPile(p:MaterialPile,w:World,version:number,tick:number):bo
 
 /** Original owners and clocks are shared by file loading and SnapshotDecoder.
  * No research, fuel, stock, item identity or task is synthesized by this guard. */
-export function validBiofuelTransport(w:World,version:number):boolean {
+export function validBiofuelTransport(w:World,version:number,powerTopology?:PowerParentReader):boolean {
   try {
     const owners=captureHumanOwners(w),foreign=owners.slots.filter(s=>s.kind!=='map');
     const packs=[...(w.packed??[]),...foreign.flatMap(s=>s.packed)];
@@ -58,7 +59,7 @@ export function validBiofuelTransport(w:World,version:number):boolean {
     if(Object.hasOwn(w.research??{},'biofuelRefining')&&(!obj(research)||!keys(research,['points'],['completedAt'])||!int(research.points,0,BIOFUEL_RESEARCH_COST)
       ||(Object.hasOwn(research,'completedAt')?!int(research.completedAt,0,w.tick)||research.points!==BIOFUEL_RESEARCH_COST||w.research?.project==='biofuel-refining':research.points===BIOFUEL_RESEARCH_COST)))return false;
     if(w.research?.project==='biofuel-refining'&&!research||content.some(s=>s?.kind==='biofuel-refinery')&&!biofuelRefiningUnlocked(w))return false;
-    for(const kind of kinds)if(validatePower(w,version,kind as Structure['kind']).length)return false;
+    for(const kind of kinds)if(validatePower(w,version,kind as Structure['kind'],powerTopology).length)return false;
     for(const s of [...w.structures,...w.jobs])if(kinds.includes(s.kind)){
       if(s.material!=='steel'||s.footprint!=='standard'||!int(s.orientation,0,s.kind==='chemfuel-generator'?0:3)
         ||footprintCells(s).some(c=>!int(c.x,0,w.width-1)||!int(c.z,0,w.height-1)))return false;
@@ -99,6 +100,6 @@ export function validBiofuelTransport(w:World,version:number):boolean {
         reservations.set(target.id,sum);
       }
     }
-    return validBiofuelProductionTransport(w,version);
+    return validBiofuelProductionTransport(w,version,powerTopology!==undefined);
   }catch{return false;}
 }

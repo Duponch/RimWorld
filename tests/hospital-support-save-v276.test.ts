@@ -6,6 +6,7 @@ import {validateConstructionMaterials} from '../src/sim/construction-material-sa
 import {SCHEMA_VERSION,type Job,type Structure,type World} from '../src/sim/types.ts';
 import {newPowerState} from '../src/sim/power-rules.ts';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
+import {initialFoodPolicies} from '../src/sim/food-policy.ts';
 
 function hospitalSupport(pawns=0){
   const w=deconstructionCamp(pawns,32);w.stockpiles=[];w.growingZones=[];
@@ -21,8 +22,11 @@ function sterilePlan(w:World):Job {
 const checkpoint=(w:World)=>new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,1)));
 
 test('migration210 is neutral and does not grant hospital support or alter RNG',()=>{
-  const old=deconstructionCamp(0,24);old.schemaVersion=210 as World['schemaVersion'];const before=structuredClone(old);
-  expect(deserializeWorld(JSON.stringify(old))).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(old).toEqual(before);
+  const old=deconstructionCamp(0,24),expected=structuredClone(old);old.schemaVersion=210 as World['schemaVersion'];
+  old.foodPolicies=initialFoodPolicies(true,true,true,true,true,false);const before=structuredClone(old);
+  expected.foodPolicies=structuredClone(old.foodPolicies);
+  for(const policy of expected.foodPolicies.slice(0,3))policy.allowed.push('nutrient-paste-meal');
+  expect(deserializeWorld(JSON.stringify(old))).toEqual({...expected,schemaVersion:SCHEMA_VERSION});expect(old).toEqual(before);
 });
 
 test('unpowered monitors retain identity and switch intent on map and as packed furniture',()=>{

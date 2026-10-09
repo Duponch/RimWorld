@@ -1,3 +1,4 @@
+import type { PowerParentReader } from './power-parent-validation.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { hopperAccepts,hopperCapacity,pasteHoppers,pasteSpot,type PasteRequest } from './nutrient-paste.ts';
 import { reservedSource } from './materials.ts';
@@ -22,7 +23,7 @@ export function validPasteRequestShape(v:unknown,w:World):boolean {
     &&new Set(v.ingredients.map(i=>i.pileId)).size===v.ingredients.length&&v.ingredients.reduce((n,i)=>n+i.quantity,0)===6;
 }
 /** Shared original-owner boundary for files and Decoder; no normalization or production. */
-export function validNutrientPasteTransport(w:World,version:number):boolean {
+export function validNutrientPasteTransport(w:World,version:number,powerTopology?:PowerParentReader):boolean {
   try {
     const humans=captureHumanOwners(w),foreign=humans.slots.filter(s=>s.kind!=='map'),packs=[...(w.packed??[]),...foreign.flatMap(s=>s.packed)];
     const content=[...w.structures,...w.jobs,...packs.map(p=>p.building),...w.jobs.flatMap(j=>[j.furniture,j.deconstruction,j.flick,j.fixBreakdown].filter(Boolean))];
@@ -40,7 +41,7 @@ export function validNutrientPasteTransport(w:World,version:number):boolean {
     if(Object.hasOwn(w.research??{},'nutrientPaste')&&(!obj(research)||!keys(research,['points'],['completedAt'])||!int(research.points,0,NUTRIENT_PASTE_RESEARCH_COST)
       ||(Object.hasOwn(research,'completedAt')? !int(research.completedAt,0,w.tick)||research.points!==NUTRIENT_PASTE_RESEARCH_COST||w.research?.project==='nutrient-paste':research.points===NUTRIENT_PASTE_RESEARCH_COST)))return false;
     if(w.research?.project==='nutrient-paste'&&!research||content.some(s=>s&&newKinds.includes(s.kind))&&!nutrientPasteUnlocked(w)||packs.some(p=>newKinds.includes(p.building.kind)))return false;
-    if(validatePower(w,version,'nutrient-paste-dispenser').length)return false;
+    if(validatePower(w,version,'nutrient-paste-dispenser',powerTopology).length)return false;
     for(const s of [...w.structures,...w.jobs])if(newKinds.includes(s.kind)){
       if(s.material!=='steel'||s.footprint!=='standard'||!int(s.orientation,0,3))return false;
       if(s.kind==='hopper'&&'power' in s&&s.power!==undefined)return false;

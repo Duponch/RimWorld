@@ -49,7 +49,7 @@ export class PowerTopologyCache {
     this.key=key;this.rebuilds++;return this.topology={width:world.width,height:world.height,cells,sources,footprints,wireParents,groups,netOf};
   }
 }
-export function validPowerParent(topology:PowerTopology,lamp:Cell,id:number):boolean {
+export function validPowerParent(topology:Pick<PowerTopology,'footprints'|'wireParents'>,lamp:Cell,id:number):boolean {
   const bounds=topology.footprints.get(id);if(!bounds||!topology.wireParents.has(id))return false;
   // The search window intersects any occupied source cell; ranking uses its anchor.
   return bounds.minX<=lamp.x+CONNECTION_RANGE&&bounds.maxX>=lamp.x-CONNECTION_RANGE

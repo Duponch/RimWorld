@@ -1,3 +1,4 @@
+import { PowerParentValidationCache } from '../sim/power-parent-validation.ts';
 import { validBiofuelTransport } from '../sim/biofuel-save.ts';
 import { validNutrientPasteTransport } from '../sim/nutrient-paste-save.ts';
 import { validOrbitalTransport,registerOrbitalThingIds } from '../sim/orbital-save.ts';
@@ -962,11 +963,14 @@ export class SnapshotDecoder {
       // In particular an absent sparse collection means it was removed.
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
-    if(!validBiofuelTransport(next,next.schemaVersion))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
-    if(!validNutrientPasteTransport(next,next.schemaVersion))return resync('Pâte nutritive, source ou transport invalide.');
-    if(!validOrbitalTransport(next,next.schemaVersion))return resync('État orbital, propriétaire ou contact invalide.');
+    // One adoption owns this cache. Every guard still reads and compares its
+    // topology key; no result or cache survives a refused or accepted packet.
+    const powerTopology=new PowerParentValidationCache();
+    if(!validBiofuelTransport(next,next.schemaVersion,powerTopology))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
+    if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
+    if(!validOrbitalTransport(next,next.schemaVersion,powerTopology))return resync('État orbital, propriétaire ou contact invalide.');
     if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');
-    if(validateHydroponics(next,next.schemaVersion).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
+    if(validateHydroponics(next,next.schemaVersion,powerTopology).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
     if(!validDomesticTasksTransport(next,next.schemaVersion))return resync('Soin ou alimentation vétérinaire, patient ou cargaison incohérents.');
     if(!validArrestRescueTransport(next))return resync('Mandat d’arrestation, portage ou libération locale incohérent.');
     if(!validEmpStructureTransport(next,next.schemaVersion)||!validEmpProductionTransport(next,next.schemaVersion))return resync('État EMP ou production future invalide.');
@@ -975,7 +979,7 @@ export class SnapshotDecoder {
     if(validateMental(next,next.schemaVersion).length||next.schemaVersion>=192&&validateMelee(next).length)return resync('Cible de crise mentale ou autorité de mêlée incohérente.');
     if(!validMechSalvageLedger(next,next.schemaVersion)||validateMechanoidRaids(next,next.schemaVersion).length)return resync('Récupération ou mandat mécanique invalide.');
     const mechanicalCorpseIds=new Set<number>();
-    if(!validHospitalSupportTransport(next,next.schemaVersion)||next.research?.project==='vitals-monitor'&&validateResearch(next,next.schemaVersion).length)return resync('Soutien hospitalier, recherche ou ingrédients invalides.');
+    if(!validHospitalSupportTransport(next,next.schemaVersion,powerTopology)||next.research?.project==='vitals-monitor'&&validateResearch(next,next.schemaVersion).length)return resync('Soutien hospitalier, recherche ou ingrédients invalides.');
     if(message.kind==='delta'&&this.current&&sterileMaterialsUnlocked(this.current)&&!sterileMaterialsUnlocked(next)&&next.tiles.some(t=>t.floor==='sterile-tile'))return resync('Sol stérile privé de sa recherche acquise.');
     if(!validMedicineResearchTransport(next,next.schemaVersion))return resync('Recherche ou laboratoire pharmaceutique invalide.');
     if(!validMedicineTransport(next))return resync('Production pharmaceutique invalide.');

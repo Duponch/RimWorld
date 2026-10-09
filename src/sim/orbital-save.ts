@@ -1,3 +1,4 @@
+import type { PowerParentReader } from './power-parent-validation.ts';
 import { isColonist } from './affiliation.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
@@ -33,7 +34,7 @@ export function registerOrbitalThingIds(w:World,ids:NumericMembershipWriter):str
 /** Same original-World contract in file loading and SnapshotDecoder. Power
  * outages and urgent needs can be saved just before runtime reconciliation;
  * an active ready task still requires its exact settled physical contact. */
-export function validOrbitalTransport(w:World,version:number):boolean {
+export function validOrbitalTransport(w:World,version:number,powerTopology?:PowerParentReader):boolean {
   try {
     const humans=captureHumanOwners(w),foreign=humans.slots.filter(s=>s.kind!=='map');
     if(foreign.some(s=>s.pawn&&Object.hasOwn(s.pawn,'orbitalTrade')||s.items.some(i=>orbitalOwner(i.owner)))
@@ -44,7 +45,7 @@ export function validOrbitalTransport(w:World,version:number):boolean {
       &&content.every(s=>!s||!kinds.includes(s.kind))&&w.piles.every(p=>!orbitalOwner(p.owner));
     if(content.some(s=>s&&kinds.includes(s.kind))&&!microelectronicsUnlocked(w))return false;
     if(packs.some(p=>p.building.kind==='comms-console')||buildings.some(s=>s.kind==='orbital-beacon'&&s.orientation!==0))return false;
-    for(const kind of kinds)if(validatePower(w,version,kind as 'orbital-beacon'|'comms-console').length)return false;
+    for(const kind of kinds)if(validatePower(w,version,kind as 'orbital-beacon'|'comms-console',powerTopology).length)return false;
     const state:unknown=w.orbital;
     if(state===undefined)return !Object.hasOwn(w,'orbital')&&w.pawns.every(p=>!Object.hasOwn(p,'orbitalTrade'))&&w.piles.every(p=>!orbitalOwner(p.owner));
     if(!obj(state)||!keys(state,['profile','adoptedAt','rng','cycleStart','scheduledAt','nextCheckAt','ships','pending'])

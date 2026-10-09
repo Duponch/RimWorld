@@ -1,3 +1,4 @@
+import type { PowerParentReader } from './power-parent-validation.ts';
 import { isElectrical,isFlickable,isPowerTrader } from './power-rules.ts';
 import { isPowerConnector,isPowerTransmitter } from './power-grid.ts';
 import { BATTERY_CAPACITY } from './power-battery.ts';
@@ -5,8 +6,8 @@ import { PowerTopologyCache, validPowerParent } from './power-topology.ts';
 import { isBlockMaterial } from './building-materials.ts';
 import type { StructureKind,World } from './types.ts';
 
-export function validatePower(world:World,version:number,onlyKind?:StructureKind):string[] {
-  const errors:string[]=[],topology=new PowerTopologyCache().read(world);
+export function validatePower(world:World,version:number,onlyKind?:StructureKind,topologyCache?:PowerParentReader):string[] {
+  const errors:string[]=[],topology=(topologyCache??new PowerTopologyCache()).read(world);
   for(const s of [...world.structures,...(world.packed??[]).map(p=>p.building)]) {
     if(onlyKind!==undefined&&s.kind!==onlyKind)continue;
     const p=s.power,packed=!world.structures.includes(s);

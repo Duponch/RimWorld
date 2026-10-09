@@ -1,5 +1,7 @@
 # Lisière
 
+**V286 — performances des Aulnes intégrées.** Les validations électriques, hydroponiques et de production réutilisent leurs calculs. Premier contrôle Chrome en1440p à×6 : **7,10→55,99 images RAF/s**, avec débit effectif proche de×6. Les240FPS restent à atteindre. [Mesures, corrections et limites](docs/development/aulnes-performance-v286.md).
+
 **V285 — raccords et fantômes de construction.** Murs, enclos et sols jointifs ; traces suivant les surfaces ; véritables modèles translucides, rotation et placements refusés. [Détails et validation](docs/gameplay/construction-presentation-v285.md). Les sauvegardes des Aulnes se chargent avec ces corrections sans modification du checkpoint.
 
 **Référence joueur maintenue : [Les Aulnes intégrées, 250×250](docs/gameplay/aulnes-current.md).** La première entrée de « Colonies de test » rassemble les systèmes compatibles dans un village avancé. Les anciennes versions restent accessibles ; les prochaines fonctionnalités enrichiront cette référence.

@@ -1,3 +1,4 @@
+import type { PowerParentReader } from './power-parent-validation.ts';
 import { BIOFUEL_REFINING_RESEARCH_COST,biofuelRefiningUnlocked,NUTRIENT_PASTE_RESEARCH_COST,DEEP_DRILLING_RESEARCH_COST,GROUND_SCANNER_RESEARCH_COST,deepDrillingUnlocked,groundScannerUnlocked,STERILE_MATERIALS_RESEARCH_COST,VITALS_MONITOR_RESEARCH_COST,sterileMaterialsUnlocked,vitalsMonitorUnlocked,DRUG_PRODUCTION_RESEARCH_COST,MEDICINE_PRODUCTION_RESEARCH_COST,drugProductionUnlocked,medicineProductionUnlocked,HYDROPONICS_RESEARCH_COST,hydroponicsUnlocked,GUN_TURRETS_RESEARCH_COST,gunTurretsUnlocked,TUBE_TELEVISION_RESEARCH_COST,tubeTelevisionUnlocked,PACKAGED_SURVIVAL_MEALS_RESEARCH_COST,packagedSurvivalMealsUnlocked,HOSPITAL_BED_RESEARCH_COST,hospitalBedUnlocked,MACHINING_RESEARCH_COST,GUNSMITHING_RESEARCH_COST,PLATE_ARMOR_RESEARCH_COST,FLAK_ARMOR_RESEARCH_COST,RECON_ARMOR_RESEARCH_COST,MICROELECTRONICS_RESEARCH_COST,MULTI_ANALYZER_RESEARCH_COST,FABRICATION_RESEARCH_COST,ADVANCED_FABRICATION_RESEARCH_COST,AUTODOORS_RESEARCH_COST,microelectronicsUnlocked,multiAnalyzerUnlocked,fabricationUnlocked,advancedFabricationUnlocked,reconArmorUnlocked,autodoorsUnlocked,machiningUnlocked,researchPrerequisite,STONECUTTING_RESEARCH_COST,SMITHING_RESEARCH_COST,COMPLEX_FURNITURE_RESEARCH_COST,CLOTHING_RESEARCH_COST,AIR_CONDITIONING_COST,BATTERIES_RESEARCH_COST,SOLAR_POWER_RESEARCH_COST,airConditioningUnlocked,clothingUnlocked,batteriesUnlocked,solarPowerUnlocked,complexFurnitureUnlocked,flakArmorUnlocked } from './research.ts';
 import { cookingSpot } from './cooking-bills.ts';
 import { canStandAt } from './furniture-travel.ts';
@@ -37,7 +38,7 @@ export function validDeepResearchTransport(world:World,version:number):boolean {
 }
 /** Sparse V211 guard, shared by files and reconstructed snapshots. Terrain is
  * checked in the existing floor/checkpoint/delta traversal, not scanned here. */
-export function validHospitalSupportTransport(world:World,version:number):boolean {
+export function validHospitalSupportTransport(world:World,version:number,powerTopology?:PowerParentReader):boolean {
   try {
     const state=world.research,project=state?.project;
     const progress=(p:unknown,cost:number,active:boolean)=>record(p)&&Object.keys(p).every(k=>k==='points'||k==='completedAt')&&int(p.points,0,cost)
@@ -55,7 +56,7 @@ export function validHospitalSupportTransport(world:World,version:number):boolea
     for(const s of monitorContent)if(version<211||s.material!=='steel'||s.footprint!=='standard'||!int(s.orientation,0,3)
       ||Object.hasOwn(s,'quality')||Object.hasOwn(s,'breakdown')||Object.hasOwn(s,'emp'))return false;
     for(const j of world.jobs)if(j.kind==='vitals-monitor'&&(Object.hasOwn(j,'power')||Object.hasOwn(j,'battery')))return false;
-    if(monitorContent.some(s=>world.structures.includes(s as World['structures'][number])||(world.packed??[]).some(p=>p.building===s))&&validatePower(world,version,'vitals-monitor').length)return false;
+    if(monitorContent.some(s=>world.structures.includes(s as World['structures'][number])||(world.packed??[]).some(p=>p.building===s))&&validatePower(world,version,'vitals-monitor',powerTopology).length)return false;
     for(const departed of [world.visitors?.departed??[],world.podRescues?.departed??[]])for(const d of departed)for(const p of d.packed??[]){
       const s=p.building;if(s.kind!=='vitals-monitor')continue;
       if(!vitalsMonitorUnlocked(world)||s.material!=='steel'||s.footprint!=='standard'||!int(s.orientation,0,3)||Object.hasOwn(s,'quality')||Object.hasOwn(s,'breakdown')||Object.hasOwn(s,'emp')
