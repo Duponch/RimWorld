@@ -816,7 +816,7 @@ function rebuildPawns(world: World) {
     colonistButtons.set(pawn.id, button);
     return button;
   }));
-  el('work-rows').replaceChildren(...world.pawns.filter(isColonist).map(pawn => {
+  el('work-rows').replaceChildren(...world.pawns.filter(p=>isColonist(p)&&!p.prisoner).map(pawn => {
     const row = document.createElement('tr'); row.dataset.worker = String(pawn.id);
     const name = document.createElement('th'); name.scope = 'row'; name.textContent = pawn.name; row.append(name);
     for (const {id: work, label} of workColumns) {
@@ -905,7 +905,7 @@ function renderState() {
     const active = Number(button.dataset.speed) === currentSpeed;
     button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
   }
-  const signature = JSON.stringify(colonists.map(pawn => [pawn.id, pawn.name]));
+  const signature = JSON.stringify(colonists.map(pawn => [pawn.id, pawn.name, !!pawn.prisoner]));
   if (signature !== pawnSignature) { pawnSignature = signature; rebuildPawns(world); }
   const equipment=equipmentProjection(world),apparel=apparelProjection(world);
   for (const pawn of colonists) {
@@ -1135,7 +1135,7 @@ function renderState() {
   if (world.jobs.some(job => constructionRecipe(job).ingredients.length > 0) && world.pawns.every(pawn => pawn.priorities.haul === 0&&pawn.priorities.build === 0)) alerts.push('Construction/transport désactivés : chantiers non approvisionnés');
   const interrupted=world.pawns.filter(pawn=>pawn.interruptedCargo).length;
   if(interrupted)alerts.push(`${interrupted} cargaison(s) conservée(s) : fin de déplacement ou sol proche à libérer`);
-  const idle = world.pawns.filter(pawn => isColonist(pawn)&&pawn.state === 'idle'&&!pawn.draft&&!pawn.flee&&!pawn.mental?.crisis&&!pawn.interruptedCargo).length;
+  const idle = world.pawns.filter(pawn => isColonist(pawn)&&!pawn.prisoner&&pawn.state === 'idle'&&!pawn.draft&&!pawn.flee&&!pawn.mental?.crisis&&!pawn.interruptedCargo).length;
   if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
   const beds = world.structures.filter(structure => isBedKind(structure.kind)&&!structure.medical&&!structure.prisoner).length;
   const alertRows=alerts.map(text=>({text,kind:''}));

@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 212 as const;
+export const SCHEMA_VERSION = 213 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -268,6 +268,7 @@ export type Command = import('./group-state.ts').GroupCommand | {type:'enable-me
   | {type:'prison-bed';bedId:number;enabled:boolean}
   | {type:'prisoner-mode';patientId:number;mode:import('./prisoner-state.ts').PrisonerMode}
   | {type:'order-capture';pawnId:number;patientId:number;queue:boolean}
+  | {type:'order-arrest';pawnId:number;patientId:number;queue:boolean}
   | {type:'power-flick';structureId:number;on:boolean}
   | {type:'enable-wildlife'}
   | {type:'cancel-unfinished';itemId:number}

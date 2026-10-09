@@ -7,6 +7,7 @@ import { interruptDraftWork } from './drafting.ts';
 import { collapseFromExhaustion,processNeeds,type NeedContext } from './needs.ts';
 import { retryInterruptedCargo } from './interrupted-cargo.ts';
 import { isColonist } from './affiliation.ts';
+import { carrierOf } from './rescue-state.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { hasReachableCell,routeToCell,type Reachability } from './pathfinding.ts';
 import { reservedServiceCells } from './service-reservations.ts';
@@ -59,6 +60,9 @@ export function updateMentalBreak(world:World,pawn:Pawn,budget?:SearchBudget):vo
   if(pawn.state==='dead'){if(m?.crisis)finishMentalBreak(world,pawn,false);return;}
   if(!isColonist(pawn))return;
   if(m?.cooldown&&!moodFrozen(pawn))m.cooldown--;
+  // The arrested person's current interval stays clinical, while no new
+  // mental job can replace the body owned by the actual carrier.
+  if(world.schemaVersion>=213&&carrierOf(world,pawn.id)?.rescue?.arrest)return;
   if(m?.crisis) {
     if(pawn.state==='downed'||moodFrozen(pawn)){finishMentalBreak(world,pawn);return;}
     if((world.tick+pawn.id)%3===0) {

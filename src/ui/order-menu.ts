@@ -30,7 +30,7 @@ export interface TacticalAttackPolicy {
  * The worker still rechecks every order against its current world. */
 export function tacticalPawns(world: World, ids: ReadonlySet<number>): Pawn[] {
   const carried = new Set(world.pawns.filter(pawn => pawn.rescue?.phase === 'carry').map(pawn => pawn.rescue!.patientId));
-  return draftablePawns(world.pawns.filter(pawn => ids.has(pawn.id))).filter(pawn => !!pawn.draft && pawn.state !== 'sleeping' && !pawn.need && !pawn.collapsePending && !carried.has(pawn.id)).sort((a, b) => a.id - b.id);
+  return draftablePawns(world.pawns.filter(pawn => ids.has(pawn.id)&&!pawn.prisoner)).filter(pawn => !!pawn.draft && pawn.state !== 'sleeping' && !pawn.need && !pawn.collapsePending && !carried.has(pawn.id)).sort((a, b) => a.id - b.id);
 }
 
 export function tacticalAttackPolicy(world: World, ids: ReadonlySet<number>, targetId: number, queue: boolean): TacticalAttackPolicy {
@@ -148,7 +148,7 @@ export class OrderMenu {
     content.textContent=pawn?'Vérification des accès…':'Sélectionnez un seul colon pour lui donner un travail.';
     this.menu.append(header,content);this.position(x,y);this.menu.focus();
     if(!pawn)return;
-    if(!isColonist(pawn)){content.textContent=pawn.prisoner?'Les prisonniers se gèrent dans leur inspection. Ils ne reçoivent pas d’ordres de colon.':'Cette personne ne fait pas partie de la colonie.';this.position(x,y);return;}
+    if(!isColonist(pawn)||pawn.prisoner){content.textContent=pawn.prisoner?'Les prisonniers se gèrent dans leur inspection. Ils ne reçoivent pas d’ordres de colon.':'Cette personne ne fait pas partie de la colonie.';this.position(x,y);return;}
     try {
       const options=await this.client.orderOptions(pawn.id,cell.x,cell.z,queue);
       if(revision!==this.revision)return;
@@ -164,8 +164,11 @@ export class OrderMenu {
         if(option.tendPatientId!==undefined)button.dataset.orderTend=String(option.tendPatientId);
         if(option.rescuePatientId!==undefined)button.dataset.orderRescue=String(option.rescuePatientId);
         if(option.capturePatientId!==undefined)button.dataset.orderCapture=String(option.capturePatientId);
+        if(option.arrestPatientId!==undefined)button.dataset.orderArrest=String(option.arrestPatientId);
         button.onclick=event=>{
-          this.close();void this.client.command(option.capturePatientId!==undefined
+          this.close();void this.client.command(option.arrestPatientId!==undefined
+            ? {type:'order-arrest',pawnId:pawn.id,patientId:option.arrestPatientId,queue:false}
+            : option.capturePatientId!==undefined
             ? {type:'order-capture',pawnId:pawn.id,patientId:option.capturePatientId,queue:queue||event.shiftKey}
             : option.equipmentItemId!==undefined
             ? {type:'order-equipment',pawnId:pawn.id,itemId:option.equipmentItemId,action:option.equipmentAction!,queue:queue||event.shiftKey}
@@ -180,14 +183,14 @@ export class OrderMenu {
             : option.haulTarget
             ? {type:'order-haul',pawnId:pawn.id,target:option.haulTarget,queue:queue||event.shiftKey}
             : {type:'order-job',pawnId:pawn.id,jobId:option.jobId,queue:queue||event.shiftKey})
-            .then(()=>this.report('Ordre accepté.')).catch(error=>this.report(String(error instanceof Error?error.message:error),true));
+            .then(()=>this.report(option.arrestPatientId!==undefined?'Tentative d’arrestation demandée ; l’acceptation sera vérifiée au contact.':'Ordre accepté.')).catch(error=>this.report(String(error instanceof Error?error.message:error),true));
         };
         content.append(button);
       }
       const fire=world.fires?.items.find(f=>{const at=firePosition(world,f);return at?.x===cell.x&&at?.z===cell.z;});
       if(fire){const button=document.createElement('button');button.setAttribute('role','menuitem');button.dataset.orderFire=String(fire.id);button.textContent='Prioriser : éteindre le feu';button.onclick=()=>{this.close();void this.client.command({type:'order-extinguish',pawnId:pawn.id,fireId:fire.id}).then(()=>this.report('Extinction prioritaire demandée.')).catch(error=>this.report(String(error instanceof Error?error.message:error),true));};content.append(button);}
       if(!options.length&&!fire)content.textContent='Aucun travail ni pile à transporter ici. Utilisez les ordres d’Architecte.';
-      const hint=document.createElement('p');hint.className='muted';hint.textContent=fire?'L’extinction est un ordre direct, sans mise en file.':options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
+      const hint=document.createElement('p');hint.className='muted';hint.textContent=options.some(option=>option.arrestPatientId!==undefined)?'Arrestation directe par un colon démobilisé, avec lit de prison accessible. La chance affichée dépend de l’état actuel ; un refus peut provoquer une fureur violente.':fire?'L’extinction est un ordre direct, sans mise en file.':options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
       this.position(x,y);content.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
     } catch(error) {if(revision===this.revision){content.textContent=String(error instanceof Error?error.message:error);this.position(x,y);}}
   }

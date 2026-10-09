@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V278 — crise, détention et retour libre ; schéma 213.**
+L’[arrestation d’un colon](gameplay/colonist-arrest-v278.md) complète une boucle humaine : tentative au contact, portage et prise en charge en prison, puis libération physique sur carte. L’évasion de ces colons attend une conservation complète hors carte ; les étrangers gardent leurs règles. Autonomie, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **Avancement fonctionnel V277 — soins des troupeaux ; schéma 212.**
 La [boucle vétérinaire](gameplay/veterinary-care-v277.md) ouvre les soins physiques aux quatre troupeaux déjà possédés, avec repos après pansement et réservations communes à la chirurgie humaine. Alimentation assistée animale et autres espèces restent ouvertes. Autonomie, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
 

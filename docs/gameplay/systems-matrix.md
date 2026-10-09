@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+**État courant V278, schéma 213.** L’[arrestation d’un colon](colonist-arrest-v278.md) relie S07/S13/S14/S19 : crise admissible, tentative au contact, détention, prise en charge et libération physique sur carte. Évasion de ces colons et culpabilité restent ouvertes ; aucun domaine ni jalon général n’est clôturé. Les états suivants sont historiques.
+
 **État courant V277, schéma 212.** Les [soins vétérinaires](veterinary-care-v277.md) relient S07/S13/S18 : quatre troupeaux possédés, médecins, médicaments physiques et récupération après pansement. Alimentation assistée et chirurgie animale restent ouvertes ; aucun domaine ni jalon général n’est clôturé. Les états suivants sont historiques.
 
 **État courant V276, schéma 211.** Le [soutien hospitalier](hospital-support-v276.md) raccorde S06/S07/S10/S13/S20 : recherches, moniteur alimenté, dalles stériles, construction et clinique réelles, lecteurs et reprise. Aucun domaine ni jalon général n’est clôturé ; les états suivants sont historiques.

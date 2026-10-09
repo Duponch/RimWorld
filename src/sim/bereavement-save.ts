@@ -9,7 +9,7 @@ const integer=(value:unknown,min:number,max=Number.MAX_SAFE_INTEGER):value is nu
 /** A sparse, prospective record: past deaths never acquire a thought on load. */
 function validMemories(value:unknown,observer:Pawn|undefined,pawnId:number,version:number,tick:number,deathTick:(id:number)=>number|undefined):boolean {
   if(value===undefined)return true;
-  if(version<170||!Array.isArray(value)||value.length<1||value.length>10||!observer||!isColonist(observer)||observer.prisoner)return false;
+  if(version<170||!Array.isArray(value)||value.length<1||value.length>10||!observer||!isColonist(observer)||observer.prisoner&&version<213)return false;
   const seen=new Set<number>();let friends=0,rivals=0;
   for(const memory of value){
     if(!object(memory)||Object.keys(memory).length!==4||Object.keys(memory).some(key=>!['otherId','kind','at','opinion'].includes(key))

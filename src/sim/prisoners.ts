@@ -1,4 +1,5 @@
 import { isBedKind } from './bed-kinds.ts';
+import { isColonist } from './affiliation.ts';
 import { prisonBreakActive } from './prison-break-state.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { medicalRestNeeded,treatmentTarget } from './care-rules.ts';
@@ -46,6 +47,7 @@ export function applyPrisonBed(world:World,command:{bedId:number;enabled:boolean
 export function applyPrisonerMode(world:World,command:{patientId:number;mode:PrisonerMode}):CommandResult {
   const p=world.pawns.find(p=>p.id===command.patientId);
   if(!p?.prisoner||p.state==='dead'||!['maintain','reduce','recruit',...world.schemaVersion>=202?['release']:[]].includes(command.mode))return fail('Prisonnier ou mode de conversation invalide.');
+  if(world.schemaVersion>=213&&isColonist(p)&&command.mode!=='maintain'&&command.mode!=='release')return fail('Ce colon appartient déjà à la colonie : maintien ou libération uniquement.');
   if(p.prisoner.mode===command.mode)return {ok:true};
   if(prisonBreakActive(p))return fail('Il faut réprimer la révolte avant de changer cette consigne.');
   if(p.prisoner.releasedAt!==undefined)return fail('Cette personne a déjà été libérée et quitte la carte.');
@@ -112,7 +114,7 @@ export function processPrisoner(world:World,p:Pawn,context:NeedContext):boolean 
   if(p.prisoner.escape&&p.path.length){p.state='moving';context.move(p.prisoner.escape,true);return true;}
   if(p.prisoner.escape&&p.x===p.prisoner.escape.x&&p.z===p.prisoner.escape.z){p.state='idle';return true;}
   let map:RoomTopology|undefined;const enclosure=()=>map??=capturePrisonTopology(world);
-  if(p.planCooldown===0){
+  if(p.planCooldown===0&&!(world.schemaVersion>=213&&isColonist(p))){
     const route=prisonerEscapeRoute(world,p,goals=>context.search(goals),enclosure());
     if(route===null)return true;
     if(route!==undefined){

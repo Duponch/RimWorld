@@ -1,4 +1,5 @@
 import { atMapEdge } from './raid-space.ts';
+import { isColonist } from './affiliation.ts';
 import { exitRaider } from './raids.ts';
 import { carrierOf } from './rescue-state.ts';
 import { cancelMelee } from './melee-state.ts';
@@ -11,6 +12,8 @@ export interface PrisonDeparture { pawnId:number;name:string;capturedAt:number;t
 /** Exit after the pawn loop, once the physical edge has arrived. The departure
  * retains ownership identities; a carried meal must first be eaten or dropped. */
 export function exitPrisoner(world:World,pawn:Pawn):boolean {
+  // Local detention until a complete off-map colony-person owner exists.
+  if(world.schemaVersion>=213&&isColonist(pawn))return false;
   if(!world.pawns.includes(pawn)||carrierOf(world,pawn.id)||!pawn.prisoner?.escape||!atMapEdge(world,pawn)||pawn.state==='dead'||pawn.state==='downed'||pawn.need||pawn.moveCooldown>0||(pawn.motion?.end??0)>world.tick||pawn.interruptedCargo||pawn.equipmentDropPending||(pawn.stun?.untilCore??0)>world.tick*10)return false;
   if(world.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===pawn.id)||world.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===pawn.id))return false;
   if(world.schemaVersion>=204&&(pawn.melee?.strike||pawn.shooting?.stance))return false;

@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V278, schéma 213 : [arrestation d’un colon](../gameplay/colonist-arrest-v278.md).** Le marqueur arrest du transport existant distingue approche et statut acquis au pickup ; aucune seconde personne ni changement de faction. Préflight des possessions avant tirage, reset mental sans récompense, lecteurs partagés et migration neutre. La branche de libération locale supprime la détention au vrai dépôt hors cellule ; appartenance et droit aux commandes restent distincts. Les états suivants sont historiques.
+
 **V277, schéma 212 : [soins vétérinaires](../gameplay/veterinary-care-v277.md).** Un prédicat clinique commun ouvre prospectivement les quatre troupeaux au pipeline existant ; anatomies et médicaments restent physiques. Les réservations comptent les chirurgies humaines et excluent les conduites concurrentes. Fichiers et Decoder partagent la garde du mandat et de ses propriétaires ; migration neutre, aucun nouvel état médical inventé. Les états suivants sont historiques.
 
 **V276, schéma 211 : [soutien hospitalier](../gameplay/hospital-support-v276.md).** Liens moniteur/lit dérivés des empreintes et de la visibilité, puis courant relu à chaque frontière clinique. Aucun propriétaire ni bonus clinique persisté. Le sol réemploie le mandat multi-ingrédients et préflight conjointement ses deux remboursements ; migration neutre, lecteurs fichiers/Decoder communs. Les états suivants sont historiques.

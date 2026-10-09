@@ -26,6 +26,14 @@ export function expireMentalCatharsisAt(pawn:Pawn,tick:number):void {if(pawn.men
 export function mentalState(pawn:Pawn):MentalState {
   return pawn.mental??={below:[0,0,0],cooldown:0,catharsis:[]};
 }
+/** ClearMind/MentalBreaker.Reset at arrest: no Recover catharsis and no new
+ * cooldown. Completed physical edges/strikes retain their existing owners. */
+export function resetMentalBreakForArrest(pawn:Pawn):void {
+  const m=pawn.mental;if(!m)return;
+  if(pawn.melee?.order?.auto==='mental')cancelMelee(pawn);
+  delete m.crisis;m.below=[0,0,0];pawn.path=[];pawn.planCooldown=0;pawn.needCooldown=0;
+  if(!pawn.need&&pawn.state!=='downed'&&pawn.state!=='dead')pawn.state='idle';
+}
 export function finishMentalBreak(world:World,pawn:Pawn,reward=true):void {
   const m=pawn.mental;if(!m?.crisis)return;
   const kind=m.crisis.kind;

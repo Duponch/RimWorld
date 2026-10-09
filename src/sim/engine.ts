@@ -37,6 +37,7 @@ import { applyScoutCommand,processScoutLoading } from './caravan-loading.ts';
 import { advanceScoutTrip,departScout,scoutOnMapId,scoutPawn } from './caravan-trip.ts';
 import { requestPowerFlick,reconcilePowerFlicks,advancePowerFlick } from './power-flick.ts';
 import { applyCapture } from './capture.ts';
+import { applyArrest } from './arrest.ts';
 import { adoptEnvironment,advanceSurfaceWeather,advanceSurfaceTemperature } from './environment-step.ts';
 import { applyExtinguish,processFirefighting,processBurning } from './firefighting.ts';
 import { reconcileFires } from './fire.ts';
@@ -382,6 +383,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='commercial-return')return applyCommercialReturn(world);
   if(command.type==='scout-start'||command.type==='scout-cancel'||command.type==='scout-unload')return applyScoutCommand(world,command);
   const actors='pawnIds' in command&&Array.isArray(command.pawnIds)?command.pawnIds:'pawnId' in command&&command.pawnId!==null?[command.pawnId]:[];
+  if(actors.some(id=>world.pawns.find(p=>p.id===id)?.prisoner)&&!['medical-care','medical-policy','food-policy-assign'].includes(command.type))return refusal('invalid-command','Une personne détenue ne reçoit pas d’ordres de colon. Utilisez son inspection de prison.');
   if(actors.some(id=>groupOnMapMember(world,id))&&(typeof command.type==='string'&&command.type.startsWith('order-')||['clear-orders','draft','draft-move','draft-stop','shoot','melee','clean-room'].includes(command.type)))return refusal('invalid-command','Terminez ou annulez la préparation du groupe avant de donner un autre ordre.');
   const scoutId=scoutOnMapId(world)??commercialOnMapId(world);
   if(scoutId!==null&&actors.includes(scoutId)&&(typeof command.type==='string'&&command.type.startsWith('order-')||['clear-orders','draft','draft-move','draft-stop','shoot','melee','clean-room'].includes(command.type)))
@@ -470,6 +472,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   }
   if(command.type==='order-rescue')return applyRescue(world,command);
   if(command.type==='order-capture')return applyCapture(world,command);
+  if(command.type==='order-arrest')return applyArrest(world,command);
   if(command.type==='medical-bed')return applyMedicalBed(world,command);
   if(command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders')return applyOrderCommand(world,command);
   if (command.type === 'schedule-paint' || command.type === 'schedule-replace') return applyScheduleCommand(world, command);
@@ -770,7 +773,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(processCommercialOnMap(world,pawn,needsContext))continue;
       if(processScoutLoading(world,pawn,needsContext))continue;
       if(processPrisonBreak(world,pawn,getBlocked,budget,getLight,needsContext))continue;
-      if(pawn.prisoner){processPrisoner(world,pawn,needsContext);continue;}
+      if(pawn.prisoner&&!(world.schemaVersion>=213&&isColonist(pawn)&&pawn.mental?.crisis)){processPrisoner(world,pawn,needsContext);continue;}
       if(pawn.mental?.crisis){
         if(isAggressiveCrisis(pawn.mental))processAggressiveCrisis(world,pawn,getBlocked,budget,getLight,needsContext);
         else processMentalBreak(world,pawn,needsContext,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));

@@ -63,10 +63,17 @@ export function validPrisonerPawnShape(p:Record<string,unknown>,version:number,w
     ||s.releasedAt!==undefined&&(!integer(s.releasedAt,s.capturedAt,w.tick)||s.mode!=='release'||s.lastChatTick!==undefined&&Number(s.lastChatTick)>s.releasedAt)
     ||!validBreakout(s.breakout,version,s.capturedAt,w)))return false;
   const active=version>=204&&object(s)&&object(s.breakout)&&s.breakout.active!==undefined;
+  const colony=object(s)&&isColonist(p as unknown as Pawn);
+  if(colony&&(version<213||!['maintain','release'].includes(String(s.mode))||['escape','releasedAt','breakout'].some(k=>Object.hasOwn(s,k))
+    ||p.raid||p.visitor||p.podRescue||p.state==='working'&&!p.burning||p.draft||p.flee||p.hostilityResponse||p.jobId!==null
+    ||!object(p.orders)||p.orders.active!==null||!Array.isArray(p.orders.queue)||p.orders.queue.length||p.priorityWork||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.ward||p.surgery||p.equipmentTask||p.recreation&&object(p.recreation)&&p.recreation.task||p.research||p.hunting||p.animalCare||p.animalHandling||p.burial||p.cleaning||p.firefighting
+    ||object(p.shooting)&&p.shooting.order||object(p.melee)&&p.melee.order||p.tactics||p.trade))return false;
+  if(colony&&w.piles.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id))return false;
   if(active&&!validActiveBreakoutPawn(p as unknown as Pawn))return false;
   if(object(p.melee)&&object(p.melee.order)&&p.melee.order.auto==='prison-break'&&!active)return false;
   const r=p.recruitment;
   if(r!==undefined&&(!object(r)||!keys(r,['capturedAt','recruitedAt','fromFaction','raidGroup'])||!integer(r.capturedAt,0,w.tick)||!integer(r.recruitedAt,r.capturedAt,w.tick)||r.fromFaction!=='outlaws'||r.raidGroup!==undefined&&!integer(r.raidGroup,1)))return false;
+  if(colony&&object(r)&&(Number(r.recruitedAt)>Number(s.capturedAt)||r.raidGroup!==undefined&&(!w.raids||Number(r.raidGroup)>w.raids.serial)))return false;
   const t=p.ward;if(t===undefined)return true;
   if(!object(t)||!integer(t.patientId,1,w.nextId-1)||!cell(t.spot,w))return false;
   if(t.kind==='food')return keys(t,['kind','patientId','sourcePileId','carryPileId','quantity','spot','phase'])&&integer(t.sourcePileId,1,w.nextId-1)&&integer(t.quantity,1,75)
@@ -109,7 +116,9 @@ export function validatePrisoners(w:World,version:number,ids:Set<number>):string
     if(p.prisoner){
       const active=version>=204&&prisonBreakActive(p);
       if(active&&!validActiveBreakoutPawn(p))errors.push('Invalid active prison break ownership.');
-      if(isColonist(p)||p.state==='working'&&!(version>=87&&p.burning)||p.recruitment||p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.ward||p.equipmentTask||p.recreation.task||p.research||p.hunting
+      const colony=version>=213&&isColonist(p);
+      if(colony&&!validPrisonerPawnShape(p as unknown as Record<string,unknown>,version,w))errors.push('Invalid local colony detention.');
+      if(isColonist(p)&&!colony||p.state==='working'&&!(version>=87&&p.burning)||p.recruitment&&!colony||p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.haul||p.cooking||p.rescue||p.tend||p.feed||p.ward||p.equipmentTask||p.recreation.task||p.research||p.hunting
         ||p.shooting?.order||p.melee?.order&&!(active&&p.melee.order.auto==='prison-break')||p.tactics)errors.push('Prisoner retains a colony or combat mandate.');
       const escape=bombRefugeRouteTarget(p,p.prisoner.escape,version);
       // A later collapse does not revoke an actual release. Ordinary rescue
@@ -118,7 +127,7 @@ export function validatePrisoners(w:World,version:number,ids:Set<number>):string
       if(p.prisoner.escape&&(p.state==='dead'||p.need&&!releasedCare||!(active&&p.melee)&&!releasedCare&&!(version>=87&&p.burning)&&p.path.length&&(!escape||!same(p.path.at(-1)!,escape))))errors.push('Invalid prisoner escape intent or route.');
       if(w.piles.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id))errors.push('Captured prisoner retains a weapon.');
     }
-    if(p.recruitment&&(!isColonist(p)||p.prisoner||p.raid||p.recruitment.raidGroup!==undefined&&(!w.raids||p.recruitment.raidGroup>w.raids.serial)))errors.push('Invalid recruitment provenance.');
+    if(p.recruitment&&(!isColonist(p)||p.prisoner&&!(version>=213&&isColonist(p))||p.raid||p.recruitment.raidGroup!==undefined&&(!w.raids||p.recruitment.raidGroup>w.raids.serial)))errors.push('Invalid recruitment provenance.');
     const beds=[p.bedId,...p.need?.kind==='sleep'?[p.need.bedId]:[]];
     for(const bedId of beds)if(bedId!==null){const bed=[...w.structures,...w.packed.map(p=>p.building)].find(b=>b.id===bedId&&isBedKind(b.kind)&&(version>=187||b.kind==='bed'));if(bed&&!!bed.prisoner!==!!p.prisoner)errors.push('Bed role disagrees with its occupant.');}
     const t=p.ward;if(!t)continue;const patient=w.pawns.find(q=>q.id===t.patientId);

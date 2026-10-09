@@ -1,4 +1,5 @@
 import { isBedKind } from './bed-kinds.ts';
+import { isColonist } from './affiliation.ts';
 import { isRoomDoor } from './door-rules.ts';
 import { pawnBody } from './health-rules.ts';
 import { interruptWork } from './interrupted-cargo.ts';
@@ -15,6 +16,7 @@ import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 const safeClock=(w:World)=>Number.isSafeInteger(w.tick)&&w.tick>=0&&Number.isSafeInteger(w.tick*10+2500);
 function participantReady(world:World,p:Pawn,ignoreAsleep:boolean):boolean {
   return world.pawns.includes(p)&&!!p.prisoner&&p.prisoner.releasedAt===undefined&&!prisonBreakActive(p)
+    &&!(world.schemaVersion>=213&&isColonist(p))
     &&p.state!=='dead'&&p.state!=='downed'&&!p.health?.death&&!p.mental?.crisis&&!p.interruptedCargo
     &&!p.health?.flu?.vomit&&!p.health?.foodPoisoning?.vomit&&!p.health?.immuneDiseases?.malaria?.vomit&&!carrierOf(world,p.id)
     &&pawnBody(p).canBeAwake&&pawnBody(p).capacities.moving>0
@@ -33,7 +35,7 @@ function exteriorDoorCount(world:World,room:RoomSpace,map:RoomTopology):number {
  * invent participation, and this never touches either existing random stream. */
 export function adoptPrisonBreaks(world:World):void {
   if(world.schemaVersion<204||!safeClock(world))return;
-  for(const p of world.pawns)if(p.prisoner&&!p.prisoner.breakout)
+  for(const p of world.pawns)if(p.prisoner&&!p.prisoner.breakout&&!(world.schemaVersion>=213&&isColonist(p)))
     p.prisoner.breakout={rng:seedPrisonBreak(world.seed,p.id,p.prisoner.capturedAt)};
 }
 

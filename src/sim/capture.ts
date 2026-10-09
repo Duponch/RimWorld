@@ -5,7 +5,7 @@ import { carrierOf,rescueClaim } from './rescue-state.ts';
 import { startRescue } from './rescue.ts';
 import { blockedCells,reachableCells,routeToCell,type Reachability } from './pathfinding.ts';
 import { clearQueuedOrders } from './player-orders.ts';
-import { planCommandDrops,releaseWork } from './work-release.ts';
+import { planCommandDrops,releaseWork,type DropPlan } from './work-release.ts';
 import { dropRetainingIdentity } from './ground-placement.ts';
 import { createPrisonerState } from './prisoner-state.ts';
 import type { Cell,CommandResult,Pawn,World } from './types.ts';
@@ -42,17 +42,23 @@ export function applyCapture(world:World,command:{pawnId:number;patientId:number
 }
 /** All possessions are preflighted at the actual destination before the status
  * transition. A full floor postpones capture without changing identity or RNG. */
-export function completeCapture(world:World,patient:Pawn):boolean {
-  if(patient.prisoner)return true;
+export function planCaptureDrops(world:World,patient:Pawn):DropPlan|null {
   const held=world.piles.filter(p=>(p.owner.type==='pawn'||p.owner.type==='equipment')&&p.owner.pawnId===patient.id);
   const shadow={...world,piles:world.piles.map(p=>({...p,owner:{...p.owner}})),packed:world.packed.map(p=>({...p,owner:{...p.owner}}))};
   const placements=new Map<number,Cell>();
-  for(const item of held){const copy=shadow.piles.find(p=>p.id===item.id)!;if(!dropRetainingIdentity(shadow,copy,patient)||copy.owner.type!=='ground')return false;placements.set(item.id,{x:copy.owner.x,z:copy.owner.z});}
-  const drops=planCommandDrops(shadow,{type:'clear-orders',pawnId:patient.id});if(!drops)return false;
+  for(const item of held){const copy=shadow.piles.find(p=>p.id===item.id)!;if(!dropRetainingIdentity(shadow,copy,patient)||copy.owner.type!=='ground')return null;placements.set(item.id,{x:copy.owner.x,z:copy.owner.z});}
+  const drops=planCommandDrops(shadow,{type:'clear-orders',pawnId:patient.id});if(!drops)return null;
   // Use the same preflighted cells for every temporary/equipment owner.
   for(const [id,cell] of placements)drops.set(id,cell);
+  return drops;
+}
+export function completeCapture(world:World,patient:Pawn,planned?:DropPlan):boolean {
+  if(patient.prisoner)return true;
+  const drops=planned??planCaptureDrops(world,patient);if(!drops)return false;
+  const held=world.piles.filter(p=>(p.owner.type==='pawn'||p.owner.type==='equipment')&&p.owner.pawnId===patient.id);
+  if(held.some(item=>!drops.has(item.id)))return false;
   if(!releaseWork(world,patient,drops))return false;
-  for(const item of held)item.owner={type:'ground',...placements.get(item.id)!};
+  for(const item of held)item.owner={type:'ground',...drops.get(item.id)!};
   clearQueuedOrders(world,patient);delete patient.priorityWork;delete patient.draft;delete patient.flee;delete patient.equipmentDropPending;
   patient.prisoner=createPrisonerState(world,patient);patient.bedId=null;
   if(patient.raid){patient.raid.goal=null;patient.raid.exiting=true;}

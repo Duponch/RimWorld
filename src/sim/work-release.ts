@@ -26,7 +26,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
  * Store the selected cells so a later greedy search cannot invalidate the plan. */
 export function planCommandDrops(world:World,command:Command):DropPlan|null {
   const jobs=new Set<number>(),zones=new Set<number>(),pawns=new Set<number>();
-  if(command.type==='order-bury'||command.type==='clean-room'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
+  if(command.type==='order-bury'||command.type==='clean-room'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-arrest'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
     pawns.add(command.pawnId);
   } else if(command.type==='designate') {
     const affected=zonesUnderPlan(world,command);for(const id of affected.deliveries)zones.add(id);

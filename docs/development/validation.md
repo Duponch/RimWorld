@@ -1,4 +1,6 @@
-# Validation courante — V277
+# Validation courante — V278
+
+**V278, schéma 213 : [arrestation et libération d’un colon](../gameplay/colonist-arrest-v278.md#validation).** 151cas/22fichiers dont34nouveaux passent par reprise ciblée ;62sauvegardes publiques et65fichiers conservés. Build/typage et WebGPU passent avec ordre UI, portage réel et quatre sauvegardes/reprises exactes3036/3127/3222/3271. Retour au contrôle du même colon, faction/possessions conservées ; détention locale sans évasion coloniale, limites explicites. Rouges de fixtures conservés, aucun FPS ou campagne naturelle déduit. Les validations suivantes sont historiques.
 
 **V277, schéma 212 : [soins vétérinaires des troupeaux](../gameplay/veterinary-care-v277.md#validation).** 125cas/19fichiers dont29nouveaux passent par reprise ciblée ;62sauvegardes publiques et65fichiers préservés. Typage/build et visite WebGPU passent, avec médicament réellement porté et consommé, trois sauvegardes/reprises exactes3010/3077/3130. Rouges de fixture et typage conservés ; aucune campagne naturelle ou mesure FPS déduite. Les validations suivantes sont historiques.
 

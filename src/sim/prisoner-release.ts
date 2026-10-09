@@ -6,7 +6,7 @@ import { medicalWorkRefusal } from './health-rules.ts';
 import { updatePawnHealth } from './health.ts';
 import { hasReachableCell,routeToCell,type Reachability } from './pathfinding.ts';
 import { clearQueuedOrders } from './player-orders.ts';
-import { capturePrisonTopology } from './prison-space.ts';
+import { capturePrisonTopology,prisonRoom } from './prison-space.ts';
 import { carrierOf,rescueClaim,syncPatient,type RescueTask } from './rescue-state.ts';
 import { workPriority } from './work-types.ts';
 import { planCommandDrops,releaseWork } from './work-release.ts';
@@ -40,12 +40,13 @@ export function releaseReady(world:World,actor:Pawn,patient:Pawn):boolean {
 export function releaseProposal(world:World,actor:Pawn,patient:Pawn,reach:Reachability):PrisonerReleaseProposal|undefined {
   if(!releaseReady(world,actor,patient))return;
   const path=routeToCell(world,patient,reach);if(!path)return;
-  const topology=capturePrisonTopology(world),candidates:Cell[]=[];
+  const topology=capturePrisonTopology(world),candidates:Cell[]=[],local=world.schemaVersion>=213&&isColonist(patient);
   for(let z=0;z<world.height;z++)for(let x=0;x<world.width;x++){
     const c={x,z},room=topology.at(x,z);
-    if(room?.kind==='space'&&room.touchesMapEdge&&canStandAt(world,c)&&hasReachableCell(reach,z*world.width+x))candidates.push(c);
+    if(room?.kind==='space'&&(local?!prisonRoom(world,c,topology):room.touchesMapEdge)&&canStandAt(world,c)&&hasReachableCell(reach,z*world.width+x))candidates.push(c);
   }
   candidates.sort((a,b)=>distance(a,patient)-distance(b,patient)||a.z*world.width+a.x-b.z*world.width-b.x);
+  if(local&&candidates[0])return {task:{patientId:patient.id,bedId:0,phase:'approach',release:{drop:{...candidates[0]},exit:{...candidates[0]}}},path};
   const exits=candidates.filter(c=>edge(world,c));
   for(const drop of candidates){
     const room=topology.at(drop.x,drop.z);
@@ -59,9 +60,10 @@ export function startPrisonerRelease(actor:Pawn,proposal:PrisonerReleaseProposal
   actor.rescue=proposal.task;actor.path=proposal.path;actor.state='moving';actor.planCooldown=0;
 }
 
-function destinationValid(world:World,task:RescueTask):boolean {
-  if(task.capture||task.bedId!==0||!task.release)return false;
+function destinationValid(world:World,task:RescueTask,patient:Pawn):boolean {
+  if(task.capture||task.arrest||task.bedId!==0||!task.release)return false;
   const {drop,exit}=task.release,topology=capturePrisonTopology(world),room=topology.at(drop.x,drop.z);
+  if(world.schemaVersion>=213&&isColonist(patient))return room?.kind==='space'&&!prisonRoom(world,drop,topology)&&same(drop,exit)&&canStandAt(world,drop);
   return room?.kind==='space'&&room.touchesMapEdge&&topology.at(exit.x,exit.z)===room
     &&edge(world,exit)&&canStandAt(world,drop)&&canStandAt(world,exit);
 }
@@ -70,7 +72,7 @@ function destinationValid(world:World,task:RescueTask):boolean {
  * captured edge and cooldown stay with the body, without marking it released. */
 export function reconcileRelease(world:World,actor:Pawn):boolean {
   const task=actor.rescue,patient=task&&world.pawns.find(p=>p.id===task.patientId);
-  if(task?.release&&patient&&releaseReady(world,actor,patient)&&destinationValid(world,task))return true;
+  if(task?.release&&patient&&releaseReady(world,actor,patient)&&destinationValid(world,task,patient))return true;
   if(task?.release)releaseWork(world,actor);
   return false;
 }
@@ -104,6 +106,11 @@ export function processPrisonerRelease(world:World,actor:Pawn,context:NeedContex
   actor.orders.active=null;actor.path=[];actor.state='idle';actor.planCooldown=0;
   patient.motion=null;patient.moveCooldown=0;patient.bedId=null;patient.need=null;
   patient.state='idle';patient.planCooldown=0;patient.needCooldown=0;
-  patient.prisoner!.releasedAt=world.tick;patient.prisoner!.escape={...exit};
-  context.event(`${actor.name} a libéré ${patient.name}, qui rejoint la sortie de la carte.`);
+  if(world.schemaVersion>=213&&isColonist(patient)){
+    delete patient.prisoner;
+    context.event(`${actor.name} a libéré ${patient.name}, qui retrouve sa liberté dans la colonie.`);
+  }else{
+    patient.prisoner!.releasedAt=world.tick;patient.prisoner!.escape={...exit};
+    context.event(`${actor.name} a libéré ${patient.name}, qui rejoint la sortie de la carte.`);
+  }
 }

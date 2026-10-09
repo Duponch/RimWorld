@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V278, schéma 213 : [arrestation et libération d’un colon](gameplay/colonist-arrest-v278.md).** Tentative au contact, portage, détention et retour libre sur carte relient crises et prison. Les limites de détention locale sont explicites ; les états suivants sont historiques.
+
 **V277, schéma 212 : [soins vétérinaires des troupeaux](gameplay/veterinary-care-v277.md).** Cinq espèces possédées partagent médecin, médicaments physiques, pansements et récupération ; alimentation assistée et chirurgie animale restent ouvertes. Les états suivants sont historiques.
 
 **V276, schéma 211 : [soutien hospitalier](gameplay/hospital-support-v276.md).** Moniteur vital, dalles stériles et deux recherches prolongent les pipelines de construction, énergie, propreté et soins. Les états suivants sont historiques.

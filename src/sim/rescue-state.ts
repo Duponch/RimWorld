@@ -4,7 +4,7 @@ import { updatePawnHealth } from './health.ts';
 /** One authoritative carrier owns this relationship; the patient is never cloned
  * into an item. During carry its saved position/edge mirror that carrier. */
 export interface RescueTask {
-  patientId:number;bedId:number;phase:'approach'|'carry';capture?:true;
+  patientId:number;bedId:number;phase:'approach'|'carry';capture?:true;arrest?:true;
   /** A release uses no bed (bedId=0), and cannot also capture the person. */
   release?:{drop:Cell;exit:Cell};
 }

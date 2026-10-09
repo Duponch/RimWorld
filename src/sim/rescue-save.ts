@@ -1,11 +1,12 @@
 import { medicalWorkRefusal } from './health-rules.ts';
 import { isColonist } from './affiliation.ts';
 import { captureReason } from './capture.ts';
+import { arrestReason } from './arrest.ts';
 import { rescueBedAvailable } from './medical-beds.ts';
 import { wantsRescue } from './rescue.ts';
 import { patientClaimed } from './care-access.ts';
 import { canStandAt } from './furniture-travel.ts';
-import { capturePrisonTopology } from './prison-space.ts';
+import { capturePrisonTopology,prisonRoom } from './prison-space.ts';
 import { carrierOf } from './rescue-state.ts';
 import { workPriority } from './work-types.ts';
 import type { Cell,World } from './types.ts';
@@ -22,16 +23,20 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 export function validRescueShape(value:unknown,version:number):boolean {
   if(version<46||!value||typeof value!=='object'||Array.isArray(value))return false;
   const t=value as Record<string,unknown>,id=(v:unknown)=>Number.isSafeInteger(v)&&Number(v)>0;
-  return Object.keys(t).every(k=>['patientId','bedId','phase',...(version>=86?['capture']:[]),...(version>=202?['release']:[])].includes(k))&&id(t.patientId)
-    &&(t.release===undefined?id(t.bedId):version>=202&&t.bedId===0&&!Object.hasOwn(t,'capture')&&object(t.release)&&Object.keys(t.release).length===2&&cell(t.release.drop)&&cell(t.release.exit))
+  return Object.keys(t).every(k=>['patientId','bedId','phase',...(version>=86?['capture']:[]),...(version>=202?['release']:[]),...(version>=213?['arrest']:[])].includes(k))&&id(t.patientId)
+    &&(!Object.hasOwn(t,'arrest')||version>=213&&t.arrest===true&&!Object.hasOwn(t,'capture')&&!Object.hasOwn(t,'release'))
+    &&(t.release===undefined?id(t.bedId):version>=202&&t.bedId===0&&!Object.hasOwn(t,'capture')&&!Object.hasOwn(t,'arrest')&&object(t.release)&&Object.keys(t.release).length===2&&cell(t.release.drop)&&cell(t.release.exit))
     &&(t.phase==='approach'||t.phase==='carry')&&(t.capture===undefined||version>=86&&t.capture===true);
 }
 /** Shapes have passed first. Cross-references must describe a single physical
  * person, never a second actor or a resource owned by the rescuer. */
-export function validateRescues(world:World):string[] {
+export function validateRescues(world:World,onlyArrestDomain=false):string[] {
   const errors:string[]=[],patients=new Set<number>(),beds=new Set<number>();
   for(const actor of world.pawns)if(actor.rescue){
     const t=actor.rescue,patient=world.pawns.find(p=>p.id===t.patientId),bed=world.structures.find(b=>b.id===t.bedId);
+    const prospective=Object.hasOwn(t,'arrest')||!!(t.release&&patient&&isColonist(patient));
+    if(onlyArrestDomain&&!prospective)continue;
+    if(prospective&&!validRescueShape(t,world.schemaVersion)){errors.push('Invalid rescue shape.');continue;}
     if(t.release){
       const carrier=patient&&carrierOf(world,patient.id);
       if(world.schemaVersion<202||t.bedId!==0||t.capture!==undefined||!patient||patient===actor||!patient.prisoner||patient.prisoner.mode!=='release'||patient.prisoner.releasedAt!==undefined
@@ -39,13 +44,21 @@ export function validateRescues(world:World):string[] {
         ||carrier&&(t.phase!=='carry'||carrier!==actor))errors.push('Invalid or duplicate prisoner release patient.');
       const {drop,exit}=t.release,inside=(c:Cell)=>cell(c)&&c.x<world.width&&c.z<world.height;
       const map=capturePrisonTopology(world),room=inside(drop)?map.at(drop.x,drop.z):undefined;
-      if(!inside(drop)||!inside(exit)||!canStandAt(world,drop)||!canStandAt(world,exit)||room?.kind!=='space'||!room.touchesMapEdge||map.at(exit.x,exit.z)!==room
-        ||!(exit.x===0||exit.z===0||exit.x===world.width-1||exit.z===world.height-1))errors.push('Invalid prisoner release destination.');
+      const colony=!!patient&&isColonist(patient);
+      if(!inside(drop)||!inside(exit)||!canStandAt(world,drop)||!canStandAt(world,exit)||room?.kind!=='space'
+        ||(colony?world.schemaVersion<213||!same(drop,exit)||!!prisonRoom(world,drop,map):!room.touchesMapEdge||map.at(exit.x,exit.z)!==room
+          ||!(exit.x===0||exit.z===0||exit.x===world.width-1||exit.z===world.height-1)))errors.push('Invalid prisoner release destination.');
       // A mobile patient may move after the guard in this tick. Approach
       // retains the last followed cell until travel replans on the next turn.
       if(t.phase==='carry'&&actor.path.length&&!same(actor.path.at(-1)!,drop))errors.push('Invalid prisoner release route.');
       if(!isColonist(actor)||actor.prisoner||medicalWorkRefusal(actor)||actor.draft||actor.mental?.crisis||actor.burning||actor.flee||actor.collapsePending||world.restRules==='legacy'&&actor.rest===0||carrierOf(world,actor.id)
         ||!workPriority(actor,'basic')&&!workPriority(actor,'warden')||actor.orders.active!==null)errors.push('Invalid prisoner release authority.');
+    }else if(t.arrest){
+      if(world.schemaVersion<213||!patient||patient===actor||arrestReason(world,actor,patient,true)||patient.rescue||patients.has(t.patientId)||patientClaimed(world,t.patientId,actor))errors.push('Invalid or duplicate arrest patient.');
+      if(!bed||!patient||!rescueBedAvailable(world,bed,patient,actor.id,true)||beds.has(t.bedId))errors.push('Invalid or duplicate arrest bed.');
+      beds.add(t.bedId);
+      if(actor.orders.active!=='rescue'||actor.orders.queue.length||actor.priorityWork||actor.surgery||actor.animalCare||actor.animalHandling||actor.hunting||actor.research||actor.equipmentTask||actor.burial||actor.cleaning||actor.firefighting||actor.trade||actor.melee?.order||actor.shooting?.order||actor.tactics)errors.push('Invalid arrest authority.');
+      if(t.phase==='carry'&&bed&&actor.path.length&&!same(actor.path.at(-1)!,bed))errors.push('Invalid arrest carry route.');
     }else{
       if(!patient||patient===actor||(t.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||patient.rescue||patients.has(t.patientId))errors.push('Invalid or duplicate rescue patient.');
       if(!bed||!patient||!rescueBedAvailable(world,bed,patient,actor.id,!!t.capture)||beds.has(t.bedId))errors.push('Invalid or duplicate rescue bed.');
@@ -60,4 +73,10 @@ export function validateRescues(world:World):string[] {
     }
   }
   return errors;
+}
+
+/** The Decoder checks only the prospective arrest/local-release owner. Older
+ * rescue services keep their existing transport path and validation cost. */
+export function validArrestRescueTransport(world:World):boolean {
+  try{return validateRescues(world,true).length===0;}catch{return false;}
 }

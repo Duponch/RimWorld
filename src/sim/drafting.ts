@@ -8,6 +8,7 @@ import { clearQueuedOrders } from './player-orders.ts';
 import { releaseAssignments } from './work-release.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { medicallyStopped } from './health-rules.ts';
+import { isColonist } from './affiliation.ts';
 import { blockedCells,canStep,routeToCell } from './pathfinding.ts';
 import { startTravel } from './movement.ts';
 import { CIVIL_TRANSIT_BLOCKERS } from './travel.ts';
@@ -39,6 +40,7 @@ export function applyDraftCommand(world:World,command:DraftCommand):CommandResul
   if(!Array.isArray(command.pawnIds)||!command.pawnIds.length||command.pawnIds.some(id=>!Number.isSafeInteger(id))||new Set(command.pawnIds).size!==command.pawnIds.length)return refuse('Sélection tactique invalide.');
   const pawns=command.pawnIds.map(id=>world.pawns.find(p=>p.id===id));
   if(pawns.some(p=>!p))return refuse('Colon introuvable.');
+  if(pawns.some(p=>p&&(!isColonist(p)||p.prisoner)))return refuse('Seuls les colons libres peuvent recevoir un ordre tactique.');
   const selected=(pawns as Pawn[]).sort((a,b)=>a.id-b.id);
   if(command.type==='draft') {
     if(typeof command.enabled!=='boolean')return refuse('État de mobilisation invalide.');
