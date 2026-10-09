@@ -7,6 +7,9 @@ import { isMechanoidKind,type MechanoidKind } from './mechanoid-definition.ts';
 export interface BodyAssessmentInput {
   readonly damage:readonly {readonly part:BodyPartId;readonly loss:number}[];
   readonly missing:readonly BodyPartId[];
+  /** Artificial root efficiency; immediate descendants count as one in limb
+   * capacity products, although their natural body parts remain missing. */
+  readonly artificialParts?:readonly {readonly part:BodyPartId;readonly efficiency:number}[];
   readonly pain:number;
   /** Condition modifiers apply after the physiological consciousness formula,
    * before its rounding and before capacities that consume consciousness. */
@@ -58,14 +61,16 @@ export function bodyEfficiencies(input:BodyAssessmentInput,model=HUMAN_MODEL):Fl
   const loss=new Float64Array(HUMAN_BODY.length),missing=new Uint8Array(HUMAN_BODY.length),efficiency=new Float64Array(HUMAN_BODY.length);
   for(const damage of input.damage)loss[BODY_INDEX[damage.part]]!+=damage.loss;
   for(const id of input.missing)missing[BODY_INDEX[id]]=1;
+  const added=new Map<BodyPartId,number>(model.kind==='human'?(input.artificialParts??[]).map(p=>[p.part,p.efficiency] as const):[]),underAdded=new Uint8Array(HUMAN_BODY.length);
   for(let i=0;i<HUMAN_BODY.length;i++) {
     const part=HUMAN_BODY[i]!,parent=BODY_PARENTS[i]!;
+    if(parent>=0&&(underAdded[parent]||added.has(HUMAN_BODY[parent]!.id))){underAdded[i]=1;efficiency[i]=1;continue;}
     if(parent>=0&&missing[parent])missing[i]=1;
     if(missing[i])continue;
     const remaining=nearestEven(Math.max(part.destroyable?0:1,part.hp-loss[i]!))/part.hp;
     // Injury efficiency on outside non-root parts reaches zero at 10% HP.
     // This is unrelated to the separate rule for indestructible internal bones.
-    efficiency[i]=part.depth==='outside'&&parent>=0 ? Math.max(0,(remaining-.1)/.9) : remaining;
+    efficiency[i]=(part.depth==='outside'&&parent>=0 ? Math.max(0,(remaining-.1)/.9) : remaining)*(added.get(part.id)??1);
   }
   return efficiency;
 }
@@ -143,5 +148,5 @@ export const HEALTHY_BODY:BodyAssessment=calculate(HEALTHY_BODY_INPUT);
 /** Caller supplies a current health projection. No cache keyed solely by pawn ID
  * or tick: in-place injury changes must be visible within the same tick. */
 export function assessBody(input:BodyAssessmentInput=HEALTHY_BODY_INPUT,model:BodyModel=HUMAN_MODEL):BodyAssessment {
-  return model.kind==='human'&&input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.manipulationOffset&&!input.movingOffset&&!input.breathingOffset&&!input.sightOffset&&!input.talkingOffset&&!input.digestionOffset&&!input.bloodFiltrationOffset&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1&&(input.consciousnessFactor??1)===1&&(input.movingFactor??1)===1&&(input.manipulationFactor??1)===1&&(input.bloodFiltrationFactor??1)===1&&(input.eatingFactor??1)===1&&(input.talkingFactor??1)===1?HEALTHY_BODY:calculate(input,model);
+  return model.kind==='human'&&!input.artificialParts?.length&&input.damage.length===0&&input.missing.length===0&&input.pain===0&&!input.manipulationOffset&&!input.movingOffset&&!input.breathingOffset&&!input.sightOffset&&!input.talkingOffset&&!input.digestionOffset&&!input.bloodFiltrationOffset&&!input.consciousnessOffset&&(input.consciousnessMax??1)>=1&&(input.consciousnessFactor??1)===1&&(input.movingFactor??1)===1&&(input.manipulationFactor??1)===1&&(input.bloodFiltrationFactor??1)===1&&(input.eatingFactor??1)===1&&(input.talkingFactor??1)===1?HEALTHY_BODY:calculate(input,model);
 }

@@ -10,8 +10,9 @@ const assessments=new WeakMap<MedicalRecord,{input:BodyAssessmentInput;model:Bod
 export function projectedMedicalBody(record:MedicalRecord,input:BodyAssessmentInput,model:BodyModel):BodyAssessment {
   const old=assessments.get(record),previous=old?.input;
   if(old&&old.model===model&&previous&&Object.keys(input).length===Object.keys(previous).length&&
-    (Object.keys(input) as (keyof BodyAssessmentInput)[]).every(k=>k==='damage'||k==='missing'||input[k]===previous[k])&&
+    (Object.keys(input) as (keyof BodyAssessmentInput)[]).every(k=>k==='damage'||k==='missing'||k==='artificialParts'||input[k]===previous[k])&&
     input.damage.length===previous.damage.length&&input.damage.every((d,i)=>d.part===previous.damage[i]!.part&&d.loss===previous.damage[i]!.loss)&&
-    input.missing.length===previous.missing.length&&input.missing.every((id,i)=>id===previous.missing[i]))return old.body;
+    input.missing.length===previous.missing.length&&input.missing.every((id,i)=>id===previous.missing[i])&&
+    (input.artificialParts?.length??0)===(previous.artificialParts?.length??0)&&(input.artificialParts??[]).every((p,i)=>p.part===previous.artificialParts![i]!.part&&p.efficiency===previous.artificialParts![i]!.efficiency))return old.body;
   const body=assessBody(input,model);assessments.set(record,{input,model,body});return body;
 }

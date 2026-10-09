@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V275, schéma 210 : [prothèses en bois](gameplay/wooden-prostheses-v275.md).** Trois prothèses et six sites relient pertes anatomiques, collecte physique, chirurgie, capacités et reprise. Les états suivants sont historiques.
+
 **V274, schéma 209 : [morts et cadavres](gameplay/death-thoughts-v274.md).** Pensées de décès et d’observation, trait Sanguinaire et corps colonial sans sépulture sont reliés aux besoins, aux tombes physiques et aux reprises. Les états suivants sont historiques.
 
 **V273, schéma 208 : [lanceur EMP](gameplay/emp-launcher-v273.md).** Fabrication à l’usinage sous Microélectronique, équipement, tir physique, neutralisation mécanique et adaptation ; les réseaux électriques conservent leurs connexions et réserves. Les états suivants sont historiques.

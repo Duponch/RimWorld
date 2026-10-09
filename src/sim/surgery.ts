@@ -23,10 +23,13 @@ import type { SurgeryCommand,SurgeryTask } from './surgery-state.ts';
 import type { Reachability } from './pathfinding.ts';
 import type { NeedContext } from './needs.ts';
 import type { Cell,CommandResult,Pawn,World } from './types.ts';
+import { implantSurgeryReason,implantSurgeryProposal,processImplantSurgery } from './prosthetic-surgery.ts';
+import { validImplantTaskRelations } from './surgery-ingredients.ts';
 
 const release=(world:World,doctor:Pawn):void=>{if(!releaseWork(world,doctor))interruptWork(world,doctor);};
 /** Sparse pending requests cost no clinical/topology query on other pawns. */
 export function surgeryReason(world:World,doctor:Pawn,patient:Pawn|undefined,accepted=false):string|undefined {
+  if(patient?.surgeryRequest?.implant||accepted&&doctor.surgery?.implant)return implantSurgeryReason(world,doctor,patient,accepted);
   const task=accepted?doctor.surgery:undefined;
   const refusal=backgroundWorkRefusal(doctor,'doctor');if(refusal)return refusal;
   if(medicalWorkRefusal(doctor))return medicalWorkRefusal(doctor);
@@ -45,6 +48,7 @@ export function surgeryReason(world:World,doctor:Pawn,patient:Pawn|undefined,acc
   return undefined;
 }
 export function surgeryProposal(world:World,doctor:Pawn,patient:Pawn,reach:Reachability):{task:SurgeryTask;path:Cell[]}|undefined {
+  if(patient.surgeryRequest?.implant)return implantSurgeryProposal(world,doctor,patient,reach);
   if(surgeryReason(world,doctor,patient))return;
   const access=bedsideAccess(world,doctor,patient,reach);if(!access)return;
   const task:SurgeryTask={patientId:patient.id,part:patient.surgeryRequest!.part,bedId:patient.need!.kind==='sleep'?patient.need!.bedId!:-1,spot:access.spot,phase:'approach',progress:0,workCore:0};
@@ -64,24 +68,26 @@ export function applySurgery(world:World,command:SurgeryCommand):CommandResult {
     for(const doctor of world.pawns)if(doctor.surgery?.patientId===patient.id)release(world,doctor);
     patient.planCooldown=0;return {ok:true};
   }
-  const reason=surgeryRequestReason(patient,command.part);if(reason)return fail(reason);
+  if(command.type==='surgery-install'&&world.schemaVersion<210)return fail('Cette partie ne permet pas encore la pose de prothèses.');
+  const reason=surgeryRequestReason(patient,command.part,command.type==='surgery-install'?{implant:command.implant}:{});if(reason)return fail(reason);
   if(patient.surgeryRequest)return fail('Une opération est déjà demandée ; annulez-la pour changer de membre.');
-  patient.surgeryRequest={part:command.part,requestedAt:world.tick};patient.planCooldown=0;
+  patient.surgeryRequest={part:command.part,requestedAt:world.tick,...command.type==='surgery-install'?{implant:command.implant}:{}};patient.planCooldown=0;
   for(const doctor of world.pawns)if(workPriority(doctor,'doctor')>0)doctor.planCooldown=0;
   return {ok:true};
 }
 export function reconcileSurgery(world:World):void {
   for(const patient of world.pawns)if(patient.surgeryRequest){
     const administered=world.pawns.some(d=>d.surgery?.patientId===patient.id&&!!d.surgery.consumedMedicine);
-    if(surgeryRequestReason(patient,patient.surgeryRequest.part,administered?{allowAnesthetic:true}:{}))delete patient.surgeryRequest;
+    if(surgeryRequestReason(patient,patient.surgeryRequest.part,{...administered?{allowAnesthetic:true as const}:{},...patient.surgeryRequest.implant?{implant:patient.surgeryRequest.implant}:{}}))delete patient.surgeryRequest;
   }
   for(const doctor of world.pawns)if(doctor.surgery){
     const patient=world.pawns.find(p=>p.id===doctor.surgery!.patientId);
-    if(surgeryReason(world,doctor,patient,true)||!patient||!doctor.surgery.consumedMedicine&&!medicineTaskValid(world,doctor,patient,doctor.surgery))release(world,doctor);
+    if(surgeryReason(world,doctor,patient,true)||!patient||(doctor.surgery.implant?!validImplantTaskRelations(world,doctor,patient,doctor.surgery):!doctor.surgery.consumedMedicine&&!medicineTaskValid(world,doctor,patient,doctor.surgery)))release(world,doctor);
   }
 }
 export function processSurgery(world:World,doctor:Pawn,context:NeedContext,doctorGlow:()=>number,patientGlow:(cell:Cell)=>number):void {
   const task=doctor.surgery;if(!task)return;
+  if(task.implant){processImplantSurgery(world,doctor,context,doctorGlow,patientGlow);return;}
   const patient=world.pawns.find(p=>p.id===task.patientId);
   if(doctor.health&&doctor.health.tick<world.tick)updatePawnHealth(world,doctor);
   if(patient?.health&&patient.health.tick<world.tick)updatePawnHealth(world,patient);

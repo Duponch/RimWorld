@@ -45,7 +45,8 @@ import { validateGroupStateWithPlanet } from '../sim/group-save.ts';
 import { registerGroupThingIds } from '../sim/group-namespace-save.ts';
 import { captureHumanOwners } from '../sim/human-owners.ts';
 import { validateSocial } from '../sim/social-save.ts';
-import { validPawnSurgeryShape } from '../sim/surgery-save.ts';
+import { validPawnSurgeryShape,validateSurgeries } from '../sim/surgery-save.ts';
+import { validArtificialPartTransport,validArtificialPartsWorldTransport } from '../sim/health-save.ts';
 import { validAnesthetic } from '../sim/anesthetic.ts';
 import { validateScoutRegistry } from '../sim/caravan-save.ts';
 import { validateCommercialRegistry,validateCommercialBindings } from '../sim/commercial-save.ts';
@@ -347,6 +348,7 @@ function validDomesticHealroot(resource:Resource,world:World|DynamicWorld):boole
 function validSurgeryTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|'tick'|'width'|'height'|'nextId'>):boolean {
   if(world.schemaVersion<179&&(Object.hasOwn(pawn,'surgery')||Object.hasOwn(pawn,'surgeryRequest')||pawn.health&&Object.hasOwn(pawn.health,'anesthetic')))return false;
   if(!validPawnSurgeryShape(pawn,world.schemaVersion,world))return false;
+  if(!validArtificialPartTransport(pawn,world.schemaVersion,world.tick))return false;
   const record=pawn.health;
   if(isMechanoidKind(record?.body))return false;
   if(record?.anesthetic===undefined)return true;
@@ -1065,6 +1067,9 @@ export class SnapshotDecoder {
     }
     if(validateRelationshipWorld(next,next.schemaVersion).length)return resync('Liens, annonce ou souvenirs relationnels incohérents.');
     if(!validDeathThoughtsTransport(next,next.schemaVersion))return resync('Souvenirs de décès perçus ou propriétaires incohérents.');
+    if(!validArtificialPartsWorldTransport(next,next.schemaVersion))return resync('Anatomie artificielle ou horloge de son propriétaire invalide.');
+    if(next.pawns.some(p=>p.surgery?.implant!==undefined||p.surgeryRequest?.implant!==undefined)
+      &&validateSurgeries(next,next.schemaVersion).length)return resync('Prothèse demandée ou ingrédients chirurgicaux incohérents.');
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     if(!this.planetValidation.commit(planetCheck))return resync('Planète, groupe ou pertes incohérents.');
     const replaced = message.epoch !== this.epoch;

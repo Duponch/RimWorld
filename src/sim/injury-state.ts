@@ -9,7 +9,8 @@ import { assessBody,type BodyAssessment } from './body-capacities.ts';
 import { projectedMedicalBody } from './medical-assessment-cache.ts';
 import type { BodyPartId } from './body-definition.ts';
 import { HUMAN_MODEL,medicalModel,modelHasPart } from './body-model.ts';
-import { BLOOD_UNIT,HP_UNIT,PAIN_UNIT,FRESH_MISSING_TICKS,INJURY_RULES,injuryPartRules,bloodConsciousness,coagulationAge,isWithinPart,scarChance,type InjuryKind,type ScarPain } from './injury-rules.ts';
+import { BLOOD_UNIT,HP_UNIT,PAIN_UNIT,FRESH_MISSING_TICKS,INJURY_RULES,injuryPartRules,medicalPartInjuryRule,bloodConsciousness,coagulationAge,isWithinPart,scarChance,type InjuryKind,type ScarPain } from './injury-rules.ts';
+import { artificialPartCovering,artificialPartEfficiencies } from './artificial-parts-rules.ts';
 import type { Injury,MedicalRandom,MedicalRecord } from './injury-types.ts';
 import { INFECTION_DELAY_MAX_CORE,INFECTION_UNIT,infectionModifiers,injuryInfectionChance } from './infection-rules.ts';
 import { initializeInfectionRisk,removeInfectionsWithin } from './infection-state.ts';
@@ -27,19 +28,19 @@ export function remainingPartHealth(record:MedicalRecord,part:BodyPartId):number
   return (hp-floor===.5?floor+floor%2:Math.round(hp))*HP_UNIT;
 }
 export function freshMissing(record:MedicalRecord,part:MedicalRecord['missing'][number]):boolean {
-  return !part.tended&&record.tick-part.bornAt<FRESH_MISSING_TICKS&&medicalModel(record).byId[part.part].depth==='outside'&&!injuryPartRules(medicalModel(record))[part.part].solid;
+  return !part.nonFresh&&!part.tended&&!artificialPartCovering(record,part.part)&&record.tick-part.bornAt<FRESH_MISSING_TICKS&&medicalModel(record).byId[part.part].depth==='outside'&&!medicalPartInjuryRule(record,part.part).solid;
 }
 export function injuryBleed(record:MedicalRecord,injury:Injury):number {
   return injuryBleedUnits(record,injury)*1000/BLOOD_UNIT;
 }
 function injuryBleedUnits(record:MedicalRecord,injury:Injury):number {
-  if(record.death||injury.tended!==undefined||injury.scar?.pain!==undefined||record.tick-injury.bornAt>=coagulationAge(injury.severity))return 0;
-  return injury.severity*INJURY_RULES[injury.kind].bleedUnits*injuryPartRules(medicalModel(record))[injury.part].bleed;
+  if(record.death||artificialPartCovering(record,injury.part)||injury.tended!==undefined||injury.scar?.pain!==undefined||record.tick-injury.bornAt>=coagulationAge(injury.severity))return 0;
+  return injury.severity*INJURY_RULES[injury.kind].bleedUnits*medicalPartInjuryRule(record,injury.part).bleed;
 }
 export function medicalPain(record:MedicalRecord):number {
   if(record.death||isMechanoidKind(record.body))return 0;
   let pain=(heatModifiers(record.heatstroke).pain+coldModifiers(record.hypothermia).pain)*PAIN_UNIT;
-  for(const i of record.injuries)pain+=i.severity*(i.scar?.pain!==undefined?5*i.scar.pain:INJURY_RULES[i.kind].painUnits);
+  for(const i of record.injuries)if(!artificialPartCovering(record,i.part))pain+=i.severity*(i.scar?.pain!==undefined?5*i.scar.pain:INJURY_RULES[i.kind].painUnits);
   for(const m of record.missing)if(freshMissing(record,m))pain+=medicalModel(record).byId[m.part].hp*10000;
   return Math.min(1,(pain/PAIN_UNIT/medicalModel(record).healthScale+infectionModifiers(record).pain+foodPoisoningModifiers(record.foodPoisoning).painOffset+fluModifiers(record.flu).pain+immuneDiseaseModifiers(record).pain)*anestheticModifiers(record.anesthetic).painFactor);
 }
@@ -60,14 +61,14 @@ const chronicBody=(badBack:boolean,frail:boolean):BodyAssessment=>assessBody({da
 const CHRONIC_BODIES=[chronicBody(false,false),chronicBody(true,false),chronicBody(false,true),chronicBody(true,true)] as const;
 const chronicOnly=(record:MedicalRecord):boolean=>!!record.ageAilments?.length&&!record.body&&!record.death&&
   !record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.heatstroke&&!record.hypothermia&&
-  !record.malnutrition&&!record.infections&&!record.flu&&!record.immuneDiseases&&!record.foodPoisoning&&!record.anesthetic;
+  !record.malnutrition&&!record.infections&&!record.flu&&!record.immuneDiseases&&!record.foodPoisoning&&!record.anesthetic&&!record.artificialParts?.length;
 export function assessMedical(record:MedicalRecord):BodyAssessment {
   if(isMechanoidKind(record.body))return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:0},medicalModel(record));
   if(chronicOnly(record))return CHRONIC_BODIES[(record.ageAilments!.includes('bad-back')?1:0)+(record.ageAilments!.includes('frail')?2:0)];
   const heat=heatModifiers(record.heatstroke),cold=coldModifiers(record.hypothermia),blood=bloodConsciousness(record.bloodLoss),infection=infectionModifiers(record),flu=fluModifiers(record.flu),diseases=immuneDiseaseModifiers(record),malnutrition=malnutritionModifiers(record.malnutrition),anesthetic=anestheticModifiers(record.anesthetic);
   const badBack=record.ageAilments?.includes('bad-back')??false,frail=record.ageAilments?.includes('frail')??false;
   const {painOffset:_foodPain,...foodFactors}=foodPoisoningModifiers(record.foodPoisoning);
-  return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset+infection.consciousnessOffset+flu.consciousnessOffset+diseases.consciousnessOffset+malnutrition.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax,infection.consciousnessMax,diseases.consciousnessMax,malnutrition.consciousnessMax,anesthetic.consciousnessMax),movingOffset:heat.movingOffset+cold.movingOffset-(badBack?.3:0)-(frail?.3:0)+anesthetic.movingOffset,manipulationOffset:cold.manipulationOffset+flu.manipulationOffset+diseases.manipulationOffset-(badBack?.1:0)-(frail?.3:0)+anesthetic.manipulationOffset,breathingOffset:infection.breathingOffset+flu.breathingOffset+diseases.breathingOffset,bloodFiltrationOffset:diseases.bloodFiltrationOffset,sightOffset:anesthetic.sightOffset,talkingOffset:anesthetic.talkingOffset,digestionOffset:anesthetic.digestionOffset,...foodFactors},medicalModel(record));
+  return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),...(record.artificialParts?{artificialParts:artificialPartEfficiencies(record)}:{}),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset+infection.consciousnessOffset+flu.consciousnessOffset+diseases.consciousnessOffset+malnutrition.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax,infection.consciousnessMax,diseases.consciousnessMax,malnutrition.consciousnessMax,anesthetic.consciousnessMax),movingOffset:heat.movingOffset+cold.movingOffset-(badBack?.3:0)-(frail?.3:0)+anesthetic.movingOffset,manipulationOffset:cold.manipulationOffset+flu.manipulationOffset+diseases.manipulationOffset-(badBack?.1:0)-(frail?.3:0)+anesthetic.manipulationOffset,breathingOffset:infection.breathingOffset+flu.breathingOffset+diseases.breathingOffset,bloodFiltrationOffset:diseases.bloodFiltrationOffset,sightOffset:anesthetic.sightOffset,talkingOffset:anesthetic.talkingOffset,digestionOffset:anesthetic.digestionOffset,...foodFactors},medicalModel(record));
 }
 export function medicalStatus(record:MedicalRecord,body=assessMedical(record)):'mobile'|'downed'|'dead' {
   return record.death?'dead':body.painShock||!body.canBeAwake||!body.movingCapable?'downed':'mobile';
@@ -113,9 +114,9 @@ function validateResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:Injury
 }
 function applyResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:InjuryKind,severity:number,random:MedicalRandom):Injury|null {
   const injury:Injury={id:record.nextInjuryId++,part,kind,severity,bornAt:record.tick};
-  const chance=scarChance(part,kind,severity,medicalModel(record));
+  const chance=scarChance(part,kind,severity,medicalModel(record),record);
   if(chance>0&&(chance>=1||random()<chance)) {
-    injury.scar=injuryPartRules(medicalModel(record))[part].delicate?{threshold:severity,pain:rollScarPain(random)}:
+    injury.scar=medicalPartInjuryRule(record,part).delicate?{threshold:severity,pain:rollScarPain(random)}:
       {threshold:Math.round(HP_UNIT+random()*(severity/2-HP_UNIT))};
   }
   // Crush can merge into an untreated nonpermanent injury. Its older scar
@@ -123,9 +124,11 @@ function applyResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:InjuryKin
   const existing=INJURY_RULES[kind].merge&&injury.scar?.pain===undefined?record.injuries.find(i=>i.part===part&&i.kind===kind&&i.tended===undefined&&i.scar?.pain===undefined):undefined;
   if(existing){existing.severity+=severity;existing.bornAt=record.tick;}else record.injuries.push(injury);
   if(medicalModel(record).byId[part].parent!==null&&remainingPartHealth(record,part)===0) {
+    const artificial=!!artificialPartCovering(record,part);
     record.injuries=record.injuries.filter(i=>!isWithinPart(i.part,part,medicalModel(record)));
     record.missing=record.missing.filter(m=>!isWithinPart(m.part,part,medicalModel(record)));
-    record.missing.push({part,bornAt:record.tick});
+    record.missing.push({part,bornAt:record.tick,...artificial?{nonFresh:true as const}:{}});
+    if(record.artificialParts){record.artificialParts=record.artificialParts.filter(p=>!isWithinPart(p.part,part,medicalModel(record)));if(!record.artificialParts.length)delete record.artificialParts;}
     removeInfectionsWithin(record,part);
     return null;
   }

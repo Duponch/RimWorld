@@ -14,8 +14,10 @@ export interface Injury {
   /** Present only if a post-V80 wound passed its initial exposure roll. */
   infection?:InfectionRisk;
 }
-export interface MissingPart {part:BodyPartId;bornAt:number;tended?:true}
+export interface MissingPart {part:BodyPartId;bornAt:number;tended?:true;nonFresh?:true}
 export interface MedicalRecord {
+  /** V210 actual installed wooden substitutes, independent of natural anatomy. */
+  artificialParts?:import('./artificial-parts-types.ts').ArtificialPart[];
   /** V192 human anesthesia; absent in historical records and animals. */
   anesthetic?:import('./anesthetic.ts').AnestheticState;
   ageAilments?:import('./human-age.ts').HumanAgeAilment[];

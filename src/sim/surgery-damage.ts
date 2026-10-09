@@ -1,5 +1,5 @@
 import { BODY_PARTS,HUMAN_BODY,BODY_INDEX,BODY_COVERAGE,type BodyPartId } from './body-definition.ts';
-import { HP_UNIT,PART_INJURY_RULES,type InjuryKind } from './injury-rules.ts';
+import { HP_UNIT,medicalPartInjuryRule,type InjuryKind } from './injury-rules.ts';
 import { addResolvedInjuryBatch,partMissing,remainingPartHealth,type ResolvedInjury } from './injury-state.ts';
 import type { MedicalRecord,MedicalRandom } from './injury-types.ts';
 import { curve } from './melee-statistics.ts';
@@ -30,7 +30,8 @@ export function applySurgeryDamage(record:MedicalRecord,part:BodyPartId,damage:n
   const add=(id:BodyPartId,amount:number)=>{
     if(record.death||partMissing(record,id))return;
     const severity=Math.round(amount*HP_UNIT);if(!severity)return;
-    const clinical:InjuryKind=PART_INJURY_RULES[id].solid?'crack':kind==='crush'?(PART_INJURY_RULES[id].skin?'cut':'crush'):kind==='scratch'?'cut':kind;
+    const traits=medicalPartInjuryRule(record,id);
+    const clinical:InjuryKind=traits.solid?'crack':kind==='crush'?(traits.skin?'cut':'crush'):kind==='scratch'?'cut':kind;
     const layer={part:id,kind:clinical,severity};hit.layers.push(layer);addResolvedInjuryBatch(record,[layer],draw);
   };
   const preserve=(id:BodyPartId,amount:number,min:number,max:number):number=>{

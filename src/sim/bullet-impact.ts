@@ -49,10 +49,10 @@ export function selectBulletPart(record:MedicalRecord,random:MedicalRandom,heigh
  * Resolve first, then commit the returned record and caller PRNG together. */
 export function resolveUnarmoredBullet(record:MedicalRecord,hit:UnarmoredBullet,random:MedicalRandom,protect?:ImpactProtection):BulletImpactResult {
   const model=medicalModel(record),{byId:BODY_PARTS,index:BODY_INDEX,coverage:BODY_COVERAGE}=model;
-  const PART_INJURY_RULES=injuryPartRules(model);
+  const PART_INJURY_RULES=injuryPartRules(model,record);
   validateUnarmoredBullet(hit,model);
   const next:MedicalRecord={...record,injuries:record.injuries.map(i=>({...i,...(i.scar?{scar:{...i.scar}}:{}),...(i.infection?{infection:{...i.infection}}:{})})),missing:record.missing.map(m=>({...m})),...(record.death?{death:{...record.death}}:{}),
-    ...(record.infections?{infections:{...record.infections,cases:record.infections.cases.map(c=>({...c,...(c.tend?{tend:{...c.tend}}:{})}))}}:{})};
+    ...(record.infections?{infections:{...record.infections,cases:record.infections.cases.map(c=>({...c,...(c.tend?{tend:{...c.tend}}:{})}))}}:{}),...(record.artificialParts?{artificialParts:record.artificialParts.map(p=>({...p}))}:{})};
   const result:BulletImpactResult={record:next,selected:null,preserved:false,layers:[]};
   if(record.death||!hit.damage||hit.part&&partMissing(record,hit.part))return result;
   const part=hit.part??selectBulletPart(next,random,hit.height,hit.depth);result.selected=part;

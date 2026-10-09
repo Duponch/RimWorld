@@ -7,7 +7,7 @@ import { interruptWork } from './interrupted-cargo.ts';
 import type { NeedContext } from './needs.ts';
 import type { Cell,Pawn,World } from './types.ts';
 
-export const medicineClaims=(world:World,id:number):number=>world.pawns.reduce((n,p)=>n+Number(p.tend?.phase==='pickup'&&p.tend.medicine?.sourcePileId===id)+Number(p.animalCare?.phase==='pickup'&&p.animalCare.medicine?.sourcePileId===id)+Number(p.surgery?.phase==='pickup'&&p.surgery.medicine?.sourcePileId===id),0);
+export const medicineClaims=(world:World,id:number):number=>world.pawns.reduce((n,p)=>n+Number(p.tend?.phase==='pickup'&&p.tend.medicine?.sourcePileId===id)+Number(p.animalCare?.phase==='pickup'&&p.animalCare.medicine?.sourcePileId===id)+Number(p.surgery?.phase==='pickup'&&p.surgery.medicine?.sourcePileId===id)+Number(!!p.surgery?.ingredients?.some(i=>i.stage==='source'&&i.pileId===id&&isMedicine(i.item))),0);
 type MedicalMedicineTask={patientId:number;spot:Cell;phase:string;medicine?:TendMedicine};
 
 /** Best allowed potency, then distance to patient, with a real route from the

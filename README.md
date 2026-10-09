@@ -1,5 +1,8 @@
 # Lisière
 
+**V275 — prothèses en bois ; schéma 210.**
+Un médecin peut rendre une fonction partielle à une jambe, une main ou un pied manquant : bois et deux médicaments réellement livrés, anesthésie, risque opératoire et suivi sauvegardé. [Règles, adaptations et validation](docs/gameplay/wooden-prostheses-v275.md). Les états suivants sont historiques.
+
 **V274 — morts, cadavres et sépultures ; schéma 209.**
 Les décès vécus et les dépouilles vues affectent maintenant l’humeur ; laisser un colon sans sépulture crée un malus distinct. Transport et inhumation arrêtent les nouvelles observations, les souvenirs restent temporaires et les deuils familiaux sont conservés. [Règles et validation](docs/gameplay/death-thoughts-v274.md). Les états suivants sont historiques.
 

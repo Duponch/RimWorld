@@ -10,6 +10,8 @@ import { reservedSource } from './materials.ts';
 import { serviceCell } from './service-reservations.ts';
 import { isSurgicalLimb } from './surgery-anatomy.ts';
 import { surgeryRequestReason,SURGERY_WORK } from './surgery-rules.ts';
+import { WOODEN_PARTS,isWoodenPartKind,isWoodenPartSite } from './artificial-parts-rules.ts';
+import { validImplantTaskRelations } from './surgery-ingredients.ts';
 import type { Pawn,World } from './types.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -17,15 +19,40 @@ const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v===
 const keys=(v:Record<string,unknown>,required:readonly string[],optional:readonly string[]=[])=>required.every(k=>Object.hasOwn(v,k))&&Object.keys(v).every(k=>required.includes(k)||optional.includes(k));
 type Bounds=Pick<World,'tick'|'width'|'height'|'nextId'>;
 export function validSurgeryRequestShape(value:unknown,version:number,tick:number):boolean {
-  return value===undefined||version>=179&&object(value)&&keys(value,['part','requestedAt'])&&isSurgicalLimb(value.part)&&int(value.requestedAt,0,tick);
+  return value===undefined||version>=179&&object(value)&&keys(value,['part','requestedAt'],version>=210?['implant']:[])
+    &&(Object.hasOwn(value,'implant')?isWoodenPartKind(value.implant)&&isWoodenPartSite(value.part)&&WOODEN_PARTS[value.implant].sites.includes(value.part as never):isSurgicalLimb(value.part))
+    &&int(value.requestedAt,0,tick);
 }
 export function validSurgeryTaskShape(value:unknown,version:number,w:Bounds):boolean {
   if(value===undefined)return true;
-  if(version<179||!object(value)||!keys(value,['patientId','part','bedId','spot','phase','progress','workCore'],['medicine','consumedMedicine'])
-    ||!int(value.patientId,1,w.nextId-1)||!int(value.bedId,1,w.nextId-1)||!isSurgicalLimb(value.part)
+  if(version<179||!object(value)||!keys(value,['patientId','part','bedId','spot','phase','progress','workCore'],['medicine','consumedMedicine',...(version>=210?['implant','ingredients']:[])])
+    ||!int(value.patientId,1,w.nextId-1)||!int(value.bedId,1,w.nextId-1)
+    ||(Object.hasOwn(value,'implant')? !isWoodenPartKind(value.implant)||!isWoodenPartSite(value.part)||!WOODEN_PARTS[value.implant].sites.includes(value.part as never):!isSurgicalLimb(value.part))
     ||!object(value.spot)||!keys(value.spot,['x','z'])||!int(value.spot.x,0,w.width-1)||!int(value.spot.z,0,w.height-1)
-    ||!['pickup','approach','work'].includes(String(value.phase))||typeof value.progress!=='number'||!Number.isFinite(value.progress)||value.progress<0||value.progress>=SURGERY_WORK
-    ||!int(value.workCore,0,19990)||value.workCore%10!==0)return false;
+    ||!['pickup','approach','work'].includes(String(value.phase))||typeof value.progress!=='number'||!Number.isFinite(value.progress)||value.progress<0
+    ||!int(value.workCore)||value.workCore%10!==0)return false;
+  const implant=isWoodenPartKind(value.implant)?value.implant:undefined,work=implant?WOODEN_PARTS[implant].work:SURGERY_WORK;
+  if(value.progress>=work||value.workCore>work*10-10)return false;
+  if(implant){
+    if(Object.hasOwn(value,'medicine'))return false;
+    if(value.phase==='work')return !Object.hasOwn(value,'ingredients')&&value.workCore>=10&&isMedicine(value.consumedMedicine as never)
+      &&value.progress+1e-7>=value.workCore*.1&&value.progress<=value.workCore*1.6+1e-7;
+    if(Object.hasOwn(value,'consumedMedicine')||value.progress!==0||value.workCore!==0||!Array.isArray(value.ingredients)
+      ||value.ingredients.length<2||value.ingredients.length>3||Object.keys(value.ingredients).length!==value.ingredients.length)return false;
+    let wood=0,doses=0,held=0,source=false,allPlaced=true,medicine:string|undefined;const ids=new Set<number>(),cells=new Set<number>();
+    for(const i of value.ingredients){
+      if(!object(i)||!keys(i,['pileId','item','quantity','stage','cell'])||!int(i.pileId,1,w.nextId-1)||ids.has(i.pileId)
+        ||i.item!=='wood'&&!isMedicine(i.item as never)||!int(i.quantity,1,2)||!['source','held','placed'].includes(String(i.stage))
+        ||!object(i.cell)||!keys(i.cell,['x','z'])||!int(i.cell.x,0,w.width-1)||!int(i.cell.z,0,w.height-1)
+        ||Math.abs(i.cell.x-value.spot.x)+Math.abs(i.cell.z-value.spot.z)>2||i.cell.x===value.spot.x&&i.cell.z===value.spot.z)return false;
+      const cell=i.cell.z*w.width+i.cell.x;if(cells.has(cell))return false;cells.add(cell);ids.add(i.pileId);
+      if(i.stage==='held')held++;
+      if(i.stage==='source')source=true;if(i.stage!=='placed')allPlaced=false;
+      if(i.item==='wood')wood+=i.quantity;else{if(medicine!==undefined&&medicine!==i.item)return false;medicine=String(i.item);doses+=i.quantity;}
+    }
+    return wood===1&&doses===2&&(value.phase==='approach'?held===1||allPlaced:held===0&&source);
+  }
+  if(Object.hasOwn(value,'ingredients'))return false;
   const m=value.medicine;
   if(value.phase==='work')return value.workCore>=10&&m===undefined&&isMedicine(value.consumedMedicine as never)&&value.progress+1e-7>=value.workCore*.1&&value.progress<=value.workCore*1.6+1e-7;
   return value.progress===0&&value.workCore===0&&value.consumedMedicine===undefined&&object(m)&&keys(m,['item','sourcePileId','carryPileId','quantity'])
@@ -49,15 +76,15 @@ export function validateSurgeries(w:World,version:number):string[] {
     if(!validPawnSurgeryShape(p,version,w)){errors.push('Invalid or future surgery state.');continue;}
     if(p.surgeryRequest){
       const active=work.get(p.id),anesthetic=p.health?.anesthetic;
-      if(p.id===offMap||p.visitor||surgeryRequestReason(p,p.surgeryRequest.part,{...(active?{allowAnesthetic:true as const}:{})})
+      if(p.id===offMap||p.visitor||surgeryRequestReason(p,p.surgeryRequest.part,{...(active?{allowAnesthetic:true as const}:{}),...(p.surgeryRequest.implant?{implant:p.surgeryRequest.implant}:{})})
         ||anesthetic&&(!active||anesthetic.bornAt<p.surgeryRequest.requestedAt))errors.push('Invalid surgical patient request.');
     }
     const t=p.surgery;if(!t)continue;
     const patient=byId.get(t.patientId),bed=w.structures.find(b=>b.id===t.bedId&&isBedKind(b.kind));
     if(!isColonist(p)||p.prisoner||p.visitor||p.podRescue||p.id===offMap||medicalWorkRefusal(p)||p.priorities.doctor===0||p.orders.active!==null
-      ||p.draft||p.mental?.crisis||p.melee?.order||p.shooting?.order)errors.push('Invalid surgical doctor.');
+      ||p.draft||p.mental?.crisis||p.melee?.order||p.shooting?.order||t.implant&&p.skills.medicine.level<WOODEN_PARTS[t.implant].medicineSkill)errors.push('Invalid surgical doctor.');
     if(!patient||patient===p||patient.id===offMap||!patient.surgeryRequest||patient.surgeryRequest.part!==t.part
-      ||surgeryRequestReason(patient,t.part,t.phase==='work'?{allowAnesthetic:true}:{}))errors.push('Surgical task lacks an eligible matching patient.');
+      ||patient.surgeryRequest.implant!==t.implant||surgeryRequestReason(patient,t.part,{...(t.phase==='work'?{allowAnesthetic:true as const}:{}),...(t.implant?{implant:t.implant}:{})}))errors.push('Surgical task lacks an eligible matching patient.');
     if(patients.has(t.patientId))errors.push('Duplicate surgical patient reservation.');patients.add(t.patientId);
     if(!bed||bed.prisoner||!patient||!rescueBedAvailable(w,bed,patient,p.id)||!lyingPatient(patient)||patient.need?.kind!=='sleep'||patient.need.bedId!==bed.id||patient.x!==bed.x||patient.z!==bed.z
       ||Math.abs(t.spot.x-bed.x)+Math.abs(t.spot.z-bed.z)!==1||!canStandAt(w,t.spot))errors.push('Surgical patient or bedside is not physically installed.');
@@ -69,6 +96,8 @@ export function validateSurgeries(w:World,version:number):string[] {
     if(t.phase==='work'){
       if(!patient?.health?.anesthetic||t.workCore>(w.tick-patient.health.anesthetic.bornAt+1)*10||!medicineAllowed(patient,t.consumedMedicine!)||p.state!=='working'||p.moveCooldown!==0||p.motion&&p.motion.end>w.tick||p.path.length||p.x!==t.spot.x||p.z!==t.spot.z
         ||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))errors.push('Invalid administered surgery phase or cargo.');
+    }else if(t.implant){
+      if(p.state!=='moving'||!patient||!validImplantTaskRelations(w,p,patient,t))errors.push('Invalid wooden surgery ingredient ownership or staging.');
     }else{
       if(p.state!=='moving'||!patient||!medicineTaskValid(w,p,patient,t))errors.push('Invalid surgery medicine permission or phase.');
       const m=t.medicine!,pile=w.piles.find(i=>i.id===(t.phase==='pickup'?m.sourcePileId:m.carryPileId));

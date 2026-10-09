@@ -156,6 +156,6 @@ test('historical schema receives no retrospective death or corpse thoughts',()=>
   const w=camp(),[p,victim]=w.pawns as [Pawn,Pawn];w.schemaVersion=208 as World['schemaVersion'];kill(w,victim);advanceHumanCorpses(w);
   observationTick(w,p);expect(p.deathThoughts).toBeUndefined();
   w.tick+=10000;expect(colonistUnburiedThought(w,p)).toBeUndefined();
-  w.schemaVersion=209;notifyDeathThoughts(w,victim);expect(p.deathThoughts).toBeUndefined();
+  w.schemaVersion=209 as World['schemaVersion'];notifyDeathThoughts(w,victim);expect(p.deathThoughts).toBeUndefined();
   observationTick(w,p);expect(kinds(p)).toEqual(['observed-corpse']);
 });

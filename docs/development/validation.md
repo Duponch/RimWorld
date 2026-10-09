@@ -1,4 +1,6 @@
-# Validation courante — V274
+# Validation courante — V275
+
+**V275, schéma 210 : [prothèses en bois](../gameplay/wooden-prostheses-v275.md#validation).** 156 cas uniques/22 fichiers dont38nouveaux passent par reprises ciblées ; anciennes opérations et62sauvegardes publiques couvertes. Typage/build et WebGPU passent : demande UI, collecte, anesthésie et pose jouées, sauvegardes/reprises exactes3094/3159/3252. Réservations de médicaments, portage et exclusivité des cellules corrigés ; rouges initiaux conservés, aucune campagne longue ou mesure FPS déduite. Les validations suivantes sont historiques.
 
 **V274, schéma 209 : [morts et cadavres](../gameplay/death-thoughts-v274.md#validation).** 102 cas uniques/18 fichiers dont28nouveaux passent par reprises ciblées, avec62sauvegardes publiques. Typage/build et WebGPU passent : pensées affichées, transport puis inhumation physiques, sauvegardes/reprises exactes3011/3087, erreurs vides. Deux attentes de fixture et l’import initial du banc restent rouges conservés ; aucun FPS ou campagne longue déduit. Les validations suivantes sont historiques.
 

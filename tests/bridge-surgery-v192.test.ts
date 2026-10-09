@@ -5,6 +5,7 @@ import { surgeryCamp } from './helpers/surgery-v192.ts';
 import { administerAnesthetic,advanceAnesthetic } from '../src/sim/anesthetic.ts';
 import { reconcilePawnHealth } from '../src/sim/health.ts';
 import { createMedicalRecord } from '../src/sim/injury-state.ts';
+import { expireDeathThoughts } from '../src/sim/death-thoughts.ts';
 import { refreshStock } from '../src/sim/materials.ts';
 import { validateWorld } from '../src/sim/serialization.ts';
 import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
@@ -95,6 +96,9 @@ test('the anesthetic cadence is checked against its medical clock, and death fre
   p.health.death={tick:p.health.tick,cause:'blood-loss'};p.health.bloodLoss=300_000_000;reconcilePawnHealth(w,p);
   expect(validateWorld(w)).toEqual([]);const frozen=structuredClone(p.health);
   w.tick=birth+20_000;
+  // This synthetic clock jump must expire the new witnessed memories; it is
+  // deliberately not a played continuation of the frozen medical record.
+  for(const observer of w.pawns)expireDeathThoughts(observer,w.tick);
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),packet=structuredClone(encoder.encode(w,0,1));
   expect(decoder.adopt(packet).status).toBe('applied');expect(p.health).toEqual(frozen);
   const delta=structuredClone(encoder.encode(w,0,1));

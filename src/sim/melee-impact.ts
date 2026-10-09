@@ -11,7 +11,7 @@ export interface MeleeImpactResult {record:MedicalRecord;selected:BodyPartId|nul
 /** Unarmored natural adult. Independent resolution, explicit random stream;
  * actor, XP, cadence and attack commands belong to the combat controller. */
 export function resolveUnarmoredMelee(record:MedicalRecord,hit:MeleeImpact,random:()=>number,protect?:ImpactProtection):MeleeImpactResult {
-  const model=medicalModel(record),{parts:HUMAN_BODY,byId:BODY_PARTS,index:BODY_INDEX,coverage:BODY_COVERAGE}=model,PART_INJURY_RULES=injuryPartRules(model);
+  const model=medicalModel(record),{parts:HUMAN_BODY,byId:BODY_PARTS,index:BODY_INDEX,coverage:BODY_COVERAGE}=model,PART_INJURY_RULES=injuryPartRules(model,record);
   if(!Number.isFinite(hit.damage)||hit.damage<0||hit.damage>1000000||!['blunt','poke','bite','cut','stab','scratch'].includes(hit.kind)||hit.part!==undefined&&(!modelHasPart(model,hit.part)||BODY_PARTS[hit.part].conceptual||BODY_PARTS[hit.part].depth!=='outside'))throw new RangeError('Invalid melee impact');
   const next=structuredClone(record),result:MeleeImpactResult={record:next,selected:null,layers:[],stun:false};
   if(record.death||!hit.damage||hit.part&&partMissing(record,hit.part))return result;

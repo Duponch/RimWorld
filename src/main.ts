@@ -682,7 +682,7 @@ function rebuildInspector() {
     createJournalInspection(panel);
     createSkillsInspection(panel);
     createEquipmentInspection(panel,current,send);
-    createHealthInspection(panel,()=>current()?.pawn,send,managed,managed?{request:(pawnId,part)=>send({type:'surgery-request',pawnId,part}),cancel:pawnId=>send({type:'surgery-cancel',pawnId})}:undefined);
+    createHealthInspection(panel,()=>current()?.pawn,send,managed,managed?{request:(pawnId,part)=>send({type:'surgery-request',pawnId,part}),cancel:pawnId=>send({type:'surgery-cancel',pawnId}),install:(pawnId,part,implant)=>send({type:'surgery-install',pawnId,part,implant})}:undefined);
     if(inspected.prisoner)createPrisonerInspection(panel,current,send);
     if(managed){
       el('manage-work').onclick = () => setPanel('work');

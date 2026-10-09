@@ -35,8 +35,10 @@ export function surgeryProtectedDamage(record:MedicalRecord,part:BodyPartId,dama
 /** Caller awards actual-work XP and revalidates all physical guards first.
  * A successful result leaves anatomy untouched for amputateSurgicalLimb.
  * Failure operates on a clone, with one explicit authoritative random stream. */
-export function resolveSurgeryOutcome(record:MedicalRecord,part:BodyPartId,chance:number,random:MedicalRandom):SurgeryOutcome {
-  if(record.body!==undefined||record.death||!BODY_PARTS[part]||BODY_PARTS[part].conceptual||partMissing(record,part)||!Number.isFinite(chance)||chance<0||chance>.98)throw new RangeError('Invalid surgery outcome');
+export function resolveSurgeryOutcome(record:MedicalRecord,part:BodyPartId,chance:number,random:MedicalRandom,options:{allowMissingPart?:true}={}):SurgeryOutcome {
+  const missing=partMissing(record,part),parent=BODY_PARTS[part]?.parent;
+  const allowedMissing=options.allowMissingPart&&record.missing.some(m=>m.part===part)&&parent&&!partMissing(record,parent);
+  if(record.body!==undefined||record.death||!BODY_PARTS[part]||BODY_PARTS[part].conceptual||missing&&!allowedMissing||!Number.isFinite(chance)||chance<0||chance>.98)throw new RangeError('Invalid surgery outcome');
   const draw=()=>checkedSurgeryRandom(random),next=structuredClone(record);reconcileMedicalDeath(next);
   if(next.death)throw new RangeError('Invalid surgery outcome');
   if(draw()<chance)return {kind:'success',record:next,hits:[]};

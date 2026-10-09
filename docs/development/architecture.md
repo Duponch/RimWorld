@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V275, schéma 210 : [prothèses en bois](../gameplay/wooden-prostheses-v275.md).** Le dossier médical porte les racines artificielles ; l’évaluation anatomique substitue leur efficacité une fois et les descendants naturels restent absents. La chirurgie commune ajoute un mandat d’ingrédients physiquement possédés et réservés, puis les consomme au contact avant le travail. Gardes fichiers/Decoder et horloges réelles restent communes ; migration neutre. Les états suivants sont historiques.
+
 **V274, schéma 209 : [perception des morts](../gameplay/death-thoughts-v274.md).** Sept familles de souvenirs bornés portent uniquement kind, identité et date. Le décès médical produit les pensées une fois ; la perception phasée observe les vrais corps au sol. La situation sans sépulture est dérivée. Fichiers et Decoder partagent les gardes, avec horloges des propriétaires hors carte ; migration neutre, deuils historiques indépendants. Les états suivants sont historiques.
 
 **V273, schéma 208 : [EMP](../gameplay/emp-launcher-v273.md).** Le producteur de tir réutilise le vol et les interceptions, puis une variante explicite de l’onde persistée porte qualité et provenance du projectile. Aucun dégât Bullet préalable. Les horloges EMP sont distinctes du stun historique de 45 Core ; la pause mécanique conserve arête, préparation et récupération. Les gardes fichiers/Decoder partagent le contenu prospectif, les durées et les propriétaires ; migration neutre. Les états suivants sont historiques.

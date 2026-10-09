@@ -1,6 +1,8 @@
 import type { BodyPartId } from './body-definition.ts';
-import { HUMAN_MODEL,type BodyModel } from './body-model.ts';
+import { HUMAN_MODEL,medicalModel,type BodyModel } from './body-model.ts';
 import { isMechanoidKind } from './mechanoid-definition.ts';
+import { artificialPartCovering } from './artificial-parts-rules.ts';
+import type { MedicalRecord } from './injury-types.ts';
 
 /** Adult natural body only. These are injury properties, not weapon/armor rules.
  * Provenance and unresolved version differences: docs/research/injuries-reference.md. */
@@ -36,10 +38,12 @@ function partRules(model:BodyModel){return Object.freeze(Object.fromEntries(mode
 })) as Record<BodyPartId,Readonly<{solid:boolean;skin:boolean;bleed:number;delicate:boolean;scarFactor:number}>>);}
 export const PART_INJURY_RULES=partRules(HUMAN_MODEL);
 const ANIMAL_INJURY_RULES=new Map<BodyModel,ReturnType<typeof partRules>>();
-export const injuryPartRules=(model:BodyModel)=>{
-  if(model.kind==='human')return PART_INJURY_RULES;
+const ARTIFICIAL_INJURY_RULE=Object.freeze({solid:true,skin:false,bleed:0,delicate:false,scarFactor:0});
+export const injuryPartRules=(model:BodyModel,record?:Pick<MedicalRecord,'body'|'artificialParts'>)=>{
+  if(model.kind==='human')return record?.artificialParts?.length?Object.freeze(Object.fromEntries(model.parts.map(p=>[p.id,artificialPartCovering(record,p.id)?ARTIFICIAL_INJURY_RULE:PART_INJURY_RULES[p.id]])) as typeof PART_INJURY_RULES):PART_INJURY_RULES;
   let rules=ANIMAL_INJURY_RULES.get(model);if(!rules){rules=partRules(model);ANIMAL_INJURY_RULES.set(model,rules);}return rules;
 };
+export const medicalPartInjuryRule=(record:MedicalRecord,part:BodyPartId)=>artificialPartCovering(record,part)?ARTIFICIAL_INJURY_RULE:injuryPartRules(medicalModel(record))[part];
 
 export function isWithinPart(candidate:BodyPartId,ancestor:BodyPartId,model=HUMAN_MODEL):boolean {
   for(let id:BodyPartId|null=candidate;id!==null;id=model.byId[id].parent)if(id===ancestor)return true;
@@ -50,8 +54,8 @@ export function coagulationAge(severity:number):number {
   const core=90000*Math.max(0,Math.min(1,(severity/HP_UNIT-1)/29)),floor=Math.floor(core);
   return (90000+(core-floor===.5?floor+floor%2:Math.round(core)))/10;
 }
-export function scarChance(part:BodyPartId,kind:InjuryKind,severity:number,model=HUMAN_MODEL):number {
-  const rules=injuryPartRules(model)[part];
+export function scarChance(part:BodyPartId,kind:InjuryKind,severity:number,model=HUMAN_MODEL,record?:Pick<MedicalRecord,'body'|'artificialParts'>):number {
+  const rules=injuryPartRules(model,record)[part];
   return INJURY_RULES[kind].scar?Math.min(1,.02*rules.scarFactor*(rules.delicate?1:Math.max(0,Math.min(1,(severity/HP_UNIT-4)/10)))):0;
 }
 export function bloodConsciousness(loss:number):{consciousnessOffset:number;consciousnessMax?:number} {

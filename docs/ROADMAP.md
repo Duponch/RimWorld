@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V275 — récupérer après perte d’un membre ; schéma 210.**
+Les [prothèses en bois](gameplay/wooden-prostheses-v275.md) prolongent la chirurgie et les soins : matériaux livrés au chevet, risque réel, fonction partielle, dégâts et sauvegarde. Prothèses industrielles, remplacement de membres sains et retrait restent ouverts. Autonomie, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **Avancement fonctionnel V274 — réactions aux morts et sépultures ; schéma 209.**
 La [boucle humaine](gameplay/death-thoughts-v274.md) complète les pertes : perception réelle, souvenirs, humeur, transport et inhumation. Les décès appris restent distincts des témoins et des deuils amicaux/familiaux ; cérémonies et idéologies restent ouvertes. Autonomie, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
 

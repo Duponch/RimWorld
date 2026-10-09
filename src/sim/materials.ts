@@ -115,6 +115,7 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
       if(pawn.animalHandling?.phase==='pickup'&&pawn.animalHandling.sourcePileId===pileId)quantity+=pawn.animalHandling.quantity;
       if(pawn.animalCare?.phase==='pickup'&&pawn.animalCare.medicine?.sourcePileId===pileId)quantity+=pawn.animalCare.medicine.quantity;
       if(pawn.surgery?.phase==='pickup'&&pawn.surgery.medicine?.sourcePileId===pileId)quantity+=pawn.surgery.medicine.quantity;
+      for(const i of pawn.surgery?.ingredients??[])if(i.pileId===pileId&&i.stage!=='held')quantity+=i.quantity;
       if(pawn.tend?.phase==='pickup'&&pawn.tend.medicine?.sourcePileId===pileId)quantity+=pawn.tend.medicine.quantity;
       if(pawn.feed?.phase==='pickup'&&pawn.feed.sourcePileId===pileId)quantity+=pawn.feed.quantity;
       if(pawn.ward?.kind==='food'&&pawn.ward.phase==='pickup'&&pawn.ward.sourcePileId===pileId)quantity+=pawn.ward.quantity;
@@ -152,6 +153,7 @@ export function reservedSourcesByPile(world: World, exceptPawn?: number): Readon
       if (pawn.animalHandling?.phase === 'pickup') add(pawn.animalHandling.sourcePileId, pawn.animalHandling.quantity);
       if (pawn.animalCare?.phase === 'pickup' && pawn.animalCare.medicine) add(pawn.animalCare.medicine.sourcePileId, pawn.animalCare.medicine.quantity);
       if (pawn.surgery?.phase === 'pickup' && pawn.surgery.medicine) add(pawn.surgery.medicine.sourcePileId, pawn.surgery.medicine.quantity);
+      for(const i of pawn.surgery?.ingredients??[])if(i.stage!=='held')add(i.pileId,i.quantity);
       if (pawn.tend?.phase === 'pickup' && pawn.tend.medicine) add(pawn.tend.medicine.sourcePileId, pawn.tend.medicine.quantity);
       if (pawn.feed?.phase === 'pickup') add(pawn.feed.sourcePileId, pawn.feed.quantity);
       if (pawn.ward?.kind === 'food' && pawn.ward.phase === 'pickup') add(pawn.ward.sourcePileId, pawn.ward.quantity);

@@ -21,5 +21,6 @@ export function amputateSurgicalLimb(record:MedicalRecord,part:unknown):boolean 
   const missing=record.missing.filter(root=>!isWithinPart(root.part,part,HUMAN_MODEL));
   missing.push({part,bornAt:record.tick});
   record.injuries=injuries;record.missing=missing;removeInfectionsWithin(record,part);
+  if(record.artificialParts){record.artificialParts=record.artificialParts.filter(p=>!isWithinPart(p.part,part,HUMAN_MODEL));if(!record.artificialParts.length)delete record.artificialParts;}
   return true;
 }

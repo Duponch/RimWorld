@@ -10,7 +10,7 @@ export interface BombImpactResult {record:MedicalRecord;fragments:number;selecte
 /** Natural body / ordinary propagation. Integer milli-HP distributes a third's
  * rounding remainder to earlier fragments; no hidden float injury or World RNG. */
 export function resolveBombImpact(record:MedicalRecord,hit:UnarmoredBullet,random:MedicalRandom,protect?:ImpactProtection):BombImpactResult {
-  const model=medicalModel(record),rules=injuryPartRules(model);validateUnarmoredBullet(hit,model);
+  const model=medicalModel(record),rules=injuryPartRules(model,record);validateUnarmoredBullet(hit,model);
   const result:BombImpactResult={record:structuredClone(record),fragments:0,selected:[],layers:[],preserved:false},next=result.record;
   if(record.death||!hit.damage)return result;
   const draw=()=>{const value=random();if(!Number.isFinite(value)||value<0||value>=1)throw new RangeError('Invalid bomb random');return value;};

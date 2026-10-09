@@ -8,12 +8,16 @@ import { MEDICINES,type MedicineItem } from './medicine-rules.ts';
 import { XP_SCALE } from './skills.ts';
 import { SURGICAL_LIMBS,isSurgicalLimb } from './surgery-anatomy.ts';
 import type { Pawn } from './types.ts';
+import { woodenPartInstallReason } from './artificial-parts.ts';
+import type { WoodenPartKind } from './artificial-parts-types.ts';
+import { isWithinPart } from './injury-rules.ts';
 
 /** Core 1.6.4871 RemoveBodyPart. Request/physical contacts belong to surgery.ts. */
 export const SURGERY_PARTS=SURGICAL_LIMBS;
 export const SURGERY_WORK=2000;
 export const surgeryBaseXp=(workedCoreTicks:number):number=>Math.round(workedCoreTicks*.1*16*XP_SCALE);
-export function surgeryRequestReason(patient:Pawn,part:unknown,options:{allowAnesthetic?:true}={}):string|undefined {
+export function surgeryRequestReason(patient:Pawn,part:unknown,options:{allowAnesthetic?:true;implant?:WoodenPartKind}={}):string|undefined {
+  if(options.implant!==undefined)return surgeryInstallRequestReason(patient,part,options.implant,options);
   if(!isColonist(patient)||patient.prisoner||patient.visitor||patient.raid||patient.podRescue)return 'Cette opération est réservée aux colons adultes libres.';
   if(patient.age&&biologicalYears(patient.age)<18)return 'Cette opération est réservée aux adultes.';
   if(patient.state==='dead'||patient.health?.death)return 'Ce colon est décédé.';
@@ -21,9 +25,18 @@ export function surgeryRequestReason(patient:Pawn,part:unknown,options:{allowAne
   const h=patient.health;
   if(!h)return 'Aucune infection présente directement sur ce membre.';
   if(h.body!==undefined||partMissing(h,part))return 'Ce membre est absent ou ne peut pas être opéré.';
+  if(h.artificialParts?.some(p=>isWithinPart(p.part,part)))return 'Ce membre contient une prothèse ; son retrait chirurgical n’est pas encore disponible.';
   if(!h.infections?.cases.some(c=>c.part===part))return 'Aucune infection présente directement sur ce membre.';
   if(h.anesthetic&&!options.allowAnesthetic)return 'Attendre la disparition de l’anesthésie avant une nouvelle demande.';
   return undefined;
+}
+
+export function surgeryInstallRequestReason(patient:Pawn,part:unknown,implant:unknown,options:{allowAnesthetic?:true}={}):string|undefined {
+  if(!isColonist(patient)||patient.prisoner||patient.visitor||patient.raid||patient.podRescue)return 'Cette opération est réservée aux colons adultes libres.';
+  if(patient.age&&biologicalYears(patient.age)<18)return 'Cette opération est réservée aux adultes.';
+  if(patient.state==='dead'||patient.health?.death)return 'Ce colon est décédé.';
+  if(patient.health?.anesthetic&&!options.allowAnesthetic)return 'Attendre la disparition de l’anesthésie avant une nouvelle demande.';
+  return woodenPartInstallReason(patient.health,part,implant);
 }
 
 /** Actual Glow, not the already transformed tending-light factor. */
@@ -42,6 +55,8 @@ export interface SurgeryChanceInput {
   patientGlow:number;roomCleanliness:number|null;outdoors:boolean;
   /** Definition of the physically used bed, before quality and environment. */
   bedSurgeryFactor?:number;
+  /** RemoveBodyPart has 1.2; wooden implantation keeps the Core base 1. */
+  recipeFactor?:1|1.2;
 }
 /** Caller supplies the physically used bed and current captures. No topology
  * search, ownership mutation, chance draw or XP in this statistic. */
@@ -49,5 +64,5 @@ export function surgerySuccessChance(input:SurgeryChanceInput):number {
   const bed=(input.bedSurgeryFactor??1)*BED_QUALITY[input.bedQuality??'normal']*curve(input.patientGlow,[[0,.75],[.5,1]])*(input.outdoors?.85:1);
   const room=input.roomCleanliness===null?.6:curve(input.roomCleanliness,[[-5,.6],[0,1],[1,1.1],[5,1.15]]);
   const medicine=curve(MEDICINES[input.medicine].potency,[[0,.7],[1,1],[2,1.3]]);
-  return Math.max(0,Math.min(.98,medicalSurgeryDoctorChance(input.doctor)*bed*room*medicine*1.2));
+  return Math.max(0,Math.min(.98,medicalSurgeryDoctorChance(input.doctor)*bed*room*medicine*(input.recipeFactor??1.2)));
 }

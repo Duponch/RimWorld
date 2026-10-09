@@ -447,7 +447,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     reconcileDomesticWork(world);wakePlanners(world);return {ok:true};
   }
   if(command.type==='animal-care-policy')return applyAnimalCarePolicy(world,command);
-  if(command.type==='surgery-request'||command.type==='surgery-cancel')return applySurgery(world,command);
+  if(command.type==='surgery-request'||command.type==='surgery-cancel'||command.type==='surgery-install')return applySurgery(world,command);
   if(command.type==='order-tend')return applyTending(world,command);
   if(command.type==='self-tend-policy'){
     const p=world.pawns.find(p=>p.id===command.pawnId);
