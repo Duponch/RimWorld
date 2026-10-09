@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V276, schéma 211 : [soutien hospitalier](gameplay/hospital-support-v276.md).** Moniteur vital, dalles stériles et deux recherches prolongent les pipelines de construction, énergie, propreté et soins. Les états suivants sont historiques.
+
 **V275, schéma 210 : [prothèses en bois](gameplay/wooden-prostheses-v275.md).** Trois prothèses et six sites relient pertes anatomiques, collecte physique, chirurgie, capacités et reprise. Les états suivants sont historiques.
 
 **V274, schéma 209 : [morts et cadavres](gameplay/death-thoughts-v274.md).** Pensées de décès et d’observation, trait Sanguinaire et corps colonial sans sépulture sont reliés aux besoins, aux tombes physiques et aux reprises. Les états suivants sont historiques.

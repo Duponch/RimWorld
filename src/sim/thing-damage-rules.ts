@@ -6,6 +6,7 @@ import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
+  'vitals-monitor':[100,.7,true],
   'drug-lab':[120,1,true],
   'hydroponics-basin':[180,.5,true],
   'mini-turret':[100,.7,true],

@@ -1,4 +1,4 @@
-import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, DRUG_PRODUCTION_RESEARCH_COST, MEDICINE_PRODUCTION_RESEARCH_COST, HYDROPONICS_RESEARCH_COST, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
+import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, STERILE_MATERIALS_RESEARCH_COST,VITALS_MONITOR_RESEARCH_COST, DRUG_PRODUCTION_RESEARCH_COST, MEDICINE_PRODUCTION_RESEARCH_COST, HYDROPONICS_RESEARCH_COST, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
 import type { Command, World } from '../sim/types';
 import './world-panels.css';
 import './management-reference-v199.css';
@@ -6,6 +6,8 @@ import {setTooltip} from './tooltip';
 
 type ProjectNode = { id: ResearchProject; prefix: string; title: string; cost: number; detail: string; progress: (w: World) => ResearchProgress | undefined; x: number; y: number };
 export const researchProjects: readonly ProjectNode[] = [
+  {id:'sterile-materials',prefix:'sterile-materials',title:'Matériaux stériles',cost:STERILE_MATERIALS_RESEARCH_COST/RESEARCH_SCALE,detail:'Sol stérile : 3 acier + 12 argent par case, Construction 6. Propreté +0,6 et temps de nettoyage ×0,6 ; sans bonus direct de moniteur. L’électricité est connue au départ.',progress:w=>w.research?.sterileMaterials,x:424,y:700},
+  {id:'vitals-monitor',prefix:'vitals-monitor',title:'Moniteur vital',cost:VITALS_MONITOR_RESEARCH_COST/RESEARCH_SCALE,detail:'50 acier + 3 composants, Construction 8, 80 W. Adjacence à un lit d’hôpital : soins +7 points, immunité +2 points et facteur chirurgie +0,05 pendant son utilisation. Un seul moniteur par lit ; le plus proche est lié avant de vérifier son courant. Recherche au bureau avancé et multi-analyseur alimentés.',progress:w=>w.research?.vitalsMonitor,x:624,y:700},
   {id:'drug-production',prefix:'drug-production',title:'Production de drogues',cost:DRUG_PRODUCTION_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque le laboratoire de chimie manuel : 50 bois ou acier, 75 acier et 6 composants ; Construction 4. Aucune alimentation électrique requise.',progress:w=>w.research?.drugProduction,x:24,y:700},
   {id:'medicine-production',prefix:'medicine-production',title:'Production de médicaments',cost:MEDICINE_PRODUCTION_RESEARCH_COST/RESEARCH_SCALE,detail:'1 plante médicinale + 1 neutroamine achetée + 3 tissus → 1 médicament industriel. Artisanat 4 et Intellectuel 4 ; travail Artisanat, apprentissage Intellectuel à la fin. Recherche au bureau avancé alimenté.',progress:w=>w.research?.medicineProduction,x:224,y:700},
   {id:'hydroponics',prefix:'hydroponics',title:'Hydroponie',cost:HYDROPONICS_RESEARCH_COST/RESEARCH_SCALE,detail:'Bac 1 × 4 : 100 acier + 1 composant, Construction 4, 70 W continus. Fertilité 280 % sur terrain porteur ; lumière et température restent nécessaires. Sans courant, nouveaux semis suspendus et plantes endommagées progressivement. Maïs exclu.',progress:w=>w.research?.hydroponics,x:24,y:566},
@@ -29,9 +31,10 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'fabrication',prefix:'fabrication',title:'Fabrication',cost:4000,detail:'Débloque l’établi de fabrication. Exige un bureau avancé alimenté et un multi-analyseur alimenté à proximité.',progress:w=>w.research?.fabrication,x:824,y:432},
   {id:'advanced-fabrication',prefix:'advanced-fabrication',title:'Fabrication avancée',cost:4000,detail:'Débloque la fabrication du composant avancé à l’établi alimenté : 1 composant, 20 acier, 10 plastacier et 3 or ; Artisanat 8.',progress:w=>w.research?.advancedFabrication,x:824,y:566},
   {id:'recon-armor',prefix:'recon-armor',title:'Armure de reconnaissance',cost:6000,detail:'Casque de reconnaissance à l’établi de fabrication alimenté : 30 plastaciers, 1 composant avancé ; Artisanat 6.',progress:w=>w.research?.reconArmor,x:624,y:566},
-  {id:'hospital-bed',prefix:'hospital-bed',title:'Lit d’hôpital',cost:HOSPITAL_BED_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque un lit spécialisé : 120 acier + 5 composants, Construction 8. Améliore les soins, l’immunité, la guérison et la chirurgie pendant son utilisation réelle. Recherche au bureau avancé alimenté. Adaptation locale : le préalable Core Matériaux stériles et ses sols sont différés.',progress:w=>w.research?.hospitalBed,x:424,y:566},
+  {id:'hospital-bed',prefix:'hospital-bed',title:'Lit d’hôpital',cost:HOSPITAL_BED_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque un lit spécialisé : 120 acier + 5 composants, Construction 8. Améliore les soins, l’immunité, la guérison et la chirurgie pendant son utilisation réelle. Recherche au bureau avancé alimenté. Adaptation locale conservée : Matériaux stériles n’est pas imposé à cette recherche historique.',progress:w=>w.research?.hospitalBed,x:424,y:566},
 ];
 export const researchLinks: readonly (readonly [ResearchProject, ResearchProject])[] = [
+  ['hospital-bed','vitals-monitor'],['multi-analyzer','vitals-monitor'],
   ['drug-production','medicine-production'],['microelectronics','medicine-production'],
   ['gunsmithing','gun-turrets'],
   ['complex-furniture','tube-television'],
@@ -48,6 +51,7 @@ const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=550;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['sterile-materials',['Électricité (acquise au départ)']],['vitals-monitor',['Lit d’hôpital','Multi-analyseur']],
   ['drug-production',[]],['medicine-production',['Production de drogues','Microélectronique']],
   ['hydroponics',['Électricité (acquise au départ)']],
   ['gun-turrets',['Armurerie']],
@@ -59,7 +63,7 @@ const prerequisites=new Map<ResearchProject,string[]>([
 function stationIssue(world:World,project:ResearchProject):string|undefined {
   if(world.structures.some(s=>researchStationUsable(world,s,project)))return undefined;
   if(project==='hospital-bed'||project==='medicine-production')return 'Bureau de recherche avancé alimenté requis';
-  if(project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor')return project==='multi-analyzer'?'Bureau de recherche avancé alimenté requis':'Bureau avancé et multi-analyseur alimentés à proximité requis';
+  if(project==='vitals-monitor'||project==='multi-analyzer'||project==='fabrication'||project==='advanced-fabrication'||project==='recon-armor')return project==='multi-analyzer'?'Bureau de recherche avancé alimenté requis':'Bureau avancé et multi-analyseur alimentés à proximité requis';
   return 'Bureau de recherche disponible requis';
 }
 

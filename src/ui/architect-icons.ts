@@ -22,12 +22,14 @@ const SECOND_ATLAS = [
   'ignore-roof', 'remove-growing', 'stockpile', 'home', 'remove-home', 'remove-stockpile',
 ] as const;
 
-export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
+export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed','vitals-monitor']:id==='steel-tile'?[id,'sterile-tile']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
 
 // Small original vector additions share the existing Architecte icon installer.
 // They do not change the historical two-atlas coordinates.
 const vectorIcon=(body:string):string=>`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><g fill="none" stroke="#365647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`)}")`;
 const CUSTOM_ICONS:Readonly<Record<string,string>>=Object.freeze({
+  'vitals-monitor':vectorIcon('<rect x="5" y="6" width="30" height="20" rx="2" fill="#b6c9c4"/><path d="M9 17h5l3-7 4 12 3-5h7M20 27v7M12 35h16"/><path d="M10 17h4l3-7 4 12 3-5h6" stroke="#63a995"/>'),
+  'sterile-tile':vectorIcon('<path d="M3 15 20 5l17 10-17 10zM3 15v10l17 10 17-10V15M20 25v10M12 10l17 10M11 20 28 10" fill="#cadbd8"/><path d="M20 10v10M15 15h10" stroke="#6b9693"/>'),
   'drug-lab':vectorIcon('<path d="M5 29h30M8 29v7M32 29v7M11 5v9L5 25h17l-6-11V5M8 5h11M8 21h11M29 8v8l-4 8h11l-4-8V8M26 8h9"/><path d="M8 22h11M28 20h5" stroke="#70aaa2"/>'),
   'hydroponics-basin':vectorIcon('<rect x="4" y="18" width="32" height="13" rx="2" fill="#b6c9c4"/><path d="M6 24h28M11 18v13M20 18v13M29 18v13M7 32v3M33 32v3"/><path d="M15 19v-8m0 4c-5 0-6-4-6-6 4 0 6 2 6 6m0-1c0-4 3-6 6-6 0 4-2 6-6 6M26 19v-6m0 3c-4 0-5-3-5-5 3 0 5 2 5 5" stroke="#628564"/>'),
   'tube-television':vectorIcon('<rect x="5" y="10" width="30" height="22" rx="4" fill="#b9aa8e"/><rect x="9" y="14" width="19" height="14" rx="3" fill="#a9cec6"/><circle cx="31" cy="17" r="1"/><circle cx="31" cy="24" r="1"/><path d="M11 33v3M29 33v3M15 5l5 5 6-6"/>'),

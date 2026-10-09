@@ -5,7 +5,7 @@ import { foodPolicyLayout } from './food-policy-controls';
 import { apparelAssignmentLayout } from './apparel-policy-controls';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from '../sim/map-config';
 import { ITEM_DEFINITIONS } from '../sim/items';
-import { FLOOR_KINDS,FLOOR_DEFINITIONS,type BuildableFloorKind } from '../sim/flooring';
+import { FLOOR_KINDS,FLOOR_DEFINITIONS,flooringRecipe,type BuildableFloorKind } from '../sim/flooring';
 
 const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
 
@@ -28,7 +28,7 @@ export const workColumns: readonly {id: WorkType; label: string}[] = [
   {id:'clean',label:'Nettoyage'}, {id:'research',label:'Recherche'},
 ];
 export const toolDefinitions: { id: Tool; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
-  ...FLOOR_KINDS.map(id=>({id,title:FLOOR_DEFINITIONS[id].label,hint:`${FLOOR_DEFINITIONS[id].quantity} ${ITEM_DEFINITIONS[FLOOR_DEFINITIONS[id].item!].label} par case · Construction ${FLOOR_DEFINITIONS[id].skill}${FLOOR_DEFINITIONS[id].research==='stonecutting'?' · recherche Taille de pierre':FLOOR_DEFINITIONS[id].research==='smithing'?' · recherche Forge':''} · cliquer ou tracer un rectangle`,key:'',category:'floors' as const})),
+  ...FLOOR_KINDS.map(id=>({id,title:FLOOR_DEFINITIONS[id].label,hint:`${flooringRecipe(id).ingredients.map(i=>`${i.quantity} ${ITEM_DEFINITIONS[i.item].label}`).join(' + ')} par case · Construction ${FLOOR_DEFINITIONS[id].skill}${FLOOR_DEFINITIONS[id].research==='stonecutting'?' · recherche Taille de pierre':FLOOR_DEFINITIONS[id].research==='smithing'?' · recherche Forge':FLOOR_DEFINITIONS[id].research==='sterile-materials'?' · recherche Matériaux stériles':''} · cliquer ou tracer un rectangle`,key:'',category:'floors' as const})),
   {id:'remove-floor',title:'Retirer le sol',hint:'Travail de Construction · récupère environ la moitié du matériau · conserve le terrain naturel',key:'',category:'floors'},
   {id:'grave',title:'Tombe',hint:'1 × 2 · creusée sans matériau · un corps · Q / E pour tourner',key:'',category:'furniture'},
   { id: 'select', title: 'Inspecter', hint: 'Choisir un colon, un objet ou une zone ; survoler le terrain pour le lire', key: 'Échap', category: 'orders' },
@@ -50,6 +50,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id: 'pen-marker', title: 'Marqueur d’enclos', hint: '30 matériaux · désigne un enclos pour les herbivores errants', key: '', category: 'structure' },
   { id: 'bed', title: 'Lit', hint: 'empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
   { id: 'hospital-bed', title: 'Lit d’hôpital', hint: '1 × 2 · Construction 8 · recherche Lit d’hôpital · usage médical initial · Q / E pour tourner', key: '', category: 'furniture' },
+  {id:'vitals-monitor',title:'Moniteur vital',hint:'1 × 1 · 50 acier + 3 composants · Construction 8 · recherche Moniteur vital · 80 W · à côté d’un lit d’hôpital : soins +7 points, immunité +2 points, chirurgie +0,05 · plusieurs lits possibles, sans cumul',key:'',category:'furniture'},
   { id: 'table', title: 'Table', hint: '1 × 2 · placer des tabourets contre le bord · Q / E pour tourner', key: '', category: 'furniture' },
   { id:'table-square',title:'Table carrée',hint:'2 × 2 · 50 matériaux · Q / E pour tourner',key:'',category:'furniture'},
   { id:'table-long',title:'Table longue',hint:'2 × 4 · 95 matériaux · Q / E pour tourner',key:'',category:'furniture'},

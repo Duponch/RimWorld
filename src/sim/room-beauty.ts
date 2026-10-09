@@ -15,7 +15,7 @@ export interface BeautyInput {
 }
 
 export const FLOOR_BEAUTY=Object.freeze({
-  'wood-planks':0,'granite-tile':1,'limestone-tile':1,'marble-tile':1,'sandstone-tile':1,'slate-tile':1,'steel-tile':0,'burned-wood':-6,
+  'wood-planks':0,'granite-tile':1,'limestone-tile':1,'marble-tile':1,'sandstone-tile':1,'slate-tile':1,'steel-tile':0,'sterile-tile':-1,'burned-wood':-6,
 } as const);
 export const FILTH_BEAUTY=Object.freeze({dirt:-15,trash:-15,blood:-30,ash:-10,vomit:-40,'corpse-bile':-50} as const);
 export type BeautyBand='hideous'|'ugly'|'neutral'|'pretty'|'beautiful'|'very-beautiful'|'extremely-beautiful'|'unbelievably-beautiful';

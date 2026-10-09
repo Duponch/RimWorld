@@ -1,5 +1,8 @@
 # Lisière
 
+**V276 — soutien hospitalier ; schéma 211.**
+Moniteur vital alimenté et sols stériles relient recherche, construction, propreté et soins réels. Le moniteur soutient les lits hospitaliers adjacents ; les dalles consomment acier et argent et se retirent sans perte de propriété. [Règles, adaptations et validation](docs/gameplay/hospital-support-v276.md). Les états suivants sont historiques.
+
 **V275 — prothèses en bois ; schéma 210.**
 Un médecin peut rendre une fonction partielle à une jambe, une main ou un pied manquant : bois et deux médicaments réellement livrés, anesthésie, risque opératoire et suivi sauvegardé. [Règles, adaptations et validation](docs/gameplay/wooden-prostheses-v275.md). Les états suivants sont historiques.
 

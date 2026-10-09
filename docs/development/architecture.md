@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V276, schéma 211 : [soutien hospitalier](../gameplay/hospital-support-v276.md).** Liens moniteur/lit dérivés des empreintes et de la visibilité, puis courant relu à chaque frontière clinique. Aucun propriétaire ni bonus clinique persisté. Le sol réemploie le mandat multi-ingrédients et préflight conjointement ses deux remboursements ; migration neutre, lecteurs fichiers/Decoder communs. Les états suivants sont historiques.
+
 **V275, schéma 210 : [prothèses en bois](../gameplay/wooden-prostheses-v275.md).** Le dossier médical porte les racines artificielles ; l’évaluation anatomique substitue leur efficacité une fois et les descendants naturels restent absents. La chirurgie commune ajoute un mandat d’ingrédients physiquement possédés et réservés, puis les consomme au contact avant le travail. Gardes fichiers/Decoder et horloges réelles restent communes ; migration neutre. Les états suivants sont historiques.
 
 **V274, schéma 209 : [perception des morts](../gameplay/death-thoughts-v274.md).** Sept familles de souvenirs bornés portent uniquement kind, identité et date. Le décès médical produit les pensées une fois ; la perception phasée observe les vrais corps au sol. La situation sans sépulture est dérivée. Fichiers et Decoder partagent les gardes, avec horloges des propriétaires hors carte ; migration neutre, deuils historiques indépendants. Les états suivants sont historiques.

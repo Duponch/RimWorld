@@ -11,9 +11,10 @@ import { validStorageConditions } from '../sim/storage-condition.ts';
 import { validFlakWorkShape } from '../sim/flak-work.ts';
 import { validComponentWorkShape } from '../sim/component-work.ts';
 import { isFloorKind } from '../sim/flooring.ts';
+import { sterileMaterialsUnlocked } from '../sim/research.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validCropBlight } from '../sim/plant-blight-save.ts';
-import { validMedicineResearchTransport } from '../sim/research-save.ts';
+import { validHospitalSupportTransport,validateResearch,validMedicineResearchTransport } from '../sim/research-save.ts';
 import { validEmpStructureTransport,validEmpProductionTransport } from '../sim/emp-save.ts';
 import { validFluIncidents } from '../sim/flu-incidents-save.ts';
 import { validateMedicalRecord } from '../sim/injury-validation.ts';
@@ -800,7 +801,7 @@ export class SnapshotDecoder {
     if((message.world.schemaVersion<181&&Object.hasOwn(message.world,'rainElectrical'))
       ||!validRainElectrical(message.world.rainElectrical,message.world.schemaVersion,message.world))return resync('Exposition électrique aux précipitations invalide pour ce snapshot.');
     if(!validPodRescueTransportBindings(message.world))return resync('Secours civil invalide pour ce snapshot.');
-    if(message.kind==='checkpoint'&&(!Array.isArray(message.world.tiles)||message.world.tiles.some(tile=>!tile||!validMiningDamage(tile,message.world.schemaVersion))))return resync('Rendement ou dégâts miniers invalides pour ce snapshot.');
+    if(message.kind==='checkpoint'&&(!Array.isArray(message.world.tiles)||message.world.tiles.some(tile=>!tile||!validMiningDamage(tile,message.world.schemaVersion)||tile.floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world))))return resync('Rendement ou dégâts miniers invalides pour ce snapshot.');
     let next: World;
     let planetCheck: PlanetPreparation | undefined;
     let reindexResources = message.kind === 'checkpoint';
@@ -827,7 +828,7 @@ export class SnapshotDecoder {
         if(message.world.schemaVersion<186&&message.tiles.some(tile=>tile.length>6))return resync('Rendement minier futur dans ce delta.');
         for (const [index, terrain, stone, miningDamage, ore, floor, miningYield] of message.tiles) {
           if (!Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
-            || !['grass', 'soil', 'water', 'rock', ...(message.world.schemaVersion>=28?['rough-stone']:[]), ...(message.world.schemaVersion>=83?['rich-soil','gravel']:[])].includes(terrain) || floor!==undefined&&(message.world.schemaVersion<89||!isFloorKind(floor)||terrain==='water'||terrain==='rock') || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage({terrain,stone,miningDamage,ore,...miningYield===undefined?{}:{miningYield}},message.world.schemaVersion) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
+            || !['grass', 'soil', 'water', 'rock', ...(message.world.schemaVersion>=28?['rough-stone']:[]), ...(message.world.schemaVersion>=83?['rich-soil','gravel']:[])].includes(terrain) || floor!==undefined&&(message.world.schemaVersion<89||!isFloorKind(floor)||floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world)||terrain==='water'||terrain==='rock') || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage({terrain,stone,miningDamage,ore,...miningYield===undefined?{}:{miningYield}},message.world.schemaVersion) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
           touched.add(index);
         }
         tiles = tiles.slice();
@@ -956,6 +957,8 @@ export class SnapshotDecoder {
     if(validateMental(next,next.schemaVersion).length||next.schemaVersion>=192&&validateMelee(next).length)return resync('Cible de crise mentale ou autorité de mêlée incohérente.');
     if(!validMechSalvageLedger(next,next.schemaVersion)||validateMechanoidRaids(next,next.schemaVersion).length)return resync('Récupération ou mandat mécanique invalide.');
     const mechanicalCorpseIds=new Set<number>();
+    if(!validHospitalSupportTransport(next,next.schemaVersion)||next.research?.project==='vitals-monitor'&&validateResearch(next,next.schemaVersion).length)return resync('Soutien hospitalier, recherche ou ingrédients invalides.');
+    if(message.kind==='delta'&&this.current&&sterileMaterialsUnlocked(this.current)&&!sterileMaterialsUnlocked(next)&&next.tiles.some(t=>t.floor==='sterile-tile'))return resync('Sol stérile privé de sa recherche acquise.');
     if(!validMedicineResearchTransport(next,next.schemaVersion))return resync('Recherche ou laboratoire pharmaceutique invalide.');
     if(!validMedicineTransport(next))return resync('Production pharmaceutique invalide.');
     if(next.schemaVersion<206&&[next.trade?.bought,next.trade?.sold,next.fires?.ledger?.items,next.destroyed?.items].some(items=>items&&Object.hasOwn(items,'neutroamine'))

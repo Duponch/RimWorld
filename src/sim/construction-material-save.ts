@@ -5,6 +5,7 @@ import type { World } from './types.ts';
 export function validateConstructionMaterials(world:World,version:number):string[] {
   const errors:string[]=[];
   for(const entity of [...world.jobs,...world.structures,...(world.packed??[]).map(p=>p.building)]) {
+    if(entity.kind==='vitals-monitor'&&(version<211||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Vitals monitor requires V211 and steel.');
     if(entity.kind==='drug-lab'&&(version<206||!validConstructionMaterial(entity.kind,entity.material,version)||entity.footprint!=='standard'))errors.push('Drug lab requires V206, wood or steel and its standard footprint.');
     if(entity.kind==='hydroponics-basin'&&(version<203||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Hydroponics basin requires V203 and steel.');
     if(entity.kind==='mini-turret'&&(version<193||entity.material!=='steel'||entity.orientation!==0||entity.footprint!=='standard'))errors.push('Mini turret requires V193, steel and fixed orientation.');

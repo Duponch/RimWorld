@@ -55,10 +55,11 @@ describe('valeur physique des pièces Core 1.6.4871', () => {
     expect(floorRoomMarketValue(tile('burned-wood'))).toBe(0);
     expect(floorRoomMarketValue(tile('wood-planks'))).toBeCloseTo(3.906, 8);
     expect(floorRoomMarketValue(tile('steel-tile'))).toBeCloseTo(16.18, 8);
+    expect(floorRoomMarketValue(tile('sterile-tile'))).toBeCloseTo(23.46, 8);
     for (const floor of Object.keys(FLOOR_DEFINITIONS) as NonNullable<Tile['floor']>[]) {
       const value = floorRoomMarketValue(tile(floor));
       expect(Number.isFinite(value), floor).toBe(true);
-      if (floor.endsWith('-tile') && floor !== 'steel-tile') expect(value, floor).toBeCloseTo(7.56, 8);
+      if (floor.endsWith('-tile') && floor !== 'steel-tile' && floor !== 'sterile-tile') expect(value, floor).toBeCloseTo(7.56, 8);
     }
   });
 

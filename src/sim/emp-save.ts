@@ -59,7 +59,7 @@ export function validEmpStructureTransport(w:World,version:number=w.schemaVersio
  * production guards still validate the common gun task/ingredients/claims. */
 export function validEmpProductionTransport(w:World,version:number=w.schemaVersion):boolean {
   const allowed=version>=208&&microelectronicsUnlocked(w);
-  for(const station of [...w.structures,...w.packed.map(p=>p.building)])for(const bill of station.bills??[])
+  for(const station of [...w.structures,...(w.packed??[]).map(p=>p.building)])for(const bill of station.bills??[])
     if(bill.recipe==='make-emp-launcher'&&(!allowed||station.kind!=='machining-table'||!validBillSettings(bill,bill.recipe,version)))return false;
   for(const pile of w.piles)if(pile.gunWork?.recipe==='make-emp-launcher'&&!allowed)return false;
   for(const p of w.pawns){

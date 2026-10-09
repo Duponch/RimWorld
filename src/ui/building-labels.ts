@@ -1,6 +1,7 @@
 import type { StructureKind } from '../sim/types';
 
 export const buildingLabels: Readonly<Record<StructureKind, string>> = {
+  'vitals-monitor':'Moniteur vital',
   'drug-lab':'Laboratoire de chimie', 'hydroponics-basin':'Bac hydroponique',
   'mini-turret':'Mini-tourelle automatique',
   'tube-television':'Télévision cathodique',

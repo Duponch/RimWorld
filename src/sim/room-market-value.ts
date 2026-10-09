@@ -43,6 +43,7 @@ const def = (stuff: number, work: number, passability: Passability,
  * inheriting a fictitious value. Historical untyped furniture keeps Core's
  * abstract-stuff estimate rather than receiving a fabricated material. */
 const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.freeze({
+  'vitals-monitor': def(0, 6000, 'pass-through', {steel:50,component:3}),
   'hydroponics-basin': def(0, 2800, 'pass-through', {steel:100,component:1}),
   'mini-turret': def(0, 1800, 'pass-through', {steel:100,component:3}),
   'tube-television': def(0, 10000, 'pass-through', {steel:80,component:4}),
@@ -152,6 +153,7 @@ const FLOOR_VALUE: Readonly<Record<FloorKind, number>> = Object.freeze({
   'sandstone-tile': 4 * MATERIAL_VALUE['sandstone-blocks'] + 1100 * VALUE_PER_WORK,
   'slate-tile': 4 * MATERIAL_VALUE['slate-blocks'] + 1100 * VALUE_PER_WORK,
   'steel-tile': 7 * MATERIAL_VALUE.steel + 800 * VALUE_PER_WORK,
+  'sterile-tile': 3 * MATERIAL_VALUE.steel + 12 + 1600 * VALUE_PER_WORK,
   'burned-wood': 0,
 });
 export function floorRoomMarketValue(tile: Tile): number {

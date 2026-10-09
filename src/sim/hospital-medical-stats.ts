@@ -1,5 +1,6 @@
 import { isBedKind } from './bed-kinds.ts';
 import { carrierOf } from './rescue-state.ts';
+import { activeVitalsMonitor } from './vitals-monitor.ts';
 import type { Pawn,Structure,World } from './types.ts';
 
 /** Current physical service only. A reservation, journey or carried body is
@@ -10,10 +11,15 @@ export function currentMedicalBed(world:World,pawn:Pawn,carried=!!carrierOf(worl
     !['sleeping','resting','downed'].includes(pawn.state)||need?.kind!=='sleep'||need.phase!=='sleep'||need.bedId===null)return;
   return world.structures.find(bed=>bed.id===need.bedId&&isBedKind(bed.kind)&&(bed.kind!=='hospital-bed'||world.schemaVersion>=187)&&bed.x===pawn.x&&bed.z===pawn.z);
 }
-/** Definition statistics independent of role, material and quality. Quality
- * is applied separately by the existing comfort/rest/surgery consumers. */
-type BedDefinition=Pick<Structure,'kind'>;
-export const bedTendOffset=(bed:BedDefinition|undefined):number=>bed?.kind==='hospital-bed'?.1:0;
-export const bedImmunityFactor=(bed:BedDefinition):1.07|1.11=>bed.kind==='hospital-bed'?1.11:1.07;
+/** Quality remains a separate consumer factor. With a World, a current powered
+ * facility adds offsets to the hospital bed's definition statistics once. */
+type BedDefinition=Pick<Structure,'kind'>&Partial<Pick<Structure,'id'>>;
+function monitored(bed:BedDefinition,world:World|undefined):boolean {
+  if(!world||bed.kind!=='hospital-bed'||bed.id===undefined)return false;
+  const current=world.structures.find(s=>s.id===bed.id&&s.kind==='hospital-bed');
+  return !!current&&!!activeVitalsMonitor(world,current);
+}
+export const bedTendOffset=(bed:BedDefinition|undefined,world?:World):number=>bed?.kind==='hospital-bed'?(monitored(bed,world)?.17:.1):0;
+export const bedImmunityFactor=(bed:BedDefinition,world?:World):1.07|1.11|1.13=>bed.kind==='hospital-bed'?(monitored(bed,world)?1.13:1.11):1.07;
 export const bedHealPerDay=(bed:BedDefinition):4|10=>bed.kind==='hospital-bed'?10:4;
-export const bedSurgeryFactor=(bed:BedDefinition):number=>bed.kind==='hospital-bed'?1.1:1;
+export const bedSurgeryFactor=(bed:BedDefinition,world?:World):number=>bed.kind==='hospital-bed'?(monitored(bed,world)?1.15:1.1):1;

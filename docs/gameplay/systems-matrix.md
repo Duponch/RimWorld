@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+**État courant V276, schéma 211.** Le [soutien hospitalier](hospital-support-v276.md) raccorde S06/S07/S10/S13/S20 : recherches, moniteur alimenté, dalles stériles, construction et clinique réelles, lecteurs et reprise. Aucun domaine ni jalon général n’est clôturé ; les états suivants sont historiques.
+
 **État courant V275, schéma 210.** Les [prothèses en bois](wooden-prostheses-v275.md) raccordent perte anatomique, ressources, chirurgie, capacités et reprise. Trois types et six sites sont disponibles ; prothèses industrielles et retrait restent ouverts. Les états suivants sont historiques.
 
 **État courant V274, schéma 209.** Les [pensées liées aux morts](death-thoughts-v274.md) raccordent perception, humeur, transport et sépulture existants. Les souvenirs et la situation d’un corps colonial sans sépulture restent distincts ; psychologie générale et cérémonies restent ouvertes. Les états suivants sont historiques.

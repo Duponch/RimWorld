@@ -64,7 +64,7 @@ export function updatePawnHealth(world:World,pawn:Pawn):BodyAssessment|undefined
     const sky=pawn.moveCooldown===0&&pawn.state==='recreating'&&pawn.recreation.task?.activity==='skygaze'&&pawn.recreation.task.phase==='active';
     advanceMedical(record,world.tick-record.tick,{phase:pawn.id%60,posture:bed?'bed':resting?'ground':'standing',starving:pawn.hunger<=0,malnutritionRate:world.schemaVersion>=84?malnutritionRate(pawn.id):undefined,infectionChanceFactor:playerInfectionFactor(world,pawn),
       hunger:pawn.hunger,rest:pawn.rest,restingBonus:!!bed||resting&&pawn.state!=='downed'||sky,infectionSeed:(world.seed^Math.imul(pawn.id,0x9e3779b1))>>>0,
-      ageImmunityFactor:humanAgeImmunityFactor(pawn.age),...(bed?{bedHealPerDay:bedHealPerDay(bed),bedImmunityFactor:bedImmunityFactor(bed)}:{})},()=>healthRandom(world));
+      ageImmunityFactor:humanAgeImmunityFactor(pawn.age),...(bed?{bedHealPerDay:bedHealPerDay(bed),bedImmunityFactor:bedImmunityFactor(bed,world)}:{})},()=>healthRandom(world));
     for(const infection of record.infections?.cases??[])if(infection.id>=nextInfection)announce(world,`${pawn.name} souffre d’une infection : consultez Santé et organisez des soins réguliers.`);
   }
   const body=pawnBody(pawn);reconcilePawnHealth(world,pawn,body);

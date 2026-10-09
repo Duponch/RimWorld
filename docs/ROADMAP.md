@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V276 — soutien hospitalier ; schéma 211.**
+Le [moniteur vital et les sols stériles](gameplay/hospital-support-v276.md) complètent l’hôpital : acier/argent/composants livrés, énergie, propreté et bonus depuis le lit réellement utilisé. Greffes et industrie prothétique restent ouvertes. Autonomie, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **Avancement fonctionnel V275 — récupérer après perte d’un membre ; schéma 210.**
 Les [prothèses en bois](gameplay/wooden-prostheses-v275.md) prolongent la chirurgie et les soins : matériaux livrés au chevet, risque réel, fonction partielle, dégâts et sauvegarde. Prothèses industrielles, remplacement de membres sains et retrait restent ouverts. Autonomie, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
 

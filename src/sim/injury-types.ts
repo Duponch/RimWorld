@@ -57,7 +57,7 @@ export interface MedicalContext {
   ageImmunityFactor?:number;
   /** Actual human bed definition; absence preserves the historical bed rate. */
   bedHealPerDay?:4|10;
-  bedImmunityFactor?:1.07|1.11;
+  bedImmunityFactor?:1.07|1.11|1.13;
 }
 /** Caller owns and persists its deterministic PRNG; never Math.random. */
 export type MedicalRandom=()=>number;

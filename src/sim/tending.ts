@@ -94,7 +94,7 @@ export function processTending(world:World,doctor:Pawn,context:NeedContext,light
   if(task.progress<task.duration)return;
   const item=task.medicine?.item,batch=treatmentBatch(treatmentTargets(patient),!!item);if(!batch.length){releaseTending(world,doctor);return;}
   resolveHumanTendBatch(patient,doctor,batch,{random:()=>healthRandom(world),awardJobXp:true,medicine:item,
-    bedOffset:bedTendOffset(currentMedicalBed(world,patient)),infectionRoomFactor:()=>infectionRoomFactor(world,patient)});
+    bedOffset:bedTendOffset(currentMedicalBed(world,patient),world),infectionRoomFactor:()=>infectionRoomFactor(world,patient)});
   consumeMedicine(world,task);
   reconcilePawnHealth(world,patient);
   context.event(`${doctor.name} a traité ${batch[0]!.infectionId!==undefined?'une infection':batch[0]!.flu?'la grippe':batch[0]!.disease==='malaria'?'le paludisme':batch[0]!.disease==='plague'?'la peste':`${batch.length} plaie(s)`} ${doctor===patient?'sur soi':`de ${patient.name}`} ${item?`avec ${ITEM_DEFINITIONS[item].label}`:'sans médicament'}.`);

@@ -112,7 +112,7 @@ export function processSurgery(world:World,doctor:Pawn,context:NeedContext,docto
   learnSkill(doctor.skills.medicine,surgeryBaseXp(task.workCore),doctor);
   const bed=world.structures.find(s=>s.id===task.bedId)!;
   const capture=captureCleanliness(world),room=capture.room(bed);
-  const chance=surgerySuccessChance({doctor,medicine:task.consumedMedicine!,bedQuality:bed.quality,bedSurgeryFactor:bedSurgeryFactor(bed),patientGlow:patientGlow(bed),roomCleanliness:room?.cleanliness??null,outdoors:surgeryOutdoors(world,bed,capture)});
+  const chance=surgerySuccessChance({doctor,medicine:task.consumedMedicine!,bedQuality:bed.quality,bedSurgeryFactor:bedSurgeryFactor(bed,world),patientGlow:patientGlow(bed),roomCleanliness:room?.cleanliness??null,outdoors:surgeryOutdoors(world,bed,capture)});
   const outcome=resolveSurgeryOutcome(patient.health!,task.part,chance,()=>healthRandom(world));
   patient.health=outcome.record;
   if(outcome.kind==='success')amputateSurgicalLimb(patient.health,task.part);

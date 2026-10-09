@@ -1,4 +1,6 @@
-# Validation courante — V275
+# Validation courante — V276
+
+**V276, schéma 211 : [soutien hospitalier](../gameplay/hospital-support-v276.md#validation).** 152cas/24fichiers dont32nouveaux passent par reprises ciblées ;62sauvegardes publiques et65fichiers conservés. Chromium WebGPU joue construction, collecte et chirurgie avec quatre sauvegardes/reprises exactes3038/3937/4076/4169, erreurs vides. Désignation du moniteur et compatibilité EMP pré25 corrigées ; rouges initiaux conservés. Aucun FPS ou campagne longue déduit. Les validations suivantes sont historiques.
 
 **V275, schéma 210 : [prothèses en bois](../gameplay/wooden-prostheses-v275.md#validation).** 156 cas uniques/22 fichiers dont38nouveaux passent par reprises ciblées ; anciennes opérations et62sauvegardes publiques couvertes. Typage/build et WebGPU passent : demande UI, collecte, anesthésie et pose jouées, sauvegardes/reprises exactes3094/3159/3252. Réservations de médicaments, portage et exclusivité des cellules corrigés ; rouges initiaux conservés, aucune campagne longue ou mesure FPS déduite. Les validations suivantes sont historiques.
 

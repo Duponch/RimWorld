@@ -15,10 +15,10 @@ import type { World,Job } from '../src/sim/types';
 function until(w:World,predicate:()=>boolean,limit=800){for(let i=0;i<limit&&!predicate();i++)stepWorld(w);expect(predicate(),JSON.stringify({tick:w.tick,jobs:w.jobs,p:w.pawns.map(p=>({state:p.state,job:p.jobId,haul:p.haul}))})).toBe(true);expect(validateWorld(w)).toEqual([]);}
 function removal(w:World,x:number,z:number):Job {return {id:w.nextId++,kind:'remove-floor',floor:w.tiles[z*w.width+x]!.floor,x,z,orientation:0,footprint:'standard',status:'pending',reservedBy:null,progress:0,escrow:{wood:0,food:0}};}
 
-test('seven recipes have independent material/work/skill requirements and real research gates',()=>{
+test('historical floor recipes keep independent material/work/skill requirements and real research gates',()=>{
   const w=cleanlinessCamp();
-  expect(FLOOR_KINDS).toHaveLength(7);
-  for(const floor of FLOOR_KINDS){const d=FLOOR_DEFINITIONS[floor],recipe=constructionRecipe({kind:'lay-floor',floor});expect(recipe.ingredients).toEqual([{item:d.item,quantity:floor==='wood-planks'?3:floor==='steel-tile'?7:4}]);expect(recipe.coreWork).toBe(floor==='wood-planks'?85:floor==='steel-tile'?800:1100);}
+  expect(FLOOR_KINDS).toHaveLength(8);
+  for(const floor of FLOOR_KINDS.filter(f=>f!=='sterile-tile')){const d=FLOOR_DEFINITIONS[floor],recipe=constructionRecipe({kind:'lay-floor',floor});expect(recipe.ingredients).toEqual([{item:d.item,quantity:floor==='wood-planks'?3:floor==='steel-tile'?7:4}]);expect(recipe.coreWork).toBe(floor==='wood-planks'?85:floor==='steel-tile'?800:1100);}
   expect(applyCommand(w,{type:'designate',kind:'lay-floor',floor:'granite-tile',x:20,z:20}).ok).toBe(false);
   expect(applyCommand(w,{type:'designate',kind:'lay-floor',floor:'steel-tile',x:20,z:20}).ok).toBe(false);
   expect(applyCommand(w,{type:'designate',kind:'lay-floor',floor:'wood-planks',x:20,z:20}).ok).toBe(true);
