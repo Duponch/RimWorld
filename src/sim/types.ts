@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 213 as const;
+export const SCHEMA_VERSION = 214 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -73,6 +73,7 @@ export interface Pawn extends Cell {
   appearance?:import('./pawn-appearance.ts').PawnAppearance;
   animalHandling?:import('./domestic-state.ts').AnimalHandlingTask;
   animalCare?:import('./domestic-state.ts').AnimalCareTask;
+  animalFeed?:import('./animal-feeding-rules.ts').AnimalFeedTask;
   roomMemories?:import('./room-experience.ts').RoomMemory[];
   body?:import('./human-corpses.ts').HumanBodyState;
   burial?:import('./burial.ts').BurialTask;

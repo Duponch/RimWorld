@@ -55,7 +55,7 @@ export function finishAnimalExits(w:World,departures:ReadonlySet<number>):void {
   const ids=new Set(actual.map(a=>a.id));
   if(w.hunting)w.hunting.targets=w.hunting.targets.filter(id=>!ids.has(id));
   s.animals=s.animals.filter(a=>!ids.has(a.id));s.exitedAnimals=count+actual.length;
-  for(const p of w.pawns)if(p.animalHandling&&ids.has(p.animalHandling.animalId)||p.animalCare&&ids.has(p.animalCare.animalId))interruptWork(w,p);
+  for(const p of w.pawns)if(p.animalHandling&&ids.has(p.animalHandling.animalId)||p.animalCare&&ids.has(p.animalCare.animalId)||p.animalFeed&&ids.has(p.animalFeed.animalId))interruptWork(w,p);
   for(const a of actual)w.events.push({tick:w.tick,type:'need',message:`${animalSpecies(a.species).label} ${a.id} a quitté la carte faute de nourriture.`});
   if(w.events.length>80)w.events.splice(0,w.events.length-80);
 }

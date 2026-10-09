@@ -23,6 +23,7 @@ export function expireFood(world: World): void {
     const affected = c && (c.ingredients.some(i => expired.has(i.pileId)) || c.productId !== null && expired.has(c.productId))
       || h && expired.has(h.phase === 'pickup' ? h.sourcePileId : h.carryPileId!)
       || pawn.animalHandling && expired.has(pawn.animalHandling.phase==='pickup'?pawn.animalHandling.sourcePileId:pawn.animalHandling.carryPileId!)
+      || pawn.animalFeed && expired.has(pawn.animalFeed.phase==='pickup'?pawn.animalFeed.sourcePileId:pawn.animalFeed.carryPileId!)
       || pawn.animalCare?.medicine && expired.has(pawn.animalCare.phase==='pickup'?pawn.animalCare.medicine.sourcePileId:pawn.animalCare.medicine.carryPileId!)
       || pawn.tend?.medicine && expired.has(pawn.tend.phase==='pickup'?pawn.tend.medicine.sourcePileId:pawn.tend.medicine.carryPileId!)
       || pawn.feed && expired.has(pawn.feed.phase==='pickup'?pawn.feed.sourcePileId:pawn.feed.carryPileId!)

@@ -33,7 +33,7 @@ const handler=(p:Pawn)=>{
   const body=pawnBody(p).capacities;return body.moving>0&&body.manipulation>0;
 };
 const claimedIds=(world:World)=>new Set(world.pawns.flatMap(p=>[
-  ...(p.animalHandling?leadingClaimIds(p.animalHandling):[]),...(p.animalCare?[p.animalCare.animalId]:[])]));
+  ...(p.animalHandling?leadingClaimIds(p.animalHandling):[]),...(p.animalCare?[p.animalCare.animalId]:[]),...(p.animalFeed?[p.animalFeed.animalId]:[])]));
 const ropeable=(a:WildAnimal)=>!!a.domestic&&livestock(a)&&a.state!=='dead'&&a.state!=='downed'
   &&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike;
 function destination(world:World,a:WildAnimal):number|undefined {

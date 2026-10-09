@@ -16,6 +16,7 @@ import { ANIMAL_PRODUCTS, productFullness, productKind } from '../sim/animal-pro
 import { animalBodySize,animalFoodPerDay,animalLifeStage,animalNutritionMax,gestationTicks } from '../sim/animal-life';
 import { animalCareTargets } from '../sim/animal-care';
 import { veterinaryCareSpeciesAllowed,veterinaryNeedsRest } from '../sim/veterinary-rules';
+import { ANIMAL_FEED_HUNGER,ANIMAL_FEED_TICKS,animalFeedingPatientReady } from '../sim/animal-feeding-rules';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import type { WildAnimal } from '../sim/wildlife-state';
 
@@ -74,8 +75,29 @@ function veterinaryLines(world:World,animal:WildAnimal):string[] {
     }else if(animal.health&&veterinaryNeedsRest(animal.health))lines.push('Récupération : plaies déjà pansées ou immunité en cours ; repos au sol selon la faim et le danger.');
     else lines.push('Soins vétérinaires : aucun pansement nécessaire actuellement.');
   }
-  lines.push('Soins au sol : aucun bonus de lit hospitalier ou de moniteur vital.','Alimentation assistée : indisponible ; les pansements ne nourrissent pas un animal immobilisé.');
+  lines.push('Soins au sol : aucun bonus de lit hospitalier ou de moniteur vital.');
   return lines;
+}
+
+/** Published tasks describe work actually owned by a doctor. Waiting text
+ * does not claim food availability or reserve a patient while inspecting. */
+function animalFeedingLines(world:World,animal:WildAnimal):string[] {
+  if(!animal.domestic||animal.state==='dead'||animal.health?.death)return [];
+  if(world.schemaVersion<214)return ['Alimentation assistée : indisponible ; les pansements ne nourrissent pas un animal immobilisé.'];
+  if(!veterinaryCareSpeciesAllowed(animal.species,world.schemaVersion))return ['Alimentation assistée : indisponible pour cette espèce.'];
+  const doctor=world.pawns.find(p=>p.animalFeed?.animalId===animal.id),task=doctor?.animalFeed;
+  if(doctor&&task){
+    const pile=world.piles.find(p=>p.id===(task.phase==='pickup'?task.sourcePileId:task.carryPileId));
+    const portion=pile?`${task.quantity} × ${ITEM_DEFINITIONS[pile.item].label}`:'la portion réservée';
+    return [`Alimentation assistée · soigneur : ${doctor.name}`,
+      task.phase==='pickup'?`Collecte de nourriture : ${portion}.`:
+      task.phase==='deliver'?`Apport de nourriture : rejoint l’animal avec ${portion}.`:
+      `Alimentation au contact : ${percent(Math.min(1,task.progress/ANIMAL_FEED_TICKS))} · ${portion}.`];
+  }
+  if(animal.manhunter||animal.burning||animal.flee||animal.threat||animal.retaliation||animal.strike)
+    return ['Alimentation assistée : en attente de sécurité ; le danger reste prioritaire.'];
+  if(animal.food<=animalNutritionMax(animal)*ANIMAL_FEED_HUNGER&&animalFeedingPatientReady(world,animal))return ['Alimentation assistée : en attente d’un médecin disponible, d’une portion compatible et d’un accès sûr.','La politique médicale ne bloque pas l’apport de nourriture.'];
+  return ['Alimentation assistée : réservée aux animaux affamés à terre ou au repos médical, physiquement arrêtés.'];
 }
 
 /** One selected-animal lookup; all other values come from that animal or its species definition. */
@@ -148,7 +170,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
       `Nourriture : ${percent(Math.max(0, Math.min(1, animal.food / animalNutritionMax(animal))))}`,
       `Repos : ${percent(Math.max(0, Math.min(1, animal.rest)))}`,
     ],
-    health:[...(animal.domestic&&!penStatus?['Statut : domestique libre']:[]),...veterinaryLines(world,animal),...condition],
+    health:[...(animal.domestic&&!penStatus?['Statut : domestique libre']:[]),...veterinaryLines(world,animal),...animalFeedingLines(world,animal),...condition],
   };
 }
 

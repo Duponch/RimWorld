@@ -47,7 +47,7 @@ export const productHandlerAvailable=(p:Pawn):boolean=>{
   const body=pawnBody(p).capacities;return body.moving>0&&body.manipulation>0;
 };
 const claimed=(world:World)=>new Set(world.pawns.flatMap(p=>[
-  ...(p.animalHandling?leadingClaimIds(p.animalHandling):[]),...(p.animalCare?[p.animalCare.animalId]:[])]));
+  ...(p.animalHandling?leadingClaimIds(p.animalHandling):[]),...(p.animalCare?[p.animalCare.animalId]:[]),...(p.animalFeed?[p.animalFeed.animalId]:[])]));
 export function productWanted(world:World,pawn:Pawn):boolean {
   if(!productHandlerAvailable(pawn)||!world.wildlife?.animals.some(available))return false;
   const reserved=claimed(world);

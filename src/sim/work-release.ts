@@ -54,7 +54,7 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const zone=world.stockpiles.find(z=>same(z,command));if(zone)zones.add(zone.id);
   } else if(command.type==='priority'&&command.value===0) {
     const pawn=world.pawns.find(p=>p.id===command.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
-    if(pawn?.ward&&command.work==='warden'||pawn?.animalHandling&&command.work==='handle'||pawn?.animalCare&&command.work==='doctor')pawns.add(pawn.id);
+    if(pawn?.ward&&command.work==='warden'||pawn?.animalHandling&&command.work==='handle'||(pawn?.animalCare||pawn?.animalFeed)&&command.work==='doctor')pawns.add(pawn.id);
     if(pawn?.burial&&command.work==='haul'&&pawn.orders.active!=='bury'||pawn?.cleaning&&!pawn.cleaning.forced&&command.work==='clean')pawns.add(pawn!.id);
     if(pawn&&((pawn.surgery&&command.work==='doctor')||(pawn.tend&&command.work==='doctor'&&pawn.orders.active!=='tend')||(pawn.feed&&command.work===feedingWork(world.pawns.find(p=>p.id===pawn.feed!.patientId))&&pawn.orders.active!=='feed')||(pawn.haul&&pawn.orders.active!=='haul'&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work&&pawn.orders.active===null)||(pawn.cooking&&pawn.orders.active!=='cook'&&command.work === taskWork(pawn.cooking))))pawns.add(pawn.id);
   } else if(command.type==='bill-remove'||command.type==='bill-update') {
@@ -126,7 +126,7 @@ export function releaseAssignments(world:World,pawn:Pawn):void {
   cancelAutomaticCombat(pawn);cancelHunting(pawn);
   if(pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
   releaseSurgeryState(world,pawn);
-  delete pawn.animalHandling;delete pawn.animalCare;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
+  delete pawn.animalHandling;delete pawn.animalCare;delete pawn.animalFeed;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
   if(job?.reservedBy===pawn.id){delete job.installationWork;delete job.clearance;delete job.pickTicks;job.reservedBy=null;job.status='pending';if(job.repair)delete job.repair.warmed;if(job.kind==='remove-floor'||job.kind==='flick'||job.kind==='repair'||job.kind==='fix-breakdown'||job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct'||isRoofJob(job))resetWork(job);}
   delete pawn.transitExit;

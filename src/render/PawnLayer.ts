@@ -765,7 +765,8 @@ export class PawnLayer {
       const workPose=pawnWorkPose(pawn,job,station?.kind);
       const stationCell=station ? footprintCells(station).reduce((best,cell)=>Math.hypot(cell.x-pawn.x,cell.z-pawn.z)<Math.hypot(best.x-pawn.x,best.z-pawn.z)?cell:best) : undefined;
       const patient=pawn.feed?.phase==='feed'?pawnsById.get(pawn.feed.patientId):pawn.tend?.phase==='tend'?pawnsById.get(pawn.tend.patientId):pawn.surgery?.phase==='work'?pawnsById.get(pawn.surgery.patientId):undefined;
-      const handledAnimal=pawn.animalCare?.phase==='treat'?world.wildlife?.animals.find(a=>a.id===pawn.animalCare!.animalId)
+      const handledAnimal=pawn.animalFeed?.phase==='feed'?world.wildlife?.animals.find(a=>a.id===pawn.animalFeed!.animalId)
+        :pawn.animalCare?.phase==='treat'?world.wildlife?.animals.find(a=>a.id===pawn.animalCare!.animalId)
         :pawn.animalHandling?.phase==='interact'?world.wildlife?.animals.find(a=>a.id===pawn.animalHandling!.animalId):undefined;
       const work = pawn.state==='working'||arriving ? fireTarget ?? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.hunting?.phase==='finish' ? world.wildlife?.animals.find(a=>a.id===pawn.hunting!.animalId) : patient ?? handledAnimal ?? stationCell ?? pawn.cooking?.actionCell ?? pawn.haul?.pickupCell) : undefined;
       if(work&&pawn.state==='working') yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);

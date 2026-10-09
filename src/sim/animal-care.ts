@@ -38,7 +38,7 @@ function patientReady(w:World,a:WildAnimal,doctor?:Pawn):boolean {
     (a.state==='downed'||a.state==='sleeping')&&(!a.motion||a.motion.end<=w.tick)&&
     (w.schemaVersion<212||!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.stun&&!a.health?.foodPoisoning?.vomit)&&
     !!a.health&&!a.health.death&&animalCareTargets(a).length>0&&
-    !w.pawns.some(p=>p!==doctor&&(p.animalCare?.animalId===a.id||p.animalHandling&&leadingClaimIds(p.animalHandling).includes(a.id)));
+    !w.pawns.some(p=>p!==doctor&&(p.animalCare?.animalId===a.id||p.animalFeed?.animalId===a.id||p.animalHandling&&leadingClaimIds(p.animalHandling).includes(a.id)));
 }
 function doctorReady(p:Pawn):boolean {
   return isColonist(p)&&!p.prisoner&&!p.visitor&&!p.draft&&!p.burning&&!p.mental?.crisis&&

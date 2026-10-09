@@ -114,7 +114,7 @@ export class CargoHandoffs {
       const oldSame=before.get(pile.id);
       const pawn=world.pawns.find(p=>p.id===pawnId);
       const sourceId=pawn?.haul?.sourcePileId??(pawn?.need?.kind==='eat'?pawn.need.sourcePileId:undefined)
-        ??pawn?.feed?.sourcePileId??pawn?.tend?.medicine?.sourcePileId??pawn?.animalCare?.medicine?.sourcePileId
+        ??pawn?.animalFeed?.sourcePileId??pawn?.feed?.sourcePileId??pawn?.tend?.medicine?.sourcePileId??pawn?.animalCare?.medicine?.sourcePileId
         ??pawn?.animalHandling?.sourcePileId??(pawn?.ward?.kind==='food'?pawn.ward.sourcePileId:undefined);
       const remembered=previous.piles.find(q=>q.id===sourceId&&q.owner.type==='ground'&&q.item===pile.item);
       const source=oldSame?.owner.type==='ground'?oldSame:remembered;

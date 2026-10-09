@@ -8,6 +8,7 @@ import type { Cell, Pawn, World } from './types.ts';
 export function serviceCell(pawn: Pawn): Cell | null {
   if(pawn.surgery)return pawn.surgery.spot;
   if(pawn.animalCare)return pawn.animalCare.spot;
+  if(pawn.animalFeed)return pawn.animalFeed.spot;
   if(pawn.ward)return pawn.ward.spot;
   if(pawn.research)return pawn.research.spot;
   if(pawn.feed)return pawn.feed.spot;

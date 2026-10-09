@@ -1,4 +1,5 @@
 import { interruptWork } from './interrupted-cargo.ts';
+import { reconcileAnimalFeeding } from './animal-feeding.ts';
 import { leadRopees } from './animal-leading.ts';
 import { penRegion } from './animal-pens.ts';
 import { productKind, productReady } from './animal-products.ts';
@@ -7,6 +8,7 @@ import type { World } from './types.ts';
 /** Death, corpse conversion and loss of tameness can precede a travelling
  * worker's turn. Release claims immediately; physical cargo survives. */
 export function reconcileDomesticWork(world:World):void {
+  reconcileAnimalFeeding(world);
   for(const animal of world.wildlife?.animals??[]){
     const id=animal.domestic?.penMarkerId;
     if(id!==undefined&&!world.structures.some(s=>s.id===id&&s.kind==='pen-marker'&&s.pen?.accepted.includes(animal.species)))delete animal.domestic!.penMarkerId;

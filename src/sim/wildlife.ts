@@ -18,6 +18,7 @@ import type { Cell,Resource,World } from './types.ts';
 import { animalSpecies,faunaBiome,selectBiomeSpecies,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
 import { animalHandlingHolding } from './animal-handling.ts';
 import { animalCareInProgress,animalCareTargets } from './animal-care.ts';
+import { animalFeedingInProgress } from './animal-feeding.ts';
 import { veterinaryCareSpeciesAllowed,veterinaryNeedsRest } from './veterinary-rules.ts';
 import { adultAgeTicks, advanceAnimalLife, animalFoodPerDay, animalLifeStage, animalNutritionMax } from './animal-life.ts';
 import { atMapEdge,cancelAnimalExit,exitSuppressed,finishAnimalExits,stopExitTargeting,WILDLIFE_EXIT_FOOD_CHECK } from './wildlife-exit.ts';
@@ -234,7 +235,7 @@ export function advanceWildlife(world:World):void {
     // decisions must not replace its route while the rope is held.
     if(!danger&&(ledAnimals?.has(a.id)||matingFemales.has(a.id)))continue;
     const held=!danger&&((!!a.taming?.designated||!!a.domestic)&&animalHandlingHolding(world,a.id)
-      ||!!a.domestic&&animalCareInProgress(world,a));
+      ||!!a.domestic&&(animalCareInProgress(world,a)||animalFeedingInProgress(world,a)));
     if(held&&!(a.state==='eating'&&a.meal)){cancelAnimalExit(world,a);continue;}
     if(a.state==='sleeping') {
       if(medicalRest&&a.food>=nutrition*.45&&!a.sleepUntilCore&&getNav(a).free(a))continue;

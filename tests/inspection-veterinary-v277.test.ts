@@ -7,7 +7,7 @@ import type { WildAnimal } from '../src/sim/wildlife-state';
 import type { World } from '../src/sim/types';
 
 function fixture(species:WildAnimal['species']='deer'){
-  const world=createWorld(901,16,16);
+  const world=createWorld(901,16,16);world.schemaVersion=212 as World['schemaVersion'];
   const animal:WildAnimal={id:world.nextId++,species,sex:'female',ageTicks:adultAgeTicks(species),x:4,z:7,food:.5,rest:.25,state:'sleeping',path:[],nextDecision:world.tick,
     domestic:{since:world.tick,care:'industrial',tameness:5,nextDecay:world.tick+45000},health:{...createMedicalRecord(world.tick),body:species}};
   addResolvedInjury(animal.health!,'left-front-leg','cut',1000,()=>.999999);

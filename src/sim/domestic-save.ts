@@ -7,6 +7,11 @@ import { isMedicine, MEDICAL_CARE } from './medicine-rules.ts';
 import { reservedSource } from './materials.ts';
 import { medicineClaims } from './medicine-logistics.ts';
 import { veterinaryCareSpeciesAllowed } from './veterinary-rules.ts';
+import { ANIMAL_FEED_TICKS,animalFeedPlaceValid } from './animal-feeding-rules.ts';
+import { animalPileFood } from './wildlife-food.ts';
+import { medicalWorkRefusal } from './health-rules.ts';
+import { workPriority } from './work-types.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
 import type { Pawn,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 
@@ -38,8 +43,8 @@ function validVeterinaryTask(w:World,p:Pawn,version:number):boolean {
     ||!obj(c.spot)||!keys(c.spot,['x','z'])||!int(c.spot.x,0,w.width-1)||!int(c.spot.z,0,w.height-1)
     ||!['pickup','approach','treat'].includes(String(c.phase))||!finite(c.progress,0)
     ||(c.phase==='treat'?!finite(c.duration,1,6000)||Number(c.progress)>=Number(c.duration):c.duration!==undefined||c.progress!==0))return false;
-  if(!isColonist(p)||p.prisoner||p.visitor||p.draft||p.mental?.crisis||p.interruptedCargo||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.flee||p.recreation.task||p.orders.active!==null||p.animalHandling||p.priorities.doctor===0||!['moving','working','idle'].includes(p.state))return false;
-  if(w.pawns.some(other=>other!==p&&(other.animalCare?.animalId===a.id||other.animalHandling&&leadingClaimIds(other.animalHandling).includes(a.id))))return false;
+  if(!isColonist(p)||p.prisoner||p.visitor||p.draft||p.mental?.crisis||p.interruptedCargo||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.flee||p.recreation.task||p.orders.active!==null||p.animalHandling||p.animalFeed||p.priorities.doctor===0||!['moving','working','idle'].includes(p.state))return false;
+  if(w.pawns.some(other=>other!==p&&(other.animalCare?.animalId===a.id||other.animalFeed?.animalId===a.id||other.animalHandling&&leadingClaimIds(other.animalHandling).includes(a.id))))return false;
   const m=c.medicine;
   const held=w.piles.filter(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
   if(m===undefined)return c.phase!=='pickup'&&!held.length;
@@ -55,10 +60,44 @@ export function validVeterinaryCareTransport(w:World,version:number):boolean {
   try{return w.pawns.every(p=>validVeterinaryTask(w,p,version));}catch{return false;}
 }
 
+/** Validate the acquired food and mandate, not temporary hunger or posture.
+ * Damage, waking and danger can occur before the next ordinary reconciliation. */
+function validAnimalFeedTask(w:World,p:Pawn,version:number):boolean {
+  const raw:unknown=p.animalFeed;
+  if(!Object.hasOwn(p,'animalFeed'))return true;
+  if(version<214||!obj(raw)||!keys(raw,['animalId','spot','sourcePileId','carryPileId','quantity','phase','progress'])
+    ||!int(raw.animalId,1,w.nextId-1)||!int(raw.sourcePileId,1,w.nextId-1)||!int(raw.quantity,1,75)
+    ||!obj(raw.spot)||!keys(raw.spot,['x','z'])||!int(raw.spot.x,0,w.width-1)||!int(raw.spot.z,0,w.height-1)
+    ||!['pickup','deliver','feed'].includes(String(raw.phase))||!int(raw.progress,0,ANIMAL_FEED_TICKS-1)
+    ||raw.phase!=='feed'&&raw.progress!==0||(raw.phase==='pickup'?raw.carryPileId!==null:!int(raw.carryPileId,1,w.nextId-1)))return false;
+  const a=w.wildlife?.animals.find(a=>a.id===raw.animalId),task=p.animalFeed!;
+  if(!a||!veterinaryCareSpeciesAllowed(a.species,version)||!validDomesticOwner(w,a,version)||!animalFeedPlaceValid(w,task,a))return false;
+  if(!isColonist(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.draft||p.mental?.crisis||p.interruptedCargo
+    ||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.equipmentTask
+    ||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.shooting?.order||p.tactics||p.flee||p.trade
+    ||p.recreation.task||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.animalHandling||p.animalCare
+    ||workPriority(p,'doctor')===0||medicalWorkRefusal(p))return false;
+  if(w.pawns.some(other=>other!==p&&(other.animalCare?.animalId===a.id||other.animalFeed?.animalId===a.id
+    ||other.animalHandling&&leadingClaimIds(other.animalHandling).includes(a.id))))return false;
+  const food=w.piles.find(i=>i.id===(task.phase==='pickup'?task.sourcePileId:task.carryPileId));
+  const held=w.piles.filter(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
+  if(!food||!animalPileFood(w,a,food)||food.kind!=='food'||task.quantity>ITEM_DEFINITIONS[food.item].maxIngest
+    ||(task.phase==='pickup'?food.owner.type!=='ground'||held.length!==0||reservedSource(w,food.id)>food.quantity:
+      held.length!==1||held[0]!==food||food.owner.type!=='pawn'||food.owner.pawnId!==p.id||food.quantity!==task.quantity))return false;
+  return task.phase==='feed'?p.state==='working'&&p.moveCooldown===0&&(p.motion?.end??0)<=w.tick&&!p.path.length&&p.x===task.spot.x&&p.z===task.spot.z:p.state==='moving';
+}
+
+/** Both clinical animal services share their real patient and cargo claims.
+ * No full-world, pen or navigation census is added to snapshot admission. */
+export function validDomesticTasksTransport(w:World,version:number):boolean {
+  try{return w.pawns.every(p=>validVeterinaryTask(w,p,version)&&validAnimalFeedTask(w,p,version));}catch{return false;}
+}
+
 /** Shape and ownership remain separate from transient availability: an animal
  * can be harmed between accepting an order and its next simulation step. */
 export function validateDomesticAnimals(w:World,version:number):string[] {
   const errors:string[]=[],claimed=new Set<number>();
+  if(w.pawns.some(p=>Object.hasOwn(p,'animalFeed'))&&!validDomesticTasksTransport(w,version))errors.push('Invalid animal medical feeding or care ownership.');
   for(const a of w.wildlife?.animals??[]){
     const d:unknown=a.domestic,t:unknown=a.taming;
     if(d!==undefined&&!validDomesticOwner(w,a,version))errors.push('Invalid domestic animal.');
@@ -97,7 +136,7 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
       if(claimed.has(id))errors.push('Animal is reserved twice.');claimed.add(id);
     }
     if(!isColonist(p)||p.prisoner||p.visitor||p.draft||p.mental?.crisis||p.interruptedCargo||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.rescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.flee||p.recreation.task||p.orders.active!==null||!['moving','working','idle'].includes(p.state)
-      ||h&&c||h&&p.priorities.handle===0||c&&p.priorities.doctor===0)errors.push('Animal work conflicts with another activity.');
+      ||p.animalFeed||h&&c||h&&p.priorities.handle===0||c&&p.priorities.doctor===0)errors.push('Animal work conflicts with another activity.');
     const a=w.wildlife!.animals.find(a=>a.id===task.animalId)!;
     if(p.animalHandling){
       const t=p.animalHandling;

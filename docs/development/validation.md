@@ -1,4 +1,6 @@
-# Validation courante — V278
+# Validation courante — V279
+
+**V279, schéma 214 : [alimentation assistée animale](../gameplay/animal-feeding-v279.md#validation).**170cas/24fichiers dont28nouveaux passent par reprise ciblée ;62sauvegardes publiques et65fichiers conservés. Build/typage et WebGPU avec trois sauvegardes/reprises exactes3010/3077/3151 passent : vraie portion portée puis34riz ingérés par le même mufalo à terre, sans XP médicale ajoutée. Rouges de fixture et d’oracle d’oubli passif conservés ; aucun FPS, guérison finale ou campagne naturelle déduit. Les validations suivantes sont historiques.
 
 **V278, schéma 213 : [arrestation et libération d’un colon](../gameplay/colonist-arrest-v278.md#validation).** 151cas/22fichiers dont34nouveaux passent par reprise ciblée ;62sauvegardes publiques et65fichiers conservés. Build/typage et WebGPU passent avec ordre UI, portage réel et quatre sauvegardes/reprises exactes3036/3127/3222/3271. Retour au contrôle du même colon, faction/possessions conservées ; détention locale sans évasion coloniale, limites explicites. Rouges de fixtures conservés, aucun FPS ou campagne naturelle déduit. Les validations suivantes sont historiques.
 

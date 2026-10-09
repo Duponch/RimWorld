@@ -35,7 +35,7 @@ import { validWorldIncidents } from '../sim/cassandra-world-save.ts';
 import { validWildlifeManhunterState } from '../sim/animal-manhunter-save.ts';
 import { validFlashstorm } from '../sim/flashstorm-save.ts';
 import { validRainElectrical } from '../sim/rain-electric-save.ts';
-import { validVeterinaryCareTransport } from '../sim/domestic-save.ts';
+import { validDomesticTasksTransport } from '../sim/domestic-save.ts';
 import { validArrestRescueTransport } from '../sim/rescue-save.ts';
 import { validPawnPodRescue,validPodRescueTransportBindings } from '../sim/pod-rescue-save.ts';
 import { validWildlifeExitState,validWildlifePredationState } from '../sim/wildlife-save.ts';
@@ -953,7 +953,7 @@ export class SnapshotDecoder {
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
     if(validateHydroponics(next,next.schemaVersion).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
-    if(!validVeterinaryCareTransport(next,next.schemaVersion))return resync('Soin vétérinaire, patient ou médicament incohérent.');
+    if(!validDomesticTasksTransport(next,next.schemaVersion))return resync('Soin ou alimentation vétérinaire, patient ou cargaison incohérents.');
     if(!validArrestRescueTransport(next))return resync('Mandat d’arrestation, portage ou libération locale incohérent.');
     if(!validEmpStructureTransport(next,next.schemaVersion)||!validEmpProductionTransport(next,next.schemaVersion))return resync('État EMP ou production future invalide.');
     for(const pawn of next.pawns)if(!validPrisonerPawnShape(pawn as unknown as Record<string,unknown>,next.schemaVersion,next))return resync('Prisonnier, geôlier ou provenance de recrutement invalide.');

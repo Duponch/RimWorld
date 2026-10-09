@@ -1,6 +1,6 @@
 # Matrice des systèmes et critères de réalisation
 
-**État courant V278, schéma 213.** L’[arrestation d’un colon](colonist-arrest-v278.md) relie S07/S13/S14/S19 : crise admissible, tentative au contact, détention, prise en charge et libération physique sur carte. Évasion de ces colons et culpabilité restent ouvertes ; aucun domaine ni jalon général n’est clôturé. Les états suivants sont historiques.
+**État courant V279, schéma 214.** L’[alimentation assistée animale](animal-feeding-v279.md) relie S07/S13/S18 : réservations, collecte, portage et ingestion des animaux médicalement immobilisés. L’[arrestation/libération V278](colonist-arrest-v278.md) reste livrée dans son périmètre local ; aucun domaine ni jalon général n’est clôturé. Les états suivants sont historiques.
 
 **État courant V277, schéma 212.** Les [soins vétérinaires](veterinary-care-v277.md) relient S07/S13/S18 : quatre troupeaux possédés, médecins, médicaments physiques et récupération après pansement. Alimentation assistée et chirurgie animale restent ouvertes ; aucun domaine ni jalon général n’est clôturé. Les états suivants sont historiques.
 

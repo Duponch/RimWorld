@@ -60,7 +60,7 @@ function tameableAt(w:World,a:WildAnimal,p:Pawn):boolean {
     &&w.tick-(a.taming.lastAttempt??-TAME_COOLDOWN)>=TAME_COOLDOWN;
 }
 export function animalHandlingClaimed(w:World,id:number):boolean {
-  return w.pawns.some(p=>p.animalHandling&&leadingClaimIds(p.animalHandling).includes(id)||p.animalCare?.animalId===id);
+  return w.pawns.some(p=>p.animalHandling&&leadingClaimIds(p.animalHandling).includes(id)||p.animalCare?.animalId===id||p.animalFeed?.animalId===id);
 }
 /** Only physical contact freezes wildlife movement, not a distant reservation. */
 export function animalHandlingHolding(w:World,id:number):boolean {
@@ -138,7 +138,7 @@ export function trainChance(p:Pawn):number {
 function stillValid(w:World,p:Pawn,a:WildAnimal,task:AnimalHandlingTask):boolean {
   return handlerAvailable(p)&&(p.skills.animals?.level??0)>=handlingSkill(a.species)&&animalAvailable(a)&&
     (task.kind==='tame'?!!a.taming?.designated&&!a.domestic:(!!a.domestic&&a.domestic.tameness<MAX_TAMENESS))
-    &&!w.pawns.some(o=>o!==p&&(o.animalHandling&&leadingClaimIds(o.animalHandling).includes(a.id)||o.animalCare?.animalId===a.id));
+    &&!w.pawns.some(o=>o!==p&&(o.animalHandling&&leadingClaimIds(o.animalHandling).includes(a.id)||o.animalCare?.animalId===a.id||o.animalFeed?.animalId===a.id));
 }
 function carried(w:World,p:Pawn,task:AnimalHandlingTask) {
   return w.piles.find(i=>i.id===task.carryPileId&&i.owner.type==='pawn'&&i.owner.pawnId===p.id

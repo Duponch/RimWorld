@@ -1,0 +1,21 @@
+# V279 — alimentation assistée des animaux
+
+Schéma214, ouverture prospective aux cinq espèces déjà possédables : lièvre, cerf, gazelle, mufalo et dromadaire. Un médecin peut apporter une vraie portion à un animal affamé, couché ou à terre, nécessitant du repos médical. Les pansements et l’alimentation restent deux tâches distinctes ; « aucun soin médical » n’interdit pas automatiquement la nourriture.
+
+La chaîne utilise des aliments du régime de l’animal, leurs quantités et leur état réels : réservation, collecte ou fractionnement, transport, contact et ingestion. Admission à38% de la capacité nutritionnelle ou moins ; travail au contact75ticks locaux. Elle ne crée ni repas ni nutrition, ne consomme pas de médicament et ne donne pas d’XP médicale. Les réservations restent communes aux autres transports et interactions avec le troupeau. Le danger et les interruptions conservent leurs priorités ; une portion portée reste une possession physique.
+
+L’inspection Santé affiche l’attente et le soigneur réellement engagé, puis collecte, livraison et alimentation en cours. Aucun nouvel ordre manuel ou réglage alimentaire n’est ajouté. Une portion ne signifie ni blessure guérie ni animal sauvé ; la récupération, l’infection et la malnutrition suivent leurs règles communes.
+
+## Core et adaptations
+
+Le XML installé `Data/Core/Defs/WorkGiverDefs/WorkGivers.xml` déclare `DoctorFeedAnimals`, travail Doctor, Manipulation, priorité40, distinct du pansement priorité50. Lecture fraîche ciblée de `RimWorld.FeedPatientUtility` par ILSpy8.2, stdout seul en6,448s : posture non debout, animal dans un couchage appartenant au joueur, besoin de nourriture, repos médical nécessaire, exclusion de l’abattage désigné et autorisations d’hôte ; faim ≤ seuil Hungry+.02. DLL Core1.6.4871rev590, SHA256 `5cf1b5be399d5b1c9c56ca72c9d35b4ecf307feacf5859d04ac5a1aa5926356a`.
+
+Les références privées historiques `tmp/feeding-reference/RimWorld_WorkGiver_FeedPatient.cs` et `RimWorld_JobDriver_FoodFeedPatient.cs`, déjà sourcées dans [la recherche alimentaire](../research/feeding-reference.md), décrivent le choix selon le patient, les réservations quantitatives, la collecte, le contact et l’ingestion ×1,5. Leur révision n’est pas présentée comme une extraction fraîche de la DLL actuelle.
+
+**Adaptation : aide au sol**, prolongeant le repos vétérinaire V277 ; aucun lit animal n’est livré. Le profil reste limité aux aliments et espèces présents, sans autorisation `allowBringFood` ou désignation d’abattage nouvelle, inventaires de caravanes, distributeur ni nourriture récoltée au passage. La politique médicale garde son sens de pansement/médicament. Horloge locale10Core par tick ; anciennes sauvegardes sans tâche alimentaire conservées.
+
+## Validation
+
+170 cas dans24fichiers passent par reprise ciblée, dont28nouveaux : cinq espèces, seuil et quantités, régime, aliment contaminé, exclusivité soins/conduite/traite/tonte, propriétaires, danger/réveil/décès, cargo sur sol saturé, refus atomiques, ancienne vue et reprise. Les62sauvegardes publiques sont migrées et les65fichiers publics restent inchangés. Groupe initial66,726s :169/170 ; reprise des dix cas alimentaires4,972s après ajout du rafraîchissement dérivé dans la fixture appelée hors tick moteur. Build avec typage8,722s PASS ; code produit inchangé par cette reprise. Journaux privés `tmp/validation-runs/v279-*` conservés.
+
+Chromium matériel WebGPU1440×1000, reprise18,042s PASS : activation Médecin depuis Travail, prélèvement/fractionnement réel, transport puis ingestion au contact. Sauvegardes/rechargements exacts aux ticks3010 (portion portée),3077 (ingestion),3151 (animal nourri).34riz consommés, nutrition.72→2.4 ; politique médicale « aucun soin » conservée. La compétence médicale correspond exactement à son oubli ordinaire, sans XP du nourrissage. Rapport/capture privés `tmp/animal-feeding-v279-native-ZGdd7C/`, erreurs vides, navigateur et port5312 possédés fermés. Premier parcours rouge18,718s conservé sous `tmp/animal-feeding-v279-native-K9AAgA/` : l’oracle demandait une XP inchangée malgré l’oubli des compétences ; reprise distincte avec horloge passive exacte, sans modification produit. Scène préparée puis réellement jouée ; aucune guérison finale, fréquence naturelle, campagne longue ou mesure FPS déduite.

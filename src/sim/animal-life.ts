@@ -46,6 +46,7 @@ export function advanceAnimalLife(world:World):void {
   for(const pawn of world.pawns){
     if(pawn.animalHandling)for(const id of leadingClaimIds(pawn.animalHandling))handled.add(id);
     if(pawn.animalCare)handled.add(pawn.animalCare.animalId);
+    if(pawn.animalFeed)handled.add(pawn.animalFeed.animalId);
   }
   for(const male of residents)if(male.mating)claimed.add(male.mating.femaleId);
   let routeBudget=1;
