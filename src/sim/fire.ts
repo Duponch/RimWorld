@@ -22,7 +22,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 /** Damage/interruption can drop an existing item without replacing its array. */
 function watchOwners(w:World,ids:Set<number>):()=>boolean {
   if(!ids.size)return ()=>false;
-  const piles=w.piles.filter(p=>p.owner.type!=='ground'&&p.owner.type!=='job'&&p.owner.type!=='grave'&&ids.has(p.owner.pawnId)).map(item=>({item,owner:item.owner}));
+  const piles=w.piles.filter(p=>'pawnId' in p.owner&&ids.has(p.owner.pawnId)).map(item=>({item,owner:item.owner}));
   const packs=w.packed.filter(p=>p.owner.type==='pawn'&&ids.has(p.owner.pawnId)).map(item=>({item,owner:item.owner}));
   const pileCount=w.piles.length,packCount=w.packed.length;
   return ()=>w.piles.length!==pileCount||w.packed.length!==packCount||piles.some(p=>p.item.owner!==p.owner)||packs.some(p=>p.item.owner!==p.owner);

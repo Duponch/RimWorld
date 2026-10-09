@@ -1,3 +1,4 @@
+import { validOrbitalTransport,registerOrbitalThingIds } from '../sim/orbital-save.ts';
 import { validDeepDrillingTransport } from '../sim/deep-drilling-save.ts';
 import { validTelevisionState } from '../sim/television-save.ts';
 import { validMiniTurretShape,validateMiniTurrets } from '../sim/mini-turret-save.ts';
@@ -458,6 +459,10 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
   }else if(owner.type==='job'){
     if(!Number.isSafeInteger(owner.jobId)||owner.jobId<1||!world.jobs.some(job=>job.id===owner.jobId)
       ||Object.keys(owner).some(key=>!['type','jobId'].includes(key)))return false;
+  }else if(owner.type==='orbital-ship'){
+    if(world.schemaVersion<216||!Number.isSafeInteger(owner.shipId)||!Array.isArray(world.orbital?.ships)||!world.orbital!.ships.some(s=>s?.id===owner.shipId)||Object.keys(owner).some(k=>!['type','shipId'].includes(k)))return false;
+  }else if(owner.type==='orbital-cargo'){
+    if(world.schemaVersion<216||!Number.isSafeInteger(owner.deliveryId)||!Array.isArray(world.orbital?.pending)||!world.orbital!.pending.some(d=>d?.id===owner.deliveryId)||Object.keys(owner).some(k=>!['type','deliveryId'].includes(k)))return false;
   }else if(owner.type==='grave'){
     if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&s.kind==='grave')
       ||Object.keys(owner).some(key=>!['type','graveId'].includes(key)))return false;
@@ -953,6 +958,7 @@ export class SnapshotDecoder {
       // In particular an absent sparse collection means it was removed.
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
+    if(!validOrbitalTransport(next,next.schemaVersion))return resync('État orbital, propriétaire ou contact invalide.');
     if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');
     if(validateHydroponics(next,next.schemaVersion).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
     if(!validDomesticTasksTransport(next,next.schemaVersion))return resync('Soin ou alimentation vétérinaire, patient ou cargaison incohérents.');
@@ -1033,15 +1039,15 @@ export class SnapshotDecoder {
     // Retained ballistic/Bomb and relationship owners need this additional identity
     // capture. Foreign registries above are already validated; their historical
     // owners reserve the same namespace as the map and cannot become a wave.
-    if(relationships||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
+    if(relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
       const owners=[
         ...next.pawns,...next.structures,...next.jobs,...next.resources,...next.piles,...next.stockpiles,...next.growingZones,
         ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
         ...next.packed.map(p=>p.building),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
       ];
-      const ids=new NumericMembership();
-      for(const owner of owners){if(relationships&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
-      const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&(relationships||mechanicalCorpseIds.has(Number(id))))return false;ids.add(Number(id));return true;};
+      const ids=new NumericMembership(),strictIds=relationships||Object.hasOwn(next,'orbital');
+      for(const owner of owners){if(strictIds&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
+      const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&(strictIds||mechanicalCorpseIds.has(Number(id))))return false;ids.add(Number(id));return true;};
       const addItems=(items:unknown):boolean=>Array.isArray(items)&&items.every(item=>item&&typeof item==='object'&&addId(item.id));
       if(relationships){for(const id of postIds)if(!addId(id))return resync('Identité du comptoir dupliquée dans le registre relationnel.');}
       else for(const id of foreignIds)ids.add(id);
@@ -1062,6 +1068,7 @@ export class SnapshotDecoder {
       for(const actor of next.mechanoids??[])if(validateMechanoidRanged(next,actor,next.schemaVersion,ids).length)return resync('Référence ou phase de tir mécanique invalide.');
       if(validateProjectiles(next,next.schemaVersion,ids).length)return resync('Balle ou canon lanceur invalide.');
       const bombErrors:string[]=[];validateBombWaves(next,bombErrors,ids);if(bombErrors.length)return resync('Vague Bomb ou identité invalide.');
+      if(registerOrbitalThingIds(next,ids).length)return resync('Une identité orbitale possède plusieurs propriétaires.');
       if(validateBombRefuges(next,[],ids).length)return resync('Refuge ou danger Bomb incohérent.');
     }
     // An absent planet also belongs to the accepted epoch. A replacement

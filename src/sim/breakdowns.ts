@@ -8,10 +8,10 @@ import type { BodyAssessment } from './body-capacities.ts';
 import type { Job,Pawn,Structure,StructureKind,World } from './types.ts';
 
 /** Core 1.6.4871: CompBreakdownable, as present on shipped buildings. */
-const KINDS:ReadonlySet<StructureKind>=new Set(['ground-scanner','mini-turret','autodoor','wood-generator','wind-turbine','battery','solar-generator','electric-tailor-bench','machining-table','electric-stove','fabrication-bench','heater','cooler']);
+const KINDS:ReadonlySet<StructureKind>=new Set(['orbital-beacon','comms-console','ground-scanner','mini-turret','autodoor','wood-generator','wind-turbine','battery','solar-generator','electric-tailor-bench','machining-table','electric-stove','fabrication-bench','heater','cooler']);
 /** Unlike Lisière's network role, Core's CompPowerTrader is absent on plants
  * and batteries. They can break even while stopped or disconnected. */
-const REQUIRES_POWER:ReadonlySet<StructureKind>=new Set(['ground-scanner','mini-turret','autodoor','electric-tailor-bench','machining-table','electric-stove','fabrication-bench','heater','cooler']);
+const REQUIRES_POWER:ReadonlySet<StructureKind>=new Set(['orbital-beacon','comms-console','ground-scanner','mini-turret','autodoor','electric-tailor-bench','machining-table','electric-stove','fabrication-bench','heater','cooler']);
 export const BREAKDOWN_CHECK_CORE_TICKS=1041;
 export const BREAKDOWN_MTB_CORE_TICKS=13_680_000;
 export const BREAKDOWN_FIX_TICKS=100;

@@ -1,4 +1,6 @@
-# Validation courante — V280
+# Validation courante — V281
+
+**V281, schéma 216 : [commerce orbital](../gameplay/orbital-trade-v281.md#validation).** 134 cas uniques/19 fichiers dont 46 nouveaux passent par reprises ciblées ; 62 sauvegardes/65 fichiers publics conservés, typage/build final et présentation commune passent. Parcours WebGPU acquis par pilote et continuation de son monde capturé : construction, contact, transaction, capsule, rangement et départ avec six reprises exactes. Rouges et limites restent explicites dans la note unique ; aucune campagne naturelle ou mesure FPS annoncée. Les validations suivantes sont historiques.
 
 **V280, schéma 215 : [scanner et forage profond](../gameplay/deep-drilling-v280.md#validation).** 159cas/26fichiers dont41nouveaux passent par reprises ciblées ;62sauvegardes publiques et65fichiers conservés. Build/typage et WebGPU passent avec construction, découverte, extraction/épuisement, repositionnement du même appareil puis roche ; sept sauvegardes/reprises exactes3041/3221/3657/4066/4137/4181/4620. Gardes services/tir consolidés, lecteurs pré17 corrigés, rouges de fixtures et pilote conservés. Scène préparée puis jouée ; aucune campagne de six jours ou mesure FPS déduite. Les validations suivantes sont historiques.
 

@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V281 — commerce orbital ; schéma 216.**
+La [boucle orbitale](gameplay/orbital-trade-v281.md) apporte une autre voie d’acquisition : deux profils marchands, balises et argent couvert, appel à la console, cargo indépendant du départ et rangement. Le catalogue orbital demeure réduit ; autonomie fonctionnelle, contrôles regroupés et push après chaque commit maintenus. Les états suivants sont historiques.
+
 **Avancement fonctionnel V280 — scanner de sol et forage profond ; schéma 215.**
 La [chaîne d’extraction profonde](gameplay/deep-drilling-v280.md) raccorde deux recherches, énergie, travail réel, grille découverte et piles transportables de quatre matières. Uranium, jade et infestations restent hors périmètre ; contrôles ciblés et parcours WebGPU avec sept reprises exactes passent. L’[alimentation assistée V279](gameplay/animal-feeding-v279.md) et l’[arrestation/libération V278](gameplay/colonist-arrest-v278.md) restent disponibles. Autonomie, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
 

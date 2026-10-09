@@ -16,7 +16,7 @@ export function deconstructionAvailable(world: World, job: Job, exceptPawn?: num
   const id = job.deconstruction?.structureId;
   if (!id || !deconstructionTarget(world, job)) return false;
   for (const p of world.pawns) if (p.id !== exceptPawn) {
-    if (p.deepWork?.structureId===id || p.research?.stationId===id || p.rescue?.bedId===id || p.cooking?.stationId === id || p.haul?.destination.type === 'fuel' && p.haul.destination.structureId === id
+    if (p.orbitalTrade?.consoleId===id || p.deepWork?.structureId===id || p.research?.stationId===id || p.rescue?.bedId===id || p.cooking?.stationId === id || p.haul?.destination.type === 'fuel' && p.haul.destination.structureId === id
       || p.need?.kind === 'sleep' && p.need.bedId === id || p.need?.kind === 'eat' && p.need.dining?.seatId === id
       || p.recreation.task?.buildingId === id || p.recreation.task?.seatId === id) return false;
     for (const order of p.orders.queue) if (typeof order !== 'number') {

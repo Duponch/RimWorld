@@ -45,7 +45,7 @@ const nextInterval=(world:World,pawn:Pawn):number=>{
   return APPAREL_POLICY_INTERVAL.min+value%(APPAREL_POLICY_INTERVAL.max-APPAREL_POLICY_INTERVAL.min+1);
 };
 const stored=(world:World,x:number,z:number,pile:MaterialPile):boolean=>world.stockpiles.some(s=>s.x===x&&s.z===z&&storageAccepts(s,pile));
-const busy=(pawn:Pawn):boolean=>pawn.state!=='idle'||pawn.orders.active!==null||pawn.orders.queue.length>0||pawn.jobId!==null||!!(pawn.haul||pawn.cooking||pawn.need||pawn.recreation.task||pawn.research||pawn.hunting||pawn.burial||pawn.cleaning||pawn.trade||pawn.firefighting||pawn.ward||pawn.feed||pawn.tend||pawn.rescue||pawn.equipmentTask||pawn.draft||pawn.flee||pawn.mental?.crisis);
+const busy=(pawn:Pawn):boolean=>pawn.state!=='idle'||pawn.orders.active!==null||pawn.orders.queue.length>0||pawn.jobId!==null||!!(pawn.haul||pawn.cooking||pawn.need||pawn.recreation.task||pawn.research||pawn.hunting||pawn.burial||pawn.cleaning||pawn.orbitalTrade||pawn.trade||pawn.firefighting||pawn.ward||pawn.feed||pawn.tend||pawn.rescue||pawn.equipmentTask||pawn.draft||pawn.flee||pawn.mental?.crisis);
 
 /** Attempts one physical policy action after urgent needs and remembered weapon
  * recovery. A due check stays due while the pawn is busy. */

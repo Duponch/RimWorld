@@ -27,7 +27,7 @@ export function deepWorkReason(world:World,pawn:Pawn,s:Structure,accepted=false)
   if(s.kind!=='deep-drill'&&s.kind!=='ground-scanner'||!world.structures.includes(s))return 'Installation introuvable.';
   if(!isColonist(pawn)||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||pawn.draft||pawn.shooting||pawn.burning||pawn.flee||pawn.mental?.crisis||pawn.interruptedCargo
     ||pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0||carrierOf(world,pawn.id)||medicalWorkRefusal(pawn))return 'Opérateur indisponible.';
-  if(pawn.need||pawn.orders.active!==null||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.research||pawn.hunting||pawn.animalHandling||pawn.animalCare||pawn.animalFeed
+  if(pawn.orbitalTrade||pawn.need||pawn.orders.active!==null||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.research||pawn.hunting||pawn.animalHandling||pawn.animalCare||pawn.animalFeed
     ||pawn.rescue||pawn.tend||pawn.surgery||pawn.feed||pawn.ward||pawn.equipmentTask||pawn.burial||pawn.cleaning||pawn.firefighting||pawn.recreation.task
     ||world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id))return 'Cet opérateur a une autre activité.';
   if(workPriority(pawn,s.kind==='deep-drill'?'mine':'research')<=0)return 'Travail désactivé.';

@@ -25,6 +25,8 @@ export function meleeApproach(pawn:Cell,target:Cell|undefined):Cell {
 }
 
 export function pawnWorkPose(pawn:Pawn,job:Job|undefined,stationKind?:StructureKind):number {
+  // Contact opens a basket immediately; it is no timed crafting operation.
+  if(pawn.orbitalTrade)return 0;
   if(pawn.state!=='working'||pawn.stun)return 0;
   if(job?.kind==='mine')return WORK_POSE.mine;
   if(job?.kind==='chop'||job?.kind==='cut'||job?.clearance)return WORK_POSE.chop;

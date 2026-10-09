@@ -6,6 +6,8 @@ import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
+  'orbital-beacon':[75,.5,false],
+  'comms-console':[250,.6,true],
   'deep-drill':[300,.5,true],
   'ground-scanner':[200,.5,false],
   'vitals-monitor':[100,.7,true],

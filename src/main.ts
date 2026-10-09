@@ -16,6 +16,7 @@ import { floraDefinition } from './sim/biome-flora';
 import { updateBurialControls } from './ui/burial-controls';
 import { updateHygieneControls } from './ui/hygiene-controls';
 import { isBuildableFloor } from './sim/flooring';
+import { createOrbitalTradeUI } from './ui/orbital-trade-panel';
 import { createTradeUI } from './ui/trade-panel';
 import { climateDateLabel,climateControls } from './ui/climate-inspection';
 import { WEATHER } from './sim/weather-definitions';
@@ -148,9 +149,9 @@ import { miniTurretView,turretSeconds } from './sim/mini-turret-presentation';
 
 import { updateRecreationInspection } from './ui/recreation-inspection';
 import { gatherSpotControls, updateGatherSpotControls } from './ui/gather-spot-controls';
-const jobLabels: Record<JobKind, string> = { 'deep-drill':'Construction de foreuse profonde','ground-scanner':'Construction du scanner souterrain', 'vitals-monitor':'Construction du moniteur vital', 'drug-lab':'Construction du laboratoire de chimie', 'hydroponics-basin':'Construction du bac hydroponique', 'mini-turret':'Construction de mini-tourelle automatique', 'tube-television':'Construction de télévision cathodique', sandbags: 'sacs de sable', fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', bed: 'Construction du lit', 'hospital-bed':'Construction du lit d’hôpital', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
+const jobLabels: Record<JobKind, string> = { 'orbital-beacon':'Construction de la balise orbitale','comms-console':'Construction de la console de communication', 'deep-drill':'Construction de foreuse profonde','ground-scanner':'Construction du scanner souterrain', 'vitals-monitor':'Construction du moniteur vital', 'drug-lab':'Construction du laboratoire de chimie', 'hydroponics-basin':'Construction du bac hydroponique', 'mini-turret':'Construction de mini-tourelle automatique', 'tube-television':'Construction de télévision cathodique', sandbags: 'sacs de sable', fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', bed: 'Construction du lit', 'hospital-bed':'Construction du lit d’hôpital', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
-const rotatableTools=new Set<Tool>(['deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','tube-television','art-bench','machining-table','hi-tech-research-bench','fabrication-bench','grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bed','hospital-bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
+const rotatableTools=new Set<Tool>(['comms-console','deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','tube-television','art-bench','machining-table','hi-tech-research-bench','fabrication-bench','grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bed','hospital-bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
 const resourceLabels = { 'wild-plant':'Plante sauvage', healroot:'Racine médicinale', potato:'Plant de pommes de terre',corn:'Plant de maïs', tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz', cotton: 'Cotonnier' };
 const params = new URLSearchParams(location.search);
 const diagnosticStart = params.has('scenario');
@@ -727,6 +728,8 @@ function rebuildInspector() {
     el('cell-deconstruct').onclick=()=>{if(selectedCell)void attempt(()=>client.command({type:'designate',kind:'deconstruct',...selectedCell!}));};
     el('cell-cancel').onclick=()=>{if(selectedCell)void attempt(()=>client.command({type:'cancel',...selectedCell!}));};
     if(selectedObject?.kind==='structure'){
+      const console=snapshot?.structures.find(s=>s.id===selectedObject!.id&&s.kind==='comms-console');
+      if(console){const button=document.createElement('button');button.dataset.orbitalOpen=String(console.id);button.textContent='Appeler un vaisseau';button.onclick=()=>orbitalUI.open(console.id);panel.querySelector('.cell-actions')?.append(button);}
       doorControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
       penControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
       gatherSpotControls(panel,(structureId,enabled)=>attempt(async()=>{await client.command({type:'gather-spot',structureId,enabled});renderState();}));
@@ -795,6 +798,7 @@ function actionLabel(pawn: Pawn, carriedPatients: ReadonlySet<number>) {
   if(pawn.cooking)return queryPawnStatus(snapshot!,pawn).reason;
   if (pawn.need) return queryPawnStatus(snapshot!, pawn).reason;
   if(pawn.recreation.task)return queryPawnStatus(snapshot!,pawn).reason;
+  if(pawn.orbitalTrade)return pawn.orbitalTrade.phase==='ready'?'Commerce orbital · au contact de la console':'Commerce orbital · rejoint la console';
   if(pawn.visitor)return pawn.visitor.phase==='leaving'?'Visiteur · quitte la carte':pawn.visitor.phase==='arriving'?'Visiteur · rejoint la colonie':pawn.visitor.role==='trader'?'Marchand · séjourne dans la colonie':'Visiteur · séjourne dans la colonie';
   if(pawn.haul?.destination.type==='fuel'||pawn.haul?.destination.type==='turret')return queryPawnStatus(snapshot!,pawn).reason;
   if (pawn.haul) {
@@ -869,7 +873,7 @@ function renderState() {
   for (const pile of world.piles) {
     const owner = pile.owner;
     if (owner.type === 'job') totals.delivered += pile.quantity;
-    const colony = owner.type === 'ground' || (owner.type !== 'grave' && owner.type !== 'job' && colonistIds.has(owner.pawnId));
+    const colony = owner.type === 'ground' || ('pawnId' in owner && colonistIds.has(owner.pawnId));
     if (!colony) continue;
     if (pile.kind === 'blocks') totals.blocks += pile.quantity;
     if (pile.kind === 'medicine') totals.medicine += pile.quantity;
@@ -1147,7 +1151,7 @@ function renderState() {
     lastStatusAlertsSignature=alertSignature;
     el('status-alerts').replaceChildren(...alertRows.map(row=>{const item=document.createElement('p');item.textContent=row.text;if(row.kind)item.dataset.alert=row.kind;return item;}));
   }
-  economyUI.update(world);arrivalUI.update(world);questUI.update(world);raidUI.update(world);heatwaveUI.update(world);flashstormUI.update(world);solarFlareUI.update(world);weatherConditionUI.update(world);shortCircuitUI.update(world);tradeUI.update(world);
+  economyUI.update(world);arrivalUI.update(world);questUI.update(world);raidUI.update(world);heatwaveUI.update(world);flashstormUI.update(world);solarFlareUI.update(world);weatherConditionUI.update(world);shortCircuitUI.update(world);tradeUI.update(world);orbitalUI.update(world);
 }
 const heatwaveUI=createHeatwaveUI(command=>client.command(command));
 const flashstormUI=createFlashstormUI();
@@ -1156,6 +1160,7 @@ const weatherConditionUI=createWeatherConditionUI();
 const shortCircuitUI=createShortCircuitUI();
 const economyUI=createColonyEconomyUI(el('colony-economy'),command=>client.command(command));
 const raidUI=createRaidUI(command=>client.command(command),id=>renderer?.focusPawn(id));
+const orbitalUI=createOrbitalTradeUI(command=>client.command(command),()=>client.setSpeed(0),id=>{const console=snapshot?.structures.find(s=>s.id===id);if(console)renderer?.focusCell(console);},async()=>{if(currentSpeed===0)await client.setSpeed(1);});
 const tradeUI=createTradeUI(command=>client.command(command),()=>client.setSpeed(0),id=>renderer?.focusPawn(id),async()=>{if(currentSpeed===0)await client.setSpeed(1);});
 const arrivalUI=createArrivalUI(command=>client.command(command));
 const questUI=createQuestUI(command=>client.command(command));
@@ -1282,6 +1287,7 @@ window.addEventListener('keyup',event=>{
 window.addEventListener('blur',()=>{altInspectorHeld=false;updateMapCellDetails(true);});
 document.addEventListener('keydown', event => {
   if(event.defaultPrevented || frontMenu.isOpen() || !snapshot || replacingWorld || graphicsFault || simulationStopped || waitingRequests.size>0)return;
+  if(document.getElementById('orbital-dialog') instanceof HTMLDialogElement&&(document.getElementById('orbital-dialog') as HTMLDialogElement).open&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();void attempt(save);return;}
   if (document.querySelector('dialog[open]')) return;
   const worldControl=event.target instanceof Element&&!!event.target.closest('#world-panel');
   if(worldControl&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();void attempt(save);return;}

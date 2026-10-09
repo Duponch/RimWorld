@@ -96,7 +96,7 @@ test('queue loses an access, clear-orders preserves designations, construction c
   expect(queryOrderOptions(fresh,actor.id,c!,true)[0]!.enabled).toBe(false);expect(queryOrderOptions(fresh,actor.id,c!)[0]!.enabled).toBe(true);
   expect(applyCommand(fresh,{type:'order-job',pawnId:actor.id,jobId:c!.id,queue:false}).ok).toBe(true);expect(actor.orders).toEqual({active:c!.id,queue:[]});expect(b!.reservedBy).toBeNull();
   applyCommand(fresh,{type:'clear-orders',pawnId:actor.id});
-  const raw=JSON.parse(serializeWorld(fresh));withoutPredatorFoodPolicies(raw);(raw.schemaVersion=16,withoutPawnSkills(raw));withoutV37LightWork(raw);for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;for(const a of raw.pawns)delete a.orders;
+  const raw=JSON.parse(serializeWorld(fresh));delete raw.deepResources;delete raw.orbital;withoutPredatorFoodPolicies(raw);(raw.schemaVersion=16,withoutPawnSkills(raw));withoutV37LightWork(raw);for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;for(const a of raw.pawns)delete a.orders;
   const migrated=deserializeWorld(JSON.stringify(raw));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect(migrated.pawns[0]!.orders).toEqual({active:null,queue:[]});
   raw.pawns[0].orders={active:null,queue:[]};expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/version 16/);
   const corrupt=JSON.parse(serializeWorld(migrated));corrupt.pawns[0].orders.queue=[fresh.jobs[0]!.id,fresh.jobs[0]!.id];expect(()=>deserializeWorld(JSON.stringify(corrupt))).toThrow(/order/);

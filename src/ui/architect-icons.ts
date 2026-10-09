@@ -22,12 +22,14 @@ const SECOND_ATLAS = [
   'ignore-roof', 'remove-growing', 'stockpile', 'home', 'remove-home', 'remove-stockpile',
 ] as const;
 
-export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed','vitals-monitor']:id==='steel-tile'?[id,'sterile-tile']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'deep-drill','ground-scanner','drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
+export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed','vitals-monitor']:id==='steel-tile'?[id,'sterile-tile']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'orbital-beacon','comms-console','deep-drill','ground-scanner','drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
 
 // Small original vector additions share the existing Architecte icon installer.
 // They do not change the historical two-atlas coordinates.
 const vectorIcon=(body:string):string=>`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><g fill="none" stroke="#365647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`)}")`;
 const CUSTOM_ICONS:Readonly<Record<string,string>>=Object.freeze({
+  'orbital-beacon':vectorIcon('<path d="M7 31h26M12 24h16M20 24v10M8 16l12 8 12-8M20 16V6M13 6l7 5 7-5"/><circle cx="20" cy="4" r="2" fill="#b8cc9e"/>'),
+  'comms-console':vectorIcon('<path d="M4 30h32M7 30v6M33 30v6M7 8h26v15H7zM11 12h18v7H11zM9 26h22"/><path d="M15 15h10" stroke="#63a995"/>'),
   'deep-drill':vectorIcon('<path d="M7 34h26M10 30V8h20v22M15 9l10 7-10 7 10 7M20 3v5M20 30v7"/><path d="M9 24H5v9h7M28 24h7v9h-7" fill="#a9b9ac"/>'),
   'ground-scanner':vectorIcon('<path d="M5 32h30M9 32V18h22v14M20 18V7M8 6l24 8M11 5l-2 7M20 7l-2 8M29 10l-2 8M13 23h14v6H13z"/><path d="M15 26h10" stroke="#63a995"/>'),
   'vitals-monitor':vectorIcon('<rect x="5" y="6" width="30" height="20" rx="2" fill="#b6c9c4"/><path d="M9 17h5l3-7 4 12 3-5h7M20 27v7M12 35h16"/><path d="M10 17h4l3-7 4 12 3-5h6" stroke="#63a995"/>'),

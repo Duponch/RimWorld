@@ -6,6 +6,7 @@ import type { Cell, Pawn, World } from './types.ts';
  * occupancy: a passer-by can cross any of these cells without claiming its use.
  * Sleeping/collapsing on the floor does not acquire furniture or a work spot. */
 export function serviceCell(pawn: Pawn): Cell | null {
+  if(pawn.orbitalTrade)return pawn.orbitalTrade.spot;
   if(pawn.deepWork)return pawn.deepWork.spot;
   if(pawn.surgery)return pawn.surgery.spot;
   if(pawn.animalCare)return pawn.animalCare.spot;

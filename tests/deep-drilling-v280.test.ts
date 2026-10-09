@@ -19,7 +19,7 @@ const quantity=(w:World,item:string)=>w.piles.filter(p=>p.item===item).reduce((n
 
 test('adoption is prospective and deposits are finite, sorted, unique and selected within exactly21 cells',()=>{
   const {w,d}=camp(),rng=w.rng;delete w.deepResources;w.schemaVersion=214 as World['schemaVersion'];adoptDeepResources(w);expect(w.deepResources).toBeUndefined();
-  w.schemaVersion=215;adoptDeepResources(w);expect(w.deepResources!.cells).toEqual([]);expect(w.rng).toBe(rng);
+  w.schemaVersion=215 as World['schemaVersion'];adoptDeepResources(w);expect(w.deepResources!.cells).toEqual([]);expect(w.rng).toBe(rng);
   const cells=[{x:d.x+2,z:d.z+1},{x:d.x-2,z:d.z},{x:d.x,z:d.z}];
   expect(addDeepDeposit(w,'gold',[...cells,cells[0]!])).toBe(3);expect(addDeepDeposit(w,'steel',[d])).toBe(0);
   expect(w.deepResources!.cells.map(c=>c.index)).toEqual(w.deepResources!.cells.map(c=>c.index).sort((a,b)=>a-b));

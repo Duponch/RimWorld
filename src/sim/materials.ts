@@ -17,11 +17,18 @@ import { isCookingOrder } from './order-types.ts';
 import { haulReservations } from './haul-reservations.ts';
 import type { Cell, HaulDestination, MaterialKind, MaterialOwner, MaterialPile, Stock, World } from './types.ts';
 
+/** Foreign owners must already exist. Metadata references are never authority
+ * to mint off-map stacks; these piles do not contribute to colony stock. */
+function validOrbitalOwner(world:World,owner:MaterialOwner):boolean {
+  return owner.type==='orbital-ship'?world.schemaVersion>=216&&Array.isArray(world.orbital?.ships)&&world.orbital!.ships.some(s=>s?.id===owner.shipId)
+    :owner.type==='orbital-cargo'?world.schemaVersion>=216&&Array.isArray(world.orbital?.pending)&&world.orbital!.pending.some(d=>d?.id===owner.deliveryId):true;
+}
+
 export function pileCell(world: World, pile: MaterialPile): Cell | null {
   const owner = pile.owner;
   if (owner.type === 'ground') return { x: owner.x, z: owner.z };
   if (owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory'){const pawn=world.pawns.find(pawn=>pawn.id===owner.pawnId);return pawn?pawnContentsLocation(world,pawn)?.cell??null:null;}
-  if(owner.type==='grave')return null;
+  if(owner.type==='grave'||owner.type==='orbital-ship'||owner.type==='orbital-cargo')return null;
   return world.jobs.find(job => job.id === owner.jobId) ?? null;
 }
 export function deliveredStock(world: World, jobId: number): Stock {
@@ -45,9 +52,12 @@ export function refreshStock(world: World): void {
 const sameOwner = (a: MaterialOwner, b: MaterialOwner): boolean => a.type === b.type
   && (a.type === 'ground' && b.type === 'ground' ? a.x === b.x && a.z === b.z
     : (a.type==='pawn'||a.type==='equipment'||a.type==='apparel'||a.type==='inventory')&&(b.type==='pawn'||b.type==='equipment'||b.type==='apparel'||b.type==='inventory') ? a.pawnId === b.pawnId
+      : a.type==='orbital-ship'&&b.type==='orbital-ship'?a.shipId===b.shipId
+      : a.type==='orbital-cargo'&&b.type==='orbital-cargo'?a.deliveryId===b.deliveryId
       : a.type === 'job' && b.type === 'job' && a.jobId === b.jobId);
 
 export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind)): boolean {
+  if(!validOrbitalOwner(world,owner))return false;
   if((kind==='corpse'||kind==='mech-corpse'||kind==='weapon'||kind==='apparel')&&owner.type==='job')return false;
   if(owner.type==='apparel'&&(kind!=='apparel'||quantity!==1||!isApparelItem(item)||world.piles.some(p=>p.owner.type==='apparel'&&p.owner.pawnId===owner.pawnId&&!apparelCompatible(APPAREL[p.item as keyof typeof APPAREL].coverage,APPAREL[item].coverage))))return false;
   if(owner.type==='equipment'&&(kind!=='weapon'||quantity!==1||world.piles.some(p=>p.owner.type==='equipment'&&p.owner.pawnId===owner.pawnId)))return false;
@@ -94,7 +104,7 @@ export function addGroundMaterial(world: World, kind: MaterialKind, quantity: nu
 }
 /** Move the existing stack, merging only when possible. No allocation or identity budget needed. */
 export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):boolean {
-  if(!world.piles.includes(pile))return false;
+  if(!world.piles.includes(pile)||!validOrbitalOwner(world,owner))return false;
   if((pile.kind==='corpse'||pile.kind==='mech-corpse')&&owner.type!=='ground'&&owner.type!=='pawn')return false;
   const carrier=pile.owner.type==='pawn'?pile.owner.pawnId:undefined;
   if(owner.type==='ground'&&groundCapacity(world,owner,pile.item,carrier)<pile.quantity)return false;
@@ -189,4 +199,4 @@ export function groundQuantity(world: World, cell: Cell): number {
 }
 
 /** Colony HUD excludes possessions of neutral or hostile people. */
-export function colonyPile(world:World,pile:MaterialPile):boolean {const o=pile.owner;return o.type==='ground'||o.type!=='job'&&o.type!=='grave'&&o.type!=='inventory'&&world.pawns.some(p=>p.id===o.pawnId&&isColonist(p));}
+export function colonyPile(world:World,pile:MaterialPile):boolean {const o=pile.owner;return o.type==='ground'||(o.type==='pawn'||o.type==='equipment'||o.type==='apparel')&&world.pawns.some(p=>p.id===o.pawnId&&isColonist(p));}

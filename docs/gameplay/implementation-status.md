@@ -1,5 +1,8 @@
 # Ce qui est jouable et ce qui manque
 
+**V281 — commerce orbital ; schéma 216.**
+La [chaîne commerciale](orbital-trade-v281.md) permet de construire console/balises, appeler un vaisseau avec un négociateur, vendre des biens couverts, recevoir les achats et les ranger. Gros et Exotique couvrent les matières et consommables documentés ; animaux, équipements et sculptures restent hors de ce canal. Les états suivants sont historiques.
+
 **V280 — scanner de sol et forage profond ; schéma 215.**
 La [boucle d’extraction](deep-drilling-v280.md) relie recherches, machines alimentées, chercheur, mineur et piles physiques de quatre matières. La vue souterraine montre les seules réserves découvertes restantes ; uranium, jade et infestations sont absents. Contrôles ciblés et parcours WebGPU passent. L’[alimentation assistée V279](animal-feeding-v279.md) et l’[arrestation/libération V278](colonist-arrest-v278.md) restent disponibles ; les états suivants sont historiques.
 

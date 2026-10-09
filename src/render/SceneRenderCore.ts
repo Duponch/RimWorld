@@ -38,6 +38,7 @@ import { GrowingZoneLayer } from './GrowingZoneLayer';
 import { buildTerrain, copyTerrainPaintRect, createTerrainPaintTexture, patchTerrainPaintTexture, singleTerrainPaintPatchRect, syncTerrainPaintUvs, TERRAIN_PAINT_PIXELS_PER_CELL, type TerrainPaintPatchRect } from './TerrainLayer';
 import { PaintedWater } from './PaintedWater';
 import { WeatherCloudLayer } from './WeatherCloudLayer';
+import { OrbitalDeliveryLayer } from './OrbitalDeliveryLayer';
 import { PodRescueLayer } from './PodRescueLayer';
 import { WeatherPrecipitationLayer } from './WeatherPrecipitationLayer';
 import { weatherRainRate, weatherSnowRate } from '../sim/weather';
@@ -131,6 +132,7 @@ export class SceneRenderCore {
   protected readonly turretTops=new MiniTurretLayer();
   protected turretPreviewSignature='';
   protected turretPreviewVisible=false;
+  protected readonly orbitalDelivery = new OrbitalDeliveryLayer(this.environmentLighting.configure);
   protected readonly podRescue = new PodRescueLayer(this.environmentLighting.configure);
 
   readonly backend: string;
@@ -316,7 +318,7 @@ export class SceneRenderCore {
     selectionGeometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(9),3));
     this.objectSelection = new THREE.Mesh(selectionGeometry,new THREE.MeshBasicMaterial({color:0xfff5d6,side:THREE.DoubleSide,depthTest:false,depthWrite:false}));
     this.objectSelection.visible=false;this.objectSelection.frustumCulled=false;this.objectSelection.renderOrder=20;
-    this.scene.add(this.hover,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group,this.podRescue.group);
+    this.scene.add(this.hover,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group,this.podRescue.group,this.orbitalDelivery.group);
     } catch (error) {
       try { this.dispose(); } catch { /* Static create also closes the device. */ }
       throw error;
@@ -476,7 +478,7 @@ export class SceneRenderCore {
     this.actionVfx.update(world,this.pawns.feedbackSource!);
     this.brawlCloud.update(world,this.pawns.feedbackSource!);
     this.structureVfx.adopt(world,newMap);
-    this.podRescue.adopt(world);
+    this.podRescue.adopt(world);this.orbitalDelivery.adopt(world);
     this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses,resourceFrame);
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses,this.pawns);
@@ -580,7 +582,7 @@ export class SceneRenderCore {
     this.fires.setTexturesEnabled(enabled);
     this.clouds.setTexturesEnabled(enabled);
     this.grass?.setTexturesEnabled(enabled);
-    this.podRescue.setTexturesEnabled(enabled);
+    this.podRescue.setTexturesEnabled(enabled);this.orbitalDelivery.setTexturesEnabled(enabled);
     this.landscape.needsUpdate=true;
   }
   protected refreshTerrainPaint(world:World):void {
@@ -691,6 +693,7 @@ export class SceneRenderCore {
     const restoreFilth=this.hygiene.filth.prepareForCompile();
     const restoreClouds=this.clouds.prepareForCompile();
     const restorePodRescue=this.podRescue.prepareForCompile();
+    const restoreOrbitalDelivery=this.orbitalDelivery.prepareForCompile();
     const restorePrecipitation=this.precipitation.prepareForCompile();
     const restoreBoxes=this.boxes.prepareEmptyShadows();
     const restoreArea=this.areaPreview.prepareForCompile();
@@ -719,7 +722,7 @@ export class SceneRenderCore {
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
       restoreBoxes();restoreArea();restoreDeep();
       restoreOverview();
-      restorePodRescue();
+      restorePodRescue();restoreOrbitalDelivery();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
       this.invalidatePausedShadow();
@@ -906,7 +909,7 @@ export class SceneRenderCore {
     const cells = new Map<string, PileBundle>();
     for (const pile of world.piles) {
       if(pile.humanCorpse||pile.mechCorpse||pile.owner.type==='grave')continue;
-      if (pile.owner.type === 'pawn'||pile.owner.type==='equipment'||pile.owner.type==='apparel'||pile.owner.type==='inventory') continue;
+      if (pile.owner.type !== 'ground'&&pile.owner.type!=='job') continue;
       const quantity=pile.quantity-(hidden.get(pile.id)??0);
       if(quantity<=0)continue;
       const job = pile.owner.type === 'job' ? jobById.get(pile.owner.jobId) : undefined;
@@ -989,7 +992,7 @@ export class SceneRenderCore {
     }
     this.resources.presentChop(skyTick/TICKS_PER_SECOND);
     this.doors.tick.value=skyTick;this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
-    this.actionVfx.present(skyTick);this.brawlCloud.present(skyTick);this.structureVfx.present(skyTick);this.podRescue.present(skyTick);
+    this.actionVfx.present(skyTick);this.brawlCloud.present(skyTick);this.structureVfx.present(skyTick);this.podRescue.present(skyTick);this.orbitalDelivery.present(skyTick);
     if(this.texturesEnabled)this.paintedWater.present(skyTick/TICKS_PER_SECOND);
     this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
     if(this.world)this.clouds.present({seed:this.world.seed,tick:skyTick,weather:this.world.weather,camera:this.camera,
@@ -1145,7 +1148,7 @@ export class SceneRenderCore {
     this.actionVfx.dispose();
     this.brawlCloud.dispose();
     this.structureVfx.dispose();
-    this.podRescue.dispose();
+    this.podRescue.dispose();this.orbitalDelivery.dispose();
     this.hostPort.disposeLabels();
     this.overview.dispose();
     this.deepResources.dispose();

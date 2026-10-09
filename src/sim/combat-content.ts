@@ -5,7 +5,7 @@ import type { Resource,ResourceKind,StructureKind } from './types.ts';
 
 /** Logical fill, not model height, navigation or the final cover probability.
  * Sources, version limits and decorative-stone decision: combat-world-reference. */
-export const STRUCTURE_SHOT_FILL:Readonly<Record<StructureKind,number>>=Object.freeze({'deep-drill':.5,'ground-scanner':.4,'drug-lab':.5,'hydroponics-basin':.3,'mini-turret':.4,'tube-television':.4,sandbags:.55,fence:.15,'fence-gate':.15,'pen-marker':.1,'art-bench':.5,'fabrication-bench':.5,'hi-tech-research-bench':.5,'multi-analyzer':.5,'small-sculpture':.35,'large-sculpture':.5,grave:0,heater:.4,'wind-turbine':.5,
+export const STRUCTURE_SHOT_FILL:Readonly<Record<StructureKind,number>>=Object.freeze({'orbital-beacon':.15,'comms-console':.5,'deep-drill':.5,'ground-scanner':.4,'drug-lab':.5,'hydroponics-basin':.3,'mini-turret':.4,'tube-television':.4,sandbags:.55,fence:.15,'fence-gate':.15,'pen-marker':.1,'art-bench':.5,'fabrication-bench':.5,'hi-tech-research-bench':.5,'multi-analyzer':.5,'small-sculpture':.35,'large-sculpture':.5,grave:0,heater:.4,'wind-turbine':.5,
   'vitals-monitor':.2,'power-conduit':0,'power-switch':0,battery:.4,'solar-generator':.5,
   'fueled-stove':.5,'electric-stove':.5,'butcher-table':.5,
   'butcher-spot':0,

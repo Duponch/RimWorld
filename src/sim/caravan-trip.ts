@@ -39,7 +39,7 @@ function acuteCondition(p:Pawn):boolean {
 }
 function activeTask(p:Pawn):boolean {
   return p.jobId!==null||p.haul!==null||p.cooking!==null||p.need!==null||p.orders.active!==null||p.orders.queue.length>0
-    ||!!(p.animalHandling||p.animalCare||p.animalFeed||p.burial||p.cleaning||p.trade||p.firefighting||p.ward||p.heatRefuge||p.research||p.hunting||p.feed||p.tend||p.surgery||p.surgeryRequest||p.rescue||p.equipmentTask||p.recreation.task||p.priorityWork);
+    ||!!(p.animalHandling||p.animalCare||p.animalFeed||p.burial||p.cleaning||p.orbitalTrade||p.trade||p.firefighting||p.ward||p.heatRefuge||p.research||p.hunting||p.feed||p.tend||p.surgery||p.surgeryRequest||p.rescue||p.equipmentTask||p.recreation.task||p.priorityWork);
 }
 function unstable(p:Pawn,w:World):boolean {
   return !!(p.prisoner||p.visitor||p.raid||p.draft||p.mental?.crisis||p.social?.fight||p.burning||p.flee||p.tactics||p.melee||p.shooting?.order||p.shooting?.stance

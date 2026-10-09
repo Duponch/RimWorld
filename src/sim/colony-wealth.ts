@@ -29,7 +29,7 @@ const colonyPawn = (p: Pawn | undefined): boolean => !!p && factionOf(p) === 'co
 function pileOnPlayerMap(pile: MaterialPile, pawns: ReadonlyMap<number, Pawn>): boolean {
   const owner = pile.owner;
   if (owner.type === 'ground' || owner.type === 'job' || owner.type === 'grave') return true;
-  return colonyPawn(pawns.get(owner.pawnId));
+  return 'pawnId' in owner&&colonyPawn(pawns.get(owner.pawnId));
 }
 
 const MATERIAL_VALUE: Readonly<Partial<Record<ItemId, number>>> = Object.freeze({

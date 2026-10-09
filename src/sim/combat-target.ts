@@ -38,7 +38,7 @@ export const hostileCandidates=(w:World,p:Pawn,animals:readonly WildAnimal[]=w.w
 
 export const retaliationPermission=(p:Pawn):boolean=>isColonist(p)&&!p.prisoner&&!p.draft&&!p.mental?.crisis&&!violentWorkRefusal(p)
   &&p.hostilityResponse==='attack'&&p.orders.active===null&&!p.orders.queue.length&&!p.priorityWork&&!p.equipmentTask
-  &&!p.trade&&!p.cleaning?.forced&&!p.firefighting?.forced;
+  &&!p.orbitalTrade&&!p.trade&&!p.cleaning?.forced&&!p.firefighting?.forced;
 /** A real attempt establishes this short-lived threat even between allies.
  * It is distinct from faction hostility and cannot turn Flee/Ignore into Attack. */
 export function meleeThreatTarget(w:World,p:Pawn|Mechanoid,core=w.tick*10,grid?:ShotGrid):LivingTarget|undefined {

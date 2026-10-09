@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V281, schéma 216 : [commerce orbital](gameplay/orbital-trade-v281.md).** Construction, énergie, appel physique, panier, livraison et transport forment une boucle économique. Règles et preuves dans cette note unique ; les états suivants sont historiques.
+
 **V280, schéma 215 : [scanner de sol et forage profond](gameplay/deep-drilling-v280.md).** Recherche, énergie, opérateurs, réserves découvertes et extraction physique forment une chaîne commune. Contrôles ciblés et parcours WebGPU passent ; preuves et limites dans cette note unique. L’[alimentation assistée V279](gameplay/animal-feeding-v279.md) et la [boucle humaine V278](gameplay/colonist-arrest-v278.md) restent disponibles ; les états suivants sont historiques.
 
 **V277, schéma 212 : [soins vétérinaires des troupeaux](gameplay/veterinary-care-v277.md).** Cinq espèces possédées partagent médecin, médicaments physiques, pansements et récupération ; alimentation assistée et chirurgie animale restent ouvertes. Les états suivants sont historiques.

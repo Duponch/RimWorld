@@ -62,6 +62,8 @@ else {
   const owner = item.owner;
   if (owner.type === 'ground' ? !coord(owner) || Object.keys(owner).some(key => !['type', 'x', 'z'].includes(key))
     : (owner.type === 'pawn'||version>=52&&owner.type==='equipment'||version>=63&&owner.type==='apparel'||version>=88&&owner.type==='inventory') ? !integer(owner.pawnId, 1) || Object.keys(owner).some(key => !['type', 'pawnId'].includes(key))
+      : version>=216&&owner.type==='orbital-ship' ? !integer(owner.shipId,1,world.nextId-1)||Object.keys(owner).some(key=>!['type','shipId'].includes(key))
+      : version>=216&&owner.type==='orbital-cargo' ? !integer(owner.deliveryId,1,world.nextId-1)||Object.keys(owner).some(key=>!['type','deliveryId'].includes(key))
       : version>=89&&owner.type==='grave' ? !integer(owner.graveId,1)||Object.keys(owner).some(key=>!['type','graveId'].includes(key)) : owner.type === 'job' ? !integer(owner.jobId, 1) || Object.keys(owner).some(key => !['type', 'jobId'].includes(key)) : true) errors.push('Invalid material owner.');
 }
  return errors;
