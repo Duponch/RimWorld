@@ -1,5 +1,8 @@
 # Lisière
 
+**V277 — soins vétérinaires des troupeaux ; schéma 212.**
+Cerfs, gazelles, mufalos et dromadaires possédés reçoivent les soins physiques déjà disponibles pour les lièvres : médecin, médicaments portés, pansements et repos de récupération. [Règles et validation](docs/gameplay/veterinary-care-v277.md). L’alimentation assistée animale reste ouverte ; les états suivants sont historiques.
+
 **V276 — soutien hospitalier ; schéma 211.**
 Moniteur vital alimenté et sols stériles relient recherche, construction, propreté et soins réels. Le moniteur soutient les lits hospitaliers adjacents ; les dalles consomment acier et argent et se retirent sans perte de propriété. [Règles, adaptations et validation](docs/gameplay/hospital-support-v276.md). Les états suivants sont historiques.
 

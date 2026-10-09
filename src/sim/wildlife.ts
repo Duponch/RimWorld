@@ -18,6 +18,7 @@ import type { Cell,Resource,World } from './types.ts';
 import { animalSpecies,faunaBiome,selectBiomeSpecies,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
 import { animalHandlingHolding } from './animal-handling.ts';
 import { animalCareInProgress,animalCareTargets } from './animal-care.ts';
+import { veterinaryCareSpeciesAllowed,veterinaryNeedsRest } from './veterinary-rules.ts';
 import { adultAgeTicks, advanceAnimalLife, animalFoodPerDay, animalLifeStage, animalNutritionMax } from './animal-life.ts';
 import { atMapEdge,cancelAnimalExit,exitSuppressed,finishAnimalExits,stopExitTargeting,WILDLIFE_EXIT_FOOD_CHECK } from './wildlife-exit.ts';
 import { animalPreyCandidates,animalPredationTarget,reconcileAnimalPredation,cancelAnimalPredation } from './wildlife-predation.ts';
@@ -166,11 +167,11 @@ export function advanceWildlife(world:World):void {
     if(a.state==='dead')continue;
     if(a.health)bleedFilth(world,a,medicalBleed(a.health),a.state==='downed'||a.state==='sleeping',.4);
     const body=animalBody(a);
-    // Local posture adaptation for mobile injured pets: allow a veterinary
-    // visit, but wake at the pre-existing 45% food-search threshold. Core's
-    // tend work requires a non-standing patient; it gives no 25% food rule.
+    // Local ground-rest adaptation: keep the existing food/danger priorities.
+    // V277 also retains convalescence after tending, as Core medical rest does.
     const medicalRest=!!a.domestic&&a.domestic.care!=='none'&&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike
-      &&animalCareTargets(a).length>0;
+      &&(animalCareTargets(a).length>0||world.schemaVersion>=212&&veterinaryCareSpeciesAllowed(a.species,world.schemaVersion)
+        &&!!a.health&&veterinaryNeedsRest(a.health));
     const nutrition=animalNutritionMax(a);
     const wantFood=species.predator?.3:.45,urgent=species.predator?.12:.18,hungry=species.predator?.24:.36;
     a.food=Math.max(0,a.food-animalFoodPerDay(a)/6000*malnutritionModifiers(a.health?.malnutrition).hungerFactor*(a.food<nutrition*urgent?.25:a.food<nutrition*hungry?.5:1));

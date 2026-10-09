@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V277, schéma 212 : [soins vétérinaires des troupeaux](gameplay/veterinary-care-v277.md).** Cinq espèces possédées partagent médecin, médicaments physiques, pansements et récupération ; alimentation assistée et chirurgie animale restent ouvertes. Les états suivants sont historiques.
+
 **V276, schéma 211 : [soutien hospitalier](gameplay/hospital-support-v276.md).** Moniteur vital, dalles stériles et deux recherches prolongent les pipelines de construction, énergie, propreté et soins. Les états suivants sont historiques.
 
 **V275, schéma 210 : [prothèses en bois](gameplay/wooden-prostheses-v275.md).** Trois prothèses et six sites relient pertes anatomiques, collecte physique, chirurgie, capacités et reprise. Les états suivants sont historiques.

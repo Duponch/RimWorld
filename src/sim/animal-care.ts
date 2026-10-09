@@ -11,6 +11,9 @@ import { healthRandom } from './health.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { reservedSource } from './materials.ts';
+import { medicineClaims } from './medicine-logistics.ts';
+import { veterinaryCareSpeciesAllowed } from './veterinary-rules.ts';
+import { animalSpecies } from './animal-species.ts';
 import { MEDICAL_CARE,MEDICINES,isMedicine,tendQuality,tendXp,type MedicalCare,type MedicineItem } from './medicine-rules.ts';
 import { copyPileCondition } from './pile-condition.ts';
 import { adjacent,routeCost,routeToCell,routeToJob,workNeighbours,type Reachability } from './pathfinding.ts';
@@ -31,8 +34,9 @@ export type AnimalCareContext=NeedContext&{candidates:()=>Reachability|null;bloc
 /** The ordinary patient must belong to the colony and stay physically down.
  * The anatomy comes from the animal record, never a surrogate human Pawn. */
 function patientReady(w:World,a:WildAnimal,doctor?:Pawn):boolean {
-  return !a.manhunter&&a.species==='hare'&&!!a.domestic&&a.domestic.care!=='none'&&
+  return !a.manhunter&&veterinaryCareSpeciesAllowed(a.species,w.schemaVersion)&&!!a.domestic&&a.domestic.care!=='none'&&
     (a.state==='downed'||a.state==='sleeping')&&(!a.motion||a.motion.end<=w.tick)&&
+    (w.schemaVersion<212||!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.stun&&!a.health?.foodPoisoning?.vomit)&&
     !!a.health&&!a.health.death&&animalCareTargets(a).length>0&&
     !w.pawns.some(p=>p!==doctor&&(p.animalCare?.animalId===a.id||p.animalHandling&&leadingClaimIds(p.animalHandling).includes(a.id)));
 }
@@ -55,10 +59,6 @@ export function animalCareWanted(w:World,doctor:Pawn):boolean {
 }
 function medicineAllowed(care:MedicalCare,item:MedicineItem):boolean {
   return care==='best'||care==='industrial'&&MEDICINES[item].potency<=1||care==='herbal'&&MEDICINES[item].potency<=.6;
-}
-function medicineClaims(w:World,id:number):number {
-  return w.pawns.reduce((n,p)=>n+Number(p.tend?.phase==='pickup'&&p.tend.medicine?.sourcePileId===id)
-    +Number(p.animalCare?.phase==='pickup'&&p.animalCare.medicine?.sourcePileId===id),0);
 }
 /** A reservation changes only the proposed task. Source stock stays physical. */
 function reserveMedicine(w:World,doctor:Pawn,a:WildAnimal,task:AnimalCareTask,reach:Reachability):Cell[]|undefined {
@@ -94,7 +94,8 @@ export function startAnimalCare(doctor:Pawn,proposal:AnimalCareProposal):void {
   doctor.animalCare=proposal.task;doctor.path=proposal.path;doctor.state='moving';doctor.planCooldown=0;
 }
 export function animalCareInProgress(w:World,a:WildAnimal):boolean {
-  if(a.manhunter||a.species!=='hare'||!a.domestic||a.state!=='downed'&&a.state!=='sleeping'||a.burning||a.flee||a.threat||a.retaliation)return false;
+  if(a.manhunter||!veterinaryCareSpeciesAllowed(a.species,w.schemaVersion)||!a.domestic||a.state!=='downed'&&a.state!=='sleeping'||a.burning||a.flee||a.threat||a.retaliation)return false;
+  if(w.schemaVersion>=212&&(a.strike||a.stun||a.health?.foodPoisoning?.vomit||a.health?.death||a.domestic.care==='none'||a.motion&&a.motion.end>w.tick))return false;
   return w.pawns.some(p=>p.animalCare?.animalId===a.id&&p.animalCare.phase==='treat'&&doctorReady(p)&&
     p.moveCooldown===0&&(!p.motion||p.motion.end<=w.tick)&&!p.path.length&&
     p.x===p.animalCare.spot.x&&p.z===p.animalCare.spot.z&&adjacent(p,a));
@@ -152,15 +153,15 @@ export function processAnimalCare(w:World,doctor:Pawn,ctx:AnimalCareContext,ligh
     else if(target.part!==undefined)tendMissingPart(record,target.part);
   }
   consumeMedicine(w,task);reconcileAnimalHealth(w,patient);
-  ctx.event(`${doctor.name} a soigné ${patient.species==='hare'?'le lièvre':'un animal'} ${patient.id} ${item?`avec ${ITEM_DEFINITIONS[item].label}`:'sans médicament'}.`);
+  ctx.event(`${doctor.name} a soigné ${patient.species==='hare'?'le lièvre':animalSpecies(patient.species).label} ${patient.id} ${item?`avec ${ITEM_DEFINITIONS[item].label}`:'sans médicament'}.`);
   task.progress=0;delete task.duration;
   if(!animalCareTargets(patient).length||item&&!task.medicine){releaseCare(w,doctor);return;}
   task.phase='approach';doctor.state='moving';
 }
 export function applyAnimalCarePolicy(w:World,command:{animalId:number;care:MedicalCare}):CommandResult {
   const animal=w.wildlife?.animals.find(a=>a.id===command.animalId);
-  if(!animal||animal.species!=='hare'||!animal.domestic||!Object.hasOwn(MEDICAL_CARE,command.care))
-    return {ok:false,code:'invalid-command',reason:'Lièvre possédé ou politique médicale introuvable.'};
+  if(!animal||!veterinaryCareSpeciesAllowed(animal.species,w.schemaVersion)||!animal.domestic||!Object.hasOwn(MEDICAL_CARE,command.care))
+    return {ok:false,code:'invalid-command',reason:w.schemaVersion>=212?'Animal possédé admissible ou politique médicale introuvable.':'Lièvre possédé ou politique médicale introuvable.'};
   if(animal.domestic.care===command.care)return {ok:true};
   animal.domestic.care=command.care;
   for(const doctor of w.pawns)if(doctor.animalCare?.animalId===animal.id)interruptWork(w,doctor);

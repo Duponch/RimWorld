@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V277 — soins des troupeaux ; schéma 212.**
+La [boucle vétérinaire](gameplay/veterinary-care-v277.md) ouvre les soins physiques aux quatre troupeaux déjà possédés, avec repos après pansement et réservations communes à la chirurgie humaine. Alimentation assistée animale et autres espèces restent ouvertes. Autonomie, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **Avancement fonctionnel V276 — soutien hospitalier ; schéma 211.**
 Le [moniteur vital et les sols stériles](gameplay/hospital-support-v276.md) complètent l’hôpital : acier/argent/composants livrés, énergie, propreté et bonus depuis le lit réellement utilisé. Greffes et industrie prothétique restent ouvertes. Autonomie, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
 

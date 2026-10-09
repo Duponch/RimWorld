@@ -14,6 +14,10 @@ import { animalPenStatus } from './pen-status';
 import { animalActivity } from './animal-activity';
 import { ANIMAL_PRODUCTS, productFullness, productKind } from '../sim/animal-products';
 import { animalBodySize,animalFoodPerDay,animalLifeStage,animalNutritionMax,gestationTicks } from '../sim/animal-life';
+import { animalCareTargets } from '../sim/animal-care';
+import { veterinaryCareSpeciesAllowed,veterinaryNeedsRest } from '../sim/veterinary-rules';
+import { ITEM_DEFINITIONS } from '../sim/items';
+import type { WildAnimal } from '../sim/wildlife-state';
 
 export type AnimalInspectorTab = 'info' | 'health';
 export interface AnimalInspectorOptions {
@@ -35,6 +39,7 @@ export interface AnimalInspectorView {
   tameReason:string;
   domestic:boolean;
   care?:MedicalCare;
+  careAvailable:boolean;
   dead:boolean;
   species: readonly string[];
   needs: readonly string[];
@@ -45,6 +50,33 @@ const poisonStage = { none: 'fin de récupération', initial: 'phase initiale', 
 const infectionLabel = { minor: 'mineure', major: 'majeure', extreme: 'extrême', critical: 'critique' } as const;
 const percent = (value: number): string => `${Math.round(value * 100)} %`;
 const stageLabel={baby:'Petit',juvenile:'Jeune',adult:'Adulte'} as const;
+
+/** Describes published clinical ownership; it does not reserve a doctor,
+ * inspect reachable medicine or turn a policy into a manual treatment order. */
+function veterinaryLines(world:World,animal:WildAnimal):string[] {
+  if(!animal.domestic)return [];
+  if(animal.state==='dead'||animal.health?.death)return ['Soins vétérinaires : animal décédé.'];
+  if(!veterinaryCareSpeciesAllowed(animal.species,world.schemaVersion))return ['Soins vétérinaires : indisponibles pour cette espèce dans cette sauvegarde.'];
+  const lines=[`Politique médicale : ${MEDICAL_CARE[animal.domestic.care]}`];
+  if(animal.domestic.care==='none')lines.push('Soins vétérinaires : interdits par la politique médicale.');
+  else if(animal.manhunter||animal.burning||animal.flee||animal.threat||animal.retaliation)lines.push('Soins vétérinaires : en attente de sécurité ; le danger reste prioritaire.');
+  else {
+    const doctor=world.pawns.find(p=>p.animalCare?.animalId===animal.id),task=doctor?.animalCare;
+    if(doctor&&task){
+      const medicine=task.medicine?ITEM_DEFINITIONS[task.medicine.item].label:undefined;
+      lines.push(`Soigneur : ${doctor.name}`);
+      lines.push(task.phase==='pickup'?`Soins vétérinaires : collecte de ${medicine??'médicaments'}.`:
+        task.phase==='approach'?`Soins vétérinaires : rejoint l’animal${medicine?` avec ${medicine}`:' pour des soins sans médicament'}.`:
+        `Soins vétérinaires : pansement en cours${task.duration?` · ${percent(Math.min(1,task.progress/task.duration))}`:''}${medicine?` · ${medicine}`:' · sans médicament'}.`);
+    }else if(animalCareTargets(animal).length){
+      const lying=(animal.state==='sleeping'||animal.state==='downed')&&(!animal.motion||animal.motion.end<=world.tick);
+      lines.push(lying?'Soins vétérinaires : pansements nécessaires ; en attente d’un médecin disponible et d’un accès sûr.':'Soins vétérinaires : pansements nécessaires ; l’animal doit dormir ou être à terre, sans déplacement engagé.');
+    }else if(animal.health&&veterinaryNeedsRest(animal.health))lines.push('Récupération : plaies déjà pansées ou immunité en cours ; repos au sol selon la faim et le danger.');
+    else lines.push('Soins vétérinaires : aucun pansement nécessaire actuellement.');
+  }
+  lines.push('Soins au sol : aucun bonus de lit hospitalier ou de moniteur vital.','Alimentation assistée : indisponible ; les pansements ne nourrissent pas un animal immobilisé.');
+  return lines;
+}
 
 /** One selected-animal lookup; all other values come from that animal or its species definition. */
 export function animalInspectorView(world: World, animalId: number): AnimalInspectorView | null {
@@ -96,6 +128,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
     tameReason:handling,
     domestic:!!animal.domestic,
     care:animal.domestic?.care,
+    careAvailable:!!animal.domestic&&veterinaryCareSpeciesAllowed(animal.species,world.schemaVersion),
     dead:animal.state==='dead',
     species: [
       `Espèce : ${species.label}`,
@@ -115,7 +148,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
       `Nourriture : ${percent(Math.max(0, Math.min(1, animal.food / animalNutritionMax(animal))))}`,
       `Repos : ${percent(Math.max(0, Math.min(1, animal.rest)))}`,
     ],
-    health:animal.domestic&&!penStatus?[`Statut : domestique libre`,...condition]:condition,
+    health:[...(animal.domestic&&!penStatus?['Statut : domestique libre']:[]),...veterinaryLines(world,animal),...condition],
   };
 }
 
@@ -219,7 +252,7 @@ export function updateAnimalInspector(root: HTMLElement, world: World, animalId:
   const care=root.querySelector<HTMLSelectElement>('[data-animal-care]')!;
   root.querySelector<HTMLElement>('[data-animal-care-wrap]')!.hidden=!view.domestic;
   if(view.care)care.value=view.care;
-  care.disabled=root.dataset.animalCareAvailable!=='true'||view.dead;
+  care.disabled=root.dataset.animalCareAvailable!=='true'||view.dead||!view.careAvailable;
   renderSections(root, 'info', [
     { title: 'Espèce', lines: view.species },
     { title: 'Besoins', lines: view.needs },

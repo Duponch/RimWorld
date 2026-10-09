@@ -5,7 +5,9 @@ import { ANIMAL_PRODUCTS, productKind } from './animal-products.ts';
 import { isColonist } from './affiliation.ts';
 import { isMedicine, MEDICAL_CARE } from './medicine-rules.ts';
 import { reservedSource } from './materials.ts';
-import type { World } from './types.ts';
+import { medicineClaims } from './medicine-logistics.ts';
+import { veterinaryCareSpeciesAllowed } from './veterinary-rules.ts';
+import type { Pawn,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 
 const obj=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -15,17 +17,51 @@ const keys=(v:Record<string,unknown>,required:string[],optional:string[]=[])=>re
 const productForVersion=(a:WildAnimal,version:number)=>version>=121?productKind(a):a.species==='muffalo'?'shear':a.species==='dromedary'&&a.sex==='female'?'milk':undefined;
 const productReadyForVersion=(a:WildAnimal,version:number)=>!!a.domestic&&!!productForVersion(a,version)&&(a.domestic.productFullness??0)>=1;
 
+function validDomesticOwner(w:World,a:WildAnimal,version:number):boolean {
+  const d:unknown=a.domestic;
+  return version>=106&&(a.species==='hare'||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=120?['lastTraining','penMarkerId','productFullness']:version>=119?['lastTraining','penMarkerId']:['lastTraining'])
+    &&int(d.since,0,w.tick)&&typeof d.care==='string'&&Object.hasOwn(MEDICAL_CARE,d.care)&&int(d.tameness,1,5)
+    &&int(d.nextDecay,0,w.tick+45000)&&(d.lastTraining===undefined||int(d.lastTraining,d.since,w.tick))
+    &&(version>=120?(productForVersion(a,version)?finite(d.productFullness,0,1):d.productFullness===undefined):d.productFullness===undefined)
+    &&(d.penMarkerId===undefined||version>=119&&livestock(a)&&int(d.penMarkerId,1,w.nextId-1)&&!!w.structures.find(s=>s.id===d.penMarkerId&&s.kind==='pen-marker'&&s.pen?.accepted.includes(a.species)));
+}
+
+/** Persistent intent may outlive transient patient availability until reconcile.
+ * Validate only the care task and its actual owners, without a pen/world scan. */
+function validVeterinaryTask(w:World,p:Pawn,version:number):boolean {
+  try {
+  const c:unknown=p.animalCare;
+  if(c===undefined)return true;
+  if(!obj(c)||!keys(c,['animalId','spot','phase','progress'],['medicine','duration'])||!int(c.animalId,1,w.nextId-1))return false;
+  const a=w.wildlife?.animals.find(a=>a.id===c.animalId);
+  if(!a||!veterinaryCareSpeciesAllowed(a.species,version)||!validDomesticOwner(w,a,version)
+    ||!obj(c.spot)||!keys(c.spot,['x','z'])||!int(c.spot.x,0,w.width-1)||!int(c.spot.z,0,w.height-1)
+    ||!['pickup','approach','treat'].includes(String(c.phase))||!finite(c.progress,0)
+    ||(c.phase==='treat'?!finite(c.duration,1,6000)||Number(c.progress)>=Number(c.duration):c.duration!==undefined||c.progress!==0))return false;
+  if(!isColonist(p)||p.prisoner||p.visitor||p.draft||p.mental?.crisis||p.interruptedCargo||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.flee||p.recreation.task||p.orders.active!==null||p.animalHandling||p.priorities.doctor===0||!['moving','working','idle'].includes(p.state))return false;
+  if(w.pawns.some(other=>other!==p&&(other.animalCare?.animalId===a.id||other.animalHandling&&leadingClaimIds(other.animalHandling).includes(a.id))))return false;
+  const m=c.medicine;
+  const held=w.piles.filter(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
+  if(m===undefined)return c.phase!=='pickup'&&!held.length;
+  if(!obj(m)||!keys(m,['item','sourcePileId','carryPileId','quantity'])||!isMedicine(m.item as never)||!int(m.sourcePileId,1,w.nextId-1)
+    ||!(m.carryPileId===null||int(m.carryPileId,1,w.nextId-1))||!int(m.quantity,1,25))return false;
+  const pile=w.piles.find(i=>i.id===(c.phase==='pickup'?m.sourcePileId:m.carryPileId));
+  return !!pile&&pile.item===m.item&&(c.phase==='pickup'?m.carryPileId===null&&!held.length&&pile.owner.type==='ground'&&reservedSource(w,pile.id)<=pile.quantity
+    &&(version<212||medicineClaims(w,pile.id)<=10):held.length===1&&pile.owner.type==='pawn'&&pile.owner.pawnId===p.id&&pile.quantity===m.quantity);
+  }catch{return false;}
+}
+
+export function validVeterinaryCareTransport(w:World,version:number):boolean {
+  try{return w.pawns.every(p=>validVeterinaryTask(w,p,version));}catch{return false;}
+}
+
 /** Shape and ownership remain separate from transient availability: an animal
  * can be harmed between accepting an order and its next simulation step. */
 export function validateDomesticAnimals(w:World,version:number):string[] {
   const errors:string[]=[],claimed=new Set<number>();
   for(const a of w.wildlife?.animals??[]){
     const d:unknown=a.domestic,t:unknown=a.taming;
-    if(d!==undefined&&!(version>=106&&(a.species==='hare'||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=120?['lastTraining','penMarkerId','productFullness']:version>=119?['lastTraining','penMarkerId']:['lastTraining'])
-      &&int(d.since,0,w.tick)&&typeof d.care==='string'&&Object.hasOwn(MEDICAL_CARE,d.care)&&int(d.tameness,1,5)
-      &&int(d.nextDecay,0,w.tick+45000)&&(d.lastTraining===undefined||int(d.lastTraining,d.since,w.tick))
-      &&(version>=120?(productForVersion(a,version)?finite(d.productFullness,0,1):d.productFullness===undefined):d.productFullness===undefined)
-      &&(d.penMarkerId===undefined||version>=119&&livestock(a)&&int(d.penMarkerId,1,w.nextId-1)&&!!w.structures.find(s=>s.id===d.penMarkerId&&s.kind==='pen-marker'&&s.pen?.accepted.includes(a.species)))))errors.push('Invalid domestic animal.');
+    if(d!==undefined&&!validDomesticOwner(w,a,version))errors.push('Invalid domestic animal.');
     if(t!==undefined&&!(version>=106&&(a.species==='hare'||version>=119&&canTameSpecies(a.species))&&obj(t)&&keys(t,['designated'],['lastAttempt'])&&typeof t.designated==='boolean'
       &&(t.lastAttempt===undefined||int(t.lastAttempt,0,w.tick))&&(!a.domestic||!t.designated)))errors.push('Invalid taming designation.');
     if(a.domestic&&w.hunting?.targets.includes(a.id))errors.push('Domestic animal is designated for hunting.');
@@ -55,11 +91,7 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
       &&int(h.sourcePileId,1,w.nextId-1)&&(h.carryPileId===null||int(h.carryPileId,1,w.nextId-1))&&int(h.quantity,0,12)
       &&int(h.step,0,5)&&int(h.progress,0,handlingStepDuration(h as unknown as import('./domestic-state.ts').AnimalHandlingTask,w.wildlife!.animals.find(a=>a.id===h.animalId)!.species)-1)
       &&(h.phase==='interact'||h.progress===0&&(h.phase==='approach'||h.step===0)))) {errors.push('Invalid animal handling task.');continue;}
-    if(c!==undefined&&!(obj(c)&&keys(c,['animalId','spot','phase','progress'],['medicine','duration'])&&base(c)&&w.wildlife?.animals.some(a=>a.id===c.animalId&&a.species==='hare')
-      &&obj(c.spot)&&keys(c.spot,['x','z'])&&int(c.spot.x,0,w.width-1)&&int(c.spot.z,0,w.height-1)
-      &&['pickup','approach','treat'].includes(String(c.phase))&&finite(c.progress,0)
-      &&(c.phase==='treat'?finite(c.duration,1,6000):c.duration===undefined)
-      &&(c.phase==='treat'?Number(c.progress)<Number(c.duration):c.progress===0))) {errors.push('Invalid animal care task.');continue;}
+    if(c!==undefined&&!validVeterinaryTask(w,p,version)) {errors.push('Invalid animal care task.');continue;}
     const task=p.animalHandling??p.animalCare!;
     for(const id of p.animalHandling?new Set(leadingClaimIds(p.animalHandling)):[task.animalId]){
       if(claimed.has(id))errors.push('Animal is reserved twice.');claimed.add(id);
@@ -92,16 +124,6 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
       if(t.quantity!==(t.step<3?units*2:t.step<5?units:0))errors.push('Animal food does not match interaction stage.');
       if(t.quantity===0?(t.step!==5||t.carryPileId!==null):!pile||!['berries','rice','potato','corn','agave-fruit'].includes(pile.item)
         ||(t.phase==='pickup'?t.carryPileId!==null||t.quantity!==units*2||pile.owner.type!=='ground'||reservedSource(w,pile.id)>pile.quantity:pile.owner.type!=='pawn'||pile.owner.pawnId!==p.id||pile.quantity!==t.quantity))errors.push('Animal food ownership mismatch.');
-    }
-    if(p.animalCare){
-      if(!a.domestic)errors.push('Veterinary patient is not owned.');
-      const t=p.animalCare,m:unknown=t.medicine;
-      if(m!==undefined){
-        if(!obj(m)||!keys(m,['item','sourcePileId','carryPileId','quantity'])||!isMedicine(m.item as never)||!int(m.sourcePileId,1,w.nextId-1)
-          ||!(m.carryPileId===null||int(m.carryPileId,1,w.nextId-1))||!int(m.quantity,1,25)){errors.push('Invalid veterinary medicine.');continue;}
-        const pile=w.piles.find(i=>i.id===(t.phase==='pickup'?m.sourcePileId:m.carryPileId));
-        if(!pile||pile.item!==m.item||(t.phase==='pickup'?m.carryPileId!==null||pile.owner.type!=='ground'||reservedSource(w,pile.id)>pile.quantity:pile.owner.type!=='pawn'||pile.owner.pawnId!==p.id||pile.quantity!==m.quantity))errors.push('Veterinary medicine ownership mismatch.');
-      }else if(t.phase==='pickup')errors.push('Veterinary pickup has no medicine.');
     }
   }
   return errors;

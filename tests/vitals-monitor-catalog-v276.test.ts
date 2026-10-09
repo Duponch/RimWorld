@@ -54,7 +54,7 @@ test('two prospective research projects preserve their own costs and fail withou
   expect(STERILE_MATERIALS_RESEARCH_COST).toBe(600_000_000);expect(VITALS_MONITOR_RESEARCH_COST).toBe(2_500_000_000);
   const w=deconstructionCamp(0);w.schemaVersion=210 as World['schemaVersion'];const old=structuredClone(w);
   expect(selectResearch(w,'sterile-materials').ok).toBe(false);expect(selectResearch(w,'vitals-monitor').ok).toBe(false);expect(w).toEqual(old);
-  w.schemaVersion=211;expect(selectResearch(w,'sterile-materials').ok).toBe(true);
+  w.schemaVersion=211 as World['schemaVersion'];expect(selectResearch(w,'sterile-materials').ok).toBe(true);
   expect(projectProgress(w.research!,'sterile-materials')).toEqual({points:0});expect(w.research?.vitalsMonitor).toBeUndefined();
 });
 

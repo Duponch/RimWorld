@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V277, schéma 212 : [soins vétérinaires](../gameplay/veterinary-care-v277.md).** Un prédicat clinique commun ouvre prospectivement les quatre troupeaux au pipeline existant ; anatomies et médicaments restent physiques. Les réservations comptent les chirurgies humaines et excluent les conduites concurrentes. Fichiers et Decoder partagent la garde du mandat et de ses propriétaires ; migration neutre, aucun nouvel état médical inventé. Les états suivants sont historiques.
+
 **V276, schéma 211 : [soutien hospitalier](../gameplay/hospital-support-v276.md).** Liens moniteur/lit dérivés des empreintes et de la visibilité, puis courant relu à chaque frontière clinique. Aucun propriétaire ni bonus clinique persisté. Le sol réemploie le mandat multi-ingrédients et préflight conjointement ses deux remboursements ; migration neutre, lecteurs fichiers/Decoder communs. Les états suivants sont historiques.
 
 **V275, schéma 210 : [prothèses en bois](../gameplay/wooden-prostheses-v275.md).** Le dossier médical porte les racines artificielles ; l’évaluation anatomique substitue leur efficacité une fois et les descendants naturels restent absents. La chirurgie commune ajoute un mandat d’ingrédients physiquement possédés et réservés, puis les consomme au contact avant le travail. Gardes fichiers/Decoder et horloges réelles restent communes ; migration neutre. Les états suivants sont historiques.

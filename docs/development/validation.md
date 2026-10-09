@@ -1,4 +1,6 @@
-# Validation courante — V276
+# Validation courante — V277
+
+**V277, schéma 212 : [soins vétérinaires des troupeaux](../gameplay/veterinary-care-v277.md#validation).** 125cas/19fichiers dont29nouveaux passent par reprise ciblée ;62sauvegardes publiques et65fichiers préservés. Typage/build et visite WebGPU passent, avec médicament réellement porté et consommé, trois sauvegardes/reprises exactes3010/3077/3130. Rouges de fixture et typage conservés ; aucune campagne naturelle ou mesure FPS déduite. Les validations suivantes sont historiques.
 
 **V276, schéma 211 : [soutien hospitalier](../gameplay/hospital-support-v276.md#validation).** 152cas/24fichiers dont32nouveaux passent par reprises ciblées ;62sauvegardes publiques et65fichiers conservés. Chromium WebGPU joue construction, collecte et chirurgie avec quatre sauvegardes/reprises exactes3038/3937/4076/4169, erreurs vides. Désignation du moniteur et compatibilité EMP pré25 corrigées ; rouges initiaux conservés. Aucun FPS ou campagne longue déduit. Les validations suivantes sont historiques.
 
