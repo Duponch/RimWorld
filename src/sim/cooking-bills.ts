@@ -9,6 +9,7 @@ import { footprintCells, footprintContains } from './definitions.ts';
 import { isCookingOrder } from './order-types.ts';
 import { storageAccepts } from './storage-filters.ts';
 import type { CookingBill, BillSettings } from './cooking-types.ts';
+import type {StagingGeometryReader} from './staging-validation.ts';
 import { SCHEMA_VERSION,type Cell,type Structure,type World } from './types.ts';
 
 export const COOK_TICKS=60; // 300 reference work / 10 local ticks Ã— campfire factor 2.
@@ -65,35 +66,35 @@ export function cookingCellReserved(world:World,cell:Cell):boolean {
   return world.pawns.some(p=>p.cooking&&(p.cooking.spot.x===cell.x&&p.cooking.spot.z===cell.z
     ||p.cooking.ingredients.some(i=>i.stage!=='placed'&&i.cell.x===cell.x&&i.cell.z===cell.z)));
 }
-export function cookingPlaceFree(world:World,cell:Cell):boolean {
+export function cookingPlaceFree(world:World,cell:Cell,geometry?:StagingGeometryReader):boolean {
   return (world.schemaVersion<22||canStandAt(world,cell))&&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
-    &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)
+    &&!(geometry?geometry.hasResource(cell):world.resources.some(r=>r.x===cell.x&&r.z===cell.z))
     &&![...world.jobs,...world.structures].some(s=>(s.kind==='wall'||s.kind==='cooler'||s.kind==='table')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
 }
 
 export const ingredientWithinReach=(cell:Cell,spot:Cell,station?:Structure):boolean=>station&&isFoodWorkstation(station.kind)?footprintContains(station,cell):Math.abs(cell.x-spot.x)+Math.abs(cell.z-spot.z)<=1;
 /** New food benches stage on their three physical surface cells. Historical
  * stations keep their existing adjacent staging and continuation unchanged. */
-export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:ProductionRecipe,station?:Structure):boolean {
+export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:ProductionRecipe,station?:Structure,geometry?:StagingGeometryReader):boolean {
   if(station&&isFoodWorkstation(station.kind))return ingredientWithinReach(cell,spot,station)
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
-    &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)&&groundOccupancyAllows(world,cell);
-  if(recipe==='cook-survival-meal'||recipe==='simple-meal'||recipe==='cook-simple-meal-bulk'||recipe==='fine-meal'||recipe==='cook-fine-meal-bulk'||recipe==='vegetarian-fine-meal'||recipe==='cook-vegetarian-fine-meal-bulk'||recipe==='carnivore-fine-meal'||recipe==='cook-carnivore-fine-meal-bulk'||recipe==='lavish-meal'||recipe==='cook-lavish-meal-bulk'||recipe==='vegetarian-lavish-meal'||recipe==='cook-vegetarian-lavish-meal-bulk'||recipe==='cook-carnivore-lavish-meal'||recipe==='cook-carnivore-lavish-meal-bulk')return cookingPlaceFree(world,cell);
+    &&!(geometry?geometry.hasResource(cell):world.resources.some(r=>r.x===cell.x&&r.z===cell.z))&&(geometry?geometry.groundAllows(cell):groundOccupancyAllows(world,cell));
+  if(recipe==='cook-survival-meal'||recipe==='simple-meal'||recipe==='cook-simple-meal-bulk'||recipe==='fine-meal'||recipe==='cook-fine-meal-bulk'||recipe==='vegetarian-fine-meal'||recipe==='cook-vegetarian-fine-meal-bulk'||recipe==='carnivore-fine-meal'||recipe==='cook-carnivore-fine-meal-bulk'||recipe==='lavish-meal'||recipe==='cook-lavish-meal-bulk'||recipe==='vegetarian-lavish-meal'||recipe==='cook-vegetarian-lavish-meal-bulk'||recipe==='cook-carnivore-lavish-meal'||recipe==='cook-carnivore-lavish-meal-bulk')return cookingPlaceFree(world,cell,geometry);
   return (cell.x!==spot.x||cell.z!==spot.z)&&Math.abs(cell.x-spot.x)+Math.abs(cell.z-spot.z)<=1
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
-    &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)&&groundOccupancyAllows(world,cell);
+    &&!(geometry?geometry.hasResource(cell):world.resources.some(r=>r.x===cell.x&&r.z===cell.z))&&(geometry?geometry.groundAllows(cell):groundOccupancyAllows(world,cell));
 }
 /** An advanced component's unfinished body can rest on the nearby fabrication
  * surface. Ordinary ingredients and historical workpieces keep their reach. */
-export function componentWorkpiecePlaceFree(world:World,cell:Cell,spot:Cell,recipe:ProductionRecipe,station?:Structure):boolean {
-  if(ingredientPlaceFree(world,cell,spot,recipe,station))return true;
+export function componentWorkpiecePlaceFree(world:World,cell:Cell,spot:Cell,recipe:ProductionRecipe,station?:Structure,geometry?:StagingGeometryReader):boolean {
+  if(ingredientPlaceFree(world,cell,spot,recipe,station,geometry))return true;
   return recipe==='make-advanced-component'&&station?.kind==='fabrication-bench'
     &&Math.abs(cell.x-spot.x)+Math.abs(cell.z-spot.z)<=2
     &&footprintCells(station).some(c=>c.x===cell.x&&c.z===cell.z)
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
-    &&!world.resources.some(r=>r.x===cell.x&&r.z===cell.z)&&groundOccupancyAllows(world,cell);
+    &&!(geometry?geometry.hasResource(cell):world.resources.some(r=>r.x===cell.x&&r.z===cell.z))&&(geometry?geometry.groundAllows(cell):groundOccupancyAllows(world,cell));
 }

@@ -1,4 +1,6 @@
-# Validation courante — V286
+# Validation courante — V287
+
+**V287 : [lectures communes des validations](aulnes-performance-v287.md#validation), schéma 218 conservé.** 76 cas/10 fichiers, typage, build, 63 références publiques, présentation et comparaison matérielle ABBA Chrome passent. Clone+adoption −21,63 % sur la référence intégrée ; 57,20→79,39 RAF/s à débit ×6 comparable. Contrôles, reprises, limites et rouge initial dans la note unique.
 
 **V286 : [performances des Aulnes](aulnes-performance-v286.md#validation), schéma 218 conservé.** 117 cas/15 fichiers par reprises, typage/build, lecteurs des 63 sauvegardes et parcours Chrome matériel passent. Coût CPU des validations réduit ; ×6 à 56–63 RAF/s contre 7,10 sur la référence intégrée, débit effectif proche de ×6. Preuves, répétition, contrepartie, rouges et limites dans la note unique ; 240 FPS non atteints.
 

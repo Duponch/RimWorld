@@ -1,4 +1,5 @@
 import type { PowerParentReader } from './power-parent-validation.ts';
+import type { ValidationIdentityContext,ValidationIdentityMembership } from './validation-identities.ts';
 import { legacyPlantGrowth } from './plants.ts';
 import { isCropKindInVersion } from './crops.ts';
 import { isGrowingTerrain } from './soil.ts';
@@ -18,7 +19,7 @@ export const hydroponicPlantAllowed=(world:World,basinId:number,plant:{kind:stri
 
 /** One hydroponics contract for saves and accepted snapshot candidates. It is
  * scoped to the new content; historical soil zones keep their old validators. */
-export function validateHydroponics(world:World,version:number,powerTopology?:PowerParentReader):string[] {
+export function validateHydroponics(world:World,version:number,powerTopology?:PowerParentReader,identities?:ValidationIdentityContext):string[] {
   const errors:string[]=[],raw=world as unknown as Record<string,unknown>;
   const structures=Array.isArray(raw.structures)?raw.structures:[],jobs=Array.isArray(raw.jobs)?raw.jobs:[],zones=Array.isArray(raw.growingZones)?raw.growingZones:[];
   const basins=structures.filter(hydro),plans=jobs.filter(hydro),linked=zones.filter(z=>record(z)&&Object.hasOwn(z,'basinId'));
@@ -60,8 +61,13 @@ export function validateHydroponics(world:World,version:number,powerTopology?:Po
   }
   const linkedBasins=new Set<number>(),linkedCells=new Map<number,number>(),zoneIds=new Set<number>(),zoneCounts=new Map<number,number>();
   for(const z of zones)if(record(z)&&integer(z.id,1))zoneCounts.set(z.id,(zoneCounts.get(z.id)??0)+1);
-  const occupiedIds=new Set<number>();
-  for(const array of [world.pawns,world.resources,world.structures,world.jobs,world.piles,world.stockpiles])for(const v of array)occupiedIds.add(v.id);
+  let occupiedIds:ValidationIdentityMembership;
+  if(identities)occupiedIds=identities.hydro(world);
+  else {
+    const legacyIds=new Set<number>();
+    for(const array of [world.pawns,world.resources,world.structures,world.jobs,world.piles,world.stockpiles])for(const v of array)legacyIds.add(v.id);
+    occupiedIds=legacyIds;
+  }
   for(const z of linked){
     if(!record(z))continue;
     const cells=integer(z.basinId,1,world.nextId-1)?geometry.get(z.basinId):undefined;

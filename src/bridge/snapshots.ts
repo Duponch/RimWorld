@@ -1,4 +1,5 @@
 import { PowerParentValidationCache } from '../sim/power-parent-validation.ts';
+import { ValidationIdentityContext } from '../sim/validation-identities.ts';
 import { validBiofuelTransport } from '../sim/biofuel-save.ts';
 import { validNutrientPasteTransport } from '../sim/nutrient-paste-save.ts';
 import { validOrbitalTransport,registerOrbitalThingIds } from '../sim/orbital-save.ts';
@@ -963,14 +964,16 @@ export class SnapshotDecoder {
       // In particular an absent sparse collection means it was removed.
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
-    // One adoption owns this cache. Every guard still reads and compares its
-    // topology key; no result or cache survives a refused or accepted packet.
+    // Captures live only in this synchronous adoption, with no World writes
+    // between these guards. Power still checks its key on every read; identity
+    // views keep their distinct domains. Refusal retains none of these caches.
     const powerTopology=new PowerParentValidationCache();
-    if(!validBiofuelTransport(next,next.schemaVersion,powerTopology))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
+    const identities=new ValidationIdentityContext(next);
+    if(!validBiofuelTransport(next,next.schemaVersion,powerTopology,true))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
-    if(!validOrbitalTransport(next,next.schemaVersion,powerTopology))return resync('État orbital, propriétaire ou contact invalide.');
+    if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');
     if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');
-    if(validateHydroponics(next,next.schemaVersion,powerTopology).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
+    if(validateHydroponics(next,next.schemaVersion,powerTopology,identities).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
     if(!validDomesticTasksTransport(next,next.schemaVersion))return resync('Soin ou alimentation vétérinaire, patient ou cargaison incohérents.');
     if(!validArrestRescueTransport(next))return resync('Mandat d’arrestation, portage ou libération locale incohérent.');
     if(!validEmpStructureTransport(next,next.schemaVersion)||!validEmpProductionTransport(next,next.schemaVersion))return resync('État EMP ou production future invalide.');

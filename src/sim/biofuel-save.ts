@@ -37,7 +37,7 @@ function validChemfuelPile(p:MaterialPile,w:World,version:number,tick:number):bo
 
 /** Original owners and clocks are shared by file loading and SnapshotDecoder.
  * No research, fuel, stock, item identity or task is synthesized by this guard. */
-export function validBiofuelTransport(w:World,version:number,powerTopology?:PowerParentReader):boolean {
+export function validBiofuelTransport(w:World,version:number,powerTopology?:PowerParentReader,indexStaging=false):boolean {
   try {
     const owners=captureHumanOwners(w),foreign=owners.slots.filter(s=>s.kind!=='map');
     const packs=[...(w.packed??[]),...foreign.flatMap(s=>s.packed)];
@@ -100,6 +100,6 @@ export function validBiofuelTransport(w:World,version:number,powerTopology?:Powe
         reservations.set(target.id,sum);
       }
     }
-    return validBiofuelProductionTransport(w,version,powerTopology!==undefined);
+    return validBiofuelProductionTransport(w,version,powerTopology!==undefined,indexStaging);
   }catch{return false;}
 }

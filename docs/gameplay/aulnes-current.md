@@ -1,6 +1,6 @@
 # Les Aulnes, référence intégrée
 
-Les [corrections CPU V286](../development/aulnes-performance-v286.md) réduisent le coût des validations répétées de cette colonie ; mesures Chrome1440p/dev et limites dans la note. Le checkpoint reste identique.
+Les [corrections CPU V287](../development/aulnes-performance-v287.md), après V286, réduisent encore le coût des validations de cette colonie. Comparaison Chrome 1440p/dev à ×6 : 57,20→79,39 RAF/s ; mesures et limites dans la note. Le checkpoint reste identique.
 
 Les [corrections visuelles V285](construction-presentation-v285.md) s’appliquent aussi à ce checkpoint : raccords des constructions, traces sur planchers et aperçus fantômes avant placement. Son fichier et son identité restent inchangés.
 

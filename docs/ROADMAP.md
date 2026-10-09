@@ -1,6 +1,6 @@
 # Plan de développement
 
-**Priorité humaine du10octobre — [performances des Aulnes](development/aulnes-performance-v286.md).** Poursuivre cette nuit les corrections fondées sur les profils, avec Chrome1440p/dev comme référence et un vrai débit×6. V286 réduit les validations répétées ; poursuivre les coûts dominants restants, sans nouvelle mécanique ni baisse de qualité. Relance réactivée explicitement pour cette nuit seulement, bilan et pause au matin. Les consignes suivantes sont historiques.
+**Priorité humaine du 10 octobre — [performances des Aulnes V287](development/aulnes-performance-v287.md), schéma 218 conservé.** Poursuivre cette nuit les corrections fondées sur les profils, avec Chrome 1440p/dev comme référence et un vrai débit ×6. V287 atteint 76–83 RAF/s dans ses passages comparés ; les lectures électriques répétées, la production et l'application de scène restent à examiner selon le profil actuel. Pas de nouvelle mécanique ni baisse de qualité. Relance réactivée explicitement pour cette nuit seulement, bilan et pause à 08h après le lot engagé. Les consignes suivantes sont historiques.
 
 **Correction visuelle V285 : [constructions et traces](gameplay/construction-presentation-v285.md).** Les raccords et l’aperçu des véritables objets passent avant un nouveau lot fonctionnel. La tâche planifiée reste en pause ; le recyclage demeure seulement étudié.
 

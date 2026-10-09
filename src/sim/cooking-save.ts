@@ -17,12 +17,13 @@ import { withoutQueuedOrder } from './haul-reservations.ts';
 import { componentWorkpiecePlaceFree,cookingSpot, ingredientPlaceFree, ingredientWithinReach, validBillSettings } from './cooking-bills.ts';
 import { groundCapacity, storageCapacity } from './ground-placement.ts';
 import { reservedSource } from './materials.ts';
+import {createStagingValidation} from './staging-validation.ts';
 import type { Cell,World } from './types.ts';
 
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 /** Called after the base schema's structures/pawns/piles are shape-checked. */
-export function validateCooking(input:unknown,version:number,ids:Set<number>,memoizeStaging=false):string[] {
+export function validateCooking(input:unknown,version:number,ids:Set<number>,memoizeStaging=false,indexStaging=false):string[] {
   const w=input as World,errors:string[]=[];
   const cell=(v:unknown)=>record(v)&&Object.keys(v).every(key=>key==='x'||key==='z')&&int(v.x,0,w.width-1)&&int(v.z,0,w.height-1);
   const taskKeys=new Set(['recipe','stationId','billId','spot','actionCell','phase','ingredients','progress','productId','storageId',...(version>=79?['workTicks']:[]),...(version>=32?['storageQuantity']:[])]);
@@ -65,6 +66,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
     for(const i of c.ingredients)if(!record(i)||Object.keys(i).some(key=>!ingredientKeys.has(key))||!int(i.pileId,1,w.nextId-1)||!int(i.quantity,1,recipe.units)||!(recipe.inputs.includes(i.item as ProductionIngredient)&&(version>=178||!V190_ITEM_IDS.includes(String(i.item)))&&(version>=120||!V120_ANIMAL_PRODUCT_ITEMS.includes(String(i.item)))&&(version>=91||!V91_ITEM_IDS.includes(String(i.item)))&&(version>=79||i.item!=='hare-meat'&&i.item!=='hare-corpse')&&(version>=84||i.item!=='potato'&&i.item!=='corn')||isTailoring(c.recipe)&&i.item===unfinishedItem(c.recipe)&&i.quantity===1||version>=101&&isGunRecipe(c.recipe)&&i.item==='unfinished-gun'&&i.quantity===1||version>=104&&isArtRecipe(c.recipe)&&i.item==='unfinished-sculpture'&&i.quantity===1||isFlakRecipe(c.recipe)&&version>=(c.recipe==='make-recon-helmet'?148:c.recipe==='make-flak-helmet'?141:109)&&i.item===flakWorkpiece(c.recipe)&&i.quantity===1||version>=123&&isComponentRecipe(c.recipe)&&i.item==='unfinished-component'&&i.quantity===1)||!['source','held','placed'].includes(i.stage as string)||!cell(i.cell))errors.push('Invalid recipe ingredient reservation.');
   }
   if(errors.length||version<10)return errors;
+  const staging=indexStaging?createStagingValidation(w):undefined;
   const stations=new Set<number>(),spots=new Set<number>();
   for(const p of w.pawns)if(p.cooking) {
     const c=p.cooking,station=w.structures.find(s=>s.id===c.stationId&&stationAccepts(s,taskRecipe(c))),bill=station?.bills?.find(b=>b.id===c.billId);
@@ -118,10 +120,10 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
       // File/raw callers retain every historical read; no cache outlives the task.
       const freeByCell=memoizeStaging?new Map<number,boolean>():undefined;
       const placeFree=(cell:Cell):boolean=>{
-        if(!freeByCell)return unfinishedComponent?componentWorkpiecePlaceFree(w,cell,spot,taskRecipe(c),station):ingredientPlaceFree(w,cell,spot,taskRecipe(c),station);
+        if(!freeByCell)return unfinishedComponent?componentWorkpiecePlaceFree(w,cell,spot,taskRecipe(c),station,staging):ingredientPlaceFree(w,cell,spot,taskRecipe(c),station,staging);
         const key=cell.z*w.width+cell.x,cached=freeByCell.get(key);
         if(cached!==undefined)return cached;
-        const free=unfinishedComponent?componentWorkpiecePlaceFree(w,cell,spot,taskRecipe(c),station):ingredientPlaceFree(w,cell,spot,taskRecipe(c),station);
+        const free=unfinishedComponent?componentWorkpiecePlaceFree(w,cell,spot,taskRecipe(c),station,staging):ingredientPlaceFree(w,cell,spot,taskRecipe(c),station,staging);
         freeByCell.set(key,free);return free;
       };
       const incoming=new Map<number,{item:ProductionIngredient;quantity:number}>();
@@ -156,13 +158,13 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
 
 /** New production envelopes use the same strict file checks in the Decoder.
  * Historical worlds without refining keep their existing transport contract. */
-export function validBiofuelProductionTransport(w:World,version:number,memoizeStaging=false):boolean {
+export function validBiofuelProductionTransport(w:World,version:number,memoizeStaging=false,indexStaging=false):boolean {
   try {
     const present=w.structures.some(s=>s.kind==='biofuel-refinery'||s.bills?.some(b=>isBiofuelRecipe(b?.recipe)))
       ||w.packed.some(p=>p.building.kind==='biofuel-refinery'||p.building.bills?.some(b=>isBiofuelRecipe(b?.recipe)))
       ||w.pawns.some(p=>isBiofuelRecipe(p.cooking?.recipe)||p.orders.queue.some(o=>isCookingOrder(o)&&isBiofuelRecipe(o.cooking.recipe)));
     if(!present)return true;
-    if(version<218||validateCooking(w,version,new Set(),memoizeStaging).length)return false;
+    if(version<218||validateCooking(w,version,new Set(),memoizeStaging,indexStaging).length)return false;
     const stations=new Set(w.pawns.filter(p=>isBiofuelRecipe(p.cooking?.recipe)).map(p=>p.cooking!.stationId));
     const spots=new Set(w.pawns.filter(p=>p.cooking).map(p=>p.cooking!.spot.z*w.width+p.cooking!.spot.x));
     for(const pawn of w.pawns)for(const order of pawn.orders.queue)if(isCookingOrder(order)&&isBiofuelRecipe(order.cooking.recipe)){

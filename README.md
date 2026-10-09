@@ -1,6 +1,6 @@
 # Lisière
 
-**V286 — performances des Aulnes intégrées.** Les validations électriques, hydroponiques et de production réutilisent leurs calculs. Premier contrôle Chrome en1440p à×6 : **7,10→55,99 images RAF/s**, avec débit effectif proche de×6. Les240FPS restent à atteindre. [Mesures, corrections et limites](docs/development/aulnes-performance-v286.md).
+**V287 — performances des Aulnes intégrées.** Les recherches de ressources et d'identités sont mutualisées pendant chaque validation. Comparaison Chrome 1440p/dev à ×6 avec V286 : **57,20→79,39 images RAF/s (+39 %)**, débit réel proche de ×6. Les 240 FPS restent à atteindre. [Mesures, corrections et limites](docs/development/aulnes-performance-v287.md).
 
 **V285 — raccords et fantômes de construction.** Murs, enclos et sols jointifs ; traces suivant les surfaces ; véritables modèles translucides, rotation et placements refusés. [Détails et validation](docs/gameplay/construction-presentation-v285.md). Les sauvegardes des Aulnes se chargent avec ces corrections sans modification du checkpoint.
 

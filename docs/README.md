@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-**V286 : [performances des Aulnes intégrées](development/aulnes-performance-v286.md).** Diagnostic de la saturation CPU, corrections des validations répétées et mesures Chrome1440p. Rendu, simulation, schéma218 et sauvegardes conservés ;240FPS non atteints.
+**V287 : [performances des Aulnes intégrées](development/aulnes-performance-v287.md).** Lectures communes aux validations, coût CPU et comparaison Chrome 1440p/dev : 57,20→79,39 RAF/s à ×6 par rapport à V286. Rendu, simulation, schéma 218 et sauvegardes conservés ; 240 FPS non atteints.
 
 **V285 : [raccords, traces et fantômes de construction](gameplay/construction-presentation-v285.md).** Modèles partagés avec le rendu final, contrôles ciblés et parcours matériel dans Les Aulnes ; schéma218 et catalogue conservés.
 

@@ -1,4 +1,5 @@
 import type { PowerParentReader } from './power-parent-validation.ts';
+import type { ValidationIdentityContext } from './validation-identities.ts';
 import { isColonist } from './affiliation.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
@@ -34,7 +35,7 @@ export function registerOrbitalThingIds(w:World,ids:NumericMembershipWriter):str
 /** Same original-World contract in file loading and SnapshotDecoder. Power
  * outages and urgent needs can be saved just before runtime reconciliation;
  * an active ready task still requires its exact settled physical contact. */
-export function validOrbitalTransport(w:World,version:number,powerTopology?:PowerParentReader):boolean {
+export function validOrbitalTransport(w:World,version:number,powerTopology?:PowerParentReader,identities?:ValidationIdentityContext):boolean {
   try {
     const humans=captureHumanOwners(w),foreign=humans.slots.filter(s=>s.kind!=='map');
     if(foreign.some(s=>s.pawn&&Object.hasOwn(s.pawn,'orbitalTrade')||s.items.some(i=>orbitalOwner(i.owner)))
@@ -58,7 +59,7 @@ export function validOrbitalTransport(w:World,version:number,powerTopology?:Powe
       ||!Array.isArray(state.pending)||state.pending.length>ORBITAL_DELIVERY_LIMIT)return false;
     const cell=(v:unknown)=>obj(v)&&keys(v,['x','z'])&&int(v.x,0,w.width-1)&&int(v.z,0,w.height-1);
     const ids=new Set<number>(),ships=new Set<number>(),deliveries=new Set<number>(),deliveryCells=new Set<number>();
-    const localOwners=new Set([...w.pawns,...w.resources,...w.structures,...w.jobs,...w.piles,...w.stockpiles,...w.growingZones,...packs.map(p=>p.building)].map(o=>o.id));
+    const localOwners=identities?identities.orbital(w,packs):new Set([...w.pawns,...w.resources,...w.structures,...w.jobs,...w.piles,...w.stockpiles,...w.growingZones,...packs.map(p=>p.building)].map(o=>o.id));
     for(const s of state.ships){
       if(!obj(s)||!keys(s,['id','kind','name','arrivedAt','departAt','announced'])||!int(s.id,1,w.nextId-1)||ids.has(s.id)||localOwners.has(s.id)||humans.byId.has(s.id)
         ||!['bulk','exotic'].includes(String(s.kind))||typeof s.name!=='string'||s.name.trim().length===0||s.name.length>80
