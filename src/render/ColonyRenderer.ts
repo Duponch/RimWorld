@@ -153,6 +153,7 @@ export class ColonyRenderer extends SceneRenderCore {
   }
   private onPointerLeave = (): void => {
     if(!this.preparing)this.recreationHints.group.visible=false;
+    if(!this.preparing)this.constructionPreview.hide();
     this.hoverCell = null; if(!this.preparing)this.hover.visible = false;
     this.onHover(null);
     if (this.areaDrag) this.updateAreaPreview(); else this.pointerDown = null;

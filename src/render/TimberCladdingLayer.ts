@@ -6,12 +6,13 @@ import { doorOrientations, isRoomDoor } from '../sim/door-rules';
 import { doorLeafTop } from './door-parts';
 import { instancedPatternUv } from './texture-variation';
 import { woodFiberDetail } from './stylized-surfaces';
+import type { Placement } from './primitives';
 
 type Point = readonly [number, number, number];
 
 /** Small authored solids are assembled once. Their vertex colours give the
  * bevels and recessed joints a stable, faceted shade without per-cell meshes. */
-function geometry(roof: boolean): THREE.BufferGeometry {
+export function createTimberGeometry(roof: boolean): THREE.BufferGeometry {
   const positions: number[] = [], normals: number[] = [], colors: number[] = [], uvs: number[] = [];
   const color = new THREE.Color();
   function quad(a: Point, b: Point, c: Point, d: Point, outward: Point, tint: number, uvRect:readonly [number,number,number,number]=[0,1,0,1]): void {
@@ -52,14 +53,16 @@ function geometry(roof: boolean): THREE.BufferGeometry {
   } else {
     // A single broad plank covers each cell face. Three unequal height bands
     // gently bend its edge, while two bevel facets round each vertical corner.
-    // The dark core only closes hairline joints between adjacent planks.
-    box(-.49,.49,0,.94,-.49,.49,0x725238);
+    // The bevels stay inside the cell and every face reaches its exact corner.
+    // Adjacent cells share that boundary instead of leaving a translucent slot
+    // or overlapping outward-bowed boards.
+    box(-.47,.47,0,.94,-.47,.47,0x725238);
     const boardTints=[0xb18858,0xa77d4e,0xb68b58,0xa57c4d];
     const levels=[
-      {y:.008,sway:0,depth:.507},
-      {y:.32,sway:-.018,depth:.517},
-      {y:.67,sway:.013,depth:.508},
-      {y:.967,sway:-.011,depth:.518},
+      {y:0,sway:0,depth:.49},
+      {y:.32,sway:-.018,depth:.5},
+      {y:.67,sway:.013,depth:.491},
+      {y:.967,sway:-.011,depth:.5},
     ];
     for(let face=0;face<4;face++) {
       const sign=face%2===0?1:-1,alongX=face<2;
@@ -72,15 +75,14 @@ function geometry(roof: boolean): THREE.BufferGeometry {
       for(let band=0;band<levels.length-1;band++) {
         const a=levels[band]!,b=levels[band+1]!;
         const frontL=(v:typeof a)=>-.445+v.sway,frontR=(v:typeof a)=>.445+v.sway;
-        const edgeL=(v:typeof a)=>-.493+v.sway*.3,edgeR=(v:typeof a)=>.493+v.sway*.3;
         quad(p(frontL(a),a.depth,a.y),p(frontR(a),a.depth,a.y),p(frontR(b),b.depth,b.y),p(frontL(b),b.depth,b.y),outward,tint,[.05,.95,a.y,b.y]);
-        quad(p(edgeL(a),.47,a.y),p(frontL(a),a.depth,a.y),p(frontL(b),b.depth,b.y),p(edgeL(b),.47,b.y),[-side[0],0,-side[2]],dark,[0,.05,a.y,b.y]);
-        quad(p(frontR(a),a.depth,a.y),p(edgeR(a),.47,a.y),p(edgeR(b),.47,b.y),p(frontR(b),b.depth,b.y),side,light,[.95,1,a.y,b.y]);
+        quad(p(-.5,.5,a.y),p(frontL(a),a.depth,a.y),p(frontL(b),b.depth,b.y),p(-.5,.5,b.y),[-side[0],0,-side[2]],dark,[0,.05,a.y,b.y]);
+        quad(p(frontR(a),a.depth,a.y),p(.5,.5,a.y),p(.5,.5,b.y),p(frontR(b),b.depth,b.y),side,light,[.95,1,a.y,b.y]);
       }
     }
     // One softly bevelled cap per cell, lower than the overhanging edge rail.
-    box(-.499,.499,.944,.961,-.499,.499,0xcfa36b);
-    const low=.961,high=.982,edge=.499,top=.464,cap=0xd6ac72;
+    box(-.5,.5,.944,.961,-.5,.5,0xcfa36b);
+    const low=.961,high=.982,edge=.5,top=.464,cap=0xd6ac72;
     quad([-top,high,top],[top,high,top],[top,high,-top],[-top,high,-top],[0,1,0],cap);
     quad([-edge,low,edge],[edge,low,edge],[top,high,top],[-top,high,top],[0,0,1],cap);
     quad([edge,low,-edge],[-edge,low,-edge],[-top,high,-top],[top,high,-top],[0,0,-1],cap);
@@ -116,12 +118,90 @@ function grainTexture():THREE.DataTexture {
   texture.needsUpdate=true;return texture;
 }
 
+export type TimberPlacement=Placement&{tint:number};
+
+/** Shared authoring for finished walls and cursor ghosts. The context determines
+ * connected edges; subjects restrict the produced objects without removing that
+ * context or constructing any GPU materials. */
+export function timberCladdingParts(world:World,cutaway:boolean,subjects:readonly World['structures'][number][]=world.structures):{walls:TimberPlacement[];eaves:TimberPlacement[]} {
+    const walls=world.structures.filter(s=>s.kind==='wall'&&s.material==='wood');
+    const doors=walls.length?world.structures.filter(s=>isRoomDoor(s.kind)):[];
+    const axes=doors.length?doorOrientations(world):new Map<number,0|1>();
+    const at=(x:number,z:number)=>`${x}:${z}`;
+    const wood=new Set(walls.map(s=>at(s.x,s.z)));
+    type RimCell={id:number;x:number;z:number;axis:'all'|'horizontal'|'vertical'};
+    const cells:RimCell[]=walls.map(s=>({id:s.id,x:s.x,z:s.z,axis:'all'}));
+    const timberDoors:typeof doors=[];
+    for(const door of doors) {
+      const horizontal=wood.has(at(door.x-1,door.z))&&wood.has(at(door.x+1,door.z));
+      const vertical=wood.has(at(door.x,door.z-1))&&wood.has(at(door.x,door.z+1));
+      if(horizontal||vertical){
+        timberDoors.push(door);
+        cells.push({id:door.id,x:door.x,z:door.z,axis:horizontal&&!vertical?'horizontal':vertical&&!horizontal?'vertical':(axes.get(door.z*world.width+door.x)??0)===0?'horizontal':'vertical'});
+      }
+    }
+    const occupied=new Set(cells.map(c=>at(c.x,c.z)));
+    // Timber trim must stop against masonry too. Otherwise a mixed-material
+    // seam retains a supposedly exposed edge rail inside the neighboring cap.
+    const solidBoundaries=new Set(world.structures.filter(s=>s.kind==='wall'||isRoomDoor(s.kind)).map(s=>at(s.x,s.z)));
+    type Side='north'|'south'|'east'|'west';
+    const offset:Record<Side,readonly [number,number]>={north:[0,1],south:[0,-1],east:[1,0],west:[-1,0]};
+    const sides:Side[]=['north','south','east','west'];
+    const exposed=new Set<string>();
+    for(const c of cells)for(const side of sides) {
+      if(c.axis==='horizontal'&&(side==='east'||side==='west')||c.axis==='vertical'&&(side==='north'||side==='south'))continue;
+      const [dx,dz]=offset[side];if(!solidBoundaries.has(at(c.x+dx,c.z+dz)))exposed.add(`${at(c.x,c.z)}:${side}`);
+    }
+    const rims:{cell:RimCell;side:Side;centre:number;length:number}[]=[];
+    for(const c of cells)for(const side of sides) {
+      if(!exposed.has(`${at(c.x,c.z)}:${side}`))continue;
+      let low=-.5,high=.5;
+      if(side==='north'||side==='south') {
+        // Straight runs meet at exactly the cell boundary. A free endpoint
+        // reaches 0.06 further to cover the perpendicular corner board.
+        if(!exposed.has(`${at(c.x-1,c.z)}:${side}`)&&(!solidBoundaries.has(at(c.x-1,c.z))||occupied.has(at(c.x-1,c.z))))low-=.06;
+        if(!exposed.has(`${at(c.x+1,c.z)}:${side}`)&&(!solidBoundaries.has(at(c.x+1,c.z))||occupied.has(at(c.x+1,c.z))))high+=.06;
+      } else {
+        // At a corner the horizontal board owns the square intersection.
+        // Trimming the vertical board makes a butt joint without coplanar faces.
+        if(exposed.has(`${at(c.x,c.z)}:south`))low+=.095;
+        if(exposed.has(`${at(c.x,c.z)}:north`))high-=.095;
+        const outward=side==='east'?1:-1;
+        // Re-entrant room corners meet a horizontal board on the diagonal
+        // cell. Its 0.06 endpoint reaches this edge too.
+        if(exposed.has(`${at(c.x+outward,c.z-1)}:north`))low=Math.max(low,-.44);
+        if(exposed.has(`${at(c.x+outward,c.z+1)}:south`))high=Math.min(high,.44);
+      }
+      rims.push({cell:c,side,centre:(low+high)/2,length:high-low});
+    }
+    const selected=new Set(subjects.map(s=>s.id));
+    const wallParts:TimberPlacement[]=[],eaveParts:TimberPlacement[]=[];
+    const height=cutaway?WORLD_SCALE.wallCutawayHeight:WORLD_SCALE.wallHeight;
+    for(const wall of walls)if(selected.has(wall.id)) {
+      const tint=1+((((wall.x*73856093)^(wall.z*19349663)^(wall.id*83492791))>>>0)%13-6)*.007;
+      const alongZ=occupied.has(at(wall.x,wall.z-1))||occupied.has(at(wall.x,wall.z+1));
+      const alongX=occupied.has(at(wall.x-1,wall.z))||occupied.has(at(wall.x+1,wall.z));
+      wallParts.push({key:wall.id,x:wall.x,y:0,z:wall.z,ry:alongZ&&!alongX?Math.PI/2:0,sx:1,sy:height,sz:1,tint});
+    }
+    for(const door of timberDoors)if(selected.has(door.id)) {
+      const from=doorLeafTop(cutaway),axis=axes.get(door.z*world.width+door.x)??0;
+      wallParts.push({key:door.id,x:door.x,y:from,z:door.z,ry:axis*Math.PI/2,sx:1,sy:height-from,sz:1,tint:1});
+    }
+    for(const {cell,side,centre,length} of rims)if(selected.has(cell.id)) {
+      const horizontal=side==='north'||side==='south';
+      const tint=1+((((cell.x*73856093)^(cell.z*19349663))>>>0)%11-5)*.006;
+      eaveParts.push({key:cell.id,x:cell.x+(horizontal?centre:0),y:height-.055,z:cell.z+(horizontal?0:centre),
+        ry:side==='north'?0:side==='south'?Math.PI:side==='east'?Math.PI/2:-Math.PI/2,sx:length,sy:1,sz:1,tint});
+    }
+    return {walls:wallParts,eaves:eaveParts};
+}
+
 /** Presentation-only wall cladding. Call update when adopting a world or
  * changing cutaway; the layer performs no work during rendered frames. */
 export class TimberCladdingLayer {
   readonly group=new THREE.Group();
-  readonly wallGeometry=geometry(false);
-  readonly eaveGeometry=geometry(true);
+  readonly wallGeometry=createTimberGeometry(false);
+  readonly eaveGeometry=createTimberGeometry(true);
   readonly grain=grainTexture();
   readonly material=new THREE.MeshStandardNodeMaterial({color:0xffffff,roughness:.94,metalness:0,flatShading:true,vertexColors:true,map:this.grain});
   readonly plainMaterial=new THREE.MeshStandardNodeMaterial({color:0xffffff,roughness:.94,metalness:0,flatShading:true,vertexColors:true});
@@ -171,84 +251,18 @@ export class TimberCladdingLayer {
     const key=`${cutaway}|${walls.map(s=>`${s.id}:${s.x}:${s.z}`).join('|')}|${doors.map(s=>`${s.id}:${s.x}:${s.z}:${axes.get(s.z*world.width+s.x)??0}`).join('|')}`;
     if(!reset&&key===this.key)return;
     this.key=key;
-    const at=(x:number,z:number)=>`${x}:${z}`;
-    const wood=new Set(walls.map(s=>at(s.x,s.z)));
-    type RimCell={x:number;z:number;axis:'all'|'horizontal'|'vertical'};
-    const cells:RimCell[]=walls.map(s=>({x:s.x,z:s.z,axis:'all'}));
-    const timberDoors:typeof doors=[];
-    for(const door of doors) {
-      const horizontal=wood.has(at(door.x-1,door.z))&&wood.has(at(door.x+1,door.z));
-      const vertical=wood.has(at(door.x,door.z-1))&&wood.has(at(door.x,door.z+1));
-      if(horizontal||vertical){
-        timberDoors.push(door);
-        cells.push({x:door.x,z:door.z,axis:horizontal&&!vertical?'horizontal':vertical&&!horizontal?'vertical':(axes.get(door.z*world.width+door.x)??0)===0?'horizontal':'vertical'});
-      }
-    }
-    const occupied=new Set(cells.map(c=>at(c.x,c.z)));
-    type Side='north'|'south'|'east'|'west';
-    const offset:Record<Side,readonly [number,number]>={north:[0,1],south:[0,-1],east:[1,0],west:[-1,0]};
-    const sides:Side[]=['north','south','east','west'];
-    const exposed=new Set<string>();
-    for(const c of cells)for(const side of sides) {
-      if(c.axis==='horizontal'&&(side==='east'||side==='west')||c.axis==='vertical'&&(side==='north'||side==='south'))continue;
-      const [dx,dz]=offset[side];if(!occupied.has(at(c.x+dx,c.z+dz)))exposed.add(`${at(c.x,c.z)}:${side}`);
-    }
-    const rims:{cell:RimCell;side:Side;centre:number;length:number}[]=[];
-    for(const c of cells)for(const side of sides) {
-      if(!exposed.has(`${at(c.x,c.z)}:${side}`))continue;
-      let low=-.5,high=.5;
-      if(side==='north'||side==='south') {
-        // Straight runs meet at exactly the cell boundary. A free endpoint
-        // reaches 0.06 further to cover the perpendicular corner board.
-        if(!exposed.has(`${at(c.x-1,c.z)}:${side}`))low-=.06;
-        if(!exposed.has(`${at(c.x+1,c.z)}:${side}`))high+=.06;
-      } else {
-        // At a corner the horizontal board owns the square intersection.
-        // Trimming the vertical board makes a butt joint without coplanar faces.
-        if(exposed.has(`${at(c.x,c.z)}:south`))low+=.095;
-        if(exposed.has(`${at(c.x,c.z)}:north`))high-=.095;
-        const outward=side==='east'?1:-1;
-        // Re-entrant room corners meet a horizontal board on the diagonal
-        // cell. Its 0.06 endpoint reaches this edge too.
-        if(exposed.has(`${at(c.x+outward,c.z-1)}:north`))low=Math.max(low,-.44);
-        if(exposed.has(`${at(c.x+outward,c.z+1)}:south`))high=Math.min(high,.44);
-      }
-      rims.push({cell:c,side,centre:(low+high)/2,length:high-low});
-    }
-    this.grow(walls.length+timberDoors.length,rims.length);
-    const height=cutaway?WORLD_SCALE.wallCutawayHeight:WORLD_SCALE.wallHeight;
+    const parts=timberCladdingParts(world,cutaway);
+    this.grow(parts.walls.length,parts.eaves.length);
     const object=new THREE.Object3D(),color=new THREE.Color();
-    for(let i=0;i<walls.length;i++) {
-      const wall=walls[i]!;
-      const tone=1+((((wall.x*73856093)^(wall.z*19349663)^(wall.id*83492791))>>>0)%13-6)*.007;
-      color.setRGB(tone,tone,tone);
-      const alongZ=occupied.has(at(wall.x,wall.z-1))||occupied.has(at(wall.x,wall.z+1));
-      const alongX=occupied.has(at(wall.x-1,wall.z))||occupied.has(at(wall.x+1,wall.z));
-      object.position.set(wall.x,0,wall.z);object.rotation.set(0,alongZ&&!alongX?Math.PI/2:0,0);object.scale.set(1,height,1);object.updateMatrix();
-      this.wallMesh.setMatrixAt(i,object.matrix);this.wallMesh.setColorAt(i,color);
+    for(const [mesh,placements] of [[this.wallMesh,parts.walls],[this.eaveMesh,parts.eaves]] as const) {
+      for(let i=0;i<placements.length;i++) {
+        const p=placements[i]!;
+        object.position.set(p.x,p.y,p.z);object.rotation.set(0,p.ry??0,0);
+        object.scale.set(p.sx??1,p.sy??1,p.sz??1);object.updateMatrix();
+        mesh.setMatrixAt(i,object.matrix);mesh.setColorAt(i,color.setRGB(p.tint,p.tint,p.tint));
+      }
+      mesh.count=placements.length;
     }
-    // The upper part of every doorway is a real timber wall plank. In
-    // particular, a steel leaf in a timber wall must not become a tall grey
-    // column through the lintel.
-    for(let i=0;i<timberDoors.length;i++) {
-      const door=timberDoors[i]!,from=doorLeafTop(cutaway),axis=axes.get(door.z*world.width+door.x)??0;
-      object.position.set(door.x,from,door.z);object.rotation.set(0,axis*Math.PI/2,0);
-      object.scale.set(1,height-from,1);object.updateMatrix();
-      this.wallMesh.setMatrixAt(walls.length+i,object.matrix);
-      this.wallMesh.setColorAt(walls.length+i,color.setRGB(1,1,1));
-    }
-    for(let i=0;i<rims.length;i++) {
-      const {cell,side,centre,length}=rims[i]!;
-      const horizontal=side==='north'||side==='south';
-      const tone=1+((((cell.x*73856093)^(cell.z*19349663))>>>0)%11-5)*.006;
-      color.setRGB(tone,tone,tone);
-      object.position.set(cell.x+(horizontal?centre:0),height-.055,cell.z+(horizontal?0:centre));
-      object.rotation.set(0,side==='north'?0:side==='south'?Math.PI:side==='east'?Math.PI/2:-Math.PI/2,0);
-      object.scale.set(length,1,1);object.updateMatrix();
-      this.eaveMesh.setMatrixAt(i,object.matrix);this.eaveMesh.setColorAt(i,color);
-    }
-    object.rotation.set(0,0,0);
-    this.wallMesh.count=walls.length+timberDoors.length;this.eaveMesh.count=rims.length;
     for(const mesh of [this.wallMesh,this.eaveMesh]) {
       mesh.visible=mesh.count>0;
       mesh.instanceMatrix.needsUpdate=true;

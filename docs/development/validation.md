@@ -1,4 +1,6 @@
-# Validation courante — V284
+# Validation courante — V285
+
+**V285 : [raccords, traces et aperçus](../gameplay/construction-presentation-v285.md#validation).** 65cas/12fichiers par reprises ciblées, build et WebGPU matériel dans Les Aulnes passent ; deux sauvegardes/recharges exactes et six espèces de traces observées sur planchers. Catalogue et sauvegardes inchangés ; preuves, rouges et limites dans la note unique.
 
 **V284 : [Les Aulnes intégrées](../gameplay/aulnes-current.md#validation), schéma218 conservé.** Référence unique en tête du catalogue, 62 payloads/fiches historiques conservés. Préparation, stricts fichiers/snapshots, continuation ordinaire de1 500ticks et reprise exacte contrôlés ; WebGPU matériel, menu public,1×/6× et deux sauvegardes/recharges UI passent. Les adaptations, observations, rouges conservés et limites sont dans la note unique. Aucun changement moteur/rendu ou gain FPS annoncé ; tâche planifiée en pause. Les validations suivantes sont historiques.
 

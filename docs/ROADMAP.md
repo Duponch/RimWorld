@@ -1,5 +1,7 @@
 # Plan de développement
 
+**Correction visuelle V285 : [constructions et traces](gameplay/construction-presentation-v285.md).** Les raccords et l’aperçu des véritables objets passent avant un nouveau lot fonctionnel. La tâche planifiée reste en pause ; le recyclage demeure seulement étudié.
+
 **Priorité humaine du 9 octobre : [Les Aulnes intégrées](gameplay/aulnes-current.md), référence maintenue sur250×250.** Rassembler les systèmes compatibles pour tester leur fonctionnement ensemble ; garder les anciennes références. La tâche planifiée est en pause. Le recyclage étudié n'est pas engagé et aucune nouvelle mécanique n'est lancée par ce lot.
 
 **Avancement fonctionnel V283 — biocarburant et générateur ; schéma 218.**

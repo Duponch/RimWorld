@@ -3,12 +3,29 @@ import type { World } from '../sim/types';
 import type { Placement } from './primitives';
 import { buildingMaterialColor } from './building-material-color';
 import { WORLD_SCALE } from '../world/scale';
+import { penBoundaryAxes } from './pen-parts';
 
 /** The lintel meets the wall above a human-height opening. In cutaway view the
  * same opening is clipped below the wall cap, like neighboring wall cells. */
 export const doorLeafTop=(cutaway:boolean):number=>Math.min(WORLD_SCALE.futureDoorClearance,(cutaway?WORLD_SCALE.wallCutawayHeight:WORLD_SCALE.wallHeight)-.14);
 export const DOOR_LEAF_BOTTOM=.035;
 export const doorLeafColor=(material:World['structures'][number]['material']):number=>buildingMaterialColor(material,0x9b744b)??0x9b744b;
+
+/** Closed leaves meet at the center and the frame's inner face. Their animated
+ * sliding displacement remains the responsibility of the retained DoorLayer. */
+export function doorLeafPartsForStructure(s:World['structures'][number],cutaway:boolean,axis:0|1):Placement[] {
+  const gate=s.kind==='fence-gate',top=gate?.94:doorLeafTop(cutaway),bottom=gate?.08:DOOR_LEAF_BOTTOM;
+  const halfWidth=gate?.37:.42,angle=axis*Math.PI/2;
+  return [-1,1].map(side=>({key:s.id,x:s.x+side*halfWidth/2*Math.cos(angle),y:(top+bottom)/2,
+    z:s.z-side*halfWidth/2*Math.sin(angle),sx:halfWidth,sy:top-bottom,sz:gate?.085:.14,ry:angle,color:doorLeafColor(s.material)}));
+}
+
+export function doorLeafParts(world:World,cutaway:boolean,subjects:readonly World['structures'][number][]=world.structures):Placement[] {
+  const axes=doorOrientations(world),gateAxes=penBoundaryAxes(world),parts:Placement[]=[];
+  for(const s of subjects)if(isRoomDoor(s.kind)||s.kind==='fence-gate')parts.push(...doorLeafPartsForStructure(s,cutaway,
+    (s.kind==='fence-gate'?gateAxes:axes).get(s.z*world.width+s.x)??0));
+  return parts;
+}
 
 /** A door can be steel or stone while the room around it is timber. The
  * material above its opening belongs to the surrounding wall, not the leaf. */
@@ -35,13 +52,13 @@ function shade(color:number,amount:number):number {
   return (channel(16)<<16)|(channel(8)<<8)|channel(0);
 }
 
-export function doorParts(world:World,cutaway:boolean):Placement[] {
+export function doorParts(world:World,cutaway:boolean,subjects:readonly World['structures'][number][]=world.structures):Placement[] {
   const parts:Placement[]=[],height=cutaway?WORLD_SCALE.wallCutawayHeight:WORLD_SCALE.wallHeight;
   const openingTop=doorLeafTop(cutaway),lintelTop=cutaway?height:openingTop+.11;
   const axes=doorOrientations(world);
   const walls=indexWalls(world);
   const woodWalls=new Set([...walls].filter(([,wall])=>wall.material==='wood').map(([key])=>key));
-  for(const s of world.structures)if(isRoomDoor(s.kind)) {
+  for(const s of subjects)if(isRoomDoor(s.kind)) {
     const axis=axes.get(s.z*world.width+s.x)??0;
     const ry=axis*Math.PI/2;
     const neighboringMaterial=doorSurroundMaterial(world,s.x,s.z,axis,walls);
@@ -52,8 +69,8 @@ export function doorParts(world:World,cutaway:boolean):Placement[] {
     // TimberCladdingLayer provides the broad upper plank and continuous cap.
     // For masonry, this matching wall panel still stops well above the leaf.
     if(!timber) {
-      if(!cutaway)parts.push({x:s.x,z:s.z,y:(lintelTop+height-.09)/2,sx:.96,sy:height-.09-lintelTop,sz:.96,ry,color:wallColor});
-      parts.push({x:s.x,z:s.z,y:height-.045,sx:1.01,sy:.09,sz:1.01,ry,color:wallColor});
+      if(!cutaway)parts.push({x:s.x,z:s.z,y:(lintelTop+height-.09)/2,sx:1,sy:height-.09-lintelTop,sz:1,ry,color:wallColor});
+      parts.push({x:s.x,z:s.z,y:height-.045,sx:1,sy:.09,sz:1,ry,color:wallColor});
     }
     if(timber)for(const face of [-1,1]) {
       const dx=face*.49*Math.sin(ry),dz=face*.49*Math.cos(ry);

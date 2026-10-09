@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**Présentation V285, schéma218 conservé : [raccords, traces et fantômes](construction-presentation-v285.md).** Corrections générales du rendu et du placement ; aucune nouvelle règle ou boucle de simulation. Les Aulnes et les références historiques bénéficient du même rendu sans régénération.
+
 **Référence intégrée V284, schéma218 conservé : [Les Aulnes actuelles](aulnes-current.md).** Elle réunit les installations compatibles livrées jusqu'àV283 ; sa présence ne signifie pas que toutes les branches, tous les biomes ou tous les incidents sont exercés. Le guide distingue disponibilité, préparation et observations réellement jouées.
 
 **V283, schéma 218 : [biocarburant et générateur](biofuel-v283.md).** Raffinerie alimentée, deux transformations, filtre organique végétal initial, transport et remplissage exclusif du générateur, 1 000 W, commutation, panne, EMP, chaleur et lueur sont raccordés. Incendies matériels existants ; explosions et éjection spécifique restent ouverts. Les états suivants sont historiques.

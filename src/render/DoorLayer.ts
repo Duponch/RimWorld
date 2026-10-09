@@ -4,7 +4,7 @@ import { BoxMesh } from './BoxMesh';
 import { material } from './primitives';
 import { doorOrientations, doorMotionTicks, isRoomDoor, type DoorState } from '../sim/door-rules';
 import type { World } from '../sim/types';
-import { DOOR_LEAF_BOTTOM, doorLeafColor, doorLeafTop } from './door-parts';
+import { doorLeafColor, doorLeafPartsForStructure } from './door-parts';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { penBoundaryAxes } from './pen-parts';
 
@@ -69,10 +69,11 @@ export class DoorLayer {
     for(const s of doors) {
       const d=s.door!,old=this.history.get(s.id),changed=!old||old.current.changedAt!==d.changedAt||old.current.from!==d.from||old.current.open!==d.open||doorMotionTicks({...s,door:old.current})!==doorMotionTicks(s);
       const pair=changed?{current:{...d},previous:old?.current??{...d}}:old!;this.history.set(s.id,pair);
-      const gate=s.kind==='fence-gate',leafTop=gate?.94:doorLeafTop(cutaway),leafBottom=gate?.08:DOOR_LEAF_BOTTOM;
-      const angle=((gate?gateAxes:axes).get(s.z*world.width+s.x)??0)*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle);
-      for(const side of [-1,1]) {
-        object.position.set(s.x+side*.215*cos,(leafTop+leafBottom)/2,s.z-side*.215*sin);object.rotation.set(0,angle,0);object.scale.set(.42,leafTop-leafBottom,gate?.085:.14);object.updateMatrix();
+      const gate=s.kind==='fence-gate',axis=(gate?gateAxes:axes).get(s.z*world.width+s.x)??0;
+      const angle=axis*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle),leaves=doorLeafPartsForStructure(s,cutaway,axis);
+      for(let sideIndex=0;sideIndex<2;sideIndex++) {
+        const side=sideIndex===0?-1:1,leaf=leaves[sideIndex]!;
+        object.position.set(leaf.x,leaf.y,leaf.z);object.rotation.set(0,angle,0);object.scale.set(leaf.sx!,leaf.sy!,leaf.sz!);object.updateMatrix();
         this.mesh.setMatrixAt(index,object.matrix);
         color.setHex(doorLeafColor(s.material));
         if(s.kind==='autodoor')color.lerp(AUTODOOR_TINT,.24);

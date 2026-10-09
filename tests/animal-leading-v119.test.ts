@@ -146,8 +146,8 @@ test('at a pen corner each rail ends at the post instead of passing through it',
   const {world}=penCamp();
   const rails=penParts(world).filter(part=>part.y===.34&&Math.abs(part.x-5)<.5&&Math.abs(part.z-5)<.5);
   expect(rails).toHaveLength(2);
-  expect(rails.some(part=>part.x===5.24&&part.sx===.48)).toBe(true);
-  expect(rails.some(part=>part.z===5.24&&part.sz===.48)).toBe(true);
+  expect(rails.some(part=>part.x===5.28&&part.sx===.44)).toBe(true);
+  expect(rails.some(part=>part.z===5.28&&part.sz===.44)).toBe(true);
   expect(rails.every(part=>part.x>=5&&part.z>=5)).toBe(true);
 });
 
@@ -157,6 +157,9 @@ test('version 134 rejects future rope members, then migrates a single rope witho
   expect(pawn.animalHandling?.kind).toBe('lead');
   const legacy=structuredClone(world);(legacy as unknown as {schemaVersion:number}).schemaVersion=134;
   withoutFutureFineMealPolicy(legacy);
+  // The prospective agendas did not exist in this claimed version. Keep the
+  // rejection below specific to future rope members rather than these fields.
+  delete legacy.deepResources;delete legacy.orbital;
   expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow('Invalid version 134 save');
   if(legacy.pawns[0]?.animalHandling?.kind==='lead')delete legacy.pawns[0].animalHandling.ropees;
   delete legacy.breakdown;

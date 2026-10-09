@@ -21,9 +21,9 @@ export function penBoundaryAxes(world:World):ReadonlyMap<number,0|1> {
 }
 
 /** All posts, rails, gate frames and marker pieces enter one resident box batch. */
-export function penParts(world:World):Placement[] {
+export function penParts(world:World,subjects:readonly Structure[]=world.structures):Placement[] {
   const parts:Placement[]=[];
-  const penStructures=world.structures.filter(s=>s.kind==='fence'||s.kind==='fence-gate'||s.kind==='pen-marker');
+  const penStructures=subjects.filter(s=>s.kind==='fence'||s.kind==='fence-gate'||s.kind==='pen-marker');
   if(!penStructures.length)return parts;
   const index=new Map<number,Structure>();
   for(const s of world.structures)if(boundary(s))index.set(s.z*world.width+s.x,s);
@@ -48,17 +48,20 @@ export function penParts(world:World):Placement[] {
       parts.push({x:s.x,z:s.z,y:1.02,sx:.17,sy:.12,sz:.17,color});
       for(const axis of axes)for(const height of [.34,.73]){
         const negative=axis===0?left:near,positive=axis===0?right:far;
-        // On a corner the rail ends at its own post, instead of crossing the
-        // perpendicular rail and visibly protruding through the enclosure.
-        const length=negative&&positive ? .96 : negative||positive ? .48 : .78;
-        const shift=negative&&!positive ? -.24 : positive&&!negative ? .24 : 0;
-        parts.push({x:s.x+(axis===0?shift:0),z:s.z+(axis===1?shift:0),y:height,
-          sx:axis===0?length:.09,sy:.075,sz:axis===1?length:.09,color});
+        // Two half-rails butt against the post and neighboring cell. Splitting
+        // at the post also prevents perpendicular corner rails from crossing.
+        const isolated=!negative&&!positive,edge=isolated?.39:.5;
+        const length=edge-.06;
+        for(const side of [-1,1])if(isolated||(side<0?negative:positive)) {
+          const shift=side*(edge+.06)/2;
+          parts.push({x:s.x+(axis===0?shift:0),z:s.z+(axis===1?shift:0),y:height,
+            sx:axis===0?length:.09,sy:.075,sz:axis===1?length:.09,color});
+        }
       }
     } else {
       const axis=axes[0]??0;
-      for(const side of [-1,1])parts.push({x:s.x+(axis===0?side*.45:0),z:s.z+(axis===1?side*.45:0),y:.53,sx:.13,sy:1.06,sz:.13,color});
-      parts.push({x:s.x,z:s.z,y:1.04,sx:axis===0?.98:.1,sy:.1,sz:axis===1?.98:.1,color});
+      for(const side of [-1,1])parts.push({x:s.x+(axis===0?side*.435:0),z:s.z+(axis===1?side*.435:0),y:.53,sx:.13,sy:1.06,sz:.13,color});
+      parts.push({x:s.x,z:s.z,y:1.04,sx:axis===0?1:.1,sy:.1,sz:axis===1?1:.1,color});
     }
   }
   return parts;

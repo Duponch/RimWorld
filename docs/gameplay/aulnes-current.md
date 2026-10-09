@@ -1,5 +1,7 @@
 # Les Aulnes, référence intégrée
 
+Les [corrections visuelles V285](construction-presentation-v285.md) s’appliquent aussi à ce checkpoint : raccords des constructions, traces sur planchers et aperçus fantômes avant placement. Son fichier et son identité restent inchangés.
+
 Ouvrez **Charger une partie → Colonies de test → Les Aulnes · référence intégrée 250×250**. Cette première entrée du catalogue ouvre une nouvelle copie en pause. Le [fichier publié](../../public/test-saves/v284/les-aulnes-integrees.json) peut aussi être importé. L’ancienne [référence V224](aulnes-seating-v224.md) demeure accessible avec ses sièges corrigés et son état original.
 
 La carte de 250×250 conserve le village, les 14 colons, Dorian en prison, les biographies, les relations, les équipements et les qualités des meubles. Les ateliers, cuisines, chambres, télévision, élevage et réseau électrique existants sont complétés par les installations compatibles livrées jusqu’à V283. Trois animaux domestiques — cerf, gazelle et lièvre — rejoignent les mufalos et dromadaires.

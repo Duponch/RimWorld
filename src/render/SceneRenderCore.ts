@@ -1,5 +1,7 @@
 import { DeepResourceLayer } from './DeepResourceLayer';
 import { AreaPreviewLayer } from './AreaPreviewLayer';
+import { ConstructionPreviewLayer } from './ConstructionPreviewLayer';
+import type { ConstructionPreviewSpec } from './construction-preview-parts';
 import { HygieneLayer } from './HygieneLayer';
 
 import { pawnBodyLocation } from '../sim/human-corpses';
@@ -169,6 +171,7 @@ export class SceneRenderCore {
   compatibilityWarning?: string;
   protected textureDimensionLimit = Infinity;
   protected readonly areaPreview=new AreaPreviewLayer();
+  protected readonly constructionPreview=new ConstructionPreviewLayer();
   protected areaIndex: AreaIndex | undefined;
   protected constructionIndex: ConstructionCellIndex | undefined;
   protected areaSignature = '';
@@ -223,7 +226,7 @@ export class SceneRenderCore {
   protected readonly homeSignature = new HomePresentationSignature();
   protected tool = 'select';
   protected furniturePlacement:Structure|undefined;
-  setFurniturePlacement(object:Structure|undefined):void {this.furniturePlacement=object;this.updateDeepResources();}
+  setFurniturePlacement(object:Structure|undefined):void {this.furniturePlacement=object;this.updateDeepResources();this.updateHover();}
   protected placementRotation: Orientation = 0;
   protected hoverCell: { x: number; z: number } | null = null;
   protected wallCutaway = false;
@@ -318,7 +321,7 @@ export class SceneRenderCore {
     selectionGeometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(9),3));
     this.objectSelection = new THREE.Mesh(selectionGeometry,new THREE.MeshBasicMaterial({color:0xfff5d6,side:THREE.DoubleSide,depthTest:false,depthWrite:false}));
     this.objectSelection.visible=false;this.objectSelection.frustumCulled=false;this.objectSelection.renderOrder=20;
-    this.scene.add(this.hover,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group,this.podRescue.group,this.orbitalDelivery.group);
+    this.scene.add(this.hover,this.constructionPreview.group,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group,this.podRescue.group,this.orbitalDelivery.group);
     } catch (error) {
       try { this.dispose(); } catch { /* Static create also closes the device. */ }
       throw error;
@@ -490,7 +493,7 @@ export class SceneRenderCore {
   }
 
   setFloorSelection(floor:BuildableFloorKind|undefined):void {
-    if(floor!==this.selectedFloor)this.cancelDesignation();this.selectedFloor=floor;
+    if(floor!==this.selectedFloor)this.cancelDesignation();this.selectedFloor=floor;this.updateHover();
   }
   setConstructionMaterial(value:ConstructionMaterial|undefined):void {
     if (this.constructionMaterial!==value && this.areaDrag) this.cancelDesignation();
@@ -528,6 +531,7 @@ export class SceneRenderCore {
     this.controls.enabled = true;
     if (drag) this.hostPort.releasePointer(drag.pointerId);
     this.areaPreview.hide();
+    this.constructionPreview.hide();
       this.turretPreviewVisible=false;this.turretPreviewSignature='';
     this.hover.visible = false;
     (this.hover.material as THREE.MeshBasicNodeMaterial).opacity = 0.55;
@@ -641,6 +645,7 @@ export class SceneRenderCore {
     this.invalidatePausedShadow();
     this.wallCutaway = enabled;
     if (this.world) { this.roofs.update(this.world,this.boxes,this.wallCutaway);this.buildStructures(this.world); this.buildJobs(this.world); }
+    this.areaSignature='';this.updateHover();
   }
 
   /** Hide canopies for inspection while retaining trunks and all game rules. */
@@ -697,6 +702,7 @@ export class SceneRenderCore {
     const restorePrecipitation=this.precipitation.prepareForCompile();
     const restoreBoxes=this.boxes.prepareEmptyShadows();
     const restoreArea=this.areaPreview.prepareForCompile();
+    const restoreConstruction=this.constructionPreview.prepareForCompile();
     const restoreDeep=this.deepResources.prepareForCompile();
     try {
       // The double-sided cursor otherwise compiles both face variants on the
@@ -720,7 +726,7 @@ export class SceneRenderCore {
       for (const [object, value] of culling) object.frustumCulled = value;
       restoreMechanoids();
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
-      restoreBoxes();restoreArea();restoreDeep();
+      restoreBoxes();restoreArea();restoreConstruction();restoreDeep();
       restoreOverview();
       restorePodRescue();restoreOrbitalDelivery();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
@@ -1069,7 +1075,7 @@ export class SceneRenderCore {
     const drag = this.areaDrag, world = this.world, cell = this.hoverCell;
     if (!drag || !world) return;
     if (!cell) {
-      this.hover.visible = false; this.areaPreview.hide();
+      this.hover.visible = false; this.areaPreview.hide();this.constructionPreview.hide();
       this.areaSignature = ''; this.onAreaPreview(null); return;
     }
     const action = 'action' in drag ? drag.action : drag.kind;
@@ -1080,7 +1086,7 @@ export class SceneRenderCore {
     if ('action' in drag) {
       this.areaIndex ??= buildAreaIndex(world);
       const result = queryArea(world, { type: 'area', action: drag.action, from: drag.from, to: cell, ...(drag.action==='lay-floor'?{floor:this.selectedFloor}:{}) }, this.areaIndex);
-      if (!result.ok) return;
+      if (!result.ok) {this.hover.visible=false;this.areaPreview.hide();this.constructionPreview.hide();this.onAreaPreview(null);return;}
       ({ bounds, cells, skipped } = result);
     } else {
       const line = constructionLineCells(drag.from, cell);
@@ -1093,6 +1099,21 @@ export class SceneRenderCore {
       skipped = line.length-cells.length;
     }
     const width = bounds.maxX - bounds.minX + 1, height = bounds.maxZ - bounds.minZ + 1;
+    if ('kind' in drag || action === 'lay-floor' || action === 'build-roof') {
+      const validCells = new Set(cells), valid: ConstructionPreviewSpec[] = [], invalid: ConstructionPreviewSpec[] = [];
+      const positions = 'kind' in drag ? constructionLineCells(drag.from, cell)
+        : Array.from({length:width*height},(_,i)=>({x:bounds.minX+i%width,z:bounds.minZ+Math.floor(i/width)}));
+      for (const position of positions) {
+        const spec:ConstructionPreviewSpec = { ...position, kind:action as ConstructionPreviewSpec['kind'], orientation:0,
+          ...('kind' in drag && drag.material ? {material:drag.material} : {}),
+          ...(action==='lay-floor'?{floor:this.selectedFloor??'wood-planks'}:{}) };
+        (validCells.has(position.z*world.width+position.x)?valid:invalid).push(spec);
+      }
+      this.hover.visible=false;this.areaPreview.hide();
+      this.constructionPreview.update(world,valid,invalid,this.wallCutaway);
+      this.onAreaPreview({width,height,eligible:cells.length,skipped,line:'kind' in drag});return;
+    }
+    this.constructionPreview.hide();
     const color = action === 'cancel' || action === 'remove-stockpile' ? 0xf49b7c : 0x9de7c9;
     this.hover.visible = true; this.hover.scale.set(width, height, 1);
     this.hover.position.set((bounds.minX + bounds.maxX) / 2, 0.045, (bounds.minZ + bounds.maxZ) / 2);
@@ -1116,25 +1137,38 @@ export class SceneRenderCore {
     const sunLamp=this.tool==='select'?this.world?.structures.find(s=>s.kind==='sun-lamp'&&s.x===cell?.x&&s.z===cell?.z):undefined;
     if(this.world&&cell&&(this.tool==='sun-lamp'||sunLamp||this.tool==='install'&&this.furniturePlacement?.kind==='sun-lamp'))this.recreationHints.sunLamp(this.world,cell);
     this.hover.visible = !!cell&&this.tool!=='select';
-    if(this.tool==='select'){this.hostPort.title('');return;}
-    if (!cell || !this.world) return;
+    if(this.tool==='select'){this.constructionPreview.hide();this.hostPort.title('');return;}
+    if (!cell || !this.world) {this.constructionPreview.hide();return;}
     const kind=this.tool==='install'&&this.furniturePlacement?this.furniturePlacement.kind:this.tool in STRUCTURE_DEFINITIONS?this.tool as JobKind:'wall';
     const cells = footprintCells({ ...cell, kind, orientation: this.placementRotation });
     const minX=Math.min(...cells.map(c=>c.x)),maxX=Math.max(...cells.map(c=>c.x)),minZ=Math.min(...cells.map(c=>c.z)),maxZ=Math.max(...cells.map(c=>c.z));
     this.hover.scale.set(maxX-minX+1, maxZ-minZ+1, 1);
     this.hover.position.set((minX+maxX)/2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (minZ+maxZ)/2);
     const placeable=this.tool in STRUCTURE_DEFINITIONS||['mine','uninstall','deconstruct','chop','harvest','cut'].includes(this.tool);
-    const validity = this.tool==='lay-floor'||this.tool==='remove-floor'?canDesignate(this.world,{type:'designate',kind:this.tool,...cell,...this.tool==='lay-floor'?{floor:this.selectedFloor}:{}}):this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(this.furniturePlacement.kind)?0:this.placementRotation},true):placeable
+    const validity = this.tool==='build-roof'?queryArea(this.world,{type:'area',action:'build-roof',from:cell,to:cell}):this.tool==='lay-floor'||this.tool==='remove-floor'?canDesignate(this.world,{type:'designate',kind:this.tool,...cell,...this.tool==='lay-floor'?{floor:this.selectedFloor}:{}}):this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(this.furniturePlacement.kind)?0:this.placementRotation},true):placeable
       ? canDesignate(this.world, { type:'designate',kind:this.tool as JobKind,...cell,...(this.constructionMaterial?{material:this.constructionMaterial}:{}),orientation:this.tool==='mini-turret'||this.tool==='sandbags'||this.tool==='solar-generator'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='wood-generator'||this.tool==='chemfuel-generator'||this.tool==='sun-lamp'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='autodoor'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
-    const color = validity?.ok === false ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
+    const invalidPlacement=validity?.ok===false||this.tool==='build-roof'&&validity!==undefined&&'cells' in validity&&validity.cells.length===0;
+    const color = invalidPlacement ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
-    this.hostPort.title(validity?.reason ?? '');
+    if (this.tool in STRUCTURE_DEFINITIONS || this.tool==='lay-floor'||this.tool==='build-roof'||this.tool==='install'&&this.furniturePlacement) {
+      const orientation:Orientation = this.tool==='install'
+        ? ['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(kind)?0:this.placementRotation
+        : ['mini-turret','sandbags','solar-generator','power-conduit','power-switch','wood-generator','chemfuel-generator','sun-lamp','standing-lamp','door','autodoor','passive-cooler'].includes(this.tool)?0:this.placementRotation;
+      const spec:ConstructionPreviewSpec={...cell,kind:(this.tool==='install'?kind:this.tool) as ConstructionPreviewSpec['kind'],orientation,
+        ...(this.constructionMaterial?{material:this.constructionMaterial}:{}),
+        ...(this.tool==='lay-floor'?{floor:this.selectedFloor??'wood-planks'}:{}),
+        ...(this.tool==='install'?{furniture:this.furniturePlacement}:{})};
+      this.hover.visible=false;
+      this.constructionPreview.update(this.world,invalidPlacement?[]:[spec],invalidPlacement?[spec]:[],this.wallCutaway);
+    } else this.constructionPreview.hide();
+    this.hostPort.title(validity&&'reason' in validity?validity.reason??'':'');
   }
   dispose(): void {
     if (this.disposed) return;
     this.hostPort.disposeSelection();
     if (this.hostPort.selectionReady() && this.rig && this.hover) this.cancelDesignation();
     this.areaPreview.dispose();
+    this.constructionPreview.dispose();
     this.disposed = true;
     this.renderer.setAnimationLoop(null);
     this.hostPort.disconnectResize();

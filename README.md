@@ -1,5 +1,7 @@
 # Lisière
 
+**V285 — raccords et fantômes de construction.** Murs, enclos et sols jointifs ; traces suivant les surfaces ; véritables modèles translucides, rotation et placements refusés. [Détails et validation](docs/gameplay/construction-presentation-v285.md). Les sauvegardes des Aulnes se chargent avec ces corrections sans modification du checkpoint.
+
 **Référence joueur maintenue : [Les Aulnes intégrées, 250×250](docs/gameplay/aulnes-current.md).** La première entrée de « Colonies de test » rassemble les systèmes compatibles dans un village avancé. Les anciennes versions restent accessibles ; les prochaines fonctionnalités enrichiront cette référence.
 
 **V283 — biocarburant et générateur ; schéma 218.**

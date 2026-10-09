@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V285 : [raccords, traces et fantômes de construction](gameplay/construction-presentation-v285.md).** Modèles partagés avec le rendu final, contrôles ciblés et parcours matériel dans Les Aulnes ; schéma218 et catalogue conservés.
+
 **Référence de test maintenue : [Les Aulnes intégrées](gameplay/aulnes-current.md).** Accès, quartiers, activités, limites logiques et procédure de mise à jour dans cette note unique. Les anciennes sauvegardes constituent des archives de validation.
 
 **V283, schéma 218 : [biocarburant et générateur](gameplay/biofuel-v283.md).** Les deux transformations, le transport, le réservoir et le réseau ferment une boucle industrielle. Règles et preuves dans cette note unique ; les états suivants sont historiques.

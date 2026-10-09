@@ -28,7 +28,7 @@ test('a lower door and recessed leaves fit a full-height wall in both axes',()=>
     if(panel&&cap){
       expect(panel.y+panel.sy!/2).toBeGreaterThanOrEqual(cap.y-cap.sy!/2);
       expect(cap.y+cap.sy!/2).toBeCloseTo(WORLD_SCALE.wallHeight);
-      expect(panel.sz).toBe(.96);
+      expect(panel.sz).toBe(1);
       expect(panel.color).toBeDefined();
     }
     expect(lintel!.y-lintel!.sy!/2).toBeCloseTo(WORLD_SCALE.futureDoorClearance);

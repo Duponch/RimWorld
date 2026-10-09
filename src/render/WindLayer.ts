@@ -4,6 +4,7 @@ import { BoxMesh } from './BoxMesh';
 import { material } from './primitives';
 import type { World } from '../sim/types';
 import { isPowerActive } from '../sim/power-rules';
+import { WIND_BLADE_COLOR, WIND_BLADE_SHAPE, windBladeHub, windBladeInitialPhase } from './wind-blade-parts';
 
 interface Spin {tick:number;phase:number;speed:number}
 /** Three retained blades per turbine. Only changes of power/placement upload
@@ -42,19 +43,19 @@ export class WindLayer {
     if(key===this.key)return;this.key=key;
     const live=new Set(turbines.map(s=>s.id));for(const id of this.history.keys())if(!live.has(id))this.history.delete(id);
     const count=turbines.length*3;if(count>this.mesh.instanceMatrix.count){const capacity=2**Math.ceil(Math.log2(count));this.mesh.allocate(this.base,capacity);this.allocateAttributes(capacity);}
-    const current=this.mesh.geometry.getAttribute('windCurrent'),previous=this.mesh.geometry.getAttribute('windPrevious'),shape=this.mesh.geometry.getAttribute('windShape'),object=new THREE.Object3D(),color=new THREE.Color(0xc4cbb6);
+    const current=this.mesh.geometry.getAttribute('windCurrent'),previous=this.mesh.geometry.getAttribute('windPrevious'),shape=this.mesh.geometry.getAttribute('windShape'),object=new THREE.Object3D(),color=new THREE.Color(WIND_BLADE_COLOR);
     let index=0;
     for(const s of turbines){
       const old=this.history.get(s.id),speed=isPowerActive(s)?(s.wind?.cachedWatts??0)/3450*.35:0;
-      const initial=(s.id*.61803398875%1)*Math.PI*2;
+      const initial=windBladeInitialPhase(s.id);
       const phase=old?(old.current.phase+(world.tick-old.current.tick)*old.current.speed)%(Math.PI*2):initial;
       const changed=!old||old.current.speed!==speed;
       const pair=changed?{current:{tick:world.tick,phase,speed},previous:old?.current??{tick:world.tick,phase,speed}}:old!;this.history.set(s.id,pair);
-      const ry=s.orientation*Math.PI/2;object.position.set(s.x+Math.sin(ry)*1.15,3.73,s.z+Math.cos(ry)*1.15);object.rotation.set(0,ry,0);object.scale.set(1,1,1);object.updateMatrix();
+      const hub=windBladeHub(s);object.position.set(hub.x,hub.y,hub.z);object.rotation.set(0,hub.ry!,0);object.scale.set(1,1,1);object.updateMatrix();
       for(let blade=0;blade<3;blade++){
         this.mesh.setMatrixAt(index,object.matrix);this.mesh.setColorAt(index,color);
         for(const [attribute,segment] of [[current,pair.current],[previous,pair.previous]] as const)attribute.setXYZW(index,segment.tick,segment.phase,segment.speed,blade*Math.PI*2/3);
-        shape.setXYZW(index,.24,2.55,.1,1.56);index++;
+        shape.setXYZW(index,WIND_BLADE_SHAPE.sx,WIND_BLADE_SHAPE.sy,WIND_BLADE_SHAPE.sz,WIND_BLADE_SHAPE.offsetY);index++;
       }
     }
     this.mesh.activeCount=count;this.mesh.instanceMatrix.needsUpdate=this.mesh.colorBuffer.needsUpdate=true;

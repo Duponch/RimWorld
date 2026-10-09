@@ -2,18 +2,18 @@ import { isPowerActive } from '../sim/power-rules';
 import { sunLampActive } from '../sim/sun-lamp';
 import { isPowerTransmitter } from '../sim/power-grid';
 import { footprintCells } from '../sim/definitions';
-import type { World } from '../sim/types';
+import type { Structure, World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import type { Placement } from './primitives';
 
 /** Parts share the prepared furniture batch. Light is a shared field, never
  * a PointLight or shadow map per appliance. */
-export function electricalParts(world:World,cutaway=false):Placement[] {
+export function electricalParts(world:World,cutaway=false,subjects:readonly Structure[]=world.structures):Placement[] {
   const out:Placement[]=[];
   const byId=new Map(world.structures.map(s=>[s.id,s]));
   const transmitters=new Set<number>();
   for(const s of world.structures)if(isPowerTransmitter(s.kind))for(const c of footprintCells(s))transmitters.add(c.z*world.width+c.x);
-  for(const s of world.structures) {
+  for(const s of subjects) {
     const on=s.kind==='sun-lamp'?sunLampActive(world,s):isPowerActive(s);
     if(s.kind==='power-conduit') {
       out.push({x:s.x,z:s.z,y:.055,sx:.18,sy:.07,sz:.18,color:0xac8258});
@@ -59,7 +59,7 @@ export function electricalParts(world:World,cutaway=false):Placement[] {
       }
     } else if(s.kind==='cooler') {
       const h=cutaway?WORLD_SCALE.wallCutawayHeight:WORLD_SCALE.wallHeight,ry=s.orientation*Math.PI/2;
-      out.push({x:s.x,z:s.z,y:h/2,sx:.94,sy:h,sz:.88,ry,color:0x8d9d98});
+      out.push({x:s.x,z:s.z,y:h/2,sx:1,sy:h,sz:.88,ry,color:0x8d9d98});
       for(const sign of [-1,1])for(const y of [.25,.5,.75])out.push({x:s.x+Math.sin(ry)*.455*sign,z:s.z+Math.cos(ry)*.455*sign,y:y*h,sx:.68,sy:.075,sz:.055,ry,color:sign>0?0x559bb6:0xb77757});
     } else if(s.kind==='sun-lamp') {
       // Broad chalk reflector and two downward strips share the resident
@@ -87,7 +87,7 @@ export function electricalParts(world:World,cutaway=false):Placement[] {
   }
   // Consumer leads are visual links to the saved connection, not guessed by
   // proximity. Reconnection changes only this resident furniture batch.
-  for(const s of world.structures)if(s.power?.parentId!=null) {
+  for(const s of subjects)if(s.power?.parentId!=null) {
     const parent=byId.get(s.power.parentId);if(!parent)continue;
     const nearest=footprintCells(parent).reduce((a,b)=>(a.x-s.x)**2+(a.z-s.z)**2<=(b.x-s.x)**2+(b.z-s.z)**2?a:b);
     const dx=nearest.x-s.x,dz=nearest.z-s.z,length=Math.hypot(dx,dz);if(!length)continue;

@@ -8,6 +8,24 @@ import { woodFiberDetail } from './stylized-surfaces';
 type RoofCell = { x: number; z: number };
 type Point = readonly [number, number, number];
 
+export interface RoofSlabCellBounds extends RoofCell {
+  w: number; e: number; s: number; n: number; top: number; bottom: number;
+  west: boolean; east: boolean; south: boolean; north: boolean;
+}
+
+/** The slab and construction ghosts use the same contour and thickness. */
+export function roofSlabCellBounds(cells: readonly RoofCell[], top: number): RoofSlabCellBounds[] {
+  const present = new Set(cells.map(c => `${c.x}:${c.z}`));
+  const has = (x: number, z: number) => present.has(`${x}:${z}`);
+  const overhang = .065;
+  return cells.map(({ x, z }) => {
+    const west = !has(x - 1, z), east = !has(x + 1, z), south = !has(x, z - 1), north = !has(x, z + 1);
+    return { x, z, w: x - .5 - (west ? overhang : 0), e: x + .5 + (east ? overhang : 0),
+      s: z - .5 - (south ? overhang : 0), n: z + .5 + (north ? overhang : 0), top, bottom: top - .31,
+      west, east, south, north };
+  });
+}
+
 /** Include roofed supports and corner posts in the slab, using only the
  * authoritative constructed cells as the adjacency source. */
 export function roofSurfaceCells(world: World): RoofCell[] {
@@ -31,9 +49,7 @@ export function roofSurfaceCells(world: World): RoofCell[] {
  * into a thick, lightly overhanging fascia. */
 export function roofSlabGeometry(cells: readonly RoofCell[], top: number): THREE.BufferGeometry {
   const positions: number[] = [], normals: number[] = [], colors: number[] = [], uvs: number[] = [];
-  const present = new Set(cells.map(c => `${c.x}:${c.z}`));
-  const has = (x: number, z: number) => present.has(`${x}:${z}`);
-  const bottom = top - .31, overhang = .065, tint = new THREE.Color();
+  const tint = new THREE.Color();
   function triangle(a: Point, b: Point, c: Point, normal: Point, shade: number): void {
     const cross = new THREE.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2])
       .cross(new THREE.Vector3(c[0] - a[0], c[1] - a[1], c[2] - a[2]));
@@ -45,11 +61,7 @@ export function roofSlabGeometry(cells: readonly RoofCell[], top: number): THREE
       uvs.push(p[0] / 8, p[2] / 8);
     }
   }
-  for (const { x, z } of cells) {
-    const w = x - .5 - (!has(x - 1, z) ? overhang : 0);
-    const e = x + .5 + (!has(x + 1, z) ? overhang : 0);
-    const s = z - .5 - (!has(x, z - 1) ? overhang : 0);
-    const n = z + .5 + (!has(x, z + 1) ? overhang : 0);
+  for (const { w, e, s, n, bottom, west, east, south, north } of roofSlabCellBounds(cells, top)) {
     const sw: Point = [w, top, s], se: Point = [e, top, s];
     const ne: Point = [e, top, n], nw: Point = [w, top, n];
     triangle(sw, ne, se, [0, 1, 0], 0xe6bc83);
@@ -59,10 +71,10 @@ export function roofSlabGeometry(cells: readonly RoofCell[], top: number): THREE
     triangle(underSW,underSE,underNE,[0,-1,0],0x806044);
     triangle(underSW,underNE,underNW,[0,-1,0],0x806044);
     const edges: Array<{ exposed: boolean; a: Point; b: Point; normal: Point }> = [
-      { exposed: !has(x, z - 1), a: sw, b: se, normal: [0, 0, -1] },
-      { exposed: !has(x + 1, z), a: se, b: ne, normal: [1, 0, 0] },
-      { exposed: !has(x, z + 1), a: ne, b: nw, normal: [0, 0, 1] },
-      { exposed: !has(x - 1, z), a: nw, b: sw, normal: [-1, 0, 0] },
+      { exposed: south, a: sw, b: se, normal: [0, 0, -1] },
+      { exposed: east, a: se, b: ne, normal: [1, 0, 0] },
+      { exposed: north, a: ne, b: nw, normal: [0, 0, 1] },
+      { exposed: west, a: nw, b: sw, normal: [-1, 0, 0] },
     ];
     for (const edge of edges) {
       if (!edge.exposed) continue;

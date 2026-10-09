@@ -1,9 +1,10 @@
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, cos, sin, positionLocal, texture, uv, vec2, vec3 } from 'three/tsl';
+import { Fn, attribute, cos, sin, positionLocal, texture, uv, varyingProperty, vec2, vec3 } from 'three/tsl';
 import type { FilthRecord } from '../sim/filth-rules';
 import { createFilthAtlas, filthDecal, FILTH_ATLAS } from './filth-appearance';
 import { prepareGrassBloodMasks } from './grass-blood-mask';
 import { material } from './primitives';
+import { FILTH_SURFACE_OFFSET, FLOOR_SURFACE_Y, filthDecalBounds, filthSurfacePatches, surfaceHeightAtCell, type FilthSurface, type SurfaceBounds, type SurfacePatch } from './surface-height';
 
 /** Flat alpha decals: one resident draw for all six species and all thicknesses.
  * No per-frame work, per-stain material, billboard or simulation randomness. */
@@ -13,6 +14,8 @@ export class FilthLayer {
   private capacity = 16;
   private revision = 0;
   private previous: Pick<FilthRecord, 'id' | 'x' | 'z' | 'kind' | 'thickness'>[] = [];
+  private previousSurfaceSize: readonly [number, number] | undefined;
+  private readonly previousSurfaceHeights = new Map<number, number | undefined>();
   constructor(configure?: (m: THREE.MeshStandardNodeMaterial) => void) {
     const pixels = createFilthAtlas();
     prepareGrassBloodMasks(pixels);
@@ -26,16 +29,24 @@ export class FilthLayer {
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 1], 2));
     geometry.setIndex([0, 2, 1, 0, 3, 2]); geometry.instanceCount = 0;
     const mat = material(0xffffff, { transparent: true, depthWrite: false });
+    const worldXZ = varyingProperty('vec2', 'filthWorldXZ');
     mat.positionNode = Fn(() => {
       const pose = attribute('filthPose', 'vec4'), shape = attribute('filthShape', 'vec4');
       const x = positionLocal.x.mul(shape.x), z = positionLocal.z.mul(shape.y), c = cos(pose.w), s = sin(pose.w);
-      return vec3(x.mul(c).sub(z.mul(s)), 0, x.mul(s).add(z.mul(c))).add(pose.xyz);
+      const point = vec3(x.mul(c).sub(z.mul(s)), 0, x.mul(s).add(z.mul(c))).add(pose.xyz);
+      worldXZ.assign(point.xz);
+      return point;
     })();
     const shape = attribute('filthShape', 'vec4'), tile = shape.z;
     const localUV = vec2(shape.w.greaterThan(0).select(uv().x.oneMinus(), uv().x), uv().y);
     const atlasUV = localUV.add(vec2(tile.mod(FILTH_ATLAS.columns), tile.div(FILTH_ATLAS.columns).floor())).div(vec2(FILTH_ATLAS.columns, FILTH_ATLAS.rows));
     const texel = texture(this.atlas, atlasUV);
-    mat.colorNode = texel.rgb; mat.opacityNode = texel.a;
+    const clip = attribute('filthClip', 'vec4');
+    // Half-open bounds give each fragment exactly one supporting surface.
+    // Copies retain the full rotated quad and its original UV derivatives.
+    const within = worldXZ.x.greaterThanEqual(clip.x).and(worldXZ.y.greaterThanEqual(clip.y))
+      .and(worldXZ.x.lessThan(clip.z)).and(worldXZ.y.lessThan(clip.w));
+    mat.colorNode = texel.rgb; mat.opacityNode = texel.a.mul(within.select(1, 0));
     configure?.(mat);
     this.mesh = new THREE.Mesh(geometry, mat); this.mesh.name = 'Filth — transparent ground layers';
     this.mesh.frustumCulled = false; this.mesh.receiveShadow = true; this.mesh.visible = false;
@@ -46,25 +57,54 @@ export class FilthLayer {
     g.dispose();
     g.setAttribute('filthPose', new THREE.InstancedBufferAttribute(new Float32Array(this.capacity * 4), 4));
     g.setAttribute('filthShape', new THREE.InstancedBufferAttribute(new Float32Array(this.capacity * 4), 4));
+    g.setAttribute('filthClip', new THREE.InstancedBufferAttribute(new Float32Array(this.capacity * 4), 4));
   }
-  update(items: readonly FilthRecord[], reset = false): void {
+  /** Surface values are copied only beneath stain footprints. Floor placement
+   * or removal invalidates unchanged filth, including mutable direct worlds.
+   * Standalone callers without a surface retain the historical .071 height. */
+  update(items: readonly FilthRecord[], reset = false, surface?: FilthSurface): void {
     if (!reset && items.length === this.previous.length && items.every((f, i) => {
       const p = this.previous[i]!; return f.id === p.id && f.x === p.x && f.z === p.z && f.kind === p.kind && f.thickness === p.thickness;
-    })) return;
+    }) && this.surfaceUnchanged(surface)) return;
     this.revision++;
     this.previous = items.map(({ id, x, z, kind, thickness }) => ({ id, x, z, kind, thickness }));
-    const count = items.reduce((n, f) => n + f.thickness, 0);
+    this.previousSurfaceSize = surface ? [surface.width, surface.height] : undefined;
+    this.previousSurfaceHeights.clear();
+    const pieces: { decal: ReturnType<typeof filthDecal>; patch: SurfacePatch }[] = [];
+    for (const f of items) for (let layer = 0; layer < f.thickness; layer++) {
+      const decal = filthDecal(f, layer), bounds = filthDecalBounds(decal);
+      if (surface) this.rememberSurface(surface, bounds);
+      const patches = surface ? filthSurfacePatches(surface, bounds) : [{ ...bounds, height: FLOOR_SURFACE_Y }];
+      for (const patch of patches) pieces.push({ decal, patch });
+    }
+    const count = pieces.length;
     if (count > this.capacity) { while (count > this.capacity) this.capacity *= 2; this.allocate(); }
     const pose = this.mesh.geometry.getAttribute('filthPose') as THREE.InstancedBufferAttribute;
     const shape = this.mesh.geometry.getAttribute('filthShape') as THREE.InstancedBufferAttribute;
+    const clip = this.mesh.geometry.getAttribute('filthClip') as THREE.InstancedBufferAttribute;
     let i = 0;
-    for (const f of items) for (let layer = 0; layer < f.thickness; layer++) {
-      const d = filthDecal(f, layer);
-      pose.setXYZW(i, d.x, .071, d.z, d.rotation);
-      shape.setXYZW(i, d.width, d.height, d.tile, d.flip ? 1 : 0); i++;
+    for (const { decal: d, patch } of pieces) {
+      pose.setXYZW(i, d.x, patch.height + FILTH_SURFACE_OFFSET, d.z, d.rotation);
+      shape.setXYZW(i, d.width, d.height, d.tile, d.flip ? 1 : 0);
+      clip.setXYZW(i, patch.minX, patch.minZ, patch.maxX, patch.maxZ); i++;
     }
-    pose.needsUpdate = shape.needsUpdate = true;
+    pose.needsUpdate = shape.needsUpdate = clip.needsUpdate = true;
     this.mesh.geometry.instanceCount = count; this.mesh.visible = count > 0;
+  }
+  private surfaceUnchanged(surface?: FilthSurface): boolean {
+    if (!surface) return this.previousSurfaceSize === undefined;
+    if (!this.previousSurfaceSize || this.previousSurfaceSize[0] !== surface.width || this.previousSurfaceSize[1] !== surface.height) return false;
+    for (const [index, height] of this.previousSurfaceHeights) {
+      if (height !== surfaceHeightAtCell(surface, index % surface.width, Math.floor(index / surface.width))) return false;
+    }
+    return true;
+  }
+  private rememberSurface(surface: FilthSurface, bounds: SurfaceBounds): void {
+    const minX = Math.max(0, Math.floor(bounds.minX + .5)), maxX = Math.min(surface.width - 1, Math.floor(bounds.maxX + .5));
+    const minZ = Math.max(0, Math.floor(bounds.minZ + .5)), maxZ = Math.min(surface.height - 1, Math.floor(bounds.maxZ + .5));
+    for (let z = minZ; z <= maxZ; z++) for (let x = minX; x <= maxX; x++) {
+      this.previousSurfaceHeights.set(z * surface.width + x, surfaceHeightAtCell(surface, x, z));
+    }
   }
   prepareForCompile(): () => void {
     if (this.mesh.visible) return () => {};
@@ -72,7 +112,9 @@ export class FilthLayer {
     // Zero size, underground: compile the same pipeline even on clean maps.
     const pose = this.mesh.geometry.getAttribute('filthPose') as THREE.InstancedBufferAttribute;
     const shape = this.mesh.geometry.getAttribute('filthShape') as THREE.InstancedBufferAttribute;
-    pose.setXYZW(0, 0, -100, 0, 0); shape.setXYZW(0, 0, 0, 0, 0); pose.needsUpdate = shape.needsUpdate = true;
+    const clip = this.mesh.geometry.getAttribute('filthClip') as THREE.InstancedBufferAttribute;
+    pose.setXYZW(0, 0, -100, 0, 0); shape.setXYZW(0, 0, 0, 0, 0); clip.setXYZW(0, 0, 0, 0, 0);
+    pose.needsUpdate = shape.needsUpdate = clip.needsUpdate = true;
     this.mesh.visible = true; this.mesh.geometry.instanceCount = 1;
     return () => { if (this.revision === revision) { this.mesh.visible = false; this.mesh.geometry.instanceCount = 0; } };
   }
