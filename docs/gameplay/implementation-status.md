@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**Référence intégrée V284, schéma218 conservé : [Les Aulnes actuelles](aulnes-current.md).** Elle réunit les installations compatibles livrées jusqu'àV283 ; sa présence ne signifie pas que toutes les branches, tous les biomes ou tous les incidents sont exercés. Le guide distingue disponibilité, préparation et observations réellement jouées.
+
 **V283, schéma 218 : [biocarburant et générateur](biofuel-v283.md).** Raffinerie alimentée, deux transformations, filtre organique végétal initial, transport et remplissage exclusif du générateur, 1 000 W, commutation, panne, EMP, chaleur et lueur sont raccordés. Incendies matériels existants ; explosions et éjection spécifique restent ouverts. Les états suivants sont historiques.
 
 **V282, schéma 217 : [pâte nutritive et trémies](nutrient-paste-v282.md).** Distributeur alimenté et trémies cardinales, transport automatique, prélèvement atomique de six unités, repas de0,9nutrition, ingestion/table/souvenir et alimentation médicale physique sont raccordés. Animaux limités aux portions déjà au sol, profils de trémie fixes et progression de recherche adaptée explicitement. Les états suivants sont historiques.

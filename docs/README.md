@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**Référence de test maintenue : [Les Aulnes intégrées](gameplay/aulnes-current.md).** Accès, quartiers, activités, limites logiques et procédure de mise à jour dans cette note unique. Les anciennes sauvegardes constituent des archives de validation.
+
 **V283, schéma 218 : [biocarburant et générateur](gameplay/biofuel-v283.md).** Les deux transformations, le transport, le réservoir et le réseau ferment une boucle industrielle. Règles et preuves dans cette note unique ; les états suivants sont historiques.
 
 **V282, schéma 217 : [pâte nutritive et trémies](gameplay/nutrient-paste-v282.md).** La chaîne relie construction, courant, remplissage physique, régime alimentaire, repas et patient au chevet. Règles et preuves dans cette note unique ; les états suivants sont historiques.

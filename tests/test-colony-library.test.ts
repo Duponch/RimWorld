@@ -32,7 +32,7 @@ test('published catalogue keeps six V98 entries and lists the V101/V103/V104/V10
   const legacy=JSON.parse(readFileSync('public/test-saves/v98/manifest.json','utf8'));
   const entries=parseTestColonies(manifest);
   expect(entries).toHaveLength(TEST_COLONY_COUNT);
-  expect(entries.slice(0,6).map(({release,...entry})=>{expect(release).toBe('v98');return entry;})).toEqual(legacy.saves);
+  expect(entries.filter(entry=>entry.release==='v98').map(({release,...entry})=>entry)).toEqual(legacy.saves);
   for(const [id,release,filename,schemaVersion] of [['atelier-v101','v101','atelier.json',101],['salles-v103','v103','salles.json',103],['art-v104','v104','sculpture.json',104],['economie-v105','v105','economie.json',105],['lievres-v106','v106','lievres.json',106],['visages-armurerie-v109','v109','visages-armurerie.json',109]] as const){
     const entry=entries.find(e=>e.id===id)!;
     expect(entry).toMatchObject({release,filename,pawns:id==='visages-armurerie-v109'?5:id==='economie-v105'?2:1,colonists:id==='visages-armurerie-v109'?5:1,width:32,height:32,prepared:true});
@@ -47,8 +47,8 @@ test('published catalogue keeps six V98 entries and lists the V101/V103/V104/V10
   }
   vi.stubGlobal('fetch',vi.fn(async(url:string)=>new Response(readFileSync(`public${url}`,'utf8'))));
   expect(await fetchTestColonies()).toEqual(entries);
-  expect(await readTestColony(entries[7]!)).toBe(readFileSync('public/test-saves/v103/salles.json','utf8'));
-  expect(await readTestColony(entries[8]!)).toBe(readFileSync('public/test-saves/v104/sculpture.json','utf8'));
+  expect(await readTestColony(entries.find(entry=>entry.id==='salles-v103')!)).toBe(readFileSync('public/test-saves/v103/salles.json','utf8'));
+  expect(await readTestColony(entries.find(entry=>entry.id==='art-v104')!)).toBe(readFileSync('public/test-saves/v104/sculpture.json','utf8'));
 });
 test('only exact published contents are passed to the ordinary world loader',async()=>{
   const raw=JSON.stringify({schemaVersion:91,tick:0,width:250,height:250,fixture:'x'.repeat(1024*1024)});

@@ -1,5 +1,11 @@
 # V209 — Continuité, validation et cadence de développement
 
+## Référence intégrée demandée le 9 octobre 2026
+
+Maintenir [Les Aulnes sur 250×250](../gameplay/aulnes-current.md) avec les systèmes compatibles d'une même partie. Publier une entrée courante identifiée `aulnes-current`, en tête du catalogue, et un payload versionné immuable ; conserver les anciennes versions et leur provenance. Lors d'un lot fonctionnel futur, enrichir ce checkpoint et jouer une continuation ordinaire courte adaptée au risque. Les petites fixtures privées peuvent tester une frontière ; elles ne deviennent pas automatiquement une sauvegarde publique supplémentaire. Distinguer contexte préparé, activités réellement jouées et branches disponibles mais non exercées. Les biomes exclusifs, incidents incompatibles et contraintes de population doivent être signalés, sans changer leurs règles pour obtenir une couverture artificielle.
+
+La relance planifiée est en pause à la demande humaine ; cette maintenance ne la réactive pas.
+
 ## Consigne de méthode du 8 octobre 2026
 
 La reprise fonctionnelle privilégie des lots larges réunissant une boucle jouable cohérente et ses dépendances.

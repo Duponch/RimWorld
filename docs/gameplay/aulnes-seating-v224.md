@@ -1,5 +1,7 @@
 # Les Aulnes avec les sièges corrigés
 
+Cette version reste un checkpoint historique. Pour tester les fonctionnalités actuelles ensemble, utiliser [Les Aulnes intégrées](aulnes-current.md), première entrée du catalogue.
+
 Ouvrez **Charger une partie → Colonies de test → Les Aulnes · sièges corrigés 250×250**. L'import direct de [la sauvegarde](../../public/test-saves/v224/les-aulnes-sieges.json) reste possible.
 
 Cette copie poursuit la colonie V223 : les colons ont réellement démonté et remonté les six fauteuils devant la télévision et les deux chaises de la table extérieure. Leurs identités, matériaux et qualités sont conservés. Le checkpoint est au tick6934 ; la colonie et ses stocks ont continué leur quotidien pendant les934ticks de travaux. L'ancienne référence au tick6000 reste disponible et inchangée.

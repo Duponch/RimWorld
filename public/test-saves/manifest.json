@@ -2,6 +2,39 @@
   "version": 2,
   "saves": [
     {
+      "id": "aulnes-current",
+      "release": "v284",
+      "filename": "les-aulnes-integrees.json",
+      "label": "Les Aulnes · référence intégrée 250×250",
+      "description": "Village avancé : 14 colons, prisonnier, cinq espèces domestiques, hôpital, hydroponie, pharmacie, industrie, forage, commerce orbital et pâte nutritive. Extension préparée puis activités ordinaires réellement jouées.",
+      "pawns": 15,
+      "colonists": 14,
+      "width": 250,
+      "height": 250,
+      "tick": 8434,
+      "prepared": true,
+      "sha256": "e11bdf91eb592c1432a879b4d6fea296469ec7d7416537f6b5e8702a361e644d",
+      "provenance": "Continuation du checkpoint V224 (tick6934), migrée au schéma218. Installations, neuf recherches, dotation finie, patients, prothèse, veine et marchand déclarés ; puis moteur ordinaire sans accélération des règles. Les anciennes références restent immuables.",
+      "focus": [
+        "colonie intégrée",
+        "hôpital et pharmacie",
+        "hydroponie",
+        "industrie et énergie",
+        "forage profond",
+        "commerce orbital",
+        "élevage",
+        "vie sociale",
+        "défense"
+      ],
+      "steps": [
+        "Choisir cette première entrée puis explorer le village ; conserver la pause pour inspecter les activités.",
+        "Au sud : pharmacie (113,173), raffinerie (128,173), foreuse (110,165) ; serre hydroponique à l’ouest.",
+        "À l’est : hôpital et moniteurs, distributeur (180,101), générateur (166,156). Console orbitale (114,127).",
+        "Le marchand de passage part définitivement après4000ticks ; négocier avec Léonie avant son départ.",
+        "Les incidents suivent leurs calendriers ordinaires. Les offres d’asile nécessitent moins de12colons ; elles ne sont pas forcées dans ce village."
+      ]
+    },
+    {
       "release": "v98",
       "id": "colony-v90",
       "label": "Colonie avancée · 4 colons",

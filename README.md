@@ -1,5 +1,7 @@
 # Lisière
 
+**Référence joueur maintenue : [Les Aulnes intégrées, 250×250](docs/gameplay/aulnes-current.md).** La première entrée de « Colonies de test » rassemble les systèmes compatibles dans un village avancé. Les anciennes versions restent accessibles ; les prochaines fonctionnalités enrichiront cette référence.
+
 **V283 — biocarburant et générateur ; schéma 218.**
 Recherche, factures, ingrédients physiques et transport relient le raffinage du bois ou des surplus alimentaires à une réserve de carburant puis au réseau électrique. [Règles, adaptations et validation](docs/gameplay/biofuel-v283.md). Les états suivants sont historiques.
 

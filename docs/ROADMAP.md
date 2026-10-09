@@ -1,5 +1,7 @@
 # Plan de développement
 
+**Priorité humaine du 9 octobre : [Les Aulnes intégrées](gameplay/aulnes-current.md), référence maintenue sur250×250.** Rassembler les systèmes compatibles pour tester leur fonctionnement ensemble ; garder les anciennes références. La tâche planifiée est en pause. Le recyclage étudié n'est pas engagé et aucune nouvelle mécanique n'est lancée par ce lot.
+
 **Avancement fonctionnel V283 — biocarburant et générateur ; schéma 218.**
 La [chaîne industrielle](gameplay/biofuel-v283.md) apporte un arbitrage entre provisions, bois, travail et énergie stockable. Les recettes et le générateur partagent production, possessions, réservations et réseau ; explosions chimiques explicitement hors lot. Autonomie fonctionnelle, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
 

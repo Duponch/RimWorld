@@ -1,4 +1,6 @@
-# Validation courante — V283
+# Validation courante — V284
+
+**V284 : [Les Aulnes intégrées](../gameplay/aulnes-current.md#validation), schéma218 conservé.** Référence unique en tête du catalogue, 62 payloads/fiches historiques conservés. Préparation, stricts fichiers/snapshots, continuation ordinaire de1 500ticks et reprise exacte contrôlés ; WebGPU matériel, menu public,1×/6× et deux sauvegardes/recharges UI passent. Les adaptations, observations, rouges conservés et limites sont dans la note unique. Aucun changement moteur/rendu ou gain FPS annoncé ; tâche planifiée en pause. Les validations suivantes sont historiques.
 
 **V283, schéma 218 : [biocarburant et générateur](../gameplay/biofuel-v283.md#validation).** 119 cas uniques/18 fichiers dont53nouveaux passent par reprises ciblées ; typage/build,62sauvegardes publiques et présentation commune passent. Le parcours WebGPU joue construction, deux raffinages, transport, ravitaillement et commutation avec dix sauvegardes/recharges exactes. Preuves, scènes préparées et rouges conservés dans la note unique ; aucun FPS ou campagne naturelle annoncé. Les validations suivantes sont historiques.
 
