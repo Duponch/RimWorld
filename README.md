@@ -1,5 +1,7 @@
 # Lisière
 
+**V288 — index spatial compact des validations ; schéma 218.** Comparaison Chrome 1440p/dev avec V287 : **75,00→82,38 images RAF/s (+9,85 %)**, à débit réel ×6. Gain CPU mesuré, aucun gain GPU annoncé ; 240 FPS restent à atteindre. [Mesures et limites](docs/development/aulnes-performance-v288.md).
+
 **V287 — performances des Aulnes intégrées.** Les recherches de ressources et d'identités sont mutualisées pendant chaque validation. Comparaison Chrome 1440p/dev à ×6 avec V286 : **57,20→79,39 images RAF/s (+39 %)**, débit réel proche de ×6. Les 240 FPS restent à atteindre. [Mesures, corrections et limites](docs/development/aulnes-performance-v287.md).
 
 **V285 — raccords et fantômes de construction.** Murs, enclos et sols jointifs ; traces suivant les surfaces ; véritables modèles translucides, rotation et placements refusés. [Détails et validation](docs/gameplay/construction-presentation-v285.md). Les sauvegardes des Aulnes se chargent avec ces corrections sans modification du checkpoint.

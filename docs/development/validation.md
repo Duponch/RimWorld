@@ -1,4 +1,6 @@
-# Validation courante — V287
+# Validation courante — V288
+
+**V288 : [index spatial compact des validations](aulnes-performance-v288.md#validation), schéma 218 conservé.** Tests ciblés, typage/build, coût complet et GAME matériel passent ; dense seul retenu, comparaison électrique par fragments rejetée. CPU intégré clone+adoption −2,40 % ; 75,00→82,38 RAF/s à vrai ×6, quatre reprises exactes. Preuves, contrôles finaux et limites dans la note unique.
 
 **V287 : [lectures communes des validations](aulnes-performance-v287.md#validation), schéma 218 conservé.** 76 cas/10 fichiers, typage, build, 63 références publiques, présentation et comparaison matérielle ABBA Chrome passent. Clone+adoption −21,63 % sur la référence intégrée ; 57,20→79,39 RAF/s à débit ×6 comparable. Contrôles, reprises, limites et rouge initial dans la note unique.
 
