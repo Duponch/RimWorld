@@ -6,6 +6,8 @@ import type { Cell, Pawn, World } from './types.ts';
  * occupancy: a passer-by can cross any of these cells without claiming its use.
  * Sleeping/collapsing on the floor does not acquire furniture or a work spot. */
 export function serviceCell(pawn: Pawn): Cell | null {
+  if(pawn.need?.kind==='eat'&&pawn.need.paste&&(pawn.need.phase==='pickup'||pawn.need.phase==='collect'))return pawn.need.paste.spot;
+  if(pawn.feed?.paste&&(pawn.feed.phase==='pickup'||pawn.feed.phase==='collect'))return pawn.feed.paste.spot;
   if(pawn.orbitalTrade)return pawn.orbitalTrade.spot;
   if(pawn.deepWork)return pawn.deepWork.spot;
   if(pawn.surgery)return pawn.surgery.spot;
@@ -29,6 +31,7 @@ export function reservedServiceCells(world: World, exceptPawn?: number): Set<num
     const visit=pawn.recreation?.task;
     if(visit?.activity==='visit-sick'&&world.pawns.some(p=>p.id===visit.patientId&&urgentTreatment(p)))continue;
     const cell = serviceCell(pawn); if (cell) reserved.add(cell.z*world.width+cell.x);
+    if(pawn.feed?.paste&&(pawn.feed.phase==='pickup'||pawn.feed.phase==='collect'))reserved.add(pawn.feed.spot.z*world.width+pawn.feed.spot.x);
   }
   for(const pawn of world.pawns)if(pawn.id!==exceptPawn&&pawn.rescue){const bed=world.structures.find(s=>s.id===pawn.rescue!.bedId);if(bed)reserved.add(bed.z*world.width+bed.x);}
   for(const pawn of world.pawns)for(const order of pawn.orders?.queue??[])if(isCookingOrder(order))reserved.add(order.cooking.spot.z*world.width+order.cooking.spot.x);

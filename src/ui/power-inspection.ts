@@ -11,6 +11,7 @@ import { isRainElectricalKind, rainElectricalEligible } from '../sim/rain-electr
 import { isRoofed } from '../sim/roof-rules';
 import { deepDrillingInspection } from './deep-drilling-inspection';
 import { orbitalInspection } from './orbital-inspection';
+import { nutrientPasteInspection } from './nutrient-paste-inspection';
 import type { Structure, World } from '../sim/types';
 
 const cache = new PowerTopologyCache();
@@ -46,7 +47,7 @@ export function rainElectricalInspection(world: World, structure: Structure): st
 
 export function powerInspection(world: World, structure: Structure, compact=false): string {
   if (!isElectrical(structure.kind) || !structure.power) return '';
-  if (compact && structure.breakdown) return ` · Panne mécanique${orbitalInspection(world,structure)?` · ${orbitalInspection(world,structure)}`:''}${deepDrillingInspection(world,structure)?` · ${deepDrillingInspection(world,structure)}`:''}${hydroponicsPowerInspection(structure)?` · ${hydroponicsPowerInspection(structure)}`:''}${solarFlareInspection(world,structure)?` · ${solarFlareInspection(world,structure)}`:''}${rainElectricalInspection(world, structure) ? ` · ${rainElectricalInspection(world, structure)}` : ''}.`;
+  if (compact && structure.breakdown) return ` · Panne mécanique${nutrientPasteInspection(world,structure)?` · ${nutrientPasteInspection(world,structure)}`:''}${orbitalInspection(world,structure)?` · ${orbitalInspection(world,structure)}`:''}${deepDrillingInspection(world,structure)?` · ${deepDrillingInspection(world,structure)}`:''}${hydroponicsPowerInspection(structure)?` · ${hydroponicsPowerInspection(structure)}`:''}${solarFlareInspection(world,structure)?` · ${solarFlareInspection(world,structure)}`:''}${rainElectricalInspection(world, structure) ? ` · ${rainElectricalInspection(world, structure)}` : ''}.`;
   const topology = cache.read(world);
   const group = connectedPowerGroups(world, topology).find(g => g.some(s => s.id === structure.id));
   const supply = group?.reduce((n, s) => n + Math.max(0, powerWatts(s, world)), 0) ?? 0;
@@ -55,7 +56,9 @@ export function powerInspection(world: World, structure: Structure, compact=fals
   const batteries = group?.filter(s => s.battery) ?? [];
   const stored = batteries.reduce((n, s) => n + batteryWattDays(s.battery!), 0);
   let detail: string;
-  if(structure.kind==='orbital-beacon'||structure.kind==='comms-console'){
+  if(structure.kind==='nutrient-paste-dispenser'){
+    detail=nutrientPasteInspection(world,structure);
+  } else if(structure.kind==='orbital-beacon'||structure.kind==='comms-console'){
     detail=orbitalInspection(world,structure);
   } else if(structure.kind==='deep-drill'||structure.kind==='ground-scanner'){
     detail=deepDrillingInspection(world,structure);

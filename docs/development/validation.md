@@ -1,4 +1,6 @@
-# Validation courante — V281
+# Validation courante — V282
+
+**V282, schéma 217 : [pâte nutritive et trémies](../gameplay/nutrient-paste-v282.md#validation).** 126cas uniques/19fichiers dont42nouveaux passent par reprises ciblées ; 62sauvegardes/65fichiers publics conservés, typage/build final passe. WebGPU joue construction, remplissage, repas à table, patient au chevet et commutation physique avec neuf reprises exactes. Présentation commune passe, documentation finale dans la note unique ; rouges et limites y restent explicites. Les validations suivantes sont historiques.
 
 **V281, schéma 216 : [commerce orbital](../gameplay/orbital-trade-v281.md#validation).** 134 cas uniques/19 fichiers dont 46 nouveaux passent par reprises ciblées ; 62 sauvegardes/65 fichiers publics conservés, typage/build final et présentation commune passent. Parcours WebGPU acquis par pilote et continuation de son monde capturé : construction, contact, transaction, capsule, rangement et départ avec six reprises exactes. Rouges et limites restent explicites dans la note unique ; aucune campagne naturelle ou mesure FPS annoncée. Les validations suivantes sont historiques.
 

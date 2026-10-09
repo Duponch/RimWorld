@@ -23,7 +23,7 @@ export function blockedCells(world: World, physical=false): Uint8Array {
   }
   for (const structure of world.structures) {
     if (!physical&&isPassageDoor(structure.kind)&&structure.door?.forbidden)blocked[cellIndex(world,structure.x,structure.z)]=1;
-    if ((structure.kind === 'wall'||structure.kind==='cooler') || world.schemaVersion<22&&structure.kind === 'table') for (const cell of footprintCells(structure)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
+    if ((structure.kind === 'wall'||structure.kind==='cooler'||structure.kind==='nutrient-paste-dispenser') || world.schemaVersion<22&&structure.kind === 'table') for (const cell of footprintCells(structure)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
   }
   for (const job of world.jobs) {
     if (jobBlocksTransit(world,job)) for (const cell of footprintCells(job)) blocked[cellIndex(world, cell.x, cell.z)] = 1;

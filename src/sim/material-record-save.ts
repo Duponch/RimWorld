@@ -54,6 +54,7 @@ else {
     else {
       if(version<84&&(item.item==='potato'||item.item==='corn'))errors.push('Legacy save contains a V84 crop product.');
       if(version<88&&['silver','bolt-action-rifle','plasteel-knife'].includes(item.item as string))errors.push('Legacy save contains V88 goods.');
+      if(version<217&&item.item==='nutrient-paste-meal')errors.push('Legacy save contains nutrient paste meal.');
       if(version<10&&item.item==='simple-meal')errors.push('Legacy save contains cooked meal.');
       const definition = ITEM_DEFINITIONS[item.item as keyof typeof ITEM_DEFINITIONS];
       if (definition.kind !== item.kind || (item.quantity as number) > definition.stackLimit) errors.push('Invalid item category or stack limit.');

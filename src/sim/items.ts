@@ -76,6 +76,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   rice: Object.freeze({ label: 'Riz', kind: 'food', stackLimit: 75, nutrition: 5, maxIngest: 75, color: 0xd9c695 }),
   potato: Object.freeze({ label: 'Pommes de terre', kind: 'food', stackLimit: 75, nutrition: 5, maxIngest: 75, color: 0xb89b70 }),
   corn: Object.freeze({ label: 'Maïs', kind: 'food', stackLimit: 75, nutrition: 5, maxIngest: 75, color: 0xe0be56 }),
+  'nutrient-paste-meal': Object.freeze({ label: 'Repas de pâte nutritive', kind: 'food', stackLimit: 10, nutrition: 90, maxIngest: 1, color: 0x9da25d }),
   'simple-meal': Object.freeze({ label: 'Repas simple', kind: 'food', stackLimit: 10, nutrition: 90, maxIngest: 1, color: 0xe4b274 }),
   'fine-meal': Object.freeze({ label: 'Plat raffiné', kind: 'food', stackLimit: 10, nutrition: 90, maxIngest: 1, color: 0xd9a686 }),
   'vegetarian-fine-meal': Object.freeze({ label: 'Plat végétarien raffiné', kind: 'food', stackLimit: 10, nutrition: 90, maxIngest: 1, color: 0xd7c892 }),

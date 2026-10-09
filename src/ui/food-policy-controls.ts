@@ -7,7 +7,7 @@ import type { World,Command } from '../sim/types';
 export function foodPolicyLayout(): string {
   return `<section id="assign-panel" class="management-panel assign-panel panel" aria-label="Assignations" hidden>
     <div class="panel-heading"><h2>Assignations</h2><button data-close-panel aria-label="Fermer Assignations">×</button></div>
-    <p>Choisissez les aliments autorisés pour chaque colon. Les régimes sont partagés : modifier un régime affecte toutes les personnes qui l’utilisent.</p>
+    <p>Choisissez les aliments autorisés pour chaque colon. Les régimes sont partagés : modifier un régime affecte toutes les personnes qui l’utilisent. La pâte nutritive doit être autorisée pour récupérer un repas au distributeur.</p>
     <div class="work-table-wrap assignment-table-wrap"><table class="assignment-table"><thead><tr><th>Colon</th><th>Régime alimentaire</th><th>Réaction hostile</th><th>État</th></tr></thead><tbody id="food-policy-rows"></tbody></table></div>
     <div class="assignment-actions"><button id="manage-food-policies">Gérer les régimes alimentaires</button><p id="assign-feedback" role="status"></p></div>
     <p class="muted">Un régime ne change pas le transport ni les ingrédients de cuisine. Un repas déjà engagé peut se terminer. Vêtements, drogues, et réaction Attaquer restent à développer. Fuir est le défaut ; les ordres directs gardent la priorité. Les soins se règlent dans Santé ; le régime d’un prisonnier se choisit dans son inspection.</p>

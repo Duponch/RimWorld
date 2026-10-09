@@ -34,10 +34,11 @@ export function withMigratedTelevisionRecreation<T>(world:T):T {
   return expected;
 }
 /** Current default permissions/filters did not exist before predator V190.
+ * Nutrient paste V282 is likewise absent from these declared older fixtures.
  * Use only to prepare declared historical fixtures, never on refusal input. */
 export function withoutPredatorDefaults<T>(world:T):T {
   const w=world as any;
-  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((item:string)=>item!=='red-fox-meat');
+  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter((item:string)=>item!=='red-fox-meat'&&item!=='nutrient-paste-meal');
   for(const policy of w.apparelPolicies??[]){
     policy.allowedItems=policy.allowedItems.filter((item:string)=>!item.startsWith('foxfur-'));
     policy.allowedMaterials=policy.allowedMaterials.filter((material:string)=>material!=='foxfur');

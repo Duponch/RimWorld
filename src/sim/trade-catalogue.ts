@@ -23,6 +23,7 @@ export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>
   'herbal-medicine':value(10),medicine:value(18,true),'glitterworld-medicine':value(50),
   neutroamine:value(6),
   berries:value(1.2),rice:value(1.1),potato:value(1.1),corn:value(1.1),'hare-meat':value(2),'red-fox-meat':value(2),foxfur:value(3.5),
+  'nutrient-paste-meal':value(10,false,{playerCanSell:false}),
   'simple-meal':value(15,false,{playerCanSell:false}),'fine-meal':value(20,false,{playerCanSell:false}),'vegetarian-fine-meal':value(20,false,{playerCanSell:false}),'carnivore-fine-meal':value(20,false,{playerCanSell:false}),'lavish-meal':value(40,false,{playerCanSell:false}),'vegetarian-lavish-meal':value(40,false,{playerCanSell:false}),'carnivore-lavish-meal':value(40,false,{playerCanSell:false}),'survival-meal':value(24,true),
   'granite-blocks':value(.9,false,{playerCanSell:false}),'limestone-blocks':value(.9,false,{playerCanSell:false}),
   'marble-blocks':value(.9,false,{playerCanSell:false}),'sandstone-blocks':value(.9,false,{playerCanSell:false}),'slate-blocks':value(.9,false,{playerCanSell:false}),

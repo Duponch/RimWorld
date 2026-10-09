@@ -8,8 +8,9 @@ import { freshMissing } from './injury-state.ts';
 import { carrierOf } from './rescue-state.ts';
 import { canStandAt } from './furniture-travel.ts';
 import type { Cell,Pawn,World } from './types.ts';
+import type { PasteRequest } from './nutrient-paste.ts';
 
-export interface FeedTask { patientId:number;spot:Cell;sourcePileId:number;carryPileId:number|null;quantity:number;phase:'pickup'|'deliver'|'feed';progress:number }
+export interface FeedTask { patientId:number;spot:Cell;sourcePileId:number|null;carryPileId:number|null;quantity:number;phase:'pickup'|'collect'|'deliver'|'feed';progress:number;paste?:PasteRequest }
 // Mirrored adult threshold: .3 × .8 + .02 = .26 (wiki lists hunger at .25).
 // Base ingest time 50 local ticks × 1.5, independent of Medicine and EatingSpeed.
 export const FEED_HUNGER=26,FEED_TICKS=75;

@@ -7,6 +7,7 @@ import { adjacent } from './pathfinding.ts';
 import { reservedSource } from './materials.ts';
 import { adjacentTable, chooseDiningPlace, validDiningPlace } from './dining.ts';
 import { rememberMeal } from './wellbeing.ts';
+import { pasteRequestValid,dispensePasteAtContact,PASTE_COLLECT_TICKS } from './nutrient-paste.ts';
 import type { NeedContext } from './needs.ts';
 import type { Pawn, World } from './types.ts';
 
@@ -16,6 +17,15 @@ export const PORTION_NUTRITION = 35;
 export function processEating(world: World, pawn: Pawn, context: NeedContext): void {
   const task = pawn.need;
   if (task?.kind !== 'eat') return;
+  if(task.phase==='pickup'&&task.paste){
+    if(!pasteRequestValid(world,pawn,task.paste)){context.release();return;}
+    const spot=task.paste.spot;
+    if(pawn.x!==spot.x||pawn.z!==spot.z){context.move(spot,true);return;}
+    if(pawn.moveCooldown>0||(pawn.motion?.end??0)>world.tick||(pawn.stun?.untilCore??0)>world.tick*10)return;
+    const meal=dispensePasteAtContact(world,pawn,task.paste);
+    if(!meal){context.release();return;}
+    task.carryPileId=meal.id;task.phase='collect';pawn.path=[];pawn.state='moving';return;
+  }
   const pile = world.piles.find(item => item.id === (task.phase === 'pickup' ? task.sourcePileId : task.carryPileId));
   if (!pile || pile.kind !== 'food') { context.release(); return; }
   if (task.phase === 'pickup') {
@@ -32,6 +42,12 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
     return;
   }
   if (pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id || pile.quantity !== task.quantity) { context.release(); return; }
+  if(task.phase==='collect'){
+    pawn.path=[];pawn.state='moving';
+    if(!task.paste||task.paste.producedAt===undefined){context.release();return;}
+    if(world.tick-task.paste.producedAt<PASTE_COLLECT_TICKS)return;
+    task.phase='choose-spot';
+  }
   if (task.dining && !validDiningPlace(world, task.dining)) {
     task.phase = 'choose-spot'; task.dining = null; task.progress = 0;delete task.workRemainder;
     pawn.path = []; pawn.state = 'moving'; pawn.needCooldown = 0;

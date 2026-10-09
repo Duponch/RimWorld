@@ -52,6 +52,6 @@ export function constructionSiteFree(world: World, job: Job, workerId?: number, 
   return !world.pawns.some(p=>p.id!==workerId&&!(p.state==='dead'&&(p.body?.pileId!==undefined||p.body?.lostAt!==undefined))&&cells.some(c=>{
     const edge=p.motion;
     const service=serviceCell(p);
-    return p.x===c.x&&p.z===c.z || service?.x===c.x&&service.z===c.z || !!edge&&edge.end>world.tick&&c.x>=Math.min(edge.from.x,edge.to.x)&&c.x<=Math.max(edge.from.x,edge.to.x)&&c.z>=Math.min(edge.from.z,edge.to.z)&&c.z<=Math.max(edge.from.z,edge.to.z);
+    return p.x===c.x&&p.z===c.z || service?.x===c.x&&service.z===c.z || p.feed?.paste&&(p.feed.phase==='pickup'||p.feed.phase==='collect')&&p.feed.spot.x===c.x&&p.feed.spot.z===c.z || !!edge&&edge.end>world.tick&&c.x>=Math.min(edge.from.x,edge.to.x)&&c.x<=Math.max(edge.from.x,edge.to.x)&&c.z>=Math.min(edge.from.z,edge.to.z)&&c.z<=Math.max(edge.from.z,edge.to.z);
   }));
 }

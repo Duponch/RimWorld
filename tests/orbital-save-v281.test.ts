@@ -7,6 +7,8 @@ import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serial
 import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
 import { orbitalCamp } from './helpers/orbital-v281.ts';
 import { medicalCamp } from './scenarios/health.ts';
+import { initialFoodPolicies } from '../src/sim/food-policy.ts';
+import { adoptPasteFoodPolicies } from '../src/sim/food-policy-save.ts';
 
 const checkpoint=(w:World)=>new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,1)));
 function refused(w:World){expect(validOrbitalTransport(w,w.schemaVersion)).toBe(false);expect(checkpoint(w).status).toBe('resync');expect(()=>deserializeWorld(JSON.stringify(w))).toThrow();}
@@ -35,9 +37,10 @@ test('approach and settled ready keep their actual exclusive console claim',()=>
 });
 
 test('215 migration is neutral and has no retroactive arrival, stock, task or RNG draw',()=>{
-  const w=medicalCamp();w.schemaVersion=215 as World['schemaVersion'];delete w.orbital;
-  const before=structuredClone(w),loaded=deserializeWorld(JSON.stringify(w));
-  expect(loaded).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(w).toEqual(before);expect(Object.hasOwn(loaded,'orbital')).toBe(false);
+  const w=medicalCamp();w.foodPolicies=initialFoodPolicies(true,true,true,true,true,false);w.schemaVersion=215 as World['schemaVersion'];delete w.orbital;
+  const before=structuredClone(w),expected=structuredClone(w);expected.schemaVersion=SCHEMA_VERSION;adoptPasteFoodPolicies(expected);
+  const loaded=deserializeWorld(JSON.stringify(w));
+  expect(loaded).toEqual(expected);expect(w).toEqual(before);expect(Object.hasOwn(loaded,'orbital')).toBe(false);
 });
 
 test('legacy schemas reject prospective fields even when own-undefined, devices and owners',()=>{

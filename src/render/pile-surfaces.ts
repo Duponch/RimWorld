@@ -10,7 +10,7 @@ export function pileSurfaces(world:World):ReadonlyMap<number,PileSurface> {
   for(const s of world.structures) {
     const surface=(isFoodWorkstation(s.kind)||s.kind==='machining-table'||s.kind==='hi-tech-research-bench'||s.kind==='fabrication-bench'||s.kind==='multi-analyzer'||s.kind==='stonecutter'||s.kind==='drug-lab'||s.kind==='art-bench'||s.kind==='research-bench'||s.kind==='tailor-bench')?{x:0,y:WORLD_SCALE.stonecutterHeight,z:0,scale:.65}:s.kind==='table'?{x:0,y:WORLD_SCALE.tableHeight,z:0,scale:.8}
       :s.kind==='stool'?{x:0,y:WORLD_SCALE.stoolHeight,z:0,scale:.5}
-      :s.kind==='horseshoes'?{x:-.18,y:0,z:.15,scale:.6}:undefined;
+      :s.kind==='hopper'?{x:0,y:.14,z:0,scale:.72}:s.kind==='horseshoes'?{x:-.18,y:0,z:.15,scale:.6}:undefined;
     if(surface)for(const c of footprintCells(s))surfaces.set(c.z*world.width+c.x,surface);
   }
   return surfaces;

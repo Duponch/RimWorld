@@ -8,7 +8,7 @@ import type { Structure,World } from './types.ts';
 
 export const RAIN_ELECTRICAL_INTERVAL_CORE=97;
 /** Core 1.6.4871 shortCircuitInRain, restricted to the delivered catalogue. */
-export const RAIN_ELECTRICAL_KINDS=['comms-console','vitals-monitor','mini-turret','battery','heater','electric-stove','electric-tailor-bench','machining-table','fabrication-bench','hi-tech-research-bench','multi-analyzer','sun-lamp','tube-television'] as const;
+export const RAIN_ELECTRICAL_KINDS=['nutrient-paste-dispenser','comms-console','vitals-monitor','mini-turret','battery','heater','electric-stove','electric-tailor-bench','machining-table','fabrication-bench','hi-tech-research-bench','multi-analyzer','sun-lamp','tube-television'] as const;
 export type RainElectricalKind=typeof RAIN_ELECTRICAL_KINDS[number];
 export interface RainElectricalContact {coreTick:number;structureId:number;kind:RainElectricalKind;x:number;z:number}
 export interface RainElectricalState {

@@ -51,6 +51,6 @@ export function rememberMeal(world: World, pawn: Pawn, atTable: boolean, raw = f
 export function rememberIngestionAt(pawn:Pawn,tick:number,{atTable,raw=false,food}:{atTable?:boolean;raw?:boolean;food?:ItemId}):void {
   // Fine and lavish tastes replace one another; table/raw thoughts remain independent.
   const taste=food==='fine-meal'||food==='vegetarian-fine-meal'||food==='carnivore-fine-meal'?'ate-fine-meal' as const:food==='lavish-meal'||food==='vegetarian-lavish-meal'||food==='carnivore-lavish-meal'?'ate-lavish-meal' as const:undefined;
-  const kinds = [...(atTable===false ? ['ate-without-table' as const] : []), ...(raw ? ['ate-raw-food' as const] : []), ...(taste ? [taste] : [])];
+  const kinds = [...(atTable===false ? ['ate-without-table' as const] : []), ...(raw ? ['ate-raw-food' as const] : []), ...(taste ? [taste] : []),...(food==='nutrient-paste-meal'?['ate-nutrient-paste' as const]:[])];
   pawn.memories = [...pawn.memories.filter(memory => !kinds.includes(memory.kind)&&!(taste&&(memory.kind==='ate-fine-meal'||memory.kind==='ate-lavish-meal'))), ...kinds.map(kind => ({kind, expiresAt: tick + TICKS_PER_DAY}))];
 }

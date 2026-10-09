@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V282, schéma 217 : [pâte nutritive et trémies](gameplay/nutrient-paste-v282.md).** La chaîne relie construction, courant, remplissage physique, régime alimentaire, repas et patient au chevet. Règles et preuves dans cette note unique ; les états suivants sont historiques.
+
 **V281, schéma 216 : [commerce orbital](gameplay/orbital-trade-v281.md).** Construction, énergie, appel physique, panier, livraison et transport forment une boucle économique. Règles et preuves dans cette note unique ; les états suivants sont historiques.
 
 **V280, schéma 215 : [scanner de sol et forage profond](gameplay/deep-drilling-v280.md).** Recherche, énergie, opérateurs, réserves découvertes et extraction physique forment une chaîne commune. Contrôles ciblés et parcours WebGPU passent ; preuves et limites dans cette note unique. L’[alimentation assistée V279](gameplay/animal-feeding-v279.md) et la [boucle humaine V278](gameplay/colonist-arrest-v278.md) restent disponibles ; les états suivants sont historiques.

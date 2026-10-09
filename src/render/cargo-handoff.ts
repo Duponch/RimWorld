@@ -27,6 +27,10 @@ function deliveryCell(previous:World,world:World,pawnId:number):{type:'ground';x
     const zone=world.stockpiles.find(s=>s.id===haul.stockpileId);
     if(zone)return {type:'ground',x:zone.x,z:zone.z};
   }
+  if(haul?.type==='hopper'){
+    const hopper=world.structures.find(s=>s.id===haul.structureId&&s.kind==='hopper');
+    if(hopper)return {type:'ground',x:hopper.x,z:hopper.z};
+  }
   if(pawn?.cooking?.phase==='output'){
     const zone=world.stockpiles.find(s=>s.id===pawn.cooking!.storageId);
     if(zone)return {type:'ground',x:zone.x,z:zone.z};

@@ -1,5 +1,8 @@
 # Plan de développement
 
+**Avancement fonctionnel V282 — pâte nutritive et trémies ; schéma 217.**
+La [chaîne alimentaire](gameplay/nutrient-paste-v282.md) relie recherche400, constructions, énergie et Transport à un repas physique disponible pour le colon ou le patient médical. Profils fixes des trémies et recherche de départ adaptée explicitement ; rations historiques conservées. Autonomie fonctionnelle, contrôles regroupés et push après chaque commit maintenus ; les états suivants sont historiques.
+
 **Avancement fonctionnel V281 — commerce orbital ; schéma 216.**
 La [boucle orbitale](gameplay/orbital-trade-v281.md) apporte une autre voie d’acquisition : deux profils marchands, balises et argent couvert, appel à la console, cargo indépendant du départ et rangement. Le catalogue orbital demeure réduit ; autonomie fonctionnelle, contrôles regroupés et push après chaque commit maintenus. Les états suivants sont historiques.
 

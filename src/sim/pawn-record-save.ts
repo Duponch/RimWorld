@@ -131,7 +131,7 @@ export function validatePawnRecordShape(item:Record<string,unknown>, world:World
     if (!(item.bedId === null || integer(item.bedId, 1)) || !integer(item.needCooldown, 0, 20)) errors.push('Invalid need cadence or bed ownership.');
     const need = item.need;
     if (need !== null && (!record(need) || (need.kind === 'eat'
-      ? !oneOf(need.phase, version < 4 ? ['pickup', 'ingest'] : ['pickup', 'choose-spot', 'travel', 'ingest']) || !integer(need.sourcePileId, 1) || !(need.carryPileId === null || integer(need.carryPileId, 1)) || !integer(need.progress, 0, INGEST_TICKS - 1)
+      ? !oneOf(need.phase, version < 4 ? ['pickup', 'ingest'] : ['pickup', 'choose-spot', 'travel', 'ingest',...(version>=217?['collect']:[])]) || !(integer(need.sourcePileId, 1)||version>=217&&need.sourcePileId===null&&record(need.paste)) || !(need.carryPileId === null || integer(need.carryPileId, 1)) || !integer(need.progress, 0, INGEST_TICKS - 1)
       : need.kind === 'sleep' ? !oneOf(need.phase, ['travel', 'sleep']) || !(need.bedId === null || integer(need.bedId, 1)) || !record(need.target) || !coord(need.target)
         : true))) errors.push('Invalid need task.');
   } else if (item.need !== undefined || item.bedId !== undefined || item.needCooldown !== undefined) errors.push('Version 2 cannot contain version 3 task fields.');
@@ -139,7 +139,7 @@ export function validatePawnRecordShape(item:Record<string,unknown>, world:World
     if (version >= 5 ? !integer(item.need.quantity, 1, MAX_STACK) : item.need.quantity !== undefined) errors.push('Invalid meal quantity.');
   }
   if (version >= 4) {
-    if (!bounded(item.comfort) || !Array.isArray(item.memories) || item.memories.length > (version >= 152 ? 3 : version >= 8 ? 2 : 1) || item.memories.some(memory => !record(memory) || !oneOf(memory.kind, version >= 154 ? ['ate-without-table', 'ate-raw-food', 'ate-fine-meal', 'ate-lavish-meal'] : version >= 152 ? ['ate-without-table', 'ate-raw-food', 'ate-fine-meal'] : version >= 8 ? ['ate-without-table', 'ate-raw-food'] : ['ate-without-table']) || !integer(memory.expiresAt, validationTick + 1, validationTick + TICKS_PER_DAY))) errors.push('Invalid comfort or meal memory.');
+    if (!bounded(item.comfort) || !Array.isArray(item.memories) || item.memories.length > (version>=217?4:version >= 152 ? 3 : version >= 8 ? 2 : 1) || item.memories.some(memory => !record(memory) || !oneOf(memory.kind, version>=217?['ate-without-table','ate-raw-food','ate-fine-meal','ate-lavish-meal','ate-nutrient-paste']:version >= 154 ? ['ate-without-table', 'ate-raw-food', 'ate-fine-meal', 'ate-lavish-meal'] : version >= 152 ? ['ate-without-table', 'ate-raw-food', 'ate-fine-meal'] : version >= 8 ? ['ate-without-table', 'ate-raw-food'] : ['ate-without-table']) || !integer(memory.expiresAt, validationTick + 1, validationTick + TICKS_PER_DAY))) errors.push('Invalid comfort or meal memory.');
     else if (new Set(item.memories.map(memory => (memory as {kind:string}).kind)).size !== item.memories.length) errors.push('Duplicate meal memory.');
     else if (item.memories.some(memory => (memory as {kind:string}).kind === 'ate-fine-meal') && item.memories.some(memory => (memory as {kind:string}).kind === 'ate-lavish-meal')) errors.push('Conflicting meal memories.');
     if (record(item.need) && item.need.kind === 'eat') {
@@ -152,7 +152,7 @@ export function validatePawnRecordShape(item:Record<string,unknown>, world:World
     if (record(haul) && haul.pickupCell!==undefined && (version<6 || haul.phase!=='deliver' || !record(haul.pickupCell) || !coord(haul.pickupCell))) errors.push('Invalid pickup facing cell.');
     if (!record(haul) || !integer(haul.sourcePileId, 1) || !integer(haul.quantity, 1, CARRY_CAPACITY) || !oneOf(haul.phase, ['pickup', 'deliver'])
       || !(haul.carryPileId === null || integer(haul.carryPileId, 1)) || !record(haul.destination)
-      || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : (haul.destination.type === 'fuel' && version>=10 ||haul.destination.type==='turret'&&version>=193) ? integer(haul.destination.structureId,1) : haul.destination.type === 'stockpile' ? integer(haul.destination.stockpileId, 1) : version >= 9 && haul.destination.type === 'aside' && coord(haul.destination))) errors.push('Invalid haul task.');
+      || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : (haul.destination.type === 'fuel' && version>=10 ||haul.destination.type==='turret'&&version>=193||haul.destination.type==='hopper'&&version>=217) ? integer(haul.destination.structureId,1) : haul.destination.type === 'stockpile' ? integer(haul.destination.stockpileId, 1) : version >= 9 && haul.destination.type === 'aside' && coord(haul.destination))) errors.push('Invalid haul task.');
   }
   return errors;
 }

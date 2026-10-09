@@ -26,9 +26,9 @@ export function expireFood(world: World): void {
       || pawn.animalFeed && expired.has(pawn.animalFeed.phase==='pickup'?pawn.animalFeed.sourcePileId:pawn.animalFeed.carryPileId!)
       || pawn.animalCare?.medicine && expired.has(pawn.animalCare.phase==='pickup'?pawn.animalCare.medicine.sourcePileId:pawn.animalCare.medicine.carryPileId!)
       || pawn.tend?.medicine && expired.has(pawn.tend.phase==='pickup'?pawn.tend.medicine.sourcePileId:pawn.tend.medicine.carryPileId!)
-      || pawn.feed && expired.has(pawn.feed.phase==='pickup'?pawn.feed.sourcePileId:pawn.feed.carryPileId!)
+      || pawn.feed && expired.has((pawn.feed.phase==='pickup'?pawn.feed.sourcePileId:pawn.feed.carryPileId)??-1)
       || pawn.ward?.kind==='food' && expired.has(pawn.ward.phase==='pickup'?pawn.ward.sourcePileId:pawn.ward.carryPileId!)
-      || n?.kind === 'eat' && expired.has(n.phase === 'pickup' ? n.sourcePileId : n.carryPileId!);
+      || n?.kind === 'eat' && expired.has((n.phase === 'pickup' ? n.sourcePileId : n.carryPileId)??-1);
     if (!affected || releaseWork(world, pawn)) continue;
     // Another ingredient may still be carried when a remote reservation rots.
     // Retain that cargo until a physical drop is possible, without dangling IDs
@@ -39,7 +39,7 @@ export function expireFood(world: World): void {
       pawn.path = []; pawn.state = pawn.moveCooldown > 0 ? 'moving' : 'working';
     }
   }
-  for (const item of ['berries', 'milk', 'rice', 'potato', 'corn', 'simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','herbal-medicine','agave-fruit',...ANIMAL_MEAT_ITEMS] as const) if (losses![item]) {
+  for (const item of ['nutrient-paste-meal','berries', 'milk', 'rice', 'potato', 'corn', 'simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','herbal-medicine','agave-fruit',...ANIMAL_MEAT_ITEMS] as const) if (losses![item]) {
     world.spoiled[item]=(world.spoiled[item]??0)+losses![item]!;
     world.events.push({ tick: world.tick, type: 'need', message: `${losses![item]} ${ITEM_DEFINITIONS[item].label} ont pourri.` });
   }

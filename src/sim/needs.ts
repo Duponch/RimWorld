@@ -10,7 +10,8 @@ import { reservedSource } from './materials.ts';
 import { mealQuantity } from './items.ts';
 import { TICKS_PER_DAY } from './types.ts';
 import { processEating } from './eating.ts';
-import { pileFoodScore, foodSearchGoals, selectFood } from './food-selection.ts';
+import { pileFoodScore, foodSourceSearchGoals, selectFoodSource } from './food-selection.ts';
+import { planPasteRequest,pasteRequestValid } from './nutrient-paste.ts';
 import { updateWellbeing,type FurnitureSight } from './wellbeing.ts';
 import { processSleeping } from './sleeping.ts';
 import { updateRecreation } from './recreation-rules.ts';
@@ -74,18 +75,27 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
     const sources = world.piles.filter(pile => pile.kind === 'food' && allowed.includes(pile.item as FoodItemId) && selfFoodAccessible(world,pawn,pile,topology) && pile.quantity > reservedSource(world, pile.id, pawn.id));
     // A hungry hauler already holding food may reserve a meal quantity for ingestion.
     const held = world.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id && pile.kind === 'food' && allowed.includes(pile.item as FoodItemId));
-    if (sources.length || held) {
-      reach = context.search( foodSearchGoals(world, pawn, sources,topology));
+    const pasteAvailable=world.structures.some(s=>s.kind==='nutrient-paste-dispenser'&&planPasteRequest(world,pawn,s,pawn,topology));
+    if (sources.length || held || pasteAvailable) {
+      reach = context.search(foodSourceSearchGoals(world, pawn, sources,topology));
       if (!reach) return true; // Budget exhaustion must not be mistaken for inaccessibility.
-      const best = selectFood(world, pawn, sources, reach,pawn,topology);
+      const best = selectFoodSource(world, pawn, sources, reach,pawn,topology);
       if (held || best) {
         const useHeld = !!held && (!best || world.foodRules === 'legacy' || pileFoodScore(world, held, 0) >= best.score);
-        const selected = useHeld ? held! : sources.find(pile => pile.id === best!.id)!;
-        const quantity = mealQuantity(pawn, selected, selected.quantity - reservedSource(world, selected.id, pawn.id));
-        if (!context.release()) return true; // Deposits cargo at the actor, preserving its identity.
-        pawn.need = { kind: 'eat', phase: 'pickup', sourcePileId: selected.id, carryPileId: null, quantity, progress: 0, dining: null };
-        pawn.path = useHeld ? [] : best!.path;
-        pawn.state = 'moving'; pawn.planCooldown = 0;
+        if(!useHeld&&best?.kind==='paste'){
+          if(!context.release())return true;
+          if(pasteRequestValid(world,pawn,best.request)){
+            pawn.need={kind:'eat',phase:'pickup',sourcePileId:null,carryPileId:null,quantity:1,progress:0,dining:null,paste:best.request};
+            pawn.path=best.path;pawn.state='moving';pawn.planCooldown=0;
+          }
+        }else{
+          const selected = useHeld ? held! : sources.find(pile => best?.kind==='pile'&&pile.id===best.id)!;
+          const quantity = mealQuantity(pawn, selected, selected.quantity - reservedSource(world, selected.id, pawn.id));
+          if (!context.release()) return true; // Deposits cargo at the actor, preserving its identity.
+          pawn.need = { kind: 'eat', phase: 'pickup', sourcePileId: selected.id, carryPileId: null, quantity, progress: 0, dining: null };
+          pawn.path = useHeld ? [] : best!.path;
+          pawn.state = 'moving'; pawn.planCooldown = 0;
+        }
       }
     }
     pawn.needCooldown = NEED_INTERVAL;

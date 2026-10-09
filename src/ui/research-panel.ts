@@ -1,4 +1,4 @@
-import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, DEEP_DRILLING_RESEARCH_COST,GROUND_SCANNER_RESEARCH_COST,STERILE_MATERIALS_RESEARCH_COST,VITALS_MONITOR_RESEARCH_COST, DRUG_PRODUCTION_RESEARCH_COST, MEDICINE_PRODUCTION_RESEARCH_COST, HYDROPONICS_RESEARCH_COST, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
+import { researchPrerequisite,researchStationUsable,intellectualSkill, RESEARCH_SCALE, NUTRIENT_PASTE_RESEARCH_COST, DEEP_DRILLING_RESEARCH_COST,GROUND_SCANNER_RESEARCH_COST,STERILE_MATERIALS_RESEARCH_COST,VITALS_MONITOR_RESEARCH_COST, DRUG_PRODUCTION_RESEARCH_COST, MEDICINE_PRODUCTION_RESEARCH_COST, HYDROPONICS_RESEARCH_COST, TUBE_TELEVISION_RESEARCH_COST, HOSPITAL_BED_RESEARCH_COST, PACKAGED_SURVIVAL_MEALS_RESEARCH_COST, researchUnlocked, type ResearchProject, type ResearchProgress } from '../sim/research';
 import type { Command, World } from '../sim/types';
 import './world-panels.css';
 import './management-reference-v199.css';
@@ -6,6 +6,7 @@ import {setTooltip} from './tooltip';
 
 type ProjectNode = { id: ResearchProject; prefix: string; title: string; cost: number; detail: string; progress: (w: World) => ResearchProgress | undefined; x: number; y: number };
 export const researchProjects: readonly ProjectNode[] = [
+  {id:'nutrient-paste',prefix:'nutrient-paste',title:'Pâte nutritive',cost:NUTRIENT_PASTE_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque le distributeur électrique : 125 acier + 3 composants, Construction 5, 200 W. Les trémies adjacentes reçoivent des aliments crus par Transport ; six unités donnent un repas récupéré sur place. Électricité connue au départ. Les repas de survie conservent leur recherche et leurs recettes.',progress:w=>w.research?.nutrientPaste,x:24,y:834},
   {id:'deep-drilling',prefix:'deep-drilling',title:'Forage profond',cost:DEEP_DRILLING_RESEARCH_COST/RESEARCH_SCALE,detail:'Foreuse 1 × 1 : 100 acier + 2 composants, Construction 4, 200 W. Travail Minage à la machine ; les gisements souterrains sont finis. Un scanner de sol est nécessaire pour découvrir et afficher ces réserves. Recherche au bureau avancé alimenté, après Microélectronique.',progress:w=>w.research?.deepDrilling,x:224,y:834},
   {id:'ground-scanner',prefix:'ground-scanner',title:'Scanner de sol',cost:GROUND_SCANNER_RESEARCH_COST/RESEARCH_SCALE,detail:'Scanner 3 × 3 : 150 acier + 4 composants + 1 composant avancé, Construction 8, 700 W, sans toit. Un chercheur travaille sur place pour découvrir des réserves ; six jours de travail à vitesse normale garantissent une découverte. Le temps sans opérateur ne progresse pas. Recherche au bureau avancé alimenté, après Forage profond.',progress:w=>w.research?.groundScanner,x:424,y:834},
   {id:'sterile-materials',prefix:'sterile-materials',title:'Matériaux stériles',cost:STERILE_MATERIALS_RESEARCH_COST/RESEARCH_SCALE,detail:'Sol stérile : 3 acier + 12 argent par case, Construction 6. Propreté +0,6 et temps de nettoyage ×0,6 ; sans bonus direct de moniteur. L’électricité est connue au départ.',progress:w=>w.research?.sterileMaterials,x:424,y:700},
@@ -21,7 +22,7 @@ export const researchProjects: readonly ProjectNode[] = [
   {id:'machining',prefix:'machining',title:'Usinage',cost:1000,detail:'Atelier d’usinage électrique, 150 acier + 5 composants. Construction 4.',progress:w=>w.research?.machining,x:624,y:20},
   {id:'gunsmithing',prefix:'gunsmithing',title:'Armurerie',cost:500,detail:'Revolver (Artisanat 3) et fusil à verrou (Artisanat 5).',progress:w=>w.research?.gunsmithing,x:824,y:20},
   {id:'complex-clothing',prefix:'research',title:'Vêtements complexes',cost:600,detail:'Débloque l’établi manuel de tailleur et la chemise en tissu.',progress:w=>w.research,x:224,y:154},
-  {id:'packaged-survival-meals',prefix:'packaged-survival-meals',title:'Repas de survie',cost:PACKAGED_SURVIVAL_MEALS_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque la préparation d’un repas de survie à la cuisinière : 6 protéines (viande ou lait) + 6 végétaux, Cuisine 8. Ces rations ne pourrissent pas et servent aux voyages. Adaptation locale : le préalable Core Pâte nutritive est différé.',progress:w=>w.research?.packagedSurvivalMeals,x:24,y:154},
+  {id:'packaged-survival-meals',prefix:'packaged-survival-meals',title:'Repas de survie',cost:PACKAGED_SURVIVAL_MEALS_RESEARCH_COST/RESEARCH_SCALE,detail:'Débloque la préparation d’un repas de survie à la cuisinière : 6 protéines (viande ou lait) + 6 végétaux, Cuisine 8. Ces rations ne pourrissent pas et servent aux voyages. Cette recherche historique reste accessible indépendamment de Pâte nutritive.',progress:w=>w.research?.packagedSurvivalMeals,x:24,y:154},
   {id:'autodoors',prefix:'autodoors',title:'Portes automatiques',cost:600,detail:'Porte à ouverture rapide sous courant : 25 matériaux, 40 acier, 2 composants ; Construction 6 et 50 W. Sans courant, elle fonctionne comme une porte ordinaire.',progress:w=>w.research?.autodoors,x:424,y:154},
   {id:'plate-armor',prefix:'plate-armor',title:'Armure de plaques',cost:600,detail:'Préalable du gilet pare-balles. La fabrication de plaques reste hors périmètre.',progress:w=>w.research?.plateArmor,x:624,y:154},
   {id:'flak-armor',prefix:'flak-armor',title:'Armure pare-balles',cost:1200,detail:'Gilet et casque pare-balles à l’atelier d’usinage, Artisanat 4 et 5.',progress:w=>w.research?.flakArmor,x:824,y:154},
@@ -54,6 +55,7 @@ const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=650;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['nutrient-paste',['Électricité (acquise au départ)']],
   ['deep-drilling',['Microélectronique']],['ground-scanner',['Forage profond']],
   ['sterile-materials',['Électricité (acquise au départ)']],['vitals-monitor',['Lit d’hôpital','Multi-analyseur']],
   ['drug-production',[]],['medicine-production',['Production de drogues','Microélectronique']],

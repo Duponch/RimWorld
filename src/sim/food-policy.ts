@@ -13,11 +13,11 @@ export type FoodPolicyCommand =
   | {type: 'food-policy-delete'; policyId: number}
   | {type: 'food-policy-assign'; pawnId: number; policyId: number};
 
-export function initialFoodPolicies(includeMeat=true,includeFoodCrops=true,includeBiomes=true,includeMilk=true,includePredators=true): FoodPolicy[] {
-  const items=FOOD_ITEMS.filter(id=>(includePredators||!V190_ITEM_IDS.includes(id))&&(includeBiomes||!V91_ITEM_IDS.includes(id))&&(includeMeat||id!=='hare-meat')&&(includeFoodCrops||id!=='potato'&&id!=='corn')&&(includeMilk||id!=='milk'));
+export function initialFoodPolicies(includeMeat=true,includeFoodCrops=true,includeBiomes=true,includeMilk=true,includePredators=true,includePaste=true): FoodPolicy[] {
+  const items=FOOD_ITEMS.filter(id=>(includePaste||id!=='nutrient-paste-meal')&&(includePredators||!V190_ITEM_IDS.includes(id))&&(includeBiomes||!V91_ITEM_IDS.includes(id))&&(includeMeat||id!=='hare-meat')&&(includeFoodCrops||id!=='potato'&&id!=='corn')&&(includeMilk||id!=='milk'));
   return [
     {id: 1, name: 'Sans restriction', allowed: [...items]},
-    {id: 2, name: 'Repas uniquement', allowed: ['simple-meal', 'fine-meal', 'vegetarian-fine-meal', 'carnivore-fine-meal', 'lavish-meal', 'vegetarian-lavish-meal', 'carnivore-lavish-meal', 'survival-meal', 'legacy-portion']},
+    {id: 2, name: 'Repas uniquement', allowed: ['simple-meal', 'fine-meal', 'vegetarian-fine-meal', 'carnivore-fine-meal', 'lavish-meal', 'vegetarian-lavish-meal', 'carnivore-lavish-meal', 'survival-meal', 'legacy-portion', ...(includePaste?['nutrient-paste-meal' as const]:[])]},
     {id: 3, name: 'Sans rations', allowed: items.filter(id => id !== 'survival-meal')},
     {id: 4, name: 'Rien', allowed: []},
   ];

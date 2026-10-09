@@ -22,7 +22,7 @@ function execute(f:ReturnType<typeof camp>,lines:TradeLine[],acceptShortfall=fal
 const checkpoint=(w:World)=>new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,1)));
 
 test('adoption is prospective, private and idempotent with exactly420 uniform phase slots',()=>{
-  const {w}=camp();delete w.orbital;const rng=w.rng;w.schemaVersion=215 as World['schemaVersion'];adoptOrbital(w);expect(w.orbital).toBeUndefined();w.schemaVersion=216;adoptOrbital(w);
+  const {w}=camp();delete w.orbital;const rng=w.rng;w.schemaVersion=215 as World['schemaVersion'];adoptOrbital(w);expect(w.orbital).toBeUndefined();w.schemaVersion=216 as World['schemaVersion'];adoptOrbital(w);
   const s=structuredClone(w.orbital!);expect(s.adoptedAt).toBe(w.tick);expect(s.cycleStart).toBeGreaterThan(w.tick);expect((s.scheduledAt-s.cycleStart)/100).toBeGreaterThanOrEqual(0);expect((s.scheduledAt-s.cycleStart)/100).toBeLessThan(420);
   expect((s.scheduledAt-s.cycleStart)%100).toBe(0);expect(w.rng).toBe(rng);adoptOrbital(w);expect(w.orbital).toEqual(s);expect(s.ships).toEqual([]);
 });

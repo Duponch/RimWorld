@@ -1,5 +1,6 @@
 import { isAnimalMeat } from './biome-items.ts';
-import { interactionGoals, routeCost, routeToJob, type Reachability } from './pathfinding.ts';
+import { interactionGoals, routeCost, routeToJob, routeToCell, type Reachability } from './pathfinding.ts';
+import { planPasteRequest,type PasteRequest } from './nutrient-paste.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { ticksUntilRot } from './food-preservation.ts';
 import { allowedFood, type FoodItemId } from './food-policy.ts';
@@ -13,7 +14,7 @@ import type { Cell, MaterialPile, Pawn, World } from './types.ts';
  * -82 optimality; survival packs have a -5 definition offset. The +12 bonus
  * for imminent spoilage is applied to physical piles; traits remain open. */
 const FOOD_OFFSETS: Readonly<Partial<Record<ItemId, number>>> = {
-  wood: -Infinity, 'simple-meal': 16, 'fine-meal': 20, 'vegetarian-fine-meal': 20, 'carnivore-fine-meal': 20, 'lavish-meal': 24, 'vegetarian-lavish-meal': 24, 'carnivore-lavish-meal': 24, berries: 0, milk: 0, rice: -82, potato: -82, corn: -82, 'hare-meat': -82, 'survival-meal': -5, 'legacy-portion': 0,
+  wood: -Infinity, 'nutrient-paste-meal': -49, 'simple-meal': 16, 'fine-meal': 20, 'vegetarian-fine-meal': 20, 'carnivore-fine-meal': 20, 'lavish-meal': 24, 'vegetarian-lavish-meal': 24, 'carnivore-lavish-meal': 24, berries: 0, milk: 0, rice: -82, potato: -82, corn: -82, 'hare-meat': -82, 'survival-meal': -5, 'legacy-portion': 0,
 };
 export function foodScore(item: ItemId, distance: number): number {
   return (FOOD_OFFSETS[item] ?? (isAnimalMeat(item)||item==='agave-fruit'?-82:-Infinity)) - distance;
@@ -54,4 +55,44 @@ export function selectFood(world: World, pawn: Pawn, sources: readonly MaterialP
     if (!best || rank > best.score || (rank === best.score && pile.id < best.id)) best = { id: pile.id, path, score: rank };
   }
   return best;
+}
+
+export type FoodSourceSelection={kind:'pile';id:number;path:Cell[];score:number}
+  |{kind:'paste';request:PasteRequest;path:Cell[];score:number};
+/** Keep pile-only selectFood for callers that cannot operate a dispenser. */
+export function selectFoodSource(world:World,pawn:Pawn,sources:readonly MaterialPile[],reachable:Reachability,eater:Pawn=pawn,topology?:RoomTopology):FoodSourceSelection|undefined {
+  const pile=selectFood(world,pawn,sources,reachable,eater,topology);
+  let best:FoodSourceSelection|undefined=pile?{kind:'pile',...pile}:undefined;
+  for(const dispenser of world.structures){
+    if(dispenser.kind!=='nutrient-paste-dispenser')continue;
+    const request=planPasteRequest(world,pawn,dispenser,eater,topology);if(!request)continue;
+    const score=foodScore('nutrient-paste-meal',Math.abs(pawn.x-dispenser.x)+Math.abs(pawn.z-dispenser.z));
+    if(world.foodRules!=='legacy'&&best&&score<best.score)continue;
+    const path=routeToCell(world,request.spot,reachable);if(!path)continue;
+    const rank=world.foodRules==='legacy'?-routeCost(world,path,reachable):score;
+    const bestId=best?.kind==='pile'?best.id:best?.request.dispenserId;
+    if(!best||rank>best.score||rank===best.score&&dispenser.id<bestId!)best={kind:'paste',request,path,score:rank};
+  }
+  return best;
+}
+/** The partial flood targets the best ranked source, including its exact
+ * machine interaction cell. An unreachable winner exhausts the component. */
+export function foodSourceSearchGoals(world:World,pawn:Pawn,sources:readonly MaterialPile[],topology?:RoomTopology):Set<number> {
+  if(!topology&&(pawn.prisoner||world.structures.some(s=>s.prisoner)))topology=capturePrisonTopology(world);
+  const goals=foodSearchGoals(world,pawn,sources,topology),allowed=selfAllowedFood(world,pawn);
+  let bestScore=-Infinity,bestId=Infinity;
+  if(world.foodRules!=='legacy')for(const p of sources){
+    if(p.owner.type!=='ground'||!allowed.includes(p.item as FoodItemId)||!selfFoodAccessible(world,pawn,p,topology))continue;
+    const score=pileFoodScore(world,p,Math.abs(pawn.x-p.owner.x)+Math.abs(pawn.z-p.owner.z));
+    if(score>bestScore||score===bestScore&&p.id<bestId){bestScore=score;bestId=p.id;}
+  }
+  for(const dispenser of world.structures){
+    if(dispenser.kind!=='nutrient-paste-dispenser')continue;
+    const request=planPasteRequest(world,pawn,dispenser,pawn,topology);if(!request)continue;
+    const index=request.spot.z*world.width+request.spot.x;
+    if(world.foodRules==='legacy'){goals.add(index);continue;}
+    const score=foodScore('nutrient-paste-meal',Math.abs(pawn.x-dispenser.x)+Math.abs(pawn.z-dispenser.z));
+    if(score>bestScore||score===bestScore&&dispenser.id<bestId){bestScore=score;bestId=dispenser.id;goals.clear();goals.add(index);}
+  }
+  return goals;
 }

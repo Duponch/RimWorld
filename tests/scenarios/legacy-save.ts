@@ -1,9 +1,9 @@
 import { withoutHunting } from './legacy-skills';
-/** Fixture construction only: pre-V178 policies never listed fox meat. This
+/** Fixture construction only: pre-V178 policies never listed fox meat or paste. This
  * does not sanitize serializer input or remove future fields in refusal tests. */
 export function withoutPredatorFoodPolicies<T>(world:T):T {
   for(const policy of (world as {foodPolicies?:Array<{allowed:string[]}>}).foodPolicies??[])
-    policy.allowed=policy.allowed.filter(item=>item!=='red-fox-meat');
+    policy.allowed=policy.allowed.filter(item=>item!=='red-fox-meat'&&item!=='nutrient-paste-meal');
   return world;
 }
 /** Historical registry expectation: preserve every prior permission and ID. */

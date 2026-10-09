@@ -1,4 +1,5 @@
 import { prisonFoodChecker } from './prison-food.ts';
+import { hopperAccepts,hopperCapacity,hopperFillWanted } from './nutrient-paste.ts';
 import { automaticallyHaulable } from './mining-rules.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { storageAccepts } from './storage-filters.ts';
@@ -10,6 +11,8 @@ import type { StockpileCell, World } from './types.ts';
 export function mayImproveStorage(world:World):boolean {
   const zones=new Map(world.stockpiles.map(z=>[z.z*world.width+z.x,z]));
   const piles=new Map(world.piles.flatMap(p=>p.owner.type==='ground'?[[p.owner.z*world.width+p.owner.x,p] as const]:[]));
+  const hoppers=new Map(world.structures.filter(s=>s.kind==='hopper').map(s=>[s.z*world.width+s.x,s]));
+  const wanted=[...hoppers.values()].filter(h=>hopperFillWanted(world,h.id));
   const best=new Map<ItemId,number>();
   // Keep the historical fast path when no range is active. Geometry/category
   // candidates are shared by item; state admission is cached separately per
@@ -34,7 +37,8 @@ export function mayImproveStorage(world:World):boolean {
   const stateBest=new Map<string,number>();
   for(const pile of piles.values())if(automaticallyHaulable(pile)&&!isPrisonFood(pile)&&pile.owner.type==='ground') {
     const zone=zones.get(pile.owner.z*world.width+pile.owner.x);
-    const current=zone&&storageAccepts(zone,pile)&&pile.quantity<=zone.capacity?zone.priority:0;
+    const current=Math.max(zone&&storageAccepts(zone,pile)&&pile.quantity<=zone.capacity?zone.priority:0,hoppers.has(pile.owner.z*world.width+pile.owner.x)&&hopperAccepts(pile.item)?3:0);
+    if(current<3&&hopperAccepts(pile.item)&&wanted.some(h=>hopperCapacity(world,h.id,pile.item)>0))return true;
     const coarse=best.get(pile.item)??0;
     if(coarse<=current)continue;
     if(!candidates)return true;

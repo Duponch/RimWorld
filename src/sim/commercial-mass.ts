@@ -5,7 +5,7 @@ import type { MaterialPile,Pawn,World } from './types.ts';
 
 export interface CommercialMass {grams:number;capacityGrams:number}
 const FIXED:Readonly<Partial<Record<ItemId,number>>>=Object.freeze({
-  silver:8,'survival-meal':300,medicine:500,neutroamine:20,component:600,cloth:26,'muffalo-wool':28,
+  'nutrient-paste-meal':440,silver:8,'survival-meal':300,medicine:500,neutroamine:20,component:600,cloth:26,'muffalo-wool':28,
   revolver:1400,'bolt-action-rifle':3500,'plasteel-knife':500,'emp-launcher':3400,
   'flak-vest':4000,'flak-helmet':1200,'recon-helmet':1000,
 });

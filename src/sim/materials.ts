@@ -127,6 +127,8 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
       if(pawn.surgery?.phase==='pickup'&&pawn.surgery.medicine?.sourcePileId===pileId)quantity+=pawn.surgery.medicine.quantity;
       for(const i of pawn.surgery?.ingredients??[])if(i.pileId===pileId&&i.stage!=='held')quantity+=i.quantity;
       if(pawn.tend?.phase==='pickup'&&pawn.tend.medicine?.sourcePileId===pileId)quantity+=pawn.tend.medicine.quantity;
+      if(pawn.need?.kind==='eat'&&pawn.need.phase==='pickup')for(const ingredient of pawn.need.paste?.ingredients??[])if(ingredient.pileId===pileId)quantity+=ingredient.quantity;
+      if(pawn.feed?.phase==='pickup')for(const ingredient of pawn.feed.paste?.ingredients??[])if(ingredient.pileId===pileId)quantity+=ingredient.quantity;
       if(pawn.feed?.phase==='pickup'&&pawn.feed.sourcePileId===pileId)quantity+=pawn.feed.quantity;
       if(pawn.animalFeed?.phase==='pickup'&&pawn.animalFeed.sourcePileId===pileId)quantity+=pawn.animalFeed.quantity;
       if(pawn.ward?.kind==='food'&&pawn.ward.phase==='pickup'&&pawn.ward.sourcePileId===pileId)quantity+=pawn.ward.quantity;
@@ -166,11 +168,13 @@ export function reservedSourcesByPile(world: World, exceptPawn?: number): Readon
       if (pawn.surgery?.phase === 'pickup' && pawn.surgery.medicine) add(pawn.surgery.medicine.sourcePileId, pawn.surgery.medicine.quantity);
       for(const i of pawn.surgery?.ingredients??[])if(i.stage!=='held')add(i.pileId,i.quantity);
       if (pawn.tend?.phase === 'pickup' && pawn.tend.medicine) add(pawn.tend.medicine.sourcePileId, pawn.tend.medicine.quantity);
-      if (pawn.feed?.phase === 'pickup') add(pawn.feed.sourcePileId, pawn.feed.quantity);
+      if(pawn.need?.kind==='eat'&&pawn.need.phase==='pickup')for(const ingredient of pawn.need.paste?.ingredients??[])add(ingredient.pileId,ingredient.quantity);
+      if(pawn.feed?.phase==='pickup')for(const ingredient of pawn.feed.paste?.ingredients??[])add(ingredient.pileId,ingredient.quantity);
+      if (pawn.feed?.phase === 'pickup'&&pawn.feed.sourcePileId!==null) add(pawn.feed.sourcePileId, pawn.feed.quantity);
       if (pawn.animalFeed?.phase === 'pickup') add(pawn.animalFeed.sourcePileId, pawn.animalFeed.quantity);
       if (pawn.ward?.kind === 'food' && pawn.ward.phase === 'pickup') add(pawn.ward.sourcePileId, pawn.ward.quantity);
       if (pawn.haul?.phase === 'pickup') add(pawn.haul.sourcePileId, pawn.haul.quantity);
-      if (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup') add(pawn.need.sourcePileId, pawn.need.quantity ?? 1);
+      if (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup'&&pawn.need.sourcePileId!==null) add(pawn.need.sourcePileId, pawn.need.quantity ?? 1);
     }
     for (const task of pawn.orders?.queue ?? []) if (typeof task !== 'number') {
       if (isCookingOrder(task)) for (const ingredient of task.cooking.ingredients) add(ingredient.pileId, ingredient.quantity);
@@ -183,6 +187,7 @@ export function sameDestination(a: HaulDestination, b: HaulDestination): boolean
   return a.type === b.type && (a.type === 'job' && b.type === 'job' ? a.jobId === b.jobId
     : a.type === 'fuel' && b.type === 'fuel' ? a.structureId === b.structureId
     : a.type === 'turret' && b.type === 'turret' ? a.structureId === b.structureId
+    : a.type === 'hopper' && b.type === 'hopper' ? a.structureId === b.structureId
     : a.type === 'stockpile' && b.type === 'stockpile' ? a.stockpileId === b.stockpileId
       : a.type === 'aside' && b.type === 'aside' && a.x === b.x && a.z === b.z);
 }

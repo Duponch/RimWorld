@@ -48,6 +48,11 @@ export function pileParts(bundles:readonly PileBundle[]):Placement[] {
         food.push({x:bundle.x,z,y:.055+row*.075,sx:.48,sy:.075,sz:.36,color:ITEM_DEFINITIONS[bundle.item].color},
           {x:bundle.x-.08,z,y:.095+row*.075,sx:.055,sy:.007,sz:.3,color:0xe1c5ab});
       }
+    } else if(bundle.item==='nutrient-paste-meal'){
+      const trays=Math.max(1,Math.min(3,Math.ceil(bundle.quantity/4)));
+      for(let row=0;row<trays;row++)food.push(
+        {x:bundle.x,z,y:.055+row*.11,sx:.53,sy:.075,sz:.43,color:0xc2c8b3},
+        {x:bundle.x,z,y:.105+row*.11,sx:.40,sy:.06,sz:.31,color:ITEM_DEFINITIONS[bundle.item].color});
     } else if(bundle.kind==='apparel'){
       for(const p of foldedApparel(bundle.item as ApparelItem))food.push({x:x+p.center[0]!,y:.07+p.center[1]!,z:z+p.center[2]!,sx:p.size[0]!,sy:p.size[1]!,sz:p.size[2]!,color:p.color});
     } else if(bundle.kind==='weapon'){

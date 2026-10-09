@@ -23,7 +23,7 @@ import { blockCargoKind } from './block-presentation';
 import { furnitureSurfaces } from './furniture-motion';
 import { pawnPresentationPose } from './pawn-presentation';
 import { headingAt,turnToward,TURN_TICKS,type TurnHeading } from './turn-presentation';
-import { pawnWorkPose,workApproach,meleeApproach,WORK_POSE } from './work-presentation';
+import { pawnWorkPose,pasteCollectionSource,workApproach,meleeApproach,WORK_POSE } from './work-presentation';
 import { GaitPhaseTracker,HUMAN_GAIT_RADIANS_PER_UNIT } from './gait-presentation';
 import { constructionWorkTarget } from '../sim/construction-rules';
 import { pawnSelectionMesh } from './PawnSelectionLayer';
@@ -88,6 +88,7 @@ function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boole
     if(activity==='watch-television'||activity==='chess'||activity==='social-relax'||activity==='visit-sick')return seated?3:0;
   }
   if(pawn.state==='resting'||medicallyStopped(pawn))return 1;
+  if(pasteCollectionSource(pawn))return 0;
   if(pawn.state==='eating')return seated?3:2;
   return workPose;
 }
@@ -762,7 +763,8 @@ export class PawnLayer {
       const fireTarget=fighting?firePosition(world,fighting):undefined;
       const fuelDestination=pawn.haul?.destination.type==='fuel'||pawn.haul?.destination.type==='turret'?pawn.haul.destination:undefined;
       const orbitalReady=pawn.orbitalTrade?.phase==='ready'&&!pawn.stun;
-      const station=orbitalReady||arriving&&pawn.orbitalTrade ? world.structures.find(s=>s.id===pawn.orbitalTrade!.consoleId) : pawn.state==='working'||arriving ? pawn.deepWork ? world.structures.find(s=>s.id===pawn.deepWork!.structureId) : pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking?.phase==='work' ? world.structures.find(s=>s.id===pawn.cooking!.stationId) : pawn.haul?.serviceProgress!==undefined&&fuelDestination ? world.structures.find(s=>s.id===fuelDestination.structureId) : undefined : undefined;
+      const pasteCollect=pasteCollectionSource(pawn);
+      const station=pasteCollect?world.structures.find(s=>s.id===pasteCollect.dispenserId):orbitalReady||arriving&&pawn.orbitalTrade ? world.structures.find(s=>s.id===pawn.orbitalTrade!.consoleId) : pawn.state==='working'||arriving ? pawn.deepWork ? world.structures.find(s=>s.id===pawn.deepWork!.structureId) : pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking?.phase==='work' ? world.structures.find(s=>s.id===pawn.cooking!.stationId) : pawn.haul?.serviceProgress!==undefined&&fuelDestination ? world.structures.find(s=>s.id===fuelDestination.structureId) : undefined : undefined;
       const workPose=pawnWorkPose(pawn,job,station?.kind);
       const stationCell=station ? footprintCells(station).reduce((best,cell)=>Math.hypot(cell.x-pawn.x,cell.z-pawn.z)<Math.hypot(best.x-pawn.x,best.z-pawn.z)?cell:best) : undefined;
       const patient=pawn.feed?.phase==='feed'?pawnsById.get(pawn.feed.patientId):pawn.tend?.phase==='tend'?pawnsById.get(pawn.tend.patientId):pawn.surgery?.phase==='work'?pawnsById.get(pawn.surgery.patientId):undefined;
@@ -772,6 +774,7 @@ export class PawnLayer {
       const work = pawn.state==='working'||arriving ? fireTarget ?? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.hunting?.phase==='finish' ? world.wildlife?.animals.find(a=>a.id===pawn.hunting!.animalId) : patient ?? handledAnimal ?? stationCell ?? pawn.cooking?.actionCell ?? pawn.haul?.pickupCell) : undefined;
       if(work&&pawn.state==='working') yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);
       if(orbitalReady&&stationCell)yaw=Math.atan2(stationCell.x-pawn.x,stationCell.z-pawn.z);
+      if(pasteCollect&&stationCell)yaw=Math.atan2(stationCell.x-pawn.x,stationCell.z-pawn.z);
       const contactPose=arriving?pawnWorkPose({...pawn,state:'working'},job,station?.kind):workPose;
       const atBench=station?.kind==='deep-drill'||station?.kind==='ground-scanner'||station?.kind==='drug-lab'||station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
       const clearance=job?.kind==='mine' ? .9 : atBench ? .88 : .82;
@@ -803,7 +806,7 @@ export class PawnLayer {
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
       this.workPoses.set(pawn.id,workPose);
       const smallMelee=!!pawn.melee?.strike&&(world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
-      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun ? 1 : 0,workActivity(pawn),animationPose(pawn,workPose,smallMelee,seated),pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.shooting?.stance?.phase==='cooldown'?coreTimeSeconds(pawn.shooting.stance.startedAtCore,Math.floor(world.tick/1024)*1024):pawn.id * 1.7);
+      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun&&!pasteCollect ? 1 : 0,workActivity(pawn),animationPose(pawn,workPose,smallMelee,seated),pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.shooting?.stance?.phase==='cooldown'?coreTimeSeconds(pawn.shooting.stance.startedAtCore,Math.floor(world.tick/1024)*1024):pawn.id * 1.7);
       const identity=appearanceOf(pawn,world.seed),variant=appearanceShape(identity);
       blood.setX(index,bodyBloodWord(pawn.health));
       scratchColor.setHex(identity.skinColor);skin.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
@@ -851,13 +854,14 @@ export class PawnLayer {
     world.pawns.forEach((pawn,i)=>{
       const segment=pawn.body?.pileId!==undefined||pawn.body?.lostAt!==undefined?undefined:timeline.segment(pawn.id);
       const active=!!segment && timeline.tick<segment.end;
-      const onEdge=!!segment&&(active||pawn.state==='moving'||world.tick<segment.end);
+      const pasteCollect=pasteCollectionSource(pawn);
+      const onEdge=!!segment&&(active||pawn.state==='moving'&&!pasteCollect||world.tick<segment.end);
       const stepping=onEdge&&!!segment&&active&&!medicallyStopped(pawn)&&(segment.fromFraction??0)!==(segment.toFraction??1)&&timeline.tick>=segment.start;
       const smallMelee=!!pawn.melee?.strike&&(world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
       const shownPose=onEdge?(medicallyStopped(pawn)?1:0)
         :animationPose(pawn,this.workPoses.get(pawn.id)??0,smallMelee,seatedOnFurniture(pawn));
       this.showPose(pawn.id,shownPose,timeline.tick);
-      const key=`${origin}:${segment?.start}:${segment?.end}:${segment?.edgeStart}:${segment?.fromFraction}:${segment?.toFraction}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}:${shownPose}:${pawn.path[0]?.x}:${pawn.path[0]?.z}`;
+      const key=`${origin}:${segment?.start}:${segment?.end}:${segment?.edgeStart}:${segment?.fromFraction}:${segment?.toFraction}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}:${shownPose}:${pawn.path[0]?.x}:${pawn.path[0]?.z}:${pasteCollect?.dispenserId}`;
       if(this.travelKeys.get(pawn.id)===key)return;
       this.travelKeys.set(pawn.id,key);dirty=true;
       const visual=this.visuals.get(pawn.id)!;

@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V282, schéma 217 : [pâte nutritive et trémies](nutrient-paste-v282.md).** Distributeur alimenté et trémies cardinales, transport automatique, prélèvement atomique de six unités, repas de0,9nutrition, ingestion/table/souvenir et alimentation médicale physique sont raccordés. Animaux limités aux portions déjà au sol, profils de trémie fixes et progression de recherche adaptée explicitement. Les états suivants sont historiques.
+
 **V281 — commerce orbital ; schéma 216.**
 La [chaîne commerciale](orbital-trade-v281.md) permet de construire console/balises, appeler un vaisseau avec un négociateur, vendre des biens couverts, recevoir les achats et les ranger. Gros et Exotique couvrent les matières et consommables documentés ; animaux, équipements et sculptures restent hors de ce canal. Les états suivants sont historiques.
 

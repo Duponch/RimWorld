@@ -3,6 +3,13 @@ import type { Cell,Job,Pawn,StructureKind } from '../sim/types';
 /** Values 0–10 are the existing locomotion, rest and combat poses. */
 export const WORK_POSE = { mine:11, chop:12, build:13, craft:14, ground:16, groundMelee:17 } as const;
 
+/** The already produced meal is in the ordinary cargo rig during recovery.
+ * Only the persisted collect phase authorizes facing the service port. */
+export function pasteCollectionSource(pawn:Pawn):{dispenserId:number;spot:Cell}|undefined {
+  if(pawn.need?.kind==='eat'&&pawn.need.phase==='collect'&&pawn.need.paste?.producedAt!==undefined)return pawn.need.paste;
+  if(pawn.feed?.phase==='collect'&&pawn.feed.paste?.producedAt!==undefined)return pawn.feed.paste;
+}
+
 /** A body may lean into a neighbouring target, but its feet must stay outside
  * the target's physical silhouette. The simulation cell is never changed. */
 export function workApproach(pawn:Cell,target:Cell|undefined,clearance=.82):Cell {
@@ -25,6 +32,7 @@ export function meleeApproach(pawn:Cell,target:Cell|undefined):Cell {
 }
 
 export function pawnWorkPose(pawn:Pawn,job:Job|undefined,stationKind?:StructureKind):number {
+  if(pasteCollectionSource(pawn))return 0;
   // Contact opens a basket immediately; it is no timed crafting operation.
   if(pawn.orbitalTrade)return 0;
   if(pawn.state!=='working'||pawn.stun)return 0;

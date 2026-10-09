@@ -1,5 +1,8 @@
 # Lisière
 
+**V282 — pâte nutritive et trémies ; schéma 217.**
+Recherche, construction, énergie et transport alimentent un distributeur qui consomme six ingrédients crus au contact pour produire un vrai repas. Ingestion à table et alimentation médicale réutilisent les pipelines communs. [Règles, adaptations et validation](docs/gameplay/nutrient-paste-v282.md). Les anciennes sauvegardes restent disponibles ; les états suivants sont historiques.
+
 **V281 — commerce orbital ; schéma 216.**
 Console et balises relient passages de vaisseaux, négociation au contact, échange de marchandises et réception en capsule puis rangement physique. [Règles, adaptations et validation](docs/gameplay/orbital-trade-v281.md). Les anciennes sauvegardes restent disponibles ; les états suivants sont historiques.
 
