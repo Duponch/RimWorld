@@ -59,3 +59,5 @@ Le premier contrôle documentaire signale deux en-têtes sans mention analysable
 ## Publication et suite
 
 Commit/push par lot maintenus ; une seule publication Cloudflare est regroupée pour cette série V297–V299, selon la [procédure Pages](cloudflare-pages.md). La relance planifiée reste en pause. La suite doit cibler les coûts actuels de préparation/soumission des objets Three, avec nombres d'objets et visibilité réellement observés, avant de modifier batching ou culling. Aucun ancien candidat audio, agenda, Worker ou freeze inchangé n'est relancé ; aucune accélération WASM présumée.
+
+Produit commité/poussé en `c4f4f8ce`, puis publication regroupée `39a1cdf9` : déploiement **PASS13,654s**, HTTPS **PASS0,863s**, sept fichiers exacts. Les66fichiers publics de sauvegarde/catalogue restent identiques dans le build. Aucun FPS supplémentaire n'est attribué à l'hébergement.

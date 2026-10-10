@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere** ; moteur, règles, qualité et schéma 218 restent inchangés. La première publication porte V295 ; la mise à jour courante contient la [préparation graphique V296](aulnes-performance-v296.md).
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere** ; moteur, règles, qualité et schéma 218 restent inchangés. La première publication porte V295 ; la mise à jour courante contient la [préparation des bâtiments V299](aulnes-performance-v299.md), avec la préparation graphique V296 conservée.
 
 ## Adresse et publication
 
@@ -37,6 +37,12 @@ Sorties locales de cette livraison sous `tmp/elsewhere-pages/` et `tmp/validatio
 ## Mise à jour V296
 
 Le 10 octobre, la même adresse stable reçoit la publication `ce930a0c`, contenant les trois modifications graphiques V296 validées. Build Pages et typage : PASS11,359s ; déploiement : PASS15,484s. Vérification HTTPS des sept fichiers : PASS0,718s, réponses 200 et bytes identiques à `dist/`. Les 66 fichiers publics de sauvegarde/catalogue restent identiques au build et le laboratoire est absent. Le Worker de simulation reste inchangé ; seuls le JS principal et son HTML de référence sont nouveaux. Les contrôles graphiques, les quatre sauvegardes/reprises et les gains locaux sont détaillés dans la note V296 ; le parcours UI de première publication n'est pas présenté comme un nouveau test de cette version.
+
+## Publication regroupée V297–V299
+
+V297 et V298 sont des diagnostics sans publication. Après le commit/push produit V299 `c4f4f8ce`, une seule mise à jour reçoit la publication `39a1cdf9`, à la même adresse stable. Build Pages/typage final PASS8,233s ; déploiement PASS13,654s ; contrôle HTTPS PASS0,863s, sept fichiers 200/MIME/bytes identiques à `dist/`, rapport `tmp/elsewhere-pages/http-2Ihv7K/report.json`. Trois fichiers sont envoyés, 234 étaient déjà présents. Les66fichiers de sauvegarde/catalogue sont identiques et le laboratoire est absent. L'avertissement Git dirty de Wrangler correspond au dossier utilisateur non suivi `references_UI`, qui n'est pas publié.
+
+Les contrôles Chrome/compatibilité et les gains V299 sont dans sa note ; la vérification HTTPS n'est pas un nouveau benchmark en ligne ni un nouveau parcours UI. Les mises à jour Pages continuent d'être regroupées ; un push reste indépendant du déploiement.
 
 ## Références
 
