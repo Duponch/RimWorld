@@ -1,6 +1,6 @@
 # Lisière
 
-**V294 — diagnostic MAIN ; produit V293 et schéma 218 conservés.** [L'attribution actuelle](docs/development/aulnes-performance-v294.md) distingue adoption, application de scène et préparation du rendu. Aucun FPS ajouté par ce diagnostic ; la [comparaison V293](docs/development/aulnes-performance-v293.md) reste104,00→113,65RAF/s à vrai×6. Pointes et240FPS restent à résoudre. Les états suivants sont historiques.
+**V295 — réemploi des faits de ressources ; schéma 218.** Chrome1440p/dev sur Les Aulnes : **111,35→119,40 images RAF/s (+7,24%)** à vrai×6 ; adoption CPU par appel−21,57%. [Mesures et bilan nocturne](docs/development/aulnes-performance-v295.md). Pointes et240FPS restent à résoudre, aucun gain GPU mesuré. Relance planifiée en pause ; arrêt après ce lot. Les états suivants sont historiques.
 
 **V292 — diagnostic du transport ; produit V291 et schéma 218 conservés.** Le coût des données territoriales est mesuré ; aucun nouveau protocole ni FPS livré. [Résultat et décision](docs/development/aulnes-performance-v292.md). Les gains V291 ci-dessous restent la référence en jeu.
 

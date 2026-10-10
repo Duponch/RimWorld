@@ -8,6 +8,23 @@ const hydroCrop=(kind:string):boolean=>kind==='rice'||kind==='potato'||kind==='c
 type Presence=Map<number,Set<number>>;
 type ResourceIndex={width:number;height:number;presence?:Uint8Array;outside:Presence;hydro?:Uint32Array;hydroOutside:Map<number,number>;ids:ValidationIdentityMembership;namespace?:OwnedResourceNamespaceFacts;candidates:number[]};
 
+/** Produced only from the closed Decoder's exact sparse reconstruction.
+ * Stable ordinals, complete updates, epoch/revision and no membership/order
+ * change are preconditions of the producer, not inferred from this shape. */
+export interface OwnedResourceReuseWitness {
+  readonly previous:World;
+  readonly kind:'sparse';
+  readonly updated:readonly {readonly id:number;readonly afterOrdinal:number}[];
+}
+
+export interface OwnedValidationResourceOwner {
+  prepare(world:World,witness?:OwnedResourceReuseWitness):OwnedValidationResourceReader;
+  commit(world:World):void;
+  discard():void;
+}
+
+const plantCandidate=(resource:Resource):boolean=>resource.kind==='healroot'||resource.growthLight!==undefined||resource.blight!==undefined||Object.hasOwn(resource,'blight');
+
 /** ID summary from the same resource capture, never an earlier guard verdict.
  * maxId is absent for an empty safe-positive ID collection. */
 export interface OwnedResourceNamespaceFacts extends ValidationIdentityMembership {
@@ -34,7 +51,13 @@ export interface OwnedValidationResourceReader {
  * and spatial projections share the first paid resource traversal. There is
  * no retained state across adoptions and no early plant predicate evaluation. */
 export function createOwnedValidationResources(world:World):OwnedValidationResourceReader {
-  let resources:ResourceIndex|undefined,captured=false;
+  return createReader(world).reader;
+}
+
+/** A confirmed index is never written here. A full capture allocates a new
+ * index; readers share only its facts and always read their own target World. */
+function createReader(world:World,reusedIndex?:ResourceIndex):{reader:OwnedValidationResourceReader;peek:()=>ResourceIndex|undefined} {
+  let resources:ResourceIndex|undefined=reusedIndex,captured=reusedIndex!==undefined;
   const capture=():ResourceIndex|undefined=>{
     if(captured)return resources;
     captured=true;
@@ -77,7 +100,7 @@ export function createOwnedValidationResources(world:World):OwnedValidationResou
     candidate.namespace={safe,unique,maxId,has:ids.has};
     return resources=candidate;
   };
-  return {
+  const reader:OwnedValidationResourceReader={
     records(target){return target===world&&capture()?true:undefined;},
     ids(target){return target===world?capture()?.ids:undefined;},
     namespace(target){return target===world?capture()?.namespace:undefined;},
@@ -102,5 +125,42 @@ export function createOwnedValidationResources(world:World):OwnedValidationResou
       for(const cell of linkedCells.keys())count+=index.hydro&&Number.isInteger(cell)&&cell>=0&&cell<index.hydro.length?index.hydro[cell]!:index.hydroOutside.get(cell)??0;
       return count;
     },
+  };
+  return {reader,peek:()=>resources};
+}
+
+/** Closed native MAIN only, after its inter-adoption ownership audit. This
+ * exported helper grants no authority to arbitrary mutable Worlds/callbacks.
+ * RAW callers keep createOwnedValidationResources and historical captures. */
+export function createOwnedValidationResourceOwner():OwnedValidationResourceOwner {
+  let confirmed:{world:World;index:ResourceIndex}|undefined;
+  let pending:{world:World;capture:ReturnType<typeof createReader>}|undefined;
+  const reusable=(world:World,witness:OwnedResourceReuseWitness):ResourceIndex|undefined=>{
+    const base=confirmed;if(!base||base.world!==witness.previous||witness.kind!=='sparse')return;
+    const previous=witness.previous,before=previous.resources,after=world.resources,index=base.index;
+    if(world.width!==index.width||world.height!==index.height||previous.width!==index.width||previous.height!==index.height
+      ||!Array.isArray(before)||!Array.isArray(after)||before.length!==after.length)return;
+    for(const update of witness.updated){
+      const ordinal=update.afterOrdinal;
+      if(!Number.isSafeInteger(ordinal)||ordinal<0||ordinal>=after.length||!Object.hasOwn(before,ordinal)||!Object.hasOwn(after,ordinal))return;
+      const old=before[ordinal],next=after[ordinal];if(!record(old)||!record(next))return;
+      if(!integerAnchor(next.x)||!integerAnchor(next.z)||typeof next.kind!=='string'||typeof next.id!=='number'
+        ||!Object.is(old.id,update.id)||!Object.is(next.id,update.id)
+        ||!Object.is(old.x,next.x)||!Object.is(old.z,next.z)||!Object.is(old.kind,next.kind)
+        ||plantCandidate(old as unknown as Resource)!==plantCandidate(next as unknown as Resource))return;
+    }
+    return index;
+  };
+  return {
+    prepare(world,witness){
+      pending=undefined;
+      const capture=createReader(world,witness?reusable(world,witness):undefined);
+      pending={world,capture};return capture.reader;
+    },
+    commit(world){
+      const index=pending?.world===world?pending.capture.peek():undefined;
+      confirmed=index?{world,index}:undefined;pending=undefined;
+    },
+    discard(){pending=undefined;},
   };
 }

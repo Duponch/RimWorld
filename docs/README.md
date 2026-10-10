@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-**V294 : [attribution MAIN actuelle](development/aulnes-performance-v294.md), produit V293 et schéma 218 conservés.** Diagnostic des validations et de la scène réellement appliquée depuisRAF ; aucune nouvelle optimisation promue. Le [gain V293](development/aulnes-performance-v293.md) reste la référence non instrumentée. Les états suivants sont historiques.
+**V295 : [faits de ressources confirmés et bilan nocturne](development/aulnes-performance-v295.md), schéma 218 conservé.**111,35→119,40RAF/s à vrai×6, adoption CPU par appel−21,57% ; sauvegardes et règles conservées.240FPS et fluidité constante non atteints. Relance en pause, aucune suite autonome engagée. Les états suivants sont historiques.
 
 **V292 : [coût des messages territoriaux](development/aulnes-performance-v292.md), produit V291 et schéma 218 conservés.** Diagnostic natif et reprise exacts ; réduction de transport expérimentale, aucun nouveau FPS. Priorité suivante conditionnée au coût du registre MAIN.
 

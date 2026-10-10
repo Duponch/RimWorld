@@ -1,6 +1,6 @@
 # Les Aulnes, référence intégrée
 
-Le [diagnostic V294](../development/aulnes-performance-v294.md) conserve ce checkpoint et le produit V293. La [comparaison V293](../development/aulnes-performance-v293.md) reste **104,00→113,65RAF/s**, Chrome1440p/dev à vrai×6 ; aucun FPS ajouté par le diagnostic. Des pointes persistent et240FPS restent à atteindre. Les états suivants sont historiques.
+Le [réemploi V295](../development/aulnes-performance-v295.md) conserve ce checkpoint et le schéma 218. Comparaison avec V293 : **111,35→119,40RAF/s**, Chrome1440p/dev à vrai×6, règles et qualité identiques. Des pointes persistent et240FPS restent à atteindre ; aucun gain GPU mesuré. Bilan nocturne dans la note, relance en pause et arrêt après ce lot. Les états suivants sont historiques.
 
 Le [diagnostic V292](../development/aulnes-performance-v292.md) mesure les échanges entre simulation et interface ; il conserve le produit V291, le schéma218 et ce checkpoint. Aucun FPS supplémentaire annoncé.
 

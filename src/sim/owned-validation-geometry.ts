@@ -17,8 +17,7 @@ export interface OwnedValidationGeometryReader extends StagingGeometryReader {re
  * Proxy or reentrance keep their historical reader; no descriptor census or
  * immutability assertion is performed here. Plain atypical shapes fall back.
  * Terrain, version, jobs and all quantities/reservations remain live queries. */
-export function createOwnedValidationGeometry(world:World):OwnedValidationGeometryReader {
-  const resourceFacts=createOwnedValidationResources(world);
+export function createOwnedValidationGeometry(world:World,resourceFacts:OwnedValidationResourceReader=createOwnedValidationResources(world)):OwnedValidationGeometryReader {
   let anchors:Anchors|undefined,structuresCaptured=false;
   const overlaps=new Map<number,Map<number,Structure[]>>();
 

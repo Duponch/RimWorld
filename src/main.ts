@@ -133,10 +133,11 @@ import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
 import { updateFoodStocks } from './ui/food-stocks';
 import { SimulationClient } from './bridge/SimulationClient';
-import { SnapshotDecoder, type SnapshotValidationContext } from './bridge/snapshots';
+import { SnapshotDecoder, type SnapshotValidationContext, type SnapshotMessage, type SnapshotAdoption } from './bridge/snapshots';
 import type { AudioCue } from './bridge/audio-cues';
 import { PowerParentValidationCache, type PowerParentIndex } from './sim/power-parent-validation';
 import { createOwnedValidationGeometry } from './sim/owned-validation-geometry.ts';
+import { createOwnedValidationResourceOwner, type OwnedResourceReuseWitness } from './sim/owned-validation-resources.ts';
 import { AudioDirector } from './audio/AudioDirector';
 import { MusicDirector, type MusicMood } from './audio/MusicDirector';
 import { ambientCameraGain, FoliageAmbience } from './audio/ambience';
@@ -168,9 +169,22 @@ const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElem
 // decoders. The command facade exposes no adoption or World callback entry.
 const client = (() => {
   class MainSnapshotDecoder extends SnapshotDecoder {
-    protected override createValidationContext(next: World): SnapshotValidationContext {
+    readonly #resourceOwner = createOwnedValidationResourceOwner();
+    override adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
+      this.#resourceOwner.discard();
+      try {
+        const result = super.adopt(packet);
+        if (result.status === 'applied') this.#resourceOwner.commit(result.world);
+        else this.#resourceOwner.discard();
+        return result;
+      } catch (error) {
+        this.#resourceOwner.discard();
+        throw error;
+      }
+    }
+    protected override createValidationContext(next: World, resourceReuse?: OwnedResourceReuseWitness): SnapshotValidationContext {
       const raw = new PowerParentValidationCache();
-      const geometry = createOwnedValidationGeometry(next);
+      const geometry = createOwnedValidationGeometry(next, this.#resourceOwner.prepare(next, resourceReuse));
       let parents: PowerParentIndex | undefined;
       return {
         powerParents: { read(world: World): PowerParentIndex {

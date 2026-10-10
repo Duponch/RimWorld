@@ -1,6 +1,6 @@
-# Validation courante — V294
+# Validation courante — V295
 
-**V294 : [attribution MAIN](aulnes-performance-v294.md#preuves-et-validation), produit V293 et schéma 218 conservés.** Typage et parcours natif repris passent ; profil et184scripts compilés qualifiés, recharge9094exacte, sources/63références inchangées. Première attribution refusée pour delta−44µs, conservée intacte. Aucun nouveau FPS ni campagne produit ; [contrôles V293](aulnes-performance-v293.md#validation) toujours acquis.
+**V295 : [réemploi des faits Resource](aulnes-performance-v295.md#validation), schéma 218 conservé.**55cas/9fichiers, typage/build,63références/66fichiers avec un vrai tick et huit recharges natives passent. CPU par adoption−21,57%, GAME original111,35→119,40RAF/s à vrai×6. Premier lancement interrompu conservé, reprise dans des sorties distinctes ; preuves et limites dans la note unique. Relance en pause après clôture du lot engagé.
 
 **V292 : [diagnostic des messages territoriaux](aulnes-performance-v292.md#validation), produit V291 et schéma 218 conservés.** Typage et reprise native de64ticks passent ; sources/publics et reprise8434→8498→8499 exacts. Rouge404 initial conservé. Le résultat B tronqué est un diagnostic de transport, aucun gain GAME/GPU certifié ; détails dans la note unique.
 

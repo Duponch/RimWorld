@@ -1,6 +1,6 @@
 import { PowerParentValidationCache,type PowerParentReader } from '../sim/power-parent-validation.ts';
 import type { StagingGeometryReader } from '../sim/staging-validation.ts';
-import type { OwnedValidationResourceReader } from '../sim/owned-validation-resources.ts';
+import type { OwnedValidationResourceReader, OwnedResourceReuseWitness } from '../sim/owned-validation-resources.ts';
 import { ValidationIdentityContext } from '../sim/validation-identities.ts';
 import { validBiofuelTransport } from '../sim/biofuel-save.ts';
 import { validNutrientPasteTransport } from '../sim/nutrient-paste-save.ts';
@@ -747,7 +747,7 @@ export class SnapshotDecoder {
 
   /** Public/mutable consumers retain the mutation-aware historical reader.
    * The closed MAIN subclass owns its fixed consumers and local query scope. */
-  protected createValidationContext(_next:World):SnapshotValidationContext {
+  protected createValidationContext(_next:World,_resourceReuse?:OwnedResourceReuseWitness):SnapshotValidationContext {
     return {powerParents:new PowerParentValidationCache()};
   }
 
@@ -985,7 +985,13 @@ export class SnapshotDecoder {
     // between these guards. The public context checks power keys on every read;
     // the closed MAIN context captures stable auxiliary queries once. Identity
     // views keep their distinct domains. Refusal retains none of these caches.
-    const validation=this.createValidationContext(next),powerTopology=validation.powerParents;
+    // This scratch witness is offered only after the historical sequence and
+    // sparse-slot checks. It is not the public post-commit change journal and
+    // grants no ownership to public callers. Checkpoints/remaps stay full.
+    const resourceReuse:OwnedResourceReuseWitness|undefined=!reindexResources
+      &&resourceStructureAllowed&&resourceStructureCandidate&&this.current
+      ?{kind:'sparse',previous:this.current,updated:resourceStructureCandidate.updated}:undefined;
+    const validation=this.createValidationContext(next,resourceReuse),powerTopology=validation.powerParents;
     const identities=new ValidationIdentityContext(next,validation.resourceFacts);
     if(!validBiofuelTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
