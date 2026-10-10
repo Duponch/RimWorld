@@ -1,6 +1,6 @@
 # Les Aulnes, référence intégrée
 
-Le [registre partagé V293](../development/aulnes-performance-v293.md) améliore le chemin commun sans modifier ce checkpoint : **104,00→113,65RAF/s**, Chrome1440p/dev à vrai×6. Des pointes persistent ;240FPS non atteints. Les états suivants sont historiques.
+Le [diagnostic V294](../development/aulnes-performance-v294.md) conserve ce checkpoint et le produit V293. La [comparaison V293](../development/aulnes-performance-v293.md) reste **104,00→113,65RAF/s**, Chrome1440p/dev à vrai×6 ; aucun FPS ajouté par le diagnostic. Des pointes persistent et240FPS restent à atteindre. Les états suivants sont historiques.
 
 Le [diagnostic V292](../development/aulnes-performance-v292.md) mesure les échanges entre simulation et interface ; il conserve le produit V291, le schéma218 et ce checkpoint. Aucun FPS supplémentaire annoncé.
 

@@ -1,6 +1,6 @@
-# Validation courante — V293
+# Validation courante — V294
 
-**V293 : [registre strict partagé](aulnes-performance-v293.md#validation), schéma218 conservé.** 60cas/10fichiers par reprises,63références, typage/build et huit recharges natives exactes. CPU−12,28%, GAME104,00→113,65RAF/s à vrai×6 ; aucun gainGPU ou240FPS certifié. Sources et sauvegardes conservées ; preuves et rouges dans la note unique.
+**V294 : [attribution MAIN](aulnes-performance-v294.md#preuves-et-validation), produit V293 et schéma 218 conservés.** Typage et parcours natif repris passent ; profil et184scripts compilés qualifiés, recharge9094exacte, sources/63références inchangées. Première attribution refusée pour delta−44µs, conservée intacte. Aucun nouveau FPS ni campagne produit ; [contrôles V293](aulnes-performance-v293.md#validation) toujours acquis.
 
 **V292 : [diagnostic des messages territoriaux](aulnes-performance-v292.md#validation), produit V291 et schéma 218 conservés.** Typage et reprise native de64ticks passent ; sources/publics et reprise8434→8498→8499 exacts. Rouge404 initial conservé. Le résultat B tronqué est un diagnostic de transport, aucun gain GAME/GPU certifié ; détails dans la note unique.
 

@@ -1,6 +1,6 @@
 # Documentation de Lisière
 
-**V293 : [registre strict partagé](development/aulnes-performance-v293.md), schéma218 conservé.** Chrome1440p/dev :104,00→113,65RAF/s à vrai×6 ; adoption CPU−12,28%. Huit recharges exactes et63références conservées ; pointes et240FPS restent à résoudre. Les états suivants sont historiques.
+**V294 : [attribution MAIN actuelle](development/aulnes-performance-v294.md), produit V293 et schéma 218 conservés.** Diagnostic des validations et de la scène réellement appliquée depuisRAF ; aucune nouvelle optimisation promue. Le [gain V293](development/aulnes-performance-v293.md) reste la référence non instrumentée. Les états suivants sont historiques.
 
 **V292 : [coût des messages territoriaux](development/aulnes-performance-v292.md), produit V291 et schéma 218 conservés.** Diagnostic natif et reprise exacts ; réduction de transport expérimentale, aucun nouveau FPS. Priorité suivante conditionnée au coût du registre MAIN.
 
