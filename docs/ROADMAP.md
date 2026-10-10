@@ -1,5 +1,7 @@
 # Plan de développement
 
+**Priorité humaine du 10 octobre — [V290](development/aulnes-performance-v290.md), schéma 218 conservé.** Validations privées partagées livrées : +21,06 % RAF local à vrai ×6, 240 FPS non atteints. Poursuivre uniquement les performances cette nuit : attribution MAIN après V290 avant un nouveau retrait de parcours ; faits de ressources locaux seulement étudiés. Aucun nouveau contenu ou ancienne piste inchangée. Commit/push, bilan et pause de la relance à08h Europe/Paris après le lot engagé. Les consignes suivantes sont historiques.
+
 **Priorité humaine du 10 octobre — [diagnostic V289](development/aulnes-performance-v289.md), produit V288 et schéma 218 conservés.** Poursuivre cette nuit les corrections fondées sur les profils, Chrome 1440p/dev et vrai débit ×6. La piste électrique est close sans promotion : examiner les écrivains et références MAIN exposées avant une refonte groupée des validations. Une nouvelle propriété doit retirer un coût mesuré ; aucune ancienne piste de Workers/freeze rejouée sans nouvelle cause. Pas de nouvelle mécanique ni baisse de qualité. Relance réactivée explicitement pour cette nuit seulement, bilan et pause à 08h après le lot engagé. Les consignes suivantes sont historiques.
 
 **Correction visuelle V285 : [constructions et traces](gameplay/construction-presentation-v285.md).** Les raccords et l’aperçu des véritables objets passent avant un nouveau lot fonctionnel. La tâche planifiée reste en pause ; le recyclage demeure seulement étudié.

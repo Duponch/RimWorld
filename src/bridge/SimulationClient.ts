@@ -18,7 +18,7 @@ interface PendingRequest {
 export class SimulationClient {
   private worker!: Worker;
   private nextId = 1;
-  private snapshots = new SnapshotDecoder();
+  private snapshots: SnapshotDecoder;
   private adopted?: { epoch: number; revision: number };
   private stopped = false;
   private fault?: SimulationFault;
@@ -31,7 +31,18 @@ export class SimulationClient {
   onRequestStatus: (status: SimulationRequestStatus) => void = () => {};
 
   constructor() {
+    this.snapshots = this.createDecoder();
     this.startWorker();
+  }
+
+  protected createDecoder(): SnapshotDecoder { return new SnapshotDecoder(); }
+
+  protected deliverSnapshot(world: World, stepMs: number, speed: number, replaced: boolean, motion?: import('./motion-tracks').PawnTrack[]): void {
+    this.onSnapshot(world, stepMs, speed, replaced, motion);
+  }
+
+  protected deliverAudioCues(cues: readonly AudioCue[], world: World, replaced: boolean): void {
+    this.onAudioCues(cues, world, replaced);
   }
 
   private startWorker() {
@@ -56,9 +67,9 @@ export class SimulationClient {
           for (const pending of this.pending.values()) if (pending.type === 'init' || pending.type === 'load') {
             if (result.replaced) pending.replacementEpoch = data.epoch;
           }
-          try { this.onSnapshot(result.world, data.stepMs, data.speed, result.replaced, data.motion); }
+          try { this.deliverSnapshot(result.world, data.stepMs, data.speed, result.replaced, data.motion); }
           catch (error) { this.onError(`Présentation interrompue : ${error instanceof Error ? error.message : String(error)}`); }
-          try { if (result.replaced || data.audioCues?.length) this.onAudioCues(data.audioCues ?? [], result.world, result.replaced); }
+          try { if (result.replaced || data.audioCues?.length) this.deliverAudioCues(data.audioCues ?? [], result.world, result.replaced); }
           catch (error) { this.onError(`Audio interrompu : ${error instanceof Error ? error.message : String(error)}`); }
           for (const [id, pending] of this.pending) this.finishReply(id, pending);
         }
@@ -115,7 +126,7 @@ export class SimulationClient {
   /** After a hard transport stop, only a subsequent init/load may restore play. */
   restartForReplacement() {
     if (!this.stopped) return;
-    this.snapshots = new SnapshotDecoder();
+    this.snapshots = this.createDecoder();
     this.adopted = undefined;
     this.resyncing = false;
     this.startWorker();

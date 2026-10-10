@@ -4,6 +4,7 @@ import { blockedCells, cellIndex, inBounds } from './pathfinding.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { storageAccepts } from './storage-filters.ts';
 import type { Cell, HaulTask, MaterialPile, StockpileCell, World } from './types.ts';
+import type { StagingGeometryReader } from './staging-validation.ts';
 
 /** Connected nearby cells, deterministic breadth first order. Never spill across a wall. */
 export function nearbyGround(world: World, origin: Cell, radius = 12): Cell[] {
@@ -29,12 +30,12 @@ export function groundPileCells(world:World):ReadonlySet<number> {
   for(const p of world.piles)if(p.owner.type==='ground')cells.add(p.owner.z*world.width+p.owner.x);
   return cells;
 }
-function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exceptPawn?: number, zone=world.stockpiles.find(z=>z.x===cell.x&&z.z===cell.z)): number {
+function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exceptPawn?: number, zone=world.stockpiles.find(z=>z.x===cell.x&&z.z===cell.z),geometry?:StagingGeometryReader): number {
   if(world.packed?.some(p=>p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z))return 0;
   const pile = groundPile(world, cell);
   if (pile && pile.item!==item) return 0;
   let capacity = Math.min(limit,ITEM_DEFINITIONS[item].stackLimit)-(pile?.quantity??0);
-  if(capacity<=0||world.schemaVersion>=21&&(!groundOccupancyAllows(world,cell)||zone&&!storageOccupancyAllows(world,cell)))return 0;
+  if(capacity<=0||world.schemaVersion>=21&&(!(geometry?geometry.groundAllows(cell):groundOccupancyAllows(world,cell))||zone&&!(geometry?.storageAllows?geometry.storageAllows(cell):storageOccupancyAllows(world,cell))))return 0;
   // Hot capacity queries must not allocate an array/generator of every transport.
   for (const pawn of world.pawns) {
     if(pawn.id!==exceptPawn)for(const i of pawn.surgery?.ingredients??[])if(i.stage!=='placed'&&i.cell.x===cell.x&&i.cell.z===cell.z)return 0;
@@ -65,12 +66,12 @@ function reservedAt(world:World,task:HaulTask,cell:Cell,item:ItemId,zone?:Stockp
   const pile=world.piles.find(p=>p.id===(task.phase==='pickup'?task.sourcePileId:task.carryPileId));
   return pile?.item===item?task.quantity:Infinity;
 }
-export function groundCapacity(world: World, cell: Cell, item: ItemId, exceptPawn?: number): number {
-  return cellCapacity(world,cell,item,ITEM_DEFINITIONS[item].stackLimit,exceptPawn);
+export function groundCapacity(world: World, cell: Cell, item: ItemId, exceptPawn?: number,geometry?:StagingGeometryReader): number {
+  return cellCapacity(world,cell,item,ITEM_DEFINITIONS[item].stackLimit,exceptPawn,undefined,geometry);
 }
-export function storageCapacity(world: World, zone: StockpileCell, subject: ItemId|MaterialPile, exceptPawn?: number): number {
+export function storageCapacity(world: World, zone: StockpileCell, subject: ItemId|MaterialPile, exceptPawn?: number,geometry?:StagingGeometryReader): number {
   const item=typeof subject==='string'?subject:subject.item;
-  return storageAccepts(zone,subject) ? cellCapacity(world,zone,item,zone.capacity,exceptPawn,zone) : 0;
+  return storageAccepts(zone,subject) ? cellCapacity(world,zone,item,zone.capacity,exceptPawn,zone,geometry) : 0;
 }
 export function planGroundPlacement(world: World, quantity: number, origin: Cell, item: ItemId, reachable?: (cell:Cell)=>boolean): {cell:Cell; quantity:number}[] | null {
   const result: {cell:Cell;quantity:number}[]=[];

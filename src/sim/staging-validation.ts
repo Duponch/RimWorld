@@ -6,6 +6,8 @@ import type {Cell,World} from './types.ts';
 export interface StagingGeometryReader {
   hasResource(cell:Cell):boolean;
   groundAllows(cell:Cell):boolean;
+  storageAllows?(cell:Cell):boolean;
+  hydroOverlapCount?(linkedCells:ReadonlyMap<number,unknown>):number;
 }
 
 type Cells=Map<number,Set<number>>;

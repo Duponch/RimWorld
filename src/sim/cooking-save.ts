@@ -17,13 +17,13 @@ import { withoutQueuedOrder } from './haul-reservations.ts';
 import { componentWorkpiecePlaceFree,cookingSpot, ingredientPlaceFree, ingredientWithinReach, validBillSettings } from './cooking-bills.ts';
 import { groundCapacity, storageCapacity } from './ground-placement.ts';
 import { reservedSource } from './materials.ts';
-import {createStagingValidation} from './staging-validation.ts';
+import {createStagingValidation,type StagingGeometryReader} from './staging-validation.ts';
 import type { Cell,World } from './types.ts';
 
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 /** Called after the base schema's structures/pawns/piles are shape-checked. */
-export function validateCooking(input:unknown,version:number,ids:Set<number>,memoizeStaging=false,indexStaging=false):string[] {
+export function validateCooking(input:unknown,version:number,ids:Set<number>,memoizeStaging=false,indexStaging=false,geometry?:StagingGeometryReader):string[] {
   const w=input as World,errors:string[]=[];
   const cell=(v:unknown)=>record(v)&&Object.keys(v).every(key=>key==='x'||key==='z')&&int(v.x,0,w.width-1)&&int(v.z,0,w.height-1);
   const taskKeys=new Set(['recipe','stationId','billId','spot','actionCell','phase','ingredients','progress','productId','storageId',...(version>=79?['workTicks']:[]),...(version>=32?['storageQuantity']:[])]);
@@ -66,7 +66,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
     for(const i of c.ingredients)if(!record(i)||Object.keys(i).some(key=>!ingredientKeys.has(key))||!int(i.pileId,1,w.nextId-1)||!int(i.quantity,1,recipe.units)||!(recipe.inputs.includes(i.item as ProductionIngredient)&&(version>=178||!V190_ITEM_IDS.includes(String(i.item)))&&(version>=120||!V120_ANIMAL_PRODUCT_ITEMS.includes(String(i.item)))&&(version>=91||!V91_ITEM_IDS.includes(String(i.item)))&&(version>=79||i.item!=='hare-meat'&&i.item!=='hare-corpse')&&(version>=84||i.item!=='potato'&&i.item!=='corn')||isTailoring(c.recipe)&&i.item===unfinishedItem(c.recipe)&&i.quantity===1||version>=101&&isGunRecipe(c.recipe)&&i.item==='unfinished-gun'&&i.quantity===1||version>=104&&isArtRecipe(c.recipe)&&i.item==='unfinished-sculpture'&&i.quantity===1||isFlakRecipe(c.recipe)&&version>=(c.recipe==='make-recon-helmet'?148:c.recipe==='make-flak-helmet'?141:109)&&i.item===flakWorkpiece(c.recipe)&&i.quantity===1||version>=123&&isComponentRecipe(c.recipe)&&i.item==='unfinished-component'&&i.quantity===1)||!['source','held','placed'].includes(i.stage as string)||!cell(i.cell))errors.push('Invalid recipe ingredient reservation.');
   }
   if(errors.length||version<10)return errors;
-  const staging=indexStaging?createStagingValidation(w):undefined;
+  const staging=geometry??(indexStaging?createStagingValidation(w):undefined);
   const stations=new Set<number>(),spots=new Set<number>();
   for(const p of w.pawns)if(p.cooking) {
     const c=p.cooking,station=w.structures.find(s=>s.id===c.stationId&&stationAccepts(s,taskRecipe(c))),bill=station?.bills?.find(b=>b.id===c.billId);
@@ -91,7 +91,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
       if(c.storageId!==null){const zone=w.stockpiles.find(z=>z.id===c.storageId);if(!zone||!zone.filters.furniture||!product||!storageConditionAccepts(zone,product.building)||!furnitureSlot(w,zone,p.id))errors.push('Invalid sculpture output reservation.');}
     } else if(c.phase==='output') {
       if(c.ingredients.length||c.progress!==0||owned.length!==1||owned[0]?.id!==c.productId||!isRecipeProduct(taskRecipe(c),owned[0]!.item)||!int(owned[0]?.quantity,1,version>=91&&c.recipe==='butcher-creature'?75:recipe.outputUnits)||c.recipe==='stone-blocks'&&!recipe.inputs.some(i=>bill.filters[i]&&blockFor(i as StoneIngredient)===owned[0]!.item))errors.push('Invalid cooked product ownership.');
-      if(c.storageId!==null){const storage=w.stockpiles.find(s=>s.id===c.storageId),product=owned[0],quantity=c.storageQuantity??1;if(!product||(isBiofuelRecipe(c.recipe)||isMechSalvageRecipe(c.recipe)||c.recipe==='stone-blocks'||c.recipe==='butcher-creature'||c.recipe==='cook-simple-meal-bulk'||c.recipe==='cook-fine-meal-bulk'||c.recipe==='cook-vegetarian-fine-meal-bulk'||c.recipe==='cook-carnivore-fine-meal-bulk'||c.recipe==='cook-lavish-meal-bulk'||c.recipe==='cook-vegetarian-lavish-meal-bulk'||c.recipe==='cook-carnivore-lavish-meal-bulk')&&c.storageQuantity===undefined||quantity>(product?.quantity??0)||!storage||storageCapacity(w,storage,product,p.id)<quantity)errors.push('Invalid cooking output reservation.');}
+      if(c.storageId!==null){const storage=w.stockpiles.find(s=>s.id===c.storageId),product=owned[0],quantity=c.storageQuantity??1;if(!product||(isBiofuelRecipe(c.recipe)||isMechSalvageRecipe(c.recipe)||c.recipe==='stone-blocks'||c.recipe==='butcher-creature'||c.recipe==='cook-simple-meal-bulk'||c.recipe==='cook-fine-meal-bulk'||c.recipe==='cook-vegetarian-fine-meal-bulk'||c.recipe==='cook-carnivore-fine-meal-bulk'||c.recipe==='cook-lavish-meal-bulk'||c.recipe==='cook-vegetarian-lavish-meal-bulk'||c.recipe==='cook-carnivore-lavish-meal-bulk')&&c.storageQuantity===undefined||quantity>(product?.quantity??0)||!storage||storageCapacity(w,storage,product,p.id,geometry)<quantity)errors.push('Invalid cooking output reservation.');}
     } else {
       if(isBiofuelRecipe(c.recipe)&&!validBiofuelIngredients(c.recipe,c.ingredients))errors.push('Invalid biofuel ingredient quota.');
       if(c.recipe==='make-medicine'&&!validMedicineIngredients(c.recipe,c.ingredients))errors.push('Invalid medicine ingredient quotas.');
@@ -147,7 +147,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
           const key=i.cell.z*w.width+i.cell.x,prior=incoming.get(key);
           if(prior&&prior.item!==i.item)errors.push('Mixed ingredient staging reservation.');
           const quantity=(prior?.quantity??0)+i.quantity;incoming.set(key,{item:i.item,quantity});
-          if(groundCapacity(w,i.cell,i.item,p.id)<quantity)errors.push('Invalid ingredient staging capacity.');
+          if(groundCapacity(w,i.cell,i.item,p.id,geometry)<quantity)errors.push('Invalid ingredient staging capacity.');
         }
       }
       if(c.phase==='work'&&(c.ingredients.some(i=>i.stage!=='placed')||p.x!==spot.x||p.z!==spot.z||p.path.length||p.state!=='working'))errors.push('Cooking before gathering or away from workstation.');
@@ -158,13 +158,13 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
 
 /** New production envelopes use the same strict file checks in the Decoder.
  * Historical worlds without refining keep their existing transport contract. */
-export function validBiofuelProductionTransport(w:World,version:number,memoizeStaging=false,indexStaging=false):boolean {
+export function validBiofuelProductionTransport(w:World,version:number,memoizeStaging=false,indexStaging=false,geometry?:StagingGeometryReader):boolean {
   try {
     const present=w.structures.some(s=>s.kind==='biofuel-refinery'||s.bills?.some(b=>isBiofuelRecipe(b?.recipe)))
       ||w.packed.some(p=>p.building.kind==='biofuel-refinery'||p.building.bills?.some(b=>isBiofuelRecipe(b?.recipe)))
       ||w.pawns.some(p=>isBiofuelRecipe(p.cooking?.recipe)||p.orders.queue.some(o=>isCookingOrder(o)&&isBiofuelRecipe(o.cooking.recipe)));
     if(!present)return true;
-    if(version<218||validateCooking(w,version,new Set(),memoizeStaging,indexStaging).length)return false;
+    if(version<218||validateCooking(w,version,new Set(),memoizeStaging,indexStaging,geometry).length)return false;
     const stations=new Set(w.pawns.filter(p=>isBiofuelRecipe(p.cooking?.recipe)).map(p=>p.cooking!.stationId));
     const spots=new Set(w.pawns.filter(p=>p.cooking).map(p=>p.cooking!.spot.z*w.width+p.cooking!.spot.x));
     for(const pawn of w.pawns)for(const order of pawn.orders.queue)if(isCookingOrder(order)&&isBiofuelRecipe(order.cooking.recipe)){
@@ -180,12 +180,12 @@ export function validBiofuelProductionTransport(w:World,version:number,memoizeSt
         if(!pile||pile.item!==part.item||pile.owner.type!=='ground'||!bill.filters[part.item]||reservedSource(w,pile.id)>pile.quantity
           ||(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2
           ||c.recipe==='chemfuel-from-organics'&&ticksUntilRot(pile,w.tick)<=0
-          ||!ingredientWithinReach(part.cell,spot,station)||!ingredientPlaceFree(w,part.cell,spot,c.recipe!,station))return false;
+          ||!ingredientWithinReach(part.cell,spot,station)||!ingredientPlaceFree(w,part.cell,spot,c.recipe!,station,geometry))return false;
         if(part.stage==='placed'){
           if(pile.owner.x!==part.cell.x||pile.owner.z!==part.cell.z)return false;
         }else{
           const cellKey=part.cell.z*w.width+part.cell.x,prior=incoming.get(cellKey),quantity=(prior?.quantity??0)+part.quantity;
-          if(prior&&prior.item!==part.item||groundCapacity(view,part.cell,part.item)<quantity)return false;
+          if(prior&&prior.item!==part.item||groundCapacity(view,part.cell,part.item,undefined,geometry)<quantity)return false;
           incoming.set(cellKey,{item:part.item,quantity});
         }
       }

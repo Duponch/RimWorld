@@ -133,6 +133,10 @@ import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
 import { updateFoodStocks } from './ui/food-stocks';
 import { SimulationClient } from './bridge/SimulationClient';
+import { SnapshotDecoder, type SnapshotValidationContext } from './bridge/snapshots';
+import type { AudioCue } from './bridge/audio-cues';
+import { PowerParentValidationCache, type PowerParentIndex } from './sim/power-parent-validation';
+import { createOwnedValidationGeometry } from './sim/owned-validation-geometry.ts';
 import { AudioDirector } from './audio/AudioDirector';
 import { MusicDirector, type MusicMood } from './audio/MusicDirector';
 import { ambientCameraGain, FoliageAmbience } from './audio/ambience';
@@ -160,7 +164,56 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = gameLayout();
 mountStorageItemControls(document.getElementById('stockpile-items')!);
 mountStorageConditionControls(document.getElementById('stockpile-items')!);
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
-const client = new SimulationClient();
+// Only this fixed Worker/client and the fixed MAIN consumers can reach these
+// decoders. The command facade exposes no adoption or World callback entry.
+const client = (() => {
+  class MainSnapshotDecoder extends SnapshotDecoder {
+    protected override createValidationContext(next: World): SnapshotValidationContext {
+      const raw = new PowerParentValidationCache();
+      let parents: PowerParentIndex | undefined;
+      return {
+        powerParents: { read(world: World): PowerParentIndex {
+          if (world !== next) return raw.read(world);
+          return parents ??= raw.read(world);
+        } },
+        geometry: createOwnedValidationGeometry(next),
+      };
+    }
+  }
+  class MainSimulationClient extends SimulationClient {
+    protected override createDecoder(): SnapshotDecoder { return new MainSnapshotDecoder(); }
+    protected override deliverSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
+      receiveMainSnapshot(world, cost, speed, replaced, motion);
+    }
+    protected override deliverAudioCues(cues: readonly AudioCue[]): void { receiveMainAudioCues(cues); }
+  }
+  const native = new MainSimulationClient();
+  let onError: SimulationClient['onError'] = () => {};
+  let onFault: SimulationClient['onFault'] = () => {};
+  let onRequestStatus: SimulationClient['onRequestStatus'] = () => {};
+  // Invoke facade listeners as plain functions so their `this` cannot expose
+  // the private client through the base client's method-style notification.
+  native.onError = message => onError(message);
+  native.onFault = fault => onFault(fault);
+  native.onRequestStatus = status => onRequestStatus(status);
+  return {
+    init: (...args: Parameters<SimulationClient['init']>) => native.init(...args),
+    command: (...args: Parameters<SimulationClient['command']>) => native.command(...args),
+    orderOptions: (...args: Parameters<SimulationClient['orderOptions']>) => native.orderOptions(...args),
+    setSpeed: (...args: Parameters<SimulationClient['setSpeed']>) => native.setSpeed(...args),
+    save: () => native.save(),
+    load: (...args: Parameters<SimulationClient['load']>) => native.load(...args),
+    stop: (...args: Parameters<SimulationClient['stop']>) => native.stop(...args),
+    restartForReplacement: () => native.restartForReplacement(),
+    dispose: () => native.dispose(),
+    get onError() { return onError; },
+    set onError(callback: SimulationClient['onError']) { onError = callback; },
+    get onFault() { return onFault; },
+    set onFault(callback: SimulationClient['onFault']) { onFault = callback; },
+    get onRequestStatus() { return onRequestStatus; },
+    set onRequestStatus(callback: SimulationClient['onRequestStatus']) { onRequestStatus = callback; },
+  };
+})();
 const audio = new AudioDirector();
 const music = new MusicDirector();
 let snapshot: World | undefined;
@@ -1326,7 +1379,7 @@ client.onFault = () => {
   if (snapshot) renderer?.setWorld(snapshot, false, 0, latestMotion, true);
   updateIncident(); syncStorageButtons();
 };
-client.onSnapshot = (world, cost, speed, replaced, motion) => {
+function receiveMainSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
   if (replaced) {audio.reset();lastAudioCamera=undefined;lastAudioSourceFocus={x:Infinity,z:Infinity};lastAudioSourceHeight=NaN;}
   const speedChanged=currentSpeed!==speed;
   const role=(p:Pawn|undefined)=>p?p.prisoner?'prisoner':isColonist(p)?'colonist':'other':'absent';
@@ -1342,10 +1395,10 @@ client.onSnapshot = (world, cost, speed, replaced, motion) => {
   if(changed)renderer?.setSelectedPawns(selection.ids);
   updateMapHover();
   snapshotHud.request(changed||roleChanged||speedChanged);
-};
-client.onAudioCues = (cues) => {
+}
+function receiveMainAudioCues(cues: readonly AudioCue[]): void {
   if (soundEnabled) audio.ingestCues(cues);
-};
+}
 function updateIncident(): void {
   const visible = simulationStopped || graphicsFault || waitingRequests.size > 0;
   if (!incidentPanel && !visible) return;

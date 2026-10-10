@@ -73,7 +73,7 @@ export function tacticalAttackPolicy(world: World, ids: ReadonlySet<number>, tar
 export class OrderMenu {
   private readonly menu=document.createElement('div');
   private revision=0;
-  constructor(private readonly client:SimulationClient,private readonly report:(message:string,error?:boolean)=>void) {
+  constructor(private readonly client:Pick<SimulationClient,'command'|'orderOptions'>,private readonly report:(message:string,error?:boolean)=>void) {
     this.menu.className='order-menu panel';this.menu.id='order-menu';this.menu.hidden=true;
     this.menu.setAttribute('role','menu');this.menu.setAttribute('aria-label','Ordres du colon');this.menu.tabIndex=-1;
     document.body.append(this.menu);

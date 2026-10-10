@@ -1,4 +1,6 @@
-# Validation courante — V289
+# Validation courante — V290
+
+**V290 : [validations communes du client privé](aulnes-performance-v290.md#validation), schéma 218 conservé.** 110cas/11fichiers, typage/build,63références/66fichiers, huit recharges exactes et arrêt/reprise réelle passent. Comparaison Chrome assemblée avec provenance : 81,90→99,14 RAF/s, débit6,001→6,010×, adoption CPU−14,38 %. Rouges de pilotes et audit textuel distinct restent visibles dans la note unique ; aucun gain GPU ou 240FPS certifié.
 
 **V289 : [comparaison primitive électrique](aulnes-performance-v289.md#validation), produit V288 et schéma 218 conservés.** Deux candidats exacts, reprise testée dans Chrome puis écartée faute de gain stable ; aucun FPS livré. Typage, 85 cas/9 fichiers, build, huit cohortes CPU et quatre parcours GAME avec reprises exactes passent. Preuves, dispersion et décision dans la note unique ; aucune campagne lourde inchangée après restauration.
 

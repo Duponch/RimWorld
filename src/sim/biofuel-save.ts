@@ -1,4 +1,5 @@
 import type { PowerParentReader } from './power-parent-validation.ts';
+import type { StagingGeometryReader } from './staging-validation.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { footprintCells } from './definitions.ts';
 import { fuelItem,fuelLimit,FUEL_UNIT_TICKS,REFUEL_WORK_TICKS } from './fuel.ts';
@@ -37,7 +38,7 @@ function validChemfuelPile(p:MaterialPile,w:World,version:number,tick:number):bo
 
 /** Original owners and clocks are shared by file loading and SnapshotDecoder.
  * No research, fuel, stock, item identity or task is synthesized by this guard. */
-export function validBiofuelTransport(w:World,version:number,powerTopology?:PowerParentReader,indexStaging=false):boolean {
+export function validBiofuelTransport(w:World,version:number,powerTopology?:PowerParentReader,indexStaging=false,geometry?:StagingGeometryReader):boolean {
   try {
     const owners=captureHumanOwners(w),foreign=owners.slots.filter(s=>s.kind!=='map');
     const packs=[...(w.packed??[]),...foreign.flatMap(s=>s.packed)];
@@ -100,6 +101,6 @@ export function validBiofuelTransport(w:World,version:number,powerTopology?:Powe
         reservations.set(target.id,sum);
       }
     }
-    return validBiofuelProductionTransport(w,version,powerTopology!==undefined,indexStaging);
+    return validBiofuelProductionTransport(w,version,powerTopology!==undefined,indexStaging,geometry);
   }catch{return false;}
 }

@@ -1,4 +1,5 @@
-import { PowerParentValidationCache } from '../sim/power-parent-validation.ts';
+import { PowerParentValidationCache,type PowerParentReader } from '../sim/power-parent-validation.ts';
+import type { StagingGeometryReader } from '../sim/staging-validation.ts';
 import { ValidationIdentityContext } from '../sim/validation-identities.ts';
 import { validBiofuelTransport } from '../sim/biofuel-save.ts';
 import { validNutrientPasteTransport } from '../sim/nutrient-paste-save.ts';
@@ -719,6 +720,13 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
 
 export type SnapshotAdoption = { status: 'applied'; world: World; replaced: boolean } | { status: 'stale' } | { status: 'resync'; reason: string };
 
+/** Auxiliary queries only; every semantic guard still runs. A context belongs
+ * to one synchronous adoption and is never committed to a later World. */
+export interface SnapshotValidationContext {
+  powerParents:PowerParentReader;
+  geometry?:StagingGeometryReader;
+}
+
 /** Reuses stable arrays and replaces changed arrays; previous render snapshots remain intact. */
 export class SnapshotDecoder {
   private epoch = 0;
@@ -733,6 +741,12 @@ export class SnapshotDecoder {
   // index; ordinary growth/metadata packets only copy the array of references.
   private resourceSlots = new Map<number, number>();
   private pileSlots = new Map<number, number>();
+
+  /** Public/mutable consumers retain the mutation-aware historical reader.
+   * The closed MAIN subclass owns its fixed consumers and local query scope. */
+  protected createValidationContext(_next:World):SnapshotValidationContext {
+    return {powerParents:new PowerParentValidationCache()};
+  }
 
   adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
     const resync = (reason: string): SnapshotAdoption => ({ status: 'resync', reason });
@@ -965,15 +979,16 @@ export class SnapshotDecoder {
       for(const key of Object.keys(previous) as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&!Object.hasOwn(message.world,key))delete (next as Partial<World>)[key];
     }
     // Captures live only in this synchronous adoption, with no World writes
-    // between these guards. Power still checks its key on every read; identity
+    // between these guards. The public context checks power keys on every read;
+    // the closed MAIN context captures stable auxiliary queries once. Identity
     // views keep their distinct domains. Refusal retains none of these caches.
-    const powerTopology=new PowerParentValidationCache();
+    const validation=this.createValidationContext(next),powerTopology=validation.powerParents;
     const identities=new ValidationIdentityContext(next);
-    if(!validBiofuelTransport(next,next.schemaVersion,powerTopology,true))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
+    if(!validBiofuelTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
     if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');
     if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');
-    if(validateHydroponics(next,next.schemaVersion,powerTopology,identities).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
+    if(validateHydroponics(next,next.schemaVersion,powerTopology,identities,validation.geometry).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
     if(!validDomesticTasksTransport(next,next.schemaVersion))return resync('Soin ou alimentation vétérinaire, patient ou cargaison incohérents.');
     if(!validArrestRescueTransport(next))return resync('Mandat d’arrestation, portage ou libération locale incohérent.');
     if(!validEmpStructureTransport(next,next.schemaVersion)||!validEmpProductionTransport(next,next.schemaVersion))return resync('État EMP ou production future invalide.');
