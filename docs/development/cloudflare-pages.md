@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les visuels V304, la préparation V305, les corrections V306 et les [interfaces, ressources et commandes V307](../gameplay/interface-hud-v307.md), schéma219 conservé.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les visuels V304, la préparation V305, les corrections V306 les [interfaces, ressources et commandes V307](../gameplay/interface-hud-v307.md) et les [modèles, contours et lecture du site V308](../gameplay/presentation-models-v308.md), schéma219 conservé.
 
 ## Adresse et publication
 
@@ -101,6 +101,14 @@ Le commit produit `b7cc70aff84ad5a114ee6f971dc7db61985a0029` est poussé puis pu
 Déploiement PASS12,425s : neuf fichiers envoyés,484déjà présents, puis en-têtes et redirections. Git dirty concerne uniquement `references_UI`, exclu du commit et du package. Vérification HTTPS PASS3,982s :64réponses200/MIME/bytes exacts sur les origines stable et fraîche, incluant les cinq images générées, provenance et six fontes. Rapport `tmp/elsewhere-pages/v307-http-UC77lx/report.json` ; package/publics inchangés, erreurs vides. Les66fichiers distants ne sont pas tous téléchargés.
 
 Le parcours Chrome avec gestes, six fontes aux deux résolutions et sauvegarde/reprise exacte est décrit dans la note V307. Le contrôle HTTPS ne constitue pas un nouveau parcours navigateur ni une mesure de performances en ligne. Aucun second déploiement pour le commit/push documentaire ; relance planifiée en pause.
+
+## Publication V308 après les modèles, contours et HUD
+
+Le produit `b22da5bc` est poussé puis publié une seule fois en `cd66026b` : [adresse stable](https://elsewhere-cq7.pages.dev/) et [publication](https://cd66026b.elsewhere-cq7.pages.dev/). Typage complet en mode `--singleThreaded` et build Pages final PASS17,315s ; la limite de mémoire du compilateur parallèle et ses reprises sont conservées dans la [note V308](../gameplay/presentation-models-v308.md).
+
+Package PASS2,186s :502fichiers/112702035octets, sept nouveaux assets identiques à `public/`,63références/66fichiers publics exacts, laboratoire et sources privés absents ; rapport `tmp/elsewhere-pages/v308-package-PzMmnp/report.json`, SHA934CB5D9. Déploiement PASS13,368s : dix fichiers envoyés,490déjà présents, puis en-têtes et redirections. Le dossier utilisateur `references_UI` seul motive le marquage Git dirty et reste exclu du commit et du package.
+
+HTTPS PASS4,301s :78réponses200/MIME/octets exacts pour39chemins sur les deux origines, incluant les quatrePNG et troisSVG V308 et les assets historiques sélectionnés. Rapport `tmp/elsewhere-pages/v308-http-wzokwi/report.json`, SHA6B6C2687 ; package et publics inchangés, erreurs vides. Les66fichiers distants ne sont pas tous téléchargés. Le contrôle HTTPS ne rejoue pas un navigateur ou un benchmark en ligne ; les contrôles natifs et le GAME sont dans la note V308. Aucun second déploiement pour le commit/push documentaire ; relance planifiée en pause.
 
 ## Références
 
