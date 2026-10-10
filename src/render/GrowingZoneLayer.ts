@@ -4,6 +4,7 @@ import type { Placement } from './primitives';
 import type { World } from '../sim/types';
 import {surfaceHeightAtCell} from './surface-height';
 import {adjacentZoneColors} from './zone-surface-presentation';
+import {GROUND_OVERLAY_RENDER_ORDER,setGroundOverlayRenderOrder} from './ground-overlay-surfaces';
 
 export class GrowingZoneLayer {
   readonly group = new THREE.Group();
@@ -28,6 +29,7 @@ export class GrowingZoneLayer {
     }
     this.surfaces=surfaces;
     this.boxes.set(this.group, 'growing-borders', surfaces, 'storage', false);
+    setGroundOverlayRenderOrder(this.group,'growing-borders',GROUND_OVERLAY_RENDER_ORDER.growing);
     return true;
   }
 }

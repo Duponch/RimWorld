@@ -1,0 +1,42 @@
+{
+  "fonts": [
+    {
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/comfortaa/Comfortaa%5Bwght%5D.ttf",
+      "bytes": 201756,
+      "id": "comfortaa",
+      "sha256": "0FC3F45DC48B614DB9C39181502544B37217ECBF8BEE2FB35886992BC96C5BD3"
+    },
+    {
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/baloo2/Baloo2%5Bwght%5D.ttf",
+      "bytes": 683200,
+      "id": "baloo-2",
+      "sha256": "D47A6852548059B1DB49A1319D06D499D546C3FA2237CF9EEE9C43C8ABB025C2"
+    },
+    {
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/breeserif/BreeSerif-Regular.ttf",
+      "bytes": 46572,
+      "id": "bree-serif",
+      "sha256": "FD080582D70112EF479BA4DDD72407F9A4FCBCEC4CAA7D29DE259B13EEB5F431"
+    },
+    {
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/grandstander/Grandstander%5Bwght%5D.ttf",
+      "bytes": 183056,
+      "id": "grandstander",
+      "sha256": "FBC7D1D934E6AA7842F7E8420CD833ECA9EB123D61880075EEC68751369E2F13"
+    },
+    {
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/patrickhand/PatrickHand-Regular.ttf",
+      "bytes": 214772,
+      "id": "patrick-hand",
+      "sha256": "0F173B3E6CB6D1AF25BABF7F0057C5AC4EE11F9992B0469BB817E967EF4AD0FC"
+    },
+    {
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/quicksand/Quicksand%5Bwght%5D.ttf",
+      "bytes": 124824,
+      "id": "quicksand",
+      "sha256": "39C9B64223561F56AAFF6062A6F04063C4FC86809AD6768722C06614D977E1CC"
+    }
+  ],
+  "revision": "bd8f81ddb5c74d5c8897b36ad88b440266245103",
+  "repository": "https://github.com/google/fonts"
+}

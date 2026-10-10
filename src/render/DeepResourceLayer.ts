@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import { deepScannerOverlayPowered } from '../sim/deep-resources';
 import type { World } from '../sim/types';
 import { BoxMesh,configureBoxMaterial } from './BoxMesh';
+import {GROUND_OVERLAY_RENDER_ORDER,groundOverlayRect,type GroundOverlayRect} from './ground-overlay-surfaces';
 
 export interface DeepResourceContext {selectedId?:number;placement?:string}
 export type DeepResourceOverlayCell=NonNullable<World['deepResources']>['cells'][number]&{selected:boolean};
@@ -24,13 +25,14 @@ export class DeepResourceLayer {
   readonly material=new THREE.MeshBasicNodeMaterial({transparent:true,opacity:.53,depthWrite:false,side:THREE.DoubleSide,forceSinglePass:true});
   private readonly base=new THREE.PlaneGeometry(.86,.86).rotateX(-Math.PI/2);
   readonly mesh:BoxMesh;
+  surfaces:readonly GroundOverlayRect[]=[];
   private signature='';
   private revision=0;
   private readonly matrix=new THREE.Matrix4();
   private readonly color=new THREE.Color();
   private readonly highlight=new THREE.Color(0xf1dda0);
 
-  constructor(){configureBoxMaterial(this.material);this.mesh=new BoxMesh(this.base,this.material,16);this.mesh.renderOrder=7;this.mesh.activeCount=0;}
+  constructor(){configureBoxMaterial(this.material);this.mesh=new BoxMesh(this.base,this.material,16);this.mesh.renderOrder=GROUND_OVERLAY_RENDER_ORDER.deep;this.mesh.activeCount=0;}
 
   update(world:World,context:DeepResourceContext):boolean {
     const cells=deepResourceOverlayCells(world,context);
@@ -39,12 +41,16 @@ export class DeepResourceLayer {
     this.signature=signature;this.revision++;
     if(cells.length>this.mesh.instanceMatrix.count)this.mesh.allocate(this.base,Math.min(world.width*world.height,2**Math.ceil(Math.log2(Math.max(16,cells.length)))));
     this.mesh.activeCount=cells.length;
+    const surfaces:GroundOverlayRect[]=[];
     for(let i=0;i<cells.length;i++){
       const c=cells[i]!;
       this.matrix.makeTranslation(c.index%world.width,.078,Math.floor(c.index/world.width));this.mesh.setMatrixAt(i,this.matrix);
       this.color.setHex(palette[c.item]);if(c.selected)this.color.lerp(this.highlight,.55);
       this.mesh.setColorAt(i,this.color);
+      const x=c.index%world.width,z=Math.floor(c.index/world.width),half=Math.fround(.86)/2;
+      surfaces.push(groundOverlayRect(x-half,z-half,x+half,z+half,this.color,this.material.opacity));
     }
+    this.surfaces=surfaces;
     this.mesh.instanceMatrix.needsUpdate=true;this.mesh.colorBuffer.needsUpdate=true;this.mesh.computeBoundingSphere();
     return true;
   }

@@ -134,10 +134,10 @@ test('an existing Architect SVG gets cached arrow and atlas-hand variants with e
   for (let step = 0; step < 16; step++) await Promise.resolve();
   expect(imageUrls).toContain(svg);
   expect(properties.get('--cursor-tool-sun-lamp')).toBe('url("data:image/png;base64,cursor") 1 1, crosshair');
-  expect(properties.get('--cursor-tool-sun-lamp-grab')).toBe('url("data:image/png;base64,cursor") 10 10, grab');
-  expect(properties.get('--cursor-tool-sun-lamp-grabbing')).toBe('url("data:image/png;base64,cursor") 10 10, grabbing');
-  expect(lineTo).toHaveBeenCalledWith(1, 17);
-  expect(drawImage.mock.calls.some(args => args.length === 3 && args[0].width === 20 && args[0].height === 20)).toBe(true);
+  expect(properties.get('--cursor-tool-sun-lamp-grab')).toBe('url("data:image/png;base64,cursor") 8 8, grab');
+  expect(properties.get('--cursor-tool-sun-lamp-grabbing')).toBe('url("data:image/png;base64,cursor") 8 8, grabbing');
+  expect(lineTo).toHaveBeenCalledWith(1, 13.8);
+  expect(drawImage.mock.calls.some(args => args.length === 3 && args[0].width === 16 && args[0].height === 16)).toBe(true);
   const painted = drawImage.mock.calls.length, requested = imageUrls.length;
   installToolCursors(root, 'test-cursor-svg');
   for (let step = 0; step < 16; step++) await Promise.resolve();

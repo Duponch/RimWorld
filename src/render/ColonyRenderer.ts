@@ -204,7 +204,7 @@ export class ColonyRenderer extends SceneRenderCore {
     if(!this.preparing)this.constructionPreview.hide();
     this.hoverCell = null; if(!this.preparing)this.hover.visible = false;
     this.onHover(null);
-    if (this.areaDrag) this.updateAreaPreview(); else this.pointerDown = null;
+    if (this.areaDrag) this.updateAreaPreview(); else {this.pointerDown = null;this.updateHover();}
   };
   private onPointerCancel = (event: PointerEvent): void => {
     if(this.orderRightPress?.pointerId===event.pointerId)this.orderRightPress=null;

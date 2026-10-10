@@ -1,7 +1,8 @@
 import * as THREE from 'three/webgpu';
-import {Fn,If,float,mix,renderGroup,texture,uniform,varying,vec2,vec3,vec4} from 'three/tsl';
+import {Fn,If,Loop,float,mix,renderGroup,texture,uniform,varying,vec2,vec3,vec4} from 'three/tsl';
 import type {Placement} from './primitives';
 import {ZONE_SELECTION_COLOR,ZONE_SELECTION_WIDTH,zoneBoundaryEdges} from './zone-surface-presentation';
+import {groundOverlayAtlas,type GroundOverlayRect} from './ground-overlay-surfaces';
 
 type Bounds={minX:number;maxX:number;minZ:number;maxZ:number};
 const color=new THREE.Color();
@@ -12,6 +13,8 @@ export class GroundSurfaceTint {
   readonly zones=new THREE.DataTexture(new Float32Array(4),1,1,THREE.RGBAFormat,THREE.FloatType);
   readonly edges=new THREE.DataTexture(new Uint8Array(4),1,1,THREE.RGBAFormat);
   readonly eligible=new THREE.DataTexture(new Uint8Array(4),1,1,THREE.RGBAFormat);
+  readonly overlayIndex=new THREE.DataTexture(new Float32Array(4),1,1,THREE.RGBAFormat,THREE.FloatType);
+  readonly overlayRecords=new THREE.DataTexture(new Float32Array(4),1,1,THREE.RGBAFormat,THREE.FloatType);
   private readonly dimensions=uniform(new THREE.Vector2(1,1)).setGroup(renderGroup);
   private readonly zoneActive=uniform(0).setGroup(renderGroup);
   private readonly edgeActive=uniform(0).setGroup(renderGroup);
@@ -20,9 +23,14 @@ export class GroundSurfaceTint {
   private readonly areaBounds=uniform(new THREE.Vector4(1,1,0,0)).setGroup(renderGroup);
   private readonly areaSize=uniform(new THREE.Vector2(1,1)).setGroup(renderGroup);
   private readonly areaColor=uniform(new THREE.Vector4()).setGroup(renderGroup);
+  private readonly overlayBounds=uniform(new THREE.Vector4(0,0,-1,-1)).setGroup(renderGroup);
+  private readonly overlayIndexSize=uniform(new THREE.Vector2(1,1)).setGroup(renderGroup);
+  private readonly overlayRecordsSize=uniform(new THREE.Vector2(1,1)).setGroup(renderGroup);
+  private readonly overlayActive=uniform(0).setGroup(renderGroup);
   private edgeKey='';
   private zoneKey='';
-  constructor(){for(const map of [this.zones,this.edges,this.eligible]){map.minFilter=map.magFilter=THREE.NearestFilter;map.generateMipmaps=false;map.needsUpdate=true;}}
+  private overlayKey='';
+  constructor(){for(const map of [this.zones,this.edges,this.eligible,this.overlayIndex,this.overlayRecords]){map.minFilter=map.magFilter=THREE.NearestFilter;map.generateMipmaps=false;map.needsUpdate=true;}}
   shade(base:THREE.Node,root:THREE.Node):THREE.Node {
     // A blade's four vertices share the authored root, before wind/shape. Sample
     // its cell and decide coverage once per vertex, not once per grass fragment.
@@ -58,23 +66,63 @@ export class GroundSurfaceTint {
       });
       return value;
     })(),'groundZoneConditions').setInterpolation(THREE.InterpolationSamplingType.FLAT,THREE.InterpolationSamplingMode.EITHER);
+    // Producers expose their actual top faces and colours. Evaluate only the
+    // small ordered list touching this root's cell; thin corners and .8/.86
+    // plates retain their geometry rather than becoming whole-cell stains.
+    const overlays=(phase:0|1)=>varying(Fn(()=>{
+      const value=vec4(0).toVar();
+      const covered=this.overlayActive.greaterThan(0).and(cell.x.greaterThanEqual(this.overlayBounds.x)).and(cell.y.greaterThanEqual(this.overlayBounds.y))
+        .and(cell.x.lessThanEqual(this.overlayBounds.z)).and(cell.y.lessThanEqual(this.overlayBounds.w));
+      If(covered,()=>{
+        // Nearest samples at texel centres retain the exact atlas words. Avoid
+        // textureLoad: Three's flipY setup injects textureSize into its UV node,
+        // which can escape these vertex-only reads into the fragment stage.
+        const header=texture(this.overlayIndex,cell.sub(this.overlayBounds.xy).add(.5).div(this.overlayIndexSize)).level(float(0));
+        const range=phase===0?header.xy:header.zw;
+        Loop({start:0,end:range.y.toInt(),type:'int'},({i})=>{
+          const record=range.x.add(float(i)).mul(2);
+          const texel=vec2(record.mod(this.overlayRecordsSize.x),record.div(this.overlayRecordsSize.x).floor());
+          const bounds=texture(this.overlayRecords,texel.add(.5).div(this.overlayRecordsSize)).level(float(0));
+          const rgba=texture(this.overlayRecords,texel.add(vec2(1.5,.5)).div(this.overlayRecordsSize)).level(float(0));
+          If(p.x.greaterThanEqual(bounds.x).and(p.y.greaterThanEqual(bounds.y)).and(p.x.lessThanEqual(bounds.z)).and(p.y.lessThanEqual(bounds.w)),()=>{
+            value.assign(vec4(value.rgb.mul(float(1).sub(rgba.a)).add(rgba.rgb.mul(rgba.a)),value.a.mul(float(1).sub(rgba.a)).add(rgba.a)));
+          });
+        });
+      });
+      return value;
+    })(),phase===0?'groundBeforePreview':'groundAfterPreview').setInterpolation(THREE.InterpolationSamplingType.FLAT,THREE.InterpolationSamplingMode.EITHER);
+    const before=overlays(0),after=overlays(1);
     return Fn(()=>{
       const result=vec4(base as ReturnType<typeof vec4>).toVar();
       If(conditions.x.greaterThan(0),()=>{
         result.assign(vec4(result.rgb.mul(float(1).sub(tint.a)).add(tint.rgb),result.a));
       });
+      If(before.a.greaterThan(0),()=>{result.assign(vec4(result.rgb.mul(float(1).sub(before.a)).add(before.rgb),result.a));});
       If(conditions.y.greaterThan(0),()=>{
         result.assign(vec4(mix(result.rgb,this.hoverColor.xyz,this.hoverColor.w),result.a));
       });
       If(conditions.z.greaterThan(0),()=>{
         result.assign(vec4(mix(result.rgb,this.areaColor.xyz,this.areaColor.w.mul(present)),result.a));
       });
+      If(after.a.greaterThan(0),()=>{result.assign(vec4(result.rgb.mul(float(1).sub(after.a)).add(after.rgb),result.a));});
       If(conditions.w.greaterThan(0),()=>{
         const selected=new THREE.Color(ZONE_SELECTION_COLOR);
         result.assign(vec4(vec3(selected.r,selected.g,selected.b),result.a));
       });
       return result;
     })();
+  }
+  /** Independent semantic layers: clearing a pointer does not erase a selected
+   * deposit/contour, and hidden hints never survive an interrupted gesture. */
+  setOverlays(width:number,height:number,before:readonly GroundOverlayRect[],after:readonly GroundOverlayRect[]):void {
+    const key=JSON.stringify([width,height,before,after]);if(key===this.overlayKey)return;this.overlayKey=key;
+    this.dimensions.value.set(width,height);
+    const atlas=groundOverlayAtlas(width,height,before,after),update=(map:THREE.DataTexture,data:Float32Array,w:number,h:number)=>{
+      if(map.image.width!==w||map.image.height!==h)map.dispose();map.image={data,width:w,height:h};map.needsUpdate=true;
+    };
+    update(this.overlayIndex,atlas.index,atlas.width,atlas.height);update(this.overlayRecords,atlas.records,atlas.recordsWidth,atlas.recordsHeight);
+    const b=atlas.bounds;this.overlayBounds.value.set(b.minX,b.minZ,b.maxX,b.maxZ);this.overlayIndexSize.value.set(atlas.width,atlas.height);this.overlayRecordsSize.value.set(atlas.recordsWidth,atlas.recordsHeight);
+    this.overlayActive.value=Number(b.maxX>=b.minX&&b.maxZ>=b.minZ);
   }
   setZones(width:number,height:number,layers:readonly {placements:readonly Placement[];opacity:number}[],visible:boolean):void {
     const key=`${width}:${height}:${visible}:`+(visible?layers.map(layer=>`${layer.opacity}:${layer.placements.map(p=>`${p.x},${p.z},${p.color??0xffffff}`).join(';')}`).join('|'):'');
@@ -108,5 +156,5 @@ export class GroundSurfaceTint {
     this.areaBounds.value.set(bounds.minX,bounds.minZ,bounds.maxX,bounds.maxZ);this.areaSize.value.set(w,h);color.setHex(hex);this.areaColor.value.set(color.r,color.g,color.b,opacity);
   }
   clearPreview():void {this.hoverColor.value.w=0;this.areaColor.value.w=0;}
-  dispose():void {this.zones.dispose();this.edges.dispose();this.eligible.dispose();}
+  dispose():void {this.zones.dispose();this.edges.dispose();this.eligible.dispose();this.overlayIndex.dispose();this.overlayRecords.dispose();}
 }

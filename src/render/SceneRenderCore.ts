@@ -3,6 +3,7 @@ import { AreaPreviewLayer } from './AreaPreviewLayer';
 import {OrderTargetIndex} from './order-target-index';
 import {OrderTargetPreviewLayer} from './OrderTargetPreviewLayer';
 import { ConstructionPreviewLayer } from './ConstructionPreviewLayer';
+import {EMPTY_GROUND_OVERLAYS,GROUND_OVERLAY_RENDER_ORDER,groundOverlayPlacements,groundOverlayRect,setGroundOverlayRenderOrder,type GroundOverlayRect} from './ground-overlay-surfaces';
 import type { ConstructionPreviewSpec } from './construction-preview-parts';
 import { HygieneLayer } from './HygieneLayer';
 
@@ -167,6 +168,9 @@ export class SceneRenderCore {
   protected roofAreasVisible=false;
   protected zoneTarget:number|undefined;
   protected readonly surfaceTint=new GroundSurfaceTint();
+  private objectTintSurfaces:readonly GroundOverlayRect[]=EMPTY_GROUND_OVERLAYS;
+  private turretTintSurfaces:readonly GroundOverlayRect[]=EMPTY_GROUND_OVERLAYS;
+  private groundOverlayInputs:readonly unknown[]=[];
   protected storageTintPlacements:readonly Placement[]=[];
   protected homeTintPlacements:readonly Placement[]=[];
   protected zonesTintDirty=true;
@@ -342,13 +346,13 @@ export class SceneRenderCore {
     this.hover.rotation.x = -Math.PI / 2;
     this.hover.position.y = 0.08;
     this.hover.visible = false;
-    this.hover.renderOrder = 5;
+    this.hover.renderOrder = GROUND_OVERLAY_RENDER_ORDER.hover;
     const selectionGeometry=new THREE.BufferGeometry();
     // A degenerate resident triangle warms the same position-only selection
     // pipeline under loading, before the first object inspection.
     selectionGeometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(9),3));
-    this.objectSelection = new THREE.Mesh(selectionGeometry,new THREE.MeshBasicMaterial({color:0xfff5d6,side:THREE.DoubleSide,depthTest:false,depthWrite:false}));
-    this.objectSelection.visible=false;this.objectSelection.frustumCulled=false;this.objectSelection.renderOrder=20;
+    this.objectSelection = new THREE.Mesh(selectionGeometry,new THREE.MeshBasicMaterial({color:0xfff5d6,side:THREE.DoubleSide,depthTest:false,depthWrite:false,transparent:true,opacity:1,forceSinglePass:true}));
+    this.objectSelection.visible=false;this.objectSelection.frustumCulled=false;this.objectSelection.renderOrder=GROUND_OVERLAY_RENDER_ORDER.selection;
     this.scene.add(this.hover,this.constructionPreview.group,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group,this.podRescue.group,this.orbitalDelivery.group);
     } catch (error) {
       try { this.dispose(); } catch { /* Static create also closes the device. */ }
@@ -580,10 +584,12 @@ export class SceneRenderCore {
     this.designations.clearPreview();
     this.clearOrderTargets();
     this.constructionPreview.hide();
-      this.turretPreviewVisible=false;this.turretPreviewSignature='';
+    this.recreationHints.hide();
+    this.turretPreviewVisible=false;this.turretPreviewSignature='';this.turretTintSurfaces=EMPTY_GROUND_OVERLAYS;
     this.hover.visible = false;
     (this.hover.material as THREE.MeshBasicNodeMaterial).opacity = 0.55;
     this.onAreaPreview(null);
+    this.refreshGroundOverlays();
     return drag !== null || selecting;
   }
 
@@ -691,6 +697,7 @@ export class SceneRenderCore {
     this.roofAreasVisible=visible;if(!this.preparing)this.roofs.areas.visible=visible&&this.zonesVisible;
     this.zonesTintDirty=true;this.refreshZonesTint();
   }
+  setCloudClearRadius(radius:number):void {this.clouds.setClearRadius(radius);}
   setZonesVisible(visible:boolean):void {
     if(this.zonesVisible===visible)return;this.zonesVisible=visible;
     if(!this.preparing){this.storageGroup.visible=this.growing.group.visible=visible;this.roofs.areas.visible=visible&&this.roofAreasVisible;}
@@ -704,12 +711,9 @@ export class SceneRenderCore {
   }
   private refreshZonesTint():void {
     const world=this.world;if(!world||!this.zonesTintDirty)return;this.zonesTintDirty=false;
-    const roof:Placement[]=this.roofAreasVisible?[
-      ...(world.roofing?.build??[]).map(i=>({x:i%world.width,z:Math.floor(i/world.width),y:0,color:0x7abca0})),
-      ...(world.roofing?.remove??[]).map(i=>({x:i%world.width,z:Math.floor(i/world.width),y:0,color:0xd49d79})),
-    ]:[];
     this.surfaceTint.setZones(world.width,world.height,[{placements:this.storageTintPlacements,opacity:ZONE_FILL_OPACITY},
-      {placements:this.growing.surfaces,opacity:ZONE_FILL_OPACITY},{placements:this.homeTintPlacements,opacity:.28},{placements:roof,opacity:.48}],this.zonesVisible);
+      {placements:this.growing.surfaces,opacity:ZONE_FILL_OPACITY},{placements:this.homeTintPlacements,opacity:.28}],this.zonesVisible);
+    this.refreshGroundOverlays();
   }
   setWallCutaway(enabled: boolean): void {
     if (this.wallCutaway === enabled) return;
@@ -840,28 +844,50 @@ export class SceneRenderCore {
   setSelectedObjects(selected:readonly MapObjectSelection[]):void {this.selectedObjects=selected.map(s=>({...s}));this.selectedObject=this.selectedObjects[0];this.updateSelectedObject();this.updateGrowingZones(false);this.updateTurretPreview();this.updateDeepResources();}
   protected updateDeepResources():void {
     if(this.world&&this.deepResources.update(this.world,{selectedId:this.tool==='select'&&this.selectedObject?.kind==='structure'?this.selectedObject.id:undefined,placement:this.tool==='install'?this.furniturePlacement?.kind:this.tool}))this.invalidatePausedShadow();
+    this.refreshGroundOverlays();
+  }
+  /** One bridge for all producers. Their records come from the same authored
+   * placements/colours as their ground meshes, not from scene-graph inspection. */
+  private refreshGroundOverlays():void {
+    const world=this.world;if(!world||this.preparing)return;
+    const hints=this.recreationHints.group.visible?this.recreationHints.surfaces:EMPTY_GROUND_OVERLAYS;
+    const roof=this.zonesVisible&&this.roofAreasVisible?this.roofs.areaSurfaces:EMPTY_GROUND_OVERLAYS;
+    const turret=this.turretPreviewVisible?this.turretTintSurfaces:EMPTY_GROUND_OVERLAYS;
+    const deep=this.deepResources.mesh.visible?this.deepResources.surfaces:EMPTY_GROUND_OVERLAYS;
+    const selection=this.objectSelection.visible?this.objectTintSurfaces:EMPTY_GROUND_OVERLAYS;
+    const inputs=[world.width,world.height,roof,hints,turret,deep,this.constructionPreview.surfaces,selection];
+    if(inputs.every((value,index)=>value===this.groundOverlayInputs[index]))return;this.groundOverlayInputs=inputs;
+    this.surfaceTint.setOverlays(world.width,world.height,
+      [...roof,...hints],[...turret,...deep,...this.constructionPreview.surfaces,...selection]);
   }
   protected updateTurretPreview():void {
     const world=this.world,selected=this.selectedObject;
     const structure=this.tool==='select'&&selected?.kind==='structure'?world?.structures.find(s=>s.id===selected.id&&s.kind==='mini-turret'):undefined;
-    if(this.areaDrag||!world||!structure){if(this.turretPreviewVisible&&!this.areaDrag)this.areaPreview.hide();this.turretPreviewVisible=false;this.turretPreviewSignature='';return;}
+    if(this.areaDrag||!world||!structure){if(this.turretPreviewVisible&&!this.areaDrag)this.areaPreview.hide();this.turretPreviewVisible=false;this.turretPreviewSignature='';this.turretTintSurfaces=EMPTY_GROUND_OVERLAYS;this.refreshGroundOverlays();return;}
     const danger=!!structure.turret?.wick,radius=danger?MINI_TURRET_DISPLAY_BOMB_RADIUS:MINI_TURRET_DISPLAY_RANGE;
     const signature=`${structure.id}:${structure.x}:${structure.z}:${world.width}:${world.height}:${danger}`;
     if(signature===this.turretPreviewSignature)return;
     this.turretPreviewSignature=signature;this.turretPreviewVisible=true;
-    this.areaPreview.update(world.width,world.width*world.height,miniTurretRadiusCells(world,structure,radius),danger?0xe79c7c:0x9bbeb0);
+    const cells=miniTurretRadiusCells(world,structure,radius),color=danger?0xe79c7c:0x9bbeb0;
+    this.areaPreview.update(world.width,world.width*world.height,cells,color);
+    this.turretTintSurfaces=groundOverlayPlacements(cells.map(index=>({x:index%world.width,z:Math.floor(index/world.width),y:.065,sx:.86,sz:.86,color})),this.areaPreview.material.opacity);
+    this.refreshGroundOverlays();
   }
   protected updateGrowingZones(reset:boolean):boolean {
     return this.world?this.growing.update(this.world,reset,this.tool==='growing'||this.tool==='remove-growing',this.selectedObject?.kind==='growing'?this.selectedObject.id:undefined):false;
   }
   protected updateSelectedObject():void {
     if(this.preparing)return;
+    try {
     if(this.world&&this.selectedObjects.length>1){
       this.surfaceTint.setSelection(this.world.width,this.world.height,[],false);
-      const groups=mapObjectGroupCells(this.world,this.selectedObjects),vertices:number[]=[],keys:string[]=[];
+      const groups=mapObjectGroupCells(this.world,this.selectedObjects),vertices:number[]=[],keys:string[]=[],surfaces:GroundOverlayRect[]=[];
+      const selectedColor=(this.objectSelection.material as THREE.MeshBasicNodeMaterial).color;
       const y=.14,stroke=(ax:number,az:number,bx:number,bz:number)=>{
         const dx=bx-ax,dz=bz-az,scale=.024/Math.hypot(dx,dz),nx=-dz*scale,nz=dx*scale;
         vertices.push(ax+nx,y,az+nz,bx+nx,y,bz+nz,bx-nx,y,bz-nz,ax+nx,y,az+nz,bx-nx,y,bz-nz,ax-nx,y,az-nz);
+        surfaces.push(groundOverlayRect(Math.min(ax+nx,bx+nx,bx-nx,ax-nx),Math.min(az+nz,bz+nz,bz-nz,az-nz),
+          Math.max(ax+nx,bx+nx,bx-nx,ax-nx),Math.max(az+nz,bz+nz,bz-nz,az-nz),selectedColor,1));
       };
       for(let i=0;i<groups.length;i++){
         const cells=groups[i]!;if(!cells.length)continue;
@@ -876,15 +902,17 @@ export class SceneRenderCore {
       }
       const signature=keys.join('|');this.objectSelection.visible=!!vertices.length;
       if(signature===this.objectSelectionSignature)return;
+      this.objectTintSurfaces=surfaces.length?surfaces:EMPTY_GROUND_OVERLAYS;
       this.objectSelectionSignature=signature;const old=this.objectSelection.geometry;
       this.objectSelection.geometry=new THREE.BufferGeometry();
       this.objectSelection.geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));old.dispose();return;
     }
     const isZone=this.selectedObject?.kind==='growing'||this.selectedObject?.kind==='stockpile';
+    if(isZone)this.objectTintSurfaces=EMPTY_GROUND_OVERLAYS;
     const cells=this.world&&this.selectedObject?(this.selectedObject.kind==='stockpile'?stockpileZoneCells(this.world,this.selectedObject.id):mapObjectCells(this.world,this.selectedObject)):[];
     if(this.world)this.surfaceTint.setSelection(this.world.width,this.world.height,isZone?cells.map(c=>c.z*this.world!.width+c.x):[],isZone&&this.zonesVisible);
     if(isZone&&!this.zonesVisible){this.objectSelection.visible=false;this.objectSelectionSignature='';return;}
-    if(!cells.length){this.objectSelection.visible=false;this.objectSelectionSignature='';return;}
+    if(!cells.length){this.objectTintSurfaces=EMPTY_GROUND_OVERLAYS;this.objectSelection.visible=false;this.objectSelectionSignature='';return;}
     let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity,shape=2166136261;
     for(const cell of cells){minX=Math.min(minX,cell.x);maxX=Math.max(maxX,cell.x);minZ=Math.min(minZ,cell.z);maxZ=Math.max(maxZ,cell.z);shape=Math.imul(shape^((cell.z*this.world!.width+cell.x)>>>0),16777619);}
     minX-=.44;maxX+=.44;minZ-=.44;maxZ+=.44;
@@ -898,13 +926,16 @@ export class SceneRenderCore {
       this.objectSelection.geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));old.dispose();return;
     }
     const length=Math.min(.23,(maxX-minX)/3,(maxZ-minZ)/3),y=.14;
-    const vertices:number[]=[];
+    const vertices:number[]=[],surfaces:GroundOverlayRect[]=[];
+    const selectedColor=(this.objectSelection.material as THREE.MeshBasicNodeMaterial).color;
     // GPU line width is fixed to one pixel on common WebGPU backends. Flat
     // strokes give object corners a stable thickness comparable to pawn rings.
     const stroke=(ax:number,az:number,bx:number,bz:number)=>{
       const dx=bx-ax,dz=bz-az,scale=.024/Math.hypot(dx,dz),nx=-dz*scale,nz=dx*scale;
       vertices.push(ax+nx,y,az+nz,bx+nx,y,bz+nz,bx-nx,y,bz-nz,
         ax+nx,y,az+nz,bx-nx,y,bz-nz,ax-nx,y,az-nz);
+      surfaces.push(groundOverlayRect(Math.min(ax+nx,bx+nx,bx-nx,ax-nx),Math.min(az+nz,bz+nz,bz-nz,az-nz),
+        Math.max(ax+nx,bx+nx,bx-nx,ax-nx),Math.max(az+nz,bz+nz,bz-nz,az-nz),selectedColor,1));
     };
     for(const x of [minX,maxX])for(const z of [minZ,maxZ]){
       const dx=x===minX?1:-1,dz=z===minZ?1:-1;
@@ -913,6 +944,8 @@ export class SceneRenderCore {
     const old=this.objectSelection.geometry;
     this.objectSelection.geometry=new THREE.BufferGeometry();
     this.objectSelection.geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));old.dispose();
+    this.objectTintSurfaces=surfaces;
+    } finally {this.refreshGroundOverlays();}
   }
 
   /** Project lightweight actor proxies only for pointer gestures, using the
@@ -1006,6 +1039,8 @@ export class SceneRenderCore {
     this.boxes.set(this.storageGroup, 'storage-cells', cells, 'storage', false);
     this.boxes.set(this.storageGroup, 'storage-borders', [], 'border', false);
     this.boxes.set(this.storageGroup, 'storage-home', home, 'storage-home', false);
+    setGroundOverlayRenderOrder(this.storageGroup,'storage-cells',GROUND_OVERLAY_RENDER_ORDER.storage);
+    setGroundOverlayRenderOrder(this.storageGroup,'storage-home',GROUND_OVERLAY_RENDER_ORDER.home);
   }
 
   protected updatePiles(world: World, newMap: boolean): void {
@@ -1209,6 +1244,8 @@ export class SceneRenderCore {
   protected updateAreaPreview(): void {
     const drag = this.areaDrag, world = this.world, cell = this.hoverCell;
     if (!drag || !world) return;
+    this.recreationHints.hide();this.turretPreviewVisible=false;this.turretPreviewSignature='';this.turretTintSurfaces=EMPTY_GROUND_OVERLAYS;
+    try {
     if (!cell) {
       this.hover.visible = false; this.areaPreview.hide();this.constructionPreview.hide();
       this.surfaceTint.clearPreview();
@@ -1266,21 +1303,23 @@ export class SceneRenderCore {
     this.designations.updatePreview(world,action as AreaAction,cells);
     this.updateOrderTargets(world,action as AreaAction,cells);
     this.onAreaPreview({ width, height, eligible: cells.length, skipped, line:'kind' in drag });
+    } finally {this.refreshGroundOverlays();}
   }
   protected updateHover(): void {
     if(this.preparing)return;
+    try {
     this.hostPort.title('');
     if (this.areaDrag) { this.updateAreaPreview(); return; }
     this.surfaceTint.clearPreview();
     this.updateTurretPreview();
     const cell = this.hoverCell;
-    this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined);
-    const television=this.tool==='select'?this.world?.structures.find(s=>s.kind==='tube-television'&&s.x===cell?.x&&s.z===cell?.z):undefined;
-    if(this.world&&cell&&(this.tool==='tube-television'||television||this.tool==='install'&&this.furniturePlacement?.kind==='tube-television'))this.recreationHints.television(this.world,{...cell,orientation:television?.orientation??this.placementRotation});
-    const turbine=this.tool==='wind-turbine'&&cell?{...cell,orientation:this.placementRotation}:this.tool==='select'?this.world?.structures.find(s=>s.kind==='wind-turbine'&&cell&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z)):undefined;
+    this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='install'&&this.furniturePlacement?.kind==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined);
+    const television=this.tool==='select'?this.world?.structures.find(s=>s.kind==='tube-television'&&cell&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z)):undefined;
+    if(this.world&&cell&&(this.tool==='tube-television'||television||this.tool==='install'&&this.furniturePlacement?.kind==='tube-television'))this.recreationHints.television(this.world,{...(television??cell),orientation:television?.orientation??this.placementRotation});
+    const turbine=(this.tool==='wind-turbine'||this.tool==='install'&&this.furniturePlacement?.kind==='wind-turbine')&&cell?{...cell,orientation:this.placementRotation}:this.tool==='select'?this.world?.structures.find(s=>s.kind==='wind-turbine'&&cell&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z)):undefined;
     if(this.world&&turbine)this.recreationHints.wind(this.world,turbine);
     const cooler=this.tool==='select'?this.world?.structures.find(s=>s.kind==='cooler'&&s.x===cell?.x&&s.z===cell?.z):undefined;
-    if(cell&&(this.tool==='cooler'||cooler))this.recreationHints.cooler(cell,cooler?.orientation??this.placementRotation);
+    if(cell&&(this.tool==='cooler'||cooler||this.tool==='install'&&this.furniturePlacement?.kind==='cooler'))this.recreationHints.cooler(cell,cooler?.orientation??this.placementRotation);
     const sunLamp=this.tool==='select'?this.world?.structures.find(s=>s.kind==='sun-lamp'&&s.x===cell?.x&&s.z===cell?.z):undefined;
     if(this.world&&cell&&(this.tool==='sun-lamp'||sunLamp||this.tool==='install'&&this.furniturePlacement?.kind==='sun-lamp'))this.recreationHints.sunLamp(this.world,cell);
     this.hover.visible = !!cell&&this.tool!=='select';
@@ -1322,6 +1361,7 @@ export class SceneRenderCore {
       const material=this.hover.material as THREE.MeshBasicNodeMaterial;material.opacity=.55;
       this.surfaceTint.setHover(this.hover.position.x,this.hover.position.z,this.hover.scale.x,this.hover.scale.y,color,material.opacity);
     }
+    } finally {this.refreshGroundOverlays();}
   }
   dispose(): void {
     if (this.disposed) return;

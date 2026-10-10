@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V306 : [herbe, HUD et préférences d’affichage](gameplay/presentation-controls-v306.md), schéma 219 conservé.** Surfaces des outils et inspections raccordées, HUD simplifié, fontes locales au choix et masquage des nuages réglable ; contrôles et publication dans la note unique. Les états suivants sont historiques.
+
 **V305 : [préparation des scènes et performances](development/aulnes-performance-v305.md), schéma 219 conservé.** Réemploi des projections confirmées et horloges graphiques communes par rendu ; visuels V304 conservés. Résultats CPU/GAME, contrepartie à froid, preuves et variantes rejetées dans la note unique. Les états suivants sont historiques.
 
 **V302 : [clic droit et curseurs des ordres](gameplay/order-pan-v302.md), schéma 219 conservé.** Clic bref sortant, maintien/rotation conservant l'outil, mains composées avec son icône ; validations ciblées et natives acquises. Publication Cloudflare regroupée, relance en pause. Les états suivants sont historiques.

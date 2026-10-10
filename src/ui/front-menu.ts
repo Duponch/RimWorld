@@ -2,6 +2,8 @@ import { DEFAULT_MAP_SIZE } from '../sim/map-config';
 import type { SiteOptions } from '../sim/site';
 import {designationMinCellPixels,designationVisibilityLabel} from './designation-visibility';
 import {itemLabelMinCellPixels,itemLabelVisibilityLabel} from './item-label-visibility';
+import {UI_FONT_CHOICES,DEFAULT_UI_FONT,type UiFontId} from './ui-fonts';
+import {cloudMaskRadius,cloudMaskRadiusLabel} from '../render/cloud-mask';
 import {UI_ATLAS_URL} from './pictograms';
 import { createSiteConfiguration, parseSiteSeed, randomSiteSeed } from './front-site';
 import { testColonyUrl, type TestColony } from './test-colonies';
@@ -21,6 +23,10 @@ export interface FrontMenuSave {
 }
 
 export interface FrontMenuOptions {
+  getUiFont?:()=>UiFontId;
+  onUiFontChange?:(font:UiFontId)=>void;
+  getCloudClearRadius?:()=>number;
+  onCloudClearRadiusChange?:(radius:number)=>boolean;
   getDesignationMinCellPixels?: () => number;
   getItemLabelMinCellPixels?: () => number;
   onItemLabelMinCellPixelsChange?: (value:number) => boolean;
@@ -318,6 +324,23 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     labelsSlider.setAttribute('aria-labelledby',labelsTitle.id);labelsSlider.setAttribute('aria-describedby',`${labelsDescription.id} ${labelsOutput.id}`);
     labelsSlider.addEventListener('input',()=>{clearError();const value=itemLabelMinCellPixels(labelsSlider.value);labelsOutput.textContent=itemLabelVisibilityLabel(value);if(options.onItemLabelMinCellPixelsChange&&!options.onItemLabelMinCellPixelsChange(value))showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');});
     labelsText.append(labelsTitle,labelsDescription,labelsOutput);labelsSetting.append(labelsText,labelsSlider);card.append(labelsSetting);
+    const fontSetting=element('label','front-relief front-texture-setting');
+    const fontText=element('span'),fontTitle=element('strong','','Typographie');fontTitle.id='front-ui-font-label';
+    fontText.append(fontTitle,element('span','','Police de toute l’interface. Choix conservé dans ce navigateur.'));
+    const fontSelect=element('select');fontSelect.id='front-ui-font';fontSelect.setAttribute('aria-labelledby',fontTitle.id);
+    for(const font of UI_FONT_CHOICES){const option=element('option','',font.label);option.value=font.id;fontSelect.append(option);}
+    fontSelect.value=options.getUiFont?.()??DEFAULT_UI_FONT;
+    fontSelect.addEventListener('change',()=>{clearError();options.onUiFontChange?.(fontSelect.value as UiFontId);});
+    fontSetting.append(fontText,fontSelect);card.append(fontSetting);
+    const cloudSetting=element('label','front-relief front-texture-setting front-volume-setting');
+    const cloudText=element('span'),cloudTitle=element('strong','','Rayon de masquage des nuages');cloudTitle.id='front-cloud-mask-label';
+    const cloudDescription=element('span','','Zone dégagée au centre de l’écran. 0 : aucun masquage.');cloudDescription.id='front-cloud-mask-description';
+    const cloudOutput=element('output');cloudOutput.id='front-cloud-mask-value';
+    const cloudSlider=element('input');cloudSlider.id='front-cloud-mask-radius';cloudSlider.type='range';cloudSlider.min='0';cloudSlider.max='100';cloudSlider.step='1';
+    cloudSlider.value=String(Math.round(cloudMaskRadius(options.getCloudClearRadius?.())*100));cloudOutput.textContent=cloudMaskRadiusLabel(Number(cloudSlider.value)/100);
+    cloudSlider.setAttribute('aria-labelledby',cloudTitle.id);cloudSlider.setAttribute('aria-describedby',`${cloudDescription.id} ${cloudOutput.id}`);
+    cloudSlider.addEventListener('input',()=>{clearError();const radius=cloudMaskRadius(Number(cloudSlider.value)/100);cloudOutput.textContent=cloudMaskRadiusLabel(radius);if(options.onCloudClearRadiusChange&&!options.onCloudClearRadiusChange(radius))showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');});
+    cloudText.append(cloudTitle,cloudDescription,cloudOutput);cloudSetting.append(cloudText,cloudSlider);card.append(cloudSetting);
     content.append(card);
     const audioCard = element('section', 'front-card front-options');
     audioCard.append(element('h2', '', 'Son'));

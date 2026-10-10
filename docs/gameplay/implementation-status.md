@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V306, schéma 219 conservé : [herbe et préférences d’affichage](presentation-controls-v306.md).** Les surfaces au sol des outils, influences et inspections pris en charge suivent le pont de l’herbe. Ressources et survol sans carte, vues compactes, six fontes locales et rayon central des nuages réglable dans les deux menus. Simulation et sauvegardes inchangées ; résultats et limites dans la note unique. Les états suivants sont historiques.
+
 **V305, schéma 219 conservé : [préparation des scènes](../development/aulnes-performance-v305.md).** Les nouveaux modèles, interface, teintes et retours des outils sont conservés. La préparation native et les horloges graphiques coûtent moins cher dans les cas mesurés ; gain local4,72%RAF, sans240FPS ni gainGPU certifiés. Aucune règle ou contenu modifié ; sauvegardes publiques préservées. Les états suivants sont historiques.
 
 **V304, schéma 219 conservé : [identité visuelle et affichage de carte](visual-identity-v304.md).** Les objets transportables ont des formes reconnaissables au sol et en portage ; leurs icônes et celles des bâtiments proviennent des mêmes géométries. Les outils disposent de pictogrammes distincts, l’interface reprend la palette et les cartes de Simulation. Quantités/qualités ont un seuil de zoom réglable, les frontières de roche sont adoucies et les zones confirmées restent colorées jusque sur l’herbe. Le clignotement du poste Brave signalé reste à diagnostiquer. Les états suivants sont historiques.

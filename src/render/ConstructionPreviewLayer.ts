@@ -4,6 +4,7 @@ import { constructionPreviewParts, type ConstructionPreviewSpec } from './constr
 import { createTimberGeometry } from './TimberCladdingLayer';
 import type { Placement } from './primitives';
 import type { World } from '../sim/types';
+import {EMPTY_GROUND_OVERLAYS,GROUND_OVERLAY_RENDER_ORDER,groundOverlayRect,type GroundOverlayRect} from './ground-overlay-surfaces';
 
 const object = new THREE.Object3D(), color = new THREE.Color(), validTint = new THREE.Color(0x9de7c9), invalidTint = new THREE.Color(0xe46f58);
 type PreviewPlacement = Placement & { rx?: number; rz?: number; tint?: number };
@@ -13,6 +14,8 @@ type PreviewPlacement = Placement & { rx?: number; rz?: number; tint?: number };
 export class ConstructionPreviewLayer {
   readonly group = new THREE.Group();
   readonly material = new THREE.MeshBasicNodeMaterial({ transparent: true, opacity: .48, depthWrite: false, depthTest: false, vertexColors:true });
+  /** Only real ground-height faces; furniture/roof models are not floor fills. */
+  surfaces:readonly GroundOverlayRect[]=EMPTY_GROUND_OVERLAYS;
   private readonly bases = [new THREE.BoxGeometry(1, 1, 1), createTimberGeometry(false), createTimberGeometry(true), new THREE.BoxGeometry(1, 1, 1)];
   private readonly meshes: BoxMesh[];
   private revision = 0;
@@ -25,7 +28,7 @@ export class ConstructionPreviewLayer {
     this.meshes = this.bases.map((base, i) => {
       const mesh = new BoxMesh(base, this.material, 32);
       if(base.hasAttribute('color'))mesh.geometry.setAttribute('color',base.getAttribute('color').clone());
-      mesh.name = `construction-ghost-${i}`; mesh.renderOrder = 7; mesh.activeCount = 0;
+      mesh.name = `construction-ghost-${i}`; mesh.renderOrder = GROUND_OVERLAY_RENDER_ORDER.ghost; mesh.activeCount = 0;
       this.group.add(mesh); return mesh;
     });
   }
@@ -39,6 +42,8 @@ export class ConstructionPreviewLayer {
     const bad = constructionPreviewParts(world, invalid, cutaway, context);
     const goodArrays = [good.boxes, good.timberWalls, good.timberEaves, good.rotatedBoxes];
     const badArrays = [bad.boxes, bad.timberWalls, bad.timberEaves, bad.rotatedBoxes];
+    const surfaces:GroundOverlayRect[]=[];
+    const floorKeys=new Set(context.flatMap((spec,index)=>spec.kind==='lay-floor'?[spec.key??index]:[]));
     for (let index = 0; index < this.meshes.length; index++) {
       const mesh = this.meshes[index]!, goodParts = goodArrays[index]!, badParts = badArrays[index]!;
       const count = goodParts.length + badParts.length;
@@ -57,16 +62,21 @@ export class ConstructionPreviewLayer {
           mesh.setMatrixAt(ordinal, object.matrix);
           color.setHex(part.color ?? 0xffffff).multiplyScalar(part.tint ?? 1).lerp(valid ? validTint : invalidTint, valid ? .35 : .8);
           mesh.setColorAt(ordinal++, color);
+          if(index===0&&floorKeys.has(part.key!)){
+            const x=Math.fround(part.x),z=Math.fround(part.z),sx=Math.fround(part.sx??1),sz=Math.fround(part.sz??1);
+            surfaces.push(groundOverlayRect(x-sx/2,z-sz/2,x+sx/2,z+sz/2,color,this.material.opacity));
+          }
         }
       };
       write(goodParts, true); write(badParts, false);
       mesh.instanceMatrix.needsUpdate = true; mesh.colorBuffer.needsUpdate = true;
       mesh.computeBoundingSphere();
     }
+    this.surfaces=surfaces.length?surfaces:EMPTY_GROUND_OVERLAYS;
     this.previousWorld=world;this.previousSignature=signature;
   }
 
-  hide(): void { this.revision++;this.previousWorld=undefined;this.previousSignature=''; for (const mesh of this.meshes) mesh.activeCount = 0; }
+  hide(): void { this.surfaces=EMPTY_GROUND_OVERLAYS;this.revision++;this.previousWorld=undefined;this.previousSignature=''; for (const mesh of this.meshes) mesh.activeCount = 0; }
 
   prepareForCompile(): () => void {
     const revision = this.revision;

@@ -1,0 +1,14 @@
+/* V306: one locally served file per face; unused choices are not preloaded. */
+@font-face{font-family:'Comfortaa';src:url('/assets/fonts/v306/comfortaa.ttf') format('truetype');font-style:normal;font-weight:300 700;font-display:swap}
+@font-face{font-family:'Baloo 2';src:url('/assets/fonts/v306/baloo-2.ttf') format('truetype');font-style:normal;font-weight:400 800;font-display:swap}
+@font-face{font-family:'Bree Serif';src:url('/assets/fonts/v306/bree-serif.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:'Grandstander';src:url('/assets/fonts/v306/grandstander.ttf') format('truetype');font-style:normal;font-weight:100 900;font-display:swap}
+@font-face{font-family:'Patrick Hand';src:url('/assets/fonts/v306/patrick-hand.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:'Quicksand';src:url('/assets/fonts/v306/quicksand.ttf') format('truetype');font-style:normal;font-weight:300 700;font-display:swap}
+
+/* Family only: existing sizes, line heights and weights remain authored by each UI sheet.
+   !important intentionally supersedes their font shorthands regardless of import order. */
+html[data-ui-font], html[data-ui-font] body,
+html[data-ui-font] :is(#app, dialog, .game-tooltip),
+html[data-ui-font] :is(#app, dialog, .game-tooltip) *,
+html[data-ui-font] :is(button, input, select, textarea, option){font-family:var(--ui-font)!important}

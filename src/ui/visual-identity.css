@@ -127,16 +127,13 @@ input[type=radio]{border-radius:50%}input:checked{background:var(--leaf);border-
 #app .panel progress::-webkit-progress-value{background:var(--leaf);border-radius:99px}
 #app .panel progress,#app .panel meter{border-radius:99px;accent-color:var(--forest)}
 
-/* Resources remain left of the fifteen-pawn rail, in compact coloured chips. */
-#app .resource-list.panel{left:12px;top:12px;width:224px;padding:9px;max-height:calc(100dvh - 120px);overflow:auto;border-radius:20px;background:var(--paper);color:var(--ink);text-shadow:none}
-#app .resource-list .resource-heading{display:block;margin:0 3px 7px;font:700 11px/1.2 var(--font-pop);letter-spacing:1px;color:var(--muted-ink)}
-#app .resource-list .resource{grid-template-columns:28px minmax(0,1fr) auto;gap:6px;min-height:34px;margin:0 0 5px;padding:2px 7px 2px 3px;border:2px solid var(--ink);border-radius:12px;background:var(--paper-white);box-shadow:none;color:var(--ink);font-size:14px;font-weight:700}
-#app .resource-list .resource:nth-of-type(4n+2){background:var(--sky-soft)}
-#app .resource-list .resource:nth-of-type(4n+3){background:var(--sun-soft)}
-#app .resource-list .resource:nth-of-type(4n+4){background:var(--leaf-soft)}
+/* The resource ledger is text on the map, not a stack of buttons or cards. */
+#app .resource-list.panel{left:12px;top:12px;width:224px;padding:0;max-height:calc(100dvh - 120px);overflow:auto;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--paper-white);text-shadow:-1px 0 1px #19242b,1px 0 1px #19242b,0 -1px 1px #19242b,0 1px 1px #19242b}
+#app .resource-list .resource-heading{display:none}
+#app .resource-list .resource{grid-template-columns:28px minmax(0,1fr) auto;gap:6px;min-height:32px;margin:0;padding:1px 2px;border:0;border-radius:0;background:transparent;box-shadow:none;color:inherit;font-size:14px;font-weight:700}
 #app .resource-list .resource strong{font-size:16px;font-weight:700}
 #app .resource-list .resource-name{min-width:0;overflow:hidden;text-overflow:ellipsis}
-#app .resource-list #food-items .resource{background:var(--coral-soft)}
+#app .resource-list #food-items .resource{background:transparent}
 #app .colonist-bar{top:12px;left:250px;right:220px}
 #app #colonists{gap:8px;padding:2px 4px 8px}
 #app #colonists .colonist{width:70px;padding:4px 4px 6px;border:2px solid var(--ink);border-radius:15px;background:var(--paper);color:var(--ink);box-shadow:0 3px 0 var(--ink);text-shadow:none;transition:background-color .12s}
@@ -152,22 +149,40 @@ input[type=radio]{border-radius:50%}input:checked{background:var(--leaf);border-
 #app .corner-tools{right:12px;top:12px;padding:6px 8px 6px 13px;border:3px solid var(--ink);border-radius:18px;background:var(--paper);box-shadow:0 3px 0 var(--ink);gap:10px}
 #app .game-title{font:700 18px/1.2 var(--font-pop);color:var(--ink);letter-spacing:.5px;text-shadow:none}
 #app .corner-tools button{width:30px;height:30px;min-height:30px;padding:0;border:2px solid var(--ink);border-radius:50%;background:var(--sun);color:var(--ink);box-shadow:none}
-#app .main-tabs.panel{height:66px;padding:7px;gap:6px;border-radius:22px;box-shadow:0 4px 0 var(--ink)}
+#app .main-tabs.panel{height:66px;padding:0;gap:6px;border:0;border-radius:0;background:transparent;box-shadow:none;align-items:center;pointer-events:none}
 #app .main-tabs button{min-height:44px;border:2px solid var(--ink);border-radius:12px;background:var(--sky-soft);color:var(--ink);box-shadow:none;font-weight:700}
+#app .main-tabs button{pointer-events:auto}
 #app .main-tabs button:nth-child(4n+2){background:var(--coral-soft)}
 #app .main-tabs button:nth-child(4n+3){background:var(--sun-soft)}
 #app .main-tabs button:nth-child(4n+4){background:var(--leaf-soft)}
 #app .main-tabs button:hover:not(:disabled){background:var(--paper-white);border-color:var(--ink)}
 #app .main-tabs button.active,#app .main-tabs button.active:hover:not(:disabled){background:var(--hud-sky);color:var(--ink);border-color:var(--ink)}
 #app .main-tabs button:disabled{color:var(--muted-ink);background:var(--paper-deep);opacity:.55}
-#app .time-panel.panel{right:12px;bottom:94px;width:224px;padding:10px;gap:7px;border-radius:20px;background:var(--paper)}
-#app .time-panel .site-readout{padding:7px 10px;color:var(--paper);background:var(--ink);border-radius:12px;text-shadow:none}
+#app .time-panel.panel{right:12px;bottom:94px;width:224px;min-height:0;padding:0;gap:7px;border:0;border-radius:0;background:transparent;box-shadow:none}
+#app .time-panel .site-readout{padding:8px 10px;color:var(--paper);background:#191b22;border-radius:12px;text-shadow:none}
 #app .time-panel #clock{font:700 27px/1.15 var(--font-pop);color:var(--sun)}
 #app .time-panel #day,#app .time-panel .biome-label{color:var(--paper)}
+#app .time-panel :is(#outdoor-temperature,#weather){display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:25px;text-align:right}
+#app .time-panel .site-readout-value{min-width:0;overflow-wrap:anywhere}
+#app .time-panel .site-readout-icon{display:inline-block;flex:none;width:22px;height:22px;background-position:center;background-repeat:no-repeat;background-size:contain}
+#app #outdoor-temperature .site-readout-icon{background-image:var(--temperature-icon)}
+#app #weather .site-readout-icon{background-image:var(--weather-icon-clear)}
+#app #weather[data-weather=fog] .site-readout-icon{background-image:var(--weather-icon-fog)}
+#app #weather[data-weather=rain] .site-readout-icon{background-image:var(--weather-icon-rain)}
+#app #weather[data-weather=dry-thunderstorm] .site-readout-icon{background-image:var(--weather-icon-dry-thunderstorm)}
+#app #weather[data-weather=rainy-thunderstorm] .site-readout-icon{background-image:var(--weather-icon-rainy-thunderstorm)}
+#app #weather[data-weather=foggy-rain] .site-readout-icon{background-image:var(--weather-icon-foggy-rain)}
+#app #weather[data-weather=snow-gentle] .site-readout-icon{background-image:var(--weather-icon-snow-gentle)}
+#app #weather[data-weather=snow-hard] .site-readout-icon{background-image:var(--weather-icon-snow-hard)}
 #app .time-controls button{min-height:32px;padding:4px;border:2px solid var(--ink);background:var(--paper-white);color:var(--ink);box-shadow:none}
 #app .time-controls button[aria-pressed=true]{background:var(--leaf)}
 #app .time-controls button:first-child[aria-pressed=true]{background:var(--sun)}
-#app .view-controls button{font-size:11px;min-height:30px;padding:4px 3px;border-width:2px;background:var(--sky-soft);box-shadow:none}
+#app .time-panel .view-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:3px;margin:0;grid-template-columns:none}
+#app .time-panel .view-controls button{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;min-width:0;min-height:32px;padding:3px;border:2px solid var(--ink);border-radius:9px;background:var(--paper-white);box-shadow:none}
+#app .time-panel .view-controls .ui-icon{width:22px;height:22px;background-size:contain;background-position:center}
+#app .time-panel .view-controls #view-home{padding:3px}
+#app .time-panel .view-controls #view-home .ui-icon{width:22px;height:22px}
+#app .time-panel .view-control-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;border:0}
 #app .view-controls button[aria-pressed=true]{background:var(--hud-sky)}
 #app .camera-controls button{background:var(--paper-white);border-width:2px;box-shadow:none}
 #app .alerts{right:12px;bottom:calc(94px + var(--time-panel-height,275px) + 12px);max-height:calc(100dvh - var(--time-panel-height,275px) - 198px)}
@@ -375,7 +390,7 @@ dialog.object-information .object-information-finish{border:2px solid var(--ink)
 #app #map-cell-details{color:var(--ink);background:var(--paper);border:2px solid var(--ink);border-radius:12px;box-shadow:0 2px 0 var(--ink);font:13px/1.3 var(--font-body)}
 #app #map-cell-details .map-cell-detail-heading,#app #map-cell-details .map-cell-detail-thing{color:var(--ink)}
 #app #map-cell-details .map-cell-detail-row:nth-of-type(even){background:var(--paper-deep);border-radius:5px}
-#app #map-hover-readout{width:fit-content;padding:5px 9px;border:2px solid var(--ink);border-radius:10px;background:var(--paper);color:var(--ink);text-shadow:none;font-size:13px}
+#app #map-hover-readout{width:fit-content;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--paper-white);text-shadow:-1px 0 1px #19242b,1px 0 1px #19242b,0 -1px 1px #19242b,0 1px 1px #19242b;font-size:13px}
 
 /* Welcome, creation, saved games, reference colony and preferences. */
 #app .front-menu{--front-paper:var(--paper);--front-muted:var(--muted-ink);--front-gold:var(--accent);--front-line:var(--line);color:var(--ink);font:15px/1.4 var(--font-body)}
@@ -428,12 +443,15 @@ dialog.object-information .object-information-finish{border:2px solid var(--ink)
 @media(max-width:1250px){#app .main-tabs button{font-size:12px}}
 @media(max-width:1050px){#app .colonist-bar{left:240px;right:190px}#app .management-panel{padding:16px}}
 @media(max-width:760px){
-  #app .resource-list.panel{left:8px;top:8px;width:190px;padding:7px;max-height:calc(100dvh - 110px)}
+  #app .resource-list.panel{left:8px;top:8px;width:190px;padding:0;max-height:calc(100dvh - 110px)}
   #app .resource-list .resource{font-size:12px;grid-template-columns:23px minmax(0,1fr) auto;gap:4px;min-height:30px}
   #app .resource-list .resource strong{font-size:14px}#app .resource-symbol{width:23px;height:23px}
   #app .colonist-bar{left:208px;right:10px;top:8px}
   #app .corner-tools{display:none}
-  #app .time-panel.panel{width:180px;right:8px;padding:8px}
+  #app .time-panel.panel{width:180px;right:8px;padding:0}
+  #app .time-panel .view-controls button{flex-basis:28px;width:28px;height:30px;min-height:30px;padding:2px}
+  #app .time-panel .view-controls #view-home{padding:2px}
+  #app .time-panel .view-controls .ui-icon,#app .time-panel .view-controls #view-home .ui-icon{width:20px;height:20px}
   #app .alerts{right:8px;width:210px}
   #app .learning-readout{right:8px;top:103px;width:180px}
   #app .inspector,#app .management-panel{left:8px;max-width:calc(100vw - 16px)}
@@ -443,5 +461,5 @@ dialog.object-information .object-information-finish{border:2px solid var(--ink)
   #app .front-menu .front-frame{border-radius:17px}
 }
 @media(max-width:480px){#app .resource-list.panel{width:156px}#app .resource-list .resource{grid-template-columns:21px minmax(0,1fr) auto;font-size:11px}#app .colonist-bar{left:168px}#app .resource-list .resource strong{font-size:12px}}
-@media(max-height:760px){#app .resource-list .resource{min-height:30px;margin-bottom:4px;font-size:13px}#app #inspector.stockpile-inspector-host{height:calc(100dvh - 178px);max-height:none}}
+@media(max-height:760px){#app .resource-list .resource{min-height:29px;margin-bottom:0;font-size:13px}#app #inspector.stockpile-inspector-host{height:calc(100dvh - 178px);max-height:none}}
 @media(prefers-reduced-motion:reduce){button,#app #colonists .colonist,#app .front-menu button{transition:none}}

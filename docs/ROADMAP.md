@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V306 — [herbe, HUD et préférences](gameplay/presentation-controls-v306.md), schéma 219 conservé.** Corrections demandées avant la suite du chantier : aides d’Architecte raccordées à l’herbe, HUD simplifié, curseurs réduits et options de fontes/nuages. Aucun système de simulation ajouté. Objectif de performances maintenu, aucun240FPS présumé ; relance en pause. Les états suivants sont historiques.
+
 **V305 — [préparation des scènes](development/aulnes-performance-v305.md), schéma 219 conservé.** Lot de performances demandé : file native et horloges graphiques optimisées sans retirer les visuels V304. Gain local4,72%RAF, débit proche6× ; fluidité constante et240FPS restent ouverts. Priorité suivante : coût substantiel du MAIN et de la soumission Three, sur attribution actuelle ; pas de reprise des atlas/cargo/Workers inchangés rejetés. Commit/push, publications regroupées et relance en pause. Les états suivants sont historiques.
 
 **V304 — [identité visuelle et affichage de carte](gameplay/visual-identity-v304.md), schéma 219 conservé.** Lot demandé : interface Simulation, modèles des objets et icônes distinctes, seuil des chiffres, raccords de roches et affichage des intentions confirmées. Le défaut Brave n’est pas reproduit et reste ouvert. Aucune règle ni qualité réduite ; preuves et contreparties dans la note unique. Relance planifiée en pause, pas de lot suivant engagé. Les états suivants sont historiques.

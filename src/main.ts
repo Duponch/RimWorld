@@ -34,6 +34,8 @@ import { fetchTestColonies, readSaveFile, readTestColony } from './ui/test-colon
 import { createFrontMenu } from './ui/front-menu';
 import {DESIGNATION_VISIBILITY_KEY,designationMinCellPixels,designationVisibilityLabel} from './ui/designation-visibility';
 import {ITEM_LABEL_VISIBILITY_KEY,itemLabelMinCellPixels,itemLabelVisibilityLabel} from './ui/item-label-visibility';
+import {applyUiFont,readUiFont,saveUiFont,type UiFontId} from './ui/ui-fonts';
+import {CLOUD_MASK_RADIUS_KEY,DEFAULT_CLOUD_MASK_RADIUS,cloudMaskRadius,cloudMaskRadiusLabel} from './render/cloud-mask';
 import type { PawnTrack } from './bridge/motion-tracks';
 import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
 import { INFECTION_UNIT,infectionStage } from './sim/infection-rules';
@@ -374,6 +376,9 @@ let texturesEnabled = true;
 let designationIconThreshold = 32;
 let itemLabelThreshold = 96;
 let groundGrassEnabled = true;
+let cloudClearRadius = DEFAULT_CLOUD_MASK_RADIUS;
+let uiFont = readUiFont();
+applyUiFont(uiFont);
 let soundEnabled = true;
 let soundVolume = 0.75;
 let musicEnabled = true;
@@ -384,6 +389,7 @@ try {
   itemLabelThreshold=itemLabelMinCellPixels(localStorage.getItem(ITEM_LABEL_VISIBILITY_KEY));
   texturesEnabled = localStorage.getItem(TEXTURE_PREFERENCE_KEY) !== 'false';
   groundGrassEnabled = localStorage.getItem(GROUND_GRASS_PREFERENCE_KEY) !== 'false';
+  cloudClearRadius = cloudMaskRadius(localStorage.getItem(CLOUD_MASK_RADIUS_KEY));
   soundEnabled = localStorage.getItem(SOUND_ENABLED_PREFERENCE_KEY) !== 'false';
   const storedVolume = Number(localStorage.getItem(SOUND_VOLUME_PREFERENCE_KEY));
   if (localStorage.getItem(SOUND_VOLUME_PREFERENCE_KEY) !== null && Number.isFinite(storedVolume)) soundVolume = Math.max(0, Math.min(1, storedVolume));
@@ -446,6 +452,21 @@ function musicMood(world: World): MusicMood {
   return hour >= 6 && hour < 20 ? 'day' : 'night';
 }
 const textureToggle = el<HTMLInputElement>('textures-enabled');
+const fontSelect = el<HTMLSelectElement>('ui-font');
+fontSelect.value = uiFont;
+function setUiFontPreference(value:UiFontId):void {
+  uiFont=value; fontSelect.value=value; applyUiFont(value); saveUiFont(value);
+}
+const cloudRadiusSlider = el<HTMLInputElement>('cloud-mask-radius');
+cloudRadiusSlider.value = String(Math.round(cloudClearRadius*100));
+el('cloud-mask-value').textContent = cloudMaskRadiusLabel(cloudClearRadius);
+function setCloudClearRadius(value:number):boolean {
+  cloudClearRadius=cloudMaskRadius(value);
+  cloudRadiusSlider.value=String(Math.round(cloudClearRadius*100));
+  el('cloud-mask-value').textContent=cloudMaskRadiusLabel(cloudClearRadius);
+  renderer?.setCloudClearRadius(cloudClearRadius);
+  try {localStorage.setItem(CLOUD_MASK_RADIUS_KEY,String(cloudClearRadius));return true;}catch{return false;}
+}
 const designationSlider=el<HTMLInputElement>('designation-visibility');
 const itemLabelSlider=el<HTMLInputElement>('item-label-visibility');
 itemLabelSlider.value=String(itemLabelThreshold);
@@ -518,6 +539,10 @@ document.querySelector('#app')!.append(el('fps-counter'));
 const frontMenu = createFrontMenu(frontHost, {
   getSaves: () => session.saves(),
   getTexturesEnabled: () => texturesEnabled,
+  getUiFont:()=>uiFont,
+  onUiFontChange:setUiFontPreference,
+  getCloudClearRadius:()=>cloudClearRadius,
+  onCloudClearRadiusChange:setCloudClearRadius,
   getDesignationMinCellPixels:()=>designationIconThreshold,
   getItemLabelMinCellPixels:()=>itemLabelThreshold,
   onItemLabelMinCellPixelsChange:setItemLabelMinCellPixels,
@@ -1072,9 +1097,11 @@ function renderState() {
   el('scenario-current').textContent=(world.scenario?SCENARIOS[world.scenario.id].label:'Partie historique · départ non renseigné')+(world.site?` · ${BIOME_LABELS[world.site.biome]} · ${HILLINESS_LABELS[world.site.hilliness]}`:'');
   el('biome-current').textContent=world.site?BIOME_LABELS[world.site.biome]:'Site historique';
   el('population').textContent = String(living.length); el('map-size').textContent = `${world.width} × ${world.height}`;
-  el('outdoor-temperature').textContent = `Extérieur : ${outdoorTemperature(world).toFixed(1)} °C`;
+  el('outdoor-temperature').querySelector('.site-readout-value')!.textContent = `Extérieur : ${outdoorTemperature(world).toFixed(1)} °C`;
   el('day').textContent = climateDateLabel(world);
-  el('weather').textContent=[world.weather?WEATHER[perceivedWeather(world)].label:'',weatherConditionLabel(world)].filter(Boolean).join(' · ');
+  const weatherReadout=el('weather');
+  weatherReadout.dataset.weather=world.weather?perceivedWeather(world):'clear';
+  weatherReadout.querySelector('.site-readout-value')!.textContent=[world.weather?WEATHER[perceivedWeather(world)].label:'',weatherConditionLabel(world)].filter(Boolean).join(' · ');
   const climateKey=world.climate?`${world.climate.adoptedAt}:${Math.floor(world.tick/TICKS_PER_DAY)}`:'historical';
   const climateRoot=el('climate-options');if(climateRoot.dataset.key!==climateKey){climateRoot.dataset.key=climateKey;climateRoot.replaceChildren(climateControls(world,c=>void attempt(()=>client.command(c))));}
   const hour = 24 * (calendarTick(world) % TICKS_PER_DAY) / TICKS_PER_DAY;
@@ -1413,6 +1440,8 @@ el('show-diagnostics').onclick = () => { const hidden = !el('metrics').hidden; e
 textureToggle.onchange = () => { if (!setTexturesEnabled(textureToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 designationSlider.oninput=()=>{if(!setDesignationMinCellPixels(Number(designationSlider.value)))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
 itemLabelSlider.oninput=()=>{if(!setItemLabelMinCellPixels(Number(itemLabelSlider.value)))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
+fontSelect.onchange=()=>setUiFontPreference(fontSelect.value as UiFontId);
+cloudRadiusSlider.oninput=()=>{if(!setCloudClearRadius(Number(cloudRadiusSlider.value)/100))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
 groundGrassToggle.onchange = () => { if (!setGroundGrassEnabled(groundGrassToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 const soundToggle = el<HTMLInputElement>('sound-enabled');
 const soundVolumeSlider = el<HTMLInputElement>('sound-volume');
@@ -1449,14 +1478,19 @@ audioGestureRoot.addEventListener('click', event => {
   audio.playInterface(panelButton ? 'ui.panel' : 'ui.click');
 }, { capture: true });
 document.addEventListener('visibilitychange', () => { music.setHidden(document.hidden); audio.setHidden(document.hidden); });
-el('wall-cutaway').onclick = () => { wallCutaway = !wallCutaway; renderer?.setWallCutaway(wallCutaway); el('wall-cutaway').textContent = wallCutaway ? 'Murs : coupés' : 'Murs : hauts'; el('wall-cutaway').setAttribute('aria-pressed', String(wallCutaway)); };
-el('roof-toggle').onclick=()=>{const button=el('roof-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));button.textContent=visible?'Toits : visibles':'Toits : masqués';renderer?.setRoofsVisible(visible);};
-el('foliage-toggle').onclick = () => { foliageVisible = !foliageVisible; renderer?.setFoliageVisible(foliageVisible); el('foliage-toggle').textContent = foliageVisible ? 'Feuillage' : 'Troncs'; el('foliage-toggle').setAttribute('aria-pressed', String(!foliageVisible)); };
-el('zones-toggle').onclick=()=>{const button=el('zones-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));button.textContent=visible?'Zones : visibles':'Zones : masquées';renderer?.setZonesVisible(visible);};
+function setViewControlLabel(id:string,label:string):void {
+  const button=el<HTMLButtonElement>(id);
+  button.querySelector<HTMLElement>('.view-control-label')!.textContent=label;
+  button.setAttribute('aria-label',label);
+}
+el('wall-cutaway').onclick = () => { wallCutaway = !wallCutaway; renderer?.setWallCutaway(wallCutaway); setViewControlLabel('wall-cutaway',wallCutaway ? 'Murs : coupés' : 'Murs : hauts'); el('wall-cutaway').setAttribute('aria-pressed', String(wallCutaway)); };
+el('roof-toggle').onclick=()=>{const button=el('roof-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));setViewControlLabel('roof-toggle',visible?'Toits : visibles':'Toits : masqués');renderer?.setRoofsVisible(visible);};
+el('foliage-toggle').onclick = () => { foliageVisible = !foliageVisible; renderer?.setFoliageVisible(foliageVisible); setViewControlLabel('foliage-toggle',foliageVisible ? 'Feuillage' : 'Troncs'); el('foliage-toggle').setAttribute('aria-pressed', String(!foliageVisible)); };
+el('zones-toggle').onclick=()=>{const button=el('zones-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));setViewControlLabel('zones-toggle',visible?'Zones : visibles':'Zones : masquées');renderer?.setZonesVisible(visible);};
 el('view-home').onclick = () => { const pawn = snapshot?.pawns[0]; if (pawn) renderer?.focusPawn(pawn.id); };
 el('camera-mode').onclick = () => {
   const perspective = renderer?.toggleCameraMode() === 'perspective';
-  el('camera-mode').textContent = perspective ? 'Vue : perspective' : 'Vue : iso';
+  setViewControlLabel('camera-mode',perspective ? 'Vue : perspective' : 'Vue : iso');
   el('camera-mode').setAttribute('aria-pressed', String(perspective));
   el('camera-mode').title = `Basculer en ${perspective ? 'vue isométrique' : 'perspective'} ; glisser avec le bouton droit pour tourner`;
 };
@@ -1609,6 +1643,7 @@ async function prepareWorldView(): Promise<void> {
     renderer.setTexturesEnabled(texturesEnabled);
     renderer.setDesignationMinCellPixels(designationIconThreshold);
     renderer.setItemLabelMinCellPixels(itemLabelThreshold);
+    renderer.setCloudClearRadius(cloudClearRadius);
     renderer.onAudioFrame = view => {
       lastAudioCamera=view.camera;
       audio.updateCamera(view.camera);

@@ -1,4 +1,6 @@
-# Validation courante — V305
+# Validation courante — V306
+
+**V306 : [herbe, HUD et préférences](../gameplay/presentation-controls-v306.md#validation), schéma 219 conservé.** Groupes ciblés et contrôles ROOT de shaders, interface, préférences et impact global ; gels et rouges conservés dans la note unique. Simulation/bridge et catalogue public inchangés. Les validations suivantes sont historiques.
 
 **V305 : [préparation des scènes](aulnes-performance-v305.md#validation), schéma 219 conservé.**76cas/11fichiers dont18nouveaux ; huit cas repris contre une file historique indépendante. Typage/build, deux suites64vrais ticks, huit états WebGPU aux pixels exacts et quatre recharges GAME passent. Comparaison109,974→115,169RAF/s avec débit5,836→5,986× ; les limites à froid, rouges et variantes rejetées sont dans la note unique.63références/66fichiers préservés, aucune nouvelle campagne générale inchangée. Les validations suivantes sont historiques.
 

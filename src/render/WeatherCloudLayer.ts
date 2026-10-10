@@ -3,6 +3,7 @@ import { Fn, If, attribute, materialColor, positionLocal, smoothstep as shaderSm
 import type { WeatherState } from '../sim/weather';
 import { visualCloudAppearance } from './visual-weather';
 import { createCloudPaint } from './cloud-surface-paint';
+import { DEFAULT_CLOUD_MASK_RADIUS, cloudMaskRadius } from './cloud-mask';
 
 const CLOUD_COUNT = 64;
 const REFERENCE_MAP_SIDE = 250;
@@ -14,7 +15,7 @@ const EDGE_FADE_FRACTION = .28;
 const MATRIX_STEP = .02;
 const MAX_CONTIGUOUS_TICK_GAP = 600;
 // Radii are fractions of the viewport's shorter dimension, in physical pixels.
-export const CLOUD_CLEAR_RADIUS = .31;
+export const CLOUD_CLEAR_RADIUS = DEFAULT_CLOUD_MASK_RADIUS;
 export const CLOUD_CLEAR_SOFT_EDGE = .08;
 // Maximum local scale and full signed shift ranges, including optional lobes.
 export const CLOUD_SHAPE = { stretch: [1.60, 1.42, 1.60], shift: [.36, .384, .66] } as const;
@@ -70,10 +71,12 @@ export function cloudViewOpacity(camera: THREE.OrthographicCamera | THREE.Perspe
 }
 
 /** Reference for the viewport-space shader mask, used by the focused tests. */
-export function cloudScreenMask(x: number, y: number, width: number, height: number): number {
+export function cloudScreenMask(x: number, y: number, width: number, height: number, clearRadius = CLOUD_CLEAR_RADIUS): number {
+  const cutoff = cloudMaskRadius(clearRadius);
+  if (cutoff === 0) return 1;
   const shorter = Math.max(1, Math.min(width, height));
   const radius = Math.hypot(x - width * .5, y - height * .5) / shorter;
-  return smoothstep(CLOUD_CLEAR_RADIUS, CLOUD_CLEAR_RADIUS + CLOUD_CLEAR_SOFT_EDGE, radius);
+  return smoothstep(cutoff, cutoff + CLOUD_CLEAR_SOFT_EDGE, radius);
 }
 
 /** Four available paper-cut masses. Their imperfect rims and translucent paint
@@ -225,6 +228,7 @@ export class WeatherCloudLayer {
     color: 0xffffff, vertexColors: true, transparent: true, opacity: 1, depthWrite: false, alphaTest: .001, fog: false,
   });
   private readonly opacityUniform = uniform(0);
+  private readonly clearRadius = uniform(CLOUD_CLEAR_RADIUS);
   private readonly paintMap=createCloudPaint();
   private readonly paintEnabled=uniform(true);
   private readonly variantData = new THREE.InstancedInterleavedBuffer(new Float32Array(CLOUD_COUNT * 12), 12);
@@ -279,7 +283,8 @@ export class WeatherCloudLayer {
       const size = viewportSize.toConst();
       const pixelsFromCentre = viewportUV.sub(.5).mul(size);
       const distance = pixelsFromCentre.length().div(size.x.min(size.y));
-      const clearCentre = shaderSmoothstep(CLOUD_CLEAR_RADIUS, CLOUD_CLEAR_RADIUS + CLOUD_CLEAR_SOFT_EDGE, distance);
+      const clearCentre = this.clearRadius.greaterThan(0).select(
+        shaderSmoothstep(this.clearRadius, this.clearRadius.add(CLOUD_CLEAR_SOFT_EDGE), distance), 1);
       return this.opacityUniform.mul(attribute('aCloudFade')).mul(clearCentre);
     })();
     this.material.positionNode = Fn(() => {
@@ -476,6 +481,7 @@ export class WeatherCloudLayer {
   }
 
   setTexturesEnabled(enabled:boolean):void {this.paintEnabled.value=enabled;}
+  setClearRadius(radius:number):void {this.clearRadius.value=cloudMaskRadius(radius);}
 
   dispose(): void {
     this.mesh.removeFromParent();

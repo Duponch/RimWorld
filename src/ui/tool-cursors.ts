@@ -35,10 +35,10 @@ export function syncToolCursor(viewport: HTMLElement, tool: Tool): ToolCursorKin
   return cursor;
 }
 
-const CURSOR_SIZE = 40;
-const TOOL_CURSOR_SIZE = 44;
-const TOOL_ICON_OFFSET = 13;
-const TOOL_HAND_SIZE = 20;
+const CURSOR_SIZE = 32;
+const TOOL_CURSOR_SIZE = 35;
+const TOOL_ICON_OFFSET = 10;
+const TOOL_HAND_SIZE = 16;
 const CURSOR_MARGIN = 1;
 const ALPHA_THRESHOLD = 8;
 type PanKind = 'grab' | 'grabbing';
@@ -174,7 +174,7 @@ async function installMapToolCursors(root: HTMLElement, atlasUrl: string, artwor
           source.drawImage(image, x, y, width, height, 0, 0, width, height);
           const geometry = alphaGeometry(source, width, height);
           if (!geometry) throw new Error(`Icône de curseur vide : ${imageUrl}`);
-          const scale = 30 / Math.max(geometry.width, geometry.height);
+          const scale = 24 / Math.max(geometry.width, geometry.height);
           const drawIcon = () => {
             target.clearRect(0, 0, TOOL_CURSOR_SIZE, TOOL_CURSOR_SIZE);
             target.imageSmoothingEnabled = true; target.imageSmoothingQuality = 'high';
@@ -183,15 +183,15 @@ async function installMapToolCursors(root: HTMLElement, atlasUrl: string, artwor
           };
           drawIcon();
           // The arrow's tip remains the exact cell-selection point.
-          target.beginPath(); target.moveTo(1, 1); target.lineTo(1, 17); target.lineTo(7, 11);
-          target.lineTo(12, 11); target.closePath();
-          target.fillStyle = '#fff4d6'; target.strokeStyle = '#263c32'; target.lineWidth = 1.5;
+          target.beginPath(); target.moveTo(1, 1); target.lineTo(1, 13.8); target.lineTo(5.8, 9);
+          target.lineTo(9.8, 9); target.closePath();
+          target.fillStyle = '#fff4d6'; target.strokeStyle = '#263c32'; target.lineWidth = 1.2;
           target.fill(); target.stroke();
           const result: MapToolSurfaces = { pointer: `url("${output.toDataURL('image/png')}") 1 1, crosshair` };
           const hands = await artwork.then(value => value.hands, () => undefined);
           if (hands) for (const gesture of ['grab', 'grabbing'] as const) {
             drawIcon(); target.drawImage(hands[gesture], 0, 0);
-            result[gesture] = `url("${output.toDataURL('image/png')}") 10 10, ${gesture}`;
+            result[gesture] = `url("${output.toDataURL('image/png')}") 8 8, ${gesture}`;
           }
           return result;
         })();

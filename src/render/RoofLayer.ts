@@ -5,6 +5,7 @@ import type { BoxBatches } from './BoxBatches';
 import { WORLD_SCALE } from '../world/scale';
 import { woodFiberDetail } from './stylized-surfaces';
 import {surfaceHeightAtCell} from './surface-height';
+import {EMPTY_GROUND_OVERLAYS,GROUND_OVERLAY_RENDER_ORDER,groundOverlayPlacements,setGroundOverlayRenderOrder,type GroundOverlayRect} from './ground-overlay-surfaces';
 
 type RoofCell = { x: number; z: number };
 type Point = readonly [number, number, number];
@@ -120,6 +121,7 @@ function roofPaint(): THREE.DataTexture {
 export class RoofLayer {
   readonly surface = new THREE.Group();
   readonly areas = new THREE.Group();
+  areaSurfaces:readonly GroundOverlayRect[]=EMPTY_GROUND_OVERLAYS;
   readonly paint = roofPaint();
   readonly textured = new THREE.MeshStandardNodeMaterial({ color: 0xffffff, roughness: .94, metalness: 0, flatShading: true, vertexColors: true, map: this.paint });
   readonly plain = new THREE.MeshStandardNodeMaterial({ color: 0xffffff, roughness: .94, metalness: 0, flatShading: true, vertexColors: true });
@@ -157,10 +159,13 @@ export class RoofLayer {
     const areaKey=`${world.width}|${state?.build.join(',')}|${state?.remove.join(',')}|${areaCells.map(i=>surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))).join(',')}`;
     if(reset||this.areaKey!==areaKey){
       this.areaKey=areaKey;
-      batches.set(this.areas, 'roof-areas', [
+      const parts=[
         ...(state?.build ?? []).map(i => ({ i, color: 0x7abca0 })),
         ...(state?.remove ?? []).map(i => ({ i, color: 0xd49d79 })),
-      ].map(({ i, color }) => ({ x: i % world.width, z: Math.floor(i / world.width), y: (surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))??0)+.054, sx: .98, sz: .98, sy: .012, color })), 'overlay', false);
+      ].map(({ i, color }) => ({ x: i % world.width, z: Math.floor(i / world.width), y: (surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))??0)+.054, sx: .98, sz: .98, sy: .012, color }));
+      this.areaSurfaces=parts.length?groundOverlayPlacements(parts,.48):EMPTY_GROUND_OVERLAYS;
+      batches.set(this.areas,'roof-areas',parts,'overlay',false);
+      setGroundOverlayRenderOrder(this.areas,'roof-areas',GROUND_OVERLAY_RENDER_ORDER.roof);
     }
   }
   prepare(): () => void {
