@@ -57,3 +57,11 @@ Les quatre sauvegardes/recharges9036/9039/9037/9002 sont exactes ; erreurs vides
 Ce gain réduit le surcoût récent sans démontrer que toute la régression V304 est annulée. Le résultat historique131,98→125,85 de V304 appartient à une autre séance : les pourcentages ne se soustraient pas et les FPS absolus ne se comparent pas directement. Le retrait CPU de58,2% porte seulement sur la file contrôlée ; aucun temps GPU gagné n’est mesuré pour V305. **240FPS et fluidité constante ne sont pas atteints**. La prochaine cible doit retirer un coût substantiel du MAIN ou de la soumission graphique ; les uniformes secondaires et variantes d’atlas écartées ne justifient pas un autre banc inchangé.
 
 SHA-256 du rapport GAME : `53287DC1261CFE6591DC116FE49DCBB8ECF83111DF0C7A25EB2BABB2D0A41D75`.
+
+## Livraison
+
+Produit commité et poussé en `ecbe76a79f9b886904be0192788647abd9000906`. Documentation PASS1,890s. Publication regroupée des corrections de ce lot sur [Cloudflare Pages](https://elsewhere-cq7.pages.dev/), déploiement `b0243966` PASS15,528s. Package PASS2,198s :469fichiers/106920817octets,63références/66fichiers publics et230SVG V304 exacts ; sources privées et laboratoire absents.
+
+La vérification HTTPS passe en3,347s :40réponses200/MIME/octets exacts sur les origines stable et fraîche, rapport `tmp/elsewhere-pages/v305-http-ShKc3R/report.json`. Elle contrôle la publication, pas de nouveaux FPS en ligne. Le commit documentaire qui enregistre ces preuves ne provoque pas de seconde publication. Relance planifiée en pause ; `references_UI` préservé.
+
+SHA-256 du rapport HTTPS : `F29EA1DF46E4B4BD6A9D4C940BE877A007D4F973A1BE6DBF89E83B2BB852FB97`.

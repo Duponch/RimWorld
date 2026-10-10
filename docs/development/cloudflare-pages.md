@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les [zones, sélection et actions V303](../gameplay/map-interactions-v303.md), avec les interactions V300–V302, schéma219, et les optimisations V296–V299 conservées.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les [visuels V304](../gameplay/visual-identity-v304.md) et les [optimisations de préparation V305](aulnes-performance-v305.md), schéma219 conservé.
 
 ## Adresse et publication
 
@@ -77,6 +77,14 @@ Le commit produit `6815b9db6686a6d92e16a63310daf5fc4652abec` est poussé, puis p
 Déploiement PASS14,526s :233fichiers envoyés et234 déjà présents, plus `_headers` et `_redirects`. L'avertissement Git dirty concerne uniquement `references_UI`, absent du commit et du package. Vérification HTTPS PASS4,031s : HTML, favicon, CSS, JS, Worker, catalogue, Aulnes et douze portraits/atlases/actions sur les deux origines, soit40réponses200 avec MIME et octets exacts. Rapport `tmp/elsewhere-pages/v304-http-4NTkPe/report.json`, SHA `DD199535` ; package/publics inchangés pendant la vérification. Les66fichiers distants ne sont pas tous téléchargés.
 
 Les interactions, recharges, pixels WebGPU/WebGL et le coût réel de la refonte sont décrits dans la [note V304](../gameplay/visual-identity-v304.md). Le contrôle HTTPS ne constitue pas un nouveau benchmark ou parcours de jeu en ligne. Le commit documentaire consécutif ne déclenche pas de deuxième publication ; la relance reste en pause.
+
+## Publication regroupée V305
+
+Après le commit/push produit `ecbe76a7`, une publication unique `b0243966` regroupe les corrections de préparation et d’horloges graphiques : [adresse stable](https://elsewhere-cq7.pages.dev/) et [URL de publication](https://b0243966.elsewhere-cq7.pages.dev/). Typage PASS6,470s et build Pages PASS2,129s ; sources inchangées entre cette compilation et la publication. Package PASS2,198s :469fichiers/106920817octets,230SVG V304 et63références/66fichiers publics exacts, laboratoire et sources privés absents ; rapport `tmp/elsewhere-pages/v305-package-eNUpnE/report.json`.
+
+Déploiement PASS15,528s : trois fichiers envoyés,464déjà présents, plus les en-têtes et redirections. L’avertissement Git dirty concerne `references_UI` et une métadonnée locale de BoxBatches ; ce dernier fichier a exactement le même blob Git `3106d8c1` que HEAD et n’a pas été modifié par le commit. Aucun de ces fichiers privés n’est publié.
+
+Vérification HTTPS PASS3,347s,40réponses200/MIME/octets exacts sur les origines stable et fraîche : HTML, favicon, CSS, JS, Worker, catalogue, Aulnes et douze icônes/atlases/portraits. Rapport `tmp/elsewhere-pages/v305-http-ShKc3R/report.json`, package/publics inchangés pendant le contrôle. Les66fichiers distants ne sont pas tous téléchargés. Contrôles du jeu, gains et limites dans la note V305 ; cette vérification ne constitue pas un benchmark en ligne. Aucun second déploiement pour le commit documentaire, relance planifiée en pause.
 
 ## Références
 
