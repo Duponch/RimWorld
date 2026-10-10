@@ -183,6 +183,85 @@ export function sameSnapshotChangeDomain(from: World, to: World): boolean {
     && before.journal.read(after, after) !== undefined;
 }
 
+export interface SnapshotStructureChanges {
+  readonly structureIndices: readonly number[];
+  readonly tileIndices: readonly number[];
+}
+interface StructureChangeStamp { journal: StructureChangeJournal; generation: number; epoch: number; revision: number }
+interface StructureChangeRecord {
+  readonly parentRevision: number;
+  readonly structureIndices: readonly number[] | undefined;
+  readonly tileIndices: readonly number[];
+  readonly values: number;
+}
+const structureChangeStamps = new WeakMap<World, StructureChangeStamp>();
+const emptyStructureChanges: SnapshotStructureChanges = Object.freeze({ structureIndices: emptyChangeIndices, tileIndices: emptyChangeIndices });
+/** Independent of resource membership. Only primitive ordinals/tiles are kept;
+ * consumers retain their constructive immutable-read mandate separately. */
+class StructureChangeJournal {
+  private generation = 0;
+  private epoch = 0;
+  private revision = 0;
+  private values = 0;
+  private readonly budget = 131072;
+  private readonly records = new Map<number, StructureChangeRecord>();
+
+  reset(world: World, epoch: number, revision: number): void {
+    this.records.clear(); this.values = 0; this.generation++;
+    this.epoch = epoch; this.revision = revision;
+    structureChangeStamps.set(world, { journal: this, generation: this.generation, epoch, revision });
+  }
+
+  append(parent: World, world: World, epoch: number, revision: number,
+    structureIndices: readonly number[] | undefined, tileIndices: readonly number[]): void {
+    const previous = structureChangeStamps.get(parent);
+    if (!previous || previous.journal !== this || previous.generation !== this.generation
+      || previous.epoch !== epoch || epoch !== this.epoch || previous.revision !== this.revision
+      || revision <= previous.revision) {
+      this.reset(world, epoch, revision); return;
+    }
+    const cost = structureIndices === undefined ? 0 : structureIndices.length + tileIndices.length;
+    const indices = structureIndices !== undefined && cost <= this.budget ? orderedChangeCopy(structureIndices) : undefined;
+    const tiles = indices === undefined ? emptyChangeIndices : orderedChangeCopy(tileIndices);
+    const values = indices === undefined ? 0 : indices.length + tiles.length;
+    this.records.set(revision, Object.freeze({ parentRevision: previous.revision,
+      structureIndices: indices, tileIndices: tiles, values }));
+    this.values += values;
+    while (this.records.size > 64 || this.values > this.budget) {
+      const key = this.records.keys().next().value!;
+      this.values -= this.records.get(key)!.values; this.records.delete(key);
+    }
+    this.revision = revision;
+    structureChangeStamps.set(world, { journal: this, generation: this.generation, epoch, revision });
+  }
+
+  read(from: StructureChangeStamp, to: StructureChangeStamp): SnapshotStructureChanges | undefined {
+    if (from.generation !== this.generation || to.generation !== this.generation
+      || from.epoch !== this.epoch || to.epoch !== this.epoch || from.revision > to.revision) return undefined;
+    if (from.revision === to.revision) return emptyStructureChanges;
+    const structures = new Set<number>(), tiles = new Set<number>();
+    let revision = to.revision;
+    while (revision > from.revision) {
+      const record = this.records.get(revision);
+      if (!record || record.structureIndices === undefined || record.parentRevision < from.revision
+        || record.parentRevision >= revision) return undefined;
+      for (const index of record.structureIndices) structures.add(index);
+      for (const index of record.tileIndices) tiles.add(index);
+      revision = record.parentRevision;
+    }
+    if (revision !== from.revision) return undefined;
+    return Object.freeze({ structureIndices: orderedChangeCopy([...structures]), tileIndices: orderedChangeCopy([...tiles]) });
+  }
+}
+
+/** Confirmed stable structure IDs/order only. Read the returned ordinals from
+ * `to`, never from a newer decoder World; no ownership is granted by this API. */
+export function readSnapshotStructureChanges(from: World, to: World): SnapshotStructureChanges | undefined {
+  const before = structureChangeStamps.get(from), after = structureChangeStamps.get(to);
+  if (!before || !after || before.journal !== after.journal) return undefined;
+  return before.journal.read(before, after);
+}
+
 export interface SnapshotResourceRemoval { readonly id: number; readonly beforeOrdinal: number }
 export interface SnapshotResourcePlacement { readonly id: number; readonly afterOrdinal: number }
 /** Primitive edits of one confirmed edge. Survivors preserve their relative
@@ -419,7 +498,8 @@ function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width
 }
 /** Only reconstructs a private candidate. All ordinary business/namespace
  * guards still run below, including for unchanged retained structures. */
-function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width'|'height'>,value:unknown):Structure[]|undefined {
+interface PreparedStructureChanges { structures: Structure[]; structureIndices: number[] | undefined }
+function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width'|'height'>,value:unknown):PreparedStructureChanges|undefined {
   if(!value||typeof value!=='object'||Array.isArray(value))return;
   const patch=value as StructureChanges;
   if(Object.keys(value).some(key=>!['removed','upserted','order'].includes(key))
@@ -427,26 +507,38 @@ function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width
     ||!denseArray(patch.removed)||!denseArray(patch.upserted)
     ||Object.hasOwn(value,'order')&&!denseArray(patch.order))return;
   const byId=new Map<number,Structure>();
+  const ordinals=new Map<number,number>();
+  let ordinal=0,stable=true;
   for(const structure of previous.structures){
     if(!Number.isSafeInteger(structure.id)||structure.id<1||structure.id>=world.nextId||byId.has(structure.id))return;
-    byId.set(structure.id,structure);
+    // Capture the same ID read used by the historical Map insertion.
+    const id=structure.id;byId.set(id,structure);
+    if(!Number.isSafeInteger(id)||id<1||ordinals.has(id))stable=false;
+    ordinals.set(id,ordinal++);
   }
   const touched=new Set<number>();
+  const structureIndices:number[]=[];
   for(const id of patch.removed){
+    stable=false;
     if(!Number.isSafeInteger(id)||id<1||id>=world.nextId||touched.has(id)||!byId.delete(id))return;
     touched.add(id);
   }
   for(const structure of patch.upserted){
     if(!validStructurePatchEntry(structure,world)||touched.has(structure.id))return;
-    touched.add(structure.id);byId.set(structure.id,structure);
+    touched.add(structure.id);
+    const id=structure.id;byId.set(id,structure);
+    const index=ordinals.get(id);
+    if(index===undefined)stable=false;
+    else structureIndices.push(index);
   }
   if(patch.order!==undefined){
     if(patch.order.length!==byId.size||new Set(patch.order).size!==patch.order.length
       ||patch.order.some(id=>!Number.isSafeInteger(id)||!byId.has(id)))return;
-    return patch.order.map(id=>byId.get(id)!);
+    return {structures:patch.order.map(id=>byId.get(id)!),structureIndices:undefined};
   }
   // Existing IDs retain their slots; additions append in upsert order.
-  return touched.size?[...byId.values()]:previous.structures;
+  return {structures:touched.size?[...byId.values()]:previous.structures,
+    structureIndices:stable?structureIndices:undefined};
 }
 
 /** Check a transported pile using the same item and optional-state contracts as saves. */
@@ -737,6 +829,7 @@ export class SnapshotDecoder {
   private current: World | undefined;
   private readonly planetValidation = new PlanetValidationCache();
   readonly #snapshotChanges = new SnapshotChangeJournal();
+  readonly #structureChanges = new StructureChangeJournal();
   readonly #resourceStructure = new ResourceStructureJournal();
   #resourceStructureReady = false;
   #resourceStructureCount = 0;
@@ -759,6 +852,7 @@ export class SnapshotDecoder {
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     let message:SnapshotMessage;
+    let structureIndices:readonly number[]|undefined;
     if(packet.kind==='delta'&&Object.hasOwn(packet,'structures')){
       // No ambiguous omission or mixed complete/patch form. Reconstruct before
       // the earliest structure guard, using only the confirmed predecessor.
@@ -768,8 +862,9 @@ export class SnapshotDecoder {
         ||packet.baseRevision!==this.revision||packet.revision!==packet.baseRevision+1)return resync('Snapshot intermédiaire manquant.');
       if(packet.world.width!==previous.width||packet.world.height!==previous.height
         ||packet.world.schemaVersion!==previous.schemaVersion)return resync('Le delta appartient à une autre carte.');
-      const structures=prepareStructureChanges(previous,packet.world,packet.structures);
-      if(!structures)return resync('Delta de structures invalide.');
+      const prepared=prepareStructureChanges(previous,packet.world,packet.structures);
+      if(!prepared)return resync('Delta de structures invalide.');
+      const structures=prepared.structures;structureIndices=prepared.structureIndices;
       const {structures:_patch,...normalized}=packet;
       message={...normalized,world:{...packet.world,structures}} as SnapshotMessage;
     }else{
@@ -1189,6 +1284,8 @@ export class SnapshotDecoder {
     // Publish only at the confirmed boundary, after every guard and planet commit.
     if (message.kind === 'checkpoint' || !previous) this.#snapshotChanges.reset(next, message.epoch, message.revision);
     else this.#snapshotChanges.append(previous, next, message.epoch, message.revision, resourceIndices, changedTileIndices);
+    if (message.kind === 'checkpoint' || !previous) this.#structureChanges.reset(next, message.epoch, message.revision);
+    else this.#structureChanges.append(previous, next, message.epoch, message.revision, structureIndices, changedTileIndices);
     if (message.kind === 'checkpoint' || !previous) this.#resourceStructure.reset(next, message.epoch, message.revision, this.#resourceStructureCount);
     else this.#resourceStructure.append(previous, next, message.epoch, message.revision, resourceStructureCandidate, changedTileIndices, this.#resourceStructureCount);
     return { status: 'applied', world: next, replaced };

@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V299 : [préparation commune des bâtiments](development/aulnes-performance-v299.md), schéma 218 conservé.** Portes, apparence et effets partagent les changements confirmés dans MAIN ; APIs RAW conservées. 121,47→130,25 RAF/s, candidat à vrai×6 ; preuves, coût des replis et limites dans la note unique. Les états suivants sont historiques.
+
 **V298 : [attribution CPU/GPU](development/aulnes-performance-v298.md), schéma 218 conservé.** Pause/×1/×6, couverture des passes et coût de l'instrumentation mesurés ; priorité aux pointes MAIN. Produit V296 inchangé, aucun FPS supplémentaire. Les états suivants sont historiques.
 
 **V297 : [recensement audio et agenda](development/aulnes-performance-v297.md), diagnostic.** Aucun FPS supplémentaire : les gains locaux ne se confirment pas dans le GAME, prototypes écartés. Produit V296/schéma218 et corpus public conservés ; prochaine attribution du coût graphique actuel1440p. Publications Cloudflare regroupées, relance planifiée en pause. Les états suivants sont historiques.

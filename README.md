@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V299 — [préparation commune des bâtiments](docs/development/aulnes-performance-v299.md), schéma 218 conservé.** Chrome 1440p/dev sur Les Aulnes : **121,47→130,25 RAF/s (+7,23 %)**, débit réel5,618→6,056× sous ×6 demandé. Qualité et règles identiques ; les pointes diminuent, mais240FPS restent à atteindre. Commit/push par lot, publication Cloudflare regroupée. Les états suivants sont historiques.
+
 **V298 — [mesure CPU/GPU actuelle](docs/development/aulnes-performance-v298.md), schéma 218 conservé.** Les pointes du thread principal restent prioritaires ; les ombres ne dominent pas le GPU. Diagnostic seulement, produit V296 inchangé, aucun FPS supplémentaire. Publications Cloudflare regroupées. Les états suivants sont historiques.
 
 **V297 — diagnostic des performances ; produit V296 conservé.** Le coût audio local diminue, mais aucun gain FPS stable n'est obtenu dans le jeu : les deux prototypes sont écartés. [Résultats et limites](docs/development/aulnes-performance-v297.md). Les optimisations continuent sans réduire règles ou qualité ; commit/push par lot et publications Cloudflare regroupées. Les états suivants sont historiques.

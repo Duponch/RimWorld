@@ -144,6 +144,7 @@ import { ambientCameraGain, FoliageAmbience } from './audio/ambience';
 import { createNearbyFireCollector, createNearbyMachineCollector, runningMachineAudioSource } from './audio/continuous';
 import { listenerPose, type AudioCamera } from './audio/spatial';
 import { ColonyRenderer } from './render/ColonyRenderer';
+import { SceneStructurePreparation } from './render/SceneStructurePreparation';
 import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell, Command } from './sim/types';
 import { TICKS_PER_DAY } from './sim/types';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from './sim/map-config';
@@ -332,6 +333,11 @@ let simulationStopped = false, graphicsFault = false, graphicsRecovering = false
 let presentationPreparation: Promise<void> | undefined;
 let graphicsMessage = '', incidentPanel: HTMLElement | undefined;
 const waitingRequests = new Map<number, string>();
+// This instance never escapes MAIN. All Worlds come from the private client,
+// all UI/audio/render aliases are fixed readers, and DEV exposes a clone.
+class MainColonyRenderer extends ColonyRenderer {
+  protected override createStructurePreparation():SceneStructurePreparation { return new SceneStructurePreparation(); }
+}
 let renderer: ColonyRenderer | undefined;
 const TEXTURE_PREFERENCE_KEY = 'lisiere.presentation.textures.v1';
 const GROUND_GRASS_PREFERENCE_KEY = 'lisiere.presentation.ground-grass.v1';
@@ -1475,7 +1481,7 @@ async function prepareWorldView(): Promise<void> {
   shell.hidden=false;
   await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
   if (!renderer) {
-    renderer = await ColonyRenderer.create(el('viewport'), pickCell, groundGrassEnabled);
+    renderer = await MainColonyRenderer.create(el('viewport'), pickCell, groundGrassEnabled);
     renderer.onFatalError = message => { void handleGraphicsFailure(message); };
     renderer.onCompatibilityWarning = message => notify(message, true);
     renderer.setTexturesEnabled(texturesEnabled);

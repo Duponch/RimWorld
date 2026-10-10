@@ -139,6 +139,68 @@ export class StructureVfxLayer {
     geometry.instanceCount=0;return geometry;
   }
 
+  // V299_NATIVE_BEGIN
+  /** Prototype-only entry for the centrally admitted, closed native path.
+   * Neither this method nor an optional axes map supplies that admission.
+   * RAW adopt below remains literal, including its reads and construction.
+   * A miss deliberately pays this decision again in RAW adopt; a hit never
+   * constructs glow/smoke/fire arrays or evaluates their geometry. */
+  adoptNative(world:World,reset=false,preparedDoorAxes?:ReadonlyMap<number,0|1>,subjects:ReadonlyArray<World['structures'][number]>=world.structures):void {
+    // A reset is always a miss, exactly like RAW's key=null before capture.
+    // Avoid a second decision pass on that already-known cold branch.
+    if(reset){this.adopt(world,true);return;}
+    const working=new Set<number>();
+    for(const pawn of world.pawns)if(pawn.state==='working'&&pawn.cooking?.phase==='work')working.add(pawn.cooking.stationId);
+    const tokens:string[]=[];
+    let doorAxes=preparedDoorAxes;
+    for(const s of subjects){
+      const on=isPowerActive(s),work=working.has(s.id);
+      if(s.kind==='mini-turret'&&s.turret?.wick)tokens.push(`${s.id}:turret-wick:${s.turret.wick.startedAtCore}`);
+      if(s.kind==='autodoor'){
+        doorAxes??=doorOrientations(world);
+        const axis=doorAxes.get(s.z*world.width+s.x)??0;
+        tokens.push(`${s.id}:autodoor:${s.x}:${s.z}:${axis}:${on}`);
+      }else if(s.kind==='machining-table'||s.kind==='fabrication-bench'){
+        tokens.push(`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${on}:${work}`);
+      }else if(s.kind==='electric-stove'||s.kind==='fueled-stove'){
+        const active=work&&(s.kind==='electric-stove'?on:!!s.fuel?.ticks);
+        tokens.push(`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${on}:${active}`);
+      }else if(s.kind==='hi-tech-research-bench'||s.kind==='multi-analyzer'){
+        tokens.push(`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${on}`);
+      }else if(s.kind==='battery'){
+        const cells=footprintCells(s),last=cells[cells.length-1]!,x=(s.x+last.x)/2,z=(s.z+last.z)/2;
+        const level=s.breakdown?0:Math.min(4,Math.max(0,Math.ceil((s.battery?.stored??0)/BATTERY_CAPACITY*4)));
+        tokens.push(`${s.id}:battery:${x}:${z}:${s.orientation}:${level}`);
+      }else if(s.kind==='biofuel-refinery'){
+        tokens.push(`${s.id}:biofuel-refinery:${s.x}:${s.z}:${s.orientation}:${on}`);
+      }else if(s.kind==='chemfuel-generator'){
+        tokens.push(`${s.id}:chemfuel-generator:${s.x}:${s.z}:${on}`);
+      }else if(s.kind==='wood-generator'){
+        tokens.push(`${s.id}:wood-generator:${s.x}:${s.z}:${on}`);
+      }else if(s.kind==='campfire'){
+        const lit=!!s.fuel?.ticks;tokens.push(`${s.id}:campfire:${s.x}:${s.z}:${lit}`);
+      }
+      if(s.breakdown){
+        const cells=footprintCells(s);
+        const x=cells.reduce((sum,cell)=>sum+cell.x,0)/cells.length;
+        const z=cells.reduce((sum,cell)=>sum+cell.z,0)/cells.length;
+        tokens.push(`${s.id}:breakdown:${s.breakdown.brokenAt}:${x}:${z}`);
+      }
+      if(s.emp&&s.emp.untilCore>world.tick*10)tokens.push(`${s.id}:emp:${s.emp.untilCore}`);
+    }
+    for(const p of world.projectiles??[])if(p.weaponItem==='mini-turret-gun'&&Math.ceil(p.emittedAtCore/10)===world.tick)tokens.push(`turret-shot:${p.id}`);
+    for(const wave of world.bombWaves??[])if(Math.ceil(wave.startedAtCore/10)===world.tick){
+      if(wave.emp){tokens.push(`emp-flash:${wave.id}`);continue;}
+      const radius=wave.shortCircuit?.radius;
+      const flame=wave.shortCircuit?.damage==='flame';
+      tokens.push(radius===undefined?`bomb-flash:${wave.id}`:`bomb-flash:${wave.id}:${radius}:${flame}`);
+    }
+    for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined)tokens.push(`${fire.id}:ground-fire:${fire.x}:${fire.z}:${fire.size}`);
+    if(tokens.join('|')===this.key)return;
+    this.adopt(world);
+  }
+  // V299_NATIVE_END
+
   adopt(world:World,reset=false):void {
     if(reset)this.key=null;
     const working=new Set<number>();

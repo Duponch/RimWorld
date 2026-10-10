@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V299 — [préparation commune des bâtiments](development/aulnes-performance-v299.md), schéma 218 conservé.** Retrait groupé de parcours MAIN livré, +7,23%RAF local et vrai×6 côté candidat. Prochaine étude : coût des objets réellement soumis à Three, culling et ordre exacts ; pas de bundle global proche ni réouverture d'un prototype inchangé. Aucun gainGPU ou240FPS annoncé. Commit/push par lot et publications Cloudflare regroupées. Les priorités suivantes sont historiques.
+
 **V298 — [attribution CPU/GPU actuelle](development/aulnes-performance-v298.md).** Pointes CPU hors soumission du dessin prioritaires ; ombres GPU minoritaires. Étudier un retrait groupé de préparation de scène, tout transfert éventuel compris. Produit V296/schéma218 conservés, commit/push par lot et publications Cloudflare regroupées. Les priorités suivantes sont historiques.
 
 **V297 — [diagnostic audio et agenda](development/aulnes-performance-v297.md).** Aucun FPS livré ; produit V296 conservé après rejet des deux prototypes. Priorité : comprendre le coût graphique complet actuel en1440p et les interruptions MAIN avant un nouveau changement structurel, sans déduire un budget GPU actuel des mesures V231. Continuer les optimisations autorisées, commit/push par lot, publications Cloudflare regroupées ; relance automatique toujours en pause. Les priorités suivantes sont historiques.

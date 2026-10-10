@@ -24,6 +24,7 @@ import { RoofLayer } from './RoofLayer';
 import { terrainSurfaceChanges,terrainTileChanges } from './terrain-state';
 import { doorOrientations } from '../sim/door-rules';
 import { DoorLayer } from './DoorLayer';
+import type { SceneStructurePreparation } from './SceneStructurePreparation';
 import { TimberCladdingLayer } from './TimberCladdingLayer';
 import { prepareShadowPipelines } from './shadow-preparation';
 import { PausedShadowCache } from './PausedShadowCache';
@@ -221,7 +222,12 @@ export class SceneRenderCore {
   protected jobKey = '';
   protected storageKey = '';
   protected readonly furniturePresentation = new FurniturePresentation();
-  protected readonly structureSignature = new StructurePresentationSignature();
+  // The public Core remains RAW. Only the non-exported MAIN subclass creates
+  // a preparation owner for its fixed readers; immutableSnapshot is not authority.
+  protected createStructurePreparation():SceneStructurePreparation|undefined { return undefined; }
+  protected readonly structurePreparation=this.createStructurePreparation();
+  protected preparedStructures:ReturnType<SceneStructurePreparation['read']>|undefined;
+  protected readonly structureSignature = this.structurePreparation?.signature ?? new StructurePresentationSignature();
   protected readonly storageSignature = new StoragePresentationSignature();
   protected readonly homeSignature = new HomePresentationSignature();
   protected tool = 'select';
@@ -454,9 +460,12 @@ export class SceneRenderCore {
     if (previousWorld?.resources !== world.resources || newMap || Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.updateResources(world, newMap,resourceFrame);
     const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.building.material}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
     this.roofs.update(world,this.boxes,this.wallCutaway,newMap);
-    this.doors.update(world,this.wallCutaway,resetPoses);
-    const doorAxes=doorOrientations(world);
-    const structureKey = this.structureSignature.read(world.structures,[...doorAxes].join(':'),packageKey,resetPoses);
+    const prepared=this.preparedStructures=this.structurePreparation?.read(world,resetPoses);
+    if(prepared)this.doors.updateNative(world,this.wallCutaway,resetPoses,prepared.doors,prepared.axes,prepared.gateAxes);
+    else this.doors.update(world,this.wallCutaway,resetPoses);
+    const structureKey = prepared
+      ? this.structurePreparation!.signature.readConfirmed(world.structures,prepared.axesKey,packageKey,prepared.indices,resetPoses)
+      : this.structureSignature.read(world.structures,[...doorOrientations(world)].join(':'),packageKey,resetPoses);
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
     this.turretTops.update(world,this.structureGroup,this.boxes,newMap);
     // Quantize presentation of progression to avoid rebuilding static meshes for
@@ -480,7 +489,8 @@ export class SceneRenderCore {
     this.pawns.update(world, resetPoses ? 1 : oldBlend, resetPoses);
     this.actionVfx.update(world,this.pawns.feedbackSource!);
     this.brawlCloud.update(world,this.pawns.feedbackSource!);
-    this.structureVfx.adopt(world,newMap);
+    if(prepared)this.structureVfx.adoptNative(world,newMap,prepared.axes,prepared.effects);
+    else this.structureVfx.adopt(world,newMap);
     this.podRescue.adopt(world);this.orbitalDelivery.adopt(world);
     this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses,resourceFrame);
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
@@ -884,7 +894,10 @@ export class SceneRenderCore {
     this.resources.update(visible, newMap,this.naturalPresentation.changes); this.overview.update(visible,newMap,this.naturalPresentation.changes);
   }
 
-  protected buildStructures(world: World): void { this.doors.update(world,this.wallCutaway);this.timber.update(world,this.wallCutaway);this.furniturePresentation.update(world,this.structureGroup,this.wallCutaway,this.boxes,this.structureSignature.flowerChanges(),this.immutableWorlds.has(world));this.structureSignature.ackFurnitureBuild(); }
+  protected buildStructures(world: World): void {
+    const prepared=this.preparedStructures;
+    if(prepared?.world===world)this.doors.updateNative(world,this.wallCutaway,false,prepared.doors,prepared.axes,prepared.gateAxes);
+    else this.doors.update(world,this.wallCutaway);this.timber.update(world,this.wallCutaway);this.furniturePresentation.update(world,this.structureGroup,this.wallCutaway,this.boxes,this.structureSignature.flowerChanges(),this.immutableWorlds.has(world));this.structureSignature.ackFurnitureBuild(); }
 
   protected buildJobs(world: World): void { buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes);this.designations.update(world); }
 
@@ -1192,6 +1205,7 @@ export class SceneRenderCore {
     if(this.grass){this.grass.mesh.removeFromParent();this.grass.dispose();this.grass=null;}
     this.resources.dispose();
     this.sceneResources.clear();
+    this.structurePreparation?.clear();this.preparedStructures=undefined;
     this.furniturePresentation.clear();this.structureSignature.clear();this.storageSignature.clear();this.homeSignature.clear();
     this.pawns.dispose();
     this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.mechanoids.dispose();this.ropes.dispose();this.designations.dispose();

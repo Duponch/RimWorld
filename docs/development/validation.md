@@ -1,4 +1,6 @@
-# Validation courante — V298
+# Validation courante — V299
+
+**V299 : [préparation commune des bâtiments](aulnes-performance-v299.md#validation), schéma 218 conservé.**55cas privés/historiques acquis par reprises,13cas permanents, coût complet contrôlé, quatre cohortes GAME avec recharges exactes,63sauvegardes avec un vrai tick et builds passent. Moteur/publics inchangés ; chiffres, contrepartie checkpoint, rouges de fixtures et limites dans la note unique. Publication Pages regroupée pour cette série.
 
 **V298 : [attribution CPU/GPU](aulnes-performance-v298.md#validation), produit V296/schéma218 conservés.** Typage, gel et douze fenêtres Chrome matériel passent ; quatre recharges exactes, sources/publics inchangés. Couverture et perturbation détaillées dans la note unique, aucun FPS supplémentaire ni déploiement Cloudflare.
 

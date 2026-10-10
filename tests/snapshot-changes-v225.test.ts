@@ -38,7 +38,7 @@ function harness() {
 }
 
 test('read-only exports cannot manufacture an accepted World witness', () => {
-  expect(Object.keys(facade)).toEqual(['readSnapshotChanges', 'sameSnapshotChangeDomain', 'readSnapshotResourceStructure']);
+  expect(Object.keys(facade).sort()).toEqual(['readSnapshotChanges', 'sameSnapshotChangeDomain', 'readSnapshotResourceStructure', 'readSnapshotStructureChanges'].sort());
   expect('SnapshotChangeJournal' in snapshots).toBe(false);
   const { world, decoder, send } = harness(), initial = send();
   expect('snapshotChanges' in decoder).toBe(false); // The capability is a runtime private field.

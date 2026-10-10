@@ -1,5 +1,7 @@
 # Les Aulnes, référence intégrée
 
+La [préparation des bâtiments V299](../development/aulnes-performance-v299.md) conserve cette sauvegarde, les règles et la qualité. Comparaison fraîche avec V296 :121,47→130,25RAF/s en1440p/dev, débit5,618→6,056× sous×6 demandé ; la référence ne tient pas uniformément×6. Quatre recharges exactes, pointes réduites,240FPS non atteints. Les états suivants sont historiques.
+
 Le [diagnostic CPU/GPU V298](../development/aulnes-performance-v298.md) conserve ce checkpoint et le produit V296. Les pointes de préparation MAIN restent prioritaires ; aucune baisse de qualité, aucun nouveau FPS livré. Les états suivants sont historiques.
 
 Le [diagnostic V297](../development/aulnes-performance-v297.md) ne change ni cette sauvegarde ni le produit V296 : les deux candidats ont été écartés faute de gain utile démontré en jeu. Aucun FPS supplémentaire annoncé ; publications Cloudflare regroupées. Les états suivants sont historiques.

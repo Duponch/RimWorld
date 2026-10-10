@@ -20,7 +20,7 @@ export class ColonyRenderer extends SceneRenderCore {
     let view: ColonyRenderer | undefined;
     try {
       await renderer.init();
-      view = new ColonyRenderer(host, onPick, renderer, groundGrassEnabled, lifetime);
+      view = new this(host, onPick, renderer, groundGrassEnabled, lifetime);
       if (view.fatalError) throw new Error(view.fatalError);
       const ready = view;
       renderer.setAnimationLoop((time) => {
@@ -34,7 +34,7 @@ export class ColonyRenderer extends SceneRenderCore {
     }
   }
 
-  private constructor(private readonly host:HTMLElement,private readonly onPick:(x:number,z:number)=>void,
+  protected constructor(private readonly host:HTMLElement,private readonly onPick:(x:number,z:number)=>void,
     renderer:THREE.WebGPURenderer,grassEnabled:boolean,lifetime:RendererLifetime){
     const dom=createDomPort(host,renderer);
     super(renderer,grassEnabled,lifetime,dom.port);

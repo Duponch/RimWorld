@@ -53,7 +53,7 @@ function asDelta(packet: SnapshotMessage): Delta {
 }
 
 test('readonly facade has no publisher and copies cannot create the private structural witness', () => {
-  expect(Object.keys(facade).sort()).toEqual(['readSnapshotChanges', 'readSnapshotResourceStructure', 'sameSnapshotChangeDomain'].sort());
+  expect(Object.keys(facade).sort()).toEqual(['readSnapshotChanges', 'readSnapshotResourceStructure', 'readSnapshotStructureChanges', 'sameSnapshotChangeDomain'].sort());
   const { world, send } = harness(), a = send();
   expect(readSnapshotResourceStructure(a, a)).toEqual({ edges: [], tileIndices: [] });
   expect(readSnapshotResourceStructure(world, a)).toBeUndefined();
