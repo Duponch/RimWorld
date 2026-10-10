@@ -18,10 +18,14 @@ test('Architect tools retain their own map symbols while UI keeps nine interacti
   expect(viewport.dataset.cursor).toBe('mine');
   expect(viewport.dataset.cursorMode).toBe('order');
   expect(properties.get('--map-tool-cursor')).toBe('var(--cursor-tool-mine, crosshair)');
+  expect(properties.get('--map-tool-grab-cursor')).toBe('var(--cursor-tool-mine-grab, var(--cursor-grab, grab))');
+  expect(properties.get('--map-tool-grabbing-cursor')).toBe('var(--cursor-tool-mine-grabbing, var(--cursor-grabbing, grabbing))');
   expect(syncToolCursor(viewport, 'cancel')).toBe('cancel');
   expect(syncToolCursor(viewport, 'select')).toBe('pointer');
   expect(viewport.dataset.cursorMode).toBe('select');
   expect(properties.get('--map-tool-cursor')).toBe('var(--cursor-pointer, default)');
+  expect(properties.get('--map-tool-grab-cursor')).toBe('var(--cursor-grab, grab)');
+  expect(properties.get('--map-tool-grabbing-cursor')).toBe('var(--cursor-grabbing, grabbing)');
   expect(Object.keys(CURSOR_CELLS)).toEqual(CURSOR_KINDS);
   expect(new Set(Object.values(CURSOR_CELLS).map(([column, row]) => `${column}:${row}`)).size).toBe(9);
 });

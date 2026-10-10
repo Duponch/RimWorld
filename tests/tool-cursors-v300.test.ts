@@ -7,8 +7,8 @@ class Viewport extends EventTarget {
   style = { setProperty: vi.fn() };
   removeAttribute(name: string) { if (name === 'data-cursor-gesture') delete this.dataset.cursorGesture; }
 }
-function pointer(target: EventTarget, type: string, button: number, pointerId = 7) {
-  target.dispatchEvent(Object.assign(new Event(type), { button, pointerId }));
+function pointer(target: EventTarget, type: string, button: number, pointerId = 7, buttons = type === 'pointerdown' ? 1 << (button === 1 ? 2 : button === 2 ? 1 : 0) : 0) {
+  target.dispatchEvent(Object.assign(new Event(type), { button, pointerId, buttons }));
 }
 let installation = 0;
 function setup() {
@@ -23,10 +23,17 @@ function setup() {
 }
 afterEach(() => { vi.clearAllTimers(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
-test('right click and wheel preserve an order symbol; middle-button pan still works', async () => {
+test('right and middle pan keep the selected order artwork, including a stationary hold', async () => {
   const { viewport, browser, element } = setup();
   syncToolCursor(element, 'chop');
-  pointer(viewport, 'pointerdown', 2); pointer(browser, 'pointerup', 2);
+  pointer(viewport, 'pointerdown', 2);
+  expect(viewport.dataset.cursorGesture).toBe('grabbing');
+  vi.advanceTimersByTime(400);
+  expect(viewport.dataset.cursorGesture).toBe('grabbing');
+  expect(viewport.dataset.cursor).toBe('chop');
+  pointer(browser, 'pointerup', 2);
+  expect(viewport.dataset.cursorGesture).toBe('grab');
+  vi.advanceTimersByTime(180);
   viewport.dispatchEvent(new Event('wheel'));
   expect(viewport.dataset.cursor).toBe('chop');
   expect(viewport.dataset.cursorGesture).toBeUndefined();
@@ -37,6 +44,25 @@ test('right click and wheel preserve an order symbol; middle-button pan still wo
   vi.advanceTimersByTime(180);
   expect(viewport.dataset.cursorGesture).toBeUndefined();
   expect(viewport.dataset.cursor).toBe('chop');
+  await Promise.resolve();
+});
+
+test('a left-right chord does not claim pan, and another button release keeps a held pan', async () => {
+  const { viewport, browser, element } = setup();
+  syncToolCursor(element, 'mine');
+  pointer(viewport, 'pointerdown', 2, 7, 3);
+  expect(viewport.dataset.cursorGesture).toBeUndefined();
+  pointer(viewport, 'pointerdown', 2);
+  pointer(browser, 'pointerup', 0, 7, 2);
+  expect(viewport.dataset.cursorGesture).toBe('grabbing');
+  pointer(browser, 'pointerup', 2, 9, 0);
+  expect(viewport.dataset.cursorGesture).toBe('grabbing');
+  // Releasing right while left remains held is delivered as pointermove.
+  pointer(browser, 'pointermove', 2, 7, 1);
+  expect(viewport.dataset.cursorGesture).toBe('grab');
+  vi.advanceTimersByTime(180);
+  expect(viewport.dataset.cursorGesture).toBeUndefined();
+  expect(viewport.dataset.cursor).toBe('mine');
   await Promise.resolve();
 });
 
@@ -58,7 +84,7 @@ test('selection retains right-button grab; changing to an order during pan clear
   await Promise.resolve();
 });
 
-test('pointer cancellation and focus loss restore the tool symbol', async () => {
+test('pointer cancellation and focus loss restore the tool symbol without a stale release', async () => {
   const { viewport, browser, element } = setup();
   syncToolCursor(element, 'cut');
   pointer(viewport, 'pointerdown', 1);
@@ -67,6 +93,8 @@ test('pointer cancellation and focus loss restore the tool symbol', async () => 
   pointer(viewport, 'pointerdown', 1);
   browser.dispatchEvent(new Event('blur'));
   expect(viewport.dataset.cursorGesture).toBeUndefined();
+  pointer(browser, 'pointerup', 1);
+  expect(viewport.dataset.cursorGesture).toBeUndefined();
   expect(viewport.dataset.cursor).toBe('cut');
   await Promise.resolve();
 });
@@ -74,11 +102,13 @@ test('pointer cancellation and focus loss restore the tool symbol', async () => 
 test('map tool and pan CSS leave the semantic UI cursors available, with no wheel lens', () => {
   const css = readFileSync(new URL('../src/ui/cursors.css', import.meta.url), 'utf8');
   expect(css).toContain('var(--map-tool-cursor, var(--cursor-pointer, default))');
+  expect(css).toContain('var(--map-tool-grab-cursor, var(--cursor-grab, grab))');
+  expect(css).toContain('var(--map-tool-grabbing-cursor, var(--cursor-grabbing, grabbing))');
   expect(css).not.toContain('data-cursor-gesture="zoom"');
   for (const kind of ['link', 'text', 'forbidden', 'wait', 'resize', 'grab', 'grabbing']) expect(css).toContain(`--cursor-${kind}`);
 });
 
-test('an existing Architect SVG becomes a tool cursor with an explicit click point', async () => {
+test('an existing Architect SVG gets cached arrow and atlas-hand variants with explicit hotspots', async () => {
   const imageUrls: string[] = [], properties = new Map<string, string>();
   vi.stubGlobal('window', new EventTarget());
   vi.stubGlobal('Image', class {
@@ -86,8 +116,9 @@ test('an existing Architect SVG becomes a tool cursor with an explicit click poi
     onload: (() => void) | undefined;
     set src(url: string) { imageUrls.push(url); queueMicrotask(() => this.onload?.()); }
   });
+  const drawImage = vi.fn(), lineTo = vi.fn();
   const context = {
-    clearRect() {}, drawImage() {}, beginPath() {}, moveTo() {}, lineTo() {}, closePath() {}, fill() {}, stroke() {},
+    clearRect() {}, drawImage, beginPath() {}, moveTo() {}, lineTo, closePath() {}, fill() {}, stroke() {},
     getImageData(_x: number, _y: number, width: number, height: number) {
       return { data: new Uint8ClampedArray(width * height * 4).fill(255) };
     },
@@ -100,7 +131,16 @@ test('an existing Architect SVG becomes a tool cursor with an explicit click poi
       ? { style: { backgroundImage: `url("${svg}")` } } : null,
   } as unknown as HTMLElement;
   installToolCursors(root, 'test-cursor-svg');
-  for (let step = 0; step < 8; step++) await Promise.resolve();
+  for (let step = 0; step < 16; step++) await Promise.resolve();
   expect(imageUrls).toContain(svg);
   expect(properties.get('--cursor-tool-sun-lamp')).toBe('url("data:image/png;base64,cursor") 1 1, crosshair');
+  expect(properties.get('--cursor-tool-sun-lamp-grab')).toBe('url("data:image/png;base64,cursor") 10 10, grab');
+  expect(properties.get('--cursor-tool-sun-lamp-grabbing')).toBe('url("data:image/png;base64,cursor") 10 10, grabbing');
+  expect(lineTo).toHaveBeenCalledWith(1, 17);
+  expect(drawImage.mock.calls.some(args => args.length === 3 && args[0].width === 20 && args[0].height === 20)).toBe(true);
+  const painted = drawImage.mock.calls.length, requested = imageUrls.length;
+  installToolCursors(root, 'test-cursor-svg');
+  for (let step = 0; step < 16; step++) await Promise.resolve();
+  expect(drawImage.mock.calls.length).toBe(painted);
+  expect(imageUrls.length).toBe(requested);
 });

@@ -13,6 +13,7 @@ import type {AreaAction,Cell} from '../sim/types';
 export class ColonyRenderer extends SceneRenderCore {
   private readonly selectionInput:PawnSelectionInput;
   private areaPointer: { x:number; y:number } | undefined;
+  private orderRightPress: {pointerId:number;x:number;y:number;at:number;tool:string;moved:boolean} | null = null;
   private readonly resizeObserver:ResizeObserver;
   protected readonly mapLabels:MapLabelsOverlay;
   static async create(host: HTMLElement, onPick: (x: number, z: number) => void, groundGrassEnabled = true): Promise<ColonyRenderer> {
@@ -79,6 +80,7 @@ export class ColonyRenderer extends SceneRenderCore {
   /** DOM methods are consumed only by the owned port; no guard writer here. */
   selectionReady():boolean{return !!this.selectionInput;}
   selectionActive():boolean{return !!this.selectionInput?.active;}
+  override cancelDesignation():boolean {this.orderRightPress=null;return super.cancelDesignation();}
   cancelSelection():boolean{return this.selectionInput?.cancel()??false;}
   disposeSelection():void{this.selectionInput?.dispose();}
   disconnectResize():void{this.resizeObserver?.disconnect();}
@@ -104,10 +106,11 @@ export class ColonyRenderer extends SceneRenderCore {
       if (event.button === 2) this.cancelDesignation();
       event.stopImmediatePropagation(); event.preventDefault(); return;
     }
-    if (event.button === 2 && this.tool !== 'select') {
-      event.stopImmediatePropagation(); event.preventDefault();
-      this.cancelDesignation(); this.onExitOrder(); return;
-    }
+    // OrbitControls owns right-button camera navigation. Decide whether this was a brief
+    // click only on release; a hold or any pan keeps the selected tool armed.
+    if (event.button === 2 && this.tool !== 'select') this.orderRightPress={
+      pointerId:event.pointerId,x:event.clientX,y:event.clientY,at:event.timeStamp,tool:this.tool,moved:false,
+    };
     this.pointerDown = { x: event.clientX, y: event.clientY, button: event.button, pointerId: event.pointerId };
     this.renderer.domElement.focus({ preventScroll: true });
     const from = this.pick(event);
@@ -126,6 +129,15 @@ export class ColonyRenderer extends SceneRenderCore {
   };
   private onPointerUp = (event: PointerEvent): void => {
     if(this.selectionInput.up(event))return;
+    const right=this.orderRightPress;
+    if(right&&event.pointerId===right.pointerId&&event.button===2){
+      this.orderRightPress=null;this.pointerDown=null;
+      if(this.tool===right.tool&&!right.moved&&Math.hypot(event.clientX-right.x,event.clientY-right.y)<=6
+        &&event.timeStamp-right.at<250&&this.pointerOnCanvas(event)){
+        this.cancelDesignation();this.onExitOrder();
+      }
+      return;
+    }
     const drag = this.areaDrag;
     if (drag) {
       if (event.pointerId !== drag.pointerId || event.button !== 0) return;
@@ -147,6 +159,8 @@ export class ColonyRenderer extends SceneRenderCore {
     this.onPick(cell.x, cell.z);
   };
   private onPointerMove = (event: PointerEvent): void => {
+    const right=this.orderRightPress;
+    if(right&&event.pointerId===right.pointerId&&Math.hypot(event.clientX-right.x,event.clientY-right.y)>6)right.moved=true;
     if(this.selectionInput.move(event))return;
     if (this.areaDrag && event.pointerId !== this.areaDrag.pointerId) return;
     if (this.areaDrag) this.areaPointer = { x:event.clientX, y:event.clientY };
@@ -168,6 +182,7 @@ export class ColonyRenderer extends SceneRenderCore {
     return document.elementFromPoint(event.clientX, event.clientY) === this.renderer.domElement;
   }
   private onPointerLeave = (): void => {
+    if(this.orderRightPress)this.orderRightPress.moved=true;
     if(!this.preparing)this.recreationHints.group.visible=false;
     if(!this.preparing)this.constructionPreview.hide();
     this.hoverCell = null; if(!this.preparing)this.hover.visible = false;
@@ -175,6 +190,7 @@ export class ColonyRenderer extends SceneRenderCore {
     if (this.areaDrag) this.updateAreaPreview(); else this.pointerDown = null;
   };
   private onPointerCancel = (event: PointerEvent): void => {
+    if(this.orderRightPress?.pointerId===event.pointerId)this.orderRightPress=null;
     if(this.selectionInput.active){this.selectionInput.cancel();return;}
     if (this.areaDrag?.pointerId === event.pointerId) this.cancelDesignation();
     else if (this.pointerDown?.pointerId === event.pointerId) this.pointerDown = null;

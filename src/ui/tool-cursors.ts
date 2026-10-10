@@ -30,13 +30,22 @@ export function syncToolCursor(viewport: HTMLElement, tool: Tool): ToolCursorKin
   viewport.dataset.cursorMode = tool === 'select' ? 'select' : 'order';
   viewport.style.setProperty('--map-tool-cursor', cursor === 'pointer'
     ? 'var(--cursor-pointer, default)' : `var(--cursor-tool-${cursor}, crosshair)`);
+  for (const gesture of ['grab', 'grabbing'] as const) viewport.style.setProperty(`--map-tool-${gesture}-cursor`, cursor === 'pointer'
+    ? `var(--cursor-${gesture}, ${gesture})` : `var(--cursor-tool-${cursor}-${gesture}, var(--cursor-${gesture}, ${gesture}))`);
   return cursor;
 }
 
 const CURSOR_SIZE = 40;
+const TOOL_CURSOR_SIZE = 44;
+const TOOL_ICON_OFFSET = 13;
+const TOOL_HAND_SIZE = 20;
 const CURSOR_MARGIN = 1;
 const ALPHA_THRESHOLD = 8;
-const cursorSurfaces = new Map<string, Promise<Record<CursorKind, string>>>();
+type PanKind = 'grab' | 'grabbing';
+type CursorArtwork = { surfaces: Record<CursorKind, string>; hands: Record<PanKind, HTMLCanvasElement> };
+type MapToolSurfaces = { pointer: string; grab?: string; grabbing?: string };
+const cursorSurfaces = new Map<string, Promise<CursorArtwork>>();
+const toolSurfaces = new Map<string, Promise<MapToolSurfaces>>();
 const iconImages = new Map<string, Promise<HTMLImageElement>>();
 type AlphaGeometry = { x: number; y: number; width: number; height: number; apexX: number; apexY: number };
 
@@ -70,7 +79,7 @@ const FALLBACK: Readonly<Record<CursorKind, string>> = {
   grab: 'grab', grabbing: 'grabbing', forbidden: 'not-allowed', resize: 'nwse-resize',
 };
 
-function loadCursorSurfaces(atlasUrl: string): Promise<Record<CursorKind, string>> {
+function loadCursorSurfaces(atlasUrl: string): Promise<CursorArtwork> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => {
@@ -80,6 +89,7 @@ function loadCursorSurfaces(atlasUrl: string): Promise<Record<CursorKind, string
       const outputContext = output.getContext('2d');
       if (!sampleContext || !outputContext) { reject(new Error('Canvas 2D indisponible pour les curseurs.')); return; }
       const surfaces = {} as Record<CursorKind, string>;
+      const hands = {} as Record<PanKind, HTMLCanvasElement>;
       for (const kind of CURSOR_KINDS) {
         const [column, row] = CURSOR_CELLS[kind];
         const sourceX = Math.round(column * image.width / 3), sourceY = Math.round(row * image.height / 3);
@@ -99,8 +109,19 @@ function loadCursorSurfaces(atlasUrl: string): Promise<Record<CursorKind, string
           CURSOR_MARGIN, CURSOR_MARGIN, targetWidth, targetHeight);
         const [hotspotX, hotspotY] = cursorHotspot(kind, geometry, targetWidth, targetHeight);
         surfaces[kind] = `url("${output.toDataURL('image/png')}") ${hotspotX} ${hotspotY}, ${FALLBACK[kind]}`;
+        if (kind === 'grab' || kind === 'grabbing') {
+          const hand = document.createElement('canvas'); hand.width = hand.height = TOOL_HAND_SIZE;
+          const context = hand.getContext('2d');
+          if (!context) { reject(new Error('Canvas 2D indisponible pour les mains.')); return; }
+          const handScale = (TOOL_HAND_SIZE - 2) / Math.max(geometry.width, geometry.height);
+          const handWidth = Math.max(1, Math.round(geometry.width * handScale)), handHeight = Math.max(1, Math.round(geometry.height * handScale));
+          context.imageSmoothingEnabled = true; context.imageSmoothingQuality = 'high';
+          context.drawImage(sample, geometry.x, geometry.y, geometry.width, geometry.height,
+            (TOOL_HAND_SIZE - handWidth) / 2, (TOOL_HAND_SIZE - handHeight) / 2, handWidth, handHeight);
+          hands[kind] = hand;
+        }
       }
-      resolve(surfaces);
+      resolve({ surfaces, hands });
     };
     image.onerror = () => reject(new Error(`Atlas de curseurs introuvable : ${atlasUrl}`));
     image.src = atlasUrl;
@@ -121,7 +142,7 @@ function loadIconImage(url: string): Promise<HTMLImageElement> {
   return pending;
 }
 
-async function installMapToolCursors(root: HTMLElement): Promise<void> {
+async function installMapToolCursors(root: HTMLElement, atlasUrl: string, artwork: Promise<CursorArtwork>): Promise<void> {
   // The synchronous Architect installer runs immediately after visual identity.
   // Read its existing SVGs on the next microtask; atlas cells keep their manifest.
   await Promise.resolve();
@@ -133,30 +154,52 @@ async function installMapToolCursors(root: HTMLElement): Promise<void> {
     const cell = ARCHITECT_ICON_MAPPING[icon];
     if (!svg && !cell) return;
     try {
-      const image = await loadIconImage(svg ?? ARCHITECT_ICON_ATLASES[cell!.atlas]);
-      const sample = document.createElement('canvas'), output = document.createElement('canvas');
+      const imageUrl = svg ?? ARCHITECT_ICON_ATLASES[cell!.atlas];
       const column = svg ? 0 : cell!.column, row = svg ? 0 : cell!.row;
       const columns = svg ? 1 : 6, rows = svg ? 1 : 5;
-      const x = Math.round(column * image.width / columns), y = Math.round(row * image.height / rows);
-      const width = Math.round((column + 1) * image.width / columns) - x;
-      const height = Math.round((row + 1) * image.height / rows) - y;
-      sample.width = width; sample.height = height;
-      output.width = output.height = CURSOR_SIZE;
-      const source = sample.getContext('2d', { willReadFrequently: true }), target = output.getContext('2d');
-      if (!source || !target) return;
-      source.drawImage(image, x, y, width, height, 0, 0, width, height);
-      const geometry = alphaGeometry(source, width, height);
-      if (!geometry) return;
-      const scale = 30 / Math.max(geometry.width, geometry.height);
-      target.imageSmoothingQuality = 'high';
-      target.drawImage(sample, geometry.x, geometry.y, geometry.width, geometry.height,
-        9, 9, Math.round(geometry.width * scale), Math.round(geometry.height * scale));
-      // A small outlined arrow marks the exact cell-selection point, beside the tool.
-      target.beginPath(); target.moveTo(1, 1); target.lineTo(1, 13); target.lineTo(5, 9);
-      target.lineTo(9, 9); target.closePath();
-      target.fillStyle = '#fff4d6'; target.strokeStyle = '#263c32'; target.lineWidth = 1.5;
-      target.fill(); target.stroke();
-      root.style.setProperty(`--cursor-tool-${tool}`, `url("${output.toDataURL('image/png')}") 1 1, crosshair`);
+      const key = JSON.stringify([atlasUrl, imageUrl, column, row, columns, rows]);
+      let pending = toolSurfaces.get(key);
+      if (!pending) {
+        pending = (async () => {
+          const image = await loadIconImage(imageUrl);
+          const sample = document.createElement('canvas'), output = document.createElement('canvas');
+          const x = Math.round(column * image.width / columns), y = Math.round(row * image.height / rows);
+          const width = Math.round((column + 1) * image.width / columns) - x;
+          const height = Math.round((row + 1) * image.height / rows) - y;
+          sample.width = width; sample.height = height;
+          output.width = output.height = TOOL_CURSOR_SIZE;
+          const source = sample.getContext('2d', { willReadFrequently: true }), target = output.getContext('2d');
+          if (!source || !target) throw new Error('Canvas 2D indisponible pour les outils.');
+          source.drawImage(image, x, y, width, height, 0, 0, width, height);
+          const geometry = alphaGeometry(source, width, height);
+          if (!geometry) throw new Error(`Icône de curseur vide : ${imageUrl}`);
+          const scale = 30 / Math.max(geometry.width, geometry.height);
+          const drawIcon = () => {
+            target.clearRect(0, 0, TOOL_CURSOR_SIZE, TOOL_CURSOR_SIZE);
+            target.imageSmoothingEnabled = true; target.imageSmoothingQuality = 'high';
+            target.drawImage(sample, geometry.x, geometry.y, geometry.width, geometry.height,
+              TOOL_ICON_OFFSET, TOOL_ICON_OFFSET, Math.round(geometry.width * scale), Math.round(geometry.height * scale));
+          };
+          drawIcon();
+          // The arrow's tip remains the exact cell-selection point.
+          target.beginPath(); target.moveTo(1, 1); target.lineTo(1, 17); target.lineTo(7, 11);
+          target.lineTo(12, 11); target.closePath();
+          target.fillStyle = '#fff4d6'; target.strokeStyle = '#263c32'; target.lineWidth = 1.5;
+          target.fill(); target.stroke();
+          const result: MapToolSurfaces = { pointer: `url("${output.toDataURL('image/png')}") 1 1, crosshair` };
+          const hands = await artwork.then(value => value.hands, () => undefined);
+          if (hands) for (const gesture of ['grab', 'grabbing'] as const) {
+            drawIcon(); target.drawImage(hands[gesture], 0, 0);
+            result[gesture] = `url("${output.toDataURL('image/png')}") 10 10, ${gesture}`;
+          }
+          return result;
+        })();
+        toolSurfaces.set(key, pending);
+      }
+      const surfaces = await pending;
+      root.style.setProperty(`--cursor-tool-${tool}`, surfaces.pointer);
+      for (const gesture of ['grab', 'grabbing'] as const) if (surfaces[gesture])
+        root.style.setProperty(`--cursor-tool-${tool}-${gesture}`, surfaces[gesture]);
     } catch {
       // A missing decorative icon leaves this tool's native crosshair usable.
     }
@@ -168,6 +211,7 @@ function installViewportGestures(root: HTMLElement): void {
   if (!viewport) return;
   let activePointer: number | null = null;
   let activeButton: number | null = null;
+  let activeCursor: string | undefined;
   let gestureTimer: ReturnType<typeof setTimeout> | undefined;
   const clearTimer = () => { if (gestureTimer !== undefined) clearTimeout(gestureTimer); gestureTimer = undefined; };
   const restore = () => { clearTimer(); viewport.removeAttribute('data-cursor-gesture'); };
@@ -175,32 +219,42 @@ function installViewportGestures(root: HTMLElement): void {
     clearTimer(); viewport.dataset.cursorGesture = 'grab';
     gestureTimer = setTimeout(restore, 180);
   };
-  const rightPanAllowed = () => viewport.dataset.cursorMode !== 'order';
+  const release = () => {
+    const sameTool = viewport.dataset.cursor === activeCursor;
+    activePointer = null; activeButton = null; activeCursor = undefined;
+    if (sameTool) briefly(); else restore();
+  };
   viewport.addEventListener('pointerdown', event => {
     if (event.button !== 1 && event.button !== 2) return;
-    if (event.button === 2 && !rightPanAllowed()) return;
+    if (event.button === 2 && (event.buttons & 1) !== 0) return;
+    if (activePointer !== null) return;
     clearTimer(); activePointer = event.pointerId; activeButton = event.button;
+    activeCursor = viewport.dataset.cursor;
     viewport.dataset.cursorGesture = 'grabbing';
   }, true);
   window.addEventListener('pointerup', event => {
     if (event.pointerId !== activePointer) return;
-    const keepGrab = activeButton === 1 || rightPanAllowed();
-    activePointer = null; activeButton = null;
-    if (keepGrab) briefly(); else restore();
+    const heldMask = activeButton === 1 ? 4 : 2;
+    if ((event.buttons & heldMask) !== 0) return;
+    release();
   }, true);
-  window.addEventListener('pointercancel', event => { if (event.pointerId === activePointer) { activePointer = null; activeButton = null; restore(); } }, true);
-  window.addEventListener('blur', () => { activePointer = null; activeButton = null; restore(); });
+  // Mouse PointerEvents report intermediate button changes through pointermove.
+  window.addEventListener('pointermove', event => {
+    if (event.pointerId === activePointer && (event.buttons & (activeButton === 1 ? 4 : 2)) === 0) release();
+  }, true);
+  window.addEventListener('pointercancel', event => { if (event.pointerId === activePointer) { activePointer = null; activeButton = null; activeCursor = undefined; restore(); } }, true);
+  window.addEventListener('blur', () => { activePointer = null; activeButton = null; activeCursor = undefined; restore(); });
 }
 
 /** Crop each cell once; native CSS cursors remain available if the atlas fails. */
 export function installToolCursors(root: HTMLElement, atlasUrl = CURSOR_ATLAS): void {
   let surfacesPromise = cursorSurfaces.get(atlasUrl);
   if (!surfacesPromise) { surfacesPromise = loadCursorSurfaces(atlasUrl); cursorSurfaces.set(atlasUrl, surfacesPromise); }
-  void surfacesPromise.then(surfaces => {
+  void surfacesPromise.then(({ surfaces }) => {
     for (const kind of CURSOR_KINDS) root.style.setProperty(`--cursor-${kind}`, surfaces[kind]);
   }).catch(() => {
     // Native CSS fallbacks remain usable when the decorative atlas cannot load.
   });
-  void installMapToolCursors(root);
+  void installMapToolCursors(root, atlasUrl, surfacesPromise);
   installViewportGestures(root);
 }

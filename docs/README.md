@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V302 : [clic droit et curseurs des ordres](gameplay/order-pan-v302.md), schéma 219 conservé.** Clic bref sortant, maintien/rotation conservant l'outil, mains composées avec son icône ; validations ciblées et natives acquises. Publication Cloudflare regroupée, relance en pause. Les états suivants sont historiques.
+
 **V301 : [zones et stockage](gameplay/zones-storage-v301.md), schéma 219.** Identité logique et politique commune, arbre Core du catalogue supporté, édition et présentation des zones sur terrain/herbe ; corpus public conservé, contrôles ciblés et natifs acquis. [Publié sur Cloudflare](development/cloudflare-pages.md) après commit/push ; relance planifiée en pause. Les états suivants sont historiques.
 
 **V299 : [préparation commune des bâtiments](development/aulnes-performance-v299.md), schéma 218 conservé.** Portes, apparence et effets partagent les changements confirmés dans MAIN ; APIs RAW conservées. 121,47→130,25 RAF/s, candidat à vrai×6 ; preuves, coût des replis et limites dans la note unique. Les états suivants sont historiques.
