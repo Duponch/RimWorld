@@ -12,7 +12,7 @@ import { pileMaxHp } from './thing-damage-rules.ts';
 import { serviceCell } from './service-reservations.ts';
 import { validatePower } from './power-save.ts';
 import { ORBITAL_ACTIVE_CHECKS,ORBITAL_CHECK,ORBITAL_CYCLE,ORBITAL_DELIVERY_LIMIT,ORBITAL_FALL_TICKS,ORBITAL_LIFETIME,ORBITAL_OPEN_TICKS,ORBITAL_SHIP_LIMIT } from './orbital-state.ts';
-import type { NumericMembershipWriter } from './numeric-membership.ts';
+import type { NumericMembershipSink } from './numeric-membership.ts';
 import type { World } from './types.ts';
 
 const obj=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -23,7 +23,7 @@ const orbitalOwner=(v:unknown)=>obj(v)&&(v.type==='orbital-ship'||v.type==='orbi
 
 /** Real owners, not historical receipt references, reserve the global namespace.
  * Invoke after the shared map, archive, group and ballistic registrations. */
-export function registerOrbitalThingIds(w:World,ids:NumericMembershipWriter):string[] {
+export function registerOrbitalThingIds(w:World,ids:NumericMembershipSink):string[] {
   const errors:string[]=[];
   for(const owner of [...(w.orbital?.ships??[]),...(w.orbital?.pending??[])]){
     if(!int(owner.id,1,w.nextId-1)||ids.has(owner.id))errors.push('Duplicate or invalid orbital entity ID.');

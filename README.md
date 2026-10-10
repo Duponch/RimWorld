@@ -1,5 +1,7 @@
 # Lisière
 
+**V293 — registre strict partagé ; schéma218 conservé.** Les Aulnes, Chrome1440p/dev : **104,00→113,65 images RAF/s (+9,28%)**, vrai×6 maintenu ; adoption CPU−12,28%. Pointes toujours présentes,240FPS non atteints. [Mesures et limites](docs/development/aulnes-performance-v293.md). Les états suivants sont historiques.
+
 **V292 — diagnostic du transport ; produit V291 et schéma 218 conservés.** Le coût des données territoriales est mesuré ; aucun nouveau protocole ni FPS livré. [Résultat et décision](docs/development/aulnes-performance-v292.md). Les gains V291 ci-dessous restent la référence en jeu.
 
 **V291 — faits de ressources partagés ; schéma 218.** Chrome 1440p/dev sur Les Aulnes : **97,27→105,47 images RAF/s (+8,43 %)** à vrai ×6 ; adoption CPU −11,16 %. Règles et qualité conservées, pointes encore présentes, 240 FPS non atteints. [Mesures et limites](docs/development/aulnes-performance-v291.md). Les états suivants sont historiques.

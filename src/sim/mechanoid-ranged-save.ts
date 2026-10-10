@@ -1,3 +1,4 @@
+import type {NumericMembershipLookup} from './numeric-membership.ts';
 import { isMechanoidKind,type MechanoidKind } from './mechanoid-definition.ts';
 import { mechanoidEnemy } from './combat-target.ts';
 import type { Mechanoid } from './mechanoid-state.ts';
@@ -40,7 +41,7 @@ function historicalTarget(w:World,key:string,id:number):boolean {
 }
 
 /** ids, when supplied, is the COMPLETE Thing namespace after collective owners. */
-export function validateMechanoidRanged(w:World,m:Mechanoid,version:number=w.schemaVersion,ids?:ReadonlySet<number>):string[] {
+export function validateMechanoidRanged(w:World,m:Mechanoid,version:number=w.schemaVersion,ids?:NumericMembershipLookup):string[] {
   const r=m.ranged;if(r===undefined)return [];
   if(!validMechanoidRangedShape(r,m.mechKind,version,w.tick))return ['Invalid mechanical ranged phase.'];
   const errors:string[]=[],o=r.order,s=r.stance,suspended=!!m.stun&&w.tick*10<m.stun.untilCore||empMechanoidActive(m,w.tick*10);

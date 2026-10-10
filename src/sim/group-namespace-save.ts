@@ -1,9 +1,9 @@
 import type { World } from './types.ts';
-import type { NumericMembershipWriter } from './numeric-membership.ts';
+import type { NumericMembershipSink } from './numeric-membership.ts';
 
 /** Register new real owners after legacy owners have registered themselves.
  * References, geographic IDs and group IDs never enter the Thing namespace. */
-export function registerGroupThingIds(w:World,ids:NumericMembershipWriter):string[] {
+export function registerGroupThingIds(w:World,ids:NumericMembershipSink):string[] {
   const errors:string[]=[],g=w.group;
   const add=(id:number)=>{if(!Number.isSafeInteger(id)||id<1||id>=w.nextId||ids.has(id))errors.push('Duplicate or invalid group Thing owner.');else ids.add(id);};
   if(g&&'members' in g){for(const p of g.members)add(p.id);for(const i of g.items)add(i.id);}

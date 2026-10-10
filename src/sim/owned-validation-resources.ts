@@ -6,7 +6,15 @@ const integerAnchor=(value:unknown):value is number=>Number.isSafeInteger(value)
 const record=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const hydroCrop=(kind:string):boolean=>kind==='rice'||kind==='potato'||kind==='cotton'||kind==='healroot';
 type Presence=Map<number,Set<number>>;
-type ResourceIndex={width:number;height:number;presence?:Uint8Array;outside:Presence;hydro?:Uint32Array;hydroOutside:Map<number,number>;ids:ValidationIdentityMembership;candidates:number[]};
+type ResourceIndex={width:number;height:number;presence?:Uint8Array;outside:Presence;hydro?:Uint32Array;hydroOutside:Map<number,number>;ids:ValidationIdentityMembership;namespace?:OwnedResourceNamespaceFacts;candidates:number[]};
+
+/** ID summary from the same resource capture, never an earlier guard verdict.
+ * maxId is absent for an empty safe-positive ID collection. */
+export interface OwnedResourceNamespaceFacts extends ValidationIdentityMembership {
+  readonly safe:boolean;
+  readonly unique:boolean;
+  readonly maxId:number|undefined;
+}
 
 /** Facts from stable ordinary resources during ONE closed MAIN adoption.
  * Undefined facts request the historical traversal. This reader is not an
@@ -14,6 +22,7 @@ type ResourceIndex={width:number;height:number;presence?:Uint8Array;outside:Pres
 export interface OwnedValidationResourceReader {
   records(world:World):boolean|undefined;
   ids(world:World):ValidationIdentityMembership|undefined;
+  namespace(world:World):OwnedResourceNamespaceFacts|undefined;
   /** invalidPlant must be the existing healroot/light/blight aggregate in that
    * order. This is not a general Array.some replacement for arbitrary callbacks. */
   hasInvalid(world:World,foreignIds:ReadonlySet<number>,invalidPlant:(resource:Resource)=>boolean):boolean|undefined;
@@ -33,6 +42,7 @@ export function createOwnedValidationResources(world:World):OwnedValidationResou
     if(!Number.isSafeInteger(width)||!Number.isSafeInteger(height)||width<=0||height<=0||!Array.isArray(source))return;
     const size=width*height,dense=Number.isSafeInteger(size)&&size<=MAX_DENSE_CELLS;
     const denseIds=new Uint8Array(ID_CAPACITY),sparseIds=new Set<number>();
+    let safe=true,unique=true,maxId:number|undefined;
     const ids:ValidationIdentityMembership={has:id=>Number.isInteger(id)&&id>=0&&id<ID_CAPACITY?denseIds[id]===1:sparseIds.has(id)};
     const candidate:ResourceIndex={width,height,presence:dense?new Uint8Array(size):undefined,outside:new Map(),hydro:dense?new Uint32Array(size):undefined,hydroOutside:new Map(),ids,candidates:[]};
     for(let ordinal=0;ordinal<source.length;ordinal++){
@@ -42,7 +52,16 @@ export function createOwnedValidationResources(world:World):OwnedValidationResou
       const resource=source[ordinal];if(!record(resource))return;
       const {x,z,kind,id}=resource;
       if(!integerAnchor(x)||!integerAnchor(z)||typeof kind!=='string'||typeof id!=='number')return;
-      if(Number.isInteger(id)&&id>=0&&id<ID_CAPACITY)denseIds[id]=1;else sparseIds.add(id);
+      if(Number.isInteger(id)&&id>=0&&id<ID_CAPACITY){
+        if(denseIds[id]===1)unique=false;
+        denseIds[id]=1;
+        if(id<1)safe=false;else if(maxId===undefined||id>maxId)maxId=id;
+      }else{
+        if(sparseIds.has(id))unique=false;
+        sparseIds.add(id);
+        if(!Number.isSafeInteger(id)||id<1)safe=false;
+        else if(maxId===undefined||id>maxId)maxId=id;
+      }
       if(kind==='healroot'||resource.growthLight!==undefined||resource.blight!==undefined||Object.hasOwn(resource,'blight'))candidate.candidates.push(ordinal);
       if(candidate.presence&&x>=0&&z>=0&&x<width&&z<height)candidate.presence[z*width+x]=1;
       else {
@@ -55,11 +74,13 @@ export function createOwnedValidationResources(world:World):OwnedValidationResou
         else candidate.hydroOutside.set(cell,(candidate.hydroOutside.get(cell)??0)+1);
       }
     }
+    candidate.namespace={safe,unique,maxId,has:ids.has};
     return resources=candidate;
   };
   return {
     records(target){return target===world&&capture()?true:undefined;},
     ids(target){return target===world?capture()?.ids:undefined;},
+    namespace(target){return target===world?capture()?.namespace:undefined;},
     hasInvalid(target,foreignIds,invalidPlant){
       if(target!==world)return;
       const index=capture();if(!index)return;

@@ -1,3 +1,4 @@
+import type {NumericMembershipLookup} from './numeric-membership.ts';
 import { BOMB_RADIUS } from './bomb-state.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { interruptWork,retryInterruptedCargo } from './interrupted-cargo.ts';
@@ -24,7 +25,7 @@ export function validBombRefugeShape(v:unknown,version=193):v is BombRefuge {
     &&Number.isSafeInteger(r.endCore)&&Number(r.endCore)>0&&!!t&&typeof t==='object'&&!Array.isArray(t)&&Object.keys(t).every(k=>k==='x'||k==='z')
     &&Number.isSafeInteger(t.x)&&Number(t.x)>=0&&Number.isSafeInteger(t.z)&&Number(t.z)>=0;
 }
-export function validateBombRefuges(w:World,errors:string[]=[],ids?:ReadonlySet<number>):string[] {
+export function validateBombRefuges(w:World,errors:string[]=[],ids?:NumericMembershipLookup):string[] {
   for(const p of w.pawns)if(Object.hasOwn(p,'bombRefuge')){
     const r=p.bombRefuge;
     if(!validBombRefugeShape(r,w.schemaVersion)||r.sourceId>=w.nextId||r.target.x>=w.width||r.target.z>=w.height||p.state==='dead'||p.state==='downed'

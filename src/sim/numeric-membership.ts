@@ -1,5 +1,8 @@
 /** An ordinary per-adoption membership collection, never
  * a World witness or a persistent validation cache. No native Set subclass. */
+export interface NumericMembershipLookup { has(value:number):boolean; }
+export interface NumericMembershipSink extends NumericMembershipLookup { add(value:number):unknown; }
+
 export interface NumericMembershipWriter extends ReadonlySet<number> {
   add(value:number):unknown;
 }

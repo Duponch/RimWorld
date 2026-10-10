@@ -1,3 +1,4 @@
+import type {NumericMembershipLookup} from './numeric-membership.ts';
 import { huntingPermission } from './hunting-state.ts';
 import { combatTarget } from './combat-target.ts';
 import { validAutomaticAttack,automaticPost,automaticOwnership } from './automatic-combat-save.ts';
@@ -43,7 +44,7 @@ function historicalTargetKind(w:World,id:number):'pawn'|'animal'|'mech'|undefine
 }
 /** registeredIds is the COMPLETE Thing namespace, after collective owners.
  * It is never a set of group/relationship references or a projected World. */
-export function validateShooting(world:World,version:number=world.schemaVersion,registeredIds?:ReadonlySet<number>):string[] {
+export function validateShooting(world:World,version:number=world.schemaVersion,registeredIds?:NumericMembershipLookup):string[] {
   const errors:string[]=[];
   for(const p of world.pawns)if(p.shooting!==undefined) {
     if(!validShootingShape(p.shooting,version,world.tick)||!validStunShape(p.stun,version,world.tick)){errors.push('Invalid shooting state for schema.');continue;}

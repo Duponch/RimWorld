@@ -96,7 +96,8 @@ import { validMechCorpseShape,validMechSalvageLedger } from '../sim/mechanoid-co
 import { validateMechanoidRaids } from '../sim/mechanoid-raid-save.ts';
 import { validateMechanoidRanged } from '../sim/mechanoid-ranged-save.ts';
 import { isMechanoidKind } from '../sim/mechanoid-definition.ts';
-import { NumericMembership } from '../sim/numeric-membership.ts';
+import { NumericMembership, type NumericMembershipSink } from '../sim/numeric-membership.ts';
+import { captureOwnedStrictNamespace } from '../sim/owned-strict-namespace.ts';
 
 export interface SnapshotChanges {
   readonly resourceIndices: readonly number[];
@@ -1072,13 +1073,23 @@ export class SnapshotDecoder {
     // capture. Foreign registries above are already validated; their historical
     // owners reserve the same namespace as the map and cannot become a wave.
     if(relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
-      const owners=[
-        ...next.pawns,...next.structures,...next.jobs,...next.resources,...next.piles,...next.stockpiles,...next.growingZones,
-        ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
-        ...next.packed.map(p=>p.building),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
-      ];
-      const ids=new NumericMembership(),strictIds=relationships||Object.hasOwn(next,'orbital');
-      for(const owner of owners){if(strictIds&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
+      // Only the closed MAIN context can reuse its resource facts. Keep RAW
+      // and non-strict collection/getter evaluation on the historical path.
+      const owned=validation.resourceFacts&&(relationships||Object.hasOwn(next,'orbital'))
+        ?captureOwnedStrictNamespace(next,validation.resourceFacts,mechanicalCorpseIds):undefined;
+      let ids:NumericMembershipSink&Iterable<number>,strictIds:boolean;
+      if(owned!==undefined){
+        if(!owned.ok)return resync(owned.reason);
+        ids=owned.ids;strictIds=true;
+      }else{
+        const owners=[
+          ...next.pawns,...next.structures,...next.jobs,...next.resources,...next.piles,...next.stockpiles,...next.growingZones,
+          ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
+          ...next.packed.map(p=>p.building),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
+        ];
+        ids=new NumericMembership();strictIds=relationships||Object.hasOwn(next,'orbital');
+        for(const owner of owners){if(strictIds&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
+      }
       const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&(strictIds||mechanicalCorpseIds.has(Number(id))))return false;ids.add(Number(id));return true;};
       const addItems=(items:unknown):boolean=>Array.isArray(items)&&items.every(item=>item&&typeof item==='object'&&addId(item.id));
       if(relationships){for(const id of postIds)if(!addId(id))return resync('Identité du comptoir dupliquée dans le registre relationnel.');}

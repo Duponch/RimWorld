@@ -4,7 +4,7 @@ const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const keys=(v:Record<string,unknown>,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
 export const validMechComposition=(value:unknown,ranged=false):boolean=>validMechanoidComposition(value,ranged);
-export function validateMechanoidRaids(w:World,version:number=w.schemaVersion,registeredIds?:ReadonlySet<number>):string[] {
+export function validateMechanoidRaids(w:World,version:number=w.schemaVersion,registeredIds?:Iterable<number>):string[] {
   const s=w.raids,errors:string[]=[];
   if(!s)return (w.mechanoids??[]).some(m=>m.raid)?['Mechanoid mandate without calendar.']:[];
   const p:unknown=s.mechanoid,g:unknown=s.mechActive;
