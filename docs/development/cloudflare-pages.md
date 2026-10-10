@@ -70,6 +70,14 @@ Le commit produit `0382e142` est commité et poussé, puis publié en `ad46371a`
 
 Les huit chemins HTML/assets/Worker/catalogue/Aulnes sont vérifiés sur les deux origines :16réponses200 avec MIME et octets exacts, PASS2,549s, rapport `tmp/elsewhere-pages/v303-http-vAuojR/report.json` (SHA59BD2E2F). Package et publics restent inchangés pendant cette vérification. Les contrôles de jeu, captures, shaders et reprises sont ceux de la note V303 ; la vérification HTTPS ne constitue pas un nouveau parcours navigateur en ligne ni un benchmark. Le commit/push documentaire qui enregistre ces preuves ne déclenche pas une deuxième publication. Relance planifiée en pause, aucun lot suivant engagé.
 
+## Publication V304 après la refonte visuelle
+
+Le commit produit `6815b9db6686a6d92e16a63310daf5fc4652abec` est poussé, puis publié en `83641821` : [adresse stable](https://elsewhere-cq7.pages.dev/) et [URL de publication](https://83641821.elsewhere-cq7.pages.dev/). Typage final PASS11,760s et build Pages PASS2,429s. Package PASS1,263s :469fichiers/106916307octets,230nouveauxSVG identiques à `public/`,63références/66fichiers de sauvegardes et catalogue exacts, laboratoire et sources privés absents ; rapport `tmp/elsewhere-pages/v304-package-eNK4mS/report.json`.
+
+Déploiement PASS14,526s :233fichiers envoyés et234 déjà présents, plus `_headers` et `_redirects`. L'avertissement Git dirty concerne uniquement `references_UI`, absent du commit et du package. Vérification HTTPS PASS4,031s : HTML, favicon, CSS, JS, Worker, catalogue, Aulnes et douze portraits/atlases/actions sur les deux origines, soit40réponses200 avec MIME et octets exacts. Rapport `tmp/elsewhere-pages/v304-http-4NTkPe/report.json`, SHA `DD199535` ; package/publics inchangés pendant la vérification. Les66fichiers distants ne sont pas tous téléchargés.
+
+Les interactions, recharges, pixels WebGPU/WebGL et le coût réel de la refonte sont décrits dans la [note V304](../gameplay/visual-identity-v304.md). Le contrôle HTTPS ne constitue pas un nouveau benchmark ou parcours de jeu en ligne. Le commit documentaire consécutif ne déclenche pas de deuxième publication ; la relance reste en pause.
+
 ## Références
 
 [Publication directe Pages](https://developers.cloudflare.com/pages/get-started/direct-upload/), [priorité des redirects](https://developers.cloudflare.com/pages/configuration/redirects/), [fallback SPA](https://developers.cloudflare.com/pages/configuration/serving-pages/), [en-têtes](https://developers.cloudflare.com/pages/configuration/headers/).
