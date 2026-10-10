@@ -1,4 +1,6 @@
-# Validation courante — V288
+# Validation courante — V289
+
+**V289 : [comparaison primitive électrique](aulnes-performance-v289.md#validation), produit V288 et schéma 218 conservés.** Deux candidats exacts, reprise testée dans Chrome puis écartée faute de gain stable ; aucun FPS livré. Typage, 85 cas/9 fichiers, build, huit cohortes CPU et quatre parcours GAME avec reprises exactes passent. Preuves, dispersion et décision dans la note unique ; aucune campagne lourde inchangée après restauration.
 
 **V288 : [index spatial compact des validations](aulnes-performance-v288.md#validation), schéma 218 conservé.** Tests ciblés, typage/build, coût complet et GAME matériel passent ; dense seul retenu, comparaison électrique par fragments rejetée. CPU intégré clone+adoption −2,40 % ; 75,00→82,38 RAF/s à vrai ×6, quatre reprises exactes. Preuves, contrôles finaux et limites dans la note unique.
 

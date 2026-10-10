@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V289 : [comparaison primitive électrique](development/aulnes-performance-v289.md), diagnostic seulement.** Candidats écartés après coût complet et Chrome ; produit V288, schéma 218 et sauvegardes conservés, aucun FPS supplémentaire livré.
+
 **V288 : [présence spatiale compacte](development/aulnes-performance-v288.md).** Même comparaison Chrome 1440p/dev : 75,00→82,38 RAF/s à vrai ×6 par rapport à V287. Rendu, simulation, schéma 218 et sauvegardes conservés ; 240 FPS non atteints. Les [lectures communes V287](development/aulnes-performance-v287.md) restent acquises.
 
 **V285 : [raccords, traces et fantômes de construction](gameplay/construction-presentation-v285.md).** Modèles partagés avec le rendu final, contrôles ciblés et parcours matériel dans Les Aulnes ; schéma218 et catalogue conservés.

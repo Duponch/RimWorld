@@ -2,6 +2,8 @@
 
 L'[index spatial V288](../development/aulnes-performance-v288.md), après les [corrections CPU V287](../development/aulnes-performance-v287.md), réduit encore le coût des validations de cette colonie. Comparaison Chrome 1440p/dev à ×6 avec V287 : 75,00→82,38 RAF/s ; mesures et limites dans la note. Le checkpoint reste identique et les 240 FPS ne sont pas atteints.
 
+Le [diagnostic V289](../development/aulnes-performance-v289.md) écarte une comparaison primitive électrique sans gain stable en jeu ; il ne modifie ni cette référence ni le produit V288.
+
 Les [corrections visuelles V285](construction-presentation-v285.md) s’appliquent aussi à ce checkpoint : raccords des constructions, traces sur planchers et aperçus fantômes avant placement. Son fichier et son identité restent inchangés.
 
 Ouvrez **Charger une partie → Colonies de test → Les Aulnes · référence intégrée 250×250**. Cette première entrée du catalogue ouvre une nouvelle copie en pause. Le [fichier publié](../../public/test-saves/v284/les-aulnes-integrees.json) peut aussi être importé. L’ancienne [référence V224](aulnes-seating-v224.md) demeure accessible avec ses sièges corrigés et son état original.
