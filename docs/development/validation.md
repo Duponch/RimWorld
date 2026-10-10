@@ -1,4 +1,6 @@
-# Validation courante — V296
+# Validation courante — V297
+
+**V297 : [diagnostic audio et agenda](aulnes-performance-v297.md#validation), produit V296/schéma218 conservés.** 66 cas acquis par reprises et contrôles privés, un ignoré, build candidat,64vrais ticks avec oracles/reprise et quatre cohortes GAME exactes. Aucun gain FPS stable, candidats rejetés et sources/tests restaurés exactement ; prototypes et rouges archivés. Aucun déploiement Cloudflare supplémentaire.
 
 **V296 : [préparation graphique commune](aulnes-performance-v296.md#validation), schéma 218 conservé.** 27 cas/3 fichiers, typage/build, quatre cohortes GAME avec recharges exactes et huit états WebGPU A/B passent. 123,18→133,00 RAF/s à vrai ×6 ; pixels et buffers cargo identiques dans le contrôle physique, 63 références/66 fichiers publics inchangés. Aucun temps GPU ni 240 FPS certifiés ; preuves et limites dans la note unique.
 

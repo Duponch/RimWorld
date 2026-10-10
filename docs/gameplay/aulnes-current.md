@@ -1,5 +1,7 @@
 # Les Aulnes, référence intégrée
 
+Le [diagnostic V297](../development/aulnes-performance-v297.md) ne change ni cette sauvegarde ni le produit V296 : les deux candidats ont été écartés faute de gain utile démontré en jeu. Aucun FPS supplémentaire annoncé ; publications Cloudflare regroupées. Les états suivants sont historiques.
+
 La [préparation graphique V296](../development/aulnes-performance-v296.md) conserve ce checkpoint et le schéma 218. Comparaison avec le produit V295 renommé Elsewhere : **123,18→133,00 RAF/s**, Chrome 1440p/dev à vrai ×6, sans baisse de qualité ou de règles. Les quatre recharges sont exactes ; les pointes persistent et les 240 FPS ne sont pas atteints. Ce résultat local ne s'additionne pas aux gains antérieurs. Les états suivants sont historiques.
 
 Le [réemploi V295](../development/aulnes-performance-v295.md) conserve ce checkpoint et le schéma 218. Comparaison avec V293 : **111,35→119,40RAF/s**, Chrome1440p/dev à vrai×6, règles et qualité identiques. Des pointes persistent et240FPS restent à atteindre ; aucun gain GPU mesuré. Bilan nocturne dans la note, relance en pause et arrêt après ce lot. Les états suivants sont historiques.

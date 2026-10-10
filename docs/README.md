@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V297 : [recensement audio et agenda](development/aulnes-performance-v297.md), diagnostic.** Aucun FPS supplémentaire : les gains locaux ne se confirment pas dans le GAME, prototypes écartés. Produit V296/schéma218 et corpus public conservés ; prochaine attribution du coût graphique actuel1440p. Publications Cloudflare regroupées, relance planifiée en pause. Les états suivants sont historiques.
+
 **V296 : [préparation graphique commune](development/aulnes-performance-v296.md), schéma 218 conservé.** 123,18→133,00 RAF/s à vrai ×6 sur Les Aulnes, qualité et règles identiques. Quatre recharges exactes et huit états graphiques comparés sur matériel ; aucun temps GPU gagné ni 240 FPS certifiés. Relance planifiée toujours en pause. Les états suivants sont historiques.
 
 **V295 : [faits de ressources confirmés et bilan nocturne](development/aulnes-performance-v295.md), schéma 218 conservé.**111,35→119,40RAF/s à vrai×6, adoption CPU par appel−21,57% ; sauvegardes et règles conservées.240FPS et fluidité constante non atteints. Relance en pause, aucune suite autonome engagée. Les états suivants sont historiques.

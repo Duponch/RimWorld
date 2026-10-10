@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V297 — diagnostic des performances ; produit V296 conservé.** Le coût audio local diminue, mais aucun gain FPS stable n'est obtenu dans le jeu : les deux prototypes sont écartés. [Résultats et limites](docs/development/aulnes-performance-v297.md). Les optimisations continuent sans réduire règles ou qualité ; commit/push par lot et publications Cloudflare regroupées. Les états suivants sont historiques.
+
 Le jeu s’appelle désormais **Elsewhere** (anciennement Lisière). [Jouer sur Cloudflare Pages](https://elsewhere-cq7.pages.dev/) · [Publication et compatibilité des sauvegardes](docs/development/cloudflare-pages.md). Les parties locales restent attachées à leur adresse d’origine ; les colonies de test, dont Les Aulnes, sont aussi accessibles en ligne.
 
 **V296 — préparation graphique commune ; schéma 218.** Chrome 1440p/dev sur Les Aulnes : **123,18→133,00 images RAF/s (+7,97 %)**, vrai ×6 conservé. Règles et qualité identiques, quatre recharges exactes et huit états graphiques comparés sur matériel. [Mesures et limites](docs/development/aulnes-performance-v296.md). Les 240 FPS restent à atteindre ; aucun gain de temps GPU mesuré. Relance planifiée toujours en pause. Les états suivants sont historiques.
