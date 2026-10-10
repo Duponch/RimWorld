@@ -1,4 +1,6 @@
-# Validation courante — V295
+# Validation courante — V296
+
+**V296 : [préparation graphique commune](aulnes-performance-v296.md#validation), schéma 218 conservé.** 27 cas/3 fichiers, typage/build, quatre cohortes GAME avec recharges exactes et huit états WebGPU A/B passent. 123,18→133,00 RAF/s à vrai ×6 ; pixels et buffers cargo identiques dans le contrôle physique, 63 références/66 fichiers publics inchangés. Aucun temps GPU ni 240 FPS certifiés ; preuves et limites dans la note unique.
 
 **V295 : [réemploi des faits Resource](aulnes-performance-v295.md#validation), schéma 218 conservé.**55cas/9fichiers, typage/build,63références/66fichiers avec un vrai tick et huit recharges natives passent. CPU par adoption−21,57%, GAME original111,35→119,40RAF/s à vrai×6. Premier lancement interrompu conservé, reprise dans des sorties distinctes ; preuves et limites dans la note unique. Relance en pause après clôture du lot engagé.
 

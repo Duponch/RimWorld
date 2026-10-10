@@ -1,5 +1,5 @@
 import { DataTexture, LinearFilter, RGBAFormat, UnsignedByteType, Vector2, Vector4, type MeshStandardNodeMaterial } from 'three/webgpu';
-import { Fn, If, diffuseColor, float, mix, normalWorldGeometry, output, positionWorld, smoothstep, texture, uniform, vec3, vec4 } from 'three/tsl';
+import { Fn, If, diffuseColor, float, mix, normalWorldGeometry, output, positionWorld, renderGroup, smoothstep, texture, uniform, vec3, vec4 } from 'three/tsl';
 import type { World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { EnvironmentLightField } from './EnvironmentLightField';
@@ -10,8 +10,8 @@ import { EnvironmentLightField } from './EnvironmentLightField';
 export class EnvironmentLighting {
   readonly field = new EnvironmentLightField();
   readonly map = new DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1, RGBAFormat, UnsignedByteType);
-  private readonly size = uniform(new Vector2(1, 1));
-  private readonly bounds = uniform(new Vector4(1, 1, 0, 0));
+  private readonly size = uniform(new Vector2(1, 1)).setGroup(renderGroup);
+  private readonly bounds = uniform(new Vector4(1, 1, 0, 0)).setGroup(renderGroup);
   private readonly sample = texture(this.map);
   private readonly configured = new WeakSet<MeshStandardNodeMaterial>();
   private readonly shade = Fn(() => {

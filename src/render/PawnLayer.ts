@@ -516,8 +516,8 @@ export class PawnLayer {
     this.group.add(mesh);
     const cargo = cargoGeometry();
     for (const name of ['aFrom', 'aTo', 'aCargo', 'aMotion', 'aTravel']) cargo.setAttribute(name, geometry.getAttribute(name));
-    cargo.setAttribute('aHandoffFrom',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.DynamicDrawUsage));
-    cargo.setAttribute('aHandoffTo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.DynamicDrawUsage));
+    cargo.setAttribute('aHandoffFrom',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.StaticDrawUsage));
+    cargo.setAttribute('aHandoffTo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.StaticDrawUsage));
     const cargoMat = material(0xffffff);
     this.configure?.(cargoMat);
     cargoMat.colorNode = attribute('color', 'vec3');
@@ -563,9 +563,9 @@ export class PawnLayer {
     this.fireMesh=attachedFireMesh(geometry,this);setFireTexturesEnabled(this.fireMesh,this.texturesEnabled);this.group.add(this.fireMesh);
     this.selectionMesh=pawnSelectionMesh(geometry,this);this.group.add(this.selectionMesh);
     const partial=cargoGeometry();
-    partial.setAttribute('aTransferFrom',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.DynamicDrawUsage));
-    partial.setAttribute('aTransferTo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.DynamicDrawUsage));
-    partial.setAttribute('aTransferCargo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.DynamicDrawUsage));
+    partial.setAttribute('aTransferFrom',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.StaticDrawUsage));
+    partial.setAttribute('aTransferTo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.StaticDrawUsage));
+    partial.setAttribute('aTransferCargo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.StaticDrawUsage));
     const partialMat=material(0xffffff);this.configure?.(partialMat);
     partialMat.colorNode=attribute('color','vec3');
     partialMat.positionNode=Fn(()=>{

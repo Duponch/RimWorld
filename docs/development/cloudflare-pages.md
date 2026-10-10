@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere** ; moteur, règles, qualité et schéma 218 restent inchangés. La base de performances livrée reste V295.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere** ; moteur, règles, qualité et schéma 218 restent inchangés. La première publication porte V295 ; la mise à jour courante contient la [préparation graphique V296](aulnes-performance-v296.md).
 
 ## Adresse et publication
 
@@ -23,7 +23,7 @@ Le nom visible change dans les titres, menus, HUD, écran de chargement et descr
 
 Pages gère son fallback SPA sans règle proxy globale dans `_redirects`, afin de ne pas intercepter scripts, Worker et JSON. Les règles `_headers` n’ajoutent pas de valeurs Cache-Control contradictoires pour les assets UI. Le fallback Netlify historique est conservé dans `netlify.toml`.
 
-## Vérification de cette livraison
+## Vérification de la première publication
 
 - Build Pages et typage : PASS, 9,486 s après correction du type de l’entrée Vite ; premier échec conservé.
 - Scénarios de départ, codec de sauvegarde et catalogue : 16 cas dans trois fichiers, PASS, 72,302 s.
@@ -33,6 +33,10 @@ Pages gère son fallback SPA sans règle proxy globale dans `_redirects`, afin d
 - Documentation : PASS, 1,525 s. Les dépendances préexistantes gardent leurs versions ; Wrangler est la seule dépendance directe ajoutée.
 
 Sorties locales de cette livraison sous `tmp/elsewhere-pages/` et `tmp/validation-runs/elsewhere-*`. Le profil V296 lancé avant l’interruption reste dans `tmp/performance-v296/profile/main-8Psn1o` : parcours terminé et recharge 9068 exacte, mais delta de profil négatif interdisant toute attribution CPU. Aucun candidat d’optimisation V296 n’est livré dans cette publication.
+
+## Mise à jour V296
+
+Le 10 octobre, la même adresse stable reçoit la publication `ce930a0c`, contenant les trois modifications graphiques V296 validées. Build Pages et typage : PASS11,359s ; déploiement : PASS15,484s. Vérification HTTPS des sept fichiers : PASS0,718s, réponses 200 et bytes identiques à `dist/`. Les 66 fichiers publics de sauvegarde/catalogue restent identiques au build et le laboratoire est absent. Le Worker de simulation reste inchangé ; seuls le JS principal et son HTML de référence sont nouveaux. Les contrôles graphiques, les quatre sauvegardes/reprises et les gains locaux sont détaillés dans la note V296 ; le parcours UI de première publication n'est pas présenté comme un nouveau test de cette version.
 
 ## Références
 

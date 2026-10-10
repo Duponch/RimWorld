@@ -2,6 +2,8 @@
 
 Le jeu s’appelle désormais **Elsewhere** (anciennement Lisière). [Jouer sur Cloudflare Pages](https://elsewhere-cq7.pages.dev/) · [Publication et compatibilité des sauvegardes](docs/development/cloudflare-pages.md). Les parties locales restent attachées à leur adresse d’origine ; les colonies de test, dont Les Aulnes, sont aussi accessibles en ligne.
 
+**V296 — préparation graphique commune ; schéma 218.** Chrome 1440p/dev sur Les Aulnes : **123,18→133,00 images RAF/s (+7,97 %)**, vrai ×6 conservé. Règles et qualité identiques, quatre recharges exactes et huit états graphiques comparés sur matériel. [Mesures et limites](docs/development/aulnes-performance-v296.md). Les 240 FPS restent à atteindre ; aucun gain de temps GPU mesuré. Relance planifiée toujours en pause. Les états suivants sont historiques.
+
 **V295 — réemploi des faits de ressources ; schéma 218.** Chrome1440p/dev sur Les Aulnes : **111,35→119,40 images RAF/s (+7,24%)** à vrai×6 ; adoption CPU par appel−21,57%. [Mesures et bilan nocturne](docs/development/aulnes-performance-v295.md). Pointes et240FPS restent à résoudre, aucun gain GPU mesuré. Relance planifiée en pause ; arrêt après ce lot. Les états suivants sont historiques.
 
 **V292 — diagnostic du transport ; produit V291 et schéma 218 conservés.** Le coût des données territoriales est mesuré ; aucun nouveau protocole ni FPS livré. [Résultat et décision](docs/development/aulnes-performance-v292.md). Les gains V291 ci-dessous restent la référence en jeu.
