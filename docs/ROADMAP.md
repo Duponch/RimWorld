@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V298 — [attribution CPU/GPU actuelle](development/aulnes-performance-v298.md).** Pointes CPU hors soumission du dessin prioritaires ; ombres GPU minoritaires. Étudier un retrait groupé de préparation de scène, tout transfert éventuel compris. Produit V296/schéma218 conservés, commit/push par lot et publications Cloudflare regroupées. Les priorités suivantes sont historiques.
+
 **V297 — [diagnostic audio et agenda](development/aulnes-performance-v297.md).** Aucun FPS livré ; produit V296 conservé après rejet des deux prototypes. Priorité : comprendre le coût graphique complet actuel en1440p et les interruptions MAIN avant un nouveau changement structurel, sans déduire un budget GPU actuel des mesures V231. Continuer les optimisations autorisées, commit/push par lot, publications Cloudflare regroupées ; relance automatique toujours en pause. Les priorités suivantes sont historiques.
 
 **V296 — [préparation graphique commune](development/aulnes-performance-v296.md), schéma 218 conservé.** Le lot MAIN/préparation graphique explicitement demandé après V295 est livré : 123,18→133,00 RAF/s à vrai ×6 sur Les Aulnes, qualité et règles conservées. Les validations, l'application de scène et la préparation Three restent des coûts importants ; aucun gain GPU ni 240 FPS établis. Elsewhere est publié sur [Cloudflare Pages](development/cloudflare-pages.md). La relance planifiée reste en pause ; aucune nouvelle autonomie nocturne n'est déduite de ces demandes. Les priorités suivantes sont historiques.

@@ -1,4 +1,6 @@
-# Validation courante — V297
+# Validation courante — V298
+
+**V298 : [attribution CPU/GPU](aulnes-performance-v298.md#validation), produit V296/schéma218 conservés.** Typage, gel et douze fenêtres Chrome matériel passent ; quatre recharges exactes, sources/publics inchangés. Couverture et perturbation détaillées dans la note unique, aucun FPS supplémentaire ni déploiement Cloudflare.
 
 **V297 : [diagnostic audio et agenda](aulnes-performance-v297.md#validation), produit V296/schéma218 conservés.** 66 cas acquis par reprises et contrôles privés, un ignoré, build candidat,64vrais ticks avec oracles/reprise et quatre cohortes GAME exactes. Aucun gain FPS stable, candidats rejetés et sources/tests restaurés exactement ; prototypes et rouges archivés. Aucun déploiement Cloudflare supplémentaire.
 
