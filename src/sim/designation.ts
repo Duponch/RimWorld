@@ -9,6 +9,7 @@ import { footprintCells } from './definitions.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { inBounds } from './pathfinding.ts';
 import { canDesignateFloor,isBuildableFloor } from './flooring.ts';
+import { soilFertility } from './soil.ts';
 import { SCHEMA_VERSION,type AreaAction,type AreaCommand,type Cell,type CommandResult,type StorageSettings,type World } from './types.ts';
 
 const TREE = 1, BERRIES = 2, FIXED = 4, JOB = 8, STORAGE = 16, BLOCKED = 32, RIPE = 64, GROWING = 128, ZONE_BLOCKED = 256, GROW_BLOCKED = 512, DECONSTRUCTIBLE = 1024, ROCK = 2048, CHUNK = 4096;
@@ -31,14 +32,17 @@ export function buildAreaIndex(world: World): AreaIndex {
   const flags = new Uint16Array(world.width * world.height);
   const index = (cell: Cell) => cell.z * world.width + cell.x;
   for (let i = 0; i < flags.length; i++) if (world.tiles[i]!.terrain === 'water' || world.tiles[i]!.terrain === 'rock') flags[i] = BLOCKED | (world.tiles[i]!.terrain==='rock'?ROCK:0);
-  for(let i=0;i<flags.length;i++)if(world.tiles[i]!.terrain==='rough-stone'||world.tiles[i]!.floor)flags[i]!|=GROW_BLOCKED;
+  for(let i=0;i<flags.length;i++)if(world.tiles[i]!.terrain==='rough-stone'||world.tiles[i]!.floor||world.schemaVersion>=219&&soilFertility(world.tiles[i]!.terrain)<.7)flags[i]!|=GROW_BLOCKED;
   for(const pile of world.piles)if(pile.kind==='chunk'&&pile.owner.type==='ground'&&!pile.haulRequested)flags[index(pile.owner)]!|=CHUNK;
-  for (const resource of world.resources) flags[index(resource)]! |= ZONE_BLOCKED | FIXED | (choppable(world,resource)?TREE:0) | (isPlant(resource) ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
+  // Core's CanOverlapZones exempts plants from the impassable-thing rule.
+  // A plant or its work designation does not carve a hole in a zone. Rock
+  // resources still obstruct both zone types; legacy schemas keep their rules.
+  for (const resource of world.resources) flags[index(resource)]! |= (world.schemaVersion<219?ZONE_BLOCKED:resource.kind==='rock'?ZONE_BLOCKED|GROW_BLOCKED:0) | FIXED | (choppable(world,resource)?TREE:0) | (isPlant(resource) ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
   for (const structure of world.structures) for (const cell of footprintCells(structure)) flags[index(cell)]! |= DECONSTRUCTIBLE | FIXED | (occupancyOf(structure.kind)?.zones?0:ZONE_BLOCKED | GROW_BLOCKED);
   for(const job of world.jobs)if(job.furniture){const source=world.structures.find(s=>s.id===job.furniture!.structureId);if(source)for(const c of footprintCells(source))flags[index(c)]!|=JOB;}
   // Repair is automatic maintenance, not a cancellable designation. Its existing
   // barrier already supplies occupancy; it must not prevent deconstruction.
-  for (const job of world.jobs.filter(j=>!isRoofJob(j)&&j.kind!=='repair'&&j.kind!=='fix-breakdown')) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB | (job.kind==='deconstruct'||job.kind==='uninstall'||occupancyOf(job.furniture?.kind??job.kind)?.zones?0:ZONE_BLOCKED) | (occupancyOf(job.furniture?.kind??job.kind)?.zones===false?GROW_BLOCKED:0);
+  for (const job of world.jobs.filter(j=>!isRoofJob(j)&&j.kind!=='repair'&&j.kind!=='fix-breakdown')) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB | (job.kind==='deconstruct'||job.kind==='uninstall'||(world.schemaVersion>=219?occupancyOf(job.furniture?.kind??job.kind)?.zones!==false:occupancyOf(job.furniture?.kind??job.kind)?.zones)?0:ZONE_BLOCKED) | (occupancyOf(job.furniture?.kind??job.kind)?.zones===false?GROW_BLOCKED:0);
   for(const pack of world.packed??[])if(pack.owner.type==='ground'&&world.jobs.some(j=>j.furniture?.structureId===pack.building.id))flags[index(pack.owner)]!|=JOB;
   for (const storage of world.stockpiles) flags[index(storage)]! |= STORAGE;
   for (const pawn of world.pawns) {

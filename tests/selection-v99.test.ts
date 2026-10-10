@@ -19,3 +19,10 @@ test('shift toggles animal identity, group replacements and removed actors remai
   selection.apply({ids:[1,9],additive:false,toggle:false},available);expect(selection.single).toBe(1);
   selection.apply({ids:[],additive:true,toggle:false},new Set([2,3]));expect(selection.ids.size).toBe(0);
 });
+test('double-click retains its target at the current Core cap, including additive actor selection',()=>{
+  const all=Array.from({length:250},(_,i)=>actor(i+1,'human:colony:false',0));
+  const ids=equivalentActors(all,all[249]!);expect(ids).toHaveLength(200);expect(ids[0]).toBe(250);
+  const selection=new PawnSelection(),available=new Set(all.map(p=>p.id));
+  selection.apply({ids,additive:false,toggle:false},available);
+  selection.apply({ids:[240,241],additive:true,toggle:false},available);expect(selection.ids.size).toBe(200);expect(selection.ids.has(250)).toBe(true);
+});

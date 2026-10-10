@@ -95,6 +95,7 @@ import {stockpileZoneCells} from '../sim/stockpile-zones';
 import {surfaceHeightAtCell} from './surface-height';
 import { HomePresentationSignature, StoragePresentationSignature, StructurePresentationSignature } from './presentation-signatures';
 import { mapObjectCells,mapObjectsAt,sameMapObject,type MapObjectSelection } from '../ui/map-object-selection';
+import {mapObjectGroupCells} from '../ui/map-object-group-selection';
 
 import type {SceneRenderHostPort,SceneCameraPort,RendererLifetime} from './scene-render-ports';
 type VisualChunk = { signature: string; group: THREE.Group };
@@ -172,10 +173,12 @@ export class SceneRenderCore {
   protected readonly hover: THREE.Mesh;
   protected readonly objectSelection: THREE.Mesh;
   protected selectedObject:MapObjectSelection|undefined;
+  protected selectedObjects:readonly MapObjectSelection[]=[];
   protected objectSelectionSignature='';
 
   protected selectedPawns:ReadonlySet<number>=new Set();
   onSelection: (gesture:SelectionGesture)=>void=()=>{};
+  onObjectSelection:(objects:MapObjectSelection[],additive:boolean)=>void=()=>{};
   onHover: (cell:Cell|null)=>void=()=>{};
   onContext: (cell:Cell,x:number,y:number,queue:boolean,targetId?:number)=>void=()=>{};
   onInteractionCancel: ()=>void=()=>{};
@@ -237,6 +240,7 @@ export class SceneRenderCore {
   protected world: World | null = null;
   protected structureKey = '';
   protected jobKey = '';
+  protected designationKey = '';
   protected storageKey = '';
   protected readonly furniturePresentation = new FurniturePresentation();
   // The public Core remains RAW. Only the non-exported MAIN subclass creates
@@ -491,7 +495,14 @@ export class SceneRenderCore {
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
     const jobKey = world.jobs.filter(j=>j.kind!=='fix-breakdown').map((j) => `${j.id}:${j.kind}:${j.floor}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' || j.kind==='repair' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
-    if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
+    const jobsChanged=jobKey!==this.jobKey||newMap;
+    if (jobsChanged) { this.jobKey = jobKey; this.buildJobs(world); }
+    // Chunk permissions and unscheduled roof intentions have no Job. Check
+    // their small primitive signature at adoption, never in the RAF loop.
+    const designationKey=world.piles.filter(p=>p.kind==='chunk'&&p.haulRequested&&p.owner.type==='ground')
+      .map(p=>p.owner.type==='ground'?`${p.id}:${p.owner.x}:${p.owner.z}`:'').join('|')
+      +`;${world.roofing?.build.join(',')};${world.roofing?.remove.join(',')};${world.roofing?.constructed.join(',')}`;
+    if(jobsChanged||designationKey!==this.designationKey){this.designationKey=designationKey;this.designations.update(world);}
     if(resetPoses)this.homeSignature.clear();
     const storageKey = `${this.homeSignature.read(world.home)};`+this.storageSignature.read(world.stockpiles,resetPoses);
     if (storageKey !== this.storageKey || newMap || groundChanged) { this.storageKey = storageKey; this.buildStorage(world); }
@@ -824,7 +835,8 @@ export class SceneRenderCore {
   }
 
   setSelectedPawns(ids:ReadonlySet<number>):void {this.selectedPawns=new Set(ids);this.pawns.setSelected(ids);this.wildlife.setSelected(ids);this.mechanoids.setSelected(ids);if(this.world&&this.pawns.feedbackSource)this.actionFeedback.update(this.world,this.selectedPawns,this.pawns.feedbackSource);}
-  setSelectedObject(selected:MapObjectSelection|undefined):void {this.selectedObject=selected;this.updateSelectedObject();this.updateGrowingZones(false);this.updateTurretPreview();this.updateDeepResources();}
+  setSelectedObject(selected:MapObjectSelection|undefined):void {this.setSelectedObjects(selected?[selected]:[]);}
+  setSelectedObjects(selected:readonly MapObjectSelection[]):void {this.selectedObjects=selected.map(s=>({...s}));this.selectedObject=this.selectedObjects[0];this.updateSelectedObject();this.updateGrowingZones(false);this.updateTurretPreview();this.updateDeepResources();}
   protected updateDeepResources():void {
     if(this.world&&this.deepResources.update(this.world,{selectedId:this.tool==='select'&&this.selectedObject?.kind==='structure'?this.selectedObject.id:undefined,placement:this.tool==='install'?this.furniturePlacement?.kind:this.tool}))this.invalidatePausedShadow();
   }
@@ -843,6 +855,30 @@ export class SceneRenderCore {
   }
   protected updateSelectedObject():void {
     if(this.preparing)return;
+    if(this.world&&this.selectedObjects.length>1){
+      this.surfaceTint.setSelection(this.world.width,this.world.height,[],false);
+      const groups=mapObjectGroupCells(this.world,this.selectedObjects),vertices:number[]=[],keys:string[]=[];
+      const y=.14,stroke=(ax:number,az:number,bx:number,bz:number)=>{
+        const dx=bx-ax,dz=bz-az,scale=.024/Math.hypot(dx,dz),nx=-dz*scale,nz=dx*scale;
+        vertices.push(ax+nx,y,az+nz,bx+nx,y,bz+nz,bx-nx,y,bz-nz,ax+nx,y,az+nz,bx-nx,y,bz-nz,ax-nx,y,az-nz);
+      };
+      for(let i=0;i<groups.length;i++){
+        const cells=groups[i]!;if(!cells.length)continue;
+        let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
+        for(const c of cells){minX=Math.min(minX,c.x);maxX=Math.max(maxX,c.x);minZ=Math.min(minZ,c.z);maxZ=Math.max(maxZ,c.z);}
+        minX-=.44;maxX+=.44;minZ-=.44;maxZ+=.44;
+        const selected=this.selectedObjects[i]!;keys.push(`${selected.kind}:${selected.id}:${minX}:${maxX}:${minZ}:${maxZ}`);
+        const length=Math.min(.23,(maxX-minX)/3,(maxZ-minZ)/3);
+        for(const x of [minX,maxX])for(const z of [minZ,maxZ]){
+          stroke(x,z,x+(x===minX?1:-1)*length,z);stroke(x,z,x,z+(z===minZ?1:-1)*length);
+        }
+      }
+      const signature=keys.join('|');this.objectSelection.visible=!!vertices.length;
+      if(signature===this.objectSelectionSignature)return;
+      this.objectSelectionSignature=signature;const old=this.objectSelection.geometry;
+      this.objectSelection.geometry=new THREE.BufferGeometry();
+      this.objectSelection.geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));old.dispose();return;
+    }
     const isZone=this.selectedObject?.kind==='growing'||this.selectedObject?.kind==='stockpile';
     const cells=this.world&&this.selectedObject?(this.selectedObject.kind==='stockpile'?stockpileZoneCells(this.world,this.selectedObject.id):mapObjectCells(this.world,this.selectedObject)):[];
     if(this.world)this.surfaceTint.setSelection(this.world.width,this.world.height,isZone?cells.map(c=>c.z*this.world!.width+c.x):[],isZone&&this.zonesVisible);
@@ -897,20 +933,22 @@ export class SceneRenderCore {
       if(center.z < cameraClipNear(this.camera)||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)continue;
       const head=position.clone().add(new THREE.Vector3(0,1.75,0)).project(this.camera);
       result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,
-        radius:Math.max(5,Math.abs(head.y-center.y)*rect.height/2),depth:center.z,group:actors.get(id)?.state==='dead'?'corpse:human':`human:${actors.get(id)?.faction??'colony'}:${!!actors.get(id)?.prisoner}`,category:actors.get(id)?.state==='dead'?3:(actors.get(id)?.faction??'colony')==='colony'?0:1});
+        radius:Math.max(5,Math.abs(head.y-center.y)*rect.height/2),depth:center.z,group:actors.get(id)?.state==='dead'?'corpse:human':`human:${actors.get(id)?.faction??'colony'}:${!!actors.get(id)?.prisoner}`,category:actors.get(id)?.state==='dead'?3:(actors.get(id)?.faction??'colony')==='colony'&&!actors.get(id)?.prisoner?0:1});
     }
+    const animals=new Map(this.world?.wildlife?.animals.map(a=>[a.id,a]));
     const center=new THREE.Vector3(),edge=new THREE.Vector3(),side=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0);
     this.wildlife.forEachPose((id,species,x,y,z,height,radius)=>{
       center.set(x,y+height*.5,z).project(this.camera);
       if(center.z< cameraClipNear(this.camera)||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)return;
       edge.set(x,y+height*.5,z).addScaledVector(side,Math.max(height*.5,radius)).project(this.camera);
-      result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:`animal:${species}`,category:2});
+      const animal=animals.get(id);
+      result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:`${animal?.state==='dead'?'corpse':'animal'}:${species}:${animal?.domestic?'colony':'wild'}`,category:animal?.state==='dead'?3:2});
     });
     this.mechanoids.forEachPose((id,x,y,z,height,radius,dead,kind)=>{
       center.set(x,y+height*.5,z).project(this.camera);
       if(center.z<cameraClipNear(this.camera)||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)return;
       edge.set(x,y+height*.5,z).addScaledVector(side,Math.max(height*.5,radius)).project(this.camera);
-      result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:dead?'corpse:mech':`mech:${kind}`,category:dead?3:1});
+      result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:dead?`corpse:mech:${kind}`:`mech:${kind}`,category:dead?3:1});
     });
     return result;
   }
@@ -957,7 +995,7 @@ export class SceneRenderCore {
     if(prepared?.world===world)this.doors.updateNative(world,this.wallCutaway,false,prepared.doors,prepared.axes,prepared.gateAxes);
     else this.doors.update(world,this.wallCutaway);this.timber.update(world,this.wallCutaway);this.furniturePresentation.update(world,this.structureGroup,this.wallCutaway,this.boxes,this.structureSignature.flowerChanges(),this.immutableWorlds.has(world));this.structureSignature.ackFurnitureBuild(); }
 
-  protected buildJobs(world: World): void { buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes);this.designations.update(world); }
+  protected buildJobs(world: World): void { buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes); }
 
   protected buildStorage(world: World): void {
     const { cells } = storageZonePlacements(world.width, world.stockpiles,world);

@@ -1,7 +1,9 @@
 import type {SceneTextureLoader} from './scene-render-ports';
 import * as THREE from 'three/webgpu';
 import { attribute, cameraPosition, cameraViewMatrix, texture, uniform, uv, vec2, vec4 } from 'three/tsl';
-import type { AreaAction, Job, World } from '../sim/types';
+import type { AreaAction, World } from '../sim/types';
+import { footprintCells } from '../sim/definitions';
+import { ARCHITECT_ICON_ATLASES, ARCHITECT_ICON_MAPPING } from '../ui/architect-icons';
 import { floraSize, floraTreeHeight } from './flora-presentation';
 import { noise } from './StaticGeometry';
 import { perspectiveDetailRange, screenSpriteScale } from './map-overlay-detail';
@@ -13,36 +15,99 @@ const CHOP_ICON_HEIGHT_FRACTION = .72;
 export const DESIGNATION_ICON_KINDS = ['mine', 'chop', 'harvest', 'cut'] as const;
 export type DesignationIconKind = typeof DESIGNATION_ICON_KINDS[number];
 const ICON_INDEX: Readonly<Record<DesignationIconKind, number>> = { mine: 0, chop: 1, harvest: 2, cut: 3 };
+const EXTRA_ICON_KINDS = ['haul-chunks', 'deconstruct', 'uninstall', 'remove-floor', 'build-roof', 'remove-roof'] as const;
+type MarkerKind = DesignationIconKind | typeof EXTRA_ICON_KINDS[number];
+type MarkerTarget = { kind: MarkerKind; x: number; z: number };
+// Keep the historical predicate below: JobLayer uses it to choose between
+// plant/mining sprites and its existing construction/removal geometry.
+const isMarkerKind = (kind: string): kind is MarkerKind => isIconDesignationKind(kind)
+  || (EXTRA_ICON_KINDS as readonly string[]).includes(kind);
+function iconIndex(kind: MarkerKind): number {
+  if (isIconDesignationKind(kind)) return ICON_INDEX[kind];
+  const cell = ARCHITECT_ICON_MAPPING[kind]!;
+  return 20 + cell.atlas * 30 + cell.row * 6 + cell.column;
+}
 
 export const isIconDesignationKind = (kind: unknown): kind is DesignationIconKind =>
   typeof kind === 'string' && (DESIGNATION_ICON_KINDS as readonly string[]).includes(kind);
 
 export interface DesignationIconInstance { x: number; y: number; z: number; icon: number }
-function instancesForTargets(world: World, targets: readonly Pick<Job, 'kind' | 'x' | 'z'>[]): DesignationIconInstance[] {
+function instancesForTargets(world: World, targets: readonly MarkerTarget[]): DesignationIconInstance[] {
   const trees=targets.some(j=>j.kind==='chop')?new Map(world.resources.filter(r=>r.kind==='tree').map(r=>[r.z*world.width+r.x,r])):undefined;
   return targets.map(job => {
     const tree=trees?.get(job.z*world.width+job.x);
     const treeHeight=tree?.species?floraTreeHeight(tree)*floraSize(world,tree)
       :tree?WORLD_SCALE.treeMinHeight+noise(tree.x,tree.z,77)*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight)
       :(WORLD_SCALE.treeMinHeight+WORLD_SCALE.treeMaxHeight)/2;
-    const y=job.kind==='chop'?treeHeight*CHOP_ICON_HEIGHT_FRACTION:job.kind==='mine'?3.2:1.08;
-    return { x: job.x, y, z: job.z, icon: ICON_INDEX[job.kind as DesignationIconKind] };
+    const y=job.kind==='chop'?treeHeight*CHOP_ICON_HEIGHT_FRACTION:job.kind==='mine'?3.2
+      :job.kind==='build-roof'||job.kind==='remove-roof'?WORLD_SCALE.wallHeight+.12:1.08;
+    return { x: job.x, y, z: job.z, icon: iconIndex(job.kind) };
   });
 }
 
+function committedTargets(world: World): MarkerTarget[] {
+  const targets: MarkerTarget[] = [];
+  const roofCells = new Set<string>();
+  for (const job of world.jobs) {
+    if (!isMarkerKind(job.kind)) continue;
+    targets.push({ kind: job.kind, x: job.x, z: job.z });
+    if (job.kind === 'build-roof' || job.kind === 'remove-roof') roofCells.add(`${job.kind}:${job.z * world.width + job.x}`);
+  }
+  // Hauling designations belong to ground piles, not to generated Jobs. One
+  // cell can hold several designated chunks; its presentation needs one icon.
+  const chunks = new Set<number>();
+  for (const pile of world.piles) if (pile.kind === 'chunk' && pile.haulRequested === true && pile.owner.type === 'ground') {
+    const cell = pile.owner.z * world.width + pile.owner.x;
+    if (chunks.has(cell)) continue;
+    chunks.add(cell);
+    targets.push({ kind: 'haul-chunks', x: pile.owner.x, z: pile.owner.z });
+  }
+  // Roof intentions exist before the bounded scheduler generates jobs. Retain
+  // unfinished intentions, including unsupported cells, without work queries.
+  if (world.roofing) {
+    const constructed = new Set(world.roofing.constructed);
+    for (const kind of ['build-roof', 'remove-roof'] as const) {
+      for (const cell of world.roofing[kind === 'build-roof' ? 'build' : 'remove']) {
+        const key = `${kind}:${cell}`;
+        if (constructed.has(cell) === (kind === 'build-roof') || roofCells.has(key)) continue;
+        roofCells.add(key);
+        targets.push({ kind, x: cell % world.width, z: Math.floor(cell / world.width) });
+      }
+    }
+  }
+  return targets;
+}
+
 export function designationIconInstances(world: World): DesignationIconInstance[] {
-  return instancesForTargets(world, world.jobs.filter(job => isIconDesignationKind(job.kind)));
+  return instancesForTargets(world, committedTargets(world));
 }
 
 /** Cells are the compatible, row-major result of queryArea for this World.
  * This presentation helper does not repeat or replace simulation eligibility.
  * Bounds and duplicates are rejected before converting linear cell indices. */
-function previewTargets(world: World, action: AreaAction, cells: readonly number[]): Pick<Job, 'kind' | 'x' | 'z'>[] {
-  if (!isIconDesignationKind(action)) return [];
-  const occupied = new Set(world.jobs.filter(job => isIconDesignationKind(job.kind)).map(job => job.z * world.width + job.x));
-  const targets: Pick<Job, 'kind' | 'x' | 'z'>[] = [];
+function previewTargets(world: World, action: AreaAction, cells: readonly number[], committed?: readonly MarkerTarget[]): MarkerTarget[] {
+  if (!isMarkerKind(action)) return [];
+  // Roof and ground intentions may coexist. Deduplicate only the same action;
+  // legacy plant/mining targets still exclude each other's occupied cells.
+  const occupied = new Set((committed ?? committedTargets(world)).filter(target => target.kind === action
+    || isIconDesignationKind(action) && isIconDesignationKind(target.kind)).map(target => target.z * world.width + target.x));
+  const targets: MarkerTarget[] = [];
+  if (action === 'deconstruct') {
+    const selected = new Set(cells.filter(cell => Number.isSafeInteger(cell) && cell >= 0 && cell < world.width * world.height));
+    // Area deconstruction targets each whole building once, even when only a
+    // non-anchor footprint cell intersects the rectangle. Work spots disappear
+    // immediately on release and never create a deconstruction Job.
+    for (const structure of world.structures) if (structure.kind !== 'crafting-spot' && structure.kind !== 'butcher-spot'
+      && !occupied.has(structure.z * world.width + structure.x)
+      && footprintCells(structure).some(cell => selected.has(cell.z * world.width + cell.x))) {
+      targets.push({ kind: action, x: structure.x, z: structure.z });
+    }
+    return targets;
+  }
+  const constructed = action === 'build-roof' || action === 'remove-roof' ? new Set(world.roofing?.constructed) : undefined;
   for (const cell of cells) {
     if (!Number.isSafeInteger(cell) || cell < 0 || cell >= world.width * world.height || occupied.has(cell)) continue;
+    if (constructed && constructed.has(cell) === (action === 'build-roof')) continue;
     occupied.add(cell);
     targets.push({ kind: action, x: cell % world.width, z: Math.floor(cell / world.width) });
   }
@@ -53,11 +118,13 @@ export function designationPreviewIconInstances(world: World, action: AreaAction
   return instancesForTargets(world, previewTargets(world, action, cells));
 }
 
-function fallbackAtlas(): THREE.DataTexture {
-  const width = 64, height = 80, data = new Uint8Array(width * height * 4);
+function fallbackAtlas(atlas?: 0 | 1): THREE.DataTexture {
+  const width = atlas === undefined ? 64 : 96, height = 80, data = new Uint8Array(width * height * 4);
   const pixel = (icon: number, x: number, y: number): void => {
     if (x < 1 || y < 1 || x > 14 || y > 14) return;
-    const offset = ((64 + y) * width + icon * 16 + x) * 4;
+    const column = atlas === undefined ? icon : icon % 6;
+    const row = atlas === undefined ? 4 : 4 - Math.floor(icon / 6);
+    const offset = ((row * 16 + y) * width + column * 16 + x) * 4;
     data[offset] = data[offset + 1] = data[offset + 2] = data[offset + 3] = 255;
   };
   const line = (icon: number, x0: number, y0: number, x1: number, y1: number, thickness = 1): void => {
@@ -67,10 +134,29 @@ function fallbackAtlas(): THREE.DataTexture {
       for (let dx = -thickness + 1; dx < thickness; dx++) for (let dy = -thickness + 1; dy < thickness; dy++) pixel(icon, x + dx, y + dy);
     }
   };
-  line(0, 4, 2, 10, 13, 2); line(0, 2, 11, 8, 14, 2);
-  line(1, 4, 2, 10, 13, 2); line(1, 8, 10, 13, 13, 2);
-  line(2, 5, 2, 9, 12, 2); line(2, 8, 12, 13, 9, 2); line(2, 13, 9, 12, 6);
-  line(3, 4, 3, 12, 12); line(3, 12, 3, 4, 12); line(3, 3, 2, 5, 4, 2); line(3, 11, 2, 13, 4, 2);
+  if (atlas === undefined) {
+    line(0, 4, 2, 10, 13, 2); line(0, 2, 11, 8, 14, 2);
+    line(1, 4, 2, 10, 13, 2); line(1, 8, 10, 13, 13, 2);
+    line(2, 5, 2, 9, 12, 2); line(2, 8, 12, 13, 9, 2); line(2, 13, 9, 12, 6);
+    line(3, 4, 3, 12, 12); line(3, 12, 3, 4, 12); line(3, 3, 2, 5, 4, 2); line(3, 11, 2, 13, 4, 2);
+  } else for (const kind of EXTRA_ICON_KINDS) {
+    const cell = ARCHITECT_ICON_MAPPING[kind]!;
+    if (cell.atlas !== atlas) continue;
+    const icon = cell.row * 6 + cell.column;
+    if (kind === 'haul-chunks') {
+      line(icon, 2, 4, 8, 4); line(icon, 8, 4, 8, 10); line(icon, 8, 10, 2, 10); line(icon, 2, 10, 2, 4);
+      line(icon, 9, 7, 14, 7, 2); line(icon, 11, 4, 14, 7); line(icon, 11, 10, 14, 7);
+    } else if (kind === 'build-roof' || kind === 'remove-roof') {
+      line(icon, 2, 9, 8, 3, 2); line(icon, 8, 3, 14, 9, 2); line(icon, 4, 9, 4, 13); line(icon, 12, 9, 12, 13);
+      line(icon, 6, 11, 10, 11); if (kind === 'build-roof') line(icon, 8, 9, 8, 13);
+    } else if (kind === 'uninstall') {
+      line(icon, 3, 3, 11, 3); line(icon, 11, 3, 11, 11); line(icon, 11, 11, 3, 11); line(icon, 3, 11, 3, 3);
+      line(icon, 6, 8, 13, 13, 2); line(icon, 13, 13, 13, 9); line(icon, 13, 13, 9, 13);
+    } else {
+      line(icon, 3, 3, 13, 13, 2); line(icon, 13, 3, 3, 13, 2);
+      if (kind === 'remove-floor') line(icon, 2, 14, 14, 14);
+    }
+  }
   const map = new THREE.DataTexture(data, width, height, THREE.RGBAFormat, THREE.UnsignedByteType);
   map.minFilter = map.magFilter = THREE.LinearFilter;
   map.generateMipmaps = false;
@@ -85,11 +171,13 @@ export class DesignationIconLayer {
   readonly mesh: THREE.Mesh<THREE.InstancedBufferGeometry, THREE.SpriteNodeMaterial>;
   private readonly fallback = fallbackAtlas();
   private readonly atlasNode = texture(this.fallback);
+  private readonly architectFallbacks = [fallbackAtlas(0), fallbackAtlas(1)] as const;
+  private readonly architectNodes = [texture(this.architectFallbacks[0]), texture(this.architectFallbacks[1])] as const;
   private readonly screenScale = uniform(1);
   private readonly detailDistance = uniform(0);
   private readonly distanceLimited = uniform(1);
   private readonly perspectiveScale = uniform(0);
-  private loaded: THREE.Texture | undefined;
+  private readonly loaded: THREE.Texture[] = [];
   private capacity = 16;
   private key = '';
   private disposed = false;
@@ -119,20 +207,28 @@ export class DesignationIconLayer {
       .mul(this.perspectiveScale.greaterThan(.5).select(depth, 1))
       .mul(inRange.select(1, 0));
     const atlasUv = vec2(uv().x.add(attribute('designationIcon', 'float')).div(4), uv().y.div(5).add(.8));
-    material.colorNode = this.atlasNode.sample(atlasUv);
+    const icon = attribute('designationIcon', 'float');
+    const architectUv = (offset: number) => {
+      const cell = icon.sub(offset);
+      return vec2(uv().x.add(cell.mod(6)).div(6), uv().y.add(cell.div(6).floor().negate().add(4)).div(5));
+    };
+    material.colorNode = icon.lessThan(20).select(this.atlasNode.sample(atlasUv),
+      icon.lessThan(50).select(this.architectNodes[0].sample(architectUv(20)), this.architectNodes[1].sample(architectUv(50))));
     this.mesh = new THREE.Mesh(geometry, material);
     this.mesh.name = 'designation-icon-billboards';
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 5;
-    loadTexture('/assets/ui/lisiere/icons.png', loaded => {
+    const loadAtlas = (url: string, node: typeof this.atlasNode): void => { loadTexture(url, loaded => {
       if (this.disposed) { loaded.dispose(); return; }
       loaded.colorSpace = THREE.SRGBColorSpace;
       loaded.minFilter = loaded.magFilter = THREE.LinearFilter;
       loaded.needsUpdate = true;
-      this.loaded = loaded;
-      this.atlasNode.value = loaded;
+      this.loaded.push(loaded);
+      node.value = loaded;
       this.mesh.material.needsUpdate = true;
-    }, undefined, () => { /* The procedural first row remains usable. */ });
+    }, undefined, () => { /* Procedural icons remain usable if an atlas fails. */ }); };
+    loadAtlas('/assets/ui/lisiere/icons.png', this.atlasNode);
+    ARCHITECT_ICON_ATLASES.forEach((url, index) => loadAtlas(url, this.architectNodes[index]!));
   }
 
   update(world: World): void {
@@ -144,10 +240,10 @@ export class DesignationIconLayer {
   }
 
   updatePreview(world: World, action: AreaAction, cells: readonly number[]): void {
-    const jobs = world.jobs.filter(job => isIconDesignationKind(job.kind));
-    const instances = instancesForTargets(world, [...jobs, ...previewTargets(world, action, cells)]);
-    this.committed = instances.slice(0, jobs.length);
-    this.preview = instances.slice(jobs.length);
+    const targets = committedTargets(world);
+    const instances = instancesForTargets(world, [...targets, ...previewTargets(world, action, cells, targets)]);
+    this.committed = instances.slice(0, targets.length);
+    this.preview = instances.slice(targets.length);
     this.publish();
   }
 
@@ -220,6 +316,7 @@ export class DesignationIconLayer {
     this.mesh.geometry.dispose();
     this.mesh.material.dispose();
     this.fallback.dispose();
-    this.loaded?.dispose();
+    for (const fallback of this.architectFallbacks) fallback.dispose();
+    for (const loaded of this.loaded) loaded.dispose();
   }
 }

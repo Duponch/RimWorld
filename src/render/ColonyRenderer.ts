@@ -9,6 +9,8 @@ import {isAreaAction} from '../sim/designation';
 import {isLineBuildKind} from '../sim/construction-line';
 import {STRUCTURE_DEFINITIONS} from '../sim/definitions';
 import {mapObjectsAt,sameMapObject} from '../ui/map-object-selection';
+import {matchingMapObjects} from '../ui/map-object-group-selection';
+import {cameraClipNear} from './camera-clip';
 import type {AreaAction,Cell} from '../sim/types';
 export class ColonyRenderer extends SceneRenderCore {
   private readonly selectionInput:PawnSelectionInput;
@@ -56,6 +58,20 @@ export class ColonyRenderer extends SceneRenderCore {
         return index>=0&&(index<objects.length-1||hitActors(this.screenPawns(),event.clientX,event.clientY).length===0);
       },
       inspect:event=>{const cell=this.pick(event);if(cell)this.onPick(cell.x,cell.z);else this.onSelection({ids:[],additive:false,toggle:false});},
+      inspectGroup:event=>{
+        const world=this.world,cell=this.pickAt(event.clientX,event.clientY);if(!world||!cell)return false;
+        // The two ordinary clicks may have cycled the inspector. Resolve the
+        // physical hit again; the final cycling slot is not the double-click target.
+        if(hitActors(this.screenPawns(),event.clientX,event.clientY).length)return false;
+        const target=mapObjectsAt(world,cell)[0];if(!target)return false;
+        this.camera.updateMatrixWorld();const point=new THREE.Vector3();
+        const objects=matchingMapObjects(world,target,c=>{
+          point.set(c.x,.1,c.z).project(this.camera);
+          return point.z>=cameraClipNear(this.camera)&&point.z<=1&&Math.abs(point.x)<=1&&Math.abs(point.y)<=1;
+        });
+        if(!objects.length)return false;
+        this.onObjectSelection(objects,event.shiftKey);return true;
+      },
       lock:locked=>{this.controls.enabled=!locked;this.keys.clear();},
     });
     this.renderer.domElement.addEventListener('pointerdown', this.onPointerDown, true);

@@ -3,6 +3,7 @@ import { BoxBatches } from './BoxBatches';
 import type { Placement } from './primitives';
 import type { World } from '../sim/types';
 import {surfaceHeightAtCell} from './surface-height';
+import {adjacentZoneColors} from './zone-surface-presentation';
 
 export class GrowingZoneLayer {
   readonly group = new THREE.Group();
@@ -15,8 +16,11 @@ export class GrowingZoneLayer {
     this.signature = signature;
     const surfaces: Placement[] = [];
     const palette=[0x79a46a,0xaaa36a,0x94aa69,0xaaa57c,0x7baa84];
+    const colors=adjacentZoneColors(world.width,world.growingZones.flatMap(zone=>zone.cells.map(cell=>({zoneId:zone.id,cell}))),palette);
     for (const zone of world.growingZones) {
-      const color = zone.allowSow ? palette[(zone.id-1)%palette.length]! : 0x9a9170;
+      // Core keeps each zone's hue when sowing is disabled. Collapsing every
+      // disabled field to one grey would make neighbouring fields merge again.
+      const color = colors.get(zone.id)!;
       for (const cell of zone.cells) {
         const x = cell % world.width, z = Math.floor(cell / world.width);
         surfaces.push({x,z,y:(surfaceHeightAtCell(world,x,z)??0)+.021,sx:1,sy:.014,sz:1,color});

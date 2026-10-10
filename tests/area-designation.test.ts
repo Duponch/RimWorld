@@ -44,12 +44,8 @@ test('rectangles : sélection exacte, frontières, reprise, concurrence et conse
         : action === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: action, x, z };
       if (applyCommand(copy, command).ok) expected.push(z * 16 + x);
     }
-    if(action==='stockpile'){
-      // (9,6) is individually storable, but its four neighbours are the berry
-      // plant (9,5), tree (9,7), bed (8,6) and bed blueprint (10,6).
-      // This explicit fixture island is not part of the extension of (4,4).
-      expect(expected).toContain(6*16+9);expected.splice(expected.indexOf(6*16+9),1);
-    }
+    // Plants are Core-zoneable, so (9,6) remains connected through its berry
+    // and tree neighbours; only the bed and bed blueprint block the zone.
     for (const rectangle of [area(action, 4, 4, 10, 8), area(action, 10, 8, 4, 4), area(action, 4, 8, 10, 4), area(action, 10, 4, 4, 8)]) {
       const preview = queryArea(world, rectangle); expect(preview.ok).toBe(true);
       if (preview.ok) { expect(preview.cells).toEqual(expected); expect(preview.selected).toBe(35); expect(preview.skipped).toBe(35 - expected.length); }

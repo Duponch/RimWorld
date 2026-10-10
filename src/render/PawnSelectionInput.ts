@@ -10,7 +10,7 @@ export function rectangleActors(pawns:readonly ScreenPawn[],x1:number,y1:number,
 export function hitActors(pawns:readonly ScreenPawn[],x:number,y:number):ScreenPawn[] {
   return pawns.filter(p=>Math.hypot(x-p.x,y-p.y)<=p.radius).sort((a,b)=>(a.category??0)-(b.category??0)||a.depth-b.depth||a.id-b.id);
 }
-export function equivalentActors(pawns:readonly ScreenPawn[],hit:ScreenPawn):number[]{return pawns.filter(p=>p.group===hit.group).map(p=>p.id);}
+export function equivalentActors(pawns:readonly ScreenPawn[],hit:ScreenPawn):number[]{return [hit.id,...pawns.filter(p=>p.id!==hit.id&&p.group===hit.group).map(p=>p.id)].slice(0,200);}
 interface Callbacks {
   enabled():boolean;
   pawns():ScreenPawn[];
@@ -19,6 +19,7 @@ interface Callbacks {
   preferObjectCycle(event:PointerEvent):boolean;
   select(gesture:SelectionGesture):void;
   inspect(event:PointerEvent):void;
+  inspectGroup?(event:MouseEvent):boolean;
   lock(locked:boolean):void;
 }
 /** Screen-space rectangle remains meaningful after rotating either 3D camera.
@@ -70,6 +71,7 @@ export class PawnSelectionInput {
   }
   private doubleClick=(event:MouseEvent):void=>{
     if(!this.callbacks.enabled()||event.button!==0)return;
+    if(this.callbacks.inspectGroup?.(event)){event.preventDefault();return;}
     const pawns=this.callbacks.pawns(),hit=hitActors(pawns,event.clientX,event.clientY)[0];
     if(!hit)return;
     this.callbacks.select({ids:equivalentActors(pawns,hit),additive:event.shiftKey,toggle:false});

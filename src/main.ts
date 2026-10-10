@@ -119,6 +119,8 @@ import './ui/inspection-dossiers.css';
 import './ui/journal-inspection.css';
 import { presentCellDescription, type CellHealth } from './ui/cell-inspector';
 import { mapObjectExists,nextMapObject,type MapObjectSelection } from './ui/map-object-selection';
+import {mapObjectGroupCells,MAX_MAP_OBJECT_SELECTION} from './ui/map-object-group-selection';
+import {mapObjectActions,mapObjectGroupActions} from './ui/map-object-actions';
 import { MapHoverLightCache,mapHoverLines } from './ui/map-hover-readout';
 import { mapCellDetails } from './ui/map-cell-details';
 import './ui/map-details.css';
@@ -244,6 +246,8 @@ let selectedPawn: number | undefined;
 let colonistInspector: ColonistInspectorState | undefined;
 let selectedCell: { x: number; z: number } | undefined;
 let selectedObject:MapObjectSelection|undefined;
+let selectedObjects:MapObjectSelection[]=[];
+const objectGroupReads=new WeakMap<HTMLElement,{world:World;selection:string}>();
 let hoveredCell:Cell|null=null;
 let lastHoverReadAt=0,lastHoverCopy='';
 let altInspectorHeld=false,lastAltReadAt=0,lastAltCopy='',mapPointerX=0,mapPointerY=0;
@@ -469,7 +473,10 @@ installVisualIdentity(document.querySelector<HTMLElement>('#app')!);
 installTooltips(document.body);
 installArchitectIcons(document.querySelector<HTMLElement>('#app')!);
 // Suppress browser chrome without cancelling the game's own order-menu handler.
-document.querySelector('#app')!.addEventListener('contextmenu', event => event.preventDefault());
+document.querySelector('#app')!.addEventListener('contextmenu', event => {
+  event.preventDefault();
+  if(currentPanel==='architect'&&(event.target as Element).closest('.management-panel'))setPanel(null,true);
+});
 const saveRepository = new BrowserSaveRepository(() => localStorage, () => globalThis.indexedDB,
   status => { if (status.message) notify(status.message, true); });
 const session = new GameSession(client, saveRepository, prepareWorld, () => {
@@ -632,7 +639,7 @@ function setTool(tool: Tool) {
   setCategory(definition.category);
   setPanel('architect');
   applyTool(tool);
-  if(definition.category==='orders'||definition.category==='zones')setPanel(null,true);
+  setPanel(null,true);
 }
 function selectPawn(id: number) {
   selectPawns({ids:[id],additive:false,toggle:false},true);
@@ -680,7 +687,7 @@ function selectPawns(gesture:SelectionGesture,focus=false) {
   shootingControls.cancel();
   selection.apply(gesture,new Set([...snapshot.pawns.map(p=>p.id),...(snapshot.wildlife?.animals??[]).map(a=>a.id),...(snapshot.mechanoids??[]).map(m=>m.id)]));
   selectedPawn=selection.single;selectedCell=undefined;
-  selectedObject=undefined;renderer?.setSelectedObject(undefined);
+  selectedObject=undefined;selectedObjects=[];renderer?.setSelectedObject(undefined);
   renderer?.setSelectedPawns(selection.ids);
   setPanel(null);
   if(focus&&selectedPawn!==undefined)renderer?.focusPawn(selectedPawn);
@@ -709,7 +716,7 @@ function pickCell(x: number, z: number) {
   const cell={x,z},object=nextMapObject(snapshot,cell,selectedCell?.x===x&&selectedCell.z===z?selectedObject:undefined);
   if(!object){clearSelection();return;}
   selection.clear();renderer?.setSelectedPawns(selection.ids);
-  selectedPawn = undefined; selectedCell = cell;selectedObject=object;renderer?.setSelectedObject(object);
+  selectedPawn = undefined; selectedCell = cell;selectedObject=object;selectedObjects=[object];renderer?.setSelectedObject(object);
   setPanel(null); rebuildInspector(); renderState();
 }
 function designateArea(action: AreaAction, from: Cell, to: Cell) {
@@ -729,8 +736,37 @@ function designateArea(action: AreaAction, from: Cell, to: Cell) {
 }
 function clearSelection() {
   selection.clear();renderer?.setSelectedPawns(selection.ids);orderMenu.close();
-  selectedPawn = undefined; selectedCell = undefined;selectedObject=undefined;renderer?.setSelectedObject(undefined);
+  selectedPawn = undefined; selectedCell = undefined;selectedObject=undefined;selectedObjects=[];renderer?.setSelectedObject(undefined);
   rebuildInspector();renderState();
+}
+function selectObjects(objects:MapObjectSelection[],additive=false):void {
+  if(!snapshot||replacingWorld||frontMenu.isOpen())return;
+  const merged=new Map<string,MapObjectSelection>();
+  for(const object of [...(additive?selectedObjects:[]),...objects])merged.set(`${object.kind}:${object.id}`,object);
+  selectedObjects=[...merged.values()].slice(0,MAX_MAP_OBJECT_SELECTION);
+  selectedObject=selectedObjects[0];selectedCell=selectedObject?mapObjectGroupCells(snapshot,[selectedObject])[0]?.[0]:undefined;
+  selection.clear();selectedPawn=undefined;renderer?.setSelectedPawns(selection.ids);renderer?.setSelectedObjects(selectedObjects);
+  setPanel(null);rebuildInspector();renderState();
+}
+function objectGroupControls():void {
+  if(!snapshot||!selectedObject)return;
+  el('object-group-title').textContent=`${selectedObjects.length} objets sélectionnés`;
+  const host=el('object-group-actions'),selectionKey=selectedObjects.map(o=>`${o.kind}:${o.id}`).join('|');
+  const previous=objectGroupReads.get(host);
+  if(previous?.world===snapshot&&previous.selection===selectionKey)return;
+  const actions=mapObjectGroupActions(snapshot,selectedObjects);
+  objectGroupReads.set(host,{world:snapshot,selection:selectionKey});
+  const key=actions.map(a=>`${a.id}:${a.label}`).join('|');if(host.dataset.actions===key)return;
+  host.dataset.actions=key;host.replaceChildren(...actions.map(action=>{
+    const button=document.createElement('button');button.type='button';button.className='secondary-action';button.textContent=action.label;
+    button.dataset.objectGroupAction=action.id;
+    button.onclick=()=>void attempt(async()=>{
+      if(!snapshot)return;
+      const commands=mapObjectGroupActions(snapshot,selectedObjects).find(a=>a.id===action.id)?.commands??[];
+      for(const command of commands)await client.command(command);
+      rebuildInspector();renderState();
+    });return button;
+  }));
 }
 function readStorageSettings(_prefix:string){return creationStorageControls.read();}
 function editZone(kind:'stockpile'|'growing',id:number,shrink=false):void {
@@ -762,7 +798,10 @@ function rebuildInspector() {
   delete panel.dataset.colonistInspectorPawn;
   delete panel.dataset.colonistInspectorTab;
   delete panel.dataset.mechanoidId;
-  if(selection.ids.size>1) {
+  if(selectedObjects.length>1){
+    panel.innerHTML='<div class="panel-heading"><h2 id="object-group-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="object-group-actions" class="zone-actions"></div><p class="muted">Double clic : objets du même type visibles à l’écran. Sélection limitée à 200 objets.</p>';
+    objectGroupControls();
+  } else if(selection.ids.size>1) {
     panel.innerHTML='<div class="panel-heading"><h2 id="group-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="group-members"></div><p class="muted">Choisissez un individu pour consulter son dossier.</p>';
     for(const id of selection.ids) {
       const button=document.createElement('button');button.dataset.groupPawn=String(id);button.onclick=()=>selectPawn(id);el('group-members').append(button);
@@ -807,6 +846,9 @@ function rebuildInspector() {
   } else if (selectedCell) {
     panel.classList.add('cell-inspector-host');
     panel.innerHTML = `<div class="cell-summary"><div class="cell-card"><div class="panel-heading cell-heading"><span class="cell-illustration ui-icon" aria-hidden="true"></span><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="cell-description"></div><p id="cell-materials"></p><p id="cell-job"></p></div><div class="cell-actions" role="group" aria-label="Commandes de l’objet"><button id="weapon-permission" class="secondary-action" hidden></button><button id="cell-chop" class="secondary-action" hidden>Couper du bois</button><button id="cell-harvest" class="secondary-action" hidden>Récolter</button><button id="cell-cut" class="secondary-action" hidden>Déraciner</button><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button></div></div><div id="cell-storage" hidden><div id="selected-stockpile-items"></div></div>`;
+    for(const [id,label] of [['mine','Miner'],['haul-chunks','Transporter les fragments']] as const){
+      const button=document.createElement('button');button.id=`cell-${id}`;button.className='secondary-action';button.hidden=true;button.textContent=label;panel.querySelector('.cell-actions')!.append(button);
+    }
     const storage = selectedObject?.kind==='stockpile'?snapshot?.stockpiles.find(item => item.id===selectedObject!.id):undefined;
     if(storage){
       panel.classList.add('stockpile-inspector-host');
@@ -839,7 +881,7 @@ function rebuildInspector() {
       bedControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
     }
     if(selectedObject?.kind==='structure'||selectedObject?.kind==='packed'){
-      furnitureControls(panel,()=>snapshot,()=>selectedCell,()=>selectedObject?.id,c=>void attempt(()=>client.command(c)),id=>{const object=furnitureObject(snapshot!,id);if(!object)return;setPanel('architect');applyTool('install');installationId=id;placementOrientation=object.orientation;renderer?.setPlacementRotation(placementOrientation);renderer?.setFurniturePlacement(object);});
+      furnitureControls(panel,()=>snapshot,()=>selectedCell,()=>selectedObject?.id,c=>void attempt(()=>client.command(c)),id=>{const object=furnitureObject(snapshot!,id);if(!object)return;setPanel('architect');applyTool('install');installationId=id;placementOrientation=object.orientation;renderer?.setPlacementRotation(placementOrientation);renderer?.setFurniturePlacement(object);setPanel(null,true);});
       panel.querySelector('.cell-actions')?.append(...panel.querySelectorAll('#cell-uninstall, #cell-install'));
     }
     const fire=selectedObject?.kind==='structure'?snapshot?.structures.find(s=>s.id===selectedObject!.id&&(stationRecipe(s)!==null||s.kind==='passive-cooler'||s.kind==='wood-generator'||s.kind==='chemfuel-generator')):undefined;
@@ -1037,7 +1079,8 @@ function renderState() {
   if (currentPanel === 'work') updateWorkPanel(world,carriedPatients);
   updateDraftControls(el('inspector'),selectedColonists);
   shootingControls.update(el('inspector'),selectedColonists);
-  if(selection.ids.size>1) {
+  if(selectedObjects.length>1){objectGroupControls();}
+  else if(selection.ids.size>1) {
     el('group-title').textContent=`${selection.ids.size} individus sélectionnés`;
     for(const button of el('group-members').querySelectorAll<HTMLButtonElement>('button')) {
       const pawn=world.pawns.find(p=>p.id===Number(button.dataset.groupPawn));
@@ -1159,6 +1202,15 @@ function renderState() {
       // The coordinate command must resolve to the intent shown in this inspector.
       const cancelTarget=job&&(world.jobs.find(item=>footprintCells(item).some(cell=>cell.x===x&&cell.z===z))??furnitureIntentAt(world,selectedCell));
       el('cell-cancel').hidden=!job||job.kind==='repair'||job.kind==='fix-breakdown'||cancelTarget?.id!==job.id||selectedObject.kind!=='job'&&job.furniture?.structureId!==selectedObject.id;
+      const offered=mapObjectActions(world,selectedObject);
+      for(const id of ['mine','haul-chunks','chop','harvest','cut','deconstruct','cancel'] as const){
+        const button=el<HTMLButtonElement>(`cell-${id}`),action=offered.find(a=>a.id===id);button.hidden=!action;
+        if(action){button.textContent=action.label;button.onclick=()=>void attempt(async()=>{
+          if(!snapshot||!selectedObject)return;
+          const current=mapObjectActions(snapshot,selectedObject).find(a=>a.id===id);if(current)await client.command(current.command);
+          renderState();
+        });}
+      }
       el('cell-storage').hidden = !storage;
       if(structure)updateBedControls(el('inspector'),world,structure);
       if(storage&&!selectedStoragePending)selectedStorageControls?.show(storage);
@@ -1434,14 +1486,19 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
   if(!replaced&&selectedObject?.kind==='stockpile'&&!world.stockpiles.some(cell=>cell.id===selectedObject!.id)){
     const old=snapshot?.stockpiles.find(cell=>cell.id===selectedObject!.id);
     const replacement=old?stockpileCellsByZoneId(world,stockpileZoneId(old))[0]:undefined;
-    if(replacement){selectedObject={kind:'stockpile',id:replacement.id};selectedCell={x:replacement.x,z:replacement.z};renderer?.setSelectedObject(selectedObject);zoneAnchorChanged=true;}
+    if(replacement){selectedObject={kind:'stockpile',id:replacement.id};selectedObjects=[selectedObject];selectedCell={x:replacement.x,z:replacement.z};renderer?.setSelectedObject(selectedObject);zoneAnchorChanged=true;}
   }
   snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
+  let objectGroupChanged=false;
+  if(!replaced&&selectedObjects.length>1){
+    const cells=mapObjectGroupCells(world,selectedObjects),remaining=selectedObjects.filter((_,i)=>cells[i]!.length>0);
+    if(remaining.length!==selectedObjects.length){const first=remaining[0]?selectedObjects.indexOf(remaining[0]):-1;selectedObjects=remaining;selectedObject=remaining[0];selectedCell=first>=0?cells[first]?.[0]:undefined;renderer?.setSelectedObjects(remaining);objectGroupChanged=true;}
+  }
   if(soundEnabled)foliageAmbience.adopt(world,true);
   music.setMood(musicMood(world));
   const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id)&&!world.wildlife?.animals.some(a=>a.id===id)&&!world.mechanoids?.some(m=>m.id===id))||!!selectedObject&&!mapObjectExists(world,selectedObject);
-  if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;renderer?.setSelectedObject(undefined);orderMenu.close();rebuildInspector();}
-  else if(roleChanged||zoneAnchorChanged){orderMenu.close();rebuildInspector();}
+  if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;selectedObjects=[];renderer?.setSelectedObject(undefined);orderMenu.close();rebuildInspector();}
+  else if(roleChanged||zoneAnchorChanged||objectGroupChanged){orderMenu.close();rebuildInspector();}
   renderer?.setWorld(world,replaced,speed,motion,true);
   syncAudioSources(world);
   if(changed)renderer?.setSelectedPawns(selection.ids);
@@ -1527,6 +1584,7 @@ async function prepareWorldView(): Promise<void> {
       audio.update({ presentedTick: view.tick, paused: view.paused || frontMenu.isOpen() || replacingWorld, hidden: document.hidden });
     };
     renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){const type=shootingControls.mode!;shootingControls.cancel();void attempt(async()=>{await client.command({type,pawnIds:selectedColonyIds(),targetId});renderState();});}return;}selectPawns(gesture);};
+    renderer.onObjectSelection=selectObjects;
     renderer.onHover=cell=>{hoveredCell=cell;updateMapHover(true);};
     renderer.onInteractionCancel=()=>orderMenu.close();
     renderer.onContext=(cell,x,y,queue,targetId)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner);if(selected.some(p=>p.draft))void orderMenu.openTactical(snapshot,new Set(selected.map(p=>p.id)),cell,x,y,queue,targetId);else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};

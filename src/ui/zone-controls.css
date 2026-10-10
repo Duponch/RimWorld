@@ -1,8 +1,12 @@
-#inspector.stockpile-inspector-host{display:flex;flex-direction:column;width:min(400px,calc(100vw - 20px));overflow:hidden;gap:10px}
-.stockpile-inspector-host #cell-storage{order:0;min-height:0;flex:1 1 auto}
-.stockpile-inspector-host .cell-summary{order:1;flex:0 0 auto;border-top:1px solid var(--line);padding-top:8px}
-.stockpile-inspector-host .cell-heading{grid-template-columns:36px minmax(0,1fr) 28px 28px}
-.stockpile-inspector-host .cell-illustration{width:36px;height:36px}
+#inspector.cell-inspector-host.stockpile-inspector-host{display:flex;flex-direction:column;width:min(400px,calc(100vw - 20px));height:min(760px,calc(100dvh - 190px));overflow:hidden;gap:10px}
+#inspector.stockpile-inspector-host #cell-storage{order:0;min-height:0;flex:1 1 auto;overflow:hidden;margin:0;padding:0;border:0}
+#inspector.stockpile-inspector-host #selected-stockpile-items{display:flex;height:100%;min-height:0}
+#inspector.stockpile-inspector-host .storage-core-controls{width:100%;height:100%;min-height:0}
+#inspector.stockpile-inspector-host .storage-core-controls> *{flex-shrink:0}
+#inspector.stockpile-inspector-host .storage-core-tree{flex:1 1 auto;min-height:0;max-height:none;overflow:auto}
+#inspector.stockpile-inspector-host .cell-summary{order:1;flex:0 0 auto;border-top:1px solid var(--line);padding-top:8px}
+#inspector.stockpile-inspector-host .cell-heading{grid-template-columns:36px minmax(0,1fr) 28px 28px}
+#inspector.stockpile-inspector-host .cell-illustration{width:36px;height:36px}
 .zone-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
 .zone-actions button{flex:1 1 110px;font-size:12px;padding:6px 8px;min-height:32px}
 .view-controls{flex-wrap:wrap}

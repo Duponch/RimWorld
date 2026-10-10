@@ -27,7 +27,9 @@
 .cell-inspector-host .cell-actions{display:grid;align-content:start;gap:7px;padding:8px;border:1px solid var(--line);border-radius:9px;background:#efe1c980}
 .cell-inspector-host .cell-actions:not(:has(>button:not([hidden]))){display:none}
 .cell-inspector-host .cell-actions button{display:block;width:100%;min-height:44px;margin:0;padding:7px 6px;font-size:12px;line-height:1.2;text-align:center;white-space:normal}
-.cell-inspector-host .cell-actions :is(#cell-chop,#cell-harvest,#cell-cut,#cell-deconstruct,#cell-cancel)::before{content:'';display:block;width:28px;height:28px;margin:0 auto 3px;background-image:url('/assets/ui/lisiere/architect-1.png');background-size:600% 500%;background-repeat:no-repeat}
+.cell-inspector-host .cell-actions :is(#cell-mine,#cell-haul-chunks,#cell-chop,#cell-harvest,#cell-cut,#cell-deconstruct,#cell-cancel)::before{content:'';display:block;width:28px;height:28px;margin:0 auto 3px;background-image:url('/assets/ui/lisiere/architect-1.png');background-size:600% 500%;background-repeat:no-repeat}
+.cell-inspector-host #cell-mine::before{background-position:80% 25%}
+.cell-inspector-host #cell-haul-chunks::before{background-position:100% 25%}
 .cell-inspector-host #cell-chop::before{background-position:0 50%}
 .cell-inspector-host #cell-harvest::before{background-position:20% 50%}
 .cell-inspector-host #cell-cut::before{background-position:40% 50%}

@@ -9,7 +9,7 @@ export class PawnSelection {
     for(const id of gesture.ids)if(available.has(id)) {
       if(gesture.toggle&&next.has(id))next.delete(id);else next.add(id);
     }
-    this.ids=new Set([...next].filter(id=>available.has(id)));
+    this.ids=new Set([...next].filter(id=>available.has(id)).slice(0,200));
   }
   clear():void {this.ids=new Set();}
 }
