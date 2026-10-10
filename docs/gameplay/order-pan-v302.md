@@ -18,4 +18,4 @@ Rapport `tmp/order-pan-v302/native-reprise/run-PuKGox/report.json` SHA `ACD98BF2
 
 Le premier pilote `native/run-ig9AKP` reste rouge 24,155 s après deux contrôles acquis : il attendait un changement de cible pour un geste droit qui tourne la caméra. La reprise distincte compare sa position ; aucun comportement produit n'a été changé pour cet oracle.
 
-Commit et push par lot ; [publications Cloudflare](../development/cloudflare-pages.md) regroupées. V302 n'est pas déployé par ce lot. La relance planifiée reste en pause.
+Commit et push produit `98265ef9` acquis. [V302 est publié sur Cloudflare](../development/cloudflare-pages.md#publication-v302-demandée-pendant-v303) en `81c1e74d` après la demande immédiate de l'utilisateur ; package isolé du candidat V303 en cours. Les futures publications restent regroupées, sauf demande immédiate. La relance planifiée reste en pause.
