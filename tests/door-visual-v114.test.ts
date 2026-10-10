@@ -50,7 +50,7 @@ test('a lower door and recessed leaves fit a full-height wall in both axes',()=>
 
 test('cutaway clips door and frame to wall height; transitions keep retained leaf geometry',()=>{
   const world=doorway(1),parts=doorParts(world,true),leaves=new DoorLayer();
-  expect(parts).toHaveLength(6);
+  expect(parts).toHaveLength(4);
   expect(doorLeafTop(true)).toBeCloseTo(WORLD_SCALE.wallCutawayHeight-.14);
   expect(parts.every(part=>part.y+part.sy!/2<=WORLD_SCALE.wallCutawayHeight+1e-6)).toBe(true);
   leaves.update(world,true);

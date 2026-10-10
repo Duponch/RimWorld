@@ -26,7 +26,7 @@ test('TV preview and its four rotations publish their actual .8 faces and F32 co
   try{
     for(const orientation of [0,1,2,3] as const){
       const tv={x:16,z:16,orientation};hints.television(world,tv);
-      const cells=televisionWatchCells(tv),mesh=hints.group.children[0] as THREE.Mesh<THREE.InstancedBufferGeometry>;
+      const cells=televisionWatchCells(tv),mesh=hints.group.getObjectByName('recreation-places') as THREE.Mesh<THREE.InstancedBufferGeometry>;
       expect(hints.surfaces).toHaveLength(cells.length);
       const first=hints.surfaces[0]!,cell=cells[0]!,rgb=mesh.geometry.getAttribute('boxColor');
       expect([first.red,first.green,first.blue]).toEqual([rgb.getX(0),rgb.getY(0),rgb.getZ(0)]);

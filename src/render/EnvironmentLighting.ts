@@ -1,5 +1,5 @@
-import { DataTexture, LinearFilter, RGBAFormat, UnsignedByteType, Vector2, Vector4, type MeshStandardNodeMaterial } from 'three/webgpu';
-import { Fn, If, diffuseColor, float, mix, normalWorldGeometry, output, positionWorld, renderGroup, smoothstep, texture, uniform, vec3, vec4 } from 'three/tsl';
+import { DataTexture, LinearFilter, RGBAFormat, UnsignedByteType, Vector2, Vector4, type MeshStandardNodeMaterial, type Node } from 'three/webgpu';
+import { Fn, If, diffuseColor, float, mix, normalWorldGeometry, output, positionWorld, renderGroup, smoothstep, texture, uniform, vec2, vec3, vec4 } from 'three/tsl';
 import type { World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { EnvironmentLightField } from './EnvironmentLightField';
@@ -14,8 +14,9 @@ export class EnvironmentLighting {
   private readonly bounds = uniform(new Vector4(1, 1, 0, 0)).setGroup(renderGroup);
   private readonly sample = texture(this.map);
   private readonly configured = new WeakSet<MeshStandardNodeMaterial>();
-  private readonly shade = Fn(() => {
-    const p = positionWorld.toVar(), n = normalWorldGeometry.toVar(), result = output.toVar();
+  private readonly shade = this.createShade(positionWorld, normalWorldGeometry);
+  private createShade(position:Node,normal:Node):Node {return Fn(() => {
+    const p = vec3(position as ReturnType<typeof vec3>).toVar(), n = vec3(normal as ReturnType<typeof vec3>).toVar(), result = output.toVar();
     // Most forest fragments have no local source/roof, or lie above its height.
     // Keep this a uniform-driven branch: no new material/pipeline on ignition.
     If(p.x.greaterThanEqual(this.bounds.x).and(p.z.greaterThanEqual(this.bounds.y))
@@ -38,7 +39,7 @@ export class EnvironmentLighting {
       result.assign(vec4(output.rgb.mul(mix(1, .12, covered)).add(diffuseColor.rgb.mul(fill)), output.a));
     });
     return result;
-  })();
+  })();}
 
   constructor() {
     this.map.minFilter = this.map.magFilter = LinearFilter;
@@ -48,6 +49,16 @@ export class EnvironmentLighting {
     if (this.configured.has(material)) return;
     if (material.outputNode) throw new Error('Environment lighting requires an unclaimed material output.');
     material.outputNode = this.shade; this.configured.add(material);
+  };
+  /** Decorative blades borrow the horizontal surface's local-light response.
+   * Their authored root precedes sway; geometric blade faces must not attenuate
+   * the lamp fill or shift the source/roof sample into a neighbouring cell. */
+  readonly configureGrounded = (material:MeshStandardNodeMaterial,root:Node):void => {
+    if(this.configured.has(material))return;
+    if(material.outputNode)throw new Error('Environment lighting requires an unclaimed material output.');
+    const p=vec2(root as ReturnType<typeof vec2>);
+    material.outputNode=this.createShade(vec3(p.x,.021,p.y),vec3(0,1,0));
+    this.configured.add(material);
   };
   update(world: World): void {
     if (!this.field.update(world)) return;

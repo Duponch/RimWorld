@@ -11,6 +11,7 @@ import { InstanceTargetTint } from './instance-target-tint';
 import {ZONE_FILL_OPACITY} from './zone-surface-presentation';
 import {ITEM_SHAPES,type ItemShape} from './item-geometry';
 import {ItemMeshAtlas} from './item-mesh-atlas';
+import {createSandbagGeometry} from './sandbag-parts';
 
 const object = new THREE.Object3D(), color = new THREE.Color();
 type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'storage-home' | 'border';
@@ -23,6 +24,7 @@ export class BoxBatches {
   private readonly geometry = new THREE.BoxGeometry(1, 1, 1);
   private readonly roundedRockGeometry = createChunkGeometry();
   private readonly smallRockGeometry = createChunkGeometry(true);
+  private readonly sandbagGeometry = createSandbagGeometry();
   private readonly surfaceTexture = createStylizedSurfaceTexture();
   private readonly rockTexture = createChunkSurfacePaint();
   private readonly texturedSolid = material(0xffffff);
@@ -60,6 +62,7 @@ export class BoxBatches {
     this.geometry.userData.rendererOwned = true;
     this.roundedRockGeometry.userData.rendererOwned = true;
     this.smallRockGeometry.userData.rendererOwned = true;
+    this.sandbagGeometry.userData.rendererOwned = true;
     for (const mat of Object.values(this.materials)) { mat.userData.rendererOwned = true; configureBoxMaterial(mat); }
     this.texturedSolid.userData.rendererOwned = true;
     configureBoxMaterial(this.texturedSolid);
@@ -101,6 +104,11 @@ export class BoxBatches {
   }
 
   set(group: THREE.Group, key: string, items: Placement[], style: Style = 'solid', shadows = true): void {
+    // Barricades own one resident mesh and the ordinary solid material. Their
+    // authored cushions never promote unrelated furniture into the item atlas.
+    if(key==='sandbags'&&style==='solid'){
+      this.setGeometry(group,key,items,this.sandbagGeometry,style,shadows);return;
+    }
     if(style==='solid'&&(key.startsWith('pile:')||this.itemBatchKeys.has(key)||items.some(p=>p.shape&&(ITEM_SHAPES as readonly string[]).includes(p.shape)))){
       this.itemBatchKeys.add(key);this.warmRoundedRocks(group,key,shadows);
       const ordinary:Placement[]=[],complex:Placement[]=[],rocks:Placement[]=[],small:Placement[]=[];
@@ -250,7 +258,7 @@ export class BoxBatches {
   }
 
   dispose(): void {
-    this.clear(); this.geometry.dispose(); this.roundedRockGeometry.dispose();this.smallRockGeometry.dispose();
+    this.clear(); this.geometry.dispose(); this.roundedRockGeometry.dispose();this.smallRockGeometry.dispose();this.sandbagGeometry.dispose();
     this.itemAtlas.dispose();this.plainItem.dispose();this.texturedItem.dispose();
     for (const mat of Object.values(this.materials)) mat.dispose();
     this.texturedSolid.dispose(); this.plainRock.dispose(); this.texturedRock.dispose(); this.surfaceTexture.dispose();this.rockTexture.dispose();

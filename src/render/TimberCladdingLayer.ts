@@ -184,11 +184,13 @@ export function timberCladdingParts(world:World,cutaway:boolean,subjects:readonl
       const alongX=occupied.has(at(wall.x-1,wall.z))||occupied.has(at(wall.x+1,wall.z));
       wallParts.push({key:wall.id,x:wall.x,y:0,z:wall.z,ry:alongZ&&!alongX?Math.PI/2:0,sx:1,sy:height,sz:1,tint});
     }
-    for(const door of timberDoors)if(selected.has(door.id)) {
+    // Keep the connected context and neighbouring plank orientation unchanged;
+    // cutaway omits only the timber pieces spanning each doorway.
+    for(const door of timberDoors)if(!cutaway&&selected.has(door.id)) {
       const from=doorLeafTop(cutaway),axis=axes.get(door.z*world.width+door.x)??0;
       wallParts.push({key:door.id,x:door.x,y:from,z:door.z,ry:axis*Math.PI/2,sx:1,sy:height-from,sz:1,tint:1});
     }
-    for(const {cell,side,centre,length} of rims)if(selected.has(cell.id)) {
+    for(const {cell,side,centre,length} of rims)if(selected.has(cell.id)&&(!cutaway||cell.axis==='all')) {
       const horizontal=side==='north'||side==='south';
       const tint=1+((((cell.x*73856093)^(cell.z*19349663))>>>0)%11-5)*.006;
       eaveParts.push({key:cell.id,x:cell.x+(horizontal?centre:0),y:height-.055,z:cell.z+(horizontal?0:centre),

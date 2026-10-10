@@ -78,14 +78,15 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
         {targetId:p.building.id,x,z,y:y+.49*scale,sx:.13*scale,sy:.03*scale,sz:.67*scale,color:buildingMaterialColor(p.building.material,0x6f634e)});
     }
     batches.set(group, 'furniture', [
-      ...graveParts(world), ...foodWorkstationParts(world), ...electricalParts(contextWorld,cutaway,world.structures), ...passiveCoolerParts(world), ...doorParts(contextWorld,cutaway,world.structures), ...penParts(contextWorld,world.structures), ...campfireParts(world), ...recreationParts(world), ...stonecutterParts(world), ...craftingSpotParts(world), ...researchTailorParts(world), ...industryParts(world), ...habitatParts(world), ...artParts(world), ...drugLabParts(world),
-      ...hospitalBedParts(world), ...vitalsMonitorParts(world), ...deepDrillingParts(world), ...orbitalParts(world), ...nutrientPasteParts(world), ...biofuelParts(world), ...hydroponicsParts(world), ...sandbagParts(world), ...miniTurretBaseParts(world), ...parcels,
+      ...graveParts(world), ...foodWorkstationParts(world), ...electricalParts(contextWorld,cutaway,world.structures), ...passiveCoolerParts(world), ...doorParts(contextWorld,cutaway,world.structures), ...penParts(contextWorld,world.structures,cutaway), ...campfireParts(world), ...recreationParts(world), ...stonecutterParts(world), ...craftingSpotParts(world), ...researchTailorParts(world), ...industryParts(world), ...habitatParts(world), ...artParts(world), ...drugLabParts(world),
+      ...hospitalBedParts(world), ...vitalsMonitorParts(world), ...deepDrillingParts(world), ...orbitalParts(world), ...nutrientPasteParts(world), ...biofuelParts(world), ...hydroponicsParts(world), ...miniTurretBaseParts(world), ...parcels,
       ...woodParts.map(p => ({ ...p, color: p.color ?? 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 1, sy: wallHeight - 0.09, sz: 1, color: p.color ?? 0xa6916e })),
       ...wallCaps.map(p => ({ ...p, sx: 1, sy: 0.09, sz: 1, color: p.color ?? 0xc3af86 })),
       ...bedFrames.map(p => ({ ...p, color: p.color ?? 0x795d41 })), ...bedding.map(p => ({ ...p, color: p.color??0xc7a977 })),
       ...pillows.map(p => ({ ...p, color: 0xe5d8b7 })), ...headboards.map(p => ({ ...p, color: p.color ?? 0x795d41 })),
     ]);
+    batches.set(group,'sandbags',sandbagParts(world));
 }
 
 

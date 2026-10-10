@@ -14,7 +14,7 @@ test('fixed low-cover model stays within one cell, reads only confirmed structur
   const before=JSON.stringify(w),parts=sandbagParts(w);
   expect(structureRoomMarketValue(w.structures[0]!)).toBeCloseTo(8.148);
   expect(structureRoomStandable('sandbags')).toBe(false);
-  expect(JSON.stringify(w)).toBe(before);expect(parts.length).toBeGreaterThan(6);
+  expect(JSON.stringify(w)).toBe(before);expect(parts).toHaveLength(5);
   for(const p of parts){
     expect(p.key).toBe(100);expect(p.ry??0).toBe(0);
     expect(p.x-p.sx!/2).toBeGreaterThanOrEqual(11.5);expect(p.x+p.sx!/2).toBeLessThanOrEqual(12.5);

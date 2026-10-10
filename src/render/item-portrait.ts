@@ -3,6 +3,7 @@ import type {ItemId} from '../sim/items';
 import {createItemGeometry} from './item-geometry';
 import {createChunkGeometry,chunkContour,isSmallChunk} from './chunk-shape';
 import {itemGeometry} from './item-presentation';
+import {createSandbagGeometry} from './sandbag-parts';
 import type {Placement} from './primitives';
 
 export interface GeometryPortraitEntry {geometry:THREE.BufferGeometry;placement:Placement&{rx?:number;rz?:number}}
@@ -53,7 +54,7 @@ export function placementGeometry(p:Placement):THREE.BufferGeometry {
     return geometry;
   }
   const key=p.shape??'box';let geometry=shapeMeshes.get(key);
-  if(!geometry){geometry=p.shape?createItemGeometry(p.shape):new THREE.BoxGeometry(1,1,1);shapeMeshes.set(key,geometry);}return geometry;
+  if(!geometry){geometry=p.shape==='sandbag'?createSandbagGeometry():p.shape?createItemGeometry(p.shape):new THREE.BoxGeometry(1,1,1);shapeMeshes.set(key,geometry);}return geometry;
 }
 export const placementsPortraitSvg=(parts:readonly Placement[],source=''):string=>geometryPortraitSvg(parts.map(placement=>({geometry:placementGeometry(placement),placement})),source);
 export const placementsPortraitDataUrl=(parts:readonly Placement[],source=''):string=>dataUrl(placementsPortraitSvg(parts,source));

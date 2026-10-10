@@ -80,7 +80,9 @@ export function animalParts(species:string):readonly HarePart[] {
     const anatomicalSide=side<0?'left':'right';
     add([.13,.08,.17],[side*width*.36,headY+.12,headZ+.02],3,headPivot,color,undefined,false,`${anatomicalSide}-ear`);
     add([.028,.035,.04],[side*width*.285,headY+.035,headZ+.21],3,headPivot,0x22262a,undefined,false,`${anatomicalSide}-eye`);
-    if(muffalo||gazelle)add([.055,muffalo?.22:.29,.06],[side*width*.29,headY+.24,headZ-.025],3,headPivot,0xd6c8a5,undefined,false,'head');
+    // Horn roots belong to the forward skull, ahead of and inside the ears.
+    // Keep their head bone/anatomical owner so living and corpse rigs agree.
+    if(muffalo||gazelle)add([.055,muffalo?.22:.29,.06],[side*width*.22,headY+.24,headZ+.15],3,headPivot,0xd6c8a5,[.36,1,.36,1],false,'head');
   }
   add([.07,.27,.065],[0,leg+height*.35,-length*.55],0,[0,0,0],0x655347);
   if(camel){add([.48,.40,.55],[0,leg+height+.12,-.1],0,[0,0,0],color,undefined,true,'hump');add([.30,.18,.33],[0,leg+height+.40,-.12],0,[0,0,0],color,undefined,true,'hump');}

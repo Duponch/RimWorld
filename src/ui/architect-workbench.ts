@@ -131,6 +131,10 @@ export function installArchitectWorkbench(
     dock.append(row);
   }
   shell.append(dock);
+  // Drawer rows can wrap with viewport/font changes. Measure the actual dock
+  // only on layout changes, keeping map hover text above its visible buttons.
+  const dockSize=new ResizeObserver(()=>shell.style.setProperty('--map-tools-height',`${dock.getBoundingClientRect().height}px`));
+  dockSize.observe(dock);
 
   return { close, get openGroup() { return openGroup; } };
 }

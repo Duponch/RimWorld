@@ -4,7 +4,7 @@ import { PresentationChanges } from '../src/bridge/presentation-changes.ts';
 import { AudioCueRecorder } from '../src/bridge/audio-cues.ts';
 import { parseAudioManifest } from '../src/audio/AudioDirector.ts';
 import { miniTurretTargets,miniTurretView,miniTurretRadiusCells } from '../src/sim/mini-turret-presentation.ts';
-import { miniTurretBaseParts,miniTurretTopParts } from '../src/render/mini-turret-parts.ts';
+import { miniTurretBaseParts,miniTurretTopParts,MINI_TURRET_TOP_PART_COUNT } from '../src/render/mini-turret-parts.ts';
 import { MiniTurretLayer } from '../src/render/MiniTurretLayer.ts';
 import type { BoxBatches } from '../src/render/BoxBatches.ts';
 import { placementMaterial } from '../src/ui/construction-controls.ts';
@@ -25,7 +25,7 @@ test('confirmed public/private target, quarter shots and service are pure facts,
 
 test('only the global top changes on a confirmed aim; empty historical scenes allocate no turret batch',()=>{
   const w=miniTurretCamp(),s=campTurret(w),p=w.pawns[1]!;s.turret!.targetKey=`pawn:${p.id}`;
-  const bases=miniTurretBaseParts(w),top=miniTurretTopParts(w);expect(bases).toHaveLength(3);expect(top).toHaveLength(2);
+  const bases=miniTurretBaseParts(w),top=miniTurretTopParts(w);expect(bases).toHaveLength(3);expect(top).toHaveLength(MINI_TURRET_TOP_PART_COUNT);
   p.z+=4;expect(miniTurretBaseParts(w)).toEqual(bases);expect(miniTurretTopParts(w)[1]!.ry).not.toBe(top[1]!.ry);
   const layer=new MiniTurretLayer(),set=vi.fn(),group=new Group(),batches={set} as unknown as BoxBatches;
   const empty={...w,structures:[]};expect(layer.update(empty,group,batches)).toBe(false);expect(set).not.toHaveBeenCalled();

@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import { BoxMesh, configureBoxMaterial } from './BoxMesh';
 import { constructionPreviewParts, type ConstructionPreviewSpec } from './construction-preview-parts';
 import { createTimberGeometry } from './TimberCladdingLayer';
+import {createSandbagGeometry} from './sandbag-parts';
 import type { Placement } from './primitives';
 import type { World } from '../sim/types';
 import {EMPTY_GROUND_OVERLAYS,GROUND_OVERLAY_RENDER_ORDER,groundOverlayRect,type GroundOverlayRect} from './ground-overlay-surfaces';
@@ -16,7 +17,7 @@ export class ConstructionPreviewLayer {
   readonly material = new THREE.MeshBasicNodeMaterial({ transparent: true, opacity: .48, depthWrite: false, depthTest: false, vertexColors:true });
   /** Only real ground-height faces; furniture/roof models are not floor fills. */
   surfaces:readonly GroundOverlayRect[]=EMPTY_GROUND_OVERLAYS;
-  private readonly bases = [new THREE.BoxGeometry(1, 1, 1), createTimberGeometry(false), createTimberGeometry(true), new THREE.BoxGeometry(1, 1, 1)];
+  private readonly bases = [new THREE.BoxGeometry(1, 1, 1), createTimberGeometry(false), createTimberGeometry(true), new THREE.BoxGeometry(1, 1, 1),createSandbagGeometry()];
   private readonly meshes: BoxMesh[];
   private revision = 0;
   private previousWorld:World|undefined;
@@ -40,8 +41,8 @@ export class ConstructionPreviewLayer {
     const context = [...valid, ...invalid];
     const good = constructionPreviewParts(world, valid, cutaway, context);
     const bad = constructionPreviewParts(world, invalid, cutaway, context);
-    const goodArrays = [good.boxes, good.timberWalls, good.timberEaves, good.rotatedBoxes];
-    const badArrays = [bad.boxes, bad.timberWalls, bad.timberEaves, bad.rotatedBoxes];
+    const goodArrays = [good.boxes.filter(part=>part.shape!=='sandbag'), good.timberWalls, good.timberEaves, good.rotatedBoxes,good.boxes.filter(part=>part.shape==='sandbag')];
+    const badArrays = [bad.boxes.filter(part=>part.shape!=='sandbag'), bad.timberWalls, bad.timberEaves, bad.rotatedBoxes,bad.boxes.filter(part=>part.shape==='sandbag')];
     const surfaces:GroundOverlayRect[]=[];
     const floorKeys=new Set(context.flatMap((spec,index)=>spec.kind==='lay-floor'?[spec.key??index]:[]));
     for (let index = 0; index < this.meshes.length; index++) {

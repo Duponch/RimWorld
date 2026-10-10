@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V308 : [modèles, contours et lecture du site](gameplay/presentation-models-v308.md), schéma 219 conservé.** Commode, portes, cornes, sacs et tourelle corrigés ; herbe éclairée, contours d’influence, texte de survol et HUD sur arc. Contrôles, reprises et impact de performances dans la note unique ; publication regroupée en préparation, relance en pause. Les états suivants sont historiques.
+
 **V307 : [interfaces, ressources et commandes de carte](gameplay/interface-hud-v307.md), schéma219 conservé.** Architecte, ressources emboîtées, calendrier/météo et six fontes ; gestes de carte, pictogrammes et badge de pause. Contrôles, sauvegarde/reprise et publication dans la note unique. Les états suivants sont historiques.
 
 **V306 : [herbe, HUD et préférences d’affichage](gameplay/presentation-controls-v306.md), schéma 219 conservé.** Surfaces des outils et inspections raccordées, HUD simplifié, fontes locales au choix et masquage des nuages réglable ; contrôles et publication dans la note unique. Les états suivants sont historiques.

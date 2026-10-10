@@ -231,7 +231,8 @@ export class GpuGroundGrassLayer {
   private readonly foregroundFootprint = new Float64Array(8);
 
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void,
-    private readonly maxTextureDimension = Infinity, private readonly onUnsupported: (message: string) => void = () => {},surfaceTint?:GroundSurfaceTint) {
+    private readonly maxTextureDimension = Infinity, private readonly onUnsupported: (message: string) => void = () => {},surfaceTint?:GroundSurfaceTint,
+    groundedConfigure?:(material:THREE.MeshStandardNodeMaterial,root:THREE.Node)=>void) {
     this.map.colorSpace = THREE.SRGBColorSpace;
     this.map.magFilter = this.map.minFilter = THREE.NearestFilter;
     this.map.generateMipmaps = false;
@@ -314,7 +315,7 @@ export class GpuGroundGrassLayer {
     // AntSystem, the three-dimensional silhouette makes the grass visible.
     material.colorNode = groundColour;
     material.normalNode = transformNormalToView(vec3(0, 1, 0));
-    configure?.(material);
+    if(groundedConfigure)groundedConfigure(material,groundRoot);else configure?.(material);
     if(surfaceTint)material.outputNode=surfaceTint.shade(material.outputNode??output,groundRoot);
     this.mesh = new THREE.Mesh(bladeGeometry(), material);
     this.mesh.name = 'GPU decorative soil grass';

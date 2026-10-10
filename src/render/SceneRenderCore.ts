@@ -21,6 +21,7 @@ import { NaturalResourcePresentation } from './NaturalResourcePresentation';
 import { SceneResourceIndex, readSceneResourceFrame, type SceneResourceFrame } from './scene-resource-index';
 import { ProjectileLayer } from './ProjectileLayer';
 import { EnvironmentLighting } from './EnvironmentLighting';
+import { RangeOutlineLayer } from './RangeOutlineLayer';
 import { PresentationQueue } from './PresentationQueue';
 import { MOTION_HISTORY_TICKS } from '../bridge/motion-tracks';
 import { RoofLayer } from './RoofLayer';
@@ -194,6 +195,7 @@ export class SceneRenderCore {
   compatibilityWarning?: string;
   protected textureDimensionLimit = Infinity;
   protected readonly areaPreview=new AreaPreviewLayer();
+  protected readonly turretRange=new RangeOutlineLayer();
   protected readonly constructionPreview=new ConstructionPreviewLayer();
   protected areaIndex: AreaIndex | undefined;
   protected orderTargetIndex: OrderTargetIndex | undefined;
@@ -333,7 +335,7 @@ export class SceneRenderCore {
     this.invalidatePausedShadow();
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
     this.scene.add(this.mechanoids.group);
-    this.scene.add(this.deepResources.mesh,this.areaPreview.mesh,this.orderRockPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
+    this.scene.add(this.deepResources.mesh,this.areaPreview.mesh,this.turretRange.mesh,this.orderRockPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
     if (groundGrassEnabled) {
       this.grass = this.createGrass();
       this.grass.setTerrainPaint(this.terrainPaintTexture);
@@ -390,7 +392,7 @@ export class SceneRenderCore {
     return new GpuGroundGrassLayer(this.environmentLighting.configure, this.textureDimensionLimit, message => {
       this.compatibilityWarning = message;
       this.onCompatibilityWarning(message);
-    },this.surfaceTint);
+    },this.surfaceTint,this.environmentLighting.configureGrounded);
   }
 
   setWorld(world: World, resetPresentation = false, speed = 1, tracks?: PawnTrack[], immutableSnapshot = false): void {
@@ -496,7 +498,7 @@ export class SceneRenderCore {
       ? this.structurePreparation!.signature.readConfirmed(world.structures,prepared.axesKey,packageKey,prepared.indices,resetPoses)
       : this.structureSignature.read(world.structures,[...doorOrientations(world)].join(':'),packageKey,resetPoses);
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
-    this.turretTops.update(world,this.structureGroup,this.boxes,newMap);
+    this.turretTops.update(world,this.structureGroup,this.boxes,resetPoses);
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
     const jobKey = world.jobs.filter(j=>j.kind!=='fix-breakdown').map((j) => `${j.id}:${j.kind}:${j.floor}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' || j.kind==='repair' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
@@ -585,7 +587,7 @@ export class SceneRenderCore {
     this.clearOrderTargets();
     this.constructionPreview.hide();
     this.recreationHints.hide();
-    this.turretPreviewVisible=false;this.turretPreviewSignature='';this.turretTintSurfaces=EMPTY_GROUND_OVERLAYS;
+    this.turretRange.hide();this.turretPreviewVisible=false;this.turretPreviewSignature='';this.turretTintSurfaces=EMPTY_GROUND_OVERLAYS;
     this.hover.visible = false;
     (this.hover.material as THREE.MeshBasicNodeMaterial).opacity = 0.55;
     this.onAreaPreview(null);
@@ -777,6 +779,8 @@ export class SceneRenderCore {
     const restorePrecipitation=this.precipitation.prepareForCompile();
     const restoreBoxes=this.boxes.prepareEmptyShadows();
     const restoreArea=this.areaPreview.prepareForCompile();
+    const restoreTurretRange=this.turretRange.prepareForCompile();
+    const restoreHints=this.recreationHints.prepareForCompile();
     const restoreOrderRock=this.orderRockPreview.prepareForCompile();
     const restoreConstruction=this.constructionPreview.prepareForCompile();
     const restoreDeep=this.deepResources.prepareForCompile();
@@ -803,7 +807,7 @@ export class SceneRenderCore {
       for (const [object, value] of culling) object.frustumCulled = value;
       restoreMechanoids();
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
-      restoreBoxes();restoreArea();restoreOrderRock();restoreConstruction();restoreDeep();
+      restoreBoxes();restoreArea();restoreTurretRange();restoreHints();restoreOrderRock();restoreConstruction();restoreDeep();
       restoreOverview();
       restorePodRescue();restoreOrbitalDelivery();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
@@ -863,14 +867,14 @@ export class SceneRenderCore {
   protected updateTurretPreview():void {
     const world=this.world,selected=this.selectedObject;
     const structure=this.tool==='select'&&selected?.kind==='structure'?world?.structures.find(s=>s.id===selected.id&&s.kind==='mini-turret'):undefined;
-    if(this.areaDrag||!world||!structure){if(this.turretPreviewVisible&&!this.areaDrag)this.areaPreview.hide();this.turretPreviewVisible=false;this.turretPreviewSignature='';this.turretTintSurfaces=EMPTY_GROUND_OVERLAYS;this.refreshGroundOverlays();return;}
+    if(this.areaDrag||!world||!structure){this.turretRange.hide();this.turretPreviewVisible=false;this.turretPreviewSignature='';this.turretTintSurfaces=EMPTY_GROUND_OVERLAYS;this.refreshGroundOverlays();return;}
     const danger=!!structure.turret?.wick,radius=danger?MINI_TURRET_DISPLAY_BOMB_RADIUS:MINI_TURRET_DISPLAY_RANGE;
     const signature=`${structure.id}:${structure.x}:${structure.z}:${world.width}:${world.height}:${danger}`;
     if(signature===this.turretPreviewSignature)return;
     this.turretPreviewSignature=signature;this.turretPreviewVisible=true;
     const cells=miniTurretRadiusCells(world,structure,radius),color=danger?0xe79c7c:0x9bbeb0;
-    this.areaPreview.update(world.width,world.width*world.height,cells,color);
-    this.turretTintSurfaces=groundOverlayPlacements(cells.map(index=>({x:index%world.width,z:Math.floor(index/world.width),y:.065,sx:.86,sz:.86,color})),this.areaPreview.material.opacity);
+    this.turretRange.update(world.width,cells,color);
+    this.turretTintSurfaces=this.turretRange.surfaces;
     this.refreshGroundOverlays();
   }
   protected updateGrowingZones(reset:boolean):boolean {
@@ -1105,6 +1109,7 @@ export class SceneRenderCore {
     if(this.hasTracks){this.timeline.advance(now);const due=this.presentation.take(this.timeline.tick,now);if(due)this.applyWorld(due);}
     const dt = this.lastFrame ? Math.min((now - this.lastFrame) / 1000, 0.05) : 0;
     this.lastFrame = now;
+    if(this.turretTops.present(dt,this.received?.speed===0))this.invalidatePausedShadow();
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (this.hostPort.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
     if(this.hasTracks && this.world) {this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
@@ -1244,7 +1249,7 @@ export class SceneRenderCore {
   protected updateAreaPreview(): void {
     const drag = this.areaDrag, world = this.world, cell = this.hoverCell;
     if (!drag || !world) return;
-    this.recreationHints.hide();this.turretPreviewVisible=false;this.turretPreviewSignature='';this.turretTintSurfaces=EMPTY_GROUND_OVERLAYS;
+    this.recreationHints.hide();this.turretRange.hide();this.turretPreviewVisible=false;this.turretPreviewSignature='';this.turretTintSurfaces=EMPTY_GROUND_OVERLAYS;
     try {
     if (!cell) {
       this.hover.visible = false; this.areaPreview.hide();this.constructionPreview.hide();
@@ -1313,15 +1318,15 @@ export class SceneRenderCore {
     this.surfaceTint.clearPreview();
     this.updateTurretPreview();
     const cell = this.hoverCell;
-    this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='install'&&this.furniturePlacement?.kind==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined);
+    this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='install'&&this.furniturePlacement?.kind==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined,this.tool==='select');
     const television=this.tool==='select'?this.world?.structures.find(s=>s.kind==='tube-television'&&cell&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z)):undefined;
-    if(this.world&&cell&&(this.tool==='tube-television'||television||this.tool==='install'&&this.furniturePlacement?.kind==='tube-television'))this.recreationHints.television(this.world,{...(television??cell),orientation:television?.orientation??this.placementRotation});
+    if(this.world&&cell&&(this.tool==='tube-television'||television||this.tool==='install'&&this.furniturePlacement?.kind==='tube-television'))this.recreationHints.television(this.world,{...(television??cell),orientation:television?.orientation??this.placementRotation},this.tool==='select');
     const turbine=(this.tool==='wind-turbine'||this.tool==='install'&&this.furniturePlacement?.kind==='wind-turbine')&&cell?{...cell,orientation:this.placementRotation}:this.tool==='select'?this.world?.structures.find(s=>s.kind==='wind-turbine'&&cell&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z)):undefined;
-    if(this.world&&turbine)this.recreationHints.wind(this.world,turbine);
+    if(this.world&&turbine)this.recreationHints.wind(this.world,turbine,this.tool==='select');
     const cooler=this.tool==='select'?this.world?.structures.find(s=>s.kind==='cooler'&&s.x===cell?.x&&s.z===cell?.z):undefined;
-    if(cell&&(this.tool==='cooler'||cooler||this.tool==='install'&&this.furniturePlacement?.kind==='cooler'))this.recreationHints.cooler(cell,cooler?.orientation??this.placementRotation);
+    if(cell&&(this.tool==='cooler'||cooler||this.tool==='install'&&this.furniturePlacement?.kind==='cooler'))this.recreationHints.cooler(cell,cooler?.orientation??this.placementRotation,this.tool==='select'?this.world??undefined:undefined);
     const sunLamp=this.tool==='select'?this.world?.structures.find(s=>s.kind==='sun-lamp'&&s.x===cell?.x&&s.z===cell?.z):undefined;
-    if(this.world&&cell&&(this.tool==='sun-lamp'||sunLamp||this.tool==='install'&&this.furniturePlacement?.kind==='sun-lamp'))this.recreationHints.sunLamp(this.world,cell);
+    if(this.world&&cell&&(this.tool==='sun-lamp'||sunLamp||this.tool==='install'&&this.furniturePlacement?.kind==='sun-lamp'))this.recreationHints.sunLamp(this.world,cell,this.tool==='select');
     this.hover.visible = !!cell&&this.tool!=='select';
     if(this.tool==='select'){this.constructionPreview.hide();this.hostPort.title('');return;}
     if (!cell || !this.world) {this.constructionPreview.hide();return;}
@@ -1368,6 +1373,8 @@ export class SceneRenderCore {
     this.hostPort.disposeSelection();
     if (this.hostPort.selectionReady() && this.rig && this.hover) this.cancelDesignation();
     this.areaPreview.dispose();
+    this.turretRange.dispose();
+    this.recreationHints.dispose();
     this.orderRockPreview.dispose();
     this.constructionPreview.dispose();
     this.disposed = true;

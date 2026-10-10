@@ -26,7 +26,9 @@ function camp(): World {
 function structure(kind: StructureKind, x = 8, z = 8): Structure {
   return { id: 1, kind, x, z, orientation: 0, footprint: 'standard', material: constructionMaterials(kind)[0] };
 }
-const keyed = (parts: readonly object[], key: number) => parts.map(part => ({ ...part, key }));
+// Ghosts author one virtual negative target id; saved source ids must not
+// leak into preview highlighting. Compare the same geometry with that owner.
+const keyed = (parts: readonly object[], key: number) => parts.map(part => ({ ...part, ...('targetId' in part&&typeof part.targetId==='number'&&part.targetId>=0?{targetId:-1}:{}), key }));
 
 test('every catalogued structure has a complete model in every orientation, including installed sculptures', () => {
   const world = camp();
@@ -127,8 +129,8 @@ test('wind blades follow the retained shader transform and mini turret includes 
   const wind = constructionPreviewParts(world, [{ kind: 'wind-turbine', x: 8, z: 8, orientation: 3 }]);
   expect(wind.rotatedBoxes).toHaveLength(3); expect(wind.boxes).toHaveLength(7);
   const gun = constructionPreviewParts(world, [{ kind: 'mini-turret', x: 8, z: 8 }]);
-  expect(gun.boxes).toHaveLength(5);
-  expect(gun.boxes.slice(-2)).toEqual(keyed(miniTurretTopPartsForStructure(structure('mini-turret')), 0));
+  expect(gun.boxes).toHaveLength(21);
+  expect(gun.boxes.slice(-18)).toEqual(keyed(miniTurretTopPartsForStructure(structure('mini-turret')), 0));
 });
 
 test('previewing furniture never enumerates or copies the map or material piles', () => {

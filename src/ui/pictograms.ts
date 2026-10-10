@@ -45,4 +45,4 @@ const urls=new Map<string,string>();
 export function pictogramDataUrl(id:string):string {let url=urls.get(id);if(!url){url=`data:image/svg+xml;charset=utf-8,${encodeURIComponent(pictogramSvg(id))}`;urls.set(id,url);}return url;}
 
 export const UI_ATLAS_URL='/assets/ui/elsewhere/v304/ui.svg';
-export function modelIconUrl(id:string):string {return `/assets/ui/elsewhere/v304/${encodeURIComponent(id)}.svg`;}
+export function modelIconUrl(id:string):string {const version=id==='dresser'||id==='sandbags'||id==='mini-turret'?'v308':'v304';return `/assets/ui/elsewhere/${version}/${encodeURIComponent(id)}.svg`;}

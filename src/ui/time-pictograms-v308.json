@@ -1,0 +1,135 @@
+{
+  "generation": {
+    "mode": "built-in image_gen",
+    "calls": 4,
+    "transparent_background": true,
+    "use_case": "logo-brand",
+    "prompts": {
+      "pause": "Use case: logo-brand. Asset type: one small game HUD control pictogram for Elsewhere. Style: strictly flat clean vector-like illustration, refined and uncluttered, no pixel art. Only dark navy #262238 silhouette with warm cream #FFF7E9 fill and thin restrained dark navy outline. No buttons, plates, square frames, circular frames, background, labels, letters, words or numbers. Transparent background with genuine alpha. No gradients, shading, bevels, shine, reflections, cast shadows, relief, extrusion, perspective or 3D. Orthographic front view. Crisp consistent contours. Square image, the complete pictogram centered precisely both vertically and horizontally and filling about 72 percent of its width and height; equal transparent margins, nothing clipped. This will be displayed at about 30 pixels, so use a confident readable silhouette. Subject: a pause symbol with exactly two equally sized upright flat bars with very slightly rounded corners and a clear gap. Both bars symmetrical around the image center. A carefully drawn flat game control icon, not embossed.",
+      "play": "Use case: logo-brand. Asset type: one small game HUD control pictogram for Elsewhere. Style: strictly flat clean vector-like illustration, refined and uncluttered, no pixel art. Only dark navy #262238 silhouette with warm cream #FFF7E9 fill and thin restrained dark navy outline. No buttons, plates, square frames, circular frames, background, labels, letters, words or numbers. Transparent background with genuine alpha. No gradients, shading, bevels, shine, reflections, cast shadows, relief, extrusion, perspective or 3D. Orthographic front view. Crisp consistent contours. Square image, the complete pictogram centered precisely both vertically and horizontally and filling about 72 percent of its width and height; equal transparent margins, nothing clipped. This will be displayed at about 30 pixels, so use a confident readable silhouette. Subject: a single broad right-facing flat play arrow with very slightly rounded corners. Exactly one arrow. The arrow's visible bounding box should be centered in the square with visually balanced mass. No perspective.",
+      "speed-double": "Use case: logo-brand. Asset type: one small game HUD control pictogram for Elsewhere. Style: strictly flat clean vector-like illustration, refined and uncluttered, no pixel art. Only dark navy #262238 silhouette with warm cream #FFF7E9 fill and thin restrained dark navy outline. No buttons, plates, square frames, circular frames, background, labels, letters, words or numbers. Transparent background with genuine alpha. No gradients, shading, bevels, shine, reflections, cast shadows, relief, extrusion, perspective or 3D. Orthographic front view. Crisp consistent contours. Square image, the complete pictogram centered precisely both vertically and horizontally and filling about 72 percent of its width and height; equal transparent margins, nothing clipped. This will be displayed at about 30 pixels, so use a confident readable silhouette. Subject: exactly two equally sized broad right-facing play arrows, placed side by side, aligned on one baseline and separated by a small clear gap. The combined visible bounding box centered precisely. Do not add a third arrow or any vertical bar.",
+      "speed-triple": "Use case: logo-brand. Asset type: one small game HUD control pictogram for Elsewhere. Style: strictly flat clean vector-like illustration, refined and uncluttered, no pixel art. Only dark navy #262238 silhouette with warm cream #FFF7E9 fill and thin restrained dark navy outline. No buttons, plates, square frames, circular frames, background, labels, letters, words or numbers. Transparent background with genuine alpha. No gradients, shading, bevels, shine, reflections, cast shadows, relief, extrusion, perspective or 3D. Orthographic front view. Crisp consistent contours. Square image, the complete pictogram centered precisely both vertically and horizontally and filling about 72 percent of its width and height; equal transparent margins, nothing clipped. This will be displayed at about 30 pixels, so use a confident readable silhouette. Subject: exactly three equally sized broad right-facing play arrows, placed side by side, aligned on one baseline and separated by small clear gaps. The combined visible bounding box centered precisely. Do not add a fourth arrow or any vertical bar."
+    }
+  },
+  "packaging": {
+    "processor": "tmp/presentation-v308/hud-assets.mjs",
+    "method": "Alpha-premultiplied area downsample only; generated originals retained byte-exact privately; no image painting or art replacement.",
+    "alphaThresholdForFrame": 16,
+    "svgFramePaddingPx": 2,
+    "productionSidePx": 128
+  },
+  "assets": {
+    "pause": {
+      "original": {
+        "width": 1254,
+        "height": 1254,
+        "bounds": [
+          369,
+          306,
+          516,
+          642
+        ],
+        "transparent": 1302023,
+        "bytes": 288566,
+        "sha256": "912afba5acdcfd5f21323fede58d5fc9feb03c09334f2cfa490649e550a09ad7"
+      },
+      "production": {
+        "width": 128,
+        "height": 128,
+        "bounds": [
+          37,
+          31,
+          54,
+          66
+        ],
+        "bytes": 3302,
+        "sha256": "267e7654ff46bff5252c77874d1bea49242d282048c72186d53349a09f355609"
+      },
+      "transform": "128x128 alpha-premultiplied area downsample, original aspect ratio retained, no recoloring, drawing, crop or removal"
+    },
+    "play": {
+      "original": {
+        "width": 1254,
+        "height": 1254,
+        "bounds": [
+          335,
+          274,
+          593,
+          705
+        ],
+        "transparent": 1316268,
+        "bytes": 313779,
+        "sha256": "f891a6e18922b19f95eca3a266f542531c4ed810214584ea256f2bba01bb985f"
+      },
+      "production": {
+        "width": 128,
+        "height": 128,
+        "bounds": [
+          34,
+          28,
+          61,
+          72
+        ],
+        "bytes": 4378,
+        "sha256": "cdd228c6e628276db3541d284af6e9a321b5c716b13195667c2d830f537f4b4a"
+      },
+      "transform": "128x128 alpha-premultiplied area downsample, original aspect ratio retained, no recoloring, drawing, crop or removal"
+    },
+    "speed-double": {
+      "original": {
+        "width": 1254,
+        "height": 1254,
+        "bounds": [
+          255,
+          405,
+          746,
+          440
+        ],
+        "transparent": 1367337,
+        "bytes": 279049,
+        "sha256": "197c54134ed86be3085681190571d4ed974b54de3af8b8a72d4e35a9aa2a29b4"
+      },
+      "production": {
+        "width": 128,
+        "height": 128,
+        "bounds": [
+          26,
+          41,
+          77,
+          46
+        ],
+        "bytes": 4520,
+        "sha256": "5e760954af9358771bbe286d011554701222823f6d8ff1b0fd9cca8d5bbff879"
+      },
+      "transform": "128x128 alpha-premultiplied area downsample, original aspect ratio retained, no recoloring, drawing, crop or removal"
+    },
+    "speed-triple": {
+      "original": {
+        "width": 1254,
+        "height": 1254,
+        "bounds": [
+          160,
+          442,
+          927,
+          375
+        ],
+        "transparent": 1358746,
+        "bytes": 304558,
+        "sha256": "eaf6e36f4d807edbded270c27fea8327dcd7c34675ec611f73d35374f2656001"
+      },
+      "production": {
+        "width": 128,
+        "height": 128,
+        "bounds": [
+          16,
+          45,
+          95,
+          39
+        ],
+        "bytes": 5320,
+        "sha256": "54fc638f5a9c74498819bdb6e622fff22af5cb6e493fea7cb55c6319f66e4fed"
+      },
+      "transform": "128x128 alpha-premultiplied area downsample, original aspect ratio retained, no recoloring, drawing, crop or removal"
+    }
+  }
+}

@@ -35,7 +35,7 @@ export interface ConstructionPreviewParts {
   rotatedBoxes: ConstructionPreviewPlacement[];
 }
 export type ConstructionPreviewPart = {
-  geometry: 'box' | 'timber-wall' | 'timber-eave';
+  geometry: 'box' | 'timber-wall' | 'timber-eave' | 'sandbag';
   placement: ConstructionPreviewPlacement;
 };
 
@@ -82,14 +82,14 @@ export function constructionPreviewParts(world: World, specs: readonly Construct
   const group = new THREE.Group();
   const captureFurniture = (renderSubjects: Structure[]): Placement[] => {
     const subjectWorld: World = { ...contextWorld, structures: renderSubjects, packed: [] };
-    let authored: Placement[] | undefined;
+    const authored=new Map<string,Placement[]>();
     const sink: Pick<BoxBatches, 'set'> = { set(_group, name, parts) {
-      if (name !== 'furniture' || authored) throw new Error('Unexpected construction furniture batch');
-      authored = parts;
+      if ((name !== 'furniture'&&name!=='sandbags')||authored.has(name)) throw new Error('Unexpected construction furniture batch');
+      authored.set(name,parts);
     } };
     buildFurniture(subjectWorld, group, cutaway, sink as BoxBatches, contextWorld);
-    if (!authored) throw new Error('Construction builder produced no furniture batch');
-    return authored;
+    if (!authored.has('furniture')||!authored.has('sandbags')) throw new Error('Construction builder produced no furniture batch');
+    return [...authored.get('furniture')!,...authored.get('sandbags')!];
   };
   // Lines contain mono-cellular objects. Their authored pieces remain within
   // the owning cell, so one capture can retain the preview key by its anchor.
@@ -143,7 +143,7 @@ export function collectConstructionPreviewParts(world: World, specs: readonly Co
   contextSpecs: readonly ConstructionPreviewSpec[] = specs): ConstructionPreviewPart[] {
   const parts = constructionPreviewParts(world, specs, cutaway, contextSpecs);
   return [
-    ...[...parts.boxes, ...parts.rotatedBoxes].map(placement => ({ geometry: 'box' as const, placement })),
+    ...[...parts.boxes, ...parts.rotatedBoxes].map(placement => ({ geometry: placement.shape==='sandbag'?'sandbag' as const:'box' as const, placement })),
     ...parts.timberWalls.map(placement => ({ geometry: 'timber-wall' as const, placement })),
     ...parts.timberEaves.map(placement => ({ geometry: 'timber-eave' as const, placement })),
   ];

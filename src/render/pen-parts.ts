@@ -21,7 +21,7 @@ export function penBoundaryAxes(world:World):ReadonlyMap<number,0|1> {
 }
 
 /** All posts, rails, gate frames and marker pieces enter one resident box batch. */
-export function penParts(world:World,subjects:readonly Structure[]=world.structures):Placement[] {
+export function penParts(world:World,subjects:readonly Structure[]=world.structures,cutaway=false):Placement[] {
   const parts:Placement[]=[];
   const penStructures=subjects.filter(s=>s.kind==='fence'||s.kind==='fence-gate'||s.kind==='pen-marker');
   if(!penStructures.length)return parts;
@@ -61,7 +61,7 @@ export function penParts(world:World,subjects:readonly Structure[]=world.structu
     } else {
       const axis=axes[0]??0;
       for(const side of [-1,1])parts.push({targetId:s.id,x:s.x+(axis===0?side*.435:0),z:s.z+(axis===1?side*.435:0),y:.53,sx:.13,sy:1.06,sz:.13,color});
-      parts.push({targetId:s.id,x:s.x,z:s.z,y:1.04,sx:axis===0?1:.1,sy:.1,sz:axis===1?1:.1,color});
+      if(!cutaway)parts.push({targetId:s.id,x:s.x,z:s.z,y:1.04,sx:axis===0?1:.1,sy:.1,sz:axis===1?1:.1,color});
     }
   }
   return parts;

@@ -5,8 +5,8 @@ import { buildingMaterialColor } from './building-material-color';
 import { WORLD_SCALE } from '../world/scale';
 import { penBoundaryAxes } from './pen-parts';
 
-/** The lintel meets the wall above a human-height opening. In cutaway view the
- * same opening is clipped below the wall cap, like neighboring wall cells. */
+/** The lintel meets the wall above a human-height opening. Cutaway retains
+ * short leaves/jambs and removes every horizontal piece spanning the opening. */
 export const doorLeafTop=(cutaway:boolean):number=>Math.min(WORLD_SCALE.futureDoorClearance,(cutaway?WORLD_SCALE.wallCutawayHeight:WORLD_SCALE.wallHeight)-.14);
 export const DOOR_LEAF_BOTTOM=.035;
 export const doorLeafColor=(material:World['structures'][number]['material']):number=>buildingMaterialColor(material,0x9b744b)??0x9b744b;
@@ -68,16 +68,16 @@ export function doorParts(world:World,cutaway:boolean,subjects:readonly World['s
     const frameColor=s.material==='wood'?0x9e9e94:shade(doorLeafColor(s.material),.76);
     // TimberCladdingLayer provides the broad upper plank and continuous cap.
     // For masonry, this matching wall panel still stops well above the leaf.
-    if(!timber) {
-      if(!cutaway)parts.push({targetId:s.id,x:s.x,z:s.z,y:(lintelTop+height-.09)/2,sx:1,sy:height-.09-lintelTop,sz:1,ry,color:wallColor});
+    if(!timber&&!cutaway) {
+      parts.push({targetId:s.id,x:s.x,z:s.z,y:(lintelTop+height-.09)/2,sx:1,sy:height-.09-lintelTop,sz:1,ry,color:wallColor});
       parts.push({targetId:s.id,x:s.x,z:s.z,y:height-.045,sx:1,sy:.09,sz:1,ry,color:wallColor});
     }
     if(timber)for(const face of [-1,1]) {
       const dx=face*.49*Math.sin(ry),dz=face*.49*Math.cos(ry);
-      parts.push({targetId:s.id,x:s.x+dx,z:s.z+dz,y:(openingTop+lintelTop)/2,sx:.92,sy:lintelTop-openingTop,sz:.09,ry,color:frameColor});
+      if(!cutaway)parts.push({targetId:s.id,x:s.x+dx,z:s.z+dz,y:(openingTop+lintelTop)/2,sx:.92,sy:lintelTop-openingTop,sz:.09,ry,color:frameColor});
       for(const side of [-1,1])parts.push({targetId:s.id,x:s.x+dx+side*.46*Math.cos(ry),z:s.z+dz-side*.46*Math.sin(ry),y:openingTop/2,sx:.08,sy:openingTop,sz:.09,ry,color:frameColor});
     } else {
-      parts.push({targetId:s.id,x:s.x,z:s.z,y:(openingTop+lintelTop)/2,sx:.92,sy:lintelTop-openingTop,sz:.34,ry,color:frameColor});
+      if(!cutaway)parts.push({targetId:s.id,x:s.x,z:s.z,y:(openingTop+lintelTop)/2,sx:.92,sy:lintelTop-openingTop,sz:.34,ry,color:frameColor});
       for(const side of [-1,1])parts.push({targetId:s.id,x:s.x+side*.46*Math.cos(ry),z:s.z-side*.46*Math.sin(ry),y:openingTop/2,sx:.08,sy:openingTop,sz:.34,ry,color:frameColor});
     }
   }

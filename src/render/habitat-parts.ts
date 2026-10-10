@@ -62,8 +62,9 @@ export function habitatParts(world: World): Placement[] {
         const cabinetDepth = Math.max(0.54, depth - 0.17);
         add(0, 0.46, 0, cabinetWidth, 0.92, cabinetDepth, trim);
         add(0, 0.95, 0, cabinetWidth + 0.07, 0.09, cabinetDepth + 0.07);
-        for (const y of [0.27, 0.52, 0.76]) add(0, y, cabinetDepth / 2 + 0.004, cabinetWidth - 0.12, 0.025, 0.04, body);
-        for (const y of [0.27, 0.52, 0.76]) for (const dx of [-0.12, 0.12]) add(dx, y, cabinetDepth / 2 + 0.035, 0.045, 0.045, 0.045, 0xc4b794);
+        // The 1×2 cabinet opens along its long side, not its narrow end.
+        for (const y of [0.27, 0.52, 0.76]) add(cabinetWidth / 2 + 0.004, y, 0, 0.04, 0.025, cabinetDepth - 0.12, body);
+        for (const y of [0.27, 0.52, 0.76]) for (const dz of [-0.36, 0.36]) add(cabinetWidth / 2 + 0.035, y, dz, 0.045, 0.045, 0.045, 0xc4b794);
         break;
       }
       case 'table-square': {
@@ -179,8 +180,9 @@ export function habitatPartsForStructure(structure: Structure): Placement[] {
       const cabinetDepth = Math.max(0.54, depth - 0.17);
       add(0, 0.46, 0, cabinetWidth, 0.92, cabinetDepth, trim);
       add(0, 0.95, 0, cabinetWidth + 0.07, 0.09, cabinetDepth + 0.07);
-      for (const y of [0.27, 0.52, 0.76]) add(0, y, cabinetDepth / 2 + 0.004, cabinetWidth - 0.12, 0.025, 0.04, body);
-      for (const y of [0.27, 0.52, 0.76]) for (const dx of [-0.12, 0.12]) add(dx, y, cabinetDepth / 2 + 0.035, 0.045, 0.045, 0.045, 0xc4b794);
+      // The 1×2 cabinet opens along its long side, not its narrow end.
+      for (const y of [0.27, 0.52, 0.76]) add(cabinetWidth / 2 + 0.004, y, 0, 0.04, 0.025, cabinetDepth - 0.12, body);
+      for (const y of [0.27, 0.52, 0.76]) for (const dz of [-0.36, 0.36]) add(cabinetWidth / 2 + 0.035, y, dz, 0.045, 0.045, 0.045, 0xc4b794);
       break;
     }
     case 'table-square': {

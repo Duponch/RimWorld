@@ -38,6 +38,7 @@ export class RecordingBatches {
   calls:Array<{kind:'set'|'patch';key:string;start?:number;count:number;total?:number}>=[];
   rejectPatch=false;
   set(group:THREE.Group,key:string,items:Placement[]):void {
+    if(key==='sandbags')return; // Independent resident geometry; furniture stamp/spans are the oracle here.
     expect(key).toBe('furniture');this.group=group;this.items=items.map(p=>({...p}));this.stamp={};
     this.calls.push({kind:'set',key,count:items.length});
   }
