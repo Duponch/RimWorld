@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les visuels V304, la préparation V305 et les [corrections d’herbe/HUD et préférences V306](../gameplay/presentation-controls-v306.md), schéma219 conservé.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les visuels V304, la préparation V305, les corrections V306 et les [interfaces, ressources et commandes V307](../gameplay/interface-hud-v307.md), schéma219 conservé.
 
 ## Adresse et publication
 
@@ -93,6 +93,14 @@ Le commit produit `a012cf32186a0bf755b35c8420bfc16625197ef9` est poussé puis pu
 Déploiement PASS13,574s :23fichiers envoyés,464déjà présents, puis en-têtes et redirections. Git dirty concerne seulement le dossier utilisateur `references_UI`, absent du commit et du package. Vérification HTTPS PASS3,655s :52réponses200/MIME/bytes exacts sur les origines stable et fraîche, incluant six TTF ; rapport `tmp/elsewhere-pages/v306-http-nP2cgJ/report.json`, SHA `809CA23E`, package et publics inchangés. Tous les66fichiers distants ne sont pas téléchargés par ce contrôle.
 
 Les préférences, shaders, surfaces, sauvegarde/reprise et l’impact GAME sont détaillés dans la note V306. Le test réseau n’est pas un nouveau parcours de jeu ni un benchmark en ligne. Une seule publication pour ce lot ; le commit/push documentaire consécutif ne déclenche pas une deuxième publication. La relance planifiée reste en pause.
+
+## Publication regroupée V307
+
+Le commit produit `b7cc70aff84ad5a114ee6f971dc7db61985a0029` est poussé puis publié une seule fois en `9c006011` : [adresse stable](https://elsewhere-cq7.pages.dev/) et [publication](https://9c006011.elsewhere-cq7.pages.dev/). Build Pages et typage PASS10,508s ; package PASS1,590s,495fichiers/112633579octets, cinqPNG et leur provenance JSON exacts, fontes/SVG historiques et63références/66fichiers publics identiques. Laboratoire et sources privés absents. Rapport `tmp/elsewhere-pages/v307-package-cJkB7J/report.json`, SHA `B3C4C1EE`.
+
+Déploiement PASS12,425s : neuf fichiers envoyés,484déjà présents, puis en-têtes et redirections. Git dirty concerne uniquement `references_UI`, exclu du commit et du package. Vérification HTTPS PASS3,982s :64réponses200/MIME/bytes exacts sur les origines stable et fraîche, incluant les cinq images générées, provenance et six fontes. Rapport `tmp/elsewhere-pages/v307-http-UC77lx/report.json` ; package/publics inchangés, erreurs vides. Les66fichiers distants ne sont pas tous téléchargés.
+
+Le parcours Chrome avec gestes, six fontes aux deux résolutions et sauvegarde/reprise exacte est décrit dans la note V307. Le contrôle HTTPS ne constitue pas un nouveau parcours navigateur ni une mesure de performances en ligne. Aucun second déploiement pour le commit/push documentaire ; relance planifiée en pause.
 
 ## Références
 

@@ -1,6 +1,6 @@
 # Elsewhere
 
-**V307 — [interfaces, ressources et commandes de carte](docs/gameplay/interface-hud-v307.md), schéma219 conservé.** Architecte réagencé, Ordres/Zones accessibles directement, ressources emboîtées, calendrier/météo illustrés, pictogrammes générés et six fontes adaptées. Les marges transparentes rendent les clics au terrain ; la molette zoome hors des vrais panneaux défilants. Contrôles et publication dans la note unique ; objectif de performances ouvert, relance en pause. Les états suivants sont historiques.
+**V307 — [interfaces, ressources et commandes de carte](docs/gameplay/interface-hud-v307.md), schéma219 conservé.** Architecte réagencé, Ordres/Zones accessibles directement, ressources emboîtées, calendrier/météo illustrés, pictogrammes générés et six fontes adaptées. Les marges transparentes rendent les clics au terrain ; la molette zoome hors des vrais panneaux défilants. Produit `b7cc70af` poussé et [publié sur Cloudflare](https://elsewhere-cq7.pages.dev/) en `9c006011`. Contrôles dans la note unique ; objectif de performances ouvert, relance en pause. Les états suivants sont historiques.
 
 **V306 — [herbe, HUD et préférences d’affichage](docs/gameplay/presentation-controls-v306.md), schéma 219 conservé.** Les surfaces au sol des aides et inspections prises en charge alimentent l’herbe ; HUD allégé, commandes de vue compactes, curseurs réduits. Six typographies locales avec Comfortaa par défaut et rayon des nuages réglable. Contrôles et publication dans la note unique ; relance en pause. Les états suivants sont historiques.
 
