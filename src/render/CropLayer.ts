@@ -7,6 +7,7 @@ import type { Resource, World } from '../sim/types';
 import { CropPresentationPartition } from './crop-presentation-partition';
 import { readHydroponicCells } from '../sim/hydroponics';
 import { HYDROPONIC_SUPPORT_HEIGHT } from './hydroponics-parts';
+import { ResourceTargetTint } from './resource-target-tint';
 
 /** Dedicated resident instancing: sowing never rebuilds forest/rock geometry. */
 function cropGeometry(kind:ResidentCropKind):THREE.BufferGeometry {
@@ -41,6 +42,8 @@ class CropBatch {
   private readonly color = new THREE.Color();
   private readonly green = new THREE.Color(0x80a24a);
   private readonly ripe = new THREE.Color(0xcfb665);
+  private readonly targetTint=new ResourceTargetTint();
+  private targetPreviewIds=new Set<number>();
   constructor(private readonly group:THREE.Group,private readonly kind:ResidentCropKind,private material: THREE.Material) {
     if(kind==='cotton')this.ripe.setHex(0xf0ead7);
     if(kind==='potato')this.ripe.setHex(0x83964a);
@@ -49,6 +52,17 @@ class CropBatch {
     this.mesh = this.createMesh(128); this.group.add(this.mesh);
   }
   setMaterial(material:THREE.Material):void {this.material=material;this.mesh.material=material;}
+  setTargetPreview(ids:ReadonlySet<number>):void {
+    if(ids.size===this.targetPreviewIds.size&&[...ids].every(id=>this.targetPreviewIds.has(id)))return;
+    this.targetTint.restore();this.targetPreviewIds=new Set(ids);this.tintTargets();
+  }
+  clearTargetPreview():void {this.targetTint.restore();this.targetPreviewIds.clear();}
+  private tintTargets():void {
+    if(!this.targetPreviewIds.size)return;
+    const slots:number[]=[];
+    for(const id of this.targetPreviewIds){const slot=this.slots.get(id);if(slot!==undefined)slots.push(slot);}
+    this.targetTint.applySlots(this.mesh.instanceColor!,slots);
+  }
   private createMesh(capacity: number): THREE.InstancedMesh {
     const mesh = new THREE.InstancedMesh(this.geometry, this.material, capacity);
     // A runtime-sized storage array keeps the same shader when capacity grows.
@@ -64,6 +78,7 @@ class CropBatch {
     return () => { if(this.mesh===mesh&&this.version===version)mesh.count=count; };
   }
   update(world: World, reset: boolean, crops: readonly Resource[],hydroponicCells:ReadonlyMap<number,number>): void {
+    if(reset)this.clearTargetPreview();else this.targetTint.restore();
     this.version++;
     if (reset) { this.slots.clear(); this.free.length = 0; this.used = 0; this.mesh.count = 0; }
     const alive = new Set(crops.map(r => r.id));
@@ -98,8 +113,9 @@ class CropBatch {
       this.mesh.instanceMatrix.needsUpdate = true; this.mesh.instanceColor!.needsUpdate = true;
     }
     this.mesh.computeBoundingSphere();
+    this.tintTargets();
   }
-  dispose(): void { this.mesh.dispose(); this.geometry.dispose(); }
+  dispose(): void { this.clearTargetPreview();this.mesh.dispose(); this.geometry.dispose(); }
 }
 
 /** One resident batch per shape, prewarmed even empty. CPU work only on snapshots;
@@ -110,6 +126,8 @@ export class CropLayer {
   private readonly partition=new CropPresentationPartition();
   constructor(private readonly plainMaterial:THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial){this.batches=RESIDENT_CROP_KINDS.map(kind=>new CropBatch(this.group,kind,texturedMaterial));}
   setTexturesEnabled(enabled:boolean):void {for(const batch of this.batches)batch.setMaterial(enabled?this.texturedMaterial:this.plainMaterial);}
+  setTargetPreview(ids:ReadonlySet<number>):void {for(const batch of this.batches)batch.setTargetPreview(ids);}
+  clearTargetPreview():void {for(const batch of this.batches)batch.clearTargetPreview();}
   prepareForCompile():()=>void {const restore=this.batches.map(b=>b.prepareForCompile());return()=>restore.forEach(f=>f());}
   update(world:World,reset:boolean,immutableSnapshot=false):void {
     const crops=this.partition.read(world,reset,immutableSnapshot);

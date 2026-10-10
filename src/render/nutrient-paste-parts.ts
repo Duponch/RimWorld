@@ -9,7 +9,7 @@ export function nutrientPasteParts(world:World):Placement[]{
     if(s.kind!=='nutrient-paste-dispenser'&&s.kind!=='hopper')continue;
     const ry=s.orientation*Math.PI/2,c=Math.cos(ry),sn=Math.sin(ry);
     const add=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number)=>
-      parts.push({x:s.x+x*c+z*sn,y,z:s.z+z*c-x*sn,sx,sy,sz,ry,color});
+      parts.push({targetId:s.id,x:s.x+x*c+z*sn,y,z:s.z+z*c-x*sn,sx,sy,sz,ry,color});
     if(s.kind==='hopper'){
       // Open interior leaves the real pile visible. No simulated food model.
       add(0,.07,0,.90,.14,.90,0x597276);

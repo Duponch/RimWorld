@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V300 — [interactions des ordres](gameplay/order-interactions-v300.md), schéma 218 conservé.** Demande humaine de lisibilité et de confort traitée : curseurs, clic droit, zoom pendant tracé, aperçus compatibles et réglage des icônes. Aucune nouvelle règle de simulation ; le chantier de performances garde les objectifs et limites V299. Commit/push par lot, publications Cloudflare regroupées, relance toujours en pause. Les priorités suivantes sont historiques.
+
 **V299 — [préparation commune des bâtiments](development/aulnes-performance-v299.md), schéma 218 conservé.** Retrait groupé de parcours MAIN livré, +7,23%RAF local et vrai×6 côté candidat. Prochaine étude : coût des objets réellement soumis à Three, culling et ordre exacts ; pas de bundle global proche ni réouverture d'un prototype inchangé. Aucun gainGPU ou240FPS annoncé. Commit/push par lot et publications Cloudflare regroupées. Les priorités suivantes sont historiques.
 
 **V298 — [attribution CPU/GPU actuelle](development/aulnes-performance-v298.md).** Pointes CPU hors soumission du dessin prioritaires ; ombres GPU minoritaires. Étudier un retrait groupé de préparation de scène, tout transfert éventuel compris. Produit V296/schéma218 conservés, commit/push par lot et publications Cloudflare regroupées. Les priorités suivantes sont historiques.

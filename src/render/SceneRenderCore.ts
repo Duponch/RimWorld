@@ -1,5 +1,7 @@
 import { DeepResourceLayer } from './DeepResourceLayer';
 import { AreaPreviewLayer } from './AreaPreviewLayer';
+import {OrderTargetIndex} from './order-target-index';
+import {OrderTargetPreviewLayer} from './OrderTargetPreviewLayer';
 import { ConstructionPreviewLayer } from './ConstructionPreviewLayer';
 import type { ConstructionPreviewSpec } from './construction-preview-parts';
 import { HygieneLayer } from './HygieneLayer';
@@ -174,11 +176,14 @@ export class SceneRenderCore {
   protected readonly areaPreview=new AreaPreviewLayer();
   protected readonly constructionPreview=new ConstructionPreviewLayer();
   protected areaIndex: AreaIndex | undefined;
+  protected orderTargetIndex: OrderTargetIndex | undefined;
+  protected readonly orderRockPreview=new OrderTargetPreviewLayer();
   protected constructionIndex: ConstructionCellIndex | undefined;
   protected areaSignature = '';
   protected areaDrag: ({ pointerId: number; action: AreaAction; from: Cell }
     | { pointerId: number; kind: LineBuildKind; from: Cell; material?: ConstructionMaterial }) | null = null;
   onArea: (action: AreaAction, from: Cell, to: Cell) => void = () => {};
+  onExitOrder: () => void = () => {};
   onBuildLine: (kind: LineBuildKind, from: Cell, to: Cell, material?: ConstructionMaterial) => void = () => {};
   onAreaPreview: (info: { width: number; height: number; eligible: number; skipped: number; line?: boolean } | null) => void = () => {};
   protected readonly raycaster = new THREE.Raycaster();
@@ -307,7 +312,7 @@ export class SceneRenderCore {
     this.invalidatePausedShadow();
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
     this.scene.add(this.mechanoids.group);
-    this.scene.add(this.deepResources.mesh,this.areaPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
+    this.scene.add(this.deepResources.mesh,this.areaPreview.mesh,this.orderRockPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
     if (groundGrassEnabled) {
       this.grass = this.createGrass();
       this.grass.setTerrainPaint(this.terrainPaintTexture);
@@ -396,6 +401,7 @@ export class SceneRenderCore {
     this.invalidatePausedShadow();
     if (resetPresentation) this.cancelDesignation();
     this.areaIndex = undefined; this.constructionIndex = undefined; this.areaSignature = '';
+    this.orderTargetIndex=undefined;
     const now = this.hostPort.now();
     const previousWorld = this.world;
     // Worker deltas keep immutable terrain/resources references stable. A changed
@@ -541,6 +547,8 @@ export class SceneRenderCore {
     this.controls.enabled = true;
     if (drag) this.hostPort.releasePointer(drag.pointerId);
     this.areaPreview.hide();
+    this.designations.clearPreview();
+    this.clearOrderTargets();
     this.constructionPreview.hide();
       this.turretPreviewVisible=false;this.turretPreviewSignature='';
     this.hover.visible = false;
@@ -712,6 +720,7 @@ export class SceneRenderCore {
     const restorePrecipitation=this.precipitation.prepareForCompile();
     const restoreBoxes=this.boxes.prepareEmptyShadows();
     const restoreArea=this.areaPreview.prepareForCompile();
+    const restoreOrderRock=this.orderRockPreview.prepareForCompile();
     const restoreConstruction=this.constructionPreview.prepareForCompile();
     const restoreDeep=this.deepResources.prepareForCompile();
     try {
@@ -736,7 +745,7 @@ export class SceneRenderCore {
       for (const [object, value] of culling) object.frustumCulled = value;
       restoreMechanoids();
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
-      restoreBoxes();restoreArea();restoreConstruction();restoreDeep();
+      restoreBoxes();restoreArea();restoreOrderRock();restoreConstruction();restoreDeep();
       restoreOverview();
       restorePodRescue();restoreOrbitalDelivery();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
@@ -937,7 +946,9 @@ export class SceneRenderCore {
       const key = `${position.x}:${position.z}:${pile.item}:${job ? 'job' : 'ground'}${pile.corpse?`:${pile.id}`:''}`;
       const bundle = cells.get(key);
       if (bundle) bundle.quantity += quantity;
-      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity, supplied: !!job, surface:job?undefined:surfaces.get(position.z*world.width+position.x),...(pile.kind==='corpse'?{corpseStage:corpseStage(pile,world.tick),facing:pile.corpse?.facing??0,corpse:pile.corpse}:{}) });
+      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity, supplied: !!job,
+        ...(pile.kind==='chunk'&&pile.owner.type==='ground'?{targetId:position.z*world.width+position.x}:{}),
+        surface:job?undefined:surfaces.get(position.z*world.width+position.x),...(pile.kind==='corpse'?{corpseStage:corpseStage(pile,world.tick),facing:pile.corpse?.facing??0,corpse:pile.corpse}:{}) });
     }
     const chunks = new Map<string, PileBundle[]>();
     for (const bundle of cells.values()) {
@@ -980,7 +991,10 @@ export class SceneRenderCore {
     if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
     if(this.world)this.mechanoids.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
     this.ropes.present(this.hasTracks?this.timeline:undefined);
-    if (!this.areaDrag && !this.hostPort.selectionActive()) { this.moveCamera(dt); this.controls.update(); }
+    if (!this.hostPort.selectionActive()) {
+      if (!this.areaDrag) this.moveCamera(dt);
+      this.controls.update();
+    }
     if (this.world) {
       const x = THREE.MathUtils.clamp(this.controls.target.x, 0, this.world.width - 1);
       const z = THREE.MathUtils.clamp(this.controls.target.z, 0, this.world.height - 1);
@@ -988,6 +1002,7 @@ export class SceneRenderCore {
       this.camera.position.z += z - this.controls.target.z;
       this.controls.target.x = x; this.controls.target.z = z;
     }
+    this.refreshAreaPointer();
     // Share the confirmed presentation clock with pawn motion. Loading a save
     // restores the sky; pausing cannot continue an independent wall-clock sun.
     const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
@@ -1084,11 +1099,31 @@ export class SceneRenderCore {
     if (x < 0 || z < 0 || x >= this.world.width || z >= this.world.height) return null;
     return { x, z };
   }
+  protected refreshAreaPointer():void {}
+  private clearOrderTargets():void {
+    this.resources.clearTargetPreview();this.crops.clearTargetPreview();this.plants.clearTargetPreview();
+    this.boxes.clearTargetPreview();this.doors.clearTargetPreview();this.timber.clearTargetPreview();
+    this.wind.clearTargetPreview();this.orderRockPreview.hide();
+  }
+  private updateOrderTargets(world:World,action:AreaAction,cells:readonly number[]):void {
+    if(!['mine','chop','cut','harvest','deconstruct','haul-chunks','cancel'].includes(action)){this.clearOrderTargets();return;}
+    this.orderTargetIndex??=new OrderTargetIndex(world);
+    const targets=this.orderTargetIndex.select(action,cells);
+    this.resources.setTargetPreview(targets.resources);this.crops.setTargetPreview(targets.resources);this.plants.setTargetPreview(targets.resources);
+    this.boxes.setTargetPreview(this.structureGroup,targets.structures);
+    this.boxes.setTargetPreview(this.jobGroup,targets.jobs);
+    for(const {group}of this.pileChunks.values())this.boxes.setTargetPreview(group,targets.chunks);
+    this.doors.setTargetPreview(targets.structures);this.timber.setTargetPreview(targets.structures);this.wind.setTargetPreview(targets.structures);
+    this.orderRockPreview.updateRock(world,[...targets.rocks]);
+  }
+  setDesignationMinCellPixels(value:number):void { this.designations.setMinCellPixels(value); }
   protected updateAreaPreview(): void {
     const drag = this.areaDrag, world = this.world, cell = this.hoverCell;
     if (!drag || !world) return;
     if (!cell) {
       this.hover.visible = false; this.areaPreview.hide();this.constructionPreview.hide();
+      this.designations.clearPreview();
+      this.clearOrderTargets();
       this.areaSignature = ''; this.onAreaPreview(null); return;
     }
     const action = 'action' in drag ? drag.action : drag.kind;
@@ -1099,7 +1134,7 @@ export class SceneRenderCore {
     if ('action' in drag) {
       this.areaIndex ??= buildAreaIndex(world);
       const result = queryArea(world, { type: 'area', action: drag.action, from: drag.from, to: cell, ...(drag.action==='lay-floor'?{floor:this.selectedFloor}:{}) }, this.areaIndex);
-      if (!result.ok) {this.hover.visible=false;this.areaPreview.hide();this.constructionPreview.hide();this.onAreaPreview(null);return;}
+      if (!result.ok) {this.hover.visible=false;this.areaPreview.hide();this.constructionPreview.hide();this.designations.clearPreview();this.clearOrderTargets();this.onAreaPreview(null);return;}
       ({ bounds, cells, skipped } = result);
     } else {
       const line = constructionLineCells(drag.from, cell);
@@ -1113,6 +1148,8 @@ export class SceneRenderCore {
     }
     const width = bounds.maxX - bounds.minX + 1, height = bounds.maxZ - bounds.minZ + 1;
     if ('kind' in drag || action === 'lay-floor' || action === 'build-roof') {
+      this.designations.clearPreview();
+      this.clearOrderTargets();
       const validCells = new Set(cells), valid: ConstructionPreviewSpec[] = [], invalid: ConstructionPreviewSpec[] = [];
       const positions = 'kind' in drag ? constructionLineCells(drag.from, cell)
         : Array.from({length:width*height},(_,i)=>({x:bounds.minX+i%width,z:bounds.minZ+Math.floor(i/width)}));
@@ -1127,16 +1164,19 @@ export class SceneRenderCore {
       this.onAreaPreview({width,height,eligible:cells.length,skipped,line:'kind' in drag});return;
     }
     this.constructionPreview.hide();
-    const color = action === 'cancel' || action === 'remove-stockpile' ? 0xf49b7c : 0x9de7c9;
+    const color = 0x8bcef0;
     this.hover.visible = true; this.hover.scale.set(width, height, 1);
-    this.hover.position.set((bounds.minX + bounds.maxX) / 2, 0.045, (bounds.minZ + bounds.maxZ) / 2);
+    this.hover.position.set((bounds.minX + bounds.maxX) / 2, 0.075, (bounds.minZ + bounds.maxZ) / 2);
     const hoverMat = this.hover.material as THREE.MeshBasicNodeMaterial;
-    hoverMat.opacity = 0.12; hoverMat.color.setHex(cells.length ? color : 0xe46f58);
+    hoverMat.opacity = 0.12; hoverMat.color.setHex(color);
     this.areaPreview.update(world.width,world.width*world.height,cells,color);
+    this.designations.updatePreview(world,action as AreaAction,cells);
+    this.updateOrderTargets(world,action as AreaAction,cells);
     this.onAreaPreview({ width, height, eligible: cells.length, skipped, line:'kind' in drag });
   }
   protected updateHover(): void {
     if(this.preparing)return;
+    this.hostPort.title('');
     if (this.areaDrag) { this.updateAreaPreview(); return; }
     this.updateTurretPreview();
     const cell = this.hoverCell;
@@ -1157,6 +1197,10 @@ export class SceneRenderCore {
     const minX=Math.min(...cells.map(c=>c.x)),maxX=Math.max(...cells.map(c=>c.x)),minZ=Math.min(...cells.map(c=>c.z)),maxZ=Math.max(...cells.map(c=>c.z));
     this.hover.scale.set(maxX-minX+1, maxZ-minZ+1, 1);
     this.hover.position.set((minX+maxX)/2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (minZ+maxZ)/2);
+    if (isAreaAction(this.tool) && this.tool!=='lay-floor' && this.tool!=='build-roof') {
+      (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(0x8bcef0);
+      this.constructionPreview.hide(); return;
+    }
     const placeable=this.tool in STRUCTURE_DEFINITIONS||['mine','uninstall','deconstruct','chop','harvest','cut'].includes(this.tool);
     const validity = this.tool==='build-roof'?queryArea(this.world,{type:'area',action:'build-roof',from:cell,to:cell}):this.tool==='lay-floor'||this.tool==='remove-floor'?canDesignate(this.world,{type:'designate',kind:this.tool,...cell,...this.tool==='lay-floor'?{floor:this.selectedFloor}:{}}):this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(this.furniturePlacement.kind)?0:this.placementRotation},true):placeable
       ? canDesignate(this.world, { type:'designate',kind:this.tool as JobKind,...cell,...(this.constructionMaterial?{material:this.constructionMaterial}:{}),orientation:this.tool==='mini-turret'||this.tool==='sandbags'||this.tool==='solar-generator'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='wood-generator'||this.tool==='chemfuel-generator'||this.tool==='sun-lamp'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='autodoor'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
@@ -1174,13 +1218,13 @@ export class SceneRenderCore {
       this.hover.visible=false;
       this.constructionPreview.update(this.world,invalidPlacement?[]:[spec],invalidPlacement?[spec]:[],this.wallCutaway);
     } else this.constructionPreview.hide();
-    this.hostPort.title(validity&&'reason' in validity?validity.reason??'':'');
   }
   dispose(): void {
     if (this.disposed) return;
     this.hostPort.disposeSelection();
     if (this.hostPort.selectionReady() && this.rig && this.hover) this.cancelDesignation();
     this.areaPreview.dispose();
+    this.orderRockPreview.dispose();
     this.constructionPreview.dispose();
     this.disposed = true;
     this.renderer.setAnimationLoop(null);

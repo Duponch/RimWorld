@@ -18,18 +18,18 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
       // Mechanical faults have their own compact mark on the appliance.
       if(job.kind==='fix-breakdown')continue;
       const cells = footprintCells(job);
-      if(!isIconDesignationKind(job.kind))for (const cell of cells) orders.push({ x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
+      if(!isIconDesignationKind(job.kind))for (const cell of cells) orders.push({ targetId:job.id, x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
       if(job.kind==='repair'||job.kind==='flick')continue;
       if(job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave'){
-        for(const cell of cells){blueprints.push({x:cell.x,z:cell.z,y:.09,sx:.94,sy:.08,sz:.94});
-          if(job.kind==='remove-floor')for(const ry of [-Math.PI/4,Math.PI/4])frames.push({x:cell.x,z:cell.z,y:.13,sx:.8,sy:.025,sz:.05,ry,color:0xd77855});}
+        for(const cell of cells){blueprints.push({targetId:job.id,x:cell.x,z:cell.z,y:.09,sx:.94,sy:.08,sz:.94});
+          if(job.kind==='remove-floor')for(const ry of [-Math.PI/4,Math.PI/4])frames.push({targetId:job.id,x:cell.x,z:cell.z,y:.13,sx:.8,sy:.025,sz:.05,ry,color:0xd77855});}
         continue;
       }
       if(isIconDesignationKind(job.kind)||job.kind === 'sow')continue;
       if(job.kind==='deconstruct'||job.kind==='uninstall') {
         const targetKind=(job.deconstruction??job.furniture)!.kind;
         const y=(targetKind==='biofuel-refinery'?1.69:targetKind==='chemfuel-generator'?1.75:targetKind==='vitals-monitor'?1.14:targetKind==='mini-turret'?1.18:targetKind==='tube-television'?.81:targetKind==='sandbags'?.66:(isFoodWorkstation(targetKind)||targetKind==='machining-table'||targetKind==='hi-tech-research-bench'||targetKind==='fabrication-bench'||targetKind==='multi-analyzer'||targetKind==='drug-lab'||targetKind==='art-bench'||targetKind==='research-bench'||targetKind==='tailor-bench'||targetKind==='stonecutter')?WORLD_SCALE.stonecutterHeight:(targetKind==='wall'||targetKind==='cooler')?wallHeight:targetKind==='table'||targetKind==='chess-table'?WORLD_SCALE.tableHeight:targetKind==='horseshoes'?WORLD_SCALE.horseshoeHeight:targetKind==='stool'?WORLD_SCALE.stoolHeight:WORLD_SCALE.bedSurfaceHeight)+.06;
-        for(const cell of cells)for(const ry of [-Math.PI/4,Math.PI/4])frames.push({x:cell.x,z:cell.z,y,sx:.85,sy:.05,sz:.08,ry,color:job.kind==='uninstall'?0xd9b66c:0xd77855});
+        for(const cell of cells)for(const ry of [-Math.PI/4,Math.PI/4])frames.push({targetId:job.id,x:cell.x,z:cell.z,y,sx:.85,sy:.05,sz:.08,ry,color:job.kind==='uninstall'?0xd9b66c:0xd77855});
         continue;
       }
       const kind=job.furniture?.kind??job.kind;
@@ -37,16 +37,16 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
       const height = kind==='biofuel-refinery'?1.69:kind==='chemfuel-generator'?1.75:kind==='vitals-monitor'?1.14:kind==='mini-turret'?1.18:kind==='tube-television'?.81:kind==='sandbags'?.66:kind==='solar-generator'?.56:kind==='power-conduit'?.08:kind==='power-switch'?.44:kind==='battery'?1.1:kind==='multi-analyzer'?1.56:(isFoodWorkstation(kind)||kind==='machining-table'||kind==='hi-tech-research-bench'||kind==='fabrication-bench'||kind==='drug-lab'||kind==='art-bench'||kind==='research-bench'||kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterHeight:kind === 'horseshoes' ? WORLD_SCALE.horseshoeHeight : (kind === 'wall'||kind==='cooler') ? wallHeight : kind === 'table'||kind==='chess-table' ? WORLD_SCALE.tableHeight : kind === 'stool' ? WORLD_SCALE.stoolHeight : WORLD_SCALE.bedSurfaceHeight;
       const width = kind==='biofuel-refinery'?2.86:kind==='chemfuel-generator'?1.86:kind==='vitals-monitor'?.78:kind==='mini-turret'?.87:kind==='tube-television'?.84:kind==='sandbags'?.94:kind==='solar-generator'?3.9:kind==='power-conduit'?.18:kind==='power-switch'?.7:kind==='battery'?.86:kind==='hi-tech-research-bench'||kind==='fabrication-bench'?4.85:kind==='multi-analyzer'?1.86:(isFoodWorkstation(kind)||kind==='machining-table'||kind==='drug-lab'||kind==='art-bench'||kind==='research-bench'||kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterWidth:kind === 'horseshoes' ? 0.12 : (kind === 'wall'||kind==='cooler'||kind==='chess-table') ? 0.92 : kind === 'table' ? WORLD_SCALE.tableWidth : kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
       const length = kind==='biofuel-refinery'||kind==='chemfuel-generator'?1.86:kind==='vitals-monitor'?.60:kind==='mini-turret'?.87:kind==='tube-television'?.72:kind==='solar-generator'?3.9:kind==='power-conduit'?.18:kind==='power-switch'?.7:kind==='battery'?1.83:kind==='hi-tech-research-bench'||kind==='fabrication-bench'||kind==='multi-analyzer'?1.84:kind==='research-bench'?1.8:(isFoodWorkstation(kind)||kind==='machining-table'||kind==='drug-lab'||kind==='art-bench'||kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterDepth:kind === 'horseshoes' ? 0.12 : kind === 'table' ? WORLD_SCALE.tableLength : kind === 'stool' ? WORLD_SCALE.stoolWidth : isBedKind(kind) && job.footprint !== 'legacy-single' ? WORLD_SCALE.bedLength : 0.92;
-      blueprints.push({ x, z, y: height / 2, sx: width, sy: height, sz: length, ry });
+      blueprints.push({ targetId:job.id, x, z, y: height / 2, sx: width, sy: height, sz: length, ry });
       if (job.construction === 'frame') {
         // Four low corner posts distinguish a supplied frame from a bare plan.
         for (const dx of [-1, 1]) for (const dz of [-1, 1]) {
           const lx = dx * (width / 2 - 0.06), lz = dz * (length / 2 - 0.06);
-          frames.push({ x: x + lx * Math.cos(ry) + lz * Math.sin(ry), z: z + lz * Math.cos(ry) - lx * Math.sin(ry), y: 0.2, sx: 0.09, sy: 0.4, sz: 0.09 });
+          frames.push({ targetId:job.id, x: x + lx * Math.cos(ry) + lz * Math.sin(ry), z: z + lz * Math.cos(ry) - lx * Math.sin(ry), y: 0.2, sx: 0.09, sy: 0.4, sz: 0.09 });
         }
       }
       const fraction = Math.floor(job.progress / jobDuration(world,job) * 20) / 20;
-      if (fraction > 0) progress.push({ x, z, y: height * fraction / 2, sx: width - 0.06, sy: height * fraction, sz: length - 0.06, ry });
+      if (fraction > 0) progress.push({ targetId:job.id, x, z, y: height * fraction / 2, sx: width - 0.06, sy: height * fraction, sz: length - 0.06, ry });
     }
     batches.set(group, 'job-orders', orders.map(p => ({ ...p, sx: 0.9, sy: 0.025, sz: 0.9 })), 'overlay', false);
     batches.set(group, 'job-plans', blueprints.map(p => ({ ...p, color: 0xa7dbc9 })), 'wire', false);

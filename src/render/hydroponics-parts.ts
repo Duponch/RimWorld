@@ -13,7 +13,7 @@ export function hydroponicsParts(world:Pick<World,'structures'>):Placement[] {
     const cx=(basin.x+last.x)/2,cz=(basin.z+last.z)/2;
     const ry=basin.orientation*Math.PI/2,cos=Math.cos(ry),sin=Math.sin(ry);
     const add=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number)=>
-      parts.push({key:basin.id,x:cx+x*cos+z*sin,y,z:cz+z*cos-x*sin,sx,sy,sz,ry,color});
+      parts.push({targetId:basin.id,key:basin.id,x:cx+x*cos+z*sin,y,z:cz+z*cos-x*sin,sx,sy,sz,ry,color});
     const steel=0x94a6a7,rim=0xc0cbc4;
     add(0,.13,0,.88,.18,3.88,steel);
     for(const side of [-1,1]) {

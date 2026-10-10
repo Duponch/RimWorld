@@ -14,7 +14,7 @@ export function artParts(world:World):Placement[] {
     const stone=buildingMaterialColor(structure.material,0x9b7e58)??0x9b7e58;
     const trim=shade(stone,.7);
     const add=(localX:number,y:number,localZ:number,sx:number,sy:number,sz:number,color=stone):void=>{
-      parts.push({key:id,x:x+localX*cos+localZ*sin,y,z:z+localZ*cos-localX*sin,sx,sy,sz,ry,color});
+      parts.push({targetId:structure.id,key:id,x:x+localX*cos+localZ*sin,y,z:z+localZ*cos-localX*sin,sx,sy,sz,ry,color});
     };
     if(kind==='art-bench'){
       const height=WORLD_SCALE.stonecutterHeight,width=WORLD_SCALE.stonecutterWidth,depth=WORLD_SCALE.stonecutterDepth;

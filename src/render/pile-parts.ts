@@ -8,11 +8,11 @@ import type { PileSurface } from './pile-surfaces';
 import { ITEM_DEFINITIONS,type ItemId } from '../sim/items';
 import type { MaterialKind } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
-import type { Placement } from './primitives';
+import { tagPlacementTargets, type Placement } from './primitives';
 import type { CorpseStage } from './corpse-presentation';
 import type { CorpseState } from '../sim/corpses';
 
-export interface PileBundle {x:number;z:number;kind:MaterialKind;item:ItemId;quantity:number;supplied:boolean;surface?:PileSurface;corpseStage?:CorpseStage;facing?:number;corpse?:CorpseState}
+export interface PileBundle {x:number;z:number;kind:MaterialKind;item:ItemId;quantity:number;supplied:boolean;surface?:PileSurface;corpseStage?:CorpseStage;facing?:number;corpse?:CorpseState;targetId?:number}
 
 /** Static content rebuilt only when a chunk's pile signature changes. Every
  * item shares that chunk's already resident mesh and material. */
@@ -114,6 +114,7 @@ export function pileParts(bundles:readonly PileBundle[]):Placement[] {
       p.x=bundle.x+(p.x-bundle.x)*surface.scale+surface.x;p.z=bundle.z+(p.z-bundle.z)*surface.scale+surface.z;
       p.y+=surface.y;p.sx=(p.sx??1)*surface.scale;p.sz=(p.sz??1)*surface.scale;
     }
+    if(bundle.targetId!==undefined)for(const [index,parts] of [logs,ends,crates,food].entries())tagPlacementTargets(parts,starts[index]!,bundle.targetId);
   }
   return [...logs,...ends.map(p=>({...p,color:0xc9ad77})),...crates.map(p=>({...p,color:0x987e51})),...food];
 }

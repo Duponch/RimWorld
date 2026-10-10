@@ -1,9 +1,8 @@
-/* V95: one standard map pointer; other sprites indicate interaction states. */
+/* Tool artwork is local to the map; UI interaction cursors retain their semantics. */
 #app { cursor: var(--cursor-pointer, default); }
-#viewport[data-cursor] canvas { cursor: var(--cursor-pointer, default) !important; }
+#viewport[data-cursor] canvas { cursor: var(--map-tool-cursor, var(--cursor-pointer, default)) !important; }
 #viewport[data-cursor-gesture="grab"] canvas { cursor: var(--cursor-grab, grab) !important; }
 #viewport[data-cursor-gesture="grabbing"] canvas { cursor: var(--cursor-grabbing, grabbing) !important; }
-#viewport[data-cursor-gesture="zoom"] canvas { cursor: var(--cursor-zoom, zoom-in) !important; }
 
 #app button:not(:disabled),
 #app select:not(:disabled),

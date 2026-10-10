@@ -8,7 +8,7 @@ export function foodWorkstationParts(world:World):Placement[] {
   const parts:Placement[]=[],height=WORLD_SCALE.stonecutterHeight;
   for(const s of world.structures)if(isFoodWorkstation(s.kind)) {
     const ry=s.orientation*Math.PI/2,cos=Math.cos(ry),sin=Math.sin(ry);
-    const add=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number)=>parts.push({x:s.x+x*cos+z*sin,y,z:s.z+z*cos-x*sin,sx,sy,sz,ry,color});
+    const add=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number)=>parts.push({targetId:s.id,x:s.x+x*cos+z*sin,y,z:s.z+z*cos-x*sin,sx,sy,sz,ry,color});
     if(s.kind==='butcher-table') {
       add(0,height-.09,0,2.8,.18,.85,0x9b7850);
       for(const x of [-1.2,1.2])for(const z of [-.3,.3])add(x,(height-.18)/2,z,.17,height-.18,.17,0x70543b);

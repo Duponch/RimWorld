@@ -5,6 +5,7 @@ import type { Resource, World } from '../sim/types';
 import { floraColor, floraSize, isClusterPlantSpecies } from './flora-presentation';
 import { noise } from './StaticGeometry';
 import type { NaturalPresentationChange } from './NaturalResourcePresentation';
+import { ResourceTargetTint } from './resource-target-tint';
 
 const BASE_STEMS = [
   { x: 0, z: 0, height: 1, leanX: .04, leanZ: -.025 },
@@ -85,6 +86,8 @@ export class PlantClusterLayer {
   private readonly bounds = new THREE.Box3();
   private readonly transformedBounds = new THREE.Box3();
   private used = 0;
+  private readonly targetTint=new ResourceTargetTint();
+  private targetPreviewIds=new Set<number>();
 
   constructor(private readonly plainMaterial: THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial) {
     const windPosition=Fn(()=>{
@@ -105,6 +108,17 @@ export class PlantClusterLayer {
   }
   private texturesEnabled=true;
   setTexturesEnabled(enabled:boolean):void {this.texturesEnabled=enabled;this.mesh.material=enabled?this.windTextured:this.windPlain;}
+  setTargetPreview(ids:ReadonlySet<number>):void {
+    if(ids.size===this.targetPreviewIds.size&&[...ids].every(id=>this.targetPreviewIds.has(id)))return;
+    this.targetTint.restore();this.targetPreviewIds=new Set(ids);this.tintTargets();
+  }
+  clearTargetPreview():void {this.targetTint.restore();this.targetPreviewIds.clear();}
+  private tintTargets():void {
+    if(!this.targetPreviewIds.size)return;
+    const slots:number[]=[];
+    for(const id of this.targetPreviewIds){const slot=this.slots.get(id);if(slot)slots.push(slot.index);}
+    this.targetTint.applySlots(this.mesh.instanceColor!,slots);
+  }
 
   setWind(strength:number,directionX:number,directionZ:number):void {
     this.windStrength.value=Number.isFinite(strength)?Math.max(0,Math.min(2,strength)):0;
@@ -156,6 +170,7 @@ export class PlantClusterLayer {
     if(this.windPlain.outputNode!==plainOutput)this.windPlain.outputNode=plainOutput;
     if(this.windTextured.outputNode!==texturedOutput)this.windTextured.outputNode=texturedOutput;
     if (reset) {
+      this.clearTargetPreview();
       this.bounds.makeEmpty();
       this.slots.clear();
       this.free.length = 0;
@@ -167,6 +182,7 @@ export class PlantClusterLayer {
       : world.resources.filter(resource => isClusterPlantSpecies(resource.species));
     const alive = !reset&&changes ? undefined : new Set(plants.map(resource => resource.id));
     if(changes&&!reset&&!plants.length&&![...changes.keys()].some(id=>this.slots.has(id)))return;
+    this.targetTint.restore();
     let firstMatrix = Infinity, lastMatrix = -1;
     let firstColor = Infinity, lastColor = -1;
     const removed = alive
@@ -232,6 +248,7 @@ export class PlantClusterLayer {
       this.mesh.instanceColor!.addUpdateRange(firstColor * 3, (lastColor - firstColor + 1) * 3);
       this.mesh.instanceColor!.needsUpdate = true;
     }
+    this.tintTargets();
   }
 
   private includeTransformBounds(): void {
@@ -242,6 +259,7 @@ export class PlantClusterLayer {
   instanceCount(): number { return this.mesh.count; }
 
   dispose(): void {
+    this.clearTargetPreview();
     this.mesh.dispose();
     this.geometry.dispose();
     this.windPlain.dispose();this.windTextured.dispose();

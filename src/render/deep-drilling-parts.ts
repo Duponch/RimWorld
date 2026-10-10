@@ -9,7 +9,7 @@ export function deepDrillingParts(world:World):Placement[]{
     if(s.kind!=='deep-drill'&&s.kind!=='ground-scanner')continue;
     const ry=s.orientation*Math.PI/2,cos=Math.cos(ry),sin=Math.sin(ry);
     const add=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number)=>
-      parts.push({x:s.x+x*cos+z*sin,y,z:s.z+z*cos-x*sin,sx,sy,sz,ry,color});
+      parts.push({targetId:s.id,x:s.x+x*cos+z*sin,y,z:s.z+z*cos-x*sin,sx,sy,sz,ry,color});
     if(s.kind==='deep-drill'){
       add(0,.10,0,.86,.20,.84,0x465559);
       add(-.31,.65,.08,.12,1.10,.16,0x6c8282);add(.31,.65,.08,.12,1.10,.16,0x6c8282);

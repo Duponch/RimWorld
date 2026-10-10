@@ -16,7 +16,7 @@ export function hospitalBedParts(world:World):Placement[] {
     const frame=buildingMaterialColor(bed.material)??0x89999e;
     const width=WORLD_SCALE.bedWidth,length=WORLD_SCALE.bedLength,surface=WORLD_SCALE.bedSurfaceHeight;
     const add=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number)=>{
-      parts.push({key:bed.id,x:cx+x*cos+z*sin,y,z:cz+z*cos-x*sin,sx,sy,sz,ry,color});
+      parts.push({targetId:bed.id,key:bed.id,x:cx+x*cos+z*sin,y,z:cz+z*cos-x*sin,sx,sy,sz,ry,color});
     };
     add(0,.31,0,width-.02,.12,length-.02,frame);
     for(const x of [-1,1])for(const z of [-1,1])add(x*(width/2-.09),.16,z*(length/2-.14),.09,.32,.09,frame);

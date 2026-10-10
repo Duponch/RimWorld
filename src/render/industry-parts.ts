@@ -12,7 +12,7 @@ export function industryParts(world:World):Placement[]{
     const centerX=s.kind==='multi-analyzer'?.5:0,centerZ=.5;
     const add=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number)=>{
       const xx=x+centerX,zz=z+centerZ;
-      parts.push({x:s.x+xx*cos+zz*sin,y,z:s.z+zz*cos-xx*sin,sx,sy,sz,ry,color});
+      parts.push({targetId:s.id,x:s.x+xx*cos+zz*sin,y,z:s.z+zz*cos-xx*sin,sx,sy,sz,ry,color});
     };
     if(s.kind==='multi-analyzer'){
       add(0,.14,0,1.7,.28,1.7,0x465a5d);

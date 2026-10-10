@@ -10,7 +10,7 @@ export function sandbagParts(world:World):Placement[] {
   for(const bag of world.structures){
     if(bag.kind!=='sandbags')continue;
     const add=(dx:number,y:number,dz:number,sx:number,sy:number,sz:number,color:number)=>
-      parts.push({key:bag.id,x:bag.x+dx,y,z:bag.z+dz,sx,sy,sz,color});
+      parts.push({targetId:bag.id,key:bag.id,x:bag.x+dx,y,z:bag.z+dz,sx,sy,sz,color});
     for(let row=0;row<3;row++)for(const side of [-1,1]){
       const dx=side*(row===1?.205:.235),dz=row===1?.045:-.025,y=.12+row*.22;
       add(dx,y,dz,.44,.20,.83,row===1?0xc6bb94:side===-1?0xd7cba5:0xcec19b);

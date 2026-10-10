@@ -1,4 +1,6 @@
-# Validation courante — V299
+# Validation courante — V300
+
+**V300 : [interactions des ordres](../gameplay/order-interactions-v300.md#validation), schéma 218 conservé.** 39 cas uniques/11 fichiers par groupe et reprise ciblée, typage/build et dix contrôles Chrome WebGPU passent : gestes natifs, teintes Float32, buffers stationnaires, options et reprise exacte. Les 63 références/66 fichiers publics sont conservés. Preuves, comparaison GAME et limites dans la note unique.
 
 **V299 : [préparation commune des bâtiments](aulnes-performance-v299.md#validation), schéma 218 conservé.**55cas privés/historiques acquis par reprises,13cas permanents, coût complet contrôlé, quatre cohortes GAME avec recharges exactes,63sauvegardes avec un vrai tick et builds passent. Moteur/publics inchangés ; chiffres, contrepartie checkpoint, rouges de fixtures et limites dans la note unique. Publication Pages regroupée pour cette série.
 

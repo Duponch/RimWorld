@@ -9,7 +9,7 @@ export function vitalsMonitorParts(world:World):Placement[]{
   for(const s of world.structures){
     if(s.kind!=='vitals-monitor')continue;
     const ry=s.orientation*Math.PI/2,c=Math.cos(ry),n=Math.sin(ry);
-    const add=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number)=>parts.push({key:s.id,x:s.x+x*c+z*n,y,z:s.z+z*c-x*n,sx,sy,sz,ry,color});
+    const add=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number)=>parts.push({targetId:s.id,key:s.id,x:s.x+x*c+z*n,y,z:s.z+z*c-x*n,sx,sy,sz,ry,color});
     add(0,.08,0,.68,.13,.60,0x627b7a);
     add(0,.48,.12,.12,.77,.12,0x7c9690);
     add(0,.90,0,.72,.48,.35,0xc4cebe);

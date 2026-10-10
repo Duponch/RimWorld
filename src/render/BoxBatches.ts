@@ -7,6 +7,7 @@ import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { instancedBoxPatternUv } from './texture-variation';
 import { chunkContour, configureChunkMaterial, createChunkGeometry, isSmallChunk } from './chunk-shape';
 import { chunkPaintUv, createChunkSurfacePaint } from './chunk-surface-paint';
+import { InstanceTargetTint } from './instance-target-tint';
 
 const object = new THREE.Object3D(), color = new THREE.Color();
 type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'storage-home' | 'border';
@@ -35,6 +36,8 @@ export class BoxBatches {
     wire: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.65, depthWrite: false }),
   };
   private readonly batches = new Map<string, BoxMesh>();
+  private readonly targetBatches = new Map<BoxMesh, { ids: (number | undefined)[]; tint: InstanceTargetTint }>();
+  private readonly targetGroups = new Map<THREE.Group, ReadonlySet<number>>();
   private furnitureRevision: object | undefined;
   furnitureStamp(): object | undefined { return this.furnitureRevision; }
   private texturesEnabled = true;
@@ -68,6 +71,22 @@ export class BoxBatches {
     for (const mesh of this.batches.values()) {
       if (mesh.material === this.texturedSolid || mesh.material === this.materials.solid) mesh.material = chosen;
       else if (mesh.material === this.texturedRock || mesh.material === this.plainRock) mesh.material = enabled ? this.texturedRock : this.plainRock;
+    }
+  }
+
+  setTargetPreview(group: THREE.Group, ids: ReadonlySet<number>): void {
+    if (ids.size === 0) { this.clearTargetPreview(group); return; }
+    this.targetGroups.set(group, new Set(ids));
+    for (const child of group.children) this.targetBatches.get(child as BoxMesh)?.tint.setTargets(ids);
+  }
+
+  clearTargetPreview(group?: THREE.Group): void {
+    if (group) {
+      this.targetGroups.delete(group);
+      for (const child of group.children) this.targetBatches.get(child as BoxMesh)?.tint.clear();
+    } else {
+      this.targetGroups.clear();
+      for (const state of this.targetBatches.values()) state.tint.clear();
     }
   }
 
@@ -110,20 +129,25 @@ export class BoxBatches {
       if(!Number.isSafeInteger(patch.start)||patch.start<last||patch.start+patch.items.length>totalCount)return false;
       last=patch.start+patch.items.length;
     }
+    const targets=this.targetBatches.get(mesh);
+    targets?.tint.restore();
     for(const patch of patches)for(let offset=0;offset<patch.items.length;offset++){
       const item=patch.items[offset]!,i=patch.start+offset;
       object.position.set(item.x,item.y,item.z);object.rotation.set(0,item.ry??0,0);
       object.scale.set(item.sx??1,item.sy??1,item.sz??1);object.updateMatrix();
       mesh.setMatrixAt(i,object.matrix);mesh.setColorAt(i,color.setHex(item.color??0xffffff));
+      if(targets)targets.ids[i]=item.targetId;
     }
     mesh.instanceMatrix.needsUpdate=true;mesh.colorBuffer.needsUpdate=true;
     mesh.computeBoundingSphere();
+    if(targets)targets.tint.setInstances(mesh.colorBuffer,targets.ids);
     return true;
   }
 
   private setGeometry(group: THREE.Group, key: string, items: Placement[], geometry: THREE.BufferGeometry, style: Style, shadows: boolean): void {
     if(key==='furniture')this.furnitureRevision={};
     let mesh = this.batches.get(key);
+    if(mesh)this.targetBatches.get(mesh)?.tint.restore();
     const rock=geometry===this.roundedRockGeometry||geometry===this.smallRockGeometry;
     const chosen = style === 'solid' && rock
       ? (this.texturesEnabled ? this.texturedRock : this.plainRock)
@@ -142,16 +166,23 @@ export class BoxBatches {
     }
     if (mesh.material !== chosen) mesh.material = chosen;
     mesh.activeCount = items.length;
+    const ids:(number|undefined)[]=[];
     for (let i = 0; i < items.length; i++) {
       const item = items[i]!;
       object.position.set(item.x, item.y, item.z); object.rotation.set(0, item.ry ?? 0, 0);
       object.scale.set(item.sx ?? 1, item.sy ?? 1, item.sz ?? 1); object.updateMatrix();
       mesh.setMatrixAt(i, object.matrix); mesh.setColorAt(i, color.setHex(item.color ?? 0xffffff));
+      ids.push(item.targetId);
       if(rock)(mesh.geometry.getAttribute('chunkContour') as THREE.InstancedBufferAttribute).setXYZW(i,...chunkContour(item.key));
     }
     mesh.instanceMatrix.needsUpdate = true; mesh.colorBuffer.needsUpdate = true;
     if(rock)mesh.geometry.getAttribute('chunkContour').needsUpdate=true;
     mesh.computeBoundingSphere();
+    let targets=this.targetBatches.get(mesh);
+    if(!targets){targets={ids,tint:new InstanceTargetTint()};this.targetBatches.set(mesh,targets);}
+    else targets.ids=ids;
+    targets.tint.setInstances(mesh.colorBuffer,ids);
+    const selected=this.targetGroups.get(group);if(selected)targets.tint.setTargets(selected);
   }
 
   private allocateRockContour(mesh: BoxMesh): void {
@@ -159,6 +190,8 @@ export class BoxBatches {
   }
 
   clear(): void {
+    for (const state of this.targetBatches.values()) state.tint.dispose();
+    this.targetBatches.clear();this.targetGroups.clear();
     for (const mesh of this.batches.values()) { mesh.removeFromParent(); mesh.dispose(); }
     this.batches.clear();
     this.furnitureRevision=undefined;

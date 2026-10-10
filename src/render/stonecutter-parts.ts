@@ -11,7 +11,7 @@ export function stonecutterParts(world:World):Placement[] {
     const ry=s.orientation*Math.PI/2,cos=Math.cos(ry),sin=Math.sin(ry);
     const stuff=s.material==='steel'?0x89999e:0x927249;
     const add=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color=stuff)=>
-      parts.push({x:s.x+x*cos+z*sin,y,z:s.z+z*cos-x*sin,sx,sy,sz,ry,color});
+      parts.push({targetId:s.id,x:s.x+x*cos+z*sin,y,z:s.z+z*cos-x*sin,sx,sy,sz,ry,color});
     add(0,height-.065,0,width,.13,depth);
     for(const x of [-1,1])for(const z of [-1,1])add(x*(width/2-.19),(height-.13)/2,z*(depth/2-.13),.15,height-.13,.15);
     add(0,.24,0,width-.3,.13,.13);

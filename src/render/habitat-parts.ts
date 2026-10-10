@@ -20,7 +20,7 @@ export function habitatParts(world: World): Placement[] {
     const body = buildingMaterialColor(structure.material, 0xa38559) ?? 0xa38559;
     const trim = structure.material === 'steel' ? 0x64747a : shade(body, 0.72);
     const add = (localX: number, y: number, localZ: number, sx: number, sy: number, sz: number, color = body): void => {
-      parts.push({
+      parts.push({targetId:structure.id,
         key: structure.id,
         x: x + localX * cos + localZ * sin,
         y,
@@ -112,7 +112,7 @@ function footprintBounds(structure: Structure): { minX: number; maxX: number; mi
 function table(parts: Placement[], structure: Structure, x: number, z: number, ry: number, width: number, depth: number, body: number, trim: number): void {
   const cos = Math.cos(ry), sin = Math.sin(ry), height = WORLD_SCALE.tableHeight;
   const add = (localX: number, y: number, localZ: number, sx: number, sy: number, sz: number, color = body): void => {
-    parts.push({ key: structure.id, x: x + localX * cos + localZ * sin, y, z: z + localZ * cos - localX * sin, sx, sy, sz, ry, color });
+    parts.push({targetId:structure.id, key: structure.id, x: x + localX * cos + localZ * sin, y, z: z + localZ * cos - localX * sin, sx, sy, sz, ry, color });
   };
   add(0, height - 0.045, 0, width, 0.09, depth);
   for (const dx of [-1, 1]) for (const dz of [-1, 1]) add(dx * (width / 2 - 0.10), (height - 0.09) / 2, dz * (depth / 2 - 0.10), 0.10, height - 0.09, 0.10, trim);
@@ -137,7 +137,7 @@ export function habitatPartsForStructure(structure: Structure): Placement[] {
   const body = buildingMaterialColor(structure.material, 0xa38559) ?? 0xa38559;
   const trim = structure.material === 'steel' ? 0x64747a : shade(body, 0.72);
   const add = (localX: number, y: number, localZ: number, sx: number, sy: number, sz: number, color = body): void => {
-    parts.push({
+    parts.push({targetId:structure.id,
       key: structure.id,
       x: x + localX * cos + localZ * sin,
       y,

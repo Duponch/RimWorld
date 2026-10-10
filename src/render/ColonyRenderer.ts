@@ -12,6 +12,7 @@ import {mapObjectsAt,sameMapObject} from '../ui/map-object-selection';
 import type {AreaAction,Cell} from '../sim/types';
 export class ColonyRenderer extends SceneRenderCore {
   private readonly selectionInput:PawnSelectionInput;
+  private areaPointer: { x:number; y:number } | undefined;
   private readonly resizeObserver:ResizeObserver;
   protected readonly mapLabels:MapLabelsOverlay;
   static async create(host: HTMLElement, onPick: (x: number, z: number) => void, groundGrassEnabled = true): Promise<ColonyRenderer> {
@@ -103,6 +104,10 @@ export class ColonyRenderer extends SceneRenderCore {
       if (event.button === 2) this.cancelDesignation();
       event.stopImmediatePropagation(); event.preventDefault(); return;
     }
+    if (event.button === 2 && this.tool !== 'select') {
+      event.stopImmediatePropagation(); event.preventDefault();
+      this.cancelDesignation(); this.onExitOrder(); return;
+    }
     this.pointerDown = { x: event.clientX, y: event.clientY, button: event.button, pointerId: event.pointerId };
     this.renderer.domElement.focus({ preventScroll: true });
     const from = this.pick(event);
@@ -111,7 +116,10 @@ export class ColonyRenderer extends SceneRenderCore {
       this.areaDrag = isLineBuildKind(this.tool)
         ? { pointerId: event.pointerId, kind: this.tool, from, material: this.constructionMaterial }
         : { pointerId: event.pointerId, action: this.tool as AreaAction, from };
-      this.controls.enabled = false; this.keys.clear();
+      // The initial press never reaches OrbitControls. Keep its wheel handler
+      // available; subsequent pointer presses are consumed by the drag branch.
+      this.controls.enabled = true; this.keys.clear();
+      this.areaPointer = { x:event.clientX, y:event.clientY };
       this.renderer.domElement.setPointerCapture(event.pointerId);
       this.hoverCell = from; this.areaSignature = ''; this.updateHover();
     }
@@ -141,6 +149,7 @@ export class ColonyRenderer extends SceneRenderCore {
   private onPointerMove = (event: PointerEvent): void => {
     if(this.selectionInput.move(event))return;
     if (this.areaDrag && event.pointerId !== this.areaDrag.pointerId) return;
+    if (this.areaDrag) this.areaPointer = { x:event.clientX, y:event.clientY };
     // A second mouse button changes `buttons` through pointermove, without a new pointerdown.
     if (this.areaDrag && (event.buttons & 2)) { event.preventDefault(); this.cancelDesignation(); return; }
     const previous=this.hoverCell;
@@ -148,6 +157,13 @@ export class ColonyRenderer extends SceneRenderCore {
     if(previous?.x!==this.hoverCell?.x||previous?.z!==this.hoverCell?.z)this.onHover(this.hoverCell);
     this.updateHover();
   };
+  protected refreshAreaPointer():void {
+    if (!this.areaDrag || !this.areaPointer) return;
+    const {x,y}=this.areaPointer;
+    const next=document.elementFromPoint(x,y)===this.renderer.domElement?this.pickAt(x,y,true):null;
+    if (next?.x===this.hoverCell?.x && next?.z===this.hoverCell?.z) return;
+    this.hoverCell=next; this.onHover(next); this.updateHover();
+  }
   private pointerOnCanvas(event: PointerEvent): boolean {
     return document.elementFromPoint(event.clientX, event.clientY) === this.renderer.domElement;
   }

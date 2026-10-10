@@ -8,7 +8,7 @@ export function orbitalParts(world:World):Placement[]{
     if(s.kind!=='orbital-beacon'&&s.kind!=='comms-console')continue;
     const ry=s.orientation*Math.PI/2,c=Math.cos(ry),sn=Math.sin(ry);
     const add=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number)=>
-      parts.push({x:s.x+x*c+z*sn,y,z:s.z+z*c-x*sn,sx,sy,sz,ry,color});
+      parts.push({targetId:s.id,x:s.x+x*c+z*sn,y,z:s.z+z*c-x*sn,sx,sy,sz,ry,color});
     if(s.kind==='orbital-beacon'){
       add(0,.09,0,.80,.18,.80,0x536d72);add(0,.42,0,.23,.70,.23,0x8dafa7);
       add(0,.81,0,.70,.12,.70,0xb7c5b5);add(0,.93,0,.27,.12,.27,0xc7a96d);

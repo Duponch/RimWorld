@@ -7,6 +7,7 @@ import { doorLeafTop } from './door-parts';
 import { instancedPatternUv } from './texture-variation';
 import { woodFiberDetail } from './stylized-surfaces';
 import type { Placement } from './primitives';
+import { InstanceTargetTint } from './instance-target-tint';
 
 type Point = readonly [number, number, number];
 
@@ -211,6 +212,10 @@ export class TimberCladdingLayer {
   private eaveCapacity=256;
   private key='';
   private texturesEnabled=true;
+  private readonly wallTint=new InstanceTargetTint();
+  private readonly eaveTint=new InstanceTargetTint();
+  setTargetPreview(ids:ReadonlySet<number>):void {this.wallTint.setTargets(ids);this.eaveTint.setTargets(ids);}
+  clearTargetPreview():void {this.wallTint.clear();this.eaveTint.clear();}
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial)=>void) {
     // NodeMaterial still applies authored vertex colours and instance tints
     // after colorNode, just as it does for the original map material.
@@ -251,17 +256,21 @@ export class TimberCladdingLayer {
     const key=`${cutaway}|${walls.map(s=>`${s.id}:${s.x}:${s.z}`).join('|')}|${doors.map(s=>`${s.id}:${s.x}:${s.z}:${axes.get(s.z*world.width+s.x)??0}`).join('|')}`;
     if(!reset&&key===this.key)return;
     this.key=key;
+    this.wallTint.restore();this.eaveTint.restore();
     const parts=timberCladdingParts(world,cutaway);
     this.grow(parts.walls.length,parts.eaves.length);
     const object=new THREE.Object3D(),color=new THREE.Color();
     for(const [mesh,placements] of [[this.wallMesh,parts.walls],[this.eaveMesh,parts.eaves]] as const) {
+      const targetIds:(number|undefined)[]=[];
       for(let i=0;i<placements.length;i++) {
         const p=placements[i]!;
         object.position.set(p.x,p.y,p.z);object.rotation.set(0,p.ry??0,0);
         object.scale.set(p.sx??1,p.sy??1,p.sz??1);object.updateMatrix();
         mesh.setMatrixAt(i,object.matrix);mesh.setColorAt(i,color.setRGB(p.tint,p.tint,p.tint));
+        targetIds.push(p.key);
       }
       mesh.count=placements.length;
+      if(mesh.instanceColor)(mesh===this.wallMesh?this.wallTint:this.eaveTint).setInstances(mesh.instanceColor,targetIds);
     }
     for(const mesh of [this.wallMesh,this.eaveMesh]) {
       mesh.visible=mesh.count>0;
@@ -278,6 +287,7 @@ export class TimberCladdingLayer {
     return ()=>{for(const {mesh,version} of saved)if(mesh.instanceMatrix.version===version){mesh.count=0;mesh.visible=false;}};
   }
   dispose():void {
+    this.wallTint.dispose();this.eaveTint.dispose();
     this.group.remove(this.wallMesh,this.eaveMesh);
     this.wallMesh.dispose();this.eaveMesh.dispose();
     this.wallGeometry.dispose();this.eaveGeometry.dispose();this.material.dispose();this.plainMaterial.dispose();this.grain.dispose();

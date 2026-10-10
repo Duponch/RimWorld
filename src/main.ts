@@ -28,6 +28,7 @@ import { GameSession, SAVE_KEY, PREVIOUS_KEY } from './ui/game-session';
 import { BrowserSaveRepository } from './ui/save-repository';
 import { fetchTestColonies, readSaveFile, readTestColony } from './ui/test-colonies';
 import { createFrontMenu } from './ui/front-menu';
+import {DESIGNATION_VISIBILITY_KEY,designationMinCellPixels,designationVisibilityLabel} from './ui/designation-visibility';
 import type { PawnTrack } from './bridge/motion-tracks';
 import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
 import { INFECTION_UNIT,infectionStage } from './sim/infection-rules';
@@ -346,6 +347,7 @@ const SOUND_VOLUME_PREFERENCE_KEY = 'lisiere.audio.effects.volume.v1';
 const MUSIC_ENABLED_PREFERENCE_KEY = 'lisiere.audio.music.enabled.v1';
 const MUSIC_VOLUME_PREFERENCE_KEY = 'lisiere.audio.music.volume.v1';
 let texturesEnabled = true;
+let designationIconThreshold = 32;
 let groundGrassEnabled = true;
 let soundEnabled = true;
 let soundVolume = 0.75;
@@ -353,6 +355,7 @@ let musicEnabled = true;
 let musicVolume = 0.5;
 let audioUnlockWarningShown = false;
 try {
+  designationIconThreshold=designationMinCellPixels(localStorage.getItem(DESIGNATION_VISIBILITY_KEY));
   texturesEnabled = localStorage.getItem(TEXTURE_PREFERENCE_KEY) !== 'false';
   groundGrassEnabled = localStorage.getItem(GROUND_GRASS_PREFERENCE_KEY) !== 'false';
   soundEnabled = localStorage.getItem(SOUND_ENABLED_PREFERENCE_KEY) !== 'false';
@@ -417,6 +420,16 @@ function musicMood(world: World): MusicMood {
   return hour >= 6 && hour < 20 ? 'day' : 'night';
 }
 const textureToggle = el<HTMLInputElement>('textures-enabled');
+const designationSlider=el<HTMLInputElement>('designation-visibility');
+designationSlider.value=String(designationIconThreshold);
+el('designation-visibility-value').textContent=designationVisibilityLabel(designationIconThreshold);
+function setDesignationMinCellPixels(value:number):boolean {
+  designationIconThreshold=designationMinCellPixels(value);
+  designationSlider.value=String(designationIconThreshold);
+  el('designation-visibility-value').textContent=designationVisibilityLabel(designationIconThreshold);
+  renderer?.setDesignationMinCellPixels(designationIconThreshold);
+  try {localStorage.setItem(DESIGNATION_VISIBILITY_KEY,String(designationIconThreshold));return true;}catch{return false;}
+}
 textureToggle.checked = texturesEnabled;
 function setTexturesEnabled(enabled: boolean): boolean {
   texturesEnabled = enabled;
@@ -466,6 +479,8 @@ document.querySelector('#app')!.append(el('fps-counter'));
 const frontMenu = createFrontMenu(frontHost, {
   getSaves: () => session.saves(),
   getTexturesEnabled: () => texturesEnabled,
+  getDesignationMinCellPixels:()=>designationIconThreshold,
+  onDesignationMinCellPixelsChange:setDesignationMinCellPixels,
   onTexturesEnabledChange: setTexturesEnabled,
   getGroundGrassEnabled: () => groundGrassEnabled,
   onGroundGrassEnabledChange: setGroundGrassEnabled,
@@ -580,7 +595,7 @@ function setPanel(panel: Panel, preserveTool = false) {
   if (panel === 'schedule' && snapshot) scheduleUI.update(snapshot);
   if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot);apparelPolicyUI.update(snapshot);}
   if (panel === 'research' && snapshot) updateResearchPanel(el('research-content'),snapshot,c=>void attempt(()=>client.command(c)));
-  el('inspector').hidden = panel !== null || (!selection.ids.size && !selectedCell);
+  el('inspector').hidden = panel !== null || preserveTool&&currentTool!=='select' || (!selection.ids.size && !selectedCell);
   if (panel !== 'architect' && !preserveTool) applyTool('select');
   if (panel === null && snapshot) {
     const cell = selectedCell ?? snapshot.pawns.find(p => p.id === selectedPawn);
@@ -604,19 +619,21 @@ function applyTool(tool: Tool) {
   renderer?.setConstructionMaterial(constructionUI.material(tool));
   el('placement-controls').hidden = !rotatableTools.has(tool);
   el('storage-options').hidden = tool !== 'stockpile';
+  updateMapHover(true);
 }
 function setTool(tool: Tool) {
   const definition = toolDefinitions.find(item => item.id === tool)!;
   setCategory(definition.category);
   setPanel('architect');
   applyTool(tool);
+  if(definition.category==='orders')setPanel(null,true);
 }
 function selectPawn(id: number) {
   selectPawns({ids:[id],additive:false,toggle:false},true);
 }
 function updateMapHover(force=false):void {
   const readout=el('map-hover-readout');
-  if(!snapshot||!hoveredCell){readout.hidden=true;readout.replaceChildren();lastHoverCopy='';updateMapCellDetails(true);return;}
+  if(currentTool!=='select'||!snapshot||!hoveredCell){readout.hidden=true;readout.replaceChildren();lastHoverCopy='';updateMapCellDetails(true);return;}
   const now=performance.now();
   if(!force&&now-lastHoverReadAt<250)return;
   lastHoverReadAt=now;
@@ -635,7 +652,7 @@ function positionMapCellDetails():void {
 }
 function updateMapCellDetails(force=false):void {
   const panel=el('map-cell-details');
-  if(!altInspectorHeld||!snapshot||!hoveredCell||frontMenu.isOpen()||replacingWorld
+  if(currentTool!=='select'||!altInspectorHeld||!snapshot||!hoveredCell||frontMenu.isOpen()||replacingWorld
     ||document.elementFromPoint(mapPointerX,mapPointerY)!==document.querySelector('#viewport canvas')){
     panel.hidden=true;lastAltCopy='';return;
   }
@@ -693,8 +710,14 @@ function pickCell(x: number, z: number) {
 function designateArea(action: AreaAction, from: Cell, to: Cell) {
   if (!snapshot || replacingWorld || frontMenu.isOpen()) return;
   void attempt(async () => {
-    const response = await client.command({ type: 'area', action, from, to, ...(action==='lay-floor'&&isBuildableFloor(currentTool)?{floor:currentTool}:{}), ...(action === 'stockpile' ? readStorageSettings('stockpile') : {}) });
+    let response:string|undefined;
+    try {response = await client.command({ type: 'area', action, from, to, ...(action==='lay-floor'&&isBuildableFloor(currentTool)?{floor:currentTool}:{}), ...(action === 'stockpile' ? readStorageSettings('stockpile') : {}) });}
+    catch(error) {
+      if(error instanceof Error && error.message==='Aucune case compatible dans ce rectangle.')return;
+      throw error;
+    }
     const result = JSON.parse(response!) as { affected: number; skipped: number };
+    if(result.affected===0)return;
     const label = action==='lay-floor'||action==='remove-floor'?'ordre(s) de sol créé(s)':action==='home'||action==='remove-home'?'case(s) de foyer modifiée(s)':isRoofArea(action) ? 'case(s) de zone de toiture modifiée(s)' : action === 'growing' ? 'case(s) de culture créée(s)' : action === 'remove-growing' ? 'case(s) de culture retirée(s)' : action === 'cancel' ? 'ordre(s) annulé(s)' : action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)';
     notify(`${result.affected} ${label}${result.skipped ? ` · ${result.skipped} case(s) ignorée(s)` : ''}.`);
   });
@@ -1303,6 +1326,7 @@ el('new-world-close').onclick = () => el<HTMLDialogElement>('new-world-dialog').
 el('new-world-form').onsubmit = event => { event.preventDefault(); void attempt(createWorld); };
 el('show-diagnostics').onclick = () => { const hidden = !el('metrics').hidden; el('metrics').hidden = hidden; el('show-diagnostics').textContent = hidden ? 'Afficher les diagnostics' : 'Masquer les diagnostics'; };
 textureToggle.onchange = () => { if (!setTexturesEnabled(textureToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
+designationSlider.oninput=()=>{if(!setDesignationMinCellPixels(Number(designationSlider.value)))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
 groundGrassToggle.onchange = () => { if (!setGroundGrassEnabled(groundGrassToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 const soundToggle = el<HTMLInputElement>('sound-enabled');
 const soundVolumeSlider = el<HTMLInputElement>('sound-volume');
@@ -1485,6 +1509,7 @@ async function prepareWorldView(): Promise<void> {
     renderer.onFatalError = message => { void handleGraphicsFailure(message); };
     renderer.onCompatibilityWarning = message => notify(message, true);
     renderer.setTexturesEnabled(texturesEnabled);
+    renderer.setDesignationMinCellPixels(designationIconThreshold);
     renderer.onAudioFrame = view => {
       lastAudioCamera=view.camera;
       audio.updateCamera(view.camera);
@@ -1500,6 +1525,7 @@ async function prepareWorldView(): Promise<void> {
     renderer.onInteractionCancel=()=>orderMenu.close();
     renderer.onContext=(cell,x,y,queue,targetId)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner);if(selected.some(p=>p.draft))void orderMenu.openTactical(snapshot,new Set(selected.map(p=>p.id)),cell,x,y,queue,targetId);else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
     renderer.onArea = designateArea;
+    renderer.onExitOrder=()=>{applyTool('select');setPanel(null);};
     renderer.onBuildLine = (kind, from, to, material) => {
       if (!snapshot || replacingWorld || frontMenu.isOpen()) return;
       void attempt(async () => {
@@ -1508,9 +1534,8 @@ async function prepareWorldView(): Promise<void> {
         notify(`${result.affected} plan(s) ${kind==='power-conduit'?'de câble':kind==='fence'?'de clôture':'de mur'} créé(s)${result.skipped ? ` · ${result.skipped} case(s) ignorée(s)` : ''}.`);
       });
     };
-    renderer.onAreaPreview = info => {
-      el('area-feedback').hidden = !info;
-      if (info) el('area-feedback').textContent = `${info.line?'Ligne':'Rectangle'} ${info.width} × ${info.height} · ${info.eligible} case(s) retenue(s) · ${info.skipped} ignorée(s) — Relâcher pour appliquer · Échap pour annuler`;
+    renderer.onAreaPreview = () => {
+      el('area-feedback').hidden = true;
     };
   }
   renderer.setWorld(snapshot, true, currentSpeed, latestMotion,true);

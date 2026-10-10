@@ -5,6 +5,7 @@ import { material } from './primitives';
 import type { World } from '../sim/types';
 import { isPowerActive } from '../sim/power-rules';
 import { WIND_BLADE_COLOR, WIND_BLADE_SHAPE, windBladeHub, windBladeInitialPhase } from './wind-blade-parts';
+import { ResourceTargetTint } from './resource-target-tint';
 
 interface Spin {tick:number;phase:number;speed:number}
 /** Three retained blades per turbine. Only changes of power/placement upload
@@ -17,6 +18,9 @@ export class WindLayer {
   private readonly material=material(0xffffff);
   private key:string|null=null;
   private readonly history=new Map<number,{current:Spin;previous:Spin}>();
+  private readonly targetTint=new ResourceTargetTint();
+  private targetPreviewIds=new Set<number>();
+  private readonly targetSlots=new Map<number,number>();
   constructor(configure?:(material:THREE.MeshStandardNodeMaterial)=>void){
     configure?.(this.material);
     this.material.positionNode=Fn(()=>{
@@ -36,16 +40,29 @@ export class WindLayer {
   private allocateAttributes(capacity:number):void {
     for(const name of ['windCurrent','windPrevious','windShape'])this.mesh.geometry.setAttribute(name,new THREE.InstancedBufferAttribute(new Float32Array(capacity*4),4).setUsage(THREE.StaticDrawUsage));
   }
+  setTargetPreview(ids:ReadonlySet<number>):void {
+    if(ids.size===this.targetPreviewIds.size&&[...ids].every(id=>this.targetPreviewIds.has(id)))return;
+    this.targetTint.restore();this.targetPreviewIds=new Set(ids);this.tintTargets();
+  }
+  clearTargetPreview():void {this.targetTint.restore();this.targetPreviewIds.clear();}
+  private tintTargets():void {
+    if(!this.targetPreviewIds.size)return;
+    const slots:number[]=[];
+    for(const id of this.targetPreviewIds){const first=this.targetSlots.get(id);if(first!==undefined)slots.push(first,first+1,first+2);}
+    this.targetTint.applySlots(this.mesh.colorBuffer,slots);
+  }
   adopt(world:World,reset=false):void {
-    if(reset){this.key=null;this.history.clear();}
+    if(reset){this.clearTargetPreview();this.key=null;this.history.clear();}
     const turbines=world.structures.filter(s=>s.kind==='wind-turbine');
     const key=turbines.map(s=>`${s.id}:${s.x}:${s.z}:${s.orientation}:${isPowerActive(s)}:${s.wind?.cachedWatts}`).join('|');
     if(key===this.key)return;this.key=key;
+    this.targetTint.restore();this.targetSlots.clear();
     const live=new Set(turbines.map(s=>s.id));for(const id of this.history.keys())if(!live.has(id))this.history.delete(id);
     const count=turbines.length*3;if(count>this.mesh.instanceMatrix.count){const capacity=2**Math.ceil(Math.log2(count));this.mesh.allocate(this.base,capacity);this.allocateAttributes(capacity);}
     const current=this.mesh.geometry.getAttribute('windCurrent'),previous=this.mesh.geometry.getAttribute('windPrevious'),shape=this.mesh.geometry.getAttribute('windShape'),object=new THREE.Object3D(),color=new THREE.Color(WIND_BLADE_COLOR);
     let index=0;
     for(const s of turbines){
+      this.targetSlots.set(s.id,index);
       const old=this.history.get(s.id),speed=isPowerActive(s)?(s.wind?.cachedWatts??0)/3450*.35:0;
       const initial=windBladeInitialPhase(s.id);
       const phase=old?(old.current.phase+(world.tick-old.current.tick)*old.current.speed)%(Math.PI*2):initial;
@@ -58,9 +75,14 @@ export class WindLayer {
         shape.setXYZW(index,WIND_BLADE_SHAPE.sx,WIND_BLADE_SHAPE.sy,WIND_BLADE_SHAPE.sz,WIND_BLADE_SHAPE.offsetY);index++;
       }
     }
-    this.mesh.activeCount=count;this.mesh.instanceMatrix.needsUpdate=this.mesh.colorBuffer.needsUpdate=true;
+    this.mesh.activeCount=count;
+    // Color writers rebuild every live blade. A pending preview range must not
+    // restrict their upload when ordinary adoption changes membership/order.
+    this.mesh.colorBuffer.clearUpdateRanges();if(count)this.mesh.colorBuffer.addUpdateRange(0,count*3);
+    this.mesh.instanceMatrix.needsUpdate=this.mesh.colorBuffer.needsUpdate=true;
     for(const a of [current,previous,shape])a.needsUpdate=true;
     this.mesh.computeBoundingSphere();if(count)this.mesh.boundingSphere.radius+=3.2;
+    this.tintTargets();
   }
   present(tick:number):void {this.tick.value=tick;}
   prepareForCompile():()=>void {
@@ -68,5 +90,5 @@ export class WindLayer {
     const version=this.mesh.instanceMatrix.version;this.mesh.activeCount=1;
     return ()=>{if(this.mesh.instanceMatrix.version===version)this.mesh.activeCount=0;};
   }
-  dispose():void {this.mesh.dispose();this.base.dispose();this.material.dispose();}
+  dispose():void {this.clearTargetPreview();this.mesh.dispose();this.base.dispose();this.material.dispose();}
 }

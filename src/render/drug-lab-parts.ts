@@ -11,7 +11,7 @@ export function drugLabParts(world:World):Placement[] {
     const ry=s.orientation*Math.PI/2,c=Math.cos(ry),n=Math.sin(ry);
     const h=WORLD_SCALE.stonecutterHeight,width=WORLD_SCALE.stonecutterWidth,depth=WORLD_SCALE.stonecutterDepth;
     const frame=buildingMaterialColor(s.material,0x9b7e58)??0x9b7e58;
-    const add=(lx:number,y:number,lz:number,sx:number,sy:number,sz:number,color:number)=>parts.push({key:s.id,x:s.x+lx*c+lz*n,y,z:s.z+lz*c-lx*n,sx,sy,sz,ry,color});
+    const add=(lx:number,y:number,lz:number,sx:number,sy:number,sz:number,color:number)=>parts.push({targetId:s.id,key:s.id,x:s.x+lx*c+lz*n,y,z:s.z+lz*c-lx*n,sx,sy,sz,ry,color});
     add(0,h-.065,0,width,.13,depth,0xa3ac9a);
     for(const x of [-1,1])for(const z of [-1,1])add(x*(width/2-.18),(h-.13)/2,z*(depth/2-.13),.14,h-.13,.14,frame);
     add(0,.3,.24,width-.3,.12,.12,frame);

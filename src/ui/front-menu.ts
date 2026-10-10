@@ -1,5 +1,6 @@
 import { DEFAULT_MAP_SIZE } from '../sim/map-config';
 import type { SiteOptions } from '../sim/site';
+import {designationMinCellPixels,designationVisibilityLabel} from './designation-visibility';
 import { createSiteConfiguration, parseSiteSeed, randomSiteSeed } from './front-site';
 import { testColonyUrl, type TestColony } from './test-colonies';
 import './front-menu.css';
@@ -18,6 +19,8 @@ export interface FrontMenuSave {
 }
 
 export interface FrontMenuOptions {
+  getDesignationMinCellPixels?: () => number;
+  onDesignationMinCellPixelsChange?: (value:number) => boolean;
   onStart: (draft: FrontMenuDraft) => Promise<void>;
   onLoad: (key: string) => Promise<void>;
   onResume: () => Promise<void>;
@@ -286,6 +289,21 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     grassText.append(grassLabel, grassDescription);
     grassSetting.append(grassCheckbox, grassText);
     card.append(grassSetting);
+    const iconSetting=element('label','front-relief front-texture-setting front-volume-setting');
+    const iconText=element('span');
+    const iconLabel=element('strong','','Icônes des ordres');iconLabel.id='front-designation-label';
+    const iconDescription=element('span','','Seuil de zoom : 0 les affiche toujours ; sinon elles disparaissent quand une case devient plus petite que ce seuil.');iconDescription.id='front-designation-description';
+    const iconOutput=element('output');iconOutput.id='front-designation-value';
+    const iconSlider=element('input');iconSlider.id='front-designation-visibility';iconSlider.type='range';iconSlider.min='0';iconSlider.max='96';iconSlider.step='1';
+    iconSlider.value=String(designationMinCellPixels(options.getDesignationMinCellPixels?.()));
+    iconOutput.textContent=designationVisibilityLabel(Number(iconSlider.value));
+    iconSlider.setAttribute('aria-labelledby',iconLabel.id);iconSlider.setAttribute('aria-describedby',`${iconDescription.id} ${iconOutput.id}`);
+    iconSlider.addEventListener('input',()=>{
+      clearError();const value=designationMinCellPixels(iconSlider.value);
+      iconOutput.textContent=designationVisibilityLabel(value);
+      if(options.onDesignationMinCellPixelsChange && !options.onDesignationMinCellPixelsChange(value))showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+    });
+    iconText.append(iconLabel,iconDescription,iconOutput);iconSetting.append(iconText,iconSlider);card.append(iconSetting);
     content.append(card);
     const audioCard = element('section', 'front-card front-options');
     audioCard.append(element('h2', '', 'Son'));

@@ -12,6 +12,7 @@ import type { Placement } from './primitives';
 import { mergedInstances,noise,type ResourceRange,type ResourceRangeData } from './StaticGeometry';
 import type { NaturalPresentationChange } from './NaturalResourcePresentation';
 import {readSceneResourceFrame,type SceneResourceFrame} from './scene-resource-index';
+import {ResourceTargetTint} from './resource-target-tint';
 
 const resourceIdentity=(world:World,resource:World['resources'][number]):string=>{
   const support=hydroponicFloraHeight(world,resource);
@@ -85,6 +86,8 @@ function visibleResourceKeys(world:World,r:World['resources'][number]):number[]{
 }
 
 export class ResourceLayer {
+  private readonly targetTint=new ResourceTargetTint();
+  private targetPreviewIds=new Set<number>();
   private readonly chunks=new Map<string,{signature:string;group:THREE.Group;identities:Map<number,string>;originalSizes:Map<number,number>;currentSizes:Map<number,number>;treeIds:number[]}>();
   private readonly resourceChunks=new Map<number,string>();
   private readonly treeParts=new Map<number,TreePart[]>();
@@ -139,7 +142,17 @@ export class ResourceLayer {
     this.foliageVisible = visible;
     this.group.traverse(object => { if (object.name === 'tree-canopy') object.visible = visible; });
   }
-  clear(): void { clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); this.treeCells.clear();this.treeCellsPending=undefined; }
+  /** Caller supplies already eligible target IDs, not a rectangle-position mask.
+   * Only their existing spatial chunks/ranges are visited on selection changes. */
+  setTargetPreview(ids:ReadonlySet<number>):void {
+    if(ids.size===this.targetPreviewIds.size&&[...ids].every(id=>this.targetPreviewIds.has(id)))return;
+    this.targetTint.restore();this.targetPreviewIds=new Set(ids);
+    const keys=new Set<string>();
+    for(const id of ids){const key=this.resourceChunks.get(id);if(key)keys.add(key);}
+    for(const key of keys){const chunk=this.chunks.get(key);if(chunk)this.targetTint.apply(chunk.group,this.targetPreviewIds);}
+  }
+  clearTargetPreview():void {this.targetTint.restore();this.targetPreviewIds.clear();}
+  clear(): void { this.clearTargetPreview();clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); this.treeCells.clear();this.treeCellsPending=undefined; }
   dispose():void {this.clear();this.windPlain.dispose();this.windTextured.dispose();}
 
   /** Only a confirmed increase in a reserved chopping job can produce a hit.
@@ -240,7 +253,7 @@ export class ResourceLayer {
     const texturedOutput=(this.texturedMaterial as THREE.MeshStandardNodeMaterial).outputNode;
     if(this.windPlain.outputNode!==plainOutput)this.windPlain.outputNode=plainOutput;
     if(this.windTextured.outputNode!==texturedOutput)this.windTextured.outputNode=texturedOutput;
-    if (newMap) { clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); }
+    if (newMap) { this.clearTargetPreview();clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); }
     const indexed=readSceneResourceFrame(frame,world);
     if(indexed)this.treeCellsPending=world;
     else{
@@ -317,7 +330,7 @@ export class ResourceLayer {
       }
       if(previous)for(const id of previous.treeIds)this.treeParts.delete(id);
       const group = previous?.group ?? new THREE.Group();
-      if (previous) clearGroup(group); else this.group.add(group);
+      if (previous) {this.targetTint.restore(group);clearGroup(group);} else this.group.add(group);
       group.name = `Resources ${key}`;
       const trunks: Placement[] = [], crowns: Placement[] = [], upperCrowns: Placement[] = [];
       const rocks: Placement[] = [], bushes: Placement[] = [], berries: Placement[] = [];
@@ -390,6 +403,7 @@ export class ResourceLayer {
       }
       for(const id of treeIds){const hit=this.treeHits.get(id);if(hit)hit.angle=NaN;}
       this.chunks.set(key,{signature,group,identities:new Map(chunk.map(r=>[r.id,resourceIdentity(world,r)])),originalSizes:new Map(sizes),currentSizes:new Map(sizes),treeIds});
+      if(this.targetPreviewIds.size&&chunk.some(r=>this.targetPreviewIds.has(r.id)))this.targetTint.apply(group,this.targetPreviewIds);
     }
   }
 

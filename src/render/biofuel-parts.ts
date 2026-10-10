@@ -14,7 +14,7 @@ export function biofuelParts(world:World):Placement[] {
     const cx=refinery?0:.5,cz=.5;
     const add=(lx:number,y:number,lz:number,sx:number,sy:number,sz:number,color:number)=>{
       const x=lx+cx,z=lz+cz;
-      parts.push({key:s.id,x:s.x+x*c+z*n,y,z:s.z+z*c-x*n,sx,sy,sz,ry,color});
+      parts.push({targetId:s.id,key:s.id,x:s.x+x*c+z*n,y,z:s.z+z*c-x*n,sx,sy,sz,ry,color});
     };
     if(refinery){
       add(0,.11,0,2.86,.22,1.86,0x435c60);

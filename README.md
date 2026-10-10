@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V300 — [ordres, curseurs et aperçus](docs/gameplay/order-interactions-v300.md), schéma 218 conservé.** Curseurs d'outils, menu des ordres fermé après choix, clic droit adapté au tracé, molette pendant sélection, rectangle bleu et modèles compatibles teintés. Les icônes apparaissent avant confirmation et leur seuil de disparition est réglable, y compris « toujours visibles ». Simulation et sauvegardes conservées ; publication Cloudflare au prochain groupe. Les états suivants sont historiques.
+
 **V299 — [préparation commune des bâtiments](docs/development/aulnes-performance-v299.md), schéma 218 conservé.** Chrome 1440p/dev sur Les Aulnes : **121,47→130,25 RAF/s (+7,23 %)**, débit réel5,618→6,056× sous ×6 demandé. Qualité et règles identiques ; les pointes diminuent, mais240FPS restent à atteindre. Commit/push par lot, publication Cloudflare regroupée. Les états suivants sont historiques.
 
 **V298 — [mesure CPU/GPU actuelle](docs/development/aulnes-performance-v298.md), schéma 218 conservé.** Les pointes du thread principal restent prioritaires ; les ombres ne dominent pas le GPU. Diagnostic seulement, produit V296 inchangé, aucun FPS supplémentaire. Publications Cloudflare regroupées. Les états suivants sont historiques.

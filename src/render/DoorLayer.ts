@@ -7,6 +7,7 @@ import type { World } from '../sim/types';
 import { doorLeafColor, doorLeafPartsForStructure } from './door-parts';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { penBoundaryAxes } from './pen-parts';
+import { InstanceTargetTint } from './instance-target-tint';
 
 const EMPTY_AXES:ReadonlyMap<number,0|1>=new Map();
 const AUTODOOR_TINT=new THREE.Color(0xa6b7b4);
@@ -25,6 +26,9 @@ export class DoorLayer {
   readonly mesh:BoxMesh;
   private key='';
   private history=new Map<number,{current:DoorState;previous:DoorState}>();
+  private readonly targetTint=new InstanceTargetTint();
+  setTargetPreview(ids:ReadonlySet<number>):void {this.targetTint.setTargets(ids);}
+  clearTargetPreview():void {this.targetTint.clear();}
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void) {
     configure?.(this.material);configure?.(this.textured);
     this.material.positionNode=Fn(()=>{
@@ -58,13 +62,13 @@ export class DoorLayer {
   updateNative(world:World,cutaway:boolean,reset:boolean,doors:ReadonlyArray<World['structures'][number]>,axes:ReadonlyMap<number,0|1>,gateAxes:ReadonlyMap<number,0|1>):void {
     if(reset){this.history.clear();this.key='';}
     const key=String(cutaway)+doors.map(s=>`${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${(s.kind==='fence-gate'?gateAxes:axes).get(s.z*world.width+s.x)??0}:${s.door!.changedAt}:${s.door!.from}:${s.door!.open}:${doorMotionTicks(s)}`).join('|');
-    if(key===this.key)return;this.key=key;
+    if(key===this.key)return;this.key=key;this.targetTint.restore();
     const live=new Set(doors.map(s=>s.id));for(const id of this.history.keys())if(!live.has(id))this.history.delete(id);
     const count=doors.length*2;
     if(count>this.mesh.instanceMatrix.count){const capacity=2**Math.ceil(Math.log2(count));this.mesh.allocate(this.base,capacity);this.allocateAttributes(capacity);}
     const current=this.mesh.geometry.getAttribute('doorCurrent'),previous=this.mesh.geometry.getAttribute('doorPrevious'),shift=this.mesh.geometry.getAttribute('doorShift');
     const object=new THREE.Object3D(),color=new THREE.Color();
-    let index=0;
+    let index=0;const targetIds:number[]=[];
     for(const s of doors) {
       const d=s.door!,old=this.history.get(s.id),changed=!old||old.current.changedAt!==d.changedAt||old.current.from!==d.from||old.current.open!==d.open||doorMotionTicks({...s,door:old.current})!==doorMotionTicks(s);
       const pair=changed?{current:{...d},previous:old?.current??{...d}}:old!;this.history.set(s.id,pair);
@@ -76,7 +80,7 @@ export class DoorLayer {
         this.mesh.setMatrixAt(index,object.matrix);
         color.setHex(doorLeafColor(s.material));
         if(s.kind==='autodoor')color.lerp(AUTODOOR_TINT,.24);
-        this.mesh.setColorAt(index,color);
+        this.mesh.setColorAt(index,color);targetIds.push(s.id);
         for(const [attribute,state] of [[current,pair.current],[previous,pair.previous]] as const)attribute.setXYZW(index,state.changedAt,state.from,(state.open?1:-1)/doorMotionTicks({...s,door:state}),0);
         shift.setXYZ(index,side*.45*cos,0,-side*.45*sin);index++;
       }
@@ -84,6 +88,7 @@ export class DoorLayer {
     this.mesh.activeCount=count;this.mesh.instanceMatrix.needsUpdate=this.mesh.colorBuffer.needsUpdate=true;
     for(const attribute of [current,previous,shift])attribute.needsUpdate=true;
     this.mesh.computeBoundingSphere();this.mesh.boundingSphere.radius+=.5;
+    this.targetTint.setInstances(this.mesh.colorBuffer,targetIds);
   }
   // V299_NATIVE_DOOR_END
 
@@ -93,13 +98,13 @@ export class DoorLayer {
     const axes=doors.some(s=>isRoomDoor(s.kind))?doorOrientations(world):EMPTY_AXES;
     const gateAxes=doors.some(s=>s.kind==='fence-gate')?penBoundaryAxes(world):EMPTY_AXES;
     const key=String(cutaway)+doors.map(s=>`${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${(s.kind==='fence-gate'?gateAxes:axes).get(s.z*world.width+s.x)??0}:${s.door!.changedAt}:${s.door!.from}:${s.door!.open}:${doorMotionTicks(s)}`).join('|');
-    if(key===this.key)return;this.key=key;
+    if(key===this.key)return;this.key=key;this.targetTint.restore();
     const live=new Set(doors.map(s=>s.id));for(const id of this.history.keys())if(!live.has(id))this.history.delete(id);
     const count=doors.length*2;
     if(count>this.mesh.instanceMatrix.count){const capacity=2**Math.ceil(Math.log2(count));this.mesh.allocate(this.base,capacity);this.allocateAttributes(capacity);}
     const current=this.mesh.geometry.getAttribute('doorCurrent'),previous=this.mesh.geometry.getAttribute('doorPrevious'),shift=this.mesh.geometry.getAttribute('doorShift');
     const object=new THREE.Object3D(),color=new THREE.Color();
-    let index=0;
+    let index=0;const targetIds:number[]=[];
     for(const s of doors) {
       const d=s.door!,old=this.history.get(s.id),changed=!old||old.current.changedAt!==d.changedAt||old.current.from!==d.from||old.current.open!==d.open||doorMotionTicks({...s,door:old.current})!==doorMotionTicks(s);
       const pair=changed?{current:{...d},previous:old?.current??{...d}}:old!;this.history.set(s.id,pair);
@@ -111,7 +116,7 @@ export class DoorLayer {
         this.mesh.setMatrixAt(index,object.matrix);
         color.setHex(doorLeafColor(s.material));
         if(s.kind==='autodoor')color.lerp(AUTODOOR_TINT,.24);
-        this.mesh.setColorAt(index,color);
+        this.mesh.setColorAt(index,color);targetIds.push(s.id);
         for(const [attribute,state] of [[current,pair.current],[previous,pair.previous]] as const)attribute.setXYZW(index,state.changedAt,state.from,(state.open?1:-1)/doorMotionTicks({...s,door:state}),0);
         shift.setXYZ(index,side*.45*cos,0,-side*.45*sin);index++;
       }
@@ -119,11 +124,12 @@ export class DoorLayer {
     this.mesh.activeCount=count;this.mesh.instanceMatrix.needsUpdate=this.mesh.colorBuffer.needsUpdate=true;
     for(const attribute of [current,previous,shift])attribute.needsUpdate=true;
     this.mesh.computeBoundingSphere();this.mesh.boundingSphere.radius+=.5;
+    this.targetTint.setInstances(this.mesh.colorBuffer,targetIds);
   }
   prepareForCompile():()=>void {
     if(this.mesh.activeCount)return ()=>{};
     const version=this.mesh.instanceMatrix.version;this.mesh.activeCount=1;
     return ()=>{if(this.mesh.instanceMatrix.version===version)this.mesh.activeCount=0;};
   }
-  dispose():void {this.mesh.dispose();this.base.dispose();this.material.dispose();this.textured.dispose();this.paint.dispose();}
+  dispose():void {this.targetTint.dispose();this.mesh.dispose();this.base.dispose();this.material.dispose();this.textured.dispose();this.paint.dispose();}
 }

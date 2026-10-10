@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**Présentation V300, schéma 218 conservé : [ordres et aperçus](order-interactions-v300.md).** Curseurs par outil, clic droit distinguant sortie et annulation du tracé, zoom pendant sélection, rectangle bleu silencieux, icônes et modèles compatibles bleutés ; seuil d'icônes réglable jusqu'à toujours visibles. Toutes les parties bénéficient de ces interactions, sans régénérer les sauvegardes ni ajouter une règle de simulation.
+
 **Présentation V285, schéma218 conservé : [raccords, traces et fantômes](construction-presentation-v285.md).** Corrections générales du rendu et du placement ; aucune nouvelle règle ou boucle de simulation. Les Aulnes et les références historiques bénéficient du même rendu sans régénération.
 
 **Référence intégrée V284, schéma218 conservé : [Les Aulnes actuelles](aulnes-current.md).** Elle réunit les installations compatibles livrées jusqu'àV283 ; sa présence ne signifie pas que toutes les branches, tous les biomes ou tous les incidents sont exercés. Le guide distingue disponibilité, préparation et observations réellement jouées.

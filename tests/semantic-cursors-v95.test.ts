@@ -2,14 +2,26 @@ import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import { expect, test } from 'vitest';
 import { toolDefinitions } from '../src/ui/layout';
-import { CURSOR_ATLAS, CURSOR_CELLS, CURSOR_KINDS, cursorHotspot, syncToolCursor, toolCursorKind } from '../src/ui/tool-cursors';
+import { CURSOR_ATLAS, CURSOR_CELLS, CURSOR_KINDS, cursorHotspot, syncToolCursor, toolCursorKind, toolCursorIcon } from '../src/ui/tool-cursors';
+import { ARCHITECT_ICON_MAPPING } from '../src/ui/architect-icons';
 
-test('all Architect tools use one standard pointer while the atlas contains nine semantic types', () => {
-  for (const tool of toolDefinitions) expect(toolCursorKind(tool.id), tool.id).toBe('pointer');
-  const viewport = { dataset: {} } as HTMLElement;
-  expect(syncToolCursor(viewport, 'mine')).toBe('pointer');
-  expect(viewport.dataset.cursor).toBe('pointer');
-  expect(syncToolCursor(viewport, 'cancel')).toBe('pointer');
+test('Architect tools retain their own map symbols while UI keeps nine interaction types', () => {
+  for (const tool of toolDefinitions) {
+    expect(toolCursorKind(tool.id), tool.id).toBe(tool.id === 'select' ? 'pointer' : tool.id);
+    expect(ARCHITECT_ICON_MAPPING[toolCursorIcon(tool.id)], tool.id).toBeDefined();
+  }
+  for (const tool of ['install', 'small-sculpture', 'large-sculpture'] as const)
+    expect(ARCHITECT_ICON_MAPPING[toolCursorIcon(tool)], tool).toBeDefined();
+  const properties = new Map<string, string>();
+  const viewport = { dataset: {}, removeAttribute() {}, style: { setProperty(key: string, value: string) { properties.set(key, value); } } } as unknown as HTMLElement;
+  expect(syncToolCursor(viewport, 'mine')).toBe('mine');
+  expect(viewport.dataset.cursor).toBe('mine');
+  expect(viewport.dataset.cursorMode).toBe('order');
+  expect(properties.get('--map-tool-cursor')).toBe('var(--cursor-tool-mine, crosshair)');
+  expect(syncToolCursor(viewport, 'cancel')).toBe('cancel');
+  expect(syncToolCursor(viewport, 'select')).toBe('pointer');
+  expect(viewport.dataset.cursorMode).toBe('select');
+  expect(properties.get('--map-tool-cursor')).toBe('var(--cursor-pointer, default)');
   expect(Object.keys(CURSOR_CELLS)).toEqual(CURSOR_KINDS);
   expect(new Set(Object.values(CURSOR_CELLS).map(([column, row]) => `${column}:${row}`)).size).toBe(9);
 });

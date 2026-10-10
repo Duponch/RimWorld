@@ -16,7 +16,7 @@ export const doorLeafColor=(material:World['structures'][number]['material']):nu
 export function doorLeafPartsForStructure(s:World['structures'][number],cutaway:boolean,axis:0|1):Placement[] {
   const gate=s.kind==='fence-gate',top=gate?.94:doorLeafTop(cutaway),bottom=gate?.08:DOOR_LEAF_BOTTOM;
   const halfWidth=gate?.37:.42,angle=axis*Math.PI/2;
-  return [-1,1].map(side=>({key:s.id,x:s.x+side*halfWidth/2*Math.cos(angle),y:(top+bottom)/2,
+  return [-1,1].map(side=>({targetId:s.id,key:s.id,x:s.x+side*halfWidth/2*Math.cos(angle),y:(top+bottom)/2,
     z:s.z-side*halfWidth/2*Math.sin(angle),sx:halfWidth,sy:top-bottom,sz:gate?.085:.14,ry:angle,color:doorLeafColor(s.material)}));
 }
 
@@ -69,16 +69,16 @@ export function doorParts(world:World,cutaway:boolean,subjects:readonly World['s
     // TimberCladdingLayer provides the broad upper plank and continuous cap.
     // For masonry, this matching wall panel still stops well above the leaf.
     if(!timber) {
-      if(!cutaway)parts.push({x:s.x,z:s.z,y:(lintelTop+height-.09)/2,sx:1,sy:height-.09-lintelTop,sz:1,ry,color:wallColor});
-      parts.push({x:s.x,z:s.z,y:height-.045,sx:1,sy:.09,sz:1,ry,color:wallColor});
+      if(!cutaway)parts.push({targetId:s.id,x:s.x,z:s.z,y:(lintelTop+height-.09)/2,sx:1,sy:height-.09-lintelTop,sz:1,ry,color:wallColor});
+      parts.push({targetId:s.id,x:s.x,z:s.z,y:height-.045,sx:1,sy:.09,sz:1,ry,color:wallColor});
     }
     if(timber)for(const face of [-1,1]) {
       const dx=face*.49*Math.sin(ry),dz=face*.49*Math.cos(ry);
-      parts.push({x:s.x+dx,z:s.z+dz,y:(openingTop+lintelTop)/2,sx:.92,sy:lintelTop-openingTop,sz:.09,ry,color:frameColor});
-      for(const side of [-1,1])parts.push({x:s.x+dx+side*.46*Math.cos(ry),z:s.z+dz-side*.46*Math.sin(ry),y:openingTop/2,sx:.08,sy:openingTop,sz:.09,ry,color:frameColor});
+      parts.push({targetId:s.id,x:s.x+dx,z:s.z+dz,y:(openingTop+lintelTop)/2,sx:.92,sy:lintelTop-openingTop,sz:.09,ry,color:frameColor});
+      for(const side of [-1,1])parts.push({targetId:s.id,x:s.x+dx+side*.46*Math.cos(ry),z:s.z+dz-side*.46*Math.sin(ry),y:openingTop/2,sx:.08,sy:openingTop,sz:.09,ry,color:frameColor});
     } else {
-      parts.push({x:s.x,z:s.z,y:(openingTop+lintelTop)/2,sx:.92,sy:lintelTop-openingTop,sz:.34,ry,color:frameColor});
-      for(const side of [-1,1])parts.push({x:s.x+side*.46*Math.cos(ry),z:s.z-side*.46*Math.sin(ry),y:openingTop/2,sx:.08,sy:openingTop,sz:.34,ry,color:frameColor});
+      parts.push({targetId:s.id,x:s.x,z:s.z,y:(openingTop+lintelTop)/2,sx:.92,sy:lintelTop-openingTop,sz:.34,ry,color:frameColor});
+      for(const side of [-1,1])parts.push({targetId:s.id,x:s.x+side*.46*Math.cos(ry),z:s.z-side*.46*Math.sin(ry),y:openingTop/2,sx:.08,sy:openingTop,sz:.34,ry,color:frameColor});
     }
   }
   return parts;

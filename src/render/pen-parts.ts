@@ -32,10 +32,10 @@ export function penParts(world:World,subjects:readonly Structure[]=world.structu
   for(const s of penStructures) {
     const color=buildingMaterialColor(s.material,0x96734a)??0x96734a;
     if(s.kind==='pen-marker') {
-      parts.push({x:s.x,z:s.z,y:.55,sx:.12,sy:1.1,sz:.12,color});
-      parts.push({x:s.x,z:s.z,y:1.13,sx:.62,sy:.39,sz:.08,color:0xd8c79b});
-      parts.push({x:s.x,z:s.z+.047,y:1.13,sx:.43,sy:.035,sz:.02,color:0x3b614e});
-      parts.push({x:s.x,z:s.z+.047,y:1.05,sx:.28,sy:.035,sz:.02,color:0x3b614e});
+      parts.push({targetId:s.id,x:s.x,z:s.z,y:.55,sx:.12,sy:1.1,sz:.12,color});
+      parts.push({targetId:s.id,x:s.x,z:s.z,y:1.13,sx:.62,sy:.39,sz:.08,color:0xd8c79b});
+      parts.push({targetId:s.id,x:s.x,z:s.z+.047,y:1.13,sx:.43,sy:.035,sz:.02,color:0x3b614e});
+      parts.push({targetId:s.id,x:s.x,z:s.z+.047,y:1.05,sx:.28,sy:.035,sz:.02,color:0x3b614e});
       continue;
     }
     const left=!!at(s.x-1,s.z),right=!!at(s.x+1,s.z);
@@ -44,8 +44,8 @@ export function penParts(world:World,subjects:readonly Structure[]=world.structu
     const vertical=near||far;
     const axes=horizontal&&vertical?[0,1]:[horizontal?0:vertical?1:orientations.get(s.z*world.width+s.x)??0];
     if(s.kind==='fence') {
-      parts.push({x:s.x,z:s.z,y:.48,sx:.12,sy:.96,sz:.12,color});
-      parts.push({x:s.x,z:s.z,y:1.02,sx:.17,sy:.12,sz:.17,color});
+      parts.push({targetId:s.id,x:s.x,z:s.z,y:.48,sx:.12,sy:.96,sz:.12,color});
+      parts.push({targetId:s.id,x:s.x,z:s.z,y:1.02,sx:.17,sy:.12,sz:.17,color});
       for(const axis of axes)for(const height of [.34,.73]){
         const negative=axis===0?left:near,positive=axis===0?right:far;
         // Two half-rails butt against the post and neighboring cell. Splitting
@@ -54,14 +54,14 @@ export function penParts(world:World,subjects:readonly Structure[]=world.structu
         const length=edge-.06;
         for(const side of [-1,1])if(isolated||(side<0?negative:positive)) {
           const shift=side*(edge+.06)/2;
-          parts.push({x:s.x+(axis===0?shift:0),z:s.z+(axis===1?shift:0),y:height,
+          parts.push({targetId:s.id,x:s.x+(axis===0?shift:0),z:s.z+(axis===1?shift:0),y:height,
             sx:axis===0?length:.09,sy:.075,sz:axis===1?length:.09,color});
         }
       }
     } else {
       const axis=axes[0]??0;
-      for(const side of [-1,1])parts.push({x:s.x+(axis===0?side*.435:0),z:s.z+(axis===1?side*.435:0),y:.53,sx:.13,sy:1.06,sz:.13,color});
-      parts.push({x:s.x,z:s.z,y:1.04,sx:axis===0?1:.1,sy:.1,sz:axis===1?1:.1,color});
+      for(const side of [-1,1])parts.push({targetId:s.id,x:s.x+(axis===0?side*.435:0),z:s.z+(axis===1?side*.435:0),y:.53,sx:.13,sy:1.06,sz:.13,color});
+      parts.push({targetId:s.id,x:s.x,z:s.z,y:1.04,sx:axis===0?1:.1,sy:.1,sz:axis===1?1:.1,color});
     }
   }
   return parts;
