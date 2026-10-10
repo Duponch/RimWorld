@@ -1,16 +1,15 @@
 import {footprintContains} from './definitions.ts';
 import {groundOccupancyAllows,storageOccupancyAllows,OCCUPANCY,occupancyOf} from './occupancy.ts';
 import type {StagingGeometryReader} from './staging-validation.ts';
+import {createOwnedValidationResources,type OwnedValidationResourceReader} from './owned-validation-resources.ts';
 import type {Cell,Structure,World} from './types.ts';
 
-const MAX_DENSE_CELLS=1048576,MAX_ANCHOR=Number.MAX_SAFE_INTEGER-3;
+const MAX_ANCHOR=Number.MAX_SAFE_INTEGER-3;
 const integerAnchor=(value:unknown):value is number=>Number.isSafeInteger(value)&&Math.abs(Number(value))<=MAX_ANCHOR;
 const record=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
-const hydroCrop=(kind:string):boolean=>kind==='rice'||kind==='potato'||kind==='cotton'||kind==='healroot';
-type Presence=Map<number,Set<number>>;
-type ResourceIndex={width:number;height:number;presence?:Uint8Array;outside:Presence;hydro?:Uint32Array;hydroOutside:Map<number,number>};
 type Occurrence={ordinal:number;structure:Structure};
 type Anchors=Map<number,Map<number,Occurrence[]>>;
+export interface OwnedValidationGeometryReader extends StagingGeometryReader {readonly resourceFacts:OwnedValidationResourceReader}
 
 /** Ordinary intrinsics and stable ordinary resource/structure collections for ONE adoption.
  * This helper grants no authority to its caller: only the closed MAIN owner
@@ -18,36 +17,10 @@ type Anchors=Map<number,Map<number,Occurrence[]>>;
  * Proxy or reentrance keep their historical reader; no descriptor census or
  * immutability assertion is performed here. Plain atypical shapes fall back.
  * Terrain, version, jobs and all quantities/reservations remain live queries. */
-export function createOwnedValidationGeometry(world:World):StagingGeometryReader {
-  let resources:ResourceIndex|undefined,resourceCaptured=false;
+export function createOwnedValidationGeometry(world:World):OwnedValidationGeometryReader {
+  const resourceFacts=createOwnedValidationResources(world);
   let anchors:Anchors|undefined,structuresCaptured=false;
   const overlaps=new Map<number,Map<number,Structure[]>>();
-
-  const captureResources=():ResourceIndex|undefined=>{
-    if(resourceCaptured)return resources;
-    resourceCaptured=true;
-    const width=world.width,height=world.height,source=world.resources;
-    if(!Number.isSafeInteger(width)||!Number.isSafeInteger(height)||width<=0||height<=0||!Array.isArray(source))return;
-    const size=width*height,dense=Number.isSafeInteger(size)&&size<=MAX_DENSE_CELLS;
-    const candidate:ResourceIndex={width,height,presence:dense?new Uint8Array(size):undefined,outside:new Map(),hydro:dense?new Uint32Array(size):undefined,hydroOutside:new Map()};
-    for(const resource of source){
-      if(!record(resource))return;
-      const {x,z,kind}=resource;
-      if(!integerAnchor(x)||!integerAnchor(z)||typeof kind!=='string')return;
-      if(candidate.presence&&x>=0&&z>=0&&x<width&&z<height)candidate.presence[z*width+x]=1;
-      else {
-        let row=candidate.outside.get(z);if(!row)candidate.outside.set(z,row=new Set());row.add(x);
-      }
-      if(!hydroCrop(kind)){
-        // Hydro uses linear keys, including historical off-map aliases, while
-        // staging presence uses separate strict x/z coordinates.
-        const cell=z*width+x;
-        if(candidate.hydro&&Number.isInteger(cell)&&cell>=0&&cell<size)candidate.hydro[cell]!++;
-        else candidate.hydroOutside.set(cell,(candidate.hydroOutside.get(cell)??0)+1);
-      }
-    }
-    return resources=candidate;
-  };
 
   const captureStructures=():Anchors|undefined=>{
     if(structuresCaptured)return anchors;
@@ -90,18 +63,9 @@ export function createOwnedValidationGeometry(world:World):StagingGeometryReader
   };
 
   return {
-    hasResource(cell){
-      const index=captureResources();if(!index)return world.resources.some(resource=>resource.x===cell.x&&resource.z===cell.z);
-      const {x,z}=cell;
-      if(index.presence&&Number.isInteger(x)&&Number.isInteger(z)&&x>=0&&z>=0&&x<index.width&&z<index.height)return index.presence[z*index.width+x]===1;
-      return x===x&&z===z&&index.outside.get(z)?.has(x)===true;
-    },
-    hydroOverlapCount(linkedCells:ReadonlyMap<number,unknown>){
-      const index=captureResources();let count=0;
-      if(!index){for(const resource of world.resources)if(linkedCells.has(resource.z*world.width+resource.x)&&!hydroCrop(resource.kind))count++;return count;}
-      for(const cell of linkedCells.keys())count+=index.hydro&&Number.isInteger(cell)&&cell>=0&&cell<index.hydro.length?index.hydro[cell]!:index.hydroOutside.get(cell)??0;
-      return count;
-    },
+    resourceFacts,
+    hasResource:resourceFacts.hasResource,
+    hydroOverlapCount:resourceFacts.hydroOverlapCount,
     groundAllows(cell){
       if(!Number.isInteger(cell.x)||!Number.isInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=world.width||cell.z>=world.height||['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain))return false;
       const structures=occupyingStructures(cell);if(!structures)return groundOccupancyAllows(world,cell);

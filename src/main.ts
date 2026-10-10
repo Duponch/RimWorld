@@ -170,13 +170,15 @@ const client = (() => {
   class MainSnapshotDecoder extends SnapshotDecoder {
     protected override createValidationContext(next: World): SnapshotValidationContext {
       const raw = new PowerParentValidationCache();
+      const geometry = createOwnedValidationGeometry(next);
       let parents: PowerParentIndex | undefined;
       return {
         powerParents: { read(world: World): PowerParentIndex {
           if (world !== next) return raw.read(world);
           return parents ??= raw.read(world);
         } },
-        geometry: createOwnedValidationGeometry(next),
+        geometry,
+        resourceFacts: geometry.resourceFacts,
       };
     }
   }

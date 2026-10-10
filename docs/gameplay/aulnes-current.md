@@ -1,5 +1,7 @@
 # Les Aulnes, référence intégrée
 
+Les [faits de ressources V291](../development/aulnes-performance-v291.md) améliorent encore le chemin commun des validations sans modifier cette sauvegarde : **97,27→105,47 RAF/s** comparés à V290, Chrome 1440p/dev à vrai ×6. Des pointes persistent et les 240 FPS restent à atteindre. Les états suivants sont historiques.
+
 Les [validations communes V290](../development/aulnes-performance-v290.md) améliorent cette référence sans modifier son fichier : Chrome1440p/dev, **81,90→99,14 images RAF/s** par rapport au produit V288, à débit réel ×6. Les 240FPS restent à atteindre ; les mesures sont locales et les gains varient selon la partie et la caméra. Les états suivants sont historiques.
 
 L'[index spatial V288](../development/aulnes-performance-v288.md), après les [corrections CPU V287](../development/aulnes-performance-v287.md), réduit encore le coût des validations de cette colonie. Comparaison Chrome 1440p/dev à ×6 avec V287 : 75,00→82,38 RAF/s ; mesures et limites dans la note. Le checkpoint reste identique et les 240 FPS ne sont pas atteints.

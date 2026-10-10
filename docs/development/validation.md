@@ -1,4 +1,6 @@
-# Validation courante — V290
+# Validation courante — V291
+
+**V291 : [faits de ressources locaux](aulnes-performance-v291.md#validation), schéma 218 conservé.** Contrôles ciblés, coût natif ABBA et jeu original à ×6 : adoption CPU −11,16 %, 97,27→105,47 RAF/s. Huit recharges exactes, sources/publics conservés ; typage, références et build détaillés dans la note unique. Aucun gain GPU ni fluidité constante certifié.
 
 **V290 : [validations communes du client privé](aulnes-performance-v290.md#validation), schéma 218 conservé.** 110cas/11fichiers, typage/build,63références/66fichiers, huit recharges exactes et arrêt/reprise réelle passent. Comparaison Chrome assemblée avec provenance : 81,90→99,14 RAF/s, débit6,001→6,010×, adoption CPU−14,38 %. Rouges de pilotes et audit textuel distinct restent visibles dans la note unique ; aucun gain GPU ou 240FPS certifié.
 

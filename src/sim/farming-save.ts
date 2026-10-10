@@ -42,7 +42,7 @@ export function validateHydroponics(world:World,version:number,powerTopology?:Po
     return true;
   };
   if(!integer(raw.width,1)||!integer(raw.height,1)||!Number.isSafeInteger(Number(raw.width)*Number(raw.height))||!integer(raw.nextId,1)||!integer(raw.tick)
-    ||!['pawns','resources','structures','jobs','piles','stockpiles','growingZones'].every(k=>records(raw[k]))
+    ||!['pawns','resources','structures','jobs','piles','stockpiles','growingZones'].every(k=>k==='resources'?(identities?.resourceRecords(world)??records(raw[k])):records(raw[k]))
     ||!Array.isArray(raw.tiles)||world.tiles.length!==world.width*world.height)return ['Invalid hydroponics world collections or dimensions.'];
   if(raw.packed!==undefined&&!Array.isArray(raw.packed)||packed.some(p=>!record(p)||!record(p.building)||!record(p.owner)))errors.push('Invalid hydroponics ownership collections.');
   if(hasPacked||jobs.some(j=>{if(!record(j)||(j.kind!=='install'&&j.kind!=='uninstall'))return false;const target=j.furniture;

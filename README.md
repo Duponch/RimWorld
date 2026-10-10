@@ -1,5 +1,7 @@
 # Lisière
 
+**V291 — faits de ressources partagés ; schéma 218.** Chrome 1440p/dev sur Les Aulnes : **97,27→105,47 images RAF/s (+8,43 %)** à vrai ×6 ; adoption CPU −11,16 %. Règles et qualité conservées, pointes encore présentes, 240 FPS non atteints. [Mesures et limites](docs/development/aulnes-performance-v291.md). Les états suivants sont historiques.
+
 **V290 — validations communes du client du jeu ; schéma 218.** Chrome1440p/dev sur Les Aulnes : **81,90→99,14 images RAF/s (+21,06 %)** à vrai ×6, adoption CPU −14,38 %. Toutes les règles et la qualité sont conservées ; 240 FPS non atteints, aucun gain GPU annoncé. [Mesures, reprises et limites](docs/development/aulnes-performance-v290.md). Les états suivants sont historiques.
 
 **V288 — index spatial compact des validations ; schéma 218.** Comparaison Chrome 1440p/dev avec V287 : **75,00→82,38 images RAF/s (+9,85 %)**, à débit réel ×6. Gain CPU mesuré, aucun gain GPU annoncé ; 240 FPS restent à atteindre. [Mesures et limites](docs/development/aulnes-performance-v288.md).

@@ -1,5 +1,6 @@
 import { PowerParentValidationCache,type PowerParentReader } from '../sim/power-parent-validation.ts';
 import type { StagingGeometryReader } from '../sim/staging-validation.ts';
+import type { OwnedValidationResourceReader } from '../sim/owned-validation-resources.ts';
 import { ValidationIdentityContext } from '../sim/validation-identities.ts';
 import { validBiofuelTransport } from '../sim/biofuel-save.ts';
 import { validNutrientPasteTransport } from '../sim/nutrient-paste-save.ts';
@@ -725,6 +726,7 @@ export type SnapshotAdoption = { status: 'applied'; world: World; replaced: bool
 export interface SnapshotValidationContext {
   powerParents:PowerParentReader;
   geometry?:StagingGeometryReader;
+  resourceFacts?:OwnedValidationResourceReader;
 }
 
 /** Reuses stable arrays and replaces changed arrays; previous render snapshots remain intact. */
@@ -983,7 +985,7 @@ export class SnapshotDecoder {
     // the closed MAIN context captures stable auxiliary queries once. Identity
     // views keep their distinct domains. Refusal retains none of these caches.
     const validation=this.createValidationContext(next),powerTopology=validation.powerParents;
-    const identities=new ValidationIdentityContext(next);
+    const identities=new ValidationIdentityContext(next,validation.resourceFacts);
     if(!validBiofuelTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
     if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');
@@ -1015,7 +1017,9 @@ export class SnapshotDecoder {
         foreignIds.add(entity.id);
       }
     }
-    if(next.resources.some(resource=>foreignIds.has(resource.id)||!validDomesticHealroot(resource,next)||!validPlantGrowthLight(resource,next.schemaVersion,next.tick)||!validCropBlight(resource,next.schemaVersion,next)))return resync('État végétal ou identité commerciale invalide.');
+    const invalidResources=validation.resourceFacts?.hasInvalid(next,foreignIds,resource=>!validDomesticHealroot(resource,next)||!validPlantGrowthLight(resource,next.schemaVersion,next.tick)||!validCropBlight(resource,next.schemaVersion,next))
+      ??next.resources.some(resource=>foreignIds.has(resource.id)||!validDomesticHealroot(resource,next)||!validPlantGrowthLight(resource,next.schemaVersion,next.tick)||!validCropBlight(resource,next.schemaVersion,next));
+    if(invalidResources)return resync('État végétal ou identité commerciale invalide.');
     if(foreignIds.size){
       const collides=(entities:readonly {id:number}[])=>entities.some(e=>foreignIds.has(e.id));
       if([next.pawns,next.piles,next.structures,next.jobs,next.stockpiles,next.growingZones,next.wildlife?.animals??[],next.mechanoids??[],next.filth?.items??[],next.fires?.items??[],next.fires?.embers??[],next.projectiles??[],next.bombWaves??[]].some(collides)

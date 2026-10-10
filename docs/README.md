@@ -1,5 +1,7 @@
 # Documentation de Lisière
 
+**V291 : [faits de ressources partagés](development/aulnes-performance-v291.md), schéma 218 conservé.** Chrome 1440p/dev : 97,27→105,47 RAF/s à vrai ×6, adoption CPU −11,16 %. Preuves, reprises et limites dans la note unique ; aucun gain GPU ou 240 FPS certifié. Les états suivants sont historiques.
+
 **V290 : [validations communes du client du jeu](development/aulnes-performance-v290.md), schéma 218 conservé.** Chrome1440p/dev : 81,90→99,14 RAF/s à vrai ×6 ; adoption CPU −14,38 %. 63 sauvegardes conservées ; reprises, contrôles et limites dans la note unique. Les états suivants sont historiques.
 
 **V289 : [comparaison primitive électrique](development/aulnes-performance-v289.md), diagnostic seulement.** Candidats écartés après coût complet et Chrome ; produit V288, schéma 218 et sauvegardes conservés, aucun FPS supplémentaire livré.
