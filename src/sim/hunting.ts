@@ -82,8 +82,8 @@ function collect(w:World,p:Pawn,ctx:HuntContext):void {
     if(retained&&p.path.length){ctx.move(sourceCell,true);if(!p.path.length)p.planCooldown=0;}
     return;
   }
-  const current=w.stockpiles.find(z=>z.x===sourceCell.x&&z.z===sourceCell.z&&storageAccepts(z,corpse));
-  const zones=w.stockpiles.filter(z=>(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&storageAccepts(z,corpse)&&storageCapacity(w,z,corpse,p.id)>=1)
+  const current=w.stockpiles.find(z=>z.x===sourceCell.x&&z.z===sourceCell.z&&storageAccepts(z,corpse,w.tick));
+  const zones=w.stockpiles.filter(z=>(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&storageAccepts(z,corpse,w.tick)&&storageCapacity(w,z,corpse,p.id)>=1)
     .sort((a,b)=>b.priority-a.priority||(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
   if(!zones.length){stop(p);return;}
   const reach=ctx.candidates();if(!reach)return;

@@ -36,7 +36,8 @@ export function growingControls(zone: GrowingZone, send: (command: Command) => v
     checkbox.type = 'checkbox'; checkbox.checked = zone[field]; checkbox.id = `growing-${field}`;
     controls.set(field, checkbox); label.append(checkbox, title); panel.append(label);
   }
-  const apply = document.createElement('button'); apply.className = 'secondary-action'; apply.textContent = 'Appliquer les réglages de culture';
-  apply.onclick = () => send({type:'growing-policy',zoneId:zone.id,plant:plant.value as GrowingZone['plant'],allowSow:controls.get('allowSow')!.checked,allowCut:controls.get('allowCut')!.checked});
-  panel.append(apply); return panel;
+  const commit=()=>send({type:'growing-policy',zoneId:zone.id,plant:plant.value as GrowingZone['plant'],allowSow:controls.get('allowSow')!.checked,allowCut:controls.get('allowCut')!.checked});
+  plant.addEventListener('change',commit);
+  for(const input of controls.values())input.addEventListener('change',commit);
+  return panel;
 }

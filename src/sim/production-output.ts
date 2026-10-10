@@ -86,7 +86,7 @@ export function processProductionOutput(world:World,pawn:Pawn,context:Production
     }
     task.storageId=null;delete task.storageQuantity;
     if(pawn.planCooldown>0)return;
-    const targets=world.stockpiles.filter(s=>storageAccepts(s,product))
+    const targets=world.stockpiles.filter(s=>storageAccepts(s,product,world.tick))
       .sort((a,b)=>b.priority-a.priority||(pawn.x-a.x)**2+(pawn.z-a.z)**2-((pawn.x-b.x)**2+(pawn.z-b.z)**2)||a.id-b.id);
     if(targets.length) {
       const reach=context.candidates?context.candidates():context.search();if(!reach)return;

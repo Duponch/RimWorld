@@ -125,7 +125,7 @@ class AllowedKeys {
 
 function legacyStorageSignature(stockpiles: readonly StockpileCell[]): string {
   const allowed = (values: object) => Object.entries(values).filter(([, value]) => value === true).map(([key]) => key).sort().join(',');
-  return stockpiles.map(s => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.capacity}:${allowed(s.filters)}:${s.items ? allowed(s.items) : '*'}`).join('|');
+  return stockpiles.map(s => `${s.id}:${s.x}:${s.z}:${s.priority}:${s.capacity}:${allowed(s.filters)}:${s.items ? allowed(s.items) : '*'}${s.zoneId===undefined?'':`:zone=${s.zoneId}`}`).join('|');
 }
 
 export class StoragePresentationSignature {
@@ -151,8 +151,9 @@ export class StoragePresentationSignature {
       }
       v[5] = slot.filters.read(s.filters);
       v[6] = s.items ? slot.items.read(s.items) : '*';
+      v[7] = s.zoneId===undefined?'':`:zone=${s.zoneId}`;
       if (!equal(slot.values, v)) {
-        slot.values = v.slice(); slot.text = `${v[0]}:${v[1]}:${v[2]}:${v[3]}:${v[4]}:${v[5]}:${v[6]}`;
+        slot.values = v.slice(); slot.text = `${v[0]}:${v[1]}:${v[2]}:${v[3]}:${v[4]}:${v[5]}:${v[6]}${v[7]}`;
         changed = true;
       }
     }

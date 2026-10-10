@@ -18,6 +18,7 @@ import { workType } from './work-types.ts';
 import { haulingWork } from './haul-aside.ts';
 import { footprintCells } from './definitions.ts';
 import { queryArea } from './designation.ts';
+import { stockpileZoneCells } from './stockpile-zones.ts';
 import { dropRetainingIdentity } from './ground-placement.ts';
 export type DropPlan=Map<number,Cell>;
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
@@ -49,9 +50,11 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const cells=command.type==='area'?queryArea(world,command):null;
     const ids=new Set(command.type==='growing-policy'?[command.zoneId]:cells?.ok?world.growingZones.filter(z=>z.cells.some(c=>cells.cells.includes(c))).map(z=>z.id):[]);
     for(const pawn of world.pawns)if(pawn.haul?.destination.type==='aside'&&ids.has(pawn.haul.destination.growingZoneId??-1))pawns.add(pawn.id);
+  } else if(command.type==='stockpile-policy') {
+    for(const zone of stockpileZoneCells(world,command.stockpileId))zones.add(zone.id);
   } else if(command.type==='stockpile') {
     for(const p of world.pawns)if(p.haul?.whole&&p.haul.destination.type==='aside'&&same(p.haul.destination,command))pawns.add(p.id);
-    const zone=world.stockpiles.find(z=>same(z,command));if(zone)zones.add(zone.id);
+    const zone=world.stockpiles.find(z=>same(z,command));if(zone)for(const cell of stockpileZoneCells(world,zone.id))zones.add(cell.id);
   } else if(command.type==='priority'&&command.value===0) {
     const pawn=world.pawns.find(p=>p.id===command.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
     if(pawn?.ward&&command.work==='warden'||pawn?.animalHandling&&command.work==='handle'||(pawn?.animalCare||pawn?.animalFeed)&&command.work==='doctor')pawns.add(pawn.id);

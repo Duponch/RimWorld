@@ -1,5 +1,6 @@
 import { validStorageItems } from './storage-filters.ts';
 import { validStorageConditions } from './storage-condition.ts';
+import { connectedZoneCells,stockpileCellsByZoneId,stockpileZoneId } from './stockpile-zones.ts';
 import { isRoofArea, isRoofJob } from './roof-rules.ts';
 import { occupancyOf } from './occupancy.ts';
 import { isPlant, harvestable,choppable } from './plants.ts';
@@ -15,11 +16,13 @@ export const isAreaAction = (value: unknown): value is AreaAction => ['lay-floor
 export interface AreaBounds { minX: number; maxX: number; minZ: number; maxZ: number }
 export interface AreaIndex { flags: Uint16Array }
 export type AreaQuery = { ok: false; reason: string; code: CommandResult['code'] }
-  | { ok: true; bounds: AreaBounds; cells: number[]; selected: number; skipped: number };
+  | { ok: true; bounds: AreaBounds; cells: number[]; selected: number; skipped: number; targetZoneId?:number };
 
 export function validStorageSettings(settings: StorageSettings,version:number=SCHEMA_VERSION): boolean {
-  return validStorageConditions(settings)&&validStorageItems(settings.items,version)&&(version>=206||!settings.filters||!Object.hasOwn(settings.filters,'neutroamine'))&&(settings.filters === undefined || (!!settings.filters && typeof settings.filters.wood === 'boolean' && typeof settings.filters.food === 'boolean' && (settings.filters['mech-corpse']===undefined||typeof settings.filters['mech-corpse']==='boolean') && (settings.filters.silver===undefined||typeof settings.filters.silver==='boolean') && (settings.filters.unfinished===undefined||typeof settings.filters.unfinished==='boolean') && (settings.filters.textile===undefined||typeof settings.filters.textile==='boolean') && (settings.filters.apparel===undefined||typeof settings.filters.apparel==='boolean') && (settings.filters.weapon===undefined||typeof settings.filters.weapon==='boolean') && (settings.filters.neutroamine===undefined||typeof settings.filters.neutroamine==='boolean') && (settings.filters.medicine===undefined||typeof settings.filters.medicine==='boolean') && (settings.filters.component===undefined||typeof settings.filters.component==='boolean') && (settings.filters['advanced-component']===undefined||typeof settings.filters['advanced-component']==='boolean') && (settings.filters.gold===undefined||typeof settings.filters.gold==='boolean') && (settings.filters.plasteel===undefined||typeof settings.filters.plasteel==='boolean') && (settings.filters.blocks===undefined||typeof settings.filters.blocks==='boolean') && (settings.filters.steel===undefined||typeof settings.filters.steel==='boolean') && (settings.filters.chunk===undefined||typeof settings.filters.chunk==='boolean') && (settings.filters.furniture===undefined||typeof settings.filters.furniture==='boolean')))
-    && (settings.priority === undefined || (Number.isInteger(settings.priority) && settings.priority >= 1 && settings.priority <= 4))
+  if(settings.filters?.corpse!==undefined&&(version<79||typeof settings.filters.corpse!=='boolean'))return false;
+  if(settings.filters&&Object.hasOwn(settings.filters,'chemfuel')&&(version<218||typeof settings.filters.chemfuel!=='boolean'))return false;
+  return validStorageConditions(settings,version)&&validStorageItems(settings.items,version)&&(version>=206||!settings.filters||!Object.hasOwn(settings.filters,'neutroamine'))&&(settings.filters === undefined || (!!settings.filters && typeof settings.filters.wood === 'boolean' && typeof settings.filters.food === 'boolean' && (settings.filters['mech-corpse']===undefined||typeof settings.filters['mech-corpse']==='boolean') && (settings.filters.silver===undefined||typeof settings.filters.silver==='boolean') && (settings.filters.unfinished===undefined||typeof settings.filters.unfinished==='boolean') && (settings.filters.textile===undefined||typeof settings.filters.textile==='boolean') && (settings.filters.apparel===undefined||typeof settings.filters.apparel==='boolean') && (settings.filters.weapon===undefined||typeof settings.filters.weapon==='boolean') && (settings.filters.neutroamine===undefined||typeof settings.filters.neutroamine==='boolean') && (settings.filters.medicine===undefined||typeof settings.filters.medicine==='boolean') && (settings.filters.component===undefined||typeof settings.filters.component==='boolean') && (settings.filters['advanced-component']===undefined||typeof settings.filters['advanced-component']==='boolean') && (settings.filters.gold===undefined||typeof settings.filters.gold==='boolean') && (settings.filters.plasteel===undefined||typeof settings.filters.plasteel==='boolean') && (settings.filters.blocks===undefined||typeof settings.filters.blocks==='boolean') && (settings.filters.steel===undefined||typeof settings.filters.steel==='boolean') && (settings.filters.chunk===undefined||typeof settings.filters.chunk==='boolean') && (settings.filters.furniture===undefined||typeof settings.filters.furniture==='boolean')))
+    && (settings.priority === undefined || (Number.isInteger(settings.priority) && settings.priority >= 1 && settings.priority <= (version>=219?5:4)))
     && (settings.capacity === undefined || (Number.isInteger(settings.capacity) && settings.capacity >= 1 && settings.capacity <= ITEM_DEFINITIONS.silver.stackLimit));
 }
 
@@ -52,11 +55,23 @@ export function buildAreaIndex(world: World): AreaIndex {
  */
 export function queryArea(world: World, command: AreaCommand, index?: AreaIndex): AreaQuery {
   if (!command || !isAreaAction(command.action)) return { ok: false, code: 'invalid-command', reason: 'Outil de rectangle inconnu.' };
+  if(command.targetZoneId===undefined&&command.from&&command.to&&(command.action==='stockpile'||command.action==='growing')){
+    const within=(x:number,z:number)=>x>=Math.min(command.from.x,command.to.x)&&x<=Math.max(command.from.x,command.to.x)&&z>=Math.min(command.from.z,command.to.z)&&z<=Math.max(command.from.z,command.to.z);
+    const targets=command.action==='stockpile'?new Set(world.stockpiles.filter(cell=>within(cell.x,cell.z)).map(stockpileZoneId))
+      :new Set(world.growingZones.filter(zone=>zone.basinId===undefined&&zone.cells.some(cell=>within(cell%world.width,Math.floor(cell/world.width)))).map(zone=>zone.id));
+    if(targets.size===1)command={...command,targetZoneId:targets.values().next().value!};
+  }
+  const zoneAction=['stockpile','remove-stockpile','growing','remove-growing'].includes(command.action);
+  const targetStorage=command.targetZoneId===undefined?undefined:stockpileCellsByZoneId(world,command.targetZoneId);
+  const targetGrowing=command.targetZoneId===undefined?undefined:world.growingZones.find(zone=>zone.id===command.targetZoneId);
+  if(command.targetZoneId!==undefined&&(!zoneAction||!Number.isSafeInteger(command.targetZoneId)
+    ||(command.action==='stockpile'||command.action==='remove-stockpile'? !targetStorage?.length:!targetGrowing||targetGrowing.basinId!==undefined)))
+    return {ok:false,code:'missing-target',reason:'Zone cible absente ou incompatible.'};
   if(command.action==='lay-floor'&&!isBuildableFloor(command.floor)||command.action!=='lay-floor'&&command.floor!==undefined)return {ok:false,code:'invalid-command',reason:'Revêtement de sol invalide.'};
   if (!command.from || !command.to || !inBounds(world, command.from.x, command.from.z) || !inBounds(world, command.to.x, command.to.z)) {
     return { ok: false, code: 'out-of-bounds', reason: 'Rectangle hors de la carte.' };
   }
-  if (command.action === 'stockpile' && !validStorageSettings(command,world.schemaVersion)) return { ok: false, code: 'invalid-storage', reason: `Filtres, plages de qualité/PV, priorité (1–4) ou capacité (1–${ITEM_DEFINITIONS.silver.stackLimit}) invalides.` };
+  if (command.action === 'stockpile' && !validStorageSettings(command,world.schemaVersion)) return { ok: false, code: 'invalid-storage', reason: `Filtres, plages de qualité/PV, priorité (1–5) ou capacité (1–${ITEM_DEFINITIONS.silver.stackLimit}) invalides.` };
   const bounds = { minX: Math.min(command.from.x, command.to.x), maxX: Math.max(command.from.x, command.to.x), minZ: Math.min(command.from.z, command.to.z), maxZ: Math.max(command.from.z, command.to.z) };
   const selected = (bounds.maxX - bounds.minX + 1) * (bounds.maxZ - bounds.minZ + 1);
   const flags = (index ?? buildAreaIndex(world)).flags;
@@ -74,7 +89,26 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
           : command.action === 'growing' ? !(value & (BLOCKED | STORAGE | GROWING | GROW_BLOCKED))
           : command.action === 'remove-stockpile' ? value & STORAGE
             : !(value & (BLOCKED | ZONE_BLOCKED | STORAGE | GROWING));
-    if (eligible) cells.push(i);
+    if (eligible&&(!(command.action==='remove-stockpile')||command.targetZoneId===undefined||targetStorage!.some(cell=>cell.x===x&&cell.z===z))
+      &&(!(command.action==='remove-growing')||world.growingZones.some(zone=>zone.basinId===undefined&&zone.cells.includes(i)&&(command.targetZoneId===undefined||zone===targetGrowing)))) cells.push(i);
   }
-  return { ok: true, bounds, cells, selected, skipped: selected - cells.length };
+  const skipped=selected-cells.length;
+  if(command.targetZoneId!==undefined&&(command.action==='stockpile'||command.action==='growing')){
+    const existing=command.action==='stockpile'?targetStorage!.map(cell=>cell.z*world.width+cell.x):targetGrowing!.cells;
+    const connected=connectedZoneCells(world.width,[...existing,...cells],existing);
+    const compatible=cells.filter(cell=>connected.has(cell));
+    return {ok:true,bounds,cells:compatible,selected,skipped:selected-compatible.length,targetZoneId:command.targetZoneId};
+  }
+  if(command.action==='remove-stockpile'||command.action==='remove-growing'){
+    const removed=new Set(cells);
+    const groups=command.action==='remove-growing'?world.growingZones.filter(zone=>zone.basinId===undefined).map(zone=>zone.cells)
+      :[...new Set(world.stockpiles.map(stockpileZoneId))].map(id=>stockpileCellsByZoneId(world,id).map(cell=>cell.z*world.width+cell.x));
+    for(const group of groups)if(group.some(cell=>removed.has(cell))){
+      const survivors=group.filter(cell=>!removed.has(cell));
+      const connected=connectedZoneCells(world.width,survivors,survivors.slice(0,1));
+      for(const cell of survivors)if(!connected.has(cell))removed.add(cell);
+    }
+    return {ok:true,bounds,cells:[...removed].sort((a,b)=>a-b),selected,skipped};
+  }
+  return { ok: true, bounds, cells, selected, skipped };
 }

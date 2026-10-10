@@ -50,7 +50,7 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
     if(!canReach(world,pile.owner,reach,true))continue;
     const sourceZone=world.stockpiles.find(z=>same(z,pile.owner as Cell));
     const excess=sourceZone?Math.max(0,pile.quantity-sourceZone.capacity):0;
-    const sourceAdmits=sourceZone&&storageAccepts(sourceZone,pile);
+    const sourceAdmits=sourceZone&&storageAccepts(sourceZone,pile,world.tick);
     const currentPriority=sourceAdmits&&!excess?sourceZone!.priority:0;
     if(!job&&sourceAdmits&&excess)available=Math.min(available,Math.max(0,excess-reservedSource(world,pile.id)));
     const destinations=job?[{destination:{type:'job' as const,jobId:job.id,forConstruction:asBuilder(pawn)},cell:job,rank:0,

@@ -289,13 +289,13 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       if(destination.destination.type==='hopper'&&!hopperAccepts(pile.item))continue;
       if(destination.destination.type==='stockpile') {
         const zone=zonesByCell.get(cellIndex(world,destination.target.x,destination.target.z))!;
-        if(!storageAccepts(zone,pile))continue;
+        if(!storageAccepts(zone,pile,world.tick))continue;
       }
       let capacity=destination.items?.get(pile.item)??destination[pile.kind]??0;
       if (sameCell(pile.owner, destination.target)) continue;
       const sourceZone = zonesByCell.get(cellIndex(world, pile.owner.x, pile.owner.z));
       const excess = sourceZone ? Math.max(0, (ground.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0) - sourceZone.capacity) : 0;
-      const sourceAdmits=sourceZone&&storageAccepts(sourceZone,pile);
+      const sourceAdmits=sourceZone&&storageAccepts(sourceZone,pile,world.tick);
       const currentPriority = Math.max(sourceAdmits&&!excess?sourceZone!.priority:0,hoppersByCell.has(cellIndex(world,pile.owner.x,pile.owner.z))&&hopperAccepts(pile.item)?3:0);
       if (destination.priority <= currentPriority) continue;
       let available = pile.quantity - (sourceReserved.get(pile.id) ?? 0);
@@ -310,7 +310,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       // Same-priority storage pairs cannot win; avoid their pure capacity scan.
       if(destination.destination.type==='stockpile') {
         const zone=zonesByCell.get(cellIndex(world,destination.target.x,destination.target.z))!;
-        const key=`${destination.destination.stockpileId}:${zone.quality||zone.hitPoints?storageConditionKey(pile):pile.item}`;
+        const key=`${destination.destination.stockpileId}:${zone.quality||zone.hitPoints||zone.allowFresh===false||zone.allowRotten===false?storageConditionKey(pile,world.tick,zone.allowFresh===false||zone.allowRotten===false):pile.item}`;
         let cached=storageCapacities.get(key);
         if(cached===undefined){cached=storageCapacity(world,zone,pile);storageCapacities.set(key,cached);}
         capacity=cached;

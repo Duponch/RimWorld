@@ -7,6 +7,7 @@ import { BIOFUEL_RESEARCH_COST } from '../src/sim/research.ts';
 import { biofuelCamp } from './helpers/biofuel-v283.ts';
 import { medicalCamp } from './scenarios/health.ts';
 import type { MaterialPile,World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION } from '../src/sim/types.ts';
 
 const checkpoint=(w:World)=>new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,1)));
 function refused(w:World){expect(validBiofuelTransport(w,w.schemaVersion)).toBe(false);expect(checkpoint(w).status).toBe('resync');expect(()=>deserializeWorld(JSON.stringify(w))).toThrow();}
@@ -16,7 +17,7 @@ function carried(){const camp=stacked(),{world:w,pile,generatorId}=camp,p=w.pawn
   p.jobId=null;p.need=null;p.cooking=null;p.state='working';p.path=[];p.moveCooldown=0;delete p.motion;refreshStock(w);return {...camp,p};}
 
 test('217 migration changes only the schema and does not add research, stock category or reserves',()=>{
-  const w=medicalCamp(),before=structuredClone(w);w.schemaVersion=217 as World['schemaVersion'];before.schemaVersion=218;
+  const w=medicalCamp(),before=structuredClone(w);w.schemaVersion=217 as World['schemaVersion'];before.schemaVersion=SCHEMA_VERSION;
   const original=structuredClone(w);expect(deserializeWorld(JSON.stringify(w))).toEqual(before);expect(w).toEqual(original);
   expect(Object.hasOwn(w.research??{},'biofuelRefining')).toBe(false);expect(w.stockpiles.every(z=>!Object.hasOwn(z.filters,'chemfuel'))).toBe(true);
 });

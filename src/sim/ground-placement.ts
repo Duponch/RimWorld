@@ -71,7 +71,7 @@ export function groundCapacity(world: World, cell: Cell, item: ItemId, exceptPaw
 }
 export function storageCapacity(world: World, zone: StockpileCell, subject: ItemId|MaterialPile, exceptPawn?: number,geometry?:StagingGeometryReader): number {
   const item=typeof subject==='string'?subject:subject.item;
-  return storageAccepts(zone,subject) ? cellCapacity(world,zone,item,zone.capacity,exceptPawn,zone,geometry) : 0;
+  return storageAccepts(zone,subject,world.tick) ? cellCapacity(world,zone,item,zone.capacity,exceptPawn,zone,geometry) : 0;
 }
 export function planGroundPlacement(world: World, quantity: number, origin: Cell, item: ItemId, reachable?: (cell:Cell)=>boolean): {cell:Cell; quantity:number}[] | null {
   const result: {cell:Cell;quantity:number}[]=[];

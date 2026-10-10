@@ -16,6 +16,7 @@ import { validPackagedSurvivalState } from '../sim/packaged-survival-save.ts';
 import { validHospitalBedState } from '../sim/hospital-bed-save.ts';
 import { validArtWorkShape } from '../sim/art-work.ts';
 import { validStorageConditions } from '../sim/storage-condition.ts';
+import { validStockpileZones } from '../sim/stockpile-zones.ts';
 import { validFlakWorkShape } from '../sim/flak-work.ts';
 import { validComponentWorkShape } from '../sim/component-work.ts';
 import { isFloorKind } from '../sim/flooring.ts';
@@ -881,6 +882,7 @@ export class SnapshotDecoder {
     if(message.world.schemaVersion<194&&[...message.world.structures,...message.world.packed.map(p=>p.building)].some(s=>s.bills?.some(b=>['smash-mechanoid','shred-mechanoid'].includes(b.recipe))))return resync('Facture mécanique future.');
     if(message.world.schemaVersion<197&&[...message.world.structures,...message.world.packed.map(p=>p.building)].some(s=>s.bills?.some(b=>V219_ITEM_IDS.some(item=>Object.hasOwn(b.filters??{},item)))))return resync('Filtre de facture mécanique futur.');
     if(!Array.isArray(message.world.stockpiles)||message.world.stockpiles.some(zone=>!validStorageConditions(zone,message.world.schemaVersion)))return resync('Plages de qualité ou de PV de réserve invalides pour ce snapshot.');
+    if(!validStockpileZones(message.world,message.world.schemaVersion)||message.world.stockpiles.some(zone=>!Number.isInteger(zone.priority)||zone.priority<1||zone.priority>(message.world.schemaVersion>=219?5:4)))return resync('Identité de zone ou priorité de réserve invalide pour ce snapshot.');
     for(const zone of message.world.stockpiles){
       if(Object.hasOwn(zone.filters??{},'neutroamine')&&(message.world.schemaVersion<206||typeof zone.filters.neutroamine!=='boolean')
         ||Object.hasOwn(zone.items??{},'neutroamine')&&(message.world.schemaVersion<206||typeof zone.items!.neutroamine!=='boolean'))return resync('Filtre de neutroamine invalide ou futur.');

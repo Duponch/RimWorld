@@ -4,10 +4,10 @@ import { BoxBatches } from '../src/render/BoxBatches';
 import { storageZonePlacements, storageZoneSignature } from '../src/render/storage-zone-presentation';
 
 const stockpile = (x: number, z: number, wood = true, food = true) => ({
-  id: z * 10 + x + 1, x, z, filters: { wood, food }, priority: 1, capacity: 75,
+  id: z * 10 + x + 1, zoneId: 1, x, z, filters: { wood, food }, priority: 1, capacity: 75,
 });
 
-test('a stockpile area keeps a faint cell tint without submitting a perimeter', () => {
+test('a stockpile area keeps a readable cell tint without submitting an unselected perimeter', () => {
   const stockpiles = Array.from({ length: 30 }, (_, index) => stockpile(index % 6 + 2, Math.floor(index / 6) + 3));
   const { cells, borders } = storageZonePlacements(16, stockpiles);
   expect(cells).toHaveLength(30);
@@ -20,7 +20,7 @@ test('a stockpile area keeps a faint cell tint without submitting a perimeter', 
     boxes.set(group, 'storage-borders', borders, 'border', false);
     const tint = group.getObjectByName('storage-cells') as THREE.InstancedMesh;
     const outline = group.getObjectByName('storage-borders') as THREE.InstancedMesh;
-    expect((tint.material as THREE.MeshBasicNodeMaterial).opacity).toBeCloseTo(0.055);
+    expect((tint.material as THREE.MeshBasicNodeMaterial).opacity).toBeCloseTo(0.2);
     expect((outline.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(0);
     expect((tint.material as THREE.MeshBasicNodeMaterial).depthWrite).toBe(false);
     expect((outline.material as THREE.MeshBasicNodeMaterial).opacity).toBeLessThan(0.5);
@@ -29,18 +29,20 @@ test('a stockpile area keeps a faint cell tint without submitting a perimeter', 
   } finally { boxes.dispose(); }
 });
 
-test('adjacent cells share a tint; different settings form separate areas without wrapping rows', () => {
+test('stable zone identity owns colour across policy edits, disjoint cells and adjacent zones', () => {
   const connected = storageZonePlacements(4, [stockpile(1, 1), stockpile(2, 1)]);
   expect(connected.borders).toHaveLength(0);
   expect(connected.cells[0]!.color).toBe(connected.cells[1]!.color);
   const separateSettings = storageZonePlacements(4, [stockpile(1, 1), stockpile(2, 1, false, true)]);
   expect(separateSettings.borders).toHaveLength(0);
-  expect(separateSettings.cells[0]!.color).not.toBe(separateSettings.cells[1]!.color);
+  expect(separateSettings.cells[0]!.color).toBe(separateSettings.cells[1]!.color);
   expect(storageZonePlacements(4, [stockpile(1, 1, false, false)]).cells[0]!.color)
     .toBe(storageZonePlacements(4, [stockpile(1, 1, true, true)]).cells[0]!.color);
-  const separated = storageZonePlacements(4, [stockpile(3, 1), stockpile(0, 2)]);
+  const separated = storageZonePlacements(4, [stockpile(3, 1), {...stockpile(0, 2),zoneId:2}]);
   expect(separated.borders).toHaveLength(0);
   expect(separated.cells[0]!.color).not.toBe(separated.cells[1]!.color);
+  const disjoint=storageZonePlacements(16,[stockpile(1,1),stockpile(10,10)]);
+  expect(disjoint.cells[0]!.color).toBe(disjoint.cells[1]!.color);
 });
 
 test('changing any storage setting invalidates the visual grouping without changing a cell identity', () => {
@@ -48,4 +50,5 @@ test('changing any storage setting invalidates the visual grouping without chang
   expect(storageZoneSignature([{ ...original, filters: { ...original.filters, medicine: true } }])).not.toBe(before);
   expect(storageZoneSignature([{ ...original, items: { wood: true } }])).not.toBe(before);
   expect(storageZoneSignature([{ ...original, capacity: 100 }])).not.toBe(before);
+  expect(storageZoneSignature([{ ...original, zoneId:2 }])).not.toBe(before);
 });

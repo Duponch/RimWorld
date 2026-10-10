@@ -4,8 +4,9 @@ import { BoxBatches } from '../src/render/BoxBatches';
 import { BoxMesh } from '../src/render/BoxMesh';
 import { GrowingZoneLayer } from '../src/render/GrowingZoneLayer';
 import { createWorld } from '../src/sim/engine';
+import {surfaceHeightAtCell,FLOOR_SURFACE_Y} from '../src/render/surface-height';
 
-test('fields retain their cells and faint resident tint without selected or management contours', () => {
+test('fields retain their cells and readable resident tint while selection contours belong to the scene', () => {
   const world=createWorld(185,32,32),boxes=new BoxBatches(),layer=new GrowingZoneLayer(boxes);
   world.growingZones=[{id:901,cells:[12*32+12,12*32+13,13*32+12],plant:'rice',allowSow:true,allowCut:true}];
   const before=structuredClone(world);
@@ -14,7 +15,7 @@ test('fields retain their cells and faint resident tint without selected or mana
     const mesh=layer.group.getObjectByName('growing-borders') as BoxMesh;
     const geometry=mesh.geometry,material=mesh.material,matrix=mesh.instanceMatrix;
     expect(mesh.activeCount).toBe(3);
-    expect((material as THREE.MeshBasicNodeMaterial).opacity).toBe(.055);
+    expect((material as THREE.MeshBasicNodeMaterial).opacity).toBe(.2);
     expect((material as THREE.MeshBasicNodeMaterial).depthWrite).toBe(false);
     expect(mesh.castShadow).toBe(false);
     const initial=Array.from(matrix.array.slice(0,3*16)),pose=new THREE.Matrix4();
@@ -22,7 +23,7 @@ test('fields retain their cells and faint resident tint without selected or mana
       mesh.getMatrixAt(i,pose);
       expect(pose.elements[0]).toBe(1);expect(pose.elements[10]).toBe(1);
       expect(pose.elements[5]).toBeCloseTo(.014);
-      expect(pose.elements[13]).toBeCloseTo(.021);
+      expect(pose.elements[13]).toBeCloseTo((surfaceHeightAtCell(world,world.growingZones[0]!.cells[i]!%32,Math.floor(world.growingZones[0]!.cells[i]!/32))??0)+.021);
       expect(pose.elements[12]).toBe(world.growingZones[0]!.cells[i]!%32);
       expect(pose.elements[14]).toBe(Math.floor(world.growingZones[0]!.cells[i]!/32));
     }
@@ -34,6 +35,8 @@ test('fields retain their cells and faint resident tint without selected or mana
     }
     expect(world).toEqual(before);
     expect(layer.update(world,false,true,901)).toBe(false);
+    world.tiles[world.growingZones[0]!.cells[0]!]!.floor='wood-planks';
+    expect(layer.update(world,false)).toBe(true);mesh.getMatrixAt(0,pose);expect(pose.elements[13]).toBeCloseTo(FLOOR_SURFACE_Y+.021);
     world.growingZones=[];layer.update(world,false);expect(mesh.activeCount).toBe(0);
   }finally{boxes.dispose();}
 });

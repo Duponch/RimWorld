@@ -104,19 +104,14 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id:'remove-roof',title:'Retirer un toit',hint:'Retirer physiquement la couverture et empêcher son ajout automatique.',key:'',category:'zones' },
   { id:'ignore-roof',title:'Ignorer le toit',hint:'Effacer la zone de toiture sans changer la couverture déjà posée.',key:'',category:'zones' },
   { id: 'remove-growing', title: 'Retirer une culture', hint: 'Retirer la zone conserve les plantes déjà semées.', key: '', category: 'zones' },
-  { id: 'stockpile', title: 'Réserve', hint: 'Tracer un rectangle de stockage. Les cases occupées et les réserves existantes sont ignorées.', key: 'S', category: 'zones' },
+  { id: 'stockpile', title: 'Zone de stockage', hint: 'Tracer une zone, ou commencer dans une zone existante pour l’agrandir. Les objets mobiles restent au sol.', key: 'S', category: 'zones' },
   { id:'home',title:'Zone de foyer',hint:'Tracer les cases où les bâtisseurs doivent entretenir les ouvrages endommagés.',key:'',category:'zones' },
   { id:'remove-home',title:'Retirer le foyer',hint:'Retire la permission de réparation sans démolir les ouvrages.',key:'',category:'zones' },
   { id: 'remove-stockpile', title: 'Retirer', hint: 'Cliquer ou tracer un rectangle pour retirer des cases de réserve ; les objets restent au sol.', key: '', category: 'zones' },
 ];
 
 export function storageSettings(prefix: string): string {
-  return `<div class="storage-settings" id="${prefix}-settings">
-    <div class="storage-filters"><label><input id="${prefix}-silver" type="checkbox" checked> Argent</label><label><input id="${prefix}-unfinished" type="checkbox" checked> Ouvrages inachevés</label><label><input id="${prefix}-textile" type="checkbox" checked> Textiles</label><label><input id="${prefix}-apparel" type="checkbox" checked> Vêtements</label><label><input id="${prefix}-weapon" type="checkbox" checked> Armes</label><label><input id="${prefix}-neutroamine" type="checkbox" checked> Neutroamine</label><label><input id="${prefix}-chemfuel" type="checkbox" checked> Biocarburant</label><label><input id="${prefix}-medicine" type="checkbox" checked> Médicaments</label><label><input id="${prefix}-wood" type="checkbox" checked> Bois</label><label><input id="${prefix}-food" type="checkbox" checked> Nourriture</label><label><input id="${prefix}-component" type="checkbox" checked> Composants</label><label><input id="${prefix}-advanced-component" type="checkbox" checked> Composants avancés</label><label><input id="${prefix}-steel" type="checkbox" checked> Acier</label><label><input id="${prefix}-gold" type="checkbox" checked> Or</label><label><input id="${prefix}-plasteel" type="checkbox" checked> Plastacier</label><label><input id="${prefix}-blocks" type="checkbox" checked> Blocs de pierre</label><label><input id="${prefix}-chunk" type="checkbox"> Fragments de roche</label><label><input id="${prefix}-corpse" type="checkbox"> Dépouilles animales</label><label><input id="${prefix}-mech-corpse" type="checkbox"> Carcasses mécaniques</label><label><input id="${prefix}-furniture" type="checkbox" checked> Meubles emballés</label></div>
-    <label>Priorité de réserve<select id="${prefix}-priority"><option value="1">1 · basse</option><option value="2" selected>2 · normale</option><option value="3">3 · importante</option><option value="4">4 · critique</option></select></label>
-    <label>Capacité (unités)<input id="${prefix}-capacity" type="number" min="1" max="${ITEM_DEFINITIONS.silver.stackLimit}" step="1" value="${ITEM_DEFINITIONS.silver.stackLimit}"></label>
-    <div id="${prefix}-items"></div>
-  </div>`;
+  return `<div class="storage-settings" id="${prefix}-settings"><div id="${prefix}-items"></div></div>`;
 }
 
 export function gameLayout(): string {
@@ -174,7 +169,7 @@ export function gameLayout(): string {
         <div class="architect-options"><p id="tool-instruction">Choisissez un ordre, puis cliquez sur la carte.</p>
         <label id="construction-material-controls" hidden>Matériau <select id="construction-material"><option value="wood">Bois</option><option value="steel">Acier</option></select></label>
         <div id="placement-controls" hidden><button id="rotate-building" aria-label="Tourner la construction">Tourner · E</button><span id="placement-orientation">0°</span></div>
-        <div id="storage-options" hidden>${storageSettings('stockpile')}<p class="muted">Réglages appliqués à chaque case désignée. Une réserve de priorité plus élevée attire les objets.</p></div>
+        <div id="storage-options" hidden>${storageSettings('stockpile')}<p class="muted">Une zone partage ses réglages. Tracez depuis une zone existante pour l’agrandir ; sa priorité attire les objets.</p></div>
         <p class="muted" id="job-count">Aucun ordre en cours</p></div>
       </div></div>
     </section>
@@ -221,7 +216,7 @@ export function gameLayout(): string {
         <button data-speed="0" aria-label="Pause" title="Pause · Espace">Ⅱ</button><button data-speed="1" aria-label="Vitesse normale" title="1× · touche 1">▷</button>
         <button data-speed="3" aria-label="Vitesse 3 fois" title="3× · touche 2">▷▷</button><button data-speed="6" aria-label="Vitesse 6 fois" title="6× · touche 3">▷▷▷</button>
       </div>
-      <div class="view-controls" aria-label="Commandes de vue"><button id="wall-cutaway" aria-pressed="false" title="Coupe visuelle : les murs gardent leurs collisions">Murs : hauts</button><button id="roof-toggle" aria-pressed="false" title="Afficher la couverture ; masquer ne retire pas le toit">Toits : masqués</button><button id="foliage-toggle" aria-pressed="false" title="Masquer le feuillage pour voir les colons">Feuillage</button><button id="view-home" title="Recentrer sur la colonie">⌂</button></div>
+      <div class="view-controls" aria-label="Commandes de vue"><button id="wall-cutaway" aria-pressed="false" title="Coupe visuelle : les murs gardent leurs collisions">Murs : hauts</button><button id="roof-toggle" aria-pressed="false" title="Afficher la couverture ; masquer ne retire pas le toit">Toits : masqués</button><button id="foliage-toggle" aria-pressed="false" title="Masquer le feuillage pour voir les colons">Feuillage</button><button id="zones-toggle" aria-pressed="true" title="Afficher ou masquer les zones sans changer leurs règles">Zones : visibles</button><button id="view-home" title="Recentrer sur la colonie">⌂</button></div>
       <div class="camera-controls"><button id="camera-mode" aria-pressed="false" title="Basculer en perspective ; glisser avec le bouton droit pour tourner">Vue : iso</button></div>
     </aside>
     <div id="metrics" class="diagnostics" hidden></div>

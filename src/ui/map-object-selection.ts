@@ -1,5 +1,6 @@
 import { footprintCells } from '../sim/definitions';
 import type { Cell, World } from '../sim/types';
+import { stockpileZoneCells } from '../sim/stockpile-zones';
 
 /** Terrain and constructed floors are readouts, never selection targets. */
 export type MapObjectSelection = { kind:'packed'|'pile'|'structure'|'resource'|'rock'|'job'|'growing'|'stockpile'; id:number };
@@ -28,7 +29,7 @@ export function mapObjectCells(world:World,selected:MapObjectSelection):Cell[] {
     case 'rock': {const tile=world.tiles[selected.id];return tile?.terrain==='rock'?[{x:selected.id%world.width,z:Math.floor(selected.id/world.width)}]:[];}
     case 'job': {const job=world.jobs.find(j=>j.id===selected.id);return job?footprintCells(job):[];}
     case 'growing': {const zone=world.growingZones.find(z=>z.id===selected.id);return zone?.cells.map(i=>({x:i%world.width,z:Math.floor(i/world.width)}))??[];}
-    case 'stockpile': {const stockpile=world.stockpiles.find(s=>s.id===selected.id);return stockpile?[stockpile]:[];}
+    case 'stockpile': return stockpileZoneCells(world,selected.id);
   }
 }
 

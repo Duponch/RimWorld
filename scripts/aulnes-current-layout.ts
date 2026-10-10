@@ -18,6 +18,7 @@ import { researchUnlocked, type ResearchProject } from '../src/sim/research.ts';
 import type { FloorKind } from '../src/sim/flooring.ts';
 import type { ItemId } from '../src/sim/items.ts';
 import type { Cell, Orientation, StorageFilters, Structure, World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION } from '../src/sim/types.ts';
 
 export interface AulnesDistrict {
   key: string;
@@ -77,8 +78,8 @@ const rectangles = (bounds: readonly [number, number, number, number]): Cell[] =
  * or duplicate machines is concealed by this layout helper.
  */
 export function applyAulnesCurrentLayout(world: World): AulnesActivitySites {
-  if (world.width !== 250 || world.height !== 250 || world.schemaVersion !== 218)
-    throw Error('The maintained Aulnes layout requires a migrated 250×250 schema218 world.');
+  if (world.width !== 250 || world.height !== 250 || world.schemaVersion !== SCHEMA_VERSION)
+    throw Error(`The maintained Aulnes layout requires a migrated 250×250 schema${SCHEMA_VERSION} world.`);
   const technologies: ResearchProject[] = ['hydroponics', 'drug-production', 'medicine-production',
     'sterile-materials', 'vitals-monitor', 'deep-drilling', 'ground-scanner', 'nutrient-paste', 'biofuel-refining'];
   for (const technology of technologies) if (!researchUnlocked(world, technology))

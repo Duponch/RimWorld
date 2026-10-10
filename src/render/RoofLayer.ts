@@ -4,6 +4,7 @@ import type { World } from '../sim/types';
 import type { BoxBatches } from './BoxBatches';
 import { WORLD_SCALE } from '../world/scale';
 import { woodFiberDetail } from './stylized-surfaces';
+import {surfaceHeightAtCell} from './surface-height';
 
 type RoofCell = { x: number; z: number };
 type Point = readonly [number, number, number];
@@ -152,13 +153,14 @@ export class RoofLayer {
       this.mesh.geometry = roofSlabGeometry(cells, top);
       old.dispose(); this.mesh.visible = cells.length > 0;
     }
-    const areaKey=`${world.width}|${state?.build.join(',')}|${state?.remove.join(',')}`;
+    const areaCells=[...(state?.build??[]),...(state?.remove??[])];
+    const areaKey=`${world.width}|${state?.build.join(',')}|${state?.remove.join(',')}|${areaCells.map(i=>surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))).join(',')}`;
     if(reset||this.areaKey!==areaKey){
       this.areaKey=areaKey;
       batches.set(this.areas, 'roof-areas', [
         ...(state?.build ?? []).map(i => ({ i, color: 0x7abca0 })),
         ...(state?.remove ?? []).map(i => ({ i, color: 0xd49d79 })),
-      ].map(({ i, color }) => ({ x: i % world.width, z: Math.floor(i / world.width), y: .054, sx: .98, sz: .98, sy: .012, color })), 'overlay', false);
+      ].map(({ i, color }) => ({ x: i % world.width, z: Math.floor(i / world.width), y: (surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))??0)+.054, sx: .98, sz: .98, sy: .012, color })), 'overlay', false);
     }
   }
   prepare(): () => void {

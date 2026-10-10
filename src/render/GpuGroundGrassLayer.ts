@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 import {
   Fn, If, float, hash, instanceIndex, mix, positionLocal, sin, smoothstep,
   texture, textureLoad, transformNormalToView, uint, uniform, uv, varyingProperty,
-  vec2, vec3,
+  vec2, vec3, output,
 } from 'three/tsl';
 import type { Terrain, World } from '../sim/types';
 import { footprintCells } from '../sim/definitions';
@@ -11,6 +11,7 @@ import { ARID_GRASS_COLOR, TERRAIN_COLORS } from './TerrainLayer';
 import { GRASS_BLOOD_COLOR } from './ground-blood';
 import { GrassBloodMask, GRASS_BLOOD_SLOTS, GRASS_BLOOD_WORDS } from './grass-blood-mask';
 import { readSceneResourceFrame, type SceneResourceFrame } from './scene-resource-index';
+import type {GroundSurfaceTint} from './GroundSurfaceTint';
 
 /** AntSystem-inspired GPU blades, indexed by stable world cell and slot.
  * This is scenery: no Resource, job, save or simulation RNG. Four vertices/two
@@ -230,7 +231,7 @@ export class GpuGroundGrassLayer {
   private readonly foregroundFootprint = new Float64Array(8);
 
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void,
-    private readonly maxTextureDimension = Infinity, private readonly onUnsupported: (message: string) => void = () => {}) {
+    private readonly maxTextureDimension = Infinity, private readonly onUnsupported: (message: string) => void = () => {},surfaceTint?:GroundSurfaceTint) {
     this.map.colorSpace = THREE.SRGBColorSpace;
     this.map.magFilter = this.map.minFilter = THREE.NearestFilter;
     this.map.generateMipmaps = false;
@@ -242,6 +243,7 @@ export class GpuGroundGrassLayer {
       color: 0xffffff, roughness: .93, metalness: 0, flatShading: true, side: THREE.DoubleSide,
     });
     const groundColour = varyingProperty('vec3', 'groundGrassColour');
+    const groundRoot=varyingProperty('vec2','groundGrassRoot');
     material.positionNode = Fn(() => {
       // instanceIndex maps to an integer world cell and a stable local slot.
       // Camera movement changes only the integer window origin; resizing that
@@ -272,6 +274,7 @@ export class GpuGroundGrassLayer {
       const bx = cellX.add(hash(key).mul(.96).sub(.48));
       const bz = cellZ.add(hash(key.add(uint(11))).mul(.96).sub(.48));
       const root = vec2(bx, bz);
+      groundRoot.assign(root);
       const sampled = texture(this.map, root.add(.5).div(this.dimensions)).level(float(0));
       groundColour.assign(sampled.rgb);
       // Share the renderer's painted ground at the existing root coordinates.
@@ -312,6 +315,7 @@ export class GpuGroundGrassLayer {
     material.colorNode = groundColour;
     material.normalNode = transformNormalToView(vec3(0, 1, 0));
     configure?.(material);
+    if(surfaceTint)material.outputNode=surfaceTint.shade(material.outputNode??output,groundRoot);
     this.mesh = new THREE.Mesh(bladeGeometry(), material);
     this.mesh.name = 'GPU decorative soil grass';
     this.mesh.frustumCulled = false;

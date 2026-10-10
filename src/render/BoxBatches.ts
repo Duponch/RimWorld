@@ -8,6 +8,7 @@ import { instancedBoxPatternUv } from './texture-variation';
 import { chunkContour, configureChunkMaterial, createChunkGeometry, isSmallChunk } from './chunk-shape';
 import { chunkPaintUv, createChunkSurfacePaint } from './chunk-surface-paint';
 import { InstanceTargetTint } from './instance-target-tint';
+import {ZONE_FILL_OPACITY} from './zone-surface-presentation';
 
 const object = new THREE.Object3D(), color = new THREE.Color();
 type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'storage-home' | 'border';
@@ -27,9 +28,8 @@ export class BoxBatches {
   private readonly texturedRock = material(0xffffff);
   private readonly materials: Record<Style, THREE.NodeMaterial> = {
     solid: material(0xffffff),
-    // A more discreet local presentation than Core's 0.09 ground-zone alpha.
-    // The edit-only home area keeps its stronger tint on a resident batch.
-    storage: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.055, depthWrite: false }),
+    // An unlit surface stays legible at midday; grass shares the same tint.
+    storage: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: ZONE_FILL_OPACITY, depthWrite: false }),
     'storage-home': new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, depthWrite: false }),
     border: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, depthWrite: false }),
     overlay: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.48, depthWrite: false }),

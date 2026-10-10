@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 218 as const;
+export const SCHEMA_VERSION = 219 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -21,7 +21,7 @@ export interface Stock { wood: number; food: number }
 export type MaterialOwner = {type:'orbital-ship';shipId:number} | {type:'orbital-cargo';deliveryId:number} | {type:'grave';graveId:number} | ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'inventory';pawnId:number} | {type:'equipment';pawnId:number} | {type:'apparel';pawnId:number} | { type: 'job'; jobId: number };
 export interface MaterialPile { mechCorpse?:import('./mechanoid-corpse.ts').MechanoidCorpseState; componentWork?:import('./component-work.ts').ComponentWork; flakWork?:import('./flak-work.ts').FlakWork; artWork?:import('./art-work.ts').ArtWork; gunWork?:import('./gun-work.ts').GunWork; humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
 export type StorageFilters = { chemfuel?:boolean; neutroamine?:boolean; 'mech-corpse'?:boolean; silver?:boolean; corpse?:boolean; wood:boolean; food:boolean; unfinished?:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; gold?:boolean; plasteel?:boolean; component?:boolean; 'advanced-component'?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
-export interface StockpileCell extends Cell, StorageConditions { items?:Partial<Record<ItemId,boolean>>; id: number; filters: StorageFilters; priority: number; capacity: number }
+export interface StockpileCell extends Cell, StorageConditions { /** Logical zone identity; physical cell IDs remain haul destinations. */ zoneId?:number; items?:Partial<Record<ItemId,boolean>>; id: number; filters: StorageFilters; priority: number; capacity: number }
 export interface GrowingZone { basinId?:number; id: number; cells: number[]; plant: 'rice' | 'cotton' | 'potato' | 'corn' | 'healroot'; allowSow: boolean; allowCut: boolean }
 export type HaulDestination = {type:'hopper';structureId:number} | { type:'turret';structureId:number;forced?:true } | { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number; forHunting?: true } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
 export interface HaulTask {
@@ -258,7 +258,7 @@ export interface World {
 export type DesignateCommand = { type: 'designate'; kind: JobKind; targetId?:number; orientation?: Orientation; material?:import('./construction-materials.ts').ConstructionMaterial; floor?:import('./flooring.ts').FloorKind } & Cell;
 export type AreaAction = 'lay-floor' | 'remove-floor' | 'home' | 'remove-home' | 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' | 'haul-chunks' | 'deconstruct' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export interface StorageSettings extends StorageConditions { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
-export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; floor?: import('./flooring.ts').FloorKind }
+export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; targetZoneId?:number; floor?: import('./flooring.ts').FloorKind }
 export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }
 export type Command = import('./orbital-state.ts').OrbitalCommand | import('./group-state.ts').GroupCommand | {type:'enable-mech-raids'} | import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
   | {type:'cut-blighted-crops'}
@@ -306,6 +306,8 @@ export type Command = import('./orbital-state.ts').OrbitalCommand | import('./gr
   | BuildLineCommand
   | { type: 'refuel-policy'; structureId: number; enabled: boolean }
   | { type: 'growing-policy'; zoneId: number; plant?: GrowingZone['plant']; allowSow: boolean; allowCut: boolean }
+  | { type:'stockpile-policy'; stockpileId:number; settings:StorageSettings }
+  | { type:'delete-zone'; kind:'stockpile'|'growing'; zoneId:number }
   | { type: 'assign-bed'; bedId: number; pawnId: number | null }
   | ({ type: 'cancel' } & Cell)
   | ({ type: 'stockpile'; enabled: boolean } & Cell & StorageSettings)

@@ -89,6 +89,10 @@ import { miniTurretRadiusCells, MINI_TURRET_DISPLAY_RANGE, MINI_TURRET_DISPLAY_B
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { GpuGroundGrassLayer } from './GpuGroundGrassLayer';
 import { storageZonePlacements } from './storage-zone-presentation';
+import {GroundSurfaceTint} from './GroundSurfaceTint';
+import {ZONE_FILL_OPACITY,ZONE_TOOLS,areaPreviewColor,zoneBoundaryVertices} from './zone-surface-presentation';
+import {stockpileZoneCells} from '../sim/stockpile-zones';
+import {surfaceHeightAtCell} from './surface-height';
 import { HomePresentationSignature, StoragePresentationSignature, StructurePresentationSignature } from './presentation-signatures';
 import { mapObjectCells,mapObjectsAt,sameMapObject,type MapObjectSelection } from '../ui/map-object-selection';
 
@@ -157,6 +161,14 @@ export class SceneRenderCore {
   protected readonly jobGroup = new THREE.Group();
   protected readonly pileGroup = new THREE.Group();
   protected readonly storageGroup = new THREE.Group();
+  protected zonesVisible=true;
+  protected roofAreasVisible=false;
+  protected zoneTarget:number|undefined;
+  protected readonly surfaceTint=new GroundSurfaceTint();
+  protected storageTintPlacements:readonly Placement[]=[];
+  protected homeTintPlacements:readonly Placement[]=[];
+  protected zonesTintDirty=true;
+  protected roofTintKey='';
   protected readonly hover: THREE.Mesh;
   protected readonly objectSelection: THREE.Mesh;
   protected selectedObject:MapObjectSelection|undefined;
@@ -369,7 +381,7 @@ export class SceneRenderCore {
     return new GpuGroundGrassLayer(this.environmentLighting.configure, this.textureDimensionLimit, message => {
       this.compatibilityWarning = message;
       this.onCompatibilityWarning(message);
-    });
+    },this.surfaceTint);
   }
 
   setWorld(world: World, resetPresentation = false, speed = 1, tracks?: PawnTrack[], immutableSnapshot = false): void {
@@ -466,6 +478,8 @@ export class SceneRenderCore {
     if (previousWorld?.resources !== world.resources || newMap || Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.updateResources(world, newMap,resourceFrame);
     const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.building.material}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
     this.roofs.update(world,this.boxes,this.wallCutaway,newMap);
+    if(this.roofAreasVisible){const key=`${(world.roofing?.build??[]).join(',')};${(world.roofing?.remove??[]).join(',')}`;
+      if(key!==this.roofTintKey||newMap){this.roofTintKey=key;this.zonesTintDirty=true;}}
     const prepared=this.preparedStructures=this.structurePreparation?.read(world,resetPoses);
     if(prepared)this.doors.updateNative(world,this.wallCutaway,resetPoses,prepared.doors,prepared.axes,prepared.gateAxes);
     else this.doors.update(world,this.wallCutaway,resetPoses);
@@ -480,9 +494,10 @@ export class SceneRenderCore {
     if (jobKey !== this.jobKey || newMap) { this.jobKey = jobKey; this.buildJobs(world); }
     if(resetPoses)this.homeSignature.clear();
     const storageKey = `${this.homeSignature.read(world.home)};`+this.storageSignature.read(world.stockpiles,resetPoses);
-    if (storageKey !== this.storageKey || newMap) { this.storageKey = storageKey; this.buildStorage(world); }
+    if (storageKey !== this.storageKey || newMap || groundChanged) { this.storageKey = storageKey; this.buildStorage(world); }
     if (newMap || previousWorld?.resources !== world.resources || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap, this.immutableWorlds.has(world));
     const zoneChanged=this.updateGrowingZones(newMap);
+    if(zoneChanged||newMap)this.zonesTintDirty=true;
     this.pawns.adoptCargo(previousWorld??undefined,world,this.hasTracks?this.timeline.tick:world.tick,
       !resetPoses&&this.hasTracks&&(this.received?.speed??0)>0);
     this.updatePiles(world, newMap);
@@ -505,6 +520,7 @@ export class SceneRenderCore {
     this.ropes.adopt(world,resetPoses);
     this.landscape.refresh(this.backend==='WebGPU'&&this.overview.group.visible);
     if(this.selectedObject?.kind!=='growing'||zoneChanged)this.updateSelectedObject();
+    this.refreshZonesTint();
     this.updateHover();
   }
 
@@ -527,6 +543,7 @@ export class SceneRenderCore {
     const color = tool === 'cancel' ? 0xe6876a : tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
     this.hostPort.cursor(tool === 'select' ? 'default' : 'crosshair');
+    this.refreshZonesTint();
     this.updateHover();
   }
 
@@ -547,6 +564,7 @@ export class SceneRenderCore {
     this.controls.enabled = true;
     if (drag) this.hostPort.releasePointer(drag.pointerId);
     this.areaPreview.hide();
+    this.surfaceTint.clearPreview();
     this.designations.clearPreview();
     this.clearOrderTargets();
     this.constructionPreview.hide();
@@ -657,7 +675,30 @@ export class SceneRenderCore {
     this.scene.add(this.grass.mesh);
     if (this.world) this.grass.update(this.world, true);
   }
-  setRoofAreasVisible(visible:boolean):void {if(this.roofs.areas.visible!==visible)this.invalidatePausedShadow();this.roofs.areas.visible=visible;}
+  setRoofAreasVisible(visible:boolean):void {
+    this.roofAreasVisible=visible;if(!this.preparing)this.roofs.areas.visible=visible&&this.zonesVisible;
+    this.zonesTintDirty=true;this.refreshZonesTint();
+  }
+  setZonesVisible(visible:boolean):void {
+    if(this.zonesVisible===visible)return;this.zonesVisible=visible;
+    if(!this.preparing){this.storageGroup.visible=this.growing.group.visible=visible;this.roofs.areas.visible=visible&&this.roofAreasVisible;}
+    this.zonesTintDirty=true;this.refreshZonesTint();this.updateSelectedObject();
+  }
+  setZoneTarget(id:number|undefined):void {
+    if(this.zoneTarget===id)return;this.zoneTarget=id;this.areaSignature='';this.updateHover();
+  }
+  private zoneTargetCommand(action:string):{targetZoneId?:number} {
+    return this.zoneTarget!==undefined&&['stockpile','growing','remove-stockpile','remove-growing'].includes(action)?{targetZoneId:this.zoneTarget}:{};
+  }
+  private refreshZonesTint():void {
+    const world=this.world;if(!world||!this.zonesTintDirty)return;this.zonesTintDirty=false;
+    const roof:Placement[]=this.roofAreasVisible?[
+      ...(world.roofing?.build??[]).map(i=>({x:i%world.width,z:Math.floor(i/world.width),y:0,color:0x7abca0})),
+      ...(world.roofing?.remove??[]).map(i=>({x:i%world.width,z:Math.floor(i/world.width),y:0,color:0xd49d79})),
+    ]:[];
+    this.surfaceTint.setZones(world.width,world.height,[{placements:this.storageTintPlacements,opacity:ZONE_FILL_OPACITY},
+      {placements:this.growing.surfaces,opacity:ZONE_FILL_OPACITY},{placements:this.homeTintPlacements,opacity:.28},{placements:roof,opacity:.48}],this.zonesVisible);
+  }
   setWallCutaway(enabled: boolean): void {
     if (this.wallCutaway === enabled) return;
     this.invalidatePausedShadow();
@@ -728,6 +769,7 @@ export class SceneRenderCore {
       // first map interaction. Include it behind the loading overlay.
       this.hover.visible = true;
       this.objectSelection.visible = true;
+      this.storageGroup.visible=this.growing.group.visible=true;
       this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = true;
       this.rocks.setDistant(false); this.rocks.mesh.visible = true;
       this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
@@ -750,6 +792,8 @@ export class SceneRenderCore {
       restorePodRescue();restoreOrbitalDelivery();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
+      this.storageGroup.visible=this.growing.group.visible=this.zonesVisible;
+      this.roofs.areas.visible=this.zonesVisible&&this.roofAreasVisible;
       this.invalidatePausedShadow();
       this.updateSelectedObject();
       this.updateHover();
@@ -799,10 +843,10 @@ export class SceneRenderCore {
   }
   protected updateSelectedObject():void {
     if(this.preparing)return;
-    if(this.selectedObject?.kind==='growing'||this.selectedObject?.kind==='stockpile'){
-      this.objectSelection.visible=false;this.objectSelectionSignature='';return;
-    }
-    const cells=this.world&&this.selectedObject?mapObjectCells(this.world,this.selectedObject):[];
+    const isZone=this.selectedObject?.kind==='growing'||this.selectedObject?.kind==='stockpile';
+    const cells=this.world&&this.selectedObject?(this.selectedObject.kind==='stockpile'?stockpileZoneCells(this.world,this.selectedObject.id):mapObjectCells(this.world,this.selectedObject)):[];
+    if(this.world)this.surfaceTint.setSelection(this.world.width,this.world.height,isZone?cells.map(c=>c.z*this.world!.width+c.x):[],isZone&&this.zonesVisible);
+    if(isZone&&!this.zonesVisible){this.objectSelection.visible=false;this.objectSelectionSignature='';return;}
     if(!cells.length){this.objectSelection.visible=false;this.objectSelectionSignature='';return;}
     let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity,shape=2166136261;
     for(const cell of cells){minX=Math.min(minX,cell.x);maxX=Math.max(maxX,cell.x);minZ=Math.min(minZ,cell.z);maxZ=Math.max(maxZ,cell.z);shape=Math.imul(shape^((cell.z*this.world!.width+cell.x)>>>0),16777619);}
@@ -811,6 +855,11 @@ export class SceneRenderCore {
     this.objectSelection.visible=true;
     if(signature===this.objectSelectionSignature)return;
     this.objectSelectionSignature=signature;
+    if(isZone){
+      const vertices=zoneBoundaryVertices(this.world!.width,cells.map(c=>c.z*this.world!.width+c.x));
+      const old=this.objectSelection.geometry;this.objectSelection.geometry=new THREE.BufferGeometry();
+      this.objectSelection.geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));old.dispose();return;
+    }
     const length=Math.min(.23,(maxX-minX)/3,(maxZ-minZ)/3),y=.14;
     const vertices:number[]=[];
     // GPU line width is fixed to one pixel on common WebGPU backends. Flat
@@ -911,9 +960,10 @@ export class SceneRenderCore {
   protected buildJobs(world: World): void { buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes);this.designations.update(world); }
 
   protected buildStorage(world: World): void {
-    const { cells } = storageZonePlacements(world.width, world.stockpiles);
+    const { cells } = storageZonePlacements(world.width, world.stockpiles,world);
     const home: Placement[] = [];
-    if(this.tool==='home'||this.tool==='remove-home')for(const i of world.home??[])home.push({x:i%world.width,z:Math.floor(i/world.width),y:.04,sx:.94,sy:.014,sz:.94,color:0x779ee6});
+    if(this.tool==='home'||this.tool==='remove-home')for(const i of world.home??[])home.push({x:i%world.width,z:Math.floor(i/world.width),y:(surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))??0)+.04,sx:1,sy:.014,sz:1,color:0x779ee6});
+    this.storageTintPlacements=cells;this.homeTintPlacements=home;this.zonesTintDirty=true;
     this.boxes.set(this.storageGroup, 'storage-cells', cells, 'storage', false);
     this.boxes.set(this.storageGroup, 'storage-borders', [], 'border', false);
     this.boxes.set(this.storageGroup, 'storage-home', home, 'storage-home', false);
@@ -1122,6 +1172,7 @@ export class SceneRenderCore {
     if (!drag || !world) return;
     if (!cell) {
       this.hover.visible = false; this.areaPreview.hide();this.constructionPreview.hide();
+      this.surfaceTint.clearPreview();
       this.designations.clearPreview();
       this.clearOrderTargets();
       this.areaSignature = ''; this.onAreaPreview(null); return;
@@ -1133,8 +1184,8 @@ export class SceneRenderCore {
     let bounds: { minX:number; maxX:number; minZ:number; maxZ:number }, cells: number[], skipped: number;
     if ('action' in drag) {
       this.areaIndex ??= buildAreaIndex(world);
-      const result = queryArea(world, { type: 'area', action: drag.action, from: drag.from, to: cell, ...(drag.action==='lay-floor'?{floor:this.selectedFloor}:{}) }, this.areaIndex);
-      if (!result.ok) {this.hover.visible=false;this.areaPreview.hide();this.constructionPreview.hide();this.designations.clearPreview();this.clearOrderTargets();this.onAreaPreview(null);return;}
+      const result = queryArea(world, { type: 'area', action: drag.action, from: drag.from, to: cell, ...this.zoneTargetCommand(drag.action), ...(drag.action==='lay-floor'?{floor:this.selectedFloor}:{}) }, this.areaIndex);
+      if (!result.ok) {this.hover.visible=false;this.areaPreview.hide();this.constructionPreview.hide();this.surfaceTint.clearPreview();this.designations.clearPreview();this.clearOrderTargets();this.onAreaPreview(null);return;}
       ({ bounds, cells, skipped } = result);
     } else {
       const line = constructionLineCells(drag.from, cell);
@@ -1148,6 +1199,7 @@ export class SceneRenderCore {
     }
     const width = bounds.maxX - bounds.minX + 1, height = bounds.maxZ - bounds.minZ + 1;
     if ('kind' in drag || action === 'lay-floor' || action === 'build-roof') {
+      this.surfaceTint.clearPreview();
       this.designations.clearPreview();
       this.clearOrderTargets();
       const validCells = new Set(cells), valid: ConstructionPreviewSpec[] = [], invalid: ConstructionPreviewSpec[] = [];
@@ -1164,11 +1216,13 @@ export class SceneRenderCore {
       this.onAreaPreview({width,height,eligible:cells.length,skipped,line:'kind' in drag});return;
     }
     this.constructionPreview.hide();
-    const color = 0x8bcef0;
+    const color = areaPreviewColor(action as AreaAction,cells.length,skipped);
     this.hover.visible = true; this.hover.scale.set(width, height, 1);
     this.hover.position.set((bounds.minX + bounds.maxX) / 2, 0.075, (bounds.minZ + bounds.maxZ) / 2);
     const hoverMat = this.hover.material as THREE.MeshBasicNodeMaterial;
     hoverMat.opacity = 0.12; hoverMat.color.setHex(color);
+    this.surfaceTint.setHover(this.hover.position.x,this.hover.position.z,width,height,color,.12);
+    this.surfaceTint.setArea(world.width,bounds,cells,color);
     this.areaPreview.update(world.width,world.width*world.height,cells,color);
     this.designations.updatePreview(world,action as AreaAction,cells);
     this.updateOrderTargets(world,action as AreaAction,cells);
@@ -1178,6 +1232,7 @@ export class SceneRenderCore {
     if(this.preparing)return;
     this.hostPort.title('');
     if (this.areaDrag) { this.updateAreaPreview(); return; }
+    this.surfaceTint.clearPreview();
     this.updateTurretPreview();
     const cell = this.hoverCell;
     this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined);
@@ -1196,9 +1251,16 @@ export class SceneRenderCore {
     const cells = footprintCells({ ...cell, kind, orientation: this.placementRotation });
     const minX=Math.min(...cells.map(c=>c.x)),maxX=Math.max(...cells.map(c=>c.x)),minZ=Math.min(...cells.map(c=>c.z)),maxZ=Math.max(...cells.map(c=>c.z));
     this.hover.scale.set(maxX-minX+1, maxZ-minZ+1, 1);
-    this.hover.position.set((minX+maxX)/2, this.world.tiles[cell.z * this.world.width + cell.x]?.terrain === 'water' ? WORLD_SCALE.waterSurface + 0.04 : 0.055, (minZ+maxZ)/2);
+    this.hover.position.set((minX+maxX)/2, (surfaceHeightAtCell(this.world,cell.x,cell.z)??0)+.055, (minZ+maxZ)/2);
     if (isAreaAction(this.tool) && this.tool!=='lay-floor' && this.tool!=='build-roof') {
-      (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(0x8bcef0);
+      let color=0x8bcef0;
+      if(ZONE_TOOLS.has(this.tool)){
+        this.areaIndex??=buildAreaIndex(this.world);
+        const result=queryArea(this.world,{type:'area',action:this.tool,from:cell,to:cell,...this.zoneTargetCommand(this.tool)},this.areaIndex);
+        color=areaPreviewColor(this.tool,result.ok?result.cells.length:0,result.ok?result.skipped:1);
+      }
+      const material=this.hover.material as THREE.MeshBasicNodeMaterial;material.color.setHex(color);material.opacity=.55;
+      this.surfaceTint.setHover(this.hover.position.x,this.hover.position.z,this.hover.scale.x,this.hover.scale.y,color,material.opacity);
       this.constructionPreview.hide(); return;
     }
     const placeable=this.tool in STRUCTURE_DEFINITIONS||['mine','uninstall','deconstruct','chop','harvest','cut'].includes(this.tool);
@@ -1217,7 +1279,10 @@ export class SceneRenderCore {
         ...(this.tool==='install'?{furniture:this.furniturePlacement}:{})};
       this.hover.visible=false;
       this.constructionPreview.update(this.world,invalidPlacement?[]:[spec],invalidPlacement?[spec]:[],this.wallCutaway);
-    } else this.constructionPreview.hide();
+    } else {this.constructionPreview.hide();
+      const material=this.hover.material as THREE.MeshBasicNodeMaterial;material.opacity=.55;
+      this.surfaceTint.setHover(this.hover.position.x,this.hover.position.z,this.hover.scale.x,this.hover.scale.y,color,material.opacity);
+    }
   }
   dispose(): void {
     if (this.disposed) return;
@@ -1247,6 +1312,7 @@ export class SceneRenderCore {
     this.crops.dispose();
     this.plants.dispose();
     if(this.grass){this.grass.mesh.removeFromParent();this.grass.dispose();this.grass=null;}
+    this.surfaceTint.dispose();
     this.resources.dispose();
     this.sceneResources.clear();
     this.structurePreparation?.clear();this.preparedStructures=undefined;

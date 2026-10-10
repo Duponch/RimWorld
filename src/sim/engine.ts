@@ -190,6 +190,7 @@ import { ITEM_DEFINITIONS } from './items.ts';
 import { constructionSkillRequired,constructionSupplied, validConstructionMaterial } from './construction-materials.ts';
 import { refreshStock } from './materials.ts';
 import { queryArea, validStorageSettings } from './designation.ts';
+import { patchStockpilePolicy,stockpileZoneId,stockpileZoneCells,stockpileCellsByZoneId,zoneCellComponents } from './stockpile-zones.ts';
 import { constructionLineCells, isLineBuildKind, type LineBuildKind } from './construction-line.ts';
 import { processNeeds, updateNeeds } from './needs.ts';
 export { HUNGER_PER_TICK, REST_PER_TICK } from './needs.ts';
@@ -214,6 +215,8 @@ function wakePlanners(world: World): void {
  * per-cell worker messages or repeated scans of every resource for every cell.
  */
 const copyStorageConditions=(settings:StorageSettings)=>({
+  ...(settings.allowFresh!==undefined?{allowFresh:settings.allowFresh}:{}),
+  ...(settings.allowRotten!==undefined?{allowRotten:settings.allowRotten}:{}),
   ...(settings.quality!==undefined?{quality:{...settings.quality}}:{}),
   ...(settings.hitPoints!==undefined?{hitPoints:{...settings.hitPoints}}:{}),
 });
@@ -222,7 +225,8 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
   const creates = command.action === 'lay-floor' || command.action === 'remove-floor' || command.action === 'mine' || command.action === 'deconstruct' || command.action === 'chop' || command.action === 'harvest' || command.action === 'cut' || command.action === 'stockpile' || command.action === 'growing';
-  if (creates && !Number.isSafeInteger(world.nextId + selection.cells.length)) return refusal('invalid-command', 'Limite des identités atteinte.');
+  const identities=command.action==='growing'?(selection.targetZoneId===undefined?zoneCellComponents(world.width,selection.cells).length:0):selection.cells.length;
+  if (creates && !Number.isSafeInteger(world.nextId + identities)) return refusal('invalid-command', 'Limite des identités atteinte.');
   let affected = selection.cells.length;
   if(command.action==='home'||command.action==='remove-home'){const cells=new Set(world.home);for(const i of selection.cells)if(command.action==='home')cells.add(i);else cells.delete(i);world.home=[...cells].sort((a,b)=>a-b);if(!world.home.length)delete world.home;} else if (isRoofArea(command.action)) { designateRoofArea(world, selection.cells, command.action); } else if (command.action === 'deconstruct') {
     const selected = new Set(selection.cells);
@@ -236,7 +240,9 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   } else if (command.action === 'mine' || command.action === 'chop' || command.action === 'harvest' || command.action === 'cut') {
     for (const index of selection.cells) world.jobs.push({ id: world.nextId++, kind: command.action, x: index % world.width, z: Math.floor(index / world.width), orientation: 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
   } else if (command.action === 'growing') {
-    world.growingZones = [...world.growingZones, { id: world.nextId++, cells: selection.cells, plant: 'rice', allowSow: true, allowCut: true }];
+    const target=world.growingZones.find(zone=>zone.id===selection.targetZoneId);
+    if(target)world.growingZones=world.growingZones.map(zone=>zone===target?{...zone,cells:[...zone.cells,...selection.cells].sort((a,b)=>a-b)}:zone);
+    else world.growingZones=[...world.growingZones,...zoneCellComponents(world.width,selection.cells).map(cells=>({id:world.nextId++,cells,plant:'rice' as const,allowSow:true,allowCut:true}))];
   } else if (command.action === 'remove-growing') {
     const selected = new Set(selection.cells);
     const changed = new Set(world.growingZones.filter(zone => zone.cells.some(c => selected.has(c))).map(z => z.id));
@@ -244,7 +250,12 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
     world.growingZones = world.growingZones.map(zone => ({...zone, cells: zone.cells.filter(c => !selected.has(c))})).filter(z => z.cells.length);
     world.growingCursor = 0;
   } else if (command.action === 'stockpile') {
-    for (const index of selection.cells) world.stockpiles.push({ id: world.nextId++, x: index % world.width, z: Math.floor(index / world.width), filters: { ...(command.filters ?? { wood: true, food: true }) },...(command.items!==undefined?{items:{...command.items}}:{}),...copyStorageConditions(command), priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });
+    const target=selection.targetZoneId===undefined?undefined:stockpileCellsByZoneId(world,selection.targetZoneId)[0];
+    const settings=target??command;
+    for(const cells of zoneCellComponents(world.width,selection.cells)){
+      const zoneId=target?stockpileZoneId(target):world.nextId;
+      for(const index of cells)world.stockpiles.push({id:world.nextId++,zoneId,x:index%world.width,z:Math.floor(index/world.width),filters:{...(settings.filters??{wood:true,food:true})},...(settings.items!==undefined?{items:{...settings.items}}:{}),...copyStorageConditions(settings),priority:settings.priority??2,capacity:settings.capacity??ITEM_DEFINITIONS.silver.stackLimit});
+    }
   } else {
     const cells = new Set(selection.cells);
     if (command.action === 'remove-stockpile') {
@@ -386,6 +397,17 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='delete-zone'){
+    if(!['stockpile','growing'].includes(command.kind)||!Number.isSafeInteger(command.zoneId))return refusal('invalid-command','Suppression de zone invalide.');
+    command={type:'area',action:command.kind==='stockpile'?'remove-stockpile':'remove-growing',targetZoneId:command.zoneId,from:{x:0,z:0},to:{x:world.width-1,z:world.height-1}};
+  }
+  if(command.type==='stockpile'&&command.enabled===false){
+    if(!validStorageSettings(command,world.schemaVersion))return refusal('invalid-storage','Politique de stockage invalide.');
+    if(!inBounds(world,command.x,command.z))return refusal('out-of-bounds','Cellule hors de la carte.');
+    const cell=world.stockpiles.find(cell=>sameCell(cell,command as Cell));
+    if(!cell)return refusal('missing-target','Aucune cellule de stockage ici.');
+    command={type:'area',action:'remove-stockpile',targetZoneId:stockpileZoneId(cell),from:{x:cell.x,z:cell.z},to:{x:cell.x,z:cell.z}};
+  }
   if(command.type==='cut-blighted-crops'){
     if(Object.keys(command).length!==1)return refusal('invalid-command','Commande de coupe invalide.');
     const result=designateBlightedCrops(world);
@@ -535,6 +557,18 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     world.growingZones = world.growingZones.map(z => z === zone ? {...z, plant:command.plant??z.plant, allowSow: command.allowSow, allowCut: command.allowCut} : z);
     wakePlanners(world); return {ok:true};
   }
+  if(command.type==='stockpile-policy'){
+    const cells=stockpileZoneCells(world,command.stockpileId);
+    if(!cells.length)return refusal('missing-target','Zone de stockage absente.');
+    if(!validStorageSettings(command.settings,world.schemaVersion))return refusal('invalid-storage','Politique de stockage invalide.');
+    const ids=new Set(cells.map(cell=>cell.id));
+    for(const cell of cells)patchStockpilePolicy(cell,command.settings);
+    for(const pawn of world.pawns)if(pawn.cooking?.storageId!==null&&pawn.cooking?.storageId!==undefined&&ids.has(pawn.cooking.storageId)){
+      pawn.cooking.storageId=null;delete pawn.cooking.storageQuantity;pawn.path=[];pawn.planCooldown=0;
+    }
+    for(const pawn of world.pawns)if(pawn.haul?.destination.type==='stockpile'&&ids.has(pawn.haul.destination.stockpileId))releaseWork(world,pawn,drops);
+    wakePlanners(world);refreshStock(world);return {ok:true,affected:cells.length};
+  }
   if (command.type === 'assign-bed') {
     const bed = world.structures.find(item => item.id === command.bedId && isBedKind(item.kind));
     const owner = world.pawns.find(item => item.id === command.pawnId);
@@ -573,8 +607,10 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (command.type === 'stockpile') {
     if(cookingCellReserved(world,command))return refusal('occupied','Case réservée par un cuisinier.');
     if (world.pawns.some(p => p.haul?.destination.type === 'aside' && !p.haul.whole && sameCell(p.haul.destination, command))) return refusal('occupied', 'Case réservée pour le dégagement des cultures.');
-    if (typeof command.enabled !== 'boolean' || !validStorageSettings(command,world.schemaVersion)) return refusal('invalid-storage', `Filtres, priorité (1–4) ou capacité (1–${ITEM_DEFINITIONS.silver.stackLimit}) invalides.`);
+    if (typeof command.enabled !== 'boolean' || !validStorageSettings(command,world.schemaVersion)) return refusal('invalid-storage', `Filtres, priorité (1–5) ou capacité (1–${ITEM_DEFINITIONS.silver.stackLimit}) invalides.`);
     const existing = world.stockpiles.find(zone => sameCell(zone, command));
+    if(!existing&&command.enabled&&!Number.isSafeInteger(world.nextId+1))return refusal('invalid-command','Limite des identités atteinte.');
+    const affectedIds=new Set(existing?stockpileZoneCells(world,existing.id).map(cell=>cell.id):[]);
     if (!command.enabled) {
       if (!existing) return refusal('missing-target', 'Aucune cellule de stockage ici.');
       removeIdentity(world.stockpiles,existing);
@@ -583,18 +619,13 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
         || world.resources.some(item => sameCell(item, command))
         || [...world.structures, ...world.jobs].some(item => !['deconstruct','uninstall'].includes(item.kind)&&occupancyOf('furniture' in item?item.furniture?.kind??item.kind:item.kind)?.zones!==true&&occupies(item,command))) return refusal('occupied', 'Stockage impossible sur cette cellule occupée ou infranchissable.');
       if (existing) {
-        if(Object.hasOwn(command,'items')){if(command.items===undefined)delete existing.items;else existing.items={...command.items};}
-        if(Object.hasOwn(command,'quality')){if(command.quality===undefined)delete existing.quality;else existing.quality={...command.quality};}
-        if(Object.hasOwn(command,'hitPoints')){if(command.hitPoints===undefined)delete existing.hitPoints;else existing.hitPoints={...command.hitPoints};}
-        existing.filters = command.filters ? { ...command.filters } : existing.filters;
-        existing.priority = command.priority ?? existing.priority;
-        existing.capacity = command.capacity ?? existing.capacity;
-      } else world.stockpiles.push({ id: world.nextId++, x: command.x, z: command.z, filters: { ...(command.filters ?? { wood: true, food: true }) },...(command.items!==undefined?{items:{...command.items}}:{}),...copyStorageConditions(command), priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });
+        for(const cell of stockpileZoneCells(world,existing.id))patchStockpilePolicy(cell,command);
+      } else {const id=world.nextId++;world.stockpiles.push({ id,zoneId:id, x: command.x, z: command.z, filters: { ...(command.filters ?? { wood: true, food: true }) },...(command.items!==undefined?{items:{...command.items}}:{}),...copyStorageConditions(command), priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });}
     }
-    for(const pawn of world.pawns)if(pawn.cooking?.storageId===existing?.id&&pawn.cooking){pawn.cooking.storageId=null;delete pawn.cooking.storageQuantity;pawn.path=[];pawn.planCooldown=0;}
+    for(const pawn of world.pawns)if(pawn.cooking?.storageId!==null&&pawn.cooking?.storageId!==undefined&&affectedIds.has(pawn.cooking.storageId)){pawn.cooking.storageId=null;delete pawn.cooking.storageQuantity;pawn.path=[];pawn.planCooldown=0;}
     // Re-evaluate pending capacity reservations atomically after the policy change.
     for (const pawn of world.pawns) if (pawn.haul?.destination.type === 'stockpile'
-      && (!destinationValid(world, pawn) || pawn.haul.destination.stockpileId === existing?.id)) releaseWork(world, pawn,drops);
+      && (!destinationValid(world, pawn) || affectedIds.has(pawn.haul.destination.stockpileId))) releaseWork(world, pawn,drops);
     for(const p of world.pawns)if(p.haul?.whole&&p.haul.destination.type==='aside'&&!destinationValid(world,p))releaseWork(world,p,drops);
     wakePlanners(world); refreshStock(world); return { ok: true };
   }

@@ -99,7 +99,7 @@ test('healroot vital clocks and physical bounds remain guard-time decisions',()=
     {growthTick:0},{growthTick:401},{growth:-.1},{growth:1},{growth:1.1},{growthThermalFactor:NaN},{species:'healroot-wild'}] as Partial<Resource>[]){
     w.schemaVersion=version as World['schemaVersion'];w.resources=[{...plant,...fields}];equalGuard(w);
   }
-  w.schemaVersion=218;w.climate={adoptedAt:0} as World['climate'];
+  w.schemaVersion=218 as World['schemaVersion'];w.climate={adoptedAt:0} as World['climate'];
   const life={since:0,age:218,darkTicks:0,nextCheck:418};
   for(const fields of [{},{since:-1},{since:401},{age:217},{darkTicks:219},{nextCheck:400},{nextCheck:601},{leaflessAt:18},{leaflessAt:19}]){
     w.resources=[{...plant,plantLife:{...life,...fields}}];equalGuard(w);

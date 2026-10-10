@@ -28,8 +28,16 @@ function prepared() {
 
 test('strict schema 175 rejects future quality and PV fields before a neutral 176 migration',()=>{
   const old=withoutPredatorDefaults(withoutTelevisionRecreation(withoutMiningSkill(camp())));command(old,{type:'stockpile',enabled:true,x:15,z:10,filters:{wood:true,food:true},priority:2});
+  // The current command creates a V219 zone marker; the historical V175 fixture
+  // must omit that future field before testing the independent V176 ranges.
+  delete old.stockpiles[0]!.zoneId;
   old.schemaVersion=(withoutTelevisionRecreation(old),175) as World['schemaVersion'];const before=structuredClone(old);
-  const resumed=deserializeWorld(JSON.stringify(old));expect(resumed).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));
+  const resumed=deserializeWorld(JSON.stringify(old)),expected=withMigratedTelevisionRecreation(structuredClone({...before,schemaVersion:SCHEMA_VERSION}));
+  // The full migration chain also enables the V217 paste meal in the exact
+  // historical meals-only profile; this is independent of storage conditions.
+  expected.foodPolicies.find(policy=>policy.id===2)!.allowed.push('nutrient-paste-meal');
+  // A single-cell legacy zone acquires its own physical ID at migration 219.
+  expected.stockpiles[0]!.zoneId=expected.stockpiles[0]!.id;expect(resumed).toEqual(expected);
   expect(old).toEqual(before);expect(resumed.stockpiles[0]!.quality).toBeUndefined();expect(resumed.stockpiles[0]!.hitPoints).toBeUndefined();
   for(const change of [
     (w:World)=>{w.stockpiles[0]!.quality={min:'awful',max:'legendary'};},

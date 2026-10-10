@@ -1,8 +1,12 @@
 import { WEAPON_QUALITIES,type WeaponQuality } from './equipment-rules.ts';
 import { pileDamage,pileMaxHp,structureMaxHp } from './thing-damage-rules.ts';
-import type { MaterialPile,Structure } from './types.ts';
+import { SCHEMA_VERSION,TICKS_PER_DAY,type MaterialPile,type Structure } from './types.ts';
+import { isPerishable,ROT_DAYS,rotAge } from './food-preservation.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
 
 export interface StorageConditions {
+  allowFresh?:boolean;
+  allowRotten?:boolean;
   quality?:{min:WeaponQuality;max:WeaponQuality};
   hitPoints?:{min:number;max:number};
 }
@@ -12,8 +16,9 @@ const qualityRank=(v:unknown):number=>typeof v==='string'?(WEAPON_QUALITIES as r
 const percent=(v:unknown):v is number=>typeof v==='number'&&Number.isInteger(v)&&v>=0&&v<=100;
 /** Validates only these optional settings, so ordinary zone/command fields
  * retain their own validators. Absence preserves historical storage rules. */
-export function validStorageConditions(value:unknown,version=176):boolean {
+export function validStorageConditions(value:unknown,version:number=SCHEMA_VERSION):boolean {
   if(!record(value))return false;
+  for(const key of ['allowFresh','allowRotten'])if(Object.hasOwn(value,key)&&(version<219||typeof value[key]!=='boolean'&&value[key]!==undefined))return false;
   const q=value.quality,h=value.hitPoints;
   if(version<176)return q===undefined&&h===undefined;
   return (q===undefined||record(q)&&rangeKeys(q)&&qualityRank(q.min)>=0&&qualityRank(q.max)>=qualityRank(q.min))
@@ -36,7 +41,11 @@ function hitPointsPercent(s:Subject):number|undefined {
 }
 /** Quality and HP are independent of category/item permissions. A subject
  * lacking the corresponding Core capability ignores that range. */
-export function storageConditionAccepts(zone:StorageConditions,subject:Subject):boolean {
+export function storageConditionAccepts(zone:StorageConditions,subject:Subject,tick?:number):boolean {
+  if(zone.allowFresh===false||zone.allowRotten===false){
+    const freshness=storageFreshness(subject,tick);
+    if(freshness==='fresh'&&zone.allowFresh===false||freshness==='rotten'&&zone.allowRotten===false)return false;
+  }
   if(zone.quality){
     const quality=subjectQuality(subject);
     if(quality!==undefined){
@@ -54,7 +63,20 @@ export function storageConditionAccepts(zone:StorageConditions,subject:Subject):
 }
 /** Bounded equivalence class for condition-sensitive storage caches. Neither
  * identity, owner, quantity nor unrounded damage affects filter acceptance. */
-export function storageConditionKey(subject:Subject):string {
+export function storageConditionKey(subject:Subject,tick?:number,includeFreshness=false):string {
   const pile=isPile(subject),quality=qualityRank(subjectQuality(subject)),hp=hitPointsPercent(subject);
-  return `${pile?subject.kind:'furniture'}:${pile?subject.item:subject.kind}:${quality}:${hp??'-'}`;
+  const key=`${pile?subject.kind:'furniture'}:${pile?subject.item:subject.kind}:${quality}:${hp??'-'}`;
+  return includeFreshness?`${key}:${storageFreshness(subject,tick)??'-'}`:key;
+}
+/** Core Fresh also matches ingestible non-drugs without CompRottable. Rotten
+ * matches retained corpses, never food whose rot stage destroys the stack.
+ * Mechanical bodies/furniture have neither capability. */
+export function storageFreshness(subject:Subject,tick?:number):'fresh'|'rotten'|undefined {
+  if(!isPile(subject))return;
+  if(subject.kind==='corpse'){
+    const threshold=subject.item==='human-corpse'?2.5*TICKS_PER_DAY:isPerishable(subject.item)?ROT_DAYS[subject.item]*TICKS_PER_DAY:undefined;
+    if(threshold===undefined)return;
+    return rotAge(subject,tick??subject.rot?.atTick??0)>=threshold?'rotten':'fresh';
+  }
+  if(isPerishable(subject.item)||ITEM_DEFINITIONS[subject.item].nutrition>0)return 'fresh';
 }

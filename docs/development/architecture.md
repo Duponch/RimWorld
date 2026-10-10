@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V301, schéma 219 : [zones et stockage](../gameplay/zones-storage-v301.md).** L’identité logique de zone reste distincte des cellules physiques qui portent réservations et transports. Les politiques sont copiées par cellule et validées en groupe avant adoption ; les commandes ciblent toute la zone. La migration regroupe les anciennes voisines cardinales de politique identique sans recréer leurs possessions. Les textures résidentes de zones, contours et tracés alimentent les teintes de l’herbe au vertex, sans boucle CPU par brin. Les états suivants sont historiques.
+
 **V283, schéma 218 : [biocarburant et générateur](../gameplay/biofuel-v283.md).** Les factures consomment des ingrédients possédés et produisent une vraie pile ; le combustible exigé est dérivé du bâtiment dans le transport partagé. Un reste entier sauvegardé conserve le débit du générateur. Gardes fichiers/Decoder communes et migration neutre, sans modification des foyers historiques ; les états suivants sont historiques.
 
 **V282, schéma 217 : [pâte nutritive et trémies](../gameplay/nutrient-paste-v282.md).** Les trémies restent des piles au sol avec réservations entrantes et priorité dédiée. Une demande de six ingrédients devient au contact un repas porté, puis conserve son identité après interruption ou disparition du distributeur. Source et chevet sont réservés ensemble ; gardes fichiers/Decoder partagées, migration des seuls profils initiaux exacts et rendu depuis les possessions confirmées. Les états suivants sont historiques.

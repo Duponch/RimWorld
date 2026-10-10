@@ -33,7 +33,8 @@ test('rectangles : sélection exacte, frontières, reprise, concurrence et conse
   const original = serializeWorld(world);
 
   // The existing single-cell command is an independent oracle for admissibility.
-  // Existing storage is deliberately skipped by the additive rectangle tool.
+  // Existing storage is skipped; a rectangle crossing one zone now extends it
+  // and admits only the cells cardinally reachable from that existing zone.
   for (const action of ['chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile'] as const) {
     const expected: number[] = [];
     for (let z = 4; z <= 8; z++) for (let x = 4; x <= 10; x++) {
@@ -42,6 +43,12 @@ test('rectangles : sélection exacte, frontières, reprise, concurrence et conse
       const command: Command = action === 'stockpile' || action === 'remove-stockpile' ? { type: 'stockpile', x, z, enabled: action === 'stockpile' }
         : action === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: action, x, z };
       if (applyCommand(copy, command).ok) expected.push(z * 16 + x);
+    }
+    if(action==='stockpile'){
+      // (9,6) is individually storable, but its four neighbours are the berry
+      // plant (9,5), tree (9,7), bed (8,6) and bed blueprint (10,6).
+      // This explicit fixture island is not part of the extension of (4,4).
+      expect(expected).toContain(6*16+9);expected.splice(expected.indexOf(6*16+9),1);
     }
     for (const rectangle of [area(action, 4, 4, 10, 8), area(action, 10, 8, 4, 4), area(action, 4, 8, 10, 4), area(action, 10, 4, 4, 8)]) {
       const preview = queryArea(world, rectangle); expect(preview.ok).toBe(true);
@@ -53,7 +60,7 @@ test('rectangles : sélection exacte, frontières, reprise, concurrence et conse
     { ...area('chop', 4, 4), from: null }, { ...area('chop', 4, 4), to: { x: NaN, z: 4 } },
     area('chop', -1, 4), area('chop', 0, 0, 16, 15), area('chop', 0.5, 4), { ...area('chop', 4, 4), action: 'wall' },
     { ...area('stockpile', 4, 4, 10, 8), filters: null }, { ...area('stockpile', 4, 4), priority: 0 },
-    { ...area('stockpile', 4, 4), capacity: 76 }, { ...area('stockpile', 4, 4), filters: { wood: true } },
+    { ...area('stockpile', 4, 4), capacity: 501 }, { ...area('stockpile', 4, 4), filters: { wood: true } },
   ]) {
     expect(applyCommand(world, bad as unknown as Command).ok).toBe(false); expect(json(world)).toBe(original);
   }
@@ -62,12 +69,22 @@ test('rectangles : sélection exacte, frontières, reprise, concurrence et conse
   const result = applyCommand(world, storage);
   expect(result).toEqual({ ok: true, affected: preview.cells.length, skipped: preview.skipped });
   expect(world.stockpiles[0]).toEqual(JSON.parse(original).stockpiles[0]);
-  expect(world.stockpiles.slice(1).every(cell => cell.filters.wood && !cell.filters.food && cell.capacity === 15 && cell.priority === 2)).toBe(true);
+  // Extending a zone keeps that zone's policy, independently of the defaults
+  // supplied for creation of an unrelated new zone.
+  const existingPolicy=JSON.parse(original).stockpiles[0];
+  for(const cell of world.stockpiles.slice(1)){
+    expect(cell.filters).toEqual(existingPolicy.filters);expect(cell.capacity).toBe(9);expect(cell.priority).toBe(4);expect(cell.zoneId).toBe(existingPolicy.zoneId);
+  }
   expect(world.stockpiles[1]!.filters).not.toBe(world.stockpiles[2]!.filters);
   const added = serializeWorld(world);
   expect(applyCommand(world, storage).ok).toBe(false); expect(json(world)).toBe(added);
   expect(json(deserializeWorld(added))).toBe(added);
   const reversed = deserializeWorld(original); applyCommand(reversed, { ...storage, from: storage.to, to: storage.from }); expect(json(reversed)).toBe(added);
+  const detached=deserializeWorld(original);
+  expect(applyCommand(detached,{...storage,from:{x:11,z:10},to:{x:12,z:10}})).toEqual({ok:true,affected:2,skipped:0});
+  expect(detached.stockpiles.slice(1).every(cell=>cell.filters.wood&&!cell.filters.food&&cell.capacity===15&&cell.priority===2)).toBe(true);
+  expect(detached.stockpiles[1]!.zoneId).toBe(detached.stockpiles[2]!.zoneId);
+  expect(detached.stockpiles[1]!.zoneId).not.toBe(detached.stockpiles[0]!.zoneId);
 
   // A full 250² rectangle includes the far boundary and preserves exact resource identities.
   const large = createWorld(7, 250, 250);

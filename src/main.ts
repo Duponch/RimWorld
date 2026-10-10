@@ -48,7 +48,9 @@ import { createScoutUI } from './ui/scout-panel';
 import { createGroupPanel } from './ui/group-panel';
 import { createGroupAdapters, readGroupPanelSnapshot } from './ui/group-adapter';
 import { createQuestUI } from './ui/quests';
-import { mountStorageItemControls,readStorageItemControls,mountStorageConditionControls,readStorageConditionControls } from './ui/storage-item-controls';
+import { mountStorageControls, type MountedStorageControls as StorageControls, type StorageControlSettings } from './ui/storage-item-controls';
+import { stockpileZoneCells, stockpileZoneId, stockpileCellsByZoneId } from './sim/stockpile-zones';
+import './ui/zone-controls.css';
 import './ui/storage-item-controls.css';
 import { updateUnfinishedInspection } from './ui/unfinished-inspection';
 import { createSocialInspection,updateSocialInspection } from './ui/social-inspection';
@@ -164,8 +166,11 @@ const resourceLabels = { 'wild-plant':'Plante sauvage', healroot:'Racine médici
 const params = new URLSearchParams(location.search);
 const diagnosticStart = params.has('scenario');
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = gameLayout();
-mountStorageItemControls(document.getElementById('stockpile-items')!);
-mountStorageConditionControls(document.getElementById('stockpile-items')!);
+const creationStorageControls=mountStorageControls(document.getElementById('stockpile-items')!,{priority:2,filters:{wood:true,food:true,unfinished:true,textile:true,apparel:true,weapon:true,medicine:true,neutroamine:true,chemfuel:true,component:true,'advanced-component':true,steel:true,gold:true,plasteel:true,blocks:true,furniture:true,silver:true}},()=>{});
+let selectedStorageControls:StorageControls|undefined;
+let selectedStoragePending=0;
+let storageClipboard:StorageControlSettings|undefined;
+let zoneEditTarget:number|undefined;
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 // Only this fixed Worker/client and the fixed MAIN consumers can reach these
 // decoders. The command facade exposes no adoption or World callback entry.
@@ -604,6 +609,7 @@ function setPanel(panel: Panel, preserveTool = false) {
   if (panel === 'work' && snapshot) updateWorkPanel(snapshot,carriedPatientsOf(snapshot));
 }
 function applyTool(tool: Tool) {
+  zoneEditTarget=undefined;renderer?.setZoneTarget(undefined);
   shootingControls.cancel();
   if(tool!=='install'){installationId=undefined;renderer?.setFurniturePlacement(undefined);}
   currentTool = tool;
@@ -626,7 +632,7 @@ function setTool(tool: Tool) {
   setCategory(definition.category);
   setPanel('architect');
   applyTool(tool);
-  if(definition.category==='orders')setPanel(null,true);
+  if(definition.category==='orders'||definition.category==='zones')setPanel(null,true);
 }
 function selectPawn(id: number) {
   selectPawns({ids:[id],additive:false,toggle:false},true);
@@ -692,9 +698,8 @@ function pickCell(x: number, z: number) {
       if(isBuildableFloor(tool))return client.command({type:'area',action:'lay-floor',floor:tool,from:{x,z},to:{x,z}});
       if(tool==='remove-floor')return client.command({type:'area',action:'remove-floor',from:{x,z},to:{x,z}});
       if(tool==='install'){if(installationId===undefined)throw new Error('Sélectionnez un meuble à installer.');return client.command({type:'install',structureId:installationId,x,z,orientation:['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(furnitureObject(snapshot!,installationId)?.kind??'')?0:placementOrientation}).then(()=>{applyTool('select');setPanel(null);});}
-      if (tool==='home'||tool==='remove-home'||isRoofArea(tool) || tool === 'haul-chunks' || tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z}});
-      if (tool === 'stockpile') return client.command({ type: 'stockpile', x, z, enabled: true, ...readStorageSettings('stockpile') });
-      if (tool === 'remove-stockpile') return client.command({ type: 'stockpile', x, z, enabled: false });
+      if (tool==='home'||tool==='remove-home'||isRoofArea(tool) || tool === 'haul-chunks' || tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z},...(zoneEditTarget===undefined?{}:{targetZoneId:zoneEditTarget})});
+      if (tool==='stockpile'||tool==='remove-stockpile')return client.command({type:'area',action:tool,from:{x,z},to:{x,z},...(zoneEditTarget===undefined?{}:{targetZoneId:zoneEditTarget}),...(tool==='stockpile'?readStorageSettings('stockpile'):{})});
       const objects = tool==='deconstruct'||tool==='uninstall' ? snapshot?.structures.filter(s=>footprintCells(s).some(c=>c.x===x&&c.z===z))??[] : [];
       const target = objects.find(s=>s.kind!=='power-conduit')??objects[0];
       return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool as JobKind, ...(target?{targetId:target.id}:{}), orientation: tool==='mini-turret'||tool==='sandbags'||tool==='solar-generator'||tool==='power-conduit'||tool==='power-switch'||tool==='wood-generator'||tool==='chemfuel-generator'||tool==='sun-lamp'||tool==='standing-lamp'||tool==='door'||tool==='autodoor'||tool==='passive-cooler'?0:placementOrientation, x, z, ...(constructionUI.material(tool) ? {material:constructionUI.material(tool)} : {}) });
@@ -711,7 +716,7 @@ function designateArea(action: AreaAction, from: Cell, to: Cell) {
   if (!snapshot || replacingWorld || frontMenu.isOpen()) return;
   void attempt(async () => {
     let response:string|undefined;
-    try {response = await client.command({ type: 'area', action, from, to, ...(action==='lay-floor'&&isBuildableFloor(currentTool)?{floor:currentTool}:{}), ...(action === 'stockpile' ? readStorageSettings('stockpile') : {}) });}
+    try {response = await client.command({ type: 'area', action, from, to, ...(action==='lay-floor'&&isBuildableFloor(currentTool)?{floor:currentTool}:{}), ...(action === 'stockpile' ? readStorageSettings('stockpile') : {}),...(zoneEditTarget===undefined?{}:{targetZoneId:zoneEditTarget}) });}
     catch(error) {
       if(error instanceof Error && error.message==='Aucune case compatible dans ce rectangle.')return;
       throw error;
@@ -727,17 +732,22 @@ function clearSelection() {
   selectedPawn = undefined; selectedCell = undefined;selectedObject=undefined;renderer?.setSelectedObject(undefined);
   rebuildInspector();renderState();
 }
-function readStorageSettings(prefix: string) {
-  const capacity = Number(el<HTMLInputElement>(`${prefix}-capacity`).value);
-  if (!Number.isInteger(capacity) || capacity < 1 || capacity > ITEM_DEFINITIONS.silver.stackLimit) throw new Error(`La capacité doit être un entier entre 1 et ${ITEM_DEFINITIONS.silver.stackLimit}.`);
-  const conditions=readStorageConditionControls(el(`${prefix}-items`));
-  return {
-    filters: { chemfuel:el<HTMLInputElement>(`${prefix}-chemfuel`).checked, 'mech-corpse':el<HTMLInputElement>(`${prefix}-mech-corpse`).checked, silver:el<HTMLInputElement>(`${prefix}-silver`).checked, corpse:el<HTMLInputElement>(`${prefix}-corpse`).checked, unfinished:el<HTMLInputElement>(`${prefix}-unfinished`).checked, textile:el<HTMLInputElement>(`${prefix}-textile`).checked, apparel:el<HTMLInputElement>(`${prefix}-apparel`).checked, weapon:el<HTMLInputElement>(`${prefix}-weapon`).checked, medicine:el<HTMLInputElement>(`${prefix}-medicine`).checked, neutroamine:el<HTMLInputElement>(`${prefix}-neutroamine`).checked, component: el<HTMLInputElement>(`${prefix}-component`).checked, 'advanced-component':el<HTMLInputElement>(`${prefix}-advanced-component`).checked, blocks: el<HTMLInputElement>(`${prefix}-blocks`).checked, steel: el<HTMLInputElement>(`${prefix}-steel`).checked, gold:el<HTMLInputElement>(`${prefix}-gold`).checked, plasteel:el<HTMLInputElement>(`${prefix}-plasteel`).checked, chunk: el<HTMLInputElement>(`${prefix}-chunk`).checked, wood: el<HTMLInputElement>(`${prefix}-wood`).checked, food: el<HTMLInputElement>(`${prefix}-food`).checked, furniture: el<HTMLInputElement>(`${prefix}-furniture`).checked },
-    items:readStorageItemControls(el(`${prefix}-items`)),
-    quality:conditions.quality,hitPoints:conditions.hitPoints,
-    priority: Number(el<HTMLSelectElement>(`${prefix}-priority`).value), capacity,
-  };
+function readStorageSettings(_prefix:string){return creationStorageControls.read();}
+function editZone(kind:'stockpile'|'growing',id:number,shrink=false):void {
+  setTool(kind==='stockpile'?(shrink?'remove-stockpile':'stockpile'):(shrink?'remove-growing':'growing'));
+  zoneEditTarget=id;renderer?.setZoneTarget(id);
 }
+function zoneActions(kind:'stockpile'|'growing',id:number):HTMLElement {
+  const actions=document.createElement('div');actions.className='zone-actions';
+  for(const [label,shrink] of [['Agrandir la zone',false],['Réduire la zone',true]] as const){
+    const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.zoneAction=shrink?'shrink':'expand';
+    button.onclick=()=>editZone(kind,id,shrink);actions.append(button);
+  }
+  const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer la zone';remove.dataset.zoneAction='delete';
+  remove.onclick=()=>void attempt(async()=>{await client.command({type:'delete-zone',kind,zoneId:id});clearSelection();});actions.append(remove);
+  return actions;
+}
+
 function rotatePlacement(direction = 1) {
   placementOrientation = ((placementOrientation + direction + 4) % 4) as Orientation;
   renderer?.setPlacementRotation(placementOrientation);
@@ -745,9 +755,10 @@ function rotatePlacement(direction = 1) {
 }
 function rebuildInspector() {
   dismissTooltip();
+  selectedStorageControls?.dispose();selectedStorageControls=undefined;selectedStoragePending=0;
   const panel = el('inspector');
   panel.hidden = currentPanel !== null || (!selection.ids.size && !selectedCell);
-  panel.classList.remove('colonist-inspector-host','animal-inspector-host','mechanoid-inspector-host','cell-inspector-host');
+  panel.classList.remove('colonist-inspector-host','animal-inspector-host','mechanoid-inspector-host','cell-inspector-host','stockpile-inspector-host');
   delete panel.dataset.colonistInspectorPawn;
   delete panel.dataset.colonistInspectorTab;
   delete panel.dataset.mechanoidId;
@@ -795,36 +806,28 @@ function rebuildInspector() {
     }
   } else if (selectedCell) {
     panel.classList.add('cell-inspector-host');
-    panel.innerHTML = `<div class="cell-summary"><div class="cell-card"><div class="panel-heading cell-heading"><span class="cell-illustration ui-icon" aria-hidden="true"></span><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="cell-description"></div><p id="cell-materials"></p><p id="cell-job"></p></div><div class="cell-actions" role="group" aria-label="Commandes de l’objet"><button id="weapon-permission" class="secondary-action" hidden></button><button id="cell-chop" class="secondary-action" hidden>Couper du bois</button><button id="cell-harvest" class="secondary-action" hidden>Récolter</button><button id="cell-cut" class="secondary-action" hidden>Déraciner</button><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button></div></div><div id="cell-storage" hidden><p id="cell-storage-quantity"></p>${storageSettings('selected-stockpile')}<button id="update-stockpile" class="secondary-action">Appliquer les réglages</button><button id="delete-stockpile" class="secondary-action">Retirer cette réserve</button></div>`;
+    panel.innerHTML = `<div class="cell-summary"><div class="cell-card"><div class="panel-heading cell-heading"><span class="cell-illustration ui-icon" aria-hidden="true"></span><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="cell-description"></div><p id="cell-materials"></p><p id="cell-job"></p></div><div class="cell-actions" role="group" aria-label="Commandes de l’objet"><button id="weapon-permission" class="secondary-action" hidden></button><button id="cell-chop" class="secondary-action" hidden>Couper du bois</button><button id="cell-harvest" class="secondary-action" hidden>Récolter</button><button id="cell-cut" class="secondary-action" hidden>Déraciner</button><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button></div></div><div id="cell-storage" hidden><div id="selected-stockpile-items"></div></div>`;
     const storage = selectedObject?.kind==='stockpile'?snapshot?.stockpiles.find(item => item.id===selectedObject!.id):undefined;
-    mountStorageItemControls(el('selected-stockpile-items'),storage?.items);
-    mountStorageConditionControls(el('selected-stockpile-items'),storage);
-    if (storage) {
-      el<HTMLInputElement>('selected-stockpile-silver').checked=storage.filters.silver??false;
-      el<HTMLInputElement>('selected-stockpile-corpse').checked=storage.filters.corpse??false;
-      el<HTMLInputElement>('selected-stockpile-mech-corpse').checked=storage.filters['mech-corpse']??false;
-      el<HTMLInputElement>('selected-stockpile-unfinished').checked=storage.filters.unfinished??false;
-      el<HTMLInputElement>('selected-stockpile-textile').checked = storage.filters.textile??false;
-      el<HTMLInputElement>('selected-stockpile-wood').checked = storage.filters.wood;
-      el<HTMLInputElement>('selected-stockpile-food').checked = storage.filters.food;
-      el<HTMLInputElement>('selected-stockpile-furniture').checked = storage.filters.furniture??false;
-      el<HTMLInputElement>('selected-stockpile-blocks').checked = storage.filters.blocks??false;
-      el<HTMLInputElement>('selected-stockpile-apparel').checked=storage.filters.apparel??false;
-      el<HTMLInputElement>('selected-stockpile-weapon').checked=storage.filters.weapon??false;
-      el<HTMLInputElement>('selected-stockpile-medicine').checked=storage.filters.medicine??false;
-      el<HTMLInputElement>('selected-stockpile-neutroamine').checked=storage.filters.neutroamine??false;
-      el<HTMLInputElement>('selected-stockpile-chemfuel').checked=storage.filters.chemfuel??false;
-      el<HTMLInputElement>('selected-stockpile-component').checked = storage.filters.component??false;
-      el<HTMLInputElement>('selected-stockpile-advanced-component').checked = storage.filters['advanced-component']??false;
-      el<HTMLInputElement>('selected-stockpile-steel').checked = storage.filters.steel??false;
-      el<HTMLInputElement>('selected-stockpile-gold').checked = storage.filters.gold??false;
-      el<HTMLInputElement>('selected-stockpile-plasteel').checked = storage.filters.plasteel??false;
-      el<HTMLInputElement>('selected-stockpile-chunk').checked = storage.filters.chunk??false;
-      el<HTMLSelectElement>('selected-stockpile-priority').value = String(storage.priority);
-      el<HTMLInputElement>('selected-stockpile-capacity').value = String(storage.capacity);
+    if(storage){
+      panel.classList.add('stockpile-inspector-host');
+      const stockpileId=storage.id;let pending=0;
+      const sendSettings=(settings:StorageControlSettings)=>{
+        pending++;selectedStoragePending=pending;
+        void attempt(async()=>{
+          let refused=false;
+          try{await client.command({type:'stockpile-policy',stockpileId,settings});}
+          catch(error){refused=true;throw error;}
+          finally{pending--;if(selectedStorageControls===controls){selectedStoragePending=pending;const current=snapshot?.stockpiles.find(cell=>cell.id===stockpileId);if(!pending&&current)controls.show(current,refused);renderState();}}
+        });
+      };
+      const controls=mountStorageControls(el('selected-stockpile-items'),storage,sendSettings);selectedStorageControls=controls;
+      const commands=zoneActions('stockpile',stockpileZoneId(storage));
+      const copy=document.createElement('button');copy.type='button';copy.textContent='Copier les réglages';copy.dataset.zoneAction='copy';
+      copy.onclick=()=>{storageClipboard=structuredClone(controls.read());rebuildInspector();renderState();};commands.append(copy);
+      const paste=document.createElement('button');paste.type='button';paste.textContent='Coller les réglages';paste.dataset.zoneAction='paste';paste.disabled=!storageClipboard;
+      paste.onclick=()=>{if(storageClipboard){const settings=structuredClone(storageClipboard);controls.show(settings);sendSettings(settings);}};commands.append(paste);
+      panel.querySelector('.cell-card')?.append(commands);
     }
-    el('update-stockpile').onclick = () => { if (selectedCell) { const cell = { ...selectedCell }; void attempt(async () => { await client.command({ type: 'stockpile', ...cell, enabled: true, ...readStorageSettings('selected-stockpile') }); notify('Réserve mise à jour.'); }); } };
-    el('delete-stockpile').onclick = () => { if (selectedCell) { const cell = { ...selectedCell }; void attempt(async () => { await client.command({ type: 'stockpile', ...cell, enabled: false }); rebuildInspector(); renderState(); }); } };
     el('cell-deconstruct').onclick=()=>{if(selectedCell)void attempt(()=>client.command({type:'designate',kind:'deconstruct',...selectedCell!}));};
     el('cell-cancel').onclick=()=>{if(selectedCell)void attempt(()=>client.command({type:'cancel',...selectedCell!}));};
     if(selectedObject?.kind==='structure'){
@@ -845,7 +848,7 @@ function rebuildInspector() {
       if(fire.fuel)panel.append(fireControls(fire,send));if(stationRecipe(fire))panel.append(billControls(fire,send));
     }
     const zone = selectedObject?.kind==='growing'?snapshot?.growingZones.find(z=>z.id===selectedObject!.id):selectedObject?.kind==='structure'?snapshot?.growingZones.find(z=>z.basinId===selectedObject!.id):undefined;
-    if (zone) panel.append(growingControls(zone, command => void attempt(async () => { await client.command(command); rebuildInspector(); renderState(); })));
+    if(zone){panel.append(growingControls(zone,command=>void attempt(async()=>{await client.command(command);renderState();})));if(zone.basinId===undefined)panel.querySelector('.cell-card')?.append(zoneActions('growing',zone.id));}
   } else panel.replaceChildren();
   if(selectedCell&&selectedObject){
     const heading=panel.querySelector('.cell-heading');
@@ -1082,8 +1085,8 @@ function renderState() {
       updateGatherSpotControls(el('inspector'),structure);
       if(structure){updateDoorControls(el('inspector'),world,selectedCell);updatePenControls(el('inspector'),world,selectedCell);roomInspection.update(el('inspector'), world, selectedCell);}
       const zone=selectedObject.kind==='growing'?world.growingZones.find(z=>z.id===selectedObject!.id):undefined;
-      el('cell-title').textContent = packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : pile ? ITEM_DEFINITIONS[pile.item].label : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]}` : zone ? 'Zone de culture' : storage ? 'Réserve' : 'Massif rocheux';
-      let cellDescription = resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Capacité : ${storage.capacity}` : '';
+      el('cell-title').textContent = packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : pile ? ITEM_DEFINITIONS[pile.item].label : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]}` : zone ? 'Zone de culture' : storage ? `Zone de stockage ${stockpileZoneId(storage)}` : 'Massif rocheux';
+      let cellDescription = resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Taille : ${stockpileZoneCells(world,storage.id).length} cases` : '';
       let cellHealth:CellHealth|undefined;
       const inspectedBuilding=packed?.building??structure;
       if(inspectedBuilding){
@@ -1158,11 +1161,7 @@ function renderState() {
       el('cell-cancel').hidden=!job||job.kind==='repair'||job.kind==='fix-breakdown'||cancelTarget?.id!==job.id||selectedObject.kind!=='job'&&job.furniture?.structureId!==selectedObject.id;
       el('cell-storage').hidden = !storage;
       if(structure)updateBedControls(el('inspector'),world,structure);
-      if (storage) {
-        const stored=world.piles.filter(p=>p.owner.type==='ground'&&p.owner.x===x&&p.owner.z===z).reduce((sum,p)=>sum+p.quantity,0);
-        const furniture=world.packed.some(p=>p.owner.type==='ground'&&p.owner.x===x&&p.owner.z===z)?1:0;
-        el('cell-storage-quantity').textContent = `Réserve · ${stored+furniture} / ${storage.capacity} unités`;
-      }
+      if(storage&&!selectedStoragePending)selectedStorageControls?.show(storage);
     }
   }
   if(currentPanel===null){const target=selectedPawn===undefined?selectedObject?.kind==='pile'&&world.piles.some(p=>p.id===selectedObject!.id&&p.humanCorpse)||selectedObject?.kind==='structure'&&world.structures.some(s=>s.id===selectedObject!.id&&s.kind==='grave')?selectedCell:undefined:world.pawns.find(p=>p.id===selectedPawn);
@@ -1366,6 +1365,7 @@ document.addEventListener('visibilitychange', () => { music.setHidden(document.h
 el('wall-cutaway').onclick = () => { wallCutaway = !wallCutaway; renderer?.setWallCutaway(wallCutaway); el('wall-cutaway').textContent = wallCutaway ? 'Murs : coupés' : 'Murs : hauts'; el('wall-cutaway').setAttribute('aria-pressed', String(wallCutaway)); };
 el('roof-toggle').onclick=()=>{const button=el('roof-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));button.textContent=visible?'Toits : visibles':'Toits : masqués';renderer?.setRoofsVisible(visible);};
 el('foliage-toggle').onclick = () => { foliageVisible = !foliageVisible; renderer?.setFoliageVisible(foliageVisible); el('foliage-toggle').textContent = foliageVisible ? 'Feuillage' : 'Troncs'; el('foliage-toggle').setAttribute('aria-pressed', String(!foliageVisible)); };
+el('zones-toggle').onclick=()=>{const button=el('zones-toggle'),visible=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(visible));button.textContent=visible?'Zones : visibles':'Zones : masquées';renderer?.setZonesVisible(visible);};
 el('view-home').onclick = () => { const pawn = snapshot?.pawns[0]; if (pawn) renderer?.focusPawn(pawn.id); };
 el('camera-mode').onclick = () => {
   const perspective = renderer?.toggleCameraMode() === 'perspective';
@@ -1430,12 +1430,18 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
   const speedChanged=currentSpeed!==speed;
   const role=(p:Pawn|undefined)=>p?p.prisoner?'prisoner':isColonist(p)?'colonist':'other':'absent';
   const roleChanged=selectedPawn!==undefined&&role(snapshot?.pawns.find(p=>p.id===selectedPawn))!==role(world.pawns.find(p=>p.id===selectedPawn));
+  let zoneAnchorChanged=false;
+  if(!replaced&&selectedObject?.kind==='stockpile'&&!world.stockpiles.some(cell=>cell.id===selectedObject!.id)){
+    const old=snapshot?.stockpiles.find(cell=>cell.id===selectedObject!.id);
+    const replacement=old?stockpileCellsByZoneId(world,stockpileZoneId(old))[0]:undefined;
+    if(replacement){selectedObject={kind:'stockpile',id:replacement.id};selectedCell={x:replacement.x,z:replacement.z};renderer?.setSelectedObject(selectedObject);zoneAnchorChanged=true;}
+  }
   snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
   if(soundEnabled)foliageAmbience.adopt(world,true);
   music.setMood(musicMood(world));
   const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id)&&!world.wildlife?.animals.some(a=>a.id===id)&&!world.mechanoids?.some(m=>m.id===id))||!!selectedObject&&!mapObjectExists(world,selectedObject);
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;renderer?.setSelectedObject(undefined);orderMenu.close();rebuildInspector();}
-  else if(roleChanged){orderMenu.close();rebuildInspector();}
+  else if(roleChanged||zoneAnchorChanged){orderMenu.close();rebuildInspector();}
   renderer?.setWorld(world,replaced,speed,motion,true);
   syncAudioSources(world);
   if(changed)renderer?.setSelectedPawns(selection.ids);
@@ -1525,7 +1531,7 @@ async function prepareWorldView(): Promise<void> {
     renderer.onInteractionCancel=()=>orderMenu.close();
     renderer.onContext=(cell,x,y,queue,targetId)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner);if(selected.some(p=>p.draft))void orderMenu.openTactical(snapshot,new Set(selected.map(p=>p.id)),cell,x,y,queue,targetId);else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
     renderer.onArea = designateArea;
-    renderer.onExitOrder=()=>{applyTool('select');setPanel(null);};
+    renderer.onExitOrder=()=>{applyTool('select');setPanel(null);clearSelection();};
     renderer.onBuildLine = (kind, from, to, material) => {
       if (!snapshot || replacingWorld || frontMenu.isOpen()) return;
       void attempt(async () => {

@@ -17,12 +17,13 @@ export function mayImproveStorage(world:World):boolean {
   // Keep the historical fast path when no range is active. Geometry/category
   // candidates are shared by item; state admission is cached separately per
   // immutable equivalence class, for this decision only.
-  const conditional=world.stockpiles.some(z=>z.quality!==undefined||z.hitPoints!==undefined);
+  const freshnessConditional=world.stockpiles.some(z=>z.allowFresh===false||z.allowRotten===false);
+  const conditional=freshnessConditional||world.stockpiles.some(z=>z.quality!==undefined||z.hitPoints!==undefined);
   const candidates=conditional?new Map<ItemId,Map<string,StockpileCell>>():undefined;
   const items=conditional?[...new Set([...piles.values()].map(p=>p.item))]:Object.keys(ITEM_DEFINITIONS) as ItemId[];
   for(const zone of world.stockpiles) {
     const pile=piles.get(zone.z*world.width+zone.x);
-    const policy=candidates?`${zone.quality?.min??'-'}:${zone.quality?.max??'-'}:${zone.hitPoints?.min??'-'}:${zone.hitPoints?.max??'-'}`:'';
+    const policy=candidates?`${zone.quality?.min??'-'}:${zone.quality?.max??'-'}:${zone.hitPoints?.min??'-'}:${zone.hitPoints?.max??'-'}:${zone.allowFresh??true}:${zone.allowRotten??true}`:'';
     for(const item of items) {
       const definition=ITEM_DEFINITIONS[item];
       if(storageAccepts(zone,item)&&(!pile||pile.item===item)&&Math.min(zone.capacity,definition.stackLimit)>(pile?.quantity??0)){
@@ -37,16 +38,16 @@ export function mayImproveStorage(world:World):boolean {
   const stateBest=new Map<string,number>();
   for(const pile of piles.values())if(automaticallyHaulable(pile)&&!isPrisonFood(pile)&&pile.owner.type==='ground') {
     const zone=zones.get(pile.owner.z*world.width+pile.owner.x);
-    const current=Math.max(zone&&storageAccepts(zone,pile)&&pile.quantity<=zone.capacity?zone.priority:0,hoppers.has(pile.owner.z*world.width+pile.owner.x)&&hopperAccepts(pile.item)?3:0);
+    const current=Math.max(zone&&storageAccepts(zone,pile,world.tick)&&pile.quantity<=zone.capacity?zone.priority:0,hoppers.has(pile.owner.z*world.width+pile.owner.x)&&hopperAccepts(pile.item)?3:0);
     if(current<3&&hopperAccepts(pile.item)&&wanted.some(h=>hopperCapacity(world,h.id,pile.item)>0))return true;
     const coarse=best.get(pile.item)??0;
     if(coarse<=current)continue;
     if(!candidates)return true;
-    const key=storageConditionKey(pile);
+    const key=storageConditionKey(pile,world.tick,freshnessConditional);
     let admitted=stateBest.get(key);
     if(admitted===undefined){
       admitted=0;
-      for(const destination of candidates.get(pile.item)?.values()??[])if(destination.priority>admitted&&storageConditionAccepts(destination,pile)){
+      for(const destination of candidates.get(pile.item)?.values()??[])if(destination.priority>admitted&&storageConditionAccepts(destination,pile,world.tick)){
         admitted=destination.priority;if(admitted===coarse)break;
       }
       stateBest.set(key,admitted);
