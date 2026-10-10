@@ -1,120 +1,28 @@
-import { isAnimalMeat } from '../sim/biome-items';
-import { blockParts } from './block-presentation';
-import { chunkParts } from './chunk-presentation';
-import { foldedApparel } from './character-apparel';
-import type { ApparelItem } from '../sim/apparel-rules';
-import { weaponVisual } from './weapon-shape';
-import type { PileSurface } from './pile-surfaces';
-import { ITEM_DEFINITIONS,type ItemId } from '../sim/items';
-import type { MaterialKind } from '../sim/types';
-import { WORLD_SCALE } from '../world/scale';
-import { tagPlacementTargets, type Placement } from './primitives';
-import type { CorpseStage } from './corpse-presentation';
-import type { CorpseState } from '../sim/corpses';
+import {itemGeometry} from './item-presentation';
+import type {PileSurface} from './pile-surfaces';
+import type {ItemId} from '../sim/items';
+import type {MaterialKind} from '../sim/types';
+import {tagPlacementTargets,type Placement} from './primitives';
+import type {CorpseStage} from './corpse-presentation';
+import type {CorpseState} from '../sim/corpses';
 
 export interface PileBundle {x:number;z:number;kind:MaterialKind;item:ItemId;quantity:number;supplied:boolean;surface?:PileSurface;corpseStage?:CorpseStage;facing?:number;corpse?:CorpseState;targetId?:number}
 
-/** Static content rebuilt only when a chunk's pile signature changes. Every
- * item shares that chunk's already resident mesh and material. */
+/** Rebuilt only at pile adoption. Resident shape batches draw the same authored
+ * parts as portraits and carried cargo; bodies retain their dedicated rigs. */
 export function pileParts(bundles:readonly PileBundle[]):Placement[] {
-  const logs: Placement[] = [], ends: Placement[] = [], crates: Placement[] = [], food: Placement[] = [];
-  for (const bundle of bundles) {
-    const starts=[logs.length,ends.length,crates.length,food.length];
-    // Materials already delivered to a blueprint are tucked beside its work
-    // marker. A loose ground object instead belongs at the centre of its cell.
-    const x = bundle.supplied ? bundle.x + (bundle.kind === 'wood' ? -.12 : .2) : bundle.x;
-    const z = bundle.z + (bundle.supplied ? .16 : 0);
-    const height = 0.12 + Math.min(1, bundle.quantity / ITEM_DEFINITIONS[bundle.item].stackLimit) * (WORLD_SCALE.pileMaxHeight - 0.12);
-    if (bundle.kind === 'wood') {
-      const rows = Math.max(1, Math.min(3, Math.ceil(bundle.quantity / 25)));
-      for (let row = 0; row < rows; row++) for (let col = 0; col < 2; col++) {
-        const y = 0.065 + row * 0.13, lz = z + (col - 0.5) * 0.145;
-        logs.push({ x, z: lz, y, sx: WORLD_SCALE.pileWidth, sy: 0.12, sz: 0.12, color: row % 2 ? 0x9d794d : 0x896841 });
-        ends.push({ x: x + WORLD_SCALE.pileWidth / 2 + 0.003, z: lz, y, sx: 0.012, sy: 0.095, sz: 0.095 });
+  const result:Placement[]=[];
+  for(const bundle of bundles){
+    const start=result.length,x=bundle.x+(bundle.supplied?(bundle.kind==='wood'?-.12:.2):0),z=bundle.z+(bundle.supplied?.16:0);
+    for(const part of itemGeometry(bundle.item,bundle.quantity,{x:bundle.x,z:bundle.z})){
+      const p={...part,x:part.x+x,z:part.z+z};
+      if(bundle.surface){const surface=bundle.surface;
+        p.x=bundle.x+(p.x-bundle.x)*surface.scale+surface.x;p.z=bundle.z+(p.z-bundle.z)*surface.scale+surface.z;
+        p.y+=surface.y;p.sx=(p.sx??1)*surface.scale;p.sz=(p.sz??1)*surface.scale;
       }
-    } else if(bundle.kind==='corpse'){
-      // Human bodies already belong to PawnLayer. Animal bodies now belong to
-      // the same resident species rig as living wildlife, for every owner.
-    } else if(bundle.item==='unfinished-gun'){
-      food.push({x,z,y:.07,sx:.62,sy:.10,sz:.24,color:0x63777d},{x:x-.20,z,y:.16,sx:.08,sy:.09,sz:.29,color:0x9f8160},{x:x+.12,z,y:.13,sx:.33,sy:.06,sz:.08,color:0xa9b5b8});
-    } else if(bundle.kind==='unfinished'){
-      food.push({x,z,y:.08,sx:.48,sy:.12,sz:.50,color:0xd8c8a2},{x:x+.15,z:z-.13,y:.17,sx:.12,sy:.08,sz:.12,color:0x5d716e});
-    } else if(bundle.kind==='textile'){
-      food.push({x:bundle.x,z,y:height/2,sx:.55,sy:height,sz:.4,color:ITEM_DEFINITIONS[bundle.item].color});
-      food.push({x:bundle.x,z,y:height+.012,sx:.08,sy:.025,sz:.42,color:0x8a846a});
-    } else if(isAnimalMeat(bundle.item)){
-      const slabs=Math.max(1,Math.min(3,Math.ceil(bundle.quantity/25)));
-      for(let row=0;row<slabs;row++){
-        food.push({x:bundle.x,z,y:.055+row*.075,sx:.48,sy:.075,sz:.36,color:ITEM_DEFINITIONS[bundle.item].color},
-          {x:bundle.x-.08,z,y:.095+row*.075,sx:.055,sy:.007,sz:.3,color:0xe1c5ab});
-      }
-    } else if(bundle.item==='chemfuel'){
-      const cans=Math.max(1,Math.min(3,Math.ceil(bundle.quantity/50)));
-      for(let i=0;i<cans;i++){
-        const dx=(i-(cans-1)/2)*.22;
-        food.push({x:bundle.x+dx,z,y:.17,sx:.19,sy:.30,sz:.34,color:ITEM_DEFINITIONS.chemfuel.color},
-          {x:bundle.x+dx,z:z-.09,y:.35,sx:.12,sy:.06,sz:.14,color:0x526b5e},
-          {x:bundle.x+dx,z:z+.07,y:.20,sx:.20,sy:.045,sz:.12,color:0x6b8266});
-      }
-    } else if(bundle.item==='nutrient-paste-meal'){
-      const trays=Math.max(1,Math.min(3,Math.ceil(bundle.quantity/4)));
-      for(let row=0;row<trays;row++)food.push(
-        {x:bundle.x,z,y:.055+row*.11,sx:.53,sy:.075,sz:.43,color:0xc2c8b3},
-        {x:bundle.x,z,y:.105+row*.11,sx:.40,sy:.06,sz:.31,color:ITEM_DEFINITIONS[bundle.item].color});
-    } else if(bundle.kind==='apparel'){
-      for(const p of foldedApparel(bundle.item as ApparelItem))food.push({x:x+p.center[0]!,y:.07+p.center[1]!,z:z+p.center[2]!,sx:p.size[0]!,sy:p.size[1]!,sz:p.size[2]!,color:p.color});
-    } else if(bundle.kind==='weapon'){
-      for(const p of weaponVisual(bundle.item)?.parts??[])food.push({x:x+p.center[0],y:.07+p.center[2],z:z+p.center[1],sx:p.size[0],sy:p.size[2],sz:p.size[1],color:p.color});
-    } else if(bundle.kind==='silver'){
-      const rows=Math.max(1,Math.min(3,Math.ceil(bundle.quantity/170)));
-      for(let row=0;row<rows;row++)for(const dx of [-.11,.11])food.push({x:bundle.x+dx,z,y:.045+row*.08,sx:.18,sy:.075,sz:.30,color:row%2?0xa5adb5:ITEM_DEFINITIONS.silver.color});
-    } else if(bundle.kind==='medicine') {
-      food.push({x:bundle.x,z,y:.14,sx:.42,sy:.26,sz:.36,color:ITEM_DEFINITIONS[bundle.item].color});
-      food.push({x:bundle.x,z,y:.285,sx:.23,sy:.03,sz:.07,color:0xf0eee0},{x:bundle.x,z,y:.285,sx:.07,sy:.03,sz:.23,color:0xf0eee0});
-    } else if(bundle.kind==='component') {
-      food.push({x:bundle.x,z,y:.14,sx:.48,sy:.26,sz:.4,color:ITEM_DEFINITIONS.component.color});
-      food.push({x:bundle.x,z,y:.29,sx:.2,sy:.07,sz:.26,color:0x637d77});
-    } else if(bundle.kind==='advanced-component') {
-      food.push({x:bundle.x,z,y:.13,sx:.45,sy:.23,sz:.38,color:ITEM_DEFINITIONS['advanced-component'].color});
-      food.push({x:bundle.x,z,y:.28,sx:.31,sy:.07,sz:.28,color:0xb2d4d2},
-        {x:bundle.x,z,y:.33,sx:.10,sy:.05,sz:.10,color:0xd8ab67});
-    } else if(bundle.kind==='gold'||bundle.kind==='plasteel') {
-      const color=ITEM_DEFINITIONS[bundle.item].color;
-      for(let row=0;row<Math.min(3,Math.ceil(bundle.quantity/25));row++)food.push({x:bundle.x,z,y:.055+row*.115,sx:.59,sy:.105,sz:.35,color:row%2?color:bundle.kind==='gold'?0xd9bd65:0x91adb4});
-    } else if(bundle.kind==='steel') {
-      for(let row=0;row<Math.ceil(bundle.quantity/25);row++)food.push({x:bundle.x,z,y:.07+row*.13,sx:.62,sy:.12,sz:.36,color:row%2?0x6b7a80:ITEM_DEFINITIONS.steel.color});
-    } else if(bundle.kind==='blocks') {
-      food.push(...blockParts(bundle.x,z,bundle.item,bundle.quantity));
-    } else if(bundle.kind==='chunk') {
-      food.push(...chunkParts(bundle.x,z,bundle.item));
-    } else {
-      crates.push({ x, z, y: height / 2, sx: 0.5, sy: height, sz: 0.45 });
-      for (const dx of [-0.12, 0.12]) for (const dz of [-0.11, 0.11]) food.push({ x: x + dx, z: z + dz, y: height + 0.025, sx: 0.18, sy: 0.1, sz: 0.16, color: ITEM_DEFINITIONS[bundle.item].color });
+      result.push(p);
     }
-    // Composite silhouettes have authored local offsets (and can rotate), so
-    // centring only their anchor still leaves logs, crates and tools off-centre.
-    // Rebalance their bounds once, when the pile chunk changes, never per frame.
-    if(!bundle.supplied){
-      let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
-      for(const [index,parts] of [logs,ends,crates,food].entries())for(let i=starts[index]!;i<parts.length;i++){
-        const p=parts[i]!,angle=p.ry??0,c=Math.abs(Math.cos(angle)),s=Math.abs(Math.sin(angle));
-        const halfX=(c*(p.sx??1)+s*(p.sz??1))/2,halfZ=(s*(p.sx??1)+c*(p.sz??1))/2;
-        minX=Math.min(minX,p.x-halfX);maxX=Math.max(maxX,p.x+halfX);
-        minZ=Math.min(minZ,p.z-halfZ);maxZ=Math.max(maxZ,p.z+halfZ);
-      }
-      if(Number.isFinite(minX)){
-        const shiftX=bundle.x-(minX+maxX)/2,shiftZ=bundle.z-(minZ+maxZ)/2;
-        for(const [index,parts] of [logs,ends,crates,food].entries())for(let i=starts[index]!;i<parts.length;i++){
-          parts[i]!.x+=shiftX;parts[i]!.z+=shiftZ;
-        }
-      }
-    }
-    if(bundle.surface)for(const [index,parts] of [logs,ends,crates,food].entries())for(let i=starts[index]!;i<parts.length;i++) {
-      const p=parts[i]!,surface=bundle.surface;
-      p.x=bundle.x+(p.x-bundle.x)*surface.scale+surface.x;p.z=bundle.z+(p.z-bundle.z)*surface.scale+surface.z;
-      p.y+=surface.y;p.sx=(p.sx??1)*surface.scale;p.sz=(p.sz??1)*surface.scale;
-    }
-    if(bundle.targetId!==undefined)for(const [index,parts] of [logs,ends,crates,food].entries())tagPlacementTargets(parts,starts[index]!,bundle.targetId);
+    if(bundle.targetId!==undefined)tagPlacementTargets(result,start,bundle.targetId);
   }
-  return [...logs,...ends.map(p=>({...p,color:0xc9ad77})),...crates.map(p=>({...p,color:0x987e51})),...food];
+  return result;
 }

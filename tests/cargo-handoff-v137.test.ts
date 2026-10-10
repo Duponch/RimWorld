@@ -7,6 +7,7 @@ import { PawnLayer } from '../src/render/PawnLayer';
 import { MotionTimeline } from '../src/render/MotionTimeline';
 import { WORLD_SCALE } from '../src/world/scale';
 import { CARRY_CAPACITY } from '../src/sim/definitions';
+import { itemCargoKind } from '../src/render/item-presentation';
 
 const hand=()=>({x:10.3,y:1.02,z:10.4,yaw:.4});
 function baseWorld():World {
@@ -69,10 +70,10 @@ test('partial output keeps the reduced load in hand and animates only its deposi
   const held=layer.feedbackSource!.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
   const transient=layer.group.children[4] as THREE.Mesh;
   const transfer=transient.geometry.getAttribute('aTransferCargo') as THREE.InstancedBufferAttribute;
-  expect(held.getX(0)).toBe(1);expect(held.getY(0)).toBeCloseTo(Math.min(1,12/CARRY_CAPACITY));
+  expect(held.getX(0)).toBe(itemCargoKind('wood'));expect(held.getY(0)).toBeCloseTo(Math.min(1,12/CARRY_CAPACITY));
   expect(held.getW(0)).toBe(0); // the remaining load is still attached to the hand
   expect((transient.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(1);
-  expect(transfer.getX(0)).toBe(1);expect(transfer.getY(0)).toBeCloseTo(8/CARRY_CAPACITY);
+  expect(transfer.getX(0)).toBe(itemCargoKind('wood'));expect(transfer.getY(0)).toBeCloseTo(8/CARRY_CAPACITY);
   expect(layer.presentCargo(101+CARGO_HANDOFF_TICKS,current)).toBe(true);
   expect((transient.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(0);
   layer.dispose();
@@ -157,7 +158,7 @@ test('resident cargo buffer moves on the confirmed clock without per-frame uploa
   layer.update(current,1,false);
   const geometry=layer.feedbackSource!,cargo=geometry.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
   const handoff=(layer.group.children[1] as THREE.Mesh).geometry.getAttribute('aHandoffTo') as THREE.InstancedBufferAttribute;
-  expect(cargo.getX(0)).toBe(1);expect(cargo.getW(0)).toBeLessThan(0);
+  expect(cargo.getX(0)).toBe(itemCargoKind('wood'));expect(cargo.getW(0)).toBeLessThan(0);
   expect(handoff.getZ(0)).toBe(11);
   const version=cargo.version;
   expect(layer.presentCargo(101.5,current)).toBe(false);

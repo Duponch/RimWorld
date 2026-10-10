@@ -1,14 +1,16 @@
 import { iconPosition, type UiIcon } from './visual-identity';
+import {modelIconUrl,UI_ATLAS_URL} from './pictograms';
 
 export type CellHealth = { current: number; maximum: number; label: string; valueText?: string };
 
 /** Presentation only. Keep engine facts in the selected object's card. */
-export function presentCellDescription(panel: HTMLElement, text: string, icon: UiIcon, health?: CellHealth): void {
+export function presentCellDescription(panel: HTMLElement, text: string, icon: UiIcon, health?: CellHealth,model?:string): void {
   const art = panel.querySelector<HTMLElement>('.cell-illustration');
-  if (art && art.dataset.icon !== icon) {
-    art.dataset.icon = icon;
+  if (art && art.dataset.icon !== (model??icon)) {
+    art.dataset.icon = model??icon;
     const [x, y] = iconPosition(icon);
-    art.style.backgroundPosition = `${x}% ${y}%`;
+    art.style.backgroundImage=`url('${model?modelIconUrl(model):UI_ATLAS_URL}')`;
+    art.style.backgroundSize=model?'contain':'400% 500%';art.style.backgroundPosition=model?'center':`${x}% ${y}%`;
   }
   const description = panel.querySelector<HTMLElement>('#cell-description');
   if (!description) return;

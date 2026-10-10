@@ -4,8 +4,9 @@ import { QUALITY_LABELS, type WeaponQuality } from '../sim/equipment-rules';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import type { MaterialPile, World } from '../sim/types';
 import { perspectiveDetailRange } from './map-overlay-detail';
+import {DEFAULT_ITEM_LABEL_MIN_CELL_PIXELS,itemLabelMinCellPixels} from '../ui/item-label-visibility';
 
-export const PILE_LABEL_MIN_CELL_PIXELS = 96;
+export const PILE_LABEL_MIN_CELL_PIXELS = DEFAULT_ITEM_LABEL_MIN_CELL_PIXELS;
 
 const QUALITY_SHORT: Readonly<Record<WeaponQuality, string>> = {
   awful: 'dépl.', poor: 'médi.', normal: 'norm.', good: 'bon',
@@ -70,6 +71,8 @@ export class MapLabelsOverlay {
   private readonly lastView = new Matrix4();
   private readonly lastProjection = new Matrix4();
   private readonly lastPosition = new Vector3();
+  private minCellPixels=PILE_LABEL_MIN_CELL_PIXELS;
+  setMinCellPixels(value:number):void {const threshold=itemLabelMinCellPixels(value);if(this.minCellPixels!==threshold){this.minCellPixels=threshold;this.drawn=false;}}
 
   constructor(host: HTMLElement) {
     this.canvas = document.createElement('canvas');
@@ -113,7 +116,7 @@ export class MapLabelsOverlay {
   draw(world: World | null | undefined, camera: OrthographicCamera | PerspectiveCamera, cellPixels: number, width: number, height: number): void {
     // RimWorld shows item overlays at its closest detail levels. At other
     // scales the early exit avoids the pile scan and all canvas operations.
-    if (!world || cellPixels < PILE_LABEL_MIN_CELL_PIXELS || !width || !height) {
+    if (!world || cellPixels < this.minCellPixels || !width || !height) {
       if (this.visible) { this.canvas.hidden = true; this.visible = false; }
       this.drawn = false;
       return;
@@ -141,8 +144,8 @@ export class MapLabelsOverlay {
     ctx.strokeStyle = 'rgba(24, 29, 27, .85)';
     ctx.fillStyle = '#fff4d9';
     this.frustum.setFromProjectionMatrix(this.projectionView.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse), camera.coordinateSystem, camera.reversedDepth);
-    const maxDistance = camera instanceof PerspectiveCamera
-      ? perspectiveDetailRange(camera, height, PILE_LABEL_MIN_CELL_PIXELS) : Infinity;
+    const maxDistance = camera instanceof PerspectiveCamera && this.minCellPixels>0
+      ? perspectiveDetailRange(camera, height, this.minCellPixels) : Infinity;
     const maxDistanceSquared = maxDistance * maxDistance;
     const occupied = new Map<number, number>();
     for (const chunk of this.chunks) {

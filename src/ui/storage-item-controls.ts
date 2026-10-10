@@ -1,4 +1,5 @@
 import { ITEM_DEFINITIONS, type ItemId } from '../sim/items';
+import {modelIconUrl} from './pictograms';
 import { QUALITY_LABELS,WEAPON_QUALITIES,type WeaponQuality } from '../sim/equipment-rules';
 import type { StorageFilters } from '../sim/types';
 import { STORAGE_FILTER_TREE,STORAGE_LEAVES,setStorageNode,storageNodeState,storageSearchNodes,storageTreePermissions,storageTreeSelection,type StorageFilterNode,type StorageLeafId } from './storage-filter-tree';
@@ -245,7 +246,7 @@ export function mountStorageControls(parent:HTMLElement,settings:StorageControlS
       check.dataset.storageCategory=node.id;children=document.createElement('ul');children.id=`${prefix}-${node.id}`;
       toggle=document.createElement('button');toggle.type='button';toggle.className='storage-core-disclosure';toggle.setAttribute('aria-controls',children.id);toggle.setAttribute('aria-label',`Déplier ou replier ${node.label}`);line.append(toggle);
       for(const child of node.children)build(child,children,depth+1);row.append(children);
-    }else {check.dataset.storageItem=node.item!;const spacer=document.createElement('span');spacer.className='storage-core-disclosure-space';line.append(spacer);}
+    }else {check.dataset.storageItem=node.item!;const spacer=document.createElement('span');spacer.className='storage-core-disclosure-space';line.append(spacer);if(node.item&&node.item!=='furniture'&&!['corpse','mech-corpse'].includes(ITEM_DEFINITIONS[node.item].kind)){const picture=document.createElement('img');picture.className='storage-item-model';picture.src=modelIconUrl(`item-${node.item}`);picture.alt='';picture.width=22;picture.height=22;picture.loading='lazy';label.prepend(picture);}}
     line.append(label);const entry={node,check,row,children,toggle,open:false};checks.set(node.id,entry);
     listen(check,'change',()=>{setStorageNode(node,selected,check.checked);refreshChecks();emit();});
     if(toggle)listen(toggle,'click',()=>{entry.open=!entry.open;refreshSearch();});

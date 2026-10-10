@@ -15,6 +15,7 @@ import { BoxMesh } from '../src/render/BoxMesh';
 import { clearGroup } from '../src/render/primitives';
 import { SnapshotEncoder,SnapshotDecoder } from '../src/bridge/snapshots';
 import { PresentationChanges } from '../src/bridge/presentation-changes';
+import {itemCargoKind} from '../src/render/item-presentation';
 
 test('the three weapons share distinct authored ground/cargo/equipment shapes in resident geometry',()=>{
   const body=pawnGeometry(),cargo=cargoGeometry(),dye=body.getAttribute('dye'),kind=cargo.getAttribute('cargoKind');
@@ -24,15 +25,15 @@ test('the three weapons share distinct authored ground/cargo/equipment shapes in
   expect(count(dye,PARKA_HOOD_DYE)).toBe(36);
   for(const weapon of WEAPON_VISUALS) {
     expect([...Object.values(APPAREL_CARGO),...Object.values(BIOME_CARGO)]).not.toContain(weapon.cargo);
-    expect(count(dye,weapon.dye)).toBe(weapon.parts.length*36);expect(count(kind,weapon.cargo)).toBe(weapon.parts.length*36);
+    expect(count(dye,weapon.dye)).toBe(weapon.parts.length*36);expect(count(kind,itemCargoKind(weapon.item))).toBe(weapon.parts.length*36);
     const ground=pileParts([{x:5,z:5,item:weapon.item,kind:'weapon',quantity:1,supplied:false}]);
     expect(ground).toHaveLength(weapon.parts.length);
     weapon.parts.forEach((part,i)=>expect(ground[i]).toMatchObject({sx:part.size[0],sy:part.size[2],sz:part.size[1],color:part.color}));
     spans.push(Math.max(...ground.map(p=>p.x+p.sx!/2))-Math.min(...ground.map(p=>p.x-p.sx!/2)));
   }
   expect(spans[1]).toBeGreaterThan(spans[0]!);expect(spans[1]).toBeGreaterThan(spans[2]!);expect(spans[0]).not.toBe(spans[2]);
-  expect(count(kind,30)).toBe(72);
-  const silver=pileParts([{x:5,z:5,item:'silver',kind:'silver',quantity:500,supplied:false}]);expect(silver).toHaveLength(6);
+  expect(count(kind,itemCargoKind('silver'))).toBe(384);
+  const silver=pileParts([{x:5,z:5,item:'silver',kind:'silver',quantity:500,supplied:false}]);expect(silver).toHaveLength(4);expect(silver.every(part=>part.shape==='item-disc')).toBe(true);
   body.dispose();cargo.dispose();
 });
 
@@ -49,16 +50,17 @@ test('inventory remains hidden while real cargo/equipment and ground transfers r
   for(const variant of WEAPON_VISUALS) {
     weapon.item=variant.item;weapon.weapon!.hitPoints=variant.item==='plasteel-knife'?280:100;weapon.owner={type:'equipment',pawnId:p.id};check(variant.equipment,0);
     expect(equipmentProjection(w).get(p.id)).toBe(weapon);expect(equipmentDescription(weapon)).toContain(`${weapon.weapon!.hitPoints}/${weapon.weapon!.hitPoints} PV`);
-    weapon.owner={type:'pawn',pawnId:p.id};check(0,variant.cargo);
+    weapon.owner={type:'pawn',pawnId:p.id};check(0,itemCargoKind(variant.item));
     weapon.owner={type:'inventory',pawnId:p.id};check(0,0);expect(equipmentProjection(w).has(p.id)).toBe(false);
   }
-  silver.owner={type:'pawn',pawnId:p.id};check(0,30);silver.owner={type:'inventory',pawnId:p.id};check(0,0);
+  silver.owner={type:'pawn',pawnId:p.id};check(0,itemCargoKind('silver'));silver.owner={type:'inventory',pawnId:p.id};check(0,0);
   // Exercise the actual pile projection without constructing a WebGPU renderer.
   const boxes=new BoxBatches(),pileGroup=new THREE.Group(),facade={boxes,pileGroup,pileChunks:new Map(),pawns:layer};
   const update=(ColonyRenderer.prototype as unknown as {updatePiles:(world:World,newMap:boolean)=>void}).updatePiles;
-  update.call(facade,w,true);const floor=pileGroup.children.flatMap(c=>c.children) as BoxMesh[];expect(floor.every(m=>m.activeCount===0)).toBe(true);
-  silver.owner={type:'ground',x:4,z:4};update.call(facade,w,false);expect(floor.reduce((n,m)=>n+m.activeCount,0)).toBe(2);
-  silver.owner={type:'inventory',pawnId:p.id};update.call(facade,w,false);expect(floor.every(m=>m.activeCount===0)).toBe(true);
+  const floor=()=>pileGroup.children.flatMap(c=>c.children) as BoxMesh[];
+  update.call(facade,w,true);expect(floor().every(m=>m.activeCount===0)).toBe(true);
+  silver.owner={type:'ground',x:4,z:4};update.call(facade,w,false);expect(floor().reduce((n,m)=>n+m.activeCount,0)).toBe(4);
+  silver.owner={type:'inventory',pawnId:p.id};update.call(facade,w,false);expect(floor().every(m=>m.activeCount===0)).toBe(true);
   boxes.dispose();clearGroup(layer.group);
 });
 

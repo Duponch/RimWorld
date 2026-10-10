@@ -81,7 +81,7 @@ test('population growth retains GPU meshes/materials and shared poses through ca
   const partial=meshes.find(mesh=>mesh.name==='Partial material releases — resident transfer batch');
   expect(partial).toBeDefined();
   const pawnBatches=meshes.filter(mesh=>mesh!==partial);
-  let materialDisposals=0;for(const material of materials)(material as THREE.Material).addEventListener('dispose',()=>materialDisposals++);
+  let materialDisposals=0;for(const material of materials.flat())material.addEventListener('dispose',()=>materialDisposals++);
   for(const count of [4,5,16,17,33,2,0,3]) {
     w.pawns=Array.from({length:count},(_,i)=>original[i]??startingPawn(2000+i,`P${i}`,10+i%10,10,0,55));
     layer.setSelected(new Set(w.pawns.slice(0,1).map(p=>p.id)));layer.update(w,.5,false);

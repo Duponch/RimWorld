@@ -29,6 +29,7 @@ import { BrowserSaveRepository } from './ui/save-repository';
 import { fetchTestColonies, readSaveFile, readTestColony } from './ui/test-colonies';
 import { createFrontMenu } from './ui/front-menu';
 import {DESIGNATION_VISIBILITY_KEY,designationMinCellPixels,designationVisibilityLabel} from './ui/designation-visibility';
+import {ITEM_LABEL_VISIBILITY_KEY,itemLabelMinCellPixels,itemLabelVisibilityLabel} from './ui/item-label-visibility';
 import type { PawnTrack } from './bridge/motion-tracks';
 import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
 import { INFECTION_UNIT,infectionStage } from './sim/infection-rules';
@@ -113,7 +114,6 @@ import { BIOME_LABELS,HILLINESS_LABELS } from './sim/site';
 import { choppable,harvestable,isPlant,PLANT_DEFINITIONS } from './sim/plants';
 import './style.css';
 import './ui/colonist-inspector.css';
-import './ui/visual-identity.css';
 import './ui/cell-inspector.css';
 import './ui/inspection-dossiers.css';
 import './ui/journal-inspection.css';
@@ -154,6 +154,7 @@ import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell, Com
 import { TICKS_PER_DAY } from './sim/types';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from './sim/map-config';
 import { footprintCells, queryJobStatus, queryPawnStatus } from './sim/index';
+import {STRUCTURE_DEFINITIONS} from './sim/definitions';
 import { gameLayout, storageSettings, toolDefinitions, workColumns } from './ui/layout';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 import { updateMiniTurretControls } from './ui/mini-turret-controls';
@@ -161,6 +162,7 @@ import { miniTurretView,turretSeconds } from './sim/mini-turret-presentation';
 
 import { updateRecreationInspection } from './ui/recreation-inspection';
 import { gatherSpotControls, updateGatherSpotControls } from './ui/gather-spot-controls';
+import './ui/visual-identity.css';
 const jobLabels: Record<JobKind, string> = { 'biofuel-refinery':'Construction de la raffinerie de biocarburant','chemfuel-generator':'Construction du générateur à biocarburant', 'nutrient-paste-dispenser':'Construction du distributeur de pâte nutritive',hopper:'Construction de la trémie', 'orbital-beacon':'Construction de la balise orbitale','comms-console':'Construction de la console de communication', 'deep-drill':'Construction de foreuse profonde','ground-scanner':'Construction du scanner souterrain', 'vitals-monitor':'Construction du moniteur vital', 'drug-lab':'Construction du laboratoire de chimie', 'hydroponics-basin':'Construction du bac hydroponique', 'mini-turret':'Construction de mini-tourelle automatique', 'tube-television':'Construction de télévision cathodique', sandbags: 'sacs de sable', fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', bed: 'Construction du lit', 'hospital-bed':'Construction du lit d’hôpital', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const rotatableTools=new Set<Tool>(['biofuel-refinery','nutrient-paste-dispenser','hopper','comms-console','deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','tube-television','art-bench','machining-table','hi-tech-research-bench','fabrication-bench','grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bed','hospital-bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
@@ -357,6 +359,7 @@ const MUSIC_ENABLED_PREFERENCE_KEY = 'lisiere.audio.music.enabled.v1';
 const MUSIC_VOLUME_PREFERENCE_KEY = 'lisiere.audio.music.volume.v1';
 let texturesEnabled = true;
 let designationIconThreshold = 32;
+let itemLabelThreshold = 96;
 let groundGrassEnabled = true;
 let soundEnabled = true;
 let soundVolume = 0.75;
@@ -365,6 +368,7 @@ let musicVolume = 0.5;
 let audioUnlockWarningShown = false;
 try {
   designationIconThreshold=designationMinCellPixels(localStorage.getItem(DESIGNATION_VISIBILITY_KEY));
+  itemLabelThreshold=itemLabelMinCellPixels(localStorage.getItem(ITEM_LABEL_VISIBILITY_KEY));
   texturesEnabled = localStorage.getItem(TEXTURE_PREFERENCE_KEY) !== 'false';
   groundGrassEnabled = localStorage.getItem(GROUND_GRASS_PREFERENCE_KEY) !== 'false';
   soundEnabled = localStorage.getItem(SOUND_ENABLED_PREFERENCE_KEY) !== 'false';
@@ -430,6 +434,16 @@ function musicMood(world: World): MusicMood {
 }
 const textureToggle = el<HTMLInputElement>('textures-enabled');
 const designationSlider=el<HTMLInputElement>('designation-visibility');
+const itemLabelSlider=el<HTMLInputElement>('item-label-visibility');
+itemLabelSlider.value=String(itemLabelThreshold);
+el('item-label-visibility-value').textContent=itemLabelVisibilityLabel(itemLabelThreshold);
+function setItemLabelMinCellPixels(value:number):boolean {
+  itemLabelThreshold=itemLabelMinCellPixels(value);
+  itemLabelSlider.value=String(itemLabelThreshold);
+  el('item-label-visibility-value').textContent=itemLabelVisibilityLabel(itemLabelThreshold);
+  renderer?.setItemLabelMinCellPixels(itemLabelThreshold);
+  try {localStorage.setItem(ITEM_LABEL_VISIBILITY_KEY,String(itemLabelThreshold));return true;}catch{return false;}
+}
 designationSlider.value=String(designationIconThreshold);
 el('designation-visibility-value').textContent=designationVisibilityLabel(designationIconThreshold);
 function setDesignationMinCellPixels(value:number):boolean {
@@ -492,6 +506,8 @@ const frontMenu = createFrontMenu(frontHost, {
   getSaves: () => session.saves(),
   getTexturesEnabled: () => texturesEnabled,
   getDesignationMinCellPixels:()=>designationIconThreshold,
+  getItemLabelMinCellPixels:()=>itemLabelThreshold,
+  onItemLabelMinCellPixelsChange:setItemLabelMinCellPixels,
   onDesignationMinCellPixelsChange:setDesignationMinCellPixels,
   onTexturesEnabledChange: setTexturesEnabled,
   getGroundGrassEnabled: () => groundGrassEnabled,
@@ -1193,7 +1209,12 @@ function renderState() {
           :pile.kind==='component'||pile.kind==='advanced-component'?'component'
           :pile.kind==='silver'?'silver':pile.kind==='chunk'||pile.kind==='blocks'?'blocks':'layers';
       }
-      presentCellDescription(el('inspector'), cellDescription, inspectionIcon, cellHealth);
+      const tile=world.tiles[z*world.width+x];
+      const illustration=structure?.kind??packed?.building.kind??(pile&&!['corpse','mech-corpse'].includes(pile.kind)?`item-${pile.item}`:undefined)
+        ??(resource?`resource-${resource.species??resource.kind}`:undefined)
+        ??(selectedObject.kind==='rock'?`mountain-${tile?.ore??tile?.stone??'granite'}`:undefined)
+        ??(zone?'growing':storage?'stockpile':job&&Object.hasOwn(STRUCTURE_DEFINITIONS,job.kind)?job.kind:undefined);
+      presentCellDescription(el('inspector'), cellDescription, inspectionIcon, cellHealth,illustration);
       if(structure?.fuel)updateFireControls(el('inspector'),structure);
       updateMiniTurretControls(el('inspector'),world,structure,c=>void attempt(async()=>{await client.command(c);renderState();}));
       if(structure&&stationRecipe(structure))updateBillControls(el('inspector'),structure,world);
@@ -1378,6 +1399,7 @@ el('new-world-form').onsubmit = event => { event.preventDefault(); void attempt(
 el('show-diagnostics').onclick = () => { const hidden = !el('metrics').hidden; el('metrics').hidden = hidden; el('show-diagnostics').textContent = hidden ? 'Afficher les diagnostics' : 'Masquer les diagnostics'; };
 textureToggle.onchange = () => { if (!setTexturesEnabled(textureToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 designationSlider.oninput=()=>{if(!setDesignationMinCellPixels(Number(designationSlider.value)))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
+itemLabelSlider.oninput=()=>{if(!setItemLabelMinCellPixels(Number(itemLabelSlider.value)))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
 groundGrassToggle.onchange = () => { if (!setGroundGrassEnabled(groundGrassToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 const soundToggle = el<HTMLInputElement>('sound-enabled');
 const soundVolumeSlider = el<HTMLInputElement>('sound-volume');
@@ -1573,6 +1595,7 @@ async function prepareWorldView(): Promise<void> {
     renderer.onCompatibilityWarning = message => notify(message, true);
     renderer.setTexturesEnabled(texturesEnabled);
     renderer.setDesignationMinCellPixels(designationIconThreshold);
+    renderer.setItemLabelMinCellPixels(itemLabelThreshold);
     renderer.onAudioFrame = view => {
       lastAudioCamera=view.camera;
       audio.updateCamera(view.camera);

@@ -1,13 +1,9 @@
 import { HAIR_PARTS,BEARD_PARTS } from './pawn-appearance-shape';
-import { BIOME_CARGO } from './biome-cargo';
-import { CHEMFUEL_CARGO } from './biofuel-parts';
 import * as THREE from 'three/webgpu';
 import { PAWN_MODEL_SCALE } from '../world/scale';
-import { ITEM_DEFINITIONS } from '../sim/items';
-import { CHUNK_ITEMS } from './chunk-presentation';
-import { BLOCK_ITEMS } from './block-presentation';
-import { foldedApparel,APPAREL_CARGO } from './character-apparel';
-import { APPAREL,type ApparelItem } from '../sim/apparel-rules';
+import { APPAREL } from '../sim/apparel-rules';
+import {ITEM_VISUAL_IDS,itemCargoKind,itemGeometry,centreItemParts} from './item-presentation';
+import {placementGeometry} from './item-portrait';
 import { WEAPON_VISUALS } from './weapon-shape';
 
 // Disjoint from weapon tags; -4 is the bolt-action rifle, not the parka hood.
@@ -191,10 +187,13 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
 
 /** Cargo is a second instanced batch sharing the pawn pose attributes. Its
  * attachment and interpolation stay on the GPU, including during camera motion.
- * These bundles indicate kind/load; individual logs are not individual items.
+ * Parts share the ground model. Individual logs are not individual items.
  */
 export function cargoGeometry(): THREE.InstancedBufferGeometry {
   const data: number[] = [];
+  const ranges:CargoGeometryRange[]=[],byKind:Record<number,CargoGeometryRange>={};
+  const begin=(kind:number)=>({kind,start:data.length/11,count:0,materialIndex:0});
+  const finish=(range:CargoGeometryRange)=>{range.count=data.length/11-range.start;Object.freeze(range);ranges.push(range);byKind[range.kind]=range;};
   const part = (size: number[], center: number[], kind: number, color: number,corpsePartMask=0) => {
     const box = new THREE.BoxGeometry(size[0], size[1], size[2]).toNonIndexed();
     const positions = box.getAttribute('position'), normals = box.getAttribute('normal');
@@ -205,37 +204,28 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
     );
     box.dispose();
   };
-  part([0.56, 0.105, 0.12], [0, -0.025, -0.08], 1, 0xa37b4d);
-  part([0.56, 0.105, 0.12], [0, -0.025, 0.08], 1, 0xb08c5d);
-  part([0.54, 0.105, 0.12], [0, 0.07, 0], 1, 0xc6a477);
-  part([0.07, 0.22, 0.3], [0.14, 0.015, 0], 1, 0x66584b);
-  part([0.44, 0.2, 0.32], [0, -0.035, 0], 2, 0x947653);
-  for (const x of [-0.1, 0.1]) for (const z of [-0.075, 0.075]) {
-    part([0.15, 0.1, 0.12], [x, 0.09, z], 2, x * z > 0 ? 0xba7e65 : 0xb9705c);
-  }
+  // Packed furniture keeps its historical attachment and shader kind.
+  const packedRange=begin(4);
   part([0.60,0.44,0.46],[0,0,0],4,0xb6996c);
   part([0.12,0.46,0.48],[0,0,0],4,0x6f634e);
-  part([0.38, 0.16, 0.26], [0, 0, 0], 3, 0xc7b96b);
-  part([0.09, 0.17, 0.27], [0, 0, 0], 3, 0x86804e);
-  part([.5,.22,.32],[0,0,0],24,ITEM_DEFINITIONS.cloth.color);
-  part([.07,.24,.34],[0,0,0],24,0x8a846a);
-  part([.55,.2,.3],[0,0,0],11,ITEM_DEFINITIONS.steel.color);
-  part([.48,.26,.4],[0,0,0],17,ITEM_DEFINITIONS.component.color);
-  part([.38,.30,.34],[0,0,0],CHEMFUEL_CARGO,ITEM_DEFINITIONS.chemfuel.color);
-  part([.18,.065,.16],[0,.18,-.07],CHEMFUEL_CARGO,0x526b5e);
-  part([.39,.045,.12],[0,.02,.07],CHEMFUEL_CARGO,0x6b8266);
-  part([.2,.07,.26],[0,.16,0],17,0x637d77);
-  (['herbal-medicine','medicine','glitterworld-medicine'] as const).forEach((item,i)=>{part([.38,.25,.3],[0,0,0],18+i,ITEM_DEFINITIONS[item].color);part([.2,.03,.065],[0,.14,0],18+i,0xf0eee0);part([.065,.03,.2],[0,.14,0],18+i,0xf0eee0);});
-  for(const variant of WEAPON_VISUALS)for(const p of variant.parts)part([...p.size],[...p.center],variant.cargo,p.color);
-  for(const x of [-.11,.11])part([.18,.075,.30],[x,0,0],30,ITEM_DEFINITIONS.silver.color);
-  for(const [item,kind] of Object.entries(APPAREL_CARGO))for(const p of foldedApparel(item as ApparelItem))part(p.size,p.center,kind,p.color);
-  part([.48,.10,.50],[0,0,0],25,0xd8c8a2);part([.12,.08,.12],[.15,.09,-.13],25,0x5d716e);
-  BLOCK_ITEMS.forEach((item,i)=>{part([.27,.17,.36],[-.145,0,0],12+i,ITEM_DEFINITIONS[item].color);part([.27,.17,.36],[.145,0,0],12+i,ITEM_DEFINITIONS[item].color);});
-  CHUNK_ITEMS.forEach((item,i)=>{part([.52,.34,.42],[0,0,0],5+i,ITEM_DEFINITIONS[item].color);part([.22,.2,.27],[.18,-.05,-.12],5+i,ITEM_DEFINITIONS[item].color);});
-  part([.52,.07,.35],[0,0,0],28,ITEM_DEFINITIONS['light-leather'].color);
-  part([.38,.18,.32],[0,0,0],29,ITEM_DEFINITIONS['hare-meat'].color);
-  for(const [item,kind] of Object.entries(BIOME_CARGO)){
-    if(!item.endsWith('-corpse'))part([.5,.12,.36],[0,0,0],kind,ITEM_DEFINITIONS[item as keyof typeof ITEM_DEFINITIONS].color);
+  finish(packedRange);
+  // Immutable all-item geometry is built once for the two resident cargo
+  // batches. No meshes, selection, or portrait work is performed per frame.
+  const transform=new THREE.Matrix4(),rotation=new THREE.Quaternion(),point=new THREE.Vector3(),normal=new THREE.Vector3(),normalMatrix=new THREE.Matrix3();
+  for(const item of ITEM_VISUAL_IDS){
+    const kind=itemCargoKind(item);
+    const range=begin(kind);
+    for(const p of centreItemParts(itemGeometry(item),true)){
+      const source=placementGeometry(p),positions=source.getAttribute('position'),normals=source.getAttribute('normal'),index=source.getIndex(),tint=new THREE.Color(p.color??0xb8ac96);
+      rotation.setFromAxisAngle(new THREE.Vector3(0,1,0),p.ry??0);
+      transform.compose(new THREE.Vector3(p.x,p.y,p.z),rotation,new THREE.Vector3(p.sx??1,p.sy??1,p.sz??1));normalMatrix.getNormalMatrix(transform);
+      for(let i=0;i<(index?.count??positions.count);i++){
+        const vertex=index?index.getX(i):i;
+        point.fromBufferAttribute(positions,vertex).applyMatrix4(transform);normal.fromBufferAttribute(normals,vertex).applyMatrix3(normalMatrix).normalize();
+        data.push(point.x,point.y,point.z,normal.x,normal.y,normal.z,tint.r,tint.g,tint.b,kind,0);
+      }
+    }
+    finish(range);
   }
   const vertices = new THREE.InterleavedBuffer(new Float32Array(data), 11);
   const geometry = new THREE.InstancedBufferGeometry();
@@ -244,8 +234,30 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   geometry.setAttribute('color', new THREE.InterleavedBufferAttribute(vertices, 3, 6));
   geometry.setAttribute('cargoKind', new THREE.InterleavedBufferAttribute(vertices, 1, 9));
   geometry.setAttribute('corpsePartMask', new THREE.InterleavedBufferAttribute(vertices, 1, 10));
+  geometry.userData.cargoRanges=Object.freeze(ranges);
+  geometry.userData.cargoRangesByKind=Object.freeze(byKind);
   geometry.instanceCount = 0;
   return geometry;
+}
+
+export interface CargoGeometryRange {kind:number;start:number;count:number;materialIndex:number}
+const activeCargoKinds=new WeakMap<THREE.BufferGeometry,string>();
+
+/** Groups only change where the producer changes cargo kinds. A single-entry
+ * material array makes Three submit these ranges with the same shader/material.
+ * Source vertices and the actor instance order never change. Immutable range
+ * metadata survives the population-growth clone; selection is geometry-local
+ * because Three's clone shares userData but copies the groups array. */
+export function selectCargoGeometryKinds(geometry:THREE.InstancedBufferGeometry,kinds:ReadonlySet<number>):void {
+  const byKind=geometry.userData.cargoRangesByKind as Record<number,CargoGeometryRange>|undefined;
+  if(!byKind)throw new Error('Cargo geometry ranges are missing');
+  const selected:CargoGeometryRange[]=[];
+  for(const kind of kinds){const range=byKind[kind];if(range&&range.count)selected.push(range);}
+  selected.sort((a,b)=>a.start-b.start);
+  const signature=selected.map(range=>range.kind).join(',');
+  if(activeCargoKinds.get(geometry)===signature)return;
+  geometry.groups.splice(0,geometry.groups.length,...selected);
+  activeCargoKinds.set(geometry,signature);
 }
 
 /** Owns GPU actor/cargo batches; receives snapshots, never simulates gameplay. */

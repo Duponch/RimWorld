@@ -3,8 +3,19 @@ import { OrthographicCamera } from 'three/webgpu';
 import { createWorld } from '../src/sim/engine';
 import type { World } from '../src/sim/types';
 import { MapLabelsOverlay, PILE_LABEL_MIN_CELL_PIXELS } from '../src/render/MapLabelsOverlay';
+import {itemLabelMinCellPixels,itemLabelVisibilityLabel} from '../src/ui/item-label-visibility';
 
 afterEach(() => vi.unstubAllGlobals());
+
+test('item-label option bounds, always visible and unchanged setting preserve cached canvas',()=>{
+  expect(itemLabelMinCellPixels(null)).toBe(96);expect(itemLabelMinCellPixels('')).toBe(96);expect(itemLabelMinCellPixels(NaN)).toBe(96);
+  expect(itemLabelMinCellPixels(-1)).toBe(0);expect(itemLabelMinCellPixels(300)).toBe(160);expect(itemLabelMinCellPixels('40.8')).toBe(41);
+  expect(itemLabelVisibilityLabel(0)).toBe('Toujours visibles');
+  const {overlay,context,canvas,camera,world}=overlayFixture();overlay.draw(world,camera,20,800,600);expect(canvas.hidden).toBe(true);
+  overlay.setMinCellPixels(0);overlay.draw(world,camera,20,800,600);expect(canvas.hidden).toBe(false);expect(context.fillText).toHaveBeenCalledWith('2',expect.any(Number),expect.any(Number));
+  const paints=context.clearRect.mock.calls.length;overlay.setMinCellPixels(0);overlay.draw(world,camera,20,800,600);expect(context.clearRect).toHaveBeenCalledTimes(paints);
+  overlay.setMinCellPixels(160);overlay.draw(world,camera,120,800,600);expect(canvas.hidden).toBe(true);overlay.dispose();
+});
 
 function overlayFixture() {
   const context = {

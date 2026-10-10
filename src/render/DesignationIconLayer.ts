@@ -8,6 +8,7 @@ import { floraSize, floraTreeHeight } from './flora-presentation';
 import { noise } from './StaticGeometry';
 import { perspectiveDetailRange, screenSpriteScale } from './map-overlay-detail';
 import { WORLD_SCALE } from '../world/scale';
+import {UI_ATLAS_URL} from '../ui/pictograms';
 
 export const DESIGNATION_MIN_CELL_PIXELS = 32;
 export const DESIGNATION_ICON_PIXELS = 30;
@@ -227,7 +228,7 @@ export class DesignationIconLayer {
       node.value = loaded;
       this.mesh.material.needsUpdate = true;
     }, undefined, () => { /* Procedural icons remain usable if an atlas fails. */ }); };
-    loadAtlas('/assets/ui/lisiere/icons.png', this.atlasNode);
+    loadAtlas(UI_ATLAS_URL, this.atlasNode);
     ARCHITECT_ICON_ATLASES.forEach((url, index) => loadAtlas(url, this.architectNodes[index]!));
   }
 

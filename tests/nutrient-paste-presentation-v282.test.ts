@@ -8,6 +8,7 @@ import { pasteCollectionSource,pawnWorkPose } from '../src/render/work-presentat
 import { CargoHandoffs,CARGO_HANDOFF_TICKS } from '../src/render/cargo-handoff';
 import { PawnLayer } from '../src/render/PawnLayer';
 import { MotionTimeline } from '../src/render/MotionTimeline';
+import { itemCargoKind } from '../src/render/item-presentation';
 import { pasteSpot } from '../src/sim/nutrient-paste';
 import type { MaterialPile,Structure } from '../src/sim/types';
 
@@ -40,7 +41,7 @@ test('hopper presents its actual pile inside the open shell without creating an 
   const piles=pileParts([{x:hopper.x,z:hopper.z,item:'rice',kind:'food',quantity:6,supplied:false,surface}]);
   expect(piles.every(p=>Math.abs(p.x-hopper.x)+(p.sx??1)/2<.4&&Math.abs(p.z-hopper.z)+(p.sz??1)/2<.4)).toBe(true);
   world.piles=[{id:world.nextId++,item:'rice',kind:'food',quantity:6,owner:{type:'ground',x:hopper.x,z:hopper.z}}];expect(nutrientPasteParts(world)).toEqual(shape);
-  const meal=pileParts([{x:14,z:15,item:'nutrient-paste-meal',kind:'food',quantity:1,supplied:false}]);expect(meal).toHaveLength(2);expect(meal.every(p=>p.y>0)).toBe(true);
+  const meal=pileParts([{x:14,z:15,item:'nutrient-paste-meal',kind:'food',quantity:1,supplied:false}]);expect(meal).toHaveLength(3);expect(meal.every(p=>p.y>0)).toBe(true);
 });
 
 test('a merge into a hopper uses the actual destination and masks only the incoming cargo until arrival',()=>{
@@ -64,7 +65,7 @@ test('collect has an ordinary meal in hand, no fake ground pickup and no cooking
   try{
     ledger.adopt(previous,world,world.tick,true,()=>({x:p.x,y:1,z:p.z,yaw:0}));expect(ledger.active.size).toBe(0);
     layer.update(world,1,true);const cargo=layer.feedbackSource!.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
-    expect(cargo.getX(0)).toBe(2);expect(cargo.getY(0)).toBeGreaterThan(0);
+    expect(cargo.getX(0)).toBe(itemCargoKind('nutrient-paste-meal'));expect(cargo.getY(0)).toBeGreaterThan(0);
     timeline.tick=world.tick;timeline.tracks.set(p.id,[{start:world.tick-1,end:world.tick,from:{x:spot.x-1,z:spot.z},to:spot,fromFraction:0,toFraction:1}]);layer.updateTravel(world,timeline);
     const motion=layer.feedbackSource!.getAttribute('aMotion'),to=layer.feedbackSource!.getAttribute('aTo');expect(motion.getX(0)).toBe(0);expect(motion.getZ(0)).toBe(0);expect(to.getW(0)).toBeCloseTo(Math.PI);
     p.need.phase='travel';expect(pasteCollectionSource(p)).toBeUndefined();

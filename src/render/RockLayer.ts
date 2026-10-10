@@ -1,11 +1,9 @@
-import { ORE_DEFINITIONS } from '../sim/ore';
 import * as THREE from 'three/webgpu';
 import type { World } from '../sim/types';
-import { noise } from './StaticGeometry';
 import { ROCK_INDICES, ROCK_VERTICES, writeRockCell } from './RockSurface';
+import { writeRockPigment } from './rock-pigment';
 import { WORLD_SCALE } from '../world/scale';
 import { STONE_KINDS } from '../sim/geology';
-import { stoneColor } from './stone-palette';
 import { material } from './primitives';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { positionLocal, texture, varying, vec2 } from 'three/tsl';
@@ -131,13 +129,12 @@ export class RockLayer {
     }
     if(dirty.size||reallocated) {
       const g=this.mesh.geometry,position=g.getAttribute('position') as THREE.BufferAttribute,normal=g.getAttribute('normal') as THREE.BufferAttribute,color=g.getAttribute('color') as THREE.BufferAttribute;
-      const c=new THREE.Color(0x899182);
       for(const attribute of [position,normal,color])attribute.clearUpdateRanges();
       for(const i of dirty) {
         const record=this.slots.get(i)!,v=24+record.slot*ROCK_VERTICES,x=i%world.width,z=Math.floor(i/world.width);
         record.indices=writeRockCell(world,x,z,position.array as Float32Array,v);
-        c.setHex(world.tiles[i]!.ore?ORE_DEFINITIONS[world.tiles[i]!.ore!].color:stoneColor(world.tiles[i]!.stone)).multiplyScalar(.96+noise(Math.floor(x/3),Math.floor(z/3),world.seed+211)*.08);
-        for(let k=0;k<ROCK_VERTICES;k++){normal.setXYZ(v+k,0,1,0);const fleck=world.tiles[i]!.ore&&Math.floor(k/3)%4===0?1.35:1;color.setXYZ(v+k,c.r*fleck,c.g*fleck,c.b*fleck);}
+        writeRockPigment(world,x,z,color.array as Float32Array,v);
+        for(let k=0;k<ROCK_VERTICES;k++)normal.setXYZ(v+k,0,1,0);
         for(const attribute of [position,normal,color])attribute.addUpdateRange(v*3,ROCK_VERTICES*3);
       }
       let offset=36;const indices=g.index!;

@@ -1,9 +1,10 @@
+import {modelIconUrl} from './pictograms';
 const ATLAS_COLUMNS = 6;
 const ATLAS_ROWS = 5;
 
 export const ARCHITECT_ICON_ATLASES = [
-  '/assets/ui/lisiere/architect-1.png',
-  '/assets/ui/lisiere/architect-2.png',
+  '/assets/ui/elsewhere/v304/architect-1.svg',
+  '/assets/ui/elsewhere/v304/architect-2.svg',
 ] as const;
 
 const FIRST_ATLAS = [
@@ -21,8 +22,12 @@ const SECOND_ATLAS = [
   'butcher-spot', 'stonecutter', 'stool', 'growing', 'build-roof', 'remove-roof',
   'ignore-roof', 'remove-growing', 'stockpile', 'home', 'remove-home', 'remove-stockpile',
 ] as const;
+export const ARCHITECT_ATLAS_IDS=Object.freeze([FIRST_ATLAS,SECOND_ATLAS]);
 
 export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed','vitals-monitor']:id==='steel-tile'?[id,'sterile-tile']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'biofuel-refinery','chemfuel-generator','nutrient-paste-dispenser','hopper','orbital-beacon','comms-console','deep-drill','ground-scanner','drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
+/** Every visible tool has its own model/action image. The old sheet addresses
+ * below remain solely the fixed world-marker UV layout. */
+export const ARCHITECT_ICON_URLS:Readonly<Record<string,string>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,modelIconUrl(id)])));
 
 // Small original vector additions share the existing Architecte icon installer.
 // They do not change the historical two-atlas coordinates.
@@ -92,22 +97,16 @@ export function installArchitectIcons(root: HTMLElement): ArchitectIconInstallRe
     const id = button.dataset.tool;
     if (!id) continue;
     present.add(id);
-    const cell = ARCHITECT_ICON_MAPPING[id];
+    const url = ARCHITECT_ICON_URLS[id];
     const icon = button.querySelector<HTMLElement>('.tool-icon');
-    if (!icon || !cell && !CUSTOM_ICONS[id]) {
+    if (!icon || !url) {
       missing.push(id);
       continue;
     }
     icon.classList.add('ui-icon');
-    if(CUSTOM_ICONS[id]) {
-      icon.style.backgroundImage=CUSTOM_ICONS[id];
-      icon.style.backgroundSize='contain';
-      icon.style.backgroundPosition='center';
-    } else {
-      icon.style.backgroundImage = `url('${ARCHITECT_ICON_ATLASES[cell!.atlas]}')`;
-      icon.style.backgroundSize = `${ATLAS_COLUMNS * 100}% ${ATLAS_ROWS * 100}%`;
-      icon.style.backgroundPosition = `${cell!.column * 100 / (ATLAS_COLUMNS - 1)}% ${cell!.row * 100 / (ATLAS_ROWS - 1)}%`;
-    }
+    icon.style.backgroundImage=`url('${url}')`;
+    icon.style.backgroundSize='contain';
+    icon.style.backgroundPosition='center';
     icon.style.backgroundRepeat = 'no-repeat';
     icon.textContent = '';
     icon.setAttribute('aria-hidden', 'true');

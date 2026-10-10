@@ -9,6 +9,8 @@ import { chunkContour, configureChunkMaterial, createChunkGeometry, isSmallChunk
 import { chunkPaintUv, createChunkSurfacePaint } from './chunk-surface-paint';
 import { InstanceTargetTint } from './instance-target-tint';
 import {ZONE_FILL_OPACITY} from './zone-surface-presentation';
+import {ITEM_SHAPES,type ItemShape} from './item-geometry';
+import {ItemMeshAtlas} from './item-mesh-atlas';
 
 const object = new THREE.Object3D(), color = new THREE.Color();
 type Style = 'solid' | 'overlay' | 'wire' | 'storage' | 'storage-home' | 'border';
@@ -36,6 +38,10 @@ export class BoxBatches {
     wire: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.65, depthWrite: false }),
   };
   private readonly batches = new Map<string, BoxMesh>();
+  private readonly itemAtlas=new ItemMeshAtlas();
+  private readonly plainItem=material(0xffffff);
+  private readonly texturedItem=material(0xffffff);
+  private readonly itemBatchKeys=new Set<string>();
   private readonly targetBatches = new Map<BoxMesh, { ids: (number | undefined)[]; tint: InstanceTargetTint }>();
   private readonly targetGroups = new Map<THREE.Group, ReadonlySet<number>>();
   private furnitureRevision: object | undefined;
@@ -48,6 +54,9 @@ export class BoxBatches {
     configure?.(this.texturedSolid);
     configure?.(this.plainRock);
     configure?.(this.texturedRock);
+    configure?.(this.plainItem);configure?.(this.texturedItem);
+    this.plainItem.userData.rendererOwned=this.texturedItem.userData.rendererOwned=true;
+    this.itemAtlas.configure(this.plainItem);this.itemAtlas.configure(this.texturedItem,this.surfaceTexture);
     this.geometry.userData.rendererOwned = true;
     this.roundedRockGeometry.userData.rendererOwned = true;
     this.smallRockGeometry.userData.rendererOwned = true;
@@ -71,6 +80,7 @@ export class BoxBatches {
     for (const mesh of this.batches.values()) {
       if (mesh.material === this.texturedSolid || mesh.material === this.materials.solid) mesh.material = chosen;
       else if (mesh.material === this.texturedRock || mesh.material === this.plainRock) mesh.material = enabled ? this.texturedRock : this.plainRock;
+      else if(mesh.material===this.texturedItem||mesh.material===this.plainItem)mesh.material=enabled?this.texturedItem:this.plainItem;
     }
   }
 
@@ -91,7 +101,22 @@ export class BoxBatches {
   }
 
   set(group: THREE.Group, key: string, items: Placement[], style: Style = 'solid', shadows = true): void {
-    if (style === 'solid' && key.startsWith('pile:') && !this.roundedRockWarm) {
+    if(style==='solid'&&(key.startsWith('pile:')||this.itemBatchKeys.has(key)||items.some(p=>p.shape&&(ITEM_SHAPES as readonly string[]).includes(p.shape)))){
+      this.itemBatchKeys.add(key);this.warmRoundedRocks(group,key,shadows);
+      const ordinary:Placement[]=[],complex:Placement[]=[],rocks:Placement[]=[],small:Placement[]=[];
+      for(const p of items){if(p.shape==='rounded-rock')(isSmallChunk(p.key,p.sx)?small:rocks).push(p);else(this.itemAtlas.isSmall(p.shape as ItemShape|undefined)?ordinary:complex).push(p);}
+      this.setGeometry(group,key,ordinary,this.itemAtlas.smallGeometry,style,shadows);
+      if(complex.length||this.batches.has(`${key}:complex`))this.setGeometry(group,`${key}:complex`,complex,this.itemAtlas.geometry,style,shadows);
+      if(rocks.length||small.length||this.batches.has(`${key}:rounded-rock`)){
+        this.setGeometry(group,`${key}:rounded-rock`,rocks,this.roundedRockGeometry,style,shadows);
+        this.setGeometry(group,`${key}:small-rock`,small,this.smallRockGeometry,style,shadows);
+      }
+      return;
+    }
+    this.setHistorical(group,key,items,style,shadows);
+  }
+  private warmRoundedRocks(group:THREE.Group,key:string,shadows:boolean):void {
+    if(key.startsWith('pile:')&&!this.roundedRockWarm){
       // Two resident, empty sentinels warm both rock geometries even on a map
       // without fragments. They are shared across the spatial map chunks.
       for(const [suffix,geometry] of [['rounded-rock',this.roundedRockGeometry],['small-rock',this.smallRockGeometry]] as const){
@@ -103,6 +128,9 @@ export class BoxBatches {
       }
       this.roundedRockWarm = true;
     }
+  }
+  private setHistorical(group: THREE.Group, key: string, items: Placement[], style: Style, shadows: boolean): void {
+    if(style==='solid')this.warmRoundedRocks(group,key,shadows);
     if (style === 'solid' && (items.some(item=>item.shape==='rounded-rock') || this.batches.has(`${key}:rounded-rock`))) {
       this.setGeometry(group,key,items.filter(item=>item.shape!=='rounded-rock'),this.geometry,style,shadows);
       const rocks=items.filter(item=>item.shape==='rounded-rock');
@@ -123,7 +151,7 @@ export class BoxBatches {
   patchFurnitureBatch(group: THREE.Group, key: string, patches: readonly {start:number;items:Placement[]}[], totalCount: number, stamp: object): boolean {
     const mesh=this.batches.get(key);
     if(key!=='furniture'||stamp!==this.furnitureRevision||!mesh||mesh.parent!==group||mesh.activeCount!==totalCount
-      ||patches.length===0||mesh.geometry.hasAttribute('chunkContour'))return false;
+      ||patches.length===0||mesh.geometry.hasAttribute('chunkContour')||mesh.itemShapeBuffer)return false;
     let last=0;
     for(const patch of patches){
       if(!Number.isSafeInteger(patch.start)||patch.start<last||patch.start+patch.items.length>totalCount)return false;
@@ -149,7 +177,8 @@ export class BoxBatches {
     let mesh = this.batches.get(key);
     if(mesh)this.targetBatches.get(mesh)?.tint.restore();
     const rock=geometry===this.roundedRockGeometry||geometry===this.smallRockGeometry;
-    const chosen = style === 'solid' && rock
+    const atlas=geometry===this.itemAtlas.geometry||geometry===this.itemAtlas.smallGeometry;
+    const chosen = style==='solid'&&atlas?(this.texturesEnabled?this.texturedItem:this.plainItem):style === 'solid' && rock
       ? (this.texturesEnabled ? this.texturedRock : this.plainRock)
       : style === 'solid' && this.texturesEnabled ? this.texturedSolid : this.materials[style];
     if (!mesh) {
@@ -158,24 +187,27 @@ export class BoxBatches {
       mesh.name = key;
       mesh.castShadow = style === 'solid' && shadows; mesh.receiveShadow = true;
       group.add(mesh); this.batches.set(key, mesh);
-    } else if (items.length > mesh.instanceMatrix.count) {
+    } else if (items.length > mesh.instanceMatrix.count||atlas!==!!mesh.itemShapeBuffer) {
       // Release the old per-instance buffers before replacing their capacity.
-      const capacity = 2 ** Math.ceil(Math.log2(items.length));
+      const capacity = Math.max(mesh.instanceMatrix.count,2 ** Math.ceil(Math.log2(items.length||1)));
       mesh.allocate(geometry, capacity);
       if(rock)this.allocateRockContour(mesh);
     }
     if (mesh.material !== chosen) mesh.material = chosen;
     mesh.activeCount = items.length;
     const ids:(number|undefined)[]=[];
+    const patternIndices=atlas?new Map<number,number>():undefined;
     for (let i = 0; i < items.length; i++) {
       const item = items[i]!;
       object.position.set(item.x, item.y, item.z); object.rotation.set(0, item.ry ?? 0, 0);
       object.scale.set(item.sx ?? 1, item.sy ?? 1, item.sz ?? 1); object.updateMatrix();
       mesh.setMatrixAt(i, object.matrix); mesh.setColorAt(i, color.setHex(item.color ?? 0xffffff));
       ids.push(item.targetId);
+      if(atlas){const slot=this.itemAtlas.slot(item.shape as ItemShape|undefined),ordinal=patternIndices!.get(slot)??0;mesh.setItemShapeAt(i,slot,ordinal);patternIndices!.set(slot,ordinal+1);}
       if(rock)(mesh.geometry.getAttribute('chunkContour') as THREE.InstancedBufferAttribute).setXYZW(i,...chunkContour(item.key));
     }
     mesh.instanceMatrix.needsUpdate = true; mesh.colorBuffer.needsUpdate = true;
+    if(mesh.itemShapeBuffer)mesh.itemShapeBuffer.needsUpdate=true;
     if(rock)mesh.geometry.getAttribute('chunkContour').needsUpdate=true;
     mesh.computeBoundingSphere();
     let targets=this.targetBatches.get(mesh);
@@ -194,6 +226,7 @@ export class BoxBatches {
     this.targetBatches.clear();this.targetGroups.clear();
     for (const mesh of this.batches.values()) { mesh.removeFromParent(); mesh.dispose(); }
     this.batches.clear();
+    this.itemBatchKeys.clear();
     this.furnitureRevision=undefined;
     this.roundedRockWarm = false;
   }
@@ -218,6 +251,7 @@ export class BoxBatches {
 
   dispose(): void {
     this.clear(); this.geometry.dispose(); this.roundedRockGeometry.dispose();this.smallRockGeometry.dispose();
+    this.itemAtlas.dispose();this.plainItem.dispose();this.texturedItem.dispose();
     for (const mat of Object.values(this.materials)) mat.dispose();
     this.texturedSolid.dispose(); this.plainRock.dispose(); this.texturedRock.dispose(); this.surfaceTexture.dispose();this.rockTexture.dispose();
   }

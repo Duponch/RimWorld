@@ -7,20 +7,17 @@ import { anestheticStage } from '../sim/anesthetic';
 import { appearanceShape,pawnBaseColor } from './pawn-appearance-shape';
 import { pawnMorph,hiddenAppearancePart } from './pawn-appearance-nodes';
 import { BIOME_CARGO } from './biome-cargo';
-import { CHEMFUEL_CARGO } from './biofuel-parts';
-import { isAnimalMeat } from '../sim/biome-items';
-import type { ApparelItem } from '../sim/apparel-rules';
+import {itemCargoKind} from './item-presentation';
 import { firePosition } from '../sim/fire-rules';
 import { attachedFireMesh, setFireTexturesEnabled } from './FireLayer';
-import { apparelProjection,apparelAppearance,APPAREL_CARGO } from './character-apparel';
+import { apparelProjection,apparelAppearance } from './character-apparel';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
-import { pawnGeometry,cargoGeometry,PARKA_HOOD_DYE,FLAK_HELMET_DYE,RECON_HELMET_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
+import { pawnGeometry,cargoGeometry,selectCargoGeometryKinds,PARKA_HOOD_DYE,FLAK_HELMET_DYE,RECON_HELMET_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
 import { WEAPON_VISUALS,weaponVisual } from './weapon-shape';
 import { doorAt } from '../sim/door-rules';
-import { blockCargoKind } from './block-presentation';
 import { furnitureSurfaces } from './furniture-motion';
 import { pawnPresentationPose } from './pawn-presentation';
 import { headingAt,turnToward,TURN_TICKS,type TurnHeading } from './turn-presentation';
@@ -32,7 +29,6 @@ import type { MotionTimeline } from './MotionTimeline';
 import * as THREE from 'three/webgpu';
 import { Fn, If, attribute, cos, float, mix, positionLocal, sin, uniform, vec3 } from 'three/tsl';
 import { TICKS_PER_SECOND,type MaterialPile,type Pawn,type World } from '../sim/types';
-import { chunkCargoKind } from './chunk-presentation';
 import { adjacentTable } from '../sim/dining';
 import { CARRY_CAPACITY, footprintCells } from '../sim/definitions';
 import { PAWN_MODEL_SCALE, WORLD_SCALE } from '../world/scale';
@@ -103,7 +99,7 @@ function cargoAppearance(load:MaterialPile|undefined):readonly [number,number] {
   // The dedicated mechanical rig follows this owner's existing cargo handoff.
   // No generic food/material proxy may duplicate the entire carcass.
   if(load.mechCorpse)return [0,0];
-  const kind=load.item==='chemfuel'?CHEMFUEL_CARGO:BIOME_CARGO[load.item]??(load.kind==='silver'?30:load.kind==='corpse'?27:load.item==='light-leather'?28:isAnimalMeat(load.item)?29:load.kind==='unfinished'?25:load.kind==='textile'?24:load.kind==='apparel'?APPAREL_CARGO[load.item as ApparelItem]:load.kind==='weapon'?(weaponVisual(load.item)?.cargo??0):load.kind==='medicine' ? (load.item==='herbal-medicine'?18:load.item==='medicine'?19:20) : load.kind === 'component' ? 17 : load.kind === 'blocks' ? blockCargoKind(load.item) : load.kind === 'steel' ? 11 : load.kind === 'chunk' ? chunkCargoKind(load.item) : load.kind === 'wood' ? 1 : load.item === 'survival-meal' ? 3 : 2);
+  const kind=load.kind==='corpse'?(BIOME_CARGO[load.item]??27):itemCargoKind(load.item);
   // Corpse loads are indivisible. Negative y encodes their exact anatomical
   // mask in the existing actor stream; no extra per-actor GPU attribute.
   const size=load.corpse?-1-corpseVisualMask(load.corpse):load.kind==='corpse'||load.kind==='unfinished'||load.kind==='weapon'||load.kind==='apparel'?1:Math.min(1,load.quantity/CARRY_CAPACITY);
@@ -554,7 +550,7 @@ export class PawnLayer {
       });
       return result;
     })();
-    this.cargoMesh = new THREE.Mesh(cargo, cargoMat);
+    this.cargoMesh = new THREE.Mesh(cargo, [cargoMat]);
     this.cargoMesh.name = 'Carried materials — shared GPU pawn poses';
     this.cargoMesh.frustumCulled = false;
     this.cargoMesh.castShadow = true;
@@ -581,7 +577,7 @@ export class PawnLayer {
       const smooth=t.mul(t).mul(float(3).sub(t.mul(2)));
       return mix(carried,landed,smooth);
     })();
-    this.partialCargoMesh=new THREE.Mesh(partial,partialMat);
+    this.partialCargoMesh=new THREE.Mesh(partial,[partialMat]);
     this.partialCargoMesh.name='Partial material releases — resident transfer batch';
     this.partialCargoMesh.frustumCulled=false;this.partialCargoMesh.castShadow=true;this.partialCargoMesh.receiveShadow=true;
     this.group.add(this.partialCargoMesh);
@@ -593,16 +589,26 @@ export class PawnLayer {
     const from=geometry.getAttribute('aTransferFrom') as THREE.InstancedBufferAttribute;
     const to=geometry.getAttribute('aTransferTo') as THREE.InstancedBufferAttribute;
     const cargo=geometry.getAttribute('aTransferCargo') as THREE.InstancedBufferAttribute;
+    const kinds=new Set<number>();
     let index=0;
     for(const item of this.handoffs.active.values())if(item.partial){
       const [kind,size]=cargoAppearance(item.pile);
       from.setXYZW(index,item.from.x,item.from.y,item.from.z,item.from.yaw);
       to.setXYZW(index,item.to.x,item.to.y,item.to.z,item.groundScale);
       cargo.setXYZW(index,kind,size,localTimeSeconds(item.start,this.carryOrigin),localTimeSeconds(item.end,this.carryOrigin));
+      kinds.add(kind);
       index++;
     }
     geometry.instanceCount=index;
+    selectCargoGeometryKinds(geometry,kinds);
     if(index){from.needsUpdate=true;to.needsUpdate=true;cargo.needsUpdate=true;}
+  }
+
+  private syncMainCargoKinds():void {
+    if(!this.cargoMesh||!this.pawnMesh)return;
+    const geometry=this.cargoMesh.geometry as THREE.InstancedBufferGeometry,cargo=this.pawnMesh.geometry.getAttribute('aCargo');
+    const kinds=new Set<number>();for(let i=0;i<geometry.instanceCount;i++)kinds.add(cargo.getX(i));
+    selectCargoGeometryKinds(geometry,kinds);
   }
 
   /** Read the already presented pose once at an ownership change. The release
@@ -663,6 +669,7 @@ export class PawnLayer {
         cargo.setXYZW(index,kind,size,0,0);
       }
       cargo.needsUpdate=true;
+      this.syncMainCargoKinds();
       this.syncPartialCargo();
     }
     return refresh;
@@ -838,6 +845,7 @@ export class PawnLayer {
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo,handoffFrom,handoffTo]) attr.needsUpdate = true;
     geometry.instanceCount = world.pawns.length;
     (this.cargoMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount = world.pawns.length;
+    this.syncMainCargoKinds();
     this.syncPartialCargo();
     (this.selectionMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount=world.pawns.length;
     this.pawnIds=world.pawns.map(p=>p.id);this.setSelected(this.selected);

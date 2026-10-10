@@ -4,6 +4,7 @@ import { createWorld } from '../src/sim/index';
 import { newBuildingFuel } from '../src/sim/fuel';
 import { cookingSpot } from '../src/sim/cooking-bills';
 import { biofuelParts,CHEMFUEL_CARGO } from '../src/render/biofuel-parts';
+import { itemCargoKind } from '../src/render/item-presentation';
 import { pileParts } from '../src/render/pile-parts';
 import { pileSurfaces } from '../src/render/pile-surfaces';
 import { buildFurniture } from '../src/render/FurnitureLayer';
@@ -45,10 +46,10 @@ test('fixed generator shell represents machinery without inventing reservoir pil
 
 test('ground fuel uses centred cans while carried fuel occupies its own existing actor cargo slot',()=>{
   const {world}=fixture(),small=pileParts([{x:8,z:7,item:'chemfuel',kind:'chemfuel',quantity:1,supplied:false}]),full=pileParts([{x:8,z:7,item:'chemfuel',kind:'chemfuel',quantity:150,supplied:false}]);
-  expect(small).toHaveLength(3);expect(full).toHaveLength(9);
+  expect(small).toHaveLength(5);expect(full).toHaveLength(5);
   const left=Math.min(...full.map(p=>p.x-(p.sx??1)/2)),right=Math.max(...full.map(p=>p.x+(p.sx??1)/2));expect((left+right)/2).toBe(8);expect(full.every(p=>p.y>0)).toBe(true);
   const pawn=world.pawns[0]!;world.piles=[{id:world.nextId++,item:'chemfuel',kind:'chemfuel',quantity:35,owner:{type:'pawn',pawnId:pawn.id}}];
-  const layer=new PawnLayer();try{layer.update(world,1,true);const cargo=layer.feedbackSource!.getAttribute('aCargo') as THREE.InstancedBufferAttribute;expect(cargo.getX(0)).toBe(CHEMFUEL_CARGO);expect(cargo.getY(0)).toBeGreaterThan(0);}finally{layer.dispose();}
+  const layer=new PawnLayer();try{layer.update(world,1,true);const cargo=layer.feedbackSource!.getAttribute('aCargo') as THREE.InstancedBufferAttribute;expect(cargo.getX(0)).toBe(itemCargoKind('chemfuel'));expect(cargo.getY(0)).toBeGreaterThan(0);}finally{layer.dispose();}
 });
 
 test('construction marker covers refinery footprint and completed refining uses the common work pose',()=>{

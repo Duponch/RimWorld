@@ -5,43 +5,32 @@ import {
   ARCHITECT_ICON_ATLASES,
   ARCHITECT_ICON_MAPPING,
   ARCHITECT_ICON_ORDER,
+  ARCHITECT_ICON_URLS,
   installArchitectIcons,
 } from '../src/ui/architect-icons';
 
-function pngHeader(asset: string) {
-  const bytes = readFileSync(new URL(`../public${asset}`, import.meta.url));
-  return {
-    signature: bytes.subarray(0, 8).toString('hex'),
-    width: bytes.readUInt32BE(16),
-    height: bytes.readUInt32BE(20),
-    colorType: bytes[25],
-  };
-}
-
 describe('Architect generated icon atlases', () => {
-  it('maps every tool without shifting the original sheets; powered benches share the machine icon', () => {
+  it('keeps marker cell addresses while every UI tool has its own complete image', () => {
     const rendered = toolDefinitions.map(tool => tool.id);
-    expect(rendered).toHaveLength(75); // V212 mini-turret shares an existing atlas cell.
-    expect(new Set(rendered).size).toBe(75);
+    expect(rendered).toHaveLength(87);
+    expect(new Set(rendered).size).toBe(87);
     expect(rendered).toContain('mini-turret');
     expect(rendered).toContain('tube-television');
     expect(rendered).toContain('sandbags');
     expect(rendered).toContain('sun-lamp');
-    expect(ARCHITECT_ICON_ORDER).toEqual(rendered);
-    expect(Object.keys(ARCHITECT_ICON_MAPPING)).toEqual(rendered);
-    expect(new Set(Object.values(ARCHITECT_ICON_MAPPING).map(cell => `${cell.atlas}:${cell.column}:${cell.row}`)).size).toBe(60);
-    expect(ARCHITECT_ICON_MAPPING['machining-table']).toEqual(ARCHITECT_ICON_MAPPING['electric-tailor-bench']);
-    expect(ARCHITECT_ICON_MAPPING['mini-turret']).toEqual(ARCHITECT_ICON_MAPPING['standing-lamp']);
+    expect([...ARCHITECT_ICON_ORDER].sort()).toEqual([...rendered].sort());
+    expect(Object.keys(ARCHITECT_ICON_MAPPING).sort()).toEqual([...rendered].sort());
+    expect(new Set(Object.values(ARCHITECT_ICON_URLS)).size).toBe(rendered.length);
+    expect(ARCHITECT_ICON_URLS['machining-table']).not.toBe(ARCHITECT_ICON_URLS['electric-tailor-bench']);
+    expect(ARCHITECT_ICON_URLS['mini-turret']).not.toBe(ARCHITECT_ICON_URLS['standing-lamp']);
+    for(const id of rendered){const svg=readFileSync(new URL(`../public${ARCHITECT_ICON_URLS[id]}`,import.meta.url),'utf8');expect(svg,id).toContain('<svg');expect(svg,id).toContain('<path');}
   });
 
-  it('ships equal RGBA cells with genuine alpha-capable PNG storage', () => {
+  it('ships transparent SVG sheets with equal cells for unchanged marker UVs', () => {
     for (const asset of ARCHITECT_ICON_ATLASES) {
-      const header = pngHeader(asset);
-      expect(header.signature).toBe('89504e470d0a1a0a');
-      expect(header.width).toBe(1374);
-      expect(header.height).toBe(1145);
-      expect(header.width / 6).toBe(header.height / 5);
-      expect(header.colorType).toBe(6);
+      const svg=readFileSync(new URL(`../public${asset}`,import.meta.url),'utf8');
+      expect(svg).toContain('width="576" height="480"');expect(svg).toContain('viewBox="0 0 576 480"');
+      expect(svg.match(/<g transform="translate/g)).toHaveLength(30);
     }
   });
 
@@ -62,7 +51,7 @@ describe('Architect generated icon atlases', () => {
     expect(icon.textContent).toBe('');
     expect(classes).toContain('ui-icon');
     expect(attributes.get('aria-hidden')).toBe('true');
-    expect(style.backgroundImage).toContain('architect-1.png');
-    expect(style.backgroundSize).toBe('600% 500%');
+    expect(style.backgroundImage).toContain('/elsewhere/v304/mine.svg');
+    expect(style.backgroundSize).toBe('contain');
   });
 });

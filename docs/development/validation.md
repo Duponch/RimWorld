@@ -1,4 +1,6 @@
-# Validation courante — V303
+# Validation courante — V304
+
+**V304 : [identité visuelle et affichage de carte](../gameplay/visual-identity-v304.md#validation), schéma 219 conservé.** Modèles, icônes, interface Simulation, seuil des chiffres et intentions confirmées ; contrôles, rouges et limites dans la note unique. Les sauvegardes publiques sont préservées. Relance planifiée en pause ; les validations suivantes sont historiques.
 
 **V303 : [zones, sélection et actions de carte](../gameplay/map-interactions-v303.md#validation), schéma 219 conservé.** 68 cas uniques/14 fichiers acquis par groupes et reprises ciblées ; corpus 63 références/66 fichiers PASS82,964s et build Pages final avec typage PASS8,110s. Lectures RAW/MAIN, checkpoint/delta et vrai tick de reprise sont couverts ; sauvegardes publiques exactes. Huit groupes Chrome acquis : sept étapes Aulnes dans un parcours restant rouge, puis fragment seul PASS28,590s avec attente de la scène appliquée ; cap200, deux résolutions, shaders construits, recharges8434 et0 exactes et deux ticks ordinaires. Sources/publics exacts, erreurs vides, Chrome/ports possédés fermés. Rouges et limites dans la note unique ; produit `0382e142` commité/poussé et publié en `ad46371a`, 16 vérifications HTTPS exactes ; aucune mesure FPS ou nouvelle campagne longue. Relance en pause. Les validations suivantes sont historiques.
 

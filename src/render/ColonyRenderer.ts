@@ -18,6 +18,7 @@ export class ColonyRenderer extends SceneRenderCore {
   private orderRightPress: {pointerId:number;x:number;y:number;at:number;tool:string;moved:boolean} | null = null;
   private readonly resizeObserver:ResizeObserver;
   protected readonly mapLabels:MapLabelsOverlay;
+  setItemLabelMinCellPixels(value:number):void {this.mapLabels.setMinCellPixels(value);}
   static async create(host: HTMLElement, onPick: (x: number, z: number) => void, groundGrassEnabled = true): Promise<ColonyRenderer> {
     const renderer = new ReentrantRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
     const lifetime: RendererLifetime = { closed: false };

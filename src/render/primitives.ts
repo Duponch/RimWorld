@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
-export type Placement = { x: number; y: number; z: number; sx?: number; sy?: number; sz?: number; ry?: number; color?: number; key?: number; targetId?: number; pigment?: 'stone'; shape?: 'rounded-rock' };
+import type {ItemShape} from './item-geometry';
+export type Placement = { x: number; y: number; z: number; sx?: number; sy?: number; sz?: number; ry?: number; color?: number; key?: number; targetId?: number; pigment?: 'stone'; shape?: 'rounded-rock'|ItemShape };
 /** Presentation ownership only; key remains the existing pigment/shape seed. */
 export function tagPlacementTargets(parts: Placement[], start: number, targetId: number): void {
   for (let i = start; i < parts.length; i++) parts[i]!.targetId = targetId;

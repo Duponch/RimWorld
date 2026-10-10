@@ -7,7 +7,7 @@ export type UiIcon = typeof UI_ICONS[number];
 /** UI interaction shapes remain independent of the selected map tool. */
 export const CURSOR_KINDS = ['pointer', 'link', 'wait', 'zoom', 'text', 'grab', 'grabbing', 'forbidden', 'resize'] as const;
 export type CursorKind = typeof CURSOR_KINDS[number];
-export const CURSOR_ATLAS = '/assets/ui/lisiere/cursors-v95.png';
+export const CURSOR_ATLAS = '/assets/ui/elsewhere/v304/cursors.svg';
 export const CURSOR_CELLS: Readonly<Record<CursorKind, readonly [number, number]>> = Object.freeze({
   pointer: [0, 0], link: [1, 0], wait: [2, 0],
   zoom: [0, 1], text: [1, 1], grab: [2, 1],
@@ -150,7 +150,8 @@ async function installMapToolCursors(root: HTMLElement, atlasUrl: string, artwor
   await Promise.all(tools.filter(tool => tool !== 'select').map(async tool => {
     const icon = toolCursorIcon(tool);
     const installed = root.querySelector<HTMLElement>(`[data-tool="${icon}"] .tool-icon`);
-    const svg = installed?.style.backgroundImage.match(/^url\(["']?(data:image\/svg\+xml,[^"')]+)["']?\)$/)?.[1];
+    const svg = installed&&(installed.style.backgroundSize==='contain'||/data:image\/svg\+xml/.test(installed.style.backgroundImage))
+      ?installed.style.backgroundImage.match(/^url\(["']?([^"')]+)["']?\)$/)?.[1]:undefined;
     const cell = ARCHITECT_ICON_MAPPING[icon];
     if (!svg && !cell) return;
     try {

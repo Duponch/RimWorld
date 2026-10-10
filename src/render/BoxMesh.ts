@@ -18,6 +18,7 @@ export function configureBoxMaterial(material: THREE.NodeMaterial): void {
 export class BoxMesh extends THREE.Mesh<THREE.InstancedBufferGeometry> {
   instanceMatrix!: THREE.InstancedInterleavedBuffer;
   colorBuffer!: THREE.InstancedBufferAttribute;
+  itemShapeBuffer?:THREE.InstancedInterleavedBuffer;
   private baseRadius = Math.sqrt(3) / 2;
 
   constructor(base: THREE.BufferGeometry, material: THREE.Material, capacity: number) {
@@ -28,7 +29,9 @@ export class BoxMesh extends THREE.Mesh<THREE.InstancedBufferGeometry> {
   allocate(base: THREE.BufferGeometry, capacity: number): void {
     this.geometry.dispose();
     if (!base.boundingSphere) base.computeBoundingSphere();
-    this.baseRadius = base.boundingSphere?.radius ?? 1;
+    // Instance bounds are centred on their transform origin. Authored meshes
+    // may be asymmetric, so enclose their displaced source sphere as well.
+    this.baseRadius = base.boundingSphere ? base.boundingSphere.radius + base.boundingSphere.center.length() : 1;
     const geometry = new THREE.InstancedBufferGeometry();
     // Tiny authored box data is owned by each geometry. Disposing a grown batch
     // must never release another live batch's attributes or index.
@@ -36,10 +39,16 @@ export class BoxMesh extends THREE.Mesh<THREE.InstancedBufferGeometry> {
     geometry.setAttribute('normal', base.getAttribute('normal').clone());
     geometry.setAttribute('uv', base.getAttribute('uv').clone());
     if (base.index) geometry.setIndex(base.index.clone());
+    geometry.setDrawRange(base.drawRange.start,base.drawRange.count);
     this.instanceMatrix = new THREE.InstancedInterleavedBuffer(new Float32Array(capacity * 16), 16).setUsage(THREE.StaticDrawUsage);
     for(let column=0;column<4;column++)geometry.setAttribute(`boxMatrix${column}`, new THREE.InterleavedBufferAttribute(this.instanceMatrix,4,column*4));
     this.colorBuffer = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3).setUsage(THREE.StaticDrawUsage);
     geometry.setAttribute('boxColor', this.colorBuffer);
+    if(base.userData.itemAtlas){
+      this.itemShapeBuffer=new THREE.InstancedInterleavedBuffer(new Float32Array(capacity*2),2).setUsage(THREE.StaticDrawUsage);
+      geometry.setAttribute('itemShape',new THREE.InterleavedBufferAttribute(this.itemShapeBuffer,1,0));
+      geometry.setAttribute('itemPatternIndex',new THREE.InterleavedBufferAttribute(this.itemShapeBuffer,1,1));
+    }else this.itemShapeBuffer=undefined;
     geometry.instanceCount=0;geometry.boundingSphere=new THREE.Sphere();
     this.geometry=geometry;
   }
@@ -50,6 +59,10 @@ export class BoxMesh extends THREE.Mesh<THREE.InstancedBufferGeometry> {
   setMatrixAt(index:number,value:THREE.Matrix4):void { value.toArray(this.instanceMatrix.array,index*16); }
   getMatrixAt(index:number,target:THREE.Matrix4):void { target.fromArray(this.instanceMatrix.array,index*16); }
   setColorAt(index:number,value:THREE.Color):void { value.toArray(this.colorBuffer.array,index*3); }
+  setItemShapeAt(index:number,slot:number,patternIndex:number):void {
+    if(!this.itemShapeBuffer)throw new Error('Item atlas slots are missing');
+    this.itemShapeBuffer.array[index*2]=slot;this.itemShapeBuffer.array[index*2+1]=patternIndex;
+  }
   computeBoundingSphere():void {
     this.boundingSphere.makeEmpty();
     for(let i=0;i<this.activeCount;i++) {

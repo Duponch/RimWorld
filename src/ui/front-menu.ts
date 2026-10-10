@@ -1,6 +1,8 @@
 import { DEFAULT_MAP_SIZE } from '../sim/map-config';
 import type { SiteOptions } from '../sim/site';
 import {designationMinCellPixels,designationVisibilityLabel} from './designation-visibility';
+import {itemLabelMinCellPixels,itemLabelVisibilityLabel} from './item-label-visibility';
+import {UI_ATLAS_URL} from './pictograms';
 import { createSiteConfiguration, parseSiteSeed, randomSiteSeed } from './front-site';
 import { testColonyUrl, type TestColony } from './test-colonies';
 import './front-menu.css';
@@ -20,6 +22,8 @@ export interface FrontMenuSave {
 
 export interface FrontMenuOptions {
   getDesignationMinCellPixels?: () => number;
+  getItemLabelMinCellPixels?: () => number;
+  onItemLabelMinCellPixelsChange?: (value:number) => boolean;
   onDesignationMinCellPixelsChange?: (value:number) => boolean;
   onStart: (draft: FrontMenuDraft) => Promise<void>;
   onLoad: (key: string) => Promise<void>;
@@ -90,7 +94,7 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', 
 function atlasMark(className: string, column: number, row: number): HTMLSpanElement {
   const mark = element('span', className);
   mark.setAttribute('aria-hidden', 'true');
-  mark.style.backgroundImage = "url('/assets/ui/lisiere/icons.png')";
+  mark.style.backgroundImage = `url('${UI_ATLAS_URL}')`;
   mark.style.backgroundSize = '400% 500%';
   mark.style.backgroundPosition = `${column * 100 / 3}% ${row * 25}%`;
   mark.style.backgroundRepeat = 'no-repeat';
@@ -304,6 +308,16 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
       if(options.onDesignationMinCellPixelsChange && !options.onDesignationMinCellPixelsChange(value))showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
     });
     iconText.append(iconLabel,iconDescription,iconOutput);iconSetting.append(iconText,iconSlider);card.append(iconSetting);
+    const labelsSetting=element('label','front-relief front-texture-setting front-volume-setting');
+    const labelsText=element('span');
+    const labelsTitle=element('strong','','Quantités et qualités des objets');labelsTitle.id='front-item-label-label';
+    const labelsDescription=element('span','','Seuil de zoom des chiffres et qualités au-dessus des objets. 0 : toujours visibles.');labelsDescription.id='front-item-label-description';
+    const labelsOutput=element('output');labelsOutput.id='front-item-label-value';
+    const labelsSlider=element('input');labelsSlider.id='front-item-label-visibility';labelsSlider.type='range';labelsSlider.min='0';labelsSlider.max='160';labelsSlider.step='1';
+    labelsSlider.value=String(itemLabelMinCellPixels(options.getItemLabelMinCellPixels?.()));labelsOutput.textContent=itemLabelVisibilityLabel(Number(labelsSlider.value));
+    labelsSlider.setAttribute('aria-labelledby',labelsTitle.id);labelsSlider.setAttribute('aria-describedby',`${labelsDescription.id} ${labelsOutput.id}`);
+    labelsSlider.addEventListener('input',()=>{clearError();const value=itemLabelMinCellPixels(labelsSlider.value);labelsOutput.textContent=itemLabelVisibilityLabel(value);if(options.onItemLabelMinCellPixelsChange&&!options.onItemLabelMinCellPixelsChange(value))showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');});
+    labelsText.append(labelsTitle,labelsDescription,labelsOutput);labelsSetting.append(labelsText,labelsSlider);card.append(labelsSetting);
     content.append(card);
     const audioCard = element('section', 'front-card front-options');
     audioCard.append(element('h2', '', 'Son'));
