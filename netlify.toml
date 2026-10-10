@@ -4,3 +4,9 @@
 
 [build.environment]
   NODE_VERSION = "22"
+
+# Legacy hosting only. Pages uses its native fallback instead of a catch-all proxy.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -23,7 +23,7 @@ async function coldHome(page: Page): Promise<void> {
   // e2e only exposes the observation bridge; it must not create a diagnostic camp.
   await page.goto('/?e2e');
   await expect(front(page)).toBeVisible();
-  await expect(page.locator('#front-title')).toHaveText('Lisière');
+  await expect(page.locator('#front-title')).toHaveText('Elsewhere');
   expect(await page.evaluate(() => window.__lisiere.world)).toBeUndefined();
   await expect(page.locator('#viewport canvas')).toHaveCount(0);
   await expect(page.locator('.game-shell')).toBeHidden();
@@ -40,7 +40,7 @@ async function chooseSave(page: Page, key: string): Promise<void> {
 async function returnHome(page: Page): Promise<void> {
   await panel(page, 'menu');
   await page.locator('#return-home').click();
-  await expect(page.locator('#front-title')).toHaveText('Lisière');
+  await expect(page.locator('#front-title')).toHaveText('Elsewhere');
   await expect(menuButton(page, 'Reprendre la colonie')).toBeVisible();
 }
 

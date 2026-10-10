@@ -118,13 +118,13 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   root.setAttribute('aria-modal', 'true');
   root.setAttribute('aria-labelledby', 'front-title');
   root.innerHTML = `${scenery}<div class="front-shade" aria-hidden="true"></div>
-    <header class="front-top"><span class="front-wordmark">LISIÈRE</span><span>Un simulateur de colonie</span></header>
+    <header class="front-top"><span class="front-wordmark">ELSEWHERE</span><span>Un simulateur de colonie</span></header>
     <div class="front-frame">
       <div class="front-heading"><p class="front-eyebrow"></p><h1 id="front-title" tabindex="-1"></h1><ol class="front-steps" aria-label="Étapes de création"></ol></div>
       <div class="front-content"></div>
       <div class="front-feedback"><p class="front-error" role="alert" hidden></p><p class="front-status" role="status" aria-live="polite" hidden></p></div>
       <footer class="front-footer"></footer>
-    </div><div class="front-bottom"><span>LISIÈRE · EN DÉVELOPPEMENT</span><span class="front-pause-note"></span></div>`;
+    </div><div class="front-bottom"><span>ELSEWHERE · EN DÉVELOPPEMENT</span><span class="front-pause-note"></span></div>`;
   host.append(root);
 
   const find = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
@@ -205,7 +205,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     steps.replaceChildren();
     root.dataset.page = page;
     eyebrow.textContent = page === 'home' ? 'UNE HISTOIRE À CONSTRUIRE' : page === 'tests' ? 'EXPLORER ET ESSAYER' : page === 'load' ? 'VOS COLONIES' : page === 'options' ? 'PRÉFÉRENCES LOCALES' : 'NOUVELLE PARTIE';
-    title.textContent = { home: 'Lisière', scenario: 'Choisir un scénario', story: 'Choisir votre histoire', configuration: 'Préparer le départ', load: 'Charger une partie', tests: 'Colonies de test', options: 'Options' }[page];
+    title.textContent = { home: 'Elsewhere', scenario: 'Choisir un scénario', story: 'Choisir votre histoire', configuration: 'Préparer le départ', load: 'Charger une partie', tests: 'Colonies de test', options: 'Options' }[page];
     if (['scenario','story','configuration'].includes(page)) {
       const active = ['scenario', 'story', 'configuration'].indexOf(page);
       ['Scénario', 'Histoire', 'Départ'].forEach((label, index) => {

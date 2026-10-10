@@ -1,4 +1,6 @@
-# Lisière
+# Elsewhere
+
+Le jeu s’appelle désormais **Elsewhere** (anciennement Lisière). [Jouer sur Cloudflare Pages](https://elsewhere-cq7.pages.dev/) · [Publication et compatibilité des sauvegardes](docs/development/cloudflare-pages.md). Les parties locales restent attachées à leur adresse d’origine ; les colonies de test, dont Les Aulnes, sont aussi accessibles en ligne.
 
 **V295 — réemploi des faits de ressources ; schéma 218.** Chrome1440p/dev sur Les Aulnes : **111,35→119,40 images RAF/s (+7,24%)** à vrai×6 ; adoption CPU par appel−21,57%. [Mesures et bilan nocturne](docs/development/aulnes-performance-v295.md). Pointes et240FPS restent à résoudre, aucun gain GPU mesuré. Relance planifiée en pause ; arrêt après ce lot. Les états suivants sont historiques.
 

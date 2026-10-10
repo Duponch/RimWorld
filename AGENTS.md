@@ -1,4 +1,6 @@
-# Travail sur Lisière
+# Travail sur Elsewhere
+
+- Consigne humaine du 10 octobre : le jeu s’appelle désormais **Elsewhere**. Publication Cloudflare Pages demandée pendant le lot de performances V296 ; configuration et procédure dans [Cloudflare Pages](docs/development/cloudflare-pages.md). Conserver les formats, clés de stockage, assets et archives historiques nommés Lisière. Le prochain lot de performances MAIN/préparation graphique a été explicitement autorisé ; cette interruption de publication ne réactive pas la tâche planifiée, qui reste PAUSED. Aucun gain de performance n’est attribué au renommage ou à l’hébergement.
 
 - V295 retient le [réemploi confirmé des faits Resource](docs/development/aulnes-performance-v295.md), schéma 218 et63références/66fichiers conservés. Tuples sparse stables, index immuable et engagement après gardes ; changements réels/checkpoints/atypiques en capture complète, RAW historique. Chrome1440p/dev :111,35→119,40RAF/s (+7,24%), vrai6,009→6,027× ; adoption CPU par appel−21,57%, pas CPU total ni gain GPU.55cas/9fichiers,63références avec vrai tick, build et huit recharges natives passent ; preuves/limites et interruption nocturne dans la note unique.240FPS et fluidité constante non atteints. **L'autorisation nocturne est terminée : relance planifiée PAUSED, arrêt après commit/push V295, aucune suite autonome sans nouvelle demande humaine.** Les consignes d'autonomie et priorités suivantes sont historiques.
 

@@ -43,3 +43,8 @@ __pycache__/
 # Local deployment identity and rolling deployment result; never credentials.
 .netlify/
 artifacts/netlify-latest.json
+
+# Cloudflare local state and credentials.
+.wrangler/
+.dev.vars
+.dev.vars.*

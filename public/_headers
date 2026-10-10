@@ -6,8 +6,6 @@
   Cache-Control: public, max-age=0, must-revalidate
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
-/assets/*
-  Cache-Control: public, max-age=3600
 /assets/ui/*
   Cache-Control: public, max-age=0, must-revalidate
 /test-saves/*

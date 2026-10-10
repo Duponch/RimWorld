@@ -1,5 +1,5 @@
 {
-  "name": "lisiere",
+  "name": "elsewhere",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
+    "build:pages": "tsc --noEmit && vite build --mode pages",
+    "deploy:pages": "npm run build:pages && wrangler pages deploy --branch main",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -34,6 +36,7 @@
     "@webgpu/types": "0.1.72",
     "typescript": "7.0.2",
     "vite": "8.3.0",
-    "vitest": "5.0.0"
+    "vitest": "5.0.0",
+    "wrangler": "4.149.0"
   }
 }

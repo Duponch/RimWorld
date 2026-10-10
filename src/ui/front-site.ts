@@ -37,7 +37,7 @@ export function createSiteConfiguration(options: SiteConfigurationOptions): { el
     <label class="front-seed-label" for="front-seed">Graine de la carte</label><div class="front-seed-row"><input id="front-seed" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" aria-describedby="front-seed-help"><button id="front-random-seed" type="button">Aléatoire</button></div>
     <p id="front-seed-help" class="front-small">Un entier entre 0 et 4 294 967 295. La graine et les réglages reproduisent la même carte dans cette version.</p>
     <fieldset class="front-relief-options"><legend>Relief</legend></fieldset>
-    <p class="front-small front-site-default">Petites collines est la proposition de Lisière, pas un site imposé par RimWorld.</p>
+    <p class="front-small front-site-default">Petites collines est la proposition d’Elsewhere, pas un site imposé par RimWorld.</p>
     </section><section class="front-card front-summary"><p class="front-kicker">VOTRE SITE</p><h2 id="front-biome-title">Forêt tempérée</h2>
     <dl class="front-map-facts"><div><dt>Relief</dt><dd id="front-site-relief"></dd></div><div><dt>Rivière</dt><dd>Sans rivière</dd></div><div><dt>Roches locales</dt><dd id="front-site-stones" aria-live="polite"></dd></div><div><dt>Taille</dt><dd>${DEFAULT_MAP_SIZE} × ${DEFAULT_MAP_SIZE} cases</dd></div></dl>
     <p class="front-small">Trois profils locaux sont proposés. La planète et les cours d’eau restent à développer.</p>
