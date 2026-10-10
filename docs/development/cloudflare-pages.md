@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere** ; moteur, règles, qualité et schéma 218 restent inchangés. La première publication porte V295 ; la mise à jour courante contient la [préparation des bâtiments V299](aulnes-performance-v299.md), avec la préparation graphique V296 conservée.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere** ; moteur, règles, qualité et schéma 218 restent inchangés. La première publication porte V295 ; la mise à jour courante contient les [interactions des ordres V300](../gameplay/order-interactions-v300.md), avec les optimisations V296–V299 conservées.
 
 ## Adresse et publication
 
@@ -43,6 +43,14 @@ Le 10 octobre, la même adresse stable reçoit la publication `ce930a0c`, conten
 V297 et V298 sont des diagnostics sans publication. Après le commit/push produit V299 `c4f4f8ce`, une seule mise à jour reçoit la publication `39a1cdf9`, à la même adresse stable. Build Pages/typage final PASS8,233s ; déploiement PASS13,654s ; contrôle HTTPS PASS0,863s, sept fichiers 200/MIME/bytes identiques à `dist/`, rapport `tmp/elsewhere-pages/http-2Ihv7K/report.json`. Trois fichiers sont envoyés, 234 étaient déjà présents. Les66fichiers de sauvegarde/catalogue sont identiques et le laboratoire est absent. L'avertissement Git dirty de Wrangler correspond au dossier utilisateur non suivi `references_UI`, qui n'est pas publié.
 
 Les contrôles Chrome/compatibilité et les gains V299 sont dans sa note ; la vérification HTTPS n'est pas un nouveau benchmark en ligne ni un nouveau parcours UI. Les mises à jour Pages continuent d'être regroupées ; un push reste indépendant du déploiement.
+
+## Publication V300 demandée immédiatement
+
+Le 10 octobre, après le commit/push produit `8af919f9`, l'utilisateur demande explicitement de publier maintenant. La publication `155770bd` contient V300 à la même [adresse stable](https://elsewhere-cq7.pages.dev/) et à son [URL de publication](https://155770bd.elsewhere-cq7.pages.dev/). Build Pages/typage PASS 8,132 s ; déploiement PASS 14,007 s, trois fichiers envoyés et 234 déjà présents. L'avertissement de travail Git non suivi concerne `references_UI`, qui n'entre pas dans `dist/`.
+
+Contrôle HTTPS PASS 3,159 s : `/`, HTML, favicon, CSS, JS principal, Worker, catalogue et Les Aulnes sur les deux origines, soit 16 réponses 200 avec les MIME et octets attendus. Rapport `tmp/elsewhere-pages/v300-http-6VGRW2/report.json`. Les 63 références/66 fichiers sont identiques entre `public/` et le package, laboratoire et sources privés absents ; package et sauvegardes ne changent pas pendant les contrôles. Le Worker conserve son hash V299. Les 66 sauvegardes distantes ne sont pas toutes téléchargées par ce contrôle ; aucun nouveau parcours de jeu en ligne ni benchmark n'est revendiqué. Les contrôles Chrome V300 sont dans sa note.
+
+Les futures publications restent regroupées, sauf demande explicite de publication immédiate. Un commit/push documentaire consécutif à cette livraison ne déclenche pas un second déploiement. La relance planifiée reste en pause.
 
 ## Références
 
