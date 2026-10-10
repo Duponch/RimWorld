@@ -119,7 +119,8 @@ export class SceneRenderCore {
   protected readonly environmentLighting = new EnvironmentLighting();
   protected readonly overview = new OverviewLayer(this.environmentLighting.configure);
   protected readonly timeline = new MotionTimeline();
-  protected readonly presentation = new PresentationQueue();
+  protected readonly presentation = this.createPresentationQueue();
+  protected createPresentationQueue():PresentationQueue { return new PresentationQueue(); }
   protected received:{world:World;speed:number;tracks?:PawnTrack[];immutableSnapshot:boolean}|undefined;
   protected immutableSnapshot=false;
   protected readonly immutableWorlds=new WeakSet<World>();

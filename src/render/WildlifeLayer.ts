@@ -1,7 +1,7 @@
 import { attachedFireMesh, setFireTexturesEnabled } from './FireLayer';
 import * as THREE from 'three/webgpu';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
-import { Fn,If,attribute,cos,sin,float,normalLocal,positionLocal,vec3,uniform,mix } from 'three/tsl';
+import { Fn,If,attribute,cos,sin,float,normalLocal,positionLocal,vec3,uniform,renderGroup,mix } from 'three/tsl';
 import { hareGeometry } from './hare-geometry';
 import { animalParts } from './animal-shape';
 import { material } from './primitives';
@@ -38,7 +38,7 @@ class SpeciesRig {
   readonly plainMaterial:THREE.MeshStandardNodeMaterial;
   readonly texturedMaterial:THREE.MeshStandardNodeMaterial;
   private selected:ReadonlySet<number>=new Set();
-  readonly blend=uniform(1);private time=uniform(0);
+  readonly blend=uniform(1).setGroup(renderGroup);private time=uniform(0).setGroup(renderGroup);
   private keys=new Map<number,string>();private source:World|undefined;
   private headings=new Map<number,TurnHeading>();
   private readonly gait=new GaitPhaseTracker();
@@ -263,7 +263,7 @@ class SpeciesRig {
 
 /** Seven resident species batches; all owners share each exact body and coat. */
 export class WildlifeLayer {
-  readonly mesh=new THREE.Group();readonly flames=new THREE.Group();readonly travelTime=uniform(0);
+  readonly mesh=new THREE.Group();readonly flames=new THREE.Group();readonly travelTime=uniform(0).setGroup(renderGroup);
   private readonly surfaceTextures={soft:createAnimalCoatTexture('soft'),short:createAnimalCoatTexture('short'),shaggy:createAnimalCoatTexture('shaggy')};
   private texturesEnabled=true;
   private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();private pileSurface:ReadonlyMap<number,PileSurface>=new Map();

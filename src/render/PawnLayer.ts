@@ -27,7 +27,7 @@ import { constructionWorkTarget } from '../sim/construction-rules';
 import { pawnSelectionMesh } from './PawnSelectionLayer';
 import type { MotionTimeline } from './MotionTimeline';
 import * as THREE from 'three/webgpu';
-import { Fn, If, attribute, cos, float, mix, positionLocal, sin, uniform, vec3 } from 'three/tsl';
+import { Fn, If, attribute, cos, float, mix, positionLocal, sin, uniform, renderGroup, vec3 } from 'three/tsl';
 import { TICKS_PER_SECOND,type MaterialPile,type Pawn,type World } from '../sim/types';
 import { adjacentTable } from '../sim/dining';
 import { CARRY_CAPACITY, footprintCells } from '../sim/definitions';
@@ -145,9 +145,9 @@ export class PawnLayer {
     this.pawnIds.forEach((id,i)=>flags.setX(i,ids.has(id)?1:0));flags.needsUpdate=true;
   }
   readonly group = new THREE.Group();
-  readonly time = uniform(0);
-  readonly travelTime = uniform(0);
-  readonly blend = uniform(1);
+  readonly time = uniform(0).setGroup(renderGroup);
+  readonly travelTime = uniform(0).setGroup(renderGroup);
+  readonly blend = uniform(1).setGroup(renderGroup);
   readonly visuals = new Map<number, VisualPawn>();
   private pawnMesh: THREE.Mesh | null = null;
   private readonly surfaceTexture = createStylizedSurfaceTexture();
@@ -181,7 +181,7 @@ export class PawnLayer {
   }
   private carryOrigin=0;
   private travelOrigin=0;
-  readonly cargoTime=uniform(0);
+  readonly cargoTime=uniform(0).setGroup(renderGroup);
   hiddenPileQuantity(pileId:number):number {return this.handoffs.hiddenQuantity(pileId);}
   hiddenPileQuantities():ReadonlyMap<number,number> {return this.handoffs.hiddenQuantities();}
   private travelSurfaces:ReadonlyMap<number,number>=new Map();

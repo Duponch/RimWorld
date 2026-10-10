@@ -1,3 +1,7 @@
+import {PresentationQueue} from './render/PresentationQueue';
+import {PresentationChanges} from './bridge/presentation-changes';
+import {ConfirmedStructurePhaseReader} from './render/ConfirmedStructurePhases';
+import {createClosedMainMapIntentReader} from './render/closed-main-map-intents';
 import { isBedKind } from './sim/bed-kinds';
 import { bedRestEffectiveness } from './sim/furniture-stats';
 import { mentalCrisisView } from './sim/mental-presentation';
@@ -347,7 +351,16 @@ let graphicsMessage = '', incidentPanel: HTMLElement | undefined;
 const waitingRequests = new Map<number, string>();
 // This instance never escapes MAIN. All Worlds come from the private client,
 // all UI/audio/render aliases are fixed readers, and DEV exposes a clone.
+// This observer lives only in the closed MAIN renderer. Source/public queues
+// retain the complete historical projections; a journal alone grants no authority.
+class MainPresentationChanges extends PresentationChanges {
+  readonly #structures=new ConfirmedStructurePhaseReader();
+  protected override readStructures(world:World):unknown { return this.#structures.read(world); }
+}
 class MainColonyRenderer extends ColonyRenderer {
+  protected override createPresentationQueue():PresentationQueue {
+    return new PresentationQueue(createClosedMainMapIntentReader(),()=>new MainPresentationChanges());
+  }
   protected override createStructurePreparation():SceneStructurePreparation { return new SceneStructurePreparation(); }
 }
 let renderer: ColonyRenderer | undefined;

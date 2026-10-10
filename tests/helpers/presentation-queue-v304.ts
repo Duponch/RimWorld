@@ -1,18 +1,16 @@
-import type { World } from '../sim/types';
-import { PresentationChanges } from '../bridge/presentation-changes';
-import type { ClosedMainMapIntentReader } from './closed-main-map-intents';
+import type { World } from '../../src/sim/types';
+import { PresentationChanges } from './presentation-changes-v304';
 
 /** Decoded snapshots are immutable and share terrain/resource arrays. Scene
  * changes wait for the actors' confirmed clock. No simulation mutation. */
 export class PresentationQueue {
   private pending:World[]=[];
-  private phases:PresentationChanges;
+  private phases=new PresentationChanges();
   private inspected:World|undefined;
   private changed=false;
   private intentSignature:string|undefined;
   private lastApplied=-Infinity;
-  constructor(private readonly intentReader?:ClosedMainMapIntentReader,private readonly createPhases:()=>PresentationChanges=()=>new PresentationChanges()) {this.phases=this.createPhases();}
-  clear():void {this.pending=[];this.phases=this.createPhases();this.inspected=undefined;this.intentSignature=undefined;this.lastApplied=-Infinity;this.intentReader?.clear();}
+  clear():void {this.pending=[];this.phases=new PresentationChanges();this.inspected=undefined;this.intentSignature=undefined;this.lastApplied=-Infinity;}
   get size():number {return this.pending.length;}
   push(world:World):void {
     if(this.pending.at(-1)?.tick===world.tick)this.pending[this.pending.length-1]=world;
@@ -29,7 +27,7 @@ export class PresentationQueue {
         // These confirmed map intentions were absent from the phase observer.
         // Compare values so ordinary cloned snapshots retain the 5 Hz cadence.
         // No movement clock, speculative preview or simulation state changes.
-        const intent=this.intentReader?this.intentReader.read(world):JSON.stringify([
+        const intent=JSON.stringify([
           world.jobs.map(j=>[j.id,j.kind,j.x,j.z,j.orientation,j.footprint,j.construction]),
           world.growingZones.map(zone=>[zone.id,zone.cells,zone.plant]),
           world.stockpiles.map(cell=>[cell.id,cell.zoneId,cell.x,cell.z]),world.home,world.roofing?.build,world.roofing?.remove,

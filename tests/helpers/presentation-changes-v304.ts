@@ -1,6 +1,6 @@
 // Affiliation and flight are discrete gameplay presentation phases.
-import type { World } from '../sim/types.ts';
-import { anestheticStage } from '../sim/anesthetic.ts';
+import type { World } from '../../src/sim/types.ts';
+import { anestheticStage } from '../../src/sim/anesthetic.ts';
 
 /** Publish discrete phase changes at their own tick. Continuous walking,
  * hunger, work progress and food age still use the periodic snapshots. This
@@ -9,11 +9,6 @@ export class PresentationChanges {
   private signature:string|undefined;
   private relationshipLinks:NonNullable<World['relationships']>['links']|undefined;
   private relationshipSignature:string|undefined;
-  protected readStructures(world:World):unknown {
-    return world.structures.map(s=>[s.id,s.x,s.z,s.medical,s.prisoner,s.emp,s.fuel? s.fuel.ticks>0:undefined,s.door?.changedAt,s.door?.open,s.power?.on,s.power?.parentId,s.power?.switchOn,
-        s.turret?[s.turret.ammoQ,s.turret.autoReload,s.turret.holdFire,s.turret.targetKey,!!s.turret.warmup,
-          s.turret.burst?.targetKey,!!s.turret.burst,s.turret.cooldownCore>0,s.turret.wick]:undefined]);
-  }
   capture(world:World):boolean {
     // Canonical producers replace the links array. Serialize a new graph once,
     // while retaining value equality for a cloned immutable World.
@@ -56,7 +51,9 @@ export class PresentationChanges {
         p.burial?.phase,p.burial?.corpseId,p.cleaning?.phase,p.cleaning?.targets[0],p.health?.foodPoisoning?.vomit?.remainingCore!==undefined,p.health?.flu?.vomit?.remainingCore!==undefined,p.health?.immuneDiseases?.malaria?.vomit?.remainingCore!==undefined,p.body?.pileId,p.body?.lostAt,p.hunting?.animalId,p.hunting?.phase,p.research?.stationId,p.haul?.phase,p.haul?.carryPileId,p.cooking?.phase,p.cooking?.productId,
         p.recreation.task?.activity,p.recreation.task?.buildingId,p.visitor?.group,p.visitor?.role,p.visitor?.phase,p.trade?.traderId,p.trade?.phase]),
       world.piles.map(p=>[p.id,p.item,p.quantity,p.owner]),
-      this.readStructures(world),
+      world.structures.map(s=>[s.id,s.x,s.z,s.medical,s.prisoner,s.emp,s.fuel? s.fuel.ticks>0:undefined,s.door?.changedAt,s.door?.open,s.power?.on,s.power?.parentId,s.power?.switchOn,
+        s.turret?[s.turret.ammoQ,s.turret.autoReload,s.turret.holdFire,s.turret.targetKey,!!s.turret.warmup,
+          s.turret.burst?.targetKey,!!s.turret.burst,s.turret.cooldownCore>0,s.turret.wick]:undefined]),
       (world.packed??[]).map(p=>[p.building.id,p.owner]),
       world.roofing?.constructed,
     ]);

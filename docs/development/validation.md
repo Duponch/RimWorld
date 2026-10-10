@@ -1,4 +1,6 @@
-# Validation courante — V304
+# Validation courante — V305
+
+**V305 : [préparation des scènes](aulnes-performance-v305.md#validation), schéma 219 conservé.**76cas/11fichiers dont18nouveaux ; huit cas repris contre une file historique indépendante. Typage/build, deux suites64vrais ticks, huit états WebGPU aux pixels exacts et quatre recharges GAME passent. Comparaison109,974→115,169RAF/s avec débit5,836→5,986× ; les limites à froid, rouges et variantes rejetées sont dans la note unique.63références/66fichiers préservés, aucune nouvelle campagne générale inchangée. Les validations suivantes sont historiques.
 
 **V304 : [identité visuelle et affichage de carte](../gameplay/visual-identity-v304.md#validation), schéma 219 conservé.** Modèles, icônes, interface Simulation, seuil des chiffres et intentions confirmées ; contrôles, rouges et limites dans la note unique. Les sauvegardes publiques sont préservées. Relance planifiée en pause ; les validations suivantes sont historiques.
 
