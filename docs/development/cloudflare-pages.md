@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les [visuels V304](../gameplay/visual-identity-v304.md) et les [optimisations de préparation V305](aulnes-performance-v305.md), schéma219 conservé.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les visuels V304, la préparation V305 et les [corrections d’herbe/HUD et préférences V306](../gameplay/presentation-controls-v306.md), schéma219 conservé.
 
 ## Adresse et publication
 
@@ -85,6 +85,14 @@ Après le commit/push produit `ecbe76a7`, une publication unique `b0243966` regr
 Déploiement PASS15,528s : trois fichiers envoyés,464déjà présents, plus les en-têtes et redirections. L’avertissement Git dirty concerne `references_UI` et une métadonnée locale de BoxBatches ; ce dernier fichier a exactement le même blob Git `3106d8c1` que HEAD et n’a pas été modifié par le commit. Aucun de ces fichiers privés n’est publié.
 
 Vérification HTTPS PASS3,347s,40réponses200/MIME/octets exacts sur les origines stable et fraîche : HTML, favicon, CSS, JS, Worker, catalogue, Aulnes et douze icônes/atlases/portraits. Rapport `tmp/elsewhere-pages/v305-http-ShKc3R/report.json`, package/publics inchangés pendant le contrôle. Les66fichiers distants ne sont pas tous téléchargés. Contrôles du jeu, gains et limites dans la note V305 ; cette vérification ne constitue pas un benchmark en ligne. Aucun second déploiement pour le commit documentaire, relance planifiée en pause.
+
+## Publication regroupée V306
+
+Le commit produit `a012cf32186a0bf755b35c8420bfc16625197ef9` est poussé puis publié en `05e05a28` : [adresse stable](https://elsewhere-cq7.pages.dev/) et [publication](https://05e05a28.elsewhere-cq7.pages.dev/). Build Pages et typage PASS14,623s ; package PASS1,862s,489fichiers/108427964octets,230SVG et six fontes exacts,63références/66fichiers de sauvegarde/catalogue identiques. La reprise de contrôle admet le seul README public de provenance des fontes, à bytes exacts ; le rouge de l’interdiction générique Markdown reste conservé.
+
+Déploiement PASS13,574s :23fichiers envoyés,464déjà présents, puis en-têtes et redirections. Git dirty concerne seulement le dossier utilisateur `references_UI`, absent du commit et du package. Vérification HTTPS PASS3,655s :52réponses200/MIME/bytes exacts sur les origines stable et fraîche, incluant six TTF ; rapport `tmp/elsewhere-pages/v306-http-nP2cgJ/report.json`, SHA `809CA23E`, package et publics inchangés. Tous les66fichiers distants ne sont pas téléchargés par ce contrôle.
+
+Les préférences, shaders, surfaces, sauvegarde/reprise et l’impact GAME sont détaillés dans la note V306. Le test réseau n’est pas un nouveau parcours de jeu ni un benchmark en ligne. Une seule publication pour ce lot ; le commit/push documentaire consécutif ne déclenche pas une deuxième publication. La relance planifiée reste en pause.
 
 ## Références
 
