@@ -1,0 +1,6 @@
+#app .colonist-bar{flex-direction:column;align-items:center;gap:5px}
+#app #colonists{flex:none;min-width:0}
+#app #pause-banner{position:static;transform:none;display:flex;align-items:center;gap:6px;padding:4px 10px;margin:0;line-height:1.3;letter-spacing:0;font-size:12px}
+#app #pause-banner img{display:block;width:19px;height:19px;object-fit:contain}
+#app .time-controls button{display:grid;place-items:center;min-width:42px;height:34px;padding:2px 5px}
+#app .time-control-icon{display:block;width:31px;height:27px;object-fit:contain;pointer-events:none}

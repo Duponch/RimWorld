@@ -76,7 +76,9 @@ test('all six local originals cover French and retain the OFL and offline CSS co
     expect(readFileSync(new URL(`../public/assets/fonts/v306/${choice.id}-OFL.txt`, import.meta.url), 'utf8')).toContain('SIL OPEN FONT LICENSE');
     expect(css).toContain(`url('${choice.asset}')`);
   }
-  expect(css).not.toMatch(/https?:|@import|font-size:|line-height:/);
+  expect(css).not.toMatch(/https?:|@import|font-size:/);
+  // V307 permits intrinsic line spacing to fit each face, retaining its size.
+  expect(css).toContain('line-height:var(--ui-copy-leading)');
   expect(css).toContain('font-family:var(--ui-font)!important');
   expect(css).toContain('dialog');
 });

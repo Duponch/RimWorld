@@ -1,0 +1,21 @@
+/* Stock disclosure stays on the map: no card, backing plate or boxed button. */
+#app .resource-list .resource-ledger-compatibility{display:none!important}
+#app .resource-list #resources{display:flex;flex-direction:column;gap:3px}
+#app .resource-list .resource-ledger-group{border:0;margin:0;padding:0;color:inherit;background:none}
+#app .resource-list .resource-ledger-heading{display:flex;align-items:center;gap:6px;min-height:29px;padding:2px 0;color:inherit;background:none;border:0;list-style:none;font-size:13px;line-height:1.35;font-weight:700;cursor:var(--cursor-pointer,pointer)}
+#app .resource-list .resource-ledger-heading::-webkit-details-marker{display:none}
+#app .resource-list .resource-ledger-heading::before{content:'';flex:0 0 5px;width:5px;height:5px;margin-right:3px;border-top:1.8px solid currentColor;border-right:1.8px solid currentColor;transform:rotate(45deg)}
+#app .resource-list .resource-ledger-group[open]>.resource-ledger-heading::before{transform:rotate(135deg);margin-top:-3px}
+#app .resource-list .resource-ledger-heading>span{flex:1;min-width:0;overflow-wrap:anywhere}
+#app .resource-list .resource-ledger-heading>strong{flex:none;font-size:14px;font-variant-numeric:tabular-nums}
+#app .resource-list .resource-ledger-heading:focus-visible{outline:2px solid var(--sun);outline-offset:1px;border-radius:2px}
+#app .resource-list .resource-ledger-children{padding-left:10px;min-width:0}
+#app .resource-list .resource-ledger-children>.resource-ledger-group>.resource-ledger-heading{font-size:12px;font-weight:600;min-height:26px}
+#app .resource-list .resource{grid-template-columns:24px minmax(0,1fr) auto;gap:5px;min-height:28px;font-size:12px;line-height:1.3;font-weight:500}
+#app .resource-list .resource-symbol{width:24px;height:24px}
+#app .resource-list .resource-name{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+#app .resource-list .resource strong{font-size:13px}
+#app .resource-list .resource-metric{font-size:11px;font-weight:500;color:#ffe7a7}
+#app .resource-list .resource-metric .resource-name{font-size:11px}
+#app .resource-list .resource-metric strong::after{content:' nutr.';font-size:10px;font-weight:400}
+@media(max-width:760px){#app .resource-list .resource-ledger-children{padding-left:7px}#app .resource-list .resource-ledger-heading{font-size:12px}#app .resource-list .resource{font-size:11px;grid-template-columns:21px minmax(0,1fr) auto;gap:4px}#app .resource-list .resource-symbol{width:21px;height:21px}}

@@ -22,7 +22,11 @@ import { updateHygieneControls } from './ui/hygiene-controls';
 import { isBuildableFloor } from './sim/flooring';
 import { createOrbitalTradeUI } from './ui/orbital-trade-panel';
 import { createTradeUI } from './ui/trade-panel';
-import { climateDateLabel,climateControls } from './ui/climate-inspection';
+import { climateControls } from './ui/climate-inspection';
+import { createSiteHud } from './ui/site-hud';
+import { createResourceLedger } from './ui/resource-ledger';
+import { installArchitectWorkbench } from './ui/architect-workbench';
+import { installTimeControls } from './ui/time-controls';
 import { WEATHER } from './sim/weather-definitions';
 import { perceivedWeather, weatherRainRate } from './sim/weather';
 import { windIntensity } from './sim/wind-rules';
@@ -142,7 +146,6 @@ import { itemInformation } from './ui/item-information';
 import { healthCapacityRows } from './ui/health-inspection';
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
-import { updateFoodStocks } from './ui/food-stocks';
 import { SimulationClient } from './bridge/SimulationClient';
 import { SnapshotDecoder, type SnapshotValidationContext, type SnapshotMessage, type SnapshotAdoption } from './bridge/snapshots';
 import type { AudioCue } from './bridge/audio-cues';
@@ -169,6 +172,10 @@ import { miniTurretView,turretSeconds } from './sim/mini-turret-presentation';
 import { updateRecreationInspection } from './ui/recreation-inspection';
 import { gatherSpotControls, updateGatherSpotControls } from './ui/gather-spot-controls';
 import './ui/visual-identity.css';
+import './ui/site-hud.css';
+import './ui/resource-ledger.css';
+import './ui/architect-workbench.css';
+import './ui/time-controls.css';
 const jobLabels: Record<JobKind, string> = { 'biofuel-refinery':'Construction de la raffinerie de biocarburant','chemfuel-generator':'Construction du générateur à biocarburant', 'nutrient-paste-dispenser':'Construction du distributeur de pâte nutritive',hopper:'Construction de la trémie', 'orbital-beacon':'Construction de la balise orbitale','comms-console':'Construction de la console de communication', 'deep-drill':'Construction de foreuse profonde','ground-scanner':'Construction du scanner souterrain', 'vitals-monitor':'Construction du moniteur vital', 'drug-lab':'Construction du laboratoire de chimie', 'hydroponics-basin':'Construction du bac hydroponique', 'mini-turret':'Construction de mini-tourelle automatique', 'tube-television':'Construction de télévision cathodique', sandbags: 'sacs de sable', fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', bed: 'Construction du lit', 'hospital-bed':'Construction du lit d’hôpital', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const rotatableTools=new Set<Tool>(['biofuel-refinery','nutrient-paste-dispenser','hopper','comms-console','deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','tube-television','art-bench','machining-table','hi-tech-research-bench','fabrication-bench','grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bed','hospital-bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
@@ -343,7 +350,7 @@ for(const button of document.querySelectorAll<HTMLButtonElement>('[data-world-ta
   });
 }
 let lastCommercialArrivalKey:string|undefined;
-let currentCategory: ArchitectCategory = 'orders';
+let currentCategory: ArchitectCategory = 'structure';
 let placementOrientation: Orientation = 0;
 let currentSpeed = 1, lastSpeed = 1, stepMs = 0;
 let wallCutaway = false, foliageVisible = true, replacingWorld = false;
@@ -520,10 +527,17 @@ inspectorSizeObserver.observe(el('inspector'));
 installVisualIdentity(document.querySelector<HTMLElement>('#app')!);
 installTooltips(document.body);
 installArchitectIcons(document.querySelector<HTMLElement>('#app')!);
+const siteHud = createSiteHud(document.querySelector<HTMLElement>('#app')!);
+const resourceLedger = createResourceLedger(document.querySelector<HTMLElement>('#app')!);
+const architectWorkbench = installArchitectWorkbench(document.querySelector<HTMLElement>('#app')!, () => {
+  setPanel(null); clearSelection(); applyTool('select');
+});
+installTimeControls(document.querySelector<HTMLElement>('#app')!);
 // Suppress browser chrome without cancelling the game's own order-menu handler.
 document.querySelector('#app')!.addEventListener('contextmenu', event => {
   event.preventDefault();
   if(currentPanel==='architect'&&(event.target as Element).closest('.management-panel'))setPanel(null,true);
+  if((event.target as Element).closest('.map-tools-dock'))architectWorkbench.close();
 });
 const saveRepository = new BrowserSaveRepository(() => localStorage, () => globalThis.indexedDB,
   status => { if (status.message) notify(status.message, true); });
@@ -630,13 +644,15 @@ const apparelPolicyUI = createApparelPolicyControls(el('assign-panel'), async co
 });
 const constructionUI = constructionControls(() => applyTool(currentTool));
 function setCategory(category: ArchitectCategory) {
+  if(category==='orders'||category==='zones')return;
   currentCategory = category;
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.classList.toggle('active', button.dataset.category === category);
-  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool-category]')) button.hidden = button.dataset.toolCategory !== category;
+  for (const button of document.querySelectorAll<HTMLButtonElement>('#architect-panel [data-tool-category]')) button.hidden = button.dataset.toolCategory !== category;
 }
 function selectedColonyIds():number[]{return snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner).map(p=>p.id)??[];}
 function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>selectPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:selectedColonyIds(),targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId:id,enabled});renderState();}));}
 function setPanel(panel: Panel, preserveTool = false) {
+  architectWorkbench.close();
   dismissTooltip();
   // Every exit path (tabs, map, portraits and shortcuts) releases this pause.
   if (currentPanel === 'menu' && panel !== 'menu' && menuResumeSpeed !== undefined && !replacingWorld && !frontMenu.isOpen()) {
@@ -670,6 +686,7 @@ function setPanel(panel: Panel, preserveTool = false) {
   if (panel === 'work' && snapshot) updateWorkPanel(snapshot,carriedPatientsOf(snapshot));
 }
 function applyTool(tool: Tool) {
+  architectWorkbench.close();
   zoneEditTarget=undefined;renderer?.setZoneTarget(undefined);
   shootingControls.cancel();
   if(tool!=='install'){installationId=undefined;renderer?.setFurniturePlacement(undefined);}
@@ -900,7 +917,7 @@ function rebuildInspector() {
   } else if (selectedCell) {
     panel.classList.add('cell-inspector-host');
     panel.innerHTML = `<div class="cell-summary"><div class="cell-card"><div class="panel-heading cell-heading"><span class="cell-illustration ui-icon" aria-hidden="true"></span><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="cell-description"></div><p id="cell-materials"></p><p id="cell-job"></p></div><div class="cell-actions" role="group" aria-label="Commandes de l’objet"><button id="weapon-permission" class="secondary-action" hidden></button><button id="cell-chop" class="secondary-action" hidden>Couper du bois</button><button id="cell-harvest" class="secondary-action" hidden>Récolter</button><button id="cell-cut" class="secondary-action" hidden>Déraciner</button><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button></div></div><div id="cell-storage" hidden><div id="selected-stockpile-items"></div></div>`;
-    for(const [id,label] of [['mine','Miner'],['haul-chunks','Transporter les fragments']] as const){
+    for(const [id,label] of [['mine','Miner'],['haul-chunks','Transporter']] as const){
       const button=document.createElement('button');button.id=`cell-${id}`;button.className='secondary-action';button.hidden=true;button.textContent=label;panel.querySelector('.cell-actions')!.append(button);
     }
     const storage = selectedObject?.kind==='stockpile'?snapshot?.stockpiles.find(item => item.id===selectedObject!.id):undefined;
@@ -1070,11 +1087,13 @@ function renderState() {
   if(currentPanel==='schedule')scheduleUI.update(world);
   if(currentPanel==='assign'){foodPolicyUI.update(world);apparelPolicyUI.update(world);}
   const totals = {blocks:0,medicine:0,silver:0,component:0,cloth:0,steel:0,chemfuel:0,gold:0,plasteel:0,'advanced-component':0,carried:0,delivered:0};
+  const stockCounts = new Map<World['piles'][number]['item'],number>();
   for (const pile of world.piles) {
     const owner = pile.owner;
     if (owner.type === 'job') totals.delivered += pile.quantity;
     const colony = owner.type === 'ground' || ('pawnId' in owner && colonistIds.has(owner.pawnId));
     if (!colony) continue;
+    stockCounts.set(pile.item,(stockCounts.get(pile.item)??0)+pile.quantity);
     if (pile.kind === 'blocks') totals.blocks += pile.quantity;
     if (pile.kind === 'medicine') totals.medicine += pile.quantity;
     if (pile.item === 'silver') totals.silver += pile.quantity;
@@ -1091,21 +1110,16 @@ function renderState() {
   el('cloth').textContent=String(totals.cloth);el('cloth-stock').hidden=totals.cloth===0;
   el('steel').textContent=String(totals.steel);
   for(const item of ['chemfuel','gold','plasteel','advanced-component'] as const){el(item).textContent=String(totals[item]);el(`${item}-stock`).hidden=totals[item]===0;}
-  el('wood').textContent = String(world.stock.wood); const nutrition = availableNutrition(world);el('food').textContent = nutrition.toFixed(1); updateFoodStocks(el('food-items'), world);
+  el('wood').textContent = String(world.stock.wood); const nutrition = availableNutrition(world);el('food').textContent = nutrition.toFixed(1);
+  resourceLedger.update(stockCounts);
   const carried = totals.carried, delivered = totals.delivered;
   el('material-status').textContent = `${carried} portées · ${delivered} au chantier`;
   el('scenario-current').textContent=(world.scenario?SCENARIOS[world.scenario.id].label:'Partie historique · départ non renseigné')+(world.site?` · ${BIOME_LABELS[world.site.biome]} · ${HILLINESS_LABELS[world.site.hilliness]}`:'');
   el('biome-current').textContent=world.site?BIOME_LABELS[world.site.biome]:'Site historique';
   el('population').textContent = String(living.length); el('map-size').textContent = `${world.width} × ${world.height}`;
-  el('outdoor-temperature').querySelector('.site-readout-value')!.textContent = `Extérieur : ${outdoorTemperature(world).toFixed(1)} °C`;
-  el('day').textContent = climateDateLabel(world);
-  const weatherReadout=el('weather');
-  weatherReadout.dataset.weather=world.weather?perceivedWeather(world):'clear';
-  weatherReadout.querySelector('.site-readout-value')!.textContent=[world.weather?WEATHER[perceivedWeather(world)].label:'',weatherConditionLabel(world)].filter(Boolean).join(' · ');
+  siteHud.update(world,outdoorTemperature(world),weatherConditionLabel(world));
   const climateKey=world.climate?`${world.climate.adoptedAt}:${Math.floor(world.tick/TICKS_PER_DAY)}`:'historical';
   const climateRoot=el('climate-options');if(climateRoot.dataset.key!==climateKey){climateRoot.dataset.key=climateKey;climateRoot.replaceChildren(climateControls(world,c=>void attempt(()=>client.command(c))));}
-  const hour = 24 * (calendarTick(world) % TICKS_PER_DAY) / TICKS_PER_DAY;
-  el('clock').textContent = `${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.floor((hour % 1) * 60)).padStart(2, '0')}`;
   el('pause-banner').hidden = currentSpeed !== 0;
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]')) {
     const active = Number(button.dataset.speed) === currentSpeed;
@@ -1418,6 +1432,10 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.onclick = () => { setCategory(button.dataset.category as ArchitectCategory); applyTool('select'); };
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) button.onclick = () => { const panel = button.dataset.panel as Panel; void attempt(() => switchPanel(currentPanel === panel ? null : panel)); };
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-guide-panel]')) button.onclick = () => { const panel = button.dataset.guidePanel as Panel; document.querySelector('.learning-readout')?.removeAttribute('open'); void attempt(() => switchPanel(panel)); };
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-guide-map-tools]')) button.onclick = () => {
+  document.querySelector('.learning-readout')?.removeAttribute('open');
+  el<HTMLButtonElement>(`${button.dataset.guideMapTools}-open`).click();
+};
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-close-panel]')) button.onclick = () => {
   const preserveTool = currentPanel === 'architect' && currentTool !== 'select';
   void attempt(() => switchPanel(null, preserveTool));

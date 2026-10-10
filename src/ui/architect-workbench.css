@@ -1,0 +1,248 @@
+/* V307: construction workbench and map tools have separate physical owners.
+   Transparent layout containers never capture the uncovered map. */
+#app .architect-workbench {
+  width: min(1420px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  height: min(900px, calc(100dvh - 254px));
+  padding: 0;
+  border: 3px solid var(--ink);
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--paper);
+}
+#app .architect-workbench > .panel-heading {
+  min-height: 84px;
+  padding: 15px 20px;
+  margin: 0;
+  border-bottom: 2px solid var(--line);
+}
+#app .architect-workbench .panel-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 29px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+#app .architect-heading-icon {
+  display: inline-block;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  background: center / contain no-repeat;
+}
+#app .architect-workbench .panel-heading > button {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--coral-soft);
+  color: var(--ink);
+  font-size: 29px;
+}
+#app .architect-workbench .architect-body {
+  grid-template-columns: 236px minmax(0, 1fr);
+  gap: 0;
+  min-height: 0;
+}
+#app .architect-workbench .architect-categories {
+  width: auto;
+  padding: 14px 12px;
+  gap: 9px;
+  border-right: 1px solid var(--line);
+  scrollbar-gutter: stable;
+}
+#app .architect-workbench .architect-categories button {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 10px;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 9px 11px;
+  border-color: #cec8c4;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: left;
+  white-space: normal;
+}
+#app .architect-workbench .architect-categories button.active {
+  border-color: #2864a2;
+}
+#app .architect-category-icon {
+  display: block;
+  width: 30px;
+  height: 30px;
+  background: center / contain no-repeat;
+}
+#app .architect-category-label { min-width: 0; overflow-wrap: normal; }
+#app .architect-category-arrow {
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
+  opacity: .65;
+}
+#app .architect-workbench .architect-content {
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 0;
+}
+#app .architect-workbench .tools {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  gap: 12px;
+  padding: 16px 14px 18px;
+  scrollbar-gutter: stable;
+}
+#app .architect-workbench .tools .tool {
+  width: auto;
+  height: auto;
+  min-height: 148px;
+  gap: 5px;
+  padding: 10px 8px 12px;
+  border-radius: 14px;
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.32;
+  overflow-wrap: anywhere;
+}
+#app .architect-workbench .tools .tool:hover:not(:disabled) { background: var(--sun-soft); }
+#app .architect-workbench .tools .tool.active { box-shadow: inset 0 0 0 1px var(--hud-sky); }
+#app .architect-workbench .tools .tool-icon {
+  width: 84px;
+  height: 84px;
+  margin: 0;
+  flex: none;
+}
+#app .architect-workbench .tools .tool > span:not(.tool-icon) {
+  min-width: 0;
+  max-width: 100%;
+}
+#app .architect-workbench .tools .tool kbd { top: 7px; right: 8px; font-size: 11px; }
+#app .architect-workbench .architect-options {
+  padding: 18px 18px 20px;
+  border-left: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.55;
+}
+#app .architect-workbench #tool-instruction {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+#app .architect-workbench #job-count {
+  border-top: 1px solid var(--line);
+  margin-top: 22px;
+  padding-top: 18px;
+  font-size: 14px;
+  font-style: italic;
+}
+#app .map-tools-dock {
+  position: absolute;
+  left: 12px;
+  bottom: calc(var(--tabs-height) + 12px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: calc(100vw - var(--right-width) - 36px);
+  z-index: 5;
+  pointer-events: none;
+}
+#app .map-tools-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+#app .map-tools-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  gap: 5px;
+  width: 108px;
+  min-height: 46px;
+  padding: 7px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  pointer-events: auto;
+}
+#app .map-tools-heading-icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  background: center / contain no-repeat;
+}
+#app .map-tools-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 600px;
+  pointer-events: none;
+}
+#app .map-tools-tray .map-tool {
+  width: 48px;
+  height: 46px;
+  min-height: 46px;
+  min-width: 48px;
+  padding: 4px;
+  gap: 0;
+  box-shadow: 0 2px 0 var(--ink);
+  pointer-events: auto;
+}
+#app .map-tools-tray .map-tool .tool-icon {
+  width: 34px;
+  height: 34px;
+  display: block;
+  flex: none;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#app .map-tools-tray .map-tool > span:not(.tool-icon),
+#app .map-tools-tray .map-tool kbd { display: none; }
+#app .game-shell:has(.management-panel:not([hidden])) .map-tools-dock { display: none; }
+#app .game-shell:has(#inspector:not([hidden])) .map-tools-dock {
+  bottom: calc(var(--tabs-height) + var(--hover-inspector-height, 0px) + 24px);
+}
+
+@media (max-width: 1280px) {
+  #app .architect-workbench .architect-body { grid-template-columns: 210px minmax(0, 1fr); }
+  #app .architect-workbench .architect-content { grid-template-columns: minmax(0, 1fr) 232px; }
+  #app .architect-workbench .architect-categories button { font-size: 13px; gap: 7px; padding-inline: 8px; }
+  #app .architect-workbench .tools { gap: 9px; padding-inline: 12px; }
+  #app .architect-workbench .tools .tool { font-size: 13px; padding-inline: 5px; }
+  #app .architect-workbench .architect-options { padding: 16px 14px; }
+}
+@media (max-width: 980px) {
+  #app .architect-workbench .architect-body { grid-template-columns: 164px minmax(0, 1fr); }
+  #app .architect-workbench .architect-content { grid-template-columns: minmax(0, 1fr) 204px; }
+  #app .architect-workbench .tools { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #app .architect-workbench .tools .tool { min-height: 136px; }
+  #app .architect-workbench .tools .tool-icon { width: 70px; height: 70px; }
+}
+@media (max-width: 760px) {
+  #app .architect-workbench { left: 10px; width: calc(100vw - 20px); max-width: calc(100vw - 20px); height: calc(100dvh - 198px); }
+  #app .architect-workbench > .panel-heading { min-height: 66px; padding: 10px 13px; }
+  #app .architect-workbench .panel-heading h2 { font-size: 23px; gap: 9px; }
+  #app .architect-heading-icon { width: 30px; height: 30px; }
+  #app .architect-workbench .architect-body { grid-template-columns: 142px minmax(0, 1fr); }
+  #app .architect-workbench .architect-categories { padding: 10px 8px; gap: 7px; }
+  #app .architect-workbench .architect-categories button { grid-template-columns: 23px minmax(0, 1fr) 7px; font-size: 12px; gap: 6px; min-height: 50px; padding: 7px 5px; }
+  #app .architect-category-icon { width: 23px; height: 23px; }
+  #app .architect-workbench .architect-content { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) minmax(100px, 28%); }
+  #app .architect-workbench .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 10px; }
+  #app .architect-workbench .architect-options { border-left: 0; border-top: 1px solid var(--line); padding: 10px 13px; }
+  #app .architect-workbench #tool-instruction { font-size: 13px; }
+  #app .architect-workbench #job-count { margin-top: 10px; padding-top: 10px; font-size: 12px; }
+  #app .map-tools-dock { left: 8px; max-width: calc(100vw - 16px); }
+  #app .map-tools-heading { width: 98px; }
+  #app .map-tools-tray { max-width: calc(100vw - 122px); }
+}

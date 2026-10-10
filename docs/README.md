@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V307 : [interfaces, ressources et commandes de carte](gameplay/interface-hud-v307.md), schéma219 conservé.** Architecte, ressources emboîtées, calendrier/météo et six fontes ; gestes de carte, pictogrammes et badge de pause. Contrôles, sauvegarde/reprise et publication dans la note unique. Les états suivants sont historiques.
+
 **V306 : [herbe, HUD et préférences d’affichage](gameplay/presentation-controls-v306.md), schéma 219 conservé.** Surfaces des outils et inspections raccordées, HUD simplifié, fontes locales au choix et masquage des nuages réglable ; contrôles et publication dans la note unique. Les états suivants sont historiques.
 
 **V305 : [préparation des scènes et performances](development/aulnes-performance-v305.md), schéma 219 conservé.** Réemploi des projections confirmées et horloges graphiques communes par rendu ; visuels V304 conservés. Résultats CPU/GAME, contrepartie à froid, preuves et variantes rejetées dans la note unique. Les états suivants sont historiques.

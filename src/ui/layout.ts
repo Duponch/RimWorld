@@ -7,6 +7,7 @@ import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from '../sim/map-config';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import { FLOOR_KINDS,FLOOR_DEFINITIONS,flooringRecipe,type BuildableFloorKind } from '../sim/flooring';
 import { UI_FONT_CHOICES } from './ui-fonts';
+import { siteHudLayout } from './site-hud';
 
 const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
 
@@ -34,7 +35,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   {id:'grave',title:'Tombe',hint:'1 × 2 · creusée sans matériau · un corps · Q / E pour tourner',key:'',category:'furniture'},
   { id: 'select', title: 'Inspecter', hint: 'Choisir un colon, un objet ou une zone ; survoler le terrain pour le lire', key: 'Échap', category: 'orders' },
   { id:'mine',title:'Miner',hint:'Désigner les massifs à creuser. Les fragments restent au sol après extraction.',key:'M',category:'orders' },
-  { id:'haul-chunks',title:'Transporter les fragments',hint:'Désigner les fragments à ranger dans une réserve qui les accepte.',key:'',category:'orders' },
+  { id:'haul-chunks',title:'Transporter',hint:'Désigner les fragments à ranger dans une réserve qui les accepte. Les autres objets sont transportés automatiquement selon les réglages de stockage et de travail.',key:'',category:'orders' },
   { id: 'chop', title: 'Abattre', hint: 'Cliquer ou tracer un rectangle sur les arbres à couper. Échap annule le tracé.', key: 'C', category: 'orders' },
   { id: 'harvest', title: 'Récolter', hint: 'Cliquer ou tracer un rectangle sur les plantes récoltables.', key: 'R', category: 'orders' },
   { id: 'cut', title: 'Couper les plantes', hint: 'Libérer la case ; récupérer le produit si la plante est récoltable.', key: '', category: 'orders' },
@@ -147,7 +148,7 @@ export function gameLayout(): string {
     <details class="learning-readout" aria-label="Conseils de jeu"><summary>Conseils</summary>
       <div class="learning-concepts"><p>Notions disponibles</p>
         <details><summary>Emploi du temps</summary><p>Planning règle les heures de travail, de loisir et de repos de chaque colon.</p><button data-guide-panel="schedule" type="button">Ouvrir Planning</button></details>
-        <details><summary>Ordres sur la carte</summary><p>Dans Architecte, désignez les arbres à abattre et les plantes à récolter. Les colons exécutent ces ordres selon leurs priorités et leur accès.</p><button data-guide-panel="architect" type="button">Ouvrir Architecte</button></details>
+        <details><summary>Ordres sur la carte</summary><p>Dans Ordres, au-dessus de la barre de gestion, désignez les arbres à abattre et les plantes à récolter. Les colons exécutent ces ordres selon leurs priorités et leur accès.</p><button data-guide-map-tools="orders" type="button">Ouvrir Ordres</button></details>
         <details><summary>Recherche</summary><p>Choisissez un projet ; un colon affecté à la recherche pourra progresser à un bureau construit et utilisable.</p><button data-guide-panel="research" type="button">Ouvrir Recherche</button></details>
       </div>
     </details>
@@ -215,7 +216,7 @@ export function gameLayout(): string {
     </section>
 
     <aside class="time-panel panel" aria-label="Temps et commandes de vue">
-      <div class="site-readout" aria-label="Conditions et date du site"><div id="outdoor-temperature" class="biome-label"><span class="site-readout-icon" aria-hidden="true"></span><span class="site-readout-value"></span></div><div id="weather" class="biome-label" data-weather="clear"><span class="site-readout-icon" aria-hidden="true"></span><span class="site-readout-value"></span></div><div id="clock">00:00</div><div id="day">Jour 1</div><div id="biome-current" class="biome-label" title="Milieu local. Climat et saisons indiqués dans le menu."></div></div>
+      ${siteHudLayout()}
       <div class="time-controls" aria-label="Vitesse de simulation">
         <button data-speed="0" aria-label="Pause" title="Pause · Espace">Ⅱ</button><button data-speed="1" aria-label="Vitesse normale" title="1× · touche 1">▷</button>
         <button data-speed="3" aria-label="Vitesse 3 fois" title="3× · touche 2">▷▷</button><button data-speed="6" aria-label="Vitesse 6 fois" title="6× · touche 3">▷▷▷</button>
@@ -227,7 +228,7 @@ export function gameLayout(): string {
     <div id="loading" class="loading"><h1>ELSEWHERE</h1><p>Préparation de votre colonie…</p></div>
     <dialog id="help" class="help-dialog"><form method="dialog"><button class="close" aria-label="Fermer l’aide">×</button></form><span class="section-label">CARNET DE SURVIE</span><h2>Votre première journée</h2>
       <p>Vous donnez les ordres. Les colons choisissent leurs tâches et se déplacent de façon autonome.</p>
-      <ol><li><b>Architecte → Ordres</b> : récolter les baies et abattre les arbres ; les matériaux apparaissent au sol.</li><li><b>Architecte → Zones</b> : désigner des cases de réserve et choisir leurs filtres. Les transporteurs y regroupent les objets.</li><li><b>Architecte → Structure / Meubles</b> : poser des murs et des lits. Les matériaux doivent être livrés avant de construire. <b>Q / E</b> tourne le lit.</li><li><b>Travail</b> : régler collecte, construction et transport ; 1 est la plus forte priorité, 0 désactive.</li><li><b>Menu</b> : sauvegarder, recharger ou choisir la taille d'une nouvelle colonie.</li></ol>
+      <ol><li><b>Ordres</b> : récolter les baies et abattre les arbres ; les matériaux apparaissent au sol.</li><li><b>Zones</b> : désigner des cases de réserve et choisir leurs filtres. Les transporteurs y regroupent les objets.</li><li><b>Architecte → Structure / Meubles</b> : poser des murs et des lits. Les matériaux doivent être livrés avant de construire. <b>Q / E</b> tourne le lit.</li><li><b>Travail</b> : régler collecte, construction et transport ; 1 est la plus forte priorité, 0 désactive.</li><li><b>Menu</b> : sauvegarder, recharger ou choisir la taille d'une nouvelle colonie.</li></ol>
       <p>Abattage, récolte, réserves et annulation : cliquer ou maintenir le bouton gauche pour tracer un rectangle. Les cases retenues sont surlignées. Relâcher applique ; Échap ou clic droit annule le tracé.</p>
       <p><b>Espace</b> : pause · <b>1 / 2 / 3</b> : vitesse · <b>Tab</b> : Architecte · <b>F1</b> : Travail · <b>F2</b> : Planning · <b>Échap</b> : annuler le tracé, puis fermer · <b>Ctrl+S</b> : sauvegarder.</p>
       <p>Molette : zoom · glisser le bouton droit : tourner · bouton central ou flèches : déplacer la caméra. La coupe des murs sert à voir les intérieurs ; leurs obstacles restent en place.</p>

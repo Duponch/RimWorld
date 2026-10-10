@@ -11,12 +11,14 @@ import {STRUCTURE_DEFINITIONS} from '../sim/definitions';
 import {mapObjectsAt,sameMapObject} from '../ui/map-object-selection';
 import {matchingMapObjects} from '../ui/map-object-group-selection';
 import {cameraClipNear} from './camera-clip';
+import {installMapWheelZoom} from '../ui/map-wheel';
 import type {AreaAction,Cell} from '../sim/types';
 export class ColonyRenderer extends SceneRenderCore {
   private readonly selectionInput:PawnSelectionInput;
   private areaPointer: { x:number; y:number } | undefined;
   private orderRightPress: {pointerId:number;x:number;y:number;at:number;tool:string;moved:boolean} | null = null;
   private readonly resizeObserver:ResizeObserver;
+  private releaseMapWheel: (() => void) | undefined;
   protected readonly mapLabels:MapLabelsOverlay;
   setItemLabelMinCellPixels(value:number):void {this.mapLabels.setMinCellPixels(value);}
   static async create(host: HTMLElement, onPick: (x: number, z: number) => void, groundGrassEnabled = true): Promise<ColonyRenderer> {
@@ -82,6 +84,8 @@ export class ColonyRenderer extends SceneRenderCore {
     this.renderer.domElement.addEventListener('pointercancel', this.onPointerCancel);
     this.renderer.domElement.addEventListener('lostpointercapture', this.onPointerCancel);
     this.renderer.domElement.addEventListener('contextmenu', this.onContextMenu);
+    this.releaseMapWheel = installMapWheelZoom(document.body,
+      this.renderer.domElement, () => !!this.world && this.controls.enabled && !this.host.closest('[inert]'));
     window.addEventListener('keydown', this.onKeyDown);
     // Menus stop bubbling keyboard events; release keys held before opening one.
     window.addEventListener('keyup', this.onKeyUp, true);
@@ -102,6 +106,7 @@ export class ColonyRenderer extends SceneRenderCore {
   disposeSelection():void{this.selectionInput?.dispose();}
   disconnectResize():void{this.resizeObserver?.disconnect();}
   removeInputListeners():void{
+    this.releaseMapWheel?.();this.releaseMapWheel=undefined;
     const canvas=this.renderer.domElement;
     canvas.removeEventListener('pointerdown',this.onPointerDown,true);
     canvas.removeEventListener('pointerup',this.onPointerUp);

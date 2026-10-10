@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V307 — [interfaces, ressources et commandes de carte](docs/gameplay/interface-hud-v307.md), schéma219 conservé.** Architecte réagencé, Ordres/Zones accessibles directement, ressources emboîtées, calendrier/météo illustrés, pictogrammes générés et six fontes adaptées. Les marges transparentes rendent les clics au terrain ; la molette zoome hors des vrais panneaux défilants. Contrôles et publication dans la note unique ; objectif de performances ouvert, relance en pause. Les états suivants sont historiques.
+
 **V306 — [herbe, HUD et préférences d’affichage](docs/gameplay/presentation-controls-v306.md), schéma 219 conservé.** Les surfaces au sol des aides et inspections prises en charge alimentent l’herbe ; HUD allégé, commandes de vue compactes, curseurs réduits. Six typographies locales avec Comfortaa par défaut et rayon des nuages réglable. Contrôles et publication dans la note unique ; relance en pause. Les états suivants sont historiques.
 
 **V305 — [optimisation de la préparation des scènes](docs/development/aulnes-performance-v305.md), schéma 219 conservé.** Les nouveaux visuels V304 restent en place. Sur Les Aulnes en Chrome1440p/dev :109,97→115,17RAF/s(+4,72%), débit réel5,84→5,99×. Le gain est modeste et les240FPS restent à atteindre ; contrôles et limites dans la note unique. Commit/push par lot, publications Cloudflare regroupées, relance en pause. Les états suivants sont historiques. Produit `ecbe76a7` poussé et publié en `b0243966` sur [Cloudflare](https://elsewhere-cq7.pages.dev/),40vérifications HTTPS exactes.

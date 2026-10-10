@@ -1,6 +1,10 @@
 /* Core proportions and information density, with Lisière's pastel identity. */
-#inspector.colonist-inspector-host{display:flex;flex-direction:column;width:min(720px,calc(100vw - var(--right-width) - 36px));height:auto;max-height:calc(100dvh - 205px);min-height:0;padding:0;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--ink);font:13px/1.35 'Lisiere Sans',sans-serif}
+#inspector.colonist-inspector-host{display:flex;flex-direction:column;width:min(720px,calc(100vw - var(--right-width) - 36px));height:auto;max-height:calc(100dvh - 205px);min-height:0;padding:0;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--ink);font:13px/1.35 'Lisiere Sans',sans-serif;pointer-events:none}
 #inspector.colonist-inspector-host[hidden]{display:none}
+/* The footer is wider than several dossiers. Only the painted cards and tab
+   buttons own pointer input; the transparent remainder belongs to the map. */
+#inspector.colonist-inspector-host :is(.colonist-inspector-scroll,.colonist-inspector-tabs,.colonist-inspector-footer){pointer-events:none}
+#inspector.colonist-inspector-host :is(.colonist-inspector-pages,.colonist-inspector-summary,.colonist-inspector-actions,.colonist-inspector-tabs button){pointer-events:auto}
 .colonist-inspector-scroll{display:flex;flex-direction:column;gap:8px;min-height:0;max-height:inherit;overflow:hidden}
 .colonist-inspector-pages{flex:0 1 auto;box-sizing:border-box;width:min(var(--dossier-width,630px),100%);height:var(--dossier-height,430px);min-height:130px;overflow-y:auto;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
 .colonist-inspector-pages>[role=tabpanel]{min-width:0;overflow-wrap:anywhere}
@@ -16,7 +20,7 @@
 #inspector.colonist-inspector-host .colonist-inspector-pages select{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:6px;box-shadow:none}
 #inspector.colonist-inspector-host .colonist-inspector-pages select::picker(select){background:var(--paper);color:var(--ink);border:1px solid var(--line)}
 .colonist-inspector-tabs{display:flex;gap:4px;flex:none;width:min(504px,100%);margin:0;padding:0}
-.colonist-inspector-tabs button{flex:1 1 72px;min-width:0;min-height:30px;padding:5px 4px;border:1px solid var(--line);border-radius:6px;background:var(--paper-deep);color:var(--ink);box-shadow:none;font-size:13px;font-weight:600;line-height:1.2;white-space:nowrap}
+.colonist-inspector-tabs button{flex:1 1 72px;min-width:0;min-height:30px;padding:5px 4px;border:1px solid var(--line);border-radius:6px;background:var(--paper-deep);color:var(--ink);box-shadow:none;font-size:13px;font-weight:600;line-height:1.3;white-space:normal;overflow-wrap:anywhere}
 .colonist-inspector-tabs button:hover:not(:disabled){background:var(--paper);border-color:var(--accent)}
 .colonist-inspector-tabs button[aria-selected=true]{background:var(--forest);border-color:var(--forest);color:var(--paper)}
 .colonist-inspector-footer{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:10px;align-items:stretch;flex:none;min-height:124px}

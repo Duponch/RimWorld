@@ -8,6 +8,7 @@ export type UiIcon = typeof UI_ICONS[number];
 export const CURSOR_KINDS = ['pointer', 'link', 'wait', 'zoom', 'text', 'grab', 'grabbing', 'forbidden', 'resize'] as const;
 export type CursorKind = typeof CURSOR_KINDS[number];
 export const CURSOR_ATLAS = '/assets/ui/elsewhere/v304/cursors.svg';
+export const WAIT_CURSOR_ARTWORK = '/assets/ui/elsewhere/v307/hourglass.png';
 export const CURSOR_CELLS: Readonly<Record<CursorKind, readonly [number, number]>> = Object.freeze({
   pointer: [0, 0], link: [1, 0], wait: [2, 0],
   zoom: [0, 1], text: [1, 1], grab: [2, 1],
@@ -47,6 +48,7 @@ type MapToolSurfaces = { pointer: string; grab?: string; grabbing?: string };
 const cursorSurfaces = new Map<string, Promise<CursorArtwork>>();
 const toolSurfaces = new Map<string, Promise<MapToolSurfaces>>();
 const iconImages = new Map<string, Promise<HTMLImageElement>>();
+let waitSurface: Promise<string> | undefined;
 type AlphaGeometry = { x: number; y: number; width: number; height: number; apexX: number; apexY: number };
 
 function alphaGeometry(context: CanvasRenderingContext2D, width: number, height: number): AlphaGeometry | undefined {
@@ -257,5 +259,20 @@ export function installToolCursors(root: HTMLElement, atlasUrl = CURSOR_ATLAS): 
     // Native CSS fallbacks remain usable when the decorative atlas cannot load.
   });
   void installMapToolCursors(root, atlasUrl, surfacesPromise);
+  // This generated artwork replaces only the wait cell; every other cursor,
+  // including tool+hand composites, retains its current size and hotspot.
+  waitSurface ??= loadIconImage(WAIT_CURSOR_ARTWORK).then(image => {
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = CURSOR_SIZE;
+    const context = canvas.getContext('2d'); if (!context) throw new Error('Canvas 2D indisponible.');
+    const scale = (CURSOR_SIZE - 2) / Math.max(image.width, image.height);
+    const width = image.width * scale, height = image.height * scale;
+    context.imageSmoothingEnabled = true; context.imageSmoothingQuality = 'high';
+    context.drawImage(image, (CURSOR_SIZE-width)/2, (CURSOR_SIZE-height)/2, width, height);
+    return `url("${canvas.toDataURL('image/png')}") 16 16, wait`;
+  });
+  // Await the atlas install so its old wait cell cannot overwrite this one.
+  void Promise.all([surfacesPromise.catch(() => undefined),waitSurface])
+    .then(([,surface]) => root.style.setProperty('--cursor-wait',surface))
+    .catch(() => { /* Retain the usable atlas/native wait fallback. */ });
   installViewportGestures(root);
 }

@@ -1,0 +1,26 @@
+{
+  "generator": "Built-in image_gen",
+  "transparentBackground": true,
+  "assets": [
+    {
+      "name": "pause",
+      "prompt": "Use case: stylized-concept. Asset type: one small Elsewhere game UI pictogram, named pause. Subject: two upright rounded gold pause pillars, separated by a clear narrow gap. Style: clean hand-painted cartoon game icon, subtle dimensional shading, crisp thick deep navy outline, warm cream and amber highlights, same welcoming polished style as a cartoon axe tool icon. Composition: ONLY the symbol, centered, front view, occupying 80% of square canvas, readable at 24 pixels. Background fully transparent. No button, no card, no frame around icon, no lettering, no watermark, no ground shadow, no extra decorative elements."
+    },
+    {
+      "name": "play",
+      "prompt": "Use case: stylized-concept. Asset type: one small Elsewhere game UI pictogram, named play. Subject: one softly rounded right-facing gold play arrow. Style: clean hand-painted cartoon game icon, subtle dimensional shading, crisp thick deep navy outline, warm cream and amber highlights, same welcoming polished style as a cartoon axe tool icon. Composition: ONLY the symbol, centered, front view, occupying 80% of square canvas, readable at 24 pixels. Background fully transparent. No button, no card, no frame around icon, no lettering, no watermark, no ground shadow, no extra decorative elements."
+    },
+    {
+      "name": "speed-double",
+      "prompt": "Use case: stylized-concept. Asset type: one small Elsewhere game UI pictogram, named speed-double. Subject: two softly rounded right-facing gold play arrows, side by side. Style: clean hand-painted cartoon game icon, subtle dimensional shading, crisp thick deep navy outline, warm cream and amber highlights, same welcoming polished style as a cartoon axe tool icon. Composition: ONLY the symbol, centered, front view, occupying 80% of square canvas, readable at 24 pixels. Background fully transparent. No button, no card, no frame around icon, no lettering, no watermark, no ground shadow, no extra decorative elements."
+    },
+    {
+      "name": "speed-triple",
+      "prompt": "Use case: stylized-concept. Asset type: one small Elsewhere game UI pictogram, named speed-triple. Subject: three softly rounded right-facing gold play arrows, side by side. Style: clean hand-painted cartoon game icon, subtle dimensional shading, crisp thick deep navy outline, warm cream and amber highlights, same welcoming polished style as a cartoon axe tool icon. Composition: ONLY the symbol, centered, front view, occupying 80% of square canvas, readable at 24 pixels. Background fully transparent. No button, no card, no frame around icon, no lettering, no watermark, no ground shadow, no extra decorative elements."
+    },
+    {
+      "name": "hourglass",
+      "prompt": "Use case: stylized-concept. Asset type: one small Elsewhere game UI pictogram, named hourglass. Subject: a clearly recognizable upright hourglass: narrow waist, two transparent glass bulbs, warm golden sand falling through the center, dark navy supports and gold top and bottom caps. Style: clean hand-painted cartoon game icon, subtle dimensional shading, crisp thick deep navy outline, warm cream and amber highlights, same welcoming polished style as a cartoon axe tool icon. Composition: ONLY the symbol, centered, front view, occupying 80% of square canvas, readable at 24 pixels. Background fully transparent. No button, no card, no frame around icon, no lettering, no watermark, no ground shadow, no extra decorative elements."
+    }
+  ]
+}
