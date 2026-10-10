@@ -1,4 +1,6 @@
-# Validation courante — V291
+# Validation courante — V292
+
+**V292 : [diagnostic des messages territoriaux](aulnes-performance-v292.md#validation), produit V291 et schéma 218 conservés.** Typage et reprise native de64ticks passent ; sources/publics et reprise8434→8498→8499 exacts. Rouge404 initial conservé. Le résultat B tronqué est un diagnostic de transport, aucun gain GAME/GPU certifié ; détails dans la note unique.
 
 **V291 : [faits de ressources locaux](aulnes-performance-v291.md#validation), schéma 218 conservé.** Contrôles ciblés, coût natif ABBA et jeu original à ×6 : adoption CPU −11,16 %, 97,27→105,47 RAF/s. Huit recharges exactes, sources/publics conservés ; typage, références et build détaillés dans la note unique. Aucun gain GPU ni fluidité constante certifié.
 

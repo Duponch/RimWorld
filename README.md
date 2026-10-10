@@ -1,5 +1,7 @@
 # Lisière
 
+**V292 — diagnostic du transport ; produit V291 et schéma 218 conservés.** Le coût des données territoriales est mesuré ; aucun nouveau protocole ni FPS livré. [Résultat et décision](docs/development/aulnes-performance-v292.md). Les gains V291 ci-dessous restent la référence en jeu.
+
 **V291 — faits de ressources partagés ; schéma 218.** Chrome 1440p/dev sur Les Aulnes : **97,27→105,47 images RAF/s (+8,43 %)** à vrai ×6 ; adoption CPU −11,16 %. Règles et qualité conservées, pointes encore présentes, 240 FPS non atteints. [Mesures et limites](docs/development/aulnes-performance-v291.md). Les états suivants sont historiques.
 
 **V290 — validations communes du client du jeu ; schéma 218.** Chrome1440p/dev sur Les Aulnes : **81,90→99,14 images RAF/s (+21,06 %)** à vrai ×6, adoption CPU −14,38 %. Toutes les règles et la qualité sont conservées ; 240 FPS non atteints, aucun gain GPU annoncé. [Mesures, reprises et limites](docs/development/aulnes-performance-v290.md). Les états suivants sont historiques.

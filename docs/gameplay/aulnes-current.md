@@ -1,5 +1,7 @@
 # Les Aulnes, référence intégrée
 
+Le [diagnostic V292](../development/aulnes-performance-v292.md) mesure les échanges entre simulation et interface ; il conserve le produit V291, le schéma218 et ce checkpoint. Aucun FPS supplémentaire annoncé.
+
 Les [faits de ressources V291](../development/aulnes-performance-v291.md) améliorent encore le chemin commun des validations sans modifier cette sauvegarde : **97,27→105,47 RAF/s** comparés à V290, Chrome 1440p/dev à vrai ×6. Des pointes persistent et les 240 FPS restent à atteindre. Les états suivants sont historiques.
 
 Les [validations communes V290](../development/aulnes-performance-v290.md) améliorent cette référence sans modifier son fichier : Chrome1440p/dev, **81,90→99,14 images RAF/s** par rapport au produit V288, à débit réel ×6. Les 240FPS restent à atteindre ; les mesures sont locales et les gains varient selon la partie et la caméra. Les états suivants sont historiques.
