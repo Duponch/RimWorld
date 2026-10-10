@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les [clics droits et curseurs V302](../gameplay/order-pan-v302.md), avec les zones V301, schéma219, et les optimisations V296–V299 conservées.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les [zones, sélection et actions V303](../gameplay/map-interactions-v303.md), avec les interactions V300–V302, schéma219, et les optimisations V296–V299 conservées.
 
 ## Adresse et publication
 
@@ -63,6 +63,12 @@ La vérification HTTPS passe en2,216s : huit chemins sur les origines stable et 
 À la demande immédiate de l'utilisateur, le commit V302 `98265ef9` est publié en `81c1e74d`, à la même [adresse stable](https://elsewhere-cq7.pages.dev/) et à son [URL de publication](https://81c1e74d.elsewhere-cq7.pages.dev/). La compilation utilise une archive Git isolée de ce commit sous `tmp/elsewhere-pages/v302-source-98265ef9` ; le candidat V303 non validé dans l'arbre de travail reste exclu. Aucun fichier de travail n'est remplacé pour cette publication.
 
 Build Pages/typage PASS9,168s ; package PASS0,862s,239fichiers/105422928octets et66fichiers publics exacts, laboratoire et sources privés absents. Déploiement PASS13,582s : quatre fichiers envoyés et233déjà présents. L'avertissement Git dirty concerne l'arbre parent contenant le candidat V303 et `references_UI`, absents du package isolé. La vérification HTTPS initiale FAIL1,018s reste conservée : `/` exact, mais la redirection `/index.html` retourne encore l'ancien HTML. Une nouvelle vérification après propagation PASS2,272s acquiert16réponses200/MIME/octets exacts sur les origines stable et fraîche, rapport `tmp/elsewhere-pages/v302-http-7JWLy9/report.json` ; package/publics restent inchangés. Les contrôles natifs V302 sont dans sa note ; aucun nouveau benchmark ou parcours de jeu en ligne n'est revendiqué. Aucun second déploiement pour le commit documentaire ; V303 reste un lot en cours autorisé, à publier après validation.
+
+## Publication V303 après les corrections de carte
+
+Le commit produit `0382e142` est commité et poussé, puis publié en `ad46371a` à la demande explicite de l’utilisateur : [adresse stable](https://elsewhere-cq7.pages.dev/) et [URL de publication](https://ad46371a.elsewhere-cq7.pages.dev/). Le build Pages final avec typage passe en8,110s. Package PASS1,017s :239fichiers/105438559octets,63références/66fichiers publics identiques, laboratoire et sources privés absents ; rapport `tmp/elsewhere-pages/v303-package-kh92It/report.json`. Déploiement PASS12,693s, quatre fichiers nouveaux et233 déjà présents. L’avertissement Git dirty concerne uniquement le dossier utilisateur `references_UI`, exclu du package.
+
+Les huit chemins HTML/assets/Worker/catalogue/Aulnes sont vérifiés sur les deux origines :16réponses200 avec MIME et octets exacts, PASS2,549s, rapport `tmp/elsewhere-pages/v303-http-vAuojR/report.json` (SHA59BD2E2F). Package et publics restent inchangés pendant cette vérification. Les contrôles de jeu, captures, shaders et reprises sont ceux de la note V303 ; la vérification HTTPS ne constitue pas un nouveau parcours navigateur en ligne ni un benchmark. Le commit/push documentaire qui enregistre ces preuves ne déclenche pas une deuxième publication. Relance planifiée en pause, aucun lot suivant engagé.
 
 ## Références
 
