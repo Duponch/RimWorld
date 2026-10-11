@@ -41,6 +41,7 @@ export function structureBeauty(structure:BeautyStructure):number {
   if(structure.kind==='deep-drill')return -25;
   if(structure.kind==='ground-scanner')return -8;
   // Fixed electronics are not stuffed furniture; steel is ingredient provenance.
+  if(structure.kind==='spike-trap')return -18;
   if(structure.kind==='mini-turret')return -20;
   if(structure.kind==='tube-television')return 0;
   if(structure.kind==='sandbags')return -10;

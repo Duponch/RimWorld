@@ -4,6 +4,7 @@ import type { OwnedValidationResourceReader, OwnedResourceReuseWitness } from '.
 import { ValidationIdentityContext } from '../sim/validation-identities.ts';
 import { validBiofuelTransport } from '../sim/biofuel-save.ts';
 import { validCremationTransport } from '../sim/cremation-save.ts';
+import { validSpikeTrapTransport } from '../sim/spike-trap-save.ts';
 import { validSmeltingTransport } from '../sim/smelting-save.ts';
 import { validAllowedAreaTransport } from '../sim/allowed-area-save.ts';
 import { validDoubleBedTransport } from '../sim/double-bed-save.ts';
@@ -1098,6 +1099,7 @@ export class SnapshotDecoder {
     if(!validBiofuelTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
     if(!validAllowedAreaTransport(next,next.schemaVersion))return resync('Zone autorisée, affectation originale ou retour invalide ou futur.');
     if(!validDoubleBedTransport(next,next.schemaVersion))return resync('Lit double, place ou réservation invalide ou futur.');
+    if(!validSpikeTrapTransport(next,next.schemaVersion))return resync('Piège à pointes, contact ou propriétaire invalide ou futur.');
     if(!validCremationTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Crématorium, filtre ou corps réservé invalide ou futur.');
     if(!validSmeltingTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Fonderie, filtre, arme ou propriétaire de fusion invalide ou futur.');
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');

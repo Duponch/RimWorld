@@ -1,0 +1,11 @@
+import {mkdir,writeFile} from 'node:fs/promises';
+import {createWorld} from '../src/sim/engine.ts';
+import {constructionPreviewParts} from '../src/render/construction-preview-parts.ts';
+import {geometryPortraitSvg,placementGeometry} from '../src/render/item-portrait.ts';
+const world=createWorld(42,32),parts=constructionPreviewParts(world,[{kind:'spike-trap',x:0,z:0,orientation:0,material:'wood'}]);
+const entries=[...parts.boxes,...parts.rotatedBoxes].map(placement=>({geometry:placementGeometry(placement),placement}));
+if(entries.length!==12)throw Error(`Unexpected spike-trap model: ${entries.length}`);
+const output=new URL('../public/assets/ui/elsewhere/v315/',import.meta.url);await mkdir(output,{recursive:true});
+await writeFile(new URL('spike-trap.svg',output),geometryPortraitSvg(entries,'construction:spike-trap'),'utf8');
+for(const entry of entries)entry.geometry.dispose();
+console.log('Wrote only v315/spike-trap.svg from the actual authored model.');

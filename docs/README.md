@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V315 : [pièges à pointes consommables](gameplay/spike-traps-v315.md), schéma 226.** Construction payée, contact physique, impacts et remplacement ordinaire ; minification et réinstallation du même ID. [Référence Core actuelle](research/spike-traps-core-v315.md) et [guide](gameplay/player-guide.md#utiliser-les-pièges-à-pointes--v315). Corpus et contrôles Chrome acquis par reprises, preuves/rouges/adaptations dans la note unique. Les états suivants sont historiques.
+
 **V314 : [crémation physique](gameplay/cremation-v314.md), schéma 225.** Poste construit/alimenté, dépouille entière transportée et destruction sans sortie ; [référence Core actuelle](research/cremation-core-v314.md) et [guide](gameplay/player-guide.md#incinérer-une-dépouille--v314). Preuves, rouges et adaptations dans la note unique. Les états suivants sont historiques.
 
 **V313 : [lits doubles civils](gameplay/double-beds-v313.md), schéma 224.** Deux propriétaires et deux places physiques, sommeil indépendant, transport du meuble et secours par tête ; [référence Core actuelle](research/double-bed-core-v313.md) et [guide](gameplay/player-guide.md#utiliser-un-lit-double--v313). Adaptations, contrôles et limites dans la note unique. Les états suivants sont historiques.

@@ -3,7 +3,7 @@ import {Fn,attribute,float,mat4,normalLocal,storage,texture,transformNormal,uint
 import {createItemGeometry,ITEM_SHAPES,type ItemShape} from './item-geometry';
 import {PATTERN_SPAN} from './texture-variation';
 
-/** Twelve exact primitive meshes, not a union of whole item assemblies. Every
+/** Exact primitive meshes, not a union of whole item assemblies. Every
  * slot has the same vertex count; the remaining whole triangles collapse at0. */
 export class ItemMeshAtlas {
   readonly shapes:readonly (ItemShape|undefined)[]=Object.freeze([undefined,...ITEM_SHAPES]);

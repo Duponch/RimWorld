@@ -1,4 +1,5 @@
 import {removeHydroponicPlants} from './hydroponics.ts';
+import {rebuildSpikeTrap} from './spike-trap-rebuild.ts';
 import {detachMissingFlakBills} from './flak-work.ts';
 import { releaseStructureMelee } from './melee-state.ts';
 import {invalidateAnimalPens} from './animal-pens.ts';
@@ -172,5 +173,6 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(world.fires)world.fires.batteryWicks=world.fires.batteryWicks.filter(w=>w.structureId!==s.id);
   if(s.kind==='hydroponics-basin')removeHydroponicPlants(world,s);
   detachMissingBills(world);detachMissingFlakBills(world);detachMissingGunBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);reconcilePower(world);if(installed)reconcileRoofSupport(world,false,s);refreshStock(world);
+  if(installed&&s.kind==='spike-trap')rebuildSpikeTrap(world,s);
   if(waveId!==undefined)registerBombWave(world,s,waveId,core,external?.instigatorKey??s.turret?.wick?.instigatorKey);return true;
 }

@@ -12,6 +12,9 @@ export function dropIncapacitatedEquipment(world:World,pawn:Pawn,retry=false,wea
   // Only the engine's once-per-pawn tick may retry a previously failed drop.
   // Health/command reconciliation can run several times within that tick.
   if(pawn.equipmentDropPending&&(!retry||world.tick%20!==pawn.id%20))return;
+  // A weapon retained through a saturated death drop becomes body contents.
+  // Moving the corpse must not retry a drop at the dead person's old position.
+  if(world.schemaVersion>=226&&pawn.state==='dead'&&pawn.body?.pileId!==undefined)return;
   if(dropRetainingIdentity(world,weapon,pawn)){
     weapon.weapon!.forbidden=true;delete pawn.equipmentDropPending;
     if(pawn.state==='downed'&&pawnBody(pawn).capacities.manipulation>0)pawn.droppedWeaponId=weapon.id;

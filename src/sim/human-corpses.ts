@@ -54,7 +54,8 @@ function materialize(w:World,p:Pawn,owner:MaterialOwner,view:TemperatureView):Ma
   for(const actor of w.pawns)if(actor.burial?.bodyPawnId===p.id)actor.burial.corpseId=pile.id;
   // A weapon whose forced death drop was blocked stays attached to this body.
   // It cannot later teleport from the frozen location stored on the dead Pawn.
-  delete p.equipmentDropPending;p.path=[];p.motion=null;p.moveCooldown=0;
+  if(w.schemaVersion<226)delete p.equipmentDropPending;
+  p.path=[];p.motion=null;p.moveCooldown=0;
   return pile;
 }
 export function pickUpRetainedHumanCorpse(w:World,actor:Pawn,bodyPawnId:number):MaterialPile|null {

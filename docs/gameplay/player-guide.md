@@ -1,6 +1,14 @@
 # Guide joueur
 
-**Schéma 225 — V314 : [crémation physique](cremation-v314.md).** Transporter puis incinérer une dépouille au crématorium électrique ; preuves et limites dans la note unique. Les résultats datés suivants demeurent historiques.
+**Schéma 226 — V315 : [pièges à pointes consommables](spike-traps-v315.md).** Contact réel, consommation du bâtiment et remplacement payé ; preuves et limites dans la note unique. Les résultats datés suivants demeurent historiques.
+
+## Utiliser les pièges à pointes — V315
+
+Dans **Architecte > Structure**, choisissez **Piège à pointes** puis son matériau. Une case traversable demande45matériaux et un bâtisseur de Construction3 ; les huit cases voisines doivent être libres d’un autre piège, de son plan ou d’une réinstallation prévue. Les zones et piles au sol sont conservées.
+
+Sélectionnez le piège terminé pour changer **Reconstruire automatiquement**. Après un déclenchement, le piège est entièrement perdu : son éventuel remplacement réclame une nouvelle livraison de45matériaux et un nouveau chantier. Les alliés essaient de contourner le piège mais gardent un risque de0,5% à chaque nouvelle entrée physique. Le réglage initial suit la zone domicile ; une modification manuelle reste sauvegardée.
+
+**Désinstaller** emballe le piège intact. **Réinstaller** déplace ce même bâtiment et ses matériaux, sans les payer une seconde fois ; le réglage domicile est repris à la nouvelle pose. [Mécanique, adaptations et contrôles](spike-traps-v315.md).
 
 ## Incinérer une dépouille — V314
 

@@ -1,4 +1,6 @@
-# Validation courante — V314
+# Validation courante — V315
+
+**V315, schéma 226 : [pièges à pointes consommables](../gameplay/spike-traps-v315.md).** Groupe165cas/17fichiers acquis par reprises : 98nouveaux/6fichiers et67historiques/11fichiers ; trois fichiers historiques nouvellement inclus dans le groupe, sans ajout de cas. Entrée physique, série de Stab, reconstruction payée et conservation de l'ID minifié contrôlées dans ce groupe. Corpus63références/66fichiers PASS84,852s ; typage final15,791s/buildPages2,079s et présentationChrome124,512s passent. ChromeWebGPU127,068s : piège construit45bois, dix recharges8835/8835/8835/8866/8869/8874/8897/8919/8950/8950 exactes, contact/départ puis minification et réinstallation du mêmeID26801 ; aucune dotation. Gel2693exact, preuves/rouges/limites dans la note unique, aucun gainFPS ni campagne naturelle certifiés. ROOT seul exécute, sources/tests/pilotes figés ; preuves, rouges et limites dans la note unique. Poursuite après commit/push autorisée, publications regroupées et relance **PAUSED**. Fourrage et nutrition animale seulement à évaluer, recherche privée sans engagement. Les validations suivantes sont historiques.
 
 **V314, schéma 225 : [crémation physique](../gameplay/cremation-v314.md#contrôles-et-limites).** Groupe132cas/14fichiers, corpus63/66 et neuf recharges ChromeWebGPU exactes acquis ; suspension/reprise et destruction sans sortie sur la continuation des Aulnes. Présentation commune119,617s. Preuves, rouges et limites rassemblés dans la note unique. Les validations suivantes sont historiques.
 

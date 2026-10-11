@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 
 /** Finite resident meshes. Every authored part uses the same mesh in the world
  * and in its portrait; outlines are geometry, not a texture decoration. */
-export const ITEM_SHAPES=['item-log','item-round','item-nugget','item-disc','item-leaf','item-shirt','item-pants','item-coat','item-vest','item-helmet','item-ingot'] as const;
+export const ITEM_SHAPES=['item-log','item-round','item-nugget','item-disc','item-leaf','item-shirt','item-pants','item-coat','item-vest','item-helmet','item-ingot','trap-spike'] as const;
 export type ItemShape=typeof ITEM_SHAPES[number];
 
 const outlines:Partial<Record<ItemShape,readonly (readonly [number,number])[]>>={
@@ -29,6 +29,7 @@ export function createItemGeometry(shape:ItemShape):THREE.BufferGeometry {
   let geometry:THREE.BufferGeometry;
   const outline=outlines[shape];
   if(outline)geometry=outlineGeometry(outline);
+  else if(shape==='trap-spike')geometry=new THREE.ConeGeometry(.5,1,4,1,false);
   else if(shape==='item-round')geometry=new THREE.SphereGeometry(.5,6,3);
   else if(shape==='item-helmet'){
     geometry=new THREE.SphereGeometry(.5,8,3,0,Math.PI*2,0,Math.PI/2);

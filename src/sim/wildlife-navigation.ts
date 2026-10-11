@@ -47,7 +47,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     }
     const exits=edges.filter(free);
     if(!indices.size&&!exits.length)return;
-    const n=navigationCosts(world);
+    const n=navigationCosts(world,a);
     // Food travel uses the species' pace. Convert common furniture costs from
     // human base-3 units into hare base-1 units; no human movement capacity.
     const search=new WeightedSearch(world.width,world.height,a.z*world.width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
@@ -82,7 +82,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
         return {target,contacts};
       });
       if(!groups.some(g=>g.contacts.length))return;
-      const n=navigationCosts(world),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+      const n=navigationCosts(world,a),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
       const pick=(list:typeof groups)=>{
         const goals=new Set(list.flatMap(g=>g.contacts.map(c=>c.z*width+c.x))),reach=search.advance(goals);
         const found=list.flatMap(g=>g.contacts.filter(c=>hasReachableCell(reach,c.z*width+c.x)).map(c=>({target:g.target,cell:c,cost:reach.costs[c.z*width+c.x]!})))
@@ -98,7 +98,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     foodPreyOrExitRoute(a:Cell,goals:Cell[],prey:readonly (Cell&{id:number})[],exitFallback=false):{kind:'food'|'prey'|'exit';path:Cell[];targetId?:number}|undefined {
       const cells=goals.filter(free),indices=new Set(cells.map(c=>c.z*width+c.x));
       if(!indices.size&&!prey.length&&!exitFallback)return;
-      const n=navigationCosts(world),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+      const n=navigationCosts(world,a),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
       if(indices.size){
         const reach=search.advance(indices),food=cells.filter(c=>hasReachableCell(reach,c.z*width+c.x)).sort((a,b)=>reach.costs[a.z*width+a.x]!-reach.costs[b.z*width+b.x]!)[0];
         if(food){const path=routeToCell(world,food,search.finish(indices));return path?{kind:'food',path}:undefined;}

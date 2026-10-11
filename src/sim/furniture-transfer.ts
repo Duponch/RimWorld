@@ -3,6 +3,7 @@ import { MAX_STACK, footprintCells } from './definitions.ts';
 import { furnitureDuration, furnitureReady, furnitureWorkTarget, packedAt, type PackedFurniture } from './furniture-rules.ts';
 import type { Cell, Job, Pawn, World } from './types.ts';
 import { advanceWork, resetWork, workProgress } from './work-progress.ts';
+import {initialSpikeTrapState} from './spike-trap-state.ts';
 
 /** A whole object needs a completely unreserved slot, never a compatible stack.
  * A full wood-slot capacity also excludes every typed inbound reservation. */
@@ -20,6 +21,7 @@ export function releaseFurniture(world:World,pawn:Pawn,plan?:ReadonlyMap<number,
 function detach(world:World,job:Job,owner:PackedFurniture['owner']):PackedFurniture {
   const building=world.structures.find(s=>s.id===job.furniture!.structureId)!;
   world.structures=world.structures.filter(s=>s!==building);
+  if(building.spikeTrap)building.spikeTrap.touching=[];
   for(const p of world.pawns)if(p.need?.kind==='eat'&&p.need.dining?.tableId===building.id)p.need.dining.tableId=null;
   if(building.power){building.power.parentId=null;building.power.on=false;}
   const pack={building,owner};world.packed.push(pack);return pack;
@@ -50,6 +52,7 @@ export function advanceFurniture(world:World,pawn:Pawn,job:Job,move:(target:Cell
     // The 150 WorkTotal field is inspection text, not its execution duration.
     // The same object is installed, not a replacement with copied attributes.
     Object.assign(pack.building,{x:job.x,z:job.z,orientation:job.orientation});
+    if(pack.building.kind==='spike-trap')pack.building.spikeTrap=initialSpikeTrapState(world,pack.building);
     world.packed=world.packed.filter(p=>p!==pack);world.structures.push(pack.building);
   } else {release();return false;}
   world.jobs=world.jobs.filter(j=>j!==job);pawn.jobId=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=0;

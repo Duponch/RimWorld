@@ -310,7 +310,9 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
         if(!storageAccepts(zone,pile,world.tick))continue;
       }
       let capacity=destination.items?.get(pile.item)??destination[pile.kind]??0;
-      if (sameCell(pile.owner, destination.target)) continue;
+      // A trap leaves items in place. Its replacement still requires a real
+      // pickup and delivery, including salvage lying on the blueprint cell.
+      if (sameCell(pile.owner, destination.target) && !(world.schemaVersion>=226 && destination.destination.type==='job' && (destination.target as Job).kind==='spike-trap')) continue;
       const sourceZone = zonesByCell.get(cellIndex(world, pile.owner.x, pile.owner.z));
       const excess = sourceZone ? Math.max(0, (ground.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0) - sourceZone.capacity) : 0;
       const sourceAdmits=sourceZone&&storageAccepts(sourceZone,pile,world.tick);

@@ -244,7 +244,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.kind==='repair')throw Error('Repair uses the home area');
     if(c.kind==='lay-floor'&&!isBuildableFloor(c.floor))throw new Error('Floor tool requires an explicit floor.');
     await tool(page,(c.kind==='lay-floor'?c.floor:c.kind) as Parameters<typeof tool>[1]);
-    if(['electric-crematorium','door','wall','bed','double-bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','stonecutter','research-bench','tailor-bench','electric-tailor-bench'].includes(c.kind)) {
+    if(['spike-trap','electric-crematorium','door','wall','bed','double-bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','stonecutter','research-bench','tailor-bench','electric-tailor-bench'].includes(c.kind)) {
       // Tool selection closes Architecte. Reopen its actual material control,
       // then close via its button, which preserves the placement tool.
       await panel(page,'architect');

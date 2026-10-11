@@ -4,6 +4,7 @@ import { footprintCells, footprintContains } from './definitions.ts';
 import { frameAt, frameCosts, FRAME_TRAVEL_DELAY } from './construction-costs.ts';
 import { overlayNavigationCosts,type NavigationCostLookup } from './navigation-costs.ts';
 import { FLOOR_DEFINITIONS } from './flooring.ts';
+import { spikeTrapKnowsOf,spikeTrapNavigationActor,SPIKE_TRAP_SEARCH_COST,SPIKE_TRAP_WALK_DELAY } from './spike-trap-state.ts';
 import type { Cell, StructureKind, World } from './types.ts';
 
 /** Core natural floors cost two Core ticks. Historical grass/soil stay neutral. */
@@ -16,6 +17,7 @@ export function terrainTravelDelay(world:World,index:number):number {
 /** Current Core wiki path costs, converted by the local day/tick ratio (10).
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
 export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:number;stand:boolean;repeat:boolean}>>>=Object.freeze({
+  'spike-trap':{delay:0,stand:true,repeat:false},
   'double-bed':{delay:4.2,stand:false,repeat:true},
   'electric-crematorium':{delay:0,stand:false,repeat:false},
   'electric-smelter':{delay:5,stand:false,repeat:true},
@@ -90,9 +92,10 @@ export function captureStandability(world:World):(cell:Cell)=>boolean {
 }
 export function furnitureDelay(world:World,from:Cell,to:Cell):number {
   if(world.schemaVersion<22)return frameAt(world,to)?FRAME_TRAVEL_DELAY:0;
-  let target:StructureKind|undefined,previousRepeats=false;
+  let target:StructureKind|undefined,previousRepeats=false,trap=false;
   for(const s of world.structures) {
     if(s.kind!=='power-conduit'&&footprintContains(s,to))target=s.kind;
+    if(s.kind==='spike-trap'&&s.spikeTrap&&s.x===to.x&&s.z===to.z)trap=true;
     if(footprintContains(s,from)&&FURNITURE_TRAVEL[s.kind].repeat)previousRepeats=true;
   }
   let objectDelay=target?FURNITURE_TRAVEL[target].delay:frameAt(world,to)?FRAME_TRAVEL_DELAY:0;
@@ -102,14 +105,18 @@ export function furnitureDelay(world:World,from:Cell,to:Cell):number {
     if(p.owner.x===from.x&&p.owner.z===from.z)previousRepeats=true;
   }
   const materialDelay=world.piles.some(p=>(world.schemaVersion>=29&&p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component'||world.schemaVersion>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'&&p.owner.x===to.x&&p.owner.z===to.z)?1.4:0;
-  return Math.max(repeats&&previousRepeats?0:objectDelay,materialDelay,terrainTravelDelay(world,to.z*world.width+to.x));
+  const actor=trap?spikeTrapNavigationActor(world,from):undefined;
+  return Math.max(repeats&&previousRepeats?0:objectDelay,materialDelay,terrainTravelDelay(world,to.z*world.width+to.x))
+    +(actor&&spikeTrapKnowsOf(world,actor)?SPIKE_TRAP_WALK_DELAY:0);
 }
 /** Captured once per synchronous search. No shared mutation or cross-tick cache. */
-export function navigationCosts(world:World):{costs:NavigationCostLookup|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:NavigationCostLookup} {
+export function navigationCosts(world:World,origin?:Cell):{costs:NavigationCostLookup|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:NavigationCostLookup} {
   const costs=new Map(frameCosts(world)),repeaters=new Set<number>(),stops=new Set<number>();
+  const actor=world.schemaVersion>=226?spikeTrapNavigationActor(world,origin):undefined,knows=!!actor&&spikeTrapKnowsOf(world,actor),traps=new Map<number,number>();
   if(world.schemaVersion>=22) {
     for(const s of world.structures)for(const c of footprintCells(s)) {
       const i=c.z*world.width+c.x,p=FURNITURE_TRAVEL[s.kind];
+      if(knows&&s.kind==='spike-trap'&&s.spikeTrap)traps.set(i,SPIKE_TRAP_SEARCH_COST);
       if(p.delay)costs.set(i,Math.round(p.delay/3*1000));
       if(p.repeat)repeaters.add(i);if(!p.stand)stops.add(i);
     }
@@ -136,5 +143,8 @@ export function navigationCosts(world:World):{costs:NavigationCostLookup|undefin
   // with it. Preserve present zero entries for fully open doors on bare floors.
   for(const s of world.structures)if(isRoomDoor(s.kind)) {const i=s.z*world.width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,world.tick)/3*1000));}
   const fire=fireNavigationCosts(world);
-  return {costs:addFireNavigationCosts(costs.size||terrainMaximum?overlayNavigationCosts(terrain,terrainMaximum,costs):undefined,fire),repeaters,stops,floors:addFireNavigationCosts(overlayNavigationCosts(terrain,terrainMaximum,floors),fire)!};
+  // Trap avoidance is additive after the ordinary terrain/object maximum, like
+  // fire danger. Its 800 Core cost already includes avoidance: do not add the
+  // separate 40 Core physical walk delay to the search a second time.
+  return {costs:addFireNavigationCosts(addFireNavigationCosts(costs.size||terrainMaximum?overlayNavigationCosts(terrain,terrainMaximum,costs):undefined,fire),traps),repeaters,stops,floors:addFireNavigationCosts(addFireNavigationCosts(overlayNavigationCosts(terrain,terrainMaximum,floors),fire),traps)!};
 }
