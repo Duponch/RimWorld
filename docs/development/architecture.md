@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V310, schéma 221 : [secours et couchages animaux](../gameplay/animal-rescue-v310.md).** Places gratuites, affectation et usage séparés, patient Wildlife conservé pendant le portage ; tâche Doctor avec copie profonde du segment et trajectoires graphiques résidentes partagées. Garde commune fichiers/Decoder, migration220 strictement validée puis numéro seul. Les états suivants sont historiques.
+
 **V309, schéma 220 : [abattage domestique](../gameplay/slaughter-v309.md).** Intention optionnelle et tâche de contact dans Handling, garde commune fichiers/Decoder, migration stricte219 puis numéro seul. La dépouille garde son identité et ses filières ; marqueur résident partageant les trajectoires GPU des animaux. Les états suivants sont historiques.
 
 **V306, schéma 219 conservé : [surfaces et préférences d’affichage](../gameplay/presentation-controls-v306.md).** Les producteurs graphiques exposent leurs rectangles F32 dans deux phases ordonnées ; index sparse résident et calcul vertex à la racine du brin. Aucun parcours des brins au CPU ni nouvelle autorité sur World. Fontes locales et uniforme de masquage des nuages relèvent des préférences du navigateur. Les états suivants sont historiques.

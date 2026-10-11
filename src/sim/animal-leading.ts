@@ -13,6 +13,7 @@ import type { Cell, Pawn, World } from './types.ts';
 import { animalNavigation, moveAnimal } from './wildlife-navigation.ts';
 import { animalBody } from './wildlife-health.ts';
 import type { WildAnimal } from './wildlife-state.ts';
+import { animalServiceIds } from './animal-rest-state.ts';
 
 export type LeadingTask=AnimalHandlingTask & {kind:'lead';markerId:number};
 /** Core 1.6.4871 JobDriver_RopeToDestination constants. */
@@ -32,8 +33,7 @@ const handler=(p:Pawn)=>{
   if(!isColonist(p)||workPriority(p,'handle')===0||p.state==='dead'||p.state==='downed'||p.draft||p.mental?.crisis||p.flee||p.interruptedCargo)return false;
   const body=pawnBody(p).capacities;return body.moving>0&&body.manipulation>0;
 };
-const claimedIds=(world:World)=>new Set(world.pawns.flatMap(p=>[
-  ...(p.animalHandling?leadingClaimIds(p.animalHandling):[]),...(p.animalCare?[p.animalCare.animalId]:[]),...(p.animalFeed?[p.animalFeed.animalId]:[])]));
+const claimedIds=(world:World)=>new Set(world.pawns.flatMap(animalServiceIds));
 const ropeable=(a:WildAnimal)=>!!a.domestic&&livestock(a)&&a.state!=='dead'&&a.state!=='downed'
   &&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike;
 function destination(world:World,a:WildAnimal):number|undefined {

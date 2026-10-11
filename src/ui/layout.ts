@@ -50,6 +50,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id: 'fence', title: 'Clôture', hint: 'cliquer ou tracer une ligne droite · 1 matériau par case · limite physique pour les herbivores errants', key: '', category: 'structure' },
   { id: 'fence-gate', title: 'Portillon', hint: '25 matériaux · accès nécessaire pour conduire les animaux dans un enclos', key: '', category: 'structure' },
   { id: 'pen-marker', title: 'Marqueur d’enclos', hint: '30 matériaux · désigne un enclos pour les herbivores errants', key: '', category: 'structure' },
+  {id:'animal-sleeping-spot',title:'Emplacement de couchage animal',hint:'Gratuit et immédiat · 1 × 1 traversable · sommeil ou secours · usage médical dans son inspection',key:'',category:'furniture'},
   { id: 'bed', title: 'Lit', hint: 'empreinte 1 × 2 · Q / E pour tourner', key: 'L', category: 'furniture' },
   { id: 'hospital-bed', title: 'Lit d’hôpital', hint: '1 × 2 · Construction 8 · recherche Lit d’hôpital · usage médical initial · Q / E pour tourner', key: '', category: 'furniture' },
   {id:'vitals-monitor',title:'Moniteur vital',hint:'1 × 1 · 50 acier + 3 composants · Construction 8 · recherche Moniteur vital · 80 W · à côté d’un lit d’hôpital : soins +7 points, immunité +2 points, chirurgie +0,05 · plusieurs lits possibles, sans cumul',key:'',category:'furniture'},

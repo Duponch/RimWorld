@@ -4,6 +4,7 @@ import { leadRopees } from './animal-leading.ts';
 import { finishRoomRest,rememberRoomUse } from './room-experience.ts';
 import { feedingWork } from './feeding-rules.ts';
 import { cancelAutomaticCombat } from './automatic-combat-state.ts';
+import {releaseAnimalRescue} from './animal-rest-state.ts';
 import { releaseRescue } from './rescue-state.ts';
 import { updatePawnHealth } from './health.ts';
 import { isRoofJob } from './roof-rules.ts';
@@ -26,8 +27,9 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 /** Plan only ownership released by this command, before any command mutation.
  * Store the selected cells so a later greedy search cannot invalidate the plan. */
 export function planCommandDrops(world:World,command:Command):DropPlan|null {
+  if(command.type==='designate'&&command.kind==='animal-sleeping-spot')return new Map();
   const jobs=new Set<number>(),zones=new Set<number>(),pawns=new Set<number>();
-  if(command.type==='order-bury'||command.type==='clean-room'||command.type==='order-orbital-trade'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-arrest'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
+  if(command.type==='order-bury'||command.type==='clean-room'||command.type==='order-orbital-trade'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-arrest'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-animal-rescue'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
     pawns.add(command.pawnId);
   } else if(command.type==='designate') {
     const affected=zonesUnderPlan(world,command);for(const id of affected.deliveries)zones.add(id);
@@ -57,7 +59,7 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const zone=world.stockpiles.find(z=>same(z,command));if(zone)for(const cell of stockpileZoneCells(world,zone.id))zones.add(cell.id);
   } else if(command.type==='priority'&&command.value===0) {
     const pawn=world.pawns.find(p=>p.id===command.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
-    if(pawn?.ward&&command.work==='warden'||pawn?.animalHandling&&command.work==='handle'||(pawn?.animalCare||pawn?.animalFeed)&&command.work==='doctor')pawns.add(pawn.id);
+    if(pawn?.ward&&command.work==='warden'||pawn?.animalHandling&&command.work==='handle'||(pawn?.animalCare||pawn?.animalFeed||pawn?.animalRescue)&&command.work==='doctor')pawns.add(pawn.id);
     if(pawn?.burial&&command.work==='haul'&&pawn.orders.active!=='bury'||pawn?.cleaning&&!pawn.cleaning.forced&&command.work==='clean')pawns.add(pawn!.id);
     if(pawn&&((pawn.surgery&&command.work==='doctor')||(pawn.tend&&command.work==='doctor'&&pawn.orders.active!=='tend')||(pawn.feed&&command.work===feedingWork(world.pawns.find(p=>p.id===pawn.feed!.patientId))&&pawn.orders.active!=='feed')||(pawn.haul&&pawn.orders.active!=='haul'&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work&&pawn.orders.active===null)||(pawn.cooking&&pawn.orders.active!=='cook'&&command.work === taskWork(pawn.cooking))))pawns.add(pawn.id);
   } else if(command.type==='bill-remove'||command.type==='bill-update') {
@@ -120,6 +122,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn):void {
+  releaseAnimalRescue(world,pawn);
   if(pawn.animalHandling?.kind==='lead'){
     const ids=new Set(leadRopees(pawn.animalHandling));
     for(const animal of world.wildlife?.animals??[])if(ids.has(animal.id)){animal.path=[];animal.nextDecision=world.tick+1;}

@@ -49,6 +49,7 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   if(carrier)return {code:'carried-patient',reason:`Transporté par ${carrier.name} vers un lit.`};
   if(pawn.ward){const t=pawn.ward,name=world.pawns.find(p=>p.id===t.patientId)?.name??'le prisonnier';return {code:'warden',reason:t.kind==='food'?`${t.phase==='pickup'?'Prélève':'Apporte'} un repas pour ${name}.`:`${t.phase==='approach'?'Rejoint':'Discute avec'} ${name}.`};}
   if(pawn.animalFeed)return {code:'animal-feed',reason:`${pawn.animalFeed.phase==='pickup'?'Prélève une portion pour':pawn.animalFeed.phase==='deliver'?'Apporte une portion à':'Nourrit'} l’animal ${pawn.animalFeed.animalId}.`};
+  if(pawn.animalRescue)return {code:'animal-rescue',reason:pawn.animalRescue.phase==='carry'?`Porte l’animal ${pawn.animalRescue.animalId} vers son emplacement de couchage.`:`Rejoint l’animal ${pawn.animalRescue.animalId} pour le secourir.`};
   if(pawn.feed)return {code:'feed',reason:`${pawn.feed.phase==='pickup'?'Prélève une portion pour':pawn.feed.phase==='deliver'?'Apporte une portion à':'Nourrit'} ${world.pawns.find(p=>p.id===pawn.feed!.patientId)?.name??'un patient'}.`};
     if(pawn.tend){
       const t=pawn.tend,target=t.patientId===pawn.id?'ses propres blessures':world.pawns.find(p=>p.id===t.patientId)?.name??'un patient';

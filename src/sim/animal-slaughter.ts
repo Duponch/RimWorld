@@ -1,6 +1,6 @@
 import { isColonist } from './affiliation.ts';
 import { violentWorkRefusal } from './colonist-backgrounds.ts';
-import { leadingClaimIds } from './animal-leading.ts';
+import { animalClaimed } from './animal-rest-state.ts';
 import { animalBodySize } from './animal-life.ts';
 import { roundYield } from './cooking-statistics.ts';
 import { addFilth } from './filth.ts';
@@ -37,8 +37,7 @@ export function slaughterTargetAvailable(world:World,animal:WildAnimal,exceptPaw
   return !!animal.domestic?.slaughter&&animal.state!=='dead'&&!animal.health?.death
     &&!animal.manhunter&&!animal.burning&&!animal.flee&&!animal.threat&&!animal.retaliation&&!animal.strike&&!animal.stun
     &&!animal.health?.foodPoisoning?.vomit
-    &&!world.pawns.some(p=>p!==exceptPawn&&(p.animalHandling&&leadingClaimIds(p.animalHandling).includes(animal.id)
-      ||p.animalCare?.animalId===animal.id||p.animalFeed?.animalId===animal.id));
+    &&!animalClaimed(world,animal.id,exceptPawn?.id);
 }
 export function slaughterHolding(world:World,pawn:Pawn,animal:WildAnimal):boolean {
   return world.schemaVersion>=220&&pawn.animalHandling?.kind==='slaughter'&&pawn.animalHandling.animalId===animal.id

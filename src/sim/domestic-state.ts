@@ -3,6 +3,8 @@ import type { Cell } from './types.ts';
 
 /** V106 covers the obtainable hare only. No historical animal changes faction. */
 export interface DomesticAnimal {
+  /** Normal sleeping-place assignment, independent from current occupation. */
+  bedId?:number;
   /** V309 prospective, explicit player intent; absence preserves the herd. */
   slaughter?:true;
   since:number;
@@ -41,6 +43,8 @@ export interface AnimalCareTask {
   medicine?:TendMedicine;
 }
 export type DomesticCommand =
+  | {type:'order-animal-rescue';pawnId:number;animalId:number}
+  | {type:'animal-spot-medical';spotId:number;enabled:boolean}
   | {type:'slaughter';animalId:number;enabled:boolean}
   | {type:'tame';animalId:number;enabled:boolean}
   | {type:'animal-care-policy';animalId:number;care:MedicalCare};

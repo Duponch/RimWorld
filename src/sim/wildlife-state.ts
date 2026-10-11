@@ -5,6 +5,7 @@ import type { StaggerState } from './stagger.ts';
 import { ANIMAL_SPECIES,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
 
 export interface WildAnimal extends Cell {
+  animalRest?:import('./animal-rest-state.ts').AnimalRestTask;
   domestic?:import('./domestic-state.ts').DomesticAnimal;
   taming?:import('./domestic-state.ts').TamingDesignation;
   id:number; species:AnimalSpeciesId; sex:'female'|'male';

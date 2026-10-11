@@ -20,12 +20,14 @@ import { ANIMAL_FEED_HUNGER,ANIMAL_FEED_TICKS,animalFeedingPatientReady } from '
 import { ITEM_DEFINITIONS } from '../sim/items';
 import type { WildAnimal } from '../sim/wildlife-state';
 import { slaughterRefusal } from '../sim/animal-slaughter';
+import { mountAnimalRescueControls,updateAnimalRescueControls } from './animal-rescue-inspection';
 
 export type AnimalInspectorTab = 'info' | 'health';
 export interface AnimalInspectorOptions {
   onHunt: (animalId: number, enabled: boolean) => void;
   onTame?: (animalId: number, enabled: boolean) => void;
   onSlaughter?: (animalId: number, enabled: boolean) => void;
+  onRescue?: (pawnId:number,animalId:number) => void;
   onCarePolicy?: (animalId: number, care: MedicalCare) => void;
   onClose: () => void;
 }
@@ -76,10 +78,10 @@ function veterinaryLines(world:World,animal:WildAnimal):string[] {
     }else if(animalCareTargets(animal).length){
       const lying=(animal.state==='sleeping'||animal.state==='downed')&&(!animal.motion||animal.motion.end<=world.tick);
       lines.push(lying?'Soins vétérinaires : pansements nécessaires ; en attente d’un médecin disponible et d’un accès sûr.':'Soins vétérinaires : pansements nécessaires ; l’animal doit dormir ou être à terre, sans déplacement engagé.');
-    }else if(animal.health&&veterinaryNeedsRest(animal.health))lines.push('Récupération : plaies déjà pansées ou immunité en cours ; repos au sol selon la faim et le danger.');
+    }else if(animal.health&&veterinaryNeedsRest(animal.health))lines.push('Récupération : plaies déjà pansées ou immunité en cours ; repos selon la faim et le danger.');
     else lines.push('Soins vétérinaires : aucun pansement nécessaire actuellement.');
   }
-  lines.push('Soins au sol : aucun bonus de lit hospitalier ou de moniteur vital.');
+  lines.push('Sol ou emplacement gratuit : aucun bonus de lit hospitalier ou de moniteur vital.');
   return lines;
 }
 
@@ -203,6 +205,7 @@ export function createAnimalInspector(root: HTMLElement, options: AnimalInspecto
   root.classList.remove('colonist-inspector-host');
   root.classList.add('animal-inspector-host');
   root.innerHTML = animalInspectorScaffold();
+  mountAnimalRescueControls(root,options.onRescue);
   root.dataset.animalTameAvailable=String(!!options.onTame);
   root.dataset.animalSlaughterAvailable=String(!!options.onSlaughter);
   root.dataset.animalCareAvailable=String(!!options.onCarePolicy);
@@ -296,5 +299,6 @@ export function updateAnimalInspector(root: HTMLElement, world: World, animalId:
     { title: 'Besoins', lines: view.needs },
   ]);
   renderSections(root, 'health', [{ title: 'État de santé', lines: view.health }]);
+  updateAnimalRescueControls(root,world,animalId);
   return true;
 }

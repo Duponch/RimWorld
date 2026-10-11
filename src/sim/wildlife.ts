@@ -18,6 +18,8 @@ import type { Cell,Resource,World } from './types.ts';
 import { animalSpecies,faunaBiome,selectBiomeSpecies,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
 import { animalHandlingHolding } from './animal-handling.ts';
 import { animalCareInProgress,animalCareTargets } from './animal-care.ts';
+import { animalCarrier } from './animal-rest-state.ts';
+import { processAnimalRest } from './animal-rest.ts';
 import { animalFeedingInProgress } from './animal-feeding.ts';
 import { veterinaryCareSpeciesAllowed,veterinaryNeedsRest } from './veterinary-rules.ts';
 import { adultAgeTicks, advanceAnimalLife, animalFoodPerDay, animalLifeStage, animalNutritionMax } from './animal-life.ts';
@@ -177,6 +179,8 @@ export function advanceWildlife(world:World):void {
     const wantFood=species.predator?.3:.45,urgent=species.predator?.12:.18,hungry=species.predator?.24:.36;
     a.food=Math.max(0,a.food-animalFoodPerDay(a)/6000*malnutritionModifiers(a.health?.malnutrition).hungerFactor*(a.food<nutrition*urgent?.25:a.food<nutrition*hungry?.5:1));
     a.rest=Math.max(0,Math.min(1,a.rest+(a.state==='sleeping'?.0003809524*.8:-.00015833333*(a.rest<.01?.6:a.rest<.14?.3:a.rest<.28?.7:1))));
+    // Transport owns position only: life, health, bleeding and needs still advance.
+    if(world.schemaVersion>=221&&animalCarrier(world,a.id))continue;
     advanceAnimalManhunter(world,a);
     if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
     if(processAnimalVomiting(world,a))continue;
@@ -237,6 +241,13 @@ export function advanceWildlife(world:World):void {
     const held=!danger&&((!!a.taming?.designated||!!a.domestic)&&animalHandlingHolding(world,a.id)
       ||!!a.domestic&&(animalCareInProgress(world,a)||animalFeedingInProgress(world,a)));
     if(held&&!(a.state==='eating'&&a.meal)){cancelAnimalExit(world,a);continue;}
+    if(world.schemaVersion>=221&&a.domestic){
+      const pen=grazingPen(world,a),inside=(c:Cell)=>!pen||pen.has(c.z*world.width+c.x);
+      if(processAnimalRest(world,a,{medicalRest,night,nutrition,
+        free:c=>inside(c)&&getNav(a).free(c),step:(from,to)=>inside(to)&&getNav(a).step(from,to),
+        route:(goals,rank)=>{if(searches>=1)return null;searches++;return getNav(a).route(a,goals.filter(inside),rank);},
+        move:()=>{moveAnimal(world,a,getNav(a).step,body.capacities.moving);}}))continue;
+    }
     if(a.state==='sleeping') {
       if(medicalRest&&a.food>=nutrition*.45&&!a.sleepUntilCore&&getNav(a).free(a))continue;
       if(!medicalRest&&a.rest<1&&!a.sleepUntilCore&&getNav(a).free(a))continue;

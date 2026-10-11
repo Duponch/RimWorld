@@ -160,6 +160,9 @@ test('version 134 rejects future rope members, then migrates a single rope witho
   // The prospective agendas did not exist in this claimed version. Keep the
   // rejection below specific to future rope members rather than these fields.
   delete legacy.deepResources;delete legacy.orbital;
+  // V134 storage had physical cell IDs and the same numeric policies, but no
+  // V301 zone identity. Retain every cell/filter/priority for later migration.
+  for(const cell of legacy.stockpiles)delete cell.zoneId;
   expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow('Invalid version 134 save');
   if(legacy.pawns[0]?.animalHandling?.kind==='lead')delete legacy.pawns[0].animalHandling.ropees;
   delete legacy.breakdown;

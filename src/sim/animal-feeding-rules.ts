@@ -1,6 +1,6 @@
 import { isColonist } from './affiliation.ts';
 import { animalNutritionMax } from './animal-life.ts';
-import { leadingClaimIds } from './animal-leading.ts';
+import { animalClaimed,animalCarrier } from './animal-rest-state.ts';
 import { veterinaryCareSpeciesAllowed,veterinaryNeedsRest } from './veterinary-rules.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { carrierOf } from './rescue-state.ts';
@@ -21,7 +21,7 @@ export const ANIMAL_FEED_HUNGER=.38,ANIMAL_FEED_TICKS=75;
 export function animalFeedingDoctorReady(w:World,p:Pawn):boolean {
   return w.schemaVersion>=214&&isColonist(p)&&!p.prisoner&&!p.visitor&&!p.raid&&!p.podRescue&&!p.draft&&!p.burning&&!p.flee&&!p.mental?.crisis
     &&!p.interruptedCargo&&!p.collapsePending&&!(w.restRules==='legacy'&&p.rest===0)&&!carrierOf(w,p.id)
-    &&!p.animalCare&&!p.animalHandling&&workPriority(p,'doctor')>0&&!medicalWorkRefusal(p);
+    &&!p.animalCare&&!p.animalHandling&&!p.animalRescue&&workPriority(p,'doctor')>0&&!medicalWorkRefusal(p);
 }
 /** Local adaptation: the five owned species rest on the ground because animal
  * beds are not delivered. Medicine policy does not govern bringing food. */
@@ -30,8 +30,7 @@ export function animalFeedingPatientReady(w:World,a:WildAnimal,doctor?:Pawn):boo
     &&(a.state==='downed'||a.state==='sleeping')&&!!a.health&&!a.health.death&&a.health.body===a.species
     &&(a.state==='downed'||veterinaryNeedsRest(a.health))&&(!a.motion||a.motion.end<=w.tick)
     &&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.stun&&!a.health.foodPoisoning?.vomit
-    &&!w.pawns.some(p=>p!==doctor&&(p.animalFeed?.animalId===a.id||p.animalCare?.animalId===a.id
-      ||p.animalHandling&&leadingClaimIds(p.animalHandling).includes(a.id)));
+    &&!animalCarrier(w,a.id)&&!animalClaimed(w,a.id,doctor?.id);
 }
 export function animalFeedingReason(w:World,doctor:Pawn,a:WildAnimal|undefined,accepted=false):string|undefined {
   if(!animalFeedingDoctorReady(w,doctor))return 'Un colon libre et apte doit avoir Médecin activé.';

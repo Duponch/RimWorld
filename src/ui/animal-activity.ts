@@ -6,11 +6,13 @@ const labels:Readonly<Record<WildAnimal['state'],string>>={idle:'Se repose',movi
 /** Shared activity for the list and inspector, published from confirmed state. */
 export function animalActivity(world:World,animal:WildAnimal):string {
   if(animal.state==='dead')return labels[animal.state];
+  const rescuer=world.pawns.find(p=>p.animalRescue?.animalId===animal.id);
+  if(rescuer)return `${rescuer.animalRescue!.phase==='carry'?'Porté vers un couchage':'Secours en approche'} · ${rescuer.name}`;
   if(animal.domestic?.slaughter){
     const worker=world.pawns.find(p=>p.animalHandling?.kind==='slaughter'&&p.animalHandling.animalId===animal.id);
     return worker?`${worker.animalHandling!.phase==='interact'?'Abattage':'Dresseur en approche'} · ${worker.name}`:'Désigné pour abattage';
   }
-  if(animal.state==='downed')return labels[animal.state];
+  if(animal.state==='downed')return animal.animalRest?.phase==='sleep'?'À terre · au couchage':labels[animal.state];
   if(animal.flee)return 'Fuit';
   if(animal.stun)return 'Étourdi';
   if(animal.manhunter){
@@ -27,6 +29,7 @@ export function animalActivity(world:World,animal:WildAnimal):string {
   if(animal.strike)return 'Riposte';
   if(animal.threat)return 'Se défend';
   if(animal.exiting)return 'Quitte la carte faute de nourriture';
+  if(animal.animalRest)return animal.animalRest.phase==='travel'?'Rejoint son couchage':'Dort au couchage';
   const state=animal.state==='moving'&&!animal.path.length&&!animal.meal&&(!animal.motion||animal.motion.end<=world.tick)?'idle':animal.state;
   return `${labels[state]}${animal.meal&&state==='moving'?' vers sa nourriture':''}`;
 }

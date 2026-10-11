@@ -1,6 +1,5 @@
 import { workPriority } from './work-types.ts';
 import { isColonist } from './affiliation.ts';
-import { leadingClaimIds } from './animal-leading.ts';
 import { animalGrowthFactor, animalLifeStage } from './animal-life.ts';
 import type { AnimalHandlingTask } from './domestic-state.ts';
 import { pawnBody, medicalWorkRefusal } from './health-rules.ts';
@@ -14,6 +13,7 @@ import { releaseWork } from './work-release.ts';
 import { learnSkill } from './skills.ts';
 import { TICKS_PER_DAY, type Cell, type Pawn, type World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
+import { animalServiceIds } from './animal-rest-state.ts';
 
 /** Core 1.6.4871 nominal quantities/intervals, converted to Lisière's 6,000-tick day. */
 export const ANIMAL_PRODUCTS = Object.freeze({
@@ -46,8 +46,7 @@ export const productHandlerAvailable=(p:Pawn):boolean=>{
   if(!isColonist(p)||workPriority(p,'handle')===0||p.draft||p.mental?.crisis||p.flee||p.interruptedCargo||medicalWorkRefusal(p))return false;
   const body=pawnBody(p).capacities;return body.moving>0&&body.manipulation>0;
 };
-const claimed=(world:World)=>new Set(world.pawns.flatMap(p=>[
-  ...(p.animalHandling?leadingClaimIds(p.animalHandling):[]),...(p.animalCare?[p.animalCare.animalId]:[]),...(p.animalFeed?[p.animalFeed.animalId]:[])]));
+const claimed=(world:World)=>new Set(world.pawns.flatMap(animalServiceIds));
 export function productWanted(world:World,pawn:Pawn):boolean {
   if(!productHandlerAvailable(pawn)||!world.wildlife?.animals.some(available))return false;
   const reserved=claimed(world);

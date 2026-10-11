@@ -25,11 +25,12 @@ const productReadyForVersion=(a:WildAnimal,version:number)=>!!a.domestic&&!!prod
 
 function validDomesticOwner(w:World,a:WildAnimal,version:number):boolean {
   const d:unknown=a.domestic;
-  return version>=106&&(a.species==='hare'||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=120?['lastTraining','penMarkerId','productFullness',...(version>=220?['slaughter']:[])]:version>=119?['lastTraining','penMarkerId']:['lastTraining'])
+  return version>=106&&(a.species==='hare'||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=120?['lastTraining','penMarkerId','productFullness',...(version>=220?['slaughter']:[]),...(version>=221?['bedId']:[])]:version>=119?['lastTraining','penMarkerId']:['lastTraining'])
     &&int(d.since,0,w.tick)&&typeof d.care==='string'&&Object.hasOwn(MEDICAL_CARE,d.care)&&int(d.tameness,1,5)
     &&int(d.nextDecay,0,w.tick+45000)&&(d.lastTraining===undefined||int(d.lastTraining,d.since,w.tick))
     &&(version>=120?(productForVersion(a,version)?finite(d.productFullness,0,1):d.productFullness===undefined):d.productFullness===undefined)
     &&(!Object.hasOwn(d,'slaughter')||version>=220&&d.slaughter===true)
+    &&(!Object.hasOwn(d,'bedId')||version>=221&&int(d.bedId,1,w.nextId-1)&&w.structures.some(s=>s.id===d.bedId&&s.kind==='animal-sleeping-spot'&&!s.medical))
     &&(d.penMarkerId===undefined||version>=119&&livestock(a)&&int(d.penMarkerId,1,w.nextId-1)&&!!w.structures.find(s=>s.id===d.penMarkerId&&s.kind==='pen-marker'&&s.pen?.accepted.includes(a.species)));
 }
 
@@ -46,11 +47,11 @@ function validSlaughterTask(w:World,p:Pawn,version:number):boolean {
   const animal=w.wildlife?.animals.find(a=>a.id===raw.animalId);
   if(!animal||!validDomesticOwner(w,animal,version)||animal.domestic?.slaughter!==true||animal.state==='dead'||animal.health?.death)return false;
   if(!slaughterHandlerAvailable(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.need||p.haul||p.cooking||p.hunting||p.research
-    ||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null
+    ||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.animalRescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null
     ||p.melee||p.shooting?.order||p.tactics||p.trade||p.orbitalTrade||p.deepWork||p.recreation.task||p.animalCare||p.animalFeed
     ||p.orders.active!==null||p.orders.queue.length||p.priorityWork||!['moving','working','idle'].includes(p.state)
     ||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))return false;
-  if(w.pawns.some(other=>other!==p&&(other.animalCare?.animalId===animal.id||other.animalFeed?.animalId===animal.id
+  if(w.pawns.some(other=>other!==p&&(other.animalRescue?.animalId===animal.id||other.animalCare?.animalId===animal.id||other.animalFeed?.animalId===animal.id
     ||other.animalHandling&&leadingClaimIds(other.animalHandling).includes(animal.id))))return false;
   return raw.phase!=='interact'||p.state==='working'&&p.moveCooldown===0&&(p.motion?.end??0)<=w.tick
     &&(animal.motion?.end??0)<=w.tick&&!p.path.length&&slaughterContact(w,p,animal);
@@ -75,8 +76,8 @@ function validVeterinaryTask(w:World,p:Pawn,version:number):boolean {
     ||!obj(c.spot)||!keys(c.spot,['x','z'])||!int(c.spot.x,0,w.width-1)||!int(c.spot.z,0,w.height-1)
     ||!['pickup','approach','treat'].includes(String(c.phase))||!finite(c.progress,0)
     ||(c.phase==='treat'?!finite(c.duration,1,6000)||Number(c.progress)>=Number(c.duration):c.duration!==undefined||c.progress!==0))return false;
-  if(!isColonist(p)||p.prisoner||p.visitor||p.draft||p.mental?.crisis||p.interruptedCargo||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.flee||p.recreation.task||p.orders.active!==null||p.animalHandling||p.animalFeed||p.priorities.doctor===0||!['moving','working','idle'].includes(p.state))return false;
-  if(w.pawns.some(other=>other!==p&&(other.animalCare?.animalId===a.id||other.animalFeed?.animalId===a.id||other.animalHandling&&leadingClaimIds(other.animalHandling).includes(a.id))))return false;
+  if(!isColonist(p)||p.prisoner||p.visitor||p.draft||p.mental?.crisis||p.interruptedCargo||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.animalRescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.flee||p.recreation.task||p.orders.active!==null||p.animalHandling||p.animalFeed||p.priorities.doctor===0||!['moving','working','idle'].includes(p.state))return false;
+  if(w.pawns.some(other=>other!==p&&(other.animalRescue?.animalId===a.id||other.animalCare?.animalId===a.id||other.animalFeed?.animalId===a.id||other.animalHandling&&leadingClaimIds(other.animalHandling).includes(a.id))))return false;
   const m=c.medicine;
   const held=w.piles.filter(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
   if(m===undefined)return c.phase!=='pickup'&&!held.length;
@@ -105,11 +106,11 @@ function validAnimalFeedTask(w:World,p:Pawn,version:number):boolean {
   const a=w.wildlife?.animals.find(a=>a.id===raw.animalId),task=p.animalFeed!;
   if(!a||!veterinaryCareSpeciesAllowed(a.species,version)||!validDomesticOwner(w,a,version)||!animalFeedPlaceValid(w,task,a))return false;
   if(!isColonist(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.draft||p.mental?.crisis||p.interruptedCargo
-    ||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.equipmentTask
+    ||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.animalRescue||p.equipmentTask
     ||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.shooting?.order||p.tactics||p.flee||p.trade
     ||p.recreation.task||p.orders.active!==null||p.orders.queue.length||p.priorityWork||p.animalHandling||p.animalCare
     ||workPriority(p,'doctor')===0||medicalWorkRefusal(p))return false;
-  if(w.pawns.some(other=>other!==p&&(other.animalCare?.animalId===a.id||other.animalFeed?.animalId===a.id
+  if(w.pawns.some(other=>other!==p&&(other.animalRescue?.animalId===a.id||other.animalCare?.animalId===a.id||other.animalFeed?.animalId===a.id
     ||other.animalHandling&&leadingClaimIds(other.animalHandling).includes(a.id))))return false;
   const food=w.piles.find(i=>i.id===(task.phase==='pickup'?task.sourcePileId:task.carryPileId));
   const held=w.piles.filter(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
@@ -169,7 +170,7 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
     for(const id of p.animalHandling?new Set(leadingClaimIds(p.animalHandling)):[task.animalId]){
       if(claimed.has(id))errors.push('Animal is reserved twice.');claimed.add(id);
     }
-    if(!isColonist(p)||p.prisoner||p.visitor||p.draft||p.mental?.crisis||p.interruptedCargo||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.rescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.flee||p.recreation.task||p.orders.active!==null||!['moving','working','idle'].includes(p.state)
+    if(!isColonist(p)||p.prisoner||p.visitor||p.draft||p.mental?.crisis||p.interruptedCargo||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.rescue||p.animalRescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.flee||p.recreation.task||p.orders.active!==null||!['moving','working','idle'].includes(p.state)
       ||p.animalFeed||h&&c||h&&p.priorities.handle===0||c&&p.priorities.doctor===0)errors.push('Animal work conflicts with another activity.');
     const a=w.wildlife!.animals.find(a=>a.id===task.animalId)!;
     if(p.animalHandling){

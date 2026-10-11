@@ -12,6 +12,7 @@ import type { Cell,World } from './types.ts';
 import { malnutritionRate } from './malnutrition.ts';
 import { cancelAnimalPredation } from './wildlife-predation.ts';
 import { recoverAnimalManhunter } from './animal-manhunter.ts';
+import { animalCarrier } from './animal-rest-state.ts';
 
 const HEALTHY_ANIMALS=new Map<WildAnimal['species'],ReturnType<typeof assessBody>>();
 export const animalBody=(a:WildAnimal)=>{
@@ -34,7 +35,7 @@ export function advanceAnimalHealth(w:World,a:WildAnimal):void {
   if(a.stagger&&a.stagger.untilCore<=w.tick*10)delete a.stagger;
   if(a.sleepUntilCore!==undefined&&a.sleepUntilCore<=w.tick*10)delete a.sleepUntilCore;
   if(!a.health||a.health.death)return;
-  const lying=(!a.motion||a.motion.end<=w.tick)&&['sleeping','downed'].includes(a.state);
+  const lying=(!a.motion||a.motion.end<=w.tick)&&['sleeping','downed'].includes(a.state)&&!(w.schemaVersion>=221&&animalCarrier(w,a.id));
   advanceMedical(a.health,w.tick-a.health.tick,{phase:a.id%60,posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:w.schemaVersion>=84?malnutritionRate(a.id):undefined,
     hunger:a.food/animalNutritionMax(a)*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(w));
   reconcileAnimalHealth(w,a);

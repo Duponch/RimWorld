@@ -168,7 +168,7 @@ class SpeciesRig {
   update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,pileSurface:ReadonlyMap<number,PileSurface>,reset=false,pawns?:PawnLayer):void {
     const changed=this.source!==world;
     if(reset){this.headings.clear();this.keys.clear();this.gait.clear();}
-    if(changed){this.source=world;this.keys.clear();this.animals=[...(world.wildlife?.animals??[]).filter(a=>a.species===this.species),...world.piles.flatMap(p=>p.corpse?.species===this.species&&p.owner.type!=='job'?[{id:p.corpse.animalId,species:p.corpse.species,state:'dead' as const,x:p.owner.type==='ground'?p.owner.x:0,z:p.owner.type==='ground'?p.owner.z:0,sex:p.corpse.sex,ageTicks:p.corpse.ageTicks,health:p.corpse.health,corpsePile:p,carrierId:p.owner.type==='pawn'?p.owner.pawnId:pawns?.animalCorpseTransferCarrier(p.id)}]:[])];this.surfaces=surfaces;
+    if(changed){this.source=world;this.keys.clear();this.animals=[...(world.wildlife?.animals??[]).filter(a=>a.species===this.species).map(a=>{const carrier=world.pawns.find(p=>p.animalRescue?.phase==='carry'&&p.animalRescue.animalId===a.id);return carrier?{...a,carrierId:carrier.id}:a;}),...world.piles.flatMap(p=>p.corpse?.species===this.species&&p.owner.type!=='job'?[{id:p.corpse.animalId,species:p.corpse.species,state:'dead' as const,x:p.owner.type==='ground'?p.owner.x:0,z:p.owner.type==='ground'?p.owner.z:0,sex:p.corpse.sex,ageTicks:p.corpse.ageTicks,health:p.corpse.health,corpsePile:p,carrierId:p.owner.type==='pawn'?p.owner.pawnId:pawns?.animalCorpseTransferCarrier(p.id)}]:[])];this.surfaces=surfaces;
       if(this.animals.length>this.mesh.geometry.getAttribute('aFrom').count)growPawnBuffers([this.mesh,this.flames,this.selection,this.slaughter],this.animals.length);
       this.setSelected(this.selected);
       const markers=this.slaughter.geometry as THREE.InstancedBufferGeometry,flags=markers.getAttribute('aSlaughter') as THREE.InstancedBufferAttribute;
@@ -229,6 +229,19 @@ class SpeciesRig {
           transferFrom.setXYZW(i,start.x,start.y-(handoff.direction==='pickup'?.15:.16*size),start.z,handoff.direction==='pickup'?corpse.facing??0:start.yaw);
           transferTo.setXYZW(i,end.x,end.y-.15,end.z,corpse.facing??0);
         }else transfer.setXY(i,0,0);
+        return;
+      }
+      if(a.carrierId!==undefined){
+        const carrier=pawns?.animalCorpseCarrier(a.carrierId),source=carrier?.geometry,index=carrier?.index??0;
+        const f=source?.getAttribute('aFrom'),t=source?.getAttribute('aTo'),travel=source?.getAttribute('aTravel'),motion=source?.getAttribute('aMotion');
+        const signature=['rescue',i,origin,a.carrierId,a.state,...[f,t,travel,motion].flatMap(attr=>attr?[attr.getX(index),attr.getY(index),attr.getZ(index),attr.getW(index)]:[])].join(':');
+        if(this.keys.get(a.id)===signature)return;this.keys.set(a.id,signature);dirty=true;
+        const growth=bodySizeAtAge(a.species,a.ageTicks)/animalSpecies(a.species).bodySize;
+        scale.setX(i,growth);state.setXYZW(i,0,0,1,0);blood.setX(i,bodyBloodWord(a.health));
+        absent.setX(i,a.health?corpseVisualMask({animalId:a.id,species:a.species,sex:a.sex,ageTicks:a.ageTicks,health:a.health}):0);
+        transfer.setXY(i,0,0);carrierState.setXYZW(i,carrier?1:0,motion?.getZ(index)??0,motion?.getW(index)??0,0);
+        if(f&&t&&travel){for(const [destination,attribute] of [[from,f],[to,t],[times,travel]] as const)destination.setXYZW(i,attribute.getX(index),attribute.getY(index),attribute.getZ(index),attribute.getW(index));}
+        else {from.setXYZW(i,a.x,0,a.z,0);to.setXYZW(i,a.x,0,a.z,0);times.setXYZW(i,0,0,0,1);}
         return;
       }
       const edge=timeline?.segment(a.id)??a.motion,active=!!edge&&tick>=edge.start&&tick<edge.end;

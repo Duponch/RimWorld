@@ -27,4 +27,10 @@
 .animal-inspector-actions label[hidden],.animal-care-policy[hidden]{display:none}
 .animal-care-policy{display:grid;gap:8px;margin-top:15px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper-deep);font-weight:600}
 .animal-care-policy select{width:100%;min-height:39px}
+.animal-rescue-actions{display:flex;flex-wrap:wrap;gap:8px;margin-block:14px}
+.animal-rescue-actions h3,.animal-rescue-actions p{flex-basis:100%;margin:0}
+.animal-rescue-actions[hidden]{display:none}
+.animal-spot-controls{display:grid;gap:8px;margin-block:12px}
+.animal-spot-controls label{display:flex;align-items:center;gap:8px}
+.animal-spot-controls p{margin:0}
 @media(max-width:1050px){.animal-inspector-summary,.animal-inspector-tabs,.animal-inspector-pages,.animal-inspector-actions{padding-inline:15px}}

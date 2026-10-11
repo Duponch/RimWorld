@@ -27,6 +27,12 @@ function care(species:AnimalSpeciesId='deer',phase:'pickup'|'approach'|'treat'='
   return {w,a,doctor,pile};
 }
 const checkpoint=(w:World)=>new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,1)));
+function historical211(w:World):World {
+  w.schemaVersion=211 as World['schemaVersion'];
+  for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');
+  for(const cell of w.stockpiles)delete cell.zoneId;
+  return w;
+}
 
 test.each(['hare','deer','gazelle','muffalo','dromedary'] as const)('%s care keeps its real anatomy, dose and identity through save and Decoder',species=>{
   const {w,a,doctor}=care(species);
@@ -38,11 +44,15 @@ test.each(['hare','deer','gazelle','muffalo','dromedary'] as const)('%s care kee
 });
 
 test('211 migration is neutral and preserves historical hare intent and private RNG',()=>{
-  const {w}=care('hare');w.schemaVersion=211 as World['schemaVersion'];const before=structuredClone(w);
+  const w=historical211(care('hare').w),before=structuredClone(w),expected=structuredClone(w);
+  // Intermediate217 extends only these untouched initial diets; no medicine,
+  // animal, task or random stream is changed by the veterinary migration.
+  expected.schemaVersion=SCHEMA_VERSION;
+  for(const policy of expected.foodPolicies.slice(0,3))policy.allowed.push('nutrient-paste-meal');
   expect(validVeterinaryCareTransport(w,211)).toBe(true);
-  expect(deserializeWorld(JSON.stringify(w))).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(w).toEqual(before);
+  expect(deserializeWorld(JSON.stringify(w))).toEqual(expected);expect(w).toEqual(before);
   for(const species of ['deer','gazelle','muffalo','dromedary'] as const){
-    const v=care(species).w;v.schemaVersion=211 as World['schemaVersion'];
+    const v=historical211(care(species).w);
     expect(validVeterinaryCareTransport(v,211)).toBe(false);expect(checkpoint(v).status).toBe('resync');expect(()=>deserializeWorld(JSON.stringify(v))).toThrow();
   }
 });

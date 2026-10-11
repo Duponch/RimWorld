@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V310 : [secours et emplacements animaux](gameplay/animal-rescue-v310.md), schéma 221.** Place gratuite normale/médicale, affectation et occupation distinctes, patient porté avec son identité et son segment capturé ; sommeil au sol conservé. [Recherche Core actuelle](research/animal-rescue-core-v310.md), [guide](gameplay/player-guide.md#secourir-et-coucher-un-animal--v310), contrôles Chrome et corpus historique qualifiés dans la note unique. Les états suivants sont historiques.
+
 **V309 : [abattage domestique manuel](gameplay/slaughter-v309.md), schéma 220.** Désignation individuelle, dresseur au contact et dépouille originale prolongent l’élevage vers les chaînes existantes de transport, boucherie, cuisine et cuir. La [recherche Core](research/slaughter-core-v309.md) distingue adoption et adaptations ; le [guide joueur](gameplay/player-guide.md#abattre-un-animal-possédé--v309) décrit les conditions et l’annulation. Contrôles et limites restent dans la note unique. Les états suivants sont historiques.
 
 **V308 : [modèles, contours et lecture du site](gameplay/presentation-models-v308.md), schéma 219 conservé.** Commode, portes, cornes, sacs et tourelle corrigés ; herbe éclairée, contours d’influence, texte de survol et HUD sur arc. Contrôles, reprises et impact de performances dans la note unique ; produit `b22da5bc` poussé et publié en `cd66026b`, relance en pause. Les états suivants sont historiques.

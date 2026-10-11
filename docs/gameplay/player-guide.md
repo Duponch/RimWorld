@@ -1,5 +1,17 @@
 # Guide joueur
 
+**Schéma courant 221 — V310 : [secours et emplacements de couchage animaux](animal-rescue-v310.md).** Conditions, adaptations et contrôles acquis sont détaillés dans la note unique. Les résultats datés ci-dessous demeurent historiques.
+
+## Secourir et coucher un animal — V310
+
+Dans **Architecte → Meubles**, posez un **Emplacement de couchage animal**. La marque apparaît immédiatement, sans matériau ni travail, sur une case praticable hors ouvrage ou plan incompatible. Les zones, plantes et biens au sol restent présents ; dégagez les fragments qui empêchent l’usage. Dans son inspection, cochez **Usage médical** pour les animaux nécessitant du repos clinique, ou gardez une place normale pour le sommeil. La fiche distingue affectation, occupation et secours en cours.
+
+Activez **Médecin** pour un colon libre capable de manipulation et de déplacement. Un lièvre, cerf, gazelle, mufalo ou dromadaire possédé **à terre**, hors couchage et sans abattage, peut être secouru automatiquement ; sa fiche propose aussi **Secourir · nom du colon**. L’ordre direct refuse les soins `none`. L’automatique peut utiliser une place normale pour cette politique, mais une place médicale exige toujours les soins autorisés. Le médecin approche, attend le contact réel, porte l’animal jusqu’à une place libre et le dépose. Le patient reste médicalement à terre ; ni sang, pansement ni nourriture n’est restauré au ramassage.
+
+Prévoyez les médicaments et portions compatibles au sol pour les circuits de soins et d’alimentation assistée existants. La santé, faim et vie continuent pendant le portage. Une mobilisation, Doctor0, incapacité ou destination retirée interrompt le secours ; l’animal termine son segment engagé à la position physique capturée. Retirer la marque ou changer son mode libère les liens devenus invalides. Une affectation normale peut survivre à une interruption et se distingue de la place réellement occupée.
+
+Les animaux mobiles cherchent aussi une place normale pour dormir, en respectant leur navigation et enclos. Faim et danger peuvent les réveiller ; sans place accessible, le sommeil au sol reste possible. La marque gratuite garde les valeurs de repos médical au sol : boîtes/lits rembourrés, confort ou qualité hospitalière, chirurgie animale et secours des sauvages restent absents. [Conditions, adaptations et contrôles](animal-rescue-v310.md).
+
 **Schéma courant 220 — V309 : [abattage domestique manuel](slaughter-v309.md).** Les règles et les limites de chaque système restent détaillées dans leurs notes ; les résultats datés ci-dessous décrivent leurs contrôles historiques.
 
 ## Abattre un animal possédé — V309
@@ -10,7 +22,7 @@ Activez **Animaux** dans le travail d’un colon disponible, capable de manipula
 
 L’abattage laisse **une dépouille**, sans donner immédiatement viande ou cuir. Prévoyez une réserve acceptant les dépouilles fraîches, le transport et une facture de boucherie ; la vraie viande peut ensuite entrer dans les factures de cuisine, le cuir dans ses usages existants. Conservez le corps au froid avant sa transformation. Les blessures antérieures continuent d’influencer le rendement : l’abattage ne restaure pas les parties perdues.
 
-Les quotas automatiques, la sélection automatique par âge/sexe/gestation, les couchages et le secours animaux restent absents. [Règles, adaptations et contrôles](slaughter-v309.md).
+Les quotas automatiques et la sélection automatique par âge/sexe/gestation restent absents. Le secours et les emplacements gratuits animaux sont décrits dans le lot V310 en cours ci-dessus ; boîtes et lits rembourrés restent absents. [Règles, adaptations et contrôles](slaughter-v309.md).
 
 **État historique V216, schéma 196 — livré dans le périmètre contrôlé.** Globe et voyage collectif sont reliés aux personnes, provisions et échanges réels. Ciblés finaux : 60/60 cas dans 13 fichiers ; régression hors campagnes longues passée par reprises, 557 fichiers/2 515 réussis/un ignoré. Sonde publique, typage, build, présentation et parcours natif composé sur WebGPU matériel passent. Les résultats initiaux et leurs reprises restent distingués dans la preuve ; campagnes longues et performance générale ne sont pas certifiées. [Contrat](../development/planet-group-v216.md), [contrôles et limites](../history/validation-planet-group-v216.md), avec régression initiale et reprise de l'oracle visiteur distinguées. Proches et couples V214, passé V210, crises V211, défense V212 et Scyther V213 conservent leurs règles.
 

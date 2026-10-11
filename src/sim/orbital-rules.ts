@@ -58,7 +58,7 @@ export function orbitalAtContact(w:World,p:Pawn,ship:OrbitalShip):boolean {
   return task.spot.x===spot.x&&task.spot.z===spot.z&&p.x===spot.x&&p.z===spot.z&&!p.path.length&&p.moveCooldown===0&&(p.motion?.end??0)<=w.tick&&(p.stun?.untilCore??0)<=w.tick*10
     &&!orbitalOtherActivity(w,p);
 }
-export function orbitalOtherActivity(w:World,p:Pawn):boolean {return !!(p.need||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.deepWork||p.trade||p.research||p.hunting||p.animalHandling||p.rescue||p.tend||p.feed||p.ward||p.surgery||p.animalCare||p.animalFeed||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.shooting||p.melee||p.tactics||p.flee||p.heatRefuge||p.bombRefuge||p.recreation.task||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id));}
+export function orbitalOtherActivity(w:World,p:Pawn):boolean {return !!(p.need||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.deepWork||p.trade||p.research||p.hunting||p.animalHandling||p.rescue||p.tend||p.feed||p.ward||p.surgery||p.animalCare||p.animalFeed||p.animalRescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.shooting||p.melee||p.tactics||p.flee||p.heatRefuge||p.bombRefuge||p.recreation.task||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id));}
 export const ORBITAL_BULK_EXTRAS=new Set(['light-leather','muffalo-wool','foxfur','berries','rice','potato','corn','hare-meat','red-fox-meat','survival-meal']);
 export function orbitalItemRefusal(pile:MaterialPile,side:'buy'|'sell',w:World,ship:OrbitalShip):string|undefined {
   const e=tradeCatalogueEntry(pile.item);

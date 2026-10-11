@@ -45,6 +45,7 @@ import { validWildlifeManhunterState } from '../sim/animal-manhunter-save.ts';
 import { validFlashstorm } from '../sim/flashstorm-save.ts';
 import { validRainElectrical } from '../sim/rain-electric-save.ts';
 import { validDomesticTasksTransport } from '../sim/domestic-save.ts';
+import { validAnimalRestTransport } from '../sim/animal-rest-save.ts';
 import { validArrestRescueTransport } from '../sim/rescue-save.ts';
 import { validPawnPodRescue,validPodRescueTransportBindings } from '../sim/pod-rescue-save.ts';
 import { validWildlifeExitState,validWildlifePredationState } from '../sim/wildlife-save.ts';
@@ -1096,6 +1097,7 @@ export class SnapshotDecoder {
     if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');
     if(validateHydroponics(next,next.schemaVersion,powerTopology,identities,validation.geometry).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
     if(!validDomesticTasksTransport(next,next.schemaVersion))return resync('Soin, alimentation vétérinaire ou abattage, patient ou cargaison incohérents.');
+    if(!validAnimalRestTransport(next,next.schemaVersion))return resync('Couchage, secours ou propriétaire animal incohérent ou futur.');
     if(!validArrestRescueTransport(next))return resync('Mandat d’arrestation, portage ou libération locale incohérent.');
     if(!validEmpStructureTransport(next,next.schemaVersion)||!validEmpProductionTransport(next,next.schemaVersion))return resync('État EMP ou production future invalide.');
     for(const pawn of next.pawns)if(!validPrisonerPawnShape(pawn as unknown as Record<string,unknown>,next.schemaVersion,next))return resync('Prisonnier, geôlier ou provenance de recrutement invalide.');

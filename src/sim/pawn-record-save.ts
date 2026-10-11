@@ -31,6 +31,7 @@ import { validFeedShape,validateFeeding } from './feeding-save.ts';
 import { validTendShape,validateCare } from './care-save.ts';
 import { validPawnSurgeryShape,validateSurgeries } from './surgery-save.ts';
 import { validRescueShape,validateRescues } from './rescue-save.ts';
+import { validAnimalRescueShape } from './animal-rest-save.ts';
 import { validSkills } from './skills-save.ts';
 import { initializePlayerOrders, validatePlayerOrders, validSowingDestination } from './player-orders-save.ts';
 import { validateTravel,MIN_PAWN_SPEED_V87,MAX_PAWN_DELAY_V87,MIN_PAWN_SPEED_V86,MAX_PAWN_DELAY_V86 } from './travel-validation.ts';
@@ -49,6 +50,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validatePawnRecordShape(item:Record<string,unknown>, world:World, version:number, validationTick=world.tick):string[] {
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
+  if(Object.hasOwn(item,'animalRescue')&&!validAnimalRescueShape(item.animalRescue,version))errors.push('Invalid or future animal rescue shape.');
   const coord=(value:Record<string,unknown>)=>integer(value.x,0,world.width-1)&&integer(value.z,0,world.height-1);
   if(!validPawnPodRescue(item,version,input as unknown as World))errors.push('Invalid or future pod rescue mandate for schema.');
   if(!validHumanAge(item.age,version))errors.push('Invalid or future human age.');

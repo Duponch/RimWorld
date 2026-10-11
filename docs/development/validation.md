@@ -1,4 +1,6 @@
-# Validation courante — V309
+# Validation courante — V310
+
+**V310 : [secours et couchages animaux](../gameplay/animal-rescue-v310.md#contrôles-et-limites), schéma 221.** Quatre fichiers nouveaux42cas et reprises historiques qualifiées ; Chrome WebGPU79,235s avec dix recharges exactes, un médicament et34riz consommés. Corpus63/66 PASS69,180s, présentationChrome121,956s ; typage14,247s/buildPages2,266s. Preuves et rouges conservés dans la note unique, aucune campagne naturelle ni performance globale certifiée. Les validations suivantes sont historiques.
 
 **V309 : [abattage domestique](../gameplay/slaughter-v309.md#contrôles-et-limites), schéma 220.** Groupe final41cas/3fichiers et reprise commune15cas/4fichiers ; typage14,139s/buildPages2,261s et corpus63références/66fichiers67,637s passent. ChromeWebGPU41,874s : sept recharges exactes,20viandes11cuirs puis un repas ingéré ; présentationChrome120,137s PASS. Refus TintIR Chromium et rouges initiaux conservés dans la note unique, aucun gainFPS ou campagne naturelle certifié. Les validations suivantes sont historiques.
 

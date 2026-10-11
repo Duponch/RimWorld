@@ -1,6 +1,6 @@
 import { workPriority } from './work-types.ts';
 import { isColonist } from './affiliation.ts';
-import { leadingClaimIds } from './animal-leading.ts';
+import { animalClaimed,animalCarrier } from './animal-rest-state.ts';
 import { medicalTendQuality,medicalTendSpeed,treatmentBatch,medicineCount,type RankedTreatment } from './care-rules.ts';
 import { animalBodyModel,modelHasPart } from './body-model.ts';
 import { infectionTargets,tendInfection,captureInfectionTendRoom } from './infection-state.ts';
@@ -38,7 +38,7 @@ function patientReady(w:World,a:WildAnimal,doctor?:Pawn):boolean {
     (a.state==='downed'||a.state==='sleeping')&&(!a.motion||a.motion.end<=w.tick)&&
     (w.schemaVersion<212||!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.stun&&!a.health?.foodPoisoning?.vomit)&&
     !!a.health&&!a.health.death&&animalCareTargets(a).length>0&&
-    !w.pawns.some(p=>p!==doctor&&(p.animalCare?.animalId===a.id||p.animalFeed?.animalId===a.id||p.animalHandling&&leadingClaimIds(p.animalHandling).includes(a.id)));
+    !animalCarrier(w,a.id)&&!animalClaimed(w,a.id,doctor?.id);
 }
 function doctorReady(p:Pawn):boolean {
   return isColonist(p)&&!p.prisoner&&!p.visitor&&!p.draft&&!p.burning&&!p.mental?.crisis&&

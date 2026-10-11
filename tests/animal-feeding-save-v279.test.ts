@@ -24,6 +24,12 @@ function feeding(species:AnimalSpeciesId='deer',phase:'pickup'|'deliver'|'feed'=
   refreshStock(w);return {w,a,doctor,pile};
 }
 const checkpoint=(w:World)=>new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,1)));
+function historical213(w:World):World {
+  w.schemaVersion=213 as World['schemaVersion'];
+  for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');
+  for(const cell of w.stockpiles)delete cell.zoneId;
+  return w;
+}
 function refused(v:ReturnType<typeof feeding>){
   expect(validDomesticTasksTransport(v.w,v.w.schemaVersion)).toBe(false);
   expect(validateDomesticAnimals(v.w,v.w.schemaVersion).length).toBeGreaterThan(0);
@@ -51,9 +57,12 @@ test.each(['deliver','feed'] as const)('%s has exactly one carried food owner an
 });
 
 test('213 migration adds no animal feeding, health, food or RNG and rejects future tasks before migration',()=>{
-  const historical=feeding();delete historical.doctor.animalFeed;historical.doctor.state='idle';historical.w.schemaVersion=213 as World['schemaVersion'];
-  const before=structuredClone(historical.w);expect(deserializeWorld(JSON.stringify(historical.w))).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(historical.w).toEqual(before);
-  const future=feeding();future.w.schemaVersion=213 as World['schemaVersion'];refused(future);
+  const historical=feeding();delete historical.doctor.animalFeed;historical.doctor.state='idle';historical213(historical.w);
+  const before=structuredClone(historical.w),expected=structuredClone(historical.w);expected.schemaVersion=SCHEMA_VERSION;
+  // Permission217 is prospective; no food pile or animal-feed task is created.
+  for(const policy of expected.foodPolicies.slice(0,3))policy.allowed.push('nutrient-paste-meal');
+  expect(deserializeWorld(JSON.stringify(historical.w))).toEqual(expected);expect(historical.w).toEqual(before);
+  const future=feeding();historical213(future.w);refused(future);
   delete future.doctor.animalFeed;Object.assign(future.doctor,{animalFeed:undefined});expect(validDomesticTasksTransport(future.w,213)).toBe(false);
 });
 
