@@ -70,10 +70,11 @@ function actorExclusive(w:World,p:Pawn):boolean {
  * ordinary reconciliation; only durable shape, owners and physical bindings
  * are validated here. No decisions, RNG, repair or full validateWorld call. */
 export function validateAnimalRest(w:World,version:number):string[] {
+  if(Object.hasOwn(w,'packed')&&!Array.isArray(w.packed))return ['Malformed animal rest furniture container.'];
   const errors:string[]=[],assignments=new Set<number>(),patients=new Set<number>(),spots=new Set<number>();
   for(const s of w.structures)if(s.kind==='animal-sleeping-spot'&&!validSpot(w,s,version))errors.push('Invalid or future animal sleeping spot.');
   if(w.jobs.some(j=>j.kind==='animal-sleeping-spot'||j.furniture?.kind==='animal-sleeping-spot'||j.deconstruction?.kind==='animal-sleeping-spot')
-    ||w.packed.some(p=>p.building.kind==='animal-sleeping-spot'))errors.push('Animal sleeping spot cannot be a job or packed furniture.');
+    ||(w.packed??[]).some(p=>p.building.kind==='animal-sleeping-spot'))errors.push('Animal sleeping spot cannot be a job or packed furniture.');
   for(const a of w.wildlife?.animals??[]){
     if(a.domestic&&Object.hasOwn(a.domestic,'bedId')){
       const target=w.structures.find(s=>s.id===a.domestic!.bedId);

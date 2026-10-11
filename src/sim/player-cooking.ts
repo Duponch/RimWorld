@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import { isSmeltingRecipe,smeltingIngredientAllowed } from './smelting-rules.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { validBiofuelIngredients,validMedicineIngredients,productionStationUsable } from './production-recipes.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
@@ -34,6 +35,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(fuelStationReserved(world,station.id))return no('Poste réservé pour une cuisine ou un ravitaillement.');
   if(station.kind==='electric-stove'&&!foodStationUsable(station))return no('La cuisinière n’est pas alimentée :350 W nécessaires.');
   if(station.kind==='biofuel-refinery'&&!productionStationUsable(station))return no('Raffinerie sans courant : 170 W nécessaires.');
+  if(station.kind==='electric-smelter'&&!productionStationUsable(station))return no('Fonderie sans courant : 700 W nécessaires.');
   if(!productionStationUsable(station))return no(station.kind==='fabrication-bench'?'Établi de fabrication sans courant : 250 W nécessaires.':'Atelier d’usinage sans courant : 350 W nécessaires.');
   const spot=cookingSpot(station);
   if(!cookingPlaceFree(world,spot)||reservedServiceCells(world).has(cellIndex(world,spot.x,spot.z)))return no('Place de cuisine obstruée ou réservée.');
@@ -43,6 +45,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(!plan)return no(!usesCookingFuel(station.kind)||station.fuel?.ticks?'Aucune recette réalisable : ingrédients autorisés dans le rayon, accès ou dépôt insuffisants.':'Aucun bois disponible et accessible pour rallumer le feu.');
   if(station.kind==='drug-lab')return {label:'Fabriquer un médicament',order:{cooking:plan.task!},path:plan.path};
   if(station.kind==='biofuel-refinery')return {label:'Raffiner du biocarburant',order:{cooking:plan.task!},path:plan.path};
+  if(station.kind==='electric-smelter')return {label:'Fondre une arme',order:{cooking:plan.task!},path:plan.path};
   return {label:plan.refuel?'Ravitailler avant de cuisiner':isButcherStation(station.kind)?'Dépecer une créature':station.kind==='tailor-bench'?'Confectionner un vêtement':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='art-bench'?'Sculpter une œuvre':station.kind==='fabrication-bench'?(plan.task?.recipe==='make-recon-helmet'?'Fabriquer un casque de reconnaissance':'Fabriquer un composant'):station.kind==='machining-table'?(plan.task?.recipe==='make-flak-helmet'?'Fabriquer un casque pare-balles':plan.task&&isFlakRecipe(plan.task.recipe)?'Fabriquer un gilet pare-balles':'Fabriquer une arme'):station.kind==='stonecutter'?'Tailler des blocs de pierre':plan.task?.recipe==='cook-survival-meal'?'Cuisiner un repas de survie emballé':plan.task?.recipe==='cook-simple-meal-bulk'?'Cuisiner quatre repas simples':plan.task?.recipe==='fine-meal'?'Cuisiner un plat raffiné':plan.task?.recipe==='cook-fine-meal-bulk'?'Cuisiner quatre plats raffinés':plan.task?.recipe==='vegetarian-fine-meal'?'Cuisiner un plat raffiné végétarien':plan.task?.recipe==='cook-vegetarian-fine-meal-bulk'?'Cuisiner quatre plats raffinés végétariens':plan.task?.recipe==='carnivore-fine-meal'?'Cuisiner un plat raffiné carnivore':plan.task?.recipe==='cook-carnivore-fine-meal-bulk'?'Cuisiner quatre plats raffinés carnivores':plan.task?.recipe==='lavish-meal'?'Cuisiner un plat gastronomique':plan.task?.recipe==='cook-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques':plan.task?.recipe==='vegetarian-lavish-meal'?'Cuisiner un plat gastronomique végétarien':plan.task?.recipe==='cook-vegetarian-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques végétariens':plan.task?.recipe==='cook-carnivore-lavish-meal'?'Cuisiner un plat gastronomique carnivore':plan.task?.recipe==='cook-carnivore-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques carnivores':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
 }
 
@@ -75,6 +78,7 @@ export function queuedCookingReason(world:World,order:CookingOrder):string|undef
   if(bill.recipe==='cook-carnivore-lavish-meal'&&!validCarnivoreLavishMealIngredients(c.ingredients))return 'Le plat carnivore gastronomique exige vingt-cinq viandes crues, sans lait ni végétaux.';
   for(const i of c.ingredients) {
     const pile=view.piles.find(p=>p.id===i.pileId);
+    if(isSmeltingRecipe(bill.recipe)&&(!pile||!smeltingIngredientAllowed(bill,pile)))return 'Arme interdite ou hors des filtres de type, état et qualité de la facture.';
     const work=pile?.artWork??pile?.gunWork??pile?.flakWork??pile?.componentWork??pile?.unfinished,bound=work?.billId===bill.id;
     const required=(sources.get(i.pileId)??0)+i.quantity;sources.set(i.pileId,required);
     if(pile&&isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick))return 'Dépouille pourrie, impropre à la boucherie.';

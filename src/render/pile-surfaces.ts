@@ -8,6 +8,16 @@ export interface PileSurface { x:number;y:number;z:number;scale:number }
 export function pileSurfaces(world:World):ReadonlyMap<number,PileSurface> {
   const surfaces=new Map<number,PileSurface>();
   for(const s of world.structures) {
+    if(s.kind==='electric-smelter'){
+      const angle=s.orientation*Math.PI/2,c=Math.cos(angle),n=Math.sin(angle);
+      for(const cell of footprintCells(s)){
+        const along=(cell.x-s.x)*c-(cell.z-s.z)*n;
+        surfaces.set(cell.z*world.width+cell.x,Math.abs(along)<.5
+          ?{x:.64*c,y:.87,z:-.64*n,scale:.65}
+          :{x:0,y:along<0?1.33:.87,z:0,scale:.65});
+      }
+      continue;
+    }
     const surface=(isFoodWorkstation(s.kind)||s.kind==='machining-table'||s.kind==='hi-tech-research-bench'||s.kind==='fabrication-bench'||s.kind==='multi-analyzer'||s.kind==='stonecutter'||s.kind==='drug-lab'||s.kind==='art-bench'||s.kind==='research-bench'||s.kind==='tailor-bench')?{x:0,y:WORLD_SCALE.stonecutterHeight,z:0,scale:.65}:s.kind==='table'?{x:0,y:WORLD_SCALE.tableHeight,z:0,scale:.8}
       :s.kind==='stool'?{x:0,y:WORLD_SCALE.stoolHeight,z:0,scale:.5}
       :s.kind==='hopper'?{x:0,y:.14,z:0,scale:.72}:s.kind==='horseshoes'?{x:-.18,y:0,z:.15,scale:.6}:undefined;

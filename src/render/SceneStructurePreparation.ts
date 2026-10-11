@@ -5,7 +5,7 @@ import { penBoundaryAxes } from './pen-parts';
 import { readSnapshotStructureChanges } from '../bridge/snapshot-changes';
 
 type Capture = { id:number; kind:Structure['kind']; x:number; z:number; effect:boolean };
-const effectKinds=new Set<string>(['mini-turret','autodoor','machining-table','fabrication-bench','electric-stove',
+const effectKinds=new Set<string>(['electric-smelter','mini-turret','autodoor','machining-table','fabrication-bench','electric-stove',
   'fueled-stove','hi-tech-research-bench','multi-analyzer','battery','biofuel-refinery','chemfuel-generator',
   'wood-generator','campfire']);
 const effect=(s:Structure)=>effectKinds.has(s.kind)||!!s.breakdown||!!s.emp;

@@ -1,4 +1,6 @@
-# Validation courante — V310
+# Validation courante — V311
+
+**V311, schéma 222 : [fonderie et fusion des armes](../gameplay/smelting-v311.md#contrôles-et-limites).** 79cas/8fichiers acquis par reprises, dont46nouveaux/3fichiers ; corpus63/66 PASS68,624s. Construction, filtres et cargo acquis dans les rouges conservés puis continuation ChromeWebGPU PASS128,946s : quatre recharges exactes,15acier récupérés/1réemployé/14rangés. PrésentationChrome119,162s, typage14,441s/buildPages2,254s ; preuves, rouges et limites dans la note unique. Les validations suivantes sont historiques.
 
 **V310 : [secours et couchages animaux](../gameplay/animal-rescue-v310.md#contrôles-et-limites), schéma 221.** Quatre fichiers nouveaux42cas et reprises historiques qualifiées ; Chrome WebGPU79,235s avec dix recharges exactes, un médicament et34riz consommés. Corpus63/66 PASS69,180s, présentationChrome121,956s ; typage14,247s/buildPages2,266s. Preuves et rouges conservés dans la note unique, aucune campagne naturelle ni performance globale certifiée. Les validations suivantes sont historiques.
 

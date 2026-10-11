@@ -1,6 +1,8 @@
 # Catalogue de contenu : couverture connue
 
-**V310 en cours — [secours et couchages animaux](animal-rescue-v310.md), schéma 221.** Nouveau `animal-sleeping-spot` gratuit, immédiat,1×1 sans rotation, qualité, PV ou objet emballé ; usage normal/médical et affectation normale facultative. Secours physique et sommeil des cinq espèces possédées, sans nouvel aliment, médicament ou patient copié. Boîtes et lits rembourrés restent absents ; pas de bonus hospitalier ajouté à la marque. [Guide](player-guide.md#secourir-et-coucher-un-animal--v310), adaptations et contrôles à acquérir dans la note unique ; aucun résultat anticipé. Les états suivants sont historiques.
+**V311 — [fonderie électrique et fusion des armes](smelting-v311.md), schéma 222.** `electric-smelter` :170acier+2composants, Construction4,350ticks neutres,3×1/180PV/700W, minifiable. Recette `smelt-weapon` des quatre armes actuelles, filtres de types/PV/qualité,160ticks neutres sans XP ; une sortie réelle acier ou plastacier. Aucun nouvel ItemId, composant récupéré, armure ou scorie. [Guide](player-guide.md#fondre-une-arme--v311), adaptations et contrôles qualifiés dans la note unique. Les états suivants sont historiques.
+
+**V310 — [secours et couchages animaux](animal-rescue-v310.md), schéma 221.** Nouveau `animal-sleeping-spot` gratuit, immédiat,1×1 sans rotation, qualité, PV ou objet emballé ; usage normal/médical et affectation normale facultative. Secours physique et sommeil des cinq espèces possédées, sans nouvel aliment, médicament ou patient copié. Boîtes et lits rembourrés restent absents ; pas de bonus hospitalier ajouté à la marque. [Guide](player-guide.md#secourir-et-coucher-un-animal--v310), adaptations et contrôles acquis dans la note unique. Les états suivants sont historiques.
 
 **V309 — [abattage domestique manuel](slaughter-v309.md), schéma 220.** Lièvre, cerf, gazelle, mufalo et dromadaire possédés gagnent une désignation individuelle annulable, accomplie par un dresseur au contact. Aucun nouvel objet, bâtiment ou ingrédient : la dépouille garde son identité, son anatomie et sa conservation, puis fournit les viandes et cuirs existants par la boucherie réelle. Les blessures préexistantes conservent leur effet sur le rendement. La chaîne poursuit cuisine et usages textiles déjà présents ; ni quotas automatiques ni couchages/secours animaux ajoutés. [Conditions et étapes](player-guide.md#abattre-un-animal-possédé--v309), règles et preuves dans la note unique. Les états suivants sont historiques.
 
@@ -304,6 +306,15 @@ La migration 181→182 ne modifie que le numéro après validation stricte ; auc
 | Viandes `hare-meat`, `deer-meat`, `muffalo-meat`, `gazelle-meat`, `dromedary-meat` | Rendement selon corps/lésions/compétence/poste ; piles de 75 au plus, stockage, pourriture et régime. Repas simple par dix unités admises ; V152 permet cinq unités de viande avec cinq végétaux dans le plat raffiné, V156 quinze viandes pour le raffiné carnivore et V159 vingt-cinq pour le gastronomique carnivore. | `snow-hare-meat` préparée mais non obtenable normalement. Pas de composition persistée des provenances. |
 | Textiles `plainleather`, `bluefur`, `camelhide` | Sorties respectives cerf/gazelle, mufalo et dromadaire; transport et stockage textile physiques. Cinq factures chacune : tenue tribale, chemise, pantalon, manteau et parka. | Pas de tannage, qualité de matière, recyclage ou autre usage animal. Le cuir léger du lièvre reste celui déjà livré. |
 | Profil `biome-herbivores-v1` | Population, prochain contrôle, budget complet/réduit, contrôles et arrivées sont sauvegardés. Groupes renouvelés prospectivement sans repeuplement instantané. | N’est pas injecté aux sauvegardes V90. Le scénario court ne certifie ni équilibre annuel ni débit 6×. |
+
+### Ajouts V311
+
+[Contrat](smelting-v311.md) et [recherche Core](../research/smelting-core-v311.md) ; les contrôles produit restent à acquérir. Cette table ne transforme pas les limites des anciennes versions ci-dessous en descriptions du jeu courant.
+
+| Identifiant local | Acquisition et usage physique | Limites |
+| --- | --- | --- |
+| `electric-smelter` |170acier+2composants, Construction4,350ticks neutres,3×1 orientable,180PV,700W ; commutation/panne/pluie, chaleur/lueur, emballage et réinstallation communs. | Électricité accessible comme socle local ; Heavy traduit par terrain sec/obstacles locaux. Aucun poste manuel hors tension. |
+| `smelt-weapon` | Un revolver/fusil/EMP/couteau en plastacier entier choisi par facture types/PV/qualité ; collecte/portage/staging,160ticks neutres, métal réel puis rangement. | Nombre/toujours seulement, quatre typesfalse initiaux, aucune XP. Acier7–8/15/18–19 ou plastacier7–8 ; aucun composant, vêtement, armure, scorie ou ledger de provenance inventé. |
 
 ### Ajouts V90 validés dans leur périmètre
 

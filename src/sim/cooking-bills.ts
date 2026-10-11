@@ -1,4 +1,5 @@
 import {isArtRecipe} from './art-rules.ts';
+import { isSmeltingRecipe,validSmeltFilter } from './smelting-rules.ts';
 import { V91_ITEM_IDS,V190_ITEM_IDS, isAnimalMeat } from './biome-items.ts';
 import { ITEM_DEFINITIONS,V219_ITEM_IDS } from './items.ts';
 import { isFoodWorkstation } from './food-workstations.ts';
@@ -16,16 +17,20 @@ export const COOK_TICKS=60; // 300 reference work / 10 local ticks Ã— campfir
 export const INGREDIENT_UNITS=10; // 0.5 nutrition for the supported raw ingredients.
 export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):CookingBill {
   const inputs=PRODUCTION_RECIPES[recipe].inputs.filter(i=>version>=197||!V219_ITEM_IDS.some(future=>future===i));
-  return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,recipe!=='chemfuel-from-organics'||(BIOFUEL_INITIAL_ORGANICS as readonly string[]).includes(i)])),radius:999,destination:'stockpile'};
+  return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,!isSmeltingRecipe(recipe)&&(recipe!=='chemfuel-from-organics'||(BIOFUEL_INITIAL_ORGANICS as readonly string[]).includes(i))])),radius:999,destination:'stockpile',
+    ...isSmeltingRecipe(recipe)?{smeltFilter:{hpMin:0,hpMax:100,qualityMin:'awful',qualityMax:'legendary'}}:{}};
 }
 export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
+  if(isSmeltingRecipe(recipe)&&version<222)return false;
   if(isBiofuelRecipe(recipe)&&version<218)return false;
   if(recipe==='make-medicine'&&version<206)return false;
   if(recipe==='make-emp-launcher'&&version<208)return false;
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   const v=value as BillSettings;
-  return Object.keys(v).every(k=>['id','recipe','mode','target','suspended','filters','radius','destination'].includes(k))
-    &&['times','until','forever'].includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
+  const smelting=isSmeltingRecipe(recipe);
+  if(smelting?!Object.hasOwn(v,'smeltFilter')||!validSmeltFilter(v.smeltFilter):Object.hasOwn(v,'smeltFilter'))return false;
+  return Object.keys(v).every(k=>['id','recipe','mode','target','suspended','filters','radius','destination',...smelting?['smeltFilter']:[]].includes(k))
+    &&(smelting?['times','forever']:['times','until','forever']).includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
     &&typeof v.suspended==='boolean'&&!!v.filters&&typeof v.filters==='object'&&!Array.isArray(v.filters)
     &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i)&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)))
     // Old carcass filters stay absent after migration and therefore reject new

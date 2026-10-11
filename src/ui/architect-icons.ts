@@ -24,7 +24,7 @@ const SECOND_ATLAS = [
 ] as const;
 export const ARCHITECT_ATLAS_IDS=Object.freeze([FIRST_ATLAS,SECOND_ATLAS]);
 
-export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed','vitals-monitor','animal-sleeping-spot']:id==='steel-tile'?[id,'sterile-tile']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'biofuel-refinery','chemfuel-generator','nutrient-paste-dispenser','hopper','orbital-beacon','comms-console','deep-drill','ground-scanner','drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
+export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'hospital-bed','vitals-monitor','animal-sleeping-spot']:id==='steel-tile'?[id,'sterile-tile']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'electric-smelter','biofuel-refinery','chemfuel-generator','nutrient-paste-dispenser','hopper','orbital-beacon','comms-console','deep-drill','ground-scanner','drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
 /** Every visible tool has its own model/action image. The old sheet addresses
  * below remain solely the fixed world-marker UV layout. */
 export const ARCHITECT_ICON_URLS:Readonly<Record<string,string>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,modelIconUrl(id)])));
@@ -79,7 +79,7 @@ const originalCells:Readonly<Record<string,ArchitectIconCell>>=Object.fromEntrie
   ...atlasCells(SECOND_ATLAS, 1),
 ]);
 // New workbenches reuse existing pictured cells; adding tools never shifts the atlas.
-export const ARCHITECT_ICON_MAPPING:Readonly<Record<string,ArchitectIconCell>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,id==='animal-sleeping-spot'?originalCells.bed!:id==='mini-turret'?originalCells['standing-lamp']!:id==='machining-table'?originalCells['electric-tailor-bench']!:id==='art-bench'?originalCells.stonecutter!:CUSTOM_ICONS[id]?originalCells.wall!:originalCells[id]!])));
+export const ARCHITECT_ICON_MAPPING:Readonly<Record<string,ArchitectIconCell>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,id==='electric-smelter'?originalCells['electric-stove']!:id==='animal-sleeping-spot'?originalCells.bed!:id==='mini-turret'?originalCells['standing-lamp']!:id==='machining-table'?originalCells['electric-tailor-bench']!:id==='art-bench'?originalCells.stonecutter!:CUSTOM_ICONS[id]?originalCells.wall!:originalCells[id]!])));
 
 export interface ArchitectIconInstallReport {
   readonly installed: readonly string[];

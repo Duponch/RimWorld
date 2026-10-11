@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V311, schéma 222 : [fonderie et fusion des armes](../gameplay/smelting-v311.md).** Facture filtrée, une arme entière source/held/placed puis une sortie métallique physique ; préflight atomique et tirage projeté, guards fichiers/Decoder communs. Migration221 validée avant changement du seul numéro. Contrôles acquis et limites dans la note unique. Les états suivants sont historiques.
+
 **V310, schéma 221 : [secours et couchages animaux](../gameplay/animal-rescue-v310.md).** Places gratuites, affectation et usage séparés, patient Wildlife conservé pendant le portage ; tâche Doctor avec copie profonde du segment et trajectoires graphiques résidentes partagées. Garde commune fichiers/Decoder, migration220 strictement validée puis numéro seul. Les états suivants sont historiques.
 
 **V309, schéma 220 : [abattage domestique](../gameplay/slaughter-v309.md).** Intention optionnelle et tâche de contact dans Handling, garde commune fichiers/Decoder, migration stricte219 puis numéro seul. La dépouille garde son identité et ses filières ; marqueur résident partageant les trajectoires GPU des animaux. Les états suivants sont historiques.

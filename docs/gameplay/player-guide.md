@@ -1,5 +1,19 @@
 # Guide joueur
 
+**Schéma 222 — V311 : [fonderie et fusion des armes](smelting-v311.md).** Boucle, filtres protecteurs et limites décrits ci-dessous ; contrôles qualifiés par reprises dans la note unique. Les résultats datés suivants demeurent historiques.
+
+## Fondre une arme — V311
+
+Dans **Architecte → Production**, construisez une **Fonderie électrique** sur terrain sec compatible :170acier,2composants,Construction4 et une emprise3×1. Gardez l’avant accessible, raccordez-la au réseau pour700W et protégez l’appareil de la pluie. Une coupure, panne ou commutation arrête le travail ; la fonderie ne fonctionne pas manuellement hors tension.
+
+Ajoutez **Fondre une arme** dans ses factures. Les quatre types sont d’abord décochés : choisissez seulement les armes que vous acceptez de sacrifier, puis les bornes dePV et dequalité. Le mode nombre compte les armes détruites ; **Toujours** poursuit tant qu’une source admissible existe. Il n’y a pas de mode « jusqu’àX métal ». Rayon, suspendre et destination réserve/dépôt restent disponibles. L’avertissement rappelle que la fusion détruit l’arme et récupère25%des métaux, **aucun composant**.
+
+Activez **Artisanat** pour un colon libre capable de manipulation. Aucune compétence minimale ni arme portée n’est nécessaire. Une arme déjà équipée doit d’abord être déposée par son circuit normal ; interdite, hors filtre ou réservée par un autre travail, elle n’est pas choisie. Le colon rejoint la source, porte la même arme, la dépose au staging puis travaille160ticks neutres ajustés à ses capacités et à l’environnement. LesPV/qualités servent au choix ; ils ne modifient pas le métal récupéré.
+
+Un revolver rend7–8acier, un fusil à verrou15acier, un lanceurEMP18–19acier et un couteau en plastacier7–8plastacier. L’ouvrier transporte ensuite le métal vers la destination ; ce sont des ressources ordinaires réutilisables pour construire ou fabriquer. Le métal reste porté si le sol est saturé.
+
+Suspendre/modifier la facture ou interrompre le colon avant la fin conserve l’arme physique, avec éventuelle perte de progression. Après consommation, annuler conserve le métal existant et ne restitue pas l’arme. Armures, textiles, scories, réparation et fusion à plusieurs sorties restent hors lot. [Conditions, adaptations et suivi des contrôles](smelting-v311.md).
+
 **Schéma courant 221 — V310 : [secours et emplacements de couchage animaux](animal-rescue-v310.md).** Conditions, adaptations et contrôles acquis sont détaillés dans la note unique. Les résultats datés ci-dessous demeurent historiques.
 
 ## Secourir et coucher un animal — V310

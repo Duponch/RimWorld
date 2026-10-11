@@ -4,6 +4,7 @@ import type { Cell, JobKind, StructureKind, World } from './types.ts';
 /** Core coexistence rules are distinct from our current planar transit rules.
  * Surface Eat admits existing items, but is not a storage-zone surface. */
 export const OCCUPANCY = Object.freeze({
+  'electric-smelter':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'biofuel-refinery':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'chemfuel-generator':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'nutrient-paste-dispenser':Object.freeze({clearItems:true,items:false,zones:false,store:false}),

@@ -160,6 +160,8 @@ export class StructureVfxLayer {
         doorAxes??=doorOrientations(world);
         const axis=doorAxes.get(s.z*world.width+s.x)??0;
         tokens.push(`${s.id}:autodoor:${s.x}:${s.z}:${axis}:${on}`);
+      }else if(s.kind==='electric-smelter'){
+        tokens.push(`${s.id}:electric-smelter:${s.x}:${s.z}:${s.orientation}:${on}:${work}`);
       }else if(s.kind==='machining-table'||s.kind==='fabrication-bench'){
         tokens.push(`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${on}:${work}`);
       }else if(s.kind==='electric-stove'||s.kind==='fueled-stove'){
@@ -231,6 +233,13 @@ export class StructureVfxLayer {
           // Two tiny face indicators share the existing resident status batch.
           for(const face of [-1,1])glow.push({x:s.x+.455*cs+face*.19*sn,y:.46,z:s.z-.455*sn+face*.19*cs,sx:.055,sy:.045,sz:.018,ry,color:0x7fd9bd});
         }
+      }else if(s.kind==='electric-smelter'){
+        tokens.push(`${s.id}:electric-smelter:${s.x}:${s.z}:${s.orientation}:${on}:${work}`);
+        if(on){
+          glow.push(local(s,-.65,.68,-.414,.82,.65,.025,work?0xffaa43:0xc96f31));
+          glow.push(local(s,.57,.55,-.449,.13,.09,.02,0xa6dab8));
+          if(work){const emitter=local(s,-.25,1.24,.29,.1,.1,.1,0xffffff);puff(emitter.x,emitter.y,emitter.z,s.id,.38,.35,.72,10);}
+        }
       }else if(s.kind==='machining-table'||s.kind==='fabrication-bench'){
         tokens.push(`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}:${on}:${work}`);
         if(on){
@@ -292,7 +301,7 @@ export class StructureVfxLayer {
         const x=cells.reduce((sum,cell)=>sum+cell.x,0)/cells.length;
         const z=cells.reduce((sum,cell)=>sum+cell.z,0)/cells.length;
         const y=s.kind==='wind-turbine'?4.42:s.kind==='autodoor'||s.kind==='cooler'?WORLD_SCALE.wallHeight+.08:
-          s.kind==='biofuel-refinery'?1.90:s.kind==='chemfuel-generator'?1.90:s.kind==='wood-generator'?WORLD_SCALE.generatorHeight+.35:s.kind==='battery'?1.21:
+          s.kind==='electric-smelter'?1.44:s.kind==='biofuel-refinery'?1.90:s.kind==='chemfuel-generator'?1.90:s.kind==='wood-generator'?WORLD_SCALE.generatorHeight+.35:s.kind==='battery'?1.21:
           s.kind==='solar-generator'?.67:WORLD_SCALE.stonecutterHeight+.4;
         tokens.push(`${s.id}:breakdown:${s.breakdown.brokenAt}:${x}:${z}`);
         glow.push({x,y,z:z-.09,sx:.115,sy:.045,sz:.255,ry:0,color:0xffac62});

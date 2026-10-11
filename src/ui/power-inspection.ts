@@ -68,7 +68,10 @@ export function powerInspection(world: World, structure: Structure, compact=fals
   const batteries = group?.filter(s => s.battery) ?? [];
   const stored = batteries.reduce((n, s) => n + batteryWattDays(s.battery!), 0);
   let detail: string;
-  if(structure.kind==='biofuel-refinery'||structure.kind==='chemfuel-generator'){
+  if(structure.kind==='electric-smelter'){
+    const state=structure.breakdown?'En panne':structure.power?.switchOn===false?'Arrêt manuel':isPowerActive(structure)?'Alimentée':'Sans alimentation';
+    detail=`${state} · 700 W · Artisanat sur place · détruit une arme autorisée par la facture · récupère 25 % des métaux, aucun composant · chaleur et lumière orange en marche`;
+  } else if(structure.kind==='biofuel-refinery'||structure.kind==='chemfuel-generator'){
     detail=biofuelPowerInspection(world,structure);
   } else if(structure.kind==='nutrient-paste-dispenser'){
     detail=nutrientPasteInspection(world,structure);

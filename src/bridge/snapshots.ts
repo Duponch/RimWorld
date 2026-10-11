@@ -3,6 +3,7 @@ import type { StagingGeometryReader } from '../sim/staging-validation.ts';
 import type { OwnedValidationResourceReader, OwnedResourceReuseWitness } from '../sim/owned-validation-resources.ts';
 import { ValidationIdentityContext } from '../sim/validation-identities.ts';
 import { validBiofuelTransport } from '../sim/biofuel-save.ts';
+import { validSmeltingTransport } from '../sim/smelting-save.ts';
 import { validNutrientPasteTransport } from '../sim/nutrient-paste-save.ts';
 import { validOrbitalTransport,registerOrbitalThingIds } from '../sim/orbital-save.ts';
 import { validDeepDrillingTransport } from '../sim/deep-drilling-save.ts';
@@ -1092,6 +1093,7 @@ export class SnapshotDecoder {
     const validation=this.createValidationContext(next,resourceReuse),powerTopology=validation.powerParents;
     const identities=new ValidationIdentityContext(next,validation.resourceFacts);
     if(!validBiofuelTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
+    if(!validSmeltingTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Fonderie, filtre, arme ou propriétaire de fusion invalide ou futur.');
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
     if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');
     if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');

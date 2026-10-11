@@ -76,6 +76,10 @@ export async function tool(page: Page, name: BuildableFloorKind|'mini-turret'|'r
   const category = isBuildableFloor(name)||name==='remove-floor'?'floors':name==='grave'?'furniture':name === 'wind-turbine' || name === 'solar-generator' || name === 'battery' || name === 'power-conduit' || name === 'power-switch' || name === 'wood-generator' ? 'power' : name === 'standing-lamp' || name === 'sun-lamp' ? 'furniture' : name === 'fueled-stove' || name === 'electric-stove' || name === 'butcher-table' || name === 'butcher-spot' || name === 'research-bench' || name === 'tailor-bench' || name === 'stonecutter' || name === 'crafting-spot' ? 'production' : name === 'horseshoes' ? 'recreation' : name === 'heater' || name === 'cooler' || name === 'campfire' || name === 'passive-cooler' ? 'temperature' : name === 'door' || name === 'wall' || name === 'mini-turret' ? 'structure' : name === 'bed' || name === 'table' || name === 'stool' ? 'furniture' : name==='home'||name==='remove-home'||name === 'build-roof' || name === 'remove-roof' || name === 'ignore-roof' || name === 'stockpile' || name === 'remove-stockpile' || name === 'growing' || name === 'remove-growing' ? 'zones' : 'orders';
   if(category==='orders'||category==='zones'){
     const heading=page.locator(`#${category}-open`);
+    // The map dock is hidden while a main panel is open. Close that panel by
+    // the player's Escape path before choosing an external map tool.
+    if(!await heading.isVisible())await page.keyboard.press('Escape');
+    await expect(heading).toBeVisible();
     if(await heading.getAttribute('aria-expanded')!=='true')await heading.click();
   }else{
     await panel(page, 'architect');

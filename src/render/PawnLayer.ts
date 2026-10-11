@@ -784,7 +784,7 @@ export class PawnLayer {
       if(orbitalReady&&stationCell)yaw=Math.atan2(stationCell.x-pawn.x,stationCell.z-pawn.z);
       if(pasteCollect&&stationCell)yaw=Math.atan2(stationCell.x-pawn.x,stationCell.z-pawn.z);
       const contactPose=arriving?pawnWorkPose({...pawn,state:'working'},job,station?.kind):workPose;
-      const atBench=station?.kind==='biofuel-refinery'||station?.kind==='deep-drill'||station?.kind==='ground-scanner'||station?.kind==='drug-lab'||station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
+      const atBench=station?.kind==='electric-smelter'||station?.kind==='biofuel-refinery'||station?.kind==='deep-drill'||station?.kind==='ground-scanner'||station?.kind==='drug-lab'||station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
       const clearance=job?.kind==='mine' ? .9 : atBench ? .88 : .82;
       const pair=pawn.social?.fight?pawnsById.get(pawn.social.fight.opponentId):undefined;
       const socialOpponent=pair?.social?.fight?.opponentId===pawn.id&&!medicallyStopped(pair)?pair:undefined;
