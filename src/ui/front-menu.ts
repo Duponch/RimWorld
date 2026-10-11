@@ -4,6 +4,7 @@ import {designationMinCellPixels,designationVisibilityLabel} from './designation
 import {itemLabelMinCellPixels,itemLabelVisibilityLabel} from './item-label-visibility';
 import {UI_FONT_CHOICES,DEFAULT_UI_FONT,type UiFontId} from './ui-fonts';
 import {cloudMaskRadius,cloudMaskRadiusLabel} from '../render/cloud-mask';
+import {roomMaskRadius,roomMaskRadiusLabel} from '../render/room-mask-settings';
 import {DEFAULT_LIGHTING_SETTINGS,LIGHTING_CONTROLS,parseLightingSettings,lightingPercentLabel,type LightingSettings} from '../render/lighting-settings';
 import {UI_ATLAS_URL} from './pictograms';
 import { createSiteConfiguration, parseSiteSeed, randomSiteSeed } from './front-site';
@@ -28,6 +29,8 @@ export interface FrontMenuOptions {
   onUiFontChange?:(font:UiFontId)=>void;
   getCloudClearRadius?:()=>number;
   onCloudClearRadiusChange?:(radius:number)=>boolean;
+  getRoomMaskRadius?:()=>number;
+  onRoomMaskRadiusChange?:(radius:number)=>boolean;
   getDesignationMinCellPixels?: () => number;
   getItemLabelMinCellPixels?: () => number;
   onItemLabelMinCellPixelsChange?: (value:number) => boolean;
@@ -344,6 +347,24 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     roomText.append(roomLabel, roomDescription);
     roomSetting.append(roomCheckbox, roomText);
     card.append(roomSetting);
+    const roomMaskSetting = element('label', 'front-relief front-texture-setting front-volume-setting');
+    const roomMaskText = element('span'), roomMaskTitle = element('strong', '', 'Rayon de masquage de la chambre');
+    roomMaskTitle.id = 'front-room-mask-label';
+    const roomMaskDescription = element('span', '', 'Dégage le centre des arcs, barres, soleil, lune et nuages de coton lorsque la chambre est activée. 0 : aucun masquage.');
+    roomMaskDescription.id = 'front-room-mask-description';
+    const roomMaskOutput = element('output'); roomMaskOutput.id = 'front-room-mask-value';
+    const roomMaskSlider = element('input'); roomMaskSlider.id = 'front-room-mask-radius'; roomMaskSlider.type = 'range';
+    roomMaskSlider.min = '0'; roomMaskSlider.max = '100'; roomMaskSlider.step = '1';
+    roomMaskSlider.value = String(Math.round(roomMaskRadius(options.getRoomMaskRadius?.()) * 100));
+    roomMaskOutput.textContent = roomMaskRadiusLabel(Number(roomMaskSlider.value) / 100);
+    roomMaskSlider.setAttribute('aria-labelledby', roomMaskTitle.id);
+    roomMaskSlider.setAttribute('aria-describedby', `${roomMaskDescription.id} ${roomMaskOutput.id}`);
+    roomMaskSlider.addEventListener('input', () => {
+      clearError(); const radius = roomMaskRadius(Number(roomMaskSlider.value) / 100);
+      roomMaskOutput.textContent = roomMaskRadiusLabel(radius);
+      if (options.onRoomMaskRadiusChange && !options.onRoomMaskRadiusChange(radius)) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+    });
+    roomMaskText.append(roomMaskTitle, roomMaskDescription, roomMaskOutput); roomMaskSetting.append(roomMaskText, roomMaskSlider); card.append(roomMaskSetting);
     const lightingSliders: { key: keyof LightingSettings; slider: HTMLInputElement; output: HTMLOutputElement }[] = [];
     const refreshLighting = () => {
       const settings = parseLightingSettings(options.getLightingSettings());
@@ -411,7 +432,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     fontSetting.append(fontText,fontSelect);card.append(fontSetting);
     const cloudSetting=element('label','front-relief front-texture-setting front-volume-setting');
     const cloudText=element('span'),cloudTitle=element('strong','','Rayon de masquage des nuages');cloudTitle.id='front-cloud-mask-label';
-    const cloudDescription=element('span','','Zone dégagée au centre de l’écran. 0 : aucun masquage.');cloudDescription.id='front-cloud-mask-description';
+    const cloudDescription=element('span','','Zone dégagée au centre de l’écran lorsque la chambre est désactivée. 0 : aucun masquage.');cloudDescription.id='front-cloud-mask-description';
     const cloudOutput=element('output');cloudOutput.id='front-cloud-mask-value';
     const cloudSlider=element('input');cloudSlider.id='front-cloud-mask-radius';cloudSlider.type='range';cloudSlider.min='0';cloudSlider.max='100';cloudSlider.step='1';
     cloudSlider.value=String(Math.round(cloudMaskRadius(options.getCloudClearRadius?.())*100));cloudOutput.textContent=cloudMaskRadiusLabel(Number(cloudSlider.value)/100);

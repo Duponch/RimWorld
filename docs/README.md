@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V325 : [table et chambre fixe](development/room-layout-v325.md), schéma 229 conservé.** Table rectangulaire, proportions communes et masquage configurable du ciel suspendu ; [guide](gameplay/player-guide.md#table-chambre-et-suspensions--v325). Comparaison de coût, contrôles natifs et limites dans la note unique. Les états suivants sont historiques.
+
 **V324 : [chambre et éclairages](development/room-diorama-v324.md), schéma 229 conservé.** Chambre facultative, globes suspendus, ambiance et intensités réglables ; [guide](gameplay/player-guide.md#chambre-et-éclairages--v324). Contrôles, coût et limites dans la note unique. Les états suivants sont historiques.
 
 **V323 : [paysages procéduraux et astres sur tiges](development/cardboard-diorama-v323.md), schéma 229 conservé.** Découpes par biome/graine et cycle solaire en papier, avec [guide](gameplay/player-guide.md#voir-la-carte-en-diorama--v323). Contrôles et coûts dans la note unique. Les états suivants sont historiques.

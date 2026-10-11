@@ -1,5 +1,21 @@
 # Guide joueur
 
+## Table, chambre et suspensions — V325
+
+La carte carrée repose maintenant sur une table rectangulaire proportionnée à
+la chambre. Le lit et la bibliothèque sont adossés au mur ; les murs restent
+présents et la caméra s'arrête avant de sortir de la pièce.
+
+Dans **Options → Rayon de masquage de la chambre**, réglez le rayon
+du cercle qui dégage la vue des arcs, barres, fils, soleil, lune et nuages de
+coton. Le rayon vaut 31 % du petit côté de l'écran par défaut ; 0 % laisse tout
+visible. Ce réglage est mémorisé et ne modifie pas la lumière du plateau.
+
+La chambre utilise six petits nuages sur trois arcs. Les anciens nuages restent
+désactivés tant qu'elle est active ; son interrupteur OFF rétablit les anciens
+nuages et leur propre réglage de masquage.
+[Réalisation et comparaison de coût](../development/room-layout-v325.md).
+
 ## Chambre et éclairages — V324
 
 **Options → Chambre autour de la carte**, ou le même réglage dans le menu de

@@ -46,6 +46,7 @@ import {applyUiFont,readUiFont,saveUiFont,type UiFontId} from './ui/ui-fonts';
 import {CLOUD_MASK_RADIUS_KEY,DEFAULT_CLOUD_MASK_RADIUS,cloudMaskRadius,cloudMaskRadiusLabel} from './render/cloud-mask';
 import {DIORAMA_PREFERENCE_KEY,DEFAULT_DIORAMA_ENABLED,dioramaEnabled as parseDioramaEnabled} from './render/diorama-settings';
 import {ROOM_PREFERENCE_KEY,DEFAULT_ROOM_ENABLED,roomEnabled as parseRoomEnabled} from './render/room-settings';
+import {ROOM_MASK_RADIUS_KEY,DEFAULT_ROOM_MASK_RADIUS,roomMaskRadius,roomMaskRadiusLabel} from './render/room-mask-settings';
 import {LIGHTING_PREFERENCE_KEY,DEFAULT_LIGHTING_SETTINGS,LIGHTING_CONTROLS,parseLightingSettings,lightingPercentLabel,type LightingSettings} from './render/lighting-settings';
 import type { PawnTrack } from './bridge/motion-tracks';
 import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
@@ -399,6 +400,7 @@ let itemLabelThreshold = 96;
 let groundGrassEnabled = true;
 let dioramaEnabled = DEFAULT_DIORAMA_ENABLED;
 let roomEnabled = DEFAULT_ROOM_ENABLED;
+let roomMaskRadiusPreference = DEFAULT_ROOM_MASK_RADIUS;
 let lightingSettings = { ...DEFAULT_LIGHTING_SETTINGS };
 let cloudClearRadius = DEFAULT_CLOUD_MASK_RADIUS;
 let uiFont = readUiFont();
@@ -415,6 +417,7 @@ try {
   groundGrassEnabled = localStorage.getItem(GROUND_GRASS_PREFERENCE_KEY) !== 'false';
   dioramaEnabled = parseDioramaEnabled(localStorage.getItem(DIORAMA_PREFERENCE_KEY));
   roomEnabled = parseRoomEnabled(localStorage.getItem(ROOM_PREFERENCE_KEY));
+  roomMaskRadiusPreference = roomMaskRadius(localStorage.getItem(ROOM_MASK_RADIUS_KEY));
   lightingSettings = parseLightingSettings(localStorage.getItem(LIGHTING_PREFERENCE_KEY));
   cloudClearRadius = cloudMaskRadius(localStorage.getItem(CLOUD_MASK_RADIUS_KEY));
   soundEnabled = localStorage.getItem(SOUND_ENABLED_PREFERENCE_KEY) !== 'false';
@@ -493,6 +496,17 @@ function setCloudClearRadius(value:number):boolean {
   el('cloud-mask-value').textContent=cloudMaskRadiusLabel(cloudClearRadius);
   renderer?.setCloudClearRadius(cloudClearRadius);
   try {localStorage.setItem(CLOUD_MASK_RADIUS_KEY,String(cloudClearRadius));return true;}catch{return false;}
+}
+const roomMaskSlider = el<HTMLInputElement>('room-mask-radius');
+roomMaskSlider.value = String(Math.round(roomMaskRadiusPreference * 100));
+el('room-mask-value').textContent = roomMaskRadiusLabel(roomMaskRadiusPreference);
+function setRoomMaskRadius(value: number): boolean {
+  roomMaskRadiusPreference = roomMaskRadius(value);
+  roomMaskSlider.value = String(Math.round(roomMaskRadiusPreference * 100));
+  el('room-mask-value').textContent = roomMaskRadiusLabel(roomMaskRadiusPreference);
+  renderer?.setRoomMaskRadius(roomMaskRadiusPreference);
+  try { localStorage.setItem(ROOM_MASK_RADIUS_KEY, String(roomMaskRadiusPreference)); return true; }
+  catch { return false; }
 }
 const designationSlider=el<HTMLInputElement>('designation-visibility');
 const itemLabelSlider=el<HTMLInputElement>('item-label-visibility');
@@ -612,6 +626,8 @@ const frontMenu = createFrontMenu(frontHost, {
   onUiFontChange:setUiFontPreference,
   getCloudClearRadius:()=>cloudClearRadius,
   onCloudClearRadiusChange:setCloudClearRadius,
+  getRoomMaskRadius: () => roomMaskRadiusPreference,
+  onRoomMaskRadiusChange: setRoomMaskRadius,
   getDesignationMinCellPixels:()=>designationIconThreshold,
   getItemLabelMinCellPixels:()=>itemLabelThreshold,
   onItemLabelMinCellPixelsChange:setItemLabelMinCellPixels,
@@ -1498,6 +1514,7 @@ designationSlider.oninput=()=>{if(!setDesignationMinCellPixels(Number(designatio
 itemLabelSlider.oninput=()=>{if(!setItemLabelMinCellPixels(Number(itemLabelSlider.value)))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
 fontSelect.onchange=()=>setUiFontPreference(fontSelect.value as UiFontId);
 cloudRadiusSlider.oninput=()=>{if(!setCloudClearRadius(Number(cloudRadiusSlider.value)/100))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
+roomMaskSlider.oninput = () => { if (!setRoomMaskRadius(Number(roomMaskSlider.value) / 100)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 groundGrassToggle.onchange = () => { if (!setGroundGrassEnabled(groundGrassToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 dioramaToggle.onchange = () => { if (!setDioramaEnabled(dioramaToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 roomToggle.onchange = () => { if (!setRoomEnabled(roomToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
@@ -1704,6 +1721,7 @@ async function prepareWorldView(): Promise<void> {
     renderer = await MainColonyRenderer.create(el('viewport'), pickCell, groundGrassEnabled);
     renderer.setDioramaEnabled(dioramaEnabled);
     renderer.setRoomEnabled(roomEnabled);
+    renderer.setRoomMaskRadius(roomMaskRadiusPreference);
     renderer.setLightingSettings(lightingSettings);
     renderer.onFatalError = message => { void handleGraphicsFailure(message); };
     renderer.onCompatibilityWarning = message => notify(message, true);

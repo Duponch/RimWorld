@@ -1,6 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { createDioramaDecor } from './diorama-decor';
 import { DIORAMA_SKY } from './diorama-sky';
+import { createRoomLayout } from './room-layout';
 import type { BiomeId } from '../sim/biome-flora';
 
 export type DioramaSide = 'north' | 'west' | 'south' | 'east';
@@ -339,47 +340,47 @@ export function createDioramaGeometry(width: number, height: number, seed = 0, b
   };
   box(base, [minX - thickness, bottom, minZ - thickness], [maxX + thickness, bottom + span * .007, maxZ + thickness], cardboard);
 
-  // Beveled tabletop: one plain continuous surface, no clutter or per-plank meshes.
-  // V322's extra paper clearance moves the box by .0006*span only. Preserve
-  // the original table coordinates, grain, apron, and legs byte-for-byte.
-  const tableMinX = -.5 - span * .012, tableMaxX = width - .5 + span * .012;
-  const tableMinZ = -.5 - span * .012, tableMaxZ = height - .5 + span * .012;
-  const x0 = tableMinX - span * .135, x1 = tableMaxX + span * .135;
-  const z0 = tableMinZ - span * .135, z1 = tableMaxZ + span * .135;
-  const bevel = span * .007, tableBottom = tableTop - span * .030;
-  const rings: Point[][] = [
-    [[x0 + bevel, tableTop, z0 + bevel], [x1 - bevel, tableTop, z0 + bevel], [x1 - bevel, tableTop, z1 - bevel], [x0 + bevel, tableTop, z1 - bevel]],
-    [[x0, tableTop - bevel, z0], [x1, tableTop - bevel, z0], [x1, tableTop - bevel, z1], [x0, tableTop - bevel, z1]],
-    [[x0, tableBottom + bevel * .5, z0], [x1, tableBottom + bevel * .5, z0], [x1, tableBottom + bevel * .5, z1], [x0, tableBottom + bevel * .5, z1]],
-    [[x0 + bevel * .5, tableBottom, z0 + bevel * .5], [x1 - bevel * .5, tableBottom, z0 + bevel * .5],
-      [x1 - bevel * .5, tableBottom, z1 - bevel * .5], [x0 + bevel * .5, tableBottom, z1 - bevel * .5]],
-  ];
-  const tv = (p: Point): Vertex => ({ p, uv: [p[0] / (span * .14), p[2] / (span * 1.25)] });
-  table.quad(...rings[0]!.map(tv) as [Vertex, Vertex, Vertex, Vertex], 0xbba589, [0, 1, 0]);
-  table.quad(...rings[3]!.map(tv) as [Vertex, Vertex, Vertex, Vertex], 0x967d62, [0, -1, 0]);
-  // Three recessed hairline joins suggest a plain four-board tabletop. The
-  // shared surface and grain stay continuous; these are static baked seams.
-  for (let i = 1; i < 4; i++) {
-    const x = x0 + (x1 - x0) * i / 4;
-    box(table, [x - span * .00028, tableTop - span * .00010, z0 + bevel],
-      [x + span * .00028, tableTop + span * .000025, z1 - bevel], 0x9f8870, true);
+  // The single reference-proportioned walnut table admits the square box on
+  // its short side. Its physical layout also defines the bedroom floor and rig.
+  const layout = createRoomLayout(width, height), unit = layout.unit;
+  const tv = (p: Point): Vertex => ({ p, uv: [p[2] / (unit * .35), p[0] / (unit * 5.89)] });
+  const tableBlock = (x: number, y: number, z: number, w: number, h: number, d: number,
+    pigment: number, bevel = .02, yaw = 0): void => {
+    const b = Math.min(bevel, w * .24, h * .24, d * .24), rings: Point[][] = [];
+    const transform = (p: Point): Point => [layout.centerX + unit * (x + Math.cos(yaw) * p[0] + Math.sin(yaw) * p[2]),
+      layout.floorY + unit * (y + p[1]), layout.centerZ + unit * (z - Math.sin(yaw) * p[0] + Math.cos(yaw) * p[2])];
+    for (const [ry, inset] of [[h / 2, b * .55], [h / 2 - b, 0], [-h / 2 + b, 0], [-h / 2, b * .55]]) {
+      const rx = w / 2 - inset!, rz = d / 2 - inset!, c = b * .55;
+      rings.push(([[-rx + c, ry!, -rz], [rx - c, ry!, -rz], [rx, ry!, -rz + c], [rx, ry!, rz - c],
+        [rx - c, ry!, rz], [-rx + c, ry!, rz], [-rx, ry!, rz - c], [-rx, ry!, -rz + c]] satisfies Point[]).map(p => transform(p)));
+    }
+    for (let i = 1; i < 7; i++) {
+      table.triangle(tv(rings[0]![0]!), tv(rings[0]![i + 1]!), tv(rings[0]![i]!), pigment, [0, 1, 0]);
+      table.triangle(tv(rings[3]![0]!), tv(rings[3]![i]!), tv(rings[3]![i + 1]!), pigment, [0, -1, 0]);
+    }
+    for (let r = 0; r < 3; r++) for (let i = 0; i < 8; i++) {
+      const j = (i + 1) % 8;
+      table.quad(tv(rings[r]![i]!), tv(rings[r]![j]!), tv(rings[r + 1]![j]!), tv(rings[r + 1]![i]!), pigment);
+    }
+  };
+  // Heights and edge/apron/stretcher proportions follow the HTML table.
+  tableBlock(0, 1.087, 0, 6.02, .172, 3.45, 0x725740, .072);
+  tableBlock(0, 1.199, 0, 5.89, .052, 3.32, 0xa08061, .027);
+  for (const x of [-2.61, 2.61]) for (const z of [-1.43, 1.43]) {
+    // Legs meet their fitted feet; both touch the same shared bedroom floor.
+    tableBlock(x, .505, z, .205, .98, .215, 0x71563e, .045, x > 0 ? -.035 : .035);
+    tableBlock(x, .023, z, .225, .046, .245, 0x5d4836, .016);
   }
-  for (let r = 0; r < 3; r++) for (let i = 0; i < 4; i++) {
-    const j = (i + 1) % 4;
-    const a = rings[r]![i]!, b = rings[r]![j]!, c = rings[r + 1]![j]!, d = rings[r + 1]![i]!;
-    const outward: Point = i === 0 ? [0, 0, -1] : i === 1 ? [1, 0, 0] : i === 2 ? [0, 0, 1] : [-1, 0, 0];
-    table.quad(tv(a), tv(b), tv(c), tv(d), r === 0 ? 0xc2aa8d : 0xa78c6e, outward);
+  for (const z of [-1.39, 1.39]) {
+    tableBlock(0, .91, z, 5.19, .25, .16, 0x73583f, .025);
+    tableBlock(0, .30, z, 5.22, .12, .15, 0x8a6c4e, .024);
   }
-  const legWidth = span * .044, legBottom = tableBottom - span * .31, inset = span * .105;
-  for (const x of [x0 + inset, x1 - inset - legWidth]) for (const z of [z0 + inset, z1 - inset - legWidth]) {
-    box(table, [x, legBottom, z], [x + legWidth, tableBottom, z + legWidth], 0xab8c6c, true);
-  }
-  // A simple apron gives the table credible support under the box.
-  const apronBottom = tableBottom - span * .040, apron = span * .020;
-  box(table, [x0 + inset, apronBottom, z0 + inset], [x1 - inset, tableBottom, z0 + inset + apron], 0xa28768, true);
-  box(table, [x0 + inset, apronBottom, z1 - inset - apron], [x1 - inset, tableBottom, z1 - inset], 0xa28768, true);
-  box(table, [x0 + inset, apronBottom, z0 + inset + apron], [x0 + inset + apron, tableBottom, z1 - inset - apron], 0xa28768, true);
-  box(table, [x1 - inset - apron, apronBottom, z0 + inset + apron], [x1 - inset, tableBottom, z1 - inset - apron], 0xa28768, true);
+  for (const x of [-2.59, 2.59]) tableBlock(x, .91, 0, .16, .25, 2.81, 0x73583f, .02);
+  tableBlock(0, .98, 1.481, 5.04, .018, .01, 0xb49c72, .003);
+  // Three fine long-grain joins, four fitted corner pins, no loose tabletop props.
+  for (const z of [-.825, .005, .835]) tableBlock(0, 1.225, z, 5.72, .001, .006, 0x7b6149, .0002);
+  for (const x of [-2.77, 2.77]) for (const z of [-1.51, 1.51])
+    tableBlock(x, 1.225, z, .034, .0015, .034, 0xb49c72, .0003);
   parts.push({ name: 'diorama-box-base', layer: 'base', material: 'cardboard', geometry: base.finish() });
   parts.push({ name: 'diorama-wooden-table', layer: 'table', material: 'wood', geometry: table.finish() });
   return { parts, span, wallHeight, tableTop };

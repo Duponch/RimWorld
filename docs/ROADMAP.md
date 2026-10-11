@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V325 — [table et chambre fixe](development/room-layout-v325.md), schéma 229 conservé.** Priorité humaine graphique : proportions de référence, nuages répartis, vue dégagée et chambre permanente. Structure regroupée conservée après comparaison de coût du décor ; aucune nouvelle mécanique ni gainFPS général revendiqué. Barricades seulement préparées, sous-métiers reportés, relance **PAUSED**. Les états suivants sont historiques.
+
 **V324 — [chambre et éclairage du plateau](development/room-diorama-v324.md), schéma 229 conservé.** Priorité graphique humaine : intégrer la chambre de référence, conserver le plateau net, améliorer la lecture nocturne et régler indépendamment soleil, lune et ambiance. Aucune nouvelle mécanique de simulation ; barricades seulement préparées, sous-métiers reportés, relance **PAUSED**. Les états suivants sont historiques.
 
 **V323 — [décors par biome et théâtre céleste](development/cardboard-diorama-v323.md), schéma 229 conservé.** Demande graphique humaine : variété procédurale au chargement et astres sur tiges animés par l’heure confirmée. Aucune nouvelle mécanique de simulation ; barricades seulement préparées, sous-métiers reportés, relance **PAUSED**. Les états suivants sont historiques.

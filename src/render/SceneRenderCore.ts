@@ -2,6 +2,7 @@ import { AllowedAreaLayer } from './AllowedAreaLayer';
 import { DioramaLayer } from './DioramaLayer';
 import { RoomLayer } from './RoomLayer';
 import { parseLightingSettings, type LightingSettings } from './lighting-settings';
+import { DEFAULT_ROOM_MASK_RADIUS, roomMaskRadius } from './room-mask-settings';
 import { DeepResourceLayer } from './DeepResourceLayer';
 import { AreaPreviewLayer } from './AreaPreviewLayer';
 import {OrderTargetIndex} from './order-target-index';
@@ -122,6 +123,7 @@ export class SceneRenderCore {
   protected dioramaEnabled = true;
   protected room: RoomLayer | null = null;
   protected roomEnabled = true;
+  private roomMaskRadius = DEFAULT_ROOM_MASK_RADIUS;
   private lightingSettings = parseLightingSettings(null);
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
   protected readonly frames = new FrameMetrics();
@@ -718,6 +720,10 @@ export class SceneRenderCore {
     this.zonesTintDirty=true;this.refreshZonesTint();
   }
   setCloudClearRadius(radius:number):void {this.clouds.setClearRadius(radius);}
+  setRoomMaskRadius(radius: number): void {
+    this.roomMaskRadius = roomMaskRadius(radius);
+    this.room?.setMaskRadius(this.roomMaskRadius);
+  }
 
   setDioramaEnabled(enabled: boolean): void {
     if (this.disposed || this.dioramaEnabled === enabled) return;
@@ -754,6 +760,7 @@ export class SceneRenderCore {
     this.room ??= new RoomLayer(this.scene);
     this.room.configure(this.world.width, this.world.height, this.world.seed);
     this.room.setSettings(this.lightingSettings);
+    this.room.setMaskRadius(this.roomMaskRadius);
     this.room.setTexturesEnabled(this.texturesEnabled);
     this.daylight.setExternalLighting(true);
     this.rig.setRoomEnabled?.(true);
@@ -1213,6 +1220,7 @@ export class SceneRenderCore {
       this.camera.position.z += z - this.controls.target.z;
       this.controls.target.x = x; this.controls.target.z = z;
     }
+    this.rig.constrainRoom?.();
     this.refreshAreaPointer();
     // Share the confirmed presentation clock with pawn motion. Loading a save
     // restores the sky; pausing cannot continue an independent wall-clock sun.
@@ -1241,7 +1249,8 @@ export class SceneRenderCore {
     if(this.texturesEnabled)this.paintedWater.present(skyTick/TICKS_PER_SECOND);
     this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
     if (this.dioramaEnabled) this.diorama?.presentSky(this.daylight.sample.y);
-    if(this.world)this.clouds.present({seed:this.world.seed,tick:skyTick,weather:this.world.weather,camera:this.camera,
+    if (this.roomEnabled) this.clouds.mesh.visible = false;
+    else if(this.world)this.clouds.present({seed:this.world.seed,tick:skyTick,weather:this.world.weather,camera:this.camera,
       target:this.controls.target,strength:visualWindStrength,directionX:visualWind.x,directionZ:visualWind.z,
       daylight:this.daylight.sample.daylight});
     if(this.world)this.precipitation.present({seed:this.world.seed,tick:skyTick,rainRate:weatherRainRate(this.world),

@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { createRoomLayout, type RoomLayout } from './room-layout';
 
 export type RoomMaterialKind = 'wood' | 'plaster' | 'fabric' | 'metal' | 'paper' | 'cotton';
 export type RoomSection = 'floor' | 'north' | 'west' | 'east' | 'furniture' | 'orbit';
@@ -35,20 +36,25 @@ export interface RoomOrbit {
 }
 
 export interface RoomSuspension {
+  readonly arcIndex: number;
+  readonly anchorT: number;
   readonly anchor: Point;
   readonly attachment: Point;
   readonly center: Point;
+  readonly bridleEnds: readonly Point[];
 }
 
 export interface RoomGeometry {
   readonly parts: readonly RoomGeometryPart[];
   readonly span: number;
   readonly floorY: number;
+  readonly layout: RoomLayout;
   readonly orbit: RoomOrbit;
+  readonly cloudArcs: readonly RoomOrbit[];
   readonly cloudSuspensions: readonly RoomSuspension[];
 }
 
-export const ROOM_GEOMETRY_LIMITS = Object.freeze({ parts: 16, triangles: 20000 });
+export const ROOM_GEOMETRY_LIMITS = Object.freeze({ parts: 16, triangles: 28000 });
 
 /** Analytic resident rail: a supplied vector is reused, with no scene or clock. */
 export function sampleRoomOrbit(orbit: RoomOrbit, t: number, out: THREE.Vector3, kind: MotionKind = 'sun'): THREE.Vector3 {
@@ -174,16 +180,18 @@ function softSphere(radius: number, widthSegments: number, heightSegments: numbe
   return geometry;
 }
 
-/** Static bedroom, centered around the existing diorama table. The exact table
- * feet end at -.389*span; no second table or playable-map content is generated. */
+/** Static bedroom and frame use the same reference scale as the single table.
+ * No second table or playable-map content is generated. */
 export function createRoomGeometry(width: number, height: number, seed = 0): RoomGeometry {
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0 || !Number.isSafeInteger(seed)) {
     throw new RangeError('Room dimensions must be finite and positive, and seed must be a safe integer.');
   }
-  const span = Math.min(width, height), floorY = -span * .389;
-  const cx = (width - 1) / 2, cz = (height - 1) / 2;
-  const halfX = width / 2 + span * 1.15, halfZ = height / 2 + span * 1.15;
-  const northZ = cz - halfZ, westX = cx - halfX, eastX = cx + halfX;
+  const layout = createRoomLayout(width, height), { span, floorY, unit, centerX: cx, centerZ: cz } = layout;
+  const { northZ, westX, eastX, southZ } = layout.walls;
+  const halfX = (eastX - westX) / 2, halfZ = (southZ - northZ) / 2, wallCenterZ = (northZ + southZ) / 2;
+  // Small authored furniture dimensions retain their ratios, at the reference
+  // window's approximately five-units-per-original-span scale.
+  const detail = unit * 5;
   const parts: RoomGeometryPart[] = [];
   const batches = new Map<string, { batch: RoomBatch; material: RoomMaterialKind; section: RoomSection; motionKind?: MotionKind }>();
   const batch = (name: string, material: RoomMaterialKind, section: RoomSection, motionKind?: MotionKind): RoomBatch => {
@@ -193,101 +201,103 @@ export function createRoomGeometry(width: number, height: number, seed = 0): Roo
   };
   // Authored lengths below are span-relative; helper coordinates are centered
   // on the map and their Y values are measured upward from the bedroom floor.
-  const world = (x: number, y: number, z: number): Point => [cx + x * span, floorY + y * span, cz + z * span];
+  const world = (x: number, y: number, z: number): Point => [cx + x * detail, floorY + y * detail, cz + z * detail];
   const box = (target: RoomBatch, center: Point, dimensions: Point, pigment: number, bevel = 0, rotation: Point = [0, 0, 0]): void => {
     const [w, h, d] = dimensions;
     target.add(bevel > 0 ? beveledBox(w, h, d, bevel) : new THREE.BoxGeometry(w, h, d), pigment, matrix(center, rotation));
   };
   const prop = (target: RoomBatch, x: number, y: number, z: number, w: number, h: number, d: number,
     pigment: number, bevel = .006, rotation: Point = [0, 0, 0]): void => box(target, world(x, y, z),
-    [w * span, h * span, d * span], pigment, bevel * span, rotation);
+    [w * detail, h * detail, d * detail], pigment, bevel * detail, rotation);
   const wood = batch('room-furniture-wood', 'wood', 'furniture');
   const fabric = batch('room-furniture-fabric', 'fabric', 'furniture');
   const paper = batch('room-books-and-art', 'paper', 'furniture');
   const metal = batch('room-orbit-structure', 'metal', 'orbit');
 
   const floor = batch('room-parquet-floor', 'wood', 'floor');
-  box(floor, [cx, floorY - span * .016, cz], [halfX * 2, span * .024, halfZ * 2], 0x8c7864);
+  const floorWidth = layout.floor.maxX - layout.floor.minX, floorDepth = layout.floor.maxZ - layout.floor.minZ;
+  const floorCenterZ = (layout.floor.minZ + layout.floor.maxZ) / 2;
+  box(floor, [cx, floorY - unit * .08, floorCenterZ], [floorWidth, unit * .12, floorDepth], 0x8c7864);
   // Individual broad boards have very narrow real recessed joins, all in one
   // batch. A fixed board count avoids an area-dependent construction budget.
-  const boards = 18, boardWidth = halfX * 2 / boards;
+  const boards = 18, boardWidth = floorWidth / boards;
   for (let i = 0; i < boards; i++) {
     const tint = [0xab957a, 0xa48c70, 0xb19c80, 0xa99074][i % 4]!;
-    box(floor, [westX + boardWidth * (i + .5), floorY - span * .002, cz],
-      [boardWidth - span * .0015, span * .004, halfZ * 2 - span * .007], tint, span * .001);
+    box(floor, [layout.floor.minX + boardWidth * (i + .5), floorY - unit * .01, floorCenterZ],
+      [boardWidth - unit * .0075, unit * .02, floorDepth - unit * .035], tint, unit * .005);
   }
-  const wallHeight = span * 1.35, wallThickness = span * .035;
+  const wallHeight = layout.walls.height, wallThickness = unit * .2;
   for (const side of ['north', 'west', 'east'] as const) {
     const target = batch(`room-${side}-wall`, 'plaster', side);
     const horizontal = side === 'north';
     box(target, [horizontal ? cx : side === 'west' ? westX - wallThickness / 2 : eastX + wallThickness / 2,
-      floorY + wallHeight / 2, horizontal ? northZ - wallThickness / 2 : cz],
+      floorY + wallHeight / 2, horizontal ? northZ - wallThickness / 2 : wallCenterZ],
     [horizontal ? halfX * 2 : wallThickness, wallHeight, horizontal ? wallThickness : halfZ * 2],
-    side === 'west' ? 0xb6a28f : 0xc8b9a5, span * .003);
-    box(wood, [horizontal ? cx : side === 'west' ? westX + span * .005 : eastX - span * .005,
-      floorY + span * .027, horizontal ? northZ + span * .005 : cz],
-    [horizontal ? halfX * 2 : span * .012, span * .054, horizontal ? span * .012 : halfZ * 2], 0x947d65, span * .003);
+    side === 'west' ? 0xb6a28f : 0xc8b9a5, unit * .015);
+    box(target, [horizontal ? cx : side === 'west' ? westX + unit * .015 : eastX - unit * .015,
+      floorY + unit * .09, horizontal ? northZ + unit * .015 : wallCenterZ],
+    [horizontal ? halfX * 2 : unit * .03, unit * .18, horizontal ? unit * .03 : halfZ * 2], 0x947d65, unit * .008);
   }
   const rug = batch('room-woven-rug', 'fabric', 'floor');
-  box(rug, [cx, floorY + span * .0007, cz + span * .035],
-    [width + span * .46, span * .0014, height + span * .42], 0xa99e88, span * .0003);
+  box(rug, [cx, floorY + unit * .0035, cz + unit * .08],
+    [unit * 7.3, unit * .007, unit * 5.1], 0xa99e88, unit * .0015);
   for (const offset of [-1, 1]) {
-    box(rug, [cx, floorY + span * .0015, cz + span * .035 + offset * (height / 2 + span * .185)],
-      [width + span * .40, span * .0003, span * .007], 0x7b8b7e);
+    box(rug, [cx, floorY + unit * .0075, cz + unit * .08 + offset * unit * 2.4],
+      [unit * 7.0, unit * .0015, unit * .035], 0x7b8b7e);
   }
 
   // Picture window: relief frame, linen curtains, and restrained layered paper
   // landscape. No downloaded bitmap or text labels are needed for this prop.
   const win = batch('room-window-frame', 'wood', 'north');
   const curtains = batch('room-window-curtains', 'fabric', 'north');
-  const wx = cx - width * .24, wy = floorY + span * .84, wz = northZ + span * .025;
-  box(win, [wx, wy, wz], [span * .64, span * .48, span * .025], 0x776451, span * .006);
+  const wx = cx - unit * 3.65, wy = floorY + unit * 2.84, wz = northZ + unit * .075;
+  box(win, [wx, wy, wz], [detail * .64, detail * .48, detail * .025], 0x776451, detail * .006);
   // The full window and framed art share the north visibility group, including
   // their coloured paper faces. Books retain the separate furniture batch.
-  box(win, [wx, wy, wz + span * .014], [span * .585, span * .426, span * .003], 0xb8c8c3);
+  box(win, [wx, wy, wz + detail * .014], [detail * .585, detail * .426, detail * .003], 0xb8c8c3);
   const landscape = (points: readonly (readonly [number, number])[], pigment: number, depth: number): void => {
     const shape = new THREE.Shape();
-    points.forEach(([x, y], i) => i ? shape.lineTo(x * span, y * span) : shape.moveTo(x * span, y * span));
+    points.forEach(([x, y], i) => i ? shape.lineTo(x * detail, y * detail) : shape.moveTo(x * detail, y * detail));
     shape.closePath();
-    win.add(new THREE.ShapeGeometry(shape), pigment, matrix([wx, wy, wz + span * depth]));
+    win.add(new THREE.ShapeGeometry(shape), pigment, matrix([wx, wy, wz + detail * depth]));
   };
   landscape([[-.29, -.21], [-.29, -.015], [-.17, .035], [-.09, -.005], [.025, .075], [.14, .02], [.29, .045], [.29, -.21]], 0x839b89, .0175);
   landscape([[-.29, -.21], [-.29, -.11], [-.14, -.025], [-.02, -.06], [.11, -.035], [.29, -.09], [.29, -.21]], 0x637e6b, .0185);
-  for (const dx of [-.317, 0, .317]) box(win, [wx + dx * span, wy, wz + span * .035],
-    [span * (dx === 0 ? .013 : .025), span * .48, span * .028], 0xd7c9b3, span * .003);
-  for (const dy of [-.24, .025, .24]) box(win, [wx, wy + dy * span, wz + span * .035],
-    [span * .66, span * (dy === .025 ? .012 : .022), span * .028], 0xd7c9b3, span * .003);
-  box(win, [wx, wy - span * .265, wz + span * .045], [span * .72, span * .021, span * .09], 0xb4a087, span * .006);
-  segment(win, [wx - span * .43, wy + span * .275, wz + span * .065],
-    [wx + span * .43, wy + span * .275, wz + span * .065], span * .005, 0x796650);
+  for (const dx of [-.317, 0, .317]) box(win, [wx + dx * detail, wy, wz + detail * .035],
+    [detail * (dx === 0 ? .013 : .025), detail * .48, detail * .028], 0xd7c9b3, detail * .003);
+  for (const dy of [-.24, .025, .24]) box(win, [wx, wy + dy * detail, wz + detail * .035],
+    [detail * .66, detail * (dy === .025 ? .012 : .022), detail * .028], 0xd7c9b3, detail * .003);
+  box(win, [wx, wy - detail * .265, wz + detail * .045], [detail * .72, detail * .021, detail * .09], 0xb4a087, detail * .006);
+  segment(win, [wx - detail * .43, wy + detail * .275, wz + detail * .065],
+    [wx + detail * .43, wy + detail * .275, wz + detail * .065], detail * .005, 0x796650);
   for (const side of [-1, 1]) {
-    const geometry = new THREE.PlaneGeometry(span * .14, span * .58, 16, 10);
+    const geometry = new THREE.PlaneGeometry(detail * .14, detail * .58, 16, 10);
     const p = geometry.getAttribute('position');
     for (let i = 0; i < p.count; i++) {
-      const x = p.getX(i) / span, y = p.getY(i) / span;
-      p.setZ(i, span * (.012 * Math.sin((x + .07) * Math.PI * 36) + .005 * Math.sin(y * 9 + side)));
+      const x = p.getX(i) / detail, y = p.getY(i) / detail;
+      p.setZ(i, detail * (.012 * Math.sin((x + .07) * Math.PI * 36) + .005 * Math.sin(y * 9 + side)));
     }
     geometry.computeVertexNormals();
     // Two coincident surfaces are avoided: a tiny fabric thickness closes the
     // panel as a folded solid rather than requiring a transparent material.
     const front = geometry.clone(), back = geometry.clone();
     const bp = back.getAttribute('position'), bn = back.getAttribute('normal');
-    for (let i = 0; i < bp.count; i++) { bp.setZ(i, bp.getZ(i) - span * .001); bn.setXYZ(i, -bn.getX(i), -bn.getY(i), -bn.getZ(i)); }
+    for (let i = 0; i < bp.count; i++) { bp.setZ(i, bp.getZ(i) - detail * .001); bn.setXYZ(i, -bn.getX(i), -bn.getY(i), -bn.getZ(i)); }
     const bi = back.getIndex()!;
     for (let i = 0; i < bi.count; i += 3) { const a = bi.getX(i); bi.setX(i, bi.getX(i + 2)); bi.setX(i + 2, a); }
-    const center: Point = [wx + side * span * .35, wy - span * .035, wz + span * .07];
+    const center: Point = [wx + side * detail * .35, wy - detail * .035, wz + detail * .07];
     const edgePositions: number[] = [], edgeUvs: number[] = [];
     const border: number[] = [];
     for (let x = 0; x <= 16; x++) border.push(x);
     for (let y = 1; y <= 10; y++) border.push(y * 17 + 16);
     for (let x = 15; x >= 0; x--) border.push(170 + x);
     for (let y = 9; y > 0; y--) border.push(y * 17);
-    const edgeVertex = (index: number, backFace: boolean): Point => [p.getX(index), p.getY(index), p.getZ(index) - (backFace ? span * .001 : 0)];
+    const edgeVertex = (index: number, backFace: boolean): Point => [p.getX(index), p.getY(index), p.getZ(index) - (backFace ? detail * .001 : 0)];
     for (let k = 0; k < border.length; k++) {
       const a = border[k]!, b = border[(k + 1) % border.length]!;
       for (const v of [edgeVertex(a, false), edgeVertex(b, true), edgeVertex(a, true),
         edgeVertex(a, false), edgeVertex(b, false), edgeVertex(b, true)]) {
-        edgePositions.push(...v); edgeUvs.push(v[0] / span, v[1] / span);
+        edgePositions.push(...v); edgeUvs.push(v[0] / detail, v[1] / detail);
       }
     }
     const edges = new THREE.BufferGeometry();
@@ -298,39 +308,42 @@ export function createRoomGeometry(width: number, height: number, seed = 0): Roo
   }
   // Two small relief prints echo the handmade diorama without crowding it.
   for (let i = 0; i < 2; i++) {
-    const x = cx + width * .18 + span * i * .24, y = floorY + span * (.83 + i * .025);
-    box(win, [x, y, northZ + span * .014], [span * .20, span * .29, span * .024], 0x806c58, span * .004);
-    box(win, [x, y, northZ + span * .028], [span * .174, span * .262, span * .003], 0xe1d7c4);
-    win.add(new THREE.CircleGeometry(span * .028, 20), i ? 0xa4ad8b : 0xc1a56d,
-      matrix([x + span * .028, y + span * .050, northZ + span * .030]));
-    box(win, [x, y - span * .057, northZ + span * .031], [span * .136, span * .046, span * .002], 0x8d9d86, span * .0004);
+    const x = cx + unit * (.10 + i * 1.34), y = floorY + unit * (3.12 + i * .05);
+    box(win, [x, y, northZ + detail * .014], [detail * .20, detail * .29, detail * .024], 0x806c58, detail * .004);
+    box(win, [x, y, northZ + detail * .028], [detail * .174, detail * .262, detail * .003], 0xe1d7c4);
+    win.add(new THREE.CircleGeometry(detail * .028, 20), i ? 0xa4ad8b : 0xc1a56d,
+      matrix([x + detail * .028, y + detail * .050, northZ + detail * .030]));
+    box(win, [x, y - detail * .057, northZ + detail * .031], [detail * .136, detail * .046, detail * .002], 0x8d9d86, detail * .0004);
   }
 
-  const left = -width / (2 * span), right = width / (2 * span), rear = -height / (2 * span);
+  const left = -width / (2 * detail), right = width / (2 * detail), rear = -height / (2 * detail);
   // Four shelves with authored book spacing; a seeded height/pigment variation
   // belongs only to this decorative preparation, never the simulation PRNG.
-  const shelfX = left - .77, shelfZ = rear - .47;
-  prop(wood, shelfX, .36, shelfZ, .40, .72, .105, 0x8d7960);
-  prop(wood, shelfX, .37, shelfZ + .056, .358, .66, .014, 0x625342, .002);
+  const relative = (point: readonly [number, number]): readonly [number, number] => [(point[0] - cx) / detail, (point[1] - cz) / detail];
+  const [shelfX, shelfZ] = relative(layout.furniture.shelf);
+  prop(wood, shelfX, .312, shelfZ, .35, .624, .105, 0x8d7960);
+  prop(wood, shelfX, .316, shelfZ + .056, .323, .576, .014, 0x625342, .002);
   for (let j = 0; j < 4; j++) {
-    const sy = .085 + j * .17;
-    prop(wood, shelfX, sy, shelfZ + .035, .40, .014, .15, 0xa28a6d, .003);
+    const sy = .08 + j * .14;
+    prop(wood, shelfX, sy, shelfZ + .035, .35, .014, .15, 0xa28a6d, .003);
     for (let i = 0; i < 8; i++) {
-      const h = .083 + hash(seed, j * 173 + i * 29 + 5) * .050;
+      const h = .070 + hash(seed, j * 173 + i * 29 + 5) * .040;
       const pigment = [0x849384, 0xae937d, 0xb8ac8e, 0x778d93, 0x977b6d, 0xc7bba4][(i + j * 2) % 6]!;
       const x = shelfX - .157 + i * .043;
       prop(paper, x, sy + .007 + h / 2, shelfZ + .090, .029, h, .065, pigment, .001);
       prop(paper, x, sy + h * .78, shelfZ + .1235, .025, .002, .001, 0xdfd3bc, 0);
     }
   }
-  const chairX = left - .47, chairZ = -.08;
+  const [chairX, chairZ] = relative(layout.furniture.chair);
   prop(fabric, chairX, .145, chairZ, .275, .073, .245, 0xa38b76, .021);
   prop(fabric, chairX, .266, chairZ - .102, .263, .23, .060, 0xa68e7c, .017, [-.10, 0, 0]);
   for (const dx of [-.13, .13]) prop(fabric, chairX + dx, .218, chairZ, .045, .14, .23, 0x947c68, .015);
   prop(fabric, chairX, .188, chairZ + .018, .209, .028, .170, 0xd4c9b6, .009);
   for (const dx of [-.103, .103]) for (const dz of [-.082, .082]) prop(wood, chairX + dx, .055, chairZ + dz, .021, .11, .021, 0x78644f, .003);
 
-  const bedX = right + .60, bedZ = rear - .45;
+  const [bedX, bedZ] = relative(layout.furniture.bed);
+  for (const dx of [-.23, .23]) for (const dz of [-.28, .28])
+    prop(wood, bedX + dx, .01625, bedZ + dz, .045, .0325, .045, 0x78644f, .004);
   prop(wood, bedX, .100, bedZ, .60, .135, .72, 0x8f7c65, .014);
   prop(wood, bedX, .230, bedZ - .35, .60, .40, .045, 0x9c8971, .016);
   prop(fabric, bedX, .210, bedZ, .565, .104, .675, 0xdcd4c2, .025);
@@ -339,49 +352,49 @@ export function createRoomGeometry(width: number, height: number, seed = 0): Roo
   for (const dx of [-.14, .14]) prop(fabric, bedX + dx, .289, bedZ - .225, .22, .055, .12, 0xe8dfce, .017, [0, dx > 0 ? -.075 : .08, 0]);
   prop(fabric, bedX, .320, bedZ + .25, .54, .015, .09, 0xbba195, .004);
   for (let i = 0; i < 7; i++) prop(fabric, bedX, .311, bedZ - .085 + i * .049, .49, .0006, .0015, 0xb5bfaa, 0);
-  const standX = right + .99, standZ = rear - .52;
+  const [standX, standZ] = relative(layout.furniture.stand);
   prop(wood, standX, .11, standZ, .21, .22, .19, 0xa58f73, .009);
   prop(wood, standX, .125, standZ + .10, .17, .012, .005, 0x8b775e, .002);
-  segment(wood, world(standX, .238, standZ), world(standX, .34, standZ), span * .006, 0xbda476);
-  fabric.add(new THREE.CylinderGeometry(span * .041, span * .073, span * .10, 20, 1, false), 0xd6c6a8,
+  segment(wood, world(standX, .238, standZ), world(standX, .34, standZ), detail * .006, 0xbda476);
+  fabric.add(new THREE.CylinderGeometry(detail * .041, detail * .073, detail * .10, 20, 1, false), 0xd6c6a8,
     matrix(world(standX, .368, standZ)));
-  fabric.add(softSphere(span * .043, 12, 8, 1, .014), 0xcdbca4, matrix(world(standX, .245, standZ), [0, 0, 0], [.78, .55, .78]));
+  fabric.add(softSphere(detail * .043, 12, 8, 1, .014), 0xcdbca4, matrix(world(standX, .245, standZ), [0, 0, 0], [.78, .55, .78]));
 
   const plant = (x: number, z: number, scale: number, phase: number): void => {
-    fabric.add(new THREE.CylinderGeometry(span * .055 * scale, span * .041 * scale, span * .094 * scale, 12),
+    fabric.add(new THREE.CylinderGeometry(detail * .055 * scale, detail * .041 * scale, detail * .094 * scale, 12),
       0xbda38b, matrix(world(x, .047 * scale, z)));
     for (let i = 0; i < 11; i++) {
       const angle = i * 2.39996 + phase, h = (.13 + i * .010) * scale;
       const spread = (.05 + .045 * Math.sin(i * .73)) * scale;
       const end = world(x + Math.cos(angle) * spread, h, z + Math.sin(angle) * spread);
-      segment(wood, world(x, .092 * scale, z), end, span * .0014 * scale, 0x73876e, 5);
-      fabric.add(softSphere(span * .028 * scale, 8, 5, i, .025), i % 2 ? 0x7c9175 : 0x687e69,
+      segment(wood, world(x, .092 * scale, z), end, detail * .0014 * scale, 0x73876e, 5);
+      fabric.add(softSphere(detail * .028 * scale, 8, 5, i, .025), i % 2 ? 0x7c9175 : 0x687e69,
         matrix(end, [Math.cos(angle) * .4, angle, Math.sin(angle) * .4], [.57, 1.25, .28]));
     }
   };
   plant(right + .74, .18, 1.18, .4); plant(left - .96, rear - .92, .82, 1.7);
 
   const orbit: RoomOrbit = {
-    centerX: cx, centerZ: cz - span * .025, halfWidth: width / 2 + span * .115,
-    baseY: span * .285, rise: span * .405, zSwing: span * .023, moonRailOffsetZ: -span * .11,
-    sun: { anchorT: .32, threadLength: span * .077, center: [0, -span * .109, 0], radius: span * .032 },
-    moon: { anchorT: .77, threadLength: span * .073, center: [0, -span * .100, 0], radius: span * .027 },
+    centerX: cx, centerZ: layout.rig.centerZ, halfWidth: layout.rig.halfWidth,
+    baseY: layout.rig.baseY, rise: layout.rig.rise, zSwing: unit * .04, moonRailOffsetZ: layout.rig.moonRailOffsetZ,
+    sun: { anchorT: .32, threadLength: unit * .48, center: [0, -unit * .77, 0], radius: unit * .29 },
+    moon: { anchorT: .77, threadLength: unit * .46, center: [0, -unit * .70, 0], radius: unit * .24 },
   };
-  const supportZ = height / 2 + span * .115;
-  // Fine posts sit on the existing tabletop, inside its .147*span margin.
+  const supportZ = layout.rig.supportZ, frameTop = layout.rig.topY;
+  // Four posts and their feet sit inside the rectangular reference tabletop.
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
     const x = cx + sx * orbit.halfWidth, z = cz + sz * supportZ;
-    segment(metal, [x, -span * .049, z], [x, span * .665, z], span * .0034, 0xbda681, 8);
-    metal.add(new THREE.CylinderGeometry(span * .012, span * .014, span * .004, 12), 0xa58d6b,
-      matrix([x, -span * .047, z]));
+    segment(metal, [x, layout.table.topY, z], [x, frameTop, z], unit * .03, 0xbda681, 8);
+    metal.add(new THREE.CylinderGeometry(unit * .042, unit * .047, unit * .012, 12), 0xa58d6b,
+      matrix([x, layout.table.topY + unit * .006, z]));
   }
   for (const sx of [-1, 1]) {
     const x = cx + sx * orbit.halfWidth;
-    segment(metal, [x, orbit.baseY, cz - supportZ], [x, orbit.baseY, cz + supportZ], span * .0032, 0xc7b394, 8);
-    segment(metal, [x, span * .665, cz - supportZ], [x, span * .665, cz + supportZ], span * .0028, 0xc7b394, 7);
+    segment(metal, [x, orbit.baseY, cz - supportZ], [x, orbit.baseY, cz + supportZ], unit * .020, 0xc7b394, 8);
+    segment(metal, [x, frameTop, cz - supportZ], [x, frameTop, cz + supportZ], unit * .025, 0xc7b394, 7);
   }
-  for (const sz of [-1, 1]) segment(metal, [cx - orbit.halfWidth, span * .665, cz + sz * supportZ],
-    [cx + orbit.halfWidth, span * .665, cz + sz * supportZ], span * .0032, 0xbda681, 8);
+  for (const sz of [-1, 1]) segment(metal, [cx - orbit.halfWidth, frameTop, cz + sz * supportZ],
+    [cx + orbit.halfWidth, frameTop, cz + sz * supportZ], unit * .025, 0xbda681, 8);
   const rail = (spec: RoomOrbit, steps: number, radius: number, pigment: number, kind: MotionKind = 'sun'): void => {
     // The tube and every attachment sample the same analytic curve. Runtime
     // motion can reuse sampleRoomOrbit without reconstructing this geometry.
@@ -392,22 +405,29 @@ export function createRoomGeometry(width: number, height: number, seed = 0): Roo
       metal.add(new THREE.SphereGeometry(radius, 8, 6), pigment, matrix([p.x, p.y, p.z]));
     }
   };
-  rail(orbit, 56, span * .0048, 0xbda477);
-  rail(orbit, 56, span * .0041, 0xc7b391, 'moon');
-  const secondary: RoomOrbit = { ...orbit, halfWidth: orbit.halfWidth * .92, centerZ: cz - supportZ * .66,
-    baseY: span * .29, rise: span * .335, zSwing: span * .011 };
-  rail(secondary, 40, span * .0028, 0xd0bfa0);
-  for (const t of [0, 1]) {
-    const a = sampleRoomOrbit(secondary, t, new THREE.Vector3());
-    segment(metal, [a.x, a.y, a.z], [cx + (t ? 1 : -1) * orbit.halfWidth, a.y, a.z], span * .0028, 0xd0bfa0);
+  rail(orbit, 56, unit * .035, 0xbda477);
+  rail(orbit, 56, unit * .029, 0xc7b391, 'moon');
+  const cloudArcs: RoomOrbit[] = [
+    { ...orbit, halfWidth: unit * 2.55, centerZ: cz - unit * 1.30, baseY: floorY + unit * 2.30, rise: unit * 1.54, zSwing: unit * .018 },
+    { ...orbit, halfWidth: unit * 2.63, centerZ: cz + unit * .88, baseY: floorY + unit * 2.38, rise: unit * 1.45, zSwing: unit * .020 },
+    { ...orbit, halfWidth: unit * 2.42, centerZ: cz + unit * 1.42, baseY: floorY + unit * 2.33, rise: unit * 1.36, zSwing: unit * .015 },
+  ];
+  for (const arc of cloudArcs) {
+    rail(arc, 40, unit * .018, 0xd0bfa0);
+    for (const t of [0, 1]) {
+      const a = sampleRoomOrbit(arc, t, new THREE.Vector3());
+      segment(metal, [a.x, a.y, a.z], [cx + (t ? 1 : -1) * orbit.halfWidth, a.y, a.z], unit * .018, 0xd0bfa0);
+    }
+    const a = sampleRoomOrbit(arc, .5, new THREE.Vector3());
+    segment(metal, [a.x, a.y, a.z], [a.x, frameTop, cz + (arc.centerZ < cz ? -supportZ : supportZ)], unit * .012, 0xc7b394);
   }
   const apex = sampleRoomOrbit(orbit, .5, new THREE.Vector3());
-  segment(metal, [apex.x, apex.y, apex.z], [apex.x, span * .665, cz - supportZ], span * .0025, 0xc7b394);
+  segment(metal, [apex.x, apex.y, apex.z], [apex.x, frameTop, cz - supportZ], unit * .014, 0xc7b394);
   const moonApex = sampleRoomOrbit(orbit, .5, new THREE.Vector3(), 'moon');
-  segment(metal, [moonApex.x, moonApex.y, moonApex.z], [moonApex.x, span * .665, cz - supportZ], span * .0023, 0xc7b394);
+  segment(metal, [moonApex.x, moonApex.y, moonApex.z], [moonApex.x, frameTop, cz - supportZ], unit * .012, 0xc7b394);
   for (const t of [.16, .32, .5, .69, .83]) {
     const anchor = sampleRoomOrbit(orbit, t, new THREE.Vector3());
-    metal.add(new THREE.TorusGeometry(span * .010, span * .0012, 5, 12), 0xceba95,
+    metal.add(new THREE.TorusGeometry(unit * .07, unit * .006, 5, 12), 0xceba95,
       matrix([anchor.x, anchor.y, anchor.z], [0, t * 1.7, 0]));
   }
 
@@ -415,8 +435,8 @@ export function createRoomGeometry(width: number, height: number, seed = 0): Roo
     const body = batch(`room-${kind}-paper`, 'paper', 'orbit', kind);
     const thread = batch(`room-${kind}-thread`, 'metal', 'orbit', kind);
     const spec = orbit[kind], r = spec.radius, center = spec.center;
-    segment(thread, [0, 0, 0], [center[0], center[1] + r, center[2]], span * .00105, 0xd7cebc, 6);
-    thread.add(new THREE.TorusGeometry(span * .007, span * .0011, 5, 12), 0xbca782,
+    segment(thread, [0, 0, 0], [center[0], center[1] + r, center[2]], unit * .010, 0xd7cebc, 6);
+    thread.add(new THREE.TorusGeometry(unit * .045, unit * .006, 5, 12), 0xbca782,
       matrix([0, 0, 0], [0, kind === 'sun' ? .3 : -.4, 0]));
     body.add(softSphere(r, 20, 14, kind === 'sun' ? .7 : 2.1, .018), kind === 'sun' ? 0xd7bd79 : 0xd9ddd4, matrix(center));
     for (const lat of [-.32, .32]) {
@@ -430,13 +450,15 @@ export function createRoomGeometry(width: number, height: number, seed = 0): Roo
 
   const cotton = batch('room-cotton-clouds', 'cotton', 'orbit');
   const cloudSuspensions: RoomSuspension[] = [];
-  for (let j = 0; j < 3; j++) {
-    const t = [.18, .48, .82][j]!, anchor = sampleRoomOrbit(secondary, t, new THREE.Vector3());
-    const size = span * [.036, .030, .034][j]!;
-    const center: Point = [anchor.x, anchor.y - span * (.13 + j * .007), anchor.z];
+  for (let j = 0; j < 6; j++) {
+    const arcIndex = Math.floor(j / 2), arc = cloudArcs[arcIndex]!;
+    const t = [[.28, .69], [.23, .77], [.39, .63]][arcIndex]![j % 2]!, anchor = sampleRoomOrbit(arc, t, new THREE.Vector3());
+    const size = span * [.031, .027, .029, .032, .023, .025][j]!;
+    const center: Point = [anchor.x, anchor.y - unit * (.49 + (j % 3) * .035), anchor.z];
     const attachment: Point = [center[0], center[1] + size * .70, center[2]];
     const start: Point = [anchor.x, anchor.y, anchor.z];
-    cloudSuspensions.push({ anchor: start, attachment, center });
+    const bridleEnds: Point[] = [-1, 1].map((side): Point => [center[0] + side * size * .77, center[1] + size * .22, center[2]]);
+    cloudSuspensions.push({ arcIndex, anchorT: t, anchor: start, attachment, center, bridleEnds });
     segment(metal, start, attachment, span * .0009, 0xd8cfbd, 6);
     for (let i = 0; i < 7; i++) {
       const angle = i * 2.4 + j * .7, side = i - 3;
@@ -448,11 +470,10 @@ export function createRoomGeometry(width: number, height: number, seed = 0): Roo
         matrix([x, y, z], [0, angle, 0], [1.13, .83 + (i % 2) * .09, .85]));
     }
     // Forked bridle lands in the actual outer puffs and joins the main thread.
-    for (const side of [-1, 1]) segment(metal, attachment,
-      [center[0] + side * size * .77, center[1] + size * .22, center[2]], span * .0007, 0xd8cfbd, 5);
+    for (const end of bridleEnds) segment(metal, attachment, end, span * .0007, 0xd8cfbd, 5);
   }
 
   for (const [name, entry] of batches) parts.push({ name, material: entry.material, section: entry.section,
     ...(entry.motionKind ? { motionKind: entry.motionKind } : {}), geometry: entry.batch.finish() });
-  return { parts, span, floorY, orbit, cloudSuspensions };
+  return { parts, span, floorY, layout, orbit, cloudArcs, cloudSuspensions };
 }

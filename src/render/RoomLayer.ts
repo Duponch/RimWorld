@@ -1,11 +1,12 @@
-import { Color, Group, Matrix4, Mesh, MeshStandardNodeMaterial, Scene, Vector3,
-  type Camera, type PerspectiveCamera, type WebGPURenderer } from 'three/webgpu';
-import { attribute, positionLocal, sin, uniform, vec3 } from 'three/tsl';
+import { Color, Group, Mesh, MeshStandardNodeMaterial, Scene, Vector3,
+  type Camera, type WebGPURenderer } from 'three/webgpu';
+import { attribute, positionLocal, sin, uniform, vec3, viewportSize, viewportUV } from 'three/tsl';
 import { createRoomGeometry, sampleRoomOrbit, type RoomGeometryPart } from './room-geometry';
 import { RoomLighting } from './RoomLighting';
 import { RoomBackdrop } from './RoomBackdrop';
 import type { DaylightSample } from './daylight';
 import { parseLightingSettings, type LightingSettings } from './lighting-settings';
+import { DEFAULT_ROOM_MASK_RADIUS, roomMaskRadius } from './room-mask-settings';
 
 /** Optional presentation owner. No World, simulation random stream, independent
  * clock, asset request or animation mixer. OFF destroys this entire owner. */
@@ -23,9 +24,7 @@ export class RoomLayer {
   private readonly sunCenter = new Vector3();
   private readonly moonCenter = new Vector3();
   private readonly local = new Vector3();
-  private readonly view = new Matrix4();
-  private readonly projection = new Matrix4();
-  private viewValid = false;
+  private readonly maskRadius = uniform(DEFAULT_ROOM_MASK_RADIUS);
   private width = 0;
   private height = 0;
   private seed = 0;
@@ -49,20 +48,31 @@ export class RoomLayer {
     this.lighting.configure(width, height);
     this.geometry = createRoomGeometry(width, height, seed);
     for (const part of this.geometry.parts) {
-      const key = part.motionKind && part.material === 'paper' ? part.motionKind : part.material;
+      // The installation uses separate materials from furniture with the same
+      // pigment, so its screen aperture never cuts a wall, bed or bookshelf.
+      const key = part.motionKind && part.material === 'paper' ? part.motionKind
+        : part.section === 'orbit' || part.motionKind ? `overhead-${part.material}` : part.material;
       const mesh = new Mesh(part.geometry, this.material(key)); mesh.name = part.name;
       mesh.castShadow = false; mesh.receiveShadow = false; mesh.matrixAutoUpdate = false;
       this.meshes.push({ part, mesh });
       (part.motionKind ? this[part.motionKind] : this.scene).add(mesh);
     }
-    this.artVersion++; this.viewValid = false; this.backdrop.invalidate();
+    this.artVersion++; this.backdrop.invalidate();
   }
 
   private material(kind: string): MeshStandardNodeMaterial {
     let material = this.materials.get(kind);
     if (material) return material;
-    material = new MeshStandardNodeMaterial({ color: 0xffffff, roughness: kind === 'metal' ? .52 : .94,
-      metalness: kind === 'metal' ? .12 : 0, vertexColors: true });
+    const metal = kind === 'metal' || kind === 'overhead-metal';
+    material = new MeshStandardNodeMaterial({ color: 0xffffff, roughness: metal ? .52 : .94,
+      metalness: metal ? .12 : 0, vertexColors: true });
+    if (kind.startsWith('overhead-') || kind === 'sun' || kind === 'moon') {
+      const pixels = viewportUV.sub(.5).mul(viewportSize);
+      // Opaque discard retains the correct room depth and requires no sorting,
+      // geometry rebuild, per-object updates or extra render pass.
+      material.maskNode = this.maskRadius.lessThanEqual(0).or(pixels.length()
+        .greaterThanEqual(viewportSize.x.min(viewportSize.y).mul(this.maskRadius)));
+    }
     this.materials.set(kind, material);
     this.applySurface(kind, material);
     return material;
@@ -92,6 +102,13 @@ export class RoomLayer {
     this.lighting.setSettings(this.lightingSettings);
   }
 
+  setMaskRadius(radius: number): void {
+    const value = roomMaskRadius(radius);
+    if (value === this.maskRadius.value) return;
+    this.maskRadius.value = value;
+    this.artVersion++; this.backdrop.invalidate();
+  }
+
   /** Both carriages remain on their own physical rail throughout a full day.
    * The opposite lantern returns along its parallel rail while its bulb fades. */
   present(sample: DaylightSample, camera: Camera): void {
@@ -107,19 +124,9 @@ export class RoomLayer {
     if (this.sunGlow.value !== sun || this.moonGlow.value !== moon) {
       this.sunGlow.value = sun; this.moonGlow.value = moon; this.artVersion++;
     }
+    // Room walls stay physical at every pose. Navigation is constrained inside
+    // the shell by CameraRig; its backdrop already invalidates on camera motion.
     camera.updateMatrixWorld();
-    if (!this.viewValid || !this.view.equals(camera.matrixWorld) || !this.projection.equals(camera.projectionMatrix)) {
-      this.view.copy(camera.matrixWorld); this.projection.copy(camera.projectionMatrix); this.viewValid = true;
-      const eye = camera.matrixWorld.elements, perspective = (camera as PerspectiveCamera).isPerspectiveCamera;
-      const x = perspective ? eye[12]! - (this.width - 1) * .5 : eye[8]!;
-      const z = perspective ? eye[14]! - (this.height - 1) * .5 : eye[10]!;
-      for (const { part, mesh } of this.meshes) {
-        // Open the viewing side of the room, independently from cardboard walls.
-        mesh.visible = part.section === 'north' ? z >= 0 : part.section === 'west' ? x >= 0
-          : part.section === 'east' ? x <= 0 : true;
-      }
-      this.artVersion++;
-    }
     this.lighting.fitShadow(camera, this.width, this.height);
     // Lighting version is monotone; sum also changes for geometry/material/camera.
     this.currentVersion = changed + this.artVersion;
@@ -147,7 +154,7 @@ export class RoomLayer {
     } finally {
       renderer.setRenderTarget(target);
       this.meshes.forEach(({ mesh }, i) => { [mesh.visible, mesh.frustumCulled] = visibility[i]!; });
-      this.viewValid = false; this.backdrop.invalidate();
+      this.backdrop.invalidate();
     }
   }
 

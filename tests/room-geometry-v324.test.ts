@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import { expect, test, vi } from 'vitest';
 import { createRoomGeometry, ROOM_GEOMETRY_LIMITS, sampleRoomOrbit, type MotionKind,
   type RoomGeometry } from '../src/render/room-geometry';
+import { createRoomLayout } from '../src/render/room-layout';
 
 const dispose = (room: RoomGeometry): void => { for (const part of room.parts) part.geometry.dispose(); };
 const signature = (room: RoomGeometry) => room.parts.map(part => ({ name: part.name, material: part.material,
@@ -18,6 +19,7 @@ test('the authored room is deterministic and caller-owned despite Three resource
     second = createRoomGeometry(32, 32, 84602);
     expect(signature(first)).toEqual(signature(second));
     expect(second.orbit).toEqual(first.orbit);
+    expect(second.layout).toEqual(first.layout); expect(second.cloudArcs).toEqual(first.cloudArcs);
     expect(second.cloudSuspensions).toEqual(first.cloudSuspensions);
     expect(second.parts[0]!.geometry).not.toBe(first.parts[0]!.geometry);
     const firstPosition = first.parts[0]!.geometry.getAttribute('position');
@@ -31,14 +33,15 @@ test.each([[250, 250], [48, 32], [32, 48], [16, 16]])('the %i×%i room is bounde
   const room = createRoomGeometry(width, height, 42);
   try {
     expect(room.span).toBe(Math.min(width, height));
-    expect(room.floorY / room.span).toBeCloseTo(-.049 - .030 - .31, 12);
+    expect(room.layout).toEqual(createRoomLayout(width, height));
+    expect(room.floorY).toBeCloseTo(room.layout.table.topY - room.layout.unit * 1.225, 12);
     expect(room.parts.length).toBeLessThanOrEqual(ROOM_GEOMETRY_LIMITS.parts);
     expect(new Set(room.parts.map(part => part.name)).size).toBe(room.parts.length);
     expect(room.parts.some(part => /table/i.test(part.name))).toBe(false);
     for (const side of ['north', 'west', 'east']) {
       const wall = room.parts.find(part => part.section === side && part.material === 'plaster');
       expect(wall).toBeDefined();
-      expect(wall!.geometry.boundingBox!.max.y).toBeCloseTo(room.floorY + room.span * 1.35, 4);
+      expect(wall!.geometry.boundingBox!.max.y).toBeCloseTo(room.layout.walls.ceilingY, 4);
     }
     const parquet = room.parts.find(part => part.name === 'room-parquet-floor')!;
     expect(parquet.geometry.boundingBox!.max.y).toBeCloseTo(room.floorY, 5);
@@ -98,24 +101,32 @@ test('each local lantern and its thread share an anchor and remain separated ove
       expect(sun.distanceTo(moon)).toBeGreaterThan(room.orbit.sun.radius + room.orbit.moon.radius);
     }
     sampleRoomOrbit(room.orbit, .5, sun, 'sun'); sampleRoomOrbit(room.orbit, .5, moon, 'moon');
-    expect(sun.z - moon.z).toBeCloseTo(room.span * .11, 10);
+    expect(sun.z - moon.z).toBeCloseTo(-room.layout.rig.moonRailOffsetZ, 10);
+    expect(room.orbit.sun.radius / room.layout.unit).toBeCloseTo(.29, 12);
+    expect(room.orbit.moon.radius / room.layout.unit).toBeCloseTo(.24, 12);
   } finally { dispose(room); }
 });
 
-test('cotton clouds are bridled from the modeled rear arc, clear of both moving globe rails', () => {
+test('six small cotton clouds are bridled from three connected arcs, clear of both moving globes', () => {
   const room = createRoomGeometry(48, 32, 84602);
   try {
-    expect(room.cloudSuspensions).toHaveLength(3);
+    expect(room.cloudSuspensions).toHaveLength(6); expect(room.cloudArcs).toHaveLength(3);
+    expect(room.cloudSuspensions.map(cloud => cloud.arcIndex)).toEqual([0, 0, 1, 1, 2, 2]);
     const rig = room.parts.find(part => part.name === 'room-orbit-structure')!.geometry.boundingBox!;
     const cotton = room.parts.find(part => part.material === 'cotton')!.geometry.boundingBox!;
     for (const cloud of room.cloudSuspensions) {
+      const modeledAnchor = sampleRoomOrbit(room.cloudArcs[cloud.arcIndex]!, cloud.anchorT, new THREE.Vector3());
+      expect(modeledAnchor.toArray()).toEqual(cloud.anchor);
       expect(rig.containsPoint(new THREE.Vector3(...cloud.anchor))).toBe(true);
       expect(cotton.containsPoint(new THREE.Vector3(...cloud.center))).toBe(true);
       expect(cloud.anchor[1]).toBeGreaterThan(cloud.attachment[1]);
       expect(cloud.attachment[1]).toBeGreaterThan(cloud.center[1]);
+      expect(cloud.bridleEnds).toHaveLength(2);
+      for (const end of cloud.bridleEnds) expect(cotton.containsPoint(new THREE.Vector3(...end))).toBe(true);
       for (const kind of ['sun', 'moon'] as MotionKind[]) for (let i = 0; i <= 32; i++) {
         const anchor = sampleRoomOrbit(room.orbit, i / 32, new THREE.Vector3(), kind);
-        expect(Math.abs(anchor.z - cloud.center[2])).toBeGreaterThan(room.span * .10);
+        // The whole lantern, not just its carriage, must clear the cloud row.
+        expect(Math.abs(anchor.z - cloud.center[2])).toBeGreaterThan(room.orbit[kind].radius + room.span * .025);
       }
     }
   } finally { dispose(room); }
