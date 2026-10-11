@@ -27,6 +27,11 @@ function prepared(species:AnimalSpeciesId='muffalo',phase:'approach'|'carry'='ap
   return {w,a,p,spot};
 }
 type Fixture=ReturnType<typeof prepared>;
+function historical220(w:World):World {
+  // Modern fixture defaults include V316 kibble; old diets did not gain it.
+  for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='kibble');
+  w.schemaVersion=220 as World['schemaVersion'];return w;
+}
 const checkpoint=(w:World)=>new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,1)));
 function exact(w:World){
   expect(validateWorld(w)).toEqual([]);expect(validAnimalRestTransport(w,w.schemaVersion)).toBe(true);
@@ -49,13 +54,13 @@ test.each(['hare','deer','gazelle','muffalo','dromedary'] as const)('%s rescue a
 
 test('strict 220 migration changes only schema, without assigning places, moving patients or reseeding streams',()=>{
   const {w,a,p}=prepared();delete a.domestic!.bedId;delete p.animalRescue;w.structures=[];p.state='idle';
-  w.schemaVersion=220 as World['schemaVersion'];const before=structuredClone(w);
+  historical220(w);const before=structuredClone(w);
   expect(deserializeWorld(JSON.stringify(w))).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(w).toEqual(before);
 });
 
 test('220 refuses all future animal-rest fields and spot kind before migration',()=>{
   for(const kind of ['bed','rest','rescue','spot','undefined-rest'] as const){
-    const f=prepared();delete f.a.domestic!.bedId;delete f.p.animalRescue;f.w.structures=[];f.p.state='idle';f.w.schemaVersion=220 as World['schemaVersion'];
+    const f=prepared();delete f.a.domestic!.bedId;delete f.p.animalRescue;f.w.structures=[];f.p.state='idle';historical220(f.w);
     if(kind==='bed')f.a.domestic!.bedId=f.w.nextId-1;
     if(kind==='rest')f.a.animalRest={spotId:f.w.nextId-1,phase:'sleep'};
     if(kind==='rescue')f.p.animalRescue={animalId:f.a.id,spotId:f.w.nextId-1,phase:'approach'};

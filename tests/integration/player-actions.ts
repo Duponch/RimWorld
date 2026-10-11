@@ -7,6 +7,7 @@ import { stationRecipes } from '../../src/sim/production-recipes';
 import { mapObjectsAt } from '../../src/ui/map-object-selection';
 import { storageTreeSelection } from '../../src/ui/storage-filter-tree';
 import { world, panel, pawnTab, tool, cell, dragRectangle, settledCells, type PawnInspectorTab } from './helpers';
+import {defaultAutoSlaughterConfig,type AutoSlaughterConfig} from '../../src/sim/auto-slaughter-state';
 
 export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise<void> {
   const architect=page.locator('#architect-panel');
@@ -120,6 +121,7 @@ async function groundOrderPoint(page:Page,target:{x:number;z:number}):Promise<{x
 
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
+  if(c.type==='auto-slaughter-policy'){await editAutoSlaughterPolicy(page,c.config);return;}
   let heaterTarget:number|undefined,billIndex:number|undefined;
   if(c.type==='answer-arrival'){await page.locator('#arrival-letter').click();await page.locator(c.accept?'#accept-arrival':'#reject-arrival').click();await expect(page.locator('#arrival-dialog')).not.toBeVisible();await expect(page.locator('#arrival-letter')).toHaveCount(0);return;}
   if(c.type==='enable-arrivals'){await panel(page,'menu');if(!await page.locator('.legacy-scenario-settings').evaluate(node=>node.hasAttribute('open')))await page.locator('.legacy-scenario-settings>summary').click();await page.locator('#enable-arrivals').click();await expect(page.locator('#enable-arrivals')).toBeHidden();await page.keyboard.press('Escape');return;}
@@ -341,6 +343,32 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await page.screenshot({path:testOutputPath('artifacts/player-action-failure.png')});
     throw new Error(`Player command did not produce its expected result: ${JSON.stringify({command:c,diagnostic})}; ${String(error)}`);
   }
+}
+
+/** Every setting uses the player control and waits for the confirmed policy.
+ * Infinity and field edits are separate commands, never fire-and-forget. */
+export async function editAutoSlaughterPolicy(page:Page,config:AutoSlaughterConfig):Promise<void>{
+  if(!await page.locator('#animals-panel').isVisible())await page.locator('[data-panel="animals"]').click();
+  const details=page.locator('[data-auto-slaughter]');
+  if(await details.getAttribute('open')===null)await details.locator('summary').click();
+  const row=details.locator(`[data-auto-slaughter-species="${config.species}"]`);
+  const current=async()=>((await world(page)).autoSlaughter?.find(c=>c.species===config.species)??defaultAutoSlaughterConfig(config.species));
+  const fields=['maxTotal','maxMales','maxFemales','maxMalesYoung','maxFemalesYoung'] as const;
+  for(const field of fields){
+    if((await current())[field]===config[field])continue;
+    const infinity=row.locator(`[data-auto-slaughter-infinity="${field}"]`);
+    if(config[field]===-1){await infinity.click();await expect.poll(async()=>(await current())[field]).toBe(-1);}
+    else {
+      if((await current())[field]===-1){await infinity.click();await expect(row.locator(`[data-auto-slaughter-field="${field}"]`)).toBeVisible();await expect(details).not.toHaveAttribute('aria-busy','true');}
+      if((await current())[field]!==config[field]){
+        const input=row.locator(`[data-auto-slaughter-field="${field}"]`);await input.fill(String(config[field]));await input.press('Tab');
+        await expect.poll(async()=>(await current())[field]).toBe(config[field]);
+      }
+    }
+    await expect(details).not.toHaveAttribute('aria-busy','true');
+  }
+  if((await current()).allowPregnant!==config.allowPregnant){await row.locator('[data-auto-slaughter-pregnant]').setChecked(config.allowPregnant);await expect.poll(async()=>(await current()).allowPregnant).toBe(config.allowPregnant);await expect(details).not.toHaveAttribute('aria-busy','true');}
+  await expect.poll(current).toEqual(config);
 }
 
 async function storageSettings(page:Page,c:import('../../src/sim/types').StorageSettings):Promise<void>{

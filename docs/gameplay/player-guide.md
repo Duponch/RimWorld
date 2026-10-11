@@ -1,5 +1,15 @@
 # Guide joueur
 
+**Schéma 228 — V318 : [régulation du troupeau](auto-slaughter-v318.md).** Maxima par espèce/sexe/stade avec abattage physique et mandats manuels indépendants.
+
+## Réguler le troupeau — V318
+
+Dans **Animaux**, dépliez **Réguler le troupeau**. Chaque espèce propose un maximum total et quatre maxima par sexe et âge. **∞** enlève une limite ; cliquez dessus lorsque le groupe est illimité pour commencer avec l'effectif actuel, puis modifiez le nombre. Zéro peut faire abattre tous les animaux admissibles du groupe : aucun minimum de reproducteurs n'est imposé. Les changements s'appliquent après confirmation du jeu.
+
+Les gestantes sont protégées par défaut et exclues des effectifs soumis aux maxima ; Population les conserve. Autoriser leur abattage les inclut, après les non-gestantes. **Réinitialiser** rétablit les limites infinies et leur protection. Petits et juvéniles appartiennent aux jeunes.
+
+Les excédents deviennent des candidats au travail **Dressage** : un colon rejoint et abat au contact. Un animal soigné, porté ou conduit reste compté mais attend sa disponibilité. La case individuelle **Abattre** ajoute seulement un ordre manuel : la décocher ne protège pas un candidat automatique. Relever un quota arrête l'automatique avant la mort ; un manuel conservé continue. La dépouille garde son identité et suit le transport/boucherie habituels.
+
 **Schéma 227 — V316 : [foin et croquettes](fodder-v316.md).** Culture de fourrage et fabrication à deux quotas avec objets, transport et consommation réels ; preuves et limites dans la note unique.
 
 ## Cultiver le foin et fabriquer des croquettes — V316

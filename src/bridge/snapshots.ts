@@ -3,6 +3,7 @@ import type { StagingGeometryReader } from '../sim/staging-validation.ts';
 import type { OwnedValidationResourceReader, OwnedResourceReuseWitness } from '../sim/owned-validation-resources.ts';
 import { ValidationIdentityContext } from '../sim/validation-identities.ts';
 import { validBiofuelTransport } from '../sim/biofuel-save.ts';
+import { validAutoSlaughterTransport } from '../sim/auto-slaughter-save.ts';
 import { validCremationTransport } from '../sim/cremation-save.ts';
 import { validFodderTransport } from '../sim/fodder-save.ts';
 import { validKibbleProductionTransport } from '../sim/cooking-save.ts';
@@ -1109,6 +1110,7 @@ export class SnapshotDecoder {
     if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');
     if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');
     if(validateHydroponics(next,next.schemaVersion,powerTopology,identities,validation.geometry).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
+    if(!validAutoSlaughterTransport(next,next.schemaVersion))return resync('Quota d’abattage automatique invalide ou futur.');
     if(!validDomesticTasksTransport(next,next.schemaVersion))return resync('Soin, alimentation vétérinaire ou abattage, patient ou cargaison incohérents.');
     if(!validAnimalRestTransport(next,next.schemaVersion))return resync('Couchage, secours ou propriétaire animal incohérent ou futur.');
     if(!validArrestRescueTransport(next))return resync('Mandat d’arrestation, portage ou libération locale incohérent.');

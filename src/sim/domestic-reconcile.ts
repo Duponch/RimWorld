@@ -5,12 +5,14 @@ import { leadRopees } from './animal-leading.ts';
 import { penRegion } from './animal-pens.ts';
 import { productKind, productReady } from './animal-products.ts';
 import { slaughterContact,slaughterHandlerAvailable } from './animal-slaughter.ts';
+import { autoSlaughterTargets,slaughterIntent } from './auto-slaughter.ts';
 import type { World } from './types.ts';
 
 /** Death, corpse conversion and loss of tameness can precede a travelling
  * worker's turn. Release claims immediately; physical cargo survives. */
 export function reconcileDomesticWork(world:World):void {
   reconcileAnimalFeeding(world);
+  const slaughterTargets=autoSlaughterTargets(world);
   for(const animal of world.wildlife?.animals??[]){
     const id=animal.domestic?.penMarkerId;
     if(id!==undefined&&!world.structures.some(s=>s.id===id&&s.kind==='pen-marker'&&s.pen?.accepted.includes(animal.species)))delete animal.domestic!.penMarkerId;
@@ -20,7 +22,7 @@ export function reconcileDomesticWork(world:World):void {
     if(!allowedAreaServicesAllowed(world,pawn)){interruptWork(world,pawn);continue;}
     const animal=world.wildlife?.animals.find(a=>a.id===task.animalId);
     const h=pawn.animalHandling;
-    if(h?.kind==='slaughter'&&(!animal?.domestic?.slaughter||!slaughterHandlerAvailable(pawn))){interruptWork(world,pawn);continue;}
+    if(h?.kind==='slaughter'&&(!animal||!slaughterIntent(world,animal,world.schemaVersion,slaughterTargets)||!slaughterHandlerAvailable(pawn))){interruptWork(world,pawn);continue;}
     // A later actor can close a diagonal flank or start a physical segment
     // after the handler's turn. Keep the intent, but never publish stale work.
     if(h?.kind==='slaughter'&&h.phase==='interact'&&animal

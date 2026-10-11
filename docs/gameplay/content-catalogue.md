@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V318 — [régulation du troupeau](auto-slaughter-v318.md).** Aucun nouvel objet, bâtiment ou espèce : cinq animaux domestiquables, maxima facultatifs par sexe/stade et protection des gestantes. Les excédents alimentent l'abattage physique V309, sans désignation manuelle ni produit au clic. [Guide](player-guide.md#réguler-le-troupeau--v318). Liens affectifs et libération sauvage différés.
+
 **V311 — [fonderie électrique et fusion des armes](smelting-v311.md), schéma 222.** `electric-smelter` :170acier+2composants, Construction4,350ticks neutres,3×1/180PV/700W, minifiable. Recette `smelt-weapon` des quatre armes actuelles, filtres de types/PV/qualité,160ticks neutres sans XP ; une sortie réelle acier ou plastacier. Aucun nouvel ItemId, composant récupéré, armure ou scorie. [Guide](player-guide.md#fondre-une-arme--v311), adaptations et contrôles qualifiés dans la note unique. Les états suivants sont historiques.
 
 **V310 — [secours et couchages animaux](animal-rescue-v310.md), schéma 221.** Nouveau `animal-sleeping-spot` gratuit, immédiat,1×1 sans rotation, qualité, PV ou objet emballé ; usage normal/médical et affectation normale facultative. Secours physique et sommeil des cinq espèces possédées, sans nouvel aliment, médicament ou patient copié. Boîtes et lits rembourrés restent absents ; pas de bonus hospitalier ajouté à la marque. [Guide](player-guide.md#secourir-et-coucher-un-animal--v310), adaptations et contrôles acquis dans la note unique. Les états suivants sont historiques.

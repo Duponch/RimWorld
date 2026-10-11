@@ -29,7 +29,8 @@ function care(species:AnimalSpeciesId='deer',phase:'pickup'|'approach'|'treat'='
 const checkpoint=(w:World)=>new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,1)));
 function historical211(w:World):World {
   w.schemaVersion=211 as World['schemaVersion'];
-  for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');
+  // V217 paste and V316 kibble are prospective permissions, absent in211.
+  for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal'&&item!=='kibble');
   for(const cell of w.stockpiles)delete cell.zoneId;
   return w;
 }

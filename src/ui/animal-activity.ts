@@ -1,16 +1,19 @@
 import { animalSpecies } from '../sim/animal-species';
 import type { WildAnimal } from '../sim/wildlife-state';
 import type { World } from '../sim/types';
+import {autoSlaughterTargets} from '../sim/auto-slaughter';
 
 const labels:Readonly<Record<WildAnimal['state'],string>>={idle:'Se repose',moving:'Se déplace',eating:'Mange',sleeping:'Dort',hungry:'Cherche à manger',downed:'À terre',dead:'Mort'};
 /** Shared activity for the list and inspector, published from confirmed state. */
-export function animalActivity(world:World,animal:WildAnimal):string {
+export function animalActivity(world:World,animal:WildAnimal,quotaTargets?:ReadonlySet<number>):string {
   if(animal.state==='dead')return labels[animal.state];
   const rescuer=world.pawns.find(p=>p.animalRescue?.animalId===animal.id);
   if(rescuer)return `${rescuer.animalRescue!.phase==='carry'?'Porté vers un couchage':'Secours en approche'} · ${rescuer.name}`;
-  if(animal.domestic?.slaughter){
+  const automatic=!!animal.domestic&&(quotaTargets??autoSlaughterTargets(world)).has(animal.id);
+  if(animal.domestic?.slaughter||automatic){
     const worker=world.pawns.find(p=>p.animalHandling?.kind==='slaughter'&&p.animalHandling.animalId===animal.id);
-    return worker?`${worker.animalHandling!.phase==='interact'?'Abattage':'Dresseur en approche'} · ${worker.name}`:'Désigné pour abattage';
+    const activity=worker?`${worker.animalHandling!.phase==='interact'?'Abattage':'Dresseur en approche'} · ${worker.name}`:'Désigné pour abattage';
+    return automatic?`${activity} · quota du troupeau${animal.domestic?.slaughter?' + ordre manuel':''}`:activity;
   }
   if(animal.state==='downed')return animal.animalRest?.phase==='sleep'?'À terre · au couchage':labels[animal.state];
   if(animal.flee)return 'Fuit';

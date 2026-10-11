@@ -8,7 +8,9 @@ import {ANIMAL_PRODUCTS,productFullness,productKind} from '../sim/animal-product
 import {animalLifeStage,animalNutritionMax,gestationTicks} from '../sim/animal-life';
 import {setTooltip} from './tooltip';
 import {slaughterRefusal} from '../sim/animal-slaughter';
+import {autoSlaughterTargets} from '../sim/auto-slaughter';
 import {animalActivity} from './animal-activity';
+import {autoSlaughterScaffold,updateAutoSlaughterPanel,type AutoSlaughterSend} from './auto-slaughter-panel';
 import './management-reference-v199.css';
 
 interface DomesticRow { locate:HTMLButtonElement; cells:HTMLElement[]; slaughter:HTMLInputElement }
@@ -18,11 +20,12 @@ const domesticRows=new WeakMap<HTMLElement,Map<number,DomesticRow>>();
 /** Owned animals remain physical wildlife actors. The panel is a filtered view
  * of those actual identities, not a separate counter or promised training UI. */
 export function animalsPanelScaffold():string {
-  return '<p class="muted" data-domestic-empty>Aucun animal domestique.</p><div class="domestic-list domestic-table-wrap" data-domestic-list></div>';
+  return autoSlaughterScaffold()+'<p class="muted" data-domestic-empty>Aucun animal domestique.</p><div class="domestic-list domestic-table-wrap" data-domestic-list></div>';
 }
 
-export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number)=>void,slaughter?:(id:number,enabled:boolean)=>void):void {
+export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number)=>void,slaughter?:(id:number,enabled:boolean)=>void,autoSlaughter?:AutoSlaughterSend):void {
   if(!root.querySelector('[data-domestic-list]'))root.innerHTML=animalsPanelScaffold();
+  updateAutoSlaughterPanel(root,world,autoSlaughter);
   const animals=world.wildlife?.animals.filter(a=>!!a.domestic&&a.state!=='dead')??[];
   root.querySelector<HTMLElement>('[data-domestic-empty]')!.hidden=animals.length>0;
   const list=root.querySelector<HTMLElement>('[data-domestic-list]')!;
@@ -50,11 +53,12 @@ export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number
     setTooltip(labels[4]!,{title:'Soins',body:'La politique médicale se règle dans le dossier Santé de l’animal. Un médecin apporte les médicaments autorisés et soigne au contact.'});
     setTooltip(labels[5]!,{title:'Enclos',body:'Le marqueur attribué et le périmètre physique déterminent cet état. Un dresseur conduit les herbivores ; le lièvre reste libre.'});
     setTooltip(labels[6]!,{title:'Production',body:'Un adulte possédé produit selon son espèce et son sexe. Animaux actif : un colon rejoint la bête pour traire ou tondre une jauge pleine.'});
-    setTooltip(labels[8]!,{title:'Abattre',body:'Désigner cet animal pour l’abattage par un dresseur au contact. Annulable avant la fin ; la dépouille rejoint la boucherie ordinaire.'});
+    setTooltip(labels[8]!,{title:'Abattre manuellement',body:'Cette case désigne un animal individuellement. Les quotas du troupeau restent indépendants : décocher ici ne retire pas une cible automatique.'});
     domesticRows.set(list,rows);
   }
   const rows=domesticRows.get(list);
   const regions=new Map<number,ReturnType<typeof penRegion>>();
+  const quotaTargets=autoSlaughterTargets(world);
   const productTasks=new Map(world.pawns.filter(pawn=>pawn.animalHandling?.kind==='milk'||pawn.animalHandling?.kind==='shear')
     .map(pawn=>[pawn.animalHandling!.animalId,pawn.animalHandling!] as const));
   for(const a of animals){
@@ -62,7 +66,7 @@ export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number
     const row=rows?.get(a.id);if(!row)continue;
     row.locate.textContent=`${species.label} ${a.id}`;
     row.locate.setAttribute('aria-label',`Repérer ${species.label} ${a.id}`);
-    const condition=animalActivity(world,a);
+    const condition=animalActivity(world,a,quotaTargets);
     const mobility=Math.round(animalBody(a).capacities.moving*100);
     const pen=animalPenStatus(world,a,regions);
     const product=productKind(a);
@@ -76,7 +80,7 @@ export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number
     const refusal=slaughterRefusal(world,a);
     row.slaughter.disabled=!slaughter||!!refusal&&!row.slaughter.checked;
     row.slaughter.onchange=()=>slaughter?.(a.id,row.slaughter.checked);
-    setTooltip(row.slaughter,{title:row.slaughter.checked?'Annuler l’abattage':'Abattre',body:refusal??'Un dresseur rejoint cet animal, sans arme ni nourriture requise. L’abattage n’a lieu qu’au terme du travail au contact.'});
+    setTooltip(row.slaughter,{title:row.slaughter.checked?'Annuler la désignation manuelle':'Abattre manuellement',body:refusal??'Un dresseur rejoint cet animal et l’abat au contact. Cette case règle seulement la désignation manuelle ; un quota automatique peut aussi cibler l’animal.'});
     row.cells[0]!.setAttribute('aria-label',a.sex==='female'?'Femelle':'Mâle');
     setTooltip(row.locate,{title:`${species.label} ${a.id}`,body:'Cliquer pour repérer l’animal et ouvrir son dossier.',rows:[{label:'Position',value:`${a.x}, ${a.z}`},{label:'Nourriture',value:`${Math.round(100*a.food/animalNutritionMax(a))} %`},{label:'Mobilité',value:`${mobility} %`},{label:'Familiarité',value:`${a.domestic!.tameness}/5`}]});
     setTooltip(row.cells[1]!,{title:'Âge biologique',body:`${(a.ageTicks/TICKS_PER_DAY).toLocaleString('fr-FR',{maximumFractionDigits:1})} jours. L’âge progresse pendant la famine ; le stade détermine la taille et les besoins.`});

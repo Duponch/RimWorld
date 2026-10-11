@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 227 as const;
+export const SCHEMA_VERSION = 228 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -187,6 +187,8 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  /** V318 prospective herd limits; absent policies leave the herd untouched. */
+  autoSlaughter?:import('./auto-slaughter-state.ts').AutoSlaughterConfig[];
   allowedAreas?:AllowedArea[];
   orbital?:import('./orbital-state.ts').OrbitalState;
   deepResources?:import('./deep-resources.ts').DeepResourceState;
@@ -275,6 +277,7 @@ export interface StorageSettings extends StorageConditions { items?:Partial<Reco
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; targetZoneId?:number; floor?: import('./flooring.ts').FloorKind }
 export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }
 export type Command = import('./orbital-state.ts').OrbitalCommand | import('./group-state.ts').GroupCommand | {type:'enable-mech-raids'} | import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
+  | import('./auto-slaughter-state.ts').AutoSlaughterCommand
   | {type:'spike-trap-auto-rebuild';structureId:number;on:boolean}
   | {type:'cut-blighted-crops'}
   | AllowedAreaCommand

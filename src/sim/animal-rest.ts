@@ -1,5 +1,6 @@
 import { canStandAt } from './furniture-travel.ts';
 import { veterinaryCareSpeciesAllowed,veterinaryNeedsRest } from './veterinary-rules.ts';
+import { autoSlaughterTargets,slaughterIntent } from './auto-slaughter.ts';
 import { animalCarrier,animalClaimed,animalSpotClaimed,releaseAnimalRescue } from './animal-rest-state.ts';
 import type { Cell,Structure,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
@@ -31,11 +32,12 @@ export function releaseAnimalSpotBindings(w:World,id:number):void {
 }
 export function reconcileAnimalRest(w:World):void {
   if(w.schemaVersion<221)return;
+  const targets=autoSlaughterTargets(w);
   for(const a of w.wildlife?.animals??[]){
     if(a.domestic?.bedId!==undefined&&(a.state==='dead'||a.health?.death||!w.structures.some(s=>s.id===a.domestic!.bedId&&s.kind==='animal-sleeping-spot'&&!s.medical)))delete a.domestic.bedId;
     const t=a.animalRest;if(!t)continue;
     const s=w.structures.find(s=>s.id===t.spotId);
-    if(!s||!animalSpotAvailable(w,s,a)||animalCarrier(w,a.id)||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.manhunter||a.domestic?.slaughter
+    if(!s||!animalSpotAvailable(w,s,a)||animalCarrier(w,a.id)||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.manhunter||slaughterIntent(w,a,w.schemaVersion,targets)
       ||t.phase==='travel'&&(a.state!=='moving'||animalClaimed(w,a.id))
       ||t.phase==='sleep'&&(!same(s,a)||(a.motion?.end??0)>w.tick||!['sleeping','downed'].includes(a.state)))clearRest(w,a);
   }

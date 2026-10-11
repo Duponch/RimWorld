@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { autoSlaughterTargets,slaughterIntent } from './auto-slaughter.ts';
 import { animalCarrier,animalClaimed,animalSpotClaimed } from './animal-rest-state.ts';
 import { medicalWorkRefusal,pawnBody } from './health-rules.ts';
 import { workPriority } from './work-types.ts';
@@ -73,6 +74,7 @@ function actorExclusive(w:World,p:Pawn):boolean {
 export function validateAnimalRest(w:World,version:number):string[] {
   if(Object.hasOwn(w,'packed')&&!Array.isArray(w.packed))return ['Malformed animal rest furniture container.'];
   const errors:string[]=[],assignments=new Set<number>(),patients=new Set<number>(),spots=new Set<number>();
+  const slaughterTargets=autoSlaughterTargets(w,version);
   for(const s of w.structures)if(s.kind==='animal-sleeping-spot'&&!validSpot(w,s,version))errors.push('Invalid or future animal sleeping spot.');
   if(w.jobs.some(j=>j.kind==='animal-sleeping-spot'||j.furniture?.kind==='animal-sleeping-spot'||j.deconstruction?.kind==='animal-sleeping-spot')
     ||(w.packed??[]).some(p=>p.building.kind==='animal-sleeping-spot'))errors.push('Animal sleeping spot cannot be a job or packed furniture.');
@@ -86,7 +88,7 @@ export function validateAnimalRest(w:World,version:number):string[] {
     const t:unknown=a.animalRest;
     if(version<221||!object(t)||!keys(t,['spotId','phase'])||!id(t.spotId,w.nextId-1)||!['travel','sleep'].includes(String(t.phase))){errors.push('Invalid or future animal rest task.');continue;}
     const spot=w.structures.find(s=>s.id===t.spotId);
-    if(!aliveOwned(a)||a.domestic!.slaughter||!spot||spot.kind!=='animal-sleeping-spot'
+    if(!aliveOwned(a)||slaughterIntent(w,a,version,slaughterTargets)||!spot||spot.kind!=='animal-sleeping-spot'
       ||a.meal||a.mating||a.exiting||(spot.medical?a.domestic?.care==='none':a.domestic?.bedId!==t.spotId))errors.push('Invalid animal rest ownership.');
     if(!spot)continue;
     if(spots.has(spot.id))errors.push('Animal sleeping place occupied twice.');spots.add(spot.id);

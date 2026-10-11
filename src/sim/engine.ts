@@ -25,6 +25,7 @@ import { advanceAnimalProducts } from './animal-products.ts';
 import { PEN_ANIMALS, invalidateAnimalPens } from './animal-pens.ts';
 import { applyTaming,processHandling,advanceTameness } from './animal-handling.ts';
 import { designateSlaughter } from './animal-slaughter.ts';
+import { setAutoSlaughterPolicy } from './auto-slaughter.ts';
 import { applyAnimalCarePolicy,processAnimalCare } from './animal-care.ts';
 import { processAnimalFeeding,reconcileAnimalFeeding } from './animal-feeding.ts';
 import {cancelFlakWork,detachMissingFlakBills} from './flak-work.ts';
@@ -505,6 +506,11 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='order-feed')return applyFeeding(world,command);
   if(command.type==='tame')return applyTaming(world,command);
   if(command.type==='slaughter')return designateSlaughter(world,command);
+  if(command.type==='auto-slaughter-policy'){
+    const result=setAutoSlaughterPolicy(world,command);
+    if(result.ok)reconcileDomesticWork(world);
+    return result;
+  }
   if(command.type==='pen-species'){
     if(!Number.isSafeInteger(command.markerId)||typeof command.accepted!=='boolean'||!PEN_ANIMALS.includes(command.species))return refusal('invalid-command','Réglage d’enclos invalide.');
     const marker=world.structures.find(s=>s.id===command.markerId&&s.kind==='pen-marker');

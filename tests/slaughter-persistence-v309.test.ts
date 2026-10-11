@@ -28,6 +28,11 @@ function prepared(species:AnimalSpeciesId='muffalo',phase:'approach'|'interact'=
   return {w,a,p};
 }
 type Fixture=ReturnType<typeof prepared>;
+function historical219(w:World):World {
+  // Modern fixture defaults include V316 kibble; old diets did not gain it.
+  for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='kibble');
+  w.schemaVersion=219 as World['schemaVersion'];return w;
+}
 const checkpoint=(w:World)=>new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,1)));
 function refused(f:Fixture){
   expect(validSlaughterTransport(f.w,f.w.schemaVersion)).toBe(false);
@@ -49,14 +54,14 @@ test.each(['hare','deer','gazelle','muffalo','dromedary'] as const)('%s slaughte
 
 test('219 migration changes only the schema number, retaining jobs, herd, quantities, skills and random streams',()=>{
   const {w,a,p}=prepared();delete a.domestic!.slaughter;delete p.animalHandling;p.state='idle';
-  w.schemaVersion=219 as World['schemaVersion'];const before=structuredClone(w),text=JSON.stringify(w);
+  historical219(w);const before=structuredClone(w),text=JSON.stringify(w);
   expect(validDomesticTasksTransport(w,219)).toBe(true);
   expect(deserializeWorld(text)).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(w).toEqual(before);
 });
 
 test('219 rejects future designation and slaughter task before migration, even with an explicitly undefined future property',()=>{
   for(const owner of ['designation','task','undefined-designation'] as const){
-    const f=prepared();f.w.schemaVersion=219 as World['schemaVersion'];
+    const f=prepared();historical219(f.w);
     if(owner!=='task'){delete f.p.animalHandling;f.p.state='idle';}
     if(owner==='task')delete f.a.domestic!.slaughter;
     if(owner==='undefined-designation')Object.assign(f.a.domestic!,{slaughter:undefined});
@@ -200,7 +205,7 @@ test('mobile animal execution requires the real terminal neck wound in 220 and i
   const medical=(value:unknown,version:number,animal=true)=>validateMedicalRecord(value,true,true,false,false,animal,true,true,true,true,true,true,version,false);
   expect(record.injuries.some(i=>i.kind==='execution-cut'&&i.part==='neck'&&i.bornAt===record.tick)).toBe(true);
   expect(medical(record,220)).toBeNull();expect(medical(record,219)).not.toBeNull();
-  const past={...structuredClone(w),schemaVersion:219};expect(()=>deserializeWorld(JSON.stringify(past))).toThrow(/version 219/);
+  const past=historical219(structuredClone(w));expect(()=>deserializeWorld(JSON.stringify(past))).toThrow(/version 219/);
   const withoutWound=structuredClone(record);withoutWound.injuries=withoutWound.injuries.filter(i=>i.kind!=='execution-cut');
   expect(medical(withoutWound,220)).not.toBeNull();
   const wrongPart=structuredClone(record);wrongPart.injuries.find(i=>i.kind==='execution-cut')!.part='left-front-leg';expect(medical(wrongPart,220)).not.toBeNull();

@@ -1,4 +1,6 @@
-# Validation courante — V316
+# Validation courante — V318
+
+**V318, schéma 228 : [régulation du troupeau](../gameplay/auto-slaughter-v318.md#contrôles-et-limites).** Groupe184cas/16fichiers dont48nouveaux acquis par reprises ; corpus63/66PASS95,800s, présentationChrome123,707s et buildPages/typage9,694s. ChromeWebGPU157,803s : huit recharges exactes sur Aulnes sans dotation, annulation et abattage physique. ROOT seul sur sources/tests/pilotes figés,2719entrées exactes ; rouges/limites dans note unique. Aucun gainFPS ni campagne entière certifiés, publications regroupées et relance **PAUSED**. Les validations suivantes sont historiques.
 
 **V316, schéma 227 : [foin et croquettes](../gameplay/fodder-v316.md#contrôles-et-limites).** Groupe203cas/20fichiers acquis par reprises dont129nouveaux/6fichiers ; corpus63références/66fichiers PASS103,110s et buildPages3,442s. ChromeWebGPU185,397s : onze sauvegardes/recharges exactes par continuations,50croquettes27626 depuis20lait20riz puis semis physique104/110 ; quinzehumains et sources historiques conservés, aucune dotation. Gel2709exact ; ROOT seul exécute, sources/tests/pilotes figés. Preuves, rouges et limites dans la note unique ; aucune campagne complète ni performance certifiée. Publications regroupées, relance **PAUSED**. Les validations suivantes sont historiques.
 

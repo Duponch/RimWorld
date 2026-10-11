@@ -52,6 +52,7 @@ import { IMMUNE_DISEASE_UNIT,immuneDiseaseStage } from './sim/immune-diseases-ru
 import { IMMUNE_DISEASE_KINDS } from './sim/immune-diseases-types';
 import { corpseStage } from './sim/corpses';
 import { updateAnimalsPanel } from './ui/animals-panel';
+import type { AutoSlaughterConfig } from './sim/auto-slaughter-state';
 import { updateWildlifePanel } from './ui/wildlife-panel';
 import { createHeatwaveUI } from './ui/heatwave';
 import { createWeatherConditionUI, weatherConditionLabel } from './ui/weather-inspection';
@@ -676,7 +677,7 @@ function setPanel(panel: Panel, preserveTool = false) {
   for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals', 'world', 'quests'] as const) el(`${name}-panel`).hidden = panel !== name;
   groupUI.setVisible(panel==='world'&&worldTab==='group');
   if(panel==='world'&&snapshot)refreshWorldPanels(snapshot);
-  if(panel==='animals'&&snapshot)updateAnimalsPanel(el('animals-content'),snapshot,id=>selectPawn(id),designateAnimalSlaughter);
+  if(panel==='animals'&&snapshot)updateAnimalsPanel(el('animals-content'),snapshot,id=>selectPawn(id),designateAnimalSlaughter,updateAutoSlaughterPolicy);
   if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) {
     const active = button.dataset.panel === panel;
@@ -1084,6 +1085,9 @@ function updateWorkPanel(world: World, carriedPatients: ReadonlySet<number>): vo
 function designateAnimalSlaughter(animalId:number,enabled:boolean):void {
   void attempt(async()=>{await client.command({type:'slaughter',animalId,enabled});renderState();});
 }
+async function updateAutoSlaughterPolicy(config:AutoSlaughterConfig):Promise<void> {
+  await client.command({type:'auto-slaughter-policy',config});renderState();
+}
 
 function renderState() {
   if (!snapshot) return;
@@ -1093,7 +1097,7 @@ function renderState() {
   const colonistIds = new Set(colonists.map(pawn => pawn.id));
   const selectedColonists = colonists.filter(pawn => selection.ids.has(pawn.id) && !pawn.prisoner);
   const carriedPatients = carriedPatientsOf(world);
-  if(currentPanel==='animals')updateAnimalsPanel(el('animals-content'),world,id=>selectPawn(id),designateAnimalSlaughter);
+  if(currentPanel==='animals')updateAnimalsPanel(el('animals-content'),world,id=>selectPawn(id),designateAnimalSlaughter,updateAutoSlaughterPolicy);
   if(currentPanel==='wildlife')renderWildlife(world);
   if(currentPanel==='research')updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)));
   if(currentPanel==='world')refreshWorldPanels(world);

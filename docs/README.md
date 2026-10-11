@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V318 : [régulation du troupeau](gameplay/auto-slaughter-v318.md), schéma 228.** Quotas par sexe/stade, gestantes et abattage réel ; [référence Core actuelle](research/auto-slaughter-core-v318.md). Groupe184cas/16fichiers, corpus63/66 et parcours Chrome des Aulnes acquis par reprises ; huit recharges exactes. Preuves/rouges/limites dans note unique, aucun gainFPS ni campagne entière certifiés. Les états suivants sont historiques.
+
 **V316 : [foin et croquettes](gameplay/fodder-v316.md), schéma 227.** Fourrage cultivé, deux quotas physiques et alimentation adaptée aux espèces ; [référence Core actuelle](research/fodder-core-v316.md) et [guide](gameplay/player-guide.md#cultiver-le-foin-et-fabriquer-des-croquettes--v316). Contrôles acquis par reprises, corpus historique exact et parcours Chrome des Aulnes sans dotation ; preuves, rouges et limites dans la note unique. Les états suivants sont historiques.
 
 **V315 : [pièges à pointes consommables](gameplay/spike-traps-v315.md), schéma 226.** Construction payée, contact physique, impacts et remplacement ordinaire ; minification et réinstallation du même ID. [Référence Core actuelle](research/spike-traps-core-v315.md) et [guide](gameplay/player-guide.md#utiliser-les-pièges-à-pointes--v315). Corpus et contrôles Chrome acquis par reprises, preuves/rouges/adaptations dans la note unique. Produit `804c04c4` commité/poussé et publié avecV312–314 une seule fois en `c18dfc8d`,88réponses HTTPS exactes. Les états suivants sont historiques.

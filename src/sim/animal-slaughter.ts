@@ -3,6 +3,7 @@ import { isColonist } from './affiliation.ts';
 import { violentWorkRefusal } from './colonist-backgrounds.ts';
 import { animalClaimed } from './animal-rest-state.ts';
 import { animalBodySize } from './animal-life.ts';
+import { autoSlaughterTargets,slaughterIntent } from './auto-slaughter.ts';
 import { roundYield } from './cooking-statistics.ts';
 import { addFilth } from './filth.ts';
 import type { AnimalHandlingTask, DomesticCommand } from './domestic-state.ts';
@@ -34,8 +35,8 @@ export function slaughterHandlerAvailable(pawn:Pawn):boolean {
     &&!pawn.draft&&!pawn.mental?.crisis&&!pawn.flee&&!pawn.burning&&!pawn.stun&&!pawn.interruptedCargo&&!medicalWorkRefusal(pawn)
     &&pawnBody(pawn).capacities.moving>0&&pawnBody(pawn).capacities.manipulation>0;
 }
-export function slaughterTargetAvailable(world:World,animal:WildAnimal,exceptPawn?:Pawn):boolean {
-  return (!exceptPawn||allowedAreaAllows(world,exceptPawn,animal))&&!!animal.domestic?.slaughter&&animal.state!=='dead'&&!animal.health?.death
+export function slaughterTargetAvailable(world:World,animal:WildAnimal,exceptPawn?:Pawn,targets?:ReadonlySet<number>):boolean {
+  return (!exceptPawn||allowedAreaAllows(world,exceptPawn,animal))&&slaughterIntent(world,animal,world.schemaVersion,targets)&&animal.state!=='dead'&&!animal.health?.death
     &&!animal.manhunter&&!animal.burning&&!animal.flee&&!animal.threat&&!animal.retaliation&&!animal.strike&&!animal.stun
     &&!animal.health?.foodPoisoning?.vomit
     &&!animalClaimed(world,animal.id,exceptPawn?.id);
@@ -47,11 +48,14 @@ export function slaughterHolding(world:World,pawn:Pawn,animal:WildAnimal):boolea
     &&slaughterContact(world,pawn,animal);
 }
 export function slaughterWanted(world:World,pawn:Pawn):boolean {
-  return world.schemaVersion>=220&&slaughterHandlerAvailable(pawn)&&!!world.wildlife?.animals.some(a=>allowedAreaAllows(world,pawn,a)&&slaughterTargetAvailable(world,a));
+  if(world.schemaVersion<220||!slaughterHandlerAvailable(pawn))return false;
+  const targets=autoSlaughterTargets(world);
+  return !!world.wildlife?.animals.some(a=>allowedAreaAllows(world,pawn,a)&&slaughterTargetAvailable(world,a,undefined,targets));
 }
 export function slaughterProposal(world:World,pawn:Pawn,reach:Reachability):SlaughterProposal|undefined {
-  if(!slaughterWanted(world,pawn))return;
-  const animals=world.wildlife!.animals.filter(a=>allowedAreaAllows(world,pawn,a)&&slaughterTargetAvailable(world,a))
+  if(world.schemaVersion<220||!slaughterHandlerAvailable(pawn))return;
+  const targets=autoSlaughterTargets(world);
+  const animals=(world.wildlife?.animals??[]).filter(a=>allowedAreaAllows(world,pawn,a)&&slaughterTargetAvailable(world,a,undefined,targets))
     .sort((a,b)=>(a.x-pawn.x)**2+(a.z-pawn.z)**2-((b.x-pawn.x)**2+(b.z-pawn.z)**2)||a.id-b.id);
   for(const animal of animals){
     const path=slaughterContact(world,pawn,animal)?[]:routeToJob(world,animal,reach,false);if(!path)continue;
@@ -72,8 +76,8 @@ export function designateSlaughter(world:World,command:Extract<DomesticCommand,{
   const animal=world.wildlife?.animals.find(a=>a.id===command.animalId),reason=slaughterRefusal(world,animal);
   if(reason)return invalid(reason);
   if(!command.enabled){
-    for(const pawn of world.pawns)if(pawn.animalHandling?.kind==='slaughter'&&pawn.animalHandling.animalId===animal!.id)interruptWork(world,pawn);
     delete animal!.domestic!.slaughter;
+    if(!slaughterIntent(world,animal!))for(const pawn of world.pawns)if(pawn.animalHandling?.kind==='slaughter'&&pawn.animalHandling.animalId===animal!.id)interruptWork(world,pawn);
   } else animal!.domestic!.slaughter=true;
   for(const pawn of world.pawns)pawn.planCooldown=0;
   return {ok:true};

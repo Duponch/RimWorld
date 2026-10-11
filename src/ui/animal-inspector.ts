@@ -289,7 +289,7 @@ export function updateAnimalInspector(root: HTMLElement, world: World, animalId:
   root.querySelector<HTMLElement>('[data-animal-slaughter-wrap]')!.hidden=!view.domestic||view.dead;
   slaughter.checked=view.slaughterDesignated;
   slaughter.disabled=root.dataset.animalSlaughterAvailable!=='true'||!!view.slaughterReason&&!view.slaughterDesignated;
-  slaughter.title=view.slaughterReason??'Un dresseur rejoint cet animal et l’abat au contact. Annulable tant que le travail n’est pas terminé.';
+  slaughter.title=view.slaughterReason??'Désignation manuelle, annulable avant la fin du travail au contact. Les quotas du troupeau restent indépendants : décocher ici ne retire pas une cible automatique.';
   const care=root.querySelector<HTMLSelectElement>('[data-animal-care]')!;
   root.querySelector<HTMLElement>('[data-animal-care-wrap]')!.hidden=!view.domestic;
   if(view.care)care.value=view.care;

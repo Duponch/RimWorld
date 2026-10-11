@@ -13,6 +13,7 @@ import { medicalWorkRefusal } from './health-rules.ts';
 import { workPriority } from './work-types.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { SLAUGHTER_WORK_TICKS,slaughterContact,slaughterHandlerAvailable } from './animal-slaughter.ts';
+import { autoSlaughterTargets,slaughterIntent } from './auto-slaughter.ts';
 import type { Pawn,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 
@@ -37,7 +38,7 @@ function validDomesticOwner(w:World,a:WildAnimal,version:number):boolean {
 /** New irreversible work shares the file and transport admission. Availability
  * can change before ordinary reconciliation; transient animal danger is not a
  * corruption. The designation, handler and exclusive ownership are durable. */
-function validSlaughterTask(w:World,p:Pawn,version:number):boolean {
+function validSlaughterTask(w:World,p:Pawn,version:number,targets?:ReadonlySet<number>):boolean {
   const raw:unknown=p.animalHandling;
   if(!obj(raw)||raw.kind!=='slaughter')return true;
   if(version<220||!keys(raw,['animalId','kind','phase','sourcePileId','carryPileId','quantity','step','progress'])
@@ -45,7 +46,7 @@ function validSlaughterTask(w:World,p:Pawn,version:number):boolean {
     ||raw.sourcePileId!==0||raw.carryPileId!==null||raw.quantity!==0||raw.step!==0
     ||!int(raw.progress,0,SLAUGHTER_WORK_TICKS-1)||raw.phase==='approach'&&raw.progress!==0)return false;
   const animal=w.wildlife?.animals.find(a=>a.id===raw.animalId);
-  if(!animal||!validDomesticOwner(w,animal,version)||animal.domestic?.slaughter!==true||animal.state==='dead'||animal.health?.death)return false;
+  if(!animal||!validDomesticOwner(w,animal,version)||!slaughterIntent(w,animal,version,targets)||animal.state==='dead'||animal.health?.death)return false;
   if(!slaughterHandlerAvailable(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.need||p.haul||p.cooking||p.hunting||p.research
     ||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.animalRescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null
     ||p.melee||p.shooting?.order||p.tactics||p.trade||p.orbitalTrade||p.deepWork||p.recreation.task||p.animalCare||p.animalFeed
@@ -60,7 +61,8 @@ function validSlaughterTask(w:World,p:Pawn,version:number):boolean {
 export function validSlaughterTransport(w:World,version:number):boolean {
   try {
     for(const a of w.wildlife?.animals??[])if(a.domestic&&Object.hasOwn(a.domestic,'slaughter')&&!validDomesticOwner(w,a,version))return false;
-    return w.pawns.every(p=>validSlaughterTask(w,p,version));
+    const targets=autoSlaughterTargets(w,version);
+    return w.pawns.every(p=>validSlaughterTask(w,p,version,targets));
   }catch{return false;}
 }
 

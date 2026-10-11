@@ -20,6 +20,7 @@ import { bodyBloodPigment,bodyBloodWord } from './body-blood';
 import { corpseVisualMask } from './corpse-presentation';
 import { corpsePartAbsent } from '../sim/corpse-anatomy';
 import { bodySizeAtAge } from '../sim/animal-life';
+import { autoSlaughterTargets } from '../sim/auto-slaughter';
 import type { WildAnimal } from '../sim/wildlife-state';
 import type { MaterialPile } from '../sim/types';
 import type { PawnLayer } from './PawnLayer';
@@ -165,7 +166,7 @@ class SpeciesRig {
     marker.instanceCount=Math.max(1,s);this.slaughter.visible=true;
     return ()=>{g.instanceCount=n;fire.instanceCount=f;marker.instanceCount=s;this.slaughter.visible=visible;};
   }
-  update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,pileSurface:ReadonlyMap<number,PileSurface>,reset=false,pawns?:PawnLayer):void {
+  update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,pileSurface:ReadonlyMap<number,PileSurface>,reset=false,pawns?:PawnLayer,quotaTargets:ReadonlySet<number>=new Set()):void {
     const changed=this.source!==world;
     if(reset){this.headings.clear();this.keys.clear();this.gait.clear();}
     if(changed){this.source=world;this.keys.clear();this.animals=[...(world.wildlife?.animals??[]).filter(a=>a.species===this.species).map(a=>{const carrier=world.pawns.find(p=>p.animalRescue?.phase==='carry'&&p.animalRescue.animalId===a.id);return carrier?{...a,carrierId:carrier.id}:a;}),...world.piles.flatMap(p=>p.corpse?.species===this.species&&p.owner.type!=='job'?[{id:p.corpse.animalId,species:p.corpse.species,state:'dead' as const,x:p.owner.type==='ground'?p.owner.x:0,z:p.owner.type==='ground'?p.owner.z:0,sex:p.corpse.sex,ageTicks:p.corpse.ageTicks,health:p.corpse.health,corpsePile:p,carrierId:p.owner.type==='pawn'?p.owner.pawnId:pawns?.animalCorpseTransferCarrier(p.id)}]:[])];this.surfaces=surfaces;
@@ -173,7 +174,7 @@ class SpeciesRig {
       this.setSelected(this.selected);
       const markers=this.slaughter.geometry as THREE.InstancedBufferGeometry,flags=markers.getAttribute('aSlaughter') as THREE.InstancedBufferAttribute;
       let any=false,dirty=false;
-      this.animals.forEach((animal,index)=>{const enabled=animal.state!=='dead'&&animal.domestic?.slaughter===true,value=enabled?1:0;
+      this.animals.forEach((animal,index)=>{const enabled=animal.state!=='dead'&&(animal.domestic?.slaughter===true||quotaTargets.has(animal.id)),value=enabled?1:0;
         if(flags.getX(index)!==value){flags.setX(index,value);dirty=true;}any||=enabled;});
       if(dirty)flags.needsUpdate=true;markers.instanceCount=this.animals.length;this.slaughter.visible=any;
       const present=new Set(this.animals.map(a=>a.id));for(const id of this.headings.keys())if(!present.has(id)){this.headings.delete(id);this.gait.delete(id);}
@@ -291,7 +292,7 @@ export class WildlifeLayer {
   private readonly surfaceTextures={soft:createAnimalCoatTexture('soft'),short:createAnimalCoatTexture('short'),shaggy:createAnimalCoatTexture('shaggy')};
   private texturesEnabled=true;
   private readonly markerStyle:AnimalSlaughterMarkerStyle;
-  private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();private pileSurface:ReadonlyMap<number,PileSurface>=new Map();
+  private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();private pileSurface:ReadonlyMap<number,PileSurface>=new Map();private quotaTargets:ReadonlySet<number>=new Set();
   constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void,loadTexture?:SceneTextureLoader){
     this.markerStyle=new AnimalSlaughterMarkerStyle(loadTexture);
     this.rigs=ANIMAL_SPECIES_IDS.map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTextures[animalCoat(species)],this.markerStyle,configure));
@@ -302,7 +303,7 @@ export class WildlifeLayer {
   setTexturesEnabled(enabled:boolean):void {if(this.texturesEnabled===enabled)return;this.texturesEnabled=enabled;for(const rig of this.rigs)rig.setTexturesEnabled(enabled);}
   setSelected(ids:ReadonlySet<number>):void {for(const rig of this.rigs)rig.setSelected(ids);}
   forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {for(const rig of this.rigs)rig.forEachPose(visit);}
-  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void{if(this.source!==world){this.source=world;this.surfaces=furnitureSurfaces(world);this.pileSurface=pileSurfaces(world);}for(const rig of this.rigs)rig.update(world,timeline,this.surfaces,this.pileSurface,reset,pawns);}
+  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void{if(this.source!==world){this.source=world;this.surfaces=furnitureSurfaces(world);this.pileSurface=pileSurfaces(world);this.quotaTargets=autoSlaughterTargets(world);}for(const rig of this.rigs)rig.update(world,timeline,this.surfaces,this.pileSurface,reset,pawns,this.quotaTargets);}
   prepare():()=>void{const restores=this.rigs.map(r=>r.prepare());return()=>{for(const restore of restores)restore();};}
   dispose():void{
     for(const r of this.rigs){

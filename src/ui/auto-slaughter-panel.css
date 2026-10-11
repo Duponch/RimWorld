@@ -1,0 +1,15 @@
+#animals-panel .auto-slaughter-controls{margin:0 0 12px;border-bottom:1px solid var(--line);padding-bottom:8px}
+#animals-panel .auto-slaughter-controls summary{cursor:pointer;font-size:13px;font-weight:600;padding:4px 0}
+#animals-panel .auto-slaughter-table-wrap{overflow:auto;border:1px solid var(--line)}
+#animals-panel .auto-slaughter-table{min-width:880px;font-size:12px;font-variant-numeric:tabular-nums}
+#animals-panel .auto-slaughter-table th,#animals-panel .auto-slaughter-table td{padding:5px 6px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--line)}
+#animals-panel .auto-slaughter-table th:first-child{text-align:left}
+#animals-panel .auto-slaughter-table thead th{background:var(--paper-deep);font-weight:600}
+#animals-panel .auto-slaughter-table small{display:block;font-size:10px;font-weight:400}
+#animals-panel .auto-slaughter-table tbody tr:nth-child(odd){background:var(--paper-deep)}
+#animals-panel .auto-slaughter-table td span{display:inline-block;min-width:20px;margin-right:5px}
+#animals-panel .auto-slaughter-table input[type=number]{width:48px;min-height:25px;padding:2px 3px;border:1px solid var(--line);border-radius:0}
+#animals-panel .auto-slaughter-table button{min-height:25px;padding:2px 5px;font-size:11px;border:1px solid var(--line);border-radius:0;box-shadow:none}
+#animals-panel .auto-slaughter-table input[type=checkbox]{vertical-align:middle}
+#animals-panel .auto-slaughter-table .quota-exceeded{color:var(--danger,#e5a094);font-weight:700}
+#animals-panel [data-auto-slaughter-feedback]{min-height:1em;margin:5px 0}

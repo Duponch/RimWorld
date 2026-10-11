@@ -9,6 +9,7 @@ import { animalClaimed,releaseAnimalRescue,syncCarriedAnimals,type AnimalRescueT
 import { animalSpotAvailable,animalRestingSpot } from './animal-rest.ts';
 import { veterinaryCareSpeciesAllowed } from './veterinary-rules.ts';
 import { slaughterContact } from './animal-slaughter.ts';
+import { autoSlaughterTargets,slaughterIntent } from './auto-slaughter.ts';
 import { blockedCells,reachableCells,routeToCell,routeToJob,type Reachability } from './pathfinding.ts';
 import { advanceAnimalHealth } from './wildlife-health.ts';
 import type { NeedContext } from './needs.ts';
@@ -22,12 +23,16 @@ export function animalRescueActorReady(w:World,p:Pawn):boolean {
     &&!backgroundWorkRefusal(p,'doctor')&&workPriority(p,'doctor')>0&&!medicalWorkRefusal(p)&&pawnBody(p).capacities.moving>0
     &&!w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)&&!w.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
 }
-function reason(w:World,p:Pawn,a:WildAnimal|undefined,direct=false):string|undefined {
+function reason(w:World,p:Pawn,a:WildAnimal|undefined,direct=false,targets?:ReadonlySet<number>):string|undefined {
   if(!animalRescueActorReady(w,p))return 'Un colon libre et apte doit avoir Médecin activé.';
   if(!a||!w.wildlife?.animals.includes(a)||!a.domestic||!veterinaryCareSpeciesAllowed(a.species,w.schemaVersion)||a.state!=='downed'||a.health?.death||animalRestingSpot(w,a))return 'Cet animal possédé doit être à terre et hors couchage.';
   if(!direct&&p.animalRescue?.phase!=='carry'){const refusal=allowedAreaReason(w,p,a);if(refusal)return refusal;}
   if(direct&&a.domestic.care==='none')return 'Les soins de cet animal sont désactivés.';
-  if(a.domestic.slaughter||a.manhunter||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun||a.health?.foodPoisoning?.vomit)return 'Le secours est suspendu par l’abattage ou le danger.';
+  // A quota cannot revoke an existing physical rescue. Once deposited, however,
+  // the selected patient must not repeatedly acquire a new rescue at that spot.
+  // The explicit manual designation remains blocking even during carriage.
+  if(a.domestic.slaughter||p.animalRescue?.animalId!==a.id&&slaughterIntent(w,a,w.schemaVersion,targets)
+    ||a.manhunter||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun||a.health?.foodPoisoning?.vomit)return 'Le secours est suspendu par l’abattage ou le danger.';
   if(animalClaimed(w,a.id,p.id))return 'Un autre service a réservé cet animal.';
   return undefined;
 }
@@ -42,12 +47,13 @@ function enemyNear(w:World,p:Pawn,a:WildAnimal):boolean {
     ||!!w.wildlife?.animals.some(other=>other.manhunter&&!['dead','downed'].includes(other.state)&&near(other))
     ||!!w.mechanoids?.some(m=>!['dead','downed'].includes(m.state)&&near(m));
 }
-export function animalRescueWanted(w:World,p:Pawn):boolean {
-  return animalRescueActorReady(w,p)&&!!w.structures.some(s=>s.kind==='animal-sleeping-spot'&&allowedAreaAllows(w,p,s))
-    &&!!w.wildlife?.animals.some(a=>!reason(w,p,a)&&!enemyNear(w,p,a));
+export function animalRescueWanted(w:World,p:Pawn,targets?:ReadonlySet<number>):boolean {
+  if(!animalRescueActorReady(w,p)||!w.structures.some(s=>s.kind==='animal-sleeping-spot'&&allowedAreaAllows(w,p,s)))return false;
+  const selected=targets??autoSlaughterTargets(w);
+  return !!w.wildlife?.animals.some(a=>!reason(w,p,a,false,selected)&&!enemyNear(w,p,a));
 }
-function proposalFor(w:World,p:Pawn,reach:Reachability,a:WildAnimal,direct=false):AnimalRescueProposal|undefined {
-  if(reason(w,p,a,direct)||!direct&&enemyNear(w,p,a))return;
+function proposalFor(w:World,p:Pawn,reach:Reachability,a:WildAnimal,direct=false,targets?:ReadonlySet<number>):AnimalRescueProposal|undefined {
+  if(reason(w,p,a,direct,targets)||!direct&&enemyNear(w,p,a))return;
   const path=slaughterContact(w,p,a)?[]:routeToJob(w,a,reach,false);if(!path)return;
   const rank=(s:Structure)=>s.medical?0:a.domestic?.bedId===s.id?1:2;
   const spots=w.structures.filter(s=>allowedAreaAllows(w,p,s)&&animalSpotAvailable(w,s,a,p.id)).sort((x,y)=>rank(x)-rank(y)
@@ -55,9 +61,10 @@ function proposalFor(w:World,p:Pawn,reach:Reachability,a:WildAnimal,direct=false
   for(const spot of spots)if(routeToCell(w,spot,reach))return {task:{animalId:a.id,spotId:spot.id,phase:'approach'},path,target:a};
 }
 export function animalRescueProposal(w:World,p:Pawn,reach:Reachability):AnimalRescueProposal|undefined {
-  if(!animalRescueWanted(w,p))return;
+  const targets=autoSlaughterTargets(w);
+  if(!animalRescueWanted(w,p,targets))return;
   const animals=[...w.wildlife!.animals].sort((x,y)=>(x.x-p.x)**2+(x.z-p.z)**2-((y.x-p.x)**2+(y.z-p.z)**2)||x.id-y.id);
-  for(const a of animals){const result=proposalFor(w,p,reach,a);if(result)return result;}
+  for(const a of animals){const result=proposalFor(w,p,reach,a,false,targets);if(result)return result;}
 }
 export function startAnimalRescue(w:World,p:Pawn,proposal:AnimalRescueProposal):void {
   const a=proposal.target,s=w.structures.find(s=>s.id===proposal.task.spotId)!;

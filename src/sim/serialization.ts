@@ -21,6 +21,7 @@ import { validateCivilianPost } from './commercial-post.ts';
 import { validateCommercialRegistry,validateCommercialBindings } from './commercial-save.ts';
 import { commercialOnMapId } from './commercial-trip.ts';
 import { validateDomesticAnimals } from './domestic-save.ts';
+import { validAutoSlaughterTransport } from './auto-slaughter-save.ts';
 import { validateAnimalRest } from './animal-rest-save.ts';
 import { validateBreakdowns } from './breakdown-save.ts';
 import { newBreakdownCalendar } from './breakdowns.ts';
@@ -194,10 +195,11 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227, relationshipContext = true): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228, relationshipContext = true): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
+  if(!validAutoSlaughterTransport(raw as unknown as World,version))return ['Invalid or future auto slaughter policy.'];
   if(version<=195&&['planet','group','groupLosses'].some(k=>Object.hasOwn(raw,k)))return ['Historical schema contains future world/group fields.'];
   let input=raw;
   if (version >= 5 && !oneOf(input.foodRules, ['legacy', 'adult'])) errors.push('Invalid food rules profile.');
@@ -602,6 +604,8 @@ export function serializeWorld(world: World): string {
 export function deserializeWorld(serialized: string): World {
   if (typeof serialized !== 'string' || serialized.length > 16_000_000) throw new Error('Invalid or oversized save.');
   let input: unknown = JSON.parse(serialized);
+  if(record(input)&&Number.isInteger(input.schemaVersion)&&Number(input.schemaVersion)>=1&&Number(input.schemaVersion)<=227
+    &&!validAutoSlaughterTransport(input as unknown as World,Number(input.schemaVersion)))throw new Error(`Invalid version ${input.schemaVersion} save: Future auto slaughter policy.`);
   if(record(input)&&Number.isInteger(input.schemaVersion)&&Number(input.schemaVersion)>=1&&Number(input.schemaVersion)<=226
     &&!validFodderTransport(input as unknown as World,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future fodder content.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&Number(input.schemaVersion)>=1&&Number(input.schemaVersion)<=225
@@ -1272,6 +1276,10 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===226){
     const errors=validateSchema(input,226);if(errors.length)throw new Error('Invalid version 226 save: '+errors.join(' '));
     input.schemaVersion=227; // No crop, item, bill, diet permission or random state is created.
+  }
+  if(record(input)&&input.schemaVersion===227){
+    const errors=validateSchema(input,227);if(errors.length)throw new Error('Invalid version 227 save: '+errors.join(' '));
+    input.schemaVersion=228; // No herd limit, designation, task or random state is created.
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;
