@@ -33,15 +33,6 @@ describe('Architect generated icon atlases', () => {
       const svg=readFileSync(new URL(`../public${asset}`,import.meta.url),'utf8');
       expect(svg).toContain('width="576" height="480"');expect(svg).toContain('viewBox="0 0 576 480"');
       expect(svg.match(/<g transform="translate/g)).toHaveLength(30);
-      expect(svg).toContain('data-style="paper-v317"');
-    }
-  });
-
-  it('uses the same action drawings on the map and in Architect buttons',()=>{
-    for(const id of ['mine','chop','harvest','cut','haul-chunks','deconstruct','uninstall','remove-floor','build-roof','remove-roof']) {
-      const icon=readFileSync(new URL(`../public${ARCHITECT_ICON_URLS[id]}`,import.meta.url),'utf8').replace(/^<svg[^>]*>/,'').replace(/<\/svg>\s*$/,'');
-      const atlas=readFileSync(new URL(`../public${ARCHITECT_ICON_ATLASES[ARCHITECT_ICON_MAPPING[id]!.atlas]}`,import.meta.url),'utf8');
-      expect(atlas,id).toContain(icon);
     }
   });
 
@@ -62,7 +53,7 @@ describe('Architect generated icon atlases', () => {
     expect(icon.textContent).toBe('');
     expect(classes).toContain('ui-icon');
     expect(attributes.get('aria-hidden')).toBe('true');
-    expect(style.backgroundImage).toContain('/elsewhere/v317/mine.svg');
+    expect(style.backgroundImage).toContain('/elsewhere/v304/mine.svg');
     expect(style.backgroundSize).toBe('contain');
   });
 });

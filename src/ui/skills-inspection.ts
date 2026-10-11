@@ -16,7 +16,6 @@ import { appearanceOf } from '../sim/pawn-appearance';
 import { createBackgroundInspection, updateBackgroundInspection, updateBackgroundSkillControl } from './background-inspection';
 import { createRelationshipInspection,updateRelationshipInspection } from './relationship-inspection';
 import './pawn-dossiers-v199.css';
-import { pictogramDataUrl } from './pictograms';
 
 type SkillEntry = {
   skill: 'animals'|'plants'|'mining'|'construction'|'medicine'|'intellectual'|'crafting'|'artistic'|'cooking'|'shooting'|'melee'|'social';
@@ -48,9 +47,7 @@ export function humanAgeText(pawn:Pawn):string {
 function createSkillEntry(entry:SkillEntry):HTMLElement {
   const details=document.createElement('div');details.className='skill-entry';details.dataset.skillEntry=entry.skill;details.tabIndex=0;
   const summary=document.createElement('div'),label=document.createElement('span');summary.className='skill-entry-heading';label.dataset.skill=entry.skill;summary.append(label);
-  const icon=document.createElement('img');icon.className='paper-skill-icon';icon.src=pictogramDataUrl(entry.skill);icon.alt='';icon.setAttribute('aria-hidden','true');summary.prepend(icon);
-  const track=document.createElement('span');track.className='paper-skill-track';track.setAttribute('aria-hidden','true');
-  const level=document.createElement('span');level.className='skill-level-bar';track.append(level);summary.append(track);
+  const level=document.createElement('span');level.className='skill-level-bar';level.setAttribute('aria-hidden','true');summary.prepend(level);
   if(entry.progress){const progress=document.createElement('progress');progress.max=1;progress.hidden=true;progress.setAttribute(entry.progress,'');summary.append(progress);}
   const description=document.createElement('p');description.className='skill-entry-details muted';description.dataset.skillDetail=entry.skill;
   if(entry.description)description.setAttribute(entry.description,'');
@@ -63,8 +60,6 @@ export function createSkillsInspection(panel:HTMLElement):void {
   const summary=document.createElement('summary');summary.textContent='Biographie · compétences';
   const age=document.createElement('p');age.className='pawn-age';age.dataset.pawnAge='';
   const identity=document.createElement('section');identity.className='bio-identity';
-  identity.style.setProperty('--paper-person-icon',`url('${pictogramDataUrl('people')}')`);
-  identity.style.setProperty('--paper-age-icon',`url('${pictogramDataUrl('clock')}')`);
   const name=document.createElement('h3');name.dataset.bioName='';
   const sex=document.createElement('p');sex.dataset.bioSex='';identity.append(name,sex,age);
   createBackgroundInspection(identity);

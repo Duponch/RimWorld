@@ -8,7 +8,6 @@ import { learningFactor, XP_SCALE, xpRequired, type PawnSkills, type SkillRecord
 import type { TooltipContent } from './tooltip';
 import { setTooltip } from './tooltip';
 import './background-inspection.css';
-import { pictogramDataUrl } from './pictograms';
 
 export const BACKGROUND_SKILL_LABELS: Readonly<Record<BackgroundSkillId, string>> = Object.freeze({
   shooting:'Tir', melee:'Mêlée', construction:'Construction', mining:'Minage', cooking:'Cuisine',
@@ -71,10 +70,7 @@ export function updateBackgroundInspection(parent:HTMLElement,pawn:BackgroundBea
   section.querySelector<HTMLElement>('[data-background-unknown]')!.hidden=rows.length>0;
   const stories=section.querySelector<HTMLElement>('[data-background-stories]')!;
   stories.hidden=!rows.length;stories.replaceChildren(...rows.map(row=>{
-    const item=document.createElement('li');item.tabIndex=0;item.dataset.backgroundPhase=row.phase==='Enfance'?'childhood':'adulthood';
-    const icon=document.createElement('img');icon.className='paper-background-icon';icon.src=pictogramDataUrl(row.phase==='Enfance'?'plants':'home');icon.alt='';icon.setAttribute('aria-hidden','true');
-    const phase=document.createElement('span');phase.className='paper-background-phase';phase.textContent=`${row.phase} : `;
-    const label=document.createElement('span');label.className='paper-background-label';label.append(phase,document.createTextNode(row.label));item.append(icon,label);
+    const item=document.createElement('li');item.tabIndex=0;item.textContent=`${row.phase} : ${row.label}`;
     setTooltip(item,row.tooltip);return item;
   }));
   section.querySelector<HTMLElement>('[data-background-restrictions-heading]')!.hidden=!restrictions.length;

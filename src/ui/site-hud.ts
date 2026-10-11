@@ -11,12 +11,12 @@ const seasons = ['Printemps', 'Été', 'Automne', 'Hiver'] as const;
 
 /** Pure presentation bands; these are not exposure or thermostat rules. */
 export const TEMPERATURE_DISPLAY_BANDS = [
-  { maximum: -20, band: 'freezing', color: '#819aaf', fill: 4 },
-  { maximum: 0, band: 'cold', color: '#a4bac7', fill: 8 },
-  { maximum: 10, band: 'cool', color: '#adc6bc', fill: 12 },
-  { maximum: 25, band: 'temperate', color: '#c8c095', fill: 17 },
-  { maximum: 35, band: 'warm', color: '#c7ad86', fill: 22 },
-  { maximum: Infinity, band: 'hot', color: '#b88f86', fill: 27 },
+  { maximum: -20, band: 'freezing', color: '#78b7ff', fill: 4 },
+  { maximum: 0, band: 'cold', color: '#99cfff', fill: 8 },
+  { maximum: 10, band: 'cool', color: '#a5e4ed', fill: 12 },
+  { maximum: 25, band: 'temperate', color: '#f7e6ac', fill: 17 },
+  { maximum: 35, band: 'warm', color: '#ffc16d', fill: 22 },
+  { maximum: Infinity, band: 'hot', color: '#ff8176', fill: 27 },
 ] as const;
 const unknownTemperature = { band: 'unknown', color: '#d0d9e6', fill: 0 } as const;
 export function temperaturePresentation(temperature: number) {
@@ -50,7 +50,7 @@ export function siteHudLayout(): string {
   return `<div class="site-readout" aria-label="Heure, date et conditions extérieures">
     <div class="site-conditions">
       <div id="weather" class="biome-label" data-weather="clear"><span class="site-readout-icon" aria-hidden="true"></span><span class="site-readout-value">Ensoleillé</span></div>
-      <div id="outdoor-temperature" class="biome-label"><span class="site-readout-value">— °C</span><svg class="site-thermometer" viewBox="0 0 32 54" aria-hidden="true" focusable="false"><path d="M11 8a5 5 0 0 1 10 0v27a10 10 0 1 1-10 0Z" fill="#f2ecdf" stroke="#b6c1b8" stroke-width="1.2"/><path d="M16 11v27" stroke="#bac4bb" stroke-width="5" stroke-linecap="round"/><rect id="site-thermometer-fill" x="14" y="20" width="4" height="17" rx="2" fill="currentColor"/><circle cx="16" cy="43" r="6" fill="currentColor"/><path d="M25 12h4m-4 9h4m-4 9h4" stroke="#9faaac" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div id="outdoor-temperature" class="biome-label"><span class="site-readout-value">— °C</span><svg class="site-thermometer" viewBox="0 0 32 54" aria-hidden="true" focusable="false"><path d="M11 8a5 5 0 0 1 10 0v27a10 10 0 1 1-10 0Z" fill="#fff7e9" stroke="#c7d4e6" stroke-width="1.5"/><path d="M16 11v27" stroke="#293344" stroke-width="5" stroke-linecap="round"/><rect id="site-thermometer-fill" x="14" y="20" width="4" height="17" rx="2" fill="currentColor"/><circle cx="16" cy="43" r="6" fill="currentColor"/><path d="M25 12h4m-4 9h4m-4 9h4" stroke="#aebdd2" stroke-width="1.5" stroke-linecap="round"/></svg></div>
     </div>
     <div id="site-condition" class="site-condition" hidden></div>
     <div class="site-civil-time">
@@ -59,18 +59,18 @@ export function siteHudLayout(): string {
     </div>
     <div id="site-sky" class="site-sky" data-phase="day" data-weather="clear" aria-hidden="true">
       <svg viewBox="0 0 280 115" preserveAspectRatio="xMidYMid meet" focusable="false">
-        <path class="site-sky-arc" d="M18 94A122 72 0 0 1 262 94" fill="none" stroke="#9ca89c" stroke-width="1.3" stroke-dasharray="2 5"/>
-        <path d="M18 90v8m122-79v6m122 65v8" stroke="#c1c5b6" stroke-width="1.2" stroke-linecap="round"/>
-        <g class="site-stars" fill="#bdc9c5"><circle cx="71" cy="61" r="1"/><circle cx="112" cy="43" r="1.3"/><circle cx="153" cy="59" r="1"/><circle cx="212" cy="73" r="1.3"/></g>
-        <g id="site-celestial" transform="translate(140 22)"><g class="site-sun" stroke="#c7b18c" stroke-width="1.6" stroke-linecap="round"><circle r="8" fill="#d0bb93"/><path d="M0-14v3M0 11v3M-14 0h3M11 0h3M-10-10l2 2M8 8l2 2M-10 10l2-2M8-8l2-2"/></g><path class="site-moon" d="M4-9A10 10 0 1 0 9 4A9 9 0 0 1 4-9Z" fill="#bdc8c9" stroke="#9daeb6" stroke-width="1.1"/></g>
+        <path class="site-sky-arc" d="M18 94A122 72 0 0 1 262 94" fill="none" stroke="#6f7b8e" stroke-width="1.3" stroke-dasharray="2 5"/>
+        <path d="M18 90v8m122-79v6m122 65v8" stroke="#d4dbe4" stroke-width="1.2" stroke-linecap="round"/>
+        <g class="site-stars" fill="#fff7e9"><circle cx="71" cy="61" r="1"/><circle cx="112" cy="43" r="1.3"/><circle cx="153" cy="59" r="1"/><circle cx="212" cy="73" r="1.3"/></g>
+        <g id="site-celestial" transform="translate(140 22)"><g class="site-sun" stroke="#ffc23c" stroke-width="2" stroke-linecap="round"><circle r="8" fill="#ffc23c"/><path d="M0-14v3M0 11v3M-14 0h3M11 0h3M-10-10l2 2M8 8l2 2M-10 10l2-2M8-8l2-2"/></g><path class="site-moon" d="M4-9A10 10 0 1 0 9 4A9 9 0 0 1 4-9Z" fill="#fff5cd" stroke="#b4c4dd" stroke-width="1.1"/></g>
         <g id="site-weather-on-arc" transform="translate(221 46)">
-          <path class="site-weather-clouds" d="M-12 5c-8 0-9-11-1-13 2-10 15-11 19-3 10-2 16 15 5 16Z" fill="#ced7d4" stroke="#94a49f" stroke-width="1.1"/>
-          <g class="site-weather-rain" stroke="#94aeb8" stroke-width="2" stroke-linecap="round"><path d="m-9 11-3 7m12-7-3 7m12-7-3 7"/></g>
-          <g class="site-weather-snow" fill="#a9bac0"><circle cx="-9" cy="12" r="2"/><circle cx="2" cy="16" r="2"/><circle cx="12" cy="11" r="2"/></g>
-          <g class="site-weather-fog" stroke="#aebdb8" stroke-width="2" stroke-linecap="round"><path d="M-16 11h31M-12 17h25"/></g>
-          <path class="site-weather-lightning" d="m2 1-9 12h7l-3 10 13-15H3l5-7Z" fill="#baa989" stroke="#a09079" stroke-width=".8"/>
+          <path class="site-weather-clouds" d="M-12 5c-8 0-9-11-1-13 2-10 15-11 19-3 10-2 16 15 5 16Z" fill="#e0e9f2" stroke="#65748b" stroke-width="1.5"/>
+          <g class="site-weather-rain" stroke="#83cfff" stroke-width="2" stroke-linecap="round"><path d="m-9 11-3 7m12-7-3 7m12-7-3 7"/></g>
+          <g class="site-weather-snow" fill="#d7f2ff"><circle cx="-9" cy="12" r="2"/><circle cx="2" cy="16" r="2"/><circle cx="12" cy="11" r="2"/></g>
+          <g class="site-weather-fog" stroke="#c3d1da" stroke-width="2" stroke-linecap="round"><path d="M-16 11h31M-12 17h25"/></g>
+          <path class="site-weather-lightning" d="m2 1-9 12h7l-3 10 13-15H3l5-7Z" fill="#ffc23c" stroke="#263449" stroke-width="1"/>
         </g>
-        <g id="site-wind-on-arc" transform="translate(54 43)" fill="none" stroke="#9badab" stroke-width="1.7" stroke-linecap="round"><path class="site-wind-light" d="M-15 0H7c8 0 8-8 2-8"/><path class="site-wind-steady" d="M-9 6h17c7 0 7 8 1 8"/><path class="site-wind-strong" d="M-14-6H0c6 0 6-7 1-7"/></g>
+        <g id="site-wind-on-arc" transform="translate(54 43)" fill="none" stroke="#b6d6e8" stroke-width="1.7" stroke-linecap="round"><path class="site-wind-light" d="M-15 0H7c8 0 8-8 2-8"/><path class="site-wind-steady" d="M-9 6h17c7 0 7 8 1 8"/><path class="site-wind-strong" d="M-14-6H0c6 0 6-7 1-7"/></g>
         <text id="site-sky-start" class="site-sky-hour" x="18" y="112" text-anchor="middle">06h</text><text id="site-sky-end" class="site-sky-hour" x="262" y="112" text-anchor="middle">18h</text>
       </svg>
     </div>
@@ -80,12 +80,12 @@ export function siteHudLayout(): string {
 
 function seasonUrl(index: number): string {
   const drawings = [
-    '<path d="M21 35v-12m0 5c-8 0-11-6-10-10 7-1 12 4 10 10Zm0-5c0-9 7-14 14-13 1 8-6 14-14 13Z" fill="#9eb6a5"/><path d="M10 37h25" stroke="#c6d3c6"/>',
-    '<circle cx="24" cy="24" r="10" fill="#d0bb93"/><path d="M24 4v5m0 30v5M4 24h5m30 0h5M10 10l4 4m20 20 4 4M10 38l4-4m20-20 4-4" stroke="#c7b18c"/>',
-    '<path d="m24 5 5 10 9-3-3 11 8 5-13 5-6 11-3-12-14-6 10-5-3-12 9 5Z" fill="#b9a085"/><path d="m24 18-2 23m1-12-8-5m8 0 8-5" stroke="#927d68"/>',
-    '<g stroke="#a9bac0"><path d="M24 5v38M8 14l32 20M8 34l32-20M19 9l5 5 5-5M19 39l5-5 5 5M8 20l7-1-2-7M35 36l-2-7 7-1M8 28l7 1-2 7M35 12l-2 7 7 1"/></g>',
+    '<path d="M21 35v-12m0 5c-8 0-11-6-10-10 7-1 12 4 10 10Zm0-5c0-9 7-14 14-13 1 8-6 14-14 13Z" fill="#2fc98e"/><path d="M10 37h25" stroke="#d6f4e6"/>',
+    '<circle cx="24" cy="24" r="10" fill="#ffc23c"/><path d="M24 4v5m0 30v5M4 24h5m30 0h5M10 10l4 4m20 20 4 4M10 38l4-4m20-20 4-4" stroke="#ffc23c"/>',
+    '<path d="m24 5 5 10 9-3-3 11 8 5-13 5-6 11-3-12-14-6 10-5-3-12 9 5Z" fill="#ff9655"/><path d="m24 18-2 23m1-12-8-5m8 0 8-5" stroke="#7c4734"/>',
+    '<g stroke="#b0deff"><path d="M24 5v38M8 14l32 20M8 34l32-20M19 9l5 5 5-5M19 39l5-5 5 5M8 20l7-1-2-7M35 36l-2-7 7-1M8 28l7 1-2 7M35 12l-2 7 7 1"/></g>',
   ];
-  return `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><g stroke="#748479" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none">${drawings[index]}</g></svg>`)}")`;
+  return `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><g stroke="#263449" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none">${drawings[index]}</g></svg>`)}")`;
 }
 
 /** Cache references once. Presentation changes are applied at minute/condition

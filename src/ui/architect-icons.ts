@@ -1,10 +1,10 @@
-import {modelIconUrl,paperPictogramUrl} from './pictograms.ts';
+import {modelIconUrl} from './pictograms';
 const ATLAS_COLUMNS = 6;
 const ATLAS_ROWS = 5;
 
 export const ARCHITECT_ICON_ATLASES = [
-  '/assets/ui/elsewhere/v317/architect-1.svg',
-  '/assets/ui/elsewhere/v317/architect-2.svg',
+  '/assets/ui/elsewhere/v304/architect-1.svg',
+  '/assets/ui/elsewhere/v304/architect-2.svg',
 ] as const;
 
 const FIRST_ATLAS = [
@@ -27,8 +27,7 @@ export const ARCHITECT_ATLAS_IDS=Object.freeze([FIRST_ATLAS,SECOND_ATLAS]);
 export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'spike-trap','mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='bed'?[id,'double-bed','hospital-bed','vitals-monitor','animal-sleeping-spot']:id==='steel-tile'?[id,'sterile-tile']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'electric-crematorium','electric-smelter','biofuel-refinery','chemfuel-generator','nutrient-paste-dispenser','hopper','orbital-beacon','comms-console','deep-drill','ground-scanner','drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
 /** Every visible tool has its own model/action image. The old sheet addresses
  * below remain solely the fixed world-marker UV layout. */
-const paperTools=new Set(['select','mine','haul-chunks','chop','harvest','cut','uninstall','deconstruct','cancel','growing','remove-growing','stockpile','remove-stockpile','home','remove-home','build-roof','remove-roof','ignore-roof','remove-floor']);
-export const ARCHITECT_ICON_URLS:Readonly<Record<string,string>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,paperTools.has(id)?paperPictogramUrl(id):modelIconUrl(id)])));
+export const ARCHITECT_ICON_URLS:Readonly<Record<string,string>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,modelIconUrl(id)])));
 
 // Small original vector additions share the existing Architecte icon installer.
 // They do not change the historical two-atlas coordinates.

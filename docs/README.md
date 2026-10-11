@@ -1,7 +1,5 @@
 # Documentation d’Elsewhere
 
-**V317 : [interface papier](gameplay/paper-ui-v317.md), schéma 227 conservé.** Refonte des dossiers, infobulles, panneaux, HUD et menus en vrais composants interactifs, avec pictogrammes cohérents et avatars/images des modèles conservés. Comportements et commandes existants, aucune migration. La demande UI remplace la priorité de régulation du troupeau préparée ; détails et limites dans la note unique. Les états suivants sont historiques.
-
 **V316 : [foin et croquettes](gameplay/fodder-v316.md), schéma 227.** Fourrage cultivé, deux quotas physiques et alimentation adaptée aux espèces ; [référence Core actuelle](research/fodder-core-v316.md) et [guide](gameplay/player-guide.md#cultiver-le-foin-et-fabriquer-des-croquettes--v316). Contrôles acquis par reprises, corpus historique exact et parcours Chrome des Aulnes sans dotation ; preuves, rouges et limites dans la note unique. Les états suivants sont historiques.
 
 **V315 : [pièges à pointes consommables](gameplay/spike-traps-v315.md), schéma 226.** Construction payée, contact physique, impacts et remplacement ordinaire ; minification et réinstallation du même ID. [Référence Core actuelle](research/spike-traps-core-v315.md) et [guide](gameplay/player-guide.md#utiliser-les-pièges-à-pointes--v315). Corpus et contrôles Chrome acquis par reprises, preuves/rouges/adaptations dans la note unique. Produit `804c04c4` commité/poussé et publié avecV312–314 une seule fois en `c18dfc8d`,88réponses HTTPS exactes. Les états suivants sont historiques.

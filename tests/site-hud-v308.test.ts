@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { siteHudLayout, siteSkyPosition, temperaturePresentation } from '../src/ui/site-hud';
-import { TIME_CONTROL_ASSETS, TIME_CONTROL_FRAMES, PAPER_TIME_CONTROL_ASSETS } from '../src/ui/time-controls';
+import { TIME_CONTROL_ASSETS, TIME_CONTROL_FRAMES } from '../src/ui/time-controls';
 
 test('temperature indicators distinguish freezing, cold, temperate and heat without rounding away threshold changes', () => {
   const temperatures = [-40, -20, -19.9, 0, .1, 10, 10.1, 25, 25.001, 35, 35.1, 60];
@@ -51,15 +51,5 @@ test('new generated time pictograms are delivery-sized PNGs with measured source
     const [x, y, width, height] = TIME_CONTROL_FRAMES[speed];
     expect(x).toBeGreaterThanOrEqual(0); expect(y).toBeGreaterThanOrEqual(0);
     expect(x + width).toBeLessThanOrEqual(128); expect(y + height).toBeLessThanOrEqual(128);
-  }
-});
-
-test('live paper time controls provide four distinct transparent images without an opaque backing plate', () => {
-  const drawings=Object.values(PAPER_TIME_CONTROL_ASSETS).map(asset=>readFileSync(new URL(`../public${asset}`,import.meta.url),'utf8'));
-  expect(new Set(drawings).size).toBe(4);
-  for(const svg of drawings){
-    expect(svg).toContain('viewBox="0 0 64 64"');
-    expect(svg).not.toMatch(/<filter|<image|<foreignObject|<script/);
-    expect(svg).not.toContain('width="64" height="64"');
   }
 });

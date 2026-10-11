@@ -29,8 +29,8 @@ test('V129: colonist dossiers stay above the compact summary and expose recorded
     });
     expect(geometry.tabsTop - geometry.pageBottom).toBeGreaterThanOrEqual(7);
     expect(geometry.summaryTop - geometry.tabsBottom).toBeGreaterThanOrEqual(7);
-    expect([geometry.pageRadius, geometry.tabRadius, geometry.summaryRadius]).toEqual(['22px', '12px', '22px']);
-    expect(geometry.pageWidth).toBe(690);
+    expect([geometry.pageRadius, geometry.tabRadius, geometry.summaryRadius]).toEqual(['10px', '6px', '10px']);
+    expect(geometry.pageWidth).toBe(514);
     await pawnTab(page, 'journal');
     await expect(page.locator('#pawn-journal-rows')).toContainText('Bavardage entre');
     for (const viewport of [{ width: 1366, height: 768 }, { width: 1522, height: 1195 }]) {
