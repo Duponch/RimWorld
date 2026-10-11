@@ -57,3 +57,7 @@ Le typage complet final avec `--singleThreaded` passe **14,139 s** (`v309-types-
 Le contrôle documentaire courant passe **5,118 s**, `v309-docs-final-2026-10-11T00-11-56.947Z-26756` : liens/en-têtes220 et originaux du corpus conservés. `git diff --check` passe. Les sources publiques historiques n’ont aucun diff ; le dossier utilisateur `references_UI/` demeure hors lot.
 
 Aucun gain CPU/GPU/FPS ni 240 FPS/vrai ×6 constant n’est annoncé. Les quotas et le secours vers un couchage animal restent absents dans V309. La relance planifiée demeure **PAUSED**. La nouvelle demande humaine autorise, après commit/push de ce lot, la suite autonome des mécaniques élémentaires ; prochaine priorité retenue : secours physique animal et emplacement gratuit normal/médical. Les publications Cloudflare restent regroupées.
+
+## Publication regroupée avec V311
+
+Le lot est inclus dans la publication unique `5f225003` du11octobre2026 sur [Cloudflare](https://elsewhere-cq7.pages.dev/). [Preuves et limites de publication V309–V311](../development/cloudflare-pages.md#publication-regroupée-v309v311) ; les contrôles de jeu datés ci-dessus ne sont pas rejoués ni transformés en benchmark par cette publication.

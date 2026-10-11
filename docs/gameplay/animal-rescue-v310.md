@@ -88,3 +88,7 @@ Le contrôle documentaire passe **1,973 s**, `v310-docs-final-2026-10-11T00-43-5
 Les boîtes et lits rembourrés, confort/qualité/immunité hospitalière, chirurgie animale, secours d’animaux sauvages ou étrangers, animal sauveteur d’humains, Scaria, caravanes animales, DLC et quotas automatiques d’abattage restent absents. Aucun nouveau public isolé ni régénération des checkpoints historiques n’est demandé. Ce lot ne certifie ni campagne annuelle, fréquence naturelle, balance générale, performance CPU/GPU,240FPS ou débit ×6 constant.
 
 Liens de maintenance : [inventaire](implementation-status.md), [catalogue](content-catalogue.md), [guide joueur](player-guide.md#secourir-et-coucher-un-animal--v310), [feuille de route](../ROADMAP.md), [recherche primaire](../research/animal-rescue-core-v310.md). La validation datée reste dans cette note unique ; les synthèses ne dupliquent pas les journaux.
+
+## Publication regroupée avec V311
+
+Le lot est inclus dans la publication unique `5f225003` du11octobre2026 sur [Cloudflare](https://elsewhere-cq7.pages.dev/). [Preuves et limites de publication V309–V311](../development/cloudflare-pages.md#publication-regroupée-v309v311) ; les contrôles de jeu datés ci-dessus ne sont pas rejoués ni transformés en benchmark par cette publication.

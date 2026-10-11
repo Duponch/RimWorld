@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les visuels V304, la préparation V305, les corrections V306 les [interfaces, ressources et commandes V307](../gameplay/interface-hud-v307.md) et les [modèles, contours et lecture du site V308](../gameplay/presentation-models-v308.md), schéma219 conservé.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295 ; la mise à jour courante contient les visuels V304, la préparation V305, les corrections V306 les [interfaces, ressources et commandes V307](../gameplay/interface-hud-v307.md) et les [modèles, contours et lecture du site V308](../gameplay/presentation-models-v308.md), puis les boucles élémentaires [V309](../gameplay/slaughter-v309.md), [V310](../gameplay/animal-rescue-v310.md) et [V311](../gameplay/smelting-v311.md), schéma222.
 
 ## Adresse et publication
 
@@ -113,3 +113,11 @@ HTTPS PASS4,301s :78réponses200/MIME/octets exacts pour39chemins sur les deux o
 ## Références
 
 [Publication directe Pages](https://developers.cloudflare.com/pages/get-started/direct-upload/), [priorité des redirects](https://developers.cloudflare.com/pages/configuration/redirects/), [fallback SPA](https://developers.cloudflare.com/pages/configuration/serving-pages/), [en-têtes](https://developers.cloudflare.com/pages/configuration/headers/).
+
+## Publication regroupée V309–V311
+
+Le11octobre2026, après les commits/pushs V309 `4c1707ad`, V310 `4092589e` et V311 `a927492a`, une seule publication `5f225003` rassemble abattage domestique, secours/couchages animaux et fonderie des armes : [adresse stable](https://elsewhere-cq7.pages.dev/) et [publication](https://5f225003.elsewhere-cq7.pages.dev/). Schéma222, migrations historiques à la lecture ; les63références/66fichiers publics restent identiques.
+
+Typage final PASS14,441s, buildPages PASS2,254s ; package PASS1,315s,505fichiers/112808169octets,66publics exacts, modèlesV310/V311 et assets historiques exacts, laboratoire/sources privés absents. Rapport `tmp/elsewhere-pages/v311-package-kQM2iU/report.json`, HEAD produit `a927492a258c2eed86258b3c688156c99db8a513`. Wrangler4.149.0 : déploiement PASS13,382s,9fichiers nouveaux et494déjà présents, plus en-têtes/redirections. L’avertissement Git dirty concerne uniquement `references_UI`, absent du commit et du package. La lecture de version a rencontré le répertoire de logs sandboxé par défaut ; le déploiement utilise les logs privés sous `tmp/host-cache/wrangler-logs`, sans modifier les credentials.
+
+HTTPS PASS4,019s :82réponses200/MIME/octets exacts sur les origines stable et fraîche, incluant les deux nouveaux modèles. Rapport `tmp/elsewhere-pages/v311-http-glOrBC/report.json` ; package/publics inchangés pendant le contrôle. Les66fichiers distants ne sont pas tous téléchargés. Les contrôles de jeu, recharges et acquisitions par reprises sont dans les notes [V309](../gameplay/slaughter-v309.md), [V310](../gameplay/animal-rescue-v310.md) et [V311](../gameplay/smelting-v311.md) ; le contrôle HTTPS n’est pas un nouveau parcours navigateur ou benchmark. Un commit/push documentaire consécutif enregistre ces preuves sans deuxième publication. Poursuite fonctionnelle autonome autorisée ; relance planifiée PAUSED.
