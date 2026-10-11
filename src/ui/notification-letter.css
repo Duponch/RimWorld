@@ -1,0 +1,3 @@
+.notification-row {display:flex;gap:.25rem;align-items:stretch;}
+.notification-row>.arrival-letter {flex:1;min-width:0;}
+.notification-details {flex:0 0 auto;padding:.1rem .5rem;}

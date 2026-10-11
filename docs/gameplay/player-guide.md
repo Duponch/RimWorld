@@ -1,5 +1,11 @@
 # Guide joueur
 
+**Schéma 228 conservé — V319 : [infobulles et alertes](interface-feedback-v319.md).** Les ressources affichent leur explication après1,7s de survol ; les notifications centrent leur cible et les clics suivants parcourent les personnes concernées. Le bouton i conserve les détails d’incident. Les textes sont protégés de la sélection accidentelle ; les champs restent éditables.
+
+## Retrouver la cible d’une alerte — V319
+
+Cliquer sur une hypothermie sélectionne la personne et ouvre Santé ; cliquer de nouveau passe à la suivante. Un assaut terminé permet de retrouver l’assaillant à terre ou sa dépouille présente. Le petit bouton i ouvre la lettre complète. Sans cible encore présente, l’information ou la gestion pertinente reste disponible. Les étagères ne sont pas encore livrées dans ce lot.
+
 **Schéma 228 — V318 : [régulation du troupeau](auto-slaughter-v318.md).** Maxima par espèce/sexe/stade avec abattage physique et mandats manuels indépendants.
 
 ## Réguler le troupeau — V318

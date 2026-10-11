@@ -1,20 +1,46 @@
 import type { Command,World } from '../sim/types';
 import { mechanoidDefinition,type MechanoidKind } from '../sim/mechanoid-definition';
+import { actorNotificationTarget,personNotificationTarget,pileNotificationTarget,NotificationFocusCycle,type NotificationTarget,type FocusNotification } from './notification-focus';
+import { createNotificationLetterDetails } from './notification-letter';
 
 const mechanicalSummary=(kinds:readonly MechanoidKind[]):string=>{
   const counts=new Map<MechanoidKind,number>();for(const kind of kinds)counts.set(kind,(counts.get(kind)??0)+1);
   return [...counts].map(([kind,count])=>`${mechanoidDefinition(kind).label} ×${count}`).join(' · ')||'0 machine';
 };
 
-export function createRaidUI(send:(c:Command)=>Promise<unknown>,focus:(id:number)=>void):{update:(w:World)=>void} {
+export interface ObservedRaidMembers {id:number;mechanical:boolean;members:readonly number[];}
+/** Only this raid's present physical owners. A downed raider remains locatable.
+ * Mechanical bodies retain their original ID but no persisted raid group;
+ * observed membership is UI metadata and cannot fabricate history after load. */
+export function raidNotificationTargets(world:World,observed?:ObservedRaidMembers):NotificationTarget[] {
+  const mechanical=world.raids?.mechActive,active=world.raids?.active,last=world.raids?.last;
+  const group=mechanical??active??last;if(!group)return [];
+  const isMechanical=!!mechanical||!active&&!!last?.mechanoid;
+  const ids=new Set<number>(mechanical?.members??active?.members??(observed?.id===group.id&&observed.mechanical===isMechanical?observed.members:[]));
+  if(isMechanical){
+    for(const m of world.mechanoids??[])if(m.raid?.group===group.id)ids.add(m.id);
+    return [...ids].sort((a,b)=>a-b).flatMap(id=>{
+      const actor=world.mechanoids?.find(m=>m.id===id);if(actor)return [actorNotificationTarget(id)];
+      const body=world.piles.find(p=>p.id===id&&p.mechCorpse),target=body?pileNotificationTarget(world,body,`actor:${id}`):undefined;
+      return target?[target]:[];
+    });
+  }
+  for(const p of world.pawns)if(p.raid?.group===group.id)ids.add(p.id);
+  return [...ids].sort((a,b)=>a-b).map(id=>personNotificationTarget(world,id)).filter((target):target is NotificationTarget=>!!target);
+}
+
+export function createRaidUI(send:(c:Command)=>Promise<unknown>,focus:FocusNotification):{update:(w:World)=>void;reset:()=>void} {
   const letter=document.createElement('button');letter.id='raid-letter';letter.className='arrival-letter';
   const dialog=document.createElement('dialog');dialog.id='raid-dialog';dialog.className='help-dialog';
   const title=document.createElement('h2'),body=document.createElement('p'),locate=document.createElement('button'),close=document.createElement('button');
   locate.id='locate-raid';locate.textContent='Voir les assaillants';close.textContent='Fermer';close.onclick=()=>dialog.close();
   dialog.append(title,body,locate,close);document.body.append(dialog);
-  let world:World|undefined,busy=false,mechBusy=false,mechError='';
-  const target=()=>world?.mechanoids?.find(m=>m.raid?.group===world?.raids?.mechActive?.id&&m.state!=='dead'&&m.state!=='downed')??world?.pawns.find(p=>p.raid&&p.state!=='dead'&&p.state!=='downed');
-  letter.onclick=()=>dialog.showModal();locate.onclick=()=>{const p=target();if(p)focus(p.id);dialog.close();};
+  const details=createNotificationLetterDetails(letter,dialog);
+  let world:World|undefined,busy=false,mechBusy=false,mechError='',observed:ObservedRaidMembers|undefined;
+  const cycle=new NotificationFocusCycle();
+  const locateNext=()=>{if(!world)return false;const group=world.raids?.mechActive??world.raids?.active??world.raids?.last;
+    const target=cycle.next(`raid:${group?.id}`,raidNotificationTargets(world,observed));if(target)focus(target);return !!target;};
+  letter.onclick=()=>{if(!locateNext()&&!dialog.open)dialog.showModal();};locate.onclick=()=>{locateNext();dialog.close();};
   const enable=document.getElementById('enable-raids') as HTMLButtonElement;
   enable.title='Calendrier provisoire : première attaque dans 3,5 à 4 jours, puis 6 à 8 jours après chaque issue.';
   enable.onclick=()=>{if(busy)return;busy=true;enable.disabled=true;void send({type:'enable-raids'}).catch(e=>enable.title=String(e)).finally(()=>{busy=false;enable.disabled=false;});};
@@ -32,15 +58,16 @@ export function createRaidUI(send:(c:Command)=>Promise<unknown>,focus:(id:number
     enableMech.title=mechError?`${mechError}\n${explanation}`:explanation;
   };
   if(enableMech)enableMech.onclick=()=>{if(mechBusy||enableMech.disabled)return;mechBusy=true;mechError='';updateAdoption();void send({type:'enable-mech-raids'}).catch(e=>{mechError=String(e);}).finally(()=>{mechBusy=false;updateAdoption();});};
-  return {update(w){world=w;enable.hidden=!!w.raids;enable.disabled=busy;
+  return {reset(){cycle.reset();observed=undefined;},update(w){world=w;enable.hidden=!!w.raids;enable.disabled=busy;
     updateAdoption();
     const raid=w.raids?.active,mech=w.raids?.mechActive,last=w.raids?.last;
-    if(!raid&&!mech&&!last){letter.remove();if(dialog.open)dialog.close();return;}
+    if(mech)observed={id:mech.id,mechanical:true,members:[...mech.members]};else if(raid)observed={id:raid.id,mechanical:false,members:[...raid.members]};
+    if(!raid&&!mech&&!last){details.remove();if(dialog.open)dialog.close();return;}
     const remaining=raid?w.pawns.filter(p=>raid.members.includes(p.id)&&p.state!=='dead'&&p.state!=='downed').length:0;
     const mechanicalRemaining=mech?w.mechanoids?.filter(m=>mech.members.includes(m.id)&&m.state!=='dead'&&m.state!=='downed')??[]:[];
     title.textContent=mech?`Raid mécanique : ${mechanicalSummary(mechanicalRemaining.map(m=>m.mechKind))} · ${mech.phase==='staging'?'regroupement':'assaut'}`:raid?raid.phase==='assault'?`Raid : ${remaining} assaillant(s)`:'Retraite des assaillants':last?.mechanoid?'Assaut mécanique terminé':'Assaut terminé';
-    letter.textContent=title.textContent;locate.hidden=!target();
+    letter.textContent=title.textContent;locate.hidden=!raidNotificationTargets(w,observed).length;
     body.textContent=mech?mech.phase==='staging'?'Les machines hostiles se regroupent avant leur assaut. Leur défense est déjà active. Préparez vos positions et votre circuit de défense.':'Les machines hostiles attaquent la colonie. Leur anatomie et les phases de leurs gestes sont inspectables ; aucun soin, recrutement ou ordre colonial ne leur est accordé.':raid?raid.phase==='assault'?'Des ennemis arrivent par le bord et attaquent la colonie. Mobilisez les défenseurs, placez-les et préparez les secours. Les assaillants peuvent frapper les murs ou portes qui leur barrent l’accès.':'Les assaillants cherchent une sortie physique. Surveillez les blessés ; les survivants encore sur la carte restent hostiles.':last?.mechanoid?`Bilan confirmé : ${mechanicalSummary(last.mechComposition?.roster??[])} neutralisé(s). Une carcasse entière devient disponible après la fin de son déplacement et de sa récupération. Transportez-la pour une facture de concassage ou de broyage ; l’acier est produit à la finition réelle.`:`Bilan à la fin de l’assaut : ${last!.killed} ennemi(s) mort(s), ${last!.downed} à terre, ${last!.escaped} parti(s). Démobilisez, soignez les colons et réparez les ouvrages dans la zone de foyer. Les corps restent sur place pour les secours et la sépulture.`;
-    const alerts=document.getElementById('alerts')!;if(letter.parentElement!==alerts)alerts.prepend(letter);
+    details.update(document.getElementById('alerts')!,!locate.hidden,true);
   }};
 }

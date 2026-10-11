@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V319 — [infobulles et alertes](gameplay/interface-feedback-v319.md), schéma 228 conservé.** Corrections demandées : ressources à délai long, suppression des titres natifs doublés, textes protégés et notification sélectionnant/centrant ses cibles en cycle. Groupe29cas et trois parcours Chrome acquis par reprises ; build/typage passent, aucun gainFPS annoncé. La demande humaine priorise maintenant les étagères physiquesV320 avant les barricades ; recherche Core et frontières multi-piles préparées, aucun mobilier fictif présenté comme livré. Commit/push puis poursuite autonome, publications regroupées et relance **PAUSED**. Les états suivants sont historiques.
+
 **V318 — [régulation du troupeau](gameplay/auto-slaughter-v318.md), schéma 228.** La politique de conservation complète fourrage et circuits de viande/cuir ; quotas, annulation et mort physique qualifiés aux Aulnes, huit recharges exactes. Groupe184cas/16fichiers et corpus63/66 acquis par reprises. Suite étudiée : barricades en matériaux courants, avec couvert et rôle de clôture ; étagères et fermentation requièrent des frontières plus larges. Poursuite autonome après commit/push, publications regroupées, relance **PAUSED**. Les états suivants sont historiques.
 
 Idée reportée à la demande humaine : priorités par sous-métier dans Travail, par exemple Semer/Récolter. Actions distinctes déjà présentes, mais priorités enfants, ordonnanceur, commandes et sauvegardes à décider avant engagement. Aucun développement de ce chantier actuellement autorisé.

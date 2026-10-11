@@ -2,6 +2,7 @@ import './resource-ledger.css';
 import { type ItemId } from '../sim/items';
 import { STORAGE_FILTER_TREE, type StorageFilterNode } from './storage-filter-tree';
 import { modelIconUrl } from './pictograms';
+import { setTooltip } from './tooltip';
 
 /** Reuse the storage catalogue hierarchy. Quantities count physical units;
  * the nutrition readout is a separate metric and never enters this census. */
@@ -13,7 +14,7 @@ export function resourceLedgerBranch(node: StorageFilterNode, counts: ReadonlyMa
 }
 
 interface LeafView { row: HTMLElement; count: HTMLElement; quantity: number }
-interface BranchView { node: StorageFilterNode; element: HTMLDetailsElement; count: HTMLElement; quantity: number; branches: BranchView[] }
+interface BranchView { node: StorageFilterNode; element: HTMLDetailsElement; summary: HTMLElement; count: HTMLElement; quantity: number; branches: BranchView[] }
 
 /** Built once. The caller supplies quantities from its existing pile census,
  * so opening the ledger or changing a stock adds no second world traversal. */
@@ -37,7 +38,7 @@ export function createResourceLedger(root: HTMLElement): { update(counts: Readon
       icon.style.backgroundImage = `url('${modelIconUrl(node.item === 'furniture' ? 'stockpile' : `item-${node.item}`)}')`;
       icon.style.backgroundSize = 'contain'; icon.style.backgroundPosition = 'center';
       const label = document.createElement('span'); label.className = 'resource-name'; label.textContent = node.label;
-      const count = document.createElement('strong'); count.textContent = '0'; row.append(icon, label, count); row.title = node.label;
+      const count = document.createElement('strong'); count.textContent = '0'; row.append(icon, label, count); setTooltip(row, { body: node.label });
       if (node.item !== 'furniture') leaves.set(node.item, { row, count, quantity: 0 });
       return row;
     }
@@ -47,7 +48,7 @@ export function createResourceLedger(root: HTMLElement): { update(counts: Readon
     const label = document.createElement('span'); label.textContent = node.label;
     const count = document.createElement('strong'); count.textContent = '0'; summary.append(label, count); element.append(summary);
     const children = document.createElement('div'); children.className = 'resource-ledger-children'; element.append(children);
-    const view: BranchView = { node, element, count, quantity: 0, branches: [] }; branchViews.push(view);
+    const view: BranchView = { node, element, summary, count, quantity: 0, branches: [] }; branchViews.push(view);
     for (const child of node.children ?? []) {
       const start = branchViews.length;
       children.append(create(child));
@@ -74,7 +75,7 @@ export function createResourceLedger(root: HTMLElement): { update(counts: Readon
         : view.branches.find(branch => branch.node === child)!.quantity;
       if (quantity !== view.quantity) {
         view.quantity = quantity; view.count.textContent = String(quantity); view.element.hidden = quantity === 0;
-        view.element.querySelector('summary')!.title = `${view.node.label} · ${quantity} unité${quantity > 1 ? 's' : ''}`;
+        setTooltip(view.summary, { body: `${view.node.label} · ${quantity} unité${quantity > 1 ? 's' : ''}` });
       }
     }
   } };

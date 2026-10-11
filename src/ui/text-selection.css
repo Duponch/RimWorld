@@ -1,0 +1,3 @@
+.game-text-selection-guard,.game-text-selection-guard *{user-select:none;-webkit-user-select:none}
+.game-text-selection-guard :is(input:not(:disabled):not([readonly]):is([type=text],[type=search],[type=email],[type=password],[type=tel],[type=url],[type=number],:not([type])),textarea:not(:disabled):not([readonly]),[contenteditable="true"],[contenteditable=""],[contenteditable="plaintext-only"]),.game-text-selection-guard :is([contenteditable="true"],[contenteditable=""],[contenteditable="plaintext-only"]) *{user-select:text;-webkit-user-select:text}
+.game-text-selection-guard [contenteditable="false"],.game-text-selection-guard [contenteditable="false"] *{user-select:none;-webkit-user-select:none}

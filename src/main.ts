@@ -72,6 +72,8 @@ import { updateUnfinishedInspection } from './ui/unfinished-inspection';
 import { createSocialInspection,updateSocialInspection } from './ui/social-inspection';
 import { createJournalInspection,updateJournalInspection } from './ui/journal-inspection';
 import { createRaidUI } from './ui/raids';
+import { createStatusAlerts } from './ui/status-alerts';
+import type { NotificationTarget } from './ui/notification-focus';
 import { barrierHp,barrierMaxHp,isBarrier } from './sim/barriers';
 import { resourceMaxHp, structureMaxHp } from './sim/thing-damage-rules';
 import { rockMaxHP } from './sim/mining-rules';
@@ -147,6 +149,7 @@ import { installArchitectIcons } from './ui/architect-icons';
 import { syncToolCursor } from './ui/tool-cursors';
 import { mountColonistInspector, updateColonistInspector, colonistInspectorState, type ColonistInspectorState } from './ui/colonist-inspector';
 import { installTooltips, dismissTooltip, setTooltip } from './ui/tooltip';
+import { installTextSelectionGuard } from './ui/text-selection';
 import { pawnNeedsMarkup, updatePawnInspection } from './ui/pawn-inspection';
 import { openObjectInformation } from './ui/object-information';
 import { itemInformation } from './ui/item-information';
@@ -312,7 +315,6 @@ function syncAudioSources(world: World,camera=lastAudioCamera): void {
   if(rustle>.001)sources.push({id:'weather:wind',kind:'weather.wind',x:focus.x,z:focus.z,gain:rustle});
   audio.setContinuousSources(sources);
 }
-let lastStatusAlertsSignature='';
 let lastColonyHistorySignature='';
 let installationId:number|undefined;
 let currentTool: Tool = 'select';
@@ -533,6 +535,7 @@ const inspectorSizeObserver=new ResizeObserver(()=>shell.style.setProperty('--ho
 inspectorSizeObserver.observe(el('inspector'));
 installVisualIdentity(document.querySelector<HTMLElement>('#app')!);
 installTooltips(document.body);
+installTextSelectionGuard(document.body);
 installArchitectIcons(document.querySelector<HTMLElement>('#app')!);
 const siteHud = createSiteHud(document.querySelector<HTMLElement>('#app')!);
 const resourceLedger = createResourceLedger(document.querySelector<HTMLElement>('#app')!);
@@ -622,6 +625,7 @@ async function replaceColony(action: () => Promise<void>): Promise<void> {
   try {
     await action(); menuResumeSpeed = undefined; updateIncident();
     if (simulationStopped) throw new Error('La simulation s’est arrêtée pendant la préparation de l’affichage. Chargez une colonie validée pour reprendre.');
+    statusAlerts.reset();raidUI.reset();heatwaveUI.reset();flashstormUI.reset();weatherConditionUI.reset();tradeUI.reset();
     clearSelection(); setPanel(null); frontMenu.hide();
     if (snapshot?.pawns[0]) renderer?.focusPawn(snapshot.pawns[0].id);
   } finally { replacingWorld = false; syncStorageButtons(); }
@@ -1340,85 +1344,34 @@ function renderState() {
     }));
     if (!entries.length) el('journal-items').textContent = 'Trois survivants. Une nouvelle histoire.';
   }
-  const alerts: string[] = [];
-  let sadWanderers=0,foodBingers=0;
-  for(const pawn of living){if(pawn.mental?.crisis?.kind==='sad-wander')sadWanderers++;else if(pawn.mental?.crisis?.kind==='food-binge')foodBingers++;}
-  if(sadWanderers)alerts.push(`${sadWanderers} colon(s) en errance triste`);
-  if(foodBingers)alerts.push(`${foodBingers} colon(s) en frénésie alimentaire`);
-  const aggressiveCrises=living.filter(p=>p.mental?.crisis&&['tantrum','berserk','murderous-rage'].includes(p.mental.crisis.kind));
-  for(const pawn of aggressiveCrises){
-    const crisis=mentalCrisisView(world,pawn,s=>buildingLabels[s.kind])!;
-    alerts.push(`${pawn.name} · ${crisis.label}${crisis.target?` · cible : ${crisis.target.label}${crisis.target.type==='structure'?` (${crisis.target.cell.x}, ${crisis.target.cell.z})`:''}`:''}`);
-  }
-  const enemy=world.pawns.find(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p));
-  const rebels=world.pawns.filter(p=>prisonBreakActive(p)&&activeThreat(p));
-  if(rebels.length)alerts.push(`Révolte de prison · ${rebels.length} détenu${rebels.length>1?'s':''} en fuite`);
-  const mechanicalThreats=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed')??[];
-  if(mechanicalThreats.length)alerts.push(`${mechanicalThreats.length} machine(s) hostiles${world.raids?.mechActive?.phase==='staging'?' · regroupement avant assaut':world.raids?.mechActive?.phase==='assault'?' · assaut mécanique':''}`);
-  for(const structure of world.structures)if(structure.turret?.wick){
-    const view=miniTurretView(world,structure)!;alerts.push(`Mini-tourelle (${structure.x}, ${structure.z}) · mèche engagée · danger 3,9 · ${turretSeconds(view.wick!.remainingCore)}`);
-  }
-  const enraged=world.wildlife?.animals.filter(animal=>animal.manhunter&&animal.state!=='dead'&&animal.state!=='downed')??[];
-  if(enraged.length)alerts.push(`${enraged.length} ${enraged.length>1?'animaux':'animal'} en rage`);
-  const fires=world.fires?.items??[],fireAlert=el<HTMLButtonElement>('inspect-fire');fireAlert.hidden=!fires.length;fireAlert.textContent=`Incendie · ${fires.length} foyer${fires.length>1?'s':''} · voir`;fireAlert.onclick=()=>{const cell=firePosition(world,fires[0]!);if(cell){applyTool('select');pickCell(cell.x,cell.z);renderer?.focusCell(cell);}};
-  const blighted=world.resources.filter(p=>!!p.blight),blightAlert=el<HTMLButtonElement>('inspect-blight');
-  blightAlert.hidden=!blighted.length;blightAlert.textContent=`Fléau des cultures · ${blighted.length} plant(s) · voir`;
-  blightAlert.onclick=()=>{const plant=blighted[0];if(plant){applyTool('select');pickCell(plant.x,plant.z);renderer?.focusCell(plant);}};
-  const threatButton=el<HTMLButtonElement>('inspect-threat'),mentalThreat=aggressiveCrises[0],threat=enemy??rebels[0]??mechanicalThreats[0]??mentalThreat??enraged[0];threatButton.hidden=!threat;if(threat){threatButton.textContent=enemy?'Menace armée · voir':rebels.length?'Révolte de prison · voir':mechanicalThreats.length?'Menace mécanique · voir':mentalThreat?`${mentalCrisisView(world,mentalThreat)!.label} · voir`:'Animal en rage · voir';threatButton.onclick=()=>selectPawn(threat.id);}
-  const downed=living.filter(p=>p.state==='downed').length,bleeding=living.filter(p=>p.health&&medicalBleed(p.health)>=.1).length,deaths=colonists.length-living.length;
-  const starving=living.filter(p=>(p.health?.malnutrition??0)>0).length;if(starving)alerts.push(`${starving} colon(s) en malnutrition`);
-  const chilled=living.filter(p=>(p.health?.hypothermia??0)>=40000000).length;if(chilled)alerts.push(`${chilled} colon(s) en hypothermie`);
-  let infected=0,critical=0,gripped=0,extremeFlu=0;
-  const immuneCases={malaria:0,plague:0},immuneCritical={malaria:0,plague:0};
-  for(const pawn of living){
-    const health=pawn.health;
-    if(health?.infections?.cases.length){
-      infected++;
-      if(health.infections.immunity<INFECTION_UNIT&&health.infections.cases.some(c=>['extreme','critical'].includes(infectionStage(c.severity))))critical++;
-    }
-    const flu=health?.flu;
-    if(flu?.severity){gripped++;if(flu.immunity<FLU_UNIT&&fluStage(flu.severity)==='extreme')extremeFlu++;}
-    for(const kind of IMMUNE_DISEASE_KINDS){const disease=health?.immuneDiseases?.[kind];if(disease?.severity){immuneCases[kind]++;if(disease.immunity<IMMUNE_DISEASE_UNIT&&['extreme','critical'].includes(immuneDiseaseStage(kind,disease.severity)))immuneCritical[kind]++;}}
-  }
-  if(critical)alerts.push(`Urgence médicale : ${critical} colon(s) avec une infection grave`);
-  if(infected)alerts.push(`${infected} colon(s) avec une infection · consulter Santé`);
-  if(extremeFlu)alerts.push(`Urgence médicale : ${extremeFlu} colon(s) avec une grippe extrême`);
-  if(gripped)alerts.push(`${gripped} colon(s) grippé(s) · consulter Santé`);
-  for(const kind of IMMUNE_DISEASE_KINDS){const label=kind==='malaria'?'paludisme':'peste';if(immuneCritical[kind])alerts.push(`Urgence médicale : ${immuneCritical[kind]} colon(s) avec ${label} grave`);if(immuneCases[kind])alerts.push(`${immuneCases[kind]} colon(s) avec ${label} · consulter Santé`);}
-  if(downed)alerts.push(`${downed} colon(s) à terre`);
-  if(bleeding)alerts.push(`${bleeding} colon(s) saignent`);
-  if(deaths)alerts.push(`${deaths} colon(s) décédé(s)`);
-  if (nutrition < living.length * 1.6) alerts.push('Réserves de nourriture faibles');
-  const hungry = living.filter(pawn => pawn.hunger < 25).length;
-  if (hungry) alerts.push(`${hungry} colon(s) affamé(s)`);
-  if (pending) alerts.push(`${pending} ordre(s) en attente`);
-  if (!world.stockpiles.length) alerts.push('Aucune réserve de stockage');
-  if (world.jobs.some(job => constructionRecipe(job).ingredients.length > 0) && world.pawns.every(pawn => pawn.priorities.haul === 0&&pawn.priorities.build === 0)) alerts.push('Construction/transport désactivés : chantiers non approvisionnés');
-  const interrupted=world.pawns.filter(pawn=>pawn.interruptedCargo).length;
-  if(interrupted)alerts.push(`${interrupted} cargaison(s) conservée(s) : fin de déplacement ou sol proche à libérer`);
-  const idle = world.pawns.filter(pawn => isColonist(pawn)&&!pawn.prisoner&&pawn.state === 'idle'&&!pawn.draft&&!pawn.flee&&!pawn.mental?.crisis&&!pawn.interruptedCargo).length;
-  if (idle) alerts.push(`${idle} colon(s) disponible(s)`);
-  const beds = world.structures.filter(structure => isBedKind(structure.kind)&&!structure.medical&&!structure.prisoner).reduce((n,bed)=>n+bedSlotsCount(bed),0);
-  const alertRows=alerts.map(text=>({text,kind:''}));
-  if (beds < living.length) alertRows.push({text:`${living.length - beds} couchage(s) manquant(s)`,kind:'beds'});
-  const prisoners=world.pawns.filter(p=>p.prisoner&&p.state!=='dead');
-  if(prisoners.length)alertRows.push({text:`${prisoners.length} prisonnier(s) · ${living.some(p=>p.priorities.warden>0)?'Geôlier activé':'Geôlier désactivé'}`,kind:'prisoners'});
-  const alertSignature=JSON.stringify(alertRows);
-  if(alertSignature!==lastStatusAlertsSignature){
-    lastStatusAlertsSignature=alertSignature;
-    el('status-alerts').replaceChildren(...alertRows.map(row=>{const item=document.createElement('p');item.textContent=row.text;if(row.kind)item.dataset.alert=row.kind;return item;}));
-  }
+  statusAlerts.update(world);
   economyUI.update(world);arrivalUI.update(world);questUI.update(world);raidUI.update(world);heatwaveUI.update(world);flashstormUI.update(world);solarFlareUI.update(world);weatherConditionUI.update(world);shortCircuitUI.update(world);tradeUI.update(world);orbitalUI.update(world);
 }
-const heatwaveUI=createHeatwaveUI(command=>client.command(command));
-const flashstormUI=createFlashstormUI();
+function focusNotification(target:NotificationTarget):void {
+  if(!snapshot||replacingWorld||frontMenu.isOpen())return;
+  shootingControls.cancel();applyTool('select');
+  if(target.kind==='actor'){selectPawn(target.id);return;}
+  if(target.kind==='object'){
+    if(!mapObjectExists(snapshot,target.object))return;
+    selectObjects([target.object]);
+  }else {clearSelection();setPanel(null);}
+  renderer?.focusCell(target.cell);
+}
+const statusAlerts=createStatusAlerts(el('status-alerts'),{
+  'inspect-threat':el<HTMLButtonElement>('inspect-threat'),'inspect-fire':el<HTMLButtonElement>('inspect-fire'),'inspect-blight':el<HTMLButtonElement>('inspect-blight'),
+},{focus:focusNotification,context:context=>{
+  if(context.tool){setTool(context.tool);return;}
+  setPanel(context.panel);if(context.category)setCategory(context.category);
+},tab:tab=>document.querySelector<HTMLButtonElement>(`[data-colonist-tab="${tab}"]`)?.click()});
+const heatwaveUI=createHeatwaveUI(command=>client.command(command),focusNotification);
+const flashstormUI=createFlashstormUI(focusNotification);
 const solarFlareUI=createSolarFlareUI();
-const weatherConditionUI=createWeatherConditionUI();
-const shortCircuitUI=createShortCircuitUI();
+const weatherConditionUI=createWeatherConditionUI(focusNotification);
+const shortCircuitUI=createShortCircuitUI(focusNotification);
 const economyUI=createColonyEconomyUI(el('colony-economy'),command=>client.command(command));
-const raidUI=createRaidUI(command=>client.command(command),id=>renderer?.focusPawn(id));
+const raidUI=createRaidUI(command=>client.command(command),focusNotification);
 const orbitalUI=createOrbitalTradeUI(command=>client.command(command),()=>client.setSpeed(0),id=>{const console=snapshot?.structures.find(s=>s.id===id);if(console)renderer?.focusCell(console);},async()=>{if(currentSpeed===0)await client.setSpeed(1);});
-const tradeUI=createTradeUI(command=>client.command(command),()=>client.setSpeed(0),id=>renderer?.focusPawn(id),async()=>{if(currentSpeed===0)await client.setSpeed(1);});
+const tradeUI=createTradeUI(command=>client.command(command),()=>client.setSpeed(0),id=>selectPawn(id),async()=>{if(currentSpeed===0)await client.setSpeed(1);});
 const arrivalUI=createArrivalUI(command=>client.command(command));
 const questUI=createQuestUI(command=>client.command(command));
 function syncStorageButtons() {

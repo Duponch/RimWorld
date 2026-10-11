@@ -1,4 +1,6 @@
-# Validation courante — V318
+# Validation courante — V319
+
+**V319, schéma 228 conservé : [infobulles et alertes](../gameplay/interface-feedback-v319.md#validation-et-portée).** Groupe29cas/4fichiers acquis par reprises, Chrome65,710s/trois parcours dont Aulnes8434 et raid à terre ; buildPages/typage12,640s. Mondes et recharges exacts, simulation/bridge et63références/66fichiers inchangés ; rouges/limites dans note unique, aucun gainFPS ou campagne naturelle certifiés. ROOT seul contrôle sur sources/tests/pilotes gelés, publication regroupée et relance **PAUSED**. Les validations suivantes sont historiques.
 
 **V318, schéma 228 : [régulation du troupeau](../gameplay/auto-slaughter-v318.md#contrôles-et-limites).** Groupe184cas/16fichiers dont48nouveaux acquis par reprises ; corpus63/66PASS95,800s, présentationChrome123,707s et buildPages/typage9,694s. ChromeWebGPU157,803s : huit recharges exactes sur Aulnes sans dotation, annulation et abattage physique. ROOT seul sur sources/tests/pilotes figés,2719entrées exactes ; rouges/limites dans note unique. Aucun gainFPS ni campagne entière certifiés, publications regroupées et relance **PAUSED**. Les validations suivantes sont historiques.
 

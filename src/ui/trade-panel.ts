@@ -8,6 +8,7 @@ import { visitorMayTrade } from '../sim/visitors';
 import type { Command,World } from '../sim/types';
 import type { TradeLine } from '../sim/trade-state';
 import './trade-panel.css';
+import { actorNotificationTarget,NotificationFocusCycle } from './notification-focus';
 
 export function createTradeUI(send:(c:Command)=>Promise<unknown>,pause:()=>Promise<unknown>,focus:(id:number)=>void,resume:()=>Promise<unknown>) {
   const button=document.createElement('button');button.id='trade-letter';button.className='arrival-letter';
@@ -22,6 +23,7 @@ export function createTradeUI(send:(c:Command)=>Promise<unknown>,pause:()=>Promi
   const confirm=document.createElement('button'),close=document.createElement('button');confirm.id='trade-confirm';close.id='trade-close';confirm.textContent='Conclure l’échange';close.textContent='Fermer';
   dialog.append(heading,trader,colonist,contact,status,hint,table,total,shortfall,error,confirm,close);document.body.append(dialog);
   let current:World|undefined,last=-Infinity,stockKey='',readyKey='',shownQuote='',busy=false;
+  const cycle=new NotificationFocusCycle();
   const quantities=new Map<string,number>();
   const lines=():TradeLine[]=>[...quantities].filter(([,n])=>n!==0).map(([key,quantity])=>key.startsWith('packed:')?{packedId:Number(key.slice(7)),quantity}:{pileId:Number(key.slice(5)),quantity});
   function balance(){
@@ -32,7 +34,7 @@ export function createTradeUI(send:(c:Command)=>Promise<unknown>,pause:()=>Promi
     shownQuote=q.signature;shortfall.hidden=!q.forgone;confirm.disabled=busy||!!q.forgone&&!accept.checked;
   }
   async function run(action:()=>Promise<unknown>){if(busy)return;busy=true;error.textContent='';render();try{await action();}catch(e){error.textContent=e instanceof Error?e.message:String(e);}finally{busy=false;if(dialog.open)render();else balance();}}
-  button.onclick=()=>{if(!dialog.open)dialog.showModal();stockKey='';last=-Infinity;render();};
+  button.onclick=()=>{const target=cycle.next('visitors',(current?.pawns??[]).filter(p=>p.visitor&&p.state!=='dead').sort((a,b)=>a.id-b.id).map(p=>actorNotificationTarget(p.id)));if(target?.kind==='actor')focus(target.id);if(!dialog.open)dialog.showModal();stockKey='';last=-Infinity;render();};
   close.onclick=()=>dialog.close();dialog.onclose=()=>{const p=current?.pawns.find(p=>p.id===Number(colonist.value));if(p?.trade)void run(()=>send({type:'cancel-trade',pawnId:p.id}));};
   dialog.oncancel=e=>{if(busy)e.preventDefault();};
   const reset=()=>{quantities.clear();stockKey='';readyKey='';accept.checked=false;render();};trader.onchange=reset;colonist.onchange=reset;accept.onchange=balance;
@@ -76,5 +78,5 @@ export function createTradeUI(send:(c:Command)=>Promise<unknown>,pause:()=>Promi
     }
     const money=stock.silver.reduce((n,x)=>n+x.quantity,0),merchant=stock.merchantSilver.reduce((n,x)=>n+x.quantity,0);hint.textContent=`Argent disponible : colonie ${money}, marchand ${merchant}. Biens au foyer ou en réserve, accessibles et non réservés. Les achats seront déposés au contact, puis rangés par les colons.`;balance();
   }
-  return {update(w:World){current=w;const count=w.pawns.filter(p=>p.visitor&&p.state!=='dead').length;button.textContent=w.visitors?`Visiteurs : ${count} · Commerce`:'Activer les visites';const alerts=document.getElementById('alerts')!;if(button.parentElement!==alerts)alerts.append(button);if(dialog.open&&performance.now()-last>250){last=performance.now();render();}}};
+  return {reset:()=>cycle.reset(),update(w:World){current=w;const count=w.pawns.filter(p=>p.visitor&&p.state!=='dead').length;button.textContent=w.visitors?`Visiteurs : ${count} · Commerce`:'Activer les visites';const alerts=document.getElementById('alerts')!;if(button.parentElement!==alerts)alerts.append(button);if(dialog.open&&performance.now()-last>250){last=performance.now();render();}}};
 }

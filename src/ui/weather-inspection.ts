@@ -1,6 +1,8 @@
 import { activeColdSnap, coldSnapOffset } from '../sim/cold-snap';
 import { activeEclipse } from '../sim/eclipse';
 import { TICKS_PER_DAY, type World } from '../sim/types';
+import { personNotificationTarget,NotificationFocusCycle,type NotificationTarget,type FocusNotification } from './notification-focus';
+import { createNotificationLetterDetails } from './notification-letter';
 
 type WeatherWorld = Pick<World, 'tick' | 'miscIncidents'>;
 export interface WeatherConditionInspection {
@@ -40,25 +42,30 @@ export function weatherConditionLabel(world: WeatherWorld): string {
 }
 
 /** Informational letters reuse the existing alerts; they issue no commands. */
-export function createWeatherConditionUI(): { update: (world: World) => void } {
-  const letters = new Map<WeatherConditionInspection['kind'], { button: HTMLButtonElement; dialog: HTMLDialogElement; title: HTMLElement; body: HTMLElement }>();
+export function createWeatherConditionUI(focus?:FocusNotification): { update: (world: World) => void;reset:()=>void } {
+  let current:World|undefined;const cycle=new NotificationFocusCycle();
+  const targets=()=>current?.pawns.filter(p=>p.state!=='dead'&&(p.health?.hypothermia??0)>0).sort((a,b)=>a.id-b.id).map(p=>personNotificationTarget(current!,p.id)).filter((target):target is NotificationTarget=>!!target)??[];
+  const letters = new Map<WeatherConditionInspection['kind'], { button: HTMLButtonElement; dialog: HTMLDialogElement; title: HTMLElement; body: HTMLElement;details:ReturnType<typeof createNotificationLetterDetails> }>();
   for (const kind of ['cold-snap', 'eclipse'] as const) {
     const button = document.createElement('button'); button.type = 'button'; button.id = `${kind}-letter`; button.className = 'arrival-letter';
     const dialog = document.createElement('dialog'); dialog.id = `${kind}-dialog`; dialog.className = 'help-dialog';
     const title = document.createElement('h2'), body = document.createElement('p'), close = document.createElement('button');
     title.id = `${kind}-title`; dialog.setAttribute('aria-labelledby', title.id);
     close.type = 'button'; close.textContent = 'Fermer'; close.onclick = () => dialog.close();
-    dialog.append(title, body, close); document.body.append(dialog); button.onclick = () => dialog.showModal();
-    letters.set(kind, { button, dialog, title, body });
+    dialog.append(title, body, close); document.body.append(dialog);const details=createNotificationLetterDetails(button,dialog);button.onclick = () => {
+      const target=kind==='cold-snap'?cycle.next('cold-snap',targets()):undefined;
+      if(target&&focus)focus(target);else if(!dialog.open)dialog.showModal();};
+    letters.set(kind, { button, dialog, title, body,details });
   }
-  return { update(world) {
+  return { reset:()=>cycle.reset(),update(world) {
+    current=world;
     const conditions = weatherConditionInspection(world);
     for (const [kind, letter] of letters) {
       const condition = conditions.find(row => row.kind === kind);
-      if (!condition) { letter.button.remove(); if (letter.dialog.open) letter.dialog.close(); continue; }
+      if (!condition) { letter.details.remove(); if (letter.dialog.open) letter.dialog.close(); continue; }
       letter.button.textContent = condition.summary; letter.title.textContent = condition.title; letter.body.textContent = condition.body;
       const alerts = document.getElementById('alerts');
-      if (alerts && letter.button.parentElement !== alerts) alerts.append(letter.button);
+      if(alerts)letter.details.update(alerts,kind==='cold-snap'&&!!focus&&!!targets().length);
     }
   } };
 }

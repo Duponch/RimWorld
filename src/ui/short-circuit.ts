@@ -1,4 +1,6 @@
 import { TICKS_PER_DAY, type World } from '../sim/types';
+import { cellNotificationTarget,type FocusNotification } from './notification-focus';
+import { createNotificationLetterDetails } from './notification-letter';
 
 type ShortCircuitWorld = Pick<World, 'tick' | 'miscIncidents'>;
 export interface ShortCircuitInspection { title: string; summary: string; body: string }
@@ -25,18 +27,21 @@ export function shortCircuitInspection(world: ShortCircuitWorld): ShortCircuitIn
 }
 
 /** One informational letter for the latest incident, using the ordinary HUD. */
-export function createShortCircuitUI(): { update: (world: World) => void } {
+export function createShortCircuitUI(focus?:FocusNotification): { update: (world: World) => void } {
   const letter = document.createElement('button'); letter.type = 'button'; letter.id = 'short-circuit-letter'; letter.className = 'arrival-letter';
   const dialog = document.createElement('dialog'); dialog.id = 'short-circuit-dialog'; dialog.className = 'help-dialog';
   const title = document.createElement('h2'), body = document.createElement('p'), close = document.createElement('button');
   title.id = 'short-circuit-title'; dialog.setAttribute('aria-labelledby', title.id);
   close.type = 'button'; close.textContent = 'Fermer'; close.onclick = () => dialog.close();
-  dialog.append(title, body, close); document.body.append(dialog); letter.onclick = () => dialog.showModal();
+  let current:World|undefined;
+  dialog.append(title, body, close); document.body.append(dialog);const details=createNotificationLetterDetails(letter,dialog);
+  letter.onclick = () => {const last=current?.miscIncidents?.shortCircuits?.last;if(last&&focus)focus(cellNotificationTarget(`short-circuit:${last.at}`,last.center));else if(!dialog.open)dialog.showModal();};
   return { update(world) {
+    current=world;
     const inspection = shortCircuitInspection(world);
-    if (!inspection) { letter.remove(); if (dialog.open) dialog.close(); return; }
+    if (!inspection) { details.remove(); if (dialog.open) dialog.close(); return; }
     title.textContent = inspection.title; body.textContent = inspection.body; letter.textContent = inspection.summary;
     const alerts = document.getElementById('alerts');
-    if (alerts && letter.parentElement !== alerts) alerts.append(letter);
+    if(alerts)details.update(alerts,!!focus);
   } };
 }
