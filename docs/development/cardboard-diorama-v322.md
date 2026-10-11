@@ -181,3 +181,25 @@ contrôle FAIL1,976s conservait un lien vers l'ancien titre du guide ; son ancre
 est mise à jour, sans changement du validateur. Gel produit/tests/pilotes2764
 encore exact après le build et les éditions documentaires. La livraison est
 consignée ci-dessous après le commit produit.
+
+## Livraison
+
+Produit `a58e5b92699d77e6880b843d5b237105520e7bb2` commité et poussé sur main,
+puis publié une seule fois en **b054f727** :
+[adresse stable](https://elsewhere-cq7.pages.dev/) et
+[publication](https://b054f727.elsewhere-cq7.pages.dev/).
+Package `v322-package` PASS1,641s,515fichiers/119141579octets,
+63références/66fichiers publics exacts, deux textures V321 et assets historiques
+exacts, laboratoire et fichiers privés absents ;
+[rapport](../../tmp/elsewhere-pages/v322-package-WF4R1t/report.json).
+Wrangler4.149.0 confirmé, déploiement PASS14,201s : deux fichiers nouveaux et
+511déjà présents, puis en-têtes/redirections. L'avertissement Git dirty concerne
+seulement `references_UI`, exclu du commit et du package.
+
+HTTPS `v322-https` PASS5,795s :51chemins sur les deux origines, soit102réponses
+200/MIME/octets exacts ;
+[rapport](../../tmp/elsewhere-pages/v322-http-XpX95Z/report.json).
+Package et fichiers publics inchangés pendant le contrôle. Les66fichiers
+distants ne sont pas tous téléchargés ; disponibilité du package seulement,
+sans nouveau parcours de jeu en ligne ni benchmark. Le commit/push documentaire
+de ces preuves ne republie pas. La relance planifiée reste **PAUSED**.

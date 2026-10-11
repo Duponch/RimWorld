@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication courante `b6ab8363` ajoute le [diorama en carton V321](cardboard-diorama-v321.md) aux boucles élémentaires jusqu'aux [étagères V320](../gameplay/shelves-v320.md) et aux corrections d'[infobulles/alertes V319](../gameplay/interface-feedback-v319.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication courante `b054f727` ajoute le [relief et la visibilité V322](cardboard-diorama-v322.md) au [diorama en carton V321](cardboard-diorama-v321.md) et aux boucles élémentaires jusqu'aux [étagères V320](../gameplay/shelves-v320.md) et aux corrections d'[infobulles/alertes V319](../gameplay/interface-feedback-v319.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
 
 ## Adresse et publication
 
@@ -172,3 +172,26 @@ navigateur en ligne ni benchmark. Les quatre recharges de continuation exactes
 et les captures sont celles du contrôle local ChromeWebGPU V321. Un commit/push
 documentaire consigne la livraison sans deuxième publication. La relance reste
 **PAUSED**.
+
+## Publication V322 — relief et visibilité
+
+Produit `a58e5b92699d77e6880b843d5b237105520e7bb2` commité/poussé puis publié une
+seule fois en **b054f727** : [adresse stable](https://elsewhere-cq7.pages.dev/)
+et [publication](https://b054f727.elsewhere-cq7.pages.dev/). Quatre murs hauts,
+papier×2,5, masque géométrique iso/perspective et rebords bas conservés. Les coûts
+mixtes et les limites de performance sont explicites dans la [note V322](cardboard-diorama-v322.md).
+
+Typage9,913s/buildPages3,278s ; package PASS1,641s,515fichiers/119141579octets,
+63références/66fichiers publics exacts, textures et assets historiques exacts,
+sources privées/laboratoire absents ;
+[rapport package](../../tmp/elsewhere-pages/v322-package-WF4R1t/report.json).
+Wrangler4.149.0 confirmé, déploiement PASS14,201s : deux fichiers envoyés,
+511déjà présents, plus en-têtes/redirections. L'avertissement dirty concerne
+uniquement le dossier utilisateur `references_UI`, absent du commit et du package.
+
+HTTPS PASS5,795s :102réponses200/MIME/octets exacts,51chemins sur les origines
+stable et fraîche ; [rapport](../../tmp/elsewhere-pages/v322-http-XpX95Z/report.json).
+Package/publics inchangés, sans téléchargement distant des66fichiers en entier
+ni nouveau parcours navigateur ou benchmark. Les22poses locales et quatre
+recharges de continuation exactes sont dans la note unique. Un commit/push
+documentaire consigne cette livraison sans nouvelle publication ; relance **PAUSED**.
