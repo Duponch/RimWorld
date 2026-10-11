@@ -1,5 +1,6 @@
 import { isCremationRecipe,cremationIngredientAllowed,validCremationIngredients } from './cremation-rules.ts';
 import { isMechSalvageRecipe } from './mechanoid-salvage.ts';
+import { isKibbleRecipe,validKibbleIngredients,kibbleOutputUnits } from './fodder-recipes.ts';
 import { isSmeltingRecipe,smeltingIngredientAllowed,validSmeltingProduct } from './smelting-rules.ts';
 import { packagedSurvivalMealsUnlocked } from './research.ts';
 import {isArtRecipe,artWorkTotal,isArtMaterial} from './art-rules.ts';
@@ -39,6 +40,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
     if(!recipe||version<32&&recipe==='stone-blocks'||version<72&&recipe==='tribalwear'||version<79&&recipe==='butcher-creature'||version<101&&s.kind==='machining-table'||version<104&&s.kind==='art-bench'||version<123&&s.kind==='fabrication-bench') {if(s.bills!==undefined)errors.push('Bills attached to a non-workstation.');continue;}
     if(!Array.isArray(s.bills)||s.bills.length>64){errors.push('Invalid workstation bills.');continue;}
     for(const b of s.bills) {
+      if(isKibbleRecipe(b?.recipe)&&version<227){errors.push('Future kibble bill.');continue;}
       if(isCremationRecipe(b?.recipe)&&(version<225||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable cremation bill.');continue;}
       if(isSmeltingRecipe(b?.recipe)&&(version<222||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable smelting bill.');continue;}
       if(isBiofuelRecipe(b?.recipe)&&(version<218||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable biofuel bill.');continue;}
@@ -54,6 +56,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
     if(!int(p.priorities.cook,0,4))errors.push('Invalid cooking priority.');
     if(p.cooking===null)continue;
     const c=p.cooking;
+    if(isKibbleRecipe(c?.recipe)&&(version<227||c.phase==='interrupted')){errors.push('Invalid or future kibble production.');continue;}
     if(isCremationRecipe(c?.recipe)&&(version<225||c.phase==='output'||c.productId!==null||c.storageId!==null||Object.hasOwn(c,'storageQuantity')||Object.hasOwn(c,'workTicks')||!productionResearchUnlocked(w,c.recipe))){errors.push('Invalid or future cremation production.');continue;}
     if(isSmeltingRecipe(c?.recipe)&&(version<222||c.phase==='interrupted'||!productionResearchUnlocked(w,c.recipe))){errors.push('Invalid or future smelting production.');continue;}
     if(isBiofuelRecipe(c?.recipe)&&(version<218||!productionResearchUnlocked(w,c.recipe)||c.phase==='interrupted')){errors.push('Invalid or future biofuel production.');continue;}
@@ -61,12 +64,12 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
     const medicine=c?.recipe==='make-medicine';
     if(medicine&&(version<206||!record(c)||Object.keys(c).some(key=>!taskKeys.has(key))||c.phase==='interrupted')){errors.push('Invalid or future medicine production.');continue;}
     if((isMechSalvageRecipe(c?.recipe)||c?.recipe==='cook-survival-meal'||c?.recipe==='fine-meal'||c?.recipe==='lavish-meal'||c?.recipe==='vegetarian-fine-meal'||c?.recipe==='carnivore-fine-meal'||c?.recipe==='vegetarian-lavish-meal'||c?.recipe==='cook-carnivore-lavish-meal'||c?.recipe==='cook-simple-meal-bulk'||c?.recipe==='cook-fine-meal-bulk'||c?.recipe==='cook-vegetarian-fine-meal-bulk'||c?.recipe==='cook-carnivore-fine-meal-bulk'||c?.recipe==='cook-lavish-meal-bulk'||c?.recipe==='cook-vegetarian-lavish-meal-bulk'||c?.recipe==='cook-carnivore-lavish-meal-bulk')&&c.phase==='interrupted'){errors.push('Meal has no resumable interrupted work.');continue;}
-    if(!record(c)||Object.keys(c).some(key=>!taskKeys.has(key))||c.recipe!==undefined&&(!((version>=225&&isCremationRecipe(c.recipe))||(version>=222&&isSmeltingRecipe(c.recipe))||(version>=218&&isBiofuelRecipe(c.recipe))||(version>=206&&c.recipe==='make-medicine')||(version>=194&&isMechSalvageRecipe(c.recipe))||(version>=188&&c.recipe==='cook-survival-meal')||(version>=32&&c.recipe==='stone-blocks')||(version>=72&&c.recipe==='tribalwear')||(version>=73&&c.recipe==='shirt')||(version>=79&&c.recipe==='butcher-creature')||(version>=90&&['pants','duster','parka'].includes(String(c.recipe)))||(version>=101&&isGunRecipe(c.recipe))||(version>=104&&isArtRecipe(c.recipe))||(version>=109&&c.recipe==='make-flak-vest')||(version>=141&&c.recipe==='make-flak-helmet')||(version>=148&&c.recipe==='make-recon-helmet')||(version>=123&&c.recipe==='make-component')||(version>=139&&c.recipe==='make-advanced-component')||(version>=152&&c.recipe==='fine-meal')||(version>=154&&c.recipe==='lavish-meal')||(version>=155&&c.recipe==='vegetarian-fine-meal')||(version>=156&&c.recipe==='carnivore-fine-meal')||(version>=157&&c.recipe==='vegetarian-lavish-meal')||(version>=159&&c.recipe==='cook-carnivore-lavish-meal')||(version>=160&&c.recipe==='cook-simple-meal-bulk')||(version>=161&&c.recipe==='cook-fine-meal-bulk')||(version>=162&&c.recipe==='cook-vegetarian-fine-meal-bulk')||(version>=163&&c.recipe==='cook-carnivore-fine-meal-bulk')||(version>=164&&c.recipe==='cook-lavish-meal-bulk')||(version>=165&&c.recipe==='cook-vegetarian-lavish-meal-bulk')||(version>=166&&c.recipe==='cook-carnivore-lavish-meal-bulk')))){errors.push('Invalid or future production recipe.');continue;}
+    if(!record(c)||Object.keys(c).some(key=>!taskKeys.has(key))||c.recipe!==undefined&&(!((version>=227&&isKibbleRecipe(c.recipe))||(version>=225&&isCremationRecipe(c.recipe))||(version>=222&&isSmeltingRecipe(c.recipe))||(version>=218&&isBiofuelRecipe(c.recipe))||(version>=206&&c.recipe==='make-medicine')||(version>=194&&isMechSalvageRecipe(c.recipe))||(version>=188&&c.recipe==='cook-survival-meal')||(version>=32&&c.recipe==='stone-blocks')||(version>=72&&c.recipe==='tribalwear')||(version>=73&&c.recipe==='shirt')||(version>=79&&c.recipe==='butcher-creature')||(version>=90&&['pants','duster','parka'].includes(String(c.recipe)))||(version>=101&&isGunRecipe(c.recipe))||(version>=104&&isArtRecipe(c.recipe))||(version>=109&&c.recipe==='make-flak-vest')||(version>=141&&c.recipe==='make-flak-helmet')||(version>=148&&c.recipe==='make-recon-helmet')||(version>=123&&c.recipe==='make-component')||(version>=139&&c.recipe==='make-advanced-component')||(version>=152&&c.recipe==='fine-meal')||(version>=154&&c.recipe==='lavish-meal')||(version>=155&&c.recipe==='vegetarian-fine-meal')||(version>=156&&c.recipe==='carnivore-fine-meal')||(version>=157&&c.recipe==='vegetarian-lavish-meal')||(version>=159&&c.recipe==='cook-carnivore-lavish-meal')||(version>=160&&c.recipe==='cook-simple-meal-bulk')||(version>=161&&c.recipe==='cook-fine-meal-bulk')||(version>=162&&c.recipe==='cook-vegetarian-fine-meal-bulk')||(version>=163&&c.recipe==='cook-carnivore-fine-meal-bulk')||(version>=164&&c.recipe==='cook-lavish-meal-bulk')||(version>=165&&c.recipe==='cook-vegetarian-lavish-meal-bulk')||(version>=166&&c.recipe==='cook-carnivore-lavish-meal-bulk')))){errors.push('Invalid or future production recipe.');continue;}
     const recipe=PRODUCTION_RECIPES[taskRecipe(c)];
-    if(isBiofuelRecipe(c.recipe)&&Array.isArray(c.ingredients)&&c.ingredients.some(i=>record(i)&&i.stage!=='placed'&&Number(i.quantity)>10))errors.push('Oversized biofuel ingredient cargo.');
+    if((isKibbleRecipe(c.recipe)||isBiofuelRecipe(c.recipe))&&Array.isArray(c.ingredients)&&c.ingredients.some(i=>record(i)&&i.stage!=='placed'&&Number(i.quantity)>10))errors.push('Oversized biofuel ingredient cargo.');
     if(c.workTicks!==undefined&&(version<79||taskWork(c)!=='cook'&&!isMechSalvageRecipe(c.recipe)&&!medicine||c.phase!=='work'||!int(c.workTicks,1,Math.floor(Number.MAX_SAFE_INTEGER/1000))))errors.push('Invalid cooking work duration.');
     if(medicine&&c.phase==='work'&&c.workTicks===undefined)errors.push('Missing medicine work duration.');
-    if(c.storageQuantity!==undefined&&(version<32||!isSmeltingRecipe(c.recipe)&&!isBiofuelRecipe(c.recipe)&&!isMechSalvageRecipe(c.recipe)&&c.recipe!=='stone-blocks'&&c.recipe!=='butcher-creature'&&c.recipe!=='cook-simple-meal-bulk'&&c.recipe!=='cook-fine-meal-bulk'&&c.recipe!=='cook-vegetarian-fine-meal-bulk'&&c.recipe!=='cook-carnivore-fine-meal-bulk'&&c.recipe!=='cook-lavish-meal-bulk'&&c.recipe!=='cook-vegetarian-lavish-meal-bulk'&&c.recipe!=='cook-carnivore-lavish-meal-bulk'||c.phase!=='output'||c.storageId===null||!int(c.storageQuantity,1,recipe.outputUnits)))errors.push('Invalid production output quantity.');
+    if(c.storageQuantity!==undefined&&(version<32||!isKibbleRecipe(c.recipe)&&!isSmeltingRecipe(c.recipe)&&!isBiofuelRecipe(c.recipe)&&!isMechSalvageRecipe(c.recipe)&&c.recipe!=='stone-blocks'&&c.recipe!=='butcher-creature'&&c.recipe!=='cook-simple-meal-bulk'&&c.recipe!=='cook-fine-meal-bulk'&&c.recipe!=='cook-vegetarian-fine-meal-bulk'&&c.recipe!=='cook-carnivore-fine-meal-bulk'&&c.recipe!=='cook-lavish-meal-bulk'&&c.recipe!=='cook-vegetarian-lavish-meal-bulk'&&c.recipe!=='cook-carnivore-lavish-meal-bulk'||c.phase!=='output'||c.storageId===null||!int(c.storageQuantity,1,recipe.outputUnits)))errors.push('Invalid production output quantity.');
     if(!record(c)||!int(c.stationId,1)||!int(c.billId,1)||!cell(c.spot)||!cell(c.actionCell)||!['gather','work','output',...(version>=11?['interrupted']:[])].includes(c.phase as string)
       ||!int(c.progress,0,version>=36?(isArtRecipe(c.recipe)?artWorkTotal(c.recipe,'granite-blocks'):productionWorkTotal(taskRecipe(c))):legacyProductionTicks(taskRecipe(c)))||!(c.productId===null||int(c.productId,1,w.nextId-1))||!(c.storageId===null||int(c.storageId,1,w.nextId-1))
       ||!Array.isArray(c.ingredients)||c.ingredients.length>recipe.units) {errors.push('Invalid cooking task.');continue;}
@@ -100,9 +103,10 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
       if(c.storageId!==null){const zone=w.stockpiles.find(z=>z.id===c.storageId);if(!zone||!zone.filters.furniture||!product||!storageConditionAccepts(zone,product.building)||!furnitureSlot(w,zone,p.id))errors.push('Invalid sculpture output reservation.');}
     } else if(c.phase==='output') {
       if(isSmeltingRecipe(c.recipe)&&(!owned[0]||!validSmeltingProduct(owned[0].item,owned[0].quantity)||owned[0].weapon!==undefined||owned[0].apparel!==undefined))errors.push('Invalid smelting metal product.');
-      if(c.ingredients.length||c.progress!==0||owned.length!==1||owned[0]?.id!==c.productId||!isRecipeProduct(taskRecipe(c),owned[0]!.item)||!int(owned[0]?.quantity,1,version>=91&&c.recipe==='butcher-creature'?75:recipe.outputUnits)||c.recipe==='stone-blocks'&&!recipe.inputs.some(i=>bill.filters[i]&&blockFor(i as StoneIngredient)===owned[0]!.item))errors.push('Invalid cooked product ownership.');
-      if(c.storageId!==null){const storage=w.stockpiles.find(s=>s.id===c.storageId),product=owned[0],quantity=c.storageQuantity??1;if(!product||(isSmeltingRecipe(c.recipe)||isBiofuelRecipe(c.recipe)||isMechSalvageRecipe(c.recipe)||c.recipe==='stone-blocks'||c.recipe==='butcher-creature'||c.recipe==='cook-simple-meal-bulk'||c.recipe==='cook-fine-meal-bulk'||c.recipe==='cook-vegetarian-fine-meal-bulk'||c.recipe==='cook-carnivore-fine-meal-bulk'||c.recipe==='cook-lavish-meal-bulk'||c.recipe==='cook-vegetarian-lavish-meal-bulk'||c.recipe==='cook-carnivore-lavish-meal-bulk')&&c.storageQuantity===undefined||quantity>(product?.quantity??0)||!storage||storageCapacity(w,storage,product,p.id,geometry)<quantity)errors.push('Invalid cooking output reservation.');}
+      if(c.ingredients.length||c.progress!==0||owned.length!==1||owned[0]?.id!==c.productId||!isRecipeProduct(taskRecipe(c),owned[0]!.item)||!int(owned[0]?.quantity,1,isKibbleRecipe(c.recipe)?kibbleOutputUnits(station):version>=91&&c.recipe==='butcher-creature'?75:recipe.outputUnits)||c.recipe==='stone-blocks'&&!recipe.inputs.some(i=>bill.filters[i]&&blockFor(i as StoneIngredient)===owned[0]!.item))errors.push('Invalid cooked product ownership.');
+      if(c.storageId!==null){const storage=w.stockpiles.find(s=>s.id===c.storageId),product=owned[0],quantity=c.storageQuantity??1;if(!product||(isKibbleRecipe(c.recipe)||isSmeltingRecipe(c.recipe)||isBiofuelRecipe(c.recipe)||isMechSalvageRecipe(c.recipe)||c.recipe==='stone-blocks'||c.recipe==='butcher-creature'||c.recipe==='cook-simple-meal-bulk'||c.recipe==='cook-fine-meal-bulk'||c.recipe==='cook-vegetarian-fine-meal-bulk'||c.recipe==='cook-carnivore-fine-meal-bulk'||c.recipe==='cook-lavish-meal-bulk'||c.recipe==='cook-vegetarian-lavish-meal-bulk'||c.recipe==='cook-carnivore-lavish-meal-bulk')&&c.storageQuantity===undefined||quantity>(product?.quantity??0)||!storage||storageCapacity(w,storage,product,p.id,geometry)<quantity)errors.push('Invalid cooking output reservation.');}
     } else {
+      if(isKibbleRecipe(c.recipe)&&!validKibbleIngredients(c.ingredients))errors.push('Invalid kibble ingredient quotas.');
       if(isCremationRecipe(c.recipe)&&!validCremationIngredients(c.ingredients))errors.push('Invalid whole cremation ingredient.');
       if(isBiofuelRecipe(c.recipe)&&!validBiofuelIngredients(c.recipe,c.ingredients))errors.push('Invalid biofuel ingredient quota.');
       if(c.recipe==='make-medicine'&&!validMedicineIngredients(c.recipe,c.ingredients))errors.push('Invalid medicine ingredient quotas.');
@@ -143,8 +147,8 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
         if(isCremationRecipe(c.recipe)&&(!pile||i.quantity!==1||!cremationIngredientAllowed(w,bill,pile)||i.stage==='source'&&pile.owner.type==='ground'&&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2))errors.push('Invalid or filtered cremation corpse.');
         if(isSmeltingRecipe(c.recipe)&&(!pile||i.quantity!==1||!smeltingIngredientAllowed(bill,pile)
           ||i.stage==='source'&&pile.owner.type==='ground'&&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2))errors.push('Invalid or filtered smelting weapon.');
-        if(isBiofuelRecipe(c.recipe)&&i.stage==='source'&&pile?.owner.type==='ground'&&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)errors.push('Biofuel ingredient outside bill radius.');
-        if(c.recipe==='chemfuel-from-organics'&&pile&&ticksUntilRot(pile,w.tick)<=0)errors.push('Spoiled biofuel ingredient.');
+        if((isKibbleRecipe(c.recipe)||isBiofuelRecipe(c.recipe))&&i.stage==='source'&&pile?.owner.type==='ground'&&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)errors.push('Biofuel ingredient outside bill radius.');
+        if((isKibbleRecipe(c.recipe)||c.recipe==='chemfuel-from-organics')&&pile&&ticksUntilRot(pile,w.tick)<=0)errors.push('Spoiled biofuel ingredient.');
         if((!unfinished&&!bill.filters[i.item])||!pile||pile.item!==i.item||pile.quantity<i.quantity){errors.push('Missing recipe ingredient.');continue;}
         if(unfinishedApparel&&(!pile.unfinished||pile.unfinished.recipe!==c.recipe||pile.unfinished.authorId!==p.id||pile.unfinished.billId!==undefined&&pile.unfinished.billId!==c.billId||c.phase==='work'&&pile.unfinished.progress!==c.progress))errors.push('Invalid unfinished work ownership or progress.');
         if(unfinishedArt&&(!pile.artWork||pile.artWork.recipe!==c.recipe||pile.artWork.authorId!==p.id||pile.artWork.billId!==undefined&&pile.artWork.billId!==c.billId||pile.artWork.billId===undefined&&!bill.filters[pile.artWork.material]||c.phase==='work'&&pile.artWork.progress!==c.progress))errors.push('Invalid unfinished sculpture ownership or progress.');
@@ -194,6 +198,48 @@ export function validBiofuelProductionTransport(w:World,version:number,memoizeSt
         if(!pile||pile.item!==part.item||pile.owner.type!=='ground'||!bill.filters[part.item]||reservedSource(w,pile.id)>pile.quantity
           ||(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2
           ||c.recipe==='chemfuel-from-organics'&&ticksUntilRot(pile,w.tick)<=0
+          ||!ingredientWithinReach(part.cell,spot,station)||!ingredientPlaceFree(w,part.cell,spot,c.recipe!,station,geometry))return false;
+        if(part.stage==='placed'){
+          if(pile.owner.x!==part.cell.x||pile.owner.z!==part.cell.z)return false;
+        }else{
+          const cellKey=part.cell.z*w.width+part.cell.x,prior=incoming.get(cellKey),quantity=(prior?.quantity??0)+part.quantity;
+          if(prior&&prior.item!==part.item||groundCapacity(view,part.cell,part.item,undefined,geometry)<quantity)return false;
+          incoming.set(cellKey,{item:part.item,quantity});
+        }
+      }
+    }
+    return true;
+  }catch{return false;}
+}
+
+/** Kibble proposals and active work retain the same strict file/Decoder
+ * quotas, physical reservations and typed staging. No historical bill opts in. */
+export function validKibbleProductionTransport(w:World,version:number,memoizeStaging=false,indexStaging=false,geometry?:StagingGeometryReader):boolean {
+  try {
+    const present=w.structures.some(s=>s.bills?.some(b=>isKibbleRecipe(b?.recipe)))
+      ||(w.packed??[]).some(p=>p.building.bills?.some(b=>isKibbleRecipe(b?.recipe)))
+      ||w.pawns.some(p=>isKibbleRecipe(p.cooking?.recipe)||(p.orders?.queue??[]).some(o=>isCookingOrder(o)&&isKibbleRecipe(o.cooking.recipe)));
+    if(!present)return true;
+    if(version<227||validateCooking(w,version,new Set(),memoizeStaging,indexStaging,geometry).length)return false;
+    const stations=new Set(w.pawns.filter(p=>p.cooking).map(p=>p.cooking!.stationId));
+    const spots=new Set(w.pawns.filter(p=>p.cooking).map(p=>p.cooking!.spot.z*w.width+p.cooking!.spot.x));
+    for(const pawn of w.pawns)for(const order of pawn.orders.queue)if(isCookingOrder(order)&&!isKibbleRecipe(order.cooking.recipe)){
+      const station=w.structures.find(s=>s.id===order.cooking.stationId);
+      if(station){const spot=cookingSpot(station);stations.add(station.id);spots.add(spot.z*w.width+spot.x);}
+    }
+    for(const pawn of w.pawns)for(const order of pawn.orders.queue)if(isCookingOrder(order)&&isKibbleRecipe(order.cooking.recipe)){
+      const c=order.cooking,station=w.structures.find(s=>s.id===c.stationId),spot=station&&cookingSpot(station);
+      if(!validCookingOrder(order,w))return false;
+      const bill=station?.bills?.find(b=>b.id===c.billId);
+      if(!station||!spot||!bill||!stationAccepts(station,c.recipe!)||bill.recipe!==c.recipe||bill.suspended||stations.has(station.id))return false;
+      const key=spot.z*w.width+spot.x;
+      if(c.spot.x!==spot.x||c.spot.z!==spot.z||spots.has(key))return false;
+      stations.add(station.id);spots.add(key);
+      const view=withoutQueuedOrder(w,order),incoming=new Map<number,{item:ProductionIngredient;quantity:number}>();
+      for(const part of c.ingredients){
+        const pile=w.piles.find(p=>p.id===part.pileId);
+        if(!pile||pile.item!==part.item||pile.owner.type!=='ground'||!bill.filters[part.item]||reservedSource(w,pile.id)>pile.quantity
+          ||(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2||ticksUntilRot(pile,w.tick)<=0
           ||!ingredientWithinReach(part.cell,spot,station)||!ingredientPlaceFree(w,part.cell,spot,c.recipe!,station,geometry))return false;
         if(part.stage==='placed'){
           if(pile.owner.x!==part.cell.x||pile.owner.z!==part.cell.z)return false;

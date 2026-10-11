@@ -32,7 +32,7 @@ export function foodPoisonFromRecipe(cleanliness:number|null,level:number,random
 }
 export function foodCanCarryPoison(item:ItemId):boolean {return item==='nutrient-paste-meal'||item==='simple-meal'||item==='fine-meal'||item==='vegetarian-fine-meal'||item==='carnivore-fine-meal'||item==='lavish-meal'||item==='vegetarian-lavish-meal'||item==='carnivore-lavish-meal'||item==='survival-meal';}
 export function rawFoodPoisonChance(item:ItemId):number {
-  return item==='berries'||item==='milk'||item==='rice'||item==='potato'||item==='corn'||item==='agave-fruit'||isAnimalMeat(item)?.02:0;
+  return item==='kibble'||item==='berries'||item==='milk'||item==='rice'||item==='potato'||item==='corn'||item==='agave-fruit'||isAnimalMeat(item)?.02:0;
 }
 export function copyFoodPoison(poison:FoodContamination|undefined):FoodContamination|undefined {return poison?{...poison}:undefined;}
 /** Both quantities are captured before the transfer. Only the incoming amount

@@ -1,5 +1,18 @@
 # Guide joueur
 
+**Schéma 227 — V316 : [foin et croquettes](fodder-v316.md).** Culture de fourrage et fabrication à deux quotas avec objets, transport et consommation réels ; preuves et limites dans la note unique.
+
+## Cultiver le foin et fabriquer des croquettes — V316
+
+Tracez une zone de culture puis choisissez **Herbe à foin**. Elle pousse sur un sol suffisamment fertile, sans recherche ni niveau minimum de Plantes ; elle ne pousse pas dans un bac hydroponique. Les colons sèment, récoltent puis transportent le foin. La récolte mature de base donne18unités avant les effets de croissance, de santé de la plante et du travailleur. Couper la plante sans récolte ne produit aucun foin.
+
+Sur une **Table de boucher** ou un **Emplacement de boucherie**, ajoutez la facture **Fabriquer des croquettes**. Il faut20unités de protéines — viande ou lait — et20unités de végétaux crus ou de foin. Choisissez les ingrédients autorisés, la quantité de fabrications et la destination avec les réglages habituels. Le colon apporte les ingrédients par cargaisons physiques ; la table donne50croquettes et l'emplacement35. Aucun combustible ni électricité n'est demandé pour cette recette.
+
+Le foin et les croquettes figurent sous **Aliments > Fourrage** dans les stocks et les filtres de stockage. Le foin pourrit après60jours d'âge thermique ; les croquettes ne pourrissent pas. Les herbivores, y compris les troupeaux possédés, peuvent manger le foin ; le renard mange des croquettes mais refuse le foin. Les animaux malades peuvent être alimentés avec une vraie portion compatible. Le dressage utilise les croquettes, mais ne collecte pas automatiquement le foin.
+
+Un humain ne mange jamais de foin. Des croquettes autorisées par son régime constituent un aliment de secours, avec souvenir négatif de−12pendant un jour et risque alimentaire humain. Les régimes d'une sauvegarde ancienne ne sont pas automatiquement élargis : autorisez explicitement les croquettes si vous souhaitez cet usage.
+
+
 **Schéma 226 — V315 : [pièges à pointes consommables](spike-traps-v315.md).** Contact réel, consommation du bâtiment et remplacement payé ; preuves et limites dans la note unique. Les résultats datés suivants demeurent historiques.
 
 ## Utiliser les pièges à pointes — V315

@@ -6,7 +6,7 @@ import { RESIDENT_CROP_KINDS } from '../src/render/flora-presentation';
 import type { World } from '../src/sim/types';
 import { MeshStandardNodeMaterial, type InstancedMesh } from 'three/webgpu';
 import { CropLayer } from '../src/render/CropLayer';
-import { CropLayer as ReferenceCropLayer } from './scenarios/crop-layer-baseline-v224';
+import { CropLayer as ReferenceCropLayer, V224_RESIDENT_CROP_KINDS } from './scenarios/crop-layer-baseline-v224';
 
 test('crop membership and current references match ordered full filters across confirmed and unknown suffixes', () => {
   const producer = createWorld(227, 32, 32);
@@ -54,7 +54,7 @@ test('crop membership and current references match ordered full filters across c
 test('confirmed crop partition preserves resident matrices, colors, slots, uploads and bounds', () => {
   const world = createWorld(228, 16, 16);
   world.tiles = world.tiles.map(() => ({ terrain: 'grass' })); world.resources = [];
-  for (const [index, kind] of RESIDENT_CROP_KINDS.entries()) {
+  for (const [index, kind] of V224_RESIDENT_CROP_KINDS.entries()) {
     world.resources.push({ id: world.nextId++, kind, x: 5 + index, z: 5, amount: 8, growth: .2, growthTick: 0 });
   }
   const encoder = new SnapshotEncoder(), decoder = new SnapshotDecoder();

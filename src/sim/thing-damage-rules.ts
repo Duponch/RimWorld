@@ -38,7 +38,7 @@ export const structureMaxHp=(s:Pick<Structure,'kind'|'material'>)=>Math.round((B
 export const structureFlammability=(s:Pick<Structure,'kind'|'material'>)=>(BUILDINGS[s.kind]?.[1]??0)*(STUFF_BUILDINGS.has(s.kind)?s.material?.endsWith('-blocks')?0:s.material==='steel'?.4:1:1);
 export const structureLeavesResources=(s:Pick<Structure,'kind'>)=>BUILDINGS[s.kind]?.[2]??false;
 export const resourceMaxHp=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.hitPoints??(r.kind==='healroot'?60:r.kind==='tree'?200:r.kind==='berries'?120:r.kind==='corn'?150:r.kind==='rock'?0:85);
-export const resourceFlammability=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.flammability??(r.kind==='rock'?0:r.kind==='tree'?.8:1);
+export const resourceFlammability=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.flammability??(r.kind==='rock'?0:r.kind==='tree'?.8:r.kind==='haygrass'?1.3:1);
 export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=193):number {
   if(p.kind==='apparel')return APPAREL[p.item as keyof typeof APPAREL]?.hitPoints??0;
   if(p.kind==='weapon')return weaponMaxHitPoints(p.item);if(p.kind==='corpse'||p.kind==='mech-corpse')return 100;
@@ -50,7 +50,7 @@ export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=193):number
 export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
   if(p.kind==='apparel')return (p.item==='flak-vest'||p.item==='flak-helmet')?.6:1.2;
   if(p.kind==='mech-corpse')return 0;
-  if(p.kind==='weapon')return p.item==='plasteel-knife'?0:.5;if(p.kind==='corpse')return .7;if(p.kind==='food')return 1;
+  if(p.kind==='weapon')return p.item==='plasteel-knife'?0:.5;if(p.kind==='corpse')return .7;if(p.kind==='food')return p.item==='hay'?1.5:1;
   if(p.kind==='medicine')return p.item==='herbal-medicine'?1.3:.7;
   if(p.kind==='chemfuel')return 2;if(p.kind==='neutroamine')return .7;
   // Unfinished apparel inherits the default zero stat; its embedded cloth is not a second ground pile.

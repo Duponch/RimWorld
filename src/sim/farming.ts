@@ -51,6 +51,7 @@ export function sowingJobAllowed(world:World,pawn:Pawn,job:Pick<Job,'kind'|'grow
  * simulation's existing spatial cache. null means the target is absent. */
 export function jobDuration(world: World, job: Job, capturedResource?:Resource|null): number {
   if(job.flowerPotId!==undefined&&job.kind==='sow')return 54;
+  if(job.kind==='sow'&&job.growingZoneId!==undefined&&zoneCells(world).byId.get(job.growingZoneId)?.plant==='haygrass')return 17;
   if(job.kind==='sow'&&job.growingZoneId!==undefined&&zoneCells(world).byId.get(job.growingZoneId)?.plant==='healroot')return 80;
   if(job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave')return constructionRecipe(job).work;
   if(job.kind==='mine'&&job.pickTicks!==undefined)return job.pickTicks/10;

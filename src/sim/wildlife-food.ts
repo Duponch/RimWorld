@@ -21,12 +21,16 @@ export function grazingPen(world:World,a:WildAnimal):ReadonlySet<number>|undefin
   return region?.closed&&region.cells.has(a.z*world.width+a.x)?region.cells:undefined;
 }
 
-export interface AnimalFood extends Cell { id:number;kind:'plant'|'pile';quantity:number }
+export interface AnimalFood extends Cell { id:number;kind:'plant'|'pile';quantity:number;preference?:number }
+/** Core animal food bonuses; older content retains its historical ranking. */
+export const animalFoodPreference=(item:ItemId):number=>item==='kibble'?100:item==='hay'?7:0;
 // Herbivory is an explicit content profile. New nutritious items do not silently
 // become animal food; prepared meals remain admissible under the existing rule.
 const herbivoreFoods:ReadonlySet<ItemId>=new Set(['nutrient-paste-meal','berries','rice','potato','corn','agave-fruit','simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','legacy-portion']);
 const preparedFoods:ReadonlySet<ItemId>=new Set(['nutrient-paste-meal','simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','legacy-portion']);
-export const animalPileFood=(world:World,a:WildAnimal,p:World['piles'][number]):boolean=>animalSpecies(a.species).predator
+export const animalPileFood=(world:World,a:WildAnimal,p:World['piles'][number]):boolean=>p.item==='hay'||p.item==='kibble'
+  ?world.schemaVersion>=227&&p.kind==='food'&&(p.item==='kibble'||!animalSpecies(a.species).predator)
+  :animalSpecies(a.species).predator
   ?p.kind==='corpse'?world.schemaVersion>=178&&corpseFresh(p,world.tick)&&!!p.corpse&&corpsePartNutrition(p.corpse,'torso')>.001
     :p.kind==='food'&&(isAnimalMeat(p.item)||preparedFoods.has(p.item))
   :p.kind==='food'&&herbivoreFoods.has(p.item);
@@ -48,7 +52,7 @@ function unclaimedPlant(world:World,r:Resource,except:number,workCells?:Readonly
     &&(workCells?!workCells.has(r.z*world.width+r.x):!world.jobs.some(j=>j.reservedBy!==null&&j.x===r.x&&j.z===r.z&&['harvest','cut','sow'].includes(j.kind)));
 }
 function grazeablePlant(r:Resource,growth:number):boolean {
-  return growth>=(r.species==='healroot-wild'||r.kind==='healroot'?.65:.1)&&plantNutrition(r,growth)>0;
+  return growth>=(r.species==='healroot-wild'||r.kind==='healroot'||r.kind==='haygrass'?.65:.1)&&plantNutrition(r,growth)>0;
 }
 export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   const result:AnimalFood[]=[];
@@ -60,7 +64,7 @@ export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   for(const other of world.wildlife?.animals??[])if(other.id!==a.id&&other.meal?.kind==='plant')claimedPlants.add(other.meal.id);
   const reservedPlantCells=new Set<number>();
   for(const job of world.jobs)if(job.reservedBy!==null&&(job.kind==='harvest'||job.kind==='cut'||job.kind==='sow'))reservedPlantCells.add(job.z*world.width+job.x);
-  if(!animalSpecies(a.species).predator)for(const r of world.resources)if((!pen||pen.has(r.z*world.width+r.x))&&isPlant(r)&&!plantLeafless(world,r)) {
+  if(!animalSpecies(a.species).predator)for(const r of world.resources)if((r.kind!=='haygrass'||world.schemaVersion>=227)&&(!pen||pen.has(r.z*world.width+r.x))&&isPlant(r)&&!plantLeafless(world,r)) {
     const growth=plantGrowth(world,r);
     if(grazeablePlant(r,growth)&&!claimedPlants.has(r.id)&&!reservedPlantCells.has(r.z*world.width+r.x))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
   }
@@ -70,7 +74,10 @@ export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
     reservations??=reservedSourcesByPile(world,a.id);
     const available=p.quantity-(reservations.get(p.id)??0),nutrition=ITEM_DEFINITIONS[p.item].nutrition/100;
     if(p.corpse){if(available===1)result.push({id:p.id,kind:'pile',x:p.owner.x,z:p.owner.z,quantity:1});continue;}
-    if(available>0&&nutrition>0)result.push({id:p.id,kind:'pile',x:p.owner.x,z:p.owner.z,quantity:Math.min(available,Math.max(1,Math.ceil((capacity-a.food)/nutrition)))});
+    if(available>0&&nutrition>0){
+      const preference=animalFoodPreference(p.item);
+      result.push({id:p.id,kind:'pile',x:p.owner.x,z:p.owner.z,quantity:Math.min(available,preference?ITEM_DEFINITIONS[p.item].maxIngest:Infinity,Math.max(1,Math.ceil((capacity-a.food)/nutrition))),...(preference?{preference}:{})});
+    }
   }
   return result;
 }
@@ -80,12 +87,12 @@ export function animalMealTarget(world:World,a:WildAnimal,resourcesById?:Readonl
   if(meal.kind==='plant') {
     if(animalSpecies(a.species).predator)return;
     const r=resourcesById?resourcesById.get(meal.id):world.resources.find(r=>r.id===meal.id);
-    if(!r||!isPlant(r)||plantLeafless(world,r))return;
+    if(!r||r.kind==='haygrass'&&world.schemaVersion<227||!isPlant(r)||plantLeafless(world,r))return;
     const growth=plantGrowth(world,r);
     return grazeablePlant(r,growth)&&unclaimedPlant(world,r,a.id,workCells)&&(!pen||pen.has(r.z*world.width+r.x))?r:undefined;
   }
   const p=world.piles.find(p=>p.id===meal.id);
-  return p&&animalPileFood(world,a,p)&&p.owner.type==='ground'&&p.quantity-reservedSource(world,p.id,a.id)>=meal.quantity&&(!p.corpse||meal.quantity===1)&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))?p.owner:undefined;
+  return p&&animalPileFood(world,a,p)&&p.owner.type==='ground'&&p.quantity-reservedSource(world,p.id,a.id)>=meal.quantity&&(!animalFoodPreference(p.item)||meal.quantity<=ITEM_DEFINITIONS[p.item].maxIngest)&&(!p.corpse||meal.quantity===1)&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))?p.owner:undefined;
 }
 /** Called only after physical contact and the complete ingestion interval. */
 export function finishAnimalMeal(world:World,a:WildAnimal):void {

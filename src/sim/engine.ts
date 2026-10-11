@@ -186,7 +186,7 @@ import { reloadableTurret,draftTurretService } from './mini-turret-reload.ts';
 import { setTurretHoldFire } from './mini-turret.ts';
 import { bombDanger,captureBombDangerSources } from './bomb-danger.ts';
 import { processHaul } from './hauling.ts';
-import { initializeHydroponicBasin,advanceHydroponics } from './hydroponics.ts';
+import { initializeHydroponicBasin,advanceHydroponics,hydroponicCropAllowed } from './hydroponics.ts';
 import { scheduleGrowing, cancelGrowingJobs, growingJobValid, finishSowing, jobDuration, growingZoneAt, resourceAt } from './farming.ts';
 import { isPlant, harvestable,choppable,berryYield } from './plants.ts';
 import { search, searchCandidates, destinationValid, planWork, type SearchBudget, type NavigationGrid } from './work-planner.ts';
@@ -579,7 +579,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if (command.type === 'growing-policy') {
     const zone = world.growingZones.find(z => z.id === command.zoneId);
     if (!zone || typeof command.allowSow !== 'boolean' || typeof command.allowCut !== 'boolean' || command.plant!==undefined&&!isCropKind(command.plant)) return refusal('invalid-command', 'Zone ou réglages de culture invalides.');
-    if(zone.basinId!==undefined&&(command.plant??zone.plant)==='corn')return refusal('invalid-command','Le maïs ne peut pas être cultivé en hydroponie.');
+    if(zone.basinId!==undefined&&!hydroponicCropAllowed(command.plant??zone.plant))return refusal('invalid-command','Cette plante ne peut pas être cultivée en hydroponie.');
     cancelGrowingJobs(world, new Set([zone.id]),drops);
     world.growingZones = world.growingZones.map(z => z === zone ? {...z, plant:command.plant??z.plant, allowSow: command.allowSow, allowCut: command.allowCut} : z);
     wakePlanners(world); return {ok:true};

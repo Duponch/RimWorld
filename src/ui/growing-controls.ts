@@ -3,6 +3,7 @@ import { PLANT_DEFINITIONS } from '../sim/plants';
 import { CROP_KINDS, type CropKind } from '../sim/crops';
 
 const CULTURE_HELP:Record<CropKind,string>={
+  haygrass:'Le foin mûr donne jusqu’à 18 unités. Sept jours de croissance pondérée, sensibilité à la fertilité de 60 %. Sol uniquement, sans hydroponie. Semis 17 ticks et récolte 20 ticks nominaux ; la durée et le rendement dépendent du récolteur et du milieu. Le foin nourrit les herbivores et entre dans les croquettes, mais ne se mange pas par les humains. Conservation : 60 jours à température ambiante.',
   rice:'Le riz mûr donne 6 unités. Cycle court, sensible à la fertilité : utile pour les premières récoltes.',
   potato:'Un plant mûr donne 11 pommes de terre. Cycle intermédiaire, moins pénalisé par le gravier ; le gain en terre riche est aussi plus faible. Conservation : 30 jours à température ambiante.',
   corn:'Un plant mûr donne 22 unités de maïs. Cycle long et sensible à la fertilité : prévoyez de quoi manger avant la récolte. Conservation : 60 jours à température ambiante.',
@@ -12,7 +13,7 @@ const CULTURE_HELP:Record<CropKind,string>={
 
 export const growingCultureHelp=(kind:CropKind):string=>CULTURE_HELP[kind];
 export const growingCultureChoices=(zone:Pick<GrowingZone,'basinId'>):readonly CropKind[]=>
-  zone.basinId===undefined?CROP_KINDS:CROP_KINDS.filter(kind=>kind!=='corn');
+  zone.basinId===undefined?CROP_KINDS:CROP_KINDS.filter(kind=>kind!=='corn'&&kind!=='haygrass');
 
 export function growingControls(zone: GrowingZone, send: (command: Command) => void): HTMLElement {
   const panel = document.createElement('div'); panel.className = 'storage-settings';

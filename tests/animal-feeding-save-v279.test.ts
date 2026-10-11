@@ -26,7 +26,7 @@ function feeding(species:AnimalSpeciesId='deer',phase:'pickup'|'deliver'|'feed'=
 const checkpoint=(w:World)=>new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,1)));
 function historical213(w:World):World {
   w.schemaVersion=213 as World['schemaVersion'];
-  for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');
+  for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal'&&item!=='kibble');
   for(const cell of w.stockpiles)delete cell.zoneId;
   return w;
 }

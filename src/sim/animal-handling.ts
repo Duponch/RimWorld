@@ -36,9 +36,14 @@ const TALK_TICKS = 27;
 const FINAL_TAME_TICKS = 35;
 const FINAL_TRAIN_TICKS = 10;
 const FOOD:ReadonlySet<ItemId> = new Set(['berries','rice','potato','corn','agave-fruit']);
+/** Core interaction accepts foods through RawTasty, including Hay and Kibble.
+ * All five local tameable species eat plants; both new foods have .05 nutrition. */
+export const handlingFoodAllowed=(w:Pick<World,'schemaVersion'>,item:ItemId):boolean=>FOOD.has(item)||w.schemaVersion>=227&&(item==='hay'||item==='kibble');
+/** Core's collection group excludes pure Plant food even when it is a pile. */
+export const handlingFoodCollectable=(w:Pick<World,'schemaVersion'>,item:ItemId):boolean=>FOOD.has(item)||w.schemaVersion>=227&&item==='kibble';
 export const handlingFeedUnits=(species:WildAnimal['species']):number=>Math.max(1,Math.ceil(Math.min(.15*animalSpecies(species).nutrition,.3)/.05));
 const MAX_TAMENESS = 5;
-/** All five explicitly supported raw foods have 0.05 nutrition per unit. */
+/** All explicitly supported interaction foods have 0.05 nutrition per unit. */
 export const HANDLING_FEED_TICKS=Math.ceil(TALK_TICKS*(ITEM_DEFINITIONS.berries.nutrition*10)/30);
 export function handlingStepDuration(task:Pick<AnimalHandlingTask,'kind'|'step'>,species:WildAnimal['species']='hare'):number {
   const feedNutrition=Math.round(Math.min(.15*animalSpecies(species).nutrition,.3)*1000);
@@ -86,7 +91,7 @@ export function handlingProposal(w:World,p:Pawn,reach:Reachability):HandlingProp
   const animals=w.wildlife!.animals.filter(a=>allowedAreaAllows(w,p,a)&&animalAvailable(a)&&!animalHandlingClaimed(w,a.id)
     &&(trainableAt(w,a)||tameableAt(w,a,p)))
     .sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
-  const sources=w.piles.filter(i=>i.kind==='food'&&FOOD.has(i.item)&&i.owner.type==='ground'&&allowedAreaAllows(w,p,i.owner))
+  const sources=w.piles.filter(i=>i.kind==='food'&&handlingFoodCollectable(w,i.item)&&i.owner.type==='ground'&&allowedAreaAllows(w,p,i.owner))
     .sort((a,b)=>(a.owner.type==='ground'?(a.owner.x-p.x)**2+(a.owner.z-p.z)**2:Infinity)
       -(b.owner.type==='ground'?(b.owner.x-p.x)**2+(b.owner.z-p.z)**2:Infinity)||a.id-b.id);
   for(const a of animals) {
@@ -147,7 +152,7 @@ function stillValid(w:World,p:Pawn,a:WildAnimal,task:AnimalHandlingTask):boolean
 }
 function carried(w:World,p:Pawn,task:AnimalHandlingTask) {
   return w.piles.find(i=>i.id===task.carryPileId&&i.owner.type==='pawn'&&i.owner.pawnId===p.id
-    &&i.kind==='food'&&FOOD.has(i.item)&&i.quantity===task.quantity);
+    &&i.kind==='food'&&handlingFoodAllowed(w,i.item)&&i.quantity===task.quantity);
 }
 function finish(w:World,p:Pawn,a:WildAnimal,task:AnimalHandlingTask,ctx:NeedContext):void {
   const skill=p.skills.animals;
@@ -178,7 +183,7 @@ export function processHandling(w:World,p:Pawn,ctx:HandlingContext):void {
   if(!a||!stillValid(w,p,a,task)){interruptWork(w,p);return;}
   if(task.phase==='pickup') {
     const pile=w.piles.find(i=>i.id===task.sourcePileId);
-    if(!pile||pile.owner.type!=='ground'||pile.kind!=='food'||!FOOD.has(pile.item)
+    if(!pile||pile.owner.type!=='ground'||pile.kind!=='food'||!handlingFoodCollectable(w,pile.item)
       ||pile.quantity-reservedSource(w,pile.id,p.id)<task.quantity){interruptWork(w,p);return;}
     if(!adjacent(p,pile.owner)&&(p.x!==pile.owner.x||p.z!==pile.owner.z)){ctx.move(pile.owner,false);return;}
     if(pile.quantity===task.quantity){pile.owner={type:'pawn',pawnId:p.id};task.carryPileId=pile.id;}

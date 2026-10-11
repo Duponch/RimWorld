@@ -1,4 +1,5 @@
 import {isArtRecipe} from './art-rules.ts';
+import { isKibbleRecipe } from './fodder-recipes.ts';
 import { isSmeltingRecipe,validSmeltFilter } from './smelting-rules.ts';
 import { isCremationRecipe,validCremationFilter } from './cremation-rules.ts';
 import { V91_ITEM_IDS,V190_ITEM_IDS, isAnimalMeat } from './biome-items.ts';
@@ -23,6 +24,7 @@ export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',v
     ...isCremationRecipe(recipe)?{cremationFilter:{colonists:true,strangers:true,fresh:true,rotting:true,desiccated:true}}:{}};
 }
 export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
+  if(isKibbleRecipe(recipe)&&version<227)return false;
   if(isSmeltingRecipe(recipe)&&version<222)return false;
   if(isCremationRecipe(recipe)&&version<225)return false;
   if(isBiofuelRecipe(recipe)&&version<218)return false;
@@ -54,7 +56,7 @@ export function countedProducts(world:World,bill?:CookingBill):number {
   let products=COUNTED_PRODUCTS.get(recipe);
   if(!products){products=new Set(Object.keys(ITEM_DEFINITIONS).filter(item=>recipe==='butcher-creature'?isAnimalMeat(item):isRecipeProduct(recipe,item as keyof typeof ITEM_DEFINITIONS)));COUNTED_PRODUCTS.set(recipe,products);}
   const stored=new Map(world.stockpiles.map(z=>[z.z*world.width+z.x,z] as const));
-  const meal=recipe==='cook-survival-meal'||recipe==='fine-meal'||recipe==='cook-fine-meal-bulk'||recipe==='vegetarian-fine-meal'||recipe==='cook-vegetarian-fine-meal-bulk'||recipe==='carnivore-fine-meal'||recipe==='cook-carnivore-fine-meal-bulk'||recipe==='lavish-meal'||recipe==='cook-lavish-meal-bulk'||recipe==='vegetarian-lavish-meal'||recipe==='cook-vegetarian-lavish-meal-bulk'||recipe==='cook-carnivore-lavish-meal'||recipe==='cook-carnivore-lavish-meal-bulk';
+  const meal=isKibbleRecipe(recipe)||recipe==='cook-survival-meal'||recipe==='fine-meal'||recipe==='cook-fine-meal-bulk'||recipe==='vegetarian-fine-meal'||recipe==='cook-vegetarian-fine-meal-bulk'||recipe==='carnivore-fine-meal'||recipe==='cook-carnivore-fine-meal-bulk'||recipe==='lavish-meal'||recipe==='cook-lavish-meal-bulk'||recipe==='vegetarian-lavish-meal'||recipe==='cook-vegetarian-lavish-meal-bulk'||recipe==='cook-carnivore-lavish-meal'||recipe==='cook-carnivore-lavish-meal-bulk';
   return world.piles.reduce((n,p)=>{
     if(!products.has(p.item))return n;
     if(p.owner.type==='pawn'&&bill?.recipe!=='butcher-creature'||isFlakRecipe(recipe)&&p.owner.type==='apparel')return n+p.quantity;

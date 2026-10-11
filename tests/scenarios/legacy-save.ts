@@ -3,7 +3,7 @@ import { withoutHunting } from './legacy-skills';
  * does not sanitize serializer input or remove future fields in refusal tests. */
 export function withoutPredatorFoodPolicies<T>(world:T):T {
   for(const policy of (world as {foodPolicies?:Array<{allowed:string[]}>}).foodPolicies??[])
-    policy.allowed=policy.allowed.filter(item=>item!=='red-fox-meat'&&item!=='nutrient-paste-meal');
+    policy.allowed=policy.allowed.filter(item=>item!=='red-fox-meat'&&item!=='nutrient-paste-meal'&&item!=='kibble');
   return world;
 }
 /** Historical registry expectation: preserve every prior permission and ID. */

@@ -1,5 +1,6 @@
 import {isMechSalvageRecipe,mechSalvageSpeed,finishMechSalvage} from './mechanoid-salvage.ts';
 import { workPriority } from './work-types.ts';
+import { isKibbleRecipe,validKibbleIngredients,kibbleOutputUnits } from './fodder-recipes.ts';
 import { allowedAreaWorkAllowed } from './allowed-area-state.ts';
 import { isSmeltingRecipe,smeltingIngredientAllowed,smeltingSpeed,validSmeltingIngredients } from './smelting-rules.ts';
 import { finishSmelting } from './smelting.ts';
@@ -55,6 +56,8 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const task=pawn.cooking!;
   if(!allowedAreaWorkAllowed(world,pawn)){context.release();return;}
   const medicine=task.recipe==='make-medicine';
+  const kibble=isKibbleRecipe(task.recipe);
+  if(kibble&&world.schemaVersion<227){context.release();return;}
   const biofuel=isBiofuelRecipe(task.recipe);
   const smelting=isSmeltingRecipe(task.recipe);
   const cremation=isCremationRecipe(task.recipe);
@@ -62,10 +65,11 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if((smelting||cremation)&&(pawn.stun||pawn.draft||pawn.state==='downed'||pawn.state==='dead'||pawnBody(pawn).capacities.manipulation<=0||cremation&&(medicalWorkRefusal(pawn)||(pawn.faction??'colony')!=='colony'||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||pawn.burning||pawn.mental?.crisis||pawn.collapsePending||workPriority(pawn,'haul')===0))){context.release();return;}
   if(task.phase==='interrupted'){context.release();return;}
   const station=world.structures.find(s=>s.id===task.stationId),bill=station?.bills?.find(b=>b.id===task.billId);
-  if((medicine||biofuel||smelting||cremation)&&(!station||!bill||bill.recipe!==task.recipe||!stationAccepts(station,task.recipe!))){context.release();return;}
+  if((kibble||medicine||biofuel||smelting||cremation)&&(!station||!bill||bill.recipe!==task.recipe||!stationAccepts(station,task.recipe!))){context.release();return;}
   if(backgroundWorkRefusal(pawn,taskWork(task))||!station||!bill||bill.suspended||task.recipe==='cook-survival-meal'&&!stationAccepts(station,task.recipe)||!productionResearchUnlocked(world,taskRecipe(task))||task.phase!=='output'&&!productionWorkerQualified(pawn,taskRecipe(task))||workPriority(pawn,taskWork(task))===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&(!foodStationUsable(station)||!productionStationUsable(station)))) {context.release();return;}
   if(task.phase==='output'){if(!recipeHasProducts(taskRecipe(task))){context.release();return;}processProductionOutput(world,pawn,context,bill.destination);return;}
   const recipe=PRODUCTION_RECIPES[taskRecipe(task)];
+  if(kibble&&!validKibbleIngredients(task.ingredients)){context.release();return;}
   if(medicine&&!validMedicineIngredients(taskRecipe(task),task.ingredients)){context.release();return;}
   if(biofuel&&!validBiofuelIngredients(taskRecipe(task),task.ingredients)){context.release();return;}
   if(smelting&&(!validSmeltingIngredients(task.ingredients)||bill.mode==='until')){context.release();return;}
@@ -75,13 +79,13 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   for(const entry of task.ingredients) {
     const pile=world.piles.find(p=>p.id===entry.pileId);
     if(cremation&&!canStandAt(world,entry.cell)){context.release();return;}
-    if(biofuel&&entry.stage!=='placed'&&entry.quantity>10){context.release();return;}
-    if((medicine||biofuel||smelting||cremation)&&(!bill.filters[entry.item]||!pile||smelting&&!smeltingIngredientAllowed(bill,pile)
+    if((kibble||biofuel)&&entry.stage!=='placed'&&entry.quantity>10){context.release();return;}
+    if((kibble||medicine||biofuel||smelting||cremation)&&(!bill.filters[entry.item]||!pile||smelting&&!smeltingIngredientAllowed(bill,pile)
       ||cremation&&(!cremationIngredientAllowed(world,bill,pile)||pile.humanCorpse&&burialClaim(world,pile.humanCorpse.pawnId,pawn.id))
       ||entry.stage==='source'&&(pile.owner.type!=='ground'||(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)
       ||entry.stage==='placed'&&(pile.owner.type!=='ground'||pile.owner.x!==entry.cell.x||pile.owner.z!==entry.cell.z)
       ||entry.stage==='held'&&(pile.owner.type!=='pawn'||pile.owner.pawnId!==pawn.id))){context.release();return;}
-    if(task.recipe==='chemfuel-from-organics'&&pile&&ticksUntilRot(pile,world.tick)<=0){context.release();return;}
+    if((kibble||task.recipe==='chemfuel-from-organics')&&pile&&ticksUntilRot(pile,world.tick)<=0){context.release();return;}
     if(!pile||!cremation&&isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick)||(task.recipe==='cook-survival-meal'||task.recipe==='cook-simple-meal-bulk'||task.recipe==='cook-fine-meal-bulk'||task.recipe==='cook-lavish-meal-bulk'||task.recipe==='vegetarian-fine-meal'||task.recipe==='cook-vegetarian-fine-meal-bulk'||task.recipe==='carnivore-fine-meal'||task.recipe==='cook-carnivore-fine-meal-bulk'||task.recipe==='vegetarian-lavish-meal'||task.recipe==='cook-vegetarian-lavish-meal-bulk'||task.recipe==='cook-carnivore-lavish-meal'||task.recipe==='cook-carnivore-lavish-meal-bulk')&&ticksUntilRot(pile,world.tick)<=0||pile.item!==entry.item||pile.quantity<entry.quantity||entry.stage!=='held'&&reservedSource(world,pile.id)>pile.quantity){context.release();return;}
     if(cremation&&reservedSource(world,pile.id,pawn.id)>0){context.release();return;}
     if((task.recipe==='cook-survival-meal'||task.recipe==='cook-simple-meal-bulk'||task.recipe==='cook-fine-meal-bulk'||task.recipe==='cook-lavish-meal-bulk'||task.recipe==='vegetarian-fine-meal'||task.recipe==='cook-vegetarian-fine-meal-bulk'||task.recipe==='carnivore-fine-meal'||task.recipe==='cook-carnivore-fine-meal-bulk'||task.recipe==='vegetarian-lavish-meal'||task.recipe==='cook-vegetarian-lavish-meal-bulk'||task.recipe==='cook-carnivore-lavish-meal'||task.recipe==='cook-carnivore-lavish-meal-bulk')&&(!bill.filters[entry.item]
@@ -154,18 +158,19 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(isTailoring(task.recipe)&&!Number.isSafeInteger((world.tailoring?.completed??0)+1))return;
   const random={rng:world.rng},apparel=isTailoring(task.recipe)||isFlakRecipe(task.recipe)?{...newApparelState(item as ApparelItem,material),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
   const weapon=isGunRecipe(task.recipe)?{...newWeaponState(item as RangedWeaponItem),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
-  const foodPoison=world.schemaVersion>=89&&culinary?foodPoisonFromRecipe(roomCleanliness(world,pawn),(pawn.skills.cooking?.level??0),()=>healthRandom(random)):undefined;
+  const foodPoison=world.schemaVersion>=89&&culinary&&!kibble?foodPoisonFromRecipe(roomCleanliness(world,pawn),(pawn.skills.cooking?.level??0),()=>healthRandom(random)):undefined;
   const medicineSkill=medicine?completedMedicineSkill(pawn,task.workTicks??0):undefined;
   // All preconditions succeeded. Consume once, create once, then store physically.
   for(const [id,quantity] of used)world.piles.find(p=>p.id===id)!.quantity-=quantity;
   world.piles=world.piles.filter(p=>p.quantity>0);
-  const id=world.nextId++;world.piles.push({id,item,kind:ITEM_DEFINITIONS[item].kind,quantity:recipe.outputUnits,owner:{type:'pawn',pawnId:pawn.id},...freshRot(item,world.tick),...(foodPoison?{foodPoison}:{}),...apparel?{apparel}:{},...(weapon?{weapon}:{})});
+  const id=world.nextId++;world.piles.push({id,item,kind:ITEM_DEFINITIONS[item].kind,quantity:kibble?kibbleOutputUnits(station):recipe.outputUnits,owner:{type:'pawn',pawnId:pawn.id},...freshRot(item,world.tick),...(foodPoison?{foodPoison}:{}),...apparel?{apparel}:{},...(weapon?{weapon}:{})});
   world.rng=random.rng;
   if(medicineSkill)pawn.skills.intellectual=medicineSkill;
   if(isTailoring(task.recipe)){(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
   task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;if(culinary)pawn.skills.cooking=completedCookingSkill(pawn,task.workTicks??0);delete task.workTicks;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
   if(medicine){context.event(`${pawn.name} a fabriqué 1 médicament.`);return;}
+  if(kibble){context.event(`${pawn.name} a fabriqué ${kibbleOutputUnits(station)} croquettes.`);return;}
   if(biofuel){context.event(`${pawn.name} a raffiné 35 unités de biocarburant.`);return;}
   context.event(isGunRecipe(task.recipe)||isFlakRecipe(task.recipe)||isComponentRecipe(task.recipe)||isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='cook-survival-meal'?`${pawn.name} a cuisiné 1 repas de survie emballé.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='cook-simple-meal-bulk'?`${pawn.name} a cuisiné 4 repas simples.`:task.recipe==='fine-meal'?`${pawn.name} a cuisiné 1 plat raffiné.`:task.recipe==='cook-fine-meal-bulk'?`${pawn.name} a cuisiné 4 plats raffinés.`:task.recipe==='vegetarian-fine-meal'?`${pawn.name} a cuisiné 1 plat végétarien raffiné.`:task.recipe==='cook-vegetarian-fine-meal-bulk'?`${pawn.name} a cuisiné 4 plats végétariens raffinés.`:task.recipe==='carnivore-fine-meal'?`${pawn.name} a cuisiné 1 plat carnivore raffiné.`:task.recipe==='cook-carnivore-fine-meal-bulk'?`${pawn.name} a cuisiné 4 plats carnivores raffinés.`:task.recipe==='lavish-meal'?`${pawn.name} a cuisiné 1 plat gastronomique.`:task.recipe==='cook-lavish-meal-bulk'?`${pawn.name} a cuisiné 4 plats gastronomiques.`:task.recipe==='vegetarian-lavish-meal'?`${pawn.name} a cuisiné 1 plat végétarien gastronomique.`:task.recipe==='cook-vegetarian-lavish-meal-bulk'?`${pawn.name} a cuisiné 4 plats végétariens gastronomiques.`:task.recipe==='cook-carnivore-lavish-meal'?`${pawn.name} a cuisiné 1 plat carnivore gastronomique.`:task.recipe==='cook-carnivore-lavish-meal-bulk'?`${pawn.name} a cuisiné 4 plats carnivores gastronomiques.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
 }

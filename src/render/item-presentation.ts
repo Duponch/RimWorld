@@ -81,6 +81,27 @@ export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].
     add('item-leaf',0,.25,-.04,.16,.025,.20,0x61834d,.4);
   }else if(item==='potato'){
     for(const [x,y,z,a] of [[-.14,.09,-.06,.3],[.13,.09,.01,-.3],[0,.22,.06,.8]])add('item-nugget',x!,y!,z!,.27,.18,.22,color,a);
+  }else if(item==='hay'){
+    // Eight long straw bundles retain a broken, fibrous outline; the bindings
+    // surround the real volume instead of drawing stripes on a solid block.
+    for(let layer=0;layer<2;layer++)for(let strand=0;strand<4;strand++){
+      const turn=(strand%2?1:-1)*.035;
+      add('item-log',(strand%2?1:-1)*.018,.063+layer*.085,(strand-1.5)*.10,
+        (.64+(strand%3)*.035)*amount,.08,.115,strand%2?color:0xc8b66a,turn);
+    }
+    for(const x of [-.17,.17]){
+      box(x,.204,0,.026,.020,.425,0x8b7952);box(x,.018,0,.026,.020,.425,0x8b7952);
+      for(const side of [-1,1])box(x,.111,side*.211,.026,.186,.018,0x8b7952);
+    }
+  }else if(item==='kibble'){
+    // Separate squat pellets, with an exposed lower ring and two upper layers.
+    // The fixed assembly shares resident disc meshes with ground and cargo.
+    for(let i=0;i<14;i++){
+      const layer=i<8?0:i<12?1:2,index=i<8?i:i<12?i-8:i-12;
+      const angle=index*2.4+layer*.6,radius=layer===0?.18:layer===1?.083:.043;
+      add('item-disc',Math.cos(angle)*radius,.052+layer*.071,Math.sin(angle)*radius,
+        .11,.082,.105,i%3===0?0xb9915d:i%3===1?color:0x8f704a,angle);
+    }
   }else if(item==='rice'){
     for(let i=0;i<7;i++){const a=i*2.4,r=i<5?.17:.06;add('item-round',Math.cos(a)*r,.055+(i>4?.075:0),Math.sin(a)*r,.15,.075,.085,color,a);}
   }else if(item==='corn'){

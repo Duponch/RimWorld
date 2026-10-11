@@ -1,11 +1,11 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 226 as const;
+export const SCHEMA_VERSION = 227 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone' | 'rich-soil' | 'gravel';
-export type ResourceKind = 'wild-plant' | 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton' | 'healroot';
+export type ResourceKind = 'wild-plant' | 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton' | 'healroot' | 'haygrass';
 export type MaterialKind = 'chemfuel' | 'neutroamine' | 'mech-corpse' | 'silver' | 'corpse' | 'wood' | 'food' | 'chunk' | 'steel' | 'gold' | 'plasteel' | 'advanced-component' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
 export type BedSlot = 0 | 1;
 export type StructureKind = 'spike-trap' | 'electric-crematorium' | 'double-bed' | 'electric-smelter' | 'animal-sleeping-spot' | 'biofuel-refinery' | 'chemfuel-generator' | 'nutrient-paste-dispenser' | 'hopper' | 'orbital-beacon' | 'comms-console' | 'deep-drill' | 'ground-scanner' | 'vitals-monitor' | 'drug-lab' | 'hydroponics-basin' | 'mini-turret' | 'tube-television' | 'sandbags' | 'art-bench' | 'small-sculpture' | 'large-sculpture' | 'machining-table' | 'fabrication-bench' | 'hi-tech-research-bench' | 'multi-analyzer' | 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'sun-lamp' | 'standing-lamp' | 'passive-cooler' | 'door' | 'autodoor' | 'wall' | 'fence' | 'fence-gate' | 'pen-marker' | 'bed' | 'hospital-bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'chess-table' | 'stonecutter';
@@ -31,7 +31,7 @@ export type MaterialOwner = {type:'orbital-ship';shipId:number} | {type:'orbital
 export interface MaterialPile { mechCorpse?:import('./mechanoid-corpse.ts').MechanoidCorpseState; componentWork?:import('./component-work.ts').ComponentWork; flakWork?:import('./flak-work.ts').FlakWork; artWork?:import('./art-work.ts').ArtWork; gunWork?:import('./gun-work.ts').GunWork; humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
 export type StorageFilters = { chemfuel?:boolean; neutroamine?:boolean; 'mech-corpse'?:boolean; silver?:boolean; corpse?:boolean; wood:boolean; food:boolean; unfinished?:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; gold?:boolean; plasteel?:boolean; component?:boolean; 'advanced-component'?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
 export interface StockpileCell extends Cell, StorageConditions { /** Logical zone identity; physical cell IDs remain haul destinations. */ zoneId?:number; items?:Partial<Record<ItemId,boolean>>; id: number; filters: StorageFilters; priority: number; capacity: number }
-export interface GrowingZone { basinId?:number; id: number; cells: number[]; plant: 'rice' | 'cotton' | 'potato' | 'corn' | 'healroot'; allowSow: boolean; allowCut: boolean }
+export interface GrowingZone { basinId?:number; id: number; cells: number[]; plant: 'rice' | 'cotton' | 'potato' | 'corn' | 'healroot' | 'haygrass'; allowSow: boolean; allowCut: boolean }
 export type HaulDestination = {type:'hopper';structureId:number} | { type:'turret';structureId:number;forced?:true } | { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number; forHunting?: true } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
 export interface HaulTask {
   /** A whole furniture identity, never a divisible material pile. */
@@ -46,7 +46,7 @@ export interface HaulTask {
   pickupCell?: Cell;
 }
 export interface DiningPlace { target: Cell; seatId: number | null; tableId: number | null }
-export interface Memory { kind: 'ate-without-table' | 'ate-raw-food' | 'ate-fine-meal' | 'ate-lavish-meal' | 'ate-nutrient-paste'; expiresAt: number }
+export interface Memory { kind: 'ate-without-table' | 'ate-raw-food' | 'ate-fine-meal' | 'ate-lavish-meal' | 'ate-nutrient-paste' | 'ate-kibble'; expiresAt: number }
 export type NeedTask =
   | { kind: 'eat'; phase: 'pickup' | 'collect' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number | null; paste?:import('./nutrient-paste.ts').PasteRequest; carryPileId: number | null; quantity: number; progress: number; workRemainder?:number; dining: DiningPlace | null }
   | { kind: 'sleep'; roomRest?:import('./room-experience.ts').RoomRest; medical?:'patient'|'bedrest'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };

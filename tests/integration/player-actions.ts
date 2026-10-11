@@ -160,7 +160,10 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     for(let i=0;i<=w.pawns.length;i++){await cell(page,target.x,target.z);if(await page.locator('#growing-plant').isVisible())break;}
     if(c.plant)await page.locator('#growing-plant').selectOption(c.plant);
     await page.locator('#growing-allowSow').setChecked(c.allowSow);await page.locator('#growing-allowCut').setChecked(c.allowCut);
-    await page.getByRole('button',{name:'Appliquer les réglages de culture'}).click();
+    await expect.poll(async()=>{
+      const current=(await world(page)).growingZones.find(z=>z.id===c.zoneId);
+      return current&&{plant:current.plant,allowSow:current.allowSow,allowCut:current.allowCut};
+    }).toEqual({plant:c.plant??zone.plant,allowSow:c.allowSow,allowCut:c.allowCut});
   } else if(c.type==='prison-bed'||c.type==='medical-bed') {
     const w=await world(page),bed=w.structures.find(s=>s.id===c.bedId);if(!bed)throw new Error('Lit à configurer absent.');
     await page.keyboard.press('Escape');await revealCells(page,[bed]);

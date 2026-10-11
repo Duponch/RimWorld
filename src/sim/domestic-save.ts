@@ -1,4 +1,4 @@
-import { handlingFeedUnits, handlingStepDuration, canTameSpecies } from './animal-handling.ts';
+import { handlingFoodAllowed, handlingFoodCollectable, handlingFeedUnits, handlingStepDuration, canTameSpecies } from './animal-handling.ts';
 import { leadRopees,leadingClaimIds,livestock,MAX_ROPEES } from './animal-leading.ts';
 import { penRegion } from './animal-pens.ts';
 import { ANIMAL_PRODUCTS, productKind } from './animal-products.ts';
@@ -197,7 +197,7 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
       const pile=w.piles.find(i=>i.id===(t.phase==='pickup'?t.sourcePileId:t.carryPileId));
       const units=handlingFeedUnits(a.species);
       if(t.quantity!==(t.step<3?units*2:t.step<5?units:0))errors.push('Animal food does not match interaction stage.');
-      if(t.quantity===0?(t.step!==5||t.carryPileId!==null):!pile||!['berries','rice','potato','corn','agave-fruit'].includes(pile.item)
+      if(t.quantity===0?(t.step!==5||t.carryPileId!==null):!pile||!(t.phase==='pickup'?handlingFoodCollectable(w,pile.item):handlingFoodAllowed(w,pile.item))
         ||(t.phase==='pickup'?t.carryPileId!==null||t.quantity!==units*2||pile.owner.type!=='ground'||reservedSource(w,pile.id)>pile.quantity:pile.owner.type!=='pawn'||pile.owner.pawnId!==p.id||pile.quantity!==t.quantity))errors.push('Animal food ownership mismatch.');
     }
   }

@@ -11,6 +11,17 @@ import { meleeContact } from './melee-space.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { animalSpecies } from './animal-species.ts';
 import type { Cell,World } from './types.ts';
+/** Ranked food candidates resume a single frontier. Group once rather than
+ * rescanning thousands of plant contacts for every distinct food score. */
+function rankedFood(world:World,cells:Cell[],search:WeightedSearch,rank:(c:Cell)=>number):Cell|undefined {
+  const groups=new Map<number,Cell[]>();
+  for(const cell of cells){const priority=rank(cell),group=groups.get(priority);if(group)group.push(cell);else groups.set(priority,[cell]);}
+  for(const [,group] of [...groups].sort(([a],[b])=>a-b)){
+    const reach=search.advance(new Set(group.map(c=>c.z*world.width+c.x)));
+    const target=group.filter(c=>hasReachableCell(reach,c.z*world.width+c.x)).sort((a,b)=>reach.costs[a.z*world.width+a.x]!-reach.costs[b.z*world.width+b.x]!)[0];
+    if(target)return target;
+  }
+}
 /** Short-lived capture: no world mutation may interleave its searches/steps. */
 /** `allowClosedGate` is for planning a handler-led route only. Physical steps
  * must use the default navigation after the handler opens each passage. */
@@ -55,13 +66,9 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
       // Stop at a reachable preferred group, not the closest lower-priority
       // goal. An unreachable group exhausts this same frontier; fallbacks then
       // reuse its settled field without launching another search.
-      const ranks=[...new Set(cells.map(rank))].sort((a,b)=>a-b);
-      for(const priority of ranks){
-        const group=cells.filter(c=>rank(c)===priority),goals=new Set(group.map(c=>c.z*world.width+c.x)),field=search.advance(goals);
-        const target=group.filter(c=>hasReachableCell(field,c.z*world.width+c.x)).sort((a,b)=>field.costs[a.z*world.width+a.x]!-field.costs[b.z*world.width+b.x]!)[0];
-        if(target){const path=routeToCell(world,target,search.finish(goals));return path?{kind:'food',path}:undefined;}
-      }
-      return;
+      const target=rankedFood(world,cells,search,rank);
+      if(target){const path=routeToCell(world,target,search.finish(new Set([target.z*width+target.x])));return path?{kind:'food',path}:undefined;}
+      if(!exitFallback)return;
     }
     const reach=search.finish(indices.size?indices:new Set(exits.map(c=>c.z*world.width+c.x)));
     const target=cells.filter(c=>hasReachableCell(reach,c.z*world.width+c.x)).sort((a,b)=>reach.costs[a.z*world.width+a.x]!-reach.costs[b.z*world.width+b.x]!)[0];
@@ -94,13 +101,13 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
       if(retainFirst&&groups[0]!.contacts.length){const first=pick(groups.slice(0,1));if(first)return first;}
       return pick(groups);
     },
-    foodOrExitRoute:(a:Cell,goals:Cell[])=>findRoute(a,goals,true),
-    foodPreyOrExitRoute(a:Cell,goals:Cell[],prey:readonly (Cell&{id:number})[],exitFallback=false):{kind:'food'|'prey'|'exit';path:Cell[];targetId?:number}|undefined {
+    foodOrExitRoute:(a:Cell,goals:Cell[],rank?:(c:Cell)=>number)=>findRoute(a,goals,true,rank),
+    foodPreyOrExitRoute(a:Cell,goals:Cell[],prey:readonly (Cell&{id:number})[],exitFallback=false,rank?:(c:Cell)=>number):{kind:'food'|'prey'|'exit';path:Cell[];targetId?:number}|undefined {
       const cells=goals.filter(free),indices=new Set(cells.map(c=>c.z*width+c.x));
       if(!indices.size&&!prey.length&&!exitFallback)return;
       const n=navigationCosts(world,a),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
       if(indices.size){
-        const reach=search.advance(indices),food=cells.filter(c=>hasReachableCell(reach,c.z*width+c.x)).sort((a,b)=>reach.costs[a.z*width+a.x]!-reach.costs[b.z*width+b.x]!)[0];
+        const reach=rank?undefined:search.advance(indices),food=rank?rankedFood(world,cells,search,rank):cells.filter(c=>hasReachableCell(reach!,c.z*width+c.x)).sort((a,b)=>reach!.costs[a.z*width+a.x]!-reach!.costs[b.z*width+b.x]!)[0];
         if(food){const path=routeToCell(world,food,search.finish(indices));return path?{kind:'food',path}:undefined;}
       }
       // Biological rank comes before travel distance. Resume the same field

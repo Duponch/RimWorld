@@ -3,8 +3,8 @@ import { isCarePatient } from './affiliation.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import type { CommandResult, Pawn, World } from './types.ts';
 
-export type FoodItemId = {[K in ItemId]: typeof ITEM_DEFINITIONS[K]['nutrition'] extends 0 ? never : K}[ItemId];
-export const FOOD_ITEMS = Object.keys(ITEM_DEFINITIONS).filter(id => ITEM_DEFINITIONS[id as ItemId].nutrition > 0) as FoodItemId[];
+export type FoodItemId = Exclude<{[K in ItemId]: typeof ITEM_DEFINITIONS[K]['nutrition'] extends 0 ? never : K}[ItemId],'hay'>;
+export const FOOD_ITEMS = Object.keys(ITEM_DEFINITIONS).filter(id => id!=='hay'&&ITEM_DEFINITIONS[id as ItemId].nutrition > 0) as FoodItemId[];
 export const MAX_FOOD_POLICIES = 32;
 export interface FoodPolicy {id: number; name: string; allowed: FoodItemId[]}
 export type FoodPolicyCommand =
@@ -13,8 +13,8 @@ export type FoodPolicyCommand =
   | {type: 'food-policy-delete'; policyId: number}
   | {type: 'food-policy-assign'; pawnId: number; policyId: number};
 
-export function initialFoodPolicies(includeMeat=true,includeFoodCrops=true,includeBiomes=true,includeMilk=true,includePredators=true,includePaste=true): FoodPolicy[] {
-  const items=FOOD_ITEMS.filter(id=>(includePaste||id!=='nutrient-paste-meal')&&(includePredators||!V190_ITEM_IDS.includes(id))&&(includeBiomes||!V91_ITEM_IDS.includes(id))&&(includeMeat||id!=='hare-meat')&&(includeFoodCrops||id!=='potato'&&id!=='corn')&&(includeMilk||id!=='milk'));
+export function initialFoodPolicies(includeMeat=true,includeFoodCrops=true,includeBiomes=true,includeMilk=true,includePredators=true,includePaste=true,includeFodder=true): FoodPolicy[] {
+  const items=FOOD_ITEMS.filter(id=>(includeFodder||id!=='kibble')&&(includePaste||id!=='nutrient-paste-meal')&&(includePredators||!V190_ITEM_IDS.includes(id))&&(includeBiomes||!V91_ITEM_IDS.includes(id))&&(includeMeat||id!=='hare-meat')&&(includeFoodCrops||id!=='potato'&&id!=='corn')&&(includeMilk||id!=='milk'));
   return [
     {id: 1, name: 'Sans restriction', allowed: [...items]},
     {id: 2, name: 'Repas uniquement', allowed: ['simple-meal', 'fine-meal', 'vegetarian-fine-meal', 'carnivore-fine-meal', 'lavish-meal', 'vegetarian-lavish-meal', 'carnivore-lavish-meal', 'survival-meal', 'legacy-portion', ...(includePaste?['nutrient-paste-meal' as const]:[])]},

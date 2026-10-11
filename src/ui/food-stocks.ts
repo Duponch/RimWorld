@@ -4,7 +4,8 @@ import { FOOD_ITEMS } from '../sim/food-policy';
 import type { World } from '../sim/types';
 import {modelIconUrl} from './pictograms';
 
-const firstItems=['berries','rice','potato','corn','hare-meat','simple-meal','nutrient-paste-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','legacy-portion'] as const;
+// Physical reserves include animal fodder independently of human food policies.
+const firstItems=['berries','rice','potato','corn','hay','kibble','hare-meat','simple-meal','nutrient-paste-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','legacy-portion'] as const;
 const foodStockItems=[...firstItems,...FOOD_ITEMS.filter(id=>!firstItems.some(first=>first===id))];
 
 /** Update in place: adding an item count never rebuilds the whole HUD. */

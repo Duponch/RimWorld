@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import { isKibbleRecipe,validKibbleIngredients } from './fodder-recipes.ts';
 import { allowedAreaReason } from './allowed-area-state.ts';
 import { isSmeltingRecipe,smeltingIngredientAllowed } from './smelting-rules.ts';
 import { isCremationRecipe,cremationIngredientAllowed,validCremationIngredients } from './cremation-rules.ts';
@@ -6,7 +7,7 @@ import { burialClaim } from './burial.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
-import { validBiofuelIngredients,validMedicineIngredients,productionStationUsable } from './production-recipes.ts';
+import { validBiofuelIngredients,validMedicineIngredients,productionStationUsable,stationAccepts } from './production-recipes.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel, isButcherStation } from './food-workstations.ts';
@@ -58,6 +59,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(station.kind==='biofuel-refinery')return {label:'Raffiner du biocarburant',order:{cooking:plan.task!},path:plan.path};
   if(station.kind==='electric-smelter')return {label:'Fondre une arme',order:{cooking:plan.task!},path:plan.path};
   if(station.kind==='electric-crematorium')return {label:'Incinérer une dépouille',order:{cooking:plan.task!},path:plan.path};
+  if(isKibbleRecipe(plan.task?.recipe))return {label:'Fabriquer des croquettes',order:{cooking:plan.task!},path:plan.path};
   return {label:plan.refuel?'Ravitailler avant de cuisiner':isButcherStation(station.kind)?'Dépecer une créature':station.kind==='tailor-bench'?'Confectionner un vêtement':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='art-bench'?'Sculpter une œuvre':station.kind==='fabrication-bench'?(plan.task?.recipe==='make-recon-helmet'?'Fabriquer un casque de reconnaissance':'Fabriquer un composant'):station.kind==='machining-table'?(plan.task?.recipe==='make-flak-helmet'?'Fabriquer un casque pare-balles':plan.task&&isFlakRecipe(plan.task.recipe)?'Fabriquer un gilet pare-balles':'Fabriquer une arme'):station.kind==='stonecutter'?'Tailler des blocs de pierre':plan.task?.recipe==='cook-survival-meal'?'Cuisiner un repas de survie emballé':plan.task?.recipe==='cook-simple-meal-bulk'?'Cuisiner quatre repas simples':plan.task?.recipe==='fine-meal'?'Cuisiner un plat raffiné':plan.task?.recipe==='cook-fine-meal-bulk'?'Cuisiner quatre plats raffinés':plan.task?.recipe==='vegetarian-fine-meal'?'Cuisiner un plat raffiné végétarien':plan.task?.recipe==='cook-vegetarian-fine-meal-bulk'?'Cuisiner quatre plats raffinés végétariens':plan.task?.recipe==='carnivore-fine-meal'?'Cuisiner un plat raffiné carnivore':plan.task?.recipe==='cook-carnivore-fine-meal-bulk'?'Cuisiner quatre plats raffinés carnivores':plan.task?.recipe==='lavish-meal'?'Cuisiner un plat gastronomique':plan.task?.recipe==='cook-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques':plan.task?.recipe==='vegetarian-lavish-meal'?'Cuisiner un plat gastronomique végétarien':plan.task?.recipe==='cook-vegetarian-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques végétariens':plan.task?.recipe==='cook-carnivore-lavish-meal'?'Cuisiner un plat gastronomique carnivore':plan.task?.recipe==='cook-carnivore-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques carnivores':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
 }
 
@@ -66,6 +68,7 @@ export function queuedCookingReason(world:World,order:CookingOrder,pawn?:Pawn):s
   const areaReason=pawn?queuedCookingAreaReason(world,pawn,order):undefined;if(areaReason)return areaReason;
   const view=withoutQueuedOrder(world,order),c=order.cooking,station=view.structures.find(s=>s.id===c.stationId&&stationRecipe(s)!==null),bill=station?.bills?.find(b=>b.id===c.billId);
   if(!station||!bill||bill.recipe!==taskRecipe(c)||!billWanted(view,bill))return 'Facture supprimée, suspendue ou quantité atteinte.';
+  if(isKibbleRecipe(bill.recipe)&&(world.schemaVersion<227||!stationAccepts(station,bill.recipe)||!validKibbleIngredients(c.ingredients)||c.ingredients.some(i=>i.stage==='source'&&i.quantity>10)))return 'Les croquettes exigent vingt protéines et vingt végétaux frais au poste de boucherie.';
   if(isCremationRecipe(bill.recipe)&&(!validCremationIngredients(c.ingredients)||c.phase==='output'||bill.mode==='until'||bill.destination!=='drop'))return 'La crémation exige une seule dépouille entière et aucune sortie.';
   if(!productionStationUsable(station)||!productionResearchUnlocked(world,bill.recipe))return 'Atelier sans courant ou recherche manquante.';
   if(!foodStationUsable(station))return station.kind==='electric-stove'?'La cuisinière n’est pas alimentée.':'Le poste est sans combustible.';
@@ -107,6 +110,7 @@ export function queuedCookingReason(world:World,order:CookingOrder,pawn?:Pawn):s
     if(pile&&bill.recipe==='cook-vegetarian-fine-meal-bulk'&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre aux quatre plats raffinés végétariens.';
     if(pile&&bill.recipe==='cook-carnivore-fine-meal-bulk'&&ticksUntilRot(pile,world.tick)<=0)return 'Viande périmée, impropre aux quatre plats raffinés carnivores.';
     if(pile&&bill.recipe==='carnivore-fine-meal'&&ticksUntilRot(pile,world.tick)<=0)return 'Viande périmée, impropre au plat carnivore raffiné.';
+    if(pile&&isKibbleRecipe(bill.recipe)&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre aux croquettes.';
     if(pile&&bill.recipe==='vegetarian-lavish-meal'&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre au plat végétarien gastronomique.';
     if(pile&&bill.recipe==='cook-vegetarian-lavish-meal-bulk'&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre aux quatre plats gastronomiques végétariens.';
     if(pile&&bill.recipe==='cook-carnivore-lavish-meal-bulk'&&ticksUntilRot(pile,world.tick)<=0)return 'Viande périmée, impropre aux quatre plats gastronomiques carnivores.';

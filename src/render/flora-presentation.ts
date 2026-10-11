@@ -5,9 +5,9 @@ import type { Placement } from './primitives';
 import { hydroponicBasinAt } from '../sim/hydroponics';
 import { HYDROPONIC_SUPPORT_HEIGHT } from './hydroponics-parts';
 
-/** Dedicated crop geometry is deliberately closed: new domain crops do not
- * allocate another map-sized instance array. Medicinal plants use shrub chunks. */
-export const RESIDENT_CROP_KINDS=['rice','potato','corn','cotton'] as const;
+/** Dedicated crop geometry is deliberately closed. Haygrass joins its resident
+ * batch only when present; medicinal plants retain the existing shrub chunks. */
+export const RESIDENT_CROP_KINDS=['rice','potato','corn','cotton','haygrass'] as const;
 export type ResidentCropKind=typeof RESIDENT_CROP_KINDS[number];
 export const isResidentCrop=(r:Pick<Resource,'kind'>):boolean=>(RESIDENT_CROP_KINDS as readonly string[]).includes(r.kind);
 export const isMedicinalPlant=(r:Pick<Resource,'kind'|'species'>):boolean=>r.kind==='healroot'||r.species==='healroot-wild';

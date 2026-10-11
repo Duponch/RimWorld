@@ -10,13 +10,21 @@ import { HYDROPONIC_SUPPORT_HEIGHT } from './hydroponics-parts';
 import { ResourceTargetTint } from './resource-target-tint';
 
 /** Dedicated resident instancing: sowing never rebuilds forest/rock geometry. */
-function cropGeometry(kind:ResidentCropKind):THREE.BufferGeometry {
+export function cropGeometry(kind:ResidentCropKind):THREE.BufferGeometry {
   let parts:THREE.BufferGeometry[];
   if(kind==='corn') {
     const stalk=new THREE.CylinderGeometry(.045,.065,1.5,5).translate(0,.75,0);
     const leaves=[-.25,.25].map((x,i)=>new THREE.ConeGeometry(.16,.7,3).rotateZ(x<0?-.7:.7).translate(x,.68+i*.34,0));
     const tassel=new THREE.ConeGeometry(.1,.28,4).translate(0,1.64,0);
     parts=[stalk,...leaves,tassel];
+  } else if(kind==='haygrass') {
+    // Blade bends are authored once in the resident mesh. Ordinary snapshots
+    // still transform one whole plant, never individual stems or seed heads.
+    parts=Array.from({length:9},(_,i)=>{
+      const angle=i*2.4,radius=i===8?0:.13+(i%2)*.08,height=1.02+(i%3)*.15;
+      return new THREE.ConeGeometry(.052,height,3).rotateZ((i%2?1:-1)*.16)
+        .rotateY(angle).translate(Math.cos(angle)*radius,height*.49,Math.sin(angle)*radius);
+    });
   } else if(kind==='potato') {
     parts=[[-.2,.1],[.2,.1],[0,-.2],[0,.25]].map(([x,z],i)=>new THREE.OctahedronGeometry(.25).scale(1,.6,1).translate(x!,.18+(i%2)*.11,z!));
   } else {
@@ -44,9 +52,10 @@ class CropBatch {
   private readonly ripe = new THREE.Color(0xcfb665);
   private readonly targetTint=new ResourceTargetTint();
   private targetPreviewIds=new Set<number>();
-  constructor(private readonly group:THREE.Group,private readonly kind:ResidentCropKind,private material: THREE.Material) {
+  constructor(private readonly group:THREE.Group,readonly kind:ResidentCropKind,private material: THREE.Material) {
     if(kind==='cotton')this.ripe.setHex(0xf0ead7);
     if(kind==='potato')this.ripe.setHex(0x83964a);
+    if(kind==='haygrass'){this.green.setHex(0x80934e);this.ripe.setHex(0xc6b56b);}
     this.geometry = cropGeometry(kind);
     this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(this.geometry.getAttribute('position').count * 3).fill(1), 3));
     this.mesh = this.createMesh(128); this.group.add(this.mesh);
@@ -86,8 +95,8 @@ class CropBatch {
       this.transform.scale.setScalar(0); this.transform.updateMatrix(); this.mesh.setMatrixAt(slot, this.transform.matrix);
       this.slots.delete(id); this.free.push(slot);
     }
-    // One plant per map cell is a proven upper bound. Reserve it during map
-    // loading, so ordinary sowing never creates a mesh, binding or pipeline.
+    // One plant per map cell is a proven upper bound. Historical batches reserve
+    // on loading; haygrass reserves when its first real plant creates the batch.
     const required = Math.max(crops.length, reset ? world.width * world.height : 0);
     if (required > this.mesh.instanceMatrix.count) {
       const old = this.mesh, mesh = this.createMesh(2 ** Math.ceil(Math.log2(required)));
@@ -118,21 +127,28 @@ class CropBatch {
   dispose(): void { this.clearTargetPreview();this.mesh.dispose(); this.geometry.dispose(); }
 }
 
-/** One resident batch per shape, prewarmed even empty. CPU work only on snapshots;
- * separate meshes preserve the rice geometry and its existing triangle count. */
+/** Four historical shapes are prewarmed even empty. Haygrass becomes resident
+ * only when present. CPU work is on snapshots; old crop geometry is retained. */
 export class CropLayer {
   readonly group=new THREE.Group();
   private readonly batches:CropBatch[];
+  private haygrassBatch:CropBatch|undefined;
+  private texturesEnabled=true;
   private readonly partition=new CropPresentationPartition();
-  constructor(private readonly plainMaterial:THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial){this.batches=RESIDENT_CROP_KINDS.map(kind=>new CropBatch(this.group,kind,texturedMaterial));}
-  setTexturesEnabled(enabled:boolean):void {for(const batch of this.batches)batch.setMaterial(enabled?this.texturedMaterial:this.plainMaterial);}
+  constructor(private readonly plainMaterial:THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial){this.batches=RESIDENT_CROP_KINDS.filter(kind=>kind!=='haygrass').map(kind=>new CropBatch(this.group,kind,texturedMaterial));}
+  setTexturesEnabled(enabled:boolean):void {this.texturesEnabled=enabled;for(const batch of this.batches)batch.setMaterial(enabled?this.texturedMaterial:this.plainMaterial);}
   setTargetPreview(ids:ReadonlySet<number>):void {for(const batch of this.batches)batch.setTargetPreview(ids);}
   clearTargetPreview():void {for(const batch of this.batches)batch.clearTargetPreview();}
   prepareForCompile():()=>void {const restore=this.batches.map(b=>b.prepareForCompile());return()=>restore.forEach(f=>f());}
   update(world:World,reset:boolean,immutableSnapshot=false):void {
     const crops=this.partition.read(world,reset,immutableSnapshot);
     const hydroponicCells=readHydroponicCells(world);
-    for(let index=0;index<this.batches.length;index++)this.batches[index]!.update(world,reset,crops[RESIDENT_CROP_KINDS[index]!],hydroponicCells);
+    let created:CropBatch|undefined;
+    if(!this.haygrassBatch&&crops.haygrass.length){
+      created=this.haygrassBatch=new CropBatch(this.group,'haygrass',this.texturesEnabled?this.texturedMaterial:this.plainMaterial);
+      this.batches.push(created);
+    }
+    for(const batch of this.batches)batch.update(world,reset||batch===created,crops[batch.kind],hydroponicCells);
   }
   dispose():void {for(const batch of this.batches)batch.dispose();}
 }

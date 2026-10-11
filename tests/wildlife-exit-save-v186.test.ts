@@ -22,7 +22,11 @@ function fixture(){
 test('173 is validated before neutral adoption; no departures or random draws are invented',()=>{
   const w=fixture(),legacy=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(JSON.parse(serializeWorld(w))));legacy.schemaVersion=173;
   const migrated=deserializeWorld(JSON.stringify(legacy));
-  expect(migrated).toEqual({...legacy,schemaVersion:SCHEMA_VERSION});
+  const expected=structuredClone(legacy);expected.schemaVersion=SCHEMA_VERSION;
+  // V217 extends the untouched meal-only profile. Other permissions and
+  // wildlife records remain historical; V227 adds no kibble permission.
+  expected.foodPolicies.find((p:{id:number})=>p.id===2).allowed.push('nutrient-paste-meal');
+  expect(migrated).toEqual(expected);
   expect(migrated.wildlife?.exitedAnimals).toBeUndefined();
   expect(migrated.wildlife?.animals[0]?.exiting).toBeUndefined();
   expect(validateWorld(migrated)).toEqual([]);

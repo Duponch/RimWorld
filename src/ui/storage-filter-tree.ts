@@ -20,6 +20,7 @@ export const STORAGE_FILTER_TREE:readonly StorageFilterNode[]=[
       branch('vegetarian','Végétaux',leaves(id=>['berries','rice','potato','corn','agave-fruit'].includes(id))),
       branch('animal-products','Produits animaliers',leaves(id=>id==='milk')),
     ]),
+    branch('animal-food','Fourrage',leaves(id=>id==='hay'||id==='kibble')),
   ]),
   branch('manufactured','Produits manufacturés',[
     branch('medicines','Médicaments',kind('medicine')),

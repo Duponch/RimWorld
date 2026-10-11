@@ -15,7 +15,7 @@ export function gatherResource(world: World, resource: Resource, kind:'chop'|'ha
   if(kind==='harvest'&&!harvestable(world,resource)||kind==='chop'&&!choppable(world,resource))return null;
   // Medicinal roots and V91 species clear without product. Historical bushes
   // and other crops keep their established cut yield.
-  const roll=kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&(resource.blight||resource.species||resource.kind==='healroot')?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
+  const roll=kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&(resource.blight||resource.species||resource.kind==='healroot'||resource.kind==='haygrass')?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
   if(roll.quantity>0) {
     const item=resource.species?FLORA_DEFINITIONS[resource.species].product:
       kind==='chop'?'wood':isCrop(resource)?cropProduct(resource.kind):world.foodRules==='legacy'?'legacy-portion':'berries';

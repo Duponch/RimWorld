@@ -2,8 +2,11 @@ import { plantLeafless } from '../../src/sim/plant-life';
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { plantGrowth } from '../../src/sim/plants';
-import { RESIDENT_CROP_KINDS, type ResidentCropKind } from '../../src/render/flora-presentation';
 import type { World } from '../../src/sim/types';
+
+/** Freeze the V224 reference domain; later resident crops have their own oracles. */
+export const V224_RESIDENT_CROP_KINDS=['rice','potato','corn','cotton'] as const;
+type ResidentCropKind=typeof V224_RESIDENT_CROP_KINDS[number];
 
 /** Dedicated resident instancing: sowing never rebuilds forest/rock geometry. */
 function cropGeometry(kind:ResidentCropKind):THREE.BufferGeometry {
@@ -104,7 +107,7 @@ class CropBatch {
 export class CropLayer {
   readonly group=new THREE.Group();
   private readonly batches:CropBatch[];
-  constructor(private readonly plainMaterial:THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial){this.batches=RESIDENT_CROP_KINDS.map(kind=>new CropBatch(this.group,kind,texturedMaterial));}
+  constructor(private readonly plainMaterial:THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial){this.batches=V224_RESIDENT_CROP_KINDS.map(kind=>new CropBatch(this.group,kind,texturedMaterial));}
   setTexturesEnabled(enabled:boolean):void {for(const batch of this.batches)batch.setMaterial(enabled?this.texturedMaterial:this.plainMaterial);}
   prepareForCompile():()=>void {const restore=this.batches.map(b=>b.prepareForCompile());return()=>restore.forEach(f=>f());}
   update(world:World,reset:boolean):void {for(const batch of this.batches)batch.update(world,reset);}
