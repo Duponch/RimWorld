@@ -4,6 +4,9 @@ export type DioramaSide = 'north' | 'west' | 'south' | 'east';
 export type DioramaMaterialKind = 'cardboard' | 'paper' | 'wood';
 export type DioramaLayer = 'base' | 'lower' | 'upper' | 'table';
 
+/** Map-relative thickness of every ordinary decorative paper cutout (V322). */
+export const DIORAMA_PAPER_THICKNESS = .00065 * 2.5;
+
 export interface DioramaGeometryPart {
   readonly name: string;
   readonly material: DioramaMaterialKind;
@@ -100,7 +103,7 @@ export function createDioramaGeometry(width: number, height: number): DioramaGeo
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
     throw new RangeError('Diorama map dimensions must be finite and positive.');
   }
-  const span = Math.min(width, height), gap = span * .012, thickness = span * .009;
+  const span = Math.min(width, height), gap = span * .0126, thickness = span * .009;
   const bottom = -span * .049, lip = span * .033, wallHeight = span * .215;
   const tableTop = bottom;
   const textureScale = span * .085;
@@ -122,16 +125,12 @@ export function createDioramaGeometry(width: number, height: number): DioramaGeo
     const lowerPaper = new GeometryBatch(), upperPaper = new GeometryBatch();
     const handCut = (ratio: number): number => Math.sin(Math.PI * ratio) *
       (Math.sin(ratio * Math.PI * 5 + .35) * .0011 + Math.sin(ratio * Math.PI * 13) * .00055);
-    const topAt = (u: number): number => {
-      const ratio = u / wall.length;
-      if (wall.side === 'south') return span * (.042 - Math.sin(ratio * Math.PI) ** 2 * .003 + handCut(ratio));
-      if (wall.side === 'north') return wallHeight + handCut(ratio) * span;
-      const north = wall.northAtStart ? 1 - ratio : ratio;
-      return span * (.042 + .173 * north + handCut(ratio));
-    };
+    // All four walls share the same nominal height and meet at exact corners;
+    // only the bounded artisan cut varies between those fixed endpoints.
+    const topAt = (u: number): number => wallHeight + handCut(u / wall.length) * span;
     // The inner face bows gently outward, preserving the exact playable bounds.
     // Outside corners widen into a matching mitre, rather than overlapping boxes.
-    const point = (u: number, y: number, depth: number): Vertex => {
+    const point = (u: number, y: number, depth: number, followBow = true): Vertex => {
       const ratio = u / wall.length;
       const lipDip = Math.sin(Math.PI * ratio) ** 2 * span *
         ((wall.side === 'south' ? -.0031 : -.0012) + Math.sin(ratio * Math.PI * 7 + .4) * .0006);
@@ -141,24 +140,25 @@ export function createDioramaGeometry(width: number, height: number): DioramaGeo
         Math.cos(Math.PI * .5 * Math.min(1, (y - lip) / (topAt(u) - lip))) ** 2;
       const actualY = y + lipDip * blend;
       const bow = Math.sin(Math.PI * ratio) * Math.sin(Math.PI * (actualY - bottom) / (wallHeight - bottom)) * span * .0012;
-      const d = depth - bow;
+      const d = depth - (followBow ? bow : 0);
       const mitre = depth < 0 ? -(2 * u / wall.length - 1) * depth : 0;
       return { p: [wall.start[0] + wall.tangent[0] * (u + mitre) + wall.inward[0] * d,
         actualY, wall.start[2] + wall.tangent[2] * (u + mitre) + wall.inward[2] * d], uv: [u / textureScale, actualY / textureScale] };
     };
 
     const prism = (batch: GeometryBatch, outline: readonly OutlinePoint[], back: number, front: number,
-      faceColor: number, edgeColor = faceColor): void => {
+      faceColor: number, edgeColor = faceColor, followBow = true): void => {
       const clean = outline.filter((p, i) => {
         const previous = outline[(i + outline.length - 1) % outline.length]!;
         return Math.hypot(p[0] - previous[0], p[1] - previous[1]) > span * 1e-8;
       });
       if (clean.length < 3) return;
+      const vertex = (p: OutlinePoint, depth: number): Vertex => point(...p, depth, followBow);
       const triangles = THREE.ShapeUtils.triangulateShape(clean.map(p => new THREE.Vector2(...p)), []);
       for (const [a, b, c] of triangles) {
         const pa = clean[a!]!, pb = clean[b!]!, pc = clean[c!]!;
-        batch.triangle(point(...pa, front), point(...pb, front), point(...pc, front), faceColor, wall.inward);
-        batch.triangle(point(...pa, back), point(...pb, back), point(...pc, back), edgeColor,
+        batch.triangle(vertex(pa, front), vertex(pb, front), vertex(pc, front), faceColor, wall.inward);
+        batch.triangle(vertex(pa, back), vertex(pb, back), vertex(pc, back), edgeColor,
           [-wall.inward[0], 0, -wall.inward[2]]);
       }
       for (let i = 0; i < clean.length; i++) {
@@ -171,14 +171,16 @@ export function createDioramaGeometry(width: number, height: number): DioramaGeo
         }
         const orientation = area >= 0 ? 1 : -1;
         const du = b[0] - a[0], dy = b[1] - a[1];
-        batch.quad(point(...a, front), point(...a, back), point(...b, back), point(...b, front), edgeColor,
+        batch.quad(vertex(a, front), vertex(a, back), vertex(b, back), vertex(b, front), edgeColor,
           [wall.tangent[0] * dy * orientation, -du * orientation, wall.tangent[2] * dy * orientation]);
       }
     };
     const splitPrism = (card: boolean, outline: readonly OutlinePoint[], back: number, front: number,
       color: number, edge = color): void => {
-      prism(card ? lowerCard : lowerPaper, clipHeight(outline, lip, false), back, front, color, edge);
-      prism(card ? upperCard : upperPaper, clipHeight(outline, lip, true), back, front, color, edge);
+      // Paper stays a planar solid. Two overlapping cutouts then cannot cross
+      // because of different triangulations of the cardboard's gentle bow.
+      prism(card ? lowerCard : lowerPaper, clipHeight(outline, lip, false), back, front, color, edge, card);
+      prism(card ? upperCard : upperPaper, clipHeight(outline, lip, true), back, front, color, edge, card);
     };
 
     // A continuous closed shell; top segments give the cardboard a restrained
@@ -237,12 +239,12 @@ export function createDioramaGeometry(width: number, height: number): DioramaGeo
       [wall.length - span * .02, bottom + span * .006], [span * .02, bottom + span * .006]],
       span * .0001, span * .00016, 0x8e7358);
 
-    const art = (outline: readonly OutlinePoint[], color: number, depth = span * .0011, shadow = true): void => {
+    const art = (outline: readonly OutlinePoint[], color: number, depth = span * .0007, shadow = true): void => {
       if (shadow) {
         const shadowOutline = outline.map(([u, y]): OutlinePoint => [u + span * .0007, y - span * .00065]);
         splitPrism(true, shadowOutline, span * .00012, span * .00019, 0x927755);
       }
-      splitPrism(false, outline, depth, depth + span * .00065, color, 0xc9bfa8);
+      splitPrism(false, outline, depth, depth + span * DIORAMA_PAPER_THICKNESS, color, 0xc9bfa8);
     };
     const outline = (points: readonly OutlinePoint[], x: number, y: number, sx: number, sy: number): OutlinePoint[] =>
       points.map(([u, v]) => [x + u * sx, y + v * sy]);
@@ -265,54 +267,61 @@ export function createDioramaGeometry(width: number, height: number): DioramaGeo
       const ratio = (i + .1) / mountainCount, u = wall.length * ratio;
       const available = topAt(Math.min(wall.length, u + wall.length / mountainCount * .5));
       const w = wall.length / mountainCount * 1.33;
-      const h = south ? span * (.024 + (i % 3) * .003) : Math.min(span * (.086 + (i % 3) * .019), available * .70);
-      const base = south ? span * .001 : -span * .006;
+      const peakHeight = south ? .082 + ((i + 1) % 3) * .019 : .086 + (i % 3) * .019;
+      const h = Math.min(span * peakHeight, available * .70);
+      const base = -span * .006;
       const sway = Math.sin(i * 2.4 + (north ? .3 : 1.1)) * .035;
       const mountainOutline = (shape: readonly OutlinePoint[]): OutlinePoint[] =>
         outline(shape.map(([x, y]): OutlinePoint => [x + sway * y, y]), u - w * .13, base, w, h);
       const points = mountainOutline(artisan(mountainShape, i, .012));
       // Crop at both physical edges; the final outline cannot poke through a seam.
       const clipped = clipWidth(points, span * .022, wall.length - span * .022);
-      art(clipped, [0x71836c, 0x809178, 0x8c9b80][i % 3]!, span * .0007, false);
-      if (!south && i % 2 === 0) {
+      // Adjacent cutouts overlap in silhouette. Alternating complete depth
+      // lanes keep their thicker solids disjoint, including their back faces.
+      art(clipped, [0x71836c, 0x809178, 0x8c9b80][i % 3]!, span * (i % 2 ? .0019 : .0002), false);
+      if (i % 2 === (south ? 1 : 0)) {
         const snow = mountainOutline([[.36, .64], [.51, 1], [.64, .68], [.55, .73], [.50, .62], [.46, .72]]);
         // The cut snow follows the mountain's slightly asymmetric summit.
         snow[1] = points[3]!;
-        art(snow, 0xe0ddc9, span * .0014, false);
+        art(snow, 0xe0ddc9, span * .00365, false);
       }
       // A darker foreground mountain overlaps the broad sage silhouette.
       const fw = w * .94, fh = h * .64, fx = u - w * .08;
       art(clipWidth(outline([[0, 0], [.23, .4], [.39, .30], [.65, 1], [.83, .37], [1, 0]],
-        fx, south ? span * .0007 : -span * .010, fw, fh), span * .022, wall.length - span * .022),
-        i % 2 ? 0x526b54 : 0x61775e, span * .0020, false);
+        fx, -span * .010, fw, fh), span * .022, wall.length - span * .022),
+        i % 2 ? 0x526b54 : 0x61775e, span * (i % 2 ? .0071 : .0054), false);
     }
     // Cutout pines are varied in width/height but share an intentional silhouette.
     const treeCount = south ? 12 : north ? 17 : 14;
     for (let i = 0; i < treeCount; i++) {
       const u = span * .025 + (wall.length - span * .05) * (i + .5) / treeCount;
-      const h = south ? span * (.018 + i % 3 * .005) : Math.min(span * (.049 + (i * 5 % 7) * .004), topAt(u) * .62);
-      const w = h * (.40 + (i % 3) * .06), y = span * ((south ? .001 : -.005) + i % 4 * .001);
-      art(outline(artisan(treeShape, i, .022), u - w / 2, y, w, h), [0x354e3d, 0x45644b, 0x557254][i % 3]!, span * .0031);
+      const treeHeight = south ? .046 + ((i * 5 + 2) % 7) * .004 : .049 + (i * 5 % 7) * .004;
+      const h = Math.min(span * treeHeight, topAt(u) * .62);
+      const w = h * (.40 + (i % 3) * .06), y = span * (-.005 + i % 4 * .001);
+      art(outline(artisan(treeShape, i, .022), u - w / 2, y, w, h), [0x354e3d, 0x45644b, 0x557254][i % 3]!, span * .00885);
       art([[u - w * .036, y], [u + w * .037, y], [u + w * .03, y + h * .15], [u - w * .033, y + h * .15]],
-        0x9a7851, span * .0038, false);
+        0x9a7851, span * .0106, false);
     }
-    if (!south) {
-      const cloudRatios = north ? [.16, .42, .86] : wall.northAtStart ? [.19, .52] : [.48, .79];
+    {
+      const cloudRatios = north ? [.16, .42, .86] : south ? [.23, .70]
+        : wall.northAtStart ? [.19, .52] : [.48, .79];
       for (let i = 0; i < cloudRatios.length; i++) {
         const u = wall.length * cloudRatios[i]!, w = span * (i % 2 ? .096 : .114), h = w * .35;
         const y = topAt(u) - h - span * (.017 + i % 2 * .014);
-        art(outline(artisan(cloudShape, i, .011), u - w / 2, y, w, h), cream, span * .0013);
+        art(outline(artisan(cloudShape, i, .011), u - w / 2, y, w, h), cream, span * .0007);
         // Short cream patch repeats a hand-cut paper overlap, not a noisy chip.
         art(outline([[0, 0], [.62, -.035], [1, .04], [.88, .22], [.21, .27]],
-          u - w * .31, y + h * .035, w * .52, h * .23), 0xf5efdf, span * .0021, false);
+          u - w * .31, y + h * .035, w * .52, h * .23), 0xf5efdf, span * .0026, false);
         if (i === 0) {
           // One lifted cream paper corner, with its contact shade baked below.
           // A closed shallow wedge stays in the cloud batch, without extra draws.
           const fold: readonly OutlinePoint[] = [[u + w * .26, y + h * .10], [u + w * .34, y + h * .065],
             [u + w * .335, y + h * .27]];
-          art(fold, 0xc4b9a4, span * .0024, false);
-          const front = fold.map(([x, v], k) => point(x, v, span * (k === 2 ? .0042 : .00265)));
-          const back = fold.map(([x, v]) => point(x, v, span * .00255));
+          art(fold, 0xc4b9a4, span * .0045, false);
+          // Preserve the original folded film's thickness profile at exactly
+          // 2.5× (.0001/.00165 -> .00025/.004125), above the contact paper.
+          const front = fold.map(([x, v], k) => point(x, v, span * (k === 2 ? .010525 : .00665), false));
+          const back = fold.map(([x, v]) => point(x, v, span * .0064, false));
           upperPaper.triangle(front[0]!, front[1]!, front[2]!, 0xf5efdf, wall.inward);
           upperPaper.triangle(back[0]!, back[1]!, back[2]!, 0xc8bca7, [-wall.inward[0], 0, -wall.inward[2]]);
           for (let k = 0; k < 3; k++) {
@@ -329,13 +338,13 @@ export function createDioramaGeometry(width: number, height: number): DioramaGeo
         const angle = i / 32 * Math.PI * 2, irregular = 1 + Math.sin(i * 1.7) * .013;
         sun.push([u + Math.cos(angle) * radius * irregular, y + Math.sin(angle) * radius * irregular]);
       }
-      art(sun, 0xc49652, span * .0018);
+      art(sun, 0xc49652, span * .0007);
       for (let i = 0; i < 9; i++) {
         const angle = i * Math.PI * 2 / 9, x = Math.cos(angle), v = Math.sin(angle), r0 = radius * 1.36, r1 = radius * 1.75;
         const half = span * .0008;
         art([[u + x * r0 - v * half, y + v * r0 + x * half], [u + x * r1 - v * half, y + v * r1 + x * half],
           [u + x * r1 + v * half, y + v * r1 - x * half], [u + x * r0 + v * half, y + v * r0 - x * half]],
-          0xb78d50, span * .0012, false);
+          0xb78d50, span * .0007, false);
       }
     }
     for (const [layer, material, batch] of [['lower', 'cardboard', lowerCard], ['upper', 'cardboard', upperCard],
@@ -362,8 +371,12 @@ export function createDioramaGeometry(width: number, height: number): DioramaGeo
   box(base, [minX - thickness, bottom, minZ - thickness], [maxX + thickness, bottom + span * .007, maxZ + thickness], cardboard);
 
   // Beveled tabletop: one plain continuous surface, no clutter or per-plank meshes.
-  const x0 = minX - span * .135, x1 = maxX + span * .135;
-  const z0 = minZ - span * .135, z1 = maxZ + span * .135;
+  // V322's extra paper clearance moves the box by .0006*span only. Preserve
+  // the original table coordinates, grain, apron, and legs byte-for-byte.
+  const tableMinX = -.5 - span * .012, tableMaxX = width - .5 + span * .012;
+  const tableMinZ = -.5 - span * .012, tableMaxZ = height - .5 + span * .012;
+  const x0 = tableMinX - span * .135, x1 = tableMaxX + span * .135;
+  const z0 = tableMinZ - span * .135, z1 = tableMaxZ + span * .135;
   const bevel = span * .007, tableBottom = tableTop - span * .030;
   const rings: Point[][] = [
     [[x0 + bevel, tableTop, z0 + bevel], [x1 - bevel, tableTop, z0 + bevel], [x1 - bevel, tableTop, z1 - bevel], [x0 + bevel, tableTop, z1 - bevel]],

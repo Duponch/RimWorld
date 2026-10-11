@@ -2,9 +2,11 @@ import * as THREE from 'three/webgpu';
 import { texture, vec3 } from 'three/tsl';
 import { createDioramaGeometry, type DioramaGeometryPart, type DioramaMaterialKind } from './diorama-geometry';
 import type { SceneTextureLoader } from './scene-render-ports';
+import { DioramaOcclusion } from './diorama-occlusion';
 
 const BOX_FACES = [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1],
   [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]] as const;
+const SIDE_BITS = { north: 1, south: 2, west: 4, east: 8 } as const;
 
 /** A handful of static batches outside the playable rectangle. No World, cell
  * scans, animation clock or light field belongs to this decorative layer. */
@@ -20,13 +22,11 @@ export class DioramaLayer {
   private disposed = false;
   private loading?: Promise<void>;
   private readonly pending = new Set<() => void>();
-  private readonly direction = new THREE.Vector3();
+  private readonly occlusion = new DioramaOcclusion();
   private readonly viewProjection = new THREE.Matrix4();
   private readonly frustum = new THREE.Frustum();
   private readonly lastView = new THREE.Matrix4();
   private readonly lastProjection = new THREE.Matrix4();
-  private readonly lastTarget = new THREE.Vector3();
-  private lastSpan = NaN;
   private lastCoordinates = -1;
   private lastReversedDepth = false;
   private viewValid = false;
@@ -94,6 +94,7 @@ export class DioramaLayer {
       mesh.castShadow = false; mesh.receiveShadow = false;
       this.parts.push({ spec, mesh }); this.group.add(mesh);
     }
+    this.occlusion.configure(geometry.parts);
   }
 
   setTexturesEnabled(enabled: boolean): void {
@@ -106,35 +107,41 @@ export class DioramaLayer {
     if (this.texturesEnabled) await this.loadTextures();
     const visibility = this.parts.map(({ mesh }) => mesh.visible);
     for (const { mesh } of this.parts) mesh.visible = true;
-    return () => { this.parts.forEach(({ mesh }, i) => { mesh.visible = visibility[i]!; }); };
+    return () => { this.parts.forEach(({ mesh }, i) => { mesh.visible = visibility[i]!; }); this.viewValid = false; };
   }
 
   /** Static world-space bounds, recomputed only for a camera change. A wall's
    * bounding sphere overlaps the colony even when its thin box is offscreen;
    * reject that work before Three traverses the visible render list. */
-  present(camera: THREE.Camera, target: THREE.Vector3, span: number): void {
+  present(camera: THREE.Camera, _target: THREE.Vector3, _span: number): void {
     camera.updateMatrixWorld();
     if (this.viewValid && this.lastView.equals(camera.matrixWorld)
-      && this.lastProjection.equals(camera.projectionMatrix) && this.lastTarget.equals(target)
-      && this.lastSpan === span && this.lastCoordinates === camera.coordinateSystem
+      && this.lastProjection.equals(camera.projectionMatrix) && this.lastCoordinates === camera.coordinateSystem
       && this.lastReversedDepth === camera.reversedDepth) return;
     this.lastView.copy(camera.matrixWorld); this.lastProjection.copy(camera.projectionMatrix);
-    this.lastTarget.copy(target); this.lastSpan = span;
     this.lastCoordinates = camera.coordinateSystem; this.lastReversedDepth = camera.reversedDepth;
     this.viewValid = true;
     this.viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     this.frustum.setFromProjectionMatrix(this.viewProjection, camera.coordinateSystem, camera.reversedDepth);
     this.nearCenter.set(0, 0, camera.reversedDepth ? 1
       : camera.coordinateSystem === THREE.WebGPUCoordinateSystem ? 0 : -1).unproject(camera);
-    this.direction.copy(camera.position).sub(target);
-    const close = span < Math.min(this.width, this.height) * .72;
+    let occlusionReady = false, hiddenSides = 0;
     for (const { spec, mesh } of this.parts) {
-      const near = spec.side === 'north' ? this.direction.z < 0
-        : spec.side === 'south' ? this.direction.z > 0
-        : spec.side === 'west' ? this.direction.x < 0
-        : spec.side === 'east' ? this.direction.x > 0 : false;
-      mesh.visible = !(near && (spec.layer === 'upper' || (close && spec.layer === 'lower')))
-        && this.intersectsBounds(spec.geometry.boundingBox!);
+      // Lower cardboard is never cut away, at any zoom. Only offscreen geometry
+      // is rejected; an upper side disappears only if it covers visible ground.
+      const upperSide = spec.layer === 'upper' && spec.side ? SIDE_BITS[spec.side] : 0;
+      if (upperSide & hiddenSides) { mesh.visible = false; continue; }
+      mesh.visible = this.intersectsBounds(spec.geometry.boundingBox!);
+      if (mesh.visible && upperSide) {
+        // Colony closeups reject every upper bound. Do not even prepare the
+        // ground-ray constraints until a visible upper batch needs them.
+        if (!occlusionReady) {
+          this.occlusion.begin(camera, this.frustum, this.width, this.height);
+          occlusionReady = true;
+        }
+        mesh.visible = !this.occlusion.hides(spec.side!);
+        if (!mesh.visible) hiddenSides |= upperSide;
+      }
     }
   }
 
@@ -157,7 +164,7 @@ export class DioramaLayer {
           if (da >= 0) output[nextCount++]!.copy(a);
           if ((da < 0) !== (db < 0)) output[nextCount++]!.copy(a).lerp(b, da / (da - db));
         }
-        count = nextCount; [input, output] = [output, input];
+        count = nextCount; const swap = input; input = output; output = swap;
         if (!count) break;
       }
       if (count) return true;
@@ -167,6 +174,7 @@ export class DioramaLayer {
 
   private clearGeometry(): void {
     this.viewValid = false;
+    this.occlusion.clear();
     for (const { mesh } of this.parts) mesh.geometry.dispose();
     this.parts = []; this.group.clear();
   }

@@ -1,17 +1,19 @@
 # Guide joueur
 
-## Voir la carte en diorama — V321
+## Voir la carte en diorama — V322
 
 Dézoomez pour voir la carte dans sa boîte en carton, posée sur une table en bois.
-Les paysages sur les parois sont des décors en papier. En tournant la caméra,
-les parois proches s’effacent pour préserver la vue sur la colonie.
+Les quatre parois ont la même hauteur et portent des paysages en papier épais.
+Une partie haute s'efface seulement lorsqu'elle couvre du sol jouable dans la
+vue actuelle, en iso comme en perspective. Les rebords bas restent présents,
+même en approchant la caméra, pour cacher le dessous du terrain.
 
 **Options → Diorama en carton** à l’accueil, ou **Menu → Affichage → Diorama en
 carton** en partie, active ou retire le décor. Le choix est conservé dans ce
 navigateur. Pour comparer les performances, gardez la même caméra et la même
 vitesse et alternez ce réglage ; aucune règle du jeu ne change.
 
-[Réalisation et contrôles](../development/cardboard-diorama-v321.md).
+[Réalisation et contrôles](../development/cardboard-diorama-v322.md).
 
 ## Ranger sur des étagères — V320
 
