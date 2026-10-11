@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication courante `b054f727` ajoute le [relief et la visibilité V322](cardboard-diorama-v322.md) au [diorama en carton V321](cardboard-diorama-v321.md) et aux boucles élémentaires jusqu'aux [étagères V320](../gameplay/shelves-v320.md) et aux corrections d'[infobulles/alertes V319](../gameplay/interface-feedback-v319.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication courante `3e8769bd` ajoute les [paysages procéduraux et astres V323](cardboard-diorama-v323.md) au [relief et à la visibilité V322](cardboard-diorama-v322.md), au [diorama en carton V321](cardboard-diorama-v321.md) et aux boucles élémentaires jusqu'aux [étagères V320](../gameplay/shelves-v320.md) et aux corrections d'[infobulles/alertes V319](../gameplay/interface-feedback-v319.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
 
 ## Adresse et publication
 
@@ -195,3 +195,26 @@ Package/publics inchangés, sans téléchargement distant des66fichiers en entie
 ni nouveau parcours navigateur ou benchmark. Les22poses locales et quatre
 recharges de continuation exactes sont dans la note unique. Un commit/push
 documentaire consigne cette livraison sans nouvelle publication ; relance **PAUSED**.
+
+## Publication V323 — paysages procéduraux et théâtre céleste
+
+Produit `79f92205` commité/poussé puis publié en `3e8769bd`, à la même
+[adresse stable](https://elsewhere-cq7.pages.dev/) et à son
+[URL de publication](https://3e8769bd.elsewhere-cq7.pages.dev/). Trois profils
+de biomes, variantes par graine et soleil/lune sur tiges ;18lots conservés,
+coûts mesurés et défaut caméra préexistant explicités dans la
+[note V323](cardboard-diorama-v323.md). Schéma229 et simulation inchangés.
+
+Build Pages/typage final PASS11,756s ;515fichiers/119148950octets identiques au
+package inspecté avant nettoyage du seul saut de ligne source. Les63références
+et66fichiers publics, textures et assets historiques restent exacts.
+Déploiement PASS13,649s avec Wrangler4.149.0 : deux fichiers envoyés,511déjà
+présents, plus en-têtes/redirections. Le dirty Git correspond uniquement à
+`references_UI`, exclu du commit et du package.
+
+HTTPS PASS4,776s :102réponses200/MIME/octets exacts,51chemins sur les deux
+origines ; [rapport](../../tmp/elsewhere-pages/v323-http-0641ja/report.json).
+Package/publics inchangés ; les66fichiers ne sont pas tous téléchargés à
+distance. Aucun nouveau benchmark ou parcours de jeu en ligne revendiqué.
+Un commit/push documentaire consigne la livraison sans deuxième publication ;
+relance **PAUSED**, aucun nouveau lot engagé.

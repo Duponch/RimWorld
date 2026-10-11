@@ -155,7 +155,7 @@ ou de construction à froid.
 
 Quatre sauvegardes/reprises exactes aux ticks8740/8784/8776/8767, erreurs vides,
 les2776entrées du gel exactes avant/après ; les quatre Chrome et Vite5400 sont
-fermés. Livraison à compléter après son exécution.
+fermés. Livraison consignée ci-dessous.
 
 Compilation finale `v323-build-pages-2026-10-11T20-11-38.737Z-9160`
 PASS12,973s, incluant le typage complet. Package
@@ -215,3 +215,23 @@ version privée moins cet octet. Build Pages/typage final
 Les515fichiers compilés restent identiques octet pour octet au package déjà
 inspecté (`tmp/diorama-v323/final-artifact-equivalence.json`). Aucun test
 fonctionnel n'est rejoué pour ce seul nettoyage sans effet compilé.
+
+## Livraison
+
+Documentation finale `v323-docs-final-2026-10-11T20-38-37.768Z-10900`
+PASS1,963s. Produit `79f92205` commité et poussé sur main, puis publié une
+seule fois sur Cloudflare Pages en `3e8769bd` :
+[adresse stable](https://elsewhere-cq7.pages.dev/) et
+[publication](https://3e8769bd.elsewhere-cq7.pages.dev/).
+`v323-deploy-2026-10-11T20-39-52.502Z-17560` PASS13,649s ; deux fichiers
+envoyés,511déjà présents, en-têtes/redirections conservés. L'avertissement
+Git dirty concerne uniquement `references_UI`, dossier utilisateur absent du
+commit et du package.
+
+`v323-https-2026-10-11T20-40-32.524Z-8880` PASS4,776s :102réponses
+200/MIME/octets exacts,51chemins sur chaque origine. Rapport
+`tmp/elsewhere-pages/v323-http-0641ja/report.json`. Package/publics inchangés ;
+les66fichiers publics sont comparés localement et seuls les chemins indiqués
+sont téléchargés. Aucun nouveau benchmark ou parcours de jeu en ligne n'est
+revendiqué. Le commit documentaire de livraison ne déclenche aucun deuxième
+déploiement. Aucun lot suivant engagé, relance planifiée **PAUSED**.
