@@ -33,3 +33,5 @@ Build Pages final avec typage **PASS12,640s**, `v319-build-pages-2026-10-11T15-5
 La demande d’étagères est prioritaire pour le lotV320 préparé : elles sont absentes deV319 et ne sont pas présentées comme livrées ici. Aucun gainFPS, vrai×6constant ou campagne naturelle n’est certifié par ces corrections d’interface. Commit/push puis poursuite humaine autorisés ; publication Cloudflare regroupée, relance planifiée PAUSED.
 
 Gel final **2729entrées exactes**. Contrôle documentaire : alias Windows `python` indisponible dans l’isolation, ERROR/EACCES0,019s conservé ; reprise avec le runtime Python réel **PASS1,705s**, `v319-docs-python-reprise-2026-10-11T15-53-49.986Z-11736`.
+
+Produit `a84416ad` commité et poussé, publié ensuite une seule fois avec les étagères V320 en `20e234d0`. Les [preuves de publication](../development/cloudflare-pages.md#publication-regroupée-v319v320) qualifient le package et98réponses HTTPS exactes ; elles ne remplacent pas les parcours locaux ci-dessus. Les étagères appartiennent au lot V320 et le schéma courant devient229 dans celui-ci.
