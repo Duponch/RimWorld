@@ -1,13 +1,14 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 223 as const;
+export const SCHEMA_VERSION = 224 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
 export type Terrain = 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone' | 'rich-soil' | 'gravel';
 export type ResourceKind = 'wild-plant' | 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton' | 'healroot';
 export type MaterialKind = 'chemfuel' | 'neutroamine' | 'mech-corpse' | 'silver' | 'corpse' | 'wood' | 'food' | 'chunk' | 'steel' | 'gold' | 'plasteel' | 'advanced-component' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
-export type StructureKind = 'electric-smelter' | 'animal-sleeping-spot' | 'biofuel-refinery' | 'chemfuel-generator' | 'nutrient-paste-dispenser' | 'hopper' | 'orbital-beacon' | 'comms-console' | 'deep-drill' | 'ground-scanner' | 'vitals-monitor' | 'drug-lab' | 'hydroponics-basin' | 'mini-turret' | 'tube-television' | 'sandbags' | 'art-bench' | 'small-sculpture' | 'large-sculpture' | 'machining-table' | 'fabrication-bench' | 'hi-tech-research-bench' | 'multi-analyzer' | 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'sun-lamp' | 'standing-lamp' | 'passive-cooler' | 'door' | 'autodoor' | 'wall' | 'fence' | 'fence-gate' | 'pen-marker' | 'bed' | 'hospital-bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'chess-table' | 'stonecutter';
+export type BedSlot = 0 | 1;
+export type StructureKind = 'double-bed' | 'electric-smelter' | 'animal-sleeping-spot' | 'biofuel-refinery' | 'chemfuel-generator' | 'nutrient-paste-dispenser' | 'hopper' | 'orbital-beacon' | 'comms-console' | 'deep-drill' | 'ground-scanner' | 'vitals-monitor' | 'drug-lab' | 'hydroponics-basin' | 'mini-turret' | 'tube-television' | 'sandbags' | 'art-bench' | 'small-sculpture' | 'large-sculpture' | 'machining-table' | 'fabrication-bench' | 'hi-tech-research-bench' | 'multi-analyzer' | 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'sun-lamp' | 'standing-lamp' | 'passive-cooler' | 'door' | 'autodoor' | 'wall' | 'fence' | 'fence-gate' | 'pen-marker' | 'bed' | 'hospital-bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'chess-table' | 'stonecutter';
 export type JobKind = 'lay-floor' | 'remove-floor' | 'flick' | 'repair' | 'fix-breakdown' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
 export type WorkType = 'handle' | 'art' | 'clean' | 'firefight' | 'warden' | 'basic' | 'hunt' | 'research' | 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
 export type Orientation = 0 | 1 | 2 | 3;
@@ -173,6 +174,7 @@ export interface Pawn extends Cell {
   need: NeedTask | null;
   /** Persistent ownership, distinct from an active sleep reservation. */
   bedId: number | null;
+  bedSlot?: BedSlot;
   needCooldown: number;
   state: PawnState;
   priorities: Record<WorkType, number>;
@@ -321,7 +323,7 @@ export type Command = import('./orbital-state.ts').OrbitalCommand | import('./gr
   | { type: 'growing-policy'; zoneId: number; plant?: GrowingZone['plant']; allowSow: boolean; allowCut: boolean }
   | { type:'stockpile-policy'; stockpileId:number; settings:StorageSettings }
   | { type:'delete-zone'; kind:'stockpile'|'growing'; zoneId:number }
-  | { type: 'assign-bed'; bedId: number; pawnId: number | null }
+  | { type: 'assign-bed'; bedId: number; pawnId: number | null; slot?: BedSlot }
   | ({ type: 'cancel' } & Cell)
   | ({ type: 'stockpile'; enabled: boolean } & Cell & StorageSettings)
   | {type:'enable-heatwaves'}

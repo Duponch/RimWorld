@@ -70,7 +70,16 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
   } else if(command.type==='refuel-policy' && !command.enabled) {
     for(const pawn of world.pawns)if(pawn.haul?.destination.type==='fuel'&&!pawn.haul.destination.forced&&pawn.haul.destination.structureId===command.structureId)pawns.add(pawn.id);
   } else if(command.type==='assign-bed') {
-    for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&(pawn.bedId===command.bedId||pawn.id===command.pawnId))pawns.add(pawn.id);
+    const bed=world.structures.find(s=>s.id===command.bedId),owner=world.pawns.find(p=>p.id===command.pawnId);
+    if(bed?.kind==='double-bed'){
+      if((command.slot===0||command.slot===1)&&!(owner?.bedId===bed.id&&owner.bedSlot===command.slot)){
+        const affected=new Set(world.pawns.filter(p=>p.bedId===bed.id&&p.bedSlot===command.slot||p.id===command.pawnId).map(p=>p.id));
+        for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&affected.has(pawn.id)||pawn.rescue&&(affected.has(pawn.rescue.patientId)||pawn.rescue.bedId===bed.id&&pawn.rescue.bedSlot===command.slot))pawns.add(pawn.id);
+      }
+    }else if(command.slot===undefined){
+      for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&(pawn.bedId===command.bedId||pawn.id===command.pawnId)
+        ||owner?.bedSlot!==undefined&&pawn.rescue?.patientId===owner.id)pawns.add(pawn.id);
+    }
   }
   for(const pawn of world.pawns)if((pawn.jobId!==null&&jobs.has(pawn.jobId))||(pawn.haul&&(jobs.has(constructionHaulId(pawn.haul.destination)??-1)||pawn.haul.destination.type==='stockpile'&&zones.has(pawn.haul.destination.stockpileId))))pawns.add(pawn.id);
   if(command.type==='designate'&&command.kind==='deconstruct'||command.type==='area'&&command.action==='deconstruct'){

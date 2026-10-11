@@ -1,5 +1,6 @@
 import { isCookingOrder } from './order-types.ts';
 import { urgentTreatment } from './care-rules.ts';
+import { bedSlotCell } from './bed-slots.ts';
 import type { Cell, Pawn, World } from './types.ts';
 
 /** Exclusive use of a workstation, dining place or bed. This is not physical
@@ -34,7 +35,7 @@ export function reservedServiceCells(world: World, exceptPawn?: number): Set<num
     if(pawn.feed?.paste&&(pawn.feed.phase==='pickup'||pawn.feed.phase==='collect'))reserved.add(pawn.feed.spot.z*world.width+pawn.feed.spot.x);
   }
   for(const pawn of world.pawns)if(pawn.id!==exceptPawn&&pawn.animalRescue){const spot=world.structures.find(s=>s.id===pawn.animalRescue!.spotId);if(spot)reserved.add(spot.z*world.width+spot.x);}
-  for(const pawn of world.pawns)if(pawn.id!==exceptPawn&&pawn.rescue){const bed=world.structures.find(s=>s.id===pawn.rescue!.bedId);if(bed)reserved.add(bed.z*world.width+bed.x);}
+  for(const pawn of world.pawns)if(pawn.id!==exceptPawn&&pawn.rescue){const bed=world.structures.find(s=>s.id===pawn.rescue!.bedId);const target=bed?.kind==='double-bed'&&pawn.rescue.bedSlot!==undefined?bedSlotCell(bed,pawn.rescue.bedSlot):bed;if(target)reserved.add(target.z*world.width+target.x);}
   for(const pawn of world.pawns)for(const order of pawn.orders?.queue??[])if(isCookingOrder(order))reserved.add(order.cooking.spot.z*world.width+order.cooking.spot.x);
   return reserved;
 }

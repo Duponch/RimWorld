@@ -117,7 +117,7 @@ export function validatePodRescues(w:World,version:number,ids:Set<number>,valida
     const p=d.pawn,i=s.incidents.find(i=>i.id===d.incidentId);
     if(!i||i.result!=='departed'||i.resolvedAt!==d.tick||i.pawnId!==p.id||p.podRescue?.incidentId!==d.incidentId
       ||!validPawnPodRescue(p,version,{...w,tick:d.tick})||i?.decision!==undefined&&i.decision.admittedAt!==p.podRescue?.admittedAt||p.faction!=='outlanders'||p.prisoner||!cell({x:p.x,z:p.z},w)||!visitorAtEdge(w,p)
-      ||p.state!=='idle'||p.moveCooldown!==0||!Array.isArray(p.path)||p.path.length||p.bedId!==null||p.need!==null||p.jobId!==null||p.haul!==null||p.cooking!==null
+      ||p.state!=='idle'||p.moveCooldown!==0||!Array.isArray(p.path)||p.path.length||p.bedId!==null||Object.hasOwn(p,'bedSlot')||p.need!==null||p.jobId!==null||p.haul!==null||p.cooking!==null
       ||!object(p.orders)||p.orders.active!==null||!Array.isArray(p.orders.queue)||p.orders.queue.length||!object(p.recreation)||p.recreation.task!==null
       ||inactiveFields.some(k=>((p as unknown as Record<string,unknown>)[k]??null)!==null)||p.mental?.crisis||p.body
       ||!object(p.priorities)||Object.values(p.priorities).some(n=>n!==0))errors.push('Invalid frozen pod rescue departure.');

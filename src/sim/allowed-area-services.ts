@@ -1,4 +1,5 @@
 import { captureAllowedArea,allowedAreaAllows,type AllowedAreaPolicy } from './allowed-area-state.ts';
+import { bedSlotCell } from './bed-slots.ts';
 import type { Cell,Pawn,World } from './types.ts';
 import type { RecreationTask } from './recreation-rules.ts';
 
@@ -50,7 +51,8 @@ export function allowedAreaServicesAllowed(world:World,pawn:Pawn):boolean {
   }
   const rescue=pawn.rescue;
   if(rescue&&!rescue.release){
-    if(!building(rescue.bedId))return false;
+    const bed=world.structures.find(s=>s.id===rescue.bedId);
+    if(bed?.kind==='double-bed'?!cell(rescue.bedSlot===undefined?undefined:bedSlotCell(bed,rescue.bedSlot)):!building(rescue.bedId))return false;
     if(!rescue.arrest&&!rescue.capture&&rescue.phase==='approach'&&pawn.orders.active!=='rescue'&&!patient(rescue.patientId))return false;
   }
   const ward=pawn.ward;

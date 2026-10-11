@@ -2,7 +2,7 @@ import { isBedKind } from './bed-kinds.ts';
 import { WEAPON_QUALITIES,type WeaponQuality } from './equipment-rules.ts';
 
 /** Core 1.6.4871 names adapted to the stable ids proposed for V90. */
-export const HABITAT_FURNITURE_KINDS=['bed','hospital-bed','table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot','chess-table'] as const;
+export const HABITAT_FURNITURE_KINDS=['double-bed','bed','hospital-bed','table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot','chess-table'] as const;
 export type HabitatFurnitureKind=typeof HABITAT_FURNITURE_KINDS[number];
 export type FurnitureQuality=WeaponQuality;
 export const FURNITURE_QUALITIES=WEAPON_QUALITIES;
@@ -35,6 +35,7 @@ export const FURNITURE_DEFINITIONS:Readonly<Record<HabitatFurnitureKind,Furnitur
   // Core gates the bed behind Complex furniture. Lisière already shipped it;
   // V90 keeps it unlocked while retaining the reference prerequisite here.
   bed:definition({label:'Lit',width:1,depth:2,stuff:45,categories:hard,coreWork:800,constructionSkill:0,research:null,coreResearch:'complex-furniture',maxHitPoints:140,beauty:1,comfort:.75,restEffectiveness:1,quality:true}),
+  'double-bed':definition({label:'Lit double',width:2,depth:2,stuff:85,categories:hard,coreWork:1500,constructionSkill:0,research:'complex-furniture',coreResearch:'complex-furniture',maxHitPoints:200,beauty:2,comfort:.75,restEffectiveness:1,quality:true}),
   'hospital-bed':definition({label:'Lit d’hôpital',width:1,depth:2,stuff:40,categories:['metallic'],coreWork:2800,constructionSkill:8,research:'hospital-bed',coreResearch:'hospital-bed',maxHitPoints:150,beauty:2,comfort:.8,restEffectiveness:1,quality:true}),
   table:definition({label:'Table 1×2',width:1,depth:2,stuff:28,categories:hard,coreWork:750,constructionSkill:0,research:null,maxHitPoints:75,beauty:.5,seats:6,quality:true}),
   stool:definition({label:'Tabouret',width:1,depth:1,stuff:25,categories:hard,coreWork:450,constructionSkill:0,research:null,maxHitPoints:75,beauty:0,comfort:.5,seats:1,quality:true}),

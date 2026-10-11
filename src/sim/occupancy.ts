@@ -58,6 +58,7 @@ export const OCCUPANCY = Object.freeze({
   autodoor: Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   stonecutter: Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   wall: Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  'double-bed':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   bed: Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'hospital-bed':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   table: Object.freeze({clearItems:false,items:true,zones:false,store:false}),

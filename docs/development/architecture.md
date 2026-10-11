@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V313, schéma 224 : [lits doubles civils](../gameplay/double-beds-v313.md).** Une autorité de géométrie fournit les deux têtes et centres rendus. Slot durable par propriétaire, préflight atomique des réaffectations, secours/soins ciblés par tête et validations prospectives sur les propriétaires originaux avant les projections MAIN. Migration223 validée puis neutre, branches simples conservées. Les états suivants sont historiques.
+
 **V312, schéma 223 : [zones autorisées humaines](../gameplay/allowed-areas-v312.md).** Définitions et références prospectives ; membership privé lié aux cellules, admissions par vraie cible et pénalité de recherche sans changement de vitesse. Préflight combiné des dépôts contre les propriétaires originaux, retour dans le budget commun ; gardes fichiers/Decoder partagées et migration222 strictement validée puis neutre. Les états suivants sont historiques.
 
 **V311, schéma 222 : [fonderie et fusion des armes](../gameplay/smelting-v311.md).** Facture filtrée, une arme entière source/held/placed puis une sortie métallique physique ; préflight atomique et tirage projeté, guards fichiers/Decoder communs. Migration221 validée avant changement du seul numéro. Contrôles acquis et limites dans la note unique. Les états suivants sont historiques.

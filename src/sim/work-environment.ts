@@ -44,7 +44,7 @@ export class WorkEnvironmentCache {
     const covered=new Map<number,number>(),scores=new Map<number,{beds:number;laboratory:number;workshop:number;kitchen:number;dining:number;recreation:number}>();
     for(const index of roofs){const room=topology.at(index%world.width,Math.floor(index/world.width));if(room?.kind==='space')covered.set(room.id,(covered.get(room.id)??0)+1);}
     for(const s of world.structures) {
-      if(!['electric-smelter','biofuel-refinery','drug-lab','machining-table','fabrication-bench','art-bench','research-bench','hi-tech-research-bench','multi-analyzer','tailor-bench','electric-tailor-bench','bed','hospital-bed','stonecutter','table','table-square','table-long','horseshoes','chess-table','tube-television','fueled-stove','electric-stove'].includes(s.kind))continue;
+      if(!['electric-smelter','biofuel-refinery','drug-lab','machining-table','fabrication-bench','art-bench','research-bench','hi-tech-research-bench','multi-analyzer','tailor-bench','electric-tailor-bench','bed','double-bed','hospital-bed','stonecutter','table','table-square','table-long','horseshoes','chess-table','tube-television','fueled-stove','electric-stove'].includes(s.kind))continue;
       const ids=new Set<number>();for(const cell of footprintCells(s)){const r=topology.at(cell.x,cell.z);if(r?.kind==='space')ids.add(r.id);}
       for(const id of ids){let v=scores.get(id);if(!v){v={beds:0,laboratory:0,workshop:0,kitchen:0,dining:0,recreation:0};scores.set(id,v);}
         if(isBedKind(s.kind))v.beds++;else if(s.kind==='drug-lab'||s.kind==='research-bench'||s.kind==='hi-tech-research-bench'||s.kind==='multi-analyzer')v.laboratory+=54;else if(s.kind==='electric-smelter'||s.kind==='biofuel-refinery'||s.kind==='machining-table'||s.kind==='fabrication-bench'||s.kind==='art-bench'||s.kind==='stonecutter'||s.kind==='tailor-bench'||s.kind==='electric-tailor-bench')v.workshop+=27;else if(isStove(s.kind))v.kitchen+=28;else if(s.kind==='table'||s.kind==='table-square'||s.kind==='table-long')v.dining+=12;else v.recreation+=7;}
@@ -55,7 +55,7 @@ export class WorkEnvironmentCache {
       const psychologicallyOutdoors=unroofed>=300||space.touchesMapEdge&&unroofed>=space.cellCount*.5;
       const score=scores.get(space.id);let role:WorkRoomRole='none';
       if(!space.touchesMapEdge&&score) {
-        // Current beds are single, civilian and adults have no love clusters.
+        // Count physical furniture, including one double, rather than its slots.
         const values={laboratory:score.laboratory,bedroom:score.beds===1?100000:0,dining:score.dining,recreation:score.recreation,workshop:score.workshop,kitchen:score.kitchen,barracks:score.beds>1?score.beds*100100:0};
         let best=0;for(const candidate of ['laboratory','bedroom','dining','recreation','workshop','barracks','kitchen'] as const)if(values[candidate]>best){best=values[candidate];role=candidate;}
       }

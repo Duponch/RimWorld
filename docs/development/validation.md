@@ -1,4 +1,6 @@
-# Validation courante — V312
+# Validation courante — V313
+
+**V313, schéma 224 : [lits doubles civils](../gameplay/double-beds-v313.md#contrôles-et-limites).** Construction, places, sommeil, services et frontières acquis par reprises ; Aulnes originales puis continuations exactes sans dotation. Résultats, rouges et limites rassemblés dans la note unique. Les validations suivantes sont historiques.
 
 **V312, schéma 223 : [zones autorisées humaines](../gameplay/allowed-areas-v312.md#contrôles-et-limites).** Admissions, coûts de navigation, possessions et sauvegardes contrôlés par groupes et reprises ; parcours graphique dans Les Aulnes historiques. Résultats, rouges et limites rassemblés dans la note unique. Les validations suivantes sont historiques.
 

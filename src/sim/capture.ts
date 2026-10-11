@@ -62,7 +62,7 @@ export function completeCapture(world:World,patient:Pawn,planned?:DropPlan):bool
   if(!releaseWork(world,patient,drops))return false;
   for(const item of held)item.owner={type:'ground',...drops.get(item.id)!};
   clearQueuedOrders(world,patient);delete patient.priorityWork;delete patient.draft;delete patient.flee;delete patient.equipmentDropPending;
-  patient.prisoner=createPrisonerState(world,patient);patient.bedId=null;
+  patient.prisoner=createPrisonerState(world,patient);patient.bedId=null;delete patient.bedSlot;
   if(patient.raid){patient.raid.goal=null;patient.raid.exiting=true;}
   return true;
 }

@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V313, schéma 224 : [lits doubles civils](double-beds-v313.md).** Deux places et deux vrais dormeurs, affectations/portage/réinstallation indépendants ; secours, pansements et alimentation non opératoires compatibles. Migration223 prospective neutre et gardes communes fichiers/Decoder. Preuves et adaptations dans la note unique. Doubles médicaux/prison, opérations dans ce modèle et nouveau comportement amoureux restent absents. Les états suivants sont historiques.
+
 **V312, schéma 223 : [zones autorisées humaines](allowed-areas-v312.md).** Dix zones nommées/colorées et indépendantes, tracé libre et affectation des colons. Métiers et besoins choisissent leurs vraies cibles dans la zone ; traversée extérieure possible, retour physique et conservation des possessions lors d’un changement. Exceptions, migrations et preuves dans la note unique. Zones animales, multicarte et lits doubles restent ouverts. Les états suivants sont historiques.
 
 **V311, schéma 222 : [fonderie et fusion des armes](smelting-v311.md).** Arme entière choisie par type/PV/qualité, transport/staging au poste alimenté, puis une pile d’acier ou plastacier réellement rangée et réutilisable. Filtresfalse initiaux, nombre/toujours, sans XP ni composant récupéré ; migration221 prospective neutre. Contrôles acquis par reprises et limites dans la note unique. Armures, scories et sorties multiples restent absentes. Les états suivants sont historiques.

@@ -34,13 +34,15 @@ function planBedInterruptions(world:World,actors:readonly Pawn[]):DropPlan|null 
 export function applyPrisonBed(world:World,command:{bedId:number;enabled:boolean}):CommandResult {
   const bed=world.structures.find(s=>isBedKind(s.kind)&&s.id===command.bedId);
   if(!bed||typeof command.enabled!=='boolean')return fail('Lit ou rôle de prison invalide.');
+  if(bed.kind==='double-bed')return fail('Le lit double est réservé au couchage civil.');
   const map=topology(world),room=map.at(bed.x,bed.z);
   if(command.enabled&&(room?.kind!=='space'||room.touchesMapEdge))return fail('Un lit de prison exige une pièce fermée ne touchant pas le bord de carte.');
   const beds=room?.kind==='space'&&!room.touchesMapEdge?world.structures.filter(s=>isBedKind(s.kind)&&map.at(s.x,s.z)===room):[bed];
+  if(command.enabled&&beds.some(b=>b.kind==='double-bed'))return fail('Cette pièce contient un lit double civil : retirez-le avant de la convertir en prison.');
   const changed=beds.filter(b=>!!b.prisoner!==command.enabled);if(!changed.length)return {ok:true};
   const actors=affectedByBeds(world,changed),drops=planBedInterruptions(world,actors);if(!drops)return fail('Pas de place pour conserver les cargaisons interrompues par le changement de prison.');
   for(const b of changed)if(command.enabled)b.prisoner=true;else delete b.prisoner;
-  for(const p of actors){p.bedId=null;releaseWork(world,p,drops);p.needCooldown=0;p.planCooldown=0;}
+  for(const p of actors){p.bedId=null;delete p.bedSlot;releaseWork(world,p,drops);p.needCooldown=0;p.planCooldown=0;}
   for(const p of world.pawns)p.planCooldown=0;
   return {ok:true};
 }
@@ -60,20 +62,21 @@ export function applyPrisonerMode(world:World,command:{patientId:number;mode:Pri
   }
   return {ok:true};
 }
-/** Joining air spaces propagates the role to every bed, as a physical room
- * property. No new role is ever introduced when no prisoner bed exists. */
+/** Joining air spaces propagates the role to supported prison beds. Civil
+ * doubles keep their role and owners when a wall merges two existing rooms.
+ * No new role is introduced when no prisoner bed exists. */
 export function reconcilePrisoners(world:World):void {
   const marked=world.structures.filter(s=>isBedKind(s.kind)&&s.prisoner);
   let captured:RoomTopology|undefined;
   if(marked.length){const map=topology(world);captured=map;const prisons=new Set<number>();
     for(const bed of marked){const room=map.at(bed.x,bed.z);if(room?.kind==='space'&&!room.touchesMapEdge)prisons.add(room.id);}
-    const added=world.structures.filter(s=>{const room=map.at(s.x,s.z);return isBedKind(s.kind)&&!s.prisoner&&room?.kind==='space'&&prisons.has(room.id);});
+    const added=world.structures.filter(s=>{const room=map.at(s.x,s.z);return isBedKind(s.kind)&&s.kind!=='double-bed'&&!s.prisoner&&room?.kind==='space'&&prisons.has(room.id);});
     for(const b of added)b.prisoner=true;
-    for(const p of affectedByBeds(world,added)){p.bedId=null;interruptWork(world,p);p.needCooldown=0;}
+    for(const p of affectedByBeds(world,added)){p.bedId=null;delete p.bedSlot;interruptWork(world,p);p.needCooldown=0;}
   }
   for(const p of world.pawns)if(p.prisoner){
     const day=prisonDay(world);if(p.prisoner.chatDay!==day){p.prisoner.chatDay=day;p.prisoner.chatCount=0;}
-    if(p.bedId!==null&&!world.structures.some(b=>b.id===p.bedId&&prisonBedValid(world,b,captured??=capturePrisonTopology(world))))p.bedId=null;
+    if(p.bedId!==null&&!world.structures.some(b=>b.id===p.bedId&&b.kind!=='double-bed'&&prisonBedValid(world,b,captured??=capturePrisonTopology(world)))){p.bedId=null;delete p.bedSlot;}
     if(p.state==='dead')delete p.prisoner.escape;
   }
 }

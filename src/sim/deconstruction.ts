@@ -68,7 +68,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
       p.bombRefuge.endCore=Math.min(p.bombRefuge.endCore,world.tick*10);
       if(p.moveCooldown===0&&(p.motion?.end??0)<=world.tick&&!p.melee?.strike&&!p.shooting?.stance&&!p.stun){delete p.bombRefuge;p.path=[];p.planCooldown=0;if(p.state==='moving')p.state='idle';}
     }
-    if (p.bedId === structure.id) p.bedId = null;
+    if (p.bedId === structure.id) {p.bedId = null;delete p.bedSlot;}
     // A table is not exclusively reserved by its eaters. Keep their actual meal
     // and position, remove the vanished surface before ingestion can benefit.
     if (p.need?.kind === 'eat' && p.need.dining?.tableId === structure.id) p.need.dining.tableId = null;

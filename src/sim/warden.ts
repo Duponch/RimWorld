@@ -104,7 +104,7 @@ function finishConversation(world:World,actor:Pawn,p:Pawn,context:NeedContext):b
     context.event(`${actor.name} réduit la résistance de ${p.name} de ${reduction.toFixed(2)} (${prisoner.resistance.toFixed(2)} restante).`);
   }else if(prisoner.mode==='recruit'){
     const raidGroup=p.raid?.group;p.recruitment={capturedAt:prisoner.capturedAt,recruitedAt:world.tick,fromFaction:'outlaws',...(raidGroup===undefined?{}:{raidGroup})};
-    delete p.prisoner;delete p.raid;p.faction='colony';p.bedId=null;p.needCooldown=0;p.planCooldown=0;
+    delete p.prisoner;delete p.raid;p.faction='colony';p.bedId=null;delete p.bedSlot;p.needCooldown=0;p.planCooldown=0;
     clearQueuedOrders(world,p);context.event(`${p.name} rejoint la colonie après les conversations avec ${actor.name}.`);
   }
   return true;

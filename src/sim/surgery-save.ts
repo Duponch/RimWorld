@@ -86,7 +86,7 @@ export function validateSurgeries(w:World,version:number):string[] {
     if(!patient||patient===p||patient.id===offMap||!patient.surgeryRequest||patient.surgeryRequest.part!==t.part
       ||patient.surgeryRequest.implant!==t.implant||surgeryRequestReason(patient,t.part,{...(t.phase==='work'?{allowAnesthetic:true as const}:{}),...(t.implant?{implant:t.implant}:{})}))errors.push('Surgical task lacks an eligible matching patient.');
     if(patients.has(t.patientId))errors.push('Duplicate surgical patient reservation.');patients.add(t.patientId);
-    if(!bed||bed.prisoner||!patient||!rescueBedAvailable(w,bed,patient,p.id)||!lyingPatient(patient)||patient.need?.kind!=='sleep'||patient.need.bedId!==bed.id||patient.x!==bed.x||patient.z!==bed.z
+    if(!bed||bed.kind==='double-bed'||bed.prisoner||!patient||!rescueBedAvailable(w,bed,patient,p.id)||!lyingPatient(patient)||patient.need?.kind!=='sleep'||patient.need.bedId!==bed.id||patient.x!==bed.x||patient.z!==bed.z
       ||Math.abs(t.spot.x-bed.x)+Math.abs(t.spot.z-bed.z)!==1||!canStandAt(w,t.spot))errors.push('Surgical patient or bedside is not physically installed.');
     if(w.pawns.some(other=>other!==p&&(other.tend?.patientId===t.patientId||other.feed?.patientId===t.patientId||other.ward?.patientId===t.patientId||other.rescue?.patientId===t.patientId
       ||serviceCell(other)&&serviceKey(serviceCell(other)!)===serviceKey(t.spot))))errors.push('Surgery conflicts with a patient or bedside reservation.');

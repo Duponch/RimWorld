@@ -22,5 +22,5 @@ export function relationshipHousingThought(world:World,pawn:Pawn,topology?:Relat
     if(one?.kind==='space'&&two?.kind==='space'&&!one.touchesMapEdge&&!two.touchesMapEdge&&one.id===two.id)return;
   }
   return {id:'want-shared-room',label:`Dormir près de ${partner.name}`,offset:-4,kind:'situation',
-    description:'Partenaire vivant présent ; attribuez deux lits civils dans la même pièce intérieure. Les positions actuelles ne valent pas une chambre commune.'};
+    description:'Partenaire vivant présent ; attribuez deux places de couchage civiles dans la même pièce intérieure. Les positions actuelles ne valent pas une chambre commune.'};
 }

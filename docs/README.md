@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V313 : [lits doubles civils](gameplay/double-beds-v313.md), schéma 224.** Deux propriétaires et deux places physiques, sommeil indépendant, transport du meuble et secours par tête ; [référence Core actuelle](research/double-bed-core-v313.md) et [guide](gameplay/player-guide.md#utiliser-un-lit-double--v313). Adaptations, contrôles et limites dans la note unique. Les états suivants sont historiques.
+
 **V312 : [zones autorisées humaines](gameplay/allowed-areas-v312.md), schéma 223.** Définition, affectation, filtrage des activités, traversée préférentielle et retour physique ; [référence Core actuelle](research/allowed-areas-core-v312.md) et [guide](gameplay/player-guide.md#affecter-une-zone-autorisée--v312). Contrôles, adaptations et limites dans la note unique. Les états suivants sont historiques.
 
 **V311 : [fonderie électrique et fusion des armes](gameplay/smelting-v311.md), schéma 222.** Factures à types/PV/qualités, une arme réelle collectée/portée/placée puis métal rangé et réutilisable. [Recherche Core actuelle](research/smelting-core-v311.md), [guide](gameplay/player-guide.md#fondre-une-arme--v311), adaptations et contrôles qualifiés dans la note unique. Les états suivants sont historiques.

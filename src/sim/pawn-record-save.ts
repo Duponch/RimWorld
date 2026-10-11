@@ -1,4 +1,5 @@
 import { validAllowedAreaPawnShape } from './allowed-area-save.ts';
+import { validBedSlotPawnShape } from './double-bed-save.ts';
 // Common raw Pawn guard. Owner registration and contextual bindings stay outside.
 // Identity/Thing registration stays with the owner coordinator. No World clone,
 // extra map Pawn, clock catch-up, or mutable gameplay is created here.
@@ -52,6 +53,7 @@ export function validatePawnRecordShape(item:Record<string,unknown>, world:World
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
   if(!validAllowedAreaPawnShape(item,world,version))errors.push('Invalid or future allowed area assignment or return shape.');
+  if(!validBedSlotPawnShape(item,world,version))errors.push('Invalid or future bed slot shape.');
   if(Object.hasOwn(item,'animalRescue')&&!validAnimalRescueShape(item.animalRescue,version))errors.push('Invalid or future animal rescue shape.');
   const coord=(value:Record<string,unknown>)=>integer(value.x,0,world.width-1)&&integer(value.z,0,world.height-1);
   if(!validPawnPodRescue(item,version,input as unknown as World))errors.push('Invalid or future pod rescue mandate for schema.');

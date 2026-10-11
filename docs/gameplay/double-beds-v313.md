@@ -1,0 +1,35 @@
+# V313 — lits doubles civils
+
+**Schéma 224.** Un lit double construit avec des matériaux réels accueille deux colons sur deux places indépendantes. [Référence primaire et adaptations](../research/double-bed-core-v313.md).
+
+## Usage
+
+Architecte > Meubles propose **Lit double** après Mobilier complexe : 2×2, 85 unités de bois, acier ou blocs de pierre, qualité et statistiques habituelles. Le modèle, le fantôme et la vignette partagent une géométrie ; deux oreillers suivent les deux têtes et les deux corps rendus restent distincts.
+
+L’inspection présente **Place 1** et **Place 2**. Deux colons libres peuvent être affectés manuellement, sans créer une relation. L’affectation ou la libération d’une place conserve l’autre. Le sommeil automatique garde la place propre avant le partage avec un partenaire réel, puis un lit sans propriétaire. La zone autorisée filtre la vraie tête, avec une recherche partagée et le budget ordinaire.
+
+Le secours réserve la place du patient avant le trajet et conserve cette destination pendant le portage. Une arête non terminée n’accorde ni dépôt ni posture de lit. Soins, alimentation assistée, confort et souvenirs existants utilisent la tête réelle. Le modèle civil refuse les rôles médicaux/prison et les opérations ; une requête opératoire reste portée par la personne pour un lit compatible.
+
+## Conservation
+
+Les propriétaires conservent leur ID de lit et leur slot pendant la désinstallation, le transport et la réinstallation tournés. La disparition, la mort ou une réaffectation libère seulement la place concernée. Les commandes planifient les dépôts avant de modifier les affectations ; un sol saturé refuse sans perdre de chargement. Les segments physiques engagés restent conservés.
+
+Le fichier et le Decoder contrôlent les slots sur les propriétaires originaux avant les projections de voyage. Slots dupliqués, cible de sommeil différente, secours incohérent, rôles futurs ou références hors carte sont refusés. Le schéma223 est validé avant sa migration neutre vers224 ; aucune ancienne sauvegarde ne reçoit de lit double ou de slot. Les lits simples conservent leurs branches historiques.
+
+## Contrôles et limites
+
+ROOT acquiert **57 nouveaux cas uniques dans quatre fichiers** par groupes et reprises : noyau17, construction7, services14 et persistance19. Ils couvrent les quatre rotations, deux propriétaires/dormeurs, vrais matériaux, chemin et budget communs, partage au partenaire réel, soins/secours par tête, réaffectation saturée, emballage et mort, propriétaires hors carte et refus prospectifs fichiers/Decoder. Le groupe historique39cas/7fichiers passe après actualisation des seules attentes du catalogue et des fixtures déclarées pré219. Le groupe de frontières final33cas/2fichiers passe en9,026s ; typage final13,283s, MAIN littéral5,626s et buildPages final2,269s passent. Logs frais sous `tmp/validation-runs/double-bed-v313-*`.
+
+Le contrôle public **63références/66fichiers** passe en70,903s : `tmp/double-bed-v313/public-controls/public-context-check-kfj19R/report.json`. Payloads historiques exacts, migrations vers224, checkpoint/delta RAW et vrai MAIN littéral, vues retenues, véritable tick ordinaire et rechargement canonique sont vérifiés. Les corrections UI et de pilote postérieures ne changent pas ces admissions ; la classe MAIN qualifiée reste exacte.
+
+Le parcours Chrome **WebGPU2560×1440** commence dans Les Aulnes originales250×250/tick8434/quinze humains, SHA stockée `6d75f98d4435e8b4569f11fce1969a71d31ba523fcf36ad864f35ba3191eedb1`. Aucune dotation ni état personnel n’est modifié. Blueprint26490, puis véritables livraisons du village et construction priorisée par les menus du joueur : le bâtiment terminé31088 reçoit du bois et une qualitégood. La continuation capturée17693 est rechargée sans correction ; **sept sauvegardes/recharges exactes**17693/17698/17698/17704/17955/17956/17956 sont acquises en127,494s. Salomé20343 et Sacha20325 suivent deux trajets, dorment aux têtes126,147 et127,147, puis gagnent chacun0,041142857 de repos sur le tick suivant. Libérer seulement la place0 conserve exactement ID/slot/besoin/arête/chemin du second. Erreurs et incidents vides. Preuves : `tmp/double-bed-v313/native-sleep-2026-10-11T031240/`.
+
+Une lecture graphique séparée repart de la vraie sauvegarde17955 en pause : deux proxies de corps réellement préparés par PawnLayer/SceneRenderCore, espacés d’environ30,63pixels dans la vue rapprochée, sont acquis en28,035s. Monde exact après pan/zoom, deux corps visibles dans la capture inspectée, erreurs vides : `tmp/double-bed-v313/render-2026-10-11T031500/`. L’inspection avec deux menus de propriétaires est aussi inspectée. La présentation commune Chrome passe118,778s. Sources/tests/publics et pilotes ROOT restent figés pendant les contrôles ; navigateur et ports5384/5173 de test sont fermés.
+
+**Rouges conservés.** Premier groupe54cas/11,194s : six échecs, whitelist d’admission oubliée, route de fixture non contiguë, secours quittant à tort la tête1 et oracle de reliquat de médicament ; corrigés puis repris. Reprise51cas/16,951s : deux anciens oracles furniture-travel, formes du nouveau catalogue et zoneId futur dans une fixture21 ; attentes déclarées corrigées sans élargir une garde. Groupe historique39cas/14,932s : ancien décompte d’icônes88 au lieu de90 ; reprise3cas/4,526s. Typage rouge14,360s : union de descriptors et label manquant ; corrigés. Revue statique : secours mobile, déjà couché, partagé avec un secours simple ou sans autorité ; deux cas permanents ajoutés et garde commune complétée.
+
+Premier natif interrompu après baseline8434 : double absent de la liste des matériaux UI ; ajout du matériau et pilote rouvrant le vrai panneau après sa fermeture à la sélection. Reprise native153,280s rouge à la limite120s, monde12755 conservé avec25/85bois livrés et10portés. Continuation170,365s rouge : le lit était construit31088, mais le pilote attendait à tort l’ID26490 du chantier ; monde17693 conservé. Attente corrigée pour distinguer ces propriétaires et parcours sommeil poursuivi depuis ce monde exact, sans réinitialiser ses personnes/objets. Aucun rouge ni gel n’est effacé.
+
+Le lot reste **civil seulement**. Un patient déjà à terre dans le double n’est pas déplacé automatiquement pour une opération ; lit simple/hospitalier nécessaire. Affectation manuelle sans relation est permise, relation automatique non créée. Aucune réduction de règles, qualité ou cadence, aucun gain CPU/GPU/FPS, vrai×6constant, 240FPS ou campagne naturelle certifiés. Commit/push et poursuite autonome autorisés ; publications Cloudflare regroupées avec V312 et les lots suivants, relance planifiée **PAUSED**. Prochaine boucle retenue : crémation physique des dépouilles matérialisées ; références actuelles seulement préparées avant la fin de V313.
+
+Gel final2662entrées exact. Contrôle documentaire :926documents/8776liens, six en-têtes224 et trois sources primaires historiques byte-identiques. Aucun serveur de test5384/5173 actif après les contrôles.

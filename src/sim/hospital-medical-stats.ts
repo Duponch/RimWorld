@@ -1,4 +1,5 @@
 import { isBedKind } from './bed-kinds.ts';
+import { bedSlotCell,pawnBedSlot } from './bed-slots.ts';
 import { carrierOf } from './rescue-state.ts';
 import { activeVitalsMonitor } from './vitals-monitor.ts';
 import type { Pawn,Structure,World } from './types.ts';
@@ -9,7 +10,15 @@ export function currentMedicalBed(world:World,pawn:Pawn,carried=!!carrierOf(worl
   const need=pawn.need;
   if(carried||pawn.state==='dead'||pawn.health?.death||pawn.moveCooldown!==0||pawn.motion&&pawn.motion.end>world.tick||
     !['sleeping','resting','downed'].includes(pawn.state)||need?.kind!=='sleep'||need.phase!=='sleep'||need.bedId===null)return;
-  return world.structures.find(bed=>bed.id===need.bedId&&isBedKind(bed.kind)&&(bed.kind!=='hospital-bed'||world.schemaVersion>=187)&&bed.x===pawn.x&&bed.z===pawn.z);
+  return world.structures.find(bed=>{
+    if(bed.id!==need.bedId||!isBedKind(bed.kind))return false;
+    if(bed.kind==='double-bed'){
+      const slot=pawnBedSlot(pawn,bed),cell=slot===undefined?undefined:bedSlotCell(bed,slot);
+      return world.schemaVersion>=224&&!bed.medical&&!bed.prisoner&&!pawn.prisoner&&!pawn.visitor&&!!cell
+        &&cell.x===pawn.x&&cell.z===pawn.z&&need.target.x===cell.x&&need.target.z===cell.z;
+    }
+    return (bed.kind!=='hospital-bed'||world.schemaVersion>=187)&&bed.x===pawn.x&&bed.z===pawn.z;
+  });
 }
 /** Quality remains a separate consumer factor. With a World, a current powered
  * facility adds offsets to the hospital bed's definition statistics once. */

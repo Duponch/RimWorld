@@ -73,7 +73,7 @@ export function departCommercial(w:World,p:Pawn):boolean {
   if(commercialDepartureReason(w,p))return false;
   const s=w.commercialTrip;if(s?.phase!=='leaving')return false;
   const items=w.piles.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id),ids=new Set(items.map(i=>i.id)),entry={x:p.x,z:p.z};
-  releaseAllowedAreaReturn(p);p.bedId=null;p.path=[];p.state='idle';p.planCooldown=0;p.moveCooldown=0;
+  releaseAllowedAreaReturn(p);p.bedId=null;delete p.bedSlot;p.path=[];p.state='idle';p.planCooldown=0;p.moveCooldown=0;
   delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;
   w.commercialTrip={phase:'outbound',pawn:p,items,foodPileId:s.foodPileId,foodQuantity:s.foodQuantity,silverQuantity:s.silverQuantity,
     startedAt:s.startedAt,departedAt:w.tick,arrivesAt:w.tick+COMMERCIAL_LEG_TICKS,entry,consumed:0,silverPaid:0,bought:{medicine:0,component:0},

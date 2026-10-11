@@ -7,6 +7,7 @@ import { startTravel } from './movement.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { wantsSleep } from './schedule.ts';
 import { releaseWork } from './work-release.ts';
+import { bedSlotCell,pawnBedSlot } from './bed-slots.ts';
 import type { World, Pawn, Cell } from './types.ts';
 import type { LightReader } from './light-environment.ts';
 
@@ -17,14 +18,19 @@ const EXIT_DIRECTIONS=[[0,-1],[1,0],[0,1],[-1,0]] as const;
 export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight?:LightReader):boolean {
   if(world.schemaVersion<22)return false;
   if(pawn.rescue){
-    const target=pawn.rescue.phase==='carry'?world.structures.find(s=>s.id===pawn.rescue!.bedId):world.pawns.find(p=>p.id===pawn.rescue!.patientId);
+    const subject=pawn.rescue.phase==='carry'?world.structures.find(s=>s.id===pawn.rescue!.bedId):world.pawns.find(p=>p.id===pawn.rescue!.patientId);
+    const target=subject&&'kind' in subject&&subject.kind==='double-bed'&&pawn.rescue.bedSlot!==undefined?bedSlotCell(subject,pawn.rescue.bedSlot):subject;
     if(target?.x===pawn.x&&target.z===pawn.z){delete pawn.transitExit;return false;}
   }
   if(canStandAt(world,pawn)){
     if(pawn.transitExit&&!pawn.draft?.target&&!pawn.need&&!pawn.haul&&!pawn.cooking&&pawn.jobId===null&&!pawn.recreation.task){pawn.path=[];pawn.state='idle';}
     delete pawn.transitExit;return false;
   }
-  if(!pawn.draft&&!pawn.need&&wantsSleep(world,pawn)&&world.structures.some(s=>s.id===pawn.bedId&&s.x===pawn.x&&s.z===pawn.z))return false;
+  if(!pawn.draft&&!pawn.need&&wantsSleep(world,pawn)&&world.structures.some(s=>{
+    const slot=s.kind==='double-bed'?pawnBedSlot(pawn,s):undefined;
+    const target=slot!==undefined?bedSlotCell(s,slot):s;
+    return s.id===pawn.bedId&&target?.x===pawn.x&&target.z===pawn.z;
+  }))return false;
   if(pawn.need?.kind==='sleep'&&pawn.need.bedId!==null&&pawn.need.target.x===pawn.x&&pawn.need.target.z===pawn.z){delete pawn.transitExit;return false;}
   if(pawn.need?.kind==='sleep'&&pawn.need.bedId===null||pawn.recreation.task&&pawn.recreation.task.target.x===pawn.x&&pawn.recreation.task.target.z===pawn.z||pawn.cooking&&pawn.cooking.spot.x===pawn.x&&pawn.cooking.spot.z===pawn.z) {
     if(!releaseWork(world,pawn))return true;

@@ -1,4 +1,5 @@
 import { isBedKind } from './bed-kinds.ts';
+import { bedAssignmentReason,bedSlotCell,bedSlotClaimed,pawnBedSlot } from './bed-slots.ts';
 import { colonyExpectation } from './colony-economy.ts';
 import { depletedHumanHunger } from './human-need-rates.ts';
 import { advanceRoomRest } from './room-experience.ts';
@@ -43,6 +44,7 @@ export interface NeedContext {
 export function processNeeds(world: World, pawn: Pawn, context: NeedContext): boolean {
   const canPlan = pawn.needCooldown === 0;
   if (pawn.bedId !== null && !world.structures.some(bed => bed.id === pawn.bedId && isBedKind(bed.kind))&&!world.packed?.some(pack=>pack.building.id===pawn.bedId&&isBedKind(pack.building.kind))) pawn.bedId = null;
+  if(pawn.bedId===null)delete pawn.bedSlot;
 
   collapseFromExhaustion(world,pawn,context);
 
@@ -142,8 +144,14 @@ export function collapseFromExhaustion(world:World,pawn:Pawn,context:NeedContext
     if(pawn.draft){pawn.draft.target=null;pawn.draft.queue=[];}
     // An actor woken on its own bed can collapse there before leaving it.
     // The physical bed is real; declaring this cell a floor is an invalid save.
-    const bed=world.structures.find(b=>b.id===pawn.bedId&&isBedKind(b.kind)&&b.x===pawn.x&&b.z===pawn.z&&!!b.prisoner===!!pawn.prisoner
-      &&!world.pawns.some(p=>p!==pawn&&(p.need?.kind==='sleep'&&p.need.bedId===b.id||p.rescue?.bedId===b.id)));
+    const bed=world.structures.find(b=>{
+      if(b.id!==pawn.bedId||!isBedKind(b.kind))return false;
+      if(b.kind==='double-bed'){
+        const slot=pawnBedSlot(pawn,b),head=slot!==undefined?bedSlotCell(b,slot):undefined;
+        return !!head&&head.x===pawn.x&&head.z===pawn.z&&bedAssignmentReason(world,b,pawn,slot!)===undefined&&!bedSlotClaimed(world,b,slot!,pawn.id);
+      }
+      return b.x===pawn.x&&b.z===pawn.z&&!!b.prisoner===!!pawn.prisoner&&!world.pawns.some(p=>p!==pawn&&(p.need?.kind==='sleep'&&p.need.bedId===b.id||p.rescue?.bedId===b.id));
+    });
     pawn.need = { kind: 'sleep', phase: 'sleep', bedId: bed?.id??null, target: { x: pawn.x, z: pawn.z } };
     pawn.state = 'sleeping'; pawn.collapsePending = false; pawn.restZeroTicks = 0;
     context.event(`${pawn.name} s’effondre de fatigue au sol.`);

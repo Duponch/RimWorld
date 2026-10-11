@@ -4,7 +4,7 @@ import { ITEM_DEFINITIONS } from '../sim/items';
 import { footprintCells } from '../sim/definitions';
 import type { Job, JobKind, Structure, World } from '../sim/types';
 
-const stuffable = new Set<string>(['drug-lab','research-bench','tailor-bench','electric-tailor-bench','door','autodoor','wall','fence','fence-gate','pen-marker','bed','hospital-bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','chess-table','stonecutter']);
+const stuffable = new Set<string>(['drug-lab','research-bench','tailor-bench','electric-tailor-bench','door','autodoor','wall','fence','fence-gate','pen-marker','bed','double-bed','hospital-bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','chess-table','stonecutter']);
 export const defaultPlacementMaterial = (tool:string):ConstructionMaterial =>
   validConstructionMaterial(tool,'wood')?'wood':constructionMaterials(tool)[0]!;
 export const placementMaterial = (tool:string, material:ConstructionMaterial):ConstructionMaterial|undefined =>
@@ -29,7 +29,7 @@ export function constructionControls(onChange:()=>void) {
       const material = placementMaterial(tool, select.value as ConstructionMaterial);
       if (!material) return hint;
       const recipe = constructionRecipe({ kind:tool as JobKind, material });
-      const rest=tool==='bed'&&BUILDING_MATERIALS[material].restFactor<1?' · Efficacité du repos : 90 %':'';
+      const rest=(tool==='bed'||tool==='double-bed')&&BUILDING_MATERIALS[material].restFactor<1?' · Efficacité du repos : 90 %':'';
       return `${recipe.ingredients.map(c => `${c.quantity} ${ITEM_DEFINITIONS[c.item].label}`).join(' + ')} à livrer${rest} · ${hint}`;
     },
   };

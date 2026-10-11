@@ -107,7 +107,7 @@ export function processPrisonerRelease(world:World,actor:Pawn,context:NeedContex
   if(!releaseWork(world,patient))return;
   syncPatient(world,actor);delete actor.rescue;
   actor.orders.active=null;actor.path=[];actor.state='idle';actor.planCooldown=0;
-  patient.motion=null;patient.moveCooldown=0;patient.bedId=null;patient.need=null;
+  patient.motion=null;patient.moveCooldown=0;patient.bedId=null;delete patient.bedSlot;patient.need=null;
   patient.state='idle';patient.planCooldown=0;patient.needCooldown=0;
   if(world.schemaVersion>=213&&isColonist(patient)){
     delete patient.prisoner;

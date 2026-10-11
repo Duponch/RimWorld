@@ -27,7 +27,7 @@ export function processPodRescuePatient(w:World,p:Pawn,ctx:NeedContext):boolean 
     if(medical){p.path=[];p.state='idle';return true;}
   }else if(processDraftSleep(w,p,ctx))return true;
   if(p.need||p.interruptedCargo||p.burning)return true;
-  p.bedId=null;
+  p.bedId=null;delete p.bedSlot;
   const target=p.path.at(-1);
   if(target){ctx.move(target,true);return true;}
   if(p.planCooldown>0){p.state='idle';return true;}

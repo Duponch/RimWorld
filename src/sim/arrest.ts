@@ -126,7 +126,7 @@ export function processArrest(world:World,actor:Pawn,context:NeedContext):void {
   }
   if(!same(actor,bed)){context.move(bed,true);syncPatient(world,actor);return;}
   delete actor.rescue;actor.orders.active=null;actor.path=[];actor.state='idle';actor.planCooldown=0;
-  patient.motion=null;patient.moveCooldown=0;if(!bed.medical)patient.bedId=bed.id;
+  patient.motion=null;patient.moveCooldown=0;if(!bed.medical){patient.bedId=bed.id;delete patient.bedSlot;}
   if(patient.state==='downed')patient.need={kind:'sleep',phase:'sleep',bedId:bed.id,target:{x:bed.x,z:bed.z}};
   else {patient.need=null;patient.state='idle';patient.planCooldown=0;patient.needCooldown=0;}
   context.event(`${actor.name} a installé ${patient.name} dans un lit de prison${bed.medical?' médical':''}.`);

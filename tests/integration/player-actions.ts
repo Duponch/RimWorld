@@ -241,8 +241,14 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.kind==='repair')throw Error('Repair uses the home area');
     if(c.kind==='lay-floor'&&!isBuildableFloor(c.floor))throw new Error('Floor tool requires an explicit floor.');
     await tool(page,(c.kind==='lay-floor'?c.floor:c.kind) as Parameters<typeof tool>[1]);
-    if(['door','wall','bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','stonecutter','research-bench','tailor-bench','electric-tailor-bench'].includes(c.kind))await page.locator('#construction-material').selectOption(c.material??'wood');
-    if(c.kind==='grave'||c.kind==='wind-turbine'||c.kind==='battery'||c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='table'||c.kind==='table-square'||c.kind==='table-long'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench'||c.kind==='electric-tailor-bench') {
+    if(['door','wall','bed','double-bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','stonecutter','research-bench','tailor-bench','electric-tailor-bench'].includes(c.kind)) {
+      // Tool selection closes Architecte. Reopen its actual material control,
+      // then close via its button, which preserves the placement tool.
+      await panel(page,'architect');
+      await page.locator('#construction-material').selectOption(c.material??'wood');
+      await page.locator('#architect-panel [data-close-panel]').click();
+    }
+    if(c.kind==='grave'||c.kind==='wind-turbine'||c.kind==='battery'||c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='double-bed'||c.kind==='table'||c.kind==='table-square'||c.kind==='table-long'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench'||c.kind==='electric-tailor-bench') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     }
     await revealCells(page,[c]);

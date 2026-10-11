@@ -108,7 +108,7 @@ export function tryGroupDeparture(w:World):void {
   },adoptDeparture:(world,plan)=>{
     if(world.group!==g)return false;
     const people=new Set(plan.capture.members.map(p=>p.id)),items=new Set(plan.capture.items.map(p=>p.id));
-    for(const p of plan.capture.members){releaseAllowedAreaReturn(p);p.bedId=null;p.path=[];p.moveCooldown=0;p.planCooldown=0;p.state='idle';if(p.mental)p.mental.below=[0,0,0];delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;}
+    for(const p of plan.capture.members){releaseAllowedAreaReturn(p);p.bedId=null;delete p.bedSlot;p.path=[];p.moveCooldown=0;p.planCooldown=0;p.state='idle';if(p.mental)p.mental.below=[0,0,0];delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;}
     world.pawns=world.pawns.filter(p=>!people.has(p.id));world.piles=world.piles.filter(p=>!items.has(p.id));world.group=plan.next;refreshStock(world);
     groupLog(world,`${people.size} membre${people.size>1?'s':''} quitte${people.size>1?'nt':''} la carte avec ses provisions.`);return true;
   }};

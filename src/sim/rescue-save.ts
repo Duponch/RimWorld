@@ -12,7 +12,7 @@ import { workPriority } from './work-types.ts';
 import type { Cell,World } from './types.ts';
 import type { TravelSegment } from './movement.ts';
 
-const sameEdge=(a:TravelSegment|null|undefined,b:TravelSegment|null|undefined):boolean=>!a||!b?!a&&!b:
+export const sameRescueEdge=(a:TravelSegment|null|undefined,b:TravelSegment|null|undefined):boolean=>!a||!b?!a&&!b:
   a.start===b.start&&a.end===b.end&&a.terrainDelay===b.terrainDelay&&a.speedFactor===b.speedFactor&&a.from.x===b.from.x&&a.from.z===b.from.z&&a.to.x===b.to.x&&a.to.z===b.to.z
   &&(a.stagger?.length??0)===(b.stagger?.length??0)&&(!a.stagger||a.stagger.every((s,i)=>s.start===b.stagger![i].start&&s.end===b.stagger![i].end))
   &&(a.stuns?.length??0)===(b.stuns?.length??0)&&(!a.stuns||a.stuns.every((s,i)=>s.start===b.stuns![i].start&&s.end===b.stuns![i].end));
@@ -23,7 +23,8 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 export function validRescueShape(value:unknown,version:number):boolean {
   if(version<46||!value||typeof value!=='object'||Array.isArray(value))return false;
   const t=value as Record<string,unknown>,id=(v:unknown)=>Number.isSafeInteger(v)&&Number(v)>0;
-  return Object.keys(t).every(k=>['patientId','bedId','phase',...(version>=86?['capture']:[]),...(version>=202?['release']:[]),...(version>=213?['arrest']:[])].includes(k))&&id(t.patientId)
+  return Object.keys(t).every(k=>['patientId','bedId','phase',...(version>=86?['capture']:[]),...(version>=202?['release']:[]),...(version>=213?['arrest']:[]),...(version>=224?['bedSlot']:[])].includes(k))&&id(t.patientId)
+    &&(!Object.hasOwn(t,'bedSlot')||version>=224&&(t.bedSlot===0||t.bedSlot===1)&&!Object.hasOwn(t,'capture')&&!Object.hasOwn(t,'arrest')&&!Object.hasOwn(t,'release'))
     &&(!Object.hasOwn(t,'arrest')||version>=213&&t.arrest===true&&!Object.hasOwn(t,'capture')&&!Object.hasOwn(t,'release'))
     &&(t.release===undefined?id(t.bedId):version>=202&&t.bedId===0&&!Object.hasOwn(t,'capture')&&!Object.hasOwn(t,'arrest')&&object(t.release)&&Object.keys(t.release).length===2&&cell(t.release.drop)&&cell(t.release.exit))
     &&(t.phase==='approach'||t.phase==='carry')&&(t.capture===undefined||version>=86&&t.capture===true);
@@ -31,9 +32,10 @@ export function validRescueShape(value:unknown,version:number):boolean {
 /** Shapes have passed first. Cross-references must describe a single physical
  * person, never a second actor or a resource owned by the rescuer. */
 export function validateRescues(world:World,onlyArrestDomain=false):string[] {
-  const errors:string[]=[],patients=new Set<number>(),beds=new Set<number>();
+  const errors:string[]=[],patients=new Set<number>(),beds=new Set<string>();
   for(const actor of world.pawns)if(actor.rescue){
     const t=actor.rescue,patient=world.pawns.find(p=>p.id===t.patientId),bed=world.structures.find(b=>b.id===t.bedId);
+    const bedKey=bed?.kind==='double-bed'?`${t.bedId}:${t.bedSlot}`:String(t.bedId);
     const prospective=Object.hasOwn(t,'arrest')||!!(t.release&&patient&&isColonist(patient));
     if(onlyArrestDomain&&!prospective)continue;
     if(prospective&&!validRescueShape(t,world.schemaVersion)){errors.push('Invalid rescue shape.');continue;}
@@ -55,20 +57,20 @@ export function validateRescues(world:World,onlyArrestDomain=false):string[] {
         ||!workPriority(actor,'basic')&&!workPriority(actor,'warden')||actor.orders.active!==null)errors.push('Invalid prisoner release authority.');
     }else if(t.arrest){
       if(world.schemaVersion<213||!patient||patient===actor||arrestReason(world,actor,patient,true)||patient.rescue||patients.has(t.patientId)||patientClaimed(world,t.patientId,actor))errors.push('Invalid or duplicate arrest patient.');
-      if(!bed||!patient||!rescueBedAvailable(world,bed,patient,actor.id,true)||beds.has(t.bedId))errors.push('Invalid or duplicate arrest bed.');
-      beds.add(t.bedId);
+      if(!bed||!patient||!rescueBedAvailable(world,bed,patient,actor.id,true)||beds.has(bedKey))errors.push('Invalid or duplicate arrest bed.');
+      beds.add(bedKey);
       if(actor.orders.active!=='rescue'||actor.orders.queue.length||actor.priorityWork||actor.surgery||actor.animalCare||actor.animalHandling||actor.hunting||actor.research||actor.equipmentTask||actor.burial||actor.cleaning||actor.firefighting||actor.trade||actor.melee?.order||actor.shooting?.order||actor.tactics)errors.push('Invalid arrest authority.');
       if(t.phase==='carry'&&bed&&actor.path.length&&!same(actor.path.at(-1)!,bed))errors.push('Invalid arrest carry route.');
     }else{
       if(!patient||patient===actor||(t.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||patient.rescue||patients.has(t.patientId))errors.push('Invalid or duplicate rescue patient.');
-      if(!bed||!patient||!rescueBedAvailable(world,bed,patient,actor.id,!!t.capture)||beds.has(t.bedId))errors.push('Invalid or duplicate rescue bed.');
-      beds.add(t.bedId);
+      if(!bed||!patient||!rescueBedAvailable(world,bed,patient,actor.id,!!t.capture,t.bedSlot)||beds.has(bedKey))errors.push('Invalid or duplicate rescue bed.');
+      beds.add(bedKey);
       if(!isColonist(actor)||actor.prisoner||medicalWorkRefusal(actor)||(t.capture?actor.orders.active!=='rescue':(patient?.prisoner?actor.priorities.warden:actor.priorities.doctor)===0&&actor.orders.active!=='rescue'))errors.push('Invalid rescue or capture authority.');
     }
     patients.add(t.patientId);
     if(actor.jobId!==null||actor.need||actor.tend||actor.ward||actor.feed||actor.haul||actor.cooking||actor.recreation.task||actor.interruptedCargo||actor.state!=='moving')errors.push('Rescue conflicts with actor activity.');
     if(patient&&t.phase==='carry'){
-      if(patient.x!==actor.x||patient.z!==actor.z||patient.moveCooldown!==actor.moveCooldown||!sameEdge(patient.motion,actor.motion))errors.push('Carried patient does not share carrier edge.');
+      if(patient.x!==actor.x||patient.z!==actor.z||patient.moveCooldown!==actor.moveCooldown||!sameRescueEdge(patient.motion,actor.motion))errors.push('Carried patient does not share carrier edge.');
       if(patient.need||patient.path.length||patient.medicalSleep)errors.push('Carried patient still uses a service.');
     }
   }

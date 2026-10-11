@@ -157,7 +157,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===s.id)delete a.manhunter.door;
   removeJobs(world,ids);
   for(const p of world.pawns){
-    if(p.bedId===s.id)p.bedId=null;
+    if(p.bedId===s.id){p.bedId=null;delete p.bedSlot;}
     if(p.need?.kind==='eat'&&p.need.dining?.tableId===s.id)p.need.dining.tableId=null;
   }
   releaseStructureMelee(world,s.id);

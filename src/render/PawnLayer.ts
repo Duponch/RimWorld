@@ -1,4 +1,5 @@
 import { appearanceOf } from '../sim/pawn-appearance';
+import { bedSlotBodyCenter,pawnBedSlot } from '../sim/bed-slots';
 import { corpseStage,CORPSE_ROT_TICKS,CORPSE_DESSICATION_TICKS } from '../sim/corpses';
 import { corpseVisualMask } from './corpse-presentation';
 import { humanCorpseAge } from '../sim/human-corpses';
@@ -749,8 +750,10 @@ export class PawnLayer {
       if(retainedOffset){px+=retainedOffset.x;pz+=retainedOffset.z;py+=retainedOffset.y;}
       if(hiddenBody)py=-1000;
       if (bed&&!body&&!hiddenBody) {
-        const cells = footprintCells(bed), last = cells[cells.length - 1]!;
-        px = (bed.x + last.x) / 2; pz = (bed.z + last.z) / 2; py = WORLD_SCALE.bedSurfaceHeight;
+        const slot=pawnBedSlot(pawn,bed),center=bed.kind==='double-bed'&&slot!==undefined?bedSlotBodyCenter(bed,slot):undefined;
+        if(center){px=center.x;pz=center.z;}
+        else {const cells = footprintCells(bed), last = cells[cells.length - 1]!;px = (bed.x + last.x) / 2;pz = (bed.z + last.z) / 2;}
+        py = WORLD_SCALE.bedSurfaceHeight;
         const target = bed.orientation * Math.PI / 2;
         yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
       }

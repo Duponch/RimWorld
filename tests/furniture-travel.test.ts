@@ -44,9 +44,9 @@ test('point queries keep complete rotated and historical footprints, job targets
   const line=[[[0,0],[1,0],[-1,0]],[[0,0],[0,1],[0,-1]],[[0,0],[1,0],[-1,0]],[[0,0],[0,1],[0,-1]]];
   const pair=[[[0,0],[0,1]],[[0,0],[1,0]],[[0,0],[0,-1]],[[0,0],[-1,0]]];
   const bench=[[[0,0],[-1,0],[1,0],[0,1],[-1,1],[1,1]],[[0,0],[0,-1],[0,1],[1,0],[1,-1],[1,1]],[[0,0],[-1,0],[1,0],[0,-1],[-1,-1],[1,-1]],[[0,0],[0,-1],[0,1],[-1,0],[-1,-1],[-1,1]]];
-  const stands=new Set<StructureKind>(['grave','power-conduit','power-switch','butcher-spot','crafting-spot','door','autodoor','fence','fence-gate','pen-marker','stool','dining-chair','armchair','horseshoes']);
-  const rejectsItems=new Set<StructureKind>(['hydroponics-basin','sandbags','small-sculpture','large-sculpture','grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','hospital-bed','dresser','flower-pot','campfire']);
-  const stores=new Set<StructureKind>(['fence','fence-gate','power-conduit','standing-lamp','sun-lamp','door','autodoor','stool','dining-chair','armchair','horseshoes']);
+  const stands=new Set<StructureKind>(['animal-sleeping-spot','grave','power-conduit','power-switch','butcher-spot','crafting-spot','door','autodoor','fence','fence-gate','pen-marker','stool','dining-chair','armchair','horseshoes']);
+  const rejectsItems=new Set<StructureKind>(['chemfuel-generator','nutrient-paste-dispenser','double-bed','hydroponics-basin','sandbags','small-sculpture','large-sculpture','grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','hospital-bed','dresser','flower-pot','campfire']);
+  const stores=new Set<StructureKind>(['animal-sleeping-spot','orbital-beacon','fence','fence-gate','power-conduit','standing-lamp','sun-lamp','door','autodoor','stool','dining-chair','armchair','horseshoes']);
   const flickable=new Set<StructureKind>(['machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench','power-switch','wood-generator','standing-lamp','cooler','heater','electric-stove']);
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];
   const points=Array.from({length:121},(_,i)=>({x:4+i%11,z:4+Math.floor(i/11)}));points.push({x:-20,z:8},{x:8,z:-20},{x:100,z:8},{x:8,z:100});
@@ -56,11 +56,12 @@ test('point queries keep complete rotated and historical footprints, job targets
       :kind==='hydroponics-basin'?[0,1,2,3].map(a=>[direction[0]!*a,direction[1]!*a])
       :kind==='wind-turbine'?[0,1].flatMap(a=>[-3,-2,-1,0,1,2,3].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='solar-generator'?Array.from({length:16},(_,i)=>[i%4,Math.floor(i/4)])
-      :kind==='wood-generator'?[[0,0],[1,0],[0,1],[1,1]]
-      :kind==='research-bench'?bench[orientation]!
+      :kind==='wood-generator'||kind==='chemfuel-generator'?[[0,0],[1,0],[0,1],[1,1]]
+      :['research-bench','comms-console','biofuel-refinery'].includes(kind)?bench[orientation]!
+      :kind==='nutrient-paste-dispenser'?[-1,0,1,2].flatMap(a=>[-1,0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :['hi-tech-research-bench','fabrication-bench'].includes(kind)?[0,1].flatMap(a=>[-2,-1,0,1,2].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
-      :['drug-lab','machining-table','art-bench','stonecutter','tailor-bench','electric-tailor-bench','fueled-stove','electric-stove','butcher-table'].includes(kind)?line[orientation]!
-      :kind==='table-square'||kind==='multi-analyzer'?[0,1].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
+      :['electric-smelter','drug-lab','machining-table','art-bench','stonecutter','tailor-bench','electric-tailor-bench','fueled-stove','electric-stove','butcher-table'].includes(kind)?line[orientation]!
+      :kind==='table-square'||kind==='multi-analyzer'||kind==='double-bed'?[0,1].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='table-long'?[0,1,2,3].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='dresser'?pair[orientation]!
       :footprint!=='legacy-single'&&['bed','hospital-bed','table','battery','grave'].includes(kind)?pair[orientation]!:[[0,0]];
@@ -145,9 +146,12 @@ test('opposite loaded trips cross furniture, cancel in transit without teleport 
   }
   expect(onTable.size).toBe(2);expect(interrupted).toBe(true);expect(w.piles.find(p=>p.item==='wood')?.owner).toEqual({type:'ground',x:2,z:8});expect(w.piles.find(p=>p.item==='rice')?.owner).toEqual({type:'ground',x:13,z:8});
   const original=furnitureTrafficFixture(),raw=JSON.parse(serializeWorld(original));((raw.schemaVersion=21,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
+  // Declare the pre-V219 cell storage, before neutral zone identities existed.
+  for(const cell of raw.stockpiles)delete cell.zoneId;
   withoutPredatorFood(raw);
   expect(deserializeWorld(JSON.stringify(raw))).toEqual(withoutPredatorFood(withMigratedSkills(original)));
   const invalid=JSON.parse(serializeWorld(original));invalid.pawns[0].x=7;invalid.pawns[0].z=8;invalid.pawns[0].path=[];(invalid.schemaVersion=21,withoutPawnSkills(invalid));for(const a of invalid.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete invalid.deconstructed;delete invalid.packed;
+  for(const cell of invalid.stockpiles)delete cell.zoneId;
   withoutPredatorFood(invalid);
   expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/version 21/);
   const futurePolicy=structuredClone(raw);futurePolicy.foodPolicies[0].allowed.push('red-fox-meat');
@@ -167,6 +171,7 @@ test('opposite loaded trips cross furniture, cancel in transit without teleport 
     }else if(service==='ground-sleep'){actor.need={kind:'sleep',phase:'sleep',bedId:null,target:{x:8,z:8}};actor.state='sleeping';}
     else{actor.motion={from:{x:7,z:8},to:{x:8,z:8},start:0,end:3};actor.moveCooldown=3;}
     refreshStock(old);const raw=structuredClone(old) as any;((raw.schemaVersion=21,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
+    for(const cell of raw.stockpiles)delete cell.zoneId;
     withoutPredatorFood(raw);
     const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded.tick).toBe(old.tick);expect(loaded.rng).toBe(old.rng);expect(loaded.piles).toEqual(raw.piles);expect(loaded.pawns[0]!.motion).toEqual(actor.motion);
     if(service==='meal')expect(loaded.pawns[0]!.need).toMatchObject({kind:'eat',phase:'choose-spot',progress:0,dining:null});

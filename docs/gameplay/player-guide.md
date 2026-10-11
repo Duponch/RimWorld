@@ -1,5 +1,15 @@
 # Guide joueur
 
+**Schéma 224 — V313 : [lits doubles civils](double-beds-v313.md).** Construction, deux affectations et sommeil indépendant décrits ci-dessous ; preuves et limites dans la note unique. Les résultats datés suivants demeurent historiques.
+
+## Utiliser un lit double — V313
+
+Après **Mobilier complexe**, choisissez **Architecte > Meubles > Lit double**. Comptez 85 unités du matériau choisi. Le menu ferme son panneau à la sélection de l’outil ; rouvrez Architecte pour changer le matériau et fermez avec son bouton pour conserver le fantôme. Q/E tourne le lit de deux cases sur deux.
+
+Dans son inspection, affectez **Place 1** et **Place 2**. Vous pouvez choisir deux colons libres sans créer de relation. Leurs trajets et leur repos restent indépendants ; **Non attribué** sur une place conserve l’autre. Un partage choisi automatiquement exige un partenaire amoureux déjà réel quand une place est possédée.
+
+Désinstaller et réinstaller conserve les affectations et leurs places. Ce modèle est civil : il n’offre pas les rôles médical ou prison. Pansements, alimentation et secours non opératoires peuvent employer sa place physique ; les opérations demandent un lit compatible. Les [adaptations et limites](double-beds-v313.md) restent explicites.
+
 **Schéma 223 — V312 : [zones autorisées humaines](allowed-areas-v312.md).** Utilisation et exceptions décrites ci-dessous ; preuves et limites dans la note unique. Les résultats datés suivants demeurent historiques.
 
 ## Affecter une zone autorisée — V312

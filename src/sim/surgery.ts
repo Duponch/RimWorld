@@ -45,6 +45,7 @@ export function surgeryReason(world:World,doctor:Pawn,patient:Pawn|undefined,acc
   if(task?.consumedMedicine&&!medicineAllowed(patient,task.consumedMedicine))return 'Le plafond médical du patient interdit ce médicament.';
   if(!lyingPatient(patient)||carrierOf(world,patient.id))return 'Le patient doit être installé dans un lit.';
   const bed=currentMedicalBed(world,patient,false);
+  if(bed?.kind==='double-bed')return 'L’opération exige un lit simple : le lit double reste un couchage civil.';
   if(!bed||!rescueBedAvailable(world,bed,patient,doctor.id)||patient.x!==bed.x||patient.z!==bed.z||task&&task.bedId!==bed.id)return 'Le lit du patient n’est plus disponible.';
   if(patientClaimed(world,patient.id,doctor))return 'Le patient est déjà pris en charge.';
   if(task&&(Math.abs(task.spot.x-bed.x)+Math.abs(task.spot.z-bed.z)!==1||!canStandAt(world,task.spot)||reservedServiceCells(world,doctor.id).has(task.spot.z*world.width+task.spot.x)))return 'Le chevet n’est plus disponible.';

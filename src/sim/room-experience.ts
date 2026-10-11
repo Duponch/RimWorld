@@ -1,4 +1,5 @@
 import { isBedKind } from './bed-kinds.ts';
+import { bedSlotCell,pawnBedSlot } from './bed-slots.ts';
 import { captureRoomQuality } from './room-quality.ts';
 import { IMPRESSION_LABELS,ROOM_MEMORY_DURATION,ROOM_MEMORY_OFFSETS } from './room-impressiveness.ts';
 import { healthRandom } from './health.ts';
@@ -26,7 +27,11 @@ function applyBedroomMemory(w:World,p:Pawn):void {
   if(!p.roomMemories?.length)delete p.roomMemories;
   const task=p.need;if(task?.kind!=='sleep'||task.phase!=='sleep'||task.bedId===null||task.bedId!==p.bedId)return;
   const bed=w.structures.find(s=>s.id===task.bedId&&isBedKind(s.kind));
-  if(!bed||bed.medical||bed.prisoner||p.x!==bed.x||p.z!==bed.z)return;
+  if(!bed||bed.medical||bed.prisoner)return;
+  if(bed.kind==='double-bed'){
+    const slot=pawnBedSlot(p,bed),cell=slot===undefined?undefined:bedSlotCell(bed,slot);
+    if(!cell||p.x!==cell.x||p.z!==cell.z||task.target.x!==cell.x||task.target.z!==cell.z||(p.motion?.end??0)>w.tick)return;
+  }else if(p.x!==bed.x||p.z!==bed.z)return;
   const room=captureRoomQuality(w).room(p);if(room?.beds)remember(w,p,room.beds===1?'bedroom':'barracks',room.stage);
 }
 /** The first observation is delayed 1–4 hours after lying down, then daily.

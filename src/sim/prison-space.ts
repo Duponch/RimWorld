@@ -58,6 +58,7 @@ export function prisonRoom(world:World,cell:Cell,topology?:RoomTopology):RoomSpa
   return markedRoom(world,cell,topology??capturePrisonTopology(world));
 }
 export function prisonBedValid(world:World,bed:Structure,topology?:RoomTopology):boolean {
+  if(bed.kind==='double-bed')return false;
   const present=world.structures.find(s=>s.id===bed.id&&isBedKind(s.kind)&&s.prisoner);
   if(!present)return false;
   const map=topology??capturePrisonTopology(world),room=markedRoom(world,present,map);
