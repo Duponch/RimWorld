@@ -6,7 +6,7 @@ et sauvegardes publiques conservés. Référence artistique fournie par l'humain
 
 ## Géométrie et navigation
 
-Une échelle commune part de la surface de table5,89×3,32 du prototype. Le
+Une échelle commune part de la surface de table 5,89×3,32 du prototype. Le
 plateau complet mesure 6,02×3,45 dans ce même repère ; une carte carrée reste
 carrée et tient sur le côté court. `room-layout.ts` fournit les dimensions de
 la table, le sol, les murs, les meubles et le cadre suspendu. La boîte en
@@ -134,4 +134,25 @@ branche UI papier conservée et relance planifiée **PAUSED**.
 Liens documentaires **PASS 12,674 s**. Package Pages **PASS 2,345 s**, avec
 les 63 références et 66 chemins de sauvegarde publics exacts ; contrôle privé
 `tmp/elsewhere-pages/verify-v325.mjs`. La publication regroupée et sa vérification
-HTTPS sont consignées après livraison, sans nouvelle compilation du produit.
+HTTPS sont consignées ci-dessous, sans nouvelle compilation du produit.
+
+
+## Publication
+
+Produit **`00995fac`** commité et poussé sur `main`, puis publié une seule fois
+sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et
+[la publication V325](https://666b3ef1.elsewhere-cq7.pages.dev/).
+Package de **515 fichiers / 119 191 064 octets**, 63 références et 66 fichiers
+publics exacts, laboratoire absent ; rapport
+`tmp/elsewhere-pages/v325-package-yiOxgO/report.json`.
+
+Wrangler 4.149.0 **PASS 13,022 s**, deux fichiers envoyés et 511 déjà présents,
+puis en-têtes/redirections. HTTPS **PASS 5,943 s**, **102 réponses**200/MIME/octets
+exactes sur les origines stable et fraîche ; rapport
+`tmp/elsewhere-pages/v325-http-YfBuuH/report.json`. Package et publics restent inchangés. `references_UI` seul reste
+non suivi ; il ne fait partie ni du commit ni du package. Le commit documentaire
+consigne cette publication sans deuxième déploiement.
+
+Ces contrôles HTTPS ne rejouent pas un navigateur ou une mesure de performance
+en ligne, ni tous les fichiers de sauvegarde distants. Relance **PAUSED**,
+aucun lot suivant engagé.

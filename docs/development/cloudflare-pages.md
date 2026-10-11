@@ -241,3 +241,23 @@ Package et publics inchangés. Ces contrôles ne téléchargent pas les66fichier
 distants ni ne rejouent le jeu ou le benchmark en ligne. Un commit/push
 documentaire consigne la livraison sans deuxième publication ; relance
 **PAUSED**, aucun nouveau lot engagé.
+
+
+## Publication V325 — 12 octobre 2026
+
+Produit **`00995fac`** commité/poussé sur `main`, déployé une seule fois en
+**`666b3ef1`** sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et
+[la publication](https://666b3ef1.elsewhere-cq7.pages.dev/). Table rectangulaire,
+chambre proportionnée et fixe, six nuages sur trois arcs et masquage central
+réglable : [contrôles et comparaison de coût](room-layout-v325.md).
+
+Build Pages/typage **PASS 17,266 s**, package **PASS 2,345 s** : 515 fichiers,
+119 191 064 octets, 63 références et 66 chemins de sauvegarde publics exacts ;
+contenus privés absents. Rapport `tmp/elsewhere-pages/v325-package-yiOxgO/report.json`.
+Wrangler 4.149.0 **PASS 13,022 s**, deux fichiers envoyés et 511 déjà présents,
+puis en-têtes/redirections. `references_UI` reste non suivi et exclu.
+
+HTTPS **PASS 5,943 s**, 102 réponses200/MIME/octets exactes sur les deux origines,
+rapport `tmp/elsewhere-pages/v325-http-YfBuuH/report.json`. Package et publics inchangés ; aucun navigateur ni
+benchmark en ligne rejoué, aucun second déploiement pour la clôture documentaire.
+Relance **PAUSED**, aucun lot suivant engagé.
