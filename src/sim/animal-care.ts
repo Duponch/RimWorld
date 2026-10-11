@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { isColonist } from './affiliation.ts';
 import { animalClaimed,animalCarrier } from './animal-rest-state.ts';
@@ -34,7 +36,7 @@ export type AnimalCareContext=NeedContext&{candidates:()=>Reachability|null;bloc
 /** The ordinary patient must belong to the colony and stay physically down.
  * The anatomy comes from the animal record, never a surrogate human Pawn. */
 function patientReady(w:World,a:WildAnimal,doctor?:Pawn):boolean {
-  return !a.manhunter&&veterinaryCareSpeciesAllowed(a.species,w.schemaVersion)&&!!a.domestic&&a.domestic.care!=='none'&&
+  return (!doctor||allowedAreaAllows(w,doctor,a))&&!a.manhunter&&veterinaryCareSpeciesAllowed(a.species,w.schemaVersion)&&!!a.domestic&&a.domestic.care!=='none'&&
     (a.state==='downed'||a.state==='sleeping')&&(!a.motion||a.motion.end<=w.tick)&&
     (w.schemaVersion<212||!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.stun&&!a.health?.foodPoisoning?.vomit)&&
     !!a.health&&!a.health.death&&animalCareTargets(a).length>0&&
@@ -64,7 +66,7 @@ function medicineAllowed(care:MedicalCare,item:MedicineItem):boolean {
 function reserveMedicine(w:World,doctor:Pawn,a:WildAnimal,task:AnimalCareTask,reach:Reachability):Cell[]|undefined {
   const needed=medicineCount(animalCareTargets(a));if(!needed)return;
   const care=a.domestic!.care;
-  const sources=w.piles.filter(p=>p.owner.type==='ground'&&isMedicine(p.item)&&medicineAllowed(care,p.item)
+  const sources=w.piles.filter(p=>p.owner.type==='ground'&&allowedAreaAllows(w,doctor,p.owner)&&isMedicine(p.item)&&medicineAllowed(care,p.item)
     &&p.quantity>reservedSource(w,p.id)&&medicineClaims(w,p.id)<10);
   sources.sort((x,y)=>MEDICINES[y.item as MedicineItem].potency-MEDICINES[x.item as MedicineItem].potency||
     (x.owner.type==='ground'?(x.owner.x-a.x)**2+(x.owner.z-a.z)**2:Infinity)-
@@ -128,6 +130,7 @@ function consumeMedicine(w:World,task:AnimalCareTask):void {
   if(!pile.quantity){w.piles.splice(w.piles.indexOf(pile),1);delete task.medicine;}
 }
 export function processAnimalCare(w:World,doctor:Pawn,ctx:AnimalCareContext,light:()=>number):void {
+  if(!allowedAreaServicesAllowed(w,doctor)){releaseCare(w,doctor);return;}
   const task=doctor.animalCare;if(!task)return;
   const patient=w.wildlife?.animals.find(a=>a.id===task.animalId);
   if(patient?.health&&patient.health.tick<w.tick&&!patient.health.death)advanceAnimalHealth(w,patient);

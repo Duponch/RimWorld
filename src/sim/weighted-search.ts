@@ -20,15 +20,17 @@ export class WeightedSearch {
   private readonly repeaters:ReadonlySet<number>;
   private readonly floors:NavigationCostLookup;
   private readonly corners:ReadonlySet<number>;
-  constructor(width:number, height:number, start:number, unavailable:Uint8Array, extraCosts?:NavigationCostLookup,repeaters:ReadonlySet<number>=new Set(),floors:NavigationCostLookup=EMPTY_NAVIGATION_COSTS,corners:ReadonlySet<number>=new Set()) {
+  private readonly additiveCosts?:NavigationCostLookup;
+  constructor(width:number, height:number, start:number, unavailable:Uint8Array, extraCosts?:NavigationCostLookup,repeaters:ReadonlySet<number>=new Set(),floors:NavigationCostLookup=EMPTY_NAVIGATION_COSTS,corners:ReadonlySet<number>=new Set(),additiveCosts?:NavigationCostLookup) {
+    this.additiveCosts=additiveCosts;
     this.extraCosts=extraCosts;this.repeaters=repeaters;this.floors=floors;this.corners=corners;
     this.width=width;this.height=height;this.unavailable=unavailable;
     const size=width*height,parents=new Int32Array(size).fill(-2),costs=new Float64Array(size).fill(Infinity);
     this.settled=new Uint8Array(size);this.field={parents,costs,start,visited:0,unreachedGroups:0,settled:this.settled};
     const maximum=extraCosts?.maximum??0;
-    this.frontier=new PathFrontier(costs,DIAGONAL_COST+maximum);costs[start]=0;parents[start]=-1;this.frontier.push(start);this.pending=this.frontier.pop();
+    this.frontier=new PathFrontier(costs,DIAGONAL_COST+maximum+(additiveCosts?.maximum??0),!!additiveCosts);costs[start]=0;parents[start]=-1;this.frontier.push(start);this.pending=this.frontier.pop();
   }
-  advance(goals?:ReadonlySet<number>,allGroups?:readonly ReadonlySet<number>[]):DistanceField {
+  advance(goals?:ReadonlySet<number>,allGroups?:readonly ReadonlySet<number>[],isGoal?:(index:number)=>boolean):DistanceField {
     if(this.finished)throw new Error('A finalized path field cannot be resumed.');
     const {parents,costs,start}=this.field,size=parents.length,blocked=this.unavailable;
     let goalCost=Infinity,remaining=0;
@@ -48,13 +50,14 @@ export class WeightedSearch {
     while(this.pending!==undefined&&costs[this.pending]!<=goalCost) {
       const index=this.pending;this.settled[index]=1;this.field.visited++;
       if(goals?.has(index))goalCost=costs[index]!;
+      if(isGoal?.(index)){goalCost=costs[index]!;this.field.goalIndex=Math.min(this.field.goalIndex??Infinity,index);}
       if(allGroups){for(const group of membership.get(index)??[])if(!reached.has(group)){reached.add(group);remaining--;}if(!remaining)goalCost=costs[index]!;}
       const x=index%this.width,z=Math.floor(index/this.width);
       for(const [dx,dz] of DIRECTIONS) {
         const nx=x+dx,nz=z+dz,next=nz*this.width+nx;
         if(nx<0||nz<0||nx>=this.width||nz>=this.height||blocked[next]||this.settled[next])continue;
         if(dx&&dz&&(blocked[index+dx]||blocked[index+dz*this.width]||this.corners.has(index+dx)||this.corners.has(index+dz*this.width)))continue;
-        const cost=costs[index]!+(dx&&dz?DIAGONAL_COST:CARDINAL_COST)+(this.repeaters.has(index)&&this.repeaters.has(next)?this.floors.get(next)??0:this.extraCosts?.get(next)??0);
+        const cost=costs[index]!+(dx&&dz?DIAGONAL_COST:CARDINAL_COST)+(this.repeaters.has(index)&&this.repeaters.has(next)?this.floors.get(next)??0:this.extraCosts?.get(next)??0)+(this.additiveCosts?.get(next)??0);
         if(cost<costs[next]!) {costs[next]=cost;parents[next]=index;this.frontier.push(next);}
       }
       this.pending=this.frontier.pop();
@@ -62,8 +65,8 @@ export class WeightedSearch {
     this.field.unreachedGroups=remaining;return this.field;
   }
   /** Public one-shot results retain the historical -2/Infinity convention. */
-  finish(goals?:ReadonlySet<number>,allGroups?:readonly ReadonlySet<number>[]):DistanceField {
-    const field=this.advance(goals,allGroups);
+  finish(goals?:ReadonlySet<number>,allGroups?:readonly ReadonlySet<number>[],isGoal?:(index:number)=>boolean):DistanceField {
+    const field=this.advance(goals,allGroups,isGoal);
     // An exhausted frontier has settled every discovered cell. The untouched
     // cells still contain their constructor's -2/Infinity sentinels.
     if(this.pending!==undefined)for(let i=0;i<field.parents.length;i++)if(!this.settled[i]){field.parents[i]=-2;field.costs[i]=Infinity;}

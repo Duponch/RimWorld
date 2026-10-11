@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import { allowedAreaAllows,allowedAreaReason,captureAllowedArea } from './allowed-area-state.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { planFurnitureHaulOrder } from './player-furniture-hauling.ts';
 import { furnitureHaulValid } from './furniture-haul-rules.ts';
@@ -25,6 +26,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 /** One read-only decision with one shared, resumable access search. No global
  * logistics cursor or per-frame query. A delivery is one trip, not a build chain. */
 export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,access?:import('./pathfinding.ts').Reachability,budget={pairs:32768}):HaulProposal {
+  const policy=captureAllowedArea(world,pawn),allows=(cell:Cell)=>!policy||allowedAreaAllows(world,pawn,cell,policy);
   if(target.type==='furniture')return planFurnitureHaulOrder(world,pawn,target.structureId,access,budget);
   if(target.type==='turret'||target.type==='fuel'||target.type==='clear'||target.type==='clear-sow')return planServiceHaul(world,pawn,target,access,budget);
   const label=target.type==='pile'?'Transporter vers le stockage':'Livrer les matériaux';
@@ -37,15 +39,16 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
   const job=target.type==='job'?world.jobs.find(j=>j.id===target.jobId):undefined;
   if(target.type==='pile'&&source?.owner.type!=='ground')return no('La pile n’est plus au sol.');
   if(target.type==='job'&&(!job||!isConstruction(job)))return no('Chantier introuvable.');
+  const areaReason=job?allowedAreaReason(world,pawn,job):source?.owner.type==='ground'?allowedAreaReason(world,pawn,source.owner):undefined;if(areaReason)return no(areaReason);
   if(job&&!constructionSiteFree(world,job,pawn.id))return no('Le chantier doit être dégagé avant la livraison.');
   if(job&&!constructionRecipe(job).ingredients.some(c=>constructionCapacity(world,job,c.item)>0))return no('Les matériaux sont déjà livrés ou réservés.');
   const reach=access??candidateAccess(world,pawn,blockedCells(world),new Set());
   if(job&&!canReach(world,job,reach,false))return no('Aucun accès praticable au chantier.');
-  const sources=source?[source]:world.piles.filter(p=>p.owner.type==='ground'&&job&&requiredMaterial(job,p.item)>0);
+  const sources=source?[source]:world.piles.filter(p=>p.owner.type==='ground'&&allows(p.owner)&&job&&requiredMaterial(job,p.item)>0);
   let best:{task:HaulTask;source:Cell;rank:number;distance:number;id:number}|undefined;
   for(const pile of sources) {
     if(budget.pairs--<=0){budget.pairs=0;return no('Décision reportée : budget de recherche atteint.');}
-    if(pile.owner.type!=='ground')continue;
+    if(pile.owner.type!=='ground'||!allows(pile.owner))continue;
     let available=pile.quantity-reservedSource(world,pile.id);if(available<=0)continue;
     if(!canReach(world,pile.owner,reach,true))continue;
     const sourceZone=world.stockpiles.find(z=>same(z,pile.owner as Cell));
@@ -55,7 +58,7 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
     if(!job&&sourceAdmits&&excess)available=Math.min(available,Math.max(0,excess-reservedSource(world,pile.id)));
     const destinations=job?[{destination:{type:'job' as const,jobId:job.id,forConstruction:asBuilder(pawn)},cell:job,rank:0,
       capacity:constructionCapacity(world,job,pile.item)}]
-      :world.stockpiles.filter(z=>z.priority>currentPriority&&!same(z,pile.owner as Cell))
+      :world.stockpiles.filter(z=>allows(z)&&z.priority>currentPriority&&!same(z,pile.owner as Cell))
         .map(z=>({destination:{type:'stockpile' as const,stockpileId:z.id},cell:z,rank:-z.priority,capacity:storageCapacity(world,z,pile)}));
     for(const dest of destinations) {
       if(budget.pairs--<=0){budget.pairs=0;return no('Décision reportée : budget de recherche atteint.');}
@@ -72,7 +75,8 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
 }
 
 /** Own waiting reservation is excluded exactly once, never the rest of its queue. */
-export function queuedHaulReason(world:World,task:HaulTask):string|undefined {
+export function queuedHaulReason(world:World,task:HaulTask,pawn?:Pawn):string|undefined {
+  if(pawn){const source=haulOrderCell(world,task),target=destinationCell(world,task.destination),reason=(source?allowedAreaReason(world,pawn,source):undefined)??(target?allowedAreaReason(world,pawn,target):undefined);if(reason)return reason;}
   if(task.whole)return furnitureHaulValid(withoutQueuedOrder(world,task),task)?undefined:'Le meuble ou son emplacement réservé n’est plus disponible.';
   const view=withoutQueuedOrder(world,task),pile=world.piles.find(p=>p.id===task.sourcePileId);
   if(pile?.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<task.quantity)return 'La pile ou sa quantité réservée n’est plus disponible.';

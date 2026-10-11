@@ -1,3 +1,4 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { copyPileCondition } from './pile-condition.ts';
 import { ingestFoodRisk } from './food-hygiene.ts';
 import { physicalEatingFactor } from './health-rules.ts';
@@ -15,6 +16,7 @@ export const INGEST_TICKS = 50;
 export const PORTION_NUTRITION = 35;
 
 export function processEating(world: World, pawn: Pawn, context: NeedContext): void {
+  if(!allowedAreaServicesAllowed(world,pawn)){context.release();return;}
   const task = pawn.need;
   if (task?.kind !== 'eat') return;
   if(task.phase==='pickup'&&task.paste){

@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import { allowedAreaReason } from './allowed-area-state.ts';
 import { isSmeltingRecipe,smeltingIngredientAllowed } from './smelting-rules.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { validBiofuelIngredients,validMedicineIngredients,productionStationUsable } from './production-recipes.ts';
@@ -26,6 +27,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   const label='Produire au poste',no=(reason:string):CookingProposal=>({label,reason});
   const station=world.structures.find(s=>s.id===stationId&&stationRecipe(s)!==null);
   if(!station)return no('Poste de production introuvable.');
+  const areaReason=allowedAreaReason(world,pawn,station);if(areaReason)return no(areaReason);
   const refusal=backgroundWorkRefusal(pawn,stationWork(station));if(refusal)return no(refusal);
   if(!workPriority(pawn,stationWork(station)))return no('Métier désactivé dans le tableau Travail.');
   if(!station.bills?.some(b=>billWanted(world,b)))return no('Aucune facture active à produire : vérifiez suspension et quantité demandée.');
@@ -50,7 +52,8 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
 }
 
 /** Waiting recipes reserve real ingredients, the work spot and typed staging. */
-export function queuedCookingReason(world:World,order:CookingOrder):string|undefined {
+export function queuedCookingReason(world:World,order:CookingOrder,pawn?:Pawn):string|undefined {
+  const areaReason=pawn?queuedCookingAreaReason(world,pawn,order):undefined;if(areaReason)return areaReason;
   const view=withoutQueuedOrder(world,order),c=order.cooking,station=view.structures.find(s=>s.id===c.stationId&&stationRecipe(s)!==null),bill=station?.bills?.find(b=>b.id===c.billId);
   if(!station||!bill||bill.recipe!==taskRecipe(c)||!billWanted(view,bill))return 'Facture supprimée, suspendue ou quantité atteinte.';
   if(!productionStationUsable(station)||!productionResearchUnlocked(world,bill.recipe))return 'Atelier sans courant ou recherche manquante.';
@@ -112,9 +115,16 @@ export function queuedCookingReason(world:World,order:CookingOrder):string|undef
 export function startCookingOrder(pawn:Pawn,order:CookingOrder,path:Cell[]):void {
   pawn.cooking=order.cooking;pawn.orders.active='cook';pawn.path=path;pawn.planCooldown=0;pawn.state=path.length||pawn.moveCooldown>0?'moving':'working';
 }
+/** Runtime queue admission is separate from its historical structural save guard. */
+export function queuedCookingAreaReason(world:World,pawn:Pawn,order:CookingOrder):string|undefined {
+  const c=order.cooking,station=world.structures.find(s=>s.id===c.stationId);
+  let reason=station?allowedAreaReason(world,pawn,station):undefined;if(reason)return reason;
+  for(const i of c.ingredients){reason=allowedAreaReason(world,pawn,i.cell);if(reason)return reason;
+    const pile=world.piles.find(p=>p.id===i.pileId);if(i.stage!=='held'&&pile?.owner.type==='ground'){reason=allowedAreaReason(world,pawn,pile.owner);if(reason)return reason;}}
+}
 export function advanceCookingOrder(world:World,pawn:Pawn,order:CookingOrder,getBlocked:NavigationGrid,budget:SearchBudget):boolean {
   const station=world.structures.find(s=>s.id===order.cooking.stationId);
-  let reason=(station?backgroundWorkRefusal(pawn,stationWork(station)):undefined)??queuedCookingReason(world,order),path:Cell[]|null=null;
+  let reason=queuedCookingAreaReason(world,pawn,order)??(station?backgroundWorkRefusal(pawn,stationWork(station)):undefined)??queuedCookingReason(world,order),path:Cell[]|null=null;
   if(!reason) {
     const c=order.cooking,sources=c.ingredients.filter(i=>i.stage==='source').map(i=>world.piles.find(p=>p.id===i.pileId)!.owner as Cell);
     const groups=[new Set([cellIndex(world,c.spot.x,c.spot.z)]),...sources.map(s=>interactionGoals(world,[s]))];

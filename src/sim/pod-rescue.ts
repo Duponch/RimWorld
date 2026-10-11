@@ -1,3 +1,4 @@
+import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { isColonist } from './affiliation.ts';
 import { newApparelState } from './apparel-rules.ts';
 import { candidateAccess } from './candidate-access.ts';
@@ -128,7 +129,7 @@ export function exitPodRescue(w:World,p:Pawn):boolean {
   const items=w.piles.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id),packed=w.packed.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id);
   if(items.some(i=>!['inventory','equipment','apparel'].includes(i.owner.type))||packed.some(i=>i.owner.type!=='inventory')||stopTargeting(w,p))return false;
   for(const q of w.pawns)if(q.rescue?.patientId===p.id||q.tend?.patientId===p.id||q.feed?.patientId===p.id)interruptWork(w,q);
-  p.path=[];p.state='idle';p.bedId=null;p.moveCooldown=0;p.orders={active:null,queue:[]};
+  releaseAllowedAreaReturn(p);p.path=[];p.state='idle';p.bedId=null;p.moveCooldown=0;p.orders={active:null,queue:[]};
   delete p.motion;delete p.stagger;delete p.stun;delete p.shooting;delete p.melee;delete p.tactics;delete p.medicalSleep;delete p.transitExit;
   s.departed.push({incidentId:incident.id,tick:w.tick,pawn:structuredClone(p),items:structuredClone(items),...packed.length?{packed:structuredClone(packed)}:{}});
   incident.result='departed';incident.resolvedAt=w.tick;

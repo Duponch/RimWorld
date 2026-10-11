@@ -1,3 +1,4 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { workPriority } from './work-types.ts';
 import { bedsideAccess } from './care-access.ts';
 import { FEED_TICKS,feedingReason,feedingPlaceValid,feedingWork,type FeedTask } from './feeding-rules.ts';
@@ -44,10 +45,11 @@ export function reconcileFeeding(world:World):void {
     const t=d.feed,p=world.pawns.find(p=>p.id===t.patientId),food=world.piles.find(p=>p.id===(t.phase==='pickup'?t.sourcePileId:t.carryPileId));
     const sourceValid=t.phase==='pickup'&&t.paste?!!p&&pasteRequestValid(world,d,t.paste,p):!!food&&food.kind==='food'
       &&(t.phase==='pickup'?food.owner.type==='ground'&&reservedSource(world,food.id)<=food.quantity:food.owner.type==='pawn'&&food.owner.pawnId===d.id&&food.quantity===t.quantity);
-    if(feedingReason(world,d,p,true)||workPriority(d,feedingWork(p))===0&&d.orders.active!=='feed'||!p||!feedingPlaceValid(world,t,p)||!sourceValid)interruptWork(world,d);
+    if(!allowedAreaServicesAllowed(world,d)||feedingReason(world,d,p,true)||workPriority(d,feedingWork(p))===0&&d.orders.active!=='feed'||!p||!feedingPlaceValid(world,t,p)||!sourceValid)interruptWork(world,d);
   }
 }
 export function processFeeding(world:World,doctor:Pawn,context:NeedContext):void {
+  if(!allowedAreaServicesAllowed(world,doctor)){interruptWork(world,doctor);return;}
   const t=doctor.feed;if(!t)return;
   const p=world.pawns.find(p=>p.id===t.patientId)!;
   if(p?.health&&p.health.tick<world.tick&&!p.health.death)updatePawnHealth(world,p);

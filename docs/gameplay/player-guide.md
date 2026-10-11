@@ -1,5 +1,17 @@
 # Guide joueur
 
+**Schéma 223 — V312 : [zones autorisées humaines](allowed-areas-v312.md).** Utilisation et exceptions décrites ci-dessous ; preuves et limites dans la note unique. Les résultats datés suivants demeurent historiques.
+
+## Affecter une zone autorisée — V312
+
+Ouvrez **Zones → Zones autorisées**, puis **Nouvelle zone**. Modifiez son nom et sa couleur. **Agrandir** ferme le gestionnaire et permet de tracer des rectangles ; **Réduire** retire les cellules tracées. Les végétaux, bâtiments et obstacles peuvent appartenir à la définition : leur présence ne les rend pas traversables. Les zones peuvent se superposer et contenir plusieurs îlots. Jusqu’à dix définitions sont disponibles ; une zone vide équivaut à **Illimité**.
+
+Dans **Affectations**, choisissez une zone pour chaque colon libre. Les cibles de travail, fournisseurs, dépôts, nourriture, sommeil et services doivent être admissibles ; un contact voisin peut être extérieur si l’objet concerné est dans la zone. Le colon peut traverser l’extérieur pour rejoindre une cible, en préférant une route intérieure lorsqu’elle reste accessible. Un colon libre dehors rejoint physiquement une cellule autorisée.
+
+Mobilisation, crise et certaines étapes de mission suspendent l’effet sans effacer l’affectation. Faim ou urgence médicale ne rendent pas la zone illimitée. Le secours direct peut prendre un patient extérieur, mais exige une destination admissible. Un repas en cours d’ingestion et un sommeil installé restent engagés. Modifier la zone conserve objets et patients ; si aucun dépôt physique n’est disponible, un changement volontaire peut être refusé.
+
+**Illimité** retire l’affectation. **Supprimer** retire aussi les références des voyageurs absents. Seule la zone actuellement éditée est montrée ; les commandes de visibilité des zones restent disponibles. Les règles, exceptions et adaptations détaillées sont dans [la note V312](allowed-areas-v312.md).
+
 **Schéma 222 — V311 : [fonderie et fusion des armes](smelting-v311.md).** Boucle, filtres protecteurs et limites décrits ci-dessous ; contrôles qualifiés par reprises dans la note unique. Les résultats datés suivants demeurent historiques.
 
 ## Fondre une arme — V311

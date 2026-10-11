@@ -1,4 +1,6 @@
-# Validation courante — V311
+# Validation courante — V312
+
+**V312, schéma 223 : [zones autorisées humaines](../gameplay/allowed-areas-v312.md#contrôles-et-limites).** Admissions, coûts de navigation, possessions et sauvegardes contrôlés par groupes et reprises ; parcours graphique dans Les Aulnes historiques. Résultats, rouges et limites rassemblés dans la note unique. Les validations suivantes sont historiques.
 
 **V311, schéma 222 : [fonderie et fusion des armes](../gameplay/smelting-v311.md#contrôles-et-limites).** 79cas/8fichiers acquis par reprises, dont46nouveaux/3fichiers ; corpus63/66 PASS68,624s. Construction, filtres et cargo acquis dans les rouges conservés puis continuation ChromeWebGPU PASS128,946s : quatre recharges exactes,15acier récupérés/1réemployé/14rangés. PrésentationChrome119,162s, typage14,441s/buildPages2,254s ; preuves, rouges et limites dans la note unique. Les validations suivantes sont historiques.
 

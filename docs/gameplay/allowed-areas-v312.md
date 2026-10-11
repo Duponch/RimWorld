@@ -1,0 +1,49 @@
+# V312 — zones autorisées humaines
+
+**Schéma 223.** Cette boucle permet de créer une zone, de la tracer et de l’affecter à un colon. Elle encadre ses activités et ses destinations sans transformer sa frontière en mur. [Référence primaire et adaptations](../research/allowed-areas-core-v312.md).
+
+## Usage et présentation
+
+Le dock Zones ouvre **Zones autorisées**. Le gestionnaire crée jusqu’à dix zones indépendantes, nommables et recolorables. Agrandir ou réduire ferme le gestionnaire et conserve l’outil de tracé ; Échap et le clic droit bref retrouvent la sortie habituelle. Les zones peuvent se chevaucher ou comporter des îlots. Leur dessin accepte les cases de la carte : la permission est distincte de la possibilité physique d’y marcher ou d’y travailler.
+
+La colonne **Zone autorisée** d’Assignations choisit la zone de chaque colon libre, ou **Illimité**. Une zone vide conserve son affectation mais agit comme Illimité. Les affectations restent sur les personnes originales pendant mobilisation, crise ou absence. Supprimer une zone retire aussi ses références chez les véritables propriétaires hors carte et dans les archives complètes.
+
+Seule la zone éditée ou survolée dans le gestionnaire est affichée. Ses surfaces utilisent le pont de teinte du sol et du tapis d’herbe déjà commun aux autres zones, sans boucle CPU par brin. Le bouton de visibilité des zones s’applique aussi à cette présentation. Les curseurs de tracé réemploient les compositions existantes.
+
+## Activités, transit et retour
+
+Les admissions de travail, production, transport, nourriture, sommeil, loisirs, soins, recherche et élevage vérifient la vraie cible avant son classement. Le patient, l’animal, la source au sol, le poste et le prochain dépôt sont des cibles distinctes ; la zone du fournisseur ne remplace pas le régime ou la politique médicale du patient. Un contact voisin peut rester extérieur si l’objet ou le patient visé est dedans. Le staging manuel doit rester admissible.
+
+Un ordre direct de travail extérieur est refusé dans l’aperçu et à l’exécution. L’équipement direct garde son exception spécifique. Le secours direct autorise un patient extérieur, avec un lit ou couchage admissible au porteur ; le secours animal direct sauvegarde son marqueur prospectif. Capture/arrestation/libération conservent les restrictions locales déclarées dans la référence.
+
+Mobilisation et crise suspendent l’effet, sans effacer le choix. Préparation, chargement et sortie d’une mission suspendent aussi la politique ; le déchargement civil la rétablit. Fuite, bombe et réponse automatique au combat peuvent sortir ; faim, urgence médicale et refuge thermique ne rendent pas la zone illimitée. Sommeil installé et ingestion engagée conservent leur propriétaire physique.
+
+Un trajet vers une cible admissible peut traverser l’extérieur. La préférence ajoute 20000 unités de recherche par case extérieure, sans changer la durée du pas, les capacités, le terrain, les portes ou les coins. La file Dial utilise un index de buckets occupés uniquement dans ce régime pour éviter de parcourir de grands intervalles vides. Les recherches restent soumises au budget commun.
+
+Un colon libre extérieur sans besoin, travail, cargo ou autre engagement réel rejoint physiquement une case autorisée praticable. La cellule choisie minimise le coût de recherche, puis l’index à égalité. Les mémoires sociales et les conteneurs de combat neutres ne constituent pas une activité ; un véritable combat garde la priorité. Le retour sauvegarde sa cible et son chemin, et respecte l’arête déjà engagée.
+
+## Changements et sauvegardes
+
+Changer l’affectation ou retirer des cellules examine d’abord la politique future. Les chargements devenus incompatibles sont planifiés ensemble contre les propriétaires actuels : impossible de déposer deux objets sur une même place ou de perdre de la matière. Un sol saturé refuse la commande avant publication. L’interruption involontaire réemploie la conservation commune du cargo ; l’arête engagée reste intacte. Les sorties de production peuvent rechercher un autre dépôt admissible.
+
+Les bitmaps de membership sont privées, paresseuses et liées à l’identité du tableau de cellules ; elles ne sont pas sauvegardées. Le fichier et le Decoder partagent les gardes prospectives : définition bornée, index triés uniques, identités sans collisions et références des propriétaires réels. Le retour est une intention locale exclusive avec cible dans la zone et route cohérente, sans flood ou évaluation de santé lors de l’admission.
+
+Le schéma 222 est validé avant la migration neutre vers 223. Aucun colon n’est affecté rétroactivement, aucune zone, ressource ou tâche n’est créée et aucun PRNG n’est consommé. Les versions précédentes refusent les champs futurs, même présents avec `undefined`. Les 63 références publiques et 66 fichiers historiques restent des sources en lecture seule.
+
+## Contrôles et limites
+
+ROOT exécute les contrôles séquentiellement sur sources, tests et pilotes figés ; les agents préparent uniquement les références suivantes pendant ces contrôles. Les sept fichiers V312 couvrent 71 nouveaux cas acquis par reprises : commandes atomiques, membership, coûts et budget de navigation, métiers/besoins/services, retour physique, cargo, migration et propriétaires absents. Le groupe d’admission final passe 70 cas dans huit fichiers en 16,321s, avec les historiques de navigation, ordres directs, secours animal et libération. Le groupe frontières acquiert 47/48 cas en 11,117s ; l’unique rouge historique de migration scout est repris à huit cas PASS7,287s après correction de son oracle V282.
+
+Les rouges restent dans `tmp/validation-runs/allowed-areas-v312-*` : premier groupe 64/69 en 13,815s ; reprise moteur/persistance 19/20 en 8,961s. Le premier défaut de retour venait du cooldown posé par une recherche de travail vide : le retour civil est maintenant proposé avant cette recherche. Le cas d’abattage attend désormais la vraie fin de la tâche avec une borne explicite ; l’oracle de forme complète des conteneurs de combat ne détend pas les gardes historiques. Le voyage a révélé un raccord V311 : `validSmeltingTransport` recevait la projection scout, où le même Pawn figurait deux fois. Il reçoit maintenant le monde original ; frontières, fonderie et départ/reprise sont acquis. L’oracle scout170 ajoute seulement le repas de pâte nutritive introduit intentionnellement par V282.
+
+Le premier typage refuse le narrowing des cinq commandes, `onfocusin` et les types des fixtures ; reprise complète PASS13,497s. Le typage séparé du lecteur MAIN littéral passe 5,451s. Le corpus public PASS68,311s (`tmp/allowed-areas-v312/public-controls/public-context-check-MIGpJa`) contrôle les 63 références et 66 fichiers exacts, les migrations, le checkpoint RAW/MAIN littéral, un vrai tick sur chacune de deux copies, les anciennes vues conservées et la recharge canonique. Aucun ordre artificiel n’est ajouté au corpus.
+
+Chrome installé, WebGPU, 2560×1440 : parcours natif final PASS65,830s. Les Aulnes originales 250×250/tick8434/quinze humains viennent de `public/test-saves/v284/les-aulnes-integrees.json`, SHA256 `6d75f98d4435e8b4569f11fce1969a71d31ba523fcf36ad864f35ba3191eedb1`. Aucun ajout de ressources. Le gestionnaire crée/renomme/colore une zone ; Agrandir ferme le dialogue, le tracé confirme deux cellules et les deux surfaces résidentes alimentent la texture de teinte. Affecter Ada19869 interrompt sa cuisine en conservant son segment original et la quantité totale des piles. Son retour commence réellement au tick8436 et termine dedans au tick8443 ; Illimité puis suppression retirent les références.
+
+Cinq sauvegardes/recharges ordinaires exactes : 8434 initial, 8434 affecté pendant l’arête, 8436 retour pendant l’arête, 8443 arrivé, 8443 supprimé. Erreurs vides, incident simulation/graphique vide ; lecture du probe graphique seulement, aucun écrivain GPU ou World injecté. Rapport, cinq fichiers et trois captures inspectées sont préservés dans `tmp/allowed-areas-v312/native-resume-2026-10-11T022312`. Le premier lancement natif est interrompu à 163,824s avant le test : restriction de sockets du bac à sable. Seuls son pilote et son serveur identifiés ont été arrêtés ; reprise hors restriction, sessions utilisateur conservées. Gel `freeze-UjeHMa` de 2652 entrées exact avant/après le parcours. Un ajustement ultérieur du seul cadre CSS du dialogue utilise un nouveau gel.
+
+La présentation commune Chrome PASS118,937s couvre minage et abattage à plusieurs vitesses : aucune discontinuité observée, absence de traversée des obstacles et retraits affichés après leur tick confirmé. La première exécution Chromium FAIL62,307s conserve son erreur de pipeline Tint IR déjà rencontrée avant V312 ; aucun correctif de ce backend n’est revendiqué. Le build Pages initial passe 2,249s avant le seul ajustement CSS. Aucun gain FPS, vrai×6 constant, campagne naturelle, système multicarte ou zone animale n’est déduit de ce lot. Le parcours limité constitue une utilisation intégrée et des reprises physiques, pas une campagne longue.
+
+Le cadre final est inspecté dans Chrome en 28,741s avec une seule reprise initiale8434 exacte : palette commune, rayon20px, bord3px et Comfortaa. Rapport et capture dans `tmp/allowed-areas-v312/style-final-2026-10-11T022944`. Pilote privé et configuration hashés avant/après exactement ; gel final `freeze-VLoVCB`,2652entrées exactes, build Pages final PASS2,300s. Les ports5383 et5173 et les navigateurs de contrôle sont fermés ; les sessions utilisateur restent intactes.
+
+Documentation :924documents/8763liens locaux, six entrées au schéma223 et trois sources originales byte-identiques passent. Aucun fichier public réécrit. Publications Cloudflare regroupées ; poursuite fonctionnelle autonome après commit et push, relance planifiée toujours PAUSED.

@@ -25,6 +25,9 @@ export function createPodDepartureValidator(validate:(world:unknown)=>string[]):
       &&!Object.hasOwn(pawn.recreation.tolerance,'television')&&!Object.hasOwn(pawn.recreation.bored,'television'))
       pawn.recreation={...pawn.recreation,tolerance:{...pawn.recreation.tolerance,television:0},bored:{...pawn.recreation.bored,television:false}};
     const view:World={...base,schemaVersion:version as World['schemaVersion'],tick:departure.tick,nextId:world.nextId,
+      // Retained assignments resolve against the real current definitions.
+      // This view neither advances nor rewrites the archived original Pawn.
+      ...Object.hasOwn(world,'allowedAreas')?{allowedAreas:world.allowedAreas}:{},
       pawns:[pawn],piles:departure.items,packed:[],nextFoodPolicyId:world.nextFoodPolicyId,
       // A deleted historical policy need not become a live colony policy.
       // No food intention survives export; only its allocated ID is checked.

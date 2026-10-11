@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { chooseApparelReplacement,type ApparelPolicyCandidate,type ApparelPolicyGarment } from './apparel-policy.ts';
 import { advanceApparelWear,APPAREL_POLICY_INTERVAL } from './apparel-renewal.ts';
 import { wornApparel } from './apparel-rules.ts';
@@ -54,7 +55,8 @@ export function considerApparelPolicy(world:World,pawn:Pawn,search:()=>Reachabil
   const policy=world.apparelPolicies?.find(p=>p.id===pawn.apparelPolicyId);if(!policy){pawn.nextApparelCheckAt=world.tick+nextInterval(world,pawn);return false;}
   const reach=search();if(!reach)return true;
   const worn:ApparelPolicyGarment[]=wornApparel(world,pawn).map(p=>({id:p.id,item:p.item as ApparelPolicyGarment['item'],apparel:p.apparel!}));
-  const candidates:ApparelPolicyCandidate[]=world.piles.filter(p=>p.kind==='apparel'&&p.apparel&&!p.apparel.forbidden&&p.owner.type==='ground'&&stored(world,p.owner.x,p.owner.z,p)).map(p=>({
+  const area=captureAllowedArea(world,pawn);
+  const candidates:ApparelPolicyCandidate[]=world.piles.filter(p=>p.kind==='apparel'&&p.apparel&&!p.apparel.forbidden&&p.owner.type==='ground'&&(!area||allowedAreaAllows(world,pawn,p.owner,area))&&stored(world,p.owner.x,p.owner.z,p)).map(p=>({
     id:p.id,item:p.item as ApparelPolicyCandidate['item'],apparel:p.apparel!,stored:stored(world,p.owner.type==='ground'?p.owner.x:0,p.owner.type==='ground'?p.owner.z:0,p),
     reachable:p.owner.type==='ground'&&routeToJob(world,p.owner,reach,true)!==null,reserved:reservedSource(world,p.id,pawn.id)>0,
     burning:world.fires?.items.some(f=>groundFire(f)&&p.owner.type==='ground'&&f.x===p.owner.x&&f.z===p.owner.z),

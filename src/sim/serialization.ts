@@ -69,6 +69,7 @@ import { createPodDepartureValidator } from './pod-rescue-projection.ts';
 import { validateResearch,validDeepResearchTransport } from './research-save.ts';
 import { validBiofuelTransport,validBuildingFuelShape } from './biofuel-save.ts';
 import { validSmeltingTransport } from './smelting-save.ts';
+import { validAllowedAreaTransport } from './allowed-area-save.ts';
 import { validNutrientPasteTransport } from './nutrient-paste-save.ts';
 import { hopperCapacity } from './nutrient-paste.ts';
 import { adoptPasteFoodPolicies } from './food-policy-save.ts';
@@ -187,7 +188,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateSchema(input, SCHEMA_VERSION);
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222, relationshipContext = true): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223, relationshipContext = true): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -351,7 +352,8 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   errors.push(...validateCorpses(world,version),...validateHunting(world,version));
   errors.push(...validateResearch(world,version));
   if(!validBiofuelTransport(commercialWorld,version))errors.push('Invalid biofuel content, original owner or fuel transport.');
-  if(!validSmeltingTransport(world,version))errors.push('Invalid or future smelting content, filter or owner.');
+  if(!validAllowedAreaTransport(commercialWorld,version))errors.push('Invalid or future allowed area, original assignment or return.');
+  if(!validSmeltingTransport(commercialWorld,version))errors.push('Invalid or future smelting content, filter or owner.');
   if(!validNutrientPasteTransport(commercialWorld,version))errors.push('Invalid nutrient paste content, source or transport.');
   if(!validOrbitalTransport(commercialWorld,version))errors.push('Invalid orbital state, ownership or task.');
   if(!validDeepDrillingTransport(world,version)||!validDeepResearchTransport(world,version))errors.push('Invalid deep resources, work or research.');
@@ -432,7 +434,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
     if (owned.length > 1 || (owned.length === 1 && !(version>=214&&pawn.animalFeed&&pawn.animalFeed.phase!=='pickup') && !(version>=210&&pawn.surgery?.implant&&pawn.surgery.phase==='approach'&&Array.isArray(pawn.surgery.ingredients)&&pawn.surgery.ingredients.some(i=>i?.stage==='held')) && !(version>=179&&pawn.surgery?.medicine&&pawn.surgery.phase==='approach') && !(version>=106&&pawn.animalHandling&&pawn.animalHandling.phase!=='pickup') && !(version>=106&&pawn.animalCare?.medicine&&pawn.animalCare.phase!=='pickup') && !(version>=89&&pawn.burial&&pawn.burial.phase!=='pickup') && !(version>=86&&pawn.ward?.kind==='food'&&pawn.ward.phase==='deliver') && !(version>=51&&pawn.tend?.medicine&&pawn.tend.phase!=='pickup') && !(version>=48&&pawn.feed&&pawn.feed.phase!=='pickup') && !(version>=44&&pawn.interruptedCargo) && !(version >= 10 && pawn.cooking) && pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
     if (version>=215&&pawn.deepWork || version>=179&&pawn.surgery || version>=86&&pawn.ward || version>=73&&pawn.research || pawn.jobId !== null || pawn.haul !== null || version>=52&&pawn.equipmentTask || version>=48&&pawn.feed || version>=47&&pawn.tend || version>=46&&pawn.rescue || version >= 10 && pawn.cooking) { if (!['moving', 'working'].includes(pawn.state)) errors.push('Assigned pawn has incompatible state.'); }
-    else if (!(version>=221&&pawn.animalRescue)&&!(version>=216&&pawn.orbitalTrade)&&!(version>=215&&pawn.deepWork)&&!(version>=214&&pawn.animalFeed)&&!(version>=196&&groupOnMapMember(world,pawn.id))&&!(version>=193&&pawn.bombRefuge)&&!(version>=171&&scoutOnMapId(world)===pawn.id||version>=180&&commercialOnMapId(world)===pawn.id)&&!(version>=106&&(pawn.animalHandling||pawn.animalCare))&&!(version>=89&&(pawn.burial||pawn.cleaning))&&!(version>=88&&(pawn.visitor||pawn.trade))&&!(version>=87&&(pawn.burning||pawn.firefighting))&&!(version>=86&&pawn.prisoner)&&!(version>=79&&pawn.hunting)&&!(version>=74&&pawn.heatRefuge)&&!(version>=68&&pawn.raid)&&!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
+    else if (!(version>=223&&pawn.allowedAreaReturn)&&!(version>=221&&pawn.animalRescue)&&!(version>=216&&pawn.orbitalTrade)&&!(version>=215&&pawn.deepWork)&&!(version>=214&&pawn.animalFeed)&&!(version>=196&&groupOnMapMember(world,pawn.id))&&!(version>=193&&pawn.bombRefuge)&&!(version>=171&&scoutOnMapId(world)===pawn.id||version>=180&&commercialOnMapId(world)===pawn.id)&&!(version>=106&&(pawn.animalHandling||pawn.animalCare))&&!(version>=89&&(pawn.burial||pawn.cleaning))&&!(version>=88&&(pawn.visitor||pawn.trade))&&!(version>=87&&(pawn.burning||pawn.firefighting))&&!(version>=86&&pawn.prisoner)&&!(version>=79&&pawn.hunting)&&!(version>=74&&pawn.heatRefuge)&&!(version>=68&&pawn.raid)&&!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
     if (!legacyV2) {
       if (pawn.bedId !== null) {
         if (![...world.structures,...(world.packed??[]).map(p=>p.building)].some(bed => isBedKind(bed.kind) && !bed.medical && bed.id === pawn.bedId) || bedOwners.has(pawn.bedId)) errors.push('Invalid or duplicate bed ownership.');
@@ -588,6 +590,8 @@ export function serializeWorld(world: World): string {
 export function deserializeWorld(serialized: string): World {
   if (typeof serialized !== 'string' || serialized.length > 16_000_000) throw new Error('Invalid or oversized save.');
   let input: unknown = JSON.parse(serialized);
+  if(record(input)&&Number(input.schemaVersion)<=222&&(Object.hasOwn(input,'allowedAreas')
+    ||Array.isArray(input.pawns)&&input.pawns.some(p=>record(p)&&(Object.hasOwn(p,'allowedAreaId')||Object.hasOwn(p,'allowedAreaReturn')))))throw new Error(`Invalid version ${input.schemaVersion} save: Future allowed area fields.`);
   if (record(input) && input.schemaVersion === 1) input = migrateLegacy(input);
   if (record(input) && input.schemaVersion === 2) {
     const errors = validateSchema(input, 2);
@@ -1226,6 +1230,11 @@ export function deserializeWorld(serialized: string): World {
     const errors=validateSchema(input,221);if(errors.length)throw new Error('Invalid version 221 save: '+errors.join(' '));
     // Smelting is prospective; keep original objects, bills, skills and streams.
     input.schemaVersion=222;
+  }
+  if(record(input)&&input.schemaVersion===222){
+    const errors=validateSchema(input,222);if(errors.length)throw new Error('Invalid version 222 save: '+errors.join(' '));
+    // Areas and assignments are prospective; original owners and streams are untouched.
+    input.schemaVersion=223;
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;

@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { cookingSpot } from './cooking-bills.ts';
 import { researchFacilityDistance,researchFacilityLinked } from './research-facilities.ts';
@@ -118,7 +120,7 @@ export function researchProposal(world:World,pawn:Pawn,reach:Reachability):{task
   if(!researchWanted(world,pawn))return null;
   const project=world.research!.project!;
   const reserved=reservedServiceCells(world,pawn.id);
-  const stations=world.structures.filter(s=>(s.kind==='research-bench'||s.kind==='hi-tech-research-bench')&&researchStationUsable(world,s,project)&&!deconstructionReserved(world,s.id,pawn.id)&&!world.pawns.some(p=>p!==pawn&&p.research?.stationId===s.id))
+  const stations=world.structures.filter(s=>allowedAreaAllows(world,pawn,s)&&(s.kind==='research-bench'||s.kind==='hi-tech-research-bench')&&researchStationUsable(world,s,project)&&!deconstructionReserved(world,s.id,pawn.id)&&!world.pawns.some(p=>p!==pawn&&p.research?.stationId===s.id))
     .sort((a,b)=>Math.abs(a.x-pawn.x)+Math.abs(a.z-pawn.z)-Math.abs(b.x-pawn.x)-Math.abs(b.z-pawn.z)||a.id-b.id);
   for(const s of stations){const spot=cookingSpot(s);if(reserved.has(spot.z*world.width+spot.x)||!canStandAt(world,spot))continue;
     const facility=s.kind==='hi-tech-research-bench'?nearbyResearchFacility(world,s):undefined;
@@ -157,6 +159,7 @@ export function researchRate(pawn:Pawn,station:Structure,environment:WorkEnviron
   return Math.round(.0825*personal*bench*RESEARCH_SCALE);
 }
 export function processResearch(world:World,pawn:Pawn,move:(target:Cell,exact:boolean)=>unknown,rate:(s:Structure)=>number,event:(text:string)=>void):void {
+  if(!allowedAreaServicesAllowed(world,pawn)){releaseAssignments(world,pawn);return;}
   const task=pawn.research!,station=world.structures.find(s=>s.id===task.stationId);
   if(medicalWorkRefusal(pawn)||!station||!researchWanted(world,pawn)||(world.research!.project==='vitals-monitor'||world.research!.project==='fabrication'||world.research!.project==='advanced-fabrication'||world.research!.project==='recon-armor')&&task.facilityId===undefined||!researchStationUsable(world,station,world.research!.project!,task.facilityId)||deconstructionReserved(world,station.id,pawn.id)||!canStandAt(world,task.spot)){releaseAssignments(world,pawn);return;}
   if(pawn.x!==task.spot.x||pawn.z!==task.spot.z){move(task.spot,true);return;}

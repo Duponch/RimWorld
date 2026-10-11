@@ -3,6 +3,7 @@ import { doorCorners } from './door-rules.ts';
 import type { Cell, World } from './types.ts';
 import type { CandidateAccess } from './navigation-types.ts';
 import { WeightedSearch } from './weighted-search.ts';
+import { navigationAllowedArea,OUTSIDE_ALLOWED_AREA_SEARCH_COST } from './allowed-area-state.ts';
 import { navigationCosts } from './furniture-travel.ts';
 
 /** With solid diagonal corners, a legal diagonal always has a cardinal detour.
@@ -10,6 +11,7 @@ import { navigationCosts } from './furniture-travel.ts';
  * assigning any unweighted route or distance to the simulation. */
 export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupied:ReadonlySet<number>,deferNavigation=false):CandidateAccess {
   const width=world.width,height=world.height,size=width*height,origin=start.z*width+start.x;
+  const policy=navigationAllowedArea(world,start),additive=policy?{maximum:OUTSIDE_ALLOWED_AREA_SEARCH_COST,has:(index:number)=>!policy.has(index),get:(index:number)=>policy.has(index)?0:OUTSIDE_ALLOWED_AREA_SEARCH_COST}:undefined;
   const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;addActorObstacles(world,start,unavailable);
   // Public callers retain the full construction-time snapshot. The ordinary
   // work planner may defer navigation inside its synchronous read-only scan.
@@ -32,9 +34,9 @@ export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupi
   };
   let weighted:WeightedSearch|undefined;
   return {
-    kind:'candidate-access',start:origin,get stops(){return getNavigation().stops;},
+    kind:'candidate-access',start:origin,...policy?{allowedAreaPolicy:policy}:{},get stops(){return getNavigation().stops;},
     has,
-    resolve:goals=>{const {costs,repeaters,stops,floors}=getNavigation();weighted??=new WeightedSearch(width,height,origin,unavailable,costs,repeaters,floors,getCorners());weighted.field.stops=stops;return weighted.advance(goals);},
+    resolve:goals=>{const {costs,repeaters,stops,floors}=getNavigation();weighted??=new WeightedSearch(width,height,origin,unavailable,costs,repeaters,floors,getCorners(),additive);weighted.field.stops=stops;return weighted.advance(goals);},
     costTo:index=>index===origin?0:weighted?.field.settled?.[index]?weighted.field.costs[index]!:Infinity,
     get visited(){return weighted?.field.visited??0;},
     get connectivityVisited(){return head;},unreachedGroups:0,

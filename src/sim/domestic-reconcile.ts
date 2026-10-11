@@ -1,3 +1,4 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { reconcileAnimalFeeding } from './animal-feeding.ts';
 import { leadRopees } from './animal-leading.ts';
@@ -16,6 +17,7 @@ export function reconcileDomesticWork(world:World):void {
   }
   for(const pawn of world.pawns){
     const task=pawn.animalHandling??pawn.animalCare;if(!task)continue;
+    if(!allowedAreaServicesAllowed(world,pawn)){interruptWork(world,pawn);continue;}
     const animal=world.wildlife?.animals.find(a=>a.id===task.animalId);
     const h=pawn.animalHandling;
     if(h?.kind==='slaughter'&&(!animal?.domestic?.slaughter||!slaughterHandlerAvailable(pawn))){interruptWork(world,pawn);continue;}

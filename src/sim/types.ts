@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 222 as const;
+export const SCHEMA_VERSION = 223 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -14,6 +14,14 @@ export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
 export type PawnState = 'idle' | 'moving' | 'working' | 'sleeping' | 'hungry' | 'eating' | 'recreating' | 'resting' | 'downed' | 'dead';
 export interface Cell { x: number; z: number }
+export interface AllowedArea { id:number; label:string; color:number; cells:number[] }
+export interface AllowedAreaReturn { target:Cell }
+export type AllowedAreaCommand =
+  | {type:'allowed-area-create';label?:string}
+  | {type:'allowed-area-settings';areaId:number;label?:string;color?:number}
+  | {type:'allowed-area-paint';areaId:number;enabled:boolean;from:Cell;to:Cell}
+  | {type:'allowed-area-delete';areaId:number}
+  | {type:'assign-allowed-area';pawnId:number;areaId:number|null};
 export interface Tile { floor?:import('./flooring.ts').FloorKind; ore?: 'steel' | 'machinery' | 'gold' | 'plasteel'; miningDamage?: number; /** Prospective yield weighted by the fraction of ore HP actually mined. */ miningYield?: number; terrain: Terrain; stone?: import('./geology.ts').StoneKind }
 export interface Resource extends Cell { blight?:import('./plant-blight.ts').CropBlightState; species?:import('./biome-flora.ts').PlantSpecies; plantLife?:import('./plant-life.ts').PlantLife; damage?:number; id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; growthThermalFactor?:number; growthLight?:'dark'|'artificial-full'; stone?: import('./geology.ts').StoneKind }
 export interface Structure extends Cell { deepDrill?:import('./deep-drilling-rules.ts').DeepDrillState; deepScanner?:import('./deep-drilling-rules.ts').DeepScannerState; emp?:{sinceCore:number;untilCore:number}; turret?:import('./mini-turret-state.ts').MiniTurretState; breakdown?:import('./breakdowns.ts').BreakdownState; gatherSpot?:boolean; pen?:{accepted:import('./animal-species.ts').AnimalSpeciesId[]}; art?:{authorId:number;createdAt:number}; flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
@@ -69,6 +77,8 @@ export interface Job extends Cell {
   escrow: Stock;
 }
 export interface Pawn extends Cell {
+  allowedAreaId?:number;
+  allowedAreaReturn?:AllowedAreaReturn;
   animalRescue?:import('./animal-rest-state.ts').AnimalRescueTask;
   deepWork?:import('./deep-drilling-rules.ts').DeepWorkTask;
   orbitalTrade?:import('./orbital-state.ts').OrbitalTradeTask;
@@ -175,6 +185,7 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  allowedAreas?:AllowedArea[];
   orbital?:import('./orbital-state.ts').OrbitalState;
   deepResources?:import('./deep-resources.ts').DeepResourceState;
   planet?:import('./planet-state.ts').PlanetState;
@@ -263,6 +274,7 @@ export interface AreaCommand extends StorageSettings { type: 'area'; action: Are
 export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }
 export type Command = import('./orbital-state.ts').OrbitalCommand | import('./group-state.ts').GroupCommand | {type:'enable-mech-raids'} | import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
   | {type:'cut-blighted-crops'}
+  | AllowedAreaCommand
   | import('./mini-turret-state.ts').TurretCommand
   | {type:'pen-species';markerId:number;species:import('./animal-species.ts').AnimalSpeciesId;accepted:boolean}
   | {type:'adopt-economy'}

@@ -46,7 +46,7 @@ const AWAY=['members','items','departedAt','lastPersonalTick','baseline','entry'
 const PASSIVE_PAWN=['age','appearance','roomMemories','filthFeet','recruitment','social','bereavement','familyBereavement','romanceMemories','deathThoughts',
   'traits','background','mental','faction','hostilityResponse','careDisabled','medicalCare','selfTend','health','apparelPolicyId',
   'apparelAutomation','nextApparelCheckAt','deniedJoining','originQuestId','podRescue','motion',
-  'lastAttack','meleeThreat','disturbance','droppedWeaponId'];
+  'lastAttack','meleeThreat','disturbance','droppedWeaponId','allowedAreaId'];
 const REQUIRED_PAWN=['id','name','x','z','skills','orders','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending',
   'hunger','rest','mood','comfort','beauty','memories','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown'];
 const PILE_KEYS=['id','kind','item','quantity','owner'];

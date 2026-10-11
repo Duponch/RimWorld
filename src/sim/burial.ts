@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import { allowedAreaAllows,allowedAreaReason,allowedAreaWorkAllowed,captureAllowedArea } from './allowed-area-state.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { isColonist } from './affiliation.ts';
 import { footprintCells } from './definitions.ts';
@@ -37,6 +38,7 @@ export function graveAccepts(w:World,grave:Structure,body:Pawn,exceptPawn?:numbe
 }
 export function burialReason(w:World,actor:Pawn,body:Pawn|undefined,continuing=false):string|undefined {
   const pile=body?bodyPile(w,body):undefined;
+  const cell=pile?.owner.type==='ground'?pile.owner:!pile?body:undefined,areaReason=cell?allowedAreaReason(w,actor,cell):undefined;if(areaReason)return areaReason;
   return !isColonist(actor)||actor.prisoner||actor.visitor?'Seul un colon peut être chargé de cette inhumation.'
     :backgroundWorkRefusal(actor,'haul')??medicalWorkRefusal(actor)??(actor.mental?.crisis||actor.burning||actor.draft?'Ce colon est indisponible pour transporter un corps.'
     :!continuing&&workPriority(actor,'haul')===0?'Transport est désactivé dans le tableau Travail.'
@@ -52,7 +54,7 @@ export function burialProposal(w:World,actor:Pawn,body:Pawn,reach:Reachability,g
   if(burialReason(w,actor,body))return;
   const location=pawnBodyLocation(w,body);if(!location)return;
   const path=routeToJob(w,location,reach,true);if(!path)return;
-  const graves=w.structures.filter(s=>(graveId===undefined||s.id===graveId)&&graveAccepts(w,s,body,actor.id))
+  const policy=captureAllowedArea(w,actor),graves=w.structures.filter(s=>(!policy||allowedAreaAllows(w,actor,s,policy))&&(graveId===undefined||s.id===graveId)&&graveAccepts(w,s,body,actor.id))
     .sort((a,b)=>(a.grave?.assignedPawnId===body.id?0:1)-(b.grave?.assignedPawnId===body.id?0:1)
       ||((a.x-location.x)**2+(a.z-location.z)**2)-((b.x-location.x)**2+(b.z-location.z)**2)||a.id-b.id);
   for(const grave of graves)if(routeToJob(w,grave,reach,true))return {bodyPawnId:body.id,graveId:grave.id,...body.body?.pileId!==undefined?{corpseId:body.body.pileId}:{},path};
@@ -106,13 +108,13 @@ export function releaseBurial(p:Pawn):void {delete p.burial;if(p.orders.active==
 export function reconcileBurials(w:World):void {
   for(const actor of w.pawns)if(actor.burial){
     const t=actor.burial,body=w.pawns.find(p=>p.id===t.bodyPawnId),grave=w.structures.find(s=>s.id===t.graveId);
-    if(burialReason(w,actor,body,true)||!grave||!body||!graveAccepts(w,grave,body,actor.id))interruptWork(w,actor);
+    if(!allowedAreaWorkAllowed(w,actor)||burialReason(w,actor,body,true)||!grave||!body||!graveAccepts(w,grave,body,actor.id))interruptWork(w,actor);
   }
 }
 export function processBurial(w:World,actor:Pawn,context:NeedContext):void {
   const t=actor.burial;if(!t)return;
   const body=w.pawns.find(p=>p.id===t.bodyPawnId),grave=w.structures.find(s=>s.id===t.graveId);
-  if(!body||!grave||burialReason(w,actor,body,true)||!graveAccepts(w,grave,body,actor.id)){interruptWork(w,actor);return;}
+  if(!allowedAreaWorkAllowed(w,actor)||!body||!grave||burialReason(w,actor,body,true)||!graveAccepts(w,grave,body,actor.id)){interruptWork(w,actor);return;}
   let pile=bodyPile(w,body);
   if(t.phase==='pickup'){
     const cell=pawnBodyLocation(w,body);if(!cell){interruptWork(w,actor);return;}

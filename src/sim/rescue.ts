@@ -1,3 +1,6 @@
+import { interruptWork } from './interrupted-cargo.ts';
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows,allowedAreaReason } from './allowed-area-state.ts';
 import { isCarePatient } from './affiliation.ts';
 import { captureReason,completeCapture } from './capture.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
@@ -15,6 +18,7 @@ import type { Cell,CommandResult,Pawn,World } from './types.ts';
 
 export const wantsRescue=(p:Pawn,forced=false):boolean=>(isCarePatient(p)||forced&&p.faction==='outlanders'&&!!p.podRescue)&&p.state==='downed'&&!(p.need?.kind==='sleep'&&p.need.bedId!==null&&p.need.phase==='sleep');
 export function rescueReason(world:World,actor:Pawn,patient:Pawn|undefined,forced=false):string|undefined {
+  if(!forced&&patient){const reason=allowedAreaReason(world,actor,patient);if(reason)return reason;}
   // Forced Rescue/Capture are Core menu services, not admitted work providers.
   if(!forced){const refusal=backgroundWorkRefusal(actor,patient?.prisoner?'warden':'doctor');if(refusal)return refusal;}
   return medicalWorkRefusal(actor)??(!forced&&(patient?.prisoner?actor.priorities.warden:actor.priorities.doctor)===0?`${patient?.prisoner?'Geôlier':'Médecin'} est désactivé dans le tableau Travail.`
@@ -28,7 +32,7 @@ export function rescueProposal(world:World,actor:Pawn,patient:Pawn,reach:Reachab
   if(rescueReason(world,actor,patient,forced))return;
   const path=routeToCell(world,patient,reach);if(!path)return;
   const rank=(bed:import('./types.ts').Structure)=>bed.medical?medicalBedPreference(bed):patient.bedId===bed.id?2:3;
-  const beds=world.structures.filter(b=>rescueBedAvailable(world,b,patient,actor.id)).sort((a,b)=>
+  const beds=world.structures.filter(b=>allowedAreaAllows(world,actor,b)&&rescueBedAvailable(world,b,patient,actor.id)).sort((a,b)=>
     rank(a)-rank(b)||(a.x-patient.x)**2+(a.z-patient.z)**2-(b.x-patient.x)**2-(b.z-patient.z)**2||a.id-b.id);
   for(const bed of beds)if(routeToCell(world,bed,reach))return {patientId:patient.id,bedId:bed.id,path};
 }
@@ -56,6 +60,7 @@ export function applyRescue(world:World,command:{pawnId:number;patientId:number;
 /** Cheap relationship checks; navigation is revalidated by the ordinary mover. */
 export function reconcileRescues(world:World):void {
   for(const actor of world.pawns)if(actor.rescue){
+    if(!allowedAreaServicesAllowed(world,actor)){if(!releaseWork(world,actor))interruptWork(world,actor);continue;}
     if(actor.rescue.release){reconcileRelease(world,actor);continue;}
     if(actor.rescue.arrest){reconcileArrest(world,actor);continue;}
     const task=actor.rescue,patient=world.pawns.find(p=>p.id===task.patientId),bed=world.structures.find(s=>s.id===task.bedId);
@@ -63,6 +68,7 @@ export function reconcileRescues(world:World):void {
   }
 }
 export function processRescue(world:World,actor:Pawn,context:NeedContext):void {
+  if(!allowedAreaServicesAllowed(world,actor)){if(!context.release())interruptWork(world,actor);return;}
   const task=actor.rescue;if(!task)return;
   if(task.release){processPrisonerRelease(world,actor,context);return;}
   if(task.arrest){processArrest(world,actor,context);return;}

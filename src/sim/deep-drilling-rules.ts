@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { allowedAreaReason } from './allowed-area-state.ts';
 import { medicalWorkRefusal,pawnBody } from './health-rules.ts';
 import { workPriority } from './work-types.ts';
 import { isPowerActive } from './power-rules.ts';
@@ -25,6 +26,7 @@ export function deepResearchSpeed(pawn:Pawn,light=1):number {
 export function deepWorkReason(world:World,pawn:Pawn,s:Structure,accepted=false):string|undefined {
   if(world.schemaVersion<215||!world.deepResources)return 'Le forage profond n’est pas encore adopté.';
   if(s.kind!=='deep-drill'&&s.kind!=='ground-scanner'||!world.structures.includes(s))return 'Installation introuvable.';
+  const areaReason=allowedAreaReason(world,pawn,s);if(areaReason)return areaReason;
   if(!isColonist(pawn)||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||pawn.draft||pawn.shooting||pawn.burning||pawn.flee||pawn.mental?.crisis||pawn.interruptedCargo
     ||pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0||carrierOf(world,pawn.id)||medicalWorkRefusal(pawn))return 'Opérateur indisponible.';
   if(pawn.orbitalTrade||pawn.need||pawn.orders.active!==null||pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.research||pawn.hunting||pawn.animalHandling||pawn.animalCare||pawn.animalFeed||pawn.animalRescue

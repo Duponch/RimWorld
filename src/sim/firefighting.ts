@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import { allowedAreaAllows,allowedAreaReason,captureAllowedArea } from './allowed-area-state.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { isColonist,isPlayerPatient } from './affiliation.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
@@ -25,7 +26,8 @@ export function fireTouch(w:World,actor:Cell,target:Cell):boolean {
   const dx=Math.abs(actor.x-target.x),dz=Math.abs(actor.z-target.z);if(dx>1||dz>1)return false;
   return !dx||!dz||!solid(w,{x:actor.x,z:target.z})&&!solid(w,{x:target.x,z:actor.z});
 }
-function allowed(w:World,p:Pawn,f:FireRecord,forced:boolean):boolean {
+function allowed(w:World,p:Pawn,f:FireRecord,forced:boolean,policy=captureAllowedArea(w,p)):boolean {
+  const cell=firePosition(w,f);if(cell&&policy&&!allowedAreaAllows(w,p,cell,policy))return false;
   if(f.attachedAnimalId!==undefined)return false; // Veterinary firefighting is not a colonist assignment in this slice.
   if(f.attachedPawnId!==undefined){const target=w.pawns.find(q=>q.id===f.attachedPawnId);return !!target&&target!==p&&isPlayerPatient(target)&&(forced||distance(p,target)<=15);}
   return forced||inHome(w,f.z*w.width+f.x);
@@ -35,6 +37,7 @@ export function applyExtinguish(w:World,command:{pawnId:number;fireId:number}):s
   if(!p||!isColonist(p)||p.prisoner)return 'Seul un colon libre peut recevoir cet ordre.';
   const refusal=backgroundWorkRefusal(p,'firefight')??medicalWorkRefusal(p);if(refusal)return refusal;
   if(p.burning||p.mental?.crisis)return 'Ce colon ne peut pas suivre cet ordre maintenant.';
+  const target=f&&firePosition(w,f),areaReason=target?allowedAreaReason(w,p,target):undefined;if(areaReason)return areaReason;
   if(!f||!allowed(w,p,f,true))return 'Le feu visé ne peut pas être éteint par ce colon.';
   const drops=planCommandDrops(w,{type:'order-extinguish',...command});if(!drops)return 'La cargaison doit être déposée avant cet ordre.';
   clearQueuedOrders(w,p);delete p.priorityWork;releaseWork(w,p,drops);
@@ -42,7 +45,8 @@ export function applyExtinguish(w:World,command:{pawnId:number;fireId:number}):s
 }
 export function firefightingTargets(w:World,p:Pawn):FireRecord[] {
   if(!workPriority(p,'firefight')||p.burning||medicalWorkRefusal(p))return [];
-  return (w.fires?.items??[]).filter(f=>allowed(w,p,f,false)&&!(distance(p,firePosition(w,f)!)>15&&w.pawns.some(q=>q!==p&&q.firefighting?.fireId===f.id)))
+  const policy=captureAllowedArea(w,p);
+  return (w.fires?.items??[]).filter(f=>allowed(w,p,f,false,policy)&&!(distance(p,firePosition(w,f)!)>15&&w.pawns.some(q=>q!==p&&q.firefighting?.fireId===f.id)))
     .sort((a,b)=>distance(p,firePosition(w,a)!)-distance(p,firePosition(w,b)!)||a.id-b.id);
 }
 export interface FirefightingProposal {fireId:number;target:Cell;path:Cell[]}

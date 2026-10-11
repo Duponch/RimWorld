@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { isSmeltingRecipe,smeltingIngredientAllowed } from './smelting-rules.ts';
 import {planArtWork} from './art-work-plan.ts';
 import {isArtRecipe} from './art-rules.ts';
@@ -30,12 +31,14 @@ export function hasCookingWork(world:World,pawn:Pawn):boolean {
   return productionPriority(world,pawn)<5;
 }
 export function availableCookingStations(world:World,pawn:Pawn):Structure[] {
-  return world.structures.filter(s=>stationRecipe(s)&&(s.kind!=='electric-stove'||foodStationUsable(s))&&productionStationUsable(s)&&workPriority(pawn,stationWork(s))>0&&s.bills?.some(b=>billWanted(world,b))
+  const policy=captureAllowedArea(world,pawn);
+  return world.structures.filter(s=>(!policy||allowedAreaAllows(world,pawn,s,policy))&&stationRecipe(s)&&(s.kind!=='electric-stove'||foodStationUsable(s))&&productionStationUsable(s)&&workPriority(pawn,stationWork(s))>0&&s.bills?.some(b=>billWanted(world,b))
     &&!fuelStationReserved(world,s.id,pawn.id));
 }
 /** Select without mutation. The ordinary planner compares this proposal with
  * construction/growing/hauling before committing its reservations. */
 export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:{pairs:number},options?:{stationId:number;forced:boolean}):CookingPlan|null {
+  const policy=captureAllowedArea(world,pawn),allows=(cell:Cell)=>!policy||allowedAreaAllows(world,pawn,cell,policy);
   const stations=availableCookingStations(world,pawn).filter(s=>!options||s.id===options.stationId)
     .sort((a,b)=>workPriority(pawn,stationWork(a))-workPriority(pawn,stationWork(b))||distance(pawn,a)-distance(pawn,b)||a.id-b.id);
   // Proposals below only read the World; reserve claims cannot change until
@@ -52,7 +55,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       // The reference bill worker refuels an empty usable station before cooking.
       if(usesCookingFuel(station.kind)&&!station.fuel?.ticks) {
         const capacity=fuelCapacity(world,station.id,undefined,options?.forced);if(!capacity)break;
-        const wood=world.piles.filter(p=>p.item==='wood'&&p.owner.type==='ground'&&p.quantity>reservedSource(world,p.id))
+        const wood=world.piles.filter(p=>p.item==='wood'&&p.owner.type==='ground'&&allows(p.owner)&&p.quantity>reservedSource(world,p.id))
           .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
         for(const pile of wood) {
           if(budget.pairs--<=0){budget.pairs=0;return null;}
@@ -68,7 +71,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       const componentResumed=planComponentWork(world,pawn,station,bill,reachable,budget);if(componentResumed.plan)return componentResumed.plan;if(componentResumed.handled)continue;
       const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
       const requiresFreshIngredients=bill.recipe==='chemfuel-from-organics'||bill.recipe==='cook-survival-meal'||bill.recipe==='cook-simple-meal-bulk'||bill.recipe==='cook-fine-meal-bulk'||bill.recipe==='cook-lavish-meal-bulk'||bill.recipe==='vegetarian-fine-meal'||bill.recipe==='cook-vegetarian-fine-meal-bulk'||bill.recipe==='carnivore-fine-meal'||bill.recipe==='cook-carnivore-fine-meal-bulk'||bill.recipe==='vegetarian-lavish-meal'||bill.recipe==='cook-vegetarian-lavish-meal-bulk'||bill.recipe==='cook-carnivore-lavish-meal'||bill.recipe==='cook-carnivore-lavish-meal-bulk';
-      const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isSmeltingRecipe(bill.recipe)||smeltingIngredientAllowed(bill,p))&&(!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&(!requiresFreshIngredients||ticksUntilRot(p,world.tick)>0)&&p.owner.type==='ground'&&distance(p.owner,station)<=bill.radius**2)
+      const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isSmeltingRecipe(bill.recipe)||smeltingIngredientAllowed(bill,p))&&(!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&(!requiresFreshIngredients||ticksUntilRot(p,world.tick)>0)&&p.owner.type==='ground'&&allows(p.owner)&&distance(p.owner,station)<=bill.radius**2)
         .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
       // No source means no pair was visited and no staging decision was made.
       // Avoid six full resource/footprint scans per empty bill, especially after
@@ -81,7 +84,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       let missing:number=PRODUCTION_RECIPES[bill.recipe].units;
       if(isArtRecipe(bill.recipe)&&group.reduce((n,p)=>n+Math.max(0,p.quantity-reservedSource(world,p.id)),0)<missing)continue;
       const cells=[station,spot,{x:spot.x-1,z:spot.z},{x:spot.x+1,z:spot.z},{x:spot.x,z:spot.z-1},{x:spot.x,z:spot.z+1},...footprintCells(station)]
-        .filter((c,i,a)=>a.findIndex(t=>same(t,c))===i&&ingredientPlaceFree(world,c,spot,bill.recipe,station));
+        .filter((c,i,a)=>allows(c)&&a.findIndex(t=>same(t,c))===i&&ingredientPlaceFree(world,c,spot,bill.recipe,station));
       let tailoringMaterial:ProductionIngredient|undefined;
       for(const pile of group) {
         if(isTailoring(bill.recipe)&&tailoringMaterial!==undefined&&pile.item!==tailoringMaterial)continue;
@@ -111,7 +114,8 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
 }
 
 export function productionPriority(world:World,pawn:Pawn):number {
+  const policy=captureAllowedArea(world,pawn);
   let priority=5;
-  for(const s of world.structures)if(stationRecipe(s)&&s.bills?.some(b=>billWanted(world,b))){const p=workPriority(pawn,stationWork(s));if(p>0)priority=Math.min(priority,p);}
+  for(const s of world.structures)if((!policy||allowedAreaAllows(world,pawn,s,policy))&&stationRecipe(s)&&s.bills?.some(b=>billWanted(world,b))){const p=workPriority(pawn,stationWork(s));if(p>0)priority=Math.min(priority,p);}
   return priority;
 }

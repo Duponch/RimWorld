@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows,allowedAreaReason,releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { isColonist,activeThreat,hostileTo } from './affiliation.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { medicalWorkRefusal,pawnBody } from './health-rules.ts';
@@ -23,6 +25,7 @@ export function animalRescueActorReady(w:World,p:Pawn):boolean {
 function reason(w:World,p:Pawn,a:WildAnimal|undefined,direct=false):string|undefined {
   if(!animalRescueActorReady(w,p))return 'Un colon libre et apte doit avoir Médecin activé.';
   if(!a||!w.wildlife?.animals.includes(a)||!a.domestic||!veterinaryCareSpeciesAllowed(a.species,w.schemaVersion)||a.state!=='downed'||a.health?.death||animalRestingSpot(w,a))return 'Cet animal possédé doit être à terre et hors couchage.';
+  if(!direct&&p.animalRescue?.phase!=='carry'){const refusal=allowedAreaReason(w,p,a);if(refusal)return refusal;}
   if(direct&&a.domestic.care==='none')return 'Les soins de cet animal sont désactivés.';
   if(a.domestic.slaughter||a.manhunter||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun||a.health?.foodPoisoning?.vomit)return 'Le secours est suspendu par l’abattage ou le danger.';
   if(animalClaimed(w,a.id,p.id))return 'Un autre service a réservé cet animal.';
@@ -40,14 +43,14 @@ function enemyNear(w:World,p:Pawn,a:WildAnimal):boolean {
     ||!!w.mechanoids?.some(m=>!['dead','downed'].includes(m.state)&&near(m));
 }
 export function animalRescueWanted(w:World,p:Pawn):boolean {
-  return animalRescueActorReady(w,p)&&!!w.structures.some(s=>s.kind==='animal-sleeping-spot')
+  return animalRescueActorReady(w,p)&&!!w.structures.some(s=>s.kind==='animal-sleeping-spot'&&allowedAreaAllows(w,p,s))
     &&!!w.wildlife?.animals.some(a=>!reason(w,p,a)&&!enemyNear(w,p,a));
 }
 function proposalFor(w:World,p:Pawn,reach:Reachability,a:WildAnimal,direct=false):AnimalRescueProposal|undefined {
   if(reason(w,p,a,direct)||!direct&&enemyNear(w,p,a))return;
   const path=slaughterContact(w,p,a)?[]:routeToJob(w,a,reach,false);if(!path)return;
   const rank=(s:Structure)=>s.medical?0:a.domestic?.bedId===s.id?1:2;
-  const spots=w.structures.filter(s=>animalSpotAvailable(w,s,a,p.id)).sort((x,y)=>rank(x)-rank(y)
+  const spots=w.structures.filter(s=>allowedAreaAllows(w,p,s)&&animalSpotAvailable(w,s,a,p.id)).sort((x,y)=>rank(x)-rank(y)
     ||(x.x-a.x)**2+(x.z-a.z)**2-((y.x-a.x)**2+(y.z-a.z)**2)||x.id-y.id);
   for(const spot of spots)if(routeToCell(w,spot,reach))return {task:{animalId:a.id,spotId:spot.id,phase:'approach'},path,target:a};
 }
@@ -66,14 +69,14 @@ export function reconcileAnimalRescues(w:World,carrier?:Pawn):void {
   for(const p of carrier?[carrier]:w.pawns){
     const t=p.animalRescue;if(!t)continue;
     const a=w.wildlife?.animals.find(a=>a.id===t.animalId),s=w.structures.find(s=>s.id===t.spotId);
-    if(reason(w,p,a)||!s||!a||!animalSpotAvailable(w,s,a,p.id))releaseAnimalRescue(w,p);
+    if(!allowedAreaServicesAllowed(w,p)||reason(w,p,a,!!t.forced)||!s||!a||!animalSpotAvailable(w,s,a,p.id))releaseAnimalRescue(w,p);
   }
 }
 export function processAnimalRescue(w:World,p:Pawn,ctx:NeedContext):void {
   const t=p.animalRescue;if(!t)return;
   const a=w.wildlife?.animals.find(a=>a.id===t.animalId),s=w.structures.find(s=>s.id===t.spotId);
   if(a&&!a.health?.death&&a.health&&a.health.tick<w.tick)advanceAnimalHealth(w,a);
-  if(reason(w,p,a)||!s||!a||!animalSpotAvailable(w,s,a,p.id)){releaseAnimalRescue(w,p);return;}
+  if(!allowedAreaServicesAllowed(w,p)||reason(w,p,a,!!t.forced)||!s||!a||!animalSpotAvailable(w,s,a,p.id)){releaseAnimalRescue(w,p);return;}
   if((p.motion?.end??0)>w.tick||p.moveCooldown>0)return;
   p.state='moving';
   if(t.phase==='approach'){
@@ -94,5 +97,7 @@ export function applyAnimalRescue(w:World,c:{type:'order-animal-rescue';pawnId:n
   const p=w.pawns.find(p=>p.id===c.pawnId),a=w.wildlife?.animals.find(a=>a.id===c.animalId);if(!p||!a)return fail('Colon ou animal introuvable.');
   const refusal=animalRescueReason(w,p,a);if(refusal)return fail(refusal);
   const proposal=proposalFor(w,p,reachableCells(w,p,blockedCells(w),new Set()),a,true);if(!proposal)return fail('Aucun couchage animal libre et accessible.');
+  if(w.schemaVersion>=223)proposal.task.forced=true;
+  releaseAllowedAreaReturn(p);
   startAnimalRescue(w,p,proposal);return {ok:true};
 }

@@ -39,6 +39,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
 }
 export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
   if(pawn.bombRefuge)return {code:'bomb-refuge',reason:`${pawn.melee?.strike?'Termine sa récupération physique avant de fuir':pawn.motion&&pawn.motion.end>world.tick?'Rejoint son refuge':'Attend hors du rayon'} contre l’explosion de la mini-tourelle ${pawn.bombRefuge.sourceId} · refuge (${pawn.bombRefuge.target.x}, ${pawn.bombRefuge.target.z}).`};
+  if(pawn.allowedAreaReturn)return {code:'allowed-area-return',reason:`Rejoint la zone autorisée ${world.allowedAreas?.find(a=>a.id===pawn.allowedAreaId)?.label??''}.`};
   if(pawn.surgery){const t=pawn.surgery,name=world.pawns.find(p=>p.id===t.patientId)?.name??'un patient';return {code:'surgery',reason:`${t.phase==='pickup'?'Collecte une dose pour':t.phase==='approach'?'Rejoint le chevet de':'Opère'} ${name}.`};}
   if(pawn.state!=='dead'&&pawn.health?.anesthetic)return {code:'anesthetic',reason:pawn.state==='downed'?'Sous anesthésie.':'L’anesthésie se dissipe.'};
   if(pawn.mental?.crisis)return {code:'mental-break',reason:mentalCrisisStatus(world,pawn)};

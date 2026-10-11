@@ -63,6 +63,22 @@ function indexHumanPossessions(items:readonly MaterialPile[]):ReadonlyMap<number
   return index;
 }
 
+/** Domain-only inspection of original full Pawn owners. Preconditions and
+ * identity/clock validation remain with the existing owner guards/capture.
+ * References and identity-only departures are excluded; no possessions are read. */
+export function everyHumanPawnOwner(realWorld:World,predicate:(pawn:Pawn,kind:HumanOwnerKind)=>boolean,explicit:ExplicitWorldHumanOwners={}):boolean {
+  for(const pawn of realWorld.pawns)if(!predicate(pawn,'map'))return false;
+  const scout=realWorld.scout,commercial=realWorld.commercialTrip;
+  if(scout&&'pawn' in scout&&!predicate(scout.pawn,'scout-away'))return false;
+  if(commercial&&'pawn' in commercial&&!predicate(commercial.pawn,'commercial-away'))return false;
+  const group=explicit.group??realWorld.group;
+  if(group&&'members' in group)for(const pawn of group.members)if(!predicate(pawn,'group-away'))return false;
+  for(const loss of explicit.losses??realWorld.groupLosses??[])if(!predicate(loss.pawn,'group-loss'))return false;
+  for(const departure of realWorld.visitors?.departed??[])if(!predicate(departure.pawn,'visitor-departure'))return false;
+  for(const departure of realWorld.podRescues?.departed??[])if(!predicate(departure.pawn,'pod-departure'))return false;
+  return true;
+}
+
 /** Ephemeral capture. Do not cache across any mutation or use scoutRegistryView.
  * Formation/unloading memberIds, offers, raid members/lost and relationships
  * are REFERENCES: ignored as owners. They are checked later against this result.

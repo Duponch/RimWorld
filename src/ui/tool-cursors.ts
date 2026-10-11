@@ -18,6 +18,7 @@ export const CURSOR_CELLS: Readonly<Record<CursorKind, readonly [number, number]
 export type ToolCursorKind = 'pointer' | Exclude<Tool, 'select'>;
 // Installation uses the pictured furniture; sculptures share the sculpture bench icon.
 const TOOL_ICON_ALIASES: Partial<Record<Tool, string>> = {
+  'allowed-expand':'home', 'allowed-shrink':'remove-home',
   install: 'uninstall', 'small-sculpture': 'art-bench', 'large-sculpture': 'art-bench',
 };
 export function toolCursorIcon(tool: Tool): string { return TOOL_ICON_ALIASES[tool] ?? tool; }

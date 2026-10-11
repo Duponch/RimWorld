@@ -1,4 +1,5 @@
 import { releaseSurgeryState } from './surgery-state.ts';
+import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { cancelHunting } from './hunting-state.ts';
 import { leadRopees } from './animal-leading.ts';
 import { finishRoomRest,rememberRoomUse } from './room-experience.ts';
@@ -86,6 +87,9 @@ export function planJobDrops(world:World,jobId:number):DropPlan|null {
   for(const pawn of world.pawns)if(pawn.jobId===jobId||pawn.haul?.destination.type==='job'&&pawn.haul.destination.jobId===jobId)pawns.add(pawn.id);
   return planSelectedDrops(world,new Set([jobId]),pawns);
 }
+export function planPawnDrops(world:World,pawnIds:ReadonlySet<number>):DropPlan|null {
+  return planSelectedDrops(world,new Set(),new Set(pawnIds));
+}
 function planSelectedDrops(world:World,jobs:Set<number>,pawns:Set<number>):DropPlan|null {
   const result:DropPlan=new Map();
   if(!jobs.size&&!pawns.size)return result;
@@ -122,6 +126,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn):void {
+  releaseAllowedAreaReturn(pawn);
   releaseAnimalRescue(world,pawn);
   if(pawn.animalHandling?.kind==='lead'){
     const ids=new Set(leadRopees(pawn.animalHandling));

@@ -1,4 +1,5 @@
 import { candidateAccess } from './candidate-access.ts';
+import { allowedAreaReason } from './allowed-area-state.ts';
 import { asBuilder } from './construction-rules.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { planFurnitureTransport } from './furniture-haul-planner.ts';
@@ -11,6 +12,7 @@ export function planFurnitureHaulOrder(world:World,pawn:Pawn,id:number,access?:R
   const work=parent?parent.kind==='sow'?'grow':asBuilder(pawn)?'build':'haul':'haul';
   const refusal=backgroundWorkRefusal(pawn,work);if(refusal)return {label,reason:refusal};
   const pack=world.packed.find(p=>p.building.id===id);if(pack?.owner.type!=='ground')return {label,reason:'Le meuble n’est plus au sol.'};
+  const areaReason=allowedAreaReason(world,pawn,pack.owner)??(parent?allowedAreaReason(world,pawn,parent):undefined);if(areaReason)return {label,reason:areaReason};
   const blocked=blockedCells(world),reach=access??candidateAccess(world,pawn,blocked,new Set());
   const c=planFurnitureTransport(world,pawn,pack,blocked,reach,budget,parent);
   if(!c)return {label,reason:'Transport désactivé, meuble réservé ou aucune destination accessible et compatible.'};

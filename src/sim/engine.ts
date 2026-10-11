@@ -1,3 +1,7 @@
+import { applyAllowedAreaCommand } from './allowed-areas.ts';
+import { commitAllowedAreaChange,preflightAllowedAreaChange,reconcileAllowedAreas,reconcileAllowedAreaPawn } from './allowed-area-reconcile.ts';
+import { processReturnToAllowedArea } from './allowed-area-navigation.ts';
+import { searchAllowed } from './work-planner.ts';
 import { deepDrillingUnlocked,groundScannerUnlocked,nutrientPasteUnlocked,biofuelRefiningUnlocked } from './research.ts';
 import { processDeepWork,reconcileDeepWork } from './deep-drilling.ts';
 import { adoptDeepResources } from './deep-resources.ts';
@@ -395,6 +399,7 @@ export function canDesignate(world: World, command: DesignateCommand, installing
 export function applyCommand(world: World, command: Command): CommandResult {
   const result=applyCommandInternal(world,command);
   if(result.ok){
+    reconcileAllowedAreas(world);
     reconcilePodRescueResults(world);
     syncCarriedAnimals(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);
     reconcileWildlife(world);
@@ -405,6 +410,8 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='allowed-area-create'||command.type==='allowed-area-settings'||command.type==='allowed-area-paint'||command.type==='allowed-area-delete'||command.type==='assign-allowed-area')
+    return applyAllowedAreaCommand(world,command,{preflight:(next,affected)=>preflightAllowedAreaChange(world,next,affected),reconcile:commitAllowedAreaChange})!;
   if(command.type==='delete-zone'){
     if(!['stockpile','growing'].includes(command.kind)||!Number.isSafeInteger(command.zoneId))return refusal('invalid-command','Suppression de zone invalide.');
     command={type:'area',action:command.kind==='stockpile'?'remove-stockpile':'remove-growing',targetZoneId:command.zoneId,from:{x:0,z:0},to:{x:world.width-1,z:world.height-1}};
@@ -754,7 +761,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     updateDoors(world);
     advancePrisonBreaks(world);
     const structuresBeforeCombat=world.structures;
-    advanceWorldCombat(world);syncCarriedAnimals(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);advanceDeathThoughts(world);reconcileBurials(world);reconcileCommercialOnMap(world);
+    reconcileAllowedAreas(world);advanceWorldCombat(world);syncCarriedAnimals(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);advanceDeathThoughts(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);if(world.tick%20===0)reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     expireStaggers(world);advanceFilth(world,weatherRainRate(world));
     scheduleGrowing(world);
@@ -800,6 +807,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
       advanceHeatExposure(world,pawn,()=>new TemperatureView(world,thermal).at(world,pawn));
       const body=updatePawnHealth(world,pawn);
+      reconcileAllowedAreaPawn(world,pawn);
       if(pawn.animalRescue)reconcileAnimalRescues(world,pawn);
       if(prisonBreakActive(pawn)&&(pawn.state==='downed'||pawn.state==='dead'))endPrisonBreak(world,pawn);
       if(scoutOnMapId(world)===pawn.id&&(pawn.state==='dead'||pawn.state==='downed'))applyScoutCommand(world,{type:'scout-cancel'});
@@ -824,9 +832,11 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if((hasAdversary||pawn.meleeThreat&&world.tick*10-pawn.meleeThreat.atCore<=400)&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget,animalThreats);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
       if(pawn.orbitalTrade)reconcileOrbitalTrade(world,pawn);if(pawn.deepWork)reconcileDeepWork(world,pawn);
-      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = groupOnMapMember(world,pawn.id) || scoutOnMapId(world)===pawn.id || commercialOnMapId(world)===pawn.id || pawn.orbitalTrade || pawn.deepWork || pawn.animalHandling || pawn.animalCare || pawn.animalFeed || pawn.animalRescue || pawn.burial || pawn.cleaning || pawn.visitor || pawn.podRescue || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.bombRefuge || pawn.heatRefuge || pawn.research || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.surgery || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      reconcileAllowedAreaPawn(world,pawn);
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = groupOnMapMember(world,pawn.id) || scoutOnMapId(world)===pawn.id || commercialOnMapId(world)===pawn.id || pawn.orbitalTrade || pawn.deepWork || pawn.animalHandling || pawn.animalCare || pawn.animalFeed || pawn.animalRescue || pawn.burial || pawn.cleaning || pawn.visitor || pawn.podRescue || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.bombRefuge || pawn.heatRefuge || pawn.research || pawn.allowedAreaReturn || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.surgery || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         recreationTopology:()=>getLight().topology,
+        searchAllowed:(policy:import('./allowed-area-state.ts').AllowedAreaPolicy)=>searchAllowed(world,pawn,getBlocked(),occupied,budget,policy),
         search: (goals?: ReadonlySet<number>) => search(world, pawn, getBlocked(), occupied, budget, goals),
         move: (target: Cell, exact: boolean) => moveToward(world, pawn, target, true, getBlocked, budget, exact, getLight),
         release: () => releaseWork(world, pawn),
@@ -846,15 +856,15 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       }
       if(pawn.visitor){processVisitor(world,pawn,needsContext);continue;}
       if(pawn.raid){if(!processDraftSleep(world,pawn,needsContext))processRaider(world,pawn,getBlocked,budget,getLight);continue;}
-      if(pawn.tactics){if(!processDraftSleep(world,pawn,needsContext))processTactics(world,pawn,getBlocked,budget,getLight);continue;}
-      if(pawn.melee){if(!processDraftSleep(world,pawn,needsContext)&&pawn.melee)processMelee(world,pawn,getBlocked,budget,getLight);continue;}
+      if(pawn.tactics&&(!pawn.allowedAreaId||pawn.tactics.targetId!==null||pawn.tactics.post!==null)){if(!processDraftSleep(world,pawn,needsContext))processTactics(world,pawn,getBlocked,budget,getLight);continue;}
+      if(pawn.melee&&(!pawn.allowedAreaId||pawn.melee.order||pawn.melee.strike)){if(!processDraftSleep(world,pawn,needsContext)&&pawn.melee)processMelee(world,pawn,getBlocked,budget,getLight);continue;}
       if(processPodRescuePatient(world,pawn,needsContext))continue;
       if(!isColonist(pawn)){if(!processDraftSleep(world,pawn,needsContext))processSentry(world,pawn,getThreats());continue;}
       if(pawn.flee){if(!processDraftSleep(world,pawn,needsContext)&&pawn.flee)processFlee(world,pawn,getThreats(),getBlocked,budget,getLight);continue;}
       if(pawn.shooting)collapseFromExhaustion(world,pawn,needsContext);
       // Finish post-shot recovery before choosing another civilian activity.
       if(pawn.hunting&&pawn.shooting?.stance?.phase==='cooldown')continue;
-      if(pawn.shooting&&!pawn.hunting){if(pawn.draft)pawn.draft.lastActiveTick=world.tick;continue;}
+      if(pawn.shooting&&!pawn.hunting&&(!pawn.allowedAreaId||pawn.shooting.order||pawn.shooting.stance)){if(pawn.draft)pawn.draft.lastActiveTick=world.tick;continue;}
       if(pawn.draft&&processFirefighting(world,pawn,needsContext))continue;
       if(pawn.draft&&draftTurretService(world,pawn)){
         pawn.draft.lastActiveTick=world.tick;
@@ -882,6 +892,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if (processNeeds(world, pawn, needsContext) || !pawn.animalHandling&&!pawn.animalCare&&!pawn.animalFeed&&!pawn.animalRescue&&!pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.surgery&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if(!pawn.surgery&&pawn.planCooldown===0&&recoverDroppedWeapon(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget)))continue;
       if(!pawn.surgery&&pawn.planCooldown===0&&considerApparelPolicy(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget)))continue;
+      if(processReturnToAllowedArea(world,pawn,needsContext))continue;
       if (pawn.jobId === null && pawn.haul === null && !pawn.rescue && !pawn.animalHandling && !pawn.animalCare && !pawn.animalFeed && !pawn.animalRescue && !pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.surgery && !pawn.cooking && !pawn.hunting && !pawn.orbitalTrade && !pawn.deepWork && !pawn.research && !pawn.burial && !pawn.cleaning && pawn.planCooldown === 0) planWork(world, pawn, getBlocked, occupied, budget);
       if(pawn.firefighting&&processFirefighting(world,pawn,needsContext))continue;
       if(pawn.animalRescue){processAnimalRescue(world,pawn,needsContext);continue;}
@@ -906,7 +917,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         move:(target,exact)=>moveToward(world,pawn,target,true,getBlocked,budget,exact,getLight),
         release:()=>releaseWork(world,pawn),event:message=>event(world,'job',message),
       });continue;}
-      const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) { processRecreation(world,pawn,needsContext,true); continue; }
+      const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) { if(processReturnToAllowedArea(world,pawn,needsContext))continue; processRecreation(world,pawn,needsContext,true); continue; }
       if(backgroundWorkRefusal(pawn,workType(job))){releaseWork(world,pawn);continue;}
        if ((job.growingZoneId !== undefined||job.flowerPotId!==undefined) && !growingJobValid(world, job)) { releaseWork(world, pawn); world.jobs = world.jobs.filter(j => j.id !== job.id); continue; }
       if (job.kind === 'sow' && groundPile(world, job)) { releaseWork(world, pawn); continue; }

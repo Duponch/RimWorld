@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import { allowedAreaAllows,allowedAreaReason,captureAllowedArea,type AllowedAreaPolicy } from './allowed-area-state.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { isColonist } from './affiliation.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
@@ -18,9 +19,9 @@ export interface CleaningTask {targets:number[];forced:boolean;phase:'approach'|
 export interface CommandCleaning extends Cell {type:'clean-room';pawnId:number}
 export interface CleaningProposal {task:CleaningTask;path:Cell[];target:Cell;id:number}
 const distance=(a:Cell,b:Cell)=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z);
-const eligible=(w:World,p:Pawn,f:FilthRecord,forced=false)=>inHome(w,f.z*w.width+f.x)&&(forced||w.tick*10-f.grownCore>=600)&&!w.pawns.some(q=>q!==p&&q.cleaning?.targets.includes(f.id));
+const eligible=(w:World,p:Pawn,f:FilthRecord,forced=false,policy?:AllowedAreaPolicy)=>(!policy||allowedAreaAllows(w,p,f,policy))&&inHome(w,f.z*w.width+f.x)&&(forced||w.tick*10-f.grownCore>=600)&&!w.pawns.some(q=>q!==p&&q.cleaning?.targets.includes(f.id));
 const able=(p:Pawn)=>isColonist(p)&&!p.prisoner&&!p.draft&&!p.mental?.crisis&&!p.burning&&!medicalWorkRefusal(p);
-export const cleaningWanted=(w:World,p:Pawn):boolean=>!!workPriority(p,'clean')&&able(p)&&!!w.filth?.items.some(f=>eligible(w,p,f));
+export function cleaningWanted(w:World,p:Pawn):boolean {const policy=captureAllowedArea(w,p);return !!workPriority(p,'clean')&&able(p)&&!!w.filth?.items.some(f=>eligible(w,p,f,false,policy));}
 function route(w:World,p:Pawn,f:FilthRecord,reach:Reachability):Cell[]|null {
   const paths=[f,...workNeighbours(f,'mine')].filter(c=>fireTouch(w,c,f)&&canStopAt(w,c,reach)).map(c=>routeToCell(w,c,reach)).filter((v):v is Cell[]=>v!==null);
   paths.sort((a,b)=>routeCost(w,a,reach)-routeCost(w,b,reach)||a.length-b.length);return paths[0]??null;
@@ -32,7 +33,7 @@ function sameCleaningRoom(w:World,origin:Cell,target:Cell,capture:CleanlinessCap
 }
 export function cleaningProposal(w:World,p:Pawn,reach:Reachability):CleaningProposal|undefined {
   if(!cleaningWanted(w,p))return;
-  const targets=w.filth!.items.filter(f=>eligible(w,p,f)).sort((a,b)=>distance(a,p)-distance(b,p)||a.id-b.id);
+  const policy=captureAllowedArea(w,p),targets=w.filth!.items.filter(f=>eligible(w,p,f,false,policy)).sort((a,b)=>distance(a,p)-distance(b,p)||a.id-b.id);
   for(const f of targets){const path=route(w,p,f,reach);if(!path)continue;
     const capture=captureCleanliness(w),near=targets.filter(v=>v!==f&&(v.x-f.x)**2+(v.z-f.z)**2<=30&&sameCleaningRoom(w,f,v,capture)).slice(0,14);
     return {id:f.id,target:{x:f.x,z:f.z},path,task:{targets:[f.id,...near.map(v=>v.id)],forced:false,phase:'approach',progress:0}};
@@ -43,11 +44,12 @@ export function startCleaning(p:Pawn,proposal:CleaningProposal):void {p.cleaning
  * the 600-Core aging delay here. It still requires home, room and real access. */
 export function applyCleanRoom(w:World,command:CommandCleaning):string|null {
   const p=w.pawns.find(p=>p.id===command.pawnId);if(!p||!able(p))return 'Ce colon ne peut pas nettoyer maintenant.';
+  const areaReason=allowedAreaReason(w,p,command);if(areaReason)return areaReason;
   const refusal=backgroundWorkRefusal(p,'clean');if(refusal)return refusal;
   if(!workPriority(p,'clean'))return 'Le nettoyage est désactivé pour ce colon.';
   const capture=captureCleanliness(w),room=capture.room(command);
   if(!room||room.cells.size-room.covered>=300)return 'Choisissez une pièce fermée qui ne soit pas un grand espace à ciel ouvert.';
-  const candidates=(w.filth?.items??[]).filter(f=>eligible(w,p,f,true)&&sameCleaningRoom(w,command,f,capture)).sort((a,b)=>distance(a,p)-distance(b,p)||a.id-b.id);
+  const policy=captureAllowedArea(w,p),candidates=(w.filth?.items??[]).filter(f=>eligible(w,p,f,true,policy)&&sameCleaningRoom(w,command,f,capture)).sort((a,b)=>distance(a,p)-distance(b,p)||a.id-b.id);
   if(!candidates.length)return 'Aucune salissure disponible dans le foyer de cette pièce.';
   const reach=reachableCells(w,p,blockedCells(w),new Set()),targets=candidates.filter(f=>route(w,p,f,reach)!==null);
   if(!targets.length)return 'Les salissures de cette pièce sont inaccessibles.';
@@ -58,7 +60,8 @@ export function applyCleanRoom(w:World,command:CommandCleaning):string|null {
 export function processCleaning(w:World,p:Pawn,context:NeedContext):boolean {
   const task=p.cleaning;if(!task)return false;
   if(backgroundWorkRefusal(p,'clean')||!able(p)||!task.forced&&!workPriority(p,'clean')){delete p.cleaning;p.path=[];p.planCooldown=0;if(p.state==='working')p.state='idle';return false;}
-  while(task.targets.length){const f=w.filth?.items.find(f=>f.id===task.targets[0]);if(f&&inHome(w,f.z*w.width+f.x))break;task.targets.shift();task.progress=0;p.path=[];}
+  const policy=captureAllowedArea(w,p);
+  while(task.targets.length){const f=w.filth?.items.find(f=>f.id===task.targets[0]);if(f&&(!policy||allowedAreaAllows(w,p,f,policy))&&inHome(w,f.z*w.width+f.x))break;task.targets.shift();task.progress=0;p.path=[];}
   const f=w.filth?.items.find(f=>f.id===task.targets[0]);if(!f){delete p.cleaning;p.planCooldown=0;if(p.state==='working')p.state='idle';return false;}
   if(p.moveCooldown>0)return true;
   if(!fireTouch(w,p,f)){

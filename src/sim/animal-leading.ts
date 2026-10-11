@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { isColonist } from './affiliation.ts';
 import { PEN_ANIMALS, penAccessCells, penRegion } from './animal-pens.ts';
@@ -36,10 +38,10 @@ const handler=(p:Pawn)=>{
 const claimedIds=(world:World)=>new Set(world.pawns.flatMap(animalServiceIds));
 const ropeable=(a:WildAnimal)=>!!a.domestic&&livestock(a)&&a.state!=='dead'&&a.state!=='downed'
   &&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike;
-function destination(world:World,a:WildAnimal):number|undefined {
+function destination(world:World,a:WildAnimal,pawn:Pawn):number|undefined {
   const assigned=a.domestic?.penMarkerId;
-  if(assigned&&usable(world,a,assigned))return assigned;
-  return world.structures.filter(s=>s.kind==='pen-marker'&&usable(world,a,s.id))
+  if(assigned&&world.structures.some(s=>s.id===assigned&&allowedAreaAllows(world,pawn,s))&&usable(world,a,assigned))return assigned;
+  return world.structures.filter(s=>s.kind==='pen-marker'&&allowedAreaAllows(world,pawn,s)&&usable(world,a,s.id))
     .sort((x,y)=>(x.x-a.x)**2+(x.z-a.z)**2-((y.x-a.x)**2+(y.z-a.z)**2)||x.id-y.id)[0]?.id;
 }
 export function leadingWanted(world:World,pawn:Pawn):boolean {
@@ -47,21 +49,22 @@ export function leadingWanted(world:World,pawn:Pawn):boolean {
   if(!world.wildlife?.animals.some(a=>a.domestic&&livestock(a)&&a.state!=='dead'&&a.state!=='downed'))return false;
   if(!world.structures.some(s=>s.kind==='pen-marker'))return false;
   const claimed=claimedIds(world);
-  return !!world.wildlife?.animals.some(a=>ropeable(a)&&!claimed.has(a.id)
-    &&(()=>{const id=destination(world,a),r=id&&usable(world,a,id);return !!r&&!r.cells.has(key(world,a));})());
+  return !!world.wildlife?.animals.some(a=>allowedAreaAllows(world,pawn,a)&&ropeable(a)&&!claimed.has(a.id)
+    &&(()=>{const id=destination(world,a,pawn),r=id&&usable(world,a,id);return !!r&&!r.cells.has(key(world,a));})());
 }
 export interface LeadingProposal {task:LeadingTask;path:Cell[];target:Cell}
 export function leadingProposal(world:World,pawn:Pawn,reach:Reachability):LeadingProposal|undefined {
   if(!handler(pawn))return;
   const claimed=claimedIds(world);
   let navigation:ReturnType<typeof animalNavigation>|undefined;
-  const animals=(world.wildlife?.animals??[]).filter(a=>ropeable(a)&&!claimed.has(a.id))
+  const animals=(world.wildlife?.animals??[]).filter(a=>allowedAreaAllows(world,pawn,a)&&ropeable(a)&&!claimed.has(a.id))
     .sort((a,b)=>(a.x-pawn.x)**2+(a.z-pawn.z)**2-((b.x-pawn.x)**2+(b.z-pawn.z)**2)||a.id-b.id);
   for(const a of animals){
-    const markerId=destination(world,a);if(!markerId)continue;
+    const markerId=destination(world,a,pawn);if(!markerId)continue;
+    const marker=world.structures.find(s=>s.id===markerId);if(!marker||!allowedAreaAllows(world,pawn,marker))continue;
     const region=usable(world,a,markerId);if(!region||region.cells.has(key(world,a)))continue;
     const path=routeToJob(world,a,reach,false);if(!path)continue;
-    const goals=penAccessCells(world,markerId);
+    const goals=penAccessCells(world,markerId).filter(c=>allowedAreaAllows(world,pawn,c));
     if(!goals.length||!(navigation??=animalNavigation(world,true)).route(a,[...goals])?.length)continue;
     return {task:{animalId:a.id,kind:'lead',markerId,phase:'approach',sourcePileId:0,carryPileId:null,quantity:0,step:0,progress:0},path,target:a};
   }
@@ -75,11 +78,13 @@ function nextGather(world:World,pawn:Pawn,task:LeadingTask,ctx:NeedContext):numb
   if(leadRopees(task).length>=MAX_ROPEES)return;
   const region=usable(world,world.wildlife!.animals.find(a=>a.id===task.animalId)!,task.markerId);
   if(!region)return;
-  const claims=claimedIds(world),reach=ctx.search();if(!reach)return;
-  return world.wildlife!.animals.filter(a=>ropeable(a)&&!claims.has(a.id)&&!region.cells.has(key(world,a))
+  const claims=claimedIds(world);
+  const candidates=world.wildlife!.animals.filter(a=>allowedAreaAllows(world,pawn,a)&&ropeable(a)&&!claims.has(a.id)&&!region.cells.has(key(world,a))
     &&!!usable(world,a,task.markerId)&&(a.x-pawn.x)**2+(a.z-pawn.z)**2<=ROPE_SCAN_RADIUS**2)
-    .sort((a,b)=>(a.x-pawn.x)**2+(a.z-pawn.z)**2-((b.x-pawn.x)**2+(b.z-pawn.z)**2)||a.id-b.id)
-    .find(a=>!!routeToJob(world,a,reach,false))?.id;
+    .sort((a,b)=>(a.x-pawn.x)**2+(a.z-pawn.z)**2-((b.x-pawn.x)**2+(b.z-pawn.z)**2)||a.id-b.id);
+  if(!candidates.length)return;
+  const reach=ctx.search();if(!reach)return;
+  return candidates.find(a=>!!routeToJob(world,a,reach,false))?.id;
 }
 /** Attached animals advance on confirmed simulation edges only. The handler
  * waits while a ropee is still traversing its edge. Routes are computed only
@@ -111,6 +116,7 @@ function followRopees(world:World,pawn:Pawn,task:LeadingTask,activeId:number|nul
   return allNear;
 }
 export function processLeading(world:World,pawn:Pawn,task:LeadingTask,ctx:NeedContext):void {
+  if(!allowedAreaServicesAllowed(world,pawn)){interruptWork(world,pawn);return;}
   const animal=world.wildlife?.animals.find(a=>a.id===task.animalId);
   if(!animal||!ropeable(animal)||!handler(pawn)||leadRopees(task).some(id=>!world.wildlife?.animals.some(a=>a.id===id&&ropeable(a)))) {interruptWork(world,pawn);return;}
   const region=usable(world,animal,task.markerId);
@@ -161,7 +167,7 @@ export function processLeading(world:World,pawn:Pawn,task:LeadingTask,ctx:NeedCo
   task.phase='lead';pawn.state='working';pawn.path=[];
   if(!active.path.length){
     if(active.nextDecision>world.tick)return;
-    const goals=penAccessCells(world,task.markerId);
+    const goals=penAccessCells(world,task.markerId).filter(c=>allowedAreaAllows(world,pawn,c));
     // One global animal route only when beginning or after a failed edge.
     const path=goals.length?animalNavigation(world,true).route(active,[...goals]):undefined;
     if(!path?.length){interruptWork(world,pawn);return;}

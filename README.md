@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V312 — [zones autorisées humaines](docs/gameplay/allowed-areas-v312.md), schéma 223.** Créer, nommer, colorer et tracer jusqu’à dix zones, puis les affecter dans Affectations. Activités limitées à leurs cibles, traversée extérieure possible et retour physique des colons libres ; cargaisons et segments engagés conservés. Contrôles et adaptations dans la note unique. Poursuite autonome après commit/push, publications regroupées et relance planifiée en pause. Les états suivants sont historiques.
+
 **V311 — [fonderie électrique et fusion des armes](docs/gameplay/smelting-v311.md), schéma 222.** Construire un poste alimenté, choisir types/PV/qualités puis transformer une arme entière en acier ou plastacier réutilisable. Quatre types décochés par défaut, nombre/toujours, transport et sortie physiques ; règles Core et adaptations documentées. Contrôles acquis par reprises et limites dans la note unique ; publications regroupées et relance planifiée en pause. Les états suivants sont historiques.
 
 **V310 — [secours et couchages animaux](docs/gameplay/animal-rescue-v310.md), schéma 221.** Emplacement gratuit normal/médical, portage physique des cinq espèces possédées à terre et sommeil avec repli au sol. Chrome WebGPU : dix recharges exactes, un médicament et 34 unités de riz réellement utilisés ; 63 sauvegardes historiques conservées. Contrôles, adaptations et limites dans la note unique. Poursuite autonome après commit/push, publications regroupées, relance planifiée en pause. Les états suivants sont historiques.

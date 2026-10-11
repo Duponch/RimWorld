@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { prisonBreakActive } from './prison-break-state.ts';
 import { isColonist } from './affiliation.ts';
@@ -27,7 +29,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 const secure=(p:Pawn)=>!!p.prisoner&&!prisonBreakActive(p)&&!p.prisoner.escape&&p.prisoner.releasedAt===undefined&&p.state!=='dead'&&!p.mental?.crisis;
 const actorReady=(p:Pawn)=>isColonist(p)&&!p.prisoner&&workPriority(p,'warden')>0&&p.state!=='downed'&&p.state!=='dead'&&!p.draft&&!p.mental?.crisis&&!p.interruptedCargo;
 function chatEligible(world:World,actor:Pawn,p:Pawn):boolean {
-  return secure(p)&&prisonerChatReady(world,p)&&pawnBody(actor).capacities.talking>0&&pawnBody(p).canBeAwake
+  return allowedAreaAllows(world,actor,p)&&secure(p)&&prisonerChatReady(world,p)&&pawnBody(actor).capacities.talking>0&&pawnBody(p).canBeAwake
     &&p.state!=='sleeping'&&!p.medicalSleep&&(!p.need||p.need.kind==='sleep')&&(p.state!=='downed'||p.need?.kind==='sleep'&&p.need.bedId!==null&&p.need.phase==='sleep')&&!carrierOf(world,p.id);
 }
 /** Available room meals count toward every hungry resident, not just this job.
@@ -47,17 +49,17 @@ function foodEligible(world:World,p:Pawn,enclosure:()=>RoomTopology):boolean {
 }
 export function wardenWanted(world:World,actor:Pawn):boolean {
   let map:RoomTopology|undefined;const enclosure=()=>map??=capturePrisonTopology(world);
-  return actorReady(actor)&&world.pawns.some(p=>p!==actor&&secure(p)&&!patientClaimed(world,p.id,actor)&&(chatEligible(world,actor,p)||!medicalWorkRefusal(actor)&&foodEligible(world,p,enclosure)));
+  return actorReady(actor)&&world.pawns.some(p=>p!==actor&&allowedAreaAllows(world,actor,p)&&secure(p)&&!patientClaimed(world,p.id,actor)&&(chatEligible(world,actor,p)||!medicalWorkRefusal(actor)&&foodEligible(world,p,enclosure)));
 }
 function foodSpot(world:World,actor:Pawn,patient:Pawn,item:World['piles'][number]['item'],quantity:number,reach:Reachability,map:RoomTopology):Cell|undefined {
   const room=prisonRoom(world,patient,map);if(!room)return;
-  return nearbyGround(world,patient,5).find(c=>prisonRoom(world,c,map)?.id===room.id&&!groundPile(world,c)&&groundCapacity(world,c,item,actor.id)>=quantity
+  return nearbyGround(world,patient,5).find(c=>allowedAreaAllows(world,actor,c)&&prisonRoom(world,c,map)?.id===room.id&&!groundPile(world,c)&&groundCapacity(world,c,item,actor.id)>=quantity
     &&!world.pawns.some(p=>p!==actor&&p.ward?.kind==='food'&&same(p.ward.spot,c))&&routeToCell(world,c,reach)!==null);
 }
 export function wardenProposal(world:World,actor:Pawn,reach:Reachability):WardenProposal|undefined {
   if(!actorReady(actor))return;
   let map:RoomTopology|undefined;const enclosure=()=>map??=capturePrisonTopology(world);
-  const patients=world.pawns.filter(p=>p!==actor&&secure(p)&&!patientClaimed(world,p.id,actor)).sort((a,b)=>a.id-b.id);
+  const patients=world.pawns.filter(p=>p!==actor&&allowedAreaAllows(world,actor,p)&&secure(p)&&!patientClaimed(world,p.id,actor)).sort((a,b)=>a.id-b.id);
   for(const p of patients)if(!medicalWorkRefusal(actor)&&foodEligible(world,p,enclosure)){
     const piles=world.piles.filter(i=>i.kind==='food'&&i.owner.type==='ground'&&!prisonRoom(world,i.owner,enclosure())&&i.quantity>reservedSource(world,i.id));
     const food=selectFood(world,actor,piles,reach,p,enclosure());if(!food)continue;
@@ -82,6 +84,7 @@ function foodTaskValid(world:World,actor:Pawn,patient:Pawn,t:WardFoodTask):boole
 }
 export function reconcileWarden(world:World):void {
   for(const actor of world.pawns)if(actor.ward){const t=actor.ward,p=world.pawns.find(p=>p.id===t.patientId);
+    if(!allowedAreaServicesAllowed(world,actor)){interruptWork(world,actor);continue;}
     if(!actorReady(actor)||!p||patientClaimed(world,p.id,actor)||(t.kind==='food'?!foodTaskValid(world,actor,p,t):t.phase==='closing'?p.state==='dead':!chatEligible(world,actor,p)))interruptWork(world,actor);
   }
 }
@@ -107,6 +110,7 @@ function finishConversation(world:World,actor:Pawn,p:Pawn,context:NeedContext):b
   return true;
 }
 export function processWarden(world:World,actor:Pawn,context:NeedContext):void {
+  if(!allowedAreaServicesAllowed(world,actor)){interruptWork(world,actor);return;}
   const t=actor.ward;if(!t)return;const p=world.pawns.find(p=>p.id===t.patientId);
   if(!p||!actorReady(actor)||patientClaimed(world,p.id,actor)){interruptWork(world,actor);return;}
   if(t.kind==='food'){

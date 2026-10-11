@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V312, schéma 223 : [zones autorisées humaines](../gameplay/allowed-areas-v312.md).** Définitions et références prospectives ; membership privé lié aux cellules, admissions par vraie cible et pénalité de recherche sans changement de vitesse. Préflight combiné des dépôts contre les propriétaires originaux, retour dans le budget commun ; gardes fichiers/Decoder partagées et migration222 strictement validée puis neutre. Les états suivants sont historiques.
+
 **V311, schéma 222 : [fonderie et fusion des armes](../gameplay/smelting-v311.md).** Facture filtrée, une arme entière source/held/placed puis une sortie métallique physique ; préflight atomique et tirage projeté, guards fichiers/Decoder communs. Migration221 validée avant changement du seul numéro. Contrôles acquis et limites dans la note unique. Les états suivants sont historiques.
 
 **V310, schéma 221 : [secours et couchages animaux](../gameplay/animal-rescue-v310.md).** Places gratuites, affectation et usage séparés, patient Wildlife conservé pendant le portage ; tâche Doctor avec copie profonde du segment et trajectoires graphiques résidentes partagées. Garde commune fichiers/Decoder, migration220 strictement validée puis numéro seul. Les états suivants sont historiques.

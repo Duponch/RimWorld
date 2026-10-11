@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaReason } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { surgeryRequestReason,medicalSurgerySpeed,surgerySuccessChance,surgeryBaseXp,SURGERY_WORK } from './surgery-rules.ts';
@@ -29,6 +31,7 @@ import { validImplantTaskRelations } from './surgery-ingredients.ts';
 const release=(world:World,doctor:Pawn):void=>{if(!releaseWork(world,doctor))interruptWork(world,doctor);};
 /** Sparse pending requests cost no clinical/topology query on other pawns. */
 export function surgeryReason(world:World,doctor:Pawn,patient:Pawn|undefined,accepted=false):string|undefined {
+  if(!accepted&&patient){const reason=allowedAreaReason(world,doctor,patient);if(reason)return reason;}
   if(patient?.surgeryRequest?.implant||accepted&&doctor.surgery?.implant)return implantSurgeryReason(world,doctor,patient,accepted);
   const task=accepted?doctor.surgery:undefined;
   const refusal=backgroundWorkRefusal(doctor,'doctor');if(refusal)return refusal;
@@ -82,10 +85,11 @@ export function reconcileSurgery(world:World):void {
   }
   for(const doctor of world.pawns)if(doctor.surgery){
     const patient=world.pawns.find(p=>p.id===doctor.surgery!.patientId);
-    if(surgeryReason(world,doctor,patient,true)||!patient||(doctor.surgery.implant?!validImplantTaskRelations(world,doctor,patient,doctor.surgery):!doctor.surgery.consumedMedicine&&!medicineTaskValid(world,doctor,patient,doctor.surgery)))release(world,doctor);
+    if(!allowedAreaServicesAllowed(world,doctor)||surgeryReason(world,doctor,patient,true)||!patient||(doctor.surgery.implant?!validImplantTaskRelations(world,doctor,patient,doctor.surgery):!doctor.surgery.consumedMedicine&&!medicineTaskValid(world,doctor,patient,doctor.surgery)))release(world,doctor);
   }
 }
 export function processSurgery(world:World,doctor:Pawn,context:NeedContext,doctorGlow:()=>number,patientGlow:(cell:Cell)=>number):void {
+  if(!allowedAreaServicesAllowed(world,doctor)){release(world,doctor);return;}
   const task=doctor.surgery;if(!task)return;
   if(task.implant){processImplantSurgery(world,doctor,context,doctorGlow,patientGlow);return;}
   const patient=world.pawns.find(p=>p.id===task.patientId);

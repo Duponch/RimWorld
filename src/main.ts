@@ -1,3 +1,6 @@
+import { createAllowedAreaControls } from './ui/allowed-area-controls';
+import './ui/allowed-area-controls.css';
+let allowedAreaEditId:number|undefined;
 import {PresentationQueue} from './render/PresentationQueue';
 import {PresentationChanges} from './bridge/presentation-changes';
 import {ConfirmedStructurePhaseReader} from './render/ConfirmedStructurePhases';
@@ -643,6 +646,9 @@ const apparelPolicyUI = createApparelPolicyControls(el('assign-panel'), async co
   try { await client.command(command); renderState(); return null; }
   catch(error) {return error instanceof Error ? error.message : String(error);}
 });
+const allowedAreaUI=createAllowedAreaControls(el('assign-panel'),async command=>{
+  try{await client.command(command);renderState();return null;}catch(error){return error instanceof Error?error.message:String(error);}
+},(id,enabled)=>{setPanel(null);applyTool(enabled?'allowed-expand':'allowed-shrink');allowedAreaEditId=id;renderer?.setAllowedAreaTarget(id);},id=>renderer?.setAllowedAreaTarget(id));
 const constructionUI = constructionControls(() => applyTool(currentTool));
 function setCategory(category: ArchitectCategory) {
   if(category==='orders'||category==='zones')return;
@@ -676,7 +682,7 @@ function setPanel(panel: Panel, preserveTool = false) {
     button.setAttribute('aria-pressed', String(active));
   }
   if (panel === 'schedule' && snapshot) scheduleUI.update(snapshot);
-  if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot);apparelPolicyUI.update(snapshot);}
+  if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot);apparelPolicyUI.update(snapshot);allowedAreaUI.update(snapshot);}
   if (panel === 'research' && snapshot) updateResearchPanel(el('research-content'),snapshot,c=>void attempt(()=>client.command(c)));
   el('inspector').hidden = panel !== null || preserveTool&&currentTool!=='select' || (!selection.ids.size && !selectedCell);
   if (panel !== 'architect' && !preserveTool) applyTool('select');
@@ -688,7 +694,7 @@ function setPanel(panel: Panel, preserveTool = false) {
 }
 function applyTool(tool: Tool) {
   architectWorkbench.close();
-  zoneEditTarget=undefined;renderer?.setZoneTarget(undefined);
+  zoneEditTarget=undefined;renderer?.setZoneTarget(undefined);allowedAreaEditId=undefined;renderer?.setAllowedAreaTarget(undefined);
   shootingControls.cancel();
   if(tool!=='install'){installationId=undefined;renderer?.setFurniturePlacement(undefined);}
   currentTool = tool;
@@ -700,7 +706,7 @@ function applyTool(tool: Tool) {
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
   }
-  el('tool-instruction').textContent = constructionUI.update(tool, toolDefinitions.find(item => item.id === tool)?.hint??'Choisissez le nouvel emplacement du meuble. Q/E : rotation. Échap : annuler.');
+  el('tool-instruction').textContent = constructionUI.update(tool, tool==='allowed-expand'||tool==='allowed-shrink'?'Tracer un rectangle pour modifier la zone autorisée. Échap ou clic droit : quitter.':toolDefinitions.find(item => item.id === tool)?.hint??'Choisissez le nouvel emplacement du meuble. Q/E : rotation. Échap : annuler.');
   renderer?.setConstructionMaterial(constructionUI.material(tool));
   el('placement-controls').hidden = !rotatableTools.has(tool);
   el('storage-options').hidden = tool !== 'stockpile';
@@ -773,6 +779,7 @@ function pickCell(x: number, z: number) {
   }
   if (currentTool !== 'select') {
     const tool = currentTool;
+    if((tool==='allowed-expand'||tool==='allowed-shrink')&&allowedAreaEditId!==undefined){paintAllowedArea(allowedAreaEditId,tool==='allowed-expand',{x,z},{x,z});return;}
     void attempt(() => {
       if(isBuildableFloor(tool))return client.command({type:'area',action:'lay-floor',floor:tool,from:{x,z},to:{x,z}});
       if(tool==='remove-floor')return client.command({type:'area',action:'remove-floor',from:{x,z},to:{x,z}});
@@ -790,6 +797,10 @@ function pickCell(x: number, z: number) {
   selection.clear();renderer?.setSelectedPawns(selection.ids);
   selectedPawn = undefined; selectedCell = cell;selectedObject=object;selectedObjects=[object];renderer?.setSelectedObject(object);
   setPanel(null); rebuildInspector(); renderState();
+}
+function paintAllowedArea(id:number,enabled:boolean,from:Cell,to:Cell):void {
+  if(!snapshot||replacingWorld||frontMenu.isOpen())return;
+  void attempt(async()=>{await client.command({type:'allowed-area-paint',areaId:id,enabled,from,to});renderState();});
 }
 function designateArea(action: AreaAction, from: Cell, to: Cell) {
   if (!snapshot || replacingWorld || frontMenu.isOpen()) return;
@@ -1092,7 +1103,7 @@ function renderState() {
     }
   }
   if(currentPanel==='schedule')scheduleUI.update(world);
-  if(currentPanel==='assign'){foodPolicyUI.update(world);apparelPolicyUI.update(world);}
+  if(currentPanel==='assign'){foodPolicyUI.update(world);apparelPolicyUI.update(world);} allowedAreaUI.update(world);
   const totals = {blocks:0,medicine:0,silver:0,component:0,cloth:0,steel:0,chemfuel:0,gold:0,plasteel:0,'advanced-component':0,carried:0,delivered:0};
   const stockCounts = new Map<World['piles'][number]['item'],number>();
   for (const pile of world.piles) {
@@ -1687,6 +1698,7 @@ async function prepareWorldView(): Promise<void> {
     renderer.onInteractionCancel=()=>orderMenu.close();
     renderer.onContext=(cell,x,y,queue,targetId)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner);if(selected.some(p=>p.draft))void orderMenu.openTactical(snapshot,new Set(selected.map(p=>p.id)),cell,x,y,queue,targetId);else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
     renderer.onArea = designateArea;
+    renderer.onAllowedAreaPaint=(enabled,from,to)=>{if(allowedAreaEditId!==undefined)paintAllowedArea(allowedAreaEditId,enabled,from,to);};
     renderer.onExitOrder=()=>{applyTool('select');setPanel(null);clearSelection();};
     renderer.onBuildLine = (kind, from, to, material) => {
       if (!snapshot || replacingWorld || frontMenu.isOpen()) return;

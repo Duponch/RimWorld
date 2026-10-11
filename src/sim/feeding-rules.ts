@@ -1,3 +1,4 @@
+import { allowedAreaReason } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { prisonBreakActive } from './prison-break-state.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
@@ -21,7 +22,7 @@ export function needsAssistedFeeding(p:Pawn):boolean {
   return lyingPatient(p)&&(p.state==='downed'||!!p.health&&(!!p.health.infections?.cases.length||p.health.injuries.some(i=>i.scar?.pain===undefined)||p.health.missing.some(m=>freshMissing(p.health!,m))));
 }
 export function feedingReason(world:World,doctor:Pawn,patient:Pawn|undefined,accepted=false):string|undefined {
-  return backgroundWorkRefusal(doctor,feedingWork(patient))??medicalWorkRefusal(doctor)??(!accepted&&workPriority(doctor,feedingWork(patient))===0?`${patient?.prisoner?'Geôlier':'Médecin'} est désactivé.`
+  return (!accepted&&patient?allowedAreaReason(world,doctor,patient):undefined)??backgroundWorkRefusal(doctor,feedingWork(patient))??medicalWorkRefusal(doctor)??(!accepted&&workPriority(doctor,feedingWork(patient))===0?`${patient?.prisoner?'Geôlier':'Médecin'} est désactivé.`
     :doctor.interruptedCargo?'La cargaison doit être déposée avant de nourrir un patient.'
     :!accepted&&(doctor.collapsePending||world.restRules==='legacy'&&doctor.rest===0)?'Ce colon doit récupérer de son épuisement.'
     :!patient||!isCarePatient(patient)||patient===doctor?'Choisissez un autre patient.'

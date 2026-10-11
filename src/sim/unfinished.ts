@@ -1,3 +1,4 @@
+import { allowedAreaAllows,allowedAreaWorkAllowed } from './allowed-area-state.ts';
 import { isApparelMaterial,APPAREL_MATERIAL_DEFINITIONS } from './apparel-rules.ts';
 import { healthRandom } from './health.ts';
 import { releaseAssignments } from './work-release.ts';
@@ -32,6 +33,7 @@ export function detachMissingBills(world:World):void {
 /** Consume staged ingredients only after proving a physical place for the work.
  * The unfinished object, not a cancelled task, owns progress and one material. */
 export function beginUnfinished(world:World,pawn:Pawn):MaterialPile|null {
+  if(!allowedAreaWorkAllowed(world,pawn))return null;
   const task=pawn.cooking!,recipe=task.recipe;
   if(!isTailoring(recipe))return null;
   const item=unfinishedItem(recipe),units=PRODUCTION_RECIPES[recipe].units,existing=task.ingredients.length===1?world.piles.find(p=>p.id===task.ingredients[0]!.pileId&&p.unfinished):undefined;
@@ -42,7 +44,7 @@ export function beginUnfinished(world:World,pawn:Pawn):MaterialPile|null {
   const piles=world.piles.map(p=>used.has(p.id)?{...p,quantity:p.quantity-used.get(p.id)!}:p).filter(p=>p.quantity>0),shadow={...world,piles};
   if(piles.length>=32768||!Number.isSafeInteger(world.nextId+1))return null;
   const s=task.spot,cells:Cell[]=[{x:s.x,z:s.z+1},{x:s.x+1,z:s.z},{x:s.x-1,z:s.z},{x:s.x,z:s.z-1}];
-  const cell=cells.find(c=>ingredientPlaceFree(shadow,c,s,recipe)&&groundCapacity(shadow,c,item,pawn.id)>=1);
+  const cell=cells.find(c=>allowedAreaAllows(world,pawn,c)&&ingredientPlaceFree(shadow,c,s,recipe)&&groundCapacity(shadow,c,item,pawn.id)>=1);
   if(!cell)return null;
   const legacyCloth=material==='cloth'&&(recipe==='tribalwear'||recipe==='shirt')?{cloth:units as 45|60}:{};
   const pile:MaterialPile={id:world.nextId++,item,kind:'unfinished',quantity:1,owner:{type:'ground',...cell},unfinished:{recipe,authorId:pawn.id,progress:0,material,units,parts:[...used.values()],billId:task.billId,...legacyCloth}};

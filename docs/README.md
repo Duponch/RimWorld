@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V312 : [zones autorisées humaines](gameplay/allowed-areas-v312.md), schéma 223.** Définition, affectation, filtrage des activités, traversée préférentielle et retour physique ; [référence Core actuelle](research/allowed-areas-core-v312.md) et [guide](gameplay/player-guide.md#affecter-une-zone-autorisée--v312). Contrôles, adaptations et limites dans la note unique. Les états suivants sont historiques.
+
 **V311 : [fonderie électrique et fusion des armes](gameplay/smelting-v311.md), schéma 222.** Factures à types/PV/qualités, une arme réelle collectée/portée/placée puis métal rangé et réutilisable. [Recherche Core actuelle](research/smelting-core-v311.md), [guide](gameplay/player-guide.md#fondre-une-arme--v311), adaptations et contrôles qualifiés dans la note unique. Les états suivants sont historiques.
 
 **V310 : [secours et emplacements animaux](gameplay/animal-rescue-v310.md), schéma 221.** Place gratuite normale/médicale, affectation et occupation distinctes, patient porté avec son identité et son segment capturé ; sommeil au sol conservé. [Recherche Core actuelle](research/animal-rescue-core-v310.md), [guide](gameplay/player-guide.md#secourir-et-coucher-un-animal--v310), contrôles Chrome et corpus historique qualifiés dans la note unique. Les états suivants sont historiques.

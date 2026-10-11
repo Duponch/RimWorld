@@ -1,4 +1,5 @@
 import {isMechSalvageRecipe} from './mechanoid-salvage.ts';
+import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { isSmeltingRecipe } from './smelting-rules.ts';
 import { isBiofuelRecipe } from './production-recipes.ts';
 import { mergeThingDamage } from './thing-damage-rules.ts';
@@ -38,18 +39,19 @@ function depositAndContinue(world:World,pawn:Pawn,product:MaterialPile,cell:Cell
 }
 /** A sculpture remains a whole building through output and stockpile delivery. */
 function processArtOutput(world:World,pawn:Pawn,context:ProductionContext,destination:'stockpile'|'drop'):void {
+  const policy=captureAllowedArea(world,pawn),allows=(cell:Cell)=>!policy||allowedAreaAllows(world,pawn,cell,policy);
   const task=pawn.cooking!,pack=world.packed.find(p=>p.building.id===task.productId);
   if(!pack||pack.owner.type!=='pawn'||pack.owner.pawnId!==pawn.id){context.release();return;}
   if(destination==='stockpile'){
     const target=world.stockpiles.find(s=>s.id===task.storageId);
-    if(target?.filters.furniture&&storageConditionAccepts(target,pack.building)&&storageOccupancyAllows(world,target)&&furnitureSlot(world,target,pawn.id)){
+    if(target?.filters.furniture&&allows(target)&&storageConditionAccepts(target,pack.building)&&storageOccupancyAllows(world,target)&&furnitureSlot(world,target,pawn.id)){
       task.actionCell={x:target.x,z:target.z};
       if(!near(pawn,target)){context.move(target,false);return;}
       pack.owner={type:'ground',x:target.x,z:target.z};finish(pawn);return;
     }
     task.storageId=null;delete task.storageQuantity;
     if(pawn.planCooldown>0)return;
-    const targets=world.stockpiles.filter(s=>s.filters.furniture&&storageConditionAccepts(s,pack.building)&&storageOccupancyAllows(world,s)&&furnitureSlot(world,s,pawn.id))
+    const targets=world.stockpiles.filter(s=>allows(s)&&s.filters.furniture&&storageConditionAccepts(s,pack.building)&&storageOccupancyAllows(world,s)&&furnitureSlot(world,s,pawn.id))
       .sort((a,b)=>b.priority-a.priority||(pawn.x-a.x)**2+(pawn.z-a.z)**2-((pawn.x-b.x)**2+(pawn.z-b.z)**2)||a.id-b.id);
     if(targets.length){
       const reach=context.candidates?context.candidates():context.search();if(!reach)return;
@@ -59,11 +61,11 @@ function processArtOutput(world:World,pawn:Pawn,context:ProductionContext,destin
       }
     }
   }
-  if(pawn.path.length&&furnitureAsideAllowed(world,task.actionCell,pawn.id,pack.building)){
+  if(pawn.path.length&&allows(task.actionCell)&&furnitureAsideAllowed(world,task.actionCell,pawn.id,pack.building)){
     context.move(task.actionCell,false);return;
   }
   if(pawn.planCooldown>0)return;
-  const targets=nearbyGround(world,pawn).filter(c=>furnitureAsideAllowed(world,c,pawn.id,pack.building));
+  const targets=nearbyGround(world,pawn).filter(c=>allows(c)&&furnitureAsideAllowed(world,c,pawn.id,pack.building));
   const close=targets.find(c=>near(pawn,c));
   if(close){task.actionCell={...close};pack.owner={type:'ground',...close};finish(pawn);return;}
   if(targets.length){
@@ -75,19 +77,20 @@ function processArtOutput(world:World,pawn:Pawn,context:ProductionContext,destin
   pawn.state='working';pawn.planCooldown=20;
 }
 export function processProductionOutput(world:World,pawn:Pawn,context:ProductionContext,destination:'stockpile'|'drop'):void {
+  const policy=captureAllowedArea(world,pawn),allows=(cell:Cell)=>!policy||allowedAreaAllows(world,pawn,cell,policy);
   if(isArtRecipe(pawn.cooking?.recipe)){processArtOutput(world,pawn,context,destination);return;}
   const task=pawn.cooking!,product=world.piles.find(p=>p.id===task.productId);
   if(!product){context.release();return;}
   if(destination==='stockpile') {
     const target=world.stockpiles.find(s=>s.id===task.storageId),quantity=task.storageQuantity??product.quantity;
-    if(target&&storageCapacity(world,target,product,pawn.id)>=quantity) {
+    if(target&&allows(target)&&storageCapacity(world,target,product,pawn.id)>=quantity) {
       task.actionCell={x:target.x,z:target.z};
       if(!near(pawn,target)){context.move(target,false);return;}
       depositAndContinue(world,pawn,product,target,quantity);return;
     }
     task.storageId=null;delete task.storageQuantity;
     if(pawn.planCooldown>0)return;
-    const targets=world.stockpiles.filter(s=>storageAccepts(s,product,world.tick))
+    const targets=world.stockpiles.filter(s=>allows(s)&&storageAccepts(s,product,world.tick))
       .sort((a,b)=>b.priority-a.priority||(pawn.x-a.x)**2+(pawn.z-a.z)**2-((pawn.x-b.x)**2+(pawn.z-b.z)**2)||a.id-b.id);
     if(targets.length) {
       const reach=context.candidates?context.candidates():context.search();if(!reach)return;
@@ -102,12 +105,12 @@ export function processProductionOutput(world:World,pawn:Pawn,context:Production
       }
     }
   }
-  if(pawn.path.length&&groundCapacity(world,task.actionCell,product.item,pawn.id)>0){
+  if(pawn.path.length&&allows(task.actionCell)&&groundCapacity(world,task.actionCell,product.item,pawn.id)>0){
     context.move(task.actionCell,false);return;
   }
   if(pawn.planCooldown>0)return;
   // Re-evaluate at an action boundary; no remote deposit across the map.
-  const targets=nearbyGround(world,pawn).filter(c=>groundCapacity(world,c,product.item,pawn.id)>0);
+  const targets=nearbyGround(world,pawn).filter(c=>allows(c)&&groundCapacity(world,c,product.item,pawn.id)>0);
   const close=targets.find(c=>near(pawn,c));
   if(close){task.actionCell={...close};depositAndContinue(world,pawn,product,close,Math.min(product.quantity,groundCapacity(world,close,product.item,pawn.id)));return;}
   if(targets.length) {

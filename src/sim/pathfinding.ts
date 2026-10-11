@@ -1,6 +1,7 @@
 import { addActorObstacles,actorStepAllowed,openHostileDoor } from './combat-navigation.ts';
 import { doorCorners,isPassageDoor } from './door-rules.ts';
 import { WeightedSearch } from './weighted-search.ts';
+import { navigationAllowedArea,OUTSIDE_ALLOWED_AREA_SEARCH_COST,type AllowedAreaPolicy } from './allowed-area-state.ts';
 import { canStandAt, navigationCosts } from './furniture-travel.ts';
 import { jobBlocksTransit } from './construction-rules.ts';
 import type { DistanceField, Reachability } from './navigation-types.ts';
@@ -65,10 +66,12 @@ export function routeToCell(world: World, target: Cell, reachable: Reachability)
  * With allGroups, finish the cheapest layer of the LAST reached group. Every
  * group must have one reachable alternative; an unreachable nonempty group
  * exhausts the component. This supports ranking all work targets exactly. */
-export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: ReadonlySet<number>, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): DistanceField {
+export function reachableCells(world: World, start: Cell, blocked: Uint8Array, occupied: ReadonlySet<number>, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[],isGoal?:(index:number)=>boolean,policy:AllowedAreaPolicy|undefined=navigationAllowedArea(world,start)): DistanceField {
   const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;addActorObstacles(world,start,unavailable);
   const {costs,repeaters,stops,floors}=navigationCosts(world);
-  const result=new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable,costs,repeaters,floors,doorCorners(world)).finish(goals,allGroups);result.stops=stops;return result;
+  const additive=policy?{maximum:OUTSIDE_ALLOWED_AREA_SEARCH_COST,has:(index:number)=>!policy.has(index),get:(index:number)=>policy.has(index)?0:OUTSIDE_ALLOWED_AREA_SEARCH_COST}:undefined;
+  const goal=isGoal?(index:number)=>!stops.has(index)&&isGoal(index):undefined;
+  const result=new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable,costs,repeaters,floors,doorCorners(world),additive).finish(goals,allGroups,goal);result.stops=stops;if(policy)result.allowedAreaPolicy=policy;return result;
 }
 
 export function routeToJob(world: World, target: Cell & { kind?: string; orientation?: 0 | 1 | 2 | 3; footprint?: 'standard' | 'legacy-single' }, reachable: Reachability, allowTarget = false): Cell[] | null {

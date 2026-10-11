@@ -1,3 +1,4 @@
+import { allowedAreaAllows,allowedAreaWorkAllowed } from './allowed-area-state.ts';
 import { isArtMaterial, isArtRecipe, artWorkTotal, type ArtMaterial, type ArtRecipe } from './art-rules.ts';
 import { ingredientPlaceFree } from './cooking-bills.ts';
 import { groundCapacity, planGroundPlacement } from './ground-placement.ts';
@@ -23,6 +24,7 @@ const artUnits = (recipe: ArtRecipe): number => recipe === 'small-sculpture' ? 5
 
 /** Incorporate the exact staged material only after a home for the workpiece is proved. */
 export function beginArtWork(world: World, pawn: Pawn): MaterialPile | null {
+  if(!allowedAreaWorkAllowed(world,pawn))return null;
   const task = pawn.cooking, recipe = task?.recipe;
   if (!task || !isArtRecipe(recipe)) return null;
   if (task.ingredients.length === 1 && task.ingredients[0]?.item === 'unfinished-sculpture') {
@@ -52,7 +54,7 @@ export function beginArtWork(world: World, pawn: Pawn): MaterialPile | null {
   if (piles.length >= 32768 || !Number.isSafeInteger(world.nextId + 1)) return null;
   const shadow = {...world,piles}, spot = task.spot;
   const cells: Cell[] = [{x:spot.x,z:spot.z+1},{x:spot.x+1,z:spot.z},{x:spot.x-1,z:spot.z},{x:spot.x,z:spot.z-1}];
-  const cell = cells.find(c => ingredientPlaceFree(shadow,c,spot,recipe) && groundCapacity(shadow,c,'unfinished-sculpture',pawn.id) >= 1);
+  const cell = cells.find(c => allowedAreaAllows(world,pawn,c) && ingredientPlaceFree(shadow,c,spot,recipe) && groundCapacity(shadow,c,'unfinished-sculpture',pawn.id) >= 1);
   if (!cell) return null;
   const pile: MaterialPile = {id:world.nextId++,item:'unfinished-sculpture',kind:'unfinished',quantity:1,
     owner:{type:'ground',...cell},artWork:{recipe,authorId:pawn.id,progress:0,material,parts,billId:task.billId}};

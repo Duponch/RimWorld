@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { asBuilder, constructionHaulPriority, containsCell, isConstruction } from './construction-rules.ts';
 import { furnitureAsideAllowed, furnitureSlot } from './furniture-haul-rules.ts';
 import { reservedSource } from './materials.ts';
@@ -30,12 +31,14 @@ export function mayImproveFurnitureStorage(world:World):boolean {
 }
 
 export function planFurnitureTransport(world:World,pawn:Pawn,pack:PackedFurniture,blocked:Uint8Array,reach:Reachability,budget:{pairs:number},parent?:Job,storageAccess=new Map<number,boolean>()):FurnitureHaulCandidate|undefined {
-  if(pack.owner.type!=='ground'||reservedSource(world,pack.building.id)>0||world.jobs.some(j=>j.furniture?.structureId===pack.building.id))return;
+  const policy=captureAllowedArea(world,pawn),allows=(cell:Cell)=>!policy||allowedAreaAllows(world,pawn,cell,policy);
+  if(pack.owner.type!=='ground'||!allows(pack.owner)||parent&&!allows(parent)||reservedSource(world,pack.building.id)>0||world.jobs.some(j=>j.furniture?.structureId===pack.building.id))return;
   const work=parent?parent.kind==='sow'?workPriority(pawn,'grow')||Infinity:constructionHaulPriority(pawn):workPriority(pawn,'haul')||Infinity;
   if(!Number.isFinite(work)||parent?.reservedBy!==undefined&&parent.reservedBy!==null||!canReach(world,pack.owner,reach,true))return;
   const origin=pack.owner,current=world.stockpiles.find(z=>z.x===origin.x&&z.z===origin.z),priority=parent?0:current?.filters.furniture&&storageConditionAccepts(current,pack.building)?current.priority:0;
   let best:{cell:Cell;id:number;priority:number;cost:number}|undefined;
   if(!parent)for(const zone of world.stockpiles) {
+    if(!allows(zone))continue;
     if(budget.pairs--<=0){budget.pairs=0;return;}
     if(!zone.filters.furniture||!storageConditionAccepts(zone,pack.building)||zone.priority<=priority||distance(zone,origin)===0)continue;
     // One synchronous decision sees unchanged occupancy/reservations. A source
@@ -54,7 +57,7 @@ export function planFurnitureTransport(world:World,pawn:Pawn,pack:PackedFurnitur
       const queue:Cell[]=[origin],seen=new Set([origin.z*world.width+origin.x]);
       for(let i=0;i<queue.length&&budget.pairs>0;i++) {
         const c=queue[i]!;budget.pairs--;
-        if(i>0&&!world.pawns.some(p=>p.x===c.x&&p.z===c.z)&&furnitureAsideAllowed(world,c,undefined,pack.building)){target=c;break;}
+        if(i>0&&allows(c)&&!world.pawns.some(p=>p.x===c.x&&p.z===c.z)&&furnitureAsideAllowed(world,c,undefined,pack.building)){target=c;break;}
         for(const [dx,dz] of [[0,-1],[1,0],[0,1],[-1,0]]) {
           const x=c.x+dx!,z=c.z+dz!,key=z*world.width+x;
           if(inBounds(world,x,z)&&!blocked[key]&&!seen.has(key)){seen.add(key);queue.push({x,z});}
@@ -68,9 +71,11 @@ export function planFurnitureTransport(world:World,pawn:Pawn,pack:PackedFurnitur
   return {whole:true,priority:work,rank:parent?1:2+(5-best!.priority)/10,distance:distance(pawn,origin)+(best?.cost??0),id:pack.building.id,sourceId:pack.building.id,quantity:1,target:origin,destination};
 }
 export function furnitureStorageCandidates(world:World,pawn:Pawn,blocked:Uint8Array,reach:Reachability,budget:{pairs:number}):FurnitureHaulCandidate[] {
+  const policy=captureAllowedArea(world,pawn);
   const result:FurnitureHaulCandidate[]=[];
   const storageAccess=new Map<number,boolean>();
   for(const pack of world.packed) {
+    if(policy&&pack.owner.type==='ground'&&!allowedAreaAllows(world,pawn,pack.owner,policy))continue;
     if(budget.pairs<=0)break;budget.pairs--;
     if(pack.owner.type!=='ground')continue;
     const owner=pack.owner,parent=world.jobs.find(j=>j.kind==='sow'&&j.x===owner.x&&j.z===owner.z);

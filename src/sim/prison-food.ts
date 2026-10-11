@@ -2,6 +2,7 @@ import { capturePrisonTopology,prisonRoom,prisonerAllowedCell } from './prison-s
 import type { RoomTopology } from './room-topology.ts';
 import { FOOD_ITEMS,allowedFood } from './food-policy.ts';
 import type { MaterialPile,Pawn,World } from './types.ts';
+import { allowedAreaAllows } from './allowed-area-state.ts';
 
 /** A captive chooses food already inside their room without the warden's diet
  * restriction. Free colonists leave that room's food for its residents. */
@@ -20,12 +21,14 @@ export function prisonFoodChecker(world:World):(pile:MaterialPile)=>boolean {
 }
 export function selfFoodAccessible(world:World,pawn:Pawn,pile:MaterialPile,topology?:RoomTopology):boolean {
   if(pile.owner.type!=='ground')return false;
+  if(!allowedAreaAllows(world,pawn,pile.owner))return false;
   return pawn.prisoner?prisonerAllowedCell(world,pawn,pile.owner,topology):!prisonFood(world,pile,topology);
 }
 /** A supplier may use public food or food reserved for this patient's room,
  * never another prison's stock. This is separate from the patient's diet. */
 export function assistedFoodAccessible(world:World,getter:Pawn,eater:Pawn,pile:MaterialPile,topology?:RoomTopology):boolean {
   if(pile.owner.type!=='ground')return false;
+  if(!allowedAreaAllows(world,getter,pile.owner))return false;
   if(selfFoodAccessible(world,getter,pile,topology))return true;
   const room=eater.prisoner?prisonRoom(world,eater,topology):undefined;
   return room!==undefined&&room===prisonRoom(world,pile.owner,topology);

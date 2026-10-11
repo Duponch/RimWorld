@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaReason } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { surgeryRequestReason,medicalSurgerySpeed,surgerySuccessChance,surgeryBaseXp } from './surgery-rules.ts';
@@ -26,6 +28,7 @@ import type { Cell,Pawn,World } from './types.ts';
 
 const release=(w:World,d:Pawn):void=>{if(!releaseWork(w,d))interruptWork(w,d);};
 export function implantSurgeryReason(w:World,d:Pawn,p:Pawn|undefined,accepted=false):string|undefined {
+  if(!accepted&&p){const reason=allowedAreaReason(w,d,p);if(reason)return reason;}
   const task=accepted?d.surgery:undefined,request=p?.surgeryRequest;
   const refusal=backgroundWorkRefusal(d,'doctor')??medicalWorkRefusal(d);if(refusal)return refusal;
   if(workPriority(d,'doctor')===0)return 'Médecin est désactivé.';
@@ -49,6 +52,7 @@ export function implantSurgeryProposal(w:World,d:Pawn,p:Pawn,reach:Reachability)
   return {path:planned.path,task:{patientId:p.id,part:p.surgeryRequest!.part,implant:p.surgeryRequest!.implant,bedId:currentMedicalBed(w,p,false)!.id,spot:access.spot,ingredients:planned.ingredients,phase:'pickup',progress:0,workCore:0}};
 }
 export function processImplantSurgery(w:World,d:Pawn,context:NeedContext,doctorGlow:()=>number,patientGlow:(cell:Cell)=>number):void {
+  if(!allowedAreaServicesAllowed(w,d)){release(w,d);return;}
   const task=d.surgery;if(!task?.implant)return;
   const p=w.pawns.find(p=>p.id===task.patientId);
   if(d.health&&d.health.tick<w.tick)updatePawnHealth(w,d);

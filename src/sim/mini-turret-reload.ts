@@ -1,4 +1,5 @@
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
+import { allowedAreaAllows,allowedAreaReason,captureAllowedArea } from './allowed-area-state.ts';
 import { deconstructionReserved } from './deconstruction-rules.ts';
 import { haulReservations } from './haul-reservations.ts';
 import { pawnBody,medicalWorkRefusal } from './health-rules.ts';
@@ -37,17 +38,19 @@ export const wantsTurretReload=(w:World,s:Structure):boolean=>s.kind==='mini-tur
 
 /** One physical trip. Read-only planning shares the ordinary access search. */
 export function planTurretReload(w:World,p:Pawn,id:number,access?:Reachability,budget={pairs:32768}):HaulProposal {
+  const policy=captureAllowedArea(w,p);
   const label='Réarmer la mini-tourelle',no=(reason:string):HaulProposal=>({label,reason});
   const reason=turretReloadPawnReason(p);if(reason)return no(reason);
   if(!workPriority(p,'haul'))return no('Le transport est désactivé dans le tableau Travail.');
   const s=reloadableTurret(w,id);if(!s)return no('Mini-tourelle introuvable.');
+  const areaReason=allowedAreaReason(w,p,s);if(areaReason)return no(areaReason);
   if(turretReloadReserved(w,id))return no('La mini-tourelle est déjà réservée ou marquée pour déconstruction.');
   const capacity=turretReloadCapacity(w,id,undefined,true);if(!capacity)return no('Le canon est déjà suffisamment plein.');
   const reach=access??candidateAccess(w,p,blockedCells(w),new Set());
   if(!canReach(w,s,reach,true))return no('Aucun contact praticable avec la mini-tourelle.');
   let best:{pileId:number;quantity:number;distance:number;path:NonNullable<ReturnType<typeof routeToJob>>}|undefined;
   for(const pile of w.piles){
-    if(pile.item!=='steel'||pile.owner.type!=='ground')continue;
+    if(pile.item!=='steel'||pile.owner.type!=='ground'||policy&&!allowedAreaAllows(w,p,pile.owner,policy))continue;
     if(budget.pairs--<=0){budget.pairs=0;return no('Décision reportée : budget de recherche atteint.');}
     const quantity=Math.min(CARRY_CAPACITY,capacity,pile.quantity-reservedSource(w,pile.id));if(quantity<=0||!canReach(w,pile.owner,reach,true))continue;
     const distance=Math.abs(p.x-pile.owner.x)+Math.abs(p.z-pile.owner.z)+Math.abs(s.x-pile.owner.x)+Math.abs(s.z-pile.owner.z);

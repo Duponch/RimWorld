@@ -1,3 +1,4 @@
+import { AllowedAreaLayer } from './AllowedAreaLayer';
 import { DeepResourceLayer } from './DeepResourceLayer';
 import { AreaPreviewLayer } from './AreaPreviewLayer';
 import {OrderTargetIndex} from './order-target-index';
@@ -203,8 +204,11 @@ export class SceneRenderCore {
   protected constructionIndex: ConstructionCellIndex | undefined;
   protected areaSignature = '';
   protected areaDrag: ({ pointerId: number; action: AreaAction; from: Cell }
+    | { pointerId:number; allowed:boolean; from:Cell }
     | { pointerId: number; kind: LineBuildKind; from: Cell; material?: ConstructionMaterial }) | null = null;
   onArea: (action: AreaAction, from: Cell, to: Cell) => void = () => {};
+  onAllowedAreaPaint:(enabled:boolean,from:Cell,to:Cell)=>void=()=>{};
+  protected allowedAreaTarget:number|undefined;
   onExitOrder: () => void = () => {};
   onBuildLine: (kind: LineBuildKind, from: Cell, to: Cell, material?: ConstructionMaterial) => void = () => {};
   onAreaPreview: (info: { width: number; height: number; eligible: number; skipped: number; line?: boolean } | null) => void = () => {};
@@ -239,6 +243,7 @@ export class SceneRenderCore {
   protected readonly sceneResources = new SceneResourceIndex();
   protected readonly crops = new CropLayer(this.staticMaterial,this.texturedStaticMaterial);
   protected readonly growing = new GrowingZoneLayer(this.boxes);
+  protected readonly allowedAreaLayer=new AllowedAreaLayer(this.boxes);
   protected readonly rocks = new RockLayer(this.staticMaterial,this.environmentLighting.configure);
   protected readonly plants = new PlantClusterLayer(this.staticMaterial,this.texturedStaticMaterial);
   protected readonly designations:DesignationIconLayer;
@@ -336,7 +341,7 @@ export class SceneRenderCore {
     this.invalidatePausedShadow();
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
     this.scene.add(this.mechanoids.group);
-    this.scene.add(this.deepResources.mesh,this.areaPreview.mesh,this.turretRange.mesh,this.orderRockPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
+    this.scene.add(this.deepResources.mesh,this.areaPreview.mesh,this.turretRange.mesh,this.orderRockPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.allowedAreaLayer.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
     if (groundGrassEnabled) {
       this.grass = this.createGrass();
       this.grass.setTerrainPaint(this.terrainPaintTexture);
@@ -516,6 +521,7 @@ export class SceneRenderCore {
     if (storageKey !== this.storageKey || newMap || groundChanged) { this.storageKey = storageKey; this.buildStorage(world); }
     if (newMap || previousWorld?.resources !== world.resources || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap, this.immutableWorlds.has(world));
     const zoneChanged=this.updateGrowingZones(newMap);
+    if(this.allowedAreaLayer.update(world,this.allowedAreaTarget,newMap))this.zonesTintDirty=true;
     if(zoneChanged||newMap)this.zonesTintDirty=true;
     this.pawns.adoptCargo(previousWorld??undefined,world,this.hasTracks?this.timeline.tick:world.tick,
       !resetPoses&&this.hasTracks&&(this.received?.speed??0)>0);
@@ -703,8 +709,12 @@ export class SceneRenderCore {
   setCloudClearRadius(radius:number):void {this.clouds.setClearRadius(radius);}
   setZonesVisible(visible:boolean):void {
     if(this.zonesVisible===visible)return;this.zonesVisible=visible;
-    if(!this.preparing){this.storageGroup.visible=this.growing.group.visible=visible;this.roofs.areas.visible=visible&&this.roofAreasVisible;}
+    if(!this.preparing){this.storageGroup.visible=this.growing.group.visible=this.allowedAreaLayer.group.visible=visible;this.roofs.areas.visible=visible&&this.roofAreasVisible;}
     this.zonesTintDirty=true;this.refreshZonesTint();this.updateSelectedObject();
+  }
+  setAllowedAreaTarget(id:number|undefined):void {
+    this.allowedAreaTarget=id;this.areaSignature='';
+    if(this.world&&this.allowedAreaLayer.update(this.world,id)){this.zonesTintDirty=true;this.refreshZonesTint();}this.updateHover();
   }
   setZoneTarget(id:number|undefined):void {
     if(this.zoneTarget===id)return;this.zoneTarget=id;this.areaSignature='';this.updateHover();
@@ -715,7 +725,7 @@ export class SceneRenderCore {
   private refreshZonesTint():void {
     const world=this.world;if(!world||!this.zonesTintDirty)return;this.zonesTintDirty=false;
     this.surfaceTint.setZones(world.width,world.height,[{placements:this.storageTintPlacements,opacity:ZONE_FILL_OPACITY},
-      {placements:this.growing.surfaces,opacity:ZONE_FILL_OPACITY},{placements:this.homeTintPlacements,opacity:.28}],this.zonesVisible);
+      {placements:this.growing.surfaces,opacity:ZONE_FILL_OPACITY},{placements:this.allowedAreaLayer.surfaces,opacity:ZONE_FILL_OPACITY},{placements:this.homeTintPlacements,opacity:.28}],this.zonesVisible);
     this.refreshGroundOverlays();
   }
   setWallCutaway(enabled: boolean): void {
@@ -790,7 +800,7 @@ export class SceneRenderCore {
       // first map interaction. Include it behind the loading overlay.
       this.hover.visible = true;
       this.objectSelection.visible = true;
-      this.storageGroup.visible=this.growing.group.visible=true;
+      this.storageGroup.visible=this.growing.group.visible=this.allowedAreaLayer.group.visible=true;
       this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = true;
       this.rocks.setDistant(false); this.rocks.mesh.visible = true;
       this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
@@ -813,7 +823,7 @@ export class SceneRenderCore {
       restorePodRescue();restoreOrbitalDelivery();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
-      this.storageGroup.visible=this.growing.group.visible=this.zonesVisible;
+      this.storageGroup.visible=this.growing.group.visible=this.allowedAreaLayer.group.visible=this.zonesVisible;
       this.roofs.areas.visible=this.zonesVisible&&this.roofAreasVisible;
       this.invalidatePausedShadow();
       this.updateSelectedObject();
@@ -1260,12 +1270,15 @@ export class SceneRenderCore {
       this.clearOrderTargets();
       this.areaSignature = ''; this.onAreaPreview(null); return;
     }
-    const action = 'action' in drag ? drag.action : drag.kind;
+    const action = 'allowed' in drag?drag.allowed?'allowed-expand':'allowed-shrink':'action' in drag ? drag.action : drag.kind;
     const signature = `${action}:${drag.from.x}:${drag.from.z}:${cell.x}:${cell.z}`;
     if (signature === this.areaSignature) return;
     this.areaSignature = signature;
     let bounds: { minX:number; maxX:number; minZ:number; maxZ:number }, cells: number[], skipped: number;
-    if ('action' in drag) {
+    if('allowed' in drag){
+      bounds={minX:Math.min(drag.from.x,cell.x),maxX:Math.max(drag.from.x,cell.x),minZ:Math.min(drag.from.z,cell.z),maxZ:Math.max(drag.from.z,cell.z)};
+      cells=[];for(let z=bounds.minZ;z<=bounds.maxZ;z++)for(let x=bounds.minX;x<=bounds.maxX;x++)cells.push(z*world.width+x);skipped=0;
+    }else if ('action' in drag) {
       this.areaIndex ??= buildAreaIndex(world);
       const result = queryArea(world, { type: 'area', action: drag.action, from: drag.from, to: cell, ...this.zoneTargetCommand(drag.action), ...(drag.action==='lay-floor'?{floor:this.selectedFloor}:{}) }, this.areaIndex);
       if (!result.ok) {this.hover.visible=false;this.areaPreview.hide();this.constructionPreview.hide();this.surfaceTint.clearPreview();this.designations.clearPreview();this.clearOrderTargets();this.onAreaPreview(null);return;}
@@ -1299,7 +1312,7 @@ export class SceneRenderCore {
       this.onAreaPreview({width,height,eligible:cells.length,skipped,line:'kind' in drag});return;
     }
     this.constructionPreview.hide();
-    const color = areaPreviewColor(action as AreaAction,cells.length,skipped);
+    const color = 'allowed' in drag?(drag.allowed?world.allowedAreas?.find(a=>a.id===this.allowedAreaTarget)?.color??0x8bcef0:0xe6876a):areaPreviewColor(action as AreaAction,cells.length,skipped);
     this.hover.visible = true; this.hover.scale.set(width, height, 1);
     this.hover.position.set((bounds.minX + bounds.maxX) / 2, 0.075, (bounds.minZ + bounds.maxZ) / 2);
     const hoverMat = this.hover.material as THREE.MeshBasicNodeMaterial;
@@ -1307,8 +1320,8 @@ export class SceneRenderCore {
     this.surfaceTint.setHover(this.hover.position.x,this.hover.position.z,width,height,color,.12);
     this.surfaceTint.setArea(world.width,bounds,cells,color);
     this.areaPreview.update(world.width,world.width*world.height,cells,color);
-    this.designations.updatePreview(world,action as AreaAction,cells);
-    this.updateOrderTargets(world,action as AreaAction,cells);
+    if('allowed' in drag){this.designations.clearPreview();this.clearOrderTargets();}
+    else {this.designations.updatePreview(world,action as AreaAction,cells);this.updateOrderTargets(world,action as AreaAction,cells);}
     this.onAreaPreview({ width, height, eligible: cells.length, skipped, line:'kind' in drag });
     } finally {this.refreshGroundOverlays();}
   }
@@ -1337,6 +1350,11 @@ export class SceneRenderCore {
     const minX=Math.min(...cells.map(c=>c.x)),maxX=Math.max(...cells.map(c=>c.x)),minZ=Math.min(...cells.map(c=>c.z)),maxZ=Math.max(...cells.map(c=>c.z));
     this.hover.scale.set(maxX-minX+1, maxZ-minZ+1, 1);
     this.hover.position.set((minX+maxX)/2, (surfaceHeightAtCell(this.world,cell.x,cell.z)??0)+.055, (minZ+maxZ)/2);
+    if(this.tool==='allowed-expand'||this.tool==='allowed-shrink'){
+      const color=this.tool==='allowed-shrink'?0xe6876a:this.world.allowedAreas?.find(a=>a.id===this.allowedAreaTarget)?.color??0x8bcef0;
+      const material=this.hover.material as THREE.MeshBasicNodeMaterial;material.color.setHex(color);material.opacity=.55;
+      this.surfaceTint.setHover(cell.x,cell.z,1,1,color,material.opacity);this.constructionPreview.hide();return;
+    }
     if (isAreaAction(this.tool) && this.tool!=='lay-floor' && this.tool!=='build-roof') {
       let color=0x8bcef0;
       if(ZONE_TOOLS.has(this.tool)){

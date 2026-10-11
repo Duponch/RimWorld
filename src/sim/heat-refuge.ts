@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { comfortableTemperature,HEAT_SERIOUS } from './heat-rules.ts';
 import { TemperatureView } from './temperature.ts';
 import { canStandAt } from './furniture-travel.ts';
@@ -11,9 +13,11 @@ export interface HeatRefuge {target:Cell;until:number}
 /** Serious thermal exposure overrides ordinary work. Direct orders, combat and mental
  * states are handled first by the caller. Civil transit remains shared. */
 export function processHeatRefuge(w:World,p:Pawn,context:NeedContext,layout:ThermalLayout):boolean {
+  if(!allowedAreaServicesAllowed(w,p)){context.release();return false;}
   const active=p.heatRefuge;
   if(!active&&Math.max(p.health?.heatstroke??0,p.health?.hypothermia??0)<HEAT_SERIOUS||p.orders.active!==null)return false;
   const view=new TemperatureView(w,layout),range=comfortableTemperature(w,p);
+  const policy=captureAllowedArea(w,p),allows=(c:Cell)=>!policy||allowedAreaAllows(w,p,c,policy);
   const comfortable=(c:Cell)=>{const t=view.at(w,c);return t>=range.min&&t<=range.max;};
   if(active){
     if(w.tick>=active.until||!canStandAt(w,active.target)||!comfortable(active.target)){context.release();return false;}
@@ -24,11 +28,11 @@ export function processHeatRefuge(w:World,p:Pawn,context:NeedContext,layout:Ther
   }
   if(p.planCooldown>0)return false;
   const reserved=reservedServiceCells(w,p.id),candidates:Cell[]=[];
-  if(comfortable(p)&&canStandAt(w,p)&&!reserved.has(p.z*w.width+p.x)){if(!context.release())return false;p.heatRefuge={target:{x:p.x,z:p.z},until:w.tick+50};return true;}
+  if(allows(p)&&comfortable(p)&&canStandAt(w,p)&&!reserved.has(p.z*w.width+p.x)){if(!context.release())return false;p.heatRefuge={target:{x:p.x,z:p.z},until:w.tick+50};return true;}
   for(const region of w.thermal?.regions??[])if(region.temperature>=range.min&&region.temperature<=range.max)for(const index of region.cells){
-    const c={x:index%w.width,z:Math.floor(index/w.width)};if(!reserved.has(index)&&canStandAt(w,c))candidates.push(c);
+    const c={x:index%w.width,z:Math.floor(index/w.width)};if(allows(c)&&!reserved.has(index)&&canStandAt(w,c))candidates.push(c);
   }
-  if(view.outside>=range.min&&view.outside<=range.max)for(let i=0;i<w.tiles.length;i++)if(layout.indices[i]===-1&&!reserved.has(i))candidates.push({x:i%w.width,z:Math.floor(i/w.width)});
+  if(view.outside>=range.min&&view.outside<=range.max)for(let i=0;i<w.tiles.length;i++)if(layout.indices[i]===-1&&!reserved.has(i)&&allows({x:i%w.width,z:Math.floor(i/w.width)}))candidates.push({x:i%w.width,z:Math.floor(i/w.width)});
   candidates.sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-(b.x-p.x)**2-(b.z-p.z)**2||a.z-b.z||a.x-b.x);
   if(!candidates.length){p.planCooldown=20;return false;}
   const reach=context.search();if(!reach)return true;

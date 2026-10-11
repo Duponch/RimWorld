@@ -1,3 +1,4 @@
+import { allowedAreaReason } from './allowed-area-state.ts';
 import { isColonist } from './affiliation.ts';
 import { animalNutritionMax } from './animal-life.ts';
 import { animalClaimed,animalCarrier } from './animal-rest-state.ts';
@@ -35,6 +36,7 @@ export function animalFeedingPatientReady(w:World,a:WildAnimal,doctor?:Pawn):boo
 export function animalFeedingReason(w:World,doctor:Pawn,a:WildAnimal|undefined,accepted=false):string|undefined {
   if(!animalFeedingDoctorReady(w,doctor))return 'Un colon libre et apte doit avoir Médecin activé.';
   if(!a||!w.wildlife?.animals.includes(a)||!animalFeedingPatientReady(w,a,doctor))return 'L’animal possédé doit être couché pour un besoin médical, sans danger ni autre service.';
+  if(!accepted){const reason=allowedAreaReason(w,doctor,a);if(reason)return reason;}
   if(!accepted&&a.food>animalNutritionMax(a)*ANIMAL_FEED_HUNGER)return 'Cet animal n’a pas encore besoin d’être nourri.';
   return undefined;
 }

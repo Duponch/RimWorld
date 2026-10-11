@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { footprintCells } from './definitions.ts';
 import { groundCapacity,groundPile } from './ground-placement.ts';
 import { isAnimalMeat } from './biome-items.ts';
@@ -79,6 +81,7 @@ export function pasteDispenserUsable(world:World,pawn:Pawn,dispenser:Structure,e
     &&pasteAccessible(world,pawn,eater,dispenser,spot,topology);
 }
 export function planPasteRequest(world:World,pawn:Pawn,dispenser:Structure,eater:Pawn=pawn,topology?:RoomTopology):PasteRequest|undefined {
+  if(!allowedAreaAllows(world,pawn,dispenser)||!allowedAreaAllows(world,pawn,pasteSpot(dispenser)))return;
   if(!pasteDispenserUsable(world,pawn,dispenser,eater,topology))return;
   const ingredients:NonNullable<PasteRequest['ingredients']>=[];let remaining=PASTE_INGREDIENT_UNITS;
   for(const p of hopperFood(world,dispenser)){
@@ -125,7 +128,7 @@ export function reconcilePasteRequests(world:World):void {
     const eat=p.need?.kind==='eat'&&p.need.phase==='pickup'?p.need.paste:undefined;
     const feed=p.feed?.phase==='pickup'?p.feed.paste:undefined;
     const patient=feed?world.pawns.find(patient=>patient.id===p.feed!.patientId):undefined;
-    if(eat&&eat.producedAt===undefined&&!pasteRequestValid(world,p,eat)
+    if((eat||feed)&&!allowedAreaServicesAllowed(world,p)||eat&&eat.producedAt===undefined&&!pasteRequestValid(world,p,eat)
       ||feed&&feed.producedAt===undefined&&(!patient||!pasteRequestValid(world,p,feed,patient)))interruptWork(world,p);
   }
 }

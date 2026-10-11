@@ -1,5 +1,6 @@
 import {isMechSalvageRecipe,mechSalvageSpeed,finishMechSalvage} from './mechanoid-salvage.ts';
 import { workPriority } from './work-types.ts';
+import { allowedAreaWorkAllowed } from './allowed-area-state.ts';
 import { isSmeltingRecipe,smeltingIngredientAllowed,smeltingSpeed,validSmeltingIngredients } from './smelting-rules.ts';
 import { finishSmelting } from './smelting.ts';
 import { pawnBody } from './health-rules.ts';
@@ -47,6 +48,7 @@ function take(world:World,pawn:Pawn,pile:MaterialPile,quantity:number):MaterialP
 }
 export function processCooking(world:World,pawn:Pawn,context:ProductionContext):void {
   const task=pawn.cooking!;
+  if(!allowedAreaWorkAllowed(world,pawn)){context.release();return;}
   const medicine=task.recipe==='make-medicine';
   const biofuel=isBiofuelRecipe(task.recipe);
   const smelting=isSmeltingRecipe(task.recipe);

@@ -1,4 +1,5 @@
 import { deepWorkReason,deepWorkSpot,deepResearchSpeed,type DeepWorkTask,type DeepDrillState } from './deep-drilling-rules.ts';
+import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { DEEP_RESOURCES,deepSeed,deepRandom,deepResourceAt,nextDeepResource,deepRockItem,discoverDeepDeposit } from './deep-resources.ts';
 import { miningWorkSpeed,miningYield,miningSkill } from './mining-skills.ts';
 import { intellectualSkill } from './research.ts';
@@ -35,6 +36,7 @@ export function deepWorkInProgress(world:World,structureId:number):boolean {
   return world.pawns.some(p=>p.deepWork?.structureId===structureId&&p.state==='working'&&p.moveCooldown===0&&(!p.motion||p.motion.end<=world.tick)&&!p.path.length&&p.x===p.deepWork.spot.x&&p.z===p.deepWork.spot.z);
 }
 function drillTick(world:World,pawn:Pawn,s:Structure,light:number):boolean {
+  const policy=captureAllowedArea(world,pawn);
   const source=s.deepDrill??{progress:0,yieldPct:0,rng:deepSeed(world.seed,s.id^0x280d111)},draft:DeepDrillState={...source};
   const rate=Math.fround(miningWorkSpeed(pawn,undefined,light)),yieldFactor=Math.fround(miningYield(pawn));
   for(let sub=0;sub<10;sub++){
@@ -43,7 +45,7 @@ function drillTick(world:World,pawn:Pawn,s:Structure,light:number):boolean {
     if(draft.progress>10000){
       const resource=nextDeepResource(world,s),item=resource?.item??deepRockItem(world,s),raw=resource?Math.min(resource.count,DEEP_RESOURCES[resource.item].portion):0;
       const exact=Math.fround(raw*draft.yieldPct),floor=Math.floor(exact),roll=deepRandom(draft),quantity=resource?Math.max(1,floor+(roll<exact-floor?1:0)):1;
-      const interaction=deepWorkSpot(s),plan=planGroundPlacement(world,quantity,interaction,item,c=>(c.x!==s.x||c.z!==s.z)&&(c.x!==interaction.x||c.z!==interaction.z));
+      const interaction=deepWorkSpot(s),plan=planGroundPlacement(world,quantity,interaction,item,c=>(!policy||allowedAreaAllows(world,pawn,c,policy))&&(c.x!==s.x||c.z!==s.z)&&(c.x!==interaction.x||c.z!==interaction.z));
       if(!plan||world.piles.length+plan.length>32768||!Number.isSafeInteger(world.nextId+plan.length))return false;
       if(resource){const live=deepResourceAt(world,resource.cell)!;live.count-=raw;
         if(!live.count)world.deepResources!.cells=world.deepResources!.cells.filter(c=>c!==live);}

@@ -3,7 +3,8 @@ import { groundCapacity, storageCapacity } from './ground-placement.ts';
 import { growingZoneAt, resourceAt } from './farming.ts';
 import { cellIndex, inBounds } from './pathfinding.ts';
 import type { ItemId } from './items.ts';
-import type { Cell, HaulDestination, MaterialPile,World } from './types.ts';
+import type { Cell, HaulDestination, MaterialPile,Pawn,World } from './types.ts';
+import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 
 /** Clearing is part of the grower's work, even with ordinary hauling disabled. */
 export { haulingWork } from './work-types.ts';
@@ -20,11 +21,12 @@ export function asideCapacity(world: World, cell: Cell, subject: ItemId|Material
 /** The reachable source connects this local flood to the actor's component.
  * Structural connectivity is exact; transient pawn occupancy is handled during
  * travel. Reuse the static grid and shared budget, not a second global search. */
-export function findAsideDestination(world: World, source: Cell, subject: ItemId|MaterialPile, quantity: number, blocked: Uint8Array, budget: { pairs: number }): (Cell & { type: 'aside' }) | null {
+export function findAsideDestination(world: World, source: Cell, subject: ItemId|MaterialPile, quantity: number, blocked: Uint8Array, budget: { pairs: number },pawn?:Pawn): (Cell & { type: 'aside' }) | null {
+  const policy=pawn?captureAllowedArea(world,pawn):undefined;
   const queue: Cell[] = [{ x: source.x, z: source.z }], seen = new Set([cellIndex(world, source.x, source.z)]);
   for (let i = 0; i < queue.length && budget.pairs > 0; i++) {
     const cell = queue[i]!; budget.pairs--;
-    if (i > 0 && !world.pawns.some(p => same(p, cell)) && asideCapacity(world, cell, subject) >= quantity) return { type: 'aside', ...cell };
+    if (i > 0 && (!policy||allowedAreaAllows(world,pawn!,cell,policy)) && !world.pawns.some(p => same(p, cell)) && asideCapacity(world, cell, subject) >= quantity) return { type: 'aside', ...cell };
     for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
       const x = cell.x + dx!, z = cell.z + dz!, key = cellIndex(world, x, z);
       if (inBounds(world, x, z) && !blocked[key] && !seen.has(key)) { seen.add(key); queue.push({ x, z }); }

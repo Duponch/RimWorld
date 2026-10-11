@@ -1,3 +1,4 @@
+import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { commercialRegistryView } from './commercial-trip.ts';
 import { findCivilianReturnEntry } from './civilian-return.ts';
 import { isColonist } from './affiliation.ts';
@@ -103,7 +104,7 @@ export function departScout(w:World,p:Pawn):boolean {
   if(!s||s.phase!=='leaving')return false;
   const items=w.piles.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id);
   const entry={x:p.x,z:p.z};
-  p.bedId=null;p.path=[];p.state='idle';p.planCooldown=0;p.moveCooldown=0;
+  releaseAllowedAreaReturn(p);p.bedId=null;p.path=[];p.state='idle';p.planCooldown=0;p.moveCooldown=0;
   delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;
   w.scout={phase:'travelling',pawn:p,items,foodPileId:s.foodPileId,quantity:s.quantity,startedAt:s.startedAt,departedAt:w.tick,returnAt:w.tick+SCOUT_TRIP_TICKS,consumed:0,entry};
   const ids=new Set(items.map(i=>i.id));

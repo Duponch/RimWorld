@@ -1,4 +1,5 @@
 import { blockedCells,inBounds } from './pathfinding.ts';
+import { allowedAreaReason } from './allowed-area-state.ts';
 import { footprintCells } from './definitions.ts';
 import { isPassageDoor } from './door-rules.ts';
 import { isPowerActive } from './power-rules.ts';
@@ -44,6 +45,7 @@ export function orbitalTradeReason(w:World,p:Pawn,ship:OrbitalShip,console?:Stru
   if(!orbitalPoweredBeacon(w))return 'Une balise orbitale alimentée est nécessaire.';
   console??=w.structures.find(s=>s.id===p.orbitalTrade?.consoleId);
   if(!console||console.kind!=='comms-console'||!w.structures.includes(console))return 'Console de communication introuvable.';
+  const areaReason=allowedAreaReason(w,p,console);if(areaReason)return areaReason;
   if(!isPowerActive(console))return 'La console n’est pas alimentée.';
   if(w.jobs.some(j=>(j.kind==='deconstruct'||j.kind==='uninstall')&&(j.deconstruction?.structureId??j.furniture?.structureId)===console.id))return 'Retrait de la console demandé.';
   if(w.fires?.items.some(f=>footprintCells(console!).some(c=>c.x===f.x&&c.z===f.z)))return 'La console est en feu.';

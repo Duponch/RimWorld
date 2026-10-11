@@ -1,3 +1,4 @@
+import { allowedAreaReason } from './allowed-area-state.ts';
 import { workPriority, workType, haulingWork } from './work-types.ts';
 import { backgroundWorkRefusal,violentWorkRefusal } from './colonist-backgrounds.ts';
 import { mentalCrisisLabel,mentalCrisisRefusal } from './mental-presentation.ts';
@@ -50,6 +51,7 @@ const orderLabel=(world:World,job:Job)=>clearingPlant(world,job)?'Couper la plan
 /** This provider orders one executable job, never an entire construction chain.
  * Quantity-based delivery is handled separately by player-hauling. */
 export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=false): string | undefined {
+  const areaReason=allowedAreaReason(world,pawn,job);if(areaReason)return areaReason;
   if(!isColonist(pawn)||pawn.prisoner)return 'Seul un colon libre peut recevoir un ordre de travail.';
   const work=job.kind==='install'&&!job.installationWork?(asBuilder(pawn)?'build':'haul'):workType(job);
   const refusal=backgroundWorkRefusal(pawn,work);if(refusal)return refusal;
@@ -167,7 +169,7 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
 const exhausted=(world:World,pawn:Pawn)=>(carrierOf(world,pawn.id)?'Ce colon est transporté.':undefined)??medicalWorkRefusal(pawn)??(pawn.interruptedCargo?'Ce colon doit d’abord déposer sa cargaison interrompue. Libérez une case de sol à proximité.':pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0?'Ce colon doit récupérer de son épuisement.':undefined);
 function orderView(world:World,pawn:Pawn,queue:boolean):World {
   if(queue)return world;
-  return {...world,pawns:world.pawns.map(p=>p!==pawn?p:{...p,haul:null,need:null,cooking:null,orders:{active:null,queue:[]}})};
+  return {...world,pawns:world.pawns.map(p=>p!==pawn?p:{...p,allowedAreaReturn:undefined,haul:null,need:null,cooking:null,orders:{active:null,queue:[]}})};
 }
 export function clearQueuedOrders(world:World,pawn:Pawn):void {
   const ids=new Set(pawn.orders.queue);
@@ -184,7 +186,7 @@ export function applyOrderCommand(world:World,command:OrderCommand):CommandResul
   const pawn=world.pawns.find(p=>p.id===command.pawnId);
   if(!pawn)return fail('Colon introuvable.');
   if(command.type==='clear-orders') {
-    const active=pawn.orders.active!==null||!!pawn.orbitalTrade;
+    const active=pawn.orders.active!==null||!!pawn.orbitalTrade||!!pawn.allowedAreaReturn;
     const drops=active?planCommandDrops(world,command):new Map();
     if(!drops)return fail('Pas de place pour déposer la cargaison.');
     if(active&&!releaseWork(world,pawn,drops))return fail('Impossible d’interrompre ce travail.');
@@ -249,12 +251,12 @@ export function reconcileOrders(world:World):void {
       if(typeof id!=='number') {
         const station=isCookingOrder(id)?world.structures.find(s=>s.id===id.cooking.stationId):undefined;
         const work=isCookingOrder(id)?station?stationWork(station):undefined:haulingWork(id.destination);
-        const reason=(work?backgroundWorkRefusal(pawn,work):undefined)??(isCookingOrder(id)?queuedCookingReason(world,id):queuedHaulReason(world,id));
+        const reason=(work?backgroundWorkRefusal(pawn,work):undefined)??(isCookingOrder(id)?queuedCookingReason(world,id,pawn):queuedHaulReason(world,id,pawn));
         if(reason){world.events.push({tick:world.tick,type:'command',message:`${pawn.name} : livraison abandonnée. ${reason}`});if(world.events.length>80)world.events.shift();}
         return !reason;
       }
       const job=jobs!.get(id);
-      if(job&&job.reservedBy===pawn.id&&!backgroundWorkRefusal(pawn,workType(job)))return true;
+      if(job&&job.reservedBy===pawn.id&&!backgroundWorkRefusal(pawn,workType(job))&&!allowedAreaReason(world,pawn,job))return true;
       if(job?.reservedBy===pawn.id){delete job.installationWork;job.reservedBy=null;job.status='pending';}
       return false;
     });
@@ -266,7 +268,7 @@ export function advanceOrders(world:World,pawn:Pawn,getBlocked:NavigationGrid,bu
   const order=pawn.orders.queue[0]!;
   if(isCookingOrder(order))return advanceCookingOrder(world,pawn,order,getBlocked,budget);
   if(typeof order!=='number') {
-    let reason=backgroundWorkRefusal(pawn,haulingWork(order.destination))??queuedHaulReason(world,order);const source=haulOrderCell(world,order),target=destinationCell(world,order.destination);
+    let reason=backgroundWorkRefusal(pawn,haulingWork(order.destination))??queuedHaulReason(world,order,pawn);const source=haulOrderCell(world,order),target=destinationCell(world,order.destination);
     let path:Cell[]|null=null;
     if(!reason&&source&&target) {
       const targetGoals=interactionGoals(world,'kind' in target?footprintCells(target as Job):[target]);

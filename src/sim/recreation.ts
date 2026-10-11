@@ -1,3 +1,5 @@
+import { allowedAreaRecreationAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { assignmentAt } from './schedule.ts';
 import { gainRecreation, RECREATION_GAIN, RECREATION_DURATION, VISIT_SICK_DURATION, recreationKind, recreationRandom, type RecreationActivity, type RecreationTask } from './recreation-rules.ts';
 import { adjacentToTable, availableChessTables, availablePins, availableTelevisions, captureRecreationResources, chessCells, horseshoeCells, isGatherSpot, nearVisitPatient, recreationSiteValid, recreationSpace, visitablePatient, visitPatient,type RecreationSpace } from './recreation-space.ts';
@@ -17,7 +19,7 @@ import type { NeedContext } from './needs.ts';
 import type { Pawn, World } from './types.ts';
 
 const labels: Record<RecreationActivity,string> = {horseshoes: 'jouer aux fers à cheval', skygaze: 'observer le ciel', chess:'jouer aux échecs','social-relax':'se détendre ensemble','visit-sick':'rendre visite à un malade','watch-television':'regarder la télévision'};
-const urgentDoctorCall=(world:World,pawn:Pawn):boolean=>urgentWorkEnabled(pawn,'doctor')&&world.pawns.some(p=>p!==pawn&&lyingPatient(p)&&urgentTreatment(p));
+const urgentDoctorCall=(world:World,pawn:Pawn):boolean=>urgentWorkEnabled(pawn,'doctor')&&world.pawns.some(p=>p!==pawn&&allowedAreaAllows(world,pawn,p)&&lyingPatient(p)&&urgentTreatment(p));
 /** Search shares the existing bounded navigation budget. No gain in transit,
  * no worker/cargo preemption just because the timetable recommends recreation. */
 export function processRecreation(world: World, pawn: Pawn, context: NeedContext, afterWork = false): boolean {
@@ -28,7 +30,7 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
       || joy.task.activity==='chess'&&pawnBody(pawn).capacities.manipulation<=0
       || joy.task.activity==='watch-television'&&(world.schemaVersion<190||!isColonist(pawn)||!!pawn.prisoner||!!pawn.visitor||pawnBody(pawn).capacities.sight<=0)
       || (joy.task.activity==='social-relax'||joy.task.activity==='visit-sick')&&!canSocialize(world,pawn,true)
-      || !recreationSiteValid(world,joy.task,undefined,context.recreationTopology)) { context.release(); return false; }
+      || !allowedAreaRecreationAllowed(world,pawn,joy.task)||!recreationSiteValid(world,joy.task,undefined,context.recreationTopology)) { context.release(); return false; }
     const task=joy.task;
     if (task.phase==='travel') {
       if(pawn.x!==task.target.x||pawn.z!==task.target.z) {context.move(task.target,true);return true;}
@@ -119,7 +121,8 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
     }
     const decisionSpace=readSpace();
     if(activity==='skygaze'&&!decisionSpace.resources)captureRecreationResources(world,decisionSpace,candidates.map(c=>c.target));
-    const valid=candidates.filter(c=>!reserved.has(cellIndex(world,c.target.x,c.target.z))&&recreationSiteValid(world,c,decisionSpace));
+    const policy=captureAllowedArea(world,pawn);
+    const valid=candidates.filter(c=>(!policy||allowedAreaRecreationAllowed(world,pawn,c,policy))&&!reserved.has(cellIndex(world,c.target.x,c.target.z))&&recreationSiteValid(world,c,decisionSpace));
     if(!valid.length)continue;
     // Search all usable destinations as one nearest-goal request; never assume
     // geometrically near means reachable. An inaccessible pin gives no benefit.

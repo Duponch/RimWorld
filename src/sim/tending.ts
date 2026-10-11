@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaReason } from './allowed-area-state.ts';
 import { resolveHumanTendBatch } from './care-resolution.ts';
 import { prisonBreakActive } from './prison-break-state.ts';
 import { workPriority } from './work-types.ts';
@@ -29,7 +31,7 @@ function releaseTending(world:World,doctor:Pawn):void {
 }
 
 export function tendingReason(world:World,doctor:Pawn,patient:Pawn|undefined,accepted=false):string|undefined {
-  return backgroundWorkRefusal(doctor,'doctor')??medicalWorkRefusal(doctor)??(!accepted&&workPriority(doctor,'doctor')===0?'Médecin est désactivé.'
+  return (!accepted&&patient?allowedAreaReason(world,doctor,patient):undefined)??backgroundWorkRefusal(doctor,'doctor')??medicalWorkRefusal(doctor)??(!accepted&&workPriority(doctor,'doctor')===0?'Médecin est désactivé.'
     :doctor.interruptedCargo?'La cargaison doit être déposée avant les soins.'
     :!accepted&&(doctor.collapsePending||world.restRules==='legacy'&&doctor.rest===0)?'Ce colon doit récupérer de son épuisement.'
     :!patient||!isCarePatient(patient)?'Patient pris en charge introuvable.'
@@ -76,10 +78,11 @@ export function applyTending(world:World,command:{pawnId:number;patientId:number
 }
 export function reconcileTending(world:World):void {
   for(const d of world.pawns)if(d.tend){const p=world.pawns.find(p=>p.id===d.tend!.patientId);
-    if(tendingReason(world,d,p,true)||workPriority(d,'doctor')===0&&d.orders.active!=='tend'||!p||!tendingPlaceValid(world,d,p,d.tend)||!medicineTaskValid(world,d,p,d.tend))releaseTending(world,d);
+    if(!allowedAreaServicesAllowed(world,d)||tendingReason(world,d,p,true)||workPriority(d,'doctor')===0&&d.orders.active!=='tend'||!p||!tendingPlaceValid(world,d,p,d.tend)||!medicineTaskValid(world,d,p,d.tend))releaseTending(world,d);
   }
 }
 export function processTending(world:World,doctor:Pawn,context:NeedContext,light:()=>number,search:()=>Reachability|null=context.search):void {
+  if(!allowedAreaServicesAllowed(world,doctor)){releaseTending(world,doctor);return;}
   const task=doctor.tend;if(!task)return;const patient=world.pawns.find(p=>p.id===task.patientId)!;
   if(patient?.health&&patient.health.tick<world.tick&&!patient.health.death)updatePawnHealth(world,patient);
   if(tendingReason(world,doctor,patient,true)||!medicineTaskValid(world,doctor,patient,task)){releaseTending(world,doctor);return;}

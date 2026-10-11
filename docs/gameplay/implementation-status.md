@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V312, schéma 223 : [zones autorisées humaines](allowed-areas-v312.md).** Dix zones nommées/colorées et indépendantes, tracé libre et affectation des colons. Métiers et besoins choisissent leurs vraies cibles dans la zone ; traversée extérieure possible, retour physique et conservation des possessions lors d’un changement. Exceptions, migrations et preuves dans la note unique. Zones animales, multicarte et lits doubles restent ouverts. Les états suivants sont historiques.
+
 **V311, schéma 222 : [fonderie et fusion des armes](smelting-v311.md).** Arme entière choisie par type/PV/qualité, transport/staging au poste alimenté, puis une pile d’acier ou plastacier réellement rangée et réutilisable. Filtresfalse initiaux, nombre/toujours, sans XP ni composant récupéré ; migration221 prospective neutre. Contrôles acquis par reprises et limites dans la note unique. Armures, scories et sorties multiples restent absentes. Les états suivants sont historiques.
 
 **V310, schéma 221 : [secours et emplacements animaux](animal-rescue-v310.md).** Emplacement gratuit normal/médical, affectation distincte de l’occupation, secours par un médecin des cinq espèces possédées puis vrais soins et nourriture. Sommeil et repli au sol, interruptions conservant identité et segment ; migration220 neutre. Chrome WebGPU et corpus historique passent ; preuves et rouges dans la note unique. Boîtes/lits rembourrés, chirurgie et quotas automatiques restent absents. Les états suivants sont historiques.

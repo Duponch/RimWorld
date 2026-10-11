@@ -25,7 +25,8 @@ export function sameAnimalCarrierEdge(a:TravelSegment|undefined,b:TravelSegment|
     &&(a.stuns?.length??0)===(b.stuns?.length??0)&&(!a.stuns||a.stuns.every((s,i)=>s.start===b.stuns![i].start&&s.end===b.stuns![i].end));
 }
 export function validAnimalRescueShape(v:unknown,version:number):boolean {
-  return version>=221&&object(v)&&keys(v,['animalId','spotId','phase'])&&id(v.animalId)&&id(v.spotId)&&(v.phase==='approach'||v.phase==='carry');
+  return version>=221&&object(v)&&keys(v,['animalId','spotId','phase'],version>=223?['forced']:[])
+    &&(!Object.hasOwn(v,'forced')||v.forced===true)&&id(v.animalId)&&id(v.spotId)&&(v.phase==='approach'||v.phase==='carry');
 }
 /** A released patient retains the admitted human segment without a synthetic
  * provenance flag. The prospective owned-animal envelope therefore also covers

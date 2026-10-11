@@ -1,3 +1,4 @@
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { MEDICINES,isMedicine,medicineAllowed,type TendMedicine } from './medicine-rules.ts';
 import { treatmentTargets,medicineCount,type TendTask } from './care-rules.ts';
 import { reservedSource } from './materials.ts';
@@ -20,7 +21,7 @@ export function reserveMedicine(world:World,doctor:Pawn,patient:Pawn,task:TendTa
 export function reserveMedicalMedicine(world:World,doctor:Pawn,patient:Pawn,task:MedicalMedicineTask,reach:Reachability,needed:number):Cell[]|undefined {
   if(world.schemaVersion<51)return;
   if(!needed)return;
-  const sources=world.piles.filter(p=>p.owner.type==='ground'&&isMedicine(p.item)&&medicineAllowed(patient,p.item)&&p.quantity>reservedSource(world,p.id)&&medicineClaims(world,p.id)<10);
+  const sources=world.piles.filter(p=>p.owner.type==='ground'&&allowedAreaAllows(world,doctor,p.owner)&&isMedicine(p.item)&&medicineAllowed(patient,p.item)&&p.quantity>reservedSource(world,p.id)&&medicineClaims(world,p.id)<10);
   const distance=(p:typeof sources[number])=>p.owner.type==='ground'?(p.owner.x-patient.x)**2+(p.owner.z-patient.z)**2:Infinity;
   sources.sort((a,b)=>MEDICINES[b.item as keyof typeof MEDICINES].potency-MEDICINES[a.item as keyof typeof MEDICINES].potency||distance(a)-distance(b)||a.id-b.id);
   for(const pile of sources){
@@ -42,7 +43,7 @@ export function pickupMedicine(world:World,doctor:Pawn,context:NeedContext):void
 }
 export function pickupMedicalMedicine(world:World,doctor:Pawn,task:MedicalMedicineTask,context:NeedContext):void {
   const m=task.medicine!,pile=world.piles.find(p=>p.id===m.sourcePileId);
-  if(!pile||pile.owner.type!=='ground'||reservedSource(world,pile.id)>pile.quantity){interruptWork(world,doctor);return;}
+  if(!pile||pile.owner.type!=='ground'||!allowedAreaAllows(world,doctor,pile.owner)||reservedSource(world,pile.id)>pile.quantity){interruptWork(world,doctor);return;}
   if((doctor.x!==pile.owner.x||doctor.z!==pile.owner.z)&&!adjacent(doctor,pile.owner)){context.move(pile.owner,false);return;}
   if(pile.quantity===m.quantity){pile.owner={type:'pawn',pawnId:doctor.id};m.carryPileId=pile.id;}
   else {

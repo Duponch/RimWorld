@@ -1,3 +1,4 @@
+import { allowedAreaAllows,allowedAreaReason } from './allowed-area-state.ts';
 import { factionOf,isColonist } from './affiliation.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { rescueBedAvailable,medicalBedPreference } from './medical-beds.ts';
@@ -12,6 +13,7 @@ import type { Cell,CommandResult,Pawn,World } from './types.ts';
 
 export const canCapturePatient=(p:Pawn):boolean=>factionOf(p)==='outlaws'&&!p.prisoner&&p.state==='downed';
 export function captureReason(world:World,actor:Pawn,patient:Pawn|undefined,accepted=false):string|undefined {
+  const areaReason=patient&&!(accepted&&actor.rescue?.phase==='carry')?allowedAreaReason(world,actor,patient):undefined;if(areaReason)return areaReason;
   return !isColonist(actor)||actor.prisoner?'Seul un colon libre peut capturer.'
     :actor.draft?'Démobilisez ce colon avant la capture.'
     :medicalWorkRefusal(actor)??(actor.mental?.crisis?'Ce colon est en crise mentale.'
@@ -23,7 +25,7 @@ export function captureReason(world:World,actor:Pawn,patient:Pawn|undefined,acce
 export function captureProposal(world:World,actor:Pawn,patient:Pawn,reach:Reachability):{patientId:number;bedId:number;path:Cell[]}|undefined {
   if(captureReason(world,actor,patient))return;
   const path=routeToCell(world,patient,reach);if(!path)return;
-  const beds=world.structures.filter(b=>rescueBedAvailable(world,b,patient,actor.id,true)).sort((a,b)=>
+  const beds=world.structures.filter(b=>allowedAreaAllows(world,actor,b)&&rescueBedAvailable(world,b,patient,actor.id,true)).sort((a,b)=>
     medicalBedPreference(a)-medicalBedPreference(b)||(a.x-patient.x)**2+(a.z-patient.z)**2-(b.x-patient.x)**2-(b.z-patient.z)**2||a.id-b.id);
   for(const bed of beds)if(routeToCell(world,bed,reach))return {patientId:patient.id,bedId:bed.id,path};
 }

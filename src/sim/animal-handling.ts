@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { isColonist } from './affiliation.ts';
 import { animalSpecies } from './animal-species.ts';
@@ -70,21 +72,21 @@ export function animalHandlingHolding(w:World,id:number):boolean {
   if(a&&w.pawns.some(p=>slaughterHolding(w,p,a)))return true;
   if(!a||!animalAvailable(a)||(a.motion?.end??0)>w.tick)return false;
   return w.pawns.some(p=>p.animalHandling?.animalId===id&&p.animalHandling.kind!=='lead'&&p.animalHandling.kind!=='slaughter'&&p.animalHandling.phase==='interact'
-    &&p.moveCooldown===0&&adjacent(p,a)
+    &&allowedAreaAllows(w,p,a)&&p.moveCooldown===0&&adjacent(p,a)
     &&((p.animalHandling.kind==='milk'||p.animalHandling.kind==='shear')?productHandlerAvailable(p):handlerAvailable(p)));
 }
 export function handlingWanted(w:World,p:Pawn):boolean {
   if(!handlerAvailable(p))return false;
-  return !!w.wildlife?.animals.some(a=>animalAvailable(a)&&!animalHandlingClaimed(w,a.id)
+  return !!w.wildlife?.animals.some(a=>allowedAreaAllows(w,p,a)&&animalAvailable(a)&&!animalHandlingClaimed(w,a.id)
     &&(trainableAt(w,a)||tameableAt(w,a,p)));
 }
 export interface HandlingProposal { task:AnimalHandlingTask; path:Cell[]; target:Cell }
 export function handlingProposal(w:World,p:Pawn,reach:Reachability):HandlingProposal|undefined {
   if(!handlingWanted(w,p))return;
-  const animals=w.wildlife!.animals.filter(a=>animalAvailable(a)&&!animalHandlingClaimed(w,a.id)
+  const animals=w.wildlife!.animals.filter(a=>allowedAreaAllows(w,p,a)&&animalAvailable(a)&&!animalHandlingClaimed(w,a.id)
     &&(trainableAt(w,a)||tameableAt(w,a,p)))
     .sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
-  const sources=w.piles.filter(i=>i.kind==='food'&&FOOD.has(i.item)&&i.owner.type==='ground')
+  const sources=w.piles.filter(i=>i.kind==='food'&&FOOD.has(i.item)&&i.owner.type==='ground'&&allowedAreaAllows(w,p,i.owner))
     .sort((a,b)=>(a.owner.type==='ground'?(a.owner.x-p.x)**2+(a.owner.z-p.z)**2:Infinity)
       -(b.owner.type==='ground'?(b.owner.x-p.x)**2+(b.owner.z-p.z)**2:Infinity)||a.id-b.id);
   for(const a of animals) {
@@ -166,6 +168,7 @@ function finish(w:World,p:Pawn,a:WildAnimal,task:AnimalHandlingTask,ctx:NeedCont
 }
 interface HandlingContext extends NeedContext { candidates():Reachability|null; blocked():Uint8Array }
 export function processHandling(w:World,p:Pawn,ctx:HandlingContext):void {
+  if(!allowedAreaServicesAllowed(w,p)){interruptWork(w,p);return;}
   const task=p.animalHandling;if(!task)return;
   if(task.kind==='slaughter'){processSlaughter(w,p,task as SlaughterTask,ctx);return;}
   if(w.wildlife?.animals.some(a=>a.manhunter&&leadingClaimIds(task).includes(a.id))){interruptWork(w,p);return;}

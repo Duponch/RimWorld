@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { equippedWeapon,isRangedWeaponItem } from './equipment-rules.ts';
 import { findShotLine } from './combat-space.ts';
@@ -35,7 +37,7 @@ export function designateHunt(w:World,c:HuntingCommand):CommandResult {
 }
 export function huntingWanted(w:World,p:Pawn):boolean {
   return isColonist(p)&&workPriority(p,'hunt')>0&&!p.draft&&!medicallyStopped(p)&&pawnBody(p).capacities.manipulation>0
-    &&equippedWeapon(w,p)?.item!=='emp-launcher'&&isRangedWeaponItem(equippedWeapon(w,p)?.item)&&!!w.hunting?.targets.some(id=>w.wildlife?.animals.some(a=>a.id===id&&!a.domestic&&a.state!=='dead')&&!w.pawns.some(o=>o!==p&&o.hunting?.animalId===id));
+    &&equippedWeapon(w,p)?.item!=='emp-launcher'&&isRangedWeaponItem(equippedWeapon(w,p)?.item)&&!!w.hunting?.targets.some(id=>w.wildlife?.animals.some(a=>a.id===id&&allowedAreaAllows(w,p,a)&&!a.domestic&&a.state!=='dead')&&!w.pawns.some(o=>o!==p&&o.hunting?.animalId===id));
 }
 /** Hunting seeks an unobstructed shot within 95% of weapon range, without
  * tactical cover scoring. All candidates share one bounded decision capture. */
@@ -48,7 +50,8 @@ function huntingPosition(w:World,p:Pawn,a:WildAnimal,reach:Reachability):{cell:C
   // Same three-cell lean margin as tactical posts. Preserve every candidate and
   // the current shooter; only unrelated terrain is omitted from this decision.
   const grid=captureWorldShotGrid(w,{minX:Math.min(p.x-3,a.x-margin),minZ:Math.min(p.z-3,a.z-margin),maxX:Math.max(p.x+3,a.x+margin),maxZ:Math.max(p.z+3,a.z+margin)});
-  const canShoot=(c:Cell)=>stands(c)&&findShotLine(grid,c,{cell:a,leans:false},range).ok;
+  const policy=captureAllowedArea(w,p);
+  const canShoot=(c:Cell)=>(!policy||allowedAreaAllows(w,p,c,policy))&&stands(c)&&findShotLine(grid,c,{cell:a,leans:false},range).ok;
   if(canShoot(p))return {cell:{x:p.x,z:p.z},path:[],grid};
   const candidates:Cell[]=[],r=Math.ceil(range);
   for(let z=Math.max(0,a.z-r);z<=Math.min(w.height-1,a.z+r);z++)for(let x=Math.max(0,a.x-r);x<=Math.min(w.width-1,a.x+r);x++)
@@ -58,7 +61,7 @@ function huntingPosition(w:World,p:Pawn,a:WildAnimal,reach:Reachability):{cell:C
 }
 export function huntingProposal(w:World,p:Pawn,reach:Reachability):{task:HuntingTask;path:Cell[];target:Cell}|undefined {
   if(!huntingWanted(w,p))return;
-  const targets=w.wildlife?.animals.filter(a=>!a.domestic&&a.state!=='dead'&&w.hunting!.targets.includes(a.id)&&!w.pawns.some(o=>o!==p&&o.hunting?.animalId===a.id))??[];
+  const targets=w.wildlife?.animals.filter(a=>allowedAreaAllows(w,p,a)&&!a.domestic&&a.state!=='dead'&&w.hunting!.targets.includes(a.id)&&!w.pawns.some(o=>o!==p&&o.hunting?.animalId===a.id))??[];
   targets.sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
   for(const a of targets){const plan=huntingPosition(w,p,a,reach);if(plan)return {task:{animalId:a.id,startedAt:w.tick,phase:'stalk',progress:0},path:plan.path,target:plan.cell};}
 }
@@ -83,7 +86,7 @@ function collect(w:World,p:Pawn,ctx:HuntContext):void {
     return;
   }
   const current=w.stockpiles.find(z=>z.x===sourceCell.x&&z.z===sourceCell.z&&storageAccepts(z,corpse,w.tick));
-  const zones=w.stockpiles.filter(z=>(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&storageAccepts(z,corpse,w.tick)&&storageCapacity(w,z,corpse,p.id)>=1)
+  const zones=w.stockpiles.filter(z=>allowedAreaAllows(w,p,z)&&(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&storageAccepts(z,corpse,w.tick)&&storageCapacity(w,z,corpse,p.id)>=1)
     .sort((a,b)=>b.priority-a.priority||(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
   if(!zones.length){stop(p);return;}
   const reach=ctx.candidates();if(!reach)return;
@@ -100,6 +103,7 @@ function collect(w:World,p:Pawn,ctx:HuntContext):void {
   p.path=path!;p.state=p.path.length?'moving':'working';p.planCooldown=0;
 }
 export function processHunting(w:World,p:Pawn,ctx:HuntContext):void {
+  if(!allowedAreaServicesAllowed(w,p)){stop(p);return;}
   const task=p.hunting!;
   if(p.draft||workPriority(p,'hunt')===0||!equippedWeapon(w,p)||equippedWeapon(w,p)?.item==='emp-launcher'||medicallyStopped(p)||pawnBody(p).capacities.manipulation===0){stop(p);return;}
   const a=w.wildlife?.animals.find(a=>a.id===task.animalId),corpse=w.piles.some(i=>i.id===task.animalId&&i.kind==='corpse');

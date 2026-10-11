@@ -1,4 +1,5 @@
 import { negotiatorRefusal } from './trade-negotiator.ts';
+import { allowedAreaReason } from './allowed-area-state.ts';
 export { negotiatorRefusal } from './trade-negotiator.ts';
 import { adjacent,blockedCells,reachableCells,routeToJob } from './pathfinding.ts';
 import { clearQueuedOrders } from './player-orders.ts';
@@ -10,13 +11,14 @@ import type { CommandResult,Pawn,World } from './types.ts';
 
 export function tradingAtContact(w:World,p:Pawn,t:Pawn):boolean {
   return p.trade?.traderId===t.id&&p.trade.phase==='ready'&&!negotiatorRefusal(p)&&visitorMayTrade(w,t)
-    &&p.moveCooldown===0&&t.moveCooldown===0&&adjacent(p,t);
+    &&!allowedAreaReason(w,p,t)&&p.moveCooldown===0&&t.moveCooldown===0&&adjacent(p,t);
 }
 export function orderTrade(w:World,pawnId:number,traderId:number):CommandResult {
   const fail=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
   const p=w.pawns.find(p=>p.id===pawnId),t=w.pawns.find(p=>p.id===traderId);
   if(!p||!t||!visitorMayTrade(w,t))return fail('Marchand disponible introuvable.');
   const why=negotiatorRefusal(p);if(why)return fail(why);
+  const areaReason=allowedAreaReason(w,p,t);if(areaReason)return fail(areaReason);
   if(w.pawns.some(other=>other!==p&&other.trade?.traderId===t.id))return fail('Ce marchand est déjà réservé par un négociateur.');
   const path=routeToJob(w,t,reachableCells(w,p,blockedCells(w),new Set()),false);
   if(!path)return fail('Ce marchand est inaccessible.');
@@ -29,7 +31,7 @@ export function orderTrade(w:World,pawnId:number,traderId:number):CommandResult 
 export function processTrade(w:World,p:Pawn,ctx:NeedContext):boolean {
   if(!p.trade)return false;
   const t=w.pawns.find(q=>q.id===p.trade!.traderId);
-  if(!t||!visitorMayTrade(w,t)||negotiatorRefusal(p)||p.hunger<=24||p.rest<=15){delete p.trade;p.path=[];p.state='idle';return false;}
+  if(!t||allowedAreaReason(w,p,t)||!visitorMayTrade(w,t)||negotiatorRefusal(p)||p.hunger<=24||p.rest<=15){delete p.trade;p.path=[];p.state='idle';return false;}
   if(p.moveCooldown===0&&t.moveCooldown===0&&adjacent(p,t)) {p.trade.phase='ready';p.path=[];p.state='idle';}
   else {p.trade.phase='approach';ctx.move(t,false);}
   return true;

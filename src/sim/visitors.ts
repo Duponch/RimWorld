@@ -1,3 +1,4 @@
+import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { activeThreat,hostileTo,isColonist } from './affiliation.ts';
 import { newApparelState } from './apparel-rules.ts';
 import { processEating } from './eating.ts';
@@ -163,7 +164,7 @@ export function exitVisitor(w:World,p:Pawn):boolean {
   const items=w.piles.filter(i=>('pawnId' in i.owner)&&i.owner.pawnId===p.id);
   if(items.some(i=>i.owner.type==='pawn')||w.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))return false;
   const packed=w.packed.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===p.id);
-  p.path=[];p.state='idle';p.visitor!.goal=null;delete p.flee;delete p.tactics;delete p.shooting;delete p.melee;delete p.motion;delete p.stagger;delete p.stun;
+  releaseAllowedAreaReturn(p);p.path=[];p.state='idle';p.visitor!.goal=null;delete p.flee;delete p.tactics;delete p.shooting;delete p.melee;delete p.motion;delete p.stagger;delete p.stun;
   w.visitors!.departed.push({group:v.group,tick:w.tick,pawn:structuredClone(p),items:structuredClone(items),...packed.length?{packed:structuredClone(packed)}:{}});
   w.piles=w.piles.filter(i=>!items.includes(i));w.packed=w.packed.filter(i=>!packed.includes(i));w.pawns=w.pawns.filter(q=>q!==p);
   if(!w.pawns.some(q=>q.visitor?.group===v.group))w.visitors!.groups=w.visitors!.groups.filter(g=>g.id!==v.group);

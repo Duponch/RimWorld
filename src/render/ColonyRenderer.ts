@@ -136,9 +136,9 @@ export class ColonyRenderer extends SceneRenderCore {
     this.pointerDown = { x: event.clientX, y: event.clientY, button: event.button, pointerId: event.pointerId };
     this.renderer.domElement.focus({ preventScroll: true });
     const from = this.pick(event);
-    if (event.button === 0 && event.isPrimary && from && (isAreaAction(this.tool) || isLineBuildKind(this.tool))) {
+    if (event.button === 0 && event.isPrimary && from && (isAreaAction(this.tool) || isLineBuildKind(this.tool)||this.tool==='allowed-expand'||this.tool==='allowed-shrink')) {
       event.stopImmediatePropagation(); event.preventDefault();
-      this.areaDrag = isLineBuildKind(this.tool)
+      this.areaDrag = this.tool==='allowed-expand'||this.tool==='allowed-shrink'?{pointerId:event.pointerId,allowed:this.tool==='allowed-expand',from}:isLineBuildKind(this.tool)
         ? { pointerId: event.pointerId, kind: this.tool, from, material: this.constructionMaterial }
         : { pointerId: event.pointerId, action: this.tool as AreaAction, from };
       // The initial press never reaches OrbitControls. Keep its wheel handler
@@ -166,7 +166,8 @@ export class ColonyRenderer extends SceneRenderCore {
       const to = this.pointerOnCanvas(event) ? this.pick(event, true) : null;
       this.cancelDesignation();
       if (to) {
-        if ('action' in drag) this.onArea(drag.action, drag.from, to);
+        if('allowed' in drag)this.onAllowedAreaPaint(drag.allowed,drag.from,to);
+        else if ('action' in drag) this.onArea(drag.action, drag.from, to);
         else this.onBuildLine(drag.kind, drag.from, to, drag.material);
       }
       return;

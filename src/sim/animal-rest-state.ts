@@ -1,6 +1,6 @@
 import type { Pawn,World } from './types.ts';
 
-export interface AnimalRescueTask {animalId:number;spotId:number;phase:'approach'|'carry'}
+export interface AnimalRescueTask {animalId:number;spotId:number;phase:'approach'|'carry';forced?:true}
 export interface AnimalRestTask {spotId:number;phase:'travel'|'sleep'}
 
 /** Pure ownership queries shared by runtime and transport guards. */

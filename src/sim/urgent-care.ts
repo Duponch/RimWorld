@@ -1,3 +1,4 @@
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { urgentTreatment } from './care-rules.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { workPriority } from './work-types.ts';
@@ -34,8 +35,8 @@ export function planUrgentCare(world:World,pawn:Pawn,search:()=>Reachability|nul
   if(!pawn.need&&pawn.planCooldown>0)return false;
   const patient=urgentWorkEnabled(pawn,'patient')&&urgentTreatment(pawn);
   const doctor=urgentWorkEnabled(pawn,'doctor');
-  const others=doctor?world.pawns.filter(p=>p!==pawn&&lyingPatient(p)&&urgentTreatment(p)):[];
-  const self=doctor&&pawn.selfTend&&urgentTreatment(pawn);
+  const others=doctor?world.pawns.filter(p=>p!==pawn&&allowedAreaAllows(world,pawn,p)&&lyingPatient(p)&&urgentTreatment(p)):[];
+  const self=doctor&&pawn.selfTend&&allowedAreaAllows(world,pawn,pawn)&&urgentTreatment(pawn);
   if(!patient&&!others.length&&!self)return false;
   const reach=search();if(!reach)return true;
   // Patient precedes Doctor on ties; both eligible categories have the same

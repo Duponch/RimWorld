@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { prisonBreakActive } from './prison-break-state.ts';
 import { patientClaimed } from './care-access.ts';
 import { canStandAt } from './furniture-travel.ts';
@@ -23,6 +24,7 @@ const distance=(a:Cell,b:Cell)=>(a.x-b.x)**2+(a.z-b.z)**2;
  * includes the existing background refusals; Manipulation uses the shared
  * medical work guard, rather than the prisoner's social capacities. */
 export function releaseReady(world:World,actor:Pawn,patient:Pawn):boolean {
+  if(actor.rescue?.phase!=='carry'&&!allowedAreaAllows(world,actor,patient))return false;
   if(world.schemaVersion<202||!isColonist(actor)||actor.prisoner||actor.draft||actor.mental?.crisis||actor.burning||actor.flee
     ||actor.collapsePending||world.restRules==='legacy'&&actor.rest===0||actor.interruptedCargo||actor.orders.active!==null||medicalWorkRefusal(actor)
     ||!workPriority(actor,'warden')&&!workPriority(actor,'basic')||carrierOf(world,actor.id))return false;
@@ -46,9 +48,10 @@ export function releaseProposal(world:World,actor:Pawn,patient:Pawn,reach:Reacha
     if(room?.kind==='space'&&(local?!prisonRoom(world,c,topology):room.touchesMapEdge)&&canStandAt(world,c)&&hasReachableCell(reach,z*world.width+x))candidates.push(c);
   }
   candidates.sort((a,b)=>distance(a,patient)-distance(b,patient)||a.z*world.width+a.x-b.z*world.width-b.x);
-  if(local&&candidates[0])return {task:{patientId:patient.id,bedId:0,phase:'approach',release:{drop:{...candidates[0]},exit:{...candidates[0]}}},path};
+  const drops=candidates.filter(c=>allowedAreaAllows(world,actor,c));
+  if(local&&drops[0])return {task:{patientId:patient.id,bedId:0,phase:'approach',release:{drop:{...drops[0]},exit:{...drops[0]}}},path};
   const exits=candidates.filter(c=>edge(world,c));
-  for(const drop of candidates){
+  for(const drop of drops){
     const room=topology.at(drop.x,drop.z);
     const exit=exits.filter(c=>topology.at(c.x,c.z)===room)
       .sort((a,b)=>distance(a,drop)-distance(b,drop)||a.z*world.width+a.x-b.z*world.width-b.x)[0];
@@ -72,7 +75,7 @@ function destinationValid(world:World,task:RescueTask,patient:Pawn):boolean {
  * captured edge and cooldown stay with the body, without marking it released. */
 export function reconcileRelease(world:World,actor:Pawn):boolean {
   const task=actor.rescue,patient=task&&world.pawns.find(p=>p.id===task.patientId);
-  if(task?.release&&patient&&releaseReady(world,actor,patient)&&destinationValid(world,task,patient))return true;
+  if(task?.release&&patient&&allowedAreaAllows(world,actor,task.release.drop)&&releaseReady(world,actor,patient)&&destinationValid(world,task,patient))return true;
   if(task?.release)releaseWork(world,actor);
   return false;
 }

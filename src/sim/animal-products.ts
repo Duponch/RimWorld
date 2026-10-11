@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { isColonist } from './affiliation.ts';
 import { animalGrowthFactor, animalLifeStage } from './animal-life.ts';
@@ -50,13 +52,13 @@ const claimed=(world:World)=>new Set(world.pawns.flatMap(animalServiceIds));
 export function productWanted(world:World,pawn:Pawn):boolean {
   if(!productHandlerAvailable(pawn)||!world.wildlife?.animals.some(available))return false;
   const reserved=claimed(world);
-  return world.wildlife.animals.some(a=>available(a)&&!reserved.has(a.id));
+  return world.wildlife.animals.some(a=>allowedAreaAllows(world,pawn,a)&&available(a)&&!reserved.has(a.id));
 }
 export interface ProductProposal {task:ProductTask;path:Cell[];target:Cell}
 export function productProposal(world:World,pawn:Pawn,reach:Reachability):ProductProposal|undefined {
   if(!productWanted(world,pawn))return;
   const reserved=claimed(world);
-  const animals=world.wildlife!.animals.filter(a=>available(a)&&!reserved.has(a.id))
+  const animals=world.wildlife!.animals.filter(a=>allowedAreaAllows(world,pawn,a)&&available(a)&&!reserved.has(a.id))
     .sort((a,b)=>ANIMAL_PRODUCTS[productKind(a)!].rank-ANIMAL_PRODUCTS[productKind(b)!].rank
       ||(a.x-pawn.x)**2+(a.z-pawn.z)**2-((b.x-pawn.x)**2+(b.z-pawn.z)**2)||a.id-b.id);
   for(const animal of animals){
@@ -70,6 +72,7 @@ export function startProduct(pawn:Pawn,proposal:ProductProposal):void {
 /** A completed gesture gathers at most one physical stack batch. A failed
  * placement retains maturity and does not consume the one yield draw. */
 export function processProduct(world:World,pawn:Pawn,task:ProductTask,ctx:NeedContext):void {
+  if(!allowedAreaServicesAllowed(world,pawn)){if(!releaseWork(world,pawn))interruptWork(world,pawn);return;}
   const animal=world.wildlife?.animals.find(a=>a.id===task.animalId);
   if(!animal||!available(animal)||productKind(animal)!==task.kind||!productHandlerAvailable(pawn)) {interruptWork(world,pawn);return;}
   if(!adjacent(pawn,animal)||(animal.motion?.end??0)>world.tick){

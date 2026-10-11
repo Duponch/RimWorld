@@ -53,7 +53,10 @@ test('schema 170 migrates neutrally and rejects a future scout field before migr
   const migrated = deserializeWorld(JSON.stringify(old));
   expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   expect(migrated.scout).toBeUndefined();
-  expect({ ...migrated, schemaVersion: 170 }).toEqual(withMigratedTelevisionRecreation(old));
+  const expected=withMigratedTelevisionRecreation(structuredClone(old));
+  // V282 prospectively extends the exact historical default meal profile.
+  expected.foodPolicies.find((policy:{id:number})=>policy.id===2)!.allowed.push('nutrient-paste-meal');
+  expect({ ...migrated, schemaVersion: 170 }).toEqual(expected);
   old.scout = { phase: 'travelling' };
   expect(() => deserializeWorld(JSON.stringify(old))).toThrow(/Invalid version 170 save.*Future scout state/);
 });

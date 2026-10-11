@@ -1,3 +1,4 @@
+import { allowedAreaAllows,allowedAreaWorkAllowed } from './allowed-area-state.ts';
 import { ingredientPlaceFree } from './cooking-bills.ts';
 import { groundCapacity, planGroundPlacement } from './ground-placement.ts';
 import { healthRandom } from './health.ts';
@@ -22,6 +23,7 @@ const integer=(value:unknown,min=0,max=Number.MAX_SAFE_INTEGER):boolean=>Number.
 
 /** Replace only already placed ingredients, after proving the whole workpiece fits. */
 export function beginGunWork(world:World,pawn:Pawn):MaterialPile|null {
+  if(!allowedAreaWorkAllowed(world,pawn))return null;
   const task=pawn.cooking,recipe=task?.recipe;
   if(!task||!isGunRecipe(recipe))return null;
   if(task.ingredients.length===1&&task.ingredients[0]?.item==='unfinished-gun'){
@@ -45,7 +47,7 @@ export function beginGunWork(world:World,pawn:Pawn):MaterialPile|null {
   if(piles.length>=32768||!Number.isSafeInteger(world.nextId+1))return null;
   const shadow={...world,piles},spot=task.spot;
   const cells:Cell[]=[{x:spot.x,z:spot.z+1},{x:spot.x+1,z:spot.z},{x:spot.x-1,z:spot.z},{x:spot.x,z:spot.z-1}];
-  const cell=cells.find(c=>ingredientPlaceFree(shadow,c,spot,recipe)&&groundCapacity(shadow,c,'unfinished-gun',pawn.id)>=1);
+  const cell=cells.find(c=>allowedAreaAllows(world,pawn,c)&&ingredientPlaceFree(shadow,c,spot,recipe)&&groundCapacity(shadow,c,'unfinished-gun',pawn.id)>=1);
   if(!cell)return null;
   const pile:MaterialPile={id:world.nextId++,item:'unfinished-gun',kind:'unfinished',quantity:1,owner:{type:'ground',...cell},gunWork:{recipe,authorId:pawn.id,progress:0,parts,billId:task.billId}};
   world.piles=[...piles,pile];

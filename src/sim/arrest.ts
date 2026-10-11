@@ -1,3 +1,4 @@
+import { allowedAreaAllows,allowedAreaReason } from './allowed-area-state.ts';
 import { hostileTo,isColonist } from './affiliation.ts';
 import { arrestAcceptedAutomatically,arrestSuccessChance } from './arrest-rules.ts';
 import { planCaptureDrops,completeCapture } from './capture.ts';
@@ -45,6 +46,7 @@ export function arrestReason(world:World,actor:Pawn,patient:Pawn|undefined,accep
   if(carrying){if(!patient.prisoner||patient.mental?.crisis)return 'Le transport ne possède plus son détenu.';}
   else if(patient.prisoner||!patient.mental?.crisis)return 'Choisissez un colon libre en crise mentale.';
   if(hostileTo(patient,actor)||hostileTo(patient,{faction:'colony'}))return 'Une personne hostile ne peut pas être arrêtée de cette façon.';
+  const areaReason=!carrying?allowedAreaReason(world,actor,patient):undefined;if(areaReason)return areaReason;
   const carrier=carrierOf(world,patient.id);
   if(carrier&&carrier!==actor||rescueClaim(world,patient.id,actor.id)||patientClaimed(world,patient.id,actor))return 'Une autre personne a réservé ce patient.';
   return undefined;
@@ -53,7 +55,7 @@ export function arrestReason(world:World,actor:Pawn,patient:Pawn|undefined,accep
 export function arrestProposal(world:World,actor:Pawn,patient:Pawn,reach:Reachability):ArrestProposal|undefined {
   if(arrestReason(world,actor,patient))return;
   const path=routeToCell(world,patient,reach);if(!path)return;
-  const beds=world.structures.filter(b=>rescueBedAvailable(world,b,patient,actor.id,true)).sort((a,b)=>
+  const beds=world.structures.filter(b=>allowedAreaAllows(world,actor,b)&&rescueBedAvailable(world,b,patient,actor.id,true)).sort((a,b)=>
     medicalBedPreference(a)-medicalBedPreference(b)||(a.x-patient.x)**2+(a.z-patient.z)**2-(b.x-patient.x)**2-(b.z-patient.z)**2||a.id-b.id);
   for(const bed of beds)if(routeToCell(world,bed,reach))return {patientId:patient.id,bedId:bed.id,path};
 }
@@ -78,7 +80,7 @@ export function reconcileArrest(world:World,actor:Pawn):boolean {
   const task=actor.rescue;if(!task?.arrest)return false;
   const patient=world.pawns.find(p=>p.id===task.patientId),bed=world.structures.find(s=>s.id===task.bedId);
   if(!task.capture&&!task.release&&actor.orders.active==='rescue'&&!arrestReason(world,actor,patient,true)
-    &&patient&&bed&&rescueBedAvailable(world,bed,patient,actor.id,true))return true;
+    &&patient&&bed&&allowedAreaAllows(world,actor,bed)&&rescueBedAvailable(world,bed,patient,actor.id,true))return true;
   releaseWork(world,actor);return false;
 }
 

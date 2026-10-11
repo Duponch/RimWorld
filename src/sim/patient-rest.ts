@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { lyingBlocked } from './disturbance-state.ts';
@@ -23,7 +25,7 @@ export function patientProposal(world:World,pawn:Pawn,reach:Reachability):{work:
   if(work==='patient'&&!pawn.surgeryRequest&&!urgentTreatment(pawn)&&!world.pawns.some(p=>p!==pawn&&workPriority(p,'doctor')>0&&!medicalWorkRefusal(p)&&p.state!=='sleeping'&&p.state!=='resting'&&!p.medicalSleep&&!(p.need?.kind==='sleep'&&p.need.phase==='sleep')&&routeToCell(world,p,reach)!==null)){
     if(!pawn.prisoner&&!isAdmittedGuest(pawn)&&workPriority(pawn,'bedrest')===0)return;work='bedrest';
   }
-  const beds=world.structures.filter(b=>rescueBedAvailable(world,b,pawn,pawn.id)).sort((a,b)=>
+  const beds=world.structures.filter(b=>allowedAreaAllows(world,pawn,b)&&rescueBedAvailable(world,b,pawn,pawn.id)).sort((a,b)=>
     medicalBedPreference(a)-medicalBedPreference(b)||Number(a.id!==pawn.bedId)-Number(b.id!==pawn.bedId)||(a.x-pawn.x)**2+(a.z-pawn.z)**2-(b.x-pawn.x)**2-(b.z-pawn.z)**2||a.id-b.id);
   // An actual occupied bed remains the service until it becomes invalid.
   const current=pawn.need;
@@ -48,6 +50,7 @@ function continueRecuperation(pawn:Pawn):void {
 /** Lying awake is separate from sleeping. Hunger retains the normal physical
  * meal path; disabled patients will later require the feeding work provider. */
 export function processPatientRest(world:World,pawn:Pawn,context:NeedContext):boolean {
+  if(!allowedAreaServicesAllowed(world,pawn)){context.release();return false;}
   const task=pawn.need;if(task?.kind!=='sleep'||!task.medical)return false;
   continueRecuperation(pawn);
   const bed=world.structures.find(b=>b.id===task.bedId&&isBedKind(b.kind));

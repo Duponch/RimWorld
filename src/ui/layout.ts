@@ -1,3 +1,4 @@
+import { allowedAreaLayout } from './allowed-area-controls';
 import { SCENARIOS, DEFAULT_SCENARIO } from '../sim/scenario-definitions';
 import type { JobKind, WorkType } from '../sim/types';
 import { scheduleLayout } from './schedule-controls';
@@ -11,7 +12,7 @@ import { siteHudLayout } from './site-hud';
 
 const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
 
-export type Tool = BuildableFloorKind | 'home' | 'remove-home' | 'ignore-roof' | 'haul-chunks' | 'select' | Exclude<JobKind, 'sow'|'repair'|'fix-breakdown'|'flick'|'lay-floor'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
+export type Tool = BuildableFloorKind | 'home' | 'remove-home' | 'ignore-roof' | 'haul-chunks' | 'select' | 'allowed-expand' | 'allowed-shrink' | Exclude<JobKind, 'sow'|'repair'|'fix-breakdown'|'flick'|'lay-floor'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export type Panel = 'quests' | 'world' | 'animals' | 'wildlife' | 'research' | 'architect' | 'work' | 'schedule' | 'assign' | 'history' | 'menu' | null;
 export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'floors' | 'furniture' | 'temperature' | 'recreation' | 'production' | 'power';
 /** Visible Core work order (naturalPriority), omitting Smithing and Tailoring
@@ -184,6 +185,7 @@ export function gameLayout(): string {
     </section>
     ${scheduleLayout()}
     ${apparelAssignmentLayout(foodPolicyLayout())}
+    ${allowedAreaLayout()}
     <section id="animals-panel" class="management-panel panel" aria-label="Animaux domestiques" hidden><div class="panel-heading"><h2>Animaux domestiques</h2><button data-close-panel aria-label="Fermer">×</button></div><div id="animals-content"></div></section>
     <section id="wildlife-panel" class="management-panel panel" aria-label="Faune" hidden><div class="panel-heading"><h2>Faune</h2><button data-close-panel aria-label="Fermer Faune">×</button></div><div id="wildlife-content"></div></section>
     <section id="research-panel" class="management-panel panel" aria-label="Recherche" hidden><div class="panel-heading"><h2>Recherche</h2><button data-close-panel aria-label="Fermer Recherche">×</button></div><div id="research-content"></div></section>

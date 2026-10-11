@@ -1,3 +1,5 @@
+import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { allowedAreaAllows } from './allowed-area-state.ts';
 import { ANIMAL_FEED_TICKS,animalFeedingDoctorReady,animalFeedingReason,animalFeedPlaceValid,animalFeedQuantity,type AnimalFeedTask } from './animal-feeding-rules.ts';
 import { animalPileFood } from './wildlife-food.ts';
 import { animalNutritionMax } from './animal-life.ts';
@@ -35,7 +37,7 @@ export function animalFeedingProposal(w:World,doctor:Pawn,reach:Reachability):An
     }
     if(!bedside)continue;
     let food:{id:number;quantity:number;path:Cell[];cost:number}|undefined;
-    for(const pile of w.piles)if(pile.kind==='food'&&pile.owner.type==='ground'&&animalPileFood(w,target,pile)){
+    for(const pile of w.piles)if(pile.kind==='food'&&pile.owner.type==='ground'&&allowedAreaAllows(w,doctor,pile.owner)&&animalPileFood(w,target,pile)){
       const available=pile.quantity-reservedSource(w,pile.id),quantity=animalFeedQuantity(target,pile,available);if(!quantity)continue;
       const path=routeToJob(w,pile.owner,reach,true);if(!path)continue;
       const cost=routeCost(w,path,reach);
@@ -48,6 +50,7 @@ export function startAnimalFeeding(doctor:Pawn,proposal:AnimalFeedingProposal):v
   doctor.animalFeed=proposal.task;doctor.path=proposal.path;doctor.state='moving';doctor.planCooldown=0;
 }
 function taskValid(w:World,doctor:Pawn,a:WildAnimal,t:AnimalFeedTask):boolean {
+  if(!allowedAreaServicesAllowed(w,doctor))return false;
   if(animalFeedingReason(w,doctor,a,true)||!animalFeedPlaceValid(w,t,a))return false;
   const food=w.piles.find(p=>p.id===(t.phase==='pickup'?t.sourcePileId:t.carryPileId));
   return !!food&&food.kind==='food'&&animalPileFood(w,a,food)&&(t.phase==='pickup'

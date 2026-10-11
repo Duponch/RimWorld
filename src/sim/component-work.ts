@@ -1,3 +1,4 @@
+import { allowedAreaAllows,allowedAreaWorkAllowed } from './allowed-area-state.ts';
 import {componentWorkpiecePlaceFree,cookingSpot,ingredientPlaceFree} from './cooking-bills.ts';
 import {footprintCells} from './definitions.ts';
 import {blockedCells,reachableCells,routeToJob} from './pathfinding.ts';
@@ -33,6 +34,7 @@ const integer=(value:unknown,min=0,max=Number.MAX_SAFE_INTEGER):boolean=>Number.
 
 /** A single authored workpiece owns the 12 physical steel once work begins. */
 export function beginComponentWork(world:World,pawn:Pawn):MaterialPile|null {
+  if(!allowedAreaWorkAllowed(world,pawn))return null;
   const task=pawn.cooking;
   if(!isComponentRecipe(task?.recipe))return null;
   if(task.ingredients.length===1&&task.ingredients[0]?.item==='unfinished-component'){
@@ -53,7 +55,7 @@ export function beginComponentWork(world:World,pawn:Pawn):MaterialPile|null {
   if(remaining.length>=32768||!Number.isSafeInteger(world.nextId+1))return null;
   const shadow={...world,piles:remaining},spot=task.spot;
   const cells:Cell[]=[{x:spot.x,z:spot.z+1},{x:spot.x+1,z:spot.z},{x:spot.x-1,z:spot.z},{x:spot.x,z:spot.z-1}];
-  const cell=cells.find(c=>ingredientPlaceFree(shadow,c,spot,'make-component')&&groundCapacity(shadow,c,'unfinished-component',pawn.id)>=1);
+  const cell=cells.find(c=>allowedAreaAllows(world,pawn,c)&&ingredientPlaceFree(shadow,c,spot,'make-component')&&groundCapacity(shadow,c,'unfinished-component',pawn.id)>=1);
   if(!cell)return null;
   const piece:MaterialPile={id:world.nextId++,item:'unfinished-component',kind:'unfinished',quantity:1,owner:{type:'ground',...cell},componentWork:{recipe:'make-component',authorId:pawn.id,progress:0,parts:[...used.values()],billId:task.billId}};
   world.piles=[...remaining,piece];
@@ -63,6 +65,7 @@ export function beginComponentWork(world:World,pawn:Pawn):MaterialPile|null {
 
 /** Consume the four exact material totals only after a reachable workpiece cell exists. */
 function beginAdvancedComponentWork(world:World,pawn:Pawn):MaterialPile|null {
+  if(!allowedAreaWorkAllowed(world,pawn))return null;
   const task=pawn.cooking!;
   const used=new Map<number,{item:AdvancedComponentMaterial;quantity:number}>();
   for(const ingredient of task.ingredients){
@@ -77,7 +80,7 @@ function beginAdvancedComponentWork(world:World,pawn:Pawn):MaterialPile|null {
   if(remaining.length>=32768||!Number.isSafeInteger(world.nextId+1))return null;
   const shadow={...world,piles:remaining},spot=task.spot,station=world.structures.find(s=>s.id===task.stationId);
   const cells:Cell[]=[{x:spot.x,z:spot.z+1},{x:spot.x+1,z:spot.z},{x:spot.x-1,z:spot.z},{x:spot.x,z:spot.z-1},...(station?footprintCells(station):[])];
-  const cell=cells.find(c=>componentWorkpiecePlaceFree(shadow,c,spot,'make-advanced-component',station)&&groundCapacity(shadow,c,'unfinished-component',pawn.id)>=1);
+  const cell=cells.find(c=>allowedAreaAllows(world,pawn,c)&&componentWorkpiecePlaceFree(shadow,c,spot,'make-advanced-component',station)&&groundCapacity(shadow,c,'unfinished-component',pawn.id)>=1);
   if(!cell)return null;
   const piece:MaterialPile={id:world.nextId++,item:'unfinished-component',kind:'unfinished',quantity:1,owner:{type:'ground',...cell},componentWork:{recipe:'make-advanced-component',authorId:pawn.id,progress:0,parts,billId:task.billId}};
   world.piles=[...remaining,piece];
