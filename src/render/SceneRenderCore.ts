@@ -723,8 +723,10 @@ export class SceneRenderCore {
   private configureDiorama(): void {
     if (!this.dioramaEnabled || !this.world) return;
     this.diorama ??= new DioramaLayer(this.hostPort.loadTexture);
-    this.diorama.configure(this.world.width, this.world.height, this.texturesEnabled);
+    this.diorama.configure(this.world.width, this.world.height, this.texturesEnabled,
+      this.world.seed, this.world.site?.biome ?? 'temperate-forest');
     this.scene.add(this.diorama.group);
+    this.diorama.presentSky(this.daylight.sample.y);
     this.diorama.present(this.camera, this.controls.target, this.rig.span);
   }
   setZonesVisible(visible:boolean):void {
@@ -826,6 +828,7 @@ export class SceneRenderCore {
       this.rocks.setDistant(false); this.rocks.mesh.visible = true;
       this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
       this.daylight.update(this.world ? calendarTick(this.world) : 0, this.controls.target,this.world??undefined);
+      if (this.dioramaEnabled) this.diorama?.presentSky(this.daylight.sample.y);
       this.daylight.fitShadow(this.camera);
       await this.renderer.compileAsync(this.scene, this.rig.orthographic);
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
@@ -1192,6 +1195,7 @@ export class SceneRenderCore {
     this.actionVfx.present(skyTick);this.brawlCloud.present(skyTick);this.structureVfx.present(skyTick);this.podRescue.present(skyTick);this.orbitalDelivery.present(skyTick);
     if(this.texturesEnabled)this.paintedWater.present(skyTick/TICKS_PER_SECOND);
     this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
+    if (this.dioramaEnabled) this.diorama?.presentSky(this.daylight.sample.y);
     if(this.world)this.clouds.present({seed:this.world.seed,tick:skyTick,weather:this.world.weather,camera:this.camera,
       target:this.controls.target,strength:visualWindStrength,directionX:visualWind.x,directionZ:visualWind.z,
       daylight:this.daylight.sample.daylight});

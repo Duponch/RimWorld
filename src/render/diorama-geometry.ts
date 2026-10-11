@@ -1,4 +1,7 @@
 import * as THREE from 'three/webgpu';
+import { createDioramaDecor } from './diorama-decor';
+import { DIORAMA_SKY } from './diorama-sky';
+import type { BiomeId } from '../sim/biome-flora';
 
 export type DioramaSide = 'north' | 'west' | 'south' | 'east';
 export type DioramaMaterialKind = 'cardboard' | 'paper' | 'wood';
@@ -28,6 +31,8 @@ type Vertex = { readonly p: Point; readonly uv: readonly [number, number] };
 
 /** Static batches retain hard paper edges and independent UV seams. */
 class GeometryBatch {
+  celestial: -1 | 0 | 1 = 0;
+  private readonly celestialKinds: number[] = [];
   private readonly positions: number[] = [];
   private readonly normals: number[] = [];
   private readonly colors: number[] = [];
@@ -49,6 +54,7 @@ class GeometryBatch {
     for (const v of [a, b, c]) {
       this.positions.push(...v.p); this.normals.push(nx, ny, nz);
       this.colors.push(color.r, color.g, color.b); this.uvs.push(...v.uv);
+      this.celestialKinds.push(this.celestial);
     }
   }
 
@@ -62,20 +68,23 @@ class GeometryBatch {
     // This only runs at construction, and keeps every authored triangle intact.
     const positions: number[] = [], normals: number[] = [], colors: number[] = [], uvs: number[] = [], indices: number[] = [];
     const vertices = new Map<string, number>();
+    const celestialKinds: number[] = [];
     for (let i = 0; i < this.positions.length / 3; i++) {
       const p = this.positions.slice(i * 3, i * 3 + 3).map(Math.fround);
       const n = this.normals.slice(i * 3, i * 3 + 3).map(Math.fround);
       const c = this.colors.slice(i * 3, i * 3 + 3).map(Math.fround);
       const uv = this.uvs.slice(i * 2, i * 2 + 2).map(Math.fround);
-      const key = [...p, ...n, ...c, ...uv].join(',');
+      const kind = this.celestialKinds[i]!;
+      const key = [...p, ...n, ...c, ...uv, kind].join(',');
       let index = vertices.get(key);
-      if (index === undefined) { index = positions.length / 3; vertices.set(key, index); positions.push(...p); normals.push(...n); colors.push(...c); uvs.push(...uv); }
+      if (index === undefined) { index = positions.length / 3; vertices.set(key, index); positions.push(...p); normals.push(...n); colors.push(...c); uvs.push(...uv); celestialKinds.push(kind); }
       indices.push(index);
     }
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    if (celestialKinds.some(kind => kind !== 0)) geometry.setAttribute('dioramaCelestial', new THREE.Float32BufferAttribute(celestialKinds, 1));
     geometry.setIndex(indices);
     geometry.computeBoundingBox(); geometry.computeBoundingSphere();
     return geometry;
@@ -98,8 +107,8 @@ function clipHeight(points: readonly OutlinePoint[], height: number, above: bool
   return result;
 }
 
-/** All dimensions are relative to map span. No map-cell iteration or randomness. */
-export function createDioramaGeometry(width: number, height: number): DioramaGeometry {
+/** One deterministic construction per site. No map-cell iteration or simulation RNG. */
+export function createDioramaGeometry(width: number, height: number, seed = 0, biome: BiomeId = 'temperate-forest'): DioramaGeometry {
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
     throw new RangeError('Diorama map dimensions must be finite and positive.');
   }
@@ -109,15 +118,14 @@ export function createDioramaGeometry(width: number, height: number): DioramaGeo
   const textureScale = span * .085;
   const parts: DioramaGeometryPart[] = [];
   const cardboard = 0xaa9279, cutEdge = 0xbda48a, shadowCard = 0x886e57;
-  const cream = 0xede7d6;
   const minX = -.5 - gap, maxX = width - .5 + gap;
   const minZ = -.5 - gap, maxZ = height - .5 + gap;
-  type Wall = { side: DioramaSide; start: Point; tangent: Point; inward: Point; length: number; northAtStart: boolean };
+  type Wall = { side: DioramaSide; start: Point; tangent: Point; inward: Point; length: number };
   const walls: Wall[] = [
-    { side: 'north', start: [minX, 0, minZ], tangent: [1, 0, 0], inward: [0, 0, 1], length: maxX - minX, northAtStart: true },
-    { side: 'west', start: [minX, 0, maxZ], tangent: [0, 0, -1], inward: [1, 0, 0], length: maxZ - minZ, northAtStart: false },
-    { side: 'south', start: [maxX, 0, maxZ], tangent: [-1, 0, 0], inward: [0, 0, -1], length: maxX - minX, northAtStart: false },
-    { side: 'east', start: [maxX, 0, minZ], tangent: [0, 0, 1], inward: [-1, 0, 0], length: maxZ - minZ, northAtStart: true },
+    { side: 'north', start: [minX, 0, minZ], tangent: [1, 0, 0], inward: [0, 0, 1], length: maxX - minX },
+    { side: 'west', start: [minX, 0, maxZ], tangent: [0, 0, -1], inward: [1, 0, 0], length: maxZ - minZ },
+    { side: 'south', start: [maxX, 0, maxZ], tangent: [-1, 0, 0], inward: [0, 0, -1], length: maxX - minX },
+    { side: 'east', start: [maxX, 0, minZ], tangent: [0, 0, 1], inward: [-1, 0, 0], length: maxZ - minZ },
   ];
 
   for (const wall of walls) {
@@ -246,106 +254,62 @@ export function createDioramaGeometry(width: number, height: number): DioramaGeo
       }
       splitPrism(false, outline, depth, depth + span * DIORAMA_PAPER_THICKNESS, color, 0xc9bfa8);
     };
-    const outline = (points: readonly OutlinePoint[], x: number, y: number, sx: number, sy: number): OutlinePoint[] =>
-      points.map(([u, v]) => [x + u * sx, y + v * sy]);
-    const artisan = (points: readonly OutlinePoint[], seed: number, amplitude: number): OutlinePoint[] =>
-      points.map(([u, v], i) => [u + Math.sin(i * 2.13 + seed * 1.71) * amplitude * v,
-        v + Math.sin(i * 1.47 + seed * 2.27) * amplitude * Math.sin(v * Math.PI)]);
-    const mountainShape: readonly OutlinePoint[] = [[0, 0], [.17, .25], [.29, .2], [.51, 1], [.70, .51], [.82, .57], [1, 0]];
-    const treeShape: readonly OutlinePoint[] = [[.46, 0], [.54, 0], [.54, .11], [.88, .11], [.73, .32], [.85, .32],
-      [.65, .55], [.73, .55], [.5, 1], [.28, .55], [.36, .55], [.15, .32], [.27, .32], [.1, .11], [.46, .11]];
-    const cloudShape: readonly OutlinePoint[] = [[.04, .06], [.02, .11], [0, .20], [.005, .31], [.04, .40], [.10, .44],
-      [.13, .42], [.13, .60], [.16, .75], [.22, .86], [.30, .89], [.38, .85], [.44, .73], [.48, .91], [.55, 1],
-      [.64, .99], [.72, .91], [.76, .77], [.78, .58], [.84, .63], [.91, .61], [.97, .50], [1, .37],
-      [.99, .20], [.94, .09], [.88, .04], [.63, 0], [.30, .01]];
-
-    // Background mountain chains use a few overlapping paper strips, rather
-    // than repeating props. Snow caps are separate glued cream paper facets.
-    const north = wall.side === 'north', south = wall.side === 'south';
-    const mountainCount = south ? 7 : north ? 8 : 7;
-    for (let i = 0; i < mountainCount; i++) {
-      const ratio = (i + .1) / mountainCount, u = wall.length * ratio;
-      const available = topAt(Math.min(wall.length, u + wall.length / mountainCount * .5));
-      const w = wall.length / mountainCount * 1.33;
-      const peakHeight = south ? .082 + ((i + 1) % 3) * .019 : .086 + (i % 3) * .019;
-      const h = Math.min(span * peakHeight, available * .70);
-      const base = -span * .006;
-      const sway = Math.sin(i * 2.4 + (north ? .3 : 1.1)) * .035;
-      const mountainOutline = (shape: readonly OutlinePoint[]): OutlinePoint[] =>
-        outline(shape.map(([x, y]): OutlinePoint => [x + sway * y, y]), u - w * .13, base, w, h);
-      const points = mountainOutline(artisan(mountainShape, i, .012));
-      // Crop at both physical edges; the final outline cannot poke through a seam.
-      const clipped = clipWidth(points, span * .022, wall.length - span * .022);
-      // Adjacent cutouts overlap in silhouette. Alternating complete depth
-      // lanes keep their thicker solids disjoint, including their back faces.
-      art(clipped, [0x71836c, 0x809178, 0x8c9b80][i % 3]!, span * (i % 2 ? .0019 : .0002), false);
-      if (i % 2 === (south ? 1 : 0)) {
-        const snow = mountainOutline([[.36, .64], [.51, 1], [.64, .68], [.55, .73], [.50, .62], [.46, .72]]);
-        // The cut snow follows the mountain's slightly asymmetric summit.
-        snow[1] = points[3]!;
-        art(snow, 0xe0ddc9, span * .00365, false);
+    const decor = createDioramaDecor({ seed, biome, side: wall.side, wallLength: wall.length, span });
+    for (const cut of decor.cutouts) art(cut.outline, cut.pigment, cut.depth, cut.shadow);
+    for (const fold of decor.folds) {
+      art(fold.outline, 0xc4b9a4, fold.contactDepth, false);
+      const front = fold.outline.map(([u, y], k) => point(u, y, k === 2 ? fold.tipDepth : fold.baseDepth, false));
+      const back = fold.outline.map(([u, y]) => point(u, y, fold.backDepth, false));
+      upperPaper.triangle(front[0]!, front[1]!, front[2]!, 0xf5efdf, wall.inward);
+      upperPaper.triangle(back[0]!, back[1]!, back[2]!, 0xc8bca7, [-wall.inward[0], 0, -wall.inward[2]]);
+      for (let k = 0; k < 3; k++) {
+        const next = (k + 1) % 3;
+        upperPaper.quad(front[k]!, back[k]!, back[next]!, front[next]!, 0xd4c8b3);
       }
-      // A darker foreground mountain overlaps the broad sage silhouette.
-      const fw = w * .94, fh = h * .64, fx = u - w * .08;
-      art(clipWidth(outline([[0, 0], [.23, .4], [.39, .30], [.65, 1], [.83, .37], [1, 0]],
-        fx, -span * .010, fw, fh), span * .022, wall.length - span * .022),
-        i % 2 ? 0x526b54 : 0x61775e, span * (i % 2 ? .0071 : .0054), false);
     }
-    // Cutout pines are varied in width/height but share an intentional silhouette.
-    const treeCount = south ? 12 : north ? 17 : 14;
-    for (let i = 0; i < treeCount; i++) {
-      const u = span * .025 + (wall.length - span * .05) * (i + .5) / treeCount;
-      const treeHeight = south ? .046 + ((i * 5 + 2) % 7) * .004 : .049 + (i * 5 % 7) * .004;
-      const h = Math.min(span * treeHeight, topAt(u) * .62);
-      const w = h * (.40 + (i % 3) * .06), y = span * (-.005 + i % 4 * .001);
-      art(outline(artisan(treeShape, i, .022), u - w / 2, y, w, h), [0x354e3d, 0x45644b, 0x557254][i % 3]!, span * .00885);
-      art([[u - w * .036, y], [u + w * .037, y], [u + w * .03, y + h * .15], [u - w * .033, y + h * .15]],
-        0x9a7851, span * .0106, false);
-    }
-    {
-      const cloudRatios = north ? [.16, .42, .86] : south ? [.23, .70]
-        : wall.northAtStart ? [.19, .52] : [.48, .79];
-      for (let i = 0; i < cloudRatios.length; i++) {
-        const u = wall.length * cloudRatios[i]!, w = span * (i % 2 ? .096 : .114), h = w * .35;
-        const y = topAt(u) - h - span * (.017 + i % 2 * .014);
-        art(outline(artisan(cloudShape, i, .011), u - w / 2, y, w, h), cream, span * .0007);
-        // Short cream patch repeats a hand-cut paper overlap, not a noisy chip.
-        art(outline([[0, 0], [.62, -.035], [1, .04], [.88, .22], [.21, .27]],
-          u - w * .31, y + h * .035, w * .52, h * .23), 0xf5efdf, span * .0026, false);
-        if (i === 0) {
-          // One lifted cream paper corner, with its contact shade baked below.
-          // A closed shallow wedge stays in the cloud batch, without extra draws.
-          const fold: readonly OutlinePoint[] = [[u + w * .26, y + h * .10], [u + w * .34, y + h * .065],
-            [u + w * .335, y + h * .27]];
-          art(fold, 0xc4b9a4, span * .0045, false);
-          // Preserve the original folded film's thickness profile at exactly
-          // 2.5× (.0001/.00165 -> .00025/.004125), above the contact paper.
-          const front = fold.map(([x, v], k) => point(x, v, span * (k === 2 ? .010525 : .00665), false));
-          const back = fold.map(([x, v]) => point(x, v, span * .0064, false));
-          upperPaper.triangle(front[0]!, front[1]!, front[2]!, 0xf5efdf, wall.inward);
-          upperPaper.triangle(back[0]!, back[1]!, back[2]!, 0xc8bca7, [-wall.inward[0], 0, -wall.inward[2]]);
-          for (let k = 0; k < 3; k++) {
-            const next = (k + 1) % 3;
-            upperPaper.quad(front[k]!, back[k]!, back[next]!, front[next]!, 0xd4c8b3);
+    if (wall.side === 'north') {
+      // Both slides share the existing north paper batch. A narrow cardboard
+      // stick lies behind each cutout, moving as one rigid piece through the
+      // concealed slot behind the foreground scenery and permanent lower rim.
+      const u = wall.length * .68, y = span * DIORAMA_SKY.center;
+      const moving = (points: readonly OutlinePoint[], color: number, back: number, front: number) =>
+        prism(upperPaper, points, span * back, span * front, color, 0xc9bfa8, false);
+      for (const kind of [1, -1] as const) {
+        upperPaper.celestial = kind;
+        const stem = span * .0022, foot = span * -.044;
+        moving([[u - stem, foot], [u + stem, foot], [u + stem * .93, y + span * .01],
+          [u + stem * .60, y + span * .012], [u - stem * .58, y + span * .012],
+          [u - stem * .91, y + span * .01]], 0xb59b76, .00005, .00060);
+        const radius = span * (kind === 1 ? DIORAMA_SKY.sunRadius : DIORAMA_SKY.moonRadius);
+        const disc: OutlinePoint[] = [];
+        if (kind === 1) {
+          for (let i = 0; i < 32; i++) {
+            const angle = i / 32 * Math.PI * 2, irregular = 1 + Math.sin(i * 1.7) * .013;
+            disc.push([u + Math.cos(angle) * radius * irregular, y + Math.sin(angle) * radius * irregular]);
           }
+          moving(disc, 0xc49652, .00065, .00065 + DIORAMA_PAPER_THICKNESS);
+          for (let i = 0; i < 9; i++) {
+            const angle = i * Math.PI * 2 / 9, x = Math.cos(angle), v = Math.sin(angle);
+            const r0 = radius * 1.36, r1 = radius * 1.75, half = span * .0008;
+            moving([[u + x * r0 - v * half, y + v * r0 + x * half], [u + x * r1 - v * half, y + v * r1 + x * half],
+              [u + x * r1 + v * half, y + v * r1 - x * half], [u + x * r0 + v * half, y + v * r0 - x * half]],
+              0xb78d50, .00065, .00065 + DIORAMA_PAPER_THICKNESS);
+          }
+        } else {
+          // A true crescent cutout, not a coloured overlay on a full circle.
+          for (let i = 0; i <= 24; i++) {
+            const angle = Math.PI * (.29 + i / 24 * 1.42);
+            disc.push([u + Math.cos(angle) * radius, y + Math.sin(angle) * radius]);
+          }
+          const tipX = Math.cos(Math.PI * .29), tipY = Math.sin(Math.PI * .29);
+          for (let i = 1; i < 16; i++) {
+            const t = i / 16;
+            disc.push([u + radius * (tipX - .97 * Math.sin(Math.PI * t)), y + radius * (-tipY + 2 * tipY * t)]);
+          }
+          moving(disc, 0xe2e4d6, .00065, .00065 + DIORAMA_PAPER_THICKNESS);
         }
       }
-    }
-    if (north) {
-      const u = wall.length * .69, y = span * .163, radius = span * .018;
-      const sun: OutlinePoint[] = [];
-      for (let i = 0; i < 32; i++) {
-        const angle = i / 32 * Math.PI * 2, irregular = 1 + Math.sin(i * 1.7) * .013;
-        sun.push([u + Math.cos(angle) * radius * irregular, y + Math.sin(angle) * radius * irregular]);
-      }
-      art(sun, 0xc49652, span * .0007);
-      for (let i = 0; i < 9; i++) {
-        const angle = i * Math.PI * 2 / 9, x = Math.cos(angle), v = Math.sin(angle), r0 = radius * 1.36, r1 = radius * 1.75;
-        const half = span * .0008;
-        art([[u + x * r0 - v * half, y + v * r0 + x * half], [u + x * r1 - v * half, y + v * r1 + x * half],
-          [u + x * r1 + v * half, y + v * r1 - x * half], [u + x * r0 + v * half, y + v * r0 - x * half]],
-          0xb78d50, span * .0007, false);
-      }
+      upperPaper.celestial = 0;
     }
     for (const [layer, material, batch] of [['lower', 'cardboard', lowerCard], ['upper', 'cardboard', upperCard],
       ['lower', 'paper', lowerPaper], ['upper', 'paper', upperPaper]] as const) {
@@ -414,9 +378,4 @@ export function createDioramaGeometry(width: number, height: number): DioramaGeo
   parts.push({ name: 'diorama-box-base', layer: 'base', material: 'cardboard', geometry: base.finish() });
   parts.push({ name: 'diorama-wooden-table', layer: 'table', material: 'wood', geometry: table.finish() });
   return { parts, span, wallHeight, tableTop };
-}
-
-function clipWidth(points: readonly OutlinePoint[], left: number, right: number): OutlinePoint[] {
-  const swapped = points.map(([x, y]): OutlinePoint => [y, x]);
-  return clipHeight(clipHeight(swapped, left, true), right, false).map(([y, x]) => [x, y]);
 }

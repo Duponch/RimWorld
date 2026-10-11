@@ -1,8 +1,10 @@
 # Documentation d’Elsewhere
 
-**V322 : [relief et visibilité de la boîte](development/cardboard-diorama-v322.md), schéma 229 conservé.** Papier épaissi, quatre murs hauts et masquage des parties supérieures seulement lorsqu'elles couvrent du sol dans la caméra actuelle ; rebords bas permanents. [Guide](gameplay/player-guide.md#voir-la-carte-en-diorama--v322), contrôles et coûts dans la note unique. Les états suivants sont historiques.
+**V323 : [paysages procéduraux et astres sur tiges](development/cardboard-diorama-v323.md), schéma 229 conservé.** Découpes par biome/graine et cycle solaire en papier, avec [guide](gameplay/player-guide.md#voir-la-carte-en-diorama--v323). Contrôles et coûts dans la note unique. Les états suivants sont historiques.
 
-**V321 : [diorama en carton](development/cardboard-diorama-v321.md), schéma 229 conservé.** Boîte et décors de papier autour de la carte, table nue et option de désactivation ; [guide](gameplay/player-guide.md#voir-la-carte-en-diorama--v322). Contrôles et coût ON/OFF dans la note unique. Les états suivants sont historiques.
+**V322 : [relief et visibilité de la boîte](development/cardboard-diorama-v322.md), schéma 229 conservé.** Papier épaissi, quatre murs hauts et masquage des parties supérieures seulement lorsqu'elles couvrent du sol dans la caméra actuelle ; rebords bas permanents. [Guide](gameplay/player-guide.md#voir-la-carte-en-diorama--v323), contrôles et coûts dans la note unique. Les états suivants sont historiques.
+
+**V321 : [diorama en carton](development/cardboard-diorama-v321.md), schéma 229 conservé.** Boîte et décors de papier autour de la carte, table nue et option de désactivation ; [guide](gameplay/player-guide.md#voir-la-carte-en-diorama--v323). Contrôles et coût ON/OFF dans la note unique. Les états suivants sont historiques.
 
 **V320 : [étagères physiques](gameplay/shelves-v320.md), schéma 229.** Stockage multi-piles, politiques propres, transports et sources communs ; [référence Core](research/shelves-core-v320.md) et [guide](gameplay/player-guide.md#ranger-sur-des-étagères--v320). Preuves, reprises, rouges et limites dans la note unique. Les états suivants sont historiques.
 

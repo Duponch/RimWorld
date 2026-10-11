@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
 import { expect, test } from 'vitest';
+import { createDioramaDecor, type DioramaDecorKind } from '../src/render/diorama-decor';
 import { createDioramaGeometry, DIORAMA_PAPER_THICKNESS, type DioramaSide } from '../src/render/diorama-geometry';
 
 const inward: Record<DioramaSide, readonly [number, number]> = {
@@ -30,18 +31,17 @@ test.each([[32, 32], [250, 250], [48, 32]])('all four %i×%i walls keep the nort
   for (const part of model.parts) part.geometry.dispose();
 });
 
-test('ordinary mountains, snow, forest, sky and folded contact paper have 2.5× physical thickness', () => {
-  const model = createDioramaGeometry(250, 250);
+test.each(['temperate-forest', 'boreal-forest', 'arid-shrubland'] as const)('%s paper faces, including both celestial slides, have 2.5× physical thickness', biome => {
+  const model = createDioramaGeometry(250, 250, 0, biome);
   const edge = new THREE.Color(0xc9bfa8);
-  const pigments = [0x71836c, 0x809178, 0x8c9b80, 0xe0ddc9, 0x526b54, 0x61775e,
-    0x354e3d, 0x45644b, 0x557254, 0x9a7851, 0xede7d6, 0xf5efdf, 0xc4b9a4, 0xc49652, 0xb78d50];
-  const colors = pigments.map(hex => new THREE.Color(hex));
+  const rod = new THREE.Color(0xb59b76);
   const observed = new Set<number>();
   let checked = 0, mismatched = 0;
   expect(DIORAMA_PAPER_THICKNESS).toBeCloseTo(.00065 * 2.5, 12);
   for (const part of model.parts.filter(part => part.material === 'paper')) {
     const position = part.geometry.getAttribute('position'), normal = part.geometry.getAttribute('normal');
-    const color = part.geometry.getAttribute('color'), [nx, nz] = inward[part.side!];
+    const color = part.geometry.getAttribute('color'), celestial = part.geometry.getAttribute('dioramaCelestial');
+    const [nx, nz] = inward[part.side!];
     const matches = (i: number, pigment: THREE.Color) => Math.abs(color.getX(i) - pigment.r) < 1e-6
       && Math.abs(color.getY(i) - pigment.g) < 1e-6 && Math.abs(color.getZ(i) - pigment.b) < 1e-6;
     const key = (i: number) => `${(nx ? position.getZ(i) : position.getX(i)).toFixed(6)},${position.getY(i).toFixed(6)}`;
@@ -55,17 +55,17 @@ test('ordinary mountains, snow, forest, sky and folded contact paper have 2.5× 
     }
     for (let i = 0; i < position.count; i++) {
       const facing = nx * normal.getX(i) + nz * normal.getZ(i);
-      if (facing < .99) continue;
-      const pigment = colors.findIndex(candidate => matches(i, candidate));
-      if (pigment < 0) continue;
-      observed.add(pigments[pigment]!); checked++;
+      // The slide rods deliberately use thinner stock; every other planar
+      // front must pair with the same full-thickness paper back edge.
+      if (facing < .99 || matches(i, rod)) continue;
+      observed.add(celestial?.getX(i) ?? 0); checked++;
       const expected = model.span * DIORAMA_PAPER_THICKNESS;
       if (!backs.get(key(i))?.some(back => Math.abs(depth(i) - back - expected) < model.span * 1e-6)) mismatched++;
     }
   }
   expect(checked).toBeGreaterThan(100);
   expect(mismatched).toBe(0);
-  expect([...observed].sort()).toEqual([...pigments].sort());
+  expect([...observed].sort()).toEqual([-1, 0, 1]);
   for (const part of model.parts) part.geometry.dispose();
 });
 
@@ -99,13 +99,16 @@ test('the lifted cloud fold keeps its base film and tip relief at 2.5× behind t
   for (const part of model.parts) part.geometry.dispose();
 });
 
-test('the high south wall carries full-scale mountains, snowy peaks, pines and sky paper', () => {
+test('the high south wall carries full-scale temperate mountains, oak, poplar and sky paper', () => {
   const model = createDioramaGeometry(250, 250);
+  const decor = createDioramaDecor({ seed: 0, biome: 'temperate-forest', side: 'south',
+    span: model.span, wallLength: 250 + model.span * .0252 });
   const south = model.parts.find(part => part.side === 'south' && part.layer === 'upper' && part.material === 'paper');
   expect(south).toBeDefined();
   const position = south!.geometry.getAttribute('position'), color = south!.geometry.getAttribute('color');
-  const peak = (pigments: number[]) => {
-    const palette = pigments.map(hex => new THREE.Color(hex));
+  const peak = (kind: DioramaDecorKind) => {
+    const palette = decor.cutouts.filter(cut => cut.kind === kind).map(cut => new THREE.Color(cut.pigment));
+    expect(palette.length).toBeGreaterThan(0);
     let maxY = -Infinity;
     for (let i = 0; i < position.count; i++) {
       if (palette.some(p => Math.abs(color.getX(i) - p.r) < 1e-6 && Math.abs(color.getY(i) - p.g) < 1e-6
@@ -113,10 +116,11 @@ test('the high south wall carries full-scale mountains, snowy peaks, pines and s
     }
     return maxY / model.span;
   };
-  expect(peak([0x71836c, 0x809178, 0x8c9b80])).toBeGreaterThan(.09);
-  expect(peak([0xe0ddc9])).toBeGreaterThan(.09);
-  expect(peak([0x354e3d, 0x45644b, 0x557254])).toBeGreaterThan(.05);
-  expect(peak([0xede7d6])).toBeGreaterThan(.17);
+  expect(peak('background-ridge')).toBeGreaterThan(.075);
+  expect(peak('foreground-ridge')).toBeGreaterThan(.025);
+  expect(peak('oak')).toBeGreaterThan(.04);
+  expect(peak('poplar')).toBeGreaterThan(.04);
+  expect(peak('cloud')).toBeGreaterThan(.16);
   expect(model.parts.length).toBeLessThanOrEqual(18);
   for (const part of model.parts) part.geometry.dispose();
 });

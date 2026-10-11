@@ -18,7 +18,12 @@ class TriangleTree {
 
   constructor(geometry: BufferGeometry) {
     this.positions = geometry.getAttribute('position').array;
-    this.indices = geometry.index?.array ?? Uint32Array.from({ length: this.positions.length / 3 }, (_, i) => i);
+    const indices = geometry.index?.array ?? Uint32Array.from({ length: this.positions.length / 3 }, (_, i) => i);
+    const celestial = geometry.getAttribute('dioramaCelestial');
+    // Sliding paper is only rendered from the interior-facing camera half-space
+    // (DioramaLayer). Its vertices stay behind every ray to playable ground.
+    // Exclude its authored maximum pose so the hierarchy remains truly static.
+    this.indices = celestial ? indices.filter(index => celestial.getX(index) === 0) : indices;
     this.root = this.build(0, this.indices.length);
   }
 
