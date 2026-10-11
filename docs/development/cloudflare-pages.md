@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication courante `20e234d0` porte les boucles élémentaires jusqu'aux [étagères V320](../gameplay/shelves-v320.md) et les corrections d'[infobulles/alertes V319](../gameplay/interface-feedback-v319.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication courante `b6ab8363` ajoute le [diorama en carton V321](cardboard-diorama-v321.md) aux boucles élémentaires jusqu'aux [étagères V320](../gameplay/shelves-v320.md) et aux corrections d'[infobulles/alertes V319](../gameplay/interface-feedback-v319.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
 
 ## Adresse et publication
 
@@ -145,3 +145,30 @@ Le 11 octobre 2026, le produit `a1bb77ee538548034658dedfa6874540e5e53954` est co
 Build Pages final avec typage **PASS 10,740 s**. Package **PASS 1,526 s**, 513 fichiers/113110031 octets ; 63 références/66 fichiers publics byte-identiques, deux nouveaux portraits d'étagères et assets historiques exacts, laboratoire et sources privés absents. [Rapport package](../../tmp/elsewhere-pages/v320-package-KXhr3z/report.json). Wrangler **4.149.0** confirmé, déploiement **PASS 14,164 s** : six fichiers envoyés, 505 déjà présents, puis en-têtes et redirections. L'avertissement Git dirty concerne uniquement `references_UI`, exclu du commit et du package. Les logs restent sous le chemin privé habituel, sans changement des credentials.
 
 HTTPS **PASS 6,576 s** : 49 chemins sur les deux origines, soit **98 réponses 200/MIME/octets exacts**, [rapport](../../tmp/elsewhere-pages/v320-http-aENTOv/report.json). Le package et les fichiers publics restent identiques pendant le contrôle. Les 66 fichiers distants ne sont pas tous téléchargés ; ces vérifications ne constituent ni un parcours de jeu en ligne ni un benchmark. Les parcours Chrome WebGPU, recharges exactes, rouges et reprises sont consignés dans les notes V319/V320. Le commit/push documentaire consécutif enregistre la livraison sans deuxième publication. Poursuite fonctionnelle autonome autorisée ; prochaine priorité étudiée : barricades constructibles et rôle de clôture. Relance planifiée **PAUSED**.
+
+## Publication V321 — diorama en carton
+
+Le 11 octobre 2026, le produit `a623ea20587676ef50f43cb19a6f19265932c3cd` est
+commité/poussé puis publié une seule fois en **b6ab8363** :
+[adresse stable](https://elsewhere-cq7.pages.dev/) et
+[publication](https://b6ab8363.elsewhere-cq7.pages.dev/). Cette priorité graphique
+ajoute la boîte, sa table, ses décors de papier et une préférence ON/OFF avec
+sorties anticipées. Simulation et schéma229 inchangés ; le coût graphique mesuré
+reste explicitement consigné dans la [note V321](cardboard-diorama-v321.md).
+
+Typage final **PASS6,910s**, build Pages **PASS2,468s**. Package **PASS2,175s**,
+515fichiers/119137682octets,63références/66fichiers publics byte-identiques ;
+deux textures et assets historiques exacts, laboratoire et fichiers privés
+absents. [Rapport package](../../tmp/elsewhere-pages/v321-package-eK6V23/report.json).
+Wrangler **4.149.0** confirmé, déploiement **PASS14,645s** : quatre fichiers
+envoyés et509déjà présents, puis en-têtes/redirections. L’avertissement Git dirty
+concerne seulement `references_UI`, exclu du commit et du package.
+
+HTTPS **PASS8,214s** :51chemins sur les deux origines, soit **102réponses200/MIME/
+octets exacts**, [rapport](../../tmp/elsewhere-pages/v321-http-nPJC3q/report.json).
+Package et publics inchangés pendant le contrôle. Les66fichiers distants ne
+sont pas tous téléchargés ; disponibilité réseau seulement, sans nouveau parcours
+navigateur en ligne ni benchmark. Les quatre recharges de continuation exactes
+et les captures sont celles du contrôle local ChromeWebGPU V321. Un commit/push
+documentaire consigne la livraison sans deuxième publication. La relance reste
+**PAUSED**.

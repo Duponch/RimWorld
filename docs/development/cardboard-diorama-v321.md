@@ -125,3 +125,16 @@ Typage final **PASS6,910s**, build Pages **PASS2,468s**. Un premier lancement np
 mal résolu sous Windows (`v321-build-pages`, ENOENT0,008s) n’a exécuté aucun
 compilateur ; typage et build ont été repris par leurs entrées Node explicites,
 sans changement produit. Le serveur Vite5395 de contrôle est fermé.
+
+## Livraison
+
+Produit `a623ea20587676ef50f43cb19a6f19265932c3cd` commité et poussé sur main.
+Documentation PASS1,777s ; package PASS2,175s,515fichiers/119137682octets,
+66fichiers publics exacts et laboratoire/sources privés absents. Une seule
+publication Cloudflare en **b6ab8363**, PASS14,645s. Contrôle HTTPS PASS8,214s,
+**102réponses200/MIME/octets exacts** sur les origines stable et fraîche,
+[rapport](../../tmp/elsewhere-pages/v321-http-nPJC3q/report.json).
+Le dossier utilisateur `references_UI` reste non suivi, hors commit et package.
+Le commit documentaire suivant ne republie pas. Procédure et portée réseau dans
+[Cloudflare Pages](cloudflare-pages.md#publication-v321--diorama-en-carton).
+Relance planifiée PAUSED ; aucun chantier gameplay supplémentaire engagé ici.
