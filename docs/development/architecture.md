@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V309, schéma 220 : [abattage domestique](../gameplay/slaughter-v309.md).** Intention optionnelle et tâche de contact dans Handling, garde commune fichiers/Decoder, migration stricte219 puis numéro seul. La dépouille garde son identité et ses filières ; marqueur résident partageant les trajectoires GPU des animaux. Les états suivants sont historiques.
+
 **V306, schéma 219 conservé : [surfaces et préférences d’affichage](../gameplay/presentation-controls-v306.md).** Les producteurs graphiques exposent leurs rectangles F32 dans deux phases ordonnées ; index sparse résident et calcul vertex à la racine du brin. Aucun parcours des brins au CPU ni nouvelle autorité sur World. Fontes locales et uniforme de masquage des nuages relèvent des préférences du navigateur. Les états suivants sont historiques.
 
 **V305, schéma 219 conservé : [préparation des scènes](aulnes-performance-v305.md).** MAIN privé construit sa file et son observateur : journal structural confirmé, projection sparse des tuples et buffers primitifs des intentions. Les API publiques et Source conservent leurs expressions historiques ; changement inconnu/checkpoint remet en capture complète. Les horloges Pawn/Wildlife utilisent les groupes Three par rendu avec nodes/propriétaires distincts. Aucun nouveau Worker, protocole ou baisse de cadence. Les états suivants sont historiques.

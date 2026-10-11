@@ -1,4 +1,6 @@
-# Validation courante — V306
+# Validation courante — V309
+
+**V309 : [abattage domestique](../gameplay/slaughter-v309.md#contrôles-et-limites), schéma 220.** Groupe final41cas/3fichiers et reprise commune15cas/4fichiers ; typage14,139s/buildPages2,261s et corpus63références/66fichiers67,637s passent. ChromeWebGPU41,874s : sept recharges exactes,20viandes11cuirs puis un repas ingéré ; présentationChrome120,137s PASS. Refus TintIR Chromium et rouges initiaux conservés dans la note unique, aucun gainFPS ou campagne naturelle certifié. Les validations suivantes sont historiques.
 
 **V306 : [herbe, HUD et préférences](../gameplay/presentation-controls-v306.md#validation), schéma 219 conservé.** Groupes ciblés et contrôles ROOT de shaders, interface, préférences et impact global ; gels et rouges conservés dans la note unique. Simulation/bridge et catalogue public inchangés. Les validations suivantes sont historiques.
 

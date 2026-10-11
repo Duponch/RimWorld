@@ -3,6 +3,7 @@ import {applyCommand,stepWorld} from '../src/sim/engine';
 import {deserializeWorld,serializeWorld,validateWorld} from '../src/sim/serialization';
 import {SnapshotDecoder,SnapshotEncoder} from '../src/bridge/snapshots';
 import {createScenarioWorld} from '../src/sim/new-game';
+import {SCHEMA_VERSION} from '../src/sim/types';
 import {createPlantLife} from '../src/sim/plant-life';
 import {isPlant} from '../src/sim/plants';
 import {reconcileTemperature} from '../src/sim/temperature';
@@ -68,7 +69,7 @@ test('schema218 raw files keep the original resource and nonconstruction-job ove
   for(const kind of ['tree','berries','wild-plant'] as const){
     const w=camp();plant(w,kind);(w as unknown as {schemaVersion:number}).schemaVersion=218;
     const before=JSON.stringify(w);
-    expect(deserializeWorld(before).schemaVersion).toBe(219);
+    expect(deserializeWorld(before).schemaVersion).toBe(SCHEMA_VERSION);
     expect(applyCommand(w,reserve)).toMatchObject({ok:false,code:'occupied'});expect(JSON.stringify(w)).toBe(before);
     injectReserve(w);delete w.stockpiles[0]!.zoneId;
     expect(()=>deserializeWorld(JSON.stringify(w))).toThrow('Storage overlaps fixed content.');

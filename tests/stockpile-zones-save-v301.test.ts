@@ -4,7 +4,7 @@ import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serial
 import { SnapshotEncoder,SnapshotDecoder } from '../src/bridge/snapshots.ts';
 import { stockpileZoneId } from '../src/sim/stockpile-zones.ts';
 import { deconstructionCamp } from './scenarios/deconstruction.ts';
-import type { World } from '../src/sim/types.ts';
+import { SCHEMA_VERSION,type World } from '../src/sim/types.ts';
 
 function camp():World {const w=deconstructionCamp(1);w.tick=2000;w.stockpiles=[];w.growingZones=[];return w;}
 function prepared():World {const w=camp();expect(applyCommand(w,{type:'area',action:'stockpile',from:{x:4,z:4},to:{x:6,z:4}}).ok).toBe(true);return w;}
@@ -12,7 +12,7 @@ function prepared():World {const w=camp();expect(applyCommand(w,{type:'area',act
 test('218 migration adds only identities, grouping cardinal equal-policy cells and preserving heterogeneous neighbours',()=>{
   const w=prepared();for(const cell of w.stockpiles)delete cell.zoneId;w.stockpiles[2]!.priority=4;
   const legacy={...w,schemaVersion:218},before=structuredClone(legacy),resumed=deserializeWorld(JSON.stringify(legacy));
-  expect(resumed.schemaVersion).toBe(219);expect(resumed.stockpiles[0]!.zoneId).toBe(resumed.stockpiles[1]!.zoneId);expect(resumed.stockpiles[2]!.zoneId).not.toBe(resumed.stockpiles[0]!.zoneId);
+  expect(resumed.schemaVersion).toBe(SCHEMA_VERSION);expect(resumed.stockpiles[0]!.zoneId).toBe(resumed.stockpiles[1]!.zoneId);expect(resumed.stockpiles[2]!.zoneId).not.toBe(resumed.stockpiles[0]!.zoneId);
   expect({...resumed,schemaVersion:218,stockpiles:resumed.stockpiles.map(({zoneId:_id,...cell})=>cell)}).toEqual(before);
   expect(validateWorld(resumed)).toEqual([]);expect(deserializeWorld(serializeWorld(resumed))).toEqual(resumed);
 });

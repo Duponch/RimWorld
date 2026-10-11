@@ -5,7 +5,12 @@ import type { World } from '../sim/types';
 const labels:Readonly<Record<WildAnimal['state'],string>>={idle:'Se repose',moving:'Se déplace',eating:'Mange',sleeping:'Dort',hungry:'Cherche à manger',downed:'À terre',dead:'Mort'};
 /** Shared activity for the list and inspector, published from confirmed state. */
 export function animalActivity(world:World,animal:WildAnimal):string {
-  if(animal.state==='dead'||animal.state==='downed')return labels[animal.state];
+  if(animal.state==='dead')return labels[animal.state];
+  if(animal.domestic?.slaughter){
+    const worker=world.pawns.find(p=>p.animalHandling?.kind==='slaughter'&&p.animalHandling.animalId===animal.id);
+    return worker?`${worker.animalHandling!.phase==='interact'?'Abattage':'Dresseur en approche'} · ${worker.name}`:'Désigné pour abattage';
+  }
+  if(animal.state==='downed')return labels[animal.state];
   if(animal.flee)return 'Fuit';
   if(animal.stun)return 'Étourdi';
   if(animal.manhunter){

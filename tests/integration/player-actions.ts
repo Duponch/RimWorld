@@ -5,6 +5,7 @@ import type { Decision } from '../scenarios/colony-player';
 import type { BillSettings } from '../../src/sim/cooking-types';
 import { stationRecipes } from '../../src/sim/production-recipes';
 import { mapObjectsAt } from '../../src/ui/map-object-selection';
+import { storageTreeSelection } from '../../src/ui/storage-filter-tree';
 import { world, panel, pawnTab, tool, cell, dragRectangle, settledCells, type PawnInspectorTab } from './helpers';
 
 export async function revealCells(page:Page,cells:{x:number;z:number}[]):Promise<void> {
@@ -331,6 +332,18 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
 }
 
 async function storageSettings(page:Page,c:import('../../src/sim/types').StorageSettings):Promise<void>{
-    await page.locator('#stockpile-silver').setChecked(c.filters!.silver??false);await page.locator('#stockpile-corpse').setChecked(c.filters!.corpse??false);await page.locator('#stockpile-textile').setChecked(c.filters!.textile??false);await page.locator('#stockpile-unfinished').setChecked(c.filters!.unfinished??false);await page.locator('#stockpile-apparel').setChecked(c.filters!.apparel??false);await page.locator('#stockpile-weapon').setChecked(c.filters!.weapon??false);await page.locator('#stockpile-medicine').setChecked(c.filters!.medicine??false);await page.locator('#stockpile-component').setChecked(c.filters!.component??false);await page.locator('#stockpile-blocks').setChecked(c.filters!.blocks??false);await page.locator('#stockpile-steel').setChecked(c.filters!.steel??false);await page.locator('#stockpile-chunk').setChecked(c.filters!.chunk??false);await page.locator('#stockpile-wood').setChecked(c.filters!.wood);await page.locator('#stockpile-food').setChecked(c.filters!.food);await page.locator('#stockpile-furniture').setChecked(c.filters!.furniture??false);
-    await page.locator('#stockpile-priority').selectOption(String(c.priority??2));await page.locator('#stockpile-capacity').fill(String(c.capacity??75));
+    // Reopen the workbench's existing creation options while retaining the
+    // selected map tool. Zone capacity now follows physical stacks, not input.
+    if(c.capacity!==undefined&&c.capacity!==75)throw new Error('The current storage UI has no editable capacity.');
+    await panel(page,'architect');
+    const controls=page.locator('#stockpile-items'),search=controls.locator('[data-storage-search]');
+    await controls.locator('[data-storage-all="false"]').click();
+    for(const item of storageTreeSelection(c.filters!,c.items)){
+      await search.fill(item);
+      await controls.locator(`[data-storage-item="${item}"]`).setChecked(true);
+    }
+    await search.fill('');
+    await controls.locator('[data-storage-priority]').selectOption(String(c.priority??2));
+    for(const key of ['allowFresh','allowRotten'] as const)
+      await controls.locator(`[data-storage-freshness="${key}"]`).setChecked(c[key]??true);
 }

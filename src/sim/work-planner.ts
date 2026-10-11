@@ -4,6 +4,7 @@ import { workPriority, workType } from './work-types.ts';
 export { workType } from './work-types.ts';
 import { surgeryProposal,startSurgery } from './surgery.ts';
 import { handlingWanted,handlingProposal,startHandling } from './animal-handling.ts';
+import { slaughterWanted,slaughterProposal } from './animal-slaughter.ts';
 import { leadingWanted,leadingProposal,startLeading } from './animal-leading.ts';
 import { productWanted,productProposal,startProduct } from './animal-products.ts';
 import { animalCareWanted,animalCareProposal,startAnimalCare } from './animal-care.ts';
@@ -120,7 +121,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if(medicalWorkRefusal(pawn)){pawn.planCooldown=20;return;}
   // Never enumerate logistics after another colonist exhausted the shared search budget.
   if (budget.remaining === 0 || budget.pairs === 0) return;
-  const handling=handlingWanted(world,pawn),leading=leadingWanted(world,pawn),gathering=productWanted(world,pawn),vet=animalCareWanted(world,pawn),vetFeed=animalFeedingWanted(world,pawn);
+  const slaughtering=slaughterWanted(world,pawn),handling=slaughtering||handlingWanted(world,pawn),leading=leadingWanted(world,pawn),gathering=productWanted(world,pawn),vet=animalCareWanted(world,pawn),vetFeed=animalFeedingWanted(world,pawn);
   const cleaning=cleaningWanted(world,pawn),burying=workPriority(pawn,'haul')>0&&world.structures.some(s=>s.kind==='grave'&&s.grave?.corpseId===undefined)&&world.pawns.some(p=>!burialReason(world,pawn,p));
   const fightingFire=firefightingTargets(world,pawn).length>0;
   const deepWorking=deepWorkWanted(world,pawn);
@@ -331,6 +332,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if(vetFeed){const proposal=animalFeedingProposal(world,pawn,reachable!);if(proposal){const candidate:Candidate={animalFeed:proposal,priority:workPriority(pawn,'doctor'),rank:-3.8,distance:Math.abs(pawn.x-proposal.target.x)+Math.abs(pawn.z-proposal.target.z),id:proposal.task.animalId,target:proposal.target};if(!best||compareCandidate(candidate,best)<0)best=candidate;}}
   if(leading){const proposal=leadingProposal(world,pawn,reachable!);if(proposal){const candidate:Candidate={animalLeading:proposal,priority:workPriority(pawn,'handle'),rank:-3.5,distance:Math.abs(pawn.x-proposal.target.x)+Math.abs(pawn.z-proposal.target.z),id:proposal.task.animalId,target:proposal.target};if(!best||compareCandidate(candidate,best)<0)best=candidate;}}
   if(gathering){const proposal=productProposal(world,pawn,reachable!);if(proposal){const candidate:Candidate={animalProduct:proposal,priority:workPriority(pawn,'handle'),rank:proposal.task.kind==='milk'?-.9:-.85,distance:Math.abs(pawn.x-proposal.target.x)+Math.abs(pawn.z-proposal.target.z),id:proposal.task.animalId,target:proposal.target};if(!best||compareCandidate(candidate,best)<0)best=candidate;}}
+  if(slaughtering){const proposal=slaughterProposal(world,pawn,reachable!);if(proposal){const candidate:Candidate={animalHandling:proposal,priority:workPriority(pawn,'handle'),rank:-4,distance:Math.abs(pawn.x-proposal.target.x)+Math.abs(pawn.z-proposal.target.z),id:proposal.task.animalId,target:proposal.target};if(!best||compareCandidate(candidate,best)<0)best=candidate;}}
   if(handling){const proposal=handlingProposal(world,pawn,reachable!);if(proposal){const candidate:Candidate={animalHandling:proposal,priority:workPriority(pawn,'handle'),rank:-.25,distance:Math.abs(pawn.x-proposal.target.x)+Math.abs(pawn.z-proposal.target.z),id:proposal.task.animalId,target:proposal.target};if(!best||compareCandidate(candidate,best)<0)best=candidate;}}
   if(hunting&&(!best||workPriority(pawn,'hunt')<best.priority||workPriority(pawn,'hunt')===best.priority&&best.rank>=0)){const proposal=huntingProposal(world,pawn,reachable!);if(proposal)best={hunting:proposal,priority:workPriority(pawn,'hunt'),rank:-.5,distance:0,id:proposal.task.animalId,target:proposal.target};}
   if(researching&&(!best||workPriority(pawn,'research')<best.priority)){const proposal=researchProposal(world,pawn,reachable!);if(proposal)best={research:proposal,priority:workPriority(pawn,'research'),rank:9,distance:0,id:proposal.task.stationId,target:proposal.task.spot};}

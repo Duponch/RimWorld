@@ -134,7 +134,7 @@ export class SceneRenderCore {
   protected readonly fires = new FireLayer();
   protected readonly wind = new WindLayer(this.environmentLighting.configure);
   protected readonly projectiles = new ProjectileLayer();
-  protected readonly wildlife = new WildlifeLayer(this.environmentLighting.configure);
+  protected readonly wildlife:WildlifeLayer;
   protected readonly mechanoids = new MechanoidLayer(this.environmentLighting.configure);
   protected readonly ropes = new RopeLayer();
   protected readonly pawns = new PawnLayer(this.environmentLighting.configure);
@@ -279,6 +279,7 @@ export class SceneRenderCore {
 
   constructor(renderer: THREE.WebGPURenderer, groundGrassEnabled: boolean, protected readonly rendererLifetime: RendererLifetime, protected readonly hostPort:SceneRenderHostPort) {
     this.renderer = renderer; this.designations=new DesignationIconLayer(hostPort.loadTexture);
+    this.wildlife=new WildlifeLayer(this.environmentLighting.configure,hostPort.loadTexture);
     try {
     const lost = renderer.onDeviceLost.bind(renderer);
     renderer.onDeviceLost = info => { lost(info); this.reportFailure(`Périphérique graphique perdu : ${info.message}`); };
@@ -1171,6 +1172,7 @@ export class SceneRenderCore {
     this.brawlCloud.setDetailVisible(cellPixels>=18);
     this.ropes.setDetailVisible(cellPixels>=18);
     this.designations.present(this.camera,this.viewportHeight,cellPixels);
+    this.wildlife.presentDesignations(this.camera,this.viewportHeight,cellPixels);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;
     if(distant!==this.overview.group.visible){this.landscape.needsUpdate=true;this.invalidatePausedShadow();}
     this.overview.group.visible=distant;this.terrainGroup.visible=!distant;this.resourceGroup.visible=!distant;this.plants.group.visible=!distant;
@@ -1245,7 +1247,7 @@ export class SceneRenderCore {
     this.doors.setTargetPreview(targets.structures);this.timber.setTargetPreview(targets.structures);this.wind.setTargetPreview(targets.structures);
     this.orderRockPreview.updateRock(world,[...targets.rocks]);
   }
-  setDesignationMinCellPixels(value:number):void { this.designations.setMinCellPixels(value); }
+  setDesignationMinCellPixels(value:number):void { this.designations.setMinCellPixels(value);this.wildlife.setDesignationMinCellPixels(value); }
   protected updateAreaPreview(): void {
     const drag = this.areaDrag, world = this.world, cell = this.hoverCell;
     if (!drag || !world) return;

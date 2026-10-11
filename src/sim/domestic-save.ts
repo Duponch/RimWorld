@@ -12,6 +12,7 @@ import { animalPileFood } from './wildlife-food.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { workPriority } from './work-types.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
+import { SLAUGHTER_WORK_TICKS,slaughterContact,slaughterHandlerAvailable } from './animal-slaughter.ts';
 import type { Pawn,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 
@@ -24,11 +25,42 @@ const productReadyForVersion=(a:WildAnimal,version:number)=>!!a.domestic&&!!prod
 
 function validDomesticOwner(w:World,a:WildAnimal,version:number):boolean {
   const d:unknown=a.domestic;
-  return version>=106&&(a.species==='hare'||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=120?['lastTraining','penMarkerId','productFullness']:version>=119?['lastTraining','penMarkerId']:['lastTraining'])
+  return version>=106&&(a.species==='hare'||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=120?['lastTraining','penMarkerId','productFullness',...(version>=220?['slaughter']:[])]:version>=119?['lastTraining','penMarkerId']:['lastTraining'])
     &&int(d.since,0,w.tick)&&typeof d.care==='string'&&Object.hasOwn(MEDICAL_CARE,d.care)&&int(d.tameness,1,5)
     &&int(d.nextDecay,0,w.tick+45000)&&(d.lastTraining===undefined||int(d.lastTraining,d.since,w.tick))
     &&(version>=120?(productForVersion(a,version)?finite(d.productFullness,0,1):d.productFullness===undefined):d.productFullness===undefined)
+    &&(!Object.hasOwn(d,'slaughter')||version>=220&&d.slaughter===true)
     &&(d.penMarkerId===undefined||version>=119&&livestock(a)&&int(d.penMarkerId,1,w.nextId-1)&&!!w.structures.find(s=>s.id===d.penMarkerId&&s.kind==='pen-marker'&&s.pen?.accepted.includes(a.species)));
+}
+
+/** New irreversible work shares the file and transport admission. Availability
+ * can change before ordinary reconciliation; transient animal danger is not a
+ * corruption. The designation, handler and exclusive ownership are durable. */
+function validSlaughterTask(w:World,p:Pawn,version:number):boolean {
+  const raw:unknown=p.animalHandling;
+  if(!obj(raw)||raw.kind!=='slaughter')return true;
+  if(version<220||!keys(raw,['animalId','kind','phase','sourcePileId','carryPileId','quantity','step','progress'])
+    ||!int(raw.animalId,1,w.nextId-1)||!['approach','interact'].includes(String(raw.phase))
+    ||raw.sourcePileId!==0||raw.carryPileId!==null||raw.quantity!==0||raw.step!==0
+    ||!int(raw.progress,0,SLAUGHTER_WORK_TICKS-1)||raw.phase==='approach'&&raw.progress!==0)return false;
+  const animal=w.wildlife?.animals.find(a=>a.id===raw.animalId);
+  if(!animal||!validDomesticOwner(w,animal,version)||animal.domestic?.slaughter!==true||animal.state==='dead'||animal.health?.death)return false;
+  if(!slaughterHandlerAvailable(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.need||p.haul||p.cooking||p.hunting||p.research
+    ||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.jobId!==null
+    ||p.melee||p.shooting?.order||p.tactics||p.trade||p.orbitalTrade||p.deepWork||p.recreation.task||p.animalCare||p.animalFeed
+    ||p.orders.active!==null||p.orders.queue.length||p.priorityWork||!['moving','working','idle'].includes(p.state)
+    ||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))return false;
+  if(w.pawns.some(other=>other!==p&&(other.animalCare?.animalId===animal.id||other.animalFeed?.animalId===animal.id
+    ||other.animalHandling&&leadingClaimIds(other.animalHandling).includes(animal.id))))return false;
+  return raw.phase!=='interact'||p.state==='working'&&p.moveCooldown===0&&(p.motion?.end??0)<=w.tick
+    &&(animal.motion?.end??0)<=w.tick&&!p.path.length&&slaughterContact(w,p,animal);
+}
+
+export function validSlaughterTransport(w:World,version:number):boolean {
+  try {
+    for(const a of w.wildlife?.animals??[])if(a.domestic&&Object.hasOwn(a.domestic,'slaughter')&&!validDomesticOwner(w,a,version))return false;
+    return w.pawns.every(p=>validSlaughterTask(w,p,version));
+  }catch{return false;}
 }
 
 /** Persistent intent may outlive transient patient availability until reconcile.
@@ -90,13 +122,14 @@ function validAnimalFeedTask(w:World,p:Pawn,version:number):boolean {
 /** Both clinical animal services share their real patient and cargo claims.
  * No full-world, pen or navigation census is added to snapshot admission. */
 export function validDomesticTasksTransport(w:World,version:number):boolean {
-  try{return w.pawns.every(p=>validVeterinaryTask(w,p,version)&&validAnimalFeedTask(w,p,version));}catch{return false;}
+  try{return validSlaughterTransport(w,version)&&w.pawns.every(p=>validVeterinaryTask(w,p,version)&&validAnimalFeedTask(w,p,version));}catch{return false;}
 }
 
 /** Shape and ownership remain separate from transient availability: an animal
  * can be harmed between accepting an order and its next simulation step. */
 export function validateDomesticAnimals(w:World,version:number):string[] {
   const errors:string[]=[],claimed=new Set<number>();
+  if(!validSlaughterTransport(w,version))errors.push('Invalid or future animal slaughter ownership.');
   if(w.pawns.some(p=>Object.hasOwn(p,'animalFeed'))&&!validDomesticTasksTransport(w,version))errors.push('Invalid animal medical feeding or care ownership.');
   for(const a of w.wildlife?.animals??[]){
     const d:unknown=a.domestic,t:unknown=a.taming;
@@ -112,8 +145,9 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
     if(version<106){errors.push('Legacy pawn contains animal work.');continue;}
     const base=(t:Record<string,unknown>)=>int(t.animalId,1,w.nextId-1)&&w.wildlife?.animals.some(a=>a.id===t.animalId&&(a.species==='hare'||version>=119&&canTameSpecies(a.species)));
     const lead=obj(h)&&h.kind==='lead';
+    const slaughter=obj(h)&&h.kind==='slaughter';
     const product=obj(h)&&(h.kind==='milk'||h.kind==='shear');
-    if(h!==undefined&&!(lead
+    if(h!==undefined&&!(slaughter?validSlaughterTask(w,p,version):lead
       ?version>=119&&keys(h,['animalId','kind','markerId','phase','sourcePileId','carryPileId','quantity','step','progress'],version>=135?['ropees','gatherId']:[])&&base(h)&&int(h.markerId,1,w.nextId-1)&&['approach','lead',...(version>=135?['gather']:[])].includes(String(h.phase))
         &&h.sourcePileId===0&&h.carryPileId===null&&h.quantity===0&&h.step===0&&h.progress===0
         &&(h.ropees===undefined||version>=135&&Array.isArray(h.ropees)&&h.ropees.length>=1&&h.ropees.length<=MAX_ROPEES
@@ -140,6 +174,7 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
     const a=w.wildlife!.animals.find(a=>a.id===task.animalId)!;
     if(p.animalHandling){
       const t=p.animalHandling;
+      if(t.kind==='slaughter')continue;
       if(t.kind==='lead'){
         const region=t.markerId===undefined?undefined:penRegion(w,t.markerId);
         if(!a.domestic||!livestock(a)||!region||!region.closed||!region.accessible||a.domestic.penMarkerId!==t.markerId

@@ -23,11 +23,13 @@ import { bodySizeAtAge } from '../sim/animal-life';
 import type { WildAnimal } from '../sim/wildlife-state';
 import type { MaterialPile } from '../sim/types';
 import type { PawnLayer } from './PawnLayer';
+import {animalSlaughterMarker,AnimalSlaughterMarkerStyle} from './AnimalSlaughterMarker';
+import type {SceneTextureLoader} from './scene-render-ports';
 import { growPawnBuffers } from './pawn-buffers';
 import { pileSurfaces,type PileSurface } from './pile-surfaces';
 import { PAWN_MODEL_SCALE,WORLD_SCALE } from '../world/scale';
 
-type VisualAnimal=Pick<WildAnimal,'id'|'species'|'state'|'x'|'z'|'sex'|'ageTicks'|'motion'|'meal'|'strike'|'stun'|'threat'|'predation'|'manhunter'|'health'>&{corpsePile?:MaterialPile;carrierId?:number};
+type VisualAnimal=Pick<WildAnimal,'id'|'species'|'state'|'x'|'z'|'sex'|'ageTicks'|'motion'|'meal'|'strike'|'stun'|'threat'|'predation'|'manhunter'|'health'|'domestic'>&{corpsePile?:MaterialPile;carrierId?:number};
 
 /** Resident capacity and node graph. CPU supplies edges/phases at snapshots
  * and segment boundaries; continuous translation and the rig run on the GPU. */
@@ -35,6 +37,7 @@ class SpeciesRig {
   readonly mesh:THREE.Mesh;
   readonly flames:THREE.Mesh;
   readonly selection:THREE.Mesh;
+  readonly slaughter:THREE.Mesh;
   readonly plainMaterial:THREE.MeshStandardNodeMaterial;
   readonly texturedMaterial:THREE.MeshStandardNodeMaterial;
   private selected:ReadonlySet<number>=new Set();
@@ -47,7 +50,7 @@ class SpeciesRig {
   private readonly restingRadius:number;
   private animals:VisualAnimal[]=[];
   private surfaces:ReadonlyMap<number,number>=new Map();
-  constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,surfaceTexture:THREE.Texture,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
+  constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,surfaceTexture:THREE.Texture,style:AnimalSlaughterMarkerStyle,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
     this.gaitRate=animalGaitRadiansPerUnit(species);
     const geometry=hareGeometry(MAX_WILDLIFE,species);
     bakeAnimalCoatCoordinates(geometry,species);
@@ -132,6 +135,7 @@ class SpeciesRig {
     this.plainMaterial=mat;this.texturedMaterial=textured;
     this.mesh=new THREE.Mesh(geometry,textured);this.mesh.name=`Wild ${this.species} — GPU rig`;this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6);
     this.selection=pawnSelectionMesh(this.mesh.geometry as THREE.InstancedBufferGeometry,this);this.selection.visible=false;
+    this.slaughter=animalSlaughterMarker(this.mesh.geometry as THREE.InstancedBufferGeometry,this,style,geometry.boundingBox!.max.y);
   }
   setTexturesEnabled(enabled:boolean):void {this.mesh.material=enabled?this.texturedMaterial:this.plainMaterial;setFireTexturesEnabled(this.flames,enabled);}
   setSelected(ids:ReadonlySet<number>):void {
@@ -155,16 +159,23 @@ class SpeciesRig {
   }
   prepare():()=>void {
     const g=this.mesh.geometry as THREE.InstancedBufferGeometry,fire=this.flames.geometry as THREE.InstancedBufferGeometry;
-    const n=g.instanceCount,f=fire.instanceCount;
+    const marker=this.slaughter.geometry as THREE.InstancedBufferGeometry;
+    const n=g.instanceCount,f=fire.instanceCount,s=marker.instanceCount,visible=this.slaughter.visible;
     g.instanceCount=Math.max(1,n);fire.instanceCount=Math.max(1,f);
-    return ()=>{g.instanceCount=n;fire.instanceCount=f;};
+    marker.instanceCount=Math.max(1,s);this.slaughter.visible=true;
+    return ()=>{g.instanceCount=n;fire.instanceCount=f;marker.instanceCount=s;this.slaughter.visible=visible;};
   }
   update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,pileSurface:ReadonlyMap<number,PileSurface>,reset=false,pawns?:PawnLayer):void {
     const changed=this.source!==world;
     if(reset){this.headings.clear();this.keys.clear();this.gait.clear();}
     if(changed){this.source=world;this.keys.clear();this.animals=[...(world.wildlife?.animals??[]).filter(a=>a.species===this.species),...world.piles.flatMap(p=>p.corpse?.species===this.species&&p.owner.type!=='job'?[{id:p.corpse.animalId,species:p.corpse.species,state:'dead' as const,x:p.owner.type==='ground'?p.owner.x:0,z:p.owner.type==='ground'?p.owner.z:0,sex:p.corpse.sex,ageTicks:p.corpse.ageTicks,health:p.corpse.health,corpsePile:p,carrierId:p.owner.type==='pawn'?p.owner.pawnId:pawns?.animalCorpseTransferCarrier(p.id)}]:[])];this.surfaces=surfaces;
-      if(this.animals.length>this.mesh.geometry.getAttribute('aFrom').count)growPawnBuffers([this.mesh,this.flames,this.selection],this.animals.length);
+      if(this.animals.length>this.mesh.geometry.getAttribute('aFrom').count)growPawnBuffers([this.mesh,this.flames,this.selection,this.slaughter],this.animals.length);
       this.setSelected(this.selected);
+      const markers=this.slaughter.geometry as THREE.InstancedBufferGeometry,flags=markers.getAttribute('aSlaughter') as THREE.InstancedBufferAttribute;
+      let any=false,dirty=false;
+      this.animals.forEach((animal,index)=>{const enabled=animal.state!=='dead'&&animal.domestic?.slaughter===true,value=enabled?1:0;
+        if(flags.getX(index)!==value){flags.setX(index,value);dirty=true;}any||=enabled;});
+      if(dirty)flags.needsUpdate=true;markers.instanceCount=this.animals.length;this.slaughter.visible=any;
       const present=new Set(this.animals.map(a=>a.id));for(const id of this.headings.keys())if(!present.has(id)){this.headings.delete(id);this.gait.delete(id);}
     }
     const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
@@ -266,11 +277,15 @@ export class WildlifeLayer {
   readonly mesh=new THREE.Group();readonly flames=new THREE.Group();readonly travelTime=uniform(0).setGroup(renderGroup);
   private readonly surfaceTextures={soft:createAnimalCoatTexture('soft'),short:createAnimalCoatTexture('short'),shaggy:createAnimalCoatTexture('shaggy')};
   private texturesEnabled=true;
+  private readonly markerStyle:AnimalSlaughterMarkerStyle;
   private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();private pileSurface:ReadonlyMap<number,PileSurface>=new Map();
-  constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void){
-    this.rigs=ANIMAL_SPECIES_IDS.map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTextures[animalCoat(species)],configure));
-    for(const rig of this.rigs){this.mesh.add(rig.mesh,rig.selection);this.flames.add(rig.flames);}
+  constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void,loadTexture?:SceneTextureLoader){
+    this.markerStyle=new AnimalSlaughterMarkerStyle(loadTexture);
+    this.rigs=ANIMAL_SPECIES_IDS.map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTextures[animalCoat(species)],this.markerStyle,configure));
+    for(const rig of this.rigs){this.mesh.add(rig.mesh,rig.selection,rig.slaughter);this.flames.add(rig.flames);}
   }
+  setDesignationMinCellPixels(value:number):void {this.markerStyle.setMinCellPixels(value);}
+  presentDesignations(camera:THREE.OrthographicCamera|THREE.PerspectiveCamera,height:number,cellPixels:number):void {this.markerStyle.present(camera,height,cellPixels);}
   setTexturesEnabled(enabled:boolean):void {if(this.texturesEnabled===enabled)return;this.texturesEnabled=enabled;for(const rig of this.rigs)rig.setTexturesEnabled(enabled);}
   setSelected(ids:ReadonlySet<number>):void {for(const rig of this.rigs)rig.setSelected(ids);}
   forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {for(const rig of this.rigs)rig.forEachPose(visit);}
@@ -278,11 +293,13 @@ export class WildlifeLayer {
   prepare():()=>void{const restores=this.rigs.map(r=>r.prepare());return()=>{for(const restore of restores)restore();};}
   dispose():void{
     for(const r of this.rigs){
-      for(const m of [r.mesh,r.flames,r.selection])m.geometry.dispose();
+      for(const m of [r.mesh,r.flames,r.selection,r.slaughter])m.geometry.dispose();
       r.plainMaterial.dispose();r.texturedMaterial.dispose();
       (r.flames.material as THREE.Material).dispose();
       (r.selection.material as THREE.Material).dispose();
+      (r.slaughter.material as THREE.Material).dispose();
     }
     for(const texture of Object.values(this.surfaceTextures))texture.dispose();
+    this.markerStyle.dispose();
   }
 }

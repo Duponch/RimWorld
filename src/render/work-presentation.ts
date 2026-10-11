@@ -38,7 +38,7 @@ export function pawnWorkPose(pawn:Pawn,job:Job|undefined,stationKind?:StructureK
   if(pawn.state!=='working'||pawn.stun)return 0;
   if(job?.kind==='mine')return WORK_POSE.mine;
   if(job?.kind==='chop'||job?.kind==='cut'||job?.clearance)return WORK_POSE.chop;
-  if(job?.kind==='harvest'||job?.kind==='sow'||job?.kind==='lay-floor'||job?.kind==='remove-floor'||pawn.hunting?.phase==='finish'||pawn.cleaning||pawn.burial||pawn.equipmentTask||pawn.haul&&!pawn.haul.serviceProgress||pawn.cooking&&pawn.cooking.phase!=='work')return WORK_POSE.ground;
+  if(job?.kind==='harvest'||job?.kind==='sow'||job?.kind==='lay-floor'||job?.kind==='remove-floor'||pawn.hunting?.phase==='finish'||pawn.animalHandling?.kind==='slaughter'&&pawn.animalHandling.phase==='interact'||pawn.cleaning||pawn.burial||pawn.equipmentTask||pawn.haul&&!pawn.haul.serviceProgress||pawn.cooking&&pawn.cooking.phase!=='work')return WORK_POSE.ground;
   // Work spots are painted directly on the floor; there is no bench at hand
   // height to justify the upright crafting or butchering silhouette.
   if(pawn.cooking?.phase==='work'&&(stationKind==='crafting-spot'||stationKind==='butcher-spot'))return WORK_POSE.ground;

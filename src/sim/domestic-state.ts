@@ -3,6 +3,8 @@ import type { Cell } from './types.ts';
 
 /** V106 covers the obtainable hare only. No historical animal changes faction. */
 export interface DomesticAnimal {
+  /** V309 prospective, explicit player intent; absence preserves the herd. */
+  slaughter?:true;
   since:number;
   care:MedicalCare;
   tameness:number;
@@ -16,7 +18,7 @@ export interface DomesticAnimal {
 export interface TamingDesignation { designated:boolean; lastAttempt?:number }
 export interface AnimalHandlingTask {
   animalId:number;
-  kind:'tame'|'maintain'|'lead'|'milk'|'shear';
+  kind:'tame'|'maintain'|'lead'|'milk'|'shear'|'slaughter';
   sourcePileId:number;
   carryPileId:number|null;
   quantity:number;
@@ -39,5 +41,6 @@ export interface AnimalCareTask {
   medicine?:TendMedicine;
 }
 export type DomesticCommand =
+  | {type:'slaughter';animalId:number;enabled:boolean}
   | {type:'tame';animalId:number;enabled:boolean}
   | {type:'animal-care-policy';animalId:number;care:MedicalCare};

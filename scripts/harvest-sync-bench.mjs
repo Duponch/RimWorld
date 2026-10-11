@@ -6,6 +6,8 @@ import { createWorld,applyCommand,serializeWorld } from '../src/sim/index.ts';
 process.env.PLAYWRIGHT_BROWSERS_PATH??=resolve('.playwright');
 const {chromium}=await import('@playwright/test');
 const label=process.argv[2]??'verification',seconds=Number(process.env.HARVEST_SECONDS??45),switches=process.env.HARVEST_SWITCHES!=='0';
+const browserChannel=process.env.HARVEST_BROWSER??'chromium';
+if(!['chromium','chrome'].includes(browserChannel))throw Error('Invalid native browser channel');
 const initialSpeed=Number(process.env.HARVEST_INITIAL_SPEED??1),speedCycle=(process.env.HARVEST_SPEEDS??'6,1,3').split(',').map(Number);
 if(![1,3,6].includes(initialSpeed)||!speedCycle.length||speedCycle.some(s=>![1,3,6].includes(s)))throw Error('Invalid speed sequence');
 if(!Number.isFinite(seconds)||seconds<7||seconds>300)throw Error('Duration must be 7–300 seconds');
@@ -39,7 +41,8 @@ ${process.env.HARVEST_CONTACT_STALL==='1'?`if(!b.contactStalls.length&&this.time
 return result;};}
 `;
 const report={date:new Date().toISOString(),cpu:os.cpus()[0].model,seconds,switches,initialSpeed,speedCycle,viewport:{width:1440,height:1000},contactStallDiagnostic:process.env.HARVEST_CONTACT_STALL==='1',protocol:'Native Chromium WebGPU, seed 42 / 250² / 3 colonists, rectangular designations, actual worker at initialSpeed; switches=true uses speedCycle every 2 seconds. Frame pose read from shared GPU inputs; no full-world serialization in frames. Runtime clock: 6 local ticks/s at 1x. 13 cells/s candidate bound includes neutral 6x travel (12 cells/s). An excess is continuous only when both frames retain identical confirmed segment and GPU endpoints, stay within the contact envelope and match independent time/pose bounds; raw candidates are reported separately.',phases:[]};
-const browser=await chromium.launch({channel:'chromium',args:[]});
+report.browserChannel=browserChannel;
+const browser=await chromium.launch({channel:browserChannel,args:[]});
 try{for(const action of (process.env.HARVEST_ACTIONS??'mine,chop').split(',')){
  const w=createWorld(42,250,250);w.tick=2000;
  const p=w.pawns[0],c=action==='mine'?w.tiles.map((t,i)=>({t,x:i%250,z:Math.floor(i/250)})).filter(v=>v.t.terrain==='rock').sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2))[0]:p;

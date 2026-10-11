@@ -1,4 +1,5 @@
 import { handlingStepDuration } from '../sim/animal-handling';
+import { SLAUGHTER_WORK_TICKS } from '../sim/animal-slaughter';
 import { isColonist } from '../sim/affiliation';
 import { INGEST_TICKS } from '../sim/eating';
 import { FEED_TICKS } from '../sim/feeding-rules';
@@ -43,7 +44,7 @@ export function actionProgress(world:World,pawn:Pawn,lookup?:ActionLookup):Actio
     const filth=world.filth?.items.find(item=>item.id===pawn.cleaning!.targets[0]);
     if(filth)return measured('cleaning',pawn.cleaning.progress,FILTH_DEFINITIONS[filth.kind].work);
   }
-  if(pawn.animalHandling?.phase==='interact')return measured('handling',pawn.animalHandling.progress,handlingStepDuration(pawn.animalHandling));
+  if(pawn.animalHandling?.phase==='interact')return measured('handling',pawn.animalHandling.progress,pawn.animalHandling.kind==='slaughter'?SLAUGHTER_WORK_TICKS:handlingStepDuration(pawn.animalHandling));
   if(pawn.animalCare?.phase==='treat'&&pawn.animalCare.duration!==undefined)return measured('tending',pawn.animalCare.progress,pawn.animalCare.duration);
   if(pawn.hunting?.phase==='finish')return measured('hunting',pawn.hunting.progress,18);
   if(pawn.tend?.phase==='tend'&&pawn.tend.duration!==undefined)

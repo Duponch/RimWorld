@@ -20,6 +20,7 @@ import { interruptWork } from './interrupted-cargo.ts';
 import { releaseWork } from './work-release.ts';
 import { leadingClaimIds,processLeading, type LeadingTask } from './animal-leading.ts';
 import { processProduct, productHandlerAvailable, productKind, type ProductTask } from './animal-products.ts';
+import { processSlaughter,slaughterHolding,type SlaughterTask } from './animal-slaughter.ts';
 
 /** Core's 60,000-tick day is represented by 6,000 local ticks. */
 export const TAME_COOLDOWN = TICKS_PER_DAY / 2;
@@ -65,8 +66,9 @@ export function animalHandlingClaimed(w:World,id:number):boolean {
 /** Only physical contact freezes wildlife movement, not a distant reservation. */
 export function animalHandlingHolding(w:World,id:number):boolean {
   const a=w.wildlife?.animals.find(a=>a.id===id);
+  if(a&&w.pawns.some(p=>slaughterHolding(w,p,a)))return true;
   if(!a||!animalAvailable(a)||(a.motion?.end??0)>w.tick)return false;
-  return w.pawns.some(p=>p.animalHandling?.animalId===id&&p.animalHandling.kind!=='lead'&&p.animalHandling.phase==='interact'
+  return w.pawns.some(p=>p.animalHandling?.animalId===id&&p.animalHandling.kind!=='lead'&&p.animalHandling.kind!=='slaughter'&&p.animalHandling.phase==='interact'
     &&p.moveCooldown===0&&adjacent(p,a)
     &&((p.animalHandling.kind==='milk'||p.animalHandling.kind==='shear')?productHandlerAvailable(p):handlerAvailable(p)));
 }
@@ -164,6 +166,7 @@ function finish(w:World,p:Pawn,a:WildAnimal,task:AnimalHandlingTask,ctx:NeedCont
 interface HandlingContext extends NeedContext { candidates():Reachability|null; blocked():Uint8Array }
 export function processHandling(w:World,p:Pawn,ctx:HandlingContext):void {
   const task=p.animalHandling;if(!task)return;
+  if(task.kind==='slaughter'){processSlaughter(w,p,task as SlaughterTask,ctx);return;}
   if(w.wildlife?.animals.some(a=>a.manhunter&&leadingClaimIds(task).includes(a.id))){interruptWork(w,p);return;}
   if(task.kind==='lead'){if(task.markerId===undefined){interruptWork(w,p);return;}processLeading(w,p,task as LeadingTask,ctx);return;}
   if(task.kind==='milk'||task.kind==='shear'){processProduct(w,p,task as ProductTask,ctx);return;}

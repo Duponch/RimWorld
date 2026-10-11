@@ -8,7 +8,7 @@ import { HUMAN_MODEL,animalBodyModel,modelHasPart } from './body-model.ts';
 import { isAnimalSpecies,type AnimalSpeciesId } from './animal-species.ts';
 import { mechanoidBodyModel } from './mechanoid-anatomy.ts';
 import { isMechanoidKind,type MechanoidKind } from './mechanoid-definition.ts';
-import { BLOOD_UNIT,INJURY_RULES,injuryPartRules,isWithinPart } from './injury-rules.ts';
+import { BLOOD_UNIT,HP_UNIT,INJURY_RULES,injuryPartRules,isWithinPart } from './injury-rules.ts';
 import { createMedicalRecord,reconcileMedicalDeath,remainingPartHealth,medicalStatus } from './injury-state.ts';
 import type { MedicalRecord } from './injury-types.ts';
 
@@ -57,7 +57,14 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   if(value.death!==undefined&&(!object(value.death)||!keys(value.death,['tick','cause'])||value.death.tick!==record.tick||!(mechanical?['vital-failure','trauma','downed']:['blood-loss','vital-failure','trauma',...(animal?['downed',...(allowExecution?['execution']:[])]:[]),...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infection']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFlu&&!animal?['flu']:[]),...(version>=207&&!animal?['malaria','plague']:[])]).includes(value.death.cause as string)))return fail;
   const living:MedicalRecord={...createMedicalRecord(record.tick),...(mechanicalKind?{body:mechanicalKind}:animal?{body:species as AnimalSpeciesId}:{}),injuries:record.injuries,missing:record.missing,bloodLoss:record.bloodLoss,...record.heatstroke?{heatstroke:record.heatstroke}:{},...record.hypothermia?{hypothermia:record.hypothermia}:{},...record.infections?{infections:record.infections}:{},...record.malnutrition?{malnutrition:record.malnutrition}:{},...record.foodPoisoning?{foodPoisoning:record.foodPoisoning}:{},...record.flu?{flu:record.flu}:{},...record.immuneDiseases?{immuneDiseases:record.immuneDiseases}:{},...record.ageAilments?{ageAilments:record.ageAilments}:{},...record.anesthetic?{anesthetic:record.anesthetic}:{},...record.artificialParts?{artificialParts:record.artificialParts}:{}};
   reconcileMedicalDeath(living);
-  if(record.death?.cause==='execution')return animal&&allowExecution&&medicalStatus(living)==='downed'?null:fail;
+  if(record.death?.cause==='execution'){
+    // Hunting's historical finishing blow requires a downed animal. V309 also
+    // slaughters a mobile owned animal: its terminal neck incision is retained,
+    // except when at most one HP remains and a further cut could remove the neck.
+    const slaughter=version>=220&&!living.death&&(record.injuries.some(i=>i.kind==='execution-cut'&&i.part==='neck'&&i.bornAt===record.tick)
+      ||remainingPartHealth(record,'neck')<=HP_UNIT);
+    return animal&&allowExecution&&(medicalStatus(living)==='downed'||slaughter)?null:fail;
+  }
   if(record.death?.cause==='downed')return !living.death&&medicalStatus(living)==='downed'?null:fail;
   if(!!living.death!==!!record.death||living.death?.cause!==record.death?.cause)return fail;
   return null;

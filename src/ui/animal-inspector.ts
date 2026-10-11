@@ -19,11 +19,13 @@ import { veterinaryCareSpeciesAllowed,veterinaryNeedsRest } from '../sim/veterin
 import { ANIMAL_FEED_HUNGER,ANIMAL_FEED_TICKS,animalFeedingPatientReady } from '../sim/animal-feeding-rules';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import type { WildAnimal } from '../sim/wildlife-state';
+import { slaughterRefusal } from '../sim/animal-slaughter';
 
 export type AnimalInspectorTab = 'info' | 'health';
 export interface AnimalInspectorOptions {
   onHunt: (animalId: number, enabled: boolean) => void;
   onTame?: (animalId: number, enabled: boolean) => void;
+  onSlaughter?: (animalId: number, enabled: boolean) => void;
   onCarePolicy?: (animalId: number, care: MedicalCare) => void;
   onClose: () => void;
 }
@@ -38,6 +40,8 @@ export interface AnimalInspectorView {
   canTame:boolean;
   tameDesignated:boolean;
   tameReason:string;
+  slaughterDesignated:boolean;
+  slaughterReason?:string;
   domestic:boolean;
   care?:MedicalCare;
   careAvailable:boolean;
@@ -148,6 +152,8 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
     canTame:!tameReason,
     tameDesignated:!!animal.taming?.designated,
     tameReason:handling,
+    slaughterDesignated:animal.domestic?.slaughter===true,
+    slaughterReason:slaughterRefusal(world,animal),
     domestic:!!animal.domestic,
     care:animal.domestic?.care,
     careAvailable:!!animal.domestic&&veterinaryCareSpeciesAllowed(animal.species,world.schemaVersion),
@@ -178,7 +184,7 @@ export function animalInspectorScaffold(): string {
   const tabs: readonly { id: AnimalInspectorTab; label: string }[] = [
     { id: 'info', label: 'Info' }, { id: 'health', label: 'Santé' },
   ];
-  return `<div class="animal-inspector-scroll"><header class="animal-inspector-summary"><div class="panel-heading"><h2 data-animal-title></h2><button type="button" data-animal-close aria-label="Fermer l’inspection">×</button></div><p data-animal-identity></p><p data-animal-activity></p><p data-animal-position></p></header><div class="animal-inspector-tabs" role="tablist" aria-label="Dossiers de l’animal">${tabs.map(tab => `<button type="button" role="tab" id="animal-tab-${tab.id}" aria-controls="animal-panel-${tab.id}" aria-selected="false" tabindex="-1" data-animal-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="animal-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="animal-panel-${tab.id}" aria-labelledby="animal-tab-${tab.id}" tabindex="0" data-animal-panel="${tab.id}" hidden><div data-animal-content="${tab.id}"></div>${tab.id==='health'?`<label class="animal-care-policy" data-animal-care-wrap>Politique de soins <select data-animal-care>${Object.entries(MEDICAL_CARE).map(([id,label])=>`<option value="${id}">${label}</option>`).join('')}</select></label>`:''}</section>`).join('')}</div><div class="animal-inspector-actions"><label data-animal-hunt-wrap><input type="checkbox" data-animal-hunt><span>Chasser</span></label><label data-animal-tame-wrap><input type="checkbox" data-animal-tame><span>Apprivoiser</span></label></div></div>`;
+  return `<div class="animal-inspector-scroll"><header class="animal-inspector-summary"><div class="panel-heading"><h2 data-animal-title></h2><button type="button" data-animal-close aria-label="Fermer l’inspection">×</button></div><p data-animal-identity></p><p data-animal-activity></p><p data-animal-position></p></header><div class="animal-inspector-tabs" role="tablist" aria-label="Dossiers de l’animal">${tabs.map(tab => `<button type="button" role="tab" id="animal-tab-${tab.id}" aria-controls="animal-panel-${tab.id}" aria-selected="false" tabindex="-1" data-animal-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="animal-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="animal-panel-${tab.id}" aria-labelledby="animal-tab-${tab.id}" tabindex="0" data-animal-panel="${tab.id}" hidden><div data-animal-content="${tab.id}"></div>${tab.id==='health'?`<label class="animal-care-policy" data-animal-care-wrap>Politique de soins <select data-animal-care>${Object.entries(MEDICAL_CARE).map(([id,label])=>`<option value="${id}">${label}</option>`).join('')}</select></label>`:''}</section>`).join('')}</div><div class="animal-inspector-actions"><label data-animal-hunt-wrap><input type="checkbox" data-animal-hunt><span>Chasser</span></label><label data-animal-tame-wrap><input type="checkbox" data-animal-tame><span>Apprivoiser</span></label><label data-animal-slaughter-wrap><input type="checkbox" data-animal-slaughter><span>Abattre</span></label></div></div>`;
 }
 
 function selectTab(root: HTMLElement, tab: AnimalInspectorTab): void {
@@ -198,6 +204,7 @@ export function createAnimalInspector(root: HTMLElement, options: AnimalInspecto
   root.classList.add('animal-inspector-host');
   root.innerHTML = animalInspectorScaffold();
   root.dataset.animalTameAvailable=String(!!options.onTame);
+  root.dataset.animalSlaughterAvailable=String(!!options.onSlaughter);
   root.dataset.animalCareAvailable=String(!!options.onCarePolicy);
   const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-animal-tab]')];
   for (const button of buttons) {
@@ -218,6 +225,10 @@ export function createAnimalInspector(root: HTMLElement, options: AnimalInspecto
   root.querySelector<HTMLInputElement>('[data-animal-tame]')!.onchange = event => {
     const id=Number(root.dataset.animalInspectorId);
     if(Number.isSafeInteger(id))options.onTame?.(id,(event.currentTarget as HTMLInputElement).checked);
+  };
+  root.querySelector<HTMLInputElement>('[data-animal-slaughter]')!.onchange = event => {
+    const id=Number(root.dataset.animalInspectorId);
+    if(Number.isSafeInteger(id))options.onSlaughter?.(id,(event.currentTarget as HTMLInputElement).checked);
   };
   root.querySelector<HTMLSelectElement>('[data-animal-care]')!.onchange = event => {
     const id=Number(root.dataset.animalInspectorId);
@@ -271,6 +282,11 @@ export function updateAnimalInspector(root: HTMLElement, world: World, animalId:
   const tame=root.querySelector<HTMLInputElement>('[data-animal-tame]')!;
   root.querySelector<HTMLElement>('[data-animal-tame-wrap]')!.hidden=!view.canTame;
   tame.checked=view.tameDesignated;tame.disabled=root.dataset.animalTameAvailable!=='true';
+  const slaughter=root.querySelector<HTMLInputElement>('[data-animal-slaughter]')!;
+  root.querySelector<HTMLElement>('[data-animal-slaughter-wrap]')!.hidden=!view.domestic||view.dead;
+  slaughter.checked=view.slaughterDesignated;
+  slaughter.disabled=root.dataset.animalSlaughterAvailable!=='true'||!!view.slaughterReason&&!view.slaughterDesignated;
+  slaughter.title=view.slaughterReason??'Un dresseur rejoint cet animal et l’abat au contact. Annulable tant que le travail n’est pas terminé.';
   const care=root.querySelector<HTMLSelectElement>('[data-animal-care]')!;
   root.querySelector<HTMLElement>('[data-animal-care-wrap]')!.hidden=!view.domestic;
   if(view.care)care.value=view.care;

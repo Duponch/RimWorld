@@ -7,6 +7,7 @@ const bodies:Readonly<Record<string,string>>={
   mine:`<path d="m17 54 7 4 29-38-7-6z" fill="${wood}"/><path d="M9 14Q31-2 58 23L48 27Q34 11 9 14Z" fill="${metal}"/>`,
   chop:`<path d="m14 55 7 4 29-41-7-5z" fill="${wood}"/><path d="m33 8 10 4C43 23 48 28 59 30L49 44C36 36 30 24 33 8Z" fill="${metal}"/><path d="M55 30 47 40" stroke="#dce5ed" stroke-width="3"/>`,
   harvest:`<path d="m15 54 9 3 12-26-8-4z" fill="${wood}"/><path d="M29 29C57 25 63 3 33 5 47 10 49 20 29 24Z" fill="${metal}"/>`,
+  slaughter:`<path d="m9 53 8 5 15-20-8-6z" fill="${wood}"/><path d="M25 30 49 5l9 9-10 20-17 7z" fill="${metal}"/><path d="m49 8 6 7-11 17-13 6" stroke="#e1e7ed" stroke-width="3"/><circle cx="16" cy="49" r="2" fill="#efc05b"/>`,
   cut:`<circle cx="16" cy="48" r="9" fill="${wood}"/><circle cx="37" cy="51" r="8" fill="${wood}"/><path d="m22 41 29-31-9 31-17 7M29 43 16 9l-3 29 17 11" fill="${metal}"/><circle cx="27" cy="40" r="3" fill="#d8e2e6"/>`,
   'haul-chunks':'<path d="m8 21 39 4-5 19H16z" fill="#bc813a"/><path d="m47 25 5-12h8M7 22l6 3M18 44h24"/><circle cx="19" cy="49" r="6" fill="#62778c"/><circle cx="40" cy="49" r="6" fill="#62778c"/><path d="M10 12h23m-7-6 7 6-7 6" stroke="#2b9b78"/>',
   uninstall:'<path d="m24 30 16-8 17 8v23l-17 8-16-8z" fill="#bb8548"/><path d="m24 30 16 8 17-8M40 38v23M33 26l17 8"/><path d="M6 12h14v24m-7-7 7 7 7-7" stroke="#3e9bff" stroke-width="5"/>',
