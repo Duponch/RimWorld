@@ -1,5 +1,6 @@
 import type { Tool } from './layout';
 import { ARCHITECT_ICON_ATLASES, ARCHITECT_ICON_MAPPING, ARCHITECT_ICON_ORDER } from './architect-icons';
+import { paperPictogramUrl } from './pictograms';
 
 export const UI_ICONS = ['mine', 'chop', 'harvest', 'cut', 'wood', 'steel', 'component', 'silver', 'medicine', 'blocks', 'food', 'meal', 'home', 'clock', 'people', 'research', 'leaf', 'eye', 'layers', 'pointer'] as const;
 export type UiIcon = typeof UI_ICONS[number];
@@ -9,6 +10,9 @@ export const CURSOR_KINDS = ['pointer', 'link', 'wait', 'zoom', 'text', 'grab', 
 export type CursorKind = typeof CURSOR_KINDS[number];
 export const CURSOR_ATLAS = '/assets/ui/elsewhere/v304/cursors.svg';
 export const WAIT_CURSOR_ARTWORK = '/assets/ui/elsewhere/v307/hourglass.png';
+/** Historical manifests stay intact; live cursors use the authored paper set. */
+export const PAPER_CURSOR_ATLAS = '/assets/ui/elsewhere/v317/cursors.svg';
+export const PAPER_WAIT_CURSOR_ARTWORK = paperPictogramUrl('cursor-wait');
 export const CURSOR_CELLS: Readonly<Record<CursorKind, readonly [number, number]>> = Object.freeze({
   pointer: [0, 0], link: [1, 0], wait: [2, 0],
   zoom: [0, 1], text: [1, 1], grab: [2, 1],
@@ -188,7 +192,7 @@ async function installMapToolCursors(root: HTMLElement, atlasUrl: string, artwor
           // The arrow's tip remains the exact cell-selection point.
           target.beginPath(); target.moveTo(1, 1); target.lineTo(1, 13.8); target.lineTo(5.8, 9);
           target.lineTo(9.8, 9); target.closePath();
-          target.fillStyle = '#fff4d6'; target.strokeStyle = '#263c32'; target.lineWidth = 1.2;
+          target.fillStyle = '#f1eadb'; target.strokeStyle = '#59645f'; target.lineWidth = 1.2;
           target.fill(); target.stroke();
           const result: MapToolSurfaces = { pointer: `url("${output.toDataURL('image/png')}") 1 1, crosshair` };
           const hands = await artwork.then(value => value.hands, () => undefined);
@@ -251,7 +255,7 @@ function installViewportGestures(root: HTMLElement): void {
 }
 
 /** Crop each cell once; native CSS cursors remain available if the atlas fails. */
-export function installToolCursors(root: HTMLElement, atlasUrl = CURSOR_ATLAS): void {
+export function installToolCursors(root: HTMLElement, atlasUrl = PAPER_CURSOR_ATLAS): void {
   let surfacesPromise = cursorSurfaces.get(atlasUrl);
   if (!surfacesPromise) { surfacesPromise = loadCursorSurfaces(atlasUrl); cursorSurfaces.set(atlasUrl, surfacesPromise); }
   void surfacesPromise.then(({ surfaces }) => {
@@ -262,7 +266,7 @@ export function installToolCursors(root: HTMLElement, atlasUrl = CURSOR_ATLAS): 
   void installMapToolCursors(root, atlasUrl, surfacesPromise);
   // This generated artwork replaces only the wait cell; every other cursor,
   // including tool+hand composites, retains its current size and hotspot.
-  waitSurface ??= loadIconImage(WAIT_CURSOR_ARTWORK).then(image => {
+  waitSurface ??= loadIconImage(PAPER_WAIT_CURSOR_ARTWORK).then(image => {
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = CURSOR_SIZE;
     const context = canvas.getContext('2d'); if (!context) throw new Error('Canvas 2D indisponible.');
     const scale = (CURSOR_SIZE - 2) / Math.max(image.width, image.height);

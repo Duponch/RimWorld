@@ -1,4 +1,6 @@
-# Validation courante — V316
+# Validation courante — V317
+
+**V317, schéma 227 conservé : [interfaces papier](../gameplay/paper-ui-v317.md#vérifications).** 40cas/10fichiers PASS12,158s et typage PASS30,636s. Chrome matériel WebGPU PASS220,263s : 47contrôles,46captures, six fontes en2560×1440/1920×1080, sélection native hors champs bloquée, infobulles et espaces transparents conservés, deux recharges8434exactes sur Les Aulnes sans dotation. Reprise ciblée des états actifs et build final consignés dans la note unique. Simulation/bridge et63références/66fichiers inchangés ; aucune campagne ni performance nouvelle certifiée. Les validations suivantes sont historiques.
 
 **V316, schéma 227 : [foin et croquettes](../gameplay/fodder-v316.md#contrôles-et-limites).** Groupe203cas/20fichiers acquis par reprises dont129nouveaux/6fichiers ; corpus63références/66fichiers PASS103,110s et buildPages3,442s. ChromeWebGPU185,397s : onze sauvegardes/recharges exactes par continuations,50croquettes27626 depuis20lait20riz puis semis physique104/110 ; quinzehumains et sources historiques conservés, aucune dotation. Gel2709exact ; ROOT seul exécute, sources/tests/pilotes figés. Preuves, rouges et limites dans la note unique ; aucune campagne complète ni performance certifiée. Publications regroupées, relance **PAUSED**. Les validations suivantes sont historiques.
 

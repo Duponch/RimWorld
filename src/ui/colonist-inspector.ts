@@ -6,6 +6,7 @@ export interface ColonistInspectorState {
 }
 
 import { dismissTooltip, setTooltip } from './tooltip';
+import { pictogramDataUrl } from './pictograms';
 
 export interface ColonistInspectorOptions extends ColonistInspectorState {
   prisoner: boolean;
@@ -68,7 +69,7 @@ export function colonistInspectorState(
  * without requiring a second browser DOM in the unit-test process. */
 export function colonistInspectorScaffold(prisoner: boolean): string {
   const tabs = colonistInspectorTabs(prisoner);
-  return `<div class="colonist-inspector-scroll"><div class="colonist-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="colonist-panel-${tab.id}" aria-labelledby="colonist-tab-${tab.id}" tabindex="0" data-colonist-panel="${tab.id}" hidden><h3 class="inspector-page-title">${tab.label}</h3></section>`).join('')}</div><div class="colonist-inspector-tabs" role="tablist" aria-label="Dossiers du personnage">${tabs.map(tab => `<button type="button" role="tab" id="colonist-tab-${tab.id}" aria-controls="colonist-panel-${tab.id}" aria-selected="false" tabindex="-1" data-colonist-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="colonist-inspector-footer"><section class="colonist-inspector-summary" aria-label="Résumé du personnage sélectionné"></section><section class="colonist-inspector-actions" aria-label="Actions du personnage"></section></div></div>`;
+  return `<div class="colonist-inspector-scroll"><div class="colonist-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="colonist-panel-${tab.id}" aria-labelledby="colonist-tab-${tab.id}" tabindex="0" data-colonist-panel="${tab.id}" hidden><h3 class="inspector-page-title">${tab.label}</h3></section>`).join('')}</div><div class="colonist-inspector-tabs" role="tablist" aria-label="Dossiers du personnage">${tabs.map(tab => `<button type="button" role="tab" id="colonist-tab-${tab.id}" aria-controls="colonist-panel-${tab.id}" aria-selected="false" tabindex="-1" data-colonist-tab="${tab.id}"><img class="paper-tab-icon" src="${pictogramDataUrl(tab.id)}" alt="" aria-hidden="true"><span>${tab.label}</span></button>`).join('')}</div><div class="colonist-inspector-footer"><section class="colonist-inspector-summary" aria-label="Résumé du personnage sélectionné"></section><section class="colonist-inspector-actions" aria-label="Actions du personnage"></section></div></div>`;
 }
 
 function directMatches(root: HTMLElement, selector: string): HTMLElement[] {
@@ -123,7 +124,7 @@ export function setColonistInspectorTab(root: HTMLElement, requested: ColonistIn
   const active = resolveColonistInspectorTab(requested, prisoner);
   if (root.dataset.colonistInspectorTab === active) return active;
   dismissTooltip();
-  const dimensions = { journal:[630,510], gear:[460,450], social:[540,510], bio:[514,489], needs:[580,520], health:[630,430], prisoner:[460,450] } as const;
+  const dimensions = { journal:[690,540], gear:[590,500], social:[660,540], bio:[690,570], needs:[690,570], health:[700,490], prisoner:[590,500] } as const;
   root.style.setProperty('--dossier-width', `${dimensions[active][0]}px`);
   root.style.setProperty('--dossier-height', `${dimensions[active][1]}px`);
   for (const button of root.querySelectorAll<HTMLButtonElement>('[data-colonist-tab]')) {

@@ -1,4 +1,5 @@
 import './time-controls.css';
+import { paperPictogramUrl } from './pictograms';
 
 export const TIME_CONTROL_ASSETS = Object.freeze({
   0: '/assets/ui/elsewhere/v308/pause.png',
@@ -16,13 +17,21 @@ export const TIME_CONTROL_FRAMES = Object.freeze({
   6: [14, 43, 99, 43],
 } as const);
 
+/** The V308 PNG manifest remains available for historical delivery evidence. */
+export const PAPER_TIME_CONTROL_ASSETS = Object.freeze({
+  0: paperPictogramUrl('pause'),
+  1: paperPictogramUrl('play'),
+  3: paperPictogramUrl('speed-double'),
+  6: paperPictogramUrl('speed-triple'),
+});
+
 function timeIcon(speed: keyof typeof TIME_CONTROL_ASSETS): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.classList.add('time-control-icon'); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
-  svg.setAttribute('viewBox', TIME_CONTROL_FRAMES[speed].join(' '));
+  svg.setAttribute('viewBox', '0 0 64 64');
   svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
   const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-  image.setAttribute('href', TIME_CONTROL_ASSETS[speed]); image.setAttribute('width', '128'); image.setAttribute('height', '128');
+  image.setAttribute('href', PAPER_TIME_CONTROL_ASSETS[speed]); image.setAttribute('width', '64'); image.setAttribute('height', '64');
   svg.append(image); return svg;
 }
 

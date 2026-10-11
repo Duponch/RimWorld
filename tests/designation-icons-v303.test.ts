@@ -131,7 +131,7 @@ test('all three existing atlases load once and late loads after disposal are rel
   const pending: { url: string; complete: (texture: THREE.Texture) => void }[] = [];
   const loader: SceneTextureLoader = (url, complete) => { pending.push({ url, complete }); };
   const icons = new DesignationIconLayer(loader);
-  expect(pending.map(entry => entry.url)).toEqual(['/assets/ui/lisiere/icons.png', '/assets/ui/lisiere/architect-1.png', '/assets/ui/lisiere/architect-2.png']);
+  expect(pending.map(entry => entry.url)).toEqual(['/assets/ui/elsewhere/v317/ui.svg', '/assets/ui/elsewhere/v317/architect-1.svg', '/assets/ui/elsewhere/v317/architect-2.svg']);
   const loaded = new THREE.Texture(), late = new THREE.Texture();
   const loadedDispose = vi.spyOn(loaded, 'dispose'), lateDispose = vi.spyOn(late, 'dispose');
   pending[0]!.complete(loaded); icons.dispose(); pending[1]!.complete(late);

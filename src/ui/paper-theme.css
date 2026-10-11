@@ -1,0 +1,129 @@
+/* V317 — the paper prototype, expressed as actual interactive components.
+   One cached texture, no full-screen image, live filters or overlay hitboxes. */
+:root {
+  --paper:#f7f1e6; --paper-white:#fbf7f0; --paper-deep:#ece3d3;
+  --panel:var(--paper); --ink:#303746; --muted-ink:#686b73; --muted:var(--muted-ink);
+  --line:#d9cfbf; --hud-sky:#b5d6e5; --sky-soft:#d1e3ea;
+  --coral:#cb927d; --coral-soft:#f0d9cb; --sun:#d9b46f; --sun-soft:#f0e3c4;
+  --leaf:#7da78d; --leaf-soft:#dce6d4; --forest:#4f7964;
+  --accent:#527c8d; --danger:#aa6259; --success:#3c846c; --track:#e3d9c7;
+  --radius:24px; --outline:1px; --outline-s:1px;
+  --paper-texture:url('/assets/ui/elsewhere/v317/paper.webp');
+  --paper-shadow:0 8px 22px #333b2b26,0 1px 3px #574b3420;
+  --control-shadow:0 2px 4px #6f5e4224,inset 0 1px 0 #ffffff80;
+  color:var(--ink); color-scheme:light;
+}
+
+/* Browser text selection is distinct from selecting a game entity. Text
+   fields explicitly opt back in so editing, caret movement and copy work. */
+#app,dialog,.game-tooltip { -webkit-user-select:none; user-select:none; }
+:is(#app,dialog) :is(input:not([type=range]):not([type=checkbox]):not([type=radio]),textarea,[contenteditable=true],[contenteditable=plaintext-only]) {
+  -webkit-user-select:text; user-select:text;
+}
+:is(#app,dialog) img { -webkit-user-drag:none; }
+
+*,*::before,*::after { scrollbar-color:#b4ab9a transparent; }
+.ui-icon { background-image:url('/assets/ui/elsewhere/v317/ui.svg'); }
+::-webkit-scrollbar-thumb { background-color:#b4ab9a; }
+
+:is(#app,dialog) button,#app .panel button {
+  border:1px solid #b8aa9126; border-radius:12px; background:var(--paper-white);
+  color:var(--ink); box-shadow:var(--control-shadow); text-shadow:none;
+  font-weight:600; transition:background-color .12s,border-color .12s;
+}
+:is(#app,dialog) button:hover:not(:disabled),#app .panel button:hover:not(:disabled) { background:var(--sun-soft); color:var(--ink); border-color:#bbab8c55; }
+:is(#app,dialog) button:is(.active,[aria-pressed=true],[aria-selected=true]),#app .panel button:is(.active,[aria-pressed=true],[aria-selected=true]) {
+  background:var(--hud-sky); color:var(--ink); border-color:#81aabb60;
+  box-shadow:inset 0 1px #ffffff60,0 2px 4px #4b748121;
+}
+:is(#app,dialog) button:is(.active,[aria-pressed=true],[aria-selected=true]):hover:not(:disabled),#app .panel button:is(.active,[aria-pressed=true],[aria-selected=true]):hover:not(:disabled) { background:#c5dfe9; }
+:is(#app,dialog) button:disabled,#app .panel button:disabled { opacity:.48; box-shadow:none; filter:none; }
+:is(#app,dialog) :is(button,input,select,textarea,summary,[tabindex]):focus-visible {
+  outline:2px solid #648b9b; outline-offset:3px;
+}
+:is(#app,dialog) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea) {
+  border:1px solid #c6b79e85; border-radius:10px; background-color:var(--paper-white);
+  color:var(--ink); box-shadow:inset 0 1px 3px #796d4c0b; font-weight:400;
+}
+:is(#app,dialog) select option { color:var(--ink); background:var(--paper-white); }
+@supports(appearance:base-select) {
+  :is(#app,dialog) select::picker(select) {
+    border:1px solid var(--line); border-radius:12px; color:var(--ink);
+    background:var(--paper-white); box-shadow:var(--paper-shadow);
+  }
+  :is(#app,dialog) select::picker-icon { color:var(--muted-ink); }
+  :is(#app,dialog) option:hover,:is(#app,dialog) option:checked { background:var(--sky-soft); }
+}
+:is(#app,dialog) :is(input[type=checkbox],input[type=radio]) {
+  background:var(--paper-white); border:1px solid #998c76; box-shadow:inset 0 1px 2px #796d4c16;
+}
+:is(#app,dialog) :is(input[type=checkbox],input[type=radio]):checked {
+  background:var(--leaf); border-color:#6d9179; box-shadow:inset 0 0 0 3px var(--paper-white);
+}
+:is(#app,dialog) input:indeterminate { background:var(--sun); }
+:is(#app,dialog) input[type=range] { accent-color:var(--forest); }
+
+/* Only painted panels receive the tile. Transparent HUD and inspector hosts
+   keep their existing pointer-events/position/overflow contracts. */
+#app :is(.management-panel,.inspector:not(.colonist-inspector-host),.order-menu,.learning-concepts),
+dialog,.game-tooltip {
+  background-color:var(--paper); background-image:linear-gradient(#f7f1e638,#f7f1e638),var(--paper-texture);
+  background-size:auto,512px 512px; border:1px solid #fff9eb99; border-image:none;
+  color:var(--ink); border-radius:var(--radius); box-shadow:var(--paper-shadow); text-shadow:none;
+}
+dialog::backdrop { background:#28332d66; }
+#app .panel-heading h2,dialog h2 { color:var(--ink); font-family:var(--font-body); font-weight:700; letter-spacing:-.035em; }
+#app .panel-heading button,#app .panel .panel-heading>button { border:0; border-radius:11px; background:#e9dfd2ad; color:var(--muted-ink); box-shadow:var(--control-shadow); }
+#app .panel-heading button:hover { background:var(--coral-soft); }
+:is(#app,dialog) :is(h3,h4,legend) { color:var(--ink); font-family:var(--font-body); }
+:is(#app,dialog) :is(fieldset,hr) { border-color:var(--line); }
+#app :is(.panel,.inspector) :is(p,label,li,td,th,details) { color:var(--ink); }
+#app .muted,dialog .muted { color:var(--muted-ink)!important; }
+
+:is(#app,dialog) :is(progress,meter) { accent-color:var(--leaf); background:var(--track); border:0; border-radius:7px; }
+:is(#app,dialog) progress::-webkit-progress-bar { background:var(--track); border-radius:7px; }
+:is(#app,dialog) progress::-webkit-progress-value { background:var(--leaf); border-radius:7px; }
+:is(#app,dialog) progress::-moz-progress-bar { background:var(--leaf); border-radius:7px; }
+#app :is(.bill,.storage-settings,.power-controls,.burial-controls,.hygiene-controls,.bill-controls) { border-color:var(--line); }
+#app :is(.bill,.storage-settings) { background:transparent; }
+#app :is(.bill,.storage-settings) :is(select,input[type=number]) { background-color:var(--paper-white); color:var(--ink); }
+#app :is(.order-menu,.learning-concepts) button { background:transparent; border-color:transparent; box-shadow:none; }
+#app :is(.order-menu,.learning-concepts) button:hover:not(:disabled) { background:var(--sky-soft); }
+#app :is(.help-dialog,.food-policy-dialog) { background-color:var(--paper); color:var(--ink); }
+
+.game-tooltip {
+  max-width:min(420px,calc(100vw - 20px)); padding:20px 24px;
+  font:15px/1.5 var(--font-body); border-radius:22px;
+}
+.game-tooltip>strong { color:var(--ink); margin-bottom:12px; font-size:1.08em; line-height:1.4; }
+.game-tooltip>strong:has(img) { display:flex; align-items:center; gap:12px; }
+.game-tooltip>strong>img { flex:none; width:32px; height:32px; object-fit:contain; }
+.game-tooltip p { color:var(--muted-ink); }
+.game-tooltip dl { margin-top:16px; padding-top:12px; border-color:#bbae9980; gap:6px 18px; grid-template-columns:minmax(7em,1fr) minmax(0,1.35fr); }
+.game-tooltip dd { color:var(--success); }
+.game-tooltip[hidden] { display:none; }
+
+#app #colonists .colonist {
+  border:1px solid #fff9ebbf; background-color:var(--paper); background-image:var(--paper-texture);
+  background-size:512px 512px; border-radius:13px; box-shadow:0 3px 10px #333b2b26;
+}
+#app #colonists .colonist:hover:not(:disabled) { background-color:var(--paper-white); border-color:#a4baa0; box-shadow:0 4px 12px #333b2b30; }
+#app #colonists .colonist:is(.selected,[aria-pressed=true]) { border-color:#78a4b4; box-shadow:inset 0 0 0 2px #8fb9c6,0 3px 10px #333b2b26; }
+#app .portrait { background:#e8dfcd; border-radius:8px; }
+#app .pawn-mood { background:#ded4c0; border-radius:4px; }
+#app .pawn-mood i { background:var(--leaf); border-radius:4px; }
+#app .corner-tools button { border:0; background:var(--paper); box-shadow:var(--control-shadow); }
+
+#app .corner-tools { background:var(--paper); border:1px solid #fff9eb99; box-shadow:var(--paper-shadow); border-radius:16px; }
+#app #fps-counter { border:0; background:#f7f1e6dc; color:var(--muted-ink); border-radius:8px; box-shadow:none; font-weight:500; }
+#app #map-cell-details { border:1px solid var(--line); border-radius:16px; box-shadow:var(--paper-shadow); background-color:var(--paper); background-image:var(--paper-texture); background-size:512px 512px; }
+#app #map-cell-details .map-cell-detail-row:nth-of-type(even) { background:#e6decc77; }
+dialog:is(.help-dialog,.food-policy-dialog,.object-information) { background-color:var(--paper); background-image:var(--paper-texture); background-size:512px 512px; border:1px solid #fff9eb99; border-radius:24px; box-shadow:var(--paper-shadow); }
+dialog.object-information .object-information-heading { background:#dce6d466; border-bottom:1px solid var(--line); }
+dialog.object-information :is(.object-information-close,.object-information-finish) { border:1px solid #b8aa9126; border-radius:12px; box-shadow:var(--control-shadow); }
+dialog.object-information .object-information-close { background:var(--paper-deep); }
+dialog.object-information .object-information-finish { background:var(--leaf-soft); }
+dialog.help-dialog kbd { border:1px solid var(--line); }
+
+@media(max-width:760px) { .game-tooltip { padding:14px 17px; font-size:14px; border-radius:17px; } }
+@media(prefers-reduced-motion:reduce) { :is(#app,dialog) button { transition:none; } }

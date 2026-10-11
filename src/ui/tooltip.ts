@@ -1,4 +1,5 @@
 import './tooltip.css';
+import { pictogramDataUrl, PICTOGRAM_IDS } from './pictograms';
 
 export interface TooltipContent {
   title?: string;
@@ -57,7 +58,14 @@ export function installTooltips(host: HTMLElement): () => void {
     if(owner.hasAttribute('title')){nativeTitle=owner.title;owner.removeAttribute('title');}
     if (!content.body && !content.title && !content.rows?.length) { hide(); return; }
     const children: HTMLElement[] = [];
-    if (content.title) { const heading = document.createElement('strong'); heading.textContent = content.title; children.push(heading); }
+    if (content.title) {
+      const heading = document.createElement('strong');
+      const skill=owner.dataset.skillEntry;
+      if(skill&&PICTOGRAM_IDS.includes(skill)) {
+        const icon=document.createElement('img');icon.src=pictogramDataUrl(skill);icon.alt='';icon.setAttribute('aria-hidden','true');heading.append(icon);
+      }
+      const title=document.createElement('span');title.textContent=content.title;heading.append(title);children.push(heading);
+    }
     if (content.body) { const body = document.createElement('p'); body.textContent = content.body; children.push(body); }
     if (content.rows?.length) {
       const rows = document.createElement('dl');

@@ -2,7 +2,7 @@ import { installToolCursors, UI_ICONS, type UiIcon } from './tool-cursors';
 import {UI_ATLAS_URL,modelIconUrl,pictogramDataUrl} from './pictograms';
 export { UI_ICONS, type UiIcon } from './tool-cursors';
 
-/** One generated atlas shared by the HUD, tool cursors and world designations. */
+/** The paper atlas retains the historical four-column marker addresses. */
 export function iconPosition(icon: UiIcon): [number, number] {
   const index = UI_ICONS.indexOf(icon);
   return [(index % 4) * 100 / 3, Math.floor(index / 4) * 25];
@@ -15,38 +15,20 @@ function decorate(element: HTMLElement, icon: UiIcon): void {
   element.textContent = ''; element.setAttribute('aria-hidden', 'true');
 }
 
-/** Installed once. Dynamic weather changes only the existing data-weather
- * attribute; no DOM observer or SVG generation runs in the simulation loop. */
-function hudSvgUrl(body: string): string {
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><g stroke="#17202e" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" fill="none">${body}</g></svg>`)}`;
-}
+/** Installed once. Weather still changes through the existing data attribute. */
 function installConditionIcons(root: HTMLElement): void {
   const temperature = root.querySelector<HTMLElement>('#outdoor-temperature');
-  if (temperature) temperature.style.setProperty('--temperature-icon', `url('${hudSvgUrl('<path d="M25 12a7 7 0 0 1 14 0v25a13 13 0 1 1-14 0Z" fill="#fff7e9"/><path d="M32 19v24" stroke="#ff6b5e" stroke-width="6"/><circle cx="32" cy="48" r="7" fill="#ff6b5e" stroke="none"/><path d="M43 16h6m-6 10h6m-6 10h6" stroke="#d9ecff"/>')}')`);
+  if (temperature) temperature.style.setProperty('--temperature-icon', `url('${pictogramDataUrl('temperature')}')`);
   const weather = root.querySelector<HTMLElement>('#weather');
   if (!weather) return;
-  const cloud = '<path d="M15 39a10 10 0 0 1 0-20c1-13 20-15 25-4 13-4 23 15 10 24Z" fill="#e6edf7"/>';
-  const rain = '<path d="m20 46-4 8m18-8-4 8m18-8-4 8" stroke="#6eb9ff" stroke-width="5"/>';
-  const fog = '<path d="M10 45h44M15 52h35" stroke="#adc4db" stroke-width="4"/>';
-  const lightning = '<path d="m34 30-13 16h10l-4 13 17-20H33l6-9Z" fill="#ffc23c"/>';
-  const snow = '<g stroke="#9fd4ff" stroke-width="3"><path d="M19 46v12m-5-9 10 6m0-6-10 6M43 46v12m-5-9 10 6m0-6-10 6"/></g>';
-  const bodies = {
-    clear: '<circle cx="32" cy="32" r="14" fill="#ffc23c"/><path d="M32 4v7m0 42v7M4 32h7m42 0h7M12 12l5 5m30 30 5 5M12 52l5-5m30-30 5-5" stroke="#ffc23c" stroke-width="4"/>',
-    fog: cloud + fog,
-    rain: cloud + rain,
-    'dry-thunderstorm': cloud + lightning,
-    'rainy-thunderstorm': cloud + rain + lightning,
-    'foggy-rain': cloud + '<path d="m20 42-3 6m24-6-3 6M10 54h44" stroke="#6eb9ff" stroke-width="4"/>',
-    'snow-gentle': cloud + snow,
-    'snow-hard': cloud + snow + '<circle cx="32" cy="45" r="2" fill="#9fd4ff" stroke="none"/><circle cx="32" cy="57" r="2" fill="#9fd4ff" stroke="none"/>',
-  };
-  for (const [kind, body] of Object.entries(bodies)) weather.style.setProperty(`--weather-icon-${kind}`, `url('${hudSvgUrl(body)}')`);
+  for (const kind of ['clear','fog','rain','dry-thunderstorm','rainy-thunderstorm','foggy-rain','snow-gentle','snow-hard'])
+    weather.style.setProperty(`--weather-icon-${kind}`, `url('${pictogramDataUrl(`weather-${kind}`)}')`);
 }
 
 function installViewIcons(root: HTMLElement): void {
   const icons: Record<string, string> = {
-    'wall-cutaway': modelIconUrl('wall'),
-    'roof-toggle': hudSvgUrl('<path d="m5 32 27-22 27 22-6 7-21-17-21 17Z" fill="#9d7155"/><path d="M15 34v20h34V34" stroke="#a4b3c6"/>'),
+    'wall-cutaway': pictogramDataUrl('wall'),
+    'roof-toggle': pictogramDataUrl('roof'),
     'foliage-toggle': pictogramDataUrl('leaf'),
     'zones-toggle': pictogramDataUrl('layers'),
     'view-home': pictogramDataUrl('home'),
