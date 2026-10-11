@@ -184,3 +184,19 @@ dans ce coût doit être attribuée avant d'envisager une modification de shader
 aucun gain supplémentaire n'est présumé. Les anciens prototypes audio/agenda
 écartés ne sont pas relancés sans changement causal. Relance planifiée
 **PAUSED**, aucune nouvelle mécanique engagée dans ce lot.
+
+## Publication
+
+Produit **`10564db7`** commité et poussé sur `main`, puis publié une seule fois
+en **`8c2a99de`** sur [l'adresse stable](https://elsewhere-cq7.pages.dev/) et
+[l'URL V326](https://8c2a99de.elsewhere-cq7.pages.dev/).
+Wrangler4.149.0 **PASS 14,915 s** : deux fichiers envoyés, 511 déjà présents,
+puis en-têtes/redirections. Aucun nouveau build après les contrôles natifs.
+
+HTTPS **PASS 20,939 s**, rapport
+`tmp/elsewhere-pages/v326-http-e43vSS/report.json` : **102 réponses**200/MIME/octets
+exactes sur les deux origines. Package et publics inchangés. Ce contrôle ne
+rejoue pas le navigateur ni les mesures de performances en ligne, et ne
+télécharge pas toutes les sauvegardes distantes. Le commit documentaire suivant
+enregistre ces preuves sans second déploiement. `references_UI` demeure seul
+non suivi ; aucun processus de contrôle conservé, relance **PAUSED**.
