@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication courante `3e8769bd` ajoute les [paysages procéduraux et astres V323](cardboard-diorama-v323.md) au [relief et à la visibilité V322](cardboard-diorama-v322.md), au [diorama en carton V321](cardboard-diorama-v321.md) et aux boucles élémentaires jusqu'aux [étagères V320](../gameplay/shelves-v320.md) et aux corrections d'[infobulles/alertes V319](../gameplay/interface-feedback-v319.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication courante `dcbff029` ajoute la [chambre et les éclairages V324](room-diorama-v324.md) aux [paysages procéduraux et astres V323](cardboard-diorama-v323.md), au [relief et à la visibilité V322](cardboard-diorama-v322.md), au [diorama en carton V321](cardboard-diorama-v321.md) et aux boucles élémentaires jusqu'aux [étagères V320](../gameplay/shelves-v320.md) et aux corrections d'[infobulles/alertes V319](../gameplay/interface-feedback-v319.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
 
 ## Adresse et publication
 
@@ -218,3 +218,26 @@ Package/publics inchangés ; les66fichiers ne sont pas tous téléchargés à
 distance. Aucun nouveau benchmark ou parcours de jeu en ligne revendiqué.
 Un commit/push documentaire consigne la livraison sans deuxième publication ;
 relance **PAUSED**, aucun nouveau lot engagé.
+
+## Publication V324 : chambre et éclairages
+
+Le produit `bd96e0cf` est poussé sur `main`, puis publié une seule fois en
+`dcbff029` : [adresse stable](https://elsewhere-cq7.pages.dev/) et
+[publication](https://dcbff029.elsewhere-cq7.pages.dev/). La chambre optionnelle,
+les globes suspendus et les trois réglages d'éclairage sont décrits dans la
+[note V324](room-diorama-v324.md), avec les contrôles natifs, les rouges et le
+surcoût mesuré. Schéma229 et archives publiques conservés.
+
+Build Pages et typage final **PASS11,273 s** ; package **PASS1,567 s**,515fichiers
+et119185882octets. Les63références/66fichiers publics sont exacts, laboratoire
+et sources privés absents. Rapport `tmp/elsewhere-pages/v324-package-R616rd/report.json`.
+Wrangler4.149.0 déploie en **13,797 s** : deux fichiers nouveaux,511déjà présents,
+puis en-têtes/redirections. `references_UI` seul motive le dirty Git et reste
+exclu du commit et du package.
+
+HTTPS **PASS5,151 s**,102réponses200/MIME/octets exacts pour51chemins sur les
+deux origines ; rapport `tmp/elsewhere-pages/v324-http-jKJxs4/report.json`.
+Package et publics inchangés. Ces contrôles ne téléchargent pas les66fichiers
+distants ni ne rejouent le jeu ou le benchmark en ligne. Un commit/push
+documentaire consigne la livraison sans deuxième publication ; relance
+**PAUSED**, aucun nouveau lot engagé.

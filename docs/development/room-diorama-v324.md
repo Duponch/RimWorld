@@ -174,6 +174,22 @@ exact après ces contrôles. Simulation, bridge et les63références/66fichiers
 publics restent inchangés ; aucune campagne de simulation générale n'est
 rejouée pour ce lot graphique.
 
-Publication regroupée prévue après commit/push, à la même adresse Cloudflare.
-La relance planifiée reste **PAUSED** et aucun nouveau chantier de gameplay
-n'est engagé pendant cette livraison.
+Le produit **`bd96e0cf`** est commité et poussé sur `main`, puis publié une
+seule fois en **`dcbff029`** : [adresse stable](https://elsewhere-cq7.pages.dev/)
+et [publication](https://dcbff029.elsewhere-cq7.pages.dev/).
+
+Package **PASS1,567 s**, 515 fichiers /119185882 octets, 63 références et
+66 fichiers publics exacts ; laboratoire et sources privés absents. Rapport
+`tmp/elsewhere-pages/v324-package-R616rd/report.json`. Wrangler4.149.0 publie
+en **13,797 s**, deux fichiers nouveaux et511déjà présents, puis en-têtes et
+redirections. Le marquage Git dirty concerne uniquement `references_UI`, qui
+n'entre ni dans le commit ni dans le package.
+
+HTTPS **PASS5,151 s**, 102 réponses200/MIME/octets exacts sur les origines
+stable et fraîche ; rapport `tmp/elsewhere-pages/v324-http-jKJxs4/report.json`.
+Le package et les fichiers publics restent inchangés. Ces vérifications ne
+rejouent pas un navigateur ou un benchmark en ligne et ne téléchargent pas
+tous les fichiers de sauvegarde distants. Le commit/push documentaire suivant
+consigne ces résultats sans second déploiement.
+
+La relance planifiée reste **PAUSED**, aucun nouveau lot n'est engagé.
