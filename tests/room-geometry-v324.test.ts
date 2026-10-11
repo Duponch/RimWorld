@@ -38,7 +38,7 @@ test.each([[250, 250], [48, 32], [32, 48], [16, 16]])('the %i×%i room is bounde
     expect(room.parts.length).toBeLessThanOrEqual(ROOM_GEOMETRY_LIMITS.parts);
     expect(new Set(room.parts.map(part => part.name)).size).toBe(room.parts.length);
     expect(room.parts.some(part => /table/i.test(part.name))).toBe(false);
-    for (const side of ['north', 'west', 'east']) {
+    for (const side of ['north', 'south', 'west', 'east']) {
       const wall = room.parts.find(part => part.section === side && part.material === 'plaster');
       expect(wall).toBeDefined();
       expect(wall!.geometry.boundingBox!.max.y).toBeCloseTo(room.layout.walls.ceilingY, 4);

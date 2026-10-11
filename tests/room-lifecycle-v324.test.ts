@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-import { Mesh, OrthographicCamera, Scene, Vector3 } from 'three/webgpu';
+import { describe, expect, it, test, vi } from 'vitest';
+import { Color, HalfFloatType, Mesh, OrthographicCamera, RenderTarget, Scene, Vector2, Vector3, type WebGPURenderer } from 'three/webgpu';
 import { DayNightLayer } from '../src/render/DayNightLayer';
 import { DioramaLayer } from '../src/render/DioramaLayer';
 import { RoomLayer } from '../src/render/RoomLayer';
@@ -158,4 +158,90 @@ describe('optional room presentation ownership', () => {
       expect(daylight.light.intensity).toBe(0); expect(daylight.ambient.intensity).toBe(0);
     } finally { daylight.dispose(); }
   });
+});
+
+/** Exercise the real room/core boundary. The fake backend selects the same kind
+ * of HDR target as Three before invoking the public scene callback. It reports
+ * draw order and ownership, leaving pixel equivalence to the native oracle. */
+function compositionHarness() {
+  const scene = new Scene(), camera = new OrthographicCamera(), shadowCamera = new OrthographicCamera();
+  const target = new Vector3(), room = new RoomLayer(scene);
+  room.configure(32, 32, 7);
+  const hdr = new RenderTarget(2560, 1440, { type: HalfFloatType, samples: 4, depthBuffer: true });
+  const state = { target: null as RenderTarget | null, autoClear: true,
+    fail: '' as '' | 'before-callback' | 'composite' | 'main' };
+  const draws: { scene: unknown; target: RenderTarget | null; autoClear: boolean }[] = [];
+  const core = Object.assign(Object.create(SceneRenderCore.prototype), {
+    room, scene, rig: { camera, controls: { target } }, armedRoom: null,
+  });
+  const renderer = {
+    get autoClear() { return state.autoClear; }, set autoClear(value: boolean) { state.autoClear = value; },
+    getDrawingBufferSize: (out: Vector2) => out.set(2560, 1440),
+    getRenderTarget: () => state.target,
+    setRenderTarget: (next: RenderTarget | null) => { state.target = next; },
+    getClearColor: (out: Color) => out.setHex(0x123456), getClearAlpha: () => 1,
+    setClearColor: () => {},
+    render: (drawScene: unknown) => {
+      if (drawScene === scene) {
+        state.target = hdr;
+        if (state.fail === 'before-callback') throw Error('Before callback');
+        // A shadow/foreign callback must leave the pending main draw intact.
+        core.composeRoomBeforeRender(scene, shadowCamera);
+        core.composeRoomBeforeRender(new Scene(), camera);
+        expect(core.armedRoom).toBe(room);
+        core.composeRoomBeforeRender(scene, camera);
+        core.composeRoomBeforeRender(scene, camera); // No second composition.
+        if (state.fail === 'main') throw Error('Main draw');
+      } else if (state.target === hdr && state.fail === 'composite') throw Error('Composite draw');
+      draws.push({ scene: drawScene, target: state.target, autoClear: state.autoClear });
+    },
+  } as unknown as WebGPURenderer;
+  core.renderer = renderer;
+  return { core, room, scene, camera, hdr, state, draws,
+    dispose: () => { room.dispose(); hdr.dispose(); } };
+}
+
+test('main scene composes exactly once before all game draws into the selected HDR target', () => {
+  const h = compositionHarness();
+  try {
+    // compileAsync invokes this callback too, outside an armed frame.
+    h.core.composeRoomBeforeRender(h.scene, h.camera);
+    expect(h.draws).toHaveLength(0);
+    h.core.renderScene();
+    expect(h.draws).toHaveLength(4); // Room, blur, composite, game.
+    expect(h.draws[0]!.scene).toBe(h.room.scene);
+    expect(h.draws[0]!.target).toBe(h.room.backdrop.target);
+    expect(h.draws[1]!.target).not.toBe(h.hdr);
+    expect(h.draws[2]!.target).toBe(h.hdr); expect(h.draws[2]!.autoClear).toBe(true);
+    expect(h.draws[3]).toEqual({ scene: h.scene, target: h.hdr, autoClear: false });
+    expect(h.room.backdrop.stats).toEqual({ roomRenders: 1, composites: 1 });
+    expect(h.core.armedRoom).toBeNull(); expect(h.state.target).toBeNull(); expect(h.state.autoClear).toBe(true);
+    h.core.composeRoomBeforeRender(h.scene, h.camera);
+    expect(h.draws).toHaveLength(4);
+    h.core.renderScene();
+    expect(h.draws).toHaveLength(6); // Paused backdrop reused, composite + game only.
+    expect(h.room.backdrop.stats).toEqual({ roomRenders: 1, composites: 2 });
+  } finally { h.dispose(); }
+});
+
+test.each(['before-callback', 'composite', 'main'] as const)('failed %s restores target/clearing and consumes no future callback', failure => {
+  const h = compositionHarness(), caller = new RenderTarget();
+  h.state.target = caller; h.state.autoClear = false; h.state.fail = failure;
+  try {
+    expect(() => h.core.renderScene()).toThrow();
+    expect(h.core.armedRoom).toBeNull(); expect(h.state.target).toBe(caller); expect(h.state.autoClear).toBe(false);
+    const count = h.room.backdrop.stats.composites;
+    h.core.composeRoomBeforeRender(h.scene, h.camera);
+    expect(h.room.backdrop.stats.composites).toBe(count);
+    expect(count).toBe(failure === 'main' ? 1 : 0);
+  } finally { h.dispose(); caller.dispose(); }
+});
+
+test('room OFF renders directly and never arms or touches a former background', () => {
+  const scene = new Scene(), camera = new OrthographicCamera(), render = vi.fn();
+  const core = Object.assign(Object.create(SceneRenderCore.prototype), {
+    room: null, scene, rig: { camera }, renderer: { render }, armedRoom: null,
+  });
+  core.renderScene(); core.composeRoomBeforeRender(scene, camera);
+  expect(render).toHaveBeenCalledExactlyOnceWith(scene, camera); expect(core.armedRoom).toBeNull();
 });

@@ -134,10 +134,15 @@ export class RoomLayer {
 
   private currentVersion = 0;
 
-  renderBackground(renderer: WebGPURenderer, camera: Camera, focus: Vector3): void {
+  renderBackground(renderer: WebGPURenderer, camera: Camera, focus: Vector3, compose = true): void {
     if (this.disposed || !this.geometry) return;
     this.local.copy(focus).applyMatrix4(camera.matrixWorldInverse);
-    this.backdrop.render(renderer, this.scene, camera, this.currentVersion, -this.local.z, this.span);
+    this.backdrop.render(renderer, this.scene, camera, this.currentVersion, -this.local.z, this.span, compose);
+  }
+
+  composeBackground(renderer: WebGPURenderer): void {
+    if (this.disposed || !this.geometry) return;
+    this.backdrop.compose(renderer);
   }
 
   async prepare(renderer: WebGPURenderer, camera: Camera): Promise<void> {

@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V326 : [quatrième mur et coût du rendu](development/aulnes-performance-v326.md), schéma 229 conservé.** Chambre fermée et contrôles sur Les Aulnes avec le diorama ; [guide](gameplay/player-guide.md#chambre-à-quatre-murs--v326). Mesures CPU/GPU, images exactes et limites de débit dans la note unique. Les états suivants sont historiques.
+
 **V325 : [table et chambre fixe](development/room-layout-v325.md), schéma 229 conservé.** Table rectangulaire, proportions communes et masquage configurable du ciel suspendu ; [guide](gameplay/player-guide.md#table-chambre-et-suspensions--v325). Comparaison de coût, contrôles natifs et limites dans la note unique. Les états suivants sont historiques.
 
 **V324 : [chambre et éclairages](development/room-diorama-v324.md), schéma 229 conservé.** Chambre facultative, globes suspendus, ambiance et intensités réglables ; [guide](gameplay/player-guide.md#chambre-et-éclairages--v324). Contrôles, coût et limites dans la note unique. Les états suivants sont historiques.

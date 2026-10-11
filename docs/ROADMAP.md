@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V326 — [quatrième mur et coût du rendu](development/aulnes-performance-v326.md), schéma 229 conservé.** Priorité humaine : chambre complète et performances avec chambre/carton ON. Images et règles conservées ; 240 FPS en vrai ×6 restent hors d'atteinte dans les mesures actuelles. Le coût MAIN doit être attribué avant une prochaine optimisation plus large ; aucune nouvelle mécanique engagée, relance **PAUSED**. Les états suivants sont historiques.
+
 **V325 — [table et chambre fixe](development/room-layout-v325.md), schéma 229 conservé.** Priorité humaine graphique : proportions de référence, nuages répartis, vue dégagée et chambre permanente. Structure regroupée conservée après comparaison de coût du décor ; aucune nouvelle mécanique ni gainFPS général revendiqué. Barricades seulement préparées, sous-métiers reportés, relance **PAUSED**. Les états suivants sont historiques.
 
 **V324 — [chambre et éclairage du plateau](development/room-diorama-v324.md), schéma 229 conservé.** Priorité graphique humaine : intégrer la chambre de référence, conserver le plateau net, améliorer la lecture nocturne et régler indépendamment soleil, lune et ambiance. Aucune nouvelle mécanique de simulation ; barricades seulement préparées, sous-métiers reportés, relance **PAUSED**. Les états suivants sont historiques.

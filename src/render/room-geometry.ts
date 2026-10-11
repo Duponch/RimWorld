@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 import { createRoomLayout, type RoomLayout } from './room-layout';
 
 export type RoomMaterialKind = 'wood' | 'plaster' | 'fabric' | 'metal' | 'paper' | 'cotton';
-export type RoomSection = 'floor' | 'north' | 'west' | 'east' | 'furniture' | 'orbit';
+export type RoomSection = 'floor' | 'north' | 'south' | 'west' | 'east' | 'furniture' | 'orbit';
 export type MotionKind = 'sun' | 'moon';
 type Point = readonly [number, number, number];
 
@@ -54,7 +54,7 @@ export interface RoomGeometry {
   readonly cloudSuspensions: readonly RoomSuspension[];
 }
 
-export const ROOM_GEOMETRY_LIMITS = Object.freeze({ parts: 16, triangles: 28000 });
+export const ROOM_GEOMETRY_LIMITS = Object.freeze({ parts: 17, triangles: 28000 });
 
 /** Analytic resident rail: a supplied vector is reused, with no scene or clock. */
 export function sampleRoomOrbit(orbit: RoomOrbit, t: number, out: THREE.Vector3, kind: MotionKind = 'sun'): THREE.Vector3 {
@@ -227,15 +227,19 @@ export function createRoomGeometry(width: number, height: number, seed = 0): Roo
       [boardWidth - unit * .0075, unit * .02, floorDepth - unit * .035], tint, unit * .005);
   }
   const wallHeight = layout.walls.height, wallThickness = unit * .2;
-  for (const side of ['north', 'west', 'east'] as const) {
+  for (const side of ['north', 'south', 'west', 'east'] as const) {
     const target = batch(`room-${side}-wall`, 'plaster', side);
-    const horizontal = side === 'north';
+    const horizontal = side === 'north' || side === 'south';
+    const wallZ = side === 'north' ? northZ - wallThickness / 2 : southZ + wallThickness / 2;
+    const skirtZ = side === 'north' ? northZ + unit * .015 : southZ - unit * .015;
+    // The end walls cover the side-wall ends. Their bevels then stay outside
+    // the interior corners instead of leaving a narrow diagonal opening.
     box(target, [horizontal ? cx : side === 'west' ? westX - wallThickness / 2 : eastX + wallThickness / 2,
-      floorY + wallHeight / 2, horizontal ? northZ - wallThickness / 2 : wallCenterZ],
-    [horizontal ? halfX * 2 : wallThickness, wallHeight, horizontal ? wallThickness : halfZ * 2],
+      floorY + wallHeight / 2, horizontal ? wallZ : wallCenterZ],
+    [horizontal ? halfX * 2 + wallThickness * 2 : wallThickness, wallHeight, horizontal ? wallThickness : halfZ * 2],
     side === 'west' ? 0xb6a28f : 0xc8b9a5, unit * .015);
     box(target, [horizontal ? cx : side === 'west' ? westX + unit * .015 : eastX - unit * .015,
-      floorY + unit * .09, horizontal ? northZ + unit * .015 : wallCenterZ],
+      floorY + unit * .09, horizontal ? skirtZ : wallCenterZ],
     [horizontal ? halfX * 2 : unit * .03, unit * .18, horizontal ? unit * .03 : halfZ * 2], 0x947d65, unit * .008);
   }
   const rug = batch('room-woven-rug', 'fabric', 'floor');

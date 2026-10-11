@@ -55,7 +55,7 @@ export class RoomBackdrop {
 
   /** Renderer state is restored even if a backend throws while creating a pass. */
   render(renderer: WebGPURenderer, scene: Scene, camera: Camera, version: number,
-    focusDistance: number, span: number): void {
+    focusDistance: number, span: number, compose = true): void {
     camera.updateMatrixWorld();
     renderer.getDrawingBufferSize(this.size);
     const width = Math.max(1, Math.ceil(this.size.x * .5)), height = Math.max(1, Math.ceil(this.size.y * .5));
@@ -80,13 +80,28 @@ export class RoomBackdrop {
         this.lastView.copy(camera.matrixWorld); this.lastProjection.copy(camera.projectionMatrix);
         this.version = version; this.ready = true; this.stats.roomRenders++;
       }
+      if (compose) {
+        renderer.setRenderTarget(previousTarget);
+        this.compose(renderer);
+      }
+    } finally {
       renderer.setRenderTarget(previousTarget);
+      renderer.autoClear = previousAutoClear;
+      renderer.setClearColor(this.clear, previousAlpha);
+    }
+  }
+
+  /** Draw into the caller's current HDR/MSAA target. During an ordinary frame
+   * the main scene has already selected this target but has not begun its pass.
+   * Its final output transform therefore serves both the room and the colony. */
+  compose(renderer: WebGPURenderer): void {
+    const previousTarget = renderer.getRenderTarget(), previousAutoClear = renderer.autoClear;
+    try {
       renderer.autoClear = true;
       this.quad.render(renderer); this.stats.composites++;
     } finally {
       renderer.setRenderTarget(previousTarget);
       renderer.autoClear = previousAutoClear;
-      renderer.setClearColor(this.clear, previousAlpha);
     }
   }
 

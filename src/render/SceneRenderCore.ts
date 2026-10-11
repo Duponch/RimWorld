@@ -123,6 +123,7 @@ export class SceneRenderCore {
   protected dioramaEnabled = true;
   protected room: RoomLayer | null = null;
   protected roomEnabled = true;
+  private armedRoom: RoomLayer | null = null;
   private roomMaskRadius = DEFAULT_ROOM_MASK_RADIUS;
   private lightingSettings = parseLightingSettings(null);
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
@@ -303,6 +304,10 @@ export class SceneRenderCore {
       this.reportFailure(`Erreur du périphérique graphique : ${detail}`);
     };
     this.scene.matrixAutoUpdate = false;
+    // WebGPU has selected its HDR/MSAA target before this public callback, but
+    // has not begun the scene pass. Composing here avoids an intermediate screen
+    // output transform while preserving room -> bundles -> objects draw order.
+    this.scene.onBeforeRender = (_renderer, scene, camera) => this.composeRoomBeforeRender(scene, camera);
     this.environmentLighting.configure(this.staticMaterial);
     this.environmentLighting.configure(this.terrainPlainMaterial);
     this.environmentLighting.configure(this.terrainPaintMaterial);
@@ -740,6 +745,7 @@ export class SceneRenderCore {
     // them when the emitter set changes, before replay can reach a freed atlas.
     this.landscape.needsUpdate = true;
     if (!enabled) {
+      this.armedRoom = null;
       this.room?.dispose(); this.room = null;
       this.daylight.setExternalLighting(false);
       if (!this.dioramaEnabled) { this.diorama?.dispose(); this.diorama = null; }
@@ -1285,13 +1291,7 @@ export class SceneRenderCore {
     if(cacheEligible){shadow.autoUpdate=!reuseShadow;if(!reuseShadow)shadow.needsUpdate=true;}
     else shadow.autoUpdate=true;
     this.renderer.info.reset();
-    if (this.room) {
-      this.room.renderBackground(this.renderer, this.camera, this.controls.target);
-      const autoClear = this.renderer.autoClear;
-      this.renderer.autoClear = false;
-      try { this.renderer.render(this.scene, this.camera); }
-      finally { this.renderer.autoClear = autoClear; }
-    } else this.renderer.render(this.scene, this.camera);
+    this.renderScene();
     if(cacheEligible&&!reuseShadow)this.pausedShadow.capture(!shadow.needsUpdate,this.camera,shadowLight,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
     this.hostPort.drawLabels(this.world, this.camera, cellPixels, this.viewportWidth, this.viewportHeight);
     this.stats.drawCalls = this.renderer.info.render.drawCalls;
@@ -1300,6 +1300,30 @@ export class SceneRenderCore {
     this.stats.fps = this.frames.fps;
     this.stats.frameMs = this.frames.meanMs;
     this.stats.frameP95 = this.frames.p95Ms;
+  }
+
+  private composeRoomBeforeRender(scene: THREE.Scene, camera: THREE.Camera): void {
+    const room = this.armedRoom;
+    // compileAsync also invokes scene callbacks; shadow renders reuse the scene.
+    // Only the explicitly armed main draw may consume the prepared background.
+    if (!room || room !== this.room || scene !== this.scene || camera !== this.camera) return;
+    this.armedRoom = null;
+    room.composeBackground(this.renderer);
+  }
+
+  protected renderScene(): void {
+    const room = this.room;
+    if (!room) { this.renderer.render(this.scene, this.camera); return; }
+    room.renderBackground(this.renderer, this.camera, this.controls.target, false);
+    const autoClear = this.renderer.autoClear, target = this.renderer.getRenderTarget();
+    this.armedRoom = room;
+    this.renderer.autoClear = false;
+    try { this.renderer.render(this.scene, this.camera); }
+    finally {
+      this.armedRoom = null;
+      this.renderer.autoClear = autoClear;
+      this.renderer.setRenderTarget(target);
+    }
   }
 
   protected moveCamera(dt: number): void {
@@ -1480,6 +1504,7 @@ export class SceneRenderCore {
   }
   dispose(): void {
     if (this.disposed) return;
+    this.armedRoom = null;
     this.diorama?.dispose(); this.diorama = null;
     this.room?.dispose(); this.room = null;
     this.hostPort.disposeSelection();

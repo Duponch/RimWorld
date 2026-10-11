@@ -1,5 +1,13 @@
 # Guide joueur
 
+## Chambre à quatre murs — V326
+
+La chambre est maintenant fermée sur ses quatre côtés. Ses murs restent présents
+pendant les rotations et le zoom ; les limites de caméra conservent le point de
+vue à l'intérieur. Les options de chambre, diorama, éclairage et masquage des
+suspensions restent disponibles comme auparavant.
+[Réalisation et contrôles](../development/aulnes-performance-v326.md).
+
 ## Table, chambre et suspensions — V325
 
 La carte carrée repose maintenant sur une table rectangulaire proportionnée à
