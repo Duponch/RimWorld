@@ -38,6 +38,8 @@ export interface FrontMenuOptions {
   onTexturesEnabledChange: (enabled: boolean) => boolean;
   getGroundGrassEnabled: () => boolean;
   onGroundGrassEnabledChange: (enabled: boolean) => boolean;
+  getDioramaEnabled: () => boolean;
+  onDioramaEnabledChange: (enabled: boolean) => boolean;
   getSoundEnabled: () => boolean;
   onSoundEnabledChange: (enabled: boolean) => boolean;
   getSoundVolume: () => number;
@@ -299,6 +301,25 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     grassText.append(grassLabel, grassDescription);
     grassSetting.append(grassCheckbox, grassText);
     card.append(grassSetting);
+    const dioramaSetting = element('label', 'front-relief front-texture-setting');
+    const dioramaCheckbox = element('input');
+    dioramaCheckbox.id = 'front-diorama-enabled';
+    dioramaCheckbox.type = 'checkbox';
+    dioramaCheckbox.checked = options.getDioramaEnabled();
+    dioramaCheckbox.setAttribute('aria-labelledby', 'front-diorama-label');
+    dioramaCheckbox.setAttribute('aria-describedby', 'front-diorama-description');
+    dioramaCheckbox.addEventListener('change', () => {
+      clearError();
+      if (!options.onDioramaEnabledChange(dioramaCheckbox.checked)) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+    });
+    const dioramaText = element('span');
+    const dioramaLabel = element('strong', '', 'Diorama en carton');
+    dioramaLabel.id = 'front-diorama-label';
+    const dioramaDescription = element('span', '', 'Table et boîte en carton autour de la carte. Choix conservé dans ce navigateur.');
+    dioramaDescription.id = 'front-diorama-description';
+    dioramaText.append(dioramaLabel, dioramaDescription);
+    dioramaSetting.append(dioramaCheckbox, dioramaText);
+    card.append(dioramaSetting);
     const iconSetting=element('label','front-relief front-texture-setting front-volume-setting');
     const iconText=element('span');
     const iconLabel=element('strong','','Icônes des ordres');iconLabel.id='front-designation-label';

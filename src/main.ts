@@ -44,6 +44,7 @@ import {DESIGNATION_VISIBILITY_KEY,designationMinCellPixels,designationVisibilit
 import {ITEM_LABEL_VISIBILITY_KEY,itemLabelMinCellPixels,itemLabelVisibilityLabel} from './ui/item-label-visibility';
 import {applyUiFont,readUiFont,saveUiFont,type UiFontId} from './ui/ui-fonts';
 import {CLOUD_MASK_RADIUS_KEY,DEFAULT_CLOUD_MASK_RADIUS,cloudMaskRadius,cloudMaskRadiusLabel} from './render/cloud-mask';
+import {DIORAMA_PREFERENCE_KEY,DEFAULT_DIORAMA_ENABLED,dioramaEnabled as parseDioramaEnabled} from './render/diorama-settings';
 import type { PawnTrack } from './bridge/motion-tracks';
 import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
 import { INFECTION_UNIT,infectionStage } from './sim/infection-rules';
@@ -394,6 +395,7 @@ let texturesEnabled = true;
 let designationIconThreshold = 32;
 let itemLabelThreshold = 96;
 let groundGrassEnabled = true;
+let dioramaEnabled = DEFAULT_DIORAMA_ENABLED;
 let cloudClearRadius = DEFAULT_CLOUD_MASK_RADIUS;
 let uiFont = readUiFont();
 applyUiFont(uiFont);
@@ -407,6 +409,7 @@ try {
   itemLabelThreshold=itemLabelMinCellPixels(localStorage.getItem(ITEM_LABEL_VISIBILITY_KEY));
   texturesEnabled = localStorage.getItem(TEXTURE_PREFERENCE_KEY) !== 'false';
   groundGrassEnabled = localStorage.getItem(GROUND_GRASS_PREFERENCE_KEY) !== 'false';
+  dioramaEnabled = parseDioramaEnabled(localStorage.getItem(DIORAMA_PREFERENCE_KEY));
   cloudClearRadius = cloudMaskRadius(localStorage.getItem(CLOUD_MASK_RADIUS_KEY));
   soundEnabled = localStorage.getItem(SOUND_ENABLED_PREFERENCE_KEY) !== 'false';
   const storedVolume = Number(localStorage.getItem(SOUND_VOLUME_PREFERENCE_KEY));
@@ -522,6 +525,15 @@ function setGroundGrassEnabled(enabled: boolean): boolean {
   try { localStorage.setItem(GROUND_GRASS_PREFERENCE_KEY, String(enabled)); return true; }
   catch { return false; }
 }
+const dioramaToggle = el<HTMLInputElement>('diorama-enabled');
+dioramaToggle.checked = dioramaEnabled;
+function setDioramaEnabled(enabled: boolean): boolean {
+  dioramaEnabled = enabled;
+  dioramaToggle.checked = enabled;
+  renderer?.setDioramaEnabled(enabled);
+  try { localStorage.setItem(DIORAMA_PREFERENCE_KEY, String(enabled)); return true; }
+  catch { return false; }
+}
 let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 let pawnSignature = '';
 const colonistButtons = new Map<number, HTMLButtonElement>();
@@ -576,6 +588,8 @@ const frontMenu = createFrontMenu(frontHost, {
   onTexturesEnabledChange: setTexturesEnabled,
   getGroundGrassEnabled: () => groundGrassEnabled,
   onGroundGrassEnabledChange: setGroundGrassEnabled,
+  getDioramaEnabled: () => dioramaEnabled,
+  onDioramaEnabledChange: setDioramaEnabled,
   getSoundEnabled: () => soundEnabled,
   onSoundEnabledChange: setSoundEnabled,
   getSoundVolume: () => soundVolume,
@@ -1450,6 +1464,7 @@ itemLabelSlider.oninput=()=>{if(!setItemLabelMinCellPixels(Number(itemLabelSlide
 fontSelect.onchange=()=>setUiFontPreference(fontSelect.value as UiFontId);
 cloudRadiusSlider.oninput=()=>{if(!setCloudClearRadius(Number(cloudRadiusSlider.value)/100))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
 groundGrassToggle.onchange = () => { if (!setGroundGrassEnabled(groundGrassToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
+dioramaToggle.onchange = () => { if (!setDioramaEnabled(dioramaToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 const soundToggle = el<HTMLInputElement>('sound-enabled');
 const soundVolumeSlider = el<HTMLInputElement>('sound-volume');
 soundToggle.checked = soundEnabled;
@@ -1645,6 +1660,7 @@ async function prepareWorldView(): Promise<void> {
   await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
   if (!renderer) {
     renderer = await MainColonyRenderer.create(el('viewport'), pickCell, groundGrassEnabled);
+    renderer.setDioramaEnabled(dioramaEnabled);
     renderer.onFatalError = message => { void handleGraphicsFailure(message); };
     renderer.onCompatibilityWarning = message => notify(message, true);
     renderer.setTexturesEnabled(texturesEnabled);

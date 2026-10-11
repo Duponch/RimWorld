@@ -1,5 +1,18 @@
 # Guide joueur
 
+## Voir la carte en diorama — V321
+
+Dézoomez pour voir la carte dans sa boîte en carton, posée sur une table en bois.
+Les paysages sur les parois sont des décors en papier. En tournant la caméra,
+les parois proches s’effacent pour préserver la vue sur la colonie.
+
+**Options → Diorama en carton** à l’accueil, ou **Menu → Affichage → Diorama en
+carton** en partie, active ou retire le décor. Le choix est conservé dans ce
+navigateur. Pour comparer les performances, gardez la même caméra et la même
+vitesse et alternez ce réglage ; aucune règle du jeu ne change.
+
+[Réalisation et contrôles](../development/cardboard-diorama-v321.md).
+
 ## Ranger sur des étagères — V320
 
 Après la recherche **Mobilier complexe**, ouvrez **Architecte > Meubles** et choisissez **Petite étagère** ou **Étagère**, son matériau et sa rotation. Les colons livrent les matériaux puis construisent le meuble : la petite occupe une case et accueille **trois piles**, la normale occupe deux cases et accueille **six piles**. Chaque pile garde la limite habituelle de son objet.

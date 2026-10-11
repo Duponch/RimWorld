@@ -1,4 +1,5 @@
 import { AllowedAreaLayer } from './AllowedAreaLayer';
+import { DioramaLayer } from './DioramaLayer';
 import { DeepResourceLayer } from './DeepResourceLayer';
 import { AreaPreviewLayer } from './AreaPreviewLayer';
 import {OrderTargetIndex} from './order-target-index';
@@ -115,6 +116,8 @@ function isNaturalSceneWorld(value:World|{changed:boolean}):value is World {
 }
 
 export class SceneRenderCore {
+  protected diorama: DioramaLayer | null = null;
+  protected dioramaEnabled = true;
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
   protected readonly frames = new FrameMetrics();
   protected viewportWidth=1;
@@ -454,6 +457,7 @@ export class SceneRenderCore {
     const resourceFrame = this.immutableWorlds.has(world) ? this.sceneResources.adopt(world,resetPoses) : undefined;
     if(!resourceFrame)this.sceneResources.clear();
     this.world = world;
+    if (this.dioramaEnabled && newMap) this.configureDiorama();
     this.updateDeepResources();
     this.grass?.update(world,newMap,immutableTileChanges,resourceFrame);
     this.fires.adopt(world,newMap);this.wind.adopt(world,newMap);
@@ -617,6 +621,7 @@ export class SceneRenderCore {
     if(this.texturesEnabled===enabled)return;
     this.invalidatePausedShadow();
     this.texturesEnabled=enabled;
+    if (this.dioramaEnabled) this.diorama?.setTexturesEnabled(enabled);
     if(enabled&&this.world)this.refreshTerrainPaint(this.world);
     if(!enabled)this.releaseTerrainPaint();
     if(!enabled&&this.world&&this.terrainGeometryDirty){
@@ -707,6 +712,21 @@ export class SceneRenderCore {
     this.zonesTintDirty=true;this.refreshZonesTint();
   }
   setCloudClearRadius(radius:number):void {this.clouds.setClearRadius(radius);}
+
+  setDioramaEnabled(enabled: boolean): void {
+    if (this.disposed || this.dioramaEnabled === enabled) return;
+    this.dioramaEnabled = enabled;
+    if (!enabled) { this.diorama?.group.removeFromParent(); return; }
+    this.configureDiorama();
+  }
+
+  private configureDiorama(): void {
+    if (!this.dioramaEnabled || !this.world) return;
+    this.diorama ??= new DioramaLayer(this.hostPort.loadTexture);
+    this.diorama.configure(this.world.width, this.world.height, this.texturesEnabled);
+    this.scene.add(this.diorama.group);
+    this.diorama.present(this.camera, this.controls.target, this.rig.span);
+  }
   setZonesVisible(visible:boolean):void {
     if(this.zonesVisible===visible)return;this.zonesVisible=visible;
     if(!this.preparing){this.storageGroup.visible=this.growing.group.visible=this.allowedAreaLayer.group.visible=visible;this.roofs.areas.visible=visible&&this.roofAreasVisible;}
@@ -763,6 +783,7 @@ export class SceneRenderCore {
 
   protected async preparePresentationResources(): Promise<void> {
     this.preparing = true;
+    const restoreDiorama = this.dioramaEnabled ? await this.diorama?.prepare() : undefined;
     this.invalidatePausedShadow();
     const culling = new Map<THREE.Object3D, boolean>();
     const distant = this.overview.group.visible;
@@ -821,6 +842,7 @@ export class SceneRenderCore {
       restoreBoxes();restoreArea();restoreTurretRange();restoreHints();restoreOrderRock();restoreConstruction();restoreDeep();
       restoreOverview();
       restorePodRescue();restoreOrbitalDelivery();
+      restoreDiorama?.();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
       this.storageGroup.visible=this.growing.group.visible=this.allowedAreaLayer.group.visible=this.zonesVisible;
@@ -1195,6 +1217,7 @@ export class SceneRenderCore {
       else{this.grass.mesh.visible=false;this.grass.mesh.geometry.instanceCount=0;}
     }
     this.landscape.setRetained(this.backend==='WebGPU'&&distant);
+    if (this.dioramaEnabled) this.diorama?.present(this.camera, this.controls.target, this.rig.span);
     const shadow=this.daylight.light.shadow,received=this.received;
     const cacheEligible=this.backend==='WebGPU'&&!!this.world;
     const paused=received?.speed===0&&(!this.hasTracks||this.timeline.tick>=received.world.tick)&&!this.hostPort.hidden();
@@ -1391,6 +1414,7 @@ export class SceneRenderCore {
   }
   dispose(): void {
     if (this.disposed) return;
+    this.diorama?.dispose(); this.diorama = null;
     this.hostPort.disposeSelection();
     if (this.hostPort.selectionReady() && this.rig && this.hover) this.cancelDesignation();
     this.areaPreview.dispose();
