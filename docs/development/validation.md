@@ -1,4 +1,6 @@
-# Validation courante — V313
+# Validation courante — V314
+
+**V314, schéma 225 : [crémation physique](../gameplay/cremation-v314.md#contrôles-et-limites).** Groupe132cas/14fichiers, corpus63/66 et neuf recharges ChromeWebGPU exactes acquis ; suspension/reprise et destruction sans sortie sur la continuation des Aulnes. Présentation commune119,617s. Preuves, rouges et limites rassemblés dans la note unique. Les validations suivantes sont historiques.
 
 **V313, schéma 224 : [lits doubles civils](../gameplay/double-beds-v313.md#contrôles-et-limites).** Construction, places, sommeil, services et frontières acquis par reprises ; Aulnes originales puis continuations exactes sans dotation. Résultats, rouges et limites rassemblés dans la note unique. Les validations suivantes sont historiques.
 

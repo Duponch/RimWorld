@@ -7,6 +7,10 @@ export interface SmeltFilter {
   hpMin:number;hpMax:number;
   qualityMin:WeaponQuality;qualityMax:WeaponQuality;
 }
+export interface CremationFilter {
+  colonists:boolean;strangers:boolean;
+  fresh:boolean;rotting:boolean;desiccated:boolean;
+}
 
 export type RawIngredient = 'rice' | 'berries' | 'agave-fruit' | typeof ANIMAL_MEAT_ITEMS[number] | 'potato' | 'corn';
 export interface CookingBill {
@@ -19,6 +23,7 @@ export interface CookingBill {
   radius:number;
   destination:'stockpile'|'drop';
   smeltFilter?:SmeltFilter;
+  cremationFilter?:CremationFilter;
 }
 export type BillSettings=Omit<CookingBill,'id'|'recipe'>;
 export interface CookingIngredient {
@@ -30,7 +35,7 @@ export interface CookingIngredient {
 }
 /** Historical serialized envelope shared by meal and material production. */
 export interface CookingTask {
-  recipe?:'smelt-weapon'|'chemfuel-from-wood'|'chemfuel-from-organics'|'make-medicine'|'smash-mechanoid'|'shred-mechanoid'|'cook-survival-meal'|'small-sculpture'|'large-sculpture'|'make-revolver'|'make-bolt-action-rifle'|'make-emp-launcher'|'make-flak-vest'|'make-flak-helmet'|'make-recon-helmet'|'make-component'|'make-advanced-component'|'stone-blocks'|'tribalwear'|'shirt'|'pants'|'duster'|'parka'|'butcher-creature'|'fine-meal'|'cook-fine-meal-bulk'|'vegetarian-fine-meal'|'cook-vegetarian-fine-meal-bulk'|'carnivore-fine-meal'|'cook-carnivore-fine-meal-bulk'|'lavish-meal'|'cook-lavish-meal-bulk'|'vegetarian-lavish-meal'|'cook-vegetarian-lavish-meal-bulk'|'cook-carnivore-lavish-meal'|'cook-carnivore-lavish-meal-bulk'|'cook-simple-meal-bulk';
+  recipe?:'cremate-corpse'|'smelt-weapon'|'chemfuel-from-wood'|'chemfuel-from-organics'|'make-medicine'|'smash-mechanoid'|'shred-mechanoid'|'cook-survival-meal'|'small-sculpture'|'large-sculpture'|'make-revolver'|'make-bolt-action-rifle'|'make-emp-launcher'|'make-flak-vest'|'make-flak-helmet'|'make-recon-helmet'|'make-component'|'make-advanced-component'|'stone-blocks'|'tribalwear'|'shirt'|'pants'|'duster'|'parka'|'butcher-creature'|'fine-meal'|'cook-fine-meal-bulk'|'vegetarian-fine-meal'|'cook-vegetarian-fine-meal-bulk'|'carnivore-fine-meal'|'cook-carnivore-fine-meal-bulk'|'lavish-meal'|'cook-lavish-meal-bulk'|'vegetarian-lavish-meal'|'cook-vegetarian-lavish-meal-bulk'|'cook-carnivore-lavish-meal'|'cook-carnivore-lavish-meal-bulk'|'cook-simple-meal-bulk';
   stationId:number;
   billId:number;
   spot:Cell;

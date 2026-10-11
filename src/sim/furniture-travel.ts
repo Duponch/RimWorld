@@ -17,6 +17,7 @@ export function terrainTravelDelay(world:World,index:number):number {
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
 export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:number;stand:boolean;repeat:boolean}>>>=Object.freeze({
   'double-bed':{delay:4.2,stand:false,repeat:true},
+  'electric-crematorium':{delay:0,stand:false,repeat:false},
   'electric-smelter':{delay:5,stand:false,repeat:true},
   'biofuel-refinery':{delay:5,stand:false,repeat:true},
   'chemfuel-generator':{delay:5,stand:false,repeat:true},

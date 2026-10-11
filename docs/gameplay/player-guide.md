@@ -1,5 +1,15 @@
 # Guide joueur
 
+**Schéma 225 — V314 : [crémation physique](cremation-v314.md).** Transporter puis incinérer une dépouille au crématorium électrique ; preuves et limites dans la note unique. Les résultats datés suivants demeurent historiques.
+
+## Incinérer une dépouille — V314
+
+Choisissez **Architecte > Production > Crématorium électrique**, une pierre et sa rotation. Il faut150blocs,20acier,2composants et Construction4, puis250W. Gardez le point d'interaction devant et une cellule extérieure libres pour le travail et la dépouille. Le poste ne se désinstalle pas.
+
+Dans **Factures**, ajoutez **Incinérer une dépouille**, choisissez le nombre ou Sans limite, puis ouvrez **Dépouilles autorisées**. Animaux est décoché par défaut ; Colons/Étrangers et les trois stades sont autorisés. Appliquez la facture et activez Transport chez un colon capable de manipuler. Seuls les corps déjà au sol hors tombe sont admissibles.
+
+Suspendre conserve le corps. Terminer détruit la dépouille et ses possessions encore attachées ; les objets déjà lâchés restent. Aucune livraison de produit n'est réglable. Gardez des tombes si vous souhaitez conserver les corps ; [règles et adaptations](cremation-v314.md) détaillées dans la note du lot.
+
 **Schéma 224 — V313 : [lits doubles civils](double-beds-v313.md).** Construction, deux affectations et sommeil indépendant décrits ci-dessous ; preuves et limites dans la note unique. Les résultats datés suivants demeurent historiques.
 
 ## Utiliser un lit double — V313

@@ -1,5 +1,6 @@
 import { productionResearchUnlocked } from './machining.ts';
 import { isSmeltingRecipe } from './smelting-rules.ts';
+import { isCremationRecipe } from './cremation-rules.ts';
 import { PRODUCTION_RECIPES, stationAccepts, stationRecipe } from './production-recipes.ts';
 import { isCookingOrder } from './order-types.ts';
 import { newCookingBill, validBillSettings } from './cooking-bills.ts';
@@ -12,7 +13,7 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
   if(!station?.bills)return {ok:false,code:'missing-target',reason:'Poste de production introuvable.'};
   if(command.type==='bill-add') {
     if(station.bills.length>=64||!Number.isSafeInteger(world.nextId+1))return {ok:false,code:'invalid-command',reason:'Limite de factures atteinte.'};
-    const recipe=command.recipe??stationRecipe(station)!;if(isSmeltingRecipe(recipe)&&world.schemaVersion<222||!stationAccepts(station,recipe)||!productionResearchUnlocked(world,recipe))return {ok:false,code:'invalid-command',reason:'Recette indisponible : vérifiez le poste et sa recherche préalable.'};
+    const recipe=command.recipe??stationRecipe(station)!;if(isCremationRecipe(recipe)&&world.schemaVersion<225||isSmeltingRecipe(recipe)&&world.schemaVersion<222||!stationAccepts(station,recipe)||!productionResearchUnlocked(world,recipe))return {ok:false,code:'invalid-command',reason:'Recette indisponible : vérifiez le poste et sa recherche préalable.'};
     station.bills.push(newCookingBill(world.nextId++,recipe,world.schemaVersion));return {ok:true};
   }
   const index=station.bills.findIndex(b=>b.id===command.billId),bill=station.bills[index];
@@ -35,6 +36,7 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
     bill.filters=Object.fromEntries(PRODUCTION_RECIPES[bill.recipe].inputs.filter(i=>s.filters[i]!==undefined).map(i=>[i,s.filters[i]]));
     bill.radius=s.radius;bill.destination=s.destination;
     if(isSmeltingRecipe(bill.recipe))bill.smeltFilter={...s.smeltFilter!};
+    if(isCremationRecipe(bill.recipe))bill.cremationFilter={...s.cremationFilter!};
   }
   return {ok:true};
 }

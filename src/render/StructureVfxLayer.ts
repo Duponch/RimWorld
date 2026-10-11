@@ -160,6 +160,8 @@ export class StructureVfxLayer {
         doorAxes??=doorOrientations(world);
         const axis=doorAxes.get(s.z*world.width+s.x)??0;
         tokens.push(`${s.id}:autodoor:${s.x}:${s.z}:${axis}:${on}`);
+      }else if(s.kind==='electric-crematorium'){
+        tokens.push(`${s.id}:electric-crematorium:${s.x}:${s.z}:${s.orientation}:${on}:${work}`);
       }else if(s.kind==='electric-smelter'){
         tokens.push(`${s.id}:electric-smelter:${s.x}:${s.z}:${s.orientation}:${on}:${work}`);
       }else if(s.kind==='machining-table'||s.kind==='fabrication-bench'){
@@ -232,6 +234,12 @@ export class StructureVfxLayer {
           const ry=axis*Math.PI/2,cs=Math.cos(ry),sn=Math.sin(ry);
           // Two tiny face indicators share the existing resident status batch.
           for(const face of [-1,1])glow.push({x:s.x+.455*cs+face*.19*sn,y:.46,z:s.z-.455*sn+face*.19*cs,sx:.055,sy:.045,sz:.018,ry,color:0x7fd9bd});
+        }
+      }else if(s.kind==='electric-crematorium'){
+        tokens.push(`${s.id}:electric-crematorium:${s.x}:${s.z}:${s.orientation}:${on}:${work}`);
+        if(on){
+          glow.push(local(s,0,.68,-.21,1.44,.68,.02,work?0xffaa43:0xc96f31));
+          glow.push(local(s,1.24,.90,-.30,.19,.15,.02,0xa6dab8));
         }
       }else if(s.kind==='electric-smelter'){
         tokens.push(`${s.id}:electric-smelter:${s.x}:${s.z}:${s.orientation}:${on}:${work}`);

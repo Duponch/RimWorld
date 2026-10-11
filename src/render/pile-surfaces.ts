@@ -8,6 +8,10 @@ export interface PileSurface { x:number;y:number;z:number;scale:number }
 export function pileSurfaces(world:World):ReadonlyMap<number,PileSurface> {
   const surfaces=new Map<number,PileSurface>();
   for(const s of world.structures) {
+    if(s.kind==='electric-crematorium'){
+      for(const cell of footprintCells(s))surfaces.set(cell.z*world.width+cell.x,{x:0,y:1.405,z:0,scale:.65});
+      continue;
+    }
     if(s.kind==='electric-smelter'){
       const angle=s.orientation*Math.PI/2,c=Math.cos(angle),n=Math.sin(angle);
       for(const cell of footprintCells(s)){

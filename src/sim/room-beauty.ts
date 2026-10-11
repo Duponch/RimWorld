@@ -47,7 +47,7 @@ export function structureBeauty(structure:BeautyStructure):number {
   if(isHabitatFurnitureKind(structure.kind))return furnitureBeauty(structure);
   if(isSculptureKind(structure.kind))return sculptureBeauty(structure);
   const material=isFurnitureMaterial(structure.material)?FURNITURE_MATERIALS[structure.material]:undefined;
-  const base=structure.baseBeauty??0;
+  const base=structure.kind==='electric-crematorium'?-10:structure.baseBeauty??0;
   return (base>0?base*(material?.beautyFactor??1):base)+(material?.beautyOffset??0);
 }
 export function beautyBand(value:number):BeautyBand {

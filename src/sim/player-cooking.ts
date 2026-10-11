@@ -1,6 +1,10 @@
 import { workPriority } from './work-types.ts';
 import { allowedAreaReason } from './allowed-area-state.ts';
 import { isSmeltingRecipe,smeltingIngredientAllowed } from './smelting-rules.ts';
+import { isCremationRecipe,cremationIngredientAllowed,validCremationIngredients } from './cremation-rules.ts';
+import { burialClaim } from './burial.ts';
+import { canStandAt } from './furniture-travel.ts';
+import { medicalWorkRefusal } from './health-rules.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { validBiofuelIngredients,validMedicineIngredients,productionStationUsable } from './production-recipes.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
@@ -27,6 +31,10 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   const label='Produire au poste',no=(reason:string):CookingProposal=>({label,reason});
   const station=world.structures.find(s=>s.id===stationId&&stationRecipe(s)!==null);
   if(!station)return no('Poste de production introuvable.');
+  if(station.kind==='electric-crematorium'){
+    const unavailable=medicalWorkRefusal(pawn)??((pawn.faction??'colony')!=='colony'||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||pawn.stun||pawn.draft||pawn.burning||pawn.mental?.crisis||pawn.collapsePending?'Ce colon est indisponible pour transporter une dépouille.':undefined);
+    if(unavailable)return no(unavailable);
+  }
   const areaReason=allowedAreaReason(world,pawn,station);if(areaReason)return no(areaReason);
   const refusal=backgroundWorkRefusal(pawn,stationWork(station));if(refusal)return no(refusal);
   if(!workPriority(pawn,stationWork(station)))return no('Métier désactivé dans le tableau Travail.');
@@ -38,6 +46,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(station.kind==='electric-stove'&&!foodStationUsable(station))return no('La cuisinière n’est pas alimentée :350 W nécessaires.');
   if(station.kind==='biofuel-refinery'&&!productionStationUsable(station))return no('Raffinerie sans courant : 170 W nécessaires.');
   if(station.kind==='electric-smelter'&&!productionStationUsable(station))return no('Fonderie sans courant : 700 W nécessaires.');
+  if(station.kind==='electric-crematorium'&&!productionStationUsable(station))return no('Crématorium sans courant : 250 W nécessaires.');
   if(!productionStationUsable(station))return no(station.kind==='fabrication-bench'?'Établi de fabrication sans courant : 250 W nécessaires.':'Atelier d’usinage sans courant : 350 W nécessaires.');
   const spot=cookingSpot(station);
   if(!cookingPlaceFree(world,spot)||reservedServiceCells(world).has(cellIndex(world,spot.x,spot.z)))return no('Place de cuisine obstruée ou réservée.');
@@ -48,6 +57,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(station.kind==='drug-lab')return {label:'Fabriquer un médicament',order:{cooking:plan.task!},path:plan.path};
   if(station.kind==='biofuel-refinery')return {label:'Raffiner du biocarburant',order:{cooking:plan.task!},path:plan.path};
   if(station.kind==='electric-smelter')return {label:'Fondre une arme',order:{cooking:plan.task!},path:plan.path};
+  if(station.kind==='electric-crematorium')return {label:'Incinérer une dépouille',order:{cooking:plan.task!},path:plan.path};
   return {label:plan.refuel?'Ravitailler avant de cuisiner':isButcherStation(station.kind)?'Dépecer une créature':station.kind==='tailor-bench'?'Confectionner un vêtement':station.kind==='crafting-spot'?'Confectionner une tenue tribale':station.kind==='art-bench'?'Sculpter une œuvre':station.kind==='fabrication-bench'?(plan.task?.recipe==='make-recon-helmet'?'Fabriquer un casque de reconnaissance':'Fabriquer un composant'):station.kind==='machining-table'?(plan.task?.recipe==='make-flak-helmet'?'Fabriquer un casque pare-balles':plan.task&&isFlakRecipe(plan.task.recipe)?'Fabriquer un gilet pare-balles':'Fabriquer une arme'):station.kind==='stonecutter'?'Tailler des blocs de pierre':plan.task?.recipe==='cook-survival-meal'?'Cuisiner un repas de survie emballé':plan.task?.recipe==='cook-simple-meal-bulk'?'Cuisiner quatre repas simples':plan.task?.recipe==='fine-meal'?'Cuisiner un plat raffiné':plan.task?.recipe==='cook-fine-meal-bulk'?'Cuisiner quatre plats raffinés':plan.task?.recipe==='vegetarian-fine-meal'?'Cuisiner un plat raffiné végétarien':plan.task?.recipe==='cook-vegetarian-fine-meal-bulk'?'Cuisiner quatre plats raffinés végétariens':plan.task?.recipe==='carnivore-fine-meal'?'Cuisiner un plat raffiné carnivore':plan.task?.recipe==='cook-carnivore-fine-meal-bulk'?'Cuisiner quatre plats raffinés carnivores':plan.task?.recipe==='lavish-meal'?'Cuisiner un plat gastronomique':plan.task?.recipe==='cook-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques':plan.task?.recipe==='vegetarian-lavish-meal'?'Cuisiner un plat gastronomique végétarien':plan.task?.recipe==='cook-vegetarian-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques végétariens':plan.task?.recipe==='cook-carnivore-lavish-meal'?'Cuisiner un plat gastronomique carnivore':plan.task?.recipe==='cook-carnivore-lavish-meal-bulk'?'Cuisiner quatre plats gastronomiques carnivores':'Cuisiner un repas simple',order:plan.refuel??{cooking:plan.task!},path:plan.path};
 }
 
@@ -56,6 +66,7 @@ export function queuedCookingReason(world:World,order:CookingOrder,pawn?:Pawn):s
   const areaReason=pawn?queuedCookingAreaReason(world,pawn,order):undefined;if(areaReason)return areaReason;
   const view=withoutQueuedOrder(world,order),c=order.cooking,station=view.structures.find(s=>s.id===c.stationId&&stationRecipe(s)!==null),bill=station?.bills?.find(b=>b.id===c.billId);
   if(!station||!bill||bill.recipe!==taskRecipe(c)||!billWanted(view,bill))return 'Facture supprimée, suspendue ou quantité atteinte.';
+  if(isCremationRecipe(bill.recipe)&&(!validCremationIngredients(c.ingredients)||c.phase==='output'||bill.mode==='until'||bill.destination!=='drop'))return 'La crémation exige une seule dépouille entière et aucune sortie.';
   if(!productionStationUsable(station)||!productionResearchUnlocked(world,bill.recipe))return 'Atelier sans courant ou recherche manquante.';
   if(!foodStationUsable(station))return station.kind==='electric-stove'?'La cuisinière n’est pas alimentée.':'Le poste est sans combustible.';
   const spot=cookingSpot(station);
@@ -81,10 +92,12 @@ export function queuedCookingReason(world:World,order:CookingOrder,pawn?:Pawn):s
   if(bill.recipe==='cook-carnivore-lavish-meal'&&!validCarnivoreLavishMealIngredients(c.ingredients))return 'Le plat carnivore gastronomique exige vingt-cinq viandes crues, sans lait ni végétaux.';
   for(const i of c.ingredients) {
     const pile=view.piles.find(p=>p.id===i.pileId);
+    if(isCremationRecipe(bill.recipe)&&!canStandAt(view,i.cell))return 'Dépôt des ingrédients inaccessible.';
+    if(isCremationRecipe(bill.recipe)&&(!pile||!cremationIngredientAllowed(view,bill,pile)||pile.humanCorpse&&burialClaim(view,pile.humanCorpse.pawnId,author?.id)))return 'Dépouille interdite par les filtres, indisponible ou réservée pour une inhumation.';
     if(isSmeltingRecipe(bill.recipe)&&(!pile||!smeltingIngredientAllowed(bill,pile)))return 'Arme interdite ou hors des filtres de type, état et qualité de la facture.';
     const work=pile?.artWork??pile?.gunWork??pile?.flakWork??pile?.componentWork??pile?.unfinished,bound=work?.billId===bill.id;
     const required=(sources.get(i.pileId)??0)+i.quantity;sources.set(i.pileId,required);
-    if(pile&&isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick))return 'Dépouille pourrie, impropre à la boucherie.';
+    if(!isCremationRecipe(bill.recipe)&&pile&&isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick))return 'Dépouille pourrie, impropre à la boucherie.';
     if(pile&&bill.recipe==='cook-survival-meal'&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre au repas de survie.';
     if(pile&&bill.recipe==='chemfuel-from-organics'&&ticksUntilRot(pile,world.tick)<=0)return 'Matière organique périmée, impropre au raffinage.';
     if(pile&&bill.recipe==='cook-simple-meal-bulk'&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre aux quatre repas simples.';

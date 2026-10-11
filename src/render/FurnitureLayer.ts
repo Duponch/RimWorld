@@ -32,6 +32,7 @@ import { nutrientPasteParts } from './nutrient-paste-parts';
 import { biofuelParts } from './biofuel-parts';
 import {smeltingParts} from './smelting-parts';
 import {doubleBedParts} from './double-bed-parts';
+import {crematoriumParts} from './crematorium-parts';
 import { penParts } from './pen-parts';
 import { WORLD_SCALE } from '../world/scale';
 import type { Placement } from './primitives';
@@ -82,7 +83,7 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
     }
     batches.set(group, 'furniture', [
       ...graveParts(world), ...foodWorkstationParts(world), ...electricalParts(contextWorld,cutaway,world.structures), ...passiveCoolerParts(world), ...doorParts(contextWorld,cutaway,world.structures), ...penParts(contextWorld,world.structures,cutaway), ...campfireParts(world), ...recreationParts(world), ...stonecutterParts(world), ...craftingSpotParts(world), ...animalSleepingSpotParts(world), ...researchTailorParts(world), ...industryParts(world), ...habitatParts(world), ...artParts(world), ...drugLabParts(world),
-      ...hospitalBedParts(world), ...doubleBedParts(world), ...vitalsMonitorParts(world), ...deepDrillingParts(world), ...orbitalParts(world), ...nutrientPasteParts(world), ...biofuelParts(world), ...smeltingParts(world), ...hydroponicsParts(world), ...miniTurretBaseParts(world), ...parcels,
+      ...hospitalBedParts(world), ...doubleBedParts(world), ...vitalsMonitorParts(world), ...deepDrillingParts(world), ...orbitalParts(world), ...nutrientPasteParts(world), ...biofuelParts(world), ...smeltingParts(world), ...crematoriumParts(world), ...hydroponicsParts(world), ...miniTurretBaseParts(world), ...parcels,
       ...woodParts.map(p => ({ ...p, color: p.color ?? 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 1, sy: wallHeight - 0.09, sz: 1, color: p.color ?? 0xa6916e })),
       ...wallCaps.map(p => ({ ...p, sx: 1, sy: 0.09, sz: 1, color: p.color ?? 0xc3af86 })),

@@ -98,7 +98,7 @@ export function advanceHumanCorpses(w:World,layout?:ThermalLayout):void {
 }
 /** All still attached possessions are destroyed together; a dropped weapon is
  * deliberately absent. Preflight the whole ledger before changing any owner. */
-export function destroyHumanCorpse(w:World,pile:MaterialPile,cause:'fire'|'bullet'|'bomb'='fire'):boolean {
+export function destroyHumanCorpse(w:World,pile:MaterialPile,cause:'fire'|'bullet'|'bomb'|'cremation'='fire'):boolean {
   const person=corpsePawn(w,pile);if(!person||!w.piles.includes(pile))return false;
   const contents=w.piles.filter(p=>p===pile||['equipment','apparel','inventory'].includes(p.owner.type)&&'pawnId' in p.owner&&p.owner.pawnId===person.id);
   const packed=w.packed.filter(p=>p.owner.type==='inventory'&&p.owner.pawnId===person.id);

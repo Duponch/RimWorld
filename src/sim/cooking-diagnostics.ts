@@ -1,5 +1,7 @@
 import { workPriority } from './work-types.ts';
 import { isSmeltingRecipe,smeltingIngredientAllowed } from './smelting-rules.ts';
+import { isCremationRecipe,cremationIngredientAllowed } from './cremation-rules.ts';
+import { burialClaim } from './burial.ts';
 import {artWorkTotal,isArtRecipe} from './art-rules.ts';
 import { isAnimalCorpseItem } from './biome-items.ts';
 import { productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
@@ -39,6 +41,7 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   if(station.kind==='fabrication-bench'&&!station.power?.on)return {code:'no-power',reason:'Établi de fabrication sans alimentation électrique : 250 W nécessaires.'};
   if(station.kind==='biofuel-refinery'&&!station.power?.on)return {code:'no-power',reason:'Raffinerie sans alimentation électrique : 170 W nécessaires.'};
   if(station.kind==='electric-smelter'&&!station.power?.on)return {code:'no-power',reason:'Fonderie sans alimentation électrique : 700 W nécessaires.'};
+  if(station.kind==='electric-crematorium'&&!station.power?.on)return {code:'no-power',reason:'Crématorium sans alimentation électrique : 250 W nécessaires.'};
   if(usesCookingFuel(station.kind)&&!station.fuel?.ticks) {
     if(!station.fuel?.autoRefuel)return {code:'refuel-disabled',reason:'Poste sans combustible ; ravitaillement automatique désactivé.'};
     const wood=world.piles.some(p=>p.item==='wood'&&p.owner.type==='ground'&&p.quantity>reservedSource(world,p.id));
@@ -46,9 +49,10 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   }
   const u=world.piles.find(p=>p.artWork?.billId===bill.id||p.unfinished?.billId===bill.id||p.gunWork?.billId===bill.id||p.flakWork?.billId===bill.id||p.componentWork?.billId===bill.id),work=u?.artWork??u?.gunWork??u?.flakWork??u?.componentWork??u?.unfinished;if(work)return {code:'unfinished',reason:`Ouvrage commencé : attend ${world.pawns.find(p=>p.id===work.authorId)?.name??'son auteur'} ; ${Math.floor(work.progress/(u?.artWork?artWorkTotal(u.artWork.recipe,u.artWork.material):productionWorkTotal(work.recipe))*100)} % conservés.`};
   let available=0;const byMaterial=new Map<string,number>();const metals={cloth:0,steel:0,component:0,plasteel:0,gold:0,'advanced-component':0};const fine={protein:0,vegetable:0};
-  for(const pile of world.piles)if(admittedIngredient(bill,pile.item)&&(!isSmeltingRecipe(bill.recipe)||smeltingIngredientAllowed(bill,pile))&&(!isAnimalCorpseItem(pile.item)||corpseFresh(pile,world.tick))&&((bill.recipe!=='chemfuel-from-organics'&&bill.recipe!=='cook-survival-meal'&&bill.recipe!=='cook-simple-meal-bulk'&&bill.recipe!=='cook-fine-meal-bulk'&&bill.recipe!=='cook-lavish-meal-bulk'&&bill.recipe!=='vegetarian-fine-meal'&&bill.recipe!=='cook-vegetarian-fine-meal-bulk'&&bill.recipe!=='carnivore-fine-meal'&&bill.recipe!=='cook-carnivore-fine-meal-bulk'&&bill.recipe!=='vegetarian-lavish-meal'&&bill.recipe!=='cook-vegetarian-lavish-meal-bulk'&&bill.recipe!=='cook-carnivore-lavish-meal'&&bill.recipe!=='cook-carnivore-lavish-meal-bulk')||ticksUntilRot(pile,world.tick)>0)&&pile.owner.type==='ground'
+  for(const pile of world.piles)if(admittedIngredient(bill,pile.item)&&(!isSmeltingRecipe(bill.recipe)||smeltingIngredientAllowed(bill,pile))&&(!isCremationRecipe(bill.recipe)||cremationIngredientAllowed(world,bill,pile)&&(!pile.humanCorpse||!burialClaim(world,pile.humanCorpse.pawnId)))&&(isCremationRecipe(bill.recipe)||!isAnimalCorpseItem(pile.item)||corpseFresh(pile,world.tick))&&((bill.recipe!=='chemfuel-from-organics'&&bill.recipe!=='cook-survival-meal'&&bill.recipe!=='cook-simple-meal-bulk'&&bill.recipe!=='cook-fine-meal-bulk'&&bill.recipe!=='cook-lavish-meal-bulk'&&bill.recipe!=='vegetarian-fine-meal'&&bill.recipe!=='cook-vegetarian-fine-meal-bulk'&&bill.recipe!=='carnivore-fine-meal'&&bill.recipe!=='cook-carnivore-fine-meal-bulk'&&bill.recipe!=='vegetarian-lavish-meal'&&bill.recipe!=='cook-vegetarian-lavish-meal-bulk'&&bill.recipe!=='cook-carnivore-lavish-meal'&&bill.recipe!=='cook-carnivore-lavish-meal-bulk')||ticksUntilRot(pile,world.tick)>0)&&pile.owner.type==='ground'
     &&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2<=bill.radius**2){const units=Math.max(0,pile.quantity-reservedSource(world,pile.id));available+=units;byMaterial.set(pile.item,(byMaterial.get(pile.item)??0)+units);if(pile.item==='cloth'||pile.item==='steel'||pile.item==='component'||pile.item==='plasteel'||pile.item==='gold'||pile.item==='advanced-component')metals[pile.item]+=units;if(mixedMealGroupUnits(bill.recipe)){const group=fineMealIngredientGroup(pile.item);if(group)fine[group]+=units;}}
   if(isSmeltingRecipe(bill.recipe)&&available<1)return {code:'missing-ingredients',reason:'Aucune arme au sol non réservée admise par les filtres de type, état et qualité dans le rayon.'};
+  if(isCremationRecipe(bill.recipe)&&available<1)return {code:'missing-ingredients',reason:'Aucune dépouille matérialisée au sol non réservée admise par les filtres de type, personne et état dans le rayon.'};
   if(bill.recipe==='make-medicine'){
     const quota=(Object.keys(MEDICINE_REQUIREMENTS) as (keyof typeof MEDICINE_REQUIREMENTS)[]).map(item=>({item,quantity:Math.min(byMaterial.get(item)??0,MEDICINE_REQUIREMENTS[item])}));
     if(!validMedicineIngredients(bill.recipe,quota))return {code:'missing-ingredients',reason:`Dans le rayon et les filtres : ${byMaterial.get('herbal-medicine')??0}/${MEDICINE_REQUIREMENTS['herbal-medicine']} plante médicinale · ${byMaterial.get('neutroamine')??0}/${MEDICINE_REQUIREMENTS.neutroamine} neutroamine · ${byMaterial.get('cloth')??0}/${MEDICINE_REQUIREMENTS.cloth} tissus non réservés.`};
@@ -78,5 +82,5 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   if(isArtRecipe(bill.recipe))available=Math.max(0,...byMaterial.values());
   if(available<PRODUCTION_RECIPES[bill.recipe].units)return {code:'missing-ingredients',reason:`Ingrédients insuffisants : ${available}/${PRODUCTION_RECIPES[bill.recipe].units} non réservés dans le rayon et les filtres.`};
   if(reservedServiceCells(world).has(spot.z*world.width+spot.x))return {code:'workplace-occupied',reason:'La place devant le poste est réservée par une autre activité.'};
-  return {code:'waiting',reason:'Attend un artisan disponible ; accès, priorités et place de dépôt à vérifier.'};
+  return {code:'waiting',reason:isCremationRecipe(bill.recipe)?'Attend un transporteur disponible ; accès, priorités et place de dépôt à vérifier.':'Attend un artisan disponible ; accès, priorités et place de dépôt à vérifier.'};
 }

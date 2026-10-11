@@ -80,7 +80,10 @@ export async function editBill(page:Page,id:number,settings:BillSettings):Promis
   if(await form.locator('details').getAttribute('open')===null)await form.locator('summary').click();
   for(const [item,allowed] of Object.entries(settings.filters))await form.locator(`[data-field="${item}"]`).setChecked(allowed===true);
   await form.locator('[data-field="radius"]').fill(String(settings.radius));
-  await form.locator('[data-field="destination"]').selectOption(settings.destination);
+  if(settings.cremationFilter){
+    for(const [key,allowed] of Object.entries(settings.cremationFilter))await form.locator(`[data-field="${key}"]`).setChecked(allowed);
+    await expect(form.locator('[data-field="destination"]')).toHaveCount(0);
+  }else await form.locator('[data-field="destination"]').selectOption(settings.destination);
   await form.locator(`[data-apply-bill="${id}"]`).click();
 }
 
@@ -241,14 +244,14 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.kind==='repair')throw Error('Repair uses the home area');
     if(c.kind==='lay-floor'&&!isBuildableFloor(c.floor))throw new Error('Floor tool requires an explicit floor.');
     await tool(page,(c.kind==='lay-floor'?c.floor:c.kind) as Parameters<typeof tool>[1]);
-    if(['door','wall','bed','double-bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','stonecutter','research-bench','tailor-bench','electric-tailor-bench'].includes(c.kind)) {
+    if(['electric-crematorium','door','wall','bed','double-bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','stonecutter','research-bench','tailor-bench','electric-tailor-bench'].includes(c.kind)) {
       // Tool selection closes Architecte. Reopen its actual material control,
       // then close via its button, which preserves the placement tool.
       await panel(page,'architect');
-      await page.locator('#construction-material').selectOption(c.material??'wood');
+      await page.locator('#construction-material').selectOption(c.material??(c.kind==='electric-crematorium'?'granite-blocks':'wood'));
       await page.locator('#architect-panel [data-close-panel]').click();
     }
-    if(c.kind==='grave'||c.kind==='wind-turbine'||c.kind==='battery'||c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='double-bed'||c.kind==='table'||c.kind==='table-square'||c.kind==='table-long'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench'||c.kind==='electric-tailor-bench') {
+    if(c.kind==='electric-crematorium'||c.kind==='grave'||c.kind==='wind-turbine'||c.kind==='battery'||c.kind==='fueled-stove'||c.kind==='electric-stove'||c.kind==='butcher-table'||c.kind==='cooler'||c.kind==='bed'||c.kind==='double-bed'||c.kind==='table'||c.kind==='table-square'||c.kind==='table-long'||c.kind==='campfire'||(c.kind==='butcher-spot'||c.kind==='crafting-spot')||c.kind==='stonecutter'||c.kind==='research-bench'||c.kind==='tailor-bench'||c.kind==='electric-tailor-bench') {
       while(rotation.value!==(c.orientation??0)){await page.keyboard.press('e');rotation.value=(rotation.value+1)%4;}
     }
     await revealCells(page,[c]);

@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V314, schéma 225 : [crémation physique](../gameplay/cremation-v314.md).** Facture sans produit, corps entier source/held/placed, staging traversable extérieur et transaction neutre de perte atomique. Gardes prospectives sur les propriétaires originaux avant projections MAIN ; migration224 validée puis numéro seul. Géométrie résidente partagée et chaleur à la pièce du contact devant. Les états suivants sont historiques.
+
 **V313, schéma 224 : [lits doubles civils](../gameplay/double-beds-v313.md).** Une autorité de géométrie fournit les deux têtes et centres rendus. Slot durable par propriétaire, préflight atomique des réaffectations, secours/soins ciblés par tête et validations prospectives sur les propriétaires originaux avant les projections MAIN. Migration223 validée puis neutre, branches simples conservées. Les états suivants sont historiques.
 
 **V312, schéma 223 : [zones autorisées humaines](../gameplay/allowed-areas-v312.md).** Définitions et références prospectives ; membership privé lié aux cellules, admissions par vraie cible et pénalité de recherche sans changement de vitesse. Préflight combiné des dépôts contre les propriétaires originaux, retour dans le budget commun ; gardes fichiers/Decoder partagées et migration222 strictement validée puis neutre. Les états suivants sont historiques.

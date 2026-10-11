@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V314 — [crémation physique](docs/gameplay/cremation-v314.md), schéma 225.** Construire et alimenter un crématorium, transporter une dépouille entière, suspendre sans perte puis l'incinérer sans sortie. Filtres humains/animaux et stades, conservation des personnes historiques ; preuves et adaptations dans la note unique. Poursuite autonome après commit/push, publications regroupées et relance planifiée en pause. Les états suivants sont historiques.
+
 **V313 — [lits doubles civils](docs/gameplay/double-beds-v313.md), schéma 224.** Construire un lit avec 85 unités réelles, affecter deux places, dormir à deux et libérer une place sans déplacer l’autre. Modèle, fantôme et vignette partagés ; secours et soins non opératoires suivent la tête réelle. Compatibilité, parcours des Aulnes, adaptations et limites dans la note unique. Poursuite autonome après commit/push, publications regroupées et relance planifiée en pause. Les états suivants sont historiques.
 
 **V312 — [zones autorisées humaines](docs/gameplay/allowed-areas-v312.md), schéma 223.** Créer, nommer, colorer et tracer jusqu’à dix zones, puis les affecter dans Affectations. Activités limitées à leurs cibles, traversée extérieure possible et retour physique des colons libres ; cargaisons et segments engagés conservés. Contrôles et adaptations dans la note unique. Poursuite autonome après commit/push, publications regroupées et relance planifiée en pause. Les états suivants sont historiques.

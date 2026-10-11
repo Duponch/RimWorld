@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V314, schéma 225 : [crémation physique](cremation-v314.md).** Crématorium3×2 construit/alimenté, facture filtrée, transport exclusif et staging extérieur du corps original, perte entière sans produit ni nouveau décès. Migration224 strictement validée puis neutre. Contrôles acquis par reprises dans la note unique ; déterrement, crémation d'objets sans corps, cendres et pollution restent absents. Les états suivants sont historiques.
+
 **V313, schéma 224 : [lits doubles civils](double-beds-v313.md).** Deux places et deux vrais dormeurs, affectations/portage/réinstallation indépendants ; secours, pansements et alimentation non opératoires compatibles. Migration223 prospective neutre et gardes communes fichiers/Decoder. Preuves et adaptations dans la note unique. Doubles médicaux/prison, opérations dans ce modèle et nouveau comportement amoureux restent absents. Les états suivants sont historiques.
 
 **V312, schéma 223 : [zones autorisées humaines](allowed-areas-v312.md).** Dix zones nommées/colorées et indépendantes, tracé libre et affectation des colons. Métiers et besoins choisissent leurs vraies cibles dans la zone ; traversée extérieure possible, retour physique et conservation des possessions lors d’un changement. Exceptions, migrations et preuves dans la note unique. Zones animales, multicarte et lits doubles restent ouverts. Les états suivants sont historiques.

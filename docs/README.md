@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V314 : [crémation physique](gameplay/cremation-v314.md), schéma 225.** Poste construit/alimenté, dépouille entière transportée et destruction sans sortie ; [référence Core actuelle](research/cremation-core-v314.md) et [guide](gameplay/player-guide.md#incinérer-une-dépouille--v314). Preuves, rouges et adaptations dans la note unique. Les états suivants sont historiques.
+
 **V313 : [lits doubles civils](gameplay/double-beds-v313.md), schéma 224.** Deux propriétaires et deux places physiques, sommeil indépendant, transport du meuble et secours par tête ; [référence Core actuelle](research/double-bed-core-v313.md) et [guide](gameplay/player-guide.md#utiliser-un-lit-double--v313). Adaptations, contrôles et limites dans la note unique. Les états suivants sont historiques.
 
 **V312 : [zones autorisées humaines](gameplay/allowed-areas-v312.md), schéma 223.** Définition, affectation, filtrage des activités, traversée préférentielle et retour physique ; [référence Core actuelle](research/allowed-areas-core-v312.md) et [guide](gameplay/player-guide.md#affecter-une-zone-autorisée--v312). Contrôles, adaptations et limites dans la note unique. Les états suivants sont historiques.

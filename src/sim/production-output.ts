@@ -1,7 +1,7 @@
 import {isMechSalvageRecipe} from './mechanoid-salvage.ts';
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { isSmeltingRecipe } from './smelting-rules.ts';
-import { isBiofuelRecipe } from './production-recipes.ts';
+import { isBiofuelRecipe,recipeHasProducts,taskRecipe } from './production-recipes.ts';
 import { mergeThingDamage } from './thing-damage-rules.ts';
 import { copyPileCondition,mergePileContamination } from './pile-condition.ts';
 import { mergeRot, rotAge } from './food-preservation.ts';
@@ -77,6 +77,7 @@ function processArtOutput(world:World,pawn:Pawn,context:ProductionContext,destin
   pawn.state='working';pawn.planCooldown=20;
 }
 export function processProductionOutput(world:World,pawn:Pawn,context:ProductionContext,destination:'stockpile'|'drop'):void {
+  if(pawn.cooking&&!recipeHasProducts(taskRecipe(pawn.cooking))){context.release();return;}
   const policy=captureAllowedArea(world,pawn),allows=(cell:Cell)=>!policy||allowedAreaAllows(world,pawn,cell,policy);
   if(isArtRecipe(pawn.cooking?.recipe)){processArtOutput(world,pawn,context,destination);return;}
   const task=pawn.cooking!,product=world.piles.find(p=>p.id===task.productId);

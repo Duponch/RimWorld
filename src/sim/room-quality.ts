@@ -51,8 +51,8 @@ export class RoomQualityCapture {
       if(contains(index(s)))totalBeauty+=structureBeauty(s)+(s.kind==='flower-pot'?daylilyBeauty(s.flower?.plant):0);
       if(inside&&isBedKind(s.kind))beds++;
       if(!structureRoomStandable(s.kind))for(const c of footprint)cannotStand.add(index(c));
-      const dirt=s.kind==='machining-table'?-2:s.kind==='butcher-table'?-15:s.kind==='stonecutter'||s.kind==='art-bench'?-5:0;
-      if(dirt&&footprint.some(c=>containsClean(index(c))))totalClean+=dirt;
+      const dirt=s.kind==='electric-crematorium'?-20:s.kind==='machining-table'?-2:s.kind==='butcher-table'?-15:s.kind==='stonecutter'||s.kind==='art-bench'?-5:0;
+      if(dirt&&footprint.some(c=>containsClean(index(c))||s.kind==='electric-crematorium'&&cardinal.some(([dx,dz])=>cells.has(index({x:c.x+dx,z:c.z+dz})))))totalClean+=dirt;
     }
     // Trees are pass-through, not standable, even though their market value
     // is zero. Wild herbs/crops and minified furniture do not reduce space.
