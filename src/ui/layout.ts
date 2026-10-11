@@ -63,6 +63,8 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id:'armchair',title:'Fauteuil',hint:'1 × 1 · 110 tissu ou cuir léger · Construction 5 · Mobilier complexe',key:'',category:'furniture'},
   { id:'end-table',title:'Table de chevet',hint:'1 × 1 · améliore le confort du lit adjacent · Mobilier complexe',key:'',category:'furniture'},
   { id:'dresser',title:'Commode',hint:'2 × 1 · améliore les lits dans un rayon de 6 cases · Mobilier complexe',key:'',category:'furniture'},
+  { id:'shelf',title:'Étagère',hint:'2 × 1 · trois piles par case, six au total · Mobilier complexe',key:'',category:'furniture'},
+  { id:'small-shelf',title:'Petite étagère',hint:'1 × 1 · trois piles · Mobilier complexe',key:'',category:'furniture'},
   { id:'flower-pot',title:'Pot de fleurs',hint:'1 × 1 · 20 matériaux · l’hémérocalle doit être semée et entretenue',key:'',category:'furniture'},
   { id: 'horseshoes', title: 'Fers à cheval', hint: '3 joueurs maximum · places de lancer à 5 cases avec vue dégagée', key: '', category: 'recreation' },
   { id: 'chess-table', title: 'Table d’échecs', hint: '1 × 1 · 70 bois, métal ou pierre · Mobilier complexe · 2 joueurs maximum avec sièges adjacents', key: '', category: 'recreation' },

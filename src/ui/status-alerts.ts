@@ -1,6 +1,7 @@
 import { isColonist,activeThreat } from '../sim/affiliation';
 import { isBedKind } from '../sim/bed-kinds';
 import { bedSlotsCount } from '../sim/bed-slots';
+import { storageCells } from '../sim/shelf-storage';
 import { constructionRecipe } from '../sim/construction-materials';
 import { firePosition } from '../sim/fire-rules';
 import { FLU_UNIT,fluStage } from '../sim/flu-rules';
@@ -65,7 +66,7 @@ export function readStatusAlerts(world:World):StatusAlert[] {
   counted('hungry',living.filter(p=>p.hunger<25),n=>`${n} colon(s) affamé(s)`,'needs');
   const pending=world.jobs.filter(j=>j.status==='pending');
   if(pending.length)add('pending-jobs',`${pending.length} ordre(s) en attente`,pending.map(j=>objectNotificationTarget('job',j.id,j)),{panel:'work'});
-  if(!world.stockpiles.length)add('no-stockpile','Aucune réserve de stockage',[],{panel:'architect',tool:'stockpile'});
+  if(!world.stockpiles.length&&!storageCells(world).length)add('no-stockpile','Aucune réserve de stockage',[],{panel:'architect',tool:'stockpile'});
   if(world.jobs.some(j=>constructionRecipe(j).ingredients.length>0)&&world.pawns.every(p=>p.priorities.haul===0&&p.priorities.build===0))add('disabled-construction','Construction/transport désactivés : chantiers non approvisionnés',[],{panel:'work'});
   const interrupted=world.pawns.filter(p=>p.interruptedCargo);
   if(interrupted.length)add('interrupted-cargo',`${interrupted.length} cargaison(s) conservée(s) : fin de déplacement ou sol proche à libérer`,people(world,interrupted),{panel:'work'});

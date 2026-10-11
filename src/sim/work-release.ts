@@ -53,6 +53,8 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const cells=command.type==='area'?queryArea(world,command):null;
     const ids=new Set(command.type==='growing-policy'?[command.zoneId]:cells?.ok?world.growingZones.filter(z=>z.cells.some(c=>cells.cells.includes(c))).map(z=>z.id):[]);
     for(const pawn of world.pawns)if(pawn.haul?.destination.type==='aside'&&ids.has(pawn.haul.destination.growingZoneId??-1))pawns.add(pawn.id);
+  } else if(command.type==='shelf-policy') {
+    for(const id of world.structures.find(s=>s.id===command.structureId)?.shelf?.cells??[])zones.add(id);
   } else if(command.type==='stockpile-policy') {
     for(const zone of stockpileZoneCells(world,command.stockpileId))zones.add(zone.id);
   } else if(command.type==='stockpile') {

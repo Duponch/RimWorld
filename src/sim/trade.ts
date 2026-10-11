@@ -28,7 +28,7 @@ function purchase(w:World,id:number,quantity:number,origin:{x:number;z:number}):
   // Earlier goods already occupy the draft, so every deposit is planned as one
   // basket. A failed last item cannot commit the first one or its payment.
   for(const cell of nearbyGround(w,origin)){
-    const count=Math.min(quantity,groundCapacity(w,cell,pile.item));
+    const count=Math.min(quantity,groundCapacity(w,cell,pile));
     if(count>0){if(!move(w,id,count,{type:'ground',...cell}))return false;quantity-=count;}
     if(!quantity)return true;
   }

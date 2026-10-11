@@ -1,4 +1,5 @@
 import { allowedAreaAllows } from './allowed-area-state.ts';
+import {shelfAt} from './shelf-storage.ts';
 import {MEDICINES,isMedicine,medicineAllowed,type MedicineItem} from './medicine-rules.ts';
 import {medicineClaims} from './medicine-logistics.ts';
 import {reservedSource,refreshStock} from './materials.ts';
@@ -28,7 +29,7 @@ export function planImplantIngredients(w:World,doctor:Pawn,patient:Pawn,spot:Cel
       selected.push({pile,quantity});needed-=quantity;if(!needed)break;
     }
     if(needed)continue;
-    const cells=nearbyGround(w,spot,2).filter(c=>!same(c,spot)&&allowedAreaAllows(w,doctor,c)),used=new Set<string>(),ingredients:SurgicalIngredient[]=[];
+    const cells=nearbyGround(w,spot,2).filter(c=>!same(c,spot)&&!shelfAt(w,c)&&allowedAreaAllows(w,doctor,c)),used=new Set<string>(),ingredients:SurgicalIngredient[]=[];
     for(const {pile,quantity} of selected){
       const cell=cells.find(c=>!used.has(`${c.x}:${c.z}`)&&!groundPile(w,c)&&groundCapacity(w,c,pile.item,doctor.id)>=quantity&&routeToJob(w,c,reach,true));
       if(!cell)break;
@@ -47,6 +48,7 @@ export function validImplantTaskRelations(w:World,doctor:Pawn,patient:Pawn|undef
   const cargo=w.piles.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===doctor.id);
   if(task.phase==='work')return task.ingredients===undefined&&!!task.consumedMedicine&&medicineAllowed(patient,task.consumedMedicine)&&cargo.length===0;
   if(task.consumedMedicine!==undefined||!task.ingredients?.length)return false;
+  if(task.ingredients.some(i=>shelfAt(w,i.cell)))return false;
   let held=0,open=false;const cells=new Set<string>();let medicine:MedicineItem|undefined,wood=0,doses=0;
   for(const i of task.ingredients){
     const key=`${i.cell.x}:${i.cell.z}`;

@@ -1,3 +1,4 @@
+import { storageCells,storageCellAccepts } from './shelf-storage.ts';
 import { workPriority } from './work-types.ts';
 import { allowedAreaAllows,allowedAreaReason,captureAllowedArea } from './allowed-area-state.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
@@ -8,10 +9,9 @@ import { planServiceHaul, type ServiceHaulTarget } from './player-service-haulin
 import { candidateAccess } from './candidate-access.ts';
 import { asBuilder, constructionHaulPriority, constructionSiteFree, isConstruction } from './construction-rules.ts';
 import { CARRY_CAPACITY } from './definitions.ts';
-import { storageCapacity } from './ground-placement.ts';
+import { storageCapacity,createGroundCapacityReader } from './ground-placement.ts';
 import { withoutQueuedOrder } from './haul-reservations.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
-import { storageAccepts } from './storage-filters.ts';
 import { constructionCapacity, constructionRecipe, requiredMaterial } from './construction-materials.ts';
 import { deliveredStock, reservedDestination, reservedSource } from './materials.ts';
 import { blockedCells, routeToJob } from './pathfinding.ts';
@@ -44,6 +44,8 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
   if(job&&!constructionRecipe(job).ingredients.some(c=>constructionCapacity(world,job,c.item)>0))return no('Les matériaux sont déjà livrés ou réservés.');
   const reach=access??candidateAccess(world,pawn,blockedCells(world),new Set());
   if(job&&!canReach(world,job,reach,false))return no('Aucun accès praticable au chantier.');
+  const cells=storageCells(world),byCell=new Map(cells.map(c=>[c.z*world.width+c.x,c]));
+  const placementFacts=world.structures.some(s=>s.shelf)?createGroundCapacityReader(world):undefined;
   const sources=source?[source]:world.piles.filter(p=>p.owner.type==='ground'&&allows(p.owner)&&job&&requiredMaterial(job,p.item)>0);
   let best:{task:HaulTask;source:Cell;rank:number;distance:number;id:number}|undefined;
   for(const pile of sources) {
@@ -51,15 +53,15 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
     if(pile.owner.type!=='ground'||!allows(pile.owner))continue;
     let available=pile.quantity-reservedSource(world,pile.id);if(available<=0)continue;
     if(!canReach(world,pile.owner,reach,true))continue;
-    const sourceZone=world.stockpiles.find(z=>same(z,pile.owner as Cell));
-    const excess=sourceZone?Math.max(0,pile.quantity-sourceZone.capacity):0;
-    const sourceAdmits=sourceZone&&storageAccepts(sourceZone,pile,world.tick);
+    const sourceZone=byCell.get(pile.owner.z*world.width+pile.owner.x);
+    const excess=sourceZone?.shelfId===undefined&&sourceZone?Math.max(0,pile.quantity-sourceZone.capacity):0;
+    const sourceAdmits=sourceZone&&storageCellAccepts(world,sourceZone,pile);
     const currentPriority=sourceAdmits&&!excess?sourceZone!.priority:0;
     if(!job&&sourceAdmits&&excess)available=Math.min(available,Math.max(0,excess-reservedSource(world,pile.id)));
     const destinations=job?[{destination:{type:'job' as const,jobId:job.id,forConstruction:asBuilder(pawn)},cell:job,rank:0,
       capacity:constructionCapacity(world,job,pile.item)}]
-      :world.stockpiles.filter(z=>allows(z)&&z.priority>currentPriority&&!same(z,pile.owner as Cell))
-        .map(z=>({destination:{type:'stockpile' as const,stockpileId:z.id},cell:z,rank:-z.priority,capacity:storageCapacity(world,z,pile)}));
+      :cells.filter(z=>allows(z)&&z.priority>currentPriority&&!same(z,pile.owner as Cell))
+        .map(z=>({destination:{type:'stockpile' as const,stockpileId:z.id},cell:z,rank:-z.priority,capacity:storageCapacity(world,z,pile,undefined,undefined,placementFacts)}));
     for(const dest of destinations) {
       if(budget.pairs--<=0){budget.pairs=0;return no('Décision reportée : budget de recherche atteint.');}
       const quantity=Math.min(CARRY_CAPACITY,available,dest.capacity);if(quantity<=0||!canReach(world,dest.cell,reach,!job))continue;

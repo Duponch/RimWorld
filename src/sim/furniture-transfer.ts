@@ -1,3 +1,5 @@
+import {shelfAt} from './shelf-storage.ts';
+import {planShelfRemoval,commitShelfRemoval} from './shelf-retirement.ts';
 import { groundCapacity, groundPile, groundPileCells, nearbyGround } from './ground-placement.ts';
 import { MAX_STACK, footprintCells } from './definitions.ts';
 import { furnitureDuration, furnitureReady, furnitureWorkTarget, packedAt, type PackedFurniture } from './furniture-rules.ts';
@@ -8,10 +10,10 @@ import {initialSpikeTrapState} from './spike-trap-state.ts';
 /** A whole object needs a completely unreserved slot, never a compatible stack.
  * A full wood-slot capacity also excludes every typed inbound reservation. */
 export function furnitureDropCell(world:World,origin:Cell,exceptPawn?:number):Cell|undefined {
-  const free=(c:Cell)=>!groundPile(world,c)&&!packedAt(world,c)&&groundCapacity(world,c,'wood',exceptPawn)===MAX_STACK;
+  const free=(c:Cell)=>!shelfAt(world,c)&&!groundPile(world,c)&&!packedAt(world,c)&&groundCapacity(world,c,'wood',exceptPawn)===MAX_STACK;
   if(free(origin))return {x:origin.x,z:origin.z};
   const occupied=groundPileCells(world);
-  return nearbyGround(world,origin).find(c=>!occupied.has(c.z*world.width+c.x)&&!packedAt(world,c)&&groundCapacity(world,c,'wood',exceptPawn)===MAX_STACK);
+  return nearbyGround(world,origin).find(c=>!shelfAt(world,c)&&!occupied.has(c.z*world.width+c.x)&&!packedAt(world,c)&&groundCapacity(world,c,'wood',exceptPawn)===MAX_STACK);
 }
 export function releaseFurniture(world:World,pawn:Pawn,plan?:ReadonlyMap<number,Cell>):boolean {
   const pack=world.packed?.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);if(!pack)return true;
@@ -37,13 +39,14 @@ export function advanceFurniture(world:World,pawn:Pawn,job:Job,move:(target:Cell
   if(source) {
     advanceWork(job,workRate());
     if(workProgress(job)<furnitureDuration(world,job))return false;
+    const removal=planShelfRemoval(world,source);if(!removal){release();return false;}
     if(job.kind==='uninstall') {
-      const view={...world,structures:world.structures.filter(s=>s.id!==id)};
+      const view=removal.view;
       const cell=furnitureDropCell(view,source);
       if(!cell){release();return false;}
-      detach(world,job,{type:'ground',...cell});
+      commitShelfRemoval(world,removal);detach(world,job,{type:'ground',...cell});
     } else {
-      pack=detach(world,job,{type:'pawn',pawnId:pawn.id});resetWork(job);return true;
+      commitShelfRemoval(world,removal);pack=detach(world,job,{type:'pawn',pawnId:pawn.id});resetWork(job);return true;
     }
   } else if(pack?.owner.type==='ground') {
     pack.owner={type:'pawn',pawnId:pawn.id};resetWork(job);return true;

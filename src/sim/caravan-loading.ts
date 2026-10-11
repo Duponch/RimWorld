@@ -36,7 +36,7 @@ export function applyScoutCommand(w:World,c:ScoutCommand):CommandResult {
       return fail('Le colon doit porter une unique pile saine de un à trois repas de survie.');
     const cell={x:p.x,z:p.z};
     if(groundPile(w,cell)||w.packed.some(i=>i.owner.type==='ground'&&same(i.owner,cell))
-      ||groundCapacity(w,cell,pile.item,p.id)<pile.quantity)
+      ||groundCapacity(w,cell,pile,p.id)<pile.quantity)
       return fail('La case du colon ne peut accueillir cette pile entière.');
     pile.owner={type:'ground',...cell};
     refreshStock(w);

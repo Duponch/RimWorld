@@ -1,3 +1,4 @@
+import { storageCells,storageAt,storageCellAccepts } from './shelf-storage.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
@@ -14,8 +15,7 @@ import { healthRandom } from './health.ts';
 import { shootingQueries,advanceShooter } from './shooting.ts';
 import { cancelShooting } from './shooting-state.ts';
 import { cancelHunting,type HuntingCommand,type HuntingTask } from './hunting-state.ts';
-import { storageCapacity } from './ground-placement.ts';
-import { storageAccepts } from './storage-filters.ts';
+import { createGroundCapacityReader,storageCapacity } from './ground-placement.ts';
 import { reservedSource } from './materials.ts';
 import { pawnBody,medicallyStopped } from './health-rules.ts';
 import { isColonist } from './affiliation.ts';
@@ -80,13 +80,16 @@ function collect(w:World,p:Pawn,ctx:HuntContext):void {
   // A retained animal becomes the same undamaged corpse at pickup. This
   // read-only condition view prevalidates that existing conversion, without
   // allocating a pile or moving its owner before a destination is available.
-  const corpse:MaterialPile=body??{id:retained!.id,kind:'corpse',item:corpseItem,quantity:1,owner:{type:'ground',x:sourceCell.x,z:sourceCell.z}};
+  const corpse:MaterialPile=body??{id:retained!.id,kind:'corpse',item:corpseItem,quantity:1,owner:{type:'ground',x:sourceCell.x,z:sourceCell.z},
+    corpse:{animalId:retained!.id,species:retained!.species,sex:retained!.sex,ageTicks:retained!.ageTicks,health:retained!.health!},
+    rot:retained!.corpseRot??{progress:0,atTick:w.tick}};
   if(p.planCooldown>0){
     if(retained&&p.path.length){ctx.move(sourceCell,true);if(!p.path.length)p.planCooldown=0;}
     return;
   }
-  const current=w.stockpiles.find(z=>z.x===sourceCell.x&&z.z===sourceCell.z&&storageAccepts(z,corpse,w.tick));
-  const zones=w.stockpiles.filter(z=>allowedAreaAllows(w,p,z)&&(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&storageAccepts(z,corpse,w.tick)&&storageCapacity(w,z,corpse,p.id)>=1)
+  const stored=storageAt(w,sourceCell),current=stored&&storageCellAccepts(w,stored,corpse)?stored:undefined;
+  const facts=w.structures.some(s=>s.shelf)?createGroundCapacityReader(w):undefined;
+  const zones=storageCells(w).filter(z=>allowedAreaAllows(w,p,z)&&(!current||z.priority>current.priority)&&(z.x!==sourceCell.x||z.z!==sourceCell.z)&&storageCellAccepts(w,z,corpse)&&storageCapacity(w,z,corpse,p.id,undefined,facts)>=1)
     .sort((a,b)=>b.priority-a.priority||(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
   if(!zones.length){stop(p);return;}
   const reach=ctx.candidates();if(!reach)return;

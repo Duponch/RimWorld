@@ -1,3 +1,4 @@
+import {planShelfRemoval,commitShelfRemoval} from './shelf-retirement.ts';
 import { removeHydroponicPlants } from './hydroponics.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { releaseStructureMelee } from './melee-state.ts';
@@ -5,7 +6,7 @@ import { isBlockMaterial, isUpholsteryMaterial, type ConstructionMaterial, type 
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { deconstructionAvailable, deconstructionTarget } from './deconstruction-rules.ts';
 import { groundPile, groundCapacity, planGroundPlacement } from './ground-placement.ts';
-import { addMaterial } from './materials.ts';
+import { addMaterial,materialCanFit } from './materials.ts';
 import { planGraveRelease,commitGraveRelease } from './burial.ts';
 import type { Job, Pawn, World } from './types.ts';
 
@@ -15,11 +16,12 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   const structure = deconstructionTarget(world, job);
   if (!structure || !deconstructionAvailable(world, job, pawn.id)) return false;
   if(world.jobs.some(j=>j.fixBreakdown?.structureId===structure.id))return false;
+  const shelfRemoval=planShelfRemoval(world,structure);if(!shelfRemoval)return false;
   const structures = world.structures.filter(s => s.id !== structure.id);
   const jobs = world.jobs.filter(j => j.id !== job.id);
   // The preview owns piles and escrow: planning several ingredient refunds must
   // neither mutate live stacks nor promise one ground cell to incompatible items.
-  const view = { ...world, structures, jobs: jobs.map(j => ({ ...j, escrow: { ...j.escrow } })), piles: world.piles.map(p => ({ ...p, owner: { ...p.owner } })) };
+  const view = { ...world, structures, jobs: jobs.map(j => ({ ...j, escrow: { ...j.escrow } })), piles: shelfRemoval.view.piles };
   const graveRelease=planGraveRelease(view,structure);if(!graveRelease)return false;
   // Occupy the preview cell before planning any other restitution. The same
   // body identity will be moved there only after all preflights succeed.
@@ -41,6 +43,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
     const newPiles = drops.filter(d => !groundPile(view, d.cell)).length;
     if (view.piles.length + newPiles > 32768 || !Number.isSafeInteger(view.nextId + newPiles)) return false;
     for (const drop of drops) {
+      if(!materialCanFit(view,ITEM_DEFINITIONS[cost.item].kind,drop.quantity,{type:'ground',...drop.cell},cost.item))return false;
       refunds.push({ ...drop, item: cost.item });
       addMaterial(view, ITEM_DEFINITIONS[cost.item].kind, drop.quantity, { type: 'ground', ...drop.cell }, cost.item);
     }
@@ -54,6 +57,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   const ledger = world.deconstructed;
   if (![(ledger.lostComponents??0)+lostComponents, ledger.count + 1, ledger.lostWood + lostWood, (ledger.lostSteel ?? 0) + lostSteel, ledger.fuelTicks + fuelTicks,...Object.values(lostBlocks),...Object.values(lostTextiles)].every(Number.isSafeInteger)) return false;
   if(!commitGraveRelease(world,structure,graveRelease))return false;
+  commitShelfRemoval(world,shelfRemoval);
   world.structures = structures; world.jobs = jobs; world.rng = rng;
   releaseStructureMelee(world,structure.id);
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===structure.id)delete a.manhunter.door;

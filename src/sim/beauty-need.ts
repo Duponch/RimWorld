@@ -2,6 +2,7 @@ import { daylilyBeauty } from './flower-pot.ts';
 import { BeautyMapCache,RoomBeautyCapture,type BeautyInput } from './room-beauty.ts';
 import type { RoomTopology } from './room-topology.ts';
 import { TICKS_PER_DAY,type World } from './types.ts';
+import { isShelfKind,shelfStorageCells } from './shelf-storage.ts';
 
 export const BEAUTY_NEED_INTERVAL=20;
 const RISE_PER_HOUR=32,FALL_PER_HOUR=8;
@@ -10,7 +11,8 @@ const caches=new WeakMap<World,BeautyMapCache>();
 /** Build the beauty input from physical world entities. Keeping this adapter
  * shared prevents the inspector from drifting away from the need simulation. */
 export function worldBeautyInput(world:World):BeautyInput {
-  const objects=[...world.piles.flatMap(p=>p.owner.type==='ground'?[{id:p.id,x:p.owner.x,z:p.owner.z,kind:p.kind,beauty:p.kind==='corpse'?-20:-4}]:[]),
+  const protectedCells=new Set(world.structures.filter(s=>isShelfKind(s.kind)).flatMap(s=>shelfStorageCells(s).map(c=>c.z*world.width+c.x)));
+  const objects=[...world.piles.flatMap(p=>p.owner.type==='ground'?[{id:p.id,x:p.owner.x,z:p.owner.z,kind:p.kind,beauty:p.kind==='corpse'?-20:-4,visible:!protectedCells.has(p.owner.z*world.width+p.owner.x)}]:[]),
     ...world.packed.flatMap(p=>p.owner.type==='ground'?[{id:p.building.id,x:p.owner.x,z:p.owner.z,kind:'packed-furniture',beauty:-4}]:[]),
     ...world.structures.flatMap(s=>s.kind==='flower-pot'?[{id:s.id,x:s.x,z:s.z,kind:'flower',beauty:daylilyBeauty(s.flower?.plant)}]:[])];
   // The pot keeps its material/quality contribution; the plant is additional.

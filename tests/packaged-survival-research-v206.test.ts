@@ -5,6 +5,7 @@ import { cookingSpot } from '../src/sim/cooking-bills.ts';
 import type { CookingTask } from '../src/sim/cooking-types.ts';
 import { addGroundMaterial,refreshStock } from '../src/sim/materials.ts';
 import { validPackagedSurvivalState } from '../src/sim/packaged-survival-save.ts';
+import {withoutFodderDefaults,withoutPredatorDefaults} from './scenarios/legacy-skills.ts';
 import { planCookingOrder } from '../src/sim/player-cooking.ts';
 import { productionWorkTotal } from '../src/sim/production-recipes.ts';
 import { MICROELECTRONICS_RESEARCH_COST,PACKAGED_SURVIVAL_MEALS_RESEARCH_COST,packagedSurvivalMealsUnlocked,processResearch,researchCost,researchPrerequisite,researchStationUsable } from '../src/sim/research.ts';
@@ -80,10 +81,12 @@ test('a prepared advanced desk requires actual power and releases its research t
 test('strict 187 migration preserves existing acquired rations and rejects every future research key before granting anything',()=>{
   const w=preparePackagedSurvivalDemo();delete w.research!.packagedSurvivalMeals;
   addGroundMaterial(w,'food',2,{x:21,z:21},'survival-meal');refreshStock(w);
-  const old=JSON.parse(serializeWorld(w));old.schemaVersion=187;
+  const old=withoutPredatorDefaults(withoutFodderDefaults(JSON.parse(serializeWorld(w))));old.schemaVersion=187;
   for(const pawn of old.pawns){delete pawn.recreation.tolerance.television;delete pawn.recreation.bored.television;}
   const serialized=JSON.stringify(old),loaded=deserializeWorld(serialized);
-  expect(loaded).toEqual({...old,schemaVersion:SCHEMA_VERSION,pawns:old.pawns.map((pawn:World['pawns'][number])=>({...pawn,recreation:{...pawn.recreation,tolerance:{...pawn.recreation.tolerance,television:0},bored:{...pawn.recreation.bored,television:false}}}))});expect(loaded.research!.packagedSurvivalMeals).toBeUndefined();
+  // V282 extends the untouched historical meals-only policy; the other
+  // prepared policies are customized by the pre-predator fixture helper.
+  expect(loaded).toEqual({...old,schemaVersion:SCHEMA_VERSION,foodPolicies:old.foodPolicies.map((policy:World['foodPolicies'][number])=>policy.id===2?{...policy,allowed:[...policy.allowed,'nutrient-paste-meal']}:policy),pawns:old.pawns.map((pawn:World['pawns'][number])=>({...pawn,recreation:{...pawn.recreation,tolerance:{...pawn.recreation.tolerance,television:0},bored:{...pawn.recreation.bored,television:false}}}))});expect(loaded.research!.packagedSurvivalMeals).toBeUndefined();
   expect(loaded.piles.filter(p=>p.item==='survival-meal').map(p=>p.quantity)).toEqual([2]);
   expect(JSON.stringify(old)).toBe(serialized);
   for(const change of [

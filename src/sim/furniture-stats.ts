@@ -2,7 +2,7 @@ import { isBedKind } from './bed-kinds.ts';
 import { WEAPON_QUALITIES,type WeaponQuality } from './equipment-rules.ts';
 
 /** Core 1.6.4871 names adapted to the stable ids proposed for V90. */
-export const HABITAT_FURNITURE_KINDS=['double-bed','bed','hospital-bed','table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot','chess-table'] as const;
+export const HABITAT_FURNITURE_KINDS=['shelf','small-shelf','double-bed','bed','hospital-bed','table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot','chess-table'] as const;
 export type HabitatFurnitureKind=typeof HABITAT_FURNITURE_KINDS[number];
 export type FurnitureQuality=WeaponQuality;
 export const FURNITURE_QUALITIES=WEAPON_QUALITIES;
@@ -32,6 +32,8 @@ const hard=Object.freeze(['woody','metallic','stony'] as const);
 /** Direct transcription of the local Core Def values. Work is in Core ticks,
  * before the stuff work factor and offset. */
 export const FURNITURE_DEFINITIONS:Readonly<Record<HabitatFurnitureKind,FurnitureDefinition>>=Object.freeze({
+  shelf:definition({label:'Étagère',width:2,depth:1,stuff:20,categories:hard,coreWork:500,constructionSkill:0,research:'complex-furniture',maxHitPoints:100,beauty:0,quality:false}),
+  'small-shelf':definition({label:'Petite étagère',width:1,depth:1,stuff:10,categories:hard,coreWork:250,constructionSkill:0,research:'complex-furniture',maxHitPoints:50,beauty:0,quality:false}),
   // Core gates the bed behind Complex furniture. Lisière already shipped it;
   // V90 keeps it unlocked while retaining the reference prerequisite here.
   bed:definition({label:'Lit',width:1,depth:2,stuff:45,categories:hard,coreWork:800,constructionSkill:0,research:null,coreResearch:'complex-furniture',maxHitPoints:140,beauty:1,comfort:.75,restEffectiveness:1,quality:true}),

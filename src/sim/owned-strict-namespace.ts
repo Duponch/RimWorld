@@ -1,3 +1,4 @@
+import {shelfIdentityOwners} from './shelf-save.ts';
 import {NumericMembership} from './numeric-membership.ts';
 import type {World} from './types.ts';
 import type {OwnedValidationResourceReader} from './owned-validation-resources.ts';
@@ -29,7 +30,7 @@ export function captureOwnedStrictNamespace(world:World,resourceFacts:OwnedValid
   const suffix=[
     ...world.piles,...world.stockpiles,...world.growingZones,
     ...(world.wildlife?.animals??[]),...(world.filth?.items??[]),...(world.fires?.items??[]),...(world.fires?.embers??[]),
-    ...world.packed.map(p=>p.building),...world.structures.flatMap(s=>s.bills??[]),...world.packed.flatMap(p=>p.building.bills??[]),
+    ...world.packed.map(p=>p.building),...shelfIdentityOwners(world),...world.structures.flatMap(s=>s.bills??[]),...world.packed.flatMap(p=>p.building.bills??[]),
   ];
   const extras=new NumericMembership();let resourcesActive=false,prefixSize=0;
   const ids:ValidationNamespaceWriter={

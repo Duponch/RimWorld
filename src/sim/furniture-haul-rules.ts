@@ -1,4 +1,5 @@
 import { footprintCells, MAX_STACK } from './definitions.ts';
+import {shelfAt} from './shelf-storage.ts';
 import { groundCapacity, groundPile } from './ground-placement.ts';
 import { packedAt } from './furniture-rules.ts';
 import { reservedSource } from './materials.ts';
@@ -12,7 +13,7 @@ export function furnitureHaulCell(world:World,d:HaulDestination):Cell|undefined 
 }
 /** A package owns the entire floor slot, including against incoming material. */
 export function furnitureSlot(world:World,c:Cell,exceptPawn?:number):boolean {
-  return !groundPile(world,c)&&!packedAt(world,c)&&groundCapacity(world,c,'wood',exceptPawn)===MAX_STACK;
+  return !shelfAt(world,c)&&!groundPile(world,c)&&!packedAt(world,c)&&groundCapacity(world,c,'wood',exceptPawn)===MAX_STACK;
 }
 export function furnitureAsideAllowed(world:World,c:Cell,exceptPawn?:number,subject?:Structure):boolean {
   if(world.resources.some(r=>r.x===c.x&&r.z===c.z)||world.growingZones.some(z=>z.cells.includes(c.z*world.width+c.x))

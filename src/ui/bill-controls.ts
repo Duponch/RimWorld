@@ -81,7 +81,7 @@ export function billControls(station:Structure,send:(command:Command)=>void):HTM
       details.append(hpMin,hpMax,select('qualityMin','Qualité minimum',qualities,filter.qualityMin),select('qualityMax','Qualité maximum',qualities,filter.qualityMax));
     }
     if(isCremationRecipe(bill.recipe)){const filter=bill.cremationFilter!;for(const [key,label] of [['colonists','Colons'],['strangers','Étrangers'],['fresh','Corps frais'],['rotting','Corps pourris'],['desiccated','Corps desséchés']] as const)details.append(input(key,label,'checkbox',filter[key]));}
-    details.append(...PRODUCTION_RECIPES[bill.recipe].inputs.map(i=>input(i,ITEM_DEFINITIONS[i].label,'checkbox',bill.filters[i]??false)),input('radius','Rayon depuis le poste','number',String(bill.radius)),...isCremationRecipe(bill.recipe)?[]:[select('destination','Produit',[['stockpile','Meilleure réserve'],['drop','Déposer au sol']],bill.destination)]);form.append(details);
+    details.append(...PRODUCTION_RECIPES[bill.recipe].inputs.map(i=>input(i,ITEM_DEFINITIONS[i].label,'checkbox',bill.filters[i]??false)),input('radius','Rayon depuis le poste','number',String(bill.radius)),...isCremationRecipe(bill.recipe)?[]:[select('destination','Produit',[['stockpile','Meilleur stockage'],['drop','Déposer au sol']],bill.destination)]);form.append(details);
     form.addEventListener('input',()=>{form.dataset.dirty='true';});
     const apply=document.createElement('button');apply.dataset.applyBill=String(bill.id);apply.textContent='Appliquer la facture';
     const field=(name:string)=>fields.get(name)!;

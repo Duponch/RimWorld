@@ -5,6 +5,8 @@ import { ITEM_DEFINITIONS } from '../sim/items';
 import type { MaterialPile, World } from '../sim/types';
 import { perspectiveDetailRange } from './map-overlay-detail';
 import {DEFAULT_ITEM_LABEL_MIN_CELL_PIXELS,itemLabelMinCellPixels} from '../ui/item-label-visibility';
+import {pileIdentitySurfaces} from './pile-surfaces';
+import {isShelfKind} from '../sim/shelf-storage';
 
 export const PILE_LABEL_MIN_CELL_PIXELS = DEFAULT_ITEM_LABEL_MIN_CELL_PIXELS;
 
@@ -21,14 +23,17 @@ function pileCaption(pile: MaterialPile): string {
   return '';
 }
 
-function samePileLabels(a: World['piles'] | undefined, b: World['piles']): boolean {
+function samePileLabels(a: World['piles'] | undefined, b: World['piles'],shelves=false): boolean {
   if (a === b) return true;
   if (!a || a.length !== b.length) return false;
   for (let i = 0; i < b.length; i++) {
     const before = a[i]!, after = b[i]!;
+    // Even an uncaptioned weapon can change the level occupied by a labelled
+    // stack. With shelves, track every physical ground identity and position.
+    if(shelves&&(before.id!==after.id||before.owner.type!==after.owner.type||before.owner.type==='ground'&&after.owner.type==='ground'&&(before.owner.x!==after.owner.x||before.owner.z!==after.owner.z)))return false;
     const oldLabel = before.owner.type === 'ground' ? pileCaption(before) : '';
     const newLabel = after.owner.type === 'ground' ? pileCaption(after) : '';
-    if (oldLabel !== newLabel || oldLabel && (before.owner.type !== 'ground' ||
+    if (oldLabel !== newLabel || oldLabel && (before.id!==after.id || before.owner.type !== 'ground' ||
       after.owner.type !== 'ground' || before.owner.x !== after.owner.x || before.owner.z !== after.owner.z)) return false;
   }
   return true;
@@ -60,8 +65,10 @@ export class MapLabelsOverlay {
   private readonly projectionView = new Matrix4();
   private sourcePiles: World['piles'] | undefined;
   private sourcePacked: World['packed'] | undefined;
+  private sourceStructures:World['structures']|undefined;
+  private shelfSignature='';
   private sourceWidth = -1;
-  private chunks: { bounds: Box3; entries: { x: number; z: number; label: string }[] }[] = [];
+  private chunks: { bounds: Box3; entries: { x: number; y:number; z: number; label: string;pileId?:number;shelf?:boolean }[] }[] = [];
   private width = 0;
   private height = 0;
   private ratio = 1;
@@ -88,12 +95,16 @@ export class MapLabelsOverlay {
   }
 
   private index(world: World): boolean {
+    // Structure snapshots are immutable in the private MAIN. Policy, HP and
+    // unrelated buildings do not move supports and must not redraw labels.
+    const shelfSignature=this.sourceStructures===world.structures?this.shelfSignature:world.structures.filter(s=>isShelfKind(s.kind)).map(s=>`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}`).join('|');
     const unchanged = this.sourceWidth === world.width &&
-      samePileLabels(this.sourcePiles, world.piles) && samePackedLabels(this.sourcePacked, world.packed);
+      this.shelfSignature===shelfSignature&&samePileLabels(this.sourcePiles, world.piles,!!shelfSignature) && samePackedLabels(this.sourcePacked, world.packed);
     this.sourcePiles = world.piles; this.sourcePacked = world.packed; this.sourceWidth = world.width;
+    this.sourceStructures=world.structures;this.shelfSignature=shelfSignature;
     if (unchanged) return false;
-    const chunks = new Map<number, { bounds: Box3; entries: { x: number; z: number; label: string }[] }>();
-    const add = (x: number, z: number, label: string): void => {
+    const chunks = new Map<number, { bounds: Box3; entries: { x: number; y:number; z: number; label: string;pileId?:number;shelf?:boolean }[] }>();
+    const add = (x: number, z: number, label: string,y=.32,pileId?:number,shelf=false): void => {
       if (!label) return;
       const cx = Math.floor(x / 16), cz = Math.floor(z / 16), key = cz * Math.ceil(world.width / 16) + cx;
       let chunk = chunks.get(key);
@@ -104,9 +115,13 @@ export class MapLabelsOverlay {
         };
         chunks.set(key, chunk);
       }
-      chunk.entries.push({ x, z, label });
+      chunk.entries.push({ x,y, z, label,pileId,shelf });
     };
-    for (const pile of world.piles) if (pile.owner.type === 'ground') add(pile.owner.x, pile.owner.z, pileCaption(pile));
+    const supports=pileIdentitySurfaces(world);
+    for (const pile of world.piles) if (pile.owner.type === 'ground'){
+      const support=supports.get(pile.id);
+      add(pile.owner.x+(support?.x??0),pile.owner.z+(support?.z??0),pileCaption(pile),support?support.y+.18:.32,pile.id,!!support);
+    }
     for (const packed of world.packed) if (packed.owner.type === 'ground')
       add(packed.owner.x, packed.owner.z, packedCaption(packed));
     this.chunks = [...chunks.values()];
@@ -147,17 +162,17 @@ export class MapLabelsOverlay {
     const maxDistance = camera instanceof PerspectiveCamera && this.minCellPixels>0
       ? perspectiveDetailRange(camera, height, this.minCellPixels) : Infinity;
     const maxDistanceSquared = maxDistance * maxDistance;
-    const occupied = new Map<number, number>();
+    const occupied = new Map<string, number>();
     for (const chunk of this.chunks) {
       if (!this.frustum.intersectsBox(chunk.bounds) || chunk.bounds.distanceToPoint(camera.position) > maxDistance) continue;
-      for (const { x, z, label } of chunk.entries) {
-        this.point.set(x, .32, z);
+      for (const { x,y:poseY, z, label,shelf } of chunk.entries) {
+        this.point.set(x, poseY, z);
         if (this.point.distanceToSquared(camera.position) > maxDistanceSquared) continue;
         this.point.project(camera);
         if (this.point.z < cameraClipNear(camera) || this.point.z > 1 || Math.abs(this.point.x) > 1.08 || Math.abs(this.point.y) > 1.08) continue;
         const screenX = (this.point.x + 1) * width * .5;
         const screenY = (1 - this.point.y) * height * .5;
-        const cell = z * world.width + x, overlap = occupied.get(cell) ?? 0;
+        const cell = shelf?`screen:${Math.round(screenX/24)}:${Math.round(screenY/12)}`:`cell:${z * world.width + x}`, overlap = occupied.get(cell) ?? 0;
         occupied.set(cell, overlap + 1);
         const y = screenY + Math.min(overlap, 3) * 12;
         ctx.strokeText(label, screenX, y); ctx.fillText(label, screenX, y);

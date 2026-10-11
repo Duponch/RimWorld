@@ -1,3 +1,5 @@
+import {validShelfTransport,validShelfGround,shelfIdentityOwners} from '../sim/shelf-save.ts';
+import {storageCellById} from '../sim/shelf-storage.ts';
 import { PowerParentValidationCache,type PowerParentReader } from '../sim/power-parent-validation.ts';
 import type { StagingGeometryReader } from '../sim/staging-validation.ts';
 import type { OwnedValidationResourceReader, OwnedResourceReuseWitness } from '../sim/owned-validation-resources.ts';
@@ -628,7 +630,7 @@ function validMedicineTransport(world:World):boolean {
       const held=world.piles.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
       return value.ingredients.length===0&&value.progress===0&&int(value.productId,1,world.nextId-1)
         &&held.length===1&&held[0]!.id===value.productId&&held[0]!.item==='medicine'&&held[0]!.quantity===1
-        &&(value.storageId===null||int(value.storageId,1,world.nextId-1)&&world.stockpiles.some(s=>s.id===value.storageId));
+        &&(value.storageId===null||int(value.storageId,1,world.nextId-1)&&!!storageCellById(world,value.storageId));
     }
     if(value.productId!==null||value.storageId!==null||value.phase==='gather'&&value.progress!==0)return false;
     for(const part of value.ingredients)if(!record(part)||Object.keys(part).some(k=>!['pileId','item','quantity','stage','cell'].includes(k))
@@ -1103,6 +1105,7 @@ export class SnapshotDecoder {
     if(!validAllowedAreaTransport(next,next.schemaVersion))return resync('Zone autorisée, affectation originale ou retour invalide ou futur.');
     if(!validDoubleBedTransport(next,next.schemaVersion))return resync('Lit double, place ou réservation invalide ou futur.');
     if(!validFodderTransport(next,next.schemaVersion)||!validKibbleProductionTransport(next,next.schemaVersion,false,true,validation.geometry))return resync('Fourrage, alimentation ou propriétaire de croquettes invalide ou futur.');
+    if(!validShelfTransport(next,next.schemaVersion)||!validShelfGround(next))return resync('Étagère, cellules ou contenu physique invalide ou futur.');
     if(!validSpikeTrapTransport(next,next.schemaVersion))return resync('Piège à pointes, contact ou propriétaire invalide ou futur.');
     if(!validCremationTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Crématorium, filtre ou corps réservé invalide ou futur.');
     if(!validSmeltingTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Fonderie, filtre, arme ou propriétaire de fusion invalide ou futur.');
@@ -1144,7 +1147,7 @@ export class SnapshotDecoder {
     if(foreignIds.size){
       const collides=(entities:readonly {id:number}[])=>entities.some(e=>foreignIds.has(e.id));
       if([next.pawns,next.piles,next.structures,next.jobs,next.stockpiles,next.growingZones,next.wildlife?.animals??[],next.mechanoids??[],next.filth?.items??[],next.fires?.items??[],next.fires?.embers??[],next.projectiles??[],next.bombWaves??[]].some(collides)
-        ||next.packed.some(p=>foreignIds.has(p.building.id)||collides(p.building.bills??[]))||next.structures.some(s=>collides(s.bills??[])))return resync('Identité commerciale dupliquée sur la carte.');
+        ||shelfIdentityOwners(next).some(o=>foreignIds.has(o.id))||next.packed.some(p=>foreignIds.has(p.building.id)||collides(p.building.bills??[]))||next.structures.some(s=>collides(s.bills??[])))return resync('Identité commerciale dupliquée sur la carte.');
       if((next.raids?.departed??[]).some(d=>foreignIds.has(d.pawnId)||collides(d.items))||(next.prisonDepartures??[]).some(d=>foreignIds.has(d.pawnId)||collides(d.items))
         ||[next.visitors?.departed??[],next.podRescues?.departed??[]].some(records=>records.some(d=>foreignIds.has(d.pawn.id)||collides(d.items)||(d.packed??[]).some(p=>foreignIds.has(p.building.id)||collides(p.building.bills??[])))))return resync('Identité commerciale dupliquée dans une archive.');
       if(next.scout&&'pawn' in next.scout&&(postIds.has(next.scout.pawn.id)||next.scout.items.some(i=>postIds.has(i.id))))return resync('Stock commercial dupliqué dans la reconnaissance.');
@@ -1192,10 +1195,11 @@ export class SnapshotDecoder {
     // Retained ballistic/Bomb and relationship owners need this additional identity
     // capture. Foreign registries above are already validated; their historical
     // owners reserve the same namespace as the map and cannot become a wave.
-    if(relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
+    const shelves=next.structures.some(s=>s.shelf!==undefined)||next.packed.some(p=>p.building.shelf!==undefined);
+    if(shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
       // Only the closed MAIN context can reuse its resource facts. Keep RAW
       // and non-strict collection/getter evaluation on the historical path.
-      const owned=validation.resourceFacts&&(relationships||Object.hasOwn(next,'orbital'))
+      const owned=validation.resourceFacts&&(shelves||relationships||Object.hasOwn(next,'orbital'))
         ?captureOwnedStrictNamespace(next,validation.resourceFacts,mechanicalCorpseIds):undefined;
       let ids:NumericMembershipSink&Iterable<number>,strictIds:boolean;
       if(owned!==undefined){
@@ -1205,9 +1209,9 @@ export class SnapshotDecoder {
         const owners=[
           ...next.pawns,...next.structures,...next.jobs,...next.resources,...next.piles,...next.stockpiles,...next.growingZones,
           ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
-          ...next.packed.map(p=>p.building),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
+          ...next.packed.map(p=>p.building),...shelfIdentityOwners(next),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
         ];
-        ids=new NumericMembership();strictIds=relationships||Object.hasOwn(next,'orbital');
+        ids=new NumericMembership();strictIds=shelves||relationships||Object.hasOwn(next,'orbital');
         for(const owner of owners){if(strictIds&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
       }
       const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&(strictIds||mechanicalCorpseIds.has(Number(id))))return false;ids.add(Number(id));return true;};

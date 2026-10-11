@@ -1,3 +1,4 @@
+import { shelfAt } from './shelf-storage.ts';
 import {isMechSalvageRecipe,mechSalvageSpeed,finishMechSalvage} from './mechanoid-salvage.ts';
 import { workPriority } from './work-types.ts';
 import { isKibbleRecipe,validKibbleIngredients,kibbleOutputUnits } from './fodder-recipes.ts';
@@ -98,6 +99,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
     if(pawn.x!==task.spot.x||pawn.z!==task.spot.z){context.move(task.spot,true);return;}
     const pile=world.piles.find(p=>p.id===held.pileId)!;
     task.actionCell={...held.cell};
+    if(shelfAt(world,held.cell)){context.release();return;}
     if(!transferPile(world,pile,{type:'ground',...held.cell})){context.release();return;}
     held.pileId=groundPile(world,held.cell)!.id;held.stage='placed';pawn.path=[];pawn.planCooldown=0;pawn.state='working';return;
   }

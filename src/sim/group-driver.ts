@@ -41,7 +41,7 @@ export function processGroupOnMap(w:World,p:Pawn,ctx:NeedContext):boolean {
     const access=candidateAccess(w,p,blockedCells(w),new Set(),true),stand=captureStandability(w);
     // This is admission only. Ordinary ctx.move owns the weighted route and
     // global PATH quota; even quota0 must not hide a second weighted search.
-    const cell=nearbyGround(w,p).find(c=>groundCapacity(w,c,pile.item,p.id)>=pile.quantity
+    const cell=nearbyGround(w,p).find(c=>groundCapacity(w,c,pile,p.id)>=pile.quantity
       &&[c,...workNeighbours(c)].some(stop=>inBounds(w,stop.x,stop.z)&&stand(stop)&&access.has(stop.z*w.width+stop.x)));
     if(!cell){p.path=[];p.state='idle';return true;}
     if(contact(p,cell)){

@@ -7,6 +7,7 @@ import {planCookingOrder,queuedCookingReason} from '../src/sim/player-cooking.ts
 import {addGroundMaterial} from '../src/sim/materials.ts';
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {packagedSurvivalCamp,packagedSurvivalUnits} from './scenarios/packaged-survival-v206.ts';
+import {withoutFodderDefaults} from './scenarios/legacy-skills.ts';
 
 function until(w:World,done:()=>boolean,max=1800):void {
   for(let i=0;i<max&&!done();i++)stepWorld(w);
@@ -14,7 +15,7 @@ function until(w:World,done:()=>boolean,max=1800):void {
   expect(validateWorld(w)).toEqual([]);
 }
 function old187(w:World):World {
-  const raw=structuredClone(w);(raw as {schemaVersion:number}).schemaVersion=187;
+  const raw=withoutFodderDefaults(structuredClone(w));(raw as {schemaVersion:number}).schemaVersion=187;
   if(raw.research)delete raw.research.packagedSurvivalMeals;
   return raw;
 }

@@ -1,4 +1,6 @@
-# Validation courante — V319
+# Validation courante — V320
+
+**V320, schéma 229 : [étagères physiques](../gameplay/shelves-v320.md#contrôles-et-limites).** Contrôles ciblés acquis par reprises ; groupe de stockage, sorties, retrait, frontières et présentation. ROOT seul exécute séquentiellement, sources/tests/pilotes/harness figés. Les résultats de corpus, Chrome et build sont centralisés dans la note unique ; aucun gainFPS ni campagne naturelle entière annoncé. Les validations suivantes sont historiques.
 
 **V319, schéma 228 conservé : [infobulles et alertes](../gameplay/interface-feedback-v319.md#validation-et-portée).** Groupe29cas/4fichiers acquis par reprises, Chrome65,710s/trois parcours dont Aulnes8434 et raid à terre ; buildPages/typage12,640s. Mondes et recharges exacts, simulation/bridge et63références/66fichiers inchangés ; rouges/limites dans note unique, aucun gainFPS ou campagne naturelle certifiés. ROOT seul contrôle sur sources/tests/pilotes gelés, publication regroupée et relance **PAUSED**. Les validations suivantes sont historiques.
 

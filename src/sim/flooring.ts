@@ -3,7 +3,7 @@ import type { BlockMaterial } from './building-materials.ts';
 import { isBlockMaterial } from './building-materials.ts';
 import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
 import { addMaterial,materialCanFit,refreshStock } from './materials.ts';
-import { groundCapacity,groundPile,planGroundPlacement } from './ground-placement.ts';
+import { groundCapacity,planGroundPlacement } from './ground-placement.ts';
 import { footprintContains } from './definitions.ts';
 import { researchUnlocked } from './research.ts';
 import { removeFilth } from './filth.ts';
@@ -70,9 +70,10 @@ export function removeFloor(w:World,job:Job):boolean {
   const view={...w,jobs:w.jobs.map(j=>({...j,escrow:{...j.escrow}})),piles:w.piles.map(p=>({...p,owner:{...p.owner}}))};
   const drops=!quantity||!d.item?[]:groundCapacity(view,job,d.item)>=quantity?[{cell:{x:job.x,z:job.z},quantity}]:planGroundPlacement(view,quantity,job,d.item);
   if(!drops)return false;
-  const created=drops.filter(drop=>!groundPile(view,drop.cell)).length,lost=d.quantity-quantity,ledger=w.deconstructed;
+  for(const drop of drops)if(d.item){const owner={type:'ground' as const,...drop.cell},kind=ITEM_DEFINITIONS[d.item].kind;if(!materialCanFit(view,kind,drop.quantity,owner,d.item))return false;addMaterial(view,kind,drop.quantity,owner,d.item);}
+  const lost=d.quantity-quantity,ledger=w.deconstructed;
   const previous=d.item==='wood'?ledger.lostWood:d.item==='steel'?ledger.lostSteel??0:d.item&&isBlockMaterial(d.item)?ledger.lostBlocks?.[d.item]??0:0;
-  if(view.piles.length+created>32768||!Number.isSafeInteger(w.nextId+created)||!Number.isSafeInteger(ledger.count+1)||!Number.isSafeInteger(previous+lost))return false;
+  if(!Number.isSafeInteger(ledger.count+1)||!Number.isSafeInteger(previous+lost))return false;
   for(const drop of drops)if(d.item)addMaterial(w,ITEM_DEFINITIONS[d.item].kind,drop.quantity,{type:'ground',...drop.cell},d.item);
   w.rng=rng;delete tile.floor;ledger.count++;
   if(d.item==='wood')ledger.lostWood+=lost;else if(d.item==='steel')ledger.lostSteel=(ledger.lostSteel??0)+lost;

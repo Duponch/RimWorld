@@ -6,6 +6,16 @@ import { newBreakdownCalendar } from '../../src/sim/breakdowns.ts';
 import { PRODUCTION_RECIPES } from '../../src/sim/production-recipes.ts';
 import { adultAgeTicks } from '../../src/sim/animal-life.ts';
 import { newVisitorAgenda } from '../../src/sim/visitor-state.ts';
+/** Prepare declared pre-V316 fixtures by removing only newer default food
+ * permissions and recipe filter keys. Never erase real piles, tasks, recipes
+ * or ledgers, and never call this after injecting a future-field refusal. */
+export function withoutFodderDefaults<T>(world:T):T {
+  const w=world as {foodPolicies?:{allowed:string[]}[];structures?:{bills?:{filters:Record<string,boolean>}[]}[];packed?:{building:{bills?:{filters:Record<string,boolean>}[]}}[]};
+  for(const policy of w.foodPolicies??[])policy.allowed=policy.allowed.filter(item=>item!=='hay'&&item!=='kibble');
+  for(const building of [...w.structures??[],...(w.packed??[]).map(pack=>pack.building)])
+    for(const bill of building.bills??[]){delete bill.filters.hay;delete bill.filters.kibble;}
+  return world;
+}
 /** Fixture preparation only; never a production migration or validator. */
 export function withoutMiningSkill<T>(world:T):T {
   const w=world as any;
@@ -68,6 +78,7 @@ export function withoutFutureFineMealPolicy<T>(world:T):T {
 }
 /** Historical fixtures must not smuggle V43's new actor profile into old schemas. */
 export function withoutPawnSkills<T>(world:T):T {
+  withoutFodderDefaults(world);
   withoutFutureFineMealPolicy(world);
   for(const p of (world as {pawns:Array<{skills?:unknown}>}).pawns)delete p.skills;
   withoutArt(world);
@@ -131,6 +142,7 @@ function withoutSocial(world:unknown):void {
 
 /** Authentic pre-V73 fixture, not a production sanitizer. */
 export function withoutResearch<T>(world:T):T {
+  withoutFodderDefaults(world);
   withoutFutureFineMealPolicy(world);
   withoutHunting(world);
   withoutArt(world);

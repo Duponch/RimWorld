@@ -1,3 +1,4 @@
+import { storageCellById } from './shelf-storage.ts';
 import type { Cell, Pawn, World } from './types.ts';
 export type { AllowedArea, AllowedAreaReturn } from './types.ts';
 
@@ -55,7 +56,7 @@ export function allowedAreaWorkAllowed(world:World,pawn:Pawn):boolean {
     if(job?.clearance&&!allows(world.resources.find(r=>r.id===job.clearance!.resourceId)))return false;
     if(job?.furniture){const pack=world.packed.find(p=>p.building.id===job.furniture!.structureId);if(pack?.owner.type==='ground'&&!allows(pack.owner))return false;}}
   if(pawn.haul){const h=pawn.haul,d=h.destination;
-    const target=d.type==='aside'?d:d.type==='job'?world.jobs.find(j=>j.id===d.jobId):d.type==='stockpile'?world.stockpiles.find(s=>s.id===d.stockpileId):world.structures.find(s=>s.id===d.structureId);
+    const target=d.type==='aside'?d:d.type==='job'?world.jobs.find(j=>j.id===d.jobId):d.type==='stockpile'?storageCellById(world,d.stockpileId):world.structures.find(s=>s.id===d.structureId);
     if(!allows(target))return false;
     if(h.phase==='pickup'){
       if(h.whole){const pack=world.packed.find(p=>p.building.id===h.sourcePileId);if(pack?.owner.type==='ground'&&!allows(pack.owner))return false;}

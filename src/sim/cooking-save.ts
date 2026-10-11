@@ -1,3 +1,4 @@
+import {storageCellById,shelfAt} from './shelf-storage.ts';
 import { isCremationRecipe,cremationIngredientAllowed,validCremationIngredients } from './cremation-rules.ts';
 import { isMechSalvageRecipe } from './mechanoid-salvage.ts';
 import { isKibbleRecipe,validKibbleIngredients,kibbleOutputUnits } from './fodder-recipes.ts';
@@ -104,7 +105,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
     } else if(c.phase==='output') {
       if(isSmeltingRecipe(c.recipe)&&(!owned[0]||!validSmeltingProduct(owned[0].item,owned[0].quantity)||owned[0].weapon!==undefined||owned[0].apparel!==undefined))errors.push('Invalid smelting metal product.');
       if(c.ingredients.length||c.progress!==0||owned.length!==1||owned[0]?.id!==c.productId||!isRecipeProduct(taskRecipe(c),owned[0]!.item)||!int(owned[0]?.quantity,1,isKibbleRecipe(c.recipe)?kibbleOutputUnits(station):version>=91&&c.recipe==='butcher-creature'?75:recipe.outputUnits)||c.recipe==='stone-blocks'&&!recipe.inputs.some(i=>bill.filters[i]&&blockFor(i as StoneIngredient)===owned[0]!.item))errors.push('Invalid cooked product ownership.');
-      if(c.storageId!==null){const storage=w.stockpiles.find(s=>s.id===c.storageId),product=owned[0],quantity=c.storageQuantity??1;if(!product||(isKibbleRecipe(c.recipe)||isSmeltingRecipe(c.recipe)||isBiofuelRecipe(c.recipe)||isMechSalvageRecipe(c.recipe)||c.recipe==='stone-blocks'||c.recipe==='butcher-creature'||c.recipe==='cook-simple-meal-bulk'||c.recipe==='cook-fine-meal-bulk'||c.recipe==='cook-vegetarian-fine-meal-bulk'||c.recipe==='cook-carnivore-fine-meal-bulk'||c.recipe==='cook-lavish-meal-bulk'||c.recipe==='cook-vegetarian-lavish-meal-bulk'||c.recipe==='cook-carnivore-lavish-meal-bulk')&&c.storageQuantity===undefined||quantity>(product?.quantity??0)||!storage||storageCapacity(w,storage,product,p.id,geometry)<quantity)errors.push('Invalid cooking output reservation.');}
+      if(c.storageId!==null){const storage=storageCellById(w,c.storageId),product=owned[0],quantity=c.storageQuantity??1;if(!product||(isKibbleRecipe(c.recipe)||isSmeltingRecipe(c.recipe)||isBiofuelRecipe(c.recipe)||isMechSalvageRecipe(c.recipe)||c.recipe==='stone-blocks'||c.recipe==='butcher-creature'||c.recipe==='cook-simple-meal-bulk'||c.recipe==='cook-fine-meal-bulk'||c.recipe==='cook-vegetarian-fine-meal-bulk'||c.recipe==='cook-carnivore-fine-meal-bulk'||c.recipe==='cook-lavish-meal-bulk'||c.recipe==='cook-vegetarian-lavish-meal-bulk'||c.recipe==='cook-carnivore-lavish-meal-bulk')&&c.storageQuantity===undefined||quantity>(product?.quantity??0)||!storage||storageCapacity(w,storage,product,p.id,geometry)<quantity)errors.push('Invalid cooking output reservation.');}
     } else {
       if(isKibbleRecipe(c.recipe)&&!validKibbleIngredients(c.ingredients))errors.push('Invalid kibble ingredient quotas.');
       if(isCremationRecipe(c.recipe)&&!validCremationIngredients(c.ingredients))errors.push('Invalid whole cremation ingredient.');
@@ -160,7 +161,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
           if(pile.owner.type!=='ground'||reservedSource(w,pile.id)>pile.quantity)errors.push('Invalid ground ingredient reservation.');
           if(i.stage==='placed'&&pile.owner.type==='ground'&&(pile.owner.x!==i.cell.x||pile.owner.z!==i.cell.z))errors.push('Ingredient not placed at workstation.');
         }
-        if(!(unfinishedComponent&&placeFree(i.cell)||ingredientWithinReach(i.cell,spot,station))||c.recipe!==undefined&&c.phase!=='interrupted'&&!placeFree(i.cell))errors.push('Ingredient staging beyond work reach.');
+        if(!(unfinishedComponent&&placeFree(i.cell)||ingredientWithinReach(i.cell,spot,station))||c.phase!=='interrupted'&&(shelfAt(w,i.cell)!==undefined||c.recipe!==undefined&&!placeFree(i.cell)))errors.push('Ingredient staging beyond work reach.');
         if(i.stage!=='placed'&&c.phase!=='interrupted') {
           const key=i.cell.z*w.width+i.cell.x,prior=incoming.get(key);
           if(prior&&prior.item!==i.item)errors.push('Mixed ingredient staging reservation.');

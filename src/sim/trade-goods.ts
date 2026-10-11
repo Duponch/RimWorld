@@ -1,3 +1,4 @@
+import { storageCells } from './shelf-storage.ts';
 import { tradeImprovement } from './trade-negotiator.ts';
 export { tradeImprovement } from './trade-negotiator.ts';
 import { reservedSource } from './materials.ts';
@@ -15,7 +16,7 @@ export interface PackedTradeGood { packed:PackedFurniture; side:'buy'|'sell'; av
 
 export function tradeGoods(w:World,p:Pawn,t:Pawn):{goods:TradeGood[];artGoods:PackedTradeGood[];silver:MaterialPile[];merchantSilver:MaterialPile[]} {
   const improvement=tradeImprovement(p),goods:TradeGood[]=[],artGoods:PackedTradeGood[]=[],silver:MaterialPile[]=[],merchantSilver:MaterialPile[]=[];
-  const home=new Set(w.home??[]),zones=new Set(w.stockpiles.map(z=>z.z*w.width+z.x));
+  const home=new Set(w.home??[]),zones=new Set(storageCells(w).map(z=>z.z*w.width+z.x));
   let reach:ReturnType<typeof reachableCells>|undefined;
   for(const pile of w.piles) {
     const held=pile.owner.type==='inventory'&&pile.owner.pawnId===t.id&&!t.visitor?.personalFoodIds.includes(pile.id);

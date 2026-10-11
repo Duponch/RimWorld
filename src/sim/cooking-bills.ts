@@ -1,3 +1,4 @@
+import { storageCells,storageCellAccepts,shelfAt } from './shelf-storage.ts';
 import {isArtRecipe} from './art-rules.ts';
 import { isKibbleRecipe } from './fodder-recipes.ts';
 import { isSmeltingRecipe,validSmeltFilter } from './smelting-rules.ts';
@@ -10,7 +11,6 @@ import { BIOFUEL_INITIAL_ORGANICS,PRODUCTION_RECIPES,isBiofuelRecipe,isFlakRecip
 import { canStandAt } from './furniture-travel.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
 import { isCookingOrder } from './order-types.ts';
-import { storageAccepts } from './storage-filters.ts';
 import type { CookingBill, BillSettings } from './cooking-types.ts';
 import type {StagingGeometryReader} from './staging-validation.ts';
 import { SCHEMA_VERSION,type Cell,type Structure,type World } from './types.ts';
@@ -55,14 +55,14 @@ export function countedProducts(world:World,bill?:CookingBill):number {
   if(isArtRecipe(recipe))return world.structures.filter(s=>s.kind===recipe).length+world.packed.filter(p=>p.building.kind===recipe&&p.owner.type!=='inventory').length;
   let products=COUNTED_PRODUCTS.get(recipe);
   if(!products){products=new Set(Object.keys(ITEM_DEFINITIONS).filter(item=>recipe==='butcher-creature'?isAnimalMeat(item):isRecipeProduct(recipe,item as keyof typeof ITEM_DEFINITIONS)));COUNTED_PRODUCTS.set(recipe,products);}
-  const stored=new Map(world.stockpiles.map(z=>[z.z*world.width+z.x,z] as const));
+  const stored=new Map(storageCells(world).map(z=>[z.z*world.width+z.x,z] as const));
   const meal=isKibbleRecipe(recipe)||recipe==='cook-survival-meal'||recipe==='fine-meal'||recipe==='cook-fine-meal-bulk'||recipe==='vegetarian-fine-meal'||recipe==='cook-vegetarian-fine-meal-bulk'||recipe==='carnivore-fine-meal'||recipe==='cook-carnivore-fine-meal-bulk'||recipe==='lavish-meal'||recipe==='cook-lavish-meal-bulk'||recipe==='vegetarian-lavish-meal'||recipe==='cook-vegetarian-lavish-meal-bulk'||recipe==='cook-carnivore-lavish-meal'||recipe==='cook-carnivore-lavish-meal-bulk';
   return world.piles.reduce((n,p)=>{
     if(!products.has(p.item))return n;
     if(p.owner.type==='pawn'&&bill?.recipe!=='butcher-creature'||isFlakRecipe(recipe)&&p.owner.type==='apparel')return n+p.quantity;
     if(p.owner.type!=='ground')return n;
     const zone=stored.get(p.owner.z*world.width+p.owner.x);
-    return zone&&(!meal||storageAccepts(zone,p.item))?n+p.quantity:n;
+    return zone&&(!meal||storageCellAccepts(world,zone,p.item))?n+p.quantity:n;
   },0);
 }
 export function billWanted(world:World,bill:CookingBill):boolean {
@@ -89,6 +89,7 @@ export const ingredientWithinReach=(cell:Cell,spot:Cell,station?:Structure):bool
 /** New food benches stage on their three physical surface cells. Historical
  * stations keep their existing adjacent staging and continuation unchanged. */
 export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:ProductionRecipe,station?:Structure,geometry?:StagingGeometryReader):boolean {
+  if(shelfAt(world,cell))return false;
   if(station&&isFoodWorkstation(station.kind))return ingredientWithinReach(cell,spot,station)
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)

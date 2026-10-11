@@ -1,5 +1,5 @@
 import { planGroundPlacement } from './ground-placement.ts';
-import { addGroundMaterial } from './materials.ts';
+import { addGroundMaterial,materialIdentityCount } from './materials.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { cropProduct } from './crops.ts';
 import { FLORA_DEFINITIONS } from './biome-flora.ts';
@@ -21,7 +21,8 @@ export function gatherResource(world: World, resource: Resource, kind:'chop'|'ha
       kind==='chop'?'wood':isCrop(resource)?cropProduct(resource.kind):world.foodRules==='legacy'?'legacy-portion':'berries';
     if(!item)return null;
     const placements=planGroundPlacement(world,roll.quantity,resource,item);
-    if(!placements||world.piles.length+placements.length>32768||!Number.isSafeInteger(world.nextId+placements.length))return null;
+    const identities=placements?.reduce((n,part)=>n+materialIdentityCount(world,part.quantity,{type:'ground',...part.cell},item),0)??0;
+    if(!placements||world.piles.length+identities>32768||!Number.isSafeInteger(world.nextId+identities))return null;
     addGroundMaterial(world,ITEM_DEFINITIONS[item].kind,roll.quantity,resource,item);
   }
   if(kind==='cut'&&resource.blight)designateBlightedCrops(world,resource);

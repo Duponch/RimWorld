@@ -38,7 +38,7 @@ import type { Structure } from '../sim/types';
 import { buildJobMarkers } from './JobLayer';
 import { jobDuration } from '../sim/farming';
 import { travelHeight } from './furniture-motion';
-import { pileSurfaces } from './pile-surfaces';
+import { pileSurfaces,pileIdentitySurfaces } from './pile-surfaces';
 import { CropLayer } from './CropLayer';
 import type { ScreenPawn, SelectionGesture } from './PawnSelectionInput';
 import { FireLayer } from './FireLayer';
@@ -1070,7 +1070,7 @@ export class SceneRenderCore {
         this.boxes.set(group,`pile:${key}`,[]);this.pileChunks.set(key,{signature:'',group});
       }
     }
-    const surfaces=pileSurfaces(world);
+    const surfaces=pileSurfaces(world),identitySurfaces=pileIdentitySurfaces(world);
     const hidden=this.pawns.hiddenPileQuantities();
     const jobById = new Map(world.jobs.map(job => [job.id, job]));
     const cells = new Map<string, PileBundle>();
@@ -1082,12 +1082,13 @@ export class SceneRenderCore {
       const job = pile.owner.type === 'job' ? jobById.get(pile.owner.jobId) : undefined;
       if (pile.owner.type === 'job' && !job) continue;
       const position = pile.owner.type === 'ground' ? pile.owner : job!;
-      const key = `${position.x}:${position.z}:${pile.item}:${job ? 'job' : 'ground'}${pile.corpse?`:${pile.id}`:''}`;
+      const identitySurface=job?undefined:identitySurfaces.get(pile.id);
+      const key = `${position.x}:${position.z}:${pile.item}:${job ? 'job' : 'ground'}${pile.corpse||identitySurface?`:${pile.id}`:''}`;
       const bundle = cells.get(key);
       if (bundle) bundle.quantity += quantity;
-      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity, supplied: !!job,
+      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity, supplied: !!job,...(identitySurface?{pileId:pile.id}:{}),
         ...(pile.kind==='chunk'&&pile.owner.type==='ground'?{targetId:position.z*world.width+position.x}:{}),
-        surface:job?undefined:surfaces.get(position.z*world.width+position.x),...(pile.kind==='corpse'?{corpseStage:corpseStage(pile,world.tick),facing:pile.corpse?.facing??0,corpse:pile.corpse}:{}) });
+        surface:job?undefined:identitySurface??surfaces.get(position.z*world.width+position.x),...(pile.kind==='corpse'?{corpseStage:corpseStage(pile,world.tick),facing:pile.corpse?.facing??0,corpse:pile.corpse}:{}) });
     }
     const chunks = new Map<string, PileBundle[]>();
     for (const bundle of cells.values()) {
@@ -1099,7 +1100,7 @@ export class SceneRenderCore {
       this.boxes.set(chunk.group, `pile:${key}`, []); chunk.signature = '';
     }
     for (const [key, bundles] of chunks) {
-      const signature = bundles.map(bundle => `${bundle.x}:${bundle.z}:${bundle.item}:${bundle.quantity}:${bundle.supplied}:${bundle.corpseStage??''}:${bundle.facing??0}:${bundle.corpse?corpseVisualMask(bundle.corpse):0}:${bundle.surface?Object.values(bundle.surface).join(','):'ground'}`).join('|');
+      const signature = bundles.map(bundle => `${bundle.x}:${bundle.z}:${bundle.item}:${bundle.quantity}:${bundle.supplied}:${bundle.pileId??''}:${bundle.corpseStage??''}:${bundle.facing??0}:${bundle.corpse?corpseVisualMask(bundle.corpse):0}:${bundle.surface?Object.values(bundle.surface).join(','):'ground'}`).join('|');
       const previous = this.pileChunks.get(key);
       if (previous?.signature === signature) continue;
       const group = previous?.group ?? new THREE.Group();

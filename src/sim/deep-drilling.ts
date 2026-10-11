@@ -6,7 +6,7 @@ import { intellectualSkill } from './research.ts';
 import { learnSkill } from './skills.ts';
 import { routeToCell,type Reachability } from './pathfinding.ts';
 import { planGroundPlacement } from './ground-placement.ts';
-import { addMaterial } from './materials.ts';
+import { addMaterial,materialIdentityCount } from './materials.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { releaseWork } from './work-release.ts';
 import { interruptWork } from './interrupted-cargo.ts';
@@ -46,7 +46,8 @@ function drillTick(world:World,pawn:Pawn,s:Structure,light:number):boolean {
       const resource=nextDeepResource(world,s),item=resource?.item??deepRockItem(world,s),raw=resource?Math.min(resource.count,DEEP_RESOURCES[resource.item].portion):0;
       const exact=Math.fround(raw*draft.yieldPct),floor=Math.floor(exact),roll=deepRandom(draft),quantity=resource?Math.max(1,floor+(roll<exact-floor?1:0)):1;
       const interaction=deepWorkSpot(s),plan=planGroundPlacement(world,quantity,interaction,item,c=>(!policy||allowedAreaAllows(world,pawn,c,policy))&&(c.x!==s.x||c.z!==s.z)&&(c.x!==interaction.x||c.z!==interaction.z));
-      if(!plan||world.piles.length+plan.length>32768||!Number.isSafeInteger(world.nextId+plan.length))return false;
+      const identities=plan?.reduce((n,part)=>n+materialIdentityCount(world,part.quantity,{type:'ground',...part.cell},item),0)??0;
+      if(!plan||world.piles.length+identities>32768||!Number.isSafeInteger(world.nextId+identities))return false;
       if(resource){const live=deepResourceAt(world,resource.cell)!;live.count-=raw;
         if(!live.count)world.deepResources!.cells=world.deepResources!.cells.filter(c=>c!==live);}
       for(const part of plan)addMaterial(world,ITEM_DEFINITIONS[item].kind,part.quantity,{type:'ground',...part.cell},item);

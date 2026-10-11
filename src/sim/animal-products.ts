@@ -8,7 +8,7 @@ import { pawnBody, medicalWorkRefusal } from './health-rules.ts';
 import { healthRandom } from './health.ts';
 import { planGroundPlacement } from './ground-placement.ts';
 import { interruptWork } from './interrupted-cargo.ts';
-import { addGroundMaterial } from './materials.ts';
+import { addGroundMaterial,materialIdentityCount } from './materials.ts';
 import type { NeedContext } from './needs.ts';
 import { adjacent, routeToJob, type Reachability } from './pathfinding.ts';
 import { releaseWork } from './work-release.ts';
@@ -89,7 +89,8 @@ export function processProduct(world:World,pawn:Pawn,task:ProductTask,ctx:NeedCo
   const rate=Math.max(.1,(.04+.12*level)*body.manipulation*(.5+.5*sight));
   if(task.progress+rate<def.work){task.progress+=rate;return;}
   const plan=planGroundPlacement(world,def.quantity,pawn,def.item);
-  if(!plan||world.piles.length+plan.length>32768||!Number.isSafeInteger(world.nextId+plan.length)){
+  const identities=plan?.reduce((n,part)=>n+materialIdentityCount(world,part.quantity,{type:'ground',...part.cell},def.item),0)??0;
+  if(!plan||world.piles.length+identities>32768||!Number.isSafeInteger(world.nextId+identities)){
     task.progress=Math.max(0,def.work-rate);return;
   }
   const chance=Math.min(1,(YIELD_BY_ANIMALS_LEVEL[Math.min(20,level)]??1)*(.7+.3*body.manipulation)*(.8+.2*sight));

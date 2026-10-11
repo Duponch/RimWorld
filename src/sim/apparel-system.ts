@@ -1,3 +1,4 @@
+import { storageAt,storageCellAccepts } from './shelf-storage.ts';
 import { isColonist } from './affiliation.ts';
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { chooseApparelReplacement,type ApparelPolicyCandidate,type ApparelPolicyGarment } from './apparel-policy.ts';
@@ -5,7 +6,6 @@ import { advanceApparelWear,APPAREL_POLICY_INTERVAL } from './apparel-renewal.ts
 import { wornApparel } from './apparel-rules.ts';
 import { beginAutomaticEquipment } from './equipment.ts';
 import { reservedSource } from './materials.ts';
-import { storageAccepts } from './storage-filters.ts';
 import type { MaterialPile } from './types.ts';
 import type { Reachability } from './pathfinding.ts';
 import { routeToJob } from './pathfinding.ts';
@@ -45,7 +45,7 @@ const nextInterval=(world:World,pawn:Pawn):number=>{
   let value=(world.seed^pawn.id^world.tick)>>>0;value=Math.imul(value^value>>>16,0x45d9f3b)>>>0;
   return APPAREL_POLICY_INTERVAL.min+value%(APPAREL_POLICY_INTERVAL.max-APPAREL_POLICY_INTERVAL.min+1);
 };
-const stored=(world:World,x:number,z:number,pile:MaterialPile):boolean=>world.stockpiles.some(s=>s.x===x&&s.z===z&&storageAccepts(s,pile,world.tick));
+const stored=(world:World,x:number,z:number,pile:MaterialPile):boolean=>{const cell=storageAt(world,{x,z});return !!cell&&storageCellAccepts(world,cell,pile);};
 const busy=(pawn:Pawn):boolean=>pawn.state!=='idle'||pawn.orders.active!==null||pawn.orders.queue.length>0||pawn.jobId!==null||!!(pawn.haul||pawn.cooking||pawn.need||pawn.recreation.task||pawn.research||pawn.hunting||pawn.burial||pawn.cleaning||pawn.orbitalTrade||pawn.trade||pawn.firefighting||pawn.ward||pawn.feed||pawn.tend||pawn.rescue||pawn.equipmentTask||pawn.draft||pawn.flee||pawn.mental?.crisis);
 
 /** Attempts one physical policy action after urgent needs and remembered weapon

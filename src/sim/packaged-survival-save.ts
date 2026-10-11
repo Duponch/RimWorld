@@ -4,6 +4,7 @@ import type { CookingTask } from './cooking-types.ts';
 import { validCookingOrder } from './player-cooking-save.ts';
 import { isRecipeProduct,productionWorkTotal,stationAccepts,validSurvivalMealIngredients } from './production-recipes.ts';
 import type { Pawn,Structure,World } from './types.ts';
+import { storageCellById } from './shelf-storage.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max:number):boolean=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
@@ -32,7 +33,7 @@ function validTask(w:World,p:Pawn,c:CookingTask):boolean {
   if(!validStation(w,c))return false;
   if(c.phase==='output'){
     if(c.ingredients.length||c.progress!==0||!integer(c.productId,1,w.nextId-1)
-      ||c.storageId!==null&&(!integer(c.storageId,1,w.nextId-1)||!w.stockpiles.some(s=>s.id===c.storageId)))return false;
+      ||c.storageId!==null&&(!integer(c.storageId,1,w.nextId-1)||!storageCellById(w,c.storageId)))return false;
     const product=w.piles.find(q=>q.id===c.productId);
     return !!product&&isRecipeProduct(recipe,product.item)&&product.quantity===1&&product.owner.type==='pawn'&&product.owner.pawnId===p.id;
   }

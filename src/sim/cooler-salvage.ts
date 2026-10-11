@@ -1,6 +1,6 @@
 import { constructionRecipe } from './construction-materials.ts';
 import { groundCapacity,planGroundPlacement } from './ground-placement.ts';
-import { addMaterial } from './materials.ts';
+import { addMaterial,materialCanFit } from './materials.ts';
 import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
 import type { Structure,World } from './types.ts';
 
@@ -15,6 +15,6 @@ export function coolerSalvage(w:World,s:Structure,rng:number){
     returned.set(c.item,quantity);if(!quantity)continue;
     const placements=groundCapacity(view,s,c.item)>=quantity?[{cell:{x:s.x,z:s.z},quantity}]:planGroundPlacement(view,quantity,s,c.item);
     if(!placements||view.piles.length+placements.length>32768||!Number.isSafeInteger(view.nextId+placements.length))return null;
-    for(const d of placements){drops.push({...d,item:c.item});addMaterial(view,ITEM_DEFINITIONS[c.item].kind,d.quantity,{type:'ground',...d.cell},c.item);}
+    for(const d of placements){if(!materialCanFit(view,ITEM_DEFINITIONS[c.item].kind,d.quantity,{type:'ground',...d.cell},c.item))return null;drops.push({...d,item:c.item});addMaterial(view,ITEM_DEFINITIONS[c.item].kind,d.quantity,{type:'ground',...d.cell},c.item);}
   }return {rng,drops,returned};
 }

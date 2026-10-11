@@ -3,15 +3,12 @@ import { isKibbleRecipe } from './fodder-recipes.ts';
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { isSmeltingRecipe } from './smelting-rules.ts';
 import { isBiofuelRecipe,recipeHasProducts,taskRecipe } from './production-recipes.ts';
-import { mergeThingDamage } from './thing-damage-rules.ts';
-import { copyPileCondition,mergePileContamination } from './pile-condition.ts';
-import { mergeRot, rotAge } from './food-preservation.ts';
-import { groundCapacity, groundPile, nearbyGround, storageCapacity } from './ground-placement.ts';
+import { createGroundCapacityReader,groundCapacity, nearbyGround, storageCapacity } from './ground-placement.ts';
 import { furnitureAsideAllowed, furnitureSlot } from './furniture-haul-rules.ts';
 import { storageOccupancyAllows } from './occupancy.ts';
-import { storageAccepts } from './storage-filters.ts';
 import { storageConditionAccepts } from './storage-condition.ts';
-import { refreshStock, transferPile } from './materials.ts';
+import { depositMaterialPart } from './materials.ts';
+import { storageCells,storageCellById,storageCellAccepts } from './shelf-storage.ts';
 import { routeToJob, type Reachability } from './pathfinding.ts';
 import type { NeedContext } from './needs.ts';
 import type { Cell, MaterialPile, Pawn, Structure, World } from './types.ts';
@@ -22,15 +19,7 @@ export interface ProductionContext extends NeedContext { candidates?():Reachabil
 function finish(pawn:Pawn):void {pawn.cooking=null;if(pawn.orders.active==='cook')pawn.orders.active=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=0;}
 /** A partial output keeps the held ID; only its deposited fraction can merge. */
 function deposit(world:World,pawn:Pawn,product:MaterialPile,cell:Cell,quantity:number):boolean {
-  if(quantity<1||groundCapacity(world,cell,product.item,pawn.id)<quantity)return false;
-  if(quantity===product.quantity)return transferPile(world,product,{type:'ground',x:cell.x,z:cell.z});
-  const target=groundPile(world,cell);
-  if(target){mergePileContamination(target,quantity,product.foodPoison);mergeThingDamage(target,quantity,product.damage);mergeRot(target,quantity,rotAge(product,world.tick),world.tick);target.quantity+=quantity;}
-  else {
-    if(world.piles.length>=32768||!Number.isSafeInteger(world.nextId+1))return false;
-    world.piles.push({...product,...copyPileCondition(product),id:world.nextId++,quantity,owner:{type:'ground',x:cell.x,z:cell.z}});
-  }
-  product.quantity-=quantity;refreshStock(world);return true;
+  return depositMaterialPart(world,product,cell,quantity,pawn.id);
 }
 function depositAndContinue(world:World,pawn:Pawn,product:MaterialPile,cell:Cell,quantity:number):void {
   const complete=quantity===product.quantity;
@@ -83,21 +72,22 @@ export function processProductionOutput(world:World,pawn:Pawn,context:Production
   if(isArtRecipe(pawn.cooking?.recipe)){processArtOutput(world,pawn,context,destination);return;}
   const task=pawn.cooking!,product=world.piles.find(p=>p.id===task.productId);
   if(!product){context.release();return;}
+  const facts=world.structures.some(s=>s.shelf)?createGroundCapacityReader(world):undefined;
   if(destination==='stockpile') {
-    const target=world.stockpiles.find(s=>s.id===task.storageId),quantity=task.storageQuantity??product.quantity;
-    if(target&&allows(target)&&storageCapacity(world,target,product,pawn.id)>=quantity) {
+    const target=storageCellById(world,task.storageId!),quantity=task.storageQuantity??product.quantity;
+    if(target&&allows(target)&&storageCapacity(world,target,product,pawn.id,undefined,facts)>=quantity) {
       task.actionCell={x:target.x,z:target.z};
       if(!near(pawn,target)){context.move(target,false);return;}
       depositAndContinue(world,pawn,product,target,quantity);return;
     }
     task.storageId=null;delete task.storageQuantity;
     if(pawn.planCooldown>0)return;
-    const targets=world.stockpiles.filter(s=>allows(s)&&storageAccepts(s,product,world.tick))
+    const targets=storageCells(world).filter(s=>allows(s)&&storageCellAccepts(world,s,product))
       .sort((a,b)=>b.priority-a.priority||(pawn.x-a.x)**2+(pawn.z-a.z)**2-((pawn.x-b.x)**2+(pawn.z-b.z)**2)||a.id-b.id);
     if(targets.length) {
       const reach=context.candidates?context.candidates():context.search();if(!reach)return;
       for(const zone of targets) {
-        const capacity=storageCapacity(world,zone,product,pawn.id);if(capacity<=0)continue;
+        const capacity=storageCapacity(world,zone,product,pawn.id,undefined,facts);if(capacity<=0)continue;
         const path=routeToJob(world,zone,reach,true);if(!path)continue;
         task.storageId=zone.id;
         // A bulk meal may fill a partly free stack; its remainder stays with
@@ -107,14 +97,14 @@ export function processProductionOutput(world:World,pawn:Pawn,context:Production
       }
     }
   }
-  if(pawn.path.length&&allows(task.actionCell)&&groundCapacity(world,task.actionCell,product.item,pawn.id)>0){
+  if(pawn.path.length&&allows(task.actionCell)&&groundCapacity(world,task.actionCell,product,pawn.id,undefined,facts)>0){
     context.move(task.actionCell,false);return;
   }
   if(pawn.planCooldown>0)return;
   // Re-evaluate at an action boundary; no remote deposit across the map.
-  const targets=nearbyGround(world,pawn).filter(c=>allows(c)&&groundCapacity(world,c,product.item,pawn.id)>0);
+  const targets=nearbyGround(world,pawn).filter(c=>allows(c)&&groundCapacity(world,c,product,pawn.id,undefined,facts)>0);
   const close=targets.find(c=>near(pawn,c));
-  if(close){task.actionCell={...close};depositAndContinue(world,pawn,product,close,Math.min(product.quantity,groundCapacity(world,close,product.item,pawn.id)));return;}
+  if(close){task.actionCell={...close};depositAndContinue(world,pawn,product,close,Math.min(product.quantity,groundCapacity(world,close,product,pawn.id,undefined,facts)));return;}
   if(targets.length) {
     const reach=context.candidates?context.candidates():context.search();if(!reach)return;
     for(const target of targets){const path=routeToJob(world,target,reach,true);if(path){task.actionCell={...target};pawn.path=path;pawn.state='moving';return;}}

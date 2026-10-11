@@ -27,7 +27,7 @@ import type { PawnLayer } from './PawnLayer';
 import {animalSlaughterMarker,AnimalSlaughterMarkerStyle} from './AnimalSlaughterMarker';
 import type {SceneTextureLoader} from './scene-render-ports';
 import { growPawnBuffers } from './pawn-buffers';
-import { pileSurfaces,type PileSurface } from './pile-surfaces';
+import { pileSurfaces,pileIdentitySurfaces,type PileSurface } from './pile-surfaces';
 import { PAWN_MODEL_SCALE,WORLD_SCALE } from '../world/scale';
 
 type VisualAnimal=Pick<WildAnimal,'id'|'species'|'state'|'x'|'z'|'sex'|'ageTicks'|'motion'|'meal'|'strike'|'stun'|'threat'|'predation'|'manhunter'|'health'|'domestic'>&{corpsePile?:MaterialPile;carrierId?:number};
@@ -166,7 +166,7 @@ class SpeciesRig {
     marker.instanceCount=Math.max(1,s);this.slaughter.visible=true;
     return ()=>{g.instanceCount=n;fire.instanceCount=f;marker.instanceCount=s;this.slaughter.visible=visible;};
   }
-  update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,pileSurface:ReadonlyMap<number,PileSurface>,reset=false,pawns?:PawnLayer,quotaTargets:ReadonlySet<number>=new Set()):void {
+  update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,pileSurface:ReadonlyMap<number,PileSurface>,reset=false,pawns?:PawnLayer,quotaTargets:ReadonlySet<number>=new Set(),pileIdentities?:ReadonlyMap<number,PileSurface>):void {
     const changed=this.source!==world;
     if(reset){this.headings.clear();this.keys.clear();this.gait.clear();}
     if(changed){this.source=world;this.keys.clear();this.animals=[...(world.wildlife?.animals??[]).filter(a=>a.species===this.species).map(a=>{const carrier=world.pawns.find(p=>p.animalRescue?.phase==='carry'&&p.animalRescue.animalId===a.id);return carrier?{...a,carrierId:carrier.id}:a;}),...world.piles.flatMap(p=>p.corpse?.species===this.species&&p.owner.type!=='job'?[{id:p.corpse.animalId,species:p.corpse.species,state:'dead' as const,x:p.owner.type==='ground'?p.owner.x:0,z:p.owner.type==='ground'?p.owner.z:0,sex:p.corpse.sex,ageTicks:p.corpse.ageTicks,health:p.corpse.health,corpsePile:p,carrierId:p.owner.type==='pawn'?p.owner.pawnId:pawns?.animalCorpseTransferCarrier(p.id)}]:[])];this.surfaces=surfaces;
@@ -218,7 +218,7 @@ class SpeciesRig {
           to.setXYZW(i,sourceTo.getX(index),sourceTo.getY(index),sourceTo.getZ(index),sourceTo.getW(index));
           times.setXYZW(i,sourceTravel.getX(index),sourceTravel.getY(index),sourceTravel.getZ(index),sourceTravel.getW(index));
         }else{
-          const surface=pile.owner.type==='ground'?pileSurface.get(pile.owner.z*world.width+pile.owner.x):undefined,yaw=corpse.facing??0;
+          const surface=pile.owner.type==='ground'?pileIdentities?.get(pile.id)??pileSurface.get(pile.owner.z*world.width+pile.owner.x):undefined,yaw=corpse.facing??0;
           from.setXYZW(i,a.x+(surface?.x??0),surface?.y??0,a.z+(surface?.z??0),yaw);to.setXYZW(i,from.getX(i),from.getY(i),from.getZ(i),yaw);times.setXYZW(i,0,0,0,1);
           // A corpse keeps its biological proportions even on furniture.
         }
@@ -292,7 +292,7 @@ export class WildlifeLayer {
   private readonly surfaceTextures={soft:createAnimalCoatTexture('soft'),short:createAnimalCoatTexture('short'),shaggy:createAnimalCoatTexture('shaggy')};
   private texturesEnabled=true;
   private readonly markerStyle:AnimalSlaughterMarkerStyle;
-  private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();private pileSurface:ReadonlyMap<number,PileSurface>=new Map();private quotaTargets:ReadonlySet<number>=new Set();
+  private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();private pileSurface:ReadonlyMap<number,PileSurface>=new Map();private pileIdentities:ReadonlyMap<number,PileSurface>=new Map();private quotaTargets:ReadonlySet<number>=new Set();
   constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void,loadTexture?:SceneTextureLoader){
     this.markerStyle=new AnimalSlaughterMarkerStyle(loadTexture);
     this.rigs=ANIMAL_SPECIES_IDS.map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTextures[animalCoat(species)],this.markerStyle,configure));
@@ -303,7 +303,7 @@ export class WildlifeLayer {
   setTexturesEnabled(enabled:boolean):void {if(this.texturesEnabled===enabled)return;this.texturesEnabled=enabled;for(const rig of this.rigs)rig.setTexturesEnabled(enabled);}
   setSelected(ids:ReadonlySet<number>):void {for(const rig of this.rigs)rig.setSelected(ids);}
   forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {for(const rig of this.rigs)rig.forEachPose(visit);}
-  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void{if(this.source!==world){this.source=world;this.surfaces=furnitureSurfaces(world);this.pileSurface=pileSurfaces(world);this.quotaTargets=autoSlaughterTargets(world);}for(const rig of this.rigs)rig.update(world,timeline,this.surfaces,this.pileSurface,reset,pawns,this.quotaTargets);}
+  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void{if(this.source!==world){this.source=world;this.surfaces=furnitureSurfaces(world);this.pileSurface=pileSurfaces(world);this.pileIdentities=pileIdentitySurfaces(world);this.quotaTargets=autoSlaughterTargets(world);}for(const rig of this.rigs)rig.update(world,timeline,this.surfaces,this.pileSurface,reset,pawns,this.quotaTargets,this.pileIdentities);}
   prepare():()=>void{const restores=this.rigs.map(r=>r.prepare());return()=>{for(const restore of restores)restore();};}
   dispose():void{
     for(const r of this.rigs){

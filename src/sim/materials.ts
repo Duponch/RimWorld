@@ -2,12 +2,13 @@ import { groupReservedQuantities,groupReservedQuantity } from './group-reservati
 import { commercialReservedQuantity,commercialReservedSources } from './commercial-reservations.ts';
 import { removeIdentity } from './collection-remove.ts';
 import { pawnContentsLocation } from './human-corpses.ts';
-import { mergePileContamination } from './pile-condition.ts';
+import { copyPileCondition,mergePileContamination } from './pile-condition.ts';
 import { isColonist } from './affiliation.ts';
 import { mergeThingDamage } from './thing-damage-rules.ts';
 import { newApparelState,isApparelItem,APPAREL } from './apparel-rules.ts';
 import { apparelCompatible } from './armor.ts';
 import { groundCapacity, planGroundPlacement } from './ground-placement.ts';
+import { shelfAt } from './shelf-storage.ts';
 import { isWeaponItem, newWeaponState } from './equipment-rules.ts';
 import { freshRot, mergeRot, rotAge } from './food-preservation.ts';
 import { ITEM_DEFINITIONS, legacyItem } from './items.ts';
@@ -56,16 +57,20 @@ const sameOwner = (a: MaterialOwner, b: MaterialOwner): boolean => a.type === b.
       : a.type==='orbital-cargo'&&b.type==='orbital-cargo'?a.deliveryId===b.deliveryId
       : a.type === 'job' && b.type === 'job' && a.jobId === b.jobId);
 
-export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind)): boolean {
+/** Number of new physical identities after filling every compatible stack. */
+export function materialIdentityCount(world:World,quantity:number,owner:MaterialOwner,item:ItemId):number {
+  const limit=ITEM_DEFINITIONS[item].stackLimit;
+  let remaining=quantity;
+  for(const pile of world.piles)if(pile.item===item&&sameOwner(pile.owner,owner))remaining-=Math.max(0,limit-pile.quantity);
+  return Math.ceil(Math.max(0,remaining)/limit);
+}
+export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind),subject?:MaterialPile): boolean {
   if(!validOrbitalOwner(world,owner))return false;
   if((kind==='corpse'||kind==='mech-corpse'||kind==='weapon'||kind==='apparel')&&owner.type==='job')return false;
   if(owner.type==='apparel'&&(kind!=='apparel'||quantity!==1||!isApparelItem(item)||world.piles.some(p=>p.owner.type==='apparel'&&p.owner.pawnId===owner.pawnId&&!apparelCompatible(APPAREL[p.item as keyof typeof APPAREL].coverage,APPAREL[item].coverage))))return false;
   if(owner.type==='equipment'&&(kind!=='weapon'||quantity!==1||world.piles.some(p=>p.owner.type==='equipment'&&p.owner.pawnId===owner.pawnId)))return false;
-  if (owner.type === 'ground' && quantity > groundCapacity(world, owner, item)) return false;
-  const limit = ITEM_DEFINITIONS[item].stackLimit;
-  let remaining = quantity;
-  for (const pile of world.piles) if (pile.item === item && sameOwner(pile.owner, owner)) remaining -= limit - pile.quantity;
-  const needed = Math.ceil(Math.max(0, remaining) / limit);
+  if (owner.type === 'ground' && quantity > groundCapacity(world, owner, subject??item)) return false;
+  const needed=materialIdentityCount(world,quantity,owner,item);
   return world.piles.length + needed <= 32768 && Number.isSafeInteger(world.nextId + needed);
 }
 
@@ -99,18 +104,41 @@ export function addGroundMaterial(world: World, kind: MaterialKind, quantity: nu
   if (!Number.isSafeInteger(quantity) || quantity < 0 || quantity > MAX_STACK * 32768) throw new Error('Invalid ground quantity.');
   if (!Object.hasOwn(ITEM_DEFINITIONS,item) || ITEM_DEFINITIONS[item].kind!==kind) throw new Error('Invalid ground item.');
   const plan = planGroundPlacement(world, quantity, cell, item);
-  if (!plan || world.piles.length + plan.length > 32768 || !Number.isSafeInteger(world.nextId + plan.length)) throw new Error('No room for ground material.');
+  const needed=plan?.reduce((n,p)=>n+materialIdentityCount(world,p.quantity,{type:'ground',...p.cell},item),0)??0;
+  if (!plan || world.piles.length + needed > 32768 || !Number.isSafeInteger(world.nextId + needed)) throw new Error('No room for ground material.');
   for (const part of plan) addMaterial(world, kind, part.quantity, { type:'ground', ...part.cell }, item);
 }
 /** Move the existing stack, merging only when possible. No allocation or identity budget needed. */
 export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):boolean {
   if(!world.piles.includes(pile)||!validOrbitalOwner(world,owner))return false;
+  if(sameOwner(pile.owner,owner))return true;
   if((pile.kind==='corpse'||pile.kind==='mech-corpse')&&owner.type!=='ground'&&owner.type!=='pawn')return false;
   const carrier=pile.owner.type==='pawn'?pile.owner.pawnId:undefined;
-  if(owner.type==='ground'&&groundCapacity(world,owner,pile.item,carrier)<pile.quantity)return false;
+  if(owner.type==='ground'&&groundCapacity(world,owner,pile,carrier)<pile.quantity)return false;
+  if(owner.type==='ground'&&shelfAt(world,owner)){
+    let remaining=pile.quantity;
+    for(const target of world.piles)if(target!==pile&&target.item===pile.item&&sameOwner(target.owner,owner)){
+      const moved=Math.min(remaining,ITEM_DEFINITIONS[pile.item].stackLimit-target.quantity);if(moved<=0)continue;
+      mergePileContamination(target,moved,pile.foodPoison);mergeThingDamage(target,moved,pile.damage);mergeRot(target,moved,rotAge(pile,world.tick),world.tick);target.quantity+=moved;remaining-=moved;if(!remaining)break;
+    }
+    if(remaining){pile.quantity=remaining;pile.owner={...owner};}else removeIdentity(world.piles,pile);
+    refreshStock(world);return true;
+  }
   const target=world.piles.find(p=>p!==pile&&p.item===pile.item&&sameOwner(p.owner,owner)&&p.quantity+pile.quantity<=ITEM_DEFINITIONS[pile.item].stackLimit);
   if(target){mergePileContamination(target,pile.quantity,pile.foodPoison);mergeThingDamage(target,pile.quantity,pile.damage);mergeRot(target,pile.quantity,rotAge(pile,world.tick),world.tick);target.quantity+=pile.quantity;removeIdentity(world.piles,pile);}else pile.owner={...owner};
   refreshStock(world);return true;
+}
+/** Split only the delivered fraction. The held source identity and its states survive. */
+export function depositMaterialPart(world:World,source:MaterialPile,cell:Cell,quantity:number,exceptPawn?:number):boolean {
+  if(!world.piles.includes(source)||!Number.isSafeInteger(quantity)||quantity<1||quantity>source.quantity||groundCapacity(world,cell,source,exceptPawn)<quantity)return false;
+  if(quantity===source.quantity)return transferPile(world,source,{type:'ground',x:cell.x,z:cell.z});
+  const targets=world.piles.filter(p=>p!==source&&p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z&&p.item===source.item&&p.quantity<ITEM_DEFINITIONS[source.item].stackLimit);
+  const residual=targets.reduce((n,p)=>n+ITEM_DEFINITIONS[source.item].stackLimit-p.quantity,0),needed=Math.ceil(Math.max(0,quantity-residual)/ITEM_DEFINITIONS[source.item].stackLimit);
+  if(world.piles.length+needed>32768||!Number.isSafeInteger(world.nextId+needed))return false;
+  let remaining=quantity;
+  for(const target of targets){const moved=Math.min(remaining,ITEM_DEFINITIONS[source.item].stackLimit-target.quantity);mergePileContamination(target,moved,source.foodPoison);mergeThingDamage(target,moved,source.damage);mergeRot(target,moved,rotAge(source,world.tick),world.tick);target.quantity+=moved;remaining-=moved;if(!remaining)break;}
+  while(remaining){const moved=Math.min(remaining,ITEM_DEFINITIONS[source.item].stackLimit);world.piles.push({...source,...copyPileCondition(source),id:world.nextId++,quantity:moved,owner:{type:'ground',x:cell.x,z:cell.z}});remaining-=moved;}
+  source.quantity-=quantity;refreshStock(world);return true;
 }
 export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {
   let quantity = commercialReservedQuantity(world,pileId,exceptPawn)+groupReservedQuantity(world,pileId);

@@ -68,7 +68,7 @@ export function applyCommercialPreparation(w:World,c:PreparationCommand):Command
     if(!held.length||held.length>256||held.some(i=>!['survival-meal','silver','medicine','component','cloth','muffalo-wool'].includes(i.item)))return fail('Aucun inventaire commercial admissible à décharger.');
     if(w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return fail('Déposez d’abord la cargaison de travail.');
     const access=candidateAccess(w,p,blockedCells(w),new Set()),first=held[0]!;
-    if(!nearbyGround(w,p).some(cell=>groundCapacity(w,cell,first.item,p.id)>=first.quantity&&routeToJob(w,cell,access,true)!==null))return fail('Aucun dépôt accessible pour la première pile.');
+    if(!nearbyGround(w,p).some(cell=>groundCapacity(w,cell,first,p.id)>=first.quantity&&routeToJob(w,cell,access,true)!==null))return fail('Aucun dépôt accessible pour la première pile.');
     w.commercialTrip={phase:'unloading',pawnId:p.id,startedAt:w.tick,pendingPileIds:held.map(i=>i.id)};
     p.planCooldown=0;return {ok:true};
   }
@@ -121,7 +121,7 @@ function unload(w:World,p:Pawn,ctx:NeedContext):boolean {
   if(!s.pendingPileIds.length){cancel(w,p);return false;}
   const id=s.pendingPileIds[0],pile=w.piles.find(i=>i.id===id);
   if(!pile||pile.owner.type!=='inventory'||pile.owner.pawnId!==p.id){cancel(w,p);return false;}
-  const cells=nearbyGround(w,p),at=cells.find(c=>contact(p,c)&&groundCapacity(w,c,pile.item,p.id)>=pile.quantity);
+  const cells=nearbyGround(w,p),at=cells.find(c=>contact(p,c)&&groundCapacity(w,c,pile,p.id)>=pile.quantity);
   if(at){
     if(!transferPile(w,pile,{type:'ground',...at}))return true;
     s.pendingPileIds.shift();p.path=[];p.planCooldown=0;p.state='idle';
@@ -130,7 +130,7 @@ function unload(w:World,p:Pawn,ctx:NeedContext):boolean {
   }
   const access=candidateAccess(w,p,blockedCells(w),new Set());
   for(const cell of cells){
-    if(groundCapacity(w,cell,pile.item,p.id)<pile.quantity)continue;
+    if(groundCapacity(w,cell,pile,p.id)<pile.quantity)continue;
     const path=routeToJob(w,cell,access,true);if(path===null)continue;
     if(!p.path.length)p.path=path;ctx.move(cell,false);return true;
   }

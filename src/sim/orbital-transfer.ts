@@ -43,7 +43,7 @@ export function orbitalDeposit(w:World,deliveryId:number,origin:Cell):boolean {
   for(const item of items){let remaining=item.quantity;
     for(const cell of nearbyGround(w,origin,8)){
       if(isRoofed(w,cell.z*w.width+cell.x))continue;
-      const n=Math.min(remaining,groundCapacity(w,cell,item.item));
+      const n=Math.min(remaining,groundCapacity(w,cell,item));
       if(n&&!orbitalTake(w,item.id,n,{type:'ground',...cell}))return false;
       remaining-=n;if(!remaining)break;
     }

@@ -2,7 +2,8 @@ import { ITEM_DEFINITIONS, type ItemId } from '../sim/items';
 import {modelIconUrl} from './pictograms';
 import { QUALITY_LABELS,WEAPON_QUALITIES,type WeaponQuality } from '../sim/equipment-rules';
 import type { StorageFilters } from '../sim/types';
-import { STORAGE_FILTER_TREE,STORAGE_LEAVES,setStorageNode,storageNodeState,storageSearchNodes,storageTreePermissions,storageTreeSelection,type StorageFilterNode,type StorageLeafId } from './storage-filter-tree';
+import { STORAGE_FILTER_TREE,STORAGE_LEAVES,setStorageNode,storageNodeLeaves,storageNodeState,storageSearchNodes,storageTreePermissions,storageTreeSelection,type StorageFilterNode,type StorageLeafId } from './storage-filter-tree';
+import { setTooltip } from './tooltip';
 
 export type StorageItemSelection = Partial<Record<ItemId, boolean>>;
 const GROUP_LABELS:Readonly<Record<string,string>>={chemfuel:'Biocarburant',neutroamine:'Neutroamine',silver:'Argent',corpse:'Dépouilles','mech-corpse':'Carcasses mécaniques',wood:'Bois',food:'Nourriture',unfinished:'Ouvrages inachevés',textile:'Textiles',chunk:'Fragments',steel:'Acier',gold:'Or',plasteel:'Plastacier',component:'Composants','advanced-component':'Composants avancés',medicine:'Médicaments',weapon:'Armes',apparel:'Vêtements',blocks:'Blocs de pierre'};
@@ -171,10 +172,22 @@ export interface MountedStorageControls {
   dispose():void;
 }
 let storageControlSerial=0;
+export interface StorageControlOptions { fixedAllows?:(item:StorageLeafId)=>boolean;fixedReason?:string }
+/** Fixed exclusions only affect effective controls; copied user policy keeps
+ * its own values and never turns physical restrictions into editable flags. */
+export function storageControlNodeState(node:StorageFilterNode,selected:ReadonlySet<StorageLeafId>,options:StorageControlOptions={}):'none'|'all'|'mixed' {
+  if(!options.fixedAllows)return storageNodeState(node,selected);
+  const leaves=storageNodeLeaves(node).filter(options.fixedAllows),count=leaves.filter(id=>selected.has(id)).length;
+  return count===0?'none':count===leaves.length?'all':'mixed';
+}
+export function setStorageControlNode(node:StorageFilterNode,selected:Set<StorageLeafId>,allowed:boolean,options:StorageControlOptions={}):void {
+  if(!options.fixedAllows){setStorageNode(node,selected,allowed);return;}
+  for(const id of storageNodeLeaves(node))if(options.fixedAllows(id)){if(allowed)selected.add(id);else selected.delete(id);}
+}
 
 /** A whole policy is committed on discrete changes; search and slider previews
  * never issue commands. Mounting/showing likewise never calls onChange. */
-export function mountStorageControls(parent:HTMLElement,settings:StorageControlSettings,onChange:(settings:StorageControlSettings)=>void):MountedStorageControls {
+export function mountStorageControls(parent:HTMLElement,settings:StorageControlSettings,onChange:(settings:StorageControlSettings)=>void,options:StorageControlOptions={}):MountedStorageControls {
   const element=document.createElement('section');element.className='storage-core-controls';element.setAttribute('aria-label','Réglages du stockage');
   const prefix=`storage-controls-${++storageControlSerial}`;
   const events=new AbortController(),listen=(node:HTMLElement,event:string,callback:()=>void)=>node.addEventListener(event,callback,{signal:events.signal});
@@ -189,7 +202,7 @@ export function mountStorageControls(parent:HTMLElement,settings:StorageControlS
   const emit=()=>{if(!disposed)onChange(read());};
   for(const [text,allowed] of [['Tout effacer',false],['Tout autoriser',true]] as const){
     const button=document.createElement('button');button.type='button';button.textContent=text;button.dataset.storageAll=String(allowed);
-    listen(button,'click',()=>{for(const node of STORAGE_FILTER_TREE)setStorageNode(node,selected,allowed);refreshChecks();emit();});actions.append(button);
+    listen(button,'click',()=>{for(const node of STORAGE_FILTER_TREE)setStorageControlNode(node,selected,allowed,options);refreshChecks();emit();});actions.append(button);
   }
   const searchLabel=document.createElement('label'),search=document.createElement('input');search.type='search';search.placeholder='Rechercher un objet…';search.dataset.storageSearch='';
   searchLabel.className='storage-core-search';searchLabel.append(document.createTextNode('Rechercher'),search);element.append(searchLabel);
@@ -248,13 +261,16 @@ export function mountStorageControls(parent:HTMLElement,settings:StorageControlS
       for(const child of node.children)build(child,children,depth+1);row.append(children);
     }else {check.dataset.storageItem=node.item!;const spacer=document.createElement('span');spacer.className='storage-core-disclosure-space';line.append(spacer);if(node.item&&node.item!=='furniture'&&!['corpse','mech-corpse'].includes(ITEM_DEFINITIONS[node.item].kind)){const picture=document.createElement('img');picture.className='storage-item-model';picture.src=modelIconUrl(`item-${node.item}`);picture.alt='';picture.width=22;picture.height=22;picture.loading='lazy';label.prepend(picture);}}
     line.append(label);const entry={node,check,row,children,toggle,open:false};checks.set(node.id,entry);
-    listen(check,'change',()=>{setStorageNode(node,selected,check.checked);refreshChecks();emit();});
+    if(options.fixedAllows&&!storageNodeLeaves(node).some(options.fixedAllows)){
+      check.disabled=true;row.dataset.storageFixed='';setTooltip(label,{body:options.fixedReason??'Exclusion physique de ce stockage.'});
+    }
+    listen(check,'change',()=>{setStorageControlNode(node,selected,check.checked,options);refreshChecks();emit();});
     if(toggle)listen(toggle,'click',()=>{entry.open=!entry.open;refreshSearch();});
   }
   for(const node of STORAGE_FILTER_TREE)build(node,list,0);
   function refreshChecks():void{
     for(const {node,check} of checks.values()){
-      const state=storageNodeState(node,selected);check.checked=state==='all';check.indeterminate=state==='mixed';check.setAttribute('aria-checked',state==='mixed'?'mixed':String(state==='all'));
+      const state=storageControlNodeState(node,selected,options);check.checked=state==='all';check.indeterminate=state==='mixed';check.setAttribute('aria-checked',state==='mixed'?'mixed':String(state==='all'));
     }
   }
   function refreshSearch():void{

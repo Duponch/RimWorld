@@ -1,3 +1,4 @@
+import { storageCells,storageCellById,storageCellAccepts } from './shelf-storage.ts';
 import { deepWorkWanted,deepWorkProposal,startDeepWork } from './deep-drilling.ts';
 import { captureAllowedArea,allowedAreaAllows,allowedAreaWorkAllowed,type AllowedAreaPolicy } from './allowed-area-state.ts';
 import type { AllowedAreaRouteResult } from './allowed-area-navigation.ts';
@@ -43,9 +44,8 @@ import { turretReloadCapacity,wantsTurretReload,turretReloadPawnReason } from '.
 import { fuelCapacity, wantsFuel, fuelItem, refuelable } from './fuel.ts';
 import { mayImproveStorage } from './idle-logistics.ts';
 import { asideCapacity, findAsideDestination } from './haul-aside.ts';
-import { storageCapacity } from './ground-placement.ts';
+import { storageCapacity,createGroundCapacityReader } from './ground-placement.ts';
 import { legacyItem, type ItemId } from './items.ts';
-import { storageAccepts } from './storage-filters.ts';
 import { storageConditionKey } from './storage-condition.ts';
 import { constructionCapacity, constructionRecipe, deliveredMaterial } from './construction-materials.ts';
 import { fixBreakdownWanted } from './breakdowns.ts';
@@ -86,7 +86,7 @@ export function searchCandidates(world:World,pawn:Pawn,blocked:Uint8Array,occupi
 export function destinationCell(world: World, destination: HaulDestination): (Cell & { kind?: JobKind }) | null {
   if (destination.type === 'aside') return destination;
   if (destination.type === 'fuel'||destination.type==='turret'||destination.type==='hopper') return world.structures.find(s=>s.id===destination.structureId) ?? null;
-  return destination.type === 'job' ? world.jobs.find(job => job.id === destination.jobId) ?? null : world.stockpiles.find(zone => zone.id === destination.stockpileId) ?? null;
+  return destination.type === 'job' ? world.jobs.find(job => job.id === destination.jobId) ?? null : storageCellById(world,destination.stockpileId) ?? null;
 }
 export function destinationCapacity(world: World, destination: HaulDestination, kind: MaterialKind, exceptPawn?: number, subject: ItemId|MaterialPile = legacyItem(kind)): number {
   const item=typeof subject==='string'?subject:subject.item;
@@ -99,7 +99,7 @@ export function destinationCapacity(world: World, destination: HaulDestination, 
     const job = world.jobs.find(item => item.id === destination.jobId);
     return job ? constructionCapacity(world,job,item,exceptPawn) : 0;
   }
-  const zone = world.stockpiles.find(item => item.id === destination.stockpileId);
+  const zone = storageCellById(world,destination.stockpileId);
   return zone ? storageCapacity(world, zone, subject, exceptPawn) : 0;
 }
 export function destinationValid(world: World, pawn: Pawn): boolean {
@@ -152,7 +152,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   let canReload:boolean|undefined;
   const fires=world.structures.filter(s=>allows(s)&&(s.kind==='mini-turret'?(canReload??=!turretReloadPawnReason(pawn))&&wantsTurretReload(world,s):wantsFuel(world,s)));
   const hoppers=workPriority(pawn,'haul')>0?world.structures.filter(s=>allows(s)&&s.kind==='hopper'&&hopperFillWanted(world,s.id)):[];
-  if (!deepWorking && !handling && !leading && !gathering && !vet && !vetFeed && !animalRescuing && !cleaning && !burying && !fightingFire && !warding && !releasePatients.length && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && !patients.length && !researching && !hunting && !cooking && !fires.length && !hoppers.length && !world.jobs.length && (!world.stockpiles.length || !world.piles.length && !world.packed.length || workPriority(pawn,'haul') === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
+  if (!deepWorking && !handling && !leading && !gathering && !vet && !vetFeed && !animalRescuing && !cleaning && !burying && !fightingFire && !warding && !releasePatients.length && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && !patients.length && !researching && !hunting && !cooking && !fires.length && !hoppers.length && !world.jobs.length && (!storageCells(world).length || !world.piles.length && !world.packed.length || workPriority(pawn,'haul') === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
   if (!deepWorking && !handling && !leading && !gathering && !vet && !vetFeed && !animalRescuing && !cleaning && !burying && !fightingFire && !warding && !releasePatients.length && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && !patients.length && !researching && !hunting && !cooking && !fires.length && !hoppers.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
   const blocked = getBlocked();
   const clearingCells=new Set(world.jobs.filter(j=>j.clearance).map(j=>cellIndex(world,j.x,j.z)));
@@ -191,6 +191,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   // candidate scan before the reachability object is first consulted.
   reachable ??= searchCandidates(world, pawn, blocked, occupied, budget, true); if (!reachable) return;
   pawn.planCooldown = PLAN_INTERVAL;
+  const storage=storageCells(world),placementFacts=world.structures.some(s=>s.shelf)?createGroundCapacityReader(world):undefined;
   const delivered = new Map<string, number>(); const ground = new Map<number, number>();
   const sourceReserved = reservedSourcesByPile(world); const jobReserved = new Map<string, number>(); const zoneReserved = new Map<number, number>();
   const outbound = new Map<number, number>(); const pileById = new Map(world.piles.map(pile => [pile.id, pile]));
@@ -274,7 +275,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     if(proposal&&(!best||proposal.priority<best.priority||proposal.priority===best.priority&&best.rank>=-1))best={cooking:proposal,priority:proposal.priority,rank:-1,distance:Math.abs(pawn.x-proposal.station.x)+Math.abs(pawn.z-proposal.station.z),id:proposal.station.id,target:proposal.target};
   }
   if (Number.isFinite(constructionHaulPriority(pawn)) && pawn.hunger > 20 && (!best || best.priority >= constructionHaulPriority(pawn))) {
-    const zonesByCell = new Map(world.stockpiles.map(zone => [cellIndex(world, zone.x, zone.z), zone]));
+    const zonesByCell = new Map(storage.map(zone => [cellIndex(world, zone.x, zone.z), zone]));
     const hoppersByCell=new Map(world.structures.filter(s=>s.kind==='hopper').map(s=>[cellIndex(world,s.x,s.z),s]));
     const isPrisonFood=prisonFoodChecker(world);
     const sources = world.piles.filter(pile => automaticallyHaulable(pile) && !isPrisonFood(pile) && pile.owner.type === 'ground' && allows(pile.owner) && pile.quantity > (sourceReserved.get(pile.id) ?? 0));
@@ -287,9 +288,9 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     }
     if(workPriority(pawn,'haul')>0)for (const fire of fires) destinations.push(fire.kind==='mini-turret'?{destination:{type:'turret',structureId:fire.id},target:fire,priority:5,workPriority:workPriority(pawn,'haul'),wood:0,food:0,steel:turretReloadCapacity(world,fire.id)}:{destination:{type:'fuel',structureId:fire.id},target:fire,priority:5,workPriority:workPriority(pawn,'haul'),wood:0,food:0,items:new Map([[fuelItem(fire.kind),fuelCapacity(world,fire.id)]])});
     for(const hopper of hoppers)destinations.push({destination:{type:'hopper',structureId:hopper.id},target:hopper,priority:3,workPriority:workPriority(pawn,'haul'),wood:0,food:75});
-    if(workPriority(pawn,'haul')>0)for (const zone of world.stockpiles) {
+    if(workPriority(pawn,'haul')>0)for (const zone of storage) {
       if(!allows(zone))continue;
-      const capacity = zone.capacity - (ground.get(cellIndex(world, zone.x, zone.z)) ?? 0) - (zoneReserved.get(zone.id) ?? 0);
+      const capacity = zone.shelfId!==undefined?zone.capacity*3:zone.capacity - (ground.get(cellIndex(world, zone.x, zone.z)) ?? 0) - (zoneReserved.get(zone.id) ?? 0);
       if (capacity > 0 && (zone.filters.chemfuel || zone.filters.neutroamine || zone.filters['mech-corpse'] || zone.filters.silver || zone.filters.corpse || zone.filters.unfinished || zone.filters.textile || zone.filters.apparel || zone.filters.weapon || zone.filters.medicine || zone.filters.wood || zone.filters.food || zone.filters.chunk || zone.filters.component || zone.filters['advanced-component'] || zone.filters.steel || zone.filters.gold || zone.filters.plasteel || zone.filters.blocks)) destinations.push({ destination: { type: 'stockpile', stockpileId: zone.id }, target: zone, priority: zone.priority, workPriority:workPriority(pawn,'haul'), chemfuel:zone.filters.chemfuel?capacity:0, 'mech-corpse':zone.filters['mech-corpse']?1:0, silver:zone.filters.silver?capacity:0, corpse:zone.filters.corpse?1:0, unfinished:zone.filters.unfinished?1:0,textile:zone.filters.textile?capacity:0, apparel:zone.filters.apparel?1:0, weapon:zone.filters.weapon?1:0, medicine:zone.filters.medicine?capacity:0, neutroamine:zone.filters.neutroamine?capacity:0, wood: zone.filters.wood ? capacity : 0, food: zone.filters.food ? capacity : 0, chunk: zone.filters.chunk ? 1 : 0, component: zone.filters.component ? capacity : 0, 'advanced-component':zone.filters['advanced-component']?capacity:0, steel: zone.filters.steel ? capacity : 0, gold:zone.filters.gold?capacity:0, plasteel:zone.filters.plasteel?capacity:0, blocks:zone.filters.blocks ? capacity : 0 });
     }
     const total = sources.length * destinations.length;
@@ -307,15 +308,15 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
       if(destination.destination.type==='hopper'&&!hopperAccepts(pile.item))continue;
       if(destination.destination.type==='stockpile') {
         const zone=zonesByCell.get(cellIndex(world,destination.target.x,destination.target.z))!;
-        if(!storageAccepts(zone,pile,world.tick))continue;
+        if(!storageCellAccepts(world,zone,pile))continue;
       }
       let capacity=destination.items?.get(pile.item)??destination[pile.kind]??0;
       // A trap leaves items in place. Its replacement still requires a real
       // pickup and delivery, including salvage lying on the blueprint cell.
       if (sameCell(pile.owner, destination.target) && !(world.schemaVersion>=226 && destination.destination.type==='job' && (destination.target as Job).kind==='spike-trap')) continue;
       const sourceZone = zonesByCell.get(cellIndex(world, pile.owner.x, pile.owner.z));
-      const excess = sourceZone ? Math.max(0, (ground.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0) - sourceZone.capacity) : 0;
-      const sourceAdmits=sourceZone&&storageAccepts(sourceZone,pile,world.tick);
+      const excess = sourceZone?.shelfId===undefined&&sourceZone ? Math.max(0, (ground.get(cellIndex(world, pile.owner.x, pile.owner.z)) ?? 0) - sourceZone.capacity) : 0;
+      const sourceAdmits=sourceZone&&storageCellAccepts(world,sourceZone,pile);
       const currentPriority = Math.max(sourceAdmits&&!excess?sourceZone!.priority:0,hoppersByCell.has(cellIndex(world,pile.owner.x,pile.owner.z))&&hopperAccepts(pile.item)?3:0);
       if (destination.priority <= currentPriority) continue;
       let available = pile.quantity - (sourceReserved.get(pile.id) ?? 0);
@@ -332,7 +333,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
         const zone=zonesByCell.get(cellIndex(world,destination.target.x,destination.target.z))!;
         const key=`${destination.destination.stockpileId}:${zone.quality||zone.hitPoints||zone.allowFresh===false||zone.allowRotten===false?storageConditionKey(pile,world.tick,zone.allowFresh===false||zone.allowRotten===false):pile.item}`;
         let cached=storageCapacities.get(key);
-        if(cached===undefined){cached=storageCapacity(world,zone,pile);storageCapacities.set(key,cached);}
+        if(cached===undefined){cached=storageCapacity(world,zone,pile,undefined,undefined,placementFacts);storageCapacities.set(key,cached);}
         capacity=cached;
       }
       if(destination.destination.type==='hopper')capacity=hopperCapacity(world,destination.destination.structureId,pile.item,pawn.id);

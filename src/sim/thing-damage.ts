@@ -1,3 +1,4 @@
+import {commitShelfRemoval} from './shelf-retirement.ts';
 import {removeHydroponicPlants} from './hydroponics.ts';
 import {rebuildSpikeTrap} from './spike-trap-rebuild.ts';
 import {detachMissingFlakBills} from './flak-work.ts';
@@ -137,6 +138,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
     ||state&&(!addSafe(state.ledger.structures,1)||!addSafe(state.ledger.items.component??0,serviceLoss)))return false;
   if(state)world.fires=state;
   const waveId=detonates?world.nextId++:undefined;
+  commitShelfRemoval(world,plan.shelfRemoval);
   world.structures=world.structures.filter(b=>b!==s);world.packed=world.packed.filter(p=>p!==packed);
   for(const p of world.pawns)if(p.bombRefuge?.sourceId===s.id){
     p.bombRefuge.endCore=Math.min(p.bombRefuge.endCore,core);

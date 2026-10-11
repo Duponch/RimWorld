@@ -3,6 +3,7 @@ import type { Structure, World } from '../sim/types';
 import { buildingMaterialColor } from './building-material-color';
 import type { Placement } from './primitives';
 import { WORLD_SCALE } from '../world/scale';
+import {shelfParts} from './shelf-presentation';
 
 /**
  * Static habitat furniture for the resident furniture batch.  These are only
@@ -33,6 +34,7 @@ export function habitatParts(world: World): Placement[] {
       });
     };
     switch (kind) {
+      case 'shelf':case 'small-shelf': parts.push(...shelfParts(structure,body,trim));break;
       case 'dining-chair': {
         const seat = WORLD_SCALE.stoolHeight + 0.03;
         add(0, seat, 0, 0.62, 0.10, 0.62);
@@ -91,6 +93,7 @@ export function habitatParts(world: World): Placement[] {
 }
 
 const HABITAT_KINDS = new Set([
+  'shelf','small-shelf',
   'dining-chair', 'armchair', 'end-table', 'dresser', 'table-square', 'table-long', 'flower-pot',
 ]);
 
@@ -151,6 +154,7 @@ export function habitatPartsForStructure(structure: Structure): Placement[] {
     });
   };
   switch (kind) {
+    case 'shelf':case 'small-shelf': parts.push(...shelfParts(structure,body,trim));break;
     case 'dining-chair': {
       const seat = WORLD_SCALE.stoolHeight + 0.03;
       add(0, seat, 0, 0.62, 0.10, 0.62);

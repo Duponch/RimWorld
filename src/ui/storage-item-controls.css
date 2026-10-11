@@ -60,3 +60,16 @@
 .storage-core-disclosure{border:0;background:transparent;color:inherit;padding:0;font-size:15px!important;min-height:24px;cursor:var(--cursor-pointer,pointer)}
 .storage-core-disclosure:focus-visible{outline:2px solid var(--accent,#77a2b8)}
 .storage-core-empty{margin:0;color:var(--muted,#766a55);font-size:.85rem}
+.storage-core-tree [data-storage-fixed]>.storage-core-node label{opacity:.5;cursor:default}
+.storage-core-tree [data-storage-fixed]>.storage-core-node input{cursor:default}
+
+/* Shelf identity/actions/contents make a taller footer than a ground zone.
+ * Let the inspector scroll that natural flow instead of collapsing the tree
+ * to zero below fixed policy controls. Ground-zone layout stays unchanged. */
+#app #inspector.cell-inspector-host.stockpile-inspector-host:has([data-shelf-controls]){overflow:auto}
+#app #inspector.cell-inspector-host.stockpile-inspector-host:has([data-shelf-controls]) #cell-storage{flex:0 0 auto;overflow:visible}
+#app #inspector.cell-inspector-host.stockpile-inspector-host:has([data-shelf-controls]) #selected-stockpile-items,
+#app #inspector.cell-inspector-host.stockpile-inspector-host:has([data-shelf-controls]) .storage-core-controls{height:auto}
+#app #inspector.cell-inspector-host.stockpile-inspector-host:has([data-shelf-controls]) .storage-core-tree{flex:0 0 auto;min-height:0;max-height:clamp(160px,30dvh,320px);overflow:auto}
+[data-shelf-piles]{display:flex;flex-wrap:wrap;gap:5px}
+[data-shelf-piles]>button{flex:1 1 110px;min-width:0;white-space:normal}

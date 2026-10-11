@@ -83,8 +83,9 @@ export function advanceCorpses(w:World,layout?:ThermalLayout):void {
     if(a.state!=='dead'||!a.health?.death)continue;
     // Old saves have no thermal history: start at the first V79 observation.
     a.corpseRot=thermalAnchor(a.corpseRot??{progress:0,atTick:w.tick},w.tick,rotRateAtTemperature(view.at(w,a)));
-    if((a.motion?.end??0)>w.tick||w.piles.length>=32768||groundCapacity(w,a,animalCorpseItem(a.species))<1)continue;
-    w.piles.push(corpsePile(a,{type:'ground',x:a.x,z:a.z},a.corpseRot));
+    const pile=corpsePile(a,{type:'ground',x:a.x,z:a.z},a.corpseRot);
+    if((a.motion?.end??0)>w.tick||w.piles.length>=32768||groundCapacity(w,a,pile)<1)continue;
+    w.piles.push(pile);
     removed.add(a.id);
     releaseBodyTargets(w,a.id);
   }

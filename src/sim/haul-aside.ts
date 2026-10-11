@@ -5,6 +5,7 @@ import { cellIndex, inBounds } from './pathfinding.ts';
 import type { ItemId } from './items.ts';
 import type { Cell, HaulDestination, MaterialPile,Pawn,World } from './types.ts';
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
+import { storageAt } from './shelf-storage.ts';
 
 /** Clearing is part of the grower's work, even with ordinary hauling disabled. */
 export { haulingWork } from './work-types.ts';
@@ -14,8 +15,8 @@ export function asideCapacity(world: World, cell: Cell, subject: ItemId|Material
     || growingZoneAt(world, cellIndex(world, cell.x, cell.z))
     || resourceAt(world, cellIndex(world, cell.x, cell.z))
     || [...world.structures, ...world.jobs].some(j => footprintCells(j).some(c => same(c, cell)))) return 0;
-  const zone = world.stockpiles.find(z => same(z, cell));
-  return zone ? storageCapacity(world, zone, subject, exceptPawn) : groundCapacity(world, cell, typeof subject==='string'?subject:subject.item, exceptPawn);
+  const zone = storageAt(world,cell);
+  return zone ? storageCapacity(world, zone, subject, exceptPawn) : groundCapacity(world, cell, subject, exceptPawn);
 }
 
 /** The reachable source connects this local flood to the actor's component.

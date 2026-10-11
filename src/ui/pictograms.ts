@@ -52,4 +52,4 @@ const FODDER_MODEL_ICONS:Readonly<Record<string,string>>=Object.freeze({
   'crop-haygrass':'/assets/ui/elsewhere/v316/haygrass.svg',
   'resource-haygrass':'/assets/ui/elsewhere/v316/haygrass.svg',
 });
-export function modelIconUrl(id:string):string {const fodder=FODDER_MODEL_ICONS[id];if(fodder)return fodder;const version=id==='spike-trap'?'v315':id==='electric-crematorium'?'v314':id==='double-bed'?'v313':id==='electric-smelter'?'v311':id==='animal-sleeping-spot'?'v310':id==='dresser'||id==='sandbags'||id==='mini-turret'?'v308':'v304';return `/assets/ui/elsewhere/${version}/${encodeURIComponent(id)}.svg`;}
+export function modelIconUrl(id:string):string {const fodder=FODDER_MODEL_ICONS[id];if(fodder)return fodder;const version=id==='shelf'||id==='small-shelf'?'v320':id==='spike-trap'?'v315':id==='electric-crematorium'?'v314':id==='double-bed'?'v313':id==='electric-smelter'?'v311':id==='animal-sleeping-spot'?'v310':id==='dresser'||id==='sandbags'||id==='mini-turret'?'v308':'v304';return `/assets/ui/elsewhere/${version}/${encodeURIComponent(id)}.svg`;}

@@ -1,5 +1,15 @@
 # Guide joueur
 
+## Ranger sur des étagères — V320
+
+Après la recherche **Mobilier complexe**, ouvrez **Architecte > Meubles** et choisissez **Petite étagère** ou **Étagère**, son matériau et sa rotation. Les colons livrent les matériaux puis construisent le meuble : la petite occupe une case et accueille **trois piles**, la normale occupe deux cases et accueille **six piles**. Chaque pile garde la limite habituelle de son objet.
+
+Sélectionnez le meuble pour régler sa **Priorité**, les objets autorisés, leur qualité et leurs points de vie, ainsi que les permissions de fraîcheur. Les changements sont pris en compte après confirmation du jeu. Activez **Transport** pour qu’un colon apporte les objets vers un stockage admissible de priorité supérieure. Les exclusions physiques restent prioritaires : fragments, meubles emballés, corps humains et gros corps ne peuvent pas être rangés sur l’étagère. Une petite dépouille peut être autorisée par ses filtres ; la taille du corps dépend de son âge.
+
+**Copier les réglages** puis **Coller les réglages** fonctionne entre une zone de stockage et une étagère, ou entre deux étagères. Chaque stockage conserve ensuite ses propres réglages : les groupes liés sont absents. Le panneau indique les places occupées et propose un bouton pour chaque pile du contenu ; cliquez dessus pour inspecter cet objet précis, même si plusieurs piles partagent la case.
+
+**Désinstaller** emballe le meuble en conservant ses réglages. Ses objets restent au sol ; les piles excédentaires sont replacées à proximité. **Réinstaller** transporte et repose ce même meuble, sans transporter son contenu avec lui ni payer un nouveau meuble. Une étagère ne réfrigère pas les aliments : leur température et leur pourriture continuent de suivre les règles habituelles.
+
 **Schéma 228 conservé — V319 : [infobulles et alertes](interface-feedback-v319.md).** Les ressources affichent leur explication après1,7s de survol ; les notifications centrent leur cible et les clics suivants parcourent les personnes concernées. Le bouton i conserve les détails d’incident. Les textes sont protégés de la sélection accidentelle ; les champs restent éditables.
 
 ## Retrouver la cible d’une alerte — V319

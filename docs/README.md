@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V320 : [étagères physiques](gameplay/shelves-v320.md), schéma 229.** Stockage multi-piles, politiques propres, transports et sources communs ; [référence Core](research/shelves-core-v320.md) et [guide](gameplay/player-guide.md#ranger-sur-des-étagères--v320). Preuves, reprises, rouges et limites dans la note unique. Les états suivants sont historiques.
+
 **V318 : [régulation du troupeau](gameplay/auto-slaughter-v318.md), schéma 228.** Quotas par sexe/stade, gestantes et abattage réel ; [référence Core actuelle](research/auto-slaughter-core-v318.md). Groupe184cas/16fichiers, corpus63/66 et parcours Chrome des Aulnes acquis par reprises ; huit recharges exactes. Preuves/rouges/limites dans note unique, aucun gainFPS ni campagne entière certifiés. Les états suivants sont historiques.
 
 **V316 : [foin et croquettes](gameplay/fodder-v316.md), schéma 227.** Fourrage cultivé, deux quotas physiques et alimentation adaptée aux espèces ; [référence Core actuelle](research/fodder-core-v316.md) et [guide](gameplay/player-guide.md#cultiver-le-foin-et-fabriquer-des-croquettes--v316). Contrôles acquis par reprises, corpus historique exact et parcours Chrome des Aulnes sans dotation ; preuves, rouges et limites dans la note unique. Les états suivants sont historiques.

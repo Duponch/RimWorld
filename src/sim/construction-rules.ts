@@ -6,6 +6,7 @@ import { footprintCells, STRUCTURE_DEFINITIONS } from './definitions.ts';
 import type { Cell, HaulDestination, Job, MaterialPile, Pawn, Resource, World } from './types.ts';
 import { serviceCell } from './service-reservations.ts';
 import { spikeTrapPlacementAllowed } from './spike-trap-state.ts';
+import { isShelfKind,shelfFixedAccepts } from './shelf-storage.ts';
 
 export const isConstruction = (job: Pick<Job,'kind'>): boolean => job.kind==='install'||job.kind==='lay-floor'||job.kind in STRUCTURE_DEFINITIONS;
 export const containsCell = (job: Job, cell: Cell): boolean => footprintCells(job).some(c=>c.x===cell.x&&c.z===cell.z);
@@ -20,9 +21,10 @@ export interface ConstructionObstruction { plant?:Resource; pile?:MaterialPile; 
 /** One synchronous planner decision. Keep array ordering for multi-cell sites,
  * and discard this index before any transfer, cutting or construction occurs. */
 export function constructionObstructions(world:World):ReadonlyMap<number,ConstructionObstruction> {
-  const sites=new Map<number,number[]>(),result=new Map<number,ConstructionObstruction>(),clearItems=new Set<number>();
+  const sites=new Map<number,number[]>(),result=new Map<number,ConstructionObstruction>(),clearItems=new Set<number>(),shelves=new Set<number>();
   for(const job of world.jobs)if(isConstruction(job)) {
     result.set(job.id,{});if(clearsGroundItems(world,job.furniture?.kind??job.kind))clearItems.add(job.id);
+    if(isShelfKind(job.furniture?.kind??job.kind))shelves.add(job.id);
     for(const c of footprintCells(job)) {
       const cell=c.z*world.width+c.x,ids=sites.get(cell)??[];
       ids.push(job.id);sites.set(cell,ids);
@@ -30,14 +32,15 @@ export function constructionObstructions(world:World):ReadonlyMap<number,Constru
   }
   if(!sites.size)return result;
   for(const resource of world.resources)for(const id of sites.get(resource.z*world.width+resource.x)??[])if(!conduitKeepsPlant(world.jobs.find(j=>j.id===id)!.kind,resource.kind))result.get(id)!.plant??=resource;
-  for(const pile of world.piles)if(pile.owner.type==='ground')for(const id of sites.get(pile.owner.z*world.width+pile.owner.x)??[])if(clearItems.has(id))result.get(id)!.pile??=pile;
+  for(const pile of world.piles)if(pile.owner.type==='ground')for(const id of sites.get(pile.owner.z*world.width+pile.owner.x)??[])if(clearItems.has(id)&&(!shelves.has(id)||!shelfFixedAccepts(pile)))result.get(id)!.pile??=pile;
   for(const pack of world.packed??[])if(pack.owner.type==='ground')for(const id of sites.get(pack.owner.z*world.width+pack.owner.x)??[])if(clearItems.has(id)&&world.jobs.find(j=>j.id===id)?.furniture?.structureId!==pack.building.id)result.get(id)!.pack??=pack;
   return result;
 }
 export function constructionObstruction(world: World, job: Job):ConstructionObstruction {
   const cells=new Set(footprintCells(job).map(c=>c.z*world.width+c.x));
   const plant=world.resources.find(r=>cells.has(r.z*world.width+r.x)&&!conduitKeepsPlant(job.kind,r.kind));
-  const pile=clearsGroundItems(world,job.furniture?.kind??job.kind)?world.piles.find(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x)):undefined;
+  const kind=job.furniture?.kind??job.kind;
+  const pile=clearsGroundItems(world,kind)?world.piles.find(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x)&&(!isShelfKind(kind)||!shelfFixedAccepts(p))):undefined;
   const pack=(job.kind==='sow'||clearsGroundItems(world,job.furniture?.kind??job.kind))?world.packed?.find(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x)&&p.building.id!==job.furniture?.structureId):undefined;
   return {plant,pile,pack};
 }
@@ -48,6 +51,11 @@ export function constructionSiteFree(world: World, job: Job, workerId?: number, 
   if((job.furniture?.kind??job.kind)==='spike-trap'&&!spikeTrapPlacementAllowed(
     {...world,jobs:world.jobs.filter(j=>j!==job)},job,job.furniture?.structureId))return false;
   const cells=footprintCells(job);
+  // A shelf may retain ordinary floor items, but cannot acquire an engaged
+  // exclusive ingredient staging cell while its owner is away gathering.
+  if(isShelfKind(job.furniture?.kind??job.kind)&&world.pawns.some(p=>
+    [...(p.cooking&&p.cooking.phase!=='interrupted'?p.cooking.ingredients:[]),...(p.surgery?.ingredients??[])]
+      .some(i=>cells.some(c=>c.x===i.cell.x&&c.z===i.cell.z))))return false;
   if((job.furniture?.kind??job.kind)==='spike-trap'&&world.mechanoids?.some(a=>a.state!=='dead'&&cells.some(c=>{const m=a.motion;return a.x===c.x&&a.z===c.z||!!m&&m.end>world.tick&&c.x>=Math.min(m.from.x,m.to.x)&&c.x<=Math.max(m.from.x,m.to.x)&&c.z>=Math.min(m.from.z,m.to.z)&&c.z<=Math.max(m.from.z,m.to.z);})))return false;
   if(job.kind==='ground-scanner'&&cells.some(c=>world.roofing?.constructed.includes(c.z*world.width+c.x)))return false;
   if(world.wildlife?.animals.some(a=>cells.some(c=>{

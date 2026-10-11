@@ -3,22 +3,24 @@ import { NumericMembership } from './numeric-membership.ts';
 import type {OwnedValidationResourceReader} from './owned-validation-resources.ts';
 
 export interface ValidationIdentityMembership { has(id:number):boolean }
-type PackedIdentity={readonly building:{readonly id:number}};
+type PackedIdentity={readonly building:{readonly id:number;readonly shelf?:{readonly cells:readonly number[]}}};
 
 function captureMapIds(world:World,resources?:OwnedValidationResourceReader):ValidationIdentityMembership {
   const ids=new NumericMembership();
   if(!resources){
     // RAW reads every collection reference before iterating any collection.
     // Keep that order (including getters/throws) exactly as before.
-    for(const collection of [world.pawns,world.resources,world.structures,world.jobs,world.piles,world.stockpiles])
-      for(const owner of collection)ids.add(owner.id);
+    const collections=[world.pawns,world.resources,world.structures,world.jobs,world.piles,world.stockpiles];
+    for(const collection of collections)for(const owner of collection)ids.add(owner.id);
+    for(const building of collections[2] as World['structures'])for(const id of building.shelf?.cells??[])ids.add(id);
     return ids;
   }
   for(const owner of world.pawns)ids.add(owner.id);
   const resourceIds=resources.ids(world);
   if(!resourceIds)for(const owner of world.resources)ids.add(owner.id);
-  for(const collection of [world.structures,world.jobs,world.piles,world.stockpiles])
-    for(const owner of collection)ids.add(owner.id);
+  const collections=[world.structures,world.jobs,world.piles,world.stockpiles];
+  for(const collection of collections)for(const owner of collection)ids.add(owner.id);
+  for(const building of collections[0] as World['structures'])for(const id of building.shelf?.cells??[])ids.add(id);
   return resourceIds?{has:id=>ids.has(id)||resourceIds.has(id)}:ids;
 }
 
@@ -48,7 +50,7 @@ export class ValidationIdentityContext {
     for(const zone of world.growingZones)extraIds.add(zone.id);
     // The caller's packs include real foreign human possessions as well as
     // map packs. They are deliberately not replaced with world.packed.
-    for(const pack of packs)extraIds.add(pack.building.id);
+    for(const pack of packs){extraIds.add(pack.building.id);for(const id of pack.building.shelf?.cells??[])extraIds.add(id);}
     return {has:(id:number)=>mapIds.has(id)||extraIds.has(id)};
   }
 }

@@ -156,6 +156,7 @@ export class OrderMenu {
       for(const option of options) {
         const button=document.createElement('button');button.setAttribute('role','menuitem');button.dataset.orderJob=String(option.jobId);
         if(option.haulTarget)button.dataset.orderHaul=option.haulTarget.type;
+        if(option.haulTarget?.type==='pile')button.dataset.orderHaulPile=String(option.haulTarget.pileId);
         if(option.cookStationId!==undefined)button.dataset.orderCook=String(option.cookStationId);
         if(option.equipmentItemId!==undefined)button.dataset.orderEquipment=String(option.equipmentItemId);
         button.textContent=option.enabled?`${queue?'Mettre en file :':'Prioriser :'} ${option.label}`:`${option.label} — ${option.reason}`;
