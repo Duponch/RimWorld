@@ -38,6 +38,10 @@ Build Pages final avec typage **PASS9,694s**, `v318-build-pages-final-2026-10-11
 
 Liens affectifs, libération sauvage, nouvelles espèces, décisions fondées sur les ressources et campagne naturelle entière restent absents. Aucun gain FPS, vrai ×6 constant ou 240 FPS certifié. Publications Cloudflare regroupées ; relance planifiée **PAUSED**.
 
+Produit `0dd195a182f162d689652f8212e70b0c451b43f2` commité/poussé sur main et publié une seule fois en `be3827cf` sur [Cloudflare](https://elsewhere-cq7.pages.dev/), avec retour à l'UI antérieure et fourrage V316. Package511fichiers/113056813octets et66fichiers publics exacts, PASS1,879s ; déploiement13,609s puis94réponses HTTPS200/MIME/octets exacts en5,207s. [Package](../../tmp/elsewhere-pages/v318-package-G4019f/report.json), [HTTPS](../../tmp/elsewhere-pages/v318-http-TlDGaW/report.json) et [procédure de publication](../development/cloudflare-pages.md#publication-regroupée-v316v318-et-retour-de-lui-précédente). Le seul non-suivi `references_UI` reste exclu du commit et du package. Un contrôle réseau n'est pas un nouveau parcours de jeu en ligne ; le commit documentaire consécutif ne republie pas.
+
+Documentation de livraison **PASS0,948s**, `v318-docs-delivery-2026-10-11T14-31-31.198Z-23584` ;2719entrées finales exactes et ports des pilotes fermés. Les sessions personnelles de l'utilisateur restent intactes.
+
 ## Suite prioritaire étudiée
 
 Les barricades constructibles rendraient le couvert défensif accessible sans tissu et réutiliseraient le chantier physique. La [préparation fraîche Core](../../tmp/functional-v318-reference/next-barricades-review.md) établit une différence à traiter : elles sont aussi des clôtures pour enclos/faune, donc ne sont pas un simple modèle de sac de sable recoloré. Étagères différées : le stockage local suppose encore une pile par case, leur capacité multiple exige un chantier de propriétaires/réservations. Fermentation/bière différée : consommation et conséquences cliniques doivent former une boucle complète. Aucun code du lot suivant n'est engagé dans V318 ; les sous-métiers restent dans le backlog à la demande humaine.
