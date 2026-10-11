@@ -25,6 +25,7 @@ export class DioramaLayer {
   private readonly textured = this.materials();
   private readonly textures: THREE.Texture[] = [];
   private texturesEnabled = true;
+  private boxVisible = true;
   private disposed = false;
   private loading?: Promise<void>;
   private readonly pending = new Set<() => void>();
@@ -117,6 +118,11 @@ export class DioramaLayer {
     for (const { spec, mesh } of this.parts) mesh.material = this.material(spec);
   }
 
+  setBoxVisible(visible: boolean): void {
+    if (this.boxVisible === visible) return;
+    this.boxVisible = visible; this.viewValid = false;
+  }
+
   private material(spec: DioramaGeometryPart): THREE.MeshStandardNodeMaterial {
     return (this.texturesEnabled ? this.textured : this.plain)[spec.geometry.hasAttribute('dioramaCelestial') ? 'movingPaper' : spec.material];
   }
@@ -129,7 +135,7 @@ export class DioramaLayer {
   async prepare(): Promise<() => void> {
     if (this.texturesEnabled) await this.loadTextures();
     const visibility = this.parts.map(({ mesh }) => mesh.visible);
-    for (const { mesh } of this.parts) mesh.visible = true;
+    for (const { spec, mesh } of this.parts) mesh.visible = this.boxVisible || spec.layer === 'table';
     return () => { this.parts.forEach(({ mesh }, i) => { mesh.visible = visibility[i]!; }); this.viewValid = false; };
   }
 
@@ -157,6 +163,7 @@ export class DioramaLayer {
       : camera.coordinateSystem === THREE.WebGPUCoordinateSystem ? 0 : -1).unproject(camera);
     let occlusionReady = false, hiddenSides = 0;
     for (const { spec, mesh } of this.parts) {
+      if (!this.boxVisible && spec.layer !== 'table') { mesh.visible = false; continue; }
       // Lower cardboard is never cut away, at any zoom. Only offscreen geometry
       // is rejected; an upper side disappears only if it covers visible ground.
       const upperSide = spec.layer === 'upper' && spec.side ? SIDE_BITS[spec.side] : 0;

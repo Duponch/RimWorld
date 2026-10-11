@@ -13,6 +13,9 @@ export class CameraRig {
   readonly controls: OrbitControls;
   mode: CameraMode = 'orthographic';
   private diagonal = Math.hypot(32, 32);
+  private roomEnabled = false;
+  private viewportWidth = 1;
+  private viewportHeight = 1;
   private readonly offset = new Vector3();
 
   constructor(element: HTMLElement | null) {
@@ -68,14 +71,22 @@ export class CameraRig {
   }
 
   resize(width: number, height: number): void {
+    this.viewportWidth = width; this.viewportHeight = height;
     const aspect = Math.max(1, width) / Math.max(1, height);
     Object.assign(this.orthographic, { left: -halfHeight * aspect, right: halfHeight * aspect, top: halfHeight, bottom: -halfHeight });
     this.perspective.aspect = aspect;
-    this.controls.minZoom = Math.min(0.25, 2 * halfHeight * Math.min(1, aspect) / (this.diagonal + 2 * WORLD_SCALE.treeMaxHeight + 8));
+    const margin = this.roomEnabled ? this.diagonal * 2 : 0;
+    this.controls.minZoom = Math.min(0.25, 2 * halfHeight * Math.min(1, aspect) / (this.diagonal + margin + 2 * WORLD_SCALE.treeMaxHeight + 8));
     this.configureDistanceLimits();
-    this.orthographic.far = Math.max(300, 2 * this.diagonal + 4 * WORLD_SCALE.treeMaxHeight);
-    this.perspective.far = halfHeight / (slope * this.controls.minZoom) + this.diagonal + 2 * WORLD_SCALE.treeMaxHeight;
+    this.orthographic.far = Math.max(300, 2 * this.diagonal + margin + 4 * WORLD_SCALE.treeMaxHeight);
+    this.perspective.far = halfHeight / (slope * this.controls.minZoom) + this.diagonal + margin + 2 * WORLD_SCALE.treeMaxHeight;
     this.orthographic.updateProjectionMatrix(); this.perspective.updateProjectionMatrix();
+  }
+
+  setRoomEnabled(enabled: boolean): void {
+    if (this.roomEnabled === enabled) return;
+    this.roomEnabled = enabled;
+    this.resize(this.viewportWidth, this.viewportHeight);
   }
 
   private configureDistanceLimits(): void {

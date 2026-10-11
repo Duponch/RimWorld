@@ -45,6 +45,8 @@ import {ITEM_LABEL_VISIBILITY_KEY,itemLabelMinCellPixels,itemLabelVisibilityLabe
 import {applyUiFont,readUiFont,saveUiFont,type UiFontId} from './ui/ui-fonts';
 import {CLOUD_MASK_RADIUS_KEY,DEFAULT_CLOUD_MASK_RADIUS,cloudMaskRadius,cloudMaskRadiusLabel} from './render/cloud-mask';
 import {DIORAMA_PREFERENCE_KEY,DEFAULT_DIORAMA_ENABLED,dioramaEnabled as parseDioramaEnabled} from './render/diorama-settings';
+import {ROOM_PREFERENCE_KEY,DEFAULT_ROOM_ENABLED,roomEnabled as parseRoomEnabled} from './render/room-settings';
+import {LIGHTING_PREFERENCE_KEY,DEFAULT_LIGHTING_SETTINGS,LIGHTING_CONTROLS,parseLightingSettings,lightingPercentLabel,type LightingSettings} from './render/lighting-settings';
 import type { PawnTrack } from './bridge/motion-tracks';
 import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
 import { INFECTION_UNIT,infectionStage } from './sim/infection-rules';
@@ -396,6 +398,8 @@ let designationIconThreshold = 32;
 let itemLabelThreshold = 96;
 let groundGrassEnabled = true;
 let dioramaEnabled = DEFAULT_DIORAMA_ENABLED;
+let roomEnabled = DEFAULT_ROOM_ENABLED;
+let lightingSettings = { ...DEFAULT_LIGHTING_SETTINGS };
 let cloudClearRadius = DEFAULT_CLOUD_MASK_RADIUS;
 let uiFont = readUiFont();
 applyUiFont(uiFont);
@@ -410,6 +414,8 @@ try {
   texturesEnabled = localStorage.getItem(TEXTURE_PREFERENCE_KEY) !== 'false';
   groundGrassEnabled = localStorage.getItem(GROUND_GRASS_PREFERENCE_KEY) !== 'false';
   dioramaEnabled = parseDioramaEnabled(localStorage.getItem(DIORAMA_PREFERENCE_KEY));
+  roomEnabled = parseRoomEnabled(localStorage.getItem(ROOM_PREFERENCE_KEY));
+  lightingSettings = parseLightingSettings(localStorage.getItem(LIGHTING_PREFERENCE_KEY));
   cloudClearRadius = cloudMaskRadius(localStorage.getItem(CLOUD_MASK_RADIUS_KEY));
   soundEnabled = localStorage.getItem(SOUND_ENABLED_PREFERENCE_KEY) !== 'false';
   const storedVolume = Number(localStorage.getItem(SOUND_VOLUME_PREFERENCE_KEY));
@@ -534,6 +540,31 @@ function setDioramaEnabled(enabled: boolean): boolean {
   try { localStorage.setItem(DIORAMA_PREFERENCE_KEY, String(enabled)); return true; }
   catch { return false; }
 }
+const roomToggle = el<HTMLInputElement>('room-enabled');
+roomToggle.checked = roomEnabled;
+function setRoomEnabled(enabled: boolean): boolean {
+  roomEnabled = enabled;
+  roomToggle.checked = enabled;
+  renderer?.setRoomEnabled(enabled);
+  try { localStorage.setItem(ROOM_PREFERENCE_KEY, String(enabled)); return true; }
+  catch { return false; }
+}
+const lightingSliders = LIGHTING_CONTROLS.map(control => ({
+  key: control.key, slider: el<HTMLInputElement>(`lighting-${control.key}`), output: el(`lighting-${control.key}-value`),
+}));
+function refreshLightingControls(): void {
+  for (const { key, slider, output } of lightingSliders) {
+    slider.value = String(Math.round(lightingSettings[key] * 100));
+    output.textContent = lightingPercentLabel(lightingSettings[key]);
+  }
+}
+refreshLightingControls();
+function setLightingSettings(settings: LightingSettings): boolean {
+  lightingSettings = parseLightingSettings(settings);
+  refreshLightingControls(); renderer?.setLightingSettings(lightingSettings);
+  try { localStorage.setItem(LIGHTING_PREFERENCE_KEY, JSON.stringify(lightingSettings)); return true; }
+  catch { return false; }
+}
 let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 let pawnSignature = '';
 const colonistButtons = new Map<number, HTMLButtonElement>();
@@ -590,6 +621,10 @@ const frontMenu = createFrontMenu(frontHost, {
   onGroundGrassEnabledChange: setGroundGrassEnabled,
   getDioramaEnabled: () => dioramaEnabled,
   onDioramaEnabledChange: setDioramaEnabled,
+  getRoomEnabled: () => roomEnabled,
+  onRoomEnabledChange: setRoomEnabled,
+  getLightingSettings: () => ({ ...lightingSettings }),
+  onLightingSettingsChange: setLightingSettings,
   getSoundEnabled: () => soundEnabled,
   onSoundEnabledChange: setSoundEnabled,
   getSoundVolume: () => soundVolume,
@@ -1465,6 +1500,13 @@ fontSelect.onchange=()=>setUiFontPreference(fontSelect.value as UiFontId);
 cloudRadiusSlider.oninput=()=>{if(!setCloudClearRadius(Number(cloudRadiusSlider.value)/100))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
 groundGrassToggle.onchange = () => { if (!setGroundGrassEnabled(groundGrassToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 dioramaToggle.onchange = () => { if (!setDioramaEnabled(dioramaToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
+roomToggle.onchange = () => { if (!setRoomEnabled(roomToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
+for (const { key, slider } of lightingSliders) slider.oninput = () => {
+  if (!setLightingSettings({ ...lightingSettings, [key]: Number(slider.value) / 100 })) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true);
+};
+el<HTMLButtonElement>('lighting-reset').onclick = () => {
+  if (!setLightingSettings({ ...DEFAULT_LIGHTING_SETTINGS })) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true);
+};
 const soundToggle = el<HTMLInputElement>('sound-enabled');
 const soundVolumeSlider = el<HTMLInputElement>('sound-volume');
 soundToggle.checked = soundEnabled;
@@ -1661,6 +1703,8 @@ async function prepareWorldView(): Promise<void> {
   if (!renderer) {
     renderer = await MainColonyRenderer.create(el('viewport'), pickCell, groundGrassEnabled);
     renderer.setDioramaEnabled(dioramaEnabled);
+    renderer.setRoomEnabled(roomEnabled);
+    renderer.setLightingSettings(lightingSettings);
     renderer.onFatalError = message => { void handleGraphicsFailure(message); };
     renderer.onCompatibilityWarning = message => notify(message, true);
     renderer.setTexturesEnabled(texturesEnabled);

@@ -34,7 +34,6 @@ test.each([[32, 32], [250, 250], [48, 32]])('all four %i×%i walls keep the nort
 test.each(['temperate-forest', 'boreal-forest', 'arid-shrubland'] as const)('%s paper faces, including both celestial slides, have 2.5× physical thickness', biome => {
   const model = createDioramaGeometry(250, 250, 0, biome);
   const edge = new THREE.Color(0xc9bfa8);
-  const rod = new THREE.Color(0xb59b76);
   const observed = new Set<number>();
   let checked = 0, mismatched = 0;
   expect(DIORAMA_PAPER_THICKNESS).toBeCloseTo(.00065 * 2.5, 12);
@@ -55,9 +54,9 @@ test.each(['temperate-forest', 'boreal-forest', 'arid-shrubland'] as const)('%s 
     }
     for (let i = 0; i < position.count; i++) {
       const facing = nx * normal.getX(i) + nz * normal.getZ(i);
-      // The slide rods deliberately use thinner stock; every other planar
-      // front must pair with the same full-thickness paper back edge.
-      if (facing < .99 || matches(i, rod)) continue;
+      // Every planar paper front, including the slide rods, pairs with the
+      // same full-thickness back edge.
+      if (facing < .99) continue;
       observed.add(celestial?.getX(i) ?? 0); checked++;
       const expected = model.span * DIORAMA_PAPER_THICKNESS;
       if (!backs.get(key(i))?.some(back => Math.abs(depth(i) - back - expected) < model.span * 1e-6)) mismatched++;

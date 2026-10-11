@@ -1,4 +1,4 @@
-import { Matrix4,Vector2,Vector3,type Camera,type DirectionalLight } from 'three/webgpu';
+import { Matrix4,Vector2,Vector3,type Camera,type DirectionalLight,type SpotLight } from 'three/webgpu';
 
 /** Only a completed shadow pass may seed this cache. The caller still owns the
  * per-light autoUpdate/needsUpdate flags and invalidates on caster setters. */
@@ -22,7 +22,7 @@ export class PausedShadowCache {
 
   invalidate():void {this.ready=false;}
 
-  canReuse(paused:boolean,camera:Camera,light:DirectionalLight,tick:number,blend:number,distant:boolean,width:number,height:number):boolean {
+  canReuse(paused:boolean,camera:Camera,light:DirectionalLight|SpotLight,tick:number,blend:number,distant:boolean,width:number,height:number):boolean {
     const shadow=light.shadow;
     return paused&&this.ready&&!shadow.needsUpdate&&Number.isFinite(tick)&&Number.isFinite(blend)&&
       this.tick===tick&&this.blend===blend&&this.distant===distant&&this.width===width&&this.height===height&&
@@ -32,7 +32,7 @@ export class PausedShadowCache {
       this.lightPosition.equals(light.position)&&this.targetPosition.equals(light.target.position)&&this.mapSize.equals(shadow.mapSize);
   }
 
-  capture(completed:boolean,camera:Camera,light:DirectionalLight,tick:number,blend:number,distant:boolean,width:number,height:number):void {
+  capture(completed:boolean,camera:Camera,light:DirectionalLight|SpotLight,tick:number,blend:number,distant:boolean,width:number,height:number):void {
     if(!completed||!Number.isFinite(tick)||!Number.isFinite(blend)){this.invalidate();return;}
     const shadow=light.shadow;
     this.view.copy(camera.matrixWorld);this.projection.copy(camera.projectionMatrix);

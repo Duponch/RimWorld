@@ -1,5 +1,25 @@
 # Guide joueur
 
+## Chambre et éclairages — V324
+
+**Options → Chambre autour de la carte**, ou le même réglage dans le menu de
+partie, place la table dans une chambre. Les globes de papier suspendus suivent
+le soleil et la lune du jeu ; les nuages en coton restent attachés à leur arc.
+La chambre est floutée pour laisser la colonie nette. Le carton et la chambre
+ont deux interrupteurs indépendants ; la table reste présente avec la chambre.
+
+Les curseurs **Soleil**, **Lune** et **Ambiance** règlent chacun une intensité de
+0 à 300 %. L'ambiance rend le terrain lisible, y compris la nuit. La lumière
+solaire varie toujours avec l'heure et devient plus chaude au crépuscule.
+Les changements sont immédiats, même en pause, et fonctionnent aussi lorsque
+la chambre est désactivée. **Réinitialiser l’éclairage** remet les trois
+curseurs à 100 %. Le navigateur conserve ces préférences ; elles ne modifient
+pas les sauvegardes ou les règles de lumière de la simulation.
+
+Pour comparer le coût du décor, alternez la chambre à caméra et vitesse égales.
+Sa désactivation libère ses ressources et rétablit le ciel habituel.
+[Réalisation, mesures et limites](../development/room-diorama-v324.md).
+
 ## Voir la carte en diorama — V323
 
 Dézoomez pour voir la carte dans sa boîte en carton, posée sur une table en bois.

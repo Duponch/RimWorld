@@ -5,6 +5,7 @@ import { calendarTick } from '../sim/calendar';
 import { eclipseLightFactor } from '../sim/eclipse';
 import type { World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
+import { parseLightingSettings, type LightingSettings } from './lighting-settings';
 
 const nightTop = new Color(0x111e3a), dayTop = new Color(0x7cb6d3);
 const nightHorizon = new Color(0x465674), dayHorizon = new Color(0xd4dfd2), duskHorizon = new Color(0xeaa377);
@@ -27,7 +28,7 @@ export function applyEclipseDaylight(civilTick: number, world: DaylightWorld | u
 
 /** Intersect a horizontal map rectangle with one camera frustum plane. The
  * resulting polygon also works when a perspective view looks past the map. */
-function clippedMapPlane(frustum: Frustum, width: number, height: number, y: number): Vector3[] {
+export function clippedMapPlane(frustum: Frustum, width: number, height: number, y: number): Vector3[] {
   let polygon = [new Vector3(-.5,y,-.5),new Vector3(width-.5,y,-.5),new Vector3(width-.5,y,height-.5),new Vector3(-.5,y,height-.5)];
   for (const plane of frustum.planes) {
     const next: Vector3[] = [];
@@ -63,6 +64,8 @@ export class DayNightLayer {
   private mapWidth = 32;
   private mapHeight = 32;
   private shadowFitValid = false;
+  private externalLighting = false;
+  private lightingSettings = parseLightingSettings(null);
   // World normals of Three's background sphere are independent of camera
   // translation. The sun follows world east/west even when the player orbits.
   private readonly ray = normalWorldGeometry.normalize();
@@ -84,6 +87,26 @@ export class DayNightLayer {
 
   configureShadow(width: number, height: number): void {
     this.mapWidth=width;this.mapHeight=height;this.shadowFitValid=false;
+  }
+
+  /** The room supplies the only environmental emitters. Keep the established
+   * civil-time sample for weather, paper slides and gameplay presentation. */
+  setExternalLighting(enabled: boolean): void {
+    if (this.externalLighting === enabled) return;
+    this.externalLighting = enabled;
+    this.shadowFitValid = false;
+    if (enabled) {
+      this.scene.remove(this.light, this.light.target, this.ambient);
+      this.scene.backgroundNode = null;
+      this.scene.background = null;
+    } else {
+      this.scene.add(this.light, this.light.target, this.ambient);
+      this.scene.backgroundNode = this.sky;
+    }
+  }
+
+  setSettings(settings: LightingSettings): void {
+    this.lightingSettings = parseLightingSettings(settings);
   }
 
   /** Fit the existing 2048² map to what this camera can see. The close view
@@ -141,6 +164,7 @@ export class DayNightLayer {
     const s = world?.climate?sampleSeasonalDaylight(tick,this.sample):sampleDaylight(tick, this.sample);
     const moonStrength = 1 - s.daylight;
     const eclipse = applyEclipseDaylight(tick, world, s);
+    if (this.externalLighting) return;
     this.sunDirection.value.set(s.x, s.y, s.z);
     this.zenith.value.copy(nightTop).lerp(dayTop, s.daylight);
     this.horizon.value.copy(nightHorizon).lerp(dayHorizon, s.daylight).lerp(duskHorizon, s.warmth * 0.7);
@@ -148,11 +172,11 @@ export class DayNightLayer {
     this.moonStrength.value = moonStrength;
     this.ambient.color.copy(nightAmbient).lerp(dayAmbient, s.daylight).lerp(duskAmbient, s.warmth * 0.25);
     this.ambient.groundColor.copy(nightGround).lerp(dayGround, s.daylight);
-    this.ambient.intensity = 1.05 + 1.05 * s.daylight;
+    this.ambient.intensity = (1.05 + 1.05 * s.daylight) * this.lightingSettings.ambient;
     const isSun = s.y >= 0;
     this.light.color.copy(isSun ? sunColor : moonColor);
     if (isSun) this.light.color.lerp(sunsetColor, s.warmth);
-    this.light.intensity = isSun ? 3.2 * s.sunlight : s.moonlight;
+    this.light.intensity = isSun ? 3.2 * s.sunlight * this.lightingSettings.sun : s.moonlight * this.lightingSettings.moon;
     // The light reaches zero before changing hemispheres; it never shines
     // through the ground. Both paths use the same bounded shadow atlas.
     const direction = isSun ? 1 : -1;

@@ -12,6 +12,7 @@ export interface SceneCameraPort {
   readonly span:number;
   readonly mode:CameraMode;
   setMode(mode:CameraMode):void;
+  setRoomEnabled?(enabled:boolean):void;
   configureMap(width:number,height:number,landing?:{x:number;z:number}):void;
   resize(width:number,height:number):void;
   pixelsPerCell(height:number):number;

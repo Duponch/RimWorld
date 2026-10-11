@@ -1,5 +1,7 @@
 import { AllowedAreaLayer } from './AllowedAreaLayer';
 import { DioramaLayer } from './DioramaLayer';
+import { RoomLayer } from './RoomLayer';
+import { parseLightingSettings, type LightingSettings } from './lighting-settings';
 import { DeepResourceLayer } from './DeepResourceLayer';
 import { AreaPreviewLayer } from './AreaPreviewLayer';
 import {OrderTargetIndex} from './order-target-index';
@@ -118,6 +120,9 @@ function isNaturalSceneWorld(value:World|{changed:boolean}):value is World {
 export class SceneRenderCore {
   protected diorama: DioramaLayer | null = null;
   protected dioramaEnabled = true;
+  protected room: RoomLayer | null = null;
+  protected roomEnabled = true;
+  private lightingSettings = parseLightingSettings(null);
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
   protected readonly frames = new FrameMetrics();
   protected viewportWidth=1;
@@ -457,7 +462,7 @@ export class SceneRenderCore {
     const resourceFrame = this.immutableWorlds.has(world) ? this.sceneResources.adopt(world,resetPoses) : undefined;
     if(!resourceFrame)this.sceneResources.clear();
     this.world = world;
-    if (this.dioramaEnabled && newMap) this.configureDiorama();
+    if (newMap) { this.configureDiorama(); this.configureRoom(); }
     this.updateDeepResources();
     this.grass?.update(world,newMap,immutableTileChanges,resourceFrame);
     this.fires.adopt(world,newMap);this.wind.adopt(world,newMap);
@@ -608,7 +613,7 @@ export class SceneRenderCore {
 
   protected invalidatePausedShadow():void {
     this.pausedShadow.invalidate();
-    const shadow=this.daylight.light.shadow;
+    const shadow=(this.room?.lighting.shadowLight ?? this.daylight.light).shadow;
     shadow.autoUpdate=true;
     shadow.needsUpdate=true;
   }
@@ -621,7 +626,8 @@ export class SceneRenderCore {
     if(this.texturesEnabled===enabled)return;
     this.invalidatePausedShadow();
     this.texturesEnabled=enabled;
-    if (this.dioramaEnabled) this.diorama?.setTexturesEnabled(enabled);
+    if (this.dioramaEnabled || this.roomEnabled) this.diorama?.setTexturesEnabled(enabled);
+    this.room?.setTexturesEnabled(enabled);
     if(enabled&&this.world)this.refreshTerrainPaint(this.world);
     if(!enabled)this.releaseTerrainPaint();
     if(!enabled&&this.world&&this.terrainGeometryDirty){
@@ -716,17 +722,51 @@ export class SceneRenderCore {
   setDioramaEnabled(enabled: boolean): void {
     if (this.disposed || this.dioramaEnabled === enabled) return;
     this.dioramaEnabled = enabled;
-    if (!enabled) { this.diorama?.group.removeFromParent(); return; }
+    if (!enabled && !this.roomEnabled) { this.diorama?.group.removeFromParent(); return; }
     this.configureDiorama();
   }
 
+  /** The disabled branch owns no room scene, lights, render target or update work. */
+  setRoomEnabled(enabled: boolean): void {
+    if (this.disposed || this.roomEnabled === enabled) return;
+    this.roomEnabled = enabled;
+    // Retained WebGPU commands own their compiled light/shadow nodes. Rebuild
+    // them when the emitter set changes, before replay can reach a freed atlas.
+    this.landscape.needsUpdate = true;
+    if (!enabled) {
+      this.room?.dispose(); this.room = null;
+      this.daylight.setExternalLighting(false);
+      if (!this.dioramaEnabled) { this.diorama?.dispose(); this.diorama = null; }
+    } else { this.configureDiorama(); this.configureRoom(); }
+    this.rig.setRoomEnabled?.(enabled);
+    this.invalidatePausedShadow();
+  }
+
+  setLightingSettings(settings: LightingSettings): void {
+    this.lightingSettings = parseLightingSettings(settings);
+    this.daylight.setSettings(this.lightingSettings);
+    this.room?.setSettings(this.lightingSettings);
+    this.invalidatePausedShadow();
+  }
+
+  private configureRoom(): void {
+    if (!this.roomEnabled || !this.world) return;
+    this.room ??= new RoomLayer(this.scene);
+    this.room.configure(this.world.width, this.world.height, this.world.seed);
+    this.room.setSettings(this.lightingSettings);
+    this.room.setTexturesEnabled(this.texturesEnabled);
+    this.daylight.setExternalLighting(true);
+    this.rig.setRoomEnabled?.(true);
+  }
+
   private configureDiorama(): void {
-    if (!this.dioramaEnabled || !this.world) return;
+    if ((!this.dioramaEnabled && !this.roomEnabled) || !this.world) return;
     this.diorama ??= new DioramaLayer(this.hostPort.loadTexture);
     this.diorama.configure(this.world.width, this.world.height, this.texturesEnabled,
       this.world.seed, this.world.site?.biome ?? 'temperate-forest');
     this.scene.add(this.diorama.group);
-    this.diorama.presentSky(this.daylight.sample.y);
+    this.diorama.setBoxVisible(this.dioramaEnabled);
+    if (this.dioramaEnabled) this.diorama.presentSky(this.daylight.sample.y);
     this.diorama.present(this.camera, this.controls.target, this.rig.span);
   }
   setZonesVisible(visible:boolean):void {
@@ -785,7 +825,7 @@ export class SceneRenderCore {
 
   protected async preparePresentationResources(): Promise<void> {
     this.preparing = true;
-    const restoreDiorama = this.dioramaEnabled ? await this.diorama?.prepare() : undefined;
+    const restoreDiorama = this.dioramaEnabled || this.roomEnabled ? await this.diorama?.prepare() : undefined;
     this.invalidatePausedShadow();
     const culling = new Map<THREE.Object3D, boolean>();
     const distant = this.overview.group.visible;
@@ -829,7 +869,12 @@ export class SceneRenderCore {
       this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
       this.daylight.update(this.world ? calendarTick(this.world) : 0, this.controls.target,this.world??undefined);
       if (this.dioramaEnabled) this.diorama?.presentSky(this.daylight.sample.y);
-      this.daylight.fitShadow(this.camera);
+      if (this.room) this.room.present(this.daylight.sample, this.camera);
+      else this.daylight.fitShadow(this.camera);
+      if (this.room) {
+        await this.room.prepare(this.renderer, this.rig.orthographic);
+        await this.room.prepare(this.renderer, this.rig.perspective);
+      }
       await this.renderer.compileAsync(this.scene, this.rig.orthographic);
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
       this.landscape.needsUpdate=true;
@@ -1202,7 +1247,8 @@ export class SceneRenderCore {
     if(this.world)this.precipitation.present({seed:this.world.seed,tick:skyTick,rainRate:weatherRainRate(this.world),
       snowRate:weatherSnowRate(this.world),camera:this.camera,target:this.controls.target,
       strength:visualWindStrength,directionX:visualWind.x,directionZ:visualWind.z,daylight:this.daylight.sample.daylight});
-    this.daylight.fitShadow(this.camera);
+    if (this.room) this.room.present(this.daylight.sample, this.camera);
+    else this.daylight.fitShadow(this.camera);
     const cellPixels=this.rig.pixelsPerCell(this.viewportHeight);
     this.actionFeedback.setBarsDetailVisible(cellPixels>=18);
     this.actionVfx.setDetailVisible(cellPixels>=18);
@@ -1221,16 +1267,23 @@ export class SceneRenderCore {
       else{this.grass.mesh.visible=false;this.grass.mesh.geometry.instanceCount=0;}
     }
     this.landscape.setRetained(this.backend==='WebGPU'&&distant);
-    if (this.dioramaEnabled) this.diorama?.present(this.camera, this.controls.target, this.rig.span);
-    const shadow=this.daylight.light.shadow,received=this.received;
+    if (this.dioramaEnabled || this.roomEnabled) this.diorama?.present(this.camera, this.controls.target, this.rig.span);
+    const shadowLight=this.room?.lighting.shadowLight ?? this.daylight.light;
+    const shadow=shadowLight.shadow,received=this.received;
     const cacheEligible=this.backend==='WebGPU'&&!!this.world;
     const paused=received?.speed===0&&(!this.hasTracks||this.timeline.tick>=received.world.tick)&&!this.hostPort.hidden();
-    const reuseShadow=cacheEligible&&this.pausedShadow.canReuse(paused,this.camera,this.daylight.light,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
+    const reuseShadow=cacheEligible&&this.pausedShadow.canReuse(paused,this.camera,shadowLight,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
     if(cacheEligible){shadow.autoUpdate=!reuseShadow;if(!reuseShadow)shadow.needsUpdate=true;}
     else shadow.autoUpdate=true;
     this.renderer.info.reset();
-    this.renderer.render(this.scene, this.camera);
-    if(cacheEligible&&!reuseShadow)this.pausedShadow.capture(!shadow.needsUpdate,this.camera,this.daylight.light,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
+    if (this.room) {
+      this.room.renderBackground(this.renderer, this.camera, this.controls.target);
+      const autoClear = this.renderer.autoClear;
+      this.renderer.autoClear = false;
+      try { this.renderer.render(this.scene, this.camera); }
+      finally { this.renderer.autoClear = autoClear; }
+    } else this.renderer.render(this.scene, this.camera);
+    if(cacheEligible&&!reuseShadow)this.pausedShadow.capture(!shadow.needsUpdate,this.camera,shadowLight,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
     this.hostPort.drawLabels(this.world, this.camera, cellPixels, this.viewportWidth, this.viewportHeight);
     this.stats.drawCalls = this.renderer.info.render.drawCalls;
     this.stats.triangles = this.renderer.info.render.triangles;
@@ -1419,6 +1472,7 @@ export class SceneRenderCore {
   dispose(): void {
     if (this.disposed) return;
     this.diorama?.dispose(); this.diorama = null;
+    this.room?.dispose(); this.room = null;
     this.hostPort.disposeSelection();
     if (this.hostPort.selectionReady() && this.rig && this.hover) this.cancelDesignation();
     this.areaPreview.dispose();

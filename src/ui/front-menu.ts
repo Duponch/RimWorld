@@ -4,6 +4,7 @@ import {designationMinCellPixels,designationVisibilityLabel} from './designation
 import {itemLabelMinCellPixels,itemLabelVisibilityLabel} from './item-label-visibility';
 import {UI_FONT_CHOICES,DEFAULT_UI_FONT,type UiFontId} from './ui-fonts';
 import {cloudMaskRadius,cloudMaskRadiusLabel} from '../render/cloud-mask';
+import {DEFAULT_LIGHTING_SETTINGS,LIGHTING_CONTROLS,parseLightingSettings,lightingPercentLabel,type LightingSettings} from '../render/lighting-settings';
 import {UI_ATLAS_URL} from './pictograms';
 import { createSiteConfiguration, parseSiteSeed, randomSiteSeed } from './front-site';
 import { testColonyUrl, type TestColony } from './test-colonies';
@@ -40,6 +41,10 @@ export interface FrontMenuOptions {
   onGroundGrassEnabledChange: (enabled: boolean) => boolean;
   getDioramaEnabled: () => boolean;
   onDioramaEnabledChange: (enabled: boolean) => boolean;
+  getRoomEnabled: () => boolean;
+  onRoomEnabledChange: (enabled: boolean) => boolean;
+  getLightingSettings: () => LightingSettings;
+  onLightingSettingsChange: (settings: LightingSettings) => boolean;
   getSoundEnabled: () => boolean;
   onSoundEnabledChange: (enabled: boolean) => boolean;
   getSoundVolume: () => number;
@@ -320,6 +325,57 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     dioramaText.append(dioramaLabel, dioramaDescription);
     dioramaSetting.append(dioramaCheckbox, dioramaText);
     card.append(dioramaSetting);
+    const roomSetting = element('label', 'front-relief front-texture-setting');
+    const roomCheckbox = element('input');
+    roomCheckbox.id = 'front-room-enabled';
+    roomCheckbox.type = 'checkbox';
+    roomCheckbox.checked = options.getRoomEnabled();
+    roomCheckbox.setAttribute('aria-labelledby', 'front-room-label');
+    roomCheckbox.setAttribute('aria-describedby', 'front-room-description');
+    roomCheckbox.addEventListener('change', () => {
+      clearError();
+      if (!options.onRoomEnabledChange(roomCheckbox.checked)) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+    });
+    const roomText = element('span');
+    const roomLabel = element('strong', '', 'Chambre autour de la carte');
+    roomLabel.id = 'front-room-label';
+    const roomDescription = element('span', '', 'Décor de chambre autour de la carte, indépendant du diorama. Choix conservé dans ce navigateur.');
+    roomDescription.id = 'front-room-description';
+    roomText.append(roomLabel, roomDescription);
+    roomSetting.append(roomCheckbox, roomText);
+    card.append(roomSetting);
+    const lightingSliders: { key: keyof LightingSettings; slider: HTMLInputElement; output: HTMLOutputElement }[] = [];
+    const refreshLighting = () => {
+      const settings = parseLightingSettings(options.getLightingSettings());
+      for (const { key, slider, output } of lightingSliders) {
+        slider.value = String(Math.round(settings[key] * 100)); output.textContent = lightingPercentLabel(settings[key]);
+      }
+    };
+    for (const { key, label, description } of LIGHTING_CONTROLS) {
+      const setting = element('label', 'front-relief front-texture-setting front-volume-setting'), text = element('span');
+      const title = element('strong', '', label); title.id = `front-lighting-${key}-label`;
+      const detail = element('span', '', description); detail.id = `front-lighting-${key}-description`;
+      const output = element('output'); output.id = `front-lighting-${key}-value`;
+      const slider = element('input'); slider.id = `front-lighting-${key}`; slider.type = 'range';
+      slider.min = '0'; slider.max = '300'; slider.step = '5';
+      slider.setAttribute('aria-labelledby', title.id); slider.setAttribute('aria-describedby', `${detail.id} ${output.id}`);
+      lightingSliders.push({ key, slider, output });
+      slider.addEventListener('input', () => {
+        clearError();
+        const stored = options.onLightingSettingsChange({ ...options.getLightingSettings(), [key]: Number(slider.value) / 100 });
+        refreshLighting();
+        if (!stored) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+      });
+      text.append(title, detail, output); setting.append(text, slider); card.append(setting);
+    }
+    refreshLighting();
+    const resetLighting = element('button', 'front-secondary', 'Réinitialiser l’éclairage');
+    resetLighting.id = 'front-lighting-reset'; resetLighting.type = 'button';
+    resetLighting.addEventListener('click', () => {
+      clearError(); const stored = options.onLightingSettingsChange({ ...DEFAULT_LIGHTING_SETTINGS }); refreshLighting();
+      if (!stored) showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');
+    });
+    card.append(resetLighting);
     const iconSetting=element('label','front-relief front-texture-setting front-volume-setting');
     const iconText=element('span');
     const iconLabel=element('strong','','Icônes des ordres');iconLabel.id='front-designation-label';

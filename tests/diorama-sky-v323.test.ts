@@ -154,7 +154,7 @@ test('actual celestial solids fit behind the safe camera half-space and all down
         const part = model.parts.find(part => part.geometry.hasAttribute('dioramaCelestial'))!;
         const positions = part.geometry.getAttribute('position'), kinds = part.geometry.getAttribute('dioramaCelestial');
         const motion = new DioramaSkyMotion(), box = part.geometry.boundingBox!;
-        const maxFrontZ = -.5 - span * (.0126 - .002275);
+        const maxFrontZ = -.5 - span * (.0126 - .003425);
         let count = 0, actualMaxZ = -Infinity;
         for (let i = 0; i < kinds.count; i++) if (kinds.getX(i) !== 0) {
           count++; actualMaxZ = Math.max(actualMaxZ, positions.getZ(i));

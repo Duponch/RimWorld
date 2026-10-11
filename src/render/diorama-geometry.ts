@@ -276,10 +276,10 @@ export function createDioramaGeometry(width: number, height: number, seed = 0, b
         prism(upperPaper, points, span * back, span * front, color, 0xc9bfa8, false);
       for (const kind of [1, -1] as const) {
         upperPaper.celestial = kind;
-        const stem = span * .0022, foot = span * -.044;
+        const stem = span * .0035, foot = span * -.044;
         moving([[u - stem, foot], [u + stem, foot], [u + stem * .93, y + span * .01],
           [u + stem * .60, y + span * .012], [u - stem * .58, y + span * .012],
-          [u - stem * .91, y + span * .01]], 0xb59b76, .00005, .00060);
+          [u - stem * .91, y + span * .01]], 0xb59b76, .00005, .00005 + DIORAMA_PAPER_THICKNESS);
         const radius = span * (kind === 1 ? DIORAMA_SKY.sunRadius : DIORAMA_SKY.moonRadius);
         const disc: OutlinePoint[] = [];
         if (kind === 1) {
@@ -287,26 +287,31 @@ export function createDioramaGeometry(width: number, height: number, seed = 0, b
             const angle = i / 32 * Math.PI * 2, irregular = 1 + Math.sin(i * 1.7) * .013;
             disc.push([u + Math.cos(angle) * radius * irregular, y + Math.sin(angle) * radius * irregular]);
           }
-          moving(disc, 0xc49652, .00065, .00065 + DIORAMA_PAPER_THICKNESS);
+          moving(disc, 0xc49652, .0018, .0018 + DIORAMA_PAPER_THICKNESS);
           for (let i = 0; i < 9; i++) {
             const angle = i * Math.PI * 2 / 9, x = Math.cos(angle), v = Math.sin(angle);
             const r0 = radius * 1.36, r1 = radius * 1.75, half = span * .0008;
             moving([[u + x * r0 - v * half, y + v * r0 + x * half], [u + x * r1 - v * half, y + v * r1 + x * half],
               [u + x * r1 + v * half, y + v * r1 - x * half], [u + x * r0 + v * half, y + v * r0 - x * half]],
-              0xb78d50, .00065, .00065 + DIORAMA_PAPER_THICKNESS);
+              0xb78d50, .0018, .0018 + DIORAMA_PAPER_THICKNESS);
           }
         } else {
-          // A true crescent cutout, not a coloured overlay on a full circle.
+          // A true crescent with a hand-cut rim and unequal tips. The inner
+          // contour rejoins the exact outer endpoints, keeping a closed solid.
           for (let i = 0; i <= 24; i++) {
             const angle = Math.PI * (.29 + i / 24 * 1.42);
-            disc.push([u + Math.cos(angle) * radius, y + Math.sin(angle) * radius]);
+            const irregular = 1 + .019 * Math.sin(i * 1.71 + .4) + .009 * Math.sin(i * .63 + .8);
+            disc.push([u + Math.cos(angle) * radius * irregular, y + Math.sin(angle) * radius * irregular]);
           }
-          const tipX = Math.cos(Math.PI * .29), tipY = Math.sin(Math.PI * .29);
+          const topTip = disc[0]!, bottomTip = disc[disc.length - 1]!;
           for (let i = 1; i < 16; i++) {
             const t = i / 16;
-            disc.push([u + radius * (tipX - .97 * Math.sin(Math.PI * t)), y + radius * (-tipY + 2 * tipY * t)]);
+            const cut = Math.sin(Math.PI * t);
+            disc.push([bottomTip[0] + (topTip[0] - bottomTip[0]) * t
+              - radius * cut * (.97 + .018 * Math.sin(t * Math.PI * 5 + .3)),
+            bottomTip[1] + (topTip[1] - bottomTip[1]) * t + radius * .014 * cut * Math.sin(t * Math.PI * 3)]);
           }
-          moving(disc, 0xe2e4d6, .00065, .00065 + DIORAMA_PAPER_THICKNESS);
+          moving(disc, 0xe2e4d6, .0018, .0018 + DIORAMA_PAPER_THICKNESS);
         }
       }
       upperPaper.celestial = 0;

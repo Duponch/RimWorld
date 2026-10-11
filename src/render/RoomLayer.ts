@@ -1,0 +1,165 @@
+import { Color, Group, Matrix4, Mesh, MeshStandardNodeMaterial, Scene, Vector3,
+  type Camera, type PerspectiveCamera, type WebGPURenderer } from 'three/webgpu';
+import { attribute, positionLocal, sin, uniform, vec3 } from 'three/tsl';
+import { createRoomGeometry, sampleRoomOrbit, type RoomGeometryPart } from './room-geometry';
+import { RoomLighting } from './RoomLighting';
+import { RoomBackdrop } from './RoomBackdrop';
+import type { DaylightSample } from './daylight';
+import { parseLightingSettings, type LightingSettings } from './lighting-settings';
+
+/** Optional presentation owner. No World, simulation random stream, independent
+ * clock, asset request or animation mixer. OFF destroys this entire owner. */
+export class RoomLayer {
+  readonly scene = new Scene();
+  readonly lighting = new RoomLighting();
+  readonly backdrop = new RoomBackdrop();
+  readonly sun = new Group();
+  readonly moon = new Group();
+  private geometry: ReturnType<typeof createRoomGeometry> | null = null;
+  private readonly materials = new Map<string, MeshStandardNodeMaterial>();
+  private readonly meshes: { part: RoomGeometryPart; mesh: Mesh }[] = [];
+  private readonly sunGlow = uniform(0);
+  private readonly moonGlow = uniform(0);
+  private readonly sunCenter = new Vector3();
+  private readonly moonCenter = new Vector3();
+  private readonly local = new Vector3();
+  private readonly view = new Matrix4();
+  private readonly projection = new Matrix4();
+  private viewValid = false;
+  private width = 0;
+  private height = 0;
+  private seed = 0;
+  private artVersion = 0;
+  private textures = true;
+  private disposed = false;
+  private lightingSettings = parseLightingSettings(null);
+
+  constructor(private readonly gameScene: Scene) {
+    this.scene.name = 'room-background'; this.scene.background = new Color(0x17151a);
+    this.sun.name = 'paper-sun-carrier'; this.moon.name = 'paper-moon-carrier';
+    this.scene.add(this.sun, this.moon);
+    this.lighting.attach(gameScene, this.scene);
+  }
+
+  get span(): number { return Math.min(this.width, this.height); }
+
+  configure(width: number, height: number, seed: number): void {
+    if (this.disposed || (this.width === width && this.height === height && this.seed === seed)) return;
+    this.clearGeometry(); this.width = width; this.height = height; this.seed = seed;
+    this.lighting.configure(width, height);
+    this.geometry = createRoomGeometry(width, height, seed);
+    for (const part of this.geometry.parts) {
+      const key = part.motionKind && part.material === 'paper' ? part.motionKind : part.material;
+      const mesh = new Mesh(part.geometry, this.material(key)); mesh.name = part.name;
+      mesh.castShadow = false; mesh.receiveShadow = false; mesh.matrixAutoUpdate = false;
+      this.meshes.push({ part, mesh });
+      (part.motionKind ? this[part.motionKind] : this.scene).add(mesh);
+    }
+    this.artVersion++; this.viewValid = false; this.backdrop.invalidate();
+  }
+
+  private material(kind: string): MeshStandardNodeMaterial {
+    let material = this.materials.get(kind);
+    if (material) return material;
+    material = new MeshStandardNodeMaterial({ color: 0xffffff, roughness: kind === 'metal' ? .52 : .94,
+      metalness: kind === 'metal' ? .12 : 0, vertexColors: true });
+    this.materials.set(kind, material);
+    this.applySurface(kind, material);
+    return material;
+  }
+
+  private applySurface(kind: string, material: MeshStandardNodeMaterial): void {
+    // Bounded surface detail, evaluated only for the deliberately soft backdrop.
+    const grain = sin(positionLocal.x.mul(31).add(positionLocal.y.mul(83)).add(positionLocal.z.mul(17)))
+      .mul(.025).add(sin(positionLocal.x.mul(137).add(positionLocal.z.mul(149))).mul(.016)).add(.96);
+    material.colorNode = this.textures ? vec3(grain) : null;
+    if (kind === 'sun' || kind === 'moon') {
+      const glow = kind === 'sun' ? this.sunGlow : this.moonGlow;
+      material.emissiveNode = attribute('color', 'vec3').mul(glow);
+    }
+    material.needsUpdate = true;
+  }
+
+  setTexturesEnabled(enabled: boolean): void {
+    if (this.textures === enabled) return;
+    this.textures = enabled;
+    for (const [kind, material] of this.materials) this.applySurface(kind, material);
+    this.artVersion++; this.backdrop.invalidate();
+  }
+
+  setSettings(settings: LightingSettings): void {
+    this.lightingSettings = parseLightingSettings(settings);
+    this.lighting.setSettings(this.lightingSettings);
+  }
+
+  /** Both carriages remain on their own physical rail throughout a full day.
+   * The opposite lantern returns along its parallel rail while its bulb fades. */
+  present(sample: DaylightSample, camera: Camera): void {
+    if (this.disposed || !this.geometry) return;
+    const orbit = this.geometry.orbit;
+    sampleRoomOrbit(orbit, (1 - sample.x) * .5, this.sun.position, 'sun');
+    sampleRoomOrbit(orbit, (1 + sample.x) * .5, this.moon.position, 'moon');
+    this.sunCenter.copy(this.sun.position).add(this.local.fromArray(orbit.sun.center));
+    this.moonCenter.copy(this.moon.position).add(this.local.fromArray(orbit.moon.center));
+    const changed = this.lighting.sync(this.sunCenter, this.moonCenter, sample, this.span);
+    const sun = sample.daylight * 1.15 * this.lightingSettings.sun;
+    const moon = (1 - sample.daylight) * .72 * this.lightingSettings.moon;
+    if (this.sunGlow.value !== sun || this.moonGlow.value !== moon) {
+      this.sunGlow.value = sun; this.moonGlow.value = moon; this.artVersion++;
+    }
+    camera.updateMatrixWorld();
+    if (!this.viewValid || !this.view.equals(camera.matrixWorld) || !this.projection.equals(camera.projectionMatrix)) {
+      this.view.copy(camera.matrixWorld); this.projection.copy(camera.projectionMatrix); this.viewValid = true;
+      const eye = camera.matrixWorld.elements, perspective = (camera as PerspectiveCamera).isPerspectiveCamera;
+      const x = perspective ? eye[12]! - (this.width - 1) * .5 : eye[8]!;
+      const z = perspective ? eye[14]! - (this.height - 1) * .5 : eye[10]!;
+      for (const { part, mesh } of this.meshes) {
+        // Open the viewing side of the room, independently from cardboard walls.
+        mesh.visible = part.section === 'north' ? z >= 0 : part.section === 'west' ? x >= 0
+          : part.section === 'east' ? x <= 0 : true;
+      }
+      this.artVersion++;
+    }
+    this.lighting.fitShadow(camera, this.width, this.height);
+    // Lighting version is monotone; sum also changes for geometry/material/camera.
+    this.currentVersion = changed + this.artVersion;
+  }
+
+  private currentVersion = 0;
+
+  renderBackground(renderer: WebGPURenderer, camera: Camera, focus: Vector3): void {
+    if (this.disposed || !this.geometry) return;
+    this.local.copy(focus).applyMatrix4(camera.matrixWorldInverse);
+    this.backdrop.render(renderer, this.scene, camera, this.currentVersion, -this.local.z, this.span);
+  }
+
+  async prepare(renderer: WebGPURenderer, camera: Camera): Promise<void> {
+    if (this.disposed || !this.geometry) return;
+    const target = renderer.getRenderTarget();
+    const visibility = this.meshes.map(({ mesh }) => [mesh.visible, mesh.frustumCulled] as const);
+    try {
+      for (const { mesh } of this.meshes) { mesh.visible = true; mesh.frustumCulled = false; }
+      // Warm the actual half-float/depth target, including offscreen furnishings.
+      renderer.setRenderTarget(this.backdrop.target);
+      await renderer.compileAsync(this.scene, camera);
+      renderer.setRenderTarget(target);
+      this.renderBackground(renderer, camera, this.local.set((this.width - 1) / 2, 0, (this.height - 1) / 2));
+    } finally {
+      renderer.setRenderTarget(target);
+      this.meshes.forEach(({ mesh }, i) => { [mesh.visible, mesh.frustumCulled] = visibility[i]!; });
+      this.viewValid = false; this.backdrop.invalidate();
+    }
+  }
+
+  private clearGeometry(): void {
+    for (const { mesh } of this.meshes) { mesh.removeFromParent(); mesh.geometry.dispose(); }
+    this.meshes.length = 0; this.geometry = null;
+  }
+
+  dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true; this.clearGeometry(); this.lighting.dispose(); this.backdrop.dispose();
+    for (const material of this.materials.values()) material.dispose(); this.materials.clear();
+    this.scene.clear();
+  }
+}

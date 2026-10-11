@@ -8,6 +8,7 @@ import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from '../sim/map-config';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import { FLOOR_KINDS,FLOOR_DEFINITIONS,flooringRecipe,type BuildableFloorKind } from '../sim/flooring';
 import { UI_FONT_CHOICES } from './ui-fonts';
+import { LIGHTING_CONTROLS } from '../render/lighting-settings';
 import { siteHudLayout } from './site-hud';
 
 const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
@@ -211,6 +212,9 @@ export function gameLayout(): string {
         <label class="presentation-setting"><span><strong id="textures-enabled-label">Textures 3D stylisées</strong><small id="textures-enabled-description">Détails peints des volumes 3D. Choix conservé dans ce navigateur.</small></span><input id="textures-enabled" type="checkbox" aria-labelledby="textures-enabled-label" aria-describedby="textures-enabled-description" checked></label>
         <label class="presentation-setting"><span><strong id="ground-grass-label">Tapis d’herbe</strong><small id="ground-grass-description">Brins décoratifs sur la terre visible. Désactivé : aucun brin ni traitement associé.</small></span><input id="ground-grass-enabled" type="checkbox" aria-labelledby="ground-grass-label" aria-describedby="ground-grass-description" checked></label>
         <label class="presentation-setting"><span><strong id="diorama-label">Diorama en carton</strong><small id="diorama-description">Table et boîte en carton autour de la carte. Choix conservé dans ce navigateur.</small></span><input id="diorama-enabled" type="checkbox" aria-labelledby="diorama-label" aria-describedby="diorama-description" checked></label>
+        <label class="presentation-setting"><span><strong id="room-label">Chambre autour de la carte</strong><small id="room-description">Décor de chambre autour de la carte, indépendant du diorama. Choix conservé dans ce navigateur.</small></span><input id="room-enabled" type="checkbox" aria-labelledby="room-label" aria-describedby="room-description" checked></label>
+        ${LIGHTING_CONTROLS.map(({key,label,description}) => `<label class="presentation-setting"><span><strong id="lighting-${key}-label">${label}</strong><small id="lighting-${key}-description">${description}</small><output id="lighting-${key}-value">100 %</output></span><input id="lighting-${key}" type="range" min="0" max="300" step="5" value="100" aria-labelledby="lighting-${key}-label" aria-describedby="lighting-${key}-description lighting-${key}-value"></label>`).join('')}
+        <button id="lighting-reset" type="button">Réinitialiser l’éclairage</button>
       </fieldset>
       <fieldset class="presentation-settings audio-settings"><legend>Son</legend>
         <label class="presentation-setting"><span><strong id="sound-enabled-label">Effets sonores</strong><small id="sound-enabled-description">Bruitages et ambiances, indépendants de la musique. Choix conservé dans ce navigateur.</small></span><input id="sound-enabled" type="checkbox" aria-labelledby="sound-enabled-label" aria-describedby="sound-enabled-description" checked></label>
