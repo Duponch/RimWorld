@@ -115,4 +115,8 @@ L'économie isolée proche motive la rétention de cette feuille, avec ces limit
 
 Documentation **PASS2,689 s** avec le Python fourni par le runtime. Premier lancement sur l'alias WindowsApps `python` **EACCES0,029 s** conservé ; aucune modification de vérificateur. Diff sans erreur d'espacement, simulation/bridge/publics intacts dans le gel final.
 
-Commit/push et une publication regroupée à consigner. `references_UI/` demeure non suivi et exclu ; relance PAUSED. Aucun nouveau gameplay engagé.
+Produit **`92ff337c` commité/poussé sur main**, publié une seule fois en **`235b1f0b`** sur [l'adresse stable](https://elsewhere-cq7.pages.dev/) et [la publication](https://235b1f0b.elsewhere-cq7.pages.dev/). Package **PASS1,768 s**, `tmp/elsewhere-pages/v329-package-tOrWNJ/report.json` :515fichiers,119196834octets,63références/66chemins publics exacts, contenus privés/laboratoire absents. Wrangler4.149.0 **PASS14,680 s** : deux fichiers nouveaux,511déjà présents, puis en-têtes/redirections.
+
+HTTPS **PASS7,614 s**,102réponses200/MIME/octets exactes sur51chemins des deux origines ; rapport `tmp/elsewhere-pages/v329-http-sioJn8/report.json`. Package/publics restent exacts. Ces réponses ne rejouent pas le jeu ni un benchmark en ligne et ne téléchargent pas les66fichiers distants. `references_UI/` demeure non suivi et exclu ; seul cet élément motive l'avertissement Git dirty de Wrangler. Un commit/push documentaire consigne la livraison sans nouvelle publication. Relance PAUSED, aucun contrôle lourd actif, aucun nouveau gameplay engagé.
+
+Documentation de livraison **PASS1,587 s**, avant ce seul ajout de durée ; aucun lien/contrat produit modifié. La suite étudiée reste hors produit et les sources/tests/pilotes acquis ne sont plus édités.
