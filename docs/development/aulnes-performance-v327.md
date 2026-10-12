@@ -53,8 +53,10 @@ Le froid ne gagne pas régulièrement : checkpoints initiaux A 75,654 / 74,386 m
 
 La modification est retenue : économie CPU complète isolée et gain natif rapproché cohérents, sorties conservées. Les moyennes larges restent à débit différent. Les sources du rendu, `engine.ts`, du Worker et du bridge ne changent pas. Captures rapprochée et large du GAME inspectées ; aucune nouvelle campagne naturelle entière ni nouvelle certification de chronologie de travail.
 
-Package Pages contrôlé en 2,007 s : 515 fichiers, 119 192 223 octets ; les 66 fichiers publics sont exacts, laboratoire et sources privés exclus. Rapport `tmp/elsewhere-pages/v327-package-jn7KTE/report.json`. Le build déjà validé sera publié une seule fois ; les contrôles HTTPS portent sur les octets publiés, pas sur une nouvelle mesure de FPS.
+Package Pages contrôlé en 2,007 s : 515 fichiers, 119 192 223 octets ; les 66 fichiers publics sont exacts, laboratoire et sources privés exclus. Rapport `tmp/elsewhere-pages/v327-package-jn7KTE/report.json`. Produit **`b48f6c51`** commité/poussé sur `main`, puis build déjà validé publié une seule fois en **`9ec327b9`**, Wrangler 4.149.0, 11,128 s : trois fichiers envoyés, 510 déjà présents, puis en-têtes/redirections.
 
-Commit/push et publication unique autorisés, identifiants consignés après leur exécution. `references_UI/` reste hors lot. L’étude `next-render-preparation.md` n’établit pas de groupe végétal récupérable plus important ; aucun autre candidat ni contrôle inchangé n’est engagé.
+HTTPS passe en 4,574 s : 102 réponses200/MIME/octets exactes, 51 chemins sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [la publication](https://9ec327b9.elsewhere-cq7.pages.dev/), rapport `tmp/elsewhere-pages/v327-http-VzQhln/report.json`. Package et sauvegardes publics restent exacts. Cette vérification ne rejoue pas le benchmark en ligne et ne télécharge pas les 66 fichiers distants. Documentation contrôlée avant commit en 1,835 s, gel final en 1,848 s ; un commit/push documentaire consigne la publication sans second déploiement.
+
+`references_UI/` reste hors lot. L’étude `next-render-preparation.md` n’établit pas de groupe végétal récupérable plus important ; aucun autre candidat ni contrôle inchangé n’est engagé.
 
 Le lot n’ajoute aucun gameplay. Gain CPU global non certifié ; relance planifiée toujours PAUSED.

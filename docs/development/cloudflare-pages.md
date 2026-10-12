@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication courante `8c2a99de` apporte les [quatre murs et la composition V326](aulnes-performance-v326.md), après la [table et la chambre fixe V325](room-layout-v325.md), la [chambre et les éclairages V324](room-diorama-v324.md), les [paysages procéduraux V323](cardboard-diorama-v323.md) et les [étagères V320](../gameplay/shelves-v320.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication courante `9ec327b9` apporte les [recherches d’étagères partagées V327](aulnes-performance-v327.md), après les [quatre murs et la composition V326](aulnes-performance-v326.md), la [table et la chambre fixe V325](room-layout-v325.md), la [chambre et les éclairages V324](room-diorama-v324.md), les [paysages procéduraux V323](cardboard-diorama-v323.md) et les [étagères V320](../gameplay/shelves-v320.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
 
 ## Adresse et publication
 
@@ -261,3 +261,12 @@ HTTPS **PASS 5,943 s**, 102 réponses200/MIME/octets exactes sur les deux origin
 rapport `tmp/elsewhere-pages/v325-http-YfBuuH/report.json`. Package et publics inchangés ; aucun navigateur ni
 benchmark en ligne rejoué, aucun second déploiement pour la clôture documentaire.
 Relance **PAUSED**, aucun lot suivant engagé.
+
+
+## Publication V327 — 12 octobre 2026
+
+Produit **`b48f6c51`** commité/poussé sur `main`, déployé une seule fois en **`9ec327b9`** sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [la publication](https://9ec327b9.elsewhere-cq7.pages.dev/). [Optimisation, mesures et limites](aulnes-performance-v327.md) : recherches d’étagères partagées pendant les validations MAIN, qualité/règles conservées.
+
+Build Pages/typage **PASS 11,980 s**, package **PASS 2,007 s** : 515 fichiers,119192223octets,63références/66fichiers publics exacts. Rapport `tmp/elsewhere-pages/v327-package-jn7KTE/report.json`. Wrangler4.149.0 **PASS 11,128 s** : trois fichiers envoyés,510déjà présents, puis en-têtes/redirections. `references_UI/` reste non suivi et exclu.
+
+HTTPS **PASS 4,574 s** :102réponses200/MIME/octets exactes sur51chemins des deux origines, rapport `tmp/elsewhere-pages/v327-http-VzQhln/report.json`. Package et publics inchangés ; aucun navigateur ni benchmark en ligne rejoué. Un commit/push documentaire consigne la livraison sans second déploiement ; relance **PAUSED**.
