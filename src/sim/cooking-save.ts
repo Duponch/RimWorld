@@ -161,7 +161,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
           if(pile.owner.type!=='ground'||reservedSource(w,pile.id)>pile.quantity)errors.push('Invalid ground ingredient reservation.');
           if(i.stage==='placed'&&pile.owner.type==='ground'&&(pile.owner.x!==i.cell.x||pile.owner.z!==i.cell.z))errors.push('Ingredient not placed at workstation.');
         }
-        if(!(unfinishedComponent&&placeFree(i.cell)||ingredientWithinReach(i.cell,spot,station))||c.phase!=='interrupted'&&(shelfAt(w,i.cell)!==undefined||c.recipe!==undefined&&!placeFree(i.cell)))errors.push('Ingredient staging beyond work reach.');
+        if(!(unfinishedComponent&&placeFree(i.cell)||ingredientWithinReach(i.cell,spot,station))||c.phase!=='interrupted'&&((staging?.shelfAt?staging.shelfAt(i.cell):shelfAt(w,i.cell))!==undefined||c.recipe!==undefined&&!placeFree(i.cell)))errors.push('Ingredient staging beyond work reach.');
         if(i.stage!=='placed'&&c.phase!=='interrupted') {
           const key=i.cell.z*w.width+i.cell.x,prior=incoming.get(key);
           if(prior&&prior.item!==i.item)errors.push('Mixed ingredient staging reservation.');

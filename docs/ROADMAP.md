@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V327 — [recherches d’étagères partagées](development/aulnes-performance-v327.md), schéma 229 conservé.** Priorité humaine : améliorer le framerate chambre/carton ON. Gain proche observé à débit voisin de ×6, objectif 240 FPS encore ouvert. Le retrait diagnostique de l’herbe n’offre qu’une faible économie ; aucune baisse de qualité ni nouvelle mécanique. Les coûts résiduels doivent être attribués avant un prochain lot ; relance **PAUSED**. Les états suivants sont historiques.
+
 **V326 — [quatrième mur et coût du rendu](development/aulnes-performance-v326.md), schéma 229 conservé.** Priorité humaine : chambre complète et performances avec chambre/carton ON. Images et règles conservées ; 240 FPS en vrai ×6 restent hors d'atteinte dans les mesures actuelles. Le coût MAIN doit être attribué avant une prochaine optimisation plus large ; aucune nouvelle mécanique engagée, relance **PAUSED**. Les états suivants sont historiques.
 
 **V325 — [table et chambre fixe](development/room-layout-v325.md), schéma 229 conservé.** Priorité humaine graphique : proportions de référence, nuages répartis, vue dégagée et chambre permanente. Structure regroupée conservée après comparaison de coût du décor ; aucune nouvelle mécanique ni gainFPS général revendiqué. Barricades seulement préparées, sous-métiers reportés, relance **PAUSED**. Les états suivants sont historiques.

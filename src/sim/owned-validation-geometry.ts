@@ -2,6 +2,7 @@ import {footprintContains} from './definitions.ts';
 import {groundOccupancyAllows,storageOccupancyAllows,OCCUPANCY,occupancyOf} from './occupancy.ts';
 import type {StagingGeometryReader} from './staging-validation.ts';
 import {createOwnedValidationResources,type OwnedValidationResourceReader} from './owned-validation-resources.ts';
+import {isShelfKind,shelfAt,storageAt,shelfStorageCells} from './shelf-storage.ts';
 import type {Cell,Structure,World} from './types.ts';
 
 const MAX_ANCHOR=Number.MAX_SAFE_INTEGER-3;
@@ -19,6 +20,7 @@ export interface OwnedValidationGeometryReader extends StagingGeometryReader {re
  * Terrain, version, jobs and all quantities/reservations remain live queries. */
 export function createOwnedValidationGeometry(world:World,resourceFacts:OwnedValidationResourceReader=createOwnedValidationResources(world)):OwnedValidationGeometryReader {
   let anchors:Anchors|undefined,structuresCaptured=false;
+  let hasShelfKinds=false;
   const overlaps=new Map<number,Map<number,Structure[]>>();
 
   const captureStructures=():Anchors|undefined=>{
@@ -26,6 +28,7 @@ export function createOwnedValidationGeometry(world:World,resourceFacts:OwnedVal
     structuresCaptured=true;
     if(!Array.isArray(world.structures))return;
     const candidate:Anchors=new Map();
+    let candidateHasShelfKinds=false;
     for(let ordinal=0;ordinal<world.structures.length;ordinal++){
       const structure=world.structures[ordinal];
       if(!record(structure))return;
@@ -34,6 +37,7 @@ export function createOwnedValidationGeometry(world:World,resourceFacts:OwnedVal
         ||orientation!==undefined&&(!Number.isInteger(orientation)||Number(orientation)<0||Number(orientation)>3)
         ||footprint!==undefined&&footprint!=='standard'&&footprint!=='legacy-single'
         ||structure.furniture!==undefined||structure.deconstruction!==undefined||structure.flick!==undefined||structure.fixBreakdown!==undefined)return;
+      candidateHasShelfKinds ||= isShelfKind(kind);
       // Every current footprint is inside the anchor-relative +/-3 envelope.
       // Buckets only select occurrences; footprintContains remains the oracle.
       const bx=Math.floor(x/4),bz=Math.floor(z/4);
@@ -41,6 +45,7 @@ export function createOwnedValidationGeometry(world:World,resourceFacts:OwnedVal
       let entries=row.get(bx);if(!entries)row.set(bx,entries=[]);
       entries.push({ordinal,structure});
     }
+    hasShelfKinds=candidateHasShelfKinds;
     return anchors=candidate;
   };
 
@@ -61,10 +66,28 @@ export function createOwnedValidationGeometry(world:World,resourceFacts:OwnedVal
     return occupied;
   };
 
+  // Reuse the same ordered occurrences during this one native adoption. Shelf
+  // state, durable cell IDs and policy stay live; unsupported captures retain
+  // the literal query rather than treating an unknown result as an empty cell.
+  const canReadShelf=(cell:Cell):boolean=>integerAnchor(cell.x)
+    &&integerAnchor(cell.z)&&captureStructures()!==undefined;
+  const indexedShelfAt=(cell:Cell):Structure|undefined=>hasShelfKinds
+    ?occupyingStructures(cell)!.find(s=>isShelfKind(s.kind)&&s.shelf)
+    :undefined;
+
   return {
     resourceFacts,
     hasResource:resourceFacts.hasResource,
     hydroOverlapCount:resourceFacts.hydroOverlapCount,
+    shelfAt(cell){
+      return canReadShelf(cell)?indexedShelfAt(cell):shelfAt(world,cell);
+    },
+    storageAt(cell){
+      if(!canReadShelf(cell))return storageAt(world,cell);
+      const shelf=indexedShelfAt(cell);
+      return shelf?shelfStorageCells(shelf).find(c=>c.x===cell.x&&c.z===cell.z)
+        :world.stockpiles.find(z=>z.x===cell.x&&z.z===cell.z);
+    },
     groundAllows(cell){
       if(!Number.isInteger(cell.x)||!Number.isInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=world.width||cell.z>=world.height||['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain))return false;
       const structures=occupyingStructures(cell);if(!structures)return groundOccupancyAllows(world,cell);

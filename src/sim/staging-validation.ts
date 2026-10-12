@@ -1,5 +1,6 @@
 import {groundOccupancyAllows} from './occupancy.ts';
-import type {Cell,World} from './types.ts';
+import type {Cell,Structure,World} from './types.ts';
+import type {StorageCell} from './shelf-storage.ts';
 
 /** Read-only geometry during one validation of a reconstructed transport World.
  * Never retain the reader across writes, validation calls or snapshot adoption. */
@@ -8,6 +9,8 @@ export interface StagingGeometryReader {
   groundAllows(cell:Cell):boolean;
   storageAllows?(cell:Cell):boolean;
   hydroOverlapCount?(linkedCells:ReadonlyMap<number,unknown>):number;
+  shelfAt?(cell:Cell):Structure|undefined;
+  storageAt?(cell:Cell):StorageCell|undefined;
 }
 
 type Cells=Map<number,Set<number>>;

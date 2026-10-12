@@ -89,7 +89,7 @@ export const ingredientWithinReach=(cell:Cell,spot:Cell,station?:Structure):bool
 /** New food benches stage on their three physical surface cells. Historical
  * stations keep their existing adjacent staging and continuation unchanged. */
 export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:ProductionRecipe,station?:Structure,geometry?:StagingGeometryReader):boolean {
-  if(shelfAt(world,cell))return false;
+  if(geometry?.shelfAt?geometry.shelfAt(cell):shelfAt(world,cell))return false;
   if(station&&isFoodWorkstation(station.kind))return ingredientWithinReach(cell,spot,station)
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)

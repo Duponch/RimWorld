@@ -123,7 +123,7 @@ function reservedAt(world:World,task:HaulTask,cell:Cell,item:ItemId,zone?:Stockp
   return pile?.item===item?task.quantity:Infinity;
 }
 export function groundCapacity(world: World, cell: Cell, subject: ItemId|MaterialPile, exceptPawn?: number,geometry?:StagingGeometryReader,reader?:GroundCapacityReader): number {
-  const item=typeof subject==='string'?subject:subject.item,zone=reader?reader.storage.get(cell.z*world.width+cell.x):storageAt(world,cell);
+  const item=typeof subject==='string'?subject:subject.item,zone=reader?reader.storage.get(cell.z*world.width+cell.x):geometry?.storageAt?geometry.storageAt(cell):storageAt(world,cell);
   return zone?.shelfId!==undefined?shelfCapacity(world,cell,subject,exceptPawn,zone,geometry,reader,false):cellCapacity(world,cell,item,ITEM_DEFINITIONS[item].stackLimit,exceptPawn,reader?zone??null:undefined,geometry);
 }
 export function storageCapacity(world: World, zone: StorageCell, subject: ItemId|MaterialPile, exceptPawn?: number,geometry?:StagingGeometryReader,reader?:GroundCapacityReader): number {
