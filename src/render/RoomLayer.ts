@@ -1,4 +1,4 @@
-import { Color, Group, Mesh, MeshStandardNodeMaterial, Scene, Vector3,
+import { BundleGroup, Color, Frustum, Group, Matrix4, Mesh, MeshStandardNodeMaterial, Scene, Vector2, Vector3, Vector4,
   type Camera, type WebGPURenderer } from 'three/webgpu';
 import { attribute, positionLocal, sin, uniform, vec3, viewportSize, viewportUV } from 'three/tsl';
 import { createRoomGeometry, sampleRoomOrbit, type RoomGeometryPart } from './room-geometry';
@@ -16,6 +16,26 @@ export class RoomLayer {
   readonly backdrop = new RoomBackdrop();
   readonly sun = new Group();
   readonly moon = new Group();
+  private readonly carriers = [this.sun, this.moon] as const;
+  private readonly staticGroup = new BundleGroup();
+  private readonly ordinaryGroup = new Group();
+  private readonly staticMeshes: Mesh[] = [];
+  private orderedStatic: Mesh[] = [];
+  private readonly bundleFrustum = new Frustum();
+  private readonly bundleProjectionView = new Matrix4();
+  private readonly sortPoint = new Vector4();
+  private bundled = true;
+  private readonly bundleView = new Matrix4();
+  private readonly bundleViewInverse = new Matrix4();
+  private readonly bundleProjection = new Matrix4();
+  private readonly drawingSize = new Vector2();
+  private bundleCamera: Camera | undefined;
+  private bundleCoordinates = -1;
+  private bundleLayers = 0;
+  private bundleReversedDepth = false;
+  private bundleWidth = 0;
+  private bundleHeight = 0;
+  private bundleViewValid = false;
   private geometry: ReturnType<typeof createRoomGeometry> | null = null;
   private readonly materials = new Map<string, MeshStandardNodeMaterial>();
   private readonly meshes: { part: RoomGeometryPart; mesh: Mesh }[] = [];
@@ -38,6 +58,11 @@ export class RoomLayer {
     this.sun.name = 'paper-sun-carrier'; this.moon.name = 'paper-moon-carrier';
     this.scene.add(this.sun, this.moon);
     this.lighting.attach(gameScene, this.scene);
+    this.staticGroup.name = 'room-static-commands';
+    this.staticGroup.matrixAutoUpdate = false;
+    this.ordinaryGroup.name = 'room-ordinary-commands';
+    this.ordinaryGroup.matrixAutoUpdate = false;
+    this.scene.add(this.staticGroup, this.ordinaryGroup);
   }
 
   get span(): number { return Math.min(this.width, this.height); }
@@ -55,7 +80,8 @@ export class RoomLayer {
       const mesh = new Mesh(part.geometry, this.material(key)); mesh.name = part.name;
       mesh.castShadow = false; mesh.receiveShadow = false; mesh.matrixAutoUpdate = false;
       this.meshes.push({ part, mesh });
-      (part.motionKind ? this[part.motionKind] : this.scene).add(mesh);
+      if (!part.motionKind) this.staticMeshes.push(mesh);
+      (part.motionKind ? this[part.motionKind] : this.staticGroup).add(mesh);
     }
     this.artVersion++; this.backdrop.invalidate();
   }
@@ -88,6 +114,7 @@ export class RoomLayer {
       material.emissiveNode = attribute('color', 'vec3').mul(glow);
     }
     material.needsUpdate = true;
+    this.invalidateStaticCommands();
   }
 
   setTexturesEnabled(enabled: boolean): void {
@@ -100,12 +127,14 @@ export class RoomLayer {
   setSettings(settings: LightingSettings): void {
     this.lightingSettings = parseLightingSettings(settings);
     this.lighting.setSettings(this.lightingSettings);
+    this.invalidateStaticCommands();
   }
 
   setMaskRadius(radius: number): void {
     const value = roomMaskRadius(radius);
     if (value === this.maskRadius.value) return;
     this.maskRadius.value = value;
+    this.invalidateStaticCommands();
     this.artVersion++; this.backdrop.invalidate();
   }
 
@@ -134,8 +163,66 @@ export class RoomLayer {
 
   private currentVersion = 0;
 
+  private invalidateStaticCommands(): void {
+    this.staticGroup.needsUpdate = true;
+    this.bundleViewValid = false;
+  }
+
+  /** Native bundle lists skip sorting and precede ordinary opaque objects.
+   * Sort fixed leaves exactly; use the ordinary path while any carrier submits.
+   * Native frustum culling, materials and node/binding updates remain live. */
+  private prepareStaticCommands(renderer: WebGPURenderer, camera: Camera): void {
+    camera.updateMatrixWorld();
+    renderer.getDrawingBufferSize(this.drawingSize);
+    const sameCamera = this.bundleViewValid && this.bundleCamera === camera
+      && this.bundleView.equals(camera.matrixWorld) && this.bundleViewInverse.equals(camera.matrixWorldInverse)
+      && this.bundleProjection.equals(camera.projectionMatrix) && this.bundleLayers === camera.layers.mask
+      && this.bundleCoordinates === camera.coordinateSystem && this.bundleReversedDepth === camera.reversedDepth
+      && this.bundleWidth === this.drawingSize.x && this.bundleHeight === this.drawingSize.y;
+    if (!sameCamera) {
+      this.staticGroup.needsUpdate = true;
+      this.bundleView.copy(camera.matrixWorld); this.bundleViewInverse.copy(camera.matrixWorldInverse);
+      this.bundleProjection.copy(camera.projectionMatrix); this.bundleLayers = camera.layers.mask;
+      this.bundleCoordinates = camera.coordinateSystem; this.bundleReversedDepth = camera.reversedDepth;
+      this.bundleWidth = this.drawingSize.x; this.bundleHeight = this.drawingSize.y;
+      this.bundleCamera = camera; this.bundleViewValid = true;
+      this.bundleProjectionView.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+      this.bundleFrustum.setFromProjectionMatrix(this.bundleProjectionView, camera.coordinateSystem, camera.reversedDepth);
+      // Same homogeneous z and id tie break as Renderer/RenderList, no divide.
+      const sorted = this.staticMeshes.map(mesh => {
+        mesh.updateWorldMatrix(true, false);
+        if (mesh.geometry.boundingSphere === null) mesh.geometry.computeBoundingSphere();
+        const center = mesh.geometry.boundingSphere!.center;
+        this.sortPoint.set(center.x, center.y, center.z, 1).applyMatrix4(mesh.matrixWorld)
+          .applyMatrix4(this.bundleProjectionView);
+        return { mesh, z: camera.reversedDepth ? -this.sortPoint.z : this.sortPoint.z };
+      });
+      sorted.sort((a, b) => a.mesh.renderOrder !== b.mesh.renderOrder ? a.mesh.renderOrder - b.mesh.renderOrder
+        : a.z !== b.z ? a.z - b.z : a.mesh.id - b.mesh.id);
+      this.orderedStatic = sorted.map(({ mesh }) => mesh);
+    }
+    // Four owned carrier leaves only. Neither intensity nor mask implies cull.
+    this.sun.updateWorldMatrix(true, true); this.moon.updateWorldMatrix(true, true);
+    const mobileSubmitted = this.carriers.some(carrier => carrier.visible && carrier.children.some(object => {
+      const mesh = object as Mesh;
+      const materialVisible = Array.isArray(mesh.material) ? mesh.material.some(material => material.visible) : mesh.material.visible;
+      return mesh.visible && mesh.layers.test(camera.layers) && materialVisible
+        && (!mesh.frustumCulled || mesh.intersectsFrustum(this.bundleFrustum));
+    }));
+    const useBundle = renderer.sortObjects && !mobileSubmitted;
+    if (this.bundled !== useBundle || (useBundle && !sameCamera)) {
+      const parent = useBundle ? this.staticGroup : this.ordinaryGroup;
+      for (const mesh of useBundle ? this.orderedStatic : this.staticMeshes) parent.add(mesh);
+      // Remove the empty bundle while using the ordinary render list.
+      this.staticGroup.visible = useBundle;
+      this.staticGroup.needsUpdate = true;
+      this.bundled = useBundle;
+    }
+  }
+
   renderBackground(renderer: WebGPURenderer, camera: Camera, focus: Vector3, compose = true): void {
     if (this.disposed || !this.geometry) return;
+    this.prepareStaticCommands(renderer, camera);
     this.local.copy(focus).applyMatrix4(camera.matrixWorldInverse);
     this.backdrop.render(renderer, this.scene, camera, this.currentVersion, -this.local.z, this.span, compose);
   }
@@ -151,21 +238,28 @@ export class RoomLayer {
     const visibility = this.meshes.map(({ mesh }) => [mesh.visible, mesh.frustumCulled] as const);
     try {
       for (const { mesh } of this.meshes) { mesh.visible = true; mesh.frustumCulled = false; }
+      this.invalidateStaticCommands();
       // Warm the actual half-float/depth target, including offscreen furnishings.
       renderer.setRenderTarget(this.backdrop.target);
       await renderer.compileAsync(this.scene, camera);
       renderer.setRenderTarget(target);
       this.renderBackground(renderer, camera, this.local.set((this.width - 1) / 2, 0, (this.height - 1) / 2));
     } finally {
-      renderer.setRenderTarget(target);
-      this.meshes.forEach(({ mesh }, i) => { [mesh.visible, mesh.frustumCulled] = visibility[i]!; });
-      this.backdrop.invalidate();
+      try { renderer.setRenderTarget(target); }
+      finally {
+        this.meshes.forEach(({ mesh }, i) => { [mesh.visible, mesh.frustumCulled] = visibility[i]!; });
+        this.invalidateStaticCommands();
+        this.backdrop.invalidate();
+      }
     }
   }
 
   private clearGeometry(): void {
+    this.invalidateStaticCommands(); this.bundleCamera = undefined;
     for (const { mesh } of this.meshes) { mesh.removeFromParent(); mesh.geometry.dispose(); }
     this.meshes.length = 0; this.geometry = null;
+    this.staticMeshes.length = 0; this.orderedStatic.length = 0;
+    this.bundled = true; this.staticGroup.visible = true;
   }
 
   dispose(): void {
