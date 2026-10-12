@@ -19,6 +19,7 @@ export function validArtificialPartTransport(pawn:Pawn,version:number,clock:numb
 export function validArtificialPartsWorldTransport(world:World,version:number=world.schemaVersion):boolean {
   try {
     const candidates:Pawn[]=[...world.pawns];
+    if(world.startingArrival&&world.startingArrival.phase!=='opened')candidates.push(...world.startingArrival.pods.map(p=>p.pawn));
     for(const owner of [world.scout,world.commercialTrip])if(owner&&'pawn' in owner)candidates.push(owner.pawn);
     if(world.group&&'members' in world.group)candidates.push(...world.group.members);
     candidates.push(...(world.groupLosses??[]).map(loss=>loss.pawn));

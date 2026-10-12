@@ -8,6 +8,7 @@ import { adoptSiteClimate,adoptStartingSiteClimate,automaticStartDay,climateDate
   TEMPERATE_CLIMATE,TICKS_PER_YEAR,validClimateDefinition,type ClimateDefinition } from '../src/sim/site-climate.ts';
 import { validSiteClimate } from '../src/sim/site-climate-save.ts';
 import type { World } from '../src/sim/types.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 
 function fixture(latitude=22.21,meanTemperature=16.2):World {
   const world=generateWorld(42,16,16);
@@ -116,7 +117,7 @@ describe('conservation des climats historiques',()=>{
   it('conserve exactement rev1 et le monde 229 pendant migration et continuation',()=>{
     const world=generateWorld(72,16,16);world.tick=17234;expect(adoptSiteClimate(world)).toBe(true);
     const historical={...world,schemaVersion:229},resumed=deserializeWorld(JSON.stringify(historical));
-    expect(resumed).toEqual({...historical,schemaVersion:230});
+    expect(resumed).toEqual({...historical,schemaVersion:SCHEMA_VERSION});
     expect(validSiteClimate(world.climate,229,world)).toBe(true);expect(validSiteClimate(resumed.climate,230,resumed)).toBe(true);
     expect(siteClimateDefinition(resumed)).toBe(TEMPERATE_CLIMATE);
     expect(resumed.climate!.calendarOrigin).toBe(climateOriginAtAdoption(world,17234));
@@ -129,7 +130,7 @@ describe('conservation des climats historiques',()=>{
 
   it('ne crée aucun climat ni globe pendant migration d’un monde 229 non adopté',()=>{
     const world=generateWorld(73,16,16),historical={...world,schemaVersion:229};
-    const resumed=deserializeWorld(JSON.stringify(historical));expect(resumed).toEqual({...historical,schemaVersion:230});
+    const resumed=deserializeWorld(JSON.stringify(historical));expect(resumed).toEqual({...historical,schemaVersion:SCHEMA_VERSION});
     expect(resumed.climate).toBeUndefined();expect(resumed.planet).toBeUndefined();
   });
 });

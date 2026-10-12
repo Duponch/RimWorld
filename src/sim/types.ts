@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 230 as const;
+export const SCHEMA_VERSION = 231 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -27,7 +27,7 @@ export interface Tile { floor?:import('./flooring.ts').FloorKind; ore?: 'steel' 
 export interface Resource extends Cell { blight?:import('./plant-blight.ts').CropBlightState; species?:import('./biome-flora.ts').PlantSpecies; plantLife?:import('./plant-life.ts').PlantLife; damage?:number; id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; growthThermalFactor?:number; growthLight?:'dark'|'artificial-full'; stone?: import('./geology.ts').StoneKind }
 export interface Structure extends Cell { shelf?:import('./shelf-storage.ts').ShelfStorageState; spikeTrap?:import('./spike-trap-state.ts').SpikeTrapState; deepDrill?:import('./deep-drilling-rules.ts').DeepDrillState; deepScanner?:import('./deep-drilling-rules.ts').DeepScannerState; emp?:{sinceCore:number;untilCore:number}; turret?:import('./mini-turret-state.ts').MiniTurretState; breakdown?:import('./breakdowns.ts').BreakdownState; gatherSpot?:boolean; pen?:{accepted:import('./animal-species.ts').AnimalSpeciesId[]}; art?:{authorId:number;createdAt:number}; flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
-export type MaterialOwner = {type:'orbital-ship';shipId:number} | {type:'orbital-cargo';deliveryId:number} | {type:'grave';graveId:number} | ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'inventory';pawnId:number} | {type:'equipment';pawnId:number} | {type:'apparel';pawnId:number} | { type: 'job'; jobId: number };
+export type MaterialOwner = {type:'starting-pod';podId:number} | {type:'orbital-ship';shipId:number} | {type:'orbital-cargo';deliveryId:number} | {type:'grave';graveId:number} | ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'inventory';pawnId:number} | {type:'equipment';pawnId:number} | {type:'apparel';pawnId:number} | { type: 'job'; jobId: number };
 export interface MaterialPile { mechCorpse?:import('./mechanoid-corpse.ts').MechanoidCorpseState; componentWork?:import('./component-work.ts').ComponentWork; flakWork?:import('./flak-work.ts').FlakWork; artWork?:import('./art-work.ts').ArtWork; gunWork?:import('./gun-work.ts').GunWork; humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
 export type StorageFilters = { chemfuel?:boolean; neutroamine?:boolean; 'mech-corpse'?:boolean; silver?:boolean; corpse?:boolean; wood:boolean; food:boolean; unfinished?:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; gold?:boolean; plasteel?:boolean; component?:boolean; 'advanced-component'?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
 export interface StockpileCell extends Cell, StorageConditions { /** Logical zone identity; physical cell IDs remain haul destinations. */ zoneId?:number; items?:Partial<Record<ItemId,boolean>>; id: number; filters: StorageFilters; priority: number; capacity: number }
@@ -219,6 +219,7 @@ export interface World {
   site?:import('./site.ts').LocalSite;
   gameProfile?:import('./game-profile.ts').GameProfile;
   scenario?:import('./scenario-definitions.ts').ScenarioStamp;
+  startingArrival?:import('./starting-arrival-state.ts').StartingArrivalState;
   hunting?:{targets:number[];completed:number};
   butchery?:{completed:number;meat:number;leather:number};
   flora?:import('./wild-flora.ts').WildFloraState;

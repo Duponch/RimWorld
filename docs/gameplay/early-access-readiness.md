@@ -6,7 +6,7 @@ Objectif humain du 13 octobre 2026 : une version prête à être essayée par de
 
 | Parcours joueur | Acquis actuellement | Qualification encore nécessaire |
 | --- | --- | --- |
-| Créer une colonie choisie | Cinq pages, site adopté, trois personnes parmi huit, trois biomes | Arrivée physique, explication des possessions, autres scénarios explicitement absents |
+| Créer une colonie choisie | Cinq pages, site adopté, trois personnes parmi huit, trois biomes ; arrivée V335 et reprise pendant la descente acquises | Première nuit et campagne naturelle ; autres scénarios explicitement absents |
 | Comprendre et préparer les premiers jours | Carnet contextuel V334, alertes ciblées, outils et dossiers | Première nuit naturelle tempérée, boréale et aride sans dotation de test |
 | Survivre et progresser | Construction, agriculture, cuisine, travail, besoins, soins, incidents et recherche déjà reliés | Campagne suffisamment longue pour observer consommation, renouvellement, saisons, incident et récupération |
 | Conserver sa campagne | Copies nommées, autosauvegardes, import/export ; reprises historiques et départ choisi qualifiés | Reprises réparties pendant la campagne naturelle, conservation complète des identités et propriétaires |
@@ -17,8 +17,8 @@ Une case de catalogue, un bouton grisé, une simulation préparée ou un test ci
 
 ## Ordre de travail courant
 
-1. Terminer le carnet contextuel V334 et le pousser ; préserver toutes les mécaniques.
-2. Fermer le parcours de création par l’arrivée physique : personnes et biens réellement détenus pendant la descente, mêmes identités et quantités à l’ouverture, pause et reprise exactes. Décider explicitement les écarts Core sans fabriquer d’autorisation ou scorie fictives.
+1. Carnet contextuel V334 commité et poussé ; préserver toutes les mécaniques.
+2. Arrivée physique V335 acquise : personnes et biens réellement détenus pendant la descente, mêmes identités et quantités à l’ouverture, pause et reprise exactes. Les écarts Core restent explicites, sans interdiction générique ou scorie fictives.
 3. Ajouter le couchage humain au sol si le manque reste confirmé, puis qualifier un camp de première nuit dans chaque biome. Corriger seulement les obstacles et explications observés.
 4. Qualifier la campagne longue avec reprises et incidents, traiter les blocages et expliquer les issues possibles.
 5. Publier une version d’essai avec une liste précise des parcours acquis, du contenu partiel et des problèmes connus ; poursuivre ensuite les priorités révélées par les joueurs.

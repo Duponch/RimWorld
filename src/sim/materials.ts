@@ -29,7 +29,7 @@ export function pileCell(world: World, pile: MaterialPile): Cell | null {
   const owner = pile.owner;
   if (owner.type === 'ground') return { x: owner.x, z: owner.z };
   if (owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory'){const pawn=world.pawns.find(pawn=>pawn.id===owner.pawnId);return pawn?pawnContentsLocation(world,pawn)?.cell??null:null;}
-  if(owner.type==='grave'||owner.type==='orbital-ship'||owner.type==='orbital-cargo')return null;
+  if(owner.type==='grave'||owner.type==='orbital-ship'||owner.type==='orbital-cargo'||owner.type==='starting-pod')return null;
   return world.jobs.find(job => job.id === owner.jobId) ?? null;
 }
 export function deliveredStock(world: World, jobId: number): Stock {

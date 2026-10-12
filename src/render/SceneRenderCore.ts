@@ -52,6 +52,7 @@ import { PaintedWater } from './PaintedWater';
 import { WeatherCloudLayer } from './WeatherCloudLayer';
 import { OrbitalDeliveryLayer } from './OrbitalDeliveryLayer';
 import { PodRescueLayer } from './PodRescueLayer';
+import { StartingArrivalLayer } from './StartingArrivalLayer';
 import { WeatherPrecipitationLayer } from './WeatherPrecipitationLayer';
 import { weatherRainRate, weatherSnowRate } from '../sim/weather';
 import { visualWindDirection } from './visual-weather';
@@ -174,6 +175,7 @@ export class SceneRenderCore {
   protected turretPreviewVisible=false;
   protected readonly orbitalDelivery = new OrbitalDeliveryLayer(this.environmentLighting.configure,this.animationDetail);
   protected readonly podRescue = new PodRescueLayer(this.environmentLighting.configure,this.animationDetail);
+  protected readonly startingArrival = new StartingArrivalLayer(this.environmentLighting.configure,this.animationDetail);
 
   readonly backend: string;
   protected readonly renderer: THREE.WebGPURenderer;
@@ -391,7 +393,7 @@ export class SceneRenderCore {
     selectionGeometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(9),3));
     this.objectSelection = new THREE.Mesh(selectionGeometry,new THREE.MeshBasicMaterial({color:0xfff5d6,side:THREE.DoubleSide,depthTest:false,depthWrite:false,transparent:true,opacity:1,forceSinglePass:true}));
     this.objectSelection.visible=false;this.objectSelection.frustumCulled=false;this.objectSelection.renderOrder=GROUND_OVERLAY_RENDER_ORDER.selection;
-    this.scene.add(this.hover,this.constructionPreview.group,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group,this.podRescue.group,this.orbitalDelivery.group);
+    this.scene.add(this.hover,this.constructionPreview.group,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group,this.podRescue.group,this.orbitalDelivery.group,this.startingArrival.group);
     } catch (error) {
       try { this.dispose(); } catch { /* Static create also closes the device. */ }
       throw error;
@@ -570,6 +572,7 @@ export class SceneRenderCore {
     if(prepared)this.structureVfx.adoptNative(world,newMap,prepared.axes,prepared.effects);
     else this.structureVfx.adopt(world,newMap);
     this.podRescue.adopt(world);this.orbitalDelivery.adopt(world);
+    if(this.startingArrival.adopt(world,resetPoses))this.invalidatePausedShadow();
     this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses,resourceFrame);
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses,this.pawns);
@@ -685,6 +688,7 @@ export class SceneRenderCore {
     this.clouds.setTexturesEnabled(enabled);
     this.grass?.setTexturesEnabled(enabled);
     this.podRescue.setTexturesEnabled(enabled);this.orbitalDelivery.setTexturesEnabled(enabled);
+    this.startingArrival.setTexturesEnabled(enabled);
     this.landscape.needsUpdate=true;
   }
   protected refreshTerrainPaint(world:World):void {
@@ -898,6 +902,7 @@ export class SceneRenderCore {
     const restoreFilth=this.hygiene.filth.prepareForCompile();
     const restoreClouds=this.clouds.prepareForCompile();
     const restorePodRescue=this.podRescue.prepareForCompile();
+    const restoreStartingArrival=this.startingArrival.prepareForCompile();
     const restoreOrbitalDelivery=this.orbitalDelivery.prepareForCompile();
     const restorePrecipitation=this.precipitation.prepareForCompile();
     const restoreBoxes=this.boxes.prepareEmptyShadows();
@@ -944,6 +949,7 @@ export class SceneRenderCore {
       restoreBoxes();restoreArea();restoreTurretRange();restoreHints();restoreOrderRock();restoreConstruction();restoreDeep();
       restoreOverview();
       restorePodRescue();restoreOrbitalDelivery();
+      restoreStartingArrival();
       restoreDiorama?.();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
@@ -1304,6 +1310,7 @@ export class SceneRenderCore {
     this.doors.present(skyTick);this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
     this.actionVfx.setView(this.camera);this.structureVfx.setView(this.camera,this.controls.target);
     this.actionVfx.present(skyTick);this.brawlCloud.present(skyTick);this.structureVfx.present(skyTick);this.podRescue.present(skyTick);this.orbitalDelivery.present(skyTick);
+    if(this.startingArrival.present(skyTick))this.invalidatePausedShadow();
     if(this.texturesEnabled)this.paintedWater.present(skyTick/TICKS_PER_SECOND);
     if(this.animationDetail.shouldSample(this.skyAnimation,(this.world?.width??1)/2,0,(this.world?.height??1)/2)){
       this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
@@ -1587,6 +1594,7 @@ export class SceneRenderCore {
     this.brawlCloud.dispose();
     this.structureVfx.dispose();
     this.podRescue.dispose();this.orbitalDelivery.dispose();
+    this.startingArrival.dispose();
     this.hostPort.disposeLabels();
     this.overview.dispose();
     this.deepResources.dispose();

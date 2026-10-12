@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V335 : [arrivée des survivants](gameplay/starting-arrival-v335.md), schéma 231.** Contenus physiques, transitions confirmées et reprise pendant la descente ; corpus historique conservé. Contrôles et limites centralisés, prochaines priorités première nuit et campagne durable. Les états suivants sont historiques.
+
 **V334 : [carnet contextuel](gameplay/first-days-v334.md), schéma 230 conservé.** Premiers jours, état actuel des préparations et liens vers les outils usuels ; [guide joueur](gameplay/player-guide.md#conseils-des-premiers-jours--v334) et [critères early access](gameplay/early-access-readiness.md). Contrôles et limites dans la note unique ; reprise autonome active et publications regroupées. Les états suivants sont historiques.
 
 **V333 : [préparation d'une nouvelle colonie](gameplay/new-game-preparation-v333.md), schéma 230.** Cinq pages avec notre charte actuelle, site réellement adopté et trois candidats choisis parmi huit. [Recherche Core](research/new-game-interface-v333.md), [menus](development/new-game-menus.md) et [guide joueur](gameplay/player-guide.md#préparer-sa-colonie--v333) distinguent structure, contenu actif et limites. Compatibilité historique, parcours natif, rouges et contrôles dans la note unique ; publication regroupée avec les sauvegardes V332. Les états suivants sont historiques.

@@ -15,5 +15,7 @@ export function civilianAdmissionFits(w:World,pawns=0,piles=0):boolean {
 /** Active originals only; frozen terminal/archive owners do not reserve a map population slot. */
 export function civilianAwayCounts(w:World):{people:number;piles:number} {
  const legacy=civilianAway(w),group=w.group&&'members' in w.group?w.group:undefined;
- return {people:Number(!!legacy)+(group?.members.length??0),piles:(legacy?.items.length??0)+(group?.items.length??0)};
+ const arrival=w.startingArrival,contained=arrival&&arrival.phase!=='opened'?arrival.pods:[];
+ return {people:Number(!!legacy)+(group?.members.length??0)+contained.length,
+   piles:(legacy?.items.length??0)+(group?.items.length??0)+contained.reduce((n,p)=>n+p.items.length,0)};
 }

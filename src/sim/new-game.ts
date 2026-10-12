@@ -5,7 +5,8 @@ import { createPlantLife } from './plant-life.ts';
 import { adoptWeather } from './weather.ts';
 import { adoptWind } from './wind.ts';
 import { ensureFireState } from './fire-rules.ts';
-import { PREPARED_CRASHLANDED_REVISION } from './scenario-definitions.ts';
+import { ARRIVING_CRASHLANDED_REVISION } from './scenario-definitions.ts';
+import { prepareStartingArrival } from './starting-arrival.ts';
 import { adoptColonyEconomy } from './colony-economy.ts';
 import { enableVisitors } from './visitors.ts';
 import { enableArrivals } from './arrivals.ts';
@@ -77,7 +78,8 @@ function landingSite(world:World,stacks=GROUND_STACKS):{landing:Cell;cells:Cell[
   throw new Error('Aucun point d’arrivée accessible ne peut accueillir les survivants et leurs réserves.');
 }
 
-function survivalStart(world:World,commerce=false,party?:StartingParty):Cell {
+function survivalStart(world:World,commerce=false,party?:StartingParty):{landing:Cell;pawnIds:number[];transportedPileIds:number[]} {
+  const firstPile=world.piles.length,pawnIds:number[]=[];
   const supplies:readonly (readonly [ItemId,number])[]=commerce?[...SUPPLIES,['silver',800],['bolt-action-rifle',1],['plasteel-knife',1]]:SUPPLIES;
   const stacks=supplies.reduce((n,[item,q])=>n+Math.ceil(q/ITEM_DEFINITIONS[item].stackLimit),0);
   const {landing,cells}=landingSite(world,stacks);
@@ -85,6 +87,7 @@ function survivalStart(world:World,commerce=false,party?:StartingParty):Cell {
     const cell=cells[index]!,pawn=party?materializeStartingCandidate(party.seed,party.selected[index]!,world.nextId++,cell.x,cell.z):startingPawn(world.nextId++,name,cell.x,cell.z,index,55,world.seed);
     if(commerce&&!party)pawn.age=crashlandedHumanAge(world.seed,pawn.id,pawn.age!);
     world.pawns.push(pawn);
+    pawnIds.push(pawn.id);
     addMaterial(world,'apparel',1,{type:'apparel',pawnId:pawn.id},'cloth-shirt');
   }
   let cursor=3;
@@ -97,7 +100,7 @@ function survivalStart(world:World,commerce=false,party?:StartingParty):Cell {
     }
   }
   world.research={project:null,points:CLOTHING_RESEARCH_COST,completedAt:0,airConditioning:{points:AIR_CONDITIONING_COST,completedAt:0}};
-  return landing;
+  return {landing,pawnIds,transportedPileIds:world.piles.slice(firstPile).filter(p=>p.item!=='wood'&&p.item!=='steel').map(p=>p.id)};
 }
 
 /** The only application factory. Loading an existing save must not call this
@@ -115,7 +118,8 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
   const site=id==='crashlanded'?resolveSite(seed,{hilliness:'small-hills',...siteOptions,biome:siteOptions?.biome??'temperate-forest'}):undefined;
   const world=site?generateSiteWorld(seed,size,size,site):natural?generateWorld(seed,size,size,'temperate-survivors-v1'):generateWorld(seed,size,size);
   if(site)world.site=site;
-  const landing=natural?survivalStart(world,id==='crashlanded',startingParty):{x:Math.floor(size/2),z:Math.floor(size/2)};
+  const start=natural?survivalStart(world,id==='crashlanded',startingParty):undefined;
+  const landing=start?.landing??{x:Math.floor(size/2),z:Math.floor(size/2)};
   if(id==='sentry')setupEncounter(world);
   else {
     initializeCampTraits(world);
@@ -124,7 +128,7 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
     if(site?.revision===2)enableBiomeWildlife(world,site.biome);else if(natural)enableWildlife(world,undefined,'natural');else enableWildlife(world);
   }
   initializeCampBackgrounds(world);
-  world.scenario={id,revision:id==='crashlanded'?(selectedSite?PREPARED_CRASHLANDED_REVISION:SCENARIOS.crashlanded.revision):SCENARIO_REVISION,landing};
+  world.scenario={id,revision:id==='crashlanded'?(selectedSite?ARRIVING_CRASHLANDED_REVISION:SCENARIOS.crashlanded.revision):SCENARIO_REVISION,landing};
   if(selectedSite){
     world.planet=selectedSite.planet;
     if(!adoptStartingSiteClimate(world,selectedSite.climate))throw new Error('Le climat du site de départ est invalide.');
@@ -143,5 +147,6 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
     });
     if(links.length&&!replaceRelationshipLinks(world,links))throw new Error('Les relations initiales contredisent les colons choisis.');
   }else initializeCampRelationships(world);
+  if(selectedSite&&start)prepareStartingArrival(world,start.pawnIds,start.transportedPileIds);
   return world;
 }

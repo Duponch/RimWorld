@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V335, schéma 231 : [propriétaire d’arrivée](../gameplay/starting-arrival-v335.md).** Records Pawn et Material originaux contenus hors tableaux map, capture humaine figée et registre commun ; transfert après acteurs, Decoder avant adoption, reçu ouvert sans ownership. Rendu résident et sortie anticipée après extinction. Les états suivants sont historiques.
+
 **V334, schéma 230 conservé : [carnet contextuel](../gameplay/first-days-v334.md).** Lecture pure du snapshot confirmé dans l’UI ; sortie avant lecture quand fermé, accueil ou remplacement. Lignes conservées par identifiant, focus/ouverture stables et callbacks détruits au remplacement. Aucun cache de tick ni état de mission ne masque les commandes en pause. Simulation, bridge, rendu et publics inchangés ; aucun gain FPS mesuré. Les états suivants sont historiques.
 
 **V333, schéma 230 : [préparation de nouvelle partie](../gameplay/new-game-preparation-v333.md).** Candidats dérivés de descriptors stricts, graines indépendantes et matérialisation des trois sélectionnés ; choix de tuile reconstruit par le worker, géographie de l'UI sans autorité. Départ révision9 avec climat local révision2 obligatoire et gardes fichiers/Decoder avant adoption ; migration229 validée puis numéro seul, chemins historiques conservés. Prévisions sur les mêmes primitives, cache annuel borné à huit profils, globe SVG résident au geste. Coûts et parité exhaustive non certifiés. Les états suivants sont historiques.

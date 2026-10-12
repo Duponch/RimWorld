@@ -20,9 +20,13 @@ test('first days guide uses current facts, opens existing tools, preserves focus
   await frontButton(page,'Suivant').click();await front(page).locator('dialog').getByRole('button',{name:'Confirmer',exact:true}).click();
   await frontButton(page,'Démarrer').click();
   await expect(front(page)).toBeHidden({timeout:90000});await expect(page.locator('.game-shell')).toHaveJSProperty('inert',false,{timeout:90000});
+  const pending=await world(page);expect(pending.tick).toBe(0);expect(pending.pawns).toHaveLength(0);
+  expect(pending.startingArrival?.phase).toBe('incoming');await expect(guide(page)).not.toHaveAttribute('open','');
+  await page.locator('.starting-arrival').getByRole('button',{name:'Reprendre',exact:true}).click();
+  await expect.poll(async()=>page.evaluate(()=>window.__lisiere.world.startingArrival?.phase)).toBe('opened');await pause(page);
   await expect(guide(page)).toHaveAttribute('open','');
   await expect(page.locator('[data-first-day-section]')).toHaveCount(7);
-  const created=await world(page);expect(created.tick).toBe(0);
+  const created=await world(page);expect(created.tick).toBeGreaterThanOrEqual(27);expect(created.pawns).toHaveLength(3);
   await expect(section(page,'storage')).toHaveAttribute('data-status','missing');
   await expect(section(page,'beds')).toHaveAttribute('data-status','missing');
   await section(page,'food').locator('summary').click();await expect(section(page,'food')).toContainText('50 repas de survie');
@@ -46,7 +50,7 @@ test('first days guide uses current facts, opens existing tools, preserves focus
   await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:info.outputPath('guide-1440.png')});
   await section(page,'food').evaluate(node=>{(window as any).__guideFoodRow=node;});
   await page.locator('[data-speed="1"]').click();await section(page,'food').locator('summary').focus();
-  await expect.poll(async()=>page.evaluate(()=>window.__lisiere.tick)).toBeGreaterThan(3);
+  await expect.poll(async()=>page.evaluate(()=>window.__lisiere.tick)).toBeGreaterThan(created.tick+3);
   expect(await section(page,'food').evaluate(node=>node===(window as any).__guideFoodRow)).toBe(true);
   await expect(section(page,'food').locator('summary')).toBeFocused();await expect(section(page,'food')).toHaveAttribute('open','');await pause(page);
   await guide(page).locator(':scope > summary').click();await expect(page.locator('#first-day-guide')).toBeHidden();

@@ -68,6 +68,7 @@ import { validDeathThoughtsPawnShape,validDeathThoughtsTransport } from '../sim/
 import { validateRelationshipWorld } from '../sim/relationship-world-save.ts';
 import { validateGroupStateWithPlanet } from '../sim/group-save.ts';
 import { registerGroupThingIds } from '../sim/group-namespace-save.ts';
+import { validStartingArrivalShape,validateStartingArrivalOwners,registerStartingArrivalThingIds,validStartingArrivalTransition } from '../sim/starting-arrival-save.ts';
 import { captureHumanOwners } from '../sim/human-owners.ts';
 import { validateSocial } from '../sim/social-save.ts';
 import { validPawnSurgeryShape,validateSurgeries } from '../sim/surgery-save.ts';
@@ -865,6 +866,10 @@ export class SnapshotDecoder {
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    const arrivalField=Object.getOwnPropertyDescriptor(packet.world,'startingArrival');
+    if(arrivalField?(!Object.hasOwn(arrivalField,'value')||!arrivalField.enumerable||arrivalField.value===undefined
+      ||!validStartingArrivalShape(arrivalField.value,packet.world.schemaVersion,packet.world)):'startingArrival' in packet.world)
+      return resync('Forme ou horloge des capsules initiales invalide.');
     let message:SnapshotMessage;
     let structureIndices:readonly number[]|undefined;
     if(packet.kind==='delta'&&Object.hasOwn(packet,'structures')){
@@ -1105,6 +1110,9 @@ export class SnapshotDecoder {
     // properties to infer authority here. Public contexts ignore this fact.
     const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
+    if(validateStartingArrivalOwners(next,next.schemaVersion).length)return resync('Personne, possession ou propriétaire de capsule initiale invalide.');
+    if(this.current&&message.epoch===this.epoch&&!validStartingArrivalTransition(this.current,next))
+      return resync('Contenu ou transfert des capsules initiales réécrit dans cette partie.');
     const validation=this.createValidationContext(next,resourceReuse,geometryReuse),powerTopology=validation.powerParents;
     const identities=new ValidationIdentityContext(next,validation.resourceFacts);
     if(!validBiofuelTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
@@ -1202,10 +1210,11 @@ export class SnapshotDecoder {
     // capture. Foreign registries above are already validated; their historical
     // owners reserve the same namespace as the map and cannot become a wave.
     const shelves=next.structures.some(s=>s.shelf!==undefined)||next.packed.some(p=>p.building.shelf!==undefined);
-    if(shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
+    const startingArrival=Object.hasOwn(next,'startingArrival');
+    if(startingArrival||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
       // Only the closed MAIN context can reuse its resource facts. Keep RAW
       // and non-strict collection/getter evaluation on the historical path.
-      const owned=validation.resourceFacts&&(shelves||relationships||Object.hasOwn(next,'orbital'))
+      const owned=validation.resourceFacts&&(startingArrival||shelves||relationships||Object.hasOwn(next,'orbital'))
         ?captureOwnedStrictNamespace(next,validation.resourceFacts,mechanicalCorpseIds):undefined;
       let ids:NumericMembershipSink&Iterable<number>,strictIds:boolean;
       if(owned!==undefined){
@@ -1217,7 +1226,7 @@ export class SnapshotDecoder {
           ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
           ...next.packed.map(p=>p.building),...shelfIdentityOwners(next),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
         ];
-        ids=new NumericMembership();strictIds=shelves||relationships||Object.hasOwn(next,'orbital');
+        ids=new NumericMembership();strictIds=startingArrival||shelves||relationships||Object.hasOwn(next,'orbital');
         for(const owner of owners){if(strictIds&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
       }
       const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&(strictIds||mechanicalCorpseIds.has(Number(id))))return false;ids.add(Number(id));return true;};
@@ -1236,6 +1245,7 @@ export class SnapshotDecoder {
       planetCheck=this.planetValidation.prepare(next,next.schemaVersion,message.epoch);
       if(!planetCheck.ok||validateGroupStateWithPlanet(next,next.schemaVersion,planetCheck.context).length)return resync('Planète, groupe ou pertes incohérents.');
       if(registerGroupThingIds(next,ids).length)return resync('Une identité du groupe possède plusieurs propriétaires.');
+      if(registerStartingArrivalThingIds(next,ids).length)return resync('Une identité des capsules initiales possède plusieurs propriétaires.');
       if(validateShooting(next,next.schemaVersion,ids).length)return resync('Référence ou autorité de tir humaine invalide.');
       if(validateMechanoidRaids(next,next.schemaVersion,ids).length)return resync('Identité mécanique historique réutilisée dans un autre propriétaire.');
       for(const actor of next.mechanoids??[])if(validateMechanoidRanged(next,actor,next.schemaVersion,ids).length)return resync('Référence ou phase de tir mécanique invalide.');
@@ -1252,7 +1262,7 @@ export class SnapshotDecoder {
     // Rev1 transport retains its historical presentation-fixture admission.
     // New tile climates are authority: certify the small definition before
     // committing the geographic witness or replacing the confirmed world.
-    if((next.scenario?.revision===9||next.climate&&(next.climate.revision!==1||Object.hasOwn(next.climate,'definition')))&&
+    if((next.scenario?.revision===9||next.scenario?.revision===10||next.climate&&(next.climate.revision!==1||Object.hasOwn(next.climate,'definition')))&&
       !validSiteClimate(next.climate,next.schemaVersion,next))return resync('Climat du lieu de départ incohérent.');
     if(Object.hasOwn(next,'group')||Object.hasOwn(next,'groupLosses')){
       try {const people=captureHumanOwners(next).people;

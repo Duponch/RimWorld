@@ -1,8 +1,12 @@
 # Guide joueur
 
+## Arrivée des survivants — V335
+
+Le nouveau départ est en pause avec trois capsules en approche. **Reprendre** fait avancer la descente ; vous pouvez mettre en pause et sauvegarder à tout moment. L’impact précède l’ouverture, après laquelle les trois colons, leurs vêtements et les fournitures transportées apparaissent réellement. Bois et acier sont dispersés au sol dès le début. Une sortie obstruée garde tous les occupants dans les capsules : annulez les plans qui bloquent les sorties. [Fonctionnement et limites](starting-arrival-v335.md).
+
 ## Conseils des premiers jours — V334
 
-Après une nouvelle partie, **Conseils** s’ouvre en haut à droite. Développez une préparation pour consulter les faits actuels et ouvrir Travail, Zones, Meubles, Production ou Assignations. Le carnet distingue les chantiers des objets construits ; une réserve de rations ou une culture ne garantit pas la nourriture future. Un lit double libre compte une place avant affectation : inspectez le lit pour choisir ses occupants. Pour équiper une arme, sélectionnez un seul colon, faites un clic droit sur l’arme au sol, puis choisissez **Équiper**.
+Après la sortie des capsules, **Conseils** s’ouvre en haut à droite. Développez une préparation pour consulter les faits actuels et ouvrir Travail, Zones, Meubles, Production ou Assignations. Le carnet distingue les chantiers des objets construits ; une réserve de rations ou une culture ne garantit pas la nourriture future. Un lit double libre compte une place avant affectation : inspectez le lit pour choisir ses occupants. Pour équiper une arme, sélectionnez un seul colon, faites un clic droit sur l’arme au sol, puis choisissez **Équiper**.
 
 Le carnet est facultatif et ne donne aucun ordre à votre place. Fermez-le pour dégager la vue ; il ne lit plus la colonie lorsqu’il est fermé. Les alertes conservent leurs clics vers les personnes ou lieux concernés. **?** ouvre l’aide générale, avec culture, cuisine, toit, température, soins et sauvegardes. Une recharge referme le carnet sans modifier votre progression. [Contrôles et limites](first-days-v334.md).
 

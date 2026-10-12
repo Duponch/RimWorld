@@ -1,6 +1,7 @@
 import { createAllowedAreaControls } from './ui/allowed-area-controls';
 import './ui/allowed-area-controls.css';
 import { createFirstDayGuide } from './ui/first-day-guide';
+import { createStartingArrivalUI } from './ui/starting-arrival';
 let allowedAreaEditId:number|undefined;
 import {PresentationQueue} from './render/PresentationQueue';
 import {PresentationChanges} from './bridge/presentation-changes';
@@ -285,6 +286,7 @@ const client = (() => {
 const audio = new AudioDirector();
 const music = new MusicDirector();
 let snapshot: World | undefined;
+let guideAfterStartingArrival=false;
 let selectedPawn: number | undefined;
 let colonistInspector: ColonistInspectorState | undefined;
 let selectedCell: { x: number; z: number } | undefined;
@@ -698,7 +700,8 @@ const frontMenu = createFrontMenu(frontHost, {
   onMusicVolumeChange: setMusicVolume,
   onStart: async draft => {
     await replaceColony(() => session.create(draft.seed, draft.size, 'crashlanded',draft.site,draft.startingParty,draft.startingWorld));
-    learningReadout.open=true;syncFirstDayGuide();
+    guideAfterStartingArrival=!!snapshot?.startingArrival&&snapshot.startingArrival.phase!=='opened';
+    learningReadout.open=!guideAfterStartingArrival;syncFirstDayGuide();
   },
   onLoad: async key => replaceColony(() => session.load(key)),
   getTestColonies: fetchTestColonies,
@@ -743,9 +746,11 @@ async function replaceColony(action: () => Promise<void>): Promise<void> {
     await action(); menuResumeSpeed = undefined; updateIncident();
     if (simulationStopped) throw new Error('La simulation s’est arrêtée pendant la préparation de l’affichage. Chargez une colonie validée pour reprendre.');
     statusAlerts.reset();raidUI.reset();heatwaveUI.reset();flashstormUI.reset();weatherConditionUI.reset();tradeUI.reset();
-    learningReadout.open=false;firstDayGuide.reset();
+    guideAfterStartingArrival=false;learningReadout.open=false;firstDayGuide.reset();startingArrivalUI.reset();
+    if(snapshot)startingArrivalUI.update(snapshot,currentSpeed);
     clearSelection(); setPanel(null); frontMenu.hide();
     if (snapshot?.pawns[0]) renderer?.focusPawn(snapshot.pawns[0].id);
+    else if(snapshot?.startingArrival&&snapshot.startingArrival.phase!=='opened')renderer?.focusCell(snapshot.startingArrival.pods[0]!.cell);
   } finally { replacingWorld = false; syncStorageButtons(); }
 }
 
@@ -1468,6 +1473,7 @@ function renderState() {
     if (!entries.length) el('journal-items').textContent = 'Trois survivants. Une nouvelle histoire.';
   }
   statusAlerts.update(world);
+  startingArrivalUI.update(world,currentSpeed);
   syncFirstDayGuide();
   economyUI.update(world);arrivalUI.update(world);questUI.update(world);raidUI.update(world);heatwaveUI.update(world);flashstormUI.update(world);solarFlareUI.update(world);weatherConditionUI.update(world);shortCircuitUI.update(world);tradeUI.update(world);orbitalUI.update(world);
 }
@@ -1488,6 +1494,7 @@ const statusAlerts=createStatusAlerts(el('status-alerts'),{
   setPanel(context.panel);if(context.category)setCategory(context.category);
 },tab:tab=>document.querySelector<HTMLButtonElement>(`[data-colonist-tab="${tab}"]`)?.click()});
 const learningReadout=document.querySelector<HTMLDetailsElement>('.learning-readout')!;
+const startingArrivalUI=createStartingArrivalUI(document.querySelector<HTMLElement>('.game-shell')!,{onResume:()=>void attempt(()=>changeSpeed(1))});
 const firstDayGuide=createFirstDayGuide(el('first-day-guide'),{onAction:action=>{
   learningReadout.open=false;firstDayGuide.setActive(false);
   if(action.mapTools){el<HTMLButtonElement>(`${action.mapTools}-open`).click();return;}
@@ -1495,7 +1502,9 @@ const firstDayGuide=createFirstDayGuide(el('first-day-guide'),{onAction:action=>
   if(action.panel)void attempt(async()=>{await switchPanel(action.panel!);if(action.category)setCategory(action.category);});
 }});
 function syncFirstDayGuide():void {
-  firstDayGuide.setActive(learningReadout.open&&!frontMenu.isOpen()&&!replacingWorld);
+  const pending=!!snapshot?.startingArrival&&snapshot.startingArrival.phase!=='opened';
+  if(guideAfterStartingArrival&&!pending&&!frontMenu.isOpen()&&!replacingWorld){guideAfterStartingArrival=false;learningReadout.open=true;}
+  firstDayGuide.setActive(learningReadout.open&&!pending&&!frontMenu.isOpen()&&!replacingWorld);
   if(snapshot)firstDayGuide.update(snapshot);
 }
 learningReadout.addEventListener('toggle',syncFirstDayGuide);

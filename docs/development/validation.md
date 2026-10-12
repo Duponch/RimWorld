@@ -1,4 +1,6 @@
-# Validation courante — V334
+# Validation courante — V335
+
+**V335, schéma 231 : [contrôles ROOT](../gameplay/starting-arrival-v335.md#contrôles-root).** Sources, tests, publics et pilotes gelés ; contrôles pertinents séquentiels, résultats et rouges dans la note unique. Unités, corpus avec vrai tick, typage, package et natif ne constituent pas une campagne naturelle entière ni un gainFPS. Les validations suivantes sont historiques.
 
 **V334, schéma 230 conservé : [carnet des premiers jours](../gameplay/first-days-v334.md#contrôles-root).** Dix-neuf cas/1fichier, typage, package Pages et Chrome natif avec création250², outils, deux tailles, focus pendant les ticks et export/recharge7exacte passent. Gel2831exact, ROOT seul contrôles ; pas de modification simulation/bridge/rendu/publics ni de reprise du banc de présentation inchangé. Aucun gainFPS, suite complète ou campagne naturelle entière certifiés. Les validations suivantes sont historiques.
 

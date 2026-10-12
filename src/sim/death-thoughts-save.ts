@@ -38,6 +38,7 @@ export function validDeathThoughtsPawnShape(pawn:Record<string,unknown>,version:
 export function validDeathThoughtsTransport(world:World,version:number=world.schemaVersion):boolean {
   try {
     const candidates:unknown[]=[...world.pawns];
+    if(world.startingArrival&&world.startingArrival.phase!=='opened')candidates.push(...world.startingArrival.pods.map(p=>p.pawn));
     for(const owner of [world.scout,world.commercialTrip])if(owner&&'pawn' in owner)candidates.push(owner.pawn);
     if(world.group&&'members' in world.group)candidates.push(...world.group.members);
     candidates.push(...(world.groupLosses??[]).map(loss=>loss.pawn));

@@ -1053,6 +1053,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);syncCarriedAnimals(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);reconcileWildlife(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     if(world.hunting)world.hunting.targets=world.hunting.targets.filter(id=>world.wildlife?.animals.some(a=>a.id===id&&a.state!=='dead')||world.pawns.some(p=>p.hunting?.animalId===id));
     advanceScoutTrip(world);advanceCommercialTrip(world);advanceGroup(world);
+    advanceStartingArrival(world);
     refreshStock(world);reconcileSpikeTrapContacts(world);
     if(thermalDirty)thermal=reconcileTemperature(world);
     updateFoodTemperatures(world,thermal);
@@ -1061,4 +1062,5 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   }
 }
 import { updatePawnHealth,reconcilePawnHealth } from './health.ts';
+import { advanceStartingArrival } from './starting-arrival.ts';
 import { medicallyStopped,physicalWorkFactor } from './health-rules.ts';
