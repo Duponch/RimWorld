@@ -3,6 +3,7 @@ import {storageCellById} from '../sim/shelf-storage.ts';
 import { PowerParentValidationCache,type PowerParentReader } from '../sim/power-parent-validation.ts';
 import type { StagingGeometryReader } from '../sim/staging-validation.ts';
 import type { OwnedValidationResourceReader, OwnedResourceReuseWitness } from '../sim/owned-validation-resources.ts';
+import type { OwnedGeometryReuseWitness } from '../sim/owned-validation-geometry.ts';
 import { ValidationIdentityContext } from '../sim/validation-identities.ts';
 import { validBiofuelTransport } from '../sim/biofuel-save.ts';
 import { validAutoSlaughterTransport } from '../sim/auto-slaughter-save.ts';
@@ -852,7 +853,7 @@ export class SnapshotDecoder {
 
   /** Public/mutable consumers retain the mutation-aware historical reader.
    * The closed MAIN subclass owns its fixed consumers and local query scope. */
-  protected createValidationContext(_next:World,_resourceReuse?:OwnedResourceReuseWitness):SnapshotValidationContext {
+  protected createValidationContext(_next:World,_resourceReuse?:OwnedResourceReuseWitness,_geometryReuse?:OwnedGeometryReuseWitness):SnapshotValidationContext {
     return {powerParents:new PowerParentValidationCache()};
   }
 
@@ -1099,7 +1100,11 @@ export class SnapshotDecoder {
     const resourceReuse:OwnedResourceReuseWitness|undefined=!reindexResources
       &&resourceStructureAllowed&&resourceStructureCandidate&&this.current
       ?{kind:'sparse',previous:this.current,updated:resourceStructureCandidate.updated}:undefined;
-    const validation=this.createValidationContext(next,resourceReuse),powerTopology=validation.powerParents;
+    // Defined only by the verified sparse branch above; do not re-read packet
+    // properties to infer authority here. Public contexts ignore this fact.
+    const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
+      ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
+    const validation=this.createValidationContext(next,resourceReuse,geometryReuse),powerTopology=validation.powerParents;
     const identities=new ValidationIdentityContext(next,validation.resourceFacts);
     if(!validBiofuelTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
     if(!validAllowedAreaTransport(next,next.schemaVersion))return resync('Zone autorisée, affectation originale ou retour invalide ou futur.');

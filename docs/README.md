@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V328 : [géométrie confirmée réutilisée](development/aulnes-performance-v328.md), schéma 229 conservé.** Projection des structures conservée uniquement dans le MAIN privé, données métier actuelles et lecteurs historiques maintenus. Gain local sur Les Aulnes avec chambre/carton ON ; preuves CPU/GAME, reprises et limites dans la note unique. Les états suivants sont historiques.
+
 **V327 : [recherches d’étagères partagées](development/aulnes-performance-v327.md), schéma 229 conservé.** Optimisation des validations MAIN, mêmes visuels/règles ; gain rapproché mesuré sur Les Aulnes avec chambre/carton activés. Coûts, contrôles, reprises et limites de débit dans la note unique. Les états suivants sont historiques.
 
 **V326 : [quatrième mur et coût du rendu](development/aulnes-performance-v326.md), schéma 229 conservé.** Chambre fermée et contrôles sur Les Aulnes avec le diorama ; [guide](gameplay/player-guide.md#chambre-à-quatre-murs--v326). Mesures CPU/GPU, images exactes et limites de débit dans la note unique. Les états suivants sont historiques.

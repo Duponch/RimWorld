@@ -166,7 +166,7 @@ import { SimulationClient } from './bridge/SimulationClient';
 import { SnapshotDecoder, type SnapshotValidationContext, type SnapshotMessage, type SnapshotAdoption } from './bridge/snapshots';
 import type { AudioCue } from './bridge/audio-cues';
 import { PowerParentValidationCache, type PowerParentIndex } from './sim/power-parent-validation';
-import { createOwnedValidationGeometry } from './sim/owned-validation-geometry.ts';
+import { createOwnedValidationGeometryOwner, type OwnedGeometryReuseWitness } from './sim/owned-validation-geometry.ts';
 import { createOwnedValidationResourceOwner, type OwnedResourceReuseWitness } from './sim/owned-validation-resources.ts';
 import { AudioDirector } from './audio/AudioDirector';
 import { MusicDirector, type MusicMood } from './audio/MusicDirector';
@@ -210,21 +210,26 @@ const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElem
 const client = (() => {
   class MainSnapshotDecoder extends SnapshotDecoder {
     readonly #resourceOwner = createOwnedValidationResourceOwner();
+    readonly #geometryOwner = createOwnedValidationGeometryOwner();
     override adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
       this.#resourceOwner.discard();
+      this.#geometryOwner.discard();
       try {
         const result = super.adopt(packet);
         if (result.status === 'applied') this.#resourceOwner.commit(result.world);
         else this.#resourceOwner.discard();
+        if (result.status === 'applied') this.#geometryOwner.commit(result.world);
+        else this.#geometryOwner.discard();
         return result;
       } catch (error) {
         this.#resourceOwner.discard();
+        this.#geometryOwner.discard();
         throw error;
       }
     }
-    protected override createValidationContext(next: World, resourceReuse?: OwnedResourceReuseWitness): SnapshotValidationContext {
+    protected override createValidationContext(next: World, resourceReuse?: OwnedResourceReuseWitness, geometryReuse?: OwnedGeometryReuseWitness): SnapshotValidationContext {
       const raw = new PowerParentValidationCache();
-      const geometry = createOwnedValidationGeometry(next, this.#resourceOwner.prepare(next, resourceReuse));
+      const geometry = this.#geometryOwner.prepare(next, geometryReuse, this.#resourceOwner.prepare(next, resourceReuse));
       let parents: PowerParentIndex | undefined;
       return {
         powerParents: { read(world: World): PowerParentIndex {
