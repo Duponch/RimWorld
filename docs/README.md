@@ -1,6 +1,6 @@
 # Documentation d’Elsewhere
 
-**V328 : [géométrie confirmée réutilisée](development/aulnes-performance-v328.md), schéma 229 conservé.** Projection des structures conservée uniquement dans le MAIN privé, données métier actuelles et lecteurs historiques maintenus. Gain local sur Les Aulnes avec chambre/carton ON ; preuves CPU/GAME, reprises et limites dans la note unique. Les états suivants sont historiques.
+**V328 : [géométrie confirmée réutilisée](development/aulnes-performance-v328.md), schéma 229 conservé.** Projection des structures conservée uniquement dans le MAIN privé, données métier actuelles et lecteurs historiques maintenus. Gain local sur Les Aulnes avec chambre/carton ON ; preuves CPU/GAME, reprises et limites dans la note unique. Produit `ff10a939` commité/poussé et publié en `e1cc34a8` ; [livraison Cloudflare](development/cloudflare-pages.md#publication-v328--12-octobre-2026). Les états suivants sont historiques.
 
 **V327 : [recherches d’étagères partagées](development/aulnes-performance-v327.md), schéma 229 conservé.** Optimisation des validations MAIN, mêmes visuels/règles ; gain rapproché mesuré sur Les Aulnes avec chambre/carton activés. Coûts, contrôles, reprises et limites de débit dans la note unique. Les états suivants sont historiques.
 
