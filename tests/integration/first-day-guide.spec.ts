@@ -1,0 +1,64 @@
+import {test,expect,type Page} from '@playwright/test';
+import {world,panel,pause,expectWorld,observeErrors} from './helpers';
+import {deserializeWorld} from '../../src/sim/serialization';
+import {readFile} from 'node:fs/promises';
+
+const front=(page:Page)=>page.locator('.front-menu');
+const frontButton=(page:Page,name:string)=>front(page).getByRole('button',{name,exact:true});
+const guide=(page:Page)=>page.locator('.learning-readout');
+const section=(page:Page,id:string)=>page.locator(`[data-first-day-section="${id}"]`);
+async function showGuide(page:Page){
+  if(!await guide(page).evaluate(node=>(node as HTMLDetailsElement).open))await guide(page).locator(':scope > summary').click();
+}
+
+test('first days guide uses current facts, opens existing tools, preserves focus and resets on reload',async({page},info)=>{
+  test.setTimeout(180000);const errors=observeErrors(page);
+  await page.goto('/?e2e');await frontButton(page,'Nouvelle partie').click();await frontButton(page,'Suivant').click();
+  await front(page).getByRole('radio',{name:'Récit d’aventure',exact:true}).check();
+  await front(page).getByRole('radio',{name:'Rechargeable à tout moment',exact:true}).check();
+  await frontButton(page,'Suivant').click();await page.locator('#front-seed').fill('42');await frontButton(page,'Générer').click();
+  await frontButton(page,'Suivant').click();await front(page).locator('dialog').getByRole('button',{name:'Confirmer',exact:true}).click();
+  await frontButton(page,'Démarrer').click();
+  await expect(front(page)).toBeHidden({timeout:90000});await expect(page.locator('.game-shell')).toHaveJSProperty('inert',false,{timeout:90000});
+  await expect(guide(page)).toHaveAttribute('open','');
+  await expect(page.locator('[data-first-day-section]')).toHaveCount(7);
+  const created=await world(page);expect(created.tick).toBe(0);
+  await expect(section(page,'storage')).toHaveAttribute('data-status','missing');
+  await expect(section(page,'beds')).toHaveAttribute('data-status','missing');
+  await section(page,'food').locator('summary').click();await expect(section(page,'food')).toContainText('50 repas de survie');
+  await section(page,'cooking').locator('summary').click();await section(page,'cooking').getByRole('button',{name:'Ouvrir Production'}).click();
+  await expect(page.locator('#architect-panel')).toBeVisible();await expect(page.locator('[data-category="production"]')).toHaveClass(/active/);
+  await expect(guide(page)).not.toHaveAttribute('open','');await expectWorld(page,created);
+  await page.locator('#architect-panel [data-close-panel]').click();await showGuide(page);
+  await section(page,'beds').locator('summary').click();await section(page,'beds').getByRole('button',{name:'Ouvrir Meubles'}).click();
+  await expect(page.locator('[data-category="furniture"]')).toHaveClass(/active/);await expectWorld(page,created);
+  await page.locator('#architect-panel [data-close-panel]').click();await showGuide(page);
+  await section(page,'work').locator('summary').click();await section(page,'work').getByRole('button',{name:'Ouvrir Travail'}).click();
+  await expect(page.locator('#work-panel')).toBeVisible();await expectWorld(page,created);await page.locator('#work-panel [data-close-panel]').click();
+  await showGuide(page);await section(page,'storage').locator('summary').click();
+  await section(page,'storage').getByRole('button',{name:'Ouvrir Zones'}).click();
+  await expect(page.locator('#zones-open')).toHaveAttribute('aria-expanded','true');await expectWorld(page,created);
+  await page.locator('#zones-open').click();
+  await showGuide(page);await page.setViewportSize({width:960,height:720});
+  await section(page,'equipment').locator('summary').click();await section(page,'equipment').scrollIntoViewIfNeeded();
+  expect(await guide(page).evaluate(node=>{const box=node.getBoundingClientRect();return box.x>=0&&box.right<=innerWidth&&box.bottom<=innerHeight;})).toBe(true);
+  await page.screenshot({path:info.outputPath('guide-960.png')});
+  await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:info.outputPath('guide-1440.png')});
+  await section(page,'food').evaluate(node=>{(window as any).__guideFoodRow=node;});
+  await page.locator('[data-speed="1"]').click();await section(page,'food').locator('summary').focus();
+  await expect.poll(async()=>page.evaluate(()=>window.__lisiere.tick)).toBeGreaterThan(3);
+  expect(await section(page,'food').evaluate(node=>node===(window as any).__guideFoodRow)).toBe(true);
+  await expect(section(page,'food').locator('summary')).toBeFocused();await expect(section(page,'food')).toHaveAttribute('open','');await pause(page);
+  await guide(page).locator(':scope > summary').click();await expect(page.locator('#first-day-guide')).toBeHidden();
+  await panel(page,'menu');const continued=await world(page),manager=page.locator('[data-save-manager]');
+  await manager.locator('[data-save-manager-name]').fill('Premiers jours V334');await manager.locator('[data-save-manager-action="create"]').click();
+  await expect(manager.locator('[data-save-manager-status]')).toHaveAttribute('data-state','success');
+  const download=page.waitForEvent('download');await manager.locator('[data-save-manager-action="export"]').click();
+  const file=await download,path=info.outputPath('first-days.json');await file.saveAs(path);expect(deserializeWorld(await readFile(path,'utf8'))).toEqual(continued);
+  await page.locator('#browse-saves').click();await front(page).locator('input[name="front-save"]').first().check();await frontButton(page,'Charger').click();
+  await expectWorld(page,continued);await expect(guide(page)).not.toHaveAttribute('open','');await expect(page.locator('[data-first-day-section]')).toHaveCount(0);
+  await showGuide(page);await expect(page.locator('[data-first-day-section]')).toHaveCount(7);
+  await guide(page).locator(':scope > summary').dblclick();expect(await page.evaluate(()=>String(getSelection()))).toBe('');
+  expect(errors).toEqual([]);
+  await info.attach('first-days-summary',{contentType:'application/json',body:JSON.stringify({seed:created.seed,ticks:[created.tick,continued.tick],people:created.pawns.map(p=>p.name),errors})});
+});

@@ -1,4 +1,6 @@
-# Validation courante — V333
+# Validation courante — V334
+
+**V334, schéma 230 conservé : [carnet des premiers jours](../gameplay/first-days-v334.md#contrôles-root).** Dix-neuf cas/1fichier, typage, package Pages et Chrome natif avec création250², outils, deux tailles, focus pendant les ticks et export/recharge7exacte passent. Gel2831exact, ROOT seul contrôles ; pas de modification simulation/bridge/rendu/publics ni de reprise du banc de présentation inchangé. Aucun gainFPS, suite complète ou campagne naturelle entière certifiés. Les validations suivantes sont historiques.
 
 **V333, schéma 230 : [préparation de nouvelle partie](../gameplay/new-game-preparation-v333.md#contrôles-root-et-acquisitions-par-reprises).** Contrôles ciblés119cas/11fichiers acquis par reprises, corpus63références/66fichiers PASS75,004s et ChromeWebGPU PASS41,654s avec création250² et reprise exacte. ROOT seul, sources/tests/pilotes gelés ; présentation, typage/build, rouges et publication consignés dans la note unique avant livraison. Aucune suite complète, campagne naturelle entière, parité UI exhaustive ni gainFPS certifiés. Les validations suivantes sont historiques.
 

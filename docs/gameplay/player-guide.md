@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Conseils des premiers jours — V334
+
+Après une nouvelle partie, **Conseils** s’ouvre en haut à droite. Développez une préparation pour consulter les faits actuels et ouvrir Travail, Zones, Meubles, Production ou Assignations. Le carnet distingue les chantiers des objets construits ; une réserve de rations ou une culture ne garantit pas la nourriture future. Un lit double libre compte une place avant affectation : inspectez le lit pour choisir ses occupants. Pour équiper une arme, sélectionnez un seul colon, faites un clic droit sur l’arme au sol, puis choisissez **Équiper**.
+
+Le carnet est facultatif et ne donne aucun ordre à votre place. Fermez-le pour dégager la vue ; il ne lit plus la colonie lorsqu’il est fermé. Les alertes conservent leurs clics vers les personnes ou lieux concernés. **?** ouvre l’aide générale, avec culture, cuisine, toit, température, soins et sauvegardes. Une recharge referme le carnet sans modifier votre progression. [Contrôles et limites](first-days-v334.md).
+
 ## Préparer sa colonie — V333
 
 Dans **Nouvelle partie**, avancez de Scénario à Narrateur, puis Créer un monde.

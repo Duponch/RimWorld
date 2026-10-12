@@ -1,0 +1,12 @@
+#app .learning-readout[open]{width:min(360px,calc(100vw - 32px))}
+#app .first-day-guide{margin:0 0 10px}
+#app .first-day-guide[hidden]{display:none}
+#app .first-day-guide details{border-top:1px solid var(--line);padding:6px 0}
+#app .first-day-guide summary{display:flex;gap:8px;align-items:baseline;justify-content:space-between;font-weight:700;cursor:pointer}
+#app .first-day-guide .first-day-title{flex:1;min-width:0}
+#app .first-day-guide .first-day-status{flex:none;color:var(--muted-ink);font-size:11px;font-weight:400}
+#app .first-day-guide details[data-status="ready"] .first-day-status{color:var(--accent)}
+#app .first-day-guide p{margin:6px 0;font-size:13px;line-height:1.4}
+#app .first-day-guide .first-day-detail{font-weight:700}
+#app .first-day-guide button{min-height:30px;padding:4px 8px;font-size:12px}
+@media(max-width:760px){#app .learning-readout[open]{width:min(360px,calc(100vw - 20px))}}
