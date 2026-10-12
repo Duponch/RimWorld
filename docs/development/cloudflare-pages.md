@@ -1,5 +1,7 @@
 # Elsewhere sur Cloudflare Pages
 
+**Publication courante V334–V335 : `4d7ac5ca`, 13 octobre 2026, schéma231.** [Carnet](../gameplay/first-days-v334.md) et [arrivée physique](../gameplay/starting-arrival-v335.md), produit `59717fa7` commité/poussé. [Adresse stable](https://elsewhere-cq7.pages.dev/) et [déploiement](https://4d7ac5ca.elsewhere-cq7.pages.dev/). Une seule publication,102réponsesHTTPS exactes ; parcours natif et présentation Chrome acquis. Les publications suivantes sont historiques.
+
 **Publication courante V332–V333 : `82fbe736`, 13 octobre 2026, schéma 230.** [Nouvelle partie préparée](../gameplay/new-game-preparation-v333.md) et [sauvegardes de campagne](../gameplay/save-library-v332.md), produit `54d20193` commité/poussé, une seule publication. [Adresse stable](https://elsewhere-cq7.pages.dev/) et [déploiement](https://82fbe736.elsewhere-cq7.pages.dev/). Typage/build, package exact et102réponsesHTTPS passent ; le contrôle long de présentation V333 reste rouge sur refus d'allocationWebGPU, indépendamment du parcours de création/recharge natif acquis. Les publications suivantes sont historiques.
 
 Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication historique V331 `74b6ca55` apporte le [LOD global des animations V331](animation-lod-v331.md), après les [ombres et animations réglables V330](render-performance-v330.md), les [commandes fixes de chambre V329](aulnes-performance-v329.md), la [géométrie confirmée réutilisée V328](aulnes-performance-v328.md), les [recherches d’étagères partagées V327](aulnes-performance-v327.md), les [quatre murs et la composition V326](aulnes-performance-v326.md), la [table et la chambre fixe V325](room-layout-v325.md), la [chambre et les éclairages V324](room-diorama-v324.md), les [paysages procéduraux V323](cardboard-diorama-v323.md) et les [étagères V320](../gameplay/shelves-v320.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
@@ -330,3 +332,13 @@ refus d'allocationWebGPU avant les gestes : [preuves et limites](../gameplay/new
 Ni campagne entière, ni parité Core exhaustive, ni gainFPS ne sont annoncés.
 Consolidation documentaire poussée sans seconde publication ; serveurs/navigateur
 de test possédés fermés, relance **PAUSED**.
+
+## Publication V334–V335 — carnet et arrivée physique
+
+Le produit `59717fa7` est commité et poussé sur `main`. Une seule publication regroupe le carnet V334 et les capsules V335 ; ces dernières détiennent réellement les personnes et objets choisis jusqu’à leur ouverture. Les anciens départs ne reçoivent aucune capsule à la migration230→231. La disponibilité réseau ne certifie pas une première nuit ou une campagne naturelle entière.
+
+Build Pages2,032s et typage séparé11,434s passent ; package1,493s :515fichiers/119392441octets. Les63références/66fichiers publics sont exacts ; aucun laboratoire, source ou fichier privé détecté par l’inspection ciblée. Rapport `tmp/elsewhere-pages/v335-package-yYKMu9/report.json`. `references_UI/` reste intact, non suivi et absent du package.
+
+Wrangler4.149.0 passe17,517s, quatre fichiers nouveaux/509déjà présents, avec en-têtes et redirections. HTTPS PASS6,436s :102réponses200 avec MIME et octets exacts sur51chemins par origine stable/fraîche, rapport `tmp/elsewhere-pages/v335-http-IJuyNi/report.json`. Les66fichiers publics sont comparés localement ; ils ne sont pas tous téléchargés à distance. Build et publics conservés.
+
+ChromeWebGPU75,073s acquiert la création250², la reprise en descente4 et le carnet/recharge37. Présentation commune Chrome129,891s acquise ; les anciens refus mémoire V333 et les erreurs Tint IR Chromium ne sont pas déclarés réparés. Sources/tests/pilotes gelés2842exacts, serveurVite5408 et navigateurs de contrôle possédés fermés. Documentation de clôture poussée sans seconde publication. Relance ACTIVE et poursuite autonome : couchages humains au sol, puis première nuit des trois biomes. Aucun gainFPS ni 240FPS annoncé.

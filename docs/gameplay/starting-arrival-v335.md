@@ -47,4 +47,6 @@ Build Pages final **PASS, 2,032 s**, après typage complet séparé ; le laborat
 
 ## Livraison et suite
 
-Commit/push sur `main`, publication regroupée V334–V335 après les contrôles. La suite prioritaire est le couchage humain au sol et la première nuit des trois biomes, puis la qualification d’une campagne durable et de ses issues. La relance demeure ACTIVE à la demande humaine. [Critères early access](early-access-readiness.md).
+Produit **`59717fa7` commité/poussé sur `main`**, publié une seule fois avec V334 en **`4d7ac5ca`**. Package515fichiers/119392441octets,63références/66fichiers exacts ; inspection1,493s, Wrangler17,517s et102réponsesHTTPS exactes6,436s. [Publication et limites](../development/cloudflare-pages.md#publication-v334v335--carnet-et-arrivée-physique). ServeurVite5408 et navigateurs de contrôle possédés fermés ; `references_UI/` laissé intact.
+
+La suite prioritaire est le couchage humain au sol et la première nuit des trois biomes, puis la qualification d’une campagne durable et de ses issues. La relance demeure ACTIVE à la demande humaine. [Critères early access](early-access-readiness.md).

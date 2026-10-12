@@ -36,6 +36,6 @@ La correction de l’aide et de l’attribut `aria-expanded` du pilote a précé
 
 ## Livraison et suite
 
-La livraison passe par commit/push sur `main` et publication regroupée avec le prochain lot ; production reste V332–V333 en `82fbe736` jusqu’à cette publication. Les serveurs/navigateurs de contrôle possédés sont fermés. Ni suite complète, campagne naturelle entière, parité Core exhaustive, disponibilité de l’arrivée en capsules, ni 240 FPS certifiés.
+Le produit V334 **`f7c93340`** est commité/poussé, puis publié avec V335 une seule fois en **`4d7ac5ca`**, produit regroupé `59717fa7` ;102réponsesHTTPS exactes. [Publication et limites](../development/cloudflare-pages.md#publication-v334v335--carnet-et-arrivée-physique). Les serveurs/navigateurs de contrôle possédés sont fermés. Ni suite complète, campagne naturelle entière, parité Core exhaustive ni 240 FPS certifiés par le carnet. L’arrivée est qualifiée séparément dans la note V335.
 
 La relance de cette conversation est **ACTIVE**, à la nouvelle demande humaine, pour poursuivre les lots utiles. [Critères early access](early-access-readiness.md). Prochaine priorité : arrivée physique des personnes et possessions ; recherches Core et audit de custody préparés sous `tmp/arrival-v334/`, sans code propriétaire publié. Les couchages humains au sol, la première nuit dans les trois biomes et la qualification d’une campagne durable restent les lots suivants.
