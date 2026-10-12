@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
 import { Fn, If, attribute, materialColor, positionLocal, smoothstep as shaderSmoothstep, texture, uniform, viewportSize, viewportUV } from 'three/tsl';
+import type { AnimationDetail,AnimationSampleHandle } from './AnimationDetail';
 import type { WeatherState } from '../sim/weather';
 import { visualCloudAppearance } from './visual-weather';
 import { createCloudPaint } from './cloud-surface-paint';
@@ -254,7 +255,9 @@ export class WeatherCloudLayer {
   private lastPoseX = NaN;
   private lastPoseZ = NaN;
 
-  constructor() {
+  private readonly animationHandles:AnimationSampleHandle[]=[];
+  private readonly seededPositions=new Float64Array(CLOUD_COUNT*5);
+  constructor(private readonly detail?:AnimationDetail) {
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, CLOUD_COUNT);
     // Alias the existing CPU matrices, without copying them. Three's internal
     // instancing uniform cannot be accessed from positionNode; these three
@@ -339,6 +342,9 @@ export class WeatherCloudLayer {
     if (seed === this.lastShapeSeed) return;
     this.lastShapeSeed = seed;
     for (let index = 0; index < CLOUD_COUNT; index++) {
+      const at=index*5;
+      for(const [part,salt]of [0x9e3779b1,0x6d2b79f5,0x45d9f3b,0x27d4eb2d,0x7f4a7c15].entries())
+        this.seededPositions[at+part]=hash01(seed^Math.imul(index+1,salt));
       const key = seed ^ Math.imul(index + 1, 0x9e3779b1);
       const draw = (salt: number) => hash01(key ^ Math.imul(salt, 0x6d2b79f5));
       this.profile.setXYZW(index, draw(1) * 2 - 1, draw(2) * 2 - 1, draw(3) * 2 - 1, draw(4) * 2 - 1);
@@ -372,6 +378,7 @@ export class WeatherCloudLayer {
 
   /** A new map starts its own visual cloud field, even if it reuses a seed. */
   reset(): void {
+    this.animationHandles.length=0;
     this.seed = this.lastTick = undefined;
     this.lastStrength = 0;
     this.lastDirectionX = 1;
@@ -429,21 +436,28 @@ export class WeatherCloudLayer {
     const poseX = Math.round(this.driftX / MATRIX_STEP) * MATRIX_STEP;
     const poseZ = Math.round(this.driftZ / MATRIX_STEP) * MATRIX_STEP;
     const coverage = Math.round(appearance.coverage * 512) / 512;
-    if (seed === this.lastPoseSeed && coverage === this.lastCoverage &&
-        poseX === this.lastPoseX && poseZ === this.lastPoseZ) return;
+    const poseChanged=seed!==this.lastPoseSeed||coverage!==this.lastCoverage||poseX!==this.lastPoseX||poseZ!==this.lastPoseZ;
+    if(!this.detail&&!poseChanged)return;
     this.lastPoseSeed = seed;
     this.lastCoverage = coverage;
     this.lastPoseX = poseX;
     this.lastPoseZ = poseZ;
 
+    let uploaded=false;
     for (let index = 0; index < this.mesh.count; index++) {
-      const a = hash01(seed ^ Math.imul(index + 1, 0x9e3779b1));
-      const b = hash01(seed ^ Math.imul(index + 1, 0x6d2b79f5));
-      const c = hash01(seed ^ Math.imul(index + 1, 0x45d9f3b));
-      const d = hash01(seed ^ Math.imul(index + 1, 0x27d4eb2d));
+      const at=index*5,a=this.seededPositions[at]!,b=this.seededPositions[at+1]!,c=this.seededPositions[at+2]!,d=this.seededPositions[at+3]!;
+      // Classification uses the live undeformed centre, never its held pose.
+      // Seeded coordinates are prepared once; these two wraps are enough to
+      // let a drifting cloud cross a perspective LOD boundary while frozen.
       const x = wrap(a * this.radiusX * 2 + poseX, this.radiusX * 2) - this.radiusX;
       const z = wrap(b * this.radiusZ * 2 + poseZ, this.radiusZ * 2) - this.radiusZ;
-      const threshold = hash01(seed ^ Math.imul(index + 1, 0x7f4a7c15));
+      if(this.detail){
+        const handle=this.animationHandles[index]??(this.animationHandles[index]=this.detail.createHandle());
+        const previous=handle.level;
+        const due=this.detail.shouldSample(handle,this.centerX+x,CLOUD_BASE_HEIGHT+(index%3)*CLOUD_BAND_SPACING+d*CLOUD_BAND_JITTER,this.centerZ+z);
+        if(!due||handle.level===0&&!poseChanged&&previous===0)continue;
+      }
+      const threshold = this.seededPositions[at+4]!;
       const activation = smoothstep(threshold - .075, threshold + .075, coverage);
       // Map-space envelope: both size and alpha reach zero before recycling.
       const edge = smoothstep(0, this.radiusX * EDGE_FADE_FRACTION, this.radiusX - Math.abs(x)) *
@@ -466,10 +480,9 @@ export class WeatherCloudLayer {
       scratch.updateMatrix();
       this.mesh.setMatrixAt(index, scratch.matrix);
       this.edgeOpacity.setX(index, fade);
+      uploaded=true;
     }
-    this.mesh.instanceMatrix.needsUpdate = true;
-    this.matrixBasis.needsUpdate = true;
-    this.edgeOpacity.needsUpdate = true;
+    if(uploaded){this.mesh.instanceMatrix.needsUpdate = true;this.matrixBasis.needsUpdate = true;this.edgeOpacity.needsUpdate = true;}
   }
 
   /** Keep the single cloud pipeline warm while the loading screen is present. */

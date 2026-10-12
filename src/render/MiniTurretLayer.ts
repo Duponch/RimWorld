@@ -5,11 +5,13 @@ import { BoxMesh } from './BoxMesh';
 import type { BoxBatches } from './BoxBatches';
 import { miniTurretFacing, miniTurretTopColor, miniTurretTopPartsForStructure, type TurretTopView } from './mini-turret-parts';
 import type { Placement } from './primitives';
+import type { AnimationDetail,AnimationSampleHandle } from './AnimationDetail';
 
 type LocalPart = { x:number;y:number;z:number;sx:number;sy:number;sz:number;ry:number;cos:number;sin:number };
 type Pose = {
   id:number;x:number;z:number;color:number;angle:number;target:number;seen:number;moving:boolean;
   parts:LocalPart[];placed:Placement[];start:number;queued:number;range:{start:number;count:number};radius:number;
+  sample?:AnimationSampleHandle;sampledAt:number;
 };
 const EPSILON=1e-5;
 const RESPONSE_SECONDS=.055;
@@ -28,6 +30,7 @@ export class MiniTurretLayer {
   private mesh:BoxMesh|undefined;
   private readonly fullRange={start:0,count:0};
   private readonly bound=new Sphere(new Vector3(),0);
+  constructor(private readonly detail?:AnimationDetail){}
 
   update(world:World,group:Group,batches:BoxBatches,reset=false):boolean {
     if(reset){this.byId.clear();this.poses=[];this.moving.length=0;this.resident=false;this.mesh=undefined;}
@@ -43,7 +46,7 @@ export class MiniTurretLayer {
         pose=this.createPose(structure,view,target,generation);this.byId.set(pose.id,pose);rebuild=true;
       }else{
         pose.seen=generation;
-        if(pose.x!==structure.x||pose.z!==structure.z){pose.x=structure.x;pose.z=structure.z;pose.angle=target;rebuild=true;}
+        if(pose.x!==structure.x||pose.z!==structure.z){pose.x=structure.x;pose.z=structure.z;pose.angle=target;if(pose.sample)this.detail?.invalidate(pose.sample);rebuild=true;}
         if(pose.color!==color){this.captureParts(pose,structure,view);rebuild=true;}
         if(pose.target!==target){pose.target=target;changed=true;}
         if(Math.abs(miniTurretShortAngle(pose.angle,target))>EPSILON&&!pose.moving){pose.moving=true;this.moving.push(pose);}
@@ -94,9 +97,14 @@ export class MiniTurretLayer {
     const blend=paused?1:-Math.expm1(-Math.min(dt,.05)/RESPONSE_SECONDS);
     let changed=false;
     for(let i=0;i<this.moving.length;){
-      const pose=this.moving[i]!,delta=miniTurretShortAngle(pose.angle,pose.target);
+      const pose=this.moving[i]!;
+      if(pose.sample&&!this.detail!.shouldSample(pose.sample,pose.x,1.04,pose.z)){i++;continue;}
+      const elapsed=this.detail&&pose.sample?.level===1?Math.max(0,(this.detail.now-pose.sampledAt)/1000):dt;
+      if(this.detail)pose.sampledAt=this.detail.now;
+      const poseBlend=pose.sample?.level===1&&!paused?-Math.expm1(-elapsed/RESPONSE_SECONDS):blend;
+      const delta=miniTurretShortAngle(pose.angle,pose.target);
       if(paused||Math.abs(delta)<EPSILON){pose.angle=pose.target;pose.moving=false;}
-      else pose.angle+=delta*blend;
+      else pose.angle+=delta*poseBlend;
       this.writePose(pose,mesh);changed=true;
       if(!full&&pose.queued!==this.uploadGeneration){
         // WebGL merges adjacent ranges in place. Restore this head's own span
@@ -113,7 +121,7 @@ export class MiniTurretLayer {
 
   private createPose(structure:Structure,view:TurretTopView,angle:number,seen:number):Pose {
     const pose:Pose={id:structure.id,x:structure.x,z:structure.z,color:miniTurretTopColor(view),angle,target:angle,seen,moving:false,
-      parts:[],placed:[],start:0,queued:-1,range:{start:0,count:0},radius:0};
+      parts:[],placed:[],start:0,queued:-1,range:{start:0,count:0},radius:0,sample:this.detail?.createHandle(),sampledAt:this.detail?.now??0};
     this.captureParts(pose,structure,view);return pose;
   }
   private captureParts(pose:Pose,structure:Structure,view:TurretTopView):void {

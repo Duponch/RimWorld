@@ -19,10 +19,10 @@ export function renderPerformanceLayout(prefix: string): string {
   const slider = (id: string, min: number, max: number) => `<input ${attributes(id,true)} type="range" min="${min}" max="${max}" step="1">`;
   return row('shadow-frequency','Fréquence des ombres','Plafond de rafraîchissement en lecture. Un changement de caméra ou d’affichage actualise immédiatement les ombres.',select('shadow-frequency',SHADOW_FREQUENCY_OPTIONS))
     + row('shadow-resolution','Résolution des ombres','Précision de la carte d’ombres, indépendante de sa fréquence. 2048 conserve la précision habituelle.',select('shadow-resolution',SHADOW_RESOLUTION_OPTIONS))
-    + row('animation-enabled','Adapter les animations à la distance','Respiration, démarche et mouvement des végétaux. Les déplacements, actions et règles du jeu restent continus.',`<input ${attributes('animation-enabled')} type="checkbox">`)
-    + row('animation-near','Animations complètes','Taille apparente minimale d’une case à l’écran. En dessous : animations décoratives moins fréquentes.',slider('animation-near',4,96),true)
-    + row('animation-far','Arrêt des animations décoratives','Sous cette taille apparente, les oscillations se reposent. 0 : aucun arrêt. Zoom isométrique et profondeur en perspective pris en compte.',slider('animation-far',0,48),true)
-    + row('animation-frequency','Fréquence à mi-distance','Nombre de mises à jour par seconde des animations décoratives intermédiaires.',slider('animation-frequency',1,60),true)
+    + row('animation-enabled','Adapter toutes les animations à la distance','Gestes, déplacements visibles, animaux, végétaux, effets et astres. La simulation et les règles continuent normalement.',`<input ${attributes('animation-enabled')} type="checkbox">`)
+    + row('animation-near','Animations complètes','Taille apparente minimale d’une case à l’écran. En dessous : poses et effets mis en cache à fréquence réduite.',slider('animation-near',4,96),true)
+    + row('animation-far','Arrêt des animations éloignées','Sous cette taille apparente, les poses restent fixes et les particules sont retirées. 0 : aucun arrêt. Zoom isométrique et profondeur en perspective pris en compte.',slider('animation-far',0,48),true)
+    + row('animation-frequency','Fréquence à mi-distance','Mises à jour par seconde réelle, indépendamment de la vitesse ×1 ou ×6. La caméra et les interactions restent immédiates.',slider('animation-frequency',1,60),true)
     + `<div class="render-performance-presets"><button id="${prefix}performance-balanced" type="button">Équilibré</button><button id="${prefix}performance-continuous" type="button">Tout animer à chaque image</button></div>`;
 }
 

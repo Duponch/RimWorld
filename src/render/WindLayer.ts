@@ -1,11 +1,13 @@
 import * as THREE from 'three/webgpu';
-import { Fn,attribute,mat4,normalLocal,positionLocal,transformNormal,uniform,select,vec3,cos,sin } from 'three/tsl';
+import { Fn,attribute,mat4,normalLocal,positionLocal,transformNormal,uniform,select,vec3,vec4,cos,sin,instanceIndex,uint } from 'three/tsl';
 import { BoxMesh } from './BoxMesh';
 import { material } from './primitives';
 import type { World } from '../sim/types';
 import { isPowerActive } from '../sim/power-rules';
 import { WIND_BLADE_COLOR, WIND_BLADE_SHAPE, windBladeHub, windBladeInitialPhase } from './wind-blade-parts';
 import { ResourceTargetTint } from './resource-target-tint';
+import type { AnimationDetail } from './AnimationDetail';
+import { RetainedAnimation } from './RetainedAnimation';
 
 interface Spin {tick:number;phase:number;speed:number}
 /** Three retained blades per turbine. Only changes of power/placement upload
@@ -21,13 +23,19 @@ export class WindLayer {
   private readonly targetTint=new ResourceTargetTint();
   private targetPreviewIds=new Set<number>();
   private readonly targetSlots=new Map<number,number>();
-  constructor(configure?:(material:THREE.MeshStandardNodeMaterial)=>void){
+  private readonly animation:RetainedAnimation;
+  constructor(configure?:(material:THREE.MeshStandardNodeMaterial)=>void,detail?:AnimationDetail){
+    this.animation=new RetainedAnimation(detail);
     configure?.(this.material);
     this.material.positionNode=Fn(()=>{
       const transform=mat4(attribute('boxMatrix0','vec4'),attribute('boxMatrix1','vec4'),attribute('boxMatrix2','vec4'),attribute('boxMatrix3','vec4'));
       const current=attribute('windCurrent','vec4'),previous=attribute('windPrevious','vec4');
-      const segment=select(this.tick.lessThan(current.x),previous,current);
-      const angle=segment.y.add(this.tick.sub(segment.x).mul(segment.z)).add(current.w),c=cos(angle),s=sin(angle);
+      const basis=this.animation.choose(()=>{
+        const segment=select(this.tick.lessThan(current.x),previous,current);
+        const angle=segment.y.add(this.tick.sub(segment.x).mul(segment.z)).add(current.w);
+        return vec4(cos(angle),sin(angle),0,0);
+      },uint(instanceIndex));
+      const c=basis.x,s=basis.y;
       const shape=attribute('windShape','vec4'),p=positionLocal.mul(shape.xyz).add(vec3(0,shape.w,0));
       const rotated=vec3(p.x.mul(c).sub(p.y.mul(s)),p.x.mul(s).add(p.y.mul(c)),p.z);
       const n=normalLocal.toVar();normalLocal.assign(transformNormal(vec3(n.x.mul(c).sub(n.y.mul(s)),n.x.mul(s).add(n.y.mul(c)),n.z),transform));
@@ -52,7 +60,7 @@ export class WindLayer {
     this.targetTint.applySlots(this.mesh.colorBuffer,slots);
   }
   adopt(world:World,reset=false):void {
-    if(reset){this.clearTargetPreview();this.key=null;this.history.clear();}
+    if(reset){this.clearTargetPreview();this.key=null;this.history.clear();this.animation.reset();}
     const turbines=world.structures.filter(s=>s.kind==='wind-turbine');
     const key=turbines.map(s=>`${s.id}:${s.x}:${s.z}:${s.orientation}:${isPowerActive(s)}:${s.wind?.cachedWatts}`).join('|');
     if(key===this.key)return;this.key=key;
@@ -83,12 +91,23 @@ export class WindLayer {
     for(const a of [current,previous,shape])a.needsUpdate=true;
     this.mesh.computeBoundingSphere();if(count)this.mesh.boundingSphere.radius+=3.2;
     this.tintTargets();
+    this.animation.reconcile(turbines.flatMap(s=>{
+      const hub=windBladeHub(s);return [0,1,2].map(blade=>({id:s.id*3+blade,x:hub.x,y:hub.y,z:hub.z}));
+    }));
   }
-  present(tick:number):void {this.tick.value=tick;}
+  present(tick:number):void {
+    this.tick.value=tick;if(!this.mesh.activeCount)return;
+    const current=this.mesh.geometry.getAttribute('windCurrent'),previous=this.mesh.geometry.getAttribute('windPrevious');
+    this.animation.present((owner,row)=>{
+      const segment=tick<current.getX(row)?previous:current;
+      const angle=segment.getY(row)+(tick-segment.getX(row))*segment.getZ(row)+current.getW(row);
+      owner.values[0]=Math.cos(angle);owner.values[1]=Math.sin(angle);
+    });
+  }
   prepareForCompile():()=>void {
     if(this.mesh.activeCount)return ()=>{};
     const version=this.mesh.instanceMatrix.version;this.mesh.activeCount=1;
     return ()=>{if(this.mesh.instanceMatrix.version===version)this.mesh.activeCount=0;};
   }
-  dispose():void {this.clearTargetPreview();this.mesh.dispose();this.base.dispose();this.material.dispose();}
+  dispose():void {this.animation.dispose();this.clearTargetPreview();this.mesh.dispose();this.base.dispose();this.material.dispose();}
 }

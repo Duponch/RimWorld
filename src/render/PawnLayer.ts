@@ -1,5 +1,7 @@
 import { appearanceOf } from '../sim/pawn-appearance';
 import { AnimationDetail } from './AnimationDetail';
+import {ActorAnimationCache,sampleActorRoot} from './ActorAnimationCache';
+import {samplePawnRig} from './actor-animation-sampling';
 import { bedSlotBodyCenter,pawnBedSlot } from '../sim/bed-slots';
 import { corpseStage,CORPSE_ROT_TICKS,CORPSE_DESSICATION_TICKS } from '../sim/corpses';
 import { corpseVisualMask } from './corpse-presentation';
@@ -11,7 +13,7 @@ import { pawnMorph,hiddenAppearancePart } from './pawn-appearance-nodes';
 import { BIOME_CARGO } from './biome-cargo';
 import {itemCargoKind} from './item-presentation';
 import { firePosition } from '../sim/fire-rules';
-import { attachedFireMesh, setFireTexturesEnabled } from './FireLayer';
+import { attachedFireMesh, presentAttachedFire,setFireTexturesEnabled } from './FireLayer';
 import { apparelProjection,apparelAppearance } from './character-apparel';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
@@ -29,7 +31,7 @@ import { constructionWorkTarget } from '../sim/construction-rules';
 import { pawnSelectionMesh } from './PawnSelectionLayer';
 import type { MotionTimeline } from './MotionTimeline';
 import * as THREE from 'three/webgpu';
-import { Fn, If, attribute, cos, float, mix, positionLocal, sin, uniform, renderGroup, vec3 } from 'three/tsl';
+import { Fn, If, attribute, cos, float, instanceIndex, mix, positionLocal, sin, uniform, renderGroup, vec3,vec4 } from 'three/tsl';
 import { TICKS_PER_SECOND,type MaterialPile,type Pawn,type World } from '../sim/types';
 import { adjacentTable } from '../sim/dining';
 import { CARRY_CAPACITY, footprintCells } from '../sim/definitions';
@@ -150,11 +152,20 @@ export class PawnLayer {
   readonly time = uniform(0).setGroup(renderGroup);
   readonly travelTime = uniform(0).setGroup(renderGroup);
   readonly blend = uniform(1).setGroup(renderGroup);
+  readonly animationCache:ActorAnimationCache;
+  private readonly partialAnimationCache:ActorAnimationCache;
+  private partialOwners:number[]=[];
+  private readonly animationOwners=new Map<number,number>();
+  private readonly animationRoot={x:0,y:0,z:0,yaw:0};
+  private readonly linkedRoot={x:0,y:0,z:0,yaw:0};
   readonly visuals = new Map<number, VisualPawn>();
   private pawnMesh: THREE.Mesh | null = null;
   private readonly surfaceTexture = createStylizedSurfaceTexture();
   private plainMaterial: THREE.MeshStandardNodeMaterial | null = null;
   private texturedMaterial: THREE.MeshStandardNodeMaterial | null = null;
+  private nativePlainMaterial: THREE.MeshStandardNodeMaterial | null = null;
+  private nativeTexturedMaterial: THREE.MeshStandardNodeMaterial | null = null;
+  private nativeBody = false;
   private texturesEnabled = true;
   get feedbackSource():THREE.InstancedBufferGeometry|undefined {return this.pawnMesh?.geometry as THREE.InstancedBufferGeometry|undefined;}
   private cargoMesh: THREE.Mesh | null = null;
@@ -188,7 +199,9 @@ export class PawnLayer {
   hiddenPileQuantities():ReadonlyMap<number,number> {return this.handoffs.hiddenQuantities();}
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
   private rescuePairs:readonly (readonly [number,number])[]=[];
-  constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void,private readonly animationDetail=new AnimationDetail()) {}
+  constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void,private readonly animationDetail=new AnimationDetail()) {this.animationCache=new ActorAnimationCache(animationDetail);this.partialAnimationCache=new ActorAnimationCache(animationDetail);}
+  cpuPoseForId(id:number){const slot=this.pawnIndices.get(id);return slot===undefined?undefined:this.animationCache.cpuPose(slot);}
+  presentedPose(id:number){return this.cpuPoseForId(id);}
   /** Warm the resident fire graph before the first burning actor appears. */
   prepareFiresForCompile():()=>void {
     if(!this.fireMesh)return ()=>{};
@@ -214,13 +227,46 @@ export class PawnLayer {
   setTexturesEnabled(enabled: boolean): void {
     if (this.texturesEnabled === enabled) return;
     this.texturesEnabled = enabled;
-    if (this.pawnMesh) this.pawnMesh.material = enabled ? this.texturedMaterial! : this.plainMaterial!;
+    this.selectBodyMaterial();
     if (this.fireMesh) setFireTexturesEnabled(this.fireMesh,enabled);
+  }
+  private selectBodyMaterial(): void {
+    if (!this.pawnMesh) return;
+    const selected = this.nativeBody
+      ? (this.texturesEnabled ? this.nativeTexturedMaterial : this.nativePlainMaterial)
+      : (this.texturesEnabled ? this.texturedMaterial : this.plainMaterial);
+    if (selected && this.pawnMesh.material !== selected) this.pawnMesh.material = selected;
+  }
+  /** Call only while the owner suspends frames and prepares scene visibility.
+   * compileAsync skips shadows; prepareShadow must request a real shadow pass.
+   * This temporary warm override never changes the chosen runtime variant. */
+  async prepareBodyPipelines(renderer: THREE.WebGPURenderer, scene: THREE.Scene,
+    cameras: readonly THREE.Camera[], prepareShadow: () => Promise<void>): Promise<void> {
+    const mesh = this.pawnMesh;
+    if (!mesh) return;
+    const geometry = mesh.geometry as THREE.InstancedBufferGeometry;
+    const savedMaterial = mesh.material, savedVisible = mesh.visible, savedCount = geometry.instanceCount;
+    try {
+      mesh.visible = true;
+      geometry.instanceCount = Math.max(1, savedCount);
+      for (const variant of [this.plainMaterial, this.texturedMaterial,
+        this.nativePlainMaterial, this.nativeTexturedMaterial]) {
+        if (!variant) continue;
+        mesh.material = variant;
+        for (const camera of cameras) await renderer.compileAsync(mesh, camera, scene);
+        await prepareShadow();
+      }
+    } finally {
+      mesh.material = savedMaterial;
+      mesh.visible = savedVisible;
+      geometry.instanceCount = savedCount;
+    }
   }
   private readonly travelKeys = new Map<number,string>();
   private createPawnMesh(count: number): void {
     clearGroup(this.group);
     const geometry = pawnGeometry();
+    geometry.userData.animationCache=this.animationCache;
     const travel = new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4);
     for(let i=0;i<count;i++)travel.setW(i,1);
     geometry.setAttribute('aTravel', travel);
@@ -237,17 +283,17 @@ export class PawnLayer {
     for (const name of ['aFrom', 'aTo', 'aMotion', 'aCargo', 'aTravel']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.StaticDrawUsage);
     const mat = material(0xffffff);
     this.configure?.(mat);
-    mat.positionNode = Fn(() => {
+    // One factory for both graphs. The original clock deliberately has no
+    // animationCache, so the native body has no retained flag/root read at all.
+    const originalClock = { travelTime: this.travelTime, blend: this.blend };
+    const makeOriginalPosition = () => Fn(() => {
       const bone = attribute('boneId', 'float');
       const pivot = pawnMorph(attribute('bindPivot', 'vec3'));
       const motion = attribute('aMotion', 'vec4');
-      const pose = pawnPresentationPose(this);
-      // Work, combat, medical and interaction poses retain their complete
-      // gestures. Only ordinary walking/idle motion uses decorative detail.
-      const detailLevel=float(0).toVar();
-      If(motion.z.equal(0),()=>{detailLevel.assign(this.animationDetail.level(pose.xyz));});
-      const time=this.animationDetail.clock(this.time,pose.xyz,detailLevel);
-      const decorativeSin=(phase:THREE.Node<'float'>)=>this.animationDetail.sine(phase,detailLevel);
+      const pose = pawnPresentationPose(originalClock);
+      // This branch is the complete original rig. Intermediate and distant
+      // actors use retained CPU coefficients in the other branch.
+      const time=this.time,decorativeSin=(phase:THREE.Node<'float'>)=>sin(phase);
       const transitioning=motion.x.lessThan(-.5);
       const packed=motion.x.negate().sub(1);
       const transitionWalk=packed.greaterThan(CROUCH_WALK_MARK);
@@ -255,7 +301,10 @@ export class PawnLayer {
       // Motion.w carries the phase at the beginning of an active edge. The
       // distance is computed from the same interpolated XZ pose as the body,
       // so a slowed/stunned edge cannot keep cycling the limbs in place.
-      const gaitPhase=this.animationDetail.gaitPhase(motion.w,HUMAN_GAIT_RADIANS_PER_UNIT,pose,this.travelTime,this.blend,detailLevel);
+      const gaitPhase=float(0).toVar();
+      If(bone.greaterThan(1.5).or(bone.equal(1).and(walking.greaterThan(.5))),()=>{
+        gaitPhase.assign(motion.w.add(pose.xz.sub(attribute('aFrom','vec4').xz).length().mul(HUMAN_GAIT_RADIANS_PER_UNIT)));
+      });
       const ground=motion.z.equal(WORK_POSE.ground),low=ground.or(motion.z.equal(WORK_POSE.groundMelee));
       const crouch=low.select(float(1),float(0)).toVar();
       If(transitioning,()=>{
@@ -270,7 +319,8 @@ export class PawnLayer {
       const idle=motion.z.equal(0).and(walking.lessThan(.5)).and(motion.y.equal(0));
       // Quiet breathing and weight shifts share the presentation clock. They
       // stop on pause and cannot change a logical position or decision.
-      const breath=decorativeSin(time.add(motion.w));
+      const breath=float(0).toVar();
+      If(idle.and(bone.lessThan(3.5)),()=>{breath.assign(decorativeSin(time.add(motion.w)));});
       If(bone.equal(3).or(bone.equal(4)).or(bone.equal(6)), () => { sign.assign(-1); });
       If(bone.greaterThan(1.5), () => {
         angle.assign(decorativeSin(gaitPhase).mul(walking).mul(sign).mul(0.65));
@@ -287,10 +337,11 @@ export class PawnLayer {
       // Every working silhouette has a small continuous gesture in the
       // resident rig. Cooking stirs; research taps; fabrication alternates
       // hands. The torso and head participate without CPU bone updates.
-      const stroke=decorativeSin(time.mul(11).add(motion.w));
+      const stroke=float(0).toVar();
       const busy=motion.z.equal(WORK_POSE.mine).or(motion.z.equal(WORK_POSE.chop)).or(motion.z.equal(WORK_POSE.build))
         .or(motion.z.equal(WORK_POSE.craft)).or(motion.z.equal(WORK_POSE.ground));
-      const swing=decorativeSin(time.mul(11).add(motion.w));
+      If(busy.and(bone.lessThan(3.5)),()=>{stroke.assign(decorativeSin(time.mul(11).add(motion.w)));});
+      const swing=stroke;
       If(busy.and(bone.equal(0)),()=>{
         angle.assign(swing.mul(motion.z.equal(WORK_POSE.mine).or(motion.z.equal(WORK_POSE.chop)).select(float(.13),float(.065))));
       });
@@ -330,7 +381,7 @@ export class PawnLayer {
       // switch in aMotion.w. Confirmed strikes add a short accent to the same
       // continuous arm/torso/leg rhythm instead of replacing the whole pose.
       const brawl=motion.z.equal(POSE_FIGHT_READY).or(motion.z.equal(8));
-      const fightPhase=time.mul(8).add(attribute('aShape','vec4').x.mod(10).mul(3.7)).add(attribute('aHairBlood','vec4').x.mul(7));
+      const fightPhase=time.mul(8).add(attribute('aShape','vec4').x.mod(10).mul(3.7)).add(attribute('aHairBlood','vec4').x.mul(7)).toVar();
       const strike=motion.z.equal(8).select(
         sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI)),float(0));
       If(brawl.and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
@@ -367,7 +418,7 @@ export class PawnLayer {
       const c = cos(angle), s = sin(angle);
       const animated = vec3(local.x, local.y.mul(c).sub(local.z.mul(s)), local.y.mul(s).add(local.z.mul(c))).add(pivot).toVar();
       If(busy.and(bone.lessThan(3.5)),()=>{
-        animated.y.addAssign(decorativeSin(time.mul(11).add(motion.w)).mul(.012));
+        animated.y.addAssign(stroke.mul(.012));
       });
       If(idle.and(bone.lessThan(3.5)),()=>{
         animated.y.addAssign(breath.mul(.007));
@@ -472,6 +523,8 @@ export class PawnLayer {
       const cy = cos(pose.w), sy = sin(pose.w);
       return vec3(animated.x.mul(cy).add(animated.z.mul(sy)), animated.y, animated.z.mul(cy).sub(animated.x.mul(sy))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
     })();
+    const originalPosition = makeOriginalPosition();
+    mat.positionNode=Fn(()=>{const result=vec3(0).toVar();If(this.animationCache.cached(),()=>{result.assign(this.cachedPawnPosition());}).Else(()=>{result.assign(originalPosition);});return result;})();
     const baseColor = Fn(()=>{const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),attribute('dye','float').equal(1).select(float(1),float(0))).toVar();
       If(attribute('dye','float').equal(-3).or(attribute('dye','float').equal(PARKA_HOOD_DYE)),()=>{ tint.assign(attribute('aTint','vec3')); });
       If(attribute('aEquipment','vec4').y.equal(2).and(attribute('boneId','float').greaterThanEqual(2)).and(attribute('boneId','float').lessThanEqual(3)),()=>{ tint.assign(attribute('aSkin','vec3')); });
@@ -505,17 +558,43 @@ export class PawnLayer {
     this.configure?.(textured);
     textured.positionNode = mat.positionNode;
     textured.colorNode = baseColor.mul(pawnSurfaceShade(this.surfaceTexture));
-    // Both pipelines survive map changes; the plain node graph contains no
-    // pigment sampling and the shared rig/instance geometry never changes.
+    const nativePlain = material(0xffffff), nativeTextured = material(0xffffff);
+    this.configure?.(nativePlain);
+    this.configure?.(nativeTextured);
+    // Instantiate separately from the LOD Else node: lazy TSL Fn state must
+    // not reuse a branch-built root in the independent native pipeline.
+    nativePlain.positionNode = makeOriginalPosition();
+    nativeTextured.positionNode = nativePlain.positionNode;
+    nativePlain.colorNode = baseColor;
+    nativeTextured.colorNode = textured.colorNode;
+    // All variants survive map changes; geometry, appearance and shading stay
+    // shared. Explicit disposal below owns these materials, not clearGroup.
     mat.userData.rendererOwned = textured.userData.rendererOwned = true;
+    nativePlain.userData.rendererOwned = nativeTextured.userData.rendererOwned = true;
     this.plainMaterial = mat;
     this.texturedMaterial = textured;
+    this.nativePlainMaterial = nativePlain;
+    this.nativeTexturedMaterial = nativeTextured;
     const mesh = new THREE.Mesh(geometry, this.texturesEnabled ? textured : mat);
     // CPU bounds cannot follow the shader positions. Individual culling/LOD is a later measured optimization.
     mesh.frustumCulled = false;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     mesh.name = 'Colonists — procedural eight-bone GPU rig';
+    // Three r186 reuses the same override-material RenderObject for this mesh.
+    // A changed source graph must explicitly invalidate that override version.
+    // Colour draws do nothing; stable shadow draws only compare two scalars.
+    const beforeRender = mesh.onBeforeRender;
+    const shadowSources = new WeakMap<THREE.Material, {source: THREE.Material; version: number}>();
+    mesh.onBeforeRender = function(renderer, scene, camera, geometry, source, group) {
+      beforeRender.call(this, renderer, scene, camera, geometry, source, group);
+      const override = scene.overrideMaterial as (THREE.Material & {isShadowPassMaterial?: boolean}) | null;
+      if (!override?.isShadowPassMaterial) return;
+      const previous = shadowSources.get(override);
+      if (previous?.source === source && previous.version === source.version) return;
+      override.needsUpdate = true;
+      shadowSources.set(override, {source, version: source.version});
+    };
     this.pawnMesh = mesh;
     this.group.add(mesh);
     const cargo = cargoGeometry();
@@ -526,10 +605,7 @@ export class PawnLayer {
     this.configure?.(cargoMat);
     cargoMat.colorNode = attribute('color', 'vec3');
     cargoMat.positionNode = Fn(() => {
-      const pose = pawnPresentationPose(this);
-      const detailLevel=float(0).toVar();
-      If(attribute('aMotion','vec4').z.equal(0),()=>{detailLevel.assign(this.animationDetail.level(pose.xyz));});
-      const time=this.animationDetail.clock(this.time,pose.xyz,detailLevel);
+      const cached=this.animationCache.cached().toVar(),pose=pawnPresentationPose(this,instanceIndex,cached);
       const load = attribute('aCargo', 'vec4');
       const scale = float(0).toVar();
       If(attribute('cargoKind', 'float').equal(load.x), () => {
@@ -538,17 +614,19 @@ export class PawnLayer {
         If(bit.greaterThan(0).and(load.y.lessThan(0)).and(load.y.negate().sub(1).div(bit.max(1)).floor().mod(2).greaterThan(.5)),()=>{ scale.assign(0); });
       });
       const height = float(WORLD_SCALE.carriedHeight).toVar();
+      If(cached,()=>{height.assign(this.animationCache.cell(4).x);}).Else(()=>{
       If(attribute('aMotion','vec4').z.equal(1).or(attribute('aMotion','vec4').z.equal(POSE_SLEEP)).or(attribute('aMotion','vec4').z.equal(POSE_DEAD)),()=>{height.assign(.28);});
-      If(attribute('aMotion', 'vec4').z.greaterThan(1.5).and(attribute('aMotion','vec4').z.lessThan(3.5)), () => { height.assign(this.animationDetail.sine(time.mul(4).add(attribute('aMotion', 'vec4').w),detailLevel).mul(0.08).add(1.32)); });
+      If(attribute('aMotion', 'vec4').z.greaterThan(1.5).and(attribute('aMotion','vec4').z.lessThan(3.5)), () => { height.assign(sin(this.time.mul(4).add(attribute('aMotion', 'vec4').w)).mul(0.08).add(1.32)); });
       If(attribute('aMotion', 'vec4').z.equal(3), () => { height.addAssign(WORLD_SCALE.stoolHeight - 0.605 * PAWN_MODEL_SCALE); });
       If(attribute('aMotion','vec4').z.equal(6),()=>{height.assign(1.3);});
+      });
       const local = positionLocal.mul(scale).add(vec3(0, height, WORLD_SCALE.carriedForward));
-      const cy = cos(pose.w), sy = sin(pose.w);
+      const cy = this.animationCache.yawNode(pose.w,'cos',instanceIndex,cached), sy = this.animationCache.yawNode(pose.w,'sin',instanceIndex,cached);
       const carried=vec3(local.x.mul(cy).add(local.z.mul(sy)), local.y, local.z.mul(cy).sub(local.x.mul(sy))).add(pose.xyz);
       const result=carried.toVar();
       const start=attribute('aHandoffFrom','vec4'),end=attribute('aHandoffTo','vec4');
       If(load.w.abs().greaterThan(.0001),()=>{
-        const progress=this.cargoTime.sub(load.z).div(load.w.abs().sub(load.z).max(.001)).clamp(0,1);
+        const progress=this.animationCache.clockNode(this.cargoTime,'cargoTime',instanceIndex,cached).sub(load.z).div(load.w.abs().sub(load.z).max(.001)).clamp(0,1);
         const smooth=progress.mul(progress).mul(float(3).sub(progress.mul(2)));
         const grounded=positionLocal.mul(scale.greaterThan(0).select(end.w,float(0)));
         If(load.w.greaterThan(0),()=>{
@@ -567,7 +645,7 @@ export class PawnLayer {
     this.cargoMesh.castShadow = true;
     this.cargoMesh.receiveShadow = true;
     this.group.add(this.cargoMesh);
-    this.fireMesh=attachedFireMesh(geometry,this);setFireTexturesEnabled(this.fireMesh,this.texturesEnabled);this.group.add(this.fireMesh);
+    this.fireMesh=attachedFireMesh(geometry,this,1,this.animationDetail);setFireTexturesEnabled(this.fireMesh,this.texturesEnabled);this.group.add(this.fireMesh);
     this.selectionMesh=pawnSelectionMesh(geometry,this);this.group.add(this.selectionMesh);
     const partial=cargoGeometry();
     partial.setAttribute('aTransferFrom',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.StaticDrawUsage));
@@ -584,7 +662,7 @@ export class PawnLayer {
       const part=positionLocal.mul(scale),c=cos(from.w),s=sin(from.w);
       const carried=vec3(part.x.mul(c).add(part.z.mul(s)),part.y,part.z.mul(c).sub(part.x.mul(s))).add(from.xyz);
       const landed=positionLocal.mul(visible.select(to.w,float(0))).add(to.xyz);
-      const t=this.cargoTime.sub(load.z).div(load.w.sub(load.z).max(.001)).clamp(0,1);
+      const t=this.partialAnimationCache.clockNode(this.cargoTime,'cargoTime').sub(load.z).div(load.w.sub(load.z).max(.001)).clamp(0,1);
       const smooth=t.mul(t).mul(float(3).sub(t.mul(2)));
       return mix(carried,landed,smooth);
     })();
@@ -594,6 +672,55 @@ export class PawnLayer {
     this.group.add(this.partialCargoMesh);
   }
 
+  /** Cached rig coefficients replace every animated trig/clock expression;
+   * static morphology and visibility still use the live encoded streams. */
+  private cachedPawnPosition():THREE.Node<'vec3'> {
+    return Fn(()=>{
+      const bone=attribute('boneId','float'),dye=attribute('dye','float'),motion=vec4(0,0,this.animationCache.cell(4).y,0);
+      const pose=this.animationCache.cell(0);
+      const pivot=pawnMorph(attribute('bindPivot','vec3')),local=pawnMorph(positionLocal).sub(pivot);
+      const data=this.animationCache.cellAt(float(8).add(bone));
+      const animated=vec3(local.x,local.y.mul(data.x).sub(local.z.mul(data.y)),local.y.mul(data.y).add(local.z.mul(data.x))).add(pivot).toVar();
+      animated.y.addAssign(data.z);animated.z.addAssign(data.w);
+      const crouch=this.animationCache.cell(3).x;
+      If(crouch.greaterThan(0),()=>{const upright=animated.toVar();
+        If(bone.greaterThan(3.5),()=>{animated.y.assign(animated.y.sub(.11).mul(.72).add(.11));});
+        If(bone.lessThan(3.5),()=>{const y=animated.y.sub(.61).toVar(),z=animated.z.toVar();animated.y.assign(y.mul(.91).sub(z.mul(.42)).add(.49));animated.z.assign(y.mul(.42).add(z.mul(.91)).add(.075));});
+        animated.assign(mix(upright,animated,crouch));});
+      const post=this.animationCache.cellAt(float(16).add(bone));animated.y.addAssign(post.x);animated.z.addAssign(post.y);
+      If(motion.z.greaterThan(2.5).and(motion.z.lessThan(3.5)),()=>{If(bone.greaterThan(5.5),()=>{animated.y.addAssign(.21);animated.z.addAssign(.21);});animated.y.addAssign(WORLD_SCALE.stoolHeight/PAWN_MODEL_SCALE-.605);});
+      If(motion.z.equal(10).and(bone.lessThan(3.5)),()=>{const y=animated.y.sub(.48).toVar(),z=animated.z.toVar();animated.y.assign(y.mul(.82).sub(z.mul(.57)).add(.48));animated.z.assign(y.mul(.57).add(z.mul(.82)));});
+      const shooting=motion.z.equal(7).or(motion.z.equal(15)),recoil=this.animationCache.cell(3).z;
+      for(const weapon of WEAPON_VISUALS){const isWeapon=dye.equal(weapon.dye),along=positionLocal.y.sub(.68),across=positionLocal.x.sub(.205),depth=positionLocal.z;
+        if(weapon.item==='bolt-action-rifle'||weapon.item==='emp-launcher'){
+          If(isWeapon,()=>{animated.assign(vec3(along.mul(.30).add(across).add(.13),along.mul(.78).add(depth.mul(.12)).add(.84),depth.mul(.8).add(.25)));});
+          If(shooting.and(isWeapon),()=>{animated.assign(vec3(across.add(.10),depth.add(1.02).add(recoil.mul(.035)),along.add(.45).sub(recoil.mul(.12))));});
+        }else{If(isWeapon,()=>{animated.assign(vec3(across.add(.27),along.mul(.82).add(.65),depth.add(.13)));});
+          If(shooting.and(isWeapon),()=>{animated.assign(vec3(across.add(.19),depth.add(.99).add(recoil.mul(.035)),along.add(.44).sub(recoil.mul(.09))));});
+          if(weapon.item==='plasteel-knife')If(motion.z.equal(8).or(motion.z.equal(WORK_POSE.groundMelee)).and(isWeapon),()=>{animated.assign(vec3(across.add(.23),depth.add(.83),along.add(.38).add(this.animationCache.cell(3).w.mul(.2))));});}
+        If(isWeapon.and(attribute('aEquipment','vec4').x.notEqual(weapon.equipment)),()=>{animated.assign(vec3(0));});}
+      If(motion.z.equal(1).or(motion.z.equal(5)).or(motion.z.equal(POSE_SLEEP)).or(motion.z.equal(POSE_DEAD)),()=>{const y=animated.y.toVar();animated.y.assign(animated.z.add(.19));animated.z.assign(float(.65).sub(y));});
+      If(motion.z.equal(POSE_DEAD),()=>{animated.z.assign(animated.z.mul(.78));});
+      If(motion.z.equal(6),()=>{const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));});
+      const equipment=attribute('aEquipment','vec4'),worn=equipment.z,helmet=worn.greaterThan(1.5),recon=worn.greaterThan(3.5);
+      If(dye.equal(-3).and(equipment.y.notEqual(2).and(equipment.y.notEqual(3))),()=>{animated.assign(vec3(0));});
+      If(dye.equal(-2).and(worn.mod(2).lessThan(.5)),()=>{animated.assign(vec3(0));});
+      If(dye.equal(FLAK_HELMET_DYE).and(helmet.not().or(recon)),()=>{animated.assign(vec3(0));});
+      If(dye.equal(RECON_HELMET_DYE).and(recon.not()),()=>{animated.assign(vec3(0));});
+      If(dye.equal(PARKA_HOOD_DYE).and(equipment.y.notEqual(4).or(helmet)),()=>{animated.assign(vec3(0));});
+      const face=motion.z.equal(POSE_DEAD).select(float(PAWN_EYE_CROSS),motion.z.equal(POSE_SLEEP).or(this.animationCache.cell(3).y.greaterThan(.5)).select(float(PAWN_EYE_CLOSED),float(PAWN_EYE_OPEN)));
+      If(dye.greaterThanEqual(PAWN_EYE_OPEN).and(dye.lessThanEqual(PAWN_EYE_CROSS)).and(dye.notEqual(face)),()=>{animated.assign(vec3(0));});
+      If(recon.and(dye.greaterThanEqual(PAWN_EYE_OPEN)).and(dye.lessThanEqual(PAWN_EYE_CROSS)),()=>{animated.assign(vec3(0));});
+      If(hiddenAppearancePart(),()=>{animated.assign(vec3(0));});
+      const mask=attribute('aShape','vec4').x.div(100).floor();
+      for(const limb of HUMAN_LIMB_VISUALS){const member=limb.bones.reduce((matches,id)=>matches.or(bone.equal(id)),bone.equal(-1));If(member.and(mask.div(limb.bit).floor().mod(2).greaterThan(.5)),()=>{animated.assign(vec3(0));});}
+      If(helmet.and(dye.greaterThanEqual(100)).and(dye.lessThan(200)),()=>{animated.assign(vec3(0));});
+      If(recon.and(dye.greaterThanEqual(200)),()=>{animated.assign(vec3(0));});
+      If(attribute('aShape','vec4').x.div(10).floor().mod(10).greaterThan(1.5),()=>{If(dye.lessThan(0).or(dye.greaterThanEqual(100)),()=>{animated.assign(vec3(0));});animated.x.assign(animated.x.mul(.78));});
+      const yaw=this.animationCache.cell(1);return vec3(animated.x.mul(yaw.x).add(animated.z.mul(yaw.y)),animated.y,animated.z.mul(yaw.x).sub(animated.x.mul(yaw.y))).mul(PAWN_MODEL_SCALE).add(pose.xyz);
+    })();
+  }
+
   private syncPartialCargo():void {
     if(!this.partialCargoMesh)return;
     const geometry=this.partialCargoMesh.geometry as THREE.InstancedBufferGeometry;
@@ -601,12 +728,15 @@ export class PawnLayer {
     const to=geometry.getAttribute('aTransferTo') as THREE.InstancedBufferAttribute;
     const cargo=geometry.getAttribute('aTransferCargo') as THREE.InstancedBufferAttribute;
     const kinds=new Set<number>();
+    this.partialOwners=[];
     let index=0;
     for(const item of this.handoffs.active.values())if(item.partial){
       const [kind,size]=cargoAppearance(item.pile);
       from.setXYZW(index,item.from.x,item.from.y,item.from.z,item.from.yaw);
       to.setXYZW(index,item.to.x,item.to.y,item.to.z,item.groundScale);
       cargo.setXYZW(index,kind,size,localTimeSeconds(item.start,this.carryOrigin),localTimeSeconds(item.end,this.carryOrigin));
+      this.partialOwners[index]=this.pawnIndices.get(item.pawnId)??-1;
+      this.partialAnimationCache.reconcile(index,item.pawnId,`${item.start}:${item.end}:${item.targetPileId}`);
       kinds.add(kind);
       index++;
     }
@@ -627,6 +757,8 @@ export class PawnLayer {
   private presentedCargoAnchor(id:number,tick:number):CargoAnchor|undefined {
     const index=this.pawnIndices.get(id),geometry=this.pawnMesh?.geometry;
     if(index===undefined||!geometry)return;
+    const cached=this.animationCache.cpuPose(index);
+    if(cached)return {x:cached.x+Math.sin(cached.yaw)*WORLD_SCALE.carriedForward,y:cached.y+this.animationCache.get(index,4,0),z:cached.z+Math.cos(cached.yaw)*WORLD_SCALE.carriedForward,yaw:cached.yaw};
     const from=geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
     const to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
     const travel=geometry.getAttribute('aTravel') as THREE.InstancedBufferAttribute;
@@ -687,6 +819,7 @@ export class PawnLayer {
   }
 
   update(world: World, oldBlend: number, newMap: boolean): void {
+    if(newMap){this.animationCache.reset();this.partialAnimationCache.reset();}
     this.travelKeys.clear();this.travelSurfaces=furnitureSurfaces(world);
     if(newMap){this.headings.clear();this.approachTransitions.clear();this.departureOffsets.clear();this.workOffsets.clear();this.crouchTransitions.clear();this.shownPoses.clear();this.gait.clear();this.handoffs.clear();}
     const indices=new Map<number,number>(),pawnsById=new Map<number,Pawn>();
@@ -855,6 +988,11 @@ export class PawnLayer {
     });
     for (const id of this.visuals.keys()) if (!present.has(id)){this.visuals.delete(id);this.targetPoses.delete(id);this.headings.delete(id);this.workPoses.delete(id);this.workOffsets.delete(id);this.approachTransitions.delete(id);this.departureOffsets.delete(id);this.crouchTransitions.delete(id);this.shownPoses.delete(id);this.gait.delete(id);}
     this.pawnIndices.clear();for(const [id,index] of indices)this.pawnIndices.set(id,index);
+    const patientOwners=new Map(this.rescuePairs.map(([carrier,patient])=>[patient,carrier] as const));
+    this.animationOwners.clear();for(const [patient,carrier] of patientOwners)this.animationOwners.set(patient,carrier);
+    world.pawns.forEach((p,i)=>{const owner=bodies.get(p.id)?.owner;
+      const pose=motion.getZ(i),posture=pose===1||pose===3||pose===5||pose===6||pose===10||pose===POSE_SLEEP||pose===POSE_DEAD||pose===WORK_POSE.ground||pose===WORK_POSE.groundMelee?pose:0;
+      this.animationCache.reconcile(i,p.id,[posture,shape.getX(i),shape.getY(i),shape.getZ(i),shape.getW(i),equipment.getX(i),equipment.getY(i),equipment.getZ(i),equipment.getW(i),owner?.type,owner?.type==='pawn'?owner.pawnId:undefined,patientOwners.get(i)].join(':'));});
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo,handoffFrom,handoffTo]) attr.needsUpdate = true;
     geometry.instanceCount = world.pawns.length;
     (this.cargoMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount = world.pawns.length;
@@ -999,11 +1137,43 @@ export class PawnLayer {
     }else if(crouchFinished)motion.needsUpdate=true;
   }
 
+  /** Called once after camera publication and physical stream reconciliation. */
+  presentAnimations():void {
+    const g=this.pawnMesh?.geometry;if(!g)return;
+    this.animationCache.setOrigins(this.travelOrigin,this.carryOrigin);this.partialAnimationCache.setOrigins(this.travelOrigin,this.carryOrigin);
+    const originalOnly = this.animationCache.prepareOriginalOnly();
+    this.nativeBody = originalOnly;
+    this.selectBodyMaterial();
+    if(!originalOnly){
+      for(const slot of this.pawnIndices.values())if(!this.animationOwners.has(slot))this.captureAnimation(slot);
+      for(const [patient,carrier] of this.animationOwners)this.captureAnimation(patient,carrier);
+    }
+    this.animationCache.flush();
+    if(!this.partialAnimationCache.prepareOriginalOnly())for(let slot=0;slot<this.partialOwners.length;slot++){const owner=this.partialOwners[slot]!;if(owner<0||!this.partialAnimationCache.shouldCaptureLinked(slot,this.animationCache,owner))continue;
+      this.animationCache.readRoot(owner,this.linkedRoot);this.partialAnimationCache.setRoot(slot,this.linkedRoot,this.time.value,this.travelTime.value,this.cargoTime.value,this.blend.value);this.partialAnimationCache.publish(slot);}
+    this.partialAnimationCache.flush();
+    if(this.fireMesh)presentAttachedFire(this.fireMesh,g,this,this.animationDetail);
+  }
+  private captureAnimation(slot:number,owner?:number):void {
+    const g=this.pawnMesh!.geometry,live=sampleActorRoot(g.getAttribute('aFrom'),g.getAttribute('aTo'),g.getAttribute('aTravel'),slot,this.travelTime.value,this.blend.value,this.animationRoot);
+    const due=owner===undefined?this.animationCache.shouldCapture(slot,live.x,live.y,live.z):this.animationCache.shouldCaptureLinked(slot,this.animationCache,owner);
+    if(!due)return;
+    const root=owner!==undefined&&this.animationCache.readRoot(owner,this.linkedRoot)?this.linkedRoot:live;
+    const time=owner===undefined?this.time.value:this.animationCache.cpuClock(owner,'time')??this.time.value;
+    const travelTime=owner===undefined?this.travelTime.value:this.animationCache.cpuClock(owner,'travelTime')??this.travelTime.value;
+    this.animationCache.setRoot(slot,root,time,travelTime,this.cargoTime.value,this.blend.value);samplePawnRig(this.animationCache,slot,g,root,time,travelTime);this.animationCache.publish(slot);
+  }
+
   dispose(): void {
     clearGroup(this.group);
     this.plainMaterial?.dispose();
     this.texturedMaterial?.dispose();
+    this.nativePlainMaterial?.dispose();
+    this.nativeTexturedMaterial?.dispose();
+    this.nativePlainMaterial = this.nativeTexturedMaterial = null;
+    this.nativeBody = false;
     this.surfaceTexture.dispose();
+    this.animationCache.dispose();this.partialAnimationCache.dispose();
     this.pawnMesh = this.cargoMesh = this.partialCargoMesh = this.fireMesh = this.selectionMesh = null;
   }
 

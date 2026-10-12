@@ -1,11 +1,13 @@
 import * as THREE from 'three/webgpu';
-import { Fn,attribute,float,mat4,normalLocal,positionLocal,smoothstep,texture,transformNormal,uniform,vec3 } from 'three/tsl';
+import { Fn,attribute,float,mat4,normalLocal,positionLocal,smoothstep,texture,transformNormal,uniform,vec3,vec4,instanceIndex,uint } from 'three/tsl';
 import { ORBITAL_DELIVERY_LIMIT } from '../sim/orbital-state';
 import type { World } from '../sim/types';
 import { BoxMesh } from './BoxMesh';
 import { material } from './primitives';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { instancedBoxPatternUv } from './texture-variation';
+import type { AnimationDetail } from './AnimationDetail';
+import { RetainedAnimation } from './RetainedAnimation';
 
 export const ORBITAL_CAPSULE_PARTS=6;
 export const ORBITAL_CAPSULE_HEIGHT=24;
@@ -31,14 +33,17 @@ export class OrbitalDeliveryLayer {
   private key='';
   private revision=0;
   private texturesEnabled=true;
-  constructor(configure?:(material:THREE.MeshStandardNodeMaterial)=>void){
+  private readonly animation:RetainedAnimation;
+  constructor(configure?:(material:THREE.MeshStandardNodeMaterial)=>void,detail?:AnimationDetail){
+    this.animation=new RetainedAnimation(detail);
     const times=attribute('orbitalTimes','vec3');
     const falling=float(1).sub(smoothstep(times.x,times.y,this.tick)).mul(ORBITAL_CAPSULE_HEIGHT);
     const opening=smoothstep(times.y,times.z,this.tick);
+    const sampled=this.animation.choose(()=>vec4(opening,falling,0,0),uint(instanceIndex.div(ORBITAL_CAPSULE_PARTS)));
     const position=Fn(()=>{
       const transform=mat4(attribute('boxMatrix0','vec4'),attribute('boxMatrix1','vec4'),attribute('boxMatrix2','vec4'),attribute('boxMatrix3','vec4')).toVar();
       normalLocal.assign(transformNormal(normalLocal,transform));
-      return transform.mul(positionLocal).xyz.add(vec3(attribute('orbitalLid','float').mul(opening).mul(.62),falling,0));
+      return transform.mul(positionLocal).xyz.add(vec3(attribute('orbitalLid','float').mul(sampled.x).mul(.62),sampled.y,0));
     })();
     for(const surface of [this.plain,this.painted]){
       configure?.(surface);surface.userData.rendererOwned=true;surface.positionNode=position;
@@ -58,6 +63,7 @@ export class OrbitalDeliveryLayer {
     const key=deliveries.map(d=>`${d.id}:${d.cell.x}:${d.cell.z}:${d.createdAt}:${d.landAt}:${d.openAt}`).join('|');
     if(key===this.key)return;
     this.key=key;this.revision++;
+    this.animation.reconcile(deliveries.map(d=>({id:d.id,x:d.cell.x,y:1,z:d.cell.z})));
     const object=new THREE.Object3D(),color=new THREE.Color();
     const times=this.mesh.geometry.getAttribute('orbitalTimes') as THREE.InstancedBufferAttribute;
     const lid=this.mesh.geometry.getAttribute('orbitalLid') as THREE.InstancedBufferAttribute;
@@ -72,7 +78,16 @@ export class OrbitalDeliveryLayer {
     }
     this.mesh.activeCount=index;this.mesh.instanceMatrix.needsUpdate=this.mesh.colorBuffer.needsUpdate=times.needsUpdate=lid.needsUpdate=true;
   }
-  present(tick:number):void {this.tick.value=tick;}
+  present(tick:number):void {
+    this.tick.value=tick;if(!this.mesh.activeCount)return;
+    const times=this.mesh.geometry.getAttribute('orbitalTimes');
+    const smooth=(a:number,b:number,t:number)=>{const f=Math.max(0,Math.min(1,(t-a)/(b-a)));return f*f*(3-2*f);};
+    this.animation.present((owner,row)=>{
+      const slot=row*ORBITAL_CAPSULE_PARTS;
+      owner.values[0]=smooth(times.getY(slot),times.getZ(slot),tick);
+      owner.values[1]=(1-smooth(times.getX(slot),times.getY(slot),tick))*ORBITAL_CAPSULE_HEIGHT;
+    });
+  }
   setTexturesEnabled(enabled:boolean):void {
     if(enabled===this.texturesEnabled)return;this.texturesEnabled=enabled;this.mesh.material=enabled?this.painted:this.plain;
   }
@@ -88,5 +103,5 @@ export class OrbitalDeliveryLayer {
       if(this.revision===revision){mesh.activeCount=count;mesh.visible=visible;}
     };
   }
-  dispose():void {this.mesh.removeFromParent();this.mesh.dispose();this.base.dispose();this.plain.dispose();this.painted.dispose();this.paint.dispose();this.group.clear();}
+  dispose():void {this.animation.dispose();this.mesh.removeFromParent();this.mesh.dispose();this.base.dispose();this.plain.dispose();this.painted.dispose();this.paint.dispose();this.group.clear();}
 }

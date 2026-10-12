@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, positionLocal, uv, vec2, vec3 } from 'three/tsl';
+import { Fn, If, attribute, positionLocal, uv, vec2, vec3, uint } from 'three/tsl';
 import type { World } from '../sim/types';
 import { pawnPresentationPose } from './pawn-presentation';
 import type { PawnLayer } from './PawnLayer';
@@ -53,7 +53,9 @@ export class ActionFeedbackLayer {
     const path=quad();
     const pathMaterial=new THREE.MeshBasicNodeMaterial({color:0x6da9ef,side:THREE.DoubleSide,depthTest:false,depthWrite:false});
     pathMaterial.positionNode=Fn(()=>{
-      const start=pawnPresentationPose(clock).xyz,end=attribute('aPathEnd','vec3');
+      const owner=attribute('aPathOwner','float'),start=vec3(0).toVar(),end=attribute('aPathEnd','vec3');
+      If(owner.greaterThanEqual(0),()=>{start.assign(pawnPresentationPose(clock,uint(owner)).xyz);})
+        .Else(()=>{start.assign(pawnPresentationPose({travelTime:clock.travelTime,blend:clock.blend}).xyz);});
       const delta=end.sub(start),distance=delta.length().max(.0001),right=vec3(delta.z.div(distance),0,delta.x.negate().div(distance));
       return start.add(delta.mul(positionLocal.x.add(.5))).add(right.mul(positionLocal.y.mul(.085))).add(vec3(0,.075,0));
     })();
@@ -119,7 +121,7 @@ export class ActionFeedbackLayer {
   private allocatePath(capacity:number):void {
     this.pathCapacity=capacity;
     const g=this.path.geometry;g.dispose();
-    for(const [name,size] of [['aFrom',4],['aTo',4],['aTravel',4],['aPathEnd',3]] as const)
+    for(const [name,size] of [['aFrom',4],['aTo',4],['aTravel',4],['aPathEnd',3],['aPathOwner',1]] as const)
       g.setAttribute(name,new THREE.InstancedBufferAttribute(new Float32Array(capacity*size),size).setUsage(THREE.StaticDrawUsage));
   }
 
@@ -135,12 +137,14 @@ export class ActionFeedbackLayer {
     const g=this.path.geometry,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,
       to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute,
       travel=g.getAttribute('aTravel') as THREE.InstancedBufferAttribute,
-      end=g.getAttribute('aPathEnd') as THREE.InstancedBufferAttribute;
+      end=g.getAttribute('aPathEnd') as THREE.InstancedBufferAttribute,
+      owner=g.getAttribute('aPathOwner') as THREE.InstancedBufferAttribute;
     let slot=0;
     for(const item of paths){
       this.movingSlots.push({slot,pawnIndex:item.index});
       for(let step=0;step<item.route.length;step++,slot++){
         const target=item.route[step]!;
+        owner.setX(slot,step===0?item.index:-1);
         end.setXYZ(slot,target.x,0,target.z);
         if(step===0)continue;
         const previous=item.route[step-1]!;
@@ -150,7 +154,7 @@ export class ActionFeedbackLayer {
       }
     }
     g.instanceCount=total;this.stats.pathSegments=total;this.path.visible=total>0;
-    if(total){from.needsUpdate=to.needsUpdate=travel.needsUpdate=end.needsUpdate=true;}
+    if(total){from.needsUpdate=to.needsUpdate=travel.needsUpdate=end.needsUpdate=owner.needsUpdate=true;}
     this.syncTravel(source,true);
   }
 

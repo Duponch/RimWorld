@@ -13,6 +13,7 @@ import { GrassBloodMask, GRASS_BLOOD_SLOTS, GRASS_BLOOD_WORDS } from './grass-bl
 import { readSceneResourceFrame, type SceneResourceFrame } from './scene-resource-index';
 import type {GroundSurfaceTint} from './GroundSurfaceTint';
 import type { AnimationDetail } from './AnimationDetail';
+import { NaturalAnimationCache, NaturalPhasePalette } from './natural-animation-cache';
 
 /** AntSystem-inspired GPU blades, indexed by stable world cell and slot.
  * This is scenery: no Resource, job, save or simulation RNG. Four vertices/two
@@ -206,6 +207,8 @@ export class GpuGroundGrassLayer {
   private readonly bandLimits = uniform(new THREE.Vector4());
   private readonly zoomVisibility = uniform(1);
   private readonly dimensions = uniform(new THREE.Vector2(1, 1));
+  private readonly middleWind = new NaturalAnimationCache();
+  private readonly middlePalette?: NaturalPhasePalette;
   private readonly windTick = uniform(0);
   private readonly windStrength = uniform(0);
   private readonly windDirection = uniform(new THREE.Vector2(1,0));
@@ -233,7 +236,8 @@ export class GpuGroundGrassLayer {
 
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void,
     private readonly maxTextureDimension = Infinity, private readonly onUnsupported: (message: string) => void = () => {},surfaceTint?:GroundSurfaceTint,
-    groundedConfigure?:(material:THREE.MeshStandardNodeMaterial,root:THREE.Node)=>void,detail?:AnimationDetail) {
+    groundedConfigure?:(material:THREE.MeshStandardNodeMaterial,root:THREE.Node)=>void,private readonly detail?:AnimationDetail) {
+    if(detail)this.middlePalette=new NaturalPhasePalette();
     this.map.colorSpace = THREE.SRGBColorSpace;
     this.map.magFilter = this.map.minFilter = THREE.NearestFilter;
     this.map.generateMipmaps = false;
@@ -305,21 +309,22 @@ export class GpuGroundGrassLayer {
       const bladeT = uv().y;
       const animate=(tick:THREE.Node<'float'>)=>sin(tick.mul(2*Math.PI/18).add(bx.mul(.31)).add(bz.mul(.23)).add(yaw))
         .mul(.07).add(.04).mul(this.windStrength).mul(bladeT.mul(bladeT));
-      const sway=float(0).toVar();
-      if(detail){
-        const level=detail.level(vec3(cellX,0,cellZ)).toVar();
-        If(level.lessThan(2),()=>{
-          const tick=this.windTick.toVar();
-          If(level.equal(1),()=>{tick.assign(this.windTick.div(6).mul(detail.middleHz).floor().div(detail.middleHz).mul(6));});
-          sway.assign(animate(tick));
-        });
-      }else sway.assign(animate(this.windTick));
       const side = positionLocal.x.mul(width), lean = positionLocal.z.mul(width);
-      return vec3(
-        bx.add(side.mul(c)).add(lean.mul(s)).add(this.windDirection.x.mul(sway)),
+      const shape=(sway:THREE.Node<'float'>,direction:THREE.Node<'vec2'>)=>vec3(
+        bx.add(side.mul(c)).add(lean.mul(s)).add(direction.x.mul(sway)),
         positionLocal.y.mul(height).add(.021),
-        bz.add(lean.mul(c)).sub(side.mul(s)).add(this.windDirection.y.mul(sway)),
+        bz.add(lean.mul(c)).sub(side.mul(s)).add(direction.y.mul(sway)),
       );
+      if(!detail)return shape(animate(this.windTick),this.windDirection);
+      const level=detail.level(vec3(cellX,0,cellZ)).toVar(),position=shape(float(0),this.windDirection).toVar();
+      If(level.equal(0),()=>{position.assign(shape(animate(this.windTick),this.windDirection));})
+        .ElseIf(level.equal(1),()=>{
+          const basis=this.middlePalette!.phase(bx.mul(.31).add(bz.mul(.23)).add(yaw));
+          const wave=this.middleWind.phaseA.x.mul(basis.y).add(this.middleWind.phaseA.y.mul(basis.x));
+          const sway=wave.mul(.07).add(.04).mul(this.middleWind.wind.z).mul(bladeT.mul(bladeT));
+          position.assign(shape(sway,this.middleWind.wind.xy));
+        });
+      return position;
     })();
     // Match TerrainLayer's albedo and vertical normal exactly. As in
     // AntSystem, the three-dimensional silhouette makes the grass visible.
@@ -353,11 +358,16 @@ export class GpuGroundGrassLayer {
       this.mesh.material.needsUpdate = true;
     }
   }
-  presentWind(tick:number):void {this.windTick.value=((tick%7200)+7200)%7200;}
+  presentWind(tick:number):void {
+    this.windTick.value=((tick%7200)+7200)%7200;
+    if(this.detail){const sample=((this.detail.middleTick%7200)+7200)%7200;
+      this.middleWind.capture(this.detail,this.windDirection.value.x,this.windDirection.value.y,this.windStrength.value,sample*2*Math.PI/18);}
+  }
 
   /** Diff spatial cover at source cells; dynamic edits leave the atlas alone.
    * Only seed/biome, dimensions and explicit force recolour the whole map. */
   update(world: World, force = false, changedTiles?: readonly number[], sceneFrame?: SceneResourceFrame): void {
+    if(force||this.previousWorld?.width!==world.width||this.previousWorld?.height!==world.height)this.middleWind.reset();
     // Check the configured canvas device before allocating the dense mask.
     // Decorative grass can be disabled safely without changing the World.
     this.supported = world.width * GRASS_BLOOD_WORDS <= this.maxTextureDimension && world.height <= this.maxTextureDimension;
@@ -678,5 +688,5 @@ export class GpuGroundGrassLayer {
     } };
   }
 
-  dispose(): void { this.mesh.geometry.dispose(); this.mesh.material.dispose(); this.map.dispose(); this.bloodMap.dispose(); }
+  dispose(): void { this.middlePalette?.dispose();this.mesh.geometry.dispose(); this.mesh.material.dispose(); this.map.dispose(); this.bloodMap.dispose(); }
 }

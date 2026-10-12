@@ -1,8 +1,10 @@
-import { attachedFireMesh, setFireTexturesEnabled } from './FireLayer';
+import { attachedFireMesh,presentAttachedFire, setFireTexturesEnabled } from './FireLayer';
 import { AnimationDetail } from './AnimationDetail';
+import {ActorAnimationCache,sampleActorRoot} from './ActorAnimationCache';
+import {sampleAnimalRig} from './actor-animation-sampling';
 import * as THREE from 'three/webgpu';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
-import { Fn,If,attribute,cos,sin,float,normalLocal,positionLocal,vec3,uniform,renderGroup,mix } from 'three/tsl';
+import { Fn,If,attribute,cos,sin,float,instanceIndex,normalLocal,positionLocal,vec3,uniform,renderGroup,mix } from 'three/tsl';
 import { hareGeometry } from './hare-geometry';
 import { animalParts } from './animal-shape';
 import { material } from './primitives';
@@ -42,6 +44,12 @@ class SpeciesRig {
   readonly slaughter:THREE.Mesh;
   readonly plainMaterial:THREE.MeshStandardNodeMaterial;
   readonly texturedMaterial:THREE.MeshStandardNodeMaterial;
+  readonly animationCache:ActorAnimationCache;
+  private readonly sampledBones:readonly number[];
+  private readonly carrierSlots=new Map<number,number>();
+  private readonly actorSlots=new Map<number,number>();
+  private readonly animationRoot={x:0,y:0,z:0,yaw:0};
+  private readonly linkedRoot={x:0,y:0,z:0,yaw:0};
   private selected:ReadonlySet<number>=new Set();
   readonly blend=uniform(1).setGroup(renderGroup);private time=uniform(0).setGroup(renderGroup);
   private keys=new Map<number,string>();private source:World|undefined;
@@ -53,8 +61,11 @@ class SpeciesRig {
   private animals:VisualAnimal[]=[];
   private surfaces:ReadonlyMap<number,number>=new Map();
   constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,surfaceTexture:THREE.Texture,style:AnimalSlaughterMarkerStyle,private readonly animationDetail:AnimationDetail,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
+    this.animationCache=new ActorAnimationCache(animationDetail);
     this.gaitRate=animalGaitRadiansPerUnit(species);
     const geometry=hareGeometry(MAX_WILDLIFE,species);
+    geometry.userData.animationCache=this.animationCache;
+    const part=geometry.getAttribute('animalPart');this.sampledBones=[...new Set(Array.from({length:part.count},(_,i)=>part.getX(i)))].sort((a,b)=>a-b);
     bakeAnimalCoatCoordinates(geometry,species);
     geometry.computeBoundingBox();
     const bounds=geometry.boundingBox!;
@@ -66,12 +77,15 @@ class SpeciesRig {
     const mat=material(0xffffff);configure?.(mat);
     mat.colorNode=bodyBloodPigment(attribute('color','vec3'),attribute('animalPart','vec4').z,species==='hare'||species==='snow-hare'?2:1,attribute('animalPart','vec4').w.lessThan(0).select(float(1),float(0)),attribute('aBiology','vec3').y);
     mat.positionNode=Fn(()=>{
-      const pose=pawnPresentationPose(this),state=attribute('aAnimal','vec4'),part=attribute('animalPart','vec4'),biology=attribute('aBiology','vec3'),bone=part.x,pivot=attribute('bindPivot','vec3');
-      const detailLevel=this.animationDetail.level(pose.xyz).toVar();
-      const time=this.animationDetail.clock(this.time,pose.xyz,detailLevel);
-      const decorativeSin=(phase:THREE.Node<'float'>)=>this.animationDetail.sine(phase,detailLevel);
+      const cached=this.animationCache.cached().toVar();
+      const pose=pawnPresentationPose(this,instanceIndex,cached),state=attribute('aAnimal','vec4'),part=attribute('animalPart','vec4'),biology=attribute('aBiology','vec3'),bone=part.x,pivot=attribute('bindPivot','vec3');
+      // The fallback is the complete original rig. Retained phases are CPU
+      // coefficients, so no second threshold or phase preparation runs here.
+      const time=this.time,decorativeSin=(phase:THREE.Node<'float'>)=>sin(phase);
       const angle=float(0).toVar();
-      const phase=this.animationDetail.gaitPhase(state.w,this.gaitRate,pose,this.travelTime,this.blend,detailLevel);
+      const phase=float(0).toVar();
+      If(cached.not(),()=>{
+      phase.assign(state.w.add(pose.xz.sub(attribute('aFrom','vec4').xz).length().mul(this.gaitRate)));
       If(bone.equal(1),()=>{ angle.assign(decorativeSin(phase).mul(.5).mul(state.x)); });
       If(bone.equal(2),()=>{ angle.assign(decorativeSin(phase.add(Math.PI)).mul(.6).mul(state.x)); });
       If(bone.greaterThanEqual(3),()=>{
@@ -85,7 +99,10 @@ class SpeciesRig {
         // pieces use bone 3 (full angle); shell vertices encode 4 + weight.
         If(bone.greaterThanEqual(4),()=>{ angle.mulAssign(bone.sub(4)); });
       });
-      const p=positionLocal.sub(pivot),c=cos(angle),s=sin(angle);
+      });
+      const c=float(0).toVar(),s=float(0).toVar();
+      If(cached,()=>{const cachedIndex=float(0).toVar();this.sampledBones.forEach((value,index)=>{If(bone.equal(value),()=>{cachedIndex.assign(index);});});const rotation=this.animationCache.cellAt(cachedIndex.add(8));c.assign(rotation.x);s.assign(rotation.y);}).Else(()=>{c.assign(cos(angle));s.assign(sin(angle));});
+      const p=positionLocal.sub(pivot);
       const q=vec3(p.x,p.y.mul(c).sub(p.z.mul(s)),p.z.mul(c).add(p.y.mul(s))).add(pivot).toVar();
       const n=normalLocal.toVar();
       const normal=vec3(n.x,n.y.mul(c).sub(n.z.mul(s)),n.z.mul(c).add(n.y.mul(s))).toVar();
@@ -94,9 +111,9 @@ class SpeciesRig {
         q.x.assign(float(bodyCenter).sub(y));q.y.assign(x.add(restFloor));
         normal.x.assign(normal.y.negate());normal.y.assign(nx);
       });
-      q.y.addAssign(decorativeSin(phase).abs().mul(.08).mul(state.x));
+      If(cached,()=>{q.y.addAssign(this.animationCache.cell(3).x);}).Else(()=>{q.y.addAssign(decorativeSin(phase).abs().mul(.08).mul(state.x));});
       If(state.x.lessThan(.5).and(state.y.lessThan(.5)).and(state.z.lessThan(.5)).and(bone.equal(0).or(bone.greaterThanEqual(3))),()=>{
-        q.y.addAssign(decorativeSin(time.add(state.w)).mul(.006));
+        If(cached,()=>{q.y.addAssign(this.animationCache.cell(3).y);}).Else(()=>{q.y.addAssign(decorativeSin(time.add(state.w)).mul(.006));});
       });
       const bit=part.y,absent=biology.z;
       If(bit.greaterThan(0).and(absent.div(bit.max(1)).floor().mod(2).greaterThan(.5)),()=>{ q.assign(vec3(0)); });
@@ -109,20 +126,22 @@ class SpeciesRig {
       const held=vec3(q.x,q.y.sub(.16),q.z).mul(biology.x).add(vec3(0,0,WORLD_SCALE.carriedForward)).toVar();
       If(carrier.x.greaterThan(.5),()=>{
         const height=float(WORLD_SCALE.carriedHeight).toVar();
+        If(cached,()=>{height.assign(this.animationCache.cell(3).z);}).Else(()=>{
         If(carrier.y.equal(1).or(carrier.y.equal(18)).or(carrier.y.equal(19)),()=>{ height.assign(.28); });
         // Match the carrier's exempt interaction pose and cargo exactly.
         If(carrier.y.greaterThan(1.5).and(carrier.y.lessThan(3.5)),()=>{ height.assign(sin(this.time.mul(4).add(carrier.z)).mul(.08).add(1.32)); });
         If(carrier.y.equal(3),()=>{ height.addAssign(WORLD_SCALE.stoolHeight-.605*PAWN_MODEL_SCALE); });
         If(carrier.y.equal(6),()=>{ height.assign(1.3); });
+        });
         held.y.addAssign(height);
       });
-      const cy=cos(pose.w),sy=sin(pose.w);
+      const cy=this.animationCache.yawNode(pose.w,'cos',instanceIndex,cached),sy=this.animationCache.yawNode(pose.w,'sin',instanceIndex,cached);
       normalLocal.assign(vec3(normal.x.mul(cy).add(normal.z.mul(sy)),normal.y,normal.z.mul(cy).sub(normal.x.mul(sy))).normalize());
       const grounded=vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy))).mul(biology.x).add(pose.xyz);
       const result=grounded.toVar();
       If(carrier.x.greaterThan(.5),()=>{ result.assign(vec3(held.x.mul(cy).add(held.z.mul(sy)),held.y,held.z.mul(cy).sub(held.x.mul(sy))).add(pose.xyz)); });
       If(transfer.y.abs().greaterThan(.0001),()=>{
-        const progress=this.travelTime.sub(transfer.x).div(transfer.y.abs().sub(transfer.x).max(.001)).clamp(0,1);
+        const progress=this.animationCache.clockNode(this.travelTime,'travelTime',instanceIndex,cached).sub(transfer.x).div(transfer.y.abs().sub(transfer.x).max(.001)).clamp(0,1);
         const smooth=progress.mul(progress).mul(float(3).sub(progress.mul(2)));
         const dc=cos(from.w),ds=sin(from.w);
         const start=vec3(q.x.mul(dc).add(q.z.mul(ds)),q.y,q.z.mul(dc).sub(q.x.mul(ds))).mul(biology.x).add(from.xyz);
@@ -139,7 +158,7 @@ class SpeciesRig {
     textured.positionNode=mat.positionNode;
     textured.colorNode=mat.colorNode.mul(animalCoatShade(surfaceTexture));
     this.plainMaterial=mat;this.texturedMaterial=textured;
-    this.mesh=new THREE.Mesh(geometry,textured);this.mesh.name=`Wild ${this.species} — GPU rig`;this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6);
+    this.mesh=new THREE.Mesh(geometry,textured);this.mesh.name=`Wild ${this.species} — GPU rig`;this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6,this.animationDetail);
     this.selection=pawnSelectionMesh(this.mesh.geometry as THREE.InstancedBufferGeometry,this);this.selection.visible=false;
     this.slaughter=animalSlaughterMarker(this.mesh.geometry as THREE.InstancedBufferGeometry,this,style,geometry.boundingBox!.max.y);
   }
@@ -160,7 +179,8 @@ class SpeciesRig {
       const start=times.getX(i),end=times.getY(i),alpha=end>start?THREE.MathUtils.clamp((this.travelTime.value-start)/(end-start),0,1):1;
       const growth=scale.getX(i),posture=state.getZ(i);
       const height=(posture>=1?this.restingHeight:box.max.y)*growth;
-      visit(a.id,this.species,THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),times.getW(i),alpha)),THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),height,(posture>=1?this.restingRadius:radius)*growth);
+      const cached=this.animationCache.cpuPose(i);
+      visit(a.id,this.species,cached?.x??THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),cached?.y??travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),times.getW(i),alpha)),cached?.z??THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),height,(posture>=1?this.restingRadius:radius)*growth);
     });
   }
   prepare():()=>void {
@@ -186,6 +206,7 @@ class SpeciesRig {
     }
     const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
     this.travelTime.value=localTimeSeconds(tick,origin);this.time.value=pawns?.time.value??localTimeSeconds(tick)%(2*Math.PI);this.blend.value=pawns?.blend.value??1;
+    this.animationCache.setOrigins(origin);
     const g=this.mesh.geometry as THREE.InstancedBufferGeometry,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=g.getAttribute('aTravel') as THREE.InstancedBufferAttribute,state=g.getAttribute('aAnimal') as THREE.InstancedBufferAttribute,scale=g.getAttribute('aScale') as THREE.InstancedBufferAttribute;
     if(changed){
     const fireSize=this.mesh.geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
@@ -200,6 +221,7 @@ class SpeciesRig {
     (this.flames.geometry as THREE.InstancedBufferGeometry).instanceCount=fireCount;
     }
     const animals=this.animals;g.instanceCount=animals.length;let dirty=false;
+    if(changed||reset){this.carrierSlots.clear();if(reset)this.animationCache.reset();}
     animals.forEach((a,i)=>{
       // These bodies have equal endpoints and no local clocks or handoff.
       // New snapshots (even at the same tick), resets and transferred bodies
@@ -211,6 +233,7 @@ class SpeciesRig {
         const pile=a.corpsePile,carrier=a.carrierId===undefined?undefined:pawns?.animalCorpseCarrier(a.carrierId);
         const held=pile.owner.type==='pawn',handoff=carrier?.handoff?.pile.corpse?.animalId===corpse.animalId?carrier.handoff:undefined;
         const source=carrier?.geometry,index=carrier?.index??0;
+        if(held&&carrier)this.carrierSlots.set(i,index);else this.carrierSlots.delete(i);
         const sourceFrom=source?.getAttribute('aFrom'),sourceTo=source?.getAttribute('aTo'),sourceTravel=source?.getAttribute('aTravel'),motion=source?.getAttribute('aMotion');
         const signature=[origin,held,handoff?.start,handoff?.end,...[sourceFrom,sourceTo,sourceTravel,motion].flatMap(attr=>attr?[attr.getX(index),attr.getY(index),attr.getZ(index),attr.getW(index)]:[])].join(':');
         if(this.keys.get(a.id)===signature)return;this.keys.set(a.id,signature);dirty=true;
@@ -239,6 +262,7 @@ class SpeciesRig {
       }
       if(a.carrierId!==undefined){
         const carrier=pawns?.animalCorpseCarrier(a.carrierId),source=carrier?.geometry,index=carrier?.index??0;
+        if(carrier)this.carrierSlots.set(i,index);else this.carrierSlots.delete(i);
         const f=source?.getAttribute('aFrom'),t=source?.getAttribute('aTo'),travel=source?.getAttribute('aTravel'),motion=source?.getAttribute('aMotion');
         const signature=['rescue',i,origin,a.carrierId,a.state,...[f,t,travel,motion].flatMap(attr=>attr?[attr.getX(index),attr.getY(index),attr.getZ(index),attr.getW(index)]:[])].join(':');
         if(this.keys.get(a.id)===signature)return;this.keys.set(a.id,signature);dirty=true;
@@ -288,6 +312,20 @@ class SpeciesRig {
       scale.setX(i,growth);
     });
     if(dirty)for(const a of [from,to,times,state,scale,g.getAttribute('aBodyBlood'),g.getAttribute('aAbsent'),g.getAttribute('aCarrier'),g.getAttribute('aCorpseHandoff'),g.getAttribute('aCorpseFrom'),g.getAttribute('aCorpseTo')])a.needsUpdate=true;
+    if(changed||reset||dirty){this.actorSlots.clear();let minScale=1;animals.forEach((a,i)=>{this.actorSlots.set(a.id,i);minScale=Math.min(minScale,scale.getX(i));const carrier=g.getAttribute('aCarrier');this.animationCache.reconcile(i,a.id,[state.getZ(i),scale.getX(i),g.getAttribute('aAbsent').getX(i),carrier.getX(i),carrier.getY(i),this.carrierSlots.get(i),a.carrierId,a.corpsePile?.owner.type].join(':'));});this.animationCache.setMinimumScale(minScale);}
+  }
+  cpuPoseForId(id:number){const slot=this.actorSlots.get(id);return slot===undefined?undefined:this.animationCache.cpuPose(slot);}
+  presentAnimations(pawns?:PawnLayer):void {
+    const g=this.mesh.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),travel=g.getAttribute('aTravel');
+    if(!this.animationCache.prepareOriginalOnly())for(let i=0;i<this.animals.length;i++){
+      const live=sampleActorRoot(from,to,travel,i,this.travelTime.value,this.blend.value,this.animationRoot),owner=this.carrierSlots.get(i);
+      const due=owner!==undefined&&pawns?this.animationCache.shouldCaptureLinked(i,pawns.animationCache,owner):this.animationCache.shouldCapture(i,live.x,live.y,live.z,g.getAttribute('aScale').getX(i));
+      if(!due)continue;
+      const root=owner!==undefined&&pawns?.animationCache.readRoot(owner,this.linkedRoot)?this.linkedRoot:live;
+      const time=owner===undefined?this.time.value:pawns?.animationCache.cpuClock(owner,'time')??this.time.value;
+      const travelTime=owner===undefined?this.travelTime.value:pawns?.animationCache.cpuClock(owner,'travelTime')??this.travelTime.value;
+      this.animationCache.setRoot(i,root,time,travelTime,travelTime,this.blend.value);sampleAnimalRig(this.animationCache,i,g,root,time,travelTime,this.gaitRate,this.sampledBones);this.animationCache.publish(i);
+    }this.animationCache.flush();presentAttachedFire(this.flames,g,this,this.animationDetail);
   }
 }
 
@@ -308,10 +346,14 @@ export class WildlifeLayer {
   setTexturesEnabled(enabled:boolean):void {if(this.texturesEnabled===enabled)return;this.texturesEnabled=enabled;for(const rig of this.rigs)rig.setTexturesEnabled(enabled);}
   setSelected(ids:ReadonlySet<number>):void {for(const rig of this.rigs)rig.setSelected(ids);}
   forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {for(const rig of this.rigs)rig.forEachPose(visit);}
+  cpuPoseForId(id:number){for(const rig of this.rigs){const pose=rig.cpuPoseForId(id);if(pose)return pose;}}
+  presentedPose(id:number){return this.cpuPoseForId(id);}
   update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void{if(this.source!==world){this.source=world;this.surfaces=furnitureSurfaces(world);this.pileSurface=pileSurfaces(world);this.pileIdentities=pileIdentitySurfaces(world);this.quotaTargets=autoSlaughterTargets(world);}for(const rig of this.rigs)rig.update(world,timeline,this.surfaces,this.pileSurface,reset,pawns,this.quotaTargets,this.pileIdentities);}
+  presentAnimations(pawns?:PawnLayer):void {for(const rig of this.rigs)rig.presentAnimations(pawns);}
   prepare():()=>void{const restores=this.rigs.map(r=>r.prepare());return()=>{for(const restore of restores)restore();};}
   dispose():void{
     for(const r of this.rigs){
+      r.animationCache.dispose();
       for(const m of [r.mesh,r.flames,r.selection,r.slaughter])m.geometry.dispose();
       r.plainMaterial.dispose();r.texturedMaterial.dispose();
       (r.flames.material as THREE.Material).dispose();

@@ -8,6 +8,7 @@ import { createRoomGeometry } from '../src/render/room-geometry';
 import { sampleDaylight } from '../src/render/daylight';
 import { SceneRenderCore } from '../src/render/SceneRenderCore';
 import { LandscapeBatch } from '../src/render/LandscapeBatch';
+import { AnimationDetail } from '../src/render/AnimationDetail';
 import { TICKS_PER_DAY } from '../src/sim/types';
 
 const noon = TICKS_PER_DAY / 2;
@@ -322,6 +323,7 @@ describe('V329 B2 ordered room commands and native mobile fallback', () => {
       disposed: false, roomEnabled: true, dioramaEnabled: true, room: h.room, scene: h.game,
       world: { width: 32, height: 48, seed: 7 }, texturesEnabled: true, roomMaskRadius: .31,
       lightingSettings: { sun: 1, moon: 1, ambient: 1 }, landscape: new LandscapeBatch(), armedRoom: null,
+      animationDetail: new AnimationDetail(), skyAnimation: new AnimationDetail().createHandle(),
       daylight: { setExternalLighting: vi.fn() }, rig: { setRoomEnabled: vi.fn() },
       configureDiorama: vi.fn(), invalidatePausedShadow: vi.fn(),
     });

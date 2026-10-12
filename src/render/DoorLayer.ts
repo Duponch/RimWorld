@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, mat4, normalLocal, positionLocal, transformNormal, uniform, clamp, select, texture, uv } from 'three/tsl';
+import { Fn, attribute, mat4, normalLocal, positionLocal, transformNormal, uniform, clamp, select, texture, uv, instanceIndex, uint } from 'three/tsl';
 import { BoxMesh } from './BoxMesh';
 import { material } from './primitives';
 import { doorOrientations, doorMotionTicks, isRoomDoor, type DoorState } from '../sim/door-rules';
@@ -8,6 +8,8 @@ import { doorLeafColor, doorLeafPartsForStructure } from './door-parts';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { penBoundaryAxes } from './pen-parts';
 import { InstanceTargetTint } from './instance-target-tint';
+import type { AnimationDetail } from './AnimationDetail';
+import { RetainedAnimation } from './RetainedAnimation';
 
 const EMPTY_AXES:ReadonlyMap<number,0|1>=new Map();
 const AUTODOOR_TINT=new THREE.Color(0xa6b7b4);
@@ -27,16 +29,20 @@ export class DoorLayer {
   private key='';
   private history=new Map<number,{current:DoorState;previous:DoorState}>();
   private readonly targetTint=new InstanceTargetTint();
+  private readonly animation:RetainedAnimation;
   setTargetPreview(ids:ReadonlySet<number>):void {this.targetTint.setTargets(ids);}
   clearTargetPreview():void {this.targetTint.clear();}
-  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void) {
+  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void,detail?:AnimationDetail) {
+    this.animation=new RetainedAnimation(detail);
     configure?.(this.material);configure?.(this.textured);
     this.material.positionNode=Fn(()=>{
       const transform=mat4(attribute('boxMatrix0','vec4'),attribute('boxMatrix1','vec4'),attribute('boxMatrix2','vec4'),attribute('boxMatrix3','vec4')).toVar();
       normalLocal.assign(transformNormal(normalLocal,transform));
       const current=attribute('doorCurrent','vec4'),previous=attribute('doorPrevious','vec4');
-      const segment=select(this.tick.lessThan(current.x),previous,current);
-      const amount=clamp(segment.y.add(this.tick.sub(segment.x).mul(segment.z)),0,1);
+      const amount=this.animation.scalar(()=>{
+        const segment=select(this.tick.lessThan(current.x),previous,current);
+        return clamp(segment.y.add(this.tick.sub(segment.x).mul(segment.z)),0,1);
+      },uint(instanceIndex.div(2)));
       return transform.mul(positionLocal).xyz.add(attribute('doorShift','vec3').mul(amount));
     })();
     // Two carried leaves still use one draw. A narrow shaded centre joint on
@@ -60,7 +66,7 @@ export class DoorLayer {
   // V299_NATIVE_DOOR_BEGIN
   // Central native admission owns these preparations; arguments do not grant it.
   updateNative(world:World,cutaway:boolean,reset:boolean,doors:ReadonlyArray<World['structures'][number]>,axes:ReadonlyMap<number,0|1>,gateAxes:ReadonlyMap<number,0|1>):void {
-    if(reset){this.history.clear();this.key='';}
+    if(reset){this.history.clear();this.key='';this.animation.reset();}
     const key=String(cutaway)+doors.map(s=>`${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${(s.kind==='fence-gate'?gateAxes:axes).get(s.z*world.width+s.x)??0}:${s.door!.changedAt}:${s.door!.from}:${s.door!.open}:${doorMotionTicks(s)}`).join('|');
     if(key===this.key)return;this.key=key;this.targetTint.restore();
     const live=new Set(doors.map(s=>s.id));for(const id of this.history.keys())if(!live.has(id))this.history.delete(id);
@@ -89,11 +95,12 @@ export class DoorLayer {
     for(const attribute of [current,previous,shift])attribute.needsUpdate=true;
     this.mesh.computeBoundingSphere();this.mesh.boundingSphere.radius+=.5;
     this.targetTint.setInstances(this.mesh.colorBuffer,targetIds);
+    this.animation.reconcile(doors.map(s=>({id:s.id,x:s.x,y:1,z:s.z})));
   }
   // V299_NATIVE_DOOR_END
 
   update(world:World,cutaway:boolean,reset=false):void {
-    if(reset){this.history.clear();this.key='';}
+    if(reset){this.history.clear();this.key='';this.animation.reset();}
     const doors=world.structures.filter(s=>isRoomDoor(s.kind)||s.kind==='fence-gate');
     const axes=doors.some(s=>isRoomDoor(s.kind))?doorOrientations(world):EMPTY_AXES;
     const gateAxes=doors.some(s=>s.kind==='fence-gate')?penBoundaryAxes(world):EMPTY_AXES;
@@ -125,11 +132,21 @@ export class DoorLayer {
     for(const attribute of [current,previous,shift])attribute.needsUpdate=true;
     this.mesh.computeBoundingSphere();this.mesh.boundingSphere.radius+=.5;
     this.targetTint.setInstances(this.mesh.colorBuffer,targetIds);
+    this.animation.reconcile(doors.map(s=>({id:s.id,x:s.x,y:1,z:s.z})));
+  }
+  present(tick:number):void {
+    this.tick.value=tick;
+    if(!this.mesh.activeCount)return;
+    const current=this.mesh.geometry.getAttribute('doorCurrent'),previous=this.mesh.geometry.getAttribute('doorPrevious');
+    this.animation.present((owner,row)=>{
+      const slot=row*2,segment=tick<current.getX(slot)?previous:current;
+      owner.values[0]=Math.max(0,Math.min(1,segment.getY(slot)+(tick-segment.getX(slot))*segment.getZ(slot)));
+    });
   }
   prepareForCompile():()=>void {
     if(this.mesh.activeCount)return ()=>{};
     const version=this.mesh.instanceMatrix.version;this.mesh.activeCount=1;
     return ()=>{if(this.mesh.instanceMatrix.version===version)this.mesh.activeCount=0;};
   }
-  dispose():void {this.targetTint.dispose();this.mesh.dispose();this.base.dispose();this.material.dispose();this.textured.dispose();this.paint.dispose();}
+  dispose():void {this.animation.dispose();this.targetTint.dispose();this.mesh.dispose();this.base.dispose();this.material.dispose();this.textured.dispose();this.paint.dispose();}
 }

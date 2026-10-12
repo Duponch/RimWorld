@@ -53,6 +53,7 @@ export class RoomLayer {
   private textures = true;
   private disposed = false;
   private lightingSettings = parseLightingSettings(null);
+  private readonly displayedSample:DaylightSample={x:NaN,y:NaN,z:NaN,daylight:NaN,warmth:NaN,sunlight:NaN,moonlight:NaN};
 
   constructor(private readonly gameScene: Scene) {
     this.scene.name = 'room-background'; this.scene.background = new Color(0x17151a);
@@ -71,6 +72,7 @@ export class RoomLayer {
   configure(width: number, height: number, seed: number): void {
     if (this.disposed || (this.width === width && this.height === height && this.seed === seed)) return;
     this.clearGeometry(); this.width = width; this.height = height; this.seed = seed;
+    this.displayedSample.x=NaN;
     this.lighting.configure(width, height);
     this.geometry = createRoomGeometry(width, height, seed);
     for (const part of this.geometry.parts) {
@@ -128,6 +130,7 @@ export class RoomLayer {
   setSettings(settings: LightingSettings): void {
     this.lightingSettings = parseLightingSettings(settings);
     this.lighting.setSettings(this.lightingSettings);
+    this.displayedSample.x=NaN;
     this.invalidateStaticCommands();
   }
 
@@ -145,6 +148,9 @@ export class RoomLayer {
    * The opposite lantern returns along its parallel rail while its bulb fades. */
   present(sample: DaylightSample, camera: Camera, refreshShadow = true): void {
     if (this.disposed || !this.geometry) return;
+    const previous=this.displayedSample;
+    if(previous.x!==sample.x||previous.y!==sample.y||previous.z!==sample.z||previous.daylight!==sample.daylight||previous.warmth!==sample.warmth||previous.sunlight!==sample.sunlight||previous.moonlight!==sample.moonlight){
+    Object.assign(previous,sample);
     const orbit = this.geometry.orbit;
     sampleRoomOrbit(orbit, (1 - sample.x) * .5, this.sun.position, 'sun');
     sampleRoomOrbit(orbit, (1 + sample.x) * .5, this.moon.position, 'moon');
@@ -156,15 +162,18 @@ export class RoomLayer {
     if (this.sunGlow.value !== sun || this.moonGlow.value !== moon) {
       this.sunGlow.value = sun; this.moonGlow.value = moon; this.artVersion++;
     }
+    this.lightingVersion=changed;
+    }else if(refreshShadow)this.lighting.refreshShadowSource(this.sunCenter,this.moonCenter);
     // Room walls stay physical at every pose. Navigation is constrained inside
     // the shell by CameraRig; its backdrop already invalidates on camera motion.
     camera.updateMatrixWorld();
     if (refreshShadow) this.lighting.fitShadow(camera, this.width, this.height);
     // Lighting version is monotone; sum also changes for geometry/material/camera.
-    this.currentVersion = changed + this.artVersion;
+    this.currentVersion = this.lightingVersion + this.artVersion;
   }
 
   private currentVersion = 0;
+  private lightingVersion = 0;
 
   private invalidateStaticCommands(): void {
     this.staticGroup.needsUpdate = true;

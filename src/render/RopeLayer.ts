@@ -7,6 +7,8 @@ import { leadRopees } from '../sim/animal-leading';
 import type { Cell,Pawn,World } from '../sim/types';
 import type { WildAnimal } from '../sim/wildlife-state';
 import type { MotionTimeline } from './MotionTimeline';
+import type { PawnLayer } from './PawnLayer';
+import type { WildlifeLayer } from './WildlifeLayer';
 
 type Pair={pawn:Pawn;animal:WildAnimal;height:number};
 const STRIDE=17;
@@ -99,20 +101,21 @@ export class RopeLayer {
     this.pairs=next;this.mesh.geometry.instanceCount=next.length;
     this.stats.activeRopes=next.length;this.mesh.visible=this.detailVisible&&next.length>0;
   }
-  present(timeline?:MotionTimeline):void {
+  present(timeline?:MotionTimeline,pawns?:PawnLayer,wildlife?:WildlifeLayer):void {
     const world=this.world;if(!world||!this.pairs.length||!this.detailVisible)return;
     const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
     this.time.value=localTimeSeconds(tick,origin);
     const stream=(this.mesh.geometry.getAttribute('aRoperFrom') as THREE.InterleavedBufferAttribute).data as THREE.InstancedInterleavedBuffer;
     let dirty=false;
     this.pairs.forEach(({pawn,animal,height},i)=>{
-      const p=presented(pawn,pawn.motion,timeline?.segment(pawn.id),tick);
-      const a=presented(animal,animal.motion,timeline?.segment(animal.id),tick);
-      const signature=`${origin}:${p.start}:${p.end}:${p.from.x}:${p.from.z}:${p.to.x}:${p.to.z}:${a.start}:${a.end}:${a.from.x}:${a.from.z}:${a.to.x}:${a.to.z}:${height}`;
+      const heldPawn=pawns?.presentedPose(pawn.id),heldAnimal=wildlife?.presentedPose(animal.id);
+      const p=heldPawn?{from:heldPawn,to:heldPawn,start:0,end:0}:presented(pawn,pawn.motion,timeline?.segment(pawn.id),tick);
+      const a=heldAnimal?{from:heldAnimal,to:heldAnimal,start:0,end:0}:presented(animal,animal.motion,timeline?.segment(animal.id),tick);
+      const signature=`${heldPawn&&heldAnimal?0:origin}:${p.start}:${p.end}:${p.from.x}:${p.from.z}:${p.to.x}:${p.to.z}:${heldPawn?.y??0}:${a.start}:${a.end}:${a.from.x}:${a.from.z}:${a.to.x}:${a.to.z}:${heldAnimal?.y??0}:${height}`;
       if(this.keys[i]===signature)return;this.keys[i]=signature;dirty=true;this.stats.uploads++;
       const offset=i*STRIDE,array=stream.array as Float32Array;
-      array.set([p.from.x,0,p.from.z,p.to.x,0,p.to.z,localTimeSeconds(p.start,origin),localTimeSeconds(p.end,origin),
-        a.from.x,0,a.from.z,a.to.x,0,a.to.z,localTimeSeconds(a.start,origin),localTimeSeconds(a.end,origin),height],offset);
+      array.set([p.from.x,heldPawn?.y??0,p.from.z,p.to.x,heldPawn?.y??0,p.to.z,localTimeSeconds(p.start,origin),localTimeSeconds(p.end,origin),
+        a.from.x,heldAnimal?.y??0,a.from.z,a.to.x,heldAnimal?.y??0,a.to.z,localTimeSeconds(a.start,origin),localTimeSeconds(a.end,origin),height],offset);
     });
     if(dirty)stream.needsUpdate=true;
   }

@@ -187,6 +187,12 @@ export class RoomLighting {
     return ++this.version;
   }
 
+  /** Refreshing an atlas must use the held emitter without re-evaluating the
+   * room's orbital lighting and colours between animation publications. */
+  refreshShadowSource(sunPos:Readonly<Vector3>,moonPos:Readonly<Vector3>):void {
+    if(!this.disposed)this.selectShadowSource(sunPos,moonPos);
+  }
+
   /** A global eight-corner fit establishes the spotlight's perspective. Crop
    * that projection to the visible ground/caster planes so close views retain
    * the existing shadow density. Bounded geometry work, cached between moves. */

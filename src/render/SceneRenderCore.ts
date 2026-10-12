@@ -133,6 +133,7 @@ export class SceneRenderCore {
   private shadowSettings = { ...DEFAULT_SHADOW_SETTINGS };
   protected readonly shadowRefresh = new ShadowRefreshScheduler();
   protected readonly animationDetail = new AnimationDetail();
+  private readonly skyAnimation=this.animationDetail.createHandle();
   private readonly shadowView = new THREE.Matrix4();
   private readonly shadowProjection = new THREE.Matrix4();
   private shadowViewReady = false;
@@ -157,22 +158,22 @@ export class SceneRenderCore {
   protected readonly hygiene = new HygieneLayer(this.environmentLighting.configure);
   protected selectedFloor:BuildableFloorKind|undefined;
   protected constructionMaterial:ConstructionMaterial|undefined;
-  protected readonly fires = new FireLayer();
-  protected readonly wind = new WindLayer(this.environmentLighting.configure);
-  protected readonly projectiles = new ProjectileLayer();
+  protected readonly fires = new FireLayer(this.animationDetail);
+  protected readonly wind = new WindLayer(this.environmentLighting.configure,this.animationDetail);
+  protected readonly projectiles = new ProjectileLayer(this.animationDetail);
   protected readonly wildlife:WildlifeLayer;
   protected readonly mechanoids = new MechanoidLayer(this.environmentLighting.configure,this.animationDetail);
   protected readonly ropes = new RopeLayer();
   protected readonly pawns = new PawnLayer(this.environmentLighting.configure,this.animationDetail);
   protected readonly actionFeedback = new ActionFeedbackLayer(this.pawns);
-  protected readonly actionVfx = new ActionVfxLayer(this.pawns);
-  protected readonly brawlCloud = new BrawlCloudLayer(this.pawns);
-  protected readonly structureVfx = new StructureVfxLayer();
-  protected readonly turretTops=new MiniTurretLayer();
+  protected readonly actionVfx = new ActionVfxLayer(this.pawns,this.animationDetail);
+  protected readonly brawlCloud = new BrawlCloudLayer(this.pawns,this.animationDetail);
+  protected readonly structureVfx = new StructureVfxLayer(this.animationDetail);
+  protected readonly turretTops=new MiniTurretLayer(this.animationDetail);
   protected turretPreviewSignature='';
   protected turretPreviewVisible=false;
-  protected readonly orbitalDelivery = new OrbitalDeliveryLayer(this.environmentLighting.configure);
-  protected readonly podRescue = new PodRescueLayer(this.environmentLighting.configure);
+  protected readonly orbitalDelivery = new OrbitalDeliveryLayer(this.environmentLighting.configure,this.animationDetail);
+  protected readonly podRescue = new PodRescueLayer(this.environmentLighting.configure,this.animationDetail);
 
   readonly backend: string;
   protected readonly renderer: THREE.WebGPURenderer;
@@ -185,7 +186,7 @@ export class SceneRenderCore {
   protected readonly terrainGroup = new THREE.Group();
   protected readonly resourceGroup = new THREE.Group();
   protected readonly roofs=new RoofLayer(this.environmentLighting.configure);
-  protected readonly doors=new DoorLayer(this.environmentLighting.configure);
+  protected readonly doors=new DoorLayer(this.environmentLighting.configure,this.animationDetail);
   protected readonly timber=new TimberCladdingLayer(this.environmentLighting.configure);
   protected readonly structureGroup = new THREE.Group();
   protected readonly jobGroup = new THREE.Group();
@@ -258,9 +259,9 @@ export class SceneRenderCore {
   protected readonly staticPaint=createStylizedSurfaceTexture('vegetation');
   protected readonly texturedStaticMaterial=material(0xffffff,{vertexColors:true,map:this.staticPaint});
   protected readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
-  protected readonly paintedWater=new PaintedWater(this.terrainPaintTexture,this.environmentLighting.configure);
-  protected readonly clouds=new WeatherCloudLayer();
-  protected readonly precipitation=new WeatherPrecipitationLayer();
+  protected readonly paintedWater=new PaintedWater(this.terrainPaintTexture,this.environmentLighting.configure,this.animationDetail);
+  protected readonly clouds=new WeatherCloudLayer(this.animationDetail);
+  protected readonly precipitation=new WeatherPrecipitationLayer(this.animationDetail);
   protected readonly boxes = new BoxBatches(this.environmentLighting.configure);
   protected readonly recreationHints = new RecreationHints(this.boxes);
   protected readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial,this.texturedStaticMaterial,this.animationDetail);
@@ -477,6 +478,7 @@ export class SceneRenderCore {
     // The worker epoch distinguishes a checkpoint from an ordinary delta even
     // if terrain content and simulation tick match a previous session.
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
+    if(resetPoses)this.animationDetail.reset();
     // Advance memberships only for the World actually applied to the scene.
     // The journal/full capture establishes the context; a public flag alone
     // cannot certify a sparse traversal or cross a missing publication.
@@ -748,6 +750,7 @@ export class SceneRenderCore {
   setDioramaEnabled(enabled: boolean): void {
     if (this.disposed || this.dioramaEnabled === enabled) return;
     this.dioramaEnabled = enabled;
+    this.animationDetail.invalidate(this.skyAnimation);
     if (!enabled && !this.roomEnabled) { this.diorama?.group.removeFromParent(); return; }
     this.configureDiorama();
   }
@@ -756,6 +759,7 @@ export class SceneRenderCore {
   setRoomEnabled(enabled: boolean): void {
     if (this.disposed || this.roomEnabled === enabled) return;
     this.roomEnabled = enabled;
+    this.animationDetail.invalidate(this.skyAnimation);
     // Retained WebGPU commands own their compiled light/shadow nodes. Rebuild
     // them when the emitter set changes, before replay can reach a freed atlas.
     this.landscape.needsUpdate = true;
@@ -773,6 +777,7 @@ export class SceneRenderCore {
     this.lightingSettings = parseLightingSettings(settings);
     this.daylight.setSettings(this.lightingSettings);
     this.room?.setSettings(this.lightingSettings);
+    this.animationDetail.invalidate(this.skyAnimation);
     this.invalidatePausedShadow();
   }
 
@@ -921,6 +926,11 @@ export class SceneRenderCore {
       }
       await this.renderer.compileAsync(this.scene, this.rig.orthographic);
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
+      await this.pawns.prepareBodyPipelines(this.renderer,this.scene,[this.rig.orthographic,this.rig.perspective],async()=>{
+        const shadow=(this.room?.lighting.shadowLight??this.daylight.light).shadow,needsUpdate=shadow.needsUpdate;
+        try {shadow.needsUpdate=true;await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);}
+        finally {shadow.needsUpdate=needsUpdate;}
+      });
       this.landscape.needsUpdate=true;
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
       if (this.fatalError) throw new Error(this.fatalError);
@@ -1092,6 +1102,8 @@ export class SceneRenderCore {
       const position=new THREE.Vector3().lerpVectors(visual.from,visual.to,alpha);
       const distance=segment?THREE.MathUtils.lerp(segment.fromFraction??0,segment.toFraction??1,alpha):alpha;
       position.y=travelHeight(visual.from.y,visual.to.y,distance);
+      const held=this.pawns.presentedPose(id);
+      if(held)position.set(held.x,held.y,held.z);
       const center=position.clone().add(new THREE.Vector3(0,.75,0)).project(this.camera);
       if(center.z < cameraClipNear(this.camera)||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)continue;
       const head=position.clone().add(new THREE.Vector3(0,1.75,0)).project(this.camera);
@@ -1226,7 +1238,7 @@ export class SceneRenderCore {
   }
 
   visibilityChanged():void {
-    this.frames.reset();this.lastFrame=0;
+    this.frames.reset();this.lastFrame=0;this.animationDetail.reset();
     if(!this.hostPort.hidden()&&this.received){const r=this.received;this.setWorld(r.world,true,r.speed,r.tracks,r.immutableSnapshot);}
   }
 
@@ -1235,17 +1247,9 @@ export class SceneRenderCore {
     if(this.hasTracks){this.timeline.advance(now);const due=this.presentation.take(this.timeline.tick,now);if(due)this.applyWorld(due);}
     const dt = this.lastFrame ? Math.min((now - this.lastFrame) / 1000, 0.05) : 0;
     this.lastFrame = now;
-    if(this.turretTops.present(dt,this.received?.speed===0))this.invalidatePausedShadow(false);
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (this.hostPort.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
     if(this.hasTracks && this.world) {this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
-    if(this.world&&this.pawns.presentCargo(this.hasTracks?this.timeline.tick:THREE.MathUtils.lerp(this.timeFrom,this.timeTo,this.pawns.blend.value)*TICKS_PER_SECOND,this.world)){
-      this.invalidatePausedShadow(false);this.updatePiles(this.world,false);
-    }
-    if(this.pawns.feedbackSource)this.actionFeedback.syncTravel(this.pawns.feedbackSource);
-    if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
-    if(this.world)this.mechanoids.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
-    this.ropes.present(this.hasTracks?this.timeline:undefined);
     if (!this.hostPort.selectionActive()) {
       if (!this.areaDrag) this.moveCamera(dt);
       this.controls.update();
@@ -1258,7 +1262,17 @@ export class SceneRenderCore {
       this.controls.target.x = x; this.controls.target.z = z;
     }
     this.rig.constrainRoom?.();
-    this.animationDetail.updateCamera(this.camera,this.viewportHeight);
+    const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
+    this.animationDetail.beginFrame(now,this.camera,this.viewportHeight,skyTick);
+    if(this.turretTops.present(dt,this.received?.speed===0))this.invalidatePausedShadow(false);
+    if(this.world&&this.pawns.presentCargo(skyTick,this.world)){
+      this.invalidatePausedShadow(false);this.updatePiles(this.world,false);
+    }
+    if(this.pawns.feedbackSource)this.actionFeedback.syncTravel(this.pawns.feedbackSource);
+    if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
+    if(this.world)this.mechanoids.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
+    this.pawns.presentAnimations();this.wildlife.presentAnimations(this.pawns);this.mechanoids.presentAnimations(this.pawns);
+    this.ropes.present(this.hasTracks?this.timeline:undefined,this.pawns,this.wildlife);
     if(!this.shadowViewReady||this.shadowCamera!==this.camera||this.shadowCameraLayers!==this.camera.layers.mask||this.shadowCameraCoordinates!==this.camera.coordinateSystem||this.shadowCameraReversedDepth!==this.camera.reversedDepth||!this.shadowView.equals(this.camera.matrixWorld)||!this.shadowProjection.equals(this.camera.projectionMatrix)) {
       this.shadowView.copy(this.camera.matrixWorld);this.shadowProjection.copy(this.camera.projectionMatrix);
       this.shadowCamera=this.camera;this.shadowViewReady=true;
@@ -1268,7 +1282,6 @@ export class SceneRenderCore {
     this.refreshAreaPointer();
     // Share the confirmed presentation clock with pawn motion. Loading a save
     // restores the sky; pausing cannot continue an independent wall-clock sun.
-    const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
     if (this.onAudioFrame) this.onAudioFrame({
       tick: skyTick,
       paused: this.received?.speed === 0,
@@ -1288,11 +1301,14 @@ export class SceneRenderCore {
       this.grass?.presentWind(skyTick);
     }
     this.resources.presentChop(skyTick/TICKS_PER_SECOND);
-    this.doors.tick.value=skyTick;this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
+    this.doors.present(skyTick);this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
+    this.actionVfx.setView(this.camera);this.structureVfx.setView(this.camera,this.controls.target);
     this.actionVfx.present(skyTick);this.brawlCloud.present(skyTick);this.structureVfx.present(skyTick);this.podRescue.present(skyTick);this.orbitalDelivery.present(skyTick);
     if(this.texturesEnabled)this.paintedWater.present(skyTick/TICKS_PER_SECOND);
-    this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
-    if (this.dioramaEnabled) this.diorama?.presentSky(this.daylight.sample.y);
+    if(this.animationDetail.shouldSample(this.skyAnimation,(this.world?.width??1)/2,0,(this.world?.height??1)/2)){
+      this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);
+      if (this.dioramaEnabled) this.diorama?.presentSky(this.daylight.sample.y);
+    }
     if (this.roomEnabled) this.clouds.mesh.visible = false;
     else if(this.world)this.clouds.present({seed:this.world.seed,tick:skyTick,weather:this.world.weather,camera:this.camera,
       target:this.controls.target,strength:visualWindStrength,directionX:visualWind.x,directionZ:visualWind.z,
@@ -1302,9 +1318,9 @@ export class SceneRenderCore {
       strength:visualWindStrength,directionX:visualWind.x,directionZ:visualWind.z,daylight:this.daylight.sample.daylight});
     const cellPixels=this.rig.pixelsPerCell(this.viewportHeight);
     this.actionFeedback.setBarsDetailVisible(cellPixels>=18);
-    this.actionVfx.setDetailVisible(cellPixels>=18);
-    this.brawlCloud.setDetailVisible(cellPixels>=18);
-    this.ropes.setDetailVisible(cellPixels>=18);
+    this.actionVfx.setDetailVisible(true);
+    this.brawlCloud.setDetailVisible(true);
+    this.ropes.setDetailVisible(true);
     this.designations.present(this.camera,this.viewportHeight,cellPixels);
     this.wildlife.presentDesignations(this.camera,this.viewportHeight,cellPixels);
     const distant=this.overview.group.visible ? cellPixels<9 : cellPixels<7;

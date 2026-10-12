@@ -1,11 +1,11 @@
 import { pawnPresentationPose } from './pawn-presentation';
 import * as THREE from 'three/webgpu';
 import { attribute, float, Fn, positionLocal, vec3 } from 'three/tsl';
-import type { PawnLayer } from './PawnLayer';
+import type { PresentationClock } from './pawn-presentation';
 
 /** One resident batch shares the body's exact GPU trajectory. No matrix or
  * skeleton update per selected pawn/frame; flags change only on selection. */
-export function pawnSelectionMesh(source:THREE.InstancedBufferGeometry,clock:Pick<PawnLayer,'blend'|'travelTime'>):THREE.Mesh {
+export function pawnSelectionMesh(source:THREE.InstancedBufferGeometry,clock:PresentationClock):THREE.Mesh {
   const ring=new THREE.RingGeometry(.38,.45,24).rotateX(-Math.PI/2);
   const geometry=new THREE.InstancedBufferGeometry();
   geometry.index=ring.index;geometry.setAttribute('position',ring.getAttribute('position'));

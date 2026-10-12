@@ -5,7 +5,8 @@ import { harvestable } from '../sim/plants';
 import { workProgress } from '../sim/work-progress';
 import * as THREE from 'three/webgpu';
 import { Fn, If, attribute, positionLocal, renderGroup, sin, uniform, vec3 } from 'three/tsl';
-import type { AnimationDetail } from './AnimationDetail';
+import type { AnimationDetail, AnimationSampleHandle } from './AnimationDetail';
+import { NaturalAnimationCache } from './natural-animation-cache';
 import { TICKS_PER_SECOND, type World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { clearGroup } from './primitives';
@@ -22,7 +23,7 @@ const resourceIdentity=(world:World,resource:World['resources'][number]):string=
 const rangeResourceId=(id:number):number=>id<0?Math.floor(-id/2):id;
 const CHOP_RECOIL_SECONDS = .55;
 type TreePart = { mesh:THREE.Mesh; range:ResourceRange; positions:Float32Array; normals:Float32Array; upload:{start:number;count:number} };
-type TreeHit = { at:number; x:number; z:number; axisX:number; axisZ:number; angle:number };
+type TreeHit = { at:number; x:number; z:number; axisX:number; axisZ:number; angle:number; sample?:AnimationSampleHandle; pendingPose?:boolean };
 
 /** A short strike and damped return about the tree's base, in confirmed scene time. */
 export function chopRecoilAngle(age:number):number {
@@ -100,13 +101,14 @@ export class ResourceLayer {
   private readonly windTick=uniform(0).setGroup(renderGroup);
   private readonly windStrength=uniform(0).setGroup(renderGroup);
   private readonly windDirection=uniform(new THREE.Vector2(1,0)).setGroup(renderGroup);
+  private readonly middleWind=new NaturalAnimationCache();
   private readonly windPlain:THREE.MeshStandardNodeMaterial;
   private readonly windTextured:THREE.MeshStandardNodeMaterial;
   private readonly growing = new Map<number,World['resources'][number]>();
   updateGrowth(world: World): void {
     for(const plant of this.growing.values())if(harvestable(world,plant)){this.update(world,false);break;}
   }
-  constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.Material, private readonly texturedMaterial: THREE.Material=staticMaterial,detail?:AnimationDetail) {
+  constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.Material, private readonly texturedMaterial: THREE.Material=staticMaterial,private readonly detail?:AnimationDetail) {
     const windPosition=Fn(()=>{
       const root=attribute('windRoot','vec3');
       const deform=(tick:THREE.Node<'float'>)=>{
@@ -124,11 +126,18 @@ export class ResourceLayer {
       };
       if(!detail)return deform(this.windTick);
       const level=detail.level(vec3(root.x,0,root.y)).toVar(),position=positionLocal.toVar();
-      If(level.lessThan(2),()=>{
-        const tick=this.windTick.toVar();
-        If(level.equal(1),()=>{tick.assign(this.windTick.div(6).mul(detail.middleHz).floor().div(detail.middleHz).mul(6));});
-        position.assign(deform(tick));
-      });
+      If(level.equal(0),()=>{position.assign(deform(this.windTick));})
+        .ElseIf(level.equal(1),()=>{
+          // Spatial sine/cosine bases are built with the resident geometry.
+          // Middle vertices do no temporal trigonometry or phase quantisation.
+          const basis=attribute('windBasis','vec4'),wind=this.middleWind.wind;
+          const wave=this.middleWind.phaseA.x.mul(basis.y).add(this.middleWind.phaseA.y.mul(basis.x));
+          const flutterWave=this.middleWind.phaseB.x.mul(basis.w).add(this.middleWind.phaseB.y.mul(basis.z));
+          const height=positionLocal.y.div(4).clamp(0,1);
+          const bend=height.mul(height).mul(root.z).mul(wind.z).mul(wave.mul(.43).add(.63));
+          const flutter=flutterWave.mul(root.z.greaterThan(.8).select(1,0)).mul(height).mul(wind.z).mul(.11);
+          position.assign(positionLocal.add(vec3(wind.x.mul(bend).sub(wind.y.mul(flutter)),0,wind.y.mul(bend).add(wind.x.mul(flutter)))));
+        });
       return position;
     })();
     this.windPlain=(staticMaterial as THREE.MeshStandardNodeMaterial).clone();
@@ -142,7 +151,11 @@ export class ResourceLayer {
     const length=Math.hypot(directionX,directionZ);
     if(length>0&&Number.isFinite(length))this.windDirection.value.set(directionX/length,directionZ/length);
   }
-  presentWind(tick:number):void {this.windTick.value=((tick%7200)+7200)%7200;}
+  presentWind(tick:number):void {
+    this.windTick.value=((tick%7200)+7200)%7200;
+    if(this.detail){const sample=((this.detail.middleTick%7200)+7200)%7200;
+      this.middleWind.capture(this.detail,this.windDirection.value.x,this.windDirection.value.y,this.windStrength.value,sample*2*Math.PI/48,sample*2*Math.PI/15);}
+  }
   setTexturesEnabled(enabled:boolean):void {
     if(this.texturesEnabled===enabled)return;
     this.texturesEnabled=enabled;
@@ -163,7 +176,7 @@ export class ResourceLayer {
     for(const key of keys){const chunk=this.chunks.get(key);if(chunk)this.targetTint.apply(chunk.group,this.targetPreviewIds);}
   }
   clearTargetPreview():void {this.targetTint.restore();this.targetPreviewIds.clear();}
-  clear(): void { this.clearTargetPreview();clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); this.treeCells.clear();this.treeCellsPending=undefined; }
+  clear(): void { this.middleWind.reset();this.clearTargetPreview();clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); this.treeCells.clear();this.treeCellsPending=undefined; }
   dispose():void {this.clear();this.windPlain.dispose();this.windTextured.dispose();}
 
   /** Only a confirmed increase in a reserved chopping job can produce a hit.
@@ -195,9 +208,12 @@ export class ResourceLayer {
       if(cycle<=priorCycle)continue;
       const at=(cycle*2*Math.PI-phase)/11;
       const dx=job.x-pawn.x,dz=job.z-pawn.z,length=Math.hypot(dx,dz)||1;
-      const priorHit=this.treeHits.get(treeId);if(priorHit)this.poseTree(treeId,priorHit,0);
+      const priorHit=this.treeHits.get(treeId);
+      const held=!!priorHit&&!!this.detail&&this.detail.classify(job.x,0,job.z)!==0;
+      if(priorHit&&!held)this.poseTree(treeId,priorHit,0);
       // The first positive lobe leans away from the worker, as if struck.
-      this.treeHits.set(treeId,{at,x:job.x,z:job.z,axisX:dz/length,axisZ:-dx/length,angle:0});
+      this.treeHits.set(treeId,{at,x:job.x,z:job.z,axisX:dz/length,axisZ:-dx/length,
+        angle:held?priorHit!.angle:0,sample:held?priorHit!.sample:undefined,pendingPose:held});
     }
     for(const [id,hit] of this.treeHits)if(!workingTrees.has(id)){
       this.poseTree(id,hit,0);this.treeHits.delete(id);
@@ -207,9 +223,17 @@ export class ResourceLayer {
   /** The same confirmed presentation clock as the pawn arm controls recoil. */
   presentChop(timeSeconds:number):void {
     for(const [id,hit] of this.treeHits){
-      const angle=chopRecoilAngle(timeSeconds-hit.at);
-      if(angle!==hit.angle)this.poseTree(id,hit,angle);
-      if(timeSeconds-hit.at>=CHOP_RECOIL_SECONDS)this.treeHits.delete(id);
+      let sampleSeconds=timeSeconds;
+      if(this.detail){
+        hit.sample??=this.detail.createHandle();
+        const due=this.detail.shouldSample(hit.sample,hit.x,0,hit.z);
+        if(hit.sample.level===2){if(hit.angle!==0)this.poseTree(id,hit,0);if(timeSeconds-hit.at>=CHOP_RECOIL_SECONDS)this.treeHits.delete(id);continue;}
+        if(!due)continue;
+        if(hit.sample.level===1)sampleSeconds=hit.sample.tick/TICKS_PER_SECOND;
+      }
+      const angle=chopRecoilAngle(sampleSeconds-hit.at);
+      if(angle!==hit.angle||hit.pendingPose){this.poseTree(id,hit,angle);hit.pendingPose=false;}
+      if(sampleSeconds-hit.at>=CHOP_RECOIL_SECONDS)this.treeHits.delete(id);
     }
   }
 
@@ -264,7 +288,7 @@ export class ResourceLayer {
     const texturedOutput=(this.texturedMaterial as THREE.MeshStandardNodeMaterial).outputNode;
     if(this.windPlain.outputNode!==plainOutput)this.windPlain.outputNode=plainOutput;
     if(this.windTextured.outputNode!==texturedOutput)this.windTextured.outputNode=texturedOutput;
-    if (newMap) { this.clearTargetPreview();clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); }
+    if (newMap) { this.middleWind.reset();this.clearTargetPreview();clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); }
     const indexed=readSceneResourceFrame(frame,world);
     if(indexed)this.treeCellsPending=world;
     else{
@@ -409,7 +433,15 @@ export class ResourceLayer {
             const offset=vertex*3;windRoot[offset]=resource.x;windRoot[offset+1]=resource.z;windRoot[offset+2]=weight;
           }
         }
+        const windBasis=new Float32Array(windRoot.length/3*4),position=mesh.geometry.getAttribute('position');
+        for(let vertex=0;vertex<position.count;vertex++){
+          const rootPhase=windRoot[vertex*3]!*.47+windRoot[vertex*3+1]!*.31;
+          const flutterPhase=position.getX(vertex)*1.3+position.getZ(vertex)*1.7;
+          windBasis[vertex*4]=Math.sin(rootPhase);windBasis[vertex*4+1]=Math.cos(rootPhase);
+          windBasis[vertex*4+2]=Math.sin(flutterPhase);windBasis[vertex*4+3]=Math.cos(flutterPhase);
+        }
         mesh.geometry.setAttribute('windRoot',new THREE.BufferAttribute(windRoot,3));
+        mesh.geometry.setAttribute('windBasis',new THREE.BufferAttribute(windBasis,4));
         mesh.material=this.texturesEnabled?this.windTextured:this.windPlain;
       }
       for(const id of treeIds){const hit=this.treeHits.get(id);if(hit)hit.angle=NaN;}

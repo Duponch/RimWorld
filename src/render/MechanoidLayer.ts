@@ -1,6 +1,8 @@
 import * as THREE from 'three/webgpu';
 import { AnimationDetail } from './AnimationDetail';
-import { attribute,cos,float,Fn,If,mix,normalLocal,positionLocal,sin,uniform,vec3 } from 'three/tsl';
+import {ActorAnimationCache,sampleActorRoot} from './ActorAnimationCache';
+import {sampleMechRig} from './actor-animation-sampling';
+import { attribute,cos,float,Fn,If,instanceIndex,mix,normalLocal,positionLocal,sin,uniform,vec3 } from 'three/tsl';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import type { Mechanoid } from '../sim/mechanoid-state';
 import { mechanoidVisualMask,mechanoidPartIndex } from '../sim/mechanoid-presentation';
@@ -29,38 +31,46 @@ const GAIT_RATE=2*Math.PI/1.12;
  * is allocated per actor. Stable frames update clocks, not joint matrices. */
 class MechanicalRaceBatch {
   readonly travelTime=uniform(0);readonly blend=uniform(1);
+  readonly animationCache:ActorAnimationCache;
+  private readonly carrierSlots=new Map<number,number>();
+  private readonly animationRoot={x:0,y:0,z:0,yaw:0};
+  private readonly linkedRoot={x:0,y:0,z:0,yaw:0};
   private body?:THREE.Mesh;private selection?:THREE.Mesh;
   private selected:ReadonlySet<number>=new Set();private source?:World;
   private records:VisualMech[]=[];private readonly keys=new Map<number,string>();
   private readonly headings=new Map<number,TurnHeading>();private readonly gait=new GaitPhaseTracker();
   private surfaces:ReadonlyMap<number,number>=new Map();private pileSurface:ReadonlyMap<number,PileSurface>=new Map();
-  constructor(private readonly kind:MechanoidKind,readonly group:THREE.Group,private readonly animationDetail:AnimationDetail,private readonly configure?:(material:THREE.MeshStandardNodeMaterial)=>void){}
+  constructor(private readonly kind:MechanoidKind,readonly group:THREE.Group,private readonly animationDetail:AnimationDetail,private readonly configure?:(material:THREE.MeshStandardNodeMaterial)=>void){this.animationCache=new ActorAnimationCache(animationDetail);}
 
   private allocate():void {
     if(this.body)return;
     const index=(id:string)=>mechanoidPartIndex(this.kind,id),geometry=this.kind==='scyther'?scytherGeometry(8,index):rangedMechGeometry(this.kind,8,index);
+    geometry.userData.animationCache=this.animationCache;
     const mat=material(0xffffff,{metalness:.24,roughness:.74});this.configure?.(mat);
     mat.colorNode=attribute('color','vec3');
     // A preparation tint belongs only to the confirmed warmup. Cooldown does
     // not imply an emitted projectile or manufacture recoil/flash.
     if(this.kind!=='scyther')mat.colorNode=mat.colorNode.mul(attribute('aGait','vec2').y.equal(10).select(float(1.13),float(1)));
     mat.positionNode=Fn(()=>{
-      const pose=pawnPresentationPose(this),part=attribute('mechPart','vec4'),pivot=attribute('bindPivot','vec3');
+      const cached=this.animationCache.cached().toVar();
+      const pose=pawnPresentationPose(this,instanceIndex,cached),part=attribute('mechPart','vec4'),pivot=attribute('bindPivot','vec3');
       const rig=attribute('aRig','vec4'),gait=attribute('aGait','vec2'),mask=attribute('aMask','vec2');
-      const detailLevel=this.animationDetail.level(pose.xyz).toVar();
-      const phase=this.animationDetail.gaitPhase(gait.x,GAIT_RATE,pose,this.travelTime,this.blend,detailLevel);
-      const attack=sin(this.travelTime.sub(rig.y).div(rig.z.max(.001)).clamp(0,1).mul(Math.PI));
       const angle=float(0).toVar();
+      If(cached.not(),()=>{
+      const phase=gait.x.add(pose.xz.sub(attribute('aFrom','vec4').xz).length().mul(GAIT_RATE)).toVar();
+      const attack=sin(this.travelTime.sub(rig.y).div(rig.z.max(.001)).clamp(0,1).mul(Math.PI)).toVar();
       If(part.x.equal(1).or(part.x.equal(2)),()=>{
-        angle.assign(this.animationDetail.sine(phase.add(part.x.equal(2).select(float(Math.PI),float(0))),detailLevel).mul(.14).mul(rig.x));
+        angle.assign(sin(phase.add(part.x.equal(2).select(float(Math.PI),float(0)))).mul(.14).mul(rig.x));
         If(gait.y.equal(part.x).and(rig.z.greaterThan(0)),()=>{angle.addAssign(attack.mul(-1.1));});
       });
       If(part.x.equal(3).or(part.x.equal(4)).or(part.x.equal(6)).or(part.x.equal(7)),()=>{
-        angle.assign(this.animationDetail.sine(phase.add(part.x.equal(4).or(part.x.equal(6)).select(float(Math.PI),float(0))),detailLevel).mul(.48).mul(rig.x));
+        angle.assign(sin(phase.add(part.x.equal(4).or(part.x.equal(6)).select(float(Math.PI),float(0)))).mul(.48).mul(rig.x));
         If(gait.y.equal(part.x).and(rig.z.greaterThan(0)),()=>{angle.addAssign(attack.mul(-.8));});
       });
       If(part.x.equal(5).and(gait.y.equal(9)).and(rig.z.greaterThan(0)),()=>{angle.assign(attack.mul(.45));});
-      const p=positionLocal.sub(pivot),c=cos(angle),s=sin(angle);
+      });
+      const c=float(0).toVar(),s=float(0).toVar();If(cached,()=>{const rotation=this.animationCache.cellAt(part.x.add(8));c.assign(rotation.x);s.assign(rotation.y);}).Else(()=>{c.assign(cos(angle));s.assign(sin(angle));});
+      const p=positionLocal.sub(pivot);
       const q=vec3(p.x,p.y.mul(c).sub(p.z.mul(s)),p.z.mul(c).add(p.y.mul(s))).add(pivot).toVar();
       const n=normalLocal.toVar(),normal=vec3(n.x,n.y.mul(c).sub(n.z.mul(s)),n.z.mul(c).add(n.y.mul(s))).toVar();
       If(rig.w.greaterThan(.5),()=>{
@@ -69,13 +79,13 @@ class MechanicalRaceBatch {
       });
       const absent=part.z.greaterThan(.5).select(mask.y,mask.x).div(part.y).floor().mod(2).greaterThan(.5);
       If(absent,()=>{q.assign(vec3(0));});
-      const cy=cos(pose.w),sy=sin(pose.w),result=vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy))).add(pose.xyz).toVar();
+      const cy=this.animationCache.yawNode(pose.w,'cos',instanceIndex,cached),sy=this.animationCache.yawNode(pose.w,'sin',instanceIndex,cached),result=vec3(q.x.mul(cy).add(q.z.mul(sy)),q.y,q.z.mul(cy).sub(q.x.mul(sy))).add(pose.xyz).toVar();
       normalLocal.assign(vec3(normal.x.mul(cy).add(normal.z.mul(sy)),normal.y,normal.z.mul(cy).sub(normal.x.mul(sy))).normalize());
       const carrier=attribute('aCarrier','vec4'),transfer=attribute('aCorpseHandoff','vec2'),from=attribute('aCorpseFrom','vec4'),to=attribute('aCorpseTo','vec4');
       const held=vec3(q.x,q.y.sub(.70),q.z).add(vec3(0,WORLD_SCALE.carriedHeight,WORLD_SCALE.carriedForward));
       If(carrier.x.greaterThan(.5),()=>{result.assign(vec3(held.x.mul(cy).add(held.z.mul(sy)),held.y,held.z.mul(cy).sub(held.x.mul(sy))).add(pose.xyz));});
       If(transfer.y.abs().greaterThan(.0001),()=>{
-        const progress=this.travelTime.sub(transfer.x).div(transfer.y.abs().sub(transfer.x).max(.001)).clamp(0,1),smooth=progress.mul(progress).mul(float(3).sub(progress.mul(2)));
+        const progress=this.animationCache.clockNode(this.travelTime,'travelTime',instanceIndex,cached).sub(transfer.x).div(transfer.y.abs().sub(transfer.x).max(.001)).clamp(0,1),smooth=progress.mul(progress).mul(float(3).sub(progress.mul(2)));
         const dc=cos(from.w),ds=sin(from.w),ec=cos(to.w),es=sin(to.w);
         const start=vec3(q.x.mul(dc).add(q.z.mul(ds)),q.y,q.z.mul(dc).sub(q.x.mul(ds))).add(from.xyz);
         const end=vec3(q.x.mul(ec).add(q.z.mul(es)),q.y,q.z.mul(ec).sub(q.x.mul(es))).add(to.xyz);
@@ -113,13 +123,16 @@ class MechanicalRaceBatch {
     if(!this.body)return;
     const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
     this.travelTime.value=localTimeSeconds(tick,origin);this.blend.value=pawns?.blend.value??1;
+    this.animationCache.setOrigins(origin);
     const g=this.body.geometry as THREE.InstancedBufferGeometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),times=g.getAttribute('aTravel'),rig=g.getAttribute('aRig'),mask=g.getAttribute('aMask'),gait=g.getAttribute('aGait'),carrierState=g.getAttribute('aCarrier'),transfer=g.getAttribute('aCorpseHandoff'),transferFrom=g.getAttribute('aCorpseFrom'),transferTo=g.getAttribute('aCorpseTo');
     g.instanceCount=this.records.length;let dirty=false;
+    if(changed||reset){this.carrierSlots.clear();if(reset)this.animationCache.reset();}
     this.records.forEach((actor,i)=>{
       if(!changed&&!reset&&actor.pile?.owner.type==='ground'&&actor.carrierId===undefined)return;
       if(actor.pile){
         const pile=actor.pile,carrier=actor.carrierId===undefined?undefined:pawns?.animalCorpseCarrier(actor.carrierId),handoff=carrier?.handoff?.pile.id===pile.id?carrier.handoff:undefined;
         const source=carrier?.geometry,index=carrier?.index??0,sourceFrom=source?.getAttribute('aFrom'),sourceTo=source?.getAttribute('aTo'),sourceTravel=source?.getAttribute('aTravel');
+        if(pile.owner.type==='pawn'&&carrier)this.carrierSlots.set(i,index);else this.carrierSlots.delete(i);
         const held=pile.owner.type==='pawn',key=JSON.stringify([origin,held,handoff?.start,handoff?.end,...[sourceFrom,sourceTo,sourceTravel].flatMap(a=>a?[a.getX(index),a.getY(index),a.getZ(index),a.getW(index)]:[])]);
         if(this.keys.get(actor.id)===key)return;this.keys.set(actor.id,key);dirty=true;
         rig.setXYZW(i,0,0,0,2);mask.setXY(i,...mechanoidVisualMask(actor));gait.setXY(i,0,0);carrierState.setXYZW(i,held&&carrier?1:0,0,0,0);
@@ -157,16 +170,28 @@ class MechanicalRaceBatch {
       mask.setXY(i,...visualMask);carrierState.setXYZW(i,0,0,0,0);transfer.setXY(i,0,0);
     });
     if(dirty)(from as THREE.InterleavedBufferAttribute).data.needsUpdate=true;
+    if(changed||reset||dirty)this.records.forEach((actor,i)=>this.animationCache.reconcile(i,actor.id,[rig.getW(i),mask.getX(i),mask.getY(i),carrierState.getX(i),this.carrierSlots.get(i),actor.carrierId,actor.pile?.owner.type].join(':')));
   }
   /** Gesture-only proxy reads the same instance edges as the rig. */
   forEachPose(visit:(id:number,x:number,y:number,z:number,height:number,radius:number,dead:boolean)=>void):void {
     if(!this.body)return;const g=this.body.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),times=g.getAttribute('aTravel'),rig=g.getAttribute('aRig');
     this.records.forEach((actor,i)=>{if(actor.pile)return;const start=times.getX(i),end=times.getY(i),alpha=end>start?THREE.MathUtils.clamp((this.travelTime.value-start)/(end-start),0,1):this.blend.value;
-      const fallen=rig.getW(i)>.5;visit(actor.id,THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),Math.min(1,times.getW(i)),alpha)),THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),fallen?1.30:this.kind==='pikeman'?1.36:this.kind==='lancer'?1.90:1.81,fallen?1.0:this.kind==='pikeman'?.88:.69,actor.state==='dead');});
+      const cached=this.animationCache.cpuPose(i),fallen=rig.getW(i)>.5;visit(actor.id,cached?.x??THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),cached?.y??travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),Math.min(1,times.getW(i)),alpha)),cached?.z??THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),fallen?1.30:this.kind==='pikeman'?1.36:this.kind==='lancer'?1.90:1.81,fallen?1.0:this.kind==='pikeman'?.88:.69,actor.state==='dead');});
+  }
+  presentAnimations(pawns?:PawnLayer):void {
+    if(!this.body)return;const g=this.body.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),travel=g.getAttribute('aTravel');
+    if(!this.animationCache.prepareOriginalOnly())for(let i=0;i<this.records.length;i++){const live=sampleActorRoot(from,to,travel,i,this.travelTime.value,this.blend.value,this.animationRoot),owner=this.carrierSlots.get(i);
+      const due=owner!==undefined&&pawns?this.animationCache.shouldCaptureLinked(i,pawns.animationCache,owner):this.animationCache.shouldCapture(i,live.x,live.y,live.z);
+      if(!due)continue;
+      const root=owner!==undefined&&pawns?.animationCache.readRoot(owner,this.linkedRoot)?this.linkedRoot:live;
+      const time=owner===undefined?0:pawns?.animationCache.cpuClock(owner,'time')??0;
+      const travelTime=owner===undefined?this.travelTime.value:pawns?.animationCache.cpuClock(owner,'travelTime')??this.travelTime.value;
+      this.animationCache.setRoot(i,root,time,travelTime,travelTime,this.blend.value);sampleMechRig(this.animationCache,i,g,root,travelTime);this.animationCache.publish(i);
+    }this.animationCache.flush();
   }
   prepare():()=>void {if(!this.body)return()=>{};const g=this.body.geometry as THREE.InstancedBufferGeometry,count=g.instanceCount;g.instanceCount=Math.max(1,count);return()=>{g.instanceCount=count;};}
-  reset():void {this.dispose();this.source=undefined;this.records=[];this.keys.clear();this.headings.clear();this.gait.clear();}
-  dispose():void {if(this.body){this.group.remove(this.body);this.body.geometry.dispose();(this.body.material as THREE.Material).dispose();}if(this.selection){this.group.remove(this.selection);this.selection.geometry.dispose();(this.selection.material as THREE.Material).dispose();}this.body=undefined;this.selection=undefined;}
+  reset():void {this.dispose();this.animationCache.reset();this.source=undefined;this.records=[];this.keys.clear();this.headings.clear();this.gait.clear();this.carrierSlots.clear();}
+  dispose():void {this.animationCache.dispose();if(this.body){this.group.remove(this.body);this.body.geometry.dispose();(this.body.material as THREE.Material).dispose();}if(this.selection){this.group.remove(this.selection);this.selection.geometry.dispose();(this.selection.material as THREE.Material).dispose();}this.body=undefined;this.selection=undefined;}
 }
 
 /** At most three conditional race batches, each one body and one selection
@@ -195,6 +220,7 @@ export class MechanoidLayer {
   forEachPose(visit:(id:number,x:number,y:number,z:number,height:number,radius:number,dead:boolean,kind:MechanoidKind)=>void):void {
     for(const [kind,batch] of this.batches)batch.forEachPose((id,x,y,z,height,radius,dead)=>visit(id,x,y,z,height,radius,dead,kind));
   }
+  presentAnimations(pawns?:PawnLayer):void {for(const batch of this.batches.values())batch.presentAnimations(pawns);}
   prepare():()=>void {const restores=[...this.batches.values()].map(batch=>batch.prepare());return()=>{for(const restore of restores)restore();};}
   reset():void {for(const batch of this.batches.values())batch.reset();this.batches.clear();this.source=undefined;this.pileSource=undefined;this.corpsePiles=[];this.records.clear();}
   dispose():void {this.reset();}

@@ -1,5 +1,7 @@
 import * as THREE from 'three/webgpu';
-import { Fn, mix, positionWorld, sin, smoothstep, texture, uniform, uv, vec3 } from 'three/tsl';
+import { Fn, If, float, mix, positionWorld, sin, smoothstep, texture, uniform, uv, vec3 } from 'three/tsl';
+import type { AnimationDetail } from './AnimationDetail';
+import { NaturalAnimationCache, NaturalPhasePalette } from './natural-animation-cache';
 
 /** One shaded material for every water quad. Its single resident paint sample
  * carries both pigment (RGB) and baked shore proximity (A). Motion is wholly
@@ -13,18 +15,39 @@ export class PaintedWater {
   private readonly ripplePhase = uniform(0);
   private readonly wind = uniform(new THREE.Vector2(.8,.6));
   private readonly windStrength = uniform(0);
+  private readonly middleWater = new NaturalAnimationCache();
+  private readonly middlePalette?: NaturalPhasePalette;
   private lastSeconds: number | undefined;
 
-  constructor(paint:THREE.DataTexture,configure:(material:THREE.MeshStandardNodeMaterial)=>void){
+  constructor(paint:THREE.DataTexture,configure:(material:THREE.MeshStandardNodeMaterial)=>void,private readonly detail?:AnimationDetail){
+    if(detail)this.middlePalette=new NaturalPhasePalette();
     const pigment=texture(paint,uv());
     this.material.colorNode=Fn(()=>{
       const sample=pigment.toVar(),p=positionWorld.xz;
       // The two scales move at visibly different speeds, but both use the
       // confirmed game clock so a pause freezes the surface exactly in place.
-      const swell=sin(p.x.mul(4.1).add(p.y.mul(2.7)).sub(this.time));
-      const downwind=p.x.mul(this.wind.x).add(p.y.mul(this.wind.y));
-      const ripple=sin(downwind.mul(8.3).add(p.x.mul(1.1))
-        .sub(this.ripplePhase));
+      const complete=()=>{
+        const swell=sin(p.x.mul(4.1).add(p.y.mul(2.7)).sub(this.time));
+        const downwind=p.x.mul(this.wind.x).add(p.y.mul(this.wind.y));
+        const ripple=sin(downwind.mul(8.3).add(p.x.mul(1.1)).sub(this.ripplePhase));
+        return {swell,ripple};
+      };
+      if(!detail){
+        const {swell,ripple}=complete();
+        const light=swell.mul(.055).add(ripple.mul(.027)).add(.96);
+        const foam=sample.a.mul(mix(.57,.96,smoothstep(-.8,.85,ripple)));
+        return mix(sample.rgb.mul(light),vec3(.81,.92,.87),foam.mul(.83));
+      }
+      const swell=float(0).toVar(),ripple=float(0).toVar();
+      const level=detail.level(vec3(positionWorld.x,0,positionWorld.z)).toVar();
+      If(level.equal(0),()=>{const full=complete();swell.assign(full.swell);ripple.assign(full.ripple);})
+        .ElseIf(level.equal(1),()=>{
+          const a=this.middlePalette!.phase(p.x.mul(4.1).add(p.y.mul(2.7)));
+          const downwind=p.x.mul(this.middleWater.wind.x).add(p.y.mul(this.middleWater.wind.y));
+          const b=this.middlePalette!.phase(downwind.mul(8.3).add(p.x.mul(1.1)));
+          swell.assign(a.x.mul(this.middleWater.phaseA.y).sub(a.y.mul(this.middleWater.phaseA.x)));
+          ripple.assign(b.x.mul(this.middleWater.phaseB.y).sub(b.y.mul(this.middleWater.phaseB.x)));
+        });
       const light=swell.mul(.055).add(ripple.mul(.027)).add(.96);
       const foam=sample.a.mul(mix(.57,.96,smoothstep(-.8,.85,ripple)));
       return mix(sample.rgb.mul(light),vec3(.81,.92,.87),foam.mul(.83));
@@ -45,11 +68,12 @@ export class PaintedWater {
       this.ripplePhase.value=(this.ripplePhase.value+delta*(4.1+.6*this.windStrength.value))%tau;
     }
     this.lastSeconds=seconds;
+    if(this.detail)this.middleWater.capture(this.detail,this.wind.value.x,this.wind.value.y,this.windStrength.value,this.time.value,this.ripplePhase.value);
   }
-  reset():void {this.lastSeconds=undefined;this.time.value=0;this.ripplePhase.value=0;}
+  reset():void {this.middleWater.reset();this.lastSeconds=undefined;this.time.value=0;this.ripplePhase.value=0;}
   setWind(strength:number,directionX:number,directionZ:number):void {
     this.wind.value.set(directionX,directionZ);
     this.windStrength.value=Math.max(0,strength);
   }
-  dispose():void {this.material.dispose();}
+  dispose():void {this.middlePalette?.dispose();this.material.dispose();}
 }
