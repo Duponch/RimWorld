@@ -1,0 +1,58 @@
+.front-starting-pawns{display:grid;grid-template-columns:230px minmax(0,1fr);gap:26px;align-items:start;position:relative}
+.front-candidate-list,.front-candidate-main,.front-candidate-columns>section{min-width:0}
+.front-menu .front-candidate-help{font-size:12px;color:var(--muted-ink);margin:0 0 12px;line-height:1.4}
+.front-menu .front-candidate-group{font-size:20px;margin:15px 0 9px}
+.front-menu .front-candidate-group:first-child{margin-top:0}
+.front-candidate-cards{display:flex;flex-direction:column;gap:7px}
+.front-menu button.front-candidate-card{display:flex;align-items:center;gap:10px;min-height:63px;padding:5px 8px;text-align:left;box-shadow:none;background:#fff9ec}
+.front-menu .front-candidate-card[aria-pressed=true]{border-color:var(--accent);background:#f4e1bc;box-shadow:inset 3px 0 var(--accent)}
+.front-candidate-card.is-dragged{opacity:.45}
+.front-menu .front-candidate-card.is-drop-target{outline:2px solid var(--accent);outline-offset:2px}
+.front-candidate-labels{display:flex;flex-direction:column;min-width:0;gap:3px;flex:1}
+.front-candidate-drag-grip{display:none;touch-action:none;user-select:none;-webkit-user-select:none;flex:none;align-items:center;justify-content:center;width:28px;min-height:40px;font-size:23px;color:var(--muted-ink)}
+.front-candidate-labels strong{font-size:14px;overflow-wrap:anywhere}
+.front-candidate-labels>span{font-size:11px;color:var(--muted-ink)}
+.front-candidate-portrait{object-fit:contain;flex:none;border-radius:7px}
+.front-candidate-card .front-candidate-portrait{width:50px;height:50px}
+.front-candidate-top{display:grid;grid-template-columns:minmax(0,1fr) 126px auto;gap:20px;align-items:start;border-bottom:1px solid var(--line);padding-bottom:15px;margin-bottom:18px}
+.front-candidate-name-label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted-ink)}
+.front-candidate-name{width:100%;min-width:0;border:1px solid #c6ae83;border-radius:7px;background:#fffaf0;color:var(--ink);font:600 18px 'Lisiere Serif',Georgia,serif;padding:8px 10px}
+.front-candidate-name[aria-invalid=true]{border-color:#a85c49;background:#fff1e8}
+.front-menu .front-candidate-identity>p{font-size:12px;margin:10px 0 0;color:var(--muted-ink)}
+.front-candidate-portrait-controls{display:flex;flex-direction:column;align-items:center;gap:7px}
+.front-candidate-portrait-controls>.front-candidate-portrait{width:112px;height:112px}
+.front-candidate-clothing{display:flex;align-items:center;gap:6px;font-size:11px;line-height:1.3;color:var(--muted-ink)}
+.front-candidate-clothing input{margin:0;accent-color:var(--forest)}
+.front-menu button.front-candidate-randomize{font-size:13px;white-space:nowrap}
+.front-candidate-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,.9fr);gap:23px}
+.front-menu .front-candidate-columns h3,.front-menu .front-candidate-team h3{font-size:14px;text-transform:none;letter-spacing:0;margin:0 0 10px}
+.front-menu .front-candidate-biography h3:not(:first-child),.front-menu .front-candidate-relations h3{margin-top:21px}
+.front-menu .front-candidate-columns p{font-size:12px;line-height:1.45;margin:0 0 8px;overflow-wrap:anywhere}
+.front-candidate-story>span,.front-candidate-empty{color:var(--muted-ink)}
+.front-candidate-skill{position:relative;display:flex;gap:7px;align-items:center;justify-content:space-between;min-height:27px;font-size:12px;margin-bottom:3px;padding:3px 4px;isolation:isolate}
+.front-candidate-skill-meter{position:absolute;inset:0;z-index:-1;background:linear-gradient(to right,#dfc49188 calc(var(--skill-level)*100%),#e9ddc340 0);border-radius:3px}
+.front-candidate-skill-label{min-width:0}
+.front-candidate-skill-value{display:flex;align-items:center;gap:2px;white-space:nowrap;min-width:32px;justify-content:end;font-weight:700}
+.front-candidate-skill.is-unavailable{color:#928875}
+.front-candidate-skill.is-unavailable .front-candidate-skill-meter{background:#e9ddc340}
+.front-candidate-skill.is-unavailable .front-candidate-skill-value{text-decoration:line-through}
+.front-candidate-team{border-top:1px solid var(--line);margin-top:25px;padding-top:15px}
+.front-candidate-team-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,auto);grid-auto-flow:column;gap:7px 22px}
+.front-candidate-team-skill{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;padding:4px 6px;border-radius:4px;background:#e9ddc34d}
+.front-candidate-team-skill>strong{display:flex;align-items:center;gap:2px;white-space:nowrap}.front-candidate-team-skill.is-unavailable{color:var(--muted-ink)}
+.front-candidate-announcement{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+#app .front-menu .front-candidate-help{font-size:11px;line-height:1.35;margin-bottom:8px}
+#app .front-menu .front-candidate-group{font-size:18px;line-height:1.3;margin:12px 0 6px}
+#app .front-menu .front-candidate-cards{gap:4px}
+#app .front-menu button.front-candidate-card{min-height:56px;padding:5px 8px;gap:9px}
+#app .front-menu .front-candidate-card .front-candidate-portrait{width:44px;height:44px}
+#app .front-menu .front-candidate-top{padding-bottom:10px;margin-bottom:12px}
+#app .front-menu .front-candidate-portrait-controls>.front-candidate-portrait{width:96px;height:96px}
+#app .front-menu .front-candidate-skill{min-height:23px;padding:2px 4px;margin-bottom:2px;line-height:1.35}
+#app .front-menu .front-candidate-team{margin-top:18px;padding-top:12px}
+.front-starting-pawns [data-tooltip]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(min-width:1250px){.front-menu[data-page=pawns] .front-frame,.front-menu[data-page=starting-pawns] .front-frame{width:min(1260px,100%)}}
+@media(max-width:1100px){.front-starting-pawns{grid-template-columns:185px minmax(0,1fr);gap:18px}.front-candidate-columns{gap:13px;grid-template-columns:minmax(0,.95fr) minmax(0,1.1fr) minmax(0,.8fr)}.front-candidate-top{grid-template-columns:minmax(0,1fr) 108px auto;gap:12px}.front-candidate-portrait-controls>.front-candidate-portrait{width:96px;height:96px}.front-menu button.front-candidate-randomize{padding:8px 11px}.front-candidate-card .front-candidate-portrait{width:42px;height:42px}.front-candidate-team-grid{gap:6px 10px}}
+@media(max-width:780px){.front-starting-pawns{grid-template-columns:155px minmax(0,1fr);gap:14px}.front-candidate-columns{grid-template-columns:repeat(2,minmax(0,1fr))}.front-candidate-social{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px}.front-candidate-social>h3,.front-candidate-social>.front-candidate-condition,.front-candidate-social>.front-candidate-empty{grid-column:1}.front-candidate-social>.front-candidate-relations{grid-column:2;grid-row:1/span 5}.front-menu .front-candidate-relations h3{margin-top:0}.front-candidate-top{grid-template-columns:minmax(0,1fr) auto}.front-candidate-portrait-controls{grid-column:2;grid-row:1/span 2}.front-candidate-randomize{grid-column:1;justify-self:start}.front-candidate-team-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,auto)}}
+@media(max-width:560px){.front-starting-pawns{grid-template-columns:minmax(0,1fr)}.front-candidate-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.front-menu .front-candidate-group{grid-column:1/-1;margin-top:12px}.front-candidate-labels strong{font-size:12px}.front-candidate-columns{gap:14px}.front-menu .front-candidate-help{font-size:11px}.front-candidate-team{margin-top:18px}}
+@media(any-pointer:coarse){.front-candidate-drag-grip{display:flex}.front-menu button.front-candidate-card{gap:6px}}

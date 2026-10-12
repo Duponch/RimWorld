@@ -694,7 +694,7 @@ const frontMenu = createFrontMenu(frontHost, {
   onMusicEnabledChange: setMusicEnabled,
   getMusicVolume: () => musicVolume,
   onMusicVolumeChange: setMusicVolume,
-  onStart: async draft => replaceColony(() => session.create(draft.seed, draft.size, 'crashlanded',draft.site)),
+  onStart: async draft => replaceColony(() => session.create(draft.seed, draft.size, 'crashlanded',draft.site,draft.startingParty,draft.startingWorld)),
   onLoad: async key => replaceColony(() => session.load(key)),
   getTestColonies: fetchTestColonies,
   onLoadTest: async save => replaceColony(() => session.loadExternal(() => readTestColony(save))),

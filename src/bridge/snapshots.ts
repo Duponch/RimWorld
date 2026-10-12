@@ -1,4 +1,5 @@
 import {validShelfTransport,validShelfGround,shelfIdentityOwners} from '../sim/shelf-save.ts';
+import {validSiteClimate} from '../sim/site-climate-save.ts';
 import {storageCellById} from '../sim/shelf-storage.ts';
 import { PowerParentValidationCache,type PowerParentReader } from '../sim/power-parent-validation.ts';
 import type { StagingGeometryReader } from '../sim/staging-validation.ts';
@@ -1248,6 +1249,11 @@ export class SnapshotDecoder {
     planetCheck??=this.planetValidation.prepareAbsence(message.epoch);
     if(!planetCheck.ok)return resync('Planète, groupe ou pertes incohérents.');
     if(planetCheck.geographyChanged)return resync('La géographie confirmée a changé sans remplacement.');
+    // Rev1 transport retains its historical presentation-fixture admission.
+    // New tile climates are authority: certify the small definition before
+    // committing the geographic witness or replacing the confirmed world.
+    if((next.scenario?.revision===9||next.climate&&(next.climate.revision!==1||Object.hasOwn(next.climate,'definition')))&&
+      !validSiteClimate(next.climate,next.schemaVersion,next))return resync('Climat du lieu de départ incohérent.');
     if(Object.hasOwn(next,'group')||Object.hasOwn(next,'groupLosses')){
       try {const people=captureHumanOwners(next).people;
         if(validateSocial(next,next.schemaVersion,new Set(people.keys())).length||next.pawns.some(p=>!validBereavement(p.bereavement,p.id,next.schemaVersion,next,people)))return resync('Souvenirs de personnes hors carte incohérents.');

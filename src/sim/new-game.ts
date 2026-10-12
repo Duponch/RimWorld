@@ -1,3 +1,11 @@
+import { resolveStartingSite,type StartingWorld } from './starting-world.ts';
+import { adoptStartingSiteClimate } from './site-climate.ts';
+import { isPlant,plantGrowth } from './plants.ts';
+import { createPlantLife } from './plant-life.ts';
+import { adoptWeather } from './weather.ts';
+import { adoptWind } from './wind.ts';
+import { ensureFireState } from './fire-rules.ts';
+import { PREPARED_CRASHLANDED_REVISION } from './scenario-definitions.ts';
 import { adoptColonyEconomy } from './colony-economy.ts';
 import { enableVisitors } from './visitors.ts';
 import { enableArrivals } from './arrivals.ts';
@@ -19,8 +27,10 @@ import { enableRaids } from './raids.ts';
 import { AIR_CONDITIONING_COST,CLOTHING_RESEARCH_COST,COMPLEX_FURNITURE_RESEARCH_COST,STONECUTTING_RESEARCH_COST } from './research.ts';
 import { DEFAULT_SCENARIO,isScenarioId,SCENARIOS,SCENARIO_REVISION,type ScenarioId } from './scenario-definitions.ts';
 import { startingPawn } from './starting-pawns.ts';
+import { materializeStartingCandidate,previewStartingParty,validStartingParty,type StartingParty } from './starting-candidates.ts';
 import { initializeCampBackgrounds } from './background-generation.ts';
 import { initializeCampRelationships } from './relationship-generation.ts';
+import { replaceRelationshipLinks } from './relationship-runtime.ts';
 import { crashlandedHumanAge } from './human-age.ts';
 import { initializeCampTraits } from './traits.ts';
 import { adoptEnvironment } from './environment-step.ts';
@@ -67,13 +77,13 @@ function landingSite(world:World,stacks=GROUND_STACKS):{landing:Cell;cells:Cell[
   throw new Error('Aucun point d’arrivée accessible ne peut accueillir les survivants et leurs réserves.');
 }
 
-function survivalStart(world:World,commerce=false):Cell {
+function survivalStart(world:World,commerce=false,party?:StartingParty):Cell {
   const supplies:readonly (readonly [ItemId,number])[]=commerce?[...SUPPLIES,['silver',800],['bolt-action-rifle',1],['plasteel-knife',1]]:SUPPLIES;
   const stacks=supplies.reduce((n,[item,q])=>n+Math.ceil(q/ITEM_DEFINITIONS[item].stackLimit),0);
   const {landing,cells}=landingSite(world,stacks);
   for(const [index,name] of ['Ada','Noé','Mina'].entries()) {
-    const cell=cells[index]!,pawn=startingPawn(world.nextId++,name,cell.x,cell.z,index,55,world.seed);
-    if(commerce)pawn.age=crashlandedHumanAge(world.seed,pawn.id,pawn.age!);
+    const cell=cells[index]!,pawn=party?materializeStartingCandidate(party.seed,party.selected[index]!,world.nextId++,cell.x,cell.z):startingPawn(world.nextId++,name,cell.x,cell.z,index,55,world.seed);
+    if(commerce&&!party)pawn.age=crashlandedHumanAge(world.seed,pawn.id,pawn.age!);
     world.pawns.push(pawn);
     addMaterial(world,'apparel',1,{type:'apparel',pawnId:pawn.id},'cloth-shirt');
   }
@@ -92,16 +102,20 @@ function survivalStart(world:World,commerce=false):Cell {
 
 /** The only application factory. Loading an existing save must not call this
  * function: scenario population, supplies and technologies are creation-only. */
-export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAULT_SCENARIO,siteOptions?:SiteOptions):World {
+export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAULT_SCENARIO,siteOptions?:SiteOptions,startingParty?:StartingParty,startingWorld?:StartingWorld):World {
   if(!isScenarioId(id))throw new Error('Scénario inconnu.');
   if(!Number.isInteger(seed)||seed<0||seed>0xffffffff)throw new Error('La graine doit être un entier de 0 à 4 294 967 295.');
   if(!validMapDimension(size)||size<SCENARIOS[id].minSize)throw new Error('Taille de carte incompatible avec ce scénario.');
   if(siteOptions!==undefined&&id!=='crashlanded')throw new Error('Ce scénario ne permet pas de choisir un site.');
+  if(startingParty!==undefined&&(!validStartingParty(startingParty)||id!=='crashlanded'))throw new Error('Le choix des trois colons est invalide pour ce scénario.');
+  if(startingWorld!==undefined&&id!=='crashlanded')throw new Error('Ce scénario ne permet pas de choisir un monde.');
+  const selectedSite=startingWorld===undefined?undefined:resolveStartingSite(startingWorld);
+  if(selectedSite&&(seed!==selectedSite.seed||siteOptions?.biome!==selectedSite.site.biome||siteOptions?.hilliness!==selectedSite.site.hilliness))throw new Error('Le terrain demandé ne correspond pas au lieu sélectionné.');
   const natural=id==='survivors'||id==='crashlanded';
   const site=id==='crashlanded'?resolveSite(seed,{hilliness:'small-hills',...siteOptions,biome:siteOptions?.biome??'temperate-forest'}):undefined;
   const world=site?generateSiteWorld(seed,size,size,site):natural?generateWorld(seed,size,size,'temperate-survivors-v1'):generateWorld(seed,size,size);
   if(site)world.site=site;
-  const landing=natural?survivalStart(world,id==='crashlanded'):{x:Math.floor(size/2),z:Math.floor(size/2)};
+  const landing=natural?survivalStart(world,id==='crashlanded',startingParty):{x:Math.floor(size/2),z:Math.floor(size/2)};
   if(id==='sentry')setupEncounter(world);
   else {
     initializeCampTraits(world);
@@ -110,9 +124,24 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
     if(site?.revision===2)enableBiomeWildlife(world,site.biome);else if(natural)enableWildlife(world,undefined,'natural');else enableWildlife(world);
   }
   initializeCampBackgrounds(world);
-  world.scenario={id,revision:id==='crashlanded'?SCENARIOS.crashlanded.revision:SCENARIO_REVISION,landing};
-  if(natural)adoptEnvironment(world);
+  world.scenario={id,revision:id==='crashlanded'?(selectedSite?PREPARED_CRASHLANDED_REVISION:SCENARIOS.crashlanded.revision):SCENARIO_REVISION,landing};
+  if(selectedSite){
+    world.planet=selectedSite.planet;
+    if(!adoptStartingSiteClimate(world,selectedSite.climate))throw new Error('Le climat du site de départ est invalide.');
+    for(const plant of world.resources)if(isPlant(plant)){
+      plant.growth=plantGrowth(world,plant);plant.growthTick=world.tick;plant.plantLife=createPlantLife(world,plant);
+    }
+    adoptWeather(world);adoptWind(world);ensureFireState(world);
+  }else if(natural)adoptEnvironment(world);
   if(id==='crashlanded'){enableVisitors(world,true);adoptColonyEconomy(world);}
-  initializeCampRelationships(world);
+  if(startingParty){
+    const preview=previewStartingParty(startingParty.seed,startingParty.selected);
+    const allocated=new Map(startingParty.selected.map((candidate,index)=>[candidate.serial,world.pawns[index]!.id]));
+    const links=preview.relationships.links.map(link=>{
+      const a=allocated.get(link.aId)!,b=allocated.get(link.bId)!;
+      return {...link,aId:Math.min(a,b),bId:Math.max(a,b)};
+    });
+    if(links.length&&!replaceRelationshipLinks(world,links))throw new Error('Les relations initiales contredisent les colons choisis.');
+  }else initializeCampRelationships(world);
   return world;
 }

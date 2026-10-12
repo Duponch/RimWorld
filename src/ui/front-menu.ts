@@ -8,7 +8,13 @@ import {cloudMaskRadius,cloudMaskRadiusLabel} from '../render/cloud-mask';
 import {roomMaskRadius,roomMaskRadiusLabel} from '../render/room-mask-settings';
 import {DEFAULT_LIGHTING_SETTINGS,LIGHTING_CONTROLS,parseLightingSettings,lightingPercentLabel,type LightingSettings} from '../render/lighting-settings';
 import {UI_ATLAS_URL} from './pictograms';
-import { createSiteConfiguration, parseSiteSeed, randomSiteSeed } from './front-site';
+import { randomSiteSeed } from './front-site';
+import { createWorldParameters,createStartingSiteConfiguration,generateStartingWorld } from './front-world';
+import { createStartingPawnsConfiguration,type StartingPawnsConfiguration } from './front-starting-pawns';
+import { createStartingCandidateRoster,startingPartyFromRoster,startingPartyMissingWork,type StartingCandidateDescriptor,type StartingParty } from '../sim/starting-candidates';
+import { BACKGROUND_WORK_LABELS } from '../sim/colonist-backgrounds';
+import { resolveStartingSite,startingSiteChoices,type StartingWorld } from '../sim/starting-world';
+import type { PlanetState } from '../sim/planet-state';
 import { testColonyUrl, type TestColony } from './test-colonies';
 import './front-menu.css';
 import { renderPerformanceLayout, bindRenderPerformanceControls } from './render-performance-controls';
@@ -19,6 +25,8 @@ export interface FrontMenuDraft {
   seed: number;
   size: number;
   site: SiteOptions;
+  startingParty:StartingParty;
+  startingWorld:StartingWorld;
 }
 
 export interface FrontMenuSave {
@@ -87,7 +95,7 @@ export interface FrontMenu {
   showError(message: string): void;
 }
 
-type Page = 'home' | 'scenario' | 'story' | 'configuration' | 'load' | 'tests' | 'options';
+type Page = 'home' | 'scenario' | 'story' | 'world' | 'site' | 'pawns' | 'load' | 'tests' | 'options';
 type Control = HTMLButtonElement | HTMLInputElement | HTMLSelectElement;
 
 const scenery = `<svg class="front-landscape" viewBox="0 0 1440 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -180,6 +188,13 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   let enabledBeforeBusy: Control[] = [];
   let seed = '';
   let site: SiteOptions = { hilliness: 'small-hills', biome:'temperate-forest' };
+  let planet:PlanetState|undefined;
+  let selectedTile:number|null=null;
+  let teamSeed=0;
+  let roster:StartingCandidateDescriptor[]=[];
+  let disposePage:(()=>void)|undefined;
+  let disposeDialog:(()=>void)|undefined;
+  let pawnsPage:StartingPawnsConfiguration|undefined;
   let difficultyChosen = false;
   let reloadChosen = false;
   let selectedSave: string | undefined;
@@ -205,6 +220,8 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
       enabledBeforeBusy = [];
     }
     busy = next;
+    content.inert=next;
+    pawnsPage?.setBusy(next);
     root.setAttribute('aria-busy', String(busy));
     status.hidden = !busy;
     status.textContent = busy ? message : '';
@@ -234,6 +251,8 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
 
   function navigate(next: Page): void {
     if (busy || operationPending) return;
+    disposeDialog?.();disposeDialog=undefined;
+    disposePage?.();disposePage=undefined;pawnsPage=undefined;
     page = next;
     clearError();
     content.replaceChildren();
@@ -241,19 +260,13 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     steps.replaceChildren();
     root.dataset.page = page;
     eyebrow.textContent = page === 'home' ? 'UNE HISTOIRE À CONSTRUIRE' : page === 'tests' ? 'EXPLORER ET ESSAYER' : page === 'load' ? 'VOS COLONIES' : page === 'options' ? 'PRÉFÉRENCES LOCALES' : 'NOUVELLE PARTIE';
-    title.textContent = { home: 'Elsewhere', scenario: 'Choisir un scénario', story: 'Choisir votre histoire', configuration: 'Préparer le départ', load: 'Charger une partie', tests: 'Colonies de test', options: 'Options' }[page];
-    if (['scenario','story','configuration'].includes(page)) {
-      const active = ['scenario', 'story', 'configuration'].indexOf(page);
-      ['Scénario', 'Histoire', 'Départ'].forEach((label, index) => {
-        const item = element('li', index === active ? 'is-current' : '', `${index + 1}  ${label}`);
-        if (index === active) item.setAttribute('aria-current', 'step');
-        steps.append(item);
-      });
-    }
+    title.textContent = { home: 'Elsewhere', scenario: 'Choisir un scénario', story: 'Choisir votre narrateur', world:'Créer un monde',site:'Choisir un lieu de départ',pawns:'Créer les personnages',load: 'Charger une partie', tests: 'Colonies de test', options: 'Options' }[page];
     if (page === 'home') renderHome();
     else if (page === 'scenario') renderScenario();
     else if (page === 'story') renderStory();
-    else if (page === 'configuration') renderConfiguration();
+    else if (page === 'world') renderWorld();
+    else if (page === 'site') renderSite();
+    else if (page === 'pawns') renderPawns();
     else if (page === 'tests') renderTests();
     else if (page === 'options') renderOptions();
     else renderLoad();
@@ -553,7 +566,6 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
 
   function addNavigation(back: () => void, nextLabel?: string, next?: () => void): void {
     footer.append(action('Retour', back, 'front-back'));
-    if (page !== 'load' && page !== 'tests') footer.append(action('Annuler la création', () => navigate('home'), 'front-quiet'));
     if (nextLabel && next) footer.append(action(nextLabel, next, 'front-primary front-next'));
   }
 
@@ -568,11 +580,11 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
           <div><dt>Bois</dt><dd>300</dd></div><div><dt>Acier</dt><dd>450</dd></div><div><dt>Composants</dt><dd>30</dd></div>
           <div><dt>Rations de survie</dt><dd>50</dd></div><div><dt>Médicaments</dt><dd>30</dd></div><div><dt>Argent</dt><dd>800</dd></div>
           <div><dt>Fusil à verrou</dt><dd>1</dd></div><div><dt>Revolver</dt><dd>1</dd></div><div><dt>Couteau en plastacier</dt><dd>1</dd></div><div><dt>Gilet pare-balles</dt><dd>1</dd></div>
-        </dl><p class="front-small">Chaque personne porte une chemise en tissu. Vêtements complexes et Climatisation sont déjà connus.</p>
+        </dl><p class="front-small">Trois personnes choisies parmi huit candidats. Chaque personne porte une chemise en tissu. Taille de pierre, Mobilier complexe, Vêtements complexes et Climatisation sont déjà connus.</p>
         <div class="front-limitation"><strong>Une adaptation encore partielle</strong><p>Le casque, le pantalon de protection, l’animal domestique et les provisions dispersées du scénario de référence restent absents. L’arrivée en capsules reste à venir.</p></div>
       </article></div>`;
     const list = find<HTMLDivElement>('.front-choice-list');
-    list.append(unavailable('Tribu perdue'), unavailable('Le riche explorateur'), unavailable('Brutalité nue'), unavailable('Personnalisé'));
+    list.append(unavailable('Tribu perdue'), unavailable('Le riche explorateur'), unavailable('Brutalité nue'), unavailable('Personnalisé'),unavailable('Steam Workshop'));
     addNavigation(() => navigate('home'), 'Suivant', () => navigate('story'));
   }
 
@@ -593,10 +605,12 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
 
   function renderStory(): void {
     const split = element('div', 'front-story-layout');
+    const list=element('div','front-choice-list front-storytellers');list.setAttribute('aria-label','Narrateurs');
+    const cassandra=action('Cassandra Classique',()=>{} ,'front-scenario-selected');cassandra.setAttribute('aria-pressed','true');
+    list.append(cassandra,unavailable('Phoebe Amicale'),unavailable('Randy Aléatoire'));
     const narrator = element('article', 'front-card front-narrator');
-    narrator.append(atlasMark('front-narrator-mark',3,3));
+    narrator.innerHTML=`<svg class="front-storyteller-illustration" viewBox="0 0 300 310" aria-hidden="true"><path fill="#cde7dc" d="M12 10h276v284H12z"/><path fill="#8faa9c" d="m12 242 42-42 34 29 59-58 71 63 34-25 36 34v51H12z"/><path fill="#554338" d="m95 87 17-42 57-12 43 38-7 80-37 27-68-36z"/><path fill="#e5bf99" d="m118 68 63 4 15 59-39 29-40-23-16-36z"/><path fill="#554338" d="m100 97 23-15 17-21 24 17 33 13-11-37-40-9-33 15z"/><path fill="#775c4d" d="m126 99 11-1 1 8-11 1zm39 1 10 1-1 8-10-1z"/><path fill="#dda691" d="m147 127 18-1-8 8z"/><path fill="#6f8f7b" d="m111 150-37 22-17 100 170 3-13-109-36-19-21 18z"/><path fill="#eee3bc" d="m132 150 21 25 20-27-8 74-30-5z"/><path fill="#e6cdb1" d="m89 224 23-16 34 27-11 16-31-11zm115-3-31-10-15 28 17 13 27-15z"/><path fill="#8d7160" stroke="#3b3e45" stroke-width="4" d="m103 211 50 14 48-9-9 44-42 7-41-17z"/><path fill="#f2e6c9" d="m111 218 40 12 38-6-6 29-33 8-33-15z"/><path fill="none" stroke="#897766" stroke-width="3" d="m150 230 1 29m-29-28 16 6m-15 4 14 6m30-10 12-3m-14 11 12-4"/></svg>`;
     narrator.insertAdjacentHTML('beforeend', `<p class="front-kicker">NARRATEUR</p><h2>Cassandra Classique</h2><span class="front-tag">Introduction partielle</span><p>Une installation, des rencontres et des menaces : Cassandra donne un rythme au début de la colonie.</p><p class="front-small">La suite du narrateur et la variété de ses événements restent incomplètes.</p>`);
-    narrator.append(unavailable('Phoebe Amicale'), unavailable('Randy Aléatoire'));
     const choices = element('div', 'front-story-choices');
     const difficulty = element('fieldset', 'front-fieldset');
     difficulty.append(element('legend', '', 'Niveau d’aventure'));
@@ -619,7 +633,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     saveHelp.id = 'front-save-help';
     saving.append(saveHelp);
     choices.append(difficulty, saving);
-    split.append(narrator, choices);
+    split.append(list,choices,narrator);
     content.append(split);
     addNavigation(() => navigate('scenario'), 'Suivant', () => {
       if (!difficultyChosen || !reloadChosen) {
@@ -627,28 +641,58 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
         (!difficultyChosen ? difficultyInput : reloadInput)?.focus();
         return;
       }
-      navigate('configuration');
+      navigate('world');
     });
   }
 
-  function renderConfiguration(): void {
-    const configuration = createSiteConfiguration({
-      seed, site,
-      onSeed: next => { seed = next; clearError(); },
-      onSite: next => { site = next; clearError(); },
-      onError: showError,
+  function renderWorld():void {
+    const parameters=createWorldParameters({seed,onSeed:next=>{seed=next;clearError();},onRandom:()=>{seed=randomSiteSeed();clearError();return seed;},onError:showError});
+    content.append(parameters.element);disposePage=parameters.dispose;
+    addNavigation(()=>navigate('story'),'Générer',()=>{
+      const parsed=parameters.validate();if(parsed===undefined)return;
+      try{
+        if(!planet||planet.generationSeed!==parsed){planet=generateStartingWorld(parsed);selectedTile=planet.homeTile;}
+        if(selectedTile===null||!startingSiteChoices(planet).includes(selectedTile))selectedTile=startingSiteChoices(planet)[0]??null;
+        navigate('site');
+      }catch(cause){showError(cause instanceof Error?cause.message:'Le monde n’a pas pu être généré.');}
     });
-    content.append(configuration.element);
-    const input = configuration.seedInput;
-    addNavigation(() => navigate('story'), 'Démarrer', () => {
-      const parsed = parseSiteSeed(seed);
-      if (parsed === undefined) {
-        showError('La graine doit être un entier compris entre 0 et 4 294 967 295.');
-        input.setAttribute('aria-invalid', 'true');
-        input.focus();
-        return;
-      }
-      void run(() => options.onStart({ seed: parsed, size: DEFAULT_MAP_SIZE, site: { ...site } }), 'Génération de la carte et préparation de la colonie…');
+    const resets=element('div','front-world-resets');
+    resets.append(action('Réinitialiser tout',()=>{try{seed=randomSiteSeed();planet=undefined;selectedTile=null;navigate('world');}catch{showError('La génération aléatoire est indisponible.');}}),unavailable('Réinitialiser les factions'));
+    footer.insertBefore(resets,footer.lastElementChild);
+  }
+
+  function confirmDraft(message:string,accept:()=>void):void {
+    disposeDialog?.();
+    const dialog=element('dialog','front-world-advanced');dialog.setAttribute('aria-label','Confirmer le départ');
+    const previous=document.activeElement;
+    const close=()=>{if(dialog.open)dialog.close();dialog.remove();disposeDialog=undefined;if(previous instanceof HTMLElement&&previous.isConnected)previous.focus({preventScroll:true});};
+    disposeDialog=close;
+    dialog.append(element('p','',message),action('Annuler',close),action('Confirmer',()=>{close();accept();},'front-primary'));
+    dialog.addEventListener('keydown',event=>event.stopPropagation());dialog.addEventListener('cancel',event=>{event.preventDefault();close();});content.append(dialog);dialog.showModal();
+  }
+
+  function renderSite():void {
+    if(!planet){navigate('world');return;}
+    const configuration=createStartingSiteConfiguration({planet,selected:selectedTile,onSelected:id=>{selectedTile=id;clearError();},onError:showError});
+    content.append(configuration.element);disposePage=configuration.dispose;
+    addNavigation(()=>navigate('world'),'Suivant',()=>{
+      const tile=configuration.validate();if(tile===undefined)return;
+      confirmDraft('Commencer la colonie sur ce lieu de départ ?',()=>navigate('pawns'));
+    });
+  }
+
+  function renderPawns():void {
+    if(!planet||selectedTile===null){navigate('world');return;}
+    const configuration=createStartingPawnsConfiguration({seed:teamSeed,roster,onRosterChange:next=>{roster=next;clearError();},onError:showError});
+    content.append(configuration.element);pawnsPage=configuration;disposePage=configuration.dispose;
+    addNavigation(()=>navigate('site'),'Démarrer',()=>{
+      if(!configuration.validate())return;
+      const startingParty=startingPartyFromRoster(teamSeed,roster),startingWorld:StartingWorld={version:1,seed:planet!.generationSeed,tile:selectedTile!};
+      const resolved=resolveStartingSite(startingWorld);site=resolved.site;
+      const launch=()=>void run(()=>options.onStart({seed:resolved.seed,size:DEFAULT_MAP_SIZE,site:{...site},startingParty,startingWorld}),'Génération de la carte et préparation de la colonie…');
+      const missing=startingPartyMissingWork(teamSeed,startingParty.selected);
+      if(missing.length)confirmDraft(`Personne dans cette équipe ne peut assurer : ${missing.map(work=>BACKGROUND_WORK_LABELS[work]).join(', ')}. Commencer malgré ces incapacités ?`,launch);
+      else launch();
     });
   }
 
@@ -768,7 +812,9 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     reloadChosen = false;
     seed = '';
     site = { hilliness: 'small-hills', biome:'temperate-forest' };
-    try { seed = randomSiteSeed(); } catch { /* Manual entry remains available. */ }
+    planet=undefined;selectedTile=null;
+    try { seed = randomSiteSeed();teamSeed=Number(randomSiteSeed()); } catch {teamSeed=0; /* Manual entry remains available. */ }
+    roster=createStartingCandidateRoster(teamSeed);
     navigate('scenario');
   }
 
@@ -777,6 +823,8 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   }
 
   function hide(): void {
+    disposeDialog?.();disposeDialog=undefined;
+    disposePage?.();disposePage=undefined;pawnsPage=undefined;
     root.hidden = true;
     if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     previousFocus = null;
@@ -787,7 +835,9 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     if (event.key === 'Escape') {
       event.preventDefault();
       if (busy || operationPending) return;
-      if (page === 'configuration') navigate('story');
+      if(page==='pawns')navigate('site');
+      else if(page==='site')navigate('world');
+      else if(page==='world')navigate('story');
       else if (page === 'story') navigate('scenario');
       else if (page === 'tests') navigate('load');
       else if (page !== 'home') navigate('home');

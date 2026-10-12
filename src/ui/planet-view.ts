@@ -11,6 +11,7 @@ export interface PlanetView {
   setPlanet(planet:PlanetState|undefined):void;
   setOverlay(overlay:PlanetOverlay):void;
   setVisible(visible:boolean):void;
+  focusTile(id:number):void;
   dispose():void;
 }
 const SVG='http://www.w3.org/2000/svg';
@@ -87,9 +88,10 @@ function routePath(ids:readonly number[],centres:ReadonlyMap<number,{center:Vect
 
 /** Orthographic SVG projection only. Pointer/keyboard rotation reads cached
  * geometry; it never consults World, invokes a solver or sends a command. */
-export function createPlanetView(host:HTMLElement,onSelect:(tileId:number)=>void):PlanetView {
+export function createPlanetView(host:HTMLElement,onSelect:(tileId:number)=>void,options:{landing?:boolean}={}):PlanetView {
   const abort=new AbortController(),element=document.createElement('section');element.className='planet-view';
   const intro=document.createElement('p');intro.textContent='Visualisation du globe. Tournez par glissement ou avec les flèches ; choisissez une case dans la liste.';
+  intro.hidden=!!options.landing;
   const svg=document.createElementNS(SVG,'svg');svg.setAttribute('viewBox','0 0 500 500');svg.setAttribute('role','img');
   svg.setAttribute('aria-label','Globe orthographique : rotation visuelle');svg.setAttribute('tabindex','0');
   const disc=document.createElementNS(SVG,'circle');disc.setAttribute('cx','250');disc.setAttribute('cy','250');disc.setAttribute('r','220');disc.setAttribute('class','planet-disc');
@@ -102,14 +104,15 @@ export function createPlanetView(host:HTMLElement,onSelect:(tileId:number)=>void
     circle.setAttribute('class',`planet-marker planet-marker-${key}`);circle.setAttribute('r',key==='selection'?'10':'6');
     circle.append(title);markers.append(circle);circles.set(key!,circle);
   }
-  svg.append(disc,faces,preview,route,markers);
+  const projection=document.createElementNS(SVG,'g');projection.append(disc,faces,preview,route,markers);svg.append(projection);
   const choiceLabel=document.createElement('label');choiceLabel.textContent='Choisir une case';
   const choice=document.createElement('select');choice.dataset.planetSelection='';choice.setAttribute('aria-label','Choisir une case du globe');choiceLabel.append(choice);
   const selectedText=document.createElement('p');selectedText.className='planet-selection';selectedText.setAttribute('aria-live','polite');
   element.append(intro,svg,choiceLabel,selectedText);host.append(element);
   let planet:PlanetState|undefined,shapeKey='',labelKey='',centres=new Map<number,{center:Vector;corners:Vector[]}>();
   const nodes=new Map<number,{path:SVGPathElement;title:SVGTitleElement}>();
-  let overlay:PlanetOverlay={selected:null,route:[]},yaw=0,pitch=0,visible=true,frame=0,disposed=false;
+  let overlay:PlanetOverlay={selected:null,route:[]},yaw=0,pitch=0,zoom=1,visible=true,frame=0,disposed=false;
+  const labelFor=(p:PlanetState,id:number)=>options.landing?`Case ${id} · ${biomeLabel(p.tiles[id]!)} · ${reliefLabel(p.tiles[id]!)}`:planetTileLabel(p,id);
   let drag:{id:number;x:number;y:number;yaw:number;pitch:number;tile:number|null;moved:boolean}|undefined;
   const rotate=(p:Vector):Vector=>{
     const x=p[0]*Math.cos(yaw)-p[2]*Math.sin(yaw),z=p[0]*Math.sin(yaw)+p[2]*Math.cos(yaw);
@@ -118,6 +121,7 @@ export function createPlanetView(host:HTMLElement,onSelect:(tileId:number)=>void
   function schedule():void {if(!disposed&&visible&&!frame)frame=requestAnimationFrame(paint);}
   function paint():void {
     frame=0;if(!planet||!visible||disposed)return;
+    projection.setAttribute('transform',`translate(250 250) scale(${zoom}) translate(-250 -250)`);
     for(const tile of planet.tiles) {
       const g=centres.get(tile.id)!,node=nodes.get(tile.id)!,path=polygonPath(clippedPolygon(g.corners.map(rotate)));
       node.path.setAttribute('d',path);node.path.style.display=path?'':'none';
@@ -128,13 +132,13 @@ export function createPlanetView(host:HTMLElement,onSelect:(tileId:number)=>void
     const positions:{[key:string]:number|undefined}={home:planet.homeTile,civilian:planet.civilianTile,group:overlay.groupTile,selection:overlay.selected??undefined};
     for(const [key,node] of circles) {
       const id=positions[key],center=id===undefined?undefined:centres.get(id)?.center,p=center?rotate(center):undefined;
-      node.style.display=p&&p[2]>=0?'':'none';
+      node.style.display=p&&p[2]>=0&&!(options.landing&&key==='home')?'':'none';
       if(p){node.setAttribute('cx',(250+p[0]*220).toFixed(3));node.setAttribute('cy',(250-p[1]*220).toFixed(3));}
     }
   }
   function select(id:number):void {
     if(!planet||!centres.has(id))return;
-    overlay={...overlay,selected:id};choice.value=String(id);selectedText.textContent=planetTileLabel(planet,id);schedule();onSelect(id);
+    overlay={...overlay,selected:id};choice.value=String(id);selectedText.textContent=labelFor(planet,id);schedule();onSelect(id);
   }
   choice.addEventListener('change',()=>select(Number(choice.value)),{signal:abort.signal});
   svg.addEventListener('pointerdown',event=>{
@@ -155,6 +159,7 @@ export function createPlanetView(host:HTMLElement,onSelect:(tileId:number)=>void
     if(!end.moved&&end.tile!==null)select(end.tile);
   },{signal:abort.signal});
   svg.addEventListener('pointercancel',()=>{drag=undefined;},{signal:abort.signal});
+  svg.addEventListener('wheel',event=>{event.preventDefault();zoom=Math.max(.7,Math.min(2.2,zoom*Math.exp(-Math.max(-100,Math.min(100,event.deltaY))*.002)));schedule();},{signal:abort.signal,passive:false});
   svg.addEventListener('keydown',event=>{
     const step=.12;
     if(event.key==='ArrowLeft')yaw-=step;else if(event.key==='ArrowRight')yaw+=step;
@@ -176,9 +181,9 @@ export function createPlanetView(host:HTMLElement,onSelect:(tileId:number)=>void
       }
       const labels=JSON.stringify([next.homeTile,next.civilianTile,next.tiles.map(t=>[t.id,t.biome,t.hilliness])]);
       if(labelKey!==labels){
-        labelKey=labels;choice.replaceChildren(...next.tiles.map(tile=>new Option(planetTileLabel(next,tile.id),String(tile.id))));
+        labelKey=labels;choice.replaceChildren(...next.tiles.map(tile=>new Option(labelFor(next,tile.id),String(tile.id))));
         for(const tile of next.tiles) {
-          const node=nodes.get(tile.id)!;node.title.textContent=planetTileLabel(next,tile.id);
+          const node=nodes.get(tile.id)!;node.title.textContent=labelFor(next,tile.id);
           node.path.setAttribute('data-biome',tile.biome);node.path.setAttribute('data-hilliness',tile.hilliness);
         }
       }
@@ -191,10 +196,11 @@ export function createPlanetView(host:HTMLElement,onSelect:(tileId:number)=>void
         const tile=planet.tiles.find(t=>t.id===path[i]);if(!tile||i>0&&path[i-1]!==path[i]&&!tile.neighbours.includes(path[i-1]!))throw Error('Route géographique non canonique.');
       }
       overlay=next;
-      if(planet&&next.selected!==null){choice.value=String(next.selected);selectedText.textContent=planetTileLabel(planet,next.selected);}
+      if(planet&&next.selected!==null){choice.value=String(next.selected);selectedText.textContent=labelFor(planet,next.selected);}
       schedule();
     },
     setVisible(next) {visible=next;element.hidden=!next||!planet;if(!next){cancelAnimationFrame(frame);frame=0;}else schedule();},
+    focusTile(id) {const p=centres.get(id)?.center;if(!p)return;yaw=Math.atan2(p[0],p[2]);pitch=Math.asin(p[1]);schedule();},
     dispose() {disposed=true;abort.abort();cancelAnimationFrame(frame);element.remove();nodes.clear();centres.clear();},
   };
 }

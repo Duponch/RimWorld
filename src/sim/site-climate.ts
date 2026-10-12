@@ -3,14 +3,22 @@ import { TICKS_PER_DAY } from './types.ts';
 import { isPlant,plantGrowth } from './plants.ts';
 import { createPlantLife } from './plant-life.ts';
 import type { BiomeId } from './biome-flora.ts';
+import type { PlanetTile } from './planet-state.ts';
 
 /** Civil time at explicit adoption; elapsed jobs and health keep World.tick. */
-export interface SiteClimate {
+export interface ReferenceSiteClimate {
   revision:1;
   profile:ClimateProfile;
   adoptedAt:number;
   calendarOrigin:number;
 }
+export interface StartingSiteClimate {
+  revision:2;
+  adoptedAt:number;
+  calendarOrigin:number;
+  definition:ClimateDefinition;
+}
+export type SiteClimate=ReferenceSiteClimate|StartingSiteClimate;
 
 export type ClimateProfile='temperate-reference'|'boreal-reference'|'arid-reference';
 export interface ClimateDefinition {meanTemperature:number;amplitude:number;rainfall:number;latitude:number;longitude:number}
@@ -30,7 +38,25 @@ export const CLIMATE_DEFINITIONS:Readonly<Record<ClimateProfile,ClimateDefinitio
   'temperate-reference':TEMPERATE_CLIMATE,'boreal-reference':BOREAL_CLIMATE,'arid-reference':ARID_CLIMATE,
 });
 const climateForBiome:Readonly<Record<BiomeId,ClimateProfile>>={'temperate-forest':'temperate-reference','boreal-forest':'boreal-reference','arid-shrubland':'arid-reference'};
-export const siteClimateDefinition=(world:Pick<World,'climate'>):ClimateDefinition=>CLIMATE_DEFINITIONS[world.climate?.profile??'temperate-reference'];
+export const siteClimateDefinition=(world:Pick<World,'climate'>):ClimateDefinition=>world.climate?.revision===2?
+  world.climate.definition:CLIMATE_DEFINITIONS[world.climate?.profile??'temperate-reference'];
+
+/** Persist only the tile's actual climate and its geographic seasonal amplitude. */
+export function planetTileClimateDefinition(tile:PlanetTile):ClimateDefinition {
+  const latitude=Math.asin(Math.max(-1,Math.min(1,tile.center[1])))*180/Math.PI;
+  const longitude=Math.atan2(tile.center[2],tile.center[0])*180/Math.PI;
+  return {meanTemperature:tile.meanTemperature,rainfall:tile.rainfall,latitude,longitude,amplitude:seasonalAmplitude(latitude)};
+}
+
+export function validClimateDefinition(value:unknown):value is ClimateDefinition {
+  if(typeof value!=='object'||value===null||Array.isArray(value))return false;
+  const v=value as Record<string,unknown>,keys=Reflect.ownKeys(v);
+  const finite=(n:unknown,min:number,max:number):n is number=>typeof n==='number'&&Number.isFinite(n)&&n>=min&&n<=max;
+  return keys.length===5&&keys.every(k=>typeof k==='string'&&['meanTemperature','amplitude','rainfall','latitude','longitude'].includes(k)&&
+    Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'))&&
+    finite(v.meanTemperature,-100,100)&&finite(v.rainfall,0,10000)&&finite(v.latitude,-90,90)&&finite(v.longitude,-180,180)&&
+    finite(v.amplitude,3,28)&&v.amplitude===seasonalAmplitude(v.latitude);
+}
 
 export function climateTick(world:ClimateWorld,tick=world.tick):number {
   return world.climate?world.climate.calendarOrigin+tick-world.climate.adoptedAt:tick+(world.gameProfile?TICKS_PER_DAY/4:0);
@@ -68,6 +94,20 @@ export function climateOriginAtAdoption(world:Pick<World,'gameProfile'|'site'>,a
     referenceStartDay*TICKS_PER_DAY+civil%TICKS_PER_DAY;
 }
 
+/** New colonies start at Auto, 06:00. Adoption time remains the elapsed clock's origin. */
+export function startingSiteClimateOrigin(adoptedAt:number,definition:ClimateDefinition):number {
+  const civil=adoptedAt+TICKS_PER_DAY/4;
+  return Math.floor(civil/TICKS_PER_YEAR)*TICKS_PER_YEAR+
+    automaticStartDay(definition.latitude,definition.meanTemperature)*TICKS_PER_DAY+civil%TICKS_PER_DAY;
+}
+
+/** Prospective initialization only: no resource growth or plant-life history is rewritten. */
+export function adoptStartingSiteClimate(world:World,definition:ClimateDefinition):boolean {
+  if(world.tick!==0||world.climate||!validClimateDefinition(definition))return false;
+  world.climate={revision:2,adoptedAt:world.tick,calendarOrigin:startingSiteClimateOrigin(world.tick,definition),definition:{...definition}};
+  return true;
+}
+
 /** Explicit transition starts a warm observed season without inventing past
  * frost/plant age. Save old growth before changing the civil environment. */
 export function adoptSiteClimate(world:World):boolean {
@@ -94,6 +134,7 @@ export function seasonalOutdoorTemperature(world:ClimateWorld,tick=world.tick):n
 
 export function climateDate(world:ClimateWorld):{year:number;day:number;quadrum:number;season:string} {
   const civil=climateTick(world),day=Math.floor(civil/TICKS_PER_DAY)%60;
+  const seasonOffset=world.climate?.revision===2&&world.climate.definition.latitude<0?2:0;
   return {year:5500+Math.floor(civil/TICKS_PER_YEAR),day:day%15+1,quadrum:Math.floor(day/15),
-    season:['Printemps','Été','Automne','Hiver'][Math.floor(day/15)]!};
+    season:['Printemps','Été','Automne','Hiver'][(Math.floor(day/15)+seasonOffset)%4]!};
 }

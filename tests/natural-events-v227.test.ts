@@ -80,7 +80,7 @@ function harness(world:World,checkHistoryEachRead=true){
 
 test.each([undefined,'temperate-reference','boreal-reference','arid-reference'] as const)('confirmed forecasts preserve every source shape at civil boundaries (%s)',profile=>{
   const world=camp();
-  if(profile){adoptSiteClimate(world);world.climate!.profile=profile;}
+  if(profile){adoptSiteClimate(world);if(world.climate?.revision!==1)throw Error('Expected reference climate');world.climate.profile=profile;}
   else world.gameProfile=crashlandedProfile();
   const {send,read}=harness(world);read(send(),true);
   for(const tick of [1,1499,1500,1501,4799,4800,4801,5999,6000,6001,TICKS_PER_YEAR-1,TICKS_PER_YEAR,TICKS_PER_YEAR+1,TICKS_PER_YEAR+1501]){
@@ -193,7 +193,7 @@ test('soil, flooring, roof and civil changes without resource patches invalidate
   world.gameProfile=crashlandedProfile();read(send());
   expect(adoptSiteClimate(world)).toBe(true);read(send());
   world.climate!.calendarOrigin+=1500;read(send());
-  world.climate!.profile='arid-reference' satisfies ClimateProfile;read(send());
+  if(world.climate?.revision!==1)throw Error('Expected reference climate');world.climate.profile='arid-reference' satisfies ClimateProfile;read(send());
 });
 
 test('silent lifecycle patches retain current references for the next returned view',()=>{

@@ -1,5 +1,30 @@
 # Guide joueur
 
+## Préparer sa colonie — V333
+
+Dans **Nouvelle partie**, avancez de Scénario à Narrateur, puis Créer un monde.
+Atterrissage forcé, Cassandra Classique, Récit d'aventure et le mode Rechargeable
+sont les choix actuellement disponibles. Entrez une graine ou choisissez
+Aléatoire, puis **Générer**. Le globe présente les trois biomes existants.
+Les paramètres grisés restent à développer.
+
+Choisissez un terrain terrestre accessible au comptoir civil, hors montagne.
+Glissez le globe pour le tourner et utilisez la molette pour rapprocher la vue.
+La fiche indique le climat et les roches réellement retenus. **Suivant**, puis
+Confirmer, ouvre les personnages.
+
+Consultez les huit personnes au clic. Les trois premières partent : glissez les
+lignes pour changer l'équipe ou utilisez Alt+↑/↓. **Aléatoire** renouvelle seulement
+la personne inspectée ; son nom est éditable. Le résumé montre les meilleurs
+niveaux utilisables des trois sélectionnés. Retour conserve vos choix.
+**Démarrer** crée directement la colonie en pause ; si toute l'équipe est
+incapable d'un travail essentiel, une confirmation vous permet de revenir ou
+de continuer. Il n'y a pas de page récapitulative supplémentaire.
+
+Le climat local et les profils choisis restent dans la sauvegarde. L'arrivée en
+capsules, le tutoriel et les autres scénarios ne sont pas encore disponibles.
+La [note V333](new-game-preparation-v333.md) précise les adaptations et contrôles.
+
 ## Régler les ombres et toutes les animations — V331
 
 Dans **Options** à l'accueil, ou **Menu → Performances visuelles** en partie, **Équilibré** choisit des ombres à **60 Hz / 2048** et adapte toutes les animations du plateau à leur taille à l'écran. Les préférences sont conservées par ce navigateur ; elles ne modifient pas votre sauvegarde.

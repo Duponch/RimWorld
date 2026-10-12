@@ -17,6 +17,8 @@
   isolation: isolate;
 }
 .front-menu[hidden] { display: none; }
+.front-menu {user-select:none;-webkit-user-select:none}
+.front-menu :is(input,textarea){user-select:text;-webkit-user-select:text}
 .front-menu * { box-sizing: border-box; }
 .front-landscape, .front-shade { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -2; }
 .front-shade { z-index: -1; background: linear-gradient(90deg, #0e211f6b, #0d1b1be8 78%), #10242142; }

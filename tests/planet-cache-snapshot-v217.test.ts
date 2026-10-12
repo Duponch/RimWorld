@@ -36,7 +36,7 @@ function packet(encoder: SnapshotEncoder, world: World, checkpoint = false): Sna
 }
 function adopt(decoder: SnapshotDecoder, message: SnapshotMessage): World {
   const result = decoder.adopt(message);
-  expect(result.status).toBe('applied');
+  expect(result.status,JSON.stringify(result)).toBe('applied');
   if (result.status !== 'applied') throw Error(JSON.stringify(result));
   return result.world;
 }
@@ -279,6 +279,11 @@ test.each([false, true])('replacement, true absence, fresh adoption and historic
   fullValidation.calls = 0; expect(adopt(decoder, packet(encoder, empty, checkpoint))).toEqual(empty); expect(fullValidation.calls).toBe(1);
   expect(empty.rng).toBe(rng); expect(empty.tick).toBe(tick); expect(emptyFrame).toEqual(emptyFrozen); expect(before).toEqual(frozen);
   const historical = createWorld(42, 16, 16); raw(historical).schemaVersion = 195;
+  // This is a prepared transport fixture, not a genuine old save. The current
+  // generator now initializes V227 food policy/ledger keys; a V195 packet
+  // must omit those future fields before exercising planetary admission.
+  for(const policy of historical.foodPolicies??[])policy.allowed=policy.allowed.filter(item=>item!=='kibble'&&item!=='nutrient-paste-meal');
+  if(historical.spoiled){delete raw(historical.spoiled).hay;delete raw(historical.spoiled).kibble;delete raw(historical.spoiled)['nutrient-paste-meal'];}
   const historicalFrame = adopt(decoder, packet(encoder, historical)), historicalFrozen = structuredClone(historicalFrame);
   const historicalRetry = packet(encoder, historical, checkpoint);
   for (const key of ['planet', 'group', 'groupLosses']) {

@@ -85,3 +85,26 @@ export function initializeCampRelationships(w:World):void {
   for(const plan of plans){remaining-=plan.weight;if(remaining<0){selected=plan;break;}}
   if(!tryAddRelationship(w,selected.link))throw Error('Initial relationship contradicted its prepared graph.');
 }
+
+/** Prospective chooser graph for the three selected candidates. The finite
+ * couple rule is the same local pacing/age weighting as ordinary new camps,
+ * but its endpoints are candidate identities, not future Thing allocations.
+ * Sorting identities makes reorder alone preserve the advertised couple. No
+ * relatives, off-map people or links to candidates left behind are invented. */
+export function generateStartingCandidateRelationships(seed:number,people:readonly Pick<Pawn,'id'|'age'>[]):RelationshipState {
+  const adults=people.filter(p=>p.age&&p.age.biologicalTicks>=18*HUMAN_YEAR_TICKS).slice().sort((a,b)=>a.id-b.id);
+  const plans:{link:RelationshipLink;weight:number}[]=[];
+  for(let i=0;i<adults.length;i++)for(let j=i+1;j<adults.length;j++){
+    const a=adults[i]!,b=adults[j]!;
+    const aAge=a.age!.biologicalTicks/HUMAN_YEAR_TICKS,bAge=b.age!.biologicalTicks/HUMAN_YEAR_TICKS,gap=Math.abs(aAge-bAge);
+    if(gap>40)continue;
+    const weight=Math.min(1,(aAge-14)/13)*Math.min(1,(bAge-14)/13)*Math.max(.001,1-.999*gap/20);
+    for(const [kind,factor] of [['lover',.35],['spouse',.4]] as const)plans.push({link:{kind,aId:a.id,bId:b.id,recordedAt:0},weight:weight*factor});
+  }
+  if(!plans.length)return {links:[]};
+  const random={rng:((seed^0x214c017)>>>0)||1};
+  if(arrivalRandom(random)>=INITIAL_COUPLE_CHANCE)return {links:[]};
+  let remaining=arrivalRandom(random)*plans.reduce((n,p)=>n+p.weight,0),selected=plans.at(-1)!;
+  for(const plan of plans){remaining-=plan.weight;if(remaining<0){selected=plan;break;}}
+  return {links:[{...selected.link}]};
+}

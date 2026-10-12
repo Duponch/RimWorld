@@ -78,6 +78,7 @@ test('eclipse: seasonal integral crosses year and maximum-duration boundaries',(
 
 test('eclipse: derived loss cache follows climate origin, latitude and event replacement',()=>{
   const world=fixture(1200,4500,true);
+  if(world.climate?.revision!==1)throw Error('Expected reference climate');
   for(const profile of ['temperate-reference','boreal-reference','arid-reference'] as const) {
     world.climate!.profile=profile;world.climate!.calendarOrigin+=1199;
     expect(integralBetween(world,1200,5700)).toBeCloseTo(intervalOracle(world,1200,5700),8);

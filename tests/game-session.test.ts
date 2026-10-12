@@ -1,6 +1,8 @@
 import { expect,test,vi } from 'vitest';
 import { GameSession,SAVE_KEY,PREVIOUS_KEY } from '../src/ui/game-session';
 import { decodeStoredSave,SAVE_COMPRESSION_THRESHOLD } from '../src/ui/save-storage-codec';
+import {createStartingCandidateRoster,startingPartyFromRoster} from '../src/sim/starting-candidates';
+import {resolveStartingSite} from '../src/sim/starting-world';
 
 function fixture(active=false) {
   const data=new Map<string,string>([[SAVE_KEY,'manual'],[PREVIOUS_KEY,'older']]);
@@ -9,6 +11,13 @@ function fixture(active=false) {
   const prepare=vi.fn(async()=>{}),session=new GameSession(client,()=>storage,prepare);session.hasWorld=active;
   return {data,storage,client,prepare,session};
 }
+test('prepared party and selected globe descriptor reach the exclusive init operation unchanged',async()=>{
+  const f=fixture(),party=startingPartyFromRoster(333,createStartingCandidateRoster(333));
+  const choice={version:1 as const,seed:42,tile:0},site=resolveStartingSite(choice);
+  await f.session.create(site.seed,250,'crashlanded',site.site,party,choice);
+  expect(f.client.init).toHaveBeenCalledExactlyOnceWith(site.seed,250,'crashlanded',true,site.site,party,choice);
+  expect(f.session.hasWorld).toBe(true);expect(f.session.busy).toBe(false);expect(f.prepare).toHaveBeenCalledOnce();
+});
 test('cold load uses the chosen data without initializing a temporary world; recovery remains distinct',async()=>{
   const f=fixture();await f.session.load(SAVE_KEY);
   expect(f.client.init).not.toHaveBeenCalled();expect(f.client.save).not.toHaveBeenCalled();
@@ -23,7 +32,7 @@ test('refused replacement restores prior recovery and active world; accepted wor
   expect(f.data.get(PREVIOUS_KEY)).toBe('older');expect(f.data.get(SAVE_KEY)).toBe('manual');expect(f.prepare).not.toHaveBeenCalled();expect(f.session.busy).toBe(false);
   f.prepare.mockRejectedValueOnce(new Error('GPU unavailable'));
   await expect(f.session.create(42,250,'crashlanded')).rejects.toThrow('GPU unavailable');
-  expect(f.client.init).toHaveBeenLastCalledWith(42,250,'crashlanded',true,undefined);
+  expect(f.client.init).toHaveBeenLastCalledWith(42,250,'crashlanded',true,undefined,undefined,undefined);
   expect(f.session.hasWorld).toBe(true);expect(f.data.get(PREVIOUS_KEY)).toBe('active');expect(f.data.get(SAVE_KEY)).toBe('manual');
 });
 test('unavailable storage prevents destructive replacement; concurrent operations are rejected until preparation ends',async()=>{

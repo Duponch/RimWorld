@@ -78,7 +78,14 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
  });
  (report.preparation??=[]).push({action,ms:performance.now()-prepareStarted});
  await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();await page.keyboard.press('Escape');
- await page.waitForFunction(()=>!document.querySelector('.game-shell').inert);
+ await page.waitForFunction(()=>!document.querySelector('.game-shell').inert,undefined,{timeout:60000}).catch(async error=>{
+  report.reloadFailure={action,errors,failedRequests,state:await page.evaluate(()=>({
+   preparing:window.__sync?.view?.preparing,backend:window.__lisiere?.backend,tick:window.__lisiere?.world?.tick,
+   notice:document.querySelector('#notice')?.textContent,incident:document.querySelector('#incident-panel')?.textContent,
+   frontVisible:!document.querySelector('.front-menu')?.hidden,loadingVisible:!document.querySelector('#loading')?.hidden,
+  }))};
+  await page.screenshot({path:testOutputPath('artifacts/harvest-reload-'+action+'-'+label+'.png')});throw error;
+ });
  await page.evaluate(()=>{window.__sync.active=true;});await page.locator('[data-speed="'+initialSpeed+'"]').click();
  if(switches)await page.evaluate(speeds=>{let i=0;window.__sync.switchTimer=setInterval(()=>document.querySelector('[data-speed="'+speeds[i++%speeds.length]+'"]').click(),2000);},speedCycle);
  await page.waitForFunction(start=>performance.now()-start>=0,await page.evaluate(s=>performance.now()+s*1000,seconds),{timeout:(seconds+15)*1000,polling:200});

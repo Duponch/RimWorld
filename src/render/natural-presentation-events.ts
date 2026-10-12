@@ -4,7 +4,7 @@ import {FLORA_DEFINITIONS} from '../sim/biome-flora';
 import {plantLeafless} from '../sim/plant-life';
 import {harvestable,isPlant,plantFertility,PLANT_DEFINITIONS} from '../sim/plants';
 import {isRoofed,roofIndex} from '../sim/roof-rules';
-import {climateTick,CLIMATE_DEFINITIONS,TICKS_PER_YEAR,type ClimateProfile} from '../sim/site-climate';
+import {climateTick,CLIMATE_DEFINITIONS,TICKS_PER_YEAR,validClimateDefinition,type ClimateProfile} from '../sim/site-climate';
 import {TICKS_PER_DAY,type Resource,type World} from '../sim/types';
 import {floraSize,isResidentCrop} from './flora-presentation';
 
@@ -15,6 +15,7 @@ const CLOCK_LIMIT=2**40;
 const CERTIFICATION_TICKS=32;
 type Clock={tick:number;civil:number;width:number;height:number;schema:number;
   gameProfilePresent:boolean;profile:ClimateProfile|undefined;
+  latitude:number|undefined;longitude:number|undefined;meanTemperature:number|undefined;rainfall:number|undefined;amplitude:number|undefined;
   adoptedAt:number|undefined;calendarOrigin:number|undefined;naturalBoundary:number;artificialBoundary:number;
   eclipseStart:number|undefined;eclipseEnd:number|undefined};
 type Inputs=Pick<Resource,'id'|'kind'|'species'|'x'|'z'|'growth'|'growthTick'|'growthLight'|'growthThermalFactor'>
@@ -27,8 +28,8 @@ function captureClock(world:World):Clock|undefined {
   const {tick,width,height,schemaVersion:schema,gameProfile,climate}=world;
   if(!Number.isSafeInteger(tick)||tick<0||tick>CLOCK_LIMIT-TICKS_PER_YEAR
     ||!Number.isSafeInteger(width)||!Number.isSafeInteger(height)||width<1||height<1)return;
-  if(climate&&(!Object.hasOwn(CLIMATE_DEFINITIONS,climate.profile)
-    ||climate.revision!==1||!Number.isSafeInteger(climate.adoptedAt)||climate.adoptedAt<0||climate.adoptedAt>tick
+  if(climate&&(!(climate.revision===1?Object.hasOwn(CLIMATE_DEFINITIONS,climate.profile):climate.revision===2&&validClimateDefinition(climate.definition))
+    ||!Number.isSafeInteger(climate.adoptedAt)||climate.adoptedAt<0||climate.adoptedAt>tick
     ||!Number.isSafeInteger(climate.calendarOrigin)||climate.calendarOrigin<0||climate.calendarOrigin>CLOCK_LIMIT))return;
   const civil=climateTick(world);
   if(!Number.isSafeInteger(civil)||civil<0||civil>CLOCK_LIMIT-TICKS_PER_YEAR)return;
@@ -51,13 +52,16 @@ function captureClock(world:World):Clock|undefined {
   }
   // climateTick observes only the truthiness of GameProfile. Its cloned object
   // is never retained and a fresh packet object cannot invalidate this clock.
-  return {tick,civil,width,height,schema,gameProfilePresent:!!gameProfile,profile:climate?.profile,
+  const definition=climate?.revision===2?climate.definition:undefined;
+  return {tick,civil,width,height,schema,gameProfilePresent:!!gameProfile,profile:climate?.revision===1?climate.profile:undefined,
+    latitude:definition?.latitude,longitude:definition?.longitude,meanTemperature:definition?.meanTemperature,rainfall:definition?.rainfall,amplitude:definition?.amplitude,
     adoptedAt:climate?.adoptedAt,calendarOrigin:climate?.calendarOrigin,naturalBoundary,artificialBoundary,
     eclipseStart:eclipse?.start,eclipseEnd:eclipse?.end};
 }
 function sameContext(a:Clock,b:Clock):boolean {
   return a.width===b.width&&a.height===b.height&&a.schema===b.schema&&a.gameProfilePresent===b.gameProfilePresent
     &&a.profile===b.profile&&a.adoptedAt===b.adoptedAt&&a.calendarOrigin===b.calendarOrigin
+    &&a.latitude===b.latitude&&a.longitude===b.longitude&&a.meanTemperature===b.meanTemperature&&a.rainfall===b.rainfall&&a.amplitude===b.amplitude
     &&a.eclipseStart===b.eclipseStart&&a.eclipseEnd===b.eclipseEnd;
 }
 function roofCells(world:World):readonly number[]|undefined {

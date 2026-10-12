@@ -66,7 +66,7 @@ test('three explicit biomes generate deterministic, distinct and fully identifie
     expect(plants.length).toBeGreaterThan(0);expect(plants.every(plant=>allowed.has(plant.species!))).toBe(true);
     for(const plant of plants)observed.add(plant.species!);
     const climate=siteClimateDefinition(world),{profile,...expected}=expectedProfiles[biome];
-    expect(world.climate?.profile).toBe(profile);expect(climate).toMatchObject(expected);
+    expect(world.climate?.revision===1?world.climate.profile:undefined).toBe(profile);expect(climate).toMatchObject(expected);
     signatures.push([...new Set(plants.map(plant=>plant.species))].sort().join(','));
   }
   expect(new Set(signatures).size).toBe(3);expect([...observed].sort()).toEqual([...PLANT_SPECIES].sort());

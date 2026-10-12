@@ -1,4 +1,6 @@
-# Validation courante — V320
+# Validation courante — V333
+
+**V333, schéma 230 : [préparation de nouvelle partie](../gameplay/new-game-preparation-v333.md#contrôles-root-et-acquisitions-par-reprises).** Contrôles ciblés119cas/11fichiers acquis par reprises, corpus63références/66fichiers PASS75,004s et ChromeWebGPU PASS41,654s avec création250² et reprise exacte. ROOT seul, sources/tests/pilotes gelés ; présentation, typage/build, rouges et publication consignés dans la note unique avant livraison. Aucune suite complète, campagne naturelle entière, parité UI exhaustive ni gainFPS certifiés. Les validations suivantes sont historiques.
 
 **V320, schéma 229 : [étagères physiques](../gameplay/shelves-v320.md#contrôles-et-limites).** Contrôles ciblés acquis par reprises ; groupe de stockage, sorties, retrait, frontières et présentation. ROOT seul exécute séquentiellement, sources/tests/pilotes/harness figés. Les résultats de corpus, Chrome et build sont centralisés dans la note unique ; aucun gainFPS ni campagne naturelle entière annoncé. Les validations suivantes sont historiques.
 

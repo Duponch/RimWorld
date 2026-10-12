@@ -57,6 +57,9 @@ function annualPrefix(latitude:number):Float64Array {
     const light=phase>=.25&&phase<=.8?Math.max(0,(seasonalNaturalLight(latitude,tick)-.51)/.49):0;
     values[tick]=values[tick-1]!+light;
   }
+  // New geographical starts add real latitudes. Keep the derived annual
+  // tables bounded across repeated new games; eviction never alters values.
+  if(yearlyPrefixes.size>=8)yearlyPrefixes.delete(yearlyPrefixes.keys().next().value!);
   yearlyPrefixes.set(latitude,values);return values;
 }
 

@@ -69,7 +69,7 @@ function harness(world:World){
 test.each([undefined,'temperate-reference','boreal-reference','arid-reference'] as const)(
   'full append, reorder and crossings preserve original observations (%s)',profile=>{
     const world=camp();
-    if(profile){adoptSiteClimate(world);world.climate!.profile=profile satisfies ClimateProfile;
+    if(profile){adoptSiteClimate(world);if(world.climate?.revision!==1)throw Error('Expected reference climate');world.climate.profile=profile satisfies ClimateProfile;
       world.climate!.calendarOrigin=TICKS_PER_YEAR-70;}
     const {send,read,verify}=harness(world);read(send(),true);
     for(const tick of [1,31,32,33,62,63,64,65,69,70,71,96,127,128,129]){
@@ -120,7 +120,7 @@ test('fresh full inputs invalidate roof, fertility, light, thermal and civil obs
   oak.growthLight='artificial-full';full();oak.growthLight='dark';full();delete oak.growthLight;world.roofing.constructed=[];full();
   oak.growthThermalFactor=0;full();oak.growthThermalFactor=.5;full();delete oak.growthThermalFactor;full();
   world.gameProfile=crashlandedProfile();full();adoptSiteClimate(world);full();
-  world.climate!.calendarOrigin+=1500;full();world.climate!.profile='arid-reference';full();
+  world.climate!.calendarOrigin+=1500;full();if(world.climate?.revision!==1)throw Error('Expected reference climate');world.climate.profile='arid-reference';full();
   verify();
 });
 
