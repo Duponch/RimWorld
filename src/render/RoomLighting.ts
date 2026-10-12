@@ -5,6 +5,7 @@ import type { DaylightSample } from './daylight';
 import { WORLD_SCALE } from '../world/scale';
 import { DEFAULT_LIGHTING_SETTINGS, parseLightingSettings } from './lighting-settings';
 import type { LightingSettings } from './lighting-settings';
+import { parseShadowSettings, type ShadowSettings } from './shadow-settings';
 
 const SUN = new Color(0xffedd3), DUSK = new Color(0xffc79b), MOON = new Color(0xc5d5f5);
 const DAY_SKY = new Color(0xfff2dd), NIGHT_SKY = new Color(0xbdcfe7);
@@ -102,6 +103,15 @@ export class RoomLighting {
     this.version++;
   }
 
+  setShadowSettings(settings: ShadowSettings): void {
+    if (this.disposed) return;
+    const resolution = parseShadowSettings(settings).resolution;
+    const projection = this.shadowLight.shadow;
+    if (projection.mapSize.x === resolution && projection.mapSize.y === resolution) return;
+    projection.mapSize.set(resolution, resolution);
+    this.fitValid = false; projection.needsUpdate = true;
+  }
+
   private selectShadowSource(sunPos: Readonly<Vector3>, moonPos: Readonly<Vector3>): boolean {
     if (this.sun.intensity === 0 && this.moon.intensity === 0) return false;
     const source = this.sun.intensity >= this.moon.intensity ? sunPos : moonPos;
@@ -134,7 +144,7 @@ export class RoomLighting {
    * grazing incidence (which would produce bright pools below edge lanterns).
    * Solar altitude continues to vary after sunlight's existing early plateau.
    * No wall clock, World or field upload. */
-  sync(sunPos: Readonly<Vector3>, moonPos: Readonly<Vector3>, sample: DaylightSample, span: number): number {
+  sync(sunPos: Readonly<Vector3>, moonPos: Readonly<Vector3>, sample: DaylightSample, span: number, refreshShadow = true): number {
     if (this.disposed) return this.version;
     if (!this.width || !this.height) this.plateauCenter.set((span - 1) / 2, 0, (span - 1) / 2);
     const daylight = Math.max(0, Math.min(1, sample.daylight));
@@ -158,7 +168,12 @@ export class RoomLighting {
       || this.sun.intensity !== sunIntensity || this.moon.intensity !== moonIntensity || !this.sun.color.equals(this.sunColor)
       || this.ambient.intensity !== ambientIntensity || !this.ambient.color.equals(this.skyColor)
       || !this.ambient.groundColor.equals(this.groundColor);
-    if (!changed) return this.version;
+    // A due pass must adopt the current source even if the live emitters were
+    // already updated on a skipped frame. The cached atlas keeps its projection.
+    if (!changed) {
+      if (refreshShadow) this.selectShadowSource(sunPos, moonPos);
+      return this.version;
+    }
     this.sun.position.copy(sunPos); this.moon.position.copy(moonPos);
     this.roomSun.position.copy(sunPos); this.roomMoon.position.copy(moonPos);
     this.sun.intensity = this.roomSun.intensity = sunIntensity;
@@ -168,7 +183,7 @@ export class RoomLighting {
     this.moon.color.copy(MOON); this.roomMoon.color.copy(MOON);
     this.ambient.color.copy(this.skyColor); this.roomAmbient.color.copy(this.skyColor);
     this.ambient.groundColor.copy(this.groundColor); this.roomAmbient.groundColor.copy(this.groundColor);
-    this.selectShadowSource(sunPos, moonPos);
+    if (refreshShadow) this.selectShadowSource(sunPos, moonPos);
     return ++this.version;
   }
 

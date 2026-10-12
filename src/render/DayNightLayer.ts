@@ -6,6 +6,7 @@ import { eclipseLightFactor } from '../sim/eclipse';
 import type { World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { parseLightingSettings, type LightingSettings } from './lighting-settings';
+import { parseShadowSettings, type ShadowSettings } from './shadow-settings';
 
 const nightTop = new Color(0x111e3a), dayTop = new Color(0x7cb6d3);
 const nightHorizon = new Color(0x465674), dayHorizon = new Color(0xd4dfd2), duskHorizon = new Color(0xeaa377);
@@ -87,6 +88,14 @@ export class DayNightLayer {
 
   configureShadow(width: number, height: number): void {
     this.mapWidth=width;this.mapHeight=height;this.shadowFitValid=false;
+  }
+
+  setShadowSettings(settings: ShadowSettings): void {
+    const resolution = parseShadowSettings(settings).resolution;
+    if (this.light.shadow.mapSize.x === resolution && this.light.shadow.mapSize.y === resolution) return;
+    this.light.shadow.mapSize.set(resolution, resolution);
+    this.shadowFitValid = false;
+    this.light.shadow.needsUpdate = true;
   }
 
   /** The room supplies the only environmental emitters. Keep the established

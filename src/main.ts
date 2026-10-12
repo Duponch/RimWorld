@@ -40,6 +40,9 @@ import { GameSession, SAVE_KEY, PREVIOUS_KEY } from './ui/game-session';
 import { BrowserSaveRepository } from './ui/save-repository';
 import { fetchTestColonies, readSaveFile, readTestColony } from './ui/test-colonies';
 import { createFrontMenu } from './ui/front-menu';
+import { bindRenderPerformanceControls } from './ui/render-performance-controls';
+import { DEFAULT_SHADOW_SETTINGS, SHADOW_PREFERENCE_KEY, parseShadowSettings, type ShadowSettings } from './render/shadow-settings';
+import { DEFAULT_ANIMATION_SETTINGS, ANIMATION_PREFERENCE_KEY, parseAnimationSettings, type AnimationSettings } from './render/animation-settings';
 import {DESIGNATION_VISIBILITY_KEY,designationMinCellPixels,designationVisibilityLabel} from './ui/designation-visibility';
 import {ITEM_LABEL_VISIBILITY_KEY,itemLabelMinCellPixels,itemLabelVisibilityLabel} from './ui/item-label-visibility';
 import {applyUiFont,readUiFont,saveUiFont,type UiFontId} from './ui/ui-fonts';
@@ -407,6 +410,8 @@ let dioramaEnabled = DEFAULT_DIORAMA_ENABLED;
 let roomEnabled = DEFAULT_ROOM_ENABLED;
 let roomMaskRadiusPreference = DEFAULT_ROOM_MASK_RADIUS;
 let lightingSettings = { ...DEFAULT_LIGHTING_SETTINGS };
+let shadowSettings = { ...DEFAULT_SHADOW_SETTINGS };
+let animationSettings = { ...DEFAULT_ANIMATION_SETTINGS };
 let cloudClearRadius = DEFAULT_CLOUD_MASK_RADIUS;
 let uiFont = readUiFont();
 applyUiFont(uiFont);
@@ -424,6 +429,8 @@ try {
   roomEnabled = parseRoomEnabled(localStorage.getItem(ROOM_PREFERENCE_KEY));
   roomMaskRadiusPreference = roomMaskRadius(localStorage.getItem(ROOM_MASK_RADIUS_KEY));
   lightingSettings = parseLightingSettings(localStorage.getItem(LIGHTING_PREFERENCE_KEY));
+  shadowSettings = parseShadowSettings(localStorage.getItem(SHADOW_PREFERENCE_KEY));
+  animationSettings = parseAnimationSettings(localStorage.getItem(ANIMATION_PREFERENCE_KEY));
   cloudClearRadius = cloudMaskRadius(localStorage.getItem(CLOUD_MASK_RADIUS_KEY));
   soundEnabled = localStorage.getItem(SOUND_ENABLED_PREFERENCE_KEY) !== 'false';
   const storedVolume = Number(localStorage.getItem(SOUND_VOLUME_PREFERENCE_KEY));
@@ -584,6 +591,19 @@ function setLightingSettings(settings: LightingSettings): boolean {
   try { localStorage.setItem(LIGHTING_PREFERENCE_KEY, JSON.stringify(lightingSettings)); return true; }
   catch { return false; }
 }
+function setShadowSettings(settings: ShadowSettings): boolean {
+  shadowSettings=parseShadowSettings(settings);renderer?.setShadowSettings(shadowSettings);refreshPerformanceControls();
+  try { localStorage.setItem(SHADOW_PREFERENCE_KEY,JSON.stringify(shadowSettings));return true; } catch { return false; }
+}
+function setAnimationSettings(settings: AnimationSettings): boolean {
+  animationSettings=parseAnimationSettings(settings);renderer?.setAnimationSettings(animationSettings);refreshPerformanceControls();
+  try { localStorage.setItem(ANIMATION_PREFERENCE_KEY,JSON.stringify(animationSettings));return true; } catch { return false; }
+}
+const refreshPerformanceControls=bindRenderPerformanceControls(document.querySelector('#menu-panel')!,'game-',{
+  getShadows:()=>shadowSettings,setShadows:setShadowSettings,
+  getAnimations:()=>animationSettings,setAnimations:setAnimationSettings,
+  onStorageFailure:()=>notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true),
+});
 let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 let pawnSignature = '';
 const colonistButtons = new Map<number, HTMLButtonElement>();
@@ -625,6 +645,8 @@ const frontHost = document.createElement('div'); document.querySelector('#app')!
 // The measured counter remains visible over both the colony and the menu.
 document.querySelector('#app')!.append(el('fps-counter'));
 const frontMenu = createFrontMenu(frontHost, {
+  getShadowSettings:()=>({...shadowSettings}),onShadowSettingsChange:setShadowSettings,
+  getAnimationSettings:()=>({...animationSettings}),onAnimationSettingsChange:setAnimationSettings,
   getSaves: () => session.saves(),
   getTexturesEnabled: () => texturesEnabled,
   getUiFont:()=>uiFont,
@@ -1728,6 +1750,8 @@ async function prepareWorldView(): Promise<void> {
     renderer.setRoomEnabled(roomEnabled);
     renderer.setRoomMaskRadius(roomMaskRadiusPreference);
     renderer.setLightingSettings(lightingSettings);
+    renderer.setShadowSettings(shadowSettings);
+    renderer.setAnimationSettings(animationSettings);
     renderer.onFatalError = message => { void handleGraphicsFailure(message); };
     renderer.onCompatibilityWarning = message => notify(message, true);
     renderer.setTexturesEnabled(texturesEnabled);

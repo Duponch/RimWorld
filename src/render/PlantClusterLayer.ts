@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, positionLocal, sin, uniform, vec3 } from 'three/tsl';
+import { Fn, If, attribute, positionLocal, sin, uniform, vec3 } from 'three/tsl';
+import type { AnimationDetail } from './AnimationDetail';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Resource, World } from '../sim/types';
 import { floraColor, floraSize, isClusterPlantSpecies } from './flora-presentation';
@@ -89,15 +90,27 @@ export class PlantClusterLayer {
   private readonly targetTint=new ResourceTargetTint();
   private targetPreviewIds=new Set<number>();
 
-  constructor(private readonly plainMaterial: THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial) {
+  constructor(private readonly plainMaterial: THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial,detail?:AnimationDetail) {
     const windPosition=Fn(()=>{
+      const deform=(tick:THREE.Node<'float'>)=>{
       const yaw=attribute('windYaw','float'),c=yaw.cos(),s=yaw.sin();
       const localX=this.windDirection.x.mul(c).sub(this.windDirection.y.mul(s));
       const localZ=this.windDirection.x.mul(s).add(this.windDirection.y.mul(c));
-      const phase=this.windTick.mul(2*Math.PI/18).add(yaw.mul(3.1));
+      const phase=tick.mul(2*Math.PI/18).add(yaw.mul(3.1));
       const bend=positionLocal.y.mul(positionLocal.y).mul(this.windStrength)
         .mul(sin(phase).mul(.075).add(.12));
       return positionLocal.add(vec3(localX.mul(bend),0,localZ.mul(bend)));
+      };
+      if(!detail)return deform(this.windTick);
+      // positionLocal has received Three's instance transform at this point.
+      const anchor=vec3(positionLocal.x.add(.5).floor(),0,positionLocal.z.add(.5).floor());
+      const level=detail.level(anchor).toVar(),position=positionLocal.toVar();
+      If(level.lessThan(2),()=>{
+        const tick=this.windTick.toVar();
+        If(level.equal(1),()=>{tick.assign(this.windTick.div(6).mul(detail.middleHz).floor().div(detail.middleHz).mul(6));});
+        position.assign(deform(tick));
+      });
+      return position;
     })();
     this.windPlain=(plainMaterial as THREE.MeshStandardNodeMaterial).clone();
     this.windTextured=(texturedMaterial as THREE.MeshStandardNodeMaterial).clone();

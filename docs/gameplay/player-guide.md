@@ -1,5 +1,16 @@
 # Guide joueur
 
+## Régler les ombres et les animations — V330
+
+Dans **Options** à l'accueil, ou **Menu → Performances visuelles** en partie, **Équilibré** choisit des ombres à **60 Hz / 2048** et adapte les animations décoratives à leur taille à l'écran. Les préférences sont conservées par ce navigateur ; elles ne modifient pas votre sauvegarde.
+
+**Fréquence des ombres** propose 30, 60, 120 Hz ou **À chaque image**. Une fréquence basse laisse les ombres suivre les mouvements par étapes ; un changement de caméra ou d'affichage les actualise immédiatement. **Résolution des ombres** règle leur précision séparément, de 512 à 4096 ; 2048 est le défaut.
+
+**Adapter les animations à la distance** utilise la taille apparente d'une case : elle suit le zoom en isométrique et la profondeur de chaque acteur ou végétal en perspective. Par défaut, les animations restent complètes à **24 px / case** ou plus, passent à **12 Hz** entre **8 et 24 px / case**, puis les oscillations décoratives se reposent sous **8 px / case**. Les trois curseurs règlent ces seuils et la fréquence intermédiaire ; un seuil d'arrêt à **0** conserve toujours une animation au loin. Les pas à mi-distance et les transitions de niveau peuvent être visibles.
+
+Les déplacements, orientations, postures utiles, gestes explicites de travail/combat et règles du jeu continuent normalement. L'adaptation concerne les mouvements décoratifs des membres, la respiration et le vent dans l'herbe, les plantes et les arbres. Elle ne change pas l'animation de l'eau. **Tout animer à chaque image** coupe l'adaptation et remet les ombres à chaque image, en gardant la résolution choisie. Pour comparer le confort et les performances, gardez la même caméra et la même vitesse ; ces options ne garantissent pas un nombre de FPS.
+[Réalisation, mesures et limites](../development/render-performance-v330.md).
+
 ## Chambre à quatre murs — V326
 
 La chambre est maintenant fermée sur ses quatre côtés. Ses murs restent présents

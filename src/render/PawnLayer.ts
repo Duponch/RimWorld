@@ -1,4 +1,5 @@
 import { appearanceOf } from '../sim/pawn-appearance';
+import { AnimationDetail } from './AnimationDetail';
 import { bedSlotBodyCenter,pawnBedSlot } from '../sim/bed-slots';
 import { corpseStage,CORPSE_ROT_TICKS,CORPSE_DESSICATION_TICKS } from '../sim/corpses';
 import { corpseVisualMask } from './corpse-presentation';
@@ -187,7 +188,7 @@ export class PawnLayer {
   hiddenPileQuantities():ReadonlyMap<number,number> {return this.handoffs.hiddenQuantities();}
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
   private rescuePairs:readonly (readonly [number,number])[]=[];
-  constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void) {}
+  constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void,private readonly animationDetail=new AnimationDetail()) {}
   /** Warm the resident fire graph before the first burning actor appears. */
   prepareFiresForCompile():()=>void {
     if(!this.fireMesh)return ()=>{};
@@ -241,6 +242,12 @@ export class PawnLayer {
       const pivot = pawnMorph(attribute('bindPivot', 'vec3'));
       const motion = attribute('aMotion', 'vec4');
       const pose = pawnPresentationPose(this);
+      // Work, combat, medical and interaction poses retain their complete
+      // gestures. Only ordinary walking/idle motion uses decorative detail.
+      const detailLevel=float(0).toVar();
+      If(motion.z.equal(0),()=>{detailLevel.assign(this.animationDetail.level(pose.xyz));});
+      const time=this.animationDetail.clock(this.time,pose.xyz,detailLevel);
+      const decorativeSin=(phase:THREE.Node<'float'>)=>this.animationDetail.sine(phase,detailLevel);
       const transitioning=motion.x.lessThan(-.5);
       const packed=motion.x.negate().sub(1);
       const transitionWalk=packed.greaterThan(CROUCH_WALK_MARK);
@@ -248,7 +255,7 @@ export class PawnLayer {
       // Motion.w carries the phase at the beginning of an active edge. The
       // distance is computed from the same interpolated XZ pose as the body,
       // so a slowed/stunned edge cannot keep cycling the limbs in place.
-      const gaitPhase=motion.w.add(pose.xz.sub(attribute('aFrom','vec4').xz).length().mul(HUMAN_GAIT_RADIANS_PER_UNIT));
+      const gaitPhase=this.animationDetail.gaitPhase(motion.w,HUMAN_GAIT_RADIANS_PER_UNIT,pose,this.travelTime,this.blend,detailLevel);
       const ground=motion.z.equal(WORK_POSE.ground),low=ground.or(motion.z.equal(WORK_POSE.groundMelee));
       const crouch=low.select(float(1),float(0)).toVar();
       If(transitioning,()=>{
@@ -263,32 +270,32 @@ export class PawnLayer {
       const idle=motion.z.equal(0).and(walking.lessThan(.5)).and(motion.y.equal(0));
       // Quiet breathing and weight shifts share the presentation clock. They
       // stop on pause and cannot change a logical position or decision.
-      const breath=sin(this.time.add(motion.w));
+      const breath=decorativeSin(time.add(motion.w));
       If(bone.equal(3).or(bone.equal(4)).or(bone.equal(6)), () => { sign.assign(-1); });
       If(bone.greaterThan(1.5), () => {
-        angle.assign(sin(gaitPhase).mul(walking).mul(sign).mul(0.65));
+        angle.assign(decorativeSin(gaitPhase).mul(walking).mul(sign).mul(0.65));
         If(bone.lessThan(3.5), () => {
           If(motion.y.greaterThan(0).and(motion.z.lessThan(10.5)),()=>{
-            angle.addAssign(sin(this.time.mul(12).add(motion.w)).mul(0.35).sub(0.8));
+            angle.addAssign(decorativeSin(time.mul(12).add(motion.w)).mul(0.35).sub(0.8));
           });
           If(attribute('aCargo', 'vec4').x.abs().greaterThan(0.5), () => {
-            angle.assign(float(-0.9).add(sin(gaitPhase).mul(walking).mul(0.06)));
-            If(motion.z.greaterThan(1.5), () => { angle.assign(float(-1.3).add(sin(this.time.mul(4).add(motion.w)).mul(0.22))); });
+            angle.assign(float(-0.9).add(decorativeSin(gaitPhase).mul(walking).mul(0.06)));
+            If(motion.z.greaterThan(1.5), () => { angle.assign(float(-1.3).add(decorativeSin(time.mul(4).add(motion.w)).mul(0.22))); });
           });
         });
       });
       // Every working silhouette has a small continuous gesture in the
       // resident rig. Cooking stirs; research taps; fabrication alternates
       // hands. The torso and head participate without CPU bone updates.
-      const stroke=sin(this.time.mul(11).add(motion.w));
+      const stroke=decorativeSin(time.mul(11).add(motion.w));
       const busy=motion.z.equal(WORK_POSE.mine).or(motion.z.equal(WORK_POSE.chop)).or(motion.z.equal(WORK_POSE.build))
         .or(motion.z.equal(WORK_POSE.craft)).or(motion.z.equal(WORK_POSE.ground));
-      const swing=sin(this.time.mul(11).add(motion.w));
+      const swing=decorativeSin(time.mul(11).add(motion.w));
       If(busy.and(bone.equal(0)),()=>{
         angle.assign(swing.mul(motion.z.equal(WORK_POSE.mine).or(motion.z.equal(WORK_POSE.chop)).select(float(.13),float(.065))));
       });
       If(busy.and(bone.equal(1)),()=>{
-        angle.assign(sin(this.time.mul(7).add(motion.w).add(.7)).mul(.075));
+        angle.assign(decorativeSin(time.mul(7).add(motion.w).add(.7)).mul(.075));
       });
       If(motion.z.equal(WORK_POSE.mine).and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
         angle.assign(stroke.mul(.78).sub(1.44));
@@ -302,11 +309,11 @@ export class PawnLayer {
       If(motion.z.equal(WORK_POSE.craft).and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
         const cadence=motion.y.equal(2).select(float(8),motion.y.equal(3).select(float(5),float(11)));
         const breadth=motion.y.equal(2).select(float(.62),motion.y.equal(3).select(float(.33),float(.54)));
-        angle.assign(sin(this.time.mul(cadence).add(motion.w).add(bone.equal(3).select(float(1.25),float(0))))
+        angle.assign(decorativeSin(time.mul(cadence).add(motion.w).add(bone.equal(3).select(float(1.25),float(0))))
           .mul(breadth).sub(motion.y.equal(3).select(float(.99),float(.87))));
       });
       If(bone.equal(1).and(walking.greaterThan(.5)),()=>{
-        angle.assign(sin(gaitPhase).mul(.045));
+        angle.assign(decorativeSin(gaitPhase).mul(.045));
       });
       If(idle.and(bone.equal(0)),()=>{ angle.assign(breath.mul(.018)); });
       If(idle.and(bone.equal(1)),()=>{ angle.assign(breath.mul(.026)); });
@@ -323,36 +330,36 @@ export class PawnLayer {
       // switch in aMotion.w. Confirmed strikes add a short accent to the same
       // continuous arm/torso/leg rhythm instead of replacing the whole pose.
       const brawl=motion.z.equal(POSE_FIGHT_READY).or(motion.z.equal(8));
-      const fightPhase=this.time.mul(8).add(attribute('aShape','vec4').x.mod(10).mul(3.7)).add(attribute('aHairBlood','vec4').x.mul(7));
+      const fightPhase=time.mul(8).add(attribute('aShape','vec4').x.mod(10).mul(3.7)).add(attribute('aHairBlood','vec4').x.mul(7));
       const strike=motion.z.equal(8).select(
         sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI)),float(0));
       If(brawl.and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
-        angle.assign(sin(fightPhase.add(bone.equal(3).select(float(Math.PI),float(0))))
+        angle.assign(decorativeSin(fightPhase.add(bone.equal(3).select(float(Math.PI),float(0))))
           .mul(.29).sub(.95).sub(strike.mul(bone.equal(3).select(float(.85),float(.3)))));
       });
       If(brawl.and(bone.equal(0).or(bone.equal(1))),()=>{
-        angle.assign(sin(fightPhase).mul(bone.equal(0).select(float(.105),float(.06))).sub(strike.mul(.11)));
+        angle.assign(decorativeSin(fightPhase).mul(bone.equal(0).select(float(.105),float(.06))).sub(strike.mul(.11)));
       });
       If(brawl.and(bone.greaterThan(3.5)),()=>{
-        angle.assign(sin(fightPhase.add(bone.equal(4).or(bone.equal(6)).select(float(0),float(Math.PI))))
+        angle.assign(decorativeSin(fightPhase.add(bone.equal(4).or(bone.equal(6)).select(float(0),float(Math.PI))))
           .mul(bone.lessThan(5.5).select(float(.12),float(.055))));
       });
       const shooting=motion.z.equal(7).or(motion.z.equal(15));
       If(shooting.and(bone.greaterThan(1.5)).and(bone.lessThan(3.5)),()=>{
         angle.assign(bone.equal(3).select(float(-1.54),float(-1.12)));
       });
-      If(motion.z.equal(4).and(bone.equal(3)), () => { angle.assign(sin(this.time.mul(2).add(motion.w)).mul(1.1).sub(.35)); });
+      If(motion.z.equal(4).and(bone.equal(3)), () => { angle.assign(decorativeSin(time.mul(2).add(motion.w)).mul(1.1).sub(.35)); });
       If(crouch.greaterThan(0).and(brawl.not()).and(bone.lessThan(3.5)),()=>{
         const lowAngle=bone.equal(0)
-          .select(sin(this.time.mul(8).add(motion.w)).mul(.085).sub(.09),
-            bone.equal(1).select(sin(this.time.mul(8).add(motion.w).add(.7)).mul(.055).add(.055),
-              sin(this.time.mul(8).add(motion.w).add(bone.equal(3).select(float(2.1),float(0)))).mul(.39).sub(.65)));
+          .select(decorativeSin(time.mul(8).add(motion.w)).mul(.085).sub(.09),
+            bone.equal(1).select(decorativeSin(time.mul(8).add(motion.w).add(.7)).mul(.055).add(.055),
+              decorativeSin(time.mul(8).add(motion.w).add(bone.equal(3).select(float(2.1),float(0)))).mul(.39).sub(.65)));
         // Keep the active strike of a low melee target, but transition ordinary
         // ground-work hands with the same bend as the body.
         If(motion.z.notEqual(WORK_POSE.groundMelee),()=>{angle.assign(mix(angle,lowAngle,crouch));});
       });
       If(crouch.greaterThan(0).and(bone.greaterThan(3.5)),()=>{
-        const lowLeg=sin(this.time.mul(8).add(motion.w).add(bone.equal(4).or(bone.equal(6)).select(float(0),float(Math.PI))))
+        const lowLeg=decorativeSin(time.mul(8).add(motion.w).add(bone.equal(4).or(bone.equal(6)).select(float(0),float(Math.PI))))
           .mul(bone.lessThan(5.5).select(float(.045),float(.025)));
         angle.assign(mix(angle,lowLeg,crouch));
       });
@@ -360,7 +367,7 @@ export class PawnLayer {
       const c = cos(angle), s = sin(angle);
       const animated = vec3(local.x, local.y.mul(c).sub(local.z.mul(s)), local.y.mul(s).add(local.z.mul(c))).add(pivot).toVar();
       If(busy.and(bone.lessThan(3.5)),()=>{
-        animated.y.addAssign(sin(this.time.mul(11).add(motion.w)).mul(.012));
+        animated.y.addAssign(decorativeSin(time.mul(11).add(motion.w)).mul(.012));
       });
       If(idle.and(bone.lessThan(3.5)),()=>{
         animated.y.addAssign(breath.mul(.007));
@@ -379,8 +386,8 @@ export class PawnLayer {
         animated.assign(mix(upright,animated,crouch));
       });
       If(brawl.and(bone.lessThan(3.5)),()=>{
-        animated.y.addAssign(sin(fightPhase.mul(2)).mul(.014));
-        animated.z.addAssign(sin(fightPhase).mul(.025));
+        animated.y.addAssign(decorativeSin(fightPhase.mul(2)).mul(.014));
+        animated.z.addAssign(decorativeSin(fightPhase).mul(.025));
       });
       If(motion.z.greaterThan(2.5).and(motion.z.lessThan(3.5)), () => {
         // Thigh rotates around the hip; the lower leg keeps its vertical pose
@@ -440,7 +447,7 @@ export class PawnLayer {
       const dye=attribute('dye','float'),asleep=motion.z.equal(POSE_SLEEP),dead=motion.z.equal(POSE_DEAD);
       // The presentation clock wraps at 2π during tracked play, so the
       // frequency is integral and cannot jump at that wrap boundary.
-      const blink=sin(this.time.add(motion.w.mul(1.97))).greaterThan(.994);
+      const blink=decorativeSin(time.add(motion.w.mul(1.97))).greaterThan(.994);
       const face=dead.select(float(PAWN_EYE_CROSS),asleep.or(blink).select(float(PAWN_EYE_CLOSED),float(PAWN_EYE_OPEN)));
       If(dye.greaterThanEqual(PAWN_EYE_OPEN).and(dye.lessThanEqual(PAWN_EYE_CROSS)).and(dye.notEqual(face)),()=>{ animated.assign(vec3(0)); });
       If(recon.and(dye.greaterThanEqual(PAWN_EYE_OPEN)).and(dye.lessThanEqual(PAWN_EYE_CROSS)),()=>{ animated.assign(vec3(0)); });
@@ -520,6 +527,9 @@ export class PawnLayer {
     cargoMat.colorNode = attribute('color', 'vec3');
     cargoMat.positionNode = Fn(() => {
       const pose = pawnPresentationPose(this);
+      const detailLevel=float(0).toVar();
+      If(attribute('aMotion','vec4').z.equal(0),()=>{detailLevel.assign(this.animationDetail.level(pose.xyz));});
+      const time=this.animationDetail.clock(this.time,pose.xyz,detailLevel);
       const load = attribute('aCargo', 'vec4');
       const scale = float(0).toVar();
       If(attribute('cargoKind', 'float').equal(load.x), () => {
@@ -529,7 +539,7 @@ export class PawnLayer {
       });
       const height = float(WORLD_SCALE.carriedHeight).toVar();
       If(attribute('aMotion','vec4').z.equal(1).or(attribute('aMotion','vec4').z.equal(POSE_SLEEP)).or(attribute('aMotion','vec4').z.equal(POSE_DEAD)),()=>{height.assign(.28);});
-      If(attribute('aMotion', 'vec4').z.greaterThan(1.5).and(attribute('aMotion','vec4').z.lessThan(3.5)), () => { height.assign(sin(this.time.mul(4).add(attribute('aMotion', 'vec4').w)).mul(0.08).add(1.32)); });
+      If(attribute('aMotion', 'vec4').z.greaterThan(1.5).and(attribute('aMotion','vec4').z.lessThan(3.5)), () => { height.assign(this.animationDetail.sine(time.mul(4).add(attribute('aMotion', 'vec4').w),detailLevel).mul(0.08).add(1.32)); });
       If(attribute('aMotion', 'vec4').z.equal(3), () => { height.addAssign(WORLD_SCALE.stoolHeight - 0.605 * PAWN_MODEL_SCALE); });
       If(attribute('aMotion','vec4').z.equal(6),()=>{height.assign(1.3);});
       const local = positionLocal.mul(scale).add(vec3(0, height, WORLD_SCALE.carriedForward));

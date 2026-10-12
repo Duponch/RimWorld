@@ -12,6 +12,7 @@ import { GRASS_BLOOD_COLOR } from './ground-blood';
 import { GrassBloodMask, GRASS_BLOOD_SLOTS, GRASS_BLOOD_WORDS } from './grass-blood-mask';
 import { readSceneResourceFrame, type SceneResourceFrame } from './scene-resource-index';
 import type {GroundSurfaceTint} from './GroundSurfaceTint';
+import type { AnimationDetail } from './AnimationDetail';
 
 /** AntSystem-inspired GPU blades, indexed by stable world cell and slot.
  * This is scenery: no Resource, job, save or simulation RNG. Four vertices/two
@@ -232,7 +233,7 @@ export class GpuGroundGrassLayer {
 
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void,
     private readonly maxTextureDimension = Infinity, private readonly onUnsupported: (message: string) => void = () => {},surfaceTint?:GroundSurfaceTint,
-    groundedConfigure?:(material:THREE.MeshStandardNodeMaterial,root:THREE.Node)=>void) {
+    groundedConfigure?:(material:THREE.MeshStandardNodeMaterial,root:THREE.Node)=>void,detail?:AnimationDetail) {
     this.map.colorSpace = THREE.SRGBColorSpace;
     this.map.magFilter = this.map.minFilter = THREE.NearestFilter;
     this.map.generateMipmaps = false;
@@ -302,8 +303,17 @@ export class GpuGroundGrassLayer {
       const height = hash(key.add(uint(43))).mul(.17).add(.21).mul(coverage);
       const width = hash(key.add(uint(59))).mul(.45).add(.76).mul(coverage);
       const bladeT = uv().y;
-      const sway = sin(this.windTick.mul(2*Math.PI/18).add(bx.mul(.31)).add(bz.mul(.23)).add(yaw))
+      const animate=(tick:THREE.Node<'float'>)=>sin(tick.mul(2*Math.PI/18).add(bx.mul(.31)).add(bz.mul(.23)).add(yaw))
         .mul(.07).add(.04).mul(this.windStrength).mul(bladeT.mul(bladeT));
+      const sway=float(0).toVar();
+      if(detail){
+        const level=detail.level(vec3(cellX,0,cellZ)).toVar();
+        If(level.lessThan(2),()=>{
+          const tick=this.windTick.toVar();
+          If(level.equal(1),()=>{tick.assign(this.windTick.div(6).mul(detail.middleHz).floor().div(detail.middleHz).mul(6));});
+          sway.assign(animate(tick));
+        });
+      }else sway.assign(animate(this.windTick));
       const side = positionLocal.x.mul(width), lean = positionLocal.z.mul(width);
       return vec3(
         bx.add(side.mul(c)).add(lean.mul(s)).add(this.windDirection.x.mul(sway)),

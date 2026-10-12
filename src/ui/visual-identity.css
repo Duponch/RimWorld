@@ -463,3 +463,9 @@ dialog.object-information .object-information-finish{border:2px solid var(--ink)
 @media(max-width:480px){#app .resource-list.panel{width:156px}#app .resource-list .resource{grid-template-columns:21px minmax(0,1fr) auto;font-size:11px}#app .colonist-bar{left:168px}#app .resource-list .resource strong{font-size:12px}}
 @media(max-height:760px){#app .resource-list .resource{min-height:29px;margin-bottom:0;font-size:13px}#app #inspector.stockpile-inspector-host{height:calc(100dvh - 178px);max-height:none}}
 @media(prefers-reduced-motion:reduce){button,#app #colonists .colonist,#app .front-menu button{transition:none}}
+.render-performance-settings .presentation-setting{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:10px 0;min-width:0}
+.render-performance-settings .presentation-setting>span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.render-performance-settings .presentation-setting small{color:var(--muted-ink);line-height:1.45}
+.render-performance-settings .presentation-setting :is(select,input[type=range]){flex:none;width:150px;max-width:40%}
+.render-performance-settings .presentation-setting output{font-size:12px;font-weight:700}
+.render-performance-presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}

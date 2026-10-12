@@ -10,6 +10,9 @@ import {UI_ATLAS_URL} from './pictograms';
 import { createSiteConfiguration, parseSiteSeed, randomSiteSeed } from './front-site';
 import { testColonyUrl, type TestColony } from './test-colonies';
 import './front-menu.css';
+import { renderPerformanceLayout, bindRenderPerformanceControls } from './render-performance-controls';
+import { DEFAULT_SHADOW_SETTINGS, type ShadowSettings } from '../render/shadow-settings';
+import { DEFAULT_ANIMATION_SETTINGS, type AnimationSettings } from '../render/animation-settings';
 
 export interface FrontMenuDraft {
   seed: number;
@@ -25,6 +28,10 @@ export interface FrontMenuSave {
 }
 
 export interface FrontMenuOptions {
+  getShadowSettings?: () => ShadowSettings;
+  onShadowSettingsChange?: (settings: ShadowSettings) => boolean;
+  getAnimationSettings?: () => AnimationSettings;
+  onAnimationSettingsChange?: (settings: AnimationSettings) => boolean;
   getUiFont?:()=>UiFontId;
   onUiFontChange?:(font:UiFontId)=>void;
   getCloudClearRadius?:()=>number;
@@ -440,6 +447,18 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     cloudSlider.addEventListener('input',()=>{clearError();const radius=cloudMaskRadius(Number(cloudSlider.value)/100);cloudOutput.textContent=cloudMaskRadiusLabel(radius);if(options.onCloudClearRadiusChange&&!options.onCloudClearRadiusChange(radius))showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');});
     cloudText.append(cloudTitle,cloudDescription,cloudOutput);cloudSetting.append(cloudText,cloudSlider);card.append(cloudSetting);
     content.append(card);
+    const performanceCard = element('section', 'front-card front-options presentation-settings');
+    performanceCard.append(element('h2', '', 'Performances visuelles'));
+    const performanceControls = element('div', 'render-performance-settings');
+    performanceControls.innerHTML = renderPerformanceLayout('front-');
+    performanceCard.append(performanceControls);content.append(performanceCard);
+    bindRenderPerformanceControls(performanceControls, 'front-', {
+      getShadows: options.getShadowSettings ?? (() => ({...DEFAULT_SHADOW_SETTINGS})),
+      setShadows: settings => options.onShadowSettingsChange?.(settings) ?? true,
+      getAnimations: options.getAnimationSettings ?? (() => ({...DEFAULT_ANIMATION_SETTINGS})),
+      setAnimations: settings => options.onAnimationSettingsChange?.(settings) ?? true,
+      onStorageFailure: () => showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.'),
+    });
     const audioCard = element('section', 'front-card front-options');
     audioCard.append(element('h2', '', 'Son'));
     const soundSetting = element('label', 'front-relief front-texture-setting');

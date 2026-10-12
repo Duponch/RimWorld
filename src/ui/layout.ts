@@ -9,6 +9,7 @@ import { ITEM_DEFINITIONS } from '../sim/items';
 import { FLOOR_KINDS,FLOOR_DEFINITIONS,flooringRecipe,type BuildableFloorKind } from '../sim/flooring';
 import { UI_FONT_CHOICES } from './ui-fonts';
 import { LIGHTING_CONTROLS } from '../render/lighting-settings';
+import { renderPerformanceLayout } from './render-performance-controls';
 import { siteHudLayout } from './site-hud';
 
 const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
@@ -217,6 +218,7 @@ export function gameLayout(): string {
         ${LIGHTING_CONTROLS.map(({key,label,description}) => `<label class="presentation-setting"><span><strong id="lighting-${key}-label">${label}</strong><small id="lighting-${key}-description">${description}</small><output id="lighting-${key}-value">100 %</output></span><input id="lighting-${key}" type="range" min="0" max="300" step="5" value="100" aria-labelledby="lighting-${key}-label" aria-describedby="lighting-${key}-description lighting-${key}-value"></label>`).join('')}
         <button id="lighting-reset" type="button">Réinitialiser l’éclairage</button>
       </fieldset>
+      <fieldset class="presentation-settings render-performance-settings"><legend>Performances visuelles</legend>${renderPerformanceLayout('game-')}</fieldset>
       <fieldset class="presentation-settings audio-settings"><legend>Son</legend>
         <label class="presentation-setting"><span><strong id="sound-enabled-label">Effets sonores</strong><small id="sound-enabled-description">Bruitages et ambiances, indépendants de la musique. Choix conservé dans ce navigateur.</small></span><input id="sound-enabled" type="checkbox" aria-labelledby="sound-enabled-label" aria-describedby="sound-enabled-description" checked></label>
         <label class="presentation-setting"><span><strong id="sound-volume-label">Volume des effets</strong><small id="sound-volume-description">Réglage général des bruitages.</small></span><input id="sound-volume" type="range" min="0" max="100" step="1" value="75" aria-labelledby="sound-volume-label" aria-describedby="sound-volume-description"></label>

@@ -4,7 +4,8 @@ import { stoneColor } from './stone-palette';
 import { harvestable } from '../sim/plants';
 import { workProgress } from '../sim/work-progress';
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, positionLocal, renderGroup, sin, uniform, vec3 } from 'three/tsl';
+import { Fn, If, attribute, positionLocal, renderGroup, sin, uniform, vec3 } from 'three/tsl';
+import type { AnimationDetail } from './AnimationDetail';
 import { TICKS_PER_SECOND, type World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { clearGroup } from './primitives';
@@ -105,20 +106,30 @@ export class ResourceLayer {
   updateGrowth(world: World): void {
     for(const plant of this.growing.values())if(harvestable(world,plant)){this.update(world,false);break;}
   }
-  constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.Material, private readonly texturedMaterial: THREE.Material=staticMaterial) {
+  constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.Material, private readonly texturedMaterial: THREE.Material=staticMaterial,detail?:AnimationDetail) {
     const windPosition=Fn(()=>{
       const root=attribute('windRoot','vec3');
+      const deform=(tick:THREE.Node<'float'>)=>{
       const height=positionLocal.y.div(4).clamp(0,1);
-      const wave=sin(this.windTick.mul(2*Math.PI/48).add(root.x.mul(.47)).add(root.y.mul(.31)));
+      const wave=sin(tick.mul(2*Math.PI/48).add(root.x.mul(.47)).add(root.y.mul(.31)));
       const bend=height.mul(height).mul(root.z).mul(this.windStrength).mul(wave.mul(.43).add(.63));
       const leaves=root.z.greaterThan(.8).select(1,0);
-      const flutter=sin(this.windTick.mul(2*Math.PI/15).add(positionLocal.x.mul(1.3)).add(positionLocal.z.mul(1.7)))
+      const flutter=sin(tick.mul(2*Math.PI/15).add(positionLocal.x.mul(1.3)).add(positionLocal.z.mul(1.7)))
         .mul(leaves).mul(height).mul(this.windStrength).mul(.11);
       return positionLocal.add(vec3(
         this.windDirection.x.mul(bend).sub(this.windDirection.y.mul(flutter)),
         0,
         this.windDirection.y.mul(bend).add(this.windDirection.x.mul(flutter)),
       ));
+      };
+      if(!detail)return deform(this.windTick);
+      const level=detail.level(vec3(root.x,0,root.y)).toVar(),position=positionLocal.toVar();
+      If(level.lessThan(2),()=>{
+        const tick=this.windTick.toVar();
+        If(level.equal(1),()=>{tick.assign(this.windTick.div(6).mul(detail.middleHz).floor().div(detail.middleHz).mul(6));});
+        position.assign(deform(tick));
+      });
+      return position;
     })();
     this.windPlain=(staticMaterial as THREE.MeshStandardNodeMaterial).clone();
     this.windTextured=(texturedMaterial as THREE.MeshStandardNodeMaterial).clone();

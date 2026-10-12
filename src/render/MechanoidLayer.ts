@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { AnimationDetail } from './AnimationDetail';
 import { attribute,cos,float,Fn,If,mix,normalLocal,positionLocal,sin,uniform,vec3 } from 'three/tsl';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import type { Mechanoid } from '../sim/mechanoid-state';
@@ -33,7 +34,7 @@ class MechanicalRaceBatch {
   private records:VisualMech[]=[];private readonly keys=new Map<number,string>();
   private readonly headings=new Map<number,TurnHeading>();private readonly gait=new GaitPhaseTracker();
   private surfaces:ReadonlyMap<number,number>=new Map();private pileSurface:ReadonlyMap<number,PileSurface>=new Map();
-  constructor(private readonly kind:MechanoidKind,readonly group:THREE.Group,private readonly configure?:(material:THREE.MeshStandardNodeMaterial)=>void){}
+  constructor(private readonly kind:MechanoidKind,readonly group:THREE.Group,private readonly animationDetail:AnimationDetail,private readonly configure?:(material:THREE.MeshStandardNodeMaterial)=>void){}
 
   private allocate():void {
     if(this.body)return;
@@ -46,15 +47,16 @@ class MechanicalRaceBatch {
     mat.positionNode=Fn(()=>{
       const pose=pawnPresentationPose(this),part=attribute('mechPart','vec4'),pivot=attribute('bindPivot','vec3');
       const rig=attribute('aRig','vec4'),gait=attribute('aGait','vec2'),mask=attribute('aMask','vec2');
-      const phase=gait.x.add(pose.xz.sub(attribute('aFrom','vec4').xz).length().mul(GAIT_RATE));
+      const detailLevel=this.animationDetail.level(pose.xyz).toVar();
+      const phase=this.animationDetail.gaitPhase(gait.x,GAIT_RATE,pose,this.travelTime,this.blend,detailLevel);
       const attack=sin(this.travelTime.sub(rig.y).div(rig.z.max(.001)).clamp(0,1).mul(Math.PI));
       const angle=float(0).toVar();
       If(part.x.equal(1).or(part.x.equal(2)),()=>{
-        angle.assign(sin(phase.add(part.x.equal(2).select(float(Math.PI),float(0)))).mul(.14).mul(rig.x));
+        angle.assign(this.animationDetail.sine(phase.add(part.x.equal(2).select(float(Math.PI),float(0))),detailLevel).mul(.14).mul(rig.x));
         If(gait.y.equal(part.x).and(rig.z.greaterThan(0)),()=>{angle.addAssign(attack.mul(-1.1));});
       });
       If(part.x.equal(3).or(part.x.equal(4)).or(part.x.equal(6)).or(part.x.equal(7)),()=>{
-        angle.assign(sin(phase.add(part.x.equal(4).or(part.x.equal(6)).select(float(Math.PI),float(0)))).mul(.48).mul(rig.x));
+        angle.assign(this.animationDetail.sine(phase.add(part.x.equal(4).or(part.x.equal(6)).select(float(Math.PI),float(0))),detailLevel).mul(.48).mul(rig.x));
         If(gait.y.equal(part.x).and(rig.z.greaterThan(0)),()=>{angle.addAssign(attack.mul(-.8));});
       });
       If(part.x.equal(5).and(gait.y.equal(9)).and(rig.z.greaterThan(0)),()=>{angle.assign(attack.mul(.45));});
@@ -175,7 +177,7 @@ export class MechanoidLayer {
   private selected:ReadonlySet<number>=new Set();
   private source?:World;private pileSource?:readonly MaterialPile[];private corpsePiles:MaterialPile[]=[];
   private records=new Map<MechanoidKind,VisualMech[]>();
-  constructor(private readonly configure?:(material:THREE.MeshStandardNodeMaterial)=>void){this.group.name='Mechanical bodies — conditional race batches';}
+  constructor(private readonly configure?:(material:THREE.MeshStandardNodeMaterial)=>void,private readonly animationDetail=new AnimationDetail()){this.group.name='Mechanical bodies — conditional race batches';}
   setSelected(ids:ReadonlySet<number>):void {this.selected=ids;for(const batch of this.batches.values())batch.setSelected(ids);}
   update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void {
     if(this.source!==world||reset){
@@ -186,7 +188,7 @@ export class MechanoidLayer {
       for(const pile of this.corpsePiles)add({id:pile.id,mechKind:pile.mechCorpse!.mechKind,state:'dead',health:pile.mechCorpse!.health,
         x:pile.owner.type==='ground'?pile.owner.x:0,z:pile.owner.type==='ground'?pile.owner.z:0,heading:pile.mechCorpse!.heading??0,path:[],moveCooldown:0,planCooldown:0,
         pile,carrierId:pile.owner.type==='pawn'?pile.owner.pawnId:pawns?.animalCorpseTransferCarrier(pile.id)});
-      for(const kind of this.records.keys())if(!this.batches.has(kind))this.batches.set(kind,new MechanicalRaceBatch(kind,this.group,this.configure));
+      for(const kind of this.records.keys())if(!this.batches.has(kind))this.batches.set(kind,new MechanicalRaceBatch(kind,this.group,this.animationDetail,this.configure));
     }
     for(const [kind,batch] of this.batches){batch.update(world,timeline,this.records.get(kind)??[],reset,pawns);batch.setSelected(this.selected);}
   }

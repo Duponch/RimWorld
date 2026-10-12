@@ -1,4 +1,5 @@
 import { attachedFireMesh, setFireTexturesEnabled } from './FireLayer';
+import { AnimationDetail } from './AnimationDetail';
 import * as THREE from 'three/webgpu';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { Fn,If,attribute,cos,sin,float,normalLocal,positionLocal,vec3,uniform,renderGroup,mix } from 'three/tsl';
@@ -51,7 +52,7 @@ class SpeciesRig {
   private readonly restingRadius:number;
   private animals:VisualAnimal[]=[];
   private surfaces:ReadonlyMap<number,number>=new Map();
-  constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,surfaceTexture:THREE.Texture,style:AnimalSlaughterMarkerStyle,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
+  constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,surfaceTexture:THREE.Texture,style:AnimalSlaughterMarkerStyle,private readonly animationDetail:AnimationDetail,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
     this.gaitRate=animalGaitRadiansPerUnit(species);
     const geometry=hareGeometry(MAX_WILDLIFE,species);
     bakeAnimalCoatCoordinates(geometry,species);
@@ -66,16 +67,19 @@ class SpeciesRig {
     mat.colorNode=bodyBloodPigment(attribute('color','vec3'),attribute('animalPart','vec4').z,species==='hare'||species==='snow-hare'?2:1,attribute('animalPart','vec4').w.lessThan(0).select(float(1),float(0)),attribute('aBiology','vec3').y);
     mat.positionNode=Fn(()=>{
       const pose=pawnPresentationPose(this),state=attribute('aAnimal','vec4'),part=attribute('animalPart','vec4'),biology=attribute('aBiology','vec3'),bone=part.x,pivot=attribute('bindPivot','vec3');
+      const detailLevel=this.animationDetail.level(pose.xyz).toVar();
+      const time=this.animationDetail.clock(this.time,pose.xyz,detailLevel);
+      const decorativeSin=(phase:THREE.Node<'float'>)=>this.animationDetail.sine(phase,detailLevel);
       const angle=float(0).toVar();
-      const phase=state.w.add(pose.xz.sub(attribute('aFrom','vec4').xz).length().mul(this.gaitRate));
-      If(bone.equal(1),()=>{ angle.assign(sin(phase).mul(.5).mul(state.x)); });
-      If(bone.equal(2),()=>{ angle.assign(sin(phase.add(Math.PI)).mul(.6).mul(state.x)); });
+      const phase=this.animationDetail.gaitPhase(state.w,this.gaitRate,pose,this.travelTime,this.blend,detailLevel);
+      If(bone.equal(1),()=>{ angle.assign(decorativeSin(phase).mul(.5).mul(state.x)); });
+      If(bone.equal(2),()=>{ angle.assign(decorativeSin(phase.add(Math.PI)).mul(.6).mul(state.x)); });
       If(bone.greaterThanEqual(3),()=>{
         const attack=sin(this.travelTime.sub(state.w).mul(10).clamp(0,Math.PI)).mul(.9);
-        angle.assign(state.x.greaterThan(.5).select(sin(phase).mul(.06),
-          state.y.greaterThan(1).select(attack,state.y.mul(sin(this.time.mul(5)).mul(.12).add(.48)))));
+        angle.assign(state.x.greaterThan(.5).select(decorativeSin(phase).mul(.06),
+          state.y.greaterThan(1).select(attack,state.y.mul(decorativeSin(time.mul(5)).mul(.12).add(.48)))));
         If(state.x.lessThan(.5).and(state.y.lessThan(.5)).and(state.z.lessThan(.5)),()=>{
-          angle.assign(sin(this.time.add(state.w)).mul(.03));
+          angle.assign(decorativeSin(time.add(state.w)).mul(.03));
         });
         // The outer shell bends continuously into the head. Existing detail
         // pieces use bone 3 (full angle); shell vertices encode 4 + weight.
@@ -90,9 +94,9 @@ class SpeciesRig {
         q.x.assign(float(bodyCenter).sub(y));q.y.assign(x.add(restFloor));
         normal.x.assign(normal.y.negate());normal.y.assign(nx);
       });
-      q.y.addAssign(sin(phase).abs().mul(.08).mul(state.x));
+      q.y.addAssign(decorativeSin(phase).abs().mul(.08).mul(state.x));
       If(state.x.lessThan(.5).and(state.y.lessThan(.5)).and(state.z.lessThan(.5)).and(bone.equal(0).or(bone.greaterThanEqual(3))),()=>{
-        q.y.addAssign(sin(this.time.add(state.w)).mul(.006));
+        q.y.addAssign(decorativeSin(time.add(state.w)).mul(.006));
       });
       const bit=part.y,absent=biology.z;
       If(bit.greaterThan(0).and(absent.div(bit.max(1)).floor().mod(2).greaterThan(.5)),()=>{ q.assign(vec3(0)); });
@@ -106,6 +110,7 @@ class SpeciesRig {
       If(carrier.x.greaterThan(.5),()=>{
         const height=float(WORLD_SCALE.carriedHeight).toVar();
         If(carrier.y.equal(1).or(carrier.y.equal(18)).or(carrier.y.equal(19)),()=>{ height.assign(.28); });
+        // Match the carrier's exempt interaction pose and cargo exactly.
         If(carrier.y.greaterThan(1.5).and(carrier.y.lessThan(3.5)),()=>{ height.assign(sin(this.time.mul(4).add(carrier.z)).mul(.08).add(1.32)); });
         If(carrier.y.equal(3),()=>{ height.addAssign(WORLD_SCALE.stoolHeight-.605*PAWN_MODEL_SCALE); });
         If(carrier.y.equal(6),()=>{ height.assign(1.3); });
@@ -293,9 +298,9 @@ export class WildlifeLayer {
   private texturesEnabled=true;
   private readonly markerStyle:AnimalSlaughterMarkerStyle;
   private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();private pileSurface:ReadonlyMap<number,PileSurface>=new Map();private pileIdentities:ReadonlyMap<number,PileSurface>=new Map();private quotaTargets:ReadonlySet<number>=new Set();
-  constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void,loadTexture?:SceneTextureLoader){
+  constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void,loadTexture?:SceneTextureLoader,animationDetail=new AnimationDetail()){
     this.markerStyle=new AnimalSlaughterMarkerStyle(loadTexture);
-    this.rigs=ANIMAL_SPECIES_IDS.map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTextures[animalCoat(species)],this.markerStyle,configure));
+    this.rigs=ANIMAL_SPECIES_IDS.map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTextures[animalCoat(species)],this.markerStyle,animationDetail,configure));
     for(const rig of this.rigs){this.mesh.add(rig.mesh,rig.selection,rig.slaughter);this.flames.add(rig.flames);}
   }
   setDesignationMinCellPixels(value:number):void {this.markerStyle.setMinCellPixels(value);}

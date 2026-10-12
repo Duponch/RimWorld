@@ -105,6 +105,10 @@ import { mapObjectCells,mapObjectsAt,sameMapObject,type MapObjectSelection } fro
 import {mapObjectGroupCells} from '../ui/map-object-group-selection';
 
 import type {SceneRenderHostPort,SceneCameraPort,RendererLifetime} from './scene-render-ports';
+import { AnimationDetail } from './AnimationDetail';
+import { parseAnimationSettings, type AnimationSettings } from './animation-settings';
+import { DEFAULT_SHADOW_SETTINGS, parseShadowSettings, type ShadowSettings } from './shadow-settings';
+import { ShadowRefreshScheduler } from './ShadowRefreshScheduler';
 type VisualChunk = { signature: string; group: THREE.Group };
 
 export interface AudioFrameView {
@@ -126,6 +130,16 @@ export class SceneRenderCore {
   private armedRoom: RoomLayer | null = null;
   private roomMaskRadius = DEFAULT_ROOM_MASK_RADIUS;
   private lightingSettings = parseLightingSettings(null);
+  private shadowSettings = { ...DEFAULT_SHADOW_SETTINGS };
+  protected readonly shadowRefresh = new ShadowRefreshScheduler();
+  protected readonly animationDetail = new AnimationDetail();
+  private readonly shadowView = new THREE.Matrix4();
+  private readonly shadowProjection = new THREE.Matrix4();
+  private shadowViewReady = false;
+  private shadowCamera: THREE.Camera | undefined;
+  private shadowCameraLayers = -1;
+  private shadowCameraCoordinates = -1;
+  private shadowCameraReversedDepth = false;
   readonly stats = { fps: 0, frameMs: 0, frameP95: 0, drawCalls: 0, triangles: 0 };
   protected readonly frames = new FrameMetrics();
   protected viewportWidth=1;
@@ -147,9 +161,9 @@ export class SceneRenderCore {
   protected readonly wind = new WindLayer(this.environmentLighting.configure);
   protected readonly projectiles = new ProjectileLayer();
   protected readonly wildlife:WildlifeLayer;
-  protected readonly mechanoids = new MechanoidLayer(this.environmentLighting.configure);
+  protected readonly mechanoids = new MechanoidLayer(this.environmentLighting.configure,this.animationDetail);
   protected readonly ropes = new RopeLayer();
-  protected readonly pawns = new PawnLayer(this.environmentLighting.configure);
+  protected readonly pawns = new PawnLayer(this.environmentLighting.configure,this.animationDetail);
   protected readonly actionFeedback = new ActionFeedbackLayer(this.pawns);
   protected readonly actionVfx = new ActionVfxLayer(this.pawns);
   protected readonly brawlCloud = new BrawlCloudLayer(this.pawns);
@@ -249,14 +263,14 @@ export class SceneRenderCore {
   protected readonly precipitation=new WeatherPrecipitationLayer();
   protected readonly boxes = new BoxBatches(this.environmentLighting.configure);
   protected readonly recreationHints = new RecreationHints(this.boxes);
-  protected readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial,this.texturedStaticMaterial);
+  protected readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial,this.texturedStaticMaterial,this.animationDetail);
   protected readonly naturalPresentation = new NaturalResourcePresentation();
   protected readonly sceneResources = new SceneResourceIndex();
   protected readonly crops = new CropLayer(this.staticMaterial,this.texturedStaticMaterial);
   protected readonly growing = new GrowingZoneLayer(this.boxes);
   protected readonly allowedAreaLayer=new AllowedAreaLayer(this.boxes);
   protected readonly rocks = new RockLayer(this.staticMaterial,this.environmentLighting.configure);
-  protected readonly plants = new PlantClusterLayer(this.staticMaterial,this.texturedStaticMaterial);
+  protected readonly plants = new PlantClusterLayer(this.staticMaterial,this.texturedStaticMaterial,this.animationDetail);
   protected readonly designations:DesignationIconLayer;
   protected readonly daylight: DayNightLayer;
   protected readonly pausedShadow = new PausedShadowCache();
@@ -295,7 +309,7 @@ export class SceneRenderCore {
 
   constructor(renderer: THREE.WebGPURenderer, groundGrassEnabled: boolean, protected readonly rendererLifetime: RendererLifetime, protected readonly hostPort:SceneRenderHostPort) {
     this.renderer = renderer; this.designations=new DesignationIconLayer(hostPort.loadTexture);
-    this.wildlife=new WildlifeLayer(this.environmentLighting.configure,hostPort.loadTexture);
+    this.wildlife=new WildlifeLayer(this.environmentLighting.configure,hostPort.loadTexture,this.animationDetail);
     try {
     const lost = renderer.onDeviceLost.bind(renderer);
     renderer.onDeviceLost = info => { lost(info); this.reportFailure(`Périphérique graphique perdu : ${info.message}`); };
@@ -413,15 +427,15 @@ export class SceneRenderCore {
     return new GpuGroundGrassLayer(this.environmentLighting.configure, this.textureDimensionLimit, message => {
       this.compatibilityWarning = message;
       this.onCompatibilityWarning(message);
-    },this.surfaceTint,this.environmentLighting.configureGrounded);
+    },this.surfaceTint,this.environmentLighting.configureGrounded,this.animationDetail);
   }
 
   setWorld(world: World, resetPresentation = false, speed = 1, tracks?: PawnTrack[], immutableSnapshot = false): void {
     if(this.disposed || this.fatalError)return;
     try {
-    this.invalidatePausedShadow();
     const previous=this.received?.world;
     const reset=resetPresentation||!previous||world.tick<previous.tick||world.seed!==previous.seed||world.width!==previous.width||world.height!==previous.height;
+    this.invalidatePausedShadow(reset);
     this.received={world,speed,tracks,immutableSnapshot};
     this.immutableSnapshot=immutableSnapshot;
     if(immutableSnapshot)this.immutableWorlds.add(world);else this.immutableWorlds.delete(world);
@@ -442,7 +456,7 @@ export class SceneRenderCore {
 
   protected applyWorld(world: World, resetPresentation = false): void {
     if (this.disposed) return;
-    this.invalidatePausedShadow();
+    this.invalidatePausedShadow(resetPresentation);
     if (resetPresentation) this.cancelDesignation();
     this.areaIndex = undefined; this.constructionIndex = undefined; this.areaSignature = '';
     this.orderTargetIndex=undefined;
@@ -459,7 +473,7 @@ export class SceneRenderCore {
     // decoder snapshots promise identity-stable unchanged tiles.
     const immutableTileChanges=this.immutableSnapshot?changedTiles??undefined:undefined;
     const groundChanged=terrainChanges===null||terrainChanges.length>0;
-    if (newMap) this.cancelDesignation();
+    if (newMap) {this.cancelDesignation();this.shadowRefresh.invalidate();}
     // The worker epoch distinguishes a checkpoint from an ordinary delta even
     // if terrain content and simulation tick match a previous session.
     const resetPoses = resetPresentation || newMap || world.tick < (previousWorld?.tick ?? 0);
@@ -618,8 +632,9 @@ export class SceneRenderCore {
     return drag !== null || selecting;
   }
 
-  protected invalidatePausedShadow():void {
+  protected invalidatePausedShadow(urgent=true):void {
     this.pausedShadow.invalidate();
+    if(urgent)this.shadowRefresh.invalidate();
     const shadow=(this.room?.lighting.shadowLight ?? this.daylight.light).shadow;
     shadow.autoUpdate=true;
     shadow.needsUpdate=true;
@@ -761,11 +776,27 @@ export class SceneRenderCore {
     this.invalidatePausedShadow();
   }
 
+  setShadowSettings(settings: ShadowSettings): void {
+    const next=parseShadowSettings(settings);
+    // The native backend owns the allocation and resizing of the one atlas.
+    const supported=[4096,2048,1024,512].find(size=>size<=this.textureDimensionLimit)??512;
+    next.resolution=Math.min(next.resolution,supported) as ShadowSettings['resolution'];
+    this.shadowSettings=next;this.shadowRefresh.setSettings(next);
+    this.daylight.setShadowSettings(next);this.room?.setShadowSettings(next);
+    this.invalidatePausedShadow();
+  }
+
+  setAnimationSettings(settings: AnimationSettings): void {
+    this.animationDetail.setSettings(parseAnimationSettings(settings));
+    this.invalidatePausedShadow();
+  }
+
   private configureRoom(): void {
     if (!this.roomEnabled || !this.world) return;
     this.room ??= new RoomLayer(this.scene);
     this.room.configure(this.world.width, this.world.height, this.world.seed);
     this.room.setSettings(this.lightingSettings);
+    this.room.setShadowSettings(this.shadowSettings);
     this.room.setMaskRadius(this.roomMaskRadius);
     this.room.setTexturesEnabled(this.texturesEnabled);
     this.daylight.setExternalLighting(true);
@@ -1204,12 +1235,12 @@ export class SceneRenderCore {
     if(this.hasTracks){this.timeline.advance(now);const due=this.presentation.take(this.timeline.tick,now);if(due)this.applyWorld(due);}
     const dt = this.lastFrame ? Math.min((now - this.lastFrame) / 1000, 0.05) : 0;
     this.lastFrame = now;
-    if(this.turretTops.present(dt,this.received?.speed===0))this.invalidatePausedShadow();
+    if(this.turretTops.present(dt,this.received?.speed===0))this.invalidatePausedShadow(false);
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (this.hostPort.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
     if(this.hasTracks && this.world) {this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
     if(this.world&&this.pawns.presentCargo(this.hasTracks?this.timeline.tick:THREE.MathUtils.lerp(this.timeFrom,this.timeTo,this.pawns.blend.value)*TICKS_PER_SECOND,this.world)){
-      this.invalidatePausedShadow();this.updatePiles(this.world,false);
+      this.invalidatePausedShadow(false);this.updatePiles(this.world,false);
     }
     if(this.pawns.feedbackSource)this.actionFeedback.syncTravel(this.pawns.feedbackSource);
     if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
@@ -1227,6 +1258,13 @@ export class SceneRenderCore {
       this.controls.target.x = x; this.controls.target.z = z;
     }
     this.rig.constrainRoom?.();
+    this.animationDetail.updateCamera(this.camera,this.viewportHeight);
+    if(!this.shadowViewReady||this.shadowCamera!==this.camera||this.shadowCameraLayers!==this.camera.layers.mask||this.shadowCameraCoordinates!==this.camera.coordinateSystem||this.shadowCameraReversedDepth!==this.camera.reversedDepth||!this.shadowView.equals(this.camera.matrixWorld)||!this.shadowProjection.equals(this.camera.projectionMatrix)) {
+      this.shadowView.copy(this.camera.matrixWorld);this.shadowProjection.copy(this.camera.projectionMatrix);
+      this.shadowCamera=this.camera;this.shadowViewReady=true;
+      this.shadowCameraLayers=this.camera.layers.mask;this.shadowCameraCoordinates=this.camera.coordinateSystem;this.shadowCameraReversedDepth=this.camera.reversedDepth;
+      this.invalidatePausedShadow();
+    }
     this.refreshAreaPointer();
     // Share the confirmed presentation clock with pawn motion. Loading a save
     // restores the sky; pausing cannot continue an independent wall-clock sun.
@@ -1262,8 +1300,6 @@ export class SceneRenderCore {
     if(this.world)this.precipitation.present({seed:this.world.seed,tick:skyTick,rainRate:weatherRainRate(this.world),
       snowRate:weatherSnowRate(this.world),camera:this.camera,target:this.controls.target,
       strength:visualWindStrength,directionX:visualWind.x,directionZ:visualWind.z,daylight:this.daylight.sample.daylight});
-    if (this.room) this.room.present(this.daylight.sample, this.camera);
-    else this.daylight.fitShadow(this.camera);
     const cellPixels=this.rig.pixelsPerCell(this.viewportHeight);
     this.actionFeedback.setBarsDetailVisible(cellPixels>=18);
     this.actionVfx.setDetailVisible(cellPixels>=18);
@@ -1288,11 +1324,18 @@ export class SceneRenderCore {
     const cacheEligible=this.backend==='WebGPU'&&!!this.world;
     const paused=received?.speed===0&&(!this.hasTracks||this.timeline.tick>=received.world.tick)&&!this.hostPort.hidden();
     const reuseShadow=cacheEligible&&this.pausedShadow.canReuse(paused,this.camera,shadowLight,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
-    if(cacheEligible){shadow.autoUpdate=!reuseShadow;if(!reuseShadow)shadow.needsUpdate=true;}
-    else shadow.autoUpdate=true;
+    const refreshShadow=!reuseShadow&&(paused||this.shadowRefresh.shouldRefresh(now,false));
+    if(this.room)this.room.present(this.daylight.sample,this.camera,refreshShadow);
+    else if(refreshShadow)this.daylight.fitShadow(this.camera);
+    // Suppress pending continuous caster changes on skipped frames as well as
+    // autoUpdate. The projection is kept with the atlas, not the live sun.
+    shadow.autoUpdate=false;shadow.needsUpdate=refreshShadow;
     this.renderer.info.reset();
     this.renderScene();
-    if(cacheEligible&&!reuseShadow)this.pausedShadow.capture(!shadow.needsUpdate,this.camera,shadowLight,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
+    if(refreshShadow){
+      const completed=!shadow.needsUpdate;this.shadowRefresh.capture(now,completed);
+      if(cacheEligible)this.pausedShadow.capture(completed,this.camera,shadowLight,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
+    }
     this.hostPort.drawLabels(this.world, this.camera, cellPixels, this.viewportWidth, this.viewportHeight);
     this.stats.drawCalls = this.renderer.info.render.drawCalls;
     this.stats.triangles = this.renderer.info.render.triangles;

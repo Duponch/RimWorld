@@ -7,6 +7,7 @@ import { RoomBackdrop } from './RoomBackdrop';
 import type { DaylightSample } from './daylight';
 import { parseLightingSettings, type LightingSettings } from './lighting-settings';
 import { DEFAULT_ROOM_MASK_RADIUS, roomMaskRadius } from './room-mask-settings';
+import type { ShadowSettings } from './shadow-settings';
 
 /** Optional presentation owner. No World, simulation random stream, independent
  * clock, asset request or animation mixer. OFF destroys this entire owner. */
@@ -138,16 +139,18 @@ export class RoomLayer {
     this.artVersion++; this.backdrop.invalidate();
   }
 
+  setShadowSettings(settings: ShadowSettings): void { this.lighting.setShadowSettings(settings); }
+
   /** Both carriages remain on their own physical rail throughout a full day.
    * The opposite lantern returns along its parallel rail while its bulb fades. */
-  present(sample: DaylightSample, camera: Camera): void {
+  present(sample: DaylightSample, camera: Camera, refreshShadow = true): void {
     if (this.disposed || !this.geometry) return;
     const orbit = this.geometry.orbit;
     sampleRoomOrbit(orbit, (1 - sample.x) * .5, this.sun.position, 'sun');
     sampleRoomOrbit(orbit, (1 + sample.x) * .5, this.moon.position, 'moon');
     this.sunCenter.copy(this.sun.position).add(this.local.fromArray(orbit.sun.center));
     this.moonCenter.copy(this.moon.position).add(this.local.fromArray(orbit.moon.center));
-    const changed = this.lighting.sync(this.sunCenter, this.moonCenter, sample, this.span);
+    const changed = this.lighting.sync(this.sunCenter, this.moonCenter, sample, this.span, refreshShadow);
     const sun = sample.daylight * 1.15 * this.lightingSettings.sun;
     const moon = (1 - sample.daylight) * .72 * this.lightingSettings.moon;
     if (this.sunGlow.value !== sun || this.moonGlow.value !== moon) {
@@ -156,7 +159,7 @@ export class RoomLayer {
     // Room walls stay physical at every pose. Navigation is constrained inside
     // the shell by CameraRig; its backdrop already invalidates on camera motion.
     camera.updateMatrixWorld();
-    this.lighting.fitShadow(camera, this.width, this.height);
+    if (refreshShadow) this.lighting.fitShadow(camera, this.width, this.height);
     // Lighting version is monotone; sum also changes for geometry/material/camera.
     this.currentVersion = changed + this.artVersion;
   }
