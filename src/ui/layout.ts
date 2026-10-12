@@ -205,6 +205,7 @@ export function gameLayout(): string {
     </section>
     <section id="menu-panel" class="management-panel menu-panel panel" aria-label="Menu du jeu" hidden>
       <div class="panel-heading"><h2>Elsewhere</h2><button data-close-panel aria-label="Fermer Menu">×</button></div><p id="scenario-current" class="muted"></p><div id="climate-options"></div>
+      <div id="save-management"></div>
       <fieldset class="presentation-settings"><legend>Affichage</legend>
         <label class="presentation-setting"><span><strong id="ui-font-label">Typographie</strong><small id="ui-font-description">Police de toute l’interface. Choix conservé dans ce navigateur.</small></span><select id="ui-font" aria-labelledby="ui-font-label" aria-describedby="ui-font-description">${UI_FONT_CHOICES.map(font=>`<option value="${font.id}">${font.label}</option>`).join('')}</select></label>
         <label class="presentation-setting"><span><strong id="cloud-mask-label">Rayon de masquage des nuages</strong><small id="cloud-mask-description">Zone dégagée au centre de l’écran lorsque la chambre est désactivée. 0 : aucun masquage.</small><output id="cloud-mask-value"></output></span><input id="cloud-mask-radius" type="range" min="0" max="100" step="1" value="31" aria-labelledby="cloud-mask-label" aria-describedby="cloud-mask-description cloud-mask-value"></label>

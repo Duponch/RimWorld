@@ -1,8 +1,20 @@
+import { MANAGED_SAVE_KEYS, isManagedSaveKey } from './save-slots';
+
 /** Storage format and world schemas are independent of this backend. Values
  * remain the exact historical raw JSON or existing gzip envelope. */
 export const SAVE_KEY = 'lisiere.save.v1';
 export const PREVIOUS_KEY = 'lisiere.previous.v1';
 export type SessionStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
+export type SaveSlotSelection=(values:ReadonlyMap<string,string|null>)=>{key:string;value:string|null};
+const INVALID_MANAGED_SAVE='elsewhere.invalid-managed-record.v1';
+function selectedSlot(keys:readonly string[],values:ReadonlyMap<string,string|null>,choose:SaveSlotSelection):{key:string;value:string|null} {
+  const selected=choose(values);
+  if(!selected||!keys.includes(selected.key)||(selected.value!==null&&typeof selected.value!=='string'))throw new Error('Sélection de sauvegarde invalide.');
+  return selected;
+}
+function validSelectionKeys(keys:readonly string[]):void {
+  if(!keys.length||keys.length>MANAGED_SAVE_KEYS.length||new Set(keys).size!==keys.length||keys.some(key=>!isManagedSaveKey(key)))throw new Error('Emplacements de sauvegarde invalides.');
+}
 
 export interface SaveRepository {
   initialize(): Promise<void>;
@@ -10,6 +22,7 @@ export interface SaveRepository {
   setItem(key: string, value: string): Promise<void>;
   removeItem(key: string): Promise<void>;
   peekItem(key: string): string | null;
+  selectAndSet(keys:readonly string[],choose:SaveSlotSelection):Promise<string>;
 }
 
 /** Kept for tests and browsers without IndexedDB. No quota eviction/retry that
@@ -21,6 +34,15 @@ export class LocalSaveRepository implements SaveRepository {
   async getItem(key: string): Promise<string | null> { return this.peekItem(key); }
   async setItem(key: string, value: string): Promise<void> { this.storage().setItem(key, value); }
   async removeItem(key: string): Promise<void> { this.storage().removeItem(key); }
+  async selectAndSet(keys:readonly string[],choose:SaveSlotSelection):Promise<string> {
+    validSelectionKeys(keys);
+    const values=new Map(keys.map(key=>[key,this.storage().getItem(key)]));
+    const selected=selectedSlot(keys,values,choose);
+    // One atomic setItem, never delete/move older worlds to make quota room.
+    if(selected.value===null)this.storage().removeItem(selected.key);
+    else this.storage().setItem(selected.key,selected.value);
+    return selected.key;
+  }
 }
 
 const DATABASE = 'lisiere-saves';
@@ -121,6 +143,18 @@ export class BrowserSaveRepository implements SaveRepository {
         };
       });
       for (const [key, value] of migrated) this.cache.set(key, value);
+      // Managed records are not migrated from retained legacy originals.
+      // Their bounded key set avoids an untrusted catalogue/index dependency.
+      const managed=new Map<string,string>();
+      await this.transaction('readonly',store=>{
+        for(const key of MANAGED_SAVE_KEYS){
+          const request=store.get(key);
+          request.onsuccess=()=>{
+            if(request.result!==undefined)managed.set(key,typeof request.result==='string'?request.result:INVALID_MANAGED_SAVE);
+          };
+        }
+      });
+      for(const [key,value] of managed)this.cache.set(key,value);
       this.initialized = true;
       this.onStatus({ ...this.status });
     } catch (error) {
@@ -152,7 +186,10 @@ export class BrowserSaveRepository implements SaveRepository {
       const request = store.get(key);
       request.onsuccess = () => { value = request.result; };
     });
-    if (value !== undefined && typeof value !== 'string') throw new Error('Emplacement de sauvegarde illisible.');
+    if (value !== undefined && typeof value !== 'string') {
+      if(!isManagedSaveKey(key))throw new Error('Emplacement de sauvegarde illisible.');
+      this.cache.set(key,INVALID_MANAGED_SAVE);return INVALID_MANAGED_SAVE;
+    }
     if (typeof value === 'string') this.cache.set(key, value); else this.cache.delete(key);
     return typeof value === 'string' ? value : null;
   }
@@ -170,6 +207,36 @@ export class BrowserSaveRepository implements SaveRepository {
     if (this.fallback) return this.fallback.removeItem(key);
     await this.transaction('readwrite', store => { store.delete(key); });
     this.cache.delete(key);
+  }
+  async selectAndSet(keys:readonly string[],choose:SaveSlotSelection):Promise<string> {
+    validSelectionKeys(keys);await this.initialize();
+    if(this.fallback)return this.fallback.selectAndSet(keys,choose);
+    const values=new Map<string,string|null>();
+    let selected:{key:string;value:string|null}|undefined,selectionError:unknown;
+    try {
+      await this.transaction('readwrite',store=>{
+        let remaining=keys.length;
+        for(const key of keys){
+          const request=store.get(key);
+          request.onsuccess=()=>{
+            try {
+              const value:unknown=request.result;
+              values.set(key,value===undefined?null:typeof value==='string'?value:INVALID_MANAGED_SAVE);
+              if(--remaining===0){
+                selected=selectedSlot(keys,values,choose);
+                if(selected.value===null)store.delete(selected.key);else store.put(selected.value,selected.key);
+              }
+            }catch(error){selectionError=error;store.transaction.abort();}
+          };
+        }
+      });
+    }catch(error){
+      if(selectionError)throw selectionError;
+      throw new Error(`Sauvegarde non écrite. Les autres copies sont conservées ; vérifiez l’espace disponible ou exportez la partie. ${error instanceof Error?error.message:String(error)}`);
+    }
+    for(const [key,value] of values)if(value===null)this.cache.delete(key);else this.cache.set(key,value);
+    if(selected!.value===null)this.cache.delete(selected!.key);else this.cache.set(selected!.key,selected!.value);
+    return selected!.key;
   }
   close(): void { this.db?.close(); }
 }

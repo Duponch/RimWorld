@@ -1,4 +1,5 @@
 import { DEFAULT_MAP_SIZE } from '../sim/map-config';
+import { AUTOSAVE_MINUTES } from './autosave';
 import type { SiteOptions } from '../sim/site';
 import {designationMinCellPixels,designationVisibilityLabel} from './designation-visibility';
 import {itemLabelMinCellPixels,itemLabelVisibilityLabel} from './item-label-visibility';
@@ -25,9 +26,14 @@ export interface FrontMenuSave {
   label: string;
   detail: string;
   disabled?: boolean;
+  kind?:'manual'|'recovery'|'named'|'auto';
+  savedAt?:number;
 }
 
 export interface FrontMenuOptions {
+  getAutosaveMinutes?:()=>number;
+  onAutosaveMinutesChange?:(minutes:number)=>boolean;
+  onExport?:()=>Promise<void>;
   getShadowSettings?: () => ShadowSettings;
   onShadowSettingsChange?: (settings: ShadowSettings) => boolean;
   getAnimationSettings?: () => AnimationSettings;
@@ -279,6 +285,18 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
 
   function renderOptions(): void {
     const card = element('section', 'front-card front-options');
+    if(options.getAutosaveMinutes&&options.onAutosaveMinutesChange){
+      card.append(element('h2','','Sauvegardes'));
+      const setting=element('label','front-relief front-texture-setting');
+      const select=element('select');select.id='front-autosave-minutes';
+      for(const minutes of AUTOSAVE_MINUTES){const choice=element('option','',minutes===0?'Désactivée':`${minutes} min`);choice.value=String(minutes);select.append(choice);}
+      select.value=String(options.getAutosaveMinutes());
+      const text=element('span');text.append(element('strong','','Sauvegarde automatique'),element('span','','Minutes réelles de jeu actif. Trois copies conservées dans ce navigateur.'));
+      select.addEventListener('change',()=>{
+        clearError();if(!options.onAutosaveMinutesChange!(Number(select.value)))showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver.');
+      });
+      setting.append(select,text);card.append(setting);
+    }
     card.append(element('h2', '', 'Affichage'));
     const setting = element('label', 'front-relief front-texture-setting');
     const checkbox = element('input');
@@ -647,6 +665,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     const file = element('input'); file.type='file'; file.accept='.json,application/json'; file.hidden=true;
     file.addEventListener('change',()=>{const chosen=file.files?.[0];file.value='';if(chosen)void run(()=>options.onImport(chosen),'Vérification du fichier et préparation de la colonie…');});
     extra.append(action('Colonies de test',()=>navigate('tests')),action('Importer un fichier',()=>file.click()),file);
+    if(hasGame&&options.onExport)extra.append(action('Exporter la partie actuelle',()=>void run(options.onExport!,'Préparation du fichier de la partie actuelle…')));
     content.append(extra);
     const list = element('fieldset', 'front-save-list');
     list.append(element('legend', 'front-visually-hidden', 'Sauvegardes disponibles'));
@@ -666,6 +685,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
       radio.disabled = save.disabled ?? false;
       const text = element('span');
       text.append(element('strong', '', save.label), element('span', '', save.detail));
+      if(save.savedAt!==undefined)text.append(element('span','',`${save.kind==='auto'?'Automatique · ':''}${new Date(save.savedAt).toLocaleString('fr-FR')}`));
       if (save.disabled) text.append(element('span', 'front-save-unavailable', 'Indisponible'));
       radio.addEventListener('change', () => { selectedSave = save.key; loadButton.disabled = false; clearError(); });
       row.append(radio, text);

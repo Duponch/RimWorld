@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
 import { BrowserSaveRepository, SAVE_KEY, PREVIOUS_KEY } from '../src/ui/save-repository';
+import { NAMED_SAVE_KEYS,AUTO_SAVE_KEYS } from '../src/ui/save-slots';
 
 /** A transactional IDB double: only a completed draft replaces durable data.
  * This proves repository order/failure handling, not native browser quotas. */
@@ -96,4 +97,44 @@ test('an open error cannot replace potentially newer IndexedDB saves with retain
   const repository = new BrowserSaveRepository(() => f.storage, () => factory);
   await expect(repository.initialize()).rejects.toThrow('Ses données et les copies historiques sont conservées');
   expect(repository.status.backend).toBe('indexeddb'); expect([...f.historical.values()]).toEqual(['manual-D', 'older-B']);
+});
+
+test('managed selection reads durable slots and a refused write retains every copy and its cache', async()=>{
+  const f=databaseFixture(),repository=new BrowserSaveRepository(()=>f.storage,()=>f.factory);await repository.initialize();
+  await repository.setItem(NAMED_SAVE_KEYS[0]!,'old');
+  f.fail(NAMED_SAVE_KEYS[0]!);
+  await expect(repository.selectAndSet(NAMED_SAVE_KEYS,values=>{
+    expect(values.get(NAMED_SAVE_KEYS[0]!)).toBe('old');return {key:NAMED_SAVE_KEYS[0]!,value:'new'};
+  })).rejects.toThrow('Sauvegarde non écrite');
+  expect(repository.peekItem(NAMED_SAVE_KEYS[0]!)).toBe('old');
+  expect(f.durable().get(NAMED_SAVE_KEYS[0]!)).toBe('old');
+  expect(f.durable().get(SAVE_KEY)).toBe('manual-D');expect(f.durable().get(PREVIOUS_KEY)).toBe('older-B');
+});
+
+test('a stale confirmation aborts before modifying a managed slot; conditional deletion commits once',async()=>{
+  const f=databaseFixture(),repository=new BrowserSaveRepository(()=>f.storage,()=>f.factory);await repository.initialize();
+  await repository.setItem(NAMED_SAVE_KEYS[0]!,'confirmed');
+  f.durable().set(NAMED_SAVE_KEYS[0]!,'another-tab');
+  await expect(repository.selectAndSet([NAMED_SAVE_KEYS[0]!],values=>{
+    if(values.get(NAMED_SAVE_KEYS[0]!)!=='confirmed')throw Error('stale');return {key:NAMED_SAVE_KEYS[0]!,value:null};
+  })).rejects.toThrow('stale');
+  expect(f.durable().get(NAMED_SAVE_KEYS[0]!)).toBe('another-tab');
+  await repository.selectAndSet([NAMED_SAVE_KEYS[0]!],values=>{
+    expect(values.get(NAMED_SAVE_KEYS[0]!)).toBe('another-tab');return {key:NAMED_SAVE_KEYS[0]!,value:null};
+  });
+  expect(repository.peekItem(NAMED_SAVE_KEYS[0]!)).toBeNull();expect(f.durable().has(NAMED_SAVE_KEYS[0]!)).toBe(false);
+});
+
+test('one non-string managed record is protected without blocking healthy historical slots',async()=>{
+  const f=databaseFixture();f.durable().set(AUTO_SAVE_KEYS[0]!,{damaged:true});
+  const repository=new BrowserSaveRepository(()=>f.storage,()=>f.factory);await repository.initialize();
+  expect(await repository.getItem(SAVE_KEY)).toBe('manual-D');
+  expect(await repository.getItem(AUTO_SAVE_KEYS[0]!)).toBeTruthy();
+  await repository.selectAndSet(AUTO_SAVE_KEYS,values=>{
+    expect(values.get(AUTO_SAVE_KEYS[0]!)).not.toBeNull();
+    return {key:AUTO_SAVE_KEYS[1]!,value:'healthy'};
+  });
+  expect(f.durable().get(AUTO_SAVE_KEYS[0]!)).toEqual({damaged:true});
+  const reloaded=new BrowserSaveRepository(()=>f.storage,()=>f.factory);await reloaded.initialize();
+  expect(reloaded.peekItem(AUTO_SAVE_KEYS[1]!)).toBe('healthy');
 });

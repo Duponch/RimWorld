@@ -38,6 +38,8 @@ import { firePosition } from './sim/fire-rules';
 import { calendarTick } from './sim/calendar';
 import { GameSession, SAVE_KEY, PREVIOUS_KEY } from './ui/game-session';
 import { BrowserSaveRepository } from './ui/save-repository';
+import { AutosaveScheduler, AUTOSAVE_PREFERENCE_KEY, autosaveMinutes } from './ui/autosave';
+import { createSaveManager } from './ui/save-manager';
 import { fetchTestColonies, readSaveFile, readTestColony } from './ui/test-colonies';
 import { createFrontMenu } from './ui/front-menu';
 import { bindRenderPerformanceControls } from './ui/render-performance-controls';
@@ -420,7 +422,10 @@ let soundVolume = 0.75;
 let musicEnabled = true;
 let musicVolume = 0.5;
 let audioUnlockWarningShown = false;
+const autosaveScheduler = new AutosaveScheduler();
+let autosaveIntervalMinutes = autosaveMinutes(null);
 try {
+  autosaveIntervalMinutes = autosaveMinutes(localStorage.getItem(AUTOSAVE_PREFERENCE_KEY));
   designationIconThreshold=designationMinCellPixels(localStorage.getItem(DESIGNATION_VISIBILITY_KEY));
   itemLabelThreshold=itemLabelMinCellPixels(localStorage.getItem(ITEM_LABEL_VISIBILITY_KEY));
   texturesEnabled = localStorage.getItem(TEXTURE_PREFERENCE_KEY) !== 'false';
@@ -439,6 +444,14 @@ try {
   const storedMusicVolume = Number(localStorage.getItem(MUSIC_VOLUME_PREFERENCE_KEY));
   if (localStorage.getItem(MUSIC_VOLUME_PREFERENCE_KEY) !== null && Number.isFinite(storedMusicVolume)) musicVolume = Math.max(0, Math.min(1, storedMusicVolume));
 } catch { /* The defaults remain active when browser storage is unavailable. */ }
+autosaveScheduler.setMinutes(autosaveIntervalMinutes);
+function setAutosaveMinutes(minutes:number):boolean {
+  autosaveIntervalMinutes=autosaveMinutes(minutes);
+  autosaveScheduler.setMinutes(autosaveIntervalMinutes);
+  saveManager?.refresh();
+  try { localStorage.setItem(AUTOSAVE_PREFERENCE_KEY,String(autosaveIntervalMinutes));return true; }
+  catch { return false; }
+}
 audio.setVolume(soundVolume);
 audio.setMuted(!soundEnabled);
 music.setVolume(musicVolume);
@@ -635,6 +648,8 @@ document.querySelector('#app')!.addEventListener('contextmenu', event => {
 });
 const saveRepository = new BrowserSaveRepository(() => localStorage, () => globalThis.indexedDB,
   status => { if (status.message) notify(status.message, true); });
+let saveManager:ReturnType<typeof createSaveManager>|undefined;
+let saveStorageReady=false;
 const session = new GameSession(client, saveRepository, prepareWorld, () => {
   simulationStopped = false; menuResumeSpeed = undefined; frontMenu.setHasGame(true);
   groupUI.resetForReplacement();
@@ -645,6 +660,8 @@ const frontHost = document.createElement('div'); document.querySelector('#app')!
 // The measured counter remains visible over both the colony and the menu.
 document.querySelector('#app')!.append(el('fps-counter'));
 const frontMenu = createFrontMenu(frontHost, {
+  getAutosaveMinutes:()=>autosaveIntervalMinutes,onAutosaveMinutesChange:setAutosaveMinutes,
+  onExport:exportCurrentColony,
   getShadowSettings:()=>({...shadowSettings}),onShadowSettingsChange:setShadowSettings,
   getAnimationSettings:()=>({...animationSettings}),onAnimationSettingsChange:setAnimationSettings,
   getSaves: () => session.saves(),
@@ -702,6 +719,7 @@ async function pauseForMenu(): Promise<void> {
 async function openFront(page: 'home' | 'create' | 'load'): Promise<void> {
   if (session.busy || replacingWorld) return;
   await pauseForMenu();
+  if(page==='load')await session.refreshSaves();
   frontMenu.setHasGame(session.hasWorld);
   if (page === 'create') frontMenu.showCreation();
   else if (page === 'load') frontMenu.showLoad();
@@ -709,7 +727,7 @@ async function openFront(page: 'home' | 'create' | 'load'): Promise<void> {
   setPanel(null); syncStorageButtons();
 }
 async function switchPanel(panel: Panel, preserveTool = false): Promise<void> {
-  if (panel === 'menu') await pauseForMenu();
+  if (panel === 'menu') { await pauseForMenu();await session.refreshSaves();saveManager?.refresh(); }
   setPanel(panel, preserveTool);
 }
 async function replaceColony(action: () => Promise<void>): Promise<void> {
@@ -1481,12 +1499,13 @@ function syncStorageButtons() {
     try { el<HTMLButtonElement>(id).disabled = replacingWorld || session.busy || !saveRepository.peekItem(key!); } catch { el<HTMLButtonElement>(id).disabled = true; }
   }
   el<HTMLButtonElement>('save').disabled=replacingWorld||session.busy||!snapshot||simulationStopped;
+  saveManager?.setBlocked(replacingWorld||session.busy||!snapshot||simulationStopped||waitingRequests.size>0);
   updateIncident();
 }
 async function save() {
   if (session.busy || replacingWorld) return;
   const saving = session.save(); syncStorageButtons();
-  try { await saving; notify('Colonie sauvegardée dans ce navigateur.'); }
+  try { await saving; autosaveScheduler.noteSaved(session.generation,snapshot?.tick??0);notify('Colonie sauvegardée dans ce navigateur.'); }
   finally { syncStorageButtons(); }
 }
 async function load(key = SAVE_KEY) {
@@ -1494,6 +1513,33 @@ async function load(key = SAVE_KEY) {
   await replaceColony(() => session.load(key));
   notify(key === PREVIOUS_KEY ? 'Colonie précédente restaurée en pause.' : 'Sauvegarde rechargée en pause.');
 }
+async function exportCurrentColony():Promise<void> {
+  if(replacingWorld)throw new Error('Attendez la fin du chargement avant d’exporter.');
+  const saving=session.exportSave();syncStorageButtons();
+  try {
+    const raw=await saving;
+    const url=URL.createObjectURL(new Blob([raw],{type:'application/json'}));
+    const anchor=document.createElement('a');anchor.href=url;
+    anchor.download=`Elsewhere-${new Date().toISOString().replace(/[:.]/g,'-')}.json`;
+    document.body.append(anchor);anchor.click();anchor.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  } finally {syncStorageButtons();}
+}
+saveManager=createSaveManager(el('save-management'),{
+  getSaves:()=>saveStorageReady?session.saves():[],
+  onSaveNamed:async(label,key,revision)=>{
+    const saving=session.saveNamed(label,key,revision);syncStorageButtons();
+    try{await saving;autosaveScheduler.noteSaved(session.generation,snapshot?.tick??0);}
+    finally{syncStorageButtons();}
+  },
+  onDelete:async(key,revision)=>{
+    const removing=session.deleteSave(key,revision);syncStorageButtons();
+    try{await removing;}finally{syncStorageButtons();}
+  },
+  onExport:exportCurrentColony,
+  getAutosaveMinutes:()=>autosaveIntervalMinutes,onAutosaveMinutesChange:setAutosaveMinutes,
+  onChanged:syncStorageButtons,
+});
 // Explicit scenario URLs retain the historical diagnostic creation dialog.
 async function createWorld() {
   if (session.busy || replacingWorld) return;
@@ -1797,7 +1843,7 @@ async function prepareWorldView(): Promise<void> {
 async function start() {
   shell.hidden=true; frontMenu.showHome(false);
   frontMenu.setBusy(true, 'Lecture des sauvegardes…');
-  try { await session.initializeStorage(); }
+  try { await session.initializeStorage();saveStorageReady=true;saveManager?.refresh(); }
   finally { frontMenu.setBusy(false); }
   if (import.meta.env.DEV && params.has('e2e')) Object.defineProperty(window, '__lisiere', { value: {
     get world() { return structuredClone(snapshot); }, get tick() { return snapshot?.tick ?? 0; }, get backend() { return renderer?.backend; },
@@ -1825,6 +1871,14 @@ async function start() {
   finally { frontMenu.setBusy(false); syncStorageButtons(); }
 }
 const metricsInterval = setInterval(() => {
+  void autosaveScheduler.poll(performance.now(),{
+    generation:session.generation,tick:snapshot?.tick??0,
+    playing:!!snapshot&&currentSpeed>0&&!document.hidden&&!frontMenu.isOpen()&&!graphicsFault&&!simulationStopped,
+    available:session.hasWorld&&!session.busy&&!replacingWorld&&!waitingRequests.size&&!graphicsFault&&!simulationStopped,
+  },async()=>{
+    const saving=session.autosave();syncStorageButtons();
+    try{await saving;}finally{syncStorageButtons();}
+  },error=>notify(`Autosauvegarde échouée : ${error instanceof Error?error.message:String(error)}. Les autres copies sont conservées ; vous pouvez exporter la partie.`,true));
   if (!renderer) return;
   el('fps-counter').textContent = renderer.stats.fps > 0 ? `${Math.round(renderer.stats.fps)} FPS` : '— FPS';
   if (!el('metrics').hidden) {
