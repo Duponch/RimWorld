@@ -1,6 +1,8 @@
 # Elsewhere sur Cloudflare Pages
 
-Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication courante `74b6ca55` apporte le [LOD global des animations V331](animation-lod-v331.md), après les [ombres et animations réglables V330](render-performance-v330.md), les [commandes fixes de chambre V329](aulnes-performance-v329.md), la [géométrie confirmée réutilisée V328](aulnes-performance-v328.md), les [recherches d’étagères partagées V327](aulnes-performance-v327.md), les [quatre murs et la composition V326](aulnes-performance-v326.md), la [table et la chambre fixe V325](room-layout-v325.md), la [chambre et les éclairages V324](room-diorama-v324.md), les [paysages procéduraux V323](cardboard-diorama-v323.md) et les [étagères V320](../gameplay/shelves-v320.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
+**Publication courante V332–V333 : `82fbe736`, 13 octobre 2026, schéma 230.** [Nouvelle partie préparée](../gameplay/new-game-preparation-v333.md) et [sauvegardes de campagne](../gameplay/save-library-v332.md), produit `54d20193` commité/poussé, une seule publication. [Adresse stable](https://elsewhere-cq7.pages.dev/) et [déploiement](https://82fbe736.elsewhere-cq7.pages.dev/). Typage/build, package exact et102réponsesHTTPS passent ; le contrôle long de présentation V333 reste rouge sur refus d'allocationWebGPU, indépendamment du parcours de création/recharge natif acquis. Les publications suivantes sont historiques.
+
+Publication demandée le 10 octobre 2026 pendant le chantier de performances V296. Le nom affiché devient **Elsewhere**. La première publication porte V295. La publication historique V331 `74b6ca55` apporte le [LOD global des animations V331](animation-lod-v331.md), après les [ombres et animations réglables V330](render-performance-v330.md), les [commandes fixes de chambre V329](aulnes-performance-v329.md), la [géométrie confirmée réutilisée V328](aulnes-performance-v328.md), les [recherches d’étagères partagées V327](aulnes-performance-v327.md), les [quatre murs et la composition V326](aulnes-performance-v326.md), la [table et la chambre fixe V325](room-layout-v325.md), la [chambre et les éclairages V324](room-diorama-v324.md), les [paysages procéduraux V323](cardboard-diorama-v323.md) et les [étagères V320](../gameplay/shelves-v320.md), schéma229, avec l'UI antérieure restaurée. La refonte papier V317 reste sur la branche distante `codex/ui-papier-v317` ; ses anciennes publications restent des archives accessibles, sans être la version courante à l'adresse stable.
 
 ## Adresse et publication
 
@@ -302,3 +304,29 @@ Produit **`9e8b1b96`** commité/poussé sur `main`, publié une seule fois en **
 Build Pages/typage **PASS12,649s**, package **PASS1,759s** :515fichiers,119272604octets,63références/66fichiers publics exacts. Rapport `tmp/elsewhere-pages/v331-package-IgdowR/report.json`. Wrangler4.149.0 **PASS21,624s** : deux fichiers envoyés,511déjà présents, puis en-têtes/redirections. `references_UI/` reste non suivi et exclu. CSS et Worker de simulation conservés.
 
 HTTPS **PASS8,051s** :102réponses200/MIME/octets exactes sur51chemins des deux origines, rapport `tmp/elsewhere-pages/v331-http-vT3RDU/report.json`. Aucun navigateur ni benchmark en ligne rejoué, les66fichiers distants ne sont pas tous téléchargés. Un commit/push documentaire consigne la livraison sans second déploiement ; relance **PAUSED**, aucun nouveau gameplay engagé.
+
+## Publication groupée V332–V333 — 13 octobre 2026
+
+Produit `54d20193397ea77a3c4920463f58f206c24c6c81` commité/poussé, publié une seule
+fois en `82fbe736` : [adresse stable](https://elsewhere-cq7.pages.dev/) et
+[déploiement](https://82fbe736.elsewhere-cq7.pages.dev/). Cette livraison regroupe
+les sauvegardes nommées/automatiques et le parcours de départ avec notre charte
+actuelle, trois personnes parmi huit et climat réel de la tuile. Le schéma230
+migre les anciennes campagnes sans nouveau climat ni dotation rétroactive.
+
+Typage24,383s/buildPages3,448s et package1,857s passent :515fichiers/119349148octets,
+63références/66fichiers publics byte-identiques, laboratoire et sources privées
+absents. Rapport `tmp/elsewhere-pages/v333-package-0RlZoM/report.json`.
+Wrangler4.149.0 passe15,386s, quatre fichiers nouveaux/509déjà présents, plus
+en-têtes/redirections. Le seul état Git non suivi est le dossier humain
+`references_UI/`, exclu du package et laissé intact.
+
+HTTPS PASS7,810s :102réponses200/MIME/octets exactes sur51chemins des origines
+stable/fraîche, rapport `tmp/elsewhere-pages/v333-http-4dFymc/report.json` ; package
+et publics conservés. Les66fichiers distants ne sont pas tous téléchargés.
+Le parcours local WebGPU de création/export/recharge est acquis, mais le
+contrôle long de présentationV333 reste rouge sur attente de recharge puis
+refus d'allocationWebGPU avant les gestes : [preuves et limites](../gameplay/new-game-preparation-v333.md).
+Ni campagne entière, ni parité Core exhaustive, ni gainFPS ne sont annoncés.
+Consolidation documentaire poussée sans seconde publication ; serveurs/navigateur
+de test possédés fermés, relance **PAUSED**.

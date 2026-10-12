@@ -186,3 +186,33 @@ jours, puis la qualification des trois biomes et d'une campagne longue avec
 reprise. Les capsules d'arrivée et le tutoriel ne sont pas livrés ici.
 Commit/push du lot utile sont autorisés, publication unique regroupée avecV332 ;
 relance planifiée **PAUSED**, sous-métiers reportés et UI papier sur branche séparée.
+
+## Publication groupée et clôture
+
+Le 13 octobre 2026, le produit `54d20193397ea77a3c4920463f58f206c24c6c81` est
+commité/poussé puis publié **une seule fois avec les sauvegardes V332** en
+`82fbe736` : [adresse stable](https://elsewhere-cq7.pages.dev/) et
+[déploiement](https://82fbe736.elsewhere-cq7.pages.dev/).
+
+Le package commité passe1,857s :515fichiers/119349148octets,63références/66fichiers
+publics exacts, laboratoire et sources privés absents ; rapport
+`tmp/elsewhere-pages/v333-package-0RlZoM/report.json`. Le package candidat avait
+déjà passé1,874s avant commit ; seule la preuve portant le bon HEAD est retenue
+pour cette clôture. Typage24,383s et compilationPages3,448s portent les dernières
+sources. Documentation PASS3,202s puis PASS2,030s après publication et contrôle
+final des liens. Aucun build n'est lancé après le déploiement.
+
+Wrangler4.149.0 passe15,386s : quatre fichiers envoyés/509déjà présents, puis
+en-têtes/redirections. L'avertissement Git dirty concerne uniquement le dossier
+humain `references_UI/`, intact, non suivi et absent du package. HTTPS passe7,810s :
+51chemins sur deux origines,102réponses200/MIME/octets exacts ; le rapport
+`tmp/elsewhere-pages/v333-http-4dFymc/report.json` est conservé. Le package et les
+publics restent inchangés. Tous les66fichiers
+distants ne sont pas téléchargés ; ces réponses prouvent la disponibilité du
+package, pas une nouvelle partie jouée en ligne ni un gainFPS.
+
+Le gel final2827reste exact. Chrome de test et Vite5406 possédés sont fermés ;
+aucune session humaine n'est touchée. La consolidation documentaire est poussée
+sans seconde publication. Le contrôle long de présentation reste non acquis
+pour les raisons conservées ci-dessus ; le passage natif du nouveau départ et
+la migration/reprise du corpus ont la portée explicitement décrite.
