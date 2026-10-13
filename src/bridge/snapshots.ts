@@ -1,5 +1,6 @@
 import {validShelfTransport,validShelfGround,shelfIdentityOwners} from '../sim/shelf-save.ts';
 import {validSiteClimate} from '../sim/site-climate-save.ts';
+import { hasForcedConsumptionDomain,validForcedConsumePawnShape,validForcedConsumeOwners,validForcedConsumeTransport } from '../sim/consume-save.ts';
 import { hasDraftedTendingMarker,validTendShape,validDraftedTendingTransport } from '../sim/care-save.ts';
 import {storageCellById} from '../sim/shelf-storage.ts';
 import { PowerParentValidationCache,type PowerParentReader } from '../sim/power-parent-validation.ts';
@@ -917,12 +918,16 @@ export class SnapshotDecoder {
       ||[...message.world.structures,...message.world.jobs,...message.world.packed.map(p=>p.building)].some(s=>s.kind==='mini-turret'||Object.hasOwn(s,'turret'))))return resync('Tourelle, recherche ou vague future.');
     for(const s of message.world.structures)if(Object.hasOwn(s,'turret')&&!validMiniTurretShape(s.turret,message.world.schemaVersion,message.world.tick*10,message.world.nextId))return resync('Canon intrinsèque invalide.');
     if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion))))return resync('Forme de vague Bomb invalide.');
-    let hasDraftedTend=false;
+    let hasDraftedTend=false;const forcedConsumers:Pawn[]=[];
     for(const pawn of message.world.pawns){
       if(!pawn||typeof pawn!=='object'||Array.isArray(pawn))return resync('Personne locale invalide pour ce snapshot.');
       if(hasDraftedTendingMarker(pawn)||pawn.draft&&pawn.tend){
         if(!hasDraftedTendingMarker(pawn)||!validTendShape(pawn.tend,message.world.schemaVersion,message.world))return resync('Forme de soins mobilisés invalide ou future.');
         hasDraftedTend=true;
+      }
+      if(hasForcedConsumptionDomain(pawn)){
+        if(!validForcedConsumePawnShape(pawn,message.world.schemaVersion,message.world))return resync('Forme de consommation forcée invalide ou future.');
+        forcedConsumers.push(pawn);
       }
       if(Object.hasOwn(pawn,'emp'))return resync('Un effet EMP mécanique ne peut pas appartenir à une personne.');
       if(!validDeathThoughtsPawnShape(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,message.world.tick))return resync('Souvenir de décès perçu invalide ou futur.');
@@ -1122,6 +1127,7 @@ export class SnapshotDecoder {
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
     if(validateStartingArrivalOwners(next,next.schemaVersion).length)return resync('Personne, possession ou propriétaire de capsule initiale invalide.');
     if(hasDraftedTend&&!validDraftedTendingTransport(next))return resync('Soins mobilisés, patient, contact ou réservation incohérents.');
+    if(forcedConsumers.length?!validForcedConsumeTransport(next,forcedConsumers):!validForcedConsumeOwners(next))return resync('Consommation forcée, propriétaire, source, contact ou réservation incohérents.');
     if(!validHumanSleepingSpotTransport(next,next.schemaVersion))return resync('Couchage au sol humain, propriétaire, rôle ou réservation physique invalide ou futur.');
     if(this.current&&message.epoch===this.epoch&&!validStartingArrivalTransition(this.current,next))
       return resync('Contenu ou transfert des capsules initiales réécrit dans cette partie.');

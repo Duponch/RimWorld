@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Consommer un aliment choisi — V346
+
+Sélectionnez un seul colon, faites un clic droit sur une pile alimentaire au sol, en réserve ou sur une étagère, puis choisissez **Consommer**. Les piles d’une étagère restent des choix distincts. L’ordre remplace l’activité actuelle, sans mise en file ; relâchez Maj. Il exige un accès réel et une portion disponible.
+
+Le colon prend sa portion et mange avant de recevoir la nutrition. Un civil cherche sa place de repas habituelle ; un colon mobilisé reste mobilisé et mange au contact. Le régime et les risques sont affichés : cet ordre direct peut consommer un aliment exclu du régime, mais le choix automatique continue de le respecter. Arrêter l’ordre ou démobiliser interrompt le repas et conserve l’aliment non mangé. Manipulation et capacité à manger sont requises dans cette première tranche ; corps, drogues et inventaires ne sont pas proposés. [Portée et contrôles](consuming-v346.md).
+
 ## Soins de terrain par un colon mobilisé — V343
 
 Sélectionnez un seul colon **mobilisé**, faites un clic droit sur un autre humain à terre ou couché dans un lit, puis choisissez **Soigner · nom (sans médicament)**. Le colon doit pouvoir exercer Médecin ; une priorité Médecin0 n’interdit pas cet ordre explicite. Il rejoint une place libre au contact et utilise les règles ordinaires de soin, sans consommer de médicament au sol ou dans son inventaire. Le patient conserve sa posture ; ses saignements continuent pendant l’approche et le travail.

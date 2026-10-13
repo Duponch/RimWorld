@@ -9,6 +9,8 @@ import { reservedSource } from './materials.ts';
 import { adjacentTable, chooseDiningPlace, validDiningPlace } from './dining.ts';
 import { rememberMeal } from './wellbeing.ts';
 import { pasteRequestValid,dispensePasteAtContact,PASTE_COLLECT_TICKS } from './nutrient-paste.ts';
+import { consumeActivityValid,consumeContactValid } from './consuming.ts';
+import { interruptDraftWork } from './drafting.ts';
 import type { NeedContext } from './needs.ts';
 import type { Pawn, World } from './types.ts';
 
@@ -16,37 +18,49 @@ export const INGEST_TICKS = 50;
 export const PORTION_NUTRITION = 35;
 
 export function processEating(world: World, pawn: Pawn, context: NeedContext): void {
-  if(!allowedAreaServicesAllowed(world,pawn)){context.release();return;}
   const task = pawn.need;
   if (task?.kind !== 'eat') return;
+  // Only the explicit mode acquires this interruption contract. Automatic
+  // eating keeps its historical release, location choice and resolution.
+  const release=()=>{if(task.forced)interruptDraftWork(world,pawn);else context.release();};
+  if(task.forced&&!consumeActivityValid(world,pawn)){release();return;}
+  if(task.forced&&(pawn.moveCooldown>0||(pawn.motion?.end??0)>world.tick))return;
+  if(!allowedAreaServicesAllowed(world,pawn)){release();return;}
   if(task.phase==='pickup'&&task.paste){
-    if(!pasteRequestValid(world,pawn,task.paste)){context.release();return;}
+    if(!pasteRequestValid(world,pawn,task.paste)){release();return;}
     const spot=task.paste.spot;
     if(pawn.x!==spot.x||pawn.z!==spot.z){context.move(spot,true);return;}
     if(pawn.moveCooldown>0||(pawn.motion?.end??0)>world.tick||(pawn.stun?.untilCore??0)>world.tick*10)return;
     const meal=dispensePasteAtContact(world,pawn,task.paste);
-    if(!meal){context.release();return;}
+    if(!meal){release();return;}
     task.carryPileId=meal.id;task.phase='collect';pawn.path=[];pawn.state='moving';return;
   }
   const pile = world.piles.find(item => item.id === (task.phase === 'pickup' ? task.sourcePileId : task.carryPileId));
-  if (!pile || pile.kind !== 'food') { context.release(); return; }
+  if (!pile || pile.kind !== 'food') { release(); return; }
   if (task.phase === 'pickup') {
-    if (pile.owner.type !== 'ground' || reservedSource(world, pile.id) > pile.quantity) { context.release(); return; }
+    if (pile.owner.type !== 'ground' || reservedSource(world, pile.id) > pile.quantity) { release(); return; }
+    if(task.forced&&!consumeContactValid(world,pawn)){
+      const contact=pawn.path.at(-1);
+      if(contact&&consumeContactValid(world,pawn,contact)
+        &&(contact.x===pile.owner.x&&contact.z===pile.owner.z||adjacent(contact,pile.owner)))context.move(contact,true);
+      else release();
+      return;
+    }
     if ((pawn.x !== pile.owner.x || pawn.z !== pile.owner.z) && !adjacent(pawn, pile.owner)) { context.move(pile.owner, false); return; }
     if (pile.quantity === task.quantity) {
       pile.owner = { type: 'pawn', pawnId: pawn.id }; task.carryPileId = pile.id;
     } else {
-      if (world.piles.length >= 32768 || !Number.isSafeInteger(world.nextId + 1)) { context.release(); return; }
+      if (world.piles.length >= 32768 || !Number.isSafeInteger(world.nextId + 1)) { release(); return; }
       pile.quantity -= task.quantity; task.carryPileId = world.nextId++;
       world.piles.push({ id: task.carryPileId, kind: 'food', item: pile.item, quantity: task.quantity, owner: { type: 'pawn', pawnId: pawn.id }, ...copyPileCondition(pile) });
     }
     task.phase = 'choose-spot'; pawn.path = []; pawn.state = 'moving'; pawn.needCooldown = 0;
     return;
   }
-  if (pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id || pile.quantity !== task.quantity) { context.release(); return; }
+  if (pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id || pile.quantity !== task.quantity) { release(); return; }
   if(task.phase==='collect'){
     pawn.path=[];pawn.state='moving';
-    if(!task.paste||task.paste.producedAt===undefined){context.release();return;}
+    if(!task.paste||task.paste.producedAt===undefined){release();return;}
     if(world.tick-task.paste.producedAt<PASTE_COLLECT_TICKS)return;
     task.phase='choose-spot';
   }
@@ -55,11 +69,16 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
     pawn.path = []; pawn.state = 'moving'; pawn.needCooldown = 0;
   }
   if (task.phase === 'choose-spot') {
-    const choice = chooseDiningPlace(world, pawn, context);
-    if (!choice) return;
+    const choice=task.forced&&pawn.draft
+      ?consumeContactValid(world,pawn)?{place:{target:{x:pawn.x,z:pawn.z},seatId:null,tableId:adjacentTable(world,pawn)?.id??null},path:[]}:null
+      :chooseDiningPlace(world, pawn, context);
+    if (!choice) {if(task.forced&&pawn.draft)release();return;}
+    if(task.forced&&!consumeContactValid(world,pawn,choice.place.target)){release();return;}
     task.dining = choice.place; task.phase = 'travel'; pawn.path = choice.path;
   }
-  if (!task.dining) { context.release(); return; }
+  if (!task.dining) { release(); return; }
+  if(task.forced&&(!consumeContactValid(world,pawn,task.dining.target)
+    ||(pawn.draft||task.phase==='ingest')&&(pawn.x!==task.dining.target.x||pawn.z!==task.dining.target.z))){release();return;}
   if (task.phase === 'travel') {
     if (pawn.x !== task.dining.target.x || pawn.z !== task.dining.target.z) { context.move(task.dining.target, true); return; }
     task.phase = 'ingest'; pawn.path = []; pawn.state = 'eating';
@@ -75,6 +94,7 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
     const atTable = adjacentTable(world, pawn) !== null;
     rememberMeal(world, pawn, atTable, rawFoodThought(pile.item), pile.item);
     pawn.need = null; pawn.state = 'idle'; pawn.planCooldown = 0; pawn.needCooldown = 0;
+    if(task.forced)pawn.orders.active=null;
     context.event(`${pawn.name} a mangé une portion (${task.quantity} × ${ITEM_DEFINITIONS[pile.item].label}) ${atTable ? 'à table' : 'sans table'}.`);
     ingestFoodRisk(world,pawn,pile);
   }

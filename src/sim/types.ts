@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 233 as const;
+export const SCHEMA_VERSION = 234 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -48,7 +48,7 @@ export interface HaulTask {
 export interface DiningPlace { target: Cell; seatId: number | null; tableId: number | null }
 export interface Memory { kind: 'ate-without-table' | 'ate-raw-food' | 'ate-fine-meal' | 'ate-lavish-meal' | 'ate-nutrient-paste' | 'ate-kibble'; expiresAt: number }
 export type NeedTask =
-  | { kind: 'eat'; phase: 'pickup' | 'collect' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number | null; paste?:import('./nutrient-paste.ts').PasteRequest; carryPileId: number | null; quantity: number; progress: number; workRemainder?:number; dining: DiningPlace | null }
+  | { kind: 'eat'; forced?:true; phase: 'pickup' | 'collect' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number | null; paste?:import('./nutrient-paste.ts').PasteRequest; carryPileId: number | null; quantity: number; progress: number; workRemainder?:number; dining: DiningPlace | null }
   | { kind: 'sleep'; roomRest?:import('./room-experience.ts').RoomRest; medical?:'patient'|'bedrest'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
 export interface Job extends Cell {
   fixBreakdown?:import('./breakdowns.ts').BreakdownTarget;
@@ -311,6 +311,7 @@ export type Command = import('./orbital-state.ts').OrbitalCommand | import('./gr
   | {type:'order-feed';pawnId:number;patientId:number;queue:boolean}
   | {type:'order-tend';pawnId:number;patientId:number;queue:boolean}
   | {type:'order-drafted-tend';pawnId:number;patientId:number;queue:false}
+  | {type:'order-consume';pawnId:number;pileId:number;queue:false}
   | {type:'self-tend-policy';pawnId:number;enabled:boolean}
   | {type:'order-rescue';pawnId:number;patientId:number;queue:boolean}
   | import('./doors.ts').DoorCommand

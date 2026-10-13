@@ -34,13 +34,16 @@ import { haulOrderCell, planHaulOrder, queuedHaulReason, startHaulOrder, type Ha
 import { canReach, destinationCell } from './work-planner.ts';
 import type { Cell, CommandResult, HaulTask, Job, Pawn, World } from './types.ts';
 
+import { interruptDraftWork } from './drafting.ts';
+import { consumeReason,consumeProposal,consumeWarnings,isForcedConsuming } from './consuming.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
 import { equipmentOrderReason } from './equipment.ts';
 import { apparelLabel } from './apparel-rules.ts';
 import { equippedWeapon,weaponLabel,type EquipmentAction } from './equipment-rules.ts';
 
-export interface PlayerOrders { active: number | 'bury' | 'equipment' | 'haul' | 'cook' | 'feed' | 'tend' | 'rescue' | null; queue: import('./order-types.ts').QueuedOrder[] }
+export interface PlayerOrders { active: number | 'bury' | 'equipment' | 'haul' | 'cook' | 'feed' | 'tend' | 'rescue' | 'consume' | null; queue: import('./order-types.ts').QueuedOrder[] }
 export type OrderCommand = { type:'order-cook';pawnId:number;structureId:number;queue:boolean } | { type: 'order-job'; pawnId: number; jobId: number; queue: boolean } | { type:'order-haul';pawnId:number;target:HaulOrderTarget;queue:boolean } | { type: 'clear-orders'; pawnId: number };
-export interface OrderOption { jobId: number; arrestPatientId?:number; capturePatientId?:number; equipmentItemId?:number; equipmentAction?:EquipmentAction; cookStationId?:number; rescuePatientId?:number; tendPatientId?:number; feedPatientId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
+export interface OrderOption { jobId: number; consumePileId?:number; warnings?:string[]; arrestPatientId?:number; capturePatientId?:number; equipmentItemId?:number; equipmentAction?:EquipmentAction; cookStationId?:number; rescuePatientId?:number; tendPatientId?:number; feedPatientId?:number; haulTarget?:HaulOrderTarget; label: string; enabled: boolean; reason?: string }
 export const MAX_QUEUED_ORDERS = 32;
 const labels: Record<Job['kind'], string> = {shelf:'Construire l’étagère','small-shelf':'Construire la petite étagère','spike-trap':'Construire le piège à pointes','double-bed':'Construire le lit double','electric-crematorium':'Construction du crématorium électrique','electric-smelter':'Construire la fonderie électrique','sleeping-spot':'Placer le couchage au sol','animal-sleeping-spot':'Placer le couchage animal','biofuel-refinery':'Construire la raffinerie de biocarburant','chemfuel-generator':'Construire le générateur à biocarburant','nutrient-paste-dispenser':'Construire le distributeur de pâte nutritive',hopper:'Construire la trémie','orbital-beacon':'Construire une balise orbitale','comms-console':'Construire la console de communication','deep-drill':'Construire une foreuse profonde','ground-scanner':'Construire le scanner souterrain', 'vitals-monitor':'Construire le moniteur vital', 'drug-lab':'Construire le laboratoire de chimie', 'hydroponics-basin':'Construire le bac hydroponique', 'mini-turret':'Construire la mini-tourelle', 'tube-television':'Construire la télévision cathodique', sandbags:'Construire les sacs de sable', autodoor:'Construire la porte automatique', fence:'Construire la clôture','fence-gate':'Construire le portillon','pen-marker':'Construire le marqueur d’enclos', 'art-bench':'Construire l’atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture',grave:'Creuser une tombe','lay-floor':'Poser un sol','remove-floor':'Retirer un sol',heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner l’interrupteur','power-conduit':'Construire le conduit','power-switch':'Construire l’interrupteur',battery:'Construire la batterie','solar-generator':'Construire le panneau solaire', 'fueled-stove':'Construire la cuisinière à bois', 'electric-stove':'Construire la cuisinière électrique', 'butcher-table':'Construire la table de boucherie', 'butcher-spot':'boucherie', cooler:'Construire le climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique','machining-table':'Construire l’atelier d’usinage','fabrication-bench':'Construire l’établi de fabrication','hi-tech-research-bench':'Construire le bureau de recherche haute technologie','multi-analyzer':'Construire le multi-analyseur', 'crafting-spot':'Placer l’artisanat', repair:'réparer', 'fix-breakdown':'Remplacer le composant en panne', 'wood-generator':'construire le générateur à bois', 'sun-lamp':'construire la lampe horticole', 'standing-lamp':'construire la lampe', 'passive-cooler':'Construire le refroidisseur passif', 'build-roof':'Poser le toit', 'remove-roof':'Retirer le toit', door:'Construire la porte', stonecutter:'Construire la table de taille', mine:'Miner', uninstall:'Désinstaller',install:'Réinstaller', deconstruct:'Déconstruire', chop:'Abattre',harvest:'Récolter',cut:'Couper',sow:'Semer',wall:'Construire le mur',bed:'Construire le lit','hospital-bed':'Construire le lit d’hôpital',table:'Construire la table','table-square':'Construire la table carrée','table-long':'Construire la table longue',stool:'Construire le tabouret','dining-chair':'Construire la chaise',armchair:'Construire le fauteuil','end-table':'Construire la table de chevet',dresser:'Construire la commode','flower-pot':'Construire le pot de fleurs',campfire:'Construire le feu',horseshoes:'Construire le piquet','chess-table':'Construire la table d’échecs' };
 const fail = (reason: string): CommandResult => ({ok:false,code:'invalid-command',reason});
@@ -99,6 +102,10 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
   if(pawn.mental?.crisis)return [{jobId:0,label:mentalCrisisLabel(pawn.mental.crisis.kind),enabled:false,reason:mentalCrisisRefusal(pawn)}];
   const jobs=world.jobs.filter(j=>footprintCells(j).some(c=>c.x===cell.x&&c.z===cell.z));
   const job=jobs.find(j=>!isRoofJob(j))??jobs[0],piles=groundPilesAt(world,cell),pile=piles[0],options:OrderOption[]=[];
+  for(const food of piles)if(food.kind==='food'){
+    const reason=queue?'La consommation directe ne peut pas être mise en file.':consumeReason(world,pawn,food)??(!consumeProposal(world,pawn,food)?'Aucun accès libre au contact de cette nourriture.':undefined);
+    options.push({jobId:0,consumePileId:food.id,label:"Consommer "+ITEM_DEFINITIONS[food.item].label,enabled:!reason,warnings:consumeWarnings(world,pawn,food),...reason?{reason}:{}});
+  }
   for(const target of jobs) {
     const reason=preflight(world,pawn,target,queue) ?? (route(world,pawn,target)===null?'Aucun accès praticable à ce travail.':undefined);
     options.push({jobId:target.id,label:orderLabel(world,target),enabled:!reason,...(reason?{reason}:{})});
@@ -187,6 +194,7 @@ export function applyOrderCommand(world:World,command:OrderCommand):CommandResul
   const pawn=world.pawns.find(p=>p.id===command.pawnId);
   if(!pawn)return fail('Colon introuvable.');
   if(command.type==='clear-orders') {
+    if(isForcedConsuming(pawn)){interruptDraftWork(world,pawn);return {ok:true};}
     const active=pawn.orders.active!==null||!!pawn.orbitalTrade||!!pawn.allowedAreaReturn;
     const drops=active?planCommandDrops(world,command):new Map();
     if(!drops)return fail('Pas de place pour déposer la cargaison.');
@@ -245,7 +253,7 @@ export function reconcileOrders(world:World):void {
   for(const pawn of world.pawns) {
     expirePriorityWork(world,pawn);
     const orders=pawn.orders;if(orders.active===null&&!orders.queue.length)continue;
-    if(orders.active==='bury'?!pawn.burial:orders.active==='equipment'?!pawn.equipmentTask:orders.active==='haul'?!pawn.haul:orders.active==='cook'?!pawn.cooking:orders.active==='feed'?!pawn.feed:orders.active==='tend'?!pawn.tend:orders.active==='rescue'?!pawn.rescue:orders.active!==pawn.jobId)orders.active=null;
+    if(orders.active==='bury'?!pawn.burial:orders.active==='equipment'?!pawn.equipmentTask:orders.active==='haul'?!pawn.haul:orders.active==='cook'?!pawn.cooking:orders.active==='feed'?!pawn.feed:orders.active==='tend'?!pawn.tend:orders.active==='rescue'?!pawn.rescue:orders.active==='consume'?!isForcedConsuming(pawn):orders.active!==pawn.jobId)orders.active=null;
     if(!orders.queue.length)continue;
     jobs??=new Map(world.jobs.map(j=>[j.id,j]));
     orders.queue=orders.queue.filter(id=>{

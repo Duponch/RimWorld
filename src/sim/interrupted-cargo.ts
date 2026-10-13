@@ -8,6 +8,13 @@ import type { Pawn,World } from './types.ts';
  * survives without preserving the task, destination, workstation or queue. */
 export function interruptWork(world:World,pawn:Pawn):void {
   clearQueuedOrders(world,pawn);delete pawn.priorityWork;
+  // Only an explicitly ordered meal retains its food over a captured edge.
+  // Health can interrupt before the actor dispatcher has observed that edge;
+  // its logical arrival cell is not yet a physical drop location.
+  if(pawn.need?.kind==='eat'&&pawn.need.forced===true&&(pawn.motion?.end??0)>world.tick
+    &&world.piles.some(p=>p.kind==='food'&&p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)){
+    releaseAssignments(world,pawn);pawn.interruptedCargo=true;pawn.planCooldown=0;return;
+  }
   if(releaseWork(world,pawn))return;
   releaseAssignments(world,pawn);
   pawn.interruptedCargo=true;

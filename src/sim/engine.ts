@@ -118,7 +118,7 @@ import { isStunned } from './stun.ts';
 import { processTactics } from './tactics.ts';
 import { considerFlee,processFlee,processSentry,threatQueries } from './threats.ts';
 import { retryInterruptedCargo } from './interrupted-cargo.ts';
-import { applyDraftCommand,processDraft } from './drafting.ts';
+import { applyDraftCommand,processDraft,interruptDraftWork } from './drafting.ts';
 import { advanceWorldCombat } from './combat-system.ts';
 import {applySpikeTrapSwitch,reconcileSpikeTrapContacts,spikeTrapWindow} from './spike-traps.ts';
 import {validSpikeTrapCommand} from './spike-trap-save.ts';
@@ -134,6 +134,8 @@ import { dropIncapacitatedEquipment,reconcileWeaponMemory } from './equipment-st
 import { applyFeeding,processFeeding,reconcileFeeding } from './feeding.ts';
 import { applySurgery,processSurgery,reconcileSurgery } from './surgery.ts';
 import { applyTending,processTending,reconcileTending } from './tending.ts';
+import { applyConsume,isForcedConsuming,consumeActivityValid } from './consuming.ts';
+import { processEating } from './eating.ts';
 import { applyDraftedTending,isDraftedTending } from './drafted-tending.ts';
 import { reconcilePatientRest } from './patient-rest.ts';
 import { MEDICAL_CARE } from './medicine-rules.ts';
@@ -501,13 +503,21 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     const affected=actors.map(id=>world.pawns.find(p=>p.id===id)).find(p=>p?.mental?.crisis);
     if(affected?.mental?.crisis)return refusal('invalid-command',`${mentalCrisisLabel(affected.mental.crisis.kind)} : ce colon ne peut pas obéir pendant sa crise.`);
   }
+  if(typeof command.type==='string'&&(command.type.startsWith('order-')||['shoot','melee','clean-room'].includes(command.type))){
+    const consumer=actors.map(id=>world.pawns.find(p=>p.id===id)).find(p=>p&&isForcedConsuming(p));
+    if(consumer){
+      if('queue' in command&&command.queue===true)return refusal('invalid-command','Terminez ou annulez la consommation avant de mettre un autre travail en file.');
+      if((consumer.moveCooldown>0||(consumer.motion?.end??0)>world.tick)
+        &&world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===consumer.id))return refusal('invalid-command','Attendez la fin du déplacement avant de déposer la portion.');
+    }
+  }
   if(command.type==='hostility-response'){const p=world.pawns.find(p=>p.id===command.pawnId);if(!p||!['flee','ignore','attack'].includes(command.response))return refusal('invalid-command','Réaction invalide.');if(command.response==='flee')delete p.hostilityResponse;else p.hostilityResponse=command.response;cancelAutomaticCombat(p);if(p.flee&&command.response!=='flee'){delete p.flee;p.path=[];p.state='idle';}return {ok:true};}
   if(typeof command.type==='string'&&command.type.startsWith('order-')&&'pawnId' in command&&world.pawns.find(p=>p.id===command.pawnId)?.melee?.strike)return refusal('invalid-command','Le colon récupère après sa frappe.');
   if(command.type==='melee'||command.type==='shoot'){const result=command.type==='melee'?applyMeleeCommand(world,command):applyShootingCommand(world,command);if(result.ok){const target=world.pawns.find(p=>p.id===command.targetId);if(target?.visitor)visitorGroupDanger(world,target,'hostile');}return result;}
   if(typeof command.type==='string'&&'pawnId' in command&&command.type.startsWith('order-')&&world.pawns.find(p=>p.id===command.pawnId)?.shooting?.stance?.phase==='cooldown')return {ok:false,code:'invalid-command',reason:'Le colon récupère après son tir.'};
   if(command.type==='draft'||command.type==='draft-move'||command.type==='draft-stop'||command.type==='fire-at-will')return applyDraftCommand(world,command);
   if(typeof command.type==='string'&&command.type.startsWith('order-')&&'pawnId' in command&&world.pawns.find(p=>p.id===command.pawnId)?.draft
-    &&!(world.schemaVersion>=233&&command.type==='order-drafted-tend')&&!(world.schemaVersion>=193&&command.type==='order-haul'&&command.target?.type==='turret'))return refusal('invalid-command','Démobilisez ce colon avant un ordre civil.');
+    &&!(world.schemaVersion>=234&&command.type==='order-consume')&&!(world.schemaVersion>=233&&command.type==='order-drafted-tend')&&!(world.schemaVersion>=193&&command.type==='order-haul'&&command.target?.type==='turret'))return refusal('invalid-command','Démobilisez ce colon avant un ordre civil.');
   if(command.type==='clear-orders'&&world.pawns.find(p=>p.id===command.pawnId)?.draft)return applyDraftCommand(world,{type:'draft-stop',pawnIds:[command.pawnId]});
   if(command.type==='order-equipment'||command.type==='weapon-permission'||command.type==='apparel-permission'||command.type==='forget-weapon')return applyEquipment(world,command);
   if(command.type==='order-feed')return applyFeeding(world,command);
@@ -531,6 +541,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='surgery-request'||command.type==='surgery-cancel'||command.type==='surgery-install')return applySurgery(world,command);
   if(command.type==='order-tend')return applyTending(world,command);
   if(command.type==='order-drafted-tend')return applyDraftedTending(world,command);
+  if(command.type==='order-consume')return applyConsume(world,command);
   if(command.type==='self-tend-policy'){
     const p=world.pawns.find(p=>p.id===command.pawnId);
     if(!p||p.state==='dead'||typeof command.enabled!=='boolean')return refusal('invalid-command','Réglage d’auto-soin invalide.');
@@ -888,8 +899,9 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(pawn.animalRescue)reconcileAnimalRescues(world,pawn);
       if(processPawnVomiting(world,pawn)){if(prisonBreakActive(pawn))endPrisonBreak(world,pawn);continue;}
       if(pawn.stun&&pawn.stun.untilCore<=world.tick*10)delete pawn.stun;
+      if(isForcedConsuming(pawn)&&!consumeActivityValid(world,pawn))interruptDraftWork(world,pawn);
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
-      if(!isDraftedTending(pawn)&&(hasAdversary||pawn.meleeThreat&&world.tick*10-pawn.meleeThreat.atCore<=400)&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget,animalThreats);considerFlee(world,pawn,getThreats());}
+      if(!isDraftedTending(pawn)&&!isForcedConsuming(pawn)&&(hasAdversary||pawn.meleeThreat&&world.tick*10-pawn.meleeThreat.atCore<=400)&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget,animalThreats);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
       if(pawn.orbitalTrade)reconcileOrbitalTrade(world,pawn);if(pawn.deepWork)reconcileDeepWork(world,pawn);
       reconcileAllowedAreaPawn(world,pawn);
@@ -906,6 +918,12 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(bombDanger(world,pawn,getBlocked,budget,getLight,bombSources))continue;
       // An explicit clinical mandate keeps its mobilisation. Physiology,
       // captured travel, stun and immediate fire/bomb danger ran above it.
+      if(isForcedConsuming(pawn)){
+        if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
+        collapseFromExhaustion(world,pawn,needsContext);
+        if(isForcedConsuming(pawn))processEating(world,pawn,needsContext);
+        continue;
+      }
       if(isDraftedTending(pawn)&&(!pawn.draft||pawn.mental?.crisis))reconcileTending(world);
       if(isDraftedTending(pawn)){
         pawn.draft!.lastActiveTick=world.tick;

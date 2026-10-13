@@ -1,4 +1,6 @@
-# Validation courante — V345
+# Validation courante — V346
+
+**V346, schéma 234 : [qualification ROOT ciblée acquise](../gameplay/consuming-v346.md).** Groupe repris167cas/12dont48nouveaux PASS34,831s, rouge initial156/162 conservé ; corpus63/66 PASS79,664s, typages17,173/16,143s et Pages2,555s. ChromeWebGPU PASS76,299s : deux scènes préparées32², huit recharges exactes, erreurs[] et cinq captures inspectées. Package PASS1,599s, gel2874exact puis2875final avec vérificateur privé ; gate documentaire/commit/publication PENDING ; détails et SHA dans note unique, ROOT seul contrôles. Aucun FPS/ingestion naturelle V345/récupération V344 certifié ; production V343 active, autonomie ACTIVE. Les validations suivantes sont historiques.
 
 **V345, schéma 233 : [qualification ROOT partielle](../gameplay/colony-reserve-v345.md).** Typages PASS18,622/16,998s ; ChromeWebGPU RED247,531s/body242,800s sur borne240s, erreurs[]. Six rations livrées entièrement tracées, trois recharges exactes ; export final58111 non rechargé, ingestion réserve non acquise. Gel2870exact, quatre captures inspectées ROOT ; détails et SHA dans note unique. QA-only sans nouveau build/corpus/FPS/déploiement, documentation PASS2,215s, prêt au commit/push QA, ROOT seul contrôles et autonomie ACTIVE. Les validations suivantes sont historiques.
 

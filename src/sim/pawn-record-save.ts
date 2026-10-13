@@ -1,3 +1,4 @@
+import { validForcedConsumePawnShape } from './consume-save.ts';
 import { validAllowedAreaPawnShape } from './allowed-area-save.ts';
 import { validBedSlotPawnShape } from './double-bed-save.ts';
 // Common raw Pawn guard. Owner registration and contextual bindings stay outside.
@@ -52,6 +53,7 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validatePawnRecordShape(item:Record<string,unknown>, world:World, version:number, validationTick=world.tick):string[] {
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
+  if(!validForcedConsumePawnShape(item,version,world))errors.push('Invalid or future forced consumption marker or mandate.');
   if(!validAllowedAreaPawnShape(item,world,version))errors.push('Invalid or future allowed area assignment or return shape.');
   if(!validBedSlotPawnShape(item,world,version))errors.push('Invalid or future bed slot shape.');
   if(Object.hasOwn(item,'animalRescue')&&!validAnimalRescueShape(item.animalRescue,version))errors.push('Invalid or future animal rescue shape.');

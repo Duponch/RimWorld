@@ -133,12 +133,12 @@ test.each(malformed)('V343 save rejects $name before accepting any repaired stat
   const w=field();accept(w);change(w);expect(()=>deserializeWorld(JSON.stringify(w))).toThrow();
 });
 
-test('V343 schema233 approach/work snapshots and saves retain every service value; schema232 migration is neutral',()=>{
-  expect(SCHEMA_VERSION).toBe(233);const w=field();accept(w);replay(w,1);until(w,()=>w.pawns[0]!.tend?.phase==='tend');replay(w,2);
+test('V343 approach/work retain every service value at the current schema; schema232 migration is neutral',()=>{
+  expect(SCHEMA_VERSION).toBeGreaterThanOrEqual(233);const w=field();accept(w);replay(w,1);until(w,()=>w.pawns[0]!.tend?.phase==='tend');replay(w,2);
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),result=decoder.adopt(structuredClone(encoder.encode(w,0,1,true)));
   expect(result.status).toBe('applied');if(result.status==='applied')expect(result.world).toEqual(w);
   const old=careCamp();until(old,()=>old.pawns[0]!.tend?.phase==='tend');old.schemaVersion=232 as World['schemaVersion'];
-  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:233});
+  expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
 });
 test.each(['absent draft owner','duplicate claim','medicine mandate'] as const)('V343 Decoder refuses %s atomically and retries the same valid revision',cause=>{
   const w=field(),encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();

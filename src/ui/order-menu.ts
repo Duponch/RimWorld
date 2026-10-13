@@ -11,6 +11,9 @@ import { meleePlaces, meleeRoute } from '../sim/melee-space';
 import { blockedCells, reachableCells } from '../sim/pathfinding';
 import { draftedTendingReason, draftedTendingProposal } from '../sim/drafted-tending';
 import { draftablePawns } from './drafting-controls';
+import { FOOD_ITEMS } from '../sim/food-policy';
+import { groundPilesAt } from '../sim/ground-placement';
+import { setTooltip } from './tooltip';
 
 export interface TacticalAttackOption {
   kind: 'shoot' | 'melee';
@@ -86,6 +89,12 @@ export function tacticalTendingPolicy(world:World,ids:ReadonlySet<number>,target
   return {patientId:patient.id,...doctor?{pawnId:doctor.id}:{},label:`Soigner ${patient.name} (sans médicament)`,enabled:!reason,...reason?{reason}:{}};
 }
 
+/** One selected actor must choose food explicitly, rather than accidentally
+ * walking to it. Distinct piles in an ordinary reserve or shelf stay distinct. */
+export function contextConsumesFood(world:World,ids:ReadonlySet<number>,cell:Cell,targetId?:number):boolean {
+  return targetId===undefined&&ids.size===1&&groundPilesAt(world,cell).some(p=>p.kind==='food'&&FOOD_ITEMS.includes(p.item as typeof FOOD_ITEMS[number]));
+}
+
 export class OrderMenu {
   private readonly menu=document.createElement('div');
   private revision=0;
@@ -112,7 +121,7 @@ export class OrderMenu {
     // A turret service is a personal haul order, including while mobilized.
     // Ask the worker for its real eligibility instead of treating the building
     // as a ground movement or a living attack target.
-    if(targetId===undefined&&world.structures.some(s=>s.kind==='mini-turret'&&s.x===cell.x&&s.z===cell.z)){
+    if(contextConsumesFood(world,ids,cell,targetId)||targetId===undefined&&world.structures.some(s=>s.kind==='mini-turret'&&s.x===cell.x&&s.z===cell.z)){
       await this.open(world,ids,cell,x,y,queue);return;
     }
     this.close();
@@ -186,7 +195,9 @@ export class OrderMenu {
         if(option.haulTarget?.type==='pile')button.dataset.orderHaulPile=String(option.haulTarget.pileId);
         if(option.cookStationId!==undefined)button.dataset.orderCook=String(option.cookStationId);
         if(option.equipmentItemId!==undefined)button.dataset.orderEquipment=String(option.equipmentItemId);
-        button.textContent=option.enabled?`${queue?'Mettre en file :':'Prioriser :'} ${option.label}`:`${option.label} — ${option.reason}`;
+        if(option.consumePileId!==undefined)button.dataset.orderConsume=String(option.consumePileId);
+        button.textContent=option.enabled?(option.consumePileId!==undefined?option.label:`${queue?'Mettre en file :':'Prioriser :'} ${option.label}`):`${option.label} — ${option.reason}`;
+        if(option.warnings?.length)setTooltip(button,{title:option.label,body:option.warnings.join(' · ')});
         button.disabled=!option.enabled;
         if(option.feedPatientId!==undefined)button.dataset.orderFeed=String(option.feedPatientId);
         if(option.tendPatientId!==undefined)button.dataset.orderTend=String(option.tendPatientId);
@@ -194,7 +205,10 @@ export class OrderMenu {
         if(option.capturePatientId!==undefined)button.dataset.orderCapture=String(option.capturePatientId);
         if(option.arrestPatientId!==undefined)button.dataset.orderArrest=String(option.arrestPatientId);
         button.onclick=event=>{
-          this.close();void this.client.command(option.arrestPatientId!==undefined
+          if(option.consumePileId!==undefined&&(queue||event.shiftKey)){this.report('Consommer est un ordre direct ; relâchez Maj.',true);return;}
+          this.close();void this.client.command(option.consumePileId!==undefined
+            ? {type:'order-consume',pawnId:pawn.id,pileId:option.consumePileId,queue:false}
+            : option.arrestPatientId!==undefined
             ? {type:'order-arrest',pawnId:pawn.id,patientId:option.arrestPatientId,queue:false}
             : option.capturePatientId!==undefined
             ? {type:'order-capture',pawnId:pawn.id,patientId:option.capturePatientId,queue:queue||event.shiftKey}
@@ -214,11 +228,12 @@ export class OrderMenu {
             .then(()=>this.report(option.arrestPatientId!==undefined?'Tentative d’arrestation demandée ; l’acceptation sera vérifiée au contact.':'Ordre accepté.')).catch(error=>this.report(String(error instanceof Error?error.message:error),true));
         };
         content.append(button);
+        if(option.consumePileId!==undefined&&option.warnings?.length){const note=document.createElement('p');note.className='muted';note.textContent=option.warnings.join(' · ');content.append(note);}
       }
       const fire=world.fires?.items.find(f=>{const at=firePosition(world,f);return at?.x===cell.x&&at?.z===cell.z;});
       if(fire){const button=document.createElement('button');button.setAttribute('role','menuitem');button.dataset.orderFire=String(fire.id);button.textContent='Prioriser : éteindre le feu';button.onclick=()=>{this.close();void this.client.command({type:'order-extinguish',pawnId:pawn.id,fireId:fire.id}).then(()=>this.report('Extinction prioritaire demandée.')).catch(error=>this.report(String(error instanceof Error?error.message:error),true));};content.append(button);}
       if(!options.length&&!fire)content.textContent='Aucun travail ni pile à transporter ici. Utilisez les ordres d’Architecte.';
-      const hint=document.createElement('p');hint.className='muted';hint.textContent=options.some(option=>option.arrestPatientId!==undefined)?'Arrestation directe par un colon démobilisé, avec lit de prison accessible. La chance affichée dépend de l’état actuel ; un refus peut provoquer une fureur violente.':fire?'L’extinction est un ordre direct, sans mise en file.':options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
+      const hint=document.createElement('p');hint.className='muted';hint.textContent=options.some(option=>option.consumePileId!==undefined)?'Consommer remplace l’activité en cours, sans mise en file. Un colon mobilisé reste mobilisé et mange au contact de la pile.':options.some(option=>option.arrestPatientId!==undefined)?'Arrestation directe par un colon démobilisé, avec lit de prison accessible. La chance affichée dépend de l’état actuel ; un refus peut provoquer une fureur violente.':fire?'L’extinction est un ordre direct, sans mise en file.':options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
       this.position(x,y);content.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
     } catch(error) {if(revision===this.revision){content.textContent=String(error instanceof Error?error.message:error);this.position(x,y);}}
   }
