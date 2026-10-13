@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V338 — [première production alimentaire naturelle](gameplay/early-colony-food-v338.md), schéma 232 conservé.** Première chaîne du champ à une portion réellement consommée acquise avec douze recharges exactes et incidents conservés. Une récolte puis resemis ne qualifient pas encore deux cycles ni une réserve durable ; les trois originaux vivent au39073, les personnes extérieures décédées restent conservées. Suite prioritaire : rendre visible le risque d’humeur déjà simulé, puis poursuivre la qualification de survie et renouvellement. [Critères early access](gameplay/early-access-readiness.md), commit/push des lots utiles, publications regroupées et relance ACTIVE. Les états suivants sont historiques.
+
 **V336 — [camp de première nuit](gameplay/human-sleeping-spots-v336.md), schéma 232.** Couchage humain gratuit et première nuit des trois biomes acquis ; suite : absence de colon contrôlable expliquée, puis campagne durable. [Critères early access](gameplay/early-access-readiness.md). Lots utiles commités/poussés, publications regroupées, relance ACTIVE. Les états suivants sont historiques.
 
 **V335 — [arrivée initiale](gameplay/starting-arrival-v335.md), schéma 231.** Dernière étape de création reliée aux vrais occupants et biens. [Critères early access](gameplay/early-access-readiness.md) : couchages et première nuit dans les trois biomes, puis campagne avec reprises et incidents. Autonomie/commit/push et publications regroupées autorisés, relance ACTIVE. Les états suivants sont historiques.
