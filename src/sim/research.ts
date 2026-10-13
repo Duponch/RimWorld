@@ -73,6 +73,43 @@ export const airConditioningUnlocked=(w:World):boolean=>w.research?.airCondition
 export const batteriesUnlocked=(w:World):boolean=>w.research?.batteries?.completedAt!==undefined;
 export const solarPowerUnlocked=(w:World):boolean=>w.research?.solarPower?.completedAt!==undefined;
 export const projectProgress=(s:ResearchState,project:ResearchProject):ResearchProgress=>project==='biofuel-refining'?(s.biofuelRefining??={points:0}):project==='nutrient-paste'?(s.nutrientPaste??={points:0}):project==='deep-drilling'?(s.deepDrilling??={points:0}):project==='ground-scanner'?(s.groundScanner??={points:0}):project==='sterile-materials'?(s.sterileMaterials??={points:0}):project==='vitals-monitor'?(s.vitalsMonitor??={points:0}):project==='drug-production'?(s.drugProduction??={points:0}):project==='medicine-production'?(s.medicineProduction??={points:0}):project==='hydroponics'?(s.hydroponics??={points:0}):project==='gun-turrets'?(s.gunTurrets??={points:0}):project==='tube-television'?(s.tubeTelevision??={points:0}):project==='packaged-survival-meals'?(s.packagedSurvivalMeals??={points:0}):project==='hospital-bed'?(s.hospitalBed??={points:0}):project==='microelectronics'?(s.microelectronics??={points:0}):project==='multi-analyzer'?(s.multiAnalyzer??={points:0}):project==='fabrication'?(s.fabrication??={points:0}):project==='advanced-fabrication'?(s.advancedFabrication??={points:0}):project==='recon-armor'?(s.reconArmor??={points:0}):project==='autodoors'?(s.autodoors??={points:0}):project==='machining'?(s.machining??={points:0}):project==='gunsmithing'?(s.gunsmithing??={points:0}):project==='plate-armor'?(s.plateArmor??={points:0}):project==='flak-armor'?(s.flakArmor??={points:0}):project==='stonecutting'?(s.stonecutting??={points:0}):project==='smithing'?(s.smithing??={points:0}):project==='complex-furniture'?(s.complexFurniture??={points:0}):project==='complex-clothing'?s:project==='air-conditioning'?(s.airConditioning??={points:0}):project==='batteries'?(s.batteries??={points:0}):(s.solarPower??={points:0});
+/** Pure HUD projection; rendering never initializes an historical record. */
+const RESEARCH_PROGRESS_KEYS:Record<Exclude<ResearchProject,'complex-clothing'>,keyof ResearchState>={
+  'biofuel-refining':'biofuelRefining',
+  'nutrient-paste':'nutrientPaste',
+  'deep-drilling':'deepDrilling',
+  'ground-scanner':'groundScanner',
+  'sterile-materials':'sterileMaterials',
+  'vitals-monitor':'vitalsMonitor',
+  'drug-production':'drugProduction',
+  'medicine-production':'medicineProduction',
+  'hydroponics':'hydroponics',
+  'gun-turrets':'gunTurrets',
+  'tube-television':'tubeTelevision',
+  'packaged-survival-meals':'packagedSurvivalMeals',
+  'hospital-bed':'hospitalBed',
+  'microelectronics':'microelectronics',
+  'multi-analyzer':'multiAnalyzer',
+  'fabrication':'fabrication',
+  'advanced-fabrication':'advancedFabrication',
+  'recon-armor':'reconArmor',
+  'autodoors':'autodoors',
+  'machining':'machining',
+  'gunsmithing':'gunsmithing',
+  'plate-armor':'plateArmor',
+  'flak-armor':'flakArmor',
+  'stonecutting':'stonecutting',
+  'smithing':'smithing',
+  'complex-furniture':'complexFurniture',
+  'air-conditioning':'airConditioning',
+  'batteries':'batteries',
+  'solar-power':'solarPower'
+};
+export function readProjectProgress(state:ResearchState,project:ResearchProject):ResearchProgress|undefined {
+  if(project==='complex-clothing')return state;
+  const progress=state[RESEARCH_PROGRESS_KEYS[project]];
+  return progress && typeof progress==='object' ? progress : undefined;
+}
 export const researchCost=(project:ResearchProject):number=>project==='biofuel-refining'?BIOFUEL_REFINING_RESEARCH_COST:project==='nutrient-paste'?NUTRIENT_PASTE_RESEARCH_COST:project==='deep-drilling'?DEEP_DRILLING_RESEARCH_COST:project==='ground-scanner'?GROUND_SCANNER_RESEARCH_COST:project==='sterile-materials'?STERILE_MATERIALS_RESEARCH_COST:project==='vitals-monitor'?VITALS_MONITOR_RESEARCH_COST:project==='drug-production'?DRUG_PRODUCTION_RESEARCH_COST:project==='medicine-production'?MEDICINE_PRODUCTION_RESEARCH_COST:project==='hydroponics'?HYDROPONICS_RESEARCH_COST:project==='gun-turrets'?GUN_TURRETS_RESEARCH_COST:project==='tube-television'?TUBE_TELEVISION_RESEARCH_COST:project==='packaged-survival-meals'?PACKAGED_SURVIVAL_MEALS_RESEARCH_COST:project==='hospital-bed'?HOSPITAL_BED_RESEARCH_COST:project==='microelectronics'?MICROELECTRONICS_RESEARCH_COST:project==='multi-analyzer'?MULTI_ANALYZER_RESEARCH_COST:project==='fabrication'?FABRICATION_RESEARCH_COST:project==='advanced-fabrication'?ADVANCED_FABRICATION_RESEARCH_COST:project==='recon-armor'?RECON_ARMOR_RESEARCH_COST:project==='autodoors'?AUTODOORS_RESEARCH_COST:project==='machining'?MACHINING_RESEARCH_COST:project==='gunsmithing'?GUNSMITHING_RESEARCH_COST:project==='plate-armor'?PLATE_ARMOR_RESEARCH_COST:project==='flak-armor'?FLAK_ARMOR_RESEARCH_COST:project==='stonecutting'?STONECUTTING_RESEARCH_COST:project==='smithing'?SMITHING_RESEARCH_COST:project==='complex-furniture'?COMPLEX_FURNITURE_RESEARCH_COST:project==='complex-clothing'?CLOTHING_RESEARCH_COST:project==='air-conditioning'?AIR_CONDITIONING_COST:project==='batteries'?BATTERIES_RESEARCH_COST:SOLAR_POWER_RESEARCH_COST;
 export const researchUnlocked=(w:World,project:ResearchProject):boolean=>project==='biofuel-refining'?biofuelRefiningUnlocked(w):project==='nutrient-paste'?nutrientPasteUnlocked(w):project==='deep-drilling'?deepDrillingUnlocked(w):project==='ground-scanner'?groundScannerUnlocked(w):project==='sterile-materials'?sterileMaterialsUnlocked(w):project==='vitals-monitor'?vitalsMonitorUnlocked(w):project==='drug-production'?drugProductionUnlocked(w):project==='medicine-production'?medicineProductionUnlocked(w):project==='hydroponics'?hydroponicsUnlocked(w):project==='gun-turrets'?gunTurretsUnlocked(w):project==='tube-television'?tubeTelevisionUnlocked(w):project==='packaged-survival-meals'?packagedSurvivalMealsUnlocked(w):project==='hospital-bed'?hospitalBedUnlocked(w):project==='microelectronics'?microelectronicsUnlocked(w):project==='multi-analyzer'?multiAnalyzerUnlocked(w):project==='fabrication'?fabricationUnlocked(w):project==='advanced-fabrication'?advancedFabricationUnlocked(w):project==='recon-armor'?reconArmorUnlocked(w):project==='autodoors'?autodoorsUnlocked(w):project==='machining'?machiningUnlocked(w):project==='gunsmithing'?gunsmithingUnlocked(w):project==='plate-armor'?plateArmorUnlocked(w):project==='flak-armor'?flakArmorUnlocked(w):project==='stonecutting'?stonecuttingUnlocked(w):project==='smithing'?smithingUnlocked(w):project==='complex-furniture'?complexFurnitureUnlocked(w):project==='complex-clothing'?clothingUnlocked(w):project==='air-conditioning'?airConditioningUnlocked(w):project==='batteries'?batteriesUnlocked(w):solarPowerUnlocked(w);
 export interface ResearchTask {stationId:number;spot:Cell;worked:number;facilityId?:number}

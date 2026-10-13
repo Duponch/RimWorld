@@ -1,3 +1,10 @@
+import { WOODEN_PARTS } from '../sim/artificial-parts';
+import { readProjectProgress, researchCost } from '../sim/research';
+import { ANIMAL_FEED_TICKS } from '../sim/animal-feeding-rules';
+import { BURIAL_TICKS } from '../sim/burial';
+import { SURGERY_WORK } from '../sim/surgery-rules';
+import { REFUEL_WORK_TICKS } from '../sim/fuel';
+import { TURRET_RELOAD_WORK_TICKS } from '../sim/mini-turret-reload';
 import { handlingStepDuration } from '../sim/animal-handling';
 import { SLAUGHTER_WORK_TICKS } from '../sim/animal-slaughter';
 import { isColonist } from '../sim/affiliation';
@@ -12,7 +19,7 @@ import { PRISON_RAPPORT_TICKS } from '../sim/prisoner-state';
 import type { Cell, Job, Pawn, Resource, World } from '../sim/types';
 
 export interface ActionProgress {
-  kind: 'job'|'clearing'|'production'|'ingestion'|'feeding'|'tending'|'warden'|'cleaning'|'hunting'|'handling';
+  kind: 'job'|'clearing'|'production'|'ingestion'|'feeding'|'tending'|'warden'|'cleaning'|'hunting'|'handling'|'burial'|'surgery'|'equipment'|'service'|'research';
   completed: number;
   total: number;
   fraction: number;
@@ -31,13 +38,29 @@ const measured=(kind:ActionProgress['kind'],completed:number,total:number):Actio
     ?{kind,completed,total,fraction:Math.max(0,Math.min(1,completed/total))}:undefined;
 
 /** Only work with a persisted counter and a known completion threshold gets a
- * bar. Waiting, travel, sleep, recreation, hauling and open-ended research do
- * not acquire a synthetic timer. Called on confirmed world snapshots only. */
+ * bar. Research reports the global project's points. Waiting, travel, sleep,
+ * recreation and hauling acquire no synthetic timer. Confirmed snapshots only. */
 export function actionProgress(world:World,pawn:Pawn,lookup?:ActionLookup):ActionProgress|undefined {
   if(!isColonist(pawn))return undefined;
   if(pawn.state==='eating'&&pawn.need?.kind==='eat'&&pawn.need.phase==='ingest')
     return measured('ingestion',workProgress(pawn.need),INGEST_TICKS);
   if(pawn.state!=='working')return undefined;
+  if(pawn.research&&world.research?.project){
+    const progress=readProjectProgress(world.research,world.research.project);
+    return measured('research',progress?.points??0,researchCost(world.research.project));
+  }
+  if(pawn.surgery?.phase==='work')return measured('surgery',pawn.surgery.progress,pawn.surgery.implant ? WOODEN_PARTS[pawn.surgery.implant].work : SURGERY_WORK);
+  if(pawn.burial?.phase==='bury')return measured('burial',pawn.burial.progress,BURIAL_TICKS);
+  if(pawn.animalFeed?.phase==='feed')return measured('feeding',pawn.animalFeed.progress,ANIMAL_FEED_TICKS);
+  if(pawn.equipmentTask){
+    const task=pawn.equipmentTask;
+    if(task.action==='wear'||task.action==='remove')return measured('equipment',task.progress,task.duration!);
+    if(task.action==='drop')return measured('equipment',task.progress,3);
+  }
+  if(pawn.haul?.phase==='deliver'&&pawn.haul.serviceProgress!==undefined){
+    if(pawn.haul.destination.type==='fuel')return measured('service',pawn.haul.serviceProgress,REFUEL_WORK_TICKS);
+    if(pawn.haul.destination.type==='turret')return measured('service',pawn.haul.serviceProgress,TURRET_RELOAD_WORK_TICKS);
+  }
   if(pawn.cooking?.phase==='work')return measured('production',pawn.cooking.progress,productionTaskTotal(world,pawn.cooking));
   if(pawn.feed?.phase==='feed')return measured('feeding',pawn.feed.progress,FEED_TICKS);
   if(pawn.cleaning?.phase==='clean'){

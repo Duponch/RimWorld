@@ -71,6 +71,7 @@ import { createShortCircuitUI } from './ui/short-circuit';
 import { createFlashstormUI } from './ui/flashstorm';
 import { createSolarFlareUI } from './ui/solar-flare';
 import { updateResearchPanel } from './ui/research-panel';
+import { specificWorkActivity } from './ui/work-activity';
 import { createScoutUI } from './ui/scout-panel';
 import { createGroupPanel } from './ui/group-panel';
 import { createGroupAdapters, readGroupPanelSnapshot } from './ui/group-adapter';
@@ -1199,6 +1200,8 @@ function actionLabel(pawn: Pawn, carriedPatients: ReadonlySet<number>) {
     return pawn.haul.phase === 'pickup' ? `Prélèvement · ${pawn.haul.quantity} unités pour ${destination}`
       : `Livraison · ${carried?.quantity ?? pawn.haul.quantity} ${carried ? ITEM_DEFINITIONS[carried.item].label : 'unités'} → ${destination}`;
   }
+  const specificActivity = snapshot && specificWorkActivity(snapshot, pawn);
+  if (specificActivity) return specificActivity;
   const job = snapshot?.jobs.find(item => item.id === pawn.jobId);
   return job ? `${stateLabels[pawn.state]} · ${jobLabels[job.kind].toLocaleLowerCase('fr')}` : stateLabels[pawn.state];
 }

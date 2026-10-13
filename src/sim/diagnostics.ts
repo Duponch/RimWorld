@@ -1,3 +1,6 @@
+import { clearingDuration } from './gathering.ts';
+import { workProgress } from './work-progress.ts';
+import { jobDuration } from './farming.ts';
 import { workPriority } from './work-types.ts';
 import { prisonBreakActive } from './prison-break-state.ts';
 import { carrierOf } from './rescue-state.ts';
@@ -24,10 +27,21 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,job.reservedBy??undefined))return {code:'blocked',reason:'Attend la fin de l’utilisation du bâtiment.',delivered,required};
   if(isConstruction(job)){
     const {plant,pile,pack}=constructionObstruction(world,job);
+    const clearer = job.clearance && world.pawns.find(p => p.id === job.reservedBy && p.jobId === job.id);
+    const clearedPlant = clearer && world.resources.find(resource => resource.id === job.clearance!.resourceId);
+    if (clearedPlant && clearer) {
+      const percentage = Math.min(99, Math.floor(100 * workProgress(job.clearance!) / clearingDuration(clearedPlant)));
+      return {code:'clearing',reason:clearer.state === 'working' ? `Dégagement de la plante par ${clearer.name} (${percentage} %).` : `${clearer.name} rejoint la plante pour dégager le chantier.`,delivered,required};
+    }
     if(plant||pile||pack)return {code:'clearing',reason:pack?'Attend le déplacement du meuble emballé hors de l’emprise.':plant?'Attend la coupe de la plante qui gêne le chantier.':`Attend le déplacement de ${pile!.quantity} unités hors de l’emprise.`,delivered,required};
     if(!constructionSiteFree(world,job,job.reservedBy??undefined))return {code:'blocked',reason:'Attend la libération de l’emprise par un colon en place ou en mouvement.',delivered,required};
   }
-  if (job.reservedBy !== null) return { code: 'working', reason: 'Travail attribué à un colon.', delivered, required };
+  if (job.reservedBy !== null) {
+    const worker = world.pawns.find(p => p.id === job.reservedBy && p.jobId === job.id);
+    return {code:'working',reason:worker?.state === 'working'
+      ? `${isConstruction(job) ? 'Assemblage' : 'Travail'} en cours (${Math.min(99, Math.floor(100 * workProgress(job) / jobDuration(world, job)))} %).`
+      : 'Travail attribué à un colon.',delivered,required};
+  }
   if (required > delivered) {
     const shipping = reservedDestination(world, { type: 'job', jobId: job.id });
     return { code: shipping ? 'delivering' : 'missing-materials', reason: shipping ? `Livraison en cours : ${costs.map(c=>`${deliveredMaterial(world,job,c.item)}/${c.quantity} ${ITEM_DEFINITIONS[c.item].label}`).join(" + ")}.` : `Attend ${costs.filter(c=>deliveredMaterial(world,job,c.item)<c.quantity).map(c=>`${c.quantity-deliveredMaterial(world,job,c.item)} ${ITEM_DEFINITIONS[c.item].label}`).join(" + ")} ; vérifier Construction/Transport et l’accès.`, delivered, required };

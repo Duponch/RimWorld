@@ -7,6 +7,8 @@ import { groundCapacity,planGroundPlacement } from './ground-placement.ts';
 import { footprintContains } from './definitions.ts';
 import { researchUnlocked } from './research.ts';
 import { removeFilth } from './filth.ts';
+import { isFloorLightPlant } from './construction-plants.ts';
+import { gatherResource } from './gathering.ts';
 import type { Cell,CommandResult,DesignateCommand,Job,World } from './types.ts';
 
 export const FLOOR_KINDS=['wood-planks','granite-tile','limestone-tile','marble-tile','sandstone-tile','slate-tile','steel-tile','sterile-tile'] as const;
@@ -52,9 +54,12 @@ export function canDesignateFloor(w:World,c:DesignateCommand):CommandResult {
  * not remove the job: the central finish transaction owns activity cleanup. */
 export function finishFloor(w:World,job:Job):boolean {
   if(job.kind!=='lay-floor'||!isBuildableFloor(job.floor)||job.floor==='sterile-tile'&&w.schemaVersion<211)return false;
-  const tile=w.tiles[job.z*w.width+job.x];if(!tile||tile.floor||tile.terrain==='rock'||tile.terrain==='water'||w.resources.some(r=>r.x===job.x&&r.z===job.z))return false;
+  const tile=w.tiles[job.z*w.width+job.x];if(!tile||tile.floor||tile.terrain==='rock'||tile.terrain==='water'||w.resources.some(r=>r.x===job.x&&r.z===job.z&&!isFloorLightPlant(r)))return false;
   const recipe=flooringRecipe(job.floor),piles=w.piles.filter(p=>p.owner.type==='job'&&p.owner.jobId===job.id);
   if(piles.some(p=>!recipe.ingredients.some(c=>c.item===p.item))||recipe.ingredients.some(c=>piles.filter(p=>p.item===c.item).reduce((n,p)=>n+p.quantity,0)!==c.quantity))return false;
+  // Every refusal precedes removal. These species have no cut output or RNG;
+  // the shared producer also releases plant jobs, clearances and animal meals.
+  for(const plant of w.resources.filter(r=>r.x===job.x&&r.z===job.z&&isFloorLightPlant(r)))gatherResource(w,plant,'cut',job.id);
   w.piles=w.piles.filter(p=>p.owner.type!=='job'||p.owner.jobId!==job.id);tile.floor=job.floor;job.escrow.wood=0;job.escrow.food=0;
   // Keep the growing-zone intention; zero fertility prevents sowing until the
   // floor is removed. Designation already excludes competing plant jobs.

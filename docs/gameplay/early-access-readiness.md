@@ -17,6 +17,8 @@ Une case de catalogue, un bouton grisé, une simulation préparée ou un test ci
 
 ## Ordre de travail courant
 
+Priorité humaine14octobre : [correctifs de construction V348](construction-clearance-v348.md) puis plantes/extraction, annulation du transport et masquage du décor. Reprendre la qualification de campagne après ces bugs ; V347 est commité/poussé en2196efdf, sans publication QA supplémentaire.
+
 1. Carnet contextuel V334 commité et poussé ; préserver toutes les mécaniques.
 2. Arrivée physique V335 acquise : personnes et biens réellement détenus pendant la descente, mêmes identités et quantités à l’ouverture, pause et reprise exactes. Les écarts Core restent explicites, sans interdiction générique ou scorie fictives.
 3. Couchage humain au sol V336 acquis avec trois camps de première nuit, ressources ordinaires et douze recharges exactes ; correction de précision du climat issu du globe, valeurs sauvegardées conservées. Les limites et reprises sont dans [la note V336](human-sleeping-spots-v336.md).

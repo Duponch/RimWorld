@@ -1,5 +1,8 @@
 # Plan de développement
 
+**V348 — [dégagement et plans](gameplay/construction-clearance-v348.md), schéma234.** Premier lot des bugs humains14octobre qualifié sur deux scènes préparées ChromeWebGPU88,057s/huit recharges exactes : jeune arbre/sol léger/porte sur ghost et lectures réelles des phases, groupe85cas/14 acquis par reprises, typage/Pages et corpus63/66 passent. Aucune sauvegarde humaine/campagne entière/FPS ni publication acquis ; documentation PASS1,448s puis commit/push et poursuivre plantes/transport/masquage en autonomie. Campagne/réserves passent après ces correctifs. Les états suivants sont historiques.
+
+
 **V347 — [une ration intérieure consommée](gameplay/colony-reserve-use-v347.md), schéma 234.** L'action Consommer est utilisée sur une copie naturelle58111 : portion réelle ingérée à l'intérieur,15rations restantes et cinq recharges exactes. La branche blessée V344 demeure distincte. QA-only, documentation PASS1,168s, prêt au commit/push QA, publication V346 stable. Suite autonome ACTIVE : préparer des médicaments en réserve intérieure et poursuivre la campagne avec mêmes personnes et gestes de mobilisation réellement observés, sans résultat futur présumé. Les états suivants sont historiques.
 
 **Clôture V346**, schéma 234 : produit `f9f65b54` commité/poussé et [publié une seule fois en5afc7ff6](development/cloudflare-pages.md#publication-v346--consommation-directe),104réponsesHTTPS exactes. Suite autonome early access ACTIVE : V347 qualifie une ration intérieure depuis la branche V34558111 distincte des blessés V344 ; aucune campagne durable ou réussite future présumée. Les états suivants sont historiques.

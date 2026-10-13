@@ -51,4 +51,6 @@ export function gatherResource(world: World, resource: Resource, kind:'chop'|'ha
   }
   return roll.quantity;
 }
+/** Select at the actual resolution: clearing does not require a mature yield. */
+export const clearingKind=(world:World,resource:Resource):'chop'|'cut'=>resource.kind==='tree'&&choppable(world,resource)?'chop':'cut';
 export const clearingDuration=(resource:Resource):number=>resource.kind==='tree'?100:isCrop(resource)?20:60;

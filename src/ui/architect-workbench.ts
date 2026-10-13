@@ -110,6 +110,9 @@ export function installArchitectWorkbench(
     tray.setAttribute('aria-label', group === 'orders' ? 'Choisir un ordre' : 'Choisir une zone');
     tray.hidden = true;
     for (const tool of panel.querySelectorAll<HTMLButtonElement>(`[data-tool-category="${group}"]`)) {
+      // Selection is the map's native idle mode (Escape/right click). Keep its
+      // catalogue/atlas slot, but expose no redundant child button.
+      if (group === 'orders' && tool.dataset.tool === 'select') { tool.remove(); continue; }
       tool.hidden = false;
       tool.classList.add('map-tool');
       tray.append(tool);
