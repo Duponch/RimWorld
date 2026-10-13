@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V337 : [disponibilité des colons](gameplay/colonist-availability-v337.md), schéma 232 conservé.** Causes et destinations réelles pour une carte sans colon libre ; défaut d’admission commerciale corrigé. Six parcours natifs et corpus historique acquis, suite campagne naturelle durable. Preuves, reprises et limites centralisées dans la note unique. Les états suivants sont historiques.
+
 **V336 : [couchages au sol et première nuit](gameplay/human-sleeping-spots-v336.md), schéma 232.** Emplacement humain gratuit, rôles et taux propres au sol ; trois premières nuits et douze recharges exactes acquises. Contrôles, rouges et limites centralisés dans la note unique. Les états suivants sont historiques.
 
 **V335 : [arrivée des survivants](gameplay/starting-arrival-v335.md), schéma 231.** Contenus physiques, transitions confirmées et reprise pendant la descente ; corpus historique conservé. Contrôles et limites centralisés, prochaines priorités première nuit et campagne durable. Les états suivants sont historiques.

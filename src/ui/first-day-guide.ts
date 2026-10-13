@@ -11,10 +11,12 @@ import { structureMaxHp } from '../sim/thing-damage-rules';
 import { workPriority } from '../sim/work-types';
 import type { BedSlot,MaterialPile,Pawn,Structure,World } from '../sim/types';
 import type { ArchitectCategory,Panel,Tool } from './layout';
+import { readAvailabilityStatusAlerts,type StatusAlert } from './status-alerts';
+import type { NotificationTarget } from './notification-focus';
 
 export type FirstDayGuideStatus='ready'|'started'|'missing'|'optional';
 export type FirstDayGuideId='work'|'storage'|'beds'|'food'|'cultivation'|'cooking'|'equipment';
-export interface FirstDayGuideAction {panel?:Exclude<Panel,null>;category?:ArchitectCategory;mapTools?:'orders'|'zones';tool?:Tool}
+export interface FirstDayGuideAction {panel?:Exclude<Panel,null>;category?:ArchitectCategory;mapTools?:'orders'|'zones';tool?:Tool;worldTab?:'group'|'individual';target?:NotificationTarget;tab?:StatusAlert['tab']}
 export interface FirstDayGuideSection {
   id:FirstDayGuideId;title:string;status:FirstDayGuideStatus;detail:string;body:string;
   action:FirstDayGuideAction;actionLabel:string;
@@ -85,10 +87,14 @@ export function readFirstDayGuide(world:World):FirstDayGuideSection[] {
   const groundWeapons=piles.filter(p=>p.kind==='weapon'&&p.owner.type==='ground'&&(p.weapon?.hitPoints??1)>0);
   const equipped=people.filter(p=>world.piles.some(item=>item.kind==='weapon'&&item.quantity>0&&item.owner.type==='equipment'&&item.owner.pawnId===p.id&&(item.weapon?.hitPoints??1)>0)).length;
   const noPeople=people.length===0;
+  const availability=readAvailabilityStatusAlerts(world),absence=availability[0];
+  const absenceTarget=absence?.targets[0];
+  const absenceAction:FirstDayGuideAction=absenceTarget?{target:absenceTarget,...absence?.tab?{tab:absence.tab}:{}}:absence?.context?{...absence.context}:{panel:'menu'};
+  const absenceActionLabel=absenceTarget?`Consulter ${absence?.tab==='health'?'Santé':absence?.tab==='needs'?'Besoins':'Prisonnier'}`:absence?.context?.panel==='world'?'Ouvrir Monde':'Ouvrir Menu';
   return [
-    {id:'work',title:'Répartir le travail',status:noPeople?'optional':missingWork.length?'missing':'ready',
-      detail:noPeople?'Aucun colon libre vivant sur cette carte.':missingWork.length?`À activer : ${missingWork.join(', ')}.`:'Transport, Construction et Culture ont un titulaire affecté.',
-      body:'Dans Travail, 1 est la priorité la plus forte ; 0 désactive. Les incapacités du dossier comptent. Ces affectations ne garantissent pas un trajet ou des matériaux. En cas de blessure, consultez Santé puis les priorités Médecin, Patient et Repos au lit.',action:{panel:'work'},actionLabel:'Ouvrir Travail'},
+    {id:'work',title:absence?'Comprendre la disponibilité des colons':'Répartir le travail',status:noPeople?'optional':absence||missingWork.length?'missing':'ready',
+      detail:absence?`${absence.text}.${availability.length>1?` ${availability.slice(1).map(row=>row.text).join('. ')}.`:''}`:noPeople?'Aucun colon libre vivant sur cette carte.':missingWork.length?`À activer : ${missingWork.join(', ')}.`:'Transport, Construction et Culture ont un titulaire affecté.',
+      body:absence?'Ces constats suivent les personnes et leurs propriétaires dans l’état confirmé. Inspectez les personnes présentes ou ouvrez leur voyage dans Monde. La partie reste ouverte ; Menu donne accès aux sauvegardes et à une nouvelle colonie.':'Dans Travail, 1 est la priorité la plus forte ; 0 désactive. Les incapacités du dossier comptent. Ces affectations ne garantissent pas un trajet ou des matériaux. En cas de blessure, consultez Santé puis les priorités Médecin, Patient et Repos au lit.',action:absence?absenceAction:{panel:'work'},actionLabel:absence?absenceActionLabel:'Ouvrir Travail'},
     {id:'storage',title:'Regrouper les réserves',status:woodCells&&foodCells?'ready':cells.length||shelfPlans?'started':'missing',
       detail:`${woodCells} case(s) acceptent le bois ; ${foodCells} acceptent les repas de survie.${shelfPlans?` ${shelfPlans} étagère(s) encore en chantier.`:''}`,
       body:'Tracez une réserve et vérifiez ses filtres, sa priorité et sa capacité. Une étagère doit être construite. Les transporteurs déplacent les piles au contact ; cette configuration ne garantit pas une place libre pour chaque objet.',action:{panel:'architect',mapTools:'zones',tool:'stockpile'},actionLabel:'Ouvrir Zones'},

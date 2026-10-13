@@ -9,11 +9,12 @@ import {miniTurretExplosive} from '../src/sim/bomb-eligibility.ts';
 import {validBombWaveShape} from '../src/sim/bomb-state.ts';
 import {validBombRefugeShape} from '../src/sim/bomb-danger.ts';
 import {commercialCamp} from './helpers/commercial-v193.ts';
+import {withoutFodderDefaults} from './scenarios/legacy-skills.ts';
 import type {World} from '../src/sim/types.ts';
 
 function adopt(decoder:SnapshotDecoder,packet:SnapshotMessage):World {
   const result=decoder.adopt(packet);
-  expect(result.status).toBe('applied');
+  expect(result.status,result.status==='resync'?result.reason:result.status).toBe('applied');
   if(result.status!=='applied')throw Error(JSON.stringify(result));
   return result.world;
 }
@@ -92,12 +93,19 @@ test.each([false,true])('group owners reserve ballistic/Bomb identities before r
 
   const malformed=structuredClone(good);
   (malformed.world as unknown as Record<string,unknown>).group=null;
-  refuse(decoder,malformed,before,frozen,'Planète, groupe ou pertes incohérents.');
+  // Descriptor-safe provenance now refuses a null owner before the narrower
+  // group guard; refusal still retains the confirmed World and revision.
+  refuse(decoder,malformed,before,frozen,'Provenance de couchage au sol humain invalide ou future.');
   expect(adopt(decoder,good)).toEqual(world);expect(world.tick).toBe(tick);expect(before).toEqual(frozen);
 });
 
 test.each([false,true])('historical 195 accepts true absence and rejects own future keys even undefined without advancing the revision (checkpoint=%s)',checkpoint=>{
-  const world=createWorld(42,16,16);(world as unknown as {schemaVersion:number}).schemaVersion=195;
+  // Construct the declared historical baseline before injecting any future
+  // owner: fodder and paste permissions did not exist in 195. Fox permissions
+  // already existed and remain intact, as do every original entity and ID.
+  const world=withoutFodderDefaults(createWorld(42,16,16));
+  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');
+  (world as unknown as {schemaVersion:number}).schemaVersion=195;
   delete world.planet;delete world.group;delete world.groupLosses;
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),before=adopt(decoder,structuredClone(encoder.encode(world,0,0))),frozen=structuredClone(before);
   const good=structuredClone(encoder.encode(world,0,0,checkpoint));

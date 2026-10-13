@@ -1,10 +1,11 @@
 import { expect,test } from 'vitest';
-import { withoutMiningSkill, withoutTelevisionRecreation,withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
+import { withoutFodderDefaults,withoutMiningSkill, withoutTelevisionRecreation,withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { applyCommand,stepWorld,deserializeWorld,serializeWorld,validateWorld,SCHEMA_VERSION } from '../src/sim/index.ts';
 import { quoteCommercial,quoteCommercialSell } from '../src/sim/commercial-post.ts';
 import { SnapshotDecoder,SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { PresentationChanges } from '../src/bridge/presentation-changes.ts';
 import { validateCommercialRegistry } from '../src/sim/commercial-save.ts';
+import { adoptPasteFoodPolicies } from '../src/sim/food-policy-save.ts';
 import { prepareCommercialSalesDemo } from '../scripts/create-test-save-commercial-sales-v203.ts';
 import { commercialCamp } from './helpers/commercial-v193.ts';
 import type { World } from '../src/sim/types.ts';
@@ -31,10 +32,17 @@ test('184 validates before neutral migration and rejects sales fields including 
   const {world:w,pawnId,foodId}=commercialCamp();
   expect(applyCommand(w,{type:'commercial-start',pawnId,foodPileId:foodId,quantity:2,silver:600}).ok).toBe(true);
   until(w,'at-post');delete w.worldIncidents;
-  const old=withoutTelevisionRecreation(withoutMiningSkill(structuredClone(w)));Object.assign(old,{schemaVersion:184});
-  const migrated=deserializeWorld(JSON.stringify(old));expect({...migrated,schemaVersion:184}).toEqual(withMigratedTelevisionRecreation(old));
+  const old=withoutFodderDefaults(withoutTelevisionRecreation(withoutMiningSkill(structuredClone(w))));Object.assign(old,{schemaVersion:184});
+  // Stepping the current engine adopts these prospective schemas215/216 agendas.
+  // This historical trip has acquired neither deposits nor orbital goods.
+  expect(old.deepResources).toMatchObject({discoveries:0,cells:[]});delete old.deepResources;
+  expect(old.orbital).toMatchObject({ships:[],pending:[]});delete old.orbital;
+  for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');
+  const before=structuredClone(old),expected=withMigratedTelevisionRecreation(old);adoptPasteFoodPolicies(expected);
+  const migrated=deserializeWorld(JSON.stringify(old));expect({...migrated,schemaVersion:184}).toEqual(expected);expect(old).toEqual(before);
   expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
-  const future=start();Object.assign(future,{schemaVersion:184});
+  const future=withoutFodderDefaults(start());Object.assign(future,{schemaVersion:184});
+  for(const policy of future.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');
   expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/Invalid version 184/);
   for(const field of ['cargo','sold','silverEarned']){
     const bad=structuredClone(old);Object.assign(bad.commercialTrip!,{[field]:undefined});

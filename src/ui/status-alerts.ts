@@ -17,17 +17,45 @@ import { buildingLabels } from './building-labels';
 import type { ArchitectCategory,Panel } from './layout';
 import { miniTurretView,turretSeconds } from '../sim/mini-turret-presentation';
 import { actorNotificationTarget,cellNotificationTarget,objectNotificationTarget,personNotificationTarget,NotificationFocusCycle,type NotificationTarget,type FocusNotification } from './notification-focus';
+import { readColonistAvailability,type AwayColonistAvailability } from './colonist-availability';
 
-export interface NotificationContext { panel:Exclude<Panel,null>;category?:ArchitectCategory;tool?:'stockpile'; }
+export interface NotificationContext { panel:Exclude<Panel,null>;category?:ArchitectCategory;tool?:'stockpile';worldTab?:'group'|'individual'; }
 export interface StatusAlert { key:string;text:string;targets:NotificationTarget[];context?:NotificationContext;tab?:'health'|'needs'|'prisoner'; }
 const present=<T>(target:T|undefined):target is T=>target!==undefined;
 const people=(world:World,pawns:readonly Pawn[])=>[...pawns].sort((a,b)=>a.id-b.id).map(p=>personNotificationTarget(world,p.id)).filter(present);
 const actors=(values:readonly {id:number}[])=>[...values].sort((a,b)=>a.id-b.id).map(p=>actorNotificationTarget(p.id));
 
+const awayContext=(owner:AwayColonistAvailability['owner']):NotificationContext=>({panel:'world',worldTab:owner==='group-away'?'group':'individual'});
+const awayLabel=(owner:AwayColonistAvailability['owner'])=>owner==='scout-away'?'reconnaissance hors carte':owner==='commercial-away'?'voyage commercial hors carte':'groupe hors carte';
+const phaseLabels:Partial<Record<AwayColonistAvailability['phase'],string>>={outbound:'trajet aller','at-post':'au comptoir',returning:'trajet retour','awaiting-entry':'entrée sur la carte en attente',travelling:'en déplacement','at-site':'sur le site'};
+
+/** Explanations use original owners, never an old position for a traveller.
+ * The arrival banner remains the sole feedback for contained starting pawns. */
+export function readAvailabilityStatusAlerts(world:World):StatusAlert[] {
+  const availability=readColonistAvailability(world);if(availability.kind!=='unavailable')return [];
+  const details:StatusAlert[]=availability.local.map(person=>{
+    const tab:NonNullable<StatusAlert['tab']>=person.causes.includes('downed')?'health':person.causes.includes('mental-crisis')?'needs':'prisoner';
+    const causes=person.causes.map(c=>c==='downed'?'à terre':c==='mental-crisis'?'en crise mentale':'détenu').join(', ');
+    const target=personNotificationTarget(world,person.id);
+    return {key:`availability-local:${person.id}`,text:`${person.name} · ${causes}`,targets:target?[target]:[],context:{panel:'history'},tab};
+  });
+  for(const person of availability.away)details.push({key:`availability-away:${person.id}`,
+    text:`${person.name} · ${awayLabel(person.owner)}${phaseLabels[person.phase]?` · ${phaseLabels[person.phase]}`:''}`,
+    targets:[],context:awayContext(person.owner)});
+  for(const person of availability.deaths){
+    const target=person.owner==='map'?personNotificationTarget(world,person.id):undefined;
+    details.push({key:`availability-death:${person.id}`,text:`${person.name} · décès confirmé${person.owner==='group-loss'?' dans le groupe':person.owner==='scout-away'?' en reconnaissance':person.owner==='commercial-away'?' en voyage commercial':''}`,
+      targets:target?[target]:[],context:person.owner==='map'?{panel:'history'}:awayContext(person.owner==='group-loss'?'group-away':person.owner),tab:'health'});
+  }
+  const first=availability.local.length||availability.away.length?details[0]:undefined;
+  const summary:StatusAlert={key:'colonist-availability',text:first?'Aucun colon libre sur cette carte':'Aucun colon vivant actuellement recensé dans la colonie ou ses voyages',targets:first?.targets??[],context:first?.context??{panel:'menu'},...first?.tab?{tab:first.tab}:{}};
+  return [summary,...details];
+}
+
 /** All predicates and targets share the same confirmed snapshot. Labels are
  * never parsed to find an entity, a medical condition or a management panel. */
 export function readStatusAlerts(world:World):StatusAlert[] {
-  const rows:StatusAlert[]=[],colonists=world.pawns.filter(isColonist),living=colonists.filter(p=>p.state!=='dead');
+  const rows:StatusAlert[]=readAvailabilityStatusAlerts(world),colonists=world.pawns.filter(isColonist),living=colonists.filter(p=>p.state!=='dead');
   const add=(key:string,text:string,targets:NotificationTarget[],context?:NotificationContext,tab?:StatusAlert['tab'])=>rows.push({key,text,targets,...context?{context}:{},...tab?{tab}:{}});
   const counted=(key:string,pawns:Pawn[],text:(count:number)=>string,tab?:StatusAlert['tab'])=>{if(pawns.length)add(key,text(pawns.length),people(world,pawns),{panel:'history'},tab);};
   counted('sad-wander',living.filter(p=>p.mental?.crisis?.kind==='sad-wander'),n=>`${n} colon(s) en errance triste`,'needs');

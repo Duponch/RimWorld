@@ -1492,14 +1492,21 @@ const statusAlerts=createStatusAlerts(el('status-alerts'),{
   'inspect-threat':el<HTMLButtonElement>('inspect-threat'),'inspect-fire':el<HTMLButtonElement>('inspect-fire'),'inspect-blight':el<HTMLButtonElement>('inspect-blight'),
 },{focus:focusNotification,context:context=>{
   if(context.tool){setTool(context.tool);return;}
-  setPanel(context.panel);if(context.category)setCategory(context.category);
+  if(context.worldTab)worldTab=context.worldTab;
+  void attempt(async()=>{await switchPanel(context.panel);if(context.category)setCategory(context.category);});
 },tab:tab=>document.querySelector<HTMLButtonElement>(`[data-colonist-tab="${tab}"]`)?.click()});
 const learningReadout=document.querySelector<HTMLDetailsElement>('.learning-readout')!;
 const startingArrivalUI=createStartingArrivalUI(document.querySelector<HTMLElement>('.game-shell')!,{onResume:()=>void attempt(()=>changeSpeed(1))});
 const firstDayGuide=createFirstDayGuide(el('first-day-guide'),{onAction:action=>{
   learningReadout.open=false;firstDayGuide.setActive(false);
+  if(action.target){
+    focusNotification(action.target);
+    if(action.tab&&action.target.kind==='actor')document.querySelector<HTMLButtonElement>(`[data-colonist-tab="${action.tab}"]`)?.click();
+    return;
+  }
   if(action.mapTools){el<HTMLButtonElement>(`${action.mapTools}-open`).click();return;}
   if(action.tool){setTool(action.tool);return;}
+  if(action.worldTab)worldTab=action.worldTab;
   if(action.panel)void attempt(async()=>{await switchPanel(action.panel!);if(action.category)setCategory(action.category);});
 }});
 function syncFirstDayGuide():void {

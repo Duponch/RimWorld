@@ -1236,7 +1236,10 @@ export class SnapshotDecoder {
       const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&(strictIds||mechanicalCorpseIds.has(Number(id))))return false;ids.add(Number(id));return true;};
       const addItems=(items:unknown):boolean=>Array.isArray(items)&&items.every(item=>item&&typeof item==='object'&&addId(item.id));
       if(relationships){for(const id of postIds)if(!addId(id))return resync('Identité du comptoir dupliquée dans le registre relationnel.');}
-      else for(const id of foreignIds)ids.add(id);
+      // Map collisions with the full foreign registry were checked above.
+      // Reserve the post here; the original travellers and their possessions
+      // are registered once by the next loop, including the strict orbital path.
+      else for(const id of postIds)ids.add(id);
       for(const owner of [next.scout,next.commercialTrip])if(owner&&'pawn' in owner){if(!addId(owner.pawn.id)||!addItems(owner.items))return resync('Identité hors carte invalide pour les projectiles.');}
       for(const pawn of next.pawns)if(pawn.body?.lostAt!==undefined&&!addId(pawn.body.pileId))return resync('Identité de dépouille perdue invalide.');
       for(const records of [next.raids?.departed??[],next.prisonDepartures??[]])for(const d of records)

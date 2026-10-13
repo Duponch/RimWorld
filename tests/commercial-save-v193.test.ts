@@ -1,7 +1,8 @@
 import { expect,test } from 'vitest';
-import { withoutMiningSkill, withoutTelevisionRecreation,withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
+import { withoutFodderDefaults,withoutMiningSkill, withoutTelevisionRecreation,withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld,SCHEMA_VERSION } from '../src/sim/index.ts';
 import { validateCommercialRegistry } from '../src/sim/commercial-save.ts';
+import { adoptPasteFoodPolicies } from '../src/sim/food-policy-save.ts';
 import { commercialCamp } from './helpers/commercial-v193.ts';
 import type { World } from '../src/sim/types.ts';
 
@@ -13,9 +14,11 @@ function atPost():World {
   expect(w.commercialTrip?.phase).toBe('at-post');return w;
 }
 test('strict schema179 migrates neutrally and refuses either future commercial field even when the future container is empty',()=>{
-  const {world}=commercialCamp(),old=withoutTelevisionRecreation(withoutMiningSkill(JSON.parse(serializeWorld(world))));old.schemaVersion=(withoutTelevisionRecreation(old),179);
+  const {world}=commercialCamp(),old=withoutFodderDefaults(withoutTelevisionRecreation(withoutMiningSkill(JSON.parse(serializeWorld(world)))));old.schemaVersion=(withoutTelevisionRecreation(old),179);
+  for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='nutrient-paste-meal');
+  const before=structuredClone(old),expected=withMigratedTelevisionRecreation(old);adoptPasteFoodPolicies(expected);
   const restored=deserializeWorld(JSON.stringify(old));expect(restored.schemaVersion).toBe(SCHEMA_VERSION);
-  expect({...restored,schemaVersion:179}).toEqual(withMigratedTelevisionRecreation(old));expect(restored.commercialTrip).toBeUndefined();expect(restored.civilianPost).toBeUndefined();
+  expect({...restored,schemaVersion:179}).toEqual(expected);expect(old).toEqual(before);expect(restored.commercialTrip).toBeUndefined();expect(restored.civilianPost).toBeUndefined();
   for(const field of ['commercialTrip','civilianPost'])expect(()=>deserializeWorld(JSON.stringify({...old,[field]:{}}))).toThrow(/Invalid version 179/);
 });
 test('malformed arbitrary containers and owners are rejected before projecting without exceptions',()=>{

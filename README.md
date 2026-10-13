@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V337 — [disponibilité des colons](docs/gameplay/colonist-availability-v337.md), schéma 232 conservé.** Alertes et carnet distinguent personnes à terre, détention, crise, voyages et décès confirmés ; chaque action ouvre le dossier ou voyage réel. Correction du refus erroné de certains voyageurs commerciaux dans le bridge. Groupe ciblé, six parcours Chrome et 63 sauvegardes historiques acquis ; campagne durable encore à qualifier. Poursuite early access autonome, publications regroupées et relance ACTIVE. Les états suivants sont historiques.
+
 **V336 — [couchages humains au sol](docs/gameplay/human-sleeping-spots-v336.md), schéma 232.** Places gratuites avec affectations et services physiques ; premières nuits tempérée, boréale et aride acquises, douze recharges exactes. Valeurs climatiques conservées malgré les différences de précision entre runtimes. Campagne durable encore à qualifier ; poursuite early access autonome, publications regroupées et relance ACTIVE. Les états suivants sont historiques.
 
 **V335 — [arrivée physique](docs/gameplay/starting-arrival-v335.md), schéma 231.** Trois capsules détiennent les survivants et leurs possessions jusqu’à l’ouverture ; pause, reprise, identités et migration neutre. Les contrôles et limites sont consignés dans la note unique. Poursuite early access autonome autorisée, publications regroupées et relance ACTIVE. Les états suivants sont historiques.

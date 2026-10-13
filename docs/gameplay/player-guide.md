@@ -1,5 +1,13 @@
 # Guide joueur
 
+## Comprendre l’absence de colon libre — V337
+
+L’alerte **Aucun colon libre sur cette carte** explique les personnes actuellement à terre, en crise mentale, détenues ou hors carte. Cliquez une personne présente pour ouvrir **Santé**, **Besoins** ou **Prisonnier**. Un voyageur en reconnaissance ou en commerce ouvre **Monde > Voyages individuels** ; un membre de groupe ouvre **Monde > Globe et groupe**, avec sa phase actuelle. Ces liens ouvrent les contrôles existants du voyage.
+
+Dans **Conseils**, la préparation **Comprendre la disponibilité des colons** reprend ces faits et propose la destination pertinente. Lorsque seuls des décès connus restent, ou qu’aucune personne coloniale vivante n’est identifiée, **Aucun colon vivant actuellement recensé dans la colonie ou ses voyages** ouvre **Menu** pour gérer les sauvegardes ou commencer une autre colonie. La partie reste ouverte. Pendant l’arrivée initiale, suivez le bandeau des capsules et son bouton **Reprendre**.
+
+[Contrat et limites V337](colonist-availability-v337.md). Le groupe unitaire ciblé est acquis par reprises ; six situations natives préparées passent avec six recharges exactes, destinations Santé/Monde/Menu par clic et clavier et continuation×1 sans pause automatique. Corpus public, typage et build passent. Ces états de voyage ou décès ne qualifient pas une campagne naturelle entière, une suite complète ou un gainFPS.
+
 ## Préparer un couchage au sol — V336
 
 Dans **Architecte > Meubles**, choisissez **Couchage au sol**. **Q/E** tourne cette place **1×2** avant la pose. Les deux cellules doivent être praticables, sans roche, arbre, ouvrage ou plan incompatible. La marque apparaît immédiatement, sans ressources ni chantier ; elle reste traversable et conserve les zones, plantes admissibles et objets au sol.

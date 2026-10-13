@@ -1,11 +1,11 @@
 import type { Command,Pawn } from '../sim/types';
-import { isColonist } from '../sim/affiliation';
+import { isLocallyControllableColonist } from './colonist-availability';
 import { mentalCrisisLabel,mentalCrisisRefusal } from '../sim/mental-presentation';
 import { setTooltip } from './tooltip';
 
 export const draftLabel=(p:Pawn):string=>p.shooting?.stance?.phase==='aim'?'Mobilisé · vise':p.shooting?.stance?.phase==='cooldown'?'Mobilisé · récupération après tir':p.shooting?.order?'Mobilisé · rejoint sa position de tir':p.need?.kind==='sleep'?'Mobilisé · effondré de fatigue':p.draft?.target&& (p.x!==p.draft.target.x||p.z!==p.draft.target.z||p.moveCooldown>0)?`Mobilisé · vers ${p.draft.target.x}, ${p.draft.target.z}`:'Mobilisé · attend les ordres';
 /** UI selection policy. The worker remains the authority when health changes. */
-export const draftablePawns=(pawns:readonly Pawn[]):Pawn[]=>pawns.filter(p=>isColonist(p)&&!p.prisoner&&p.state!=='dead'&&p.state!=='downed'&&!p.mental?.crisis);
+export const draftablePawns=(pawns:readonly Pawn[]):Pawn[]=>pawns.filter(isLocallyControllableColonist);
 export const draftedPawns=(pawns:readonly Pawn[]):Pawn[]=>draftablePawns(pawns).filter(p=>!!p.draft);
 export function toggleDraft(pawns:Pawn[],send:(c:Command)=>void):void {
   const eligible=draftablePawns(pawns);
