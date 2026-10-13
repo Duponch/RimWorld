@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V342 : [secours physique partiel](gameplay/colony-rescue-v342.md), schéma 232 conservé.** Ordre, approche et portage rechargés exactement ; blessure du médecin et menace conservées, aucun soin ou rétablissement annoncé. Suite tactique étudiée sur référence Core actuelle. Les états suivants sont historiques.
+
 **V341 : [aide initiale](gameplay/player-help-v341.md), schéma 232 conservé.** Accueil et partie réemploient le même dialogue ; guide joueur actualisé. Typage/build et deux parcours natifs acquis après correction Tab, recharge28exacte ; rouges et limites centralisés. Les états suivants sont historiques.
 
 **V340 : [second renouvellement et incident](gameplay/second-colony-food-v340.md), schéma 232 conservé.** Qualification partielle et branches conservées : nouvelle récolte/cargo/cuisine attestés, ingestion et récupération non acquises. Reprises, rouges, état médical et limites dans la note unique ; suite aide initiale et guide cohérent. Les états suivants sont historiques.

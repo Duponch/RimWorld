@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V342 — [secours sous menace](docs/gameplay/colony-rescue-v342.md), schéma 232 conservé.** Iris rejoint et porte réellement le blessé de la campagne de test ; trois checkpoints rechargés exactement. La gazelle blesse ensuite Iris : arrêt conservé, dépôt médical et soins non acquis. QA partielle, règles et rendu conservés ; prochain ajout étudié : premiers soins par un colon mobilisé, distincts des soins automatiques au lit.
+
 **V341 — [aide dès l’accueil](docs/gameplay/player-help-v341.md), schéma 232 conservé.** Aide accessible avant de créer une partie, même dialogue qu’en jeu et navigation clavier préservée. Guide actualisé : capsules, personnes choisies, couchages gratuits et sauvegardes. Deux parcours Chrome passent, avec vraie création250² et export/recharge exacte ; campagne durable toujours à qualifier. Poursuite autonome et publication regroupée.
 
 **V340 — [second renouvellement et incident naturel](docs/gameplay/second-colony-food-v340.md), schéma 232 conservé.** Seconde génération de riz récoltée et transportée, quatre nouvelles cuissons attestées et recharges exactes. Contrôle partiel : nouvelle ingestion non attribuée, menace persistante et branche de combat avec Gaël à terre conservée ; aucune autonomie alimentaire ou campagne entière certifiée. Pilotes corrigés, jeu conservé. Suite prioritaire : accès à l’aide depuis l’accueil et guide à jour ; poursuite autonome et publications regroupées.

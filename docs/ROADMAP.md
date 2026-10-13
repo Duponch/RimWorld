@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V342 — [secours sous menace](gameplay/colony-rescue-v342.md), schéma 232 conservé.** Portage réel et trois recharges exactes depuis la branche blessée ; la tentative s’arrête sur une nouvelle contusion d’Iris, dépôt et soins non acquis. La [préparation early access](gameplay/early-access-readiness.md) avance maintenant vers V343 : soins tactiques de terrain, action distincte fondée sur le Core installé, sans retirer le lit aux fournisseurs automatiques. Commit/push QA puis poursuite autonome ACTIVE ; aucun nouveau déploiement pour ce contrôle.
+
 **Publication V339/V341 acquise**, f75ea107 et104réponsesHTTPS exactes ; [preuve et limites](development/cloudflare-pages.md#publication-v339-et-v341--humeur-et-aide). V340 reste une qualification partielle. Suite autonome ACTIVE : récupération après incident, réserves et campagne durable ; préparation V342 en cours, aucun nouveau gameplay engagé.
 
 **V341 — [aide initiale et guide actuel](gameplay/player-help-v341.md), schéma 232 conservé.** L’aide s’ouvre avant une carte ; guide capsules, équipe et sauvegardes cohérent avec le produit. Deux parcours natifs et recharge28exacte acquis après correction clavier. [Critères early access](gameplay/early-access-readiness.md) : qualifier ensuite récupération après incident et réserve durable, en conservant les branches V340 blessées ; aucune campagne complète ou parité exhaustive annoncée. Commit/push des lots utiles, produitsV339–341 àpublierensemble, relance ACTIVE. Les états suivants sont historiques.

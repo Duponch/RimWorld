@@ -1,4 +1,6 @@
-# Validation courante — V341
+# Validation courante — V342
+
+**V342, schéma 232 : [secours ROOT partiel](../gameplay/colony-rescue-v342.md).** Typage17,316s et gel2864exact ; unique Chrome rouge51,977s sur blessure réelle du médecin, trois recharges exactes et deux captures inspectées. Pas de build/corpus/FPS inchangé rejoué pour ce pilote QA-only. Les validations suivantes sont historiques.
 
 **V341, schéma 232 : [aide ROOT](../gameplay/player-help-v341.md).** BuildPages/typage21,682s et reprise Chrome40,345s passent, deux cas/deux captures inspectées/recharge28exacte/gel2862exact. Rouge Tab37,940s conservé ; contrôles proportionnés au câblage et aux textes, sans replay moteur/FPS. Les validations suivantes sont historiques.
 
