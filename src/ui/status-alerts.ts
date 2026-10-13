@@ -18,9 +18,11 @@ import type { ArchitectCategory,Panel } from './layout';
 import { miniTurretView,turretSeconds } from '../sim/mini-turret-presentation';
 import { actorNotificationTarget,cellNotificationTarget,objectNotificationTarget,personNotificationTarget,NotificationFocusCycle,type NotificationTarget,type FocusNotification } from './notification-focus';
 import { readColonistAvailability,type AwayColonistAvailability } from './colonist-availability';
+import { readMoodRiskAlerts } from './mood-risk-alerts';
+import { setTooltip,type TooltipContent } from './tooltip';
 
 export interface NotificationContext { panel:Exclude<Panel,null>;category?:ArchitectCategory;tool?:'stockpile';worldTab?:'group'|'individual'; }
-export interface StatusAlert { key:string;text:string;targets:NotificationTarget[];context?:NotificationContext;tab?:'health'|'needs'|'prisoner'; }
+export interface StatusAlert { key:string;text:string;targets:NotificationTarget[];context?:NotificationContext;tab?:'health'|'needs'|'prisoner';tooltip?:TooltipContent; }
 const present=<T>(target:T|undefined):target is T=>target!==undefined;
 const people=(world:World,pawns:readonly Pawn[])=>[...pawns].sort((a,b)=>a.id-b.id).map(p=>personNotificationTarget(world,p.id)).filter(present);
 const actors=(values:readonly {id:number}[])=>[...values].sort((a,b)=>a.id-b.id).map(p=>actorNotificationTarget(p.id));
@@ -64,6 +66,7 @@ export function readStatusAlerts(world:World):StatusAlert[] {
     const crisis=mentalCrisisView(world,pawn,s=>buildingLabels[s.kind])!;
     add(`mental:${pawn.id}`,`${pawn.name} · ${crisis.label}${crisis.target?` · cible : ${crisis.target.label}${crisis.target.type==='structure'?` (${crisis.target.cell.x}, ${crisis.target.cell.z})`:''}`:''}`,people(world,[pawn]),undefined,'needs');
   }
+  rows.push(...readMoodRiskAlerts(world));
   const rebels=world.pawns.filter(p=>prisonBreakActive(p)&&activeThreat(p));
   if(rebels.length)add('prison-break',`Révolte de prison · ${rebels.length} détenu${rebels.length>1?'s':''} en fuite`,people(world,rebels));
   const machines=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed')??[];
@@ -140,6 +143,7 @@ export function createStatusAlerts(host:HTMLElement,jumps:Partial<Record<'inspec
         node.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();activate(created.row);}};
       }
       record.row=row;const node=record.node;if(node.textContent!==row.text)node.textContent=row.text;
+      if(row.tooltip)setTooltip(node,row.tooltip);
       if(host.children[index]!==node)host.insertBefore(node,host.children[index]??null);
     });
     inspection=readInspectAlerts(world);

@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Surveiller le risque d’humeur — V339
+
+L’alerte **Risque de crise mineure, majeure ou extrême** signale une humeur sous le seuil personnel. Survolez-la ou donnez-lui le focus clavier pour lire les trois groupes et leurs noms. Quand un risque majeur ou extrême existe, le titre compte seulement les personnes du niveau le plus élevé ; les clics parcourent d’abord les extrêmes, puis les majeurs. Sinon, ils parcourent les mineurs.
+
+**Clic, Entrée ou Espace** centre et sélectionne la personne, puis ouvre **Besoins** pour examiner ses pensées, son humeur et ses seuils. Une personne endormie ou en récupération peut rester signalée. L’avertissement ne garantit ni une crise ni son déclenchement immédiat ; les épisodes actifs ont leurs propres alertes. [Contrat et contrôles](mood-risk-v339.md).
+
 ## Comprendre l’absence de colon libre — V337
 
 L’alerte **Aucun colon libre sur cette carte** explique les personnes actuellement à terre, en crise mentale, détenues ou hors carte. Cliquez une personne présente pour ouvrir **Santé**, **Besoins** ou **Prisonnier**. Un voyageur en reconnaissance ou en commerce ouvre **Monde > Voyages individuels** ; un membre de groupe ouvre **Monde > Globe et groupe**, avec sa phase actuelle. Ces liens ouvrent les contrôles existants du voyage.
