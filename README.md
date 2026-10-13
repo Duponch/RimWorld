@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V341 — [aide dès l’accueil](docs/gameplay/player-help-v341.md), schéma 232 conservé.** Aide accessible avant de créer une partie, même dialogue qu’en jeu et navigation clavier préservée. Guide actualisé : capsules, personnes choisies, couchages gratuits et sauvegardes. Deux parcours Chrome passent, avec vraie création250² et export/recharge exacte ; campagne durable toujours à qualifier. Poursuite autonome et publication regroupée.
+
 **V340 — [second renouvellement et incident naturel](docs/gameplay/second-colony-food-v340.md), schéma 232 conservé.** Seconde génération de riz récoltée et transportée, quatre nouvelles cuissons attestées et recharges exactes. Contrôle partiel : nouvelle ingestion non attribuée, menace persistante et branche de combat avec Gaël à terre conservée ; aucune autonomie alimentaire ou campagne entière certifiée. Pilotes corrigés, jeu conservé. Suite prioritaire : accès à l’aide depuis l’accueil et guide à jour ; poursuite autonome et publications regroupées.
 
 **V339 — [risque préventif d’humeur](docs/gameplay/mood-risk-v339.md), schéma 232 conservé.** Alerte unique fondée sur les seuils personnels, détails des trois gravités et clic cyclant les personnes vers Besoins. Sommeil et récupération restent visibles ; les crises actives conservent leurs alertes. Tests ciblés78cas, build/typage et Chrome sur groupe préparé puis camp naturel passent, deux recharges exactes. Poursuite early access autonome : deuxième cycle alimentaire et réserve ; publications regroupées, relance ACTIVE.

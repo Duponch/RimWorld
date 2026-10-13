@@ -42,6 +42,7 @@ export interface FrontMenuOptions {
   getAutosaveMinutes?:()=>number;
   onAutosaveMinutesChange?:(minutes:number)=>boolean;
   onExport?:()=>Promise<void>;
+  onHelp?:()=>void;
   getShadowSettings?: () => ShadowSettings;
   onShadowSettingsChange?: (settings: ShadowSettings) => boolean;
   getAnimationSettings?: () => AnimationSettings;
@@ -290,6 +291,10 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     if (homeResume) nav.append(homeResume);
     homeStart = action('Nouvelle partie', showCreation, hasGame ? '' : 'front-primary');
     nav.append(homeStart, action('Charger une partie', showLoad));
+    if (options.onHelp) nav.append(action('Aide', () => {
+      if (busy || operationPending) return;
+      options.onHelp?.();
+    }));
     const later = element('div', 'front-later');
     later.append(unavailable('Tutoriel'), action('Options', () => navigate('options')), unavailable('Mods'), unavailable('Crédits'));
     nav.append(later);

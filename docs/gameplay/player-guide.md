@@ -1,5 +1,40 @@
 # Guide joueur
 
+## Votre première partie
+
+À l’accueil, **Nouvelle partie** ouvre les cinq étapes du choix de colonie.
+Choisissez trois personnes, démarrez en pause, puis utilisez **Reprendre**
+pour faire arriver les capsules. **Conseils** vous aide ensuite à préparer
+travail, réserves, trois **Couchages au sol** gratuits, abri et repas.
+Une marque de couchage ne crée ni toit ni température adaptée. Le bouton **Aide** à l’accueil et le bouton **?** en partie ouvrent la même
+aide ; elle décrit les outils existants sans donner d’ordres ou de fournitures
+à votre place.
+
+## Sauvegarder votre essai
+
+Dans **Menu → Sauvegardes**, créez une copie nommée et utilisez
+**Exporter la partie actuelle** pour garder un fichier indépendant du navigateur.
+Pour reprendre, ouvrez **Charger une partie** à l’accueil, ou
+**Importer un fichier** pour votre export. La colonie reprend en pause.
+Les automatiques gardent les trois dernières copies locales ; elles ne
+remplacent pas un export pour transférer la campagne.
+
+## Comprendre un blocage
+
+Inspectez le chantier ou la facture pour vérifier matériaux, ingrédients,
+travail actif, combustible ou courant et accès physique. Un compteur de
+nourriture ne garantit pas que chaque colon peut rejoindre ou manger ces piles.
+Santé et Besoins expliquent les blessures et l’humeur ; les alertes ouvrent
+les personnes ou voyages réellement concernés.
+
+La projection d’une cible peut se trouver derrière un panneau : déplacez la
+caméra ou dégagez la vue avant de cliquer. Une création ou une recharge de grande
+carte peut demander du temps ; attendez son résultat visible. Si elle est
+refusée, lisez le message et conservez un export valide pour reprendre.
+Les choix grisés, le tutoriel, les autres scénarios et la victoire restent
+indisponibles dans le périmètre actuel. Les limites de campagne sont dans
+les [critères de préparation](early-access-readiness.md).
+
 ## Surveiller le risque d’humeur — V339
 
 L’alerte **Risque de crise mineure, majeure ou extrême** signale une humeur sous le seuil personnel. Survolez-la ou donnez-lui le focus clavier pour lire les trois groupes et leurs noms. Quand un risque majeur ou extrême existe, le titre compte seulement les personnes du niveau le plus élevé ; les clics parcourent d’abord les extrêmes, puis les majeurs. Sinon, ils parcourent les mineurs.
@@ -57,9 +92,11 @@ niveaux utilisables des trois sélectionnés. Retour conserve vos choix.
 incapable d'un travail essentiel, une confirmation vous permet de revenir ou
 de continuer. Il n'y a pas de page récapitulative supplémentaire.
 
-Le climat local et les profils choisis restent dans la sauvegarde. L'arrivée en
-capsules, le tutoriel et les autres scénarios ne sont pas encore disponibles.
-La [note V333](new-game-preparation-v333.md) précise les adaptations et contrôles.
+Le climat local et les profils choisis restent dans la sauvegarde. Le départ
+commence en pause avec trois capsules : **Reprendre** fait avancer leur arrivée
+et leur ouverture réelle. Le tutoriel et les autres scénarios restent
+indisponibles. La [note V333](new-game-preparation-v333.md) précise les adaptations
+du choix de départ ; [V335](starting-arrival-v335.md) décrit l’arrivée.
 
 ## Régler les ombres et toutes les animations — V331
 
@@ -964,7 +1001,11 @@ Ce guide décrit la version jouable actuelle. Le [bilan fonctionnel](implementat
 
 ## Commencer une colonie
 
-Ada, Noé et Mina arrivent sur la carte de **250 × 250 cases** du nouveau menu. Les cases et personnages gardent leurs dimensions : les trajets lointains prennent du temps et la caméra commence près du point d'arrivée. À taille, version de générateur et profil identiques, la même graine redonne le même départ.
+Les trois personnes choisies dans le menu commencent leur arrivée sur une carte
+de **250 × 250 cases**. Leurs noms et profils sont ceux que vous avez retenus.
+Les trajets lointains prennent du temps et la caméra commence près de l’arrivée.
+À lieu, graine et version de générateur identiques, le terrain reste reproductible ;
+la même graine du monde ne garantit pas une équipe identique.
 
 La dotation annoncée en tête du guide comprend **300 bois et 50 repas de survie**. Les 12 bois et 18 repas appartiennent au camp pédagogique historique. Les nombres à gauche additionnent les objets au sol et portés ; les matériaux déjà livrés aux chantiers sont comptés séparément. Les anciennes petites parties gardent leur taille, y compris les cartes 32 × 32 ; charger une partie ne l'agrandit pas.
 
@@ -1203,17 +1244,51 @@ Sans adoption V87, une ancienne partie conserve son cycle quotidien tempéré ; 
 
 ## Sauvegarder et reprendre
 
-Menu → Sauvegarder conserve le monde, les travaux, les réservations, les trajets et les besoins dans un emplacement local à ce navigateur. Depuis l’accueil, **Charger** propose la sauvegarde manuelle et la colonie précédente. Le chargement accepté ouvre la partie en pause ; une sauvegarde invalide est refusée sans remplacer la colonie active. La vitesse et l'angle de caméra ne font pas partie de la sauvegarde. Il n'y a pas encore d'autosauvegarde ni d'export de fichier.
+Dans **Menu → Sauvegardes**, donnez un nom puis cliquez **Créer une sauvegarde**
+pour conserver une copie indépendante. Douze copies nommées et trois copies
+automatiques sont disponibles. **Sauvegarde automatique** règle un intervalle
+en minutes réelles de jeu actif, cinq par défaut ; la pause ne produit pas de
+captures périodiques. **Exporter la partie actuelle** télécharge le checkpoint
+courant en JSON, pas nécessairement la copie sélectionnée dans la liste.
+
+Depuis l’accueil, **Charger une partie** affiche les copies manuelles, nommées,
+automatiques et « Colonie précédente » ; choisissez une entrée puis **Charger**.
+**Importer un fichier** ouvre un export JSON conservé hors du navigateur.
+Le chargement accepté reprend en pause. Une sauvegarde invalide est refusée
+sans remplacer la colonie active. La vitesse et l’angle de caméra ne font pas
+partie de la sauvegarde.
+
+Les copies locales appartiennent à cette origine et à ce navigateur. Pour
+transférer votre campagne ou la conserver séparément, exportez-la avant de
+quitter. Fermer l’onglet ne garantit pas une dernière capture automatique.
+Remplacer ou supprimer une copie nommée demande une confirmation.
 
 Avant de créer ou de charger une autre colonie, le jeu conserve aussi l'état courant dans un emplacement « Colonie précédente », distinct de la sauvegarde manuelle. Cette copie contient la dernière colonie remplacée, pas tout l'historique des colonies. La création est refusée si cette copie ne peut pas être enregistrée. Les anciennes sauvegardes gardent leurs dimensions, leur terrain et leurs ressources ; leur ancien stock global, lorsqu'il existe, est converti en piles et leurs matériaux réservés sont localisés aux chantiers. Les nouvelles sauvegardes conservent également les cargaisons et les réserves. Créer ou charger un grand territoire prépare toute sa carte ; la durée de cette opération dépend de l'appareil.
 
 ## Limites et suite
 
-Riz, coton, pommes de terre et maïs sont livrés. Le candidat V90 ajoute cinq familles vestimentaires en tissu ou cuir ; restent absents les autres cultures, les autres vêtements et matières, les armures fabriquées, autres postes et recettes culinaires avancées au-delà des ajouts V84, autres minerais que l’acier et les machines compactées, autres familles de loisirs, autres espèces animales, catalogue complet d’armes, combat complet, médecine complète, relations familiales/amoureuses, autres interactions sociales et traits, arbre de recherche complet, commerce au-delà du petit visiteur, autres producteurs électriques et pannes électriques généralisées, toit naturel, gelures localisées, carte du monde ou narrateur complet. Les lièvres et la cadence Cassandra partielle sont présents ; les autres espèces et la sélection complète d’incidents restent absentes. Les autres profils de déplacement, les réserves à plusieurs cases partageant une politique, les autres familles sélectionnables, les fournisseurs supplémentaires de travail lié sur une case et les tournées logistiques restent à développer. Les modèles sont provisoires ; la congestion entre agents actifs et la calibration des besoins restent ouvertes. V84 ajoute les conséquences médicales et mortelles de la faim. V89 relie intoxication, salissures et nettoyage, avec sept sols et les sépultures ; cela ne livre ni hôpital complet, ni toutes les maladies, ni deuil social. V85 livre conduits, batteries, solaire et interrupteurs civils dans le périmètre décrit plus haut. V86 livre la captivité et le recrutement décrits ici ; la diplomatie, les évasions organisées et une population narrative complète restent absentes. V87 ajoute saisons et survie végétale, huit météos de surface, éolienne, radiateur et incendies/extinction ; autres climats, neige accumulée et catalogue complet de risques restent ouverts.
+Elsewhere reste un jeu en développement. Le nouveau départ propose actuellement
+Atterrissage forcé, Cassandra Classique, Récit d’aventure et le mode Rechargeable
+à tout moment, sur les trois biomes disponibles. Les paramètres et choix grisés
+restent indisponibles. Le globe, les voyages, les relations, les cultures,
+les soins, les recettes et les équipements existent dans les périmètres décrits
+dans leurs sections ; ils ne constituent pas les catalogues ou règles Core
+exhaustifs. Les extensions DLC et les conditions de victoire ne sont pas livrées.
+
+Les premières nuits des trois biomes et une première chaîne alimentaire
+naturelle ont leurs preuves propres. La qualification d’une campagne durable,
+de réserves suffisantes et de plusieurs renouvellements reste ouverte. Un stock
+actuel, un repas produit ou un incident terminé ne garantit ni l’autonomie
+alimentaire ni la récupération de toutes les personnes exposées.
 
 La suite est suivie dans [le plan de développement](../ROADMAP.md). Les détails de la référence et les futures interactions sont dans [la matrice des systèmes](systems-matrix.md).
 
-Revolver, fusil, couteau, gilet et vêtements du candidat V90 ont une première présentation partagée carte/portrait ; le reste du catalogue et les portraits définitifs restent prévus. Les modèles sont provisoires ; les sols, roches, plantes et biomes génériques ne constituent pas un catalogue complet. Consultez l’[inventaire des systèmes](implementation-status.md), le [catalogue](content-catalogue.md) et les [écarts assumés](decisions.md).
+La présentation utilise les modèles, portraits et pictogrammes actuels du
+projet. Les réglages visuels permettent d’adapter le confort de jeu ; aucun
+gainFPS, 240FPS, compatibilité matérielle exhaustive ou campagne entière n’est
+garanti. Consultez l’[inventaire des systèmes](implementation-status.md),
+le [catalogue](content-catalogue.md), les [écarts assumés](decisions.md)
+et les [critères de préparation](early-access-readiness.md).
 
 ## Prendre le temps de se divertir
 

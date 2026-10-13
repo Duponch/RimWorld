@@ -98,3 +98,5 @@ La recherche privée `tmp/early-access-v340/priority-review.md` reprend **Core1.
 
 
 Vérifications finales ROOT : gel2863exact après le dernier natif ; documentation **PASS12,310s** (`v340-docs-2026-10-13T19-22-54.651Z-20440`) et diff sans erreur d’espacement. Livraison QA-only : aucun nouveau build ni publication pour ce lot ; le produit V339 attend la prochaine publication regroupée.
+
+Livraison observée : V340 commité et poussé sur main en **f3f80307**, sans déploiement pour ce lot QA-only. Les branches blessées restent ouvertes ; la suite V341 rend l’aide initiale accessible et répare le guide, sans récupérer ces personnes.

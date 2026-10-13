@@ -661,9 +661,35 @@ const session = new GameSession(client, saveRepository, prepareWorld, () => {
   updateIncident(); syncStorageButtons();
 });
 const frontHost = document.createElement('div'); document.querySelector('#app')!.append(frontHost);
+// Help is shared by both entry points, outside the hidden/inert colony shell.
+const helpDialog=el<HTMLDialogElement>('help');document.querySelector('#app')!.append(helpDialog);
+let helpOpener:HTMLElement|null=null;
+function openHelp():void {
+  if(helpDialog.open)return;
+  helpOpener=document.activeElement instanceof HTMLElement?document.activeElement:null;
+  renderer?.cancelDesignation();altInspectorHeld=false;updateMapCellDetails(true);
+  helpDialog.showModal();
+}
+// Keep keyboard navigation in the help, including its single-button form.
+helpDialog.addEventListener('keydown',event=>{
+  if(event.key!=='Tab'||!helpDialog.open)return;
+  const controls=[...helpDialog.querySelectorAll<HTMLElement>('button,input,select,textarea,a[href],[tabindex]')]
+    .filter(node=>node.tabIndex>=0&&!node.matches(':disabled')&&node.getClientRects().length);
+  const first=controls[0],last=controls.at(-1);
+  if(!first||!last){event.preventDefault();helpDialog.focus();return;}
+  const active=document.activeElement;
+  if(!helpDialog.contains(active)||(event.shiftKey?active===first:active===last)){
+    event.preventDefault();(event.shiftKey?last:first).focus({preventScroll:true});
+  }
+});
+helpDialog.addEventListener('close',()=>{
+  const opener=helpOpener;helpOpener=null;
+  if(opener?.isConnected&&!opener.closest('[hidden],[inert]')&&opener.getClientRects().length)opener.focus({preventScroll:true});
+});
 // The measured counter remains visible over both the colony and the menu.
 document.querySelector('#app')!.append(el('fps-counter'));
 const frontMenu = createFrontMenu(frontHost, {
+  onHelp:openHelp,
   getAutosaveMinutes:()=>autosaveIntervalMinutes,onAutosaveMinutesChange:setAutosaveMinutes,
   onExport:exportCurrentColony,
   getShadowSettings:()=>({...shadowSettings}),onShadowSettingsChange:setShadowSettings,
@@ -1608,7 +1634,7 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]'
 el('save').onclick = () => { void attempt(save); }; el('load').onclick = () => { void attempt(() => load()); };
 el('restore-previous').onclick = () => { void attempt(() => load(PREVIOUS_KEY)); };
 el('browse-saves').onclick = () => { void attempt(() => openFront('load')); };
-el('help-open').onclick = () => { renderer?.cancelDesignation(); el<HTMLDialogElement>('help').showModal(); };
+el('help-open').onclick = openHelp;
 el('new-colony').onclick = () => { if (diagnosticStart) el<HTMLDialogElement>('new-world-dialog').showModal(); else void attempt(() => openFront('create')); };
 el('return-home').onclick = () => { void attempt(async () => { await save(); await openFront('home'); }); };
 function updateScenarioDescription():void {
@@ -1692,7 +1718,7 @@ window.addEventListener('pointermove',event=>{
   if(altInspectorHeld)positionMapCellDetails();
 },{passive:true});
 window.addEventListener('keydown',event=>{
-  if(event.key!=='Alt'||frontMenu.isOpen()||!snapshot||replacingWorld)return;
+  if(event.key!=='Alt'||frontMenu.isOpen()||!snapshot||replacingWorld||document.querySelector('dialog[open]'))return;
   if(event.target instanceof Element&&event.target.closest('#world-panel'))return;
   altInspectorHeld=true;event.preventDefault();updateMapCellDetails(true);
 },true);

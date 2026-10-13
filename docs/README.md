@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V341 : [aide initiale](gameplay/player-help-v341.md), schéma 232 conservé.** Accueil et partie réemploient le même dialogue ; guide joueur actualisé. Typage/build et deux parcours natifs acquis après correction Tab, recharge28exacte ; rouges et limites centralisés. Les états suivants sont historiques.
+
 **V340 : [second renouvellement et incident](gameplay/second-colony-food-v340.md), schéma 232 conservé.** Qualification partielle et branches conservées : nouvelle récolte/cargo/cuisine attestés, ingestion et récupération non acquises. Reprises, rouges, état médical et limites dans la note unique ; suite aide initiale et guide cohérent. Les états suivants sont historiques.
 
 **V337 : [disponibilité des colons](gameplay/colonist-availability-v337.md), schéma 232 conservé.** Causes et destinations réelles pour une carte sans colon libre ; défaut d’admission commerciale corrigé. Six parcours natifs et corpus historique acquis, suite campagne naturelle durable. Preuves, reprises et limites centralisées dans la note unique. Les états suivants sont historiques.

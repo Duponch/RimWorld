@@ -1,4 +1,6 @@
-# Validation courante — V340
+# Validation courante — V341
+
+**V341, schéma 232 : [aide ROOT](../gameplay/player-help-v341.md).** BuildPages/typage21,682s et reprise Chrome40,345s passent, deux cas/deux captures inspectées/recharge28exacte/gel2862exact. Rouge Tab37,940s conservé ; contrôles proportionnés au câblage et aux textes, sans replay moteur/FPS. Les validations suivantes sont historiques.
 
 **V340, schéma 232 : [qualification partielle ROOT](../gameplay/second-colony-food-v340.md).** Deuxième récolte/cargo et quatre cuissons attestés, six passages natifs rouges conservés ; aucune nouvelle ingestion ou récupération générale acquise. Dernier typagePASS18,175s, gel2863exact et deux captures finales inspectées. Aucun nouveau build/corpus requis pour les seuls pilotes et documentation ; validations suivantes historiques.
 
