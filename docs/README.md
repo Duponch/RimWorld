@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V344 : [repli et premier soin naturel](gameplay/colony-recovery-v344.md), schéma 233.** Branche littérale conservée, séparation physique et première plaie traitée ; six recharges exactes, erreurs[] et captures inspectées. Guérison, fin de menace et réserves sûres non acquises. QA-only, résultats et limites dans la note unique ; gate documentaire/commit PENDING, autonomie ACTIVE. Les états suivants sont historiques.
+
 **V343 : [soins mobilisés sans médicament](gameplay/drafted-tending-v343.md), schéma 233.** Mode explicite sec, contact réel et propriétaire clinique unique ; migration neutre strictement validée. Contrôles, rouges, limites et sept recharges dans la note unique. Produit59accafd commité/poussé et publié une fois en819c5941,104réponsesHTTPS exactes ; suite naturelle V344 en préparation, autonomie ACTIVE. Les états suivants sont historiques.
 
 **V342 : [secours physique partiel](gameplay/colony-rescue-v342.md), schéma 232 conservé.** Ordre, approche et portage rechargés exactement ; blessure du médecin et menace conservées, aucun soin ou rétablissement annoncé. Suite tactique étudiée sur référence Core actuelle. Les états suivants sont historiques.

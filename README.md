@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V344 — [premier soin naturel sous menace](docs/gameplay/colony-recovery-v344.md), schéma 233.** Depuis la branche blessée réelle, Iris rejoint le refuge et Léonie soigne une plaie de Gaël après fermeture physique de la porte. Six recharges exactes et six captures inspectées ; le patient reste à terre, la gazelle active et les réserves extérieures à qualifier. QA ciblée acquise, gate documentaire/commit en attente ; autonomie ACTIVE vers besoins alimentaires et réserve intérieure sûre. Les états suivants sont historiques.
+
 **V343 — [soins mobilisés sans médicament](docs/gameplay/drafted-tending-v343.md), schéma 233.** Un colon mobilisé capable peut soigner au contact un autre humain local à terre ou couché. Mode sec et sauvegardes historiques conservés ;54 nouveaux cas et deux parcours Chrome passent, sept recharges exactes. Produit59accafd commité/poussé et publié une fois en819c5941,104réponsesHTTPS exactes. La campagne blessée V342 reste à qualifier ; poursuite autonome ACTIVE. Les états suivants sont historiques.
 
 **V342 — [secours sous menace](docs/gameplay/colony-rescue-v342.md), schéma 232 conservé.** Iris rejoint et porte réellement le blessé de la campagne de test ; trois checkpoints rechargés exactement. La gazelle blesse ensuite Iris : arrêt conservé, dépôt médical et soins non acquis. QA partielle, règles et rendu conservés ; prochain ajout étudié : premiers soins par un colon mobilisé, distincts des soins automatiques au lit.

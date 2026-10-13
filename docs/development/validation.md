@@ -1,4 +1,6 @@
-# Validation courante — V343
+# Validation courante — V344
+
+**V344, schéma 233 : [qualification ROOT ciblée acquise](../gameplay/colony-recovery-v344.md).** Typage PASS18,737s, ChromeWebGPU PASS87,369s/body82,075s, six recharges exactes, erreurs[] et six captures inspectées ; migration neutre et premier soin naturel sur même branche blessée. Gel2869exact,2868anciens fichiers V343 inchangés. QA-only sans replay corpus/build/FPS/déploiement inchangé ; documentationPASS1,141s, prêt au commit/push. Résultat clinique, menace active et réserves ouvertes dans la note unique ; ROOT seul contrôles, autonomie ACTIVE. Les validations suivantes sont historiques.
 
 **V343, schéma 233 : [qualification ROOT ciblée acquise](../gameplay/drafted-tending-v343.md).** Reprise74cas/6dont54nouveaux PASS26,474s ; deux anciens rouges reproduits sur parent9443938b et conservés. Corpus63/66 PASS100,098s, typage produit21,847s/buildPages3,932s, typage pilote18,742s et ChromeWebGPU93,579s passent : sept recharges exactes, erreurs[] et sept captures inspectées. Package/publication104HTTPS exacts acquis, produit59accafd livré, gel2868exact ; documentation finalePASS1,115s. Aucun gainFPS ou guérison naturelle certifié ; ROOT seul contrôles et autonomie ACTIVE. Les validations suivantes sont historiques.
 
