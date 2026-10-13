@@ -33,6 +33,6 @@ La reprise sous `tmp/early-access-v341/native-keyboard/` passe les deux cas. À 
 
 ROOT inspecte `initial-help.png` et `ingame-help.png` : dialogue lisible, accueil/carte atténués derrière et focus du bouton Fermer visible. Ces deux captures ne constituent pas un contrôle responsive exhaustif ou une mesure FPS. Aucun corpus moteur ni banc de performance inchangé n’est rejoué pour ces textes et le câblage d’aide.
 
-Schéma, simulation, bridge, rendu et publics sont hors du périmètre de changement. Aucun gainFPS, nouvelle campagne, autonomie alimentaire, survie durable ou early access100% acquis. Cette note n'annonce aucun commit, push ou déploiement V341. Après qualification et livraison, les produits V339/V341 sont prévus pour une publication regroupée sous contrôle ROOT.
+Schéma, simulation, bridge, rendu et publics sont hors du périmètre de changement. Aucun gainFPS, nouvelle campagne, autonomie alimentaire, survie durable ou early access100% acquis. Produit **79661190** commité/poussé, puis publié une seule fois avec V339 en **f75ea107**. Les104réponses HTTPS sont exactes ; les détails et limites réseau restent dans la [note de publication](../development/cloudflare-pages.md#publication-v339-et-v341--humeur-et-aide).
 
 Clôture ROOT : documentation **PASS1,473s** (`v341-docs-2026-10-13T19-34-27.106Z-18244`), gel2862exact et diff sans erreur d’espacement ; simulation, rendu, bridge et publics inchangés. Les contrôles restent bornés aux parcours décrits.
