@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V347 : [ration depuis la réserve intérieure](gameplay/colony-reserve-use-v347.md), schéma 234.** Source intérieure/cargo/ingestion réelle acquis sur même branche naturelle, cinq recharges exactes et backendWebGPU relevé ici ; aucune qualification rétroactive de V346. Provenance antérieure et limites conservées dans note unique. QA-only, documentation/commit PENDING, produit V346 stable et autonomie ACTIVE vers réserves médicales/campagne naturelle. Les états suivants sont historiques.
+
 **V346 livré**, schéma 234 : [consommation directe](gameplay/consuming-v346.md), produit `f9f65b54`, publication unique `5afc7ff6` et104réponsesHTTPS exactes. [Preuves](development/cloudflare-pages.md#publication-v346--consommation-directe). Suite autonome ACTIVE : ration intérieure sur copie naturelle distincte58111, V347 seulement préparé. Les états suivants sont historiques.
 
 **V346 : [Consommer](gameplay/consuming-v346.md), schéma 234, qualification ciblée acquise.** Menu direct, portion réelle et mandat durable ; contrôles ciblés, corpus et deux scènes natives préparées passent. Huit recharges, correctifs, rouge initial et limites dans note unique, avec référence primaire liée. Package vérifié, documentation/livraison PENDING ; production V343 active, autonomie ACTIVE vers V347 préparé. Les états suivants sont historiques.

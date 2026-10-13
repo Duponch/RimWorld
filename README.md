@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V347 — [une ration intérieure consommée](docs/gameplay/colony-reserve-use-v347.md), schéma 234.** Sur copie naturelle de la réserve V345, Iris consomme une ration réelle à l'intérieur ; cinq recharges exactes et trois captures inspectées.15rations restent, Iris encore mobilisée et trois originaux vivants. QA ciblée acquise, documentation/commit en attente ; produit V346 inchangé. Autonomie ACTIVE vers médicaments intérieurs et poursuite de campagne, aucune autonomie durable certifiée. Les états suivants sont historiques.
+
 **V346 livré**, schéma 234 : [Consommer un aliment choisi](docs/gameplay/consuming-v346.md), produit `f9f65b54` commité/poussé et publié une fois en `5afc7ff6`,104réponsesHTTPS exactes. [Publication](docs/development/cloudflare-pages.md#publication-v346--consommation-directe). Les parcours préparés sont qualifiés ; poursuite autonome ACTIVE sur la réserve naturelle V347, sans ingestion future présumée. Les états suivants sont historiques.
 
 **V346 — [Consommer un aliment choisi](docs/gameplay/consuming-v346.md), schéma 234, qualification ciblée acquise.** Menu explicite civil/mobilisé, portions et ingestion physiques communes ; deux scènes Chrome préparées passent avec huit recharges exactes. Contrôles ciblés et corpus acquis, package vérifié, clôture/livraison en attente. L'ingestion de réserve naturelle V345 et la récupération V344 restent non acquises ; V343 publié reste actif. Autonomie ACTIVE vers V347 préparé en copie distincte. Les états suivants sont historiques.

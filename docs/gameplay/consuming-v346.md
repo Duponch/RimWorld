@@ -37,14 +37,14 @@ ROOT seul exécute séquentiellement sur sources/tests/pilotes figés. Le premie
 | Typage après correctifs | **PASS16,143s** |
 | Groupe repris | **PASS34,831s**,167cas/12fichiers dont48nouveaux :44dédiés et4 UI ROOT |
 | Corpus public | **PASS79,664s**,63références/66fichiers, un vrai tick au schéma 234, recharges/snapshots stricts et publics inchangés |
-| Chrome/WebGPU | **PASS76,299s**, deux scènes préparées32×32, huit recharges exactes, erreurs[] ; corps civil36,654s/mobilisé32,843s |
+| Chrome natif, backend non relevé | **PASS76,299s**, deux scènes préparées32×32, huit recharges exactes, erreurs[] ; corps civil36,654s/mobilisé32,843s |
 | Revue visuelle | Cinq PNG inspectés ROOT |
 | Pages build | **PASS2,555s** après typage sur sources exactes |
 | Gel |2874exact vérifié ROOT, puis2875final avec seul ajout du vérificateur privé ; aucune source changée après typage16,143s/natif |
 | Package final | **PASS1,599s**,516fichiers/119470631octets,63références/66chemins publics exacts, laboratoire absent/targetedForbidden[] |
 | Gate documentaire, commit/push et publication | **PASS1,258/1,263s**, produit `f9f65b54` poussé/publié une fois5afc7ff6 ;104réponsesHTTPS exactes |
 
-Le civil porte14riz puis mange à table au3040 ; fin3091, cargo consommé,16riz sources restants, événement d'ingestion réel et absence de pensée sans-table. Le mobilisé pacifiste, régime « Rien », choisit14riz sur étagère, mange à son contact au3026 et termine3077 ; mobilisation conservée,3rations de survie restent inchangées. Les deux scènes sont préparées, sans assimilation à la campagne naturelle.
+Le civil porte14riz puis mange à table au3040 ; fin3091, cargo consommé,16riz sources restants, événement d'ingestion réel et absence de pensée sans-table. Le mobilisé pacifiste, régime « Rien », choisit14riz sur étagère, mange à son contact au3026 et termine3077 ; mobilisation conservée,3rations de survie restent inchangées. Les deux scènes sont préparées, sans assimilation à la campagne naturelle. Le pilote conserve le canal Chrome mais n'a pas enregistré le backend du renderer dans ses résumés : ces preuves qualifient Chrome natif, sans certification WebGPU ou WebGL. Le choix automatique dans le code ne prouve pas le périphérique actif de ce passage. Cette correction concerne seulement la portée documentaire ; aucun contrôle inchangé n'est rejoué pour lui attribuer rétroactivement un backend.
 
 | Scène et checkpoint rechargé exactement | Tick | SHA256 |
 | --- | --- | --- |

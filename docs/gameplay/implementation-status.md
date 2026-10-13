@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V347, schéma 234 : [utilisation réelle d'une réserve intérieure](colony-reserve-use-v347.md).** Iris consomme une ration existante par l'action livrée ; source intérieure, cargo unique, mastication stationnaire et résultat nutritionnel attestés, cinq recharges exactes. Qualification d'une portion seulement, sans autonomie alimentaire ou guérison V344. QA-only, documentation/commit PENDING, produit V346 inchangé ; autonomie ACTIVE vers réserve médicale intérieure et campagne naturelle. Les états suivants sont historiques.
+
 **V346 livré**, schéma 234 : [Consommer](consuming-v346.md), produit `f9f65b54` commité/poussé et publié une fois en `5afc7ff6`,104réponsesHTTPS exactes. Action explicite qualifiée sur scènes préparées ; suite V347 naturelle seulement préparée, autonomie ACTIVE. Les états suivants sont historiques.
 
 **V346, schéma 234 : [consommation directe](consuming-v346.md), qualification ciblée acquise.** Choisir une portion réelle au sol/réserve/étagère, civil ou mobilisé ; aucune file, nutrition à vraie fin et fournisseurs automatiques conservés.48nouveaux cas et deux scènes Chrome préparées passent, huit recharges exactes. Package vérifié, clôture/livraison PENDING, limites dans note unique ; ingestion naturelle V345 et guérison V344 non acquises, V343 publié reste actif. Autonomie ACTIVE, V347 préparé seulement. Les états suivants sont historiques.
