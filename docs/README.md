@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V343 : [soins mobilisés sans médicament](gameplay/drafted-tending-v343.md), schéma 233, qualification ciblée acquise.** Mode explicite sec, contact réel et propriétaire clinique unique ; migration232 validée strictement avant changement neutre. Contrôles ciblés, corpus, build et deux scènes natives préparées acquis ; rouges, sept recharges et limites réunis dans la note unique. Gate documentaire et livraison PENDING, branche naturelle V342 non récupérée. Autonomie ACTIVE et publications regroupées après livraison. Les états suivants sont historiques.
+
 **V342 : [secours physique partiel](gameplay/colony-rescue-v342.md), schéma 232 conservé.** Ordre, approche et portage rechargés exactement ; blessure du médecin et menace conservées, aucun soin ou rétablissement annoncé. Suite tactique étudiée sur référence Core actuelle. Les états suivants sont historiques.
 
 **V341 : [aide initiale](gameplay/player-help-v341.md), schéma 232 conservé.** Accueil et partie réemploient le même dialogue ; guide joueur actualisé. Typage/build et deux parcours natifs acquis après correction Tab, recharge28exacte ; rouges et limites centralisés. Les états suivants sont historiques.

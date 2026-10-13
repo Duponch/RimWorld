@@ -63,7 +63,7 @@ export function validateRescues(world:World,onlyArrestDomain=false,onlyBedIds?:R
       if(actor.orders.active!=='rescue'||actor.orders.queue.length||actor.priorityWork||actor.surgery||actor.animalCare||actor.animalHandling||actor.hunting||actor.research||actor.equipmentTask||actor.burial||actor.cleaning||actor.firefighting||actor.trade||actor.melee?.order||actor.shooting?.order||actor.tactics)errors.push('Invalid arrest authority.');
       if(t.phase==='carry'&&bed&&actor.path.length&&!same(actor.path.at(-1)!,bed))errors.push('Invalid arrest carry route.');
     }else{
-      if(!patient||patient===actor||(t.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||patient.rescue||patients.has(t.patientId))errors.push('Invalid or duplicate rescue patient.');
+      if(!patient||patient===actor||(t.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||patient.rescue||patients.has(t.patientId)||world.schemaVersion>=233&&patientClaimed(world,t.patientId,actor))errors.push('Invalid or duplicate rescue patient.');
       if(!bed||!patient||!rescueBedAvailable(world,bed,patient,actor.id,!!t.capture,t.bedSlot)||beds.has(bedKey))errors.push('Invalid or duplicate rescue bed.');
       beds.add(bedKey);
       if(!isColonist(actor)||actor.prisoner||medicalWorkRefusal(actor)||(t.capture?actor.orders.active!=='rescue':(patient?.prisoner?actor.priorities.warden:actor.priorities.doctor)===0&&actor.orders.active!=='rescue'))errors.push('Invalid rescue or capture authority.');

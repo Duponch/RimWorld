@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Soins de terrain par un colon mobilisé — V343
+
+Sélectionnez un seul colon **mobilisé**, faites un clic droit sur un autre humain à terre ou couché dans un lit, puis choisissez **Soigner · nom (sans médicament)**. Le colon doit pouvoir exercer Médecin ; une priorité Médecin0 n’interdit pas cet ordre explicite. Il rejoint une place libre au contact et utilise les règles ordinaires de soin, sans consommer de médicament au sol ou dans son inventaire. Le patient conserve sa posture ; ses saignements continuent pendant l’approche et le travail.
+
+Le patient doit être un humain local pris en charge et autoriser les soins. Posez d’abord une personne portée. Une réservation clinique concurrente, un trajet impossible ou un patient debout empêche cette action. Annuler l’ordre ou démobiliser le soignant l’interrompt. Le secours vers un couchage et les soins automatiques gardent leurs conditions habituelles ; ce premier mode tactique ne garantit pas la sécurité ni la guérison. [Portée et contrôles](drafted-tending-v343.md).
+
 ## Votre première partie
 
 À l’accueil, **Nouvelle partie** ouvre les cinq étapes du choix de colonie.

@@ -1,4 +1,5 @@
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
+import { draftedTendingReason,draftedTendingPlaceValid } from './drafted-tending.ts';
 import { allowedAreaReason } from './allowed-area-state.ts';
 import { resolveHumanTendBatch } from './care-resolution.ts';
 import { prisonBreakActive } from './prison-break-state.ts';
@@ -78,14 +79,16 @@ export function applyTending(world:World,command:{pawnId:number;patientId:number
 }
 export function reconcileTending(world:World):void {
   for(const d of world.pawns)if(d.tend){const p=world.pawns.find(p=>p.id===d.tend!.patientId);
-    if(!allowedAreaServicesAllowed(world,d)||tendingReason(world,d,p,true)||workPriority(d,'doctor')===0&&d.orders.active!=='tend'||!p||!tendingPlaceValid(world,d,p,d.tend)||!medicineTaskValid(world,d,p,d.tend))releaseTending(world,d);
+    if(!allowedAreaServicesAllowed(world,d)||(d.tend.drafted?draftedTendingReason(world,d,p,true):tendingReason(world,d,p,true))||workPriority(d,'doctor')===0&&d.orders.active!=='tend'||!p||!tendingPlaceValid(world,d,p,d.tend)||!medicineTaskValid(world,d,p,d.tend))releaseTending(world,d);
   }
 }
 export function processTending(world:World,doctor:Pawn,context:NeedContext,light:()=>number,search:()=>Reachability|null=context.search):void {
   if(!allowedAreaServicesAllowed(world,doctor)){releaseTending(world,doctor);return;}
   const task=doctor.tend;if(!task)return;const patient=world.pawns.find(p=>p.id===task.patientId)!;
   if(patient?.health&&patient.health.tick<world.tick&&!patient.health.death)updatePawnHealth(world,patient);
-  if(tendingReason(world,doctor,patient,true)||!medicineTaskValid(world,doctor,patient,task)){releaseTending(world,doctor);return;}
+  if((task.drafted?draftedTendingReason(world,doctor,patient,true):tendingReason(world,doctor,patient,true))||!medicineTaskValid(world,doctor,patient,task)||task.drafted&&!draftedTendingPlaceValid(world,doctor,patient,task)){releaseTending(world,doctor);return;}
+  if(task.drafted&&(doctor.moveCooldown>0||(doctor.motion?.end??0)>world.tick||(doctor.stun?.untilCore??0)>world.tick*10
+    ||doctor.melee?.strike||doctor.shooting?.stance?.phase==='cooldown'))return;
   if(task.phase==='find-medicine'){
     const reach=search();if(!reach)return;
     task.phase='approach';doctor.path=reserveMedicine(world,doctor,patient,task,reach)??[];doctor.state='moving';

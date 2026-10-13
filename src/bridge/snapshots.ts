@@ -1,5 +1,6 @@
 import {validShelfTransport,validShelfGround,shelfIdentityOwners} from '../sim/shelf-save.ts';
 import {validSiteClimate} from '../sim/site-climate-save.ts';
+import { hasDraftedTendingMarker,validTendShape,validDraftedTendingTransport } from '../sim/care-save.ts';
 import {storageCellById} from '../sim/shelf-storage.ts';
 import { PowerParentValidationCache,type PowerParentReader } from '../sim/power-parent-validation.ts';
 import type { StagingGeometryReader } from '../sim/staging-validation.ts';
@@ -916,8 +917,13 @@ export class SnapshotDecoder {
       ||[...message.world.structures,...message.world.jobs,...message.world.packed.map(p=>p.building)].some(s=>s.kind==='mini-turret'||Object.hasOwn(s,'turret'))))return resync('Tourelle, recherche ou vague future.');
     for(const s of message.world.structures)if(Object.hasOwn(s,'turret')&&!validMiniTurretShape(s.turret,message.world.schemaVersion,message.world.tick*10,message.world.nextId))return resync('Canon intrinsèque invalide.');
     if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion))))return resync('Forme de vague Bomb invalide.');
+    let hasDraftedTend=false;
     for(const pawn of message.world.pawns){
       if(!pawn||typeof pawn!=='object'||Array.isArray(pawn))return resync('Personne locale invalide pour ce snapshot.');
+      if(hasDraftedTendingMarker(pawn)||pawn.draft&&pawn.tend){
+        if(!hasDraftedTendingMarker(pawn)||!validTendShape(pawn.tend,message.world.schemaVersion,message.world))return resync('Forme de soins mobilisés invalide ou future.');
+        hasDraftedTend=true;
+      }
       if(Object.hasOwn(pawn,'emp'))return resync('Un effet EMP mécanique ne peut pas appartenir à une personne.');
       if(!validDeathThoughtsPawnShape(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,message.world.tick))return resync('Souvenir de décès perçu invalide ou futur.');
       if(Object.hasOwn(pawn,'bombRefuge')&&!validBombRefugeShape(pawn.bombRefuge,message.world.schemaVersion))return resync('Refuge Bomb futur ou invalide.');
@@ -933,6 +939,7 @@ export class SnapshotDecoder {
       if(pawn.bereavement!==undefined&&!Object.hasOwn(message.world,'group')&&!Object.hasOwn(message.world,'groupLosses')&&!validBereavement(pawn.bereavement,pawn.id,message.world.schemaVersion,message.world))return resync('Souvenir de décès invalide pour ce snapshot.');
     }
     for(const owner of [message.world.scout,message.world.commercialTrip]){
+      if(owner&&typeof owner==='object'&&'pawn' in owner&&hasDraftedTendingMarker(owner.pawn))return resync('Soins mobilisés détenus par une personne hors carte.');
       if(owner&&typeof owner==='object'&&'pawn' in owner&&Object.hasOwn(owner.pawn,'emp'))return resync('Effet EMP détenu par un voyageur humain.');
       if(owner&&typeof owner==='object'&&'pawn' in owner&&!validBackgroundTransport(owner.pawn,message.world.schemaVersion))return resync('Âge ou passé personnel hors carte invalide pour ce snapshot.');
       if(owner&&typeof owner==='object'&&'pawn' in owner&&(owner.pawn.mental?.crisis
@@ -1114,6 +1121,7 @@ export class SnapshotDecoder {
     const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
     if(validateStartingArrivalOwners(next,next.schemaVersion).length)return resync('Personne, possession ou propriétaire de capsule initiale invalide.');
+    if(hasDraftedTend&&!validDraftedTendingTransport(next))return resync('Soins mobilisés, patient, contact ou réservation incohérents.');
     if(!validHumanSleepingSpotTransport(next,next.schemaVersion))return resync('Couchage au sol humain, propriétaire, rôle ou réservation physique invalide ou futur.');
     if(this.current&&message.epoch===this.epoch&&!validStartingArrivalTransition(this.current,next))
       return resync('Contenu ou transfert des capsules initiales réécrit dans cette partie.');

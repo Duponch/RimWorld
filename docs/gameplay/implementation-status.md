@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V343, schéma 233 : [soins mobilisés sans médicament](drafted-tending-v343.md), qualification ciblée acquise.** Commande explicite d'un colon mobilisé capable sur un autre humain local pris en charge, à terre ou réellement couché ; trajet/contact cardinal et traitement sec commun. Priorité Médecin0 admise pour ce mandat, incapacités et permissions conservées ; aucune file, auto-soin tactique ou médicament de terrain livré dans cette tranche.54 nouveaux cas et deux scènes natives préparées passent. Gate documentaire/livraison PENDING ; V342 reste sans dépôt, soin ou récupération naturelle acquis, autonomie ACTIVE. Les états suivants sont historiques.
+
 **V336, schéma 232 : [couchages humains au sol](human-sleeping-spots-v336.md).** Un emplacement1×2 gratuit orientable avec propriétaire, médical/prison et services réels ; aucun matelas, HP ou emballage. Premières nuits naturelles et reprises exactes acquises dans trois biomes. Double au sol/bedrolls et mémoire SleptOnGround restent absents ; campagne durable encore à qualifier. Les états suivants sont historiques.
 
 **V335, schéma 231 : [arrivée physique](starting-arrival-v335.md).** Trois occupants hors carte jusqu’à l’ouverture collective, propriétaires exclusifs et cellules revalidées ; départs antérieurs inchangés. Charte et dotation conservées ; interdictions génériques, scories, récit modal et parité exhaustive restent absents. Les états suivants sont historiques.

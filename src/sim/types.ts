@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 232 as const;
+export const SCHEMA_VERSION = 233 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -310,6 +310,7 @@ export type Command = import('./orbital-state.ts').OrbitalCommand | import('./gr
   | {type:'medical-policy';pawnId:number;enabled:boolean}
   | {type:'order-feed';pawnId:number;patientId:number;queue:boolean}
   | {type:'order-tend';pawnId:number;patientId:number;queue:boolean}
+  | {type:'order-drafted-tend';pawnId:number;patientId:number;queue:false}
   | {type:'self-tend-policy';pawnId:number;enabled:boolean}
   | {type:'order-rescue';pawnId:number;patientId:number;queue:boolean}
   | import('./doors.ts').DoorCommand

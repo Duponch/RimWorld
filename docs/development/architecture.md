@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V343, schéma 233 : [mandat de soins mobilisés](../gameplay/drafted-tending-v343.md), qualification ciblée acquise.** TendTask porte drafted:true avec phases approach/tend sèches et ordre actif tend ; le médecin reste l'unique propriétaire, le patient conserve posture, identité et horloge. Fournisseur civil au lit inchangé, contact cardinal et réservations cliniques exclusives ; forme/relations vérifiées avant adoption Decoder, sans validation World complète sur MAIN. Migration232 strictement validée puis numéro seul, aucun marqueur ajouté aux anciennes parties. Contrôles ciblés, corpus et reprises natives acquis ; gate documentaire/livraison PENDING, autonomie ACTIVE. Les états suivants sont historiques.
+
 **V336, schéma 232 : [emplacement humain](../gameplay/human-sleeping-spots-v336.md).** Structure instantanée, services de lit communs à statistiques de sol, retrait prévalidé et gardes save/Decoder avant adoption. Modèle/fantôme/portrait communs, corps hauteur0, LOD actuel. Les états suivants sont historiques.
 
 **V335, schéma 231 : [propriétaire d’arrivée](../gameplay/starting-arrival-v335.md).** Records Pawn et Material originaux contenus hors tableaux map, capture humaine figée et registre commun ; transfert après acteurs, Decoder avant adoption, reçu ouvert sans ownership. Rendu résident et sortie anticipée après extinction. Les états suivants sont historiques.

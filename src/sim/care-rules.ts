@@ -10,7 +10,7 @@ import { fluNeedsRest,fluTendable } from './flu-state.ts';
 import { immuneDiseaseTargets,immuneDiseasesNeedRest } from './immune-diseases-state.ts';
 import type { ImmuneDiseaseKind } from './immune-diseases-types.ts';
 
-export interface TendTask { patientId:number; spot:Cell; phase:'find-medicine'|'pickup'|'approach'|'tend'; progress:number; duration?:number; urgent?:true; useMedicine?:true; medicine?:TendMedicine }
+export interface TendTask { drafted?:true; patientId:number; spot:Cell; phase:'find-medicine'|'pickup'|'approach'|'tend'; progress:number; duration?:number; urgent?:true; useMedicine?:true; medicine?:TendMedicine }
 export type TreatmentTarget={injuryId:number;part?:never;infectionId?:never;flu?:never;disease?:never}|{part:BodyPartId;injuryId?:never;infectionId?:never;flu?:never;disease?:never}|{infectionId:number;injuryId?:never;part?:never;flu?:never;disease?:never}|{flu:true;injuryId?:never;part?:never;infectionId?:never;disease?:never}|{disease:ImmuneDiseaseKind;injuryId?:never;part?:never;infectionId?:never;flu?:never};
 export type RankedTreatment=TreatmentTarget&{priority:number;severity:number};
 export function treatmentTargets(p:Pawn):RankedTreatment[] {

@@ -39,7 +39,7 @@ export function humanSleepingSpotActors(world:World,ids:ReadonlySet<number>):Paw
 export function planCommandDrops(world:World,command:Command):DropPlan|null {
   if(command.type==='designate'&&(command.kind==='sleeping-spot'||command.kind==='animal-sleeping-spot'))return new Map();
   const jobs=new Set<number>(),zones=new Set<number>(),pawns=new Set<number>();
-  if(command.type==='order-bury'||command.type==='clean-room'||command.type==='order-orbital-trade'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-arrest'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-animal-rescue'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
+  if(command.type==='order-bury'||command.type==='clean-room'||command.type==='order-orbital-trade'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-arrest'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-drafted-tend'||command.type==='order-animal-rescue'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
     pawns.add(command.pawnId);
   } else if(command.type==='designate') {
     const affected=zonesUnderPlan(world,command);for(const id of affected.deliveries)zones.add(id);

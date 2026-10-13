@@ -134,6 +134,7 @@ import { dropIncapacitatedEquipment,reconcileWeaponMemory } from './equipment-st
 import { applyFeeding,processFeeding,reconcileFeeding } from './feeding.ts';
 import { applySurgery,processSurgery,reconcileSurgery } from './surgery.ts';
 import { applyTending,processTending,reconcileTending } from './tending.ts';
+import { applyDraftedTending,isDraftedTending } from './drafted-tending.ts';
 import { reconcilePatientRest } from './patient-rest.ts';
 import { MEDICAL_CARE } from './medicine-rules.ts';
 import { planUrgentCare } from './urgent-care.ts';
@@ -506,7 +507,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(typeof command.type==='string'&&'pawnId' in command&&command.type.startsWith('order-')&&world.pawns.find(p=>p.id===command.pawnId)?.shooting?.stance?.phase==='cooldown')return {ok:false,code:'invalid-command',reason:'Le colon récupère après son tir.'};
   if(command.type==='draft'||command.type==='draft-move'||command.type==='draft-stop'||command.type==='fire-at-will')return applyDraftCommand(world,command);
   if(typeof command.type==='string'&&command.type.startsWith('order-')&&'pawnId' in command&&world.pawns.find(p=>p.id===command.pawnId)?.draft
-    &&!(world.schemaVersion>=193&&command.type==='order-haul'&&command.target?.type==='turret'))return refusal('invalid-command','Démobilisez ce colon avant un ordre civil.');
+    &&!(world.schemaVersion>=233&&command.type==='order-drafted-tend')&&!(world.schemaVersion>=193&&command.type==='order-haul'&&command.target?.type==='turret'))return refusal('invalid-command','Démobilisez ce colon avant un ordre civil.');
   if(command.type==='clear-orders'&&world.pawns.find(p=>p.id===command.pawnId)?.draft)return applyDraftCommand(world,{type:'draft-stop',pawnIds:[command.pawnId]});
   if(command.type==='order-equipment'||command.type==='weapon-permission'||command.type==='apparel-permission'||command.type==='forget-weapon')return applyEquipment(world,command);
   if(command.type==='order-feed')return applyFeeding(world,command);
@@ -529,6 +530,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.type==='animal-care-policy')return applyAnimalCarePolicy(world,command);
   if(command.type==='surgery-request'||command.type==='surgery-cancel'||command.type==='surgery-install')return applySurgery(world,command);
   if(command.type==='order-tend')return applyTending(world,command);
+  if(command.type==='order-drafted-tend')return applyDraftedTending(world,command);
   if(command.type==='self-tend-policy'){
     const p=world.pawns.find(p=>p.id===command.pawnId);
     if(!p||p.state==='dead'||typeof command.enabled!=='boolean')return refusal('invalid-command','Réglage d’auto-soin invalide.');
@@ -887,7 +889,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(processPawnVomiting(world,pawn)){if(prisonBreakActive(pawn))endPrisonBreak(world,pawn);continue;}
       if(pawn.stun&&pawn.stun.untilCore<=world.tick*10)delete pawn.stun;
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
-      if((hasAdversary||pawn.meleeThreat&&world.tick*10-pawn.meleeThreat.atCore<=400)&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget,animalThreats);considerFlee(world,pawn,getThreats());}
+      if(!isDraftedTending(pawn)&&(hasAdversary||pawn.meleeThreat&&world.tick*10-pawn.meleeThreat.atCore<=400)&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget,animalThreats);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
       if(pawn.orbitalTrade)reconcileOrbitalTrade(world,pawn);if(pawn.deepWork)reconcileDeepWork(world,pawn);
       reconcileAllowedAreaPawn(world,pawn);
@@ -902,6 +904,15 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       };
       if(processBurning(world,pawn,needsContext))continue;
       if(bombDanger(world,pawn,getBlocked,budget,getLight,bombSources))continue;
+      // An explicit clinical mandate keeps its mobilisation. Physiology,
+      // captured travel, stun and immediate fire/bomb danger ran above it.
+      if(isDraftedTending(pawn)&&(!pawn.draft||pawn.mental?.crisis))reconcileTending(world);
+      if(isDraftedTending(pawn)){
+        pawn.draft!.lastActiveTick=world.tick;
+        if(!processDraftSleep(world,pawn,needsContext)&&isDraftedTending(pawn))
+          processTending(world,pawn,needsContext,()=>getLight().speedAt(pawn),()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));
+        continue;
+      }
       if(processGroupOnMap(world,pawn,needsContext))continue;
       if(processCommercialOnMap(world,pawn,needsContext))continue;
       if(processScoutLoading(world,pawn,needsContext))continue;

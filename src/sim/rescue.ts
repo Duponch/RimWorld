@@ -29,7 +29,8 @@ export function rescueReason(world:World,actor:Pawn,patient:Pawn|undefined,force
     :carrierOf(world,actor.id)?'Ce colon est transporté.'
     :actor.interruptedCargo?'La cargaison doit être déposée avant le secours.'
     :!patient||patient===actor||!wantsRescue(patient,forced)?'Cette personne ne nécessite pas de secours vers un lit.'
-    :rescueClaim(world,patient.id,actor.id)?'Une autre personne a réservé ce secours.':undefined);
+    :rescueClaim(world,patient.id,actor.id)?'Une autre personne a réservé ce secours.'
+    :world.pawns.some(p=>p.id!==actor.id&&p.tend?.drafted&&p.tend.patientId===patient.id)?'Cette personne est réservée pour des soins mobilisés.':undefined);
 }
 export function rescueProposal(world:World,actor:Pawn,patient:Pawn,reach:Reachability,forced=false):RescueProposal|undefined {
   if(rescueReason(world,actor,patient,forced))return;

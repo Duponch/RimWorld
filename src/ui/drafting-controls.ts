@@ -3,7 +3,7 @@ import { isLocallyControllableColonist } from './colonist-availability';
 import { mentalCrisisLabel,mentalCrisisRefusal } from '../sim/mental-presentation';
 import { setTooltip } from './tooltip';
 
-export const draftLabel=(p:Pawn):string=>p.shooting?.stance?.phase==='aim'?'Mobilisé · vise':p.shooting?.stance?.phase==='cooldown'?'Mobilisé · récupération après tir':p.shooting?.order?'Mobilisé · rejoint sa position de tir':p.need?.kind==='sleep'?'Mobilisé · effondré de fatigue':p.draft?.target&& (p.x!==p.draft.target.x||p.z!==p.draft.target.z||p.moveCooldown>0)?`Mobilisé · vers ${p.draft.target.x}, ${p.draft.target.z}`:'Mobilisé · attend les ordres';
+export const draftLabel=(p:Pawn):string=>p.tend?.drafted?(p.tend.phase==='tend'?'Mobilisé · soins sans médicament':'Mobilisé · rejoint le patient'):p.shooting?.stance?.phase==='aim'?'Mobilisé · vise':p.shooting?.stance?.phase==='cooldown'?'Mobilisé · récupération après tir':p.shooting?.order?'Mobilisé · rejoint sa position de tir':p.need?.kind==='sleep'?'Mobilisé · effondré de fatigue':p.draft?.target&& (p.x!==p.draft.target.x||p.z!==p.draft.target.z||p.moveCooldown>0)?`Mobilisé · vers ${p.draft.target.x}, ${p.draft.target.z}`:'Mobilisé · attend les ordres';
 /** UI selection policy. The worker remains the authority when health changes. */
 export const draftablePawns=(pawns:readonly Pawn[]):Pawn[]=>pawns.filter(isLocallyControllableColonist);
 export const draftedPawns=(pawns:readonly Pawn[]):Pawn[]=>draftablePawns(pawns).filter(p=>!!p.draft);
@@ -32,11 +32,11 @@ export function updateDraftControls(parent:HTMLElement,pawns:Pawn[]):void {
   const scope=excluded?`${excluded} membre(s) indisponible(s) ou hors colonie exclus. `:'';
   const refused=crises.length===1?`${mentalCrisisRefusal(crises[0]!)} `:crises.length?`${crises.length} colons en crise (${[...new Set(crises.map(p=>mentalCrisisLabel(p.mental!.crisis!.kind)))].join(', ')}) refusent les ordres. `:'';
   const help=parent.querySelector<HTMLElement>('#draft-help')!;
-  help.textContent=refused+scope+(all?`Clic droit sur le sol : déplacement. Clic droit sur une cible : options d’attaque. Maj : file de déplacements. ${drafted.reduce((n,p)=>n+p.draft!.queue.length,0)} déplacement(s) en attente.`:drafted.length?'Sélection mixte : R mobilise les autres colons disponibles. Les ordres tactiques concernent seulement les mobilisés.':!eligible.length?'Aucun colon libre capable d’être mobilisé.':'R mobilise les colons disponibles.');
+  help.textContent=refused+scope+(all?`Clic droit sur le sol : déplacement. Clic droit sur une cible : attaque, ou soins sans médicament sur un patient à terre ou couché. Maj : file de déplacements. ${drafted.reduce((n,p)=>n+p.draft!.queue.length,0)} déplacement(s) en attente.`:drafted.length?'Sélection mixte : R mobilise les autres colons disponibles. Les ordres tactiques concernent seulement les mobilisés.':!eligible.length?'Aucun colon libre capable d’être mobilisé.':'R mobilise les colons disponibles.');
   help.tabIndex=crises.length?0:-1;
   setTooltip(help,{title:'Contrôle du colon',body:help.textContent});
   setTooltip(toggle,{title:all?'Démobiliser':'Mobiliser',body:parent.querySelector('#draft-help')!.textContent??'',rows:[{label:'Raccourci',value:'R'}]});
-  setTooltip(stop,{title:'Arrêter l’ordre',body:'Arrêter les déplacements et attaques tactiques en cours. Les colons restent mobilisés.'});
+  setTooltip(stop,{title:'Arrêter l’ordre',body:'Arrêter les déplacements, attaques et soins mobilisés en cours. Les colons restent mobilisés.'});
   setTooltip(fire,{title:'Tirer à volonté',body:'Autoriser ou suspendre les tirs automatiques des colons mobilisés.'});
   setTooltip(parent.querySelector<HTMLElement>('#inspector-hostility-label')!,{title:'Réaction hostile',body:'Comportement autonome face à une menace lorsque le colon n’est pas mobilisé : fuir, attaquer ou ignorer.'});
 }

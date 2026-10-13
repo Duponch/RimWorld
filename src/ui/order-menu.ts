@@ -8,7 +8,8 @@ import { mechanoidDefinition } from '../sim/mechanoid-definition';
 import { shotPlan, shootingQueries } from '../sim/shooting';
 import { meleeTools } from '../sim/melee-statistics';
 import { meleePlaces, meleeRoute } from '../sim/melee-space';
-import { blockedCells } from '../sim/pathfinding';
+import { blockedCells, reachableCells } from '../sim/pathfinding';
+import { draftedTendingReason, draftedTendingProposal } from '../sim/drafted-tending';
 import { draftablePawns } from './drafting-controls';
 
 export interface TacticalAttackOption {
@@ -70,6 +71,21 @@ export function tacticalAttackPolicy(world: World, ids: ReadonlySet<number>, tar
   return { ...base, options: [option('shoot', shootIds, shootReason), option('melee', meleeIds, meleeReason)] };
 }
 
+export interface TacticalTendingOption {
+  patientId:number; pawnId?:number; label:string; enabled:boolean; reason?:string;
+}
+/** Clinical eligibility is independent of the ability to attack. */
+export function tacticalTendingPolicy(world:World,ids:ReadonlySet<number>,targetId:number,queue:boolean):TacticalTendingOption|undefined {
+  const patient=world.pawns.find(p=>p.id===targetId);if(!patient)return;
+  const doctor=ids.size===1?world.pawns.find(p=>ids.has(p.id)):undefined;
+  const reason=queue?'Les soins mobilisés ne peuvent pas être mis en file ; relâchez Maj.'
+    :ids.size!==1?'Sélectionnez un seul colon pour les soins mobilisés.'
+    :!doctor?'Ce colon est indisponible.'
+    :draftedTendingReason(world,doctor,patient)
+      ??(!draftedTendingProposal(world,doctor,patient,reachableCells(world,doctor,blockedCells(world),new Set()))?'Aucune place de soin accessible et libre.':undefined);
+  return {patientId:patient.id,...doctor?{pawnId:doctor.id}:{},label:`Soigner ${patient.name} (sans médicament)`,enabled:!reason,...reason?{reason}:{}};
+}
+
 export class OrderMenu {
   private readonly menu=document.createElement('div');
   private revision=0;
@@ -110,11 +126,22 @@ export class OrderMenu {
       return;
     }
     const policy=tacticalAttackPolicy(world,ids,targetId,queue);
+    const tending=tacticalTendingPolicy(world,ids,targetId,queue);
     this.menu.replaceChildren();this.menu.hidden=false;
     const header=document.createElement('strong');header.textContent=`${policy.target} · case ${cell.x}, ${cell.z}`;
     const content=document.createElement('div');
-    if(policy.reason)content.textContent=policy.reason;
-    else {
+    if(policy.reason&&!tending)content.textContent=policy.reason;
+    if(tending){
+      const button=document.createElement('button');button.type='button';button.setAttribute('role','menuitem');button.dataset.orderDraftedTend=String(tending.patientId);
+      button.textContent=tending.enabled?tending.label:`${tending.label} — ${tending.reason}`;button.disabled=!tending.enabled;
+      button.onclick=()=>{
+        if(!tending.enabled||tending.pawnId===undefined)return;
+        this.close();void this.client.command({type:'order-drafted-tend',pawnId:tending.pawnId,patientId:tending.patientId,queue:false})
+          .then(()=>this.report(`Soins sans médicament demandés pour ${policy.target}.`)).catch(error=>this.report(String(error instanceof Error?error.message:error),true));
+      };
+      content.append(button);
+    }
+    if(!policy.reason) {
       if(policy.drafted<policy.selected){const note=document.createElement('p');note.className='muted';note.textContent=`${policy.selected-policy.drafted} membre(s) non mobilisé(s) ou indisponible(s) exclus.`;content.append(note);}
       for(const option of policy.options) {
         const button=document.createElement('button');button.type='button';button.setAttribute('role','menuitem');button.dataset.tacticalAttack=option.kind;

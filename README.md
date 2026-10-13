@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V343 — [soins mobilisés sans médicament](docs/gameplay/drafted-tending-v343.md), schéma 233, qualification ciblée acquise.** Un colon mobilisé capable peut donner un ordre sec au contact d'un autre humain local à terre ou couché ; les soins civils conservent leur lit. Les contrôles ciblés et deux scènes Chrome préparées passent, avec sept recharges exactes. La campagne V342 conserve son patient porté et son médecin blessé, sans récupération acquise. Gate documentaire et livraison restent en attente ; poursuite autonome ACTIVE et publications regroupées. Les états suivants sont historiques.
+
 **V342 — [secours sous menace](docs/gameplay/colony-rescue-v342.md), schéma 232 conservé.** Iris rejoint et porte réellement le blessé de la campagne de test ; trois checkpoints rechargés exactement. La gazelle blesse ensuite Iris : arrêt conservé, dépôt médical et soins non acquis. QA partielle, règles et rendu conservés ; prochain ajout étudié : premiers soins par un colon mobilisé, distincts des soins automatiques au lit.
 
 **V341 — [aide dès l’accueil](docs/gameplay/player-help-v341.md), schéma 232 conservé.** Aide accessible avant de créer une partie, même dialogue qu’en jeu et navigation clavier préservée. Guide actualisé : capsules, personnes choisies, couchages gratuits et sauvegardes. Deux parcours Chrome passent, avec vraie création250² et export/recharge exacte ; campagne durable toujours à qualifier. Poursuite autonome et publication regroupée.
