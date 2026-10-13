@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V340 : [second renouvellement et incident](gameplay/second-colony-food-v340.md), schéma 232 conservé.** Qualification partielle et branches conservées : nouvelle récolte/cargo/cuisine attestés, ingestion et récupération non acquises. Reprises, rouges, état médical et limites dans la note unique ; suite aide initiale et guide cohérent. Les états suivants sont historiques.
+
 **V337 : [disponibilité des colons](gameplay/colonist-availability-v337.md), schéma 232 conservé.** Causes et destinations réelles pour une carte sans colon libre ; défaut d’admission commerciale corrigé. Six parcours natifs et corpus historique acquis, suite campagne naturelle durable. Preuves, reprises et limites centralisées dans la note unique. Les états suivants sont historiques.
 
 **V336 : [couchages au sol et première nuit](gameplay/human-sleeping-spots-v336.md), schéma 232.** Emplacement humain gratuit, rôles et taux propres au sol ; trois premières nuits et douze recharges exactes acquises. Contrôles, rouges et limites centralisés dans la note unique. Les états suivants sont historiques.

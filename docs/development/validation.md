@@ -1,4 +1,6 @@
-# Validation courante — V336
+# Validation courante — V340
+
+**V340, schéma 232 : [qualification partielle ROOT](../gameplay/second-colony-food-v340.md).** Deuxième récolte/cargo et quatre cuissons attestés, six passages natifs rouges conservés ; aucune nouvelle ingestion ou récupération générale acquise. Dernier typagePASS18,175s, gel2863exact et deux captures finales inspectées. Aucun nouveau build/corpus requis pour les seuls pilotes et documentation ; validations suivantes historiques.
 
 **V336, schéma 232 : [contrôles ROOT](../gameplay/human-sleeping-spots-v336.md#contrôles-root-et-premières-nuits).** 239cas/18fichiers acquis par reprises, corpus63/66 avec vrai tick et premières nuits naturelles Chrome des trois biomes, douze recharges exactes. ROOT seul, entrées gelées ; rouges, contrôles finaux et limites centralisés. Les validations suivantes sont historiques.
 

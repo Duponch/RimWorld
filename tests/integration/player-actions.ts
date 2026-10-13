@@ -140,7 +140,9 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
   } else if((c.type==='shoot'||c.type==='melee'&&!c.structure)&&(await world(page)).wildlife?.animals.some(a=>a.id===c.targetId)) {
     await page.keyboard.press('Escape');
     for(const [i,id] of c.pawnIds.entries())await page.locator(`[data-pawn="${id}"]`).click({modifiers:i?['Shift']:[]});
-    await panel(page,'wildlife');await page.locator(`[data-animal-${c.type==='shoot'?'shoot':'melee'}="${c.targetId}"]`).click();
+    await panel(page,'wildlife');
+    const target=page.locator('[data-fauna-target-choice]');await target.selectOption(String(c.targetId));await expect(target).toHaveValue(String(c.targetId));
+    const attack=page.locator(c.type==='shoot'?'[data-fauna-shoot]':'[data-fauna-melee]');await expect(attack).toBeEnabled();await attack.click();
   } else if(c.type==='order-capture'||c.type==='order-equipment'||c.type==='order-feed'||c.type==='order-tend'||c.type==='order-rescue'||c.type==='order-job'||c.type==='order-haul'||c.type==='order-cook') {
     await page.keyboard.press('Escape');await page.locator(`[data-pawn="${c.pawnId}"]`).click();
     if(c.type==='order-equipment'&&c.action==='remove'){await pawnTab(page,'gear');await page.locator(`[data-remove-apparel="${c.itemId}"]`).click();return;}
