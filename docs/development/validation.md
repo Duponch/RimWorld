@@ -1,4 +1,6 @@
-# Validation courante — V344
+# Validation courante — V345
+
+**V345, schéma 233 : [qualification ROOT partielle](../gameplay/colony-reserve-v345.md).** Typages PASS18,622/16,998s ; ChromeWebGPU RED247,531s/body242,800s sur borne240s, erreurs[]. Six rations livrées entièrement tracées, trois recharges exactes ; export final58111 non rechargé, ingestion réserve non acquise. Gel2870exact, quatre captures inspectées ROOT ; détails et SHA dans note unique. QA-only sans nouveau build/corpus/FPS/déploiement, documentation PASS2,215s, prêt au commit/push QA, ROOT seul contrôles et autonomie ACTIVE. Les validations suivantes sont historiques.
 
 **V344, schéma 233 : [qualification ROOT ciblée acquise](../gameplay/colony-recovery-v344.md).** Typage PASS18,737s, ChromeWebGPU PASS87,369s/body82,075s, six recharges exactes, erreurs[] et six captures inspectées ; migration neutre et premier soin naturel sur même branche blessée. Gel2869exact,2868anciens fichiers V343 inchangés. QA-only sans replay corpus/build/FPS/déploiement inchangé ; documentationPASS1,141s, prêt au commit/push. Résultat clinique, menace active et réserves ouvertes dans la note unique ; ROOT seul contrôles, autonomie ACTIVE. Les validations suivantes sont historiques.
 

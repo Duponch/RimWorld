@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V345 : [réserve intérieure partielle](gameplay/colony-reserve-v345.md), schéma 233.** Six rations entièrement tracées source/cargo/livraison et trois recharges exactes ; rouge sur borne240s, ingestion de réserve absente. Quantités finales, export non rechargé et limites dans la note unique. QA-only, documentation PASS2,215s, prêt au commit/push QA ; branches blessées conservées, autonomie ACTIVE vers l'action Consommer préparée. Les états suivants sont historiques.
+
 **V344 : [repli et premier soin naturel](gameplay/colony-recovery-v344.md), schéma 233.** Branche littérale conservée, séparation physique et première plaie traitée ; six recharges exactes, erreurs[] et captures inspectées. Guérison, fin de menace et réserves sûres non acquises. QA-only, résultats et limites dans la note unique ; gate documentaire/commit PENDING, autonomie ACTIVE. Les états suivants sont historiques.
 
 **V343 : [soins mobilisés sans médicament](gameplay/drafted-tending-v343.md), schéma 233.** Mode explicite sec, contact réel et propriétaire clinique unique ; migration neutre strictement validée. Contrôles, rouges, limites et sept recharges dans la note unique. Produit59accafd commité/poussé et publié une fois en819c5941,104réponsesHTTPS exactes ; suite naturelle V344 en préparation, autonomie ACTIVE. Les états suivants sont historiques.
