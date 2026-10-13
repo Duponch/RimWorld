@@ -1,6 +1,6 @@
 # Documentation d’Elsewhere
 
-**V343 : [soins mobilisés sans médicament](gameplay/drafted-tending-v343.md), schéma 233, qualification ciblée acquise.** Mode explicite sec, contact réel et propriétaire clinique unique ; migration232 validée strictement avant changement neutre. Contrôles ciblés, corpus, build et deux scènes natives préparées acquis ; rouges, sept recharges et limites réunis dans la note unique. Gate documentaire et livraison PENDING, branche naturelle V342 non récupérée. Autonomie ACTIVE et publications regroupées après livraison. Les états suivants sont historiques.
+**V343 : [soins mobilisés sans médicament](gameplay/drafted-tending-v343.md), schéma 233.** Mode explicite sec, contact réel et propriétaire clinique unique ; migration neutre strictement validée. Contrôles, rouges, limites et sept recharges dans la note unique. Produit59accafd commité/poussé et publié une fois en819c5941,104réponsesHTTPS exactes ; suite naturelle V344 en préparation, autonomie ACTIVE. Les états suivants sont historiques.
 
 **V342 : [secours physique partiel](gameplay/colony-rescue-v342.md), schéma 232 conservé.** Ordre, approche et portage rechargés exactement ; blessure du médecin et menace conservées, aucun soin ou rétablissement annoncé. Suite tactique étudiée sur référence Core actuelle. Les états suivants sont historiques.
 

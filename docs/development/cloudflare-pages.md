@@ -1,5 +1,7 @@
 # Elsewhere sur Cloudflare Pages
 
+**Publication courante V343 : `819c5941`, 13 octobre 2026, schéma 233.** [Soins mobilisés sans médicament](../gameplay/drafted-tending-v343.md), produit `59accafd` commité/poussé. Une publication et104 réponses HTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://819c5941.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v343--soins-mobilisés). Les publications suivantes sont historiques.
+
 **Publication courante V336–V337 : `f604f7ac`, 13 octobre 2026, schéma232.** [Couchages et premières nuits](../gameplay/human-sleeping-spots-v336.md) et [disponibilité des colons](../gameplay/colonist-availability-v337.md), produit `7c18d244` commité/poussé. [Adresse stable](https://elsewhere-cq7.pages.dev/) et [déploiement](https://f604f7ac.elsewhere-cq7.pages.dev/). Une seule publication,104réponsesHTTPS exactes ; parcours natifs acquis, campagne durable encore à qualifier. Les publications suivantes sont historiques.
 
 **Publication courante V332–V333 : `82fbe736`, 13 octobre 2026, schéma 230.** [Nouvelle partie préparée](../gameplay/new-game-preparation-v333.md) et [sauvegardes de campagne](../gameplay/save-library-v332.md), produit `54d20193` commité/poussé, une seule publication. [Adresse stable](https://elsewhere-cq7.pages.dev/) et [déploiement](https://82fbe736.elsewhere-cq7.pages.dev/). Typage/build, package exact et102réponsesHTTPS passent ; le contrôle long de présentation V333 reste rouge sur refus d'allocationWebGPU, indépendamment du parcours de création/recharge natif acquis. Les publications suivantes sont historiques.
@@ -364,3 +366,22 @@ Package PASS2,235s : **516fichiers/119429393octets**, 63sauvegardes/66chemins pu
 Wrangler4.149.0 PASS15,650s : trois fichiers nouveaux,511 déjà présents, en-têtes/redirections transmis. Déploiement **f75ea107**, [production](https://elsewhere-cq7.pages.dev/) et [adresse immuable](https://f75ea107.elsewhere-cq7.pages.dev/). HTTPS PASS13,537s : **104réponses200/MIME/octets exacts**, 52chemins sur chaque origine, rapport `tmp/elsewhere-pages/v341-http-Wiw4UU/report.json`. Les66publics sont comparés localement ; ils ne sont pas tous téléchargés à distance. Package/publics inchangés après vérification, erreurs[]. Le paramètre commit-dirty reflète le dossier humain non suivi ; seuls les assets contrôlés de dist sont téléversés.
 
 Gel final2862exact. Navigateurs de contrôle fermés par leurs contextes, Vite5411 possédé arrêté ; sessions humaines préservées. Documentation de clôture poussée sans deuxième publication. Poursuite autonome ACTIVE : récupération après incident et réserves/campagne durable, préparation privée V342. Aucun gainFPS, secours des branches V340, campagne entière ou early access complète certifiés.
+
+## Publication V343 — soins mobilisés
+
+13 octobre 2026. Produit `59accafdf30d4f2dfafe8624b3348c93600a3841` commité/poussé sur main après la [qualification ciblée](../gameplay/drafted-tending-v343.md), puis publié **une seule fois** en `819c5941`. Aucun déploiement intermédiaire pour les pilotes QA V340/V342. Les soins explicites secs, leur mode durable233 et leurs gardes sont inclus ; les visuels et63 sauvegardes publiques restent conservés.
+
+| Contrôle ROOT | Résultat |
+| --- | --- |
+| Typage produit / buildPages | PASS21,847s / PASS3,932s |
+| Typage du pilote corrigé | PASS18,742s |
+| Package avant publication | PASS2,191s —516fichiers,119446355octets ;66chemins de sauvegarde publics exacts,63références |
+| Wrangler4.149.0 épinglé | PASS14,775s —3fichiers envoyés et511 déjà présents ; _headers/_redirects publiés |
+| Disponibilité stable + fraîche | PASS9,412s —104réponses200HTTPS, octetsSHA256 et MIME exacts ; erreurs[] |
+| Conservation après contrôle | dist et66fichiers publics inchangés ; laboratoire et chemins privés ciblés absents |
+
+Inspection privée `tmp/elsewhere-pages/v343-package-pOrmP1/report.json` au HEAD précommit9443938b ; disponibilité privée `tmp/elsewhere-pages/v343-http-WICelp/report.json` au HEAD produit59accafd, avec census dist avant/après. Journaux `v343-cloudflare-2026-10-13T20-53-19.625Z-13948` et `v343-http-2026-10-13T20-54-20.495Z-13376`. Le gel2868 a été vérifié avant construction, essais et publication. Les rapports HTTPS comparent52 chemins par origine ; les66chemins publics sont tous comparés localement, pas tous téléchargés à distance.
+
+`--commit-dirty=true` correspond uniquement à `references_UI/`, dossier humain non suivi laissé intact ; le package inspecté seul a été envoyé. La recherche Core privée et la branche UI papier restent hors package. Les contextes Chrome de test sont terminés ; Vite5412 possédé est réemployé pour V344, aucune session humaine fermée.
+
+Les sept recharges et scènes préparées qualifient le geste de soin, son interruption et sa conservation. Le clic réel et les règles médicales sont attestés ; ni guérison de la branche naturelle V342, ni réserve durable, campagne entière, gainFPS ou early access100% ne sont annoncés. La poursuite autonome ACTIVE engage maintenant une tentative de repli et soin depuis le66474 conservé, sans effacer la menace ni relâcher les gardes.

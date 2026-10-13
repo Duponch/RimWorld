@@ -1,6 +1,6 @@
 # Elsewhere
 
-**V343 — [soins mobilisés sans médicament](docs/gameplay/drafted-tending-v343.md), schéma 233, qualification ciblée acquise.** Un colon mobilisé capable peut donner un ordre sec au contact d'un autre humain local à terre ou couché ; les soins civils conservent leur lit. Les contrôles ciblés et deux scènes Chrome préparées passent, avec sept recharges exactes. La campagne V342 conserve son patient porté et son médecin blessé, sans récupération acquise. Gate documentaire et livraison restent en attente ; poursuite autonome ACTIVE et publications regroupées. Les états suivants sont historiques.
+**V343 — [soins mobilisés sans médicament](docs/gameplay/drafted-tending-v343.md), schéma 233.** Un colon mobilisé capable peut soigner au contact un autre humain local à terre ou couché. Mode sec et sauvegardes historiques conservés ;54 nouveaux cas et deux parcours Chrome passent, sept recharges exactes. Produit59accafd commité/poussé et publié une fois en819c5941,104réponsesHTTPS exactes. La campagne blessée V342 reste à qualifier ; poursuite autonome ACTIVE. Les états suivants sont historiques.
 
 **V342 — [secours sous menace](docs/gameplay/colony-rescue-v342.md), schéma 232 conservé.** Iris rejoint et porte réellement le blessé de la campagne de test ; trois checkpoints rechargés exactement. La gazelle blesse ensuite Iris : arrêt conservé, dépôt médical et soins non acquis. QA partielle, règles et rendu conservés ; prochain ajout étudié : premiers soins par un colon mobilisé, distincts des soins automatiques au lit.
 

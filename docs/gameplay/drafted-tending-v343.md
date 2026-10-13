@@ -1,6 +1,6 @@
 # V343 — soins mobilisés sans médicament
 
-13 octobre 2026. **Qualification ciblée acquise au schéma 233.** Un colon mobilisé peut soigner sans médicament au contact d’un autre humain local à terre ou déjà couché. Les54 nouveaux cas passent, ainsi que la conservation des63 sauvegardes historiques et les deux parcours Chrome avec sept recharges exactes. Les rouges initiaux et leurs baselines restent conservés ci-dessous. La branche naturelle V342 demeure blessée et non récupérée ; livraison prête au commit/push, puis publication.
+13 octobre 2026. **Qualification ciblée acquise au schéma 233.** Un colon mobilisé peut soigner sans médicament au contact d’un autre humain local à terre ou déjà couché. Les54 nouveaux cas passent, ainsi que la conservation des63 sauvegardes historiques et les deux parcours Chrome avec sept recharges exactes. Les rouges initiaux et leurs baselines restent conservés ci-dessous. La branche naturelle V342 demeure blessée et non récupérée ; produit `59accafd` commité/poussé et [publié une seule fois](../development/cloudflare-pages.md#publication-v343--soins-mobilisés) en `819c5941`,104réponses HTTPS exactes.
 
 ## Geste joueur et conditions
 
@@ -46,7 +46,7 @@ ROOT seul exécute. Le premier typage a été rouge sur une assertion de test po
 | Typage final du pilote | **PASS18,742s**, label `v343-typecheck-pilot-final20:45:57.703Z-19528` |
 | Package | **PASS2,191s**,516fichiers/119446355octets ;66chemins publics/63références exacts, laboratoire absent, forbidden[], dist et publics inchangés |
 | Documentation | **PASS2,363s**, contrôle `v343-docs-2026-10-13T20-50-59.856Z-2900` ; gel2868 exact et sept captures inspectées ROOT |
-| Livraison | Prête au commit/push ; publication après ces opérations |
+| Livraison | Produit59accafd commité/poussé, publication819c5941 ;104réponses HTTPS exactes, package/publics conservés |
 
 Le contrôle isolé parent9443938b reproduit les deux rouges initiaux, label `v343-historical-baseline20:29:32.935Z-12292` : transport historique195 demande resync au lieu d'applied ; interrupted-cargo43 ajoute stockpile.zoneId65, rouge historique connu depuisV320. Aucune régression V343 n'est déduite de ces deux cas ; aucune conclusion générale d'absence de régression n'en découle.
 
@@ -70,4 +70,4 @@ La dernière relecture ne trouve aucun défaut concret supplémentaire sur les m
 
 La [continuation V342](colony-rescue-v342.md) reste à l'export66474 : Iris blessée porte encore Gaël à terre sous menace active, sans dépôt médical ni premier soin acquis. Ce mode refuse justement un patient porté. Les scènes préparées ne récupèrent ni Iris, ni Gaël, ni cette branche naturelle. Après validation/commit/push, la suite autonome ACTIVE est une tentative unique de repli, pose et soin de terrain depuis cet export, puis la qualification des réserves. La menace reste vivante ; aucune victoire, guérison ou sécurité du médecin n'est promise.
 
-Aucun gainFPS, guérison ou secours de la campagne V342, autonomie alimentaire, campagne entière ou early access100% acquis. Les contrôles ciblés et la conservation native sont attestés ci-dessus ; documentation et gel finaux passent. Le commit/push et la publication restent à effectuer par ROOT, puis la continuation naturelle.
+Aucun gainFPS, guérison ou secours de la campagne V342, autonomie alimentaire, campagne entière ou early access100% acquis. Les contrôles ciblés et la conservation native sont attestés ci-dessus ; documentation et gel finaux passent. Le produit est commité/poussé et publié ; la continuation naturelle V344 est engagée en préparation.
