@@ -1,6 +1,6 @@
 # V346 — Consommer un aliment choisi
 
-14 octobre 2026. **Qualification ciblée acquise, clôture documentaire et livraison en cours**, schéma 234. L'action directe Consommer réemploie le kernel alimentaire et ses possessions réelles. Groupe167cas/12fichiers dont48nouveaux, corpus63références/66fichiers et deux scènes Chrome préparées passent ; huit checkpoints sont rechargés exactement. Cette preuve ne qualifie aucune ingestion naturelle de la réserve V345 ni récupération des blessés V344. Package inspecté ; documentation **PASS1,258s**, prêt au commit/push ; publication en attente ; production active V343819c5941 conservée.
+14 octobre 2026. **Qualification ciblée acquise et produit livré**, schéma 234. L'action directe Consommer réemploie le kernel alimentaire et ses possessions réelles. Groupe167cas/12fichiers dont48nouveaux, corpus63références/66fichiers et deux scènes Chrome préparées passent ; huit checkpoints sont rechargés exactement. Cette preuve ne qualifie aucune ingestion naturelle de la réserve V345 ni récupération des blessés V344. Package inspecté et documentation **PASS1,258/1,263s** ; produit `f9f65b54` commité/poussé et [publié une seule fois en5afc7ff6](../development/cloudflare-pages.md#publication-v346--consommation-directe),104réponsesHTTPS exactes.
 
 ## Geste joueur, permissions et portée
 
@@ -42,7 +42,7 @@ ROOT seul exécute séquentiellement sur sources/tests/pilotes figés. Le premie
 | Pages build | **PASS2,555s** après typage sur sources exactes |
 | Gel |2874exact vérifié ROOT, puis2875final avec seul ajout du vérificateur privé ; aucune source changée après typage16,143s/natif |
 | Package final | **PASS1,599s**,516fichiers/119470631octets,63références/66chemins publics exacts, laboratoire absent/targetedForbidden[] |
-| Gate documentaire, commit/push et publication | **PASS1,258s**, prêt au commit/push ; publication en attente |
+| Gate documentaire, commit/push et publication | **PASS1,258/1,263s**, produit `f9f65b54` poussé/publié une fois5afc7ff6 ;104réponsesHTTPS exactes |
 
 Le civil porte14riz puis mange à table au3040 ; fin3091, cargo consommé,16riz sources restants, événement d'ingestion réel et absence de pensée sans-table. Le mobilisé pacifiste, régime « Rien », choisit14riz sur étagère, mange à son contact au3026 et termine3077 ; mobilisation conservée,3rations de survie restent inchangées. Les deux scènes sont préparées, sans assimilation à la campagne naturelle.
 
@@ -59,4 +59,4 @@ Le civil porte14riz puis mange à table au3040 ; fin3091, cargo consommé,16riz 
 
 Résumés/exports/captures dans `tmp/early-access-v346/native/consuming-v346-V346-prepar-4cc15-civil-real-pile-consumption/consuming-summary.json` et `tmp/early-access-v346/native/consuming-v346-V346-prepar-1bcd2-afted-real-pile-consumption/consuming-summary.json`. Rapports ROOT `tmp/early-access-v346/native-report.json`, `public-corpus-report.json` et gels conservés séparément. Les huit recharges ne recomptent aucune preuve héritée. Package : `tmp/elsewhere-pages/v346-package-mPaVsw/report.json`, label `v346-package-2026-10-13T22-18-33.586Z-5192` ; inspection seulement, sans livraison ou publication encore créditée.
 
-Aucun FPS, ingestion naturelle de [V345](colony-reserve-v345.md), récupération clinique de [V344](colony-recovery-v344.md), autonomie alimentaire, campagne entière ou early access100% certifiés. V34588297f86 poussé conserve son rouge borné et son export final non rechargé. Poursuite autonome ACTIVE après validation/commit/push : V347 prépare une copie distincte de la réserve58111 pour un repas forcé borné ; cette préparation privée n'a encore aucun résultat acquis. Publication unique après livraison et avant adoption V347 reste à faire ; V343 reste actif jusque-là.
+Aucun FPS, ingestion naturelle de [V345](colony-reserve-v345.md), récupération clinique de [V344](colony-recovery-v344.md), autonomie alimentaire, campagne entière ou early access100% certifiés. V34588297f86 poussé conserve son rouge borné et son export final non rechargé. Poursuite autonome ACTIVE après validation/commit/push : V347 prépare une copie distincte de la réserve58111 pour un repas forcé borné ; cette préparation privée n'a encore aucun résultat acquis. Publication unique acquise en5afc7ff6 après commit/push ; preuve et limites dans la note de publication. V347 reste préparé sans acquisition native.

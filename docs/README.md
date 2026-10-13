@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V346 livré**, schéma 234 : [consommation directe](gameplay/consuming-v346.md), produit `f9f65b54`, publication unique `5afc7ff6` et104réponsesHTTPS exactes. [Preuves](development/cloudflare-pages.md#publication-v346--consommation-directe). Suite autonome ACTIVE : ration intérieure sur copie naturelle distincte58111, V347 seulement préparé. Les états suivants sont historiques.
+
 **V346 : [Consommer](gameplay/consuming-v346.md), schéma 234, qualification ciblée acquise.** Menu direct, portion réelle et mandat durable ; contrôles ciblés, corpus et deux scènes natives préparées passent. Huit recharges, correctifs, rouge initial et limites dans note unique, avec référence primaire liée. Package vérifié, documentation/livraison PENDING ; production V343 active, autonomie ACTIVE vers V347 préparé. Les états suivants sont historiques.
 
 **V345 : [réserve intérieure partielle](gameplay/colony-reserve-v345.md), schéma 233.** Six rations entièrement tracées source/cargo/livraison et trois recharges exactes ; rouge sur borne240s, ingestion de réserve absente. Quantités finales, export non rechargé et limites dans la note unique. QA-only, documentation PASS2,215s, prêt au commit/push QA ; branches blessées conservées, autonomie ACTIVE vers l'action Consommer préparée. Les états suivants sont historiques.

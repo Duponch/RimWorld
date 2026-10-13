@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V346 livré**, schéma 234 : [consommation directe](../gameplay/consuming-v346.md), produit `f9f65b54` publié une fois en `5afc7ff6`,104réponsesHTTPS exactes. Sources qualifiées2875exactes ; reprise alimentaire naturelle V347 préparée, aucune ingestion future ou performance déduite. Autonomie ACTIVE. Les états suivants sont historiques.
+
 **V346, schéma 234 : [mandat de consommation directe](../gameplay/consuming-v346.md), qualification ciblée acquise.** NeedEat forcedtrue/activeconsume, portion native et kernel d'ingestion commun ; migration233 strictement validée puis neutre, domaine snapshot indexé avant adoption. Horloge draftRAW et custody du cargo pendant interruption physiologique capturée verrouillées ; fournisseurs automatiques historiques conservés. Groupe/corpus/reprises natives acquis, package vérifié, clôture/livraison PENDING ; aucun FPS général certifié, autonomie ACTIVE vers V347 préparé en copie distincte. Les états suivants sont historiques.
 
 **V345, schéma 233 conservé : [rangement intérieur qualifié partiellement](../gameplay/colony-reserve-v345.md).** Aucun changement produit : filtre/priorité de réserve et planificateur de transport existants, transfert réel source au sol/cargo humain/livraison, vrais splits/merges et propriétaires. Copie56911 migrée neutrement, branches blessées conservées ; trois recharges exactes, ingestion de réserve absente. QA-only, documentation PASS2,215s, prêt au commit/push QA ; autonomie ACTIVE, prochaine action Consommer préparée. Les états suivants sont historiques.

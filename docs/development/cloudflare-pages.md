@@ -1,5 +1,7 @@
 # Elsewhere sur Cloudflare Pages
 
+**Publication courante V346 : `5afc7ff6`, 14 octobre 2026, schéma 234.** [Consommer un aliment choisi](../gameplay/consuming-v346.md), produit `f9f65b54` commité/poussé. Une publication et104réponsesHTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://5afc7ff6.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v346--consommation-directe). Les publications suivantes sont historiques.
+
 **Publication courante V343 : `819c5941`, 13 octobre 2026, schéma 233.** [Soins mobilisés sans médicament](../gameplay/drafted-tending-v343.md), produit `59accafd` commité/poussé. Une publication et104 réponses HTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://819c5941.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v343--soins-mobilisés). Les publications suivantes sont historiques.
 
 **Publication courante V336–V337 : `f604f7ac`, 13 octobre 2026, schéma232.** [Couchages et premières nuits](../gameplay/human-sleeping-spots-v336.md) et [disponibilité des colons](../gameplay/colonist-availability-v337.md), produit `7c18d244` commité/poussé. [Adresse stable](https://elsewhere-cq7.pages.dev/) et [déploiement](https://f604f7ac.elsewhere-cq7.pages.dev/). Une seule publication,104réponsesHTTPS exactes ; parcours natifs acquis, campagne durable encore à qualifier. Les publications suivantes sont historiques.
@@ -385,3 +387,21 @@ Inspection privée `tmp/elsewhere-pages/v343-package-pOrmP1/report.json` au HEAD
 `--commit-dirty=true` correspond uniquement à `references_UI/`, dossier humain non suivi laissé intact ; le package inspecté seul a été envoyé. La recherche Core privée et la branche UI papier restent hors package. Les contextes Chrome de test sont terminés ; Vite5412 possédé est réemployé pour V344, aucune session humaine fermée.
 
 Les sept recharges et scènes préparées qualifient le geste de soin, son interruption et sa conservation. Le clic réel et les règles médicales sont attestés ; ni guérison de la branche naturelle V342, ni réserve durable, campagne entière, gainFPS ou early access100% ne sont annoncés. La poursuite autonome ACTIVE engage maintenant une tentative de repli et soin depuis le66474 conservé, sans effacer la menace ni relâcher les gardes.
+
+## Publication V346 — consommation directe
+
+14 octobre 2026. Produit `f9f65b54ae78ccc3161cf68fcb01ac52c6dcfbb2` commité/poussé sur main après la [qualification ciblée](../gameplay/consuming-v346.md), puis publié **une seule fois** en `5afc7ff6`. Aucun déploiement intermédiaire des pilotes QA V344/V345. Les visuels et63 sauvegardes publiques sont conservés.
+
+| Contrôle ROOT | Résultat |
+| --- | --- |
+| Typage après correctifs / buildPages | PASS16,143s / PASS2,555s |
+| Package | PASS1,599s :516fichiers/119470631octets,63références/66chemins publics exacts ; laboratoire absent et chemins privés ciblés absents |
+| Wrangler4.149.0 épinglé | PASS14,273s :3fichiers envoyés,511déjà présents ; _headers/_redirects publiés |
+| Adresse stable et nouvelle publication | PASS9,442s :104réponses200HTTPS, SHA256/MIME exacts, erreurs[] |
+| Conservation | dist et66fichiers publics inchangés après vérification, gel2875exact |
+
+Package privé `tmp/elsewhere-pages/v346-package-mPaVsw/report.json` au HEAD précommit88297f86 ; HTTPS privé `tmp/elsewhere-pages/v346-http-iompA5/report.json` au HEAD produitf9f65b54. Journaux `v346-cloudflare-2026-10-13T22-23-44.100Z-10996` et `v346-http-2026-10-13T22-24-42.480Z-14000` (UTC ;14octobre local). Les52chemins par origine sont récupérés à distance ; les66fichiers de sauvegarde sont tous comparés localement, pas tous téléchargés à distance.
+
+`--commit-dirty=true` correspond seulement au dossier humain non suivi `references_UI/`, laissé intact. Le package inspecté seul est envoyé ; branche UI papier et recherches privées restent hors package. Les contextes Chrome de test sont terminés, Vite5412 possédé est réemployé pour V347 ; aucune session humaine fermée.
+
+Les huit recharges et scènes préparées attestent l’action et sa conservation. Aucune ingestion naturelle de la réserve V345, récupération clinique V344, autonomie alimentaire, campagne entière, gainFPS ou early access100% n’est certifiée. Poursuite autonome ACTIVE : une copie distincte58111 permettra une tentative alimentaire bornée, sans modifier besoins, fournitures ou événements naturels.
