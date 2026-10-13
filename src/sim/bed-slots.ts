@@ -2,7 +2,7 @@ import type { BedSlot,Cell,Pawn,Structure,World } from './types.ts';
 export type { BedSlot } from './types.ts';
 
 const directions:readonly Cell[]=[{x:0,z:1},{x:1,z:0},{x:0,z:-1},{x:-1,z:0}];
-const bedKind=(bed:Structure)=>bed.kind==='bed'||bed.kind==='hospital-bed'||bed.kind==='double-bed';
+const bedKind=(bed:Structure)=>bed.kind==='sleeping-spot'||bed.kind==='bed'||bed.kind==='hospital-bed'||bed.kind==='double-bed';
 const civil=(pawn:Pawn)=> (pawn.faction??'colony')==='colony'&&!pawn.prisoner&&!pawn.visitor&&!pawn.raid&&!pawn.podRescue&&pawn.state!=='dead';
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 

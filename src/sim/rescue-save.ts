@@ -31,10 +31,11 @@ export function validRescueShape(value:unknown,version:number):boolean {
 }
 /** Shapes have passed first. Cross-references must describe a single physical
  * person, never a second actor or a resource owned by the rescuer. */
-export function validateRescues(world:World,onlyArrestDomain=false):string[] {
+export function validateRescues(world:World,onlyArrestDomain=false,onlyBedIds?:ReadonlySet<number>):string[] {
   const errors:string[]=[],patients=new Set<number>(),beds=new Set<string>();
   for(const actor of world.pawns)if(actor.rescue){
     const t=actor.rescue,patient=world.pawns.find(p=>p.id===t.patientId),bed=world.structures.find(b=>b.id===t.bedId);
+    if(onlyBedIds&&!onlyBedIds.has(t.bedId))continue;
     const bedKey=bed?.kind==='double-bed'?`${t.bedId}:${t.bedSlot}`:String(t.bedId);
     const prospective=Object.hasOwn(t,'arrest')||!!(t.release&&patient&&isColonist(patient));
     if(onlyArrestDomain&&!prospective)continue;

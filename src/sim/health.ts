@@ -38,7 +38,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
       if(status==='downed'&&wasSleeping)pawn.medicalSleep=true;else delete pawn.medicalSleep;
       pawn.collapsePending=false;pawn.restZeroTicks=0;pawn.state=status;
       if(status==='dead'){
-        if(world.structures.some(b=>b.id===pawn.bedId&&b.kind==='double-bed')||(world.packed??[]).some(pack=>pack.building.id===pawn.bedId&&pack.building.kind==='double-bed')){pawn.bedId=null;delete pawn.bedSlot;}
+        if(world.structures.some(b=>b.id===pawn.bedId&&(b.kind==='double-bed'||b.kind==='sleeping-spot'))||(world.packed??[]).some(pack=>pack.building.id===pawn.bedId&&pack.building.kind==='double-bed')){pawn.bedId=null;delete pawn.bedSlot;}
         delete pawn.surgeryRequest;notifyPawnDeath(world,pawn);
       }
       announce(world,status==='dead'?`${pawn.name} est décédé.`:`${pawn.name} est à terre.`);

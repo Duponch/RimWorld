@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V336, schéma 232 : [emplacement humain](../gameplay/human-sleeping-spots-v336.md).** Structure instantanée, services de lit communs à statistiques de sol, retrait prévalidé et gardes save/Decoder avant adoption. Modèle/fantôme/portrait communs, corps hauteur0, LOD actuel. Les états suivants sont historiques.
+
 **V335, schéma 231 : [propriétaire d’arrivée](../gameplay/starting-arrival-v335.md).** Records Pawn et Material originaux contenus hors tableaux map, capture humaine figée et registre commun ; transfert après acteurs, Decoder avant adoption, reçu ouvert sans ownership. Rendu résident et sortie anticipée après extinction. Les états suivants sont historiques.
 
 **V334, schéma 230 conservé : [carnet contextuel](../gameplay/first-days-v334.md).** Lecture pure du snapshot confirmé dans l’UI ; sortie avant lecture quand fermé, accueil ou remplacement. Lignes conservées par identifiant, focus/ouverture stables et callbacks détruits au remplacement. Aucun cache de tick ni état de mission ne masque les commandes en pause. Simulation, bridge, rendu et publics inchangés ; aucun gain FPS mesuré. Les états suivants sont historiques.

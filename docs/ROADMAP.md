@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V336 — [camp de première nuit](gameplay/human-sleeping-spots-v336.md), schéma 232.** Couchage humain gratuit et première nuit des trois biomes acquis ; suite : absence de colon contrôlable expliquée, puis campagne durable. [Critères early access](gameplay/early-access-readiness.md). Lots utiles commités/poussés, publications regroupées, relance ACTIVE. Les états suivants sont historiques.
+
 **V335 — [arrivée initiale](gameplay/starting-arrival-v335.md), schéma 231.** Dernière étape de création reliée aux vrais occupants et biens. [Critères early access](gameplay/early-access-readiness.md) : couchages et première nuit dans les trois biomes, puis campagne avec reprises et incidents. Autonomie/commit/push et publications regroupées autorisés, relance ACTIVE. Les états suivants sont historiques.
 
 **V334 — [accompagnement initial](gameplay/first-days-v334.md), schéma 230 conservé.** Carnet contextuel terminé et contrôlé. [Critères early access](gameplay/early-access-readiness.md) : arrivée physique, couchages humains au sol, première nuit dans les trois biomes existants, campagne durable avec reprises et issue compréhensible. Ces priorités suivent les manques constatés, sans sous-métiers ni nouveaux biomes prématurés. L’utilisateur demande de poursuivre sans ses relances : automation de cette conversation **ACTIVE**, lots utiles commités/poussés et publications regroupées. Les états suivants sont historiques.

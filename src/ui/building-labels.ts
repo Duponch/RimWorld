@@ -22,6 +22,7 @@ export const buildingLabels: Readonly<Record<StructureKind, string>> = {
   'butcher-table': 'Table de boucherie', 'butcher-spot': 'Emplacement de boucherie',
   'machining-table':'Atelier d’usinage', 'fabrication-bench':'Établi de fabrication', 'hi-tech-research-bench':'Bureau de recherche haute technologie', 'multi-analyzer':'Multi-analyseur', 'art-bench':'Atelier de sculpture', cooler: 'Climatiseur', 'research-bench': 'Bureau de recherche', 'tailor-bench': 'Établi de tailleur', 'electric-tailor-bench':'Établi de tailleur électrique',
   'animal-sleeping-spot':'Emplacement de couchage animal',
+  'sleeping-spot':'Couchage au sol',
   'crafting-spot': 'Emplacement d’artisanat', 'wood-generator': 'Générateur à bois',
   'standing-lamp': 'Lampe sur pied', 'sun-lamp': 'Lampe horticole', 'passive-cooler': 'Refroidisseur passif', door: 'Porte', autodoor: 'Porte automatique',
   fence: 'Clôture', 'fence-gate': 'Portillon', 'pen-marker': 'Marqueur d’enclos',

@@ -1,4 +1,6 @@
-# Validation courante — V335
+# Validation courante — V336
+
+**V336, schéma 232 : [contrôles ROOT](../gameplay/human-sleeping-spots-v336.md#contrôles-root-et-premières-nuits).** 239cas/18fichiers acquis par reprises, corpus63/66 avec vrai tick et premières nuits naturelles Chrome des trois biomes, douze recharges exactes. ROOT seul, entrées gelées ; rouges, contrôles finaux et limites centralisés. Les validations suivantes sont historiques.
 
 **V335, schéma 231 : [contrôles ROOT](../gameplay/starting-arrival-v335.md#contrôles-root).** Sources, tests, publics et pilotes gelés ; contrôles pertinents séquentiels, résultats et rouges dans la note unique. Unités, corpus avec vrai tick, typage, package et natif ne constituent pas une campagne naturelle entière ni un gainFPS. Les validations suivantes sont historiques.
 

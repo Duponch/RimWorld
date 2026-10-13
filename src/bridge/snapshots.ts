@@ -69,6 +69,7 @@ import { validateRelationshipWorld } from '../sim/relationship-world-save.ts';
 import { validateGroupStateWithPlanet } from '../sim/group-save.ts';
 import { registerGroupThingIds } from '../sim/group-namespace-save.ts';
 import { validStartingArrivalShape,validateStartingArrivalOwners,registerStartingArrivalThingIds,validStartingArrivalTransition } from '../sim/starting-arrival-save.ts';
+import { validHumanSleepingSpotProvenance,validHumanSleepingSpotStructureEntry,validHumanSleepingSpotTransport } from '../sim/human-sleeping-spot-save.ts';
 import { captureHumanOwners } from '../sim/human-owners.ts';
 import { validateSocial } from '../sim/social-save.ts';
 import { validPawnSurgeryShape,validateSurgeries } from '../sim/surgery-save.ts';
@@ -500,8 +501,9 @@ function denseArray(value:unknown):value is unknown[] {
   return Array.isArray(value)&&Object.keys(value).length===value.length
     &&Object.keys(value).every((key,index)=>key===String(index));
 }
-function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width'|'height'>):value is Structure {
+function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'>):value is Structure {
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
+  if(!validHumanSleepingSpotStructureEntry(value,world.schemaVersion,world))return false;
   const s=value as Structure;
   return Number.isSafeInteger(s.id)&&s.id>=1&&s.id<world.nextId
     &&typeof s.kind==='string'&&Object.hasOwn(STRUCTURE_DEFINITIONS,s.kind)
@@ -514,7 +516,7 @@ function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width
 /** Only reconstructs a private candidate. All ordinary business/namespace
  * guards still run below, including for unchanged retained structures. */
 interface PreparedStructureChanges { structures: Structure[]; structureIndices: number[] | undefined }
-function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width'|'height'>,value:unknown):PreparedStructureChanges|undefined {
+function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'>,value:unknown):PreparedStructureChanges|undefined {
   if(!value||typeof value!=='object'||Array.isArray(value))return;
   const patch=value as StructureChanges;
   if(Object.keys(value).some(key=>!['removed','upserted','order'].includes(key))
@@ -866,6 +868,7 @@ export class SnapshotDecoder {
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    if(!validHumanSleepingSpotProvenance(packet.world,packet.world.schemaVersion))return resync('Provenance de couchage au sol humain invalide ou future.');
     const arrivalField=Object.getOwnPropertyDescriptor(packet.world,'startingArrival');
     if(arrivalField?(!Object.hasOwn(arrivalField,'value')||!arrivalField.enumerable||arrivalField.value===undefined
       ||!validStartingArrivalShape(arrivalField.value,packet.world.schemaVersion,packet.world)):'startingArrival' in packet.world)
@@ -1111,6 +1114,7 @@ export class SnapshotDecoder {
     const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
     if(validateStartingArrivalOwners(next,next.schemaVersion).length)return resync('Personne, possession ou propriétaire de capsule initiale invalide.');
+    if(!validHumanSleepingSpotTransport(next,next.schemaVersion))return resync('Couchage au sol humain, propriétaire, rôle ou réservation physique invalide ou futur.');
     if(this.current&&message.epoch===this.epoch&&!validStartingArrivalTransition(this.current,next))
       return resync('Contenu ou transfert des capsules initiales réécrit dans cette partie.');
     const validation=this.createValidationContext(next,resourceReuse,geometryReuse),powerTopology=validation.powerParents;

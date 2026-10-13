@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V336 — [couchages humains au sol](docs/gameplay/human-sleeping-spots-v336.md), schéma 232.** Places gratuites avec affectations et services physiques ; premières nuits tempérée, boréale et aride acquises, douze recharges exactes. Valeurs climatiques conservées malgré les différences de précision entre runtimes. Campagne durable encore à qualifier ; poursuite early access autonome, publications regroupées et relance ACTIVE. Les états suivants sont historiques.
+
 **V335 — [arrivée physique](docs/gameplay/starting-arrival-v335.md), schéma 231.** Trois capsules détiennent les survivants et leurs possessions jusqu’à l’ouverture ; pause, reprise, identités et migration neutre. Les contrôles et limites sont consignés dans la note unique. Poursuite early access autonome autorisée, publications regroupées et relance ACTIVE. Les états suivants sont historiques.
 
 **V334 — [carnet des premiers jours](docs/gameplay/first-days-v334.md), schéma 230 conservé.** Sept préparations fondées sur l’état actuel, outils existants et aide actualisée ; carnet facultatif, sans changement de règles. Dix-neuf tests et parcours Chrome avec export/recharge exacte passent ; aucune campagne entière ni gain FPS annoncés. [Critères early access](docs/gameplay/early-access-readiness.md), poursuite autonome réactivée à la demande humaine et publications regroupées. Les états suivants sont historiques.

@@ -25,10 +25,19 @@ import { dropRetainingIdentity } from './ground-placement.ts';
 export type DropPlan=Map<number,Cell>;
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 
+/** Floor-bed retirement interrupts actual use/services, not unrelated owner work. */
+export function humanSleepingSpotActors(world:World,ids:ReadonlySet<number>):Pawn[] {
+  if(!ids.size)return [];
+  const patients=new Set(world.pawns.filter(p=>ids.has(p.bedId??-1)||p.need?.kind==='sleep'&&ids.has(p.need.bedId??-1)).map(p=>p.id));
+  return world.pawns.filter(p=>p.need?.kind==='sleep'&&ids.has(p.need.bedId??-1)
+    ||p.rescue&&ids.has(p.rescue.bedId)||p.surgery&&ids.has(p.surgery.bedId)
+    ||p.ward&&patients.has(p.ward.patientId)||p.feed&&patients.has(p.feed.patientId)||p.tend&&patients.has(p.tend.patientId));
+}
+
 /** Plan only ownership released by this command, before any command mutation.
  * Store the selected cells so a later greedy search cannot invalidate the plan. */
 export function planCommandDrops(world:World,command:Command):DropPlan|null {
-  if(command.type==='designate'&&command.kind==='animal-sleeping-spot')return new Map();
+  if(command.type==='designate'&&(command.kind==='sleeping-spot'||command.kind==='animal-sleeping-spot'))return new Map();
   const jobs=new Set<number>(),zones=new Set<number>(),pawns=new Set<number>();
   if(command.type==='order-bury'||command.type==='clean-room'||command.type==='order-orbital-trade'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-arrest'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-animal-rescue'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
     pawns.add(command.pawnId);
@@ -88,6 +97,8 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const selection=command.type==='area'?queryArea(world,command):null;const cells=selection?.ok?new Set(selection.cells):null;
     const spots=new Set(world.structures.filter(s=>(s.kind==='crafting-spot'||s.kind==='butcher-spot')&&(cells?cells.has(s.z*world.width+s.x):command.type==='designate'&&same(s,command))).map(s=>s.id));
     for(const p of world.pawns)if(p.cooking&&spots.has(p.cooking.stationId))pawns.add(p.id);
+    const humanSpots=new Set(world.structures.filter(s=>s.kind==='sleeping-spot'&&(cells?footprintCells(s).some(c=>cells.has(c.z*world.width+c.x)):command.type==='designate'&&(command.targetId===undefined||command.targetId===s.id)&&footprintCells(s).some(c=>same(c,command)))).map(s=>s.id));
+    for(const p of humanSleepingSpotActors(world,humanSpots))pawns.add(p.id);
   }
   return planSelectedDrops(world,jobs,pawns);
 }

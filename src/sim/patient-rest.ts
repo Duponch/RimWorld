@@ -66,7 +66,7 @@ export function processPatientRest(world:World,pawn:Pawn,context:NeedContext):bo
   if(!bed||bed.kind==='double-bed'&&(!!pawn.surgeryRequest||!cell||task.target.x!==cell.x||task.target.z!==cell.z)
     ||!rescueBedAvailable(world,bed,pawn,pawn.id,false,slot)||!wanted||!pawn.prisoner&&!isAdmittedGuest(pawn)&&workPriority(pawn,task.medical)===0){context.release();return true;}
   if(pawn.x!==task.target.x||pawn.z!==task.target.z){context.move(task.target,true);return true;}
-  if(bed.kind==='double-bed'&&(pawn.moveCooldown>0||(pawn.motion?.end??0)>world.tick))return true;
+  if((bed.kind==='double-bed'||bed.kind==='sleeping-spot')&&(pawn.moveCooldown>0||(pawn.motion?.end??0)>world.tick))return true;
   if(task.phase==='travel'){
     if(pawn.health&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
     task.phase='sleep';context.event(`${pawn.name} s'allonge pour ${task.medical==='patient'?'recevoir des soins':'récupérer de son état de santé'}.`);

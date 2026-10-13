@@ -50,6 +50,7 @@ export const OCCUPANCY = Object.freeze({
   'tailor-bench':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'machining-table':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'electric-tailor-bench':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
+  'sleeping-spot':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'animal-sleeping-spot':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'crafting-spot':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'build-roof': Object.freeze({clearItems:false,items:true,zones:true,store:true}),

@@ -32,9 +32,10 @@ export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment,re
         return !!cell&&!item.medical&&!item.prisoner&&need.phase==='sleep'&&pawn.moveCooldown===0&&(pawn.motion?.end??0)<=world.tick
           &&cell.x===pawn.x&&cell.z===pawn.z&&need.target.x===cell.x&&need.target.z===cell.z;
       }
+      if(item.kind==='sleeping-spot')return need.phase==='sleep'&&pawn.moveCooldown===0&&(pawn.motion?.end??0)<=world.tick&&item.x===pawn.x&&item.z===pawn.z&&need.target.x===item.x&&need.target.z===item.z;
       return item.x===pawn.x&&item.z===pawn.z&&(item.kind!=='hospital-bed'||need.phase==='sleep'&&pawn.moveCooldown===0&&need.target.x===item.x&&need.target.z===item.z);
     });
-    if(bed&&(pawn.state==='sleeping'||bed.kind==='hospital-bed')) {
+    if(bed&&(pawn.state==='sleeping'||bed.kind==='hospital-bed'||bed.kind==='sleeping-spot')) {
       ceiling=comfortForStructure(furnitureWorld,bed)*100;
     }
   }

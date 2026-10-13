@@ -31,8 +31,8 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
     context.infectionChanceFactor!==undefined&&(!Number.isFinite(context.infectionChanceFactor)||context.infectionChanceFactor<0||context.infectionChanceFactor>1)||
     context.infectionSeed!==undefined&&(!Number.isInteger(context.infectionSeed)||context.infectionSeed<0||context.infectionSeed>0xffffffff)||
     context.ageImmunityFactor!==undefined&&(!Number.isFinite(context.ageImmunityFactor)||context.ageImmunityFactor<.5||context.ageImmunityFactor>1)||
-    context.bedHealPerDay!==undefined&&context.bedHealPerDay!==4&&context.bedHealPerDay!==10||
-    context.bedImmunityFactor!==undefined&&context.bedImmunityFactor!==1.07&&context.bedImmunityFactor!==1.11&&context.bedImmunityFactor!==1.13)throw new Error('Invalid medical interval');
+    context.bedHealPerDay!==undefined&&context.bedHealPerDay!==0&&context.bedHealPerDay!==4&&context.bedHealPerDay!==10||
+    context.bedImmunityFactor!==undefined&&context.bedImmunityFactor!==1&&context.bedImmunityFactor!==1.07&&context.bedImmunityFactor!==1.11&&context.bedImmunityFactor!==1.13)throw new Error('Invalid medical interval');
   if(record.death||isMechanoidKind(record.body))return;
   const pending=record.injuries.filter(i=>i.infection&&i.infection.dueCore<=(record.tick+ticks)*10).length;
   if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');

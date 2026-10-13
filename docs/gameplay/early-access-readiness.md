@@ -6,8 +6,8 @@ Objectif humain du 13 octobre 2026 : une version prête à être essayée par de
 
 | Parcours joueur | Acquis actuellement | Qualification encore nécessaire |
 | --- | --- | --- |
-| Créer une colonie choisie | Cinq pages, site adopté, trois personnes parmi huit, trois biomes ; arrivée V335 et reprise pendant la descente acquises | Première nuit et campagne naturelle ; autres scénarios explicitement absents |
-| Comprendre et préparer les premiers jours | Carnet contextuel V334, alertes ciblées, outils et dossiers | Première nuit naturelle tempérée, boréale et aride sans dotation de test |
+| Créer une colonie choisie | Cinq pages, site adopté, trois personnes parmi huit, trois biomes ; arrivée V335 et première nuit V336 acquises | Campagne durable ; autres scénarios explicitement absents |
+| Comprendre et préparer les premiers jours | Carnet contextuel V334, outils et dossiers ; couchages gratuits V336, première nuit naturelle tempérée, boréale et aride | Renouvellement des ressources et incidents durant une campagne plus longue |
 | Survivre et progresser | Construction, agriculture, cuisine, travail, besoins, soins, incidents et recherche déjà reliés | Campagne suffisamment longue pour observer consommation, renouvellement, saisons, incident et récupération |
 | Conserver sa campagne | Copies nommées, autosauvegardes, import/export ; reprises historiques et départ choisi qualifiés | Reprises réparties pendant la campagne naturelle, conservation complète des identités et propriétaires |
 | Comprendre une difficulté ou une issue | Diagnostics de chantier, santé, météo, ordres et sauvegardes | Absence de colon contrôlable expliquée sans fin prématurée lorsque des personnes vivent hors carte |
@@ -19,8 +19,8 @@ Une case de catalogue, un bouton grisé, une simulation préparée ou un test ci
 
 1. Carnet contextuel V334 commité et poussé ; préserver toutes les mécaniques.
 2. Arrivée physique V335 acquise : personnes et biens réellement détenus pendant la descente, mêmes identités et quantités à l’ouverture, pause et reprise exactes. Les écarts Core restent explicites, sans interdiction générique ou scorie fictives.
-3. Ajouter le couchage humain au sol si le manque reste confirmé, puis qualifier un camp de première nuit dans chaque biome. Corriger seulement les obstacles et explications observés.
-4. Qualifier la campagne longue avec reprises et incidents, traiter les blocages et expliquer les issues possibles.
+3. Couchage humain au sol V336 acquis avec trois camps de première nuit, ressources ordinaires et douze recharges exactes ; correction de précision du climat issu du globe, valeurs sauvegardées conservées. Les limites et reprises sont dans [la note V336](human-sleeping-spots-v336.md).
+4. Expliquer l’absence de colon contrôlable, puis qualifier la campagne longue avec reprises et incidents ; traiter les blocages et les issues possibles.
 5. Publier une version d’essai avec une liste précise des parcours acquis, du contenu partiel et des problèmes connus ; poursuivre ensuite les priorités révélées par les joueurs.
 
 La recherche et les validations peuvent préciser cet ordre. Les sous-métiers restent reportés ; la refonte papier demeure sur sa branche séparée. La relance de cette conversation est active à la demande humaine ; elle respecte toute nouvelle instruction d’arrêt ou de pause.

@@ -157,11 +157,14 @@ export function seatComfort(value:FurnitureLike):number {
 export interface BedFacilities {endTable?:boolean;dresser?:boolean}
 export const bedFacilityOffset=(facilities:BedFacilities={}):number=>(facilities.endTable?.05:0)+(facilities.dresser?.05:0);
 export function bedComfort(value:FurnitureLike,facilities:BedFacilities={}):number {
-  if(!isBedKind(value.kind))return 0;return ((FURNITURE_DEFINITIONS[value.kind].comfort??0)+bedFacilityOffset(facilities))*QUALITY_COMFORT[furnitureQuality(value.quality)];
+  if(!isBedKind(value.kind))return 0;
+  if(value.kind==='sleeping-spot')return .4;
+  return ((FURNITURE_DEFINITIONS[value.kind].comfort??0)+bedFacilityOffset(facilities))*QUALITY_COMFORT[furnitureQuality(value.quality)];
 }
 export const comfortNeedCeiling=(comfort:number):number=>Math.max(0,Math.min(1,comfort));
 export function bedRestEffectiveness(value:FurnitureLike):number {
   if(!isBedKind(value.kind))return 0;
+  if(value.kind==='sleeping-spot')return .8;
   const materialFactor=isFurnitureMaterial(value.material)?FURNITURE_MATERIALS[value.material].restFactor:1;
   return (FURNITURE_DEFINITIONS[value.kind].restEffectiveness??1)*materialFactor*QUALITY_REST[furnitureQuality(value.quality)];
 }
@@ -192,6 +195,7 @@ function localCells(structure:FurnitureStructureLike):readonly FurnitureCell[] {
  * The optional cellsOf callback lets the central footprint owner override the
  * local V90 fallback without importing engine types here. */
 export function comfortForStructure(world:FurnitureWorldLike,structure:FurnitureStructureLike):number {
+  if(structure.kind==='sleeping-spot')return .4;
   if(!isBedKind(structure.kind))return seatComfort(structure);
   const cellsOf=world.cellsOf??localCells,bedCells=cellsOf(structure),head=bedCells[0]??structure;
   const visible=(facilityCells:readonly FurnitureCell[])=>!world.lineOfSight||bedCells.some(b=>facilityCells.some(f=>world.lineOfSight!(b,f)));

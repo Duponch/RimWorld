@@ -47,6 +47,7 @@ const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.free
   'spike-trap':def(45,3200,'standable'),
   'electric-crematorium':def(150,4500,'impassable',{steel:20,component:2}),
   'double-bed':def(85,1500,'pass-through',{},true),
+  'sleeping-spot':def(0,0,'standable'),
   'animal-sleeping-spot':def(0,0,'standable'),
   'electric-smelter':def(0,3500,'pass-through',{steel:170,component:2}),
   'biofuel-refinery':def(0,2000,'pass-through',{steel:150,component:3}),

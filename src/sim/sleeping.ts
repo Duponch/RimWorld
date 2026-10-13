@@ -100,11 +100,11 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     const head=bed&&slot!==undefined?bedSlotCell(bed,slot):undefined;
     if (task.bedId !== null && (!bed || pawn.bedId !== bed.id || !head || !same(head, task.target)||bed.kind==='double-bed'&&(bedAssignmentReason(world,bed,pawn,slot!)!==undefined||bedSlotClaimed(world,bed,slot!,pawn.id)))) { if (!context.release()) return true; return true; }
     if (!same(pawn, task.target)) { context.move(task.target, true); return true; }
-    if(bed?.kind==='double-bed'&&(pawn.moveCooldown>0||pawn.motion&&pawn.motion.end>world.tick))return true;
+    if((bed?.kind==='double-bed'||bed?.kind==='sleeping-spot')&&(pawn.moveCooldown>0||pawn.motion&&pawn.motion.end>world.tick))return true;
     if (task.phase === 'travel') context.event(`${pawn.name} s’allonge ${bed ? 'dans son lit' : 'au sol'}.`);
     task.phase = 'sleep'; pawn.path = []; pawn.state = 'sleeping'; pawn.collapsePending = false; pawn.restZeroTicks = 0;
     advanceRoomRest(world,pawn);
-    pawn.rest = Math.min(100, pawn.rest + (bed ? BED_REST_PER_TICK * (bed.kind==='hospital-bed'||bed.kind==='double-bed'?bedRestEffectiveness(bed):BUILDING_MATERIALS[bed.material??'wood'].restFactor) : GROUND_REST_PER_TICK));
+    pawn.rest = Math.min(100, pawn.rest + (bed&&bed.kind!=='sleeping-spot' ? BED_REST_PER_TICK * (bed.kind==='hospital-bed'||bed.kind==='double-bed'?bedRestEffectiveness(bed):BUILDING_MATERIALS[bed.material??'wood'].restFactor) : GROUND_REST_PER_TICK));
     if (pawn.rest >= 100) { finishRoomRest(world,pawn);pawn.need = null; pawn.state = 'idle'; pawn.planCooldown = 0; pawn.needCooldown = 0; }
     return true;
   }

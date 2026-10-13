@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest';
+import { withoutFodderDefaults,withoutPredatorDefaults } from './scenarios/legacy-skills.ts';
 import { SnapshotDecoder,SnapshotEncoder,type SnapshotMessage } from '../src/bridge/snapshots.ts';
 import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index.ts';
 import { COMPLEX_FURNITURE_RESEARCH_COST,HOSPITAL_BED_RESEARCH_COST,MICROELECTRONICS_RESEARCH_COST } from '../src/sim/research.ts';
@@ -21,13 +22,18 @@ function until(w:World,done:()=>boolean,limit=1500):void {
 }
 const packet=(encoder:SnapshotEncoder,w:World,checkpoint=false)=>structuredClone(encoder.encode(w,0,6,checkpoint));
 function old186(w:World) {
-  const raw=JSON.parse(serializeWorld(w));raw.schemaVersion=186;
+  const raw=withoutPredatorDefaults(withoutFodderDefaults(JSON.parse(serializeWorld(w))));raw.schemaVersion=186;
   for(const pawn of raw.pawns){delete pawn.recreation.tolerance.television;delete pawn.recreation.bored.television;}
   return raw;
 }
-const migratedCurrent=(old:World)=>({...old,schemaVersion:SCHEMA_VERSION,pawns:old.pawns.map(pawn=>({...pawn,recreation:{...pawn.recreation,tolerance:{...pawn.recreation.tolerance,television:0},bored:{...pawn.recreation.bored,television:false}}}))});
+const migratedCurrent=(old:World)=>({...old,schemaVersion:SCHEMA_VERSION,
+  // This declared old default meal-only policy receives the separately
+  // qualified V282 paste permission. Custom/restricted diets stay unchanged.
+  foodPolicies:old.foodPolicies.map(policy=>policy.id===2&&policy.name==='Repas uniquement'
+    ?{...policy,allowed:[...policy.allowed,'nutrient-paste-meal' as const]}:policy),
+  pawns:old.pawns.map(pawn=>({...pawn,recreation:{...pawn.recreation,tolerance:{...pawn.recreation.tolerance,television:0},bored:{...pawn.recreation.bored,television:false}}}))});
 
-test('strict186 migration preserves medical beds, research, possessions and RNG with only current schema and neutral television family',()=>{
+test('strict186 migration preserves beds, research, possessions and RNG with current schema, television family and old default meal permission',()=>{
   const raw=old186(camp());
   const before=JSON.stringify(raw),loaded=deserializeWorld(before);
   expect(loaded.schemaVersion).toBe(SCHEMA_VERSION);expect(loaded).toEqual(migratedCurrent(raw));

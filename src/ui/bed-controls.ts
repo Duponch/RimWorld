@@ -27,8 +27,9 @@ export function updateBedControls(panel:HTMLElement,world:World,structure:Struct
   root.hidden=!structure||!isBedKind(structure.kind);if(!structure||!isBedKind(structure.kind))return;
   const owner=root.querySelector<HTMLSelectElement>('#bed-owner')!;
   const double=structure.kind==='double-bed',second=root.querySelector<HTMLSelectElement>('#bed-owner-second')!;
-  owner.parentElement!.firstChild!.textContent=double?'Place 1 ':'Propriétaire du lit ';
-  owner.setAttribute('aria-label',double?'Propriétaire de la place 1':'Propriétaire du lit');second.parentElement!.hidden=!double;
+  const ground=structure.kind==='sleeping-spot';
+  owner.parentElement!.firstChild!.textContent=double?'Place 1 ':ground?'Propriétaire de l’emplacement ':'Propriétaire du lit ';
+  owner.setAttribute('aria-label',double?'Propriétaire de la place 1':ground?'Propriétaire de l’emplacement':'Propriétaire du lit');second.parentElement!.hidden=!double;
   owner.disabled=!!structure.medical||!!structure.prisoner;
   owner.parentElement!.hidden=!!structure.prisoner;
   const currentOptions=[...owner.options].map(o=>o.value).join(',');
@@ -44,5 +45,6 @@ export function updateBedControls(panel:HTMLElement,world:World,structure:Struct
   root.querySelector<HTMLInputElement>('#bed-medical')!.parentElement!.hidden=double;
   root.querySelector<HTMLInputElement>('#bed-prisoner')!.parentElement!.hidden=double;
   const prisoner=world.pawns.find(p=>p.prisoner&&(p.bedId===structure.id||p.need?.kind==='sleep'&&p.need.bedId===structure.id));
-  root.querySelector('#bed-prisoner-description')!.textContent=double?'Deux places civiles indépendantes. Affectez deux colons ; une place automatique dans le lit d’un autre colon est réservée à son partenaire. Usage médical et prisonniers indisponibles pour ce modèle.':structure.prisoner?`Réservé aux captifs. Une pièce fermée et accessible est nécessaire à la capture.${prisoner?` Occupant : ${prisoner.name}.`:''}`:'';
+  const role=double?'Deux places civiles indépendantes. Affectez deux colons ; une place automatique dans le lit d’un autre colon est réservée à son partenaire. Usage médical et prisonniers indisponibles pour ce modèle.':structure.prisoner?`Réservé aux captifs. Une pièce fermée et accessible est nécessaire à la capture.${prisoner?` Occupant : ${prisoner.name}.`:''}`:'';
+  root.querySelector('#bed-prisoner-description')!.textContent=`${ground?'Emplacement gratuit pour une personne, posé et retiré immédiatement. Le corps reste au sol ; aucun matelas, matériau ou chantier. Vérifiez le toit, la température et l’accès. ':''}${role}`.trim();
 }

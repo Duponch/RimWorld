@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V336 — [couchages humains au sol](human-sleeping-spots-v336.md), schéma 232, premières nuits acquises dans trois biomes.** `sleeping-spot` ajoute une place humaine gratuite 1×2 orientable, posée et retirée immédiatement. Affectation civile exclusive, rôles médical et prison indépendants, sommeil et services physiques ; repos 0,8, confort 0,4, guérison additionnelle 0/jour, immunité ×1 et chirurgie ×0,7. Aucun matériau, qualité, PV, chantier ou paquet. Double emplacement, bedrolls et mémoire Core SleptOnGround restent hors lot ; les lits historiques gardent leurs règles. [Guide](player-guide.md#préparer-un-couchage-au-sol--v336), écarts et qualification bornée dans la note unique ; la campagne durable reste à vérifier.
+
 **V318 — [régulation du troupeau](auto-slaughter-v318.md).** Aucun nouvel objet, bâtiment ou espèce : cinq animaux domestiquables, maxima facultatifs par sexe/stade et protection des gestantes. Les excédents alimentent l'abattage physique V309, sans désignation manuelle ni produit au clic. [Guide](player-guide.md#réguler-le-troupeau--v318). Liens affectifs et libération sauvage différés.
 
 **V311 — [fonderie électrique et fusion des armes](smelting-v311.md), schéma 222.** `electric-smelter` :170acier+2composants, Construction4,350ticks neutres,3×1/180PV/700W, minifiable. Recette `smelt-weapon` des quatre armes actuelles, filtres de types/PV/qualité,160ticks neutres sans XP ; une sortie réelle acier ou plastacier. Aucun nouvel ItemId, composant récupéré, armure ou scorie. [Guide](player-guide.md#fondre-une-arme--v311), adaptations et contrôles qualifiés dans la note unique. Les états suivants sont historiques.
@@ -246,6 +248,13 @@ Une future acquisition devra conserver version exacte, modules et ordre de charg
 L’[audit du 13 septembre](../research/environment-review.md) confirme que les familles **CAT-059..065** sont partielles : sols aux fertilités/supports/coûts distincts, cinq roches naturelles de base (granite, calcaire, marbre, grès, ardoise), minerais et produits séparés, arbres/plantes propres aux biomes. V27 livre les identités des cinq roches, leur distribution et leur apparence ; cela ne clôture aucune de ces familles. Les types exacts, propriétés et variantes ne sont pas encore acquis dans un manifeste résolu.
 
 ## Petit catalogue et statut des ajouts
+
+### Ajouts V336 — préparation des contrôles de première nuit
+
+| Registre / identifiant local | Acquisition et usage physique | Limites |
+| --- | --- | --- |
+| Structure `sleeping-spot` | Marque humaine gratuite immédiate, 1×2, quatre orientations, traversable. Une affectation civile ; usages médical et prison indépendants, réservations et arrivée à la tête réelles. Retrait immédiat avec prévalidation des objets portés et libération des usages concernés. | Aucun matériau, qualité, PV, réparation, chantier, objet emballé ou transport de meuble. Ne crée ni pièce, toit ni température ; nouvelles réservations et captures en prison exigent une enceinte fermée. |
+| Statistiques du couchage au sol | Repos 0,8 du taux de référence, confort plafond 0,4 sans bonus de chevet/commode ; guérison additionnelle 0/jour, immunité ×1, facteur de chirurgie 0,7. Soins, secours et nourriture gardent leurs acteurs, possessions et déplacements. | Aucun bonus hospitalier ou matelas. Double couchage, bedrolls, préceptes DLC et mémoire SleptOnGround absents ; souvenirs de chambre/dortoir existants conservés. [Référence, écarts et état des contrôles](human-sleeping-spots-v336.md). |
 
 ### Ajouts V207 — livré dans le périmètre ciblé
 

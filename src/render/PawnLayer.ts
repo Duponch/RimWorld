@@ -896,7 +896,7 @@ export class PawnLayer {
         const slot=pawnBedSlot(pawn,bed),center=bed.kind==='double-bed'&&slot!==undefined?bedSlotBodyCenter(bed,slot):undefined;
         if(center){px=center.x;pz=center.z;}
         else {const cells = footprintCells(bed), last = cells[cells.length - 1]!;px = (bed.x + last.x) / 2;pz = (bed.z + last.z) / 2;}
-        py = WORLD_SCALE.bedSurfaceHeight;
+        py = bed.kind==='sleeping-spot'?0:WORLD_SCALE.bedSurfaceHeight;
         const target = bed.orientation * Math.PI / 2;
         yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
       }

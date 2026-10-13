@@ -66,13 +66,15 @@ export function validPawnSurgeryShape(p:Pick<Pawn,'surgeryRequest'|'surgery'>|Re
 }
 /** Full relations, after ordinary Pawn/item/clinical shapes. Request is not a
  * second work task: it survives patient's anesthetic incapacity. */
-export function validateSurgeries(w:World,version:number):string[] {
+export function validateSurgeries(w:World,version:number,onlyBedIds?:ReadonlySet<number>):string[] {
   const errors:string[]=[],patients=new Set<number>(),byId=new Map(w.pawns.map(p=>[p.id,p]));
   const work=new Map<number,Pawn>();
   for(const d of w.pawns)if(d.surgery?.phase==='work')work.set(d.surgery.patientId,d);
   const offMap=w.scout&&'pawn' in w.scout?w.scout.pawn.id:w.commercialTrip&&'pawn' in w.commercialTrip?w.commercialTrip.pawn.id:undefined;
   const serviceKey=(cell:{x:number;z:number})=>cell.z*w.width+cell.x;
   for(const p of w.pawns){
+    if(onlyBedIds&&!(p.surgery&&onlyBedIds.has(p.surgery.bedId))
+      &&!(p.need?.kind==='sleep'&&onlyBedIds.has(p.need.bedId??0)))continue;
     if(!validPawnSurgeryShape(p,version,w)){errors.push('Invalid or future surgery state.');continue;}
     if(p.surgeryRequest){
       const active=work.get(p.id),anesthetic=p.health?.anesthetic;

@@ -23,7 +23,7 @@ export interface FirstDayGuideCallbacks {onAction:(action:FirstDayGuideAction)=>
 
 const civil=(p:Pawn)=>isColonist(p)&&!p.prisoner&&!p.visitor&&!p.raid&&!p.podRescue&&p.state!=='dead'&&!p.health?.death;
 const foodCrop=(kind:string)=>kind==='rice'||kind==='potato'||kind==='corn';
-const aliveBuilding=(s:Structure)=>(s.damage??0)<structureMaxHp(s);
+const aliveBuilding=(s:Structure)=>s.kind==='sleeping-spot'||(s.damage??0)<structureMaxHp(s);
 const retiring=(w:World,s:Structure)=>w.jobs.some(j=>j.deconstruction?.structureId===s.id||j.furniture?.structureId===s.id&&j.kind==='uninstall');
 const localPile=(ids:ReadonlySet<number>,p:MaterialPile)=>p.quantity>0&&(p.owner.type==='ground'||p.owner.type==='pawn'&&ids.has(p.owner.pawnId));
 
@@ -94,7 +94,7 @@ export function readFirstDayGuide(world:World):FirstDayGuideSection[] {
       body:'Tracez une réserve et vérifiez ses filtres, sa priorité et sa capacité. Une étagère doit être construite. Les transporteurs déplacent les piles au contact ; cette configuration ne garantit pas une place libre pour chaque objet.',action:{panel:'architect',mapTools:'zones',tool:'stockpile'},actionLabel:'Ouvrir Zones'},
     {id:'beds',title:'Préparer les couchages',status:noPeople?'optional':beds>=people.length?'ready':beds||bedPlans?'started':'missing',
       detail:`${beds} place(s) civile(s) compatibles pour ${people.length} colon(s).${bedPlans?` ${bedPlans} couchage(s) en chantier.`:''}`,
-      body:'Un plan ne permet pas de dormir. Les lits médicaux, de prison et les places déjà revendiquées restent distincts. Un lit double entièrement libre compte ici une place : affectez ses occupants dans son inspection pour utiliser la seconde, ou laissez un partenaire la rejoindre. Vérifiez le trajet, le toit et la température des couchages la première nuit.',action:{panel:'architect',category:'furniture'},actionLabel:'Ouvrir Meubles'},
+      body:'Placez trois Couchages au sol gratuits et immédiats pour les premiers colons, puis construisez des lits. Chaque emplacement accueille une personne ; affectez-la dans son inspection. Le repos au sol est moins efficace qu’un vrai lit. Un plan de lit ne permet pas de dormir. Les places médicales, de prison et déjà revendiquées restent distinctes. Un lit double entièrement libre compte ici une place : affectez ses occupants pour utiliser la seconde, ou laissez un partenaire la rejoindre. Vérifiez le trajet, le toit et la température la première nuit : une marque au sol ne crée pas d’abri.',action:{panel:'architect',category:'furniture'},actionLabel:'Ouvrir Meubles'},
     {id:'food',title:'Surveiller les provisions',status:noPeople?'optional':nutrition>=people.length*1.6?'ready':nutrition>0?'started':'missing',
       detail:`${nutrition.toFixed(1)} nutrition actuellement en réserve, dont ${survival} repas de survie.`,
       body:'Ce stock actuel ne prouve pas une production durable. Vérifiez le régime de chaque colon et l’accès aux piles. Les rations seront consommées : préparez récolte, cultures et cuisine avant leur épuisement.',action:{panel:'assign'},actionLabel:'Ouvrir Assignations'},

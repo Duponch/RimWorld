@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest';
+import { withoutFodderDefaults } from './scenarios/legacy-skills.ts';
 import { SnapshotDecoder,SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { deserializeWorld,serializeWorld,validateWorld } from '../src/sim/serialization.ts';
 import { validDoubleBedTransport,validBedSlotPawnShape } from '../src/sim/double-bed-save.ts';
@@ -125,7 +126,7 @@ test('simple, null and dangling historical bed references never admit a prospect
   const w=medicalCamp(),bed=fixtureBuilding(w,'bed',17,16);w.pawns[0]!.bedId=bed.id;w.pawns[0]!.bedSlot=0;refused(w);
 });
 test('223 migration validates historical data then changes only the schema number',()=>{
-  const w=medicalCamp(2),bed=fixtureBuilding(w,'bed',17,16);w.pawns[0]!.bedId=bed.id;w.schemaVersion=223 as World['schemaVersion'];
+  const w=withoutFodderDefaults(medicalCamp(2)),bed=fixtureBuilding(w,'bed',17,16);w.pawns[0]!.bedId=bed.id;w.schemaVersion=223 as World['schemaVersion'];
   const before=structuredClone(w);expect(deserializeWorld(JSON.stringify(w))).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(w).toEqual(before);
 });
 test('223 refuses double structures, packed buildings and slots before neutral migration',()=>{

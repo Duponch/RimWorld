@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V336 : [couchages au sol et première nuit](gameplay/human-sleeping-spots-v336.md), schéma 232.** Emplacement humain gratuit, rôles et taux propres au sol ; trois premières nuits et douze recharges exactes acquises. Contrôles, rouges et limites centralisés dans la note unique. Les états suivants sont historiques.
+
 **V335 : [arrivée des survivants](gameplay/starting-arrival-v335.md), schéma 231.** Contenus physiques, transitions confirmées et reprise pendant la descente ; corpus historique conservé. Contrôles et limites centralisés, prochaines priorités première nuit et campagne durable. Les états suivants sont historiques.
 
 **V334 : [carnet contextuel](gameplay/first-days-v334.md), schéma 230 conservé.** Premiers jours, état actuel des préparations et liens vers les outils usuels ; [guide joueur](gameplay/player-guide.md#conseils-des-premiers-jours--v334) et [critères early access](gameplay/early-access-readiness.md). Contrôles et limites dans la note unique ; reprise autonome active et publications regroupées. Les états suivants sont historiques.

@@ -1,5 +1,17 @@
 # Guide joueur
 
+## Préparer un couchage au sol — V336
+
+Dans **Architecte > Meubles**, choisissez **Couchage au sol**. **Q/E** tourne cette place **1×2** avant la pose. Les deux cellules doivent être praticables, sans roche, arbre, ouvrage ou plan incompatible. La marque apparaît immédiatement, sans ressources ni chantier ; elle reste traversable et conserve les zones, plantes admissibles et objets au sol.
+
+Inspectez l’emplacement pour choisir **Propriétaire de l’emplacement**. Une seule personne peut l’utiliser ; elle rejoint réellement la tête avant de s’allonger au sol. Le repos récupère à **0,8** du taux de référence et le confort atteint au plus **0,4**, sans bonus de table de chevet ou de commode. Préparez aussi un abri, un toit et une température adaptée : l’emplacement ne les fournit pas.
+
+**Usage médical** réserve temporairement la place aux patients, avec les priorités Patient, Repos au lit et Médecin habituelles. Soins, secours, médicaments et repas servis demandent toujours leurs trajets et objets réels. Le couchage ajoute **0 point de guérison par jour**, garde un multiplicateur d’immunité de **1** et un facteur de chirurgie de **0,7**. **Pour prisonniers** est indépendant du rôle médical ; capture et nouvelles réservations exigent une pièce réellement fermée. Une brèche ne déplace pas un patient médical à terre déjà installé.
+
+Le retrait est immédiat et libère l’affectation ainsi que les usages concernés ; il peut être refusé s’il n’existe aucune place pour conserver les objets portés. L’emplacement n’a ni matériau, qualité, points de vie, réparation ni paquet : retirez-le puis posez-en un autre pour changer sa position.
+
+Le double couchage au sol et les bedrolls restent absents. La mémoire Core **SleptOnGround** n’est pas encore appliquée, y compris pour le sommeil libre au sol ; les souvenirs existants de chambre ou dortoir suivent leur usage réel. [Contrat, écarts et contrôles V336](human-sleeping-spots-v336.md). Les premières nuits naturelles des trois biomes sont qualifiées avec abri et reprises exactes ; la campagne durable reste à vérifier.
+
 ## Arrivée des survivants — V335
 
 Le nouveau départ est en pause avec trois capsules en approche. **Reprendre** fait avancer la descente ; vous pouvez mettre en pause et sauvegarder à tout moment. L’impact précède l’ouverture, après laquelle les trois colons, leurs vêtements et les fournitures transportées apparaissent réellement. Bois et acier sont dispersés au sol dès le début. Une sortie obstruée garde tous les occupants dans les capsules : annulez les plans qui bloquent les sorties. [Fonctionnement et limites](starting-arrival-v335.md).
@@ -860,7 +872,7 @@ La poursuite en mêlée continue sur un trajet encore praticable pendant son rec
 
 ## Capturer et recruter — V86 livrée
 
-Préparez une pièce fermée ne touchant pas le bord de la carte, avec un lit accessible. Dans l’inspection du lit, cochez **Pour prisonniers** : tous les lits de cette pièce prennent ce rôle et cessent d’être disponibles aux colons libres. **Usage médical** reste un choix indépendant. Un toit n’est pas requis pour le rôle de prison, mais température, confort et santé continuent de compter.
+Préparez une pièce fermée ne touchant pas le bord de la carte, avec un lit simple, un lit d’hôpital ou un [couchage au sol V336](#préparer-un-couchage-au-sol--v336) accessible. Dans son inspection, cochez **Pour prisonniers** : les couchages compatibles de cette pièce prennent ce rôle et cessent d’être disponibles aux colons libres. **Usage médical** reste un choix indépendant. Le lit double reste civil. Un toit n’est pas requis pour le rôle de prison, mais température, confort et santé continuent de compter.
 
 Sélectionnez un colon démobilisé, faites un clic droit sur un hors-la-loi vivant à terre et choisissez **Capturer**. Le colon doit le rejoindre, le prendre et le porter au lit réservé. Une personne relevée avant la prise ne peut plus être capturée ; le transfert garde blessures, identité et vêtements. Arme et cargaison sont déposées physiquement : un sol encombré peut retarder l’arrivée. L’arrestation d’une personne debout et la mise en file des captures ne sont pas disponibles.
 
@@ -1039,6 +1051,8 @@ Dans **Architecte → Meubles**, les tables 2×2 et 2×4 augmentent les places d
 
 Le confort vient du meuble effectivement utilisé. Une chaise proche ne suffit pas. Une table de chevet placée près de la tête du lit et une commode couvrant le lit ajoutent chacune +0,05 à son confort. La qualité du lit ou du siège modifie ce plafond ; la qualité du lit modifie aussi l'efficacité du repos. Désinstaller et réinstaller le meuble conserve matière et qualité.
 
+Le [couchage au sol V336](#préparer-un-couchage-au-sol--v336) conserve son plafond de confort 0,4 et son repos 0,8 : il n’a aucune qualité et ne reçoit aucun bonus de chevet ou de commode.
+
 La beauté visible fait maintenant évoluer un besoin personnel et l'humeur. Meubles, marbre, sols, fleurs, piles, corps et salissures contribuent selon leurs valeurs connues : nettoyer, ranger et meubler change donc réellement le résultat. L'inspection affiche les pensées du colon, mais n'expose pas encore le score et le qualificatif de beauté de la pièce. L'impression Core complète, la richesse et les souvenirs de chambre ou réfectoire restent absents.
 
 Le **pot de fleurs** ne fournit pas une décoration instantanée. Après construction, un colon affecté aux Cultures sème une hémérocalle. Elle exige lumière et température admissibles, grandit en environ 1,5 jour biologique et vieillit ; lorsqu'elle meurt, elle doit être coupée avant le prochain semis. Un pot planté ne peut pas être désinstallé avant cette coupe.
@@ -1129,6 +1143,8 @@ Couvrez les réserves et les ateliers avec des supports construits. **Un toit ne
 
 ## Nourriture, repos et humeur
 
+Un [couchage au sol V336](#préparer-un-couchage-au-sol--v336) peut être attribué et réservé comme une place de lit simple. Le dormeur rejoint sa tête et reste au sol, avec repos 0,8 et confort plafond 0,4 ; le matelas décrit ci-dessous concerne les lits construits.
+
 ### Garder la cuisine propre — V89
 
 Inspectez la **propreté de la pièce**, plutôt que son seul rôle. Le score tient compte des terrains ou revêtements, des traces présentes et de certains meubles : une table de boucherie salit la pièce où elle se trouve. Bois et pierre donnent une contribution de sol neutre ; l'acier donne +0,2. Ce n'est pas une garantie contre l'intoxication. L'extérieur et une porte seule n'ont pas de score de pièce ; cuisiner dehors conserve un risque propre à cet emplacement.
@@ -1200,6 +1216,8 @@ Vous pouvez poser un plan dans une réserve. Mur, lit et table retirent les cell
 La table conserve une pile déjà présente, affichée sur son plateau, mais n’accepte pas de zone de stockage. Tabouret et piquet peuvent garder une réserve utilisable. Le feu peut recouvrir son tracé, mais aucun objet ne sera rangé sur sa cellule ; le combustible utilise l’ordre de ravitaillement. Murs, lits et feux attendent le déplacement des piles gênantes. La table se traverse mais ne sert pas de poste de travail ou de repos. Après interruption pendant une traversée, le colon finit son arête puis rejoint une case admissible ; il ne se téléporte pas.
 
 ## Déplacer un meuble entier
+
+Le [couchage au sol V336](#préparer-un-couchage-au-sol--v336) se retire immédiatement puis se repose ailleurs ; il ne se désinstalle pas en paquet et ne se réinstalle pas par transport.
 
 Inspectez un lit, une table, un siège, un meuble de chambre, un pot vide ou un piquet et cliquez sur **Réinstaller**. Choisissez sa nouvelle case ; **Q/E** tourne son empreinte. Un bâtisseur dégage si nécessaire l’emplacement, rejoint le meuble, le retire, le porte puis le pose. Il ne consomme pas de nouvelle matière et conserve sa qualité. Le propriétaire du lit reste le même, mais le couchage est indisponible pendant le déplacement. Un meuble occupé attend la fin de son usage ; un pot planté attend d'abord la coupe physique de sa fleur.
 

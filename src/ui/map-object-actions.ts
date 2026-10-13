@@ -65,7 +65,7 @@ function actionsFor(world: World, selected: MapObjectSelection, cells: readonly 
   } else if (selected.kind === 'structure') {
     const structure = lookups?.structures ? lookups.structures.get(selected.id) : world.structures.find(structure => structure.id === selected.id);
     if (structure && !world.jobs.some(job => job.furniture?.structureId === structure.id) && !blocked(structure.kind, cells, true)) {
-      actions.push({ id: 'deconstruct', label: 'Déconstruire',
+      actions.push({ id: 'deconstruct', label: structure.kind==='sleeping-spot'?'Retirer l’emplacement':'Déconstruire',
         command: { type: 'designate', kind: 'deconstruct', targetId: structure.id, x: structure.x, z: structure.z } });
     }
     ownsJob = job => job.deconstruction?.structureId === selected.id || job.furniture?.structureId === selected.id || job.flick?.structureId === selected.id;
@@ -108,7 +108,10 @@ export function mapObjectGroupActions(world: World, selected: readonly MapObject
     if (seen.has(key)) continue;
     seen.add(key);
     const group = groups.get(action.id);
-    if (group) group.commands.push(action.command);
+    if (group) {
+      group.commands.push(action.command);
+      if(group.label!==action.label)group.label='Déconstruire';
+    }
     else groups.set(action.id, { id: action.id, label: action.label, commands: [action.command] });
   }
   return [...groups.values()];

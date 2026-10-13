@@ -17,6 +17,7 @@ export function currentMedicalBed(world:World,pawn:Pawn,carried=!!carrierOf(worl
       return world.schemaVersion>=224&&!bed.medical&&!bed.prisoner&&!pawn.prisoner&&!pawn.visitor&&!!cell
         &&cell.x===pawn.x&&cell.z===pawn.z&&need.target.x===cell.x&&need.target.z===cell.z;
     }
+    if(bed.kind==='sleeping-spot')return world.schemaVersion>=232&&bed.x===pawn.x&&bed.z===pawn.z&&need.target.x===bed.x&&need.target.z===bed.z;
     return (bed.kind!=='hospital-bed'||world.schemaVersion>=187)&&bed.x===pawn.x&&bed.z===pawn.z;
   });
 }
@@ -29,6 +30,6 @@ function monitored(bed:BedDefinition,world:World|undefined):boolean {
   return !!current&&!!activeVitalsMonitor(world,current);
 }
 export const bedTendOffset=(bed:BedDefinition|undefined,world?:World):number=>bed?.kind==='hospital-bed'?(monitored(bed,world)?.17:.1):0;
-export const bedImmunityFactor=(bed:BedDefinition,world?:World):1.07|1.11|1.13=>bed.kind==='hospital-bed'?(monitored(bed,world)?1.13:1.11):1.07;
-export const bedHealPerDay=(bed:BedDefinition):4|10=>bed.kind==='hospital-bed'?10:4;
-export const bedSurgeryFactor=(bed:BedDefinition,world?:World):number=>bed.kind==='hospital-bed'?(monitored(bed,world)?1.15:1.1):1;
+export const bedImmunityFactor=(bed:BedDefinition,world?:World):1|1.07|1.11|1.13=>bed.kind==='sleeping-spot'?1:bed.kind==='hospital-bed'?(monitored(bed,world)?1.13:1.11):1.07;
+export const bedHealPerDay=(bed:BedDefinition):0|4|10=>bed.kind==='sleeping-spot'?0:bed.kind==='hospital-bed'?10:4;
+export const bedSurgeryFactor=(bed:BedDefinition,world?:World):number=>bed.kind==='sleeping-spot'?.7:bed.kind==='hospital-bed'?(monitored(bed,world)?1.15:1.1):1;

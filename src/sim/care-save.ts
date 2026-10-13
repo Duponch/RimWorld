@@ -22,9 +22,11 @@ export function validTendShape(value:unknown,version:number,w:World):boolean {
     &&(t.phase==='approach'||t.phase==='tend'||version>=51&&(t.phase==='pickup'||t.phase==='find-medicine'))&&int(t.progress,0,5999)
     &&(t.duration===undefined?t.phase!=='tend'&&t.phase!=='find-medicine'&&t.progress===0:int(t.duration,1,6000)&&Number(t.progress)<Number(t.duration));
 }
-export function validateCare(world:World):string[] {
+export function validateCare(world:World,onlyBedIds?:ReadonlySet<number>):string[] {
   const errors:string[]=[],patients=new Set<number>();
   for(const d of world.pawns){
+    if(onlyBedIds&&!(d.need?.kind==='sleep'&&onlyBedIds.has(d.need.bedId??0))
+      &&!(d.tend&&world.pawns.some(p=>p.id===d.tend!.patientId&&p.need?.kind==='sleep'&&onlyBedIds.has(p.need.bedId??0))))continue;
     if(d.state==='resting'&&!(d.need?.kind==='sleep'&&d.need.medical&&d.need.phase==='sleep'))errors.push('Medical rest without a physical bed service.');
     if(d.need?.kind==='sleep'&&d.need.medical&&(d.need.bedId===null||!d.prisoner&&!isAdmittedGuest(d)&&d.priorities[d.need.medical]===0))errors.push('Invalid medical bed intent.');
     if(d.need?.kind==='sleep'&&d.need.medical&&!d.surgeryRequest&&!treatmentTarget(d)&&!(d.need.medical==='bedrest'&&medicalRestNeeded(d)))errors.push('Medical rest without an eligible condition.');

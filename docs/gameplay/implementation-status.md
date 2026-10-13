@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V336, schéma 232 : [couchages humains au sol](human-sleeping-spots-v336.md).** Un emplacement1×2 gratuit orientable avec propriétaire, médical/prison et services réels ; aucun matelas, HP ou emballage. Premières nuits naturelles et reprises exactes acquises dans trois biomes. Double au sol/bedrolls et mémoire SleptOnGround restent absents ; campagne durable encore à qualifier. Les états suivants sont historiques.
+
 **V335, schéma 231 : [arrivée physique](starting-arrival-v335.md).** Trois occupants hors carte jusqu’à l’ouverture collective, propriétaires exclusifs et cellules revalidées ; départs antérieurs inchangés. Charte et dotation conservées ; interdictions génériques, scories, récit modal et parité exhaustive restent absents. Les états suivants sont historiques.
 
 **V334, schéma 230 conservé : [carnet des premiers jours](first-days-v334.md).** Sept lignes décrivent la préparation actuelle, avec distinction plans/installations et travail, propriétaires, filtres, culture et cuisine réels. Carnet facultatif, ouvert après création publique, fermé après recharge ; aide statique corrigée. Dix-neuf cas et Chrome avec export/recharge exacte passent. Arrivée en capsules, tutoriel guidé complet et campagne naturelle entière restent absents ou non qualifiés ; [critères early access](early-access-readiness.md). Les états suivants sont historiques.

@@ -1,4 +1,4 @@
-import { climateOriginAtAdoption,planetTileClimateDefinition,startingSiteClimateOrigin,validClimateDefinition,type ClimateProfile } from './site-climate.ts';
+import { climateOriginAtAdoption,planetTileClimateDefinition,sameDerivedClimateNumber,startingSiteClimateOrigin,validClimateDefinition,type ClimateProfile } from './site-climate.ts';
 import type { World } from './types.ts';
 import type { PlanetTile } from './planet-state.ts';
 import { PREPARED_CRASHLANDED_REVISION,ARRIVING_CRASHLANDED_REVISION } from './scenario-definitions.ts';
@@ -25,7 +25,8 @@ export function validSiteClimate(value:unknown,version:number,world:Pick<World,'
       !Number.isFinite(Math.hypot(...tile.center))||Math.abs(Math.hypot(...tile.center)-1)>1e-9||
       !finite(tile.meanTemperature,-100,100)||!finite(tile.rainfall,0,10000))return false;
     const expectedDefinition=planetTileClimateDefinition(tile as unknown as PlanetTile),definition=v.definition;
-    return Object.keys(expectedDefinition).every(k=>definition[k as keyof typeof expectedDefinition]===expectedDefinition[k as keyof typeof expectedDefinition])&&
+    return definition.meanTemperature===expectedDefinition.meanTemperature&&definition.rainfall===expectedDefinition.rainfall&&
+      (['latitude','longitude','amplitude'] as const).every(k=>sameDerivedClimateNumber(definition[k],expectedDefinition[k]))&&
       v.calendarOrigin===startingSiteClimateOrigin(v.adoptedAt,definition);
   }
   const expected:ClimateProfile=version>=91&&world.site?.revision===2?

@@ -48,6 +48,13 @@ export function planetTileClimateDefinition(tile:PlanetTile):ClimateDefinition {
   return {meanTemperature:tile.meanTemperature,rainfall:tile.rainfall,latitude,longitude,amplitude:seasonalAmplitude(latitude)};
 }
 
+/** Trigonometric results can differ by one ULP between JS runtimes. Keep the
+ * stored values; this tolerance applies only to derived climate numbers. */
+export function sameDerivedClimateNumber(a:number,b:number):boolean {
+  return Number.isFinite(a)&&Number.isFinite(b)&&
+    Math.abs(a-b)<=2*Number.EPSILON*Math.max(1,Math.abs(a),Math.abs(b));
+}
+
 export function validClimateDefinition(value:unknown):value is ClimateDefinition {
   if(typeof value!=='object'||value===null||Array.isArray(value))return false;
   const v=value as Record<string,unknown>,keys=Reflect.ownKeys(v);
@@ -55,7 +62,7 @@ export function validClimateDefinition(value:unknown):value is ClimateDefinition
   return keys.length===5&&keys.every(k=>typeof k==='string'&&['meanTemperature','amplitude','rainfall','latitude','longitude'].includes(k)&&
     Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'))&&
     finite(v.meanTemperature,-100,100)&&finite(v.rainfall,0,10000)&&finite(v.latitude,-90,90)&&finite(v.longitude,-180,180)&&
-    finite(v.amplitude,3,28)&&v.amplitude===seasonalAmplitude(v.latitude);
+    finite(v.amplitude,3,28)&&sameDerivedClimateNumber(v.amplitude,seasonalAmplitude(v.latitude));
 }
 
 export function climateTick(world:ClimateWorld,tick=world.tick):number {
