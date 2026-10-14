@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V353 livré**, schéma 236 : [expiration d’arbre sous saturation](tree-expiry-v353.md), produit `8dc7bf70` et [publication f6ced911](../development/cloudflare-pages.md#publication-v353--arbre-expiré-et-sortie-saturée),106réponsesHTTPS exactes. Suite autonome réserve médicale/campagne, branches blessées conservées ; aucune campagne entière/FPS/parité exhaustive certifiés. Les états suivants sont historiques.
+
 **V353, schéma 236 : [expiration d’arbre et sortie saturée](tree-expiry-v353.md).** Mort et restes en attente sauvegardables sans stop simulation ;213cas/14 acquis par reprises, corpus63/66 et cinqrecharges ChromeWebGPU exactes. Livraison PENDING ; campagne naturelle, réserve durable et récupération des branches blessées restent à qualifier, sans promesse FPS/parité exhaustive. Les états suivants sont historiques.
 
 **V349–V350, schéma 235 : [arbres et annulations](tree-transfer-v349.md), [masquage selon caméra](../development/decor-occlusion-v350.md).** Qualification ciblée acquise par reprises, Pages/typage15,176s, corpus63/66final63,431s ; arbre/annulation et douze vues de décor ChromeWebGPU, onze recharges exactes, gel2917exact. Rouges et limites conservés dans les notes, aucune sauvegarde humaine/campagne entière/FPS/parité exhaustive certifiés. Produit ee5d4288 commité/poussé et publié avecV348 en8840de17,106réponsesHTTPS exactes ; autonomie ACTIVE vers les derniers blocages de végétation et sorties lourdes, puis campagne/réserves. Les états suivants sont historiques.

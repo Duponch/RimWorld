@@ -37,3 +37,5 @@ Le premier typage rouge13,311s venait du nom de sol wood au lieu de wood-planks 
 Premier natif rouge29,208s/body0,230s avant chargement : serveur5412 disparu après la coupure, connexion refusée. Le serveur dédié est relancé, rapport rouge conservé dans native/native-report.json ; reprise distincte dans native-reprise, sans fermer une session humaine ou changer le produit.
 
 Aucun FPS, sauvegarde humaine réparée, campagne entière, early access100% ou parité exhaustive certifiés. Après commit/push et publication vérifiée, poursuivre la réserve médicale intérieure depuis la branche naturelle V34758168, distincte de la branche blessée V344 ; aucun résultat futur acquis.
+
+Produit `8dc7bf70` commité/poussé, documentation initiale PASS9,870s et publication unique `f6ced911` vérifiée sur106réponsesHTTPS exactes ; [clôture et package](../development/cloudflare-pages.md#publication-v353--arbre-expiré-et-sortie-saturée).

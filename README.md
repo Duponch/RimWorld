@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V353 livré**, schéma 236 : [expiration d’arbre sous saturation](docs/gameplay/tree-expiry-v353.md), produit `8dc7bf70` commité/poussé et [publié une fois en f6ced911](docs/development/cloudflare-pages.md#publication-v353--arbre-expiré-et-sortie-saturée),106réponsesHTTPS exactes.213tests/14fichiers acquis par reprises, corpus63références et cinqrecharges WebGPU exactes. Autonomie ACTIVE vers réserve médicale/campagne ; aucun FPS/campagne entière/parité exhaustive certifiés. Les états suivants sont historiques.
+
 **V353, schéma 236 : [expiration d’arbre et sortie saturée](docs/gameplay/tree-expiry-v353.md).** Un arbre porté peut mourir sans arrêter la simulation quand son bois n’a pas de place ; sortie complète et identité conservées en attente.213tests/14fichiers acquis par reprises, corpus63références et cinqrecharges ChromeWebGPU exactes ; livraison PENDING, V352fbf78d3a reste publié. Suite autonome ACTIVE vers réserve médicale/campagne, sans FPS/parité exhaustive/campagne entière certifiés. Les états suivants sont historiques.
 
 **V352 livré**, schéma 235 : [coupe productive et attente](docs/gameplay/cut-yield-v352.md), produit `f0c9b83c` commité/poussé et publié en `fbf78d3a` sur [Elsewhere](https://elsewhere-cq7.pages.dev/),106réponsesHTTPS exactes.205tests/9fichiers acquis par reprises, corpus63références et douzerecharges natives exactes. Autonomie ACTIVE : dernier cas d'expiration d'arbre, puis réserves/campagne ; aucune campagne entière/parité exhaustive/FPS certifiés. Les états suivants sont historiques.

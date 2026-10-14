@@ -1,5 +1,7 @@
 # Elsewhere sur Cloudflare Pages
 
+**Publication courante V353 : `f6ced911`,14octobre2026, schéma 236.** Produit `8dc7bf70` commité/poussé ; [expiration d’arbre sous saturation](../gameplay/tree-expiry-v353.md), une publication et106réponsesHTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://f6ced911.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v353--arbre-expiré-et-sortie-saturée). Les publications suivantes sont historiques.
+
 **Publication courante V352 : `fbf78d3a`,14octobre2026, schéma 235.** Produit `f0c9b83c` commité/poussé ; [coupe productive et attente](../gameplay/cut-yield-v352.md), une publication et106réponsesHTTPS exactes sur [l'adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://fbf78d3a.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v352--coupe-productive-et-attente). Les publications suivantes sont historiques.
 
 **Publication courante V348–V350 : `8840de17`, 14 octobre 2026, schéma 235.** Produit `ee5d4288` commité/poussé, une publication groupée : [construction](../gameplay/construction-clearance-v348.md), [arbres et annulations](../gameplay/tree-transfer-v349.md), [masquage selon caméra](decor-occlusion-v350.md). [Adresse stable](https://elsewhere-cq7.pages.dev/) et [déploiement](https://8840de17.elsewhere-cq7.pages.dev/),106réponsesHTTPS exactes. [Preuves et limites](#publication-v348v350--arbres-annulations-et-décor). Les publications suivantes sont historiques.
@@ -448,3 +450,17 @@ Les deux parcours Chrome préparés et six recharges exactes sont qualifiés sé
 Rapports privés tmp/elsewhere-pages/v352-package-zxCHoj/report.json et v352-http-glyPzm/report.json ; journaux v352-package/v352-cloudflare-deploy/v352-cloudflare-http datés04:15–04:18UTC. Gel2925sources/tests/publics/pilotes exact ; contextes Chrome de test terminés, Vite5412 réemployable, sessions/références humaines et branche codex/ui-papier-v317 intactes.
 
 Les trois parcours préparés et douzerecharges sont qualifiés séparément dans la note V352, avec leurs rouges conservés et limites Core explicites. Ces réponsesHTTPS ne prouvent aucune réparation de sauvegarde humaine absente, campagne entière, parité exhaustive ou gainCPU/GPU/FPS. Autonomie ACTIVE : expiration d'un arbre porté sous saturation de sortie à corriger avant médicaments/réserves et campagne naturelle ; sous-métiers reportés.
+
+## Publication V353 — arbre expiré et sortie saturée
+
+14octobre2026, schéma 236. Produit `8dc7bf7029330c0bb77e7601c1f0e3656741e577` commité/poussé : [expiration d’arbre sous saturation](../gameplay/tree-expiry-v353.md). Publication unique [f6ced911](https://f6ced911.elsewhere-cq7.pages.dev/), également servie sur [l’adresse stable](https://elsewhere-cq7.pages.dev/).
+
+Package517fichiers/119561168octets :63références et66chemins publics exacts, laboratoire et instrumentation privés absents. Typage/Pages24,423s, documentation initiale9,870s ; packagePASS3,378s, publicationPASS18,975s (3fichiers envoyés,512réutilisés, puis headers/redirects), vérificationHTTPS PASS8,756s :106réponses exactes et MIME attendus sur53chemins×2origines. Sources/tests/pilotes2932 exacts ; cinqrecharges WebGPU exactes et deuxcaptures inspectées ROOT. Cette vérification de fichiers ne remplace pas une campagne entière, un save humain ou un banc FPS.
+
+- `/assets/index-BAfwnwsw.js` : SHA256 `58e2365fb691ec024b9d84d813e27b8d7acfc0d41ca8f978cab81fae5f8ee780`.
+- `/assets/simulation.worker-FnucXed3.js` : SHA256 `13ec3c20b9bcfa0d7ad16969e86b03f38593da86096b8c332f41446f31b1ddba`.
+
+Rapports privés : tmp/elsewhere-pages/v353-package-duxIFv/report.json et tmp/elsewhere-pages/v353-http-aqNFBO/report.json ; toutes les limites du contrôle y restent inscrites. dist et public/test-saves sont exacts avant/après. L’avertissement Wrangler de checkout dirty vient uniquement de references_UI humain non suivi ; le produit commité est celui vérifié. La branche distante codex/ui-papier-v317 reste a7a6b4654158312178ecd1a6dfed02940b81219b. Les sessions humaines restent intactes ; le serveur de test5412 est gardé pour la reprise naturelle suivante.
+
+Suite autonome ACTIVE : un médicament réel vers la réserve intérieure depuis V34758168, puis campagne durable ; les branches blessées restent distinctes. Aucun nouveau résultat naturel ou FPS annoncé.
+

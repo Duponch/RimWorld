@@ -17,7 +17,7 @@ Une case de catalogue, un bouton grisé, une simulation préparée ou un test ci
 
 ## Ordre de travail courant
 
-Priorité humaine14octobre : les lots [construction V348](construction-clearance-v348.md), [arbres/annulations V349](tree-transfer-v349.md), [masquage V350](../development/decor-occlusion-v350.md), [plantes V351](construction-plants-v351.md) et [coupe V352](cut-yield-v352.md) sont livrés. [V353 expiration d’arbre sous saturation](tree-expiry-v353.md) est qualifié sur scènes préparées, livraison PENDING. Après sa livraison, reprendre médicaments/réserves depuis V34758168 puis campagne durable avec mêmes personnes et branches blessées distinctes ; aucune réussite naturelle nouvelle n’est créditée par ces régressions préparées.
+Priorité humaine14octobre : les lots [construction V348](construction-clearance-v348.md), [arbres/annulations V349](tree-transfer-v349.md), [masquage V350](../development/decor-occlusion-v350.md), [plantes V351](construction-plants-v351.md) et [coupe V352](cut-yield-v352.md) sont livrés. [V353 expiration d’arbre sous saturation](tree-expiry-v353.md) est livré en8dc7bf70/f6ced911 après qualification sur scènes préparées. Reprendre médicaments/réserves depuis V34758168 puis campagne durable avec mêmes personnes et branches blessées distinctes ; aucune réussite naturelle nouvelle n’est créditée par ces régressions préparées.
 
 1. Carnet contextuel V334 commité et poussé ; préserver toutes les mécaniques.
 2. Arrivée physique V335 acquise : personnes et biens réellement détenus pendant la descente, mêmes identités et quantités à l’ouverture, pause et reprise exactes. Les écarts Core restent explicites, sans interdiction générique ou scorie fictives.

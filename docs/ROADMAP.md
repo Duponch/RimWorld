@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V353 livré**, schéma 236 : produit `8dc7bf70` commité/poussé et [publié une fois en f6ced911](development/cloudflare-pages.md#publication-v353--arbre-expiré-et-sortie-saturée),106réponsesHTTPS exactes.213cas/14 acquis par reprises, corpus63/66 et cinqrecharges WebGPU exactes. Suite autonome ACTIVE : V354 médicament intérieur depuis V34758168 puis campagne durable, branches blessées conservées. Aucun FPS/parité exhaustive/EA100% certifiés. Les états suivants sont historiques.
+
 **V353, schéma 236 : [expiration d’arbre sous saturation](gameplay/tree-expiry-v353.md).** Dernier blocage révélé par la revueV352 corrigé et qualifié sur213tests/14fichiers acquis par reprises, corpus63/66 et ChromeWebGPU/cinqrecharges exactes. Livraison PENDING ; suite autonome ACTIVE : médicaments intérieurs depuis V34758168 puis campagne durable, branches blessées conservées. Aucun FPS/parité exhaustive/EA100% certifiés. Les états suivants sont historiques.
 
 **V352 livré**, schéma 235 : produit `f0c9b83c` commité/poussé et [publié une fois enfbf78d3a](development/cloudflare-pages.md#publication-v352--coupe-productive-et-attente),106réponsesHTTPS exactes. Coupe productive, attente et infection payée qualifiées sur205tests/9fichiers acquis par reprises, corpus63références et trois parcours WebGPU/douzerecharges exactes. Autonomie ACTIVE : expiration d'arbre porté sous saturation à corriger avant médicaments/réserves et campagne naturelle ; aucun FPS/parité exhaustive/EA100% certifiés. Les états suivants sont historiques.
