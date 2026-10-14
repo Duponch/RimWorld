@@ -193,6 +193,7 @@ import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from './sim/map-config';
 import { footprintCells, queryJobStatus, queryPawnStatus } from './sim/index';
 import {STRUCTURE_DEFINITIONS} from './sim/definitions';
 import { gameLayout, storageSettings, toolDefinitions, workColumns } from './ui/layout';
+import {architectAvailabilityKey,architectToolAvailable} from './ui/architect-availability';
 import type { ArchitectCategory, Panel, Tool } from './ui/layout';
 import { updateMiniTurretControls } from './ui/mini-turret-controls';
 import { miniTurretView,turretSeconds } from './sim/mini-turret-presentation';
@@ -637,6 +638,11 @@ const resourceLedger = createResourceLedger(document.querySelector<HTMLElement>(
 const architectWorkbench = installArchitectWorkbench(document.querySelector<HTMLElement>('#app')!, () => {
   setPanel(null); clearSelection(); applyTool('select');
 });
+// Workbench has already moved Orders/Zones out of Architect. Keep the
+// resident catalogue and its icon/handler nodes; only visibility changes.
+const architectToolButtons=[...el('architect-panel').querySelectorAll<HTMLButtonElement>('[data-tool-category]')]
+  .map(button=>({button,tool:button.dataset.tool as Tool,category:button.dataset.toolCategory as ArchitectCategory}));
+let lastArchitectAvailabilityKey='';
 installTimeControls(document.querySelector<HTMLElement>('#app')!);
 // Suppress browser chrome without cancelling the game's own order-menu handler.
 document.querySelector('#app')!.addEventListener('contextmenu', event => {
@@ -802,7 +808,21 @@ function setCategory(category: ArchitectCategory) {
   if(category==='orders'||category==='zones')return;
   currentCategory = category;
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.classList.toggle('active', button.dataset.category === category);
-  for (const button of document.querySelectorAll<HTMLButtonElement>('#architect-panel [data-tool-category]')) button.hidden = button.dataset.toolCategory !== category;
+  syncArchitectAvailability(true);
+}
+
+function syncArchitectAvailability(force=false):void {
+  const key=`${currentCategory}:${snapshot?architectAvailabilityKey(snapshot):'no-world'}`;
+  if(!force&&key===lastArchitectAvailabilityKey)return;
+  lastArchitectAvailabilityKey=key;
+  for(const {button,tool,category} of architectToolButtons){
+    const hidden=category!==currentCategory||!snapshot||!architectToolAvailable(snapshot,tool);
+    if(button.hidden!==hidden)button.hidden=hidden;
+  }
+  if(snapshot&&!architectToolAvailable(snapshot,currentTool)){
+    renderer?.cancelDesignation();
+    applyTool('select');
+  }
 }
 function selectedColonyIds():number[]{return snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner).map(p=>p.id)??[];}
 function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>selectPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:selectedColonyIds(),targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId:id,enabled});renderState();}));}
@@ -862,7 +882,9 @@ function applyTool(tool: Tool) {
   updateMapHover(true);
 }
 function setTool(tool: Tool) {
-  const definition = toolDefinitions.find(item => item.id === tool)!;
+  if(!snapshot||!architectToolAvailable(snapshot,tool))return;
+  const definition = toolDefinitions.find(item => item.id === tool);
+  if(!definition)return;
   setCategory(definition.category);
   setPanel('architect');
   applyTool(tool);
@@ -1247,6 +1269,7 @@ async function updateAutoSlaughterPolicy(config:AutoSlaughterConfig):Promise<voi
 
 function renderState() {
   if (!snapshot) return;
+  syncArchitectAvailability();
   const world = snapshot;
   const colonists = world.pawns.filter(isColonist);
   const living = colonists.filter(pawn => pawn.state !== 'dead');
@@ -1785,6 +1808,7 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
   }
   if(currentTool==='replant-tree'&&replantPileId!==undefined&&!world.piles.some(p=>p.id===replantPileId&&p.owner.type==='ground'&&isMinifiedTree(p)&&!p.plantPack.pendingExpiry))applyTool('select');
   snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
+  syncArchitectAvailability(replaced);
   let objectGroupChanged=false;
   if(!replaced&&selectedObjects.length>1){
     const cells=mapObjectGroupCells(world,selectedObjects),remaining=selectedObjects.filter((_,i)=>cells[i]!.length>0);

@@ -1,5 +1,7 @@
 # Préparer une version early access
 
+**Priorités humaines du 15 octobre 2026**, schéma 236 : [V358 visibilité Architecte](architect-research-v358.md), qualification acquise/livraison en cours, puis quatre résultats regroupés : survie durable, incidents/récupération, progression productive, essai fiable des trois biomes. Après ces résultats, extensions biomes/multicartes/catalogue autorisées sans nouvelle relance. V359 reprend le vrai checkpoint66037 et conserve les personnes, biens, mémoires et branches blessées distinctes ; aucun résultat futur acquis ni microversion par portion. Les critères généraux restent ouverts. Les états suivants sont historiques.
+
 **V357 livré**, schéma236 : [recherche guidée](research-guidance-v357.md), produit5cd5ffce/pub965abf99 et106réponsesHTTPS exactes. V356QAffc19efd poussé, journée jusqu’à66037 par reprises ; aucun repas complet nouveau crédité. Suite autonome ACTIVE : réveils et alimentation naturelle depuis cet export, réserves/renouvellement/incidents ensuite. Les critères généraux restent ouverts. Les états suivants sont historiques.
 
 **V357 qualifié**, schéma236 conservé : [première recherche guidée](research-guidance-v357.md), conseils facultatifs et diagnostics de progression, sans recherche achevée ou campagne nouvelle créditées. V356ffc19efd poussé, campagne66037 conservée. Livraison V357 en cours, suite autonome ACTIVE vers besoins et incidents naturels. Les critères généraux restent ouverts. Les états suivants sont historiques.
