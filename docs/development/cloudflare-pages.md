@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-**Publication courante V351 : `7b9ccdba`,14octobre2026, schéma 235.** Produit `a545b6bc` commité/poussé ; [plantes et chantiers](../gameplay/construction-plants-v351.md), une publication et106réponsesHTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://7b9ccdba.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v351--plantes-et-chantiers). Les publications suivantes sont historiques.
+**Publication courante V352 : `fbf78d3a`,14octobre2026, schéma 235.** Produit `f0c9b83c` commité/poussé ; [coupe productive et attente](../gameplay/cut-yield-v352.md), une publication et106réponsesHTTPS exactes sur [l'adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://fbf78d3a.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v352--coupe-productive-et-attente). Les publications suivantes sont historiques.
 
 **Publication courante V348–V350 : `8840de17`, 14 octobre 2026, schéma 235.** Produit `ee5d4288` commité/poussé, une publication groupée : [construction](../gameplay/construction-clearance-v348.md), [arbres et annulations](../gameplay/tree-transfer-v349.md), [masquage selon caméra](decor-occlusion-v350.md). [Adresse stable](https://elsewhere-cq7.pages.dev/) et [déploiement](https://8840de17.elsewhere-cq7.pages.dev/),106réponsesHTTPS exactes. [Preuves et limites](#publication-v348v350--arbres-annulations-et-décor). Les publications suivantes sont historiques.
 
@@ -434,3 +434,17 @@ Gel2917sources/tests/publics/pilotes exact. Chrome de test terminé ; Vite5413 p
 Rapports privés tmp/elsewhere-pages/v351-package-xVU4A8/report.json et v351-http-b8ioru/report.json ; journaux v351-package/v351-cloudflare-deploy/v351-cloudflare-http datés03:20–03:22UTC. Gel2921sources/tests/publics/pilotes exact. Chrome de test terminé, Vite5412 réemployable ; sessions/références humaines et branche codex/ui-papier-v317 intactes.
 
 Les deux parcours Chrome préparés et six recharges exactes sont qualifiés séparément dans la note V351. Ces réponsesHTTPS ne prouvent ni réparation d’une sauvegarde humaine absente, ni campagne entière, ni gainCPU/GPU/FPS. Autonomie ACTIVE : prochain correctif du rendement de Couper typé V352, puis médicaments/réserves et reprise naturelle avec les mêmes personnes. Sous-métiers reportés.
+
+## Publication V352 — coupe productive et attente
+
+14octobre2026 : produit `f0c9b83c` poussé sur main, schéma235 conservé. Package final du buildPages/typage15,464s, mêmes sources figées et aucun rebâtissage pendant la publication. Une publication ROOT par Wrangler4.149.0, projet elsewhere/branche main. L'avertissement Git sale ne concerne que references_UI non suivi ; aucune source produit non commitée.
+
+- Package517fichiers/119555142octets PASS1,148s ;63références/66chemins publics exacts, laboratoire et instrumentation privée absents.
+- Déploiement PASS13,035s,3fichiers envoyés/512réemployés plus headers/redirects ; nouvelle URL [fbf78d3a](https://fbf78d3a.elsewhere-cq7.pages.dev/).
+- HTTPS PASS8,556s :53chemins×2origines,106réponses exactes/MIME attendus. Census dist/publics identique avant/après ; les66sauvegardes sont comparées localement, seuls les chemins listés sont téléchargés à distance.
+- index-kU0-CWYn.js SHA256 `c2542b4d21c063e03787d30bf29acaffedb693c0fcf86731f584fd34f9b18996`.
+- simulation.worker-DbN15uFJ.js SHA256 `c47aa8efaae63d9c79c391774d3713b30e6658fc551ee4db6371c7df6626cf80`.
+
+Rapports privés tmp/elsewhere-pages/v352-package-zxCHoj/report.json et v352-http-glyPzm/report.json ; journaux v352-package/v352-cloudflare-deploy/v352-cloudflare-http datés04:15–04:18UTC. Gel2925sources/tests/publics/pilotes exact ; contextes Chrome de test terminés, Vite5412 réemployable, sessions/références humaines et branche codex/ui-papier-v317 intactes.
+
+Les trois parcours préparés et douzerecharges sont qualifiés séparément dans la note V352, avec leurs rouges conservés et limites Core explicites. Ces réponsesHTTPS ne prouvent aucune réparation de sauvegarde humaine absente, campagne entière, parité exhaustive ou gainCPU/GPU/FPS. Autonomie ACTIVE : expiration d'un arbre porté sous saturation de sortie à corriger avant médicaments/réserves et campagne naturelle ; sous-métiers reportés.
