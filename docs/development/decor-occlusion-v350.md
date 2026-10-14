@@ -1,6 +1,6 @@
 # V350 — Décor masqué selon la vraie vue du plateau
 
-14 octobre 2026. Demande humaine de remplacement des deux anciens cercles ; intégré avec le schéma235 de V349 sans règle de simulation supplémentaire. **Qualification native ciblée acquise56,193s**, douze captures inspectées ROOT et deux recharges3000exactes ; dernier Pages/typage15,176s. Oracle/préférences acquis, ROOT seul sur gel2917exact, aucun gain de performance présumé. Livraison/publication PENDING.
+14 octobre 2026. Demande humaine de remplacement des deux anciens cercles ; intégré avec le schéma235 de V349 sans règle de simulation supplémentaire. **Qualification native ciblée acquise56,193s**, douze captures inspectées ROOT et deux recharges3000exactes ; dernier Pages/typage15,176s. Oracle/préférences acquis, ROOT seul sur gel2917exact, aucun gain de performance présumé. Produit `ee5d4288` commité/poussé, publié en `8840de17` avecV348,106réponsesHTTPS exactes.
 
 ## Géométrie
 
@@ -23,3 +23,5 @@ Reprise finale ChromeWebGPU PASS56,193s/body52,093s : quatre couples OFF/ON à m
 Diagnostic WGSL privé, pass-through des appels natifs, seulement programmes136/139 : les trois variantes réellement construites du136 ont15/16/16locations et v_pawnFragmentTraits vec2 ; celles qui échouaient à17 compilent désormais. Pose vertex, peau/cheveux/vêtements/sang/rot/ribs restent leurs expressions/stages natifs. Trois nouveaux cas de transport/interpolation/graphes, ensemble22cas/2 PASS4,778s ; limite matérielle réellement confirmée par le navigateur. Pas de comparaison raster A/B de tous avatars, pas de coût GPU mesuré. La provenance et les programmes restent privés, instrumentation absente des sources produit et contrôlée dans Pages.
 
 Publication PENDING. Aucune campagne ou 240FPS certifiés. Publication sera regroupée avec V348/V349 après qualification et commit/push.
+
+Clôture : produit `ee5d4288` commité/poussé et publié une fois en `8840de17` avecV348,106réponsesHTTPS exactes ; package517fichiers119546485octets, gel2917exact. Les PENDING précédents décrivent les étapes historiques de préparation. Suite V351 autonome ACTIVE, aucune campagne entière ni FPS nouveau crédité.

@@ -1,5 +1,7 @@
 # Elsewhere sur Cloudflare Pages
 
+**Publication courante V348–V350 : `8840de17`, 14 octobre 2026, schéma 235.** Produit `ee5d4288` commité/poussé, une publication groupée : [construction](../gameplay/construction-clearance-v348.md), [arbres et annulations](../gameplay/tree-transfer-v349.md), [masquage selon caméra](decor-occlusion-v350.md). [Adresse stable](https://elsewhere-cq7.pages.dev/) et [déploiement](https://8840de17.elsewhere-cq7.pages.dev/),106réponsesHTTPS exactes. [Preuves et limites](#publication-v348v350--arbres-annulations-et-decor). Les publications suivantes sont historiques.
+
 **Publication courante V346 : `5afc7ff6`, 14 octobre 2026, schéma 234.** [Consommer un aliment choisi](../gameplay/consuming-v346.md), produit `f9f65b54` commité/poussé. Une publication et104réponsesHTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://5afc7ff6.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v346--consommation-directe). Les publications suivantes sont historiques.
 
 **Publication courante V343 : `819c5941`, 13 octobre 2026, schéma 233.** [Soins mobilisés sans médicament](../gameplay/drafted-tending-v343.md), produit `59accafd` commité/poussé. Une publication et104 réponses HTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://819c5941.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v343--soins-mobilisés). Les publications suivantes sont historiques.
@@ -405,3 +407,14 @@ Package privé `tmp/elsewhere-pages/v346-package-mPaVsw/report.json` au HEAD pr�
 `--commit-dirty=true` correspond seulement au dossier humain non suivi `references_UI/`, laissé intact. Le package inspecté seul est envoyé ; branche UI papier et recherches privées restent hors package. Les contextes Chrome de test sont terminés, Vite5412 possédé est réemployé pour V347 ; aucune session humaine fermée.
 
 Les huit recharges et scènes préparées attestent l’action et sa conservation. Aucune ingestion naturelle de la réserve V345, récupération clinique V344, autonomie alimentaire, campagne entière, gainFPS ou early access100% n’est certifiée. Poursuite autonome ACTIVE : une copie distincte58111 permettra une tentative alimentaire bornée, sans modifier besoins, fournitures ou événements naturels.
+
+## Publication V348–V350 — arbres, annulations et décor
+
+14 octobre 2026 : produit `ee5d4288` poussé sur main après V348 `f640c01e`, schéma 235. ROOT publie une seule fois par Wrangler4.149, branche main/project elsewhere/commit exact ; seule salissure Git references_UI humaine exclue. Aucun nouveau build en publication : même dist figé issu du Pages/typage15,176s.
+
+- Package517fichiers/119546485octets PASS1,100s ;63références/66chemins publics exactement identiques, laboratoire et instrumentation privée absents, nouvelle minified-tree.svg incluse.
+- Déploiement PASS14,067s,4fichiers envoyés/511réemployés plus _headers/_redirects ; nouvelle URL [8840de17](https://8840de17.elsewhere-cq7.pages.dev/).
+- HTTPS PASS8,619s :53chemins ×2origines,106réponses exactes et MIME attendus, index/entry/worker/fonts/pictos/Aulnes/catalogue ; census du package/publics avant/après identique. Rapports privés tmp/elsewhere-pages/v350-{package,http}-*.
+- Entrée JS index-B4pXWTyL.js SHA2566158e712abaa90d2c150d59e907d55ca6920d7faea50c2e54db953bd7d008e5f ; worker simulation.worker-Clw1wQdD.js SHA2568640467c45e015a938d4049ccacdce89eab0fc8dedaf4c4370ca9c52ac8d0a17 ; minified-tree.svg SHA256e1099b30365da2ed36a6fb806b417287f078faf48865a7691449f87df101eef3.
+
+Gel2917sources/tests/publics/pilotes exact. Chrome de test terminé ; Vite5413 possédé à fermer, Vite5412 conservé pour suite. Les preuves de jeu restent ciblées dans les notes V348/V349/V350 : le HTTPS ne qualifie aucune sauvegarde humaine, campagne entière, parité exhaustive ou gainFPS. Suite autonome ACTIVE : classification globale des petites plantes, frontière Core Frame/final et sorties lourdes refusées, puis campagne/réserves. Références humaines, branche UIpapier et sous-métiers reportés conservés.
