@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V357 qualifié**, schéma236 : [première recherche guidée](research-guidance-v357.md), mêmes projets/règles/graphes avec conseil facultatif, alerte et constats de travail. Livraison PENDING ; V356ffc19efd poussé, campagne66037 acquise par reprises. Priorité durable : besoins, réserves, incidents et progression avec reprises ; aucune campagne entière/FPS/EA100% certifiés. Les états suivants sont historiques.
+
 **V356 acquis par reprise**, schéma 236 conservé : [coin repas et journée naturelle](dining-day-v356.md), table/tabouret réellement payés, cinq recharges exactes cumulées jusqu’à66037. Premier natif rouge de perte d’accès navigateur conservé ; continuation WebGPU PASS66,788s, aucun repas complet supplémentaire crédité. ProduitV353/f6ced911 inchangé. Suite autonome ACTIVE : première recherche guidée et attentes expliquées ; campagne durable, incidents, reprises et fluidité restent à qualifier. Les états suivants sont historiques.
 
 **V353 livré**, schéma 236 : [expiration d’arbre sous saturation](tree-expiry-v353.md), produit `8dc7bf70` et [publication f6ced911](../development/cloudflare-pages.md#publication-v353--arbre-expiré-et-sortie-saturée),106réponsesHTTPS exactes. Suite autonome réserve médicale/campagne, branches blessées conservées ; aucune campagne entière/FPS/parité exhaustive certifiés. Les états suivants sont historiques.

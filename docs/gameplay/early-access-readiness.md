@@ -1,5 +1,7 @@
 # Préparer une version early access
 
+**V357 qualifié**, schéma236 conservé : [première recherche guidée](research-guidance-v357.md), conseils facultatifs et diagnostics de progression, sans recherche achevée ou campagne nouvelle créditées. V356ffc19efd poussé, campagne66037 conservée. Livraison V357 en cours, suite autonome ACTIVE vers besoins et incidents naturels. Les critères généraux restent ouverts. Les états suivants sont historiques.
+
 **V356 acquis par reprise**, schéma 236 conservé : [coin repas et journée naturelle](dining-day-v356.md), table/tabouret réellement payés, cinq recharges exactes cumulées jusqu’à66037. Premier natif rouge de perte d’accès navigateur conservé ; continuation WebGPU PASS66,788s, aucun repas complet supplémentaire crédité. ProduitV353/f6ced911 inchangé. Suite autonome ACTIVE : première recherche guidée et attentes expliquées ; campagne durable, incidents, reprises et fluidité restent à qualifier. Les états suivants sont historiques.
 
 Objectif humain du 13 octobre 2026 : une version prête à être essayée par des joueurs, avec progression autonome entre lots validés, commits/push et publications regroupées. Le statut actuel reste un jeu en développement ; un compteur de contenu RimWorld ne définit pas sa préparation.
@@ -44,5 +46,7 @@ Priorité humaine14octobre : les lots [construction V348](construction-clearance
 16. [V355 : réserve26 et aube suivante](medicine-day-v355.md), schéma236 conservé. Trois transports/fusions réels et quatre recharges exactes jusqu’à60031 ;26médicaments intérieurs, deux ingestions ordinaires observées et nouvelle cuisson en cours. QA-only commité/poussé enb0b09701 ; V3547a0be77f poussé. Suite autonome : une journée plus longue, coin repas et préparation aux incidents selon les constats ; aucune autonomie alimentaire, guérisonV344 ou campagne entière créditée.
 
 17. [V356 : coin repas et journée naturelle](dining-day-v356.md), schéma236 conservé. Meubles payés et journée60031→66037 acquis par reprises, cinq recharges exactes ; premier rouge navigateur et traces de repas non qualifiées conservés. Les besoins affamés encore endormis restent naturels et la suite n'est pas promise. Prochaine amélioration produit : expliquer la première recherche depuis les panneaux existants, puis poursuivre la campagne avec ses identités et incidents.
+
+18. [V357 : première recherche guidée](research-guidance-v357.md). Conseil facultatif, alerte de projet manquant, constats purs et destinations Travail/Production ; groupe86cas/6 et premier travail réel sur scène32² préparée avec deux recharges exactes acquis. Aucune recherche complète ni progression de la campagne66037 créditée ; reprendre ensuite ses besoins et incidents naturels.
 
 La recherche et les validations peuvent préciser cet ordre. Les sous-métiers restent reportés ; la refonte papier demeure sur sa branche séparée. La relance de cette conversation est active à la demande humaine ; elle respecte toute nouvelle instruction d’arrêt ou de pause.

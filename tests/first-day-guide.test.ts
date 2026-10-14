@@ -1,6 +1,7 @@
 import { expect,test } from 'vitest';
 import { readFirstDayGuide,createFirstDayGuide,type FirstDayGuideAction,type FirstDayGuideId } from '../src/ui/first-day-guide';
-import { newCookingBill } from '../src/sim/cooking-bills';
+import { newCookingBill,cookingSpot } from '../src/sim/cooking-bills';
+import {selectResearch} from '../src/sim/research';
 import { newShelfStorage } from '../src/sim/shelf-storage';
 import { structureMaxHp } from '../src/sim/thing-damage-rules';
 import { addMaterial } from '../src/sim/materials';
@@ -153,7 +154,7 @@ test('inactive and disposed guide updates do not read or retain any world data',
   const host=new GuideNode(),guide=createFirstDayGuide(host as unknown as HTMLElement,{onAction:()=>{}});
   const unreadable=new Proxy({} as World,{get(){throw new Error('hidden guide read World');}});
   expect(()=>guide.update(unreadable)).not.toThrow();expect(host.children).toHaveLength(0);
-  guide.setActive(true);guide.update(camp());expect(host.children).toHaveLength(7);
+  guide.setActive(true);guide.update(camp());expect(host.children).toHaveLength(8);
   guide.setActive(false);expect(()=>guide.update(unreadable)).not.toThrow();
   guide.dispose();expect(()=>guide.update(unreadable)).not.toThrow();expect(host.children).toHaveLength(0);
 });
@@ -166,4 +167,25 @@ test('keyed details and action buttons survive refreshes; reset releases their c
   button.onclick!();expect(actions).toEqual([{panel:'work'}]);
   guide.setActive(false);button.onclick!();expect(actions).toHaveLength(1);
   guide.reset();expect(button.onclick).toBeNull();expect(host.children).toHaveLength(0);
+});
+
+test('research is an eighth optional guide route, never an automatic project or assignment',()=>{
+ const w=camp();delete w.research;const before=structuredClone(w),section=row(w,'research');
+ expect(readFirstDayGuide(w)).toHaveLength(8);expect(section).toMatchObject({status:'optional',action:{panel:'research'},actionLabel:'Ouvrir Recherche'});expect(section.detail).toContain('Aucun projet choisi');expect(section.body).toContain('facultatif');expect(w).toEqual(before);
+ fixtureBuilding(w,'research-bench',7,7);expect(row(w,'research').status).toBe('optional');expect(w.research).toBeUndefined();expect(w.pawns.every(p=>p.priorities.research===0)).toBe(true);
+ const host=new GuideNode(),actions:FirstDayGuideAction[]=[],guide=createFirstDayGuide(host as unknown as HTMLElement,{onAction:action=>actions.push(action)});guide.setActive(true);guide.update(w);host.children[7]!.children[3]!.onclick!();expect(actions).toEqual([{panel:'research'}]);expect(w.research).toBeUndefined();
+});
+
+test('a chosen project with a sleeping assigned researcher stays started, not complete or a promised route',()=>{
+ const w=camp();delete w.research;fixtureBuilding(w,'research-bench',7,7);expect(selectResearch(w,'complex-clothing').ok).toBe(true);
+ expect(row(w,'research')).toMatchObject({status:'started'});expect(row(w,'research').body).toContain('0 colon(s) affecté(s)');
+ const p=w.pawns[0]!;p.priorities.research=1;p.state='sleeping';p.need={kind:'sleep',phase:'sleep',bedId:null,target:{x:p.x,z:p.z}};
+ const before=structuredClone(w),section=row(w,'research');expect(section.status).toBe('started');expect(section.detail).toContain('0 chercheur(s) au travail, 0 en chemin');expect(section.body).toContain('1 colon(s) affecté(s)');expect(section.body).toContain('ne garantit pas l’accès');expect(w).toEqual(before);expect(w.research!.points).toBe(0);
+});
+
+test('a current local research task supplies guide readiness without inventing completion, and foreign engagement is excluded',()=>{
+ const w=camp();delete w.research;const bench=fixtureBuilding(w,'research-bench',7,7),p=w.pawns[0]!;expect(selectResearch(w,'complex-clothing').ok).toBe(true);p.priorities.research=1;
+ const spot=cookingSpot(bench);Object.assign(p,{x:spot.x,z:spot.z,state:'working',path:[],motion:null,moveCooldown:0,research:{stationId:bench.id,spot,worked:0}});
+ const before=structuredClone(w);expect(row(w,'research')).toMatchObject({status:'ready'});expect(row(w,'research').detail).toContain('1 chercheur(s) au travail');expect(w).toEqual(before);expect(w.research!.points).toBe(0);expect(w.research!.completedAt).toBeUndefined();
+ p.faction='outlanders';expect(row(w,'research').status).toBe('started');expect(row(w,'research').detail).toContain('0 chercheur(s) au travail');
 });

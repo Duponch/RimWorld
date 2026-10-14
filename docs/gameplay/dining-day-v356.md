@@ -41,3 +41,5 @@ Deux rouges de typage de continuation19,542s/17,915s révèlent une inférence c
 QA-only : aucun moteur, bridge, rendu, public ou schéma changé ; aucun build, corpus ou déploiement inchangé rejoué. ProduitV353 `8dc7bf70` et publication `f6ced911` conservés. Une journée locale, même achevée ensuite, ne certifie ni autonomie alimentaire durable, campagne entière, guérisonV344, framerate ou débit réel×6.
 
 Lot utile prêt au commit/push après gate documentaire. Suite autonome préparée : première recherche guidée et constats d’attente, en réutilisant les règles et panneaux existants ; besoins et menace futurs de cette campagne restent des parcours à qualifier.
+
+Clôture QA : lot commité/poussé en `ffc19efd`, documentation PASS2,275s. Aucun déploiement pour cette qualification seule ; le produit V357 prépare ensuite un meilleur accompagnement de la recherche.

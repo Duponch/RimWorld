@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V357 qualifié**, schéma236 conservé : [première recherche guidée](gameplay/research-guidance-v357.md), lecteur pur/alerte contextuelle/conseil facultatif et destinations existantes.86cas/6, typage/Pages et ChromeWebGPU/deuxrecharges exactes acquis, livraison PENDING. V356ffc19efd commité/poussé, campagne66037 conservée ; suite autonome ACTIVE vers ses besoins/incidents après livraison, aucune campagne entière/FPS/EA100% certifiés. Les états suivants sont historiques.
+
 **V356 acquis par reprise**, schéma 236 conservé : [coin repas et journée naturelle](gameplay/dining-day-v356.md), table/tabouret réellement payés, cinq recharges exactes cumulées jusqu’à66037. Premier natif rouge de perte d’accès navigateur conservé ; continuation WebGPU PASS66,788s, aucun repas complet supplémentaire crédité. ProduitV353/f6ced911 inchangé. Suite autonome ACTIVE : première recherche guidée et attentes expliquées ; campagne durable, incidents, reprises et fluidité restent à qualifier. Les états suivants sont historiques.
 
 **V354–V355 livrés**, schéma 236 conservé : QA `7a0be77f`/`b0b09701`, [réserve26 et aube suivante](gameplay/medicine-day-v355.md), neuf recharges natives exactes cumulées. ProduitV353/f6ced911 reste publié, aucun déploiement inchangé rejoué. Suite autonome ACTIVE : depuis60031, coinrepas et journée naturelle selon audit, arrêt/conservation au premier danger réel ; aucune réussitefuture/guérisonV344/campagneentière/FPS certifiés. Les états suivants sont historiques.

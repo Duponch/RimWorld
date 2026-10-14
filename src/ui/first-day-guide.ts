@@ -13,9 +13,11 @@ import type { BedSlot,MaterialPile,Pawn,Structure,World } from '../sim/types';
 import type { ArchitectCategory,Panel,Tool } from './layout';
 import { readAvailabilityStatusAlerts,type StatusAlert } from './status-alerts';
 import type { NotificationTarget } from './notification-focus';
+import {readResearchReadiness} from './research-readiness';
+import {researchProjects} from './research-projects';
 
 export type FirstDayGuideStatus='ready'|'started'|'missing'|'optional';
-export type FirstDayGuideId='work'|'storage'|'beds'|'food'|'cultivation'|'cooking'|'equipment';
+export type FirstDayGuideId='work'|'storage'|'beds'|'food'|'cultivation'|'cooking'|'equipment'|'research';
 export interface FirstDayGuideAction {panel?:Exclude<Panel,null>;category?:ArchitectCategory;mapTools?:'orders'|'zones';tool?:Tool;worldTab?:'group'|'individual';target?:NotificationTarget;tab?:StatusAlert['tab']}
 export interface FirstDayGuideSection {
   id:FirstDayGuideId;title:string;status:FirstDayGuideStatus;detail:string;body:string;
@@ -86,7 +88,7 @@ export function readFirstDayGuide(world:World):FirstDayGuideSection[] {
   const usable=configured.filter(s=>foodStationUsable(s)&&!s.breakdown);
   const groundWeapons=piles.filter(p=>p.kind==='weapon'&&p.owner.type==='ground'&&(p.weapon?.hitPoints??1)>0);
   const equipped=people.filter(p=>world.piles.some(item=>item.kind==='weapon'&&item.quantity>0&&item.owner.type==='equipment'&&item.owner.pawnId===p.id&&(item.weapon?.hitPoints??1)>0)).length;
-  const noPeople=people.length===0;
+  const noPeople=people.length===0,research=readResearchReadiness(world),project=researchProjects.find(p=>p.id===research.activeProject);
   const availability=readAvailabilityStatusAlerts(world),absence=availability[0];
   const absenceTarget=absence?.targets[0];
   const absenceAction:FirstDayGuideAction=absenceTarget?{target:absenceTarget,...absence?.tab?{tab:absence.tab}:{}}:absence?.context?{...absence.context}:{panel:'menu'};
@@ -113,6 +115,9 @@ export function readFirstDayGuide(world:World):FirstDayGuideSection[] {
     {id:'equipment',title:'Choisir les équipements',status:people.length&&equipped>=people.length?'ready':groundWeapons.length||equipped?'started':'optional',
       detail:`${equipped} colon(s) portent une arme ; ${groundWeapons.length} arme(s) restent au sol.`,
       body:groundWeapons.length?`Armes au sol : ${groundWeapons.map(p=>ITEM_DEFINITIONS[p.item].label).join(', ')}. Sélectionnez un seul colon, faites un clic droit sur l’arme au sol, puis choisissez Équiper : il doit la rejoindre. Assignations règle les politiques ; ce bouton n’équipe personne.`:'Inspectez les colons et leurs possessions avant une menace. L’équipement, l’inventaire et les vêtements sont distincts ; les incapacités peuvent interdire le combat.',action:{panel:'assign'},actionLabel:'Ouvrir Assignations'},
+    {id:'research',title:'Commencer la recherche',status:research.remainingCount===0||research.engagedIds.length?'ready':research.activeProject?'started':'optional',
+      detail:research.remainingCount===0?'Tous les projets livrés sont acquis.':project?`${project.title} choisi ; ${research.workingIds.length} chercheur(s) au travail, ${research.movingIds.length} en chemin.`:research.availableCount?`Aucun projet choisi ; ${research.availableCount} projet(s) sélectionnable(s).`:'Aucun projet choisi ; les recherches restantes ont des prérequis à remplir.',
+      body:`Ce conseil est facultatif. Choisissez un projet et consultez ses prérequis dans Recherche. ${research.benchIds.length} bureau(x) physique(s) présent(s) ; ${research.assignedIds.length} colon(s) affecté(s) à Recherche dans Travail. Un projet choisi n’est pas achevé ; un poste compatible ne garantit pas l’accès ni la réservation. Les besoins, soins et autres tâches continuent.`,action:{panel:'research'},actionLabel:'Ouvrir Recherche'},
   ];
 }
 

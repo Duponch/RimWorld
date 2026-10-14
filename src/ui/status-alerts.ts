@@ -20,6 +20,7 @@ import { actorNotificationTarget,cellNotificationTarget,objectNotificationTarget
 import { readColonistAvailability,type AwayColonistAvailability } from './colonist-availability';
 import { readMoodRiskAlerts } from './mood-risk-alerts';
 import { setTooltip,type TooltipContent } from './tooltip';
+import {readResearchReadiness} from './research-readiness';
 
 export interface NotificationContext { panel:Exclude<Panel,null>;category?:ArchitectCategory;tool?:'stockpile';worldTab?:'group'|'individual'; }
 export interface StatusAlert { key:string;text:string;targets:NotificationTarget[];context?:NotificationContext;tab?:'health'|'needs'|'prisoner';tooltip?:TooltipContent; }
@@ -95,6 +96,8 @@ export function readStatusAlerts(world:World):StatusAlert[] {
   counted('deaths',colonists.filter(p=>p.state==='dead'),n=>`${n} colon(s) décédé(s)`,'health');
   if(availableNutrition(world)<living.length*1.6)add('food-reserves','Réserves de nourriture faibles',[],{panel:'assign'});
   counted('hungry',living.filter(p=>p.hunger<25),n=>`${n} colon(s) affamé(s)`,'needs');
+  const research=world.research?.project?undefined:readResearchReadiness(world);
+  if(research?.needProject)rows.push({key:'research-project',text:'Choisir une recherche',targets:[],context:{panel:'research'},tooltip:{title:'Choisir une recherche',body:'Un bureau physique est présent et un projet est sélectionnable, mais aucun projet n’est choisi. Ouvrir Recherche permet de consulter les prérequis et de choisir ; cela n’affecte personne et ne garantit pas un travail au bureau.'}});
   const pending=world.jobs.filter(j=>j.status==='pending');
   if(pending.length)add('pending-jobs',`${pending.length} ordre(s) en attente`,pending.map(j=>objectNotificationTarget('job',j.id,j)),{panel:'work'});
   if(!world.stockpiles.length&&!storageCells(world).length)add('no-stockpile','Aucune réserve de stockage',[],{panel:'architect',tool:'stockpile'});

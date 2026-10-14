@@ -25,10 +25,14 @@ test('first days guide uses current facts, opens existing tools, preserves focus
   await page.locator('.starting-arrival').getByRole('button',{name:'Reprendre',exact:true}).click();
   await expect.poll(async()=>page.evaluate(()=>window.__lisiere.world.startingArrival?.phase)).toBe('opened');await pause(page);
   await expect(guide(page)).toHaveAttribute('open','');
-  await expect(page.locator('[data-first-day-section]')).toHaveCount(7);
+  await expect(page.locator('[data-first-day-section]')).toHaveCount(8);
   const created=await world(page);expect(created.tick).toBeGreaterThanOrEqual(27);expect(created.pawns).toHaveLength(3);
   await expect(section(page,'storage')).toHaveAttribute('data-status','missing');
   await expect(section(page,'beds')).toHaveAttribute('data-status','missing');
+  await expect(section(page,'research')).toHaveAttribute('data-status','optional');
+  await section(page,'research').locator('summary').click();await expect(section(page,'research')).toContainText('facultatif');await section(page,'research').getByRole('button',{name:'Ouvrir Recherche',exact:true}).click();
+  await expect(page.locator('#research-panel')).toBeVisible();await expectWorld(page,created);
+  await page.keyboard.press('Escape');await showGuide(page);
   await section(page,'food').locator('summary').click();await expect(section(page,'food')).toContainText('50 repas de survie');
   await section(page,'cooking').locator('summary').click();await section(page,'cooking').getByRole('button',{name:'Ouvrir Production'}).click();
   await expect(page.locator('#architect-panel')).toBeVisible();await expect(page.locator('[data-category="production"]')).toHaveClass(/active/);
@@ -61,7 +65,7 @@ test('first days guide uses current facts, opens existing tools, preserves focus
   const file=await download,path=info.outputPath('first-days.json');await file.saveAs(path);expect(deserializeWorld(await readFile(path,'utf8'))).toEqual(continued);
   await page.locator('#browse-saves').click();await front(page).locator('input[name="front-save"]').first().check();await frontButton(page,'Charger').click();
   await expectWorld(page,continued);await expect(guide(page)).not.toHaveAttribute('open','');await expect(page.locator('[data-first-day-section]')).toHaveCount(0);
-  await showGuide(page);await expect(page.locator('[data-first-day-section]')).toHaveCount(7);
+  await showGuide(page);await expect(page.locator('[data-first-day-section]')).toHaveCount(8);
   await guide(page).locator(':scope > summary').dblclick();expect(await page.evaluate(()=>String(getSelection()))).toBe('');
   expect(errors).toEqual([]);
   await info.attach('first-days-summary',{contentType:'application/json',body:JSON.stringify({seed:created.seed,ticks:[created.tick,continued.tick],people:created.pawns.map(p=>p.name),errors})});

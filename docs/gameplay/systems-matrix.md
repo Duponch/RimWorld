@@ -1,5 +1,7 @@
 # Matrice des systèmes et critères de réalisation
 
+**V357 qualifié**, schéma236 conservé : [première recherche guidée](research-guidance-v357.md) raccorde UI/Travail/Recherche sans modifier les règles.86cas/6 et deuxrecharges WebGPU exactes acquis ; livraison PENDING. V356ffc19efd poussé, campagne66037 à poursuivre, aucun domaine/jalon général clôturé. Les états suivants sont historiques.
+
 **V356 acquis par reprise**, schéma 236 conservé : [coin repas et journée naturelle](dining-day-v356.md), table/tabouret réellement payés, cinq recharges exactes cumulées jusqu’à66037. Premier natif rouge de perte d’accès navigateur conservé ; continuation WebGPU PASS66,788s, aucun repas complet supplémentaire crédité. ProduitV353/f6ced911 inchangé. Suite autonome ACTIVE : première recherche guidée et attentes expliquées ; campagne durable, incidents, reprises et fluidité restent à qualifier. Les états suivants sont historiques.
 
 **État au14octobre2026 : produitV353, schéma 236, et QA V354–V355 livrés.** [Inventaire](implementation-status.md), [réserve et aube V355](medicine-day-v355.md), [critères early access](early-access-readiness.md). V356 en qualification ; les tableaux corrigent les absences périmées de lits doubles, EMP, groupe mondial et alimentation animale. Ils restent une cible et un inventaire partiel, sans clôture de G0–G5, campagne entière ou pourcentage global. Les états suivants sont historiques.

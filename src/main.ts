@@ -71,7 +71,7 @@ import { createWeatherConditionUI, weatherConditionLabel } from './ui/weather-in
 import { createShortCircuitUI } from './ui/short-circuit';
 import { createFlashstormUI } from './ui/flashstorm';
 import { createSolarFlareUI } from './ui/solar-flare';
-import { updateResearchPanel } from './ui/research-panel';
+import { updateResearchPanel,type ResearchPanelActions } from './ui/research-panel';
 import { specificWorkActivity } from './ui/work-activity';
 import { createScoutUI } from './ui/scout-panel';
 import { createGroupPanel } from './ui/group-panel';
@@ -218,6 +218,10 @@ let selectedStoragePending=0;
 let storageClipboard:StorageControlSettings|undefined;
 let zoneEditTarget:number|undefined;
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+const researchPanelActions:ResearchPanelActions={onOpenWork:()=>openResearchContext('work'),onOpenProduction:()=>openResearchContext('architect')};
+function openResearchContext(panel:'work'|'architect'):void {
+  void attempt(async()=>{await switchPanel(panel);if(panel==='architect')setCategory('production');});
+}
 // Only this fixed Worker/client and the fixed MAIN consumers can reach these
 // decoders. The command facade exposes no adoption or World callback entry.
 const client = (() => {
@@ -827,7 +831,7 @@ function setPanel(panel: Panel, preserveTool = false) {
   }
   if (panel === 'schedule' && snapshot) scheduleUI.update(snapshot);
   if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot);apparelPolicyUI.update(snapshot);allowedAreaUI.update(snapshot);}
-  if (panel === 'research' && snapshot) updateResearchPanel(el('research-content'),snapshot,c=>void attempt(()=>client.command(c)));
+  if (panel === 'research' && snapshot) updateResearchPanel(el('research-content'),snapshot,c=>void attempt(()=>client.command(c)),researchPanelActions);
   el('inspector').hidden = panel !== null || preserveTool&&currentTool!=='select' || (!selection.ids.size && !selectedCell);
   if (panel !== 'architect' && !preserveTool) applyTool('select');
   if (panel === null && snapshot) {
@@ -1251,7 +1255,7 @@ function renderState() {
   const carriedPatients = carriedPatientsOf(world);
   if(currentPanel==='animals')updateAnimalsPanel(el('animals-content'),world,id=>selectPawn(id),designateAnimalSlaughter,updateAutoSlaughterPolicy);
   if(currentPanel==='wildlife')renderWildlife(world);
-  if(currentPanel==='research')updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)));
+  if(currentPanel==='research')updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)),researchPanelActions);
   if(currentPanel==='world')refreshWorldPanels(world);
   if(world.commercialTrip?.phase==='at-post'){
     const t=world.commercialTrip,key=[world.seed,t.pawn.id,t.departedAt,t.arrivedAt].join(':');
