@@ -1,5 +1,7 @@
 # Elsewhere sur Cloudflare Pages
 
+**Publication courante V351 : `7b9ccdba`,14octobre2026, schéma 235.** Produit `a545b6bc` commité/poussé ; [plantes et chantiers](../gameplay/construction-plants-v351.md), une publication et106réponsesHTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://7b9ccdba.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v351--plantes-et-chantiers). Les publications suivantes sont historiques.
+
 **Publication courante V348–V350 : `8840de17`, 14 octobre 2026, schéma 235.** Produit `ee5d4288` commité/poussé, une publication groupée : [construction](../gameplay/construction-clearance-v348.md), [arbres et annulations](../gameplay/tree-transfer-v349.md), [masquage selon caméra](decor-occlusion-v350.md). [Adresse stable](https://elsewhere-cq7.pages.dev/) et [déploiement](https://8840de17.elsewhere-cq7.pages.dev/),106réponsesHTTPS exactes. [Preuves et limites](#publication-v348v350--arbres-annulations-et-décor). Les publications suivantes sont historiques.
 
 **Publication courante V346 : `5afc7ff6`, 14 octobre 2026, schéma 234.** [Consommer un aliment choisi](../gameplay/consuming-v346.md), produit `f9f65b54` commité/poussé. Une publication et104réponsesHTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://5afc7ff6.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v346--consommation-directe). Les publications suivantes sont historiques.
@@ -418,3 +420,17 @@ Les huit recharges et scènes préparées attestent l’action et sa conservatio
 - Entrée JS index-B4pXWTyL.js SHA2566158e712abaa90d2c150d59e907d55ca6920d7faea50c2e54db953bd7d008e5f ; worker simulation.worker-Clw1wQdD.js SHA2568640467c45e015a938d4049ccacdce89eab0fc8dedaf4c4370ca9c52ac8d0a17 ; minified-tree.svg SHA256e1099b30365da2ed36a6fb806b417287f078faf48865a7691449f87df101eef3.
 
 Gel2917sources/tests/publics/pilotes exact. Chrome de test terminé ; Vite5413 possédé fermé après vérification de sa ligne de commande, Vite5412 conservé pour suite. Les preuves de jeu restent ciblées dans les notes V348/V349/V350 : le HTTPS ne qualifie aucune sauvegarde humaine, campagne entière, parité exhaustive ou gainFPS. Suite autonome ACTIVE : classification globale des petites plantes, frontière Core Frame/final et sorties lourdes refusées, puis campagne/réserves. Références humaines, branche UIpapier et sous-métiers reportés conservés.
+
+## Publication V351 — plantes et chantiers
+
+14octobre2026 : produit `a545b6bc` poussé sur main, schéma235 conservé. Même dist figé, buildPages2,018s, sans rebâtir pendant la publication. Une publication ROOT par Wrangler4.149.0, projet elsewhere et branche main. L’avertissement Git sale concerne uniquement le dossier humain non suivi references_UI ; aucune source non commitée dans le package.
+
+- Package517fichiers/119553472octets PASS1,442s ;63références/66chemins publics exacts, laboratoire et instrumentation privée absents.
+- Déploiement PASS14,013s,3fichiers envoyés/512réemployés plus headers/redirects ; nouvelle URL [7b9ccdba](https://7b9ccdba.elsewhere-cq7.pages.dev/).
+- HTTPS PASS7,601s :53chemins×2origines,106réponses exactes et MIME attendus. Census dist/publics identique avant/après ; toutes les66sauvegardes sont comparées localement, seuls les chemins listés sont téléchargés à distance.
+- index-wcOu5c6H.js SHA256 `551e2f4d73e8ff7bc677662fca2819e71ca412ea5255d859041428eef7a5cb2b`.
+- simulation.worker-BoQWHBU9.js SHA256 `038a14b6f4b6da18f5bdefcef7ff6dcdbb4cbc42296341947e5a85a816fd1bac`.
+
+Rapports privés tmp/elsewhere-pages/v351-package-xVU4A8/report.json et v351-http-b8ioru/report.json ; journaux v351-package/v351-cloudflare-deploy/v351-cloudflare-http datés03:20–03:22UTC. Gel2921sources/tests/publics/pilotes exact. Chrome de test terminé, Vite5412 réemployable ; sessions/références humaines et branche codex/ui-papier-v317 intactes.
+
+Les deux parcours Chrome préparés et six recharges exactes sont qualifiés séparément dans la note V351. Ces réponsesHTTPS ne prouvent ni réparation d’une sauvegarde humaine absente, ni campagne entière, ni gainCPU/GPU/FPS. Autonomie ACTIVE : prochain correctif du rendement de Couper typé V352, puis médicaments/réserves et reprise naturelle avec les mêmes personnes. Sous-métiers reportés.
