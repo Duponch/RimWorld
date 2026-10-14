@@ -1,5 +1,7 @@
 # Validation courante — V349–V350
 
+**V354, schéma 236 conservé : [réserve médicale naturelle](../gameplay/medicine-reserve-v354.md).** ROOTChromeWebGPU55,281s/body49,918s, cinqrecharges exactes58168/58168/58168/58199/58206, erreurs[], troiscapturesacquises et unerougeinspectées, gel2928exact. LotQA, aucun build/corpus/déploiement inchangé rejoué ; typage final16,140s PASS, gate doc/commit PENDING, produitV353 publié conservé. Les validations suivantes sont historiques.
+
 **V353 livré**, schéma 236 : [preuve](../gameplay/tree-expiry-v353.md), produit `8dc7bf70` et [publication f6ced911](cloudflare-pages.md#publication-v353--arbre-expiré-et-sortie-saturée),106réponsesHTTPS exactes ; package517fichiers119561168octets exact, gel2932/cinqrecharges natives exactes/deuxcapturesinspectéesROOT. Aucun FPS/savehumain/campagne entière/EA100% certifiés, suite autonome réserve médicale/campagne. Les validations suivantes sont historiques.
 
 **V353, schéma 236 : [expiration d’arbre sous saturation](../gameplay/tree-expiry-v353.md).** ROOT seul :213cas/14 acquis par reprises dont31nouveaux/3 ; Pages/typage24,423s, corpus63/66PASS80,076s, ChromeWebGPU62,920s/body58,094s/cinqrecharges exactes/erreurs[], deuxcaptures inspectées et gel2932exact. Rouges conservés dans note unique ; gate doc/commit/publication PENDING. Aucun FPS/savehumain/campagne entière/EA100% certifiés. Les validations suivantes sont historiques.

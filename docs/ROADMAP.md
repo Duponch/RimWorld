@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V354, schéma 236 conservé : [première dose médicale intérieure](gameplay/medicine-reserve-v354.md).** Source18975/cargo19676/dépôt123114 tracés depuis V34758168, cinqrecharges exactes et ChromeWebGPU55,281s. QA-only, commit PENDING, V353/f6ced911 reste publié ; suite autonome réserve26surdeuxcases puisfinjournée60000, aucun résultat futur/FPS/récupérationV344 certifiés. Les états suivants sont historiques.
+
 **V353 livré**, schéma 236 : produit `8dc7bf70` commité/poussé et [publié une fois en f6ced911](development/cloudflare-pages.md#publication-v353--arbre-expiré-et-sortie-saturée),106réponsesHTTPS exactes.213cas/14 acquis par reprises, corpus63/66 et cinqrecharges WebGPU exactes. Suite autonome ACTIVE : V354 médicament intérieur depuis V34758168 puis campagne durable, branches blessées conservées. Aucun FPS/parité exhaustive/EA100% certifiés. Les états suivants sont historiques.
 
 **V353, schéma 236 : [expiration d’arbre sous saturation](gameplay/tree-expiry-v353.md).** Dernier blocage révélé par la revueV352 corrigé et qualifié sur213tests/14fichiers acquis par reprises, corpus63/66 et ChromeWebGPU/cinqrecharges exactes. Livraison PENDING ; suite autonome ACTIVE : médicaments intérieurs depuis V34758168 puis campagne durable, branches blessées conservées. Aucun FPS/parité exhaustive/EA100% certifiés. Les états suivants sont historiques.

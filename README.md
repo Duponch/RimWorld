@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V354, schéma 236 conservé : [une dose de médicament à l’intérieur](docs/gameplay/medicine-reserve-v354.md).** Transport naturel source/cargo/dépôt tracé, mêmes personnes et cinqrecharges exactes en ChromeWebGPU. QA-only, produitV353/f6ced911 inchangé, commit PENDING ; suite autonome réserve médicale complète et fin de journée, sans soinV344/FPS/campagne entière certifiés. Les états suivants sont historiques.
+
 **V353 livré**, schéma 236 : [expiration d’arbre sous saturation](docs/gameplay/tree-expiry-v353.md), produit `8dc7bf70` commité/poussé et [publié une fois en f6ced911](docs/development/cloudflare-pages.md#publication-v353--arbre-expiré-et-sortie-saturée),106réponsesHTTPS exactes.213tests/14fichiers acquis par reprises, corpus63références et cinqrecharges WebGPU exactes. Autonomie ACTIVE vers réserve médicale/campagne ; aucun FPS/campagne entière/parité exhaustive certifiés. Les états suivants sont historiques.
 
 **V353, schéma 236 : [expiration d’arbre et sortie saturée](docs/gameplay/tree-expiry-v353.md).** Un arbre porté peut mourir sans arrêter la simulation quand son bois n’a pas de place ; sortie complète et identité conservées en attente.213tests/14fichiers acquis par reprises, corpus63références et cinqrecharges ChromeWebGPU exactes ; livraison PENDING, V352fbf78d3a reste publié. Suite autonome ACTIVE vers réserve médicale/campagne, sans FPS/parité exhaustive/campagne entière certifiés. Les états suivants sont historiques.
