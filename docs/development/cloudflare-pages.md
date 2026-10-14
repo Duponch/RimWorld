@@ -478,3 +478,16 @@ Build Pages2,499s, package1,775s : **517fichiers/119566517octets**,63référence
 Wrangler4.149.0, syntaxe locale vérifiée et documentation officielle consultée : déploiement14,629s,2fichiers téléversés/513réemployés. Son avertissement dirty vient seulement de references_UI humain non suivi, absent du package ; les modifications produit sont commités. Contrôle post-publication7,939s : **106réponses HTTPS200 exactes avec MIME attendu** sur les deux origines, distribution/publics inchangés. Rapports privés : `tmp/elsewhere-pages/v357-package-ID8WFS/report.json` et `tmp/elsewhere-pages/v357-http-MCDoI3/report.json` ; gel2935exact avant/après. Ces réponses établissent la disponibilité du package, pas un parcours navigateur public, une réparation de sauvegarde humaine, une campagne entière ou240FPS.
 
 La branche distante codex/ui-papier-v317 garde `a7a6b4654158312178ecd1a6dfed02940b81219b`. Sessions/références humaines intactes ; Vite5412 reste disponible pour le prochain contrôle. Suite autonome : besoins et repas naturels depuis la vraie campagne V35666037, puis renouvellement/incidents, sans résultat futur promis.
+
+
+## Publication V358 — Architecte et recherches
+
+15 octobre 2026, schéma 236. Produit `b509a61ec5b75ab80f0a75676d6fe61c4ddf9e0a` commité/poussé : [visibilité des constructions et matière atelier](../gameplay/architect-research-v358.md). Publication unique [9cc85810](https://9cc85810.elsewhere-cq7.pages.dev/), également servie sur [l’adresse stable](https://elsewhere-cq7.pages.dev/).
+
+Groupe79cas/8 acquis par reprises dont8nouveaux, typage final18,635s, Chrome/WebGPU66,604s/deuxcas/quatre recharges exactes/trois captures inspectées ROOT ; gel2937 exact avant l’adoption du pilote de campagne suivant. Le navigateur qualifie une vraie nouvelle partie250² puis un achèvement préparé32² ; aucun progrès naturel de V356 n’est crédité.
+
+Pages2,868s, documentation initiale2,826s, package1,441s : **517fichiers/119569122octets**,63références/66chemins publics exacts, laboratoire et instrumentation privés absents. JS `/assets/index-BeJXljdx.js`, SHA256 `b8f8396cda3a8bbff5f2e658f6d05e7dd33bdac5dd2041a138ecc40f867ebadc` ; worker `/assets/simulation.worker-FnucXed3.js`, SHA256 `13ec3c20b9bcfa0d7ad16969e86b03f38593da86096b8c332f41446f31b1ddba` identique ; CSS et assets visuels exacts.
+
+Wrangler4.149.0 et syntaxe locale relue : déploiement12,513s,2fichiers envoyés/513réutilisés. La page de documentation officielle n’était pas accessible au nouvel appel web ; aucune nouvelle assertion de quota n’en est dérivée. L’avertissement dirty au moment du déploiement venait uniquement de references_UI humain non suivi, absent du package. Contrôle post-publication8,124s : **106réponses HTTPS200 exactes/MIME attendu**,53chemins sur deux origines ; dist/publics inchangés, erreurs[]. Rapports `tmp/elsewhere-pages/v358-package-BaZMLl/report.json` et `tmp/elsewhere-pages/v358-http-ObEb8f/report.json`.
+
+Branches/références humaines intactes, UIpapier distante conservée ; Vite5412 réemployé pour V359. La suite reprend le vrai export66037 : survie durable, incidents/récupération, progression productive, essai joueur puis expansions, sans microversion par portion ni résultat futur annoncé. Le contrôle HTTPS ne certifie pas une campagne entière, une sauvegarde humaine réparée ou240FPS.
